@@ -187,14 +187,14 @@ xbox::ULONG NTAPI JumpedPKGetKeyLen
 	return ret;
 }
 
-xbox::BOOLEAN NTAPI JumpedVerifyPKCS1Signature
+xbox::boolean_t NTAPI JumpedVerifyPKCS1Signature
 (
 	xbox::PUCHAR pbSig,
 	xbox::PUCHAR pbPubKey,
 	xbox::PUCHAR pbDigest
 )
 {
-	BOOLEAN ret = TRUE;
+	xbox::boolean_t ret = TRUE;
 
 	LOG_UNIMPLEMENTED();
 
@@ -584,7 +584,7 @@ XBSYSAPI EXPORTNUM(343) xbox::ULONG NTAPI xbox::XcPKGetKeyLen
 // ******************************************************************
 // * 0x0158 - XcVerifyPKCS1Signature()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(344) xbox::BOOLEAN NTAPI xbox::XcVerifyPKCS1Signature
+XBSYSAPI EXPORTNUM(344) xbox::boolean_t NTAPI xbox::XcVerifyPKCS1Signature
 (
 	IN PUCHAR pbSig,
 	IN PUCHAR pbPubKey,
@@ -597,7 +597,7 @@ XBSYSAPI EXPORTNUM(344) xbox::BOOLEAN NTAPI xbox::XcVerifyPKCS1Signature
 		LOG_FUNC_ARG_TYPE(PBYTE, pbDigest)
 	LOG_FUNC_END;
 
-	BOOLEAN ret = UpdatedCryptoStruct.pXcVerifyPKCS1Signature(pbSig, pbPubKey, pbDigest);
+	boolean_t ret = UpdatedCryptoStruct.pXcVerifyPKCS1Signature(pbSig, pbPubKey, pbDigest);
 
 	RETURN(ret);
 }

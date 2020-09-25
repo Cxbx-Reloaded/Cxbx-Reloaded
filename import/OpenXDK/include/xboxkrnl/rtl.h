@@ -114,7 +114,7 @@ XBSYSAPI EXPORTNUM(270) LONG NTAPI RtlCompareString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_t CaseInSensitive
 );
 
 // ******************************************************************
@@ -124,7 +124,7 @@ XBSYSAPI EXPORTNUM(271) LONG NTAPI RtlCompareUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_t CaseInSensitive
 );
 
 // ******************************************************************
@@ -152,7 +152,7 @@ XBSYSAPI EXPORTNUM(273) void_t NTAPI RtlCopyUnicodeString
 // ******************************************************************
 // * 0x0112 - RtlCreateUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(274) BOOLEAN NTAPI RtlCreateUnicodeString
+XBSYSAPI EXPORTNUM(274) boolean_t NTAPI RtlCreateUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PCWSTR SourceString
@@ -173,7 +173,7 @@ XBSYSAPI EXPORTNUM(276) NTSTATUS NTAPI RtlDowncaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString,
-	IN BOOLEAN AllocateDestinationString
+	IN boolean_t AllocateDestinationString
 );
 
 // ******************************************************************
@@ -195,21 +195,21 @@ XBSYSAPI EXPORTNUM(278) void_t NTAPI RtlEnterCriticalSectionAndRegion
 // ******************************************************************
 // * 0x0117 - RtlEqualString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(279) BOOLEAN NTAPI RtlEqualString
+XBSYSAPI EXPORTNUM(279) boolean_t NTAPI RtlEqualString
 (
   IN PSTRING String1,
   IN PSTRING String2,
-  IN BOOLEAN CaseInsensitive
+  IN boolean_t CaseInsensitive
 );
 
 // ******************************************************************
 // * 0x0118 - RtlEqualUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(280) BOOLEAN NTAPI RtlEqualUnicodeString
+XBSYSAPI EXPORTNUM(280) boolean_t NTAPI RtlEqualUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_t CaseInSensitive
 );
 
 // ******************************************************************
@@ -248,7 +248,7 @@ XBSYSAPI EXPORTNUM(284) void_t NTAPI RtlFillMemory
 (
 	IN void_t UNALIGNED *Destination,
 	IN DWORD Length,
-	IN BYTE  Fill
+	IN byte_t  Fill
 );
 
 // ******************************************************************
@@ -428,7 +428,7 @@ XBSYSAPI EXPORTNUM(303) void_t NTAPI RtlRaiseStatus
 // ******************************************************************
 // * RtlTimeFieldsToTime
 // ******************************************************************
-XBSYSAPI EXPORTNUM(304) BOOLEAN NTAPI RtlTimeFieldsToTime
+XBSYSAPI EXPORTNUM(304) boolean_t NTAPI RtlTimeFieldsToTime
 (
     IN  PTIME_FIELDS    TimeFields,
     OUT PLARGE_INTEGER  Time
@@ -446,7 +446,7 @@ XBSYSAPI EXPORTNUM(305) void_t NTAPI RtlTimeToTimeFields
 // ******************************************************************
 // * RtlTryEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(306) BOOLEAN NTAPI RtlTryEnterCriticalSection
+XBSYSAPI EXPORTNUM(306) boolean_t NTAPI RtlTryEnterCriticalSection
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
@@ -466,7 +466,7 @@ XBSYSAPI EXPORTNUM(308) NTSTATUS NTAPI RtlUnicodeStringToAnsiString
 (
     IN OUT PSTRING         DestinationString,
     IN     PUNICODE_STRING SourceString,
-    IN     BOOLEAN         AllocateDestinationString
+    IN     boolean_t         AllocateDestinationString
 );
 
 // ******************************************************************
@@ -527,7 +527,7 @@ XBSYSAPI EXPORTNUM(314) NTSTATUS NTAPI RtlUpcaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN  PUNICODE_STRING SourceString,
-	IN  BOOLEAN AllocateDestinationString
+	IN  boolean_t AllocateDestinationString
 );
 
 // ******************************************************************

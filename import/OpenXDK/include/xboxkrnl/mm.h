@@ -63,7 +63,7 @@ XBSYSAPI EXPORTNUM(168) PVOID NTAPI MmClaimGpuInstanceMemory
 XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
 (
     IN ULONG	NumberOfBytes,
-    IN BOOLEAN	DebuggerThread
+    IN boolean_t	DebuggerThread
 );
 
 // ******************************************************************
@@ -103,7 +103,7 @@ XBSYSAPI EXPORTNUM(173) PHYSICAL_ADDRESS NTAPI MmGetPhysicalAddress
 // ******************************************************************
 // * MmIsAddressValid
 // ******************************************************************
-XBSYSAPI EXPORTNUM(174) BOOLEAN NTAPI MmIsAddressValid
+XBSYSAPI EXPORTNUM(174) boolean_t NTAPI MmIsAddressValid
 (
 	IN PVOID   VirtualAddress
 );
@@ -115,7 +115,7 @@ XBSYSAPI EXPORTNUM(175) void_t NTAPI MmLockUnlockBufferPages
 (
     IN PVOID             BaseAddress,
     IN SIZE_T            NumberOfBytes,
-    IN BOOLEAN           UnlockPages
+    IN boolean_t           UnlockPages
 );
 
 // ******************************************************************
@@ -124,7 +124,7 @@ XBSYSAPI EXPORTNUM(175) void_t NTAPI MmLockUnlockBufferPages
 XBSYSAPI EXPORTNUM(176) void_t NTAPI MmLockUnlockPhysicalPage
 (
 	IN ULONG_PTR PhysicalAddress,
-	IN BOOLEAN UnlockPage
+	IN boolean_t UnlockPage
 );
 
 // ******************************************************************
@@ -144,7 +144,7 @@ XBSYSAPI EXPORTNUM(178) void_t NTAPI MmPersistContiguousMemory
 (
     IN PVOID   BaseAddress,
     IN ULONG   NumberOfBytes,
-    IN BOOLEAN Persist
+    IN boolean_t Persist
 );
 
 // ******************************************************************

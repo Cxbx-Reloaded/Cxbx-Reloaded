@@ -149,7 +149,7 @@ XBSYSAPI EXPORTNUM(168) xbox::PVOID NTAPI xbox::MmClaimGpuInstanceMemory
 XBSYSAPI EXPORTNUM(169) xbox::PVOID NTAPI xbox::MmCreateKernelStack
 (
 	IN ULONG	NumberOfBytes,
-	IN BOOLEAN  DebuggerThread
+	IN boolean_t  DebuggerThread
 )
 {
 	LOG_FUNC_BEGIN
@@ -251,14 +251,14 @@ XBSYSAPI EXPORTNUM(173) xbox::PHYSICAL_ADDRESS NTAPI xbox::MmGetPhysicalAddress
 // ******************************************************************
 // * 0x00AE - MmIsAddressValid()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(174) xbox::BOOLEAN NTAPI xbox::MmIsAddressValid
+XBSYSAPI EXPORTNUM(174) xbox::boolean_t NTAPI xbox::MmIsAddressValid
 (
 	IN PVOID   VirtualAddress
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(VirtualAddress);
 
-	BOOLEAN Ret = FALSE;
+	boolean_t Ret = FALSE;
 
 	if (g_VMManager.IsValidVirtualAddress((VAddr)VirtualAddress)) { Ret = TRUE; }
 
@@ -272,7 +272,7 @@ XBSYSAPI EXPORTNUM(175) xbox::void_t NTAPI xbox::MmLockUnlockBufferPages
 (
 	IN PVOID	        BaseAddress,
 	IN SIZE_T			NumberOfBytes,
-	IN BOOLEAN			UnlockPages
+	IN boolean_t			UnlockPages
 )
 {
 	LOG_FUNC_BEGIN
@@ -292,7 +292,7 @@ XBSYSAPI EXPORTNUM(175) xbox::void_t NTAPI xbox::MmLockUnlockBufferPages
 XBSYSAPI EXPORTNUM(176) xbox::void_t NTAPI xbox::MmLockUnlockPhysicalPage
 (
 	IN ULONG_PTR PhysicalAddress,
-	IN BOOLEAN UnlockPage
+	IN boolean_t UnlockPage
 )
 {
 	LOG_FUNC_BEGIN
@@ -341,7 +341,7 @@ XBSYSAPI EXPORTNUM(178) xbox::void_t NTAPI xbox::MmPersistContiguousMemory
 (
 	IN PVOID   BaseAddress,
 	IN ULONG   NumberOfBytes,
-	IN BOOLEAN Persist
+	IN boolean_t Persist
 )
 {
 	LOG_FUNC_BEGIN

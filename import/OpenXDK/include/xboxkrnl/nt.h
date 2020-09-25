@@ -69,7 +69,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI NtCreateEvent
     OUT PHANDLE             EventHandle,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
     IN  EVENT_TYPE          EventType,
-    IN  BOOLEAN             InitialState
+    IN  boolean_t             InitialState
 );
 
 
@@ -111,7 +111,7 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI NtCreateMutant
 (
     OUT PHANDLE             MutantHandle,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-    IN  BOOLEAN             InitialOwner
+    IN  boolean_t             InitialOwner
 );
 
 // ******************************************************************
@@ -273,7 +273,7 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
     IN  ULONG                       Length,
     IN  FILE_INFORMATION_CLASS      FileInformationClass,
     IN  PSTRING                     FileMask,
-    IN  BOOLEAN                     RestartScan
+    IN  boolean_t                     RestartScan
 );
 
 // ******************************************************************
@@ -283,7 +283,7 @@ XBSYSAPI EXPORTNUM(208) NTSTATUS NTAPI NtQueryDirectoryObject(
 	IN HANDLE DirectoryHandle,
 	OUT PVOID Buffer,
 	IN ULONG Length,
-	IN BOOLEAN RestartScan,
+	IN boolean_t RestartScan,
 	IN OUT PULONG Context,
 	OUT PULONG ReturnedLength OPTIONAL
 );
@@ -519,7 +519,7 @@ XBSYSAPI EXPORTNUM(229) NTSTATUS NTAPI NtSetTimerEx
 	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
 	IN KPROCESSOR_MODE ApcMode,
 	IN PVOID TimerContext OPTIONAL,
-	IN BOOLEAN WakeTimer,
+	IN boolean_t WakeTimer,
 	IN LONG Period OPTIONAL,
 	OUT PBOOLEAN PreviousState OPTIONAL
 );
@@ -532,7 +532,7 @@ XBSYSAPI EXPORTNUM(230) NTSTATUS NTAPI NtSignalAndWaitForSingleObjectEx
 	IN HANDLE SignalHandle,
 	IN HANDLE WaitHandle,
 	IN KPROCESSOR_MODE WaitMode,
-	IN BOOLEAN Alertable,
+	IN boolean_t Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
@@ -567,7 +567,7 @@ XBSYSAPI EXPORTNUM(232) void_t NTAPI NtUserIoApcDispatcher
 XBSYSAPI EXPORTNUM(233) NTSTATUS NTAPI NtWaitForSingleObject
 (
     IN  HANDLE  Handle,
-    IN  BOOLEAN Alertable,
+    IN  boolean_t Alertable,
 	IN	PLARGE_INTEGER Timeout
 );
 
@@ -578,7 +578,7 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI NtWaitForSingleObjectEx
 (
     IN  HANDLE          Handle,
     IN  char_t          WaitMode,
-    IN  BOOLEAN         Alertable,
+    IN  boolean_t         Alertable,
     IN  PLARGE_INTEGER  Timeout
 );
 
@@ -591,7 +591,7 @@ XBSYSAPI EXPORTNUM(235) NTSTATUS NTAPI NtWaitForMultipleObjectsEx
     IN  HANDLE         *Handles,
     IN  WAIT_TYPE       WaitType,
     IN  char_t          WaitMode,
-    IN  BOOLEAN         Alertable,
+    IN  boolean_t         Alertable,
     IN  PLARGE_INTEGER  Timeout
 );
 

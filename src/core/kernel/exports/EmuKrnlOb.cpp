@@ -66,7 +66,7 @@ XBSYSAPI EXPORTNUM(245) xbox::OBJECT_HANDLE_TABLE xbox::ObpObjectHandleTable = {
 
 xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
 
-xbox::BOOLEAN xbox::ObpCreatePermanentDirectoryObject(
+xbox::boolean_t xbox::ObpCreatePermanentDirectoryObject(
 	IN xbox::POBJECT_STRING DirectoryName OPTIONAL,
 	OUT xbox::POBJECT_DIRECTORY *DirectoryObject
 )
@@ -118,7 +118,7 @@ xbox::NTSTATUS xbox::ObpReferenceObjectByName(
 		RtlZeroMemory(&RemainingName, sizeof(OBJECT_STRING));
 	}
 
-	BOOLEAN ResolveSymbolicLink = TRUE;
+	boolean_t ResolveSymbolicLink = TRUE;
 	PVOID FoundObject;
 
 	if (RootDirectoryHandle != NULL) {
@@ -236,7 +236,7 @@ CleanupAndExit:
 	return status;
 }
 
-xbox::BOOLEAN xbox::ObInitSystem()
+xbox::boolean_t xbox::ObInitSystem()
 {
 	ObpObjectHandleTable.HandleCount = 0;
 	ObpObjectHandleTable.FirstFreeTableEntry = -1;
@@ -264,7 +264,7 @@ xbox::BOOLEAN xbox::ObInitSystem()
 	return TRUE;
 }
 
-xbox::BOOLEAN xbox::ObpExtendObjectHandleTable()
+xbox::boolean_t xbox::ObpExtendObjectHandleTable()
 {
 	PVOID* NewTable = (PVOID*)ExAllocatePoolWithTag(sizeof(PVOID) * OB_HANDLES_PER_TABLE, 'tHbO');
 	if (NewTable == NULL) {
@@ -542,10 +542,10 @@ xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 	return NULL;
 }
 
-xbox::BOOLEAN xbox::ObpLookupElementNameInDirectory(
+xbox::boolean_t xbox::ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
 	IN POBJECT_STRING ElementName,
-	IN BOOLEAN ResolveSymbolicLink,
+	IN boolean_t ResolveSymbolicLink,
 	OUT PVOID *ReturnedObject
 )
 {

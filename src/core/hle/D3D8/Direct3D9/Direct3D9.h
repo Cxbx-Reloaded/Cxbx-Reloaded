@@ -699,10 +699,10 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetVertexData4f_16)
 xbox::void_t WINAPI EMUPATCH(D3DDevice_SetVertexData4ub)
 (
 	INT		Register,
-	BYTE	a,
-	BYTE	b,
-	BYTE	c,
-	BYTE	d
+	byte_t	a,
+	byte_t	b,
+	byte_t	c,
+	byte_t	d
 );
 
 // ******************************************************************
@@ -1329,14 +1329,14 @@ xbox::void_t WINAPI EMUPATCH(D3DVertexBuffer_Lock)
     X_D3DVertexBuffer   *pVertexBuffer,
     UINT                OffsetToLock,
     UINT                SizeToLock,
-    BYTE              **ppbData,
+    byte_t              **ppbData,
     DWORD               Flags
 );
 
 // ******************************************************************
 // * patch: IDirect3DVertexBuffer8_Lock2
 // ******************************************************************
-BYTE* WINAPI EMUPATCH(D3DVertexBuffer_Lock2)
+byte_t* WINAPI EMUPATCH(D3DVertexBuffer_Lock2)
 (
     X_D3DVertexBuffer  *pVertexBuffer,
     DWORD               Flags

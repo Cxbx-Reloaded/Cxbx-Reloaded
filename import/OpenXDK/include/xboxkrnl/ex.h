@@ -121,7 +121,7 @@ XBSYSAPI EXPORTNUM(25) NTSTATUS NTAPI ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
 	IN ULONG	dwBufferSize,
-	IN BOOLEAN	bIsWriteMode
+	IN boolean_t	bIsWriteMode
 );
 
 XBSYSAPI EXPORTNUM(26) void_t NTAPI ExRaiseException

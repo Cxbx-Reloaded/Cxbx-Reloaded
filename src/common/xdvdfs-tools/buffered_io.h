@@ -10,7 +10,7 @@ extern "C" {
 namespace xbox
 {
 
-#define BOOL BOOLEAN
+#define BOOL xbox::boolean_t
 #define LPSTR LPCH
 
 // Determines how large a sector is
@@ -22,7 +22,7 @@ namespace xbox
 typedef struct {
 	DWORD	SectorList[DISK_BUFFER];		// Ring buffer for buffered disk i/o
 	DWORD	LockList[DISK_BUFFER];			// Lock for each buffered sector
-	BYTE	DiskBuffer[SECTOR_SIZE * DISK_BUFFER];	// Storage room for buffered sectors
+	xbox::byte_t	DiskBuffer[SECTOR_SIZE * DISK_BUFFER];	// Storage room for buffered sectors
 	DWORD	WriteIndex;						// Write pointer
 
 	// Pointer to arbitrary data passed at init

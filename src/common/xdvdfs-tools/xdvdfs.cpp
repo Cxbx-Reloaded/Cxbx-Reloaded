@@ -42,9 +42,9 @@ typedef struct {
 	WORD		RightSubTree;
 	DWORD		FileStartSector;
 	DWORD		FileSize;
-	BYTE		FileAttributes;
-	BYTE		FilenameLength;
-	BYTE		Filename[FILENAME_SIZE];
+	xbox::byte_t		FileAttributes;
+	xbox::byte_t		FilenameLength;
+	xbox::byte_t		Filename[FILENAME_SIZE];
 } XDVDFS_DIRECTORY_ENTRY, *PXDVDFS_DIRECTORY_ENTRY;
 
 // XDVDFS init a session object

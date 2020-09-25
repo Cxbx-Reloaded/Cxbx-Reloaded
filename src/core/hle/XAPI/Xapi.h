@@ -62,12 +62,12 @@ typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 // ******************************************************************
 typedef struct _XINPUT_POLLING_PARAMETERS
 {
-    BYTE       fAutoPoll        : 1;
-    BYTE       fInterruptOut    : 1;
-    BYTE       ReservedMBZ1     : 6;
-    BYTE       bInputInterval;
-    BYTE       bOutputInterval;
-    BYTE       ReservedMBZ2;
+    xbox::byte_t       fAutoPoll        : 1;
+    xbox::byte_t       fInterruptOut    : 1;
+    xbox::byte_t       ReservedMBZ1     : 6;
+    xbox::byte_t       bInputInterval;
+    xbox::byte_t       bOutputInterval;
+    xbox::byte_t       ReservedMBZ2;
 }
 XINPUT_POLLING_PARAMETERS, *PXINPUT_POLLING_PARAMETERS;
 
@@ -110,7 +110,7 @@ XPP_DEVICE_FEEDBACK_DESC, *PXPP_DEVICE_FEEDBACK_DESC;
 typedef struct _XID_TYPE_INFORMATION
 {
 	xbox::uchar_t				ucType;
-    BYTE				bRemainingHandles;
+    xbox::byte_t				bRemainingHandles;
 	xbox::uchar_t				ucUnknown[2];//probably for DWORD align
 	PXPP_DEVICE_TYPE    XppType;//pointer to DeviceType structure.
     PXPP_DEVICE_INPUTSTATE_DESC pInputStateDesc;//pointer to InputStateDesc structure
@@ -136,7 +136,7 @@ XDEVICE_PREALLOC_TYPE, *PXDEVICE_PREALLOC_TYPE;
 typedef struct _XINPUT_GAMEPAD
 {
     WORD    wButtons;
-    BYTE    bAnalogButtons[8];
+    xbox::byte_t    bAnalogButtons[8];
     SHORT   sThumbLX;
     SHORT   sThumbLY;
     SHORT   sThumbRX;
@@ -178,7 +178,7 @@ XINPUT_RUMBLE, *PXINPUT_RUMBLE;
 #include "AlignPrefix1.h"
 typedef struct _XINPUT_CAPABILITIES
 {
-    BYTE SubType;
+    xbox::byte_t SubType;
     WORD Reserved;
 
     union
@@ -243,9 +243,9 @@ typedef struct _XINPUT_FEEDBACK_HEADER
 {
     DWORD             dwStatus;
     HANDLE OPTIONAL   hEvent;
-    BYTE              Unknown1[4];
+    xbox::byte_t              Unknown1[4];
     PVOID             IoCompletedEvent; // PKEVENT really
-    BYTE              Unknown2[50];
+    xbox::byte_t              Unknown2[50];
 }
 #include "AlignPosfix1.h"
 XINPUT_FEEDBACK_HEADER, *PXINPUT_FEEDBACK_HEADER;
@@ -270,7 +270,7 @@ XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
 typedef struct _RTL_HEAP_PARAMETERS
 {
     ULONG   Length;
-    BYTE    Unknown[0x2C];
+    xbox::byte_t    Unknown[0x2C];
 }
 RTL_HEAP_PARAMETERS;
 
@@ -296,7 +296,7 @@ XTHREAD_NOTIFICATION, *PXTHREAD_NOTIFICATION;
 
 typedef struct _XCALCSIG_SIGNATURE
 {
-    BYTE    Signature[XCALCSIG_SIGNATURE_SIZE];
+    xbox::byte_t    Signature[XCALCSIG_SIGNATURE_SIZE];
 }
 XCALCSIG_SIGNATURE, *PXCALCSIG_SIGNATURE;
 
@@ -309,8 +309,8 @@ XCALCSIG_SIGNATURE, *PXCALCSIG_SIGNATURE;
 
 typedef struct _LAUNCH_DATA 
 {
-	BYTE	Data[MAX_LAUNCH_DATA_SIZE];
-} 
+	xbox::byte_t	Data[MAX_LAUNCH_DATA_SIZE];
+}
 LAUNCH_DATA, *PLAUNCH_DATA;
 
 #define LDT_TITLE                 0
@@ -781,7 +781,7 @@ HANDLE WINAPI EMUPATCH(XCalculateSignatureBeginEx)
 DWORD WINAPI EMUPATCH(XCalculateSignatureUpdate)
 (
   HANDLE        hCalcSig,
-  const BYTE    *pbData,
+  const xbox::byte_t    *pbData,
   ULONG         cbData
 );
 

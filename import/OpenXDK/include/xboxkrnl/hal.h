@@ -63,7 +63,7 @@ XBSYSAPI EXPORTNUM(45) NTSTATUS NTAPI HalReadSMBusValue
 (
     IN uchar_t   Address,
     IN uchar_t   Command,
-    IN BOOLEAN WriteWord,
+    IN boolean_t WriteWord,
     OUT PULONG DataValue
 );
 
@@ -77,7 +77,7 @@ XBSYSAPI EXPORTNUM(46) void_t NTAPI HalReadWritePCISpace
   IN ULONG   RegisterNumber,
   IN PVOID   Buffer,
   IN ULONG   Length,
-  IN BOOLEAN WritePCISpace
+  IN boolean_t WritePCISpace
 );
 
 typedef void_t (*PHAL_SHUTDOWN_NOTIFICATION)(
@@ -92,7 +92,7 @@ typedef struct _HAL_SHUTDOWN_REGISTRATION {
 
 XBSYSAPI EXPORTNUM(47) void_t NTAPI HalRegisterShutdownNotification(
     IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
-    IN BOOLEAN Register
+    IN boolean_t Register
 );
 
 XBSYSAPI EXPORTNUM(46) void_t FASTCALL HalRequestSoftwareInterrupt
@@ -119,7 +119,7 @@ XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
 (
     uchar_t   Address,
     uchar_t   Command,
-    BOOLEAN WriteWord,
+    boolean_t WriteWord,
     ULONG   DataValue
 );
 
@@ -188,7 +188,7 @@ XBSYSAPI EXPORTNUM(334) void_t NTAPI WRITE_PORT_BUFFER_ULONG
 // ******************************************************************
 XBSYSAPI EXPORTNUM(356) DWORD HalBootSMCVideoMode;
 
-XBSYSAPI EXPORTNUM(358) BOOLEAN NTAPI HalIsResetOrShutdownPending
+XBSYSAPI EXPORTNUM(358) boolean_t NTAPI HalIsResetOrShutdownPending
 (
 );
 

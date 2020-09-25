@@ -945,7 +945,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
-			XboxVertexElementByteSize = 1 * sizeof(xbox::BYTE);
+			XboxVertexElementByteSize = 1 * sizeof(xbox::byte_t);
 			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_PBYTE2: // 0x24:
@@ -958,7 +958,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			}
-			XboxVertexElementByteSize = 2 * sizeof(xbox::BYTE);
+			XboxVertexElementByteSize = 2 * sizeof(xbox::byte_t);
 			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_PBYTE3: // 0x34:
@@ -971,7 +971,7 @@ private:
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
-			XboxVertexElementByteSize = 3 * sizeof(xbox::BYTE);
+			XboxVertexElementByteSize = 3 * sizeof(xbox::byte_t);
 			NeedPatching = TRUE;
 			break;
 		case xbox::X_D3DVSDT_PBYTE4: // 0x44:
@@ -985,7 +985,7 @@ private:
 			{
 				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
-				XboxVertexElementByteSize = 4 * sizeof(xbox::BYTE);
+				XboxVertexElementByteSize = 4 * sizeof(xbox::byte_t);
 				NeedPatching = TRUE;
 			}
 			break;

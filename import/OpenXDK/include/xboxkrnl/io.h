@@ -44,7 +44,7 @@ XBSYSAPI EXPORTNUM(61) PVOID NTAPI IoBuildDeviceIoControlRequest
 	IN ULONG InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
 	IN ULONG OutputBufferLength OPTIONAL,
-	IN BOOLEAN InternalDeviceIoControl,
+	IN boolean_t InternalDeviceIoControl,
 	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 );
@@ -72,7 +72,7 @@ XBSYSAPI EXPORTNUM(63) NTSTATUS NTAPI IoCheckShareAccess
 	IN ULONG DesiredShareAccess,
 	OUT PFILE_OBJECT FileObject,
 	OUT PSHARE_ACCESS ShareAccess,
-	IN BOOLEAN Update
+	IN boolean_t Update
 );
 
 // ******************************************************************
@@ -89,7 +89,7 @@ XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 	IN  ULONG				DeviceExtensionSize,
 	IN  PSTRING				DeviceName OPTIONAL,
 	IN  ULONG				DeviceType,
-	IN  BOOLEAN				Exclusive,
+	IN  boolean_t				Exclusive,
 	OUT PDEVICE_OBJECT*		DeviceObject
 );
 
@@ -275,7 +275,7 @@ XBSYSAPI EXPORTNUM(84) NTSTATUS NTAPI IoSynchronousDeviceIoControlRequest
 	OUT PVOID OutputBuffer OPTIONAL,
 	IN ULONG OutputBufferLength,
 	OUT PULONG ReturnedOutputBufferLength OPTIONAL,
-	IN BOOLEAN InternalDeviceIoControl
+	IN boolean_t InternalDeviceIoControl
 );
 
 // ******************************************************************

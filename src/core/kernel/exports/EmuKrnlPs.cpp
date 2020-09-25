@@ -169,7 +169,7 @@ XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  BOOLEAN         DebuggerThread
+	IN  boolean_t         DebuggerThread
 )
 {
 	LOG_FORWARD("PsCreateSystemThreadEx");
@@ -213,8 +213,8 @@ XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  BOOLEAN         CreateSuspended,
-	IN  BOOLEAN         DebuggerThread,
+	IN  boolean_t         CreateSuspended,
+	IN  boolean_t         DebuggerThread,
 	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 )
 {

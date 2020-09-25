@@ -4803,10 +4803,10 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 (
 	INT		Register,
-	BYTE	a,
-	BYTE	b,
-	BYTE	c,
-	BYTE	d
+	byte_t	a,
+	byte_t	b,
+	byte_t	c,
+	byte_t	d
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexData4f");

@@ -27,6 +27,9 @@
 
 #undef UNICODE // make sure dxerr.h DXGetErrorString is aliassed to *A, not *W
 
+// NOTE: required because XbD3D8Types.h is included in places where xbox_types.h is not, which causes compiler errors because of the undefined types
+#include "xbox_types.h"
+
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
 #include <d3d9.h>

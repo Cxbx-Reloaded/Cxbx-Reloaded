@@ -352,7 +352,7 @@ typedef struct _FILE_FS_VOLUME_INFORMATION {
 	LARGE_INTEGER	VolumeCreationTime;
 	ULONG			VolumeSerialNumber;
 	ULONG			VolumeLabelLength;
-	BOOLEAN			SupportsObjects;
+	boolean_t			SupportsObjects;
 	char_t			VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
@@ -639,7 +639,7 @@ FILE_DIRECTORY_INFORMATION;
 // ******************************************************************
 typedef struct _FILE_RENAME_INFORMATION
 {
-	BOOLEAN         ReplaceIfExists;
+	boolean_t         ReplaceIfExists;
 	HANDLE          RootDirectory;
 	OBJECT_STRING   FileName;
 }
@@ -649,7 +649,7 @@ FILE_RENAME_INFORMATION;
 // * FILE_LINK_INFORMATION
 // ******************************************************************
 typedef struct _FILE_LINK_INFORMATION {
-	BOOLEAN         ReplaceIfExists;
+	boolean_t         ReplaceIfExists;
 	HANDLE          RootDirectory;
 	ULONG           FileNameLength;
 	char_t            FileName[1];
@@ -697,8 +697,8 @@ typedef struct _FILE_STANDARD_INFORMATION {
 	LARGE_INTEGER   AllocationSize;
 	LARGE_INTEGER   EndOfFile;
 	ULONG           NumberOfLinks;
-	BOOLEAN         DeletePending;
-	BOOLEAN         Directory;
+	boolean_t         DeletePending;
+	boolean_t         Directory;
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
 
 // ******************************************************************
@@ -770,7 +770,7 @@ typedef struct _FILE_ALL_INFORMATION {
 // * FILE_DISPOSITION_INFORMATION
 // ******************************************************************
 typedef struct _FILE_DISPOSITION_INFORMATION {
-	BOOLEAN         DeleteFile;
+	boolean_t         DeleteFile;
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
 
 // ******************************************************************
@@ -964,7 +964,7 @@ typedef void_t(NTAPI *PTIMER_APC_ROUTINE)
 typedef struct _TIMER_BASIC_INFORMATION
 {
 	LARGE_INTEGER TimeRemaining;
-	BOOLEAN SignalState;
+	boolean_t SignalState;
 }
 TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
 
@@ -1169,7 +1169,7 @@ typedef struct _DASH_LAUNCH_DATA
 	DWORD dwContext;
 	DWORD dwParameter1;
 	DWORD dwParameter2;
-	BYTE  Reserved[3072 - 16];
+	byte_t  Reserved[3072 - 16];
 }
 DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
 
@@ -1240,8 +1240,8 @@ SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 typedef struct _MUTANT_BASIC_INFORMATION
 {
 	LONG CurrentCount;
-	BOOLEAN OwnedByCaller;
-	BOOLEAN AbandonedState;
+	boolean_t OwnedByCaller;
+	boolean_t AbandonedState;
 }
 MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
@@ -1266,7 +1266,7 @@ typedef struct _KDEVICE_QUEUE
 {
 	CSHORT Type;                // 0x00
 	uchar_t Size;                 // 0x02
-	BOOLEAN Busy;               // 0x04
+	boolean_t Busy;               // 0x04
 	LIST_ENTRY DeviceListHead;  // 0x08
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
@@ -1275,7 +1275,7 @@ typedef struct _KDEVICE_QUEUE_ENTRY
 {
 	LIST_ENTRY DeviceListEntry;
 	ULONG SortKey;
-	BOOLEAN Inserted;
+	boolean_t Inserted;
 } KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY, *RESTRICTED_POINTER PRKDEVICE_QUEUE_ENTRY;
 
 // ******************************************************************
@@ -1323,7 +1323,7 @@ typedef struct _DEVICE_OBJECT
 	uchar_t DeviceType;
 	uchar_t StartIoFlags;
 	cchar_t StackSize;
-	BOOLEAN DeletePending;
+	boolean_t DeletePending;
 	ULONG SectorSize;
 	ULONG AlignmentRequirement;
 	KDEVICE_QUEUE DeviceQueue;
@@ -1352,16 +1352,16 @@ typedef struct _IO_COMPLETION_CONTEXT
 typedef struct _FILE_OBJECT {
 	CSHORT                    Type;               // 0x00
 
-	BYTE                      DeletePending : 1;  // 0x02
-	BYTE                      ReadAccess : 1;     // 0x02
-	BYTE                      WriteAccess : 1;    // 0x02
-	BYTE                      DeleteAccess : 1;   // 0x02
-	BYTE                      SharedRead : 1;     // 0x02
-	BYTE                      SharedWrite : 1;    // 0x02
-	BYTE                      SharedDelete : 1;   // 0x02
-	BYTE                      Reserved : 1;       // 0x02
+	byte_t                      DeletePending : 1;  // 0x02
+	byte_t                      ReadAccess : 1;     // 0x02
+	byte_t                      WriteAccess : 1;    // 0x02
+	byte_t                      DeleteAccess : 1;   // 0x02
+	byte_t                      SharedRead : 1;     // 0x02
+	byte_t                      SharedWrite : 1;    // 0x02
+	byte_t                      SharedDelete : 1;   // 0x02
+	byte_t                      Reserved : 1;       // 0x02
 
-	BYTE                      Flags;              // 0x03
+	byte_t                      Flags;              // 0x03
 	PDEVICE_OBJECT            DeviceObject;       // 0x04
 	PVOID                     FsContext;          // 0x08
 	PVOID                     FsContext2;         // 0x0C
@@ -1378,13 +1378,13 @@ typedef struct _FILE_OBJECT {
 // * SHARE_ACCESS
 // ******************************************************************
 typedef struct _SHARE_ACCESS {
-	BYTE OpenCount;
-	BYTE Readers;
-	BYTE Writers;
-	BYTE Deleters;
-	BYTE SharedRead;
-	BYTE SharedWrite;
-	BYTE SharedDelete;
+	byte_t OpenCount;
+	byte_t Readers;
+	byte_t Writers;
+	byte_t Deleters;
+	byte_t SharedRead;
+	byte_t SharedWrite;
+	byte_t SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
 // ******************************************************************
@@ -1457,7 +1457,7 @@ typedef struct _KDPC
 	union
 	{
 		uchar_t           Number;             // 0x02
-		BOOLEAN         Inserted;           // 0x02
+		boolean_t         Inserted;           // 0x02
 	};
 	uchar_t               Importance;         // 0x03
     LIST_ENTRY          DpcListEntry;       // 0x04
@@ -1549,7 +1549,7 @@ typedef void_t (*PKRUNDOWN_ROUTINE)
 // ******************************************************************
 // * PKSYNCHRONIZE_ROUTINE
 // ******************************************************************
-typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)
+typedef boolean_t (*PKSYNCHRONIZE_ROUTINE)
 (
 	IN PVOID SynchronizeContext
 );
@@ -1557,7 +1557,7 @@ typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)
 // ******************************************************************
 // * PKSERVICE_ROUTINE
 // ******************************************************************
-typedef BOOLEAN (*PKSERVICE_ROUTINE)
+typedef boolean_t (*PKSERVICE_ROUTINE)
 (
 	IN struct _KINTERRUPT *Interrupt,
 	IN PVOID ServiceContext
@@ -1606,8 +1606,8 @@ typedef struct _KINTERRUPT
 	/* 0x04= 4 */ PVOID ServiceContext;
 	/* 0x08= 8 */ ULONG BusInterruptLevel;
 	/* 0x0C=12 */ ULONG Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
-	/* 0x10=16 */ BOOLEAN Connected;
-	/* 0x11=17 */ BOOLEAN ShareVector;
+	/* 0x10=16 */ boolean_t Connected;
+	/* 0x11=17 */ boolean_t ShareVector;
 	/* 0x12=18 */ KINTERRUPT_MODE Mode;
 	/* 0x14=20 */ ULONG ServiceCount;
 	/* 0x18=24 */ ULONG DispatchCode[DISPATCH_SIZE]; // Same as old : unsigned char ISR[0x58];
@@ -1737,7 +1737,7 @@ typedef struct _KMUTANT {
 	DISPATCHER_HEADER Header;
 	LIST_ENTRY MutantListEntry;
 	struct _KTHREAD *RESTRICTED_POINTER OwnerThread;
-	BOOLEAN Abandoned;
+	boolean_t Abandoned;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT;
 
 // ******************************************************************
@@ -1845,7 +1845,7 @@ typedef struct _KAPC
 {
 	/* 0x0/0 */ USHORT Type;
 	/* 0x2/2 */ KPROCESSOR_MODE ApcMode;
-	/* 0x3/3 */ BOOLEAN Inserted;
+	/* 0x3/3 */ boolean_t Inserted;
 	/* 0x4/4 */ PKTHREAD Thread;
 	/* 0x8/8 */ LIST_ENTRY ApcListEntry;
 	/* 0x10/16 */ PKKERNEL_ROUTINE KernelRoutine;
@@ -1934,7 +1934,7 @@ typedef void_t(*PCREATE_THREAD_NOTIFY_ROUTINE)
 (
 	IN PETHREAD Thread,
 	IN HANDLE ThreadId,
-	IN BOOLEAN Create
+	IN boolean_t Create
 );
 
 // ******************************************************************
@@ -2466,7 +2466,7 @@ typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
 	ULONG SectionReferenceCount; // Section reference count - when >= 1, section is loaded
 	PUSHORT HeadReferenceCount; // Pointer to head shared page reference counter
 	PUSHORT TailReferenceCount; // Pointer to tail shared page reference counter
-	BYTE ShaHash[20];         // SHA hash.  Hash DWORD containing FileSize, then hash section.
+	byte_t ShaHash[20];         // SHA hash.  Hash DWORD containing FileSize, then hash section.
 }
 XBEIMAGE_SECTION, *PXBEIMAGE_SECTION;
 
@@ -2522,9 +2522,9 @@ typedef struct _FLOATING_SAVE_AREA
     DWORD DataSelector;
     DWORD MXCsr;
     DWORD Reserved2;
-    BYTE RegisterArea[128];
-    BYTE XmmRegisterArea[128];
-    BYTE Reserved4[224];
+    byte_t RegisterArea[128];
+    byte_t XmmRegisterArea[128];
+    byte_t Reserved4[224];
     DWORD Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 #pragma pack(pop)
@@ -2556,7 +2556,7 @@ typedef void_t(*PIDE_INTERRUPT_ROUTINE) (void);
 
 typedef void_t(*PIDE_FINISHIO_ROUTINE) (void);
 
-typedef BOOLEAN(*PIDE_POLL_RESET_COMPLETE_ROUTINE) (void);
+typedef boolean_t(*PIDE_POLL_RESET_COMPLETE_ROUTINE) (void);
 
 typedef void_t(*PIDE_TIMEOUT_EXPIRED_ROUTINE) (void);
 
@@ -2576,9 +2576,9 @@ typedef struct _IDE_CHANNEL_OBJECT
     PIDE_START_PACKET_ROUTINE StartPacketRoutine;
     PIDE_START_NEXT_PACKET_ROUTINE StartNextPacketRoutine;
     KIRQL InterruptIrql;
-    BOOLEAN ExpectingBusMasterInterrupt;
-    BOOLEAN StartPacketBusy;
-    BOOLEAN StartPacketRequested;
+    boolean_t ExpectingBusMasterInterrupt;
+    boolean_t StartPacketBusy;
+    boolean_t StartPacketRequested;
     uchar_t Timeout;
     uchar_t IoRetries;
     uchar_t MaximumIoRetries;

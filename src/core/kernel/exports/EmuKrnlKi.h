@@ -87,13 +87,13 @@ namespace xbox
 		IN PKTIMER Timer
 	);
 
-	BOOLEAN FASTCALL KiInsertTimerTable
+	boolean_t FASTCALL KiInsertTimerTable
 	(
 		IN PKTIMER Timer,
 		IN ULONG Hand
 	);
 
-	BOOLEAN FASTCALL KiInsertTreeTimer
+	boolean_t FASTCALL KiInsertTreeTimer
 	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER Interval
@@ -104,14 +104,14 @@ namespace xbox
 		IN ULONGLONG Interval
 	);
 
-	BOOLEAN KiComputeDueTime
+	boolean_t KiComputeDueTime
 	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER DueTime,
 		OUT PULONG Hand
 	);
 
-	BOOLEAN FASTCALL KiSignalTimer
+	boolean_t FASTCALL KiSignalTimer
 	(
 		IN PKTIMER Timer
 	);

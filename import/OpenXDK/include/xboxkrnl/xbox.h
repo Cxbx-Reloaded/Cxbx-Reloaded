@@ -133,12 +133,12 @@ XBSYSAPI EXPORTNUM(37) NTSTATUS NTAPI FscSetCacheSize
 // ******************************************************************
 // * 0x0058 - KdDebuggerEnabled
 // ******************************************************************
-XBSYSAPI EXPORTNUM(88) BOOLEAN KdDebuggerEnabled;
+XBSYSAPI EXPORTNUM(88) boolean_t KdDebuggerEnabled;
 
 // ******************************************************************
 // * 0x0059 - KdDebuggerNotPresent
 // ******************************************************************
-XBSYSAPI EXPORTNUM(89) BOOLEAN KdDebuggerNotPresent;
+XBSYSAPI EXPORTNUM(89) boolean_t KdDebuggerNotPresent;
 
 // ******************************************************************
 // * 0x00A0 - KfRaiseIrql()
@@ -226,7 +226,7 @@ XBSYSAPI EXPORTNUM(324) XBOX_KRNL_VERSION XboxKrnlVersion;
 // ******************************************************************
 // * 0x0145 - XboxSignatureKey
 // ******************************************************************
-XBSYSAPI EXPORTNUM(325) BYTE XboxSignatureKey[16];
+XBSYSAPI EXPORTNUM(325) byte_t XboxSignatureKey[16];
 
 // ******************************************************************
 // * 0x0146 - XeImageFileName
@@ -341,7 +341,7 @@ XBSYSAPI EXPORTNUM(343) ULONG NTAPI XcPKGetKeyLen
 // ******************************************************************
 // * 0x0158 - XcVerifyPKCS1Signature()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(344) BOOLEAN NTAPI XcVerifyPKCS1Signature
+XBSYSAPI EXPORTNUM(344) boolean_t NTAPI XcVerifyPKCS1Signature
 (
 	IN PUCHAR pbSig,
 	IN PUCHAR pbPubKey,
@@ -424,7 +424,7 @@ typedef void_t(NTAPI *pfXcHMAC)(PBYTE pbKeyMaterial, ULONG cbKeyMaterial, PBYTE 
 typedef ULONG(NTAPI *pfXcPKEncPublic)(PUCHAR pbPubKey, PUCHAR pbInput, PUCHAR pbOutput);
 typedef ULONG(NTAPI *pfXcPKDecPrivate)(PUCHAR pbPrvKey, PUCHAR pbInput, PUCHAR pbOutput);
 typedef ULONG(NTAPI *pfXcPKGetKeyLen)(PUCHAR pbPubKey);
-typedef BOOLEAN(NTAPI *pfXcVerifyPKCS1Signature)(PUCHAR pbSig, PUCHAR pbPubKey, PUCHAR pbDigest);
+typedef boolean_t(NTAPI *pfXcVerifyPKCS1Signature)(PUCHAR pbSig, PUCHAR pbPubKey, PUCHAR pbDigest);
 typedef ULONG(NTAPI *pfXcModExp)(LPDWORD pA, LPDWORD pB, LPDWORD pC, LPDWORD pD, ULONG dwN);
 typedef void_t(NTAPI *pfXcDESKeyParity)(PUCHAR pbKey, ULONG dwKeyLength);
 typedef void_t(NTAPI *pfXcKeyTable)(ULONG dwCipher, PUCHAR pbKeyTable, PUCHAR pbKey);

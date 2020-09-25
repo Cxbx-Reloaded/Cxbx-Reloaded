@@ -54,7 +54,7 @@ typedef struct _OBJECT_HEADER_NAME_INFO {
 #define OBJECT_HEADER_NAME_INFO_TO_OBJECT(ObjectHeaderNameInfo) (&OBJECT_HEADER_NAME_INFO_TO_OBJECT_HEADER(ObjectHeaderNameInfo)->Body)
 
 HANDLE ObpCreateObjectHandle(PVOID Object);
-BOOLEAN ObpCreatePermanentDirectoryObject(
+boolean_t ObpCreatePermanentDirectoryObject(
 	IN POBJECT_STRING DirectoryName OPTIONAL,
 	OUT POBJECT_DIRECTORY *DirectoryObject
 );
@@ -74,17 +74,17 @@ NTSTATUS ObpReferenceObjectByName(
 	(p)->ObjectName = n;      \
 }
 
-BOOLEAN ObInitSystem();
-BOOLEAN ObpExtendObjectHandleTable();
+boolean_t ObInitSystem();
+boolean_t ObpExtendObjectHandleTable();
 void_t ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
 PVOID ObpGetObjectHandleContents(HANDLE Handle);
 PVOID ObpGetObjectHandleReference(HANDLE Handle);
 ULONG FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
 
-BOOLEAN ObpLookupElementNameInDirectory(
+boolean_t ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
 	IN POBJECT_STRING ElementName,
-	IN BOOLEAN ResolveSymbolicLink,
+	IN boolean_t ResolveSymbolicLink,
 	OUT PVOID *ReturnedObject
 );
 

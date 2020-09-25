@@ -474,7 +474,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
 	IN ULONG	dwBufferSize,
-	IN BOOLEAN	bIsWriteMode
+	IN boolean_t	bIsWriteMode
 )
 {
 	LOG_FUNC_BEGIN

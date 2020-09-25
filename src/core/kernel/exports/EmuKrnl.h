@@ -43,7 +43,7 @@ void InsertHeadList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry);
 void InsertTailList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry);
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
 
-xbox::BOOLEAN RemoveEntryList(xbox::PLIST_ENTRY pEntry);
+xbox::boolean_t RemoveEntryList(xbox::PLIST_ENTRY pEntry);
 xbox::PLIST_ENTRY RemoveHeadList(xbox::PLIST_ENTRY pListHead);
 xbox::PLIST_ENTRY RemoveTailList(xbox::PLIST_ENTRY pListHead);
 
@@ -88,8 +88,8 @@ public:
 			m_Pending = false;
 		}
 
-		BOOLEAN(__stdcall *ServiceRoutine)(xbox::PKINTERRUPT, void*) = (BOOLEAN(__stdcall *)(xbox::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
-		BOOLEAN result = ServiceRoutine(Interrupt, Interrupt->ServiceContext);
+		xbox::boolean_t(__stdcall *ServiceRoutine)(xbox::PKINTERRUPT, void*) = (xbox::boolean_t(__stdcall *)(xbox::PKINTERRUPT, void*))Interrupt->ServiceRoutine;
+		xbox::boolean_t result = ServiceRoutine(Interrupt, Interrupt->ServiceContext);
 	}
 private:
 	bool m_Asserted = false;

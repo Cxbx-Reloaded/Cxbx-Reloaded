@@ -223,7 +223,7 @@ XBSYSAPI EXPORTNUM(189) xbox::NTSTATUS NTAPI xbox::NtCreateEvent
 	OUT PHANDLE             EventHandle,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
 	IN  EVENT_TYPE          EventType,
-	IN  BOOLEAN             InitialState
+	IN  boolean_t             InitialState
 )
 {
 	LOG_FUNC_BEGIN
@@ -358,7 +358,7 @@ XBSYSAPI EXPORTNUM(192) xbox::NTSTATUS NTAPI xbox::NtCreateMutant
 (
 	OUT PHANDLE             MutantHandle,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-	IN  BOOLEAN             InitialOwner
+	IN  boolean_t             InitialOwner
 )
 {
 	LOG_FUNC_BEGIN
@@ -1037,7 +1037,7 @@ XBSYSAPI EXPORTNUM(207) xbox::NTSTATUS NTAPI xbox::NtQueryDirectoryFile
 	IN  ULONG                       Length,
 	IN  FILE_INFORMATION_CLASS      FileInformationClass,
 	IN  PSTRING                     FileMask,
-	IN  BOOLEAN                     RestartScan
+	IN  boolean_t                     RestartScan
 )
 {
 	LOG_FUNC_BEGIN
@@ -1131,7 +1131,7 @@ XBSYSAPI EXPORTNUM(208) xbox::NTSTATUS NTAPI xbox::NtQueryDirectoryObject
 	IN HANDLE DirectoryHandle,
 	OUT PVOID Buffer,
 	IN ULONG Length,
-	IN BOOLEAN RestartScan,
+	IN boolean_t RestartScan,
 	IN OUT PULONG Context,
 	OUT PULONG ReturnedLength OPTIONAL
 )
@@ -1937,7 +1937,7 @@ XBSYSAPI EXPORTNUM(229) xbox::NTSTATUS NTAPI xbox::NtSetTimerEx
 	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
 	IN KPROCESSOR_MODE ApcMode,
 	IN PVOID TimerContext OPTIONAL,
-	IN BOOLEAN WakeTimer,
+	IN boolean_t WakeTimer,
 	IN LONG Period OPTIONAL,
 	OUT PBOOLEAN PreviousState OPTIONAL
 )
@@ -1978,7 +1978,7 @@ XBSYSAPI EXPORTNUM(230) xbox::NTSTATUS NTAPI xbox::NtSignalAndWaitForSingleObjec
 	IN HANDLE SignalHandle,
 	IN HANDLE WaitHandle,
 	IN KPROCESSOR_MODE WaitMode,
-	IN BOOLEAN Alertable,
+	IN boolean_t Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
@@ -2057,7 +2057,7 @@ XBSYSAPI EXPORTNUM(232) xbox::void_t NTAPI xbox::NtUserIoApcDispatcher
 XBSYSAPI EXPORTNUM(233) xbox::NTSTATUS NTAPI xbox::NtWaitForSingleObject
 (
     IN  HANDLE  Handle,
-    IN  BOOLEAN Alertable,
+    IN  boolean_t Alertable,
     IN  PLARGE_INTEGER   Timeout
 )
 {
@@ -2080,7 +2080,7 @@ XBSYSAPI EXPORTNUM(234) xbox::NTSTATUS NTAPI xbox::NtWaitForSingleObjectEx
 (
 	IN  HANDLE          Handle,
 	IN  KPROCESSOR_MODE WaitMode,
-	IN  BOOLEAN         Alertable,
+	IN  boolean_t         Alertable,
 	IN  PLARGE_INTEGER  Timeout
 )
 {
@@ -2105,7 +2105,7 @@ XBSYSAPI EXPORTNUM(235) xbox::NTSTATUS NTAPI xbox::NtWaitForMultipleObjectsEx
 	IN  HANDLE         *Handles,
 	IN  WAIT_TYPE       WaitType,
 	IN  char_t            WaitMode,
-	IN  BOOLEAN         Alertable,
+	IN  boolean_t         Alertable,
 	IN  PLARGE_INTEGER  Timeout
 )
 {

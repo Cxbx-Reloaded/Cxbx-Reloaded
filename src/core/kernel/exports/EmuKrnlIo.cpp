@@ -94,7 +94,7 @@ XBSYSAPI EXPORTNUM(61) xbox::PVOID NTAPI xbox::IoBuildDeviceIoControlRequest
 	IN ULONG InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
 	IN ULONG OutputBufferLength OPTIONAL,
-	IN BOOLEAN InternalDeviceIoControl,
+	IN boolean_t InternalDeviceIoControl,
 	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 )
@@ -158,7 +158,7 @@ XBSYSAPI EXPORTNUM(63) xbox::NTSTATUS NTAPI xbox::IoCheckShareAccess
 	IN ULONG DesiredShareAccess,
 	OUT PFILE_OBJECT FileObject,
 	OUT PSHARE_ACCESS ShareAccess,
-	IN BOOLEAN Update
+	IN boolean_t Update
 )
 {
 	LOG_FUNC_BEGIN
@@ -197,7 +197,7 @@ XBSYSAPI EXPORTNUM(65) xbox::NTSTATUS NTAPI xbox::IoCreateDevice
 	IN  ULONG				DeviceExtensionSize,
 	IN  PSTRING				DeviceName OPTIONAL,
 	IN  ULONG				DeviceType,
-	IN  BOOLEAN				Exclusive,
+	IN  boolean_t				Exclusive,
 	OUT PDEVICE_OBJECT*		DeviceObject
 )
 {
@@ -635,7 +635,7 @@ XBSYSAPI EXPORTNUM(84) xbox::NTSTATUS NTAPI xbox::IoSynchronousDeviceIoControlRe
 	OUT PVOID OutputBuffer OPTIONAL,
 	IN ULONG OutputBufferLength,
 	OUT PULONG ReturnedOutputBufferLength OPTIONAL,
-	IN BOOLEAN InternalDeviceIoControl
+	IN boolean_t InternalDeviceIoControl
 )
 {
 	LOG_FUNC_BEGIN

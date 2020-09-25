@@ -82,7 +82,7 @@ void InsertTailList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry)
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
 
 // Returns TRUE if the list has become empty after removing the element, FALSE otherwise.
-xbox::BOOLEAN RemoveEntryList(xbox::PLIST_ENTRY pEntry)
+xbox::boolean_t RemoveEntryList(xbox::PLIST_ENTRY pEntry)
 {
 	xbox::PLIST_ENTRY _EX_Flink = pEntry->Flink;
 	xbox::PLIST_ENTRY _EX_Blink = pEntry->Blink;

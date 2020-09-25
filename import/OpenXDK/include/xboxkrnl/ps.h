@@ -23,7 +23,7 @@ XBSYSAPI EXPORTNUM(254) NTSTATUS NTAPI PsCreateSystemThread
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  BOOLEAN         DebuggerThread
+	IN  boolean_t         DebuggerThread
 );
 
 // ******************************************************************
@@ -38,8 +38,8 @@ XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI PsCreateSystemThreadEx
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  BOOLEAN         CreateSuspended,
-	IN  BOOLEAN         DebuggerThread,
+	IN  boolean_t         CreateSuspended,
+	IN  boolean_t         DebuggerThread,
 	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 );
 

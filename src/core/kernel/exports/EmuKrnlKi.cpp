@@ -240,7 +240,7 @@ xbox::void_t FASTCALL xbox::KiCompleteTimer
 )
 {
 	LIST_ENTRY ListHead;
-	BOOLEAN RequestInterrupt = FALSE;
+	boolean_t RequestInterrupt = FALSE;
 
 	ASSERT_TIMER_LOCKED;
 
@@ -317,7 +317,7 @@ xbox::void_t xbox::KxRemoveTreeTimer
 	}
 }
 
-xbox::BOOLEAN FASTCALL xbox::KiInsertTimerTable
+xbox::boolean_t FASTCALL xbox::KiInsertTimerTable
 (
 	IN xbox::PKTIMER Timer,
 	IN xbox::ULONG Hand
@@ -325,7 +325,7 @@ xbox::BOOLEAN FASTCALL xbox::KiInsertTimerTable
 {
 	LARGE_INTEGER InterruptTime;
 	LONGLONG DueTime = Timer->DueTime.QuadPart;
-	BOOLEAN Expired = FALSE;
+	boolean_t Expired = FALSE;
 	PLIST_ENTRY ListHead, NextEntry;
 	PKTIMER CurrentTimer;
 
@@ -374,13 +374,13 @@ xbox::BOOLEAN FASTCALL xbox::KiInsertTimerTable
 	return Expired;
 }
 
-xbox::BOOLEAN FASTCALL xbox::KiInsertTreeTimer
+xbox::boolean_t FASTCALL xbox::KiInsertTreeTimer
 (
 	IN xbox::PKTIMER Timer,
 	IN xbox::LARGE_INTEGER Interval
 )
 {
-	BOOLEAN Inserted = FALSE;
+	boolean_t Inserted = FALSE;
 	ULONG Hand = 0;
 
 	ASSERT_TIMER_LOCKED;
@@ -413,7 +413,7 @@ xbox::ULONG xbox::KiComputeTimerTableIndex
 	return (Interval / CLOCK_TIME_INCREMENT) & (TIMER_TABLE_SIZE - 1);
 }
 
-xbox::BOOLEAN xbox::KiComputeDueTime
+xbox::boolean_t xbox::KiComputeDueTime
 (
 	IN  xbox::PKTIMER Timer,
 	IN  xbox::LARGE_INTEGER DueTime,
@@ -462,12 +462,12 @@ xbox::BOOLEAN xbox::KiComputeDueTime
 	return TRUE;
 }
 
-xbox::BOOLEAN FASTCALL xbox::KiSignalTimer
+xbox::boolean_t FASTCALL xbox::KiSignalTimer
 (
 	IN xbox::PKTIMER Timer
 )
 {
-	BOOLEAN RequestInterrupt = FALSE;
+	boolean_t RequestInterrupt = FALSE;
 	PKDPC Dpc = Timer->Dpc;
 	ULONG Period = Timer->Period;
 	LARGE_INTEGER Interval, SystemTime;

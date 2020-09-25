@@ -42,12 +42,12 @@ CONST char_t *XDVDFS_Signature = "MICROSOFT*XBOX*MEDIA";
 
 // XDVDFS Volume descriptor
 typedef struct {
-	BYTE		Signature1[SIGNATURE_SIZE];
+	xbox::byte_t		Signature1[SIGNATURE_SIZE];
 	DWORD		RootDirectory;
 	DWORD		RootDirectorySize;
 	FILETIME	ImageCreationTime;
-	BYTE		Unused[1992];
-	BYTE		Signature2[SIGNATURE_SIZE];
+	xbox::byte_t		Unused[1992];
+	xbox::byte_t		Signature2[SIGNATURE_SIZE];
 } XDVDFS_VOLUME_DESCRIPTOR, *PXDVDFS_VOLUME_DESCRIPTOR;
 
 // XDVDFS session
@@ -69,7 +69,7 @@ typedef struct {
 // File Record
 typedef struct {
 	DWORD	Magic;
-	BYTE	PartialData[SECTOR_SIZE];
+	xbox::byte_t	PartialData[SECTOR_SIZE];
 	DWORD	PartialSector;
 	DWORD	FileStartSector;
 	DWORD	FileSize;
@@ -82,7 +82,7 @@ typedef struct {
 	DWORD	SearchStartSector;
 	DWORD	DirectorySize;
 	DWORD	Position;
-	BYTE	CurrentFilename[FILENAME_SIZE];
+	xbox::byte_t	CurrentFilename[FILENAME_SIZE];
 	DWORD	CurrentFileAttributes;
 	DWORD	CurrentFileSize;
 	DWORD	CurrentFileStartSector;

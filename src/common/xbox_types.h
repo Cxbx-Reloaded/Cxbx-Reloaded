@@ -50,8 +50,8 @@ namespace xbox
 	typedef short               SHORT, CSHORT;
 	typedef long                LONG;
 	using uchar_t = std::uint8_t;
-	typedef unsigned char       BYTE;
-	typedef unsigned char       BOOLEAN;
+	using byte_t = std::uint8_t;
+	using boolean_t = std::uint8_t;
 	typedef unsigned short      USHORT;
 	typedef unsigned short      WORD;
 	typedef unsigned long       ULONG;
@@ -80,8 +80,8 @@ namespace xbox
 	typedef char_t *PCHAR;
 	typedef char_t *PSZ;
 	typedef char_t *PCSZ;
-	typedef BYTE *PBYTE;
-	typedef BOOLEAN *PBOOLEAN;
+	typedef byte_t *PBYTE;
+	typedef boolean_t *PBOOLEAN;
 	typedef uchar_t *PUCHAR;
 	typedef USHORT *PUSHORT;
 	typedef unsigned int *PUINT;

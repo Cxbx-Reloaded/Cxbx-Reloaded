@@ -461,7 +461,7 @@ XBSYSAPI EXPORTNUM(270) xbox::LONG NTAPI xbox::RtlCompareString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_t CaseInSensitive
 )
 {
 	LOG_FUNC_BEGIN
@@ -496,7 +496,7 @@ XBSYSAPI EXPORTNUM(271) xbox::LONG NTAPI xbox::RtlCompareUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_t CaseInSensitive
 )
 {
 	LOG_FUNC_BEGIN
@@ -587,7 +587,7 @@ XBSYSAPI EXPORTNUM(273) xbox::void_t NTAPI xbox::RtlCopyUnicodeString
 // ******************************************************************
 // * 0x0112 - RtlCreateUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(274) xbox::BOOLEAN NTAPI xbox::RtlCreateUnicodeString
+XBSYSAPI EXPORTNUM(274) xbox::boolean_t NTAPI xbox::RtlCreateUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PCWSTR SourceString
@@ -598,7 +598,7 @@ XBSYSAPI EXPORTNUM(274) xbox::BOOLEAN NTAPI xbox::RtlCreateUnicodeString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	BOOLEAN result = TRUE;
+	boolean_t result = TRUE;
 
 	ULONG bufferSize = (wcslen(SourceString) + 1) * sizeof(WCHAR);
 	DestinationString->Buffer = (USHORT *)ExAllocatePoolWithTag(bufferSize, 'grtS');
@@ -636,7 +636,7 @@ XBSYSAPI EXPORTNUM(276) xbox::NTSTATUS NTAPI xbox::RtlDowncaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString,
-	IN BOOLEAN AllocateDestinationString
+	IN boolean_t AllocateDestinationString
 )
 {
 	LOG_FUNC_BEGIN
@@ -697,7 +697,7 @@ XBSYSAPI EXPORTNUM(277) xbox::void_t NTAPI xbox::RtlEnterCriticalSection
 					(PVOID)CriticalSection,
 					(KWAIT_REASON)0,
 					(KPROCESSOR_MODE)0,
-					(BOOLEAN)0,
+					(boolean_t)0,
 					(PLARGE_INTEGER)0
 				);
 				if (!NT_SUCCESS(result))
@@ -731,11 +731,11 @@ XBSYSAPI EXPORTNUM(278) xbox::void_t NTAPI xbox::RtlEnterCriticalSectionAndRegio
 // ******************************************************************
 // * 0x0117 - RtlEqualString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(279) xbox::BOOLEAN NTAPI xbox::RtlEqualString
+XBSYSAPI EXPORTNUM(279) xbox::boolean_t NTAPI xbox::RtlEqualString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_t CaseInSensitive
 )
 {
 	LOG_FUNC_BEGIN
@@ -744,7 +744,7 @@ XBSYSAPI EXPORTNUM(279) xbox::BOOLEAN NTAPI xbox::RtlEqualString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	BOOLEAN bRet = TRUE;
+	boolean_t bRet = TRUE;
 
 	USHORT l1 = String1->Length;
 	USHORT l2 = String2->Length;
@@ -784,11 +784,11 @@ XBSYSAPI EXPORTNUM(279) xbox::BOOLEAN NTAPI xbox::RtlEqualString
 // ******************************************************************
 // * 0x0118 - RtlEqualUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(280) xbox::BOOLEAN NTAPI xbox::RtlEqualUnicodeString
+XBSYSAPI EXPORTNUM(280) xbox::boolean_t NTAPI xbox::RtlEqualUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_t CaseInSensitive
 )
 {
 	LOG_FUNC_BEGIN
@@ -797,7 +797,7 @@ XBSYSAPI EXPORTNUM(280) xbox::BOOLEAN NTAPI xbox::RtlEqualUnicodeString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	BOOLEAN bRet = FALSE;
+	boolean_t bRet = FALSE;
 	USHORT l1 = String1->Length;
 	USHORT l2 = String2->Length;
 
@@ -966,7 +966,7 @@ XBSYSAPI EXPORTNUM(284) xbox::void_t NTAPI xbox::RtlFillMemory
 (
 	IN void_t UNALIGNED *Destination,
 	IN DWORD Length,
-	IN BYTE  Fill
+	IN byte_t  Fill
 )
 {
 	LOG_FUNC_BEGIN
@@ -1232,7 +1232,7 @@ XBSYSAPI EXPORTNUM(294) xbox::void_t NTAPI xbox::RtlLeaveCriticalSection
     if(CriticalSection->RecursionCount == 0) {
         CriticalSection->OwningThread = 0;
         if(CriticalSection->LockCount >= 0) {
-            KeSetEvent((PRKEVENT)CriticalSection, (KPRIORITY)1, (BOOLEAN)0);
+            KeSetEvent((PRKEVENT)CriticalSection, (KPRIORITY)1, (boolean_t)0);
         }
     }
 }
@@ -1264,7 +1264,7 @@ XBSYSAPI EXPORTNUM(296) xbox::char_t NTAPI xbox::RtlLowerChar
 {
 	LOG_FUNC_ONE_ARG(Character);
 	
-	BYTE CharCode = (BYTE)Character;
+	byte_t CharCode = (byte_t)Character;
 
 	if (CharCode >= 'A' && CharCode <= 'Z')
 	{
@@ -1514,7 +1514,7 @@ XBSYSAPI EXPORTNUM(303) xbox::void_t NTAPI xbox::RtlRaiseStatus
 // ******************************************************************
 // * 0x0130 - RtlTimeFieldsToTime()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(304) xbox::BOOLEAN NTAPI xbox::RtlTimeFieldsToTime
+XBSYSAPI EXPORTNUM(304) xbox::boolean_t NTAPI xbox::RtlTimeFieldsToTime
 (
 	IN  PTIME_FIELDS    TimeFields,
 	OUT PLARGE_INTEGER  Time
@@ -1637,14 +1637,14 @@ XBSYSAPI EXPORTNUM(305) xbox::void_t NTAPI xbox::RtlTimeToTimeFields
 // ******************************************************************
 // * 0x0132 - RtlTryEnterCriticalSection()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(306) xbox::BOOLEAN NTAPI xbox::RtlTryEnterCriticalSection
+XBSYSAPI EXPORTNUM(306) xbox::boolean_t NTAPI xbox::RtlTryEnterCriticalSection
 (
 	IN PRTL_CRITICAL_SECTION CriticalSection
 )
 {
 	LOG_FUNC_ONE_ARG(CriticalSection);
 
-    BOOLEAN ret = false;
+    boolean_t ret = false;
     HANDLE thread = (HANDLE)KeGetCurrentThread();
 
     if(InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1) {
@@ -1692,7 +1692,7 @@ XBSYSAPI EXPORTNUM(308) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToAnsiString
 (
 	IN OUT PSTRING         DestinationString,
 	IN     PUNICODE_STRING SourceString,
-	IN     BOOLEAN         AllocateDestinationString
+	IN     boolean_t         AllocateDestinationString
 )
 {
 	LOG_FUNC_BEGIN
@@ -1927,7 +1927,7 @@ XBSYSAPI EXPORTNUM(314) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN  PUNICODE_STRING SourceString,
-	IN  BOOLEAN AllocateDestinationString
+	IN  boolean_t AllocateDestinationString
 )
 {
 	LOG_FUNC_BEGIN
@@ -2012,7 +2012,7 @@ XBSYSAPI EXPORTNUM(316) xbox::char_t NTAPI xbox::RtlUpperChar
 {
 	LOG_FUNC_ONE_ARG(Character);
 
-	BYTE CharCode = (BYTE)Character;
+	byte_t CharCode = (byte_t)Character;
 	
 	if (CharCode >= 'a' && CharCode <= 'z')
 	{

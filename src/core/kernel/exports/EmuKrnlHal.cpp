@@ -265,7 +265,7 @@ XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 (
 	IN  uchar_t               Address,
 	IN  uchar_t               Command,
-	IN  BOOLEAN             ReadWord,
+	IN  boolean_t             ReadWord,
 	OUT PULONG              DataValue
 )
 {
@@ -317,7 +317,7 @@ XBSYSAPI EXPORTNUM(46) xbox::void_t NTAPI xbox::HalReadWritePCISpace
 	IN ULONG   RegisterNumber,
 	IN PVOID   Buffer,
 	IN ULONG   Length,
-	IN BOOLEAN WritePCISpace
+	IN boolean_t WritePCISpace
 )
 {
 	LOG_FUNC_BEGIN
@@ -389,7 +389,7 @@ XBSYSAPI EXPORTNUM(46) xbox::void_t NTAPI xbox::HalReadWritePCISpace
 XBSYSAPI EXPORTNUM(47) xbox::void_t NTAPI xbox::HalRegisterShutdownNotification
 (
 	IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
-	IN BOOLEAN Register
+	IN boolean_t Register
 )
 {
 	LOG_FUNC_BEGIN
@@ -655,7 +655,7 @@ XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 (
 	IN  uchar_t               Address,
 	IN  uchar_t               Command,
-	IN  BOOLEAN             WriteWord,
+	IN  boolean_t             WriteWord,
 	IN  ULONG               DataValue
 )
 {
@@ -821,13 +821,13 @@ XBSYSAPI EXPORTNUM(356) xbox::DWORD xbox::HalBootSMCVideoMode = 1; // TODO : AV_
 // * 0x0166 - HalIsResetOrShutdownPending()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(358) xbox::BOOLEAN NTAPI xbox::HalIsResetOrShutdownPending
+XBSYSAPI EXPORTNUM(358) xbox::boolean_t NTAPI xbox::HalIsResetOrShutdownPending
 (
 )
 {
 	LOG_FUNC();
 
-	BOOLEAN ret = FALSE;
+	boolean_t ret = FALSE;
 
 	if (ResetOrShutdownCommandCode != 0) { ret = TRUE; }
 
