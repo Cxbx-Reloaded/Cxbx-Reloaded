@@ -21,3 +21,7 @@
 [submodule "import/SDL2"]
 	path = import/SDL2
 	url = https://github.com/SDL-mirror/SDL
+[submodule "import/xxHash"]
+	path = import/xxHash
+	url = https://github.com/Cyan4973/xxHash.git
+	branch = release

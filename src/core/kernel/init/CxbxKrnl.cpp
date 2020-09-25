@@ -54,7 +54,7 @@
 #include "core\kernel\memory-manager\VMManager.h"
 #include "CxbxDebugger.h"
 #include "common/util/cliConfig.hpp"
-#include "common/util/xxhash.h"
+#include "xxhash.h"
 #include "common/ReserveAddressRanges.h"
 #include "common/xbox/Types.hpp"
 

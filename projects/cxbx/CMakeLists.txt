@@ -22,6 +22,7 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
  "${CXBXR_ROOT_DIR}/import/SDL2/include"
+ "${CXBXR_ROOT_DIR}/import/xxHash"
 )
 
 link_directories(
