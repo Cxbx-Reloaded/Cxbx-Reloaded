@@ -14,14 +14,9 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/OpenXDK/include"
  "${CXBXR_ROOT_DIR}/import/distorm/include"
  "${CXBXR_ROOT_DIR}/import/glew-2.0.0/include"
- "${CXBXR_ROOT_DIR}/import/subhook"
  "${CXBXR_ROOT_DIR}/import/DirectX9/include"
- "${CXBXR_ROOT_DIR}/import/XbSymbolDatabase"
  "${CXBXR_ROOT_DIR}/import/simpleini"
- "${CXBXR_ROOT_DIR}/import/libtommath"
- "${CXBXR_ROOT_DIR}/import/libtomcrypt/src/headers"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
- "${CXBXR_ROOT_DIR}/import/SDL2/include"
  "${CXBXR_ROOT_DIR}/import/xxHash"
 )
 

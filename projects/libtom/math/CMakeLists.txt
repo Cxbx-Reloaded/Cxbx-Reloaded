@@ -11,11 +11,6 @@ if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
  )
 endif()
 
-
-include_directories(
- "${CXBXR_ROOT_DIR}/import/libtommath"
-)
-
 file (GLOB HEADERS
  "${CXBXR_ROOT_DIR}/import/libtommath/tommath.h"
  "${CXBXR_ROOT_DIR}/import/libtommath/tommath_class.h"
@@ -170,3 +165,7 @@ source_group(TREE ${CXBXR_ROOT_DIR}/import/libtommath PREFIX header FILES ${HEAD
 source_group(TREE ${CXBXR_ROOT_DIR}/import/libtommath PREFIX source FILES ${SOURCES})
 
 add_library(libtommath ${HEADERS} ${SOURCES})
+
+target_include_directories(libtommath
+ PUBLIC "${CXBXR_ROOT_DIR}/import/libtommath"
+)
