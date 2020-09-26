@@ -1343,7 +1343,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(RaiseException)
 	dword_t			dwExceptionCode,       // exception code
 	dword_t			dwExceptionFlags,      // continuable exception flag
 	dword_t			nNumberOfArguments,    // number of arguments
-	CONST ULONG_PTR *lpArguments		   // array of arguments
+	CONST ulong_ptr_t *lpArguments		   // array of arguments
 )
 {
 

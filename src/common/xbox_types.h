@@ -62,7 +62,9 @@ namespace xbox
 	using physical_address_t = ulong_t;
 	using uint_t = std::uint32_t;
 	using int_t = std::int32_t;
-	typedef int                 INT_PTR;
+	using int_ptr_t = int_t;
+	using long_ptr_t = long_t;
+	using ulong_ptr_t = ulong_t;
 	typedef signed __int64      LONGLONG;
 	typedef unsigned __int64    ULONGLONG;
 	typedef wchar_t             WCHAR;
@@ -89,16 +91,12 @@ namespace xbox
 	typedef ulong_t *PULONG;
 	typedef dword_t *PDWORD, *LPDWORD;
 	typedef long_t *PLONG;
-	typedef int *PINT_PTR;
+	typedef int_ptr_t *PINT_PTR;
 	typedef void_t *PVOID, *LPVOID;
 	typedef void *HANDLE;
 	typedef HANDLE *PHANDLE;
 	typedef size_t *PSIZE_T;
 	typedef access_mask_t *PACCESS_MASK;
-
-	// Additional basic and pointer types :
-	typedef long                LONG_PTR;
-	typedef unsigned long       ULONG_PTR;
 
 	typedef LONGLONG *PLONGLONG;
 	typedef QUAD *PQUAD;

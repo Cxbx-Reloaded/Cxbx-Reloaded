@@ -436,7 +436,7 @@ XBSYSAPI EXPORTNUM(161) xbox::void_t FASTCALL xbox::KfLowerIrql
 // * 0x00A2 - KiBugCheckData
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(162) xbox::ULONG_PTR xbox::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
+XBSYSAPI EXPORTNUM(162) xbox::ulong_ptr_t xbox::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
 
 extern xbox::KPRCB *KeGetCurrentPrcb();
 

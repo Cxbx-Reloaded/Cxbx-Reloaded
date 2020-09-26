@@ -1862,7 +1862,7 @@ XBSYSAPI EXPORTNUM(227) xbox::NTSTATUS NTAPI xbox::NtSetIoCompletion
 	IN PVOID KeyContext,
 	IN PVOID ApcContext,
 	IN NTSTATUS IoStatus,
-	IN ULONG_PTR IoStatusInformation
+	IN ulong_ptr_t IoStatusInformation
 )
 {
 	LOG_FUNC_BEGIN

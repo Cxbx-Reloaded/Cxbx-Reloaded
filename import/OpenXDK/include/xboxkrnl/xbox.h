@@ -164,7 +164,7 @@ XBSYSAPI EXPORTNUM(161) void_t FASTCALL KfLowerIrql
 // ******************************************************************
 // * 0x00A2 - KiBugCheckData
 // ******************************************************************
-XBSYSAPI EXPORTNUM(162) ULONG_PTR KiBugCheckData[5];
+XBSYSAPI EXPORTNUM(162) ulong_ptr_t KiBugCheckData[5];
 
 void KiLockDispatcherDatabase 
 (

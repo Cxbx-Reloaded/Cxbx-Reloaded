@@ -40,13 +40,13 @@ typedef struct _OBJECT_HEADER_NAME_INFO {
 
 #define ObpIsFlagSet(flagset, flag) (((flagset) & (flag)) != 0)
 #define ObpIsFlagClear(flagset, flag) (((flagset) & (flag)) == 0)
-#define ObpEncodeFreeHandleLink(Link) (((ULONG_PTR)(Link)) | 1)
-#define ObpDecodeFreeHandleLink(Link) (((ULONG_PTR)(Link)) & (~1))
-#define ObpIsFreeHandleLink(Link) (((ULONG_PTR)(Link)) & 1)
+#define ObpEncodeFreeHandleLink(Link) (((ulong_ptr_t)(Link)) | 1)
+#define ObpDecodeFreeHandleLink(Link) (((ulong_ptr_t)(Link)) & (~1))
+#define ObpIsFreeHandleLink(Link) (((ulong_ptr_t)(Link)) & 1)
 #define ObpGetTableByteOffsetFromHandle(Handle) (HandleToUlong(Handle) & (OB_HANDLES_PER_TABLE * sizeof(PVOID) - 1))
 #define ObpGetTableFromHandle(Handle) ObpObjectHandleTable.RootTable[HandleToUlong(Handle) >> (OB_HANDLES_PER_TABLE_SHIFT + 2)]
 #define ObpGetHandleContentsPointer(Handle) ((PVOID*)((PUCHAR)ObpGetTableFromHandle(Handle) + ObpGetTableByteOffsetFromHandle(Handle)))
-#define ObpMaskOffApplicationBits(Handle) ((HANDLE)(((ULONG_PTR)(Handle)) & ~(sizeof(ulong_t) - 1)))
+#define ObpMaskOffApplicationBits(Handle) ((HANDLE)(((ulong_ptr_t)(Handle)) & ~(sizeof(ulong_t) - 1)))
 
 #define OB_FLAG_NAMED_OBJECT            0x01
 #define OB_FLAG_PERMANENT_OBJECT        0x02
@@ -156,7 +156,7 @@ XBSYSAPI EXPORTNUM(244) NTSTATUS NTAPI ObOpenObjectByPointer
 
 typedef struct _OBJECT_HANDLE_TABLE {
 	long_t HandleCount;
-	LONG_PTR FirstFreeTableEntry;
+	long_ptr_t FirstFreeTableEntry;
 	HANDLE NextHandleNeedingPool;
 	PVOID **RootTable;
 	PVOID *BuiltinRootTable[OB_TABLES_PER_SEGMENT];

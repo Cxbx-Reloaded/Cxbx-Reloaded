@@ -72,7 +72,7 @@ XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ULONG_PTR ProcessId
+	IN ulong_ptr_t ProcessId
 )
 {
 	LOG_FUNC_BEGIN;
@@ -165,7 +165,7 @@ XBSYSAPI EXPORTNUM(11) xbox::void_t NTAPI xbox::DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ULONG_PTR ProcessId
+	IN ulong_ptr_t ProcessId
 )
 {
 	LOG_FUNC_BEGIN;

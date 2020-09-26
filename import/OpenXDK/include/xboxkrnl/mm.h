@@ -128,7 +128,7 @@ XBSYSAPI EXPORTNUM(175) void_t NTAPI MmLockUnlockBufferPages
 // ******************************************************************
 XBSYSAPI EXPORTNUM(176) void_t NTAPI MmLockUnlockPhysicalPage
 (
-	IN ULONG_PTR PhysicalAddress,
+	IN ulong_ptr_t PhysicalAddress,
 	IN boolean_t UnlockPage
 );
 

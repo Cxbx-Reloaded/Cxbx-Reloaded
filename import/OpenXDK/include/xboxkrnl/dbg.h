@@ -26,7 +26,7 @@ XBSYSAPI EXPORTNUM(7) NTSTATUS NTAPI DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ULONG_PTR ProcessId
+	IN ulong_ptr_t ProcessId
 );
 XBSYSAPI EXPORTNUM(8) ulong_t _cdecl DbgPrint
 (
@@ -42,7 +42,7 @@ XBSYSAPI EXPORTNUM(11) void_t NTAPI DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ULONG_PTR ProcessId
+	IN ulong_ptr_t ProcessId
 );
 
 }

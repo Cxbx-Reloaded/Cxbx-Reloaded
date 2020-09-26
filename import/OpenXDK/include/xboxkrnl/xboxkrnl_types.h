@@ -550,7 +550,7 @@ typedef struct _OBJECT_HEADER {
 } OBJECT_HEADER, *POBJECT_HEADER;
 
 // Source : DXBX
-typedef ULONG_PTR KSPIN_LOCK;
+typedef ulong_ptr_t KSPIN_LOCK;
 typedef KSPIN_LOCK *PKSPIN_LOCK;
 
 // ******************************************************************
@@ -580,8 +580,8 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 
 #define ALIGN_DOWN(length, type) ((ulong_t)(length) & ~(sizeof(type) - 1))
 #define ALIGN_UP(length, type) (ALIGN_DOWN(((ulong_t)(length) + sizeof(type) - 1), type))
-#define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ULONG_PTR)(address) & ~((ULONG_PTR)sizeof(type) - 1)))
-#define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ULONG_PTR)(address) + sizeof(type) - 1), type))
+#define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ulong_ptr_t)(address) & ~((ulong_ptr_t)sizeof(type) - 1)))
+#define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ulong_ptr_t)(address) + sizeof(type) - 1), type))
 
 // ******************************************************************
 // * EXCEPTION_RECORD
@@ -594,7 +594,7 @@ typedef struct _EXCEPTION_RECORD
 	_EXCEPTION_RECORD *ExceptionRecord;
 	void_t *ExceptionAddress;
 	dword_t NumberParameters;
-	ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+	ulong_ptr_t ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 }
 EXCEPTION_RECORD, *PEXCEPTION_RECORD;
 
@@ -934,7 +934,7 @@ typedef struct _IO_STATUS_BLOCK
         PVOID    Pointer;
 	};
 
-    ULONG_PTR Information;
+    ulong_ptr_t Information;
 }
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
@@ -1105,7 +1105,7 @@ typedef struct _PCI_COMMON_CONFIG
 }
 PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
-#define FIELD_OFFSET(type, field)    ((xbox::long_t)(LONG_PTR)&(((type *)0)->field))
+#define FIELD_OFFSET(type, field)    ((xbox::long_t)(xbox::long_ptr_t)&(((type *)0)->field))
 
 #define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific))
 

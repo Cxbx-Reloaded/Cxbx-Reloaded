@@ -291,7 +291,7 @@ XBSYSAPI EXPORTNUM(175) xbox::void_t NTAPI xbox::MmLockUnlockBufferPages
 // ******************************************************************
 XBSYSAPI EXPORTNUM(176) xbox::void_t NTAPI xbox::MmLockUnlockPhysicalPage
 (
-	IN ULONG_PTR PhysicalAddress,
+	IN ulong_ptr_t PhysicalAddress,
 	IN boolean_t UnlockPage
 )
 {

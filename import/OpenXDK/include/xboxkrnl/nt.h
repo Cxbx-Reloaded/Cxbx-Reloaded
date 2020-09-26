@@ -502,7 +502,7 @@ XBSYSAPI EXPORTNUM(227) NTSTATUS NTAPI NtSetIoCompletion
 	IN PVOID KeyContext,
 	IN PVOID ApcContext,
 	IN NTSTATUS IoStatus,
-	IN ULONG_PTR IoStatusInformation
+	IN ulong_ptr_t IoStatusInformation
 );
 
 // ******************************************************************
