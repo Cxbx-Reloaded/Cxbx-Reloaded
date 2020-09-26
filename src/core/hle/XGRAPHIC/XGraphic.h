@@ -94,15 +94,15 @@ xbox::hresult_t WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 // ******************************************************************
 xbox::void_t	WINAPI EMUPATCH(XGSetTextureHeader)
 (
-	UINT			Width,
-	UINT			Height,
-	UINT			Levels,
+	uint_t			Width,
+	uint_t			Height,
+	uint_t			Levels,
 	DWORD			Usage,
 	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
-	UINT			Data,
-	UINT			Pitch
+	uint_t			Data,
+	uint_t			Pitch
 );
 
 // ******************************************************************

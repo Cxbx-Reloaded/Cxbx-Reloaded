@@ -466,7 +466,7 @@ XBSYSAPI EXPORTNUM(357) xbox::IDE_CHANNEL_OBJECT xbox::IdexChannelObject = { };
 // ******************************************************************
 // * 0x0169 - RtlSnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(361) xbox::INT CDECL xbox::RtlSnprintf
+XBSYSAPI EXPORTNUM(361) xbox::int_t CDECL xbox::RtlSnprintf
 (
 	IN PCHAR string,
 	IN size_t count,
@@ -493,7 +493,7 @@ XBSYSAPI EXPORTNUM(361) xbox::INT CDECL xbox::RtlSnprintf
 // ******************************************************************
 // * 0x016A - RtlSprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(362) xbox::INT CDECL xbox::RtlSprintf
+XBSYSAPI EXPORTNUM(362) xbox::int_t CDECL xbox::RtlSprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,
@@ -518,7 +518,7 @@ XBSYSAPI EXPORTNUM(362) xbox::INT CDECL xbox::RtlSprintf
 // ******************************************************************
 // * 0x016B - RtlVsnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(363) xbox::INT CDECL xbox::RtlVsnprintf
+XBSYSAPI EXPORTNUM(363) xbox::int_t CDECL xbox::RtlVsnprintf
 (
 	IN PCHAR string,
 	IN size_t count,
@@ -545,7 +545,7 @@ XBSYSAPI EXPORTNUM(363) xbox::INT CDECL xbox::RtlVsnprintf
 // ******************************************************************
 // * 0x016C - RtlVsprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(364) xbox::INT CDECL xbox::RtlVsprintf
+XBSYSAPI EXPORTNUM(364) xbox::int_t CDECL xbox::RtlVsprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,

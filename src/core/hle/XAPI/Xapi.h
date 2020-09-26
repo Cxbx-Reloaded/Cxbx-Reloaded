@@ -626,11 +626,11 @@ xbox::dword_t WINAPI EMUPATCH(SignalObjectAndWait)
 // ******************************************************************
 MMRESULT WINAPI EMUPATCH(timeSetEvent)
 (
-	UINT			uDelay,
-	UINT			uResolution,
+	uint_t			uDelay,
+	uint_t			uResolution,
 	LPTIMECALLBACK	fptc,
 	dword_t			dwUser,
-	UINT			fuEvent
+	uint_t			fuEvent
 );
 
 // ******************************************************************
@@ -638,7 +638,7 @@ MMRESULT WINAPI EMUPATCH(timeSetEvent)
 // ******************************************************************
 MMRESULT WINAPI EMUPATCH(timeKillEvent)
 (
-	UINT uTimerID  
+	uint_t uTimerID  
 );
 
 // ******************************************************************

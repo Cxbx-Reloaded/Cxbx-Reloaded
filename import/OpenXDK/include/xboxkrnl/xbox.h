@@ -495,7 +495,7 @@ XBSYSAPI EXPORTNUM(357) IDE_CHANNEL_OBJECT IdexChannelObject;
 // ******************************************************************
 // * 0x0169 - RtlSnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(361) INT CDECL RtlSnprintf
+XBSYSAPI EXPORTNUM(361) int_t CDECL RtlSnprintf
 (
 	IN PCHAR string,
 	IN size_t count,
@@ -506,7 +506,7 @@ XBSYSAPI EXPORTNUM(361) INT CDECL RtlSnprintf
 // ******************************************************************
 // * 0x016A - RtlSprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(362) INT CDECL RtlSprintf
+XBSYSAPI EXPORTNUM(362) int_t CDECL RtlSprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,
@@ -516,7 +516,7 @@ XBSYSAPI EXPORTNUM(362) INT CDECL RtlSprintf
 // ******************************************************************
 // * 0x016B - RtlVsnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(363) INT CDECL RtlVsnprintf
+XBSYSAPI EXPORTNUM(363) int_t CDECL RtlVsnprintf
 (
 	IN PCHAR string,
 	IN size_t count,
@@ -527,7 +527,7 @@ XBSYSAPI EXPORTNUM(363) INT CDECL RtlVsnprintf
 // ******************************************************************
 // * 0x016C - RtlVsprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(364) INT CDECL RtlVsprintf
+XBSYSAPI EXPORTNUM(364) int_t CDECL RtlVsprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,
