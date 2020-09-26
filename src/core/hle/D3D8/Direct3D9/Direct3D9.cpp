@@ -3517,7 +3517,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
     dword_t                       Index,
     uint_t                       *pResult,
-    ULONGLONG                  *pTimeStamp
+    ulonglong_t                  *pTimeStamp
 )
 {
 	LOG_FUNC_BEGIN

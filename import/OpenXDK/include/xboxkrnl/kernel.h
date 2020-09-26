@@ -284,17 +284,17 @@ XBSYSAPI EXPORTNUM(124) long_t NTAPI KeQueryBasePriorityThread
 // ******************************************************************
 // * 0x007D - KeQueryInterruptTime()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(125) ULONGLONG NTAPI KeQueryInterruptTime(void);
+XBSYSAPI EXPORTNUM(125) ulonglong_t NTAPI KeQueryInterruptTime(void);
 
 // ******************************************************************
 // * 0x007E - KeQueryPerformanceCounter()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(126) ULONGLONG NTAPI KeQueryPerformanceCounter(void);
+XBSYSAPI EXPORTNUM(126) ulonglong_t NTAPI KeQueryPerformanceCounter(void);
 
 // ******************************************************************
 // * 0x007F - KeQueryPerformanceFrequency()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(127) ULONGLONG NTAPI KeQueryPerformanceFrequency(void);
+XBSYSAPI EXPORTNUM(127) ulonglong_t NTAPI KeQueryPerformanceFrequency(void);
 
 // ******************************************************************
 // * 0x0080 - KeQuerySystemTime()

@@ -407,7 +407,7 @@ xbox::boolean_t FASTCALL xbox::KiInsertTreeTimer
 
 xbox::ulong_t xbox::KiComputeTimerTableIndex
 (
-	IN xbox::ULONGLONG Interval
+	IN xbox::ulonglong_t Interval
 )
 {
 	return (Interval / CLOCK_TIME_INCREMENT) & (TIMER_TABLE_SIZE - 1);

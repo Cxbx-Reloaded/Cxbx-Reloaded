@@ -90,7 +90,7 @@ XBSYSAPI EXPORTNUM(20) void_t FASTCALL ExInterlockedAddLargeStatistic
 );
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) LONGLONG FASTCALL ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) longlong_t FASTCALL ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,

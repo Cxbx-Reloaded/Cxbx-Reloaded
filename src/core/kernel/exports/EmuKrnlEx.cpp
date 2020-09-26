@@ -340,7 +340,7 @@ XBSYSAPI EXPORTNUM(20) xbox::void_t FASTCALL xbox::ExInterlockedAddLargeStatisti
 // * 0x0015 - ExInterlockedCompareExchange64()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) xbox::LONGLONG FASTCALL xbox::ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) xbox::longlong_t FASTCALL xbox::ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,

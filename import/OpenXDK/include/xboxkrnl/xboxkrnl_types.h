@@ -217,7 +217,7 @@ typedef union _LARGE_INTEGER
     }
     u;
 
-    LONGLONG QuadPart;
+    longlong_t QuadPart;
 }
 LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -240,7 +240,7 @@ typedef union _ULARGE_INTEGER
     }
     u;
 
-    ULONGLONG QuadPart;
+    ulonglong_t QuadPart;
 }
 ULARGE_INTEGER, *PULARGE_INTEGER;
 
@@ -289,7 +289,7 @@ typedef struct _SINGLE_LIST_ENTRY {
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY, SLIST_ENTRY, *PSLIST_ENTRY;
 
 typedef union _SLIST_HEADER {
-	ULONGLONG Alignment;
+	ulonglong_t Alignment;
 	struct {
 		SINGLE_LIST_ENTRY Next;
 		ushort_t Depth;
@@ -891,7 +891,7 @@ typedef struct _FILE_MAILSLOT_SET_INFORMATION {
 // * FILE_REPARSE_POINT_INFORMATION
 // ******************************************************************
 typedef struct _FILE_REPARSE_POINT_INFORMATION {
-	LONGLONG        FileReference;
+	longlong_t        FileReference;
 	ulong_t           Tag;
 } FILE_REPARSE_POINT_INFORMATION, *PFILE_REPARSE_POINT_INFORMATION;
 
@@ -1299,11 +1299,11 @@ typedef struct _IRP
 	uchar_t                  Cancel;              // 0x1B
 	PIO_STATUS_BLOCK       UserIosb;            // 0x1C
 	PKEVENT                UserEvent;           // 0x20
-	ULONGLONG              Overlay;	            // 0x28
+	ulonglong_t              Overlay;	            // 0x28
 	PVOID                  UserBuffer;          // 0x30
 	PFILE_SEGMENT_ELEMENT  SegmentArray;        // 0x34
 	ulong_t                  LockedBufferLength;  // 0x38
-	ULONGLONG              Tail;                // 0x3C
+	ulonglong_t              Tail;                // 0x3C
 }
 IRP, *PIRP;
 

@@ -101,7 +101,7 @@ namespace xbox
 
 	xbox::ulong_t KiComputeTimerTableIndex
 	(
-		IN ULONGLONG Interval
+		IN ulonglong_t Interval
 	);
 
 	boolean_t KiComputeDueTime

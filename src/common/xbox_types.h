@@ -65,8 +65,8 @@ namespace xbox
 	using int_ptr_t = int_t;
 	using long_ptr_t = long_t;
 	using ulong_ptr_t = ulong_t;
-	typedef signed __int64      LONGLONG;
-	typedef unsigned __int64    ULONGLONG;
+	using longlong_t = std::int64_t;
+	using ulonglong_t = std::uint64_t;
 	typedef wchar_t             WCHAR;
 	typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
 	typedef int                 BOOL;
@@ -97,8 +97,7 @@ namespace xbox
 	typedef HANDLE *PHANDLE;
 	typedef size_t *PSIZE_T;
 	typedef access_mask_t *PACCESS_MASK;
-
-	typedef LONGLONG *PLONGLONG;
+	typedef longlong_t *PLONGLONG;
 	typedef QUAD *PQUAD;
 
 	// ******************************************************************

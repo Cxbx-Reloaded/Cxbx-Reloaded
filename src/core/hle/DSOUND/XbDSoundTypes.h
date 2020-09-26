@@ -196,7 +196,7 @@ struct X_DSSTREAMDESC
 // ******************************************************************
 // * REFERENCE_TIME
 // ******************************************************************
-typedef LONGLONG REFERENCE_TIME, *PREFERENCE_TIME, *LPREFERENCE_TIME;
+typedef longlong_t REFERENCE_TIME, *PREFERENCE_TIME, *LPREFERENCE_TIME;
 
 // ******************************************************************
 // * XMEDIAPACKET

@@ -98,7 +98,7 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcThread()
 
-xbox::ULONGLONG LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
+xbox::ulonglong_t LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 {
 	// Weird construction because there doesn't seem to exist an implicit
 	// conversion of LARGE_INTEGER to ULONGLONG :
@@ -1186,7 +1186,7 @@ XBSYSAPI EXPORTNUM(124) xbox::long_t NTAPI xbox::KeQueryBasePriorityThread
 // ******************************************************************
 // * 0x007D - KeQueryInterruptTime()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(125) xbox::ULONGLONG NTAPI xbox::KeQueryInterruptTime(void)
+XBSYSAPI EXPORTNUM(125) xbox::ulonglong_t NTAPI xbox::KeQueryInterruptTime(void)
 {
 	// TODO : Some software might call KeQueryInterruptTime often and fill the log quickly,
 	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
@@ -1218,7 +1218,7 @@ XBSYSAPI EXPORTNUM(125) xbox::ULONGLONG NTAPI xbox::KeQueryInterruptTime(void)
 //   NOTE: The KeQueryPerformance* functions run at the ACPI clock
 //	       The XAPI QueryPerformance* functions run at the TSC clock
 // ******************************************************************
-XBSYSAPI EXPORTNUM(126) xbox::ULONGLONG NTAPI xbox::KeQueryPerformanceCounter(void)
+XBSYSAPI EXPORTNUM(126) xbox::ulonglong_t NTAPI xbox::KeQueryPerformanceCounter(void)
 {
 	LOG_FUNC();
 	ULONGLONG ret;
@@ -1229,7 +1229,7 @@ XBSYSAPI EXPORTNUM(126) xbox::ULONGLONG NTAPI xbox::KeQueryPerformanceCounter(vo
 // ******************************************************************
 // * 0x007F - KeQueryPerformanceFrequency()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(127) xbox::ULONGLONG NTAPI xbox::KeQueryPerformanceFrequency(void)
+XBSYSAPI EXPORTNUM(127) xbox::ulonglong_t NTAPI xbox::KeQueryPerformanceFrequency(void)
 {
 	LOG_FUNC();
 	ULONGLONG ret = XBOX_ACPI_FREQUENCY;

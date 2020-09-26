@@ -188,7 +188,7 @@ xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
     dword_t                       Index,
     uint_t                       *pResult,
-    ULONGLONG                  *pTimeStamp
+    ulonglong_t                  *pTimeStamp
 );
 
 // ******************************************************************
