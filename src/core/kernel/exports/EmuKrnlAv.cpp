@@ -49,27 +49,27 @@ namespace NtDll
 
 
 // HW Register helper functions
-xbox::uchar_t REG_RD08(void* Ptr, xbox::ulong_t Addr)
+xbox::uchar_xt REG_RD08(void* Ptr, xbox::ulong_xt Addr)
 {
-	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
+	return EmuX86_Read((xbox::addr_xt)Ptr + Addr, sizeof(uint8_t));
 }
 
-void REG_WR08(void* Ptr, xbox::ulong_t Addr, xbox::uchar_t Val)
+void REG_WR08(void* Ptr, xbox::ulong_xt Addr, xbox::uchar_xt Val)
 {
-	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
+	EmuX86_Write((xbox::addr_xt)Ptr + Addr, Val, sizeof(uint8_t));
 }
 
-xbox::ulong_t REG_RD32(void* Ptr, xbox::ulong_t Addr)
+xbox::ulong_xt REG_RD32(void* Ptr, xbox::ulong_xt Addr)
 {
-	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint32_t));
+	return EmuX86_Read((xbox::addr_xt)Ptr + Addr, sizeof(uint32_t));
 }
 
-void REG_WR32(void* Ptr, xbox::ulong_t Addr, xbox::ulong_t Val)
+void REG_WR32(void* Ptr, xbox::ulong_xt Addr, xbox::ulong_xt Val)
 {
-	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
+	EmuX86_Write((xbox::addr_xt)Ptr + Addr, Val, sizeof(uint32_t));
 }
 
-void CRTC_WR(void* Ptr, xbox::uchar_t i, xbox::uchar_t d)
+void CRTC_WR(void* Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
 
@@ -77,7 +77,7 @@ void CRTC_WR(void* Ptr, xbox::uchar_t i, xbox::uchar_t d)
 	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
-void SRX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
+void SRX_WR(void *Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
 
@@ -85,7 +85,7 @@ void SRX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
-void GRX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
+void GRX_WR(void *Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
 
@@ -93,7 +93,7 @@ void GRX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
-void ARX_WR(void *Ptr, xbox::uchar_t i, xbox::uchar_t d)
+void ARX_WR(void *Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
 
@@ -132,7 +132,7 @@ ULONG AvQueryAvCapabilities()
 	ULONG avRegion;
 	NTSTATUS result = xbox::ExQueryNonVolatileSetting(
 		xbox::XC_FACTORY_AV_REGION,
-		(xbox::dword_t *)&type,
+		(xbox::dword_xt *)&type,
 		&avRegion,
 		sizeof(ULONG),
 		(xbox::PSIZE_T)&resultSize);
@@ -146,7 +146,7 @@ ULONG AvQueryAvCapabilities()
 	ULONG userSettings;
 	result = xbox::ExQueryNonVolatileSetting(
 		xbox::XC_VIDEO,
-		(xbox::dword_t *) &type,
+		(xbox::dword_xt *) &type,
 		&userSettings,
 		sizeof(ULONG),
 		(xbox::PSIZE_T)&resultSize);
@@ -174,12 +174,12 @@ XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) xbox::void_t NTAPI xbox::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) xbox::void_xt NTAPI xbox::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
-	IN  ulong_t   Option,
-	IN  ulong_t   Param,
-	OUT ulong_t   *Result
+	IN  ulong_xt   Option,
+	IN  ulong_xt   Param,
+	OUT ulong_xt   *Result
 )
 {
 	LOG_FUNC_BEGIN;
@@ -253,14 +253,14 @@ XBSYSAPI EXPORTNUM(2) xbox::void_t NTAPI xbox::AvSendTVEncoderOption
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(3) xbox::ulong_t NTAPI xbox::AvSetDisplayMode
+XBSYSAPI EXPORTNUM(3) xbox::ulong_xt NTAPI xbox::AvSetDisplayMode
 (
 	IN  PVOID   RegisterBase,
-	IN  ulong_t   Step,
-	IN  ulong_t   Mode,
-	IN  ulong_t   Format,
-	IN  ulong_t   Pitch,
-	IN  ulong_t   FrameBuffer
+	IN  ulong_xt   Step,
+	IN  ulong_xt   Mode,
+	IN  ulong_xt   Format,
+	IN  ulong_xt   Pitch,
+	IN  ulong_xt   FrameBuffer
 )
 {
 	LOG_FUNC_BEGIN;
@@ -401,7 +401,7 @@ XBSYSAPI EXPORTNUM(3) xbox::ulong_t NTAPI xbox::AvSetDisplayMode
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) xbox::void_t NTAPI xbox::AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) xbox::void_xt NTAPI xbox::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

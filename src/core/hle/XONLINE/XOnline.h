@@ -32,16 +32,16 @@ namespace xbox {
 // ******************************************************************
 // * patch: WSAStartup
 // ******************************************************************
-int WINAPI EMUPATCH(WSAStartup)
+xbox::int_xt WINAPI EMUPATCH(WSAStartup)
 (
-    WORD        wVersionRequested,
+    word_xt        wVersionRequested,
     WSADATA    *lpWSAData
 );
 
 // ******************************************************************
 // * patch: XNetStartup
 // ******************************************************************
-INT WINAPI EMUPATCH(XNetStartup)
+xbox::int_xt WINAPI EMUPATCH(XNetStartup)
 (
     const PVOID pDummy
 );
@@ -49,12 +49,12 @@ INT WINAPI EMUPATCH(XNetStartup)
 // ******************************************************************
 // * patch: XNetGetEthernetLinkStatus
 // ******************************************************************
-DWORD WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
+xbox::dword_xt WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
 
 // ******************************************************************
 // * patch: XOnlineLaunchNewImage
 // ******************************************************************
-HRESULT WINAPI XOnlineLaunchNewImage
+xbox::hresult_xt WINAPI XOnlineLaunchNewImage
 (
     LPCSTR	lpImagePath,
     LPVOID	pLaunchData
@@ -63,60 +63,60 @@ HRESULT WINAPI XOnlineLaunchNewImage
 // ******************************************************************
 // * patch: XOnlineLogon
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(XOnlineLogon)
+xbox::hresult_xt WINAPI EMUPATCH(XOnlineLogon)
 (
-    void_t*	pUsers,
-    DWORD*	pdwServiceIDs,
-    DWORD	dwServices,
+    void_xt*	pUsers,
+    dword_xt*	pdwServiceIDs,
+    dword_xt	dwServices,
     HANDLE	hEvent,
     HANDLE	pHandle
 );
 
 SOCKET WINAPI EMUPATCH(socket)
 (
-    int   af,
-    int   type,
-    int   protocol
+    int_xt   af,
+    int_xt   type,
+    int_xt   protocol
 );
 
-int WINAPI EMUPATCH(connect)
+xbox::int_xt WINAPI EMUPATCH(connect)
 (
     SOCKET s,
     const struct sockaddr FAR *name,
-    int namelen
+    int_xt namelen
 );
 
-int WINAPI EMUPATCH(send)
+xbox::int_xt WINAPI EMUPATCH(send)
 (
     SOCKET s,
     const char FAR *buf,
-    int len,
-    int flags
+    int_xt len,
+    int_xt flags
 );
 
-int WINAPI EMUPATCH(recv)
+xbox::int_xt WINAPI EMUPATCH(recv)
 (
     SOCKET s,
     char FAR *buf,
-    int len,
-    int flags
+    int_xt len,
+    int_xt flags
 );
 
 
-int WINAPI EMUPATCH(bind)
+xbox::int_xt WINAPI EMUPATCH(bind)
 (
     SOCKET s, 
     const struct sockaddr FAR *name, 
-    int namelen
+    int_xt namelen
 );
 
-int WINAPI EMUPATCH(listen)
+xbox::int_xt WINAPI EMUPATCH(listen)
 (
     SOCKET s, 
-    int backlog
+    int_xt backlog
 );
 
-int WINAPI EMUPATCH(ioctlsocket)
+xbox::int_xt WINAPI EMUPATCH(ioctlsocket)
 (
     SOCKET s, 
     long cmd, 

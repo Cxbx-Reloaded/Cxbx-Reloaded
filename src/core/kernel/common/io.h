@@ -12,7 +12,7 @@
 #ifndef XBOXKRNL_IO_H
 #define XBOXKRNL_IO_H
 
-#include "xboxkrnl/xboxkrnl_types.h"
+#include "types.h"
 
 namespace xbox
 {
@@ -22,7 +22,7 @@ namespace xbox
 // ******************************************************************
 XBSYSAPI EXPORTNUM(59) PVOID NTAPI IoAllocateIrp
 (
-	IN cchar_t StackSize
+	IN cchar_xt StackSize
 );
 
 // ******************************************************************
@@ -30,10 +30,10 @@ XBSYSAPI EXPORTNUM(59) PVOID NTAPI IoAllocateIrp
 // ******************************************************************
 XBSYSAPI EXPORTNUM(60) PVOID NTAPI IoBuildAsynchronousFsdRequest
 (
-	IN ulong_t MajorFunction,
+	IN ulong_xt MajorFunction,
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	OUT PLARGE_INTEGER StartingOffset OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 );
@@ -43,13 +43,13 @@ XBSYSAPI EXPORTNUM(60) PVOID NTAPI IoBuildAsynchronousFsdRequest
 // ******************************************************************
 XBSYSAPI EXPORTNUM(61) PVOID NTAPI IoBuildDeviceIoControlRequest
 (
-	IN ulong_t IoControlCode,
+	IN ulong_xt IoControlCode,
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PVOID InputBuffer OPTIONAL,
-	IN ulong_t InputBufferLength,
+	IN ulong_xt InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
-	IN ulong_t OutputBufferLength OPTIONAL,
-	IN boolean_t InternalDeviceIoControl,
+	IN ulong_xt OutputBufferLength OPTIONAL,
+	IN boolean_xt InternalDeviceIoControl,
 	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock OPTIONAL
 );
@@ -59,10 +59,10 @@ XBSYSAPI EXPORTNUM(61) PVOID NTAPI IoBuildDeviceIoControlRequest
 // ******************************************************************
 XBSYSAPI EXPORTNUM(62) PVOID NTAPI IoBuildSynchronousFsdRequest
 (
-	IN ulong_t MajorFunction,
+	IN ulong_xt MajorFunction,
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	OUT PLARGE_INTEGER StartingOffset OPTIONAL,
 	IN PKEVENT Event,
 	OUT PIO_STATUS_BLOCK IoStatusBlock
@@ -73,11 +73,11 @@ XBSYSAPI EXPORTNUM(62) PVOID NTAPI IoBuildSynchronousFsdRequest
 // ******************************************************************
 XBSYSAPI EXPORTNUM(63) NTSTATUS NTAPI IoCheckShareAccess
 (
-	IN access_mask_t DesiredAccess,
-	IN ulong_t DesiredShareAccess,
+	IN access_mask_xt DesiredAccess,
+	IN ulong_xt DesiredShareAccess,
 	OUT PFILE_OBJECT FileObject,
 	OUT PSHARE_ACCESS ShareAccess,
-	IN boolean_t Update
+	IN boolean_xt Update
 );
 
 // ******************************************************************
@@ -91,10 +91,10 @@ XBSYSAPI EXPORTNUM(64) OBJECT_TYPE IoCompletionObjectType;
 XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 (
 	IN  PDRIVER_OBJECT		DriverObject,
-	IN  ulong_t				DeviceExtensionSize,
+	IN  ulong_xt				DeviceExtensionSize,
 	IN  PSTRING				DeviceName OPTIONAL,
-	IN  ulong_t				DeviceType,
-	IN  boolean_t				Exclusive,
+	IN  ulong_xt				DeviceType,
+	IN  boolean_xt				Exclusive,
 	OUT PDEVICE_OBJECT*		DeviceObject
 );
 
@@ -104,15 +104,15 @@ XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI IoCreateFile
 (
     OUT PHANDLE             FileHandle,
-    IN  access_mask_t         DesiredAccess,
+    IN  access_mask_xt         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  PLARGE_INTEGER      AllocationSize,
-    IN  ulong_t               FileAttributes,
-    IN  ulong_t               ShareAccess,
-    IN  ulong_t               Disposition,
-    IN  ulong_t               CreateOptions,
-    IN  ulong_t               Options
+    IN  ulong_xt               FileAttributes,
+    IN  ulong_xt               ShareAccess,
+    IN  ulong_xt               Disposition,
+    IN  ulong_xt               CreateOptions,
+    IN  ulong_xt               Options
 );
 
 // ******************************************************************
@@ -127,7 +127,7 @@ XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI IoCreateSymbolicLink
 // ******************************************************************
 // * 0x0044 - IoDeleteDevice()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(68) void_t NTAPI IoDeleteDevice
+XBSYSAPI EXPORTNUM(68) void_xt NTAPI IoDeleteDevice
 (
 	IN PDEVICE_OBJECT irql
 );
@@ -153,7 +153,7 @@ XBSYSAPI EXPORTNUM(71) OBJECT_TYPE IoFileObjectType;
 // ******************************************************************
 // * 0x0048 - IoFreeIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(72) void_t NTAPI IoFreeIrp
+XBSYSAPI EXPORTNUM(72) void_xt NTAPI IoFreeIrp
 (
 	IN PIRP Irp
 );
@@ -164,8 +164,8 @@ XBSYSAPI EXPORTNUM(72) void_t NTAPI IoFreeIrp
 XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
 (
 	IN PIRP Irp,
-	IN ushort_t PacketSize,
-	IN cchar_t StackSize
+	IN ushort_xt PacketSize,
+	IN cchar_xt StackSize
 );
 
 // ******************************************************************
@@ -184,7 +184,7 @@ XBSYSAPI EXPORTNUM(75) NTSTATUS NTAPI IoQueryFileInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FILE_INFORMATION_CLASS FileInformationClass,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	OUT PVOID FileInformation,
 	OUT PULONG ReturnedLength
 );
@@ -196,7 +196,7 @@ XBSYSAPI EXPORTNUM(76) NTSTATUS NTAPI IoQueryVolumeInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FS_INFORMATION_CLASS FsInformationClass,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	OUT PVOID FsInformation,
 	OUT PULONG ReturnedLength
 );
@@ -204,7 +204,7 @@ XBSYSAPI EXPORTNUM(76) NTSTATUS NTAPI IoQueryVolumeInformation
 // ******************************************************************
 // * 0x004D - IoQueueThreadIrp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(77) void_t NTAPI IoQueueThreadIrp
+XBSYSAPI EXPORTNUM(77) void_xt NTAPI IoQueueThreadIrp
 (
 	IN PIRP Irp
 );
@@ -212,7 +212,7 @@ XBSYSAPI EXPORTNUM(77) void_t NTAPI IoQueueThreadIrp
 // ******************************************************************
 // * 0x004E - IoRemoveShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(78) void_t NTAPI IoRemoveShareAccess
+XBSYSAPI EXPORTNUM(78) void_xt NTAPI IoRemoveShareAccess
 (
 	IN PFILE_OBJECT FileObject,
 	IN PSHARE_ACCESS ShareAccess
@@ -227,16 +227,16 @@ XBSYSAPI EXPORTNUM(79) NTSTATUS NTAPI IoSetIoCompletion
 	IN PVOID KeyContext,
 	IN PVOID ApcContext,
 	IN NTSTATUS IoStatus,
-	IN ulong_t IoStatusInformation
+	IN ulong_xt IoStatusInformation
 );
 
 // ******************************************************************
 // * 0x0050 - IoSetShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(80) cchar_t NTAPI IoSetShareAccess
+XBSYSAPI EXPORTNUM(80) cchar_xt NTAPI IoSetShareAccess
 (
-	IN ulong_t DesiredAccess,
-	IN ulong_t DesiredShareAccess,
+	IN ulong_xt DesiredAccess,
+	IN ulong_xt DesiredShareAccess,
 	IN PFILE_OBJECT FileObject,
 	OUT PSHARE_ACCESS ShareAccess
 );
@@ -244,7 +244,7 @@ XBSYSAPI EXPORTNUM(80) cchar_t NTAPI IoSetShareAccess
 // ******************************************************************
 // * 0x0051 - IoStartNextPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(81) void_t NTAPI IoStartNextPacket
+XBSYSAPI EXPORTNUM(81) void_xt NTAPI IoStartNextPacket
 (
 	IN PDEVICE_OBJECT DeviceObject
 );
@@ -252,16 +252,16 @@ XBSYSAPI EXPORTNUM(81) void_t NTAPI IoStartNextPacket
 // ******************************************************************
 // * 0x0052 - IoStartNextPacketByKey()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(82) void_t NTAPI IoStartNextPacketByKey
+XBSYSAPI EXPORTNUM(82) void_xt NTAPI IoStartNextPacketByKey
 (
 	IN PDEVICE_OBJECT DeviceObject,
-	IN ulong_t Key
+	IN ulong_xt Key
 );
 
 // ******************************************************************
 // * 0x0053 - IoStartPacket()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(83) void_t NTAPI IoStartPacket
+XBSYSAPI EXPORTNUM(83) void_xt NTAPI IoStartPacket
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,
@@ -273,14 +273,14 @@ XBSYSAPI EXPORTNUM(83) void_t NTAPI IoStartPacket
 // ******************************************************************
 XBSYSAPI EXPORTNUM(84) NTSTATUS NTAPI IoSynchronousDeviceIoControlRequest
 (
-	IN ulong_t IoControlCode,
+	IN ulong_xt IoControlCode,
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PVOID InputBuffer OPTIONAL,
-	IN ulong_t InputBufferLength,
+	IN ulong_xt InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
-	IN ulong_t OutputBufferLength,
+	IN ulong_xt OutputBufferLength,
 	OUT PULONG ReturnedOutputBufferLength OPTIONAL,
-	IN boolean_t InternalDeviceIoControl
+	IN boolean_xt InternalDeviceIoControl
 );
 
 // ******************************************************************
@@ -288,10 +288,10 @@ XBSYSAPI EXPORTNUM(84) NTSTATUS NTAPI IoSynchronousDeviceIoControlRequest
 // ******************************************************************
 XBSYSAPI EXPORTNUM(85) NTSTATUS NTAPI IoSynchronousFsdRequest
 (
-	IN ulong_t MajorFunction,
+	IN ulong_xt MajorFunction,
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PVOID Buffer OPTIONAL,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	IN PLARGE_INTEGER StartingOffset OPTIONAL
 );
 
@@ -307,10 +307,10 @@ XBSYSAPI EXPORTNUM(86) NTSTATUS FASTCALL IofCallDriver
 // ******************************************************************
 // * 0x0057 - IofCompleteRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(87) void_t FASTCALL IofCompleteRequest
+XBSYSAPI EXPORTNUM(87) void_xt FASTCALL IofCompleteRequest
 (
 	IN PIRP Irp,
-	IN cchar_t PriorityBoost
+	IN cchar_xt PriorityBoost
 );
 
 // ******************************************************************
@@ -332,7 +332,7 @@ XBSYSAPI EXPORTNUM(91) NTSTATUS NTAPI IoDismountVolumeByName
 // ******************************************************************
 // * 0x0167 - IoMarkIrpMustComplete()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(359) cchar_t NTAPI IoMarkIrpMustComplete
+XBSYSAPI EXPORTNUM(359) cchar_xt NTAPI IoMarkIrpMustComplete
 (
 	IN PIRP Irp
 );

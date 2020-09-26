@@ -12,7 +12,7 @@
 #ifndef XBOXKRNL_PS_H
 #define XBOXKRNL_PS_H
 
-#include "xboxkrnl/xboxkrnl_types.h"
+#include "types.h"
 
 namespace xbox
 {
@@ -28,7 +28,7 @@ XBSYSAPI EXPORTNUM(254) NTSTATUS NTAPI PsCreateSystemThread
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  boolean_t         DebuggerThread
+	IN  boolean_xt         DebuggerThread
 );
 
 // ******************************************************************
@@ -37,14 +37,14 @@ XBSYSAPI EXPORTNUM(254) NTSTATUS NTAPI PsCreateSystemThread
 XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
-	IN  ulong_t           ThreadExtensionSize,
-	IN  ulong_t           KernelStackSize,
-	IN  ulong_t           TlsDataSize,
+	IN  ulong_xt           ThreadExtensionSize,
+	IN  ulong_xt           KernelStackSize,
+	IN  ulong_xt           TlsDataSize,
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  boolean_t         CreateSuspended,
-	IN  boolean_t         DebuggerThread,
+	IN  boolean_xt         CreateSuspended,
+	IN  boolean_xt         DebuggerThread,
 	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 );
 
@@ -67,7 +67,7 @@ XBSYSAPI EXPORTNUM(257) NTSTATUS NTAPI PsSetCreateThreadNotifyRoutine
 // ******************************************************************
 // * PsTerminateSystemThread
 // ******************************************************************
-XBSYSAPI EXPORTNUM(258) void_t NTAPI PsTerminateSystemThread(IN NTSTATUS ExitStatus);
+XBSYSAPI EXPORTNUM(258) void_xt NTAPI PsTerminateSystemThread(IN NTSTATUS ExitStatus);
 
 XBSYSAPI EXPORTNUM(259) volatile OBJECT_TYPE PsThreadObjectType;
 

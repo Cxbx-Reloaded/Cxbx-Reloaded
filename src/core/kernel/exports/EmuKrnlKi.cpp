@@ -88,14 +88,14 @@ the said software).
 
 #define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired > 0)
 
-const xbox::ulong_t CLOCK_TIME_INCREMENT = 0x2710;
+const xbox::ulong_xt CLOCK_TIME_INCREMENT = 0x2710;
 xbox::KDPC KiTimerExpireDpc;
 xbox::KI_TIMER_LOCK KiTimerMtx;
 xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 xbox::LIST_ENTRY KiWaitInListHead;
 
 
-xbox::void_t xbox::KiInitSystem()
+xbox::void_xt xbox::KiInitSystem()
 {
 	unsigned int i;
 
@@ -112,19 +112,19 @@ xbox::void_t xbox::KiInitSystem()
 	InitializeListHead(&IdexChannelObject.DeviceQueue.DeviceListHead);
 }
 
-xbox::void_t xbox::KiTimerLock()
+xbox::void_xt xbox::KiTimerLock()
 {
 	KiTimerMtx.Mtx.lock();
 	KiTimerMtx.Acquired++;
 }
 
-xbox::void_t xbox::KiTimerUnlock()
+xbox::void_xt xbox::KiTimerUnlock()
 {
 	KiTimerMtx.Acquired--;
 	KiTimerMtx.Mtx.unlock();
 }
 
-xbox::void_t xbox::KiClockIsr
+xbox::void_xt xbox::KiClockIsr
 (
 	unsigned int ScalingFactor
 )
@@ -175,7 +175,7 @@ xbox::void_t xbox::KiClockIsr
 	KfLowerIrql(OldIrql);
 }
 
-xbox::void_t NTAPI xbox::KiCheckTimerTable
+xbox::void_xt NTAPI xbox::KiCheckTimerTable
 (
 	IN xbox::ULARGE_INTEGER CurrentTime
 )
@@ -217,10 +217,10 @@ xbox::void_t NTAPI xbox::KiCheckTimerTable
 	KfLowerIrql(OldIrql);
 }
 
-xbox::void_t xbox::KxInsertTimer
+xbox::void_xt xbox::KxInsertTimer
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ulong_t Hand
+	IN xbox::ulong_xt Hand
 )
 {
 	ASSERT_TIMER_LOCKED;
@@ -233,14 +233,14 @@ xbox::void_t xbox::KxInsertTimer
 	}
 }
 
-xbox::void_t FASTCALL xbox::KiCompleteTimer
+xbox::void_xt FASTCALL xbox::KiCompleteTimer
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ulong_t Hand
+	IN xbox::ulong_xt Hand
 )
 {
 	LIST_ENTRY ListHead;
-	boolean_t RequestInterrupt = FALSE;
+	BOOLEAN RequestInterrupt = FALSE;
 
 	ASSERT_TIMER_LOCKED;
 
@@ -264,10 +264,10 @@ xbox::void_t FASTCALL xbox::KiCompleteTimer
 	}
 }
 
-xbox::void_t xbox::KiRemoveEntryTimer
+xbox::void_xt xbox::KiRemoveEntryTimer
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ulong_t Hand
+	IN xbox::ulong_xt Hand
 )
 {
 	PKTIMER_TABLE_ENTRY TableEntry;
@@ -291,7 +291,7 @@ xbox::void_t xbox::KiRemoveEntryTimer
 	Timer->TimerListEntry.Blink = NULL;
 }
 
-xbox::void_t xbox::KxRemoveTreeTimer
+xbox::void_xt xbox::KxRemoveTreeTimer
 (
 	IN xbox::PKTIMER Timer
 )
@@ -317,15 +317,15 @@ xbox::void_t xbox::KxRemoveTreeTimer
 	}
 }
 
-xbox::boolean_t FASTCALL xbox::KiInsertTimerTable
+xbox::boolean_xt FASTCALL xbox::KiInsertTimerTable
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ulong_t Hand
+	IN xbox::ulong_xt Hand
 )
 {
 	LARGE_INTEGER InterruptTime;
 	LONGLONG DueTime = Timer->DueTime.QuadPart;
-	boolean_t Expired = FALSE;
+	BOOLEAN Expired = FALSE;
 	PLIST_ENTRY ListHead, NextEntry;
 	PKTIMER CurrentTimer;
 
@@ -374,13 +374,13 @@ xbox::boolean_t FASTCALL xbox::KiInsertTimerTable
 	return Expired;
 }
 
-xbox::boolean_t FASTCALL xbox::KiInsertTreeTimer
+xbox::boolean_xt FASTCALL xbox::KiInsertTreeTimer
 (
 	IN xbox::PKTIMER Timer,
 	IN xbox::LARGE_INTEGER Interval
 )
 {
-	boolean_t Inserted = FALSE;
+	BOOLEAN Inserted = FALSE;
 	ULONG Hand = 0;
 
 	ASSERT_TIMER_LOCKED;
@@ -405,15 +405,15 @@ xbox::boolean_t FASTCALL xbox::KiInsertTreeTimer
 	return Inserted;
 }
 
-xbox::ulong_t xbox::KiComputeTimerTableIndex
+xbox::ulong_xt xbox::KiComputeTimerTableIndex
 (
-	IN xbox::ulonglong_t Interval
+	IN xbox::ulonglong_xt Interval
 )
 {
 	return (Interval / CLOCK_TIME_INCREMENT) & (TIMER_TABLE_SIZE - 1);
 }
 
-xbox::boolean_t xbox::KiComputeDueTime
+xbox::boolean_xt xbox::KiComputeDueTime
 (
 	IN  xbox::PKTIMER Timer,
 	IN  xbox::LARGE_INTEGER DueTime,
@@ -462,12 +462,12 @@ xbox::boolean_t xbox::KiComputeDueTime
 	return TRUE;
 }
 
-xbox::boolean_t FASTCALL xbox::KiSignalTimer
+xbox::boolean_xt FASTCALL xbox::KiSignalTimer
 (
 	IN xbox::PKTIMER Timer
 )
 {
-	boolean_t RequestInterrupt = FALSE;
+	BOOLEAN RequestInterrupt = FALSE;
 	PKDPC Dpc = Timer->Dpc;
 	ULONG Period = Timer->Period;
 	LARGE_INTEGER Interval, SystemTime;
@@ -517,7 +517,7 @@ xbox::boolean_t FASTCALL xbox::KiSignalTimer
 	return RequestInterrupt;
 }
 
-xbox::void_t NTAPI xbox::KiTimerExpiration
+xbox::void_xt NTAPI xbox::KiTimerExpiration
 (
 	IN xbox::PKDPC Dpc,
 	IN xbox::PVOID DeferredContext,
@@ -746,7 +746,7 @@ xbox::void_t NTAPI xbox::KiTimerExpiration
 	}
 }
 
-xbox::void_t FASTCALL xbox::KiTimerListExpire
+xbox::void_xt FASTCALL xbox::KiTimerListExpire
 (
 	IN xbox::PLIST_ENTRY ExpiredListHead,
 	IN xbox::KIRQL OldIrql
@@ -854,7 +854,7 @@ xbox::void_t FASTCALL xbox::KiTimerListExpire
 	}
 }
 
-xbox::void_t FASTCALL xbox::KiWaitSatisfyAll
+xbox::void_xt FASTCALL xbox::KiWaitSatisfyAll
 (
 	IN xbox::PKWAIT_BLOCK WaitBlock
 )
@@ -866,7 +866,7 @@ xbox::void_t FASTCALL xbox::KiWaitSatisfyAll
 	WaitBlock1 = WaitBlock;
 	Thread = WaitBlock1->Thread;
 	do {
-		if (WaitBlock1->WaitKey != (cshort_t)STATUS_TIMEOUT) {
+		if (WaitBlock1->WaitKey != (cshort_xt)STATUS_TIMEOUT) {
 			Object = (PKMUTANT)WaitBlock1->Object;
 			KiWaitSatisfyAny(Object, Thread);
 		}

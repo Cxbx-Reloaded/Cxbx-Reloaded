@@ -72,39 +72,39 @@ typedef void* LPSECURITY_ATTRIBUTES;
 typedef long                            NTSTATUS;
 
 #define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
-#define STATUS_SUCCESS                   ((xbox::dword_t   )0x00000000L)
-#define STATUS_ABANDONED                 ((xbox::dword_t   )0x00000080L)
-#define STATUS_MUTANT_LIMIT_EXCEEDED     ((xbox::dword_t   )0xC0000191L)
+#define STATUS_SUCCESS                   ((xbox::dword_xt   )0x00000000L)
+#define STATUS_ABANDONED                 ((xbox::dword_xt   )0x00000080L)
+#define STATUS_MUTANT_LIMIT_EXCEEDED     ((xbox::dword_xt   )0xC0000191L)
 #ifndef STATUS_PENDING
-#define STATUS_PENDING                   ((xbox::dword_t   )0x00000103L)
+#define STATUS_PENDING                   ((xbox::dword_xt   )0x00000103L)
 #endif
-#define STATUS_TIMER_RESUME_IGNORED      ((xbox::dword_t   )0x40000025L)
-#define STATUS_BUFFER_OVERFLOW           ((xbox::dword_t   )0x80000005L)
-#define STATUS_UNSUCCESSFUL              ((xbox::dword_t   )0xC0000001)
-#define STATUS_UNRECOGNIZED_MEDIA        ((xbox::dword_t   )0xC0000014)
+#define STATUS_TIMER_RESUME_IGNORED      ((xbox::dword_xt   )0x40000025L)
+#define STATUS_BUFFER_OVERFLOW           ((xbox::dword_xt   )0x80000005L)
+#define STATUS_UNSUCCESSFUL              ((xbox::dword_xt   )0xC0000001)
+#define STATUS_UNRECOGNIZED_MEDIA        ((xbox::dword_xt   )0xC0000014)
 #ifndef STATUS_NO_MEMORY
-#define STATUS_NO_MEMORY                 ((xbox::dword_t   )0xC0000017L)
+#define STATUS_NO_MEMORY                 ((xbox::dword_xt   )0xC0000017L)
 #endif
-#define STATUS_BUFFER_TOO_SMALL          ((xbox::dword_t   )0xC0000023L)
-#define STATUS_INVALID_PARAMETER_2       ((xbox::dword_t   )0xC00000F0L)
-#define STATUS_ALERTED                   ((xbox::dword_t   )0x00000101)
-#define STATUS_USER_APC                  ((xbox::dword_t   )0x000000C0L)
+#define STATUS_BUFFER_TOO_SMALL          ((xbox::dword_xt   )0xC0000023L)
+#define STATUS_INVALID_PARAMETER_2       ((xbox::dword_xt   )0xC00000F0L)
+#define STATUS_ALERTED                   ((xbox::dword_xt   )0x00000101)
+#define STATUS_USER_APC                  ((xbox::dword_xt   )0x000000C0L)
 // The SCSI input buffer was too large (not necessarily an error!)
-#define STATUS_DATA_OVERRUN              ((xbox::dword_t   )0xC000003CL)
-#define STATUS_SEMAPHORE_LIMIT_EXCEEDED  ((xbox::dword_t   )0xC0000047L)
-#define STATUS_INVALID_IMAGE_FORMAT      ((xbox::dword_t   )0xC000007BL)
-#define STATUS_INSUFFICIENT_RESOURCES    ((xbox::dword_t   )0xC000009AL)
-#define STATUS_TOO_MANY_SECRETS          ((xbox::dword_t   )0xC0000156L)
-#define STATUS_XBE_REGION_MISMATCH       ((xbox::dword_t   )0xC0050001L)
-#define STATUS_XBE_MEDIA_MISMATCH        ((xbox::dword_t   )0xC0050002L)
-#define STATUS_OBJECT_NAME_NOT_FOUND     ((xbox::dword_t   )0xC0000034L)
-#define STATUS_OBJECT_NAME_COLLISION     ((xbox::dword_t   )0xC0000035L)
-#define STATUS_INVALID_PAGE_PROTECTION   ((xbox::dword_t   )0xC0000045L)
-#define STATUS_CONFLICTING_ADDRESSES     ((xbox::dword_t   )0xC0000018L)
-#define STATUS_UNABLE_TO_FREE_VM         ((xbox::dword_t   )0xC000001AL)
-#define STATUS_FREE_VM_NOT_AT_BASE       ((xbox::dword_t   )0xC000009FL)
-#define STATUS_MEMORY_NOT_ALLOCATED      ((xbox::dword_t   )0xC00000A0L)
-#define STATUS_NOT_COMMITTED             ((xbox::dword_t   )0xC000002DL)
+#define STATUS_DATA_OVERRUN              ((xbox::dword_xt   )0xC000003CL)
+#define STATUS_SEMAPHORE_LIMIT_EXCEEDED  ((xbox::dword_xt   )0xC0000047L)
+#define STATUS_INVALID_IMAGE_FORMAT      ((xbox::dword_xt   )0xC000007BL)
+#define STATUS_INSUFFICIENT_RESOURCES    ((xbox::dword_xt   )0xC000009AL)
+#define STATUS_TOO_MANY_SECRETS          ((xbox::dword_xt   )0xC0000156L)
+#define STATUS_XBE_REGION_MISMATCH       ((xbox::dword_xt   )0xC0050001L)
+#define STATUS_XBE_MEDIA_MISMATCH        ((xbox::dword_xt   )0xC0050002L)
+#define STATUS_OBJECT_NAME_NOT_FOUND     ((xbox::dword_xt   )0xC0000034L)
+#define STATUS_OBJECT_NAME_COLLISION     ((xbox::dword_xt   )0xC0000035L)
+#define STATUS_INVALID_PAGE_PROTECTION   ((xbox::dword_xt   )0xC0000045L)
+#define STATUS_CONFLICTING_ADDRESSES     ((xbox::dword_xt   )0xC0000018L)
+#define STATUS_UNABLE_TO_FREE_VM         ((xbox::dword_xt   )0xC000001AL)
+#define STATUS_FREE_VM_NOT_AT_BASE       ((xbox::dword_xt   )0xC000009FL)
+#define STATUS_MEMORY_NOT_ALLOCATED      ((xbox::dword_xt   )0xC00000A0L)
+#define STATUS_NOT_COMMITTED             ((xbox::dword_xt   )0xC000002DL)
 
 // ******************************************************************
 // * Registry value types
@@ -148,7 +148,7 @@ typedef long                            NTSTATUS;
 // ******************************************************************
 // * KPROCESSOR_MODE
 // ******************************************************************
-typedef cchar_t KPROCESSOR_MODE;
+typedef cchar_xt KPROCESSOR_MODE;
 
 // ******************************************************************
 // * KWAIT_REASON
@@ -212,12 +212,12 @@ typedef union _LARGE_INTEGER
 {
     struct
     {
-        dword_t   LowPart;
-        long_t    HighPart;
+        dword_xt   LowPart;
+        long_xt    HighPart;
     }
     u;
 
-    longlong_t QuadPart;
+    longlong_xt QuadPart;
 }
 LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -228,19 +228,19 @@ typedef union _ULARGE_INTEGER
 {
     struct
     {
-        dword_t LowPart;
-        dword_t HighPart;
+        dword_xt LowPart;
+        dword_xt HighPart;
     }
     u1;
 
     struct
     {
-        dword_t LowPart;
-        dword_t HighPart;
+        dword_xt LowPart;
+        dword_xt HighPart;
     }
     u;
 
-    ulonglong_t QuadPart;
+    ulonglong_xt QuadPart;
 }
 ULARGE_INTEGER, *PULARGE_INTEGER;
 
@@ -249,8 +249,8 @@ ULARGE_INTEGER, *PULARGE_INTEGER;
 // ******************************************************************
 typedef struct _STRING
 {
-    ushort_t  Length;
-    ushort_t  MaximumLength;
+    ushort_xt  Length;
+    ushort_xt  MaximumLength;
     PCHAR   Buffer;
 }
 STRING, ANSI_STRING, *PSTRING, *PANSI_STRING;
@@ -265,9 +265,9 @@ typedef STRING OBJECT_STRING, *POBJECT_STRING;
 // ******************************************************************
 typedef struct _UNICODE_STRING
 {
-    ushort_t  Length;
-    ushort_t  MaximumLength;
-    ushort_t *Buffer;
+    ushort_xt  Length;
+    ushort_xt  MaximumLength;
+    ushort_xt *Buffer;
 }
 UNICODE_STRING, *PUNICODE_STRING;
 
@@ -289,15 +289,15 @@ typedef struct _SINGLE_LIST_ENTRY {
 } SINGLE_LIST_ENTRY, *PSINGLE_LIST_ENTRY, SLIST_ENTRY, *PSLIST_ENTRY;
 
 typedef union _SLIST_HEADER {
-	ulonglong_t Alignment;
+	ulonglong_xt Alignment;
 	struct {
 		SINGLE_LIST_ENTRY Next;
-		ushort_t Depth;
-		ushort_t Sequence;
+		ushort_xt Depth;
+		ushort_xt Sequence;
 	};
 } SLIST_HEADER, *PSLIST_HEADER;
 
-#define QUERY_DEPTH_SLIST(_listhead_) (xbox::ushort_t)(_listhead_)->Depth
+#define QUERY_DEPTH_SLIST(_listhead_) (xbox::ushort_xt)(_listhead_)->Depth
 
 /*
  * Disabled as Cxbx-Reloaded does not support Win64 compilation
@@ -340,8 +340,8 @@ typedef struct _FILE_FS_SIZE_INFORMATION
 {
     LARGE_INTEGER   TotalAllocationUnits;
     LARGE_INTEGER   AvailableAllocationUnits;
-    ulong_t           SectorsPerAllocationUnit;
-    ulong_t           BytesPerSector;
+    ulong_xt           SectorsPerAllocationUnit;
+    ulong_xt           BytesPerSector;
 }
 FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 
@@ -350,10 +350,10 @@ FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 // ******************************************************************
 typedef struct _FILE_FS_VOLUME_INFORMATION {
 	LARGE_INTEGER	VolumeCreationTime;
-	ulong_t			VolumeSerialNumber;
-	ulong_t			VolumeLabelLength;
-	boolean_t			SupportsObjects;
-	char_t			VolumeLabel[1];
+	ulong_xt			VolumeSerialNumber;
+	ulong_xt			VolumeLabelLength;
+	boolean_xt			SupportsObjects;
+	char_xt			VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
 
 // ******************************************************************
@@ -477,10 +477,10 @@ FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 // ******************************************************************
 typedef struct _GENERIC_MAPPING
 {
-	access_mask_t GenericRead;
-	access_mask_t GenericWrite;
-	access_mask_t GenericExecute;
-	access_mask_t GenericAll;
+	access_mask_xt GenericRead;
+	access_mask_xt GenericWrite;
+	access_mask_xt GenericExecute;
+	access_mask_xt GenericAll;
 }
 GENERIC_MAPPING, *PGENERIC_MAPPING;
 
@@ -491,7 +491,7 @@ typedef struct _OBJECT_ATTRIBUTES
 {
     HANDLE  RootDirectory;
     PSTRING ObjectName;
-    ulong_t   Attributes;
+    ulong_xt   Attributes;
 }
 OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
@@ -499,27 +499,27 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // * OBJECT_TYPE
 // ******************************************************************
 typedef PVOID(NTAPI *OB_ALLOCATE_METHOD)(
-	IN size_t NumberOfBytes,
-	IN ulong_t Tag
+	IN size_xt NumberOfBytes,
+	IN ulong_xt Tag
 	);
 
-typedef void_t(NTAPI *OB_FREE_METHOD)(
+typedef void_xt(NTAPI *OB_FREE_METHOD)(
 	IN PVOID Pointer
 	);
 
-typedef void_t(NTAPI *OB_CLOSE_METHOD)(
+typedef void_xt(NTAPI *OB_CLOSE_METHOD)(
 	IN PVOID Object,
-	IN ulong_t SystemHandleCount
+	IN ulong_xt SystemHandleCount
 	);
 
-typedef void_t(NTAPI *OB_DELETE_METHOD)(
+typedef void_xt(NTAPI *OB_DELETE_METHOD)(
 	IN PVOID Object
 	);
 
 typedef NTSTATUS(NTAPI *OB_PARSE_METHOD)(
 	IN PVOID ParseObject,
 	IN struct _OBJECT_TYPE *ObjectType,
-	IN ulong_t Attributes,
+	IN ulong_xt Attributes,
 	IN OUT POBJECT_STRING CompleteName,
 	IN OUT POBJECT_STRING RemainingName,
 	IN OUT PVOID Context OPTIONAL,
@@ -534,7 +534,7 @@ typedef struct _OBJECT_TYPE
     OB_DELETE_METHOD DeleteProcedure;
     OB_PARSE_METHOD ParseProcedure;
 	PVOID DefaultObject;
-	ulong_t PoolTag;
+	ulong_xt PoolTag;
 }
 OBJECT_TYPE, *POBJECT_TYPE;
 
@@ -542,15 +542,15 @@ OBJECT_TYPE, *POBJECT_TYPE;
 // * OBJECT_HEADER
 // ******************************************************************
 typedef struct _OBJECT_HEADER {
-	long_t PointerCount;
-	long_t HandleCount;
+	long_xt PointerCount;
+	long_xt HandleCount;
 	POBJECT_TYPE Type;
-	ulong_t Flags;
-	quad_t Body;
+	ulong_xt Flags;
+	quad_xt Body;
 } OBJECT_HEADER, *POBJECT_HEADER;
 
 // Source : DXBX
-typedef ulong_ptr_t KSPIN_LOCK;
+typedef ulong_ptr_xt KSPIN_LOCK;
 typedef KSPIN_LOCK *PKSPIN_LOCK;
 
 // ******************************************************************
@@ -559,8 +559,8 @@ typedef KSPIN_LOCK *PKSPIN_LOCK;
 // Source : DXBX
 typedef struct _FILETIME
 {
-	dword_t dwLowDateTime;
-	dword_t dwHighDateTime;
+	dword_xt dwLowDateTime;
+	dword_xt dwHighDateTime;
 }
 FILETIME, *PFILETIME;
 
@@ -570,18 +570,18 @@ FILETIME, *PFILETIME;
 // Source : DXBX (Xbox Refurb Info)
 typedef struct _XBOX_REFURB_INFO
 {
-	dword_t Signature;
-	dword_t PowerCycleCount;
+	dword_xt Signature;
+	dword_xt PowerCycleCount;
 	FILETIME FirstBootTime;
 }
 XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 
 #define EXCEPTION_MAXIMUM_PARAMETERS 15 // maximum number of exception parameters
 
-#define ALIGN_DOWN(length, type) ((ulong_t)(length) & ~(sizeof(type) - 1))
-#define ALIGN_UP(length, type) (ALIGN_DOWN(((ulong_t)(length) + sizeof(type) - 1), type))
-#define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ulong_ptr_t)(address) & ~((ulong_ptr_t)sizeof(type) - 1)))
-#define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ulong_ptr_t)(address) + sizeof(type) - 1), type))
+#define ALIGN_DOWN(length, type) ((ulong_xt)(length) & ~(sizeof(type) - 1))
+#define ALIGN_UP(length, type) (ALIGN_DOWN(((ulong_xt)(length) + sizeof(type) - 1), type))
+#define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ulong_ptr_xt)(address) & ~((ulong_ptr_xt)sizeof(type) - 1)))
+#define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ulong_ptr_xt)(address) + sizeof(type) - 1), type))
 
 // ******************************************************************
 // * EXCEPTION_RECORD
@@ -589,12 +589,12 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 // Source : DXBX
 typedef struct _EXCEPTION_RECORD
 {
-	dword_t ExceptionCode;
-	dword_t ExceptionFlags;
+	dword_xt ExceptionCode;
+	dword_xt ExceptionFlags;
 	_EXCEPTION_RECORD *ExceptionRecord;
-	void_t *ExceptionAddress;
-	dword_t NumberParameters;
-	ulong_ptr_t ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+	void_xt *ExceptionAddress;
+	dword_xt NumberParameters;
+	ulong_ptr_xt ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 }
 EXCEPTION_RECORD, *PEXCEPTION_RECORD;
 
@@ -620,17 +620,17 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // ******************************************************************
 typedef struct _FILE_DIRECTORY_INFORMATION
 {
-	ulong_t           NextEntryOffset;
-	ulong_t           FileIndex;
+	ulong_xt           NextEntryOffset;
+	ulong_xt           FileIndex;
 	LARGE_INTEGER   CreationTime;
 	LARGE_INTEGER   LastAccessTime;
 	LARGE_INTEGER   LastWriteTime;
 	LARGE_INTEGER   ChangeTime;
 	LARGE_INTEGER   EndOfFile;
 	LARGE_INTEGER   AllocationSize;
-	ulong_t           FileAttributes;
-	ulong_t           FileNameLength;
-	char_t            FileName[1];        // Offset: 0x40
+	ulong_xt           FileAttributes;
+	ulong_xt           FileNameLength;
+	char_xt            FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
 
@@ -639,7 +639,7 @@ FILE_DIRECTORY_INFORMATION;
 // ******************************************************************
 typedef struct _FILE_RENAME_INFORMATION
 {
-	boolean_t         ReplaceIfExists;
+	boolean_xt         ReplaceIfExists;
 	HANDLE          RootDirectory;
 	OBJECT_STRING   FileName;
 }
@@ -649,10 +649,10 @@ FILE_RENAME_INFORMATION;
 // * FILE_LINK_INFORMATION
 // ******************************************************************
 typedef struct _FILE_LINK_INFORMATION {
-	boolean_t         ReplaceIfExists;
+	boolean_xt         ReplaceIfExists;
 	HANDLE          RootDirectory;
-	ulong_t           FileNameLength;
-	char_t            FileName[1];
+	ulong_xt           FileNameLength;
+	char_xt            FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
 
 // ******************************************************************
@@ -665,18 +665,18 @@ typedef struct _FILE_NETWORK_OPEN_INFORMATION {
 	LARGE_INTEGER   ChangeTime;
 	LARGE_INTEGER   AllocationSize;
 	LARGE_INTEGER   EndOfFile;
-	ulong_t           FileAttributes;
+	ulong_xt           FileAttributes;
 } FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
 // ******************************************************************
 // * FILE_FULL_EA_INFORMATION
 // ******************************************************************
 typedef struct _FILE_FULL_EA_INFORMATION {
-	ulong_t NextEntryOffset;
-	uchar_t Flags;
-	uchar_t EaNameLength;
-	ushort_t EaValueLength;
-	char_t EaName[1];
+	ulong_xt NextEntryOffset;
+	uchar_xt Flags;
+	uchar_xt EaNameLength;
+	ushort_xt EaValueLength;
+	char_xt EaName[1];
 } FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
 
 // ******************************************************************
@@ -687,7 +687,7 @@ typedef struct _FILE_BASIC_INFORMATION {
 	LARGE_INTEGER   LastAccessTime;
 	LARGE_INTEGER   LastWriteTime;
 	LARGE_INTEGER   ChangeTime;
-	ulong_t           FileAttributes;
+	ulong_xt           FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
 
 // ******************************************************************
@@ -696,9 +696,9 @@ typedef struct _FILE_BASIC_INFORMATION {
 typedef struct _FILE_STANDARD_INFORMATION {
 	LARGE_INTEGER   AllocationSize;
 	LARGE_INTEGER   EndOfFile;
-	ulong_t           NumberOfLinks;
-	boolean_t         DeletePending;
-	boolean_t         Directory;
+	ulong_xt           NumberOfLinks;
+	boolean_xt         DeletePending;
+	boolean_xt         Directory;
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
 
 // ******************************************************************
@@ -712,14 +712,14 @@ typedef struct _FILE_INTERNAL_INFORMATION {
 // * FILE_EA_INFORMATION
 // ******************************************************************
 typedef struct _FILE_EA_INFORMATION {
-	ulong_t           EaSize;
+	ulong_xt           EaSize;
 } FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
 
 // ******************************************************************
 // * FILE_ACCESS_INFORMATION
 // ******************************************************************
 typedef struct _FILE_ACCESS_INFORMATION {
-	access_mask_t     AccessFlags;
+	access_mask_xt     AccessFlags;
 } FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
 
 // ******************************************************************
@@ -733,22 +733,22 @@ typedef struct _FILE_POSITION_INFORMATION {
 // * FILE_MODE_INFORMATION
 // ******************************************************************
 typedef struct _FILE_MODE_INFORMATION {
-	ulong_t           Mode;
+	ulong_xt           Mode;
 } FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
 
 // ******************************************************************
 // * FILE_ALIGNMENT_INFORMATION
 // ******************************************************************
 typedef struct _FILE_ALIGNMENT_INFORMATION {
-	ulong_t           AlignmentRequirement;
+	ulong_xt           AlignmentRequirement;
 } FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
 
 // ******************************************************************
 // * FILE_NAME_INFORMATION
 // ******************************************************************
 typedef struct _FILE_NAME_INFORMATION {
-	ulong_t           FileNameLength;
-	char_t            FileName[1];
+	ulong_xt           FileNameLength;
+	char_xt            FileName[1];
 } FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
 
 // ******************************************************************
@@ -770,7 +770,7 @@ typedef struct _FILE_ALL_INFORMATION {
 // * FILE_DISPOSITION_INFORMATION
 // ******************************************************************
 typedef struct _FILE_DISPOSITION_INFORMATION {
-	boolean_t         DeleteFile;
+	boolean_xt         DeleteFile;
 } FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION;
 
 // ******************************************************************
@@ -785,11 +785,11 @@ typedef struct _FILE_ALLOCATION_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_COMPRESSION_INFORMATION {
 	LARGE_INTEGER   CompressedFileSize;
-	ushort_t          CompressionFormat;
-	uchar_t           CompressionUnitShift;
-	uchar_t           ChunkShift;
-	uchar_t           ClusterShift;
-	uchar_t           Reserved[3];
+	ushort_xt          CompressionFormat;
+	uchar_xt           CompressionUnitShift;
+	uchar_xt           ChunkShift;
+	uchar_xt           ClusterShift;
+	uchar_xt           Reserved[3];
 } FILE_COMPRESSION_INFORMATION, *PFILE_COMPRESSION_INFORMATION;
 
 // ******************************************************************
@@ -803,21 +803,21 @@ typedef struct _FILE_END_OF_FILE_INFORMATION {
 // * FILE_MOVE_CLUSTER_INFORMATION
 // ******************************************************************
 typedef struct _FILE_MOVE_CLUSTER_INFORMATION {
-	ulong_t ClusterCount;
+	ulong_xt ClusterCount;
 	HANDLE RootDirectory;
-	ulong_t FileNameLength;
-	char_t FileName[1];
+	ulong_xt FileNameLength;
+	char_xt FileName[1];
 } FILE_MOVE_CLUSTER_INFORMATION, *PFILE_MOVE_CLUSTER_INFORMATION;
 
 // ******************************************************************
 // * FILE_STREAM_INFORMATION
 // ******************************************************************
 typedef struct _FILE_STREAM_INFORMATION {
-	ulong_t           NextEntryOffset;
-	ulong_t           StreamNameLength;
+	ulong_xt           NextEntryOffset;
+	ulong_xt           StreamNameLength;
 	LARGE_INTEGER   StreamSize;
 	LARGE_INTEGER   StreamAllocationSize;
-	char_t            StreamName[1];
+	char_xt            StreamName[1];
 } FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
 
 // ******************************************************************
@@ -825,8 +825,8 @@ typedef struct _FILE_STREAM_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_TRACKING_INFORMATION {
 	HANDLE          DestinationFile;
-	ulong_t           ObjectInformationLength;
-	char_t            ObjectInformation[1];
+	ulong_xt           ObjectInformationLength;
+	char_xt            ObjectInformation[1];
 } FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
 
 // ******************************************************************
@@ -841,24 +841,24 @@ typedef struct _FILE_COMPLETION_INFORMATION {
 // * FILE_PIPE_INFORMATION
 // ******************************************************************
 typedef struct _FILE_PIPE_INFORMATION {
-	ulong_t           ReadMode;
-	ulong_t           CompletionMode;
+	ulong_xt           ReadMode;
+	ulong_xt           CompletionMode;
 } FILE_PIPE_INFORMATION, *PFILE_PIPE_INFORMATION;
 
 // ******************************************************************
 // * FILE_PIPE_LOCAL_INFORMATION
 // ******************************************************************
 typedef struct _FILE_PIPE_LOCAL_INFORMATION {
-	ulong_t           NamedPipeType;
-	ulong_t           NamedPipeConfiguration;
-	ulong_t           MaximumInstances;
-	ulong_t           CurrentInstances;
-	ulong_t           InboundQuota;
-	ulong_t           ReadDataAvailable;
-	ulong_t           OutboundQuota;
-	ulong_t           WriteQuotaAvailable;
-	ulong_t           NamedPipeState;
-	ulong_t           NamedPipeEnd;
+	ulong_xt           NamedPipeType;
+	ulong_xt           NamedPipeConfiguration;
+	ulong_xt           MaximumInstances;
+	ulong_xt           CurrentInstances;
+	ulong_xt           InboundQuota;
+	ulong_xt           ReadDataAvailable;
+	ulong_xt           OutboundQuota;
+	ulong_xt           WriteQuotaAvailable;
+	ulong_xt           NamedPipeState;
+	ulong_xt           NamedPipeEnd;
 } FILE_PIPE_LOCAL_INFORMATION, *PFILE_PIPE_LOCAL_INFORMATION;
 
 // ******************************************************************
@@ -866,17 +866,17 @@ typedef struct _FILE_PIPE_LOCAL_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_PIPE_REMOTE_INFORMATION {
 	LARGE_INTEGER   CollectDataTime;
-	ulong_t           MaximumCollectionCount;
+	ulong_xt           MaximumCollectionCount;
 } FILE_PIPE_REMOTE_INFORMATION, *PFILE_PIPE_REMOTE_INFORMATION;
 
 // ******************************************************************
 // * FILE_MAILSLOT_QUERY_INFORMATION
 // ******************************************************************
 typedef struct _FILE_MAILSLOT_QUERY_INFORMATION {
-	ulong_t           MaximumMessageSize;
-	ulong_t           MailslotQuota;
-	ulong_t           NextMessageSize;
-	ulong_t           MessagesAvailable;
+	ulong_xt           MaximumMessageSize;
+	ulong_xt           MailslotQuota;
+	ulong_xt           NextMessageSize;
+	ulong_xt           MessagesAvailable;
 	LARGE_INTEGER   ReadTimeout;
 } FILE_MAILSLOT_QUERY_INFORMATION, *PFILE_MAILSLOT_QUERY_INFORMATION;
 
@@ -891,8 +891,8 @@ typedef struct _FILE_MAILSLOT_SET_INFORMATION {
 // * FILE_REPARSE_POINT_INFORMATION
 // ******************************************************************
 typedef struct _FILE_REPARSE_POINT_INFORMATION {
-	longlong_t        FileReference;
-	ulong_t           Tag;
+	longlong_xt        FileReference;
+	ulong_xt           Tag;
 } FILE_REPARSE_POINT_INFORMATION, *PFILE_REPARSE_POINT_INFORMATION;
 
 // ******************************************************************
@@ -900,9 +900,9 @@ typedef struct _FILE_REPARSE_POINT_INFORMATION {
 // ******************************************************************
 typedef struct _KSYSTEM_TIME
 {
-	/* 0x00 */ ulong_t LowPart;
-	/* 0x04 */ long_t High1Time;
-	/* 0x08 */ long_t High2Time;
+	/* 0x00 */ ulong_xt LowPart;
+	/* 0x04 */ long_xt High1Time;
+	/* 0x08 */ long_xt High2Time;
 } // Size = 0x0C
 KSYSTEM_TIME, *PKSYSTEM_TIME;
 
@@ -911,15 +911,15 @@ KSYSTEM_TIME, *PKSYSTEM_TIME;
 // ******************************************************************
 typedef struct _MM_STATISTICS
 {
-    ulong_t   Length;
-    ulong_t   TotalPhysicalPages;
-    ulong_t   AvailablePages;
-    ulong_t   VirtualMemoryBytesCommitted;
-    ulong_t   VirtualMemoryBytesReserved;
-    ulong_t   CachePagesCommitted;
-    ulong_t   PoolPagesCommitted;
-    ulong_t   StackPagesCommitted;
-    ulong_t   ImagePagesCommitted;
+    ulong_xt   Length;
+    ulong_xt   TotalPhysicalPages;
+    ulong_xt   AvailablePages;
+    ulong_xt   VirtualMemoryBytesCommitted;
+    ulong_xt   VirtualMemoryBytesReserved;
+    ulong_xt   CachePagesCommitted;
+    ulong_xt   PoolPagesCommitted;
+    ulong_xt   StackPagesCommitted;
+    ulong_xt   ImagePagesCommitted;
 }
 MM_STATISTICS, *PMM_STATISTICS;
 
@@ -934,28 +934,28 @@ typedef struct _IO_STATUS_BLOCK
         PVOID    Pointer;
 	};
 
-    ulong_ptr_t Information;
+    ulong_ptr_xt Information;
 }
 IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
 // ******************************************************************
 // * PIO_APC_ROUTINE
 // ******************************************************************
-typedef void_t (NTAPI *PIO_APC_ROUTINE)
+typedef void_xt (NTAPI *PIO_APC_ROUTINE)
 (
     IN PVOID            ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,
-    IN ulong_t            Reserved
+    IN ulong_xt            Reserved
 );
 
 // ******************************************************************
 // * PTIMER_APC_ROUTINE *Same as Win2k/XP*
 // ******************************************************************
-typedef void_t(NTAPI *PTIMER_APC_ROUTINE)
+typedef void_xt(NTAPI *PTIMER_APC_ROUTINE)
 (
 	IN PVOID	TimerContext,
-	IN ulong_t	TimerLowValue,
-	IN long_t		TimerHighValue
+	IN ulong_xt	TimerLowValue,
+	IN long_xt		TimerHighValue
 );
 
 // ******************************************************************
@@ -964,7 +964,7 @@ typedef void_t(NTAPI *PTIMER_APC_ROUTINE)
 typedef struct _TIMER_BASIC_INFORMATION
 {
 	LARGE_INTEGER TimeRemaining;
-	boolean_t SignalState;
+	boolean_xt SignalState;
 }
 TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;
 
@@ -975,11 +975,11 @@ typedef struct _MEMORY_BASIC_INFORMATION
 {
     PVOID   BaseAddress;
     PVOID   AllocationBase;
-    dword_t   AllocationProtect;
-    size_t  RegionSize;
-    dword_t   State;
-    dword_t   Protect;
-    dword_t   Type;
+    dword_xt   AllocationProtect;
+    size_xt  RegionSize;
+    dword_xt   State;
+    dword_xt   Protect;
+    dword_xt   Type;
 }
 MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
 
@@ -1024,13 +1024,13 @@ typedef struct _PCI_SLOT_NUMBER
     {
         struct
         {
-            ulong_t   DeviceNumber:5;
-            ulong_t   FunctionNumber:3;
-            ulong_t   Reserved:24;
+            ulong_xt   DeviceNumber:5;
+            ulong_xt   FunctionNumber:3;
+            ulong_xt   Reserved:24;
         }
         bits;
 
-        ulong_t   AsULONG;
+        ulong_xt   AsULONG;
     }u;
 }
 PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
@@ -1049,16 +1049,16 @@ PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 typedef struct _PCI_TYPE1_CFG_BITS {
     union {
         struct {
-            ulong_t   Reserved1:2;
-            ulong_t   RegisterNumber:6;
-            ulong_t   FunctionNumber:3;
-            ulong_t   DeviceNumber:5;
-            ulong_t   BusNumber:8;
-            ulong_t   Reserved2:7;
-            ulong_t   Enable:1;
+            ulong_xt   Reserved1:2;
+            ulong_xt   RegisterNumber:6;
+            ulong_xt   FunctionNumber:3;
+            ulong_xt   DeviceNumber:5;
+            ulong_xt   BusNumber:8;
+            ulong_xt   Reserved2:7;
+            ulong_xt   Enable:1;
         } bits;
 
-        ulong_t   AsULONG;
+        ulong_xt   AsULONG;
     } u;
 } PCI_TYPE1_CFG_BITS, *PPCI_TYPE1_CFG_BITS;
 
@@ -1067,45 +1067,45 @@ typedef struct _PCI_TYPE1_CFG_BITS {
 // ******************************************************************
 typedef struct _PCI_COMMON_CONFIG
 {
-    ushort_t  VendorID;                   // 0x00 (ro)
-    ushort_t  DeviceID;                   // 0x02 (ro)
-    ushort_t  Command;                    // 0x04 Device control
-    ushort_t  Status;                     // 0x06
-    uchar_t   RevisionID;                 // 0x08 (ro)
-    uchar_t   ProgIf;                     // 0x09 (ro)
-    uchar_t   SubClass;                   // 0x0A (ro)
-    uchar_t   BaseClass;                  // 0x0B (ro)
-    uchar_t   CacheLineSize;              // 0x0C (ro+)
-    uchar_t   LatencyTimer;               // 0x0D (ro+)
-    uchar_t   HeaderType;                 // 0x0E (ro)
-    uchar_t   BIST;                       // 0x0F Built in self test
+    ushort_xt  VendorID;                   // 0x00 (ro)
+    ushort_xt  DeviceID;                   // 0x02 (ro)
+    ushort_xt  Command;                    // 0x04 Device control
+    ushort_xt  Status;                     // 0x06
+    uchar_xt   RevisionID;                 // 0x08 (ro)
+    uchar_xt   ProgIf;                     // 0x09 (ro)
+    uchar_xt   SubClass;                   // 0x0A (ro)
+    uchar_xt   BaseClass;                  // 0x0B (ro)
+    uchar_xt   CacheLineSize;              // 0x0C (ro+)
+    uchar_xt   LatencyTimer;               // 0x0D (ro+)
+    uchar_xt   HeaderType;                 // 0x0E (ro)
+    uchar_xt   BIST;                       // 0x0F Built in self test
 
     union
     {
         struct _PCI_HEADER_TYPE_0
         {
-            ulong_t   BaseAddresses[PCI_TYPE0_ADDRESSES]; // 0x10
-            ulong_t   CIS;
-            ushort_t  SubVendorID;
-            ushort_t  SubSystemID;
-            ulong_t   ROMBaseAddress;
-            uchar_t   CapabilitiesPtr;
-            uchar_t   Reserved1[3];
-            ulong_t   Reserved2;
-            uchar_t   InterruptLine;      //
-            uchar_t   InterruptPin;       // (ro)
-            uchar_t   MinimumGrant;       // (ro)
-            uchar_t   MaximumLatency;     // (ro)
+            ulong_xt   BaseAddresses[PCI_TYPE0_ADDRESSES]; // 0x10
+            ulong_xt   CIS;
+            ushort_xt  SubVendorID;
+            ushort_xt  SubSystemID;
+            ulong_xt   ROMBaseAddress;
+            uchar_xt   CapabilitiesPtr;
+            uchar_xt   Reserved1[3];
+            ulong_xt   Reserved2;
+            uchar_xt   InterruptLine;      //
+            uchar_xt   InterruptPin;       // (ro)
+            uchar_xt   MinimumGrant;       // (ro)
+            uchar_xt   MaximumLatency;     // (ro)
         }
         type0;
     }u;
 
-    uchar_t DeviceSpecific[192];
+    uchar_xt DeviceSpecific[192];
 
 }
 PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
-#define FIELD_OFFSET(type, field)    ((xbox::long_t)(xbox::long_ptr_t)&(((type *)0)->field))
+#define FIELD_OFFSET(type, field)    ((xbox::long_xt)(xbox::long_ptr_xt)&(((type *)0)->field))
 
 #define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific))
 
@@ -1142,10 +1142,10 @@ RETURN_FIRMWARE, *LPRETURN_FIRMWARE;
 // ******************************************************************
 typedef struct _LAUNCH_DATA_HEADER
 {
-    dword_t   dwLaunchDataType;
-    dword_t   dwTitleId;
+    dword_xt   dwLaunchDataType;
+    dword_xt   dwTitleId;
     char    szLaunchPath[520];
-    dword_t   dwFlags;
+    dword_xt   dwFlags;
 }
 LAUNCH_DATA_HEADER, *PLAUNCH_DATA_HEADER;
 
@@ -1155,8 +1155,8 @@ LAUNCH_DATA_HEADER, *PLAUNCH_DATA_HEADER;
 typedef struct _LAUNCH_DATA_PAGE
 {
     LAUNCH_DATA_HEADER  Header;
-    uchar_t               Pad[492];
-    uchar_t               LaunchData[3072];
+    uchar_xt               Pad[492];
+    uchar_xt               LaunchData[3072];
 }
 LAUNCH_DATA_PAGE, *PLAUNCH_DATA_PAGE;
 
@@ -1165,11 +1165,11 @@ LAUNCH_DATA_PAGE, *PLAUNCH_DATA_PAGE;
 // ******************************************************************
 typedef struct _DASH_LAUNCH_DATA
 {
-	dword_t dwReason;
-	dword_t dwContext;
-	dword_t dwParameter1;
-	dword_t dwParameter2;
-	byte_t  Reserved[3072 - 16];
+	dword_xt dwReason;
+	dword_xt dwContext;
+	dword_xt dwParameter1;
+	dword_xt dwParameter2;
+	byte_xt  Reserved[3072 - 16];
 }
 DASH_LAUNCH_DATA, *PDASH_LAUNCH_DATA;
 
@@ -1183,16 +1183,16 @@ extern PVOID AvSavedDataAddress;
 // ******************************************************************
 typedef struct _DISPATCHER_HEADER
 {
-    uchar_t       Type;           // 0x00
-    uchar_t       Absolute;       // 0x01
-    uchar_t       Size;           // 0x02
-    uchar_t       Inserted;       // 0x03
-    long_t        SignalState;    // 0x04
+    uchar_xt       Type;           // 0x00
+    uchar_xt       Absolute;       // 0x01
+    uchar_xt       Size;           // 0x02
+    uchar_xt       Inserted;       // 0x03
+    long_xt        SignalState;    // 0x04
     LIST_ENTRY  WaitListHead;   // 0x08
 }
 DISPATCHER_HEADER;
 
-typedef long_t KPRIORITY;
+typedef long_xt KPRIORITY;
 
 // ******************************************************************
 // * KEVENT
@@ -1210,7 +1210,7 @@ KEVENT, *PKEVENT, *PRKEVENT; // even with undefined RESTRICTED_POINTER, this doe
 typedef struct _EVENT_BASIC_INFORMATION
 {
 	EVENT_TYPE EventType;
-	long_t EventState;
+	long_xt EventState;
 }
 EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
@@ -1220,7 +1220,7 @@ EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 typedef struct _KSEMAPHORE
 {
 	DISPATCHER_HEADER Header; // 0x00
-	long_t Limit;               // 0x10
+	long_xt Limit;               // 0x10
 }                             // 0x14
 KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 
@@ -1229,8 +1229,8 @@ KSEMAPHORE, *PKSEMAPHORE, *RESTRICTED_POINTER PRKSEMAPHORE;
 // ******************************************************************
 typedef struct _SEMAPHORE_BASIC_INFORMATION
 {
-	long_t CurrentCount;
-	long_t MaximumCount;
+	long_xt CurrentCount;
+	long_xt MaximumCount;
 }
 SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 
@@ -1239,9 +1239,9 @@ SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
 // ******************************************************************
 typedef struct _MUTANT_BASIC_INFORMATION
 {
-	long_t CurrentCount;
-	boolean_t OwnedByCaller;
-	boolean_t AbandonedState;
+	long_xt CurrentCount;
+	boolean_xt OwnedByCaller;
+	boolean_xt AbandonedState;
 }
 MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 
@@ -1250,10 +1250,10 @@ MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 // ******************************************************************
 typedef struct _ERWLOCK
 {
-	long_t LockCount;             // 0x00
-	ulong_t WritersWaitingCount;  // 0x04
-	ulong_t ReadersWaitingCount;  // 0x08
-	ulong_t ReadersEntryCount;    // 0x0C
+	long_xt LockCount;             // 0x00
+	ulong_xt WritersWaitingCount;  // 0x04
+	ulong_xt ReadersWaitingCount;  // 0x08
+	ulong_xt ReadersEntryCount;    // 0x0C
 	KEVENT WriterEvent;         // 0x10
 	KSEMAPHORE ReaderSemaphore; // 0x20
 }                               // 0x34
@@ -1264,9 +1264,9 @@ ERWLOCK, *PERWLOCK;
 // ******************************************************************
 typedef struct _KDEVICE_QUEUE
 {
-	cshort_t Type;                // 0x00
-	uchar_t Size;                 // 0x02
-	boolean_t Busy;               // 0x04
+	cshort_xt Type;                // 0x00
+	uchar_xt Size;                 // 0x02
+	boolean_xt Busy;               // 0x04
 	LIST_ENTRY DeviceListHead;  // 0x08
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
@@ -1274,8 +1274,8 @@ KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 typedef struct _KDEVICE_QUEUE_ENTRY 
 {
 	LIST_ENTRY DeviceListEntry;
-	ulong_t SortKey;
-	boolean_t Inserted;
+	ulong_xt SortKey;
+	boolean_xt Inserted;
 } KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY, *RESTRICTED_POINTER PRKDEVICE_QUEUE_ENTRY;
 
 // ******************************************************************
@@ -1288,22 +1288,22 @@ typedef PVOID PFILE_SEGMENT_ELEMENT;
 // ******************************************************************
 typedef struct _IRP
 {
-	cshort_t                 Type;                // 0x00
-	word_t                   Size;                // 0x02
-	ulong_t                  Flags;               // 0x04
+	cshort_xt                 Type;                // 0x00
+	word_xt                   Size;                // 0x02
+	ulong_xt                  Flags;               // 0x04
 	LIST_ENTRY             ThreadListEntry;     // 0x08
 	IO_STATUS_BLOCK        IoStatus;            // 0x10
-	char_t                   StackCount;          // 0x18
-	char_t                   CurrentLocation;	    // 0x19
-	uchar_t                  PendingReturned;     // 0x1A
-	uchar_t                  Cancel;              // 0x1B
+	char_xt                   StackCount;          // 0x18
+	char_xt                   CurrentLocation;	    // 0x19
+	uchar_xt                  PendingReturned;     // 0x1A
+	uchar_xt                  Cancel;              // 0x1B
 	PIO_STATUS_BLOCK       UserIosb;            // 0x1C
 	PKEVENT                UserEvent;           // 0x20
-	ulonglong_t              Overlay;	            // 0x28
+	ulonglong_xt              Overlay;	            // 0x28
 	PVOID                  UserBuffer;          // 0x30
 	PFILE_SEGMENT_ELEMENT  SegmentArray;        // 0x34
-	ulong_t                  LockedBufferLength;  // 0x38
-	ulonglong_t              Tail;                // 0x3C
+	ulong_xt                  LockedBufferLength;  // 0x38
+	ulonglong_xt              Tail;                // 0x3C
 }
 IRP, *PIRP;
 
@@ -1312,30 +1312,30 @@ IRP, *PIRP;
 // ******************************************************************
 typedef struct _DEVICE_OBJECT
 {
-	cshort_t Type;
-	ushort_t Size;
-	long_t ReferenceCount;
+	cshort_xt Type;
+	ushort_xt Size;
+	long_xt ReferenceCount;
 	struct _DRIVER_OBJECT *DriverObject;
 	struct _DEVICE_OBJECT *MountedOrSelfDevice;
 	PIRP CurrentIrp;
-	ulong_t Flags;
+	ulong_xt Flags;
 	PVOID DeviceExtension;
-	uchar_t DeviceType;
-	uchar_t StartIoFlags;
-	cchar_t StackSize;
-	boolean_t DeletePending;
-	ulong_t SectorSize;
-	ulong_t AlignmentRequirement;
+	uchar_xt DeviceType;
+	uchar_xt StartIoFlags;
+	cchar_xt StackSize;
+	boolean_xt DeletePending;
+	ulong_xt SectorSize;
+	ulong_xt AlignmentRequirement;
 	KDEVICE_QUEUE DeviceQueue;
 	KEVENT DeviceLock;
-	ulong_t StartIoKey;
+	ulong_xt StartIoKey;
 }
 DEVICE_OBJECT, *PDEVICE_OBJECT;
 
 // ******************************************************************
 // PDRIVER_OBJECT
 // ******************************************************************
-typedef void_t *PDRIVER_OBJECT;
+typedef void_xt *PDRIVER_OBJECT;
 
 // ******************************************************************
 // * IO_COMPLETION_CONTEXT
@@ -1350,18 +1350,18 @@ typedef struct _IO_COMPLETION_CONTEXT
 // * FILE_OBJECT
 // ******************************************************************
 typedef struct _FILE_OBJECT {
-	cshort_t                    Type;               // 0x00
+	cshort_xt                    Type;               // 0x00
 
-	byte_t                      DeletePending : 1;  // 0x02
-	byte_t                      ReadAccess : 1;     // 0x02
-	byte_t                      WriteAccess : 1;    // 0x02
-	byte_t                      DeleteAccess : 1;   // 0x02
-	byte_t                      SharedRead : 1;     // 0x02
-	byte_t                      SharedWrite : 1;    // 0x02
-	byte_t                      SharedDelete : 1;   // 0x02
-	byte_t                      Reserved : 1;       // 0x02
+	byte_xt                      DeletePending : 1;  // 0x02
+	byte_xt                      ReadAccess : 1;     // 0x02
+	byte_xt                      WriteAccess : 1;    // 0x02
+	byte_xt                      DeleteAccess : 1;   // 0x02
+	byte_xt                      SharedRead : 1;     // 0x02
+	byte_xt                      SharedWrite : 1;    // 0x02
+	byte_xt                      SharedDelete : 1;   // 0x02
+	byte_xt                      Reserved : 1;       // 0x02
 
-	byte_t                      Flags;              // 0x03
+	byte_xt                      Flags;              // 0x03
 	PDEVICE_OBJECT            DeviceObject;       // 0x04
 	PVOID                     FsContext;          // 0x08
 	PVOID                     FsContext2;         // 0x0C
@@ -1369,7 +1369,7 @@ typedef struct _FILE_OBJECT {
 	LARGE_INTEGER             CurrentByteOffset;  // 0x14
 	struct _FILE_OBJECT *     RelatedFileObject;  // 0x1C
 	PIO_COMPLETION_CONTEXT    CompletionContext;  // 0x20
-	long_t                      LockCount;          // 0x24
+	long_xt                      LockCount;          // 0x24
 	KEVENT                    Lock;               // 0x28
 	KEVENT                    Event;              // 0x38
 } FILE_OBJECT, *PFILE_OBJECT;
@@ -1378,13 +1378,13 @@ typedef struct _FILE_OBJECT {
 // * SHARE_ACCESS
 // ******************************************************************
 typedef struct _SHARE_ACCESS {
-	byte_t OpenCount;
-	byte_t Readers;
-	byte_t Writers;
-	byte_t Deleters;
-	byte_t SharedRead;
-	byte_t SharedWrite;
-	byte_t SharedDelete;
+	byte_xt OpenCount;
+	byte_xt Readers;
+	byte_xt Writers;
+	byte_xt Deleters;
+	byte_xt SharedRead;
+	byte_xt SharedWrite;
+	byte_xt SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
 // ******************************************************************
@@ -1406,14 +1406,14 @@ typedef struct _KTIMER
     ULARGE_INTEGER      DueTime;          // 0x10
     LIST_ENTRY          TimerListEntry;   // 0x18
     struct _KDPC       *Dpc;              // 0x20
-    long_t                Period;           // 0x24
+    long_xt                Period;           // 0x24
 }
 KTIMER, *PKTIMER;
 
 // ******************************************************************
 // * PKSTART_ROUTINE
 // ******************************************************************
-typedef void_t (NTAPI *PKSTART_ROUTINE)
+typedef void_xt (NTAPI *PKSTART_ROUTINE)
 (
     IN PVOID StartContext
 );
@@ -1429,7 +1429,7 @@ typedef void_t (NTAPI *PKSTART_ROUTINE)
 // *       opposed to 1.
 // *
 // ******************************************************************
-typedef void_t (*PKSYSTEM_ROUTINE)
+typedef void_xt (*PKSYSTEM_ROUTINE)
 (
 	IN PKSTART_ROUTINE StartRoutine OPTIONAL,
 	IN PVOID StartContext OPTIONAL
@@ -1440,7 +1440,7 @@ struct _KDPC;
 // ******************************************************************
 // * PKDEFERRED_ROUTINE
 // ******************************************************************
-typedef void_t (__stdcall *PKDEFERRED_ROUTINE)
+typedef void_xt (__stdcall *PKDEFERRED_ROUTINE)
 (
     IN struct _KDPC *Dpc,
     IN PVOID         DeferredContext,
@@ -1453,13 +1453,13 @@ typedef void_t (__stdcall *PKDEFERRED_ROUTINE)
 // ******************************************************************
 typedef struct _KDPC
 {
-    cshort_t              Type;               // 0x00
+    cshort_xt              Type;               // 0x00
 	union
 	{
-		uchar_t           Number;             // 0x02
-		boolean_t         Inserted;           // 0x02
+		uchar_xt           Number;             // 0x02
+		boolean_xt         Inserted;           // 0x02
 	};
-	uchar_t               Importance;         // 0x03
+	uchar_xt               Importance;         // 0x03
     LIST_ENTRY          DpcListEntry;       // 0x04
     PKDEFERRED_ROUTINE  DeferredRoutine;    // 0x0C
     PVOID               DeferredContext;
@@ -1485,15 +1485,15 @@ DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 // See NtDll::FLOATING_SAVE_AREA
 typedef struct _KFLOATING_SAVE
 {
-	ulong_t   ControlWord;
-	ulong_t   StatusWord;
-	// NtDll contains ulong_t TagWord here
-	ulong_t   ErrorOffset;
-	ulong_t   ErrorSelector;
-	ulong_t   DataOffset;
-	ulong_t   DataSelector;
-	ulong_t   Cr0NpxState; // NtDll has RegisterArea[SIZE_OF_80387_REGISTERS];
-	ulong_t   Spare1; // NtDll calls this Spare0
+	ulong_xt   ControlWord;
+	ulong_xt   StatusWord;
+	// NtDll contains ulong_xt TagWord here
+	ulong_xt   ErrorOffset;
+	ulong_xt   ErrorSelector;
+	ulong_xt   DataOffset;
+	ulong_xt   DataSelector;
+	ulong_xt   Cr0NpxState; // NtDll has RegisterArea[SIZE_OF_80387_REGISTERS];
+	ulong_xt   Spare1; // NtDll calls this Spare0
 }
 KFLOATING_SAVE, *PKFLOATING_SAVE;
 
@@ -1519,7 +1519,7 @@ KOBJECTS, *PKOBJECTS;
 // ******************************************************************
 // * PKNORMAL_ROUTINE
 // ******************************************************************
-typedef void_t (*PKNORMAL_ROUTINE)
+typedef void_xt (*PKNORMAL_ROUTINE)
 (
 	IN PVOID NormalContext,
 	IN PVOID SystemArgument1,
@@ -1529,7 +1529,7 @@ typedef void_t (*PKNORMAL_ROUTINE)
 // ******************************************************************
 // * PKKERNEL_ROUTINE
 // ******************************************************************
-typedef void_t (*PKKERNEL_ROUTINE)
+typedef void_xt (*PKKERNEL_ROUTINE)
 (
 	IN struct _KAPC *Apc,
 	IN OUT PKNORMAL_ROUTINE *NormalRoutine,
@@ -1541,7 +1541,7 @@ typedef void_t (*PKKERNEL_ROUTINE)
 // ******************************************************************
 // * PKRUNDOWN_ROUTINE
 // ******************************************************************
-typedef void_t (*PKRUNDOWN_ROUTINE)
+typedef void_xt (*PKRUNDOWN_ROUTINE)
 (
 	IN struct _KAPC *Apc
 );
@@ -1549,7 +1549,7 @@ typedef void_t (*PKRUNDOWN_ROUTINE)
 // ******************************************************************
 // * PKSYNCHRONIZE_ROUTINE
 // ******************************************************************
-typedef boolean_t (*PKSYNCHRONIZE_ROUTINE)
+typedef boolean_xt (*PKSYNCHRONIZE_ROUTINE)
 (
 	IN PVOID SynchronizeContext
 );
@@ -1557,7 +1557,7 @@ typedef boolean_t (*PKSYNCHRONIZE_ROUTINE)
 // ******************************************************************
 // * PKSERVICE_ROUTINE
 // ******************************************************************
-typedef boolean_t (*PKSERVICE_ROUTINE)
+typedef boolean_xt (*PKSERVICE_ROUTINE)
 (
 	IN struct _KINTERRUPT *Interrupt,
 	IN PVOID ServiceContext
@@ -1604,29 +1604,29 @@ typedef struct _KINTERRUPT
 {
 	/* 0x00= 0 */ PKSERVICE_ROUTINE ServiceRoutine;
 	/* 0x04= 4 */ PVOID ServiceContext;
-	/* 0x08= 8 */ ulong_t BusInterruptLevel;
-	/* 0x0C=12 */ ulong_t Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
-	/* 0x10=16 */ boolean_t Connected;
-	/* 0x11=17 */ boolean_t ShareVector;
+	/* 0x08= 8 */ ulong_xt BusInterruptLevel;
+	/* 0x0C=12 */ ulong_xt Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
+	/* 0x10=16 */ boolean_xt Connected;
+	/* 0x11=17 */ boolean_xt ShareVector;
 	/* 0x12=18 */ KINTERRUPT_MODE Mode;
-	/* 0x14=20 */ ulong_t ServiceCount;
-	/* 0x18=24 */ ulong_t DispatchCode[DISPATCH_SIZE]; // Same as old : unsigned char ISR[0x58];
+	/* 0x14=20 */ ulong_xt ServiceCount;
+	/* 0x18=24 */ ulong_xt DispatchCode[DISPATCH_SIZE]; // Same as old : unsigned char ISR[0x58];
 }
 KINTERRUPT, *PKINTERRUPT;
 
 // ******************************************************************
 // * IRQL (Interrupt ReQuest Level) (* same as on win *)
 // ******************************************************************
-typedef uchar_t KIRQL, *PKIRQL;
+typedef uchar_xt KIRQL, *PKIRQL;
 
 // ******************************************************************
 // * PS_STATISTICS
 // ******************************************************************
 typedef struct _PS_STATISTICS
 {
-	ulong_t Length;
-	ulong_t ThreadCount;
-	ulong_t HandleCount;
+	ulong_xt Length;
+	ulong_xt ThreadCount;
+	ulong_xt HandleCount;
 }
 PS_STATISTICS, *PPS_STATISTICS;
 
@@ -1636,8 +1636,8 @@ PS_STATISTICS, *PPS_STATISTICS;
 typedef struct _RTL_CRITICAL_SECTION
 {
 	DISPATCHER_HEADER   Event;                                          // 0x00
-    long_t                LockCount;                                      // 0x10
-    long_t                RecursionCount;                                 // 0x14
+    long_xt                LockCount;                                      // 0x10
+    long_xt                RecursionCount;                                 // 0x14
     HANDLE              OwningThread;                                   // 0x18
 }
 RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
@@ -1654,7 +1654,7 @@ typedef struct _NT_TIB
     union
     {
         PVOID FiberData;                                            // 0x10 for TIB
-        ulong_t Version;                                              // 0x10 for TEB (?)
+        ulong_xt Version;                                              // 0x10 for TEB (?)
     }
     u_a;
     PVOID                                   ArbitraryUserPointer;   // 0x14
@@ -1664,30 +1664,30 @@ NT_TIB, *PNT_TIB;
 
 // 	typedef struct _KGDTENTRY
 // 	{
-// 		word_t LimitLow;
-// 		word_t BaseLow;
-// 		ulong_t HighWord;
+// 		word_xt LimitLow;
+// 		word_xt BaseLow;
+// 		ulong_xt HighWord;
 // 	}
 //  KGDTENTRY, *PKGDTENTRY;
 // 
 // 	typedef struct _KIDTENTRY
 // 	{
-// 		word_t Offset;
-// 		word_t Selector;
-// 		word_t Access;
-// 		word_t ExtendedOffset;
+// 		word_xt Offset;
+// 		word_xt Selector;
+// 		word_xt Access;
+// 		word_xt ExtendedOffset;
 // 	}
 //  KIDTENTRY, *PKIDTENTRY;
 // 
 // 	typedef struct _KEXECUTE_OPTIONS
 // 	{
-// 		ulong_t ExecuteDisable: 1;
-// 		ulong_t ExecuteEnable: 1;
-// 		ulong_t DisableThunkEmulation: 1;
-// 		ulong_t Permanent: 1;
-// 		ulong_t ExecuteDispatchEnable: 1;
-// 		ulong_t ImageDispatchEnable: 1;
-// 		ulong_t Spare: 2;
+// 		ulong_xt ExecuteDisable: 1;
+// 		ulong_xt ExecuteEnable: 1;
+// 		ulong_xt DisableThunkEmulation: 1;
+// 		ulong_xt Permanent: 1;
+// 		ulong_xt ExecuteDispatchEnable: 1;
+// 		ulong_xt ImageDispatchEnable: 1;
+// 		ulong_xt Spare: 2;
 // 	}
 //  KEXECUTE_OPTIONS, *PKEXECUTE_OPTIONS;
 
@@ -1698,12 +1698,12 @@ typedef struct _KPROCESS
 {
 	/* 0x0/0 */ LIST_ENTRY ReadyListHead;
 	/* 0x8/8 */ LIST_ENTRY ThreadListHead;
-	/* 0x10/16 */ ulong_t StackCount;
-	/* 0x14/20 */ ulong_t ThreadQuantum;
-	/* 0x18/24 */ char_t BasePriority;
-	/* 0x19/25 */ char_t DisableBoost;
-	/* 0x1A/26 */ char_t DisableQuantum;
-	/* 0x1B/27 */ char_t _padding;
+	/* 0x10/16 */ ulong_xt StackCount;
+	/* 0x14/20 */ ulong_xt ThreadQuantum;
+	/* 0x18/24 */ char_xt BasePriority;
+	/* 0x19/25 */ char_xt DisableBoost;
+	/* 0x1A/26 */ char_xt DisableQuantum;
+	/* 0x1B/27 */ char_xt _padding;
 }
 KPROCESS, *PKPROCESS;
 
@@ -1714,10 +1714,10 @@ typedef struct _KAPC_STATE
 {
 	LIST_ENTRY ApcListHead[2];
 	PKPROCESS Process;
-	uchar_t KernelApcInProgress;
-	uchar_t KernelApcPending;
-	uchar_t UserApcPending;
-	uchar_t ApcQueueable;
+	uchar_xt KernelApcInProgress;
+	uchar_xt KernelApcPending;
+	uchar_xt UserApcPending;
+	uchar_xt ApcQueueable;
 }
 KAPC_STATE, *PKAPC_STATE;
 
@@ -1737,7 +1737,7 @@ typedef struct _KMUTANT {
 	DISPATCHER_HEADER Header;
 	LIST_ENTRY MutantListEntry;
 	struct _KTHREAD *RESTRICTED_POINTER OwnerThread;
-	boolean_t Abandoned;
+	boolean_xt Abandoned;
 } KMUTANT, *PKMUTANT, *RESTRICTED_POINTER PRKMUTANT;
 
 // ******************************************************************
@@ -1747,8 +1747,8 @@ typedef struct _KQUEUE
 {
 	DISPATCHER_HEADER Header;
 	LIST_ENTRY EntryListHead;
-	ulong_t CurrentCount;
-	ulong_t MaximumCount;
+	ulong_xt CurrentCount;
+	ulong_xt MaximumCount;
 	LIST_ENTRY ThreadListHead;
 }
 KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
@@ -1780,43 +1780,43 @@ EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 // ******************************************************************
 typedef struct _KTRAP_FRAME
 {
-	ulong_t DbgEbp;
-	ulong_t DbgEip;
-	ulong_t DbgArgMark;
-	ulong_t DbgArgPointer;
-	word_t TempSegCs;
-	uchar_t Logging;
-	uchar_t Reserved;
-	ulong_t TempEsp;
-	ulong_t Dr0;
-	ulong_t Dr1;
-	ulong_t Dr2;
-	ulong_t Dr3;
-	ulong_t Dr6;
-	ulong_t Dr7;
-	ulong_t SegGs;
-	ulong_t SegEs;
-	ulong_t SegDs;
-	ulong_t Edx;
-	ulong_t Ecx;
-	ulong_t Eax;
-	ulong_t PreviousPreviousMode;
+	ulong_xt DbgEbp;
+	ulong_xt DbgEip;
+	ulong_xt DbgArgMark;
+	ulong_xt DbgArgPointer;
+	word_xt TempSegCs;
+	uchar_xt Logging;
+	uchar_xt Reserved;
+	ulong_xt TempEsp;
+	ulong_xt Dr0;
+	ulong_xt Dr1;
+	ulong_xt Dr2;
+	ulong_xt Dr3;
+	ulong_xt Dr6;
+	ulong_xt Dr7;
+	ulong_xt SegGs;
+	ulong_xt SegEs;
+	ulong_xt SegDs;
+	ulong_xt Edx;
+	ulong_xt Ecx;
+	ulong_xt Eax;
+	ulong_xt PreviousPreviousMode;
 	PEXCEPTION_REGISTRATION_RECORD ExceptionList;
-	ulong_t SegFs;
-	ulong_t Edi;
-	ulong_t Esi;
-	ulong_t Ebx;
-	ulong_t Ebp;
-	ulong_t ErrCode;
-	ulong_t Eip;
-	ulong_t SegCs;
-	ulong_t EFlags;
-	ulong_t HardwareEsp;
-	ulong_t HardwareSegSs;
-	ulong_t V86Es;
-	ulong_t V86Ds;
-	ulong_t V86Fs;
-	ulong_t V86Gs;
+	ulong_xt SegFs;
+	ulong_xt Edi;
+	ulong_xt Esi;
+	ulong_xt Ebx;
+	ulong_xt Ebp;
+	ulong_xt ErrCode;
+	ulong_xt Eip;
+	ulong_xt SegCs;
+	ulong_xt EFlags;
+	ulong_xt HardwareEsp;
+	ulong_xt HardwareSegSs;
+	ulong_xt V86Es;
+	ulong_xt V86Ds;
+	ulong_xt V86Fs;
+	ulong_xt V86Gs;
 }
 KTRAP_FRAME, *PKTRAP_FRAME;
 
@@ -1832,9 +1832,9 @@ typedef struct _KWAIT_BLOCK
 	PKTHREAD Thread;
 	PVOID Object;
 	struct _KWAIT_BLOCK *NextWaitBlock;
-	word_t WaitKey;
-	uchar_t WaitType;
-	uchar_t SpareByte;
+	word_xt WaitKey;
+	uchar_xt WaitType;
+	uchar_xt SpareByte;
 }
 KWAIT_BLOCK, *PKWAIT_BLOCK;
 
@@ -1843,9 +1843,9 @@ KWAIT_BLOCK, *PKWAIT_BLOCK;
 // ******************************************************************
 typedef struct _KAPC
 {
-	/* 0x0/0 */ ushort_t Type;
+	/* 0x0/0 */ ushort_xt Type;
 	/* 0x2/2 */ KPROCESSOR_MODE ApcMode;
-	/* 0x3/3 */ boolean_t Inserted;
+	/* 0x3/3 */ boolean_xt Inserted;
 	/* 0x4/4 */ PKTHREAD Thread;
 	/* 0x8/8 */ LIST_ENTRY ApcListEntry;
 	/* 0x10/16 */ PKKERNEL_ROUTINE KernelRoutine;
@@ -1873,42 +1873,42 @@ typedef struct _KTHREAD
 	/* 0x20/32 */ void *StackLimit;
 	/* 0x24/36 */ void *KernelStack;
 	/* 0x28/40 */ void *TlsData;
-	/* 0x2C/44 */ char_t State;
-	/* 0x2D/45 */ char_t Alerted[2];
-	/* 0x2F/47 */ char_t Alertable;
-	/* 0x30/48 */ char_t NpxState;
-	/* 0x31/49 */ char_t Saturation;
-	/* 0x32/50 */ char_t Priority;
-	/* 0x33/51 */ char_t Padding;
+	/* 0x2C/44 */ char_xt State;
+	/* 0x2D/45 */ char_xt Alerted[2];
+	/* 0x2F/47 */ char_xt Alertable;
+	/* 0x30/48 */ char_xt NpxState;
+	/* 0x31/49 */ char_xt Saturation;
+	/* 0x32/50 */ char_xt Priority;
+	/* 0x33/51 */ char_xt Padding;
 	/* 0x34/52 */ KAPC_STATE ApcState;
-	/* 0x4C/76 */ ulong_t ContextSwitches;
-	/* 0x50/80 */ ulong_t WaitStatus;
-	/* 0x54/84 */ char_t WaitIrql;
-	/* 0x55/85 */ char_t WaitMode;
-	/* 0x56/86 */ char_t WaitNext;
-	/* 0x57/87 */ char_t WaitReason;
+	/* 0x4C/76 */ ulong_xt ContextSwitches;
+	/* 0x50/80 */ ulong_xt WaitStatus;
+	/* 0x54/84 */ char_xt WaitIrql;
+	/* 0x55/85 */ char_xt WaitMode;
+	/* 0x56/86 */ char_xt WaitNext;
+	/* 0x57/87 */ char_xt WaitReason;
 	/* 0x58/88 */ PKWAIT_BLOCK WaitBlockList;
 	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
-	/* 0x64/100 */ ulong_t WaitTime;
-	/* 0x68/104 */ ulong_t KernelApcDisable;
-	/* 0x6C/108 */ ulong_t Quantum;
-	/* 0x70/112 */ char_t BasePriority;
-	/* 0x71/113 */ char_t DecrementCount;
-	/* 0x72/114 */ char_t PriorityDecrement;
-	/* 0x73/115 */ char_t DisableBoost;
-	/* 0x74/116 */ char_t NpxIrql;
-	/* 0x75/117 */ char_t SuspendCount;
-	/* 0x76/118 */ char_t Preempted;
-	/* 0x77/119 */ char_t HasTerminated;
+	/* 0x64/100 */ ulong_xt WaitTime;
+	/* 0x68/104 */ ulong_xt KernelApcDisable;
+	/* 0x6C/108 */ ulong_xt Quantum;
+	/* 0x70/112 */ char_xt BasePriority;
+	/* 0x71/113 */ char_xt DecrementCount;
+	/* 0x72/114 */ char_xt PriorityDecrement;
+	/* 0x73/115 */ char_xt DisableBoost;
+	/* 0x74/116 */ char_xt NpxIrql;
+	/* 0x75/117 */ char_xt SuspendCount;
+	/* 0x76/118 */ char_xt Preempted;
+	/* 0x77/119 */ char_xt HasTerminated;
 	/* 0x78/120 */ PVOID Queue;
 	/* 0x7C/124 */ LIST_ENTRY QueueListEntry;
-	/* 0x88/136 */ uchar_t rsvd1[4];
+	/* 0x88/136 */ uchar_xt rsvd1[4];
 	/* 0x88/136 */ KTIMER Timer;
 	/* 0xB0/176 */ KWAIT_BLOCK TimerWaitBlock;
 	/* 0xC8/200 */ KAPC SuspendApc;
 	/* 0xF0/240 */ KSEMAPHORE SuspendSemaphore;
 	/* 0x104/260 */ LIST_ENTRY ThreadListEntry;
-	/* 0x10C/268 */ uchar_t _padding[4];
+	/* 0x10C/268 */ uchar_xt _padding[4];
 }
 KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 
@@ -1922,19 +1922,19 @@ KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 typedef struct _ETHREAD
 {
     struct _KTHREAD Tcb;
-    uchar_t           UnknownA[0x1C]; // 0x110
-    dword_t           UniqueThread;   // 0x12C
+    uchar_xt           UnknownA[0x1C]; // 0x110
+    dword_xt           UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
 
 // ******************************************************************
 // * PCREATE_THREAD_NOTIFY_ROUTINE
 // ******************************************************************
-typedef void_t(*PCREATE_THREAD_NOTIFY_ROUTINE)
+typedef void_xt(*PCREATE_THREAD_NOTIFY_ROUTINE)
 (
 	IN PETHREAD Thread,
 	IN HANDLE ThreadId,
-	IN boolean_t Create
+	IN boolean_xt Create
 );
 
 // ******************************************************************
@@ -1950,13 +1950,13 @@ typedef struct _KPRCB
     struct _KTHREAD* NextThread;                                    // 0x04, KPCR : 0x2C
     struct _KTHREAD* IdleThread;                                    // 0x08, KPCR : 0x30
 
-	ulong_t            Unknown1[7];                                   // 0x0C, KPCR : 0x34
+	ulong_xt            Unknown1[7];                                   // 0x0C, KPCR : 0x34
 
 	LIST_ENTRY       DpcListHead;                                   // 0x28, KPCR : 0x50
-	ulong_t            DpcRoutineActive;                              // 0x30, KPCR : 0x58
+	ulong_xt            DpcRoutineActive;                              // 0x30, KPCR : 0x58
 
     // This completes the total size of the structure (presumably)
-    uchar_t            Unknown[0x224];                            
+    uchar_xt            Unknown[0x224];                            
 }
 KPRCB, *PKPRCB;
 
@@ -1973,7 +1973,7 @@ typedef struct _KPCR
     struct _NT_TIB  NtTib;                                          // 0x00
     struct _KPCR   *SelfPcr;                                        // 0x1C
     struct _KPRCB  *Prcb;                                           // 0x20
-    uchar_t           Irql;                                           // 0x24
+    uchar_xt           Irql;                                           // 0x24
     struct _KPRCB   PrcbData;                                       // 0x28
 }
 KPCR, *PKPCR;
@@ -2022,27 +2022,27 @@ XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 // ******************************************************************
 typedef struct _XBOX_HARDWARE_INFO
 {
-    ulong_t Flags;
-    uchar_t GpuRevision;
-	uchar_t McpRevision;
-    uchar_t Unknown3;
-    uchar_t Unknown4;
+    ulong_xt Flags;
+    uchar_xt GpuRevision;
+	uchar_xt McpRevision;
+    uchar_xt Unknown3;
+    uchar_xt Unknown4;
 }
 XBOX_HARDWARE_INFO;
 
 const int XBOX_KEY_LENGTH = 16;
 const int ALTERNATE_SIGNATURE_COUNT = 16;
-typedef uchar_t XBOX_KEY_DATA[XBOX_KEY_LENGTH];
+typedef uchar_xt XBOX_KEY_DATA[XBOX_KEY_LENGTH];
 
 // ******************************************************************
 // * XBOX_ENCRYPTED_SETTINGS
 // ******************************************************************
 typedef struct _XBOX_ENCRYPTED_SETTINGS
 {
-	uchar_t Checksum[20];
-	uchar_t Confounder[8];
-	uchar_t HDKey[XBOX_KEY_LENGTH];
-	ulong_t GameRegion;
+	uchar_xt Checksum[20];
+	uchar_xt Confounder[8];
+	uchar_xt HDKey[XBOX_KEY_LENGTH];
+	ulong_xt GameRegion;
 }
 XBOX_ENCRYPTED_SETTINGS;
 
@@ -2051,13 +2051,13 @@ XBOX_ENCRYPTED_SETTINGS;
 // ******************************************************************
 typedef struct _XBOX_FACTORY_SETTINGS
 {
-	ulong_t Checksum;
-	uchar_t SerialNumber[12];
-	uchar_t EthernetAddr[6];
-	uchar_t Reserved1[2];
-	uchar_t OnlineKey[16];
-	ulong_t AVRegion;
-	ulong_t Reserved2;
+	ulong_xt Checksum;
+	uchar_xt SerialNumber[12];
+	uchar_xt EthernetAddr[6];
+	uchar_xt Reserved1[2];
+	uchar_xt OnlineKey[16];
+	ulong_xt AVRegion;
+	ulong_xt Reserved2;
 }
 XBOX_FACTORY_SETTINGS;
 
@@ -2066,10 +2066,10 @@ XBOX_FACTORY_SETTINGS;
 // ******************************************************************
 typedef struct _XBOX_TIMEZONE_DATE
 {
-	uchar_t Month;
-	uchar_t Day;
-	uchar_t DayOfWeek;
-	uchar_t Hour;
+	uchar_xt Month;
+	uchar_xt Day;
+	uchar_xt DayOfWeek;
+	uchar_xt Hour;
 }
 XBOX_TIMEZONE_DATE;
 
@@ -2079,28 +2079,28 @@ XBOX_TIMEZONE_DATE;
 #define TIME_ZONE_NAME_LENGTH 4
 typedef struct _XBOX_USER_SETTINGS
 {
-	ulong_t Checksum;
-	long_t TimeZoneBias;
-	char_t TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
-	char_t TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
-	ulong_t Reserved1[2];
+	ulong_xt Checksum;
+	long_xt TimeZoneBias;
+	char_xt TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
+	char_xt TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
+	ulong_xt Reserved1[2];
 	XBOX_TIMEZONE_DATE TimeZoneStdDate;
 	XBOX_TIMEZONE_DATE TimeZoneDltDate;
-	ulong_t Reserved2[2];
-	long_t TimeZoneStdBias;
-	long_t TimeZoneDltBias;
-	ulong_t Language;
-	ulong_t VideoFlags;
-	ulong_t AudioFlags;
-	ulong_t ParentalControlGames;
-	ulong_t ParentalControlPassword;
-	ulong_t ParentalControlMovies;
-	ulong_t OnlineIpAddress;
-	ulong_t OnlineDnsAddress;
-	ulong_t OnlineDefaultGatewayAddress;
-	ulong_t OnlineSubnetMask;
-	ulong_t MiscFlags;
-	ulong_t DvdRegion;
+	ulong_xt Reserved2[2];
+	long_xt TimeZoneStdBias;
+	long_xt TimeZoneDltBias;
+	ulong_xt Language;
+	ulong_xt VideoFlags;
+	ulong_xt AudioFlags;
+	ulong_xt ParentalControlGames;
+	ulong_xt ParentalControlPassword;
+	ulong_xt ParentalControlMovies;
+	ulong_xt OnlineIpAddress;
+	ulong_xt OnlineDnsAddress;
+	ulong_xt OnlineDefaultGatewayAddress;
+	ulong_xt OnlineSubnetMask;
+	ulong_xt MiscFlags;
+	ulong_xt DvdRegion;
 }
 XBOX_USER_SETTINGS;
 
@@ -2112,9 +2112,9 @@ typedef struct _XBOX_EEPROM
 	XBOX_ENCRYPTED_SETTINGS EncryptedSettings;
 	XBOX_FACTORY_SETTINGS FactorySettings;
 	XBOX_USER_SETTINGS UserSettings;
-	uchar_t Unused[58];
-	uchar_t UEMInfo[4];
-	uchar_t Reserved1[2];
+	uchar_xt Unused[58];
+	uchar_xt UEMInfo[4];
+	uchar_xt Reserved1[2];
 }
 XBOX_EEPROM;
 
@@ -2123,9 +2123,9 @@ XBOX_EEPROM;
 // ******************************************************************
 typedef struct _XBOX_UEM_INFO
 {
-	uchar_t ErrorCode;
-	uchar_t Unused;
-	ushort_t History;
+	uchar_xt ErrorCode;
+	uchar_xt Unused;
+	ushort_xt History;
 }
 XBOX_UEM_INFO;
 
@@ -2161,14 +2161,14 @@ XBOX_UEM_INFO;
 // ******************************************************************
 typedef struct _TIME_FIELDS
 {
-    ushort_t  Year;
-    ushort_t  Month;
-    ushort_t  Day;
-    ushort_t  Hour;
-    ushort_t  Minute;
-    ushort_t  Second;
-    ushort_t  Millisecond;
-    ushort_t  Weekday;
+    ushort_xt  Year;
+    ushort_xt  Month;
+    ushort_xt  Day;
+    ushort_xt  Hour;
+    ushort_xt  Minute;
+    ushort_xt  Second;
+    ushort_xt  Millisecond;
+    ushort_xt  Weekday;
 }
 TIME_FIELDS, *PTIME_FIELDS;
 
@@ -2183,11 +2183,11 @@ KINTERRUPT_POLARITY;
 
 typedef struct _OWNER_ENTRY
 {
-	ulong_t OwnerThread;
+	ulong_xt OwnerThread;
 	union
 	{
-		long_t OwnerCount;
-		ulong_t TableSize;
+		long_xt OwnerCount;
+		ulong_xt TableSize;
 	};
 }
 OWNER_ENTRY, *POWNER_ENTRY;
@@ -2196,21 +2196,21 @@ typedef struct _ERESOURCE
 {
 	LIST_ENTRY SystemResourcesList;
 	POWNER_ENTRY OwnerTable;
-	short_t ActiveCount;
-	word_t Flag;
+	short_xt ActiveCount;
+	word_xt Flag;
 	PKSEMAPHORE SharedWaiters;
 	PKEVENT ExclusiveWaiters;
 	OWNER_ENTRY OwnerEntry;
-	ulong_t ActiveEntries;
-	ulong_t ContentionCount;
-	ulong_t NumberOfSharedWaiters;
-	ulong_t NumberOfExclusiveWaiters;
+	ulong_xt ActiveEntries;
+	ulong_xt ContentionCount;
+	ulong_xt NumberOfSharedWaiters;
+	ulong_xt NumberOfExclusiveWaiters;
 	union
 	{
 		PVOID Address;
-		ulong_t CreatorBackTraceIndex;
+		ulong_xt CreatorBackTraceIndex;
 	};
-	ulong_t SpinLock;
+	ulong_xt SpinLock;
 }
 ERESOURCE, *PERESOURCE;
 
@@ -2236,38 +2236,38 @@ POOL_TYPE;
 
 typedef struct _GENERIC_MAPPING
 {
-	ulong_t GenericRead;
-	ulong_t GenericWrite;
-	ulong_t GenericExecute;
-	ulong_t GenericAll;
+	ulong_xt GenericRead;
+	ulong_xt GenericWrite;
+	ulong_xt GenericExecute;
+	ulong_xt GenericAll;
 }
 GENERIC_MAPPING, *PGENERIC_MAPPING;
 
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
-	word_t Length;
-	uchar_t ObjectTypeFlags;
-	ulong_t CaseInsensitive: 1;
-	ulong_t UnnamedObjectsOnly: 1;
-	ulong_t UseDefaultObject: 1;
-	ulong_t SecurityRequired: 1;
-	ulong_t MaintainHandleCount: 1;
-	ulong_t MaintainTypeList: 1;
-	ulong_t ObjectTypeCode;
-	ulong_t InvalidAttributes;
+	word_xt Length;
+	uchar_xt ObjectTypeFlags;
+	ulong_xt CaseInsensitive: 1;
+	ulong_xt UnnamedObjectsOnly: 1;
+	ulong_xt UseDefaultObject: 1;
+	ulong_xt SecurityRequired: 1;
+	ulong_xt MaintainHandleCount: 1;
+	ulong_xt MaintainTypeList: 1;
+	ulong_xt ObjectTypeCode;
+	ulong_xt InvalidAttributes;
 	GENERIC_MAPPING GenericMapping;
-	ulong_t ValidAccessMask;
+	ulong_xt ValidAccessMask;
 	POOL_TYPE PoolType;
-	ulong_t DefaultPagedPoolCharge;
-	ulong_t DefaultNonPagedPoolCharge;
+	ulong_xt DefaultPagedPoolCharge;
+	ulong_xt DefaultNonPagedPoolCharge;
 	PVOID DumpProcedure;
-	long_t * OpenProcedure;
+	long_xt * OpenProcedure;
 	PVOID CloseProcedure;
 	PVOID DeleteProcedure;
-	long_t * ParseProcedure;
-	long_t * SecurityProcedure;
-	long_t * QueryNameProcedure;
-	uchar_t * OkayToCloseProcedure;
+	long_xt * ParseProcedure;
+	long_xt * SecurityProcedure;
+	long_xt * QueryNameProcedure;
+	uchar_xt * OkayToCloseProcedure;
 }
 OBJECT_TYPE_INITIALIZER, *POBJECT_TYPE_INITIALIZER;
 
@@ -2275,12 +2275,12 @@ typedef struct _EX_PUSH_LOCK
 {
 	union
 	{
-		ulong_t Locked: 1;
-		ulong_t Waiting: 1;
-		ulong_t Waking: 1;
-		ulong_t MultipleShared: 1;
-		ulong_t Shared: 28;
-		ulong_t Value;
+		ulong_xt Locked: 1;
+		ulong_xt Waiting: 1;
+		ulong_xt Waking: 1;
+		ulong_xt MultipleShared: 1;
+		ulong_xt Shared: 28;
+		ulong_xt Value;
 		PVOID Ptr;
 	};
 }
@@ -2292,13 +2292,13 @@ typedef struct _OBJECT_TYPE
 	LIST_ENTRY TypeList;
 	UNICODE_STRING Name;
 	PVOID DefaultObject;
-	ulong_t Index;
-	ulong_t TotalNumberOfObjects;
-	ulong_t TotalNumberOfHandles;
-	ulong_t HighWaterNumberOfObjects;
-	ulong_t HighWaterNumberOfHandles;
+	ulong_xt Index;
+	ulong_xt TotalNumberOfObjects;
+	ulong_xt TotalNumberOfHandles;
+	ulong_xt HighWaterNumberOfObjects;
+	ulong_xt HighWaterNumberOfHandles;
 	OBJECT_TYPE_INITIALIZER TypeInfo;
-	ulong_t Key;
+	ulong_xt Key;
 	EX_PUSH_LOCK ObjectLocks[32];
 }
 OBJECT_TYPE, *POBJECT_TYPE;
@@ -2311,9 +2311,9 @@ OBJECT_TYPE, *POBJECT_TYPE;
 // * Use this to access I/O mapped memory. Just a good standard.
 // *
 // ******************************************************************
-INLINE static uchar_t READ_REGISTER_UCHAR(PUCHAR Address)
+INLINE static uchar_xt READ_REGISTER_UCHAR(PUCHAR Address)
 {
-    return *(volatile uchar_t *)Address;
+    return *(volatile uchar_xt *)Address;
 }
 
 // ******************************************************************
@@ -2323,9 +2323,9 @@ INLINE static uchar_t READ_REGISTER_UCHAR(PUCHAR Address)
 // * Use this to access I/O mapped memory. Just a good standard.
 // *
 // ******************************************************************
-INLINE static ushort_t READ_REGISTER_USHORT(PUSHORT Address)
+INLINE static ushort_xt READ_REGISTER_USHORT(PUSHORT Address)
 {
-    return *(volatile ushort_t *)Address;
+    return *(volatile ushort_xt *)Address;
 }
 
 // ******************************************************************
@@ -2335,9 +2335,9 @@ INLINE static ushort_t READ_REGISTER_USHORT(PUSHORT Address)
 // * Use this to access I/O mapped memory. Just a good standard.
 // *
 // ******************************************************************
-INLINE static ulong_t READ_REGISTER_ULONG(PULONG Address)
+INLINE static ulong_xt READ_REGISTER_ULONG(PULONG Address)
 {
-    return *(volatile ulong_t *)Address;
+    return *(volatile ulong_xt *)Address;
 }
 
 // ******************************************************************
@@ -2349,7 +2349,7 @@ INLINE static ulong_t READ_REGISTER_ULONG(PULONG Address)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static void_t WRITE_REGISTER_UCHAR(PVOID Address, uchar_t Value)
+static void_xt WRITE_REGISTER_UCHAR(PVOID Address, uchar_xt Value)
 {
     __asm
     {
@@ -2369,7 +2369,7 @@ static void_t WRITE_REGISTER_UCHAR(PVOID Address, uchar_t Value)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static void_t WRITE_REGISTER_USHORT(PVOID Address, ushort_t Value)
+static void_xt WRITE_REGISTER_USHORT(PVOID Address, ushort_xt Value)
 {
     __asm
     {
@@ -2389,7 +2389,7 @@ static void_t WRITE_REGISTER_USHORT(PVOID Address, ushort_t Value)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static void_t WRITE_REGISTER_ULONG(PVOID Address, ulong_t Value)
+static void_xt WRITE_REGISTER_ULONG(PVOID Address, ulong_xt Value)
 {
     __asm
     {
@@ -2404,42 +2404,42 @@ static void_t WRITE_REGISTER_ULONG(PVOID Address, ulong_t Value)
 // * SCSI_PASS_THROUGH_DIRECT
 // ******************************************************************
 typedef struct _SCSI_PASS_THROUGH_DIRECT {
-	ushort_t Length;
-	uchar_t ScsiStatus;
-	uchar_t PathId;
-	uchar_t TargetId;
-	uchar_t Lun;
-	uchar_t CdbLength;
-	uchar_t SenseInfoLength;
-	uchar_t DataIn;
-	ulong_t DataTransferLength;
-	ulong_t TimeOutValue;
+	ushort_xt Length;
+	uchar_xt ScsiStatus;
+	uchar_xt PathId;
+	uchar_xt TargetId;
+	uchar_xt Lun;
+	uchar_xt CdbLength;
+	uchar_xt SenseInfoLength;
+	uchar_xt DataIn;
+	ulong_xt DataTransferLength;
+	ulong_xt TimeOutValue;
 	PVOID DataBuffer;
-	ulong_t SenseInfoOffset;
-	uchar_t Cdb[16];
+	ulong_xt SenseInfoOffset;
+	uchar_xt Cdb[16];
 }SCSI_PASS_THROUGH_DIRECT, *PSCSI_PASS_THROUGH_DIRECT;
 
 // ******************************************************************
 // * MODE_PARAMETER_HEADER10
 // ******************************************************************
 typedef struct _MODE_PARAMETER_HEADER10 {
-	uchar_t ModeDataLength[2];
-	uchar_t MediumType;
-	uchar_t DeviceSpecificParameter;
-	uchar_t Reserved[2];
-	uchar_t BlockDescriptorLength[2];
+	uchar_xt ModeDataLength[2];
+	uchar_xt MediumType;
+	uchar_xt DeviceSpecificParameter;
+	uchar_xt Reserved[2];
+	uchar_xt BlockDescriptorLength[2];
 }MODE_PARAMETER_HEADER10, *PMODE_PARAMETER_HEADER10;
 
 // ******************************************************************
 // * DVDX2_AUTHENTICATION_PAGE
 // ******************************************************************
 typedef struct _DVDX2_AUTHENTICATION_PAGE {
-	uchar_t Unknown[2];
-    uchar_t PartitionArea;
-    uchar_t CDFValid;
-    uchar_t Authentication;
-	uchar_t Unknown2[3];
-	ulong_t Unknown3[3];
+	uchar_xt Unknown[2];
+    uchar_xt PartitionArea;
+    uchar_xt CDFValid;
+    uchar_xt Authentication;
+	uchar_xt Unknown2[3];
+	ulong_xt Unknown3[3];
 } DVDX2_AUTHENTICATION_PAGE, *PDVDX2_AUTHENTICATION_PAGE;
 
 // ******************************************************************
@@ -2457,16 +2457,16 @@ typedef struct _DVDX2_AUTHENTICATION {
 // See Xbe.h struct SectionHeader
 typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
 {
-	ulong_t Flags;
+	ulong_xt Flags;
 	PVOID VirtualAddress; // Virtual address (where this section loads in RAM)
-	ulong_t VirtualSize; // Virtual size (size of section in RAM; after FileSize it's 00'd)
-	ulong_t FileAddress; // File address (where in the file from which this section comes)
-	ulong_t FileSize; // File size (size of the section in the XBE file)
+	ulong_xt VirtualSize; // Virtual size (size of section in RAM; after FileSize it's 00'd)
+	ulong_xt FileAddress; // File address (where in the file from which this section comes)
+	ulong_xt FileSize; // File size (size of the section in the XBE file)
 	PCSZ SectionName; // Pointer to section name
-	ulong_t SectionReferenceCount; // Section reference count - when >= 1, section is loaded
+	ulong_xt SectionReferenceCount; // Section reference count - when >= 1, section is loaded
 	PUSHORT HeadReferenceCount; // Pointer to head shared page reference counter
 	PUSHORT TailReferenceCount; // Pointer to tail shared page reference counter
-	byte_t ShaHash[20];         // SHA hash.  Hash dword_t containing FileSize, then hash section.
+	byte_xt ShaHash[20];         // SHA hash.  Hash dword_xt containing FileSize, then hash section.
 }
 XBEIMAGE_SECTION, *PXBEIMAGE_SECTION;
 
@@ -2503,69 +2503,69 @@ typedef enum _MEDIA_TYPE {
 typedef struct _DISK_GEOMETRY {
 	LARGE_INTEGER Cylinders;
 	MEDIA_TYPE MediaType;
-	dword_t TracksPerCylinder;
-	dword_t SectorsPerTrack;
-	dword_t BytesPerSector;
+	dword_xt TracksPerCylinder;
+	dword_xt SectorsPerTrack;
+	dword_xt BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
 // From nxdk
 #pragma pack(push, 1)
 typedef struct _FLOATING_SAVE_AREA
 {
-    word_t ControlWord;
-    word_t StatusWord;
-    word_t TagWord;
-    word_t ErrorOpcode;
-    dword_t ErrorOffset;
-    dword_t ErrorSelector;
-    dword_t DataOffset;
-    dword_t DataSelector;
-    dword_t MXCsr;
-    dword_t Reserved2;
-    byte_t RegisterArea[128];
-    byte_t XmmRegisterArea[128];
-    byte_t Reserved4[224];
-    dword_t Cr0NpxState;
+    word_xt ControlWord;
+    word_xt StatusWord;
+    word_xt TagWord;
+    word_xt ErrorOpcode;
+    dword_xt ErrorOffset;
+    dword_xt ErrorSelector;
+    dword_xt DataOffset;
+    dword_xt DataSelector;
+    dword_xt MXCsr;
+    dword_xt Reserved2;
+    byte_xt RegisterArea[128];
+    byte_xt XmmRegisterArea[128];
+    byte_xt Reserved4[224];
+    dword_xt Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 #pragma pack(pop)
 
 typedef struct _CONTEXT
 {
-    dword_t ContextFlags; // 0x00
+    dword_xt ContextFlags; // 0x00
     FLOATING_SAVE_AREA FloatSave; // 0x04
-    dword_t Edi; // 0x208
-    dword_t Esi; // 0x20C
-    dword_t Ebx; // 0x210
-    dword_t Edx; // 0x214
-    dword_t Ecx; // 0x218
-    dword_t Eax; // 0x21C
-    dword_t Ebp; // 0x220
-    dword_t Eip; // 0x224
-    dword_t SegCs; // 0x228
-    dword_t EFlags; // 0x22C
-    dword_t Esp; // 0x230
-    dword_t SegSs; // 0x234
+    dword_xt Edi; // 0x208
+    dword_xt Esi; // 0x20C
+    dword_xt Ebx; // 0x210
+    dword_xt Edx; // 0x214
+    dword_xt Ecx; // 0x218
+    dword_xt Eax; // 0x21C
+    dword_xt Ebp; // 0x220
+    dword_xt Eip; // 0x224
+    dword_xt SegCs; // 0x228
+    dword_xt EFlags; // 0x22C
+    dword_xt Esp; // 0x230
+    dword_xt SegSs; // 0x234
 } CONTEXT, *PCONTEXT;
 
 // This is modeled around the Windows definition
 typedef struct _IO_COMPLETION_BASIC_INFORMATION {
-	long_t Depth;
+	long_xt Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
-typedef void_t(*PIDE_INTERRUPT_ROUTINE) (void);
+typedef void_xt(*PIDE_INTERRUPT_ROUTINE) (void);
 
-typedef void_t(*PIDE_FINISHIO_ROUTINE) (void);
+typedef void_xt(*PIDE_FINISHIO_ROUTINE) (void);
 
-typedef boolean_t(*PIDE_POLL_RESET_COMPLETE_ROUTINE) (void);
+typedef boolean_xt(*PIDE_POLL_RESET_COMPLETE_ROUTINE) (void);
 
-typedef void_t(*PIDE_TIMEOUT_EXPIRED_ROUTINE) (void);
+typedef void_xt(*PIDE_TIMEOUT_EXPIRED_ROUTINE) (void);
 
-typedef void_t(*PIDE_START_PACKET_ROUTINE) (
+typedef void_xt(*PIDE_START_PACKET_ROUTINE) (
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
 );
 
-typedef void_t(*PIDE_START_NEXT_PACKET_ROUTINE) (void);
+typedef void_xt(*PIDE_START_NEXT_PACKET_ROUTINE) (void);
 
 typedef struct _IDE_CHANNEL_OBJECT
 {
@@ -2576,15 +2576,15 @@ typedef struct _IDE_CHANNEL_OBJECT
     PIDE_START_PACKET_ROUTINE StartPacketRoutine;
     PIDE_START_NEXT_PACKET_ROUTINE StartNextPacketRoutine;
     KIRQL InterruptIrql;
-    boolean_t ExpectingBusMasterInterrupt;
-    boolean_t StartPacketBusy;
-    boolean_t StartPacketRequested;
-    uchar_t Timeout;
-    uchar_t IoRetries;
-    uchar_t MaximumIoRetries;
+    boolean_xt ExpectingBusMasterInterrupt;
+    boolean_xt StartPacketBusy;
+    boolean_xt StartPacketRequested;
+    uchar_xt Timeout;
+    uchar_xt IoRetries;
+    uchar_xt MaximumIoRetries;
     PIRP CurrentIrp;
     KDEVICE_QUEUE DeviceQueue;
-    ulong_t PhysicalRegionDescriptorTablePhysical;
+    ulong_xt PhysicalRegionDescriptorTablePhysical;
     KDPC TimerDpc;
     KDPC FinishDpc;
     KTIMER Timer;

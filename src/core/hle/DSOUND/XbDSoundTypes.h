@@ -72,8 +72,8 @@ typedef const WAVEFORMATEX *LPCWAVEFORMATEX;
 // * X_DSMIXBINVOLUMEPAIR
 // ******************************************************************
 typedef struct _XDSMIXBINVOLUMEPAIR {
-    dword_t       dwMixBin;
-    long_t        lVolume;
+    dword_xt       dwMixBin;
+    long_xt        lVolume;
 } X_DSMIXBINVOLUMEPAIR, *X_LPDSMIXBINVOLUMEPAIR;
 
 // ******************************************************************
@@ -81,7 +81,7 @@ typedef struct _XDSMIXBINVOLUMEPAIR {
 // ******************************************************************
 // Revision 2 (4039+)
 typedef struct _XDSMIXBINS {
-    dword_t                       dwCount;
+    dword_xt                       dwCount;
     X_LPDSMIXBINVOLUMEPAIR     lpMixBinVolumePairs;
 } X_DSMIXBINS, *X_LPDSMIXBINS;
 
@@ -145,12 +145,12 @@ typedef struct _XDSMIXBINS {
 // ******************************************************************
 struct X_DSBUFFERDESC
 {
-    dword_t           dwSize;
-    dword_t           dwFlags;
-    dword_t           dwBufferBytes;
+    dword_xt           dwSize;
+    dword_xt           dwFlags;
+    dword_xt           dwBufferBytes;
     LPWAVEFORMATEX  lpwfxFormat;
     X_LPDSMIXBINS   lpMixBinsOutput;
-    dword_t           dwInputMixBin;
+    dword_xt           dwInputMixBin;
 };
 
 // ******************************************************************
@@ -158,16 +158,16 @@ struct X_DSBUFFERDESC
 // ******************************************************************
 struct X_DSENVOLOPEDESC
 {
-    dword_t           dwEnvelopGenerator;
-    dword_t           dwMode;
-    dword_t           dwDelay;
-    dword_t           dwAttack;
-    dword_t           dwHold;
-    dword_t           dwDecay;
-    dword_t           dwRelease;
-    dword_t           dwSustain;
-    long_t            lPitchScale;
-    long_t            lFilterCutOff;
+    dword_xt           dwEnvelopGenerator;
+    dword_xt           dwMode;
+    dword_xt           dwDelay;
+    dword_xt           dwAttack;
+    dword_xt           dwHold;
+    dword_xt           dwDecay;
+    dword_xt           dwRelease;
+    dword_xt           dwSustain;
+    long_xt            lPitchScale;
+    long_xt            lFilterCutOff;
 };
 
 #define XTL_DSSCAPS_CTRL3D               0x00000010
@@ -178,15 +178,15 @@ struct X_DSENVOLOPEDESC
 #define XTL_DSSCAPS_NOMERGE              0x20000000
 #define XTL_DSSCAPS_ACCURATENOTIFY       0x40000000
 
-typedef xbox::void_t(XCALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, dword_t dwStatus);
+typedef xbox::void_xt(XCALLBACK *LPFNXMOCALLBACK)(LPVOID pStreamContext, LPVOID pPacketContext, dword_xt dwStatus);
 
 // ******************************************************************
 // * X_DSSTREAMDESC
 // ******************************************************************
 struct X_DSSTREAMDESC
 {
-    dword_t                       dwFlags;
-    dword_t                       dwMaxAttachedPackets;
+    dword_xt                       dwFlags;
+    dword_xt                       dwMaxAttachedPackets;
     LPWAVEFORMATEX              lpwfxFormat;
     LPFNXMOCALLBACK             lpfnCallback;
     LPVOID                      lpvContext;
@@ -196,7 +196,7 @@ struct X_DSSTREAMDESC
 // ******************************************************************
 // * REFERENCE_TIME
 // ******************************************************************
-typedef longlong_t REFERENCE_TIME, *PREFERENCE_TIME, *LPREFERENCE_TIME;
+typedef longlong_xt REFERENCE_TIME, *PREFERENCE_TIME, *LPREFERENCE_TIME;
 
 // ******************************************************************
 // * XMEDIAPACKET
@@ -204,7 +204,7 @@ typedef longlong_t REFERENCE_TIME, *PREFERENCE_TIME, *LPREFERENCE_TIME;
 typedef struct _XMEDIAPACKET
 {
     LPVOID pvBuffer;
-    dword_t dwMaxSize;
+    dword_xt dwMaxSize;
     PDWORD pdwCompletedSize;
     PDWORD pdwStatus;
     union {
@@ -226,10 +226,10 @@ XMEDIAPACKET, *PXMEDIAPACKET, *LPXMEDIAPACKET;
 // ******************************************************************
 typedef struct _XMEDIAINFO
 {
-    dword_t  dwFlags;
-    dword_t  dwInputSize;
-    dword_t  dwOutputSize;
-    dword_t  dwMaxLookahead;
+    dword_xt  dwFlags;
+    dword_xt  dwInputSize;
+    dword_xt  dwOutputSize;
+    dword_xt  dwMaxLookahead;
 }
 XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
 
@@ -246,9 +246,9 @@ XMEDIAINFO, *PXEIDIAINFO, *LPXMEDIAINFO;
 // ******************************************************************
 struct X_DSFILTERDESC
 {
-    dword_t dwMode;
-    dword_t dwQCoefficient;
-    dword_t adwCoefficients[4];
+    dword_xt dwMode;
+    dword_xt dwQCoefficient;
+    dword_xt adwCoefficients[4];
 };
 
 // X_DSFILTERDESC modes
@@ -262,12 +262,12 @@ struct X_DSFILTERDESC
 // ******************************************************************
 typedef struct _DSLFODESC
 {
-    dword_t dwLFO;
-    dword_t dwDelay;
-    dword_t dwDelta;
-    long_t lPitchModulation;
-    long_t lFilterCutOffRange;
-    long_t lAmplitudeModulation;
+    dword_xt dwLFO;
+    dword_xt dwDelay;
+    dword_xt dwDelta;
+    long_xt lPitchModulation;
+    long_xt lFilterCutOffRange;
+    long_xt lAmplitudeModulation;
 }
 DSLFODESC, *LPCDSLFODESC;
 
@@ -277,7 +277,7 @@ DSLFODESC, *LPCDSLFODESC;
 typedef struct xbox_adpcmwaveformat_tag
 {
     WAVEFORMATEX    wfx;                    // WAVEFORMATEX data
-    word_t            wSamplesPerBlock;       // Number of samples per encoded block.  It must be 64.
+    word_xt            wSamplesPerBlock;       // Number of samples per encoded block.  It must be 64.
 }
 XBOXADPCMWAVEFORMAT, *PXBOXADPCMWAVEFORMAT, *LPXBOXADPCMWAVEFORMAT;
 
@@ -288,22 +288,22 @@ typedef const XBOXADPCMWAVEFORMAT *LPCXBOXADPCMWAVEFORMAT;
 // ******************************************************************
 struct X_DSOUTPUTLEVELS
 {
-    dword_t dwAnalogLeftTotalPeak;    // analog peak
-    dword_t dwAnalogRightTotalPeak;
-    dword_t dwAnalogLeftTotalRMS;        // analog RMS
-    dword_t dwAnalogRightTotalRMS;
-    dword_t dwDigitalFrontLeftPeak;    // digital peak levels
-    dword_t dwDigitalFrontCenterPeak;
-    dword_t dwDigitalFrontRightPeak;
-    dword_t dwDigitalBackLeftPeak;
-    dword_t dwDigitalBackRightPeak;
-    dword_t dwDigitalLowFrequencyPeak;
-    dword_t dwDigitalFrontLeftRMS;    // digital RMS levels
-    dword_t dwDigitalFrontCenterRMS;
-    dword_t dwDigitalFrontRightRMS;
-    dword_t dwDigitalBackLeftRMS;
-    dword_t dwDigitalBackRightRMS;
-    dword_t dwDigitalLowFrequencyRMS;
+    dword_xt dwAnalogLeftTotalPeak;    // analog peak
+    dword_xt dwAnalogRightTotalPeak;
+    dword_xt dwAnalogLeftTotalRMS;        // analog RMS
+    dword_xt dwAnalogRightTotalRMS;
+    dword_xt dwDigitalFrontLeftPeak;    // digital peak levels
+    dword_xt dwDigitalFrontCenterPeak;
+    dword_xt dwDigitalFrontRightPeak;
+    dword_xt dwDigitalBackLeftPeak;
+    dword_xt dwDigitalBackRightPeak;
+    dword_xt dwDigitalLowFrequencyPeak;
+    dword_xt dwDigitalFrontLeftRMS;    // digital RMS levels
+    dword_xt dwDigitalFrontCenterRMS;
+    dword_xt dwDigitalFrontRightRMS;
+    dword_xt dwDigitalBackLeftRMS;
+    dword_xt dwDigitalBackRightRMS;
+    dword_xt dwDigitalLowFrequencyRMS;
 };
 
 // ******************************************************************
@@ -311,10 +311,10 @@ struct X_DSOUTPUTLEVELS
 // ******************************************************************
 struct X_DSCAPS
 {                                                       
-    dword_t dwFree2DBuffers;
-    dword_t dwFree3DBuffers;
-    dword_t dwFreeBufferSGEs;
-    dword_t dwMemoryAllocated;
+    dword_xt dwFree2DBuffers;
+    dword_xt dwFree3DBuffers;
+    dword_xt dwFreeBufferSGEs;
+    dword_xt dwMemoryAllocated;
 };
 
 #define X_DSSPEAKER_STEREO          0x00000000
@@ -324,52 +324,52 @@ struct X_DSCAPS
 #define X_DSSPEAKER_ENABLE_DTS      0x00020000
 
 struct X_DS3DBUFFER {
-    dword_t dwSize;
+    dword_xt dwSize;
     D3DVECTOR vPosition;
     D3DVECTOR vVelocity;
-    dword_t dwInsideConeAngle;
-    dword_t  dwOutsideConeAngle;
+    dword_xt dwInsideConeAngle;
+    dword_xt  dwOutsideConeAngle;
     D3DVECTOR vConeOrientation;
-    long_t lConeOutsideVolume;
-    float_t flMinDistance;
-    float_t flMaxDistance;
-    dword_t dwMode;
-    float_t flDistanceFactor;
-    float_t flRolloffFactor;
-    float_t flDopplerFactor;
+    long_xt lConeOutsideVolume;
+    float_xt flMinDistance;
+    float_xt flMaxDistance;
+    dword_xt dwMode;
+    float_xt flDistanceFactor;
+    float_xt flRolloffFactor;
+    float_xt flDopplerFactor;
 };
 
 struct X_DSI3DL2LISTENER {
-    long_t lRoom;
-    long_t lRoomHF;
-    float_t flRoomRolloffFactor;
-    float_t flDecayTime;
-    float_t flDecayHFRatio;
-    long_t  lReflections;
-    float_t flReflectionsDelay;
-    long_t  lReverb;
-    float_t flReverbDelay;
-    float_t flDiffusion;
-    float_t flDensity;
-    float_t flHFReference;
+    long_xt lRoom;
+    long_xt lRoomHF;
+    float_xt flRoomRolloffFactor;
+    float_xt flDecayTime;
+    float_xt flDecayHFRatio;
+    long_xt  lReflections;
+    float_xt flReflectionsDelay;
+    long_xt  lReverb;
+    float_xt flReverbDelay;
+    float_xt flDiffusion;
+    float_xt flDensity;
+    float_xt flHFReference;
 };
 
 struct X_DSI3DL2OBSTRUCTION {
-    long_t            lHFLevel;
-    float_t           flLFRatio;
+    long_xt            lHFLevel;
+    float_xt           flLFRatio;
 };
 
 struct X_DSI3DL2OCCLUSION {
-    long_t            lHFLevel;
-    float_t           flLFRatio;
+    long_xt            lHFLevel;
+    float_xt           flLFRatio;
 };
 
 struct X_DSI3DL2BUFFER {
-    long_t lDirect;
-    long_t lDirectHF;
-    long_t lRoom;
-    long_t lRoomHF;
-    float_t flRoomRolloffFactor;
+    long_xt lDirect;
+    long_xt lDirectHF;
+    long_xt lRoom;
+    long_xt lRoomHF;
+    float_xt flRoomRolloffFactor;
     X_DSI3DL2OBSTRUCTION Obstruction;
     X_DSI3DL2OCCLUSION Occlusion;
 };
@@ -378,14 +378,14 @@ typedef struct IDirectSoundStream IDirectSoundStream;
 typedef IDirectSoundStream *LPDIRECTSOUNDSTREAM;
 
 struct X_DSVOICEPROPS {
-    dword_t dwMixBinCount;
+    dword_xt dwMixBinCount;
     X_DSMIXBINVOLUMEPAIR MixBinVolumePairs[8];
-    long_t lPitch;
-    long_t l3DDistanceVolume;
-    long_t l3DConeVolume;
-    long_t l3DDopplerPitch;
-    long_t lI3DL2DirectVolume;
-    long_t lI3DL2RoomVolume;
+    long_xt lPitch;
+    long_xt l3DDistanceVolume;
+    long_xt l3DConeVolume;
+    long_xt l3DDopplerPitch;
+    long_xt lI3DL2DirectVolume;
+    long_xt lI3DL2RoomVolume;
 };
 
 } // end of namespace xbox

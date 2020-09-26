@@ -82,7 +82,7 @@ void InsertTailList(xbox::PLIST_ENTRY pListHead, xbox::PLIST_ENTRY pEntry)
 //#define RemoveEntryList(e) do { PLIST_ENTRY f = (e)->Flink, b = (e)->Blink; f->Blink = b; b->Flink = f; (e)->Flink = (e)->Blink = NULL; } while (0)
 
 // Returns TRUE if the list has become empty after removing the element, FALSE otherwise.
-xbox::boolean_t RemoveEntryList(xbox::PLIST_ENTRY pEntry)
+xbox::boolean_xt RemoveEntryList(xbox::PLIST_ENTRY pEntry)
 {
 	xbox::PLIST_ENTRY _EX_Flink = pEntry->Flink;
 	xbox::PLIST_ENTRY _EX_Blink = pEntry->Blink;
@@ -217,11 +217,11 @@ const DWORD IrqlMasks[] = {
 // * 0x0033 - InterlockedCompareExchange()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(51) xbox::long_t FASTCALL xbox::KRNL(InterlockedCompareExchange)
+XBSYSAPI EXPORTNUM(51) xbox::long_xt FASTCALL xbox::KRNL(InterlockedCompareExchange)
 (
 	IN OUT PLONG VOLATILE Destination,
-	IN long_t  Exchange,
-	IN long_t  Comparand
+	IN long_xt  Exchange,
+	IN long_xt  Comparand
 )
 {
 	LOG_FUNC_BEGIN
@@ -230,7 +230,7 @@ XBSYSAPI EXPORTNUM(51) xbox::long_t FASTCALL xbox::KRNL(InterlockedCompareExchan
 		LOG_FUNC_ARG(Comparand)
 		LOG_FUNC_END;
 
-	long_t res = InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand);
+	LONG res = InterlockedCompareExchange((NtDll::PLONG)Destination, (NtDll::LONG)Exchange, (NtDll::LONG)Comparand);
 
 	RETURN(res);
 }
@@ -239,14 +239,14 @@ XBSYSAPI EXPORTNUM(51) xbox::long_t FASTCALL xbox::KRNL(InterlockedCompareExchan
 // * 0x0034 - InterlockedDecrement()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(52) xbox::long_t FASTCALL xbox::KRNL(InterlockedDecrement)
+XBSYSAPI EXPORTNUM(52) xbox::long_xt FASTCALL xbox::KRNL(InterlockedDecrement)
 (
 	IN OUT PLONG Addend
 )
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	long_t res = InterlockedDecrement((NtDll::PLONG)Addend);
+	LONG res = InterlockedDecrement((NtDll::PLONG)Addend);
 
 	RETURN(res);
 }
@@ -255,14 +255,14 @@ XBSYSAPI EXPORTNUM(52) xbox::long_t FASTCALL xbox::KRNL(InterlockedDecrement)
 // * 0x0035 - InterlockedIncrement()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(53) xbox::long_t FASTCALL xbox::KRNL(InterlockedIncrement)
+XBSYSAPI EXPORTNUM(53) xbox::long_xt FASTCALL xbox::KRNL(InterlockedIncrement)
 (
 	IN OUT PLONG Addend
 )
 {
 	LOG_FUNC_ONE_ARG(Addend);
 
-	long_t res = InterlockedIncrement((NtDll::PLONG)Addend);
+	LONG res = InterlockedIncrement((NtDll::PLONG)Addend);
 
 	RETURN(res);
 }
@@ -271,10 +271,10 @@ XBSYSAPI EXPORTNUM(53) xbox::long_t FASTCALL xbox::KRNL(InterlockedIncrement)
 // * 0x0036 - InterlockedExchange()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(54) xbox::long_t FASTCALL xbox::KRNL(InterlockedExchange)
+XBSYSAPI EXPORTNUM(54) xbox::long_xt FASTCALL xbox::KRNL(InterlockedExchange)
 (
 	IN PLONG VOLATILE Destination,
-	IN long_t Value
+	IN long_xt Value
 )
 {
 	LOG_FUNC_BEGIN
@@ -282,7 +282,7 @@ XBSYSAPI EXPORTNUM(54) xbox::long_t FASTCALL xbox::KRNL(InterlockedExchange)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	long_t res = InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value);
+	LONG res = InterlockedExchange((NtDll::PLONG)Destination, (NtDll::LONG)Value);
 
 	RETURN(res);
 }
@@ -291,10 +291,10 @@ XBSYSAPI EXPORTNUM(54) xbox::long_t FASTCALL xbox::KRNL(InterlockedExchange)
 // * 0x0037 - InterlockedExchangeAdd()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(55) xbox::long_t FASTCALL xbox::KRNL(InterlockedExchangeAdd)
+XBSYSAPI EXPORTNUM(55) xbox::long_xt FASTCALL xbox::KRNL(InterlockedExchangeAdd)
 (
 	IN PLONG VOLATILE Addend,
-	IN long_t	Value
+	IN long_xt	Value
 )
 {
 	LOG_FUNC_BEGIN
@@ -302,7 +302,7 @@ XBSYSAPI EXPORTNUM(55) xbox::long_t FASTCALL xbox::KRNL(InterlockedExchangeAdd)
 		LOG_FUNC_ARG(Value)
 		LOG_FUNC_END;
 
-	long_t res = InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value);
+	LONG res = InterlockedExchangeAdd((NtDll::PLONG)Addend, (NtDll::LONG)Value);
 
 	RETURN(res);
 }
@@ -395,7 +395,7 @@ inline int bsr(const uint32_t a) { DWORD result; _BitScanReverse(&result, a); re
 // ******************************************************************
 // Restores the irq level on the current processor
 // ARGUMENTS NewIrql = Irql to lower to
-XBSYSAPI EXPORTNUM(161) xbox::void_t FASTCALL xbox::KfLowerIrql
+XBSYSAPI EXPORTNUM(161) xbox::void_xt FASTCALL xbox::KfLowerIrql
 (
     IN KIRQL NewIrql
 )
@@ -436,14 +436,14 @@ XBSYSAPI EXPORTNUM(161) xbox::void_t FASTCALL xbox::KfLowerIrql
 // * 0x00A2 - KiBugCheckData
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(162) xbox::ulong_ptr_t xbox::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
+XBSYSAPI EXPORTNUM(162) xbox::ulong_ptr_xt xbox::KiBugCheckData[5] = { NULL, NULL, NULL, NULL, NULL };
 
 extern xbox::KPRCB *KeGetCurrentPrcb();
 
 // ******************************************************************
 // * 0x00A3 - KiUnlockDispatcherDatabase()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(163) xbox::void_t FASTCALL xbox::KiUnlockDispatcherDatabase
+XBSYSAPI EXPORTNUM(163) xbox::void_xt FASTCALL xbox::KiUnlockDispatcherDatabase
 (
 	IN KIRQL OldIrql
 )
@@ -466,10 +466,10 @@ XBSYSAPI EXPORTNUM(357) xbox::IDE_CHANNEL_OBJECT xbox::IdexChannelObject = { };
 // ******************************************************************
 // * 0x0169 - RtlSnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(361) xbox::int_t CDECL xbox::RtlSnprintf
+XBSYSAPI EXPORTNUM(361) xbox::int_xt CDECL xbox::RtlSnprintf
 (
 	IN PCHAR string,
-	IN size_t count,
+	IN size_xt count,
 	IN LPCCH format,
 	...
 )
@@ -493,7 +493,7 @@ XBSYSAPI EXPORTNUM(361) xbox::int_t CDECL xbox::RtlSnprintf
 // ******************************************************************
 // * 0x016A - RtlSprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(362) xbox::int_t CDECL xbox::RtlSprintf
+XBSYSAPI EXPORTNUM(362) xbox::int_xt CDECL xbox::RtlSprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,
@@ -518,10 +518,10 @@ XBSYSAPI EXPORTNUM(362) xbox::int_t CDECL xbox::RtlSprintf
 // ******************************************************************
 // * 0x016B - RtlVsnprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(363) xbox::int_t CDECL xbox::RtlVsnprintf
+XBSYSAPI EXPORTNUM(363) xbox::int_xt CDECL xbox::RtlVsnprintf
 (
 	IN PCHAR string,
-	IN size_t count,
+	IN size_xt count,
 	IN LPCCH format,
 	...
 )
@@ -545,7 +545,7 @@ XBSYSAPI EXPORTNUM(363) xbox::int_t CDECL xbox::RtlVsnprintf
 // ******************************************************************
 // * 0x016C - RtlVsprintf()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(364) xbox::int_t CDECL xbox::RtlVsprintf
+XBSYSAPI EXPORTNUM(364) xbox::int_xt CDECL xbox::RtlVsprintf
 (
 	IN PCHAR string,
 	IN LPCCH format,
@@ -617,8 +617,8 @@ XBSYSAPI EXPORTNUM(369) xbox::NTSTATUS NTAPI xbox::UnknownAPI369
 // ******************************************************************
 XBSYSAPI EXPORTNUM(370) xbox::NTSTATUS NTAPI xbox::XProfpControl // PROFILING
 (
-	ulong_t Action,
-	ulong_t Param
+	ulong_xt Action,
+	ulong_xt Param
 )
 {
 	LOG_FUNC_BEGIN

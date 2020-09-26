@@ -165,7 +165,7 @@ class X_CMcpxStream
             // TODO: Function needs X_CMcpxStream "this" pointer (ecx!)
             //
 
-            xbox::void_t (WINAPI *Dummy_0x10)(xbox::dword_t dwDummy1, xbox::dword_t dwDummy2);   // 0x10
+            xbox::void_xt (WINAPI *Dummy_0x10)(xbox::dword_xt dwDummy1, xbox::dword_xt dwDummy2);   // 0x10
         }
         *pVtbl;
 
@@ -207,31 +207,31 @@ class X_CDirectSoundStream
         // vtable (cached by each instance, via constructor)
         struct _vtbl
         {
-            ulong_t (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
-            ulong_t (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
+            ulong_xt (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
+            ulong_xt (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
             
-            hresult_t (WINAPI *GetInfo)                                       // 0x08
+            hresult_xt (WINAPI *GetInfo)                                       // 0x08
             (
                 X_CDirectSoundStream*   pThis,
                 XMEDIAINFO*             pInfo
             );
 
-            hresult_t (WINAPI *GetStatus)                                     // 0x0C
+            hresult_xt (WINAPI *GetStatus)                                     // 0x0C
             (
                 X_CDirectSoundStream*   pThis,
                 LPDWORD                 pdwStatus
             );
 
-            hresult_t (WINAPI *Process)                                       // 0x10
+            hresult_xt (WINAPI *Process)                                       // 0x10
             (
                 X_CDirectSoundStream*   pThis,
                 PXMEDIAPACKET           pInputBuffer,
                 PXMEDIAPACKET           pOutputBuffer
             );
 
-            hresult_t (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
+            hresult_xt (WINAPI *Discontinuity)(X_CDirectSoundStream *pThis);   // 0x14
 
-            hresult_t (WINAPI *Flush)(X_CDirectSoundStream *pThis);           // 0x18
+            hresult_xt (WINAPI *Flush)(X_CDirectSoundStream *pThis);           // 0x18
 
             DWORD Unknown2;                                                 // 0x1C - ???
             DWORD Unknown3;                                                 // 0x20 - ???
@@ -298,39 +298,39 @@ class X_XFileMediaObject
         // vtable (cached by each instance, via constructor)
         struct _vtbl
         {
-            ulong_t (WINAPI *AddRef)(X_XFileMediaObject *pThis);            // 0x00
-            ulong_t (WINAPI *Release)(X_XFileMediaObject *pThis);           // 0x04
+            ulong_xt (WINAPI *AddRef)(X_XFileMediaObject *pThis);            // 0x00
+            ulong_xt (WINAPI *Release)(X_XFileMediaObject *pThis);           // 0x04
 
-            hresult_t (WINAPI *GetInfo)                                        // 0x08
+            hresult_xt (WINAPI *GetInfo)                                        // 0x08
             (
                 X_XFileMediaObject*     pThis,
                 XMEDIAINFO*             pInfo
             );
                                                                                                               
-            hresult_t (WINAPI *GetStatus)                                     // 0x0C
+            hresult_xt (WINAPI *GetStatus)                                     // 0x0C
             (
                 X_XFileMediaObject*     pThis,
                 LPDWORD                 pdwStatus
             );
  
-            hresult_t (WINAPI *Process)                                       // 0x10
+            hresult_xt (WINAPI *Process)                                       // 0x10
             (
                 X_XFileMediaObject*     pThis,
                 PXMEDIAPACKET           pInputBuffer,
                 PXMEDIAPACKET           pOutputBuffer
             );
            
-            hresult_t (WINAPI *Discontinuity)(X_XFileMediaObject *pThis);        // 0x14
+            hresult_xt (WINAPI *Discontinuity)(X_XFileMediaObject *pThis);        // 0x14
                                                                            
             DWORD Unknown7;
 /*
             HRESULT (WINAPI *Flush)(X_XFileMediaObject *pThis);                // 0x18
 */
-            hresult_t (WINAPI *Seek)                                            // 0x1C
+            hresult_xt (WINAPI *Seek)                                            // 0x1C
             (
                 X_XFileMediaObject*     pThis,
-                long_t                    lOffset, 
-                dword_t                   dwOrigin, 
+                long_xt                    lOffset, 
+                dword_xt                   dwOrigin, 
                 LPDWORD                 pdwAbsolute
             );
 /*
@@ -366,7 +366,7 @@ extern "C" {
 // ******************************************************************
 // * patch: DirectSoundCreate
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(DirectSoundCreate)
+xbox::hresult_xt WINAPI EMUPATCH(DirectSoundCreate)
 (
     LPVOID          pguidDeviceId,
     LPDIRECTSOUND8 *ppDirectSound,
@@ -376,12 +376,12 @@ xbox::hresult_t WINAPI EMUPATCH(DirectSoundCreate)
 // ******************************************************************
 // * patch: DirectSoundDoWork
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(DirectSoundDoWork)();
+xbox::void_xt WINAPI EMUPATCH(DirectSoundDoWork)();
 
 // ******************************************************************
 // * patch: IDirectSound_AddRef
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(IDirectSound_AddRef)
+xbox::ulong_xt WINAPI EMUPATCH(IDirectSound_AddRef)
 (
     LPDIRECTSOUND8          pThis
 );
@@ -389,7 +389,7 @@ xbox::ulong_t WINAPI EMUPATCH(IDirectSound_AddRef)
 // ******************************************************************
 // * patch: IDirectSound_Release
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(IDirectSound_Release)
+xbox::ulong_xt WINAPI EMUPATCH(IDirectSound_Release)
 (
     LPDIRECTSOUND8          pThis
 );
@@ -397,7 +397,7 @@ xbox::ulong_t WINAPI EMUPATCH(IDirectSound_Release)
 // ******************************************************************
 // * patch: CDirectSound_GetSpeakerConfig
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSound_GetSpeakerConfig)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSound_GetSpeakerConfig)
 (
     X_CDirectSound*         pThis,
     PDWORD                  pdwSpeakerConfig
@@ -406,7 +406,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSound_GetSpeakerConfig)
 // ******************************************************************
 // * patch: IDirectSound_SynchPlayback
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SynchPlayback)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SynchPlayback)
 (
     LPDIRECTSOUND8          pThis
 );
@@ -414,11 +414,11 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SynchPlayback)
 // ******************************************************************
 // * patch: IDirectSound_DownloadEffectsImage
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_DownloadEffectsImage)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_DownloadEffectsImage)
 (
     LPDIRECTSOUND8          pThis,
     LPCVOID                 pvImageBuffer,
-    dword_t                   dwImageSize,
+    dword_xt                   dwImageSize,
     PVOID                   pImageLoc,      // TODO: Use this param
     PVOID                  *ppImageDesc     // TODO: Use this param
 );
@@ -426,91 +426,91 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_DownloadEffectsImage)
 // ******************************************************************
 // * patch: IDirectSound_SetOrientation
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetOrientation)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetOrientation)
 (
     LPDIRECTSOUND8  pThis,
-    float_t           xFront,
-    float_t           yFront,
-    float_t           zFront,
-    float_t           xTop,
-    float_t           yTop,
-    float_t           zTop,
-    dword_t           dwApply
+    float_xt           xFront,
+    float_xt           yFront,
+    float_xt           zFront,
+    float_xt           xTop,
+    float_xt           yTop,
+    float_xt           zTop,
+    dword_xt           dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetDistanceFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetDistanceFactor)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
-    float_t           fDistanceFactor,
-    dword_t           dwApply
+    float_xt           fDistanceFactor,
+    dword_xt           dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetRolloffFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetRolloffFactor)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
-    float_t           fRolloffFactor,
-    dword_t           dwApply
+    float_xt           fRolloffFactor,
+    dword_xt           dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetDopplerFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetDopplerFactor)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
-    float_t           fDopplerFactor,
-    dword_t           dwApply
+    float_xt           fDopplerFactor,
+    dword_xt           dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetI3DL2Listener
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetI3DL2Listener)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetI3DL2Listener)
 (
     LPDIRECTSOUND8          pThis,
     X_DSI3DL2LISTENER      *pds3dl,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetMixBinHeadroom
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetMixBinHeadroom)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetMixBinHeadroom)
 (
     LPDIRECTSOUND8          pThis,
-    dword_t                   dwMixBinMask,
-    dword_t                   dwHeadroom
+    dword_xt                   dwMixBinMask,
+    dword_xt                   dwHeadroom
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMixBins
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwMixBinMask
+    dword_xt                   dwMixBinMask
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwMixBinMask,
-    const long_t*             alVolumes
+    dword_xt                   dwMixBinMask,
+    const long_xt*             alVolumes
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_LPDSMIXBINS           pMixBins
@@ -519,41 +519,41 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 // ******************************************************************
 // * patch: IDirectSound_SetPosition
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetPosition)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetPosition)
 (
     LPDIRECTSOUND8          pThis,
-    float_t                   x,
-    float_t                   y,
-    float_t                   z,
-    dword_t                   dwApply
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetVelocity
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetVelocity)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetVelocity)
 (
     LPDIRECTSOUND8          pThis,
-    float_t                   x,
-    float_t                   y,
-    float_t                   z,
-    dword_t                   dwApply
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetAllParameters
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetAllParameters)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetAllParameters)
 (
     LPDIRECTSOUND8          pThis,
     LPCDS3DLISTENER         pDS3DListenerParameters,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSound_CommitDeferredSettings
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSound_CommitDeferredSettings)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSound_CommitDeferredSettings)
 (
     X_CDirectSound*         pThis
 );
@@ -561,7 +561,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSound_CommitDeferredSettings)
 // ******************************************************************
 // * patch: IDirectSound_CreateSoundBuffer
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_CreateSoundBuffer)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_CreateSoundBuffer)
 (
     LPDIRECTSOUND8              pThis,
     X_DSBUFFERDESC*             pdsbd,
@@ -572,7 +572,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_CreateSoundBuffer)
 // ******************************************************************
 // * patch: DirectSoundCreateBuffer
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(DirectSoundCreateBuffer)
+xbox::hresult_xt WINAPI EMUPATCH(DirectSoundCreateBuffer)
 (
     X_DSBUFFERDESC*             pdsbd,
     XbHybridDSBuffer**          ppBuffer
@@ -581,72 +581,72 @@ xbox::hresult_t WINAPI EMUPATCH(DirectSoundCreateBuffer)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetBufferData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetBufferData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetBufferData)
 (
     XbHybridDSBuffer*           pHybridThis,
     LPVOID                      pvBufferData,
-    dword_t                       dwBufferBytes
+    dword_xt                       dwBufferBytes
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetPlayRegion
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 (
     XbHybridDSBuffer*           pHybridThis,
-    dword_t                       dwPlayStart,
-    dword_t                       dwPlayLength
+    dword_xt                       dwPlayStart,
+    dword_xt                       dwPlayLength
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Lock
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Lock)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_Lock)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwOffset,
-    dword_t                   dwBytes,
+    dword_xt                   dwOffset,
+    dword_xt                   dwBytes,
     LPVOID*                 ppvAudioPtr1,
     LPDWORD                 pdwAudioBytes1,
     LPVOID*                 ppvAudioPtr2,
     LPDWORD                 pdwAudioBytes2,
-    dword_t                   dwFlags
+    dword_xt                   dwFlags
 );
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Unlock
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Unlock)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_Unlock)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPVOID                  ppvAudioPtr1,
-    dword_t                   pdwAudioBytes1,
+    dword_xt                   pdwAudioBytes1,
     LPVOID                  ppvAudioPtr2,
-    dword_t                   pdwAudioBytes2
+    dword_xt                   pdwAudioBytes2
     );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetHeadroom
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetHeadroom)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwHeadroom
+    dword_xt                   dwHeadroom
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetLoopRegion
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwLoopStart,
-    dword_t                   dwLoopLength
+    dword_xt                   dwLoopStart,
+    dword_xt                   dwLoopLength
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Release
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(IDirectSoundBuffer_Release)
+xbox::ulong_xt WINAPI EMUPATCH(IDirectSoundBuffer_Release)
 (
     XbHybridDSBuffer*       pHybridThis
 );
@@ -654,16 +654,16 @@ xbox::ulong_t WINAPI EMUPATCH(IDirectSoundBuffer_Release)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetPitch
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetPitch)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetPitch)
 (
     XbHybridDSBuffer*       pHybridThis,
-    long_t                    lPitch
+    long_xt                    lPitch
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_GetStatus
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_GetStatus)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_GetStatus)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPDWORD                 pdwStatus
@@ -672,25 +672,25 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_GetStatus)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetVolume
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
 (
     XbHybridDSBuffer*       pHybridThis,
-    long_t                    lVolume
+    long_xt                    lVolume
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetCurrentPosition
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwNewPosition
+    dword_xt                   dwNewPosition
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_GetCurrentPosition
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 (
     XbHybridDSBuffer*       pHybridThis,
     PDWORD                  pdwCurrentPlayCursor,
@@ -700,7 +700,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Stop
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Stop)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_Stop)
 (
     XbHybridDSBuffer*       pHybridThis
 );
@@ -708,56 +708,56 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Stop)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_StopEx
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_StopEx)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_StopEx)
 (
     XbHybridDSBuffer*       pHybridThis,
     REFERENCE_TIME          rtTimeStamp,
-    dword_t                   dwFlags
+    dword_xt                   dwFlags
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Play
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Play)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_Play)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwReserved1,
-    dword_t                   dwReserved2,
-    dword_t                   dwFlags
+    dword_xt                   dwReserved1,
+    dword_xt                   dwReserved2,
+    dword_xt                   dwFlags
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PlayEx
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_PlayEx)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_PlayEx)
 (
     XbHybridDSBuffer*       pHybridThis,
     REFERENCE_TIME          rtTimeStamp,
-    dword_t                   dwFlags
+    dword_xt                   dwFlags
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetVolume
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetVolume)
 (
     XbHybridDSBuffer*       pHybridThis,
-    long_t                    lVolume
+    long_xt                    lVolume
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFrequency
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetFrequency)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetFrequency)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwFrequency
+    dword_xt                   dwFrequency
 );
 
 // ******************************************************************
 // * patch: DirectSoundCreateStream
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(DirectSoundCreateStream)
+xbox::hresult_xt WINAPI EMUPATCH(DirectSoundCreateStream)
 (
     X_DSSTREAMDESC*         pdssd,
     X_CDirectSoundStream**  ppStream
@@ -766,7 +766,7 @@ xbox::hresult_t WINAPI EMUPATCH(DirectSoundCreateStream)
 // ******************************************************************
 // * patch: IDirectSound_CreateSoundStream
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_CreateSoundStream)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_CreateSoundStream)
 (
     LPDIRECTSOUND8          pThis,
     X_DSSTREAMDESC*         pdssd,
@@ -777,32 +777,32 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_CreateSoundStream)
 // ******************************************************************
 // * patch: CMcpxStream_Dummy_0x10
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(CMcpxStream_Dummy_0x10)(dword_t dwDummy1, dword_t dwDummy2);
+xbox::void_xt WINAPI EMUPATCH(CMcpxStream_Dummy_0x10)(dword_xt dwDummy1, dword_xt dwDummy2);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetRolloffFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetRolloffFactor)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 (
     X_CDirectSoundStream *pThis,
-    float_t                 fRolloffFactor,
-    dword_t                 dwApply
+    float_xt                 fRolloffFactor,
+    dword_xt                 dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_AddRef
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(CDirectSoundStream_AddRef)(X_CDirectSoundStream *pThis);
+xbox::ulong_xt WINAPI EMUPATCH(CDirectSoundStream_AddRef)(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_Release
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pThis);
+xbox::ulong_xt WINAPI EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
 // * CDirectSoundStream_GetInfo
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_GetInfo)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetInfo)
 (
     X_CDirectSoundStream*    pThis, 
     LPXMEDIAINFO            pInfo
@@ -811,7 +811,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_GetInfo)
 // ******************************************************************
 // * patch: CDirectSoundStream_GetStatus
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_GetStatus)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetStatus)
 (
     X_CDirectSoundStream*   pThis,
     LPDWORD                 pdwStatus
@@ -820,7 +820,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_GetStatus)
 // ******************************************************************
 // * patch: CDirectSoundStream_Process
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_Process)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_Process)
 (
     X_CDirectSoundStream*   pThis,
     PXMEDIAPACKET           pInputBuffer,
@@ -830,17 +830,17 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_Process)
 // ******************************************************************
 // * patch: CDirectSoundStream_Discontinuity
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_Discontinuity)(X_CDirectSoundStream *pThis);
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_Discontinuity)(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_Flush
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_Flush)(X_CDirectSoundStream *pThis);
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_Flush)(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
 // * patch: CDirectSound_SynchPlayback
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSound_SynchPlayback)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSound_SynchPlayback)
 (
     LPDIRECTSOUND8          pThis
 );
@@ -848,269 +848,269 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSound_SynchPlayback)
 // ******************************************************************
 // * patch: CDirectSoundStream_Pause
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_Pause)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_Pause)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwPause
+    dword_xt                   dwPause
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetHeadroom
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetHeadroom)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetHeadroom)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwHeadroom
+    dword_xt                   dwHeadroom
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetAllParameters
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetAllParameters)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetAllParameters)
 (
     X_CDirectSoundStream*   pThis,
     X_DS3DBUFFER*           pc3DBufferParameters,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetConeAngles
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetConeAngles)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetConeAngles)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwInsideConeAngle,
-    dword_t                   dwOutsideConeAngle,
-    dword_t                   dwApply
+    dword_xt                   dwInsideConeAngle,
+    dword_xt                   dwOutsideConeAngle,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetConeOutsideVolume
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetConeOutsideVolume)
 (
     X_CDirectSoundStream*   pThis,
-    long_t                    lConeOutsideVolume,
-    dword_t                   dwApply
+    long_xt                    lConeOutsideVolume,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMaxDistance
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMaxDistance)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMaxDistance)
 (
     X_CDirectSoundStream*   pThis,
     D3DVALUE                fMaxDistance,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMinDistance
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMinDistance)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMinDistance)
 (
     X_CDirectSoundStream*   pThis,
     D3DVALUE                fMinDistance,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetVelocity
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetVelocity)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetVelocity)
 (
     X_CDirectSoundStream*   pThis,
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetConeOrientation
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetConeOrientation)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetConeOrientation)
 (
     X_CDirectSoundStream*   pThis,
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetPosition
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetPosition)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetPosition)
 (
     X_CDirectSoundStream*   pThis,
     D3DVALUE                x,
     D3DVALUE                y,
     D3DVALUE                z,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetFrequency
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetFrequency)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetFrequency)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwFrequency
+    dword_xt                   dwFrequency
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetI3DL2Source
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 (
     X_CDirectSoundStream*   pThis,
     X_DSI3DL2BUFFER*        pds3db,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMixBins
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMixBins)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwMixBinMask
+    dword_xt                   dwMixBinMask
 );
 
 // s+
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMaxDistance
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   flMaxDistance,
-    dword_t                   dwApply
+    float_xt                   flMaxDistance,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMinDistance
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMinDistance)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   flMaxDistance,
-    dword_t                   dwApply
+    float_xt                   flMaxDistance,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetRolloffFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   flRolloffFactor,
-    dword_t                   dwApply
+    float_xt                   flRolloffFactor,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetDistanceFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   flDistanceFactor,
-    dword_t                   dwApply
+    float_xt                   flDistanceFactor,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetConeAngles
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetConeAngles)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwInsideConeAngle,
-    dword_t                   dwOutsideConeAngle,
-    dword_t                   dwApply
+    dword_xt                   dwInsideConeAngle,
+    dword_xt                   dwOutsideConeAngle,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetConeOrientation
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   x,
-    float_t                   y,
-    float_t                   z,
-    dword_t                   dwApply
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetConeOutsideVolume
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 (
     XbHybridDSBuffer*       pHybridThis,
-    long_t                    lConeOutsideVolume,
-    dword_t                   dwApply
+    long_xt                    lConeOutsideVolume,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetPosition
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetPosition)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetPosition)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   x,
-    float_t                   y,
-    float_t                   z,
-    dword_t                   dwApply
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetVelocity
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetVelocity)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetVelocity)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   x,
-    float_t                   y,
-    float_t                   z,
-    dword_t                   dwApply
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetDopplerFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_t                   flDopplerFactor,
-    dword_t                   dwApply
+    float_xt                   flDopplerFactor,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_DSI3DL2BUFFER*        pds3db,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 // +s
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMode
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMode)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMode)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwMode,
-    dword_t                   dwApply
+    dword_xt                   dwMode,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFormat
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetFormat)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetFormat)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPCWAVEFORMATEX pwfxFormat
@@ -1139,7 +1139,7 @@ void WINAPI EMUPATCH(DirectSoundUseLightHRTF4Channel)(void);
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetLFO
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPCDSLFODESC            pLFODesc
@@ -1148,7 +1148,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetLFO)
 // ******************************************************************
 // * patch: CDirectSoundStream_SetLFO
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetLFO)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetLFO)
 (
     X_CDirectSoundStream *pThis,
     LPCDSLFODESC         pLFODesc
@@ -1157,46 +1157,46 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetLFO)
 // ******************************************************************
 // * patch: XAudioCreateAdpcmFormat // NOTE: Not require to patch
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
+xbox::void_xt WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
 (
-    word_t                        nChannels,
-    dword_t                       nSamplesPerSec,
+    word_xt                        nChannels,
+    dword_xt                       nSamplesPerSec,
     OUT LPXBOXADPCMWAVEFORMAT   pwfx
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetRolloffCurve
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 (
     XbHybridDSBuffer*       pHybridThis,
-    const float_t*            pflPoints,
-    dword_t                   dwPointCount,
-    dword_t                   dwApply
+    const float_xt*            pflPoints,
+    dword_xt                   dwPointCount,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetVolume
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetVolume)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetVolume)
 (
     X_CDirectSoundStream*   pStream,
-    long_t                    lVolume
+    long_xt                    lVolume
 );
 
 // ******************************************************************
 // * patch: IDirectSound_EnableHeadphones
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_EnableHeadphones)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_EnableHeadphones)
 (
     LPDIRECTSOUND8      pThis,
-    bool_t                fEnabled
+    bool_xt                fEnabled
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_AddRef
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(IDirectSoundBuffer_AddRef)
+xbox::ulong_xt WINAPI EMUPATCH(IDirectSoundBuffer_AddRef)
 (
     XbHybridDSBuffer*       pHybridThis
 );
@@ -1204,36 +1204,36 @@ xbox::ulong_t WINAPI EMUPATCH(IDirectSoundBuffer_AddRef)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Pause
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Pause)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_Pause)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwPause
+    dword_xt                   dwPause
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PauseEx
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_PauseEx)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_PauseEx)
 (
     XbHybridDSBuffer*       pHybridThis,
     REFERENCE_TIME          rtTimestamp,
-    dword_t                   dwPause
+    dword_xt                   dwPause
 );
 
 // ******************************************************************
 // * patch: IDirectSound_GetOutputLevels
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_GetOutputLevels)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_GetOutputLevels)
 (
     LPDIRECTSOUND8*         pThis,
     X_DSOUTPUTLEVELS*       pOutputLevels,
-    bool_t                    bResetPeakValues
+    bool_xt                    bResetPeakValues
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetEG
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetEG)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetEG)
 (
     X_CDirectSoundStream*   pThis,
     X_DSENVOLOPEDESC*       pEnvelopeDesc
@@ -1242,38 +1242,38 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetEG)
 // ******************************************************************
 // * patch: CDirectSoundStream_FlushEx
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_FlushEx)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_FlushEx)
 (
     X_CDirectSoundStream*   pThis,
     REFERENCE_TIME          rtTimeStamp,
-    dword_t                   dwFlags
+    dword_xt                   dwFlags
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMode
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMode)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMode)
 (
     X_CDirectSoundStream*   pStream,
-    dword_t                   dwMode,
-    dword_t                   dwApply
+    dword_xt                   dwMode,
+    dword_xt                   dwApply
 );
     
 // ******************************************************************
 // * patch: XAudioDownloadEffectsImage
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XAudioDownloadEffectsImage)
+xbox::hresult_xt WINAPI EMUPATCH(XAudioDownloadEffectsImage)
 (
     LPCSTR          pszImageName,
     LPVOID          pImageLoc,
-    dword_t           dwFlags,
+    dword_xt           dwFlags,
     LPVOID*         ppImageDesc
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFilter
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetFilter)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetFilter)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_DSFILTERDESC*         pFilterDesc
@@ -1282,7 +1282,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetFilter)
 // ******************************************************************
 // * patch: CDirectSoundStream_SetFilter
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetFilter)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetFilter)
 (
     X_CDirectSoundStream*   pThis,
     X_DSFILTERDESC*         pFilterDesc
@@ -1291,7 +1291,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetFilter)
 // ******************************************************************
 // * patch: IDirectSound_GetCaps
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_GetCaps)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_GetCaps)
 (
     X_CDirectSound*    pThis,
     X_DSCAPS*        pDSCaps
@@ -1300,31 +1300,31 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_GetCaps)
 // ******************************************************************
 // * patch: CDirectSoundStream_SetPitch
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetPitch)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetPitch)
 (    
     X_CDirectSoundStream*   pThis,
-    long_t                    lPitch
+    long_xt                    lPitch
 );
 
 // ******************************************************************
 // * patch: DirectSoundGetSampleTime
 // ******************************************************************
-xbox::dword_t WINAPI EMUPATCH(DirectSoundGetSampleTime)();
+xbox::dword_xt WINAPI EMUPATCH(DirectSoundGetSampleTime)();
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMixBinVolumes_12
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 (
     X_CDirectSoundStream*    pThis,
-    dword_t                    dwMixBinMask,
-    const long_t*              alVolumes
+    dword_xt                    dwMixBinMask,
+    const long_xt*              alVolumes
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetMixBinVolumes_8
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 (
     X_CDirectSoundStream*    pThis,
     X_LPDSMIXBINS            pMixBins
@@ -1333,27 +1333,27 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMixBinVolumes_8)
 // ******************************************************************
 // * patch: CDirectSoundStream_SetI3DL2Source
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 (
     X_CDirectSoundStream*   pThis,
     X_DSI3DL2BUFFER*        pds3db,
-    dword_t                   dwApply
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetAllParameters)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_DS3DBUFFER*            pc3DBufferParameters,
-    dword_t                    dwApply
+    dword_xt                    dwApply
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream::SetFormat
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetFormat)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetFormat)
 (
     X_CDirectSoundStream*   pThis,
     LPCWAVEFORMATEX         pwfxFormat
@@ -1362,7 +1362,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetFormat)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetOutputBuffer
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 (
     XbHybridDSBuffer*       pHybridThis,
     XbHybridDSBuffer*       pOutputBuffer
@@ -1371,7 +1371,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 // ******************************************************************
 // * patch: CDirectSoundStream_SetOutputBuffer
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetOutputBuffer)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 (
     X_CDirectSoundStream*   pThis,
     XbHybridDSBuffer*       pOutputBuffer
@@ -1380,7 +1380,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetOutputBuffer)
 // ******************************************************************
 // * patch: XFileCreaeMediaObjectEx
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileCreateMediaObjectEx)
+xbox::hresult_xt WINAPI EMUPATCH(XFileCreateMediaObjectEx)
 (
     HANDLE    hFile,
     void**    ppMediaObject
@@ -1389,7 +1389,7 @@ xbox::hresult_t WINAPI EMUPATCH(XFileCreateMediaObjectEx)
 // ******************************************************************
 // * patch: XWaveFileCreateMediaObject
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XWaveFileCreateMediaObject)
+xbox::hresult_xt WINAPI EMUPATCH(XWaveFileCreateMediaObject)
 (
     LPCSTR              pszFileName,
     LPCWAVEFORMATEX    *ppwfxFormat,
@@ -1399,7 +1399,7 @@ xbox::hresult_t WINAPI EMUPATCH(XWaveFileCreateMediaObject)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetEG
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
 (
     XbHybridDSBuffer*   pHybridThis,
     X_DSENVOLOPEDESC*   pEnvelopeDesc
@@ -1408,53 +1408,53 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetEG)
 // ******************************************************************
 // * patch: IDirectSound_GetEffectData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_GetEffectData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_GetEffectData)
 (
     X_CDirectSound*     pThis,
-    dword_t               dwEffectIndex,
-    dword_t               dwOffset,
+    dword_xt               dwEffectIndex,
+    dword_xt               dwOffset,
     LPVOID              pvData,
-    dword_t               dwDataSize
+    dword_xt               dwDataSize
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetNotificationPositions
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t                   dwNotifyCount,
+    dword_xt                   dwNotifyCount,
     LPCDSBPOSITIONNOTIFY    paNotifies
 );
 
 // ******************************************************************
 // * patch: CDirectSoundStream::SetRolloffCurve
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetRolloffCurve)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 (
     X_CDirectSoundStream*   pThis,
-    const float_t*            pflPoints,
-    dword_t                   dwPointCount,
-    dword_t                   dwApply
+    const float_xt*            pflPoints,
+    dword_xt                   dwPointCount,
+    dword_xt                   dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSound_SetEffectData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetEffectData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetEffectData)
 (
     LPVOID pThis,
-    dword_t dwEffectIndex,
-    dword_t dwOffset,
+    dword_xt dwEffectIndex,
+    dword_xt dwOffset,
     LPCVOID pvData,
-    dword_t dwDataSize,
-    dword_t dwApply
+    dword_xt dwDataSize,
+    dword_xt dwApply
 );
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Use3DVoiceData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPUNKNOWN               pUnknown
@@ -1463,33 +1463,33 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
 // ******************************************************************
 // * patch: XFileCreateMediaObjectAsync
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileCreateMediaObjectAsync)
+xbox::hresult_xt WINAPI EMUPATCH(XFileCreateMediaObjectAsync)
 (
     HANDLE    hFile,
-    dword_t    dwMaxPackets,
+    dword_xt    dwMaxPackets,
     void    **ppMediaObject
 );
 
 // ******************************************************************
 // * patch: XFileMediaObject_Seek
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_Seek)
+xbox::hresult_xt WINAPI EMUPATCH(XFileMediaObject_Seek)
 (
     X_XFileMediaObject* pThis,
-    long_t                lOffset,
-    dword_t               dwOrigin,
+    long_xt                lOffset,
+    dword_xt               dwOrigin,
     LPDWORD             pdwAbsolute
 );
 
 // ******************************************************************
 // * patch: XFileMediaObject_DoWork
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis);
+xbox::void_xt WINAPI EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis);
 
 // ******************************************************************
 // * patch: XFileMediaObject_GetStatus
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_GetStatus)
+xbox::hresult_xt WINAPI EMUPATCH(XFileMediaObject_GetStatus)
 (
     X_XFileMediaObject*     pThis,
     LPDWORD                 pdwStatus
@@ -1498,7 +1498,7 @@ xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_GetStatus)
 // ******************************************************************
 // * patch: XFileMediaObject_GetInfo
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_GetInfo)
+xbox::hresult_xt WINAPI EMUPATCH(XFileMediaObject_GetInfo)
 (
     X_XFileMediaObject       *pThis,
     XMEDIAINFO               *pInfo
@@ -1507,7 +1507,7 @@ xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_GetInfo)
 // ******************************************************************
 // * patch: XFileMediaObject_Process
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_Process)
+xbox::hresult_xt WINAPI EMUPATCH(XFileMediaObject_Process)
 (
     X_XFileMediaObject       *pThis,
     LPXMEDIAPACKET            pInputBuffer, 
@@ -1517,61 +1517,61 @@ xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_Process)
 // ******************************************************************
 // * patch: XFileMediaObject_AddRef
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(XFileMediaObject_AddRef)(X_XFileMediaObject *pThis);
+xbox::ulong_xt WINAPI EMUPATCH(XFileMediaObject_AddRef)(X_XFileMediaObject *pThis);
 
 // ******************************************************************
 // * patch: XFileMediaObject_Release
 // ******************************************************************
-xbox::ulong_t WINAPI EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject *pThis);
+xbox::ulong_xt WINAPI EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject *pThis);
 
 // ******************************************************************
 // * patch: XFileMediaObject_Discontinuity
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_Discontinuity)(X_XFileMediaObject *pThis);
+xbox::hresult_xt WINAPI EMUPATCH(XFileMediaObject_Discontinuity)(X_XFileMediaObject *pThis);
 
 // ******************************************************************
 // * patch: IDirectSound_GetSpeakerConfig
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_GetSpeakerConfig)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_GetSpeakerConfig)
     (X_CDirectSound* pThis, OUT LPDWORD* pdwSpeakerConfig);
 
 // ******************************************************************
 // * patch: IDirectSound_CommitDeferredSettings
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_CommitDeferredSettings)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_CommitDeferredSettings)
     (X_CDirectSound* pThis);
 
 // ******************************************************************
 // * patch: IDirectSound_CommitEffectData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSound_CommitEffectData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_CommitEffectData)
     (X_CDirectSound* pThis);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_PauseEx
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_PauseEx)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_PauseEx)
 (
     X_CDirectSoundStream   *pThis,
     REFERENCE_TIME          rtTimestamp,
-    dword_t                   dwPause);
+    dword_xt                   dwPause);
 
 // ******************************************************************
 // * patch: XFileCreaeMediaObject
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFileCreateMediaObject)
+xbox::hresult_xt WINAPI EMUPATCH(XFileCreateMediaObject)
 (
     LPCSTR              pstrFileName,
-    dword_t               dwDesiredAccess,
-    dword_t               dwShareMode,
-    dword_t               dwCreationDisposition,
-    dword_t               dwFlagsAndAttributes,
+    dword_xt               dwDesiredAccess,
+    dword_xt               dwShareMode,
+    dword_xt               dwCreationDisposition,
+    dword_xt               dwFlagsAndAttributes,
     OUT void**          ppMediaObject);
 
 // ******************************************************************
 // * patch: XWaveFileCreateMediaObjectEx
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XWaveFileCreateMediaObjectEx)
+xbox::hresult_xt WINAPI EMUPATCH(XWaveFileCreateMediaObjectEx)
 (
     LPCSTR              pszFileName,
     HANDLE              hFile,
@@ -1580,34 +1580,34 @@ xbox::hresult_t WINAPI EMUPATCH(XWaveFileCreateMediaObjectEx)
 // ******************************************************************
 // * patch: XAudioSetEffectData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XAudioSetEffectData)
+xbox::hresult_xt WINAPI EMUPATCH(XAudioSetEffectData)
 (
-    dword_t               dwEffectIndex,
+    dword_xt               dwEffectIndex,
     void*               pDesc,
     void*               pRawDesc);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetDistanceFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetDistanceFactor)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetDistanceFactor)
 (
     X_CDirectSoundStream*   pThis,
-    float_t                   flDistanceFactor,
-    dword_t                   dwApply);
+    float_xt                   flDistanceFactor,
+    dword_xt                   dwApply);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_SetDopplerFactor
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetDopplerFactor)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetDopplerFactor)
 (
     X_CDirectSoundStream*   pThis,
-    float_t                   flDopplerFactor,
-    dword_t                   dwApply);
+    float_xt                   flDopplerFactor,
+    dword_xt                   dwApply);
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_GetVoiceProperties
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 (
     XbHybridDSBuffer*       pHybridThis,
     OUT X_DSVOICEPROPS*     pVoiceProps);
@@ -1615,7 +1615,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 // ******************************************************************
 // * patch: CDirectSoundStream_GetVoiceProperties
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_GetVoiceProperties)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetVoiceProperties)
 (
     X_CDirectSoundStream*   pThis,
     OUT X_DSVOICEPROPS*     pVoiceProps);
@@ -1623,23 +1623,23 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_GetVoiceProperties)
 // ******************************************************************
 // * patch: IDirectSoundStream_SetVolume
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetVolume)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetVolume)
 (
     X_CDirectSoundStream*   pThis,
-    long_t                    lVolume);
+    long_xt                    lVolume);
 
 // ******************************************************************
 // * patch: IDirectSoundStream_SetPitch
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetPitch)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetPitch)
 (
     X_CDirectSoundStream*   pThis,
-    long_t                    lPitch);
+    long_xt                    lPitch);
 
 // ******************************************************************
 // * patch: IDirectSoundStream_SetLFO
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetLFO)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetLFO)
 (
     X_CDirectSoundStream*   pThis,
     LPCDSLFODESC            pLFODesc);
@@ -1647,7 +1647,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetLFO)
 // ******************************************************************
 // * patch: IDirectSoundStream_SetEG
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetEG)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetEG)
 (
     X_CDirectSoundStream*   pThis,
     X_DSENVOLOPEDESC*       pEnvelopeDesc);
@@ -1655,7 +1655,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetEG)
 // ******************************************************************
 // * patch: IDirectSoundStream_SetFilter
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetFilter)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetFilter)
 (
     X_CDirectSoundStream*   pThis,
     X_DSFILTERDESC*         pFilterDesc);
@@ -1663,70 +1663,70 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetFilter)
 // ******************************************************************
 // * patch: IDirectSoundStream_SetHeadroom
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetHeadroom)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetHeadroom)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwHeadroom);
+    dword_xt                   dwHeadroom);
 
 // ******************************************************************
 // * patch: IDirectSoundStream_SetFrequency
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetFrequency)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetFrequency)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwFrequency);
+    dword_xt                   dwFrequency);
 
 // ******************************************************************
 // * patch: IDirectSoundStream_SetMixBins
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_SetMixBins)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t                   dwMixBinMask);
+    dword_xt                   dwMixBinMask);
 
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_Calculate3D
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(CDirectSound3DCalculator_Calculate3D)
+xbox::void_xt WINAPI EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 (
-    dword_t a1,
-    dword_t a2);
+    dword_xt a1,
+    dword_xt a2);
 
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_GetVoiceData
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
+xbox::void_xt WINAPI EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
 (
-    dword_t a1,
-    dword_t a2,
-    dword_t a3,
-    dword_t a4,
-    dword_t a5);
+    dword_xt a1,
+    dword_xt a2,
+    dword_xt a3,
+    dword_xt a4,
+    dword_xt a5);
 
 // ******************************************************************
 // * patch:  IDirectSoundBuffer_Set3DVoiceData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_t a2);
+    dword_xt a2);
 
 // ******************************************************************
 // * patch:  IDirectSoundStream_Set3DVoiceData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_Set3DVoiceData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_Set3DVoiceData)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t a2
+    dword_xt a2
 );
 
 // ******************************************************************
 // * patch:  IDirectSoundStrea,_Use3DVoiceData
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IDirectSoundStream_Use3DVoiceData)
+xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_Use3DVoiceData)
 (
     X_CDirectSoundStream*   pThis,
-    dword_t a2
+    dword_xt a2
 );
 
 } // end of extern "C"

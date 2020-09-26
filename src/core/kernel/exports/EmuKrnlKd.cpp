@@ -35,10 +35,10 @@
 // ******************************************************************
 // * 0x0058 - KdDebuggerEnabled
 // ******************************************************************
-XBSYSAPI EXPORTNUM(88) xbox::boolean_t xbox::KdDebuggerEnabled = false;
+XBSYSAPI EXPORTNUM(88) xbox::boolean_xt xbox::KdDebuggerEnabled = false;
 
 // ******************************************************************
 // * 0x0059 - KdDebuggerNotPresent
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(89) xbox::boolean_t xbox::KdDebuggerNotPresent = true;
+XBSYSAPI EXPORTNUM(89) xbox::boolean_xt xbox::KdDebuggerNotPresent = true;

@@ -70,10 +70,10 @@ xbox::X_XFileMediaObject::_vtbl xbox::X_XFileMediaObject::vtbl =
 // ******************************************************************
 // * patch: XAudioCreateAdpcmFormat
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(XAudioCreateAdpcmFormat)
+xbox::void_xt WINAPI xbox::EMUPATCH(XAudioCreateAdpcmFormat)
 (
-    word_t                        nChannels,
-    dword_t                       nSamplesPerSec,
+    word_xt                        nChannels,
+    dword_xt                       nSamplesPerSec,
     OUT LPXBOXADPCMWAVEFORMAT   pwfx)
 {
     DSoundMutexGuardLock;
@@ -99,11 +99,11 @@ xbox::void_t WINAPI xbox::EMUPATCH(XAudioCreateAdpcmFormat)
 // ******************************************************************
 // * patch: XAudioDownloadEffectsImage
 // ******************************************************************
-xbox::hresult_t WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
 (
     LPCSTR      pszImageName,
     LPVOID      pImageLoc,
-    dword_t       dwFlags,
+    dword_xt       dwFlags,
     LPVOID*     ppImageDesc)
 {
     DSoundMutexGuardLock;
@@ -123,9 +123,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
 // ******************************************************************
 // * patch: XAudioSetEffectData
 // ******************************************************************
-xbox::hresult_t WINAPI xbox::EMUPATCH(XAudioSetEffectData)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioSetEffectData)
 (
-    dword_t               dwEffectIndex,
+    dword_xt               dwEffectIndex,
     void*               pDesc,
     void*               pRawDesc)
 {
@@ -145,13 +145,13 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XAudioSetEffectData)
 // ******************************************************************
 // * patch: XFileCreaeMediaObject
 // ******************************************************************
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileCreateMediaObject)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileCreateMediaObject)
 (
     LPCSTR          pstrFileName,
-    dword_t           dwDesiredAccess,
-    dword_t           dwShareMode,
-    dword_t           dwCreationDisposition,
-    dword_t           dwFlagsAndAttributes,
+    dword_xt           dwDesiredAccess,
+    dword_xt           dwShareMode,
+    dword_xt           dwCreationDisposition,
+    dword_xt           dwFlagsAndAttributes,
     OUT void**      ppMediaObject)
 {
     DSoundMutexGuardLock;
@@ -174,10 +174,10 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileCreateMediaObject)
 // * patch: XFileCreateMediaObjectAsync
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileCreateMediaObjectAsync)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileCreateMediaObjectAsync)
 (
     HANDLE      hFile,
-    dword_t       dwMaxPackets,
+    dword_xt       dwMaxPackets,
     OUT void**      ppMediaObject)
 {
     DSoundMutexGuardLock;
@@ -198,7 +198,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileCreateMediaObjectAsync)
 // ******************************************************************
 // * patch: XFileCreaeMediaObjectEx
 // ******************************************************************
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileCreateMediaObjectEx)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileCreateMediaObjectEx)
 (
     HANDLE      hFile,
     OUT void**      ppMediaObject)
@@ -219,7 +219,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileCreateMediaObjectEx)
 // * patch: XWaveFileCreateMediaObject
 // ******************************************************************
 // NOTE: Does not require any patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XWaveFileCreateMediaObject)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XWaveFileCreateMediaObject)
 (
     LPCSTR                  pszFileName,
     LPCWAVEFORMATEX*        ppwfxFormat,
@@ -244,7 +244,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XWaveFileCreateMediaObject)
 // * patch: XWaveFileCreateMediaObjectEx
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XWaveFileCreateMediaObjectEx)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XWaveFileCreateMediaObjectEx)
 (
     LPCSTR              pszFileName,
     HANDLE              hFile,
@@ -269,11 +269,11 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XWaveFileCreateMediaObjectEx)
 // * patch: XFileMediaObject_Seek
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_Seek)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileMediaObject_Seek)
 (
     X_XFileMediaObject* pThis,
-    long_t                lOffset,
-    dword_t               dwOrigin,
+    long_xt                lOffset,
+    dword_xt               dwOrigin,
     LPDWORD             pdwAbsolute)
 {
     DSoundMutexGuardLock;
@@ -294,7 +294,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_Seek)
 // * patch: XFileMediaObject_DoWork
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::void_t WINAPI xbox::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
+xbox::void_xt WINAPI xbox::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* pThis)
 {
     DSoundMutexGuardLock;
 
@@ -308,7 +308,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(XFileMediaObject_DoWork)(X_XFileMediaObject* 
 // * patch: XFileMediaObject_GetStatus
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_GetStatus)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileMediaObject_GetStatus)
 (
     X_XFileMediaObject* pThis,
     OUT LPDWORD             pdwStatus)
@@ -329,7 +329,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_GetStatus)
 // * patch: XFileMediaObject_GetInfo
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_GetInfo)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileMediaObject_GetInfo)
 (
     X_XFileMediaObject* pThis,
     OUT XMEDIAINFO*         pInfo)
@@ -350,7 +350,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_GetInfo)
 // * patch: XFileMediaObject_Process
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_Process)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileMediaObject_Process)
 (
     X_XFileMediaObject* pThis,
     LPXMEDIAPACKET      pInputBuffer,
@@ -373,7 +373,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_Process)
 // * patch: XFileMediaObject_AddRef
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::ulong_t WINAPI xbox::EMUPATCH(XFileMediaObject_AddRef)
+xbox::ulong_xt WINAPI xbox::EMUPATCH(XFileMediaObject_AddRef)
 (
 	X_XFileMediaObject* pThis)
 {
@@ -394,7 +394,7 @@ xbox::ulong_t WINAPI xbox::EMUPATCH(XFileMediaObject_AddRef)
 // * patch: XFileMediaObject_Release
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::ulong_t WINAPI xbox::EMUPATCH(XFileMediaObject_Release)
+xbox::ulong_xt WINAPI xbox::EMUPATCH(XFileMediaObject_Release)
 (
 	X_XFileMediaObject* pThis)
 {
@@ -418,7 +418,7 @@ xbox::ulong_t WINAPI xbox::EMUPATCH(XFileMediaObject_Release)
 // * patch: XFileMediaObject_Discontinuity
 // ******************************************************************
 // NOTE: Does not require a patch.
-xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_Discontinuity)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XFileMediaObject_Discontinuity)
 (
 	X_XFileMediaObject *pThis)
 {

@@ -32,11 +32,11 @@ extern bool bLLE_GPU; // Set this to true for experimental GPU (graphics) LLE
 extern bool bLLE_USB; // Set this to true for experimental USB (input) LLE
 extern bool bLLE_JIT; // Set this to true for experimental JIT
 
-extern std::map<std::string, xbox::addr> g_SymbolAddresses;
+extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
 
 void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
-std::string GetDetectedSymbolName(const xbox::addr address, int * const symbolOffset);
+std::string GetDetectedSymbolName(const xbox::addr_xt address, int * const symbolOffset);
 void* GetXboxFunctionPointer(std::string functionName);
 
 #define XB_TYPE(func) XB_TRAMPOLINE_##func##_t

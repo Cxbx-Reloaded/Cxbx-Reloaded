@@ -193,8 +193,8 @@ void SetupXboxDeviceTypes()
 		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != xbox::zero) {
 			printf("Deriving XDEVICE_TYPE_GAMEPAD from DeviceTable (via GetTypeInformation)\n");
 			// Read the offset values of the device table structure from GetTypeInformation
-			xbox::addr deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
-			xbox::addr deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
+			xbox::addr_xt deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
+			xbox::addr_xt deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
 
 			// Calculate the number of device entires in the table
 			size_t deviceTableEntryCount = (deviceTableEndOffset - deviceTableStartOffset) / sizeof(uint32_t);
@@ -256,9 +256,9 @@ void SetupXboxDeviceTypes()
 // ******************************************************************
 // * patch: XInitDevices
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(XInitDevices)
+xbox::void_xt WINAPI xbox::EMUPATCH(XInitDevices)
 (
-    dword_t					dwPreallocTypeCount,
+    dword_xt					dwPreallocTypeCount,
 	PXDEVICE_PREALLOC_TYPE	PreallocTypes
 )
 {
@@ -321,7 +321,7 @@ void UpdateConnectedDeviceState(xbox::PXPP_DEVICE_TYPE DeviceType) {
 // * This in turn requires USB LLE to be implemented, or USBD_Init 
 // * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XGetDevices)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XGetDevices)
 (
     PXPP_DEVICE_TYPE DeviceType
 )
@@ -330,9 +330,9 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XGetDevices)
 
 	UpdateConnectedDeviceState(DeviceType);
 
-	uchar_t oldIrql = xbox::KeRaiseIrqlToDpcLevel();
+	UCHAR oldIrql = xbox::KeRaiseIrqlToDpcLevel();
 
-	dword_t ret = DeviceType->CurrentConnected;
+	dword_xt ret = DeviceType->CurrentConnected;
 
 	DeviceType->ChangeConnected = 0;
 	DeviceType->PreviousConnected = DeviceType->CurrentConnected;
@@ -349,7 +349,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XGetDevices)
 // * This in turn requires USB LLE to be implemented, or USBD_Init 
 // * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
-xbox::bool_t WINAPI xbox::EMUPATCH(XGetDeviceChanges)
+xbox::bool_xt WINAPI xbox::EMUPATCH(XGetDeviceChanges)
 (
     PXPP_DEVICE_TYPE DeviceType,
     PDWORD           pdwInsertions,
@@ -374,7 +374,7 @@ xbox::bool_t WINAPI xbox::EMUPATCH(XGetDeviceChanges)
     }
     else
     {
-        uchar_t oldIrql = xbox::KeRaiseIrqlToDpcLevel();
+        UCHAR oldIrql = xbox::KeRaiseIrqlToDpcLevel();
 
 		// Insertions and removals
         *pdwInsertions = (DeviceType->CurrentConnected & ~DeviceType->PreviousConnected);
@@ -403,8 +403,8 @@ xbox::bool_t WINAPI xbox::EMUPATCH(XGetDeviceChanges)
 xbox::HANDLE WINAPI xbox::EMUPATCH(XInputOpen)
 (
     IN PXPP_DEVICE_TYPE             DeviceType,
-    IN dword_t                        dwPort,
-    IN dword_t                        dwSlot,
+    IN dword_xt                        dwPort,
+    IN dword_xt                        dwSlot,
     IN PXINPUT_POLLING_PARAMETERS   pPollingParameters OPTIONAL
 )
 {
@@ -455,7 +455,7 @@ xbox::HANDLE WINAPI xbox::EMUPATCH(XInputOpen)
 // ******************************************************************
 // * patch: XInputClose
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(XInputClose)
+xbox::void_xt WINAPI xbox::EMUPATCH(XInputClose)
 (
     IN HANDLE hDevice
 )
@@ -472,7 +472,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(XInputClose)
 // ******************************************************************
 // * patch: XInputPoll
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XInputPoll)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XInputPoll)
 (
     IN HANDLE hDevice
 )
@@ -487,7 +487,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XInputPoll)
 // ******************************************************************
 // * patch: XInputGetCapabilities
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XInputGetCapabilities)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetCapabilities)
 (
     IN  HANDLE               hDevice,
     OUT PXINPUT_CAPABILITIES pCapabilities
@@ -498,12 +498,12 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XInputGetCapabilities)
 		LOG_FUNC_ARG_OUT(pCapabilities)
 		LOG_FUNC_END;
 
-    dword_t ret = ERROR_DEVICE_NOT_CONNECTED;
+    dword_xt ret = ERROR_DEVICE_NOT_CONNECTED;
 	PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
 	int Port = Device->XboxPort;
     if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice && !g_XboxControllerHostBridge[Port].bPendingRemoval) {
         pCapabilities->SubType = g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType;
-        UCHAR* pCap = (uchar_t*)(&pCapabilities->In);
+        UCHAR* pCap = (UCHAR*)(&pCapabilities->In);
         memset(pCap, 0xFF, g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize + g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize);
 		ret = ERROR_SUCCESS;
     }
@@ -586,9 +586,9 @@ void EmuSBCGetState(xbox::PX_SBC_GAMEPAD pSBCGamepad, xbox::PXINPUT_GAMEPAD pXIG
     pSBCGamepad->sRotationLever = 0;//(pXIGamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER) ? 255 : 0;
     pSBCGamepad->sSightChangeX = pXIGamepad->sThumbLX;
     pSBCGamepad->sSightChangeY = pXIGamepad->sThumbLY;
-    pSBCGamepad->wLeftPedal = ((xbox::short_t)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_LEFT_TRIGGER]))<<8;
+    pSBCGamepad->wLeftPedal = ((SHORT)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_LEFT_TRIGGER]))<<8;
     pSBCGamepad->wMiddlePedal=0;// = (pXIGamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 255 : 0;
-    pSBCGamepad->wRightPedal = (xbox::short_t)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_RIGHT_TRIGGER])<<8;
+    pSBCGamepad->wRightPedal = (SHORT)(pXIGamepad->bAnalogButtons[CXBX_XINPUT_GAMEPAD_RIGHT_TRIGGER])<<8;
     pSBCGamepad->ucTunerDial=0;//low nibble
 
     
@@ -739,7 +739,7 @@ void EmuSBCGetState(xbox::PX_SBC_GAMEPAD pSBCGamepad, xbox::PXINPUT_GAMEPAD pXIG
 // ******************************************************************
 // * patch: XInputGetState
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XInputGetState)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetState)
 (
     IN  HANDLE         hDevice,
     OUT PXINPUT_STATE  pState
@@ -752,7 +752,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XInputGetState)
 		LOG_FUNC_ARG_OUT(pState)
 		LOG_FUNC_END;
 
-    dword_t ret = ERROR_DEVICE_NOT_CONNECTED;
+    dword_xt ret = ERROR_DEVICE_NOT_CONNECTED;
     PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
     int Port = Device->XboxPort;
     if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice) {
@@ -773,7 +773,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XInputGetState)
 // ******************************************************************
 // * patch: XInputSetState
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XInputSetState)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetState)
 (
     IN     HANDLE           hDevice,
     IN OUT PXINPUT_FEEDBACK pFeedback
@@ -808,10 +808,10 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XInputSetState)
 // ******************************************************************
 // * patch: SetThreadPriorityBoost
 // ******************************************************************
-xbox::bool_t WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
+xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
 (
     HANDLE  hThread,
-    bool_t    DisablePriorityBoost
+    bool_xt    DisablePriorityBoost
 )
 {
 
@@ -832,7 +832,7 @@ xbox::bool_t WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
 // ******************************************************************
 // * patch: SetThreadPriority
 // ******************************************************************
-xbox::bool_t WINAPI xbox::EMUPATCH(SetThreadPriority)
+xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriority)
 (
     HANDLE  hThread,
     int     nPriority
@@ -877,7 +877,7 @@ int WINAPI xbox::EMUPATCH(GetThreadPriority)
 // ******************************************************************
 // * patch: GetExitCodeThread
 // ******************************************************************
-xbox::bool_t WINAPI xbox::EMUPATCH(GetExitCodeThread)
+xbox::bool_xt WINAPI xbox::EMUPATCH(GetExitCodeThread)
 (
     HANDLE  hThread,
     LPDWORD lpExitCode
@@ -898,10 +898,10 @@ xbox::bool_t WINAPI xbox::EMUPATCH(GetExitCodeThread)
 // ******************************************************************
 // * patch: XapiThreadStartup
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(XapiThreadStartup)
+xbox::void_xt WINAPI xbox::EMUPATCH(XapiThreadStartup)
 (
-    dword_t dwDummy1,
-    dword_t dwDummy2
+    dword_xt dwDummy1,
+    dword_xt dwDummy2
 )
 {
 	LOG_FUNC_BEGIN
@@ -909,7 +909,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(XapiThreadStartup)
 		LOG_FUNC_ARG(dwDummy2)
 		LOG_FUNC_END;
 
-	typedef int (__stdcall *pfDummyFunc)(dword_t dwDummy);
+	typedef int (__stdcall *pfDummyFunc)(dword_xt dwDummy);
 
     pfDummyFunc func = (pfDummyFunc)dwDummy1;
 
@@ -931,10 +931,10 @@ xbox::void_t WINAPI xbox::EMUPATCH(XapiThreadStartup)
 // ******************************************************************
 // * patch: XRegisterThreadNotifyRoutine
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
+xbox::void_xt WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
 (
     PXTHREAD_NOTIFICATION   pThreadNotification,
-    bool_t                    fRegister
+    bool_xt                    fRegister
 )
 {
 	LOG_FUNC_BEGIN
@@ -992,7 +992,7 @@ void WINAPI EmuFiberStartup(fiber_context_t* context)
 // ******************************************************************
 xbox::LPVOID WINAPI xbox::EMUPATCH(CreateFiber)
 (
-	dword_t					dwStackSize,
+	dword_xt					dwStackSize,
 	LPFIBER_START_ROUTINE	lpStartRoutine,
 	LPVOID					lpParameter
 )
@@ -1018,7 +1018,7 @@ xbox::LPVOID WINAPI xbox::EMUPATCH(CreateFiber)
 // ******************************************************************
 // * patch: DeleteFiber
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(DeleteFiber)
+xbox::void_xt WINAPI xbox::EMUPATCH(DeleteFiber)
 (
 	LPVOID					lpFiber
 )
@@ -1032,7 +1032,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(DeleteFiber)
 // ******************************************************************
 // * patch: SwitchToFiber
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(SwitchToFiber)
+xbox::void_xt WINAPI xbox::EMUPATCH(SwitchToFiber)
 (
 	LPVOID lpFiber 
 )
@@ -1062,11 +1062,11 @@ xbox::LPVOID WINAPI xbox::EMUPATCH(ConvertThreadToFiber)
 // ******************************************************************
 // * patch: QueueUserAPC
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(QueueUserAPC)
+xbox::dword_xt WINAPI xbox::EMUPATCH(QueueUserAPC)
 (
 	PAPCFUNC	pfnAPC,
 	HANDLE		hThread,
-	dword_t		dwData
+	dword_xt		dwData
 )
 {
 	LOG_FUNC_BEGIN
@@ -1075,7 +1075,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(QueueUserAPC)
 		LOG_FUNC_ARG(dwData)
 		LOG_FUNC_END;
 
-	dword_t dwRet = 0;
+	dword_xt dwRet = 0;
 
 	// If necessary, we can just continue to emulate NtQueueApcThread (0xCE).
 	// I added this because NtQueueApcThread fails in Metal Slug 3.
@@ -1095,12 +1095,12 @@ xbox::dword_t WINAPI xbox::EMUPATCH(QueueUserAPC)
 // ******************************************************************
 // * patch: GetOverlappedResult
 // ******************************************************************
-xbox::bool_t WINAPI xbox::EMUPATCH(GetOverlappedResult)
+xbox::bool_xt WINAPI xbox::EMUPATCH(GetOverlappedResult)
 (
 	HANDLE			hFile,
 	LPOVERLAPPED	lpOverlapped,
 	LPDWORD			lpNumberOfBytesTransferred,
-	bool_t			bWait
+	bool_xt			bWait
 )
 {
 	LOG_FUNC_BEGIN
@@ -1122,7 +1122,7 @@ xbox::bool_t WINAPI xbox::EMUPATCH(GetOverlappedResult)
 // ******************************************************************
 // * patch: XLaunchNewImageA
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XLaunchNewImageA)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XLaunchNewImageA)
 (
 	LPCSTR			lpTitlePath,
 	PLAUNCH_DATA	pLaunchData
@@ -1205,7 +1205,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XLaunchNewImageA)
 // ******************************************************************
 // * patch: XGetLaunchInfo
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XGetLaunchInfo)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XGetLaunchInfo)
 (
 	PDWORD			pdwLaunchDataType,
 	PLAUNCH_DATA	pLaunchData
@@ -1225,7 +1225,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XGetLaunchInfo)
 		LOG_FUNC_ARG(pLaunchData)
 		LOG_FUNC_END;
 
-	dword_t ret = ERROR_NOT_FOUND;
+	dword_xt ret = ERROR_NOT_FOUND;
 
 	if (xbox::LaunchDataPage != NULL)
 	{
@@ -1255,9 +1255,9 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XGetLaunchInfo)
 // ******************************************************************
 // * patch: XSetProcessQuantumLength
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(XSetProcessQuantumLength)
+xbox::void_xt WINAPI xbox::EMUPATCH(XSetProcessQuantumLength)
 (
-    dword_t dwMilliseconds
+    dword_xt dwMilliseconds
 )
 {
 
@@ -1270,12 +1270,12 @@ xbox::void_t WINAPI xbox::EMUPATCH(XSetProcessQuantumLength)
 // ******************************************************************
 // * patch: SignalObjectAndWait
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(SignalObjectAndWait)
+xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 (
 	HANDLE	hObjectToSignal,
 	HANDLE	hObjectToWaitOn,
-	dword_t	dwMilliseconds,
-	bool_t	bAlertable
+	dword_xt	dwMilliseconds,
+	bool_xt	bAlertable
 )
 {
 
@@ -1286,7 +1286,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 		LOG_FUNC_ARG(bAlertable)
 		LOG_FUNC_END;
 
-	dword_t dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable );
+	dword_xt dwRet = SignalObjectAndWait( hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable );
 
 	RETURN(dwRet);
 }
@@ -1296,11 +1296,11 @@ xbox::dword_t WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 // ******************************************************************
 MMRESULT WINAPI xbox::EMUPATCH(timeSetEvent)
 (
-	uint_t			uDelay,
-	uint_t			uResolution,
+	uint_xt			uDelay,
+	uint_xt			uResolution,
 	LPTIMECALLBACK	fptc,
-	dword_t			dwUser,
-	uint_t			fuEvent
+	dword_xt			dwUser,
+	uint_xt			fuEvent
 )
 {
 
@@ -1323,7 +1323,7 @@ MMRESULT WINAPI xbox::EMUPATCH(timeSetEvent)
 // ******************************************************************
 MMRESULT WINAPI xbox::EMUPATCH(timeKillEvent)
 (
-	uint_t uTimerID  
+	uint_xt uTimerID  
 )
 {
 
@@ -1338,12 +1338,12 @@ MMRESULT WINAPI xbox::EMUPATCH(timeKillEvent)
 // ******************************************************************
 // * patch: RaiseException
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(RaiseException)
+xbox::void_xt WINAPI xbox::EMUPATCH(RaiseException)
 (
-	dword_t			dwExceptionCode,       // exception code
-	dword_t			dwExceptionFlags,      // continuable exception flag
-	dword_t			nNumberOfArguments,    // number of arguments
-	CONST ulong_ptr_t *lpArguments		   // array of arguments
+	dword_xt			dwExceptionCode,       // exception code
+	dword_xt			dwExceptionFlags,      // continuable exception flag
+	dword_xt			nNumberOfArguments,    // number of arguments
+	CONST ulong_ptr_xt *lpArguments		   // array of arguments
 )
 {
 
@@ -1364,10 +1364,10 @@ xbox::void_t WINAPI xbox::EMUPATCH(RaiseException)
 // ******************************************************************
 // patch: XMountMUA
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XMountMUA)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 (
-	dword_t dwPort,                  
-	dword_t dwSlot,                  
+	dword_xt dwPort,                  
+	dword_xt dwSlot,                  
 	PCHAR pchDrive               
 )
 {
@@ -1388,13 +1388,13 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XMountMUA)
 // ******************************************************************
 // * patch: XGetDeviceEnumerationStatus
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XGetDeviceEnumerationStatus)()
+xbox::dword_xt WINAPI xbox::EMUPATCH(XGetDeviceEnumerationStatus)()
 {
 
 
 	LOG_FUNC();
 
-	dword_t ret = (g_bIsDevicesInitializing || g_bIsDevicesEmulating) ? XDEVICE_ENUMERATION_BUSY : XDEVICE_ENUMERATION_IDLE;
+	dword_xt ret = (g_bIsDevicesInitializing || g_bIsDevicesEmulating) ? XDEVICE_ENUMERATION_BUSY : XDEVICE_ENUMERATION_IDLE;
 
 	RETURN(ret);
 }
@@ -1402,7 +1402,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XGetDeviceEnumerationStatus)()
 // ******************************************************************
 // * patch: XInputGetDeviceDescription
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XInputGetDeviceDescription)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetDeviceDescription)
 (
     HANDLE	hDevice,
     PVOID	pDescription
@@ -1424,10 +1424,10 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XInputGetDeviceDescription)
 // ******************************************************************
 // * patch: XMountMURootA
 // ******************************************************************
-xbox::dword_t WINAPI xbox::EMUPATCH(XMountMURootA)
+xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMURootA)
 (
-	dword_t dwPort,                  
-	dword_t dwSlot,                  
+	dword_xt dwPort,                  
+	dword_xt dwSlot,                  
 	PCHAR pchDrive               
 )
 {
@@ -1448,7 +1448,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XMountMURootA)
 // ******************************************************************
 // * patch: OutputDebugStringA
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(OutputDebugStringA)
+xbox::void_xt WINAPI xbox::EMUPATCH(OutputDebugStringA)
 (
 	IN LPCSTR lpOutputString
 )

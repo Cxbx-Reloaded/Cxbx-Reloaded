@@ -430,11 +430,11 @@ static void CxbxKrnlClockThread(void* pVoid)
 	xbox::KiClockIsr(IncrementScaling);
 }
 
-std::vector<xbox::addr> g_RdtscPatches;
+std::vector<xbox::addr_xt> g_RdtscPatches;
 
 #define OPCODE_PATCH_RDTSC 0x90EF  // OUT DX, EAX; NOP
 
-bool IsRdtscInstruction(xbox::addr addr)
+bool IsRdtscInstruction(xbox::addr_xt addr)
 {
 	// First the fastest check - does addr contain exact patch from PatchRdtsc?
 	// Second check - is addr on the rdtsc patch list?
@@ -445,7 +445,7 @@ bool IsRdtscInstruction(xbox::addr addr)
 		&& (std::find(g_RdtscPatches.begin(), g_RdtscPatches.end(), addr) != g_RdtscPatches.end());
 }
 
-void PatchRdtsc(xbox::addr addr)
+void PatchRdtsc(xbox::addr_xt addr)
 {
 	// Patch away rdtsc with an opcode we can intercept
 	// We use a privilaged instruction rather than int 3 for debugging
@@ -514,10 +514,10 @@ void PatchRdtscInstructions()
 		}
 
 		EmuLogInit(LOG_LEVEL::INFO, "Searching for rdtsc in section %s", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-		xbox::addr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+		xbox::addr_xt startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
 		//rdtsc is two bytes instruction, it needs at least one opcode byte after it to finish a function, so the endAddr need to substract 3 bytes.
-		xbox::addr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw-3;
-		for (xbox::addr addr = startAddr; addr <= endAddr; addr++) 
+		xbox::addr_xt endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw-3;
+		for (xbox::addr_xt addr = startAddr; addr <= endAddr; addr++) 
 		{
 			if (memcmp((void*)addr, rdtsc, 2) == 0) 
 			{
@@ -593,8 +593,8 @@ void MapThunkTable(uint32_t* kt, uint32_t* pThunkTable)
 }
 
 typedef struct {
-	xbox::addr ThunkAddr;
-	xbox::addr LibNameAddr;
+	xbox::addr_xt ThunkAddr;
+	xbox::addr_xt LibNameAddr;
 } XbeImportEntry;
 
 void ImportLibraries(XbeImportEntry *pImportDirectory)
@@ -1133,9 +1133,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 			}
 
 			EmuLogInit(LOG_LEVEL::INFO, "Searching for XBEH in section %s", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-			xbox::addr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
-			xbox::addr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-			for (xbox::addr addr = startAddr; addr < endAddr; addr++) {
+			xbox::addr_xt startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+			xbox::addr_xt endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+			for (xbox::addr_xt addr = startAddr; addr < endAddr; addr++) {
 				if (*(uint32_t*)addr == 0x48454258) {
 					EmuLogInit(LOG_LEVEL::INFO, "Patching XBEH at 0x%08X", addr);
 					*((uint32_t*)addr) = *(uint32_t*)XBE_IMAGE_BASE;
@@ -1152,7 +1152,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		Xbe::TLS* XbeTls = (Xbe::TLS*)CxbxKrnl_Xbe->m_Header.dwTLSAddr;
 		void* XbeTlsData = (XbeTls != nullptr) ? (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr : nullptr;
 		// Decode Entry Point
-		xbox::addr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
+		xbox::addr_xt EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
 		EntryPoint ^= XOR_EP_KEY[to_underlying(CxbxKrnl_Xbe->GetXbeType())];
 		// Launch XBE
 		CxbxKrnlInit(
@@ -1787,7 +1787,7 @@ void CxbxKrnlShutDown()
 
 void CxbxKrnlPrintUEM(ULONG ErrorCode)
 {
-	xbox::dword_t Type;
+	xbox::dword_xt Type;
 	xbox::XBOX_EEPROM Eeprom;
 	ULONG ResultSize;
 

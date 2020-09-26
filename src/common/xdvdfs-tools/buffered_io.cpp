@@ -10,7 +10,7 @@ namespace xbox
 
 PBYTE GetSectorBuffered(
 		PCDIO_READ This,
-		xbox::dword_t SectorNumber)
+		xbox::dword_xt SectorNumber)
 {
 	int		i, index;
 	PBYTE	Ptr;
@@ -65,7 +65,7 @@ PBYTE GetSectorBuffered(
 //------------------------------------------------------------------------------
 void ReleaseBufferedSector(
 		PCDIO_READ This,
-		xbox::dword_t SectorNumber)
+		xbox::dword_xt SectorNumber)
 {
 	int     i;
 

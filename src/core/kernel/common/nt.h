@@ -12,7 +12,7 @@
 #ifndef XBOXKRNL_NT_H
 #define XBOXKRNL_NT_H
 
-#include "xboxkrnl/xboxkrnl_types.h"
+#include "types.h"
 
 namespace xbox
 {
@@ -25,10 +25,10 @@ namespace xbox
 XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI NtAllocateVirtualMemory
 (
     IN OUT PVOID    *BaseAddress,
-    IN ulong_t         ZeroBits,
+    IN ulong_xt         ZeroBits,
     IN OUT PULONG    AllocationSize,
-    IN dword_t         AllocationType,
-    IN dword_t         Protect
+    IN dword_xt         AllocationType,
+    IN dword_xt         Protect
 );
 
 // ******************************************************************
@@ -74,7 +74,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI NtCreateEvent
     OUT PHANDLE             EventHandle,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
     IN  EVENT_TYPE          EventType,
-    IN  boolean_t             InitialState
+    IN  boolean_xt             InitialState
 );
 
 
@@ -91,22 +91,22 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI NtCreateEvent
 XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI NtCreateFile
 (
     OUT PHANDLE             FileHandle,
-    IN  access_mask_t         DesiredAccess,
+    IN  access_mask_xt         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
-    IN  ulong_t               FileAttributes,
-    IN  ulong_t               ShareAccess,
-    IN  ulong_t               CreateDisposition,
-    IN  ulong_t               CreateOptions
+    IN  ulong_xt               FileAttributes,
+    IN  ulong_xt               ShareAccess,
+    IN  ulong_xt               CreateDisposition,
+    IN  ulong_xt               CreateOptions
 );
 
 XBSYSAPI EXPORTNUM(191) NTSTATUS NTAPI NtCreateIoCompletion
 (
 	OUT PHANDLE IoCompletionHandle,
-	IN access_mask_t DesiredAccess,
+	IN access_mask_xt DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ulong_t Count
+	IN ulong_xt Count
 );
 
 // ******************************************************************
@@ -116,7 +116,7 @@ XBSYSAPI EXPORTNUM(192) NTSTATUS NTAPI NtCreateMutant
 (
     OUT PHANDLE             MutantHandle,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-    IN  boolean_t             InitialOwner
+    IN  boolean_xt             InitialOwner
 );
 
 // ******************************************************************
@@ -126,8 +126,8 @@ XBSYSAPI EXPORTNUM(193) NTSTATUS NTAPI NtCreateSemaphore
 (
     OUT PHANDLE             SemaphoreHandle,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
-    IN  ulong_t               InitialCount,
-    IN  ulong_t               MaximumCount
+    IN  ulong_xt               InitialCount,
+    IN  ulong_xt               MaximumCount
 );
 
 // ******************************************************************
@@ -158,11 +158,11 @@ XBSYSAPI EXPORTNUM(196) NTSTATUS NTAPI NtDeviceIoControlFile
     IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
     IN PVOID ApcContext OPTIONAL,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN ulong_t IoControlCode,
+    IN ulong_xt IoControlCode,
     IN PVOID InputBuffer OPTIONAL,
-    IN ulong_t InputBufferLength,
+    IN ulong_xt InputBufferLength,
     OUT PVOID OutputBuffer OPTIONAL,
-    IN ulong_t OutputBufferLength
+    IN ulong_xt OutputBufferLength
 );
 
 // ******************************************************************
@@ -172,7 +172,7 @@ XBSYSAPI EXPORTNUM(197) NTSTATUS NTAPI NtDuplicateObject
 (
     PVOID   SourceHandle,
     PVOID  *TargetHandle,
-    dword_t   Options
+    dword_xt   Options
 );
 
 // ******************************************************************
@@ -191,7 +191,7 @@ XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI NtFreeVirtualMemory
 (
     IN OUT PVOID *BaseAddress,
     IN OUT PULONG FreeSize,
-    IN ulong_t      FreeType
+    IN ulong_xt      FreeType
 );
 
 // ******************************************************************
@@ -204,11 +204,11 @@ XBSYSAPI EXPORTNUM(200) NTSTATUS NTAPI NtFsControlFile
 	IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
 	IN PVOID                ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
-	IN ulong_t                FsControlCode,
+	IN ulong_xt                FsControlCode,
 	IN PVOID                InputBuffer OPTIONAL,
-	IN ulong_t                InputBufferLength,
+	IN ulong_xt                InputBufferLength,
 	OUT PVOID               OutputBuffer OPTIONAL,
-	IN ulong_t                OutputBufferLength
+	IN ulong_xt                OutputBufferLength
 );
 
 XBSYSAPI EXPORTNUM(201) NTSTATUS NTAPI NtOpenDirectoryObject
@@ -223,11 +223,11 @@ XBSYSAPI EXPORTNUM(201) NTSTATUS NTAPI NtOpenDirectoryObject
 XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI NtOpenFile
 (
     OUT PHANDLE             FileHandle,
-    IN  access_mask_t         DesiredAccess,
+    IN  access_mask_xt         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN  ulong_t               ShareAccess,
-    IN  ulong_t               OpenOptions
+    IN  ulong_xt               ShareAccess,
+    IN  ulong_xt               OpenOptions
 );
 
 XBSYSAPI EXPORTNUM(203) NTSTATUS NTAPI NtOpenSymbolicLinkObject(
@@ -238,7 +238,7 @@ XBSYSAPI EXPORTNUM(203) NTSTATUS NTAPI NtOpenSymbolicLinkObject(
 XBSYSAPI EXPORTNUM(205) NTSTATUS NTAPI NtProtectVirtualMemory(
     IN OUT PVOID *BaseAddress,
     IN OUT PSIZE_T RegionSize,
-    IN ulong_t NewProtect,
+    IN ulong_xt NewProtect,
     OUT PULONG OldProtect
 );
 
@@ -261,7 +261,7 @@ XBSYSAPI EXPORTNUM(206) NTSTATUS NTAPI NtQueueApcThread
 	IN PIO_APC_ROUTINE      ApcRoutine,
 	IN PVOID                ApcRoutineContext OPTIONAL,
 	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
-	IN ulong_t                ApcReserved OPTIONAL 
+	IN ulong_xt                ApcReserved OPTIONAL 
 );
 
 // ******************************************************************
@@ -275,10 +275,10 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
     IN  PVOID                       ApcContext,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
     OUT FILE_DIRECTORY_INFORMATION *FileInformation,
-    IN  ulong_t                       Length,
+    IN  ulong_xt                       Length,
     IN  FILE_INFORMATION_CLASS      FileInformationClass,
     IN  PSTRING                     FileMask,
-    IN  boolean_t                     RestartScan
+    IN  boolean_xt                     RestartScan
 );
 
 // ******************************************************************
@@ -287,8 +287,8 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
 XBSYSAPI EXPORTNUM(208) NTSTATUS NTAPI NtQueryDirectoryObject(
 	IN HANDLE DirectoryHandle,
 	OUT PVOID Buffer,
-	IN ulong_t Length,
-	IN boolean_t RestartScan,
+	IN ulong_xt Length,
+	IN boolean_xt RestartScan,
 	IN OUT PULONG Context,
 	OUT PULONG ReturnedLength OPTIONAL
 );
@@ -323,7 +323,7 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
     OUT PVOID                       FileInformation,
-    IN  ulong_t                       Length,
+    IN  ulong_xt                       Length,
     IN  FILE_INFORMATION_CLASS      FileInfo
 );
 
@@ -390,7 +390,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI NtQueryVolumeInformationFile
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
     OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
-    IN  ulong_t                       Length,
+    IN  ulong_xt                       Length,
     IN  FS_INFORMATION_CLASS        FileInformationClass
 );
 
@@ -409,7 +409,7 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI NtReadFile
     IN  PVOID           ApcContext,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
     OUT PVOID           Buffer,
-    IN  ulong_t           Length,
+    IN  ulong_xt           Length,
     IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 );
 
@@ -424,7 +424,7 @@ XBSYSAPI EXPORTNUM(220) NTSTATUS NTAPI NtReadFileScatter
 	IN PVOID ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN PFILE_SEGMENT_ELEMENT SegmentArray,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 );
 
@@ -443,7 +443,7 @@ XBSYSAPI EXPORTNUM(221) NTSTATUS NTAPI NtReleaseMutant
 XBSYSAPI EXPORTNUM(222) NTSTATUS NTAPI NtReleaseSemaphore
 (
     IN  HANDLE  SemaphoreHandle,
-    IN  ulong_t   ReleaseCount,
+    IN  ulong_xt   ReleaseCount,
     OUT PULONG  PreviousCount OPTIONAL
 );
 
@@ -489,7 +489,7 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI NtSetInformationFile
     IN  HANDLE  FileHandle,            // TODO: correct paramters
     OUT PIO_STATUS_BLOCK   IoStatusBlock,
     IN  PVOID   FileInformation,
-    IN  ulong_t   Length,
+    IN  ulong_xt   Length,
     IN  FILE_INFORMATION_CLASS   FileInformationClass
 );
 
@@ -502,7 +502,7 @@ XBSYSAPI EXPORTNUM(227) NTSTATUS NTAPI NtSetIoCompletion
 	IN PVOID KeyContext,
 	IN PVOID ApcContext,
 	IN NTSTATUS IoStatus,
-	IN ulong_ptr_t IoStatusInformation
+	IN ulong_ptr_xt IoStatusInformation
 );
 
 // ******************************************************************
@@ -524,8 +524,8 @@ XBSYSAPI EXPORTNUM(229) NTSTATUS NTAPI NtSetTimerEx
 	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
 	IN KPROCESSOR_MODE ApcMode,
 	IN PVOID TimerContext OPTIONAL,
-	IN boolean_t WakeTimer,
-	IN long_t Period OPTIONAL,
+	IN boolean_xt WakeTimer,
+	IN long_xt Period OPTIONAL,
 	OUT PBOOLEAN PreviousState OPTIONAL
 );
 
@@ -537,7 +537,7 @@ XBSYSAPI EXPORTNUM(230) NTSTATUS NTAPI NtSignalAndWaitForSingleObjectEx
 	IN HANDLE SignalHandle,
 	IN HANDLE WaitHandle,
 	IN KPROCESSOR_MODE WaitMode,
-	IN boolean_t Alertable,
+	IN boolean_xt Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
 );
 
@@ -553,11 +553,11 @@ XBSYSAPI EXPORTNUM(231) NTSTATUS NTAPI NtSuspendThread
 // ******************************************************************
 // * NtUserIoApcDispatcher
 // ******************************************************************
-XBSYSAPI EXPORTNUM(232) void_t NTAPI NtUserIoApcDispatcher
+XBSYSAPI EXPORTNUM(232) void_xt NTAPI NtUserIoApcDispatcher
 (
     PVOID            ApcContext,
     PIO_STATUS_BLOCK IoStatusBlock,
-    ulong_t            Reserved
+    ulong_xt            Reserved
 );
 
 // ******************************************************************
@@ -572,7 +572,7 @@ XBSYSAPI EXPORTNUM(232) void_t NTAPI NtUserIoApcDispatcher
 XBSYSAPI EXPORTNUM(233) NTSTATUS NTAPI NtWaitForSingleObject
 (
     IN  HANDLE  Handle,
-    IN  boolean_t Alertable,
+    IN  boolean_xt Alertable,
 	IN	PLARGE_INTEGER Timeout
 );
 
@@ -582,8 +582,8 @@ XBSYSAPI EXPORTNUM(233) NTSTATUS NTAPI NtWaitForSingleObject
 XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI NtWaitForSingleObjectEx
 (
     IN  HANDLE          Handle,
-    IN  char_t          WaitMode,
-    IN  boolean_t         Alertable,
+    IN  char_xt          WaitMode,
+    IN  boolean_xt         Alertable,
     IN  PLARGE_INTEGER  Timeout
 );
 
@@ -592,11 +592,11 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI NtWaitForSingleObjectEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(235) NTSTATUS NTAPI NtWaitForMultipleObjectsEx
 (
-    IN  ulong_t           Count,
+    IN  ulong_xt           Count,
     IN  HANDLE         *Handles,
     IN  WAIT_TYPE       WaitType,
-    IN  char_t          WaitMode,
-    IN  boolean_t         Alertable,
+    IN  char_xt          WaitMode,
+    IN  boolean_xt         Alertable,
     IN  PLARGE_INTEGER  Timeout
 );
 
@@ -615,7 +615,7 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI NtWriteFile
 	IN  PVOID           ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN  PVOID           Buffer,
-	IN  ulong_t           Length,
+	IN  ulong_xt           Length,
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 );
 
@@ -630,14 +630,14 @@ XBSYSAPI EXPORTNUM(237) NTSTATUS NTAPI NtWriteFileGather
 	IN PVOID ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN PFILE_SEGMENT_ELEMENT SegmentArray,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 );
 
 // ******************************************************************
 // * NtYieldExecution
 // ******************************************************************
-XBSYSAPI EXPORTNUM(238) void_t NTAPI NtYieldExecution(void);
+XBSYSAPI EXPORTNUM(238) void_xt NTAPI NtYieldExecution(void);
 
 }
 

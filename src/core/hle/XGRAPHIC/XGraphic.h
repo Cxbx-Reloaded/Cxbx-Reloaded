@@ -49,7 +49,7 @@ PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 // ******************************************************************
 // * patch: XGSwizzleRect
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(XGSwizzleRect)
+xbox::void_xt WINAPI EMUPATCH(XGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -65,7 +65,7 @@ xbox::void_t WINAPI EMUPATCH(XGSwizzleRect)
 // ******************************************************************
 // * patch: XGSwizzleBox
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(XGSwizzleBox)
+xbox::void_xt WINAPI EMUPATCH(XGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -82,33 +82,33 @@ xbox::void_t WINAPI EMUPATCH(XGSwizzleBox)
 // ******************************************************************
 // * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
+xbox::hresult_xt WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
-	bool_t			bWriteSurfaceAsTexture
+	bool_xt			bWriteSurfaceAsTexture
 );
 
 // ******************************************************************
 // * patch: XGSetTextureHeader
 // ******************************************************************
-xbox::void_t	WINAPI EMUPATCH(XGSetTextureHeader)
+xbox::void_xt	WINAPI EMUPATCH(XGSetTextureHeader)
 (
-	uint_t			Width,
-	uint_t			Height,
-	uint_t			Levels,
+	uint_xt			Width,
+	uint_xt			Height,
+	uint_xt			Levels,
 	DWORD			Usage,
 	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
-	uint_t			Data,
-	uint_t			Pitch
+	uint_xt			Data,
+	uint_xt			Pitch
 );
 
 // ******************************************************************
 // * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
+xbox::hresult_xt WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 (
 	CONST void		*pFontData,
 	unsigned		uFontDataSize,

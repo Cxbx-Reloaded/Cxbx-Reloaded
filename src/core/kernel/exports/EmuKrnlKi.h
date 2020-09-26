@@ -48,75 +48,75 @@ namespace xbox
 	} KI_TIMER_LOCK;
 
 
-	xbox::void_t KiInitSystem();
+	xbox::void_xt KiInitSystem();
 
-	xbox::void_t KiTimerLock();
+	xbox::void_xt KiTimerLock();
 
-	xbox::void_t KiTimerUnlock();
+	xbox::void_xt KiTimerUnlock();
 
-	xbox::void_t KiClockIsr
+	xbox::void_xt KiClockIsr
 	(
 		IN unsigned int ScalingFactor
 	);
 
-	xbox::void_t NTAPI KiCheckTimerTable
+	xbox::void_xt NTAPI KiCheckTimerTable
 	(
 		IN ULARGE_INTEGER CurrentTime
 	);
 
-	xbox::void_t KxInsertTimer
+	xbox::void_xt KxInsertTimer
 	(
 		IN PKTIMER Timer,
-		IN ulong_t Hand
+		IN ulong_xt Hand
 	);
 
-	xbox::void_t FASTCALL KiCompleteTimer
+	xbox::void_xt FASTCALL KiCompleteTimer
 	(
 		IN PKTIMER Timer,
-		IN ulong_t Hand
+		IN ulong_xt Hand
 	);
 
-	xbox::void_t KiRemoveEntryTimer
+	xbox::void_xt KiRemoveEntryTimer
 	(
 		IN PKTIMER Timer,
-		IN ulong_t Hand
+		IN ulong_xt Hand
 	);
 
-	xbox::void_t KxRemoveTreeTimer
+	xbox::void_xt KxRemoveTreeTimer
 	(
 		IN PKTIMER Timer
 	);
 
-	boolean_t FASTCALL KiInsertTimerTable
+	boolean_xt FASTCALL KiInsertTimerTable
 	(
 		IN PKTIMER Timer,
-		IN ulong_t Hand
+		IN ulong_xt Hand
 	);
 
-	boolean_t FASTCALL KiInsertTreeTimer
+	boolean_xt FASTCALL KiInsertTreeTimer
 	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER Interval
 	);
 
-	xbox::ulong_t KiComputeTimerTableIndex
+	xbox::ulong_xt KiComputeTimerTableIndex
 	(
-		IN ulonglong_t Interval
+		IN ulonglong_xt Interval
 	);
 
-	boolean_t KiComputeDueTime
+	boolean_xt KiComputeDueTime
 	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER DueTime,
 		OUT PULONG Hand
 	);
 
-	boolean_t FASTCALL KiSignalTimer
+	boolean_xt FASTCALL KiSignalTimer
 	(
 		IN PKTIMER Timer
 	);
 
-	xbox::void_t NTAPI KiTimerExpiration
+	xbox::void_xt NTAPI KiTimerExpiration
 	(
 		IN PKDPC Dpc,
 		IN PVOID DeferredContext,
@@ -124,19 +124,19 @@ namespace xbox
 		IN PVOID SystemArgument2
 	);
 
-	xbox::void_t FASTCALL KiTimerListExpire
+	xbox::void_xt FASTCALL KiTimerListExpire
 	(
 		IN PLIST_ENTRY ExpiredListHead,
 		IN KIRQL OldIrql
 	);
 
-	xbox::void_t FASTCALL KiWaitSatisfyAll
+	xbox::void_xt FASTCALL KiWaitSatisfyAll
 	(
 		IN PKWAIT_BLOCK WaitBlock
 	);
 };
 
-extern const xbox::ulong_t CLOCK_TIME_INCREMENT;
+extern const xbox::ulong_xt CLOCK_TIME_INCREMENT;
 extern xbox::LIST_ENTRY KiWaitInListHead;
 extern xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 extern xbox::KI_TIMER_LOCK KiTimerMtx;

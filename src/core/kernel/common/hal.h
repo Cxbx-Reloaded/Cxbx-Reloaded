@@ -12,7 +12,7 @@
 #ifndef XBOXKRNL_HAL_H
 #define XBOXKRNL_HAL_H
 
-#include "xboxkrnl/xboxkrnl_types.h"
+#include "types.h"
 
 namespace xbox
 {
@@ -22,11 +22,11 @@ namespace xbox
 // ******************************************************************
 XBSYSAPI EXPORTNUM(9) NTSTATUS NTAPI HalReadSMCTrayState
 (
-	dword_t*	State,
-	dword_t*	Count
+	dword_xt*	State,
+	dword_xt*	Count
 );
 
-XBSYSAPI EXPORTNUM(38) void_t FASTCALL HalClearSoftwareInterrupt
+XBSYSAPI EXPORTNUM(38) void_xt FASTCALL HalClearSoftwareInterrupt
 (
 	KIRQL Request
 );
@@ -34,30 +34,30 @@ XBSYSAPI EXPORTNUM(38) void_t FASTCALL HalClearSoftwareInterrupt
 // ******************************************************************
 // * 0x0027 - HalDisableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(39) void_t NTAPI HalDisableSystemInterrupt
+XBSYSAPI EXPORTNUM(39) void_xt NTAPI HalDisableSystemInterrupt
 (
-	IN ulong_t BusInterruptLevel
+	IN ulong_xt BusInterruptLevel
 );
 
-XBSYSAPI EXPORTNUM(40) ulong_t HalDiskCachePartitionCount;
+XBSYSAPI EXPORTNUM(40) ulong_xt HalDiskCachePartitionCount;
 XBSYSAPI EXPORTNUM(41) PANSI_STRING HalDiskModelNumber;
 XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
 
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(43) void_t NTAPI HalEnableSystemInterrupt
+XBSYSAPI EXPORTNUM(43) void_xt NTAPI HalEnableSystemInterrupt
 (
-	IN ulong_t BusInterruptLevel,
+	IN ulong_xt BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode
 );
 
 // ******************************************************************
 // * HalGetInterruptVector
 // ******************************************************************
-XBSYSAPI EXPORTNUM(44) ulong_t  NTAPI HalGetInterruptVector
+XBSYSAPI EXPORTNUM(44) ulong_xt  NTAPI HalGetInterruptVector
 (
-    IN ulong_t   BusInterruptLevel,
+    IN ulong_xt   BusInterruptLevel,
     OUT PKIRQL Irql
 );
 
@@ -66,41 +66,41 @@ XBSYSAPI EXPORTNUM(44) ulong_t  NTAPI HalGetInterruptVector
 // ******************************************************************
 XBSYSAPI EXPORTNUM(45) NTSTATUS NTAPI HalReadSMBusValue
 (
-    IN uchar_t   Address,
-    IN uchar_t   Command,
-    IN boolean_t WriteWord,
+    IN uchar_xt   Address,
+    IN uchar_xt   Command,
+    IN boolean_xt WriteWord,
     OUT PULONG DataValue
 );
 
 // ******************************************************************
 // * HalReadWritePCISpace
 // ******************************************************************
-XBSYSAPI EXPORTNUM(46) void_t NTAPI HalReadWritePCISpace
+XBSYSAPI EXPORTNUM(46) void_xt NTAPI HalReadWritePCISpace
 (
-  IN ulong_t   BusNumber,
-  IN ulong_t   SlotNumber,
-  IN ulong_t   RegisterNumber,
+  IN ulong_xt   BusNumber,
+  IN ulong_xt   SlotNumber,
+  IN ulong_xt   RegisterNumber,
   IN PVOID   Buffer,
-  IN ulong_t   Length,
-  IN boolean_t WritePCISpace
+  IN ulong_xt   Length,
+  IN boolean_xt WritePCISpace
 );
 
-typedef void_t (*PHAL_SHUTDOWN_NOTIFICATION)(
+typedef void_xt (*PHAL_SHUTDOWN_NOTIFICATION)(
     IN struct _HAL_SHUTDOWN_REGISTRATION *ShutdownRegistration
 );
 
 typedef struct _HAL_SHUTDOWN_REGISTRATION {
     PHAL_SHUTDOWN_NOTIFICATION NotificationRoutine;
-    long_t Priority;
+    long_xt Priority;
     LIST_ENTRY ListEntry;
 } HAL_SHUTDOWN_REGISTRATION, *PHAL_SHUTDOWN_REGISTRATION;
 
-XBSYSAPI EXPORTNUM(47) void_t NTAPI HalRegisterShutdownNotification(
+XBSYSAPI EXPORTNUM(47) void_xt NTAPI HalRegisterShutdownNotification(
     IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
-    IN boolean_t Register
+    IN boolean_xt Register
 );
 
-XBSYSAPI EXPORTNUM(46) void_t FASTCALL HalRequestSoftwareInterrupt
+XBSYSAPI EXPORTNUM(46) void_xt FASTCALL HalRequestSoftwareInterrupt
 (
 	IN KIRQL Request
 );
@@ -112,7 +112,7 @@ XBSYSAPI EXPORTNUM(46) void_t FASTCALL HalRequestSoftwareInterrupt
 // * Reboot / Shutdown / Etc
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) void_t DECLSPEC_NORETURN NTAPI HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) void_xt DECLSPEC_NORETURN NTAPI HalReturnToFirmware
 (
     RETURN_FIRMWARE Routine
 );
@@ -122,78 +122,78 @@ XBSYSAPI EXPORTNUM(49) void_t DECLSPEC_NORETURN NTAPI HalReturnToFirmware
 // ******************************************************************
 XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
 (
-    uchar_t   Address,
-    uchar_t   Command,
-    boolean_t WriteWord,
-    ulong_t   DataValue
+    uchar_xt   Address,
+    uchar_xt   Command,
+    boolean_xt WriteWord,
+    ulong_xt   DataValue
 );
 
 // ******************************************************************
 // * READ_PORT_BUFFER_UCHAR
 // ******************************************************************
-XBSYSAPI EXPORTNUM(329) void_t NTAPI READ_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(329) void_xt NTAPI READ_PORT_BUFFER_UCHAR
 (
     IN PUCHAR Port,
     IN PUCHAR Buffer,
-    IN ulong_t  Count
+    IN ulong_xt  Count
 );
 
 // ******************************************************************
 // * READ_PORT_BUFFER_USHORT
 // ******************************************************************
-XBSYSAPI EXPORTNUM(330) void_t NTAPI READ_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(330) void_xt NTAPI READ_PORT_BUFFER_USHORT
 (
     IN PUSHORT Port,
     IN PUSHORT Buffer,
-    IN ulong_t   Count
+    IN ulong_xt   Count
 );
 
 // ******************************************************************
 // * READ_PORT_BUFFER_ULONG
 // ******************************************************************
-XBSYSAPI EXPORTNUM(331) void_t NTAPI READ_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(331) void_xt NTAPI READ_PORT_BUFFER_ULONG
 (
     IN PULONG Port,
     IN PULONG Buffer,
-    IN ulong_t  Count
+    IN ulong_xt  Count
 );
 
 // ******************************************************************
 // * WRITE_PORT_BUFFER_UCHAR
 // ******************************************************************
-XBSYSAPI EXPORTNUM(332) void_t NTAPI WRITE_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(332) void_xt NTAPI WRITE_PORT_BUFFER_UCHAR
 (
     IN PUCHAR Port,
     IN PUCHAR Buffer,
-    IN ulong_t  Count
+    IN ulong_xt  Count
 );
 
 // ******************************************************************
 // * WRITE_PORT_BUFFER_USHORT
 // ******************************************************************
-XBSYSAPI EXPORTNUM(333) void_t NTAPI WRITE_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(333) void_xt NTAPI WRITE_PORT_BUFFER_USHORT
 (
     IN PUSHORT Port,
     IN PUSHORT Buffer,
-    IN ulong_t   Count
+    IN ulong_xt   Count
 );
 
 // ******************************************************************
 // * WRITE_PORT_BUFFER_ULONG
 // ******************************************************************
-XBSYSAPI EXPORTNUM(334) void_t NTAPI WRITE_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(334) void_xt NTAPI WRITE_PORT_BUFFER_ULONG
 (
     IN PULONG Port,
     IN PULONG Buffer,
-    IN ulong_t  Count
+    IN ulong_xt  Count
 );
 
 // ******************************************************************
 // * HalBootSMCVideoMode
 // ******************************************************************
-XBSYSAPI EXPORTNUM(356) dword_t HalBootSMCVideoMode;
+XBSYSAPI EXPORTNUM(356) dword_xt HalBootSMCVideoMode;
 
-XBSYSAPI EXPORTNUM(358) boolean_t NTAPI HalIsResetOrShutdownPending
+XBSYSAPI EXPORTNUM(358) boolean_xt NTAPI HalIsResetOrShutdownPending
 (
 );
 
@@ -201,13 +201,13 @@ XBSYSAPI EXPORTNUM(360) NTSTATUS NTAPI HalInitiateShutdown
 (
 );
 
-XBSYSAPI EXPORTNUM(365) void_t NTAPI HalEnableSecureTrayEject
+XBSYSAPI EXPORTNUM(365) void_xt NTAPI HalEnableSecureTrayEject
 (
 );
 
 XBSYSAPI EXPORTNUM(366) NTSTATUS NTAPI HalWriteSMCScratchRegister
 (
-	IN dword_t ScratchRegister
+	IN dword_xt ScratchRegister
 );
 
 }

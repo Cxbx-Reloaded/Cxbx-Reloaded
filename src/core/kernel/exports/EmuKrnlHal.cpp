@@ -80,8 +80,8 @@ static DWORD g_TrayCount = 0;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 (
-	dword_t*	State,
-	dword_t*	Count
+	dword_xt*	State,
+	dword_xt*	Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -89,7 +89,7 @@ XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_END;
 
-	uchar_t orig_irql = KeRaiseIrqlToDpcLevel();
+	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
 	DWORD TrayState = g_TrayState;
 	DWORD orig_TrayCount = g_TrayCount;
 	KfLowerIrql(orig_irql);
@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 // * 0x0026 - HalClearSoftwareInterrupt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(38) xbox::void_t FASTCALL xbox::HalClearSoftwareInterrupt
+XBSYSAPI EXPORTNUM(38) xbox::void_xt FASTCALL xbox::HalClearSoftwareInterrupt
 (
 	KIRQL Request
 )
@@ -140,9 +140,9 @@ XBSYSAPI EXPORTNUM(38) xbox::void_t FASTCALL xbox::HalClearSoftwareInterrupt
 // ******************************************************************
 // * 0x0027 - HalDisableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(39) xbox::void_t NTAPI xbox::HalDisableSystemInterrupt
+XBSYSAPI EXPORTNUM(39) xbox::void_xt NTAPI xbox::HalDisableSystemInterrupt
 (
-	IN ulong_t BusInterruptLevel
+	IN ulong_xt BusInterruptLevel
 )
 {
 	LOG_FUNC_ONE_ARG(BusInterruptLevel);
@@ -155,7 +155,7 @@ XBSYSAPI EXPORTNUM(39) xbox::void_t NTAPI xbox::HalDisableSystemInterrupt
 // ******************************************************************
 // This specifies the number of Cache partitions available for game data caching
 // On real hardware, there are three, generally known as X, Y and Z in homebrew
-XBSYSAPI EXPORTNUM(40) xbox::ulong_t xbox::HalDiskCachePartitionCount = 3; 
+XBSYSAPI EXPORTNUM(40) xbox::ulong_xt xbox::HalDiskCachePartitionCount = 3; 
 
 // ******************************************************************
 // * 0x0029 - HalDiskModelNumber
@@ -172,9 +172,9 @@ XBSYSAPI EXPORTNUM(42) xbox::PANSI_STRING xbox::HalDiskSerialNumber = 0;
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(43) xbox::void_t NTAPI xbox::HalEnableSystemInterrupt
+XBSYSAPI EXPORTNUM(43) xbox::void_xt NTAPI xbox::HalEnableSystemInterrupt
 (
-	IN ulong_t BusInterruptLevel,
+	IN ulong_xt BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode
 )
 {
@@ -224,9 +224,9 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 // ******************************************************************
 // * 0x002C - HalGetInterruptVector()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(44) xbox::ulong_t NTAPI xbox::HalGetInterruptVector
+XBSYSAPI EXPORTNUM(44) xbox::ulong_xt NTAPI xbox::HalGetInterruptVector
 (
-	IN ulong_t   BusInterruptLevel,
+	IN ulong_xt   BusInterruptLevel,
 	OUT PKIRQL  Irql
 )
 {
@@ -263,9 +263,9 @@ XBSYSAPI EXPORTNUM(44) xbox::ulong_t NTAPI xbox::HalGetInterruptVector
 // ******************************************************************
 XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 (
-	IN  uchar_t               Address,
-	IN  uchar_t               Command,
-	IN  boolean_t             ReadWord,
+	IN  uchar_xt               Address,
+	IN  uchar_xt               Command,
+	IN  boolean_xt             ReadWord,
 	OUT PULONG              DataValue
 )
 {
@@ -310,14 +310,14 @@ XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 // * 0x002E - HalReadWritePCISpace()
 // ******************************************************************
 // Source:OpenXDK
-XBSYSAPI EXPORTNUM(46) xbox::void_t NTAPI xbox::HalReadWritePCISpace
+XBSYSAPI EXPORTNUM(46) xbox::void_xt NTAPI xbox::HalReadWritePCISpace
 (
-	IN ulong_t   BusNumber,
-	IN ulong_t   SlotNumber,
-	IN ulong_t   RegisterNumber,
+	IN ulong_xt   BusNumber,
+	IN ulong_xt   SlotNumber,
+	IN ulong_xt   RegisterNumber,
 	IN PVOID   Buffer,
-	IN ulong_t   Length,
-	IN boolean_t WritePCISpace
+	IN ulong_xt   Length,
+	IN boolean_xt WritePCISpace
 )
 {
 	LOG_FUNC_BEGIN
@@ -355,7 +355,7 @@ XBSYSAPI EXPORTNUM(46) xbox::void_t NTAPI xbox::HalReadWritePCISpace
 		int ByteOffset = RegisterNumber % sizeof(ULONG);
 		int Size = RegisterDataSizes[RegisterNumber % sizeof(ULONG)][Length % sizeof(ULONG)];
 
-		EmuX86_IOWrite((xbox::addr)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG, sizeof(uint32_t));
+		EmuX86_IOWrite((xbox::addr_xt)PCI_TYPE1_ADDR_PORT, CfgBits.u.AsULONG, sizeof(uint32_t));
 
 		if (WritePCISpace) {
 			EmuX86_IOWrite(PCI_TYPE1_DATA_PORT, *((PUCHAR)Buffer), Size);
@@ -386,10 +386,10 @@ XBSYSAPI EXPORTNUM(46) xbox::void_t NTAPI xbox::HalReadWritePCISpace
 // ******************************************************************
 // * 0x002F - HalRegisterShutdownNotification()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(47) xbox::void_t NTAPI xbox::HalRegisterShutdownNotification
+XBSYSAPI EXPORTNUM(47) xbox::void_xt NTAPI xbox::HalRegisterShutdownNotification
 (
 	IN PHAL_SHUTDOWN_REGISTRATION ShutdownRegistration,
-	IN boolean_t Register
+	IN boolean_xt Register
 )
 {
 	LOG_FUNC_BEGIN
@@ -446,7 +446,7 @@ uint8_t SoftwareInterruptLookupTable[] = {
 // * 0x0030 - HalRequestSoftwareInterrupt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(48) xbox::void_t FASTCALL xbox::HalRequestSoftwareInterrupt
+XBSYSAPI EXPORTNUM(48) xbox::void_xt FASTCALL xbox::HalRequestSoftwareInterrupt
 (
 	IN KIRQL Request
 )
@@ -480,7 +480,7 @@ XBSYSAPI EXPORTNUM(48) xbox::void_t FASTCALL xbox::HalRequestSoftwareInterrupt
 // ******************************************************************
 // * 0x0031 - HalReturnToFirmware()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(49) xbox::void_t DECLSPEC_NORETURN NTAPI xbox::HalReturnToFirmware
+XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFirmware
 (
 	RETURN_FIRMWARE Routine
 )
@@ -653,10 +653,10 @@ XBSYSAPI EXPORTNUM(49) xbox::void_t DECLSPEC_NORETURN NTAPI xbox::HalReturnToFir
 // ******************************************************************
 XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 (
-	IN  uchar_t               Address,
-	IN  uchar_t               Command,
-	IN  boolean_t             WriteWord,
-	IN  ulong_t               DataValue
+	IN  uchar_xt               Address,
+	IN  uchar_xt               Command,
+	IN  boolean_xt             WriteWord,
+	IN  ulong_xt               DataValue
 )
 {
 	LOG_FUNC_BEGIN
@@ -694,11 +694,11 @@ XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 // ******************************************************************
 // * 0x0149 - READ_PORT_BUFFER_UCHAR()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(329) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(329) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
-	IN ulong_t  Count
+	IN ulong_xt  Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -708,17 +708,17 @@ XBSYSAPI EXPORTNUM(329) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = (uint8_t)EmuX86_IORead((xbox::addr)Port, sizeof(uint8_t));
+		*Buffer++ = (uint8_t)EmuX86_IORead((xbox::addr_xt)Port, sizeof(uint8_t));
 }
 
 // ******************************************************************
 // * 0x014A - READ_PORT_BUFFER_USHORT()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(330) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(330) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
-	IN ulong_t   Count
+	IN ulong_xt   Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -728,17 +728,17 @@ XBSYSAPI EXPORTNUM(330) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = (uint16_t)EmuX86_IORead((xbox::addr)Port, sizeof(uint16_t));
+		*Buffer++ = (uint16_t)EmuX86_IORead((xbox::addr_xt)Port, sizeof(uint16_t));
 }
 
 // ******************************************************************
 // * 0x014B - READ_PORT_BUFFER_ULONG()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(331) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(331) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
-	IN ulong_t  Count
+	IN ulong_xt  Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -748,17 +748,17 @@ XBSYSAPI EXPORTNUM(331) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		*Buffer++ = EmuX86_IORead((xbox::addr)Port, sizeof(uint32_t));
+		*Buffer++ = EmuX86_IORead((xbox::addr_xt)Port, sizeof(uint32_t));
 }
 
 // ******************************************************************
 // * 0x014C - WRITE_PORT_BUFFER_UCHAR()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(332) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
+XBSYSAPI EXPORTNUM(332) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
-	IN ulong_t  Count
+	IN ulong_xt  Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -768,17 +768,17 @@ XBSYSAPI EXPORTNUM(332) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite((xbox::addr)Port, *Buffer++, sizeof(uint8_t));
+		EmuX86_IOWrite((xbox::addr_xt)Port, *Buffer++, sizeof(uint8_t));
 }
 
 // ******************************************************************
 // * 0x014D - WRITE_PORT_BUFFER_USHORT()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(333) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_USHORT
+XBSYSAPI EXPORTNUM(333) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
-	IN ulong_t   Count
+	IN ulong_xt   Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -788,17 +788,17 @@ XBSYSAPI EXPORTNUM(333) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_USHORT
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite((xbox::addr)Port, *Buffer++, sizeof(uint16_t));
+		EmuX86_IOWrite((xbox::addr_xt)Port, *Buffer++, sizeof(uint16_t));
 }
 
 // ******************************************************************
 // * 0x014E - WRITE_PORT_BUFFER_ULONG()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(334) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_ULONG
+XBSYSAPI EXPORTNUM(334) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
-	IN ulong_t  Count
+	IN ulong_xt  Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -808,26 +808,26 @@ XBSYSAPI EXPORTNUM(334) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_ULONG
 		LOG_FUNC_END;
 
 	while (Count-- > 0)
-		EmuX86_IOWrite((xbox::addr)Port, *Buffer++, sizeof(uint32_t));
+		EmuX86_IOWrite((xbox::addr_xt)Port, *Buffer++, sizeof(uint32_t));
 }
 
 // ******************************************************************
 // * 0x0164 - HalBootSMCVideoMode
 // ******************************************************************
 // TODO: This should be set to whichever AV Pack is read from the SMC at boot time
-XBSYSAPI EXPORTNUM(356) xbox::dword_t xbox::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
+XBSYSAPI EXPORTNUM(356) xbox::dword_xt xbox::HalBootSMCVideoMode = 1; // TODO : AV_PACK_STANDARD?
 
 // ******************************************************************
 // * 0x0166 - HalIsResetOrShutdownPending()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(358) xbox::boolean_t NTAPI xbox::HalIsResetOrShutdownPending
+XBSYSAPI EXPORTNUM(358) xbox::boolean_xt NTAPI xbox::HalIsResetOrShutdownPending
 (
 )
 {
 	LOG_FUNC();
 
-	boolean_t ret = FALSE;
+	BOOLEAN ret = FALSE;
 
 	if (ResetOrShutdownCommandCode != 0) { ret = TRUE; }
 
@@ -859,7 +859,7 @@ XBSYSAPI EXPORTNUM(360) xbox::NTSTATUS NTAPI xbox::HalInitiateShutdown
 //
 // New to the XBOX.
 // Source:XBMC Undocumented.h
-XBSYSAPI EXPORTNUM(365) xbox::void_t NTAPI xbox::HalEnableSecureTrayEject
+XBSYSAPI EXPORTNUM(365) xbox::void_xt NTAPI xbox::HalEnableSecureTrayEject
 (
 )
 {
@@ -874,7 +874,7 @@ XBSYSAPI EXPORTNUM(365) xbox::void_t NTAPI xbox::HalEnableSecureTrayEject
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(366) xbox::NTSTATUS NTAPI xbox::HalWriteSMCScratchRegister
 (
-	IN dword_t ScratchRegister
+	IN dword_xt ScratchRegister
 )
 {
 	LOG_FUNC_ONE_ARG(ScratchRegister);

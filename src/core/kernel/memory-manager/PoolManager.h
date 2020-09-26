@@ -38,43 +38,43 @@
 
 
 typedef struct _POOL_DESCRIPTOR {
-	xbox::ulong_t RunningAllocs;
-	xbox::ulong_t RunningDeAllocs;
-	xbox::ulong_t TotalPages;
-	xbox::ulong_t TotalBigPages;
+	xbox::ulong_xt RunningAllocs;
+	xbox::ulong_xt RunningDeAllocs;
+	xbox::ulong_xt TotalPages;
+	xbox::ulong_xt TotalBigPages;
 	xbox::LIST_ENTRY ListHeads[POOL_LIST_HEADS];
 } POOL_DESCRIPTOR, *PPOOL_DESCRIPTOR;
 
 
 typedef struct _POOL_LOOKASIDE_LIST {
 	xbox::SLIST_HEADER ListHead;
-	xbox::ushort_t Depth;
-	xbox::ushort_t Padding;
-	xbox::ulong_t TotalAllocates;
-	xbox::ulong_t AllocateHits;
+	xbox::ushort_xt Depth;
+	xbox::ushort_xt Padding;
+	xbox::ulong_xt TotalAllocates;
+	xbox::ulong_xt AllocateHits;
 } POOL_LOOKASIDE_LIST, *PPOOL_LOOKASIDE_LIST;
 
 
 typedef struct _POOL_HEADER {
 	union {
 		struct {
-			xbox::uchar_t PreviousSize;
-			xbox::uchar_t PoolIndex;
-			xbox::uchar_t PoolType;
-			xbox::uchar_t BlockSize;
+			xbox::uchar_xt PreviousSize;
+			xbox::uchar_xt PoolIndex;
+			xbox::uchar_xt PoolType;
+			xbox::uchar_xt BlockSize;
 		};
-		xbox::ulong_t Ulong1;
+		xbox::ulong_xt Ulong1;
 	};
-	xbox::ulong_t PoolTag;
+	xbox::ulong_xt PoolTag;
 } POOL_HEADER, *PPOOL_HEADER;
 
 
 typedef struct _POOL_BLOCK {
-	xbox::uchar_t Fill[1 << POOL_BLOCK_SHIFT];
+	xbox::uchar_xt Fill[1 << POOL_BLOCK_SHIFT];
 } POOL_BLOCK, *PPOOL_BLOCK;
 
 
-#define POOL_OVERHEAD (static_cast<xbox::long_t>(sizeof(POOL_HEADER)))
+#define POOL_OVERHEAD (static_cast<xbox::long_xt>(sizeof(POOL_HEADER)))
 #define POOL_SMALLEST_BLOCK (sizeof(POOL_BLOCK))
 #define POOL_BUDDY_MAX (PAGE_SIZE - (POOL_OVERHEAD + POOL_SMALLEST_BLOCK ))
 #define MARK_POOL_HEADER_ALLOCATED(POOLHEADER)      {(POOLHEADER)->PoolIndex = 0x80;}

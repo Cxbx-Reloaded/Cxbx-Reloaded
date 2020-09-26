@@ -136,7 +136,7 @@ struct X_XACTSoundCue
 // ******************************************************************
 // * EmuXACTEngineCreate
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(XACTEngineCreate)( X_XACT_RUNTIME_PARAMETERS* pParams, X_XACTEngine** ppEngine );
+xbox::hresult_xt WINAPI EMUPATCH(XACTEngineCreate)( X_XACT_RUNTIME_PARAMETERS* pParams, X_XACTEngine** ppEngine );
 
 // ******************************************************************
 // * EmuXACTEngineDoWork
@@ -146,18 +146,18 @@ void WINAPI EMUPATCH(XACTEngineDoWork)();
 // ******************************************************************
 // * EmuIXACTEngine_RegisterWaveBank
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_RegisterWaveBank)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_RegisterWaveBank)
 (
 	X_XACTEngine*		pThis,
 	LPVOID				pvData,
-	dword_t				dwSize,
+	dword_xt				dwSize,
 	X_XACTWaveBank**	ppWaveBank
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_RegisterStreamedWaveBank
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 (
 	X_XACTEngine*							pThis,
 	X_XACT_WAVEBANK_STREAMING_PARAMETERS*	pParams,
@@ -167,22 +167,22 @@ xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_RegisterStreamedWaveBank)
 // ******************************************************************
 // * EmuIXACTEngine_CreateSoundBank
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_CreateSoundBank)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_CreateSoundBank)
 (
 	X_XACTEngine*		pThis,
 	LPVOID				pvData,
-	dword_t				dwSize,
+	dword_xt				dwSize,
 	X_XACTSoundBank**	ppSoundBank
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_DownloadEffectsImage
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_DownloadEffectsImage)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_DownloadEffectsImage)
 (
 	X_XACTEngine*		pThis,
 	PVOID				pvData,
-	dword_t				dwSize,
+	dword_xt				dwSize,
 	LPVOID				pEffectLoc,
 	LPVOID*				ppImageDesc
 );
@@ -190,26 +190,26 @@ xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_DownloadEffectsImage)
 // ******************************************************************
 // * EmuIXACTEngine_CreateSoundSource
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_CreateSoundSource)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_CreateSoundSource)
 (
 	X_XACTEngine*		pThis,
-	dword_t				dwFlags,
+	dword_xt				dwFlags,
 	X_XACTSoundSource** ppSoundSource
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_EnableHeadphones
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_EnableHeadphones)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_EnableHeadphones)
 (
 	X_XACTEngine*		pThis,
-	bool_t				fEnabled
+	bool_xt				fEnabled
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_SetListenerOrientation
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_SetListenerOrientation)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_SetListenerOrientation)
 (
 	X_XACTEngine*	pThis,
 	float			xFront,
@@ -218,109 +218,109 @@ xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_SetListenerOrientation)
 	float			xTop,
 	float			yTop,
 	float			zTop,
-	dword_t			dwApply
+	dword_xt			dwApply
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_SetListenerPosition
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_SetListenerPosition)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_SetListenerPosition)
 (
 	X_XACTEngine*	pThis,
 	float			x,
 	float			y, 
 	float			z,
-	dword_t			dwApply
+	dword_xt			dwApply
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_SetListenerVelocity
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_SetListenerVelocity)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_SetListenerVelocity)
 (
 	X_XACTEngine*	pThis,
 	float			x,
 	float			y, 
 	float			z,
-	dword_t			dwApply
+	dword_xt			dwApply
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_SetMasterVolume
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_SetMasterVolume)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_SetMasterVolume)
 (
 	X_XACTEngine*	pThis,
-    word_t			wCategory,
-    long_t			lVolume
+    word_xt			wCategory,
+    long_xt			lVolume
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_CommitDeferredSettings
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_CommitDeferredSettings)(X_XACTEngine* pThis);
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_CommitDeferredSettings)(X_XACTEngine* pThis);
 
 // ******************************************************************
 // * EmuIXACTSoundBank_GetSoundCueIndexFromFriendlyName
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTSoundBank_GetSoundCueIndexFromFriendlyName)
 (
 	X_XACTEngine*		pThis,
 	PCSTR				pFriendlyName,
-	dword_t*				pdwSoundCueIndex
+	dword_xt*				pdwSoundCueIndex
 );
 
 // ******************************************************************
 // * EmuIXACTSoundBank_Play
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTSoundBank_Play)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTSoundBank_Play)
 (
 	X_XACTSoundBank*	pThis,
-	dword_t				dwSoundCueIndex,
+	dword_xt				dwSoundCueIndex,
 	X_XACTSoundSource*	pSoundSource,
-	dword_t				dwFlags,
+	dword_xt				dwFlags,
 	X_XACTSoundCue**	ppSoundCue
 );
 
 // ******************************************************************
 // * EmuIXACTSoundBank_Stop
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTSoundBank_Stop)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTSoundBank_Stop)
 (
 	X_XACTSoundBank*	pThis,
-	dword_t				dwSoundCueIndex,
-	dword_t				dwFlags,
+	dword_xt				dwSoundCueIndex,
+	dword_xt				dwFlags,
 	X_XACTSoundCue*		pSoundCue
 );
 
 // ******************************************************************
 // * EmuIXACTSoundSource_SetPosition
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTSoundSource_SetPosition)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTSoundSource_SetPosition)
 (
 	X_XACTSoundSource*	pThis,
-    float_t				x,
-    float_t				y,
-    float_t				z,
-    dword_t				dwApply
+    float_xt				x,
+    float_xt				y,
+    float_xt				z,
+    dword_xt				dwApply
 );
 
 // ******************************************************************
 // * EmuIXACTSoundSource_SetVelocity
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTSoundSource_SetVelocity)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTSoundSource_SetVelocity)
 (
 	X_XACTSoundSource*	pThis,
-    float_t				x,
-    float_t				y,
-    float_t				z,
-    dword_t				dwApply
+    float_xt				x,
+    float_xt				y,
+    float_xt				z,
+    dword_xt				dwApply
 );
 
 // ******************************************************************
 // * EmuIXACTEngine_RegisterNotification
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_RegisterNotification)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_RegisterNotification)
 (
 	X_XACTEngine*					pThis,
     PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc
@@ -329,7 +329,7 @@ xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_RegisterNotification)
 // ******************************************************************
 // * EmuIXACTEngine_GetNotification
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_GetNotification)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_GetNotification)
 (
 	X_XACTEngine*					pThis,
     PCXACT_NOTIFICATION_DESCRIPTION pNotificationDesc,
@@ -339,7 +339,7 @@ xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_GetNotification)
 // ******************************************************************
 // * EmuIXACTEngine_UnRegisterWaveBank
 // ******************************************************************
-xbox::hresult_t WINAPI EMUPATCH(IXACTEngine_UnRegisterWaveBank)
+xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_UnRegisterWaveBank)
 (
 	X_XACTEngine*	pThis,
     X_XACTWaveBank*	pWaveBank

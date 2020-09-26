@@ -1036,7 +1036,7 @@ std::ostream& operator<<(std::ostream& os, const NtDll::NTSTATUS& value)
 */
 
 // TODO : Create (and use) an Xbox version of this too
-xbox::char_t* NtStatusToString(IN NTSTATUS Status)
+CHAR* NtStatusToString(IN NTSTATUS Status)
 {
 #define _CASE(s) case s: return #s;
 

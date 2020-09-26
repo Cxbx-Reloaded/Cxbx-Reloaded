@@ -140,7 +140,7 @@ static bool eeprom_data_is_valid(xbox::XC_VALUE_INDEX index)
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(12) xbox::void_t NTAPI xbox::ExAcquireReadWriteLockExclusive
+XBSYSAPI EXPORTNUM(12) xbox::void_xt NTAPI xbox::ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -169,7 +169,7 @@ XBSYSAPI EXPORTNUM(12) xbox::void_t NTAPI xbox::ExAcquireReadWriteLockExclusive
 // * 0x000D - ExAcquireReadWriteLockShared()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(13) xbox::void_t NTAPI xbox::ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) xbox::void_xt NTAPI xbox::ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -205,7 +205,7 @@ XBSYSAPI EXPORTNUM(13) xbox::void_t NTAPI xbox::ExAcquireReadWriteLockShared
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 (
-	IN size_t NumberOfBytes
+	IN size_xt NumberOfBytes
 )
 {
 	LOG_FORWARD("ExAllocatePoolWithTag");
@@ -221,8 +221,8 @@ XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(15) xbox::PVOID NTAPI xbox::ExAllocatePoolWithTag
 (
-	IN size_t NumberOfBytes,
-	IN ulong_t Tag
+	IN size_xt NumberOfBytes,
+	IN ulong_xt Tag
 )
 {
 	LOG_FUNC_BEGIN
@@ -252,7 +252,7 @@ XBSYSAPI EXPORTNUM(16) xbox::OBJECT_TYPE xbox::ExEventObjectType =
 // ******************************************************************
 // * 0x0011 - ExFreePool()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) xbox::void_t NTAPI xbox::ExFreePool
+XBSYSAPI EXPORTNUM(17) xbox::void_xt NTAPI xbox::ExFreePool
 (
 	IN PVOID	P
 )
@@ -266,7 +266,7 @@ XBSYSAPI EXPORTNUM(17) xbox::void_t NTAPI xbox::ExFreePool
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(18) xbox::void_t NTAPI xbox::ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) xbox::void_xt NTAPI xbox::ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -321,10 +321,10 @@ XBSYSAPI EXPORTNUM(19) xbox::LARGE_INTEGER NTAPI xbox::ExInterlockedAddLargeInte
 // * 0x0014 - ExInterlockedAddLargeStatistic()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) xbox::void_t FASTCALL xbox::ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) xbox::void_xt FASTCALL xbox::ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
-	IN ulong_t Increment
+	IN ulong_xt Increment
 )
 {
 	LOG_FUNC_BEGIN
@@ -340,7 +340,7 @@ XBSYSAPI EXPORTNUM(20) xbox::void_t FASTCALL xbox::ExInterlockedAddLargeStatisti
 // * 0x0015 - ExInterlockedCompareExchange64()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) xbox::longlong_t FASTCALL xbox::ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) xbox::longlong_xt FASTCALL xbox::ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
@@ -378,7 +378,7 @@ XBSYSAPI EXPORTNUM(22) xbox::OBJECT_TYPE xbox::ExMutantObjectType =
 // ******************************************************************
 // * 0x0017 - ExQueryPoolBlockSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(23) xbox::ulong_t NTAPI xbox::ExQueryPoolBlockSize
+XBSYSAPI EXPORTNUM(23) xbox::ulong_xt NTAPI xbox::ExQueryPoolBlockSize
 (
 	IN PVOID PoolBlock
 )
@@ -395,10 +395,10 @@ XBSYSAPI EXPORTNUM(23) xbox::ulong_t NTAPI xbox::ExQueryPoolBlockSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 (
-	IN  dword_t   ValueIndex,
-	OUT dword_t   *Type,
+	IN  dword_xt   ValueIndex,
+	OUT dword_xt   *Type,
 	OUT PVOID   Value,
-	IN  size_t  ValueLength,
+	IN  size_xt  ValueLength,
 	OUT PSIZE_T ResultLength OPTIONAL
 )
 {
@@ -473,8 +473,8 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
-	IN ulong_t	dwBufferSize,
-	IN boolean_t	bIsWriteMode
+	IN ulong_xt	dwBufferSize,
+	IN boolean_xt	bIsWriteMode
 )
 {
 	LOG_FUNC_BEGIN
@@ -550,7 +550,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 // * 0x001A - ExRaiseException()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(26) xbox::void_t NTAPI xbox::ExRaiseException
+XBSYSAPI EXPORTNUM(26) xbox::void_xt NTAPI xbox::ExRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
@@ -565,7 +565,7 @@ XBSYSAPI EXPORTNUM(26) xbox::void_t NTAPI xbox::ExRaiseException
 // * 0x001B - ExRaiseStatus()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(27) xbox::void_t NTAPI xbox::ExRaiseStatus
+XBSYSAPI EXPORTNUM(27) xbox::void_xt NTAPI xbox::ExRaiseStatus
 (
 	IN NTSTATUS Status
 )
@@ -579,7 +579,7 @@ XBSYSAPI EXPORTNUM(27) xbox::void_t NTAPI xbox::ExRaiseStatus
 // * 0x001C - ExReleaseReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(28) xbox::void_t NTAPI xbox::ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) xbox::void_xt NTAPI xbox::ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -600,7 +600,7 @@ XBSYSAPI EXPORTNUM(28) xbox::void_t NTAPI xbox::ExReleaseReadWriteLock
 			ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
 			ReadWriteLock->ReadersWaitingCount = 0;
 			RestoreInterruptMode(interrupt_mode);
-			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (long_t)orig_readers_waiting, 0);
+			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (long_xt)orig_readers_waiting, 0);
 			return;
 		}
 	}
@@ -622,10 +622,10 @@ XBSYSAPI EXPORTNUM(28) xbox::void_t NTAPI xbox::ExReleaseReadWriteLock
 // ******************************************************************
 XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 (
-	IN  dword_t			   ValueIndex,
-	IN  dword_t			   Type,
+	IN  dword_xt			   ValueIndex,
+	IN  dword_xt			   Type,
 	IN  PVOID			   Value,
-	IN  size_t			   ValueLength
+	IN  size_xt			   ValueLength
 )
 {
 	LOG_FUNC_BEGIN

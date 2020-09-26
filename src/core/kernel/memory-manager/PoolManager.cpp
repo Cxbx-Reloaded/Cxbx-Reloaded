@@ -128,7 +128,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Entry -= 1;
 			LookasideList->AllocateHits += 1;
 
-			Entry->PoolType = static_cast<xbox::uchar_t>(1);
+			Entry->PoolType = static_cast<xbox::uchar_xt>(1);
 			MARK_POOL_HEADER_ALLOCATED(Entry);
 
 			Entry->PoolTag = Tag;
@@ -158,8 +158,8 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 				if (Entry->BlockSize != NeededSize) {
 					if (Entry->PreviousSize == 0) {
 						SplitEntry = reinterpret_cast<PPOOL_HEADER>((reinterpret_cast<PPOOL_BLOCK>(Entry) + NeededSize));
-						SplitEntry->BlockSize = Entry->BlockSize - static_cast<xbox::uchar_t>(NeededSize);
-						SplitEntry->PreviousSize = static_cast<xbox::uchar_t>(NeededSize);
+						SplitEntry->BlockSize = Entry->BlockSize - static_cast<xbox::uchar_xt>(NeededSize);
+						SplitEntry->PreviousSize = static_cast<xbox::uchar_xt>(NeededSize);
 
 						NextEntry = reinterpret_cast<PPOOL_HEADER>((reinterpret_cast<PPOOL_BLOCK>(SplitEntry) + SplitEntry->BlockSize));
 						if (PAGE_END(NextEntry) == false) {
@@ -168,16 +168,16 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 					}
 					else {
 						SplitEntry = Entry;
-						Entry->BlockSize -= static_cast<xbox::uchar_t>(NeededSize);
+						Entry->BlockSize -= static_cast<xbox::uchar_xt>(NeededSize);
 						Entry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PPOOL_BLOCK>(Entry) + Entry->BlockSize);
 						Entry->PreviousSize = SplitEntry->BlockSize;
 
 						NextEntry = reinterpret_cast<PPOOL_HEADER>(reinterpret_cast<PPOOL_BLOCK>(Entry) + NeededSize);
 						if (PAGE_END(NextEntry) == false) {
-							NextEntry->PreviousSize = static_cast<xbox::uchar_t>(NeededSize);
+							NextEntry->PreviousSize = static_cast<xbox::uchar_xt>(NeededSize);
 						}
 					}
-					Entry->BlockSize = static_cast<xbox::uchar_t>(NeededSize);
+					Entry->BlockSize = static_cast<xbox::uchar_xt>(NeededSize);
 					SplitEntry->PoolType = 0;
 					Index = SplitEntry->BlockSize;
 
@@ -185,7 +185,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 						+ POOL_OVERHEAD))));
 				}
 
-				Entry->PoolType = static_cast<xbox::uchar_t>(1);
+				Entry->PoolType = static_cast<xbox::uchar_xt>(1);
 
 				MARK_POOL_HEADER_ALLOCATED(Entry);
 
@@ -217,7 +217,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 			Entry->BlockSize = 255;
 		}
 		else {
-			Entry->BlockSize = static_cast<xbox::uchar_t>((PAGE_SIZE / POOL_SMALLEST_BLOCK));
+			Entry->BlockSize = static_cast<xbox::uchar_xt>((PAGE_SIZE / POOL_SMALLEST_BLOCK));
 		}
 
 		Entry->PreviousSize = 0;

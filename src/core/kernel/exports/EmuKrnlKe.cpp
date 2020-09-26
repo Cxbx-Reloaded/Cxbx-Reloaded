@@ -98,7 +98,7 @@ typedef struct _DpcData {
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcThread()
 
-xbox::ulonglong_t LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
+xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 {
 	// Weird construction because there doesn't seem to exist an implicit
 	// conversion of LARGE_INTEGER to ULONGLONG :
@@ -160,7 +160,7 @@ xbox::KPRCB *KeGetCurrentPrcb()
 // ******************************************************************
 // * KeSetSystemTime()
 // ******************************************************************
-xbox::void_t NTAPI xbox::KeSetSystemTime
+xbox::void_xt NTAPI xbox::KeSetSystemTime
 (
 	IN  xbox::PLARGE_INTEGER NewTime,
 	OUT xbox::PLARGE_INTEGER OldTime
@@ -254,7 +254,7 @@ xbox::void_t NTAPI xbox::KeSetSystemTime
 // ******************************************************************
 // * KeInitializeTimer()
 // ******************************************************************
-xbox::void_t NTAPI xbox::KeInitializeTimer
+xbox::void_xt NTAPI xbox::KeInitializeTimer
 (
 	IN PKTIMER Timer
 )
@@ -429,9 +429,9 @@ XBSYSAPI EXPORTNUM(94) xbox::NTSTATUS NTAPI xbox::KeBoostPriorityThread
 // ******************************************************************
 // * 0x005F - KeBugCheck()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(95) xbox::void_t NTAPI xbox::KeBugCheck
+XBSYSAPI EXPORTNUM(95) xbox::void_xt NTAPI xbox::KeBugCheck
 (
-	IN ulong_t BugCheckMode
+	IN ulong_xt BugCheckMode
 )
 {
 	LOG_FORWARD("KeBugCheckEx");
@@ -445,7 +445,7 @@ XBSYSAPI EXPORTNUM(95) xbox::void_t NTAPI xbox::KeBugCheck
 // Source:Dxbx
 XBSYSAPI EXPORTNUM(96) xbox::NTSTATUS NTAPI xbox::KeBugCheckEx
 (
-	IN dword_t BugCheckCode,
+	IN dword_xt BugCheckCode,
 	IN PVOID BugCheckParameter1,
 	IN PVOID BugCheckParameter2,
 	IN PVOID BugCheckParameter3,
@@ -491,7 +491,7 @@ XBSYSAPI EXPORTNUM(96) xbox::NTSTATUS NTAPI xbox::KeBugCheckEx
 // ******************************************************************
 // * 0x0061 - KeCancelTimer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(96) xbox::boolean_t NTAPI xbox::KeCancelTimer
+XBSYSAPI EXPORTNUM(96) xbox::boolean_xt NTAPI xbox::KeCancelTimer
 (
 	IN PKTIMER Timer
 )
@@ -499,7 +499,7 @@ XBSYSAPI EXPORTNUM(96) xbox::boolean_t NTAPI xbox::KeCancelTimer
 	LOG_FUNC_ONE_ARG(Timer);
 
 	KIRQL OldIrql;
-	boolean_t Inserted;
+	BOOLEAN Inserted;
 
 	assert(Timer);
 
@@ -526,14 +526,14 @@ xbox::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1] = { 0 };
 // ******************************************************************
 // * 0x0062 - KeConnectInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(98) xbox::boolean_t NTAPI xbox::KeConnectInterrupt
+XBSYSAPI EXPORTNUM(98) xbox::boolean_xt NTAPI xbox::KeConnectInterrupt
 (
 	IN PKINTERRUPT  InterruptObject
 )
 {
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
-	boolean_t ret = FALSE;
+	BOOLEAN ret = FALSE;
 	KIRQL OldIrql;
 
 	KiLockDispatcherDatabase(&OldIrql);
@@ -563,7 +563,7 @@ XBSYSAPI EXPORTNUM(98) xbox::boolean_t NTAPI xbox::KeConnectInterrupt
 XBSYSAPI EXPORTNUM(99) xbox::NTSTATUS NTAPI xbox::KeDelayExecutionThread
 (
 	IN KPROCESSOR_MODE  WaitMode,
-	IN boolean_t          Alertable,
+	IN boolean_xt          Alertable,
 	IN PLARGE_INTEGER   Interval
 )
 {
@@ -581,7 +581,7 @@ XBSYSAPI EXPORTNUM(99) xbox::NTSTATUS NTAPI xbox::KeDelayExecutionThread
 // ******************************************************************
 // * 0x0064 - KeDisconnectInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(100) xbox::void_t NTAPI xbox::KeDisconnectInterrupt
+XBSYSAPI EXPORTNUM(100) xbox::void_xt NTAPI xbox::KeDisconnectInterrupt
 (
 	IN PKINTERRUPT  InterruptObject
 ) 
@@ -606,9 +606,9 @@ XBSYSAPI EXPORTNUM(100) xbox::void_t NTAPI xbox::KeDisconnectInterrupt
 // ******************************************************************
 // * 0x0065 - KeEnterCriticalRegion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(101) xbox::void_t NTAPI xbox::KeEnterCriticalRegion
+XBSYSAPI EXPORTNUM(101) xbox::void_xt NTAPI xbox::KeEnterCriticalRegion
 (
-    void_t
+    void_xt
 )
 {
     LOG_FUNC();
@@ -646,7 +646,7 @@ XBSYSAPI EXPORTNUM(104) xbox::PKTHREAD NTAPI xbox::KeGetCurrentThread(void)
 // ******************************************************************
 // * 0x0069 - KeInitializeApc()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(105) xbox::void_t NTAPI xbox::KeInitializeApc
+XBSYSAPI EXPORTNUM(105) xbox::void_xt NTAPI xbox::KeInitializeApc
 (
 	IN PKAPC Apc,
 	IN PKTHREAD Thread,
@@ -685,7 +685,7 @@ XBSYSAPI EXPORTNUM(105) xbox::void_t NTAPI xbox::KeInitializeApc
 // ******************************************************************
 // * 0x006A - KeInitializeDeviceQueue()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(106) xbox::void_t NTAPI xbox::KeInitializeDeviceQueue
+XBSYSAPI EXPORTNUM(106) xbox::void_xt NTAPI xbox::KeInitializeDeviceQueue
 (
 	OUT PKDEVICE_QUEUE DeviceQueue
 )
@@ -702,7 +702,7 @@ XBSYSAPI EXPORTNUM(106) xbox::void_t NTAPI xbox::KeInitializeDeviceQueue
 // ******************************************************************
 // * 0x006B - KeInitializeDpc()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(107) xbox::void_t NTAPI xbox::KeInitializeDpc
+XBSYSAPI EXPORTNUM(107) xbox::void_xt NTAPI xbox::KeInitializeDpc
 (
 	KDPC                *Dpc,
 	PKDEFERRED_ROUTINE   DeferredRoutine,
@@ -725,11 +725,11 @@ XBSYSAPI EXPORTNUM(107) xbox::void_t NTAPI xbox::KeInitializeDpc
 // ******************************************************************
 // * 0x006C - KeInitializeEvent()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(108) xbox::void_t NTAPI xbox::KeInitializeEvent
+XBSYSAPI EXPORTNUM(108) xbox::void_xt NTAPI xbox::KeInitializeEvent
 (
 	IN PRKEVENT Event,
 	IN EVENT_TYPE Type,
-	IN boolean_t SignalState
+	IN boolean_xt SignalState
 )
 {
 	LOG_FUNC_BEGIN
@@ -748,7 +748,7 @@ XBSYSAPI EXPORTNUM(108) xbox::void_t NTAPI xbox::KeInitializeEvent
 
 	// Setup the Xbox event struct
 	Event->Header.Type = Type;
-	Event->Header.Size = sizeof(KEVENT) / sizeof(long_t);
+	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
 	Event->Header.SignalState = SignalState;
 	InitializeListHead(&(Event->Header.WaitListHead)); 
 }
@@ -756,15 +756,15 @@ XBSYSAPI EXPORTNUM(108) xbox::void_t NTAPI xbox::KeInitializeEvent
 // ******************************************************************
 // * 0x006D - KeInitializeInterrupt()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(109) xbox::void_t NTAPI xbox::KeInitializeInterrupt
+XBSYSAPI EXPORTNUM(109) xbox::void_xt NTAPI xbox::KeInitializeInterrupt
 (
 	OUT PKINTERRUPT Interrupt,
 	IN PKSERVICE_ROUTINE ServiceRoutine,
 	IN PVOID ServiceContext,
-	IN ulong_t Vector,
+	IN ulong_xt Vector,
 	IN KIRQL Irql,
 	IN KINTERRUPT_MODE InterruptMode,
-	IN boolean_t ShareVector
+	IN BOOLEAN ShareVector
 )
 {
 	LOG_FUNC_BEGIN
@@ -795,10 +795,10 @@ XBSYSAPI EXPORTNUM(109) xbox::void_t NTAPI xbox::KeInitializeInterrupt
 // ******************************************************************
 // * 0x006E - KeInitializeMutant()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(110) xbox::void_t NTAPI xbox::KeInitializeMutant
+XBSYSAPI EXPORTNUM(110) xbox::void_xt NTAPI xbox::KeInitializeMutant
 (
 	IN PRKMUTANT Mutant,
-	IN boolean_t InitialOwner
+	IN boolean_xt InitialOwner
 )
 {
 	LOG_FUNC_BEGIN
@@ -808,7 +808,7 @@ XBSYSAPI EXPORTNUM(110) xbox::void_t NTAPI xbox::KeInitializeMutant
 
 	// Initialize header :
 	Mutant->Header.Type = MutantObject;
-	Mutant->Header.Size = sizeof(KMUTANT) / sizeof(long_t);
+	Mutant->Header.Size = sizeof(KMUTANT) / sizeof(LONG);
 	InitializeListHead(&Mutant->Header.WaitListHead);
 	// Initialize specific fields :
 	Mutant->Abandoned = FALSE;
@@ -834,10 +834,10 @@ XBSYSAPI EXPORTNUM(110) xbox::void_t NTAPI xbox::KeInitializeMutant
 // ******************************************************************
 // * 0x006F - KeInitializeQueue()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(111) xbox::void_t NTAPI xbox::KeInitializeQueue
+XBSYSAPI EXPORTNUM(111) xbox::void_xt NTAPI xbox::KeInitializeQueue
 (
 	IN PKQUEUE Queue,
-	IN ulong_t Count OPTIONAL
+	IN ulong_xt Count OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -847,7 +847,7 @@ XBSYSAPI EXPORTNUM(111) xbox::void_t NTAPI xbox::KeInitializeQueue
 
 	// Initialize header :
 	Queue->Header.Type = QueueObject;
-	Queue->Header.Size = sizeof(KQUEUE) / sizeof(long_t);
+	Queue->Header.Size = sizeof(KQUEUE) / sizeof(LONG);
 	Queue->Header.SignalState = 0;
 	InitializeListHead(&Queue->Header.WaitListHead);
 	// Initialize specific fields :
@@ -860,11 +860,11 @@ XBSYSAPI EXPORTNUM(111) xbox::void_t NTAPI xbox::KeInitializeQueue
 // ******************************************************************
 // * 0x0070 - KeInitializeSemaphore()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(112) xbox::void_t NTAPI xbox::KeInitializeSemaphore
+XBSYSAPI EXPORTNUM(112) xbox::void_xt NTAPI xbox::KeInitializeSemaphore
 (
 	IN PRKSEMAPHORE Semaphore,
-	IN long_t Count,
-	IN long_t Limit
+	IN long_xt Count,
+	IN long_xt Limit
 )
 {
 	LOG_FUNC_BEGIN
@@ -875,7 +875,7 @@ XBSYSAPI EXPORTNUM(112) xbox::void_t NTAPI xbox::KeInitializeSemaphore
 
 	// Initialize header :
 	Semaphore->Header.Type = SemaphoreObject;
-	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(long_t);
+	Semaphore->Header.Size = sizeof(KSEMAPHORE) / sizeof(LONG);
 	Semaphore->Header.SignalState = Count;
 	InitializeListHead(&Semaphore->Header.WaitListHead);
 	// Initialize specific fields :
@@ -885,7 +885,7 @@ XBSYSAPI EXPORTNUM(112) xbox::void_t NTAPI xbox::KeInitializeSemaphore
 // ******************************************************************
 // * 0x0071 - KeInitializeTimerEx()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(113) xbox::void_t NTAPI xbox::KeInitializeTimerEx
+XBSYSAPI EXPORTNUM(113) xbox::void_xt NTAPI xbox::KeInitializeTimerEx
 (
 	IN PKTIMER      Timer,
 	IN TIMER_TYPE   Type
@@ -911,11 +911,11 @@ XBSYSAPI EXPORTNUM(113) xbox::void_t NTAPI xbox::KeInitializeTimerEx
 	Timer->Period = 0;
 }
 
-XBSYSAPI EXPORTNUM(114) xbox::boolean_t NTAPI xbox::KeInsertByKeyDeviceQueue
+XBSYSAPI EXPORTNUM(114) xbox::boolean_xt NTAPI xbox::KeInsertByKeyDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
 	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
-	IN ulong_t SortKey
+	IN ulong_xt SortKey
 )
 {
 	LOG_FUNC_BEGIN
@@ -924,7 +924,7 @@ XBSYSAPI EXPORTNUM(114) xbox::boolean_t NTAPI xbox::KeInsertByKeyDeviceQueue
 		LOG_FUNC_ARG(SortKey)
 		LOG_FUNC_END;
 
-	boolean_t Res = FALSE;
+	BOOLEAN Res = FALSE;
 
 	// We should lock the device queue here
 
@@ -959,7 +959,7 @@ XBSYSAPI EXPORTNUM(114) xbox::boolean_t NTAPI xbox::KeInsertByKeyDeviceQueue
 // * This implementation is inspired by ReactOS source code
 // * Ref: https://github.com/reactos/reactos/blob/master/ntoskrnl/ke/devqueue.c
 // ******************************************************************
-XBSYSAPI EXPORTNUM(115) xbox::boolean_t NTAPI xbox::KeInsertDeviceQueue
+XBSYSAPI EXPORTNUM(115) xbox::boolean_xt NTAPI xbox::KeInsertDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
 	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry
@@ -970,7 +970,7 @@ XBSYSAPI EXPORTNUM(115) xbox::boolean_t NTAPI xbox::KeInsertDeviceQueue
 		LOG_FUNC_ARG(DeviceQueueEntry)
 		LOG_FUNC_END;
 
-	boolean_t Res = FALSE;
+	BOOLEAN Res = FALSE;
 
 	// We should lock the device queue here
 	
@@ -989,7 +989,7 @@ XBSYSAPI EXPORTNUM(115) xbox::boolean_t NTAPI xbox::KeInsertDeviceQueue
 	RETURN(Res);
 }
 
-XBSYSAPI EXPORTNUM(116) xbox::long_t NTAPI xbox::KeInsertHeadQueue
+XBSYSAPI EXPORTNUM(116) xbox::long_xt NTAPI xbox::KeInsertHeadQueue
 (
 	IN PRKQUEUE Queue,
 	IN PLIST_ENTRY Entry
@@ -1005,7 +1005,7 @@ XBSYSAPI EXPORTNUM(116) xbox::long_t NTAPI xbox::KeInsertHeadQueue
 	RETURN(0);
 }
 
-XBSYSAPI EXPORTNUM(117) xbox::long_t NTAPI xbox::KeInsertQueue
+XBSYSAPI EXPORTNUM(117) xbox::long_xt NTAPI xbox::KeInsertQueue
 (
 	IN PRKQUEUE Queue,
 	IN PLIST_ENTRY Entry
@@ -1021,7 +1021,7 @@ XBSYSAPI EXPORTNUM(117) xbox::long_t NTAPI xbox::KeInsertQueue
 	RETURN(0);
 }
 
-XBSYSAPI EXPORTNUM(118) xbox::boolean_t NTAPI xbox::KeInsertQueueApc
+XBSYSAPI EXPORTNUM(118) xbox::boolean_xt NTAPI xbox::KeInsertQueueApc
 (
 	IN PRKAPC Apc,
 	IN PVOID SystemArgument1,
@@ -1044,7 +1044,7 @@ XBSYSAPI EXPORTNUM(118) xbox::boolean_t NTAPI xbox::KeInsertQueueApc
 // ******************************************************************
 // * 0x0077 - KeInsertQueueDpc()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(119) xbox::boolean_t NTAPI xbox::KeInsertQueueDpc
+XBSYSAPI EXPORTNUM(119) xbox::boolean_xt NTAPI xbox::KeInsertQueueDpc
 (
 	IN PKDPC        Dpc,
 	IN PVOID        SystemArgument1,
@@ -1061,7 +1061,7 @@ XBSYSAPI EXPORTNUM(119) xbox::boolean_t NTAPI xbox::KeInsertQueueDpc
 	EnterCriticalSection(&(g_DpcData.Lock));
 	// TODO : Instead, disable interrupts - use KeRaiseIrql(HIGH_LEVEL, &(KIRQL)OldIrql) ?
 
-	boolean_t NeedsInsertion = (Dpc->Inserted == FALSE);
+	BOOLEAN NeedsInsertion = (Dpc->Inserted == FALSE);
 
 	if (NeedsInsertion) {
 		// Remember the arguments and link it into our DpcQueue :
@@ -1087,12 +1087,12 @@ XBSYSAPI EXPORTNUM(119) xbox::boolean_t NTAPI xbox::KeInsertQueueDpc
 // ******************************************************************
 // * 0x0079 - KeIsExecutingDpc()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(121) xbox::boolean_t NTAPI xbox::KeIsExecutingDpc
+XBSYSAPI EXPORTNUM(121) xbox::boolean_xt NTAPI xbox::KeIsExecutingDpc
 ()
 {
 	LOG_FUNC();
 
-	boolean_t ret = (boolean_t)KeGetCurrentPrcb()->DpcRoutineActive;
+	BOOLEAN ret = (BOOLEAN)KeGetCurrentPrcb()->DpcRoutineActive;
 
 	RETURN(ret);
 }
@@ -1105,9 +1105,9 @@ XBSYSAPI EXPORTNUM(120) xbox::KSYSTEM_TIME xbox::KeInterruptTime = { 0, 0, 0 };
 // ******************************************************************
 // * 0x007A - KeLeaveCriticalRegion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(122) xbox::void_t NTAPI xbox::KeLeaveCriticalRegion
+XBSYSAPI EXPORTNUM(122) xbox::void_xt NTAPI xbox::KeLeaveCriticalRegion
 (
-    void_t
+    void_xt
 )
 {
     LOG_FUNC();
@@ -1123,11 +1123,11 @@ XBSYSAPI EXPORTNUM(122) xbox::void_t NTAPI xbox::KeLeaveCriticalRegion
     }
 }
 
-XBSYSAPI EXPORTNUM(123) xbox::long_t NTAPI xbox::KePulseEvent
+XBSYSAPI EXPORTNUM(123) xbox::long_xt NTAPI xbox::KePulseEvent
 (
 	IN PRKEVENT Event,
 	IN KPRIORITY Increment,
-	IN boolean_t Wait
+	IN boolean_xt Wait
 )
 {
 	LOG_FUNC_BEGIN
@@ -1148,7 +1148,7 @@ XBSYSAPI EXPORTNUM(123) xbox::long_t NTAPI xbox::KePulseEvent
 		return NtDll::NtPulseEvent((HANDLE)Event, nullptr);
 	}
 
-	long_t OldState = Event->Header.SignalState;
+	LONG OldState = Event->Header.SignalState;
 	if ((OldState == 0) && (IsListEmpty(&Event->Header.WaitListHead) == FALSE)) {
 		Event->Header.SignalState = 1;
 		// TODO: KiWaitTest(Event, Increment);
@@ -1171,7 +1171,7 @@ XBSYSAPI EXPORTNUM(123) xbox::long_t NTAPI xbox::KePulseEvent
 	RETURN(OldState);
 }
 
-XBSYSAPI EXPORTNUM(124) xbox::long_t NTAPI xbox::KeQueryBasePriorityThread
+XBSYSAPI EXPORTNUM(124) xbox::long_xt NTAPI xbox::KeQueryBasePriorityThread
 (
 	IN PKTHREAD Thread
 )
@@ -1186,7 +1186,7 @@ XBSYSAPI EXPORTNUM(124) xbox::long_t NTAPI xbox::KeQueryBasePriorityThread
 // ******************************************************************
 // * 0x007D - KeQueryInterruptTime()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(125) xbox::ulonglong_t NTAPI xbox::KeQueryInterruptTime(void)
+XBSYSAPI EXPORTNUM(125) xbox::ulonglong_xt NTAPI xbox::KeQueryInterruptTime(void)
 {
 	// TODO : Some software might call KeQueryInterruptTime often and fill the log quickly,
 	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
@@ -1218,7 +1218,7 @@ XBSYSAPI EXPORTNUM(125) xbox::ulonglong_t NTAPI xbox::KeQueryInterruptTime(void)
 //   NOTE: The KeQueryPerformance* functions run at the ACPI clock
 //	       The XAPI QueryPerformance* functions run at the TSC clock
 // ******************************************************************
-XBSYSAPI EXPORTNUM(126) xbox::ulonglong_t NTAPI xbox::KeQueryPerformanceCounter(void)
+XBSYSAPI EXPORTNUM(126) xbox::ulonglong_xt NTAPI xbox::KeQueryPerformanceCounter(void)
 {
 	LOG_FUNC();
 	ULONGLONG ret;
@@ -1229,7 +1229,7 @@ XBSYSAPI EXPORTNUM(126) xbox::ulonglong_t NTAPI xbox::KeQueryPerformanceCounter(
 // ******************************************************************
 // * 0x007F - KeQueryPerformanceFrequency()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(127) xbox::ulonglong_t NTAPI xbox::KeQueryPerformanceFrequency(void)
+XBSYSAPI EXPORTNUM(127) xbox::ulonglong_xt NTAPI xbox::KeQueryPerformanceFrequency(void)
 {
 	LOG_FUNC();
 	ULONGLONG ret = XBOX_ACPI_FREQUENCY;
@@ -1239,7 +1239,7 @@ XBSYSAPI EXPORTNUM(127) xbox::ulonglong_t NTAPI xbox::KeQueryPerformanceFrequenc
 // ******************************************************************
 // * 0x0080 - KeQuerySystemTime()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(128) xbox::void_t NTAPI xbox::KeQuerySystemTime
+XBSYSAPI EXPORTNUM(128) xbox::void_xt NTAPI xbox::KeQuerySystemTime
 (
 	PLARGE_INTEGER CurrentTime
 )
@@ -1265,7 +1265,7 @@ XBSYSAPI EXPORTNUM(128) xbox::void_t NTAPI xbox::KeQuerySystemTime
 // ******************************************************************
 // * 0x0081 - KeRaiseIrqlToDpcLevel()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(129) xbox::uchar_t NTAPI xbox::KeRaiseIrqlToDpcLevel()
+XBSYSAPI EXPORTNUM(129) xbox::uchar_xt NTAPI xbox::KeRaiseIrqlToDpcLevel()
 {
 	LOG_FORWARD(KfRaiseIrql);
 
@@ -1275,19 +1275,19 @@ XBSYSAPI EXPORTNUM(129) xbox::uchar_t NTAPI xbox::KeRaiseIrqlToDpcLevel()
 // ******************************************************************
 // * 0x0082 - KeRaiseIrqlToSynchLevel()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(130) xbox::uchar_t NTAPI xbox::KeRaiseIrqlToSynchLevel()
+XBSYSAPI EXPORTNUM(130) xbox::uchar_xt NTAPI xbox::KeRaiseIrqlToSynchLevel()
 {
 	LOG_FORWARD(KfRaiseIrql);
 
 	return KfRaiseIrql(SYNC_LEVEL);
 }
 
-XBSYSAPI EXPORTNUM(131) xbox::long_t NTAPI xbox::KeReleaseMutant
+XBSYSAPI EXPORTNUM(131) xbox::long_xt NTAPI xbox::KeReleaseMutant
 (
 	IN PRKMUTANT Mutant,
 	IN KPRIORITY Increment,
-	IN boolean_t Abandoned,
-	IN boolean_t Wait
+	IN boolean_xt Abandoned,
+	IN boolean_xt Wait
 )
 {
 	LOG_FUNC_BEGIN
@@ -1302,12 +1302,12 @@ XBSYSAPI EXPORTNUM(131) xbox::long_t NTAPI xbox::KeReleaseMutant
 	RETURN(0);
 }
 
-XBSYSAPI EXPORTNUM(132) xbox::long_t NTAPI xbox::KeReleaseSemaphore
+XBSYSAPI EXPORTNUM(132) xbox::long_xt NTAPI xbox::KeReleaseSemaphore
 (
 	IN PRKSEMAPHORE Semaphore,
 	IN KPRIORITY Increment,
-	IN long_t Adjustment,
-	IN boolean_t Wait
+	IN long_xt Adjustment,
+	IN boolean_xt Wait
 )
 {
 	LOG_FUNC_BEGIN
@@ -1317,8 +1317,8 @@ XBSYSAPI EXPORTNUM(132) xbox::long_t NTAPI xbox::KeReleaseSemaphore
 		LOG_FUNC_ARG(Wait)
 		LOG_FUNC_END;
 
-	uchar_t orig_irql = KeRaiseIrqlToDpcLevel();
-	long_t initial_state = Semaphore->Header.SignalState;
+	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
+	LONG initial_state = Semaphore->Header.SignalState;
 	LONG adjusted_signalstate = Semaphore->Header.SignalState + Adjustment;
 
 	BOOL limit_reached = adjusted_signalstate > Semaphore->Limit;
@@ -1351,7 +1351,7 @@ XBSYSAPI EXPORTNUM(132) xbox::long_t NTAPI xbox::KeReleaseSemaphore
 XBSYSAPI EXPORTNUM(133) xbox::PKDEVICE_QUEUE_ENTRY NTAPI xbox::KeRemoveByKeyDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
-	IN ulong_t SortKey
+	IN ulong_xt SortKey
 )
 {
 	LOG_FUNC_BEGIN
@@ -1416,7 +1416,7 @@ XBSYSAPI EXPORTNUM(134) xbox::PKDEVICE_QUEUE_ENTRY NTAPI xbox::KeRemoveDeviceQue
 	RETURN(pEntry);
 }
 
-XBSYSAPI EXPORTNUM(135) xbox::boolean_t NTAPI xbox::KeRemoveEntryDeviceQueue
+XBSYSAPI EXPORTNUM(135) xbox::boolean_xt NTAPI xbox::KeRemoveEntryDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
 	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry
@@ -1432,7 +1432,7 @@ XBSYSAPI EXPORTNUM(135) xbox::boolean_t NTAPI xbox::KeRemoveEntryDeviceQueue
 	KiLockDispatcherDatabase(&oldIRQL);
 	// We should lock the device queue here
 
-	boolean_t currentlyInserted = DeviceQueueEntry->Inserted;
+	BOOLEAN currentlyInserted = DeviceQueueEntry->Inserted;
 	if (currentlyInserted) {
 		DeviceQueueEntry->Inserted = FALSE;
 		RemoveEntryList(&DeviceQueueEntry->DeviceListEntry);
@@ -1466,7 +1466,7 @@ XBSYSAPI EXPORTNUM(136) xbox::PLIST_ENTRY NTAPI xbox::KeRemoveQueue
 // ******************************************************************
 // * 0x0089 - KeRemoveQueueDpc()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(137) xbox::boolean_t NTAPI xbox::KeRemoveQueueDpc
+XBSYSAPI EXPORTNUM(137) xbox::boolean_xt NTAPI xbox::KeRemoveQueueDpc
 (
 	IN PKDPC Dpc
 )
@@ -1477,7 +1477,7 @@ XBSYSAPI EXPORTNUM(137) xbox::boolean_t NTAPI xbox::KeRemoveQueueDpc
 	// See https://msdn.microsoft.com/is-is/library/y14401ab(v=vs.80).aspx
 	EnterCriticalSection(&(g_DpcData.Lock));
 
-	boolean_t Inserted = Dpc->Inserted;
+	BOOLEAN Inserted = Dpc->Inserted;
 
 	if (Inserted)
 	{
@@ -1495,7 +1495,7 @@ XBSYSAPI EXPORTNUM(137) xbox::boolean_t NTAPI xbox::KeRemoveQueueDpc
 // ******************************************************************
 // * 0x008A - KeResetEvent()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(138) xbox::long_t NTAPI xbox::KeResetEvent
+XBSYSAPI EXPORTNUM(138) xbox::long_xt NTAPI xbox::KeResetEvent
 (
 	IN PRKEVENT Event
 )
@@ -1514,7 +1514,7 @@ XBSYSAPI EXPORTNUM(138) xbox::long_t NTAPI xbox::KeResetEvent
 		return NtDll::NtResetEvent((HANDLE)Event, nullptr);
 	}
 
-	long_t OldState = Event->Header.SignalState;
+	LONG OldState = Event->Header.SignalState;
 	Event->Header.SignalState = 0;
 
 	KiUnlockDispatcherDatabase(OldIrql);
@@ -1541,7 +1541,7 @@ XBSYSAPI EXPORTNUM(139) xbox::NTSTATUS NTAPI xbox::KeRestoreFloatingPointState
 // ******************************************************************
 // * 0x008C - KeResumeThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(140) xbox::ulong_t NTAPI xbox::KeResumeThread
+XBSYSAPI EXPORTNUM(140) xbox::ulong_xt NTAPI xbox::KeResumeThread
 (
 	IN PKTHREAD Thread
 )
@@ -1587,10 +1587,10 @@ XBSYSAPI EXPORTNUM(142) xbox::NTSTATUS NTAPI xbox::KeSaveFloatingPointState
 // ******************************************************************
 // * 0x008F - KeSetBasePriorityThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(143) xbox::long_t NTAPI xbox::KeSetBasePriorityThread
+XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 (
 	IN PKTHREAD  Thread,
-	IN long_t  Priority
+	IN long_xt  Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -1598,7 +1598,7 @@ XBSYSAPI EXPORTNUM(143) xbox::long_t NTAPI xbox::KeSetBasePriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	long_t ret = GetThreadPriority((HANDLE)Thread);
+	LONG ret = GetThreadPriority((HANDLE)Thread);
 
 	// This would work normally, but it will slow down the emulation, 
 	// don't do that if the priority is higher then normal (so our own)!
@@ -1609,10 +1609,10 @@ XBSYSAPI EXPORTNUM(143) xbox::long_t NTAPI xbox::KeSetBasePriorityThread
 	RETURN(ret);
 }
 
-XBSYSAPI EXPORTNUM(144) xbox::ulong_t NTAPI xbox::KeSetDisableBoostThread
+XBSYSAPI EXPORTNUM(144) xbox::ulong_xt NTAPI xbox::KeSetDisableBoostThread
 (
 	IN PKTHREAD Thread,
-	IN ulong_t Disable
+	IN ulong_xt Disable
 )
 {
 	LOG_FUNC_BEGIN
@@ -1634,11 +1634,11 @@ XBSYSAPI EXPORTNUM(144) xbox::ulong_t NTAPI xbox::KeSetDisableBoostThread
 // ******************************************************************
 // * 0x0091 - KeSetEvent()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(145) xbox::long_t NTAPI xbox::KeSetEvent
+XBSYSAPI EXPORTNUM(145) xbox::long_xt NTAPI xbox::KeSetEvent
 (
 	IN PRKEVENT		Event,
 	IN KPRIORITY	Increment,
-	IN boolean_t		Wait	
+	IN boolean_xt		Wait	
 )
 {
 	LOG_FUNC_BEGIN
@@ -1659,7 +1659,7 @@ XBSYSAPI EXPORTNUM(145) xbox::long_t NTAPI xbox::KeSetEvent
 		return NtDll::NtSetEvent((HANDLE)Event, nullptr);
 	}
 
-	long_t OldState = Event->Header.SignalState;
+	LONG OldState = Event->Header.SignalState;
 	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
 		Event->Header.SignalState = 1;
 	} else {
@@ -1692,7 +1692,7 @@ XBSYSAPI EXPORTNUM(145) xbox::long_t NTAPI xbox::KeSetEvent
 	RETURN(OldState);
 }
 
-XBSYSAPI EXPORTNUM(146) xbox::void_t NTAPI xbox::KeSetEventBoostPriority
+XBSYSAPI EXPORTNUM(146) xbox::void_xt NTAPI xbox::KeSetEventBoostPriority
 (
 	IN PRKEVENT Event,
 	IN PRKTHREAD *Thread
@@ -1753,10 +1753,10 @@ XBSYSAPI EXPORTNUM(147) xbox::KPRIORITY NTAPI xbox::KeSetPriorityProcess
 // ******************************************************************
 // * 0x0094 - KeSetPriorityThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(148) xbox::boolean_t NTAPI xbox::KeSetPriorityThread
+XBSYSAPI EXPORTNUM(148) xbox::boolean_xt NTAPI xbox::KeSetPriorityThread
 (
     IN PKTHREAD  Thread,
-    IN long_t  Priority
+    IN long_xt  Priority
 )
 {
 	LOG_FUNC_BEGIN
@@ -1772,7 +1772,7 @@ XBSYSAPI EXPORTNUM(148) xbox::boolean_t NTAPI xbox::KeSetPriorityThread
 // ******************************************************************
 // * 0x0095 - KeSetTimer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(149) xbox::boolean_t NTAPI xbox::KeSetTimer
+XBSYSAPI EXPORTNUM(149) xbox::boolean_xt NTAPI xbox::KeSetTimer
 (
 	IN PKTIMER        Timer,
 	IN LARGE_INTEGER  DueTime,
@@ -1788,11 +1788,11 @@ XBSYSAPI EXPORTNUM(149) xbox::boolean_t NTAPI xbox::KeSetTimer
 // ******************************************************************
 // * 0x0096 - KeSetTimerEx()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(150) xbox::boolean_t NTAPI xbox::KeSetTimerEx
+XBSYSAPI EXPORTNUM(150) xbox::boolean_xt NTAPI xbox::KeSetTimerEx
 (
 	IN PKTIMER        Timer,
 	IN LARGE_INTEGER  DueTime,
-	IN long_t           Period OPTIONAL,
+	IN long_xt           Period OPTIONAL,
 	IN PKDPC          Dpc OPTIONAL
 )
 {
@@ -1803,8 +1803,8 @@ XBSYSAPI EXPORTNUM(150) xbox::boolean_t NTAPI xbox::KeSetTimerEx
 		LOG_FUNC_ARG(Dpc)
 	LOG_FUNC_END;
 
-	boolean_t Inserted;
-	boolean_t RequestInterrupt = FALSE;
+	BOOLEAN Inserted;
+	BOOLEAN RequestInterrupt = FALSE;
 	KIRQL OldIrql;
 	ULONG Hand;
 
@@ -1851,9 +1851,9 @@ XBSYSAPI EXPORTNUM(150) xbox::boolean_t NTAPI xbox::KeSetTimerEx
 // ******************************************************************
 // * 0x0097 - KeStallExecutionProcessor()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(151) xbox::void_t NTAPI xbox::KeStallExecutionProcessor
+XBSYSAPI EXPORTNUM(151) xbox::void_xt NTAPI xbox::KeStallExecutionProcessor
 (
-	IN ulong_t MicroSeconds
+	IN ulong_xt MicroSeconds
 )
 {
 	LOG_FUNC_ONE_ARG(MicroSeconds);
@@ -1867,7 +1867,7 @@ XBSYSAPI EXPORTNUM(151) xbox::void_t NTAPI xbox::KeStallExecutionProcessor
 // ******************************************************************
 // * 0x0098 - KeSuspendThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(152) xbox::ulong_t NTAPI xbox::KeSuspendThread
+XBSYSAPI EXPORTNUM(152) xbox::ulong_xt NTAPI xbox::KeSuspendThread
 (
 	IN PKTHREAD Thread
 )
@@ -1884,7 +1884,7 @@ XBSYSAPI EXPORTNUM(152) xbox::ulong_t NTAPI xbox::KeSuspendThread
 // ******************************************************************
 // * 0x0099 - KeSynchronizeExecution()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(153) xbox::boolean_t NTAPI xbox::KeSynchronizeExecution
+XBSYSAPI EXPORTNUM(153) xbox::boolean_xt NTAPI xbox::KeSynchronizeExecution
 (
 	IN PKINTERRUPT Interrupt,
 	IN PKSYNCHRONIZE_ROUTINE SynchronizeRoutine,
@@ -1897,7 +1897,7 @@ XBSYSAPI EXPORTNUM(153) xbox::boolean_t NTAPI xbox::KeSynchronizeExecution
 		LOG_FUNC_ARG(SynchronizeContext)
 		LOG_FUNC_END;
 
-	boolean_t ret = TRUE;
+	BOOLEAN ret = TRUE;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1912,14 +1912,14 @@ XBSYSAPI EXPORTNUM(154) xbox::KSYSTEM_TIME xbox::KeSystemTime = { 0, 0, 0 };
 // ******************************************************************
 // * 0x009B - KeTestAlertThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(155) xbox::boolean_t NTAPI xbox::KeTestAlertThread
+XBSYSAPI EXPORTNUM(155) xbox::boolean_xt NTAPI xbox::KeTestAlertThread
 (
 	IN KPROCESSOR_MODE AlertMode
 )
 {
 	LOG_FUNC_ONE_ARG(AlertMode);
 
-	boolean_t ret = TRUE;
+	BOOLEAN ret = TRUE;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1929,12 +1929,12 @@ XBSYSAPI EXPORTNUM(155) xbox::boolean_t NTAPI xbox::KeTestAlertThread
 // ******************************************************************
 // * 0x009C - KeTickCount
 // ******************************************************************
-XBSYSAPI EXPORTNUM(156) xbox::dword_t VOLATILE xbox::KeTickCount = 0;
+XBSYSAPI EXPORTNUM(156) xbox::dword_xt VOLATILE xbox::KeTickCount = 0;
 
 // ******************************************************************
 // * 0x009D - KeTimeIncrement
 // ******************************************************************
-XBSYSAPI EXPORTNUM(157) xbox::ulong_t xbox::KeTimeIncrement = CLOCK_TIME_INCREMENT;
+XBSYSAPI EXPORTNUM(157) xbox::ulong_xt xbox::KeTimeIncrement = CLOCK_TIME_INCREMENT;
 
 
 xbox::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
@@ -1959,12 +1959,12 @@ xbox::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
 // ******************************************************************
 XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 (
-	IN ulong_t Count,
+	IN ulong_xt Count,
 	IN PVOID Object[],
 	IN WAIT_TYPE WaitType,
 	IN KWAIT_REASON WaitReason,
 	IN KPROCESSOR_MODE WaitMode,
-	IN boolean_t Alertable,
+	IN boolean_xt Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL,
 	IN PKWAIT_BLOCK WaitBlockArray OPTIONAL
 )
@@ -2050,7 +2050,7 @@ XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 				// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
 				WaitBlock = &WaitBlockArray[Index];
 				WaitBlock->Object = ObjectMutant;
-				WaitBlock->WaitKey = (cshort_t)(Index);
+				WaitBlock->WaitKey = (cshort_xt)(Index);
 				WaitBlock->WaitType = WaitType;
 				WaitBlock->Thread = Thread;
 				WaitBlock->NextWaitBlock = &WaitBlockArray[Index + 1];
@@ -2210,7 +2210,7 @@ XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
 	IN PVOID Object,
 	IN KWAIT_REASON WaitReason,
 	IN KPROCESSOR_MODE WaitMode,
-	IN boolean_t Alertable,
+	IN boolean_xt Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
@@ -2273,7 +2273,7 @@ XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
 			// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
 			Thread->WaitBlockList = WaitBlock;
 			WaitBlock->Object = Object;
-			WaitBlock->WaitKey = (cshort_t)(STATUS_SUCCESS);
+			WaitBlock->WaitKey = (cshort_xt)(STATUS_SUCCESS);
 			WaitBlock->WaitType = WaitAny;
 			WaitBlock->Thread = Thread;
 

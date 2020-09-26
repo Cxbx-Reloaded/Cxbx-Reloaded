@@ -58,7 +58,7 @@ LONG PhyLockFlag;
 #define XNET_ETHERNET_LINK_FULL_DUPLEX      0x08
 #define XNET_ETHERNET_LINK_HALF_DUPLEX      0x10
 
-#define PhyLock() InterlockedCompareExchange((::PLONG)(&PhyLockFlag), 1, 0)
+#define PhyLock() InterlockedCompareExchange(&PhyLockFlag, 1, 0)
 #define PhyUnlock() (PhyLockFlag = 0)
 #define NETERR(_err)        HRESULT_FROM_WIN32(_err)
 #define NETERR_OK           STATUS_SUCCESS
@@ -209,9 +209,9 @@ BOOL PhyUpdateLinkState()
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) xbox::dword_t NTAPI xbox::PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) xbox::dword_xt NTAPI xbox::PhyGetLinkState
 (
-	IN ulong_t	Mode
+	IN ulong_xt	Mode
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
@@ -229,7 +229,7 @@ XBSYSAPI EXPORTNUM(252) xbox::dword_t NTAPI xbox::PhyGetLinkState
 // ******************************************************************
 XBSYSAPI EXPORTNUM(253) xbox::NTSTATUS NTAPI xbox::PhyInitialize
 (
-	IN ulong_t	forceReset,
+	IN ulong_xt	forceReset,
 	IN PVOID	Parameter2
 )
 {

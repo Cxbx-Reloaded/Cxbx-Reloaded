@@ -38,19 +38,19 @@
 
 // Directory Entry
 typedef struct {
-	xbox::word_t		LeftSubTree;
-	xbox::word_t		RightSubTree;
-	xbox::dword_t		FileStartSector;
-	xbox::dword_t		FileSize;
-	xbox::byte_t		FileAttributes;
-	xbox::byte_t		FilenameLength;
-	xbox::byte_t		Filename[FILENAME_SIZE];
+	xbox::word_xt		LeftSubTree;
+	xbox::word_xt		RightSubTree;
+	xbox::dword_xt		FileStartSector;
+	xbox::dword_xt		FileSize;
+	xbox::byte_xt		FileAttributes;
+	xbox::byte_xt		FilenameLength;
+	xbox::byte_xt		Filename[FILENAME_SIZE];
 } XDVDFS_DIRECTORY_ENTRY, *PXDVDFS_DIRECTORY_ENTRY;
 
 // XDVDFS init a session object
 BOOL	XDVDFS_Mount(
 			PXDVDFS_SESSION	Session,
-			BOOL			(*ReadFunc)(PVOID, PVOID, xbox::dword_t, xbox::dword_t),
+			BOOL			(*ReadFunc)(PVOID, PVOID, xbox::dword_xt, xbox::dword_xt),
 			PVOID			Data)
 {
 	Session->Read.Data = Data;
@@ -98,8 +98,8 @@ BOOL	XDVDFS_UnMount(
 			PXDVDFS_SESSION	Session)
 {
 	// Reset ring buffer
-	memset(Session->Read.SectorList, 0, sizeof(xbox::dword_t) * DISK_BUFFER);
-	memset(Session->Read.LockList, 0, sizeof(xbox::dword_t) * DISK_BUFFER);
+	memset(Session->Read.SectorList, 0, sizeof(xbox::dword_xt) * DISK_BUFFER);
+	memset(Session->Read.LockList, 0, sizeof(xbox::dword_xt) * DISK_BUFFER);
 	Session->Read.WriteIndex = 0;
 	// Invalidate all open files & search structures
 	Session->Magic++;
@@ -108,7 +108,7 @@ BOOL	XDVDFS_UnMount(
 
 // Initialize a search record with root dir
 // Note: Can return XDVDFS_NO_MORE_FILES if the image is empty
-xbox::dword_t	XDVDFS_GetRootDir(
+xbox::dword_xt	XDVDFS_GetRootDir(
 			PXDVDFS_SESSION	Session,
 			PSEARCH_RECORD	SearchRecord)
 {
@@ -124,12 +124,12 @@ xbox::dword_t	XDVDFS_GetRootDir(
 }
 
 // Enumerate files
-xbox::dword_t	XDVDFS_EnumFiles(
+xbox::dword_xt	XDVDFS_EnumFiles(
 			PXDVDFS_SESSION	Session,
 			PSEARCH_RECORD	SearchRecord)
 {
 	PXDVDFS_DIRECTORY_ENTRY	Entry;
-	xbox::dword_t					SectorNumber, Position, i;
+	xbox::dword_xt					SectorNumber, Position, i;
 	PBYTE					Ptr;
 
 enum_retry:
@@ -200,12 +200,12 @@ enum_retry:
 	return XDVDFS_NO_ERROR;
 }
 
-xbox::dword_t	XDVDFS_GetFileInfo(
+xbox::dword_xt	XDVDFS_GetFileInfo(
 			PXDVDFS_SESSION	Session,
 			LPSTR 			Filename,
 			PSEARCH_RECORD	SearchRecord)
 {
-	xbox::dword_t   Length, i, ReturnCode;
+	xbox::dword_xt   Length, i, ReturnCode;
 
 	// To begin, we will enter the root directory
 	XDVDFS_GetRootDir(Session, SearchRecord);
@@ -280,12 +280,12 @@ xbox::dword_t	XDVDFS_GetFileInfo(
 }
 
 // Initialize a search record given a path
-xbox::dword_t	XDVDFS_OpenFolder(
+xbox::dword_xt	XDVDFS_OpenFolder(
 			PXDVDFS_SESSION	Session,
 			LPSTR			Path,
 			PSEARCH_RECORD	SearchRecord)
 {
-	xbox::dword_t   ReturnCode;
+	xbox::dword_xt   ReturnCode;
 
 	// Find a file matching the given path
 	ReturnCode = XDVDFS_GetFileInfo(Session, Path, SearchRecord);
@@ -305,13 +305,13 @@ xbox::dword_t	XDVDFS_OpenFolder(
 }
 
 // Open a file
-xbox::dword_t	XDVDFS_OpenFile(
+xbox::dword_xt	XDVDFS_OpenFile(
 			PXDVDFS_SESSION	Session,
 			LPSTR			Filename,
 			PFILE_RECORD	FileRecord)
 {
 	SEARCH_RECORD	SearchRecord;
-	xbox::dword_t			ReturnCode;
+	xbox::dword_xt			ReturnCode;
 
 	// Find a file matching the given path
 	ReturnCode = XDVDFS_GetFileInfo(Session, Filename, &SearchRecord);
@@ -333,7 +333,7 @@ xbox::dword_t	XDVDFS_OpenFile(
 }
 
 // Open a file pointed by a search rec
-xbox::dword_t	XDVDFS_OpenFileEx(
+xbox::dword_xt	XDVDFS_OpenFileEx(
 			PXDVDFS_SESSION	Session,
 			PSEARCH_RECORD	SearchRecord,
 			PFILE_RECORD	FileRecord)
@@ -356,13 +356,13 @@ xbox::dword_t	XDVDFS_OpenFileEx(
 }
 
 // Read a file
-xbox::dword_t	XDVDFS_FileRead(
+xbox::dword_xt	XDVDFS_FileRead(
 			PXDVDFS_SESSION	Session,
 			PFILE_RECORD	FileRecord,
 			PVOID			OutBuffer,
-			xbox::dword_t			Size)
+			xbox::dword_xt			Size)
 {
-	xbox::dword_t   CurrentSector, Position, PartialRead, Readed, i;
+	xbox::dword_xt   CurrentSector, Position, PartialRead, Readed, i;
 	PBYTE	Buffer = (PBYTE)OutBuffer;
 
 	Readed = 0;
@@ -460,7 +460,7 @@ xbox::dword_t	XDVDFS_FileRead(
 	return Readed;
 }
 
-xbox::dword_t	XDVDFS_FileClose(
+xbox::dword_xt	XDVDFS_FileClose(
 			PXDVDFS_SESSION	Session,
 			PFILE_RECORD 	FileRecord)
 {
@@ -473,11 +473,11 @@ xbox::dword_t	XDVDFS_FileClose(
 	return XDVDFS_NO_ERROR;
 }
 
-xbox::dword_t	XDVDFS_FileSeek(
+xbox::dword_xt	XDVDFS_FileSeek(
 			PXDVDFS_SESSION	Session,
 			PFILE_RECORD	FileRecord,
 			int				Delta,
-			xbox::dword_t			SeekMode)
+			xbox::dword_xt			SeekMode)
 {
 	// Check structure validity
 	if (FileRecord->Magic != Session->Magic)

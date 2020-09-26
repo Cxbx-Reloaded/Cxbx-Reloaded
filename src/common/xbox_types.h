@@ -31,90 +31,90 @@
 
 namespace xbox
 {
-	/*! addr is the type of a physical address */
-	using addr = std::uint32_t;
-
-	/*! zero is the type of null address or value */
-	inline constexpr addr zero = 0;
-
-	/*! zeroptr is the type of null pointer address */
-	using zeroptr_t = std::nullptr_t;
-	inline constexpr zeroptr_t zeroptr = nullptr;
-
 	// ******************************************************************
-	// * Basic types
+	// * Calling conventions
 	// ******************************************************************
-	using void_t = void;
-	using char_t = char;
-	using cchar_t = char;
-	using wChar_t = wchar_t;
-	using short_t = std::int16_t;
-	using cshort_t = std::int16_t;
-	using long_t = std::int32_t;
-	using uchar_t = std::uint8_t;
-	using byte_t = std::uint8_t;
-	using boolean_t = std::uint8_t;
-	using ushort_t = std::uint16_t;
-	using word_t = std::uint16_t;
-	using ulong_t = std::uint32_t;
-	using dword_t = std::uint32_t;
-	using size_t = ulong_t;
-	using access_mask_t = ulong_t;
-	using physical_address_t = ulong_t;
-	using uint_t = std::uint32_t;
-	using int_t = std::int32_t;
-	using int_ptr_t = int_t;
-	using long_ptr_t = long_t;
-	using ulong_ptr_t = ulong_t;
-	using longlong_t = std::int64_t;
-	using ulonglong_t = std::uint64_t;
-	using quad_t = std::uint64_t; // 8 byte aligned 8 byte long
-	using bool_t = std::int32_t;
-	using hresult_t = long_t;
-	using float_t = float;
 	// TODO: Remove __stdcall once lib86cpu is implemented.
 	#define XBOXAPI             __stdcall
 	#define XCALLBACK           XBOXAPI
 
+	// ******************************************************************
+	// * Basic types
+	// ******************************************************************
+	using void_xt = void;
+	using char_xt = char;
+	using cchar_xt = char;
+	using wchar_xt = wchar_t;
+	using short_xt = std::int16_t;
+	using cshort_xt = std::int16_t;
+	using long_xt = std::int32_t;
+	using uchar_xt = std::uint8_t;
+	using byte_xt = std::uint8_t;
+	using boolean_xt = std::uint8_t;
+	using ushort_xt = std::uint16_t;
+	using word_xt = std::uint16_t;
+	using ulong_xt = std::uint32_t;
+	using dword_xt = std::uint32_t;
+	using size_xt = ulong_xt;
+	using access_mask_xt = ulong_xt;
+	using physical_address_xt = ulong_xt;
+	using uint_xt = std::uint32_t;
+	using int_xt = std::int32_t;
+	using int_ptr_xt = int_xt;
+	using long_ptr_xt = long_xt;
+	using ulong_ptr_xt = ulong_xt;
+	using longlong_xt = std::int64_t;
+	using ulonglong_xt = std::uint64_t;
+	using quad_xt = std::uint64_t; // 8 byte aligned 8 byte long
+	using bool_xt = std::int32_t;
+	using hresult_xt = long_xt;
+	using float_xt = float;
+	/*! addr is the type of a physical address */
+	using addr_xt = std::uint32_t;
+	/*! zero is the type of null address or value */
+	inline constexpr addr_xt zero = 0;
+	/*! zeroptr is the type of null pointer address */
+	using zeroptr_xt = std::nullptr_t;
+	inline constexpr zeroptr_xt zeroptr = nullptr;
 
 	// ******************************************************************
 	// * Pointer types
 	// ******************************************************************
-	typedef char_t *PCHAR;
-	typedef char_t *PSZ;
-	typedef char_t *PCSZ;
-	typedef byte_t *PBYTE;
-	typedef boolean_t *PBOOLEAN;
-	typedef uchar_t *PUCHAR;
-	typedef ushort_t *PUSHORT;
-	typedef uint_t *PUINT;
-	typedef ulong_t *PULONG;
-	typedef dword_t *PDWORD, *LPDWORD;
-	typedef long_t *PLONG;
-	typedef int_ptr_t *PINT_PTR;
-	typedef void_t *PVOID, *LPVOID;
-	typedef void *HANDLE;
+	typedef char_xt *PCHAR;
+	typedef char_xt *PSZ;
+	typedef char_xt *PCSZ;
+	typedef byte_xt *PBYTE;
+	typedef boolean_xt *PBOOLEAN;
+	typedef uchar_xt *PUCHAR;
+	typedef ushort_xt *PUSHORT;
+	typedef uint_xt *PUINT;
+	typedef ulong_xt *PULONG;
+	typedef dword_xt *PDWORD, *LPDWORD;
+	typedef long_xt *PLONG;
+	typedef int_ptr_xt *PINT_PTR;
+	typedef void_xt *PVOID, *LPVOID;
+	typedef void_xt *HANDLE;
 	typedef HANDLE *PHANDLE;
-	typedef size_t *PSIZE_T;
-	typedef access_mask_t *PACCESS_MASK;
-	typedef longlong_t *PLONGLONG;
-	typedef quad_t *PQUAD;
+	typedef size_xt *PSIZE_T;
+	typedef access_mask_xt *PACCESS_MASK;
+	typedef longlong_xt *PLONGLONG;
+	typedef quad_xt *PQUAD;
 
 	// ******************************************************************
 	// ANSI (Multi-byte Character) types
 	// ******************************************************************
-	typedef char_t *PCHAR, *LPCH, *PCH;
-	typedef const char_t *LPCCH, *PCCH;
-	typedef wChar_t *LPWSTR, *PWSTR;
-	typedef /*_Null_terminated_*/ const wChar_t *LPCWSTR, *PCWSTR;
+	typedef char_xt *PCHAR, *LPCH, *PCH;
+	typedef const char_xt *LPCCH, *PCCH;
+	typedef wchar_xt *LPWSTR, *PWSTR;
+	typedef /*_Null_terminated_*/ const wchar_xt *LPCWSTR, *PCWSTR;
 
 	// ******************************************************************
 	// Misc
 	// ******************************************************************
 	typedef struct _XD3DVECTOR {
-		float_t x;
-		float_t y;
-		float_t z;
+		float_xt x;
+		float_xt y;
+		float_xt z;
 	} D3DVECTOR;
 
 	template<typename A, typename B>

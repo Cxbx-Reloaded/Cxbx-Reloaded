@@ -157,7 +157,7 @@ struct RingDesc {
 	uint16_t flags;
 };
 
-char* EmuNVNet_GetRegisterName(xbox::addr addr)
+char* EmuNVNet_GetRegisterName(xbox::addr_xt addr)
 {
 	switch (addr) {
 	case NvRegIrqStatus:             return "NvRegIrqStatus";
@@ -218,7 +218,7 @@ char* EmuNVNet_GetMiiRegisterName(uint8_t reg)
 	}
 }
 
-uint32_t EmuNVNet_GetRegister(xbox::addr addr, unsigned int size)
+uint32_t EmuNVNet_GetRegister(xbox::addr_xt addr, unsigned int size)
 {
 	switch (size) {
 	case sizeof(uint32_t) :
@@ -232,7 +232,7 @@ uint32_t EmuNVNet_GetRegister(xbox::addr addr, unsigned int size)
 	return 0;
 }
 
-void EmuNVNet_SetRegister(xbox::addr addr, uint32_t value, unsigned int size)
+void EmuNVNet_SetRegister(xbox::addr_xt addr, uint32_t value, unsigned int size)
 {
 	switch (size) {
 	case sizeof(uint32_t):
@@ -299,7 +299,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 	return retval;
 }
 
-uint32_t EmuNVNet_Read(xbox::addr addr, int size)
+uint32_t EmuNVNet_Read(xbox::addr_xt addr, int size)
 {
 	EmuLog(LOG_LEVEL::DEBUG, "Read%d: %s (0x%.8X)", size * 8, EmuNVNet_GetRegisterName(addr), addr);
 
@@ -326,7 +326,7 @@ void EmuNVNet_DMAPacketFromGuest()
 	for (int i = 0; i < s->tx_ring_size; i++) {
 		/* Read ring descriptor */
 		s->tx_ring_index %= s->tx_ring_size;
-		xbox::addr tx_ring_addr = EmuNVNet_GetRegister(NvRegTxRingPhysAddr, 4);
+		xbox::addr_xt tx_ring_addr = EmuNVNet_GetRegister(NvRegTxRingPhysAddr, 4);
 		tx_ring_addr += s->tx_ring_index * sizeof(desc);
 
 		memcpy(&desc, (void*)(tx_ring_addr | CONTIGUOUS_MEMORY_BASE), sizeof(desc));
@@ -381,7 +381,7 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 	for (int i = 0; i < s->rx_ring_size; i++) {
 		/* Read current ring descriptor */
 		s->rx_ring_index %= s->rx_ring_size;
-		xbox::addr rx_ring_addr = EmuNVNet_GetRegister(NvRegRxRingPhysAddr, 4);
+		xbox::addr_xt rx_ring_addr = EmuNVNet_GetRegister(NvRegRxRingPhysAddr, 4);
 		rx_ring_addr += s->rx_ring_index * sizeof(desc);
 		
 		memcpy(&desc, (void*)(rx_ring_addr | CONTIGUOUS_MEMORY_BASE), sizeof(desc));
@@ -423,7 +423,7 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 	return false;
 }
 
-void EmuNVNet_Write(xbox::addr addr, uint32_t value, int size)
+void EmuNVNet_Write(xbox::addr_xt addr, uint32_t value, int size)
 {
 	switch (addr) {
 	case NvRegRingSizes:

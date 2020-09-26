@@ -56,10 +56,10 @@ void IoVecAdd(IOVector* qiov, void* base, size_t len);
 size_t IoVecTobuffer(const IoVec* iov, const unsigned int iov_cnt, size_t offset, void *buf, size_t bytes);
 size_t IoVecFromBuffer(const IoVec* iov, unsigned int iov_cnt, size_t offset, void* buf, size_t bytes);
 
-bool WriteDwords(xbox::addr Paddr, uint32_t* Buffer, int Number);
-bool GetDwords(xbox::addr Paddr, uint32_t* Buffer, int Number);
-bool GetWords(xbox::addr Paddr, uint16_t* Buffer, int Number);
-bool WriteWords(xbox::addr Paddr, uint16_t* Buffer, int Number);
+bool WriteDwords(xbox::addr_xt Paddr, uint32_t* Buffer, int Number);
+bool GetDwords(xbox::addr_xt Paddr, uint32_t* Buffer, int Number);
+bool GetWords(xbox::addr_xt Paddr, uint16_t* Buffer, int Number);
+bool WriteWords(xbox::addr_xt Paddr, uint16_t* Buffer, int Number);
 bool Memory_R(void* Addr, void* Buf, size_t Num);
 bool Memory_W(void* Addr, void* Buf, size_t Num);
 bool Memory_RW(void* Addr, void* Buf, size_t Num, bool bIsWrite);

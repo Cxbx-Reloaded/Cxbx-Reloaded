@@ -12,37 +12,37 @@
 #ifndef XBOXKRNL_DBG_H
 #define XBOXKRNL_DBG_H
 
-#include "xboxkrnl/xboxkrnl_types.h"
+#include "types.h"
 
 namespace xbox
 {
 
-XBSYSAPI EXPORTNUM(5) void_t NTAPI DbgBreakPoint();
-XBSYSAPI EXPORTNUM(6) void_t NTAPI DbgBreakPointWithStatus
+XBSYSAPI EXPORTNUM(5) void_xt NTAPI DbgBreakPoint();
+XBSYSAPI EXPORTNUM(6) void_xt NTAPI DbgBreakPointWithStatus
 (
-	IN ulong_t Status
+	IN ulong_xt Status
 );
 XBSYSAPI EXPORTNUM(7) NTSTATUS NTAPI DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ulong_ptr_t ProcessId
+	IN ulong_ptr_xt ProcessId
 );
-XBSYSAPI EXPORTNUM(8) ulong_t _cdecl DbgPrint
+XBSYSAPI EXPORTNUM(8) ulong_xt _cdecl DbgPrint
 (
 	PCHAR  Format, ...
 );
-XBSYSAPI EXPORTNUM(10) ulong_t NTAPI DbgPrompt
+XBSYSAPI EXPORTNUM(10) ulong_xt NTAPI DbgPrompt
 (
 	IN PCCH Prompt,
 	OUT PCH Response,
-	IN ulong_t MaximumResponseLength
+	IN ulong_xt MaximumResponseLength
 );
-XBSYSAPI EXPORTNUM(11) void_t NTAPI DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) void_xt NTAPI DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ulong_ptr_t ProcessId
+	IN ulong_ptr_xt ProcessId
 );
 
 }

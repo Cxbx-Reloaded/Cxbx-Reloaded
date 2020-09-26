@@ -45,7 +45,7 @@ namespace NtDll
 // ******************************************************************
 // * 0x0005 - DbgBreakPoint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(5) xbox::void_t NTAPI xbox::DbgBreakPoint()
+XBSYSAPI EXPORTNUM(5) xbox::void_xt NTAPI xbox::DbgBreakPoint()
 {
 	LOG_FUNC();
 
@@ -55,9 +55,9 @@ XBSYSAPI EXPORTNUM(5) xbox::void_t NTAPI xbox::DbgBreakPoint()
 // ******************************************************************
 // * 0x0006 - DbgBreakPointWithStatus()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(6) xbox::void_t NTAPI xbox::DbgBreakPointWithStatus
+XBSYSAPI EXPORTNUM(6) xbox::void_xt NTAPI xbox::DbgBreakPointWithStatus
 (
-	IN ulong_t Status 
+	IN ulong_xt Status 
 )
 {
 	LOG_FUNC_ONE_ARG(Status);
@@ -72,7 +72,7 @@ XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ulong_ptr_t ProcessId
+	IN ulong_ptr_xt ProcessId
 )
 {
 	LOG_FUNC_BEGIN;
@@ -91,7 +91,7 @@ XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
 // ******************************************************************
 // * 0x0008 - DbgPrint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(8) xbox::ulong_t _cdecl xbox::DbgPrint
+XBSYSAPI EXPORTNUM(8) xbox::ulong_xt _cdecl xbox::DbgPrint
 (
 	PCHAR  Format, ...
 )
@@ -137,11 +137,11 @@ XBSYSAPI EXPORTNUM(8) xbox::ulong_t _cdecl xbox::DbgPrint
 // * 0x000A - DbgPrompt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(10) xbox::ulong_t NTAPI xbox::DbgPrompt
+XBSYSAPI EXPORTNUM(10) xbox::ulong_xt NTAPI xbox::DbgPrompt
 (
 	IN PCCH Prompt,
 	OUT PCH Response,
-	IN ulong_t MaximumResponseLength
+	IN ulong_xt MaximumResponseLength
 )
 {
 	LOG_FUNC_BEGIN;
@@ -161,11 +161,11 @@ XBSYSAPI EXPORTNUM(10) xbox::ulong_t NTAPI xbox::DbgPrompt
 // * 0x000B - DbgUnLoadImageSymbols()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(11) xbox::void_t NTAPI xbox::DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) xbox::void_xt NTAPI xbox::DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ulong_ptr_t ProcessId
+	IN ulong_ptr_xt ProcessId
 )
 {
 	LOG_FUNC_BEGIN;

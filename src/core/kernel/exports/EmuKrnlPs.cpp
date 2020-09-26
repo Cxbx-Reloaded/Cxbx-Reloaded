@@ -169,7 +169,7 @@ XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  boolean_t         DebuggerThread
+	IN  boolean_xt         DebuggerThread
 )
 {
 	LOG_FORWARD("PsCreateSystemThreadEx");
@@ -207,14 +207,14 @@ XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
 XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
-	IN  ulong_t           ThreadExtensionSize,
-	IN  ulong_t           KernelStackSize,
-	IN  ulong_t           TlsDataSize,
+	IN  ulong_xt           ThreadExtensionSize,
+	IN  ulong_xt           KernelStackSize,
+	IN  ulong_xt           TlsDataSize,
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  boolean_t         CreateSuspended,
-	IN  boolean_t         DebuggerThread,
+	IN  boolean_xt         CreateSuspended,
+	IN  boolean_xt         DebuggerThread,
 	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 )
 {
@@ -397,7 +397,7 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-XBSYSAPI EXPORTNUM(258) xbox::void_t NTAPI xbox::PsTerminateSystemThread
+XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 (
 	IN NTSTATUS ExitStatus
 )

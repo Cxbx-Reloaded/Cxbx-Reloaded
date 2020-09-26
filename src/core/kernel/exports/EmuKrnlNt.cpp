@@ -66,10 +66,10 @@ std::mutex NtSystemTimeMtx;
 XBSYSAPI EXPORTNUM(184) xbox::NTSTATUS NTAPI xbox::NtAllocateVirtualMemory
 (
 	IN OUT PVOID    *BaseAddress,
-	IN ulong_t         ZeroBits,
+	IN ulong_xt         ZeroBits,
 	IN OUT PULONG    AllocationSize,
-	IN dword_t         AllocationType,
-	IN dword_t         Protect
+	IN dword_xt         AllocationType,
+	IN dword_xt         Protect
 )
 {
 	LOG_FUNC_BEGIN
@@ -223,7 +223,7 @@ XBSYSAPI EXPORTNUM(189) xbox::NTSTATUS NTAPI xbox::NtCreateEvent
 	OUT PHANDLE             EventHandle,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
 	IN  EVENT_TYPE          EventType,
-	IN  boolean_t             InitialState
+	IN  boolean_xt             InitialState
 )
 {
 	LOG_FUNC_BEGIN
@@ -301,14 +301,14 @@ XBSYSAPI EXPORTNUM(189) xbox::NTSTATUS NTAPI xbox::NtCreateEvent
 XBSYSAPI EXPORTNUM(190) xbox::NTSTATUS NTAPI xbox::NtCreateFile
 (
 	OUT PHANDLE             FileHandle,
-	IN  access_mask_t         DesiredAccess,
+	IN  access_mask_xt         DesiredAccess,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
 	IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
-	IN  ulong_t               FileAttributes,
-	IN  ulong_t               ShareAccess,
-	IN  ulong_t               CreateDisposition,
-	IN  ulong_t               CreateOptions
+	IN  ulong_xt               FileAttributes,
+	IN  ulong_xt               ShareAccess,
+	IN  ulong_xt               CreateDisposition,
+	IN  ulong_xt               CreateOptions
 )
 {
 	LOG_FORWARD("IoCreateFile");
@@ -334,9 +334,9 @@ XBSYSAPI EXPORTNUM(190) xbox::NTSTATUS NTAPI xbox::NtCreateFile
 XBSYSAPI EXPORTNUM(191) xbox::NTSTATUS NTAPI xbox::NtCreateIoCompletion
 (
 	OUT PHANDLE IoCompletionHandle,
-	IN access_mask_t DesiredAccess,
+	IN access_mask_xt DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ulong_t Count
+	IN ulong_xt Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -358,7 +358,7 @@ XBSYSAPI EXPORTNUM(192) xbox::NTSTATUS NTAPI xbox::NtCreateMutant
 (
 	OUT PHANDLE             MutantHandle,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
-	IN  boolean_t             InitialOwner
+	IN  boolean_xt             InitialOwner
 )
 {
 	LOG_FUNC_BEGIN
@@ -430,8 +430,8 @@ XBSYSAPI EXPORTNUM(193) xbox::NTSTATUS NTAPI xbox::NtCreateSemaphore
 (
 	OUT PHANDLE             SemaphoreHandle,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
-	IN  ulong_t               InitialCount,
-	IN  ulong_t               MaximumCount
+	IN  ulong_xt               InitialCount,
+	IN  ulong_xt               MaximumCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -596,11 +596,11 @@ XBSYSAPI EXPORTNUM(196) xbox::NTSTATUS NTAPI xbox::NtDeviceIoControlFile
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
 	IN PVOID ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
-	IN ulong_t IoControlCode,
+	IN ulong_xt IoControlCode,
 	IN PVOID InputBuffer OPTIONAL,
-	IN ulong_t InputBufferLength,
+	IN ulong_xt InputBufferLength,
 	OUT PVOID OutputBuffer OPTIONAL,
-	IN ulong_t OutputBufferLength
+	IN ulong_xt OutputBufferLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -671,7 +671,7 @@ XBSYSAPI EXPORTNUM(197) xbox::NTSTATUS NTAPI xbox::NtDuplicateObject
 (
 	HANDLE  SourceHandle,
 	HANDLE *TargetHandle,
-	dword_t   Options
+	dword_xt   Options
 )
 {
 	LOG_FUNC_BEGIN
@@ -756,7 +756,7 @@ XBSYSAPI EXPORTNUM(199) xbox::NTSTATUS NTAPI xbox::NtFreeVirtualMemory
 (
 	IN OUT PVOID *BaseAddress,
 	IN OUT PULONG FreeSize,
-	IN ulong_t      FreeType
+	IN ulong_xt      FreeType
 )
 {
 	LOG_FUNC_BEGIN
@@ -780,11 +780,11 @@ XBSYSAPI EXPORTNUM(200) xbox::NTSTATUS NTAPI xbox::NtFsControlFile
 	IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
 	IN PVOID                ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
-	IN ulong_t                FsControlCode,
+	IN ulong_xt                FsControlCode,
 	IN PVOID                InputBuffer OPTIONAL,
-	IN ulong_t                InputBufferLength,
+	IN ulong_xt                InputBufferLength,
 	OUT PVOID               OutputBuffer OPTIONAL,
-	IN ulong_t                OutputBufferLength
+	IN ulong_xt                OutputBufferLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -841,11 +841,11 @@ XBSYSAPI EXPORTNUM(201) xbox::NTSTATUS NTAPI xbox::NtOpenDirectoryObject
 XBSYSAPI EXPORTNUM(202) xbox::NTSTATUS NTAPI xbox::NtOpenFile
 (
 	OUT PHANDLE             FileHandle,
-	IN  access_mask_t         DesiredAccess,
+	IN  access_mask_xt         DesiredAccess,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
-	IN  ulong_t               ShareAccess,
-	IN  ulong_t               OpenOptions
+	IN  ulong_xt               ShareAccess,
+	IN  ulong_xt               OpenOptions
 )
 {
 	LOG_FORWARD("IoCreateFile");
@@ -908,7 +908,7 @@ XBSYSAPI EXPORTNUM(204) xbox::NTSTATUS NTAPI xbox::NtProtectVirtualMemory
 (
 	IN OUT PVOID *BaseAddress,
 	IN OUT PSIZE_T RegionSize,
-	IN ulong_t NewProtect,
+	IN ulong_xt NewProtect,
 	OUT PULONG OldProtect
 )
 {
@@ -962,7 +962,7 @@ XBSYSAPI EXPORTNUM(206) xbox::NTSTATUS NTAPI xbox::NtQueueApcThread
 	IN PIO_APC_ROUTINE      ApcRoutine,
 	IN PVOID                ApcRoutineContext OPTIONAL,
 	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
-	IN ulong_t                ApcReserved OPTIONAL
+	IN ulong_xt                ApcReserved OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -1034,10 +1034,10 @@ XBSYSAPI EXPORTNUM(207) xbox::NTSTATUS NTAPI xbox::NtQueryDirectoryFile
 	IN  PVOID                       ApcContext,
 	OUT PIO_STATUS_BLOCK            IoStatusBlock,
 	OUT FILE_DIRECTORY_INFORMATION *FileInformation,
-	IN  ulong_t                       Length,
+	IN  ulong_xt                       Length,
 	IN  FILE_INFORMATION_CLASS      FileInformationClass,
 	IN  PSTRING                     FileMask,
-	IN  boolean_t                     RestartScan
+	IN  boolean_xt                     RestartScan
 )
 {
 	LOG_FUNC_BEGIN
@@ -1130,8 +1130,8 @@ XBSYSAPI EXPORTNUM(208) xbox::NTSTATUS NTAPI xbox::NtQueryDirectoryObject
 (
 	IN HANDLE DirectoryHandle,
 	OUT PVOID Buffer,
-	IN ulong_t Length,
-	IN boolean_t RestartScan,
+	IN ulong_xt Length,
+	IN boolean_xt RestartScan,
 	IN OUT PULONG Context,
 	OUT PULONG ReturnedLength OPTIONAL
 )
@@ -1222,7 +1222,7 @@ XBSYSAPI EXPORTNUM(211) xbox::NTSTATUS NTAPI xbox::NtQueryInformationFile
 	IN  HANDLE                      FileHandle,
 	OUT PIO_STATUS_BLOCK            IoStatusBlock,
 	OUT PVOID                       FileInformation,
-	IN  ulong_t                       Length,
+	IN  ulong_xt                       Length,
 	IN  FILE_INFORMATION_CLASS      FileInformationClass
 )
 {
@@ -1504,7 +1504,7 @@ XBSYSAPI EXPORTNUM(218) xbox::NTSTATUS NTAPI xbox::NtQueryVolumeInformationFile
 	IN  HANDLE                      FileHandle,
 	OUT PIO_STATUS_BLOCK            IoStatusBlock,
 	OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
-	IN  ulong_t                       Length,
+	IN  ulong_xt                       Length,
 	IN  FS_INFORMATION_CLASS        FileInformationClass
 )
 {
@@ -1620,7 +1620,7 @@ XBSYSAPI EXPORTNUM(219) xbox::NTSTATUS NTAPI xbox::NtReadFile
 	IN  PVOID           ApcContext,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID           Buffer,
-	IN  ulong_t           Length,
+	IN  ulong_xt           Length,
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 )
 {
@@ -1677,7 +1677,7 @@ XBSYSAPI EXPORTNUM(220) xbox::NTSTATUS NTAPI xbox::NtReadFileScatter
 	IN PVOID ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN PFILE_SEGMENT_ELEMENT SegmentArray,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 )
 {
@@ -1726,7 +1726,7 @@ XBSYSAPI EXPORTNUM(221) xbox::NTSTATUS NTAPI xbox::NtReleaseMutant
 XBSYSAPI EXPORTNUM(222) xbox::NTSTATUS NTAPI xbox::NtReleaseSemaphore
 (
 	IN  HANDLE              SemaphoreHandle,
-	IN  ulong_t               ReleaseCount,
+	IN  ulong_xt               ReleaseCount,
 	OUT PULONG              PreviousCount OPTIONAL
 )
 {
@@ -1829,7 +1829,7 @@ XBSYSAPI EXPORTNUM(226) xbox::NTSTATUS NTAPI xbox::NtSetInformationFile
 	IN  HANDLE                   FileHandle,
 	OUT PIO_STATUS_BLOCK         IoStatusBlock,
 	IN  PVOID                    FileInformation,
-	IN  ulong_t                    Length,
+	IN  ulong_xt                    Length,
 	IN  FILE_INFORMATION_CLASS   FileInformationClass
 )
 {
@@ -1862,7 +1862,7 @@ XBSYSAPI EXPORTNUM(227) xbox::NTSTATUS NTAPI xbox::NtSetIoCompletion
 	IN PVOID KeyContext,
 	IN PVOID ApcContext,
 	IN NTSTATUS IoStatus,
-	IN ulong_ptr_t IoStatusInformation
+	IN ulong_ptr_xt IoStatusInformation
 )
 {
 	LOG_FUNC_BEGIN
@@ -1937,8 +1937,8 @@ XBSYSAPI EXPORTNUM(229) xbox::NTSTATUS NTAPI xbox::NtSetTimerEx
 	IN PTIMER_APC_ROUTINE TimerApcRoutine OPTIONAL,
 	IN KPROCESSOR_MODE ApcMode,
 	IN PVOID TimerContext OPTIONAL,
-	IN boolean_t WakeTimer,
-	IN long_t Period OPTIONAL,
+	IN boolean_xt WakeTimer,
+	IN long_xt Period OPTIONAL,
 	OUT PBOOLEAN PreviousState OPTIONAL
 )
 {
@@ -1978,7 +1978,7 @@ XBSYSAPI EXPORTNUM(230) xbox::NTSTATUS NTAPI xbox::NtSignalAndWaitForSingleObjec
 	IN HANDLE SignalHandle,
 	IN HANDLE WaitHandle,
 	IN KPROCESSOR_MODE WaitMode,
-	IN boolean_t Alertable,
+	IN boolean_xt Alertable,
 	IN PLARGE_INTEGER Timeout OPTIONAL
 )
 {
@@ -2021,11 +2021,11 @@ XBSYSAPI EXPORTNUM(231) xbox::NTSTATUS NTAPI xbox::NtSuspendThread
 // ******************************************************************
 // * 0x00E8 - NtUserIoApcDispatcher()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(232) xbox::void_t NTAPI xbox::NtUserIoApcDispatcher
+XBSYSAPI EXPORTNUM(232) xbox::void_xt NTAPI xbox::NtUserIoApcDispatcher
 (
 	PVOID            ApcContext,
 	PIO_STATUS_BLOCK IoStatusBlock,
-	ulong_t            Reserved
+	ulong_xt            Reserved
 )
 {
 	LOG_FUNC_BEGIN
@@ -2057,7 +2057,7 @@ XBSYSAPI EXPORTNUM(232) xbox::void_t NTAPI xbox::NtUserIoApcDispatcher
 XBSYSAPI EXPORTNUM(233) xbox::NTSTATUS NTAPI xbox::NtWaitForSingleObject
 (
     IN  HANDLE  Handle,
-    IN  boolean_t Alertable,
+    IN  boolean_xt Alertable,
     IN  PLARGE_INTEGER   Timeout
 )
 {
@@ -2080,7 +2080,7 @@ XBSYSAPI EXPORTNUM(234) xbox::NTSTATUS NTAPI xbox::NtWaitForSingleObjectEx
 (
 	IN  HANDLE          Handle,
 	IN  KPROCESSOR_MODE WaitMode,
-	IN  boolean_t         Alertable,
+	IN  boolean_xt         Alertable,
 	IN  PLARGE_INTEGER  Timeout
 )
 {
@@ -2101,11 +2101,11 @@ XBSYSAPI EXPORTNUM(234) xbox::NTSTATUS NTAPI xbox::NtWaitForSingleObjectEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(235) xbox::NTSTATUS NTAPI xbox::NtWaitForMultipleObjectsEx
 (
-	IN  ulong_t           Count,
+	IN  ulong_xt           Count,
 	IN  HANDLE         *Handles,
 	IN  WAIT_TYPE       WaitType,
-	IN  char_t            WaitMode,
-	IN  boolean_t         Alertable,
+	IN  char_xt            WaitMode,
+	IN  boolean_xt         Alertable,
 	IN  PLARGE_INTEGER  Timeout
 )
 {
@@ -2140,7 +2140,7 @@ XBSYSAPI EXPORTNUM(236) xbox::NTSTATUS NTAPI xbox::NtWriteFile
 	IN  PVOID           ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN  PVOID           Buffer,
-	IN  ulong_t           Length,
+	IN  ulong_xt           Length,
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 )
 {
@@ -2196,7 +2196,7 @@ XBSYSAPI EXPORTNUM(237) xbox::NTSTATUS NTAPI xbox::NtWriteFileGather
 	IN PVOID ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN PFILE_SEGMENT_ELEMENT SegmentArray,
-	IN ulong_t Length,
+	IN ulong_xt Length,
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 )
 {
@@ -2219,7 +2219,7 @@ XBSYSAPI EXPORTNUM(237) xbox::NTSTATUS NTAPI xbox::NtWriteFileGather
 // ******************************************************************
 // * 0x00EE - NtYieldExecution()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(238) xbox::void_t NTAPI xbox::NtYieldExecution()
+XBSYSAPI EXPORTNUM(238) xbox::void_xt NTAPI xbox::NtYieldExecution()
 {
 	// NOTE: Logging this fills the debug log far too quickly, so don't.
 	// LOG_FUNC();

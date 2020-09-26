@@ -44,7 +44,7 @@
 #define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))
 
 #define INITIALIZED_OBJECT_STRING(ObjectString, Value)                  \
-	xbox::char_t ObjectString##Buffer[] = Value;                      \
+	xbox::char_xt ObjectString##Buffer[] = Value;                      \
 	xbox::OBJECT_STRING ObjectString = {							\
 	sizeof(Value) - sizeof(CHAR),                                      \
 	sizeof(Value),                                                      \
@@ -66,7 +66,7 @@ XBSYSAPI EXPORTNUM(245) xbox::OBJECT_HANDLE_TABLE xbox::ObpObjectHandleTable = {
 
 xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
 
-xbox::boolean_t xbox::ObpCreatePermanentDirectoryObject(
+xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 	IN xbox::POBJECT_STRING DirectoryName OPTIONAL,
 	OUT xbox::POBJECT_DIRECTORY *DirectoryObject
 )
@@ -100,7 +100,7 @@ xbox::boolean_t xbox::ObpCreatePermanentDirectoryObject(
 xbox::NTSTATUS xbox::ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
-	IN ulong_t Attributes,
+	IN ulong_xt Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *ReturnedObject
@@ -118,7 +118,7 @@ xbox::NTSTATUS xbox::ObpReferenceObjectByName(
 		RtlZeroMemory(&RemainingName, sizeof(OBJECT_STRING));
 	}
 
-	boolean_t ResolveSymbolicLink = TRUE;
+	BOOLEAN ResolveSymbolicLink = TRUE;
 	PVOID FoundObject;
 
 	if (RootDirectoryHandle != NULL) {
@@ -236,7 +236,7 @@ CleanupAndExit:
 	return status;
 }
 
-xbox::boolean_t xbox::ObInitSystem()
+xbox::boolean_xt xbox::ObInitSystem()
 {
 	ObpObjectHandleTable.HandleCount = 0;
 	ObpObjectHandleTable.FirstFreeTableEntry = -1;
@@ -264,7 +264,7 @@ xbox::boolean_t xbox::ObInitSystem()
 	return TRUE;
 }
 
-xbox::boolean_t xbox::ObpExtendObjectHandleTable()
+xbox::boolean_xt xbox::ObpExtendObjectHandleTable()
 {
 	PVOID* NewTable = (PVOID*)ExAllocatePoolWithTag(sizeof(PVOID) * OB_HANDLES_PER_TABLE, 'tHbO');
 	if (NewTable == NULL) {
@@ -342,7 +342,7 @@ xbox::HANDLE xbox::ObpCreateObjectHandle(xbox::PVOID Object)
 	return Handle;
 }
 
-xbox::void_t xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
+xbox::void_xt xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
 {
 	ULONG i = 0;
 	
@@ -389,7 +389,7 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ulong_t ObjectBodySize,
+	IN ulong_xt ObjectBodySize,
 	OUT PVOID *Object
 )
 {
@@ -494,7 +494,7 @@ xbox::PVOID xbox::ObpGetObjectHandleContents(HANDLE Handle)
 	return NULL;
 }
 
-xbox::ulong_t FASTCALL xbox::ObpComputeHashIndex(
+xbox::ulong_xt FASTCALL xbox::ObpComputeHashIndex(
 	IN POBJECT_STRING ElementName
 )
 {
@@ -542,10 +542,10 @@ xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 	return NULL;
 }
 
-xbox::boolean_t xbox::ObpLookupElementNameInDirectory(
+xbox::boolean_xt xbox::ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
 	IN POBJECT_STRING ElementName,
-	IN boolean_t ResolveSymbolicLink,
+	IN boolean_xt ResolveSymbolicLink,
 	OUT PVOID *ReturnedObject
 )
 {
@@ -594,7 +594,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ulong_t ObjectPointerBias,
+	IN ulong_xt ObjectPointerBias,
 	OUT PHANDLE ReturnedHandle
 )
 {
@@ -745,7 +745,7 @@ CleanupAndExit:
 // ******************************************************************
 // * 0x00F2 - ObMakeTemporaryObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(242) xbox::void_t NTAPI xbox::ObMakeTemporaryObject
+XBSYSAPI EXPORTNUM(242) xbox::void_xt NTAPI xbox::ObMakeTemporaryObject
 (
 	IN PVOID Object
 )
@@ -877,7 +877,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 XBSYSAPI EXPORTNUM(247) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
-	IN ulong_t Attributes,
+	IN ulong_xt Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *Object
@@ -936,7 +936,7 @@ XBSYSAPI EXPORTNUM(249) xbox::OBJECT_TYPE xbox::ObSymbolicLinkObjectType =
 // ******************************************************************
 // * 0x00FA - ObfDereferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(250) xbox::void_t FASTCALL xbox::ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) xbox::void_xt FASTCALL xbox::ObfDereferenceObject
 (
 	IN PVOID Object
 )
@@ -972,7 +972,7 @@ XBSYSAPI EXPORTNUM(250) xbox::void_t FASTCALL xbox::ObfDereferenceObject
 // ******************************************************************
 // * 0x00FB - ObfReferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(251) xbox::void_t FASTCALL xbox::ObfReferenceObject
+XBSYSAPI EXPORTNUM(251) xbox::void_xt FASTCALL xbox::ObfReferenceObject
 (
 	IN PVOID Object
 )

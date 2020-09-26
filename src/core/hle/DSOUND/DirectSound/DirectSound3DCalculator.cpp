@@ -49,10 +49,10 @@
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_Calculate3D
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
+xbox::void_xt WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 (
-    dword_t a1,
-    dword_t a2
+    dword_xt a1,
+    dword_xt a2
 )
 {
     DSoundMutexGuardLock;
@@ -68,13 +68,13 @@ xbox::void_t WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_GetVoiceData
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
+xbox::void_xt WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
 (
-    dword_t a1,
-    dword_t a2,
-    dword_t a3,
-    dword_t a4,
-    dword_t a5
+    dword_xt a1,
+    dword_xt a2,
+    dword_xt a3,
+    dword_xt a4,
+    dword_xt a5
 )
 {
     DSoundMutexGuardLock;
