@@ -546,7 +546,7 @@ typedef struct _OBJECT_HEADER {
 	long_t HandleCount;
 	POBJECT_TYPE Type;
 	ulong_t Flags;
-	QUAD Body;
+	quad_t Body;
 } OBJECT_HEADER, *POBJECT_HEADER;
 
 // Source : DXBX

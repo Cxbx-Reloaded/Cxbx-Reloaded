@@ -429,12 +429,12 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_DownloadEffectsImage)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetOrientation)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           xFront,
-    FLOAT           yFront,
-    FLOAT           zFront,
-    FLOAT           xTop,
-    FLOAT           yTop,
-    FLOAT           zTop,
+    float_t           xFront,
+    float_t           yFront,
+    float_t           zFront,
+    float_t           xTop,
+    float_t           yTop,
+    float_t           zTop,
     dword_t           dwApply
 );
 
@@ -444,7 +444,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetOrientation)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           fDistanceFactor,
+    float_t           fDistanceFactor,
     dword_t           dwApply
 );
 
@@ -454,7 +454,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetDistanceFactor)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           fRolloffFactor,
+    float_t           fRolloffFactor,
     dword_t           dwApply
 );
 
@@ -464,7 +464,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetRolloffFactor)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           fDopplerFactor,
+    float_t           fDopplerFactor,
     dword_t           dwApply
 );
 
@@ -522,9 +522,9 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetPosition)
 (
     LPDIRECTSOUND8          pThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply
 );
 
@@ -534,9 +534,9 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetPosition)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSound_SetVelocity)
 (
     LPDIRECTSOUND8          pThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply
 );
 
@@ -785,7 +785,7 @@ xbox::void_t WINAPI EMUPATCH(CMcpxStream_Dummy_0x10)(dword_t dwDummy1, dword_t d
 xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 (
     X_CDirectSoundStream *pThis,
-    FLOAT                 fRolloffFactor,
+    float_t                 fRolloffFactor,
     dword_t                 dwApply
 );
 
@@ -985,7 +985,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetMixBins)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flMaxDistance,
+    float_t                   flMaxDistance,
     dword_t                   dwApply
 );
 
@@ -995,7 +995,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flMaxDistance,
+    float_t                   flMaxDistance,
     dword_t                   dwApply
 );
 
@@ -1005,7 +1005,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flRolloffFactor,
+    float_t                   flRolloffFactor,
     dword_t                   dwApply
 );
 
@@ -1015,7 +1015,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flDistanceFactor,
+    float_t                   flDistanceFactor,
     dword_t                   dwApply
 );
 
@@ -1036,9 +1036,9 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply
 );
 
@@ -1058,9 +1058,9 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetPosition)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply
 );
 
@@ -1070,9 +1070,9 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetPosition)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetVelocity)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply
 );
 
@@ -1082,7 +1082,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetVelocity)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flDopplerFactor,
+    float_t                   flDopplerFactor,
     dword_t                   dwApply
 );
 
@@ -1170,7 +1170,7 @@ xbox::void_t WINAPI EMUPATCH(XAudioCreateAdpcmFormat)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 (
     XbHybridDSBuffer*       pHybridThis,
-    const FLOAT*            pflPoints,
+    const float_t*            pflPoints,
     dword_t                   dwPointCount,
     dword_t                   dwApply
 );
@@ -1190,7 +1190,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetVolume)
 xbox::hresult_t WINAPI EMUPATCH(IDirectSound_EnableHeadphones)
 (
     LPDIRECTSOUND8      pThis,
-    BOOL                fEnabled
+    bool_t                fEnabled
 );
 
 // ******************************************************************
@@ -1227,7 +1227,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_GetOutputLevels)
 (
     LPDIRECTSOUND8*         pThis,
     X_DSOUTPUTLEVELS*       pOutputLevels,
-    BOOL                    bResetPeakValues
+    bool_t                    bResetPeakValues
 );
 
 // ******************************************************************
@@ -1433,7 +1433,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetRolloffCurve)
 (
     X_CDirectSoundStream*   pThis,
-    const FLOAT*            pflPoints,
+    const float_t*            pflPoints,
     dword_t                   dwPointCount,
     dword_t                   dwApply
 );
@@ -1592,7 +1592,7 @@ xbox::hresult_t WINAPI EMUPATCH(XAudioSetEffectData)
 xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetDistanceFactor)
 (
     X_CDirectSoundStream*   pThis,
-    FLOAT                   flDistanceFactor,
+    float_t                   flDistanceFactor,
     dword_t                   dwApply);
 
 // ******************************************************************
@@ -1601,7 +1601,7 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetDistanceFactor)
 xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetDopplerFactor)
 (
     X_CDirectSoundStream*   pThis,
-    FLOAT                   flDopplerFactor,
+    float_t                   flDopplerFactor,
     dword_t                   dwApply);
 
 // ******************************************************************

@@ -331,37 +331,37 @@ struct X_DS3DBUFFER {
     dword_t  dwOutsideConeAngle;
     D3DVECTOR vConeOrientation;
     long_t lConeOutsideVolume;
-    FLOAT flMinDistance;
-    FLOAT flMaxDistance;
+    float_t flMinDistance;
+    float_t flMaxDistance;
     dword_t dwMode;
-    FLOAT flDistanceFactor;
-    FLOAT flRolloffFactor;
-    FLOAT flDopplerFactor;
+    float_t flDistanceFactor;
+    float_t flRolloffFactor;
+    float_t flDopplerFactor;
 };
 
 struct X_DSI3DL2LISTENER {
     long_t lRoom;
     long_t lRoomHF;
-    FLOAT flRoomRolloffFactor;
-    FLOAT flDecayTime;
-    FLOAT flDecayHFRatio;
+    float_t flRoomRolloffFactor;
+    float_t flDecayTime;
+    float_t flDecayHFRatio;
     long_t  lReflections;
-    FLOAT flReflectionsDelay;
+    float_t flReflectionsDelay;
     long_t  lReverb;
-    FLOAT flReverbDelay;
-    FLOAT flDiffusion;
-    FLOAT flDensity;
-    FLOAT flHFReference;
+    float_t flReverbDelay;
+    float_t flDiffusion;
+    float_t flDensity;
+    float_t flHFReference;
 };
 
 struct X_DSI3DL2OBSTRUCTION {
     long_t            lHFLevel;
-    FLOAT           flLFRatio;
+    float_t           flLFRatio;
 };
 
 struct X_DSI3DL2OCCLUSION {
     long_t            lHFLevel;
-    FLOAT           flLFRatio;
+    float_t           flLFRatio;
 };
 
 struct X_DSI3DL2BUFFER {
@@ -369,7 +369,7 @@ struct X_DSI3DL2BUFFER {
     long_t lDirectHF;
     long_t lRoom;
     long_t lRoomHF;
-    FLOAT flRoomRolloffFactor;
+    float_t flRoomRolloffFactor;
     X_DSI3DL2OBSTRUCTION Obstruction;
     X_DSI3DL2OCCLUSION Occlusion;
 };

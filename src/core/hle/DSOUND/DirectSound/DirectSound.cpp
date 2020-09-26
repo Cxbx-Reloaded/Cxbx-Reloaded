@@ -556,7 +556,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_DownloadEffectsImage)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_EnableHeadphones)
 (
     LPDIRECTSOUND8      pThis,
-    BOOL                fEnabled)
+    bool_t                fEnabled)
 {
     DSoundMutexGuardLock;
 
@@ -611,7 +611,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_GetOutputLevels)
 (
     LPDIRECTSOUND8*         pThis,
     OUT X_DSOUTPUTLEVELS*       pOutputLevels,
-    BOOL                    bResetPeakValues)
+    bool_t                    bResetPeakValues)
 {
     DSoundMutexGuardLock;
 
@@ -705,7 +705,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetAllParameters)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetDistanceFactor)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           fDistanceFactor,
+    float_t           fDistanceFactor,
     dword_t           dwApply)
 {
     DSoundMutexGuardLock;
@@ -727,7 +727,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetDistanceFactor)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetDopplerFactor)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           fDopplerFactor,
+    float_t           fDopplerFactor,
     dword_t           dwApply)
 {
     DSoundMutexGuardLock;
@@ -795,12 +795,12 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetMixBinHeadroom)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetOrientation)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           xFront,
-    FLOAT           yFront,
-    FLOAT           zFront,
-    FLOAT           xTop,
-    FLOAT           yTop,
-    FLOAT           zTop,
+    float_t           xFront,
+    float_t           yFront,
+    float_t           zFront,
+    float_t           xTop,
+    float_t           yTop,
+    float_t           zTop,
     dword_t           dwApply)
 {
     DSoundMutexGuardLock;
@@ -837,9 +837,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetOrientation)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetPosition)
 (
     LPDIRECTSOUND8          pThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -863,7 +863,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetPosition)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetRolloffFactor)
 (
     LPDIRECTSOUND8  pThis,
-    FLOAT           fRolloffFactor,
+    float_t           fRolloffFactor,
     dword_t           dwApply)
 {
     DSoundMutexGuardLock;
@@ -943,9 +943,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SynchPlayback)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSound_SetVelocity)
 (
     LPDIRECTSOUND8          pThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;

@@ -832,9 +832,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -882,7 +882,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flDistanceFactor,
+    float_t                   flDistanceFactor,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -904,7 +904,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 (
     XbHybridDSBuffer*       pThis,
-    FLOAT                   flDopplerFactor,
+    float_t                   flDopplerFactor,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -1134,7 +1134,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flMaxDistance,
+    float_t                   flMaxDistance,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -1157,7 +1157,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flMinDistance,
+    float_t                   flMinDistance,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -1422,9 +1422,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPosition)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -1449,7 +1449,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPosition)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 (
     XbHybridDSBuffer*       pHybridThis,
-    const FLOAT*            pflPoints,
+    const float_t*            pflPoints,
     dword_t                   dwPointCount,
     dword_t                   dwApply)
 {
@@ -1475,7 +1475,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flRolloffFactor,
+    float_t                   flRolloffFactor,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;
@@ -1499,9 +1499,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetVelocity)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
+    float_t                   x,
+    float_t                   y,
+    float_t                   z,
     dword_t                   dwApply)
 {
     DSoundMutexGuardLock;

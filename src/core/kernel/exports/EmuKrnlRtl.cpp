@@ -617,9 +617,9 @@ XBSYSAPI EXPORTNUM(274) xbox::boolean_t NTAPI xbox::RtlCreateUnicodeString
 // ******************************************************************
 // * 0x0113 - RtlDowncaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(275) xbox::WCHAR NTAPI xbox::RtlDowncaseUnicodeChar
+XBSYSAPI EXPORTNUM(275) xbox::wChar_t NTAPI xbox::RtlDowncaseUnicodeChar
 (
-	IN WCHAR SourceCharacter
+	IN wChar_t SourceCharacter
 )
 {
 	LOG_FUNC_ONE_ARG(SourceCharacter);
@@ -1908,9 +1908,9 @@ XBSYSAPI EXPORTNUM(312) xbox::void_t NTAPI xbox::RtlUnwind
 // ******************************************************************
 // * 0x0139 - RtlUpcaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(313) xbox::WCHAR NTAPI xbox::RtlUpcaseUnicodeChar
+XBSYSAPI EXPORTNUM(313) xbox::wChar_t NTAPI xbox::RtlUpcaseUnicodeChar
 (
-	IN WCHAR SourceCharacter
+	IN wChar_t SourceCharacter
 )
 {
 	LOG_FUNC_ONE_ARG(SourceCharacter);

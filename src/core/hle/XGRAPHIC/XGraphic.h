@@ -86,7 +86,7 @@ xbox::hresult_t WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
-	BOOL			bWriteSurfaceAsTexture
+	bool_t			bWriteSurfaceAsTexture
 );
 
 // ******************************************************************

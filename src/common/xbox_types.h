@@ -47,6 +47,7 @@ namespace xbox
 	using void_t = void;
 	using char_t = char;
 	using cchar_t = char;
+	using wChar_t = wchar_t;
 	using short_t = std::int16_t;
 	using cshort_t = std::int16_t;
 	using long_t = std::int32_t;
@@ -67,11 +68,10 @@ namespace xbox
 	using ulong_ptr_t = ulong_t;
 	using longlong_t = std::int64_t;
 	using ulonglong_t = std::uint64_t;
-	typedef wchar_t             WCHAR;
-	typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
-	typedef int                 BOOL;
+	using quad_t = std::uint64_t; // 8 byte aligned 8 byte long
+	using bool_t = std::int32_t;
 	using hresult_t = long_t;
-	typedef float               FLOAT;
+	using float_t = float;
 	// TODO: Remove __stdcall once lib86cpu is implemented.
 	#define XBOXAPI             __stdcall
 	#define XCALLBACK           XBOXAPI
@@ -98,24 +98,23 @@ namespace xbox
 	typedef size_t *PSIZE_T;
 	typedef access_mask_t *PACCESS_MASK;
 	typedef longlong_t *PLONGLONG;
-	typedef QUAD *PQUAD;
+	typedef quad_t *PQUAD;
 
 	// ******************************************************************
 	// ANSI (Multi-byte Character) types
 	// ******************************************************************
 	typedef char_t *PCHAR, *LPCH, *PCH;
 	typedef const char_t *LPCCH, *PCCH;
-	typedef WCHAR *LPWSTR, *PWSTR;
-
-	typedef /*_Null_terminated_*/ const WCHAR *LPCWSTR, *PCWSTR;
+	typedef wChar_t *LPWSTR, *PWSTR;
+	typedef /*_Null_terminated_*/ const wChar_t *LPCWSTR, *PCWSTR;
 
 	// ******************************************************************
 	// Misc
 	// ******************************************************************
 	typedef struct _XD3DVECTOR {
-		FLOAT x;
-		FLOAT y;
-		FLOAT z;
+		float_t x;
+		float_t y;
+		float_t z;
 	} D3DVECTOR;
 
 	template<typename A, typename B>

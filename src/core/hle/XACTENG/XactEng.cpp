@@ -214,7 +214,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IXACTEngine_CreateSoundSource)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IXACTEngine_EnableHeadphones)
 (
 	X_XACTEngine*		pThis,
-	BOOL				fEnabled
+	bool_t				fEnabled
 )
 {
 	LOG_FUNC_BEGIN
@@ -401,9 +401,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IXACTSoundBank_Stop)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IXACTSoundSource_SetPosition)
 (
 	X_XACTSoundSource*	pThis,
-    FLOAT				x,
-    FLOAT				y,
-    FLOAT				z,
+    float_t				x,
+    float_t				y,
+    float_t				z,
     dword_t				dwApply
 )
 {
@@ -424,9 +424,9 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(IXACTSoundSource_SetPosition)
 xbox::hresult_t WINAPI xbox::EMUPATCH(IXACTSoundSource_SetVelocity)
 (
 	X_XACTSoundSource*	pThis,
-    FLOAT				x,
-    FLOAT				y,
-    FLOAT				z,
+    float_t				x,
+    float_t				y,
+    float_t				z,
     dword_t				dwApply
 )
 {

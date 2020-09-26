@@ -349,7 +349,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XGetDevices)
 // * This in turn requires USB LLE to be implemented, or USBD_Init 
 // * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
-xbox::BOOL WINAPI xbox::EMUPATCH(XGetDeviceChanges)
+xbox::bool_t WINAPI xbox::EMUPATCH(XGetDeviceChanges)
 (
     PXPP_DEVICE_TYPE DeviceType,
     PDWORD           pdwInsertions,
@@ -808,10 +808,10 @@ xbox::dword_t WINAPI xbox::EMUPATCH(XInputSetState)
 // ******************************************************************
 // * patch: SetThreadPriorityBoost
 // ******************************************************************
-xbox::BOOL WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
+xbox::bool_t WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
 (
     HANDLE  hThread,
-    BOOL    DisablePriorityBoost
+    bool_t    DisablePriorityBoost
 )
 {
 
@@ -832,7 +832,7 @@ xbox::BOOL WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
 // ******************************************************************
 // * patch: SetThreadPriority
 // ******************************************************************
-xbox::BOOL WINAPI xbox::EMUPATCH(SetThreadPriority)
+xbox::bool_t WINAPI xbox::EMUPATCH(SetThreadPriority)
 (
     HANDLE  hThread,
     int     nPriority
@@ -877,7 +877,7 @@ int WINAPI xbox::EMUPATCH(GetThreadPriority)
 // ******************************************************************
 // * patch: GetExitCodeThread
 // ******************************************************************
-xbox::BOOL WINAPI xbox::EMUPATCH(GetExitCodeThread)
+xbox::bool_t WINAPI xbox::EMUPATCH(GetExitCodeThread)
 (
     HANDLE  hThread,
     LPDWORD lpExitCode
@@ -934,7 +934,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(XapiThreadStartup)
 xbox::void_t WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
 (
     PXTHREAD_NOTIFICATION   pThreadNotification,
-    BOOL                    fRegister
+    bool_t                    fRegister
 )
 {
 	LOG_FUNC_BEGIN
@@ -1095,12 +1095,12 @@ xbox::dword_t WINAPI xbox::EMUPATCH(QueueUserAPC)
 // ******************************************************************
 // * patch: GetOverlappedResult
 // ******************************************************************
-BOOL WINAPI xbox::EMUPATCH(GetOverlappedResult)
+xbox::bool_t WINAPI xbox::EMUPATCH(GetOverlappedResult)
 (
 	HANDLE			hFile,
 	LPOVERLAPPED	lpOverlapped,
 	LPDWORD			lpNumberOfBytesTransferred,
-	BOOL			bWait
+	bool_t			bWait
 )
 {
 	LOG_FUNC_BEGIN
@@ -1275,7 +1275,7 @@ xbox::dword_t WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 	HANDLE	hObjectToSignal,
 	HANDLE	hObjectToWaitOn,
 	dword_t	dwMilliseconds,
-	BOOL	bAlertable
+	bool_t	bAlertable
 )
 {
 

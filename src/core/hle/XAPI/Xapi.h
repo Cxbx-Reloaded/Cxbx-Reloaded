@@ -277,7 +277,7 @@ RTL_HEAP_PARAMETERS;
 // ******************************************************************
 // * XTHREAD_NOTIFY_PROC
 // ******************************************************************
-typedef xbox::void_t (WINAPI *XTHREAD_NOTIFY_PROC)(BOOL fCreate);
+typedef xbox::void_t (WINAPI *XTHREAD_NOTIFY_PROC)(bool_t fCreate);
 
 // ******************************************************************
 // * XTHREAD_NOTIFICATION
@@ -332,7 +332,7 @@ LAUNCH_DATA, *PLAUNCH_DATA;
 // ******************************************************************
 // * patch: XFormatUtilityDrive
 // ******************************************************************
-BOOL WINAPI EMUPATCH(XFormatUtilityDrive)();
+xbox::bool_t WINAPI EMUPATCH(XFormatUtilityDrive)();
 
 #if 0 // Handled by ExQueryNonVolatileSetting(XC_MAX_OS) returning XBOX_USER_SETTINGS
 // ******************************************************************
@@ -347,9 +347,9 @@ xbox::dword_t WINAPI EMUPATCH(GetTimeZoneInformation)
 // ******************************************************************
 // * patch: XMountUtilityDrive
 // ******************************************************************
-BOOL WINAPI EMUPATCH(XMountUtilityDrive)
+xbox::bool_t WINAPI EMUPATCH(XMountUtilityDrive)
 (
-    BOOL    fFormatClean
+    bool_t    fFormatClean
 );
 
 // ******************************************************************
@@ -372,7 +372,7 @@ xbox::dword_t WINAPI EMUPATCH(XGetDevices)
 // ******************************************************************
 // * patch: XGetDeviceChanges
 // ******************************************************************
-BOOL WINAPI EMUPATCH(XGetDeviceChanges)
+xbox::bool_t WINAPI EMUPATCH(XGetDeviceChanges)
 (
     PXPP_DEVICE_TYPE DeviceType,
     PDWORD           pdwInsertions,
@@ -440,14 +440,14 @@ xbox::dword_t WINAPI EMUPATCH(XInputSetState)
 HANDLE WINAPI EMUPATCH(CreateMutex)
 (
     LPSECURITY_ATTRIBUTES   lpMutexAttributes,
-    BOOL                    bInitialOwner,
+    bool_t                    bInitialOwner,
     LPCSTR                  lpName
 );
 
 // ******************************************************************
 // * patch: CloseHandle
 // ******************************************************************
-BOOL WINAPI EMUPATCH(CloseHandle)
+xbox::bool_t WINAPI EMUPATCH(CloseHandle)
 (
     HANDLE hObject
 );
@@ -455,7 +455,7 @@ BOOL WINAPI EMUPATCH(CloseHandle)
 // ******************************************************************
 // * patch: SetThreadPriority
 // ******************************************************************
-BOOL WINAPI EMUPATCH(SetThreadPriority)
+xbox::bool_t WINAPI EMUPATCH(SetThreadPriority)
 (
     HANDLE  hThread,
     int     nPriority
@@ -472,16 +472,16 @@ int WINAPI EMUPATCH(GetThreadPriority)
 // ******************************************************************
 // * patch: SetThreadPriorityBoost
 // ******************************************************************
-BOOL WINAPI EMUPATCH(SetThreadPriorityBoost)
+xbox::bool_t WINAPI EMUPATCH(SetThreadPriorityBoost)
 (
     HANDLE  hThread,
-    BOOL    DisablePriorityBoost
+    bool_t    DisablePriorityBoost
 );
 
 // ******************************************************************
 // * patch: GetExitCodeThread
 // ******************************************************************
-BOOL WINAPI EMUPATCH(GetExitCodeThread)
+xbox::bool_t WINAPI EMUPATCH(GetExitCodeThread)
 (
     HANDLE  hThread,
     LPDWORD lpExitCode
@@ -509,7 +509,7 @@ NTSTATUS CDECL XapiSetupPerTitleDriveLetters(dword_t dwTitleId, LPCWSTR wszTitle
 xbox::void_t WINAPI EMUPATCH(XRegisterThreadNotifyRoutine)
 (
     PXTHREAD_NOTIFICATION   pThreadNotification,
-    BOOL                    fRegister
+    bool_t                    fRegister
 );
 
 // ******************************************************************
@@ -554,7 +554,7 @@ xbox::void_t WINAPI EMUPATCH(XapiFiberStartup)(dword_t dwDummy);
 // ******************************************************************
 // * patch: QueryPerformanceCounter
 // ******************************************************************
-BOOL WINAPI EMUPATCH(QueryPerformanceCounter)
+xbox::bool_t WINAPI EMUPATCH(QueryPerformanceCounter)
 (
 	LARGE_INTEGER *lpPerformanceCount
 );
@@ -573,12 +573,12 @@ xbox::dword_t WINAPI EMUPATCH(QueueUserAPC)
 // ******************************************************************
 // * patch: GetOverlappedResult
 // ******************************************************************
-BOOL WINAPI EMUPATCH(GetOverlappedResult)
+xbox::bool_t WINAPI EMUPATCH(GetOverlappedResult)
 (
 	HANDLE			hFile,
 	LPOVERLAPPED	lpOverlapped,
 	LPDWORD			lpNumberOfBytesTransferred,
-	BOOL			bWait
+	bool_t			bWait
 );
 #endif
 
@@ -618,7 +618,7 @@ xbox::dword_t WINAPI EMUPATCH(SignalObjectAndWait)
 	HANDLE	hObjectToSignal,
 	HANDLE	hObjectToWaitOn,
 	dword_t	dwMilliseconds,
-	BOOL	bAlertable
+	bool_t	bAlertable
 );
 
 // ******************************************************************
@@ -699,7 +699,7 @@ xbox::dword_t WINAPI EMUPATCH(XMountMURootA)
 // ******************************************************************
 // * patch: MoveFileA
 // ******************************************************************
-BOOL WINAPI EMUPATCH(MoveFileA)
+xbox::bool_t WINAPI EMUPATCH(MoveFileA)
 (
     LPCSTR lpExistingFileName,
     LPCSTR lpNewFileName
@@ -713,7 +713,7 @@ xbox::dword_t WINAPI EMUPATCH(XGetDeviceEnumerationStatus)();
 // ******************************************************************
 // * patch: SwitchToThread
 // ******************************************************************
-BOOL WINAPI EMUPATCH(SwitchToThread)();
+xbox::bool_t WINAPI EMUPATCH(SwitchToThread)();
 
 // ******************************************************************
 // * patch: XInputGetDeviceDescription
@@ -727,7 +727,7 @@ xbox::dword_t WINAPI EMUPATCH(XInputGetDeviceDescription)
 // ******************************************************************
 // * patch: ReadFileEx
 // ******************************************************************
-BOOL WINAPI EMUPATCH(ReadFileEx)
+xbox::bool_t WINAPI EMUPATCH(ReadFileEx)
 (
 	HANDLE hFile,                                       // handle to file
 	LPVOID lpBuffer,                                    // data buffer
@@ -739,7 +739,7 @@ BOOL WINAPI EMUPATCH(ReadFileEx)
 // ******************************************************************
 // * patch: WriteFileEx
 // ******************************************************************
-BOOL WINAPI EMUPATCH(WriteFileEx)
+xbox::bool_t WINAPI EMUPATCH(WriteFileEx)
 (
 	HANDLE hFile,                                       // handle to output file
 	LPCVOID lpBuffer,                                   // data buffer

@@ -166,9 +166,9 @@ XBSYSAPI EXPORTNUM(274) boolean_t NTAPI RtlCreateUnicodeString
 // ******************************************************************
 // * 0x0113 - RtlDowncaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(275) WCHAR NTAPI RtlDowncaseUnicodeChar
+XBSYSAPI EXPORTNUM(275) wChar_t NTAPI RtlDowncaseUnicodeChar
 (
-	IN WCHAR SourceCharacter
+	IN wChar_t SourceCharacter
 );
 
 // ******************************************************************
@@ -520,9 +520,9 @@ XBSYSAPI EXPORTNUM(312) void_t NTAPI RtlUnwind
 // ******************************************************************
 // * 0x0139 - RtlUpcaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(313) WCHAR NTAPI RtlUpcaseUnicodeChar
+XBSYSAPI EXPORTNUM(313) wChar_t NTAPI RtlUpcaseUnicodeChar
 (
-	IN WCHAR SourceCharacter
+	IN wChar_t SourceCharacter
 );
 
 // ******************************************************************
