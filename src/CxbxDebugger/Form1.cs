@@ -15,7 +15,7 @@ namespace CxbxDebugger
     {
         Thread DebuggerWorkerThread;
         Debugger DebuggerInst;
-        string[] CachedArgs;
+        string[] StartupArgs;
         string CachedTitle = "";
         bool SuspendedOnBp = false;
 
@@ -45,13 +45,9 @@ namespace CxbxDebugger
                 throw new Exception("Incorrect usage");
             }
 
-            var items = new List<string>(args.Length - 1);
-            for (int i = 1; i < args.Length; ++i)
-            {
-                items.Add(args[i]);
-            }
 
-            CachedArgs = items.ToArray();
+            StartupArgs = new string[args.Length - 1];
+            Array.Copy(args, 1, StartupArgs, 0, args.Length - 1);
 
             DebugEvents = new DebuggerFormEvents(this);
 
@@ -104,7 +100,7 @@ namespace CxbxDebugger
             if (Create)
             {
                 // Create debugger instance
-                DebuggerInst = new Debugger(CachedArgs);
+                DebuggerInst = new Debugger(StartupArgs);
                 DebuggerInst.RegisterEventInterfaces(DebugEvents);
                 DebuggerInst.RegisterEventInterfaces(patchMan);
 

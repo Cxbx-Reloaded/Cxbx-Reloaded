@@ -71,30 +71,29 @@ namespace CxbxDebugger
             Init();
         }
 
-        public Debugger(string[] x_args)
+        public Debugger(string[] launchArgs)
         {
             Init();
 
-            if (x_args == null)
-                return;
-
-            // Copy all arguments
-            args = x_args;
-
-            // Keep quotes for any strings that may contain spaces
-            int scratch;
-            for (int i = 0; i < args.Length; ++i)
+            // Copy XBE path without the quotes
+            var loadArg = Array.FindIndex(launchArgs, x => x == "/load");
+            if (loadArg != -1)
             {
-                if (int.TryParse(args[i], out scratch) == false)
-                {
-                    args[i] = string.Format("\"{0}\"", args[i]);
-                }
+                Target = launchArgs[loadArg + 1].Trim(new char[] { '"' });
             }
 
-            // Copy XBE path without the quotes
-            if(x_args.Length > 2)
+            args = new string[launchArgs.Length];
+
+            for (int i = 0; i < launchArgs.Length; ++i)
             {
-                Target = x_args[2].Trim(new char[] { '"' });
+                var arg = launchArgs[i];
+
+                if (arg.Contains(" "))
+                {
+                    arg = string.Format($"\"{arg}\"");
+                }
+
+                args[i] = arg;
             }
         }
 
@@ -176,11 +175,13 @@ namespace CxbxDebugger
             var DebugCreationFlags =
                 WinProcesses.ProcessCreationFlags.DEBUG_ONLY_THIS_PROCESS |
                 WinProcesses.ProcessCreationFlags.CREATE_NEW_CONSOLE;
-            
+
+            var launchArgs = new StringBuilder(string.Join(" ", args));
+
             bool bRet = WinProcesses.NativeMethods.CreateProcess
             (
                 null,
-                new StringBuilder(string.Join(" ", args)),
+                launchArgs,
                 null,
                 null,
                 false,
@@ -200,6 +201,10 @@ namespace CxbxDebugger
                 bContinue = true;
 
                 State = RunState.Running;
+            }
+            else
+            {
+                throw new Exception($"Failed to launch loader '{launchArgs}'");
             }
 
             return bRet;

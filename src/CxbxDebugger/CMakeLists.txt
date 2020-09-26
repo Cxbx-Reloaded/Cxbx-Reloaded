@@ -42,11 +42,6 @@ file (GLOB SOURCES
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/PatchManager.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Program.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Properties/AssemblyInfo.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Resources.Designer.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Resources.resx"
- "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Settings.Designer.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Settings.settings"
  "${CXBXR_DEBUGGER_SRC_DIR}/Resources/BreakpointDisable_16x_24.bmp"
  "${CXBXR_DEBUGGER_SRC_DIR}/Resources/BreakpointEnable_16x_24.bmp"
  "${CXBXR_DEBUGGER_SRC_DIR}/Resources/Pause_16x_24.bmp"
@@ -92,15 +87,23 @@ file (GLOB SOURCES
  "${CXBXR_DEBUGGER_SRC_DIR}/Win32/Windows/NativeMethods.cs"
 )
 
-csharp_set_windows_forms_properties(
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.Designer.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
+file (GLOB PROPERTIES
+ "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Settings.settings"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/AssemblyInfo.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Resources.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Resources.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Settings.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Properties/Settings.settings"
+)
+
+csharp_set_windows_forms_properties(
+ "${CXBXR_DEBUGGER_SRC_DIR}/Form1.Designer.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
+)
+
+csharp_set_designer_cs_properties(
+ ${PROPERTIES}
 )
 
 set_source_files_properties("${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
@@ -113,7 +116,7 @@ set_source_files_properties("${CXBXR_DEBUGGER_SRC_DIR}/RicherTextBox.cs"
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${SOURCES})
 
-add_executable(cxbxr-debugger WIN32 ${SOURCES} #Test WIN32 like cxbx does if doesn't need compile option set
+add_executable(cxbxr-debugger WIN32 ${SOURCES} ${PROPERTIES} #Test WIN32 like cxbx does if doesn't need compile option set
 )
 
 set_target_properties(cxbxr-debugger PROPERTIES 
