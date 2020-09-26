@@ -82,7 +82,7 @@ namespace xbox {
 // ******************************************************************
 // * patch: Direct3D_CreateDevice
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
+xbox::hresult_t WINAPI EMUPATCH(Direct3D_CreateDevice)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -92,7 +92,7 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice)
     IDirect3DDevice           **ppReturnedDeviceInterface
 );
 
-HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_16)
+xbox::hresult_t WINAPI EMUPATCH(Direct3D_CreateDevice_16)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -100,7 +100,7 @@ HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_16)
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters
 );
 
-HRESULT WINAPI EMUPATCH(Direct3D_CreateDevice_4)
+xbox::hresult_t WINAPI EMUPATCH(Direct3D_CreateDevice_4)
 (
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters
 );
@@ -122,7 +122,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_GetCreationParameters)
 // ******************************************************************
 // * patch: D3D_CheckDeviceFormat
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3D_CheckDeviceFormat)
+xbox::hresult_t WINAPI EMUPATCH(D3D_CheckDeviceFormat)
 (
     UINT                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -169,22 +169,22 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_EndPush)(dword_t *pPush);
 // ******************************************************************
 // * patch: D3DDevice_BeginVisibilityTest
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_BeginVisibilityTest)();
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_BeginVisibilityTest)();
 
 // ******************************************************************
 // * patch: D3DDevice_EndVisibilityTest
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
 (
     dword_t                       Index
 );
 
-HRESULT __stdcall EMUPATCH(D3DDevice_EndVisibilityTest_0)();
+xbox::hresult_t __stdcall EMUPATCH(D3DDevice_EndVisibilityTest_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_GetVisibilityTestResult
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_GetVisibilityTestResult)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
     dword_t                       Index,
     UINT                       *pResult,
@@ -268,7 +268,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_ApplyStateBlock)(dword_t Token);
 // ******************************************************************
 // * patch: D3DDevice_EndStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_EndStateBlock)(dword_t *pToken);
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_EndStateBlock)(dword_t *pToken);
 
 // ******************************************************************
 // * patch: D3DDevice_CopyRects
@@ -285,7 +285,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_CopyRects)
 // ******************************************************************
 // * patch: D3DDevice_CreateImageSurface
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateImageSurface)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateImageSurface)
 (
     UINT                Width,
     UINT                Height,
@@ -359,7 +359,7 @@ xbox::void_t __stdcall EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
 // ******************************************************************
 // * patch: D3DDevice_Reset
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_Reset)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_Reset)
 (
     X_D3DPRESENT_PARAMETERS *pPresentationParameters
 );
@@ -367,7 +367,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_Reset)
 // ******************************************************************
 // * patch: D3DDevice_GetRenderTarget
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_GetRenderTarget)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetRenderTarget)
 (
     X_D3DSurface  **ppRenderTarget
 );
@@ -380,7 +380,7 @@ X_D3DSurface * WINAPI EMUPATCH(D3DDevice_GetRenderTarget2)();
 // ******************************************************************
 // * patch: D3DDevice_GetDepthStencilSurface
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_GetDepthStencilSurface)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetDepthStencilSurface)
 (
     X_D3DSurface  **ppZStencilSurface
 );
@@ -411,7 +411,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetTile)
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateVertexShader)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateVertexShader)
 (
     CONST dword_t    *pDeclaration,
     CONST dword_t    *pFunction,
@@ -504,7 +504,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_DeletePixelShader)
 // ******************************************************************
 // * patch: D3DDevice_CreatePixelShader
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreatePixelShader)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreatePixelShader)
 (
     X_D3DPIXELSHADERDEF    *pPSDef,
     dword_t				   *pHandle
@@ -537,7 +537,7 @@ X_D3DResource * WINAPI EMUPATCH(D3DDevice_CreateTexture2)
 // ******************************************************************
 // * patch: D3DDevice_CreateTexture
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateTexture)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateTexture)
 (
     UINT                Width,
     UINT                Height,
@@ -551,7 +551,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_CreateTexture)
 // ******************************************************************
 // * patch: D3DDevice_CreateVolumeTexture
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateVolumeTexture)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateVolumeTexture)
 (
     UINT                 Width,
     UINT                 Height,
@@ -566,7 +566,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_CreateVolumeTexture)
 // ******************************************************************
 // * patch: D3DDevice_CreateCubeTexture
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateCubeTexture)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateCubeTexture)
 (
     UINT                 EdgeLength,
     UINT                 Levels,
@@ -579,7 +579,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_CreateCubeTexture)
 // ******************************************************************
 // * patch: D3DDevice_CreateIndexBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateIndexBuffer)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateIndexBuffer)
 (
     UINT                 Length,
     dword_t                Usage,
@@ -905,7 +905,7 @@ xbox::void_t WINAPI EMUPATCH(D3DTexture_LockRect)
 // ******************************************************************
 // * patch: IDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel)
+xbox::hresult_t WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel)
 (
     X_D3DTexture   *pThis,
     UINT            Level,
@@ -940,7 +940,7 @@ xbox::void_t WINAPI EMUPATCH(D3DCubeTexture_LockRect)
 // ******************************************************************
 // * patch: D3DDevice_CreateVertexBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateVertexBuffer)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateVertexBuffer)
 (
     UINT                Length,
     dword_t               Usage,
@@ -1443,7 +1443,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_GetLight)
 // ******************************************************************
 // * patch: D3DDevice_SetLight
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_SetLight)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_SetLight)
 (
     dword_t            Index,
     CONST X_D3DLIGHT8 *pLight
@@ -1460,7 +1460,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetMaterial)
 // ******************************************************************
 // * patch: D3DDevice_LightEnable
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_LightEnable)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_LightEnable)
 (
     dword_t            Index,
     BOOL             bEnable
@@ -1474,7 +1474,7 @@ ULONG WINAPI EMUPATCH(D3DDevice_Release)();
 // ******************************************************************
 // * patch: D3DDevice_CreatePalette
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreatePalette)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreatePalette)
 (
     X_D3DPALETTESIZE    Size,
     X_D3DPalette      **ppPalette
@@ -1612,7 +1612,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
 // ******************************************************************
 // * patch: D3DDevice_GetVertexShaderInput
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderInput)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetVertexShaderInput)
 (
     dword_t              *pHandle,
     UINT               *pStreamCount,
@@ -1659,7 +1659,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_GetVertexShaderType)
 // ******************************************************************
 // * patch: D3DDevice_GetVertexShaderDeclaration
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 (
     dword_t  Handle,
     PVOID  pData,
@@ -1669,7 +1669,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 // ******************************************************************
 // * patch: D3DDevice_GetVertexShaderFunction
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderFunction)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetVertexShaderFunction)
 (
     dword_t  Handle,
     PVOID *pData,
@@ -1679,7 +1679,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_GetVertexShaderFunction)
 // ******************************************************************
 // * patch: D3DDevice_SetDepthClipPlanes
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_SetDepthClipPlanes)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_SetDepthClipPlanes)
 (
     FLOAT Near,
     FLOAT Far,
@@ -1701,7 +1701,7 @@ PVOID WINAPI EMUPATCH(D3D_AllocContiguousMemory)
 // ******************************************************************
 // * patch: D3DTexture_GetLevelDesc
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DTexture_GetLevelDesc)
+xbox::hresult_t WINAPI EMUPATCH(D3DTexture_GetLevelDesc)
 (
     UINT Level,
     X_D3DSURFACE_DESC* pDesc
@@ -1712,7 +1712,7 @@ HRESULT WINAPI EMUPATCH(D3DTexture_GetLevelDesc)
 // ******************************************************************
 // * patch: Direct3D_CheckDeviceMultiSampleType
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
+xbox::hresult_t WINAPI EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 (
     UINT                 Adapter,
     D3DDEVTYPE           DeviceType,
@@ -1726,7 +1726,7 @@ HRESULT WINAPI EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 // ******************************************************************
 // * patch: D3D_GetDeviceCaps
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3D_GetDeviceCaps)
+xbox::hresult_t WINAPI EMUPATCH(D3D_GetDeviceCaps)
 (
     UINT        Adapter,
     D3DDEVTYPE  DeviceType,
@@ -1738,7 +1738,7 @@ HRESULT WINAPI EMUPATCH(D3D_GetDeviceCaps)
 // ******************************************************************
 // * patch: D3D_SetPushBufferSize
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3D_SetPushBufferSize)
+xbox::hresult_t WINAPI EMUPATCH(D3D_SetPushBufferSize)
 (
     dword_t PushBufferSize,
     dword_t KickOffSize
@@ -1815,7 +1815,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetPixelShaderProgram)
 // ******************************************************************
 // * patch: D3DDevice_CreateStateBlock
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_CreateStateBlock)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_CreateStateBlock)
 (
 	D3DSTATEBLOCKTYPE Type,
 	dword_t			  *pToken
@@ -1834,7 +1834,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_InsertCallback)
 // ******************************************************************
 // * patch: D3DDevice_DrawRectPatch
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_DrawRectPatch)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_DrawRectPatch)
 (
 	UINT					Handle,
 	CONST FLOAT				*pNumSegs,
@@ -1844,7 +1844,7 @@ HRESULT WINAPI EMUPATCH(D3DDevice_DrawRectPatch)
 // ******************************************************************
 // * patch: D3DDevice_DrawTriPatch
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_DrawTriPatch)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_DrawTriPatch)
 (
 	UINT					Handle,
 	CONST FLOAT				*pNumSegs,
@@ -1909,7 +1909,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetSwapCallback)
 // ******************************************************************
 // * patch: D3DDevice_PersistDisplay
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_PersistDisplay)();
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_PersistDisplay)();
 
 // ******************************************************************
 // * patch: D3DDevice_GetPersistedSurface
@@ -1934,7 +1934,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_PrimeVertexCache)
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_SampleAlpha
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_SetRenderState_SampleAlpha)
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_SetRenderState_SampleAlpha)
 (
 	dword_t dwSampleAlpha
 );
@@ -1982,7 +1982,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_BeginPushBuffer)
 // ******************************************************************
 // * patch: D3DDevice_EndPushBuffer
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_EndPushBuffer)();
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_EndPushBuffer)();
 
 // ******************************************************************
 // * patch: XMETAL_StartPush
@@ -1992,7 +1992,7 @@ PDWORD WINAPI EMUPATCH(XMETAL_StartPush)(void* Unknown);
 // ******************************************************************
 // * patch: D3DDevice_GetModelView
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView);
+xbox::hresult_t WINAPI EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView);
 
 // ******************************************************************
 // * patch: D3DDevice_SetBackMaterial
@@ -2006,7 +2006,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetBackMaterial)
 // ******************************************************************
 // * patch: D3D_GetAdapterIdentifier
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3D_GetAdapterIdentifier)
+xbox::hresult_t WINAPI EMUPATCH(D3D_GetAdapterIdentifier)
 (
 	UINT					Adapter,
 	dword_t					Flags,
@@ -2065,7 +2065,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_GetPushBufferOffset)
 // ******************************************************************
 // * patch: IDirect3DCubeTexture8_GetCubeMapSurface
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
+xbox::hresult_t WINAPI EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 (
 	X_D3DCubeTexture*	pThis,
 	D3DCUBEMAP_FACES	FaceType,

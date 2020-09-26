@@ -182,7 +182,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(XGSwizzleBox)
 // ******************************************************************
 // * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
+xbox::hresult_t WINAPI xbox::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
@@ -274,7 +274,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(XGSetTextureHeader)
 // ******************************************************************
 // * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-//HRESULT WINAPI xbox::EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
+//xbox::hresult_t WINAPI xbox::EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 //(
 //	CONST void		*pFontData,
 //	unsigned		uFontDataSize,

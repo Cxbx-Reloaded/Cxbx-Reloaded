@@ -68,6 +68,7 @@ namespace xbox
 	typedef wchar_t             WCHAR;
 	typedef unsigned __int64    QUAD; // 8 byte aligned 8 byte long
 	typedef int                 BOOL;
+	using hresult_t = long_t;
 	typedef float               FLOAT;
 	// TODO: Remove __stdcall once lib86cpu is implemented.
 	#define XBOXAPI             __stdcall
