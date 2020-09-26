@@ -211,7 +211,7 @@ BOOL PhyUpdateLinkState()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(252) xbox::dword_t NTAPI xbox::PhyGetLinkState
 (
-	IN ULONG	Mode
+	IN ulong_t	Mode
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
@@ -229,7 +229,7 @@ XBSYSAPI EXPORTNUM(252) xbox::dword_t NTAPI xbox::PhyGetLinkState
 // ******************************************************************
 XBSYSAPI EXPORTNUM(253) xbox::NTSTATUS NTAPI xbox::PhyInitialize
 (
-	IN ULONG	forceReset,
+	IN ulong_t	forceReset,
 	IN PVOID	Parameter2
 )
 {

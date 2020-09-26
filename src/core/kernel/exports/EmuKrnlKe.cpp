@@ -431,7 +431,7 @@ XBSYSAPI EXPORTNUM(94) xbox::NTSTATUS NTAPI xbox::KeBoostPriorityThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(95) xbox::void_t NTAPI xbox::KeBugCheck
 (
-	IN ULONG BugCheckMode
+	IN ulong_t BugCheckMode
 )
 {
 	LOG_FORWARD("KeBugCheckEx");
@@ -761,7 +761,7 @@ XBSYSAPI EXPORTNUM(109) xbox::void_t NTAPI xbox::KeInitializeInterrupt
 	OUT PKINTERRUPT Interrupt,
 	IN PKSERVICE_ROUTINE ServiceRoutine,
 	IN PVOID ServiceContext,
-	IN ULONG Vector,
+	IN ulong_t Vector,
 	IN KIRQL Irql,
 	IN KINTERRUPT_MODE InterruptMode,
 	IN boolean_t ShareVector
@@ -837,7 +837,7 @@ XBSYSAPI EXPORTNUM(110) xbox::void_t NTAPI xbox::KeInitializeMutant
 XBSYSAPI EXPORTNUM(111) xbox::void_t NTAPI xbox::KeInitializeQueue
 (
 	IN PKQUEUE Queue,
-	IN ULONG Count OPTIONAL
+	IN ulong_t Count OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -915,7 +915,7 @@ XBSYSAPI EXPORTNUM(114) xbox::boolean_t NTAPI xbox::KeInsertByKeyDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
 	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
-	IN ULONG SortKey
+	IN ulong_t SortKey
 )
 {
 	LOG_FUNC_BEGIN
@@ -1351,7 +1351,7 @@ XBSYSAPI EXPORTNUM(132) xbox::long_t NTAPI xbox::KeReleaseSemaphore
 XBSYSAPI EXPORTNUM(133) xbox::PKDEVICE_QUEUE_ENTRY NTAPI xbox::KeRemoveByKeyDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
-	IN ULONG SortKey
+	IN ulong_t SortKey
 )
 {
 	LOG_FUNC_BEGIN
@@ -1541,7 +1541,7 @@ XBSYSAPI EXPORTNUM(139) xbox::NTSTATUS NTAPI xbox::KeRestoreFloatingPointState
 // ******************************************************************
 // * 0x008C - KeResumeThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(140) xbox::ULONG NTAPI xbox::KeResumeThread
+XBSYSAPI EXPORTNUM(140) xbox::ulong_t NTAPI xbox::KeResumeThread
 (
 	IN PKTHREAD Thread
 )
@@ -1609,10 +1609,10 @@ XBSYSAPI EXPORTNUM(143) xbox::long_t NTAPI xbox::KeSetBasePriorityThread
 	RETURN(ret);
 }
 
-XBSYSAPI EXPORTNUM(144) xbox::ULONG NTAPI xbox::KeSetDisableBoostThread
+XBSYSAPI EXPORTNUM(144) xbox::ulong_t NTAPI xbox::KeSetDisableBoostThread
 (
 	IN PKTHREAD Thread,
-	IN ULONG Disable
+	IN ulong_t Disable
 )
 {
 	LOG_FUNC_BEGIN
@@ -1824,7 +1824,7 @@ XBSYSAPI EXPORTNUM(150) xbox::boolean_t NTAPI xbox::KeSetTimerEx
 	/* Set Default Timer Data */
 	Timer->Dpc = Dpc;
 	Timer->Period = Period;
-	if (!KiComputeDueTime(Timer, DueTime, &Hand))
+	if (!KiComputeDueTime(Timer, DueTime, (PULONG)&Hand))
 	{
 		/* Signal the timer */
 		RequestInterrupt = KiSignalTimer(Timer);
@@ -1853,7 +1853,7 @@ XBSYSAPI EXPORTNUM(150) xbox::boolean_t NTAPI xbox::KeSetTimerEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(151) xbox::void_t NTAPI xbox::KeStallExecutionProcessor
 (
-	IN ULONG MicroSeconds
+	IN ulong_t MicroSeconds
 )
 {
 	LOG_FUNC_ONE_ARG(MicroSeconds);
@@ -1867,7 +1867,7 @@ XBSYSAPI EXPORTNUM(151) xbox::void_t NTAPI xbox::KeStallExecutionProcessor
 // ******************************************************************
 // * 0x0098 - KeSuspendThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(152) xbox::ULONG NTAPI xbox::KeSuspendThread
+XBSYSAPI EXPORTNUM(152) xbox::ulong_t NTAPI xbox::KeSuspendThread
 (
 	IN PKTHREAD Thread
 )
@@ -1934,7 +1934,7 @@ XBSYSAPI EXPORTNUM(156) xbox::dword_t VOLATILE xbox::KeTickCount = 0;
 // ******************************************************************
 // * 0x009D - KeTimeIncrement
 // ******************************************************************
-XBSYSAPI EXPORTNUM(157) xbox::ULONG xbox::KeTimeIncrement = CLOCK_TIME_INCREMENT;
+XBSYSAPI EXPORTNUM(157) xbox::ulong_t xbox::KeTimeIncrement = CLOCK_TIME_INCREMENT;
 
 
 xbox::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
@@ -1959,7 +1959,7 @@ xbox::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
 // ******************************************************************
 XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 (
-	IN ULONG Count,
+	IN ulong_t Count,
 	IN PVOID Object[],
 	IN WAIT_TYPE WaitType,
 	IN KWAIT_REASON WaitReason,

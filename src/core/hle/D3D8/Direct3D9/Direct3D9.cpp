@@ -8311,7 +8311,7 @@ xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 // ******************************************************************
 // * patch: D3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
 // ******************************************************************
-xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetStateVB)( ULONG Unknown1 )
+xbox::void_t WINAPI xbox::EMUPATCH(D3DDevice_SetStateVB)(ulong_t Unknown1 )
 {
 	LOG_FUNC_ONE_ARG(Unknown1);
 

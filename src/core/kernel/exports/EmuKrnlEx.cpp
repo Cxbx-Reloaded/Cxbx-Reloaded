@@ -222,7 +222,7 @@ XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 XBSYSAPI EXPORTNUM(15) xbox::PVOID NTAPI xbox::ExAllocatePoolWithTag
 (
 	IN SIZE_T NumberOfBytes,
-	IN ULONG Tag
+	IN ulong_t Tag
 )
 {
 	LOG_FUNC_BEGIN
@@ -324,7 +324,7 @@ XBSYSAPI EXPORTNUM(19) xbox::LARGE_INTEGER NTAPI xbox::ExInterlockedAddLargeInte
 XBSYSAPI EXPORTNUM(20) xbox::void_t FASTCALL xbox::ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
-	IN ULONG Increment
+	IN ulong_t Increment
 )
 {
 	LOG_FUNC_BEGIN
@@ -378,7 +378,7 @@ XBSYSAPI EXPORTNUM(22) xbox::OBJECT_TYPE xbox::ExMutantObjectType =
 // ******************************************************************
 // * 0x0017 - ExQueryPoolBlockSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(23) xbox::ULONG NTAPI xbox::ExQueryPoolBlockSize
+XBSYSAPI EXPORTNUM(23) xbox::ulong_t NTAPI xbox::ExQueryPoolBlockSize
 (
 	IN PVOID PoolBlock
 )
@@ -473,7 +473,7 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
-	IN ULONG	dwBufferSize,
+	IN ulong_t	dwBufferSize,
 	IN boolean_t	bIsWriteMode
 )
 {

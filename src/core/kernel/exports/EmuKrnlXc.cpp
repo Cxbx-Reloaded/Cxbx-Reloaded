@@ -63,7 +63,7 @@ xbox::void_t NTAPI JumpedSHAUpdate
 (
 	xbox::PUCHAR pbSHAContext,
 	xbox::PUCHAR pbInput,
-	xbox::ULONG dwInputLength
+	xbox::ulong_t dwInputLength
 )
 {
 	SHA1Update((SHA1_CTX*)(pbSHAContext + 24), pbInput, dwInputLength);
@@ -81,7 +81,7 @@ xbox::void_t NTAPI JumpedSHAFinal
 xbox::void_t NTAPI JumpedRC4Key
 (
 	xbox::PUCHAR pbKeyStruct,
-	xbox::ULONG dwKeyLength,
+	xbox::ulong_t dwKeyLength,
 	xbox::PUCHAR pbKey
 )
 {
@@ -91,7 +91,7 @@ xbox::void_t NTAPI JumpedRC4Key
 xbox::void_t NTAPI JumpedRC4Crypt
 (
 	xbox::PUCHAR pbKeyStruct,
-	xbox::ULONG dwInputLength,
+	xbox::ulong_t dwInputLength,
 	xbox::PUCHAR pbInput
 )
 {
@@ -101,11 +101,11 @@ xbox::void_t NTAPI JumpedRC4Crypt
 xbox::void_t NTAPI JumpedHMAC
 (
 	xbox::PBYTE pbKeyMaterial,
-	xbox::ULONG cbKeyMaterial,
+	xbox::ulong_t cbKeyMaterial,
 	xbox::PBYTE pbData,
-	xbox::ULONG cbData,
+	xbox::ulong_t cbData,
 	xbox::PBYTE pbData2,
-	xbox::ULONG cbData2,
+	xbox::ulong_t cbData2,
 	xbox::PBYTE HmacData
 )
 {
@@ -147,7 +147,7 @@ xbox::void_t NTAPI JumpedHMAC
 	SHA1Final(HmacData, &ShaContext);
 }
 
-xbox::ULONG NTAPI JumpedPKEncPublic
+xbox::ulong_t NTAPI JumpedPKEncPublic
 (
 	xbox::PUCHAR pbPubKey,
 	xbox::PUCHAR pbInput,
@@ -161,7 +161,7 @@ xbox::ULONG NTAPI JumpedPKEncPublic
 	return ret;
 }
 
-xbox::ULONG NTAPI JumpedPKDecPrivate
+xbox::ulong_t NTAPI JumpedPKDecPrivate
 (
 	xbox::PUCHAR pbPrvKey,
 	xbox::PUCHAR pbInput,
@@ -175,7 +175,7 @@ xbox::ULONG NTAPI JumpedPKDecPrivate
 	return ret;
 }
 
-xbox::ULONG NTAPI JumpedPKGetKeyLen
+xbox::ulong_t NTAPI JumpedPKGetKeyLen
 (
 	xbox::PUCHAR pbPubKey
 )
@@ -201,13 +201,13 @@ xbox::boolean_t NTAPI JumpedVerifyPKCS1Signature
 	return ret;
 }
 
-xbox::ULONG NTAPI JumpedModExp
+xbox::ulong_t NTAPI JumpedModExp
 (
 	xbox::LPDWORD pA,
 	xbox::LPDWORD pB,
 	xbox::LPDWORD pC,
 	xbox::LPDWORD pD,
-	xbox::ULONG dwN
+	xbox::ulong_t dwN
 )
 {
 	unsigned int len = dwN * 4;
@@ -221,7 +221,7 @@ xbox::ULONG NTAPI JumpedModExp
 xbox::void_t NTAPI JumpedDESKeyParity
 (
 	xbox::PUCHAR pbKey,
-	xbox::ULONG dwKeyLength
+	xbox::ulong_t dwKeyLength
 )
 {
 	mbedtls_des_key_set_parity(pbKey, dwKeyLength);
@@ -229,7 +229,7 @@ xbox::void_t NTAPI JumpedDESKeyParity
 
 xbox::void_t NTAPI JumpedKeyTable
 (
-	xbox::ULONG dwCipher,
+	xbox::ulong_t dwCipher,
 	xbox::PUCHAR pbKeyTable,
 	xbox::PUCHAR pbKey
 )
@@ -244,11 +244,11 @@ xbox::void_t NTAPI JumpedKeyTable
 
 xbox::void_t NTAPI JumpedBlockCrypt
 (
-	xbox::ULONG dwCipher,
+	xbox::ulong_t dwCipher,
 	xbox::PUCHAR pbOutput,
 	xbox::PUCHAR pbInput,
 	xbox::PUCHAR pbKeyTable,
-	xbox::ULONG dwOp
+	xbox::ulong_t dwOp
 )
 {
 	if (dwCipher) {
@@ -261,12 +261,12 @@ xbox::void_t NTAPI JumpedBlockCrypt
 
 xbox::void_t NTAPI JumpedBlockCryptCBC
 (
-	xbox::ULONG dwCipher,
-	xbox::ULONG dwInputLength,
+	xbox::ulong_t dwCipher,
+	xbox::ulong_t dwInputLength,
 	xbox::PUCHAR pbOutput,
 	xbox::PUCHAR pbInput,
 	xbox::PUCHAR pbKeyTable,
-	xbox::ULONG dwOp,
+	xbox::ulong_t dwOp,
 	xbox::PUCHAR pbFeedback
 )
 {
@@ -284,9 +284,9 @@ xbox::void_t NTAPI JumpedBlockCryptCBC
 	}
 }
 
-xbox::ULONG NTAPI JumpedCryptService
+xbox::ulong_t NTAPI JumpedCryptService
 (
-	xbox::ULONG dwOp,
+	xbox::ulong_t dwOp,
 	xbox::PVOID pArgs
 )
 {
@@ -430,7 +430,7 @@ XBSYSAPI EXPORTNUM(336) xbox::void_t NTAPI xbox::XcSHAUpdate
 (
 	PUCHAR pbSHAContext,
 	PUCHAR pbInput,
-	ULONG dwInputLength
+	ulong_t dwInputLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -465,7 +465,7 @@ XBSYSAPI EXPORTNUM(337) xbox::void_t NTAPI xbox::XcSHAFinal
 XBSYSAPI EXPORTNUM(338) xbox::void_t NTAPI xbox::XcRC4Key
 (
 	IN PUCHAR pbKeyStruct,
-	IN ULONG dwKeyLength,
+	IN ulong_t dwKeyLength,
 	IN PUCHAR pbKey
 )
 {
@@ -484,7 +484,7 @@ XBSYSAPI EXPORTNUM(338) xbox::void_t NTAPI xbox::XcRC4Key
 XBSYSAPI EXPORTNUM(339) xbox::void_t NTAPI xbox::XcRC4Crypt
 (
 	IN PUCHAR pbKeyStruct,
-	IN ULONG dwInputLength,
+	IN ulong_t dwInputLength,
 	IN PUCHAR pbInput
 )
 {
@@ -503,11 +503,11 @@ XBSYSAPI EXPORTNUM(339) xbox::void_t NTAPI xbox::XcRC4Crypt
 XBSYSAPI EXPORTNUM(340) xbox::void_t NTAPI xbox::XcHMAC
 (
 	IN PBYTE pbKeyMaterial,
-	IN ULONG cbKeyMaterial,
+	IN ulong_t cbKeyMaterial,
 	IN PBYTE pbData,
-	IN ULONG cbData,
+	IN ulong_t cbData,
 	IN PBYTE pbData2,
-	IN ULONG cbData2,
+	IN ulong_t cbData2,
 	OUT PBYTE HmacData
 )
 {
@@ -527,7 +527,7 @@ XBSYSAPI EXPORTNUM(340) xbox::void_t NTAPI xbox::XcHMAC
 // ******************************************************************
 // * 0x0155 - XcPKEncPublic()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(341) xbox::ULONG NTAPI xbox::XcPKEncPublic
+XBSYSAPI EXPORTNUM(341) xbox::ulong_t NTAPI xbox::XcPKEncPublic
 (
 	IN PUCHAR pbPubKey,
 	IN PUCHAR pbInput,
@@ -548,7 +548,7 @@ XBSYSAPI EXPORTNUM(341) xbox::ULONG NTAPI xbox::XcPKEncPublic
 // ******************************************************************
 // * 0x0156 - XcPKDecPrivate()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(342) xbox::ULONG NTAPI xbox::XcPKDecPrivate
+XBSYSAPI EXPORTNUM(342) xbox::ulong_t NTAPI xbox::XcPKDecPrivate
 (
 	IN PUCHAR pbPrvKey,
 	IN PUCHAR pbInput,
@@ -569,7 +569,7 @@ XBSYSAPI EXPORTNUM(342) xbox::ULONG NTAPI xbox::XcPKDecPrivate
 // ******************************************************************
 // * 0x0157 - XcPKGetKeyLen()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(343) xbox::ULONG NTAPI xbox::XcPKGetKeyLen
+XBSYSAPI EXPORTNUM(343) xbox::ulong_t NTAPI xbox::XcPKGetKeyLen
 (
 	OUT PUCHAR pbPubKey
 )
@@ -605,13 +605,13 @@ XBSYSAPI EXPORTNUM(344) xbox::boolean_t NTAPI xbox::XcVerifyPKCS1Signature
 // ******************************************************************
 // * 0x0159 - XcModExp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(345) xbox::ULONG NTAPI xbox::XcModExp
+XBSYSAPI EXPORTNUM(345) xbox::ulong_t NTAPI xbox::XcModExp
 (
 	IN LPDWORD pA,
 	IN LPDWORD pB,
 	IN LPDWORD pC,
 	IN LPDWORD pD,
-	IN ULONG dwN
+	IN ulong_t dwN
 )
 {
 	LOG_FUNC_BEGIN
@@ -633,7 +633,7 @@ XBSYSAPI EXPORTNUM(345) xbox::ULONG NTAPI xbox::XcModExp
 XBSYSAPI EXPORTNUM(346) xbox::void_t NTAPI xbox::XcDESKeyParity
 (
 	IN PUCHAR pbKey,
-	IN ULONG dwKeyLength
+	IN ulong_t dwKeyLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -649,7 +649,7 @@ XBSYSAPI EXPORTNUM(346) xbox::void_t NTAPI xbox::XcDESKeyParity
 // ******************************************************************
 XBSYSAPI EXPORTNUM(347) xbox::void_t NTAPI xbox::XcKeyTable
 (
-	IN ULONG dwCipher,
+	IN ulong_t dwCipher,
 	OUT PUCHAR pbKeyTable,
 	IN PUCHAR pbKey
 )
@@ -668,11 +668,11 @@ XBSYSAPI EXPORTNUM(347) xbox::void_t NTAPI xbox::XcKeyTable
 // ******************************************************************
 XBSYSAPI EXPORTNUM(348) xbox::void_t NTAPI xbox::XcBlockCrypt
 (
-	IN ULONG dwCipher,
+	IN ulong_t dwCipher,
 	OUT PUCHAR pbOutput,
 	IN PUCHAR pbInput,
 	IN PUCHAR pbKeyTable,
-	IN ULONG dwOp
+	IN ulong_t dwOp
 )
 {
 	LOG_FUNC_BEGIN
@@ -691,12 +691,12 @@ XBSYSAPI EXPORTNUM(348) xbox::void_t NTAPI xbox::XcBlockCrypt
 // ******************************************************************
 XBSYSAPI EXPORTNUM(349) xbox::void_t NTAPI xbox::XcBlockCryptCBC
 (
-	IN ULONG dwCipher,
-	IN ULONG dwInputLength,
+	IN ulong_t dwCipher,
+	IN ulong_t dwInputLength,
 	OUT PUCHAR pbOutput,
 	IN PUCHAR pbInput,
 	IN PUCHAR pbKeyTable,
-	IN ULONG dwOp,
+	IN ulong_t dwOp,
 	IN PUCHAR pbFeedback
 )
 {
@@ -716,9 +716,9 @@ XBSYSAPI EXPORTNUM(349) xbox::void_t NTAPI xbox::XcBlockCryptCBC
 // ******************************************************************
 // * 0x015E - XcCryptService()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(350) xbox::ULONG NTAPI xbox::XcCryptService
+XBSYSAPI EXPORTNUM(350) xbox::ulong_t NTAPI xbox::XcCryptService
 (
-	IN ULONG dwOp,
+	IN ulong_t dwOp,
 	IN PVOID pArgs
 )
 {

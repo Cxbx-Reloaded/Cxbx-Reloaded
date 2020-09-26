@@ -57,7 +57,7 @@ XBSYSAPI EXPORTNUM(5) xbox::void_t NTAPI xbox::DbgBreakPoint()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(6) xbox::void_t NTAPI xbox::DbgBreakPointWithStatus
 (
-	IN ULONG Status 
+	IN ulong_t Status 
 )
 {
 	LOG_FUNC_ONE_ARG(Status);
@@ -91,7 +91,7 @@ XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
 // ******************************************************************
 // * 0x0008 - DbgPrint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(8) xbox::ULONG _cdecl xbox::DbgPrint
+XBSYSAPI EXPORTNUM(8) xbox::ulong_t _cdecl xbox::DbgPrint
 (
 	PCHAR  Format, ...
 )
@@ -137,11 +137,11 @@ XBSYSAPI EXPORTNUM(8) xbox::ULONG _cdecl xbox::DbgPrint
 // * 0x000A - DbgPrompt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(10) xbox::ULONG NTAPI xbox::DbgPrompt
+XBSYSAPI EXPORTNUM(10) xbox::ulong_t NTAPI xbox::DbgPrompt
 (
 	IN PCCH Prompt,
 	OUT PCH Response,
-	IN ULONG MaximumResponseLength
+	IN ulong_t MaximumResponseLength
 )
 {
 	LOG_FUNC_BEGIN;

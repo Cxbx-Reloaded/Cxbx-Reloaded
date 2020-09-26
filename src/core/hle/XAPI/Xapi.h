@@ -76,9 +76,9 @@ XINPUT_POLLING_PARAMETERS, *PXINPUT_POLLING_PARAMETERS;
 // ******************************************************************
 typedef struct _XPP_DEVICE_TYPE
 {
-	ULONG CurrentConnected;
-	ULONG ChangeConnected;
-	ULONG PreviousConnected;
+	xbox::ulong_t CurrentConnected;
+	xbox::ulong_t ChangeConnected;
+	xbox::ulong_t PreviousConnected;
 }
 XPP_DEVICE_TYPE, *PXPP_DEVICE_TYPE;
 
@@ -269,7 +269,7 @@ XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
 // ******************************************************************
 typedef struct _RTL_HEAP_PARAMETERS
 {
-    ULONG   Length;
+    xbox::ulong_t   Length;
     xbox::byte_t    Unknown[0x2C];
 }
 RTL_HEAP_PARAMETERS;
@@ -782,7 +782,7 @@ xbox::dword_t WINAPI EMUPATCH(XCalculateSignatureUpdate)
 (
   HANDLE        hCalcSig,
   const xbox::byte_t    *pbData,
-  ULONG         cbData
+  ulong_t         cbData
 );
 
 // ******************************************************************

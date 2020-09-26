@@ -37,9 +37,9 @@ XBSYSAPI EXPORTNUM(254) NTSTATUS NTAPI PsCreateSystemThread
 XBSYSAPI EXPORTNUM(255) NTSTATUS NTAPI PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
-	IN  ULONG           ThreadExtensionSize,
-	IN  ULONG           KernelStackSize,
-	IN  ULONG           TlsDataSize,
+	IN  ulong_t           ThreadExtensionSize,
+	IN  ulong_t           KernelStackSize,
+	IN  ulong_t           TlsDataSize,
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,

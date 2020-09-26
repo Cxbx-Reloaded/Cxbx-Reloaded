@@ -220,7 +220,7 @@ XBSYSAPI EXPORTNUM(264) xbox::void_t NTAPI xbox::RtlAssert
 (
 	PCHAR   FailedAssertion,
 	PCHAR   FileName,
-	ULONG   LineNumber,
+	ulong_t   LineNumber,
 	PCHAR   Message
 )
 {
@@ -285,8 +285,8 @@ XBSYSAPI EXPORTNUM(265) xbox::void_t NTAPI xbox::RtlCaptureContext
 // ******************************************************************
 XBSYSAPI EXPORTNUM(266) xbox::ushort_t NTAPI xbox::RtlCaptureStackBackTrace
 (
-	IN ULONG FramesToSkip,
-	IN ULONG FramesToCapture,
+	IN ulong_t FramesToSkip,
+	IN ulong_t FramesToCapture,
 	OUT PVOID *BackTrace,
 	OUT PULONG BackTraceHash
 )
@@ -309,7 +309,7 @@ XBSYSAPI EXPORTNUM(266) xbox::ushort_t NTAPI xbox::RtlCaptureStackBackTrace
 XBSYSAPI EXPORTNUM(267) xbox::NTSTATUS NTAPI xbox::RtlCharToInteger
 (
 	IN     PCSZ   String,
-	IN     ULONG  Base OPTIONAL,
+	IN     ulong_t  Base OPTIONAL,
 	OUT    PULONG Value
 )
 {
@@ -429,7 +429,7 @@ XBSYSAPI EXPORTNUM(269) xbox::SIZE_T NTAPI xbox::RtlCompareMemoryUlong
 (
 	IN PVOID Source,
 	IN SIZE_T Length,
-	IN ULONG Pattern
+	IN ulong_t Pattern
 )
 {
 	LOG_FUNC_BEGIN
@@ -862,7 +862,7 @@ XBSYSAPI EXPORTNUM(281) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedIntegerMultip
 XBSYSAPI EXPORTNUM(282) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedLargeIntegerDivide
 (
 	IN LARGE_INTEGER Dividend,
-	IN ULONG Divisor,
+	IN ulong_t Divisor,
 	IN OUT PULONG Remainder OPTIONAL
 )
 {
@@ -985,7 +985,7 @@ XBSYSAPI EXPORTNUM(285) xbox::void_t NTAPI xbox::RtlFillMemoryUlong
 (
 	IN PVOID Destination,
 	IN SIZE_T Length,
-	IN ULONG Pattern
+	IN ulong_t Pattern
 )
 {
 	LOG_FUNC_BEGIN
@@ -1131,8 +1131,8 @@ XBSYSAPI EXPORTNUM(291) xbox::void_t NTAPI xbox::RtlInitializeCriticalSection
 // ******************************************************************
 XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
 (
-	IN ULONG Value,
-	IN ULONG Base,
+	IN ulong_t Value,
+	IN ulong_t Base,
 	IN long_t OutputLength,
 	IN PSZ String
 )
@@ -1190,8 +1190,8 @@ XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
 // ******************************************************************
 XBSYSAPI EXPORTNUM(293) xbox::NTSTATUS NTAPI xbox::RtlIntegerToUnicodeString
 (
-	IN     ULONG Value,
-	IN     ULONG Base,
+	IN     ulong_t Value,
+	IN     ulong_t Base,
 	IN     PUNICODE_STRING String
 )
 {
@@ -1335,10 +1335,10 @@ XBSYSAPI EXPORTNUM(298) xbox::void_t NTAPI xbox::RtlMoveMemory
 XBSYSAPI EXPORTNUM(299) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeN
 (
 	IN     PWSTR UnicodeString,
-	IN     ULONG MaxBytesInUnicodeString,
+	IN     ulong_t MaxBytesInUnicodeString,
 	IN     PULONG BytesInUnicodeString,
 	IN     PCHAR MultiByteString,
-	IN     ULONG BytesInMultiByteString
+	IN     ulong_t BytesInMultiByteString
 )
 {
 	LOG_FUNC_BEGIN
@@ -1374,7 +1374,7 @@ XBSYSAPI EXPORTNUM(300) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeSize
 (
 	IN PULONG BytesInUnicodeString,
 	IN PCHAR MultiByteString,
-	IN ULONG BytesInMultiByteString
+	IN ulong_t BytesInMultiByteString
 )
 {
 	LOG_FUNC_BEGIN
@@ -1391,7 +1391,7 @@ XBSYSAPI EXPORTNUM(300) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeSize
 // ******************************************************************
 // * 0x012D - RtlNtStatusToDosError()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(301) xbox::ULONG NTAPI xbox::RtlNtStatusToDosError
+XBSYSAPI EXPORTNUM(301) xbox::ulong_t NTAPI xbox::RtlNtStatusToDosError
 (
 	IN NTSTATUS Status
 )
@@ -1666,9 +1666,9 @@ XBSYSAPI EXPORTNUM(306) xbox::boolean_t NTAPI xbox::RtlTryEnterCriticalSection
 // ******************************************************************
 // * 0x0133 - RtlUlongByteSwap()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(307) xbox::ULONG FASTCALL xbox::RtlUlongByteSwap
+XBSYSAPI EXPORTNUM(307) xbox::ulong_t FASTCALL xbox::RtlUlongByteSwap
 (
-	IN ULONG Source
+	IN ulong_t Source
 )
 {
 	LOG_FUNC_ONE_ARG(Source);
@@ -1732,7 +1732,7 @@ XBSYSAPI EXPORTNUM(308) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToAnsiString
 XBSYSAPI EXPORTNUM(309) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToInteger
 (
 	IN     PUNICODE_STRING String,
-	IN     ULONG Base,
+	IN     ulong_t Base,
 	IN     PULONG Value
 )
 {
@@ -1831,10 +1831,10 @@ XBSYSAPI EXPORTNUM(309) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToInteger
 XBSYSAPI EXPORTNUM(310) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteN
 (
 	IN PCHAR MultiByteString,
-	IN ULONG MaxBytesInMultiByteString,
+	IN ulong_t MaxBytesInMultiByteString,
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
-	IN ULONG BytesInUnicodeString
+	IN ulong_t BytesInUnicodeString
 )
 {
 	LOG_FUNC_BEGIN
@@ -1870,7 +1870,7 @@ XBSYSAPI EXPORTNUM(311) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteSize
 (
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
-	IN ULONG BytesInUnicodeString
+	IN ulong_t BytesInUnicodeString
 )
 {
 	LOG_FUNC_BEGIN
@@ -1967,10 +1967,10 @@ XBSYSAPI EXPORTNUM(314) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeString
 XBSYSAPI EXPORTNUM(315) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeToMultiByteN
 (
 	IN OUT PCHAR MultiByteString,
-	IN ULONG MaxBytesInMultiByteString,
+	IN ulong_t MaxBytesInMultiByteString,
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
-	IN ULONG BytesInUnicodeString
+	IN ulong_t BytesInUnicodeString
 )
 {
 	LOG_FUNC_BEGIN
@@ -2079,11 +2079,11 @@ XBSYSAPI EXPORTNUM(318) xbox::ushort_t FASTCALL xbox::RtlUshortByteSwap
 // ******************************************************************
 // * 0x013F - RtlWalkFrameChain()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(319) xbox::ULONG NTAPI xbox::RtlWalkFrameChain
+XBSYSAPI EXPORTNUM(319) xbox::ulong_t NTAPI xbox::RtlWalkFrameChain
 (
 	OUT PVOID *Callers,
-	IN ULONG Count,
-	IN ULONG Flags
+	IN ulong_t Count,
+	IN ulong_t Flags
 )
 {
 	LOG_FUNC_BEGIN

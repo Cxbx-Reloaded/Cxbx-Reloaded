@@ -46,7 +46,7 @@ typedef struct _OBJECT_HEADER_NAME_INFO {
 #define ObpGetTableByteOffsetFromHandle(Handle) (HandleToUlong(Handle) & (OB_HANDLES_PER_TABLE * sizeof(PVOID) - 1))
 #define ObpGetTableFromHandle(Handle) ObpObjectHandleTable.RootTable[HandleToUlong(Handle) >> (OB_HANDLES_PER_TABLE_SHIFT + 2)]
 #define ObpGetHandleContentsPointer(Handle) ((PVOID*)((PUCHAR)ObpGetTableFromHandle(Handle) + ObpGetTableByteOffsetFromHandle(Handle)))
-#define ObpMaskOffApplicationBits(Handle) ((HANDLE)(((ULONG_PTR)(Handle)) & ~(sizeof(ULONG) - 1)))
+#define ObpMaskOffApplicationBits(Handle) ((HANDLE)(((ULONG_PTR)(Handle)) & ~(sizeof(ulong_t) - 1)))
 
 #define OB_FLAG_NAMED_OBJECT            0x01
 #define OB_FLAG_PERMANENT_OBJECT        0x02
@@ -67,7 +67,7 @@ boolean_t ObpCreatePermanentDirectoryObject(
 NTSTATUS ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_t Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *ReturnedObject
@@ -84,7 +84,7 @@ boolean_t ObpExtendObjectHandleTable();
 void_t ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
 PVOID ObpGetObjectHandleContents(HANDLE Handle);
 PVOID ObpGetObjectHandleReference(HANDLE Handle);
-ULONG FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
+ulong_t FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
 
 boolean_t ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
@@ -100,7 +100,7 @@ XBSYSAPI EXPORTNUM(239) NTSTATUS NTAPI ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectBodySize,
+	IN ulong_t ObjectBodySize,
 	OUT PVOID *Object
 );
 
@@ -116,7 +116,7 @@ XBSYSAPI EXPORTNUM(241) NTSTATUS NTAPI ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectPointerBias,
+	IN ulong_t ObjectPointerBias,
 	OUT PHANDLE Handle
 );
 
@@ -183,7 +183,7 @@ XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
 XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_t Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *Object

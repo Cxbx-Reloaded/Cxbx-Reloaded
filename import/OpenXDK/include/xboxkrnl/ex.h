@@ -49,7 +49,7 @@ XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 XBSYSAPI EXPORTNUM(15) PVOID NTAPI ExAllocatePoolWithTag
 (
     IN SIZE_T NumberOfBytes,
-    IN ULONG Tag
+    IN ulong_t Tag
 );
 
 XBSYSAPI EXPORTNUM(16) OBJECT_TYPE ExEventObjectType;
@@ -86,7 +86,7 @@ XBSYSAPI EXPORTNUM(19) LARGE_INTEGER NTAPI ExInterlockedAddLargeInteger
 XBSYSAPI EXPORTNUM(20) void_t FASTCALL ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
-	IN ULONG Increment
+	IN ulong_t Increment
 );
 
 // Source:ReactOS
@@ -102,7 +102,7 @@ XBSYSAPI EXPORTNUM(22) OBJECT_TYPE ExMutantObjectType;
 // ******************************************************************
 // * ExQueryPoolBlockSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize
+XBSYSAPI EXPORTNUM(23) ulong_t NTAPI ExQueryPoolBlockSize
 (
     IN PVOID PoolBlock
 );
@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 XBSYSAPI EXPORTNUM(25) NTSTATUS NTAPI ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
-	IN ULONG	dwBufferSize,
+	IN ulong_t	dwBufferSize,
 	IN boolean_t	bIsWriteMode
 );
 

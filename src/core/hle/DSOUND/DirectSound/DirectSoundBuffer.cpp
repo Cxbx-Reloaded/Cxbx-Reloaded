@@ -92,7 +92,7 @@ void DirectSoundDoWork_Buffer(xbox::LARGE_INTEGER &time)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_AddRef
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(IDirectSoundBuffer_AddRef)
+xbox::ulong_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_AddRef)
 (
     XbHybridDSBuffer*       pHybridThis)
 {
@@ -133,7 +133,7 @@ xbox::EmuDirectSoundBuffer::~EmuDirectSoundBuffer()
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Release
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Release)
+xbox::ulong_t WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Release)
 (
     XbHybridDSBuffer*       pHybridThis)
 {

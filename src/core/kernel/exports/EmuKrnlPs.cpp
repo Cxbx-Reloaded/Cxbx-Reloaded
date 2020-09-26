@@ -207,9 +207,9 @@ XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
 XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
-	IN  ULONG           ThreadExtensionSize,
-	IN  ULONG           KernelStackSize,
-	IN  ULONG           TlsDataSize,
+	IN  ulong_t           ThreadExtensionSize,
+	IN  ulong_t           KernelStackSize,
+	IN  ulong_t           TlsDataSize,
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,

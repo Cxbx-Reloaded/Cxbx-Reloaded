@@ -248,7 +248,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_SetGammaRamp)
 // ******************************************************************
 // * patch: D3DDevice_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(D3DDevice_AddRef)();
+xbox::ulong_t WINAPI EMUPATCH(D3DDevice_AddRef)();
 
 // ******************************************************************
 // * patch: D3DDevice_BeginStateBlock
@@ -786,7 +786,7 @@ xbox::void_t WINAPI EMUPATCH(D3DResource_Register)
 // ******************************************************************
 // * patch: IDirect3DResource8_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(D3DResource_Release)
+xbox::ulong_t WINAPI EMUPATCH(D3DResource_Release)
 (
     X_D3DResource      *pThis
 );
@@ -804,7 +804,7 @@ X_D3DRESOURCETYPE WINAPI EMUPATCH(D3DResource_GetType)
 // ******************************************************************
 // * patch: IDirect3DResource8_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(D3DResource_AddRef)
+xbox::ulong_t WINAPI EMUPATCH(D3DResource_AddRef)
 (
     X_D3DResource      *pThis
 );
@@ -1469,7 +1469,7 @@ xbox::hresult_t WINAPI EMUPATCH(D3DDevice_LightEnable)
 // ******************************************************************
 // * patch: D3DDevice_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(D3DDevice_Release)();
+xbox::ulong_t WINAPI EMUPATCH(D3DDevice_Release)();
 
 // ******************************************************************
 // * patch: D3DDevice_CreatePalette
@@ -1886,7 +1886,7 @@ xbox::void_t WINAPI EMUPATCH(D3DDevice_GetTexture)
 // ******************************************************************
 // * patch: D3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
 // ******************************************************************
-xbox::void_t WINAPI EMUPATCH(D3DDevice_SetStateVB)( ULONG Unknown1 );
+xbox::void_t WINAPI EMUPATCH(D3DDevice_SetStateVB)( xbox::ulong_t Unknown1 );
 
 // ******************************************************************
 // * patch: D3DDevice_SetStateUP (D3D::CDevice::SetStateUP)

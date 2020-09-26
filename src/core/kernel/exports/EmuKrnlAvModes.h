@@ -203,10 +203,10 @@ const UCHAR AvpCRTCRegisters[][34] =
 
 typedef struct
 {
-    ULONG  AvInfo;
+    xbox::ulong_t  AvInfo;
     xbox::ushort_t Width;
     xbox::ushort_t Height;
-    ULONG  DisplayMode;
+    xbox::ulong_t  DisplayMode;
 } XB_DisplayMode;
 
 const XB_DisplayMode g_DisplayModes[] =

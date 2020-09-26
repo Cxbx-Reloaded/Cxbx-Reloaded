@@ -48,7 +48,7 @@ XBSYSAPI EXPORTNUM(94) NTSTATUS NTAPI KeBoostPriorityThread
 // ******************************************************************
 XBSYSAPI EXPORTNUM(95) void_t NTAPI KeBugCheck
 (
-	IN ULONG BugCheckMode
+	IN ulong_t BugCheckMode
 );
 
 // ******************************************************************
@@ -165,7 +165,7 @@ XBSYSAPI EXPORTNUM(109) void_t NTAPI KeInitializeInterrupt
     OUT PKINTERRUPT Interrupt,
     IN PKSERVICE_ROUTINE ServiceRoutine,
     IN PVOID ServiceContext,
-    IN ULONG Vector,
+    IN ulong_t Vector,
     IN KIRQL Irql,
     IN KINTERRUPT_MODE InterruptMode,
     IN boolean_t ShareVector
@@ -186,7 +186,7 @@ XBSYSAPI EXPORTNUM(110) void_t NTAPI KeInitializeMutant
 XBSYSAPI EXPORTNUM(111) void_t NTAPI KeInitializeQueue
 (
 	IN PKQUEUE Queue,
-	IN ULONG Count OPTIONAL
+	IN ulong_t Count OPTIONAL
 );
 
 // ******************************************************************
@@ -212,7 +212,7 @@ XBSYSAPI EXPORTNUM(114) boolean_t NTAPI KeInsertByKeyDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
 	IN PKDEVICE_QUEUE_ENTRY DeviceQueueEntry,
-	IN ULONG SortKey
+	IN ulong_t SortKey
 );
 
 XBSYSAPI EXPORTNUM(115) boolean_t NTAPI KeInsertDeviceQueue
@@ -333,7 +333,7 @@ XBSYSAPI EXPORTNUM(132) long_t NTAPI KeReleaseSemaphore
 XBSYSAPI EXPORTNUM(133) PKDEVICE_QUEUE_ENTRY NTAPI KeRemoveByKeyDeviceQueue
 (
 	IN PKDEVICE_QUEUE DeviceQueue,
-	IN ULONG SortKey
+	IN ulong_t SortKey
 );
 
 XBSYSAPI EXPORTNUM(134) PKDEVICE_QUEUE_ENTRY NTAPI KeRemoveDeviceQueue
@@ -381,7 +381,7 @@ XBSYSAPI EXPORTNUM(139) NTSTATUS NTAPI KeRestoreFloatingPointState
 // ******************************************************************
 // * 0x008C - KeResumeThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(140) ULONG NTAPI KeResumeThread
+XBSYSAPI EXPORTNUM(140) ulong_t NTAPI KeResumeThread
 (
 	IN PKTHREAD Thread
 );
@@ -408,10 +408,10 @@ XBSYSAPI EXPORTNUM(143) long_t NTAPI KeSetBasePriorityThread
     IN long_t	Priority
 );
 
-XBSYSAPI EXPORTNUM(144) ULONG NTAPI KeSetDisableBoostThread
+XBSYSAPI EXPORTNUM(144) ulong_t NTAPI KeSetDisableBoostThread
 (
 	IN PKTHREAD Thread,
-	IN ULONG Disable
+	IN ulong_t Disable
 );
 
 // ******************************************************************
@@ -471,13 +471,13 @@ XBSYSAPI EXPORTNUM(150) boolean_t NTAPI KeSetTimerEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(151) void_t NTAPI KeStallExecutionProcessor
 (
-	IN ULONG MicroSeconds
+	IN ulong_t MicroSeconds
 );
 
 // ******************************************************************
 // * 0x0098 - KeSuspendThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(152) ULONG NTAPI KeSuspendThread
+XBSYSAPI EXPORTNUM(152) ulong_t NTAPI KeSuspendThread
 (
 	IN PKTHREAD Thread
 );
@@ -513,14 +513,14 @@ XBSYSAPI EXPORTNUM(156) volatile dword_t KeTickCount;
 // ******************************************************************
 // * 0x009D - KeTimeIncrement
 // ******************************************************************
-XBSYSAPI EXPORTNUM(157) ULONG KeTimeIncrement;
+XBSYSAPI EXPORTNUM(157) ulong_t KeTimeIncrement;
 
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(158) NTSTATUS NTAPI KeWaitForMultipleObjects
 (
-    IN ULONG Count,
+    IN ulong_t Count,
     IN PVOID Object[],
     IN WAIT_TYPE WaitType,
     IN KWAIT_REASON WaitReason,

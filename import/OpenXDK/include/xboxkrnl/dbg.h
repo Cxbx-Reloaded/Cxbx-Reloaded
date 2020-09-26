@@ -20,7 +20,7 @@ namespace xbox
 XBSYSAPI EXPORTNUM(5) void_t NTAPI DbgBreakPoint();
 XBSYSAPI EXPORTNUM(6) void_t NTAPI DbgBreakPointWithStatus
 (
-	IN ULONG Status
+	IN ulong_t Status
 );
 XBSYSAPI EXPORTNUM(7) NTSTATUS NTAPI DbgLoadImageSymbols
 (
@@ -28,15 +28,15 @@ XBSYSAPI EXPORTNUM(7) NTSTATUS NTAPI DbgLoadImageSymbols
 	IN PVOID Base,
 	IN ULONG_PTR ProcessId
 );
-XBSYSAPI EXPORTNUM(8) ULONG _cdecl DbgPrint
+XBSYSAPI EXPORTNUM(8) ulong_t _cdecl DbgPrint
 (
 	PCHAR  Format, ...
 );
-XBSYSAPI EXPORTNUM(10) ULONG NTAPI DbgPrompt
+XBSYSAPI EXPORTNUM(10) ulong_t NTAPI DbgPrompt
 (
 	IN PCCH Prompt,
 	OUT PCH Response,
-	IN ULONG MaximumResponseLength
+	IN ulong_t MaximumResponseLength
 );
 XBSYSAPI EXPORTNUM(11) void_t NTAPI DbgUnLoadImageSymbols
 (

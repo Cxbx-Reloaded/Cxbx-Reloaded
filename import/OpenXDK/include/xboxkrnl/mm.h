@@ -29,7 +29,7 @@ XBSYSAPI EXPORTNUM(102) PVOID MmGlobalData[8];
 // ******************************************************************
 XBSYSAPI EXPORTNUM(165) PVOID NTAPI MmAllocateContiguousMemory
 (
-    IN ULONG NumberOfBytes
+    IN ulong_t NumberOfBytes
 );
 
 // ******************************************************************
@@ -37,11 +37,11 @@ XBSYSAPI EXPORTNUM(165) PVOID NTAPI MmAllocateContiguousMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(166) PVOID NTAPI MmAllocateContiguousMemoryEx
 (
-    IN ULONG            NumberOfBytes,
+    IN ulong_t            NumberOfBytes,
     IN PHYSICAL_ADDRESS LowestAcceptableAddress,
     IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-    IN ULONG            Alignment OPTIONAL,
-    IN ULONG            ProtectionType
+    IN ulong_t            Alignment OPTIONAL,
+    IN ulong_t            ProtectionType
 );
 
 // ******************************************************************
@@ -49,8 +49,8 @@ XBSYSAPI EXPORTNUM(166) PVOID NTAPI MmAllocateContiguousMemoryEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(167) PVOID NTAPI MmAllocateSystemMemory
 (
-    ULONG NumberOfBytes,
-    ULONG Protect
+    ulong_t NumberOfBytes,
+    ulong_t Protect
 );
 
 // ******************************************************************
@@ -67,7 +67,7 @@ XBSYSAPI EXPORTNUM(168) PVOID NTAPI MmClaimGpuInstanceMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(169) PVOID NTAPI MmCreateKernelStack
 (
-    IN ULONG	NumberOfBytes,
+    IN ulong_t	NumberOfBytes,
     IN boolean_t	DebuggerThread
 );
 
@@ -91,10 +91,10 @@ XBSYSAPI EXPORTNUM(171) void_t NTAPI MmFreeContiguousMemory
 // ******************************************************************
 // * MmFreeSystemMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(172) ULONG NTAPI MmFreeSystemMemory
+XBSYSAPI EXPORTNUM(172) ulong_t NTAPI MmFreeSystemMemory
 (
     PVOID BaseAddress,
-    ULONG NumberOfBytes
+    ulong_t NumberOfBytes
 );
 
 // ******************************************************************
@@ -138,8 +138,8 @@ XBSYSAPI EXPORTNUM(176) void_t NTAPI MmLockUnlockPhysicalPage
 XBSYSAPI EXPORTNUM(177) PVOID NTAPI MmMapIoSpace
 (
     IN PHYSICAL_ADDRESS PhysicalAddress,
-    IN ULONG            NumberOfBytes,
-    IN ULONG            ProtectionType
+    IN ulong_t            NumberOfBytes,
+    IN ulong_t            ProtectionType
 );
 
 // ******************************************************************
@@ -148,14 +148,14 @@ XBSYSAPI EXPORTNUM(177) PVOID NTAPI MmMapIoSpace
 XBSYSAPI EXPORTNUM(178) void_t NTAPI MmPersistContiguousMemory
 (
     IN PVOID   BaseAddress,
-    IN ULONG   NumberOfBytes,
+    IN ulong_t   NumberOfBytes,
     IN boolean_t Persist
 );
 
 // ******************************************************************
 // * MmQueryAddressProtect
 // ******************************************************************
-XBSYSAPI EXPORTNUM(179) ULONG NTAPI MmQueryAddressProtect
+XBSYSAPI EXPORTNUM(179) ulong_t NTAPI MmQueryAddressProtect
 (
 	IN PVOID VirtualAddress
 );
@@ -163,7 +163,7 @@ XBSYSAPI EXPORTNUM(179) ULONG NTAPI MmQueryAddressProtect
 // ******************************************************************
 // * MmQueryAllocationSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(180) ULONG NTAPI MmQueryAllocationSize
+XBSYSAPI EXPORTNUM(180) ulong_t NTAPI MmQueryAllocationSize
 (
     IN PVOID   BaseAddress
 );
@@ -182,8 +182,8 @@ XBSYSAPI EXPORTNUM(181) NTSTATUS NTAPI MmQueryStatistics
 XBSYSAPI EXPORTNUM(182) void_t NTAPI MmSetAddressProtect
 (
     IN PVOID BaseAddress,
-    IN ULONG NumberOfBytes,
-    IN ULONG NewProtect
+    IN ulong_t NumberOfBytes,
+    IN ulong_t NewProtect
 );
 
 // ******************************************************************
@@ -192,7 +192,7 @@ XBSYSAPI EXPORTNUM(182) void_t NTAPI MmSetAddressProtect
 XBSYSAPI EXPORTNUM(183) void_t NTAPI MmUnmapIoSpace
 (
     IN PVOID BaseAddress,
-    IN ULONG NumberOfBytes
+    IN ulong_t NumberOfBytes
 );
 
 // ******************************************************************
@@ -200,23 +200,23 @@ XBSYSAPI EXPORTNUM(183) void_t NTAPI MmUnmapIoSpace
 // ******************************************************************
 XBSYSAPI EXPORTNUM(374) PVOID NTAPI MmDbgAllocateMemory
 (
-	IN ULONG NumberOfBytes,
-	IN ULONG Protect
+	IN ulong_t NumberOfBytes,
+	IN ulong_t Protect
 );
 
 // ******************************************************************
 // * MmDbgFreeMemory
 // ******************************************************************
-XBSYSAPI EXPORTNUM(375) ULONG NTAPI MmDbgFreeMemory
+XBSYSAPI EXPORTNUM(375) ulong_t NTAPI MmDbgFreeMemory
 (
 	IN PVOID BaseAddress,
-	IN ULONG NumberOfBytes
+	IN ulong_t NumberOfBytes
 );
 
 // ******************************************************************
 // * MmDbgQueryAvailablePages
 // ******************************************************************
-XBSYSAPI EXPORTNUM(376) ULONG NTAPI MmDbgQueryAvailablePages(void);
+XBSYSAPI EXPORTNUM(376) ulong_t NTAPI MmDbgQueryAvailablePages(void);
 
 // ******************************************************************
 // * MmDbgReleaseAddress

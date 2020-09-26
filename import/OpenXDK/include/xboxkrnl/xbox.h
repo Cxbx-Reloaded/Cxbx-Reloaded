@@ -91,22 +91,22 @@ XBSYSAPI EXPORTNUM(1) PVOID NTAPI AvGetSavedDataAddress(void);
 XBSYSAPI EXPORTNUM(2) void_t NTAPI AvSendTVEncoderOption
 (
     IN  PVOID   RegisterBase,
-    IN  ULONG   Option,
-    IN  ULONG   Param,
-    OUT ULONG   *Result
+    IN  ulong_t   Option,
+    IN  ulong_t   Param,
+    OUT ulong_t   *Result
 );
 
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(3) ULONG NTAPI AvSetDisplayMode
+XBSYSAPI EXPORTNUM(3) ulong_t NTAPI AvSetDisplayMode
 (
     IN PVOID    RegisterBase,
-    IN ULONG    Step,
-    IN ULONG    Mode,
-    IN ULONG    Format,
-    IN ULONG    Pitch,
-    IN ULONG    FrameBuffer
+    IN ulong_t    Step,
+    IN ulong_t    Mode,
+    IN ulong_t    Format,
+    IN ulong_t    Pitch,
+    IN ulong_t    FrameBuffer
 );
 
 // ******************************************************************
@@ -120,7 +120,7 @@ XBSYSAPI EXPORTNUM(4) void_t NTAPI AvSetSavedDataAddress
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(35) ULONG NTAPI FscGetCacheSize();
+XBSYSAPI EXPORTNUM(35) ulong_t NTAPI FscGetCacheSize();
 
 // ******************************************************************
 // * 0x0024 - FscInvalidateIdleBlocks()
@@ -132,7 +132,7 @@ XBSYSAPI EXPORTNUM(36) void_t NTAPI FscInvalidateIdleBlocks();
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) NTSTATUS NTAPI FscSetCacheSize
 (
-		ULONG NumberOfCachePages
+		ulong_t NumberOfCachePages
 );
 
 // ******************************************************************
@@ -189,7 +189,7 @@ XBSYSAPI EXPORTNUM(164) PLAUNCH_DATA_PAGE LaunchDataPage;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(252) dword_t NTAPI PhyGetLinkState
 (
-	IN ULONG	Mode
+	IN ulong_t	Mode
 );
 
 // ******************************************************************
@@ -197,7 +197,7 @@ XBSYSAPI EXPORTNUM(252) dword_t NTAPI PhyGetLinkState
 // ******************************************************************
 XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
 (
-	IN ULONG	forceReset,
+	IN ulong_t	forceReset,
 	IN PVOID	Parameter2
 );
 
@@ -269,7 +269,7 @@ XBSYSAPI EXPORTNUM(336) void_t NTAPI XcSHAUpdate
 (
 	IN PUCHAR pbSHAContext,
 	IN PUCHAR pbInput,
-	IN ULONG dwInputLength
+	IN ulong_t dwInputLength
 );
 
 // ******************************************************************
@@ -287,7 +287,7 @@ XBSYSAPI EXPORTNUM(337) void_t NTAPI XcSHAFinal
 XBSYSAPI EXPORTNUM(338) void_t NTAPI XcRC4Key
 (
 	IN PUCHAR pbKeyStruct,
-	IN ULONG dwKeyLength,
+	IN ulong_t dwKeyLength,
 	IN PUCHAR pbKey
 );
 
@@ -297,7 +297,7 @@ XBSYSAPI EXPORTNUM(338) void_t NTAPI XcRC4Key
 XBSYSAPI EXPORTNUM(339) void_t NTAPI XcRC4Crypt
 (
 	IN PUCHAR pbKeyStruct,
-	IN ULONG dwInputLength,
+	IN ulong_t dwInputLength,
 	IN PUCHAR pbInput
 );
 
@@ -307,18 +307,18 @@ XBSYSAPI EXPORTNUM(339) void_t NTAPI XcRC4Crypt
 XBSYSAPI EXPORTNUM(340) void_t NTAPI XcHMAC
 (
 	IN PBYTE pbKeyMaterial,
-	IN ULONG cbKeyMaterial,
+	IN ulong_t cbKeyMaterial,
 	IN PBYTE pbData,
-	IN ULONG cbData,
+	IN ulong_t cbData,
 	IN PBYTE pbData2,
-	IN ULONG cbData2,
+	IN ulong_t cbData2,
 	OUT PBYTE HmacData
 );
 
 // ******************************************************************
 // * 0x0155 - XcPKEncPublic()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(341) ULONG NTAPI XcPKEncPublic
+XBSYSAPI EXPORTNUM(341) ulong_t NTAPI XcPKEncPublic
 (
 	IN PUCHAR pbPubKey,
 	IN PUCHAR pbInput,
@@ -328,7 +328,7 @@ XBSYSAPI EXPORTNUM(341) ULONG NTAPI XcPKEncPublic
 // ******************************************************************
 // * 0x0156 - XcPKDecPrivate()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(342) ULONG NTAPI XcPKDecPrivate
+XBSYSAPI EXPORTNUM(342) ulong_t NTAPI XcPKDecPrivate
 (
 	IN PUCHAR pbPrvKey,
 	IN PUCHAR pbInput,
@@ -338,7 +338,7 @@ XBSYSAPI EXPORTNUM(342) ULONG NTAPI XcPKDecPrivate
 // ******************************************************************
 // * 0x0157 - XcPKGetKeyLen()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(343) ULONG NTAPI XcPKGetKeyLen
+XBSYSAPI EXPORTNUM(343) ulong_t NTAPI XcPKGetKeyLen
 (
 	OUT PUCHAR pbPubKey
 );
@@ -356,13 +356,13 @@ XBSYSAPI EXPORTNUM(344) boolean_t NTAPI XcVerifyPKCS1Signature
 // ******************************************************************
 // * 0x0159 - XcModExp()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(345) ULONG NTAPI XcModExp
+XBSYSAPI EXPORTNUM(345) ulong_t NTAPI XcModExp
 (
 	IN LPDWORD pA,
 	IN LPDWORD pB,
 	IN LPDWORD pC,
 	IN LPDWORD pD,
-	IN ULONG dwN
+	IN ulong_t dwN
 );
 
 // ******************************************************************
@@ -371,7 +371,7 @@ XBSYSAPI EXPORTNUM(345) ULONG NTAPI XcModExp
 XBSYSAPI EXPORTNUM(346) void_t NTAPI XcDESKeyParity
 (
 	IN PUCHAR pbKey,
-	IN ULONG dwKeyLength
+	IN ulong_t dwKeyLength
 );
 
 // ******************************************************************
@@ -379,7 +379,7 @@ XBSYSAPI EXPORTNUM(346) void_t NTAPI XcDESKeyParity
 // ******************************************************************
 XBSYSAPI EXPORTNUM(347) void_t NTAPI XcKeyTable
 (
-	IN ULONG dwCipher,
+	IN ulong_t dwCipher,
 	OUT PUCHAR pbKeyTable,
 	IN PUCHAR pbKey
 );
@@ -389,11 +389,11 @@ XBSYSAPI EXPORTNUM(347) void_t NTAPI XcKeyTable
 // ******************************************************************
 XBSYSAPI EXPORTNUM(348) void_t NTAPI XcBlockCrypt
 (
-	IN ULONG dwCipher,
+	IN ulong_t dwCipher,
 	OUT PUCHAR pbOutput,
 	IN PUCHAR pbInput,
 	IN PUCHAR pbKeyTable,
-	IN ULONG dwOp
+	IN ulong_t dwOp
 );
 
 // ******************************************************************
@@ -401,41 +401,41 @@ XBSYSAPI EXPORTNUM(348) void_t NTAPI XcBlockCrypt
 // ******************************************************************
 XBSYSAPI EXPORTNUM(349) void_t NTAPI XcBlockCryptCBC
 (
-	IN ULONG dwCipher,
-	IN ULONG dwInputLength,
+	IN ulong_t dwCipher,
+	IN ulong_t dwInputLength,
 	OUT PUCHAR pbOutput,
 	IN PUCHAR pbInput,
 	IN PUCHAR pbKeyTable,
-	IN ULONG dwOp,
+	IN ulong_t dwOp,
 	IN PUCHAR pbFeedback
 );
 
 // ******************************************************************
 // * 0x015E - XcCryptService()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(350) ULONG NTAPI XcCryptService
+XBSYSAPI EXPORTNUM(350) ulong_t NTAPI XcCryptService
 (
-	IN ULONG dwOp,
+	IN ulong_t dwOp,
 	IN PVOID pArgs
 );
 
 /* Function pointers which point to all the kernel crypto functions. Used by PCRYPTO_VECTOR. */
 typedef void_t(NTAPI *pfXcSHAInit)(PUCHAR pbSHAContext);
-typedef void_t(NTAPI *pfXcSHAUpdate)(PUCHAR pbSHAContext, PUCHAR pbInput, ULONG dwInputLength);
+typedef void_t(NTAPI *pfXcSHAUpdate)(PUCHAR pbSHAContext, PUCHAR pbInput, ulong_t dwInputLength);
 typedef void_t(NTAPI *pfXcSHAFinal)(PUCHAR pbSHAContext, PUCHAR pbDigest);
-typedef void_t(NTAPI *pfXcRC4Key)(PUCHAR pbKeyStruct, ULONG dwKeyLength, PUCHAR pbKey);
-typedef void_t(NTAPI *pfXcRC4Crypt)(PUCHAR pbKeyStruct, ULONG dwInputLength, PUCHAR pbInput);
-typedef void_t(NTAPI *pfXcHMAC)(PBYTE pbKeyMaterial, ULONG cbKeyMaterial, PBYTE pbData, ULONG cbData, PBYTE pbData2, ULONG cbData2, PBYTE HmacData);
-typedef ULONG(NTAPI *pfXcPKEncPublic)(PUCHAR pbPubKey, PUCHAR pbInput, PUCHAR pbOutput);
-typedef ULONG(NTAPI *pfXcPKDecPrivate)(PUCHAR pbPrvKey, PUCHAR pbInput, PUCHAR pbOutput);
-typedef ULONG(NTAPI *pfXcPKGetKeyLen)(PUCHAR pbPubKey);
+typedef void_t(NTAPI *pfXcRC4Key)(PUCHAR pbKeyStruct, ulong_t dwKeyLength, PUCHAR pbKey);
+typedef void_t(NTAPI *pfXcRC4Crypt)(PUCHAR pbKeyStruct, ulong_t dwInputLength, PUCHAR pbInput);
+typedef void_t(NTAPI *pfXcHMAC)(PBYTE pbKeyMaterial, ulong_t cbKeyMaterial, PBYTE pbData, ulong_t cbData, PBYTE pbData2, ulong_t cbData2, PBYTE HmacData);
+typedef ulong_t(NTAPI *pfXcPKEncPublic)(PUCHAR pbPubKey, PUCHAR pbInput, PUCHAR pbOutput);
+typedef ulong_t(NTAPI *pfXcPKDecPrivate)(PUCHAR pbPrvKey, PUCHAR pbInput, PUCHAR pbOutput);
+typedef ulong_t(NTAPI *pfXcPKGetKeyLen)(PUCHAR pbPubKey);
 typedef boolean_t(NTAPI *pfXcVerifyPKCS1Signature)(PUCHAR pbSig, PUCHAR pbPubKey, PUCHAR pbDigest);
-typedef ULONG(NTAPI *pfXcModExp)(LPDWORD pA, LPDWORD pB, LPDWORD pC, LPDWORD pD, ULONG dwN);
-typedef void_t(NTAPI *pfXcDESKeyParity)(PUCHAR pbKey, ULONG dwKeyLength);
-typedef void_t(NTAPI *pfXcKeyTable)(ULONG dwCipher, PUCHAR pbKeyTable, PUCHAR pbKey);
-typedef void_t(NTAPI *pfXcBlockCrypt)(ULONG dwCipher, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp);
-typedef void_t(NTAPI *pfXcBlockCryptCBC)(ULONG dwCipher, ULONG dwInputLength, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ULONG dwOp, PUCHAR pbFeedback);
-typedef ULONG(NTAPI *pfXcCryptService)(ULONG dwOp, PVOID pArgs);
+typedef ulong_t(NTAPI *pfXcModExp)(LPDWORD pA, LPDWORD pB, LPDWORD pC, LPDWORD pD, ulong_t dwN);
+typedef void_t(NTAPI *pfXcDESKeyParity)(PUCHAR pbKey, ulong_t dwKeyLength);
+typedef void_t(NTAPI *pfXcKeyTable)(ulong_t dwCipher, PUCHAR pbKeyTable, PUCHAR pbKey);
+typedef void_t(NTAPI *pfXcBlockCrypt)(ulong_t dwCipher, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ulong_t dwOp);
+typedef void_t(NTAPI *pfXcBlockCryptCBC)(ulong_t dwCipher, ulong_t dwInputLength, PUCHAR pbOutput, PUCHAR pbInput, PUCHAR pbKeyTable, ulong_t dwOp, PUCHAR pbFeedback);
+typedef ulong_t(NTAPI *pfXcCryptService)(ulong_t dwOp, PVOID pArgs);
 
 /* Struct which contains all the pointers to the crypto functions */
 typedef struct {
@@ -551,8 +551,8 @@ XBSYSAPI EXPORTNUM(369) NTSTATUS NTAPI UnknownAPI369
 
 XBSYSAPI EXPORTNUM(370) NTSTATUS NTAPI XProfpControl // PROFILING
 (
-	ULONG Action,
-	ULONG Param
+	ulong_t Action,
+	ulong_t Param
 );
 
 XBSYSAPI EXPORTNUM(371) NTSTATUS NTAPI XProfpGetData // PROFILING 

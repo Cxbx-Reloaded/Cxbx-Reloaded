@@ -117,7 +117,7 @@ void DirectSoundDoWork_Stream(xbox::LARGE_INTEGER& time)
 // ******************************************************************
 // * patch: CDirectSoundStream_AddRef
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(CDirectSoundStream_AddRef)
+xbox::ulong_t WINAPI xbox::EMUPATCH(CDirectSoundStream_AddRef)
 (
     X_CDirectSoundStream*   pThis)
 {
@@ -133,7 +133,7 @@ ULONG WINAPI xbox::EMUPATCH(CDirectSoundStream_AddRef)
 // ******************************************************************
 // * patch: CDirectSoundStream_Release
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(CDirectSoundStream_Release)
+xbox::ulong_t WINAPI xbox::EMUPATCH(CDirectSoundStream_Release)
 (
     X_CDirectSoundStream*   pThis)
 {

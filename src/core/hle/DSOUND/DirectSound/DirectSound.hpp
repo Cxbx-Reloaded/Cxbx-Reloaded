@@ -207,8 +207,8 @@ class X_CDirectSoundStream
         // vtable (cached by each instance, via constructor)
         struct _vtbl
         {
-            ULONG (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
-            ULONG (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
+            ulong_t (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
+            ulong_t (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
             
             hresult_t (WINAPI *GetInfo)                                       // 0x08
             (
@@ -298,8 +298,8 @@ class X_XFileMediaObject
         // vtable (cached by each instance, via constructor)
         struct _vtbl
         {
-            ULONG (WINAPI *AddRef)(X_XFileMediaObject *pThis);            // 0x00
-            ULONG (WINAPI *Release)(X_XFileMediaObject *pThis);           // 0x04
+            ulong_t (WINAPI *AddRef)(X_XFileMediaObject *pThis);            // 0x00
+            ulong_t (WINAPI *Release)(X_XFileMediaObject *pThis);           // 0x04
 
             hresult_t (WINAPI *GetInfo)                                        // 0x08
             (
@@ -381,7 +381,7 @@ xbox::void_t WINAPI EMUPATCH(DirectSoundDoWork)();
 // ******************************************************************
 // * patch: IDirectSound_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirectSound_AddRef)
+xbox::ulong_t WINAPI EMUPATCH(IDirectSound_AddRef)
 (
     LPDIRECTSOUND8          pThis
 );
@@ -389,7 +389,7 @@ ULONG WINAPI EMUPATCH(IDirectSound_AddRef)
 // ******************************************************************
 // * patch: IDirectSound_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirectSound_Release)
+xbox::ulong_t WINAPI EMUPATCH(IDirectSound_Release)
 (
     LPDIRECTSOUND8          pThis
 );
@@ -646,7 +646,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirectSoundBuffer_Release)
+xbox::ulong_t WINAPI EMUPATCH(IDirectSoundBuffer_Release)
 (
     XbHybridDSBuffer*       pHybridThis
 );
@@ -792,12 +792,12 @@ xbox::hresult_t WINAPI EMUPATCH(CDirectSoundStream_SetRolloffFactor)
 // ******************************************************************
 // * patch: CDirectSoundStream_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(CDirectSoundStream_AddRef)(X_CDirectSoundStream *pThis);
+xbox::ulong_t WINAPI EMUPATCH(CDirectSoundStream_AddRef)(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
 // * patch: CDirectSoundStream_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pThis);
+xbox::ulong_t WINAPI EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream *pThis);
 
 // ******************************************************************
 // * CDirectSoundStream_GetInfo
@@ -1196,7 +1196,7 @@ xbox::hresult_t WINAPI EMUPATCH(IDirectSound_EnableHeadphones)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(IDirectSoundBuffer_AddRef)
+xbox::ulong_t WINAPI EMUPATCH(IDirectSoundBuffer_AddRef)
 (
     XbHybridDSBuffer*       pHybridThis
 );
@@ -1517,12 +1517,12 @@ xbox::hresult_t WINAPI EMUPATCH(XFileMediaObject_Process)
 // ******************************************************************
 // * patch: XFileMediaObject_AddRef
 // ******************************************************************
-ULONG WINAPI EMUPATCH(XFileMediaObject_AddRef)(X_XFileMediaObject *pThis);
+xbox::ulong_t WINAPI EMUPATCH(XFileMediaObject_AddRef)(X_XFileMediaObject *pThis);
 
 // ******************************************************************
 // * patch: XFileMediaObject_Release
 // ******************************************************************
-ULONG WINAPI EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject *pThis);
+xbox::ulong_t WINAPI EMUPATCH(XFileMediaObject_Release)(X_XFileMediaObject *pThis);
 
 // ******************************************************************
 // * patch: XFileMediaObject_Discontinuity

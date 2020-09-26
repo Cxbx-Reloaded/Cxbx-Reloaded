@@ -100,7 +100,7 @@ xbox::boolean_t xbox::ObpCreatePermanentDirectoryObject(
 xbox::NTSTATUS xbox::ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_t Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *ReturnedObject
@@ -389,7 +389,7 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectBodySize,
+	IN ulong_t ObjectBodySize,
 	OUT PVOID *Object
 )
 {
@@ -494,7 +494,7 @@ xbox::PVOID xbox::ObpGetObjectHandleContents(HANDLE Handle)
 	return NULL;
 }
 
-xbox::ULONG FASTCALL xbox::ObpComputeHashIndex(
+xbox::ulong_t FASTCALL xbox::ObpComputeHashIndex(
 	IN POBJECT_STRING ElementName
 )
 {
@@ -594,7 +594,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectPointerBias,
+	IN ulong_t ObjectPointerBias,
 	OUT PHANDLE ReturnedHandle
 )
 {
@@ -877,7 +877,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 XBSYSAPI EXPORTNUM(247) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_t Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *Object

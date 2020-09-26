@@ -252,7 +252,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(DirectSoundCreate)
 // ******************************************************************
 // * patch: IDirectSound_AddRef
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(IDirectSound_AddRef)
+xbox::ulong_t WINAPI xbox::EMUPATCH(IDirectSound_AddRef)
 (
     LPDIRECTSOUND8          pThis)
 {
@@ -270,7 +270,7 @@ ULONG WINAPI xbox::EMUPATCH(IDirectSound_AddRef)
 // ******************************************************************
 // * patch: IDirectSound_Release
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(IDirectSound_Release)
+xbox::ulong_t WINAPI xbox::EMUPATCH(IDirectSound_Release)
 (
     LPDIRECTSOUND8          pThis)
 {

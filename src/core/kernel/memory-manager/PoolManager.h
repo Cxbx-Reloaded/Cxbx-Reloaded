@@ -38,10 +38,10 @@
 
 
 typedef struct _POOL_DESCRIPTOR {
-	ULONG RunningAllocs;
-	ULONG RunningDeAllocs;
-	ULONG TotalPages;
-	ULONG TotalBigPages;
+	xbox::ulong_t RunningAllocs;
+	xbox::ulong_t RunningDeAllocs;
+	xbox::ulong_t TotalPages;
+	xbox::ulong_t TotalBigPages;
 	xbox::LIST_ENTRY ListHeads[POOL_LIST_HEADS];
 } POOL_DESCRIPTOR, *PPOOL_DESCRIPTOR;
 
@@ -50,8 +50,8 @@ typedef struct _POOL_LOOKASIDE_LIST {
 	xbox::SLIST_HEADER ListHead;
 	xbox::ushort_t Depth;
 	xbox::ushort_t Padding;
-	ULONG TotalAllocates;
-	ULONG AllocateHits;
+	xbox::ulong_t TotalAllocates;
+	xbox::ulong_t AllocateHits;
 } POOL_LOOKASIDE_LIST, *PPOOL_LOOKASIDE_LIST;
 
 
@@ -63,9 +63,9 @@ typedef struct _POOL_HEADER {
 			xbox::uchar_t PoolType;
 			xbox::uchar_t BlockSize;
 		};
-		ULONG Ulong1;
+		xbox::ulong_t Ulong1;
 	};
-	ULONG PoolTag;
+	xbox::ulong_t PoolTag;
 } POOL_HEADER, *PPOOL_HEADER;
 
 

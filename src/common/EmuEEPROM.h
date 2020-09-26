@@ -148,7 +148,7 @@ extern const EEPROMInfo* EmuFindEEPROMInfo(xbox::XC_VALUE_INDEX index);
 
 extern xbox::XBOX_EEPROM *EEPROM;
 
-extern xbox::ULONG XboxFactoryGameRegion;
+extern xbox::ulong_t XboxFactoryGameRegion;
 
 extern void EmuEEPROMReset(xbox::XBOX_EEPROM* eeprom);
 

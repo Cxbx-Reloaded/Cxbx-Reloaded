@@ -340,8 +340,8 @@ typedef struct _FILE_FS_SIZE_INFORMATION
 {
     LARGE_INTEGER   TotalAllocationUnits;
     LARGE_INTEGER   AvailableAllocationUnits;
-    ULONG           SectorsPerAllocationUnit;
-    ULONG           BytesPerSector;
+    ulong_t           SectorsPerAllocationUnit;
+    ulong_t           BytesPerSector;
 }
 FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 
@@ -350,8 +350,8 @@ FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
 // ******************************************************************
 typedef struct _FILE_FS_VOLUME_INFORMATION {
 	LARGE_INTEGER	VolumeCreationTime;
-	ULONG			VolumeSerialNumber;
-	ULONG			VolumeLabelLength;
+	ulong_t			VolumeSerialNumber;
+	ulong_t			VolumeLabelLength;
 	boolean_t			SupportsObjects;
 	char_t			VolumeLabel[1];
 } FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
@@ -491,7 +491,7 @@ typedef struct _OBJECT_ATTRIBUTES
 {
     HANDLE  RootDirectory;
     PSTRING ObjectName;
-    ULONG   Attributes;
+    ulong_t   Attributes;
 }
 OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
@@ -500,7 +500,7 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // ******************************************************************
 typedef PVOID(NTAPI *OB_ALLOCATE_METHOD)(
 	IN SIZE_T NumberOfBytes,
-	IN ULONG Tag
+	IN ulong_t Tag
 	);
 
 typedef void_t(NTAPI *OB_FREE_METHOD)(
@@ -509,7 +509,7 @@ typedef void_t(NTAPI *OB_FREE_METHOD)(
 
 typedef void_t(NTAPI *OB_CLOSE_METHOD)(
 	IN PVOID Object,
-	IN ULONG SystemHandleCount
+	IN ulong_t SystemHandleCount
 	);
 
 typedef void_t(NTAPI *OB_DELETE_METHOD)(
@@ -519,7 +519,7 @@ typedef void_t(NTAPI *OB_DELETE_METHOD)(
 typedef NTSTATUS(NTAPI *OB_PARSE_METHOD)(
 	IN PVOID ParseObject,
 	IN struct _OBJECT_TYPE *ObjectType,
-	IN ULONG Attributes,
+	IN ulong_t Attributes,
 	IN OUT POBJECT_STRING CompleteName,
 	IN OUT POBJECT_STRING RemainingName,
 	IN OUT PVOID Context OPTIONAL,
@@ -534,7 +534,7 @@ typedef struct _OBJECT_TYPE
     OB_DELETE_METHOD DeleteProcedure;
     OB_PARSE_METHOD ParseProcedure;
 	PVOID DefaultObject;
-	ULONG PoolTag;
+	ulong_t PoolTag;
 }
 OBJECT_TYPE, *POBJECT_TYPE;
 
@@ -545,7 +545,7 @@ typedef struct _OBJECT_HEADER {
 	long_t PointerCount;
 	long_t HandleCount;
 	POBJECT_TYPE Type;
-	ULONG Flags;
+	ulong_t Flags;
 	QUAD Body;
 } OBJECT_HEADER, *POBJECT_HEADER;
 
@@ -578,8 +578,8 @@ XBOX_REFURB_INFO, *PXBOX_REFURB_INFO;
 
 #define EXCEPTION_MAXIMUM_PARAMETERS 15 // maximum number of exception parameters
 
-#define ALIGN_DOWN(length, type) ((ULONG)(length) & ~(sizeof(type) - 1))
-#define ALIGN_UP(length, type) (ALIGN_DOWN(((ULONG)(length) + sizeof(type) - 1), type))
+#define ALIGN_DOWN(length, type) ((ulong_t)(length) & ~(sizeof(type) - 1))
+#define ALIGN_UP(length, type) (ALIGN_DOWN(((ulong_t)(length) + sizeof(type) - 1), type))
 #define ALIGN_DOWN_POINTER(address, type) ((PVOID)((ULONG_PTR)(address) & ~((ULONG_PTR)sizeof(type) - 1)))
 #define ALIGN_UP_POINTER(address, type) (ALIGN_DOWN_POINTER(((ULONG_PTR)(address) + sizeof(type) - 1), type))
 
@@ -620,16 +620,16 @@ FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 // ******************************************************************
 typedef struct _FILE_DIRECTORY_INFORMATION
 {
-	ULONG           NextEntryOffset;
-	ULONG           FileIndex;
+	ulong_t           NextEntryOffset;
+	ulong_t           FileIndex;
 	LARGE_INTEGER   CreationTime;
 	LARGE_INTEGER   LastAccessTime;
 	LARGE_INTEGER   LastWriteTime;
 	LARGE_INTEGER   ChangeTime;
 	LARGE_INTEGER   EndOfFile;
 	LARGE_INTEGER   AllocationSize;
-	ULONG           FileAttributes;
-	ULONG           FileNameLength;
+	ulong_t           FileAttributes;
+	ulong_t           FileNameLength;
 	char_t            FileName[1];        // Offset: 0x40
 }
 FILE_DIRECTORY_INFORMATION;
@@ -651,7 +651,7 @@ FILE_RENAME_INFORMATION;
 typedef struct _FILE_LINK_INFORMATION {
 	boolean_t         ReplaceIfExists;
 	HANDLE          RootDirectory;
-	ULONG           FileNameLength;
+	ulong_t           FileNameLength;
 	char_t            FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
 
@@ -665,14 +665,14 @@ typedef struct _FILE_NETWORK_OPEN_INFORMATION {
 	LARGE_INTEGER   ChangeTime;
 	LARGE_INTEGER   AllocationSize;
 	LARGE_INTEGER   EndOfFile;
-	ULONG           FileAttributes;
+	ulong_t           FileAttributes;
 } FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
 
 // ******************************************************************
 // * FILE_FULL_EA_INFORMATION
 // ******************************************************************
 typedef struct _FILE_FULL_EA_INFORMATION {
-	ULONG NextEntryOffset;
+	ulong_t NextEntryOffset;
 	uchar_t Flags;
 	uchar_t EaNameLength;
 	ushort_t EaValueLength;
@@ -687,7 +687,7 @@ typedef struct _FILE_BASIC_INFORMATION {
 	LARGE_INTEGER   LastAccessTime;
 	LARGE_INTEGER   LastWriteTime;
 	LARGE_INTEGER   ChangeTime;
-	ULONG           FileAttributes;
+	ulong_t           FileAttributes;
 } FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;
 
 // ******************************************************************
@@ -696,7 +696,7 @@ typedef struct _FILE_BASIC_INFORMATION {
 typedef struct _FILE_STANDARD_INFORMATION {
 	LARGE_INTEGER   AllocationSize;
 	LARGE_INTEGER   EndOfFile;
-	ULONG           NumberOfLinks;
+	ulong_t           NumberOfLinks;
 	boolean_t         DeletePending;
 	boolean_t         Directory;
 } FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;
@@ -712,7 +712,7 @@ typedef struct _FILE_INTERNAL_INFORMATION {
 // * FILE_EA_INFORMATION
 // ******************************************************************
 typedef struct _FILE_EA_INFORMATION {
-	ULONG           EaSize;
+	ulong_t           EaSize;
 } FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
 
 // ******************************************************************
@@ -733,21 +733,21 @@ typedef struct _FILE_POSITION_INFORMATION {
 // * FILE_MODE_INFORMATION
 // ******************************************************************
 typedef struct _FILE_MODE_INFORMATION {
-	ULONG           Mode;
+	ulong_t           Mode;
 } FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
 
 // ******************************************************************
 // * FILE_ALIGNMENT_INFORMATION
 // ******************************************************************
 typedef struct _FILE_ALIGNMENT_INFORMATION {
-	ULONG           AlignmentRequirement;
+	ulong_t           AlignmentRequirement;
 } FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;
 
 // ******************************************************************
 // * FILE_NAME_INFORMATION
 // ******************************************************************
 typedef struct _FILE_NAME_INFORMATION {
-	ULONG           FileNameLength;
+	ulong_t           FileNameLength;
 	char_t            FileName[1];
 } FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
 
@@ -803,9 +803,9 @@ typedef struct _FILE_END_OF_FILE_INFORMATION {
 // * FILE_MOVE_CLUSTER_INFORMATION
 // ******************************************************************
 typedef struct _FILE_MOVE_CLUSTER_INFORMATION {
-	ULONG ClusterCount;
+	ulong_t ClusterCount;
 	HANDLE RootDirectory;
-	ULONG FileNameLength;
+	ulong_t FileNameLength;
 	char_t FileName[1];
 } FILE_MOVE_CLUSTER_INFORMATION, *PFILE_MOVE_CLUSTER_INFORMATION;
 
@@ -813,8 +813,8 @@ typedef struct _FILE_MOVE_CLUSTER_INFORMATION {
 // * FILE_STREAM_INFORMATION
 // ******************************************************************
 typedef struct _FILE_STREAM_INFORMATION {
-	ULONG           NextEntryOffset;
-	ULONG           StreamNameLength;
+	ulong_t           NextEntryOffset;
+	ulong_t           StreamNameLength;
 	LARGE_INTEGER   StreamSize;
 	LARGE_INTEGER   StreamAllocationSize;
 	char_t            StreamName[1];
@@ -825,7 +825,7 @@ typedef struct _FILE_STREAM_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_TRACKING_INFORMATION {
 	HANDLE          DestinationFile;
-	ULONG           ObjectInformationLength;
+	ulong_t           ObjectInformationLength;
 	char_t            ObjectInformation[1];
 } FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
 
@@ -841,24 +841,24 @@ typedef struct _FILE_COMPLETION_INFORMATION {
 // * FILE_PIPE_INFORMATION
 // ******************************************************************
 typedef struct _FILE_PIPE_INFORMATION {
-	ULONG           ReadMode;
-	ULONG           CompletionMode;
+	ulong_t           ReadMode;
+	ulong_t           CompletionMode;
 } FILE_PIPE_INFORMATION, *PFILE_PIPE_INFORMATION;
 
 // ******************************************************************
 // * FILE_PIPE_LOCAL_INFORMATION
 // ******************************************************************
 typedef struct _FILE_PIPE_LOCAL_INFORMATION {
-	ULONG           NamedPipeType;
-	ULONG           NamedPipeConfiguration;
-	ULONG           MaximumInstances;
-	ULONG           CurrentInstances;
-	ULONG           InboundQuota;
-	ULONG           ReadDataAvailable;
-	ULONG           OutboundQuota;
-	ULONG           WriteQuotaAvailable;
-	ULONG           NamedPipeState;
-	ULONG           NamedPipeEnd;
+	ulong_t           NamedPipeType;
+	ulong_t           NamedPipeConfiguration;
+	ulong_t           MaximumInstances;
+	ulong_t           CurrentInstances;
+	ulong_t           InboundQuota;
+	ulong_t           ReadDataAvailable;
+	ulong_t           OutboundQuota;
+	ulong_t           WriteQuotaAvailable;
+	ulong_t           NamedPipeState;
+	ulong_t           NamedPipeEnd;
 } FILE_PIPE_LOCAL_INFORMATION, *PFILE_PIPE_LOCAL_INFORMATION;
 
 // ******************************************************************
@@ -866,17 +866,17 @@ typedef struct _FILE_PIPE_LOCAL_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_PIPE_REMOTE_INFORMATION {
 	LARGE_INTEGER   CollectDataTime;
-	ULONG           MaximumCollectionCount;
+	ulong_t           MaximumCollectionCount;
 } FILE_PIPE_REMOTE_INFORMATION, *PFILE_PIPE_REMOTE_INFORMATION;
 
 // ******************************************************************
 // * FILE_MAILSLOT_QUERY_INFORMATION
 // ******************************************************************
 typedef struct _FILE_MAILSLOT_QUERY_INFORMATION {
-	ULONG           MaximumMessageSize;
-	ULONG           MailslotQuota;
-	ULONG           NextMessageSize;
-	ULONG           MessagesAvailable;
+	ulong_t           MaximumMessageSize;
+	ulong_t           MailslotQuota;
+	ulong_t           NextMessageSize;
+	ulong_t           MessagesAvailable;
 	LARGE_INTEGER   ReadTimeout;
 } FILE_MAILSLOT_QUERY_INFORMATION, *PFILE_MAILSLOT_QUERY_INFORMATION;
 
@@ -892,7 +892,7 @@ typedef struct _FILE_MAILSLOT_SET_INFORMATION {
 // ******************************************************************
 typedef struct _FILE_REPARSE_POINT_INFORMATION {
 	LONGLONG        FileReference;
-	ULONG           Tag;
+	ulong_t           Tag;
 } FILE_REPARSE_POINT_INFORMATION, *PFILE_REPARSE_POINT_INFORMATION;
 
 // ******************************************************************
@@ -900,7 +900,7 @@ typedef struct _FILE_REPARSE_POINT_INFORMATION {
 // ******************************************************************
 typedef struct _KSYSTEM_TIME
 {
-	/* 0x00 */ ULONG LowPart;
+	/* 0x00 */ ulong_t LowPart;
 	/* 0x04 */ long_t High1Time;
 	/* 0x08 */ long_t High2Time;
 } // Size = 0x0C
@@ -911,15 +911,15 @@ KSYSTEM_TIME, *PKSYSTEM_TIME;
 // ******************************************************************
 typedef struct _MM_STATISTICS
 {
-    ULONG   Length;
-    ULONG   TotalPhysicalPages;
-    ULONG   AvailablePages;
-    ULONG   VirtualMemoryBytesCommitted;
-    ULONG   VirtualMemoryBytesReserved;
-    ULONG   CachePagesCommitted;
-    ULONG   PoolPagesCommitted;
-    ULONG   StackPagesCommitted;
-    ULONG   ImagePagesCommitted;
+    ulong_t   Length;
+    ulong_t   TotalPhysicalPages;
+    ulong_t   AvailablePages;
+    ulong_t   VirtualMemoryBytesCommitted;
+    ulong_t   VirtualMemoryBytesReserved;
+    ulong_t   CachePagesCommitted;
+    ulong_t   PoolPagesCommitted;
+    ulong_t   StackPagesCommitted;
+    ulong_t   ImagePagesCommitted;
 }
 MM_STATISTICS, *PMM_STATISTICS;
 
@@ -945,7 +945,7 @@ typedef void_t (NTAPI *PIO_APC_ROUTINE)
 (
     IN PVOID            ApcContext,
     IN PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG            Reserved
+    IN ulong_t            Reserved
 );
 
 // ******************************************************************
@@ -954,7 +954,7 @@ typedef void_t (NTAPI *PIO_APC_ROUTINE)
 typedef void_t(NTAPI *PTIMER_APC_ROUTINE)
 (
 	IN PVOID	TimerContext,
-	IN ULONG	TimerLowValue,
+	IN ulong_t	TimerLowValue,
 	IN long_t		TimerHighValue
 );
 
@@ -1024,13 +1024,13 @@ typedef struct _PCI_SLOT_NUMBER
     {
         struct
         {
-            ULONG   DeviceNumber:5;
-            ULONG   FunctionNumber:3;
-            ULONG   Reserved:24;
+            ulong_t   DeviceNumber:5;
+            ulong_t   FunctionNumber:3;
+            ulong_t   Reserved:24;
         }
         bits;
 
-        ULONG   AsULONG;
+        ulong_t   AsULONG;
     }u;
 }
 PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
@@ -1049,16 +1049,16 @@ PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 typedef struct _PCI_TYPE1_CFG_BITS {
     union {
         struct {
-            ULONG   Reserved1:2;
-            ULONG   RegisterNumber:6;
-            ULONG   FunctionNumber:3;
-            ULONG   DeviceNumber:5;
-            ULONG   BusNumber:8;
-            ULONG   Reserved2:7;
-            ULONG   Enable:1;
+            ulong_t   Reserved1:2;
+            ulong_t   RegisterNumber:6;
+            ulong_t   FunctionNumber:3;
+            ulong_t   DeviceNumber:5;
+            ulong_t   BusNumber:8;
+            ulong_t   Reserved2:7;
+            ulong_t   Enable:1;
         } bits;
 
-        ULONG   AsULONG;
+        ulong_t   AsULONG;
     } u;
 } PCI_TYPE1_CFG_BITS, *PPCI_TYPE1_CFG_BITS;
 
@@ -1084,14 +1084,14 @@ typedef struct _PCI_COMMON_CONFIG
     {
         struct _PCI_HEADER_TYPE_0
         {
-            ULONG   BaseAddresses[PCI_TYPE0_ADDRESSES]; // 0x10
-            ULONG   CIS;
+            ulong_t   BaseAddresses[PCI_TYPE0_ADDRESSES]; // 0x10
+            ulong_t   CIS;
             ushort_t  SubVendorID;
             ushort_t  SubSystemID;
-            ULONG   ROMBaseAddress;
+            ulong_t   ROMBaseAddress;
             uchar_t   CapabilitiesPtr;
             uchar_t   Reserved1[3];
-            ULONG   Reserved2;
+            ulong_t   Reserved2;
             uchar_t   InterruptLine;      //
             uchar_t   InterruptPin;       // (ro)
             uchar_t   MinimumGrant;       // (ro)
@@ -1251,9 +1251,9 @@ MUTANT_BASIC_INFORMATION, *PMUTANT_BASIC_INFORMATION;
 typedef struct _ERWLOCK
 {
 	long_t LockCount;             // 0x00
-	ULONG WritersWaitingCount;  // 0x04
-	ULONG ReadersWaitingCount;  // 0x08
-	ULONG ReadersEntryCount;    // 0x0C
+	ulong_t WritersWaitingCount;  // 0x04
+	ulong_t ReadersWaitingCount;  // 0x08
+	ulong_t ReadersEntryCount;    // 0x0C
 	KEVENT WriterEvent;         // 0x10
 	KSEMAPHORE ReaderSemaphore; // 0x20
 }                               // 0x34
@@ -1274,7 +1274,7 @@ KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 typedef struct _KDEVICE_QUEUE_ENTRY 
 {
 	LIST_ENTRY DeviceListEntry;
-	ULONG SortKey;
+	ulong_t SortKey;
 	boolean_t Inserted;
 } KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY, *RESTRICTED_POINTER PRKDEVICE_QUEUE_ENTRY;
 
@@ -1290,7 +1290,7 @@ typedef struct _IRP
 {
 	cshort_t                 Type;                // 0x00
 	word_t                   Size;                // 0x02
-	ULONG                  Flags;               // 0x04
+	ulong_t                  Flags;               // 0x04
 	LIST_ENTRY             ThreadListEntry;     // 0x08
 	IO_STATUS_BLOCK        IoStatus;            // 0x10
 	char_t                   StackCount;          // 0x18
@@ -1302,7 +1302,7 @@ typedef struct _IRP
 	ULONGLONG              Overlay;	            // 0x28
 	PVOID                  UserBuffer;          // 0x30
 	PFILE_SEGMENT_ELEMENT  SegmentArray;        // 0x34
-	ULONG                  LockedBufferLength;  // 0x38
+	ulong_t                  LockedBufferLength;  // 0x38
 	ULONGLONG              Tail;                // 0x3C
 }
 IRP, *PIRP;
@@ -1318,17 +1318,17 @@ typedef struct _DEVICE_OBJECT
 	struct _DRIVER_OBJECT *DriverObject;
 	struct _DEVICE_OBJECT *MountedOrSelfDevice;
 	PIRP CurrentIrp;
-	ULONG Flags;
+	ulong_t Flags;
 	PVOID DeviceExtension;
 	uchar_t DeviceType;
 	uchar_t StartIoFlags;
 	cchar_t StackSize;
 	boolean_t DeletePending;
-	ULONG SectorSize;
-	ULONG AlignmentRequirement;
+	ulong_t SectorSize;
+	ulong_t AlignmentRequirement;
 	KDEVICE_QUEUE DeviceQueue;
 	KEVENT DeviceLock;
-	ULONG StartIoKey;
+	ulong_t StartIoKey;
 }
 DEVICE_OBJECT, *PDEVICE_OBJECT;
 
@@ -1485,15 +1485,15 @@ DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 // See NtDll::FLOATING_SAVE_AREA
 typedef struct _KFLOATING_SAVE
 {
-	ULONG   ControlWord;
-	ULONG   StatusWord;
-	// NtDll contains ULONG TagWord here
-	ULONG   ErrorOffset;
-	ULONG   ErrorSelector;
-	ULONG   DataOffset;
-	ULONG   DataSelector;
-	ULONG   Cr0NpxState; // NtDll has RegisterArea[SIZE_OF_80387_REGISTERS];
-	ULONG   Spare1; // NtDll calls this Spare0
+	ulong_t   ControlWord;
+	ulong_t   StatusWord;
+	// NtDll contains ulong_t TagWord here
+	ulong_t   ErrorOffset;
+	ulong_t   ErrorSelector;
+	ulong_t   DataOffset;
+	ulong_t   DataSelector;
+	ulong_t   Cr0NpxState; // NtDll has RegisterArea[SIZE_OF_80387_REGISTERS];
+	ulong_t   Spare1; // NtDll calls this Spare0
 }
 KFLOATING_SAVE, *PKFLOATING_SAVE;
 
@@ -1604,13 +1604,13 @@ typedef struct _KINTERRUPT
 {
 	/* 0x00= 0 */ PKSERVICE_ROUTINE ServiceRoutine;
 	/* 0x04= 4 */ PVOID ServiceContext;
-	/* 0x08= 8 */ ULONG BusInterruptLevel;
-	/* 0x0C=12 */ ULONG Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
+	/* 0x08= 8 */ ulong_t BusInterruptLevel;
+	/* 0x0C=12 */ ulong_t Irql; // Was : unsigned char     KIRQL; unsigned char     PaddingA[0x03];
 	/* 0x10=16 */ boolean_t Connected;
 	/* 0x11=17 */ boolean_t ShareVector;
 	/* 0x12=18 */ KINTERRUPT_MODE Mode;
-	/* 0x14=20 */ ULONG ServiceCount;
-	/* 0x18=24 */ ULONG DispatchCode[DISPATCH_SIZE]; // Same as old : unsigned char ISR[0x58];
+	/* 0x14=20 */ ulong_t ServiceCount;
+	/* 0x18=24 */ ulong_t DispatchCode[DISPATCH_SIZE]; // Same as old : unsigned char ISR[0x58];
 }
 KINTERRUPT, *PKINTERRUPT;
 
@@ -1624,9 +1624,9 @@ typedef uchar_t KIRQL, *PKIRQL;
 // ******************************************************************
 typedef struct _PS_STATISTICS
 {
-	ULONG Length;
-	ULONG ThreadCount;
-	ULONG HandleCount;
+	ulong_t Length;
+	ulong_t ThreadCount;
+	ulong_t HandleCount;
 }
 PS_STATISTICS, *PPS_STATISTICS;
 
@@ -1654,7 +1654,7 @@ typedef struct _NT_TIB
     union
     {
         PVOID FiberData;                                            // 0x10 for TIB
-        ULONG Version;                                              // 0x10 for TEB (?)
+        ulong_t Version;                                              // 0x10 for TEB (?)
     }
     u_a;
     PVOID                                   ArbitraryUserPointer;   // 0x14
@@ -1666,7 +1666,7 @@ NT_TIB, *PNT_TIB;
 // 	{
 // 		word_t LimitLow;
 // 		word_t BaseLow;
-// 		ULONG HighWord;
+// 		ulong_t HighWord;
 // 	}
 //  KGDTENTRY, *PKGDTENTRY;
 // 
@@ -1681,13 +1681,13 @@ NT_TIB, *PNT_TIB;
 // 
 // 	typedef struct _KEXECUTE_OPTIONS
 // 	{
-// 		ULONG ExecuteDisable: 1;
-// 		ULONG ExecuteEnable: 1;
-// 		ULONG DisableThunkEmulation: 1;
-// 		ULONG Permanent: 1;
-// 		ULONG ExecuteDispatchEnable: 1;
-// 		ULONG ImageDispatchEnable: 1;
-// 		ULONG Spare: 2;
+// 		ulong_t ExecuteDisable: 1;
+// 		ulong_t ExecuteEnable: 1;
+// 		ulong_t DisableThunkEmulation: 1;
+// 		ulong_t Permanent: 1;
+// 		ulong_t ExecuteDispatchEnable: 1;
+// 		ulong_t ImageDispatchEnable: 1;
+// 		ulong_t Spare: 2;
 // 	}
 //  KEXECUTE_OPTIONS, *PKEXECUTE_OPTIONS;
 
@@ -1698,8 +1698,8 @@ typedef struct _KPROCESS
 {
 	/* 0x0/0 */ LIST_ENTRY ReadyListHead;
 	/* 0x8/8 */ LIST_ENTRY ThreadListHead;
-	/* 0x10/16 */ ULONG StackCount;
-	/* 0x14/20 */ ULONG ThreadQuantum;
+	/* 0x10/16 */ ulong_t StackCount;
+	/* 0x14/20 */ ulong_t ThreadQuantum;
 	/* 0x18/24 */ char_t BasePriority;
 	/* 0x19/25 */ char_t DisableBoost;
 	/* 0x1A/26 */ char_t DisableQuantum;
@@ -1747,8 +1747,8 @@ typedef struct _KQUEUE
 {
 	DISPATCHER_HEADER Header;
 	LIST_ENTRY EntryListHead;
-	ULONG CurrentCount;
-	ULONG MaximumCount;
+	ulong_t CurrentCount;
+	ulong_t MaximumCount;
 	LIST_ENTRY ThreadListHead;
 }
 KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
@@ -1780,43 +1780,43 @@ EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 // ******************************************************************
 typedef struct _KTRAP_FRAME
 {
-	ULONG DbgEbp;
-	ULONG DbgEip;
-	ULONG DbgArgMark;
-	ULONG DbgArgPointer;
+	ulong_t DbgEbp;
+	ulong_t DbgEip;
+	ulong_t DbgArgMark;
+	ulong_t DbgArgPointer;
 	word_t TempSegCs;
 	uchar_t Logging;
 	uchar_t Reserved;
-	ULONG TempEsp;
-	ULONG Dr0;
-	ULONG Dr1;
-	ULONG Dr2;
-	ULONG Dr3;
-	ULONG Dr6;
-	ULONG Dr7;
-	ULONG SegGs;
-	ULONG SegEs;
-	ULONG SegDs;
-	ULONG Edx;
-	ULONG Ecx;
-	ULONG Eax;
-	ULONG PreviousPreviousMode;
+	ulong_t TempEsp;
+	ulong_t Dr0;
+	ulong_t Dr1;
+	ulong_t Dr2;
+	ulong_t Dr3;
+	ulong_t Dr6;
+	ulong_t Dr7;
+	ulong_t SegGs;
+	ulong_t SegEs;
+	ulong_t SegDs;
+	ulong_t Edx;
+	ulong_t Ecx;
+	ulong_t Eax;
+	ulong_t PreviousPreviousMode;
 	PEXCEPTION_REGISTRATION_RECORD ExceptionList;
-	ULONG SegFs;
-	ULONG Edi;
-	ULONG Esi;
-	ULONG Ebx;
-	ULONG Ebp;
-	ULONG ErrCode;
-	ULONG Eip;
-	ULONG SegCs;
-	ULONG EFlags;
-	ULONG HardwareEsp;
-	ULONG HardwareSegSs;
-	ULONG V86Es;
-	ULONG V86Ds;
-	ULONG V86Fs;
-	ULONG V86Gs;
+	ulong_t SegFs;
+	ulong_t Edi;
+	ulong_t Esi;
+	ulong_t Ebx;
+	ulong_t Ebp;
+	ulong_t ErrCode;
+	ulong_t Eip;
+	ulong_t SegCs;
+	ulong_t EFlags;
+	ulong_t HardwareEsp;
+	ulong_t HardwareSegSs;
+	ulong_t V86Es;
+	ulong_t V86Ds;
+	ulong_t V86Fs;
+	ulong_t V86Gs;
 }
 KTRAP_FRAME, *PKTRAP_FRAME;
 
@@ -1881,17 +1881,17 @@ typedef struct _KTHREAD
 	/* 0x32/50 */ char_t Priority;
 	/* 0x33/51 */ char_t Padding;
 	/* 0x34/52 */ KAPC_STATE ApcState;
-	/* 0x4C/76 */ ULONG ContextSwitches;
-	/* 0x50/80 */ ULONG WaitStatus;
+	/* 0x4C/76 */ ulong_t ContextSwitches;
+	/* 0x50/80 */ ulong_t WaitStatus;
 	/* 0x54/84 */ char_t WaitIrql;
 	/* 0x55/85 */ char_t WaitMode;
 	/* 0x56/86 */ char_t WaitNext;
 	/* 0x57/87 */ char_t WaitReason;
 	/* 0x58/88 */ PKWAIT_BLOCK WaitBlockList;
 	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
-	/* 0x64/100 */ ULONG WaitTime;
-	/* 0x68/104 */ ULONG KernelApcDisable;
-	/* 0x6C/108 */ ULONG Quantum;
+	/* 0x64/100 */ ulong_t WaitTime;
+	/* 0x68/104 */ ulong_t KernelApcDisable;
+	/* 0x6C/108 */ ulong_t Quantum;
 	/* 0x70/112 */ char_t BasePriority;
 	/* 0x71/113 */ char_t DecrementCount;
 	/* 0x72/114 */ char_t PriorityDecrement;
@@ -1950,10 +1950,10 @@ typedef struct _KPRCB
     struct _KTHREAD* NextThread;                                    // 0x04, KPCR : 0x2C
     struct _KTHREAD* IdleThread;                                    // 0x08, KPCR : 0x30
 
-	ULONG            Unknown1[7];                                   // 0x0C, KPCR : 0x34
+	ulong_t            Unknown1[7];                                   // 0x0C, KPCR : 0x34
 
 	LIST_ENTRY       DpcListHead;                                   // 0x28, KPCR : 0x50
-	ULONG            DpcRoutineActive;                              // 0x30, KPCR : 0x58
+	ulong_t            DpcRoutineActive;                              // 0x30, KPCR : 0x58
 
     // This completes the total size of the structure (presumably)
     uchar_t            Unknown[0x224];                            
@@ -2022,7 +2022,7 @@ XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 // ******************************************************************
 typedef struct _XBOX_HARDWARE_INFO
 {
-    ULONG Flags;
+    ulong_t Flags;
     uchar_t GpuRevision;
 	uchar_t McpRevision;
     uchar_t Unknown3;
@@ -2042,7 +2042,7 @@ typedef struct _XBOX_ENCRYPTED_SETTINGS
 	uchar_t Checksum[20];
 	uchar_t Confounder[8];
 	uchar_t HDKey[XBOX_KEY_LENGTH];
-	ULONG GameRegion;
+	ulong_t GameRegion;
 }
 XBOX_ENCRYPTED_SETTINGS;
 
@@ -2051,13 +2051,13 @@ XBOX_ENCRYPTED_SETTINGS;
 // ******************************************************************
 typedef struct _XBOX_FACTORY_SETTINGS
 {
-	ULONG Checksum;
+	ulong_t Checksum;
 	uchar_t SerialNumber[12];
 	uchar_t EthernetAddr[6];
 	uchar_t Reserved1[2];
 	uchar_t OnlineKey[16];
-	ULONG AVRegion;
-	ULONG Reserved2;
+	ulong_t AVRegion;
+	ulong_t Reserved2;
 }
 XBOX_FACTORY_SETTINGS;
 
@@ -2079,28 +2079,28 @@ XBOX_TIMEZONE_DATE;
 #define TIME_ZONE_NAME_LENGTH 4
 typedef struct _XBOX_USER_SETTINGS
 {
-	ULONG Checksum;
+	ulong_t Checksum;
 	long_t TimeZoneBias;
 	char_t TimeZoneStdName[TIME_ZONE_NAME_LENGTH];
 	char_t TimeZoneDltName[TIME_ZONE_NAME_LENGTH];
-	ULONG Reserved1[2];
+	ulong_t Reserved1[2];
 	XBOX_TIMEZONE_DATE TimeZoneStdDate;
 	XBOX_TIMEZONE_DATE TimeZoneDltDate;
-	ULONG Reserved2[2];
+	ulong_t Reserved2[2];
 	long_t TimeZoneStdBias;
 	long_t TimeZoneDltBias;
-	ULONG Language;
-	ULONG VideoFlags;
-	ULONG AudioFlags;
-	ULONG ParentalControlGames;
-	ULONG ParentalControlPassword;
-	ULONG ParentalControlMovies;
-	ULONG OnlineIpAddress;
-	ULONG OnlineDnsAddress;
-	ULONG OnlineDefaultGatewayAddress;
-	ULONG OnlineSubnetMask;
-	ULONG MiscFlags;
-	ULONG DvdRegion;
+	ulong_t Language;
+	ulong_t VideoFlags;
+	ulong_t AudioFlags;
+	ulong_t ParentalControlGames;
+	ulong_t ParentalControlPassword;
+	ulong_t ParentalControlMovies;
+	ulong_t OnlineIpAddress;
+	ulong_t OnlineDnsAddress;
+	ulong_t OnlineDefaultGatewayAddress;
+	ulong_t OnlineSubnetMask;
+	ulong_t MiscFlags;
+	ulong_t DvdRegion;
 }
 XBOX_USER_SETTINGS;
 
@@ -2183,11 +2183,11 @@ KINTERRUPT_POLARITY;
 
 typedef struct _OWNER_ENTRY
 {
-	ULONG OwnerThread;
+	ulong_t OwnerThread;
 	union
 	{
 		long_t OwnerCount;
-		ULONG TableSize;
+		ulong_t TableSize;
 	};
 }
 OWNER_ENTRY, *POWNER_ENTRY;
@@ -2201,16 +2201,16 @@ typedef struct _ERESOURCE
 	PKSEMAPHORE SharedWaiters;
 	PKEVENT ExclusiveWaiters;
 	OWNER_ENTRY OwnerEntry;
-	ULONG ActiveEntries;
-	ULONG ContentionCount;
-	ULONG NumberOfSharedWaiters;
-	ULONG NumberOfExclusiveWaiters;
+	ulong_t ActiveEntries;
+	ulong_t ContentionCount;
+	ulong_t NumberOfSharedWaiters;
+	ulong_t NumberOfExclusiveWaiters;
 	union
 	{
 		PVOID Address;
-		ULONG CreatorBackTraceIndex;
+		ulong_t CreatorBackTraceIndex;
 	};
-	ULONG SpinLock;
+	ulong_t SpinLock;
 }
 ERESOURCE, *PERESOURCE;
 
@@ -2236,10 +2236,10 @@ POOL_TYPE;
 
 typedef struct _GENERIC_MAPPING
 {
-	ULONG GenericRead;
-	ULONG GenericWrite;
-	ULONG GenericExecute;
-	ULONG GenericAll;
+	ulong_t GenericRead;
+	ulong_t GenericWrite;
+	ulong_t GenericExecute;
+	ulong_t GenericAll;
 }
 GENERIC_MAPPING, *PGENERIC_MAPPING;
 
@@ -2247,19 +2247,19 @@ typedef struct _OBJECT_TYPE_INITIALIZER
 {
 	word_t Length;
 	uchar_t ObjectTypeFlags;
-	ULONG CaseInsensitive: 1;
-	ULONG UnnamedObjectsOnly: 1;
-	ULONG UseDefaultObject: 1;
-	ULONG SecurityRequired: 1;
-	ULONG MaintainHandleCount: 1;
-	ULONG MaintainTypeList: 1;
-	ULONG ObjectTypeCode;
-	ULONG InvalidAttributes;
+	ulong_t CaseInsensitive: 1;
+	ulong_t UnnamedObjectsOnly: 1;
+	ulong_t UseDefaultObject: 1;
+	ulong_t SecurityRequired: 1;
+	ulong_t MaintainHandleCount: 1;
+	ulong_t MaintainTypeList: 1;
+	ulong_t ObjectTypeCode;
+	ulong_t InvalidAttributes;
 	GENERIC_MAPPING GenericMapping;
-	ULONG ValidAccessMask;
+	ulong_t ValidAccessMask;
 	POOL_TYPE PoolType;
-	ULONG DefaultPagedPoolCharge;
-	ULONG DefaultNonPagedPoolCharge;
+	ulong_t DefaultPagedPoolCharge;
+	ulong_t DefaultNonPagedPoolCharge;
 	PVOID DumpProcedure;
 	long_t * OpenProcedure;
 	PVOID CloseProcedure;
@@ -2275,12 +2275,12 @@ typedef struct _EX_PUSH_LOCK
 {
 	union
 	{
-		ULONG Locked: 1;
-		ULONG Waiting: 1;
-		ULONG Waking: 1;
-		ULONG MultipleShared: 1;
-		ULONG Shared: 28;
-		ULONG Value;
+		ulong_t Locked: 1;
+		ulong_t Waiting: 1;
+		ulong_t Waking: 1;
+		ulong_t MultipleShared: 1;
+		ulong_t Shared: 28;
+		ulong_t Value;
 		PVOID Ptr;
 	};
 }
@@ -2292,13 +2292,13 @@ typedef struct _OBJECT_TYPE
 	LIST_ENTRY TypeList;
 	UNICODE_STRING Name;
 	PVOID DefaultObject;
-	ULONG Index;
-	ULONG TotalNumberOfObjects;
-	ULONG TotalNumberOfHandles;
-	ULONG HighWaterNumberOfObjects;
-	ULONG HighWaterNumberOfHandles;
+	ulong_t Index;
+	ulong_t TotalNumberOfObjects;
+	ulong_t TotalNumberOfHandles;
+	ulong_t HighWaterNumberOfObjects;
+	ulong_t HighWaterNumberOfHandles;
 	OBJECT_TYPE_INITIALIZER TypeInfo;
-	ULONG Key;
+	ulong_t Key;
 	EX_PUSH_LOCK ObjectLocks[32];
 }
 OBJECT_TYPE, *POBJECT_TYPE;
@@ -2335,9 +2335,9 @@ INLINE static ushort_t READ_REGISTER_USHORT(PUSHORT Address)
 // * Use this to access I/O mapped memory. Just a good standard.
 // *
 // ******************************************************************
-INLINE static ULONG READ_REGISTER_ULONG(PULONG Address)
+INLINE static ulong_t READ_REGISTER_ULONG(PULONG Address)
 {
-    return *(volatile ULONG *)Address;
+    return *(volatile ulong_t *)Address;
 }
 
 // ******************************************************************
@@ -2389,7 +2389,7 @@ static void_t WRITE_REGISTER_USHORT(PVOID Address, ushort_t Value)
 // * because the write may not be completed yet.)
 // *
 // ******************************************************************
-static void_t WRITE_REGISTER_ULONG(PVOID Address, ULONG Value)
+static void_t WRITE_REGISTER_ULONG(PVOID Address, ulong_t Value)
 {
     __asm
     {
@@ -2412,10 +2412,10 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT {
 	uchar_t CdbLength;
 	uchar_t SenseInfoLength;
 	uchar_t DataIn;
-	ULONG DataTransferLength;
-	ULONG TimeOutValue;
+	ulong_t DataTransferLength;
+	ulong_t TimeOutValue;
 	PVOID DataBuffer;
-	ULONG SenseInfoOffset;
+	ulong_t SenseInfoOffset;
 	uchar_t Cdb[16];
 }SCSI_PASS_THROUGH_DIRECT, *PSCSI_PASS_THROUGH_DIRECT;
 
@@ -2439,7 +2439,7 @@ typedef struct _DVDX2_AUTHENTICATION_PAGE {
     uchar_t CDFValid;
     uchar_t Authentication;
 	uchar_t Unknown2[3];
-	ULONG Unknown3[3];
+	ulong_t Unknown3[3];
 } DVDX2_AUTHENTICATION_PAGE, *PDVDX2_AUTHENTICATION_PAGE;
 
 // ******************************************************************
@@ -2457,13 +2457,13 @@ typedef struct _DVDX2_AUTHENTICATION {
 // See Xbe.h struct SectionHeader
 typedef struct _XBE_SECTION // Was _XBE_SECTIONHEADER
 {
-	ULONG Flags;
+	ulong_t Flags;
 	PVOID VirtualAddress; // Virtual address (where this section loads in RAM)
-	ULONG VirtualSize; // Virtual size (size of section in RAM; after FileSize it's 00'd)
-	ULONG FileAddress; // File address (where in the file from which this section comes)
-	ULONG FileSize; // File size (size of the section in the XBE file)
+	ulong_t VirtualSize; // Virtual size (size of section in RAM; after FileSize it's 00'd)
+	ulong_t FileAddress; // File address (where in the file from which this section comes)
+	ulong_t FileSize; // File size (size of the section in the XBE file)
 	PCSZ SectionName; // Pointer to section name
-	ULONG SectionReferenceCount; // Section reference count - when >= 1, section is loaded
+	ulong_t SectionReferenceCount; // Section reference count - when >= 1, section is loaded
 	PUSHORT HeadReferenceCount; // Pointer to head shared page reference counter
 	PUSHORT TailReferenceCount; // Pointer to tail shared page reference counter
 	byte_t ShaHash[20];         // SHA hash.  Hash dword_t containing FileSize, then hash section.
@@ -2584,7 +2584,7 @@ typedef struct _IDE_CHANNEL_OBJECT
     uchar_t MaximumIoRetries;
     PIRP CurrentIrp;
     KDEVICE_QUEUE DeviceQueue;
-    ULONG PhysicalRegionDescriptorTablePhysical;
+    ulong_t PhysicalRegionDescriptorTablePhysical;
     KDPC TimerDpc;
     KDPC FinishDpc;
     KTIMER Timer;

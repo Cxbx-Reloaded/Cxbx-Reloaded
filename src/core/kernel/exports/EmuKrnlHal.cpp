@@ -96,7 +96,7 @@ XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 
 	NTSTATUS ret = STATUS_SUCCESS;
 	if (TrayState == INIT_TRAY_STATE) {
-		ret = HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_TRAY_STATE, 0, &TrayState);
+		ret = HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_TRAY_STATE, 0, (PULONG)&TrayState);
 		// If bit 31 = 1, then there is an error so do not execute this code.
 		if ((ret >> 31) == 0) {
 			TrayState &= 0x70;
@@ -142,7 +142,7 @@ XBSYSAPI EXPORTNUM(38) xbox::void_t FASTCALL xbox::HalClearSoftwareInterrupt
 // ******************************************************************
 XBSYSAPI EXPORTNUM(39) xbox::void_t NTAPI xbox::HalDisableSystemInterrupt
 (
-	IN ULONG BusInterruptLevel
+	IN ulong_t BusInterruptLevel
 )
 {
 	LOG_FUNC_ONE_ARG(BusInterruptLevel);
@@ -155,7 +155,7 @@ XBSYSAPI EXPORTNUM(39) xbox::void_t NTAPI xbox::HalDisableSystemInterrupt
 // ******************************************************************
 // This specifies the number of Cache partitions available for game data caching
 // On real hardware, there are three, generally known as X, Y and Z in homebrew
-XBSYSAPI EXPORTNUM(40) xbox::ULONG xbox::HalDiskCachePartitionCount = 3; 
+XBSYSAPI EXPORTNUM(40) xbox::ulong_t xbox::HalDiskCachePartitionCount = 3; 
 
 // ******************************************************************
 // * 0x0029 - HalDiskModelNumber
@@ -174,7 +174,7 @@ XBSYSAPI EXPORTNUM(42) xbox::PANSI_STRING xbox::HalDiskSerialNumber = 0;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(43) xbox::void_t NTAPI xbox::HalEnableSystemInterrupt
 (
-	IN ULONG BusInterruptLevel,
+	IN ulong_t BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode
 )
 {
@@ -224,9 +224,9 @@ char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 // ******************************************************************
 // * 0x002C - HalGetInterruptVector()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(44) xbox::ULONG NTAPI xbox::HalGetInterruptVector
+XBSYSAPI EXPORTNUM(44) xbox::ulong_t NTAPI xbox::HalGetInterruptVector
 (
-	IN ULONG   BusInterruptLevel,
+	IN ulong_t   BusInterruptLevel,
 	OUT PKIRQL  Irql
 )
 {
@@ -312,11 +312,11 @@ XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 // Source:OpenXDK
 XBSYSAPI EXPORTNUM(46) xbox::void_t NTAPI xbox::HalReadWritePCISpace
 (
-	IN ULONG   BusNumber,
-	IN ULONG   SlotNumber,
-	IN ULONG   RegisterNumber,
+	IN ulong_t   BusNumber,
+	IN ulong_t   SlotNumber,
+	IN ulong_t   RegisterNumber,
 	IN PVOID   Buffer,
-	IN ULONG   Length,
+	IN ulong_t   Length,
 	IN boolean_t WritePCISpace
 )
 {
@@ -656,7 +656,7 @@ XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 	IN  uchar_t               Address,
 	IN  uchar_t               Command,
 	IN  boolean_t             WriteWord,
-	IN  ULONG               DataValue
+	IN  ulong_t               DataValue
 )
 {
 	LOG_FUNC_BEGIN
@@ -698,7 +698,7 @@ XBSYSAPI EXPORTNUM(329) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
-	IN ULONG  Count
+	IN ulong_t  Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -718,7 +718,7 @@ XBSYSAPI EXPORTNUM(330) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
-	IN ULONG   Count
+	IN ulong_t   Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -738,7 +738,7 @@ XBSYSAPI EXPORTNUM(331) xbox::void_t NTAPI xbox::READ_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
-	IN ULONG  Count
+	IN ulong_t  Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -758,7 +758,7 @@ XBSYSAPI EXPORTNUM(332) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
 (
 	IN PUCHAR Port,
 	IN PUCHAR Buffer,
-	IN ULONG  Count
+	IN ulong_t  Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -778,7 +778,7 @@ XBSYSAPI EXPORTNUM(333) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_USHORT
 (
 	IN PUSHORT Port,
 	IN PUSHORT Buffer,
-	IN ULONG   Count
+	IN ulong_t   Count
 )
 {
 	LOG_FUNC_BEGIN
@@ -798,7 +798,7 @@ XBSYSAPI EXPORTNUM(334) xbox::void_t NTAPI xbox::WRITE_PORT_BUFFER_ULONG
 (
 	IN PULONG Port,
 	IN PULONG Buffer,
-	IN ULONG  Count
+	IN ulong_t  Count
 )
 {
 	LOG_FUNC_BEGIN

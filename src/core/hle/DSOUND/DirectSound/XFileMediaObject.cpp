@@ -373,7 +373,7 @@ xbox::hresult_t WINAPI xbox::EMUPATCH(XFileMediaObject_Process)
 // * patch: XFileMediaObject_AddRef
 // ******************************************************************
 // NOTE: Does not require a patch.
-ULONG WINAPI xbox::EMUPATCH(XFileMediaObject_AddRef)
+xbox::ulong_t WINAPI xbox::EMUPATCH(XFileMediaObject_AddRef)
 (
 	X_XFileMediaObject* pThis)
 {
@@ -394,7 +394,7 @@ ULONG WINAPI xbox::EMUPATCH(XFileMediaObject_AddRef)
 // * patch: XFileMediaObject_Release
 // ******************************************************************
 // NOTE: Does not require a patch.
-ULONG WINAPI xbox::EMUPATCH(XFileMediaObject_Release)
+xbox::ulong_t WINAPI xbox::EMUPATCH(XFileMediaObject_Release)
 (
 	X_XFileMediaObject* pThis)
 {

@@ -25,7 +25,7 @@ namespace xbox
 XBSYSAPI EXPORTNUM(184) NTSTATUS NTAPI NtAllocateVirtualMemory
 (
     IN OUT PVOID    *BaseAddress,
-    IN ULONG         ZeroBits,
+    IN ulong_t         ZeroBits,
     IN OUT PULONG    AllocationSize,
     IN dword_t         AllocationType,
     IN dword_t         Protect
@@ -95,10 +95,10 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI NtCreateFile
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
-    IN  ULONG               FileAttributes,
-    IN  ULONG               ShareAccess,
-    IN  ULONG               CreateDisposition,
-    IN  ULONG               CreateOptions
+    IN  ulong_t               FileAttributes,
+    IN  ulong_t               ShareAccess,
+    IN  ulong_t               CreateDisposition,
+    IN  ulong_t               CreateOptions
 );
 
 XBSYSAPI EXPORTNUM(191) NTSTATUS NTAPI NtCreateIoCompletion
@@ -106,7 +106,7 @@ XBSYSAPI EXPORTNUM(191) NTSTATUS NTAPI NtCreateIoCompletion
 	OUT PHANDLE IoCompletionHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ULONG Count
+	IN ulong_t Count
 );
 
 // ******************************************************************
@@ -126,8 +126,8 @@ XBSYSAPI EXPORTNUM(193) NTSTATUS NTAPI NtCreateSemaphore
 (
     OUT PHANDLE             SemaphoreHandle,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes OPTIONAL,
-    IN  ULONG               InitialCount,
-    IN  ULONG               MaximumCount
+    IN  ulong_t               InitialCount,
+    IN  ulong_t               MaximumCount
 );
 
 // ******************************************************************
@@ -158,11 +158,11 @@ XBSYSAPI EXPORTNUM(196) NTSTATUS NTAPI NtDeviceIoControlFile
     IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
     IN PVOID ApcContext OPTIONAL,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
-    IN ULONG IoControlCode,
+    IN ulong_t IoControlCode,
     IN PVOID InputBuffer OPTIONAL,
-    IN ULONG InputBufferLength,
+    IN ulong_t InputBufferLength,
     OUT PVOID OutputBuffer OPTIONAL,
-    IN ULONG OutputBufferLength
+    IN ulong_t OutputBufferLength
 );
 
 // ******************************************************************
@@ -191,7 +191,7 @@ XBSYSAPI EXPORTNUM(199) NTSTATUS NTAPI NtFreeVirtualMemory
 (
     IN OUT PVOID *BaseAddress,
     IN OUT PULONG FreeSize,
-    IN ULONG      FreeType
+    IN ulong_t      FreeType
 );
 
 // ******************************************************************
@@ -204,11 +204,11 @@ XBSYSAPI EXPORTNUM(200) NTSTATUS NTAPI NtFsControlFile
 	IN PIO_APC_ROUTINE      ApcRoutine OPTIONAL,
 	IN PVOID                ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
-	IN ULONG                FsControlCode,
+	IN ulong_t                FsControlCode,
 	IN PVOID                InputBuffer OPTIONAL,
-	IN ULONG                InputBufferLength,
+	IN ulong_t                InputBufferLength,
 	OUT PVOID               OutputBuffer OPTIONAL,
-	IN ULONG                OutputBufferLength
+	IN ulong_t                OutputBufferLength
 );
 
 XBSYSAPI EXPORTNUM(201) NTSTATUS NTAPI NtOpenDirectoryObject
@@ -226,8 +226,8 @@ XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI NtOpenFile
     IN  ACCESS_MASK         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
-    IN  ULONG               ShareAccess,
-    IN  ULONG               OpenOptions
+    IN  ulong_t               ShareAccess,
+    IN  ulong_t               OpenOptions
 );
 
 XBSYSAPI EXPORTNUM(203) NTSTATUS NTAPI NtOpenSymbolicLinkObject(
@@ -238,7 +238,7 @@ XBSYSAPI EXPORTNUM(203) NTSTATUS NTAPI NtOpenSymbolicLinkObject(
 XBSYSAPI EXPORTNUM(205) NTSTATUS NTAPI NtProtectVirtualMemory(
     IN OUT PVOID *BaseAddress,
     IN OUT PSIZE_T RegionSize,
-    IN ULONG NewProtect,
+    IN ulong_t NewProtect,
     OUT PULONG OldProtect
 );
 
@@ -261,7 +261,7 @@ XBSYSAPI EXPORTNUM(206) NTSTATUS NTAPI NtQueueApcThread
 	IN PIO_APC_ROUTINE      ApcRoutine,
 	IN PVOID                ApcRoutineContext OPTIONAL,
 	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
-	IN ULONG                ApcReserved OPTIONAL 
+	IN ulong_t                ApcReserved OPTIONAL 
 );
 
 // ******************************************************************
@@ -275,7 +275,7 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
     IN  PVOID                       ApcContext,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
     OUT FILE_DIRECTORY_INFORMATION *FileInformation,
-    IN  ULONG                       Length,
+    IN  ulong_t                       Length,
     IN  FILE_INFORMATION_CLASS      FileInformationClass,
     IN  PSTRING                     FileMask,
     IN  boolean_t                     RestartScan
@@ -287,7 +287,7 @@ XBSYSAPI EXPORTNUM(207) NTSTATUS NTAPI NtQueryDirectoryFile
 XBSYSAPI EXPORTNUM(208) NTSTATUS NTAPI NtQueryDirectoryObject(
 	IN HANDLE DirectoryHandle,
 	OUT PVOID Buffer,
-	IN ULONG Length,
+	IN ulong_t Length,
 	IN boolean_t RestartScan,
 	IN OUT PULONG Context,
 	OUT PULONG ReturnedLength OPTIONAL
@@ -323,7 +323,7 @@ XBSYSAPI EXPORTNUM(211) NTSTATUS NTAPI NtQueryInformationFile
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
     OUT PVOID                       FileInformation,
-    IN  ULONG                       Length,
+    IN  ulong_t                       Length,
     IN  FILE_INFORMATION_CLASS      FileInfo
 );
 
@@ -390,7 +390,7 @@ XBSYSAPI EXPORTNUM(218) NTSTATUS NTAPI NtQueryVolumeInformationFile
     IN  HANDLE                      FileHandle,
     OUT PIO_STATUS_BLOCK            IoStatusBlock,
     OUT PFILE_FS_SIZE_INFORMATION   FileInformation,
-    IN  ULONG                       Length,
+    IN  ulong_t                       Length,
     IN  FS_INFORMATION_CLASS        FileInformationClass
 );
 
@@ -409,7 +409,7 @@ XBSYSAPI EXPORTNUM(219) NTSTATUS NTAPI NtReadFile
     IN  PVOID           ApcContext,
     OUT PIO_STATUS_BLOCK IoStatusBlock,
     OUT PVOID           Buffer,
-    IN  ULONG           Length,
+    IN  ulong_t           Length,
     IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 );
 
@@ -424,7 +424,7 @@ XBSYSAPI EXPORTNUM(220) NTSTATUS NTAPI NtReadFileScatter
 	IN PVOID ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN PFILE_SEGMENT_ELEMENT SegmentArray,
-	IN ULONG Length,
+	IN ulong_t Length,
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 );
 
@@ -443,7 +443,7 @@ XBSYSAPI EXPORTNUM(221) NTSTATUS NTAPI NtReleaseMutant
 XBSYSAPI EXPORTNUM(222) NTSTATUS NTAPI NtReleaseSemaphore
 (
     IN  HANDLE  SemaphoreHandle,
-    IN  ULONG   ReleaseCount,
+    IN  ulong_t   ReleaseCount,
     OUT PULONG  PreviousCount OPTIONAL
 );
 
@@ -489,7 +489,7 @@ XBSYSAPI EXPORTNUM(226) NTSTATUS NTAPI NtSetInformationFile
     IN  HANDLE  FileHandle,            // TODO: correct paramters
     OUT PIO_STATUS_BLOCK   IoStatusBlock,
     IN  PVOID   FileInformation,
-    IN  ULONG   Length,
+    IN  ulong_t   Length,
     IN  FILE_INFORMATION_CLASS   FileInformationClass
 );
 
@@ -557,7 +557,7 @@ XBSYSAPI EXPORTNUM(232) void_t NTAPI NtUserIoApcDispatcher
 (
     PVOID            ApcContext,
     PIO_STATUS_BLOCK IoStatusBlock,
-    ULONG            Reserved
+    ulong_t            Reserved
 );
 
 // ******************************************************************
@@ -592,7 +592,7 @@ XBSYSAPI EXPORTNUM(234) NTSTATUS NTAPI NtWaitForSingleObjectEx
 // ******************************************************************
 XBSYSAPI EXPORTNUM(235) NTSTATUS NTAPI NtWaitForMultipleObjectsEx
 (
-    IN  ULONG           Count,
+    IN  ulong_t           Count,
     IN  HANDLE         *Handles,
     IN  WAIT_TYPE       WaitType,
     IN  char_t          WaitMode,
@@ -615,7 +615,7 @@ XBSYSAPI EXPORTNUM(236) NTSTATUS NTAPI NtWriteFile
 	IN  PVOID           ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN  PVOID           Buffer,
-	IN  ULONG           Length,
+	IN  ulong_t           Length,
 	IN  PLARGE_INTEGER  ByteOffset OPTIONAL
 );
 
@@ -630,7 +630,7 @@ XBSYSAPI EXPORTNUM(237) NTSTATUS NTAPI NtWriteFileGather
 	IN PVOID ApcContext OPTIONAL,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN PFILE_SEGMENT_ELEMENT SegmentArray,
-	IN ULONG Length,
+	IN ulong_t Length,
 	IN PLARGE_INTEGER ByteOffset OPTIONAL
 );
 

@@ -36,10 +36,10 @@ XBSYSAPI EXPORTNUM(38) void_t FASTCALL HalClearSoftwareInterrupt
 // ******************************************************************
 XBSYSAPI EXPORTNUM(39) void_t NTAPI HalDisableSystemInterrupt
 (
-	IN ULONG BusInterruptLevel
+	IN ulong_t BusInterruptLevel
 );
 
-XBSYSAPI EXPORTNUM(40) ULONG HalDiskCachePartitionCount;
+XBSYSAPI EXPORTNUM(40) ulong_t HalDiskCachePartitionCount;
 XBSYSAPI EXPORTNUM(41) PANSI_STRING HalDiskModelNumber;
 XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
 
@@ -48,16 +48,16 @@ XBSYSAPI EXPORTNUM(42) PANSI_STRING HalDiskSerialNumber;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(43) void_t NTAPI HalEnableSystemInterrupt
 (
-	IN ULONG BusInterruptLevel,
+	IN ulong_t BusInterruptLevel,
 	IN KINTERRUPT_MODE InterruptMode
 );
 
 // ******************************************************************
 // * HalGetInterruptVector
 // ******************************************************************
-XBSYSAPI EXPORTNUM(44) ULONG  NTAPI HalGetInterruptVector
+XBSYSAPI EXPORTNUM(44) ulong_t  NTAPI HalGetInterruptVector
 (
-    IN ULONG   BusInterruptLevel,
+    IN ulong_t   BusInterruptLevel,
     OUT PKIRQL Irql
 );
 
@@ -77,11 +77,11 @@ XBSYSAPI EXPORTNUM(45) NTSTATUS NTAPI HalReadSMBusValue
 // ******************************************************************
 XBSYSAPI EXPORTNUM(46) void_t NTAPI HalReadWritePCISpace
 (
-  IN ULONG   BusNumber,
-  IN ULONG   SlotNumber,
-  IN ULONG   RegisterNumber,
+  IN ulong_t   BusNumber,
+  IN ulong_t   SlotNumber,
+  IN ulong_t   RegisterNumber,
   IN PVOID   Buffer,
-  IN ULONG   Length,
+  IN ulong_t   Length,
   IN boolean_t WritePCISpace
 );
 
@@ -125,7 +125,7 @@ XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
     uchar_t   Address,
     uchar_t   Command,
     boolean_t WriteWord,
-    ULONG   DataValue
+    ulong_t   DataValue
 );
 
 // ******************************************************************
@@ -135,7 +135,7 @@ XBSYSAPI EXPORTNUM(329) void_t NTAPI READ_PORT_BUFFER_UCHAR
 (
     IN PUCHAR Port,
     IN PUCHAR Buffer,
-    IN ULONG  Count
+    IN ulong_t  Count
 );
 
 // ******************************************************************
@@ -145,7 +145,7 @@ XBSYSAPI EXPORTNUM(330) void_t NTAPI READ_PORT_BUFFER_USHORT
 (
     IN PUSHORT Port,
     IN PUSHORT Buffer,
-    IN ULONG   Count
+    IN ulong_t   Count
 );
 
 // ******************************************************************
@@ -155,7 +155,7 @@ XBSYSAPI EXPORTNUM(331) void_t NTAPI READ_PORT_BUFFER_ULONG
 (
     IN PULONG Port,
     IN PULONG Buffer,
-    IN ULONG  Count
+    IN ulong_t  Count
 );
 
 // ******************************************************************
@@ -165,7 +165,7 @@ XBSYSAPI EXPORTNUM(332) void_t NTAPI WRITE_PORT_BUFFER_UCHAR
 (
     IN PUCHAR Port,
     IN PUCHAR Buffer,
-    IN ULONG  Count
+    IN ulong_t  Count
 );
 
 // ******************************************************************
@@ -175,7 +175,7 @@ XBSYSAPI EXPORTNUM(333) void_t NTAPI WRITE_PORT_BUFFER_USHORT
 (
     IN PUSHORT Port,
     IN PUSHORT Buffer,
-    IN ULONG   Count
+    IN ulong_t   Count
 );
 
 // ******************************************************************
@@ -185,7 +185,7 @@ XBSYSAPI EXPORTNUM(334) void_t NTAPI WRITE_PORT_BUFFER_ULONG
 (
     IN PULONG Port,
     IN PULONG Buffer,
-    IN ULONG  Count
+    IN ulong_t  Count
 );
 
 // ******************************************************************

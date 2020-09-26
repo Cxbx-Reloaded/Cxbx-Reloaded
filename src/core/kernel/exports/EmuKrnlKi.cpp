@@ -88,7 +88,7 @@ the said software).
 
 #define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired > 0)
 
-const xbox::ULONG CLOCK_TIME_INCREMENT = 0x2710;
+const xbox::ulong_t CLOCK_TIME_INCREMENT = 0x2710;
 xbox::KDPC KiTimerExpireDpc;
 xbox::KI_TIMER_LOCK KiTimerMtx;
 xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
@@ -220,7 +220,7 @@ xbox::void_t NTAPI xbox::KiCheckTimerTable
 xbox::void_t xbox::KxInsertTimer
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ULONG Hand
+	IN xbox::ulong_t Hand
 )
 {
 	ASSERT_TIMER_LOCKED;
@@ -236,7 +236,7 @@ xbox::void_t xbox::KxInsertTimer
 xbox::void_t FASTCALL xbox::KiCompleteTimer
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ULONG Hand
+	IN xbox::ulong_t Hand
 )
 {
 	LIST_ENTRY ListHead;
@@ -267,7 +267,7 @@ xbox::void_t FASTCALL xbox::KiCompleteTimer
 xbox::void_t xbox::KiRemoveEntryTimer
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ULONG Hand
+	IN xbox::ulong_t Hand
 )
 {
 	PKTIMER_TABLE_ENTRY TableEntry;
@@ -320,7 +320,7 @@ xbox::void_t xbox::KxRemoveTreeTimer
 xbox::boolean_t FASTCALL xbox::KiInsertTimerTable
 (
 	IN xbox::PKTIMER Timer,
-	IN xbox::ULONG Hand
+	IN xbox::ulong_t Hand
 )
 {
 	LARGE_INTEGER InterruptTime;
@@ -386,7 +386,7 @@ xbox::boolean_t FASTCALL xbox::KiInsertTreeTimer
 	ASSERT_TIMER_LOCKED;
 
 	/* Setup the timer's due time */
-	if (KiComputeDueTime(Timer, Interval, &Hand))
+	if (KiComputeDueTime(Timer, Interval, (PULONG)&Hand))
 	{
 		/* Insert the timer */
 		if (KiInsertTimerTable(Timer, Hand))
@@ -405,7 +405,7 @@ xbox::boolean_t FASTCALL xbox::KiInsertTreeTimer
 	return Inserted;
 }
 
-xbox::ULONG xbox::KiComputeTimerTableIndex
+xbox::ulong_t xbox::KiComputeTimerTableIndex
 (
 	IN xbox::ULONGLONG Interval
 )

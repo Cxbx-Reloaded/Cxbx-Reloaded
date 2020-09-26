@@ -67,19 +67,19 @@ namespace xbox
 	xbox::void_t KxInsertTimer
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_t Hand
 	);
 
 	xbox::void_t FASTCALL KiCompleteTimer
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_t Hand
 	);
 
 	xbox::void_t KiRemoveEntryTimer
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_t Hand
 	);
 
 	xbox::void_t KxRemoveTreeTimer
@@ -90,7 +90,7 @@ namespace xbox
 	boolean_t FASTCALL KiInsertTimerTable
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_t Hand
 	);
 
 	boolean_t FASTCALL KiInsertTreeTimer
@@ -99,7 +99,7 @@ namespace xbox
 		IN LARGE_INTEGER Interval
 	);
 
-	ULONG KiComputeTimerTableIndex
+	xbox::ulong_t KiComputeTimerTableIndex
 	(
 		IN ULONGLONG Interval
 	);
@@ -136,7 +136,7 @@ namespace xbox
 	);
 };
 
-extern const xbox::ULONG CLOCK_TIME_INCREMENT;
+extern const xbox::ulong_t CLOCK_TIME_INCREMENT;
 extern xbox::LIST_ENTRY KiWaitInListHead;
 extern xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 extern xbox::KI_TIMER_LOCK KiTimerMtx;

@@ -617,8 +617,8 @@ XBSYSAPI EXPORTNUM(369) xbox::NTSTATUS NTAPI xbox::UnknownAPI369
 // ******************************************************************
 XBSYSAPI EXPORTNUM(370) xbox::NTSTATUS NTAPI xbox::XProfpControl // PROFILING
 (
-	ULONG Action,
-	ULONG Param
+	ulong_t Action,
+	ulong_t Param
 )
 {
 	LOG_FUNC_BEGIN

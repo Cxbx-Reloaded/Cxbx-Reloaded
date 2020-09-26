@@ -48,7 +48,7 @@ xbox::long_t g_FscNumberOfCachePages = 16; // 16 = default number of file system
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(35) xbox::ULONG NTAPI xbox::FscGetCacheSize()
+XBSYSAPI EXPORTNUM(35) xbox::ulong_t NTAPI xbox::FscGetCacheSize()
 {
 	LOG_FUNC();
 
@@ -77,7 +77,7 @@ xbox::void_t xbox::InitializeFscCacheEvent()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(37) xbox::NTSTATUS NTAPI xbox::FscSetCacheSize
 (
-	ULONG NumberOfCachePages
+	ulong_t NumberOfCachePages
 )
 {
 	LOG_FUNC_ONE_ARG(NumberOfCachePages);

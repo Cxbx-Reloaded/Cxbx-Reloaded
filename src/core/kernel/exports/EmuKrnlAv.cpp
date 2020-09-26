@@ -49,22 +49,22 @@ namespace NtDll
 
 
 // HW Register helper functions
-xbox::uchar_t REG_RD08(void* Ptr, xbox::ULONG Addr)
+xbox::uchar_t REG_RD08(void* Ptr, xbox::ulong_t Addr)
 {
 	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
 }
 
-void REG_WR08(void* Ptr, xbox::ULONG Addr, xbox::uchar_t Val)
+void REG_WR08(void* Ptr, xbox::ulong_t Addr, xbox::uchar_t Val)
 {
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
 }
 
-xbox::ULONG REG_RD32(void* Ptr, xbox::ULONG Addr)
+xbox::ulong_t REG_RD32(void* Ptr, xbox::ulong_t Addr)
 {
 	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint32_t));
 }
 
-void REG_WR32(void* Ptr, xbox::ULONG Addr, xbox::ULONG Val)
+void REG_WR32(void* Ptr, xbox::ulong_t Addr, xbox::ulong_t Val)
 {
 	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
 }
@@ -177,9 +177,9 @@ XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 XBSYSAPI EXPORTNUM(2) xbox::void_t NTAPI xbox::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
-	IN  ULONG   Option,
-	IN  ULONG   Param,
-	OUT ULONG   *Result
+	IN  ulong_t   Option,
+	IN  ulong_t   Param,
+	OUT ulong_t   *Result
 )
 {
 	LOG_FUNC_BEGIN;
@@ -253,14 +253,14 @@ XBSYSAPI EXPORTNUM(2) xbox::void_t NTAPI xbox::AvSendTVEncoderOption
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
+XBSYSAPI EXPORTNUM(3) xbox::ulong_t NTAPI xbox::AvSetDisplayMode
 (
 	IN  PVOID   RegisterBase,
-	IN  ULONG   Step,
-	IN  ULONG   Mode,
-	IN  ULONG   Format,
-	IN  ULONG   Pitch,
-	IN  ULONG   FrameBuffer
+	IN  ulong_t   Step,
+	IN  ulong_t   Mode,
+	IN  ulong_t   Format,
+	IN  ulong_t   Pitch,
+	IN  ulong_t   FrameBuffer
 )
 {
 	LOG_FUNC_BEGIN;
