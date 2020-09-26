@@ -38,8 +38,8 @@ XBSYSAPI EXPORTNUM(165) PVOID NTAPI MmAllocateContiguousMemory
 XBSYSAPI EXPORTNUM(166) PVOID NTAPI MmAllocateContiguousMemoryEx
 (
     IN ulong_t            NumberOfBytes,
-    IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-    IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+    IN physical_address_t LowestAcceptableAddress,
+    IN physical_address_t HighestAcceptableAddress,
     IN ulong_t            Alignment OPTIONAL,
     IN ulong_t            ProtectionType
 );
@@ -58,8 +58,8 @@ XBSYSAPI EXPORTNUM(167) PVOID NTAPI MmAllocateSystemMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(168) PVOID NTAPI MmClaimGpuInstanceMemory
 (
-	IN SIZE_T NumberOfBytes,
-	OUT SIZE_T *NumberOfPaddingBytes
+	IN size_t NumberOfBytes,
+	OUT size_t *NumberOfPaddingBytes
 );
 
 // ******************************************************************
@@ -100,7 +100,7 @@ XBSYSAPI EXPORTNUM(172) ulong_t NTAPI MmFreeSystemMemory
 // ******************************************************************
 // * MmGetPhysicalAddress
 // ******************************************************************
-XBSYSAPI EXPORTNUM(173) PHYSICAL_ADDRESS NTAPI MmGetPhysicalAddress
+XBSYSAPI EXPORTNUM(173) physical_address_t NTAPI MmGetPhysicalAddress
 (
     IN PVOID   BaseAddress
 );
@@ -119,7 +119,7 @@ XBSYSAPI EXPORTNUM(174) boolean_t NTAPI MmIsAddressValid
 XBSYSAPI EXPORTNUM(175) void_t NTAPI MmLockUnlockBufferPages
 (
     IN PVOID             BaseAddress,
-    IN SIZE_T            NumberOfBytes,
+    IN size_t            NumberOfBytes,
     IN boolean_t           UnlockPages
 );
 
@@ -137,7 +137,7 @@ XBSYSAPI EXPORTNUM(176) void_t NTAPI MmLockUnlockPhysicalPage
 // ******************************************************************
 XBSYSAPI EXPORTNUM(177) PVOID NTAPI MmMapIoSpace
 (
-    IN PHYSICAL_ADDRESS PhysicalAddress,
+    IN physical_address_t PhysicalAddress,
     IN ulong_t            NumberOfBytes,
     IN ulong_t            ProtectionType
 );

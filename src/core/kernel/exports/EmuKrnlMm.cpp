@@ -84,8 +84,8 @@ XBSYSAPI EXPORTNUM(165) xbox::PVOID NTAPI xbox::MmAllocateContiguousMemory
 XBSYSAPI EXPORTNUM(166) xbox::PVOID NTAPI xbox::MmAllocateContiguousMemoryEx
 (
 	IN ulong_t            NumberOfBytes,
-	IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-	IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+	IN physical_address_t LowestAcceptableAddress,
+	IN physical_address_t HighestAcceptableAddress,
 	IN ulong_t            Alignment OPTIONAL,
 	IN ulong_t            ProtectionType
 )
@@ -127,8 +127,8 @@ XBSYSAPI EXPORTNUM(167) xbox::PVOID NTAPI xbox::MmAllocateSystemMemory
 // ******************************************************************
 XBSYSAPI EXPORTNUM(168) xbox::PVOID NTAPI xbox::MmClaimGpuInstanceMemory
 (
-	IN SIZE_T NumberOfBytes,
-	OUT SIZE_T *NumberOfPaddingBytes
+	IN size_t NumberOfBytes,
+	OUT size_t *NumberOfPaddingBytes
 )
 {
 	LOG_FUNC_BEGIN
@@ -233,7 +233,7 @@ XBSYSAPI EXPORTNUM(172) xbox::ulong_t NTAPI xbox::MmFreeSystemMemory
 // Translates a virtual address into a physical address.
 //
 // Differences from NT: PhysicalAddress is 32 bit, not 64.
-XBSYSAPI EXPORTNUM(173) xbox::PHYSICAL_ADDRESS NTAPI xbox::MmGetPhysicalAddress
+XBSYSAPI EXPORTNUM(173) xbox::physical_address_t NTAPI xbox::MmGetPhysicalAddress
 (
 	IN PVOID   BaseAddress
 )
@@ -271,7 +271,7 @@ XBSYSAPI EXPORTNUM(174) xbox::boolean_t NTAPI xbox::MmIsAddressValid
 XBSYSAPI EXPORTNUM(175) xbox::void_t NTAPI xbox::MmLockUnlockBufferPages
 (
 	IN PVOID	        BaseAddress,
-	IN SIZE_T			NumberOfBytes,
+	IN size_t			NumberOfBytes,
 	IN boolean_t			UnlockPages
 )
 {
@@ -318,7 +318,7 @@ XBSYSAPI EXPORTNUM(176) xbox::void_t NTAPI xbox::MmLockUnlockPhysicalPage
 //     want...
 XBSYSAPI EXPORTNUM(177) xbox::PVOID NTAPI xbox::MmMapIoSpace
 (
-	IN PHYSICAL_ADDRESS PhysicalAddress,
+	IN physical_address_t PhysicalAddress,
 	IN ulong_t            NumberOfBytes,
 	IN ulong_t            ProtectionType
 )

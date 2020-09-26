@@ -1791,7 +1791,7 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 	xbox::XBOX_EEPROM Eeprom;
 	ULONG ResultSize;
 
-	xbox::NTSTATUS status = xbox::ExQueryNonVolatileSetting(xbox::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), &ResultSize);
+	xbox::NTSTATUS status = xbox::ExQueryNonVolatileSetting(xbox::XC_MAX_ALL, &Type, &Eeprom, sizeof(Eeprom), (xbox::PSIZE_T)&ResultSize);
 
 	if (status == STATUS_SUCCESS)
 	{

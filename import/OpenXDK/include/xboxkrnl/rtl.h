@@ -95,20 +95,20 @@ XBSYSAPI EXPORTNUM(267) NTSTATUS NTAPI RtlCharToInteger
 // * compare block of memory, return number of equivalent bytes.
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(268) SIZE_T NTAPI RtlCompareMemory
+XBSYSAPI EXPORTNUM(268) size_t NTAPI RtlCompareMemory
 (
   IN CONST void_t *Source1,
   IN CONST void_t *Source2,
-  IN SIZE_T      Length
+  IN size_t      Length
 );
 
 // ******************************************************************
 // * 0x010D - RtlCompareMemoryUlong()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(269) SIZE_T NTAPI RtlCompareMemoryUlong
+XBSYSAPI EXPORTNUM(269) size_t NTAPI RtlCompareMemoryUlong
 (
 	IN PVOID Source,
-	IN SIZE_T Length,
+	IN size_t Length,
 	IN ulong_t Pattern
 );
 
@@ -262,7 +262,7 @@ XBSYSAPI EXPORTNUM(284) void_t NTAPI RtlFillMemory
 XBSYSAPI EXPORTNUM(285) void_t NTAPI RtlFillMemoryUlong
 (
 	IN PVOID Destination,
-	IN SIZE_T Length,
+	IN size_t Length,
 	IN ulong_t Pattern
 );
 
@@ -381,7 +381,7 @@ XBSYSAPI EXPORTNUM(298) void_t NTAPI RtlMoveMemory
 (
   IN void_t UNALIGNED       *Destination,
   IN CONST void_t UNALIGNED *Source,
-  IN SIZE_T                Length
+  IN size_t                Length
 );
 
 // ******************************************************************
@@ -592,7 +592,7 @@ XBSYSAPI EXPORTNUM(319) ulong_t NTAPI RtlWalkFrameChain
 XBSYSAPI EXPORTNUM(320) void_t NTAPI RtlZeroMemory
 (
   IN void_t UNALIGNED  *Destination,
-  IN SIZE_T           Length
+  IN size_t           Length
 );
 
 // ******************************************************************

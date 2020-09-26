@@ -36,7 +36,7 @@ XBSYSAPI EXPORTNUM(13) void_t NTAPI ExAcquireReadWriteLockShared
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 (
-    IN SIZE_T NumberOfBytes
+    IN size_t NumberOfBytes
 );
 
 // ******************************************************************
@@ -48,7 +48,7 @@ XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(15) PVOID NTAPI ExAllocatePoolWithTag
 (
-    IN SIZE_T NumberOfBytes,
+    IN size_t NumberOfBytes,
     IN ulong_t Tag
 );
 
@@ -115,7 +115,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 	IN  dword_t               ValueIndex,
 	OUT dword_t              *Type,
 	OUT PVOID               Value,
-	IN  SIZE_T              ValueLength,
+	IN  size_t              ValueLength,
 	OUT PSIZE_T             ResultLength OPTIONAL
 );
 
@@ -152,7 +152,7 @@ XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
 	IN  dword_t               ValueIndex,
 	IN  dword_t               Type,
 	IN  PVOID               Value,
-	IN  SIZE_T              ValueLength
+	IN  size_t              ValueLength
 );
 
 XBSYSAPI EXPORTNUM(30) OBJECT_TYPE ExSemaphoreObjectType;

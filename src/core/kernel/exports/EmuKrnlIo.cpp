@@ -154,7 +154,7 @@ XBSYSAPI EXPORTNUM(62) xbox::PVOID NTAPI xbox::IoBuildSynchronousFsdRequest
 // ******************************************************************
 XBSYSAPI EXPORTNUM(63) xbox::NTSTATUS NTAPI xbox::IoCheckShareAccess
 (
-	IN ACCESS_MASK DesiredAccess,
+	IN access_mask_t DesiredAccess,
 	IN ulong_t DesiredShareAccess,
 	OUT PFILE_OBJECT FileObject,
 	OUT PSHARE_ACCESS ShareAccess,
@@ -221,7 +221,7 @@ XBSYSAPI EXPORTNUM(65) xbox::NTSTATUS NTAPI xbox::IoCreateDevice
 XBSYSAPI EXPORTNUM(66) xbox::NTSTATUS NTAPI xbox::IoCreateFile
 (
 	OUT PHANDLE             FileHandle,
-	IN  ACCESS_MASK         DesiredAccess,
+	IN  access_mask_t         DesiredAccess,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
 	IN  PLARGE_INTEGER      AllocationSize OPTIONAL,

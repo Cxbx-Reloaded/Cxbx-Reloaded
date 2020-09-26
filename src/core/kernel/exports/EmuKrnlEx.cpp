@@ -205,7 +205,7 @@ XBSYSAPI EXPORTNUM(13) xbox::void_t NTAPI xbox::ExAcquireReadWriteLockShared
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 (
-	IN SIZE_T NumberOfBytes
+	IN size_t NumberOfBytes
 )
 {
 	LOG_FORWARD("ExAllocatePoolWithTag");
@@ -221,7 +221,7 @@ XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(15) xbox::PVOID NTAPI xbox::ExAllocatePoolWithTag
 (
-	IN SIZE_T NumberOfBytes,
+	IN size_t NumberOfBytes,
 	IN ulong_t Tag
 )
 {
@@ -398,7 +398,7 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 	IN  dword_t   ValueIndex,
 	OUT dword_t   *Type,
 	OUT PVOID   Value,
-	IN  SIZE_T  ValueLength,
+	IN  size_t  ValueLength,
 	OUT PSIZE_T ResultLength OPTIONAL
 )
 {
@@ -625,7 +625,7 @@ XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 	IN  dword_t			   ValueIndex,
 	IN  dword_t			   Type,
 	IN  PVOID			   Value,
-	IN  SIZE_T			   ValueLength
+	IN  size_t			   ValueLength
 )
 {
 	LOG_FUNC_BEGIN

@@ -395,11 +395,11 @@ XBSYSAPI EXPORTNUM(267) xbox::NTSTATUS NTAPI xbox::RtlCharToInteger
 // ******************************************************************
 // * compare block of memory, return number of equivalent bytes.
 // ******************************************************************
-XBSYSAPI EXPORTNUM(268) xbox::SIZE_T NTAPI xbox::RtlCompareMemory
+XBSYSAPI EXPORTNUM(268) xbox::size_t NTAPI xbox::RtlCompareMemory
 (
 	IN CONST void_t *Source1,
 	IN CONST void_t *Source2,
-	IN SIZE_T      Length
+	IN size_t      Length
 )
 {
 	LOG_FUNC_BEGIN
@@ -425,10 +425,10 @@ XBSYSAPI EXPORTNUM(268) xbox::SIZE_T NTAPI xbox::RtlCompareMemory
 // ******************************************************************
 // * 0x010D - RtlCompareMemoryUlong()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(269) xbox::SIZE_T NTAPI xbox::RtlCompareMemoryUlong
+XBSYSAPI EXPORTNUM(269) xbox::size_t NTAPI xbox::RtlCompareMemoryUlong
 (
 	IN PVOID Source,
-	IN SIZE_T Length,
+	IN size_t Length,
 	IN ulong_t Pattern
 )
 {
@@ -984,7 +984,7 @@ XBSYSAPI EXPORTNUM(284) xbox::void_t NTAPI xbox::RtlFillMemory
 XBSYSAPI EXPORTNUM(285) xbox::void_t NTAPI xbox::RtlFillMemoryUlong
 (
 	IN PVOID Destination,
-	IN SIZE_T Length,
+	IN size_t Length,
 	IN ulong_t Pattern
 )
 {
@@ -1317,7 +1317,7 @@ XBSYSAPI EXPORTNUM(298) xbox::void_t NTAPI xbox::RtlMoveMemory
 (
 	IN void_t UNALIGNED       *Destination,
 	IN CONST void_t UNALIGNED *Source,
-	IN SIZE_T                Length
+	IN size_t                Length
 )
 {
 	LOG_FUNC_BEGIN
@@ -2103,7 +2103,7 @@ XBSYSAPI EXPORTNUM(319) xbox::ulong_t NTAPI xbox::RtlWalkFrameChain
 XBSYSAPI EXPORTNUM(320) xbox::void_t NTAPI xbox::RtlZeroMemory
 (
 	IN void_t UNALIGNED  *Destination,
-	IN SIZE_T           Length
+	IN size_t           Length
 )
 {
 	LOG_FUNC_BEGIN

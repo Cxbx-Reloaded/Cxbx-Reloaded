@@ -1692,7 +1692,7 @@ xbox::hresult_t WINAPI EMUPATCH(D3DDevice_SetDepthClipPlanes)
 // ******************************************************************
 PVOID WINAPI EMUPATCH(D3D_AllocContiguousMemory)
 (
-    SIZE_T dwSize,
+    size_t dwSize,
     dword_t dwAllocAttributes
 );
 #endif

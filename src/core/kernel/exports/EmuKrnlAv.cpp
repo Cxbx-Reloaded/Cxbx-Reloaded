@@ -135,7 +135,7 @@ ULONG AvQueryAvCapabilities()
 		(xbox::dword_t *)&type,
 		&avRegion,
 		sizeof(ULONG),
-		&resultSize);
+		(xbox::PSIZE_T)&resultSize);
 
 	// If this failed, default to AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
 	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {
@@ -149,7 +149,7 @@ ULONG AvQueryAvCapabilities()
 		(xbox::dword_t *) &type,
 		&userSettings,
 		sizeof(ULONG),
-		&resultSize);
+		(xbox::PSIZE_T)&resultSize);
 
 	// If this failed, default to no user-options set
 	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {

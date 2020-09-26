@@ -73,7 +73,7 @@ XBSYSAPI EXPORTNUM(62) PVOID NTAPI IoBuildSynchronousFsdRequest
 // ******************************************************************
 XBSYSAPI EXPORTNUM(63) NTSTATUS NTAPI IoCheckShareAccess
 (
-	IN ACCESS_MASK DesiredAccess,
+	IN access_mask_t DesiredAccess,
 	IN ulong_t DesiredShareAccess,
 	OUT PFILE_OBJECT FileObject,
 	OUT PSHARE_ACCESS ShareAccess,
@@ -104,7 +104,7 @@ XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI IoCreateFile
 (
     OUT PHANDLE             FileHandle,
-    IN  ACCESS_MASK         DesiredAccess,
+    IN  access_mask_t         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  PLARGE_INTEGER      AllocationSize,

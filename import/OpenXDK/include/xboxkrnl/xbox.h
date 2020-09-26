@@ -498,7 +498,7 @@ XBSYSAPI EXPORTNUM(357) IDE_CHANNEL_OBJECT IdexChannelObject;
 XBSYSAPI EXPORTNUM(361) INT CDECL RtlSnprintf
 (
 	IN PCHAR string,
-	IN SIZE_T count,
+	IN size_t count,
 	IN LPCCH format,
 	...
 );
@@ -519,7 +519,7 @@ XBSYSAPI EXPORTNUM(362) INT CDECL RtlSprintf
 XBSYSAPI EXPORTNUM(363) INT CDECL RtlVsnprintf
 (
 	IN PCHAR string,
-	IN SIZE_T count,
+	IN size_t count,
 	IN LPCCH format,
 	...
 );

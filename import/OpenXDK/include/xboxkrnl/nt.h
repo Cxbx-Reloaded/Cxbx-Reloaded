@@ -91,7 +91,7 @@ XBSYSAPI EXPORTNUM(189) NTSTATUS NTAPI NtCreateEvent
 XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI NtCreateFile
 (
     OUT PHANDLE             FileHandle,
-    IN  ACCESS_MASK         DesiredAccess,
+    IN  access_mask_t         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
@@ -104,7 +104,7 @@ XBSYSAPI EXPORTNUM(190) NTSTATUS NTAPI NtCreateFile
 XBSYSAPI EXPORTNUM(191) NTSTATUS NTAPI NtCreateIoCompletion
 (
 	OUT PHANDLE IoCompletionHandle,
-	IN ACCESS_MASK DesiredAccess,
+	IN access_mask_t DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN ulong_t Count
 );
@@ -223,7 +223,7 @@ XBSYSAPI EXPORTNUM(201) NTSTATUS NTAPI NtOpenDirectoryObject
 XBSYSAPI EXPORTNUM(202) NTSTATUS NTAPI NtOpenFile
 (
     OUT PHANDLE             FileHandle,
-    IN  ACCESS_MASK         DesiredAccess,
+    IN  access_mask_t         DesiredAccess,
     IN  POBJECT_ATTRIBUTES  ObjectAttributes,
     OUT PIO_STATUS_BLOCK    IoStatusBlock,
     IN  ulong_t               ShareAccess,

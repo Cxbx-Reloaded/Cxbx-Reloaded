@@ -301,7 +301,7 @@ XBSYSAPI EXPORTNUM(189) xbox::NTSTATUS NTAPI xbox::NtCreateEvent
 XBSYSAPI EXPORTNUM(190) xbox::NTSTATUS NTAPI xbox::NtCreateFile
 (
 	OUT PHANDLE             FileHandle,
-	IN  ACCESS_MASK         DesiredAccess,
+	IN  access_mask_t         DesiredAccess,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
 	IN  PLARGE_INTEGER      AllocationSize OPTIONAL,
@@ -334,7 +334,7 @@ XBSYSAPI EXPORTNUM(190) xbox::NTSTATUS NTAPI xbox::NtCreateFile
 XBSYSAPI EXPORTNUM(191) xbox::NTSTATUS NTAPI xbox::NtCreateIoCompletion
 (
 	OUT PHANDLE IoCompletionHandle,
-	IN ACCESS_MASK DesiredAccess,
+	IN access_mask_t DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN ulong_t Count
 )
@@ -841,7 +841,7 @@ XBSYSAPI EXPORTNUM(201) xbox::NTSTATUS NTAPI xbox::NtOpenDirectoryObject
 XBSYSAPI EXPORTNUM(202) xbox::NTSTATUS NTAPI xbox::NtOpenFile
 (
 	OUT PHANDLE             FileHandle,
-	IN  ACCESS_MASK         DesiredAccess,
+	IN  access_mask_t         DesiredAccess,
 	IN  POBJECT_ATTRIBUTES  ObjectAttributes,
 	OUT PIO_STATUS_BLOCK    IoStatusBlock,
 	IN  ulong_t               ShareAccess,

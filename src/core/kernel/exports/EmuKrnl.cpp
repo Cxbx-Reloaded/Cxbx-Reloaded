@@ -469,7 +469,7 @@ XBSYSAPI EXPORTNUM(357) xbox::IDE_CHANNEL_OBJECT xbox::IdexChannelObject = { };
 XBSYSAPI EXPORTNUM(361) xbox::INT CDECL xbox::RtlSnprintf
 (
 	IN PCHAR string,
-	IN SIZE_T count,
+	IN size_t count,
 	IN LPCCH format,
 	...
 )
@@ -521,7 +521,7 @@ XBSYSAPI EXPORTNUM(362) xbox::INT CDECL xbox::RtlSprintf
 XBSYSAPI EXPORTNUM(363) xbox::INT CDECL xbox::RtlVsnprintf
 (
 	IN PCHAR string,
-	IN SIZE_T count,
+	IN size_t count,
 	IN LPCCH format,
 	...
 )

@@ -477,10 +477,10 @@ FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;
 // ******************************************************************
 typedef struct _GENERIC_MAPPING
 {
-	ACCESS_MASK GenericRead;
-	ACCESS_MASK GenericWrite;
-	ACCESS_MASK GenericExecute;
-	ACCESS_MASK GenericAll;
+	access_mask_t GenericRead;
+	access_mask_t GenericWrite;
+	access_mask_t GenericExecute;
+	access_mask_t GenericAll;
 }
 GENERIC_MAPPING, *PGENERIC_MAPPING;
 
@@ -499,7 +499,7 @@ OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 // * OBJECT_TYPE
 // ******************************************************************
 typedef PVOID(NTAPI *OB_ALLOCATE_METHOD)(
-	IN SIZE_T NumberOfBytes,
+	IN size_t NumberOfBytes,
 	IN ulong_t Tag
 	);
 
@@ -719,7 +719,7 @@ typedef struct _FILE_EA_INFORMATION {
 // * FILE_ACCESS_INFORMATION
 // ******************************************************************
 typedef struct _FILE_ACCESS_INFORMATION {
-	ACCESS_MASK     AccessFlags;
+	access_mask_t     AccessFlags;
 } FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
 
 // ******************************************************************
@@ -976,7 +976,7 @@ typedef struct _MEMORY_BASIC_INFORMATION
     PVOID   BaseAddress;
     PVOID   AllocationBase;
     dword_t   AllocationProtect;
-    SIZE_T  RegionSize;
+    size_t  RegionSize;
     dword_t   State;
     dword_t   Protect;
     dword_t   Type;
