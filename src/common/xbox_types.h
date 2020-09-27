@@ -27,6 +27,8 @@
 
 #include <cstdint>
 #include <cstddef>
+#include <climits>
+#include <cuchar>
 
 
 namespace xbox
@@ -44,7 +46,7 @@ namespace xbox
 	using void_xt = void;
 	using char_xt = char;
 	using cchar_xt = char;
-	using wchar_xt = wchar_t;
+	using wchar_xt = char16_t;
 	using short_xt = std::int16_t;
 	using cshort_xt = std::int16_t;
 	using long_xt = std::int32_t;
@@ -124,4 +126,10 @@ namespace xbox
 		a.y = b.y;
 		a.z = b.z;
 	}
+
+	// ******************************************************************
+	// Type assertions
+	// ******************************************************************
+	static_assert(CHAR_BIT == 8);
+	static_assert(sizeof(char16_t) == 2);
 }

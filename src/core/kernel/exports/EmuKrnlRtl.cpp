@@ -600,7 +600,7 @@ XBSYSAPI EXPORTNUM(274) xbox::boolean_xt NTAPI xbox::RtlCreateUnicodeString
 
 	BOOLEAN result = TRUE;
 
-	ULONG bufferSize = (wcslen(SourceString) + 1) * sizeof(WCHAR);
+	ULONG bufferSize = (std::u16string(SourceString).length() + 1) * sizeof(WCHAR);
 	DestinationString->Buffer = (USHORT *)ExAllocatePoolWithTag(bufferSize, 'grtS');
 	if (!DestinationString->Buffer) {
 		result = FALSE;
@@ -1102,7 +1102,7 @@ XBSYSAPI EXPORTNUM(290) xbox::void_xt NTAPI xbox::RtlInitUnicodeString
 	DestinationString->Buffer = (USHORT*)SourceString;
 	if (SourceString != NULL) {
 		DestinationString->Buffer = (USHORT*)SourceString;
-		DestinationString->Length = (USHORT)wcslen(SourceString) * 2;
+		DestinationString->Length = (USHORT)std::u16string(SourceString).length() * 2;
 		DestinationString->MaximumLength = DestinationString->Length + 2;
 	}
 	else {
