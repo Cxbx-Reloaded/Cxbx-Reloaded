@@ -95,7 +95,7 @@ xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 	RETURN(TRUE);
 }
 
-xbox::NTSTATUS xbox::ObpReferenceObjectByName(
+xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
 	IN ulong_xt Attributes,
@@ -383,7 +383,7 @@ xbox::void_xt xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, 
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
+XBSYSAPI EXPORTNUM(239) xbox::ntstatus_xt NTAPI xbox::ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -588,7 +588,7 @@ xbox::boolean_xt xbox::ObpLookupElementNameInDirectory(
 // ******************************************************************
 // * 0x00F1 - ObInsertObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
+XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -757,7 +757,7 @@ XBSYSAPI EXPORTNUM(242) xbox::void_xt NTAPI xbox::ObMakeTemporaryObject
 // ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(243) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByName
+XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 (
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN POBJECT_TYPE ObjectType,
@@ -781,7 +781,7 @@ XBSYSAPI EXPORTNUM(243) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByName
 // ******************************************************************
 // * 0x00F4 - ObOpenObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(244) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByPointer
+XBSYSAPI EXPORTNUM(244) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType,
@@ -809,7 +809,7 @@ XBSYSAPI EXPORTNUM(244) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByPointer
 //
 // Differences from NT: There are no DesiredAccess, AccessMode, or
 //     HandleInformation parameters.
-XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
+XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 (
 	IN HANDLE Handle,
 	IN POBJECT_TYPE ObjectType OPTIONAL,
@@ -872,7 +872,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 // ******************************************************************
 // * 0x00F7 - ObReferenceObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(247) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByName
+XBSYSAPI EXPORTNUM(247) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
 	IN ulong_xt Attributes,
@@ -896,7 +896,7 @@ XBSYSAPI EXPORTNUM(247) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByName
 // ******************************************************************
 // * 0x00F8 - ObReferenceObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(248) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByPointer
+XBSYSAPI EXPORTNUM(248) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType

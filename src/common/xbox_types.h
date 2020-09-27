@@ -70,6 +70,7 @@ namespace xbox
 	using quad_xt = std::uint64_t; // 8 byte aligned 8 byte long
 	using bool_xt = std::int32_t;
 	using hresult_xt = long_xt;
+	using ntstatus_xt = long_xt;
 	using float_xt = float;
 	/*! addr is the type of a physical address */
 	using addr_xt = std::uint32_t;

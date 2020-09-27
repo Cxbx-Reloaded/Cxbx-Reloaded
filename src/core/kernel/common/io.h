@@ -71,7 +71,7 @@ XBSYSAPI EXPORTNUM(62) PVOID NTAPI IoBuildSynchronousFsdRequest
 // ******************************************************************
 // * 0x003F - IoCheckShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(63) NTSTATUS NTAPI IoCheckShareAccess
+XBSYSAPI EXPORTNUM(63) ntstatus_xt NTAPI IoCheckShareAccess
 (
 	IN access_mask_xt DesiredAccess,
 	IN ulong_xt DesiredShareAccess,
@@ -88,7 +88,7 @@ XBSYSAPI EXPORTNUM(64) OBJECT_TYPE IoCompletionObjectType;
 // ******************************************************************
 // * 0x0041 - IoCreateDevice()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
+XBSYSAPI EXPORTNUM(65) ntstatus_xt NTAPI IoCreateDevice
 (
 	IN  PDRIVER_OBJECT		DriverObject,
 	IN  ulong_xt				DeviceExtensionSize,
@@ -101,7 +101,7 @@ XBSYSAPI EXPORTNUM(65) NTSTATUS NTAPI IoCreateDevice
 // ******************************************************************
 // * 0x0042 - IoCreateFile()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI IoCreateFile
+XBSYSAPI EXPORTNUM(66) ntstatus_xt NTAPI IoCreateFile
 (
     OUT PHANDLE             FileHandle,
     IN  access_mask_xt         DesiredAccess,
@@ -118,7 +118,7 @@ XBSYSAPI EXPORTNUM(66) NTSTATUS NTAPI IoCreateFile
 // ******************************************************************
 // * 0x0043 - IoCreateSymbolicLink()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(67) NTSTATUS NTAPI IoCreateSymbolicLink
+XBSYSAPI EXPORTNUM(67) ntstatus_xt NTAPI IoCreateSymbolicLink
 (
     IN PSTRING SymbolicLinkName,
     IN PSTRING DeviceName
@@ -135,7 +135,7 @@ XBSYSAPI EXPORTNUM(68) void_xt NTAPI IoDeleteDevice
 // ******************************************************************
 // * 0x0045 - IoDeleteSymbolicLink()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(69) NTSTATUS NTAPI IoDeleteSymbolicLink
+XBSYSAPI EXPORTNUM(69) ntstatus_xt NTAPI IoDeleteSymbolicLink
 (
     IN PSTRING SymbolicLinkName
 );
@@ -171,7 +171,7 @@ XBSYSAPI EXPORTNUM(73) PVOID NTAPI IoInitializeIrp
 // ******************************************************************
 // * 0x004A - IoInvalidDeviceRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoInvalidDeviceRequest
+XBSYSAPI EXPORTNUM(74) ntstatus_xt NTAPI IoInvalidDeviceRequest
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp
@@ -180,7 +180,7 @@ XBSYSAPI EXPORTNUM(74) NTSTATUS NTAPI IoInvalidDeviceRequest
 // ******************************************************************
 // * 0x004B - IoQueryFileInformation()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(75) NTSTATUS NTAPI IoQueryFileInformation
+XBSYSAPI EXPORTNUM(75) ntstatus_xt NTAPI IoQueryFileInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FILE_INFORMATION_CLASS FileInformationClass,
@@ -192,7 +192,7 @@ XBSYSAPI EXPORTNUM(75) NTSTATUS NTAPI IoQueryFileInformation
 // ******************************************************************
 // * 0x004C - IoQueryVolumeInformation()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(76) NTSTATUS NTAPI IoQueryVolumeInformation
+XBSYSAPI EXPORTNUM(76) ntstatus_xt NTAPI IoQueryVolumeInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FS_INFORMATION_CLASS FsInformationClass,
@@ -221,12 +221,12 @@ XBSYSAPI EXPORTNUM(78) void_xt NTAPI IoRemoveShareAccess
 // ******************************************************************
 // * 0x004F - IoSetIoCompletion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(79) NTSTATUS NTAPI IoSetIoCompletion
+XBSYSAPI EXPORTNUM(79) ntstatus_xt NTAPI IoSetIoCompletion
 (
 	IN PKQUEUE IoCompletion,
 	IN PVOID KeyContext,
 	IN PVOID ApcContext,
-	IN NTSTATUS IoStatus,
+	IN ntstatus_xt IoStatus,
 	IN ulong_xt IoStatusInformation
 );
 
@@ -271,7 +271,7 @@ XBSYSAPI EXPORTNUM(83) void_xt NTAPI IoStartPacket
 // ******************************************************************
 // * 0x0054 - IoSynchronousDeviceIoControlRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(84) NTSTATUS NTAPI IoSynchronousDeviceIoControlRequest
+XBSYSAPI EXPORTNUM(84) ntstatus_xt NTAPI IoSynchronousDeviceIoControlRequest
 (
 	IN ulong_xt IoControlCode,
 	IN PDEVICE_OBJECT DeviceObject,
@@ -286,7 +286,7 @@ XBSYSAPI EXPORTNUM(84) NTSTATUS NTAPI IoSynchronousDeviceIoControlRequest
 // ******************************************************************
 // * 0x0055 - IoSynchronousFsdRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(85) NTSTATUS NTAPI IoSynchronousFsdRequest
+XBSYSAPI EXPORTNUM(85) ntstatus_xt NTAPI IoSynchronousFsdRequest
 (
 	IN ulong_xt MajorFunction,
 	IN PDEVICE_OBJECT DeviceObject,
@@ -298,7 +298,7 @@ XBSYSAPI EXPORTNUM(85) NTSTATUS NTAPI IoSynchronousFsdRequest
 // ******************************************************************
 // * 0x0056 - IofCallDriver()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(86) NTSTATUS FASTCALL IofCallDriver
+XBSYSAPI EXPORTNUM(86) ntstatus_xt FASTCALL IofCallDriver
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp
@@ -316,7 +316,7 @@ XBSYSAPI EXPORTNUM(87) void_xt FASTCALL IofCompleteRequest
 // ******************************************************************
 // * 0x005A - IoDismountVolume()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(90) NTSTATUS NTAPI IoDismountVolume
+XBSYSAPI EXPORTNUM(90) ntstatus_xt NTAPI IoDismountVolume
 (
 	IN PDEVICE_OBJECT DeviceObject
 );
@@ -324,7 +324,7 @@ XBSYSAPI EXPORTNUM(90) NTSTATUS NTAPI IoDismountVolume
 // ******************************************************************
 // * 0x005B - IoDismountVolumeByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(91) NTSTATUS NTAPI IoDismountVolumeByName
+XBSYSAPI EXPORTNUM(91) ntstatus_xt NTAPI IoDismountVolumeByName
 (
 	IN PSTRING VolumeName
 );

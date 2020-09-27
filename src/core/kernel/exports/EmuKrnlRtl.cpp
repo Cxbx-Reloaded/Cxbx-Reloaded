@@ -81,7 +81,7 @@ xbox::dword_xt WINAPI RtlAnsiStringToUnicodeSize(const xbox::STRING *str)
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(260) xbox::NTSTATUS NTAPI xbox::RtlAnsiStringToUnicodeString
+XBSYSAPI EXPORTNUM(260) xbox::ntstatus_xt NTAPI xbox::RtlAnsiStringToUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PSTRING         SourceString,
@@ -122,7 +122,7 @@ XBSYSAPI EXPORTNUM(260) xbox::NTSTATUS NTAPI xbox::RtlAnsiStringToUnicodeString
 // ******************************************************************
 // * 0x0105 - RtlAppendStringToString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(261) xbox::NTSTATUS NTAPI xbox::RtlAppendStringToString
+XBSYSAPI EXPORTNUM(261) xbox::ntstatus_xt NTAPI xbox::RtlAppendStringToString
 (
 	IN PSTRING Destination,
 	IN PSTRING Source
@@ -155,7 +155,7 @@ XBSYSAPI EXPORTNUM(261) xbox::NTSTATUS NTAPI xbox::RtlAppendStringToString
 // ******************************************************************
 // * 0x0106 - RtlAppendUnicodeStringToString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(262) xbox::NTSTATUS NTAPI xbox::RtlAppendUnicodeStringToString
+XBSYSAPI EXPORTNUM(262) xbox::ntstatus_xt NTAPI xbox::RtlAppendUnicodeStringToString
 (
 	IN PUNICODE_STRING Destination,
 	IN PUNICODE_STRING Source
@@ -190,7 +190,7 @@ XBSYSAPI EXPORTNUM(262) xbox::NTSTATUS NTAPI xbox::RtlAppendUnicodeStringToStrin
 // ******************************************************************
 // * 0x0107 - RtlAppendUnicodeToString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(263) xbox::NTSTATUS NTAPI xbox::RtlAppendUnicodeToString
+XBSYSAPI EXPORTNUM(263) xbox::ntstatus_xt NTAPI xbox::RtlAppendUnicodeToString
 (
 	IN OUT PUNICODE_STRING Destination,
 	IN LPCWSTR Source
@@ -306,7 +306,7 @@ XBSYSAPI EXPORTNUM(266) xbox::ushort_xt NTAPI xbox::RtlCaptureStackBackTrace
 // ******************************************************************
 // * 0x010B - RtlCharToInteger()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(267) xbox::NTSTATUS NTAPI xbox::RtlCharToInteger
+XBSYSAPI EXPORTNUM(267) xbox::ntstatus_xt NTAPI xbox::RtlCharToInteger
 (
 	IN     PCSZ   String,
 	IN     ulong_xt  Base OPTIONAL,
@@ -632,7 +632,7 @@ XBSYSAPI EXPORTNUM(275) xbox::wchar_xt NTAPI xbox::RtlDowncaseUnicodeChar
 // ******************************************************************
 // * 0x0114 - RtlDowncaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(276) xbox::NTSTATUS NTAPI xbox::RtlDowncaseUnicodeString
+XBSYSAPI EXPORTNUM(276) xbox::ntstatus_xt NTAPI xbox::RtlDowncaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString,
@@ -1129,7 +1129,7 @@ XBSYSAPI EXPORTNUM(291) xbox::void_xt NTAPI xbox::RtlInitializeCriticalSection
 // ******************************************************************
 // * 0x0124 - RtlIntegerToChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
+XBSYSAPI EXPORTNUM(292) xbox::ntstatus_xt NTAPI xbox::RtlIntegerToChar
 (
 	IN ulong_xt Value,
 	IN ulong_xt Base,
@@ -1188,7 +1188,7 @@ XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
 // ******************************************************************
 // * 0x0125 - RtlIntegerToUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(293) xbox::NTSTATUS NTAPI xbox::RtlIntegerToUnicodeString
+XBSYSAPI EXPORTNUM(293) xbox::ntstatus_xt NTAPI xbox::RtlIntegerToUnicodeString
 (
 	IN     ulong_xt Value,
 	IN     ulong_xt Base,
@@ -1332,7 +1332,7 @@ XBSYSAPI EXPORTNUM(298) xbox::void_xt NTAPI xbox::RtlMoveMemory
 // ******************************************************************
 // * 0x012B - RtlMultiByteToUnicodeN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(299) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeN
+XBSYSAPI EXPORTNUM(299) xbox::ntstatus_xt NTAPI xbox::RtlMultiByteToUnicodeN
 (
 	IN     PWSTR UnicodeString,
 	IN     ulong_xt MaxBytesInUnicodeString,
@@ -1370,7 +1370,7 @@ XBSYSAPI EXPORTNUM(299) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeN
 // ******************************************************************
 // * 0x012C - RtlMultiByteToUnicodeSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(300) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeSize
+XBSYSAPI EXPORTNUM(300) xbox::ntstatus_xt NTAPI xbox::RtlMultiByteToUnicodeSize
 (
 	IN PULONG BytesInUnicodeString,
 	IN PCHAR MultiByteString,
@@ -1393,7 +1393,7 @@ XBSYSAPI EXPORTNUM(300) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(301) xbox::ulong_xt NTAPI xbox::RtlNtStatusToDosError
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 )
 {
 	LOG_FUNC_ONE_ARG(Status);
@@ -1497,7 +1497,7 @@ XBSYSAPI EXPORTNUM(302) xbox::void_xt NTAPI xbox::RtlRaiseException
 // ******************************************************************
 XBSYSAPI EXPORTNUM(303) xbox::void_xt NTAPI xbox::RtlRaiseStatus
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 )
 {
 	LOG_FUNC_ONE_ARG(Status);
@@ -1688,7 +1688,7 @@ xbox::dword_xt WINAPI RtlUnicodeStringToAnsiSize(const xbox::UNICODE_STRING *str
 // ******************************************************************
 // * 0x0134 - RtlUnicodeStringToAnsiString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(308) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToAnsiString
+XBSYSAPI EXPORTNUM(308) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToAnsiString
 (
 	IN OUT PSTRING         DestinationString,
 	IN     PUNICODE_STRING SourceString,
@@ -1729,7 +1729,7 @@ XBSYSAPI EXPORTNUM(308) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToAnsiString
 // ******************************************************************
 // * 0x0135 - RtlUnicodeStringToInteger()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(309) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToInteger
+XBSYSAPI EXPORTNUM(309) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToInteger
 (
 	IN     PUNICODE_STRING String,
 	IN     ulong_xt Base,
@@ -1828,7 +1828,7 @@ XBSYSAPI EXPORTNUM(309) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToInteger
 // ******************************************************************
 // * 0x0136 - RtlUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(310) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(310) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeToMultiByteN
 (
 	IN PCHAR MultiByteString,
 	IN ulong_xt MaxBytesInMultiByteString,
@@ -1866,7 +1866,7 @@ XBSYSAPI EXPORTNUM(310) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteN
 // ******************************************************************
 // * 0x0137 - RtlUnicodeToMultiByteSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(311) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteSize
+XBSYSAPI EXPORTNUM(311) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeToMultiByteSize
 (
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
@@ -1923,7 +1923,7 @@ XBSYSAPI EXPORTNUM(313) xbox::wchar_xt NTAPI xbox::RtlUpcaseUnicodeChar
 // ******************************************************************
 // * 0x013A - RtlUpcaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(314) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeString
+XBSYSAPI EXPORTNUM(314) xbox::ntstatus_xt NTAPI xbox::RtlUpcaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN  PUNICODE_STRING SourceString,
@@ -1964,7 +1964,7 @@ XBSYSAPI EXPORTNUM(314) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeString
 // ******************************************************************
 // * 0x013B - RtlUpcaseUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(315) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(315) xbox::ntstatus_xt NTAPI xbox::RtlUpcaseUnicodeToMultiByteN
 (
 	IN OUT PCHAR MultiByteString,
 	IN ulong_xt MaxBytesInMultiByteString,

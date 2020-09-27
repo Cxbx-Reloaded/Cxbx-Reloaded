@@ -22,7 +22,7 @@ XBSYSAPI EXPORTNUM(6) void_xt NTAPI DbgBreakPointWithStatus
 (
 	IN ulong_xt Status
 );
-XBSYSAPI EXPORTNUM(7) NTSTATUS NTAPI DbgLoadImageSymbols
+XBSYSAPI EXPORTNUM(7) ntstatus_xt NTAPI DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,

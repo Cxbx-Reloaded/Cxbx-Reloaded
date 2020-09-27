@@ -66,12 +66,7 @@ namespace xbox
 // ******************************************************************
 typedef void* LPSECURITY_ATTRIBUTES;
 
-// ******************************************************************
-// * NTSTATUS
-// ******************************************************************
-typedef long                            NTSTATUS;
-
-inline bool nt_success(NTSTATUS status) { return status >= 0; }
+inline bool nt_success(ntstatus_xt status) { return status >= 0; }
 inline constexpr dword_xt status_success = 0x00000000L;
 inline constexpr dword_xt status_abandoned = 0x00000080L;
 inline constexpr dword_xt status_mutant_limit_exceeded = 0xC0000191L;
@@ -510,7 +505,7 @@ typedef void_xt(NTAPI *OB_DELETE_METHOD)(
 	IN PVOID Object
 	);
 
-typedef NTSTATUS(NTAPI *OB_PARSE_METHOD)(
+typedef ntstatus_xt(NTAPI *OB_PARSE_METHOD)(
 	IN PVOID ParseObject,
 	IN struct _OBJECT_TYPE *ObjectType,
 	IN ulong_xt Attributes,
@@ -924,7 +919,7 @@ typedef struct _IO_STATUS_BLOCK
 {
     union
     {
-        NTSTATUS Status;
+        ntstatus_xt Status;
         PVOID    Pointer;
 	};
 
@@ -1355,7 +1350,7 @@ typedef struct _FILE_OBJECT {
 	PDEVICE_OBJECT            DeviceObject;       // 0x04
 	PVOID                     FsContext;          // 0x08
 	PVOID                     FsContext2;         // 0x0C
-	NTSTATUS                  FinalStatus;        // 0x10
+	ntstatus_xt                  FinalStatus;        // 0x10
 	LARGE_INTEGER             CurrentByteOffset;  // 0x14
 	struct _FILE_OBJECT *     RelatedFileObject;  // 0x1C
 	PIO_COMPLETION_CONTEXT    CompletionContext;  // 0x20

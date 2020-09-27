@@ -386,7 +386,7 @@ XBSYSAPI EXPORTNUM(180) xbox::ulong_xt NTAPI xbox::MmQueryAllocationSize
 // ******************************************************************
 // * 0x00B5 - MmQueryStatistics()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(181) xbox::NTSTATUS NTAPI xbox::MmQueryStatistics
+XBSYSAPI EXPORTNUM(181) xbox::ntstatus_xt NTAPI xbox::MmQueryStatistics
 (
 	OUT PMM_STATISTICS MemoryStatistics
 )

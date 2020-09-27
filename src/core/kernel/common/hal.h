@@ -20,7 +20,7 @@ namespace xbox
 // ******************************************************************
 // * HalReadSMCTrayState
 // ******************************************************************
-XBSYSAPI EXPORTNUM(9) NTSTATUS NTAPI HalReadSMCTrayState
+XBSYSAPI EXPORTNUM(9) ntstatus_xt NTAPI HalReadSMCTrayState
 (
 	dword_xt*	State,
 	dword_xt*	Count
@@ -64,7 +64,7 @@ XBSYSAPI EXPORTNUM(44) ulong_xt  NTAPI HalGetInterruptVector
 // ******************************************************************
 // * HalReadSMBusValue
 // ******************************************************************
-XBSYSAPI EXPORTNUM(45) NTSTATUS NTAPI HalReadSMBusValue
+XBSYSAPI EXPORTNUM(45) ntstatus_xt NTAPI HalReadSMBusValue
 (
     IN uchar_xt   Address,
     IN uchar_xt   Command,
@@ -120,7 +120,7 @@ XBSYSAPI EXPORTNUM(49) void_xt DECLSPEC_NORETURN NTAPI HalReturnToFirmware
 // ******************************************************************
 // * HalWriteSMBusValue
 // ******************************************************************
-XBSYSAPI EXPORTNUM(50) NTSTATUS NTAPI HalWriteSMBusValue
+XBSYSAPI EXPORTNUM(50) ntstatus_xt NTAPI HalWriteSMBusValue
 (
     uchar_xt   Address,
     uchar_xt   Command,
@@ -197,7 +197,7 @@ XBSYSAPI EXPORTNUM(358) boolean_xt NTAPI HalIsResetOrShutdownPending
 (
 );
 
-XBSYSAPI EXPORTNUM(360) NTSTATUS NTAPI HalInitiateShutdown
+XBSYSAPI EXPORTNUM(360) ntstatus_xt NTAPI HalInitiateShutdown
 (
 );
 
@@ -205,7 +205,7 @@ XBSYSAPI EXPORTNUM(365) void_xt NTAPI HalEnableSecureTrayEject
 (
 );
 
-XBSYSAPI EXPORTNUM(366) NTSTATUS NTAPI HalWriteSMCScratchRegister
+XBSYSAPI EXPORTNUM(366) ntstatus_xt NTAPI HalWriteSMCScratchRegister
 (
 	IN dword_xt ScratchRegister
 );

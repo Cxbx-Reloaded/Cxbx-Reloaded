@@ -171,7 +171,7 @@ XBSYSAPI EXPORTNUM(180) ulong_xt NTAPI MmQueryAllocationSize
 // ******************************************************************
 // * MmQueryStatistics
 // ******************************************************************
-XBSYSAPI EXPORTNUM(181) NTSTATUS NTAPI MmQueryStatistics
+XBSYSAPI EXPORTNUM(181) ntstatus_xt NTAPI MmQueryStatistics
 (
     OUT PMM_STATISTICS MemoryStatistics
 );

@@ -130,7 +130,7 @@ XBSYSAPI EXPORTNUM(36) void_xt NTAPI FscInvalidateIdleBlocks();
 // ******************************************************************
 // * 0x0025 - FscSetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(37) NTSTATUS NTAPI FscSetCacheSize
+XBSYSAPI EXPORTNUM(37) ntstatus_xt NTAPI FscSetCacheSize
 (
 		ulong_xt NumberOfCachePages
 );
@@ -195,7 +195,7 @@ XBSYSAPI EXPORTNUM(252) dword_xt NTAPI PhyGetLinkState
 // ******************************************************************
 // * 0x00FD - PhyInitialize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(253) NTSTATUS NTAPI PhyInitialize
+XBSYSAPI EXPORTNUM(253) ntstatus_xt NTAPI PhyInitialize
 (
 	IN ulong_xt	forceReset,
 	IN PVOID	Parameter2
@@ -241,7 +241,7 @@ XBSYSAPI EXPORTNUM(326) OBJECT_STRING XeImageFileName;
 // ******************************************************************
 // * 0x0147 - XeLoadSection()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(327) NTSTATUS NTAPI XeLoadSection
+XBSYSAPI EXPORTNUM(327) ntstatus_xt NTAPI XeLoadSection
 (
 	IN PXBEIMAGE_SECTION Section
 );
@@ -249,7 +249,7 @@ XBSYSAPI EXPORTNUM(327) NTSTATUS NTAPI XeLoadSection
 // ******************************************************************
 // * 0x0148 - XeUnloadSection()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(328) NTSTATUS NTAPI XeUnloadSection
+XBSYSAPI EXPORTNUM(328) ntstatus_xt NTAPI XeUnloadSection
 (
 	IN PXBEIMAGE_SECTION Section
 );
@@ -534,38 +534,38 @@ XBSYSAPI EXPORTNUM(364) int_xt CDECL RtlVsprintf
 	...
 );
 
-XBSYSAPI EXPORTNUM(367) NTSTATUS NTAPI UnknownAPI367
+XBSYSAPI EXPORTNUM(367) ntstatus_xt NTAPI UnknownAPI367
 (
 	// UNKNOWN ARGUMENTS
 );
 
-XBSYSAPI EXPORTNUM(368) NTSTATUS NTAPI UnknownAPI368
+XBSYSAPI EXPORTNUM(368) ntstatus_xt NTAPI UnknownAPI368
 (
 	// UNKNOWN ARGUMENTS
 );
 
-XBSYSAPI EXPORTNUM(369) NTSTATUS NTAPI UnknownAPI369
+XBSYSAPI EXPORTNUM(369) ntstatus_xt NTAPI UnknownAPI369
 (
 	// UNKNOWN ARGUMENTS
 );
 
-XBSYSAPI EXPORTNUM(370) NTSTATUS NTAPI XProfpControl // PROFILING
+XBSYSAPI EXPORTNUM(370) ntstatus_xt NTAPI XProfpControl // PROFILING
 (
 	ulong_xt Action,
 	ulong_xt Param
 );
 
-XBSYSAPI EXPORTNUM(371) NTSTATUS NTAPI XProfpGetData // PROFILING 
+XBSYSAPI EXPORTNUM(371) ntstatus_xt NTAPI XProfpGetData // PROFILING 
 (
 	// NO ARGUMENTS
 );
 
-XBSYSAPI EXPORTNUM(372) NTSTATUS NTAPI IrtClientInitFast // PROFILING
+XBSYSAPI EXPORTNUM(372) ntstatus_xt NTAPI IrtClientInitFast // PROFILING
 (
 	// UNKNOWN ARGUMENTS
 );
 
-XBSYSAPI EXPORTNUM(373) NTSTATUS NTAPI IrtSweep // PROFILING
+XBSYSAPI EXPORTNUM(373) ntstatus_xt NTAPI IrtSweep // PROFILING
 (
 	// UNKNOWN ARGUMENTS
 );

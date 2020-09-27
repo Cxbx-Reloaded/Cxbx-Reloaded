@@ -110,7 +110,7 @@ XBSYSAPI EXPORTNUM(23) ulong_xt NTAPI ExQueryPoolBlockSize
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
+XBSYSAPI EXPORTNUM(24) ntstatus_xt NTAPI ExQueryNonVolatileSetting
 (
 	IN  dword_xt               ValueIndex,
 	OUT dword_xt              *Type,
@@ -122,7 +122,7 @@ XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
 // ******************************************************************
 // * ExReadWriteRefurbInfo
 // ******************************************************************
-XBSYSAPI EXPORTNUM(25) NTSTATUS NTAPI ExReadWriteRefurbInfo
+XBSYSAPI EXPORTNUM(25) ntstatus_xt NTAPI ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
 	IN ulong_xt	dwBufferSize,
@@ -136,7 +136,7 @@ XBSYSAPI EXPORTNUM(26) void_xt NTAPI ExRaiseException
 
 XBSYSAPI EXPORTNUM(27) void_xt NTAPI ExRaiseStatus
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 );
 
 XBSYSAPI EXPORTNUM(28) void_xt NTAPI ExReleaseReadWriteLock
@@ -147,7 +147,7 @@ XBSYSAPI EXPORTNUM(28) void_xt NTAPI ExReleaseReadWriteLock
 // ******************************************************************
 // * 0x001D - ExSaveNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
+XBSYSAPI EXPORTNUM(29) ntstatus_xt NTAPI ExSaveNonVolatileSetting
 (
 	IN  dword_xt               ValueIndex,
 	IN  dword_xt               Type,

@@ -20,7 +20,7 @@ namespace xbox
 // ******************************************************************
 // * RtlAnsiStringToUnicodeString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI RtlAnsiStringToUnicodeString
+XBSYSAPI EXPORTNUM(260) ntstatus_xt NTAPI RtlAnsiStringToUnicodeString
 (
     PUNICODE_STRING DestinationString,
     PSTRING         SourceString,
@@ -30,19 +30,19 @@ XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI RtlAnsiStringToUnicodeString
 // ******************************************************************
 // * RtlAppendStringToString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(261) NTSTATUS NTAPI RtlAppendStringToString
+XBSYSAPI EXPORTNUM(261) ntstatus_xt NTAPI RtlAppendStringToString
 (
   IN OUT PSTRING    Destination,
   IN PSTRING    Source
 );
 
-XBSYSAPI EXPORTNUM(262) NTSTATUS NTAPI RtlAppendUnicodeStringToString
+XBSYSAPI EXPORTNUM(262) ntstatus_xt NTAPI RtlAppendUnicodeStringToString
 (
 	IN OUT PUNICODE_STRING Destination,
 	IN PUNICODE_STRING Source
 );
 
-XBSYSAPI EXPORTNUM(263) NTSTATUS NTAPI RtlAppendUnicodeToString
+XBSYSAPI EXPORTNUM(263) ntstatus_xt NTAPI RtlAppendUnicodeToString
 (
 	IN OUT PUNICODE_STRING Destination,
 	IN LPCWSTR Source
@@ -81,7 +81,7 @@ XBSYSAPI EXPORTNUM(266) ushort_xt NTAPI RtlCaptureStackBackTrace
 // ******************************************************************
 // * RtlCharToInteger
 // ******************************************************************
-XBSYSAPI EXPORTNUM(267) NTSTATUS NTAPI RtlCharToInteger
+XBSYSAPI EXPORTNUM(267) ntstatus_xt NTAPI RtlCharToInteger
 (
 	IN     PCSZ   String,
 	IN     ulong_xt  Base OPTIONAL,
@@ -174,7 +174,7 @@ XBSYSAPI EXPORTNUM(275) wchar_xt NTAPI RtlDowncaseUnicodeChar
 // ******************************************************************
 // * 0x0114 - RtlDowncaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(276) NTSTATUS NTAPI RtlDowncaseUnicodeString
+XBSYSAPI EXPORTNUM(276) ntstatus_xt NTAPI RtlDowncaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString,
@@ -321,7 +321,7 @@ XBSYSAPI EXPORTNUM(291) void_xt NTAPI RtlInitializeCriticalSection
 // ******************************************************************
 // * 0x0124 - RtlIntegerToChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(292) NTSTATUS NTAPI RtlIntegerToChar
+XBSYSAPI EXPORTNUM(292) ntstatus_xt NTAPI RtlIntegerToChar
 (
 	IN ulong_xt Value,
 	IN ulong_xt Base,
@@ -332,7 +332,7 @@ XBSYSAPI EXPORTNUM(292) NTSTATUS NTAPI RtlIntegerToChar
 // ******************************************************************
 // * 0x0125 - RtlIntegerToUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(293) NTSTATUS NTAPI RtlIntegerToUnicodeString
+XBSYSAPI EXPORTNUM(293) ntstatus_xt NTAPI RtlIntegerToUnicodeString
 (
 	IN     ulong_xt Value,
 	IN     ulong_xt Base,
@@ -387,7 +387,7 @@ XBSYSAPI EXPORTNUM(298) void_xt NTAPI RtlMoveMemory
 // ******************************************************************
 // * 0x012B - RtlMultiByteToUnicodeN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(299) NTSTATUS NTAPI RtlMultiByteToUnicodeN
+XBSYSAPI EXPORTNUM(299) ntstatus_xt NTAPI RtlMultiByteToUnicodeN
 (
 	IN     PWSTR UnicodeString,
 	IN     ulong_xt MaxBytesInUnicodeString,
@@ -399,7 +399,7 @@ XBSYSAPI EXPORTNUM(299) NTSTATUS NTAPI RtlMultiByteToUnicodeN
 // ******************************************************************
 // * 0x012C - RtlMultiByteToUnicodeSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(300) NTSTATUS NTAPI RtlMultiByteToUnicodeSize
+XBSYSAPI EXPORTNUM(300) ntstatus_xt NTAPI RtlMultiByteToUnicodeSize
 (
 	IN PULONG BytesInUnicodeString,
 	IN PCHAR MultiByteString,
@@ -411,7 +411,7 @@ XBSYSAPI EXPORTNUM(300) NTSTATUS NTAPI RtlMultiByteToUnicodeSize
 // ******************************************************************
 XBSYSAPI EXPORTNUM(301) ulong_xt NTAPI RtlNtStatusToDosError
 (
-    IN NTSTATUS Status
+    IN ntstatus_xt Status
 );
 
 // ******************************************************************
@@ -427,7 +427,7 @@ XBSYSAPI EXPORTNUM(302) void_xt NTAPI RtlRaiseException
 // ******************************************************************
 XBSYSAPI EXPORTNUM(303) void_xt NTAPI RtlRaiseStatus
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 );
 
 // ******************************************************************
@@ -467,7 +467,7 @@ XBSYSAPI EXPORTNUM(307) ulong_xt FASTCALL RtlUlongByteSwap
 // ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(308) NTSTATUS NTAPI RtlUnicodeStringToAnsiString
+XBSYSAPI EXPORTNUM(308) ntstatus_xt NTAPI RtlUnicodeStringToAnsiString
 (
     IN OUT PSTRING         DestinationString,
     IN     PUNICODE_STRING SourceString,
@@ -477,7 +477,7 @@ XBSYSAPI EXPORTNUM(308) NTSTATUS NTAPI RtlUnicodeStringToAnsiString
 // ******************************************************************
 // * 0x0135 - RtlUnicodeStringToInteger()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(309) NTSTATUS NTAPI RtlUnicodeStringToInteger
+XBSYSAPI EXPORTNUM(309) ntstatus_xt NTAPI RtlUnicodeStringToInteger
 (
 	IN     PUNICODE_STRING String,
 	IN     ulong_xt Base,
@@ -487,7 +487,7 @@ XBSYSAPI EXPORTNUM(309) NTSTATUS NTAPI RtlUnicodeStringToInteger
 // ******************************************************************
 // * 0x0136 - RtlUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(310) NTSTATUS NTAPI RtlUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(310) ntstatus_xt NTAPI RtlUnicodeToMultiByteN
 (
 	IN PCHAR MultiByteString,
 	IN ulong_xt MaxBytesInMultiByteString,
@@ -499,7 +499,7 @@ XBSYSAPI EXPORTNUM(310) NTSTATUS NTAPI RtlUnicodeToMultiByteN
 // ******************************************************************
 // * 0x0137 - RtlUnicodeToMultiByteSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(311) NTSTATUS NTAPI RtlUnicodeToMultiByteSize
+XBSYSAPI EXPORTNUM(311) ntstatus_xt NTAPI RtlUnicodeToMultiByteSize
 (
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
@@ -528,7 +528,7 @@ XBSYSAPI EXPORTNUM(313) wchar_xt NTAPI RtlUpcaseUnicodeChar
 // ******************************************************************
 // * 0x013A - RtlUpcaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(314) NTSTATUS NTAPI RtlUpcaseUnicodeString
+XBSYSAPI EXPORTNUM(314) ntstatus_xt NTAPI RtlUpcaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN  PUNICODE_STRING SourceString,
@@ -538,7 +538,7 @@ XBSYSAPI EXPORTNUM(314) NTSTATUS NTAPI RtlUpcaseUnicodeString
 // ******************************************************************
 // * 0x013B - RtlUpcaseUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(315) NTSTATUS NTAPI RtlUpcaseUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(315) ntstatus_xt NTAPI RtlUpcaseUnicodeToMultiByteN
 (
 	IN OUT PCHAR MultiByteString,
 	IN ulong_xt MaxBytesInMultiByteString,

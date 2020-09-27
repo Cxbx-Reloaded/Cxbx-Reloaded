@@ -78,7 +78,7 @@ static DWORD g_TrayCount = 0;
 // ******************************************************************
 // * 0x0009 - HalReadSMCTrayState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
+XBSYSAPI EXPORTNUM(9) xbox::ntstatus_xt NTAPI xbox::HalReadSMCTrayState
 (
 	dword_xt*	State,
 	dword_xt*	Count
@@ -261,7 +261,7 @@ XBSYSAPI EXPORTNUM(44) xbox::ulong_xt NTAPI xbox::HalGetInterruptVector
 // ******************************************************************
 // * 0x002D - HalReadSMBusValue()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
+XBSYSAPI EXPORTNUM(45) xbox::ntstatus_xt NTAPI xbox::HalReadSMBusValue
 (
 	IN  uchar_xt               Address,
 	IN  uchar_xt               Command,
@@ -651,7 +651,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 // ******************************************************************
 // * 0x0032 - HalWriteSMBusValue()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
+XBSYSAPI EXPORTNUM(50) xbox::ntstatus_xt NTAPI xbox::HalWriteSMBusValue
 (
 	IN  uchar_xt               Address,
 	IN  uchar_xt               Command,
@@ -838,7 +838,7 @@ XBSYSAPI EXPORTNUM(358) xbox::boolean_xt NTAPI xbox::HalIsResetOrShutdownPending
 // * 0x0168 - HalInitiateShutdown()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(360) xbox::NTSTATUS NTAPI xbox::HalInitiateShutdown
+XBSYSAPI EXPORTNUM(360) xbox::ntstatus_xt NTAPI xbox::HalInitiateShutdown
 (
 )
 {
@@ -872,7 +872,7 @@ XBSYSAPI EXPORTNUM(365) xbox::void_xt NTAPI xbox::HalEnableSecureTrayEject
 // * 0x016E - HalWriteSMCScratchRegister()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(366) xbox::NTSTATUS NTAPI xbox::HalWriteSMCScratchRegister
+XBSYSAPI EXPORTNUM(366) xbox::ntstatus_xt NTAPI xbox::HalWriteSMCScratchRegister
 (
 	IN dword_xt ScratchRegister
 )

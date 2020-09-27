@@ -64,7 +64,7 @@ boolean_xt ObpCreatePermanentDirectoryObject(
 	OUT POBJECT_DIRECTORY *DirectoryObject
 );
 
-NTSTATUS ObpReferenceObjectByName(
+ntstatus_xt ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
 	IN ulong_xt Attributes,
@@ -96,7 +96,7 @@ boolean_xt ObpLookupElementNameInDirectory(
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(239) NTSTATUS NTAPI ObCreateObject
+XBSYSAPI EXPORTNUM(239) ntstatus_xt NTAPI ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -112,7 +112,7 @@ XBSYSAPI EXPORTNUM(240) OBJECT_TYPE ObDirectoryObjectType;
 // ******************************************************************
 // * 0x00F1 - ObInsertObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(241) NTSTATUS NTAPI ObInsertObject
+XBSYSAPI EXPORTNUM(241) ntstatus_xt NTAPI ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -131,7 +131,7 @@ XBSYSAPI EXPORTNUM(242) void_xt NTAPI ObMakeTemporaryObject
 // ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName
+XBSYSAPI EXPORTNUM(243) ntstatus_xt NTAPI ObOpenObjectByName
 (
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN POBJECT_TYPE ObjectType,
@@ -142,7 +142,7 @@ XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName
 // ******************************************************************
 // * 0x00F4 - ObOpenObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(244) NTSTATUS NTAPI ObOpenObjectByPointer
+XBSYSAPI EXPORTNUM(244) ntstatus_xt NTAPI ObOpenObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType,
@@ -170,7 +170,7 @@ XBSYSAPI EXPORTNUM(245) OBJECT_HANDLE_TABLE ObpObjectHandleTable;
 // ******************************************************************
 // * 0x00F6 - ObReferenceObjectByHandle()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
+XBSYSAPI EXPORTNUM(246) ntstatus_xt NTAPI ObReferenceObjectByHandle
 (
     IN HANDLE Handle,
     IN POBJECT_TYPE ObjectType OPTIONAL,
@@ -180,7 +180,7 @@ XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
 // ******************************************************************
 // * 0x00F7 - ObReferenceObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
+XBSYSAPI EXPORTNUM(247) ntstatus_xt NTAPI ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
 	IN ulong_xt Attributes,
@@ -192,7 +192,7 @@ XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
 // ******************************************************************
 // * 0x00F8 - ObReferenceObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(248) NTSTATUS NTAPI ObReferenceObjectByPointer
+XBSYSAPI EXPORTNUM(248) ntstatus_xt NTAPI ObReferenceObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType

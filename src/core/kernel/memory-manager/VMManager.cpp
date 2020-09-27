@@ -1372,7 +1372,7 @@ void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, boo
 	Unlock();
 }
 
-xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
+xbox::ntstatus_xt VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1389,7 +1389,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 	PFN_COUNT PteNumber = 0;
 	PFN TempPfn;
 	PageType BusyType;
-	xbox::NTSTATUS status;
+	xbox::ntstatus_xt status;
 	VAddr CapturedBase = *addr;
 	size_t CapturedSize = *Size;
 	VAddr MaxAllowedAddress;
@@ -1631,7 +1631,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 	RETURN(status);
 }
 
-xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType)
+xbox::ntstatus_xt VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1643,7 +1643,7 @@ xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD F
 	size_t CapturedSize = *Size;
 	VAddr AlignedCapturedBase;
 	size_t AlignedCapturedSize;
-	xbox::NTSTATUS status;
+	xbox::ntstatus_xt status;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	PMMPTE StartingPte;
@@ -1789,7 +1789,7 @@ xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD F
 	RETURN(status);
 }
 
-xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
+xbox::ntstatus_xt VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1802,7 +1802,7 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 	size_t CapturedSize = *Size;
 	VAddr AlignedCapturedBase;
 	size_t AlignedCapturedSize;
-	xbox::NTSTATUS status;
+	xbox::ntstatus_xt status;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	PMMPTE StartingPte;
@@ -1907,7 +1907,7 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 	RETURN(status);
 }
 
-xbox::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics)
+xbox::ntstatus_xt VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics)
 {
 	VMAIter it;
 	PMMPTE PointerPte;

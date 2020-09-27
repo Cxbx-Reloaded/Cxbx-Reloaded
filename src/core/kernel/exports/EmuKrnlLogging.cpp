@@ -270,7 +270,7 @@ ENUM2STR_START(MODE)
 ENUM2STR_END_and_LOGRENDER(MODE)
 
 /* TODO : Fix error C2593 "'operator <<' is ambiguous",
-// because often NtDLL::NTSTATUS is used instead of xbox::NTSTATUS
+// because often NtDLL::NTSTATUS is used instead of xbox::ntstatus_xt
 ENUM2STR_START(NTSTATUS) // Not really an enum
 	ENUM2STR_CASE(xbox::status_success)
 	ENUM2STR_CASE(xbox::status_pending)

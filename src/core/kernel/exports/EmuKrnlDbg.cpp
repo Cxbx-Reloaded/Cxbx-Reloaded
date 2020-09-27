@@ -68,7 +68,7 @@ XBSYSAPI EXPORTNUM(6) xbox::void_xt NTAPI xbox::DbgBreakPointWithStatus
 // ******************************************************************
 // * 0x0007 - DbgLoadImageSymbols()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
+XBSYSAPI EXPORTNUM(7) xbox::ntstatus_xt NTAPI xbox::DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,

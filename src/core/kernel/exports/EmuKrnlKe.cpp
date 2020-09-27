@@ -371,7 +371,7 @@ void CxbxInitPerformanceCounters()
 // * 0x005C - KeAlertResumeThread()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(92) xbox::NTSTATUS NTAPI xbox::KeAlertResumeThread
+XBSYSAPI EXPORTNUM(92) xbox::ntstatus_xt NTAPI xbox::KeAlertResumeThread
 (
 	IN HANDLE ThreadHandle,
 	IN OUT PULONG PreviousSuspendCount
@@ -392,7 +392,7 @@ XBSYSAPI EXPORTNUM(92) xbox::NTSTATUS NTAPI xbox::KeAlertResumeThread
 // * 0x005D - KeAlertThread()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(93) xbox::NTSTATUS NTAPI xbox::KeAlertThread
+XBSYSAPI EXPORTNUM(93) xbox::ntstatus_xt NTAPI xbox::KeAlertThread
 (
 	IN HANDLE ThreadHandle
 )
@@ -409,7 +409,7 @@ XBSYSAPI EXPORTNUM(93) xbox::NTSTATUS NTAPI xbox::KeAlertThread
 // * 0x005E - KeBoostPriorityThread()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(94) xbox::NTSTATUS NTAPI xbox::KeBoostPriorityThread
+XBSYSAPI EXPORTNUM(94) xbox::ntstatus_xt NTAPI xbox::KeBoostPriorityThread
 (
 	IN PKTHREAD Thread,
 	IN KPRIORITY Increment
@@ -443,7 +443,7 @@ XBSYSAPI EXPORTNUM(95) xbox::void_xt NTAPI xbox::KeBugCheck
 // * 0x0060 - KeBugCheckEx()
 // ******************************************************************
 // Source:Dxbx
-XBSYSAPI EXPORTNUM(96) xbox::NTSTATUS NTAPI xbox::KeBugCheckEx
+XBSYSAPI EXPORTNUM(96) xbox::ntstatus_xt NTAPI xbox::KeBugCheckEx
 (
 	IN dword_xt BugCheckCode,
 	IN PVOID BugCheckParameter1,
@@ -560,7 +560,7 @@ XBSYSAPI EXPORTNUM(98) xbox::boolean_xt NTAPI xbox::KeConnectInterrupt
 // ******************************************************************
 // * 0x0063 - KeDelayExecutionThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(99) xbox::NTSTATUS NTAPI xbox::KeDelayExecutionThread
+XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 (
 	IN KPROCESSOR_MODE  WaitMode,
 	IN boolean_xt          Alertable,
@@ -1524,7 +1524,7 @@ XBSYSAPI EXPORTNUM(138) xbox::long_xt NTAPI xbox::KeResetEvent
 // ******************************************************************
 // * 0x008B - KeRestoreFloatingPointState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(139) xbox::NTSTATUS NTAPI xbox::KeRestoreFloatingPointState
+XBSYSAPI EXPORTNUM(139) xbox::ntstatus_xt NTAPI xbox::KeRestoreFloatingPointState
 (
 	IN PKFLOATING_SAVE     PublicFloatSave
 )
@@ -1570,7 +1570,7 @@ XBSYSAPI EXPORTNUM(141) xbox::PLIST_ENTRY NTAPI xbox::KeRundownQueue
 // ******************************************************************
 // * 0x008E - KeSaveFloatingPointState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(142) xbox::NTSTATUS NTAPI xbox::KeSaveFloatingPointState
+XBSYSAPI EXPORTNUM(142) xbox::ntstatus_xt NTAPI xbox::KeSaveFloatingPointState
 (
 	OUT PKFLOATING_SAVE     PublicFloatSave
 )
@@ -1957,7 +1957,7 @@ xbox::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
+XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 (
 	IN ulong_xt Count,
 	IN PVOID Object[],
@@ -2205,7 +2205,7 @@ NoWait:
 // ******************************************************************
 // * 0x009F - KeWaitForSingleObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
+XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 (
 	IN PVOID Object,
 	IN KWAIT_REASON WaitReason,

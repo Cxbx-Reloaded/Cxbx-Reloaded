@@ -152,7 +152,7 @@ XBSYSAPI EXPORTNUM(62) xbox::PVOID NTAPI xbox::IoBuildSynchronousFsdRequest
 // ******************************************************************
 // * 0x003F - IoCheckShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(63) xbox::NTSTATUS NTAPI xbox::IoCheckShareAccess
+XBSYSAPI EXPORTNUM(63) xbox::ntstatus_xt NTAPI xbox::IoCheckShareAccess
 (
 	IN access_mask_xt DesiredAccess,
 	IN ulong_xt DesiredShareAccess,
@@ -191,7 +191,7 @@ XBSYSAPI EXPORTNUM(64) xbox::OBJECT_TYPE xbox::IoCompletionObjectType =
 // ******************************************************************
 // * 0x0041 - IoCreateDevice()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(65) xbox::NTSTATUS NTAPI xbox::IoCreateDevice
+XBSYSAPI EXPORTNUM(65) xbox::ntstatus_xt NTAPI xbox::IoCreateDevice
 (
 	IN  PDRIVER_OBJECT		DriverObject,
 	IN  ulong_xt				DeviceExtensionSize,
@@ -218,7 +218,7 @@ XBSYSAPI EXPORTNUM(65) xbox::NTSTATUS NTAPI xbox::IoCreateDevice
 // ******************************************************************
 // * 0x0042 - IoCreateFile()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(66) xbox::NTSTATUS NTAPI xbox::IoCreateFile
+XBSYSAPI EXPORTNUM(66) xbox::ntstatus_xt NTAPI xbox::IoCreateFile
 (
 	OUT PHANDLE             FileHandle,
 	IN  access_mask_xt         DesiredAccess,
@@ -303,7 +303,7 @@ XBSYSAPI EXPORTNUM(66) xbox::NTSTATUS NTAPI xbox::IoCreateFile
 // ******************************************************************
 // * 0x0043 - IoCreateSymbolicLink()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(67) xbox::NTSTATUS NTAPI xbox::IoCreateSymbolicLink
+XBSYSAPI EXPORTNUM(67) xbox::ntstatus_xt NTAPI xbox::IoCreateSymbolicLink
 (
 	IN PSTRING SymbolicLinkName,
 	IN PSTRING DeviceName
@@ -335,7 +335,7 @@ XBSYSAPI EXPORTNUM(68) xbox::void_xt NTAPI xbox::IoDeleteDevice
 // ******************************************************************
 // * 0x0045 - IoDeleteSymbolicLink()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(69) xbox::NTSTATUS NTAPI xbox::IoDeleteSymbolicLink
+XBSYSAPI EXPORTNUM(69) xbox::ntstatus_xt NTAPI xbox::IoDeleteSymbolicLink
 (
 	IN PSTRING SymbolicLinkName
 )
@@ -420,7 +420,7 @@ XBSYSAPI EXPORTNUM(73) xbox::PVOID NTAPI xbox::IoInitializeIrp
 // ******************************************************************
 // * 0x004A - IoInvalidDeviceRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(74) xbox::NTSTATUS NTAPI xbox::IoInvalidDeviceRequest
+XBSYSAPI EXPORTNUM(74) xbox::ntstatus_xt NTAPI xbox::IoInvalidDeviceRequest
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp
@@ -439,7 +439,7 @@ XBSYSAPI EXPORTNUM(74) xbox::NTSTATUS NTAPI xbox::IoInvalidDeviceRequest
 // ******************************************************************
 // * 0x004B - IoQueryFileInformation()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(75) xbox::NTSTATUS NTAPI xbox::IoQueryFileInformation
+XBSYSAPI EXPORTNUM(75) xbox::ntstatus_xt NTAPI xbox::IoQueryFileInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FILE_INFORMATION_CLASS FileInformationClass,
@@ -465,7 +465,7 @@ XBSYSAPI EXPORTNUM(75) xbox::NTSTATUS NTAPI xbox::IoQueryFileInformation
 // ******************************************************************
 // * 0x004C - IoQueryVolumeInformation()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(76) xbox::NTSTATUS NTAPI xbox::IoQueryVolumeInformation
+XBSYSAPI EXPORTNUM(76) xbox::ntstatus_xt NTAPI xbox::IoQueryVolumeInformation
 (
 	IN PFILE_OBJECT FileObject,
 	IN FS_INFORMATION_CLASS FsInformationClass,
@@ -522,12 +522,12 @@ XBSYSAPI EXPORTNUM(78) xbox::void_xt NTAPI xbox::IoRemoveShareAccess
 // ******************************************************************
 // * 0x004F - IoSetIoCompletion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(79) xbox::NTSTATUS NTAPI xbox::IoSetIoCompletion
+XBSYSAPI EXPORTNUM(79) xbox::ntstatus_xt NTAPI xbox::IoSetIoCompletion
 (
 	IN PKQUEUE IoCompletion,
 	IN PVOID KeyContext,
 	IN PVOID ApcContext,
-	IN NTSTATUS IoStatus,
+	IN ntstatus_xt IoStatus,
 	IN ulong_xt IoStatusInformation
 )
 {
@@ -626,7 +626,7 @@ XBSYSAPI EXPORTNUM(83) xbox::void_xt NTAPI xbox::IoStartPacket
 // blocking IOCTL on the specified device.
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(84) xbox::NTSTATUS NTAPI xbox::IoSynchronousDeviceIoControlRequest
+XBSYSAPI EXPORTNUM(84) xbox::ntstatus_xt NTAPI xbox::IoSynchronousDeviceIoControlRequest
 (
 	IN ulong_xt IoControlCode,
 	IN PDEVICE_OBJECT DeviceObject,
@@ -657,7 +657,7 @@ XBSYSAPI EXPORTNUM(84) xbox::NTSTATUS NTAPI xbox::IoSynchronousDeviceIoControlRe
 // ******************************************************************
 // * 0x0055 - IoSynchronousFsdRequest()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(85) xbox::NTSTATUS NTAPI xbox::IoSynchronousFsdRequest
+XBSYSAPI EXPORTNUM(85) xbox::ntstatus_xt NTAPI xbox::IoSynchronousFsdRequest
 (
 	IN ulong_xt MajorFunction,
 	IN PDEVICE_OBJECT DeviceObject,
@@ -682,7 +682,7 @@ XBSYSAPI EXPORTNUM(85) xbox::NTSTATUS NTAPI xbox::IoSynchronousFsdRequest
 // ******************************************************************
 // * 0x0056 - IofCallDriver()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(86) xbox::NTSTATUS FASTCALL xbox::IofCallDriver
+XBSYSAPI EXPORTNUM(86) xbox::ntstatus_xt FASTCALL xbox::IofCallDriver
 (
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp
@@ -718,7 +718,7 @@ XBSYSAPI EXPORTNUM(87) xbox::void_xt FASTCALL xbox::IofCompleteRequest
 // ******************************************************************
 // * 0x005A - IoDismountVolume()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(90) xbox::NTSTATUS NTAPI xbox::IoDismountVolume
+XBSYSAPI EXPORTNUM(90) xbox::ntstatus_xt NTAPI xbox::IoDismountVolume
 (
 	IN PDEVICE_OBJECT DeviceObject
 )
@@ -735,7 +735,7 @@ XBSYSAPI EXPORTNUM(90) xbox::NTSTATUS NTAPI xbox::IoDismountVolume
 // ******************************************************************
 // * 0x005B - IoDismountVolumeByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(91) xbox::NTSTATUS NTAPI xbox::IoDismountVolumeByName
+XBSYSAPI EXPORTNUM(91) xbox::ntstatus_xt NTAPI xbox::IoDismountVolumeByName
 (
 	IN PSTRING VolumeName
 )

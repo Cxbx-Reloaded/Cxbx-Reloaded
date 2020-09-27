@@ -75,7 +75,7 @@ xbox::void_xt xbox::InitializeFscCacheEvent()
 // ******************************************************************
 // * 0x0025 - FscSetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(37) xbox::NTSTATUS NTAPI xbox::FscSetCacheSize
+XBSYSAPI EXPORTNUM(37) xbox::ntstatus_xt NTAPI xbox::FscSetCacheSize
 (
 	ulong_xt NumberOfCachePages
 )

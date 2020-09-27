@@ -163,7 +163,7 @@ void PspSystemThreadStartup
 // ******************************************************************
 // * 0x00FE - PsCreateSystemThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
+XBSYSAPI EXPORTNUM(254) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,
 	OUT PHANDLE         ThreadId OPTIONAL,
@@ -204,7 +204,7 @@ XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
 // SystemRoutine: System function (normally XapiThreadStartup) called when the thread is created
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
+XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
 	IN  ulong_xt           ThreadExtensionSize,
@@ -336,7 +336,7 @@ XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 // ******************************************************************
 // * 0x0100 - PsQueryStatistics()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(256) xbox::NTSTATUS NTAPI xbox::PsQueryStatistics
+XBSYSAPI EXPORTNUM(256) xbox::ntstatus_xt NTAPI xbox::PsQueryStatistics
 (
 	IN OUT PPS_STATISTICS ProcessStatistics
 )
@@ -359,7 +359,7 @@ XBSYSAPI EXPORTNUM(256) xbox::NTSTATUS NTAPI xbox::PsQueryStatistics
 // ******************************************************************
 // * 0x0101 - PsSetCreateThreadNotifyRoutine()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutine
+XBSYSAPI EXPORTNUM(257) xbox::ntstatus_xt NTAPI xbox::PsSetCreateThreadNotifyRoutine
 (
 	IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
 )
@@ -399,7 +399,7 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 // Differences from NT: None.
 XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 (
-	IN NTSTATUS ExitStatus
+	IN ntstatus_xt ExitStatus
 )
 {
 	LOG_FUNC_ONE_ARG(ExitStatus);

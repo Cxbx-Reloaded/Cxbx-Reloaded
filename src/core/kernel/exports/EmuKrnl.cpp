@@ -570,7 +570,7 @@ XBSYSAPI EXPORTNUM(364) xbox::int_xt CDECL xbox::RtlVsprintf
 // ******************************************************************
 // * 0x016F - UnknownAPI367()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(367) xbox::NTSTATUS NTAPI xbox::UnknownAPI367
+XBSYSAPI EXPORTNUM(367) xbox::ntstatus_xt NTAPI xbox::UnknownAPI367
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -585,7 +585,7 @@ XBSYSAPI EXPORTNUM(367) xbox::NTSTATUS NTAPI xbox::UnknownAPI367
 // ******************************************************************
 // * 0x0170 - UnknownAPI368()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(368) xbox::NTSTATUS NTAPI xbox::UnknownAPI368
+XBSYSAPI EXPORTNUM(368) xbox::ntstatus_xt NTAPI xbox::UnknownAPI368
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -600,7 +600,7 @@ XBSYSAPI EXPORTNUM(368) xbox::NTSTATUS NTAPI xbox::UnknownAPI368
 // ******************************************************************
 // * 0x0171 - UnknownAPI369()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(369) xbox::NTSTATUS NTAPI xbox::UnknownAPI369
+XBSYSAPI EXPORTNUM(369) xbox::ntstatus_xt NTAPI xbox::UnknownAPI369
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -615,7 +615,7 @@ XBSYSAPI EXPORTNUM(369) xbox::NTSTATUS NTAPI xbox::UnknownAPI369
 // ******************************************************************
 // * 0x0172 - XProfpControl()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(370) xbox::NTSTATUS NTAPI xbox::XProfpControl // PROFILING
+XBSYSAPI EXPORTNUM(370) xbox::ntstatus_xt NTAPI xbox::XProfpControl // PROFILING
 (
 	ulong_xt Action,
 	ulong_xt Param
@@ -634,7 +634,7 @@ XBSYSAPI EXPORTNUM(370) xbox::NTSTATUS NTAPI xbox::XProfpControl // PROFILING
 // ******************************************************************
 // * 0x0173 - XProfpGetData()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(371) xbox::NTSTATUS NTAPI xbox::XProfpGetData // PROFILING 
+XBSYSAPI EXPORTNUM(371) xbox::ntstatus_xt NTAPI xbox::XProfpGetData // PROFILING 
 (
 	// NO ARGUMENTS
 )
@@ -649,7 +649,7 @@ XBSYSAPI EXPORTNUM(371) xbox::NTSTATUS NTAPI xbox::XProfpGetData // PROFILING
 // ******************************************************************
 // * 0x0174 - IrtClientInitFast()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(372) xbox::NTSTATUS NTAPI xbox::IrtClientInitFast // PROFILING
+XBSYSAPI EXPORTNUM(372) xbox::ntstatus_xt NTAPI xbox::IrtClientInitFast // PROFILING
 (
 	// UNKNOWN ARGUMENTS
 )
@@ -664,7 +664,7 @@ XBSYSAPI EXPORTNUM(372) xbox::NTSTATUS NTAPI xbox::IrtClientInitFast // PROFILIN
 // ******************************************************************
 // * 0x0175 - IrtSweep()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(373) xbox::NTSTATUS NTAPI xbox::IrtSweep // PROFILING
+XBSYSAPI EXPORTNUM(373) xbox::ntstatus_xt NTAPI xbox::IrtSweep // PROFILING
 (
 	// UNKNOWN ARGUMENTS
 )

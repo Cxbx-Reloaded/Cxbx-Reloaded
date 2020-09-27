@@ -20,7 +20,7 @@ namespace xbox
 // ******************************************************************
 // * 0x005C - KeAlertResumeThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(92) NTSTATUS NTAPI KeAlertResumeThread
+XBSYSAPI EXPORTNUM(92) ntstatus_xt NTAPI KeAlertResumeThread
 (
 	IN HANDLE ThreadHandle,
 	IN OUT PULONG PreviousSuspendCount
@@ -29,7 +29,7 @@ XBSYSAPI EXPORTNUM(92) NTSTATUS NTAPI KeAlertResumeThread
 // ******************************************************************
 // * 0x005D - KeAlertThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(93) NTSTATUS NTAPI KeAlertThread
+XBSYSAPI EXPORTNUM(93) ntstatus_xt NTAPI KeAlertThread
 (
 	IN HANDLE ThreadHandle
 );
@@ -37,7 +37,7 @@ XBSYSAPI EXPORTNUM(93) NTSTATUS NTAPI KeAlertThread
 // ******************************************************************
 // * 0x005E - KeBoostPriorityThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(94) NTSTATUS NTAPI KeBoostPriorityThread
+XBSYSAPI EXPORTNUM(94) ntstatus_xt NTAPI KeBoostPriorityThread
 (
 	IN PKTHREAD Thread,
 	IN KPRIORITY Increment
@@ -54,7 +54,7 @@ XBSYSAPI EXPORTNUM(95) void_xt NTAPI KeBugCheck
 // ******************************************************************
 // * 0x0060 - KeBugCheckEx()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(96) NTSTATUS NTAPI KeBugCheckEx
+XBSYSAPI EXPORTNUM(96) ntstatus_xt NTAPI KeBugCheckEx
 (
 	IN dword_xt BugCheckCode,
 	IN PVOID BugCheckParameter1,
@@ -82,7 +82,7 @@ XBSYSAPI EXPORTNUM(98) boolean_xt NTAPI KeConnectInterrupt
 // ******************************************************************
 // * 0x0063 - KeDelayExecutionThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(99) NTSTATUS NTAPI KeDelayExecutionThread
+XBSYSAPI EXPORTNUM(99) ntstatus_xt NTAPI KeDelayExecutionThread
 (
     IN KPROCESSOR_MODE  WaitMode,
     IN boolean_xt          Alertable,
@@ -373,7 +373,7 @@ XBSYSAPI EXPORTNUM(138) long_xt NTAPI KeResetEvent
 // ******************************************************************
 // * 0x008B - KeRestoreFloatingPointState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(139) NTSTATUS NTAPI KeRestoreFloatingPointState
+XBSYSAPI EXPORTNUM(139) ntstatus_xt NTAPI KeRestoreFloatingPointState
 (
 	IN PKFLOATING_SAVE     PublicFloatSave
 );
@@ -394,7 +394,7 @@ XBSYSAPI EXPORTNUM(141) PLIST_ENTRY NTAPI KeRundownQueue
 // ******************************************************************
 // * 0x008E - KeSaveFloatingPointState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(142) NTSTATUS NTAPI KeSaveFloatingPointState
+XBSYSAPI EXPORTNUM(142) ntstatus_xt NTAPI KeSaveFloatingPointState
 (
 	OUT PKFLOATING_SAVE     PublicFloatSave
 );
@@ -518,7 +518,7 @@ XBSYSAPI EXPORTNUM(157) ulong_xt KeTimeIncrement;
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(158) NTSTATUS NTAPI KeWaitForMultipleObjects
+XBSYSAPI EXPORTNUM(158) ntstatus_xt NTAPI KeWaitForMultipleObjects
 (
     IN ulong_xt Count,
     IN PVOID Object[],
@@ -533,7 +533,7 @@ XBSYSAPI EXPORTNUM(158) NTSTATUS NTAPI KeWaitForMultipleObjects
 // ******************************************************************
 // * 0x009F - KeWaitForSingleObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(159) NTSTATUS NTAPI KeWaitForSingleObject
+XBSYSAPI EXPORTNUM(159) ntstatus_xt NTAPI KeWaitForSingleObject
 (
     IN PVOID Object,
     IN KWAIT_REASON WaitReason,

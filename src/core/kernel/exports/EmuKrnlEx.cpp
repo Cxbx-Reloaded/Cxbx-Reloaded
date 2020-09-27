@@ -393,7 +393,7 @@ XBSYSAPI EXPORTNUM(23) xbox::ulong_xt NTAPI xbox::ExQueryPoolBlockSize
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
+XBSYSAPI EXPORTNUM(24) xbox::ntstatus_xt NTAPI xbox::ExQueryNonVolatileSetting
 (
 	IN  dword_xt   ValueIndex,
 	OUT dword_xt   *Type,
@@ -470,7 +470,7 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 // ******************************************************************
 // * 0x0019 - ExReadWriteRefurbInfo()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
+XBSYSAPI EXPORTNUM(25) xbox::ntstatus_xt NTAPI xbox::ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
 	IN ulong_xt	dwBufferSize,
@@ -567,7 +567,7 @@ XBSYSAPI EXPORTNUM(26) xbox::void_xt NTAPI xbox::ExRaiseException
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(27) xbox::void_xt NTAPI xbox::ExRaiseStatus
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 )
 {
 	LOG_FUNC_ONE_ARG(Status);
@@ -620,7 +620,7 @@ XBSYSAPI EXPORTNUM(28) xbox::void_xt NTAPI xbox::ExReleaseReadWriteLock
 // ******************************************************************
 // * 0x001D - ExSaveNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
+XBSYSAPI EXPORTNUM(29) xbox::ntstatus_xt NTAPI xbox::ExSaveNonVolatileSetting
 (
 	IN  dword_xt			   ValueIndex,
 	IN  dword_xt			   Type,
