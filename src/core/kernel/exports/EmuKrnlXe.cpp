@@ -64,7 +64,7 @@ XBSYSAPI EXPORTNUM(327) xbox::NTSTATUS NTAPI xbox::XeLoadSection
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	void* sectionData = CxbxKrnl_Xbe->FindSection(Section);
 	if (sectionData != nullptr) {
@@ -80,7 +80,7 @@ XBSYSAPI EXPORTNUM(327) xbox::NTSTATUS NTAPI xbox::XeLoadSection
 			size_t SectionSize = (VAddr)Section->VirtualSize;
 
 			ret = g_VMManager.XbAllocateVirtualMemory(&BaseAddress, 0, &SectionSize, XBOX_MEM_COMMIT, XBOX_PAGE_EXECUTE_READWRITE);
-			if (ret != STATUS_SUCCESS) {
+			if (ret != xbox::status_success) {
 				RETURN(ret);
 			}
 
@@ -154,7 +154,7 @@ XBSYSAPI EXPORTNUM(328) xbox::NTSTATUS NTAPI xbox::XeUnloadSection
 			}
 		}
 
-		ret = STATUS_SUCCESS;
+		ret = xbox::status_success;
 	}
 
 	RETURN(ret);

@@ -212,7 +212,7 @@ XBSYSAPI EXPORTNUM(65) xbox::NTSTATUS NTAPI xbox::IoCreateDevice
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -344,7 +344,7 @@ XBSYSAPI EXPORTNUM(69) xbox::NTSTATUS NTAPI xbox::IoDeleteSymbolicLink
 
 	EmuNtSymbolicLinkObject* symbolicLink = FindNtSymbolicLinkObjectByName(PSTRING_to_string(SymbolicLinkName));
 
-	NTSTATUS ret = STATUS_OBJECT_NAME_NOT_FOUND;
+	NTSTATUS ret = xbox::status_object_name_not_found;
 
 	if (symbolicLink != NULL)
 		// Destroy the object once all handles to it are closed too :
@@ -725,7 +725,7 @@ XBSYSAPI EXPORTNUM(90) xbox::NTSTATUS NTAPI xbox::IoDismountVolume
 {
 	LOG_FUNC_ONE_ARG(DeviceObject);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	LOG_UNIMPLEMENTED();
 
@@ -742,7 +742,7 @@ XBSYSAPI EXPORTNUM(91) xbox::NTSTATUS NTAPI xbox::IoDismountVolumeByName
 {
 	LOG_FUNC_ONE_ARG(VolumeName);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	// TODO: Anything?
 	LOG_UNIMPLEMENTED();

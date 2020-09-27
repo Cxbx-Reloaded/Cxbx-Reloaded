@@ -117,7 +117,7 @@ XBSYSAPI EXPORTNUM(8) xbox::ulong_xt _cdecl xbox::DbgPrint
             // Prevent a crash if we can't allocate enough memory
             // We want this to be transparent to the running Xbox application
             // Hence, we return success.
-            return STATUS_SUCCESS;
+            return xbox::status_success;
         }
 
         // Perform the actual print operation
@@ -130,7 +130,7 @@ XBSYSAPI EXPORTNUM(8) xbox::ulong_xt _cdecl xbox::DbgPrint
 		fflush(stdout);
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************

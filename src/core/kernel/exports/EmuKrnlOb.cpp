@@ -41,8 +41,6 @@
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
-#define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))
-
 #define INITIALIZED_OBJECT_STRING(ObjectString, Value)                  \
 	xbox::char_xt ObjectString##Buffer[] = Value;                      \
 	xbox::OBJECT_STRING ObjectString = {							\
@@ -82,13 +80,13 @@ xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 	HANDLE Handle;
 	NTSTATUS status = NtCreateDirectoryObject(&Handle, &ObjectAttributes);
 
-	if (!NT_SUCCESS(status)) {
+	if (!nt_success(status)) {
 		RETURN(FALSE);
 	}
 	
 	status = ObReferenceObjectByHandle(Handle, &ObDirectoryObjectType, (PVOID *)DirectoryObject);
 	
-	if (!NT_SUCCESS(status)) {
+	if (!nt_success(status)) {
 		RETURN(FALSE);
 	}
 
@@ -175,7 +173,7 @@ xbox::NTSTATUS xbox::ObpReferenceObjectByName(
 
 		if (!ObpLookupElementNameInDirectory(Directory, &ElementName,
 			ResolveSymbolicLink, &FoundObject)) {
-			status = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : STATUS_OBJECT_NAME_NOT_FOUND;
+			status = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : xbox::status_object_name_not_found;
 			goto CleanupAndExit;
 		}
 
@@ -194,7 +192,7 @@ OpenRootDirectory:
 
 			ObjectHeader->PointerCount++;
 			*ReturnedObject = FoundObject;
-			status = STATUS_SUCCESS;
+			status = xbox::status_success;
 			goto CleanupAndExit;
 		}
 
@@ -218,10 +216,10 @@ InvokeParseProcedure:
 			status = ObjectHeader->Type->ParseProcedure(FoundObject, ObjectType, Attributes, ObjectName, &RemainingName, ParseContext, &ParsedObject);
 			ObfDereferenceObject(FoundObject);
 
-			if (NT_SUCCESS(status)) {
+			if (nt_success(status)) {
 				if ((ObjectType == NULL) || (ObjectType == OBJECT_TO_OBJECT_HEADER(ParsedObject)->Type)) {
 					*ReturnedObject = ParsedObject;
-					status = STATUS_SUCCESS;
+					status = xbox::status_success;
 				} else {
 					ObfDereferenceObject(ParsedObject);
 					status = STATUS_OBJECT_TYPE_MISMATCH;
@@ -401,10 +399,10 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 		LOG_FUNC_END;
 
 	if (ObjectAttributes == NULL || ObjectAttributes->ObjectName == NULL) {
-		POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)ObjectType->AllocateProcedure(FIELD_OFFSET(OBJECT_HEADER, Body) + ObjectBodySize, ObjectType->PoolTag);
+		POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)ObjectType->AllocateProcedure(offsetof(OBJECT_HEADER, Body) + ObjectBodySize, ObjectType->PoolTag);
 
 		if (ObjectHeader == nullptr) {
-			RETURN(STATUS_INSUFFICIENT_RESOURCES);
+			RETURN(xbox::status_insufficient_resources);
 		}
 
 		ObjectHeader->PointerCount = 1;
@@ -414,7 +412,7 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 
 		*Object = &ObjectHeader->Body;
 		
-		RETURN(STATUS_SUCCESS);
+		RETURN(xbox::status_success);
 	}
 
 	OBJECT_STRING RemainingName = *ObjectAttributes->ObjectName;
@@ -436,11 +434,11 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 	ObjectBodySize = ALIGN_UP(ObjectBodySize, ULONG);
 
 	POBJECT_HEADER_NAME_INFO ObjectNameInfo = (POBJECT_HEADER_NAME_INFO)ObjectType->AllocateProcedure(
-		sizeof(OBJECT_HEADER_NAME_INFO) + FIELD_OFFSET(OBJECT_HEADER, Body) +
+		sizeof(OBJECT_HEADER_NAME_INFO) + offsetof(OBJECT_HEADER, Body) +
 		ObjectBodySize + ElementName.Length, ObjectType->PoolTag);
 
 	if (ObjectNameInfo == NULL) {
-		return STATUS_INSUFFICIENT_RESOURCES;
+		return xbox::status_insufficient_resources;
 	}
 
 	POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)(ObjectNameInfo + 1);
@@ -459,7 +457,7 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 
 	*Object = &ObjectHeader->Body;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -664,7 +662,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 							goto CleanupAndExit;
 						}
 					} else {
-						status = STATUS_OBJECT_NAME_COLLISION;
+						status = xbox::status_object_name_collision;
 						goto CleanupAndExit;
 					}
 				}
@@ -692,7 +690,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 	Handle = ObpCreateObjectHandle(InsertObject);
 
 	if (Handle == NULL) {
-		status = STATUS_INSUFFICIENT_RESOURCES;
+		status = xbox::status_insufficient_resources;
 		goto CleanupAndExit;
 	}
 
@@ -732,7 +730,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 		ObjectHeader->Flags |= OB_FLAG_PERMANENT_OBJECT;
 	}
 
-	status = (Object == InsertObject) ? STATUS_SUCCESS : STATUS_OBJECT_NAME_EXISTS;
+	status = (Object == InsertObject) ? xbox::status_success : STATUS_OBJECT_NAME_EXISTS;
 
 CleanupAndExit:
 	KfLowerIrql(OldIrql);
@@ -777,7 +775,7 @@ XBSYSAPI EXPORTNUM(243) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByName
 	LOG_UNIMPLEMENTED();
 	assert(false);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -799,7 +797,7 @@ XBSYSAPI EXPORTNUM(244) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByPointer
 	LOG_UNIMPLEMENTED();
 	assert(false);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -834,7 +832,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 			InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 			*ReturnedObject = Object;
-			return STATUS_SUCCESS;
+			return xbox::status_success;
 		} else {
 			status = STATUS_OBJECT_TYPE_MISMATCH;
 		}
@@ -846,7 +844,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 
 			if ((ObjectType == ObjectHeader->Type) || (ObjectType == NULL)) {
 				*ReturnedObject = Object;
-				return STATUS_SUCCESS;
+				return xbox::status_success;
 			} else {
 				ObfDereferenceObject(Object);
 				status = STATUS_OBJECT_TYPE_MISMATCH;
@@ -859,7 +857,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 			if (GetHandleInformation(Handle, &flags)) {
 				// This was a Windows Handle, so return it.
 				*ReturnedObject = Handle;
-				return STATUS_SUCCESS;
+				return xbox::status_success;
 			}
 
 			status = STATUS_INVALID_HANDLE;
@@ -913,7 +911,7 @@ XBSYSAPI EXPORTNUM(248) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByPointer
 
 	if (ObjectType == ObjectHeader->Type) {
 		InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
-		RETURN(STATUS_SUCCESS);
+		RETURN(xbox::status_success);
 	} 
 	
 	RETURN(STATUS_OBJECT_TYPE_MISMATCH);

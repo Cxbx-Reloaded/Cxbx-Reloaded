@@ -104,8 +104,6 @@ typedef long                            NTSTATUS;
 typedef __int64							LONGLONG;
 typedef unsigned __int64                ULONGLONG;
 
-#define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
-
 #define DIRECTORY_QUERY 1
 #define DIRECTORY_TRAVERSE 2
 #define DIRECTORY_CREATE_OBJECT 4

@@ -28,7 +28,6 @@
 #include "common\xbe\Xbe.h"
 #include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 #include <dsound.h>

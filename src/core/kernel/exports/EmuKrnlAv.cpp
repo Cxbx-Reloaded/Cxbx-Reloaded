@@ -138,7 +138,7 @@ ULONG AvQueryAvCapabilities()
 		(xbox::PSIZE_T)&resultSize);
 
 	// If this failed, default to AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
-	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {
+	if (result != xbox::status_success || resultSize != sizeof(ULONG)) {
 		avRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 	}
 
@@ -152,7 +152,7 @@ ULONG AvQueryAvCapabilities()
 		(xbox::PSIZE_T)&resultSize);
 
 	// If this failed, default to no user-options set
-	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {
+	if (result != xbox::status_success || resultSize != sizeof(ULONG)) {
 		userSettings = 0;
 	}
 
@@ -317,7 +317,7 @@ XBSYSAPI EXPORTNUM(3) xbox::ulong_xt NTAPI xbox::AvSetDisplayMode
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_FLICKER_FILTER, 5, NULL);
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_ENABLE_LUMA_FILTER, FALSE, NULL);
 
-		RETURN(STATUS_SUCCESS);
+		RETURN(xbox::status_success);
 	}
 
 	CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
@@ -395,7 +395,7 @@ XBSYSAPI EXPORTNUM(3) xbox::ulong_xt NTAPI xbox::AvSetDisplayMode
 	REG_WR32(RegisterBase, NV_PCRTC_START, FrameBuffer);
 	AvpCurrentMode = Mode;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************

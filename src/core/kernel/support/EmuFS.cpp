@@ -36,7 +36,6 @@
 #include "core\kernel\memory-manager\VMManager.h"
 #include "Logging.h"
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <cstdio>
 #include <vector>

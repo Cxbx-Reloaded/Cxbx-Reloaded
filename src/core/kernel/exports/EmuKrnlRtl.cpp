@@ -97,26 +97,26 @@ XBSYSAPI EXPORTNUM(260) xbox::NTSTATUS NTAPI xbox::RtlAnsiStringToUnicodeString
 	dword_xt total = RtlAnsiStringToUnicodeSize(SourceString);
 
 	if (total > 0xffff) {
-		return STATUS_INVALID_PARAMETER_2;
+		return xbox::status_invalid_parameter_2;
 	}
 
 	DestinationString->Length = (USHORT)(total - sizeof(WCHAR));
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)total;
 		if (!(DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag(total, 'grtS'))) {
-			return STATUS_NO_MEMORY;
+			return xbox::status_no_memory;
 		}
 	}
 	else {
 		if (total > DestinationString->MaximumLength) {
-			return STATUS_BUFFER_OVERFLOW;
+			return xbox::status_buffer_overflow;
 		}
 	}
 
 	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer, (ULONG)DestinationString->Length, NULL, SourceString->Buffer, SourceString->Length);
 	DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -133,13 +133,13 @@ XBSYSAPI EXPORTNUM(261) xbox::NTSTATUS NTAPI xbox::RtlAppendStringToString
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = STATUS_SUCCESS;
+	NTSTATUS result = xbox::status_success;
 
 	USHORT dstLen = Destination->Length;
 	USHORT srcLen = Source->Length;
 	if (srcLen > 0) {
 		if ((srcLen + dstLen) > Destination->MaximumLength) {
-			result = STATUS_BUFFER_TOO_SMALL;
+			result = xbox::status_buffer_too_small;
 		}
 		else {
 			CHAR *dstBuf = Destination->Buffer + Destination->Length;
@@ -166,13 +166,13 @@ XBSYSAPI EXPORTNUM(262) xbox::NTSTATUS NTAPI xbox::RtlAppendUnicodeStringToStrin
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = STATUS_SUCCESS;
+	NTSTATUS result = xbox::status_success;
 
 	USHORT dstLen = Destination->Length;
 	USHORT srcLen = Source->Length;
 	if (srcLen > 0) {
 		if ((srcLen + dstLen) > Destination->MaximumLength) {
-			result = STATUS_BUFFER_TOO_SMALL;
+			result = xbox::status_buffer_too_small;
 		}
 		else {
 			WCHAR *dstBuf = (WCHAR*)(Destination->Buffer + (Destination->Length / sizeof(WCHAR)));
@@ -201,7 +201,7 @@ XBSYSAPI EXPORTNUM(263) xbox::NTSTATUS NTAPI xbox::RtlAppendUnicodeToString
 		LOG_FUNC_ARG(Source)
 		LOG_FUNC_END;
 
-	NTSTATUS result = STATUS_SUCCESS;
+	NTSTATUS result = xbox::status_success;
 	if (Source != NULL) {
 		UNICODE_STRING unicodeString;
 		RtlInitUnicodeString(&unicodeString, Source);
@@ -387,7 +387,7 @@ XBSYSAPI EXPORTNUM(267) xbox::NTSTATUS NTAPI xbox::RtlCharToInteger
 	}
 
     *Value = bMinus ? (0 - RunningTotal) : RunningTotal;
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -645,18 +645,18 @@ XBSYSAPI EXPORTNUM(276) xbox::NTSTATUS NTAPI xbox::RtlDowncaseUnicodeString
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-	NTSTATUS result = STATUS_SUCCESS;
+	NTSTATUS result = xbox::status_success;
 
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = SourceString->Length;
 		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
 		if (DestinationString->Buffer == NULL) {
-			return STATUS_NO_MEMORY;
+			return xbox::status_no_memory;
 		}
 	}
 	else {
 		if (SourceString->Length > DestinationString->MaximumLength) {
-			return STATUS_BUFFER_OVERFLOW;
+			return xbox::status_buffer_overflow;
 		}
 	}
 
@@ -700,7 +700,7 @@ XBSYSAPI EXPORTNUM(277) xbox::void_xt NTAPI xbox::RtlEnterCriticalSection
 					(boolean_xt)0,
 					(PLARGE_INTEGER)0
 				);
-				if (!NT_SUCCESS(result))
+				if (!nt_success(result))
 				{
 					CxbxKrnlCleanup("Waiting for event of a critical section returned %lx.", result);
 				};
@@ -1170,7 +1170,7 @@ XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
 
 	SIZE_T len = &buffer[32] - pos;   
 	if (len > (SIZE_T)OutputLength) {
-		return STATUS_BUFFER_OVERFLOW;
+		return xbox::status_buffer_overflow;
 	}
 	else if (String == NULL) {
 		return STATUS_ACCESS_VIOLATION;
@@ -1182,7 +1182,7 @@ XBSYSAPI EXPORTNUM(292) xbox::NTSTATUS NTAPI xbox::RtlIntegerToChar
 		RtlCopyMemory(String, pos, len + 1);
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1204,7 +1204,7 @@ XBSYSAPI EXPORTNUM(293) xbox::NTSTATUS NTAPI xbox::RtlIntegerToUnicodeString
     CHAR Buffer[33];
     NTSTATUS Status = RtlIntegerToChar(Value, Base, sizeof(Buffer), Buffer);
 
-    if (NT_SUCCESS(Status)) {
+    if (nt_success(Status)) {
 		ANSI_STRING AnsiString;
 
         AnsiString.Buffer = Buffer;
@@ -1364,7 +1364,7 @@ XBSYSAPI EXPORTNUM(299) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeN
 		numChars--;
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1385,7 +1385,7 @@ XBSYSAPI EXPORTNUM(300) xbox::NTSTATUS NTAPI xbox::RtlMultiByteToUnicodeSize
 
 	*BytesInUnicodeString = BytesInMultiByteString * sizeof(WCHAR);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1701,23 +1701,23 @@ XBSYSAPI EXPORTNUM(308) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToAnsiString
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-    NTSTATUS ret = STATUS_SUCCESS;
+    NTSTATUS ret = xbox::status_success;
     dword_xt len = RtlUnicodeStringToAnsiSize(SourceString);
 
 	DestinationString->Length = (USHORT)(len - 1);
     if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)len;
 		if (!(DestinationString->Buffer = (PCHAR)ExAllocatePoolWithTag(len, 'grtS'))) {
-			return STATUS_NO_MEMORY;
+			return xbox::status_no_memory;
 		}
     }
     else if (DestinationString->MaximumLength < len) {
 		if (!DestinationString->MaximumLength) {
-			return STATUS_BUFFER_OVERFLOW;
+			return xbox::status_buffer_overflow;
 		}
 
 		DestinationString->Length = DestinationString->MaximumLength - 1;
-        ret = STATUS_BUFFER_OVERFLOW;
+        ret = xbox::status_buffer_overflow;
     }
 
     RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, NULL, (PWSTR)SourceString->Buffer, (ULONG)SourceString->Length);
@@ -1822,7 +1822,7 @@ XBSYSAPI EXPORTNUM(309) xbox::NTSTATUS NTAPI xbox::RtlUnicodeStringToInteger
  
 	*Value = bMinus ? (0 - RunningTotal) : RunningTotal;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1860,7 +1860,7 @@ XBSYSAPI EXPORTNUM(310) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteN
 		numChars--;
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1881,7 +1881,7 @@ XBSYSAPI EXPORTNUM(311) xbox::NTSTATUS NTAPI xbox::RtlUnicodeToMultiByteSize
 
 	*BytesInMultiByteString = BytesInUnicodeString * sizeof(WCHAR);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1940,12 +1940,12 @@ XBSYSAPI EXPORTNUM(314) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeString
 		DestinationString->MaximumLength = SourceString->Length;
 		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
 		if (DestinationString->Buffer == NULL) {
-			return STATUS_NO_MEMORY;
+			return xbox::status_no_memory;
 		}
 	}
 	else {
 		if (SourceString->Length > DestinationString->MaximumLength) {
-			return STATUS_BUFFER_OVERFLOW;
+			return xbox::status_buffer_overflow;
 		}
 	}
 
@@ -1958,7 +1958,7 @@ XBSYSAPI EXPORTNUM(314) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeString
 
 	DestinationString->Length = SourceString->Length;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1999,7 +1999,7 @@ XBSYSAPI EXPORTNUM(315) xbox::NTSTATUS NTAPI xbox::RtlUpcaseUnicodeToMultiByteN
 		numChars--;
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************

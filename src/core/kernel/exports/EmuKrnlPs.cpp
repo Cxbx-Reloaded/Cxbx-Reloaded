@@ -142,7 +142,7 @@ static unsigned int WINAPI PCSTProxy
 
 	// This will also handle thread notification :
 	LOG_TEST_CASE("Thread returned from SystemRoutine");
-	xbox::PsTerminateSystemThread(STATUS_SUCCESS);
+	xbox::PsTerminateSystemThread(xbox::status_success);
 
 	return 0; // will never be reached
 }
@@ -157,7 +157,7 @@ void PspSystemThreadStartup
 	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
 	(StartRoutine)(StartContext);
 
-	xbox::PsTerminateSystemThread(STATUS_SUCCESS);
+	xbox::PsTerminateSystemThread(xbox::status_success);
 }
 
 // ******************************************************************
@@ -330,7 +330,7 @@ XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 	SwitchToThread();
 	Sleep(10);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -343,7 +343,7 @@ XBSYSAPI EXPORTNUM(256) xbox::NTSTATUS NTAPI xbox::PsQueryStatistics
 {
 	LOG_FUNC_ONE_ARG_OUT(ProcessStatistics);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
 		LOG_INCOMPLETE(); // TODO : Return number of threads and handles that currently exist
@@ -366,7 +366,7 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 {
 	LOG_FUNC_ONE_ARG(NotifyRoutine);
 
-	NTSTATUS ret = STATUS_INSUFFICIENT_RESOURCES;
+	NTSTATUS ret = xbox::status_insufficient_resources;
 
 	// Taken from xbox::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
 
@@ -383,7 +383,7 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 		{
 			g_pfnThreadNotification[i] = (PVOID)NotifyRoutine;
 			g_iThreadNotificationCount++;
-			ret = STATUS_SUCCESS;
+			ret = xbox::status_success;
 			break;
 		}
 	}

@@ -94,7 +94,7 @@ XBSYSAPI EXPORTNUM(9) xbox::NTSTATUS NTAPI xbox::HalReadSMCTrayState
 	DWORD orig_TrayCount = g_TrayCount;
 	KfLowerIrql(orig_irql);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 	if (TrayState == INIT_TRAY_STATE) {
 		ret = HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_TRAY_STATE, 0, (PULONG)&TrayState);
 		// If bit 31 = 1, then there is an error so do not execute this code.
@@ -278,7 +278,7 @@ XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 
 	// TODO : Prevent interrupts
 
-	NTSTATUS Status = STATUS_SUCCESS;
+	NTSTATUS Status = xbox::status_success;
 
 	// ergo720: the or 1 on the address is necessary because I have seen that UnleashX and RDX dashboard pass 0x20 instead of the
 	// expected 0x21 to this function when reading cpu and m/b temperatures
@@ -293,7 +293,7 @@ XBSYSAPI EXPORTNUM(45) xbox::NTSTATUS NTAPI xbox::HalReadSMBusValue
 
 	// Check if the command was executed successfully
 	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) & GS_PRERR_STS) {
-		Status = STATUS_UNSUCCESSFUL;
+		Status = xbox::status_unsuccessful;
 	}
 	else {
 		*DataValue = g_SMBus->IORead(1, SMB_HOST_DATA);
@@ -668,7 +668,7 @@ XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 
 	// TODO : Prevent interrupts
 
-	NTSTATUS Status = STATUS_SUCCESS;
+	NTSTATUS Status = xbox::status_success;
 
 	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address);
 	g_SMBus->IOWrite(1, SMB_HOST_COMMAND, Command);
@@ -683,7 +683,7 @@ XBSYSAPI EXPORTNUM(50) xbox::NTSTATUS NTAPI xbox::HalWriteSMBusValue
 
 	// Check if the command was executed successfully
 	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) & GS_PRERR_STS) {
-		Status = STATUS_UNSUCCESSFUL;
+		Status = xbox::status_unsuccessful;
 	}
 
 	// TODO : Reenable interrupts

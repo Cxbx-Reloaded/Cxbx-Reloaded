@@ -27,7 +27,6 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XAPI
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 
 
 #include <core\kernel\exports\xboxkrnl.h>
@@ -1153,7 +1152,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XLaunchNewImageA)
 			PVOID LaunchDataVAddr = xbox::MmAllocateContiguousMemory(sizeof(xbox::LAUNCH_DATA_PAGE));
 			if (!LaunchDataVAddr)
 			{
-				RETURN(STATUS_NO_MEMORY);
+				RETURN(xbox::status_no_memory);
 			}
 			xbox::LaunchDataPage = (xbox::LAUNCH_DATA_PAGE*)LaunchDataVAddr;
 		}

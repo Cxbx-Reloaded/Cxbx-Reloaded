@@ -1513,7 +1513,7 @@ HRESULT CxbxImpl_CreateVertexShader(CONST DWORD *pDeclaration, CONST DWORD *pFun
 	if (g_pD3DDevice == nullptr) {
 		LOG_TEST_CASE("D3DDevice_CreateVertexShader called before Direct3D_CreateDevice");
 		// We lie to allow the game to continue for now, but it probably won't work well
-		return 0; // == STATUS_SUCCESS
+		return 0; // == xbox::status_success
 	}
 
 	// HACK: TODO: support this situation

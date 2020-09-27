@@ -45,7 +45,6 @@ void CxbxInitAudio();
 
 namespace xbox {
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <dsound.h> // TODO: FIXME after global namespace xbox issue is resolved.
 
 // ******************************************************************

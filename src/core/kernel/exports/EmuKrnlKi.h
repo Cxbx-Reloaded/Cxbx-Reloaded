@@ -165,7 +165,7 @@ extern xbox::KI_TIMER_LOCK KiTimerMtx;
         (_Object_)->OwnerThread = (_Thread_);                                \
         if ((_Object_)->Abandoned == TRUE) {                                 \
             (_Object_)->Abandoned = FALSE;                                   \
-            (_Thread_)->WaitStatus = STATUS_ABANDONED;                       \
+            (_Thread_)->WaitStatus = xbox::status_abandoned;                 \
         }                                                                    \
                                                                              \
         InsertHeadList((_Thread_)->MutantListHead.Blink,                     \
@@ -196,7 +196,7 @@ extern xbox::KI_TIMER_LOCK KiTimerMtx;
             (_Object_)->OwnerThread = (_Thread_);                            \
             if ((_Object_)->Abandoned == TRUE) {                             \
                 (_Object_)->Abandoned = FALSE;                               \
-                (_Thread_)->WaitStatus = STATUS_ABANDONED;                   \
+                (_Thread_)->WaitStatus = xbox::status_abandoned;             \
             }                                                                \
                                                                              \
             InsertHeadList((_Thread_)->MutantListHead.Blink,                 \

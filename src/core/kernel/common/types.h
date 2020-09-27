@@ -71,59 +71,53 @@ typedef void* LPSECURITY_ATTRIBUTES;
 // ******************************************************************
 typedef long                            NTSTATUS;
 
-#define NT_SUCCESS(Status)              ((NTSTATUS) (Status) >= 0)
-#define STATUS_SUCCESS                   ((xbox::dword_xt   )0x00000000L)
-#define STATUS_ABANDONED                 ((xbox::dword_xt   )0x00000080L)
-#define STATUS_MUTANT_LIMIT_EXCEEDED     ((xbox::dword_xt   )0xC0000191L)
-#ifndef STATUS_PENDING
-#define STATUS_PENDING                   ((xbox::dword_xt   )0x00000103L)
-#endif
-#define STATUS_TIMER_RESUME_IGNORED      ((xbox::dword_xt   )0x40000025L)
-#define STATUS_BUFFER_OVERFLOW           ((xbox::dword_xt   )0x80000005L)
-#define STATUS_UNSUCCESSFUL              ((xbox::dword_xt   )0xC0000001)
-#define STATUS_UNRECOGNIZED_MEDIA        ((xbox::dword_xt   )0xC0000014)
-#ifndef STATUS_NO_MEMORY
-#define STATUS_NO_MEMORY                 ((xbox::dword_xt   )0xC0000017L)
-#endif
-#define STATUS_BUFFER_TOO_SMALL          ((xbox::dword_xt   )0xC0000023L)
-#define STATUS_INVALID_PARAMETER_2       ((xbox::dword_xt   )0xC00000F0L)
-#define STATUS_ALERTED                   ((xbox::dword_xt   )0x00000101)
-#define STATUS_USER_APC                  ((xbox::dword_xt   )0x000000C0L)
+inline bool nt_success(NTSTATUS status) { return status >= 0; }
+inline constexpr dword_xt status_success = 0x00000000L;
+inline constexpr dword_xt status_abandoned = 0x00000080L;
+inline constexpr dword_xt status_mutant_limit_exceeded = 0xC0000191L;
+inline constexpr dword_xt status_pending = 0x00000103L;
+inline constexpr dword_xt status_timer_resume_ignored = 0x40000025L;
+inline constexpr dword_xt status_buffer_overflow = 0x80000005L;
+inline constexpr dword_xt status_unsuccessful = 0xC0000001;
+inline constexpr dword_xt status_unrecognized_media = 0xC0000014;
+inline constexpr dword_xt status_no_memory = 0xC0000017L;
+inline constexpr dword_xt status_buffer_too_small = 0xC0000023L;
+inline constexpr dword_xt status_invalid_parameter_2 = 0xC00000F0L;
+inline constexpr dword_xt status_alerted = 0x00000101;
+inline constexpr dword_xt status_user_apc = 0x000000C0L;
 // The SCSI input buffer was too large (not necessarily an error!)
-#define STATUS_DATA_OVERRUN              ((xbox::dword_xt   )0xC000003CL)
-#define STATUS_SEMAPHORE_LIMIT_EXCEEDED  ((xbox::dword_xt   )0xC0000047L)
-#define STATUS_INVALID_IMAGE_FORMAT      ((xbox::dword_xt   )0xC000007BL)
-#define STATUS_INSUFFICIENT_RESOURCES    ((xbox::dword_xt   )0xC000009AL)
-#define STATUS_TOO_MANY_SECRETS          ((xbox::dword_xt   )0xC0000156L)
-#define STATUS_XBE_REGION_MISMATCH       ((xbox::dword_xt   )0xC0050001L)
-#define STATUS_XBE_MEDIA_MISMATCH        ((xbox::dword_xt   )0xC0050002L)
-#define STATUS_OBJECT_NAME_NOT_FOUND     ((xbox::dword_xt   )0xC0000034L)
-#define STATUS_OBJECT_NAME_COLLISION     ((xbox::dword_xt   )0xC0000035L)
-#define STATUS_INVALID_PAGE_PROTECTION   ((xbox::dword_xt   )0xC0000045L)
-#define STATUS_CONFLICTING_ADDRESSES     ((xbox::dword_xt   )0xC0000018L)
-#define STATUS_UNABLE_TO_FREE_VM         ((xbox::dword_xt   )0xC000001AL)
-#define STATUS_FREE_VM_NOT_AT_BASE       ((xbox::dword_xt   )0xC000009FL)
-#define STATUS_MEMORY_NOT_ALLOCATED      ((xbox::dword_xt   )0xC00000A0L)
-#define STATUS_NOT_COMMITTED             ((xbox::dword_xt   )0xC000002DL)
+inline constexpr dword_xt status_data_overrun = 0xC000003CL;
+inline constexpr dword_xt status_semaphore_limit_exceeded = 0xC0000047L;
+inline constexpr dword_xt status_invalid_image_format = 0xC000007BL;
+inline constexpr dword_xt status_insufficient_resources = 0xC000009AL;
+inline constexpr dword_xt status_too_many_secrets = 0xC0000156L;
+inline constexpr dword_xt status_xbe_region_mismatch = 0xC0050001L;
+inline constexpr dword_xt status_xbe_media_mismatch = 0xC0050002L;
+inline constexpr dword_xt status_object_name_not_found = 0xC0000034L;
+inline constexpr dword_xt status_object_name_collision = 0xC0000035L;
+inline constexpr dword_xt status_invalid_page_protection = 0xC0000045L;
+inline constexpr dword_xt status_conflicting_addresses = 0xC0000018L;
+inline constexpr dword_xt status_unable_to_free_vm = 0xC000001AL;
+inline constexpr dword_xt status_free_vm_not_at_base = 0xC000009FL;
+inline constexpr dword_xt status_memory_not_allocated = 0xC00000A0L;
+inline constexpr dword_xt status_not_committed = 0xC000002DL;
 
 // ******************************************************************
 // * Registry value types
 // ******************************************************************
 // Used in ExQueryNonVolatileSetting and ExSaveNonVolatileSetting
-#ifndef _WIN32 // Avoid "warning C4005:  'REG_NONE': macro redefinition" (conflicting with winnt.h)
-#define REG_NONE                    ( 0 )   // No defined value type.
-#define REG_SZ                      ( 1 )   // A null - terminated string. This will be either a Unicode or an ANSI string, depending on whether you use the Unicode or ANSI functions.
-#define REG_EXPAND_SZ               ( 2 )   // A null - terminated string that contains unexpanded references to environment variables (for example, "%PATH%"). It will be a Unicode or ANSI string depending on whether you use the Unicode or ANSI functions. To expand the environment variable references, use the ExpandEnvironmentStrings function.
-#define REG_BINARY                  ( 3 )   // Binary data in any form.
-#define REG_DWORD                   ( 4 )   // A 32 - bit number.
-#define REG_DWORD_LITTLE_ENDIAN     ( 4 )   // A 32 - bit number in little - endian format. Windows is designed to run on little - endian computer architectures. Therefore, this value is defined as REG_DWORD in the Windows header files.
-#define REG_DWORD_BIG_ENDIAN        ( 5 )   // A 32 - bit number in big - endian format. Some UNIX systems support big - endian architectures.
-#define REG_LINK                    ( 6 )   // A null - terminated Unicode string that contains the target path of a symbolic link that was created by calling the RegCreateKeyEx function with REG_OPTION_CREATE_LINK.
-#define REG_MULTI_SZ                ( 7 )   // A sequence of null - terminated strings, terminated by an empty string(\0). String1\0String2\0String3\0LastString\0\0								 // The first \0 terminates the first string, the second to the last \0 terminates the last string, and the final \0 terminates the sequence.Note that the final terminator must be factored into the length of the string.
-#define REG_RESOURCE_LIST           ( 8 )   // Resource list in the resource map
-#define REG_FULL_RESOURCE_DESCRIPTOR ( 9 )  // Resource list in the hardware description
-#define REG_RESOURCE_REQUIREMENTS_LIST ( 10 )
-#endif
+inline constexpr int_xt reg_none                       = 0;   // No defined value type.
+inline constexpr int_xt reg_sz                         = 1;   // A null - terminated string. This will be either a Unicode or an ANSI string, depending on whether you use the Unicode or ANSI functions.
+inline constexpr int_xt reg_expand_sz                  = 2;   // A null - terminated string that contains unexpanded references to environment variables (for example, "%PATH%"). It will be a Unicode or ANSI string depending on whether you use the Unicode or ANSI functions. To expand the environment variable references, use the ExpandEnvironmentStrings function.
+inline constexpr int_xt reg_binary                     = 3;   // Binary data in any form.
+inline constexpr int_xt reg_dword                      = 4;   // A 32 - bit number.
+inline constexpr int_xt reg_dword_little_endian        = 4;   // A 32 - bit number in little - endian format. Windows is designed to run on little - endian computer architectures. Therefore, this value is defined as REG_DWORD in the Windows header files.
+inline constexpr int_xt reg_dword_big_endian           = 5;   // A 32 - bit number in big - endian format. Some UNIX systems support big - endian architectures.
+inline constexpr int_xt reg_link                       = 6;   // A null - terminated Unicode string that contains the target path of a symbolic link that was created by calling the RegCreateKeyEx function with REG_OPTION_CREATE_LINK.
+inline constexpr int_xt reg_multi_sz                   = 7;   // A sequence of null - terminated strings, terminated by an empty string(\0). String1\0String2\0String3\0LastString\0\0								 // The first \0 terminates the first string, the second to the last \0 terminates the last string, and the final \0 terminates the sequence.Note that the final terminator must be factored into the length of the string.
+inline constexpr int_xt reg_resource_list              = 8;   // Resource list in the resource map
+inline constexpr int_xt reg_full_resource_descriptor   = 9;   // Resource list in the hardware description
+inline constexpr int_xt reg_resource_requirements_list = 10;
 
 // ******************************************************************
 // * calling conventions
@@ -1104,10 +1098,6 @@ typedef struct _PCI_COMMON_CONFIG
 
 }
 PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
-
-#define FIELD_OFFSET(type, field)    ((xbox::long_xt)(xbox::long_ptr_xt)&(((type *)0)->field))
-
-#define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific))
 
 #define PCI_MAX_DEVICES                     32
 #define PCI_MAX_FUNCTION                    8

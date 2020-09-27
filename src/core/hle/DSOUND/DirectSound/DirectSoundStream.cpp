@@ -537,7 +537,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Pause)
 
 	if (!pThis) {
 		LOG_TEST_CASE("CDirectSoundStream_Pause called with pThis = nullptr");
-		return STATUS_SUCCESS;
+		return xbox::status_success;
 	}
 
     HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
@@ -1431,7 +1431,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundStream_Set3DVoiceData)
 
     LOG_UNIMPLEMENTED();
 
-    RETURN(STATUS_SUCCESS);
+    RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -1452,5 +1452,5 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundStream_Use3DVoiceData)
 
     LOG_UNIMPLEMENTED();
 
-    RETURN(STATUS_SUCCESS);
+    RETURN(xbox::status_success);
 }

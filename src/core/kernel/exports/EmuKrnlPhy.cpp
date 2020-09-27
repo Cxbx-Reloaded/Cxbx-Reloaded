@@ -61,7 +61,7 @@ LONG PhyLockFlag;
 #define PhyLock() InterlockedCompareExchange(&PhyLockFlag, 1, 0)
 #define PhyUnlock() (PhyLockFlag = 0)
 #define NETERR(_err)        HRESULT_FROM_WIN32(_err)
-#define NETERR_OK           STATUS_SUCCESS
+#define NETERR_OK           xbox::status_success
 #define NETERR_HARDWARE     0x801f0001  // hardware not responding
 
 #define BIT(n)              (1u << (n))

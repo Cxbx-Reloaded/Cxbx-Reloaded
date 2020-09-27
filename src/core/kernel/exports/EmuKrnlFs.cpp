@@ -82,7 +82,7 @@ XBSYSAPI EXPORTNUM(37) xbox::NTSTATUS NTAPI xbox::FscSetCacheSize
 {
 	LOG_FUNC_ONE_ARG(NumberOfCachePages);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 	KeWaitForSingleObject(&g_FscCacheEvent, Executive, 0, 0, 0);
 	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
 

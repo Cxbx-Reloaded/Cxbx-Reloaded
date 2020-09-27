@@ -27,7 +27,6 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XGRP
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 #include "core\kernel\support\Emu.h"

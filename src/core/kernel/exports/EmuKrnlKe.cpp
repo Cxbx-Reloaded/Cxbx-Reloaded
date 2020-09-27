@@ -109,20 +109,20 @@ xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
     if (Alertable) { \
         if (Thread->Alerted[WaitMode] != FALSE) { \
             Thread->Alerted[WaitMode] = FALSE; \
-            WaitStatus = STATUS_ALERTED; \
+            WaitStatus = xbox::status_alerted; \
             break; \
         } else if ((WaitMode != KernelMode) && \
                   (IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])) == FALSE) { \
             Thread->ApcState.UserApcPending = TRUE; \
-            WaitStatus = STATUS_USER_APC; \
+            WaitStatus = xbox::status_user_apc; \
             break; \
         } else if (Thread->Alerted[KernelMode] != FALSE) { \
             Thread->Alerted[KernelMode] = FALSE; \
-            WaitStatus = STATUS_ALERTED; \
+            WaitStatus = xbox::status_alerted; \
             break; \
         } \
     } else if ((WaitMode != KernelMode) && (Thread->ApcState.UserApcPending)) { \
-        WaitStatus = STATUS_USER_APC; \
+        WaitStatus = xbox::status_user_apc; \
         break; \
     }
 
@@ -1325,7 +1325,7 @@ XBSYSAPI EXPORTNUM(132) xbox::long_xt NTAPI xbox::KeReleaseSemaphore
 	BOOL signalstate_overflow = adjusted_signalstate < initial_state;
 	if (limit_reached || signalstate_overflow) {
 		KiUnlockDispatcherDatabase(orig_irql);
-		ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+		ExRaiseStatus(xbox::status_semaphore_limit_exceeded);
 	}
 	Semaphore->Header.SignalState = adjusted_signalstate;
 
@@ -1531,7 +1531,7 @@ XBSYSAPI EXPORTNUM(139) xbox::NTSTATUS NTAPI xbox::KeRestoreFloatingPointState
 {
 	LOG_FUNC_ONE_ARG(PublicFloatSave);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1548,7 +1548,7 @@ XBSYSAPI EXPORTNUM(140) xbox::ulong_xt NTAPI xbox::KeResumeThread
 {
 	LOG_FUNC_ONE_ARG(Thread);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1577,7 +1577,7 @@ XBSYSAPI EXPORTNUM(142) xbox::NTSTATUS NTAPI xbox::KeSaveFloatingPointState
 {
 	LOG_FUNC_ONE_ARG_OUT(PublicFloatSave);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	LOG_UNIMPLEMENTED();
 
@@ -1724,7 +1724,7 @@ XBSYSAPI EXPORTNUM(146) xbox::void_xt NTAPI xbox::KeSetEventBoostPriority
 		}
 
 		WaitThread->Quantum = WaitThread->ApcState.Process->ThreadQuantum;
-		// TODO: KiUnwaitThread(WaitThread, STATUS_SUCCESS, 1);
+		// TODO: KiUnwaitThread(WaitThread, xbox::status_success, 1);
 		// For now, we just sleep to give other threads time to wake
 		// See KePulseEvent
 		Sleep(1);
@@ -1874,7 +1874,7 @@ XBSYSAPI EXPORTNUM(152) xbox::ulong_xt NTAPI xbox::KeSuspendThread
 {
 	LOG_FUNC_ONE_ARG(Thread);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	LOG_UNIMPLEMENTED();
 
@@ -2007,7 +2007,7 @@ XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 		}
 		else {
 			WaitSatisfied = TRUE;
-			Thread->WaitStatus = STATUS_SUCCESS;
+			Thread->WaitStatus = xbox::status_success;
 
 			for (ULONG Index = 0; Index < Count; Index += 1) {
 				ObjectMutant = (PKMUTANT)Object[Index];
@@ -2023,21 +2023,21 @@ XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 							}
 							else {
 								KiUnlockDispatcherDatabase(Thread->WaitIrql);
-								ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
+								ExRaiseStatus(xbox::status_mutant_limit_exceeded);
 							}
 						}
 					}
 					else if (ObjectMutant->Header.SignalState) {
 						// Otherwise, if the signal state is > 0, we can still just satisfy the wait
 						KiWaitSatisfyOther(ObjectMutant);
-						WaitStatus = STATUS_SUCCESS;
+						WaitStatus = xbox::status_success;
 						goto NoWait;
 					}
 				} else {
 					if (ObjectMutant->Header.Type == MutantObject) {
 						if ((Thread == ObjectMutant->OwnerThread) && (ObjectMutant->Header.SignalState == MINLONG)) {
 							KiUnlockDispatcherDatabase(Thread->WaitIrql);
-							ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
+							ExRaiseStatus(xbox::status_mutant_limit_exceeded);
 						} else if ((ObjectMutant->Header.SignalState <= 0) && (Thread != ObjectMutant->OwnerThread)) {
 							WaitSatisfied = FALSE;
 						}
@@ -2143,7 +2143,7 @@ XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 
 			//WaitStatus = (NTSTATUS)KiSwapThread();
 
-			//if (WaitStatus == STATUS_USER_APC) {
+			//if (WaitStatus == xbox::status_user_apc) {
 				// TODO: KiDeliverUserApc();
 			//}
 
@@ -2174,7 +2174,7 @@ XBSYSAPI EXPORTNUM(158) xbox::NTSTATUS NTAPI xbox::KeWaitForMultipleObjects
 	// The waiting thead has been alerted, or an APC needs to be delivered
 	// So unlock the dispatcher database, lower the IRQ and return the status
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
-	if (WaitStatus == STATUS_USER_APC) {
+	if (WaitStatus == xbox::status_user_apc) {
 		//TODO: KiDeliverUserApc();
 	}
 
@@ -2195,7 +2195,7 @@ NoWait:
 
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 
-	if (WaitStatus == STATUS_USER_APC) {
+	if (WaitStatus == xbox::status_user_apc) {
 		// TODO: KiDeliverUserApc();
 	}
 
@@ -2246,7 +2246,7 @@ XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
 			KiUnlockDispatcherDatabase(Thread->WaitIrql);
 		} else {
 			PKMUTANT ObjectMutant = (PKMUTANT)Object;
-			Thread->WaitStatus = STATUS_SUCCESS;
+			Thread->WaitStatus = xbox::status_success;
 
 			if (ObjectMutant->Header.Type == MutantObject) {
 				// If the object is a mutant object and it has been acquired MINGLONG times, raise an exception
@@ -2259,21 +2259,21 @@ XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
 					}
 					else {
 						KiUnlockDispatcherDatabase(Thread->WaitIrql);
-						ExRaiseStatus(STATUS_MUTANT_LIMIT_EXCEEDED);
+						ExRaiseStatus(xbox::status_mutant_limit_exceeded);
 					}
 				}
 			}
 			else if (ObjectMutant->Header.SignalState > 0) {
 				// Otherwise, if the signal state is > 0, we can still just satisfy the wait
 				KiWaitSatisfyOther(ObjectMutant);
-				WaitStatus = STATUS_SUCCESS;
+				WaitStatus = xbox::status_success;
 				goto NoWait;
 			}
 
 			// If we reached here, the wait could not be satisfied immediately, so we must setup a WaitBlock
 			Thread->WaitBlockList = WaitBlock;
 			WaitBlock->Object = Object;
-			WaitBlock->WaitKey = (cshort_xt)(STATUS_SUCCESS);
+			WaitBlock->WaitKey = (cshort_xt)(xbox::status_success);
 			WaitBlock->WaitType = WaitAny;
 			WaitBlock->Thread = Thread;
 
@@ -2348,7 +2348,7 @@ XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
 			/*
 			WaitStatus = (NTSTATUS)KiSwapThread();
 
-			if (WaitStatus == STATUS_USER_APC) {
+			if (WaitStatus == xbox::status_user_apc) {
 				// TODO: KiDeliverUserApc();
 			}
 
@@ -2379,7 +2379,7 @@ XBSYSAPI EXPORTNUM(159) xbox::NTSTATUS NTAPI xbox::KeWaitForSingleObject
 	// The waiting thead has been alerted, or an APC needs to be delivered
 	// So unlock the dispatcher database, lower the IRQ and return the status
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
-	if (WaitStatus == STATUS_USER_APC) {
+	if (WaitStatus == xbox::status_user_apc) {
 		//TODO: KiDeliverUserApc();
 	}
 
@@ -2400,7 +2400,7 @@ NoWait:
 
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 
-	if (WaitStatus == STATUS_USER_APC) {
+	if (WaitStatus == xbox::status_user_apc) {
 		// TODO: KiDeliverUserApc();
 	}
 

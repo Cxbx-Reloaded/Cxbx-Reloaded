@@ -1677,7 +1677,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
 
     LOG_UNIMPLEMENTED();
 
-    RETURN(STATUS_SUCCESS);
+    RETURN(xbox::status_success);
 }
 
 // ******************************************************************

@@ -29,7 +29,6 @@
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <cstdio>
 

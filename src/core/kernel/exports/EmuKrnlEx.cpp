@@ -47,7 +47,7 @@ namespace NtDll
 
 #include <atomic> // for std::atomic
 #pragma warning(disable:4005) // Ignore redefined status values
-#include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
+#include <ntstatus.h> // For xbox::status_buffer_too_small
 #pragma warning(default:4005)
 
 static CRITICAL_SECTION eeprom_crit_section;
@@ -410,7 +410,7 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 		LOG_FUNC_ARG_OUT(ResultLength)
 	LOG_FUNC_END;
 
-	NTSTATUS Status = STATUS_SUCCESS;
+	NTSTATUS Status = xbox::status_success;
 	void * value_addr = nullptr;
 	int value_type;
 	int result_length;
@@ -419,7 +419,7 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 	// handle eeprom read
 	if (index == XC_FACTORY_GAME_REGION) {
 		value_addr = &XboxFactoryGameRegion;
-		value_type = REG_DWORD;
+		value_type = reg_dword;
 		result_length = sizeof(ULONG);
 	}
 	else {
@@ -457,11 +457,11 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 			UnlockEeprom();
 		}
 		else {
-			Status = STATUS_BUFFER_TOO_SMALL;
+			Status = xbox::status_buffer_too_small;
 		}
 	}
 	else {
-		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+		Status = xbox::status_object_name_not_found;
 	}
 
 	RETURN(Status);
@@ -483,7 +483,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 		LOG_FUNC_ARG(bIsWriteMode)
 		LOG_FUNC_END;
 
-	NTSTATUS Result = STATUS_SUCCESS;
+	NTSTATUS Result = xbox::status_success;
 
 /* TODO: Port this Dxbx code :
 	if (pRefurbInfo)
@@ -508,7 +508,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 				&IoStatusBlock,
 				FILE_SHARE_READ or FILE_SHARE_WRITE,
 				FILE_SYNCHRONOUS_IO_ALERT);
-			if (NT_SUCCESS(Result))
+			if (nt_success(Result))
 			{
 				LARGE_INTEGER ByteOffset;
 				ByteOffset.QuadPart = XBOX_REFURB_INFO_SECTOR_INDEX * XBOX_HD_SECTOR_SIZE;
@@ -523,7 +523,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 				else
 				{
 					Result = xbox::NtReadFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
-					if (NT_SUCCESS(Result)) 
+					if (nt_success(Result)) 
 					{
 						if (RefurbInfoCopy.Signature_ == XBOX_REFURB_INFO_SIGNATURE)
 							// No signature - clear output buffer :
@@ -538,7 +538,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 		}
 	}
 	else
-		Result = STATUS_UNSUCCESSFUL; // This may never happen!
+		Result = xbox::status_unsuccessful; // This may never happen!
 */
 
 	LOG_IGNORED();
@@ -635,13 +635,13 @@ XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 		LOG_FUNC_ARG(ValueLength)
 	LOG_FUNC_END;
 
-	NTSTATUS Status = STATUS_SUCCESS;
+	NTSTATUS Status = xbox::status_success;
 	void * value_addr = nullptr;
 	DWORD result_length;
 
 	// Don't allow writing to the eeprom encrypted area
 	if (ValueIndex == XC_ENCRYPTED_SECTION)
-		RETURN(STATUS_OBJECT_NAME_NOT_FOUND);
+		RETURN(xbox::status_object_name_not_found);
 
 	// handle eeprom write
 	if (g_bIsDebug || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
@@ -683,7 +683,7 @@ XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 		}
 	}
 	else {
-		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+		Status = xbox::status_object_name_not_found;
 	}
 
 	RETURN(Status);
