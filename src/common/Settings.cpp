@@ -915,10 +915,10 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 		m_si.Delete(section_core, "LoaderExperiment", true);
 		break;
 	case 6:
-                break;
+		break;
         case 9:
-                m_si.Delete(section_video, "HardwareYUV", true);
-                break;
+		m_si.Delete(section_video, "HardwareYUV", true);
+		break;
 	default:
 		break;
 	}
