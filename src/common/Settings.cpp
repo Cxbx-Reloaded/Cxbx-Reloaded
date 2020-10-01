@@ -916,7 +916,7 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 		break;
 	case 6:
 		break;
-        case 9:
+	case 9:
 		m_si.Delete(section_video, "HardwareYUV", true);
 		break;
 	default:
