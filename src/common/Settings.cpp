@@ -63,8 +63,9 @@ uint16_t g_LibVersion_DSOUND = 0;
 // * 6: (RadWolfie), added loader executable member to core, only for clean up loader expertimental setting
 // * 7: (RadWolfie), fix allowAdminPrivilege not align with other boolean members
 // * 8: (ergo720),   added general input settings
+// * 9: (LukeUsher), replaced HardwareYUV with MaintainAspect
 ///////////////////////////
-const unsigned int settings_version = 8;
+const unsigned int settings_version = 9;
 
 Settings* g_Settings = nullptr;
 
@@ -914,6 +915,10 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 		m_si.Delete(section_core, "LoaderExperiment", true);
 		break;
 	case 6:
+                break;
+        case 9:
+                m_si.Delete(section_video, "HardwareYUV", true);
+                break;
 	default:
 		break;
 	}
