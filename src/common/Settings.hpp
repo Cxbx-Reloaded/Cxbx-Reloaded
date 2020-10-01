@@ -116,7 +116,7 @@ public:
         unsigned int direct3DDevice;
 		bool bVSync;
 		bool bFullScreen;
-		bool bHardwareYUV;
+		bool bMaintainAspect;
         bool Reserved3;
 		int  renderScaleFactor = 1;
 		int  Reserved99[9] = { 0 };

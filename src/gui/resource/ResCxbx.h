@@ -149,7 +149,7 @@
 #define IDC_VC_RENDER_RESOLUTION        1052
 #define IDC_BTN_COM3                    1053
 #define IDC_BTN_COM4                    1054
-#define IDC_CV_HARDWAREYUV              1055
+#define IDC_CV_MAINTAINASPECT           1055
 #define IDC_BTN_COM5                    1056
 #define IDC_BTN_FUNC1                   1057
 #define IDC_BTN_FUNC2                   1058

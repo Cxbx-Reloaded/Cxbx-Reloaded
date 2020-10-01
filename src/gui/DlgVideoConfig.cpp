@@ -151,7 +151,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                 SendMessage(GetDlgItem(hWndDlg, IDC_CV_VSYNC), BM_SETCHECK, (WPARAM)g_XBVideo.bVSync, 0);
 
-				SendMessage(GetDlgItem(hWndDlg, IDC_CV_HARDWAREYUV), BM_SETCHECK, (WPARAM)g_XBVideo.bHardwareYUV, 0);
+                SendMessage(GetDlgItem(hWndDlg, IDC_CV_MAINTAINASPECT), BM_SETCHECK, (WPARAM)g_XBVideo.bMaintainAspect, 0);
             }
         }
         break;
@@ -224,9 +224,9 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
                         g_XBVideo.bVSync = (lRet == BST_CHECKED);
 
-						lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_HARDWAREYUV), BM_GETCHECK, 0, 0);
+                        lRet = SendMessage(GetDlgItem(hWndDlg, IDC_CV_MAINTAINASPECT), BM_GETCHECK, 0, 0);
 
-						g_XBVideo.bHardwareYUV = (lRet == BST_CHECKED);
+                        g_XBVideo.bMaintainAspect = (lRet == BST_CHECKED);
                     }
 
                     /*! save video configuration */
