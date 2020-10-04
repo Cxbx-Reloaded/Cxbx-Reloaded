@@ -285,6 +285,9 @@ XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 		}*/
 
         *ThreadHandle = (HANDLE)_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, (unsigned int*)&dwThreadId);
+        if (ThreadId != NULL)
+            *ThreadId = (xbox::HANDLE)dwThreadId;
+
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
 		EmuLog(LOG_LEVEL::DEBUG, "Waiting for Xbox proxy thread to start...");
@@ -322,9 +325,6 @@ XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", *ThreadHandle, dwThreadId);
 
 		CxbxKrnlRegisterThread(*ThreadHandle);
-
-		if (ThreadId != NULL)
-			*ThreadId = (xbox::HANDLE)dwThreadId;
 	}
 
 	SwitchToThread();
