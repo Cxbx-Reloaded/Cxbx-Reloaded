@@ -1140,18 +1140,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		}
 	}
 
-	// Decode kernel thunk table address :
-	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
-	kt ^= XOR_KT_KEY[to_underlying(xbeType)];
-
-	// Process the Kernel thunk table to map Kernel function calls to their actual address :
-	MapThunkTable((uint32_t*)kt, CxbxKrnl_KernelThunkTable);
-
-	// Does this xbe import any other libraries?
-	if (CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr) {
-		ImportLibraries((XbeImportEntry*)CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr);
-	}
-
 	g_ExceptionManager = new ExceptionManager(); // If in need to add VEHs, move this line earlier. (just in case)
 
 	// Launch the XBE :
@@ -1161,7 +1149,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		void* XbeTlsData = (XbeTls != nullptr) ? (void*)CxbxKrnl_Xbe->m_TLS->dwDataStartAddr : nullptr;
 		// Decode Entry Point
 		xbox::addr EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
-		EntryPoint ^= XOR_EP_KEY[to_underlying(xbeType)];
+		EntryPoint ^= XOR_EP_KEY[to_underlying(CxbxKrnl_Xbe->GetXbeType())];
 		// Launch XBE
 		CxbxKrnlInit(
 			XbeTlsData, 
@@ -1467,9 +1455,22 @@ __declspec(noreturn) void CxbxKrnlInit
 	if (BootFlags & BOOT_SKIP_ANIMATION) {} // TODO
 	if (BootFlags & BOOT_RUN_DASHBOARD) {} // TODO
 
-    CxbxInitAudio();
+	CxbxInitAudio();
 
+	// EmuHLEIntercept must be call before MapThunkTable, otherwise scanning for symbols will not work properly.
 	EmuHLEIntercept(pXbeHeader);
+
+	// Decode kernel thunk table address :
+	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
+	kt ^= XOR_KT_KEY[to_underlying(CxbxKrnl_Xbe->GetXbeType())];
+
+	// Process the Kernel thunk table to map Kernel function calls to their actual address :
+	MapThunkTable((uint32_t *)kt, CxbxKrnl_KernelThunkTable);
+
+	// Does this xbe import any other libraries?
+	if (CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr) {
+		ImportLibraries((XbeImportEntry *)CxbxKrnl_Xbe->m_Header.dwNonKernelImportDirAddr);
+	}
 
 	if (!bLLE_USB) {
 		SetupXboxDeviceTypes();
