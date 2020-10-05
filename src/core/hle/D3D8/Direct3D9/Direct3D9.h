@@ -619,6 +619,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture)
 	X_D3DBaseTexture  *pTexture
 );
 
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+(
+	dword_xt           Stage
+);
+
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4)
 (
 	X_D3DBaseTexture  *pTexture

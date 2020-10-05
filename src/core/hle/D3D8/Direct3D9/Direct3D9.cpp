@@ -295,7 +295,8 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_4,       (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_8,       (xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                                    );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture,              (xbox::dword_xt, xbox::X_D3DBaseTexture*)                                                    );  \
-    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4,            (xbox::X_D3DBaseTexture*)                                                           );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4__LTCG_eax_pTexture, (xbox::dword_xt)                                                                             );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4,            (xbox::X_D3DBaseTexture*)                                                                    );  \
   /*XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetVertexShader,         (xbox::dword_xt)                                                                            );*/\
   /*XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetVertexShaderInput,    (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );*/\
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetViewport,             (CONST xbox::X_D3DVIEWPORT8*)                                                       );  \
@@ -4317,7 +4318,34 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
 }
 
 // LTCG specific D3DDevice_SetTexture function...
-// This uses a custom calling convention where parameter is passed in EAX
+// This uses a custom calling convention where pTexture is passed in EAX
+// Test-case: NASCAR Heat 2002
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+(
+	dword_xt           Stage
+)
+{
+	X_D3DBaseTexture  *pTexture;
+	__asm mov pTexture, eax;
+
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Stage)
+	//	LOG_FUNC_ARG(pTexture)
+	//	LOG_FUNC_END;
+	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTexture_4__LTCG_eax_pTexture(Stage : %d pTexture : %08x);", Stage, pTexture);
+
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	__asm {
+		mov eax, pTexture
+		push Stage
+		call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+	}
+
+	g_pXbox_SetTexture[Stage] = pTexture;
+}
+
+// LTCG specific D3DDevice_SetTexture function...
+// This uses a custom calling convention where Stage is passed in EAX
 // Test-case: Metal Wolf Chaos
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 (
