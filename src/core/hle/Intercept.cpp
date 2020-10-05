@@ -192,10 +192,7 @@ void CDECL EmuOutputMessage(xb_output_message mFlag,
         }
         case XB_OUTPUT_MESSAGE_DEBUG:
         default: {
-#ifdef _DEBUG_TRACE
-            printf("%s\n", message);
-#endif
-
+            EmuLog(LOG_LEVEL::DEBUG, "%s", message);
             break;
         }
     }
