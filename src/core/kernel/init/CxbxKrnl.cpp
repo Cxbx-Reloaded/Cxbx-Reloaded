@@ -492,7 +492,7 @@ const uint8_t rdtsc_pattern[] = {
     0xEB,
     0xF6,
     0xA1,
-    0x01
+    0x01                       // one false positive in Group S Challenge [1.05] .text E8 0F 31 01 00
 };
 const int sizeof_rdtsc_pattern = sizeof(rdtsc_pattern);
 
@@ -545,6 +545,15 @@ void PatchRdtscInstructions()
 						if (next_byte == 0x50)
 						{
 							if (*(uint8_t*)(addr - 2) == 0x83 && *(uint8_t*)(addr - 1) == 0xE2)
+							{
+								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
+								continue;
+							}
+
+						}
+						if (next_byte == 0x01)
+						{
+							if (*(uint8_t*)(addr - 1) == 0xE8 && *(uint8_t*)(addr + 3) == 0x00)
 							{
 								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
 								continue;
