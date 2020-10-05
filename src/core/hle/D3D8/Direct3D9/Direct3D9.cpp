@@ -4318,7 +4318,6 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
 
 // LTCG specific D3DDevice_SetTexture function...
 // This uses a custom calling convention where parameter is passed in EAX
-// TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
 // Test-case: Metal Wolf Chaos
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 (
@@ -4335,7 +4334,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTexture_4(Stage : %d pTexture : %08x);", Stage, pTexture);
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	//XB_TRMP(D3DDevice_SetTexture_4)(pTexture);
+	__asm {
+		mov eax, Stage
+		push pTexture
+		call XB_TRMP(D3DDevice_SetTexture_4)
+	}
 
 	g_pXbox_SetTexture[Stage] = pTexture;
 }
