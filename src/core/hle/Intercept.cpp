@@ -387,7 +387,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	std::stringstream sstream;
 	char tAsciiTitle[40] = "Unknown";
 	std::setlocale(LC_ALL, "English");
-	std::wcstombs(tAsciiTitle, g_pCertificate->wszTitleName, sizeof(tAsciiTitle));
+	std::wcstombs(tAsciiTitle, CxbxKrnl_Xbe->m_Certificate.wszTitleName, sizeof(tAsciiTitle));
 	std::string szTitleName(tAsciiTitle);
 	CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
 	sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
@@ -510,9 +510,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 
 	// Store Certificate Details
 	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.Name, tAsciiTitle);
-	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.TitleID, FormatTitleId(g_pCertificate->dwTitleId).c_str());
-	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.TitleIDHex, g_pCertificate->dwTitleId, nullptr, /*UseHex =*/true);
-	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.Region, g_pCertificate->dwGameRegion, nullptr, /*UseHex =*/true);
+	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.TitleID, FormatTitleId(CxbxKrnl_Xbe->m_Certificate.dwTitleId).c_str());
+	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.TitleIDHex, CxbxKrnl_Xbe->m_Certificate.dwTitleId, nullptr, /*UseHex =*/true);
+	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.Region, CxbxKrnl_Xbe->m_Certificate.dwGameRegion, nullptr, /*UseHex =*/true);
 
 	// Store Library Details
 	for (unsigned int i = 0; i < pXbeHeader->dwLibraryVersions; i++) {
