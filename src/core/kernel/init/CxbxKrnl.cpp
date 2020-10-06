@@ -487,7 +487,8 @@ const uint8_t rdtsc_pattern[] = {
     0xEB,
     0xF6,
     0xA1,
-    0x01                       // one false positive in Group S Challenge [1.05] .text E8 0F 31 01 00
+    0x01,                      // one false positive in Group S Challenge [1.05] .text E8 0F 31 01 00
+    0xA3
 };
 const int sizeof_rdtsc_pattern = sizeof(rdtsc_pattern);
 
