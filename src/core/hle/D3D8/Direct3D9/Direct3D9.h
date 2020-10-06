@@ -444,7 +444,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstant)
     dword_xt       ConstantCount
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetVertexShaderConstant_8)();
+xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
+(
+    void*,
+    dword_xt    ConstantCount,
+    int_xt      Register,
+    CONST PVOID pConstantData
+);
+
 
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant1

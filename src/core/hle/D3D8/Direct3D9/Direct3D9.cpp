@@ -4189,26 +4189,23 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_CreateVertexShader)
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
-// This uses a custom calling convention where parameter is passed in EDX
+// This uses a custom calling convention where ConstantCount parameter is passed in EDX
 // Test-case: Murakumo
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
+xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
 (
+    void*,
+    dword_xt    ConstantCount,
+    int_xt      Register,
+    CONST PVOID pConstantData
 )
 {
-	static uint32_t returnAddr;
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(pConstantData)
+		LOG_FUNC_ARG(ConstantCount)
+		LOG_FUNC_END;
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
-
-	__asm {
-		pop returnAddr
-		push edx
-		call EmuPatch_D3DDevice_SetVertexShaderConstant
-		mov eax, 0
-		push returnAddr
-		ret
-	}
+	CxbxImpl_SetVertexShaderConstant(Register, pConstantData, ConstantCount);
 }
 
 // ******************************************************************
