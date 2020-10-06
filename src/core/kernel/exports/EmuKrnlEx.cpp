@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::EX
 
 
-#include <xboxkrnl/xboxkrnl.h> // For ExAllocatePool, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For ExAllocatePool, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuEEPROM.h" // For EmuFindEEPROMInfo, EEPROM, XboxFactoryGameRegion
 #include "EmuKrnlLogging.h"
@@ -47,7 +47,7 @@ namespace NtDll
 
 #include <atomic> // for std::atomic
 #pragma warning(disable:4005) // Ignore redefined status values
-#include <ntstatus.h> // For STATUS_BUFFER_TOO_SMALL
+#include <ntstatus.h> // For xbox::status_buffer_too_small
 #pragma warning(default:4005)
 
 static CRITICAL_SECTION eeprom_crit_section;
@@ -140,7 +140,7 @@ static bool eeprom_data_is_valid(xbox::XC_VALUE_INDEX index)
 // * 0x000C - ExAcquireReadWriteLockExclusive()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(12) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockExclusive
+XBSYSAPI EXPORTNUM(12) xbox::void_xt NTAPI xbox::ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -169,7 +169,7 @@ XBSYSAPI EXPORTNUM(12) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockExclusive
 // * 0x000D - ExAcquireReadWriteLockShared()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(13) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) xbox::void_xt NTAPI xbox::ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -205,7 +205,7 @@ XBSYSAPI EXPORTNUM(13) xbox::VOID NTAPI xbox::ExAcquireReadWriteLockShared
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 (
-	IN SIZE_T NumberOfBytes
+	IN size_xt NumberOfBytes
 )
 {
 	LOG_FORWARD("ExAllocatePoolWithTag");
@@ -221,8 +221,8 @@ XBSYSAPI EXPORTNUM(14) xbox::PVOID NTAPI xbox::ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(15) xbox::PVOID NTAPI xbox::ExAllocatePoolWithTag
 (
-	IN SIZE_T NumberOfBytes,
-	IN ULONG Tag
+	IN size_xt NumberOfBytes,
+	IN ulong_xt Tag
 )
 {
 	LOG_FUNC_BEGIN
@@ -252,7 +252,7 @@ XBSYSAPI EXPORTNUM(16) xbox::OBJECT_TYPE xbox::ExEventObjectType =
 // ******************************************************************
 // * 0x0011 - ExFreePool()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) xbox::VOID NTAPI xbox::ExFreePool
+XBSYSAPI EXPORTNUM(17) xbox::void_xt NTAPI xbox::ExFreePool
 (
 	IN PVOID	P
 )
@@ -266,7 +266,7 @@ XBSYSAPI EXPORTNUM(17) xbox::VOID NTAPI xbox::ExFreePool
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(18) xbox::VOID NTAPI xbox::ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) xbox::void_xt NTAPI xbox::ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -321,10 +321,10 @@ XBSYSAPI EXPORTNUM(19) xbox::LARGE_INTEGER NTAPI xbox::ExInterlockedAddLargeInte
 // * 0x0014 - ExInterlockedAddLargeStatistic()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) xbox::VOID FASTCALL xbox::ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) xbox::void_xt FASTCALL xbox::ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
-	IN ULONG Increment
+	IN ulong_xt Increment
 )
 {
 	LOG_FUNC_BEGIN
@@ -340,7 +340,7 @@ XBSYSAPI EXPORTNUM(20) xbox::VOID FASTCALL xbox::ExInterlockedAddLargeStatistic
 // * 0x0015 - ExInterlockedCompareExchange64()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) xbox::LONGLONG FASTCALL xbox::ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) xbox::longlong_xt FASTCALL xbox::ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
@@ -378,7 +378,7 @@ XBSYSAPI EXPORTNUM(22) xbox::OBJECT_TYPE xbox::ExMutantObjectType =
 // ******************************************************************
 // * 0x0017 - ExQueryPoolBlockSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(23) xbox::ULONG NTAPI xbox::ExQueryPoolBlockSize
+XBSYSAPI EXPORTNUM(23) xbox::ulong_xt NTAPI xbox::ExQueryPoolBlockSize
 (
 	IN PVOID PoolBlock
 )
@@ -393,12 +393,12 @@ XBSYSAPI EXPORTNUM(23) xbox::ULONG NTAPI xbox::ExQueryPoolBlockSize
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
+XBSYSAPI EXPORTNUM(24) xbox::ntstatus_xt NTAPI xbox::ExQueryNonVolatileSetting
 (
-	IN  DWORD   ValueIndex,
-	OUT DWORD   *Type,
+	IN  dword_xt   ValueIndex,
+	OUT dword_xt   *Type,
 	OUT PVOID   Value,
-	IN  SIZE_T  ValueLength,
+	IN  size_xt  ValueLength,
 	OUT PSIZE_T ResultLength OPTIONAL
 )
 {
@@ -410,7 +410,7 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 		LOG_FUNC_ARG_OUT(ResultLength)
 	LOG_FUNC_END;
 
-	NTSTATUS Status = STATUS_SUCCESS;
+	NTSTATUS Status = xbox::status_success;
 	void * value_addr = nullptr;
 	int value_type;
 	int result_length;
@@ -419,7 +419,7 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 	// handle eeprom read
 	if (index == XC_FACTORY_GAME_REGION) {
 		value_addr = &XboxFactoryGameRegion;
-		value_type = REG_DWORD;
+		value_type = reg_dword;
 		result_length = sizeof(ULONG);
 	}
 	else {
@@ -457,11 +457,11 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 			UnlockEeprom();
 		}
 		else {
-			Status = STATUS_BUFFER_TOO_SMALL;
+			Status = xbox::status_buffer_too_small;
 		}
 	}
 	else {
-		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+		Status = xbox::status_object_name_not_found;
 	}
 
 	RETURN(Status);
@@ -470,11 +470,11 @@ XBSYSAPI EXPORTNUM(24) xbox::NTSTATUS NTAPI xbox::ExQueryNonVolatileSetting
 // ******************************************************************
 // * 0x0019 - ExReadWriteRefurbInfo()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
+XBSYSAPI EXPORTNUM(25) xbox::ntstatus_xt NTAPI xbox::ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
-	IN ULONG	dwBufferSize,
-	IN BOOLEAN	bIsWriteMode
+	IN ulong_xt	dwBufferSize,
+	IN boolean_xt	bIsWriteMode
 )
 {
 	LOG_FUNC_BEGIN
@@ -483,7 +483,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 		LOG_FUNC_ARG(bIsWriteMode)
 		LOG_FUNC_END;
 
-	NTSTATUS Result = STATUS_SUCCESS;
+	NTSTATUS Result = xbox::status_success;
 
 /* TODO: Port this Dxbx code :
 	if (pRefurbInfo)
@@ -508,7 +508,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 				&IoStatusBlock,
 				FILE_SHARE_READ or FILE_SHARE_WRITE,
 				FILE_SYNCHRONOUS_IO_ALERT);
-			if (NT_SUCCESS(Result))
+			if (nt_success(Result))
 			{
 				LARGE_INTEGER ByteOffset;
 				ByteOffset.QuadPart = XBOX_REFURB_INFO_SECTOR_INDEX * XBOX_HD_SECTOR_SIZE;
@@ -523,7 +523,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 				else
 				{
 					Result = xbox::NtReadFile(ConfigPartitionHandle, 0, NULL, NULL, &IoStatusBlock, &RefurbInfoCopy, XBOX_HD_SECTOR_SIZE, &ByteOffset);
-					if (NT_SUCCESS(Result)) 
+					if (nt_success(Result)) 
 					{
 						if (RefurbInfoCopy.Signature_ == XBOX_REFURB_INFO_SIGNATURE)
 							// No signature - clear output buffer :
@@ -538,7 +538,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 		}
 	}
 	else
-		Result = STATUS_UNSUCCESSFUL; // This may never happen!
+		Result = xbox::status_unsuccessful; // This may never happen!
 */
 
 	LOG_IGNORED();
@@ -550,7 +550,7 @@ XBSYSAPI EXPORTNUM(25) xbox::NTSTATUS NTAPI xbox::ExReadWriteRefurbInfo
 // * 0x001A - ExRaiseException()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(26) xbox::VOID NTAPI xbox::ExRaiseException
+XBSYSAPI EXPORTNUM(26) xbox::void_xt NTAPI xbox::ExRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 )
@@ -565,9 +565,9 @@ XBSYSAPI EXPORTNUM(26) xbox::VOID NTAPI xbox::ExRaiseException
 // * 0x001B - ExRaiseStatus()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(27) xbox::VOID NTAPI xbox::ExRaiseStatus
+XBSYSAPI EXPORTNUM(27) xbox::void_xt NTAPI xbox::ExRaiseStatus
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 )
 {
 	LOG_FUNC_ONE_ARG(Status);
@@ -579,7 +579,7 @@ XBSYSAPI EXPORTNUM(27) xbox::VOID NTAPI xbox::ExRaiseStatus
 // * 0x001C - ExReleaseReadWriteLock()
 // ******************************************************************
 // Source:APILogger - Uncertain
-XBSYSAPI EXPORTNUM(28) xbox::VOID NTAPI xbox::ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) xbox::void_xt NTAPI xbox::ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 )
@@ -600,7 +600,7 @@ XBSYSAPI EXPORTNUM(28) xbox::VOID NTAPI xbox::ExReleaseReadWriteLock
 			ReadWriteLock->ReadersEntryCount = ReadWriteLock->ReadersWaitingCount;
 			ReadWriteLock->ReadersWaitingCount = 0;
 			RestoreInterruptMode(interrupt_mode);
-			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (LONG)orig_readers_waiting, 0);
+			KeReleaseSemaphore(&ReadWriteLock->ReaderSemaphore, 1, (long_xt)orig_readers_waiting, 0);
 			return;
 		}
 	}
@@ -620,12 +620,12 @@ XBSYSAPI EXPORTNUM(28) xbox::VOID NTAPI xbox::ExReleaseReadWriteLock
 // ******************************************************************
 // * 0x001D - ExSaveNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
+XBSYSAPI EXPORTNUM(29) xbox::ntstatus_xt NTAPI xbox::ExSaveNonVolatileSetting
 (
-	IN  DWORD			   ValueIndex,
-	IN  DWORD			   Type,
+	IN  dword_xt			   ValueIndex,
+	IN  dword_xt			   Type,
 	IN  PVOID			   Value,
-	IN  SIZE_T			   ValueLength
+	IN  size_xt			   ValueLength
 )
 {
 	LOG_FUNC_BEGIN
@@ -635,13 +635,13 @@ XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 		LOG_FUNC_ARG(ValueLength)
 	LOG_FUNC_END;
 
-	NTSTATUS Status = STATUS_SUCCESS;
+	NTSTATUS Status = xbox::status_success;
 	void * value_addr = nullptr;
 	DWORD result_length;
 
 	// Don't allow writing to the eeprom encrypted area
 	if (ValueIndex == XC_ENCRYPTED_SECTION)
-		RETURN(STATUS_OBJECT_NAME_NOT_FOUND);
+		RETURN(xbox::status_object_name_not_found);
 
 	// handle eeprom write
 	if (g_bIsDebug || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
@@ -683,7 +683,7 @@ XBSYSAPI EXPORTNUM(29) xbox::NTSTATUS NTAPI xbox::ExSaveNonVolatileSetting
 		}
 	}
 	else {
-		Status = STATUS_OBJECT_NAME_NOT_FOUND;
+		Status = xbox::status_object_name_not_found;
 	}
 
 	RETURN(Status);

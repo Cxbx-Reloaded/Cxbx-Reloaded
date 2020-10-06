@@ -38,19 +38,19 @@
 
 // Directory Entry
 typedef struct {
-	WORD		LeftSubTree;
-	WORD		RightSubTree;
-	DWORD		FileStartSector;
-	DWORD		FileSize;
-	BYTE		FileAttributes;
-	BYTE		FilenameLength;
-	BYTE		Filename[FILENAME_SIZE];
+	xbox::word_xt		LeftSubTree;
+	xbox::word_xt		RightSubTree;
+	xbox::dword_xt		FileStartSector;
+	xbox::dword_xt		FileSize;
+	xbox::byte_xt		FileAttributes;
+	xbox::byte_xt		FilenameLength;
+	xbox::byte_xt		Filename[FILENAME_SIZE];
 } XDVDFS_DIRECTORY_ENTRY, *PXDVDFS_DIRECTORY_ENTRY;
 
 // XDVDFS init a session object
 BOOL	XDVDFS_Mount(
 			PXDVDFS_SESSION	Session,
-			BOOL			(*ReadFunc)(PVOID, PVOID, DWORD, DWORD),
+			BOOL			(*ReadFunc)(PVOID, PVOID, xbox::dword_xt, xbox::dword_xt),
 			PVOID			Data)
 {
 	Session->Read.Data = Data;
@@ -98,8 +98,8 @@ BOOL	XDVDFS_UnMount(
 			PXDVDFS_SESSION	Session)
 {
 	// Reset ring buffer
-	memset(Session->Read.SectorList, 0, sizeof(DWORD) * DISK_BUFFER);
-	memset(Session->Read.LockList, 0, sizeof(DWORD) * DISK_BUFFER);
+	memset(Session->Read.SectorList, 0, sizeof(xbox::dword_xt) * DISK_BUFFER);
+	memset(Session->Read.LockList, 0, sizeof(xbox::dword_xt) * DISK_BUFFER);
 	Session->Read.WriteIndex = 0;
 	// Invalidate all open files & search structures
 	Session->Magic++;
@@ -108,7 +108,7 @@ BOOL	XDVDFS_UnMount(
 
 // Initialize a search record with root dir
 // Note: Can return XDVDFS_NO_MORE_FILES if the image is empty
-DWORD	XDVDFS_GetRootDir(
+xbox::dword_xt	XDVDFS_GetRootDir(
 			PXDVDFS_SESSION	Session,
 			PSEARCH_RECORD	SearchRecord)
 {
@@ -124,12 +124,12 @@ DWORD	XDVDFS_GetRootDir(
 }
 
 // Enumerate files
-DWORD	XDVDFS_EnumFiles(
+xbox::dword_xt	XDVDFS_EnumFiles(
 			PXDVDFS_SESSION	Session,
 			PSEARCH_RECORD	SearchRecord)
 {
 	PXDVDFS_DIRECTORY_ENTRY	Entry;
-	DWORD					SectorNumber, Position, i;
+	xbox::dword_xt					SectorNumber, Position, i;
 	PBYTE					Ptr;
 
 enum_retry:
@@ -200,12 +200,12 @@ enum_retry:
 	return XDVDFS_NO_ERROR;
 }
 
-DWORD	XDVDFS_GetFileInfo(
+xbox::dword_xt	XDVDFS_GetFileInfo(
 			PXDVDFS_SESSION	Session,
 			LPSTR 			Filename,
 			PSEARCH_RECORD	SearchRecord)
 {
-	DWORD   Length, i, ReturnCode;
+	xbox::dword_xt   Length, i, ReturnCode;
 
 	// To begin, we will enter the root directory
 	XDVDFS_GetRootDir(Session, SearchRecord);
@@ -280,12 +280,12 @@ DWORD	XDVDFS_GetFileInfo(
 }
 
 // Initialize a search record given a path
-DWORD	XDVDFS_OpenFolder(
+xbox::dword_xt	XDVDFS_OpenFolder(
 			PXDVDFS_SESSION	Session,
 			LPSTR			Path,
 			PSEARCH_RECORD	SearchRecord)
 {
-	DWORD   ReturnCode;
+	xbox::dword_xt   ReturnCode;
 
 	// Find a file matching the given path
 	ReturnCode = XDVDFS_GetFileInfo(Session, Path, SearchRecord);
@@ -305,13 +305,13 @@ DWORD	XDVDFS_OpenFolder(
 }
 
 // Open a file
-DWORD	XDVDFS_OpenFile(
+xbox::dword_xt	XDVDFS_OpenFile(
 			PXDVDFS_SESSION	Session,
 			LPSTR			Filename,
 			PFILE_RECORD	FileRecord)
 {
 	SEARCH_RECORD	SearchRecord;
-	DWORD			ReturnCode;
+	xbox::dword_xt			ReturnCode;
 
 	// Find a file matching the given path
 	ReturnCode = XDVDFS_GetFileInfo(Session, Filename, &SearchRecord);
@@ -333,7 +333,7 @@ DWORD	XDVDFS_OpenFile(
 }
 
 // Open a file pointed by a search rec
-DWORD	XDVDFS_OpenFileEx(
+xbox::dword_xt	XDVDFS_OpenFileEx(
 			PXDVDFS_SESSION	Session,
 			PSEARCH_RECORD	SearchRecord,
 			PFILE_RECORD	FileRecord)
@@ -356,13 +356,13 @@ DWORD	XDVDFS_OpenFileEx(
 }
 
 // Read a file
-DWORD	XDVDFS_FileRead(
+xbox::dword_xt	XDVDFS_FileRead(
 			PXDVDFS_SESSION	Session,
 			PFILE_RECORD	FileRecord,
 			PVOID			OutBuffer,
-			DWORD			Size)
+			xbox::dword_xt			Size)
 {
-	DWORD   CurrentSector, Position, PartialRead, Readed, i;
+	xbox::dword_xt   CurrentSector, Position, PartialRead, Readed, i;
 	PBYTE	Buffer = (PBYTE)OutBuffer;
 
 	Readed = 0;
@@ -460,7 +460,7 @@ DWORD	XDVDFS_FileRead(
 	return Readed;
 }
 
-DWORD	XDVDFS_FileClose(
+xbox::dword_xt	XDVDFS_FileClose(
 			PXDVDFS_SESSION	Session,
 			PFILE_RECORD 	FileRecord)
 {
@@ -473,11 +473,11 @@ DWORD	XDVDFS_FileClose(
 	return XDVDFS_NO_ERROR;
 }
 
-DWORD	XDVDFS_FileSeek(
+xbox::dword_xt	XDVDFS_FileSeek(
 			PXDVDFS_SESSION	Session,
 			PFILE_RECORD	FileRecord,
 			int				Delta,
-			DWORD			SeekMode)
+			xbox::dword_xt			SeekMode)
 {
 	// Check structure validity
 	if (FileRecord->Magic != Session->Magic)

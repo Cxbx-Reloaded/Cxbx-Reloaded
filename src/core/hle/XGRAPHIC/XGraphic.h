@@ -49,7 +49,7 @@ PVOID WINAPI EMUPATCH(XGIsSwizzledFormat)
 // ******************************************************************
 // * patch: XGSwizzleRect
 // ******************************************************************
-VOID WINAPI EMUPATCH(XGSwizzleRect)
+xbox::void_xt WINAPI EMUPATCH(XGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -65,7 +65,7 @@ VOID WINAPI EMUPATCH(XGSwizzleRect)
 // ******************************************************************
 // * patch: XGSwizzleBox
 // ******************************************************************
-VOID WINAPI EMUPATCH(XGSwizzleBox)
+xbox::void_xt WINAPI EMUPATCH(XGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -82,33 +82,33 @@ VOID WINAPI EMUPATCH(XGSwizzleBox)
 // ******************************************************************
 // * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
+xbox::hresult_xt WINAPI EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
-	BOOL			bWriteSurfaceAsTexture
+	bool_xt			bWriteSurfaceAsTexture
 );
 
 // ******************************************************************
 // * patch: XGSetTextureHeader
 // ******************************************************************
-VOID	WINAPI EMUPATCH(XGSetTextureHeader)
+xbox::void_xt	WINAPI EMUPATCH(XGSetTextureHeader)
 (
-	UINT			Width,
-	UINT			Height,
-	UINT			Levels,
+	uint_xt			Width,
+	uint_xt			Height,
+	uint_xt			Levels,
 	DWORD			Usage,
 	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
-	UINT			Data,
-	UINT			Pitch
+	uint_xt			Data,
+	uint_xt			Pitch
 );
 
 // ******************************************************************
 // * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-HRESULT WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
+xbox::hresult_xt WINAPI EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 (
 	CONST void		*pFontData,
 	unsigned		uFontDataSize,

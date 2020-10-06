@@ -26,7 +26,7 @@
 // ******************************************************************
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 
 #define LOG_PREFIX CXBXR_MODULE::KRNL
 
@@ -61,7 +61,7 @@ LONG PhyLockFlag;
 #define PhyLock() InterlockedCompareExchange(&PhyLockFlag, 1, 0)
 #define PhyUnlock() (PhyLockFlag = 0)
 #define NETERR(_err)        HRESULT_FROM_WIN32(_err)
-#define NETERR_OK           STATUS_SUCCESS
+#define NETERR_OK           xbox::status_success
 #define NETERR_HARDWARE     0x801f0001  // hardware not responding
 
 #define BIT(n)              (1u << (n))
@@ -209,9 +209,9 @@ BOOL PhyUpdateLinkState()
 // ******************************************************************
 // * 0x00FC - PhyGetLinkState()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(252) xbox::DWORD NTAPI xbox::PhyGetLinkState
+XBSYSAPI EXPORTNUM(252) xbox::dword_xt NTAPI xbox::PhyGetLinkState
 (
-	IN ULONG	Mode
+	IN ulong_xt	Mode
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
@@ -227,9 +227,9 @@ XBSYSAPI EXPORTNUM(252) xbox::DWORD NTAPI xbox::PhyGetLinkState
 // ******************************************************************
 // * 0x00FD - PhyInitialize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(253) xbox::NTSTATUS NTAPI xbox::PhyInitialize
+XBSYSAPI EXPORTNUM(253) xbox::ntstatus_xt NTAPI xbox::PhyInitialize
 (
-	IN ULONG	forceReset,
+	IN ulong_xt	forceReset,
 	IN PVOID	Parameter2
 )
 {

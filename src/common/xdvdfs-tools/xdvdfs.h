@@ -3,13 +3,13 @@
 #ifndef __XDVDFS_H__
 #define __XDVDFS_H__
 
-#include <xboxkrnl/xboxkrnl.h> //#include <stdtypes.h>
+#include <core\kernel\exports\xboxkrnl.h> //#include <stdtypes.h>
 
 #include "buffered_io.h"
 
 using namespace xbox;
 
-CONST CHAR *XDVDFS_Signature = "MICROSOFT*XBOX*MEDIA";
+CONST char_xt *XDVDFS_Signature = "MICROSOFT*XBOX*MEDIA";
 
 //-- Defines ------------------------------------------------------------------
 
@@ -42,18 +42,18 @@ CONST CHAR *XDVDFS_Signature = "MICROSOFT*XBOX*MEDIA";
 
 // XDVDFS Volume descriptor
 typedef struct {
-	BYTE		Signature1[SIGNATURE_SIZE];
-	DWORD		RootDirectory;
-	DWORD		RootDirectorySize;
+	xbox::byte_xt		Signature1[SIGNATURE_SIZE];
+	xbox::dword_xt		RootDirectory;
+	xbox::dword_xt		RootDirectorySize;
 	FILETIME	ImageCreationTime;
-	BYTE		Unused[1992];
-	BYTE		Signature2[SIGNATURE_SIZE];
+	xbox::byte_xt		Unused[1992];
+	xbox::byte_xt		Signature2[SIGNATURE_SIZE];
 } XDVDFS_VOLUME_DESCRIPTOR, *PXDVDFS_VOLUME_DESCRIPTOR;
 
 // XDVDFS session
 typedef struct {
 	// Start sector of current session
-	DWORD						FileSystemBaseSector;
+	xbox::dword_xt						FileSystemBaseSector;
 
 	// Volume Descriptor of the current session
 	XDVDFS_VOLUME_DESCRIPTOR	Root;
@@ -63,30 +63,30 @@ typedef struct {
 
 	// The dword below is incremented when the filesystem is unmounted
 	// automatically invalidating all open files and search records
-	DWORD						Magic;
+	xbox::dword_xt						Magic;
 } XDVDFS_SESSION, *PXDVDFS_SESSION;
 
 // File Record
 typedef struct {
-	DWORD	Magic;
-	BYTE	PartialData[SECTOR_SIZE];
-	DWORD	PartialSector;
-	DWORD	FileStartSector;
-	DWORD	FileSize;
-	DWORD	CurrentPosition;
+	xbox::dword_xt	Magic;
+	xbox::byte_xt	PartialData[SECTOR_SIZE];
+	xbox::dword_xt	PartialSector;
+	xbox::dword_xt	FileStartSector;
+	xbox::dword_xt	FileSize;
+	xbox::dword_xt	CurrentPosition;
 } FILE_RECORD, *PFILE_RECORD;
 
 // Search Record
 typedef struct {
-	DWORD	Magic;
-	DWORD	SearchStartSector;
-	DWORD	DirectorySize;
-	DWORD	Position;
-	BYTE	CurrentFilename[FILENAME_SIZE];
-	DWORD	CurrentFileAttributes;
-	DWORD	CurrentFileSize;
-	DWORD	CurrentFileStartSector;
-	DWORD	CurrentFileEndSector;
+	xbox::dword_xt	Magic;
+	xbox::dword_xt	SearchStartSector;
+	xbox::dword_xt	DirectorySize;
+	xbox::dword_xt	Position;
+	xbox::byte_xt	CurrentFilename[FILENAME_SIZE];
+	xbox::dword_xt	CurrentFileAttributes;
+	xbox::dword_xt	CurrentFileSize;
+	xbox::dword_xt	CurrentFileStartSector;
+	xbox::dword_xt	CurrentFileEndSector;
 } SEARCH_RECORD, *PSEARCH_RECORD;
 
 //-- Exported Functions -------------------------------------------------------
@@ -94,7 +94,7 @@ typedef struct {
 // XDVDFS init a session object
 extern BOOL		XDVDFS_Mount(
 					PXDVDFS_SESSION	Session,
-					BOOL			(*ReadFunc)(PVOID, PVOID, DWORD, DWORD),
+					BOOL			(*ReadFunc)(PVOID, PVOID, xbox::dword_xt, xbox::dword_xt),
 					PVOID			Data);
 
 // XDVDFS deinit a session object
@@ -103,56 +103,56 @@ extern BOOL		XDVDFS_UnMount(
 
 // Initialize a search record with root dir
 // Note: Can return XDVDFS_NO_MORE_FILES if the image is empty
-extern DWORD	XDVDFS_GetRootDir(
+extern xbox::dword_xt	XDVDFS_GetRootDir(
 					PXDVDFS_SESSION	Session,
 					PSEARCH_RECORD	SearchRecord);
 
 // Enumerate files
-extern DWORD	XDVDFS_EnumFiles(
+extern xbox::dword_xt	XDVDFS_EnumFiles(
 					PXDVDFS_SESSION	Session,
 					PSEARCH_RECORD	SearchRecord);
 
 // Find a file given its path
-extern DWORD	XDVDFS_GetFileInfo(
+extern xbox::dword_xt	XDVDFS_GetFileInfo(
 					PXDVDFS_SESSION	Session,
 					LPSTR 			Filename,
 					PSEARCH_RECORD	SearchRecord);
 
 // Initialize a search record given a path
-extern DWORD	XDVDFS_OpenFolder(
+extern xbox::dword_xt	XDVDFS_OpenFolder(
 					PXDVDFS_SESSION	Session,
 					LPSTR			Path,
 					PSEARCH_RECORD	SearchRecord);
 
 // Open a file
-extern DWORD	XDVDFS_OpenFile(
+extern xbox::dword_xt	XDVDFS_OpenFile(
 					PXDVDFS_SESSION	Session,
 					LPSTR			Filename,
 					PFILE_RECORD	FileRecord);
 
 // Open a file pointed by a search rec
-extern DWORD	XDVDFS_OpenFileEx(
+extern xbox::dword_xt	XDVDFS_OpenFileEx(
 					PXDVDFS_SESSION	Session,
 					PSEARCH_RECORD	SearchRecord,
 					PFILE_RECORD	FileRecord);
 
 // Read a file
-extern DWORD	XDVDFS_FileRead(
+extern xbox::dword_xt	XDVDFS_FileRead(
 					PXDVDFS_SESSION	Session,
 					PFILE_RECORD	FileRecord,
 					PVOID			Buffer,
-					DWORD			Size);
+					xbox::dword_xt			Size);
 
 // Close file
-extern DWORD	XDVDFS_FileClose(
+extern xbox::dword_xt	XDVDFS_FileClose(
 					PXDVDFS_SESSION	Session,
 					PFILE_RECORD 	FileRecord);
 
 // File seek
-extern DWORD	XDVDFS_FileSeek(
+extern xbox::dword_xt	XDVDFS_FileSeek(
 					PXDVDFS_SESSION	Session,
 					PFILE_RECORD	FileRecord,
 					int				Delta,
-					DWORD			SeekMode);
+					xbox::dword_xt			SeekMode);
 
 #endif // __XDVDFS_H__

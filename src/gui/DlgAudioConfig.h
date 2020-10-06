@@ -28,6 +28,6 @@
 #include <windows.h>
 
 /*! show audio configuration dialog */
-extern VOID ShowAudioConfig(HWND hwnd);
+extern void ShowAudioConfig(HWND hwnd);
 
 #endif

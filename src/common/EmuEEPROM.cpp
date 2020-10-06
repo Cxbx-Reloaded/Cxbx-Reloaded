@@ -28,7 +28,7 @@
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
 
-#include <xboxkrnl/xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
+#include <core\kernel\exports\xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
 #include <stdio.h> // For printf
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
 #include <random>
@@ -41,7 +41,7 @@
 xbox::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 
 // Default value (NA), overwritten with the actual content in the eeprom by CxbxRestoreEEPROM
-xbox::ULONG XboxFactoryGameRegion = XC_GAME_REGION_NA;
+xbox::ulong_xt XboxFactoryGameRegion = XC_GAME_REGION_NA;
 
 const EEPROMInfo* EmuFindEEPROMInfo(xbox::XC_VALUE_INDEX index)
 {

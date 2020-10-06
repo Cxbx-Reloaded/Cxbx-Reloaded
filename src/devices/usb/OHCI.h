@@ -142,9 +142,9 @@ class OHCI
 		// destructor
 		~OHCI() {}
 		// read a register
-		uint32_t OHCI_ReadRegister(xbox::addr Addr);
+		uint32_t OHCI_ReadRegister(xbox::addr_xt Addr);
 		// write a register
-		void OHCI_WriteRegister(xbox::addr Addr, uint32_t Value);
+		void OHCI_WriteRegister(xbox::addr_xt Addr, uint32_t Value);
 
 
 	private:
@@ -169,7 +169,7 @@ class OHCI
 		// Done Queue Interrupt Counter
 		int m_DoneCount;
 		// the address of the pending TD
-		xbox::addr m_AsyncTD = xbox::zero;
+		xbox::addr_xt m_AsyncTD = xbox::zero;
 		// indicates if there is a pending asynchronous packet to process
 		int m_AsyncComplete = 0;
 
@@ -209,27 +209,27 @@ class OHCI
 		// if not set ConnectStatusChange flag; if flag is enabled return 1
 		int OHCI_PortSetIfConnected(int i, uint32_t Value);
 		// read the HCCA structure in memory
-		bool OHCI_ReadHCCA(xbox::addr Paddr, OHCI_HCCA* Hcca);
+		bool OHCI_ReadHCCA(xbox::addr_xt Paddr, OHCI_HCCA* Hcca);
 		// write the HCCA structure in memory
-		bool OHCI_WriteHCCA(xbox::addr Paddr, OHCI_HCCA* Hcca);
+		bool OHCI_WriteHCCA(xbox::addr_xt Paddr, OHCI_HCCA* Hcca);
 		// read an ED in memory
-		bool OHCI_ReadED(xbox::addr Paddr, OHCI_ED* Ed);
+		bool OHCI_ReadED(xbox::addr_xt Paddr, OHCI_ED* Ed);
 		// write an ED in memory
-		bool OHCI_WriteED(xbox::addr Paddr, OHCI_ED* Ed);
+		bool OHCI_WriteED(xbox::addr_xt Paddr, OHCI_ED* Ed);
 		// read an TD in memory
-		bool OHCI_ReadTD(xbox::addr Paddr, OHCI_TD* Td);
+		bool OHCI_ReadTD(xbox::addr_xt Paddr, OHCI_TD* Td);
 		// write a TD in memory
-		bool OHCI_WriteTD(xbox::addr Paddr, OHCI_TD* Td);
+		bool OHCI_WriteTD(xbox::addr_xt Paddr, OHCI_TD* Td);
 		// read an iso TD in memory
-		bool OHCI_ReadIsoTD(xbox::addr Paddr, OHCI_ISO_TD* td);
+		bool OHCI_ReadIsoTD(xbox::addr_xt Paddr, OHCI_ISO_TD* td);
 		// write an iso TD in memory
-		bool OHCI_WriteIsoTD(xbox::addr Paddr, OHCI_ISO_TD* td);
+		bool OHCI_WriteIsoTD(xbox::addr_xt Paddr, OHCI_ISO_TD* td);
 		// read/write the user buffer pointed to by a TD from/to main memory
 		bool OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsWrite);
 		// read/write the user buffer pointed to by a ISO TD from/to main memory
 		bool OHCI_CopyIsoTDBuffer(uint32_t start_addr, uint32_t end_addr, uint8_t* Buffer, int Length, bool bIsWrite);
 		// process an ED list. Returns nonzero if active TD was found
-		int OHCI_ServiceEDlist(xbox::addr Head, int Completion);
+		int OHCI_ServiceEDlist(xbox::addr_xt Head, int Completion);
 		// process a TD. Returns nonzero to terminate processing of this endpoint
 		int OHCI_ServiceTD(OHCI_ED* Ed);
 		// process an isochronous TD

@@ -831,7 +831,7 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	}
 }
 
-VOID EmuFlushIVB()
+void EmuFlushIVB()
 {
 	CxbxUpdateNativeD3DResources();
 

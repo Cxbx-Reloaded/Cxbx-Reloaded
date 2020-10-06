@@ -141,13 +141,13 @@ class VMManager : public PhysicalMemory
 		// retrieves the number of free debugger pages
 		PFN_COUNT QueryNumberOfFreeDebuggerPages();
 		// xbox implementation of NtAllocateVirtualMemory
-		xbox::NTSTATUS XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect);
+		xbox::ntstatus_xt XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect);
 		// xbox implementation of NtFreeVirtualMemory
-		xbox::NTSTATUS XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
+		xbox::ntstatus_xt XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType);
 		// xbox implementation of NtProtectVirtualMemory
-		xbox::NTSTATUS XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
+		xbox::ntstatus_xt XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect);
 		// xbox implementation of NtQueryVirtualMemory
-		xbox::NTSTATUS XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics);
+		xbox::ntstatus_xt XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics);
 		// get persistent memory from previous process until RestorePersistentMemory is called
 		void GetPersistentMemory();
 		// saves all persisted memory just before a quick reboot

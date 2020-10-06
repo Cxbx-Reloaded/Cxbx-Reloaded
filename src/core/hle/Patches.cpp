@@ -390,7 +390,7 @@ inline bool TitleRequiresUnpatchedFibers()
 
 
 // NOTE: EmuInstallPatch do not get to be in XbSymbolDatabase, do the patches in Cxbx project only.
-inline void EmuInstallPatch(const std::string FunctionName, const xbox::addr FunctionAddr)
+inline void EmuInstallPatch(const std::string FunctionName, const xbox::addr_xt FunctionAddr)
 {
 	auto it = g_PatchTable.find(FunctionName);
 	if (it == g_PatchTable.end()) {

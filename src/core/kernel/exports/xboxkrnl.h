@@ -17,112 +17,67 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2020 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#if 0 // XOnline.h isn't used, but below is still useful documentation.
 
-#include "core\kernel\support\Emu.h"
-#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
+#pragma once
 
-namespace xbox {
+#include "core\kernel\common\types.h"
 
 // ******************************************************************
-// * patch: WSAStartup
+// * Debug
 // ******************************************************************
-xbox::int_xt WINAPI EMUPATCH(WSAStartup)
-(
-    word_xt        wVersionRequested,
-    WSADATA    *lpWSAData
-);
+#include "core\kernel\common\dbg.h"
 
 // ******************************************************************
-// * patch: XNetStartup
+// * Executive
 // ******************************************************************
-xbox::int_xt WINAPI EMUPATCH(XNetStartup)
-(
-    const PVOID pDummy
-);
+#include "core\kernel\common\ex.h"
 
 // ******************************************************************
-// * patch: XNetGetEthernetLinkStatus
+// * Hardware Abstraction Layer
 // ******************************************************************
-xbox::dword_xt WINAPI EMUPATCH(XNetGetEthernetLinkStatus)();
-
-// ******************************************************************
-// * patch: XOnlineLaunchNewImage
-// ******************************************************************
-xbox::hresult_xt WINAPI XOnlineLaunchNewImage
-(
-    LPCSTR	lpImagePath,
-    LPVOID	pLaunchData
-);
+#include "core\kernel\common\hal.h"
 
 // ******************************************************************
-// * patch: XOnlineLogon
+// * I/O Manager
 // ******************************************************************
-xbox::hresult_xt WINAPI EMUPATCH(XOnlineLogon)
-(
-    void_xt*	pUsers,
-    dword_xt*	pdwServiceIDs,
-    dword_xt	dwServices,
-    HANDLE	hEvent,
-    HANDLE	pHandle
-);
+#include "core\kernel\common\io.h"
 
-SOCKET WINAPI EMUPATCH(socket)
-(
-    int_xt   af,
-    int_xt   type,
-    int_xt   protocol
-);
+// ******************************************************************
+// * Kernel
+// ******************************************************************
+#include "core\kernel\common\kernel.h"
 
-xbox::int_xt WINAPI EMUPATCH(connect)
-(
-    SOCKET s,
-    const struct sockaddr FAR *name,
-    int_xt namelen
-);
+// ******************************************************************
+// * Memory Manager
+// ******************************************************************
+#include "core\kernel\common\mm.h"
 
-xbox::int_xt WINAPI EMUPATCH(send)
-(
-    SOCKET s,
-    const char FAR *buf,
-    int_xt len,
-    int_xt flags
-);
+// ******************************************************************
+// * NT
+// ******************************************************************
+#include "core\kernel\common\nt.h"
 
-xbox::int_xt WINAPI EMUPATCH(recv)
-(
-    SOCKET s,
-    char FAR *buf,
-    int_xt len,
-    int_xt flags
-);
+// ******************************************************************
+// * Object Manager
+// ******************************************************************
+#include "core\kernel\common\ob.h"
 
+// ******************************************************************
+// * Process Structure
+// ******************************************************************
+#include "core\kernel\common\ps.h"
 
-xbox::int_xt WINAPI EMUPATCH(bind)
-(
-    SOCKET s, 
-    const struct sockaddr FAR *name, 
-    int_xt namelen
-);
+// ******************************************************************
+// * Run-time Library
+// ******************************************************************
+#include "core\kernel\common\rtl.h"
 
-xbox::int_xt WINAPI EMUPATCH(listen)
-(
-    SOCKET s, 
-    int_xt backlog
-);
-
-xbox::int_xt WINAPI EMUPATCH(ioctlsocket)
-(
-    SOCKET s, 
-    long cmd, 
-    u_long FAR *argp
-);
-
-} // end of namespace xbox
-
-#endif
+// ******************************************************************
+// * XBox
+// ******************************************************************
+#include "core\kernel\common\xbox.h"

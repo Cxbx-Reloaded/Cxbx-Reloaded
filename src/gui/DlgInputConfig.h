@@ -28,7 +28,7 @@
 #ifndef DLGINPUTCONFIG_H
 #define DLGINPUTCONFIG_H
 
-VOID ShowInputConfig(HWND hwnd, HWND ChildWnd);
+void ShowInputConfig(HWND hwnd, HWND ChildWnd);
 extern HWND g_ChildWnd;
 
 #endif

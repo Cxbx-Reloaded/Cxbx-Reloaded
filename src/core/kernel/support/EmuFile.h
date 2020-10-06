@@ -25,7 +25,7 @@
 #define EMUFILE_H
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include <vector>
 #include <cstdio>
 #include <string>

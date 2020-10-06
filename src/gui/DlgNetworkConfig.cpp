@@ -40,14 +40,14 @@ static Settings::s_network g_XBNetwork;
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgNetworkConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-VOID ShowNetworkConfig(HWND hwnd)
+void ShowNetworkConfig(HWND hwnd)
 {
 	g_XBNetwork = g_Settings->m_network;
     /*! show dialog box */
     DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_NETWORK_CFG), hwnd, DlgNetworkConfigProc);
 }
 
-VOID FetchNetworkInterfaces(HWND hwnd)
+void FetchNetworkInterfaces(HWND hwnd)
 {
 	static IP_ADAPTER_INFO AdapterInfo[128];
 	static PIP_ADAPTER_INFO pAdapterInfo;

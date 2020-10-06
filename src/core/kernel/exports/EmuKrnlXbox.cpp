@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::XBOX
 
 
-#include <xboxkrnl/xboxkrnl.h> // For XboxEEPROMKey, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For XboxEEPROMKey, etc.
 #include "Logging.h"
 
 // Certificate Key

@@ -28,7 +28,6 @@
 #include "common\xbe\Xbe.h"
 #include "Logging.h"
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <multimon.h>
 

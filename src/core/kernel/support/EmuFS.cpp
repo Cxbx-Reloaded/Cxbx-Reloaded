@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::FS
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include "core\kernel\support\EmuFS.h" // For fs_instruction_t
@@ -36,7 +36,6 @@
 #include "core\kernel\memory-manager\VMManager.h"
 #include "Logging.h"
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 #include <cstdio>
 #include <vector>
@@ -476,9 +475,9 @@ void EmuInitFS()
 		}
 
 		EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Searching for FS Instruction in section %s\n", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-		xbox::addr startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
-		xbox::addr endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-		for (xbox::addr addr = startAddr; addr < endAddr; addr++)
+		xbox::addr_xt startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+		xbox::addr_xt endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+		for (xbox::addr_xt addr = startAddr; addr < endAddr; addr++)
 		{
 			for (int i = 0; i < numberOfInstructions; i++)
 			{
@@ -554,7 +553,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
                         uint8_t *bByte = (uint8_t*)pNewTLS + v;
 
                         if (v % 0x10 == 0) {
-							EmuLog(LOG_LEVEL::DEBUG, "0x%.8X:", (xbox::addr)bByte);
+							EmuLog(LOG_LEVEL::DEBUG, "0x%.8X:", (xbox::addr_xt)bByte);
                         }
 
                         // Note : Use printf instead of EmuLog here, which prefixes with GetCurrentThreadId() :
@@ -570,7 +569,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		// prepare TLS
 		{
 			if (pTLS->dwTLSIndexAddr != 0) {
-				*(xbox::addr*)pTLS->dwTLSIndexAddr = xbox::zero;
+				*(xbox::addr_xt*)pTLS->dwTLSIndexAddr = xbox::zero;
 			}
 
 			// dword @ pTLSData := pTLSData
@@ -634,13 +633,13 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
 		// Initialize the thread header and its wait list
 		Prcb->CurrentThread->Header.Type = xbox::ThreadObject;
-		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::LONG);
+		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::long_xt);
 		InitializeListHead(&Prcb->CurrentThread->Header.WaitListHead);
 		// Also initialize the timer associated with the thread
 		xbox::KeInitializeTimer(&Prcb->CurrentThread->Timer);
 		xbox::PKWAIT_BLOCK WaitBlock = &Prcb->CurrentThread->TimerWaitBlock;
 		WaitBlock->Object = &Prcb->CurrentThread->Timer;
-		WaitBlock->WaitKey = (xbox::CSHORT)STATUS_TIMEOUT;
+		WaitBlock->WaitKey = (xbox::cshort_xt)STATUS_TIMEOUT;
 		WaitBlock->WaitType = xbox::WaitAny;
 		WaitBlock->Thread = Prcb->CurrentThread;
 		WaitBlock->WaitListEntry.Flink = &Prcb->CurrentThread->Timer.Header.WaitListHead;

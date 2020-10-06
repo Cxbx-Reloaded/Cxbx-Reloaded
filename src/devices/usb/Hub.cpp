@@ -56,7 +56,7 @@
 #define LOG_PREFIX CXBXR_MODULE::HUB
 
 
-#include <xboxkrnl/xboxkrnl.h> // For PKINTERRUPT, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
 #include <cstring> // For memcpy
 #include "OHCI.h"
 #include "Hub.h"

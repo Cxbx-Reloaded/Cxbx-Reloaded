@@ -27,7 +27,6 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XGRP
 
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 #include "core\kernel\support\Emu.h"
@@ -54,7 +53,7 @@ PVOID WINAPI xbox::EMUPATCH(XGIsSwizzledFormat)
 // ******************************************************************
 // * patch: XGSwizzleRect
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(XGSwizzleRect)
+xbox::void_xt WINAPI xbox::EMUPATCH(XGSwizzleRect)
 (
     LPCVOID       pSource,
     DWORD         Pitch,
@@ -115,7 +114,7 @@ VOID WINAPI xbox::EMUPATCH(XGSwizzleRect)
 // ******************************************************************
 // * patch: XGSwizzleBox
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(XGSwizzleBox)
+xbox::void_xt WINAPI xbox::EMUPATCH(XGSwizzleBox)
 (
     LPCVOID          pSource,
     DWORD            RowPitch,
@@ -182,11 +181,11 @@ VOID WINAPI xbox::EMUPATCH(XGSwizzleBox)
 // ******************************************************************
 // * patch: XGWriteSurfaceOrTextureToXPR
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 ( 
 	LPVOID			pResource,
 	const char*		cPath,
-	BOOL			bWriteSurfaceAsTexture
+	bool_xt			bWriteSurfaceAsTexture
 )
 {
 	LOG_FUNC_BEGIN
@@ -207,17 +206,17 @@ HRESULT WINAPI xbox::EMUPATCH(XGWriteSurfaceOrTextureToXPR)
 // ******************************************************************
 // * patch: XGSetTextureHeader
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(XGSetTextureHeader)
+xbox::void_xt WINAPI xbox::EMUPATCH(XGSetTextureHeader)
 (
-	UINT			Width,
-	UINT			Height,
-	UINT			Levels,
+	uint_xt			Width,
+	uint_xt			Height,
+	uint_xt			Levels,
 	DWORD			Usage,
 	X_D3DFORMAT		Format,
 	D3DPOOL			Pool,
 	X_D3DTexture*	pTexture,
-	UINT			Data,
-	UINT			Pitch
+	uint_xt			Data,
+	uint_xt			Pitch
 )
 {
 	LOG_FUNC_BEGIN
@@ -274,7 +273,7 @@ VOID WINAPI xbox::EMUPATCH(XGSetTextureHeader)
 // ******************************************************************
 // * patch: XFONT_OpenBitmapFontFromMemory 
 // ******************************************************************
-//HRESULT WINAPI xbox::EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
+//xbox::hresult_xt WINAPI xbox::EMUPATCH(XFONT_OpenBitmapFontFromMemory) 
 //(
 //	CONST void		*pFontData,
 //	unsigned		uFontDataSize,

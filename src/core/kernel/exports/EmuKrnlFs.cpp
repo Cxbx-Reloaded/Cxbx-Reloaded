@@ -28,7 +28,7 @@
 
 #define LOG_PREFIX CXBXR_MODULE::FSC
 
-#include <xboxkrnl/xboxkrnl.h> // For FscGetCacheSize, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For FscGetCacheSize, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 
@@ -43,12 +43,12 @@ namespace NtDll
 #define FSCACHE_MAXIMUM_NUMBER_OF_CACHE_PAGES 2048
 
 // global variables
-xbox::LONG g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
+xbox::long_xt g_FscNumberOfCachePages = 16; // 16 = default number of file system cache pages
 
 // ******************************************************************
 // * 0x0023 - FscGetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(35) xbox::ULONG NTAPI xbox::FscGetCacheSize()
+XBSYSAPI EXPORTNUM(35) xbox::ulong_xt NTAPI xbox::FscGetCacheSize()
 {
 	LOG_FUNC();
 
@@ -58,7 +58,7 @@ XBSYSAPI EXPORTNUM(35) xbox::ULONG NTAPI xbox::FscGetCacheSize()
 // ******************************************************************
 // * 0x0024 - FscInvalidateIdleBlocks()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(36) xbox::VOID NTAPI xbox::FscInvalidateIdleBlocks()
+XBSYSAPI EXPORTNUM(36) xbox::void_xt NTAPI xbox::FscInvalidateIdleBlocks()
 {
 	LOG_FUNC();
 
@@ -67,7 +67,7 @@ XBSYSAPI EXPORTNUM(36) xbox::VOID NTAPI xbox::FscInvalidateIdleBlocks()
 
 static xbox::KEVENT g_FscCacheEvent;
 
-xbox::VOID xbox::InitializeFscCacheEvent()
+xbox::void_xt xbox::InitializeFscCacheEvent()
 {
     KeInitializeEvent(&g_FscCacheEvent, SynchronizationEvent, TRUE);
 }
@@ -75,14 +75,14 @@ xbox::VOID xbox::InitializeFscCacheEvent()
 // ******************************************************************
 // * 0x0025 - FscSetCacheSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(37) xbox::NTSTATUS NTAPI xbox::FscSetCacheSize
+XBSYSAPI EXPORTNUM(37) xbox::ntstatus_xt NTAPI xbox::FscSetCacheSize
 (
-	ULONG NumberOfCachePages
+	ulong_xt NumberOfCachePages
 )
 {
 	LOG_FUNC_ONE_ARG(NumberOfCachePages);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 	KeWaitForSingleObject(&g_FscCacheEvent, Executive, 0, 0, 0);
 	UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
 

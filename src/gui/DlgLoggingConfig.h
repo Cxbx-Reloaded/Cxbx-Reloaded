@@ -26,6 +26,6 @@
 #ifndef DLGLOGGINGCONFIG_H
 #define DLGLOGGINGCONFIG_H
 
-VOID ShowLoggingConfig(HWND hwnd, HWND ChildWnd);
+void ShowLoggingConfig(HWND hwnd, HWND ChildWnd);
 
 #endif

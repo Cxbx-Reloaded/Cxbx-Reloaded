@@ -26,7 +26,7 @@
 #define DLGEEPROMCONFIG_H
 
 
-VOID ShowEepromConfig(HWND hwnd);
+void ShowEepromConfig(HWND hwnd);
 
 #endif
 

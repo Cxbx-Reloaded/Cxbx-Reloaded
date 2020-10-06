@@ -10,7 +10,7 @@ extern "C" {
 namespace xbox
 {
 
-#define BOOL BOOLEAN
+#define BOOL xbox::boolean_xt
 #define LPSTR LPCH
 
 // Determines how large a sector is
@@ -20,10 +20,10 @@ namespace xbox
 #define DISK_BUFFER		64
 
 typedef struct {
-	DWORD	SectorList[DISK_BUFFER];		// Ring buffer for buffered disk i/o
-	DWORD	LockList[DISK_BUFFER];			// Lock for each buffered sector
-	BYTE	DiskBuffer[SECTOR_SIZE * DISK_BUFFER];	// Storage room for buffered sectors
-	DWORD	WriteIndex;						// Write pointer
+	xbox::dword_xt	SectorList[DISK_BUFFER];		// Ring buffer for buffered disk i/o
+	xbox::dword_xt	LockList[DISK_BUFFER];			// Lock for each buffered sector
+	xbox::byte_xt	DiskBuffer[SECTOR_SIZE * DISK_BUFFER];	// Storage room for buffered sectors
+	xbox::dword_xt	WriteIndex;						// Write pointer
 
 	// Pointer to arbitrary data passed at init
 	// (usually a file or device handle)
@@ -32,20 +32,20 @@ typedef struct {
 	BOOL	(*Sectors)(						// Routine to get sectors
 				PVOID	Data,				//  Pointer to arbitrary data
 				PVOID	Buffer,				//  Buffer to fill
-				DWORD	StartSector,		//  Start sector
-				DWORD	ReadSize);			//  Number of sectors to read
+				xbox::dword_xt	StartSector,		//  Start sector
+				xbox::dword_xt	ReadSize);			//  Number of sectors to read
 
 } CDIO_READ, *PCDIO_READ;
 
 // Get a sector from buffer and lock it
 extern PBYTE GetSectorBuffered(
 				PCDIO_READ This,
-				DWORD SectorNumber);
+				xbox::dword_xt SectorNumber);
 
 // Release a locked buffer
 extern void ReleaseBufferedSector(
 				PCDIO_READ This,
-				DWORD SectorNumber);
+				xbox::dword_xt SectorNumber);
 
 };
 

@@ -27,13 +27,13 @@
 
 namespace xbox
 {
-	VOID NTAPI KeSetSystemTime
+	xbox::void_xt NTAPI KeSetSystemTime
 	(
 		IN  PLARGE_INTEGER NewTime,
 		OUT PLARGE_INTEGER OldTime
 	);
 
-	VOID NTAPI KeInitializeTimer
+	xbox::void_xt NTAPI KeInitializeTimer
 	(
 		IN PKTIMER Timer
 	);

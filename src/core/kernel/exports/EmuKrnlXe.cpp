@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::XE
 
 
-#include <xboxkrnl/xboxkrnl.h> // For XeImageFileName, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For XeImageFileName, etc.
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_Xbe
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
@@ -55,7 +55,7 @@ XBSYSAPI EXPORTNUM(326) xbox::OBJECT_STRING xbox::XeImageFileName =
 // count is now above zero.
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(327) xbox::NTSTATUS NTAPI xbox::XeLoadSection
+XBSYSAPI EXPORTNUM(327) xbox::ntstatus_xt NTAPI xbox::XeLoadSection
 (
 	IN PXBEIMAGE_SECTION Section
 )
@@ -64,7 +64,7 @@ XBSYSAPI EXPORTNUM(327) xbox::NTSTATUS NTAPI xbox::XeLoadSection
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	void* sectionData = CxbxKrnl_Xbe->FindSection(Section);
 	if (sectionData != nullptr) {
@@ -80,7 +80,7 @@ XBSYSAPI EXPORTNUM(327) xbox::NTSTATUS NTAPI xbox::XeLoadSection
 			size_t SectionSize = (VAddr)Section->VirtualSize;
 
 			ret = g_VMManager.XbAllocateVirtualMemory(&BaseAddress, 0, &SectionSize, XBOX_MEM_COMMIT, XBOX_PAGE_EXECUTE_READWRITE);
-			if (ret != STATUS_SUCCESS) {
+			if (ret != xbox::status_success) {
 				RETURN(ret);
 			}
 
@@ -108,7 +108,7 @@ XBSYSAPI EXPORTNUM(327) xbox::NTSTATUS NTAPI xbox::XeLoadSection
 // if the count is now zero.
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(328) xbox::NTSTATUS NTAPI xbox::XeUnloadSection
+XBSYSAPI EXPORTNUM(328) xbox::ntstatus_xt NTAPI xbox::XeUnloadSection
 (
 	IN PXBEIMAGE_SECTION Section
 )
@@ -154,7 +154,7 @@ XBSYSAPI EXPORTNUM(328) xbox::NTSTATUS NTAPI xbox::XeUnloadSection
 			}
 		}
 
-		ret = STATUS_SUCCESS;
+		ret = xbox::status_success;
 	}
 
 	RETURN(ret);
@@ -164,10 +164,10 @@ XBSYSAPI EXPORTNUM(328) xbox::NTSTATUS NTAPI xbox::XeUnloadSection
 // * 0x0163 - XePublicKeyData
 // ******************************************************************
 // Define XePublicKeyData: This will be overwritten by the correct key for the given Xbe at runtime
-XBSYSAPI EXPORTNUM(355) xbox::UCHAR xbox::XePublicKeyData[284] = { 0 };
+XBSYSAPI EXPORTNUM(355) xbox::uchar_xt xbox::XePublicKeyData[284] = { 0 };
 
 // We are allowed to use the real RSA public key since it cannot be used to sign data, only verify it -> it's not secret/private
-xbox::UCHAR xbox::XePublicKeyDataRetail[284] = {
+xbox::uchar_xt xbox::XePublicKeyDataRetail[284] = {
 	0x52,0x53,0x41,0x31, 0x08,0x01,0x00,0x00, 0x00,0x08,0x00,0x00, 0xff,0x00,0x00,0x00,
 	0x01,0x00,0x01,0x00,
 	// Public Modulus "m"
@@ -192,7 +192,7 @@ xbox::UCHAR xbox::XePublicKeyDataRetail[284] = {
 };
 
 // Chihiro Game Public Key
-xbox::UCHAR xbox::XePublicKeyDataChihiroGame[284] = {
+xbox::uchar_xt xbox::XePublicKeyDataChihiroGame[284] = {
 	0x52, 0x53, 0x41, 0x31, 0x08, 0x01, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00,
 	0xFF, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x9B, 0x83, 0xD4, 0xD5,
 	0xDE, 0x16, 0x25, 0x8E, 0xE5, 0x15, 0xF2, 0x18, 0x9D, 0x19, 0x1C, 0xF8,
@@ -220,7 +220,7 @@ xbox::UCHAR xbox::XePublicKeyDataChihiroGame[284] = {
 };
 
 // Chihiro bootloader public key (Segaboot)
-xbox::UCHAR xbox::XePublicKeyDataChihiroBoot[284] = {
+xbox::uchar_xt xbox::XePublicKeyDataChihiroBoot[284] = {
 	0x52, 0x53, 0x41, 0x31, 0x08, 0x01, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00,
 	0xFF, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x6B, 0x7B, 0x38, 0x78,
 	0xE3, 0x16, 0x04, 0x88, 0x1D, 0xAF, 0x63, 0x4E, 0x23, 0xDB, 0x10, 0x14,

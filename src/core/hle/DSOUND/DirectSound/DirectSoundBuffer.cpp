@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::DSBUFFER
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp" // Global variables
 
@@ -92,7 +92,7 @@ void DirectSoundDoWork_Buffer(xbox::LARGE_INTEGER &time)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_AddRef
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(IDirectSoundBuffer_AddRef)
+xbox::ulong_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_AddRef)
 (
     XbHybridDSBuffer*       pHybridThis)
 {
@@ -133,7 +133,7 @@ xbox::EmuDirectSoundBuffer::~EmuDirectSoundBuffer()
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Release
 // ******************************************************************
-ULONG WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Release)
+xbox::ulong_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Release)
 (
     XbHybridDSBuffer*       pHybridThis)
 {
@@ -160,7 +160,7 @@ ULONG WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Release)
 // ******************************************************************
 // * patch: DirectSoundCreateBuffer
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(DirectSoundCreateBuffer)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreateBuffer)
 (
     X_DSBUFFERDESC*         pdsbd,
     OUT XbHybridDSBuffer**  ppBuffer)
@@ -223,7 +223,7 @@ HRESULT WINAPI xbox::EMUPATCH(DirectSoundCreateBuffer)
         DSoundBufferRegionSetDefault(pEmuBuffer);
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
-        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, pdsbd->dwFlags, pEmuBuffer->EmuFlags, pdsbd->dwBufferBytes,
+        GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (DWORD &)pdsbd->dwFlags, pEmuBuffer->EmuFlags, pdsbd->dwBufferBytes,
                           &pEmuBuffer->X_BufferCache, pEmuBuffer->X_BufferCacheSize, pEmuBuffer->Xb_VoiceProperties, pdsbd->lpMixBinsOutput,
                           pHybridBuffer->p_CDSVoice);
         pEmuBuffer->EmuBufferDesc = DSBufferDesc;
@@ -265,7 +265,7 @@ HRESULT WINAPI xbox::EMUPATCH(DirectSoundCreateBuffer)
 // ******************************************************************
 // * patch: IDirectSound_CreateSoundBuffer
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSound_CreateSoundBuffer)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSound_CreateSoundBuffer)
 (
     LPDIRECTSOUND8          pThis,
     X_DSBUFFERDESC*         pdsbd,
@@ -286,7 +286,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSound_CreateSoundBuffer)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_GetCurrentPosition
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 (
     XbHybridDSBuffer*           pHybridThis,
     OUT PDWORD                  pdwCurrentPlayCursor,
@@ -301,7 +301,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 		LOG_FUNC_END;
 
     EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
-    HRESULT hRet = HybridDirectSoundBuffer_GetCurrentPosition(pThis->EmuDirectSoundBuffer8, pdwCurrentPlayCursor, pdwCurrentWriteCursor, pThis->EmuFlags);
+    xbox::hresult_xt hRet = HybridDirectSoundBuffer_GetCurrentPosition(pThis->EmuDirectSoundBuffer8, (::PDWORD)pdwCurrentPlayCursor, (::PDWORD)pdwCurrentWriteCursor, pThis->EmuFlags);
 
     LOG_FUNC_BEGIN_ARG_RESULT
         LOG_FUNC_ARG_RESULT(pdwCurrentPlayCursor)
@@ -314,10 +314,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetCurrentPosition)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetCurrentPosition
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwNewPosition)
+    dword_xt                   dwNewPosition)
 {
     DSoundMutexGuardLock;
 
@@ -342,7 +342,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetCurrentPosition)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_GetStatus
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetStatus)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetStatus)
 (
     XbHybridDSBuffer*       pHybridThis,
     OUT LPDWORD             pdwStatus)
@@ -386,7 +386,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetStatus)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_GetVoiceProperties
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 (
     XbHybridDSBuffer*       pHybridThis,
     OUT X_DSVOICEPROPS*     pVoiceProps)
@@ -412,16 +412,16 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_GetVoiceProperties)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Lock
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Lock)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Lock)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwOffset,
-    DWORD                   dwBytes,
+    dword_xt                   dwOffset,
+    dword_xt                   dwBytes,
     LPVOID*                 ppvAudioPtr1,
     LPDWORD                 pdwAudioBytes1,
     LPVOID*                 ppvAudioPtr2,
     LPDWORD                 pdwAudioBytes2,
-    DWORD                   dwFlags)
+    dword_xt                   dwFlags)
 {
     DSoundMutexGuardLock;
 
@@ -500,13 +500,13 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Lock)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Unlock
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Unlock)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Unlock)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPVOID                  ppvAudioPtr1,
-    DWORD                   pdwAudioBytes1,
+    dword_xt                   pdwAudioBytes1,
     LPVOID                  ppvAudioPtr2,
-    DWORD                   pdwAudioBytes2
+    dword_xt                   pdwAudioBytes2
     )
 {
     DSoundMutexGuardLock;
@@ -549,10 +549,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Unlock)
 // * patch: IDirectSoundBuffer_Pause
 // ******************************************************************
 // Introduced in XDK 4721 revision.
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Pause)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Pause)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwPause)
+    dword_xt                   dwPause)
 {
     DSoundMutexGuardLock;
 
@@ -581,11 +581,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Pause)
 // * patch: IDirectSoundBuffer_PauseEx
 // ******************************************************************
 // Introduced in XDK 4721 revision.
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_PauseEx)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_PauseEx)
 (
     XbHybridDSBuffer*       pHybridThis,
     REFERENCE_TIME          rtTimestamp,
-    DWORD                   dwPause)
+    dword_xt                   dwPause)
 {
     DSoundMutexGuardLock;
 
@@ -605,12 +605,12 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_PauseEx)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Play
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Play)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Play)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwReserved1,
-    DWORD                   dwReserved2,
-    DWORD                   dwFlags)
+    dword_xt                   dwReserved1,
+    dword_xt                   dwReserved2,
+    dword_xt                   dwFlags)
 {
     DSoundMutexGuardLock;
 
@@ -669,11 +669,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Play)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_PlayEx
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_PlayEx)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_PlayEx)
 (
     XbHybridDSBuffer*   pThis,
     REFERENCE_TIME        rtTimeStamp,
-    DWORD                 dwFlags)
+    dword_xt                 dwFlags)
 {
     DSoundMutexGuardLock;
 
@@ -696,11 +696,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_PlayEx)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetAllParameters
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_DS3DBUFFER*            pc3DBufferParameters,
-    DWORD                    dwApply)
+    dword_xt                    dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -719,11 +719,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetAllParameters)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetBufferData
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetBufferData)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPVOID                  pvBufferData,
-    DWORD                   dwBufferBytes)
+    dword_xt                   dwBufferBytes)
 {
     DSoundMutexGuardLock;
 
@@ -804,12 +804,12 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetBufferData)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetConeAngles
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwInsideConeAngle,
-    DWORD                   dwOutsideConeAngle,
-    DWORD                   dwApply)
+    dword_xt                   dwInsideConeAngle,
+    dword_xt                   dwOutsideConeAngle,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -829,13 +829,13 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeAngles)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetConeOrientation
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
-    DWORD                   dwApply)
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -856,11 +856,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOrientation)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetConeOutsideVolume
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 (
     XbHybridDSBuffer*       pHybridThis,
-    LONG                    lConeOutsideVolume,
-    DWORD                   dwApply)
+    long_xt                    lConeOutsideVolume,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -879,11 +879,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetConeOutsideVolume)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetDistanceFactor
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flDistanceFactor,
-    DWORD                   dwApply)
+    float_xt                   flDistanceFactor,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -901,11 +901,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDistanceFactor)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetDopplerFactor
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 (
     XbHybridDSBuffer*       pThis,
-    FLOAT                   flDopplerFactor,
-    DWORD                   dwApply)
+    float_xt                   flDopplerFactor,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -923,7 +923,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetDopplerFactor)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetEG
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetEG)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetEG)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_DSENVOLOPEDESC*       pEnvelopeDesc)
@@ -948,7 +948,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetEG)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFilter
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFilter)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFilter)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_DSFILTERDESC*         pFilterDesc)
@@ -971,7 +971,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFilter)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFormat
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFormat)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFormat)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPCWAVEFORMATEX         pwfxFormat)
@@ -996,10 +996,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFormat)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetFrequency
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFrequency)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwFrequency)
+    dword_xt                   dwFrequency)
 {
     DSoundMutexGuardLock;
 
@@ -1018,10 +1018,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetFrequency)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetHeadroom
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwHeadroom)
+    dword_xt                   dwHeadroom)
 {
     DSoundMutexGuardLock;
 
@@ -1041,11 +1041,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetHeadroom)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetI3DL2Source
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_DSI3DL2BUFFER*        pds3db,
-    DWORD                   dwApply)
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1067,7 +1067,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetI3DL2Source)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetLFO
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetLFO) //Low Frequency Oscillators
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetLFO) //Low Frequency Oscillators
 (
     XbHybridDSBuffer*       pHybridThis,
     LPCDSLFODESC            pLFODesc)
@@ -1089,11 +1089,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetLFO) //Low Frequency Oscilla
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetLoopRegion
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwLoopStart,
-    DWORD                   dwLoopLength)
+    dword_xt                   dwLoopStart,
+    dword_xt                   dwLoopLength)
 {
     DSoundMutexGuardLock;
 
@@ -1131,11 +1131,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetLoopRegion)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMaxDistance
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flMaxDistance,
-    DWORD                   dwApply)
+    float_xt                   flMaxDistance,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1154,11 +1154,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMinDistance
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flMinDistance,
-    DWORD                   dwApply)
+    float_xt                   flMinDistance,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1177,10 +1177,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMixBins
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBins)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwMixBinMask)
+    dword_xt                   dwMixBinMask)
 {
     DSoundMutexGuardLock;
     HRESULT hRet = DS_OK;
@@ -1211,11 +1211,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 // * patch: IDirectSoundBuffer_SetMixBinVolumes_12
 // ******************************************************************
 // This revision API was used in XDK 3911 until API had changed in XDK 4039.
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwMixBinMask,
-    const LONG*             alVolumes)
+    dword_xt                   dwMixBinMask,
+    const long_xt*             alVolumes)
 {
     DSoundMutexGuardLock;
 
@@ -1237,7 +1237,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
 // * patch: IDirectSoundBuffer_SetMixBinVolumes_8
 // ******************************************************************
 // This revision is only used in XDK 4039 and higher.
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 (
     XbHybridDSBuffer*       pHybridThis,
     X_LPDSMIXBINS           pMixBins)
@@ -1259,11 +1259,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_8)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetMode
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMode)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMode)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwMode,
-    DWORD                   dwApply)
+    dword_xt                   dwMode,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1282,10 +1282,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMode)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetNotificationPositions
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwNotifyCount,
+    dword_xt                   dwNotifyCount,
     LPCDSBPOSITIONNOTIFY    paNotifies)
 {
     DSoundMutexGuardLock;
@@ -1328,7 +1328,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetNotificationPositions)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetOutputBuffer
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 (
     XbHybridDSBuffer*   pHybridThis,
     XbHybridDSBuffer*   pOutputBuffer)
@@ -1352,10 +1352,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetOutputBuffer)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetPitch
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPitch)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPitch)
 (
     XbHybridDSBuffer*       pHybridThis,
-    LONG                    lPitch)
+    long_xt                    lPitch)
 {
     DSoundMutexGuardLock;
 
@@ -1374,11 +1374,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPitch)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetPlayRegion
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD                   dwPlayStart,
-    DWORD                   dwPlayLength)
+    dword_xt                   dwPlayStart,
+    dword_xt                   dwPlayLength)
 {
     DSoundMutexGuardLock;
 
@@ -1419,13 +1419,13 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPlayRegion)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetPosition
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPosition)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPosition)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
-    DWORD                   dwApply)
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1446,12 +1446,12 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetPosition)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetRolloffCurve
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 (
     XbHybridDSBuffer*       pHybridThis,
-    const FLOAT*            pflPoints,
-    DWORD                   dwPointCount,
-    DWORD                   dwApply)
+    const float_xt*            pflPoints,
+    dword_xt                   dwPointCount,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1472,11 +1472,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffCurve)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetRolloffFactor
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   flRolloffFactor,
-    DWORD                   dwApply)
+    float_xt                   flRolloffFactor,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1496,13 +1496,13 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetRolloffFactor)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetVelocity
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetVelocity)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetVelocity)
 (
     XbHybridDSBuffer*       pHybridThis,
-    FLOAT                   x,
-    FLOAT                   y,
-    FLOAT                   z,
-    DWORD                   dwApply)
+    float_xt                   x,
+    float_xt                   y,
+    float_xt                   z,
+    dword_xt                   dwApply)
 {
     DSoundMutexGuardLock;
 
@@ -1523,10 +1523,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetVelocity)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_SetVolume
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetVolume)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetVolume)
 (
     XbHybridDSBuffer*       pHybridThis,
-    LONG                    lVolume)
+    long_xt                    lVolume)
 {
     DSoundMutexGuardLock;
 
@@ -1545,7 +1545,7 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetVolume)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Stop
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Stop)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Stop)
 (
     XbHybridDSBuffer*       pHybridThis)
 {
@@ -1568,11 +1568,11 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Stop)
 // ******************************************************************
 // * patch: IDirectSoundBuffer_StopEx
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
 (
     XbHybridDSBuffer*       pHybridThis,
     REFERENCE_TIME          rtTimeStamp,
-    DWORD                   dwFlags)
+    dword_xt                   dwFlags)
 {
     DSoundMutexGuardLock;
 
@@ -1662,10 +1662,10 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
 // ******************************************************************
 // * patch:  IDirectSoundBuffer_Set3DVoiceData
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
 (
     XbHybridDSBuffer*       pHybridThis,
-    DWORD a2
+    dword_xt a2
 )
 {
     DSoundMutexGuardLock;
@@ -1677,13 +1677,13 @@ HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Set3DVoiceData)
 
     LOG_UNIMPLEMENTED();
 
-    RETURN(STATUS_SUCCESS);
+    RETURN(xbox::status_success);
 }
 
 // ******************************************************************
 // * patch: IDirectSoundBuffer_Use3DVoiceData
 // ******************************************************************
-HRESULT WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Use3DVoiceData)
 (
     XbHybridDSBuffer*       pHybridThis,
     LPUNKNOWN               pUnknown)

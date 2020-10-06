@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::DS3DCALC
 
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp" // Global variables
 
@@ -49,10 +49,10 @@
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_Calculate3D
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
+xbox::void_xt WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 (
-    DWORD a1,
-    DWORD a2
+    dword_xt a1,
+    dword_xt a2
 )
 {
     DSoundMutexGuardLock;
@@ -68,13 +68,13 @@ VOID WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D)
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_GetVoiceData
 // ******************************************************************
-VOID WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
+xbox::void_xt WINAPI xbox::EMUPATCH(CDirectSound3DCalculator_GetVoiceData)
 (
-    DWORD a1,
-    DWORD a2,
-    DWORD a3,
-    DWORD a4,
-    DWORD a5
+    dword_xt a1,
+    dword_xt a2,
+    dword_xt a3,
+    dword_xt a4,
+    dword_xt a5
 )
 {
     DSoundMutexGuardLock;

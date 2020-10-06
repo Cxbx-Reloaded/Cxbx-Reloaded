@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::OB
 
 
-#include <xboxkrnl/xboxkrnl.h> // For ObDirectoryObjectType, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For ObDirectoryObjectType, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
@@ -41,10 +41,8 @@
 #include <ntstatus.h>
 #pragma warning(default:4005)
 
-#define FIELD_OFFSET(type,field)  ((ULONG)&(((type *)0)->field))
-
 #define INITIALIZED_OBJECT_STRING(ObjectString, Value)                  \
-	xbox::CHAR ObjectString##Buffer[] = Value;                      \
+	xbox::char_xt ObjectString##Buffer[] = Value;                      \
 	xbox::OBJECT_STRING ObjectString = {							\
 	sizeof(Value) - sizeof(CHAR),                                      \
 	sizeof(Value),                                                      \
@@ -66,7 +64,7 @@ XBSYSAPI EXPORTNUM(245) xbox::OBJECT_HANDLE_TABLE xbox::ObpObjectHandleTable = {
 
 xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
 
-xbox::BOOLEAN xbox::ObpCreatePermanentDirectoryObject(
+xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 	IN xbox::POBJECT_STRING DirectoryName OPTIONAL,
 	OUT xbox::POBJECT_DIRECTORY *DirectoryObject
 )
@@ -82,13 +80,13 @@ xbox::BOOLEAN xbox::ObpCreatePermanentDirectoryObject(
 	HANDLE Handle;
 	NTSTATUS status = NtCreateDirectoryObject(&Handle, &ObjectAttributes);
 
-	if (!NT_SUCCESS(status)) {
+	if (!nt_success(status)) {
 		RETURN(FALSE);
 	}
 	
 	status = ObReferenceObjectByHandle(Handle, &ObDirectoryObjectType, (PVOID *)DirectoryObject);
 	
-	if (!NT_SUCCESS(status)) {
+	if (!nt_success(status)) {
 		RETURN(FALSE);
 	}
 
@@ -97,10 +95,10 @@ xbox::BOOLEAN xbox::ObpCreatePermanentDirectoryObject(
 	RETURN(TRUE);
 }
 
-xbox::NTSTATUS xbox::ObpReferenceObjectByName(
+xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_xt Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *ReturnedObject
@@ -175,7 +173,7 @@ xbox::NTSTATUS xbox::ObpReferenceObjectByName(
 
 		if (!ObpLookupElementNameInDirectory(Directory, &ElementName,
 			ResolveSymbolicLink, &FoundObject)) {
-			status = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : STATUS_OBJECT_NAME_NOT_FOUND;
+			status = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : xbox::status_object_name_not_found;
 			goto CleanupAndExit;
 		}
 
@@ -194,7 +192,7 @@ OpenRootDirectory:
 
 			ObjectHeader->PointerCount++;
 			*ReturnedObject = FoundObject;
-			status = STATUS_SUCCESS;
+			status = xbox::status_success;
 			goto CleanupAndExit;
 		}
 
@@ -218,10 +216,10 @@ InvokeParseProcedure:
 			status = ObjectHeader->Type->ParseProcedure(FoundObject, ObjectType, Attributes, ObjectName, &RemainingName, ParseContext, &ParsedObject);
 			ObfDereferenceObject(FoundObject);
 
-			if (NT_SUCCESS(status)) {
+			if (nt_success(status)) {
 				if ((ObjectType == NULL) || (ObjectType == OBJECT_TO_OBJECT_HEADER(ParsedObject)->Type)) {
 					*ReturnedObject = ParsedObject;
-					status = STATUS_SUCCESS;
+					status = xbox::status_success;
 				} else {
 					ObfDereferenceObject(ParsedObject);
 					status = STATUS_OBJECT_TYPE_MISMATCH;
@@ -236,7 +234,7 @@ CleanupAndExit:
 	return status;
 }
 
-xbox::BOOLEAN xbox::ObInitSystem()
+xbox::boolean_xt xbox::ObInitSystem()
 {
 	ObpObjectHandleTable.HandleCount = 0;
 	ObpObjectHandleTable.FirstFreeTableEntry = -1;
@@ -264,7 +262,7 @@ xbox::BOOLEAN xbox::ObInitSystem()
 	return TRUE;
 }
 
-xbox::BOOLEAN xbox::ObpExtendObjectHandleTable()
+xbox::boolean_xt xbox::ObpExtendObjectHandleTable()
 {
 	PVOID* NewTable = (PVOID*)ExAllocatePoolWithTag(sizeof(PVOID) * OB_HANDLES_PER_TABLE, 'tHbO');
 	if (NewTable == NULL) {
@@ -342,7 +340,7 @@ xbox::HANDLE xbox::ObpCreateObjectHandle(xbox::PVOID Object)
 	return Handle;
 }
 
-xbox::VOID xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
+xbox::void_xt xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
 {
 	ULONG i = 0;
 	
@@ -385,11 +383,11 @@ xbox::VOID xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POB
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
+XBSYSAPI EXPORTNUM(239) xbox::ntstatus_xt NTAPI xbox::ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectBodySize,
+	IN ulong_xt ObjectBodySize,
 	OUT PVOID *Object
 )
 {
@@ -401,10 +399,10 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 		LOG_FUNC_END;
 
 	if (ObjectAttributes == NULL || ObjectAttributes->ObjectName == NULL) {
-		POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)ObjectType->AllocateProcedure(FIELD_OFFSET(OBJECT_HEADER, Body) + ObjectBodySize, ObjectType->PoolTag);
+		POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)ObjectType->AllocateProcedure(offsetof(OBJECT_HEADER, Body) + ObjectBodySize, ObjectType->PoolTag);
 
 		if (ObjectHeader == nullptr) {
-			RETURN(STATUS_INSUFFICIENT_RESOURCES);
+			RETURN(xbox::status_insufficient_resources);
 		}
 
 		ObjectHeader->PointerCount = 1;
@@ -414,7 +412,7 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 
 		*Object = &ObjectHeader->Body;
 		
-		RETURN(STATUS_SUCCESS);
+		RETURN(xbox::status_success);
 	}
 
 	OBJECT_STRING RemainingName = *ObjectAttributes->ObjectName;
@@ -436,11 +434,11 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 	ObjectBodySize = ALIGN_UP(ObjectBodySize, ULONG);
 
 	POBJECT_HEADER_NAME_INFO ObjectNameInfo = (POBJECT_HEADER_NAME_INFO)ObjectType->AllocateProcedure(
-		sizeof(OBJECT_HEADER_NAME_INFO) + FIELD_OFFSET(OBJECT_HEADER, Body) +
+		sizeof(OBJECT_HEADER_NAME_INFO) + offsetof(OBJECT_HEADER, Body) +
 		ObjectBodySize + ElementName.Length, ObjectType->PoolTag);
 
 	if (ObjectNameInfo == NULL) {
-		return STATUS_INSUFFICIENT_RESOURCES;
+		return xbox::status_insufficient_resources;
 	}
 
 	POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)(ObjectNameInfo + 1);
@@ -459,7 +457,7 @@ XBSYSAPI EXPORTNUM(239) xbox::NTSTATUS NTAPI xbox::ObCreateObject
 
 	*Object = &ObjectHeader->Body;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -494,7 +492,7 @@ xbox::PVOID xbox::ObpGetObjectHandleContents(HANDLE Handle)
 	return NULL;
 }
 
-xbox::ULONG FASTCALL xbox::ObpComputeHashIndex(
+xbox::ulong_xt FASTCALL xbox::ObpComputeHashIndex(
 	IN POBJECT_STRING ElementName
 )
 {
@@ -542,10 +540,10 @@ xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 	return NULL;
 }
 
-xbox::BOOLEAN xbox::ObpLookupElementNameInDirectory(
+xbox::boolean_xt xbox::ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
 	IN POBJECT_STRING ElementName,
-	IN BOOLEAN ResolveSymbolicLink,
+	IN boolean_xt ResolveSymbolicLink,
 	OUT PVOID *ReturnedObject
 )
 {
@@ -590,11 +588,11 @@ xbox::BOOLEAN xbox::ObpLookupElementNameInDirectory(
 // ******************************************************************
 // * 0x00F1 - ObInsertObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
+XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectPointerBias,
+	IN ulong_xt ObjectPointerBias,
 	OUT PHANDLE ReturnedHandle
 )
 {
@@ -664,7 +662,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 							goto CleanupAndExit;
 						}
 					} else {
-						status = STATUS_OBJECT_NAME_COLLISION;
+						status = xbox::status_object_name_collision;
 						goto CleanupAndExit;
 					}
 				}
@@ -692,7 +690,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 	Handle = ObpCreateObjectHandle(InsertObject);
 
 	if (Handle == NULL) {
-		status = STATUS_INSUFFICIENT_RESOURCES;
+		status = xbox::status_insufficient_resources;
 		goto CleanupAndExit;
 	}
 
@@ -732,7 +730,7 @@ XBSYSAPI EXPORTNUM(241) xbox::NTSTATUS NTAPI xbox::ObInsertObject
 		ObjectHeader->Flags |= OB_FLAG_PERMANENT_OBJECT;
 	}
 
-	status = (Object == InsertObject) ? STATUS_SUCCESS : STATUS_OBJECT_NAME_EXISTS;
+	status = (Object == InsertObject) ? xbox::status_success : STATUS_OBJECT_NAME_EXISTS;
 
 CleanupAndExit:
 	KfLowerIrql(OldIrql);
@@ -745,7 +743,7 @@ CleanupAndExit:
 // ******************************************************************
 // * 0x00F2 - ObMakeTemporaryObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(242) xbox::VOID NTAPI xbox::ObMakeTemporaryObject
+XBSYSAPI EXPORTNUM(242) xbox::void_xt NTAPI xbox::ObMakeTemporaryObject
 (
 	IN PVOID Object
 )
@@ -759,7 +757,7 @@ XBSYSAPI EXPORTNUM(242) xbox::VOID NTAPI xbox::ObMakeTemporaryObject
 // ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(243) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByName
+XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 (
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN POBJECT_TYPE ObjectType,
@@ -777,13 +775,13 @@ XBSYSAPI EXPORTNUM(243) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByName
 	LOG_UNIMPLEMENTED();
 	assert(false);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
 // * 0x00F4 - ObOpenObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(244) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByPointer
+XBSYSAPI EXPORTNUM(244) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType,
@@ -799,7 +797,7 @@ XBSYSAPI EXPORTNUM(244) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByPointer
 	LOG_UNIMPLEMENTED();
 	assert(false);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
@@ -811,7 +809,7 @@ XBSYSAPI EXPORTNUM(244) xbox::NTSTATUS NTAPI xbox::ObOpenObjectByPointer
 //
 // Differences from NT: There are no DesiredAccess, AccessMode, or
 //     HandleInformation parameters.
-XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
+XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 (
 	IN HANDLE Handle,
 	IN POBJECT_TYPE ObjectType OPTIONAL,
@@ -832,9 +830,9 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 		if ((ObjectType == &PsThreadObjectType) || (ObjectType == NULL)) {
 			Object = PsGetCurrentThread();
 			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-			InterlockedIncrement(&ObjectHeader->PointerCount);
+			InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 			*ReturnedObject = Object;
-			return STATUS_SUCCESS;
+			return xbox::status_success;
 		} else {
 			status = STATUS_OBJECT_TYPE_MISMATCH;
 		}
@@ -846,7 +844,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 
 			if ((ObjectType == ObjectHeader->Type) || (ObjectType == NULL)) {
 				*ReturnedObject = Object;
-				return STATUS_SUCCESS;
+				return xbox::status_success;
 			} else {
 				ObfDereferenceObject(Object);
 				status = STATUS_OBJECT_TYPE_MISMATCH;
@@ -859,7 +857,7 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 			if (GetHandleInformation(Handle, &flags)) {
 				// This was a Windows Handle, so return it.
 				*ReturnedObject = Handle;
-				return STATUS_SUCCESS;
+				return xbox::status_success;
 			}
 
 			status = STATUS_INVALID_HANDLE;
@@ -874,10 +872,10 @@ XBSYSAPI EXPORTNUM(246) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByHandle
 // ******************************************************************
 // * 0x00F7 - ObReferenceObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(247) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByName
+XBSYSAPI EXPORTNUM(247) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_xt Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *Object
@@ -898,7 +896,7 @@ XBSYSAPI EXPORTNUM(247) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByName
 // ******************************************************************
 // * 0x00F8 - ObReferenceObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(248) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByPointer
+XBSYSAPI EXPORTNUM(248) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType
@@ -912,8 +910,8 @@ XBSYSAPI EXPORTNUM(248) xbox::NTSTATUS NTAPI xbox::ObReferenceObjectByPointer
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 
 	if (ObjectType == ObjectHeader->Type) {
-		InterlockedIncrement(&ObjectHeader->PointerCount);
-		RETURN(STATUS_SUCCESS);
+		InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
+		RETURN(xbox::status_success);
 	} 
 	
 	RETURN(STATUS_OBJECT_TYPE_MISMATCH);
@@ -936,7 +934,7 @@ XBSYSAPI EXPORTNUM(249) xbox::OBJECT_TYPE xbox::ObSymbolicLinkObjectType =
 // ******************************************************************
 // * 0x00FA - ObfDereferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(250) xbox::VOID FASTCALL xbox::ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) xbox::void_xt FASTCALL xbox::ObfDereferenceObject
 (
 	IN PVOID Object
 )
@@ -953,7 +951,7 @@ XBSYSAPI EXPORTNUM(250) xbox::VOID FASTCALL xbox::ObfDereferenceObject
 
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 	
-	if (InterlockedDecrement(&ObjectHeader->PointerCount) == 0) {
+	if (InterlockedDecrement((::PLONG)(&ObjectHeader->PointerCount)) == 0) {
 		if (ObjectHeader->Type->DeleteProcedure != NULL) {
 			ObjectHeader->Type->DeleteProcedure(Object);
 		}
@@ -972,11 +970,11 @@ XBSYSAPI EXPORTNUM(250) xbox::VOID FASTCALL xbox::ObfDereferenceObject
 // ******************************************************************
 // * 0x00FB - ObfReferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(251) xbox::VOID FASTCALL xbox::ObfReferenceObject
+XBSYSAPI EXPORTNUM(251) xbox::void_xt FASTCALL xbox::ObfReferenceObject
 (
 	IN PVOID Object
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(Object);
-	InterlockedIncrement(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount);
+	InterlockedIncrement((::PLONG)(&OBJECT_TO_OBJECT_HEADER(Object)->PointerCount));
 }

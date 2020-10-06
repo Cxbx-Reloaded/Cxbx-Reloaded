@@ -12,7 +12,12 @@
 #ifndef XBOXKRNL_OB_H
 #define XBOXKRNL_OB_H
 
-#define OBJ_NAME_PATH_SEPARATOR ((CHAR)L'\\')
+#include "types.h"
+
+namespace xbox
+{
+
+#define OBJ_NAME_PATH_SEPARATOR ((char_xt)L'\\')
 
 #define OB_NUMBER_HASH_BUCKETS          11
 typedef struct _OBJECT_DIRECTORY {
@@ -35,13 +40,13 @@ typedef struct _OBJECT_HEADER_NAME_INFO {
 
 #define ObpIsFlagSet(flagset, flag) (((flagset) & (flag)) != 0)
 #define ObpIsFlagClear(flagset, flag) (((flagset) & (flag)) == 0)
-#define ObpEncodeFreeHandleLink(Link) (((ULONG_PTR)(Link)) | 1)
-#define ObpDecodeFreeHandleLink(Link) (((ULONG_PTR)(Link)) & (~1))
-#define ObpIsFreeHandleLink(Link) (((ULONG_PTR)(Link)) & 1)
+#define ObpEncodeFreeHandleLink(Link) (((ulong_ptr_xt)(Link)) | 1)
+#define ObpDecodeFreeHandleLink(Link) (((ulong_ptr_xt)(Link)) & (~1))
+#define ObpIsFreeHandleLink(Link) (((ulong_ptr_xt)(Link)) & 1)
 #define ObpGetTableByteOffsetFromHandle(Handle) (HandleToUlong(Handle) & (OB_HANDLES_PER_TABLE * sizeof(PVOID) - 1))
 #define ObpGetTableFromHandle(Handle) ObpObjectHandleTable.RootTable[HandleToUlong(Handle) >> (OB_HANDLES_PER_TABLE_SHIFT + 2)]
 #define ObpGetHandleContentsPointer(Handle) ((PVOID*)((PUCHAR)ObpGetTableFromHandle(Handle) + ObpGetTableByteOffsetFromHandle(Handle)))
-#define ObpMaskOffApplicationBits(Handle) ((HANDLE)(((ULONG_PTR)(Handle)) & ~(sizeof(ULONG) - 1)))
+#define ObpMaskOffApplicationBits(Handle) ((HANDLE)(((ulong_ptr_xt)(Handle)) & ~(sizeof(ulong_xt) - 1)))
 
 #define OB_FLAG_NAMED_OBJECT            0x01
 #define OB_FLAG_PERMANENT_OBJECT        0x02
@@ -54,15 +59,15 @@ typedef struct _OBJECT_HEADER_NAME_INFO {
 #define OBJECT_HEADER_NAME_INFO_TO_OBJECT(ObjectHeaderNameInfo) (&OBJECT_HEADER_NAME_INFO_TO_OBJECT_HEADER(ObjectHeaderNameInfo)->Body)
 
 HANDLE ObpCreateObjectHandle(PVOID Object);
-BOOLEAN ObpCreatePermanentDirectoryObject(
+boolean_xt ObpCreatePermanentDirectoryObject(
 	IN POBJECT_STRING DirectoryName OPTIONAL,
 	OUT POBJECT_DIRECTORY *DirectoryObject
 );
 
-NTSTATUS ObpReferenceObjectByName(
+ntstatus_xt ObpReferenceObjectByName(
 	IN HANDLE RootDirectoryHandle,
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_xt Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *ReturnedObject
@@ -74,28 +79,28 @@ NTSTATUS ObpReferenceObjectByName(
 	(p)->ObjectName = n;      \
 }
 
-BOOLEAN ObInitSystem();
-BOOLEAN ObpExtendObjectHandleTable();
-VOID ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
+boolean_xt ObInitSystem();
+boolean_xt ObpExtendObjectHandleTable();
+void_xt ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
 PVOID ObpGetObjectHandleContents(HANDLE Handle);
 PVOID ObpGetObjectHandleReference(HANDLE Handle);
-ULONG FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
+ulong_xt FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
 
-BOOLEAN ObpLookupElementNameInDirectory(
+boolean_xt ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
 	IN POBJECT_STRING ElementName,
-	IN BOOLEAN ResolveSymbolicLink,
+	IN boolean_xt ResolveSymbolicLink,
 	OUT PVOID *ReturnedObject
 );
 
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(239) NTSTATUS NTAPI ObCreateObject
+XBSYSAPI EXPORTNUM(239) ntstatus_xt NTAPI ObCreateObject
 (
 	IN POBJECT_TYPE ObjectType,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectBodySize,
+	IN ulong_xt ObjectBodySize,
 	OUT PVOID *Object
 );
 
@@ -107,18 +112,18 @@ XBSYSAPI EXPORTNUM(240) OBJECT_TYPE ObDirectoryObjectType;
 // ******************************************************************
 // * 0x00F1 - ObInsertObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(241) NTSTATUS NTAPI ObInsertObject
+XBSYSAPI EXPORTNUM(241) ntstatus_xt NTAPI ObInsertObject
 (
 	IN PVOID Object,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG ObjectPointerBias,
+	IN ulong_xt ObjectPointerBias,
 	OUT PHANDLE Handle
 );
 
 // ******************************************************************
 // * 0x00F2 - ObMakeTemporaryObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(242) VOID NTAPI ObMakeTemporaryObject
+XBSYSAPI EXPORTNUM(242) void_xt NTAPI ObMakeTemporaryObject
 (
 	IN PVOID Object
 );
@@ -126,7 +131,7 @@ XBSYSAPI EXPORTNUM(242) VOID NTAPI ObMakeTemporaryObject
 // ******************************************************************
 // * 0x00F3 - ObOpenObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName
+XBSYSAPI EXPORTNUM(243) ntstatus_xt NTAPI ObOpenObjectByName
 (
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN POBJECT_TYPE ObjectType,
@@ -137,7 +142,7 @@ XBSYSAPI EXPORTNUM(243) NTSTATUS NTAPI ObOpenObjectByName
 // ******************************************************************
 // * 0x00F4 - ObOpenObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(244) NTSTATUS NTAPI ObOpenObjectByPointer
+XBSYSAPI EXPORTNUM(244) ntstatus_xt NTAPI ObOpenObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType,
@@ -150,8 +155,8 @@ XBSYSAPI EXPORTNUM(244) NTSTATUS NTAPI ObOpenObjectByPointer
 #define OB_HANDLES_PER_SEGMENT          (OB_TABLES_PER_SEGMENT * OB_HANDLES_PER_TABLE)
 
 typedef struct _OBJECT_HANDLE_TABLE {
-	LONG HandleCount;
-	LONG_PTR FirstFreeTableEntry;
+	long_xt HandleCount;
+	long_ptr_xt FirstFreeTableEntry;
 	HANDLE NextHandleNeedingPool;
 	PVOID **RootTable;
 	PVOID *BuiltinRootTable[OB_TABLES_PER_SEGMENT];
@@ -165,7 +170,7 @@ XBSYSAPI EXPORTNUM(245) OBJECT_HANDLE_TABLE ObpObjectHandleTable;
 // ******************************************************************
 // * 0x00F6 - ObReferenceObjectByHandle()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
+XBSYSAPI EXPORTNUM(246) ntstatus_xt NTAPI ObReferenceObjectByHandle
 (
     IN HANDLE Handle,
     IN POBJECT_TYPE ObjectType OPTIONAL,
@@ -175,10 +180,10 @@ XBSYSAPI EXPORTNUM(246) NTSTATUS NTAPI ObReferenceObjectByHandle
 // ******************************************************************
 // * 0x00F7 - ObReferenceObjectByName()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
+XBSYSAPI EXPORTNUM(247) ntstatus_xt NTAPI ObReferenceObjectByName
 (
 	IN POBJECT_STRING ObjectName,
-	IN ULONG Attributes,
+	IN ulong_xt Attributes,
 	IN POBJECT_TYPE ObjectType,
 	IN OUT PVOID ParseContext OPTIONAL,
 	OUT PVOID *Object
@@ -187,7 +192,7 @@ XBSYSAPI EXPORTNUM(247) NTSTATUS NTAPI ObReferenceObjectByName
 // ******************************************************************
 // * 0x00F8 - ObReferenceObjectByPointer()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(248) NTSTATUS NTAPI ObReferenceObjectByPointer
+XBSYSAPI EXPORTNUM(248) ntstatus_xt NTAPI ObReferenceObjectByPointer
 (
 	IN PVOID Object,
 	IN POBJECT_TYPE ObjectType
@@ -201,7 +206,7 @@ XBSYSAPI EXPORTNUM(249) OBJECT_TYPE ObSymbolicLinkObjectType;
 // ******************************************************************
 // * 0x00FA - ObfDereferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(250) VOID FASTCALL ObfDereferenceObject
+XBSYSAPI EXPORTNUM(250) void_xt FASTCALL ObfDereferenceObject
 (
 	IN PVOID Object
 );
@@ -209,11 +214,12 @@ XBSYSAPI EXPORTNUM(250) VOID FASTCALL ObfDereferenceObject
 // ******************************************************************
 // * 0x00FB - ObfReferenceObject()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(251) VOID FASTCALL ObfReferenceObject
+XBSYSAPI EXPORTNUM(251) void_xt FASTCALL ObfReferenceObject
 (
 	IN PVOID Object
 );
 
+}
 
 #endif
 

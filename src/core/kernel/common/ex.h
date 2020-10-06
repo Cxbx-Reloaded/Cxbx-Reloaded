@@ -12,12 +12,17 @@
 #ifndef XBOXKRNL_EX_H
 #define XBOXKRNL_EX_H
 
-XBSYSAPI EXPORTNUM(12) VOID NTAPI ExAcquireReadWriteLockExclusive
+#include "types.h"
+
+namespace xbox
+{
+
+XBSYSAPI EXPORTNUM(12) void_xt NTAPI ExAcquireReadWriteLockExclusive
 (
 	IN PERWLOCK ReadWriteLock
 );
 
-XBSYSAPI EXPORTNUM(13) VOID NTAPI ExAcquireReadWriteLockShared
+XBSYSAPI EXPORTNUM(13) void_xt NTAPI ExAcquireReadWriteLockShared
 (
 	IN PERWLOCK ReadWriteLock
 );
@@ -31,7 +36,7 @@ XBSYSAPI EXPORTNUM(13) VOID NTAPI ExAcquireReadWriteLockShared
 // ******************************************************************
 XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 (
-    IN SIZE_T NumberOfBytes
+    IN size_xt NumberOfBytes
 );
 
 // ******************************************************************
@@ -43,8 +48,8 @@ XBSYSAPI EXPORTNUM(14) PVOID NTAPI ExAllocatePool
 // ******************************************************************
 XBSYSAPI EXPORTNUM(15) PVOID NTAPI ExAllocatePoolWithTag
 (
-    IN SIZE_T NumberOfBytes,
-    IN ULONG Tag
+    IN size_xt NumberOfBytes,
+    IN ulong_xt Tag
 );
 
 XBSYSAPI EXPORTNUM(16) OBJECT_TYPE ExEventObjectType;
@@ -56,7 +61,7 @@ XBSYSAPI EXPORTNUM(16) OBJECT_TYPE ExEventObjectType;
 // * Deallocates a block  of pool memory
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
+XBSYSAPI EXPORTNUM(17) void_xt NTAPI ExFreePool
 (
     IN PVOID P
 );
@@ -64,7 +69,7 @@ XBSYSAPI EXPORTNUM(17) VOID NTAPI ExFreePool
 // ******************************************************************
 // * 0x0012 - ExInitializeReadWriteLock()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(18) VOID NTAPI ExInitializeReadWriteLock
+XBSYSAPI EXPORTNUM(18) void_xt NTAPI ExInitializeReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 );
@@ -78,14 +83,14 @@ XBSYSAPI EXPORTNUM(19) LARGE_INTEGER NTAPI ExInterlockedAddLargeInteger
 );
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(20) VOID FASTCALL ExInterlockedAddLargeStatistic
+XBSYSAPI EXPORTNUM(20) void_xt FASTCALL ExInterlockedAddLargeStatistic
 (
 	IN PLARGE_INTEGER Addend,
-	IN ULONG Increment
+	IN ulong_xt Increment
 );
 
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(21) LONGLONG FASTCALL ExInterlockedCompareExchange64
+XBSYSAPI EXPORTNUM(21) longlong_xt FASTCALL ExInterlockedCompareExchange64
 (
 	IN OUT PLONGLONG Destination,
 	IN PLONGLONG Exchange,
@@ -97,7 +102,7 @@ XBSYSAPI EXPORTNUM(22) OBJECT_TYPE ExMutantObjectType;
 // ******************************************************************
 // * ExQueryPoolBlockSize
 // ******************************************************************
-XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize
+XBSYSAPI EXPORTNUM(23) ulong_xt NTAPI ExQueryPoolBlockSize
 (
     IN PVOID PoolBlock
 );
@@ -105,36 +110,36 @@ XBSYSAPI EXPORTNUM(23) ULONG NTAPI ExQueryPoolBlockSize
 // ******************************************************************
 // * 0x0018 - ExQueryNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(24) NTSTATUS NTAPI ExQueryNonVolatileSetting
+XBSYSAPI EXPORTNUM(24) ntstatus_xt NTAPI ExQueryNonVolatileSetting
 (
-	IN  DWORD               ValueIndex,
-	OUT DWORD              *Type,
+	IN  dword_xt               ValueIndex,
+	OUT dword_xt              *Type,
 	OUT PVOID               Value,
-	IN  SIZE_T              ValueLength,
+	IN  size_xt              ValueLength,
 	OUT PSIZE_T             ResultLength OPTIONAL
 );
 
 // ******************************************************************
 // * ExReadWriteRefurbInfo
 // ******************************************************************
-XBSYSAPI EXPORTNUM(25) NTSTATUS NTAPI ExReadWriteRefurbInfo
+XBSYSAPI EXPORTNUM(25) ntstatus_xt NTAPI ExReadWriteRefurbInfo
 (
 	IN OUT PXBOX_REFURB_INFO	pRefurbInfo,
-	IN ULONG	dwBufferSize,
-	IN BOOLEAN	bIsWriteMode
+	IN ulong_xt	dwBufferSize,
+	IN boolean_xt	bIsWriteMode
 );
 
-XBSYSAPI EXPORTNUM(26) VOID NTAPI ExRaiseException
+XBSYSAPI EXPORTNUM(26) void_xt NTAPI ExRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 );
 
-XBSYSAPI EXPORTNUM(27) VOID NTAPI ExRaiseStatus
+XBSYSAPI EXPORTNUM(27) void_xt NTAPI ExRaiseStatus
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 );
 
-XBSYSAPI EXPORTNUM(28) VOID NTAPI ExReleaseReadWriteLock
+XBSYSAPI EXPORTNUM(28) void_xt NTAPI ExReleaseReadWriteLock
 (
 	IN PERWLOCK ReadWriteLock
 );
@@ -142,12 +147,12 @@ XBSYSAPI EXPORTNUM(28) VOID NTAPI ExReleaseReadWriteLock
 // ******************************************************************
 // * 0x001D - ExSaveNonVolatileSetting()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(29) NTSTATUS NTAPI ExSaveNonVolatileSetting
+XBSYSAPI EXPORTNUM(29) ntstatus_xt NTAPI ExSaveNonVolatileSetting
 (
-	IN  DWORD               ValueIndex,
-	IN  DWORD               Type,
+	IN  dword_xt               ValueIndex,
+	IN  dword_xt               Type,
 	IN  PVOID               Value,
-	IN  SIZE_T              ValueLength
+	IN  size_xt              ValueLength
 );
 
 XBSYSAPI EXPORTNUM(30) OBJECT_TYPE ExSemaphoreObjectType;
@@ -180,33 +185,33 @@ XBSYSAPI EXPORTNUM(34) PLIST_ENTRY FASTCALL ExfInterlockedRemoveHeadList
 	IN PLIST_ENTRY ListHead
 );
 
-XBSYSAPI EXPORTNUM(51) LONG FASTCALL KRNL(InterlockedCompareExchange)
+XBSYSAPI EXPORTNUM(51) long_xt FASTCALL KRNL(InterlockedCompareExchange)
 (
 	IN OUT volatile PLONG Destination,
-	IN LONG  Exchange,
-	IN LONG  Comparand
+	IN long_xt  Exchange,
+	IN long_xt  Comparand
 );
 
-XBSYSAPI EXPORTNUM(52) LONG FASTCALL KRNL(InterlockedDecrement)
+XBSYSAPI EXPORTNUM(52) long_xt FASTCALL KRNL(InterlockedDecrement)
 (
 	IN OUT PLONG Addend
 );
 
-XBSYSAPI EXPORTNUM(53) LONG FASTCALL KRNL(InterlockedIncrement)
+XBSYSAPI EXPORTNUM(53) long_xt FASTCALL KRNL(InterlockedIncrement)
 (
 	IN OUT PLONG Addend
 );
 
-XBSYSAPI EXPORTNUM(54) LONG FASTCALL KRNL(InterlockedExchange)
+XBSYSAPI EXPORTNUM(54) long_xt FASTCALL KRNL(InterlockedExchange)
 (
 	IN volatile PLONG Destination,
-	IN LONG Value
+	IN long_xt Value
 );
 
-XBSYSAPI EXPORTNUM(55) LONG FASTCALL KRNL(InterlockedExchangeAdd)
+XBSYSAPI EXPORTNUM(55) long_xt FASTCALL KRNL(InterlockedExchangeAdd)
 (
 	IN volatile PLONG Addend,
-	IN LONG	Value
+	IN long_xt	Value
 );
 
 // Dxbx Note : The Xbox1 SINGLE_LIST strucures are the same as in WinNT
@@ -225,6 +230,8 @@ XBSYSAPI EXPORTNUM(58) SLIST_ENTRY * FASTCALL KRNL(InterlockedPushEntrySList)
 	IN PSLIST_HEADER ListHead,
 	IN PSLIST_ENTRY ListEntry
 );
+
+}
 
 #endif
 

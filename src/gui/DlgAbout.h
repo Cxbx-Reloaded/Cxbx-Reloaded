@@ -28,6 +28,6 @@
 #include <windows.h>
 
 /*! show About dialog */
-extern VOID ShowAboutDialog(HWND hwnd);
+extern void ShowAboutDialog(HWND hwnd);
 
 #endif

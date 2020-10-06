@@ -1372,7 +1372,7 @@ void VMManager::LockBufferOrSinglePage(PAddr paddr, VAddr addr, size_t Size, boo
 	Unlock();
 }
 
-xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
+xbox::ntstatus_xt VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1389,7 +1389,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 	PFN_COUNT PteNumber = 0;
 	PFN TempPfn;
 	PageType BusyType;
-	xbox::NTSTATUS status;
+	xbox::ntstatus_xt status;
 	VAddr CapturedBase = *addr;
 	size_t CapturedSize = *Size;
 	VAddr MaxAllowedAddress;
@@ -1422,7 +1422,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 	// At least MEM_RESET, MEM_COMMIT or MEM_RESERVE must be set
 	if ((AllocationType & (XBOX_MEM_COMMIT | XBOX_MEM_RESERVE | XBOX_MEM_RESET)) == 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
-	if (!ConvertXboxToPtePermissions(Protect, &TempPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
+	if (!ConvertXboxToPtePermissions(Protect, &TempPte)) { RETURN(xbox::status_invalid_page_protection); }
 
 	EmuLog(LOG_LEVEL::DEBUG, "%s requested range : 0x%.8X - 0x%.8X", __func__, CapturedBase, CapturedBase + CapturedSize);
 
@@ -1452,7 +1452,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 
 			AlignedCapturedBase = MapMemoryBlock(UserRegion, AlignedCapturedSize >> PAGE_SHIFT, MEM_RESERVE, false, MaxAllowedAddress);
 
-			if (!AlignedCapturedBase) { status = STATUS_NO_MEMORY; goto Exit; }
+			if (!AlignedCapturedBase) { status = xbox::status_no_memory; goto Exit; }
 		}
 		else
 		{
@@ -1464,7 +1464,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 			{
 				// Reserved vma or we are overflowing a free vma, report an error
 
-				status = STATUS_CONFLICTING_ADDRESSES;
+				status = xbox::status_conflicting_addresses;
 				goto Exit;
 			}
 
@@ -1486,7 +1486,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 				{
 					// An host allocation is already mapped there, report an error
 
-					status = STATUS_CONFLICTING_ADDRESSES;
+					status = xbox::status_conflicting_addresses;
 					goto Exit;
 				}
 			}
@@ -1504,7 +1504,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 			*addr = AlignedCapturedBase;
 			*Size = AlignedCapturedSize;
 
-			status = STATUS_SUCCESS;
+			status = xbox::status_success;
 			goto Exit;
 		}
 		bDestructVmaOnFailure = true;
@@ -1525,7 +1525,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 	{
 		// The specified region is not completely inside a reserved vma or it's free
 
-		status = STATUS_CONFLICTING_ADDRESSES;
+		status = xbox::status_conflicting_addresses;
 		goto Exit;
 	}
 
@@ -1537,7 +1537,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 		*Size = AlignedCapturedSize;
 
 		Unlock();
-		RETURN(STATUS_SUCCESS);
+		RETURN(xbox::status_success);
 	}
 
 	// Figure out the number of physical pages we need to allocate. Note that NtAllocateVirtualMemory can do overlapped allocations so we
@@ -1557,7 +1557,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 
 	if (!IsMappable(PteNumber, true, m_MmLayoutDebug && m_bAllowNonDebuggerOnTop64MiB ? true : false))
 	{
-		status = STATUS_NO_MEMORY;
+		status = xbox::status_no_memory;
 		goto Exit;
 	}
 
@@ -1570,7 +1570,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 			(ConvertXboxToWinPermissions(PatchXboxPermissions(Protect))) & ~(PAGE_WRITECOMBINE | PAGE_NOCACHE)))
 		{
 			EmuLog(LOG_LEVEL::DEBUG, "%s: VirtualAlloc failed to commit the memory! The error was 0x%08X", __func__, GetLastError());
-			status = STATUS_NO_MEMORY;
+			status = xbox::status_no_memory;
 			goto Exit;
 		}
 	}
@@ -1579,7 +1579,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 
 	if (!AllocatePT(AlignedCapturedSize, AlignedCapturedBase))
 	{
-		status = STATUS_NO_MEMORY;
+		status = xbox::status_no_memory;
 		goto Exit;
 	}
 
@@ -1619,7 +1619,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
 	Unlock();
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 
 	Exit:
 	if (bDestructVmaOnFailure)
@@ -1631,7 +1631,7 @@ xbox::NTSTATUS VMManager::XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, s
 	RETURN(status);
 }
 
-xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType)
+xbox::ntstatus_xt VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD FreeType)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1643,7 +1643,7 @@ xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD F
 	size_t CapturedSize = *Size;
 	VAddr AlignedCapturedBase;
 	size_t AlignedCapturedSize;
-	xbox::NTSTATUS status;
+	xbox::ntstatus_xt status;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	PMMPTE StartingPte;
@@ -1679,7 +1679,7 @@ xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD F
 	{
 		// Free vma, report an error
 
-		status = STATUS_MEMORY_NOT_ALLOCATED;
+		status = xbox::status_memory_not_allocated;
 		goto Exit;
 	}
 
@@ -1687,7 +1687,7 @@ xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD F
 	{
 		// The provided ending adddress is beyond the end of the vma, report an error
 
-		status = STATUS_UNABLE_TO_FREE_VM;
+		status = xbox::status_unable_to_free_vm;
 		goto Exit;
 	}
 
@@ -1701,7 +1701,7 @@ xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD F
 			{
 				// The provided base address is not the starting address of the vma, report an error
 
-				status = STATUS_FREE_VM_NOT_AT_BASE;
+				status = xbox::status_free_vm_not_at_base;
 				goto Exit;
 			}
 
@@ -1782,14 +1782,14 @@ xbox::NTSTATUS VMManager::XbFreeVirtualMemory(VAddr* addr, size_t* Size, DWORD F
 
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
-	status = STATUS_SUCCESS;
+	status = xbox::status_success;
 
 	Exit:
 	Unlock();
 	RETURN(status);
 }
 
-xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
+xbox::ntstatus_xt VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Protect)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(*addr)
@@ -1802,7 +1802,7 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 	size_t CapturedSize = *Size;
 	VAddr AlignedCapturedBase;
 	size_t AlignedCapturedSize;
-	xbox::NTSTATUS status;
+	xbox::ntstatus_xt status;
 	PMMPTE PointerPte;
 	PMMPTE EndingPte;
 	PMMPTE StartingPte;
@@ -1823,7 +1823,7 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 	// Size cannot be zero
 	if (CapturedSize == 0) { RETURN(STATUS_INVALID_PARAMETER); }
 
-	if (!ConvertXboxToPtePermissions(NewPerms, &NewPermsPte)) { RETURN(STATUS_INVALID_PAGE_PROTECTION); }
+	if (!ConvertXboxToPtePermissions(NewPerms, &NewPermsPte)) { RETURN(xbox::status_invalid_page_protection); }
 
 	AlignedCapturedBase = ROUND_DOWN_4K(CapturedBase);
 	AlignedCapturedSize = (PAGES_SPANNED(CapturedBase, CapturedSize)) << PAGE_SHIFT;
@@ -1836,7 +1836,7 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 	{
 		// Free vma or the requested ending address is beyond the vma, report an error
 
-		status = STATUS_CONFLICTING_ADDRESSES;
+		status = xbox::status_conflicting_addresses;
 		goto Exit;
 	}
 
@@ -1856,7 +1856,7 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 			{
 				// Pde is not committed, report an error
 
-				status = STATUS_NOT_COMMITTED;
+				status = xbox::status_not_committed;
 				goto Exit;
 			}
 		}
@@ -1865,7 +1865,7 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 		{
 			// Pte is not committed, report an error
 
-			status = STATUS_NOT_COMMITTED;
+			status = xbox::status_not_committed;
 			goto Exit;
 		}
 
@@ -1900,14 +1900,14 @@ xbox::NTSTATUS VMManager::XbVirtualProtect(VAddr* addr, size_t* Size, DWORD* Pro
 	*addr = AlignedCapturedBase;
 	*Size = AlignedCapturedSize;
 	*Protect = ConvertPteToXboxPermissions(OldPermsPte.Default);
-	status = STATUS_SUCCESS;
+	status = xbox::status_success;
 
 	Exit:
 	Unlock();
 	RETURN(status);
 }
 
-xbox::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics)
+xbox::ntstatus_xt VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BASIC_INFORMATION memory_statistics)
 {
 	VMAIter it;
 	PMMPTE PointerPte;
@@ -1946,7 +1946,7 @@ xbox::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BA
 			memory_statistics->RegionSize = info.RegionSize;
 			memory_statistics->State = info.State;
 			memory_statistics->Type = info.Type;
-			return STATUS_SUCCESS;
+			return xbox::status_success;
 		}
 		else {
 			return STATUS_INVALID_PARAMETER;
@@ -1975,7 +1975,7 @@ xbox::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BA
 		memory_statistics->Type = 0;
 
 		Unlock();
-		return STATUS_SUCCESS;
+		return xbox::status_success;
 	}
 
 	// The vma is in the reserved or allocated state
@@ -2044,7 +2044,7 @@ xbox::NTSTATUS VMManager::XbVirtualMemoryStatistics(VAddr addr, xbox::PMEMORY_BA
 	memory_statistics->Type = XBOX_MEM_PRIVATE;
 
 	Unlock();
-	return STATUS_SUCCESS;
+	return xbox::status_success;
 }
 
 VAddr VMManager::MapMemoryBlock(MemoryRegionType Type, PFN_COUNT PteNumber, DWORD Permissions, bool b64Blocks, VAddr HighestAddress)

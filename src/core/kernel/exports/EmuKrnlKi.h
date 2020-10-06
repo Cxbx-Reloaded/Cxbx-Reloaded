@@ -28,11 +28,6 @@
 
 #include <mutex>
 
-// Workaround to avoid collisions with the VOID provided by Windows and the one of xboxkrnl
-#ifdef VOID
-#undef VOID
-#endif
-
 // ReactOS uses a size of 512, but disassembling the kernel reveals it to be 32 instead
 #define TIMER_TABLE_SIZE 32
 
@@ -53,75 +48,75 @@ namespace xbox
 	} KI_TIMER_LOCK;
 
 
-	VOID KiInitSystem();
+	xbox::void_xt KiInitSystem();
 
-	VOID KiTimerLock();
+	xbox::void_xt KiTimerLock();
 
-	VOID KiTimerUnlock();
+	xbox::void_xt KiTimerUnlock();
 
-	VOID KiClockIsr
+	xbox::void_xt KiClockIsr
 	(
 		IN unsigned int ScalingFactor
 	);
 
-	VOID NTAPI KiCheckTimerTable
+	xbox::void_xt NTAPI KiCheckTimerTable
 	(
 		IN ULARGE_INTEGER CurrentTime
 	);
 
-	VOID KxInsertTimer
+	xbox::void_xt KxInsertTimer
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_xt Hand
 	);
 
-	VOID FASTCALL KiCompleteTimer
+	xbox::void_xt FASTCALL KiCompleteTimer
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_xt Hand
 	);
 
-	VOID KiRemoveEntryTimer
+	xbox::void_xt KiRemoveEntryTimer
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_xt Hand
 	);
 
-	VOID KxRemoveTreeTimer
+	xbox::void_xt KxRemoveTreeTimer
 	(
 		IN PKTIMER Timer
 	);
 
-	BOOLEAN FASTCALL KiInsertTimerTable
+	boolean_xt FASTCALL KiInsertTimerTable
 	(
 		IN PKTIMER Timer,
-		IN ULONG Hand
+		IN ulong_xt Hand
 	);
 
-	BOOLEAN FASTCALL KiInsertTreeTimer
+	boolean_xt FASTCALL KiInsertTreeTimer
 	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER Interval
 	);
 
-	ULONG KiComputeTimerTableIndex
+	xbox::ulong_xt KiComputeTimerTableIndex
 	(
-		IN ULONGLONG Interval
+		IN ulonglong_xt Interval
 	);
 
-	BOOLEAN KiComputeDueTime
+	boolean_xt KiComputeDueTime
 	(
 		IN PKTIMER Timer,
 		IN LARGE_INTEGER DueTime,
 		OUT PULONG Hand
 	);
 
-	BOOLEAN FASTCALL KiSignalTimer
+	boolean_xt FASTCALL KiSignalTimer
 	(
 		IN PKTIMER Timer
 	);
 
-	VOID NTAPI KiTimerExpiration
+	xbox::void_xt NTAPI KiTimerExpiration
 	(
 		IN PKDPC Dpc,
 		IN PVOID DeferredContext,
@@ -129,19 +124,19 @@ namespace xbox
 		IN PVOID SystemArgument2
 	);
 
-	VOID FASTCALL KiTimerListExpire
+	xbox::void_xt FASTCALL KiTimerListExpire
 	(
 		IN PLIST_ENTRY ExpiredListHead,
 		IN KIRQL OldIrql
 	);
 
-	VOID FASTCALL KiWaitSatisfyAll
+	xbox::void_xt FASTCALL KiWaitSatisfyAll
 	(
 		IN PKWAIT_BLOCK WaitBlock
 	);
 };
 
-extern const xbox::ULONG CLOCK_TIME_INCREMENT;
+extern const xbox::ulong_xt CLOCK_TIME_INCREMENT;
 extern xbox::LIST_ENTRY KiWaitInListHead;
 extern xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 extern xbox::KI_TIMER_LOCK KiTimerMtx;
@@ -170,7 +165,7 @@ extern xbox::KI_TIMER_LOCK KiTimerMtx;
         (_Object_)->OwnerThread = (_Thread_);                                \
         if ((_Object_)->Abandoned == TRUE) {                                 \
             (_Object_)->Abandoned = FALSE;                                   \
-            (_Thread_)->WaitStatus = STATUS_ABANDONED;                       \
+            (_Thread_)->WaitStatus = xbox::status_abandoned;                 \
         }                                                                    \
                                                                              \
         InsertHeadList((_Thread_)->MutantListHead.Blink,                     \
@@ -201,7 +196,7 @@ extern xbox::KI_TIMER_LOCK KiTimerMtx;
             (_Object_)->OwnerThread = (_Thread_);                            \
             if ((_Object_)->Abandoned == TRUE) {                             \
                 (_Object_)->Abandoned = FALSE;                               \
-                (_Thread_)->WaitStatus = STATUS_ABANDONED;                   \
+                (_Thread_)->WaitStatus = xbox::status_abandoned;             \
             }                                                                \
                                                                              \
             InsertHeadList((_Thread_)->MutantListHead.Blink,                 \

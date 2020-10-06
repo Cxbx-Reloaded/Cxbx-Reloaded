@@ -52,7 +52,7 @@ enum  PROTECTION_TYPE : int;
 #undef ExceptionCollidedUnwind
 #endif
 
-#include <xboxkrnl/xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 
 // prevent name collisions
 namespace xbox

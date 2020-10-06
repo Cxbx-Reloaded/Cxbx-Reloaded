@@ -30,7 +30,7 @@
 #include <common\util\CxbxUtil.h>
 
 
-#include <xboxkrnl/xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
 #include <process.h> // For __beginthreadex(), etc.
 #include <float.h> // For _controlfp constants
 
@@ -142,7 +142,7 @@ static unsigned int WINAPI PCSTProxy
 
 	// This will also handle thread notification :
 	LOG_TEST_CASE("Thread returned from SystemRoutine");
-	xbox::PsTerminateSystemThread(STATUS_SUCCESS);
+	xbox::PsTerminateSystemThread(xbox::status_success);
 
 	return 0; // will never be reached
 }
@@ -157,19 +157,19 @@ void PspSystemThreadStartup
 	// TODO : Call PspUnhandledExceptionInSystemThread(GetExceptionInformation())
 	(StartRoutine)(StartContext);
 
-	xbox::PsTerminateSystemThread(STATUS_SUCCESS);
+	xbox::PsTerminateSystemThread(xbox::status_success);
 }
 
 // ******************************************************************
 // * 0x00FE - PsCreateSystemThread()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
+XBSYSAPI EXPORTNUM(254) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  BOOLEAN         DebuggerThread
+	IN  boolean_xt         DebuggerThread
 )
 {
 	LOG_FORWARD("PsCreateSystemThreadEx");
@@ -204,17 +204,17 @@ XBSYSAPI EXPORTNUM(254) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThread
 // SystemRoutine: System function (normally XapiThreadStartup) called when the thread is created
 //
 // New to the XBOX.
-XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
+XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 (
 	OUT PHANDLE         ThreadHandle,
-	IN  ULONG           ThreadExtensionSize,
-	IN  ULONG           KernelStackSize,
-	IN  ULONG           TlsDataSize,
+	IN  ulong_xt           ThreadExtensionSize,
+	IN  ulong_xt           KernelStackSize,
+	IN  ulong_xt           TlsDataSize,
 	OUT PHANDLE         ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
-	IN  BOOLEAN         CreateSuspended,
-	IN  BOOLEAN         DebuggerThread,
+	IN  boolean_xt         CreateSuspended,
+	IN  boolean_xt         DebuggerThread,
 	IN  PKSYSTEM_ROUTINE SystemRoutine OPTIONAL
 )
 {
@@ -330,20 +330,20 @@ XBSYSAPI EXPORTNUM(255) xbox::NTSTATUS NTAPI xbox::PsCreateSystemThreadEx
 	SwitchToThread();
 	Sleep(10);
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
 // * 0x0100 - PsQueryStatistics()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(256) xbox::NTSTATUS NTAPI xbox::PsQueryStatistics
+XBSYSAPI EXPORTNUM(256) xbox::ntstatus_xt NTAPI xbox::PsQueryStatistics
 (
 	IN OUT PPS_STATISTICS ProcessStatistics
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(ProcessStatistics);
 
-	NTSTATUS ret = STATUS_SUCCESS;
+	NTSTATUS ret = xbox::status_success;
 
 	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
 		LOG_INCOMPLETE(); // TODO : Return number of threads and handles that currently exist
@@ -359,14 +359,14 @@ XBSYSAPI EXPORTNUM(256) xbox::NTSTATUS NTAPI xbox::PsQueryStatistics
 // ******************************************************************
 // * 0x0101 - PsSetCreateThreadNotifyRoutine()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutine
+XBSYSAPI EXPORTNUM(257) xbox::ntstatus_xt NTAPI xbox::PsSetCreateThreadNotifyRoutine
 (
 	IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine
 )
 {
 	LOG_FUNC_ONE_ARG(NotifyRoutine);
 
-	NTSTATUS ret = STATUS_INSUFFICIENT_RESOURCES;
+	NTSTATUS ret = xbox::status_insufficient_resources;
 
 	// Taken from xbox::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
 
@@ -383,7 +383,7 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 		{
 			g_pfnThreadNotification[i] = (PVOID)NotifyRoutine;
 			g_iThreadNotificationCount++;
-			ret = STATUS_SUCCESS;
+			ret = xbox::status_success;
 			break;
 		}
 	}
@@ -397,9 +397,9 @@ XBSYSAPI EXPORTNUM(257) xbox::NTSTATUS NTAPI xbox::PsSetCreateThreadNotifyRoutin
 // Exits the current system thread.  Must be called from a system thread.
 //
 // Differences from NT: None.
-XBSYSAPI EXPORTNUM(258) xbox::VOID NTAPI xbox::PsTerminateSystemThread
+XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 (
-	IN NTSTATUS ExitStatus
+	IN ntstatus_xt ExitStatus
 )
 {
 	LOG_FUNC_ONE_ARG(ExitStatus);

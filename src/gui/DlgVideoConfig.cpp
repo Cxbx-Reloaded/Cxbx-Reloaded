@@ -40,11 +40,11 @@
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 /*! refresh UI based on selected display adapter */
-static VOID RefreshDisplayAdapter();
+static void RefreshDisplayAdapter();
 /*! refresh UI based on selected device */
-static VOID RefreshDirect3DDevice();
+static void RefreshDirect3DDevice();
 /*! refrehs UI based on selected Render Resolution */
-static VOID RefreshRenderResolution();
+static void RefreshRenderResolution();
 
 /*! direct3d instance */
 static IDirect3D *g_pDirect3D = nullptr;
@@ -65,7 +65,7 @@ static HWND g_hRenderResolution = NULL;
 
 #pragma optimize("", off)
 
-VOID ShowVideoConfig(HWND hwnd)
+void ShowVideoConfig(HWND hwnd)
 {
     /*! reset changes flag */
     g_bHasChanges = FALSE;
@@ -271,7 +271,7 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
     return FALSE;
 }
 
-VOID RefreshDisplayAdapter()
+void RefreshDisplayAdapter()
 {
     /*! save configured display adapter */
     {
@@ -321,7 +321,7 @@ VOID RefreshDisplayAdapter()
     return;
 }
 
-VOID RefreshDirect3DDevice()
+void RefreshDirect3DDevice()
 {
     DWORD dwVideoResolution = 0;
 
@@ -417,7 +417,7 @@ VOID RefreshDirect3DDevice()
     return;
 }
 
-VOID RefreshRenderResolution()
+void RefreshRenderResolution()
 {
 	/*! save configured render resolution */
 	{

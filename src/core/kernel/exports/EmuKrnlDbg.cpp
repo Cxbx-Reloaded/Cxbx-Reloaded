@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::DBG
 
 
-#include <xboxkrnl/xboxkrnl.h> // For DbgPrint, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For DbgPrint, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 
@@ -45,7 +45,7 @@ namespace NtDll
 // ******************************************************************
 // * 0x0005 - DbgBreakPoint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(5) xbox::VOID NTAPI xbox::DbgBreakPoint()
+XBSYSAPI EXPORTNUM(5) xbox::void_xt NTAPI xbox::DbgBreakPoint()
 {
 	LOG_FUNC();
 
@@ -55,9 +55,9 @@ XBSYSAPI EXPORTNUM(5) xbox::VOID NTAPI xbox::DbgBreakPoint()
 // ******************************************************************
 // * 0x0006 - DbgBreakPointWithStatus()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(6) xbox::VOID NTAPI xbox::DbgBreakPointWithStatus
+XBSYSAPI EXPORTNUM(6) xbox::void_xt NTAPI xbox::DbgBreakPointWithStatus
 (
-	IN ULONG Status 
+	IN ulong_xt Status 
 )
 {
 	LOG_FUNC_ONE_ARG(Status);
@@ -68,11 +68,11 @@ XBSYSAPI EXPORTNUM(6) xbox::VOID NTAPI xbox::DbgBreakPointWithStatus
 // ******************************************************************
 // * 0x0007 - DbgLoadImageSymbols()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
+XBSYSAPI EXPORTNUM(7) xbox::ntstatus_xt NTAPI xbox::DbgLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ULONG_PTR ProcessId
+	IN ulong_ptr_xt ProcessId
 )
 {
 	LOG_FUNC_BEGIN;
@@ -91,7 +91,7 @@ XBSYSAPI EXPORTNUM(7) xbox::NTSTATUS NTAPI xbox::DbgLoadImageSymbols
 // ******************************************************************
 // * 0x0008 - DbgPrint()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(8) xbox::ULONG _cdecl xbox::DbgPrint
+XBSYSAPI EXPORTNUM(8) xbox::ulong_xt _cdecl xbox::DbgPrint
 (
 	PCHAR  Format, ...
 )
@@ -117,7 +117,7 @@ XBSYSAPI EXPORTNUM(8) xbox::ULONG _cdecl xbox::DbgPrint
             // Prevent a crash if we can't allocate enough memory
             // We want this to be transparent to the running Xbox application
             // Hence, we return success.
-            return STATUS_SUCCESS;
+            return xbox::status_success;
         }
 
         // Perform the actual print operation
@@ -130,18 +130,18 @@ XBSYSAPI EXPORTNUM(8) xbox::ULONG _cdecl xbox::DbgPrint
 		fflush(stdout);
 	}
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
 // * 0x000A - DbgPrompt()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(10) xbox::ULONG NTAPI xbox::DbgPrompt
+XBSYSAPI EXPORTNUM(10) xbox::ulong_xt NTAPI xbox::DbgPrompt
 (
 	IN PCCH Prompt,
 	OUT PCH Response,
-	IN ULONG MaximumResponseLength
+	IN ulong_xt MaximumResponseLength
 )
 {
 	LOG_FUNC_BEGIN;
@@ -161,11 +161,11 @@ XBSYSAPI EXPORTNUM(10) xbox::ULONG NTAPI xbox::DbgPrompt
 // * 0x000B - DbgUnLoadImageSymbols()
 // ******************************************************************
 // Source:ReactOS
-XBSYSAPI EXPORTNUM(11) xbox::VOID NTAPI xbox::DbgUnLoadImageSymbols
+XBSYSAPI EXPORTNUM(11) xbox::void_xt NTAPI xbox::DbgUnLoadImageSymbols
 (
 	IN PANSI_STRING Name,
 	IN PVOID Base,
-	IN ULONG_PTR ProcessId
+	IN ulong_ptr_xt ProcessId
 )
 {
 	LOG_FUNC_BEGIN;

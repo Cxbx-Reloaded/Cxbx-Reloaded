@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::X86
 
 
-#include <xboxkrnl\xboxkrnl.h>
+#include <core\kernel\exports\xboxkrnl.h>
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Emu.h"
 #include "devices\x86\EmuX86.h"
@@ -88,7 +88,7 @@ std::string FormatTitleId(uint32_t title_id)
 	return ss.str();
 }
 
-std::string EIPToString(xbox::addr EIP)
+std::string EIPToString(xbox::addr_xt EIP)
 {
 	char buffer[256];
 	
@@ -207,7 +207,7 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 }
 
 // Returns weither the given address is part of an Xbox managed memory region
-bool IsXboxCodeAddress(xbox::addr addr)
+bool IsXboxCodeAddress(xbox::addr_xt addr)
 {
 	// TODO : Replace the following with a (fast) check weither
 	// the given address lies in xbox allocated virtual memory,
@@ -241,7 +241,7 @@ void genericException(EXCEPTION_POINTERS *e) {
 	}
 }
 
-bool IsRdtscInstruction(xbox::addr addr); // Implemented in CxbxKrnl.cpp
+bool IsRdtscInstruction(xbox::addr_xt addr); // Implemented in CxbxKrnl.cpp
 void EmuX86_Opcode_RDTSC(EXCEPTION_POINTERS *e); // Implemented in EmuX86.cpp
 bool lleTryHandleException(EXCEPTION_POINTERS *e)
 {
@@ -497,7 +497,7 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 			// Try getting a symbol name from the HLE cache :
 			int symbolOffset = 0;
 
-			symbolName = GetDetectedSymbolName((xbox::addr)frame.AddrPC.Offset, &symbolOffset);
+			symbolName = GetDetectedSymbolName((xbox::addr_xt)frame.AddrPC.Offset, &symbolOffset);
 			if (symbolOffset < 1000)
 				dwDisplacement = (DWORD64)symbolOffset;
 			else

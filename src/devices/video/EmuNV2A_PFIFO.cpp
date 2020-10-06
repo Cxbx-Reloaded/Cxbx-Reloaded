@@ -35,7 +35,7 @@
 
 typedef struct RAMHTEntry {
 	uint32_t handle;
-	xbox::addr instance;
+	xbox::addr_xt instance;
 	enum FIFOEngine engine;
 	unsigned int channel_id : 5;
 	bool valid;
@@ -499,7 +499,7 @@ static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
 	uint32_t hash = ramht_hash(d, handle);
 	assert(hash * 8 < ramht_size(d));
 
-	xbox::addr ramht_address =
+	xbox::addr_xt ramht_address =
 		GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT],
 			NV_PFIFO_RAMHT_BASE_ADDRESS_MASK) << 12;
 

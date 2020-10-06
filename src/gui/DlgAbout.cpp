@@ -44,7 +44,7 @@ unsigned int aboutCurrentTab = 0;
 /*! windows dialog procedure */
 static INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-VOID ShowAboutDialog(HWND hwnd)
+void ShowAboutDialog(HWND hwnd)
 {
     /*! show dialog box */
     DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_ABOUT), hwnd, DlgAboutProc);

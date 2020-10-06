@@ -29,7 +29,7 @@
 #define LOG_PREFIX CXBXR_MODULE::AV
 
 
-#include <xboxkrnl/xboxkrnl.h> // For AvGetSavedDataAddress, etc.
+#include <core\kernel\exports\xboxkrnl.h> // For AvGetSavedDataAddress, etc.
 #include "EmuKrnlLogging.h"
 
 // prevent name collisions
@@ -37,10 +37,6 @@ namespace NtDll
 {
 #include "core\kernel\support\EmuNtDll.h"
 };
-
-#ifndef VOID
-#define VOID void
-#endif
 
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h"
@@ -51,33 +47,29 @@ namespace NtDll
 #include "devices\video\nv2a_int.h"
 #include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
 
-#ifdef VOID
-#undef VOID
-#endif
-
 
 // HW Register helper functions
-xbox::UCHAR REG_RD08(void* Ptr, xbox::ULONG Addr)
+xbox::uchar_xt REG_RD08(void* Ptr, xbox::ulong_xt Addr)
 {
-	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint8_t));
+	return EmuX86_Read((xbox::addr_xt)Ptr + Addr, sizeof(uint8_t));
 }
 
-void REG_WR08(void* Ptr, xbox::ULONG Addr, xbox::UCHAR Val)
+void REG_WR08(void* Ptr, xbox::ulong_xt Addr, xbox::uchar_xt Val)
 {
-	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint8_t));
+	EmuX86_Write((xbox::addr_xt)Ptr + Addr, Val, sizeof(uint8_t));
 }
 
-xbox::ULONG REG_RD32(void* Ptr, xbox::ULONG Addr)
+xbox::ulong_xt REG_RD32(void* Ptr, xbox::ulong_xt Addr)
 {
-	return EmuX86_Read((xbox::addr)Ptr + Addr, sizeof(uint32_t));
+	return EmuX86_Read((xbox::addr_xt)Ptr + Addr, sizeof(uint32_t));
 }
 
-void REG_WR32(void* Ptr, xbox::ULONG Addr, xbox::ULONG Val)
+void REG_WR32(void* Ptr, xbox::ulong_xt Addr, xbox::ulong_xt Val)
 {
-	EmuX86_Write((xbox::addr)Ptr + Addr, Val, sizeof(uint32_t));
+	EmuX86_Write((xbox::addr_xt)Ptr + Addr, Val, sizeof(uint32_t));
 }
 
-void CRTC_WR(void* Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void CRTC_WR(void* Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_CRX__COLOR);
 
@@ -85,7 +77,7 @@ void CRTC_WR(void* Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMCIO_CR__COLOR, d, sizeof(uint8_t));
 }
 
-void SRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void SRX_WR(void *Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_SRX);
 
@@ -93,7 +85,7 @@ void SRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_SR, d, sizeof(uint8_t));
 }
 
-void GRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void GRX_WR(void *Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMVIO_GRX);
 
@@ -101,7 +93,7 @@ void GRX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
 	g_NV2A->BlockWrite(block, NV_PRMVIO_GX, d, sizeof(uint8_t));
 }
 
-void ARX_WR(void *Ptr, xbox::UCHAR i, xbox::UCHAR d)
+void ARX_WR(void *Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 {
 	static const NV2ABlockInfo* block = EmuNV2A_Block(NV_PRMCIO_ARX);
 
@@ -140,13 +132,13 @@ ULONG AvQueryAvCapabilities()
 	ULONG avRegion;
 	NTSTATUS result = xbox::ExQueryNonVolatileSetting(
 		xbox::XC_FACTORY_AV_REGION,
-		&type,
+		(xbox::dword_xt *)&type,
 		&avRegion,
 		sizeof(ULONG),
-		&resultSize);
+		(xbox::PSIZE_T)&resultSize);
 
 	// If this failed, default to AV_STANDARD_NTSC_M | AV_FLAGS_60Hz
-	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {
+	if (result != xbox::status_success || resultSize != sizeof(ULONG)) {
 		avRegion = AV_STANDARD_NTSC_M | AV_FLAGS_60Hz;
 	}
 
@@ -154,13 +146,13 @@ ULONG AvQueryAvCapabilities()
 	ULONG userSettings;
 	result = xbox::ExQueryNonVolatileSetting(
 		xbox::XC_VIDEO,
-		&type,
+		(xbox::dword_xt *) &type,
 		&userSettings,
 		sizeof(ULONG),
-		&resultSize);
+		(xbox::PSIZE_T)&resultSize);
 
 	// If this failed, default to no user-options set
-	if (result != STATUS_SUCCESS || resultSize != sizeof(ULONG)) {
+	if (result != xbox::status_success || resultSize != sizeof(ULONG)) {
 		userSettings = 0;
 	}
 
@@ -182,12 +174,12 @@ XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 // ******************************************************************
 // * 0x0002 - AvSendTVEncoderOption()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(2) xbox::VOID NTAPI xbox::AvSendTVEncoderOption
+XBSYSAPI EXPORTNUM(2) xbox::void_xt NTAPI xbox::AvSendTVEncoderOption
 (
 	IN  PVOID   RegisterBase,
-	IN  ULONG   Option,
-	IN  ULONG   Param,
-	OUT ULONG   *Result
+	IN  ulong_xt   Option,
+	IN  ulong_xt   Param,
+	OUT ulong_xt   *Result
 )
 {
 	LOG_FUNC_BEGIN;
@@ -261,14 +253,14 @@ XBSYSAPI EXPORTNUM(2) xbox::VOID NTAPI xbox::AvSendTVEncoderOption
 // ******************************************************************
 // * 0x0003 - AvSetDisplayMode()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
+XBSYSAPI EXPORTNUM(3) xbox::ulong_xt NTAPI xbox::AvSetDisplayMode
 (
 	IN  PVOID   RegisterBase,
-	IN  ULONG   Step,
-	IN  ULONG   Mode,
-	IN  ULONG   Format,
-	IN  ULONG   Pitch,
-	IN  ULONG   FrameBuffer
+	IN  ulong_xt   Step,
+	IN  ulong_xt   Mode,
+	IN  ulong_xt   Format,
+	IN  ulong_xt   Pitch,
+	IN  ulong_xt   FrameBuffer
 )
 {
 	LOG_FUNC_BEGIN;
@@ -325,7 +317,7 @@ XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_FLICKER_FILTER, 5, NULL);
 		AvSendTVEncoderOption(RegisterBase, AV_OPTION_ENABLE_LUMA_FILTER, FALSE, NULL);
 
-		RETURN(STATUS_SUCCESS);
+		RETURN(xbox::status_success);
 	}
 
 	CRTC_WR(RegisterBase, NV_CIO_CRE_PIXEL_INDEX /*=0x28*/, 0x80 | CR28Depth);
@@ -403,13 +395,13 @@ XBSYSAPI EXPORTNUM(3) xbox::ULONG NTAPI xbox::AvSetDisplayMode
 	REG_WR32(RegisterBase, NV_PCRTC_START, FrameBuffer);
 	AvpCurrentMode = Mode;
 
-	RETURN(STATUS_SUCCESS);
+	RETURN(xbox::status_success);
 }
 
 // ******************************************************************
 // * 0x0004 - AvSetSavedDataAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(4) xbox::VOID NTAPI xbox::AvSetSavedDataAddress
+XBSYSAPI EXPORTNUM(4) xbox::void_xt NTAPI xbox::AvSetSavedDataAddress
 (
 	IN  PVOID   Address
 )

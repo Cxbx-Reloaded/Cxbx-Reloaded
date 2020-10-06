@@ -27,7 +27,6 @@
 
 #include <vector>
 #include "common\xbe\Xbe.h"
-#undef FIELD_OFFSET     // prevent macro redefinition warnings
 #include <windows.h>
 
 // initialize fs segment selector emulation

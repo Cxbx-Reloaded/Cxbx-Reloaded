@@ -103,7 +103,7 @@ static int g_DlgIndexes[] = {
 };
 
 
-VOID ShowLoggingConfig(HWND hwnd, HWND ChildWnd)
+void ShowLoggingConfig(HWND hwnd, HWND ChildWnd)
 {
 	g_ChildWnd = ChildWnd;
 	DialogBox(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_LOGGING_CFG), hwnd, DlgLogConfigProc);

@@ -12,32 +12,37 @@
 #ifndef XBOXKRNL_RTL_H
 #define XBOXKRNL_RTL_H
 
+#include "types.h"
+
+namespace xbox
+{
+
 // ******************************************************************
 // * RtlAnsiStringToUnicodeString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(260) NTSTATUS NTAPI RtlAnsiStringToUnicodeString
+XBSYSAPI EXPORTNUM(260) ntstatus_xt NTAPI RtlAnsiStringToUnicodeString
 (
     PUNICODE_STRING DestinationString,
     PSTRING         SourceString,
-    UCHAR           AllocateDestinationString
+    uchar_xt           AllocateDestinationString
 );
 
 // ******************************************************************
 // * RtlAppendStringToString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(261) NTSTATUS NTAPI RtlAppendStringToString
+XBSYSAPI EXPORTNUM(261) ntstatus_xt NTAPI RtlAppendStringToString
 (
   IN OUT PSTRING    Destination,
   IN PSTRING    Source
 );
 
-XBSYSAPI EXPORTNUM(262) NTSTATUS NTAPI RtlAppendUnicodeStringToString
+XBSYSAPI EXPORTNUM(262) ntstatus_xt NTAPI RtlAppendUnicodeStringToString
 (
 	IN OUT PUNICODE_STRING Destination,
 	IN PUNICODE_STRING Source
 );
 
-XBSYSAPI EXPORTNUM(263) NTSTATUS NTAPI RtlAppendUnicodeToString
+XBSYSAPI EXPORTNUM(263) ntstatus_xt NTAPI RtlAppendUnicodeToString
 (
 	IN OUT PUNICODE_STRING Destination,
 	IN LPCWSTR Source
@@ -46,18 +51,18 @@ XBSYSAPI EXPORTNUM(263) NTSTATUS NTAPI RtlAppendUnicodeToString
 // ******************************************************************
 // * RtlAssert
 // ******************************************************************
-XBSYSAPI EXPORTNUM(264) VOID NTAPI RtlAssert
+XBSYSAPI EXPORTNUM(264) void_xt NTAPI RtlAssert
 (
     PCHAR   FailedAssertion,
 	PCHAR   FileName,
-    ULONG   LineNumber,
+    ulong_xt   LineNumber,
     PCHAR   Message
 );
 
 // ******************************************************************
 // * 0x0109 - RtlCaptureContext()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(265) VOID NTAPI RtlCaptureContext
+XBSYSAPI EXPORTNUM(265) void_xt NTAPI RtlCaptureContext
 (
 	IN PCONTEXT ContextRecord
 );
@@ -65,10 +70,10 @@ XBSYSAPI EXPORTNUM(265) VOID NTAPI RtlCaptureContext
 // ******************************************************************
 // * 0x010A - RtlCaptureStackBackTrace()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(266) USHORT NTAPI RtlCaptureStackBackTrace
+XBSYSAPI EXPORTNUM(266) ushort_xt NTAPI RtlCaptureStackBackTrace
 (
-	IN ULONG FramesToSkip,
-	IN ULONG FramesToCapture,
+	IN ulong_xt FramesToSkip,
+	IN ulong_xt FramesToCapture,
 	OUT PVOID *BackTrace,
 	OUT PULONG BackTraceHash
 );
@@ -76,10 +81,10 @@ XBSYSAPI EXPORTNUM(266) USHORT NTAPI RtlCaptureStackBackTrace
 // ******************************************************************
 // * RtlCharToInteger
 // ******************************************************************
-XBSYSAPI EXPORTNUM(267) NTSTATUS NTAPI RtlCharToInteger
+XBSYSAPI EXPORTNUM(267) ntstatus_xt NTAPI RtlCharToInteger
 (
 	IN     PCSZ   String,
-	IN     ULONG  Base OPTIONAL,
+	IN     ulong_xt  Base OPTIONAL,
 	OUT    PULONG Value
 );
 
@@ -90,41 +95,41 @@ XBSYSAPI EXPORTNUM(267) NTSTATUS NTAPI RtlCharToInteger
 // * compare block of memory, return number of equivalent bytes.
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(268) SIZE_T NTAPI RtlCompareMemory
+XBSYSAPI EXPORTNUM(268) size_xt NTAPI RtlCompareMemory
 (
-  IN CONST VOID *Source1,
-  IN CONST VOID *Source2,
-  IN SIZE_T      Length
+  IN CONST void_xt *Source1,
+  IN CONST void_xt *Source2,
+  IN size_xt      Length
 );
 
 // ******************************************************************
 // * 0x010D - RtlCompareMemoryUlong()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(269) SIZE_T NTAPI RtlCompareMemoryUlong
+XBSYSAPI EXPORTNUM(269) size_xt NTAPI RtlCompareMemoryUlong
 (
 	IN PVOID Source,
-	IN SIZE_T Length,
-	IN ULONG Pattern
+	IN size_xt Length,
+	IN ulong_xt Pattern
 );
 
 // ******************************************************************
 // * 0x010E - RtlCompareString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(270) LONG NTAPI RtlCompareString
+XBSYSAPI EXPORTNUM(270) long_xt NTAPI RtlCompareString
 (
 	IN PSTRING String1,
 	IN PSTRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_xt CaseInSensitive
 );
 
 // ******************************************************************
 // * 0x010F - RtlCompareUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(271) LONG NTAPI RtlCompareUnicodeString
+XBSYSAPI EXPORTNUM(271) long_xt NTAPI RtlCompareUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_xt CaseInSensitive
 );
 
 // ******************************************************************
@@ -134,7 +139,7 @@ XBSYSAPI EXPORTNUM(271) LONG NTAPI RtlCompareUnicodeString
 // * Copy Source to Destination
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(272) VOID NTAPI RtlCopyString
+XBSYSAPI EXPORTNUM(272) void_xt NTAPI RtlCopyString
 (
 	OUT PSTRING DestinationString,
 	IN PSTRING SourceString OPTIONAL
@@ -143,7 +148,7 @@ XBSYSAPI EXPORTNUM(272) VOID NTAPI RtlCopyString
 // ******************************************************************
 // * 0x0111 - RtlCopyUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(273) VOID NTAPI RtlCopyUnicodeString
+XBSYSAPI EXPORTNUM(273) void_xt NTAPI RtlCopyUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString OPTIONAL
@@ -152,7 +157,7 @@ XBSYSAPI EXPORTNUM(273) VOID NTAPI RtlCopyUnicodeString
 // ******************************************************************
 // * 0x0112 - RtlCreateUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(274) BOOLEAN NTAPI RtlCreateUnicodeString
+XBSYSAPI EXPORTNUM(274) boolean_xt NTAPI RtlCreateUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PCWSTR SourceString
@@ -161,25 +166,25 @@ XBSYSAPI EXPORTNUM(274) BOOLEAN NTAPI RtlCreateUnicodeString
 // ******************************************************************
 // * 0x0113 - RtlDowncaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(275) WCHAR NTAPI RtlDowncaseUnicodeChar
+XBSYSAPI EXPORTNUM(275) wchar_xt NTAPI RtlDowncaseUnicodeChar
 (
-	IN WCHAR SourceCharacter
+	IN wchar_xt SourceCharacter
 );
 
 // ******************************************************************
 // * 0x0114 - RtlDowncaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(276) NTSTATUS NTAPI RtlDowncaseUnicodeString
+XBSYSAPI EXPORTNUM(276) ntstatus_xt NTAPI RtlDowncaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN PUNICODE_STRING SourceString,
-	IN BOOLEAN AllocateDestinationString
+	IN boolean_xt AllocateDestinationString
 );
 
 // ******************************************************************
 // * RtlEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(277) VOID NTAPI RtlEnterCriticalSection
+XBSYSAPI EXPORTNUM(277) void_xt NTAPI RtlEnterCriticalSection
 (
   IN PRTL_CRITICAL_SECTION CriticalSection
 );
@@ -187,7 +192,7 @@ XBSYSAPI EXPORTNUM(277) VOID NTAPI RtlEnterCriticalSection
 // ******************************************************************
 // * 0x0116 - RtlEnterCriticalSectionAndRegion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(278) VOID NTAPI RtlEnterCriticalSectionAndRegion
+XBSYSAPI EXPORTNUM(278) void_xt NTAPI RtlEnterCriticalSectionAndRegion
 (
 	IN PRTL_CRITICAL_SECTION CriticalSection
 );
@@ -195,21 +200,21 @@ XBSYSAPI EXPORTNUM(278) VOID NTAPI RtlEnterCriticalSectionAndRegion
 // ******************************************************************
 // * 0x0117 - RtlEqualString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(279) BOOLEAN NTAPI RtlEqualString
+XBSYSAPI EXPORTNUM(279) boolean_xt NTAPI RtlEqualString
 (
   IN PSTRING String1,
   IN PSTRING String2,
-  IN BOOLEAN CaseInsensitive
+  IN boolean_xt CaseInsensitive
 );
 
 // ******************************************************************
 // * 0x0118 - RtlEqualUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(280) BOOLEAN NTAPI RtlEqualUnicodeString
+XBSYSAPI EXPORTNUM(280) boolean_xt NTAPI RtlEqualUnicodeString
 (
 	IN PUNICODE_STRING String1,
 	IN PUNICODE_STRING String2,
-	IN BOOLEAN CaseInSensitive
+	IN boolean_xt CaseInSensitive
 );
 
 // ******************************************************************
@@ -218,7 +223,7 @@ XBSYSAPI EXPORTNUM(280) BOOLEAN NTAPI RtlEqualUnicodeString
 XBSYSAPI EXPORTNUM(281) LARGE_INTEGER NTAPI RtlExtendedIntegerMultiply
 (
 	IN LARGE_INTEGER Multiplicand,
-	IN LONG Multiplier
+	IN long_xt Multiplier
 );
 
 // ******************************************************************
@@ -227,7 +232,7 @@ XBSYSAPI EXPORTNUM(281) LARGE_INTEGER NTAPI RtlExtendedIntegerMultiply
 XBSYSAPI EXPORTNUM(282) LARGE_INTEGER NTAPI RtlExtendedLargeIntegerDivide
 (
 	IN	LARGE_INTEGER Dividend,
-	IN	ULONG Divisor,
+	IN	ulong_xt Divisor,
 	IN	PULONG Remainder // OUT? OPTIONAL?
 );
 
@@ -238,33 +243,33 @@ XBSYSAPI EXPORTNUM(283) LARGE_INTEGER NTAPI RtlExtendedMagicDivide
 (
 	IN	LARGE_INTEGER Dividend,
 	IN	LARGE_INTEGER MagicDivisor,
-	IN	CCHAR ShiftCount
+	IN	cchar_xt ShiftCount
 );
 
 // ******************************************************************
 // * 0x011C - RtlFillMemory()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(284) VOID NTAPI RtlFillMemory
+XBSYSAPI EXPORTNUM(284) void_xt NTAPI RtlFillMemory
 (
-	IN VOID UNALIGNED *Destination,
-	IN DWORD Length,
-	IN BYTE  Fill
+	IN void_xt UNALIGNED *Destination,
+	IN dword_xt Length,
+	IN byte_xt  Fill
 );
 
 // ******************************************************************
 // * 0x011D - RtlFillMemoryUlong()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(285) VOID NTAPI RtlFillMemoryUlong
+XBSYSAPI EXPORTNUM(285) void_xt NTAPI RtlFillMemoryUlong
 (
 	IN PVOID Destination,
-	IN SIZE_T Length,
-	IN ULONG Pattern
+	IN size_xt Length,
+	IN ulong_xt Pattern
 );
 
 // ******************************************************************
 // * RtlFreeAnsiString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(286) VOID NTAPI RtlFreeAnsiString
+XBSYSAPI EXPORTNUM(286) void_xt NTAPI RtlFreeAnsiString
 (
   IN OUT PANSI_STRING AnsiString
 );
@@ -272,7 +277,7 @@ XBSYSAPI EXPORTNUM(286) VOID NTAPI RtlFreeAnsiString
 // ******************************************************************
 // * 0x011F - RtlFreeUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(287) VOID NTAPI RtlFreeUnicodeString
+XBSYSAPI EXPORTNUM(287) void_xt NTAPI RtlFreeUnicodeString
 (
 	IN OUT PUNICODE_STRING UnicodeString
 );
@@ -280,7 +285,7 @@ XBSYSAPI EXPORTNUM(287) VOID NTAPI RtlFreeUnicodeString
 // ******************************************************************
 // * 0x0120 - RtlGetCallersAddress()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(288) VOID NTAPI RtlGetCallersAddress
+XBSYSAPI EXPORTNUM(288) void_xt NTAPI RtlGetCallersAddress
 (
 	OUT PVOID *CallersAddress,
 	OUT PVOID *CallersCaller
@@ -293,13 +298,13 @@ XBSYSAPI EXPORTNUM(288) VOID NTAPI RtlGetCallersAddress
 // * Initialize a counted ANSI string.
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(289) VOID NTAPI RtlInitAnsiString
+XBSYSAPI EXPORTNUM(289) void_xt NTAPI RtlInitAnsiString
 (
   IN OUT PANSI_STRING DestinationString,
   IN     PCSZ         SourceString
 );
 
-XBSYSAPI EXPORTNUM(290) VOID NTAPI RtlInitUnicodeString
+XBSYSAPI EXPORTNUM(290) void_xt NTAPI RtlInitUnicodeString
 (
   IN OUT PUNICODE_STRING DestinationString,
   IN     PCWSTR          SourceString
@@ -308,7 +313,7 @@ XBSYSAPI EXPORTNUM(290) VOID NTAPI RtlInitUnicodeString
 // ******************************************************************
 // * RtlInitializeCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(291) VOID NTAPI RtlInitializeCriticalSection
+XBSYSAPI EXPORTNUM(291) void_xt NTAPI RtlInitializeCriticalSection
 (
   IN PRTL_CRITICAL_SECTION CriticalSection
 );
@@ -316,28 +321,28 @@ XBSYSAPI EXPORTNUM(291) VOID NTAPI RtlInitializeCriticalSection
 // ******************************************************************
 // * 0x0124 - RtlIntegerToChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(292) NTSTATUS NTAPI RtlIntegerToChar
+XBSYSAPI EXPORTNUM(292) ntstatus_xt NTAPI RtlIntegerToChar
 (
-	IN ULONG Value,
-	IN ULONG Base,
-	IN LONG OutputLength,
+	IN ulong_xt Value,
+	IN ulong_xt Base,
+	IN long_xt OutputLength,
 	IN PSZ String
 );
 
 // ******************************************************************
 // * 0x0125 - RtlIntegerToUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(293) NTSTATUS NTAPI RtlIntegerToUnicodeString
+XBSYSAPI EXPORTNUM(293) ntstatus_xt NTAPI RtlIntegerToUnicodeString
 (
-	IN     ULONG Value,
-	IN     ULONG Base,
+	IN     ulong_xt Value,
+	IN     ulong_xt Base,
 	IN     PUNICODE_STRING String
 );
 
 // ******************************************************************
 // * RtlLeaveCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(294) VOID NTAPI RtlLeaveCriticalSection
+XBSYSAPI EXPORTNUM(294) void_xt NTAPI RtlLeaveCriticalSection
 (
   IN PRTL_CRITICAL_SECTION CriticalSection
 );
@@ -345,7 +350,7 @@ XBSYSAPI EXPORTNUM(294) VOID NTAPI RtlLeaveCriticalSection
 // ******************************************************************
 // * 0x0127 - RtlLeaveCriticalSectionAndRegion()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(295) VOID NTAPI RtlLeaveCriticalSectionAndRegion
+XBSYSAPI EXPORTNUM(295) void_xt NTAPI RtlLeaveCriticalSectionAndRegion
 (
 	IN PRTL_CRITICAL_SECTION CriticalSection
 );
@@ -353,12 +358,12 @@ XBSYSAPI EXPORTNUM(295) VOID NTAPI RtlLeaveCriticalSectionAndRegion
 // ******************************************************************
 // * RtlLowerChar
 // ******************************************************************
-XBSYSAPI EXPORTNUM(296) CHAR NTAPI RtlLowerChar(CHAR Character);
+XBSYSAPI EXPORTNUM(296) char_xt NTAPI RtlLowerChar(char_xt Character);
 
 // ******************************************************************
 // * 0x0129 - RtlMapGenericMask()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(297) VOID NTAPI RtlMapGenericMask
+XBSYSAPI EXPORTNUM(297) void_xt NTAPI RtlMapGenericMask
 (
 	IN PACCESS_MASK AccessMask,
 	IN PGENERIC_MAPPING GenericMapping
@@ -372,47 +377,47 @@ XBSYSAPI EXPORTNUM(297) VOID NTAPI RtlMapGenericMask
 // * in 4-byte blocks, followed by any remaining blocks.
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(298) VOID NTAPI RtlMoveMemory
+XBSYSAPI EXPORTNUM(298) void_xt NTAPI RtlMoveMemory
 (
-  IN VOID UNALIGNED       *Destination,
-  IN CONST VOID UNALIGNED *Source,
-  IN SIZE_T                Length
+  IN void_xt UNALIGNED       *Destination,
+  IN CONST void_xt UNALIGNED *Source,
+  IN size_xt                Length
 );
 
 // ******************************************************************
 // * 0x012B - RtlMultiByteToUnicodeN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(299) NTSTATUS NTAPI RtlMultiByteToUnicodeN
+XBSYSAPI EXPORTNUM(299) ntstatus_xt NTAPI RtlMultiByteToUnicodeN
 (
 	IN     PWSTR UnicodeString,
-	IN     ULONG MaxBytesInUnicodeString,
+	IN     ulong_xt MaxBytesInUnicodeString,
 	IN     PULONG BytesInUnicodeString,
 	IN     PCHAR MultiByteString,
-	IN     ULONG BytesInMultiByteString
+	IN     ulong_xt BytesInMultiByteString
 );
 
 // ******************************************************************
 // * 0x012C - RtlMultiByteToUnicodeSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(300) NTSTATUS NTAPI RtlMultiByteToUnicodeSize
+XBSYSAPI EXPORTNUM(300) ntstatus_xt NTAPI RtlMultiByteToUnicodeSize
 (
 	IN PULONG BytesInUnicodeString,
 	IN PCHAR MultiByteString,
-	IN ULONG BytesInMultiByteString
+	IN ulong_xt BytesInMultiByteString
 );
 
 // ******************************************************************
 // * RtlNtStatusToDosError
 // ******************************************************************
-XBSYSAPI EXPORTNUM(301) ULONG NTAPI RtlNtStatusToDosError
+XBSYSAPI EXPORTNUM(301) ulong_xt NTAPI RtlNtStatusToDosError
 (
-    IN NTSTATUS Status
+    IN ntstatus_xt Status
 );
 
 // ******************************************************************
 // * 0x012E - RtlRaiseException()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(302) VOID NTAPI RtlRaiseException
+XBSYSAPI EXPORTNUM(302) void_xt NTAPI RtlRaiseException
 (
 	IN PEXCEPTION_RECORD ExceptionRecord
 );
@@ -420,15 +425,15 @@ XBSYSAPI EXPORTNUM(302) VOID NTAPI RtlRaiseException
 // ******************************************************************
 // * 0x012F - RtlRaiseStatus()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(303) VOID NTAPI RtlRaiseStatus
+XBSYSAPI EXPORTNUM(303) void_xt NTAPI RtlRaiseStatus
 (
-	IN NTSTATUS Status
+	IN ntstatus_xt Status
 );
 
 // ******************************************************************
 // * RtlTimeFieldsToTime
 // ******************************************************************
-XBSYSAPI EXPORTNUM(304) BOOLEAN NTAPI RtlTimeFieldsToTime
+XBSYSAPI EXPORTNUM(304) boolean_xt NTAPI RtlTimeFieldsToTime
 (
     IN  PTIME_FIELDS    TimeFields,
     OUT PLARGE_INTEGER  Time
@@ -437,7 +442,7 @@ XBSYSAPI EXPORTNUM(304) BOOLEAN NTAPI RtlTimeFieldsToTime
 // ******************************************************************
 // * RtlTimeToTimeFields
 // ******************************************************************
-XBSYSAPI EXPORTNUM(305) VOID NTAPI RtlTimeToTimeFields
+XBSYSAPI EXPORTNUM(305) void_xt NTAPI RtlTimeToTimeFields
 (
     IN  PLARGE_INTEGER  Time,
     OUT PTIME_FIELDS    TimeFields
@@ -446,7 +451,7 @@ XBSYSAPI EXPORTNUM(305) VOID NTAPI RtlTimeToTimeFields
 // ******************************************************************
 // * RtlTryEnterCriticalSection
 // ******************************************************************
-XBSYSAPI EXPORTNUM(306) BOOLEAN NTAPI RtlTryEnterCriticalSection
+XBSYSAPI EXPORTNUM(306) boolean_xt NTAPI RtlTryEnterCriticalSection
 (
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
@@ -454,57 +459,57 @@ XBSYSAPI EXPORTNUM(306) BOOLEAN NTAPI RtlTryEnterCriticalSection
 // ******************************************************************
 // * 0x0133 - RtlUlongByteSwap()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(307) ULONG FASTCALL RtlUlongByteSwap
+XBSYSAPI EXPORTNUM(307) ulong_xt FASTCALL RtlUlongByteSwap
 (
-	IN ULONG Source
+	IN ulong_xt Source
 );
 
 // ******************************************************************
 // * RtlUnicodeStringToAnsiString
 // ******************************************************************
-XBSYSAPI EXPORTNUM(308) NTSTATUS NTAPI RtlUnicodeStringToAnsiString
+XBSYSAPI EXPORTNUM(308) ntstatus_xt NTAPI RtlUnicodeStringToAnsiString
 (
     IN OUT PSTRING         DestinationString,
     IN     PUNICODE_STRING SourceString,
-    IN     BOOLEAN         AllocateDestinationString
+    IN     boolean_xt         AllocateDestinationString
 );
 
 // ******************************************************************
 // * 0x0135 - RtlUnicodeStringToInteger()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(309) NTSTATUS NTAPI RtlUnicodeStringToInteger
+XBSYSAPI EXPORTNUM(309) ntstatus_xt NTAPI RtlUnicodeStringToInteger
 (
 	IN     PUNICODE_STRING String,
-	IN     ULONG Base,
+	IN     ulong_xt Base,
 	IN     PULONG Value
 );
 
 // ******************************************************************
 // * 0x0136 - RtlUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(310) NTSTATUS NTAPI RtlUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(310) ntstatus_xt NTAPI RtlUnicodeToMultiByteN
 (
 	IN PCHAR MultiByteString,
-	IN ULONG MaxBytesInMultiByteString,
+	IN ulong_xt MaxBytesInMultiByteString,
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
-	IN ULONG BytesInUnicodeString
+	IN ulong_xt BytesInUnicodeString
 );
 
 // ******************************************************************
 // * 0x0137 - RtlUnicodeToMultiByteSize()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(311) NTSTATUS NTAPI RtlUnicodeToMultiByteSize
+XBSYSAPI EXPORTNUM(311) ntstatus_xt NTAPI RtlUnicodeToMultiByteSize
 (
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
-	IN ULONG BytesInUnicodeString
+	IN ulong_xt BytesInUnicodeString
 );
 
 // ******************************************************************
 // * 0x0138 - RtlUnwind()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(312) VOID NTAPI RtlUnwind
+XBSYSAPI EXPORTNUM(312) void_xt NTAPI RtlUnwind
 (
 	IN PVOID TargetFrame OPTIONAL,
 	IN PVOID TargetIp OPTIONAL,
@@ -515,45 +520,45 @@ XBSYSAPI EXPORTNUM(312) VOID NTAPI RtlUnwind
 // ******************************************************************
 // * 0x0139 - RtlUpcaseUnicodeChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(313) WCHAR NTAPI RtlUpcaseUnicodeChar
+XBSYSAPI EXPORTNUM(313) wchar_xt NTAPI RtlUpcaseUnicodeChar
 (
-	IN WCHAR SourceCharacter
+	IN wchar_xt SourceCharacter
 );
 
 // ******************************************************************
 // * 0x013A - RtlUpcaseUnicodeString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(314) NTSTATUS NTAPI RtlUpcaseUnicodeString
+XBSYSAPI EXPORTNUM(314) ntstatus_xt NTAPI RtlUpcaseUnicodeString
 (
 	OUT PUNICODE_STRING DestinationString,
 	IN  PUNICODE_STRING SourceString,
-	IN  BOOLEAN AllocateDestinationString
+	IN  boolean_xt AllocateDestinationString
 );
 
 // ******************************************************************
 // * 0x013B - RtlUpcaseUnicodeToMultiByteN()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(315) NTSTATUS NTAPI RtlUpcaseUnicodeToMultiByteN
+XBSYSAPI EXPORTNUM(315) ntstatus_xt NTAPI RtlUpcaseUnicodeToMultiByteN
 (
 	IN OUT PCHAR MultiByteString,
-	IN ULONG MaxBytesInMultiByteString,
+	IN ulong_xt MaxBytesInMultiByteString,
 	IN PULONG BytesInMultiByteString,
 	IN PWSTR UnicodeString,
-	IN ULONG BytesInUnicodeString
+	IN ulong_xt BytesInUnicodeString
 );
 
 // ******************************************************************
 // * 0x013C - RtlUpperChar()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(316) CHAR NTAPI RtlUpperChar
+XBSYSAPI EXPORTNUM(316) char_xt NTAPI RtlUpperChar
 (
-	CHAR Character
+	char_xt Character
 );
 
 // ******************************************************************
 // * 0x013D - RtlUpperString()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(317) VOID NTAPI RtlUpperString
+XBSYSAPI EXPORTNUM(317) void_xt NTAPI RtlUpperString
 (
 	OUT PSTRING DestinationString,
 	IN  PSTRING SourceString
@@ -562,19 +567,19 @@ XBSYSAPI EXPORTNUM(317) VOID NTAPI RtlUpperString
 // ******************************************************************
 // * 0x013E - RtlUshortByteSwap()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(318) USHORT FASTCALL RtlUshortByteSwap
+XBSYSAPI EXPORTNUM(318) ushort_xt FASTCALL RtlUshortByteSwap
 (
-	IN USHORT Source
+	IN ushort_xt Source
 );
 
 // ******************************************************************
 // * 0x013F - RtlWalkFrameChain
 // ******************************************************************
-XBSYSAPI EXPORTNUM(319) ULONG NTAPI RtlWalkFrameChain
+XBSYSAPI EXPORTNUM(319) ulong_xt NTAPI RtlWalkFrameChain
 (
 	OUT PVOID *Callers,
-	IN ULONG Count,
-	IN ULONG Flags
+	IN ulong_xt Count,
+	IN ulong_xt Flags
 );
 
 // ******************************************************************
@@ -584,21 +589,23 @@ XBSYSAPI EXPORTNUM(319) ULONG NTAPI RtlWalkFrameChain
 // * Fill a block of memory with zeros.
 // *
 // ******************************************************************
-XBSYSAPI EXPORTNUM(320) VOID NTAPI RtlZeroMemory
+XBSYSAPI EXPORTNUM(320) void_xt NTAPI RtlZeroMemory
 (
-  IN VOID UNALIGNED  *Destination,
-  IN SIZE_T           Length
+  IN void_xt UNALIGNED  *Destination,
+  IN size_xt           Length
 );
 
 // ******************************************************************
 // * 0x0160 - RtlRip
 // ******************************************************************
-XBSYSAPI EXPORTNUM(352) VOID NTAPI RtlRip
+XBSYSAPI EXPORTNUM(352) void_xt NTAPI RtlRip
 (
  PCHAR	ApiName,
  PCHAR	Expression,
  PCHAR	Message
 );
+
+}
 
 #endif
 
