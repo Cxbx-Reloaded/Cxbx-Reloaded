@@ -147,6 +147,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SetStreamSource", xbox::EMUPATCH(D3DDevice_SetStreamSource), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetStreamSource_4", xbox::EMUPATCH(D3DDevice_SetStreamSource_4), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetStreamSource_8", xbox::EMUPATCH(D3DDevice_SetStreamSource_8), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber", xbox::EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetSwapCallback", xbox::EMUPATCH(D3DDevice_SetSwapCallback), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetTexture", xbox::EMUPATCH(D3DDevice_SetTexture), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetTexture_4__LTCG_eax_pTexture", xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture), PATCH_HLE_D3D),

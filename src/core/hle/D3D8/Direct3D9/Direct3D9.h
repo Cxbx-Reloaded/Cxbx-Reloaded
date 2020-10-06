@@ -1384,6 +1384,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_8)
     uint_xt                Stride
 );
 
+xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber)
+(
+    void*,
+    uint_xt                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt                Stride
+);
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShader
 // ******************************************************************

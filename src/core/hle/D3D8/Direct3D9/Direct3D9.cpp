@@ -294,6 +294,7 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource,         (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_4,       (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_8,       (xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                                    );  \
+    XB_MACRO(xbox::void_xt,               __fastcall, D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber, (void*, xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                         );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture,              (xbox::dword_xt, xbox::X_D3DBaseTexture*)                                                    );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4__LTCG_eax_pTexture, (xbox::dword_xt)                                                                             );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4,            (xbox::X_D3DBaseTexture*)                                                                    );  \
@@ -6638,6 +6639,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_8)
 	// TODO : Forward to Xbox implementation
 	// This should stop us having to patch GetStreamSource!
 	//XB_TRMP(D3DDevice_SetStreamSource_8)(pStreamData, Stride);
+}
+
+// This uses a custom calling convention where StreamNumber parameter is passed in EDX
+// Test-case: NASCAR Heat 2002
+xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber)
+(
+    void*,
+    uint_xt                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt                Stride
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(StreamNumber)
+		LOG_FUNC_ARG(pStreamData)
+		LOG_FUNC_ARG(Stride)
+		LOG_FUNC_END;
+
+	CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+	// Forward to Xbox implementation
+	// This should stop us having to patch GetStreamSource!
+	XB_TRMP(D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber)(nullptr, StreamNumber, pStreamData, Stride);
 }
 
 // ******************************************************************
