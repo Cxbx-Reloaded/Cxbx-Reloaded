@@ -7489,6 +7489,24 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 	CxbxHandleXboxCallbacks();
 }
 
+// LTCG specific D3DDevice_DrawVerticesUP function...
+// This uses a custom calling convention where pVertexStreamZeroData is passed in EBX
+// Test-case: NASCAR Heat 20002
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    uint_xt                VertexCount,
+    uint_xt                VertexStreamZeroStride
+)
+{
+	PVOID         pVertexStreamZeroData;
+	__asm mov pVertexStreamZeroData, ebx
+
+	LOG_FORWARD("D3DDevice_DrawVerticesUP");
+
+	EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+}
+
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVertices
 // ******************************************************************

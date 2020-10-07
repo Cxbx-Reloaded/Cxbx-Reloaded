@@ -1429,6 +1429,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP)
     uint_xt                VertexStreamZeroStride
 );
 
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP_12)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    uint_xt                VertexCount,
+    uint_xt                VertexStreamZeroStride
+);
+
+
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVertices
 // ******************************************************************

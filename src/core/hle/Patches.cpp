@@ -74,6 +74,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_DrawVertices", xbox::EMUPATCH(D3DDevice_DrawVertices), PATCH_HLE_D3D),
     PATCH_ENTRY("D3DDevice_DrawVertices_4", xbox::EMUPATCH(D3DDevice_DrawVertices_4), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_DrawVerticesUP", xbox::EMUPATCH(D3DDevice_DrawVerticesUP), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_DrawVerticesUP_12", xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_EnableOverlay", xbox::EMUPATCH(D3DDevice_EnableOverlay), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_End", xbox::EMUPATCH(D3DDevice_End), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_EndPush", xbox::EMUPATCH(D3DDevice_EndPush), PATCH_HLE_D3D),
