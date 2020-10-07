@@ -163,6 +163,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SetVertexData4ub", xbox::EMUPATCH(D3DDevice_SetVertexData4ub), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetVertexDataColor", xbox::EMUPATCH(D3DDevice_SetVertexDataColor), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetVertexShader", xbox::EMUPATCH(D3DDevice_SetVertexShader), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_SetVertexShader_0", xbox::EMUPATCH(D3DDevice_SetVertexShader_0), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetVertexShaderConstant", xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetVertexShaderConstant1", xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetVertexShaderConstant1Fast", xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast), PATCH_HLE_D3D),

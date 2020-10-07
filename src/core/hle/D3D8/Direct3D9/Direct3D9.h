@@ -1400,6 +1400,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader)
     dword_xt            Handle
 );
 
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader_0)();
+
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices
 // ******************************************************************

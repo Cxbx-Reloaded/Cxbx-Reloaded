@@ -6702,6 +6702,20 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	UpdateViewPortOffsetAndScaleConstants();
 }
 
+// This uses a custom calling convention where Handle is passed in EBX
+// Test-case: NASCAR Heat 2002
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
+{
+	dword_xt Handle;
+	__asm mov Handle, ebx
+
+	LOG_FUNC_ONE_ARG(Handle);
+
+	CxbxImpl_SetVertexShader(Handle);
+
+	UpdateViewPortOffsetAndScaleConstants();
+}
+
 // TODO : Move to own file
 constexpr unsigned int IndicesPerPage = PAGE_SIZE / sizeof(INDEX16);
 constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
