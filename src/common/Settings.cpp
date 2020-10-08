@@ -904,24 +904,15 @@ CXBX_DATA Settings::SetupFile(std::string& file_path_out)
 
 void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 {
-	switch (CurrentRevision) {
-	case 2:
-	case 3:
-	case 4:
+	if (CurrentRevision == 4) {
 		m_si.Delete(section_controller_dinput, nullptr, true);
 		m_si.Delete(section_controller_port, nullptr, true);
-		break;
-	case 5:
-		m_si.Delete(section_core, "LoaderExperiment", true);
-		break;
-	case 6:
-		break;
-	case 9:
-		m_si.Delete(section_video, "HardwareYUV", true);
-		break;
-	default:
-		break;
 	}
+
+	if (CurrentRevision == 5) {
+		m_si.Delete(section_core, "LoaderExperiment", true);
+	}
+
 
 	if (CurrentRevision < 8) {
 		const std::string kb_str = "Keyboard";
@@ -955,5 +946,9 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 				}
 			}
 		}
+	}
+
+	if(CurrentRevision == 9) {
+		m_si.Delete(section_video, "HardwareYUV", true);
 	}
 }
