@@ -904,7 +904,7 @@ CXBX_DATA Settings::SetupFile(std::string& file_path_out)
 
 void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 {
-	if (CurrentRevision == 4) {
+	if (CurrentRevision < 5) {
 		m_si.Delete(section_controller_dinput, nullptr, true);
 		m_si.Delete(section_controller_port, nullptr, true);
 	}
@@ -948,7 +948,7 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 		}
 	}
 
-	if(CurrentRevision == 9) {
+	if(CurrentRevision < 9) {
 		m_si.Delete(section_video, "HardwareYUV", true);
 	}
 }
