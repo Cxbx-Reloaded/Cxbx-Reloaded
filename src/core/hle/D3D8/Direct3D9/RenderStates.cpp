@@ -32,6 +32,8 @@
 #include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For g_pD3DDevice
 #include "core/hle/D3D8/XbConvert.h"
 
+void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE value);
+
 bool XboxRenderStateConverter::Init()
 {
     if (g_SymbolAddresses.find("D3DDeferredRenderState") != g_SymbolAddresses.end()) {
@@ -456,6 +458,9 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_EDGEANTIALIAS:
         case xbox::X_D3DRS_MULTISAMPLEANTIALIAS:
         case xbox::X_D3DRS_MULTISAMPLEMASK:
+            break;
+        case xbox::X_D3DRS_MULTISAMPLETYPE:
+            SetXboxMultiSampleType(Value);
             break;
         default:
             // Only log missing state if it has a PC counterpart
