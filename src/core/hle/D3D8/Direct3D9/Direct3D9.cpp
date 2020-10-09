@@ -4576,7 +4576,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 	// Is this the initial call after D3DDevice_Begin() ?
 	if (g_InlineVertexBuffer_FVF == 0) {
 		// Set first vertex to zero (preventing leaks from prior Begin/End calls)
-		g_InlineVertexBuffer_Table[0] = {};
+		memset(&g_InlineVertexBuffer_Table[0], 0, sizeof(g_InlineVertexBuffer_Table[0]));
 
 		// Handle persistent vertex attribute flags, by resetting non-persistent colors
 		// to their default value (and leaving the persistent colors alone - see the
@@ -4649,7 +4649,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 			// Start a new vertex
 			g_InlineVertexBuffer_TableOffset++;
 			// Copy all attributes of the previous vertex (if any) to the new vertex
-			g_InlineVertexBuffer_Table[g_InlineVertexBuffer_TableOffset] = g_InlineVertexBuffer_Table[o];
+			memcpy(&g_InlineVertexBuffer_Table[g_InlineVertexBuffer_TableOffset], &g_InlineVertexBuffer_Table[o], sizeof(g_InlineVertexBuffer_Table[o]));
 	
 			break;
 		}
