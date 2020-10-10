@@ -224,7 +224,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreateBuffer)
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
         GeneratePCMFormat(DSBufferDesc, pdsbd->lpwfxFormat, (DWORD &)pdsbd->dwFlags, pEmuBuffer->EmuFlags, pdsbd->dwBufferBytes,
-                          &pEmuBuffer->X_BufferCache, pEmuBuffer->X_BufferCacheSize, pEmuBuffer->Xb_VoiceProperties, pdsbd->lpMixBinsOutput,
+                          &pEmuBuffer->X_BufferCache, pEmuBuffer->X_BufferCacheSize, pEmuBuffer->Xb_VoiceProperties, pdsbd->mixBinsOutput,
                           pHybridBuffer->p_CDSVoice);
         pEmuBuffer->EmuBufferDesc = DSBufferDesc;
 
@@ -1180,31 +1180,25 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_xt                   dwMixBinMask)
+    X_DSMIXBINBUNION  mixBins)
 {
     DSoundMutexGuardLock;
-    HRESULT hRet = DS_OK;
-    X_LPDSMIXBINS pMixBins = reinterpret_cast<X_LPDSMIXBINS>(dwMixBinMask);
 
     if (g_LibVersion_DSOUND < 4039) {
         LOG_FUNC_BEGIN
             LOG_FUNC_ARG(pHybridThis)
-            LOG_FUNC_ARG(dwMixBinMask)
+            LOG_FUNC_ARG(mixBins.dwMixBinMask)
             LOG_FUNC_END;
-
-        LOG_UNIMPLEMENTED();
     }
     else {
         LOG_FUNC_BEGIN
             LOG_FUNC_ARG(pHybridThis)
-            LOG_FUNC_ARG(pMixBins)
+            LOG_FUNC_ARG(mixBins.pMixBins)
             LOG_FUNC_END;
-
-        EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
-        hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc);
     }
 
-    return hRet;
+    EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
+    return HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, mixBins, pThis->EmuBufferDesc);
 }
 
 // ******************************************************************
@@ -1225,12 +1219,11 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetMixBinVolumes_12)
         LOG_FUNC_ARG(alVolumes)
         LOG_FUNC_END;
 
-    // NOTE: Use this function for XDK 3911 only because the implementation was changed
-    // somewhere around the December 2001 (4134) update (or earlier, maybe).
+    EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
+    HRESULT hRet = HybridDirectSoundBuffer_SetMixBinVolumes_12(pThis->EmuDirectSoundBuffer8, dwMixBinMask, alVolumes, pThis->Xb_VoiceProperties,
+                                                              pThis->EmuFlags, pThis->Xb_VolumeMixbin, pHybridThis->p_CDSVoice);
 
-    LOG_UNIMPLEMENTED();
-
-    return DS_OK;
+    return hRet;
 }
 
 // ******************************************************************

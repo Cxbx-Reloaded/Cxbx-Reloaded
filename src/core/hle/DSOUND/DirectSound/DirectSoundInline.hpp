@@ -134,22 +134,25 @@ static inline void InitVoiceProperties(xbox::X_DSVOICEPROPS& Xb_VoiceProperties)
 static inline void GenerateMixBinDefault(
     xbox::X_DSVOICEPROPS    &Xb_VoiceProperties,
     ::LPCWAVEFORMATEX        lpwfxFormat,
-    xbox::X_LPDSMIXBINS      mixbins_output,
+    xbox::X_DSMIXBINBUNION   mixbins_output,
     bool                    is3D)
 {
+    std::unique_ptr<xbox::DSOUND::CMixBinConverter> convertedMixBins;
+
     if (g_LibVersion_DSOUND < 4039) {
-        // Do not apply any update since below 4039 doesn't provide access to get properties.
-        return;
+        // Convert old style mixbin to a new style mixbin
+        convertedMixBins = std::make_unique<xbox::DSOUND::CMixBinConverter>(mixbins_output.dwMixBinMask, nullptr);
+        mixbins_output.pMixBins = convertedMixBins->GetMixBins();
     }
 
     auto& xb_mixbinArray = Xb_VoiceProperties.MixBinVolumePairs;
     unsigned int i;
 
     // Use custom mixbin if provided.
-    if (mixbins_output != xbox::zeroptr) {
+    if (mixbins_output.pMixBins != xbox::zeroptr) {
 
-        Xb_VoiceProperties.dwMixBinCount = mixbins_output->dwCount;
-        auto& mixbinArray_output = mixbins_output->lpMixBinVolumePairs;
+        Xb_VoiceProperties.dwMixBinCount = mixbins_output.pMixBins->dwCount;
+        auto& mixbinArray_output = mixbins_output.pMixBins->lpMixBinVolumePairs;
 
         for (i = 0; i < Xb_VoiceProperties.dwMixBinCount; i++) {
             xb_mixbinArray[i].dwMixBin = mixbinArray_output[i].dwMixBin;
@@ -254,7 +257,7 @@ static inline void GeneratePCMFormat(
     LPVOID*         X_BufferCache,
     DWORD          &X_BufferCacheSize,
     xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
-    xbox::X_LPDSMIXBINS mixbins_output,
+    xbox::X_DSMIXBINBUNION mixbins_output,
     xbox::CDirectSoundVoice* Xb_Voice)
 {
     bool bIsSpecial = false;
@@ -1124,13 +1127,16 @@ static inline HRESULT HybridDirectSoundBuffer_SetFormat(
 {
     pDSBuffer->Stop();
 
+    xbox::X_DSMIXBINBUNION mixBins;
+    mixBins.pMixBins = mixbins_output;
+
     if (X_BufferAllocate) {
         GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, X_BufferCacheSize,
-                           xbox::zeroptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output, Xb_Voice);
+                           xbox::zeroptr, X_BufferCacheSize, Xb_VoiceProperties, mixBins, Xb_Voice);
     // Don't allocate for DS Stream class, it is using straight from the source.
     } else {
         GeneratePCMFormat(BufferDesc, Xb_pwfxFormat, Xb_flags, dwEmuFlags, 0,
-                           xbox::zeroptr, X_BufferCacheSize, Xb_VoiceProperties, mixbins_output, Xb_Voice);
+                           xbox::zeroptr, X_BufferCacheSize, Xb_VoiceProperties, mixBins, Xb_Voice);
     }
     HRESULT hRet = DS_OK;
     if ((void*)g_pDSoundPrimaryBuffer == (void*)pDSBuffer) {
@@ -1260,13 +1266,13 @@ static inline HRESULT HybridDirectSound3DBuffer_SetMinDistance(
 //IDirectSoundBuffer
 static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
     xbox::X_DSVOICEPROPS&   Xb_VoiceProperties,
-    xbox::X_LPDSMIXBINS     in_MixBins,
+    xbox::X_DSMIXBINBUNION  mixBins,
     DSBUFFERDESC&           BufferDesc
 )
 {
     HRESULT ret = DS_OK;
 
-    GenerateMixBinDefault(Xb_VoiceProperties, BufferDesc.lpwfxFormat, in_MixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
+    GenerateMixBinDefault(Xb_VoiceProperties, BufferDesc.lpwfxFormat, mixBins, ((BufferDesc.dwFlags & DSBCAPS_CTRL3D) > 0));
 
     return ret;
 }
@@ -1275,7 +1281,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBins(
 //IDirectSoundBuffer x2
 static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     LPDIRECTSOUNDBUFFER8 pDSBuffer,
-    xbox::X_LPDSMIXBINS   pMixBins,
+    xbox::X_LPDSMIXBINS pMixBins,
     xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
     DWORD                EmuFlags,
     LONG                &Xb_volumeMixBin,
@@ -1291,7 +1297,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
             for (DWORD i = 0; i < count; i++) {
                 // Update the mixbin volume only, do not reassign volume pair array.
                 for (DWORD i = 0; i < count; i++) {
-                    auto& it_in = pMixBins->lpMixBinVolumePairs[i];
+                    const auto& it_in = pMixBins->lpMixBinVolumePairs[i];
                     for (DWORD ii = 0; ii < Xb_VoiceProperties.dwMixBinCount; ii++) {
                         auto& it_internal = Xb_VoiceProperties.MixBinVolumePairs[ii];
 
@@ -1329,6 +1335,23 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     }
 
     return hRet;
+}
+
+
+//IDirectSoundStream x2
+//IDirectSoundBuffer x2
+static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_12(
+    LPDIRECTSOUNDBUFFER8 pDSBuffer,
+    xbox::dword_xt       dwMixBinMask,
+    const xbox::long_xt* alVolumes,
+    xbox::X_DSVOICEPROPS& Xb_VoiceProperties,
+    DWORD                EmuFlags,
+    LONG                &Xb_volumeMixBin,
+    xbox::CDirectSoundVoice* Xb_Voice)
+{
+    // Convert volumes/mask to xbox::X_DSMIXBINS and call the newer version of the function to keep implementations consistent
+    xbox::DSOUND::CMixBinConverter convertedMixBins(dwMixBinMask, alVolumes);
+    return HybridDirectSoundBuffer_SetMixBinVolumes_8(pDSBuffer, convertedMixBins.GetMixBins(), Xb_VoiceProperties, EmuFlags, Xb_volumeMixBin, Xb_Voice);
 }
 
 //IDirectSoundStream

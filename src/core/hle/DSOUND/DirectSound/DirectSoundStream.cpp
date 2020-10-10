@@ -233,7 +233,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreateStream)
 
         // We have to set DSBufferDesc last due to EmuFlags must be either 0 or previously written value to preserve other flags.
         GeneratePCMFormat(DSBufferDesc, pdssd->lpwfxFormat, (DWORD &)pdssd->dwFlags, (*ppStream)->EmuFlags, 0,
-                          xbox::zeroptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->lpMixBinsOutput,
+                          xbox::zeroptr, (*ppStream)->X_BufferCacheSize, (*ppStream)->Xb_VoiceProperties, pdssd->mixBinsOutput,
                           &(*ppStream)->Xb_Voice);
 
         // Test case: Star Wars: KotOR has one packet greater than 5 seconds worth. Increasing to 10 seconds allow stream to work until
@@ -1105,31 +1105,24 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMinDistance)
 xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    dword_xt                   dwMixBinMask) // Also can be X_LPDSMIXBINS (4039+)
+    X_DSMIXBINBUNION  mixBins) // Can be dword_xt (up to 4039) or X_LPDSMIXBINS (4039+)
 {
     DSoundMutexGuardLock;
-    HRESULT hRet = DS_OK;
-    X_LPDSMIXBINS pMixBins = reinterpret_cast<X_LPDSMIXBINS>(dwMixBinMask);
 
     if (g_LibVersion_DSOUND < 4039) {
         LOG_FUNC_BEGIN
             LOG_FUNC_ARG(pThis)
-            LOG_FUNC_ARG(dwMixBinMask)
+            LOG_FUNC_ARG(mixBins.dwMixBinMask)
             LOG_FUNC_END;
-
-        LOG_UNIMPLEMENTED();
     }
     else {
         LOG_FUNC_BEGIN
             LOG_FUNC_ARG(pThis)
-            LOG_FUNC_ARG(pMixBins)
+            LOG_FUNC_ARG(mixBins.pMixBins)
             LOG_FUNC_END;
-
-        hRet = HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, pMixBins, pThis->EmuBufferDesc);
     }
 
-
-    return hRet;
+    return HybridDirectSoundBuffer_SetMixBins(pThis->Xb_VoiceProperties, mixBins, pThis->EmuBufferDesc);
 }
 
 // ******************************************************************
@@ -1138,13 +1131,13 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMixBins)
 xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    dword_xt                   dwMixBinMask) // Also can be X_LPDSMIXBINS (4039+)
+    X_DSMIXBINBUNION  mixBins) // Can be dword_xt (up to 4039) or X_LPDSMIXBINS (4039+)
 {
     DSoundMutexGuardLock;
 
     LOG_FORWARD("CDirectSoundStream_SetMixBins");
 
-    return xbox::EMUPATCH(CDirectSoundStream_SetMixBins)(pThis, dwMixBinMask);
+    return xbox::EMUPATCH(CDirectSoundStream_SetMixBins)(pThis, mixBins);
 }
 
 // ******************************************************************
@@ -1187,12 +1180,10 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_SetMixBinVolumes_12)
 		LOG_FUNC_ARG(alVolumes)
 		LOG_FUNC_END;
 
-    // NOTE: Use this function for XDK 3911 only because the implementation was changed
-    // somewhere around the March 2002 (4361) update (or earlier, maybe).
+    HRESULT hRet = HybridDirectSoundBuffer_SetMixBinVolumes_12(pThis->EmuDirectSoundBuffer8, dwMixBinMask, alVolumes, pThis->Xb_VoiceProperties,
+                                                              pThis->EmuFlags, pThis->Xb_VolumeMixbin, &pThis->Xb_Voice);
 
-    LOG_UNIMPLEMENTED();
-
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
