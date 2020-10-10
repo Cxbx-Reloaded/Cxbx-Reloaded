@@ -1319,7 +1319,7 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
             }
             if (counter > 0) {
                 Xb_volumeMixBin = volume / (LONG)counter;
-                int32_t Xb_volume = Xb_Voice->GetVolume();
+                int32_t Xb_volume = Xb_Voice->GetVolume() + Xb_Voice->GetHeadroom();
                 hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags,
                                                          Xb_volumeMixBin, Xb_Voice);
             } else {
