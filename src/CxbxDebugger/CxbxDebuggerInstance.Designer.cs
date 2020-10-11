@@ -36,8 +36,6 @@
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.cbFrames = new System.Windows.Forms.ToolStripComboBox();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
-            this.statusBar = new System.Windows.Forms.StatusStrip();
-            this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.tabContainer = new System.Windows.Forms.TabControl();
             this.tabSummary = new System.Windows.Forms.TabPage();
             this.linkLabel3 = new System.Windows.Forms.LinkLabel();
@@ -115,7 +113,6 @@
             this.txDisassembly = new CxbxDebugger.RicherTextBox();
             this.toolStrip1.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
-            this.statusBar.SuspendLayout();
             this.tabContainer.SuspendLayout();
             this.tabSummary.SuspendLayout();
             this.tabDisassembly.SuspendLayout();
@@ -161,11 +158,11 @@
             this.lbConsole.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lbConsole.FormattingEnabled = true;
             this.lbConsole.ItemHeight = 20;
-            this.lbConsole.Location = new System.Drawing.Point(4, 361);
+            this.lbConsole.Location = new System.Drawing.Point(4, 425);
             this.lbConsole.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.lbConsole.Name = "lbConsole";
             this.lbConsole.ScrollAlwaysVisible = true;
-            this.lbConsole.Size = new System.Drawing.Size(1093, 79);
+            this.lbConsole.Size = new System.Drawing.Size(1185, 96);
             this.lbConsole.TabIndex = 2;
             // 
             // toolStrip1
@@ -181,7 +178,7 @@
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0, 0, 3, 0);
             this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.toolStrip1.Size = new System.Drawing.Size(1101, 33);
+            this.toolStrip1.Size = new System.Drawing.Size(1193, 33);
             this.toolStrip1.TabIndex = 7;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -215,38 +212,18 @@
             // 
             this.tableLayoutPanel3.ColumnCount = 1;
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel3.Controls.Add(this.statusBar, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this.tabContainer, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this.lbConsole, 0, 1);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(0, 33);
             this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 3;
+            this.tableLayoutPanel3.RowCount = 2;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 80F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 20F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 31F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(1101, 476);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(1193, 526);
             this.tableLayoutPanel3.TabIndex = 9;
-            // 
-            // statusBar
-            // 
-            this.statusBar.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.statusBar.ImageScalingSize = new System.Drawing.Size(24, 24);
-            this.statusBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lblStatus});
-            this.statusBar.Location = new System.Drawing.Point(0, 445);
-            this.statusBar.Name = "statusBar";
-            this.statusBar.Padding = new System.Windows.Forms.Padding(2, 0, 21, 0);
-            this.statusBar.Size = new System.Drawing.Size(1101, 31);
-            this.statusBar.TabIndex = 10;
-            this.statusBar.Text = "statusStrip1";
-            // 
-            // lblStatus
-            // 
-            this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(60, 24);
-            this.lblStatus.Text = "Ready";
             // 
             // tabContainer
             // 
@@ -263,7 +240,7 @@
             this.tabContainer.Multiline = true;
             this.tabContainer.Name = "tabContainer";
             this.tabContainer.SelectedIndex = 0;
-            this.tabContainer.Size = new System.Drawing.Size(1093, 346);
+            this.tabContainer.Size = new System.Drawing.Size(1185, 410);
             this.tabContainer.TabIndex = 3;
             // 
             // tabSummary
@@ -277,7 +254,7 @@
             this.tabSummary.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabSummary.Name = "tabSummary";
             this.tabSummary.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabSummary.Size = new System.Drawing.Size(1085, 313);
+            this.tabSummary.Size = new System.Drawing.Size(1177, 377);
             this.tabSummary.TabIndex = 6;
             this.tabSummary.Text = "Summary";
             this.tabSummary.UseVisualStyleBackColor = true;
@@ -345,7 +322,7 @@
             this.tabDisassembly.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabDisassembly.Name = "tabDisassembly";
             this.tabDisassembly.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabDisassembly.Size = new System.Drawing.Size(1085, 309);
+            this.tabDisassembly.Size = new System.Drawing.Size(1085, 337);
             this.tabDisassembly.TabIndex = 0;
             this.tabDisassembly.Text = "Disassembly";
             this.tabDisassembly.UseVisualStyleBackColor = true;
@@ -372,7 +349,7 @@
             // splitContainer2.Panel2
             // 
             this.splitContainer2.Panel2.Controls.Add(this.txDisassembly);
-            this.splitContainer2.Size = new System.Drawing.Size(1077, 299);
+            this.splitContainer2.Size = new System.Drawing.Size(1077, 327);
             this.splitContainer2.SplitterDistance = 34;
             this.splitContainer2.SplitterWidth = 6;
             this.splitContainer2.TabIndex = 2;
@@ -455,7 +432,7 @@
             this.tabBreakpoints.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabBreakpoints.Name = "tabBreakpoints";
             this.tabBreakpoints.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabBreakpoints.Size = new System.Drawing.Size(1085, 309);
+            this.tabBreakpoints.Size = new System.Drawing.Size(1085, 337);
             this.tabBreakpoints.TabIndex = 1;
             this.tabBreakpoints.Text = "Breakpoints";
             this.tabBreakpoints.UseVisualStyleBackColor = true;
@@ -475,7 +452,7 @@
             // splitContainer3.Panel2
             // 
             this.splitContainer3.Panel2.Controls.Add(this.clbBreakpoints);
-            this.splitContainer3.Size = new System.Drawing.Size(1077, 299);
+            this.splitContainer3.Size = new System.Drawing.Size(1077, 327);
             this.splitContainer3.SplitterDistance = 357;
             this.splitContainer3.SplitterWidth = 6;
             this.splitContainer3.TabIndex = 5;
@@ -491,7 +468,7 @@
             this.groupBox4.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox4.Size = new System.Drawing.Size(351, 122);
+            this.groupBox4.Size = new System.Drawing.Size(351, 150);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Interrupts";
@@ -600,7 +577,7 @@
             this.clbBreakpoints.Location = new System.Drawing.Point(0, 0);
             this.clbBreakpoints.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.clbBreakpoints.Name = "clbBreakpoints";
-            this.clbBreakpoints.Size = new System.Drawing.Size(714, 299);
+            this.clbBreakpoints.Size = new System.Drawing.Size(714, 327);
             this.clbBreakpoints.TabIndex = 0;
             this.clbBreakpoints.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbBreakpoints_ItemCheck);
             this.clbBreakpoints.KeyDown += new System.Windows.Forms.KeyEventHandler(this.clbBreakpoints_KeyDown);
@@ -612,7 +589,7 @@
             this.tabWatch.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabWatch.Name = "tabWatch";
             this.tabWatch.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabWatch.Size = new System.Drawing.Size(1085, 309);
+            this.tabWatch.Size = new System.Drawing.Size(1085, 337);
             this.tabWatch.TabIndex = 2;
             this.tabWatch.Text = "File Watcher";
             this.tabWatch.UseVisualStyleBackColor = true;
@@ -631,7 +608,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.lbOpenedFiles);
-            this.splitContainer1.Size = new System.Drawing.Size(1077, 299);
+            this.splitContainer1.Size = new System.Drawing.Size(1077, 327);
             this.splitContainer1.SplitterDistance = 755;
             this.splitContainer1.SplitterWidth = 6;
             this.splitContainer1.TabIndex = 3;
@@ -649,7 +626,7 @@
             this.lvFileDetails.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.lvFileDetails.MultiSelect = false;
             this.lvFileDetails.Name = "lvFileDetails";
-            this.lvFileDetails.Size = new System.Drawing.Size(755, 299);
+            this.lvFileDetails.Size = new System.Drawing.Size(755, 327);
             this.lvFileDetails.TabIndex = 2;
             this.lvFileDetails.UseCompatibleStateImageBehavior = false;
             this.lvFileDetails.View = System.Windows.Forms.View.Details;
@@ -677,7 +654,7 @@
             this.lbOpenedFiles.Location = new System.Drawing.Point(0, 0);
             this.lbOpenedFiles.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.lbOpenedFiles.Name = "lbOpenedFiles";
-            this.lbOpenedFiles.Size = new System.Drawing.Size(316, 299);
+            this.lbOpenedFiles.Size = new System.Drawing.Size(316, 327);
             this.lbOpenedFiles.TabIndex = 0;
             // 
             // tabMemory
@@ -687,7 +664,7 @@
             this.tabMemory.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabMemory.Name = "tabMemory";
             this.tabMemory.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabMemory.Size = new System.Drawing.Size(1085, 309);
+            this.tabMemory.Size = new System.Drawing.Size(1085, 337);
             this.tabMemory.TabIndex = 4;
             this.tabMemory.Text = "Memory Viewer";
             this.tabMemory.UseVisualStyleBackColor = true;
@@ -706,7 +683,7 @@
             // splitContainer4.Panel2
             // 
             this.splitContainer4.Panel2.Controls.Add(this.groupBox2);
-            this.splitContainer4.Size = new System.Drawing.Size(1077, 299);
+            this.splitContainer4.Size = new System.Drawing.Size(1077, 327);
             this.splitContainer4.SplitterDistance = 566;
             this.splitContainer4.SplitterWidth = 6;
             this.splitContainer4.TabIndex = 7;
@@ -723,7 +700,7 @@
             this.txMemoryDump.Name = "txMemoryDump";
             this.txMemoryDump.ReadOnly = true;
             this.txMemoryDump.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.txMemoryDump.Size = new System.Drawing.Size(566, 299);
+            this.txMemoryDump.Size = new System.Drawing.Size(566, 327);
             this.txMemoryDump.TabIndex = 0;
             // 
             // groupBox2
@@ -743,7 +720,7 @@
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.groupBox2.Size = new System.Drawing.Size(505, 299);
+            this.groupBox2.Size = new System.Drawing.Size(505, 327);
             this.groupBox2.TabIndex = 8;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "View or Dump Memory";
@@ -868,7 +845,7 @@
             this.tabTweaks.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabTweaks.Name = "tabTweaks";
             this.tabTweaks.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabTweaks.Size = new System.Drawing.Size(1085, 309);
+            this.tabTweaks.Size = new System.Drawing.Size(1085, 337);
             this.tabTweaks.TabIndex = 5;
             this.tabTweaks.Text = "Memory Editor";
             this.tabTweaks.UseVisualStyleBackColor = true;
@@ -882,7 +859,7 @@
             this.tabCEContainer.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabCEContainer.Name = "tabCEContainer";
             this.tabCEContainer.SelectedIndex = 0;
-            this.tabCEContainer.Size = new System.Drawing.Size(1077, 299);
+            this.tabCEContainer.Size = new System.Drawing.Size(1077, 327);
             this.tabCEContainer.TabIndex = 5;
             // 
             // tabSubData
@@ -892,7 +869,7 @@
             this.tabSubData.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabSubData.Name = "tabSubData";
             this.tabSubData.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabSubData.Size = new System.Drawing.Size(1069, 266);
+            this.tabSubData.Size = new System.Drawing.Size(1069, 294);
             this.tabSubData.TabIndex = 0;
             this.tabSubData.Text = "Edit Data";
             this.tabSubData.UseVisualStyleBackColor = true;
@@ -915,8 +892,8 @@
             // splitContainer6.Panel2
             // 
             this.splitContainer6.Panel2.Controls.Add(this.lvCEMemory);
-            this.splitContainer6.Size = new System.Drawing.Size(1061, 256);
-            this.splitContainer6.SplitterDistance = 54;
+            this.splitContainer6.Size = new System.Drawing.Size(1061, 284);
+            this.splitContainer6.SplitterDistance = 59;
             this.splitContainer6.SplitterWidth = 6;
             this.splitContainer6.TabIndex = 2;
             // 
@@ -978,7 +955,7 @@
             this.lvCEMemory.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.lvCEMemory.MultiSelect = false;
             this.lvCEMemory.Name = "lvCEMemory";
-            this.lvCEMemory.Size = new System.Drawing.Size(1061, 196);
+            this.lvCEMemory.Size = new System.Drawing.Size(1061, 219);
             this.lvCEMemory.TabIndex = 1;
             this.lvCEMemory.UseCompatibleStateImageBehavior = false;
             this.lvCEMemory.View = System.Windows.Forms.View.Details;
@@ -1010,7 +987,7 @@
             this.tabSubAssembly.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabSubAssembly.Name = "tabSubAssembly";
             this.tabSubAssembly.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabSubAssembly.Size = new System.Drawing.Size(1069, 266);
+            this.tabSubAssembly.Size = new System.Drawing.Size(1069, 294);
             this.tabSubAssembly.TabIndex = 1;
             this.tabSubAssembly.Text = "Edit Assembly";
             this.tabSubAssembly.UseVisualStyleBackColor = true;
@@ -1061,7 +1038,7 @@
             this.tabOutput.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.tabOutput.Name = "tabOutput";
             this.tabOutput.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.tabOutput.Size = new System.Drawing.Size(1085, 309);
+            this.tabOutput.Size = new System.Drawing.Size(1085, 337);
             this.tabOutput.TabIndex = 3;
             this.tabOutput.Text = "Debug Output";
             this.tabOutput.UseVisualStyleBackColor = true;
@@ -1084,7 +1061,7 @@
             // splitContainer5.Panel2
             // 
             this.splitContainer5.Panel2.Controls.Add(this.lbDebug);
-            this.splitContainer5.Size = new System.Drawing.Size(1077, 299);
+            this.splitContainer5.Size = new System.Drawing.Size(1077, 327);
             this.splitContainer5.SplitterDistance = 26;
             this.splitContainer5.SplitterWidth = 6;
             this.splitContainer5.TabIndex = 6;
@@ -1120,7 +1097,7 @@
             this.lbDebug.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.lbDebug.Name = "lbDebug";
             this.lbDebug.ScrollAlwaysVisible = true;
-            this.lbDebug.Size = new System.Drawing.Size(1077, 267);
+            this.lbDebug.Size = new System.Drawing.Size(1077, 295);
             this.lbDebug.TabIndex = 3;
             // 
             // diagSaveMemory
@@ -1145,7 +1122,7 @@
             this.txDisassembly.Name = "txDisassembly";
             this.txDisassembly.ReadOnly = true;
             this.txDisassembly.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
-            this.txDisassembly.Size = new System.Drawing.Size(1077, 259);
+            this.txDisassembly.Size = new System.Drawing.Size(1077, 287);
             this.txDisassembly.TabIndex = 1;
             this.txDisassembly.Text = "";
             // 
@@ -1153,7 +1130,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(144F, 144F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(1101, 509);
+            this.ClientSize = new System.Drawing.Size(1193, 559);
             this.ControlBox = false;
             this.Controls.Add(this.tableLayoutPanel3);
             this.Controls.Add(this.toolStrip1);
@@ -1166,9 +1143,6 @@
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
-            this.tableLayoutPanel3.PerformLayout();
-            this.statusBar.ResumeLayout(false);
-            this.statusBar.PerformLayout();
             this.tabContainer.ResumeLayout(false);
             this.tabSummary.ResumeLayout(false);
             this.tabSummary.PerformLayout();
@@ -1242,8 +1216,6 @@
         private System.Windows.Forms.TextBox txAddress;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TextBox tbFilter;
-        private System.Windows.Forms.StatusStrip statusBar;
-        private System.Windows.Forms.ToolStripStatusLabel lblStatus;
         private RicherTextBox txDisassembly;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;

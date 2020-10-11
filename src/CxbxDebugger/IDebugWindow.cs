@@ -10,6 +10,22 @@ namespace CxbxDebugger
         Ended,
     }
 
+    public enum DebugState
+    {
+        Unknown,
+        Idle,
+        Suspended,
+        Breakpoint,
+        Running,
+        Terminated,
+    }
+
+    public struct DebugStateInfo
+    {
+        public DebugState State;
+        public string Detail;
+    }
+
     public interface IDebugWindow
     {
         void StartSession();
@@ -19,6 +35,8 @@ namespace CxbxDebugger
         void ResumeSession();
 
         SessionState GetSessionState();
+
+        DebugStateInfo GetDebugStateInfo();
     }
 
     public interface IDebugContainerWindow
@@ -26,6 +44,8 @@ namespace CxbxDebugger
         void AddDebugSession(string[] Arguments, bool StartAutomatically);
 
         void ReportGameTitle(string GameTitle);
+
+        void ReportStatus(IDebugWindow Window, DebugState Status, string Detail);
     }
 
 }

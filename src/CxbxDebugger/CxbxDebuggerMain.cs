@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Written by x1nixmzeng for the Cxbx-Reloaded project
+//
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -21,6 +24,10 @@ namespace CxbxDebugger
 
             // Setup session without initially running the game
             AddDebugSession(StartupArgs, false);
+
+#if FALSE
+            AddDebugSession(new string[] { }, false);
+#endif
         }
 
         private void ExitToolsStripMenuItem_Click(object sender, EventArgs e)
@@ -28,56 +35,27 @@ namespace CxbxDebugger
             Close();
         }
 
-        private void CascadeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            LayoutMdi(MdiLayout.Cascade);
-        }
-
-        private void TileVerticalToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            LayoutMdi(MdiLayout.TileVertical);
-        }
-
-        private void TileHorizontalToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            LayoutMdi(MdiLayout.TileHorizontal);
-        }
-
-        private void ArrangeIconsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            LayoutMdi(MdiLayout.ArrangeIcons);
-        }
-
         private void startDebuggingToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (Form childForm in MdiChildren)
+            if (ActiveMdiChild is IDebugWindow)
             {
-                if (childForm is IDebugWindow)
-                {
-                    (childForm as IDebugWindow).StartSession();
-                }
+                (ActiveMdiChild as IDebugWindow).StartSession();
             }
         }
 
         private void suspendToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (Form childForm in MdiChildren)
+            if (ActiveMdiChild is IDebugWindow)
             {
-                if (childForm is IDebugWindow)
-                {
-                    (childForm as IDebugWindow).SuspendSession();
-                }
+                (ActiveMdiChild as IDebugWindow).SuspendSession();
             }
         }
 
         private void resumeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            foreach (Form childForm in MdiChildren)
+            if (ActiveMdiChild is IDebugWindow)
             {
-                if (childForm is IDebugWindow)
-                {
-                    (childForm as IDebugWindow).ResumeSession();
-                }
+                (ActiveMdiChild as IDebugWindow).ResumeSession();
             }
         }
 
@@ -98,12 +76,81 @@ namespace CxbxDebugger
 
         private IDebugWindow CreateNewSessionWindow(string[] Arguments)
         {
-            var childForm = new CxbxDebuggerInstance(Arguments);
-            childForm.MdiParent = this;
+            var childForm = new CxbxDebuggerInstance(this, Arguments);
             childForm.WindowState = FormWindowState.Maximized;
+            childForm.TextChanged += (sender, e) => { OnSessionWindowRenamed(sender as Form); };
+            childForm.Activated += (sender, e) => { OnSessionWindowActivated(sender as IDebugWindow); };
             childForm.Show();
-
+            
             return childForm;
+        }
+
+        private void OnSessionWindowActivated(IDebugWindow child)
+        {
+            var state = child.GetDebugStateInfo();
+            RefreshStatusText(state);
+        }
+
+        private void OnSessionWindowRenamed(Form form)
+        {
+            // https://stackoverflow.com/questions/1347734/mdi-window-list-not-updating-child-title-bar-texts
+
+            ActivateMdiChild(null);
+            ActivateMdiChild(form);
+        }
+
+        public void ReportStatus(IDebugWindow Window, DebugState State, string Detail)
+        {
+            if (Window == ActiveMdiChild)
+            {
+                RefreshStatusText(new DebugStateInfo() { State = State, Detail = Detail });
+            }
+        }
+
+        private void RefreshStatusText(DebugStateInfo stateInfo)
+        {
+            var stateString = "";
+            var canSuspend = false;
+            var canResume = false;
+            var canRun = false;
+
+            switch (stateInfo.State)
+            {
+                case DebugState.Unknown:
+                    stateString = "No valid Xbe was loaded. Invalid session.";
+                    break;
+
+                case DebugState.Idle:
+                    stateString = "Ready";
+                    canRun = true;
+                    break;
+
+                case DebugState.Suspended:
+                    stateString = "Suspended";
+                    canResume = true;
+                    break;
+
+                case DebugState.Running:
+                    stateString = "Running";
+                    canSuspend = true;
+                    break;
+
+                case DebugState.Terminated:
+                    stateString = "Terminated";
+                    //canRun = true; // Uncomment to allow restarted sessions
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(stateInfo.Detail))
+            {
+                stateString += $" - {stateInfo.Detail}";
+            }
+
+            miStartDebugging.Enabled = canRun;
+            miSuspend.Enabled = canSuspend;
+            miResume.Enabled = canResume;
+            lblStatus.Text = stateString;
         }
     }
 }
+
