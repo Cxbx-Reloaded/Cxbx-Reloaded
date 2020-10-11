@@ -5,11 +5,12 @@ using System;
 
 namespace CxbxDebugger
 {
-    public interface IDebuggerGeneralEvents
+    public interface IDebuggerSessionEvents
     {
         void OnDebugStart();
         void OnDebugEnd();
         void OnDebugTitleLoaded(string Title);
+        void OnDebugTargetChanged(string CommandLine);
     }
 
     public interface IDebuggerProcessEvents
