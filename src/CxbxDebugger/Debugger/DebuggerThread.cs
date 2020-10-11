@@ -114,6 +114,12 @@ namespace CxbxDebugger
                 if (ebp == 0 || ReturnAddr == ebp)
                     break;
 
+                if ((ReturnAddr & 0x80000000) != 0)
+                    break;
+
+                if ((ebp & 0x80000000) != 0)
+                    break;
+
                 CallstackCache.AddFrame(new DebuggerStackFrame(new IntPtr(ReturnAddr), new IntPtr(ebp)));
             }
             while (CallstackCache.CanCollect);
