@@ -4614,7 +4614,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 		}
 
 		for (unsigned i = 0; i < (g_InlineVertexBuffer_TableLength - InlineVertexBuffer_TableLength_Original); ++i) {
-			g_InlineVertexBuffer_Table.emplace_back(_D3DIVB{});
+			g_InlineVertexBuffer_Table.emplace_back();
 		}
 
 		EmuLog(LOG_LEVEL::DEBUG, "Expanded g_InlineVertexBuffer_Table to %u entries", g_InlineVertexBuffer_TableLength);

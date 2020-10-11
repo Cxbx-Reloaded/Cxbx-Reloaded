@@ -75,9 +75,7 @@ _D3DIVB::_D3DIVB()
 	Position.y = 0.0f;
 	Position.z = 0.0f;
 	Rhw = 0.0f;
-	for (unsigned i = 0; i < 4; ++i) {
-		Blend[i] = 0.0f;
-	}
+	std::fill(std::begin(Blend), std::end(Blend), 0.0f);
 	Normal.x = 0.0f;
 	Normal.y = 0.0f;
 	Normal.z = 0.0f;
@@ -86,12 +84,7 @@ _D3DIVB::_D3DIVB()
 	Fog = 0.0f;
 	BackDiffuse = 0u;
 	BackSpecular = 0u;
-	for (unsigned i = 0; i < 4; ++i) {
-		TexCoord[i].x = 0.0f;
-		TexCoord[i].y = 0.0f;
-		TexCoord[i].z = 0.0f;
-		TexCoord[i].w = 0.0f;
-	}
+	std::fill(std::begin(TexCoord), std::end(TexCoord), D3DXVECTOR4{ 0.0f , 0.0f, 0.0f, 0.0f });
 }
 
 struct _D3DIVB &_D3DIVB::operator=(const struct _D3DIVB &Val)
@@ -100,9 +93,7 @@ struct _D3DIVB &_D3DIVB::operator=(const struct _D3DIVB &Val)
 	Position.y = Val.Position.y;
 	Position.z = Val.Position.z;
 	Rhw = Val.Rhw;
-	for (unsigned i = 0; i < 4; ++i) {
-		Blend[i] = Val.Blend[i];
-	}
+	std::copy(std::begin(Val.Blend), std::end(Val.Blend), std::begin(Blend));
 	Normal.x = Val.Normal.x;
 	Normal.y = Val.Normal.y;
 	Normal.z = Val.Normal.z;
@@ -111,12 +102,7 @@ struct _D3DIVB &_D3DIVB::operator=(const struct _D3DIVB &Val)
 	Fog = Val.Fog;
 	BackDiffuse = Val.BackDiffuse;
 	BackSpecular = Val.BackSpecular;
-	for (unsigned i = 0; i < 4; ++i) {
-		TexCoord[i].x = Val.TexCoord[i].x;
-		TexCoord[i].y = Val.TexCoord[i].y;
-		TexCoord[i].z = Val.TexCoord[i].z;
-		TexCoord[i].w = Val.TexCoord[i].w;
-	}
+	std::copy(std::begin(Val.TexCoord), std::end(Val.TexCoord), std::begin(TexCoord));
 
 	return *this;
 }
