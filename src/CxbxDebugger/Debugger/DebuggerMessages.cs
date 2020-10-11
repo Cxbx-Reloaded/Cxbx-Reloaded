@@ -19,10 +19,10 @@ namespace CxbxDebugger
             FILE_WRITE = 0x3002,
             FILE_CLOSED = 0x3003,
 
-            DEBUGGER_INIT = 0x400,
-            DEBUGGER_NEW_TARGET = 0x401,
+            DEBUGGER_INIT = 0x4000,
+            DEBUGGER_NEW_TARGET = 0x4001,
 
-            OVERRIDE_EXCEPTION = 0x500,
+            OVERRIDE_EXCEPTION = 0x5000,
 
             // Exception code from https://msdn.microsoft.com/en-us/library/xcb2z8hs.aspx
             MS_VC_EXCEPTION = 0x406D1388,
