@@ -33,7 +33,7 @@ namespace CxbxDebugger
         string[] args = new string[] { };
         string Target = "";
 
-        public string ProcessName
+        public string TargetPath
         {
             get { return Target; }
         }
