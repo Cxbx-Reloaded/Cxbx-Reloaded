@@ -63,8 +63,9 @@ uint16_t g_LibVersion_DSOUND = 0;
 // * 6: (RadWolfie), added loader executable member to core, only for clean up loader expertimental setting
 // * 7: (RadWolfie), fix allowAdminPrivilege not align with other boolean members
 // * 8: (ergo720),   added general input settings
+// * 9: (LukeUsher), replaced HardwareYUV with MaintainAspect
 ///////////////////////////
-const unsigned int settings_version = 8;
+const unsigned int settings_version = 9;
 
 Settings* g_Settings = nullptr;
 
@@ -107,7 +108,7 @@ static struct {
 	const char* Direct3DDevice = "Direct3DDevice";
 	const char* VSync = "VSync";
 	const char* FullScreen = "FullScreen";
-	const char* HardwareYUV = "HardwareYUV";
+	const char* MaintainAspect = "MaintainAspect";
 	const char* RenderResolution = "RenderResolution";
 } sect_video_keys;
 
@@ -401,7 +402,7 @@ bool Settings::LoadConfig()
 	m_video.direct3DDevice = m_si.GetLongValue(section_video, sect_video_keys.Direct3DDevice, /*Default=*/0);
 	m_video.bVSync = m_si.GetBoolValue(section_video, sect_video_keys.VSync, /*Default=*/false);
 	m_video.bFullScreen = m_si.GetBoolValue(section_video, sect_video_keys.FullScreen, /*Default=*/false);
-	m_video.bHardwareYUV = m_si.GetBoolValue(section_video, sect_video_keys.HardwareYUV, /*Default=*/false);
+	m_video.bMaintainAspect = m_si.GetBoolValue(section_video, sect_video_keys.MaintainAspect, /*Default=*/true);
 	m_video.renderScaleFactor = m_si.GetLongValue(section_video, sect_video_keys.RenderResolution, /*Default=*/1);
 
 	// ==== Video End ===========
@@ -569,7 +570,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetLongValue(section_video, sect_video_keys.Direct3DDevice, m_video.direct3DDevice, nullptr, true, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.VSync, m_video.bVSync, nullptr, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.FullScreen, m_video.bFullScreen, nullptr, true);
-	m_si.SetBoolValue(section_video, sect_video_keys.HardwareYUV, m_video.bHardwareYUV, nullptr, true);
+	m_si.SetBoolValue(section_video, sect_video_keys.MaintainAspect, m_video.bMaintainAspect, nullptr, true);
 	m_si.SetLongValue(section_video, sect_video_keys.RenderResolution, m_video.renderScaleFactor, nullptr, false, true);
 	// ==== Video End ===========
 
@@ -903,20 +904,15 @@ CXBX_DATA Settings::SetupFile(std::string& file_path_out)
 
 void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 {
-	switch (CurrentRevision) {
-	case 2:
-	case 3:
-	case 4:
+	if (CurrentRevision < 5) {
 		m_si.Delete(section_controller_dinput, nullptr, true);
 		m_si.Delete(section_controller_port, nullptr, true);
-		break;
-	case 5:
-		m_si.Delete(section_core, "LoaderExperiment", true);
-		break;
-	case 6:
-	default:
-		break;
 	}
+
+	if (CurrentRevision == 5) {
+		m_si.Delete(section_core, "LoaderExperiment", true);
+	}
+
 
 	if (CurrentRevision < 8) {
 		const std::string kb_str = "Keyboard";
@@ -950,5 +946,9 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 				}
 			}
 		}
+	}
+
+	if(CurrentRevision < 9) {
+		m_si.Delete(section_video, "HardwareYUV", true);
 	}
 }

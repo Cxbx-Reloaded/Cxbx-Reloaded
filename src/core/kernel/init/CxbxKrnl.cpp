@@ -293,7 +293,7 @@ void PrintCurrentConfigurationLog()
 		EmuLogInit(LOG_LEVEL::INFO, "Video Resolution: %s", XBVideoConf.szVideoResolution);
 		EmuLogInit(LOG_LEVEL::INFO, "Force VSync is %s", XBVideoConf.bVSync ? "enabled" : "disabled");
 		EmuLogInit(LOG_LEVEL::INFO, "Fullscreen is %s", XBVideoConf.bFullScreen ? "enabled" : "disabled");
-		EmuLogInit(LOG_LEVEL::INFO, "Hardware YUV is %s", XBVideoConf.bHardwareYUV ? "enabled" : "disabled");
+		EmuLogInit(LOG_LEVEL::INFO, "Maintain Aspect is %s", XBVideoConf.bMaintainAspect ? "enabled" : "disabled");
 	}
 
 	// Print current audio configuration

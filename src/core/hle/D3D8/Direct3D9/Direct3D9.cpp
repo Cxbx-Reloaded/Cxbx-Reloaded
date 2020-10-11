@@ -5167,12 +5167,12 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
         const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_LINEAR;
         const DWORD LoadOverlayFilter = D3DX_DEFAULT;
 
+        // Use backbuffer width/height since that may differ from the Window size
+        const auto width = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleWidth * g_AspectRatioScale : g_HostBackBufferDesc.Width;
+        const auto height = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleHeight * g_AspectRatioScale : g_HostBackBufferDesc.Height;
+
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
-            // Calculate the target width/height
-            const auto width = g_AspectRatioScaleWidth * g_AspectRatioScale;
-            const auto height = g_AspectRatioScaleHeight * g_AspectRatioScale;
-
             // Calculate the centered rectangle
             RECT dest{};
             dest.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
@@ -5254,8 +5254,6 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 				float xScale, yScale;
 				GetMultiSampleScale(xScale, yScale);
 
-                const auto width = g_AspectRatioScaleWidth * g_AspectRatioScale;
-                const auto height = g_AspectRatioScaleHeight * g_AspectRatioScale;
                 xScale = (float)width / ((float)XboxBackBufferWidth / xScale);
                 yScale = (float)height / ((float)XboxBackBufferHeight / yScale);
 
@@ -5271,10 +5269,6 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 EmuDestRect.right += (LONG)((g_HostBackBufferDesc.Width - width) / 2);
                 EmuDestRect.bottom += (LONG)((g_HostBackBufferDesc.Height - height) / 2);
 			} else {
-				// Use backbuffer width/height since that may differ from the Window size
-                const auto width = g_AspectRatioScaleWidth * g_AspectRatioScale;
-                const auto height = g_AspectRatioScaleHeight * g_AspectRatioScale;
-
                 // Calculate the centered rectangle
                 EmuDestRect.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
                 EmuDestRect.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
