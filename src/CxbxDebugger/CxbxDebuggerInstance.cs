@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 
 namespace CxbxDebugger
 {
-    public partial class Form1 : Form, IDebugWindow
+    public partial class CxbxDebuggerInstance : Form, IDebugWindow
     {
         Thread DebuggerWorkerThread;
         Debugger DebuggerInst;
@@ -39,7 +39,7 @@ namespace CxbxDebugger
 
         List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
-        public Form1(string[] args)
+        public CxbxDebuggerInstance(string[] args)
         {
             InitializeComponent();
 
@@ -397,12 +397,12 @@ namespace CxbxDebugger
             IDebuggerExceptionEvents,
             IDebuggerFileEvents
         {
-            Form1 frm;
+            CxbxDebuggerInstance frm;
 
 
 
 
-            public DebuggerFormEvents(Form1 main)
+            public DebuggerFormEvents(CxbxDebuggerInstance main)
             {
                 frm = main;
             }

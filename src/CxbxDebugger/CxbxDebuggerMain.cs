@@ -98,12 +98,12 @@ namespace CxbxDebugger
 
         private IDebugWindow CreateNewSessionWindow(string[] Arguments)
         {
-            Form childForm = new Form1(Arguments);
+            var childForm = new CxbxDebuggerInstance(Arguments);
             childForm.MdiParent = this;
             childForm.WindowState = FormWindowState.Maximized;
             childForm.Show();
 
-            return childForm as IDebugWindow;
+            return childForm;
         }
     }
 }

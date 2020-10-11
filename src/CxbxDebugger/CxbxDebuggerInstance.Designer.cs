@@ -1,6 +1,6 @@
 ﻿namespace CxbxDebugger
 {
-    partial class Form1
+    partial class CxbxDebuggerInstance
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CxbxDebuggerInstance));
             this.tabContainer = new System.Windows.Forms.TabControl();
             this.tabSummary = new System.Windows.Forms.TabPage();
             this.linkLabel3 = new System.Windows.Forms.LinkLabel();
@@ -170,7 +170,7 @@
             this.tabSummary.Controls.Add(this.label7);
             this.tabSummary.Location = new System.Drawing.Point(4, 22);
             this.tabSummary.Name = "tabSummary";
-            this.tabSummary.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabSummary.Padding = new System.Windows.Forms.Padding(3);
             this.tabSummary.Size = new System.Drawing.Size(726, 305);
             this.tabSummary.TabIndex = 6;
             this.tabSummary.Text = "Summary";
@@ -232,7 +232,7 @@
             this.tabDisassembly.Controls.Add(this.splitContainer2);
             this.tabDisassembly.Location = new System.Drawing.Point(4, 22);
             this.tabDisassembly.Name = "tabDisassembly";
-            this.tabDisassembly.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabDisassembly.Padding = new System.Windows.Forms.Padding(3);
             this.tabDisassembly.Size = new System.Drawing.Size(726, 305);
             this.tabDisassembly.TabIndex = 0;
             this.tabDisassembly.Text = "Disassembly";
@@ -348,7 +348,7 @@
             this.tabBreakpoints.Controls.Add(this.splitContainer3);
             this.tabBreakpoints.Location = new System.Drawing.Point(4, 22);
             this.tabBreakpoints.Name = "tabBreakpoints";
-            this.tabBreakpoints.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabBreakpoints.Padding = new System.Windows.Forms.Padding(3);
             this.tabBreakpoints.Size = new System.Drawing.Size(726, 305);
             this.tabBreakpoints.TabIndex = 1;
             this.tabBreakpoints.Text = "Breakpoints";
@@ -369,7 +369,7 @@
             // 
             this.splitContainer3.Panel2.Controls.Add(this.clbBreakpoints);
             this.splitContainer3.Size = new System.Drawing.Size(720, 299);
-            this.splitContainer3.SplitterDistance = 237;
+            this.splitContainer3.SplitterDistance = 236;
             this.splitContainer3.TabIndex = 5;
             // 
             // groupBox4
@@ -381,7 +381,7 @@
             this.groupBox4.Controls.Add(this.cbBreakpointCxbx);
             this.groupBox4.Location = new System.Drawing.Point(2, 112);
             this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(233, 185);
+            this.groupBox4.Size = new System.Drawing.Size(232, 185);
             this.groupBox4.TabIndex = 5;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Interrupts";
@@ -419,7 +419,7 @@
             this.groupBox1.Controls.Add(this.tbFilter);
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(233, 106);
+            this.groupBox1.Size = new System.Drawing.Size(232, 106);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "File Watch";
@@ -432,7 +432,7 @@
             this.cbAction.FormattingEnabled = true;
             this.cbAction.Location = new System.Drawing.Point(89, 45);
             this.cbAction.Name = "cbAction";
-            this.cbAction.Size = new System.Drawing.Size(137, 21);
+            this.cbAction.Size = new System.Drawing.Size(136, 21);
             this.cbAction.TabIndex = 6;
             // 
             // label5
@@ -459,7 +459,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.btnAddFileBp.Location = new System.Drawing.Point(89, 72);
             this.btnAddFileBp.Name = "btnAddFileBp";
-            this.btnAddFileBp.Size = new System.Drawing.Size(137, 23);
+            this.btnAddFileBp.Size = new System.Drawing.Size(136, 23);
             this.btnAddFileBp.TabIndex = 4;
             this.btnAddFileBp.Text = "Add";
             this.btnAddFileBp.UseVisualStyleBackColor = true;
@@ -471,7 +471,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbFilter.Location = new System.Drawing.Point(89, 19);
             this.tbFilter.Name = "tbFilter";
-            this.tbFilter.Size = new System.Drawing.Size(137, 20);
+            this.tbFilter.Size = new System.Drawing.Size(136, 20);
             this.tbFilter.TabIndex = 2;
             // 
             // clbBreakpoints
@@ -480,7 +480,7 @@
             this.clbBreakpoints.FormattingEnabled = true;
             this.clbBreakpoints.Location = new System.Drawing.Point(0, 0);
             this.clbBreakpoints.Name = "clbBreakpoints";
-            this.clbBreakpoints.Size = new System.Drawing.Size(479, 299);
+            this.clbBreakpoints.Size = new System.Drawing.Size(480, 299);
             this.clbBreakpoints.TabIndex = 0;
             this.clbBreakpoints.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbBreakpoints_ItemCheck);
             this.clbBreakpoints.KeyDown += new System.Windows.Forms.KeyEventHandler(this.clbBreakpoints_KeyDown);
@@ -490,7 +490,7 @@
             this.tabWatch.Controls.Add(this.splitContainer1);
             this.tabWatch.Location = new System.Drawing.Point(4, 22);
             this.tabWatch.Name = "tabWatch";
-            this.tabWatch.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabWatch.Padding = new System.Windows.Forms.Padding(3);
             this.tabWatch.Size = new System.Drawing.Size(726, 305);
             this.tabWatch.TabIndex = 2;
             this.tabWatch.Text = "File Watcher";
@@ -559,7 +559,7 @@
             this.tabMemory.Controls.Add(this.splitContainer4);
             this.tabMemory.Location = new System.Drawing.Point(4, 22);
             this.tabMemory.Name = "tabMemory";
-            this.tabMemory.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabMemory.Padding = new System.Windows.Forms.Padding(3);
             this.tabMemory.Size = new System.Drawing.Size(726, 305);
             this.tabMemory.TabIndex = 4;
             this.tabMemory.Text = "Memory Viewer";
@@ -724,7 +724,7 @@
             this.tabTweaks.Controls.Add(this.tabCEContainer);
             this.tabTweaks.Location = new System.Drawing.Point(4, 22);
             this.tabTweaks.Name = "tabTweaks";
-            this.tabTweaks.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabTweaks.Padding = new System.Windows.Forms.Padding(3);
             this.tabTweaks.Size = new System.Drawing.Size(726, 305);
             this.tabTweaks.TabIndex = 5;
             this.tabTweaks.Text = "Memory Editor";
@@ -746,7 +746,7 @@
             this.tabSubData.Controls.Add(this.splitContainer6);
             this.tabSubData.Location = new System.Drawing.Point(4, 22);
             this.tabSubData.Name = "tabSubData";
-            this.tabSubData.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabSubData.Padding = new System.Windows.Forms.Padding(3);
             this.tabSubData.Size = new System.Drawing.Size(712, 273);
             this.tabSubData.TabIndex = 0;
             this.tabSubData.Text = "Edit Data";
@@ -770,7 +770,7 @@
             // 
             this.splitContainer6.Panel2.Controls.Add(this.lvCEMemory);
             this.splitContainer6.Size = new System.Drawing.Size(706, 267);
-            this.splitContainer6.SplitterDistance = 56;
+            this.splitContainer6.SplitterDistance = 55;
             this.splitContainer6.TabIndex = 2;
             // 
             // btnRefresh
@@ -826,7 +826,7 @@
             this.lvCEMemory.Location = new System.Drawing.Point(0, 0);
             this.lvCEMemory.MultiSelect = false;
             this.lvCEMemory.Name = "lvCEMemory";
-            this.lvCEMemory.Size = new System.Drawing.Size(706, 207);
+            this.lvCEMemory.Size = new System.Drawing.Size(706, 208);
             this.lvCEMemory.TabIndex = 1;
             this.lvCEMemory.UseCompatibleStateImageBehavior = false;
             this.lvCEMemory.View = System.Windows.Forms.View.Details;
@@ -856,8 +856,8 @@
             this.tabSubAssembly.Controls.Add(this.lvCEAssembly);
             this.tabSubAssembly.Location = new System.Drawing.Point(4, 22);
             this.tabSubAssembly.Name = "tabSubAssembly";
-            this.tabSubAssembly.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-            this.tabSubAssembly.Size = new System.Drawing.Size(715, 277);
+            this.tabSubAssembly.Padding = new System.Windows.Forms.Padding(3);
+            this.tabSubAssembly.Size = new System.Drawing.Size(712, 273);
             this.tabSubAssembly.TabIndex = 1;
             this.tabSubAssembly.Text = "Edit Assembly";
             this.tabSubAssembly.UseVisualStyleBackColor = true;
@@ -875,7 +875,7 @@
             this.lvCEAssembly.Location = new System.Drawing.Point(3, 3);
             this.lvCEAssembly.MultiSelect = false;
             this.lvCEAssembly.Name = "lvCEAssembly";
-            this.lvCEAssembly.Size = new System.Drawing.Size(709, 271);
+            this.lvCEAssembly.Size = new System.Drawing.Size(706, 267);
             this.lvCEAssembly.TabIndex = 4;
             this.lvCEAssembly.UseCompatibleStateImageBehavior = false;
             this.lvCEAssembly.View = System.Windows.Forms.View.Details;
@@ -905,7 +905,7 @@
             this.tabOutput.Controls.Add(this.splitContainer5);
             this.tabOutput.Location = new System.Drawing.Point(4, 22);
             this.tabOutput.Name = "tabOutput";
-            this.tabOutput.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.tabOutput.Padding = new System.Windows.Forms.Padding(3);
             this.tabOutput.Size = new System.Drawing.Size(726, 305);
             this.tabOutput.TabIndex = 3;
             this.tabOutput.Text = "Debug Output";
@@ -972,14 +972,14 @@
             this.diagBrowseCT.Filter = "Cheat Engine Tables (*.CT)|*.ct";
             this.diagBrowseCT.Title = "Load cheat table";
             // 
-            // Form1
+            // CxbxDebuggerInstance
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(734, 331);
             this.Controls.Add(this.tabContainer);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "Form1";
+            this.Name = "CxbxDebuggerInstance";
             this.Text = "unnamed instance";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.tabContainer.ResumeLayout(false);

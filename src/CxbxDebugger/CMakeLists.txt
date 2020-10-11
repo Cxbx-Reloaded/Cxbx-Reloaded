@@ -37,10 +37,10 @@ file (GLOB SOURCES
  "${CXBXR_DEBUGGER_SRC_DIR}/DebugOutputManager.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/FileEventManager.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/FileWatchManager.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.Designer.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/IDebugWindow.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerInstance.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerInstance.Designer.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerInstance.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.resx"
@@ -101,9 +101,9 @@ file (GLOB PROPERTIES
 )
 
 csharp_set_windows_forms_properties(
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.Designer.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
- "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerInstance.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerInstance.Designer.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerInstance.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.resx"
@@ -113,7 +113,9 @@ csharp_set_designer_cs_properties(
  ${PROPERTIES}
 )
 
-set_source_files_properties("${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
+set_source_files_properties(
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerInstance.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.cs"
  VS_CSHARP_SubType "Form"
 )
 
