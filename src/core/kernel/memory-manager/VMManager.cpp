@@ -336,17 +336,17 @@ void VMManager::RestorePersistentMemory()
 		memcpy(GetPteAddress(persisted_mem->Data[i]), &pte.Default, sizeof(MMPTE));
 		RemoveFree(1, &pfn, 0, pte.Hardware.PFN, pte.Hardware.PFN);
 		if (m_MmLayoutChihiro) {
-			memcpy(CHIHIRO_PFN_ELEMENT(pte.Hardware.PFN),
-				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 32) * KiB(1)])[pte.Hardware.PFN],
-				sizeof(XBOX_PFN));
+			PXBOX_PFN temp_pfn = &((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 32) * KiB(1)])[pte.Hardware.PFN];
+			m_PagesByUsage[temp_pfn->Busy.BusyType]++;
+			memcpy(CHIHIRO_PFN_ELEMENT(pte.Hardware.PFN), temp_pfn, sizeof(XBOX_PFN));
 			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)CHIHIRO_PFN_ADDRESS) {
 				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
 			}
 		}
 		else {
-			memcpy(XBOX_PFN_ELEMENT(pte.Hardware.PFN),
-				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 16) * KiB(1)])[pte.Hardware.PFN],
-				sizeof(XBOX_PFN));
+			PXBOX_PFN temp_pfn = &((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 16) * KiB(1)])[pte.Hardware.PFN];
+			m_PagesByUsage[temp_pfn->Busy.BusyType]++;
+			memcpy(XBOX_PFN_ELEMENT(pte.Hardware.PFN), temp_pfn, sizeof(XBOX_PFN));
 			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)XBOX_PFN_ADDRESS) {
 				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
 			}
