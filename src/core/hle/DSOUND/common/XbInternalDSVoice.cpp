@@ -117,7 +117,7 @@ uint32_t GetVolume(T& settings)
 
 // Interface for set volume
 template<class T>
-void SetVolume(T& settings, uint32_t volume)
+void SetVolume(T& settings, int32_t volume)
 {
     settings.volume = volume - settings.headroom;
 }
@@ -133,7 +133,7 @@ uint32_t GetHeadroom(T& settings)
 template<class T>
 void SetHeadroom(T& settings, uint32_t set_headroom)
 {
-    settings.volume = settings.volume - set_headroom - settings.headroom;
+    settings.volume = settings.volume + settings.headroom - set_headroom;
     settings.headroom = set_headroom;
 }
 

@@ -493,7 +493,7 @@ xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SetMixBinHeadroom)
 xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMixBins)
 (
     XbHybridDSBuffer*       pHybridThis,
-    dword_xt                   dwMixBinMask
+    X_DSMIXBINBUNION  mixBins
 );
 
 // ******************************************************************
@@ -974,7 +974,7 @@ xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetI3DL2Source)
 xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    dword_xt                   dwMixBinMask
+    X_DSMIXBINBUNION  mixBins
 );
 
 // s+
@@ -1681,7 +1681,7 @@ xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetFrequency)
 xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundStream_SetMixBins)
 (
     X_CDirectSoundStream*   pThis,
-    dword_xt                   dwMixBinMask);
+    X_DSMIXBINBUNION  mixBins);
 
 // ******************************************************************
 // * patch:  CDirectSound3DCalculator_Calculate3D

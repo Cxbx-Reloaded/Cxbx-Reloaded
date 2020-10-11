@@ -38,5 +38,35 @@ namespace xbox {
         return 2; // Default to stereo channel
     }
 
+    // A helper class, converting old (pre-XDK 4039) mixbin format to the new (XDK 4039 and newer) format
+    class CMixBinConverter
+    {
+    public:
+        CMixBinConverter(xbox::dword_xt dwMixBinMask, const xbox::long_xt* alVolumes) {
+
+            if (dwMixBinMask != 0) {
+                for (unsigned int i = 0; i < 32; i++) {
+                    if ((dwMixBinMask & (1 << i)) != 0) {
+                        xbox::X_DSMIXBINVOLUMEPAIR pair { i, alVolumes != nullptr ? *alVolumes++ : 0 };
+                        m_volumePairs.emplace_back(pair);
+                    }
+                }
+
+                m_mixBins.dwCount = static_cast<xbox::dword_xt>(m_volumePairs.size());
+                m_mixBins.lpMixBinVolumePairs = m_volumePairs.data();
+            }
+            else {
+                m_mixBins.dwCount = 0;
+                m_mixBins.lpMixBinVolumePairs = nullptr;
+            }
+        }
+
+        xbox::X_LPDSMIXBINS GetMixBins() { return m_mixBins.dwCount != 0 ? &m_mixBins : nullptr; }
+
+    private:
+        std::vector<xbox::X_DSMIXBINVOLUMEPAIR> m_volumePairs;
+        xbox::X_DSMIXBINS m_mixBins;
+    };
+
     }
 }

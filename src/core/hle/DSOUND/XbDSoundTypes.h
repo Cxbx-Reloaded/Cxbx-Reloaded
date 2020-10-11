@@ -85,6 +85,12 @@ typedef struct _XDSMIXBINS {
     X_LPDSMIXBINVOLUMEPAIR     lpMixBinVolumePairs;
 } X_DSMIXBINS, *X_LPDSMIXBINS;
 
+// A convenience union combining Revision 1 (3911-4034) and Revision 2 (4039+) mixbin function parameters
+union X_DSMIXBINBUNION {
+    dword_xt      dwMixBinMask;
+    X_LPDSMIXBINS pMixBins;
+};
+
 // EmuIDirectSoundBuffer_Play flags
 #define X_DSBPLAY_LOOPING       0x00000001
 #define X_DSBPLAY_FROMSTART     0x00000002
@@ -149,7 +155,7 @@ struct X_DSBUFFERDESC
     dword_xt           dwFlags;
     dword_xt           dwBufferBytes;
     LPWAVEFORMATEX  lpwfxFormat;
-    X_LPDSMIXBINS   lpMixBinsOutput;
+    X_DSMIXBINBUNION   mixBinsOutput;
     dword_xt           dwInputMixBin;
 };
 
@@ -190,7 +196,7 @@ struct X_DSSTREAMDESC
     LPWAVEFORMATEX              lpwfxFormat;
     LPFNXMOCALLBACK             lpfnCallback;
     LPVOID                      lpvContext;
-    X_LPDSMIXBINS               lpMixBinsOutput;
+    X_DSMIXBINBUNION               mixBinsOutput;
 };
 
 // ******************************************************************
