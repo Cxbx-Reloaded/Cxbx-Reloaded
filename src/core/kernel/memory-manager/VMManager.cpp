@@ -330,26 +330,38 @@ void VMManager::RestorePersistentMemory()
 
 	MMPTE pte;
 	PFN pfn;
+	size_t pfn_num_pages;
+	uint32_t *pfn_addr;
+	if (m_MmLayoutRetail) {
+		pfn_addr = (uint32_t *)XBOX_PFN_ADDRESS;
+		pfn_num_pages = 16;
+	}
+	else if (m_MmLayoutDebug) {
+		pfn_addr = (uint32_t *)XBOX_PFN_ADDRESS;
+		pfn_num_pages = 32;
+	}
+	else {
+		pfn_addr = (uint32_t *)CHIHIRO_PFN_ADDRESS;
+		pfn_num_pages = 32;
+	}
+
 	for (unsigned int i = 0; i < persisted_mem->NumOfPtes; i++) {
 		pte.Default = persisted_mem->Data[persisted_mem->NumOfPtes + i];
 		assert(pte.Hardware.Valid != 0 && pte.Hardware.Persist != 0);
 		memcpy(GetPteAddress(persisted_mem->Data[i]), &pte.Default, sizeof(MMPTE));
 		RemoveFree(1, &pfn, 0, pte.Hardware.PFN, pte.Hardware.PFN);
+		PXBOX_PFN temp_pfn = &((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - pfn_num_pages) * KiB(1)])[pte.Hardware.PFN];
+		m_PagesByUsage[temp_pfn->Busy.BusyType]++;
+
 		if (m_MmLayoutChihiro) {
-			PXBOX_PFN temp_pfn = &((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 32) * KiB(1)])[pte.Hardware.PFN];
-			m_PagesByUsage[temp_pfn->Busy.BusyType]++;
 			memcpy(CHIHIRO_PFN_ELEMENT(pte.Hardware.PFN), temp_pfn, sizeof(XBOX_PFN));
-			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)CHIHIRO_PFN_ADDRESS) {
-				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
-			}
 		}
 		else {
-			PXBOX_PFN temp_pfn = &((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 16) * KiB(1)])[pte.Hardware.PFN];
-			m_PagesByUsage[temp_pfn->Busy.BusyType]++;
 			memcpy(XBOX_PFN_ELEMENT(pte.Hardware.PFN), temp_pfn, sizeof(XBOX_PFN));
-			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)XBOX_PFN_ADDRESS) {
-				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
-			}
+		}
+
+		if ((uint32_t *)persisted_mem->Data[i] < pfn_addr) {
+			memcpy((void *)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
 		}
 	}
 
