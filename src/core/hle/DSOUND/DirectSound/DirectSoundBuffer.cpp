@@ -756,9 +756,11 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetBufferData)
     HRESULT hRet = DSERR_OUTOFMEMORY;
     DWORD dwStatus;
 
-    // force wait until buffer is stop playing.
+    // stop and force wait until the buffer has stopped playing.
+    pThis->EmuDirectSoundBuffer8->Stop();
     pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
-    while ((dwStatus & DSBSTATUS_PLAYING) > 0) {
+    while ((dwStatus & DSBSTATUS_PLAYING) != 0) {
+        // TODO: Add a timeout, like on xbox
         SwitchToThread();
         pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
     }
