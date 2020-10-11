@@ -248,7 +248,7 @@ void VMManager::InitializeSystemAllocations()
 	}
 	addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
 
-	AllocateContiguousMemoryInternal(pfn_end - pfn + 1, pfn, pfn_end, 1, XBOX_PAGE_READWRITE);
+	AllocateContiguousMemoryInternal(pfn_end - pfn + 1, pfn, pfn_end, 1, XBOX_PAGE_READWRITE, UnknownType);
 	PersistMemory(addr, (pfn_end - pfn + 1) << PAGE_SHIFT, true);
 	if (m_MmLayoutDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
 
@@ -855,7 +855,7 @@ VAddr VMManager::AllocateContiguousMemory(size_t Size, PAddr LowestAddress, PAdd
 	RETURN(Addr);
 }
 
-VAddr VMManager::AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms)
+VAddr VMManager::AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms, PageType BusyType)
 {
 	MMPTE TempPte;
 	PMMPTE PointerPte;
@@ -884,7 +884,7 @@ VAddr VMManager::AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN L
 	EndingPte = PointerPte + NumberOfPages - 1;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
-	WritePfn(pfn, EndingPfn, PointerPte, ContiguousType);
+	WritePfn(pfn, EndingPfn, PointerPte, BusyType);
 	EndingPte->Hardware.GuardOrEnd = 1;
 
 	ConstructVMA(addr, NumberOfPages << PAGE_SHIFT, ContiguousRegion, AllocatedVma, false);

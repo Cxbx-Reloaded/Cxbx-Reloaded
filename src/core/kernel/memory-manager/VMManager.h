@@ -167,7 +167,7 @@ class VMManager : public PhysicalMemory
 		void* m_PersistentMemoryHandle = nullptr;
 
 		// same as AllocateContiguousMemory, but it allows to allocate beyond m_MaxContiguousPfn
-		VAddr AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms);
+		VAddr AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms, PageType BusyType = ContiguousType);
 		// set up the system allocations
 		void InitializeSystemAllocations();
 		// initializes a memory region struct
