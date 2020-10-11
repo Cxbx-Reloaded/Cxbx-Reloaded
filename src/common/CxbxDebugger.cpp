@@ -128,6 +128,7 @@ namespace CxbxDebugger
 		case Internal::KERNEL_PATCH:
 		case Internal::FILE_OPENED:
 		case Internal::FILE_READ:
+		case Internal::FILE_WRITE:
 		case Internal::FILE_CLOSED:
 		case Internal::DEBUGGER_INIT:
 		case Internal::DEBUGGER_NEW_TARGET:
