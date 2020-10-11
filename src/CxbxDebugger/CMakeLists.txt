@@ -40,6 +40,10 @@ file (GLOB SOURCES
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
+ "${CXBXR_DEBUGGER_SRC_DIR}/IDebugWindow.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.Designer.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.resx"
  "${CXBXR_DEBUGGER_SRC_DIR}/PatchManager.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Program.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Resources/BreakpointDisable_16x_24.bmp"
@@ -100,6 +104,9 @@ csharp_set_windows_forms_properties(
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.Designer.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.cs"
  "${CXBXR_DEBUGGER_SRC_DIR}/Form1.resx"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.Designer.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.cs"
+ "${CXBXR_DEBUGGER_SRC_DIR}/CxbxDebuggerMain.resx"
 )
 
 csharp_set_designer_cs_properties(
