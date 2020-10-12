@@ -444,7 +444,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstant)
     dword_xt       ConstantCount
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetVertexShaderConstant_8)();
+xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
+(
+    void*,
+    dword_xt    ConstantCount,
+    int_xt      Register,
+    CONST PVOID pConstantData
+);
+
 
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant1
@@ -617,6 +624,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture)
 (
     dword_xt           Stage,
 	X_D3DBaseTexture  *pTexture
+);
+
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+(
+	dword_xt           Stage
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4)
@@ -1372,6 +1384,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_8)
     uint_xt                Stride
 );
 
+xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber)
+(
+    void*,
+    uint_xt                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt                Stride
+);
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShader
 // ******************************************************************
@@ -1379,6 +1399,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader)
 (
     dword_xt            Handle
 );
+
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices
@@ -1408,6 +1430,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP)
     CONST PVOID         pVertexStreamZeroData,
     uint_xt                VertexStreamZeroStride
 );
+
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP_12)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    uint_xt                VertexCount,
+    uint_xt                VertexStreamZeroStride
+);
+
 
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVertices

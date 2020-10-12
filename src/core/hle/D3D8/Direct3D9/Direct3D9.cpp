@@ -294,8 +294,10 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource,         (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_4,       (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_8,       (xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                                    );  \
+    XB_MACRO(xbox::void_xt,               __fastcall, D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber, (void*, xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                         );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture,              (xbox::dword_xt, xbox::X_D3DBaseTexture*)                                                    );  \
-    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4,            (xbox::X_D3DBaseTexture*)                                                           );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4__LTCG_eax_pTexture, (xbox::dword_xt)                                                                             );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTexture_4,            (xbox::X_D3DBaseTexture*)                                                                    );  \
   /*XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetVertexShader,         (xbox::dword_xt)                                                                            );*/\
   /*XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetVertexShaderInput,    (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );*/\
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetViewport,             (CONST xbox::X_D3DVIEWPORT8*)                                                       );  \
@@ -4188,26 +4190,23 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_CreateVertexShader)
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
-// This uses a custom calling convention where parameter is passed in EDX
+// This uses a custom calling convention where ConstantCount parameter is passed in EDX
 // Test-case: Murakumo
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
+xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
 (
+    void*,
+    dword_xt    ConstantCount,
+    int_xt      Register,
+    CONST PVOID pConstantData
 )
 {
-	static uint32_t returnAddr;
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(pConstantData)
+		LOG_FUNC_ARG(ConstantCount)
+		LOG_FUNC_END;
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
-
-	__asm {
-		pop returnAddr
-		push edx
-		call EmuPatch_D3DDevice_SetVertexShaderConstant
-		mov eax, 0
-		push returnAddr
-		ret
-	}
+	CxbxImpl_SetVertexShaderConstant(Register, pConstantData, ConstantCount);
 }
 
 // ******************************************************************
@@ -4317,8 +4316,34 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
 }
 
 // LTCG specific D3DDevice_SetTexture function...
-// This uses a custom calling convention where parameter is passed in EAX
-// TODO: XB_trampoline plus Log function is not working due lost parameter in EAX.
+// This uses a custom calling convention where pTexture is passed in EAX
+// Test-case: NASCAR Heat 2002
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+(
+	dword_xt           Stage
+)
+{
+	X_D3DBaseTexture  *pTexture;
+	__asm mov pTexture, eax;
+
+	//LOG_FUNC_BEGIN
+	//	LOG_FUNC_ARG(Stage)
+	//	LOG_FUNC_ARG(pTexture)
+	//	LOG_FUNC_END;
+	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTexture_4__LTCG_eax_pTexture(Stage : %d pTexture : %08x);", Stage, pTexture);
+
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	__asm {
+		mov eax, pTexture
+		push Stage
+		call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+	}
+
+	g_pXbox_SetTexture[Stage] = pTexture;
+}
+
+// LTCG specific D3DDevice_SetTexture function...
+// This uses a custom calling convention where Stage is passed in EAX
 // Test-case: Metal Wolf Chaos
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 (
@@ -4335,7 +4360,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTexture_4(Stage : %d pTexture : %08x);", Stage, pTexture);
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	//XB_TRMP(D3DDevice_SetTexture_4)(pTexture);
+	__asm {
+		mov eax, Stage
+		push pTexture
+		call XB_TRMP(D3DDevice_SetTexture_4)
+	}
 
 	g_pXbox_SetTexture[Stage] = pTexture;
 }
@@ -6606,6 +6635,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_8)
 	//XB_TRMP(D3DDevice_SetStreamSource_8)(pStreamData, Stride);
 }
 
+// This uses a custom calling convention where StreamNumber parameter is passed in EDX
+// Test-case: NASCAR Heat 2002
+xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber)
+(
+    void*,
+    uint_xt                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt                Stride
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(StreamNumber)
+		LOG_FUNC_ARG(pStreamData)
+		LOG_FUNC_ARG(Stride)
+		LOG_FUNC_END;
+
+	CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+	// Forward to Xbox implementation
+	// This should stop us having to patch GetStreamSource!
+	XB_TRMP(D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber)(nullptr, StreamNumber, pStreamData, Stride);
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetStreamSource
 // ******************************************************************
@@ -6637,6 +6689,20 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
     dword_xt Handle
 )
 {
+	LOG_FUNC_ONE_ARG(Handle);
+
+	CxbxImpl_SetVertexShader(Handle);
+
+	UpdateViewPortOffsetAndScaleConstants();
+}
+
+// This uses a custom calling convention where Handle is passed in EBX
+// Test-case: NASCAR Heat 2002
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
+{
+	dword_xt Handle;
+	__asm mov Handle, ebx
+
 	LOG_FUNC_ONE_ARG(Handle);
 
 	CxbxImpl_SetVertexShader(Handle);
@@ -7429,6 +7495,24 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
     }
 
 	CxbxHandleXboxCallbacks();
+}
+
+// LTCG specific D3DDevice_DrawVerticesUP function...
+// This uses a custom calling convention where pVertexStreamZeroData is passed in EBX
+// Test-case: NASCAR Heat 20002
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    uint_xt                VertexCount,
+    uint_xt                VertexStreamZeroStride
+)
+{
+	PVOID         pVertexStreamZeroData;
+	__asm mov pVertexStreamZeroData, ebx
+
+	LOG_FORWARD("D3DDevice_DrawVerticesUP");
+
+	EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 }
 
 // ******************************************************************
