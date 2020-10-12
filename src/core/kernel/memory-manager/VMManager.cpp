@@ -248,7 +248,7 @@ void VMManager::InitializeSystemAllocations()
 	}
 	addr = (VAddr)CONVERT_PFN_TO_CONTIGUOUS_PHYSICAL(pfn);
 
-	AllocateContiguousMemoryInternal(pfn_end - pfn + 1, pfn, pfn_end, 1, XBOX_PAGE_READWRITE);
+	AllocateContiguousMemoryInternal(pfn_end - pfn + 1, pfn, pfn_end, 1, XBOX_PAGE_READWRITE, UnknownType);
 	PersistMemory(addr, (pfn_end - pfn + 1) << PAGE_SHIFT, true);
 	if (m_MmLayoutDebug) { m_PhysicalPagesAvailable += 16; m_DebuggerPagesAvailable -= 16; }
 
@@ -330,26 +330,38 @@ void VMManager::RestorePersistentMemory()
 
 	MMPTE pte;
 	PFN pfn;
+	size_t pfn_num_pages;
+	uint32_t *pfn_addr;
+	if (m_MmLayoutRetail) {
+		pfn_addr = (uint32_t *)XBOX_PFN_ADDRESS;
+		pfn_num_pages = 16;
+	}
+	else if (m_MmLayoutDebug) {
+		pfn_addr = (uint32_t *)XBOX_PFN_ADDRESS;
+		pfn_num_pages = 32;
+	}
+	else {
+		pfn_addr = (uint32_t *)CHIHIRO_PFN_ADDRESS;
+		pfn_num_pages = 32;
+	}
+
 	for (unsigned int i = 0; i < persisted_mem->NumOfPtes; i++) {
 		pte.Default = persisted_mem->Data[persisted_mem->NumOfPtes + i];
 		assert(pte.Hardware.Valid != 0 && pte.Hardware.Persist != 0);
 		memcpy(GetPteAddress(persisted_mem->Data[i]), &pte.Default, sizeof(MMPTE));
 		RemoveFree(1, &pfn, 0, pte.Hardware.PFN, pte.Hardware.PFN);
+		PXBOX_PFN temp_pfn = &((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - pfn_num_pages) * KiB(1)])[pte.Hardware.PFN];
+		m_PagesByUsage[temp_pfn->Busy.BusyType]++;
+
 		if (m_MmLayoutChihiro) {
-			memcpy(CHIHIRO_PFN_ELEMENT(pte.Hardware.PFN),
-				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 32) * KiB(1)])[pte.Hardware.PFN],
-				sizeof(XBOX_PFN));
-			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)CHIHIRO_PFN_ADDRESS) {
-				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
-			}
+			memcpy(CHIHIRO_PFN_ELEMENT(pte.Hardware.PFN), temp_pfn, sizeof(XBOX_PFN));
 		}
 		else {
-			memcpy(XBOX_PFN_ELEMENT(pte.Hardware.PFN),
-				&((PXBOX_PFN)&persisted_mem->Data[(persisted_mem->NumOfPtes * 2) + (persisted_mem->NumOfPtes - 16) * KiB(1)])[pte.Hardware.PFN],
-				sizeof(XBOX_PFN));
-			if ((uint32_t*)persisted_mem->Data[i] < (uint32_t*)XBOX_PFN_ADDRESS) {
-				memcpy((void*)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
-			}
+			memcpy(XBOX_PFN_ELEMENT(pte.Hardware.PFN), temp_pfn, sizeof(XBOX_PFN));
+		}
+
+		if ((uint32_t *)persisted_mem->Data[i] < pfn_addr) {
+			memcpy((void *)(persisted_mem->Data[i]), &persisted_mem->Data[persisted_mem->NumOfPtes * 2 + i * KiB(1)], PAGE_SIZE);
 		}
 	}
 
@@ -855,7 +867,7 @@ VAddr VMManager::AllocateContiguousMemory(size_t Size, PAddr LowestAddress, PAdd
 	RETURN(Addr);
 }
 
-VAddr VMManager::AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms)
+VAddr VMManager::AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms, PageType BusyType)
 {
 	MMPTE TempPte;
 	PMMPTE PointerPte;
@@ -884,7 +896,7 @@ VAddr VMManager::AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN L
 	EndingPte = PointerPte + NumberOfPages - 1;
 
 	WritePte(PointerPte, EndingPte, TempPte, pfn);
-	WritePfn(pfn, EndingPfn, PointerPte, ContiguousType);
+	WritePfn(pfn, EndingPfn, PointerPte, BusyType);
 	EndingPte->Hardware.GuardOrEnd = 1;
 
 	ConstructVMA(addr, NumberOfPages << PAGE_SHIFT, ContiguousRegion, AllocatedVma, false);
