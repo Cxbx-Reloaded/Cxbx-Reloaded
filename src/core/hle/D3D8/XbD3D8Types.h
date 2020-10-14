@@ -480,10 +480,10 @@ const int X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN          = 0x1233;
 const int X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN          = 0x2233;
 
 // Multisample masks (Cxbx additions)
-const int X_D3DMULTISAMPLE_YSCALE_MASK                             = 0x0003;
+const int X_D3DMULTISAMPLE_YSCALE_MASK                             = 0x000F;
 const int X_D3DMULTISAMPLE_YSCALE_SHIFT = 0;
 
-const int X_D3DMULTISAMPLE_XSCALE_MASK                             = 0x0030;
+const int X_D3DMULTISAMPLE_XSCALE_MASK                             = 0x00F0;
 const int X_D3DMULTISAMPLE_XSCALE_SHIFT = 4;
 
 const int X_D3DMULTISAMPLE_ALGO_LINEAR                           = 0x0000;

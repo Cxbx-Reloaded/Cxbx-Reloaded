@@ -173,6 +173,8 @@ static xbox::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbox::
        xbox::X_D3DSurface           *g_pXbox_RenderTarget = xbox::zeroptr;
 static xbox::X_D3DSurface           *g_pXbox_DepthStencil = xbox::zeroptr;
        xbox::X_D3DMULTISAMPLE_TYPE   g_Xbox_MultiSampleType = xbox::X_D3DMULTISAMPLE_NONE;
+static float                         g_Xbox_MultiSampleXScale = 1.0f;
+static float                         g_Xbox_MultiSampleYScale = 1.0f;
 
        xbox::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
 static xbox::dword_xt                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
@@ -2995,15 +2997,10 @@ static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
 	xOffset = yOffset = GetMultiSampleOffsetDelta();
 }
 
-static inline void GetMultiSampleScale(float& xScale, float& yScale)
-{
-	xScale = (float)CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType);
-	yScale = (float)CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType);
-}
-
 void GetMultiSampleOffsetAndScale(float& xScale, float& yScale, float& xOffset, float& yOffset)
 {
-	GetMultiSampleScale(xScale, yScale);
+	xScale = g_Xbox_MultiSampleXScale;
+	yScale = g_Xbox_MultiSampleYScale;
 	GetMultiSampleOffset(xOffset, yOffset);
 }
 
@@ -3016,16 +3013,38 @@ static void ApplyXboxMultiSampleOffset(float& x, float& y)
 
 static void ApplyXboxMultiSampleScale(float& x, float& y)
 {
-	float xs, ys;
-	GetMultiSampleScale(xs, ys);
-	x *= xs;
-	y *= ys;
+	x *= g_Xbox_MultiSampleXScale;
+	y *= g_Xbox_MultiSampleYScale;
 }
 
 void ApplyXboxMultiSampleOffsetAndScale(float& x, float& y)
 {
 	ApplyXboxMultiSampleScale(x, y);
 	ApplyXboxMultiSampleOffset(x, y);
+}
+
+void CalculateMultiSampleScaleForRenderTarget(xbox::X_D3DSurface* renderTarget)
+{
+	float xScale = 1.0f;
+	float yScale = 1.0f;
+	if (renderTarget == g_pXbox_BackBufferSurface && (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MASK) != 0) {
+		xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType));
+		yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType));
+		if (xScale > 3.0f || yScale > 3.0f) {
+			// No games known to do this, but XSCALE and YSCALE masks technically allow for it
+			LOG_TEST_CASE("g_Xbox_MultiSampleXScale or g_Xbox_MultiSampleYScale over 3");
+		}
+		// TODO: Buffers should not be upscaled when using multisampling
+		/*if ((g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) != 0) {
+			xScale /= 2.0f;
+			if (yScale > 1.0f) {
+				yScale /= 2.0f;
+			}
+		}*/
+	}
+
+	g_Xbox_MultiSampleXScale = xScale;
+	g_Xbox_MultiSampleYScale = yScale;
 }
 
 void Direct3D_CreateDevice_Start
@@ -3971,8 +3990,8 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 	// Since Width and Height are DWORD, subtracting MultiSampleOffset 0.0f or 0.5f makes no sense
 	//ViewPort.Width -= xOffset;
 	//ViewPort.Height -= yOffset;
-	ViewPort.Width /= (DWORD)xScale;
-	ViewPort.Height /= (DWORD)yScale;
+	ViewPort.Width = static_cast<DWORD>(ViewPort.Width / xScale);
+	ViewPort.Height = static_cast<DWORD>(ViewPort.Height / yScale);
 
     // Calculate Width/Height scale & offset
     float scaleWidth = (2.0f / ViewPort.Width) * g_RenderScaleFactor;
@@ -4101,10 +4120,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 	}
 
 	// Apply MSAA scale and offset
-	float xScale, yScale;
-	GetMultiSampleScale(xScale, yScale);
-	HostViewPort.Width *= (DWORD)xScale;
-	HostViewPort.Height *= (DWORD)yScale;
+	HostViewPort.Width = static_cast<DWORD>(HostViewPort.Width * g_Xbox_MultiSampleXScale);
+	HostViewPort.Height = static_cast<DWORD>(HostViewPort.Height * g_Xbox_MultiSampleYScale);
 	// Since Width and Height are DWORD, adding GetMultiSampleOffset 0.0f or 0.5f makes no sense
 
 	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
@@ -4984,12 +5001,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
     HRESULT hRet;
 
     if (pRects != nullptr) {
-        // Scale the fill based on our scale factor
-        D3DRECT rect = *pRects;
-        rect.x1 *= g_RenderScaleFactor;
-        rect.x2 *= g_RenderScaleFactor;
-        rect.y1 *= g_RenderScaleFactor;
-        rect.y2 *= g_RenderScaleFactor;
+        // Scale the fill based on our scale factor and MSAA scale
+        D3DRECT rect;
+        rect.x1 = static_cast<LONG>(pRects->x1 * g_Xbox_MultiSampleXScale * g_RenderScaleFactor);
+        rect.x2 = static_cast<LONG>(pRects->x2 * g_Xbox_MultiSampleXScale * g_RenderScaleFactor);
+        rect.y1 = static_cast<LONG>(pRects->y1 * g_Xbox_MultiSampleYScale * g_RenderScaleFactor);
+        rect.y2 = static_cast<LONG>(pRects->y2 * g_Xbox_MultiSampleYScale * g_RenderScaleFactor);
         hRet = g_pD3DDevice->Clear(Count, &rect, HostFlags, Color, Z, Stencil);
     } else {
         hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
@@ -5280,8 +5297,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 DWORD XboxBackBufferHeight = GetPixelContainerHeight(g_pXbox_BackBufferSurface);
 
 				// We also need to account for any MSAA which may have enlarged the Xbox Backbuffer
-				float xScale, yScale;
-				GetMultiSampleScale(xScale, yScale);
+				float xScale = g_Xbox_MultiSampleXScale;
+				float yScale = g_Xbox_MultiSampleYScale;
 
                 xScale = (float)width / ((float)XboxBackBufferWidth / xScale);
                 yScale = (float)height / ((float)XboxBackBufferHeight / yScale);
@@ -7801,6 +7818,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
     }
 
     UpdateViewPortOffsetAndScaleConstants();
+    CalculateMultiSampleScaleForRenderTarget(pRenderTarget);
 }
 
 // LTCG specific D3DDevice_SetPalette function...
