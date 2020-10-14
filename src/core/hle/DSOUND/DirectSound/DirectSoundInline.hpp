@@ -27,6 +27,7 @@
 #pragma once
 
 #include <mutex>
+#include <optional>
 
 #include "common/XADPCM.h"
 #include "core/hle/DSOUND/XbDSoundTypes.h"
@@ -1289,45 +1290,64 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
 {
     HRESULT hRet = DSERR_INVALIDPARAM;
 
-    if (pMixBins != xbox::zeroptr) {
-        DWORD counter = pMixBins->dwCount, count = pMixBins->dwCount;
-        LONG volume = 0;
-        if (pMixBins->lpMixBinVolumePairs != xbox::zeroptr) {
-            // Let's normalize audio level except for low frequency (subwoofer)
-            for (DWORD i = 0; i < count; i++) {
-                // Update the mixbin volume only, do not reassign volume pair array.
-                for (DWORD i = 0; i < count; i++) {
-                    const auto& it_in = pMixBins->lpMixBinVolumePairs[i];
-                    for (DWORD ii = 0; ii < Xb_VoiceProperties.dwMixBinCount; ii++) {
-                        auto& it_internal = Xb_VoiceProperties.MixBinVolumePairs[ii];
-
-                        // Once found a match, set the volume.
-                        // NOTE If titles input duplicate with different volume,
-                        //      it will override previous value.
-                        if (it_in.dwMixBin == it_internal.dwMixBin) {
-                            it_internal.lVolume = it_in.lVolume;
-                        }
-                    }
-                }
+    if (pMixBins != xbox::zeroptr && pMixBins->lpMixBinVolumePairs != xbox::zeroptr) {
+        std::optional<LONG> leftVolume, rightVolume, centerVolume;
+        // Let's normalize audio level except for low frequency (subwoofer)
+        for (DWORD i = 0; i < pMixBins->dwCount; i++) {
+            // Update the mixbin volume only, do not reassign volume pair array.
+            const auto& it_in = pMixBins->lpMixBinVolumePairs[i];
+            auto it_out = std::find_if(Xb_VoiceProperties.MixBinVolumePairs, Xb_VoiceProperties.MixBinVolumePairs+Xb_VoiceProperties.dwMixBinCount,
+                [&it_in](const auto& e) {
+                    return e.dwMixBin == it_in.dwMixBin;
+                });
+            // Once found a match, set the volume.
+            // NOTE If titles input duplicate with different volume,
+            //      it will override previous value.
+            if (it_out != Xb_VoiceProperties.MixBinVolumePairs+Xb_VoiceProperties.dwMixBinCount) {
+                it_out->lVolume = it_in.lVolume;
+            }
 
 #if 0 // This code isn't ideal for DirectSound, since it's not possible to set volume for each speakers.
-                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY
-                    // We only want to focus on speaker volumes, nothing else.
-                    && pMixBins->lpMixBinVolumePairs[i].dwMixBin < XDSMIXBIN_SPEAKERS_MAX) {
+            if (pMixBins->lpMixBinVolumePairs[i].dwMixBin != XDSMIXBIN_LOW_FREQUENCY
+                // We only want to focus on speaker volumes, nothing else.
+                && pMixBins->lpMixBinVolumePairs[i].dwMixBin < XDSMIXBIN_SPEAKERS_MAX) {
 #endif
-                if (pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_LEFT
-                    // We only want to focus on front speaker volumes, nothing else.
-                    || pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_RIGHT) {
-                    volume += pMixBins->lpMixBinVolumePairs[i].lVolume;
-                } else {
-                    counter--;
-                }
+            // We only want to focus on front speaker volumes, nothing else.
+            if (pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_LEFT) {
+                leftVolume = it_in.lVolume;
+            }
+            else if (pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_RIGHT) {
+                rightVolume = it_in.lVolume;
+            }
+            else if (pMixBins->lpMixBinVolumePairs[i].dwMixBin == XDSMIXBIN_FRONT_CENTER) {
+                centerVolume = it_in.lVolume;
+            }
+        }
+
+        // If the sound is mono and muted left/right volumes, use the center volume (and log as a test case)
+        // else, use left/right volumes (if they exist)
+        if (Xb_Voice->GetFormat().nChannels == 1 &&
+            leftVolume.value_or(DSBVOLUME_MIN) <= DSBVOLUME_MIN && rightVolume.value_or(DSBVOLUME_MIN) <= DSBVOLUME_MIN) {
+            LOG_TEST_CASE("Mono sound with volume set on a center mixbin channel");
+            Xb_volumeMixBin = centerVolume.value_or(DSBVOLUME_MIN);
+            int32_t Xb_volume = Xb_Voice->GetVolume() + Xb_Voice->GetHeadroom();
+            hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags,
+                                                        Xb_volumeMixBin, Xb_Voice);
+        } else {
+            LONG counter = 0, volume = 0;
+            if (leftVolume.has_value()) {
+                volume += *leftVolume;
+                counter++;
+            }
+            if (rightVolume.has_value()) {
+                volume += *rightVolume;
+                counter++;
             }
             if (counter > 0) {
-                Xb_volumeMixBin = volume / (LONG)counter;
+                Xb_volumeMixBin = volume / counter;
                 int32_t Xb_volume = Xb_Voice->GetVolume() + Xb_Voice->GetHeadroom();
                 hRet = HybridDirectSoundBuffer_SetVolume(pDSBuffer, Xb_volume, EmuFlags,
-                                                         Xb_volumeMixBin, Xb_Voice);
+                                                            Xb_volumeMixBin, Xb_Voice);
             } else {
                 hRet = DS_OK;
             }
