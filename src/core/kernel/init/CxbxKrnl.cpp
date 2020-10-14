@@ -458,9 +458,9 @@ void PatchRdtsc(xbox::addr_xt addr)
 }
 
 const uint8_t rdtsc_pattern[] = {
-	0x89,//{ 0x0F,0x31,0x89 },
+	0x89,//{ 0x0F,0x31,0x89 },   // two false positives in Stranger's Wrath
 	0xC3,//{ 0x0F,0x31,0xC3 },
-	0x8B,//{ 0x0F,0x31,0x8B },   //one false positive in Sonic Rider .text 88 5C 0F 31
+	0x8B,//{ 0x0F,0x31,0x8B },   // one false positive in Sonic Rider .text 88 5C 0F 31, two false positives in Stranger's Wrath
 	0xB9,//{ 0x0F,0x31,0xB9 },
 	0xC7,//{ 0x0F,0x31,0xC7 },
 	0x8D,//{ 0x0F,0x31,0x8D },
@@ -479,7 +479,7 @@ const uint8_t rdtsc_pattern[] = {
 	0x85,//{ 0x0F,0x31,0x85 },
 	0x83,//{ 0x0F,0x31,0x83 },
 	0x33,//{ 0x0F,0x31,0x33 },
-	0xF7,//{ 0x0F,0x31,0xF7 },
+	0xF7,//{ 0x0F,0x31,0xF7 }, // one false positive in Stranger's Wrath
 	0x8A,//{ 0x0F,0x31,0x8A }, // 8A and 56 only apears in RalliSport 2 .text , need to watch whether any future false positive.
 	0x56,//{ 0x0F,0x31,0x56 }
     0x6A,                      // 6A, 39, EB, F6, A1, 01 only appear in Unreal Championship, 01 is at WMVDEC section
@@ -537,6 +537,20 @@ void PatchRdtscInstructions()
 								continue;
 							}
 
+							if (*(uint8_t *)(addr - 2) == 0x24 && *(uint8_t *)(addr - 1) == 0x0C)
+							{
+								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
+								continue;
+							}
+						}
+						if (next_byte == 0x89)
+						{
+							if (*(uint8_t *)(addr - 2) == 0x24 && *(uint8_t *)(addr - 1) == 0x04)
+							{
+								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
+								continue;
+							}
+
 						}
 						if (next_byte == 0x50)
 						{
@@ -550,6 +564,15 @@ void PatchRdtscInstructions()
 						if (next_byte == 0x01)
 						{
 							if (*(uint8_t*)(addr - 1) == 0xE8 && *(uint8_t*)(addr + 3) == 0x00)
+							{
+								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
+								continue;
+							}
+
+						}
+						if (next_byte == 0xF7)
+						{
+							if (*(uint8_t *)(addr - 1) == 0xE8 && *(uint8_t *)(addr + 3) == 0xFF)
 							{
 								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
 								continue;
