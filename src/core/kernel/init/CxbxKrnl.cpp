@@ -545,7 +545,7 @@ void PatchRdtscInstructions()
 						}
 						if (next_byte == 0x89)
 						{
-							if (*(uint8_t *)(addr - 2) == 0x24 && *(uint8_t *)(addr - 1) == 0x04)
+							if (*(uint8_t *)(addr + 4) == 0x8B && *(uint8_t *)(addr - 5) == 0x04)
 							{
 								EmuLogInit(LOG_LEVEL::INFO, "Skipped false positive: rdtsc pattern  0x%.2X, @ 0x%.8X", next_byte, (DWORD)addr);
 								continue;
