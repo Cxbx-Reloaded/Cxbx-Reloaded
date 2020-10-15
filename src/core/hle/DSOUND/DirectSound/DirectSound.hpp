@@ -994,7 +994,7 @@ xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMaxDistance)
 xbox::hresult_xt WINAPI EMUPATCH(IDirectSoundBuffer_SetMinDistance)
 (
     XbHybridDSBuffer*       pHybridThis,
-    float_xt                   flMaxDistance,
+    float_xt                   flMinDistance,
     dword_xt                   dwApply
 );
 
