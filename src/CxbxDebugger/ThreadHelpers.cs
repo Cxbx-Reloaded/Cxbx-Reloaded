@@ -345,6 +345,10 @@ namespace CxbxDebugger
         /// <summary>
         /// 
         /// </summary>
+        StatusHandleNotClosable = 0xC0000235,
+        /// <summary>
+        /// 
+        /// </summary>
         GuardPageViolation = 0x80000001,
         /// <summary>
         /// 

@@ -18,6 +18,7 @@ namespace CxbxDebugger
             Application.SetCompatibleTextRenderingDefault(false);
 
             string[] args = Environment.GetCommandLineArgs();
+#if !DEBUG
             if( args.Length == 1 )
             {
                 // TODO: Valid usage message
@@ -25,8 +26,9 @@ namespace CxbxDebugger
                 Application.Exit();
             }
             else
+#endif
             {
-                Application.Run(new Form1());
+                Application.Run(new CxbxDebuggerMain(args));
             }
         }
     }

@@ -46,6 +46,7 @@
 #include "common/util/strConverter.hpp" // for utf16_to_ascii
 #include "core\kernel\memory-manager\VMManager.h"
 #include "common/util/cliConfig.hpp"
+#include "common/CxbxDebugger.h"
 
 #include <algorithm> // for std::replace
 #include <locale>
@@ -588,11 +589,31 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 				g_VMManager.SavePersistentMemory();
 
 				// Some titles (Xbox Dashboard and retail/demo discs) use ";" as a current directory path seperator
-				// This process is handled during initialization. No speical handling here required.
+				// This process is handled during initialization. No special handling here required.
 
 				cli_config::SetLoad(XbePath);
-				if (!CxbxExec(false, nullptr, false)) {
-					CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+
+				bool Debugging{ false };
+				g_EmuShared->GetDebuggingFlag(&Debugging);
+
+				if (Debugging)
+				{
+					std::string cliCommands;
+					if (!cli_config::GenCMD(cliCommands))
+					{
+						CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+					}
+
+					CxbxDebugger::ReportNewTarget(cliCommands.c_str());
+
+					// The debugger will execute this process
+				}
+				else
+				{
+					if (!CxbxExec(false, nullptr, false))
+					{
+						CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+					}
 				}
 
 				// This is a requirement to have shared memory buffers remain alive and transfer to new emulation process.

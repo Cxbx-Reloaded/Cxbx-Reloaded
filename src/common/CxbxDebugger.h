@@ -36,6 +36,7 @@ namespace CxbxDebugger
 	// Report helpers:
 
 	void ReportDebuggerInit(const char* XbeTitle);
+	void ReportNewTarget(const char* CommandLine);
 
 	void ReportHLECacheFile(const char* Filename);
 	void ReportKernelPatch(const char* ImportName, DWORD Address);

@@ -8,15 +8,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using cs_x86;
+using System.Runtime.InteropServices;
 
 namespace CxbxDebugger
 {
-    public partial class Form1 : Form
+    public partial class CxbxDebuggerInstance : Form, IDebugWindow
     {
         Thread DebuggerWorkerThread;
         Debugger DebuggerInst;
         string[] StartupArgs;
-        string CachedTitle = "";
         bool SuspendedOnBp = false;
 
         DebuggerFormEvents DebugEvents;
@@ -29,29 +29,45 @@ namespace CxbxDebugger
         DebugOutputManager debugStrMan;
         PatchManager patchMan;
 
+        IDebugContainerWindow DebugContainer
+        {
+            get
+            {
+                return MdiParent as IDebugContainerWindow;
+            }
+        }
+
+        DebugStateInfo StateInfo = new DebugStateInfo();
+
+        private void SetDebugState(DebugState State, string Detail = "")
+        {
+            DebugContainer.ReportStatus(this, State, Detail);
+
+            StateInfo.State = State;
+            StateInfo.Detail = Detail;
+        }
+
         List<DebuggerMessages.FileOpened> FileHandles = new List<DebuggerMessages.FileOpened>();
 
-        public Form1()
+        public CxbxDebuggerInstance(Form Owner, string[] args)
         {
             InitializeComponent();
 
-            // TODO: Cleanup arg handling
+            MdiParent = Owner;
 
-            string[] args = Environment.GetCommandLineArgs();
-
+#if !DEBUG
             // Arguments are expected before the Form is created
             if (args.Length < 2)
             {
                 throw new Exception("Incorrect usage");
             }
+#endif
 
-
-            StartupArgs = new string[args.Length - 1];
-            Array.Copy(args, 1, StartupArgs, 0, args.Length - 1);
+            StartupArgs = args;
 
             DebugEvents = new DebuggerFormEvents(this);
 
-            SetDebugProcessActive(false);
+            SetDebugState(DebugState.Unknown);
 
             txDisassembly.InlineLinkClicked += OnDisassemblyNavigation;
 
@@ -73,6 +89,8 @@ namespace CxbxDebugger
             fileWatchMan = new FileWatchManager(clbBreakpoints);
             debugStrMan = new DebugOutputManager(lbDebug);
             patchMan = new PatchManager();
+
+            CreateDebuggerOnce();
         }
 
         private void OnDisassemblyNavigation(object sender, InlineLinkClickedEventArgs e)
@@ -82,38 +100,85 @@ namespace CxbxDebugger
             ShowDisassemblyAt(e.Link);
         }
 
-        private void StartDebugging()
+        private void CreateDebuggerOnce()
         {
-            bool Create = false;
-
-            if (DebuggerWorkerThread == null)
-            {
-                // First launch
-                Create = true;
-            }
-            else if (DebuggerWorkerThread.ThreadState == ThreadState.Stopped)
-            {
-                // Further launches
-                Create = true;
-            }
-
-            if (Create)
+            if (DebuggerInst == null)
             {
                 // Create debugger instance
                 DebuggerInst = new Debugger(StartupArgs);
                 DebuggerInst.RegisterEventInterfaces(DebugEvents);
                 DebuggerInst.RegisterEventInterfaces(patchMan);
 
+                var TargetXbeName = ValidateXbeTargetName(DebuggerInst.TargetPath);
+                var TargetXbeValid = true;
+
+                if (string.IsNullOrEmpty(TargetXbeName))
+                {
+                    TargetXbeName = "<unknown>";
+                    TargetXbeValid = false;
+                }
+
+                if (InvokeRequired)
+                {
+                    // Set form title based on this new process
+                    Invoke(new MethodInvoker(delegate ()
+                    {
+                        Text = TargetXbeName;
+                    }));
+                }
+                else
+                {
+                    Text = TargetXbeName;
+                }
+
+                if (TargetXbeValid)
+                {
+                    SetDebugState(DebugState.Idle, $"{TargetXbeName} is waiting to start");
+                }
+            }
+        }
+
+        private string ValidateXbeTargetName(string XbePath)
+        {
+            var XbeName = Path.GetFileName(XbePath);
+
+            if (File.Exists(XbePath))
+            {
+                return XbeName;
+            }
+
+            // Cxbx CLI will pass through the path as a list of parameters, "dir;name"
+            if (XbeName.StartsWith(";"))
+            {
+                var CleanedXbePath = XbePath.Remove(XbePath.Length - XbeName.Length, 1);
+
+                if (File.Exists(CleanedXbePath))
+                {
+                    return XbeName.Substring(1);
+                }
+            }
+
+            return null;
+        }
+
+        private void StartDebugging()
+        {
+            if (GetSessionState() == SessionState.Inactive)
+            {
                 // Setup new debugger thread
                 DebuggerWorkerThread = new Thread(x =>
                 {
+                    CreateDebuggerOnce();
+
                     if (DebuggerInst.Launch())
                     {
                         DebuggerInst.RunThreaded();
                     }
                 });
 
-                DebuggerWorkerThread.Name = "CxbxDebugger";
+                var ProcessName = Path.GetFileName(DebuggerInst.TargetPath);
+
+                DebuggerWorkerThread.Name = $"DebuggerFor_{ProcessName}";
                 DebuggerWorkerThread.Start();
             }
         }
@@ -142,7 +207,7 @@ namespace CxbxDebugger
                 if (IsMainThread)
                     PrefixStr = "> ";
 
-                string DisplayStr = string.Format("{0}[{1}] ", PrefixStr, (uint)Thread.Handle);
+                var DisplayStr = $"{PrefixStr}[{(uint)Thread.Handle}]";
 
                 // Resolve thread name
 
@@ -202,7 +267,7 @@ namespace CxbxDebugger
 
         private void DebugLog(string Message)
         {
-            string MessageStamped = string.Format("[{0}] {1}", DateTime.Now.ToLongTimeString(), Message);
+            var MessageStamped = $"[{DateTime.Now.ToLongTimeString()}] {Message}";
 
             if (InvokeRequired)
             {
@@ -231,11 +296,11 @@ namespace CxbxDebugger
                     {
                         case FileEventType.Read:
                         case FileEventType.Write:
-                            string text = string.Format("{0} bytes", Event.Length.ToString());
+                            string text = $"{Event.Length} bytes";
 
                             if (Event.Offset != uint.MaxValue)
                             {
-                                text += string.Format(" from offset {0}", Event.Offset);
+                                text += $" from offset {Event.Offset}";
                             }
 
                             lvi.SubItems.Add(text);
@@ -276,7 +341,7 @@ namespace CxbxDebugger
                 {
                     Invoke(new MethodInvoker(delegate ()
                     {
-                        Suspend("file open");
+                        Suspend(DebugState.Breakpoint, "Hit file event");
                     }));
                 }
             }
@@ -286,12 +351,10 @@ namespace CxbxDebugger
         {
             Invoke(new MethodInvoker(delegate ()
             {
-                CachedTitle = Title;
-
-                Text = string.Format("{0} - Cxbx-Reloaded Debugger", CachedTitle);
+                DebugContainer.ReportGameTitle(Title);
 
                 // This is done too late - modules are already loaded
-                //LoadCheatTable(string.Format("{0}.ct", CachedTitle));
+                //LoadCheatTable($"{Title}.ct");
             }));
         }
 
@@ -325,7 +388,7 @@ namespace CxbxDebugger
                 else
                 {
                     string module_name = Path.GetFileName(Module.Path);
-                    Suspend(string.Format("Breakpoint hit in {0} at 0x{1:x}", module_name, Address));
+                    Suspend(DebugState.Breakpoint, string.Format("Breakpoint hit in {0} at 0x{1:x}", module_name, Address));
 
                     // Forces a refresh at the breakpoint address (not the callstack trace)
                     DumpDisassembly(Address);
@@ -340,35 +403,21 @@ namespace CxbxDebugger
             {
                 Invoke(new MethodInvoker(delegate ()
                 {
-                    // Disable when active
-                    btnStart.Enabled = !Active;
-
-                    // Enable when active
-                    btnSuspend.Enabled = Active;
-                    btnResume.Enabled = Active;
-
-                    lblStatus.Text = (Active ? "Running" : "Inactive");
+                    SetDebugState(Active ? DebugState.Running : DebugState.Terminated);
                 }));
             }
             else
             {
-                // Disable when active
-                btnStart.Enabled = !Active;
-
-                // Enable when active
-                btnSuspend.Enabled = Active;
-                btnResume.Enabled = Active;
-
-                lblStatus.Text = (Active ? "Running" : "Inactive");
+                SetDebugState(Active ? DebugState.Running : DebugState.Terminated);
             }
         }
 
         private void btnClearLog_Click(object sender, EventArgs e)
         {
-            lbConsole.Items.Clear();
+            //lbConsole.Items.Clear();
         }
 
-        class DebuggerFormEvents : IDebuggerGeneralEvents,
+        class DebuggerFormEvents : IDebuggerSessionEvents,
             IDebuggerProcessEvents,
             IDebuggerModuleEvents,
             IDebuggerThreadEvents,
@@ -376,9 +425,12 @@ namespace CxbxDebugger
             IDebuggerExceptionEvents,
             IDebuggerFileEvents
         {
-            Form1 frm;
+            CxbxDebuggerInstance frm;
 
-            public DebuggerFormEvents(Form1 main)
+
+
+
+            public DebuggerFormEvents(CxbxDebuggerInstance main)
             {
                 frm = main;
             }
@@ -393,8 +445,8 @@ namespace CxbxDebugger
             {
                 int remainingThreads = Process.Threads.Count;
 
-                frm.DebugLog(string.Format("Process exited {0} ({1})", Process.ProcessID, NtStatus.PrettyPrint(ExitCode)));
-                frm.DebugLog(string.Format("{0} child thread(s) remain open", remainingThreads));
+                frm.DebugLog($"Process exited {Process.ProcessID} ({NtStatus.PrettyPrint(ExitCode)})");
+                frm.DebugLog($"{remainingThreads} child thread(s) remain open");
 
                 frm.DebugModules.Clear();
 
@@ -422,36 +474,70 @@ namespace CxbxDebugger
 
             public void OnDebugTitleLoaded(string Title)
             {
-                frm.DebugLog(string.Format("Loaded title \"{0}\"", Title));
+                frm.DebugLog($"Loaded title \"{Title}\"");
                 frm.DebugTitle(Title);
+            }
+
+            // https://stackoverflow.com/a/749653
+            public static string[] CommandLineToArgs(string commandLine)
+            {
+                int argc;
+                var argv = VsChromium.Core.Win32.Processes.NativeMethods.CommandLineToArgvW(commandLine, out argc);
+                if (argv == IntPtr.Zero)
+                    throw new System.ComponentModel.Win32Exception();
+                try
+                {
+                    var args = new string[argc];
+                    for (var i = 0; i < args.Length; i++)
+                    {
+                        var p = Marshal.ReadIntPtr(argv, i * IntPtr.Size);
+                        args[i] = Marshal.PtrToStringUni(p);
+                    }
+
+                    return args;
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal(argv);
+                }
+            }
+
+            public void OnDebugTargetChanged(string CommandLine)
+            { 
+                frm.DebugLog($"New debug session started - {CommandLine}");
+
+                frm.Invoke(new MethodInvoker(delegate ()
+                {
+                    frm.DebugContainer.AddDebugSession(CommandLineToArgs(CommandLine), true);
+                }));
             }
 
             public void OnThreadCreate(DebuggerThread Thread)
             {
-                frm.DebugLog(string.Format("Thread created {0}", Thread.ThreadID));
+                frm.DebugLog($"Thread created {Thread.ThreadID}");
                 frm.DebugThreads.Add(Thread);
             }
 
             public void OnThreadExit(DebuggerThread Thread, uint ExitCode)
             {
-                frm.DebugLog(string.Format("Thread exited {0} ({1})", Thread.ThreadID, NtStatus.PrettyPrint(ExitCode)));
+                frm.DebugLog($"Thread exited {Thread.ThreadID} ({NtStatus.PrettyPrint(ExitCode)})");
                 frm.DebugThreads.Remove(Thread);
             }
 
             public void OnThreadNamed(DebuggerThread Thread)
             {
-                frm.DebugLog(string.Format("Thread {0} named {1}", Thread.ThreadID, Thread.DebugName));
+                frm.DebugLog($"Thread {Thread.ThreadID} named {Thread.DebugName}");
             }
 
             public void OnModuleLoaded(DebuggerModule Module)
             {
-                frm.DebugLog(string.Format("Loaded module \"{0}\"", Module.Path));
+                frm.DebugLog($"Loaded module \"{Module.Path}\"");
                 frm.DebugModules.Add(Module);
             }
 
             public void OnModuleUnloaded(DebuggerModule Module)
             {
-                frm.DebugLog(string.Format("Unloaded module \"{0}\"", Module.Path));
+                frm.DebugLog($"Unloaded module \"{Module.Path}\"");
                 frm.DebugModules.Remove(Module);
             }
 
@@ -471,7 +557,7 @@ namespace CxbxDebugger
                 }
 
                 // TODO Include GetLastError string
-                string ExceptionMessage = string.Format("Access violation thrown at 0x{0:X8} ({1})", Address, ProcessName);
+                var ExceptionMessage = string.Format("Access violation thrown at 0x{0:X8} ({1})", Address, ProcessName);
 
                 ExceptionMessage += string.Format("\n\nException code {0:X8}", Code);
 
@@ -501,13 +587,13 @@ namespace CxbxDebugger
                 if (Info.Succeeded)
                 {
                     frm.FileHandles.Add(Info);
-                    frm.DebugLog(string.Format("Opened file: \"{0}\"", Info.FileName));
+                    frm.DebugLog($"Opened file: \"{Info.FileName}\"");
 
                     frm.DebugFileEvent(FileEvents.Opened(Info.FileName));
                 }
                 else
                 {
-                    frm.DebugLog(string.Format("Opened file FAILED: \"{0}\"", Info.FileName));
+                    frm.DebugLog($"Opened file FAILED: \"{Info.FileName}\"");
 
                     frm.DebugFileEvent(FileEvents.OpenedFailed(Info.FileName));
                 }
@@ -518,7 +604,7 @@ namespace CxbxDebugger
                 var Found = frm.FileHandles.Find(FileInfo => FileInfo.Handle == Info.Handle);
                 if (Found != null)
                 {
-                    frm.DebugLog(string.Format("Reading {0} byte(s) from: {1}", Info.Length, Found.FileName));
+                    frm.DebugLog($"Reading {Info.Length} byte(s) from: {Found.FileName}");
                     frm.DebugFileEvent(FileEvents.Read(Found.FileName, Info.Length, Info.Offset));
                 }
             }
@@ -528,7 +614,7 @@ namespace CxbxDebugger
                 var Found = frm.FileHandles.Find(FileInfo => FileInfo.Handle == Info.Handle);
                 if (Found != null)
                 {
-                    frm.DebugLog(string.Format("Writing {0} byte(s) to: {1}", Info.Length, Found.FileName));
+                    frm.DebugLog($"Writing {Info.Length} byte(s) to: {Found.FileName}");
                     frm.DebugFileEvent(FileEvents.Write(Found.FileName, Info.Length, Info.Offset));
                 }
             }
@@ -542,17 +628,12 @@ namespace CxbxDebugger
 
                     frm.DebugFileEvent(FileEvents.Closed(Found.FileName));
 
-                    frm.DebugLog(string.Format("Closed file: \"{0}\"", Found.FileName));
+                    frm.DebugLog($"Closed file: \"{Found.FileName}\"");
                 }
             }
         }
 
-        private void toolStripButton1_Click(object sender, EventArgs e)
-        {
-            StartDebugging();
-        }
-
-        private void Suspend(string Reason)
+        private void Suspend(DebugState State, string Detail)
         {
             if (DebuggerInst != null)
             {
@@ -568,7 +649,7 @@ namespace CxbxDebugger
                 PopulateThreadList(cbThreads, null);
             }
 
-            lblStatus.Text = string.Format("Suspended ({0})", Reason);
+            SetDebugState(State, Detail);
 
             cbThreads.Enabled = true;
             cbFrames.Enabled = true;
@@ -589,20 +670,10 @@ namespace CxbxDebugger
                 }
             }
 
-            lblStatus.Text = "Running";
+            SetDebugState(DebugState.Running);
 
             cbThreads.Enabled = false;
             cbFrames.Enabled = false;
-        }
-
-        private void toolStripButton2_Click(object sender, EventArgs e)
-        {
-            Suspend("manually triggered");
-        }
-
-        private void toolStripButton3_Click(object sender, EventArgs e)
-        {
-            Resume();
         }
 
         struct CallstackInfo
@@ -737,8 +808,8 @@ namespace CxbxDebugger
             {
                 if (EP != 0)
                 {
-                    string LinkName = string.Format("{0} +{1:x}", Name, Address - EP);
-                    string Link = string.Format("0x{0:x8}", Address);
+                    var LinkName = string.Format("{0} +{1:x}", Name, Address - EP);
+                    var Link = string.Format("0x{0:x8}", Address);
 
                     tb.InsertLink(LinkName, Link);
                 }
@@ -829,9 +900,6 @@ namespace CxbxDebugger
 
         private void btnDumpMemory_Click(object sender, EventArgs e)
         {
-            if (DebuggerInst == null)
-                return;
-
             if (diagSaveMemory.ShowDialog() == DialogResult.OK)
             {
                 byte[] data = ReadMemory();
@@ -851,7 +919,7 @@ namespace CxbxDebugger
             int Index = cbThreads.SelectedIndex;
             if (Index == -1)
                 return;
-
+            
             CallstackDump.Clear();
             cbFrames.Items.Clear();
 
@@ -970,17 +1038,6 @@ namespace CxbxDebugger
             fileWatchMan.SetEnabled(e.Index, e.NewValue == CheckState.Checked);
         }
 
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        {
-            if (keyData == Keys.F5)
-            {
-                StartDebugging();
-                return true;
-            }
-
-            return false;
-        }
-
         private void HandleDisasmGo()
         {
             uint addr = 0;
@@ -1041,7 +1098,7 @@ namespace CxbxDebugger
             {
                 var li = lvCEMemory.Items.Add(string.Format("{0} 0x{1:x}", DataPatch.Module, DataPatch.Offset));
                 li.SubItems.Add(DataPatch.Name);
-                li.SubItems.Add(string.Format("{0} byte(s)", DataPatch.Patched.Length));
+                li.SubItems.Add($"{DataPatch.Patched.Length} byte(s)");
                 if (MainProcess != null)
                 {
                     li.SubItems.Add(patchMan.Read(MainProcess, DataPatch));
@@ -1100,7 +1157,7 @@ namespace CxbxDebugger
 
             if (File.Exists(filename))
             {
-                DebugLog(string.Format("Attempting to load \"{0}\"", filename));
+                DebugLog($"Attempting to load \"{filename}\"");
 
                 CheatEngine.CheatTable ct_data = CheatEngine.CheatTableReader.FromFile(filename);
                 if (ct_data != null)
@@ -1137,8 +1194,8 @@ namespace CxbxDebugger
                         patchMan.Assembly.Add(DataPatch);
                     }
 
-                    DebugLog(string.Format("Loaded {0} auto-assembler entries", ct_data.CodeEntires.Count));
-                    DebugLog(string.Format("Loaded {0} cheat entries", ct_data.CheatEntries.Count));
+                    DebugLog($"Loaded {ct_data.CodeEntires.Count} auto-assembler entries");
+                    DebugLog($"Loaded {ct_data.CheatEntries.Count} cheat entries");
 
                     RefreshPatches();
                 }
@@ -1147,7 +1204,7 @@ namespace CxbxDebugger
 
         private void button5_Click(object sender, EventArgs e)
         {
-            PatchType PatchType = (PatchType)cbDataFormat.SelectedIndex;
+            var PatchType = (PatchType)cbDataFormat.SelectedIndex;
 
             int PatchSize = PatchManager.PatchTypeLength(PatchType);
             if (PatchSize == 0)
@@ -1165,7 +1222,7 @@ namespace CxbxDebugger
                 Patch DataPatch = new Patch();
 
                 DataPatch.DisplayAs = PatchType;
-                DataPatch.Name = string.Format("Patched {0}", PatchType);
+                DataPatch.Name = $"Patched {PatchType}";
                 DataPatch.Module = "";
                 DataPatch.Offset = addr;
 
@@ -1229,6 +1286,61 @@ namespace CxbxDebugger
                     RefreshPatches();
                 }
             }
+        }
+
+        public SessionState GetSessionState()
+        {
+            if (DebuggerWorkerThread == null)
+            {
+                return SessionState.Inactive;
+            }
+            else if (DebuggerWorkerThread.ThreadState == ThreadState.Stopped)
+            {
+                return SessionState.Ended;
+            }
+
+            return SessionState.Running;
+        }
+
+        public void StartSession()
+        {
+            if (GetSessionState() == SessionState.Inactive)
+            {
+                StartDebugging();
+            }
+        }
+
+        public void SuspendSession()
+        {
+            if (GetSessionState() == SessionState.Running)
+            {
+                Suspend(DebugState.Suspended, "By user");
+            }
+        }
+
+        public void ResumeSession()
+        {
+            Resume();
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            tabContainer.SelectedTab = tabWatch;
+        }
+
+        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            tabContainer.SelectedTab = tabMemory;
+        }
+
+        private void linkLabel3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            tabContainer.SelectedTab = tabDisassembly;
+        }
+
+        public DebugStateInfo GetDebugStateInfo()
+        {
+            return StateInfo;
         }
     }
 }

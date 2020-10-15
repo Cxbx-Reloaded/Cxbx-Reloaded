@@ -37,19 +37,19 @@ namespace CxbxDebugger
 		// Note: Keep the top 3-bits empty as they are used internally
 		enum ReportType : DWORD
 		{
-			// Debugger report codes:
+			HLECACHE_FILE = 0x1000,
 
-			HLECACHE_FILE = 0x00deed00,
-			KERNEL_PATCH = 0x00deed01,
-			FILE_OPENED = 0x00deed02,
-			FILE_READ = 0x00deed03,
-			FILE_CLOSED = 0x00deed04,
-			DEBUGGER_INIT = 0x00deed05,
-			FILE_WRITE = 0x00deed06,
+			KERNEL_PATCH = 0x2000,
 
-			// Debugger query codes:
+			FILE_OPENED = 0x3000,
+			FILE_READ = 0x3001,
+			FILE_WRITE = 0x3002,
+			FILE_CLOSED = 0x3003,
 
-			OVERRIDE_EXCEPTION = 0x00ceed01,
+			DEBUGGER_INIT = 0x4000,
+			DEBUGGER_NEW_TARGET = 0x4001,
+
+			OVERRIDE_EXCEPTION = 0x5000,
 		};
 
 		bool IsAttached()
@@ -128,8 +128,10 @@ namespace CxbxDebugger
 		case Internal::KERNEL_PATCH:
 		case Internal::FILE_OPENED:
 		case Internal::FILE_READ:
+		case Internal::FILE_WRITE:
 		case Internal::FILE_CLOSED:
 		case Internal::DEBUGGER_INIT:
+		case Internal::DEBUGGER_NEW_TARGET:
 			return true;
 
 		case Internal::OVERRIDE_EXCEPTION:
@@ -148,8 +150,16 @@ namespace CxbxDebugger
 	{
 		Internal::ReportHelper Report(Internal::DEBUGGER_INIT);
 
-		Report.Add(0); // unused
 		Report.AddString(XbeTitle);
+
+		Report.Send();
+	}
+
+	void ReportNewTarget(const char* CommandLine)
+	{
+		Internal::ReportHelper Report(Internal::DEBUGGER_NEW_TARGET);
+
+		Report.AddString(CommandLine);
 
 		Report.Send();
 	}
