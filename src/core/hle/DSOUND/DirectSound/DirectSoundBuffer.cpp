@@ -748,11 +748,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetBufferData)
                             pThis->X_lock.dwLockBytes2);
     }
 
-    //TODO: Current workaround method since dwBufferBytes do set to zero. Otherwise it will produce lock error message.
-    if (dwBufferBytes == 0) {
-
-        return DS_OK;
-    }
     HRESULT hRet = DSERR_OUTOFMEMORY;
     DWORD dwStatus;
 
@@ -763,6 +758,12 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_SetBufferData)
         // TODO: Add a timeout, like on xbox
         SwitchToThread();
         pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+    }
+
+    //TODO: Current workaround method since dwBufferBytes do set to zero. Otherwise it will produce lock error message.
+    if (dwBufferBytes == 0) {
+
+        return DS_OK;
     }
 
     // Allocate memory whenever made request internally

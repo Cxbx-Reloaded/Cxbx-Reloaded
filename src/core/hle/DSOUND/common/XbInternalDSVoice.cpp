@@ -28,22 +28,26 @@
 
 // Interface for get format
 template<class T>
-void GetFormat_4034_lower(T& settings, xbox::audio_format& format)
+xbox::audio_format GetFormat_4034_lower(T& settings)
 {
-    format.audio_codec = settings.p_audio_format->wfx.wFormatTag = format.audio_codec;
+    xbox::audio_format format;
+    format.audio_codec = settings.p_audio_format->wfx.wFormatTag;
     format.nChannels = settings.p_audio_format->wfx.nChannels;
     format.cbSize = settings.p_audio_format->wfx.cbSize;
     format.nSamplesPerSec = settings.p_audio_format->wfx.nSamplesPerSec;
     format.bitsPerSample = settings.p_audio_format->wfx.wBitsPerSample;
+    return format;
 }
 template<class T>
-void GetFormat_4039_upper(T& settings, xbox::audio_format& format)
+xbox::audio_format GetFormat_4039_upper(T& settings)
 {
+    xbox::audio_format format;
     format.audio_codec = settings.audio_codec;
     format.nChannels = settings.nChannels;
     format.cbSize = settings.cbSize;
     format.nSamplesPerSec = settings.nSamplesPerSec_default;
     format.bitsPerSample = settings.bitsPerSample;
+    return format;
 }
 
 // Interface for set format
