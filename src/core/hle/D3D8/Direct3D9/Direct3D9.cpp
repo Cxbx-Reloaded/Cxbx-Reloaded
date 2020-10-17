@@ -4999,12 +4999,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 
     if (pRects != nullptr) {
         // Scale the fill based on our scale factor and MSAA scale
-        D3DRECT rect;
-        rect.x1 = static_cast<LONG>(pRects->x1 * g_Xbox_MultiSampleXScale * g_RenderScaleFactor);
-        rect.x2 = static_cast<LONG>(pRects->x2 * g_Xbox_MultiSampleXScale * g_RenderScaleFactor);
-        rect.y1 = static_cast<LONG>(pRects->y1 * g_Xbox_MultiSampleYScale * g_RenderScaleFactor);
-        rect.y2 = static_cast<LONG>(pRects->y2 * g_Xbox_MultiSampleYScale * g_RenderScaleFactor);
-        hRet = g_pD3DDevice->Clear(Count, &rect, HostFlags, Color, Z, Stencil);
+        std::vector<D3DRECT> rects(Count);
+        for (DWORD i = 0; i < Count; i++) {
+            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * g_Xbox_MultiSampleXScale * g_RenderScaleFactor);
+            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * g_Xbox_MultiSampleXScale * g_RenderScaleFactor);
+            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * g_Xbox_MultiSampleYScale * g_RenderScaleFactor);
+            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * g_Xbox_MultiSampleYScale * g_RenderScaleFactor);
+		}
+        hRet = g_pD3DDevice->Clear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
         hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
     }
