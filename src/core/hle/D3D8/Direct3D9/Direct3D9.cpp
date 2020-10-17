@@ -845,7 +845,6 @@ void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource)
 
 typedef struct {
 	IDirect3DResource* pHostResource = nullptr;
-	xbox::X_D3DResource* pXboxResource = xbox::zeroptr;
 	DWORD dwXboxResourceType = 0;
 	void* pXboxData = xbox::zeroptr;
 	size_t szXboxDataSize = 0;
@@ -1023,17 +1022,21 @@ size_t GetXboxResourceSize(xbox::X_D3DResource* pXboxResource)
 	
 }
 
-bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
+bool HostResourceRequiresUpdate(resource_key_t key, xbox::X_D3DResource* pXboxResource, DWORD dwSize)
 {
-	auto& ResourceCache = GetResourceCache(key);
-	auto it = ResourceCache.find(key);
-	if (it == ResourceCache.end() || !it->second.pXboxResource) {
+	if (pXboxResource == nullptr) {
 		return false;
 	}
 
 	// Currently, we only dynamically update Textures and Surfaces, so if our resource
 	// isn't of these types, do nothing
-	if (!IsResourceAPixelContainer(it->second.pXboxResource)) {
+	if (!IsResourceAPixelContainer(pXboxResource)) {
+		return false;
+	}
+
+	auto& ResourceCache = GetResourceCache(key);
+	auto it = ResourceCache.find(key);
+	if (it == ResourceCache.end()) {
 		return false;
 	}
 
@@ -1044,7 +1047,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, DWORD dwSize)
 	}
 
 	// If the resource type changed, we need to re-create it
-	if (it->second.dwXboxResourceType != GetXboxCommonResourceType(it->second.pXboxResource)) {
+	if (it->second.dwXboxResourceType != GetXboxCommonResourceType(pXboxResource)) {
 		return true;
 	}
 
@@ -1088,7 +1091,6 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	}
 
 	resourceInfo.pHostResource = pHostResource;
-	resourceInfo.pXboxResource = pXboxResource;
 	resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxResource);
 	resourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
 	resourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
@@ -2656,15 +2658,8 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
             }
 		}
 
-        //check if the same key existed in the HostResource map already. if there is a old pXboxResource in the map with the same key but different resource address, it must be freed first.
-        
-        if (it->second.pXboxResource != pResource) {
-            //printf("EmuVerifyResourceIsRegistered passed in XboxResource collides HostResource map!! key : %llX , map pXboxResource : %08X , passed in pResource : %08X \n", key, it->second.pXboxResource, pResource);
-        }
-        else {
-			if (!HostResourceRequiresUpdate(key, dwSize)) {
-				return;
-			}
+		if (!HostResourceRequiresUpdate(key, pResource, dwSize)) {
+			return;
 		}
 
 		FreeHostResource(key);
