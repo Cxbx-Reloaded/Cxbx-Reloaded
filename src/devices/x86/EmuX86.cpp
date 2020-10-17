@@ -149,6 +149,10 @@ uint32_t EmuFlash_Read32(xbox::addr_xt addr) // TODO : Move to EmuFlash.cpp
 {
 	uint32_t r;
 
+    // Some games attempt to read from the BIOS ROM directly, for purposes of hardware-version detection
+    // And other (currently unknown) reasons. We can't include the entire bios, and we don't want to require it
+    // So we specifiy the specific values that games rely on.
+
 	switch (addr) {
     case 0x08: // ? Test Case - Shenmue II attempts to read this address but never uses the resulting value? 
         r = 0x2B16D065;
@@ -179,7 +183,7 @@ uint32_t EmuX86_Read(xbox::addr_xt addr, int size)
 
 	uint32_t value;
 
-	if (addr >= FLASH_DEVICE1_BASE) { // 0xFFF00000 - 0xFFFFFFF
+	if (addr >= FLASH_DEVICE1_BASE) { // 0xFF000000 - 0xFFFFFFF
 		return EmuFlash_Read32((addr - FLASH_DEVICE1_BASE) % KiB(256)); // NOTE: Bios is a 256kb rom, mirrored through the address space
 	}
 
