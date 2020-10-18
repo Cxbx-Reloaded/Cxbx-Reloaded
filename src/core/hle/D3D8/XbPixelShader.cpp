@@ -2089,17 +2089,15 @@ bool PSH_INTERMEDIATE_FORMAT::Decode(DWORD aCombinerStageNr, DWORD PSInputs, DWO
       // And if this is true, how do the blue-to-alpha flags behave if present on both AB and CD?
 
       // TODO : Rayman does this in some shaders, requires a fixup (as output.b is incorrect and not allowed)
+      // TODO: Above may not be valid anymore, needs testing
       Output[0].Modifiers = Output[0].Modifiers | (1 << ARGMOD_BLUE_REPLICATE);
-      Output[0].Mask = MASK_B;
-      // TODO Handle blue-to-alpha flag (only valid for RGB)
-      // Note : We can't use the '+ ' prefix, as the blue channel is not determined yet!
-      // Note 2: Pixel shader 1.1-1.3 'blue replicate' on source, uses an alpha destination write mask.
+      CommentString += ", d0.a=d0.b";
     }
 
     if ((CombinerOutputFlags & PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) > 0) // false=Alpha-to-Alpha, true=Blue-to-Alpha
     {
       Output[1].Modifiers = Output[1].Modifiers | (1 << ARGMOD_BLUE_REPLICATE);
-      Output[1].Mask = MASK_B;
+      CommentString += ", d1.a=d1.b";
     }
 
     // Decode all four inputs :
@@ -4545,8 +4543,26 @@ bool PSH_XBOX_SHADER::FixInstructionModifiers()
         if (insert)
         {
             Cur->Modifier = INSMOD_NONE;
-            InsertIntermediate(&Ins, InsertPos);
+            InsertIntermediate(&Ins, InsertPos++);
             Result = true;
+        }
+
+        // Handle blue-to-alpha which is technically an instruction modifier, but operates on arguments
+        for (int i = 0; i < PSH_OPCODE_DEFS[Cur->Opcode]._Out; i++) {
+            auto& output = Cur->Output[i];
+
+            if (output.UsesRegister() && output.HasModifier(ARGMOD_BLUE_REPLICATE)) {
+                Ins.Initialize(PO_MOV);
+                Ins.Output[0].Type = Ins.Parameters[0].Type = output.Type;
+                Ins.Output[0].Address = Ins.Parameters[0].Address = output.Address;
+                Ins.Output[0].Mask = MASK_A;
+                Ins.Parameters[0].Mask = MASK_B;
+                Ins.CommentString = "; Inserted Blue-to-Alpha";
+                EmuLog(LOG_LEVEL::DEBUG, "; Inserted Blue-to-Alpha");
+
+                InsertIntermediate(&Ins, InsertPos);
+                Result = true;
+            }
         }
     }
     return Result;
@@ -5166,6 +5182,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
           {
               insert = true;
               Cur->Parameters[p].Address = output;
+              Cur->Parameters[p].Type = PARAM_R;
           }
       }
       if (insert)
