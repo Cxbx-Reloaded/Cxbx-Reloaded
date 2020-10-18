@@ -149,7 +149,14 @@ uint32_t EmuFlash_Read32(xbox::addr_xt addr) // TODO : Move to EmuFlash.cpp
 {
 	uint32_t r;
 
+    // Some games attempt to read from the BIOS ROM directly, for purposes of hardware-version detection
+    // And other (currently unknown) reasons. We can't include the entire bios, and we don't want to require it
+    // So we specifiy the specific values that games rely on.
+
 	switch (addr) {
+    case 0x08: // ? Test Case - Shenmue II attempts to read this address but never uses the resulting value? 
+        r = 0x2B16D065;
+        break;
 	case 0x78: // ROM_VERSION
 		r = 0x90; // Luke's hardware revision 1.6 Xbox returns this (also since XboxKrnlVersion is set to 5838)
 		break;
@@ -176,8 +183,8 @@ uint32_t EmuX86_Read(xbox::addr_xt addr, int size)
 
 	uint32_t value;
 
-	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
-		return EmuFlash_Read32(addr - XBOX_FLASH_ROM_BASE); // TODO : Make flash access size-aware
+	if (addr >= FLASH_DEVICE1_BASE) { // 0xFF000000 - 0xFFFFFFF
+		return EmuFlash_Read32((addr - FLASH_DEVICE1_BASE) % KiB(256)); // NOTE: Bios is a 256kb rom, mirrored through the address space
 	}
 
 	// TODO: Remove this once we have an LLE APU Device
@@ -206,7 +213,7 @@ void EmuX86_Write(xbox::addr_xt addr, uint32_t value, int size)
 		return;
 	}
 
-	if (addr >= XBOX_FLASH_ROM_BASE) { // 0xFFF00000 - 0xFFFFFFF
+	if (addr >= FLASH_DEVICE1_BASE) { // 0xFF000000 - 0xFFFFFFF
 		EmuLog(LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X) [FLASH_ROM]", addr, value);
 		return;
 	}

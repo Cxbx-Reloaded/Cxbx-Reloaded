@@ -115,10 +115,6 @@ inline constexpr uint32_t NVNET_DEVICE_BASE =      0xFEF00000;
 inline constexpr uint32_t NVNET_DEVICE_SIZE =      (KiB(1)); // = 0x00000400
 inline constexpr uint32_t NVNET_DEVICE_END  =      (NVNET_DEVICE_BASE + NVNET_DEVICE_SIZE - 1); // 0xFEF003FF
 
-#define XBOX_FLASH_ROM_BASE                 0xFFF00000
-#define XBOX_FLASH_ROM_SIZE                 (MiB(1)) // = 0x00100000
-#define XBOX_FLASH_ROM_END                  (XBOX_FLASH_ROM_BASE + XBOX_FLASH_ROM_SIZE - 1) // - 0xFFFFFFF
-
 inline constexpr uint32_t FLASH_DEVICEN_SIZE =     (MiB(4)); // = 0x00400000
 inline constexpr uint32_t FLASH_DEVICE1_BASE =     0xFF000000;
 inline constexpr uint32_t FLASH_DEVICE1_END  =     (FLASH_DEVICE1_BASE + FLASH_DEVICEN_SIZE - 1); // 0xFF3FFFFF
