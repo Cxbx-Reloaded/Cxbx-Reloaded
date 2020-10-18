@@ -5166,6 +5166,7 @@ bool  PSH_XBOX_SHADER::SimplifyLRP(PPSH_INTERMEDIATE_FORMAT Cur, int index)
           {
               insert = true;
               Cur->Parameters[p].Address = output;
+              Cur->Parameters[p].Type = PARAM_R;
           }
       }
       if (insert)
