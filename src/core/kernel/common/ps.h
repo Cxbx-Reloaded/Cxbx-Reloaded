@@ -25,7 +25,7 @@ namespace xbox
 XBSYSAPI EXPORTNUM(254) ntstatus_xt NTAPI PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,
-	OUT PHANDLE         ThreadId OPTIONAL,
+	OUT PDWORD          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         DebuggerThread
@@ -40,7 +40,7 @@ XBSYSAPI EXPORTNUM(255) ntstatus_xt NTAPI PsCreateSystemThreadEx
 	IN  ulong_xt           ThreadExtensionSize,
 	IN  ulong_xt           KernelStackSize,
 	IN  ulong_xt           TlsDataSize,
-	OUT PHANDLE         ThreadId OPTIONAL,
+	OUT PDWORD          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         CreateSuspended,
