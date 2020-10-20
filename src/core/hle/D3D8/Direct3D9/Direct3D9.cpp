@@ -5118,7 +5118,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 
         HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
         if (FAILED(hRet)) {
-            LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
+			// Fallback for cases which StretchRect cannot handle (such as copying from texture to texture)
+			hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, &DestRect, pHostSourceSurface, nullptr, &SourceRect, D3DTEXF_LINEAR, 0);
+			if (FAILED(hRet)) {
+				LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
+			}
         }
     }
 }
