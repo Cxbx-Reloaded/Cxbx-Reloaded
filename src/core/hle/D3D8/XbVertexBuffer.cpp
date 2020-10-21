@@ -47,7 +47,7 @@
 // Inline vertex buffer emulation
 extern xbox::X_D3DPRIMITIVETYPE g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
 extern DWORD                   g_InlineVertexBuffer_FVF = 0;
-extern struct _D3DIVB         *g_InlineVertexBuffer_Table = nullptr;
+       std::vector<_D3DIVB>    g_InlineVertexBuffer_Table;
 extern UINT                    g_InlineVertexBuffer_TableLength = 0;
 extern UINT                    g_InlineVertexBuffer_TableOffset = 0;
 
@@ -68,6 +68,44 @@ bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirec
 uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer* pPixelContainer);
 uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer* pPixelContainer);
 void ApplyXboxMultiSampleOffsetAndScale(float& x, float& y);
+
+_D3DIVB::_D3DIVB()
+{
+	Position.x = 0.0f;
+	Position.y = 0.0f;
+	Position.z = 0.0f;
+	Rhw = 0.0f;
+	std::fill(std::begin(Blend), std::end(Blend), 0.0f);
+	Normal.x = 0.0f;
+	Normal.y = 0.0f;
+	Normal.z = 0.0f;
+	Diffuse = 0u;
+	Specular = 0u;
+	Fog = 0.0f;
+	BackDiffuse = 0u;
+	BackSpecular = 0u;
+	std::fill(std::begin(TexCoord), std::end(TexCoord), D3DXVECTOR4{ 0.0f , 0.0f, 0.0f, 0.0f });
+}
+
+struct _D3DIVB &_D3DIVB::operator=(const struct _D3DIVB &Val)
+{
+	Position.x = Val.Position.x;
+	Position.y = Val.Position.y;
+	Position.z = Val.Position.z;
+	Rhw = Val.Rhw;
+	std::copy(std::begin(Val.Blend), std::end(Val.Blend), std::begin(Blend));
+	Normal.x = Val.Normal.x;
+	Normal.y = Val.Normal.y;
+	Normal.z = Val.Normal.z;
+	Diffuse = Val.Diffuse;
+	Specular = Val.Specular;
+	Fog = Val.Fog;
+	BackDiffuse = Val.BackDiffuse;
+	BackSpecular = Val.BackSpecular;
+	std::copy(std::begin(Val.TexCoord), std::end(Val.TexCoord), std::begin(TexCoord));
+
+	return *this;
+}
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT uiStream) const
 {
