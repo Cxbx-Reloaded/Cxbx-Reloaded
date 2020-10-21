@@ -54,8 +54,6 @@ typedef struct _PCSTProxyParam
 	IN PVOID  StartRoutine;
 	IN PVOID  StartContext;
 	IN PVOID  SystemRoutine;
-	IN BOOL   StartSuspended;
-	IN HANDLE hStartedEvent;
 }
 PCSTProxyParam;
 
@@ -68,27 +66,29 @@ void LOG_PCSTProxy
 (
 	PVOID StartRoutine,
 	PVOID StartContext,
-	PVOID SystemRoutine,
-	BOOL   StartSuspended,
-	HANDLE hStartedEvent
+	PVOID SystemRoutine
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(StartRoutine)
 		LOG_FUNC_ARG(StartContext)
 		LOG_FUNC_ARG(SystemRoutine)
-		LOG_FUNC_ARG(StartSuspended)
-		LOG_FUNC_ARG(hStartedEvent)
 		LOG_FUNC_END;
 }
 
-void InitXboxThread(DWORD_PTR cores)
+// Overload which doesn't change affinity
+void InitXboxThread()
 {
 	// initialize FS segment selector
 	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
 
 	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
 	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
+}
+
+void InitXboxThread(DWORD_PTR cores)
+{
+	InitXboxThread();
 
 	if (!g_UseAllCores) {
 		// Run this thread solely on the indicated core(s) :
@@ -105,40 +105,27 @@ static unsigned int WINAPI PCSTProxy
 {
 	CxbxSetThreadName("PsCreateSystemThread Proxy");
 
-	PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)Parameter;
+	PCSTProxyParam *iPCSTProxyParam = static_cast<PCSTProxyParam*>(Parameter);
 
-	PVOID StartRoutine = iPCSTProxyParam->StartRoutine;
-	PVOID StartContext = iPCSTProxyParam->StartContext;
-	PVOID SystemRoutine = iPCSTProxyParam->SystemRoutine;
-	BOOL StartSuspended = iPCSTProxyParam->StartSuspended;
-	HANDLE hStartedEvent = iPCSTProxyParam->hStartedEvent;
-
-	// Once deleted, unable to directly access iPCSTProxyParam in remainder of function.
-	free(iPCSTProxyParam);
+	// Copy params to the stack so they can be freed
+	PCSTProxyParam params = *iPCSTProxyParam;
+	delete iPCSTProxyParam;
 
 	LOG_PCSTProxy(
-		StartRoutine,
-		StartContext,
-		SystemRoutine,
-		StartSuspended,
-		hStartedEvent);
+		params.StartRoutine,
+		params.StartContext,
+		params.SystemRoutine);
 
 
 	// Do minimal thread initialization
-	InitXboxThread(g_CPUXbox);
+	InitXboxThread();
 
-	SetEvent(hStartedEvent);
-
-	if (StartSuspended == TRUE) {
-		SuspendThread(GetCurrentThread());
-	}
-
-	auto routine = (xbox::PKSYSTEM_ROUTINE)SystemRoutine;
+	auto routine = (xbox::PKSYSTEM_ROUTINE)params.SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
 	// message like: "Exception thrown at 0x00026190 in cxbx.exe: 0xC0000005: Access
 	// violation reading location 0xFD001804.", then this is AS-DESIGNED behaviour!
 	// (To avoid repetitions, uncheck "Break when this exception type is thrown").
-	routine(xbox::PKSTART_ROUTINE(StartRoutine), StartContext);
+	routine(xbox::PKSTART_ROUTINE(params.StartRoutine), params.StartContext);
 
 	// This will also handle thread notification :
 	LOG_TEST_CASE("Thread returned from SystemRoutine");
@@ -166,7 +153,7 @@ void PspSystemThreadStartup
 XBSYSAPI EXPORTNUM(254) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,
-	OUT PHANDLE         ThreadId OPTIONAL,
+	OUT PDWORD          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         DebuggerThread
@@ -210,7 +197,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	IN  ulong_xt           ThreadExtensionSize,
 	IN  ulong_xt           KernelStackSize,
 	IN  ulong_xt           TlsDataSize,
-	OUT PHANDLE         ThreadId OPTIONAL,
+	OUT PDWORD          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         CreateSuspended,
@@ -245,22 +232,14 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 
     // create thread, using our special proxy technique
     {
-        DWORD dwThreadId = 0, dwThreadWait;
-        bool bWait = true;
-		HANDLE hStartedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-		if (hStartedEvent == NULL) {
-			std::string errorMessage = CxbxGetLastErrorString("PsCreateSystemThreadEx could not create PCSTProxyEvent");
-			CxbxKrnlCleanup(errorMessage.c_str());
-		}
+        DWORD dwThreadId = 0;
 
         // PCSTProxy is responsible for cleaning up this pointer
-		PCSTProxyParam *iPCSTProxyParam = (PCSTProxyParam*)malloc(sizeof(PCSTProxyParam));
+		PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
 
         iPCSTProxyParam->StartRoutine = (PVOID)StartRoutine;
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = (PVOID)SystemRoutine; // NULL, XapiThreadStartup or unknown?
-        iPCSTProxyParam->StartSuspended = CreateSuspended;
-	    iPCSTProxyParam->hStartedEvent = hStartedEvent;
 
 		/*
 		// call thread notification routine(s)
@@ -284,51 +263,28 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			}
 		}*/
 
-        *ThreadHandle = (HANDLE)_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, (unsigned int*)&dwThreadId);
+        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, reinterpret_cast<unsigned int*>(&dwThreadId)));
+		*ThreadHandle = handle;
         if (ThreadId != NULL)
-            *ThreadId = (xbox::HANDLE)dwThreadId;
+            *ThreadId = dwThreadId;
+
+		if (!g_UseAllCores) {
+			// Run this thread solely on the indicated core(s) :
+			SetThreadAffinityMask(handle, g_CPUXbox);
+		}
+
+		CxbxKrnlRegisterThread(handle);
+
+		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
+		if (!CreateSuspended) {
+			ResumeThread(handle);
+		}
 
 		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
 
-		EmuLog(LOG_LEVEL::DEBUG, "Waiting for Xbox proxy thread to start...");
-
-        while (bWait) {
-            dwThreadWait = WaitForSingleObject(hStartedEvent, INFINITE);
-            switch (dwThreadWait) {
-                case WAIT_TIMEOUT: { // The time-out interval elapsed, and the object's state is nonsignaled.
-					EmuLog(LOG_LEVEL::WARNING, "Timeout while waiting for Xbox proxy thread to start...\n");
-                    bWait = false;
-                    break;
-                }
-                case WAIT_OBJECT_0: { // The state of the specified object is signaled.
-					EmuLog(LOG_LEVEL::DEBUG, "Xbox proxy thread is started.");
-                    bWait = false;
-                    break;
-                }
-                default: {
-					if (dwThreadWait == WAIT_FAILED) // The function has failed
-						bWait = false;
-
-					std::string ErrorStr = CxbxGetLastErrorString("While waiting for Xbox proxy thread to start");
-					EmuLog(LOG_LEVEL::WARNING, "%s\n", ErrorStr.c_str());
-					break;
-                }
-            }
-        }
-
-
-		// Release the event
-		CloseHandle(hStartedEvent);
-		hStartedEvent = NULL;
-
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", *ThreadHandle, dwThreadId);
-
-		CxbxKrnlRegisterThread(*ThreadHandle);
+		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", handle, dwThreadId);
 	}
-
-	SwitchToThread();
-	Sleep(10);
 
 	RETURN(xbox::status_success);
 }
