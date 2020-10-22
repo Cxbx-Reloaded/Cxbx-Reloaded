@@ -3925,8 +3925,8 @@ void PSH_XBOX_SHADER::ConvertXFCToNative(int i)
 
   if (NeedsSum)
   {
-    // Add a new opcode that calculates r0*v1 :
-    Ins.Initialize(PO_MUL);
+    // Add a new opcode that calculates r0+v1 :
+    Ins.Initialize(PO_ADD);
     Ins.Output[0].SetRegister(PARAM_T, FakeRegNr_Sum, MASK_RGBA); // 'r2'
 
     Ins.Parameters[0].SetRegister(PARAM_R, 0, MASK_RGB);
