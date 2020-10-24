@@ -133,7 +133,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SetPalette", xbox::EMUPATCH(D3DDevice_SetPalette), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetPalette_4", xbox::EMUPATCH(D3DDevice_SetPalette_4), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetPixelShader", xbox::EMUPATCH(D3DDevice_SetPixelShader), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_SetPixelShaderConstant_4", xbox::EMUPATCH(D3DDevice_SetPixelShaderConstant_4), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_SetPixelShaderConstant_4", xbox::EMUPATCH(D3DDevice_SetPixelShaderConstant_4), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetPixelShader_0", xbox::EMUPATCH(D3DDevice_SetPixelShader_0), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderState_Simple", xbox::EMUPATCH(D3DDevice_SetRenderState_Simple), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderTarget", xbox::EMUPATCH(D3DDevice_SetRenderTarget), PATCH_HLE_D3D),
