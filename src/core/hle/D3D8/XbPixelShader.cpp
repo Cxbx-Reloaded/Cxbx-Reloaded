@@ -627,15 +627,24 @@ constexpr int PSH_XBOX_MAX_C_REGISTER_COUNT = 16;
 constexpr int PSH_XBOX_MAX_R_REGISTER_COUNT = 2;
 constexpr int PSH_XBOX_MAX_T_REGISTER_COUNT = 4;
 constexpr int PSH_XBOX_MAX_V_REGISTER_COUNT = 2;
-// Extra constants to support features not present in Native D3D :
-constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
-constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_FOG + 1; // = 17
-constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 18
-constexpr int PSH_XBOX_CONSTANT_MUL0 = PSH_XBOX_CONSTANT_FC1 + 1; // = 19
-constexpr int PSH_XBOX_CONSTANT_MUL1 = PSH_XBOX_CONSTANT_MUL0 + 1; // = 20
-constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_MUL1 + 1; // = 21
-constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 25
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_LUM + 4; // = 29
+
+// Mapping indices of Xbox register combiner constants to host pixel shader constants;
+// The first 16 are identity-mapped (C0_1 .. C0_7 are C0 .. C7 on host, C1_0 .. C1_7 are C8 .. C15 on host) :
+constexpr int PSH_XBOX_CONSTANT_C0 = 0; // = 0..15
+// Then two final combiner constants :
+constexpr int PSH_XBOX_CONSTANT_FC0 = PSH_XBOX_CONSTANT_C0 + PSH_XBOX_MAX_C_REGISTER_COUNT; // = 16
+constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 17
+// Fog requires a constant (as host PS1.4 doesn't support the FOG register)
+constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_CONSTANT_FC1 + 1; // = 18
+// Bump Environment Material registers
+constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_FOG + 1; // = 19..22
+// Bump map Luminance registers
+constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 23..26
+// This concludes the set of constants that need to be set on host :
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_LUM + 4; // = 27
+// After those, we need two constants for literal values, which we DEF'ine in ConvertConstantsToNative :
+constexpr int PSH_XBOX_CONSTANT_MUL0 = PSH_XBOX_CONSTANT_MAX; // = 27
+constexpr int PSH_XBOX_CONSTANT_MUL1 = PSH_XBOX_CONSTANT_MUL0 + 1; // = 28
 
 constexpr int FakeRegNr_Sum = PSH_XBOX_MAX_T_REGISTER_COUNT + 0;
 constexpr int FakeRegNr_Prod = PSH_XBOX_MAX_T_REGISTER_COUNT + 1;
@@ -1256,8 +1265,6 @@ bool PSH_IMD_ARGUMENT::HasModifier(PSH_ARG_MODIFIER modifier)
 
 bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor, const PSH_RECOMPILED_SHADER& pRecompiled)
 {
-    bool result = false;
-
     PSH_ARG_MODIFIERs modifiers = 0;
     DWORD mask = Mask;
     int address = Address;
@@ -1269,81 +1276,71 @@ bool PSH_IMD_ARGUMENT::SetScaleConstRegister(float factor, const PSH_RECOMPILED_
     {
         factor = -factor;
         modifiers = (1 << ARGMOD_NEGATE);
+        // This inversion is here to support negative scales, but it's not an actual match yet.
     }
 
+    // Note : 'switch(factor)' can't be used here, since that requires an ordinal value (and factor is a float)
     if (factor == 1.0f)
     {
         address = mappedConstant0;
         mask = MASK_R;
-        result = true;
     }
 
     else if (factor == 2.0f)
     {
         address = mappedConstant0;
         mask = MASK_G;
-        result = true;
     }
 
     else if (factor == 4.0f)
     {
         address = mappedConstant0;
         mask = MASK_B;
-        result = true;
     }
 
     else if (factor == 8.0f)
     {
         address = mappedConstant0;
         mask = MASK_A;
-        result = true;
     }
 
     else if (factor == 0.0f)
     {
         address = mappedConstant1;
         mask = MASK_R;
-        result = true;
     }
 
     else if (factor == 1.0f / 2.0f)
     {
         address = mappedConstant1;
         mask = MASK_G;
-        result = true;
     }
 
     else if (factor == 1.0f / 4.0f)
     {
         address = mappedConstant1;
         mask = MASK_B;
-        result = true;
     }
 
     else if (factor == 1.0f / 8.0f)
     {
         address = mappedConstant1;
         mask = MASK_A;
-        result = true;
     }
+    else return false;
 
-    if (result)
-    {
-        Type = PARAM_C;
-        Address = address;
-        Mask = mask;
-        Modifiers = modifiers;
-        Multiplier = 1.0f;
-    }
+    Type = PARAM_C;
+    Address = address;
+    Mask = mask;
+    Modifiers = modifiers;
+    Multiplier = 1.0f;
 
-    return result;
+    return true;
 }
 
 bool PSH_IMD_ARGUMENT::SetScaleBemLumRegister(D3DTEXTURESTAGESTATETYPE factor, int stage, const PSH_RECOMPILED_SHADER& pRecompiled)
 {
-    bool result = false;
-
-    PSH_ARG_MODIFIERs modifiers = 0;
+    const PSH_ARG_MODIFIERs modifiers = 0;
     DWORD mask = Mask;
     int address = Address;
 
@@ -1356,56 +1353,48 @@ bool PSH_IMD_ARGUMENT::SetScaleBemLumRegister(D3DTEXTURESTAGESTATETYPE factor, i
     {
         address = mappedConstant0;
         mask = MASK_R;
-        result = true;
         break;
     }
     case D3DTSS_BUMPENVMAT01:
     {
         address = mappedConstant0;
         mask = MASK_G;
-        result = true;
         break;
     }
     case D3DTSS_BUMPENVMAT11:
     {
         address = mappedConstant0;
         mask = MASK_B;
-        result = true;
         break;
     }
     case D3DTSS_BUMPENVMAT10:
     {
         address = mappedConstant0;
         mask = MASK_A;
-        result = true;
         break;
     }
     case D3DTSS_BUMPENVLSCALE:
     {
         address = mappedConstant1;
         mask = MASK_R;
-        result = true;
         break;
     }
     case D3DTSS_BUMPENVLOFFSET:
     {
         address = mappedConstant1;
         mask = MASK_G;
-        result = true;
         break;
     }
+    default: return false;
     }
 
-    if (result)
-    {
-        Type = PARAM_C;
-        Address = address;
-        Mask = mask;
-        Modifiers = modifiers;
-        Multiplier = 1.0f;
-    }
+    Type = PARAM_C;
+    Address = address;
+    Mask = mask;
+    Modifiers = modifiers;
+    Multiplier = 1.0f;
 
-    return result;
+    return true;
 }
 
 std::string PSH_IMD_ARGUMENT::ToString()
@@ -5862,6 +5851,39 @@ static const
 
 std::vector<PSH_RECOMPILED_SHADER> g_RecompiledPixelShaders;
 
+bool ArePSDefsIdentical(xbox::X_D3DPIXELSHADERDEF &PSDef1, xbox::X_D3DPIXELSHADERDEF &PSDef2)
+{
+    // Only compare the [*]-marked members, which forms the unique shader declaration (ignore the constants and Xbox Direct3D8 run-time fields) :
+    // [*] DWORD    PSAlphaInputs[8];          // X_D3DRS_PSALPHAINPUTS0..X_D3DRS_PSALPHAINPUTS7 : Alpha inputs for each stage
+    // [*] DWORD    PSFinalCombinerInputsABCD; // X_D3DRS_PSFINALCOMBINERINPUTSABCD : Final combiner inputs
+    // [*] DWORD    PSFinalCombinerInputsEFG;  // X_D3DRS_PSFINALCOMBINERINPUTSEFG : Final combiner inputs (continued)
+    if (memcmp(&(PSDef1.PSAlphaInputs[0]), &(PSDef2.PSAlphaInputs[0]), (8 + 1 + 1) * sizeof(DWORD)) != 0)
+        return false;
+
+    // [-] DWORD    PSConstant0[8];            // X_D3DRS_PSCONSTANT0_0..X_D3DRS_PSCONSTANT0_7 : C0 for each stage
+    // [-] DWORD    PSConstant1[8];            // X_D3DRS_PSCONSTANT1_0..X_D3DRS_PSCONSTANT1_7 : C1 for each stage
+    // [*] DWORD    PSAlphaOutputs[8];         // X_D3DRS_PSALPHAOUTPUTS0..X_D3DRS_PSALPHAOUTPUTS7 : Alpha output for each stage
+    // [*] DWORD    PSRGBInputs[8];            // X_D3DRS_PSRGBINPUTS0..X_D3DRS_PSRGBINPUTS7 : RGB inputs for each stage
+    // [*] DWORD    PSCompareMode;             // X_D3DRS_PSCOMPAREMODE : Compare modes for clipplane texture mode
+    if (memcmp(&(PSDef1.PSAlphaOutputs[0]), &(PSDef2.PSAlphaOutputs[0]), (8 + 8 + 1) * sizeof(DWORD)) != 0)
+        return false;
+
+    // [-] DWORD    PSFinalCombinerConstant0;  // X_D3DRS_PSFINALCOMBINERCONSTANT0 : C0 in final combiner
+    // [-] DWORD    PSFinalCombinerConstant1;  // X_D3DRS_PSFINALCOMBINERCONSTANT1 : C1 in final combiner
+    // [*] DWORD    PSRGBOutputs[8];           // X_D3DRS_PSRGBOUTPUTS0..X_D3DRS_PSRGBOUTPUTS7 : Stage 0 RGB outputs
+    // [*] DWORD    PSCombinerCount;           // X_D3DRS_PSCOMBINERCOUNT : Active combiner count (Stages 0-7)
+    // [*] DWORD    PSTextureModes;            // X_D3DRS_PS_RESERVED (copied from out-of-range X_D3DRS_PSTEXTUREMODES) : Texture addressing modes
+    // [*] DWORD    PSDotMapping;              // X_D3DRS_PSDOTMAPPING : Input mapping for dot product modes
+    // [*] DWORD    PSInputTexture;            // X_D3DRS_PSINPUTTEXTURE : Texture source for some texture modes
+    if (memcmp(&(PSDef1.PSRGBOutputs[0]), &(PSDef2.PSRGBOutputs[0]), (8 + 1 + 1 + 1 + 1) * sizeof(DWORD)) != 0)
+        return false;
+
+    // [-] DWORD    PSC0Mapping;               // Mapping of c0 regs to D3D constants
+    // [-] DWORD    PSC1Mapping;               // Mapping of c1 regs to D3D constants
+    // [-] DWORD    PSFinalCombinerConstants;  // Final combiner constant mapping
+    return true;
+}
+
 void DxbxUpdateActivePixelShader() // NOPATCH
 {
   xbox::X_D3DPIXELSHADERDEF *pPSDef;
@@ -5869,7 +5891,6 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   DWORD ConvertedPixelShaderHandle;
   DWORD CurrentPixelShader;
   int i;
-  DWORD Register_;
   D3DCOLOR dwColor;
   D3DXCOLOR fColor[PSH_XBOX_CONSTANT_MAX];
 
@@ -5881,32 +5902,35 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 
   // Use the pixel shader stored in D3D__RenderState rather than the set handle
   // This allows changes made via SetRenderState to actually take effect!
-  // NOTE: PSTextureModes is in a different location in the X_D3DPIXELSHADERFEF than in Render State mappings
+  // NOTE: PSTextureModes is in a different location in the X_D3DPIXELSHADERDEF than in Render State mappings
   // All other fields are the same.
   // We cast D3D__RenderState to a pPSDef for these fields, but
-  // manually read from D3D__RenderState[X_D3DRS_PSTEXTUREMODES) for that one field.
+  // manually read from D3D__RenderState[X_D3DRS_PSTEXTUREMODES] for that one field.
   // See D3DDevice_SetPixelShaderCommon which implements this
 
   pPSDef = g_pXbox_PixelShader != nullptr ? (xbox::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
  
   if (pPSDef != nullptr)
   {
+    // Create a copy of the pixel shader definition, as it is residing in render state register slots :
+    xbox::X_D3DPIXELSHADERDEF PSDefCopy = *pPSDef;
+    // Copy-in the PSTextureModes value which is stored outside the range of Xbox pixel shader render state slots :
+    PSDefCopy.PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+
 	RecompiledPixelShader = nullptr;
 
     // Now, see if we already have a shader compiled for this declaration :
+    // TODO : Change g_RecompiledPixelShaders into an unordered_map, hash just the identifying PSDef members, and add cache eviction (clearing host resources when pruning)
 	for (auto it = g_RecompiledPixelShaders.begin(); it != g_RecompiledPixelShaders.end(); ++it) {
-		// Only compare parts that form a unique shader (ignore the constants and Direct3D8 run-time fields) :
-		if ((memcmp(&(it->PSDef.PSAlphaInputs[0]), &(pPSDef->PSAlphaInputs[0]), (8 + 2) * sizeof(DWORD)) == 0)
-			&& (memcmp(&(it->PSDef.PSAlphaOutputs[0]), &(pPSDef->PSAlphaOutputs[0]), (8 + 8 + 3 + 8 + 4) * sizeof(DWORD)) == 0)) {
+		if (ArePSDefsIdentical(it->PSDef, PSDefCopy)) {
 			RecompiledPixelShader = &(*it);
 			break;
 		}
 	}
-
     // If none was found, recompile this shader and remember it :
     if (RecompiledPixelShader == nullptr) {
       // Recompile this pixel shader :
-	  g_RecompiledPixelShaders.push_back(DxbxRecompilePixelShader(pPSDef));
+	  g_RecompiledPixelShaders.push_back(DxbxRecompilePixelShader(&PSDefCopy));
 	  RecompiledPixelShader = &g_RecompiledPixelShaders.back();
     }
 
@@ -5917,10 +5941,6 @@ void DxbxUpdateActivePixelShader() // NOPATCH
     g_pD3DDevice->GetPixelShader(/*out*/(IDirect3DPixelShader**)(&CurrentPixelShader));
     if (CurrentPixelShader != ConvertedPixelShaderHandle)
 		g_pD3DDevice->SetPixelShader((IDirect3DPixelShader*)ConvertedPixelShaderHandle);
-
-    // Note : We set the constants /after/ setting the shader, so that any
-    // constants in the shader declaration can be overwritten (this will be
-    // needed for the final combiner constants at least)!
 
     // TODO: Figure out a method to forward the vertex-shader oFog output to the pixel shader FOG input register :
     // We could use the unused oT4.x to output fog from the vertex shader, and read it with 'texcoord t4' in pixel shader!
@@ -5970,10 +5990,6 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 		  case PSH_XBOX_CONSTANT_FC1:
               fColor[i] = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT1);
 			break;
-          case PSH_XBOX_CONSTANT_MUL0:
-          case PSH_XBOX_CONSTANT_MUL1:
-              // These have already been DEFined at the start of ConvertConstantsToNative
-              continue;
           case PSH_XBOX_CONSTANT_BEM + 0:
           case PSH_XBOX_CONSTANT_BEM + 1:
           case PSH_XBOX_CONSTANT_BEM + 2:
@@ -6002,14 +6018,16 @@ void DxbxUpdateActivePixelShader() // NOPATCH
               value[3] = 0;
               break;
           }
-          default: // Actual constants C0..C15 are stored as-is in (and should thus be read from) the Xbox render state pixel shader constant slots
-              fColor[i] = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + i);
+          default: // PSH_XBOX_CONSTANT_C0..C15 are stored as-is in (and should thus be read from) the Xbox render state pixel shader constant slots
+              fColor[i] = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + i - PSH_XBOX_CONSTANT_C0);
 			break;
         }
       }
 
       // Set all host constant values using a single call:
       g_pD3DDevice->SetPixelShaderConstantF(0, (PixelShaderConstantType*)(&fColor[0]), PSH_XBOX_CONSTANT_MAX);
+      // Note PSH_XBOX_CONSTANT_MUL0 and PSH_XBOX_CONSTANT_MUL1 fall outside PSH_XBOX_CONSTANT_MAX
+      // and have already been 'PO_DEF'ined at the start of ConvertConstantsToNative
     }
   }
   else
