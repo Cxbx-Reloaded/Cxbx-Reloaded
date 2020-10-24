@@ -32,6 +32,7 @@
 #include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp" // Global variables
+#include <common/Timer.h>
 
 #include "Logging.h"
 #include "DirectSoundLogging.hpp"
@@ -52,42 +53,16 @@
 // TODO: Move these to LLE APUDevice once we have one!
 
 static constexpr uint32_t APU_TIMER_FREQUENCY = 48000;
-static constexpr uint32_t SEC_TO_NSEC = 1000000000; // For seconds -> nanoseconds conversions
-static uint64_t NativeToXbox_FactorForApu = 0;
-
-static LARGE_INTEGER LastApuQPC;
-static DWORD CurrentApu = 0;
-static ULONGLONG CurrentApuRemainder = 0; // Must be 64-bit because it stores a nanosecond precision remainder
+static ScaledPerformanceCounter ApuCounter;
 
 void ResetApuTimer()
 {
-    // Measure current host performance counter and frequency
-    LARGE_INTEGER HostClockFrequency;
-    QueryPerformanceFrequency(&HostClockFrequency);
-
-    NativeToXbox_FactorForApu = Muldiv64(HostClockFrequency.QuadPart, SEC_TO_NSEC, APU_TIMER_FREQUENCY);
-
-    LARGE_INTEGER tsc;
-    QueryPerformanceCounter(&tsc);
-    LastApuQPC = tsc;
-    CurrentApu = 0;
-    CurrentApuRemainder = 0;
+    ApuCounter.Reset(APU_TIMER_FREQUENCY);
 }
 
 uint32_t GetAPUTime()
 {
-    LARGE_INTEGER tsc;
-    QueryPerformanceCounter(&tsc);
-
-    LARGE_INTEGER lastTsc = std::exchange(LastApuQPC, tsc);
-    tsc.QuadPart -= lastTsc.QuadPart;
-    tsc.QuadPart *= SEC_TO_NSEC;
-    tsc.QuadPart += CurrentApuRemainder;
-    DWORD quotient = static_cast<DWORD>(tsc.QuadPart / NativeToXbox_FactorForApu);
-    ULONGLONG remainder = tsc.QuadPart % NativeToXbox_FactorForApu;
-
-    CurrentApuRemainder = remainder;
-    return CurrentApu += quotient;
+    return static_cast<uint32_t>(ApuCounter.Tick());
 }
 
 

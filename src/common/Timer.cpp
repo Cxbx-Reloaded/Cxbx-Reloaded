@@ -170,3 +170,37 @@ void Timer_Init()
 #error "Unsupported OS"
 #endif
 }
+
+// ******************************************************************
+
+void ScaledPerformanceCounter::Reset(uint32_t frequency)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+
+	m_frequencyFactor = Muldiv64(HostClockFrequency, SCALE_S_IN_NS, frequency);
+
+	LARGE_INTEGER tsc;
+	QueryPerformanceCounter(&tsc);
+	m_lastQPC = tsc.QuadPart;
+
+	m_currentCount = 0;
+	m_currentRemainder = 0;
+}
+
+uint64_t ScaledPerformanceCounter::Tick()
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+
+	LARGE_INTEGER qpc;
+	QueryPerformanceCounter(&qpc);
+
+	int64_t lastQpc = std::exchange(m_lastQPC, qpc.QuadPart);
+	qpc.QuadPart -= lastQpc;
+	qpc.QuadPart *= SCALE_S_IN_NS;
+	qpc.QuadPart += m_currentRemainder;
+	uint64_t quotient = qpc.QuadPart / m_frequencyFactor;
+	uint64_t remainder =  qpc.QuadPart % m_frequencyFactor;
+
+	m_currentRemainder = remainder;
+	return m_currentCount += quotient;
+}
