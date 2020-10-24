@@ -51,27 +51,43 @@
 // Temporary APU Timer Functions
 // TODO: Move these to LLE APUDevice once we have one!
 
-#define APU_TIMER_FREQUENCY	48000
-LARGE_INTEGER APUInitialPerformanceCounter;
-double NativeToXboxAPU_FactorForPerformanceFrequency = 0;
+static constexpr uint32_t APU_TIMER_FREQUENCY = 48000;
+static constexpr uint32_t SEC_TO_NSEC = 1000000000; // For seconds -> nanoseconds conversions
+static uint64_t NativeToXbox_FactorForApu = 0;
+
+static LARGE_INTEGER LastApuQPC;
+static DWORD CurrentApu = 0;
+static ULONGLONG CurrentApuRemainder = 0; // Must be 64-bit because it stores a nanosecond precision remainder
 
 void ResetApuTimer()
 {
-	// Measure current host performance counter and frequency
-	QueryPerformanceCounter(&APUInitialPerformanceCounter);
-	NativeToXboxAPU_FactorForPerformanceFrequency = (double)APU_TIMER_FREQUENCY / APUInitialPerformanceCounter.QuadPart;
+    // Measure current host performance counter and frequency
+    LARGE_INTEGER HostClockFrequency;
+    QueryPerformanceFrequency(&HostClockFrequency);
+
+    NativeToXbox_FactorForApu = Muldiv64(HostClockFrequency.QuadPart, SEC_TO_NSEC, APU_TIMER_FREQUENCY);
+
+    LARGE_INTEGER tsc;
+    QueryPerformanceCounter(&tsc);
+    LastApuQPC = tsc;
+    CurrentApu = 0;
+    CurrentApuRemainder = 0;
 }
 
 uint32_t GetAPUTime()
 {
-	::LARGE_INTEGER PerformanceCounter;
-	QueryPerformanceCounter(&PerformanceCounter);
+    LARGE_INTEGER tsc;
+    QueryPerformanceCounter(&tsc);
 
-	// Re-Base on the time DirectSoundCreate was called
-	PerformanceCounter.QuadPart -= APUInitialPerformanceCounter.QuadPart;
-	// Apply a delta to make it appear to tick at 48khz
-	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXboxAPU_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
-	return (DWORD)PerformanceCounter.QuadPart;
+    LARGE_INTEGER lastTsc = std::exchange(LastApuQPC, tsc);
+    tsc.QuadPart -= lastTsc.QuadPart;
+    tsc.QuadPart *= SEC_TO_NSEC;
+    tsc.QuadPart += CurrentApuRemainder;
+    DWORD quotient = static_cast<DWORD>(tsc.QuadPart / NativeToXbox_FactorForApu);
+    ULONGLONG remainder = tsc.QuadPart % NativeToXbox_FactorForApu;
+
+    CurrentApuRemainder = remainder;
+    return CurrentApu += quotient;
 }
 
 
