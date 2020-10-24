@@ -4032,11 +4032,10 @@ void GetViewPortOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 
 void UpdateViewPortOffsetAndScaleConstants()
 {
-    float vOffset[4], vScale[4];
-    GetViewPortOffsetAndScale(vOffset, vScale);
+    float vScaleOffset[2][4]; // 0 - scale 1 - offset
+    GetViewPortOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
 
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_VIEWPORT_SCALE_MIRROR, vScale, 1);
-    g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR, vOffset, 1);
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_VIEWPORT_SCALE_MIRROR, reinterpret_cast<float*>(vScaleOffset), 2);
 
 	// Store viewport offset and scale in constant registers 58 (c-38) and
 	// 59 (c-37) used for screen space transformation.
@@ -4044,8 +4043,7 @@ void UpdateViewPortOffsetAndScaleConstants()
 	// Treat this as a flag
 	// Test Case: GTA III, Soldier of Fortune II
 	if (!(g_Xbox_VertexShaderConstantMode & X_D3DSCM_NORESERVEDCONSTANTS)) {
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_SCALE + X_D3DSCM_CORRECTION, vScale, 1);
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_OFFSET + X_D3DSCM_CORRECTION, vOffset, 1);
+		g_pD3DDevice->SetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_SCALE + X_D3DSCM_CORRECTION, reinterpret_cast<float*>(vScaleOffset), 2);
 	}
 }
 

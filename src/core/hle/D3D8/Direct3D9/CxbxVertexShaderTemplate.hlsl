@@ -261,9 +261,13 @@ float4 reverseScreenspaceTransform(float4 oPos)
 	// mad oPos.xyz, r12, r1.x, c-37
 	// where c-37 and c-38 are reserved transform values
 
+	// oPos.w and xboxViewportScale.z might be VERY big when a D24 depth buffer is used
+	// and multiplying oPos.xyz by oPos.w may cause precision issues.
+	// Pre-divide them to help keep the values reasonably small.
+	// Test case: Burnout 3
+	float3 divisor = xboxViewportScale.xyz / oPos.w;
 	oPos.xyz -= xboxViewportOffset.xyz; // reverse offset
-	oPos.xyz *= oPos.w; // reverse perspective divide
-	oPos.xyz /= xboxViewportScale.xyz; // reverse scale
+	oPos.xyz /= divisor; // reverse scale and perspective divide
 
 	return oPos;
 }
