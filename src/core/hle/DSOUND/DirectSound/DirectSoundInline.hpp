@@ -854,10 +854,10 @@ static inline HRESULT HybridDirectSoundBuffer_Pause(
          // TODO: NOTE: If stream is playing, it perform same behavior as pause flag. If it is not played, it act as a queue until trigger to play it.
         case X_DSSPAUSE_PAUSENOACTIVATE:
             if ((dwEmuFlags & DSE_FLAG_PAUSE) != 0) {
-                // TODO: Start queueing
+                // TODO: Start queueing, might need the use of a DSE_FLAG_IS_ACTIVATED flag
                 break;
             }
-            // Intentional fallthrough
+            [[fallthrough]];
         case X_DSSPAUSE_PAUSE:
             pDSBuffer->Stop();
             DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);

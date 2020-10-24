@@ -372,7 +372,7 @@ bool DSStream_Packet_Flush(
     }
     // Clear flags and set status to zero.
     DSStream_Packet_FlushEx_Reset(pThis);
-    pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
+    pThis->EmuFlags |= DSE_FLAG_PAUSE;
     pThis->Xb_Status = 0;
     return false;
 }
