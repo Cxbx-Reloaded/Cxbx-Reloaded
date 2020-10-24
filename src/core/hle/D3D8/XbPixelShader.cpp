@@ -3419,7 +3419,6 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(xbox::X_D3DPIXELSHADERDEF *pPSDef
   int i, j;
   PPSH_INTERMEDIATE_FORMAT Cur;
   PPSH_IMD_ARGUMENT CurArg;
-  int16_t OriginalConstantNr;
   PSH_INTERMEDIATE_FORMAT NewIns = {};
 
     NewIns.Initialize(PO_DEF);
@@ -3469,10 +3468,6 @@ bool PSH_XBOX_SHADER::ConvertConstantsToNative(xbox::X_D3DPIXELSHADERDEF *pPSDef
 
       if (CurArg->Type != PARAM_C)
         continue;
-
-      // Make sure we can detect new constants (and if it was C0 or C1),
-      // as we need this for fixing up final combiner constants :
-      OriginalConstantNr = CurArg->Address;
 
       // For each constant being addressed, we find out which Xbox constant it is,
       // and map it to a native constant (as far as we have space for them) :
@@ -5876,7 +5871,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   int i;
   DWORD Register_;
   D3DCOLOR dwColor;
-  D3DXCOLOR fColor;
+  D3DXCOLOR fColor[PSH_XBOX_CONSTANT_MAX];
 
   HRESULT Result = D3D_OK;
 
@@ -5960,20 +5955,20 @@ void DxbxUpdateActivePixelShader() // NOPATCH
     // as these could have been updated via SetRenderState or otherwise :
     for (i = 0; i < PSH_XBOX_CONSTANT_MAX; i++)
 	{
-      // Asume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
+      // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
 	  {
         // Read the color from the corresponding render state slot :
         switch (i) {
           case PSH_XBOX_CONSTANT_FOG:
             // Note : FOG.RGB is correct like this, but FOG.a should be coming
             // from the vertex shader (oFog) - however, D3D8 does not forward this...
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
+              fColor[i] = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
 			break;
 		  case PSH_XBOX_CONSTANT_FC0:
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
+              fColor[i] = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
 			break;
 		  case PSH_XBOX_CONSTANT_FC1:
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT1);
+              fColor[i] = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT1);
 			break;
           case PSH_XBOX_CONSTANT_MUL0:
           case PSH_XBOX_CONSTANT_MUL1:
@@ -5985,7 +5980,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
           case PSH_XBOX_CONSTANT_BEM + 3:
           {
               int stage = i - PSH_XBOX_CONSTANT_BEM;
-              DWORD* value = (DWORD*)&fColor;
+              DWORD* value = (DWORD*)&fColor[i];
 
               g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT00, &value[0]);
               g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT01, &value[1]);
@@ -5999,7 +5994,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
           case PSH_XBOX_CONSTANT_LUM + 3:
           {
               int stage = i - PSH_XBOX_CONSTANT_LUM;
-              DWORD* value = (DWORD*)&fColor;
+              DWORD* value = (DWORD*)&fColor[i];
 
               g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLSCALE, &value[0]);
               g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLOFFSET, &value[1]);
@@ -6008,21 +6003,13 @@ void DxbxUpdateActivePixelShader() // NOPATCH
               break;
           }
           default: // Actual constants C0..C15 are stored as-is in (and should thus be read from) the Xbox render state pixel shader constant slots
-              fColor = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + i);
+              fColor[i] = dwColor = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + i);
 			break;
         }
-
-        // Convert it back to 4 floats  :
-        //fColor = dwColor;
-        // TODO : Avoid the following setter if it's no different from the previous update (this might speed things up)
-        // Set the value locally in this register :
-        g_pD3DDevice->SetPixelShaderConstantF
-		(
-			i, 
-			(PixelShaderConstantType*)(&fColor),
-			1
-		);
       }
+
+      // Set all host constant values using a single call:
+      g_pD3DDevice->SetPixelShaderConstantF(0, (PixelShaderConstantType*)(&fColor[0]), PSH_XBOX_CONSTANT_MAX);
     }
   }
   else
