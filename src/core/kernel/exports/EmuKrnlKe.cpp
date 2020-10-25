@@ -326,47 +326,14 @@ void InitDpcThread()
 
 static constexpr uint32_t XBOX_TSC_FREQUENCY = 733333333; // Xbox Time Stamp Counter Frequency = 733333333 (CPU Clock)
 static constexpr uint32_t XBOX_ACPI_FREQUENCY = 3375000;  // Xbox ACPI frequency (3.375 mhz)
-static constexpr uint32_t SEC_TO_NSEC = 1000000000; // For seconds -> nanoseconds conversions
-static uint64_t NativeToXbox_FactorForRdtsc = 0, NativeToXbox_FactorForAcpi = 0;
-
-// State for CxbxGetPerformanceCounter - concurrent access should be next to non-existent, but secure against it anyway
-static std::mutex RdtscLock, AcpiLock;
-static LARGE_INTEGER LastRdtscQPC, LastAcpiQPC;
-static ULONGLONG CurrentRdtsc = 0, CurrentAcpi = 0;
-static ULONGLONG CurrentRdtscRemainder = 0, CurrentAcpiRemainder = 0;
+static ScaledPerformanceCounter TscCounter, AcpiCounter;
 
 ULONGLONG CxbxGetPerformanceCounter(bool acpi)
 {
-	if (acpi == false && NativeToXbox_FactorForRdtsc != 0) {
-		std::lock_guard<std::mutex> lock(RdtscLock);
-
-		LARGE_INTEGER tsc;
-		QueryPerformanceCounter(&tsc);
-
-		LARGE_INTEGER lastTsc = std::exchange(LastRdtscQPC, tsc);
-		tsc.QuadPart -= lastTsc.QuadPart;
-		tsc.QuadPart *= SEC_TO_NSEC;
-		tsc.QuadPart += CurrentRdtscRemainder;
-		ULONGLONG quotient = tsc.QuadPart / NativeToXbox_FactorForRdtsc;
-		ULONGLONG remainder =  tsc.QuadPart % NativeToXbox_FactorForRdtsc;
-
-		CurrentRdtscRemainder = remainder;
-		return CurrentRdtsc += quotient;
-	} else if (acpi == true && NativeToXbox_FactorForAcpi != 0) {
-		std::lock_guard<std::mutex> lock(AcpiLock);
-
-		LARGE_INTEGER tsc;
-		QueryPerformanceCounter(&tsc);
-
-		LARGE_INTEGER lastTsc = std::exchange(LastAcpiQPC, tsc);
-		tsc.QuadPart -= lastTsc.QuadPart;
-		tsc.QuadPart *= SEC_TO_NSEC;
-		tsc.QuadPart += CurrentAcpiRemainder;
-		ULONGLONG quotient = tsc.QuadPart / NativeToXbox_FactorForAcpi;
-		ULONGLONG remainder = tsc.QuadPart % NativeToXbox_FactorForAcpi;
-
-		CurrentAcpiRemainder = remainder;
-		return CurrentAcpi += quotient;
+	if (acpi == false) {
+		return TscCounter.Tick();
+	} else if (acpi == true) {
+		return AcpiCounter.Tick();
 	}
 
 	LARGE_INTEGER tsc;
@@ -376,12 +343,8 @@ ULONGLONG CxbxGetPerformanceCounter(bool acpi)
 
 void CxbxInitPerformanceCounters()
 {
-	NativeToXbox_FactorForRdtsc = Muldiv64(HostClockFrequency, SEC_TO_NSEC, XBOX_TSC_FREQUENCY);
-	NativeToXbox_FactorForAcpi = Muldiv64(HostClockFrequency, SEC_TO_NSEC, XBOX_ACPI_FREQUENCY);
-
-	LARGE_INTEGER tsc;
-	QueryPerformanceCounter(&tsc);
-	LastRdtscQPC = LastAcpiQPC = tsc;
+	TscCounter.Reset(XBOX_TSC_FREQUENCY);
+	AcpiCounter.Reset(XBOX_ACPI_FREQUENCY);
 
 	// Let's initialize the Dpc handling thread too,
 	// here for now (should be called by our caller)

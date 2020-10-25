@@ -32,6 +32,7 @@
 #include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp" // Global variables
+#include <common/Timer.h>
 
 #include "Logging.h"
 #include "DirectSoundLogging.hpp"
@@ -51,27 +52,17 @@
 // Temporary APU Timer Functions
 // TODO: Move these to LLE APUDevice once we have one!
 
-#define APU_TIMER_FREQUENCY	48000
-LARGE_INTEGER APUInitialPerformanceCounter;
-double NativeToXboxAPU_FactorForPerformanceFrequency = 0;
+static constexpr uint32_t APU_TIMER_FREQUENCY = 48000;
+static ScaledPerformanceCounter ApuCounter;
 
 void ResetApuTimer()
 {
-	// Measure current host performance counter and frequency
-	QueryPerformanceCounter(&APUInitialPerformanceCounter);
-	NativeToXboxAPU_FactorForPerformanceFrequency = (double)APU_TIMER_FREQUENCY / APUInitialPerformanceCounter.QuadPart;
+    ApuCounter.Reset(APU_TIMER_FREQUENCY);
 }
 
 uint32_t GetAPUTime()
 {
-	::LARGE_INTEGER PerformanceCounter;
-	QueryPerformanceCounter(&PerformanceCounter);
-
-	// Re-Base on the time DirectSoundCreate was called
-	PerformanceCounter.QuadPart -= APUInitialPerformanceCounter.QuadPart;
-	// Apply a delta to make it appear to tick at 48khz
-	PerformanceCounter.QuadPart = (ULONGLONG)(NativeToXboxAPU_FactorForPerformanceFrequency * PerformanceCounter.QuadPart);
-	return (DWORD)PerformanceCounter.QuadPart;
+    return static_cast<uint32_t>(ApuCounter.Tick());
 }
 
 
