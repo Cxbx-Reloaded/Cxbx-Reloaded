@@ -2069,6 +2069,12 @@ void WINAPI EMUPATCH(D3D_SetCommonDebugRegisters)();
 void WINAPI EMUPATCH(D3D_BlockOnTime)( dword_xt Unknown1, int Unknown2 );
 
 // ******************************************************************
+// * patch: D3D_BlockOnTime_4
+//   One of the parameters (unknown which) passed in EAX
+// ******************************************************************
+void WINAPI EMUPATCH(D3D_BlockOnTime_4)( dword_xt Unknown1 );
+
+// ******************************************************************
 // * patch: D3D_BlockOnResource
 // ******************************************************************
 void WINAPI EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource );

@@ -8608,6 +8608,33 @@ void WINAPI xbox::EMUPATCH(D3D_BlockOnTime)( dword_xt Unknown1, int Unknown2 )
 	LOG_UNIMPLEMENTED();
 }
 
+// LTCG specific D3D_BlockOnTime function
+// This uses a custom calling convention where parameter is passed in EAX
+// Test case: Burnout 3
+__declspec(naked) void WINAPI xbox::EMUPATCH(D3D_BlockOnTime_4)( dword_xt Unknown1 )
+{
+	int Unknown2;
+
+	// prologue
+	__asm {
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  Unknown2, eax // get parameter from eax
+	}
+
+	// LOG_FORWARD requires unwinding, so carry on without it
+	EMUPATCH(D3D_BlockOnTime)(Unknown1, Unknown2);
+
+	// epilogue
+	__asm {
+		mov  esp, ebp
+		pop  ebp
+		ret  4
+	}
+}
+
+
 bool DestroyResource_Common(xbox::X_D3DResource* pResource)
 {
     if (pResource == g_pXbox_RenderTarget) {
