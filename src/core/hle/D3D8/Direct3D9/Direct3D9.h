@@ -1313,7 +1313,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform)
     CONST D3DMATRIX      *pMatrix
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetTransform_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_MultiplyTransform

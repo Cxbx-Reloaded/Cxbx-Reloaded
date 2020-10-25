@@ -303,6 +303,9 @@ g_EmuCDPD = {0};
   /*XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetVertexShader,         (xbox::dword_xt)                                                                            );*/\
   /*XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetVertexShaderInput,    (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );*/\
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetViewport,             (CONST xbox::X_D3DVIEWPORT8*)                                                       );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTransform,            (D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                       );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetTransform_0,          ()                                                       );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_MultiplyTransform,       (D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                       );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3D_DestroyResource,               (xbox::X_D3DResource*)                                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3D_DestroyResource__LTCG,         (xbox::void_xt)                                                                             );  \
     XB_MACRO(xbox::hresult_xt,            WINAPI,     Direct3D_CreateDevice,             (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::dword_xt, xbox::X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**)  );  \
@@ -6445,21 +6448,51 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
     XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
 }
 
+void CxbxImpl_SetTransform
+(
+    D3DTRANSFORMSTATETYPE State,
+    CONST D3DMATRIX *pMatrix
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(State)
+        LOG_FUNC_ARG(pMatrix)
+        LOG_FUNC_END;
+
+	State = EmuXB2PC_D3DTS(State);
+
+    HRESULT hRet = g_pD3DDevice->SetTransform(State, pMatrix);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
+}
+
 // LTCG specific D3DDevice_SetTransform function...
 // This uses a custom calling convention where parameter is passed in EAX, EDX
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetTransform_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0)
 (
 )
 {
-	D3DTRANSFORMSTATETYPE param1;
-	CONST D3DMATRIX *param2;
+	D3DTRANSFORMSTATETYPE State;
+	CONST D3DMATRIX *pMatrix;
 
+	// prologue
 	__asm {
-		mov param1, eax
-		mov param2, edx
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  State, eax
+		mov  pMatrix, edx
+		// Trampoline to guest code to remove the need for a GetTransform patch
+		call XB_TRMP(D3DDevice_SetTransform_0)
 	}
 
-	return EMUPATCH(D3DDevice_SetTransform)(param1, param2);
+	CxbxImpl_SetTransform(State, pMatrix);
+
+	// epilogue
+	__asm {
+		mov  esp, ebp
+		pop  ebp
+		ret
+	}
 }
 
 // ******************************************************************
@@ -6471,36 +6504,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
     CONST D3DMATRIX      *pMatrix
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(State)
-		LOG_FUNC_ARG(pMatrix)
-		LOG_FUNC_END;
-
-    /*
-    printf("pMatrix (%d)\n", State);
-    printf("{\n");
-    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_11, pMatrix->_12, pMatrix->_13, pMatrix->_14);
-    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_21, pMatrix->_22, pMatrix->_23, pMatrix->_24);
-    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_31, pMatrix->_32, pMatrix->_33, pMatrix->_34);
-    printf("    %.08f,%.08f,%.08f,%.08f\n", pMatrix->_41, pMatrix->_42, pMatrix->_43, pMatrix->_44);
-    printf("}\n");
-
-    if(State == 6 && (pMatrix->_11 == 1.0f) && (pMatrix->_22 == 1.0f) && (pMatrix->_33 == 1.0f) && (pMatrix->_44 == 1.0f))
-    {
-        g_bSkipPush = TRUE;
-        printf("SkipPush ON\n");
-    }
-    else
-    {
-        g_bSkipPush = FALSE;
-        printf("SkipPush OFF\n");
-    }
-    */
-
-    State = EmuXB2PC_D3DTS(State);
-
-    HRESULT hRet = g_pD3DDevice->SetTransform(State, pMatrix);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
+	// Trampoline to guest code to remove the need for a GetTransform patch
+    XB_TRMP(D3DDevice_SetTransform)(State, pMatrix);
+    CxbxImpl_SetTransform(State, pMatrix);  
 }
 
 // ******************************************************************
@@ -6517,31 +6523,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 		LOG_FUNC_ARG(pMatrix)
 		LOG_FUNC_END;
 
+
+	// Trampoline to guest code to remove the need for a GetTransform patch
+    XB_TRMP(D3DDevice_MultiplyTransform)(State, pMatrix);
+
 	State = EmuXB2PC_D3DTS(State);
 
 	HRESULT hRet = g_pD3DDevice->MultiplyTransform(State, pMatrix);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->MultiplyTransform");
-}
-
-
-// ******************************************************************
-// * patch: D3DDevice_GetTransform
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetTransform)
-(
-    D3DTRANSFORMSTATETYPE State,
-    D3DMATRIX            *pMatrix
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(State)
-		LOG_FUNC_ARG(pMatrix)
-		LOG_FUNC_END;
-
-    State = EmuXB2PC_D3DTS(State);
-
-    HRESULT hRet = g_pD3DDevice->GetTransform(State, pMatrix);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetTransform");    
 }
 
 // ******************************************************************

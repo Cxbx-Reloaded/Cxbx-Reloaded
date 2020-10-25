@@ -4135,3 +4135,23 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
     
     return hRet;
 }
+
+// ******************************************************************
+// * patch: D3DDevice_GetTransform
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetTransform)
+(
+    D3DTRANSFORMSTATETYPE State,
+    D3DMATRIX            *pMatrix
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(State)
+		LOG_FUNC_ARG(pMatrix)
+		LOG_FUNC_END;
+
+    State = EmuXB2PC_D3DTS(State);
+
+    HRESULT hRet = g_pD3DDevice->GetTransform(State, pMatrix);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetTransform");    
+}
