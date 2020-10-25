@@ -5690,14 +5690,20 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		switch (XboxResourceType) {
 		case xbox::X_D3DRTYPE_SURFACE: {
 			if (D3DUsage & D3DUSAGE_RENDERTARGET) {
-				hRet = g_pD3DDevice->CreateRenderTarget(dwWidth * g_RenderScaleFactor, dwHeight * g_RenderScaleFactor, PCFormat,
-					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
-					0, // MultisampleQuality
-					true, // Lockable
-					&pNewHostSurface,
+				hRet = g_pD3DDevice->CreateTexture(dwWidth * g_RenderScaleFactor, dwHeight * g_RenderScaleFactor, 1, D3DUSAGE_RENDERTARGET,
+					PCFormat,
+					D3DPOOL_DEFAULT, // Pool
+					&pNewHostTexture,
 					nullptr // pSharedHandle
 				);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTarget");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture");
+
+				if (hRet == D3D_OK) {
+					hRet = pNewHostTexture->GetSurfaceLevel(0, &pNewHostSurface);
+					DEBUG_D3DRESULT(hRet, "pNewHostTexture->pNewHostSurface");
+					pNewHostTexture->Release();
+					pNewHostTexture = nullptr;
+				}
 			} else
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth * g_RenderScaleFactor, dwHeight * g_RenderScaleFactor, PCFormat,
@@ -5710,9 +5716,20 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateDepthStencilSurface");
 			}
 			else {
-				D3DPool = D3DPOOL_SYSTEMMEM;
-				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
+				hRet = g_pD3DDevice->CreateTexture(dwWidth * g_RenderScaleFactor, dwHeight * g_RenderScaleFactor, 1, D3DUSAGE_RENDERTARGET,
+					PCFormat,
+					D3DPOOL_DEFAULT, // Pool
+					&pNewHostTexture,
+					nullptr // pSharedHandle
+				);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture");
+
+				if (hRet == D3D_OK) {
+					hRet = pNewHostTexture->GetSurfaceLevel(0, &pNewHostSurface);
+					DEBUG_D3DRESULT(hRet, "pNewHostTexture->pNewHostSurface");
+					pNewHostTexture->Release();
+					pNewHostTexture = nullptr;
+                }
 			}
 
 			// First fail, retry with a fallback format
@@ -6943,34 +6960,21 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
+	IDirect3DSurface* pHostSurface = GetHostSurface(pBaseTexture);
+	if (!pHostSurface) {
+        LOG_TEST_CASE("Failed to get host surface");
+		return nullptr;
+	}
+
 	IDirect3DTexture* pNewHostTexture = nullptr;
-#if 0 // TODO : Complete, debug and activate (and then cleanup GetHostBaseTexture)
-	D3DFORMAT PCFormat = D3DFMT_A8B8G8R8; // TODO : Derive from pBaseTexture
+	auto hRet = pHostSurface->GetContainer(__uuidof(IDirect3DTexture9), (void**)&pNewHostTexture);
+    DEBUG_D3DRESULT(hRet, "pHostSurface->GetContainer");
 
-	IDirect3DSurface* pHostSurface = GetHostSurface(pBaseTexture); // TODO : Extend this with a texture channel number too, if surfaces send to SetTexture can be paletized format?
-
-	DWORD dwWidth = GetPixelContainerWidth(pBaseTexture);
-	DWORD dwHeight = GetPixelContainerHeight(pBaseTexture);
-	UINT dwMipMapLevels = CxbxGetPixelContainerMipMapLevels(pBaseTexture);
-
-	HRESULT hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
-		/*Usage=*/0, PCFormat, D3DPOOL_SYSTEMMEM, &pNewHostTexture, nullptr);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture (in CxbxConvertXboxSurfaceToHostTexture)");
-	if (hRet != D3D_OK) {
-		CxbxKrnlCleanup("CreateTexture Failed!\n\nError: \nDesc: "/*,
-			DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
+	if (FAILED(hRet)) {
+		LOG_TEST_CASE("Failed to get Texture from Surface");
+		return nullptr;
 	}
 
-	IDirect3DSurface* pHostTextureSurface = nullptr;
-	hRet = pNewHostTexture->GetSurfaceLevel(/*Level=*/0, &pHostTextureSurface);
-	DEBUG_D3DRESULT(hRet, "pHostBaseTexture->GetSurfaceLevel");
-
-	if (hRet == D3D_OK) {
-		hRet = D3DXLoadSurfaceFromSurface(pHostTextureSurface, nullptr, nullptr, pHostSurface, nullptr, nullptr, D3DX_FILTER_NONE, 0x00000000);
-		DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromSurface");
-		pHostTextureSurface->Release();
-	}
-#endif
 	return (IDirect3DBaseTexture*)pNewHostTexture; // return it as a base texture
 }
 
