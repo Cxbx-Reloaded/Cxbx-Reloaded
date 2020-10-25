@@ -1313,7 +1313,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform)
     CONST D3DMATRIX      *pMatrix
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetTransform_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_MultiplyTransform
@@ -2067,6 +2067,12 @@ void WINAPI EMUPATCH(D3D_SetCommonDebugRegisters)();
 // * patch: D3D_BlockOnTime
 // ******************************************************************
 void WINAPI EMUPATCH(D3D_BlockOnTime)( dword_xt Unknown1, int Unknown2 );
+
+// ******************************************************************
+// * patch: D3D_BlockOnTime_4
+//   One of the parameters (unknown which) passed in EAX
+// ******************************************************************
+void WINAPI EMUPATCH(D3D_BlockOnTime_4)( dword_xt Unknown1 );
 
 // ******************************************************************
 // * patch: D3D_BlockOnResource
