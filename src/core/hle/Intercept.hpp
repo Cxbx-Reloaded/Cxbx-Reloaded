@@ -56,4 +56,26 @@ void* GetXboxFunctionPointer(std::string functionName);
 void VerifyHLEDataBase();
 #endif
 
+// A helper class to allow code patches to detect nested calls (patches called from patches)
+class NestedPatchCounter
+{
+public:
+	explicit NestedPatchCounter(uint32_t& counter) noexcept
+		: m_counter(counter), m_level(counter)
+	{
+		m_counter++;
+	}
+
+	~NestedPatchCounter() noexcept
+	{
+		m_counter--;
+	}
+
+	uint32_t GetLevel() const noexcept { return m_level; }
+
+public:
+	uint32_t& m_counter;
+	const uint32_t m_level;
+};
+
 #endif
