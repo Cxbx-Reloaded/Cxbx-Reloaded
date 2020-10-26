@@ -6459,40 +6459,66 @@ void CxbxImpl_SetTransform
         LOG_FUNC_ARG(pMatrix)
         LOG_FUNC_END;
 
-	State = EmuXB2PC_D3DTS(State);
+    State = EmuXB2PC_D3DTS(State);
 
     HRESULT hRet = g_pD3DDevice->SetTransform(State, pMatrix);
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
 }
 
+// MultiplyTransform can call SetTransform, nested call detection is required
+// Test case: 25 to Life
+static thread_local uint32_t setTransformCount = 0;
+
 // LTCG specific D3DDevice_SetTransform function...
 // This uses a custom calling convention where parameter is passed in EAX, EDX
+
+// Naked functions must not contain objects that would require unwinding
+// so we cheat a bit by stashing the function body in a separate function
+static void D3DDevice_SetTransform_0_Inner
+(
+    D3DTRANSFORMSTATETYPE State,
+    CONST D3DMATRIX *pMatrix
+)
+{
+    NestedPatchCounter call(setTransformCount);
+
+    __asm {
+        // Trampoline to guest code to remove the need for a GetTransform patch
+        mov  eax, State
+        mov  edx, pMatrix
+        call XB_TRMP(D3DDevice_SetTransform_0)
+    }
+
+    if (call.GetLevel() == 0) {
+        // Skip if this patch is called from MultiplyTransform
+        CxbxImpl_SetTransform(State, pMatrix);
+    }
+}
+
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0)
 (
 )
 {
-	D3DTRANSFORMSTATETYPE State;
-	CONST D3DMATRIX *pMatrix;
+    D3DTRANSFORMSTATETYPE State;
+    CONST D3DMATRIX *pMatrix;
 
-	// prologue
-	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
-		mov  State, eax
-		mov  pMatrix, edx
-		// Trampoline to guest code to remove the need for a GetTransform patch
-		call XB_TRMP(D3DDevice_SetTransform_0)
-	}
+    // prologue
+    __asm {
+        push ebp
+        mov  ebp, esp
+        sub  esp, __LOCAL_SIZE
+        mov  State, eax
+        mov  pMatrix, edx   
+    }
 
-	CxbxImpl_SetTransform(State, pMatrix);
+    D3DDevice_SetTransform_0_Inner(State, pMatrix);
 
-	// epilogue
-	__asm {
-		mov  esp, ebp
-		pop  ebp
-		ret
-	}
+    // epilogue
+    __asm {
+        mov  esp, ebp
+        pop  ebp
+        ret
+    }
 }
 
 // ******************************************************************
@@ -6504,9 +6530,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
     CONST D3DMATRIX      *pMatrix
 )
 {
-	// Trampoline to guest code to remove the need for a GetTransform patch
+    NestedPatchCounter call(setTransformCount);
+
+    // Trampoline to guest code to remove the need for a GetTransform patch
     XB_TRMP(D3DDevice_SetTransform)(State, pMatrix);
-    CxbxImpl_SetTransform(State, pMatrix);  
+    if (call.GetLevel() == 0) {
+        // Skip if this patch is called from MultiplyTransform
+        CxbxImpl_SetTransform(State, pMatrix);
+    }
 }
 
 // ******************************************************************
@@ -6514,23 +6545,24 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 (
-	D3DTRANSFORMSTATETYPE State,
-	CONST D3DMATRIX      *pMatrix
+    D3DTRANSFORMSTATETYPE State,
+    CONST D3DMATRIX      *pMatrix
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(State)
-		LOG_FUNC_ARG(pMatrix)
-		LOG_FUNC_END;
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(State)
+        LOG_FUNC_ARG(pMatrix)
+        LOG_FUNC_END;
 
+    NestedPatchCounter call(setTransformCount);
 
-	// Trampoline to guest code to remove the need for a GetTransform patch
+    // Trampoline to guest code to remove the need for a GetTransform patch
     XB_TRMP(D3DDevice_MultiplyTransform)(State, pMatrix);
 
-	State = EmuXB2PC_D3DTS(State);
+    State = EmuXB2PC_D3DTS(State);
 
-	HRESULT hRet = g_pD3DDevice->MultiplyTransform(State, pMatrix);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->MultiplyTransform");
+    HRESULT hRet = g_pD3DDevice->MultiplyTransform(State, pMatrix);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->MultiplyTransform");
 }
 
 // ******************************************************************
