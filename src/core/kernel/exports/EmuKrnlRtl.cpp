@@ -684,8 +684,7 @@ XBSYSAPI EXPORTNUM(277) xbox::void_xt NTAPI xbox::RtlEnterCriticalSection
 
     HANDLE thread = (HANDLE)KeGetCurrentThread();
 
-    CriticalSection->LockCount++;
-    if(CriticalSection->LockCount == 0) {
+    if(InterlockedIncrement(reinterpret_cast<LONG*>(&CriticalSection->LockCount)) == 0) {
         CriticalSection->OwningThread = thread;
         CriticalSection->RecursionCount = 1;
     }
@@ -1228,10 +1227,10 @@ XBSYSAPI EXPORTNUM(294) xbox::void_xt NTAPI xbox::RtlLeaveCriticalSection
     LOG_FUNC_ONE_ARG(CriticalSection);
 
     CriticalSection->RecursionCount--;
-    CriticalSection->LockCount--;
+    LONG count = InterlockedDecrement(reinterpret_cast<LONG*>(&CriticalSection->LockCount));
     if(CriticalSection->RecursionCount == 0) {
         CriticalSection->OwningThread = 0;
-        if(CriticalSection->LockCount >= 0) {
+        if(count >= 0) {
             KeSetEvent((PRKEVENT)CriticalSection, (KPRIORITY)1, (boolean_xt)0);
         }
     }
@@ -1647,14 +1646,14 @@ XBSYSAPI EXPORTNUM(306) xbox::boolean_xt NTAPI xbox::RtlTryEnterCriticalSection
     BOOLEAN ret = false;
     HANDLE thread = (HANDLE)KeGetCurrentThread();
 
-    if(InterlockedCompareExchange((::PLONG)(&CriticalSection->LockCount), 0, -1) == -1) {
+    if(InterlockedCompareExchange(reinterpret_cast<LONG*>(&CriticalSection->LockCount), 0, -1) == -1) {
         CriticalSection->OwningThread = thread;
         CriticalSection->RecursionCount = 1;
         ret = true;
     }
     else {
         if(CriticalSection->OwningThread == thread) {
-            CriticalSection->LockCount++;
+            InterlockedIncrement(reinterpret_cast<LONG*>(&CriticalSection->LockCount));
             CriticalSection->RecursionCount++;
             ret = true;
         }
