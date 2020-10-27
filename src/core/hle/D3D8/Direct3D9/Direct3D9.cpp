@@ -7302,7 +7302,7 @@ void CxbxImpl_InsertCallback
 	}
 }
 
-xbox::void_xt __declspec(noinline) D3DDevice_SetPixelShaderCommon(xbox::dword_xt Handle)
+xbox::void_xt CxbxImpl_SetPixelShader(xbox::dword_xt Handle)
 {
     // Cache the active shader handle
     g_pXbox_PixelShader = (xbox::X_PixelShader*)Handle;
@@ -7320,33 +7320,47 @@ xbox::void_xt __declspec(noinline) D3DDevice_SetPixelShaderCommon(xbox::dword_xt
     }
 }
 
+// Overload for logging
+static void D3DDevice_SetPixelShader_0
+(
+	xbox::dword_xt      Handle
+)
+{
+	LOG_FUNC_ONE_ARG(Handle);
+}
+
 // LTCG specific D3DDevice_SetPixelShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Metal Wolf Chaos
 // Test-case: Lord of the Rings: The Third Age
-xbox::void_xt WINAPI D3DDevice_SetPixelShader_0_IMPL
-(
-    xbox::dword_xt Handle
-)
+// Test-case: Midtown Madness 3
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0)()
 {
-    LOG_FUNC_ONE_ARG(Handle);
+	dword_xt Handle;
+	// prologue
+	__asm {
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  Handle, eax
+	}
 
-    // Call the Xbox function to make sure D3D structures get set
-    __asm {
-        mov eax, Handle
-        call XB_TRMP(D3DDevice_SetPixelShader_0)
-    }
+	// Log
+	D3DDevice_SetPixelShader_0(Handle);
 
-    D3DDevice_SetPixelShaderCommon(Handle);
-}
+	__asm {
+		mov  eax, Handle
+		call XB_TRMP(D3DDevice_SetPixelShader_0)
+	}
 
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0)()
-{
-    __asm {
-        push eax
-        call D3DDevice_SetPixelShader_0_IMPL
-        ret
-    }
+	CxbxImpl_SetPixelShader(Handle);
+
+	// epilogue
+	__asm {
+		mov  esp, ebp
+		pop  ebp
+		ret
+	}
 }
 
 // ******************************************************************
@@ -7362,7 +7376,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 	// Call the Xbox function to make sure D3D structures get set
 	XB_TRMP(D3DDevice_SetPixelShader)(Handle);
 
-	D3DDevice_SetPixelShaderCommon(Handle);
+	CxbxImpl_SetPixelShader(Handle);
 }
 
 // ******************************************************************
