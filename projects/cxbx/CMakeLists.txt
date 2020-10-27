@@ -194,3 +194,14 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 add_dependencies(cxbx cxbxr-ldr cxbxr-emu misc-batch)
+
+# Try to stop cmake from building hlsl files
+# Which are all currently loaded at runtime only
+set(HlslHeaders ${CXBXR_HEADER_EMU})
+list(FILTER HlslHeaders INCLUDE REGEX ".*\\.hlsl$")
+set_source_files_properties(
+  ${HlslHeaders}
+  PROPERTIES
+  HEADER_FILE_ONLY TRUE
+  VS_TOOL_OVERRIDE "None"
+)

@@ -323,6 +323,23 @@ static DWORD* CxbxGetVertexShaderTokens(xbox::X_D3DVertexShader* pXboxVertexShad
 	return &pXboxVertexShader->ProgramAndConstants[0];
 }
 
+int GetXboxVertexDataComponentCount(int d3dvsdt) {
+	using namespace xbox;
+	switch (d3dvsdt) {
+	case X_D3DVSDT_NORMPACKED3:
+		return 3;
+	case X_D3DVSDT_FLOAT2H:
+		LOG_TEST_CASE("Attempting to use component count for X_D3DVSDT_FLOAT2H, which uses an odd (value, value, 0, value) layout");
+		// This is a bit of an odd case. Will call it 4 since it writes a value to the 4th component...
+		return 4;
+	default:
+		// Most data types have a representation consistent with the number of components
+		const int countMask = 0x7;
+		const int countShift = 4;
+		return (d3dvsdt >> countShift) & countMask;
+	}
+}
+
 extern bool g_InlineVertexBuffer_DeclarationOverride; // TMP glue
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat; // TMP glue
 
