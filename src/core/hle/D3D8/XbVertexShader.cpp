@@ -1435,6 +1435,37 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
 	}
 }
 
+// Set default values for attributes missing from vertex declaration
+void SetFixedFunctionDefaultVertexAttributes(DWORD vshFlags) {
+	// Test case: Mechassault (skybox)
+	// Test case: KOTOR (overlay)
+	auto decl = CxbxGetVertexDeclaration();
+	for (int i = 0; i < xbox::X_D3DVSDE_TEXCOORD3; i++) {
+		if (decl->vRegisterInDeclaration[i]) {
+			continue; // only reset missing attributes
+		}
+
+		const float white[4] = { 1, 1, 1, 1 };
+		const float black[4] = { 0, 0, 0, 0 };
+		const float unset[4] = { 0, 0, 0, 1 };
+		const float* value = unset;
+
+		// Account for flags that override this reset behaviour
+		if (i == xbox::X_D3DVSDE_DIFFUSE && !(vshFlags & X_VERTEXSHADER_FLAG_HASDIFFUSE) ||
+			i == xbox::X_D3DVSDE_BACKDIFFUSE && !(vshFlags & X_VERTEXSHADER_FLAG_HASBACKDIFFUSE)) {
+			value = white;
+		}
+		else if (i == xbox::X_D3DVSDE_SPECULAR && !(vshFlags & X_VERTEXSHADER_FLAG_HASSPECULAR) ||
+			i == xbox::X_D3DVSDE_BACKSPECULAR && !(vshFlags & X_VERTEXSHADER_FLAG_HASBACKSPECULAR)) {
+			value = black;
+		}
+
+		// Note : We avoid calling CxbxImpl_SetVertexData4f here, as that would
+		// start populating g_InlineVertexBuffer_Table, which is not our intent here.
+		CxbxSetVertexAttribute(i, value[0], value[1], value[2], value[3]);
+	}
+}
+
 void CxbxImpl_SetVertexShader(DWORD Handle)
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
@@ -1491,21 +1522,7 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 		g_Xbox_VertexShader_Handle = Handle;
 		g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 
-		// Only when there's no program, set default values for attributes missing from vertex shader
-		// Note : We avoid calling CxbxImpl_SetVertexData4f here, as that would
-		// start populating g_InlineVertexBuffer_Table, which is not our intend here.
-		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASDIFFUSE)) {
-			CxbxSetVertexAttribute(xbox::X_D3DVSDE_DIFFUSE, 1, 1, 1, 1);
-		}
-		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASSPECULAR)) {
-			CxbxSetVertexAttribute(xbox::X_D3DVSDE_SPECULAR, 0, 0, 0, 0);
-		}
-		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASBACKDIFFUSE)) {
-			CxbxSetVertexAttribute(xbox::X_D3DVSDE_BACKDIFFUSE, 1, 1, 1, 1);
-		}
-		if (!(pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_HASBACKSPECULAR)) {
-			CxbxSetVertexAttribute(xbox::X_D3DVSDE_BACKSPECULAR, 0, 0, 0, 0);
-		}
+		SetFixedFunctionDefaultVertexAttributes(pXboxVertexShader->Flags);
 
 		// Switch to passthrough program, if so required
 		if (pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_PASSTHROUGH) {
