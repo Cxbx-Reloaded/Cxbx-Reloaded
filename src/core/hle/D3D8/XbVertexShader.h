@@ -200,6 +200,9 @@ extern void EmuParseVshFunction
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF_RESERVED0) ? TRUE : FALSE; }
 inline xbox::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (xbox::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
+// Get the number of components represented by the given xbox vertex data type
+extern int GetXboxVertexDataComponentCount(int d3dvsdt);
+
 extern bool g_Xbox_VertexShader_IsFixedFunction;
 
 extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();

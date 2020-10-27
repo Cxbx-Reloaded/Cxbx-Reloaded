@@ -4,6 +4,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 
+#include <fstream>
 #include <sstream>
 
 extern const char* g_vs_model = vs_model_3_0;
@@ -329,6 +330,31 @@ extern HRESULT EmuCompileShader
 
 	return CompileHlsl(hlsl_str, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
 }
+
+extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
+{
+	static ID3DBlob* pShader = nullptr;
+
+	// TODO does this need to be thread safe?
+	if (pShader == nullptr) {
+		// Determine the filename and directory for the fixed function shader
+		auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
+			.parent_path()
+			.append("hlsl");
+
+		auto sourceFile = hlslDir.append("FixedFunctionVertexShader.hlsl").string();
+
+		// Load the shader into a string
+		std::ifstream hlslStream(sourceFile);
+		std::stringstream hlsl;
+		hlsl << hlslStream.rdbuf();
+
+		// Compile the shader
+		CompileHlsl(hlsl.str(), &pShader, sourceFile.c_str());
+	}
+
+	*ppHostShader = pShader;
+};
 
 static ID3DBlob* pPassthroughShader = nullptr;
 

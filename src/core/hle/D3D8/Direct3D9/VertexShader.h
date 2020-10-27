@@ -3,6 +3,7 @@
 #define DIRECT3D9VERTEXSHADER_H
 
 #include "core\hle\D3D8\XbVertexShader.h"
+#include "FixedFunctionVertexShaderState.hlsli"
 
 enum class ShaderType {
 	Empty = 0,
@@ -21,6 +22,8 @@ extern HRESULT EmuCompileShader
     IntermediateVertexShader* pIntermediateShader,
     ID3DBlob** ppHostShader
 );
+
+extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader);
 
 extern HRESULT EmuCompileXboxPassthrough(ID3DBlob** ppHostShader);
 

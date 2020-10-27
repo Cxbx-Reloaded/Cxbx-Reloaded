@@ -37,6 +37,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
+#include "..\FixedFunctionState.h"
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For LPDIRECTDRAWSURFACE7
 #include "core\hle\D3D8\XbVertexBuffer.h"
@@ -69,6 +70,9 @@
 
 XboxRenderStateConverter XboxRenderStates;
 XboxTextureStateConverter XboxTextureStates;
+
+D3D8LightState d3d8LightState = D3D8LightState();
+FixedFunctionVertexShaderState ffShaderState = {0}; // TODO find a home for this and associated code
 
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
@@ -6216,6 +6220,179 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
     } // switch XboxResourceType
 }
 
+D3DXVECTOR4 toVector(D3DCOLOR color) {
+	D3DXVECTOR4 v;
+	// ARGB to XYZW
+	v.w = (color >> 24 & 0xFF) / 255.f;
+	v.x = (color >> 16 & 0xFF) / 255.f;
+	v.y = (color >> 8 & 0xFF) / 255.f;
+	v.z = (color >> 0 & 0xFF) / 255.f;
+	return v;
+}
+
+D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
+	return D3DXVECTOR4(val.r, val.g, val.b, val.a);
+}
+
+void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient, D3DXMATRIX viewTransform) {
+	if (d3dLightIndex == -1) {
+		pShaderLight->Type = 0; // Disable the light
+		return;
+	}
+
+	auto d3dLight = &d3d8LightState.Lights[d3dLightIndex];
+
+	// TODO remove D3DX usage
+	// Pre-transform light position to viewspace
+	D3DXVECTOR4 positionV;
+	D3DXVec3Transform(&positionV, (D3DXVECTOR3*)&d3dLight->Position, &viewTransform);
+	pShaderLight->PositionV = (D3DXVECTOR3)positionV;
+
+	// Pre-transform light direction to viewspace and normalize
+	D3DXVECTOR4 directionV;
+	D3DXMATRIX viewTransform3x3;
+	D3DXMatrixIdentity(&viewTransform3x3);
+	for (int y = 0; y < 3; y++) {
+		for (int x = 0; x < 3; x++) {
+			viewTransform3x3.m[x][y] = viewTransform.m[x][y];
+		}
+	}
+
+	D3DXVec3Transform(&directionV, (D3DXVECTOR3*)&d3dLight->Direction, &viewTransform3x3);
+	D3DXVec3Normalize((D3DXVECTOR3*)&pShaderLight->DirectionVN, (D3DXVECTOR3*)&directionV);
+
+	// Map D3D light to state struct
+	pShaderLight->Type = (float)((int)d3dLight->Type);
+	pShaderLight->Diffuse = toVector(d3dLight->Diffuse);
+	pShaderLight->Specular = toVector(d3dLight->Specular);
+	pShaderLight->Range = d3dLight->Range;
+	pShaderLight->Falloff = d3dLight->Falloff;
+	pShaderLight->Attenuation.x = d3dLight->Attenuation0;
+	pShaderLight->Attenuation.y = d3dLight->Attenuation1;
+	pShaderLight->Attenuation.z = d3dLight->Attenuation2;
+
+	pLightAmbient->x += d3dLight->Ambient.r;
+	pLightAmbient->y += d3dLight->Ambient.g;
+	pLightAmbient->z += d3dLight->Ambient.b;
+
+	auto cosHalfPhi = cos(d3dLight->Phi / 2);
+	pShaderLight->CosHalfPhi = cosHalfPhi;
+	pShaderLight->SpotIntensityDivisor = cos(d3dLight->Theta / 2) - cos(d3dLight->Phi / 2);
+}
+
+float AsFloat(uint32_t value) {
+	auto v = value;
+	return *(float*)&v;
+}
+
+void UpdateFixedFunctionVertexShaderState()
+{
+	using namespace xbox;
+
+	// Lighting
+	ffShaderState.Modes.Lighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
+	ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
+	ffShaderState.Modes.SpecularEnable = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARENABLE);
+	ffShaderState.Modes.LocalViewer = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
+	ffShaderState.Modes.ColorVertex = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX);
+
+	D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
+	D3DXVECTOR4 BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
+
+	// Material sources
+	ffShaderState.Modes.AmbientMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE);
+	ffShaderState.Modes.DiffuseMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE);
+	ffShaderState.Modes.SpecularMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE);
+	ffShaderState.Modes.EmissiveMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE);
+	ffShaderState.Modes.BackAmbientMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE);
+	ffShaderState.Modes.BackDiffuseMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE);
+	ffShaderState.Modes.BackSpecularMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE);
+	ffShaderState.Modes.BackEmissiveMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE);
+
+	// Point sprites
+	auto pointSize = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE);
+	ffShaderState.PointSprite.PointSize = *reinterpret_cast<float*>(&pointSize);
+	ffShaderState.PointSprite.PointScaleEnable = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE);
+	ffShaderState.PointSprite.RenderTargetHeight = GetPixelContainerHeight(g_pXbox_RenderTarget);
+	auto scaleA = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_A);
+	ffShaderState.PointSprite.ScaleA = *reinterpret_cast<float*>(&scaleA);
+	auto scaleB = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_B);
+	ffShaderState.PointSprite.ScaleB = *reinterpret_cast<float*>(&scaleB);
+	auto scaleC = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_C);
+	ffShaderState.PointSprite.ScaleC = *reinterpret_cast<float*>(&scaleC);
+
+	// Fog
+	// Determine how fog depth is calculated
+	if (XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGENABLE) &&
+		XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE) != D3DFOG_NONE) {
+		auto proj = &ffShaderState.Transforms.Projection;
+
+		if (XboxRenderStates.GetXboxRenderState(X_D3DRS_RANGEFOGENABLE)) {
+			LOG_TEST_CASE("Using RANGE fog");
+			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_RANGE;
+		}
+		else if (proj->_14 == 0 &&
+			proj->_24 == 0 &&
+			proj->_34 == 0 &&
+			proj->_44 == 1) {
+			LOG_TEST_CASE("Using Z fog");
+			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_Z;
+		}
+		else {
+			// Test case:
+			// Fog sample
+			// JSRF (non-compliant projection matrix)
+			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_W;
+		}
+	}
+	else {
+		ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_NONE;
+	}
+
+	// Texture state
+	for (int i = 0; i < 4; i++) {
+		auto transformFlags = XboxTextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
+		ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
+		ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
+
+		auto texCoordIndex = XboxTextureStates.Get(i, X_D3DTSS_TEXCOORDINDEX);
+		ffShaderState.TextureStates[i].TexCoordIndex = (float)(texCoordIndex & 0x7); // 8 coords
+		ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
+	}
+
+	// TexCoord component counts
+	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
+	xbox::X_VERTEXATTRIBUTEFORMAT* pXboxVertexAttributeFormat = GetXboxVertexAttributeFormat();
+	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+		auto vertexDataFormat = pXboxVertexAttributeFormat->Slots[xbox::X_D3DVSDE_TEXCOORD0 + i].Format;
+		ffShaderState.TexCoordComponentCount[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
+	}
+
+	// Misc flags
+	ffShaderState.Modes.VertexBlend = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
+	ffShaderState.Modes.NormalizeNormals = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
+
+	// Update lights
+	auto LightAmbient = D3DXVECTOR4(0.f, 0.f, 0.f, 0.f);
+	D3DXMATRIX rowMajorViewTransform;
+	D3DXMatrixTranspose(&rowMajorViewTransform, (D3DXMATRIX*)&ffShaderState.Transforms.View);
+	for (size_t i = 0; i < ffShaderState.Lights.size(); i++) {
+		UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient, rowMajorViewTransform);
+	}
+
+	ffShaderState.AmbientPlusLightAmbient = Ambient + LightAmbient;
+	ffShaderState.BackAmbientPlusLightAmbient = BackAmbient + LightAmbient;
+
+	// Write fixed function state to shader constants
+	const int slotSize = 16;
+	const int fixedFunctionStateSize = (sizeof(FixedFunctionVertexShaderState) + slotSize - 1) / slotSize;
+	auto hRet = g_pD3DDevice->SetVertexShaderConstantF(0, (float*)&ffShaderState, fixedFunctionStateSize);
+
+	if (FAILED(hRet)) {
+		CxbxKrnlCleanup("Failed to write fixed-function HLSL state");
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_EnableOverlay
 // ******************************************************************
@@ -6358,9 +6535,15 @@ void CxbxImpl_SetTransform
 {
     LOG_INIT
 
-    State = EmuXB2PC_D3DTS(State);
+	// Transpose row major to column major for HLSL
+	D3DXMATRIX hlslMatrix;
+	D3DXMatrixTranspose(&hlslMatrix, (D3DXMATRIX*)pMatrix);
+	// Save to vertex shader state
+	((D3DXMATRIX*)&ffShaderState.Transforms)[State] = hlslMatrix;
 
-    HRESULT hRet = g_pD3DDevice->SetTransform(State, pMatrix);
+	auto d3d9State = EmuXB2PC_D3DTS(State);
+
+    HRESULT hRet = g_pD3DDevice->SetTransform(d3d9State, pMatrix);
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
 }
 
@@ -7850,6 +8033,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 
 	XB_TRMP(D3DDevice_SetLight)(Index, pLight);
 
+	d3d8LightState.Lights[Index] = *pLight;
+
     HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
 
@@ -7865,6 +8050,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 )
 {
 	LOG_FUNC_ONE_ARG(pMaterial);
+
+	ffShaderState.Materials[0].Ambient = toVector(pMaterial->Ambient);
+	ffShaderState.Materials[0].Diffuse = toVector(pMaterial->Diffuse);
+	ffShaderState.Materials[0].Specular = toVector(pMaterial->Specular);
+	ffShaderState.Materials[0].Emissive = toVector(pMaterial->Emissive);
+	ffShaderState.Materials[0].Power = pMaterial->Power;
 
     HRESULT hRet = g_pD3DDevice->SetMaterial(pMaterial);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
@@ -7885,6 +8076,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 		LOG_FUNC_END;
 
 	XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
+
+	d3d8LightState.EnableLight(Index, bEnable);
 
     HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    

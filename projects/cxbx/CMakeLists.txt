@@ -190,3 +190,18 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
 endif()
 
 add_dependencies(cxbx cxbxr-ldr cxbxr-emu misc-batch)
+
+# HLSL compilation
+# Don't build HLSL files, though include them in Visual Studio
+set_source_files_properties(
+  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
+  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl" 
+  PROPERTIES HEADER_FILE_ONLY TRUE
+)
+
+# Copy shader files to hlsl directory
+add_custom_target(copy_hlsl ALL
+ COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:cxbx>/hlsl
+ COMMAND ${CMAKE_COMMAND} -E copy "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli" $<TARGET_FILE_DIR:cxbx>/hlsl
+ COMMAND ${CMAKE_COMMAND} -E copy "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl" $<TARGET_FILE_DIR:cxbx>/hlsl
+) 
