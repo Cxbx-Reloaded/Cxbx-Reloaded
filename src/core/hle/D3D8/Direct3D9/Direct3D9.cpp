@@ -204,6 +204,7 @@ static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wPara
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
+static void							CxbxImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_D3DSurface *pNewZStencil);
 
 extern void UpdateFPSCounter();
 
@@ -293,6 +294,7 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetPixelShader_0,        ()                                                                                 );  \
     XB_MACRO(xbox::void_xt,               __fastcall, D3DDevice_SetRenderState_Simple,   (xbox::dword_xt, xbox::dword_xt)                                                                     );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetRenderTarget,         (xbox::X_D3DSurface*, xbox::X_D3DSurface*)                                           );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetRenderTarget_0,       ()                                                                                ); \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource,         (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_4,       (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_SetStreamSource_8,       (xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                                    );  \
@@ -3321,7 +3323,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset)
 
 	// Refresh the current render target and depth stencil, to apply changes made within D3DDevice_Reset
 	// Some XDKs do this for us, but not all do!
-	EMUPATCH(D3DDevice_SetRenderTarget)(g_pXbox_RenderTarget, g_pXbox_DepthStencil);
+	CxbxImpl_SetRenderTarget(g_pXbox_RenderTarget, g_pXbox_DepthStencil);
 
 	return hRet;
 }
@@ -7774,24 +7776,16 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
     return hRet;
 }
 
-// ******************************************************************
-// * patch: D3DDevice_SetRenderTarget
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
+static void CxbxImpl_SetRenderTarget
 (
-    X_D3DSurface    *pRenderTarget,
-    X_D3DSurface    *pNewZStencil
+    xbox::X_D3DSurface    *pRenderTarget,
+    xbox::X_D3DSurface    *pNewZStencil
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pRenderTarget)
-		LOG_FUNC_ARG(pNewZStencil)
-		LOG_FUNC_END;
+	LOG_INIT;
 
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
-
-	XB_TRMP(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
 
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
@@ -7855,6 +7849,60 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
     UpdateViewPortOffsetAndScaleConstants();
     CalculateMultiSampleScaleForRenderTarget(pRenderTarget);
 }
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderTarget
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
+(
+    X_D3DSurface    *pRenderTarget,
+    X_D3DSurface    *pNewZStencil
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pRenderTarget)
+		LOG_FUNC_ARG(pNewZStencil)
+		LOG_FUNC_END;
+
+	XB_TRMP(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
+
+	CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+}
+
+// LTCG specific D3DDevice_SetRenderTarget function...
+// Passes pRenderTarget in ecx and pNewZStencil in eax
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pRenderTarget)
+		LOG_FUNC_ARG(pNewZStencil)
+		LOG_FUNC_END;
+
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
+(
+)
+{
+	X_D3DSurface *pRenderTarget;
+    X_D3DSurface *pNewZStencil;
+
+	// prologue
+	__asm {
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  pRenderTarget, ecx
+		mov  pNewZStencil, eax
+		call XB_TRMP(D3DDevice_SetRenderTarget_0)
+	}
+
+	CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+
+	// epilogue
+	__asm {
+		mov  esp, ebp
+		pop  ebp
+		ret
+	}
+}
+
 
 // LTCG specific D3DDevice_SetPalette function...
 // This uses a custom calling convention where parameter is passed in EAX

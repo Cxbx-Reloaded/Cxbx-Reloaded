@@ -1513,6 +1513,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_SetRenderTarget_0
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget_0)();
+
+// ******************************************************************
 // * patch: D3DDevice_SetPalette
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette)
