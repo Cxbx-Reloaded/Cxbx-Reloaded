@@ -263,25 +263,26 @@ HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char
 
 		if (FAILED(hRet)) {
 			LOG_TEST_CASE("Couldn't assemble vertex shader");
-			//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
 		}
 	}
 
 	// Determine the log level
 	auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
 	if (pErrors) {
-		// Log HLSL compiler errors
+		// Log errors from the initial compilation
 		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
 		pErrors->Release();
 		pErrors = nullptr;
-		if (pErrorsCompatibility != nullptr) {
-			pErrorsCompatibility->Release();
-			pErrorsCompatibility = nullptr;
-		}
 	}
 
-	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG)
-		if (g_bPrintfOn)
+	// Failure to recompile in compatibility mode ignored for now
+	if (pErrorsCompatibility != nullptr) {
+		pErrorsCompatibility->Release();
+		pErrorsCompatibility = nullptr;
+	}
+
+	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
+		if (g_bPrintfOn) {
 			if (!FAILED(hRet)) {
 				// Log disassembly
 				hRet = D3DDisassemble(
@@ -296,6 +297,8 @@ HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char
 					pErrors->Release();
 				}
 			}
+		}
+	}
 
 	return hRet;
 }
