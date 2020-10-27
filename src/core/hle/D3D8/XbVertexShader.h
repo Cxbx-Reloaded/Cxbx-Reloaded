@@ -80,6 +80,17 @@ typedef struct _CxbxVertexDeclaration
 }
 CxbxVertexDeclaration;
 
+enum class VertexShaderMode {
+	FixedFunction,
+	// When titles use Xbox fixed function with pre-transformed vertices
+	// it actually uses a special "passthrough" shader program
+	Passthrough,
+	ShaderProgram
+};
+
+extern VertexShaderMode g_Xbox_VertexShaderMode;
+extern bool g_UseFixedFunctionVertexShader;
+
 // Intermediate vertex shader structures
 
 enum VSH_OREG_NAME {
@@ -217,5 +228,6 @@ extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::
 extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
 extern void CxbxImpl_DeleteVertexShader(DWORD Handle);
 extern void CxbxVertexShaderSetFlags();
+extern HRESULT SetVertexShader(IDirect3DVertexShader* pShader);
 
 #endif
