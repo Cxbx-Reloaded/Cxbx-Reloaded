@@ -844,7 +844,7 @@ void CxbxImpl_End()
 	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
 	// so that our above composed declaration will be used for the next draw :
 	g_InlineVertexBuffer_DeclarationOverride = true;
-	// Note, that g_Xbox_VertexShader_IsFixedFunction should be left untouched,
+	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
 

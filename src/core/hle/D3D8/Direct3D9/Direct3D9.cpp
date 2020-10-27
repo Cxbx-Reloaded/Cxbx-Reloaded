@@ -1908,6 +1908,10 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 extern void DSound_PrintStats(); //TODO: move into plugin class usage.
                 DSound_PrintStats();
             }
+			else if (wParam == VK_F2)
+			{
+				g_UseFixedFunctionVertexShader = !g_UseFixedFunctionVertexShader;
+			}
             else if (wParam == VK_F3)
             {
                 g_bClipCursor = !g_bClipCursor;
@@ -2885,8 +2889,6 @@ void GetMultiSampleScaleRaw(float& xScale, float& yScale) {
 // Titles can render pre-transformed vertices to screen space (using XYZRHW vertex position data or otherwise)
 // so we need to know the space they are in to interpret it correctly
 void GetScreenScaleFactors(float& scaleX, float& scaleY) {
-	extern bool g_Xbox_VertexShader_IsPassthrough;
-
 	// Example:
 	// NFS HP2 renders in-game at 640*480
 	// The title uses MSAA, which increases the rendertarget size, but leaves the screen scale unaffected
@@ -2916,7 +2918,7 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	// - Antialias sample (background gradient)
 	// Vertex program passthrough equivalent (title does apply backbuffer scale):
 	// - NFS:HP2 (car speed and other in-game UI elements)
-	if (!g_Xbox_VertexShader_IsPassthrough) {
+	if (g_Xbox_VertexShaderMode != VertexShaderMode::Passthrough) {
 		scaleX *= g_Xbox_BackbufferScaleX;
 		scaleY *= g_Xbox_BackbufferScaleY;
 	}
@@ -4169,8 +4171,6 @@ void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 
 void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 {
-	extern bool g_Xbox_VertexShader_IsPassthrough;
-
     float vScaleOffset[2][4]; // 0 - scale 1 - offset
     GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
 
@@ -4196,7 +4196,7 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 
 	// Passthrough should range 0 to 1, instead of 0 to zbuffer depth
 	// Test case: DoA3 character select
-	float zOutputScale = g_Xbox_VertexShader_IsPassthrough ? 1 : g_ZScale;
+	float zOutputScale = g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough ? 1 : g_ZScale;
 
 	float screenspaceScale[4] = { xboxScreenspaceWidth / 2,  -xboxScreenspaceHeight / 2, zOutputScale, 1 };
 	float screenspaceOffset[4] = { xboxScreenspaceWidth / 2 + aaOffsetX, xboxScreenspaceHeight / 2 + aaOffsetY, 0, 0 };
@@ -7343,7 +7343,7 @@ void CxbxUpdateHostTextureScaling()
 
 		// Texcoord index. Just the texture stage unless fixed function mode
 		int texCoordIndex = stage;
-		if (g_Xbox_VertexShader_IsFixedFunction) {
+		if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 			// Get TEXCOORDINDEX for the current texture stage's state
 			// Stores both the texture stage index and information for generating coordinates
 			// See D3DTSS_TEXCOORDINDEX
@@ -7434,7 +7434,7 @@ void CxbxUpdateHostViewport() {
 	aaScaleX *= g_RenderTargetUpscaleFactor;
 	aaScaleY *= g_RenderTargetUpscaleFactor;
 
-	if (g_Xbox_VertexShader_IsFixedFunction) {
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
 		D3DVIEWPORT hostViewport = g_Xbox_Viewport;
 		hostViewport.X *= aaScaleX;
@@ -7495,6 +7495,11 @@ void CxbxUpdateNativeD3DResources()
 	CxbxUpdateHostVertexShaderConstants();
 
 	CxbxUpdateHostViewport();
+	
+	// Update fixed function vertex shader state
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
+		UpdateFixedFunctionVertexShaderState();
+	}
 
 	// NOTE: Order is important here
     // Some Texture States depend on RenderState values (Point Sprites)
