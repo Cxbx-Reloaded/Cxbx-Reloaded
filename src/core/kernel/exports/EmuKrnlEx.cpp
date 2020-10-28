@@ -148,8 +148,7 @@ XBSYSAPI EXPORTNUM(12) xbox::void_xt NTAPI xbox::ExAcquireReadWriteLockExclusive
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
 	bool interrupt_mode = DisableInterrupts();
-	ReadWriteLock->LockCount++;
-	if (ReadWriteLock->LockCount != 0) {
+	if (InterlockedIncrement(reinterpret_cast<LONG*>(&ReadWriteLock->LockCount)) != 0) {
 		ReadWriteLock->WritersWaitingCount++;
 		RestoreInterruptMode(interrupt_mode);
 		KeWaitForSingleObject(
@@ -180,8 +179,7 @@ XBSYSAPI EXPORTNUM(13) xbox::void_xt NTAPI xbox::ExAcquireReadWriteLockShared
 	bool must_wait_on_active_write = ReadWriteLock->ReadersEntryCount == 0;
 	bool must_wait_on_queued_write = (ReadWriteLock->ReadersEntryCount != 0) && (ReadWriteLock->WritersWaitingCount != 0);
 	bool must_wait = must_wait_on_active_write || must_wait_on_queued_write;
-	ReadWriteLock->LockCount++;
-	if ((ReadWriteLock->LockCount != 0) && must_wait) {
+	if (InterlockedIncrement(reinterpret_cast<LONG*>(&ReadWriteLock->LockCount)) != 0 && must_wait) {
 		ReadWriteLock->ReadersWaitingCount++;
 		RestoreInterruptMode(interrupt_mode);
 #if 0 //FIXME - Enable once KeReleaseSempahore is implemented (used in ExFreeReadWriteLock for Sharedlocks).
@@ -587,8 +585,7 @@ XBSYSAPI EXPORTNUM(28) xbox::void_xt NTAPI xbox::ExReleaseReadWriteLock
 	LOG_FUNC_ONE_ARG(ReadWriteLock);
 
 	bool interrupt_mode = DisableInterrupts();
-	ReadWriteLock->LockCount--;
-	if (ReadWriteLock->LockCount == -1) {
+	if (InterlockedDecrement(reinterpret_cast<LONG*>(&ReadWriteLock->LockCount)) == -1) {
 		ReadWriteLock->ReadersEntryCount = 0;
 		RestoreInterruptMode(interrupt_mode);
 		return;
