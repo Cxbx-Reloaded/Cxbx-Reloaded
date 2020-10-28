@@ -420,21 +420,6 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_CreateVertexShader)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_SetPixelShaderConstant
-// ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShaderConstant)
-(
-    dword_xt       Register,
-    CONST PVOID pConstantData,
-    dword_xt       ConstantCount
-);
-
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
-(
-    CONST PVOID pConstantData
-);
-
-// ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstant
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstant)

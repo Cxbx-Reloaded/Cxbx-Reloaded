@@ -7310,7 +7310,11 @@ xbox::void_xt __declspec(noinline) D3DDevice_SetPixelShaderCommon(xbox::dword_xt
     // This mirrors the fact that unpatched SetPixelShader does the same thing!
     // This shouldn't be necessary anymore, but shaders still break if we don't do this
     if (g_pXbox_PixelShader != nullptr) {
+        // TODO : If D3DDevice_SetPixelShader() in XDKs don't overwrite the X_D3DRS_PS_RESERVED slot with PSDef.PSTextureModes,
+        // store it here and restore after memcpy, or alternatively, perform two separate memcpy's (the halves before, and after the reserved slot).
         memcpy(XboxRenderStates.GetPixelShaderRenderStatePointer(), g_pXbox_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+        // Copy the PSDef.PSTextureModes field to it's dedicated slot, which lies outside the range of PixelShader render state slots
+        // Note : This seems to be what XDK's do as well. Needs verification.
         XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, g_pXbox_PixelShader->pPSDef->PSTextureModes);
     }
 }
@@ -8777,46 +8781,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetMaterial)
 	if(FAILED(hRet))
     {
 		EmuLog(LOG_LEVEL::WARNING, "We're lying about getting a material!");
-        hRet = D3D_OK;
-    }
-}
-
-// LTCG specific D3DDevice_SetPixelShaderConstant function...
-// This uses a custom calling convention where parameter is passed in ECX, EAX
-// TODO: Log function is not working due lost parameter in EAX.
-// Test-case: Otogi 2, Ninja Gaiden: Black
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShaderConstant_4)
-(
-    CONST PVOID pConstantData
-)
-{
-    DWORD       Register;
-    DWORD       ConstantCount;
-
-    __asm {
-        mov Register, ecx
-        mov ConstantCount, eax
-    }
-
-    //LOG_FUNC_BEGIN
-    //    LOG_FUNC_ARG(Register)
-    //    LOG_FUNC_ARG(pConstantData)
-    //    LOG_FUNC_ARG(ConstantCount)
-    //    LOG_FUNC_END;
-    EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetPixelShaderConstant_4(Register : %d pConstantData : %08X ConstantCount : %d);", Register, pConstantData, ConstantCount);
-
-	HRESULT hRet = g_pD3DDevice->SetPixelShaderConstantF
-    (
-        Register,
-		(PixelShaderConstantType*)pConstantData,
-        ConstantCount
-    );
-    //DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetPixelShaderConstant");
-
-    if(FAILED(hRet))
-    {
-        EmuLog(LOG_LEVEL::WARNING, "We're lying about setting a pixel shader constant!");
-
         hRet = D3D_OK;
     }
 }
