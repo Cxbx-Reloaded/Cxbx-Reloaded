@@ -1605,12 +1605,11 @@ void EmuD3DInit()
 {
 	// create the create device proxy thread
 	{
-		DWORD dwThreadId;
-
-		CreateThread(nullptr, 0, EmuCreateDeviceProxy, nullptr, 0, &dwThreadId);
+		HANDLE thread = CreateThread(nullptr, 0, EmuCreateDeviceProxy, nullptr, 0, nullptr);
 		// Ported from Dxbx :
 		// If possible, assign this thread to another core than the one that runs Xbox1 code :
-		SetThreadAffinityMask(&dwThreadId, g_CPUOthers);
+		SetThreadAffinityMask(thread, g_CPUOthers);
+		CloseHandle(thread);
 	}
 
 	// Initialise CreateDevice Proxy Data struct
