@@ -315,6 +315,7 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::hresult_xt,            WINAPI,     Direct3D_CreateDevice_4,           (xbox::X_D3DPRESENT_PARAMETERS*)                                                    );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     Lock2DSurface,                     (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     Lock3DSurface,                     (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3D_CommonSetRenderTarget,         (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                  ); \
 
 XB_TRAMPOLINES(XB_trampoline_declare);
 
@@ -7790,6 +7791,10 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
     return hRet;
 }
 
+// SetRenderTarget can call CommonSetRenderTarget, nested call detection is required
+// Test case: Midtown Madness 3
+static thread_local uint32_t setRenderTargetCount = 0;
+
 static void CxbxImpl_SetRenderTarget
 (
     xbox::X_D3DSurface    *pRenderTarget,
@@ -7878,6 +7883,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
+	NestedPatchCounter call(setRenderTargetCount);
+
 	XB_TRMP(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
 
 	CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
@@ -7885,10 +7892,27 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 
 // LTCG specific D3DDevice_SetRenderTarget function...
 // Passes pRenderTarget in ecx and pNewZStencil in eax
+static void D3DDevice_SetRenderTarget_0
+(
+    xbox::X_D3DSurface    *pRenderTarget,
+    xbox::X_D3DSurface    *pNewZStencil
+)
+{
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
+
+	NestedPatchCounter call(setTransformCount);
+
+	__asm {
+		mov  ecx, pRenderTarget
+		mov  eax, pNewZStencil
+		call XB_TRMP(D3DDevice_SetRenderTarget_0)
+	}
+
+	CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+}
 
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
 (
@@ -7904,16 +7928,43 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_
 		sub  esp, __LOCAL_SIZE
 		mov  pRenderTarget, ecx
 		mov  pNewZStencil, eax
-		call XB_TRMP(D3DDevice_SetRenderTarget_0)
 	}
 
-	CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+	// Actual function body
+	D3DDevice_SetRenderTarget_0(pRenderTarget, pNewZStencil);
 
 	// epilogue
 	__asm {
 		mov  esp, ebp
 		pop  ebp
 		ret
+	}
+}
+
+// ******************************************************************
+// * patch: D3D_CommonSetRenderTarget
+// ******************************************************************
+// This is an internal function, but some LTCG games inline SetRenderTarget and call it directly
+// Test-case: Midtown Madness 3
+xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
+(
+    X_D3DSurface    *pRenderTarget,
+    X_D3DSurface    *pNewZStencil,
+    void            *unknown
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pRenderTarget)
+		LOG_FUNC_ARG(pNewZStencil)
+		LOG_FUNC_ARG(unknown)
+		LOG_FUNC_END;
+
+	NestedPatchCounter call(setRenderTargetCount);
+
+	XB_TRMP(D3D_CommonSetRenderTarget)(pRenderTarget, pNewZStencil, unknown);
+
+	if (call.GetLevel() == 0) {
+		CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	}
 }
 

@@ -1518,6 +1518,16 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget)
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget_0)();
 
 // ******************************************************************
+// * patch: D3D_CommonSetRenderTarget
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3D_CommonSetRenderTarget)
+(
+    X_D3DSurface    *pRenderTarget,
+    X_D3DSurface    *pNewZStencil,
+    void            *unknown
+);
+
+// ******************************************************************
 // * patch: D3DDevice_SetPalette
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette)
