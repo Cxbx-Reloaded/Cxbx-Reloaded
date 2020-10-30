@@ -1600,7 +1600,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader)
     dword_xt Handle
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_DeleteVertexShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SelectVertexShaderDirect

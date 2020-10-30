@@ -269,6 +269,7 @@ g_EmuCDPD = {0};
 #define XB_TRAMPOLINES(XB_MACRO)                                                                                                                                       \
     XB_MACRO(xbox::hresult_xt,            WINAPI,     D3DDevice_CreateVertexShader,      (CONST xbox::dword_xt*, CONST xbox::dword_xt*, xbox::dword_xt*, xbox::dword_xt)                                        );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_DeleteVertexShader,      (xbox::dword_xt)                                                                            );  \
+    XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_DeleteVertexShader_0,    ()                                                                                          );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3DDevice_GetBackBuffer,           (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                     );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,          (xbox::int_xt)                                                                              );  \
     XB_MACRO(xbox::hresult_xt,            WINAPI,     D3DDevice_GetDepthStencilSurface,  (xbox::X_D3DSurface**)                                                              );  \
@@ -8196,21 +8197,45 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 	LOG_IGNORED();
 }
 
+// Overload for logging
+static void D3DDevice_DeleteVertexShader_0
+(
+	xbox::dword_xt Handle
+)
+{
+	LOG_FUNC_ONE_ARG(Handle);
+}
+
 // LTCG specific D3DDevice_DeleteVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX
-// UNTESTED - Need test-case!
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_DeleteVertexShader_0)
+// Test-case: Midtown Madness 3
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 (
 )
 {
 	dword_xt Handle;
 
 	__asm {
-		mov Handle, eax
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  Handle, eax
 	}
 
-	LOG_TEST_CASE("Validate this function!");
-	return EMUPATCH(D3DDevice_DeleteVertexShader)(Handle);
+	// Log
+	D3DDevice_DeleteVertexShader_0(Handle);
+
+	CxbxImpl_DeleteVertexShader(Handle);
+
+	// When deleting, call trampoline *after* our implementation,
+	// so that we can still access it's fields before it gets deleted!
+	__asm {
+		mov  eax, Handle
+		call XB_TRMP(D3DDevice_DeleteVertexShader_0)
+		mov  esp, ebp
+		pop  ebp
+		ret
+	}
 }
 
 // ******************************************************************
