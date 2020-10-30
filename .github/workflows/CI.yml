@@ -55,8 +55,11 @@ jobs:
         run: |
           robocopy . artifacts COPYING README.md /r:0 /w:0
           robocopy build\bin\${{ matrix.configuration }} artifacts `
-            cxbx.exe cxbxr-ldr.exe cxbxr-emu.dll glew32.dll subhook.dll SDL2.dll `
-            cxbxr-debugger.exe capstone.dll cs_x86.dll /r:0 /w:0
+            /MIR /XF /r:0 /w:0 `
+            cstool.exe `
+            cxbxr-debugger.exe.config `
+            Tests_cs_x86.exe* `
+            *.pdb
           If ($LastExitCode -le 7) { $LastExitCode = 0 }
       - uses: actions/upload-artifact@v1
         if: matrix.configuration == 'Release'
