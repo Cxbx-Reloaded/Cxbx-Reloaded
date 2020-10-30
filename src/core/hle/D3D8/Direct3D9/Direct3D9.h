@@ -92,7 +92,15 @@ xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice)
     IDirect3DDevice           **ppReturnedDeviceInterface
 );
 
-xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16)
+xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
+(
+    uint_xt                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters
+);
+
+xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface)
 (
     uint_xt                        Adapter,
     D3DDEVTYPE                  DeviceType,

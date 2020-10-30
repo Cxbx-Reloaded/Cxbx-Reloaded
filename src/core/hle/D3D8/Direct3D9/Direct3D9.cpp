@@ -311,7 +311,8 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_xt,               WINAPI,     D3D_DestroyResource,               (xbox::X_D3DResource*)                                                              );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     D3D_DestroyResource__LTCG,         (xbox::void_xt)                                                                             );  \
     XB_MACRO(xbox::hresult_xt,            WINAPI,     Direct3D_CreateDevice,             (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::dword_xt, xbox::X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**)  );  \
-    XB_MACRO(xbox::hresult_xt,            WINAPI,     Direct3D_CreateDevice_16,          (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)                            );  \
+    XB_MACRO(xbox::hresult_xt,            WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface, (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*) );  \
+    XB_MACRO(xbox::hresult_xt,            WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface, (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*) );  \
     XB_MACRO(xbox::hresult_xt,            WINAPI,     Direct3D_CreateDevice_4,           (xbox::X_D3DPRESENT_PARAMETERS*)                                                    );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     Lock2DSurface,                     (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
     XB_MACRO(xbox::void_xt,               WINAPI,     Lock3DSurface,                     (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
@@ -3146,10 +3147,25 @@ void Direct3D_CreateDevice_End()
     }
 }
 
+// Overload for logging
+static void Direct3D_CreateDevice_4
+(
+    xbox::dword_xt                BehaviorFlags,
+    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+    IDirect3DDevice               **ppReturnedDeviceInterface
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BehaviorFlags)
+		LOG_FUNC_ARG(pPresentationParameters)
+		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
+		LOG_FUNC_END;
+}
+
 // LTCG specific Direct3D_CreateDevice function...
-// This uses a custom calling with parameters passed in eax, ecx and the stack
+// This uses a custom calling with parameters passed in EAX, ECX and the stack
 // Test-case: Ninja Gaiden, Halo 2
-xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4)
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4)
 (
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
@@ -3158,58 +3174,178 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4)
     IDirect3DDevice **ppReturnedDeviceInterface;
 
     __asm {
-        mov BehaviorFlags, eax
-        mov ppReturnedDeviceInterface, ecx
-    }
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  BehaviorFlags, eax
+		mov  ppReturnedDeviceInterface, ecx
+	}
 
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pPresentationParameters)
-		LOG_FUNC_END;
+	// Log
+	Direct3D_CreateDevice_4(BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
-    hresult_xt hRet = 0;
-
 	// Only then call Xbox CreateDevice function
-    __asm {
-        mov eax, BehaviorFlags
-        mov ecx, ppReturnedDeviceInterface
-        push pPresentationParameters
-        call XB_TRMP(Direct3D_CreateDevice_4)
-        mov hRet, eax
-    }
+	hresult_xt hRet;
+	__asm {
+		push pPresentationParameters
+		mov  eax, BehaviorFlags
+		mov  ecx, ppReturnedDeviceInterface
+		call XB_TRMP(Direct3D_CreateDevice_4)
+		mov  hRet, eax
+	}
 
 	Direct3D_CreateDevice_End();
 
-	return hRet;
+	__asm {
+		mov  eax, hRet
+		mov  esp, ebp
+		pop  ebp
+		ret  4
+	}
 }
 
-// LTCG specific Direct3D_CreateDevice function...
-// This uses a custom calling convention passed unknown parameters
-// Test-case: Battle Engine Aquila
-xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16)
+// Overload for logging
+static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface
 (
-    uint_xt                        Adapter,
-    D3DDEVTYPE                  DeviceType,
-    HWND                        hFocusWindow,
-    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+    xbox::uint_xt                 Adapter,
+    D3DDEVTYPE                    DeviceType,
+    HWND                          hFocusWindow,
+    xbox::dword_xt                BehaviorFlags,
+    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+    IDirect3DDevice               **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Adapter)
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(hFocusWindow)
+		LOG_FUNC_ARG(BehaviorFlags)
 		LOG_FUNC_ARG(pPresentationParameters)
+		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
+}
+
+// LTCG specific Direct3D_CreateDevice function...
+// This uses a custom calling convention passing parameters on stack, in EAX and ECX
+// Test-case: Aggressive Inline, Midtown Madness 3
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface)
+(
+    uint_xt                     Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+	dword_xt BehaviorFlags;
+	IDirect3DDevice **ppReturnedDeviceInterface;
+
+	__asm {
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  BehaviorFlags, eax
+		mov  ppReturnedDeviceInterface, ecx
+	}
+
+	// Log
+	Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
-	hresult_xt hRet = XB_TRMP(Direct3D_CreateDevice_16)(Adapter, DeviceType, hFocusWindow, pPresentationParameters);
+	hresult_xt hRet;
+	__asm {
+		push pPresentationParameters
+		push hFocusWindow
+		push DeviceType
+		push Adapter
+		mov  eax, BehaviorFlags
+		mov  ecx, ppReturnedDeviceInterface
+		call XB_TRMP(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface)
+		mov  hRet, eax
+	}
 
 	Direct3D_CreateDevice_End();
 
-	return hRet;
+	__asm {
+		mov  eax, hRet
+		mov  esp, ebp
+		pop  ebp
+		ret  10h
+	}
+}
+
+// Overload for logging
+static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface
+(
+    xbox::uint_xt                 Adapter,
+    D3DDEVTYPE                    DeviceType,
+    HWND                          hFocusWindow,
+    xbox::dword_xt                BehaviorFlags,
+    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+    IDirect3DDevice               **ppReturnedDeviceInterface
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(hFocusWindow)
+		LOG_FUNC_ARG(BehaviorFlags)
+		LOG_FUNC_ARG(pPresentationParameters)
+		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
+		LOG_FUNC_END;
+}
+
+// LTCG specific Direct3D_CreateDevice function...
+// This uses a custom calling convention passing parameters on stack, in EAX and EBX
+// Test-case: NASCAR Heat 2002
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
+(
+    uint_xt                     Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+	dword_xt BehaviorFlags;
+	IDirect3DDevice **ppReturnedDeviceInterface;
+
+	__asm {
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  BehaviorFlags, eax
+		mov  ppReturnedDeviceInterface, ebx
+	}
+
+	// Log
+	Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+
+	Direct3D_CreateDevice_Start(pPresentationParameters);
+
+	// Only then call Xbox CreateDevice function
+	hresult_xt hRet;
+	__asm {
+		push pPresentationParameters
+		push hFocusWindow
+		push DeviceType
+		push Adapter
+		mov  eax, BehaviorFlags
+		mov  ebx, ppReturnedDeviceInterface
+		call XB_TRMP(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
+		mov  hRet, eax
+	}
+
+	Direct3D_CreateDevice_End();
+
+	__asm {
+		mov  eax, hRet
+		mov  esp, ebp
+		pop  ebp
+		ret  10h
+	}
 }
 
 // ******************************************************************
@@ -3277,9 +3413,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_ARG(Adapter)
 		LOG_FUNC_ARG(DeviceType)
 		LOG_FUNC_ARG(hFocusWindow)
-		LOG_FUNC_ARG(BehaviorFlags) // Xbox ignores BehaviorFlags
+		LOG_FUNC_ARG(BehaviorFlags)
 		LOG_FUNC_ARG(pPresentationParameters)
-		LOG_FUNC_ARG(ppReturnedDeviceInterface)
+		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
