@@ -5356,6 +5356,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
                 /*Stencil=*/0);
             g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
+            pExistingRenderTarget->Release();
         }
         
         // TODO: Implement a hot-key to change the filter?
