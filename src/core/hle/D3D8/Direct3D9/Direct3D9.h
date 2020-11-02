@@ -92,7 +92,15 @@ xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice)
     IDirect3DDevice           **ppReturnedDeviceInterface
 );
 
-xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16)
+xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
+(
+    uint_xt                        Adapter,
+    D3DDEVTYPE                  DeviceType,
+    HWND                        hFocusWindow,
+    X_D3DPRESENT_PARAMETERS    *pPresentationParameters
+);
+
+xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface)
 (
     uint_xt                        Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -1513,6 +1521,21 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_SetRenderTarget_0
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget_0)();
+
+// ******************************************************************
+// * patch: D3D_CommonSetRenderTarget
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3D_CommonSetRenderTarget)
+(
+    X_D3DSurface    *pRenderTarget,
+    X_D3DSurface    *pNewZStencil,
+    void            *unknown
+);
+
+// ******************************************************************
 // * patch: D3DDevice_SetPalette
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette)
@@ -1577,7 +1600,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader)
     dword_xt Handle
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_DeleteVertexShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SelectVertexShaderDirect
