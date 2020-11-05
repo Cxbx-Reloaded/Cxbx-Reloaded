@@ -65,3 +65,7 @@ endif()
 target_link_libraries(cxbxr-ldr
  PUBLIC kernel32.lib
 )
+
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+)

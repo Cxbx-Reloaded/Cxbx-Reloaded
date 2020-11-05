@@ -140,3 +140,7 @@ set_target_properties(cxbxr-debugger PROPERTIES
 set_property(TARGET cxbxr-debugger PROPERTY DOTNET_TARGET_FRAMEWORK_VERSION "v4.5")
 
 target_link_libraries(cxbxr-debugger cs_x86)
+
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+)
