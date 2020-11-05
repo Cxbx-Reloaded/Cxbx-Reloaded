@@ -304,4 +304,15 @@ int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
 std::string CxbxGetPartitionDataPathFromHandle(HANDLE hFile);
 void CxbxFormatPartitionByHandle(HANDLE hFile);
 
+// Ensures that an original IoStatusBlock gets passed to the completion callback
+// Used by NtReadFile and NtWriteFile
+using CxbxIoDispatcherContext = std::tuple<xbox::PIO_STATUS_BLOCK, xbox::PIO_APC_ROUTINE, PVOID>;
+
+void NTAPI CxbxIoApcDispatcher
+(
+	PVOID                  ApcContext,
+	xbox::PIO_STATUS_BLOCK IoStatusBlock,
+	xbox::ulong_xt         Reserved
+);
+
 #endif
