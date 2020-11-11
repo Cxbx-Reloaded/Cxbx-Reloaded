@@ -86,7 +86,7 @@ jobs:
           name: ${{ env.artifact_2 }}
       - name: Prepare artifacts for release
         run: | # download-artifact doesn't download a zip, so rezip it
-          echo "::set-env name=short_commit_sha::$(git rev-parse --short HEAD)"
+          echo "short_commit_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           7z a -mx1 "$env:artifact_1.zip" ".\$env:artifact_1\*"
           7z a -mx1 "$env:artifact_2.zip" ".\$env:artifact_2\*"
       - name: Create Release
