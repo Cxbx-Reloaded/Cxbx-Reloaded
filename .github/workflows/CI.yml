@@ -73,7 +73,8 @@ jobs:
     env:
       artifact_1: CxbxReloaded-Release-VS2019
       artifact_2: CxbxReloaded-Release-VS2017
-    runs-on: windows-latest
+    # Use the Ubuntu image to make releases quicker.
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Download artifacts (1)
@@ -87,8 +88,8 @@ jobs:
       - name: Prepare artifacts for release
         run: | # download-artifact doesn't download a zip, so rezip it
           echo "short_commit_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          7z a -mx1 "$env:artifact_1.zip" ".\$env:artifact_1\*"
-          7z a -mx1 "$env:artifact_2.zip" ".\$env:artifact_2\*"
+          7z a -mx1 "${{ env.artifact_1 }}.zip" "./${{ env.artifact_1 }}/*"
+          7z a -mx1 "${{ env.artifact_2 }}.zip" "./${{ env.artifact_2 }}/*"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.1
