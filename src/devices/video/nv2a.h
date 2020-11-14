@@ -95,7 +95,7 @@ public:
 	void Reset();
 
 	// State Getter: Used for HLE reading of device state
-	NV2AState* GetDeviceState() { return m_nv2a_state; };
+	inline NV2AState* GetDeviceState() { return m_nv2a_state; };
 
 	uint32_t IORead(int barIndex, uint32_t port, unsigned size);
 	void IOWrite(int barIndex, uint32_t port, uint32_t value, unsigned size);

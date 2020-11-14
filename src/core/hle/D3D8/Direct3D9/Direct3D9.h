@@ -63,6 +63,9 @@ extern uint8_t *ConvertD3DTextureToARGB(
 
 void CxbxUpdateNativeD3DResources();
 
+void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
+void CxbxImpl_SetViewPort(xbox::X_D3DVIEWPORT8* pViewport);
+
 // initialize direct3d
 extern void EmuD3DInit();
 
@@ -214,7 +217,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
 );
 
 xbox::void_xt __stdcall EMUPATCH(D3DDevice_LoadVertexShader_0)();
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_4)
+xbox::void_xt EMUPATCH(D3DDevice_LoadVertexShader_4)
 (
     dword_xt                       Address
 );
@@ -332,7 +335,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetBackBuffer)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetViewport)
 (
-    CONST X_D3DVIEWPORT8 *pViewport
+    X_D3DVIEWPORT8 *pViewport
 );
 
 // ******************************************************************
@@ -1603,15 +1606,6 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader)
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader_0)();
 
 // ******************************************************************
-// * patch: D3DDevice_SelectVertexShaderDirect
-// ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShaderDirect)
-(
-    X_VERTEXATTRIBUTEFORMAT *pVAF,
-    dword_xt                    Address
-);
-
-// ******************************************************************
 // * patch: D3DDevice_GetShaderConstantMode
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetShaderConstantMode)
@@ -1638,16 +1632,6 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetVertexShaderConstant)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_SetVertexShaderInputDirect
-// ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
-(
-    X_VERTEXATTRIBUTEFORMAT *pVAF,
-    uint_xt                     StreamCount,
-    X_STREAMINPUT           *pStreamInputs
-);
-
-// ******************************************************************
 // * patch: D3DDevice_GetVertexShaderInput
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetVertexShaderInput)
@@ -1658,7 +1642,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetVertexShaderInput)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_GetVertexShaderInput
+// * patch: D3DDevice_SetVertexShaderInput
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShaderInput)
 (

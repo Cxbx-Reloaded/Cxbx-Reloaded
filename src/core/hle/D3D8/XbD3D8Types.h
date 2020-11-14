@@ -1020,9 +1020,22 @@ typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 // Special Registers, used to pass additional information to the shaders
 // TODO co-locate shader workaround constants with shader code
 #define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE      (X_D3DVS_CONSTREG_COUNT)
-#define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE (CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + 16)
-#define CXBX_D3DVS_VIEWPORT_SCALE_MIRROR           (CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE + 4)
-#define CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR          (CXBX_D3DVS_VIEWPORT_SCALE_MIRROR + 1)
+#define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_SIZE      16
+
+#define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE (CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + CXBX_D3DVS_CONSTREG_VREGDEFAULTS_SIZE)
+#define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE 4
+
+#define CXBX_D3DVS_VIEWPORT_SCALE_INVERSE_BASE     (CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE + CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE)
+#define CXBX_D3DVS_VIEWPORT_SCALE_INVERSE_SIZE     1
+
+#define CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR_BASE     (CXBX_D3DVS_VIEWPORT_SCALE_INVERSE_BASE + CXBX_D3DVS_VIEWPORT_SCALE_INVERSE_SIZE)
+#define CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR_SIZE     1
+
+#define CXBX_D3DVS_TEXTURES_SCALE_BASE             (CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR_BASE + CXBX_D3DVS_VIEWPORT_OFFSET_MIRROR_SIZE)
+#define CXBX_D3DVS_TEXTURES_SCALE_SIZE             4
+
+#define CXBX_D3DVS_IS_RHW_TRANSFORMED_POSITION_BASE (CXBX_D3DVS_TEXTURES_SCALE_BASE + CXBX_D3DVS_TEXTURES_SCALE_SIZE)
+#define CXBX_D3DVS_IS_RHW_TRANSFORMED_POSITION_SIZE 1
 
 #define X_D3DSCM_RESERVED_CONSTANT_SCALE_CORRECTED (X_D3DSCM_RESERVED_CONSTANT_SCALE + X_D3DSCM_CORRECTION)
 #define X_D3DSCM_RESERVED_CONSTANT_OFFSET_CORRECTED (X_D3DSCM_RESERVED_CONSTANT_OFFSET + X_D3DSCM_CORRECTION)
@@ -1039,14 +1052,16 @@ typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 #define X_VST_STATE                   3
 
 // Xbox vertex shader counts
-#define X_VSH_MAX_ATTRIBUTES           16
-#define X_VSH_MAX_STREAMS              16
-#define X_VSH_MAX_INSTRUCTION_COUNT    136  // The maximum Xbox shader instruction count
+#define X_VSH_MAX_ATTRIBUTES          16
+#define X_VSH_MAX_STREAMS             16
+#define X_VSH_MAX_INSTRUCTION_COUNT   136  // The maximum Xbox shader instruction count
+#define X_VSH_INSTRUCTION_SIZE        4
+#define X_VSH_INSTRUCTION_SIZE_BYTES  (X_VSH_INSTRUCTION_SIZE * sizeof(DWORD))
 
 // Xbox Vertex Shader versions
-#define VERSION_XVS                    0x2078 // 'x ' Xbox vertex shader
-#define VERSION_XVSS                   0x7378 // 'xs' Xbox vertex state shader
-#define VERSION_XVSW                   0x7778 // 'xw' Xbox vertex read/write shader
+#define VERSION_XVS                    0x2078 // 'x ' Xbox vertex shader. Corresponds to X_VST_NORMAL
+#define VERSION_XVSS                   0x7378 // 'xs' Xbox vertex state shader. Corresponds to X_VST_STATE
+#define VERSION_XVSW                   0x7778 // 'xw' Xbox vertex read/write shader. Corresponds to X_VST_READWRITE
 
 /// nv2a microcode header
 typedef struct
@@ -1056,21 +1071,29 @@ typedef struct
 }
 X_VSH_SHADER_HEADER;
 
-#define X_VSH_INSTRUCTION_SIZE       4
-#define X_VSH_INSTRUCTION_SIZE_BYTES (X_VSH_INSTRUCTION_SIZE * sizeof(DWORD))
-
 // ******************************************************************
 // * X_VERTEXSHADERINPUT
 // ******************************************************************
 typedef struct _X_VERTEXSHADERINPUT
 {
-    DWORD IndexOfStream;
+    DWORD StreamIndex;
     DWORD Offset;
     DWORD Format;
-    BYTE  TesselationType;
-    BYTE  TesselationSource;
+    BYTE TessellationType;
+    BYTE TessellationSource;
+	BYTE Padding0;
+	BYTE Padding1;
 }
 X_VERTEXSHADERINPUT;
+
+typedef struct {
+	DWORD StreamIndex;
+	DWORD Offset;
+	DWORD SizeAndType;
+	BYTE Flags;
+	BYTE Source;
+}
+X_VertexShaderSlot;
 
 // ******************************************************************
 // * X_VERTEXATTRIBUTEFORMAT
@@ -1092,34 +1115,64 @@ typedef struct _X_STREAMINPUT
     UINT                Offset;
 } X_STREAMINPUT;
 
+struct X_D3DVertexShader3948
+{
+#if 0 
+	DWORD Signature; // Note : Debug XBE's have a 'Vshd' DWORD signature prefix
+#endif
+	DWORD RefCount; // Based on the observation this member is set to 1 in D3DDevice_CreateVertexShader and decreased in D3DDevice_DeleteVertexShader
+	DWORD Flags; // Seems to contain at solely the four X_D3DUSAGE_PERSISTENT* flags
+	DWORD MaxSlot;
+	DWORD TextureCount;
+	DWORD ProgramSize;
+	DWORD ProgramAndConstantsDwords; // Sum of ProgramSize + constant count, expressed in instruction slots, taking 4 DWORD's per slot (see X_VSH_INSTRUCTION_SIZE)
+	DWORD Dimensionality[4] ; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
+	X_VERTEXATTRIBUTEFORMAT VertexAttribute;
+	X_VertexShaderSlot Slot[4]; // Four more (for a total of 20)
+	DWORD ProgramAndConstants[1 /*declare more for debugging purposes */+ X_VSH_MAX_INSTRUCTION_COUNT]; // The binary function data and constants (contents continues futher outside this struct, up to ProgramAndConstantsDwords * 4 (=X_VSH_INSTRUCTION_SIZE) DWORD's)
+};
+
 struct X_D3DVertexShader
 {
-	// Note : Debug XBE's have a 'Vshd' DWORD signature prefixing this!
+#if 0 
+	DWORD Signature; // Note : Debug XBE's have a 'Vshd' DWORD signature prefix
+#endif
 	DWORD RefCount; // Based on the observation this member is set to 1 in D3DDevice_CreateVertexShader and decreased in D3DDevice_DeleteVertexShader
-	DWORD Flags;
-	DWORD FunctionSize; // ?Also known as ProgramSize?
-	DWORD TotalSize; // seems to include both the function and ?constants?
-	DWORD NumberOfDimensionsPerTexture; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
+	DWORD Flags; // Contains X_VERTEXSHADER_FLAG_* bits
+	DWORD ProgramSize;
+	DWORD ProgramAndConstantsDwords; // Sum of ProgramSize + constant count, expressed in instruction slots, taking 4 DWORD's per slot (see X_VSH_INSTRUCTION_SIZE)
+	BYTE Dimensionality[4] ; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
 	X_VERTEXATTRIBUTEFORMAT VertexAttribute;
-	DWORD FunctionData[X_VSH_MAX_INSTRUCTION_COUNT]; // probably the binary function data and ?constants? (data continues futher outside this struct, up to TotalSize DWORD's)
+	DWORD ProgramAndConstants[X_VSH_MAX_INSTRUCTION_COUNT]; // The binary function data and constants (contents continues futher outside this struct, up to ProgramAndConstantsDwords * 4 (=X_VSH_INSTRUCTION_SIZE) DWORD's)
 };
+
+// X_D3DVertexShader.Flags values :
+#define X_VERTEXSHADER_FLAG_WRITE           (1 <<  0) // = 0x0001 // Set for Xbox ShaderType != X_VST_NORMAL 
+#define X_VERTEXSHADER_FLAG_PASSTHROUGH     (1 <<  1) // = 0x0002
+#define X_VERTEXSHADER_FLAG_UNKNOWN         (1 <<  2) // = 0x0004 // Test case: Amped
+#define X_VERTEXSHADER_FLAG_STATE           (1 <<  3) // = 0x0008 // Set for Xbox ShaderType == X_VST_STATE
+#define X_VERTEXSHADER_FLAG_PROGRAM         (1 <<  4) // = 0x0010 // Set when X_D3DVertexShader was created with assigned function data
+#define X_VERTEXSHADER_FLAG_HASDIFFUSE      (1 << 10) // = 0x0400 Corresponds to X_D3DUSAGE_PERSISTENTDIFFUSE
+#define X_VERTEXSHADER_FLAG_HASSPECULAR     (1 << 11) // = 0x0800 Corresponds to X_D3DUSAGE_PERSISTENTSPECULAR
+#define X_VERTEXSHADER_FLAG_HASBACKDIFFUSE  (1 << 12) // = 0x1000 Corresponds to X_D3DUSAGE_PERSISTENTBACKDIFFUSE
+#define X_VERTEXSHADER_FLAG_HASBACKSPECULAR (1 << 13) // = 0x2000 Corresponds to X_D3DUSAGE_PERSISTENTBACKSPECULAR
 
 // vertex shader input registers for fixed function vertex shader
 
 //          Name                   Register number      D3DFVF
-const int X_D3DVSDE_POSITION     = 0; // Corresponds to D3DFVF_XYZ
-const int X_D3DVSDE_BLENDWEIGHT  = 1; // Corresponds to D3DFVF_XYZRHW
-const int X_D3DVSDE_NORMAL       = 2; // Corresponds to D3DFVF_NORMAL
-const int X_D3DVSDE_DIFFUSE      = 3; // Corresponds to D3DFVF_DIFFUSE
-const int X_D3DVSDE_SPECULAR     = 4; // Corresponds to D3DFVF_SPECULAR
+const int X_D3DVSDE_POSITION     = 0; // Corresponds to X_D3DFVF_XYZ
+const int X_D3DVSDE_BLENDWEIGHT  = 1; // Corresponds to X_D3DFVF_XYZB1? (was X_D3DFVF_XYZRHW?)
+const int X_D3DVSDE_NORMAL       = 2; // Corresponds to X_D3DFVF_NORMAL
+const int X_D3DVSDE_DIFFUSE      = 3; // Corresponds to X_D3DFVF_DIFFUSE
+const int X_D3DVSDE_SPECULAR     = 4; // Corresponds to X_D3DFVF_SPECULAR
 const int X_D3DVSDE_FOG          = 5; // Xbox extension
 const int X_D3DVSDE_POINTSIZE    = 6; // Dxbx addition
 const int X_D3DVSDE_BACKDIFFUSE  = 7; // Xbox extension
 const int X_D3DVSDE_BACKSPECULAR = 8; // Xbox extension
-const int X_D3DVSDE_TEXCOORD0    = 9; // Corresponds to D3DFVF_TEX1 (not D3DFVF_TEX0, which means no textures are present)
-const int X_D3DVSDE_TEXCOORD1    = 10; // Corresponds to D3DFVF_TEX2
-const int X_D3DVSDE_TEXCOORD2    = 11; // Corresponds to D3DFVF_TEX3
-const int X_D3DVSDE_TEXCOORD3    = 12; // Corresponds to D3DFVF_TEX4
+const int X_D3DVSDE_TEXCOORD0    = 9; // Corresponds to X_D3DFVF_TEX1 (not X_D3DFVF_TEX0, which means no textures are present)
+const int X_D3DVSDE_TEXCOORD1    = 10; // Corresponds to X_D3DFVF_TEX2
+const int X_D3DVSDE_TEXCOORD2    = 11; // Corresponds to X_D3DFVF_TEX3
+const int X_D3DVSDE_TEXCOORD3    = 12; // Corresponds to X_D3DFVF_TEX4
 const int X_D3DVSDE_VERTEX       = 0xFFFFFFFF; // Xbox extension for Begin/End drawing (data is a D3DVSDT_FLOAT4)
 
 //typedef X_D3DVSDE = X_D3DVSDE_POSITION..High(DWORD)-2; // Unique declaration to make overloads possible;
@@ -1233,11 +1286,21 @@ typedef enum _X_D3DVSD_TOKENTYPE
 #define X_D3DFVF_TEXTUREFORMAT2   0x000
 #define X_D3DFVF_TEXTUREFORMAT3   0x001
 #define X_D3DFVF_TEXTUREFORMAT4   0x002
-
+#define X_D3DFVF_TEXCOORDSIZE_SHIFT(Index) ((Index) * 2 + 16)
 #define X_D3DFVF_TEXCOORDSIZE1(Index) (X_D3DFVF_TEXTUREFORMAT1 << (Index * 2 + 16))
 #define X_D3DFVF_TEXCOORDSIZE2(Index) (X_D3DFVF_TEXTUREFORMAT2)
 #define X_D3DFVF_TEXCOORDSIZE3(Index) (X_D3DFVF_TEXTUREFORMAT3 << (Index * 2 + 16))
 #define X_D3DFVF_TEXCOORDSIZE4(Index) (X_D3DFVF_TEXTUREFORMAT4 << (Index * 2 + 16))
+
+// Values, used with D3DTSS_TEXCOORDINDEX, to specify that the vertex data (position
+// and normal in the camera space) should be taken as texture coordinates.
+// Low 16 bits are used to specify texture coordinate index, to take the WRAP mode from.
+#define X_D3DTSS_TCI_PASSTHRU                             0x00000000
+#define X_D3DTSS_TCI_CAMERASPACENORMAL                    0x00010000
+#define X_D3DTSS_TCI_CAMERASPACEPOSITION                  0x00020000
+#define X_D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR          0x00030000
+#define X_D3DTSS_TCI_OBJECT                               0x00040000 // Warning! Collides with host Direct3D 9 D3DTSS_TCI_SPHEREMAP
+#define X_D3DTSS_TCI_SPHEREMAP                            0x00050000
 
 typedef DWORD NV2AMETHOD;
 

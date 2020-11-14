@@ -66,8 +66,9 @@
 #include <process.h>
 #include <locale.h>
 
-#include "Direct3D9\RenderStates.h"
-extern XboxRenderStateConverter XboxRenderStates;
+#include "Direct3D9\RenderStates.h" // For XboxRenderStateConverter
+
+extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
 
 #define DbgPshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \

@@ -335,6 +335,8 @@
 #define NV_PGRAPH_FIFO                                   0x00000720
 #   define NV_PGRAPH_FIFO_ACCESS                                (1 << 0)
 #define NV_PGRAPH_RDI_INDEX                              0x00000750
+#   define NV_PGRAPH_RDI_INDEX_ADDRESS                        0x00001FFC
+#   define NV_PGRAPH_RDI_INDEX_SELECT                         0x01FF0000
 #define NV_PGRAPH_RDI_DATA                               0x00000754
 #define NV_PGRAPH_FFINTFC_ST2                            0x00000764
 #define NV_PGRAPH_CHANNEL_CTX_TABLE                      0x00000780
@@ -691,6 +693,7 @@
 #define NV_PCRTC_CONFIG                                  0x00000804
 #define NV_PCRTC_RASTER                                  0x00000808
 
+
 #define NV_PVIDEO_DEBUG_2                                0x00000088
 #define NV_PVIDEO_DEBUG_3                                0x0000008C
 #define NV_PVIDEO_INTR                                   0x00000100
@@ -832,13 +835,21 @@
 #   define NV_PRAMDAC_PLL_TEST_COUNTER_NVPLL_LOCK              (1 << 29)
 #   define NV_PRAMDAC_PLL_TEST_COUNTER_MPLL_LOCK               (1 << 30)
 #   define NV_PRAMDAC_PLL_TEST_COUNTER_VPLL_LOCK               (1 << 31)
-#define NV_PRAMDAC_GENERAL_CONTROL			0x00680600
+#define NV_PRAMDAC_GENERAL_CONTROL                       0x00000600
 #	define NV_PRAMDAC_GENERAL_CONTROL_PIXMIX_ON		(3 << 4)
 #	define NV_PRAMDAC_GENERAL_CONTROL_VGA_STATE_SEL		(1 << 8)
 #	define NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL		(1 << 12)
 #	define NV_PRAMDAC_GENERAL_CONTROL_TERMINATION_75OHM	(2 << 16)
 #	define NV_PRAMDAC_GENERAL_CONTROL_BPC_8BITS		(1 << 20)
 #	define NV_PRAMDAC_GENERAL_CONTROL_PIPE_LONG		(2 << 28)
+
+#define NV_PRAMDAC_FP_VDISPLAY_END                       0x00000800
+#define NV_PRAMDAC_FP_VCRTC                              0x00000808
+#define NV_PRAMDAC_FP_VSYNC_END                          0x00000810
+#define NV_PRAMDAC_FP_VVALID_END                         0x00000818
+#define NV_PRAMDAC_FP_HDISPLAY_END                       0x00000820
+#define NV_PRAMDAC_FP_HCRTC                              0x00000828
+#define NV_PRAMDAC_FP_HVALID_END                         0x00000838
 
 #define NV_PRMCIO_ARX			0x006013c0
 #define NV_PRMCIO_AR__WRITE		0x006013c0
@@ -1794,6 +1805,14 @@
 #define NV_IGRAPH_XF_LTC1_L5                         0x11
 #define NV_IGRAPH_XF_LTC1_L6                         0x12
 #define NV_IGRAPH_XF_LTC1_L7                         0x13
+
+/* These RDI select values appear to be named by MS.
+ * nvidia seems to refer to RDI_INDEX_VTX_CONSTANTS0 by RDI_RAMSEL_XL_XFCTX.
+ * However, we don't have other nvidia names; so we use these aliases for now.
+ * Eventually we'll probably adopt nouveau names for these internals.
+ */
+#define RDI_INDEX_VTX_CONSTANTS0                     0x17
+#define RDI_INDEX_VTX_CONSTANTS1                     0xCC
 
 
 #define NV2A_VERTEX_ATTR_POSITION       0

@@ -43,7 +43,7 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
 
  // Create a new shader
  // If the shader was already created, just increase its reference count
-ShaderKey VertexShaderSource::CreateShader(const DWORD* pXboxFunction, DWORD *pXboxFunctionSize) {
+ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, DWORD *pXboxFunctionSize) {
 	IntermediateVertexShader intermediateShader;
 
 	// Parse into intermediate format
