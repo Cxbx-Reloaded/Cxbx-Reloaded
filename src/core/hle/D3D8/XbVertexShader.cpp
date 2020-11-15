@@ -289,7 +289,7 @@ xbox::X_D3DVertexShader* GetXboxVertexShader()
 	return pXboxVertexShader;
 }
 
-static bool UseXboxD3DVertexShaderTypeForVersion3948(xbox::X_D3DVertexShader* pXboxVertexShader)
+static bool UseXboxD3DVertexShaderTypeForVersion3948(const xbox::X_D3DVertexShader* pXboxVertexShader)
 {
 	// Don't check XDK version for our internal FVF vertex shader
 	// because g_Xbox_VertexShader_ForFVF is an internal variable
@@ -304,7 +304,7 @@ static bool UseXboxD3DVertexShaderTypeForVersion3948(xbox::X_D3DVertexShader* pX
 static xbox::X_VERTEXATTRIBUTEFORMAT* CxbxGetVertexShaderAttributes(xbox::X_D3DVertexShader* pXboxVertexShader)
 {
 	if (UseXboxD3DVertexShaderTypeForVersion3948(pXboxVertexShader)) {
-		auto pXboxVertexShader3948 = (xbox::X_D3DVertexShader3948*)pXboxVertexShader;
+		auto pXboxVertexShader3948 = reinterpret_cast<xbox::X_D3DVertexShader3948*>(pXboxVertexShader);
 		return &(pXboxVertexShader3948->VertexAttribute);
 	}
 
@@ -314,7 +314,7 @@ static xbox::X_VERTEXATTRIBUTEFORMAT* CxbxGetVertexShaderAttributes(xbox::X_D3DV
 static DWORD* CxbxGetVertexShaderTokens(xbox::X_D3DVertexShader* pXboxVertexShader, DWORD* pNrTokens)
 {
 	if (UseXboxD3DVertexShaderTypeForVersion3948(pXboxVertexShader)) {
-		auto pXboxVertexShader3948 = (xbox::X_D3DVertexShader3948*)pXboxVertexShader;
+		auto pXboxVertexShader3948 = reinterpret_cast<xbox::X_D3DVertexShader3948*>(pXboxVertexShader);
 		*pNrTokens = pXboxVertexShader3948->ProgramAndConstantsDwords;
 		return &pXboxVertexShader3948->ProgramAndConstants[0];
 	}
