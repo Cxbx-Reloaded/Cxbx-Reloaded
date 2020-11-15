@@ -4304,8 +4304,6 @@ void CxbxImpl_SetViewPort(xbox::X_D3DVIEWPORT8* pViewport)
 	HostViewPort.Y = static_cast<DWORD>(HostViewPort.Y * g_Xbox_MultiSampleYScale);
 	HostViewPort.Width = static_cast<DWORD>(HostViewPort.Width * g_Xbox_MultiSampleXScale);
 	HostViewPort.Height = static_cast<DWORD>(HostViewPort.Height * g_Xbox_MultiSampleYScale);
-	HostViewPort.X = static_cast<DWORD>(HostViewPort.X * g_Xbox_MultiSampleXScale);
-	HostViewPort.Y = static_cast<DWORD>(HostViewPort.Y * g_Xbox_MultiSampleYScale);
 	// Since Width and Height are DWORD, adding GetMultiSampleOffset 0.0f or 0.5f makes no sense
 
 	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
