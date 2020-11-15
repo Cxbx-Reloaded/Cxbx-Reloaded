@@ -77,6 +77,23 @@ extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
 
 static xbox::X_D3DVertexShader g_Xbox_VertexShader_ForFVF = {};
 
+static uint32_t                g_X_VERTEXSHADER_FLAG_PROGRAM; // X_VERTEXSHADER_FLAG_PROGRAM flag varies per XDK, so it is set on runtime
+static uint32_t                g_X_VERTEXSHADER_FLAG_VALID_MASK; // For a test case
+
+void CxbxVertexShaderSetFlags()
+{
+	// Set an appropriate X_VERTEXSHADER_FLAG_PROGRAM version and mask off the "wrong" one
+	// to allow the test case to spot it
+	if (g_LibVersion_D3D8 <= 3948) {
+		g_X_VERTEXSHADER_FLAG_PROGRAM = X_VERTEXSHADER3948_FLAG_PROGRAM;
+		g_X_VERTEXSHADER_FLAG_VALID_MASK = ~X_VERTEXSHADER_FLAG_PROGRAM;
+	}
+	else {
+		g_X_VERTEXSHADER_FLAG_PROGRAM = X_VERTEXSHADER_FLAG_PROGRAM;
+		g_X_VERTEXSHADER_FLAG_VALID_MASK = ~X_VERTEXSHADER3948_FLAG_PROGRAM;
+	}
+}
+
 // Converts an Xbox FVF shader handle to X_D3DVertexShader
 // Note : Temporary, until we reliably locate the Xbox internal state for this
 // See D3DXDeclaratorFromFVF docs https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxdeclaratorfromfvf
@@ -1408,7 +1425,12 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 
 	xbox::X_D3DVertexShader* pXboxVertexShader = CxbxGetXboxVertexShaderForHandle(Handle);
 	g_Xbox_VertexShader_IsPassthrough = false;
-	if (pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_PROGRAM) {
+
+	if ((pXboxVertexShader->Flags & g_X_VERTEXSHADER_FLAG_VALID_MASK) != pXboxVertexShader->Flags) {
+		LOG_TEST_CASE("Unknown vertex shader flag");
+	}
+
+	if (pXboxVertexShader->Flags & g_X_VERTEXSHADER_FLAG_PROGRAM) { // Global variable set from CxbxVertexShaderSetFlags
 #if 0 // Since the D3DDevice_SetVertexShader patch already called it's trampoline, these calls have already been executed :
 		CxbxImpl_LoadVertexShader(Handle, 0);
 		CxbxImpl_SelectVertexShader(Handle, 0);
@@ -1465,9 +1487,6 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 			CxbxSetVertexShaderPassthroughProgram();
 			g_Xbox_VertexShader_IsFixedFunction = false;
 			g_Xbox_VertexShader_IsPassthrough = true;
-		} else if (pXboxVertexShader->Flags & X_VERTEXSHADER_FLAG_UNKNOWN) {
-			// Test-case : Amped
-			LOG_TEST_CASE("unknown vertex shader flag (4)");
 		} else {
 			// Test-case : Many XDK samples, Crazy taxi 3
 			//LOG_TEST_CASE("Other or no vertex shader flags");

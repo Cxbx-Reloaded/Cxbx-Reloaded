@@ -3061,6 +3061,8 @@ void Direct3D_CreateDevice_Start
 	xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
+    CxbxVertexShaderSetFlags();
+
     if (!XboxRenderStates.Init()) {
         CxbxKrnlCleanup("Failed to init XboxRenderStates");
     }

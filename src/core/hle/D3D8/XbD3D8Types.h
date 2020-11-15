@@ -1149,13 +1149,15 @@ struct X_D3DVertexShader
 // X_D3DVertexShader.Flags values :
 #define X_VERTEXSHADER_FLAG_WRITE           (1 <<  0) // = 0x0001 // Set for Xbox ShaderType != X_VST_NORMAL 
 #define X_VERTEXSHADER_FLAG_PASSTHROUGH     (1 <<  1) // = 0x0002
-#define X_VERTEXSHADER_FLAG_UNKNOWN         (1 <<  2) // = 0x0004 // Test case: Amped
 #define X_VERTEXSHADER_FLAG_STATE           (1 <<  3) // = 0x0008 // Set for Xbox ShaderType == X_VST_STATE
-#define X_VERTEXSHADER_FLAG_PROGRAM         (1 <<  4) // = 0x0010 // Set when X_D3DVertexShader was created with assigned function data
+#define X_VERTEXSHADER_FLAG_PROGRAM         (1 <<  4) // = 0x0010 // Set when X_D3DVertexShader was created with assigned function data; introduced after XDK 3948; don't use directly, use g_X_VERTEXSHADER_FLAG_PROGRAM instead
 #define X_VERTEXSHADER_FLAG_HASDIFFUSE      (1 << 10) // = 0x0400 Corresponds to X_D3DUSAGE_PERSISTENTDIFFUSE
 #define X_VERTEXSHADER_FLAG_HASSPECULAR     (1 << 11) // = 0x0800 Corresponds to X_D3DUSAGE_PERSISTENTSPECULAR
 #define X_VERTEXSHADER_FLAG_HASBACKDIFFUSE  (1 << 12) // = 0x1000 Corresponds to X_D3DUSAGE_PERSISTENTBACKDIFFUSE
 #define X_VERTEXSHADER_FLAG_HASBACKSPECULAR (1 << 13) // = 0x2000 Corresponds to X_D3DUSAGE_PERSISTENTBACKSPECULAR
+
+// X_D3DVertexShader3948.Flags values, only those which differ from the above :
+#define X_VERTEXSHADER3948_FLAG_PROGRAM     (1 <<  2) // = 0x0004 // Test case: Amped, NASCAR Heat 2002; don't use directly, use g_X_VERTEXSHADER_FLAG_PROGRAM instead
 
 // vertex shader input registers for fixed function vertex shader
 
