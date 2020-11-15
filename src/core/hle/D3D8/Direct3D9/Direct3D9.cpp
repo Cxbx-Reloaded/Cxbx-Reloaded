@@ -301,6 +301,7 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture_4__LTCG_eax_pTexture,          (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture_4,                             (xbox::X_D3DBaseTexture*)                                                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader,                          (xbox::dword_xt)                                                                                      );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader_0,                        ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                             );  \
@@ -3060,6 +3061,8 @@ void Direct3D_CreateDevice_Start
 	xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
+    CxbxVertexShaderSetFlags();
+
     if (!XboxRenderStates.Init()) {
         CxbxKrnlCleanup("Failed to init XboxRenderStates");
     }
@@ -4301,8 +4304,6 @@ void CxbxImpl_SetViewPort(xbox::X_D3DVIEWPORT8* pViewport)
 	HostViewPort.Y = static_cast<DWORD>(HostViewPort.Y * g_Xbox_MultiSampleYScale);
 	HostViewPort.Width = static_cast<DWORD>(HostViewPort.Width * g_Xbox_MultiSampleXScale);
 	HostViewPort.Height = static_cast<DWORD>(HostViewPort.Height * g_Xbox_MultiSampleYScale);
-	HostViewPort.X = static_cast<DWORD>(HostViewPort.X * g_Xbox_MultiSampleXScale);
-	HostViewPort.Y = static_cast<DWORD>(HostViewPort.Y * g_Xbox_MultiSampleYScale);
 	// Since Width and Height are DWORD, adding GetMultiSampleOffset 0.0f or 0.5f makes no sense
 
 	HRESULT hRet = g_pD3DDevice->SetViewport(&HostViewPort);
@@ -6604,22 +6605,51 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 {
 	LOG_FUNC_ONE_ARG(Handle);
 
-	if (XB_TRMP(D3DDevice_SetVertexShader))
-		XB_TRMP(D3DDevice_SetVertexShader)(Handle);
+	// This trampoline leads to calling D3DDevice_LoadVertexShader and D3DDevice_SelectVertexShader
+	// Please raise the alarm if this is ever not the case
+	XB_TRMP(D3DDevice_SetVertexShader)(Handle);
 
 	CxbxImpl_SetVertexShader(Handle);
 }
 
+// Overload for logging
+static void D3DDevice_SetVertexShader_0
+(
+    xbox::dword_xt Handle
+)
+{
+	LOG_FUNC_ONE_ARG(Handle);
+}
+
 // This uses a custom calling convention where Handle is passed in EBX
 // Test-case: NASCAR Heat 2002
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
 {
 	dword_xt Handle;
-	__asm mov Handle, ebx
+	__asm {
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  Handle, ebx
+	}
 
-	LOG_FUNC_ONE_ARG(Handle);
+	// Log
+	D3DDevice_SetVertexShader_0(Handle);
+
+	// This trampoline leads to calling D3DDevice_LoadVertexShader and D3DDevice_SelectVertexShader
+	// Please raise the alarm if this is ever not the case
+	__asm {
+		mov  ebx, Handle
+		call XB_TRMP(D3DDevice_SetVertexShader_0)
+	}
 
 	CxbxImpl_SetVertexShader(Handle);
+
+	__asm {
+		mov  esp, ebp
+		pop  ebp
+		ret
+	}
 }
 
 // TODO : Move to own file
