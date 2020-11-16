@@ -296,6 +296,7 @@ void CxbxVertexBufferConverter::ConvertStream
 			return;
 		}
 
+		pXboxVertexData += XboxStreamInput.Offset;
 		uiXboxVertexStride = XboxStreamInput.Stride;
         // Set a new (exact) vertex count
 		uiVertexCount = pDrawContext->VerticesInBuffer;
