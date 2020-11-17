@@ -8749,20 +8749,34 @@ void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
 // ******************************************************************
 // * patch: D3D_DestroyResource_LTCG
 // ******************************************************************
-void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
+static void D3D_DestroyResource__LTCG(xbox::X_D3DResource* pResource)
+{
+	LOG_FUNC_ONE_ARG(pResource);
+}
+
+__declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
 {
     X_D3DResource* pResource;
     __asm {
-        mov pResource, edi
+        push ebp
+        mov  ebp, esp
+        sub  esp, __LOCAL_SIZE
+        mov  pResource, edi
     }
+
+    // Log
+    D3D_DestroyResource__LTCG(pResource);
 
     // Release the host copy (if it exists!)
     FreeHostResource(GetHostResourceKey(pResource));
 
     // Call the Xbox version of DestroyResource
     __asm {
-        mov edi, pResource
+        mov  edi, pResource
         call XB_TRMP(D3D_DestroyResource__LTCG)
+        mov  esp, ebp
+        pop  ebp
+        ret
     }
 }
 
