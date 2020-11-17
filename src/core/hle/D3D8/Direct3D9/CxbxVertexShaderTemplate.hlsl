@@ -7,13 +7,13 @@ struct VS_INPUT
 };
 
 // Output registers
-struct VS_OUTPUT
+struct VS_OUTPUT // Declared identical to pixel shader input (see PS_INPUT)
 {
 	float4 oPos : POSITION;  // Homogeneous clip space position
 	float4 oD0  : COLOR0;    // Primary color (front-facing)
 	float4 oD1  : COLOR1;    // Secondary color (front-facing)
 	float  oFog : FOG;       // Fog coordinate
-	float  oPts : PSIZE;	 // Point size
+	float  oPts : PSIZE;     // Point size
 	float4 oB0  : TEXCOORD4; // Back-facing primary color
 	float4 oB1  : TEXCOORD5; // Back-facing secondary color
 	float4 oT0  : TEXCOORD0; // Texture coordinate set 0
