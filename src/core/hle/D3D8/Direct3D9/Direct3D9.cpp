@@ -8732,44 +8732,6 @@ __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_BlockOnTime_4)( dword_xt Unknow
 	}
 }
 
-
-bool DestroyResource_Common(xbox::X_D3DResource* pResource)
-{
-    if (pResource == g_pXbox_RenderTarget) {
-        LOG_TEST_CASE("Skipping Release of active Xbox Render Target");
-        return false;
-    }
-
-    if (pResource == g_pXbox_DepthStencil) {
-        LOG_TEST_CASE("Skipping Release of active Xbox Depth Stencil");
-        return false;
-    }
-
-    if (pResource == g_pXbox_BackBufferSurface) {
-        LOG_TEST_CASE("Skipping Release of active Xbox BackBuffer");
-        return false;
-    }
-
-    if (pResource == g_pXbox_DefaultDepthStencilSurface) {
-        LOG_TEST_CASE("Skipping Release of default Xbox Depth Stencil");
-        return false;
-    }
-
-    for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-        if (pResource == g_pXbox_SetTexture[i]) {
-            // This shouldn't happen, since texture resources that get destroyed,
-            // shouldn't be set to any stage anymore.
-            LOG_TEST_CASE("Skipping Release of active Xbox Texture");
-            return false;
-        }
-    }
-
-    // Release the host copy (if it exists!)
-    FreeHostResource(GetHostResourceKey(pResource));
-
-    return true;
-}
-
 // ******************************************************************
 // * patch: D3D_DestroyResource
 // ******************************************************************
@@ -8777,28 +8739,44 @@ void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
 {
     LOG_FUNC_ONE_ARG(pResource);
 
-    if (DestroyResource_Common(pResource)) {
-        // Call the Xbox version of DestroyResource
-		XB_TRMP(D3D_DestroyResource)(pResource);
-    }
+    // Release the host copy (if it exists!)
+    FreeHostResource(GetHostResourceKey(pResource));
+
+    // Call the Xbox version of DestroyResource
+    XB_TRMP(D3D_DestroyResource)(pResource);
 }
 
 // ******************************************************************
 // * patch: D3D_DestroyResource_LTCG
 // ******************************************************************
-void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
+static void D3D_DestroyResource__LTCG(xbox::X_D3DResource* pResource)
+{
+	LOG_FUNC_ONE_ARG(pResource);
+}
+
+__declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
 {
     X_D3DResource* pResource;
     __asm {
-        mov pResource, edi
+        push ebp
+        mov  ebp, esp
+        sub  esp, __LOCAL_SIZE
+        mov  pResource, edi
     }
 
-    if (DestroyResource_Common(pResource)) {
-        // Call the Xbox version of DestroyResource
-        __asm {
-            mov edi, pResource
-            call XB_TRMP(D3D_DestroyResource__LTCG)
-        }
+    // Log
+    D3D_DestroyResource__LTCG(pResource);
+
+    // Release the host copy (if it exists!)
+    FreeHostResource(GetHostResourceKey(pResource));
+
+    // Call the Xbox version of DestroyResource
+    __asm {
+        mov  edi, pResource
+        call XB_TRMP(D3D_DestroyResource__LTCG)
+        mov  esp, ebp
+        pop  ebp
+        ret
     }
 }
 
