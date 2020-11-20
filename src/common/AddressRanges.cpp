@@ -65,7 +65,7 @@ const _XboxAddressRanges XboxAddressRanges[] = {
 	RANGE_ENTRY(NVNET_DEVICE_BASE , NVNET_DEVICE_END , NVNET_DEVICE_SIZE , PROT_NAC, SYSTEM_ALL              , "DeviceNVNet"),
 	RANGE_ENTRY(FLASH_DEVICE1_BASE, FLASH_DEVICE1_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL              , "DeviceFlash_a (Flash mirror 1)"),
 	RANGE_ENTRY(FLASH_DEVICE2_BASE, FLASH_DEVICE2_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL              , "DeviceFlash_b (Flash mirror 2)"),
-	RANGE_ENTRY(FLASH_DEVICE3_BASE, FLASH_DEVICE3_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL              , "DeviceFlash_c (Flash mirror 3)"),
+	RANGE_ENTRY(FLASH_DEVICE3_BASE, FLASH_DEVICE3_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL    | MAY_FAIL, "DeviceFlash_c (Flash mirror 3)"), // this region fails reservation when running under Ubuntu with wine, so it must be allowed to fail
 	RANGE_ENTRY(FLASH_DEVICE4_BASE, FLASH_DEVICE4_END, FLASH_DEVICEN_SIZE, PROT_NAC, SYSTEM_ALL    | MAY_FAIL, "DeviceFlash_d (Flash mirror 4) Optional (will probably fail reservation, which is acceptable - the 3 other mirrors work just fine"),
 	#undef RANGE_ENTRY
 };
