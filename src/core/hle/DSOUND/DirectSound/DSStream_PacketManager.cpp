@@ -75,13 +75,6 @@ void DSStream_Packet_Clear(
 
     free(buffer->pBuffer_data);
 
-    // Peform release only, don't trigger any events below.
-    if (status == XMP_STATUS_RELEASE_CXBXR) {
-        DSoundSGEMemDealloc(buffer->xmp_data.dwMaxSize);
-        buffer = pThis->Host_BufferPacketArray.erase(buffer);
-        return;
-    }
-
     if (buffer->xmp_data.pdwStatus != xbox::zeroptr) {
         (*buffer->xmp_data.pdwStatus) = status;
     }
@@ -218,6 +211,16 @@ bool DSStream_Packet_Process(
         return 0;
     }
 
+    // Do not allow to process when the voice is not activated.
+    if ((pThis->EmuFlags & DSE_FLAG_PAUSENOACTIVATE) != 0 &&
+        (pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) == 0) {
+        return 0;
+    }
+
+    if (!(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
+        pThis->EmuFlags |= DSE_FLAG_IS_ACTIVATED;
+    }
+
     // If title want to pause, then don't process the packets.
     // If media object is being used as playback synch, then don't process the packets.
     if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0 ||
@@ -226,16 +229,6 @@ bool DSStream_Packet_Process(
         vector_hvp_iterator packetCurrent = pThis->Host_BufferPacketArray.begin();
         DSStream_Packet_Prefill(pThis, packetCurrent);
         return 0;
-    }
-
-    if ((pThis->Xb_Status & X_DSSSTATUS_PAUSED) > 0) {
-        pThis->Xb_Status &= ~X_DSSSTATUS_PAUSED;
-    }
-
-    if (pThis->Host_isProcessing == false) {
-        if (!(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
-            pThis->EmuFlags |= DSE_FLAG_IS_ACTIVATED;
-        }
     }
 
     DWORD dwAudioBytes;
@@ -372,7 +365,7 @@ bool DSStream_Packet_Flush(
     }
     // Clear flags and set status to zero.
     DSStream_Packet_FlushEx_Reset(pThis);
-    pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
+    pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_IS_ACTIVATED);
     pThis->Xb_Status = 0;
     return false;
 }
