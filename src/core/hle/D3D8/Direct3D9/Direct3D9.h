@@ -64,7 +64,7 @@ extern uint8_t *ConvertD3DTextureToARGB(
 void CxbxUpdateNativeD3DResources();
 
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
-void CxbxImpl_SetViewPort(xbox::X_D3DVIEWPORT8* pViewport);
+void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 
 // initialize direct3d
 extern void EmuD3DInit();
