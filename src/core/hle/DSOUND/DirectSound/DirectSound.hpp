@@ -200,7 +200,7 @@ class X_CDirectSoundStream
 {
     public:
         // construct vtable (or grab ptr to existing)
-        X_CDirectSoundStream(bool is3D) : pVtbl(&vtbl), Xb_Voice(is3D) { pMcpxStream = new X_CMcpxStream(this); };
+        X_CDirectSoundStream(bool is3D);
 
     private:
         // vtable (cached by each instance, via constructor)
@@ -244,7 +244,8 @@ class X_CDirectSoundStream
         *pVtbl;
 
         // global vtbl for this class
-        static _vtbl vtbl;
+        static _vtbl vtbl_r1;
+        static _vtbl vtbl_r2;
 
         DWORD Spacer[8];
         PVOID pMcpxStream;
@@ -808,9 +809,18 @@ xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetInfo)
 );
 
 // ******************************************************************
-// * patch: CDirectSoundStream_GetStatus
+// * patch: CDirectSoundStream_GetStatus (3911+)
 // ******************************************************************
-xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetStatus)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetStatus__r1)
+(
+    X_CDirectSoundStream*   pThis,
+    LPDWORD                 pdwStatus
+);
+
+// ******************************************************************
+// * patch: CDirectSoundStream_GetStatus (4134+)
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetStatus__r2)
 (
     X_CDirectSoundStream*   pThis,
     LPDWORD                 pdwStatus

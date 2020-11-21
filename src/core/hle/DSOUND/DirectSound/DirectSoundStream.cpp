@@ -55,18 +55,18 @@ xbox::X_CMcpxStream::_vtbl xbox::X_CMcpxStream::vtbl =
     &xbox::EMUPATCH(CMcpxStream_Dummy_0x10),// 0x10
 };
 
-xbox::X_CDirectSoundStream::_vtbl xbox::X_CDirectSoundStream::vtbl =
+xbox::X_CDirectSoundStream::_vtbl xbox::X_CDirectSoundStream::vtbl_r1 =
 {
     &xbox::EMUPATCH(CDirectSoundStream_AddRef),          // 0x00
     &xbox::EMUPATCH(CDirectSoundStream_Release),         // 0x04
 /*
     STDMETHOD(GetInfo)(THIS_ LPXMEDIAINFO pInfo) PURE;
 */
-    &xbox::EMUPATCH(CDirectSoundStream_GetInfo),         // 0x08
-    &xbox::EMUPATCH(CDirectSoundStream_GetStatus),       // 0x0C
-    &xbox::EMUPATCH(CDirectSoundStream_Process),         // 0x10
-    &xbox::EMUPATCH(CDirectSoundStream_Discontinuity),   // 0x14
-    &xbox::EMUPATCH(CDirectSoundStream_Flush),           // 0x18
+    &xbox::EMUPATCH(CDirectSoundStream_GetInfo),        // 0x08
+    &xbox::EMUPATCH(CDirectSoundStream_GetStatus__r1),  // 0x0C
+    &xbox::EMUPATCH(CDirectSoundStream_Process),        // 0x10
+    &xbox::EMUPATCH(CDirectSoundStream_Discontinuity),  // 0x14
+    &xbox::EMUPATCH(CDirectSoundStream_Flush),          // 0x18
     0xBEEFB003,                                         // 0x1C // unknown function
     0xBEEFB004,                                         // 0x20 // DS_CRefCount_AddRef
     0xBEEFB005,                                         // 0x24 // DS_CRefCount_Release
@@ -76,6 +76,40 @@ xbox::X_CDirectSoundStream::_vtbl xbox::X_CDirectSoundStream::vtbl =
     0xBEEFB009,                                         // 0x34
     0xBEEFB00A,                                         // 0x38
 };
+
+xbox::X_CDirectSoundStream::_vtbl xbox::X_CDirectSoundStream::vtbl_r2 =
+{
+    &xbox::EMUPATCH(CDirectSoundStream_AddRef),          // 0x00
+    &xbox::EMUPATCH(CDirectSoundStream_Release),         // 0x04
+/*
+    STDMETHOD(GetInfo)(THIS_ LPXMEDIAINFO pInfo) PURE;
+*/
+    &xbox::EMUPATCH(CDirectSoundStream_GetInfo),        // 0x08
+    &xbox::EMUPATCH(CDirectSoundStream_GetStatus__r2),  // 0x0C
+    &xbox::EMUPATCH(CDirectSoundStream_Process),        // 0x10
+    &xbox::EMUPATCH(CDirectSoundStream_Discontinuity),  // 0x14
+    &xbox::EMUPATCH(CDirectSoundStream_Flush),          // 0x18
+    0xBEEFB003,                                         // 0x1C // unknown function
+    0xBEEFB004,                                         // 0x20 // DS_CRefCount_AddRef
+    0xBEEFB005,                                         // 0x24 // DS_CRefCount_Release
+    0xBEEFB006,                                         // 0x28
+    0xBEEFB007,                                         // 0x2C
+    0xBEEFB008,                                         // 0x30
+    0xBEEFB009,                                         // 0x34
+    0xBEEFB00A,                                         // 0x38
+};
+
+// construct vtable (or grab ptr to existing)
+xbox::X_CDirectSoundStream::X_CDirectSoundStream(bool is3D) : Xb_Voice(is3D)
+{
+    pMcpxStream = new xbox::X_CMcpxStream(this);
+    if (g_LibVersion_DSOUND < 4134) {
+        pVtbl = &vtbl_r1;
+    }
+    else {
+        pVtbl = &vtbl_r2;
+    }
+}
 
 /* NOTE: SUCCEEDED define is only checking for is equal or greater than zero value.
     And FAILED check for less than zero value. Since DS_OK is only 0 base on DirectSound documentation,
@@ -453,12 +487,55 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetInfo)
 }
 
 // ******************************************************************
-// * patch: CDirectSoundStream_GetStatus
+// * patch: CDirectSoundStream_GetStatus (3911+)
 // ******************************************************************
-xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus__r1)
 (
     X_CDirectSoundStream*   pThis,
-    OUT dword_xt*              pdwStatus)
+    OUT dword_xt*           pdwStatus)
+{
+    DSoundMutexGuardLock;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG_OUT(pdwStatus)
+        LOG_FUNC_END;
+
+    DWORD dwStatusXbox = 0, dwStatusHost;
+    HRESULT hRet = pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatusHost);
+
+    // Convert host to xbox status flag.
+    if (hRet == DS_OK) {
+        if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
+            dwStatusXbox = X_DSSSTATUS_READY;
+        }
+
+    }
+    else {
+        hRet = DSERR_GENERIC;
+    }
+
+    if (pdwStatus != xbox::zeroptr) {
+        *pdwStatus = dwStatusXbox;
+    }
+
+    // Only used for debug any future issues with custom stream's packet management
+    EmuLog(LOG_LEVEL::DEBUG, "packet array size: %d", pThis->Host_BufferPacketArray.size());
+
+    LOG_FUNC_BEGIN_ARG_RESULT
+        LOG_FUNC_ARG_RESULT_TYPE(DSSSTATUS_FLAG, pdwStatus)
+    LOG_FUNC_END_ARG_RESULT;
+
+    return hRet;
+}
+
+// ******************************************************************
+// * patch: CDirectSoundStream_GetStatus (4134+)
+// ******************************************************************
+xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus__r2)
+(
+    X_CDirectSoundStream*   pThis,
+    OUT dword_xt*           pdwStatus)
 {
     DSoundMutexGuardLock;
 
@@ -479,13 +556,17 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus)
         if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
             dwStatusXbox |= X_DSSSTATUS_READY;
         }
-        *pdwStatus = dwStatusXbox;
 
-    } else if (pdwStatus != xbox::zeroptr) {
-        *pdwStatus = 0;
+    } else {
+        dwStatusXbox = 0;
+        hRet = DSERR_GENERIC;
     }
 
-    // Only used for debugging any future issues with custom stream's packet management
+    if (pdwStatus != xbox::zeroptr) {
+        *pdwStatus = dwStatusXbox;
+    }
+
+    // Only used for debug any future issues with custom stream's packet management
     EmuLog(LOG_LEVEL::DEBUG, "packet array size: %d", pThis->Host_BufferPacketArray.size());
 
     LOG_FUNC_BEGIN_ARG_RESULT
