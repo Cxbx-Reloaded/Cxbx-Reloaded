@@ -32,12 +32,10 @@ uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
 uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
 
-uniform float4 xboxViewportScaleInverse : register(c212);
-uniform float4 xboxViewportOffset : register(c213);
+uniform float4 xboxScreenspaceScale : register(c212);
+uniform float4 xboxScreenspaceOffset : register(c213);
 
 uniform float4 xboxTextureScale[4] : register(c214);
-
-uniform float4 xboxIsRHWTransformedPosition : register(c218);
 
 // Overloaded casts, assuring all inputs are treated as float4
 float4 _tof4(float  src) { return float4(src, src, src, src); }
@@ -271,20 +269,20 @@ float4 reverseScreenspaceTransform(float4 oPos)
 	// mad oPos.xyz, r12, r1.x, c-37
 	// where c-37 and c-38 are reserved transform values
 
-	if (xboxIsRHWTransformedPosition.x) {
-		// Detect 0 w and avoid 0 division
-		if (oPos.w == 0) oPos.w = 1; // if else doesn't seem to work here
-		oPos.w = 1 / oPos.w; // flip rhw to w
-	}
-
 	// oPos.w and xboxViewportScale.z might be VERY big when a D24 depth buffer is used
 	// and multiplying oPos.xyz by oPos.w may cause precision issues.
 	// Test case: Burnout 3
 
-	oPos.xyz -= xboxViewportOffset.xyz; // reverse offset
-	oPos.xyz *= oPos.w; // reverse perspective divide
-	oPos.xyz *= xboxViewportScaleInverse.xyz; // reverse scale
+	// Reverse screenspace offset
+	oPos -= xboxScreenspaceOffset;
+	// Reverse screenspace scale
+	oPos /= xboxScreenspaceScale;
 
+	// Ensure w is nonzero
+	if(oPos.w == 0) oPos.w = 1;
+	// Reverse perspective divide
+	oPos.xyz *= oPos.w;
+	
 	return oPos;
 }
 
