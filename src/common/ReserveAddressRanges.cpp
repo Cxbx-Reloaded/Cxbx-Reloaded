@@ -302,9 +302,9 @@ bool AttemptReserveAddressRanges(unsigned int* p_reserved_systems, blocks_reserv
 			// Some ranges are allowed to fail reserving
 			if (!IsOptionalAddressRange(i)) {
 				// If not, then let's free them and downgrade host's limitation.
+				clear_systems = AddressRangeGetSystemFlags(i);
 				iLast = i;
 				i = -1; // Reset index back to zero after for statement's increment.
-				clear_systems = AddressRangeGetSystemFlags(i);
 				continue;
 			}
 		}
