@@ -72,17 +72,17 @@ const _XboxAddressRanges XboxAddressRanges[] = {
 
 const size_t XboxAddressRanges_size = ARRAY_SIZE(XboxAddressRanges);
 
-bool AddressRangeMatchesFlags(const int index, const unsigned int flags)
+bool AddressRangeMatchesFlags(const size_t index, const unsigned int flags)
 {
 	return XboxAddressRanges[index].RangeFlags & flags;
 }
 
-bool IsOptionalAddressRange(const int index)
+bool IsOptionalAddressRange(const size_t index)
 {
 	return AddressRangeMatchesFlags(index, MAY_FAIL);
 }
 
-int AddressRangeGetSystemFlags(const int index)
+unsigned int AddressRangeGetSystemFlags(const size_t index)
 {
 	return XboxAddressRanges[index].RangeFlags & SYSTEM_ALL;
 }
