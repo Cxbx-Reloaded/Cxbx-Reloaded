@@ -196,8 +196,8 @@ extern const struct _XboxAddressRanges {
 
 extern const size_t XboxAddressRanges_size;
 
-extern bool AddressRangeMatchesFlags(const int index, const unsigned int flags);
-extern bool IsOptionalAddressRange(const int index);
-extern int AddressRangeGetSystemFlags(const int index);
+extern bool AddressRangeMatchesFlags(const size_t index, const unsigned int flags);
+extern bool IsOptionalAddressRange(const size_t index);
+extern unsigned int AddressRangeGetSystemFlags(const size_t index);
 
 extern bool VerifyWow64();
