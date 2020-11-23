@@ -634,7 +634,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Pause)
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(dwPause)
+		LOG_FUNC_ARG_TYPE(DSSPAUSE_FLAG, dwPause)
 		LOG_FUNC_END;
 
 	if (!pThis) {
@@ -661,7 +661,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_PauseEx)
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(rtTimestamp)
-        LOG_FUNC_ARG(dwPause)
+        LOG_FUNC_ARG_TYPE(DSSPAUSE_FLAG, dwPause)
         LOG_FUNC_END;
 
     // This function wasn't part of the XDK until 4721. (Same as IDirectSoundBuffer_PauseEx?)
