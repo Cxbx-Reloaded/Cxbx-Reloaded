@@ -347,6 +347,7 @@ bool DSStream_Packet_Flush(
     xbox::X_CDirectSoundStream* pThis
     )
 {
+
     // If host's audio is still playing then return busy-state until buffer has stop playing.
     DWORD dwStatus;
     pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
@@ -365,7 +366,12 @@ bool DSStream_Packet_Flush(
     }
     // Clear flags and set status to zero.
     DSStream_Packet_FlushEx_Reset(pThis);
-    pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_IS_ACTIVATED);
     pThis->Xb_Status = 0;
+
+    // TESTCASE: Burnout 3 sets stream to pause state then calling SetFormat without processing any packets.
+    // Which then doesn't need to clear pause flag.
+    if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) != 0) {
+        pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_IS_ACTIVATED);
+    }
     return false;
 }
