@@ -899,7 +899,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSound_SynchPlayback)
 
     vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
     for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
-        if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
+        if ((*ppDSStream)->Host_BufferPacketArray.empty()) {
             continue;
         }
         if (((*ppDSStream)->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) > 0) {

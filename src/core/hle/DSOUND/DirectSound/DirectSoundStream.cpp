@@ -126,7 +126,7 @@ void DirectSoundDoWork_Stream(xbox::LARGE_INTEGER& time)
     // Actually, DirectSoundStream need to process buffer packets here.
     vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
     for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
-        if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
+        if ((*ppDSStream)->Host_BufferPacketArray.empty()) {
             continue;
         }
         xbox::X_CDirectSoundStream* pThis = (*ppDSStream);

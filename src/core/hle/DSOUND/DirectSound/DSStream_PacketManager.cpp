@@ -156,7 +156,7 @@ static inline void DSStream_Packet_Stop(
 {
     DSStream_Packet_Stop_Internal(pThis);
 
-    if (pThis->Host_BufferPacketArray.size() == 0) {
+    if (pThis->Host_BufferPacketArray.empty()) {
         if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) > 0) {
             pThis->Xb_Status |= X_DSSSTATUS_ENVELOPECOMPLETE;
         }
@@ -207,7 +207,7 @@ bool DSStream_Packet_Process(
 {
 
     // Do not allow to process if there is no packets.
-    if (pThis->Host_BufferPacketArray.size() == 0) {
+    if (pThis->Host_BufferPacketArray.empty()) {
         return 0;
     }
 
@@ -282,7 +282,7 @@ bool DSStream_Packet_Process(
                     bool isStreamEnd = packetCurrent->isStreamEnd;
                     DSStream_Packet_Clear(packetCurrent, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
 
-                    if (pThis->Host_BufferPacketArray.size() == 0) {
+                    if (pThis->Host_BufferPacketArray.empty()) {
                         if (isStreamEnd) {
                             DSStream_Packet_Stop(pThis);
                         }
@@ -318,7 +318,7 @@ bool DSStream_Packet_Process(
             DSStream_Packet_Prefill(pThis, packetCurrent);
         }
         // Out of packets, let's stop stream's buffer.
-        if (pThis->Host_BufferPacketArray.size() == 0) {
+        if (pThis->Host_BufferPacketArray.empty()) {
             DSStream_Packet_Starved(pThis);
             return 0;
         }
