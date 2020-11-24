@@ -412,7 +412,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_FlushEx)
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(rtTimeStamp)
-		LOG_FUNC_ARG(dwFlags)
+		LOG_FUNC_ARG_TYPE(DSSFLUSHEX_FLAG, dwFlags)
 		LOG_FUNC_END;
 
     HRESULT hRet = DSERR_INVALIDPARAM;
