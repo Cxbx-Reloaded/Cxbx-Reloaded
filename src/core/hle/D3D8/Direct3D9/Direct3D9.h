@@ -1547,7 +1547,10 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette)
     X_D3DPalette *pPalette
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetPalette_4)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette_4)
+(
+    X_D3DPalette *pPalette
+);
 
 // ******************************************************************
 // * patch: D3DDevice_SetFlickerFilter
