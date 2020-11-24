@@ -7943,7 +7943,7 @@ static void D3DDevice_SetRenderTarget_0
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
-	NestedPatchCounter call(setTransformCount);
+	NestedPatchCounter call(setRenderTargetCount);
 
 	__asm {
 		mov  ecx, pRenderTarget
