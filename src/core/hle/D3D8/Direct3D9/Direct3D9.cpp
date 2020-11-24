@@ -4180,11 +4180,11 @@ void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 	auto zRange = g_Xbox_Viewport.MaxZ - g_Xbox_Viewport.MinZ;
 	vScale[0] = scaledWidth / 2;
 	vScale[1] = -scaledHeight / 2;
-	vScale[2] = zRange > 0 ? g_ZScale / zRange : g_ZScale; // avoid divide by 0 when MinZ == MaxZ
+	vScale[2] = zRange * g_ZScale;
 	vScale[3] = 1;
 	vOffset[0] = scaledWidth / 2 + scaledX;
 	vOffset[1] = scaledHeight / 2 + scaledY;
-	vOffset[2] = -g_Xbox_Viewport.MinZ;
+	vOffset[2] = g_Xbox_Viewport.MinZ * g_ZScale;
 	vOffset[3] = 0;
 }
 
@@ -4195,11 +4195,6 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
     float vScaleOffset[2][4]; // 0 - scale 1 - offset
     GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
 
-	if (g_Xbox_VertexShader_IsPassthrough) {
-		// Passthrough should not scale Z
-		// Test case: DoA3 character select
-		vScaleOffset[0][2] = 1.0f;
-	}
 
 	// Xbox outputs vertex positions in rendertarget pixel coordinate space, with non-normalized Z
 	// e.g. 0 < x < 640 and 0 < y < 480
@@ -4220,8 +4215,12 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 	float xboxScreenspaceWidth = xboxRenderTargetWidth * screenScaleX;
 	float xboxScreenspaceHeight = xboxRenderTargetHeight * screenScaleY;
 
-	float screenspaceScale[4] = { xboxScreenspaceWidth / 2,  -xboxScreenspaceHeight / 2, vScaleOffset[0][2], 1 };
-	float screenspaceOffset[4] = { xboxScreenspaceWidth / 2 + aaOffsetX, xboxScreenspaceHeight / 2 + aaOffsetY, vScaleOffset[1][2], 0 };
+	// Passthrough should range 0 to 1, instead of 0 to zbuffer depth
+	// Test case: DoA3 character select
+	float zOutputScale = g_Xbox_VertexShader_IsPassthrough ? 1 : g_ZScale;
+
+	float screenspaceScale[4] = { xboxScreenspaceWidth / 2,  -xboxScreenspaceHeight / 2, zOutputScale, 1 };
+	float screenspaceOffset[4] = { xboxScreenspaceWidth / 2 + aaOffsetX, xboxScreenspaceHeight / 2 + aaOffsetY, 0, 0 };
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_SCALE_BASE, screenspaceScale, CXBX_D3DVS_NORMALIZE_SCALE_SIZE);
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_OFFSET_BASE, screenspaceOffset, CXBX_D3DVS_NORMALIZE_OFFSET_SIZE);
 
