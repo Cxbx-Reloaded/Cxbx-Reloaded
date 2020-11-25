@@ -302,6 +302,8 @@ g_EmuCDPD = {0};
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture,                               (xbox::dword_xt, xbox::X_D3DBaseTexture*)                                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture_4__LTCG_eax_pTexture,          (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture_4,                             (xbox::X_D3DBaseTexture*)                                                                             );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPalette,                               (xbox::dword_xt, xbox::X_D3DPalette*)                                                                 );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPalette_4,                             (xbox::X_D3DPalette*)                                                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader,                          (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader_0,                        ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
@@ -5954,14 +5956,27 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				if (bConvertToARGB) {
 					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
+					// In case where there is a palettized texture without a palette attached,
+					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
+					// Test case: DRIV3R
+					bool skipDueToNoPalette = false;
+					if (X_Format == xbox::X_D3DFMT_P8 && g_pXbox_Palette_Data[iTextureStage] == nullptr) {
+						LOG_TEST_CASE("Palettized texture bound without a palette");
+
+						memset(pDst, 0, dwDstRowPitch * dwMipHeight);
+						skipDueToNoPalette = true;
+					}
+
 					// Convert a row at a time, using a libyuv-like callback approach :
-					if (!ConvertD3DTextureToARGBBuffer(
-						X_Format,
-						pSrc, dwMipWidth, dwMipHeight, dwMipRowPitch, dwSrcSlicePitch,
-						pDst, dwDstRowPitch, dwDstSlicePitch,
-						dwDepth,
-						iTextureStage)) {
-						CxbxKrnlCleanup("Unhandled conversion!");
+					if (!skipDueToNoPalette) {
+						if (!ConvertD3DTextureToARGBBuffer(
+							X_Format,
+							pSrc, dwMipWidth, dwMipHeight, dwMipRowPitch, dwSrcSlicePitch,
+							pDst, dwDstRowPitch, dwDstSlicePitch,
+							dwDepth,
+							iTextureStage)) {
+							CxbxKrnlCleanup("Unhandled conversion!");
+						}
 					}
 				}
 				else if (bSwizzled) {
@@ -7943,7 +7958,7 @@ static void D3DDevice_SetRenderTarget_0
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
-	NestedPatchCounter call(setTransformCount);
+	NestedPatchCounter call(setRenderTargetCount);
 
 	__asm {
 		mov  ecx, pRenderTarget
@@ -8008,27 +8023,67 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
 	}
 }
 
-
-// LTCG specific D3DDevice_SetPalette function...
-// This uses a custom calling convention where parameter is passed in EAX
-// Test-case: Ninja Gaiden
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetPalette_4)
+static void CxbxImpl_SetPalette
 (
+    xbox::dword_xt      Stage,
+    xbox::X_D3DPalette *pPalette
 )
 {
-	static uint32_t returnAddr;
+	if (Stage >= xbox::X_D3DTS_STAGECOUNT) {
+		LOG_TEST_CASE("Stage out of bounds");
+	} else {
+		// Note : Actual update of paletized textures (X_D3DFMT_P8) happens in CxbxUpdateHostTextures!
+		g_pXbox_Palette_Data[Stage] = GetDataFromXboxResource(pPalette);
+		g_Xbox_Palette_Size[Stage] = pPalette ? XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette)) : 0;
+	}
+}
 
-#ifdef _DEBUG_TRACE
-		__asm add esp, 4
-#endif
+// Overload for logging
+static void D3DDevice_SetPalette_4
+(
+	xbox::dword_xt      Stage,
+	xbox::X_D3DPalette *pPalette
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Stage)
+		LOG_FUNC_ARG(pPalette)
+		LOG_FUNC_END;
+}
+
+// LTCG specific D3DDevice_SetPalette function...
+// This uses a custom calling convention where Stage parameter is passed in EAX
+// Test-case: Ninja Gaiden
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
+(
+	X_D3DPalette *pPalette
+)
+{
+	dword_xt      Stage;
 
 	__asm {
-		pop returnAddr
-		push eax
-		call EmuPatch_D3DDevice_SetPalette
-		mov eax, 0
-		push returnAddr
-		ret
+		push ebp
+		mov  ebp, esp
+		sub  esp, __LOCAL_SIZE
+		mov  Stage, eax
+	}
+
+	// Log
+	D3DDevice_SetPalette_4(Stage, pPalette);
+
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	__asm {
+		push pPalette
+		mov  eax, Stage
+		call XB_TRMP(D3DDevice_SetPalette_4)
+	}
+
+	CxbxImpl_SetPalette(Stage, pPalette);
+
+	__asm {
+		mov  esp, ebp
+		pop  ebp
+		ret  4
 	}
 }
 
@@ -8037,8 +8092,8 @@ xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetPalette_4)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 (
-    dword_xt         Stage,
-    X_D3DPalette *pPalette
+	dword_xt      Stage,
+	X_D3DPalette *pPalette
 )
 {
 	LOG_FUNC_BEGIN
@@ -8046,16 +8101,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 		LOG_FUNC_ARG(pPalette)
 		LOG_FUNC_END;
 
-	//    g_pD3DDevice9->SetPaletteEntries(Stage?, (PALETTEENTRY*)pPalette->Data);
-	//    g_pD3DDevice9->SetCurrentTexturePalette(Stage, Stage);
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	XB_TRMP(D3DDevice_SetPalette)(Stage, pPalette);
 
-	if (Stage >= xbox::X_D3DTS_STAGECOUNT) {
-		LOG_TEST_CASE("Stage out of bounds");
-	} else {
-		// Note : Actual update of paletized textures (X_D3DFMT_P8) happens in CxbxUpdateHostTextures!
-		g_pXbox_Palette_Data[Stage] = GetDataFromXboxResource(pPalette);
-		g_Xbox_Palette_Size[Stage] = pPalette ? XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette)) : 0;
-	}
+	CxbxImpl_SetPalette(Stage, pPalette);
 }
 
 // LTCG specific D3DDevice_SetFlickerFilter function...
