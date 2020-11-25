@@ -4862,12 +4862,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
         // Scale the fill based on our scale factor and MSAA scale
 		float aaX, aaY;
 		GetMultiSampleScaleRaw(aaX, aaY);
+		auto rtUpscale = GetRenderTargetUpscaleFactor();
+
         std::vector<D3DRECT> rects(Count);
         for (DWORD i = 0; i < Count; i++) {
-            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * aaX * GetRenderTargetUpscaleFactor());
-            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * aaX * GetRenderTargetUpscaleFactor());
-            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * aaY * GetRenderTargetUpscaleFactor());
-            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * aaY * GetRenderTargetUpscaleFactor());
+            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * aaX * rtUpscale);
+            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * aaX * rtUpscale);
+            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * aaY * rtUpscale);
+            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * aaY * rtUpscale);
 		}
         hRet = g_pD3DDevice->Clear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
