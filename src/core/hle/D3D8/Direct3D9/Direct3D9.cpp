@@ -5956,14 +5956,27 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				if (bConvertToARGB) {
 					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
+					// In case where there is a palettized texture without a palette attached,
+					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
+					// Test case: DRIV3R
+					bool skipDueToNoPalette = false;
+					if (X_Format == xbox::X_D3DFMT_P8 && g_pXbox_Palette_Data[iTextureStage] == nullptr) {
+						LOG_TEST_CASE("Palettized texture bound without a palette");
+
+						memset(pDst, 0, dwDstRowPitch * dwMipHeight);
+						skipDueToNoPalette = true;
+					}
+
 					// Convert a row at a time, using a libyuv-like callback approach :
-					if (!ConvertD3DTextureToARGBBuffer(
-						X_Format,
-						pSrc, dwMipWidth, dwMipHeight, dwMipRowPitch, dwSrcSlicePitch,
-						pDst, dwDstRowPitch, dwDstSlicePitch,
-						dwDepth,
-						iTextureStage)) {
-						CxbxKrnlCleanup("Unhandled conversion!");
+					if (!skipDueToNoPalette) {
+						if (!ConvertD3DTextureToARGBBuffer(
+							X_Format,
+							pSrc, dwMipWidth, dwMipHeight, dwMipRowPitch, dwSrcSlicePitch,
+							pDst, dwDstRowPitch, dwDstSlicePitch,
+							dwDepth,
+							iTextureStage)) {
+							CxbxKrnlCleanup("Unhandled conversion!");
+						}
 					}
 				}
 				else if (bSwizzled) {
