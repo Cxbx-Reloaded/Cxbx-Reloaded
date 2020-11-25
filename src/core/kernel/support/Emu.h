@@ -95,5 +95,4 @@ typedef WORD INDEX16;
 extern bool g_DisablePixelShaders;
 extern bool g_UseAllCores;
 extern bool g_SkipRdtscPatching;
-extern int g_RenderUpscaleFactor;
 #endif

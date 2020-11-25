@@ -155,6 +155,8 @@ static std::queue<s_Xbox_Callback>  g_Xbox_CallbackQueue;
 static bool                         g_bHack_DisableHostGPUQueries = false; // TODO : Make configurable
 static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
 static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
+static int                          g_RenderUpscaleFactor = 1;
+static int                          g_RenderTargetUpscaleFactor = 1;
 
 static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
 static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
@@ -2275,6 +2277,7 @@ static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
             if (g_EmuCDPD.bCreate) {
 				// Apply render scale factor for high-resolution rendering
 				g_RenderUpscaleFactor = g_XBVideo.renderScaleFactor;
+				g_RenderTargetUpscaleFactor = 1;
 
 				// Setup the HostPresentationParameters
 				{
@@ -3077,14 +3080,6 @@ void GetRenderTargetBaseDimensions(float& x, float& y) {
 	y /= aaY;
 }
 
-// Get the host upscale factor for the current rendertarget
-// Currently, only the host backbuffer is upscaled
-int GetRenderTargetUpscaleFactor() {
-	return g_pXbox_RenderTarget == g_pXbox_BackBufferSurface
-		? g_RenderUpscaleFactor
-		: 1;
-}
-
 void Direct3D_CreateDevice_Start
 (
 	xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
@@ -3162,7 +3157,8 @@ void Direct3D_CreateDevice_End()
         }
 
         // We must also properly setup the host state
-        // Update only the Back buffer
+        // Update only the Back buffer, not the depth buffer
+        // This will also update g_RenderTargetUpscaleFactor and g_ZScale
         CxbxImpl_SetRenderTarget(g_pXbox_BackBufferSurface, xbox::zeroptr);
     }
 
@@ -4120,8 +4116,8 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     // Because of this, we need to validate that the associated host resource still matches the dimensions of the Xbox Render Target
     // If not, we must force them to be re-created
     // TEST CASE: Chihiro Factory Test Program
-    DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * GetRenderTargetUpscaleFactor();
-    DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * GetRenderTargetUpscaleFactor();
+    DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * g_RenderTargetUpscaleFactor;
+    DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * g_RenderTargetUpscaleFactor;
     if (HostRenderTarget_Width != XboxRenderTarget_Width_Scaled || HostRenderTarget_Height != XboxRenderTarget_Height_Scaled) {
         LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
@@ -4862,14 +4858,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
         // Scale the fill based on our scale factor and MSAA scale
 		float aaX, aaY;
 		GetMultiSampleScaleRaw(aaX, aaY);
-		auto rtUpscale = GetRenderTargetUpscaleFactor();
+		aaX *= g_RenderTargetUpscaleFactor;
+		aaY *= g_RenderTargetUpscaleFactor;
 
         std::vector<D3DRECT> rects(Count);
         for (DWORD i = 0; i < Count; i++) {
-            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * aaX * rtUpscale);
-            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * aaX * rtUpscale);
-            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * aaY * rtUpscale);
-            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * aaY * rtUpscale);
+            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * aaX);
+            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * aaX);
+            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * aaY);
+            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * aaY);
 		}
         hRet = g_pD3DDevice->Clear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
@@ -7138,15 +7135,16 @@ void CxbxUpdateHostViewport() {
 		LOG_TEST_CASE("Could not get rendertarget dimensions while setting the viewport");
 	}
 
-	auto rtUpscale = GetRenderTargetUpscaleFactor();
+	aaScaleX *= g_RenderTargetUpscaleFactor;
+	aaScaleY *= g_RenderTargetUpscaleFactor;
 
 	if (g_Xbox_VertexShader_IsFixedFunction) {
 		// Set viewport
 		D3DVIEWPORT hostViewport = g_Xbox_Viewport;
-		hostViewport.X *= (aaScaleX * rtUpscale);
-		hostViewport.Y *= (aaScaleY * rtUpscale);
-		hostViewport.Width *= (aaScaleX * rtUpscale);
-		hostViewport.Height *= (aaScaleY * rtUpscale);
+		hostViewport.X *= aaScaleX;
+		hostViewport.Y *= aaScaleY;
+		hostViewport.Width *= aaScaleX;
+		hostViewport.Height *= aaScaleY;
 		g_pD3DDevice->SetViewport(&hostViewport);
 
 		// Reset scissor rect
@@ -7178,10 +7176,10 @@ void CxbxUpdateHostViewport() {
 		// Scissor to viewport
 		g_pD3DDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
 		RECT viewportRect;
-		viewportRect.left = g_Xbox_Viewport.X * aaScaleX * rtUpscale;
-		viewportRect.top = g_Xbox_Viewport.Y * aaScaleY * rtUpscale;
-		viewportRect.right = viewportRect.left + g_Xbox_Viewport.Width * aaScaleX * rtUpscale;
-		viewportRect.bottom = viewportRect.top + g_Xbox_Viewport.Height * aaScaleY * rtUpscale;
+		viewportRect.left = g_Xbox_Viewport.X * aaScaleX;
+		viewportRect.top = g_Xbox_Viewport.Y * aaScaleY;
+		viewportRect.right = viewportRect.left + g_Xbox_Viewport.Width * aaScaleX;
+		viewportRect.bottom = viewportRect.top + g_Xbox_Viewport.Height * aaScaleY;
 		g_pD3DDevice->SetScissorRect(&viewportRect);
 	}
 }
@@ -7876,6 +7874,10 @@ static void CxbxImpl_SetRenderTarget
 			pRenderTarget = g_pXbox_BackBufferSurface;
 		}
     }
+
+	// Get the host upscale factor for the current rendertarget
+	// Currently, only the host backbuffer is upscaled
+	g_RenderTargetUpscaleFactor = (g_pXbox_RenderTarget == g_pXbox_BackBufferSurface) ? g_RenderUpscaleFactor : 1;
 
 	// Set default viewport now we've updated the rendertarget
 	// Note the Xbox does this, but before _our_ SetRenderTarget sets up the render target
