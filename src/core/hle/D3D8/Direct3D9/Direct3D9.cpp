@@ -6413,6 +6413,7 @@ float AsFloat(uint32_t value) {
 
 void UpdateFixedFunctionVertexShaderState()
 {
+	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
 	using namespace xbox;
 
 	// Vertex blending
@@ -6514,7 +6515,7 @@ void UpdateFixedFunctionVertexShaderState()
 	}
 
 	// Texture state
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 		auto transformFlags = XboxTextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
 		ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
 		ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
@@ -6524,9 +6525,14 @@ void UpdateFixedFunctionVertexShaderState()
 		ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
 	}
 
-	// TexCoord component counts
-	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
+	// Read current TexCoord component counts
 	xbox::X_VERTEXATTRIBUTEFORMAT* pXboxVertexAttributeFormat = GetXboxVertexAttributeFormat();
+	// Note : There seem to be other ways to access this, but we can use only this one;
+	// This, because CxbxGetVertexDeclaration() can't be used, since it doesn't track VertexAttributes
+	// (plus, it contains the overhead of shader lookup).
+	// Another, GetXboxVertexShader(), can't be used, because it doesn't honor vertex attribute overrides
+	// like those that apply for g_InlineVertexBuffer_DeclarationOverride and active SetVertexShaderInput.
+	// Also, the xbox::X_D3DVertexShader.Dimensionality[] field contains somewhat strange values.
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 		auto vertexDataFormat = pXboxVertexAttributeFormat->Slots[xbox::X_D3DVSDE_TEXCOORD0 + i].Format;
 		ffShaderState.TexCoordComponentCount[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
