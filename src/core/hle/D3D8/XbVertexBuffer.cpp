@@ -261,9 +261,7 @@ void CxbxVertexBufferConverter::ConvertStream
 	UINT HostStreamNumber = XboxStreamNumber; // Use Xbox stream index on host
 	uint8_t *pXboxVertexData = xbox::zeroptr;
 	UINT uiXboxVertexStride = 0;
-	UINT uiVertexCount = 0;
 	UINT uiHostVertexStride = 0;
-	DWORD dwHostVertexDataSize = 0;
 	uint8_t *pHostVertexData = nullptr;
 	IDirect3DVertexBuffer *pNewHostVertexBuffer = nullptr;
 
@@ -275,9 +273,7 @@ void CxbxVertexBufferConverter::ConvertStream
 
 		pXboxVertexData = (uint8_t *)pDrawContext->pXboxVertexStreamZeroData;
 		uiXboxVertexStride = pDrawContext->uiXboxVertexStreamZeroStride;
-		uiVertexCount = pDrawContext->VerticesInBuffer; 
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
-		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 	} else {
 		xbox::X_STREAMINPUT& XboxStreamInput = GetXboxVertexStreamInput(XboxStreamNumber);
 		xbox::X_D3DVertexBuffer *pXboxVertexBuffer = XboxStreamInput.VertexBuffer;
@@ -298,14 +294,11 @@ void CxbxVertexBufferConverter::ConvertStream
 
 		pXboxVertexData += XboxStreamInput.Offset;
 		uiXboxVertexStride = XboxStreamInput.Stride;
-        // Set a new (exact) vertex count
-		uiVertexCount = pDrawContext->VerticesInBuffer;
 		// Dxbx note : Don't overwrite pDrawContext.dwVertexCount with uiVertexCount, because an indexed draw
 		// can (and will) use less vertices than the supplied nr of indexes. Thix fixes
 		// the missing parts in the CompressedVertices sample (in Vertex shader mode).
 
 		uiHostVertexStride = (bNeedVertexPatching) ? pVertexShaderStreamInfo->HostVertexStride : uiXboxVertexStride;
-		dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
 
 		// Copy stream for patching and caching.
 		bNeedStreamCopy = true;
@@ -327,7 +320,17 @@ void CxbxVertexBufferConverter::ConvertStream
     }
 
     // Now we have enough information to hash the existing resource and find it in our cache!
-    DWORD xboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
+    // To avoid hashing and converting unused vertices, identify the "interesting" region
+    // basing on the index/starting vertex data 
+    if (pDrawContext->pXboxIndexData != nullptr) {
+        pXboxVertexData += (pDrawContext->dwBaseVertexIndex + pDrawContext->LowIndex) * uiXboxVertexStride;
+    } else {
+        pXboxVertexData += pDrawContext->dwStartVertex * uiXboxVertexStride;
+    }
+
+    const UINT uiVertexCount = pDrawContext->NumVerticesToUse;
+    const DWORD dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
+    const DWORD xboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
     uint64_t vertexDataHash = ComputeHash(pXboxVertexData, xboxVertexDataSize);
     uint64_t pVertexShaderSteamInfoHash = 0;
 
@@ -634,9 +637,6 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 
 	m_pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
 
-	// If we are drawing from an offset, we know that the vertex count must have
-	// 'offset' vertices before the first drawn vertices
-	pDrawContext->VerticesInBuffer = pDrawContext->dwStartVertex + pDrawContext->dwVertexCount;
 	// When this is an indexed draw, take the index buffer into account
 	if (pDrawContext->pXboxIndexData) {
 		// Is the highest index in this buffer not set yet?
@@ -646,11 +646,13 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 			LOG_TEST_CASE("HighIndex == 0"); // TODO : If this is never hit, replace entire block by assert(pDrawContext->HighIndex > 0);
 			WalkIndexBuffer(pDrawContext->LowIndex, pDrawContext->HighIndex, pDrawContext->pXboxIndexData, pDrawContext->dwVertexCount);
 		}
-		// Convert highest index (including the base offset) into a count
-		DWORD dwHighestVertexCount = pDrawContext->dwBaseVertexIndex + pDrawContext->HighIndex + 1;
-		// Use the biggest vertex count that can be reached
-		if (pDrawContext->VerticesInBuffer < dwHighestVertexCount)
-			pDrawContext->VerticesInBuffer = dwHighestVertexCount;
+		// Convert the range of indices into a count
+		pDrawContext->NumVerticesToUse = pDrawContext->HighIndex - pDrawContext->LowIndex + 1;
+	}
+	else {
+		// If we are drawing from an offset, we know that the vertex count must have
+		// 'offset' vertices before the first drawn vertices
+		pDrawContext->NumVerticesToUse = pDrawContext->dwVertexCount;
 	}
 
     // Get the number of streams

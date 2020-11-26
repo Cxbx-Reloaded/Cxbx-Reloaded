@@ -6864,7 +6864,7 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 	// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
 	HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 		/* PrimitiveType = */EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
-		BaseVertexIndex,
+		/* BaseVertexIndex, = */-CacheEntry.LowIndex, // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
 		/* MinVertexIndex = */CacheEntry.LowIndex,
 		/* NumVertices = */(CacheEntry.HighIndex - CacheEntry.LowIndex) + 1,
 		/* startIndex = DrawContext.dwStartVertex = */0,
@@ -7516,9 +7516,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 			// Assure & activate that special index buffer :
 			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
-			// This API's StartVertex argument is multiplied by vertex stride and added to the start of the vertex buffer;
-			// BaseVertexIndex offers the same functionality on host :
-			UINT BaseVertexIndex = DrawContext.dwStartVertex;
 			// Convert quad vertex count to triangle vertex count :
 			UINT NumVertices = QuadToTriangleVertexCount(DrawContext.dwVertexCount);
 			// Convert quad primitive count to triangle primitive count :
@@ -7528,7 +7525,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			// Emulate drawing quads by drawing each quad with two indexed triangles :
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
 				/*PrimitiveType=*/D3DPT_TRIANGLELIST,
-				BaseVertexIndex,
+				/*BaseVertexIndex=*/0, // Base vertex index has been accounted for in the stream conversion
 				/*MinVertexIndex=*/0,
 				NumVertices,
 				/*startIndex=*/0,
@@ -7542,7 +7539,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
 			HRESULT hRet = g_pD3DDevice->DrawPrimitive(
 				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
-				DrawContext.dwStartVertex,
+				/*StartVertex=*/0, // Start vertex has been accounted for in the stream conversion
 				DrawContext.dwHostPrimitiveCount
 			);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitive");
@@ -7553,8 +7550,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 				LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Text-cases needed
 
 				assert(DrawContext.dwBaseVertexIndex == 0); // if this fails, it needs to be added to LowIndex and HighIndex :
-				INDEX16 LowIndex = (INDEX16)DrawContext.dwStartVertex;
-				INDEX16 HighIndex = (INDEX16)(DrawContext.dwStartVertex + DrawContext.dwHostPrimitiveCount);
+				INDEX16 LowIndex = 0;
+				INDEX16 HighIndex = (INDEX16)(DrawContext.dwHostPrimitiveCount);
 				// Draw the closing line using a helper function (which will SetIndices)
 				CxbxDrawIndexedClosingLine(LowIndex, HighIndex);
 				// NOTE : We don't restore the previously active index buffer
