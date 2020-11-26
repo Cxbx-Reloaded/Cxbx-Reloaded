@@ -5691,7 +5691,8 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		// Create the surface/volume/(volume/cube/)texture
 		switch (XboxResourceType) {
 		case xbox::X_D3DRTYPE_SURFACE: {
-			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+			// Note : Create a depth stencil only when D3DUSAGE_DEPTHSTENCIL is set and D3DUSAGE_RENDERTARGET is not!
+			if (D3DUsage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL) == D3DUSAGE_DEPTHSTENCIL) {
 				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth * g_RenderScaleFactor, dwHeight * g_RenderScaleFactor, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
 					0, // MultisampleQuality
@@ -6968,8 +6969,8 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
 		return nullptr;
 	}
 
-	IDirect3DBaseTexture* pNewHostBaseTexture = nullptr;
-	auto hRet = pHostSurface->GetContainer(IID_PPV_ARGS(&pNewHostBaseTexture));
+	IDirect3DTexture* pNewHostTexture = nullptr;
+	auto hRet = pHostSurface->GetContainer(IID_PPV_ARGS(&pNewHostTexture));
     DEBUG_D3DRESULT(hRet, "pHostSurface->GetContainer");
 
 	if (FAILED(hRet)) {
@@ -6977,7 +6978,7 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
 		return nullptr;
 	}
 
-	return pNewHostBaseTexture;
+	return static_cast<IDirect3DBaseTexture*>(pNewHostTexture);
 }
 
 void CxbxUpdateHostTextures()
