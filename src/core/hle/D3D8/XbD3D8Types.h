@@ -62,7 +62,6 @@
 #define D3DXAssembleShader		        D3DXAssembleShader
 #define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
 #define D3DLockData                     void
-#define PixelShaderConstantType         float
 
 #define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                         D3DCAPS9
