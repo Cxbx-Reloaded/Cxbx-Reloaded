@@ -1193,9 +1193,6 @@ static void CxbxSetVertexShaderPassthroughProgram()
 
 	CxbxSetVertexShaderSlots(&XboxShaderBinaryPassthrough[0], 0, sizeof(XboxShaderBinaryPassthrough) / X_VSH_INSTRUCTION_SIZE_BYTES);
 
-	extern float g_ZScale; // TMP glue
-	extern float GetMultiSampleOffsetDelta(); // TMP glue
-
 	// Passthrough programs require scale and offset to be set in constants zero and one (both minus 96)
 	// (Note, these are different from GetMultiSampleOffsetAndScale / GetViewPortOffsetAndScale)
 	float scale[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -1208,6 +1205,8 @@ static void CxbxSetVertexShaderPassthroughProgram()
 
 	float MultiSampleBias = 0.0f;
 	if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS) > 0) {
+		extern float GetMultiSampleOffsetDelta(); // TMP glue
+
 		MultiSampleBias = GetMultiSampleOffsetDelta();
 	}
 
