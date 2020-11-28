@@ -295,7 +295,7 @@ void XboxTextureStateConverter::Apply()
         // Make sure we only do this once
         if (pointSpriteOverride && XboxStage == 3) {
             pointSpriteOverride = false;
-            XboxStage--; ng C` to XDK Textu
+            XboxStage--;
         }
     }
 
