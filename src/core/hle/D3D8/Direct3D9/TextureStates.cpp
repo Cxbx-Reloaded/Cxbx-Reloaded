@@ -106,6 +106,7 @@ void XboxTextureStateConverter::BuildTextureStateMappingTable()
         // Values range 0-9 (D3DTSS_COLOROP to D3DTSS_TEXTURETRANSFORMFLAGS) become 12-21
         // Values 10-21 (D3DTSS_ADDRESSU to D3DTSS_ALPHAKILL) become 0-11
         bool bOldOrder = g_LibVersion_D3D8 <= 3948; // Verfied old order in 3944, new order in 4039
+
         if (bOldOrder) {
             if (State <= 9) {
                 index += 12;
@@ -115,7 +116,7 @@ void XboxTextureStateConverter::BuildTextureStateMappingTable()
         }
 
         EmuLog(LOG_LEVEL::INFO, "%s = %d", CxbxTextureStateInfo[State].S, index);
-        XboxTextureStateOffsets[State] = index;
+        XboxTextureStateOffsets[index] = State;
     }
 }
 
@@ -173,14 +174,9 @@ void XboxTextureStateConverter::Apply()
         // If point sprites are enabled, we need to overwrite our existing state 0 with State 3 also
         DWORD HostStage = (pointSpriteOverride && XboxStage == 3) ? 0 : XboxStage;
 
-        for (int StateIndex = xbox::X_D3DTSS_FIRST; StateIndex <= xbox::X_D3DTSS_LAST; StateIndex++) {
+        for (int State = xbox::X_D3DTSS_FIRST; State <= xbox::X_D3DTSS_LAST; State++) {
             // Read the value of the current stage/state from the Xbox data structure
-            DWORD Value = D3D__TextureState[(XboxStage * xbox::X_D3DTS_STAGESIZE) + StateIndex];
-
-            // Convert the index of the current state to an index that we can use
-            // This handles the case when XDKs have different state values
-            DWORD State = XboxTextureStateOffsets[StateIndex];
-
+            DWORD Value = Get(XboxStage, State); // OR D3D__TextureState[(XboxStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[State]];
             switch (State) {
                 // These types map 1:1 but have some unsupported values
                 case xbox::X_D3DTSS_ADDRESSU: case xbox::X_D3DTSS_ADDRESSV: case xbox::X_D3DTSS_ADDRESSW:
@@ -299,7 +295,7 @@ void XboxTextureStateConverter::Apply()
         // Make sure we only do this once
         if (pointSpriteOverride && XboxStage == 3) {
             pointSpriteOverride = false;
-            XboxStage--;
+            XboxStage--; ng C` to XDK Textu
         }
     }
 
@@ -328,5 +324,5 @@ uint32_t XboxTextureStateConverter::Get(int textureStage, DWORD xboxState) {
     if (xboxState < xbox::X_D3DTSS_FIRST || xboxState > xbox::X_D3DTSS_LAST)
         CxbxKrnlCleanup("Requested texture state was out of range: %d", xboxState);
 
-    return D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + xboxState];
+    return D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[xboxState]];
 }
