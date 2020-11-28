@@ -50,10 +50,13 @@
 #include <locale.h>
 
 #include "Direct3D9\RenderStates.h" // For XboxRenderStateConverter
+#include "Direct3D9\TextureStates.h" // For XboxTextureStateConverter
 
 #include <wrl/client.h>
 
 extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
+extern XboxTextureStateConverter XboxTextureStates; // Declared in Direct3D9.cpp
+
 
 #define DbgPshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
@@ -680,21 +683,39 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // the render state slots containing the pixel shader constants,
   // as these could have been updated via SetRenderState or otherwise :
   D3DXCOLOR fColor[PSH_XBOX_CONSTANT_MAX];
+
+  // PSH_XBOX_CONSTANT_C0..C15 are stored as-is in (and should thus be read from) the Xbox render state pixel shader constant slots
+  for (unsigned constant_nr = 0; constant_nr < 16; constant_nr++) {
+    fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
+  }
+
+  fColor[PSH_XBOX_CONSTANT_FC0] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
+  fColor[PSH_XBOX_CONSTANT_FC1] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT1);
+
+  // Fog requires a constant (as host PS1.4 doesn't support the FOG register)
+  // Note : FOG.RGB is correct like this, but FOG.a should be coming
+  // from the vertex shader (oFog) - however, D3D8 does not forward this...
+  fColor[PSH_XBOX_CONSTANT_FOG] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
+#if 0 // New, doesn't work yet
+  // Bump Environment Material registers
+  for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
+    // Note : No loop, because X_D3DTSS_BUMPENVMAT11 and X_D3DTSS_BUMPENVMAT10 are swapped
+    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].r = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT00); // Maps to BEM[stage].x
+    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].g = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT01); // Maps to BEM[stage].y
+    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].b = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT10); // Maps to BEM[stage].z
+    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].a = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT11); // Maps to BEM[stage].w
+  }
+
+  // Bump map Luminance registers
+  for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
+	  fColor[PSH_XBOX_CONSTANT_LUM + stage_nr].r = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVLSCALE); // Maps to LUM[stage].x
+	  fColor[PSH_XBOX_CONSTANT_LUM + stage_nr].g = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVLOFFSET); // Maps to LUM[stage].y
+	  fColor[PSH_XBOX_CONSTANT_LUM + stage_nr].b = 0;
+	  fColor[PSH_XBOX_CONSTANT_LUM + stage_nr].a = 0;
+  }
+#else
   for (int i = 0; i < PSH_XBOX_CONSTANT_MAX; i++) {
-    // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
-    // Read the color from the corresponding render state slot :
     switch (i) {
-      case PSH_XBOX_CONSTANT_FOG:
-        // Note : FOG.RGB is correct like this, but FOG.a should be coming
-        // from the vertex shader (oFog) - however, D3D8 does not forward this...
-        fColor[i] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
-        break;
-      case PSH_XBOX_CONSTANT_FC0:
-        fColor[i] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
-        break;
-      case PSH_XBOX_CONSTANT_FC1:
-        fColor[i] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT1);
-        break;
       case PSH_XBOX_CONSTANT_BEM + 0:
       case PSH_XBOX_CONSTANT_BEM + 1:
       case PSH_XBOX_CONSTANT_BEM + 2:
@@ -724,13 +745,12 @@ void DxbxUpdateActivePixelShader() // NOPATCH
         value[3] = 0;
         break;
       }
-    default: // PSH_XBOX_CONSTANT_C0..C15 are stored as-is in (and should thus be read from) the Xbox render state pixel shader constant slots
-      unsigned constant_nr = i - PSH_XBOX_CONSTANT_C0;
-      fColor[i] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
-      break;
     }
   }
+#endif
 
+  // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
+  // Read the color from the corresponding render state slot :
   // Set all host constant values using a single call:
   g_pD3DDevice->SetPixelShaderConstantF(0, reinterpret_cast<const float*>(fColor), PSH_XBOX_CONSTANT_MAX);
 }
