@@ -275,9 +275,13 @@ void XboxTextureStateConverter::Apply()
                 case xbox::X_D3DTSS_COLORARG0: case xbox::X_D3DTSS_COLORARG1: case xbox::X_D3DTSS_COLORARG2:
                 case xbox::X_D3DTSS_ALPHAARG0: case xbox::X_D3DTSS_ALPHAARG1: case xbox::X_D3DTSS_ALPHAARG2:
                 case xbox::X_D3DTSS_RESULTARG: case xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS:
+                    break;
                 case xbox::X_D3DTSS_BUMPENVMAT00: case xbox::X_D3DTSS_BUMPENVMAT01:
                 case xbox::X_D3DTSS_BUMPENVMAT11: case xbox::X_D3DTSS_BUMPENVMAT10:
                 case xbox::X_D3DTSS_BUMPENVLSCALE: case xbox::X_D3DTSS_BUMPENVLOFFSET:
+#if 0 // New, doesn't work yet
+                    continue; // Note : Since DxbxUpdateActivePixelShader() reads these too, you'd expect here we could skip, but alas. TODO: Fix PS HLSL to not depend on host D3D TSS
+#endif
                 case xbox::X_D3DTSS_BORDERCOLOR: case xbox::X_D3DTSS_MIPMAPLODBIAS:
                 case xbox::X_D3DTSS_MAXMIPLEVEL: case xbox::X_D3DTSS_MAXANISOTROPY:
                     break;
@@ -336,5 +340,6 @@ uint32_t XboxTextureStateConverter::Get(int textureStage, DWORD xboxState) {
     if (xboxState < xbox::X_D3DTSS_FIRST || xboxState > xbox::X_D3DTSS_LAST)
         CxbxKrnlCleanup("Requested texture state was out of range: %d", xboxState);
 
+    // Read the value of the current stage/state from the Xbox data structure
     return D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[xboxState]];
 }
