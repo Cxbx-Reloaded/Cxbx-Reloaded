@@ -385,6 +385,7 @@ typedef struct s_CxbxPSDef {
 	bool DecodedHasFinalCombiner;
 	bool RenderStateFogEnable;
 	bool RenderStateSpecularEnable;
+	bool AlphaKill[4]; // Read from XboxTextureStates.Get(stage, xbox::X_D3DTSS_ALPHAKILL);
 
 	bool IsEquivalent(const s_CxbxPSDef &Another)
 	{
@@ -419,6 +420,10 @@ typedef struct s_CxbxPSDef {
 		// Note : From PSFinalCombinerConstants, only the PS_GLOBALFLAGS_TEXMODE_ADJUST flag must correspond
 		if (DecodedTexModeAdjust != Another.DecodedTexModeAdjust)
 			return false;
+
+		for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
+			if (AlphaKill[i] != Another.AlphaKill[i])
+				return false;
 
 		// All ActiveTextureTypes must correspond as well (otherwise the recompiled shader would sample incorrectly) :
 		for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
@@ -465,6 +470,10 @@ typedef struct s_CxbxPSDef {
 		// Fetch all render states that impact AdjustFinalCombiner
 		RenderStateFogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE) > 0;
 		RenderStateSpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) > 0;
+
+		for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+			AlphaKill[i] = XboxTextureStates.Get(/*stage=*/i, xbox::X_D3DTSS_ALPHAKILL) & 4; // D3DTALPHAKILL_ENABLE
+		}
 	}
 
 	void AdjustTextureModes(DecodedRegisterCombiner &RC)
@@ -560,6 +569,10 @@ typedef struct s_CxbxPSDef {
 
 	void PerformRuntimeAdjustments(DecodedRegisterCombiner &RC)
 	{
+		RC.AlphaKill[0] = AlphaKill[0];
+		RC.AlphaKill[1] = AlphaKill[1];
+		RC.AlphaKill[2] = AlphaKill[2];
+		RC.AlphaKill[3] = AlphaKill[3];
 		AdjustTextureModes(RC);
 		AdjustFinalCombiner(RC);
 	}
