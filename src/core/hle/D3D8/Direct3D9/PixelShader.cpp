@@ -277,6 +277,12 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 
 	hlsl << hlsl_template[0]; // Start with the HLSL template header
 
+	hlsl << "\nbool alphakill[4] = {"
+		<< (pShader->AlphaKill[0] ? "true, " : "false, ")
+		<< (pShader->AlphaKill[1] ? "true, " : "false, ")
+		<< (pShader->AlphaKill[2] ? "true, " : "false, ")
+		<< (pShader->AlphaKill[3] ? "true};" : "false};");
+
 	hlsl << "\n#define PS_COMBINERCOUNT " << pShader->NumberOfCombiners;
 	if (pShader->NumberOfCombiners > 0) {
 		OutputDefine(hlsl, "PS_COMBINERCOUNT_UNIQUE_C0", pShader->CombinerHasUniqueC0);
