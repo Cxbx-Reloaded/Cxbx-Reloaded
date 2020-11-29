@@ -191,6 +191,14 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
 
+void NTAPI CxbxIoApcDispatcher(PVOID ApcContext, xbox::PIO_STATUS_BLOCK /*IoStatusBlock*/, xbox::ulong_xt Reserved)
+{
+	CxbxIoDispatcherContext* cxbxContext = reinterpret_cast<CxbxIoDispatcherContext*>(ApcContext);
+	std::get<xbox::PIO_APC_ROUTINE>(*cxbxContext)(
+		std::get<LPVOID>(*cxbxContext),std::get<xbox::PIO_STATUS_BLOCK>(*cxbxContext), Reserved);
+	delete cxbxContext;
+}
+
 const std::string MediaBoardRomFile = "Chihiro\\fpr21042_m29w160et.bin";
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";

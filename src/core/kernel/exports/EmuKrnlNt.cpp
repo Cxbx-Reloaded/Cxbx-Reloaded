@@ -1648,10 +1648,17 @@ XBSYSAPI EXPORTNUM(219) xbox::ntstatus_xt NTAPI xbox::NtReadFile
 		CxbxDebugger::ReportFileRead(FileHandle, Length, Offset);
 	}
 
+	if (ApcRoutine != nullptr) {
+		// Pack the original parameters to a wrapped context for a custom APC routine
+		CxbxIoDispatcherContext* cxbxContext = new CxbxIoDispatcherContext(IoStatusBlock, ApcRoutine, ApcContext);
+		ApcRoutine = CxbxIoApcDispatcher;
+		ApcContext = cxbxContext;
+	}
+
 	NTSTATUS ret = NtDll::NtReadFile(
 		FileHandle,
 		Event,
-		(PVOID)ApcRoutine,
+		ApcRoutine,
 		ApcContext,
 		IoStatusBlock,
 		Buffer,
@@ -2043,8 +2050,8 @@ XBSYSAPI EXPORTNUM(232) xbox::void_xt NTAPI xbox::NtUserIoApcDispatcher
 		dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
 	}
 
-	LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine = (LPOVERLAPPED_COMPLETION_ROUTINE)ApcContext;
-	LPOVERLAPPED lpOverlapped = (LPOVERLAPPED)CONTAINING_RECORD(IoStatusBlock, OVERLAPPED, Internal);
+	LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine = reinterpret_cast<LPOVERLAPPED_COMPLETION_ROUTINE>(ApcContext);
+	LPOVERLAPPED lpOverlapped = reinterpret_cast<LPOVERLAPPED>(IoStatusBlock);
 
 	(CompletionRoutine)(dwErrorCode, dwTransferred, lpOverlapped);
 
@@ -2168,10 +2175,17 @@ XBSYSAPI EXPORTNUM(236) xbox::ntstatus_xt NTAPI xbox::NtWriteFile
 		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
 	}
 
+	if (ApcRoutine != nullptr) {
+		// Pack the original parameters to a wrapped context for a custom APC routine
+		CxbxIoDispatcherContext* cxbxContext = new CxbxIoDispatcherContext(IoStatusBlock, ApcRoutine, ApcContext);
+		ApcRoutine = CxbxIoApcDispatcher;
+		ApcContext = cxbxContext;
+	}
+
 	NTSTATUS ret = NtDll::NtWriteFile(
 		FileHandle,
 		Event,
-		(PVOID)ApcRoutine,
+		ApcRoutine,
 		ApcContext,
 		IoStatusBlock,
 		Buffer,
