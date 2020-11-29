@@ -380,6 +380,18 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Discontinuity)
     return DS_OK;
 }
 
+xbox::hresult_xt CxbxrImpl_CDirectSoundStream_Flush
+(
+    xbox::X_CDirectSoundStream* pThis)
+{
+
+    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
+
+    while (DSStream_Packet_Flush(pThis));
+
+    return DS_OK;
+}
+
 // ******************************************************************
 // * patch: CDirectSoundStream_Flush
 // ******************************************************************
@@ -391,11 +403,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Flush)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
-
-    while (DSStream_Packet_Flush(pThis));
-
-    return DS_OK;
+    return CxbxrImpl_CDirectSoundStream_Flush(pThis);
 }
 
 // ******************************************************************
@@ -422,22 +430,20 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_FlushEx)
     // Cannot use rtTimeStamp here, it must be flush.
     if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {
 
-        hRet = xbox::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+        hRet = CxbxrImpl_CDirectSoundStream_Flush(pThis);
 
     }
     // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
-    else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
+    else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0 && !pThis->Host_BufferPacketArray.empty()) {
         // If rtTimeStamp is zero'd, then call flush once and allow process flush in worker thread.
         if (rtTimeStamp == 0LL) {
-            bool isBusy = DSStream_Packet_Flush(pThis);
-            if (!isBusy) {
-                // testcase: Obscure will crash after new game's video if not call DSStream_Packet_Flush in same thread.
-                // If flush is not busy, then we don't need worker thread to continue flushing.
-                return hRet;
-            }
             xbox::LARGE_INTEGER getTime;
             xbox::KeQuerySystemTime(&getTime);
             pThis->Xb_rtFlushEx = getTime.QuadPart;
+            pThis->EmuFlags |= DSE_FLAG_IS_FLUSHING;
+            // HACK: Need to find a way to remove Flush call without break Obscure.
+            // Otherwise, it will behave like on hardware.
+            DSStream_Packet_Flush(pThis);
         }
         else {
             pThis->Xb_rtFlushEx = rtTimeStamp;
@@ -549,15 +555,16 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus__r2)
 
     // Convert host to xbox status flag.
     if (hRet == DS_OK) {
-        if (!pThis->Host_BufferPacketArray.empty() && (pThis->EmuFlags & (DSE_FLAG_PAUSE | DSE_FLAG_PAUSENOACTIVATE)) == 0) {
-            dwStatusXbox |= X_DSSSTATUS_PLAYING;
-
-        }
         if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
             dwStatusXbox |= X_DSSSTATUS_READY;
         }
-        if (!pThis->Host_BufferPacketArray.empty() && (pThis->EmuFlags & DSE_FLAG_PAUSE) != 0) {
-            dwStatusXbox |= X_DSSSTATUS_PAUSED;
+        if (!pThis->Host_BufferPacketArray.empty()) {
+            if ((pThis->EmuFlags & DSE_FLAG_PAUSE) != 0) {
+                dwStatusXbox |= X_DSSSTATUS_PAUSED;
+            }
+            else if ((pThis->EmuFlags & (DSE_FLAG_PAUSE | DSE_FLAG_PAUSENOACTIVATE | DSE_FLAG_IS_FLUSHING)) == 0) {
+                dwStatusXbox |= X_DSSSTATUS_PLAYING;
+            }
         }
     } else {
         dwStatusXbox = 0;
@@ -735,6 +742,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Process)
                 if ((pThis->Xb_Status & X_DSSSTATUS_STARVED) > 0) {
                     pThis->Xb_Status &= ~X_DSSSTATUS_STARVED;
                 }
+                pThis->EmuFlags &= ~DSE_FLAG_IS_FLUSHING;
                 DSStream_Packet_Process(pThis);
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {

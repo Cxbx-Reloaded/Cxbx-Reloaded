@@ -217,6 +217,10 @@ bool DSStream_Packet_Process(
         return 0;
     }
 
+    if (pThis->EmuFlags & DSE_FLAG_IS_FLUSHING) {
+        return 0;
+    }
+
     if (!(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
         pThis->EmuFlags |= DSE_FLAG_IS_ACTIVATED;
     }
@@ -347,7 +351,9 @@ bool DSStream_Packet_Flush(
     xbox::X_CDirectSoundStream* pThis
     )
 {
-
+    if ((pThis->EmuFlags & DSE_FLAG_IS_FLUSHING) == 0) {
+        pThis->EmuFlags |= DSE_FLAG_IS_FLUSHING;
+    }
     // If host's audio is still playing then return busy-state until buffer has stop playing.
     DWORD dwStatus;
     pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
@@ -373,5 +379,6 @@ bool DSStream_Packet_Flush(
     if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) != 0) {
         pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_IS_ACTIVATED);
     }
+    pThis->EmuFlags &= ~DSE_FLAG_IS_FLUSHING;
     return false;
 }
