@@ -7338,18 +7338,10 @@ extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // 
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()
 {
-	// Transfer all constants that have been flagged dirty to host
-	auto nv2a = g_NV2A->GetDeviceState();
-	for (int i = 0; i < X_D3DVS_CONSTREG_COUNT; i++) {
-		if (nv2a->pgraph.vsh_constants_dirty[i]) {
-			nv2a->pgraph.vsh_constants_dirty[i] = false;
-
-			float *constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(i);
-			// Note : If host SetVertexShaderConstantF has high overhead (unlikely),
-			// we could combine multiple adjacent constants into one call.
-			g_pD3DDevice->SetVertexShaderConstantF(i, constant_floats, 1);
-		}
-	}
+	// Copy all constants (as they may have been overwritten with fixed-function mode)
+	// Though we should only have to copy overwritten or dirty constants
+	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(0);
+	g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
 
 	// FIXME our viewport constants don't match Xbox values
 	// If we write them to pgraph constants, like we do with constants set by the title,
