@@ -179,6 +179,18 @@ static inline void DSStream_Packet_Starved(
     );
 }
 
+static inline void DSStream_Packet_Complete(
+    xbox::X_CDirectSoundStream* pThis
+    )
+{
+    if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) != 0) {
+        pThis->Xb_Status = X_DSSSTATUS_ENVELOPECOMPLETE;
+    }
+    else {
+        pThis->Xb_Status = 0;
+    }
+}
+
 // Prefill buffer with at least 1 second worth of buffer. See "nAvgBytesPerSec" below for inspection.
 static void DSStream_Packet_Prefill(
     xbox::X_CDirectSoundStream* pThis,
@@ -289,6 +301,7 @@ bool DSStream_Packet_Process(
                     if (pThis->Host_BufferPacketArray.empty()) {
                         if (isStreamEnd) {
                             DSStream_Packet_Stop(pThis);
+                            DSStream_Packet_Complete(pThis);
                         }
                         else {
                             DSStream_Packet_Starved(pThis);
@@ -342,7 +355,7 @@ void DSStream_Packet_FlushEx_Reset(
     xbox::X_CDirectSoundStream* pThis
     )
 {
-    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
+    // Remove flags only (This is the only place it will remove beside FlushEx perform re-set the flags.)
     pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
     pThis->Xb_rtFlushEx = 0LL;
 }
@@ -371,8 +384,8 @@ bool DSStream_Packet_Flush(
         DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
     }
     // Clear flags and set status to zero.
+    DSStream_Packet_Complete(pThis);
     DSStream_Packet_FlushEx_Reset(pThis);
-    pThis->Xb_Status = 0;
 
     // TESTCASE: Burnout 3 sets stream to pause state then calling SetFormat without processing any packets.
     // Which then doesn't need to clear pause flag.
