@@ -114,11 +114,11 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 
 		for (int i = 0, j = 0; i != 4; i++) {
 			HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + i);
-			for (auto str : { "None", "MS Controller Duke", "MS Controller S" }) {
-				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str));
+			for (auto input : input_support_list) {
+				LRESULT index = SendMessage(hHandle, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(input.name));
 				SendMessage(hHandle, CB_SETITEMDATA, index,
-					to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j);
-				if (g_Settings->m_input_port[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) + j) {
+					to_underlying(input.type));
+				if (g_Settings->m_input_port[i].Type == to_underlying(input.type)) {
 					SendMessage(hHandle, CB_SETCURSEL, index, 0);
 					if (g_Settings->m_input_port[i].Type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 						EnableWindow(GetDlgItem(hWndDlg, IDC_CONFIGURE_PORT1 + i), FALSE);

@@ -39,6 +39,17 @@
 
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
+typedef struct _input_controller {
+	XBOX_INPUT_DEVICE type;
+	const char* name;
+} input_controller;
+
+static input_controller input_support_list[] = {
+	{ XBOX_INPUT_DEVICE::DEVICE_INVALID, "None" },
+	{ XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE, "MS Controller Duke" },
+	{ XBOX_INPUT_DEVICE::MS_CONTROLLER_S, "MS Controller S" },
+};
+
 #pragma pack(1)
 
 // xpad in/out buffers stripped of the first two bytes
