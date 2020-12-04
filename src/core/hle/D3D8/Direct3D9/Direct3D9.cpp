@@ -102,7 +102,6 @@ static bool                         g_bSupportsFormatTextureDepthStencil[xbox::X
 static bool                         g_bSupportsFormatVolumeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
 static bool                         g_bSupportsFormatCubeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
 static HBRUSH                       g_hBgBrush = NULL; // Background Brush
-static volatile bool                g_bRenderWindowActive = false;
 static BOOL                         g_bIsFauxFullscreen = FALSE;
 static DWORD						g_OverlaySwap = 0; // Set in D3DDevice_UpdateOverlay
 static int                          g_iWireframe = 0; // wireframe toggle
@@ -590,13 +589,12 @@ void CxbxInitWindow(bool bFullInit)
     // create timing thread
 	if (bFullInit)
     {
-        DWORD dwThreadId;
-
-        HANDLE hThread = CreateThread(nullptr, 0, EmuUpdateTickCount, nullptr, 0, &dwThreadId);
+        HANDLE hThread = CreateThread(nullptr, 0, EmuUpdateTickCount, nullptr, 0, nullptr);
         // We set the priority of this thread a bit higher, to assure reliable timing :
         SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
 
         CxbxKrnlRegisterThread(hThread);
+        CloseHandle(hThread); // CxbxKrnlRegisterThread duplicates the handle so we can close this one
     }
 
 /* TODO : Port this Dxbx code :
@@ -608,11 +606,8 @@ void CxbxInitWindow(bool bFullInit)
 */
     // create window message processing thread
     {
-        DWORD dwThreadId;
-
-        g_bRenderWindowActive = false;
-
-        HANDLE hRenderWindowThread = CreateThread(nullptr, 0, EmuRenderWindow, nullptr, 0, &dwThreadId);
+		HANDLE hStartEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+		HANDLE hRenderWindowThread = CreateThread(nullptr, 0, EmuRenderWindow, &hStartEvent, 0, nullptr);
 
 		if (hRenderWindowThread == NULL) {
 			char szBuffer[1024] = { 0 };
@@ -621,11 +616,12 @@ void CxbxInitWindow(bool bFullInit)
 			EmuShared::Cleanup();
 			ExitProcess(0);
 		}
+		SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
 
-        while(!g_bRenderWindowActive)
-            Sleep(0); 
-
-		Sleep(0);
+		// Wait for the window to create
+		WaitForSingleObject(hStartEvent, INFINITE);
+		CloseHandle(hStartEvent);
+		CloseHandle(hRenderWindowThread);
     }
 
 	SetFocus(g_hEmuWindow);
@@ -1688,10 +1684,9 @@ static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescrip
 }
 
 // window message processing thread
-static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
+static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
 {
 	CxbxSetThreadName("Cxbx Render Window");
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
 
     // register window class
     {
@@ -1772,6 +1767,8 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 	DbgConsole *dbgConsole = new DbgConsole();
 #endif
 
+    SetEvent(*reinterpret_cast<PHANDLE>(lpParam));
+
     // message processing loop
     {
         MSG msg;
@@ -1779,8 +1776,6 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
         ZeroMemory(&msg, sizeof(msg));
 
         bool lPrintfOn = g_bPrintfOn;
-
-        g_bRenderWindowActive = true;
 
         while(msg.message != WM_QUIT)
         {
@@ -1808,8 +1803,6 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpVoid)
 #endif
             }
         }
-
-        g_bRenderWindowActive = false;
 
 #ifdef INCLUDE_DBG_CONSOLE
 		delete dbgConsole;
