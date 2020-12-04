@@ -87,21 +87,14 @@ bool                                g_bClipCursor  = false; // indicates that th
 IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
 
 // Static Variable(s)
-static IDirectDrawSurface7         *g_pDDSPrimary  = nullptr; // DirectDraw7 Primary Surface
-static IDirectDrawClipper          *g_pDDClipper   = nullptr; // DirectDraw7 Clipper
-static IDirectDraw7                *g_pDD7          = nullptr; // DirectDraw7
-static HMONITOR                     g_hMonitor      = NULL; // Handle to DirectDraw monitor
-static GUID                         g_ddguid = { 0 }; // DirectDraw driver GUID
-static DDCAPS                       g_DriverCaps = { 0 };
-
-static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
-static bool                         g_bSupportsFormatSurfaceRenderTarget[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
-static bool                         g_bSupportsFormatSurfaceDepthStencil[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support surface format?
-static bool                         g_bSupportsFormatTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support texture format?
-static bool                         g_bSupportsFormatTextureRenderTarget[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
-static bool                         g_bSupportsFormatTextureDepthStencil[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false };// Does device support texture format?
-static bool                         g_bSupportsFormatVolumeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
-static bool                         g_bSupportsFormatCubeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1] = { false }; // Does device support surface format?
+static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceRenderTarget[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceDepthStencil[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support texture format?
+static bool                         g_bSupportsFormatTextureRenderTarget[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support texture format?
+static bool                         g_bSupportsFormatTextureDepthStencil[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support texture format?
+static bool                         g_bSupportsFormatVolumeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatCubeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
 static HBRUSH                       g_hBgBrush = NULL; // Background Brush
 static BOOL                         g_bIsFauxFullscreen = FALSE;
 static DWORD						g_OverlaySwap = 0; // Set in D3DDevice_UpdateOverlay
@@ -121,7 +114,6 @@ static Settings::s_video            g_XBVideo;
 // D3D based variables
 static IDirect3D                   *g_pDirect3D = nullptr;
        D3DCAPS						g_D3DCaps = {};         // Direct3D Caps
-static IDirect3DVertexBuffer       *g_pDummyBuffer = nullptr;  // Dummy buffer, used to set unused stream sources with
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
 
@@ -193,14 +185,10 @@ float g_Xbox_BackbufferScaleY = 1;
 
 /* Unused :
 static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
-
-static	DWORD						g_dwVertexShaderUsage = 0; // Unused. If needed, move to XbVertexShader.cpp
 */
 
 // Static Function(s)
-static BOOL WINAPI                  EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm);
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
-static DWORD WINAPI                 EmuCreateDeviceProxy(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
 static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
@@ -254,17 +242,10 @@ struct EmuD3D8CreateDeviceProxyData
 	// Set by EmuD3DInit()
     xbox::uint_xt                        Adapter;
     D3DDEVTYPE                       DeviceType;
-    HWND                             hFocusWindow;
-	// Set byt EMUPATCH(Direct3D_CreateDevice)
-    xbox::X_D3DPRESENT_PARAMETERS     XboxPresentationParameters;
-    volatile bool                    bReady;
-    volatile bool                    bCreate;   // false : release
 	// Set by EmuCreateDeviceProxy()
-    xbox::dword_xt                       BehaviorFlags;
 	D3DPRESENT_PARAMETERS            HostPresentationParameters;
-    volatile HRESULT                 hRet;
 }
-g_EmuCDPD = {0};
+g_EmuCDPD;
 
 // Declare trampolines
 #define XB_TRAMPOLINES(XB_MACRO)                                                                                                                                                                            \
@@ -1623,21 +1604,10 @@ void EmuD3DInit()
 {
 	HLE_init_pgraph_plugins(); // TODO : Hook more nv_dma_map() result uses in EmuNV2A_PGRAPH.cpp
 
-	// create the create device proxy thread
-	{
-		HANDLE thread = CreateThread(nullptr, 0, EmuCreateDeviceProxy, nullptr, 0, nullptr);
-		// Ported from Dxbx :
-		// If possible, assign this thread to another core than the one that runs Xbox1 code :
-		SetThreadAffinityMask(thread, g_CPUOthers);
-		CloseHandle(thread);
-	}
-
 	// Initialise CreateDevice Proxy Data struct
 	{
-		g_EmuCDPD = {0};
 		g_EmuCDPD.Adapter = g_XBVideo.adapter;
 		g_EmuCDPD.DeviceType = (g_XBVideo.direct3DDevice == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
-		g_EmuCDPD.hFocusWindow = g_hEmuWindow;
 	}
 
 	// create Direct3D8 and retrieve caps
@@ -1669,30 +1639,6 @@ void EmuD3DInit()
 
 // cleanup Direct3D
 void EmuD3DCleanup() {}
-
-// enumeration procedure for locating display device GUIDs
-static BOOL WINAPI EmuEnumDisplayDevices(GUID FAR *lpGUID, LPSTR lpDriverDescription, LPSTR lpDriverName, LPVOID lpContext, HMONITOR hm)
-{
-    static DWORD dwEnumCount = 0;
-
-    if(dwEnumCount++ == g_EmuCDPD.Adapter + 1)
-    {
-        g_hMonitor = hm;
-        dwEnumCount = 0;
-        if(lpGUID != 0)
-        {
-            memcpy(&g_ddguid, lpGUID, sizeof(GUID));
-        }
-        else
-        {
-            memset(&g_ddguid, 0, sizeof(GUID));
-        }
-
-        return FALSE;
-    }
-
-    return TRUE;
-}
 
 // window message processing thread
 static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
@@ -2236,384 +2182,282 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 		}
 	}
 }
-// thread dedicated to create devices
-static DWORD WINAPI EmuCreateDeviceProxy(LPVOID)
+
+static void SetupPresentationParameters
+(
+    const xbox::X_D3DPRESENT_PARAMETERS     *pXboxPresentationParameters
+)
 {
-	LOG_FUNC();
+    D3DPRESENT_PARAMETERS& params = g_EmuCDPD.HostPresentationParameters;
 
-	CxbxSetThreadName("Cxbx CreateDevice Proxy");
+    params.Windowed = !g_XBVideo.bFullScreen;
 
-    EmuLog(LOG_LEVEL::DEBUG, "CreateDevice proxy thread is running.");
+    // TODO: Investigate the best option for this
+    params.SwapEffect = D3DSWAPEFFECT_COPY;
 
-    while(true)
-    {
-        // if we have been signalled, create the device with cached parameters
-        if(g_EmuCDPD.bReady)
-        {
-            EmuLog(LOG_LEVEL::DEBUG, "CreateDevice proxy thread received request.");
+    // Attempt to match backbuffer format, this is not *required*, but leads to faster blitting/swapping
+    params.BackBufferFormat = EmuXB2PC_D3DFormat(pXboxPresentationParameters->BackBufferFormat);
 
-            // only one device should be created at once
-            if (g_pD3DDevice != nullptr) {
-                EmuLog(LOG_LEVEL::DEBUG, "CreateDevice proxy thread releasing old Device.");
+    params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+    g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->PresentationInterval;
 
-                g_pD3DDevice->EndScene();
+    // We only want *one* backbuffer on the host, triple buffering, etc should be handled by our Present/Swap impl
+    params.BackBufferCount = 1;
 
-				ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
-				ClearResourceCache(g_Cxbx_Cached_Direct3DResources);
+    // We don't want multisampling on the host backbuffer, it should be applied to Xbox surfaces if required
+    params.MultiSampleType = D3DMULTISAMPLE_NONE;
+    params.MultiSampleQuality = 0;
 
-				// TODO: ensure all other resources are cleaned up too
+    // We want a lockable backbuffer for swapping/blitting purposes
+    params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 
-				g_EmuCDPD.hRet = g_pD3DDevice->Release();
-				g_pD3DDevice = nullptr;
-
-				// cleanup overlay clipper
-				if (g_pDDClipper != nullptr) {
-					g_pDDClipper->Release();
-					g_pDDClipper = nullptr;
-				}
-
-				// cleanup directdraw surface
-				if (g_pDDSPrimary != nullptr) {
-					g_pDDSPrimary->Release();
-					g_pDDSPrimary = nullptr;
-				}
-
-				// cleanup directdraw
-				if (g_pDD7 != nullptr) {
-					g_pDD7->Release();
-					g_pDD7 = nullptr;
-				}
-			}
-
-            if (g_EmuCDPD.bCreate) {
-				// Apply render scale factor for high-resolution rendering
-				g_RenderUpscaleFactor = g_XBVideo.renderScaleFactor;
-				g_RenderTargetUpscaleFactor = 1;
-
-				// Setup the HostPresentationParameters
-				{
-					g_EmuCDPD.HostPresentationParameters = {};
-					g_EmuCDPD.HostPresentationParameters.Windowed = !g_XBVideo.bFullScreen;
-
-					// TODO: Investigate the best option for this
-					g_EmuCDPD.HostPresentationParameters.SwapEffect = D3DSWAPEFFECT_COPY;
-
-					// Attempt to match backbuffer format, this is not *required*, but leads to faster blitting/swapping
-					g_EmuCDPD.HostPresentationParameters.BackBufferFormat = EmuXB2PC_D3DFormat(g_EmuCDPD.XboxPresentationParameters.BackBufferFormat);
-
-					g_EmuCDPD.HostPresentationParameters.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-					g_Xbox_PresentationInterval_Default = g_EmuCDPD.XboxPresentationParameters.PresentationInterval;
-
-					// We only want *one* backbuffer on the host, triple buffering, etc should be handled by our Present/Swap impl
-					g_EmuCDPD.HostPresentationParameters.BackBufferCount = 1;
-
-					// We don't want multisampling on the host backbuffer, it should be applied to Xbox surfaces if required
-					g_EmuCDPD.HostPresentationParameters.MultiSampleType = D3DMULTISAMPLE_NONE;
-					g_EmuCDPD.HostPresentationParameters.MultiSampleQuality = 0;
-
-					// We want a lockable backbuffer for swapping/blitting purposes
-					g_EmuCDPD.HostPresentationParameters.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
-
-					// retrieve resolution from configuration
-					char szBackBufferFormat[16] = {};
-					const char* resolution = g_XBVideo.szVideoResolution;
-					if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
-						&g_EmuCDPD.HostPresentationParameters.BackBufferWidth,
-						&g_EmuCDPD.HostPresentationParameters.BackBufferHeight,
-						szBackBufferFormat,
-						&g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz)) {
-						EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s. Using Xbox Default (%d, %d @ %uhz)", resolution,
-							g_EmuCDPD.XboxPresentationParameters.BackBufferWidth, g_EmuCDPD.XboxPresentationParameters.BackBufferHeight,
-							g_EmuCDPD.XboxPresentationParameters.FullScreen_RefreshRateInHz);
-						g_EmuCDPD.HostPresentationParameters.BackBufferWidth = g_EmuCDPD.XboxPresentationParameters.BackBufferWidth;
-						g_EmuCDPD.HostPresentationParameters.BackBufferHeight = g_EmuCDPD.XboxPresentationParameters.BackBufferHeight;
-						g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz = g_EmuCDPD.XboxPresentationParameters.FullScreen_RefreshRateInHz;
-					}
-
-                    if(g_EmuCDPD.HostPresentationParameters.Windowed)
-					{
-						D3DDISPLAYMODE D3DDisplayMode;
-						g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
-
-						g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DDisplayMode.Format;
-						g_EmuCDPD.HostPresentationParameters.FullScreen_RefreshRateInHz = 0;
-					}
-					else
-					{
-						// In exclusive fullscreen mode, make *sure* to use the info that was in the resolution string
-						if (strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
-							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_X1R5G5B5;
-						else if (strcmp(szBackBufferFormat, "r5g6r5") == 0)
-							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_R5G6B5;
-						else if (strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
-							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_X8R8G8B8;
-						else if (strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
-							g_EmuCDPD.HostPresentationParameters.BackBufferFormat = D3DFMT_A8R8G8B8;
-					}
-				}
-
-                // detect vertex processing capabilities
-                if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuCDPD.DeviceType == D3DDEVTYPE_HAL)
-                {
-                    EmuLog(LOG_LEVEL::DEBUG, "Using hardware vertex processing");
-
-                    g_EmuCDPD.BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-                    // Unused : g_dwVertexShaderUsage = 0;
-                }
-                else
-                {
-                    EmuLog(LOG_LEVEL::DEBUG, "Using software vertex processing");
-
-                    g_EmuCDPD.BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-                    // Unused : g_dwVertexShaderUsage = D3DUSAGE_SOFTWAREPROCESSING;
-                }
-
-				// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
-				g_EmuCDPD.BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
-
-                // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
-                g_EmuCDPD.BehaviorFlags |= D3DCREATE_MULTITHREADED;
-
-				// We never want auto-depth stencil on the host, Xbox D3D will handle this for us
-				g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = FALSE;
-
-                // redirect to windows Direct3D
-                g_EmuCDPD.hRet = g_pDirect3D->CreateDevice(
-                    g_EmuCDPD.Adapter,
-                    g_EmuCDPD.DeviceType,
-                    g_EmuCDPD.hFocusWindow,
-                    g_EmuCDPD.BehaviorFlags,
-                    &g_EmuCDPD.HostPresentationParameters,
-                    &g_pD3DDevice
-                );
-				DEBUG_D3DRESULT(g_EmuCDPD.hRet, "IDirect3D::CreateDevice");
-
-                if(FAILED(g_EmuCDPD.hRet))
-                    CxbxKrnlCleanup("IDirect3D::CreateDevice failed");
-
-				// Which texture formats does this device support?
-				memset(g_bSupportsFormatSurface, false, sizeof(g_bSupportsFormatSurface));
-				memset(g_bSupportsFormatSurfaceRenderTarget, false, sizeof(g_bSupportsFormatSurfaceRenderTarget));
-				memset(g_bSupportsFormatSurfaceDepthStencil, false, sizeof(g_bSupportsFormatSurfaceDepthStencil));
-				memset(g_bSupportsFormatTexture, false, sizeof(g_bSupportsFormatTexture));
-				memset(g_bSupportsFormatTextureRenderTarget, false, sizeof(g_bSupportsFormatTextureRenderTarget));
-				memset(g_bSupportsFormatTextureDepthStencil, false, sizeof(g_bSupportsFormatTextureDepthStencil));
-				memset(g_bSupportsFormatVolumeTexture, false, sizeof(g_bSupportsFormatVolumeTexture));
-				memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
-				for (int X_Format = xbox::X_D3DFMT_L8; X_Format <= xbox::X_D3DFMT_LIN_R8G8B8A8; X_Format++) {
-					// Only process Xbox formats that are directly mappable to host
-					if (!EmuXBFormatRequiresConversionToARGB((xbox::X_D3DFORMAT)X_Format)) {
-						// Convert the Xbox format into host format (without warning, thanks to the above restriction)
-						D3DFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
-						if (PCFormat != D3DFMT_UNKNOWN) {
-							// Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									D3DRTYPE_SURFACE, PCFormat))
-								g_bSupportsFormatSurface[X_Format] = true;
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
-									D3DRTYPE_SURFACE, PCFormat))
-								g_bSupportsFormatSurfaceRenderTarget[X_Format] = true;
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
-									D3DRTYPE_SURFACE, PCFormat))
-								g_bSupportsFormatSurfaceDepthStencil[X_Format] = true;
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									D3DRTYPE_TEXTURE, PCFormat))
-								g_bSupportsFormatTexture[X_Format] = true;
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
-									D3DRTYPE_TEXTURE, PCFormat))
-								g_bSupportsFormatTextureRenderTarget[X_Format] = true;
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
-									D3DRTYPE_TEXTURE, PCFormat))
-								g_bSupportsFormatTextureDepthStencil[X_Format] = true;
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									D3DRTYPE_VOLUMETEXTURE, PCFormat))
-								g_bSupportsFormatVolumeTexture[X_Format] = true;
-							if (D3D_OK == g_pDirect3D->CheckDeviceFormat(
-									g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-									g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-									D3DRTYPE_CUBETEXTURE, PCFormat))
-								g_bSupportsFormatCubeTexture[X_Format] = true;
-						}
-					}
-				}
-
-                // default NULL guid
-                ZeroMemory(&g_ddguid, sizeof(GUID));
-
-				HRESULT hRet;
-
-                // enumerate device guid for this monitor, for directdraw
-				hRet = DirectDrawEnumerateExA(EmuEnumDisplayDevices, nullptr, DDENUM_ATTACHEDSECONDARYDEVICES);
-				DEBUG_D3DRESULT(hRet, "DirectDrawEnumerateExA");
-
-                // create DirectDraw7
-                {
-                    if(FAILED(hRet)) {
-                        hRet = DirectDrawCreateEx(nullptr, (void**)&g_pDD7, IID_IDirectDraw7, nullptr);
-						DEBUG_D3DRESULT(hRet, "DirectDrawCreateEx(NULL)");
-					} else {
-						hRet = DirectDrawCreateEx(&g_ddguid, (void**)&g_pDD7, IID_IDirectDraw7, nullptr);
-						DEBUG_D3DRESULT(hRet, "DirectDrawCreateEx(&g_ddguid)");
-					}
-
-					if(FAILED(hRet))
-                        CxbxKrnlCleanup("Could not initialize DirectDraw7");
-
-					hRet = g_pDD7->GetCaps(&g_DriverCaps, nullptr);
-					// TODO : Why does this call return DDERR_INVALIDPARAMS, even when passing in a second argument?
-					DEBUG_D3DRESULT(hRet, "g_pDD7->GetCaps");
-
-                    hRet = g_pDD7->SetCooperativeLevel(0, DDSCL_NORMAL);
-					DEBUG_D3DRESULT(hRet, "g_pDD7->SetCooperativeLevel");
-
-                    if(FAILED(hRet))
-                        CxbxKrnlCleanup("Could not set cooperative level");
-                }
-
-				// Dump all supported DirectDraw FourCC format codes
-				{
-                    DWORD  dwCodes = 0;
-                    DWORD *lpCodes = nullptr;
-
-                    g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
-                    lpCodes = (DWORD*)malloc(dwCodes*sizeof(DWORD));
-                    g_pDD7->GetFourCCCodes(&dwCodes, lpCodes);
-                    for(DWORD v=0;v<dwCodes;v++)
-                    {
-						EmuLog(LOG_LEVEL::DEBUG, "FourCC[%d] = %.4s", v, (char *)&(lpCodes[v]));
-						// Map known FourCC codes to Xbox Format
-						int X_Format;
-						switch (lpCodes[v]) {
-						case MAKEFOURCC('Y', 'U', 'Y', '2'):
-							X_Format = xbox::X_D3DFMT_YUY2;
-							break;
-						case MAKEFOURCC('U', 'Y', 'V', 'Y'):
-							X_Format = xbox::X_D3DFMT_UYVY;
-							break;
-						case MAKEFOURCC('D', 'X', 'T', '1'):
-							X_Format = xbox::X_D3DFMT_DXT1;
-							break;
-						case MAKEFOURCC('D', 'X', 'T', '3'):
-							X_Format = xbox::X_D3DFMT_DXT3;
-							break;
-						case MAKEFOURCC('D', 'X', 'T', '5'):
-							X_Format = xbox::X_D3DFMT_DXT5;
-							break;
-						default:
-							continue;
-						}
-
-						// Warn if CheckDeviceFormat didn't report this format
-						if (!g_bSupportsFormatTexture[X_Format]) {
-							EmuLog(LOG_LEVEL::WARNING, "FourCC format %.4s not previously detected via CheckDeviceFormat()! Enabling it.", (char *)&(lpCodes[v]));
-							// TODO : If this warning never shows, detecting FourCC's could be removed entirely. For now, enable the format :
-							g_bSupportsFormatTexture[X_Format] = true;
-						}
-                    }
-
-                    free(lpCodes);						
-				}
-
-				// Can host driver create event queries?
-				if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, nullptr))) {
-					// Is host GPU query creation enabled?
-					if (!g_bHack_DisableHostGPUQueries) {
-						// Create a D3D event query to handle "wait-for-idle" with
-						hRet = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryWaitForIdle);
-						DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (wait for idle)");
-
-						// Create a D3D event query to handle "callback events" with
-						hRet = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryCallbackEvent);
-						DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (callback event)");
-					}
-				} else {
-					LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_EVENT) on host!");
-				}
-
-				// Can host driver create occlusion queries?
-				g_bEnableHostQueryVisibilityTest = false;
-				if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, nullptr))) {
-					// Is host GPU query creation enabled?
-					if (!g_bHack_DisableHostGPUQueries) {
-						g_bEnableHostQueryVisibilityTest = true;
-					} else {
-						LOG_TEST_CASE("Disabled D3DQUERYTYPE_OCCLUSION on host!");
-					}
-				} else {
-					LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_OCCLUSION) on host!");
-				}
-
-				hRet = g_pD3DDevice->CreateVertexBuffer
-                (
-                    1, 0, 0, D3DPOOL_MANAGED,
-                    &g_pDummyBuffer
-					, nullptr
-                );
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexBuffer");
-
-                for(int HostStreamNumber = 0; HostStreamNumber < X_VSH_MAX_STREAMS; HostStreamNumber++)
-                {
-                    hRet = g_pD3DDevice->SetStreamSource(HostStreamNumber, g_pDummyBuffer,
-						0, // OffsetInBytes
-						1);
-					DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
-				}
-
-                // initially, show a black screen
-                // Only clear depth buffer and stencil if present
-                //
-                // Avoids following DirectX Debug Runtime error report
-                //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
-                //
-                hRet = g_pD3DDevice->Clear(
-					/*Count=*/0, 
-					/*pRects=*/nullptr, 
-					D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
-					/*Color=*/0xFF000000, // TODO : Use constant for this
-					/*Z=*/g_bHasDepth ? 1.0f : 0.0f,
-					/*Stencil=*/0);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
-
-				hRet = g_pD3DDevice->BeginScene();
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene");
-
-				hRet = g_pD3DDevice->EndScene();
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->EndScene");
-
-				hRet = g_pD3DDevice->Present(0, 0, 0, 0);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
-
-                // begin scene
-                hRet = g_pD3DDevice->BeginScene();
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene(2nd)");
-
-				// Set up cache
-				g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
-            }
-
-            // signal completion
-            g_EmuCDPD.bReady = false;
-        }
-
-		Sleep(1);
+    // retrieve resolution from configuration
+    char szBackBufferFormat[16] = {};
+    const char* resolution = g_XBVideo.szVideoResolution;
+    if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
+        &params.BackBufferWidth,
+        &params.BackBufferHeight,
+        szBackBufferFormat,
+        &params.FullScreen_RefreshRateInHz)) {
+        EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s. Using Xbox Default (%d, %d @ %uhz)", resolution,
+            pXboxPresentationParameters->BackBufferWidth, pXboxPresentationParameters->BackBufferHeight,
+            pXboxPresentationParameters->FullScreen_RefreshRateInHz);
+        params.BackBufferWidth = pXboxPresentationParameters->BackBufferWidth;
+        params.BackBufferHeight = pXboxPresentationParameters->BackBufferHeight;
+        params.FullScreen_RefreshRateInHz = pXboxPresentationParameters->FullScreen_RefreshRateInHz;
     }
 
-    return 0;
+    if(params.Windowed)
+    {
+        D3DDISPLAYMODE D3DDisplayMode;
+        g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
+
+        params.BackBufferFormat = D3DDisplayMode.Format;
+        params.FullScreen_RefreshRateInHz = 0;
+    }
+    else
+    {
+        // In exclusive fullscreen mode, make *sure* to use the info that was in the resolution string
+        if (strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
+            params.BackBufferFormat = D3DFMT_X1R5G5B5;
+        else if (strcmp(szBackBufferFormat, "r5g6r5") == 0)
+            params.BackBufferFormat = D3DFMT_R5G6B5;
+        else if (strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
+            params.BackBufferFormat = D3DFMT_X8R8G8B8;
+        else if (strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
+            params.BackBufferFormat = D3DFMT_A8R8G8B8;
+    }
 }
+
+static void DetermineSupportedD3DFormats
+(
+)
+{
+    memset(g_bSupportsFormatSurface, false, sizeof(g_bSupportsFormatSurface));
+    memset(g_bSupportsFormatSurfaceRenderTarget, false, sizeof(g_bSupportsFormatSurfaceRenderTarget));
+    memset(g_bSupportsFormatSurfaceDepthStencil, false, sizeof(g_bSupportsFormatSurfaceDepthStencil));
+    memset(g_bSupportsFormatTexture, false, sizeof(g_bSupportsFormatTexture));
+    memset(g_bSupportsFormatTextureRenderTarget, false, sizeof(g_bSupportsFormatTextureRenderTarget));
+    memset(g_bSupportsFormatTextureDepthStencil, false, sizeof(g_bSupportsFormatTextureDepthStencil));
+    memset(g_bSupportsFormatVolumeTexture, false, sizeof(g_bSupportsFormatVolumeTexture));
+    memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
+    for (int X_Format = xbox::X_D3DFMT_L8; X_Format <= xbox::X_D3DFMT_LIN_R8G8B8A8; X_Format++) {
+        // Only process Xbox formats that are directly mappable to host
+        if (!EmuXBFormatRequiresConversionToARGB((xbox::X_D3DFORMAT)X_Format)) {
+            // Convert the Xbox format into host format (without warning, thanks to the above restriction)
+            const D3DFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
+            if (PCFormat != D3DFMT_UNKNOWN) {
+                // Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
+                g_bSupportsFormatSurface[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+                        D3DRTYPE_SURFACE, PCFormat));
+
+                g_bSupportsFormatSurfaceRenderTarget[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
+                        D3DRTYPE_SURFACE, PCFormat));
+
+                g_bSupportsFormatSurfaceDepthStencil[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
+                        D3DRTYPE_SURFACE, PCFormat));
+
+                g_bSupportsFormatTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+                        D3DRTYPE_TEXTURE, PCFormat));
+
+                g_bSupportsFormatTextureRenderTarget[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
+                        D3DRTYPE_TEXTURE, PCFormat));
+
+                g_bSupportsFormatTextureDepthStencil[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
+                        D3DRTYPE_TEXTURE, PCFormat));
+
+                g_bSupportsFormatVolumeTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+                        D3DRTYPE_VOLUMETEXTURE, PCFormat));
+
+                g_bSupportsFormatCubeTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+                        D3DRTYPE_CUBETEXTURE, PCFormat));
+            }
+        }
+    }
+}
+
+static void DrawInitialBlackScreen
+(
+)
+{
+    LOG_INIT;
+
+    // initially, show a black screen
+    // Only clear depth buffer and stencil if present
+    //
+    // Avoids following DirectX Debug Runtime error report
+    //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
+    //
+    HRESULT hRet = g_pD3DDevice->Clear(
+        /*Count=*/0, 
+        /*pRects=*/nullptr, 
+        D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
+        /*Color=*/0xFF000000, // TODO : Use constant for this
+        /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
+        /*Stencil=*/0);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
+
+    hRet = g_pD3DDevice->BeginScene();
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene");
+
+    hRet = g_pD3DDevice->EndScene();
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->EndScene");
+
+    hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
+
+    // begin scene
+    hRet = g_pD3DDevice->BeginScene();
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene(2nd)");
+}
+
+static void CreateDefaultD3D9Device
+(
+    const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+    LOG_INIT;
+
+    // only one device should be created at once
+    if (g_pD3DDevice != nullptr) {
+        EmuLog(LOG_LEVEL::DEBUG, "CreateDefaultD3D9Device releasing old Device.");
+
+        g_pD3DDevice->EndScene();
+
+        ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
+        ClearResourceCache(g_Cxbx_Cached_Direct3DResources);
+
+        // TODO: ensure all other resources are cleaned up too
+
+        // Final release of IDirect3DDevice9 must be called from the window message thread
+        // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
+        RunOnWndMsgThread([] {
+            g_pD3DDevice->Release();
+        });
+    }
+
+    // Apply render scale factor for high-resolution rendering
+    g_RenderUpscaleFactor = g_XBVideo.renderScaleFactor;
+    g_RenderTargetUpscaleFactor = 1;
+
+    // Setup the HostPresentationParameters
+    SetupPresentationParameters(pPresentationParameters);
+
+    // detect vertex processing capabilities
+    DWORD BehaviorFlags;
+    if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuCDPD.DeviceType == D3DDEVTYPE_HAL)
+    {
+        EmuLog(LOG_LEVEL::DEBUG, "Using hardware vertex processing");
+
+        BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    }
+    else
+    {
+        EmuLog(LOG_LEVEL::DEBUG, "Using software vertex processing");
+
+        BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    }
+
+    // Dxbx addition : Prevent Direct3D from changing the FPU Control word :
+    BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+
+    // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
+    BehaviorFlags |= D3DCREATE_MULTITHREADED;
+
+    // We never want auto-depth stencil on the host, Xbox D3D will handle this for us
+    g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = FALSE;
+
+    // IDirect3D9::CreateDevice must be called from the window message thread
+    // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
+    HRESULT hr;
+    RunOnWndMsgThread([&hr, BehaviorFlags] {
+        hr = g_pDirect3D->CreateDevice(
+            g_EmuCDPD.Adapter,
+            g_EmuCDPD.DeviceType,
+            g_hEmuWindow,
+            BehaviorFlags,
+            &g_EmuCDPD.HostPresentationParameters,
+            &g_pD3DDevice);
+    });
+    DEBUG_D3DRESULT(hr, "IDirect3D::CreateDevice");
+
+    if(FAILED(hr))
+        CxbxKrnlCleanup("IDirect3D::CreateDevice failed");
+
+    // Which texture formats does this device support?
+    DetermineSupportedD3DFormats();
+
+    // Can host driver create event queries?
+    if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, nullptr))) {
+        // Is host GPU query creation enabled?
+        if (!g_bHack_DisableHostGPUQueries) {
+            // Create a D3D event query to handle "wait-for-idle" with
+            hr = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryWaitForIdle);
+            DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (wait for idle)");
+
+            // Create a D3D event query to handle "callback events" with
+            hr = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryCallbackEvent);
+            DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (callback event)");
+        }
+    } else {
+        LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_EVENT) on host!");
+    }
+
+    // Can host driver create occlusion queries?
+    g_bEnableHostQueryVisibilityTest = false;
+    if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, nullptr))) {
+        // Is host GPU query creation enabled?
+        if (!g_bHack_DisableHostGPUQueries) {
+            g_bEnableHostQueryVisibilityTest = true;
+        } else {
+            LOG_TEST_CASE("Disabled D3DQUERYTYPE_OCCLUSION on host!");
+        }
+    } else {
+        LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_OCCLUSION) on host!");
+    }
+
+    DrawInitialBlackScreen();
+
+    // Set up cache
+    g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
+}
+
 
 // check if a resource has been registered yet (if not, register it)
 void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code
@@ -2952,7 +2796,7 @@ void UpdateHostBackBufferDesc()
     pCurrentHostBackBuffer->Release();
 }
 
-void SetAspectRatioScale(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
+void SetAspectRatioScale(const xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
     // NOTE: Some games use anamorphic widesceen (expecting a 4:3 surface to be displayed at 16:9)
     // For those, we *lie* about the default width, for the scaler
@@ -3093,7 +2937,7 @@ void GetRenderTargetBaseDimensions(float& x, float& y) {
 
 void Direct3D_CreateDevice_Start
 (
-	xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
     CxbxVertexShaderSetFlags();
@@ -3108,27 +2952,15 @@ void Direct3D_CreateDevice_Start
 
 	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
 
-	// create default device *before* calling Xbox Direct3D_CreateDevice trampline
+	// create default device *before* calling Xbox Direct3D_CreateDevice trampoline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
-	{
-		// Wait until proxy is done with an existing call (i highly doubt this situation will come up)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-
-		// Cache parameters
-		memcpy(&(g_EmuCDPD.XboxPresentationParameters), pPresentationParameters, sizeof(xbox::X_D3DPRESENT_PARAMETERS));
-
-		// Signal proxy thread (this will trigger EmuCreateDeviceProxy to call CreateDevice)
-		g_EmuCDPD.bCreate = true;
-		g_EmuCDPD.bReady = true;
-
-		// Wait until host proxy is completed (otherwise, Xbox code could hit patches that need an assigned g_pD3DDevice)
-		while (g_EmuCDPD.bReady)
-			Sleep(10);
-	}
+	CreateDefaultD3D9Device(pPresentationParameters);
 }
 
-void Direct3D_CreateDevice_End()
+void Direct3D_CreateDevice_End
+(
+	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
 {
 #if 0 // Unused :
     // Set g_Xbox_D3DDevice to point to the Xbox D3D Device
@@ -3139,7 +2971,7 @@ void Direct3D_CreateDevice_End()
 #endif
 
     UpdateHostBackBufferDesc();
-    SetAspectRatioScale(&g_EmuCDPD.XboxPresentationParameters);
+    SetAspectRatioScale(pPresentationParameters);
 
     // If the Xbox version of CreateDevice didn't call SetRenderTarget, we must derive the default backbuffer ourselves
     // This works because CreateDevice always sets the current render target to the Xbox Backbuffer
@@ -3242,7 +3074,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4
 		mov  hRet, eax
 	}
 
-	Direct3D_CreateDevice_End();
+	Direct3D_CreateDevice_End(pPresentationParameters);
 
 	__asm {
 		mov  eax, hRet
@@ -3313,7 +3145,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 		mov  hRet, eax
 	}
 
-	Direct3D_CreateDevice_End();
+	Direct3D_CreateDevice_End(pPresentationParameters);
 
 	__asm {
 		mov  eax, hRet
@@ -3384,7 +3216,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 		mov  hRet, eax
 	}
 
-	Direct3D_CreateDevice_End();
+	Direct3D_CreateDevice_End(pPresentationParameters);
 
 	__asm {
 		mov  eax, hRet
@@ -3469,7 +3301,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 	// Only then call Xbox CreateDevice function
 	hresult_xt hRet = XB_TRMP(Direct3D_CreateDevice)(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
-	Direct3D_CreateDevice_End();
+	Direct3D_CreateDevice_End(pPresentationParameters);
 
 	return hRet;
 }
