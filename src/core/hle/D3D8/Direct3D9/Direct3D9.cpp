@@ -71,6 +71,7 @@
 #include <assert.h>
 #include <process.h>
 #include <clocale>
+#include <functional>
 #include <unordered_map>
 #include <thread>
 
@@ -555,6 +556,16 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	}
 
 	return nullptr;
+}
+
+static constexpr UINT WM_CXBXR_RUN_ON_MESSAGE_THREAD = WM_USER+0;
+
+// A helper function to run any code on a window message thread
+// Used for those D3D9 function which *must* be ran on this particular thread
+static void RunOnWndMsgThread(const std::function<void()>& func)
+{
+	const void* param = &func;
+	SendMessage(g_hEmuWindow, WM_CXBXR_RUN_ON_MESSAGE_THREAD, reinterpret_cast<WPARAM>(param), 0);
 }
 
 
@@ -2108,6 +2119,13 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             return DefWindowProc(hWnd, msg, wParam, lParam);
         }
         break;
+
+		case WM_CXBXR_RUN_ON_MESSAGE_THREAD:
+		{
+			auto func = reinterpret_cast<const std::function<void()>*>(wParam);
+			(*func)();
+			return 0;
+		}
 
         default:
             return DefWindowProc(hWnd, msg, wParam, lParam);
