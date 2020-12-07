@@ -702,7 +702,10 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 	}
 	else
 	{
-		// On the xbox, the duplicated handle always has the same access rights of the source handle
+		// On the xbox, the duplicated handle always has the same access rigths of the source handle
+		const ACCESS_MASK DesiredAccess = 0;
+		const ULONG Attributes = 0;
+		Options |= (DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
 
 		// redirect to Win2k/XP
 		ret = NtDll::NtDuplicateObject(
@@ -710,9 +713,9 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 			SourceHandle,
 			/*TargetProcessHandle=*/g_CurrentProcessHandle,
 			TargetHandle,
-			0,
-			0,
-			(Options | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS));
+			DesiredAccess,
+			Attributes,
+			Options);
 	}
 
 	if (ret != xbox::status_success)
