@@ -94,25 +94,25 @@ else
 //*/
 
 // convert from xbox to pc texture transform state types
-inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(D3DTRANSFORMSTATETYPE State)
+inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(xbox::X_D3DTRANSFORMSTATETYPE State)
 {
     // Handle Xbox -> D3D State mapping
     switch (State) {
-        case 0: return (D3DTRANSFORMSTATETYPE)D3DTS_VIEW;
-        case 1: return (D3DTRANSFORMSTATETYPE)D3DTS_PROJECTION;
-        case 2: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE0;
-        case 3: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE1;
-        case 4: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE2;
-        case 5: return (D3DTRANSFORMSTATETYPE)D3DTS_TEXTURE3;
-        case 6: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD;
-        case 7: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD1;
-        case 8: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD2;
-        case 9: return (D3DTRANSFORMSTATETYPE)D3DTS_WORLD3;
+	case xbox::X_D3DTS_VIEW: return D3DTS_VIEW;
+    case xbox::X_D3DTS_PROJECTION: return D3DTS_PROJECTION;
+    case xbox::X_D3DTS_TEXTURE0: return D3DTS_TEXTURE0;
+    case xbox::X_D3DTS_TEXTURE1: return D3DTS_TEXTURE1;
+    case xbox::X_D3DTS_TEXTURE2: return D3DTS_TEXTURE2;
+    case xbox::X_D3DTS_TEXTURE3: return D3DTS_TEXTURE3;
+    case xbox::X_D3DTS_WORLD: return D3DTS_WORLD;
+    case xbox::X_D3DTS_WORLD1: return D3DTS_WORLD1;
+    case xbox::X_D3DTS_WORLD2: return D3DTS_WORLD2;
+    case xbox::X_D3DTS_WORLD3: return D3DTS_WORLD3;
     }
 
     // Handle World Matrix offsets
     if (State >= 256 && State <= 511) {
-        return D3DTS_WORLDMATRIX(State - 256);
+		return D3DTS_WORLDMATRIX(State - 256);
     }
 
     CxbxKrnlCleanupEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);

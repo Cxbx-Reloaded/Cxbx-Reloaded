@@ -23,4 +23,18 @@ public:
     void EnableLight(uint32_t index, bool enable);
 };
 
+class D3D8TransformState {
+public:
+	D3D8TransformState();
+	void SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const D3DMATRIX* pMatrix);
+
+	// The transforms set by the Xbox title
+	std::array<D3DMATRIX, xbox::X_D3DTS_MAX> Transforms;
+
+	// Combines world/view matrices
+	std::array<D3DMATRIX, 4> WorldView;
+	// World/view inverse transpose for lighting calculations
+	std::array<D3DMATRIX, 4> WorldViewInverseTranspose;
+};
+
 #endif

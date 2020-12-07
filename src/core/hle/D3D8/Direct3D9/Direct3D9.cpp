@@ -72,6 +72,7 @@ XboxRenderStateConverter XboxRenderStates;
 XboxTextureStateConverter XboxTextureStates;
 
 D3D8LightState d3d8LightState = D3D8LightState();
+D3D8TransformState d3d8TransformState = D3D8TransformState();
 FixedFunctionVertexShaderState ffShaderState = {0}; // TODO find a home for this and associated code
 
 // Allow use of time duration literals (making 16ms, etc possible)
@@ -305,9 +306,9 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader_0,                        ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                             );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform_0,                           ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                             );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice,                              (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::dword_xt, xbox::X_D3DPRESENT_PARAMETERS*, xbox::X_D3DDevice**));  \
@@ -6289,6 +6290,17 @@ void UpdateFixedFunctionVertexShaderState()
 {
 	using namespace xbox;
 
+	// Transforms
+	// Transpose row major to column major for HLSL
+	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
+	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
+
+	for (int i = 0; i < 4; i++) {
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)&d3d8TransformState.WorldView[i]);
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&d3d8TransformState.WorldViewInverseTranspose[i]);
+	}
+
 	// Lighting
 	ffShaderState.Modes.Lighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
 	ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
@@ -6529,17 +6541,13 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
 
 void CxbxImpl_SetTransform
 (
-    D3DTRANSFORMSTATETYPE State,
+    xbox::X_D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX *pMatrix
 )
 {
     LOG_INIT
 
-	// Transpose row major to column major for HLSL
-	D3DXMATRIX hlslMatrix;
-	D3DXMatrixTranspose(&hlslMatrix, (D3DXMATRIX*)pMatrix);
-	// Save to vertex shader state
-	((D3DXMATRIX*)&ffShaderState.Transforms)[State] = hlslMatrix;
+	d3d8TransformState.SetTransform(State, pMatrix);
 
 	auto d3d9State = EmuXB2PC_D3DTS(State);
 
@@ -6558,7 +6566,7 @@ static thread_local uint32_t setTransformCount = 0;
 // so we cheat a bit by stashing the function body in a separate function
 static void D3DDevice_SetTransform_0
 (
-    D3DTRANSFORMSTATETYPE State,
+	xbox::X_D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX *pMatrix
 )
 {
@@ -6586,7 +6594,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0)
 (
 )
 {
-    D3DTRANSFORMSTATETYPE State;
+	xbox::X_D3DTRANSFORMSTATETYPE State;
     CONST D3DMATRIX *pMatrix;
     __asm {
         LTCG_PROLOGUE
@@ -6608,7 +6616,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 (
-    D3DTRANSFORMSTATETYPE State,
+	xbox::X_D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
 )
 {
@@ -6632,7 +6640,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 (
-    D3DTRANSFORMSTATETYPE State,
+    xbox::X_D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
 )
 {
@@ -6646,9 +6654,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
     // Trampoline to guest code to remove the need for a GetTransform patch
     XB_TRMP(D3DDevice_MultiplyTransform)(State, pMatrix);
 
-    State = EmuXB2PC_D3DTS(State);
+    auto pcState = EmuXB2PC_D3DTS(State);
 
-    HRESULT hRet = g_pD3DDevice->MultiplyTransform(State, pMatrix);
+    HRESULT hRet = g_pD3DDevice->MultiplyTransform(pcState, pMatrix);
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->MultiplyTransform");
 }
 

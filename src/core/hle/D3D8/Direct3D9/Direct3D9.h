@@ -1305,7 +1305,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderState_ShadowFunc)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform)
 (
-    D3DTRANSFORMSTATETYPE State,
+	xbox::X_D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX      *pMatrix
 );
 
@@ -1316,7 +1316,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform_0)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_MultiplyTransform)
 (
-	D3DTRANSFORMSTATETYPE State,
+	xbox::X_D3DTRANSFORMSTATETYPE State,
 	CONST D3DMATRIX      *pMatrix
 );
 

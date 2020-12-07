@@ -2,6 +2,7 @@
 
 #include "FixedFunctionState.h"
 #include "Logging.h"
+#include "core/kernel/init/CxbxKrnl.h"
 
 D3DCOLORVALUE colorValue(float r, float g, float b, float a) {
     auto value = D3DCOLORVALUE();
@@ -84,4 +85,44 @@ void D3D8LightState::EnableLight(uint32_t index, bool enable) {
     else {
         EmuLog(LOG_LEVEL::INFO, "Could not disable light %d because it wasn't enabled", index);
     }
+}
+
+D3D8TransformState::D3D8TransformState() {
+	D3DMATRIX identity;
+	D3DXMatrixIdentity((D3DXMATRIX*)&identity);
+
+	this->Transforms.fill(identity);
+	this->WorldView.fill(identity);
+	this->WorldViewInverseTranspose.fill(identity);
+}
+
+void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const D3DMATRIX* pMatrix)
+{
+	using namespace xbox;
+
+	LOG_INIT
+
+	if (state >= this->Transforms.size()) {
+		LOG_TEST_CASE("Transform state was not in expected range");
+		return;
+	}
+
+	// Update transform state
+	this->Transforms[state] = *pMatrix;
+
+	// Recalculate dependent matrices
+	for (int i = 0; i < 4; i++) {
+		auto worldState = X_D3DTS_WORLD + i;
+		if (state == X_D3DTS_VIEW || state == worldState) {
+			D3DXMATRIX worldView;
+			D3DXMatrixMultiply(&worldView, (D3DXMATRIX*)&Transforms[worldState], (D3DXMATRIX*)&Transforms[X_D3DTS_VIEW]);
+			this->WorldView[i] = worldView;
+
+			D3DXMATRIX worldViewInverseTranspose;
+			D3DXMatrixInverse(&worldViewInverseTranspose, nullptr, &worldView);
+			D3DXMatrixTranspose(&worldViewInverseTranspose, &worldViewInverseTranspose);
+
+			this->WorldViewInverseTranspose[i] = worldViewInverseTranspose;
+		}
+	}
 }
