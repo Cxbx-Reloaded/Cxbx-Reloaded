@@ -42,7 +42,10 @@ struct Transforms {
     float4x4 View; // 0
     float4x4 Projection; // 1
     arr(Texture, float4x4, 4); // 2, 3, 4, 5
-    arr(World, float4x4, 4); // 6, 7, 8, 9
+	// World matrices are 6, 7, 8, 9
+	// But we use combined WorldView matrices in the shader
+    arr(WorldView, float4x4, 4); 
+	arr(WorldViewInverseTranspose, float4x4, 4);
 };
 
 // See D3DLIGHT

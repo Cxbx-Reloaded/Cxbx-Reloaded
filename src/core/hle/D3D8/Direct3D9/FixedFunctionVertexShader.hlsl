@@ -91,9 +91,8 @@ struct TransformInfo
     float3 Normal;
 };
 
-static TransformInfo World; // Vertex worldspace transform
-static TransformInfo View; // Vertex viewspace/cameraspace transform
-static TransformInfo Projection; // Vertex projection transform
+static TransformInfo View; // Vertex transformed to viewspace
+static TransformInfo Projection; // Vertex transformed to projection space
 
 // Vertex lighting
 // Both frontface and backface lighting can be calculated
@@ -285,7 +284,7 @@ LightingOutput CalcLighting(const float2 powers)
     return totalLightOutput;
 }
 
-TransformInfo DoWorldTransform(const float4 position, const float3 normal, const float4 blendWeights)
+TransformInfo DoTransform(const float4 position, const float3 normal, const float4 blendWeights)
 {
     TransformInfo output;
     output.Position = float4(0, 0, 0, 0);
@@ -302,8 +301,8 @@ TransformInfo DoWorldTransform(const float4 position, const float3 normal, const
     const int _4WEIGHT_4MAT = 6;
 
     if (state.Modes.VertexBlend == _BLEND_OFF) {
-        output.Position = mul(position, state.Transforms.World[0]);
-        output.Normal = mul(normal, (float3x3)state.Transforms.World[0]);
+        output.Position = mul(position, state.Transforms.WorldView[0]);
+        output.Normal = mul(normal, (float3x3)state.Transforms.WorldViewInverseTranspose[0]);
         return output;
     }
     
@@ -315,20 +314,20 @@ TransformInfo DoWorldTransform(const float4 position, const float3 normal, const
     float lastBlend = 1;
     for (int i = 0; i < mats - 1; i++)
     {
-        output.Position += mul(position, state.Transforms.World[i]) * blendWeights[i];
-        output.Normal += mul(normal, (float3x3) state.Transforms.World[i]) * blendWeights[i];
+        output.Position += mul(position, state.Transforms.WorldView[i]) * blendWeights[i];
+        output.Normal += mul(normal, (float3x3) state.Transforms.WorldViewInverseTranspose[i]) * blendWeights[i];
         lastBlend -= blendWeights[i];
     }
 
     if (calcLastBlend)
     {
-        output.Position += mul(position, state.Transforms.World[mats-1]) * lastBlend;
-        output.Normal += mul(normal, (float3x3) state.Transforms.World[mats-1]) * lastBlend;
+        output.Position += mul(position, state.Transforms.WorldView[mats-1]) * lastBlend;
+        output.Normal += mul(normal, (float3x3) state.Transforms.WorldViewInverseTranspose[mats-1]) * lastBlend;
     }
     else
     {
-        output.Position += mul(position, state.Transforms.World[mats-1]) * blendWeights[mats-1];
-        output.Normal += mul(normal, (float3x3) state.Transforms.World[mats-1]) * blendWeights[mats-1];
+        output.Position += mul(position, state.Transforms.WorldView[mats-1]) * blendWeights[mats-1];
+        output.Normal += mul(normal, (float3x3) state.Transforms.WorldViewInverseTranspose[mats-1]) * blendWeights[mats-1];
     }
 
     return output;
@@ -549,12 +548,8 @@ VS_OUTPUT main(const VS_INPUT xInput)
     // Map default values
     VS_INPUT xIn = InitializeInputRegisters(xInput);
 
-    // World transform with vertex blending
-    World = DoWorldTransform(Get(xIn, position), Get(xIn, normal).xyz, Get(xIn, weight));
-
-    // View transform
-    View.Position = mul(World.Position, state.Transforms.View);
-    View.Normal = mul(World.Normal, (float3x3) state.Transforms.View);
+    // World + View transform with vertex blending
+    View = DoTransform(Get(xIn, position), Get(xIn, normal).xyz, Get(xIn, weight));
 
     // Optionally normalize camera-space normals
     if (state.Modes.NormalizeNormals)
