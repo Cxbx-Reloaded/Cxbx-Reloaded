@@ -5004,15 +5004,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
         // Scale the fill based on our scale factor and MSAA scale
 		float aaX, aaY;
 		GetMultiSampleScaleRaw(aaX, aaY);
-		aaX *= g_RenderUpscaleFactor;
-		aaY *= g_RenderUpscaleFactor;
+		float Xscale = aaX * g_RenderUpscaleFactor;
+		float Yscale = aaY * g_RenderUpscaleFactor;
 
         std::vector<D3DRECT> rects(Count);
         for (DWORD i = 0; i < Count; i++) {
-            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * aaX);
-            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * aaX);
-            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * aaY);
-            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * aaY);
+            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * Xscale);
+            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * Xscale);
+            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * Yscale);
+            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * Yscale);
 		}
         hRet = g_pD3DDevice->Clear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
@@ -7585,16 +7585,16 @@ void CxbxUpdateHostViewport() {
 		LOG_TEST_CASE("Could not get rendertarget dimensions while setting the viewport");
 	}
 
-	aaScaleX *= g_RenderUpscaleFactor;
-	aaScaleY *= g_RenderUpscaleFactor;
+	float Xscale = aaScaleX * g_RenderUpscaleFactor;
+	float Yscale = aaScaleY * g_RenderUpscaleFactor;
 
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
 		D3DVIEWPORT hostViewport = g_Xbox_Viewport;
-		hostViewport.X *= aaScaleX;
-		hostViewport.Y *= aaScaleY;
-		hostViewport.Width *= aaScaleX;
-		hostViewport.Height *= aaScaleY;
+		hostViewport.X *= Xscale;
+		hostViewport.Y *= Yscale;
+		hostViewport.Width *= Xscale;
+		hostViewport.Height *= Yscale;
 		g_pD3DDevice->SetViewport(&hostViewport);
 
 		// Reset scissor rect
@@ -7626,10 +7626,10 @@ void CxbxUpdateHostViewport() {
 		// Scissor to viewport
 		g_pD3DDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
 		RECT viewportRect;
-		viewportRect.left = g_Xbox_Viewport.X * aaScaleX;
-		viewportRect.top = g_Xbox_Viewport.Y * aaScaleY;
-		viewportRect.right = viewportRect.left + g_Xbox_Viewport.Width * aaScaleX;
-		viewportRect.bottom = viewportRect.top + g_Xbox_Viewport.Height * aaScaleY;
+		viewportRect.left = g_Xbox_Viewport.X * Xscale;
+		viewportRect.top = g_Xbox_Viewport.Y * Yscale;
+		viewportRect.right = viewportRect.left + (g_Xbox_Viewport.Width * Xscale);
+		viewportRect.bottom = viewportRect.top + (g_Xbox_Viewport.Height * Yscale);
 		g_pD3DDevice->SetScissorRect(&viewportRect);
 	}
 }
