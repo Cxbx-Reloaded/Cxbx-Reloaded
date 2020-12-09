@@ -369,7 +369,7 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
     return material;
 }
 
-float DoFog(VS_INPUT xIn)
+float DoFog(const VS_INPUT xIn)
 {
 	// TODO implement properly
 	// Until we have pixel shader HLSL we are still leaning on D3D renderstates for fogging
@@ -379,7 +379,7 @@ float DoFog(VS_INPUT xIn)
 	float fogDepth;
 
 	if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_NONE)
-		fogDepth = xIn.color[1].a; // In fixed-function mode, fog is passed in the specular alpha
+		fogDepth = Get(xIn, specular).a; // In fixed-function mode, fog is passed in the specular alpha
 	if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_RANGE)
 		fogDepth = length(View.Position.xyz);
 	if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_Z)
@@ -574,24 +574,24 @@ VS_OUTPUT main(const VS_INPUT xInput)
         LightingOutput lighting = CalcLighting(powers);
 
         // Compute each lighting component
-        float3 ambient = material.Ambient.rgb * state.AmbientPlusLightAmbient.rgb;
-        float3 backAmbient = backMaterial.Ambient.rgb * state.BackAmbientPlusLightAmbient.rgb;
+        float3 _ambient = material.Ambient.rgb * state.AmbientPlusLightAmbient.rgb;
+        float3 _backAmbient = backMaterial.Ambient.rgb * state.BackAmbientPlusLightAmbient.rgb;
     
-        float3 diffuse = material.Diffuse.rgb * lighting.Diffuse.Front;
-        float3 backDiffuse = backMaterial.Diffuse.rgb * lighting.Diffuse.Back;
+        float3 _diffuse = material.Diffuse.rgb * lighting.Diffuse.Front;
+        float3 _backDiffuse = backMaterial.Diffuse.rgb * lighting.Diffuse.Back;
     
-        float3 specular = material.Specular.rgb * lighting.Specular.Front;
-        float3 backSpecular = backMaterial.Specular.rgb * lighting.Specular.Back;
+        float3 _specular = material.Specular.rgb * lighting.Specular.Front;
+        float3 _backSpecular = backMaterial.Specular.rgb * lighting.Specular.Back;
     
-        float3 emissive = material.Emissive.rgb;
-        float3 backEmissive = backMaterial.Emissive.rgb;
+        float3 _emissive = material.Emissive.rgb;
+        float3 _backEmissive = backMaterial.Emissive.rgb;
 
         // Frontface
-        xOut.oD0 = float4(ambient + diffuse + emissive, material.Diffuse.a);
-        xOut.oD1 = float4(specular, 0);
+        xOut.oD0 = float4(_ambient + _diffuse + _emissive, material.Diffuse.a);
+        xOut.oD1 = float4(_specular, 0);
         // Backface
-        xOut.oB0 = float4(backAmbient + backDiffuse + backEmissive, backMaterial.Diffuse.a);
-        xOut.oB1 = float4(backSpecular, 0);
+        xOut.oB0 = float4(_backAmbient + _backDiffuse + _backEmissive, backMaterial.Diffuse.a);
+        xOut.oB1 = float4(_backSpecular, 0);
     }
 
     // TODO does TwoSidedLighting imply Lighting? Verify if TwoSidedLighting can be enabled independently of Lighting
@@ -621,10 +621,10 @@ VS_OUTPUT main(const VS_INPUT xInput)
     xOut.oPts = DoPointSpriteSize();
 
     // Texture coordinates
-    xOut.oT0 = DoTexCoord(0, xIn) / xboxTextureScale[0];;
-    xOut.oT1 = DoTexCoord(1, xIn) / xboxTextureScale[1];;
-    xOut.oT2 = DoTexCoord(2, xIn) / xboxTextureScale[2];;
-    xOut.oT3 = DoTexCoord(3, xIn) / xboxTextureScale[3];;
+    xOut.oT0 = DoTexCoord(0, xIn) / xboxTextureScale[0];
+    xOut.oT1 = DoTexCoord(1, xIn) / xboxTextureScale[1];
+    xOut.oT2 = DoTexCoord(2, xIn) / xboxTextureScale[2];
+    xOut.oT3 = DoTexCoord(3, xIn) / xboxTextureScale[3];
 
 	return xOut;
 }
