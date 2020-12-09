@@ -126,14 +126,14 @@ void DirectSoundDoWork_Stream(xbox::LARGE_INTEGER& time)
     // Actually, DirectSoundStream need to process buffer packets here.
     vector_ds_stream::iterator ppDSStream = g_pDSoundStreamCache.begin();
     for (; ppDSStream != g_pDSoundStreamCache.end(); ppDSStream++) {
-        if ((*ppDSStream)->Host_BufferPacketArray.size() == 0) {
+        if ((*ppDSStream)->Host_BufferPacketArray.empty()) {
             continue;
         }
         xbox::X_CDirectSoundStream* pThis = (*ppDSStream);
         // TODO: Do we need this in async thread loop?
         if (pThis->Xb_rtPauseEx != 0LL && pThis->Xb_rtPauseEx <= time.QuadPart) {
             pThis->Xb_rtPauseEx = 0LL;
-            pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
+            pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_PAUSENOACTIVATE);
             // Don't call play here, let DSStream_Packet_Process deal with it.
         }
         // If has flush async requested then verify time has expired to perform flush process.
@@ -191,7 +191,7 @@ xbox::ulong_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Release)
             }
 
             for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-                DSStream_Packet_Clear(buffer, XMP_STATUS_RELEASE_CXBXR, nullptr, nullptr, pThis);
+                DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
             }
 
             if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
@@ -380,6 +380,18 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Discontinuity)
     return DS_OK;
 }
 
+xbox::hresult_xt CxbxrImpl_CDirectSoundStream_Flush
+(
+    xbox::X_CDirectSoundStream* pThis)
+{
+
+    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
+
+    while (DSStream_Packet_Flush(pThis));
+
+    return DS_OK;
+}
+
 // ******************************************************************
 // * patch: CDirectSoundStream_Flush
 // ******************************************************************
@@ -391,11 +403,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Flush)
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    DSoundBufferSynchPlaybackFlagRemove(pThis->EmuFlags);
-
-    while (DSStream_Packet_Flush(pThis));
-
-    return DS_OK;
+    return CxbxrImpl_CDirectSoundStream_Flush(pThis);
 }
 
 // ******************************************************************
@@ -412,7 +420,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_FlushEx)
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
 		LOG_FUNC_ARG(rtTimeStamp)
-		LOG_FUNC_ARG(dwFlags)
+		LOG_FUNC_ARG_TYPE(DSSFLUSHEX_FLAG, dwFlags)
 		LOG_FUNC_END;
 
     HRESULT hRet = DSERR_INVALIDPARAM;
@@ -422,22 +430,20 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_FlushEx)
     // Cannot use rtTimeStamp here, it must be flush.
     if (dwFlags == X_DSSFLUSHEX_IMMEDIATE) {
 
-        hRet = xbox::EMUPATCH(CDirectSoundStream_Flush)(pThis);
+        hRet = CxbxrImpl_CDirectSoundStream_Flush(pThis);
 
     }
     // Remaining flags require X_DSSFLUSHEX_ASYNC to be include.
-    else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0) {
+    else if ((dwFlags & X_DSSFLUSHEX_ASYNC) > 0 && !pThis->Host_BufferPacketArray.empty()) {
         // If rtTimeStamp is zero'd, then call flush once and allow process flush in worker thread.
         if (rtTimeStamp == 0LL) {
-            bool isBusy = DSStream_Packet_Flush(pThis);
-            if (!isBusy) {
-                // testcase: Obscure will crash after new game's video if not call DSStream_Packet_Flush in same thread.
-                // If flush is not busy, then we don't need worker thread to continue flushing.
-                return hRet;
-            }
             xbox::LARGE_INTEGER getTime;
             xbox::KeQuerySystemTime(&getTime);
             pThis->Xb_rtFlushEx = getTime.QuadPart;
+            pThis->EmuFlags |= DSE_FLAG_IS_FLUSHING;
+            // HACK: Need to find a way to remove Flush call without break Obscure.
+            // Otherwise, it will behave like on hardware.
+            DSStream_Packet_Flush(pThis);
         }
         else {
             pThis->Xb_rtFlushEx = rtTimeStamp;
@@ -549,14 +555,17 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus__r2)
 
     // Convert host to xbox status flag.
     if (hRet == DS_OK) {
-        if (pThis->Host_isProcessing && !(dwStatusXbox & X_DSSSTATUS_PAUSED)) {
-            dwStatusXbox |= X_DSSSTATUS_PLAYING;
-
-        }
         if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
             dwStatusXbox |= X_DSSSTATUS_READY;
         }
-
+        if (!pThis->Host_BufferPacketArray.empty()) {
+            if ((pThis->EmuFlags & DSE_FLAG_PAUSE) != 0) {
+                dwStatusXbox |= X_DSSSTATUS_PAUSED;
+            }
+            else if ((pThis->EmuFlags & (DSE_FLAG_PAUSE | DSE_FLAG_PAUSENOACTIVATE | DSE_FLAG_IS_FLUSHING)) == 0) {
+                dwStatusXbox |= X_DSSSTATUS_PLAYING;
+            }
+        }
     } else {
         dwStatusXbox = 0;
         hRet = DSERR_GENERIC;
@@ -601,19 +610,38 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetVoiceProperties)
     return hRet;
 }
 
+
+xbox::hresult_xt CxbxrImpl_CDirectSoundStream_PauseEx(
+    xbox::X_CDirectSoundStream* pThis,
+    xbox::REFERENCE_TIME        rtTimestamp,
+    xbox::dword_xt              dwPause)
+{
+    xbox::hresult_xt hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
+        pThis->Host_isProcessing, rtTimestamp, pThis->Xb_rtPauseEx);
+
+    if ((pThis->EmuFlags & DSE_FLAG_PAUSE) != 0) {
+        pThis->Host_isProcessing = false;
+    }
+    else if (!pThis->Host_isProcessing) {
+        DSStream_Packet_Process(pThis);
+    }
+
+    return hRet;
+}
+
 // ******************************************************************
 // * patch: CDirectSoundStream_Pause
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Pause)
 (
     X_CDirectSoundStream*   pThis,
-    dword_xt                   dwPause)
+    dword_xt                dwPause)
 {
     DSoundMutexGuardLock;
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(dwPause)
+		LOG_FUNC_ARG_TYPE(DSSPAUSE_FLAG, dwPause)
 		LOG_FUNC_END;
 
 	if (!pThis) {
@@ -621,26 +649,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Pause)
 		return xbox::status_success;
 	}
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags,
-                                                 pThis->Host_isProcessing, 0LL, pThis->Xb_rtPauseEx);
-
-    if (dwPause == X_DSSPAUSE_PAUSENOACTIVATE) {
-        if (pThis->Host_BufferPacketArray.size() == 0 && !(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
-            pThis->EmuFlags |= DSE_FLAG_PAUSE;
-        }
-    }
-
-    if ((pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
-        pThis->Host_isProcessing = false;
-        if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) > 0) {
-            if (pThis->Host_BufferPacketArray.size() != 0) {
-                pThis->Xb_Status |= X_DSSSTATUS_PAUSED;
-            }
-        }
-    }
-    else if (!pThis->Host_isProcessing) {
-        DSStream_Packet_Process(pThis);
-    }
+    HRESULT hRet = CxbxrImpl_CDirectSoundStream_PauseEx(pThis, 0LL, dwPause);
 
     return hRet;
 }
@@ -652,21 +661,19 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_PauseEx)
 (
     X_CDirectSoundStream   *pThis,
     REFERENCE_TIME          rtTimestamp,
-    dword_xt                   dwPause)
+    dword_xt                dwPause)
 {
     DSoundMutexGuardLock;
 
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pThis)
         LOG_FUNC_ARG(rtTimestamp)
-        LOG_FUNC_ARG(dwPause)
+        LOG_FUNC_ARG_TYPE(DSSPAUSE_FLAG, dwPause)
         LOG_FUNC_END;
 
     // This function wasn't part of the XDK until 4721. (Same as IDirectSoundBuffer_PauseEx?)
-    // TODO: Implement time stamp feature (a thread maybe?)
 
-    HRESULT hRet = HybridDirectSoundBuffer_Pause(pThis->EmuDirectSoundBuffer8, dwPause, pThis->EmuFlags, pThis->EmuPlayFlags, 
-                                                pThis->Host_isProcessing, rtTimestamp, pThis->Xb_rtPauseEx);
+    HRESULT hRet = CxbxrImpl_CDirectSoundStream_PauseEx(pThis, rtTimestamp, dwPause);
 
     return hRet;
 }
@@ -735,9 +742,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Process)
                 if ((pThis->Xb_Status & X_DSSSTATUS_STARVED) > 0) {
                     pThis->Xb_Status &= ~X_DSSSTATUS_STARVED;
                 }
-                if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) > 0 && (pThis->EmuFlags & DSE_FLAG_PAUSE) > 0) {
-                    pThis->Xb_Status |= X_DSSSTATUS_PAUSED;
-                }
+                pThis->EmuFlags &= ~DSE_FLAG_IS_FLUSHING;
                 DSStream_Packet_Process(pThis);
             // Once full it needs to change status to flushed when cannot hold any more packets.
             } else {

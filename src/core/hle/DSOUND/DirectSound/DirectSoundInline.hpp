@@ -849,14 +849,16 @@ static inline HRESULT HybridDirectSoundBuffer_Pause(
                 pDSBuffer->Play(0, 0, dwEmuPlayFlags);
             }
             DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);
-            dwEmuFlags &= ~DSE_FLAG_PAUSE;
+            dwEmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_PAUSENOACTIVATE);
             Xb_rtTimeStamp = 0;
             break;
         case X_DSSPAUSE_PAUSE:
             pDSBuffer->Stop();
             DSoundBufferSynchPlaybackFlagRemove(dwEmuFlags);
-            dwEmuFlags |= DSE_FLAG_PAUSE;
-            Xb_rtTimeStamp = rtTimeStamp;
+            if ((dwEmuFlags & DSE_FLAG_PAUSENOACTIVATE) == 0) {
+                dwEmuFlags |= DSE_FLAG_PAUSE;
+                Xb_rtTimeStamp = rtTimeStamp;
+            }
             break;
         case X_DSSPAUSE_SYNCHPLAYBACK:
             //TODO: Test case Rayman 3 - Hoodlum Havoc, Battlestar Galactica, Miami Vice, Star Wars: KotOR, and... ?
@@ -867,8 +869,13 @@ static inline HRESULT HybridDirectSoundBuffer_Pause(
                 pDSBuffer->Stop();
             }
             break;
-        // TODO: NOTE: If stream is playing, it perform same behavior as pause flag. If it is not played, it act as a queue until trigger to play it.
+        // NOTE: If stream is paused with packets, it will trigger to play. If it is not played, it act as a queue until trigger to play it.
         case X_DSSPAUSE_PAUSENOACTIVATE:
+            dwEmuFlags &= ~DSE_FLAG_PAUSE;
+            if ((dwEmuFlags & DSE_FLAG_IS_ACTIVATED) == 0) {
+                dwEmuFlags |= DSE_FLAG_PAUSENOACTIVATE;
+                Xb_rtTimeStamp = rtTimeStamp;
+            }
             break;
     }
 

@@ -133,11 +133,13 @@ struct SharedDSBuffer : DSBUFFER_S {
 #define DSE_FLAG_PCM_UNKNOWN            (1 << 2)
 #define DSE_FLAG_SYNCHPLAYBACK_CONTROL  (1 << 10)
 #define DSE_FLAG_PAUSE                  (1 << 11)
-#define DSE_FLAG_FLUSH_ASYNC            (1 << 12)
-#define DSE_FLAG_ENVELOPE               (1 << 13)
-#define DSE_FLAG_ENVELOPE2              (1 << 14) // NOTE: This flag is a requirement for GetStatus to return X_DSSSTATUS_ENVELOPECOMPLETE value.
+#define DSE_FLAG_PAUSENOACTIVATE        (1 << 12)
+#define DSE_FLAG_FLUSH_ASYNC            (1 << 13)
+#define DSE_FLAG_ENVELOPE               (1 << 14)
+#define DSE_FLAG_ENVELOPE2              (1 << 15) // NOTE: This flag is a requirement for GetStatus to return X_DSSSTATUS_ENVELOPECOMPLETE value.
 #define DSE_FLAG_RECIEVEDATA            (1 << 20)
 #define DSE_FLAG_IS_ACTIVATED           (1 << 21) // Only used for DirectSoundStream class, to acknowledge pause's no activate flag.
+#define DSE_FLAG_IS_FLUSHING            (1 << 22) // Only used for DirectSoundStream class, to acknowledge pause's no activate flag.
 #define DSE_FLAG_DEBUG_MUTE             (1 << 30) // Cxbx-R debugging usage only
 #define DSE_FLAG_BUFFER_EXTERNAL        (1 << 31)
 #define DSE_FLAG_AUDIO_CODECS           (DSE_FLAG_PCM | DSE_FLAG_XADPCM | DSE_FLAG_PCM_UNKNOWN)

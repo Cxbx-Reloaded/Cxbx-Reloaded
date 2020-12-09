@@ -75,13 +75,6 @@ void DSStream_Packet_Clear(
 
     free(buffer->pBuffer_data);
 
-    // Peform release only, don't trigger any events below.
-    if (status == XMP_STATUS_RELEASE_CXBXR) {
-        DSoundSGEMemDealloc(buffer->xmp_data.dwMaxSize);
-        buffer = pThis->Host_BufferPacketArray.erase(buffer);
-        return;
-    }
-
     if (buffer->xmp_data.pdwStatus != xbox::zeroptr) {
         (*buffer->xmp_data.pdwStatus) = status;
     }
@@ -163,7 +156,7 @@ static inline void DSStream_Packet_Stop(
 {
     DSStream_Packet_Stop_Internal(pThis);
 
-    if (pThis->Host_BufferPacketArray.size() == 0) {
+    if (pThis->Host_BufferPacketArray.empty()) {
         if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) > 0) {
             pThis->Xb_Status |= X_DSSSTATUS_ENVELOPECOMPLETE;
         }
@@ -184,6 +177,18 @@ static inline void DSStream_Packet_Starved(
     EmuLog(LOG_LEVEL::INFO, "Starved: pThis = %08X;",
         pThis
     );
+}
+
+static inline void DSStream_Packet_Complete(
+    xbox::X_CDirectSoundStream* pThis
+    )
+{
+    if ((pThis->EmuFlags & DSE_FLAG_ENVELOPE2) != 0) {
+        pThis->Xb_Status = X_DSSSTATUS_ENVELOPECOMPLETE;
+    }
+    else {
+        pThis->Xb_Status = 0;
+    }
 }
 
 // Prefill buffer with at least 1 second worth of buffer. See "nAvgBytesPerSec" below for inspection.
@@ -214,8 +219,22 @@ bool DSStream_Packet_Process(
 {
 
     // Do not allow to process if there is no packets.
-    if (pThis->Host_BufferPacketArray.size() == 0) {
+    if (pThis->Host_BufferPacketArray.empty()) {
         return 0;
+    }
+
+    // Do not allow to process when the voice is not activated.
+    if ((pThis->EmuFlags & DSE_FLAG_PAUSENOACTIVATE) != 0 &&
+        (pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) == 0) {
+        return 0;
+    }
+
+    if (pThis->EmuFlags & DSE_FLAG_IS_FLUSHING) {
+        return 0;
+    }
+
+    if (!(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
+        pThis->EmuFlags |= DSE_FLAG_IS_ACTIVATED;
     }
 
     // If title want to pause, then don't process the packets.
@@ -226,16 +245,6 @@ bool DSStream_Packet_Process(
         vector_hvp_iterator packetCurrent = pThis->Host_BufferPacketArray.begin();
         DSStream_Packet_Prefill(pThis, packetCurrent);
         return 0;
-    }
-
-    if ((pThis->Xb_Status & X_DSSSTATUS_PAUSED) > 0) {
-        pThis->Xb_Status &= ~X_DSSSTATUS_PAUSED;
-    }
-
-    if (pThis->Host_isProcessing == false) {
-        if (!(pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED)) {
-            pThis->EmuFlags |= DSE_FLAG_IS_ACTIVATED;
-        }
     }
 
     DWORD dwAudioBytes;
@@ -289,9 +298,10 @@ bool DSStream_Packet_Process(
                     bool isStreamEnd = packetCurrent->isStreamEnd;
                     DSStream_Packet_Clear(packetCurrent, XMP_STATUS_SUCCESS, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
 
-                    if (pThis->Host_BufferPacketArray.size() == 0) {
+                    if (pThis->Host_BufferPacketArray.empty()) {
                         if (isStreamEnd) {
                             DSStream_Packet_Stop(pThis);
+                            DSStream_Packet_Complete(pThis);
                         }
                         else {
                             DSStream_Packet_Starved(pThis);
@@ -325,7 +335,7 @@ bool DSStream_Packet_Process(
             DSStream_Packet_Prefill(pThis, packetCurrent);
         }
         // Out of packets, let's stop stream's buffer.
-        if (pThis->Host_BufferPacketArray.size() == 0) {
+        if (pThis->Host_BufferPacketArray.empty()) {
             DSStream_Packet_Starved(pThis);
             return 0;
         }
@@ -345,7 +355,7 @@ void DSStream_Packet_FlushEx_Reset(
     xbox::X_CDirectSoundStream* pThis
     )
 {
-    // Remove flags only (This is the only place it will remove other than FlushEx perform set/remove the flags.)
+    // Remove flags only (This is the only place it will remove beside FlushEx perform re-set the flags.)
     pThis->EmuFlags &= ~(DSE_FLAG_FLUSH_ASYNC | DSE_FLAG_ENVELOPE | DSE_FLAG_ENVELOPE2);
     pThis->Xb_rtFlushEx = 0LL;
 }
@@ -354,6 +364,9 @@ bool DSStream_Packet_Flush(
     xbox::X_CDirectSoundStream* pThis
     )
 {
+    if ((pThis->EmuFlags & DSE_FLAG_IS_FLUSHING) == 0) {
+        pThis->EmuFlags |= DSE_FLAG_IS_FLUSHING;
+    }
     // If host's audio is still playing then return busy-state until buffer has stop playing.
     DWORD dwStatus;
     pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
@@ -371,8 +384,14 @@ bool DSStream_Packet_Flush(
         DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
     }
     // Clear flags and set status to zero.
+    DSStream_Packet_Complete(pThis);
     DSStream_Packet_FlushEx_Reset(pThis);
-    pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
-    pThis->Xb_Status = 0;
+
+    // TESTCASE: Burnout 3 sets stream to pause state then calling SetFormat without processing any packets.
+    // Which then doesn't need to clear pause flag.
+    if ((pThis->EmuFlags & DSE_FLAG_IS_ACTIVATED) != 0) {
+        pThis->EmuFlags &= ~(DSE_FLAG_PAUSE | DSE_FLAG_IS_ACTIVATED);
+    }
+    pThis->EmuFlags &= ~DSE_FLAG_IS_FLUSHING;
     return false;
 }
