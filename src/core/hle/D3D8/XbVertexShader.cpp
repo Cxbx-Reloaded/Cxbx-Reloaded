@@ -38,6 +38,7 @@
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
+#include "devices\xbox.h"
 #include "core\hle\D3D8\XbConvert.h" // For NV2A_VP_UPLOAD_INST, NV2A_VP_UPLOAD_CONST_ID, NV2A_VP_UPLOAD_CONST
 #include "devices\video\nv2a.h" // For D3DPUSH_DECODE
 #include "common\Logging.h" // For LOG_INIT
@@ -98,7 +99,7 @@ void CxbxVertexShaderSetFlags()
 // Note : Temporary, until we reliably locate the Xbox internal state for this
 // See D3DXDeclaratorFromFVF docs https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxdeclaratorfromfvf
 // and https://github.com/reactos/wine/blob/2e8dfbb1ad71f24c41e8485a39df01bb9304127f/dlls/d3dx9_36/mesh.c#L2041
-static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf)
+static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf) // TODO : Rename CxbxFVFToXboxVertexAttributeFormat?
 {
 	using namespace xbox;
 
