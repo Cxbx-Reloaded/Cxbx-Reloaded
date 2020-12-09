@@ -1298,26 +1298,28 @@ static inline HRESULT HybridDirectSoundBuffer_SetMixBinVolumes_8(
     HRESULT hRet = DSERR_INVALIDPARAM;
 
     if (pMixBins != xbox::zeroptr && pMixBins->lpMixBinVolumePairs != xbox::zeroptr) {
-        LONG maxVolume = DSBVOLUME_MIN;
-        // Let's normalize audio level except for low frequency (subwoofer)
+        // Update the mixbin volume only, do not reassign volume pair array.
         for (DWORD i = 0; i < pMixBins->dwCount; i++) {
-            // Update the mixbin volume only, do not reassign volume pair array.
             const auto& it_in = pMixBins->lpMixBinVolumePairs[i];
-            auto it_out = std::find_if(Xb_VoiceProperties.MixBinVolumePairs, Xb_VoiceProperties.MixBinVolumePairs+Xb_VoiceProperties.dwMixBinCount,
+            auto it_out = std::find_if(Xb_VoiceProperties.MixBinVolumePairs, Xb_VoiceProperties.MixBinVolumePairs + Xb_VoiceProperties.dwMixBinCount,
                 [&it_in](const auto& e) {
                     return e.dwMixBin == it_in.dwMixBin;
                 });
             // Once found a match, set the volume.
             // NOTE If titles input duplicate with different volume,
             //      it will override previous value.
-            if (it_out != Xb_VoiceProperties.MixBinVolumePairs+Xb_VoiceProperties.dwMixBinCount) {
+            if (it_out != Xb_VoiceProperties.MixBinVolumePairs + Xb_VoiceProperties.dwMixBinCount) {
                 it_out->lVolume = it_in.lVolume;
             }
+        }
 
-            // Since we cannot set per-channel volumes, we want to pick "dominant" volume
-            if (it_in.dwMixBin != XDSMIXBIN_LOW_FREQUENCY && it_in.dwMixBin < XDSMIXBIN_SPEAKERS_MAX) {
-                if (it_in.lVolume > maxVolume) {
-                    maxVolume = it_in.lVolume;
+        // Since we cannot set per-channel volumes, we want to pick "dominant" volume
+        LONG maxVolume = DSBVOLUME_MIN;
+        for(unsigned i = 0; i < Xb_VoiceProperties.dwMixBinCount; i++) {
+            const auto& it_out = Xb_VoiceProperties.MixBinVolumePairs[i];
+            if (it_out.dwMixBin != XDSMIXBIN_LOW_FREQUENCY && it_out.dwMixBin < XDSMIXBIN_SPEAKERS_MAX) {
+                if (maxVolume < it_out.lVolume) {
+                    maxVolume = it_out.lVolume;
                 }
             }
         }
