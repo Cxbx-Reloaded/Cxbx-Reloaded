@@ -13,7 +13,7 @@ VertexShaderSource g_VertexShaderSource = VertexShaderSource();
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {
 	ID3DBlob* pCompiledShader;
 
-	auto hRet = EmuCompileShader(
+	auto hRet = EmuCompileVertexShader(
 		&intermediateShader,
 		&pCompiledShader
 	);
