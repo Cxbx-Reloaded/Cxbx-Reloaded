@@ -209,6 +209,10 @@ extern void EmuParseVshFunction
 );
 
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF_RESERVED0) ? TRUE : FALSE; }
+inline boolean VshHandleIsFVF(DWORD Handle) { return !VshHandleIsVertexShader(Handle); }
+inline boolean VshHandleIsPassthrough(DWORD Handle) {
+	return VshHandleIsFVF(Handle) && ((Handle & X_D3DFVF_POSITION_MASK) == X_D3DFVF_XYZRHW);
+}
 inline xbox::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (xbox::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
 // Get the number of components represented by the given xbox vertex data type
@@ -228,6 +232,5 @@ extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::
 extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
 extern void CxbxImpl_DeleteVertexShader(DWORD Handle);
 extern void CxbxVertexShaderSetFlags();
-extern HRESULT SetVertexShader(IDirect3DVertexShader* pShader);
 
 #endif

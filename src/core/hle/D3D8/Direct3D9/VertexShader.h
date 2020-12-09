@@ -1,6 +1,4 @@
-
-#ifndef DIRECT3D9VERTEXSHADER_H
-#define DIRECT3D9VERTEXSHADER_H
+#pragma once
 
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "FixedFunctionVertexShaderState.hlsli"
@@ -17,7 +15,7 @@ extern const char* g_vs_model;
 
 extern ShaderType EmuGetShaderInfo(IntermediateVertexShader* pIntermediateShader);
 
-extern HRESULT EmuCompileShader
+extern HRESULT EmuCompileVertexShader
 (
     IntermediateVertexShader* pIntermediateShader,
     ID3DBlob** ppHostShader
@@ -27,4 +25,3 @@ extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader);
 
 extern HRESULT EmuCompileXboxPassthrough(ID3DBlob** ppHostShader);
 
-#endif

@@ -17,7 +17,7 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
 
 	ID3DBlob* pCompiledShader;
 
-	auto hRet = EmuCompileShader(
+	auto hRet = EmuCompileVertexShader(
 		&intermediateShader,
 		&pCompiledShader
 	);
