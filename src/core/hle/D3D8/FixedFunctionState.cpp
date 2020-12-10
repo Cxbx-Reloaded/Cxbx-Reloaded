@@ -94,7 +94,7 @@ D3D8TransformState::D3D8TransformState() {
 	this->Transforms.fill(identity);
 	this->WorldView.fill(identity);
 	this->WorldViewInverseTranspose.fill(identity);
-	bWorldViewDirty = true;
+	bWorldViewDirty.fill(true);
 }
 
 void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const D3DMATRIX* pMatrix)
@@ -111,33 +111,34 @@ void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const
 	// Update transform state
 	this->Transforms[state] = *pMatrix;
 
-	if ((state == X_D3DTS_VIEW) || ((X_D3DTS_WORLD <= state) && (state <= X_D3DTS_WORLD3))) {
-		bWorldViewDirty = true;
+	if (state == X_D3DTS_VIEW) {
+		bWorldViewDirty.fill(true);
+	}
+	if ((X_D3DTS_WORLD <= state) && (state <= X_D3DTS_WORLD3)) {
+		bWorldViewDirty[state - X_D3DTS_WORLD] = true;
 	}
 }
 
-void D3D8TransformState::RecalculateDependentMatrices()
+void D3D8TransformState::RecalculateDependentMatrices(unsigned i)
 {
-	for (unsigned i = 0; i < 4; i++) {
-		auto worldState = xbox::X_D3DTS_WORLD + i;
-		D3DXMATRIX worldView;
-		D3DXMatrixMultiply(&worldView, (D3DXMATRIX*)&Transforms[worldState], (D3DXMATRIX*)&Transforms[xbox::X_D3DTS_VIEW]);
-		this->WorldView[i] = worldView;
+	auto worldState = xbox::X_D3DTS_WORLD + i;
+	D3DXMATRIX worldView;
+	D3DXMatrixMultiply(&worldView, (D3DXMATRIX*)&Transforms[worldState], (D3DXMATRIX*)&Transforms[xbox::X_D3DTS_VIEW]);
+	this->WorldView[i] = worldView;
 
-		D3DXMATRIX worldViewInverseTranspose;
-		D3DXMatrixInverse(&worldViewInverseTranspose, nullptr, &worldView);
-		D3DXMatrixTranspose(&worldViewInverseTranspose, &worldViewInverseTranspose);
-		this->WorldViewInverseTranspose[i] = worldViewInverseTranspose;
-	}
+	D3DXMATRIX worldViewInverseTranspose;
+	D3DXMatrixInverse(&worldViewInverseTranspose, nullptr, &worldView);
+	D3DXMatrixTranspose(&worldViewInverseTranspose, &worldViewInverseTranspose);
+	this->WorldViewInverseTranspose[i] = worldViewInverseTranspose;
 }
 
 D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
 {
 	assert(i < 4);
 
-	if (bWorldViewDirty) {
-		RecalculateDependentMatrices();
-		bWorldViewDirty = false;
+	if (bWorldViewDirty[i]) {
+		RecalculateDependentMatrices(i);
+		bWorldViewDirty[i] = false;
 	}
 
 	return &WorldView[i];
@@ -147,9 +148,9 @@ D3DMATRIX* D3D8TransformState::GetWorldViewInverseTranspose(unsigned i)
 {
 	assert(i < 4);
 
-	if (bWorldViewDirty) {
-		RecalculateDependentMatrices();
-		bWorldViewDirty = false;
+	if (bWorldViewDirty[i]) {
+		RecalculateDependentMatrices(i);
+		bWorldViewDirty[i] = false;
 	}
 
 	return &WorldViewInverseTranspose[i];

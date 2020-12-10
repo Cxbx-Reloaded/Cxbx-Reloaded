@@ -1007,6 +1007,18 @@ constexpr DWORD X_D3DCOLORWRITEENABLE_ALL = 0x01010101; // Xbox ext.
 // deferred texture stage state "unknown" flag
 #define X_D3DTSS_UNK 0x7fffffff
 
+typedef enum _D3DVERTEXBLENDFLAGS
+{
+	X_D3DVBF_DISABLE = 0,              // 1 matrix,   0 weights => final weight effectively 1 (Disable vertex blending)
+	X_D3DVBF_1WEIGHTS = 1,             // 2 matrices, 1 weights => final weight calculated
+	X_D3DVBF_2WEIGHTS = 3,             // 3 matrices, 2 weights => final weight calculated
+	X_D3DVBF_3WEIGHTS = 5,             // 4 matrices, 3 weights => final weight calculated
+	X_D3DVBF_2WEIGHTS2MATRICES = 2,    // 2 matrices, 2 weights (Xbox ext.)
+	X_D3DVBF_3WEIGHTS3MATRICES = 4,    // 3 matrices, 3 weights (Xbox ext.)
+	X_D3DVBF_4WEIGHTS4MATRICES = 6,    // 4 matrices, 4 weights (Xbox ext.)
+	X_D3DVBF_FORCE_DWORD = 0x7fffffff
+} X_D3DVERTEXBLENDFLAGS;
+
 typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 
 // Xbox vertex shader constant modes

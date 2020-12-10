@@ -6290,13 +6290,38 @@ void UpdateFixedFunctionVertexShaderState()
 {
 	using namespace xbox;
 
+	// Preprocessing
+	// Prepare vertex blending mode variables used in transforms, below
+	auto VertexBlend = XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
+	// Xbox and host D3DVERTEXBLENDFLAGS :
+	//     D3DVBF_DISABLE           = 0 : 1 matrix,   0 weights => final weight 1
+	//     D3DVBF_1WEIGHTS          = 1 : 2 matrices, 1 weights => final weight calculated
+	//     D3DVBF_2WEIGHTS          = 3 : 3 matrices, 2 weights => final weight calculated
+	//     D3DVBF_3WEIGHTS          = 5 : 4 matrices, 3 weights => final weight calculated
+	// Xbox X_D3DVERTEXBLENDFLAGS :
+	//   X_D3DVBF_2WEIGHTS2MATRICES = 2 : 2 matrices, 2 weights
+	//   X_D3DVBF_3WEIGHTS3MATRICES = 4 : 3 matrices, 3 weights
+	//   X_D3DVBF_4WEIGHTS4MATRICES = 6 : 4 matrices, 4 weights
+	//
+	if (VertexBlend > xbox::X_D3DVBF_4WEIGHTS4MATRICES) LOG_TEST_CASE("X_D3DRS_VERTEXBLEND out of range");
+	// Calculate the number of matrices, by adding the LSB to turn (0,1,3,5) and (0,2,4,6) into (0,2,4,6); Then divide by 2 to get (0,1,2,3), and add 1 to get 1, 2, 3 or 4 matrices :
+	auto NrBlendMatrices = ((VertexBlend + (VertexBlend & 1)) / 2) + 1;
+	// Looking at the above values, 0 or the LSB of VertexBlend signals that the final weight needs to be calculated from all previous weigths (deducting them all from an initial 1) :
+	auto CalcLastBlendWeight = (VertexBlend == xbox::X_D3DVBF_DISABLE) || (VertexBlend & 1);
+	// Copy the resulting values over to shader state :
+	ffShaderState.Modes.VertexBlend_NrOfMatrices = (float)NrBlendMatrices;
+	ffShaderState.Modes.VertexBlend_CalcLastWeight = (float)CalcLastBlendWeight;
+
 	// Transforms
 	// Transpose row major to column major for HLSL
 	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
 	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
 
-	for (unsigned i = 0; i < 4; i++) {
+	for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
+	}
+
+	for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
 	}
@@ -6325,7 +6350,7 @@ void UpdateFixedFunctionVertexShaderState()
 	auto pointSize = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE);
 	ffShaderState.PointSprite.PointSize = *reinterpret_cast<float*>(&pointSize);
 	ffShaderState.PointSprite.PointScaleEnable = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE);
-	ffShaderState.PointSprite.RenderTargetHeight = GetPixelContainerHeight(g_pXbox_RenderTarget);
+	ffShaderState.PointSprite.RenderTargetHeight = (float)GetPixelContainerHeight(g_pXbox_RenderTarget);
 	auto scaleA = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_A);
 	ffShaderState.PointSprite.ScaleA = *reinterpret_cast<float*>(&scaleA);
 	auto scaleB = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_B);
@@ -6381,7 +6406,6 @@ void UpdateFixedFunctionVertexShaderState()
 	}
 
 	// Misc flags
-	ffShaderState.Modes.VertexBlend = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
 	ffShaderState.Modes.NormalizeNormals = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
 
 	// Update lights

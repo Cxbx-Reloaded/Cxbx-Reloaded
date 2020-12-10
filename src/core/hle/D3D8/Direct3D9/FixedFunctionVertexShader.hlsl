@@ -290,44 +290,23 @@ TransformInfo DoTransform(const float4 position, const float3 normal, const floa
     output.Position = float4(0, 0, 0, 0);
     output.Normal = float3(0, 0, 0);
 
-    // D3D
-    const int _BLEND_OFF = 0;
-    const int _1WEIGHT_2MAT = 1;
-    const int _2WEIGHT_3MAT = 3;
-    const int _3WEIGHT_4MAT = 5;
-    // Xbox
-    const int _2WEIGHT_2MAT = 2;
-    const int _3WEIGHT_3MAT = 4;
-    const int _4WEIGHT_4MAT = 6;
+    // The number of matrices to blend (always in the range [1..4])
+    int matrices = state.Modes.VertexBlend_NrOfMatrices;
 
-    if (state.Modes.VertexBlend == _BLEND_OFF) {
-        output.Position = mul(position, state.Transforms.WorldView[0]);
-        output.Normal = mul(normal, (float3x3)state.Transforms.WorldViewInverseTranspose[0]);
-        return output;
-    }
-    
-    // The number of matrices to blend
-    int mats = floor((state.Modes.VertexBlend - 1) / 2 + 2);
-    // If we have to calculate the last blend value
-    bool calcLastBlend = fmod(state.Modes.VertexBlend, 2) == 1;
-
+    // Initialize the final matrix its blend weight at 1, from which all preceding blend weights will be deducted :
     float lastBlend = 1;
-    for (int i = 0; i < mats - 1; i++)
+    for (int i = 0; i < matrices; i++)
     {
-        output.Position += mul(position, state.Transforms.WorldView[i]) * blendWeights[i];
-        output.Normal += mul(normal, (float3x3) state.Transforms.WorldViewInverseTranspose[i]) * blendWeights[i];
+        // Do we have to calculate the last blend value (never happens when there's already 4 matrices) ?
+	    bool bCalcFinalWeight = (state.Modes.VertexBlend_CalcLastWeight > 0) && (i == (matrices - 1));
+        // Note : In case of X_D3DVBF_DISABLE, no prior weights have been deducted from lastBlend, so it will still be 1.
+        // The number of matrices will also be 1, which effectively turns this into non-weighted single-matrix multiplications :
+	    float blendWeight = bCalcFinalWeight ? lastBlend : blendWeights[i];
+        // Reduce the blend weight for the final matrix :
         lastBlend -= blendWeights[i];
-    }
-
-    if (calcLastBlend)
-    {
-        output.Position += mul(position, state.Transforms.WorldView[mats-1]) * lastBlend;
-        output.Normal += mul(normal, (float3x3) state.Transforms.WorldViewInverseTranspose[mats-1]) * lastBlend;
-    }
-    else
-    {
-        output.Position += mul(position, state.Transforms.WorldView[mats-1]) * blendWeights[mats-1];
-        output.Normal += mul(normal, (float3x3) state.Transforms.WorldViewInverseTranspose[mats-1]) * blendWeights[mats-1];
+        // Add this matrix (multiplied by its blend weight) to the output :
+        output.Position += mul(position, state.Transforms.WorldView[i]) * blendWeight;
+        output.Normal += mul(normal, (float3x3) state.Transforms.WorldViewInverseTranspose[i]) * blendWeight;
     }
 
     return output;
