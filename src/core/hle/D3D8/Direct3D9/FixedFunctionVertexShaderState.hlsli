@@ -98,7 +98,8 @@ struct Modes {
     alignas(16) float LocalViewer;
 
     alignas(16) float ColorVertex;
-    alignas(16) float VertexBlend;
+    alignas(16) float VertexBlend_NrOfMatrices;
+    alignas(16) float VertexBlend_CalcLastWeight; // Could be a bool in higer shader models
     alignas(16) float NormalizeNormals;
 };
 

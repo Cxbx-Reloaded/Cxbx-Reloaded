@@ -34,9 +34,9 @@ public:
 	std::array<D3DMATRIX, xbox::X_D3DTS_MAX> Transforms;
 
 private:
-	void RecalculateDependentMatrices();
+	void RecalculateDependentMatrices(unsigned i);
 
-	bool bWorldViewDirty;
+	std::array<bool, 4> bWorldViewDirty;
 	// Combines world/view matrices
 	std::array<D3DMATRIX, 4> WorldView;
 	// World/view inverse transpose for lighting calculations
