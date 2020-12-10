@@ -44,6 +44,7 @@
 #include "core\hle\D3D8\XbConvert.h" // For EmuPC2XB_D3DFormat
 #include "common\Settings.hpp"
 #include "common/util/cliConfig.hpp"
+#include "common/win32/WineEnv.h"
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxExec
 #include "resource/ResCxbx.h"
@@ -271,6 +272,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
                 if(hDC != NULL)
                     ReleaseDC(hwnd, hDC);
+            }
+
+            // Check if running in Wine environment. If it is, then we don't need admin warning message popup on startup.
+            if (isWineEnv()) {
+                BOOL bAdminCheckRemoveRet = RemoveMenu(GetMenu(hwnd), ID_SETTINGS_ALLOWADMINPRIVILEGE, MF_GRAYED);
+                assert(bAdminCheckRemoveRet != -1);
             }
 
             SetClassLong(hwnd, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));

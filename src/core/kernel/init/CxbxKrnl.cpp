@@ -52,6 +52,7 @@
 #include "xxhash.h"
 #include "common/ReserveAddressRanges.h"
 #include "common/xbox/Types.hpp"
+#include "common/win32/WineEnv.h"
 
 #include <clocale>
 #include <process.h>
@@ -106,7 +107,6 @@ std::atomic_bool g_bEnableAllInterrupts = true;
 size_t g_SystemMaxMemory = 0;
 
 HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
-bool g_bIsWine = false;
 
 bool g_CxbxPrintUEM = false;
 ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
@@ -220,9 +220,6 @@ void RestoreExeImageHeader()
 	ExeOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS] = NewOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS];
 }
 
-typedef const char* (CDECL *LPFN_WINEGETVERSION)(void);
-LPFN_WINEGETVERSION wine_get_version;
-
 // Forward declaration to avoid moving the definition of LoadXboxKeys
 void LoadXboxKeys(std::string path);
 
@@ -267,8 +264,8 @@ std::string CxbxGetLastErrorString(char * lpszFunction)
 
 void PrintCurrentConfigurationLog()
 {
-	if (g_bIsWine) {
-		EmuLogInit(LOG_LEVEL::INFO, "Running under Wine Version %s", wine_get_version());
+	if (isWineEnv()) {
+		EmuLogInit(LOG_LEVEL::INFO, "Running under Wine Version %s", getWineVersion());
 	}
 
 	// HACK: For API TRace..
@@ -667,8 +664,10 @@ bool HandleFirstLaunch()
 			return false;
 		}
 
+		// Wine will always run programs as administrator by default, it can be safely disregard.
+		// Since Wine doesn't use root permission. Unless user is running Wine as root.
 		bool bElevated = CxbxIsElevated();
-		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
+		if (bElevated && !isWineEnv() && !g_Settings->m_core.allowAdminPrivilege) {
 			PopupReturn ret = PopupWarningEx(nullptr, PopupButtons::YesNo, PopupReturn::No,
 				"Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
 				"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
@@ -880,17 +879,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	// Log once, since multi-xbe boot is appending to file instead of overwrite.
 	if (BootFlags == BOOT_NONE) {
 		log_generate_active_filter_output(CXBXR_MODULE::INIT);
-	}
-
-	// Detect Wine
-	g_bIsWine = false;
-	HMODULE hNtDll = GetModuleHandle("ntdll.dll");
-
-	if (hNtDll != nullptr) {
-		wine_get_version = (LPFN_WINEGETVERSION)GetProcAddress(hNtDll, "wine_get_version");
-		if (wine_get_version) {
-			g_bIsWine = true;
-		}
 	}
 
 	// Now we got the arguments, start by initializing the Xbox memory map :
