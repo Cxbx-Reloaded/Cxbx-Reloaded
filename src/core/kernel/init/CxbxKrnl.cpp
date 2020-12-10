@@ -664,8 +664,10 @@ bool HandleFirstLaunch()
 			return false;
 		}
 
+		// Wine will always run programs as administrator by default, it can be safely disregard.
+		// Since Wine doesn't use root permission. Unless user is running Wine as root.
 		bool bElevated = CxbxIsElevated();
-		if (bElevated && !g_Settings->m_core.allowAdminPrivilege) {
+		if (bElevated && !isWineEnv() && !g_Settings->m_core.allowAdminPrivilege) {
 			PopupReturn ret = PopupWarningEx(nullptr, PopupButtons::YesNo, PopupReturn::No,
 				"Cxbx-Reloaded has detected that it has been launched with Administrator rights.\n"
 				"\nThis is dangerous, as a maliciously modified Xbox titles could take control of your system.\n"
