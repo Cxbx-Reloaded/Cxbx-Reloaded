@@ -83,7 +83,7 @@ void DSound_PrintStats()
                 ss << "play once";
             }
             ss << "\n\t\tX_BufferCacheSize = " << buffer->X_BufferCacheSize;
-            ss << "\n\t\tXb_Flags = " << buffer->Xb_Flags;
+            ss << "\n\t\tEmuFlags = " << buffer->EmuFlags;
             ss << "\n\t\tEmuRegionToggle = " << buffer->EmuBufferToggle;
             if (buffer->EmuBufferToggle == xbox::X_DSB_TOGGLE_PLAY) {
                 ss << "\n\t\t\tEmuRegionPlayStartOffset = " << buffer->EmuRegionPlayStartOffset;
@@ -117,7 +117,7 @@ void DSound_PrintStats()
             ss << "\n\t\tMax packets allow = " << i->X_MaxAttachedPackets;
             ss << "\n\t\tTotal packets = " << i->Host_BufferPacketArray.size();
             ss << "\n\t\tis processing = " << i->Host_isProcessing;
-            ss << "\n\t\tXb_Flags = " <<  i->Xb_Flags;
+            ss << "\n\t\tEmuFlags = " <<  i->EmuFlags;
             ss << "\n\t\tXb_Status = " << i->Xb_Status;
         }
         index++;
