@@ -15,14 +15,14 @@ uniform float4 xboxTextureScale[4] : register(c214);
 struct VS_INPUT
 {
 #ifdef CXBX_ALL_TEXCOORD_INPUTS
-	float4 v[16] : TEXCOORD;
+    float4 v[16] : TEXCOORD;
 #else
-	float4 pos : POSITION;
-	float4 bw : BLENDWEIGHT;
-	float4 color[2] : COLOR;
-	float4 backColor[2] : TEXCOORD4;
-	float4 normal : NORMAL;
-	float4 texcoord[4] : TEXCOORD;
+    float4 pos : POSITION;
+    float4 bw : BLENDWEIGHT;
+    float4 color[2] : COLOR;
+    float4 backColor[2] : TEXCOORD4;
+    float4 normal : NORMAL;
+    float4 texcoord[4] : TEXCOORD;
 #endif
 };
 
@@ -51,7 +51,7 @@ static const uint reserved2 = 15;   // Has no X_D3DFVF_*     / X_D3DVSDE_*
 float4 Get(const VS_INPUT xIn, const uint index)
 {
 #ifdef CXBX_ALL_TEXCOORD_INPUTS
-	return xIn.v[index];
+    return xIn.v[index];
 #else
     // switch statements inexplicably don't work here
     if(index == position) return xIn.pos;
@@ -72,17 +72,17 @@ float4 Get(const VS_INPUT xIn, const uint index)
 // Output registers
 struct VS_OUTPUT
 {
-	float4 oPos : POSITION;  // Homogeneous clip space position
-	float4 oD0  : COLOR0;    // Primary color (front-facing)
-	float4 oD1  : COLOR1;    // Secondary color (front-facing)
-	float  oFog : FOG;       // Fog coordinate
-	float  oPts : PSIZE;	 // Point size
-	float4 oB0  : TEXCOORD4; // Back-facing primary color
-	float4 oB1  : TEXCOORD5; // Back-facing secondary color
-	float4 oT0  : TEXCOORD0; // Texture coordinate set 0
-	float4 oT1  : TEXCOORD1; // Texture coordinate set 1
-	float4 oT2  : TEXCOORD2; // Texture coordinate set 2
-	float4 oT3  : TEXCOORD3; // Texture coordinate set 3
+    float4 oPos : POSITION;  // Homogeneous clip space position
+    float4 oD0  : COLOR0;    // Primary color (front-facing)
+    float4 oD1  : COLOR1;    // Secondary color (front-facing)
+    float  oFog : FOG;       // Fog coordinate
+    float  oPts : PSIZE;	 // Point size
+    float4 oB0  : TEXCOORD4; // Back-facing primary color
+    float4 oB1  : TEXCOORD5; // Back-facing secondary color
+    float4 oT0  : TEXCOORD0; // Texture coordinate set 0
+    float4 oT1  : TEXCOORD1; // Texture coordinate set 1
+    float4 oT2  : TEXCOORD2; // Texture coordinate set 2
+    float4 oT3  : TEXCOORD3; // Texture coordinate set 3
 };
 
 struct TransformInfo
@@ -113,18 +113,18 @@ LightingInfo DoSpecular(const float3 toLightVN, const float3 toViewerVN, const f
 {
     LightingInfo o;
     o.Front = o.Back = float3(0, 0, 0);
-    
+
     // Specular
     if (state.Modes.SpecularEnable)
     {
         // Blinn-Phong
         // https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
-        float3 halfway = normalize(toViewerVN + toLightVN);
-        float NdotH = dot(View.Normal, halfway);
+        const float3 halfway = normalize(toViewerVN + toLightVN);
+        const float NdotH = dot(View.Normal, halfway);
 
-        float3 frontSpecular = pow(abs(NdotH), powers[0]) * lightSpecular.rgb;
-        float3 backSpecular = pow(abs(NdotH), powers[1]) * lightSpecular.rgb;
-        
+        const float3 frontSpecular = pow(abs(NdotH), powers[0]) * lightSpecular.rgb;
+        const float3 backSpecular = pow(abs(NdotH), powers[1]) * lightSpecular.rgb;
+
         if (NdotH >= 0)
             o.Front = frontSpecular;
         else
@@ -143,9 +143,9 @@ LightingOutput DoPointLight(const Light l, const float3 toViewerVN, const float2
     o.Specular.Front = o.Specular.Back = float3(0, 0, 0);
 
     // Diffuse
-    float3 toLightV = l.PositionV - View.Position.xyz;
-	float lightDist = length(toLightV);
-    float3 toLightVN = normalize(toLightV);
+    const float3 toLightV = l.PositionV - View.Position.xyz;
+    const float lightDist = length(toLightV);
+    const float3 toLightVN = normalize(toLightV);
 
     // A(Constant) + A(Linear) * dist + A(Exp) * dist^2
     float attenuation =
@@ -157,8 +157,8 @@ LightingOutput DoPointLight(const Light l, const float3 toViewerVN, const float2
     if (lightDist > l.Range)
         attenuation = 0;
 
-    float NdotL = dot(View.Normal, toLightVN);
-    float3 lightDiffuse = abs(NdotL) * attenuation * l.Diffuse.rgb;
+    const float NdotL = dot(View.Normal, toLightVN);
+    const float3 lightDiffuse = abs(NdotL) * attenuation * l.Diffuse.rgb;
 
     if (NdotL >= 0)
         o.Diffuse.Front = lightDiffuse;
@@ -180,16 +180,16 @@ LightingOutput DoSpotLight(const Light l, const float3 toViewerVN, const float2 
     o.Specular.Front = o.Specular.Back = float3(0, 0, 0);
 
     // Diffuse
-	float3 toLightV = l.PositionV - View.Position.xyz;
-	float lightDist = length(toLightV);
-	float3 toLightVN = normalize(toLightV);
-	float3 toVertexVN = -toLightVN;
+    const float3 toLightV = l.PositionV - View.Position.xyz;
+    const float lightDist = length(toLightV);
+    const float3 toLightVN = normalize(toLightV);
+    const float3 toVertexVN = -toLightVN;
 
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/light-types
-	float cosAlpha = dot(l.DirectionVN, toVertexVN);
+    const float cosAlpha = dot(l.DirectionVN, toVertexVN);
     // I = ( cos(a) - cos(phi/2) ) / ( cos(theta/2) - cos(phi/2) )
-    float spotBase = saturate((cosAlpha - l.CosHalfPhi) / l.SpotIntensityDivisor);
-    float spotIntensity = pow(spotBase, l.Falloff);
+    const float spotBase = saturate((cosAlpha - l.CosHalfPhi) / l.SpotIntensityDivisor);
+    const float spotIntensity = pow(spotBase, l.Falloff);
 
     // A(Constant) + A(Linear) * dist + A(Exp) * dist^2
     float attenuation =
@@ -201,8 +201,8 @@ LightingOutput DoSpotLight(const Light l, const float3 toViewerVN, const float2 
     if (lightDist > l.Range)
         attenuation = 0;
 
-    float NdotL = dot(View.Normal, toLightVN);
-    float3 lightDiffuse = abs(NdotL) * attenuation * l.Diffuse.rgb * spotIntensity;
+    const float NdotL = dot(View.Normal, toLightVN);
+    const float3 lightDiffuse = abs(NdotL) * attenuation * l.Diffuse.rgb * spotIntensity;
 
     if (NdotL >= 0)
         o.Diffuse.Front = lightDiffuse;
@@ -226,9 +226,9 @@ LightingOutput DoDirectionalLight(const Light l, const float3 toViewerVN, const 
     // Diffuse
 
     // Intensity from N . L
-    float3 toLightVN = -l.DirectionVN;
-    float NdotL = dot(View.Normal, toLightVN);
-    float3 lightDiffuse = abs(NdotL * l.Diffuse.rgb);
+    const float3 toLightVN = -l.DirectionVN;
+    const float NdotL = dot(View.Normal, toLightVN);
+    const float3 lightDiffuse = abs(NdotL * l.Diffuse.rgb);
 
     // Apply light contribution to front or back face
     // as the case may be
@@ -246,10 +246,10 @@ LightingOutput DoDirectionalLight(const Light l, const float3 toViewerVN, const 
 
 LightingOutput CalcLighting(const float2 powers)
 {
-    const int LIGHT_TYPE_NONE        = 0;
-    const int LIGHT_TYPE_POINT       = 1;
-    const int LIGHT_TYPE_SPOT        = 2;
-    const int LIGHT_TYPE_DIRECTIONAL = 3;
+    static const int LIGHT_TYPE_NONE        = 0;
+    static const int LIGHT_TYPE_POINT       = 1;
+    static const int LIGHT_TYPE_SPOT        = 2;
+    static const int LIGHT_TYPE_DIRECTIONAL = 3;
 
     LightingOutput totalLightOutput;
     totalLightOutput.Diffuse.Front = float3(0, 0, 0);
@@ -257,10 +257,10 @@ LightingOutput CalcLighting(const float2 powers)
     totalLightOutput.Specular.Front = float3(0, 0, 0);
     totalLightOutput.Specular.Back = float3(0, 0, 0);
 
-    float3 toViewerVN = state.Modes.LocalViewer
+    const float3 toViewerVN = state.Modes.LocalViewer
         ? float3(0, 0, 1)
         : normalize(-View.Position.xyz);
-    
+
     for (uint i = 0; i < 8; i++)
     {
         const Light currentLight = state.Lights[i];
@@ -291,17 +291,17 @@ TransformInfo DoTransform(const float4 position, const float3 normal, const floa
     output.Normal = float3(0, 0, 0);
 
     // The number of matrices to blend (always in the range [1..4])
-    int matrices = state.Modes.VertexBlend_NrOfMatrices;
+    const int matrices = state.Modes.VertexBlend_NrOfMatrices;
 
     // Initialize the final matrix its blend weight at 1, from which all preceding blend weights will be deducted :
     float lastBlend = 1;
     for (int i = 0; i < matrices; i++)
     {
         // Do we have to calculate the last blend value (never happens when there's already 4 matrices) ?
-	    bool bCalcFinalWeight = (state.Modes.VertexBlend_CalcLastWeight > 0) && (i == (matrices - 1));
+        const bool bCalcFinalWeight = (state.Modes.VertexBlend_CalcLastWeight > 0) && (i == (matrices - 1));
         // Note : In case of X_D3DVBF_DISABLE, no prior weights have been deducted from lastBlend, so it will still be 1.
         // The number of matrices will also be 1, which effectively turns this into non-weighted single-matrix multiplications :
-	    float blendWeight = bCalcFinalWeight ? lastBlend : blendWeights[i];
+        const float blendWeight = bCalcFinalWeight ? lastBlend : blendWeights[i];
         // Reduce the blend weight for the final matrix :
         lastBlend -= blendWeights[i];
         // Add this matrix (multiplied by its blend weight) to the output :
@@ -320,15 +320,15 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
     // Note : If X_D3DRS_COLORVERTEX is FALSE, UpdateFixedFunctionVertexShaderState has already changed all MaterialSource's into D3DMCS_MATERIAL
 
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dmaterialcolorsource
-    const int D3DMCS_MATERIAL = 0;
-    const int D3DMCS_COLOR1 = 1;
-    const int D3DMCS_COLOR2 = 2;
+    static const int D3DMCS_MATERIAL = 0;
+    static const int D3DMCS_COLOR1 = 1;
+    static const int D3DMCS_COLOR2 = 2;
 
     // If COLORVERTEX mode, AND the desired diffuse or specular colour is defined in the vertex declaration
     // Then use the vertex colour instead of the material
 
     if (!vRegisterDefaultFlags[diffuseReg]) {
-        float4 diffuseVertexColour = Get(xIn, diffuseReg);
+        const float4 diffuseVertexColour = Get(xIn, diffuseReg);
         if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR1) material.Ambient = diffuseVertexColour;
         if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR1) material.Diffuse = diffuseVertexColour;
         if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR1) material.Specular = diffuseVertexColour;
@@ -336,7 +336,7 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
     }
 
     if (!vRegisterDefaultFlags[specularReg]) {
-		float4 specularVertexColour = Get(xIn, specularReg);
+        const float4 specularVertexColour = Get(xIn, specularReg);
         if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR2) material.Ambient = specularVertexColour;
         if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR2) material.Diffuse = specularVertexColour;
         if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR2) material.Specular = specularVertexColour;
@@ -348,50 +348,50 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
 
 float DoFog(const VS_INPUT xIn)
 {
-	// TODO implement properly
-	// Until we have pixel shader HLSL we are still leaning on D3D renderstates for fogging
-	// So we are not doing any fog density calculations here
-	// http://developer.download.nvidia.com/assets/gamedev/docs/Fog2.pdf
+    // TODO implement properly
+    // Until we have pixel shader HLSL we are still leaning on D3D renderstates for fogging
+    // So we are not doing any fog density calculations here
+    // http://developer.download.nvidia.com/assets/gamedev/docs/Fog2.pdf
 
-	float fogDepth;
+    float fogDepth;
 
-	if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_NONE)
-		fogDepth = Get(xIn, specular).a; // In fixed-function mode, fog is passed in the specular alpha
-	if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_RANGE)
-		fogDepth = length(View.Position.xyz);
-	if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_Z)
-		fogDepth = abs(Projection.Position.z);
-	if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_W)
-		fogDepth = Projection.Position.w;
+    if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_NONE)
+        fogDepth = Get(xIn, specular).a; // In fixed-function mode, fog is passed in the specular alpha
+    if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_RANGE)
+        fogDepth = length(View.Position.xyz);
+    if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_Z)
+        fogDepth = abs(Projection.Position.z);
+    if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_W)
+        fogDepth = Projection.Position.w;
 
-	return fogDepth;
+    return fogDepth;
 }
 
 float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
 {
     // Texture transform flags
     // https://docs.microsoft.com/en-gb/windows/win32/direct3d9/d3dtexturetransformflags
-    const int D3DTTFF_DISABLE = 0;
-    const int D3DTTFF_COUNT1  = 1;
-    const int D3DTTFF_COUNT2  = 2;
-    const int D3DTTFF_COUNT3  = 3;
-    const int D3DTTFF_COUNT4  = 4;
-    const int D3DTTFF_PROJECTED = 256; // This is the only real flag
+    static const int D3DTTFF_DISABLE = 0;
+    static const int D3DTTFF_COUNT1  = 1;
+    static const int D3DTTFF_COUNT2  = 2;
+    static const int D3DTTFF_COUNT3  = 3;
+    static const int D3DTTFF_COUNT4  = 4;
+    static const int D3DTTFF_PROJECTED = 256; // This is the only real flag
 
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtss-tci
     // Pre-shifted
-    const int TCI_PASSTHRU = 0;
-    const int TCI_CAMERASPACENORMAL = 1;
-    const int TCI_CAMERASPACEPOSITION = 2;
-    const int TCI_CAMERASPACEREFLECTIONVECTOR = 3;
-    const int TCI_OBJECT = 4; // Xbox
-    const int TCI_SPHERE = 5; // Xbox
+    static const int TCI_PASSTHRU = 0;
+    static const int TCI_CAMERASPACENORMAL = 1;
+    static const int TCI_CAMERASPACEPOSITION = 2;
+    static const int TCI_CAMERASPACEREFLECTIONVECTOR = 3;
+    static const int TCI_OBJECT = 4; // Xbox
+    static const int TCI_SPHERE = 5; // Xbox
 
     const TextureState tState = state.TextureStates[stage];
-    
+
     // Extract transform flags
-    int countFlag = tState.TextureTransformFlagsCount;
-    bool projected = tState.TextureTransformFlagsProjected;
+    const int countFlag = tState.TextureTransformFlagsCount;
+    const bool projected = tState.TextureTransformFlagsProjected;
 
     // Get texture coordinates
     // Coordinates are either from the vertex texcoord data
@@ -400,52 +400,51 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
     if (tState.TexCoordIndexGen == TCI_PASSTHRU)
     {
         // Get from vertex data
-        uint texCoordIndex = abs(tState.TexCoordIndex); // Note : abs() avoids error X3548 : in vs_3_0 uints can only be used with known - positive values, use int if possible
+        const uint texCoordIndex = abs(tState.TexCoordIndex); // Note : abs() avoids error X3548 : in vs_3_0 uints can only be used with known - positive values, use int if possible
         texCoord = Get(xIn, texcoord0+texCoordIndex);
 
-		// Make coordinates homogenous
-		// For example, if a title supplies (u, v)
-		// We need to make transform (u, v, 1) to allow translation with a 3x3 matrix
-		// We'll need to get this from the current FVF or VertexDeclaration
-		// Test case: JSRF scrolling texture effect.
-		// Test case: Madagascar shadows
-		// Test case: Modify pixel shader sample
+        // Make coordinates homogenous
+        // For example, if a title supplies (u, v)
+        // We need to make transform (u, v, 1) to allow translation with a 3x3 matrix
+        // We'll need to get this from the current FVF or VertexDeclaration
+        // Test case: JSRF scrolling texture effect.
+        // Test case: Madagascar shadows
+        // Test case: Modify pixel shader sample
 
-		// TODO move alongside the texture transformation when it stops angering the HLSL compiler
-		float componentCount = state.TexCoordComponentCount[texCoordIndex];
-		if (componentCount == 1)
-			texCoord.yzw = float3(1, 0, 0);
-		if (componentCount == 2)
-			texCoord.zw = float2(1, 0);
-		if (componentCount == 3)
-			texCoord.w = 1;
-    }
-	else
-	{
-        // Generate texture coordinates
-		float3 reflected = reflect(normalize(View.Position.xyz), View.Normal);
-        
-		if (tState.TexCoordIndexGen == TCI_CAMERASPACENORMAL)
-			texCoord = float4(View.Normal, 1);
-		else if (tState.TexCoordIndexGen == TCI_CAMERASPACEPOSITION)
-			texCoord = View.Position;
-		else if (tState.TexCoordIndexGen == TCI_CAMERASPACEREFLECTIONVECTOR)
-			texCoord.xyz = reflected;
+       // TODO move alongside the texture transformation when it stops angering the HLSL compiler
+        const float componentCount = state.TexCoordComponentCount[texCoordIndex];
+        if (componentCount == 1)
+            texCoord.yzw = float3(1, 0, 0);
+        if (componentCount == 2)
+            texCoord.zw = float2(1, 0);
+        if (componentCount == 3)
+            texCoord.w = 1;
+    }   // Generate texture coordinates
+    else if (tState.TexCoordIndexGen == TCI_CAMERASPACENORMAL)
+        texCoord = float4(View.Normal, 1);
+    else if (tState.TexCoordIndexGen == TCI_CAMERASPACEPOSITION)
+        texCoord = View.Position;
+    else
+    {
+        const float3 reflected = reflect(normalize(View.Position.xyz), View.Normal);
+
+        if (tState.TexCoordIndexGen == TCI_CAMERASPACEREFLECTIONVECTOR)
+            texCoord.xyz = reflected;
         // else if TCI_OBJECT TODO is this just model position?
-		else if (tState.TexCoordIndexGen == TCI_SPHERE)
-		{
+        else if (tState.TexCoordIndexGen == TCI_SPHERE)
+        {
             // TODO verify
             // http://www.bluevoid.com/opengl/sig99/advanced99/notes/node177.html
-			float3 R = reflected;
-			float p = sqrt(pow(R.x, 2) + pow(R.y, 2) + pow(R.z + 1, 2));
-			texCoord.x = R.x / 2 * p + 0.5f;
-			texCoord.y = R.y / 2 * p + 0.5f;
-		}
-	}
+            const float3 R = reflected;
+            const float p = sqrt(pow(R.x, 2) + pow(R.y, 2) + pow(R.z + 1, 2));
+            texCoord.x = R.x / 2 * p + 0.5f;
+            texCoord.y = R.y / 2 * p + 0.5f;
+        }
+    }
 
     // Transform the texture coordinates if requested
     if (countFlag != D3DTTFF_DISABLE)
-		texCoord = mul(texCoord, state.Transforms.Texture[stage]);
+        texCoord = mul(texCoord, state.Transforms.Texture[stage]);
 
     // We always send four coordinates
     // If we are supposed to send less than four
@@ -463,8 +462,8 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
         if (countFlag == 3)
             texCoord.w = texCoord.z;
     }
-    
-	return texCoord;
+
+    return texCoord;
 }
 
 // Point size for Point Sprites
@@ -472,12 +471,14 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
 // Test case: Point sprite sample
 float DoPointSpriteSize()
 {
-    PointSprite ps = state.PointSprite;
+    const PointSprite ps = state.PointSprite;
     float pointSize = ps.PointSize;
+
     if (ps.PointScaleEnable)
     {
-        float eyeDistance = length(View.Position);
-        float factor = ps.ScaleA + ps.ScaleB * eyeDistance + ps.ScaleC * (eyeDistance * eyeDistance);
+        const float eyeDistance = length(View.Position);
+        const float factor = ps.ScaleA + ps.ScaleB * eyeDistance + ps.ScaleC * (eyeDistance * eyeDistance);
+
         pointSize *= ps.RenderTargetHeight * sqrt(1 / factor);
     }
 
@@ -490,23 +491,24 @@ VS_INPUT InitializeInputRegisters(const VS_INPUT xInput)
 
     // Initialize input registers from the vertex buffer data
     // Or use the register's default value (which can be changed by the title)
-    for (uint i = 0; i < 16; i++) {
-        float4 value = lerp(Get(xInput, i), vRegisterDefaultValues[i], vRegisterDefaultFlags[i]);
+    for (uint i = 0; i < 16; i++)
+    {
+        const float4 value = lerp(Get(xInput, i), vRegisterDefaultValues[i], vRegisterDefaultFlags[i]);
         #ifdef CXBX_ALL_TEXCOORD_INPUTS
             xIn.v[i] = value;
         #else
-	        // switch statements inexplicably don't work here
-	        if(i == position) xIn.pos = value;
-	        if(i == weight) xIn.bw = value;
-	        if(i == normal) xIn.normal = value;
-	        if(i == diffuse) xIn.color[0] = value;
-	        if(i == specular) xIn.color[1] = value;
-	        if(i == backDiffuse) xIn.backColor[0] = value;
-	        if(i == backSpecular) xIn.backColor[1] = value;
-	        if(i == texcoord0) xIn.texcoord[0] = value;
-	        if(i == texcoord1) xIn.texcoord[1] = value;
-	        if(i == texcoord2) xIn.texcoord[2] = value;
-	        if(i == texcoord3) xIn.texcoord[3] = value;
+            // switch statements inexplicably don't work here
+            if(i == position) xIn.pos = value;
+            if(i == weight) xIn.bw = value;
+            if(i == normal) xIn.normal = value;
+            if(i == diffuse) xIn.color[0] = value;
+            if(i == specular) xIn.color[1] = value;
+            if(i == backDiffuse) xIn.backColor[0] = value;
+            if(i == backSpecular) xIn.backColor[1] = value;
+            if(i == texcoord0) xIn.texcoord[0] = value;
+            if(i == texcoord1) xIn.texcoord[1] = value;
+            if(i == texcoord2) xIn.texcoord[2] = value;
+            if(i == texcoord3) xIn.texcoord[3] = value;
         #endif
     }
 
@@ -518,7 +520,7 @@ VS_OUTPUT main(const VS_INPUT xInput)
     VS_OUTPUT xOut;
 
     // Unpack 16 bool flags from 4 float4 constant registers
-	vRegisterDefaultFlags = (bool[16]) vRegisterDefaultFlagsPacked;
+    vRegisterDefaultFlags = (bool[16]) vRegisterDefaultFlagsPacked;
 
     // TODO make sure this goes fast
 
@@ -532,9 +534,9 @@ VS_OUTPUT main(const VS_INPUT xInput)
     if (state.Modes.NormalizeNormals)
         View.Normal = normalize(View.Normal);
 
-	// Projection transform
-	Projection.Position = mul(View.Position, state.Transforms.Projection);
-	// Normal unused...
+    // Projection transform
+    Projection.Position = mul(View.Position, state.Transforms.Projection);
+    // Normal unused...
 
     // Projection transform - final position
     xOut.oPos = Projection.Position;
@@ -543,25 +545,25 @@ VS_OUTPUT main(const VS_INPUT xInput)
     if (state.Modes.Lighting || state.Modes.TwoSidedLighting)
     {
         // Materials
-        Material material = DoMaterial(0, diffuse, specular, xIn);
-        Material backMaterial = DoMaterial(1, backDiffuse, backSpecular, xIn);
-        
-        float2 powers = float2(material.Power, backMaterial.Power);
+        const Material material = DoMaterial(0, diffuse, specular, xIn);
+        const Material backMaterial = DoMaterial(1, backDiffuse, backSpecular, xIn);
+
+        const float2 powers = float2(material.Power, backMaterial.Power);
 
         LightingOutput lighting = CalcLighting(powers);
 
         // Compute each lighting component
-        float3 _ambient = material.Ambient.rgb * state.AmbientPlusLightAmbient.rgb;
-        float3 _backAmbient = backMaterial.Ambient.rgb * state.BackAmbientPlusLightAmbient.rgb;
-    
-        float3 _diffuse = material.Diffuse.rgb * lighting.Diffuse.Front;
-        float3 _backDiffuse = backMaterial.Diffuse.rgb * lighting.Diffuse.Back;
-    
-        float3 _specular = material.Specular.rgb * lighting.Specular.Front;
-        float3 _backSpecular = backMaterial.Specular.rgb * lighting.Specular.Back;
-    
-        float3 _emissive = material.Emissive.rgb;
-        float3 _backEmissive = backMaterial.Emissive.rgb;
+        const float3 _ambient = material.Ambient.rgb * state.AmbientPlusLightAmbient.rgb;
+        const float3 _backAmbient = backMaterial.Ambient.rgb * state.BackAmbientPlusLightAmbient.rgb;
+
+        const float3 _diffuse = material.Diffuse.rgb * lighting.Diffuse.Front;
+        const float3 _backDiffuse = backMaterial.Diffuse.rgb * lighting.Diffuse.Back;
+
+        const float3 _specular = material.Specular.rgb * lighting.Specular.Front;
+        const float3 _backSpecular = backMaterial.Specular.rgb * lighting.Specular.Back;
+
+        const float3 _emissive = material.Emissive.rgb;
+        const float3 _backEmissive = backMaterial.Emissive.rgb;
 
         // Frontface
         xOut.oD0 = float4(_ambient + _diffuse + _emissive, material.Diffuse.a);
@@ -592,7 +594,7 @@ VS_OUTPUT main(const VS_INPUT xInput)
     xOut.oB1 = saturate(xOut.oB1);
 
     // Fog
-	xOut.oFog = DoFog(xIn);
+    xOut.oFog = DoFog(xIn);
 
     // Point Sprite
     xOut.oPts = DoPointSpriteSize();
@@ -603,5 +605,5 @@ VS_OUTPUT main(const VS_INPUT xInput)
     xOut.oT2 = DoTexCoord(2, xIn) / xboxTextureScale[2];
     xOut.oT3 = DoTexCoord(3, xIn) / xboxTextureScale[3];
 
-	return xOut;
+    return xOut;
 }
