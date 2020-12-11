@@ -94,28 +94,20 @@ struct TransformInfo
 static TransformInfo View; // Vertex transformed to viewspace
 static TransformInfo Projection; // Vertex transformed to projection space
 
-// Vertex lighting
-// Both frontface and backface lighting can be calculated
-struct LightingInfo
-{
-    float3 Front;
-    float3 Back;
-};
-
 // Final lighting output
 struct LightingOutput
 {
-    LightingInfo Diffuse;
-    LightingInfo Specular;
+    TwoSidedColor Diffuse;
+    TwoSidedColor Specular;
 };
 
-LightingInfo DoSpecular(const float3 toLightVN, const float3 toViewerVN, const float2 powers, const float4 lightSpecular)
+TwoSidedColor DoSpecular(const float3 toLightVN, const float3 toViewerVN, const float2 powers, const float4 lightSpecular)
 {
-    LightingInfo o;
-    o.Front = o.Back = float3(0, 0, 0);
+    TwoSidedColor Specular;
+    Specular.Front = Specular.Back = float3(0, 0, 0);
 
     // Specular
-    if (state.Modes.SpecularEnable)
+    // Note : if (state.Modes.SpecularEnable) no longer required because when disabled, CPU sets all lightSpecular.rgb inputs to 0
     {
         // Blinn-Phong
         // https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
@@ -126,12 +118,12 @@ LightingInfo DoSpecular(const float3 toLightVN, const float3 toViewerVN, const f
         const float3 backSpecular = pow(abs(NdotH), powers[1]) * lightSpecular.rgb;
 
         if (NdotH >= 0)
-            o.Front = frontSpecular;
+            Specular.Front = frontSpecular;
         else
-            o.Back = backSpecular;
+            Specular.Back = backSpecular;
     }
 
-    return o;
+    return Specular;
 }
 
 // useful reference https://drivers.amd.com/misc/samples/dx9/FixedFuncShader.pdf
@@ -317,30 +309,31 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
     // Get the material from material state
     Material material = state.Materials[index];
 
-    // Note : If X_D3DRS_COLORVERTEX is FALSE, UpdateFixedFunctionVertexShaderState has already changed all MaterialSource's into D3DMCS_MATERIAL
+    // Note : if (state.Modes.ColorVertex) no longer required because when disabled, CPU sets all MaterialSource's to D3DMCS_MATERIAL
+    {
+        // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dmaterialcolorsource
+        static const int D3DMCS_MATERIAL = 0;
+        static const int D3DMCS_COLOR1 = 1;
+        static const int D3DMCS_COLOR2 = 2;
 
-    // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dmaterialcolorsource
-    static const int D3DMCS_MATERIAL = 0;
-    static const int D3DMCS_COLOR1 = 1;
-    static const int D3DMCS_COLOR2 = 2;
+        // If COLORVERTEX mode, AND the desired diffuse or specular colour is defined in the vertex declaration
+        // Then use the vertex colour instead of the material
 
-    // If COLORVERTEX mode, AND the desired diffuse or specular colour is defined in the vertex declaration
-    // Then use the vertex colour instead of the material
+        if (!vRegisterDefaultFlags[diffuseReg]) {
+            const float4 diffuseVertexColour = Get(xIn, diffuseReg);
+            if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR1) material.Ambient = diffuseVertexColour;
+            if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR1) material.Diffuse = diffuseVertexColour;
+            if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR1) material.Specular = diffuseVertexColour;
+            if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR1) material.Emissive = diffuseVertexColour;
+        }
 
-    if (!vRegisterDefaultFlags[diffuseReg]) {
-        const float4 diffuseVertexColour = Get(xIn, diffuseReg);
-        if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR1) material.Ambient = diffuseVertexColour;
-        if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR1) material.Diffuse = diffuseVertexColour;
-        if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR1) material.Specular = diffuseVertexColour;
-        if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR1) material.Emissive = diffuseVertexColour;
-    }
-
-    if (!vRegisterDefaultFlags[specularReg]) {
-        const float4 specularVertexColour = Get(xIn, specularReg);
-        if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR2) material.Ambient = specularVertexColour;
-        if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR2) material.Diffuse = specularVertexColour;
-        if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR2) material.Specular = specularVertexColour;
-        if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR2) material.Emissive = specularVertexColour;
+        if (!vRegisterDefaultFlags[specularReg]) {
+            const float4 specularVertexColour = Get(xIn, specularReg);
+            if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR2) material.Ambient = specularVertexColour;
+            if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR2) material.Diffuse = specularVertexColour;
+            if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR2) material.Specular = specularVertexColour;
+            if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR2) material.Emissive = specularVertexColour;
+        }
     }
 
     return material;
@@ -474,7 +467,7 @@ float DoPointSpriteSize()
     const PointSprite ps = state.PointSprite;
     float pointSize = ps.PointSize;
 
-    if (ps.PointScaleEnable)
+    // Note : if (ps.PointScaleEnable) not required because when disabled, CPU sets RenderTargetHeight and ScaleA to 1, and ScaleB and ScaleC to 0
     {
         const float eyeDistance = length(View.Position);
         const float factor = ps.ScaleA + ps.ScaleB * eyeDistance + ps.ScaleC * (eyeDistance * eyeDistance);
@@ -541,50 +534,39 @@ VS_OUTPUT main(const VS_INPUT xInput)
     // Projection transform - final position
     xOut.oPos = Projection.Position;
 
+    // Diffuse and specular for when lighting is disabled
+    xOut.oD0 = Get(xIn, diffuse);
+    xOut.oD1 = Get(xIn, specular);
+    xOut.oB0 = Get(xIn, backDiffuse);
+    xOut.oB1 = Get(xIn, backSpecular);
+
     // Vertex lighting
-    if (state.Modes.Lighting || state.Modes.TwoSidedLighting)
+    if (state.Modes.Lighting) // TODO : Remove this check by incorporating this boolean into the variables used below (set DiffuseMaterialSource to D3DMCS_COLOR1, SpecularMaterialSource to D3DMCS_COLOR2, all other to D3DMCS_MATERIAL and their colors and TotalLightsAmbient to zero, etc)
     {
         // Materials
-        const Material material = DoMaterial(0, diffuse, specular, xIn);
-        const Material backMaterial = DoMaterial(1, backDiffuse, backSpecular, xIn);
-
-        const float2 powers = float2(material.Power, backMaterial.Power);
-
-        LightingOutput lighting = CalcLighting(powers);
+        Material material = DoMaterial(0, diffuse, specular, xIn);
+        Material backMaterial = DoMaterial(1, backDiffuse, backSpecular, xIn);
 
         // Compute each lighting component
-        const float3 _ambient = material.Ambient.rgb * state.AmbientPlusLightAmbient.rgb;
-        const float3 _backAmbient = backMaterial.Ambient.rgb * state.BackAmbientPlusLightAmbient.rgb;
-
-        const float3 _diffuse = material.Diffuse.rgb * lighting.Diffuse.Front;
-        const float3 _backDiffuse = backMaterial.Diffuse.rgb * lighting.Diffuse.Back;
-
-        const float3 _specular = material.Specular.rgb * lighting.Specular.Front;
-        const float3 _backSpecular = backMaterial.Specular.rgb * lighting.Specular.Back;
-
-        const float3 _emissive = material.Emissive.rgb;
-        const float3 _backEmissive = backMaterial.Emissive.rgb;
+        const float2 powers = float2(material.Power, backMaterial.Power);
+        const LightingOutput lighting = CalcLighting(powers);
 
         // Frontface
-        xOut.oD0 = float4(_ambient + _diffuse + _emissive, material.Diffuse.a);
-        xOut.oD1 = float4(_specular, 0);
-        // Backface
-        xOut.oB0 = float4(_backAmbient + _backDiffuse + _backEmissive, backMaterial.Diffuse.a);
-        xOut.oB1 = float4(_backSpecular, 0);
-    }
+        material.Specular.rgb *= lighting.Specular.Front;
+        material.Diffuse.rgb *= lighting.Diffuse.Front;
+        material.Ambient.rgb *= state.TotalLightsAmbient.Front;
+        xOut.oD0 = float4(material.Diffuse.rgb + material.Ambient.rgb + material.Emissive.rgb, material.Diffuse.a);
+        xOut.oD1 = float4(material.Specular.rgb, 0);
 
-    // TODO does TwoSidedLighting imply Lighting? Verify if TwoSidedLighting can be enabled independently of Lighting
-    // Diffuse and specular for when lighting is disabled
-    if (!state.Modes.Lighting)
-    {
-        xOut.oD0 = Get(xIn, diffuse);
-        xOut.oD1 = Get(xIn, specular);
-    }
-
-    if(!state.Modes.TwoSidedLighting)
-    {
-        xOut.oB0 = Get(xIn, backDiffuse);
-        xOut.oB1 = Get(xIn, backSpecular);
+        if(state.Modes.TwoSidedLighting) // TODO : Same as above, for backface lighting variables
+        {
+            // Backface
+            backMaterial.Specular.rgb *= lighting.Specular.Back;
+            backMaterial.Diffuse.rgb *= lighting.Diffuse.Back;
+            backMaterial.Ambient.rgb *= state.TotalLightsAmbient.Back;
+            xOut.oB0 = float4(backMaterial.Diffuse.rgb + backMaterial.Ambient.rgb + backMaterial.Emissive.rgb, backMaterial.Diffuse.a);
+            xOut.oB1 = float4(backMaterial.Specular.rgb, 0);
+        }
     }
 
     // Colour
