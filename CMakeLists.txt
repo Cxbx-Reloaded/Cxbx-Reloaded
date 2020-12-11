@@ -106,7 +106,6 @@ file (GLOB CXBXR_HEADER_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/DlgLoggingConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgNetworkConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgVideoConfig.h"
- "${CXBXR_ROOT_DIR}/src/gui/ResCxbx.h"
  "${CXBXR_ROOT_DIR}/src/gui/Wnd.h"
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.h"
 )

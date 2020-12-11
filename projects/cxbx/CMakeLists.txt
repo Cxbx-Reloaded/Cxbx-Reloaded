@@ -73,6 +73,7 @@ file (GLOB RESOURCES
  "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx-R.ico"
  "${CXBXR_ROOT_DIR}/src/gui/resource/Logo.bmp"
  "${CXBXR_ROOT_DIR}/src/gui/resource/Logo-License-CC4.bmp"
+ "${CXBXR_ROOT_DIR}/src/gui/resource/ResCxbx.h"
  "${CXBXR_ROOT_DIR}/src/.editorconfig"
 )
 
