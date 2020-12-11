@@ -94,9 +94,10 @@ struct Modes {
 
     alignas(16) float Lighting;
     alignas(16) float TwoSidedLighting;
-    alignas(16) float SpecularEnable;
+//  alignas(16) float SpecularEnable;
     alignas(16) float LocalViewer;
 
+/// alignas(16) float ColorVertex;
     alignas(16) float VertexBlend_NrOfMatrices;
     alignas(16) float VertexBlend_CalcLastWeight; // Could be a bool in higer shader models
     alignas(16) float NormalizeNormals;
@@ -104,7 +105,7 @@ struct Modes {
 
 struct PointSprite {
     alignas(16) float PointSize;
-    alignas(16) float PointScaleEnable;
+//  alignas(16) float PointScaleEnable;
     alignas(16) float RenderTargetHeight;
     alignas(16) float ScaleA;
     alignas(16) float ScaleB;
@@ -122,11 +123,18 @@ struct Fog {
     alignas(16) float DepthMode;
 };
 
+// Vertex lighting
+// Both frontface and backface lighting can be calculated
+struct TwoSidedColor
+{
+	alignas(16) float3 Front;
+	alignas(16) float3 Back;
+};
+
 struct FixedFunctionVertexShaderState {
     alignas(16) Transforms Transforms;
     alignas(16) arr(Lights, Light, 8);
-    alignas(16) float4 AmbientPlusLightAmbient;
-    alignas(16) float4 BackAmbientPlusLightAmbient;
+    alignas(16) TwoSidedColor TotalLightsAmbient;
     alignas(16) arr(Materials, Material, 2);
     alignas(16) Modes Modes;
     alignas(16) Fog Fog;

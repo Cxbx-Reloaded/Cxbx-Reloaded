@@ -6262,10 +6262,12 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	D3DXVec3Transform(&directionV, (D3DXVECTOR3*)&d3dLight->Direction, &viewTransform3x3);
 	D3DXVec3Normalize((D3DXVECTOR3*)&pShaderLight->DirectionVN, (D3DXVECTOR3*)&directionV);
 
+	bool SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
+
 	// Map D3D light to state struct
 	pShaderLight->Type = (float)((int)d3dLight->Type);
 	pShaderLight->Diffuse = toVector(d3dLight->Diffuse);
-	pShaderLight->Specular = toVector(d3dLight->Specular);
+	pShaderLight->Specular = SpecularEnable ? toVector(d3dLight->Specular) : toVector(0);
 	pShaderLight->Range = d3dLight->Range;
 	pShaderLight->Falloff = d3dLight->Falloff;
 	pShaderLight->Attenuation.x = d3dLight->Attenuation0;
@@ -6290,7 +6292,7 @@ void UpdateFixedFunctionVertexShaderState()
 {
 	using namespace xbox;
 
-	// Preprocessing
+	// Vertex blending
 	// Prepare vertex blending mode variables used in transforms, below
 	auto VertexBlend = XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
 	// Xbox and host D3DVERTEXBLENDFLAGS :
@@ -6329,14 +6331,10 @@ void UpdateFixedFunctionVertexShaderState()
 	// Lighting
 	ffShaderState.Modes.Lighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
 	ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
-	ffShaderState.Modes.SpecularEnable = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARENABLE);
 	ffShaderState.Modes.LocalViewer = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
-	bool ColorVertex = XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
-
-	D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
-	D3DXVECTOR4 BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
 
 	// Material sources
+	bool ColorVertex = XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
 	ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
 	ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
 	ffShaderState.Modes.SpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
@@ -6349,14 +6347,14 @@ void UpdateFixedFunctionVertexShaderState()
 	// Point sprites
 	auto pointSize = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE);
 	ffShaderState.PointSprite.PointSize = *reinterpret_cast<float*>(&pointSize);
-	ffShaderState.PointSprite.PointScaleEnable = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE);
-	ffShaderState.PointSprite.RenderTargetHeight = (float)GetPixelContainerHeight(g_pXbox_RenderTarget);
+	bool PointScaleEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE) != FALSE;
+	ffShaderState.PointSprite.RenderTargetHeight = PointScaleEnable ? (float)GetPixelContainerHeight(g_pXbox_RenderTarget) : 1.0f;
 	auto scaleA = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_A);
-	ffShaderState.PointSprite.ScaleA = *reinterpret_cast<float*>(&scaleA);
+	ffShaderState.PointSprite.ScaleA = PointScaleEnable ? *reinterpret_cast<float*>(&scaleA) : 1.0f;
 	auto scaleB = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_B);
-	ffShaderState.PointSprite.ScaleB = *reinterpret_cast<float*>(&scaleB);
+	ffShaderState.PointSprite.ScaleB = PointScaleEnable ? *reinterpret_cast<float*>(&scaleB) : 0.0f;
 	auto scaleC = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_C);
-	ffShaderState.PointSprite.ScaleC = *reinterpret_cast<float*>(&scaleC);
+	ffShaderState.PointSprite.ScaleC = PointScaleEnable ? *reinterpret_cast<float*>(&scaleC) : 0.0f;
 
 	// Fog
 	// Determine how fog depth is calculated
@@ -6405,9 +6403,6 @@ void UpdateFixedFunctionVertexShaderState()
 		ffShaderState.TexCoordComponentCount[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
 	}
 
-	// Misc flags
-	ffShaderState.Modes.NormalizeNormals = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
-
 	// Update lights
 	auto LightAmbient = D3DXVECTOR4(0.f, 0.f, 0.f, 0.f);
 	D3DXMATRIX rowMajorViewTransform;
@@ -6416,8 +6411,14 @@ void UpdateFixedFunctionVertexShaderState()
 		UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient, rowMajorViewTransform);
 	}
 
-	ffShaderState.AmbientPlusLightAmbient = Ambient + LightAmbient;
-	ffShaderState.BackAmbientPlusLightAmbient = BackAmbient + LightAmbient;
+	D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
+	D3DXVECTOR4 BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
+
+	ffShaderState.TotalLightsAmbient.Front = (D3DXVECTOR3)(LightAmbient + Ambient);
+	ffShaderState.TotalLightsAmbient.Back = (D3DXVECTOR3)(LightAmbient + BackAmbient);
+
+	// Misc flags
+	ffShaderState.Modes.NormalizeNormals = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
 
 	// Write fixed function state to shader constants
 	const int slotSize = 16;
@@ -7297,8 +7298,6 @@ void CxbxUpdateHostTextures()
 
 void CxbxUpdateHostTextureScaling()
 {
-	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
-
 	// Xbox works with "Linear" and "Swizzled" texture formats
 	// Linear formats are not addressed with normalized coordinates (similar to https://www.khronos.org/opengl/wiki/Rectangle_Texture?)
 	// We want to use normalized coordinates in our shaders, so need to be able to scale the coordinates back
