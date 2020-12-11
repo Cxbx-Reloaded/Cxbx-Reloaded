@@ -6331,20 +6331,20 @@ void UpdateFixedFunctionVertexShaderState()
 	ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
 	ffShaderState.Modes.SpecularEnable = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARENABLE);
 	ffShaderState.Modes.LocalViewer = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
-	ffShaderState.Modes.ColorVertex = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX);
+	bool ColorVertex = XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
 
 	D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
 	D3DXVECTOR4 BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
 
 	// Material sources
-	ffShaderState.Modes.AmbientMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE);
-	ffShaderState.Modes.DiffuseMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE);
-	ffShaderState.Modes.SpecularMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE);
-	ffShaderState.Modes.EmissiveMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE);
-	ffShaderState.Modes.BackAmbientMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE);
-	ffShaderState.Modes.BackDiffuseMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE);
-	ffShaderState.Modes.BackSpecularMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE);
-	ffShaderState.Modes.BackEmissiveMaterialSource = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE);
+	ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+	ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+	ffShaderState.Modes.SpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+	ffShaderState.Modes.EmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+	ffShaderState.Modes.BackAmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+	ffShaderState.Modes.BackDiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+	ffShaderState.Modes.BackSpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+	ffShaderState.Modes.BackEmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
 
 	// Point sprites
 	auto pointSize = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE);

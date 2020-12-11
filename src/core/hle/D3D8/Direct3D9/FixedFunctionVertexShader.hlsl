@@ -317,32 +317,30 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
     // Get the material from material state
     Material material = state.Materials[index];
 
-    if (state.Modes.ColorVertex)
-    {
-		// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dmaterialcolorsource
-        const int D3DMCS_MATERIAL = 0;
-        const int D3DMCS_COLOR1 = 1;
-        const int D3DMCS_COLOR2 = 2;
+    // Note : If X_D3DRS_COLORVERTEX is FALSE, UpdateFixedFunctionVertexShaderState has already changed all MaterialSource's into D3DMCS_MATERIAL
 
-        // TODO preprocess on the CPU
-        // If COLORVERTEX mode, AND the desired diffuse or specular colour is defined in the vertex declaration
-        // Then use the vertex colour instead of the material
+    // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dmaterialcolorsource
+    const int D3DMCS_MATERIAL = 0;
+    const int D3DMCS_COLOR1 = 1;
+    const int D3DMCS_COLOR2 = 2;
 
-        if (!vRegisterDefaultFlags[diffuseReg]) {
-            float4 diffuseVertexColour = Get(xIn, diffuseReg);
-            if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR1) material.Ambient = diffuseVertexColour;
-            if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR1) material.Diffuse = diffuseVertexColour;
-            if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR1) material.Specular = diffuseVertexColour;
-            if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR1) material.Emissive = diffuseVertexColour;
-        }
+    // If COLORVERTEX mode, AND the desired diffuse or specular colour is defined in the vertex declaration
+    // Then use the vertex colour instead of the material
 
-        if (!vRegisterDefaultFlags[specularReg]) {
-			float4 specularVertexColour = Get(xIn, specularReg);
-            if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR2) material.Ambient = specularVertexColour;
-            if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR2) material.Diffuse = specularVertexColour;
-            if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR2) material.Specular = specularVertexColour;
-            if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR2) material.Emissive = specularVertexColour;
-        }
+    if (!vRegisterDefaultFlags[diffuseReg]) {
+        float4 diffuseVertexColour = Get(xIn, diffuseReg);
+        if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR1) material.Ambient = diffuseVertexColour;
+        if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR1) material.Diffuse = diffuseVertexColour;
+        if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR1) material.Specular = diffuseVertexColour;
+        if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR1) material.Emissive = diffuseVertexColour;
+    }
+
+    if (!vRegisterDefaultFlags[specularReg]) {
+		float4 specularVertexColour = Get(xIn, specularReg);
+        if (state.Modes.AmbientMaterialSource == D3DMCS_COLOR2) material.Ambient = specularVertexColour;
+        if (state.Modes.DiffuseMaterialSource == D3DMCS_COLOR2) material.Diffuse = specularVertexColour;
+        if (state.Modes.SpecularMaterialSource == D3DMCS_COLOR2) material.Specular = specularVertexColour;
+        if (state.Modes.EmissiveMaterialSource == D3DMCS_COLOR2) material.Emissive = specularVertexColour;
     }
 
     return material;
