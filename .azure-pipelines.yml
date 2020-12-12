@@ -64,22 +64,16 @@ jobs:
     workingDirectory: build
     displayName: 'Build'
 
+  - script: cmake --install . --config %configuration% --prefix ../artifacts
+    workingDirectory: build
+    displayName: 'Prepare Files'
+    condition: and(succeeded(), eq(variables['Agent.JobName'], 'Release'))
+
   - task: CopyFiles@2
     displayName: 'Copy files to $(Build.ArtifactStagingDirectory)'
     condition: and(succeeded(), eq(variables['Agent.JobName'], 'Release'))
     inputs:
-      Contents: |
-          COPYING
-          README.md
-          build\bin\$(configuration)\cxbx.exe
-          build\bin\$(configuration)\cxbxr-ldr.exe
-          build\bin\$(configuration)\cxbxr-emu.dll
-          build\bin\$(configuration)\glew32.dll
-          build\bin\$(configuration)\subhook.dll
-          build\bin\$(configuration)\SDL2.dll
-          build\bin\$(configuration)\cxbxr-debugger.exe
-          build\bin\$(configuration)\capstone.dll
-          build\bin\$(configuration)\cx_x86.dll
+      Contents: artifacts\bin\**
       TargetFolder: '$(Build.ArtifactStagingDirectory)'
       flattenFolders: true
 
