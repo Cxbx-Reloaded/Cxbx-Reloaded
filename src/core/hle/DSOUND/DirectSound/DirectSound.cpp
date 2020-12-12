@@ -538,7 +538,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSound_DownloadEffectsImage)
 
     LOG_NOT_SUPPORTED();
 
-    return S_OK;
+    // HACK: Return as failure workaround to allow titles to progress further.
+    return E_FAIL;
 }
 
 // ******************************************************************
