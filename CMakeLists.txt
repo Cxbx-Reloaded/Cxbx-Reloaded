@@ -380,7 +380,6 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 # for some reason did not put the files into virtual folder?
 # Might need to put the list in the source folder for workaround fix.
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
-  #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/debugger")
   add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
 endif()
 
@@ -390,16 +389,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
-  # Refuse to exclude due to install is not set to optional
-  #set_target_properties(cstool
-  # PROPERTIES EXCLUDE_FROM_ALL TRUE
-  #)
   set_target_properties(Tests_cs_x86
    PROPERTIES EXCLUDE_FROM_ALL TRUE
   )
 
   # Cxbx-Debugger project with third-party libraries
-  set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared cstool
+  set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared
    PROPERTIES FOLDER Cxbx-Reloaded/debugger
   )
 endif()
