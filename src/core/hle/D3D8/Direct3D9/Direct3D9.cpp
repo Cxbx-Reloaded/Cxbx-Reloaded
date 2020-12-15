@@ -84,7 +84,7 @@ using namespace std::literals::chrono_literals;
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
 bool                                g_bClipCursor  = false; // indicates that the mouse cursor should be confined inside the rendering window
-IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
+IDirect3DDevice9Ex                 *g_pD3DDevice   = nullptr; // Direct3D Device
 
 // Static Variable(s)
 static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
@@ -112,7 +112,7 @@ static D3DSURFACE_DESC              g_HostBackBufferDesc;
 static Settings::s_video            g_XBVideo;
 
 // D3D based variables
-static IDirect3D                   *g_pDirect3D = nullptr;
+static IDirect3D9Ex                *g_pDirect3D = nullptr;
        D3DCAPS						g_D3DCaps = {};         // Direct3D Caps
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
@@ -296,7 +296,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                       );  \
-    XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice,                              (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::dword_xt, xbox::X_D3DPRESENT_PARAMETERS*, IDirect3DDevice**)  );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice,                              (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::dword_xt, xbox::X_D3DPRESENT_PARAMETERS*, xbox::X_D3DDevice**));  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface, (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)         );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface, (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)         );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4,                            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
@@ -1613,8 +1613,7 @@ void EmuD3DInit()
 	// create Direct3D8 and retrieve caps
     {
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
-        g_pDirect3D = Direct3DCreate(D3D_SDK_VERSION);
-        if(g_pDirect3D == nullptr)
+        if(FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &g_pDirect3D)))
             CxbxKrnlCleanup("Could not initialize Direct3D8!");
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
@@ -2403,22 +2402,33 @@ static void CreateDefaultD3D9Device
     // We never want auto-depth stencil on the host, Xbox D3D will handle this for us
     g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = FALSE;
 
+	D3DDISPLAYMODEEX displayMode { sizeof(displayMode) };
+	{
+		const auto& presentParameters = g_EmuCDPD.HostPresentationParameters;
+		displayMode.Width = presentParameters.BackBufferWidth;
+		displayMode.Height = presentParameters.BackBufferHeight;
+		displayMode.RefreshRate = presentParameters.FullScreen_RefreshRateInHz;
+		displayMode.Format = presentParameters.BackBufferFormat;
+		displayMode.ScanLineOrdering = D3DSCANLINEORDERING_PROGRESSIVE;
+	}
+
     // IDirect3D9::CreateDevice must be called from the window message thread
     // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
     HRESULT hr;
-    RunOnWndMsgThread([&hr, BehaviorFlags] {
-        hr = g_pDirect3D->CreateDevice(
+    RunOnWndMsgThread([&hr, BehaviorFlags, &displayMode] {
+        hr = g_pDirect3D->CreateDeviceEx(
             g_EmuCDPD.Adapter,
             g_EmuCDPD.DeviceType,
             g_hEmuWindow,
             BehaviorFlags,
             &g_EmuCDPD.HostPresentationParameters,
+			g_EmuCDPD.HostPresentationParameters.Windowed ? nullptr : &displayMode,
             &g_pD3DDevice);
     });
-    DEBUG_D3DRESULT(hr, "IDirect3D::CreateDevice");
+    DEBUG_D3DRESULT(hr, "IDirect3D::CreateDeviceEx");
 
     if(FAILED(hr))
-        CxbxKrnlCleanup("IDirect3D::CreateDevice failed");
+        CxbxKrnlCleanup("IDirect3D::CreateDeviceEx failed");
 
     // Which texture formats does this device support?
     DetermineSupportedD3DFormats();
@@ -2664,7 +2674,7 @@ IDirect3DIndexBuffer* CxbxCreateIndexBuffer(unsigned IndexCount)
 	// "Managing Resources (Direct3D 9)"
 	// suggests "for resources which change with high frequency" [...]
 	// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
-	const D3DPOOL D3DPool = D3DPOOL_DEFAULT; // Was D3DPOOL_MANAGED
+	const D3DPOOL D3DPool = D3DPOOL_DEFAULT;
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
 	// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
 	const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY; // Was D3DUSAGE_WRITEONLY
@@ -3030,7 +3040,7 @@ static void Direct3D_CreateDevice_4
 (
     xbox::dword_xt                BehaviorFlags,
     xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
-    IDirect3DDevice               **ppReturnedDeviceInterface
+    xbox::X_D3DDevice            **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -3049,7 +3059,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4
 )
 {
     DWORD BehaviorFlags;
-    IDirect3DDevice **ppReturnedDeviceInterface;
+    xbox::X_D3DDevice **ppReturnedDeviceInterface;
 
     __asm {
 		push ebp
@@ -3092,7 +3102,7 @@ static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDevic
     HWND                          hFocusWindow,
     xbox::dword_xt                BehaviorFlags,
     xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
-    IDirect3DDevice               **ppReturnedDeviceInterface
+    xbox::X_D3DDevice            **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -3117,7 +3127,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 )
 {
 	dword_xt BehaviorFlags;
-	IDirect3DDevice **ppReturnedDeviceInterface;
+	xbox::X_D3DDevice **ppReturnedDeviceInterface;
 
 	__asm {
 		push ebp
@@ -3163,7 +3173,7 @@ static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDevic
     HWND                          hFocusWindow,
     xbox::dword_xt                BehaviorFlags,
     xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
-    IDirect3DDevice               **ppReturnedDeviceInterface
+    xbox::X_D3DDevice            **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -3188,7 +3198,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 )
 {
 	dword_xt BehaviorFlags;
-	IDirect3DDevice **ppReturnedDeviceInterface;
+	xbox::X_D3DDevice **ppReturnedDeviceInterface;
 
 	__asm {
 		push ebp
@@ -3284,7 +3294,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
     HWND                        hFocusWindow,
     dword_xt                       BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
-    IDirect3DDevice           **ppReturnedDeviceInterface
+    xbox::X_D3DDevice         **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -5405,7 +5415,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 	case xbox::X_D3DRTYPE_CUBETEXTURE: {
 		xbox::X_D3DPixelContainer *pPixelContainer = (xbox::X_D3DPixelContainer*)pResource;
 		xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
-		D3DPOOL D3DPool = D3DPOOL_DEFAULT; // Was: D3DPOOL_MANAGED  TODO : Nuance D3DPOOL where/when needed
+		D3DPOOL D3DPool = D3DPOOL_DEFAULT; // TODO : Nuance D3DPOOL where/when needed
 
 		if (EmuXBFormatIsDepthBuffer(X_Format)) {
 			D3DUsage |= D3DUSAGE_DEPTHSTENCIL;
@@ -5692,7 +5702,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		case xbox::X_D3DRTYPE_CUBETEXTURE: {
-			EmuLog(LOG_LEVEL::DEBUG, "CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_MANAGED)", dwWidth,
+			EmuLog(LOG_LEVEL::DEBUG, "CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_DEFAULT)", dwWidth,
 				dwMipMapLevels, PCFormat);
 
 			hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, D3DUsage,

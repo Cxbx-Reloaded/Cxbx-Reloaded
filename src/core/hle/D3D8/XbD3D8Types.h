@@ -58,7 +58,6 @@
 // Alias all host Direct3D 9 symbols to generic symbols
 #define DXGetErrorString                DXGetErrorString9A
 #define DXGetErrorDescription           DXGetErrorDescription9A
-#define Direct3DCreate			        Direct3DCreate9
 #define D3DXAssembleShader		        D3DXAssembleShader
 #define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
 #define D3DLockData                     void
@@ -68,8 +67,6 @@
 #define D3DVERTEXELEMENT                D3DVERTEXELEMENT9
 #define D3DVIEWPORT                     D3DVIEWPORT9
 
-#define IDirect3D                       IDirect3D9
-#define IDirect3DDevice                 IDirect3DDevice9
 #define IDirect3DStateBlock             IDirect3DStateBlock9 // unused
 #define IDirect3DVertexDeclaration      IDirect3DVertexDeclaration9
 #define IDirect3DVertexShader           IDirect3DVertexShader9
@@ -417,6 +414,7 @@ typedef struct _X_D3DPIXELSHADERDEF	// <- blueshogun 10/1/07
 }
 X_D3DPIXELSHADERDEF;
 
+typedef void X_D3DDevice;
 
 typedef struct _X_PixelShader
 {
