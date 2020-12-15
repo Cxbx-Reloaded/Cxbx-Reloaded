@@ -6580,7 +6580,7 @@ void CxbxImpl_SetTransform
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
 }
 
-// MultiplyTransform can call SetTransform, nested call detection is required
+// MultiplyTransform should call SetTransform, we'd like to know if it didn't
 // Test case: 25 to Life
 static thread_local uint32_t setTransformCount = 0;
 
@@ -6600,7 +6600,7 @@ static void D3DDevice_SetTransform_0
         LOG_FUNC_ARG(pMatrix)
         LOG_FUNC_END;
 
-    NestedPatchCounter call(setTransformCount);
+    setTransformCount++;
 
     __asm {
         // Trampoline to guest code to remove the need for a GetTransform patch
@@ -6609,10 +6609,7 @@ static void D3DDevice_SetTransform_0
         call XB_TRMP(D3DDevice_SetTransform_0)
     }
 
-    if (call.GetLevel() == 0) {
-        // Skip if this patch is called from MultiplyTransform
-        CxbxImpl_SetTransform(State, pMatrix);
-    }
+	CxbxImpl_SetTransform(State, pMatrix);
 }
 
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0)
@@ -6650,14 +6647,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
         LOG_FUNC_ARG(pMatrix)
         LOG_FUNC_END;
 
-    NestedPatchCounter call(setTransformCount);
+    setTransformCount++;
 
     // Trampoline to guest code to remove the need for a GetTransform patch
     XB_TRMP(D3DDevice_SetTransform)(State, pMatrix);
-    if (call.GetLevel() == 0) {
-        // Skip if this patch is called from MultiplyTransform
-        CxbxImpl_SetTransform(State, pMatrix);
-    }
+    CxbxImpl_SetTransform(State, pMatrix);
 }
 
 // ******************************************************************
@@ -6674,15 +6668,17 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
         LOG_FUNC_ARG(pMatrix)
         LOG_FUNC_END;
 
-    NestedPatchCounter call(setTransformCount);
+	setTransformCount = 0;
 
-    // Trampoline to guest code to remove the need for a GetTransform patch
+    // Trampoline to guest code, which we expect to call SetTransform
+	// If we find a case where the trampoline doesn't call SetTransform
+	// (or we can't detect the call) we will need to implement this
     XB_TRMP(D3DDevice_MultiplyTransform)(State, pMatrix);
 
-    auto pcState = EmuXB2PC_D3DTS(State);
+	if (setTransformCount == 0) {
+		LOG_TEST_CASE("MultiplyTransform did not appear to call SetTransform");
+	}
 
-    HRESULT hRet = g_pD3DDevice->MultiplyTransform(pcState, pMatrix);
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->MultiplyTransform");
 }
 
 // ******************************************************************
