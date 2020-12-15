@@ -250,8 +250,8 @@ LightingOutput CalcLighting(const float2 powers)
     totalLightOutput.Specular.Back = float3(0, 0, 0);
 
     const float3 toViewerVN = state.Modes.LocalViewer
-        ? float3(0, 0, 1)
-        : normalize(-View.Position.xyz);
+        ? float3(0, 0, -1) // Strip sample
+        : normalize(-View.Position.xyz); // DoA3 character select
 
     for (uint i = 0; i < 8; i++)
     {
