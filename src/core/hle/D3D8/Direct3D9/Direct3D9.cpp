@@ -199,6 +199,24 @@ extern void UpdateFPSCounter();
 
 #define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_D3DCREATED)
 
+
+// Those should be used with LTCG patches which use __declspec(naked)
+#define LTCG_PROLOGUE \
+		__asm push ebp \
+		__asm mov  ebp, esp \
+		__asm sub  esp, __LOCAL_SIZE \
+		__asm push esi \
+		__asm push edi \
+		__asm push ebx
+
+#define LTCG_EPILOGUE \
+		__asm pop  ebx \
+		__asm pop  edi \
+		__asm pop  esi \
+		__asm mov  esp, ebp \
+		__asm pop  ebp
+
+
 typedef struct resource_key_hash {
 	// All Xbox X_D3DResource structs have these fields :
 	DWORD Common; // We set this to the CXBX_D3DCOMMON_IDENTIFYING_MASK bits of the source Common field
@@ -3060,11 +3078,8 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4
 {
     DWORD BehaviorFlags;
     xbox::X_D3DDevice **ppReturnedDeviceInterface;
-
     __asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
+		LTCG_PROLOGUE
 		mov  BehaviorFlags, eax
 		mov  ppReturnedDeviceInterface, ecx
 	}
@@ -3088,8 +3103,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4
 
 	__asm {
 		mov  eax, hRet
-		mov  esp, ebp
-		pop  ebp
+		LTCG_EPILOGUE
 		ret  4
 	}
 }
@@ -3128,11 +3142,8 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 {
 	dword_xt BehaviorFlags;
 	xbox::X_D3DDevice **ppReturnedDeviceInterface;
-
 	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
+		LTCG_PROLOGUE
 		mov  BehaviorFlags, eax
 		mov  ppReturnedDeviceInterface, ecx
 	}
@@ -3159,8 +3170,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 
 	__asm {
 		mov  eax, hRet
-		mov  esp, ebp
-		pop  ebp
+		LTCG_EPILOGUE
 		ret  10h
 	}
 }
@@ -3199,11 +3209,8 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 {
 	dword_xt BehaviorFlags;
 	xbox::X_D3DDevice **ppReturnedDeviceInterface;
-
 	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
+		LTCG_PROLOGUE
 		mov  BehaviorFlags, eax
 		mov  ppReturnedDeviceInterface, ebx
 	}
@@ -3230,8 +3237,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 
 	__asm {
 		mov  eax, hRet
-		mov  esp, ebp
-		pop  ebp
+		LTCG_EPILOGUE
 		ret  10h
 	}
 }
