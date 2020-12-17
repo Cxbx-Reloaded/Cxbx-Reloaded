@@ -4475,14 +4475,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 (
-    int     Register,
+    int_xt     Register,
     float_xt   a,
     float_xt   b
 )
 {
-	LOG_FORWARD("D3DDevice_SetVertexData4f");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(a)
+		LOG_FUNC_ARG(b)
+		LOG_FUNC_END;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, a, b, 0.0f, 1.0f);
+	CxbxImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 }
 
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
@@ -4493,33 +4497,56 @@ static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 (
-    int     Register,
-    SHORT   a,
-    SHORT   b
+    int_xt   Register,
+    short_xt a,
+    short_xt b
 )
 {
-	LOG_FORWARD("D3DDevice_SetVertexData4f");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(a)
+		LOG_FUNC_ARG(b)
+		LOG_FUNC_END;
 
-	float fa, fb;
-	
 	// Test case: Halo
 	// Note : XQEMU verified that the int16_t arguments
 	// must be mapped to floats in the range [-32768.0, 32767.0]
 	// (See https://github.com/xqemu/xqemu/pull/176)
-	fa = (float)a;
-	fb = (float)b;
+	const float fa = static_cast<float>(a);
+	const float fb = static_cast<float>(b);
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, 0.0f, 1.0f);
+
+	CxbxImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 }
 
 extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in PushBuffer.cpp
 
 extern NV2ADevice* g_NV2A;
 
+// Overload for logging
+static void D3DDevice_SetVertexData4f_16
+(
+    xbox::int_xt     Register,
+    xbox::float_xt   a,
+    xbox::float_xt   b,
+    xbox::float_xt   c,
+    xbox::float_xt   d
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(a)
+		LOG_FUNC_ARG(b)
+		LOG_FUNC_ARG(c)
+		LOG_FUNC_ARG(d)
+		LOG_FUNC_END;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetVertexData4f_16
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
+// This is an LTCG specific version of SetVertexData4f where the first param is passed in EDI
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
 (
 	float_xt   a,
 	float_xt   b,
@@ -4527,15 +4554,22 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
 	float_xt   d
 )
 {
-	// This is an LTCG specific version of SetVertexData4f where the first param is passed in edi
-	int Register = 0;
-	__asm{
-		mov Register, edi
+	int_xt Register;
+
+	__asm {
+		LTCG_PROLOGUE
+		mov  Register, edi
 	}
 
-	LOG_FORWARD("D3DDevice_SetVertexData4f");
+	// Log
+	D3DDevice_SetVertexData4f_16(Register, a, b, c, d);
 
-	EMUPATCH(D3DDevice_SetVertexData4f)(Register, a, b, c, d);
+	CxbxImpl_SetVertexData4f(Register, a, b, c, d);
+
+	_asm {
+		LTCG_EPILOGUE
+		ret  10h
+	}
 }
 
 // ******************************************************************
@@ -4543,7 +4577,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 (
-    int     Register,
+    int_xt     Register,
     float_xt   a,
     float_xt   b,
     float_xt   c,
@@ -4566,21 +4600,27 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 (
-	int_xt		Register,
+	int_xt	Register,
 	byte_xt	a,
 	byte_xt	b,
 	byte_xt	c,
 	byte_xt	d
 )
 {
-	LOG_FORWARD("D3DDevice_SetVertexData4f");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(a)
+		LOG_FUNC_ARG(b)
+		LOG_FUNC_ARG(c)
+		LOG_FUNC_ARG(d)
+		LOG_FUNC_END;
 
-	float fa = a / 255.0f;
-	float fb = b / 255.0f;
-	float fc = c / 255.0f;
-	float fd = d / 255.0f;
+	const float fa = a / 255.0f;
+	const float fb = b / 255.0f;
+	const float fc = c / 255.0f;
+	const float fd = d / 255.0f;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
+    CxbxImpl_SetVertexData4f(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -4588,27 +4628,31 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 (
-	int_xt		Register,
-	SHORT	a,
-	SHORT	b,
-	SHORT	c,
-	SHORT	d
+	int_xt	 Register,
+	short_xt a,
+	short_xt b,
+	short_xt c,
+	short_xt d
 )
 {
-	LOG_FORWARD("D3DDevice_SetVertexData4f");
-
-	float fa, fb, fc, fd;
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(a)
+		LOG_FUNC_ARG(b)
+		LOG_FUNC_ARG(c)
+		LOG_FUNC_ARG(d)
+		LOG_FUNC_END;
 
 	// Test case: Halo
 	// Note : XQEMU verified that the int16_t arguments
 	// must be mapped to floats in the range [-32768.0, 32767.0]
 	// (See https://github.com/xqemu/xqemu/pull/176)
-	fa = (float)a;
-	fb = (float)b;
-	fc = (float)c;
-	fd = (float)d;
+	const float fa = static_cast<float>(a);
+	const float fb = static_cast<float>(b);
+	const float fc = static_cast<float>(c);
+	const float fd = static_cast<float>(d);
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, fa, fb, fc, fd);
+    CxbxImpl_SetVertexData4f(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -4616,15 +4660,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 (
-    int         Register,
+    int_xt      Register,
     D3DCOLOR    Color
 )
 {
-	LOG_FORWARD("D3DDevice_SetVertexData4f");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Register)
+		LOG_FUNC_ARG(Color)
+		LOG_FUNC_END;
 
-    D3DXCOLOR XColor = Color;
+    const D3DXCOLOR XColor = Color;
 
-    EMUPATCH(D3DDevice_SetVertexData4f)(Register, XColor.r, XColor.g, XColor.b, XColor.a);
+    CxbxImpl_SetVertexData4f(Register, XColor.r, XColor.g, XColor.b, XColor.a);
 }
 
 // ******************************************************************

@@ -663,7 +663,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_Begin)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 (
-    int     Register,
+    int_xt     Register,
     float_xt   a,
     float_xt   b
 );
@@ -673,7 +673,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 (
-    int     Register,
+    int_xt     Register,
     short_xt   a,
     short_xt   b
 );
@@ -683,7 +683,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4f)
 (
-    int     Register,
+    int_xt     Register,
     float_xt   a,
     float_xt   b,
     float_xt   c,
@@ -706,7 +706,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4f_16)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4ub)
 (
-	int_xt		Register,
+	int_xt	Register,
 	byte_xt	a,
 	byte_xt	b,
 	byte_xt	c,
@@ -730,7 +730,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4s)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexDataColor)
 (
-    int         Register,
+    int_xt      Register,
     D3DCOLOR    Color
 );
 
