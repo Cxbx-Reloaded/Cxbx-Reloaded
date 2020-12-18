@@ -6349,9 +6349,9 @@ void UpdateFixedFunctionVertexShaderState()
 	auto pointSize = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE);
 	auto pointSizeMin = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE_MIN);
 	auto pointSizeMax = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE_MAX);
-	ffShaderState.PointSprite.PointSize = *reinterpret_cast<float*>(&pointSize);
-	ffShaderState.PointSprite.PointSizeMin = *reinterpret_cast<float*>(&pointSizeMin);
-	ffShaderState.PointSprite.PointSizeMax = *reinterpret_cast<float*>(&pointSizeMax);
+	ffShaderState.PointSprite.PointSize = *reinterpret_cast<float*>(&pointSize) * g_RenderUpscaleFactor;
+	ffShaderState.PointSprite.PointSizeMin = *reinterpret_cast<float*>(&pointSizeMin) * g_RenderUpscaleFactor;
+	ffShaderState.PointSprite.PointSizeMax = *reinterpret_cast<float*>(&pointSizeMax) * g_RenderUpscaleFactor;
 
 	bool PointScaleEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE);
 	auto scaleA = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_A);
