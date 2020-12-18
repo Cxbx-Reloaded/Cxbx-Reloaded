@@ -94,6 +94,11 @@ struct TransformInfo
 static TransformInfo View; // Vertex transformed to viewspace
 static TransformInfo Projection; // Vertex transformed to projection space
 
+static const int LIGHT_TYPE_NONE = 0;
+static const int LIGHT_TYPE_POINT = 1;
+static const int LIGHT_TYPE_SPOT = 2;
+static const int LIGHT_TYPE_DIRECTIONAL = 3;
+
 // Final lighting output
 struct LightingOutput
 {
@@ -101,155 +106,71 @@ struct LightingOutput
     TwoSidedColor Specular;
 };
 
-TwoSidedColor DoSpecular(const float3 toLightVN, const float3 toViewerVN, const float2 powers, const float4 lightSpecular)
-{
-    TwoSidedColor Specular;
-    Specular.Front = Specular.Back = float3(0, 0, 0);
-
-    // Specular
-    // Note : if (state.Modes.SpecularEnable) no longer required because when disabled, CPU sets all lightSpecular.rgb inputs to 0
-    {
-        // Blinn-Phong
-        // https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
-        const float3 halfway = normalize(toViewerVN + toLightVN);
-        const float NdotH = dot(View.Normal, halfway);
-
-        const float3 frontSpecular = pow(abs(NdotH), powers[0]) * lightSpecular.rgb;
-        const float3 backSpecular = pow(abs(NdotH), powers[1]) * lightSpecular.rgb;
-
-        if (NdotH >= 0)
-            Specular.Front = frontSpecular;
-        else
-            Specular.Back = backSpecular;
-    }
-
-    return Specular;
-}
-
 // useful reference https://drivers.amd.com/misc/samples/dx9/FixedFuncShader.pdf
-
-LightingOutput DoPointLight(const Light l, const float3 toViewerVN, const float2 powers)
+LightingOutput DoLight(const Light l, const float3 toViewerN, const float2 powers)
 {
     LightingOutput o;
     o.Diffuse.Front = o.Diffuse.Back = float3(0, 0, 0);
     o.Specular.Front = o.Specular.Back = float3(0, 0, 0);
 
-    // Diffuse
-    const float3 toLightV = l.PositionV - View.Position.xyz;
-    const float lightDist = length(toLightV);
-    const float3 toLightVN = normalize(toLightV);
+    const float3 toLight = l.PositionV - View.Position.xyz;
+    const float3 toLightN = normalize(toLight);
+	float attenuation = 1;
+	float spotIntensity = 1;
 
-    // A(Constant) + A(Linear) * dist + A(Exp) * dist^2
-    float attenuation =
-        1 / (l.Attenuation[0]
-        + l.Attenuation[1] * lightDist
-        + l.Attenuation[2] * lightDist * lightDist);
+	if (l.Type == LIGHT_TYPE_SPOT) {
+		// Spotlight factors
+		// https://docs.microsoft.com/en-us/windows/win32/direct3d9/light-types
+		float3 toVertexN = -toLightN;
+		float cosAlpha = dot(l.DirectionVN, toVertexN);
+		// I = ( cos(a) - cos(phi/2) ) / ( cos(theta/2) - cos(phi/2) )
+		float spotBase = saturate((cosAlpha - l.CosHalfPhi) / l.SpotIntensityDivisor);
+		float spotIntensity = pow(spotBase, l.Falloff);
+	}
 
-    // Range cutoff
-    if (lightDist > l.Range)
-        attenuation = 0;
+	if (l.Type == LIGHT_TYPE_POINT || l.Type == LIGHT_TYPE_SPOT) {
+		float lightDist = length(toLight);
 
-    const float NdotL = dot(View.Normal, toLightVN);
-    const float3 lightDiffuse = abs(NdotL) * attenuation * l.Diffuse.rgb;
+		// A(Constant) + A(Linear) * dist + A(Exp) * dist^2
+		attenuation =
+			1 / (l.Attenuation[0]
+				+ l.Attenuation[1] * lightDist
+				+ l.Attenuation[2] * lightDist * lightDist);
 
-    if (NdotL >= 0)
-        o.Diffuse.Front = lightDiffuse;
-    else
-        o.Diffuse.Back = lightDiffuse;
+		// Range cutoff
+		if (lightDist > l.Range)
+			attenuation = 0;
+	}
 
-    // Specular
-    o.Specular = DoSpecular(toLightVN, toViewerVN, powers, l.Specular);
-    o.Specular.Front *= attenuation;
-    o.Specular.Back *= attenuation;
+	// Diffuse lighting calculation
+    const float NdotLFront = dot(View.Normal, toLightN);
+	const float NdotLBack = dot(-View.Normal, toLightN);
+	o.Diffuse.Front = max(NdotLFront, 0) * l.Diffuse.rgb * attenuation * spotIntensity;
+	o.Diffuse.Back = max(NdotLBack, 0) * l.Diffuse.rgb * attenuation * spotIntensity;
 
-    return o;
-}
+	// Specular lighting calculation
+	// Note : if (state.Modes.SpecularEnable) no longer required because when disabled, CPU sets all lightSpecular.rgb inputs to 0
+	// Blinn-Phong
+	// https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
+	const float3 halfway = normalize(toViewerN + toLightN);
+	const float NdotHFront = dot(View.Normal, halfway);
+	const float NdotHBack = dot(-View.Normal, halfway);
 
-LightingOutput DoSpotLight(const Light l, const float3 toViewerVN, const float2 powers)
-{
-    LightingOutput o;
-    o.Diffuse.Front = o.Diffuse.Back = float3(0, 0, 0);
-    o.Specular.Front = o.Specular.Back = float3(0, 0, 0);
-
-    // Diffuse
-    const float3 toLightV = l.PositionV - View.Position.xyz;
-    const float lightDist = length(toLightV);
-    const float3 toLightVN = normalize(toLightV);
-    const float3 toVertexVN = -toLightVN;
-
-    // https://docs.microsoft.com/en-us/windows/win32/direct3d9/light-types
-    const float cosAlpha = dot(l.DirectionVN, toVertexVN);
-    // I = ( cos(a) - cos(phi/2) ) / ( cos(theta/2) - cos(phi/2) )
-    const float spotBase = saturate((cosAlpha - l.CosHalfPhi) / l.SpotIntensityDivisor);
-    const float spotIntensity = pow(spotBase, l.Falloff);
-
-    // A(Constant) + A(Linear) * dist + A(Exp) * dist^2
-    float attenuation =
-        1 / (l.Attenuation[0]
-        + l.Attenuation[1] * lightDist
-        + l.Attenuation[2] * lightDist * lightDist);
-
-    // Range cutoff
-    if (lightDist > l.Range)
-        attenuation = 0;
-
-    const float NdotL = dot(View.Normal, toLightVN);
-    const float3 lightDiffuse = abs(NdotL) * attenuation * l.Diffuse.rgb * spotIntensity;
-
-    if (NdotL >= 0)
-        o.Diffuse.Front = lightDiffuse;
-    else
-        o.Diffuse.Back = lightDiffuse;
-
-    // Specular
-    o.Specular = DoSpecular(toLightVN, toViewerVN, powers, l.Specular);
-    o.Specular.Front *= attenuation;
-    o.Specular.Back *= attenuation;
+	o.Specular.Front = pow(max(NdotHFront, 0), powers[0]) * l.Specular.rgb * attenuation * spotIntensity;
+	o.Specular.Back = pow(max(NdotHBack, 0), powers[1]) * l.Specular.rgb * attenuation * spotIntensity;
 
     return o;
 }
-
-LightingOutput DoDirectionalLight(const Light l, const float3 toViewerVN, const float2 powers)
-{
-    LightingOutput o;
-    o.Diffuse.Front = o.Diffuse.Back = float3(0, 0, 0);
-    o.Specular.Front = o.Specular.Back = float3(0, 0, 0);
-
-    // Diffuse
-
-    // Intensity from N . L
-    const float3 toLightVN = -l.DirectionVN;
-    const float NdotL = dot(View.Normal, toLightVN);
-    const float3 lightDiffuse = abs(NdotL * l.Diffuse.rgb);
-
-    // Apply light contribution to front or back face
-    // as the case may be
-    if (NdotL >= 0)
-        o.Diffuse.Front = lightDiffuse;
-    else
-        o.Diffuse.Back = lightDiffuse;
-
-    // Specular
-    o.Specular = DoSpecular(toLightVN, toViewerVN, powers, l.Specular);
-
-    return o;
-}
-
 
 LightingOutput CalcLighting(const float2 powers)
 {
-    static const int LIGHT_TYPE_NONE        = 0;
-    static const int LIGHT_TYPE_POINT       = 1;
-    static const int LIGHT_TYPE_SPOT        = 2;
-    static const int LIGHT_TYPE_DIRECTIONAL = 3;
-
     LightingOutput totalLightOutput;
     totalLightOutput.Diffuse.Front = float3(0, 0, 0);
     totalLightOutput.Diffuse.Back = float3(0, 0, 0);
     totalLightOutput.Specular.Front = float3(0, 0, 0);
     totalLightOutput.Specular.Back = float3(0, 0, 0);
 
-    const float3 toViewerVN = state.Modes.LocalViewer
+    const float3 toViewerN = state.Modes.LocalViewer
         ? float3(0, 0, -1) // Strip sample
         : normalize(-View.Position.xyz); // DoA3 character select
 
@@ -258,19 +179,14 @@ LightingOutput CalcLighting(const float2 powers)
         const Light currentLight = state.Lights[i];
         LightingOutput currentLightOutput;
 
-        if(currentLight.Type == LIGHT_TYPE_POINT)
-            currentLightOutput = DoPointLight(currentLight, toViewerVN, powers);
-        else if(currentLight.Type == LIGHT_TYPE_SPOT)
-            currentLightOutput = DoSpotLight(currentLight, toViewerVN, powers);
-        else if (currentLight.Type == LIGHT_TYPE_DIRECTIONAL)
-            currentLightOutput = DoDirectionalLight(currentLight, toViewerVN, powers);
-        else
-            continue;
+		if (currentLight.Type != LIGHT_TYPE_NONE) {
+			currentLightOutput = DoLight(currentLight, toViewerN, powers);
 
-        totalLightOutput.Diffuse.Front += currentLightOutput.Diffuse.Front;
-        totalLightOutput.Diffuse.Back += currentLightOutput.Diffuse.Back;
-        totalLightOutput.Specular.Front += currentLightOutput.Specular.Front;
-        totalLightOutput.Specular.Back += currentLightOutput.Specular.Back;
+			totalLightOutput.Diffuse.Front += currentLightOutput.Diffuse.Front;
+			totalLightOutput.Diffuse.Back += currentLightOutput.Diffuse.Back;
+			totalLightOutput.Specular.Front += currentLightOutput.Specular.Front;
+			totalLightOutput.Specular.Back += currentLightOutput.Specular.Back;
+		}
     }
 
     return totalLightOutput;
