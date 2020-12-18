@@ -105,11 +105,12 @@ struct Modes {
 
 struct PointSprite {
     alignas(16) float PointSize;
+	alignas(16) float PointSizeMin;
+	alignas(16) float PointSizeMax;
 //  alignas(16) float PointScaleEnable;
-    alignas(16) float RenderTargetHeight;
-    alignas(16) float ScaleA;
-    alignas(16) float ScaleB;
-    alignas(16) float ScaleC;
+    alignas(16) float XboxRenderTargetHeight;
+    alignas(16) float3 ScaleABC;
+    alignas(16) float RenderUpscaleFactor;
 };
 
 struct TextureState {
