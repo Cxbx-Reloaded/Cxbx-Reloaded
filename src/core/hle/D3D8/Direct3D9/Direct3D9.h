@@ -190,7 +190,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
     dword_xt                       Index
 );
 
-xbox::hresult_xt __stdcall EMUPATCH(D3DDevice_EndVisibilityTest_0)();
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndVisibilityTest_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_GetVisibilityTestResult
@@ -216,8 +216,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
     dword_xt                       Address
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_LoadVertexShader_0)();
-xbox::void_xt EMUPATCH(D3DDevice_LoadVertexShader_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_4)
 (
     dword_xt                       Address
 );
@@ -231,8 +231,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
     dword_xt                       Address
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SelectVertexShader_0)();
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SelectVertexShader_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_4)
 (
     dword_xt                       Address
 );

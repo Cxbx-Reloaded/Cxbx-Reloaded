@@ -3242,30 +3242,50 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 	}
 }
 
+// Overload for logging
+static void D3DDevice_SetIndices_4
+(
+    xbox::X_D3DIndexBuffer   *pIndexData,
+    xbox::uint_xt             BaseVertexIndex
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pIndexData)
+        LOG_FUNC_ARG(BaseVertexIndex)
+        LOG_FUNC_END;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetIndices_4
 // LTCG specific D3DDevice_SetIndices function...
 // This uses a custom calling convention where parameter is passed in EBX and Stack
 // Test Case: Conker
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
 (
     uint_xt                BaseVertexIndex
 )
 {
     X_D3DIndexBuffer   *pIndexData;
-
     __asm {
-        mov pIndexData, ebx
+        LTCG_PROLOGUE
+        mov  pIndexData, ebx
     }
+
+    // Log
+    D3DDevice_SetIndices_4(pIndexData, BaseVertexIndex);
+
     // Cache the base vertex index
     g_Xbox_BaseVertexIndex = BaseVertexIndex;
 
     // Call LTCG-specific trampoline
     __asm {
-        mov ebx, pIndexData
+        mov  ebx, pIndexData
         push BaseVertexIndex
         call XB_TRMP(D3DDevice_SetIndices_4);
+
+        LTCG_EPILOGUE
+        ret  4
     }
 }
 
@@ -3497,17 +3517,24 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 // LTCG specific D3DDevice_EndVisibilityTest function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Test Drive: Eve of Destruction
-xbox::hresult_xt __stdcall xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0)
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 (
 )
 {
-	dword_xt                       Index;
+    dword_xt Index;
+	xbox::hresult_xt result;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Index, eax
+    }
 
-	__asm {
-		mov Index, eax
-	}
+    result = EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 
-	return EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
+    __asm {
+        mov  eax, result
+        LTCG_EPILOGUE
+        ret
+    }
 }
 
 // ******************************************************************
@@ -3608,50 +3635,80 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
     return D3D_OK;
 }
 
+// Overload for logging
+static void D3DDevice_LoadVertexShader_0
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+    LOG_FUNC_END;
+}
+
 // LTCG specific D3DDevice_LoadVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX, ECX
 // Test-case: Aggressive Inline
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_LoadVertexShader_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0)
 (
 )
 {
-    dword_xt                       Handle;
-    dword_xt                       Address;
+    dword_xt Handle;
+    dword_xt Address;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Address, eax
+        mov  Handle, ecx
+    }
 
-	__asm {
-		mov Address, eax
-		mov Handle, ecx
-	}
+    // Log
+    D3DDevice_LoadVertexShader_0(Handle, Address);
 
-	return EMUPATCH(D3DDevice_LoadVertexShader)(Handle, Address);
+    CxbxImpl_LoadVertexShader(Handle, Address);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
+}
+
+// Overload for logging
+static void D3DDevice_LoadVertexShader_4
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+    LOG_FUNC_END;
 }
 
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Ninja Gaiden
-__declspec(naked) VOID xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
 (
     dword_xt                       Address
 )
 {
-	dword_xt Handle;
+    dword_xt Handle;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, eax
+    }
 
-	// prologue
-	__asm
-	{
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
-		mov  Handle, eax // get parameter from eax
-	}
+    // Log
+    D3DDevice_LoadVertexShader_4(Handle, Address);
 
-	CxbxImpl_LoadVertexShader(Handle, Address);
+    CxbxImpl_LoadVertexShader(Handle, Address);
 
-	// epilogue
-	__asm {
-		mov  esp, ebp
-		pop  ebp
-		ret  4
-	}
+    __asm {
+        LTCG_EPILOGUE
+        ret  4
+    }
 }
 
 // ******************************************************************
@@ -3671,36 +3728,81 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader)
 	CxbxImpl_LoadVertexShader(Handle, Address);
 }
 
+// Overload for logging
+static void D3DDevice_SelectVertexShader_0
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+        LOG_FUNC_END;
+}
+
 // LTCG specific D3DDevice_SelectVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX, EBX
 // Test-case: Star Wars - Battlefront
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SelectVertexShader_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0)
 (
 )
 {
-    dword_xt                       Handle;
-    dword_xt                       Address;
+    dword_xt Handle;
+    dword_xt Address;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, eax
+        mov  Address, ebx
+    }
 
-	__asm {
-		mov Handle, eax
-		mov Address, ebx
-	}
+    // Log
+    D3DDevice_SelectVertexShader_0(Handle, Address);
 
-	return EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
+    CxbxImpl_SelectVertexShader(Handle, Address);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
+}
+
+// Overload for logging
+static void D3DDevice_SelectVertexShader_4
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+        LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_SelectVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Aggressive Inline
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SelectVertexShader_4)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_4)
 (
     dword_xt                       Address
 )
 {
-	dword_xt           Handle;
-	__asm mov Handle, eax;
+    dword_xt Handle;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, eax
+    }
 
-	return EMUPATCH(D3DDevice_SelectVertexShader)(Handle, Address);
+    // Log
+    D3DDevice_SelectVertexShader_4(Handle, Address);
+
+    CxbxImpl_SelectVertexShader(Handle, Address);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret  4
+    }
 }
 
 // ******************************************************************
@@ -3712,12 +3814,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
     dword_xt                       Address
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(Address)
-		LOG_FUNC_END;
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+        LOG_FUNC_END;
 
-	CxbxImpl_SelectVertexShader(Handle, Address);
+    CxbxImpl_SelectVertexShader(Handle, Address);
 }
 
 // ******************************************************************
