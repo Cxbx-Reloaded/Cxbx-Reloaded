@@ -105,6 +105,8 @@ struct Modes {
 
 struct PointSprite {
     alignas(16) float PointSize;
+	alignas(16) float PointSizeMin;
+	alignas(16) float PointSizeMax;
 //  alignas(16) float PointScaleEnable;
     alignas(16) float RenderTargetHeight;
     alignas(16) float ScaleA;

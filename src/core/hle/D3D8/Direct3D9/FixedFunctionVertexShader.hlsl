@@ -399,7 +399,7 @@ float DoPointSpriteSize()
         pointSize *= ps.RenderTargetHeight * sqrt(1 / factor);
     }
 
-    return pointSize;
+	return clamp(pointSize, ps.PointSizeMin, ps.PointSizeMax);
 }
 
 VS_INPUT InitializeInputRegisters(const VS_INPUT xInput)
