@@ -6235,13 +6235,14 @@ D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
 	return D3DXVECTOR4(val.r, val.g, val.b, val.a);
 }
 
-void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient, D3DXMATRIX viewTransform) {
+void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient) {
 	if (d3dLightIndex == -1) {
 		pShaderLight->Type = 0; // Disable the light
 		return;
 	}
 
 	auto d3dLight = &d3d8LightState.Lights[d3dLightIndex];
+	auto viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 
 	// TODO remove D3DX usage
 	// Pre-transform light position to viewspace
@@ -6405,10 +6406,8 @@ void UpdateFixedFunctionVertexShaderState()
 
 	// Update lights
 	auto LightAmbient = D3DXVECTOR4(0.f, 0.f, 0.f, 0.f);
-	D3DXMATRIX rowMajorViewTransform;
-	D3DXMatrixTranspose(&rowMajorViewTransform, (D3DXMATRIX*)&ffShaderState.Transforms.View);
 	for (size_t i = 0; i < ffShaderState.Lights.size(); i++) {
-		UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient, rowMajorViewTransform);
+		UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient);
 	}
 
 	D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
