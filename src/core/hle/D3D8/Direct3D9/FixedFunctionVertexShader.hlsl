@@ -107,16 +107,24 @@ struct LightingOutput
 };
 
 // useful reference https://drivers.amd.com/misc/samples/dx9/FixedFuncShader.pdf
-LightingOutput DoLight(const Light l, const float3 toViewerN, const float2 powers)
+LightingOutput DoLight(const Light l, const float2 powers)
 {
     LightingOutput o;
     o.Diffuse.Front = o.Diffuse.Back = float3(0, 0, 0);
     o.Specular.Front = o.Specular.Back = float3(0, 0, 0);
 
-    const float3 toLight = l.PositionV - View.Position.xyz;
-    const float3 toLightN = normalize(toLight);
+	float3 toLight;
+	float3 toLightN;
 	float attenuation = 1;
 	float spotIntensity = 1;
+	
+	if (l.Type == LIGHT_TYPE_DIRECTIONAL) {
+		toLight = toLightN = -l.DirectionVN;
+	}
+	else {
+		toLight = l.PositionV - View.Position.xyz;
+		toLightN = normalize(toLight);
+	}
 
 	if (l.Type == LIGHT_TYPE_SPOT) {
 		// Spotlight factors
@@ -133,9 +141,9 @@ LightingOutput DoLight(const Light l, const float3 toViewerN, const float2 power
 
 		// A(Constant) + A(Linear) * dist + A(Exp) * dist^2
 		attenuation =
-			1 / (l.Attenuation[0]
-				+ l.Attenuation[1] * lightDist
-				+ l.Attenuation[2] * lightDist * lightDist);
+		1 / (l.Attenuation[0]
+			+ l.Attenuation[1] * lightDist
+			+ l.Attenuation[2] * lightDist * lightDist);
 
 		// Range cutoff
 		if (lightDist > l.Range)
@@ -143,13 +151,17 @@ LightingOutput DoLight(const Light l, const float3 toViewerN, const float2 power
 	}
 
 	// Diffuse lighting calculation
-    const float NdotLFront = dot(View.Normal, toLightN);
+	const float NdotLFront = dot(View.Normal, toLightN);
 	const float NdotLBack = dot(-View.Normal, toLightN);
 	o.Diffuse.Front = max(NdotLFront, 0) * l.Diffuse.rgb * attenuation * spotIntensity;
 	o.Diffuse.Back = max(NdotLBack, 0) * l.Diffuse.rgb * attenuation * spotIntensity;
 
 	// Specular lighting calculation
-	// Note : if (state.Modes.SpecularEnable) no longer required because when disabled, CPU sets all lightSpecular.rgb inputs to 0
+	float3 toViewerN = state.Modes.LocalViewer
+		? normalize(-View.Position.xyz) // Strip sample
+		: float3(0, 0, -1); // DoA 3 character select
+	
+	// Note : if X_D3DRS_SPECULARENABLE is false then all light specular colours should have been zeroed out
 	// Blinn-Phong
 	// https://learnopengl.com/Advanced-Lighting/Advanced-Lighting
 	const float3 halfway = normalize(toViewerN + toLightN);
@@ -159,7 +171,7 @@ LightingOutput DoLight(const Light l, const float3 toViewerN, const float2 power
 	o.Specular.Front = pow(max(NdotHFront, 0), powers[0]) * l.Specular.rgb * attenuation * spotIntensity;
 	o.Specular.Back = pow(max(NdotHBack, 0), powers[1]) * l.Specular.rgb * attenuation * spotIntensity;
 
-    return o;
+	return o;
 }
 
 LightingOutput CalcLighting(const float2 powers)
@@ -170,17 +182,13 @@ LightingOutput CalcLighting(const float2 powers)
     totalLightOutput.Specular.Front = float3(0, 0, 0);
     totalLightOutput.Specular.Back = float3(0, 0, 0);
 
-    const float3 toViewerN = state.Modes.LocalViewer
-        ? float3(0, 0, -1) // Strip sample
-        : normalize(-View.Position.xyz); // DoA3 character select
-
     for (uint i = 0; i < 8; i++)
     {
         const Light currentLight = state.Lights[i];
         LightingOutput currentLightOutput;
 
 		if (currentLight.Type != LIGHT_TYPE_NONE) {
-			currentLightOutput = DoLight(currentLight, toViewerN, powers);
+			currentLightOutput = DoLight(currentLight, powers);
 
 			totalLightOutput.Diffuse.Front += currentLightOutput.Diffuse.Front;
 			totalLightOutput.Diffuse.Back += currentLightOutput.Diffuse.Back;
