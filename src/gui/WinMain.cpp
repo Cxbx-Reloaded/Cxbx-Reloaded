@@ -54,14 +54,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
 	// Cxbx-Reloaded needs access to high memory, only exposed to WoW64.
 	if (!VerifyWow64()) {
-		PopupError(nullptr, "Cxbx-Reloaded can only run under WoW64\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix");
+		PopupError(nullptr, "Cxbx-Reloaded can only run under WoW64;\nThis means either a 64-bit version of Windows, or Wine with a 64-bit prefix.");
 		return EXIT_FAILURE;
 	}
 
 #ifndef CXBXR_EMU
 	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
-		PopupError(nullptr, "Cxbx.exe is not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
+		PopupError(nullptr, "Cxbx.exe is not loaded to base address 0x00010000, which is a requirement for Xbox emulation.");
 		return EXIT_FAILURE;
 	}
 #endif

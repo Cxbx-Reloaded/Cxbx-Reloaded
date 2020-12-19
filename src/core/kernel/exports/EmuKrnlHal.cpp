@@ -630,7 +630,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 					retryAttempt++;
 					// Terminate after 5 seconds of failure.
 					if (retryAttempt >= (5 * (1000 / 100))) {
-						PopupError(nullptr, "Could not reboot, new emulation process did not take over.");
+						PopupError(nullptr, "Could not reboot; New emulation process did not take over.");
 						break;
 					}
 				}

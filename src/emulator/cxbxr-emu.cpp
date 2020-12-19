@@ -130,7 +130,7 @@ DWORD WINAPI Emulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 
 	/*! Verify our host executable, cxbxr-ldr.exe, is loaded to base address 0x00010000 */
 	if (!VerifyBaseAddr()) {
-		PopupError(nullptr, "cxbx-ldr.exe was not loaded to base address 0x00010000 (which is a requirement for Xbox emulation)");
+		PopupError(nullptr, "cxbx-ldr.exe was not loaded to base address 0x00010000, which is a requirement for Xbox emulation.");
 		return EXIT_FAILURE;
 	}
 

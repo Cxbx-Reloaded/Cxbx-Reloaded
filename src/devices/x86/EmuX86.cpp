@@ -918,7 +918,7 @@ void EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
 	// This CPUID emulation is based on :
 	// https://github.com/docbrown/vxb/wiki/Xbox-CPUID-Information
 	// https://github.com/docbrown/vxb/wiki/Xbox-Hardware-Information and
-	// http://www.sandpile.org/x86/cpuid.htm
+	// https://www.sandpile.org/x86/cpuid.htm
 	switch (e->ContextRecord->Eax) { // simpler than EmuX86_GetRegisterValue32(e, R_EAX)
 	case 0: { // CPUID Function 0, return the maximum supported standard level and vendor ID string
 		// Maximum supported standard level

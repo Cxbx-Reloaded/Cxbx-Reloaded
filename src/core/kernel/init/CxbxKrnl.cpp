@@ -1616,7 +1616,7 @@ bool CxbxLockFilePath()
     }
 
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        PopupError(nullptr, "Data path directory is currently in used.\nUse different data path directory or stop emulation from another process.");
+        PopupError(nullptr, "Data path directory is currently in use.\nUse a different data path directory or stop emulation from another process.");
         CloseHandle(hMapDataHash);
         return false;
     }
