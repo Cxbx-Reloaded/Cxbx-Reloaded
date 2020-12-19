@@ -709,6 +709,18 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	// not present in the vertex declaration.
 	// We use range 193 and up to store these values, as Xbox shaders stop at c192!
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
+
+	// Some early titles have fog issues
+	// In fixed-function mode, the fog factor is stored in specular alpha
+	// Halo sets the specular alpha to 1 (which if treated as the fog value, fixes geometry visibility)
+	// We may need to copy specular alpha to the fog register in some specific circumstances
+	// Do it all the time for now
+	// Test cases: Halo, Silent Hill 2
+	if (Register == xbox::X_D3DVSDE_SPECULAR) {
+		auto fogFloats = HLE_get_NV2A_vertex_attribute_value_pointer(xbox::X_D3DVSDE_FOG);
+		fogFloats[0] = d;
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + xbox::X_D3DVSDE_FOG, fogFloats, 1);
+	}
 }
 
 DWORD Float4ToDWORD(float* floats)
