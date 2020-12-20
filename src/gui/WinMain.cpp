@@ -54,7 +54,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// First detect if we are running on WoW64, if not, prevent Cxbx-Reloaded from starting
 	// Cxbx-Reloaded needs access to high memory, only exposed to WoW64.
 	if (!VerifyWow64()) {
-		PopupError(nullptr, "Cxbx-Reloaded can only run under WoW64;\nThis means either a 64-bit version of Windows, or Wine with a 64-bit prefix.");
+		PopupError(nullptr, "Cxbx-Reloaded can only run under WoW64;\nThis means either a 64-bit version of Windows or Wine with a 64-bit prefix.");
 		return EXIT_FAILURE;
 	}
 
