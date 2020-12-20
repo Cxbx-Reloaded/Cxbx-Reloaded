@@ -8,7 +8,6 @@
 [submodule "import/XbSymbolDatabase"]
 	path = import/XbSymbolDatabase
 	url = https://github.com/Cxbx-Reloaded/XbSymbolDatabase.git
-	shallow = true
 [submodule "import/simpleini"]
 	path = import/simpleini
 	url = https://github.com/brofield/simpleini.git
