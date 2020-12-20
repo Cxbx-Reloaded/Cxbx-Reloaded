@@ -4255,16 +4255,22 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 
 // LTCG specific D3DDevice_SetShaderConstantMode function...
 // This uses a custom calling convention where parameter is passed in EAX
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
 (
 )
 {
-	xbox::X_VERTEXSHADERCONSTANTMODE param;
-	__asm {
-		mov param, eax;
-	}
+    X_VERTEXSHADERCONSTANTMODE Mode;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Mode, eax
+    }
 
-	return EMUPATCH(D3DDevice_SetShaderConstantMode)(param);
+    EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
 }
 
 // ******************************************************************
@@ -4272,7 +4278,7 @@ xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
-    xbox::X_VERTEXSHADERCONSTANTMODE Mode
+    X_VERTEXSHADERCONSTANTMODE Mode
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
@@ -4412,58 +4418,94 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
+// Overload for logging
+static void D3DDevice_SetTexture_4__LTCG_eax_pTexture
+(
+    xbox::dword_xt           Stage,
+    xbox::X_D3DBaseTexture  *pTexture
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Stage)
+        LOG_FUNC_ARG(pTexture)
+        LOG_FUNC_END;
+}
+
 // LTCG specific D3DDevice_SetTexture function...
 // This uses a custom calling convention where pTexture is passed in EAX
 // Test-case: NASCAR Heat 2002
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
 (
-	dword_xt           Stage
+    dword_xt           Stage
 )
 {
-	X_D3DBaseTexture  *pTexture;
-	__asm mov pTexture, eax;
+    X_D3DBaseTexture *pTexture;
+    __asm {
+        LTCG_PROLOGUE
+        mov  pTexture, eax
+    }
 
-	//LOG_FUNC_BEGIN
-	//	LOG_FUNC_ARG(Stage)
-	//	LOG_FUNC_ARG(pTexture)
-	//	LOG_FUNC_END;
-	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTexture_4__LTCG_eax_pTexture(Stage : %d pTexture : %08x);", Stage, pTexture);
+    // Log
+    D3DDevice_SetTexture_4__LTCG_eax_pTexture(Stage, pTexture);
 
-	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	__asm {
-		mov eax, pTexture
-		push Stage
-		call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
-	}
+    // Call the Xbox implementation of this function, to properly handle reference counting for us
+    __asm {
+        mov eax, pTexture
+        push Stage
+        call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+    }
 
-	g_pXbox_SetTexture[Stage] = pTexture;
+    g_pXbox_SetTexture[Stage] = pTexture;
+
+    __asm {
+        LTCG_EPILOGUE
+        ret  4
+    }
+}
+
+// Overload for logging
+static void D3DDevice_SetTexture_4
+(
+    xbox::dword_xt           Stage,
+    xbox::X_D3DBaseTexture  *pTexture
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Stage)
+        LOG_FUNC_ARG(pTexture)
+        LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_SetTexture function...
 // This uses a custom calling convention where Stage is passed in EAX
 // Test-case: Metal Wolf Chaos
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4)
 (
-	X_D3DBaseTexture  *pTexture
+    X_D3DBaseTexture  *pTexture
 )
 {
-	dword_xt           Stage;
-	__asm mov Stage, eax;
+    dword_xt Stage;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Stage, eax
+    }
 
-	//LOG_FUNC_BEGIN
-	//	LOG_FUNC_ARG(Stage)
-	//	LOG_FUNC_ARG(pTexture)
-	//	LOG_FUNC_END;
-	EmuLog(LOG_LEVEL::DEBUG, "D3DDevice_SetTexture_4(Stage : %d pTexture : %08x);", Stage, pTexture);
+    // Log
+    D3DDevice_SetTexture_4(Stage, pTexture);
 
-	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	__asm {
-		mov eax, Stage
-		push pTexture
-		call XB_TRMP(D3DDevice_SetTexture_4)
-	}
+    // Call the Xbox implementation of this function, to properly handle reference counting for us
+    __asm {
+        mov eax, Stage
+        push pTexture
+        call XB_TRMP(D3DDevice_SetTexture_4)
+    }
 
-	g_pXbox_SetTexture[Stage] = pTexture;
+    g_pXbox_SetTexture[Stage] = pTexture;
+
+    __asm {
+        LTCG_EPILOGUE
+        ret  4
+    }
 }
 
 // ******************************************************************

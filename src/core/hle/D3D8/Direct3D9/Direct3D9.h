@@ -362,10 +362,10 @@ xbox::void_xt __stdcall EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
-    xbox::X_VERTEXSHADERCONSTANTMODE Mode
+    X_VERTEXSHADERCONSTANTMODE Mode
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_Reset
