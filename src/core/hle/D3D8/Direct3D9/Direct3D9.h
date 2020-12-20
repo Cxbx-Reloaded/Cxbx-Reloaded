@@ -1555,17 +1555,17 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette_4)
 // ******************************************************************
 // * patch: D3DDevice_SetFlickerFilter
 // ******************************************************************
-void WINAPI EMUPATCH(D3DDevice_SetFlickerFilter)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetFlickerFilter)
 (
     dword_xt         Filter
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetFlickerFilter_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetFlickerFilter_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetSoftDisplayFilter
 // ******************************************************************
-void WINAPI EMUPATCH(D3DDevice_SetSoftDisplayFilter)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 (
     bool_xt Enable
 );

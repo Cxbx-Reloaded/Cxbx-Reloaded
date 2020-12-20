@@ -7462,10 +7462,10 @@ xbox::void_xt CxbxImpl_SetPixelShader(xbox::dword_xt Handle)
 // Overload for logging
 static void D3DDevice_SetPixelShader_0
 (
-	xbox::dword_xt      Handle
+    xbox::dword_xt      Handle
 )
 {
-	LOG_FUNC_ONE_ARG(Handle);
+    LOG_FUNC_ONE_ARG(Handle);
 }
 
 // LTCG specific D3DDevice_SetPixelShader function...
@@ -7475,31 +7475,26 @@ static void D3DDevice_SetPixelShader_0
 // Test-case: Midtown Madness 3
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0)()
 {
-	dword_xt Handle;
-	// prologue
-	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
-		mov  Handle, eax
-	}
+    dword_xt Handle;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, eax
+    }
 
-	// Log
-	D3DDevice_SetPixelShader_0(Handle);
+    // Log
+    D3DDevice_SetPixelShader_0(Handle);
 
-	__asm {
-		mov  eax, Handle
-		call XB_TRMP(D3DDevice_SetPixelShader_0)
-	}
+    __asm {
+        mov  eax, Handle
+        call XB_TRMP(D3DDevice_SetPixelShader_0)
+    }
 
-	CxbxImpl_SetPixelShader(Handle);
+    CxbxImpl_SetPixelShader(Handle);
 
-	// epilogue
-	__asm {
-		mov  esp, ebp
-		pop  ebp
-		ret
-	}
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
 }
 
 // ******************************************************************
@@ -7524,20 +7519,25 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 // This uses a custom calling convention where parameter is passed in ECX, EAX and Stack
 // Test Case: Conker
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType
+    X_D3DPRIMITIVETYPE PrimitiveType
 )
 {
-    UINT VertexCount;
-    UINT StartVertex;
-    
-    _asm {
-        mov VertexCount, eax
-        mov StartVertex, ecx
+    uint_xt VertexCount;
+    uint_xt StartVertex;
+    __asm {
+        LTCG_PROLOGUE
+        mov  VertexCount, eax
+        mov  StartVertex, ecx
     }
 
     EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret  4
+    }
 }
 
 // ******************************************************************
@@ -7546,8 +7546,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 (
     X_D3DPRIMITIVETYPE PrimitiveType,
-    uint_xt               StartVertex,
-    uint_xt               VertexCount
+    uint_xt            StartVertex,
+    uint_xt            VertexCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -7665,9 +7665,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
+    uint_xt             VertexCount,
     CONST PVOID         pVertexStreamZeroData,
-    uint_xt                VertexStreamZeroStride
+    uint_xt             VertexStreamZeroStride
 )
 {
 	LOG_FUNC_BEGIN
@@ -7701,19 +7701,25 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 // LTCG specific D3DDevice_DrawVerticesUP function...
 // This uses a custom calling convention where pVertexStreamZeroData is passed in EBX
 // Test-case: NASCAR Heat 20002
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
-    uint_xt                VertexStreamZeroStride
+    uint_xt             VertexCount,
+    uint_xt             VertexStreamZeroStride
 )
 {
-	PVOID         pVertexStreamZeroData;
-	__asm mov pVertexStreamZeroData, ebx
+    PVOID pVertexStreamZeroData;
+    __asm {
+        LTCG_PROLOGUE
+        mov  pVertexStreamZeroData, ebx
+    }
 
-	LOG_FORWARD("D3DDevice_DrawVerticesUP");
+    EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
-	EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+    __asm {
+        LTCG_EPILOGUE
+        ret  0Ch
+    }
 }
 
 // ******************************************************************
@@ -7722,7 +7728,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
+    uint_xt             VertexCount,
     CONST PWORD         pIndexData
 )
 {
@@ -8065,12 +8071,8 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_
 {
 	X_D3DSurface *pRenderTarget;
     X_D3DSurface *pNewZStencil;
-
-	// prologue
 	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
+		LTCG_PROLOGUE
 		mov  pRenderTarget, ecx
 		mov  pNewZStencil, eax
 	}
@@ -8078,10 +8080,8 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_
 	// Actual function body
 	D3DDevice_SetRenderTarget_0(pRenderTarget, pNewZStencil);
 
-	// epilogue
 	__asm {
-		mov  esp, ebp
-		pop  ebp
+		LTCG_EPILOGUE
 		ret
 	}
 }
@@ -8149,12 +8149,9 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 	X_D3DPalette *pPalette
 )
 {
-	dword_xt      Stage;
-
+	dword_xt Stage;
 	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
+		LTCG_PROLOGUE
 		mov  Stage, eax
 	}
 
@@ -8171,8 +8168,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 	CxbxImpl_SetPalette(Stage, pPalette);
 
 	__asm {
-		mov  esp, ebp
-		pop  ebp
+		LTCG_EPILOGUE
 		ret  4
 	}
 }
@@ -8200,17 +8196,22 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 // LTCG specific D3DDevice_SetFlickerFilter function...
 // This uses a custom calling convention where parameter is passed in ESI
 // Test-case: Metal Wolf Chaos
-xbox::void_xt __stdcall xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0)
 (
 )
 {
-	dword_xt         Filter;
-
+	dword_xt Filter;
 	__asm {
-		mov Filter, esi
+		LTCG_PROLOGUE
+		mov  Filter, esi
 	}
 
-	return EMUPATCH(D3DDevice_SetFlickerFilter)(Filter);
+	EMUPATCH(D3DDevice_SetFlickerFilter)(Filter);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret
+	}
 }
 
 // ******************************************************************
@@ -8256,11 +8257,8 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShad
 )
 {
 	dword_xt Handle;
-
 	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
+		LTCG_PROLOGUE
 		mov  Handle, eax
 	}
 
@@ -8274,8 +8272,8 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShad
 	__asm {
 		mov  eax, Handle
 		call XB_TRMP(D3DDevice_DeleteVertexShader_0)
-		mov  esp, ebp
-		pop  ebp
+
+		LTCG_EPILOGUE
 		ret
 	}
 }
@@ -8913,22 +8911,16 @@ void WINAPI xbox::EMUPATCH(D3D_BlockOnTime)( dword_xt Unknown1, int Unknown2 )
 __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_BlockOnTime_4)( dword_xt Unknown1 )
 {
 	int Unknown2;
-
-	// prologue
 	__asm {
-		push ebp
-		mov  ebp, esp
-		sub  esp, __LOCAL_SIZE
-		mov  Unknown2, eax // get parameter from eax
+		LTCG_PROLOGUE
+		mov  Unknown2, eax
 	}
 
 	// LOG_FORWARD requires unwinding, so carry on without it
 	EMUPATCH(D3D_BlockOnTime)(Unknown1, Unknown2);
 
-	// epilogue
 	__asm {
-		mov  esp, ebp
-		pop  ebp
+		LTCG_EPILOGUE
 		ret  4
 	}
 }
@@ -8959,9 +8951,7 @@ __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
 {
     X_D3DResource* pResource;
     __asm {
-        push ebp
-        mov  ebp, esp
-        sub  esp, __LOCAL_SIZE
+        LTCG_PROLOGUE
         mov  pResource, edi
     }
 
@@ -8975,8 +8965,8 @@ __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
     __asm {
         mov  edi, pResource
         call XB_TRMP(D3D_DestroyResource__LTCG)
-        mov  esp, ebp
-        pop  ebp
+
+        LTCG_EPILOGUE
         ret
     }
 }
