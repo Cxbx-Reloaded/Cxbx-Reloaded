@@ -780,7 +780,7 @@ dword_xt WINAPI EMUPATCH(D3DDevice_Swap)
     dword_xt Flags
 );
 
-dword_xt EMUPATCH(D3DDevice_Swap_0)();
+dword_xt WINAPI EMUPATCH(D3DDevice_Swap_0)();
 
 // ******************************************************************
 // * patch: IDirect3DResource8_Register
