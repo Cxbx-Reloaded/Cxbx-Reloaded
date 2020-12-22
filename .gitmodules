@@ -1,27 +1,33 @@
 [submodule "import/subhook"]
 	path = import/subhook
 	url = https://github.com/Zeex/subhook.git
+	shallow = true
 [submodule "import/cs_x86"]
 	path = import/cs_x86
-	url = https://github.com/x1nixmzeng/cs_x86
+	url = https://github.com/x1nixmzeng/cs_x86.git
 [submodule "import/XbSymbolDatabase"]
 	path = import/XbSymbolDatabase
-	url = https://github.com/Cxbx-Reloaded/XbSymbolDatabase
+	url = https://github.com/Cxbx-Reloaded/XbSymbolDatabase.git
 [submodule "import/simpleini"]
 	path = import/simpleini
-	url = https://github.com/brofield/simpleini
+	url = https://github.com/brofield/simpleini.git
+	shallow = true
 [submodule "import/libtommath"]
 	path = import/libtommath
-	url = https://github.com/libtom/libtommath
+	url = https://github.com/libtom/libtommath.git
 	branch = master
+	shallow = true
 [submodule "import/libtomcrypt"]
 	path = import/libtomcrypt
-	url = https://github.com/libtom/libtomcrypt
+	url = https://github.com/libtom/libtomcrypt.git
 	branch = master
+	shallow = true
 [submodule "import/SDL2"]
 	path = import/SDL2
-	url = https://github.com/SDL-mirror/SDL
+	url = https://github.com/SDL-mirror/SDL.git
+	shallow = true
 [submodule "import/xxHash"]
 	path = import/xxHash
 	url = https://github.com/Cyan4973/xxHash.git
 	branch = release
+	shallow = true
