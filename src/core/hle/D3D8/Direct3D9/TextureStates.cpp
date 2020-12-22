@@ -33,6 +33,7 @@
 #include "EmuShared.h"
 #include "core/hle/Intercept.hpp"
 #include "RenderStates.h"
+#include "core/hle/D3D8/XbVertexShader.h" // For g_UseFixedFunctionVertexShader, g_Xbox_VertexShaderMode and VertexShaderMode::FixedFunction
 #include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For g_pD3DDevice
 #include <optional>
 
@@ -166,9 +167,12 @@ void XboxTextureStateConverter::Apply()
     // The Xbox NV2A uses only Stage 3 for point-sprites, so we emulate this
     // by mapping Stage 3 to Stage 0, and disabling all stages > 0
     bool pointSpriteOverride = false;
-    bool pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
-    if (pointSpritesEnabled) {
-        pointSpriteOverride = true;
+    bool pointSpritesEnabled = false;
+    if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
+		pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+        if (pointSpritesEnabled) {
+            pointSpriteOverride = true;
+        }
     }
 
     for (int XboxStage = 0; XboxStage < xbox::X_D3DTS_STAGECOUNT; XboxStage++) {
