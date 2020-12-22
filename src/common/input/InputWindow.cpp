@@ -349,7 +349,7 @@ bool InputWindow::SaveProfile(const std::string& name)
 		return false;
 	}
 	if (m_host_dev == std::string()) {
-		PopupError(m_hwnd_window, "Cannot save. No input devices detected", "Cxbx-Reloaded");
+		PopupError(m_hwnd_window, "Cannot save. No input devices detected.", "Cxbx-Reloaded");
 		return false;
 	}
 	OverwriteProfile(name);

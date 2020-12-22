@@ -81,7 +81,7 @@ float x_floor(float src)
 	return floor(src + BIAS);
 }
 
-// http://xboxdevwiki.net/NV2A/Vertex_Shader
+// https://xboxdevwiki.net/NV2A/Vertex_Shader
 // https://www.khronos.org/registry/OpenGL/extensions/NV/NV_vertex_program.txt
 // https://www.khronos.org/registry/OpenGL/extensions/NV/NV_vertex_program1_1.txt
 

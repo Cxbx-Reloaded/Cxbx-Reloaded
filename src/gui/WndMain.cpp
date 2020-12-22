@@ -985,7 +985,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				if (m_bIsStarted) {
 					// We don't allow changing the contents of the eeprom while a game is running, mostly because we lack a "pause emulation"
 					// function necessary to modify the contents safely (the game itself can modify the eeprom)
-					PopupError(hwnd, "Cannot modify eeprom file while a title is running");
+					PopupError(hwnd, "Cannot modify eeprom file while a title is running.");
 					break;
 				}
 				ShowEepromConfig(hwnd);

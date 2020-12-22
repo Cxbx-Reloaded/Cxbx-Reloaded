@@ -45,8 +45,8 @@ const _XboxAddressRanges XboxAddressRanges[] = {
 #else
 	#define RANGE_ENTRY(START, END, SIZE, PROT, FLAGS, COMMENT) { START, SIZE, PROT, FLAGS }
 #endif
-	// See http://xboxdevwiki.net/Memory
-	// and http://xboxdevwiki.net/Boot_Process#Paging
+	// See https://xboxdevwiki.net/Memory
+	// and https://xboxdevwiki.net/Boot_Process#Paging
 	// Entry :  Start             , End              , Size              , Protect , RangeFlags              , Comment
 	RANGE_ENTRY(USER_ADDRESS1_BASE, USER_ADDRESS1_END, USER_ADDRESS1_SIZE, PROT_XRW, SYSTEM_ALL    | MAY_FAIL, "MemLowVirtual (General Xbox type) lower 64 MiB Optional (already reserved via virtual_memory_placeholder)"),
 	RANGE_ENTRY(USER_ADDRESS2_BASE, USER_ADDRESS2_END, USER_ADDRESS2_SIZE, PROT_XRW, SYSTEM_128MB  | MAY_FAIL, "MemLowVirtual (Chihiro / DevKit)  ^ + upper 64 MiB"),
