@@ -6386,21 +6386,23 @@ void UpdateFixedFunctionVertexShaderState()
 	ffShaderState.Modes.BackEmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
 
 	// Point sprites
-	auto pointSize = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE);
-	auto pointSizeMin = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE_MIN);
-	auto pointSizeMax = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSIZE_MAX);
-	ffShaderState.PointSprite.PointSize = *reinterpret_cast<float*>(&pointSize);
-	ffShaderState.PointSprite.PointSizeMin = *reinterpret_cast<float*>(&pointSizeMin);
-	ffShaderState.PointSprite.PointSizeMax = *reinterpret_cast<float*>(&pointSizeMax);
-
+	bool PointSpriteEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
+	float pointSize = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE);
+	float pointSizeMin = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MIN);
+	float pointSizeMax = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MAX);
 	bool PointScaleEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE);
-	auto scaleA = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_A);
-	auto scaleB = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_B);
-	auto scaleC = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALE_C);
-	ffShaderState.PointSprite.ScaleABC.x = PointScaleEnable ? *reinterpret_cast<float*>(&scaleA) : 1.0f;
-	ffShaderState.PointSprite.ScaleABC.y = PointScaleEnable ? *reinterpret_cast<float*>(&scaleB) : 0.0f;
-	ffShaderState.PointSprite.ScaleABC.z = PointScaleEnable ? *reinterpret_cast<float*>(&scaleC) : 0.0f;
-	ffShaderState.PointSprite.XboxRenderTargetHeight = PointScaleEnable ? (float)GetPixelContainerHeight(g_pXbox_RenderTarget) : 1.0f;
+	float scaleA = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_A);
+	float scaleB = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_B);
+	float scaleC = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_C);
+	float renderTargetHeight = (float)GetPixelContainerHeight(g_pXbox_RenderTarget);
+	PointScaleEnable &= PointSpriteEnable;
+	ffShaderState.PointSprite.PointSize = PointSpriteEnable ? pointSize : 1.0f;
+	ffShaderState.PointSprite.PointSizeMin = PointSpriteEnable ? pointSizeMin : 1.0f;
+	ffShaderState.PointSprite.PointSizeMax = PointSpriteEnable ? pointSizeMax : 1.0f;
+	ffShaderState.PointSprite.ScaleABC.x = PointScaleEnable ? scaleA : 1.0f;
+	ffShaderState.PointSprite.ScaleABC.y = PointScaleEnable ? scaleB : 0.0f;
+	ffShaderState.PointSprite.ScaleABC.z = PointScaleEnable ? scaleC : 0.0f;
+	ffShaderState.PointSprite.XboxRenderTargetHeight = PointScaleEnable ? renderTargetHeight : 1.0f;
 	ffShaderState.PointSprite.RenderUpscaleFactor = g_RenderUpscaleFactor;
 
 	// Fog
