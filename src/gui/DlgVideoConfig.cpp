@@ -47,7 +47,7 @@ static void RefreshDirect3DDevice();
 static void RefreshRenderResolution();
 
 /*! direct3d instance */
-static IDirect3D *g_pDirect3D = nullptr;
+static IDirect3D9Ex *g_pDirect3D = nullptr;
 /*! video configuration */
 static Settings::s_video g_XBVideo;
 /*! changes flag */
@@ -63,8 +63,6 @@ static HWND g_hVideoResolution = NULL;
 /*! handle to scale factor window*/
 static HWND g_hRenderResolution = NULL;
 
-#pragma optimize("", off)
-
 void ShowVideoConfig(HWND hwnd)
 {
     /*! reset changes flag */
@@ -75,9 +73,7 @@ void ShowVideoConfig(HWND hwnd)
 
     /*! initialize direct3d */
     {
-        g_pDirect3D = Direct3DCreate(D3D_SDK_VERSION);
-
-        if(g_pDirect3D == 0) { goto cleanup; }
+        if(FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &g_pDirect3D))) { goto cleanup; }
 
         g_dwAdapterCount = g_pDirect3D->GetAdapterCount();
     }

@@ -72,7 +72,7 @@ extern void EmuD3DInit();
 // cleanup direct3d
 extern void EmuD3DCleanup();
 
-extern IDirect3DDevice *g_pD3DDevice;
+extern IDirect3DDevice9Ex *g_pD3DDevice;
 
 extern xbox::dword_xt g_Xbox_VertexShader_Handle;
 
@@ -92,7 +92,7 @@ xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice)
     HWND                        hFocusWindow,
     dword_xt                       BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
-    IDirect3DDevice           **ppReturnedDeviceInterface
+    X_D3DDevice           **ppReturnedDeviceInterface
 );
 
 xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
