@@ -19,10 +19,13 @@ struct VS_INPUT
 #else
     float4 pos : POSITION;
     float4 bw : BLENDWEIGHT;
-    float4 color[2] : COLOR;
+	float4 normal : NORMAL;
+	float4 color[2] : COLOR;
+	float1 fogCoord : FOG;
+	float1 pointSize : PSIZE;
     float4 backColor[2] : TEXCOORD4;
-    float4 normal : NORMAL;
     float4 texcoord[4] : TEXCOORD;
+	float4 reserved[3] : TEXCOORD6;
 #endif
 };
 
@@ -59,12 +62,17 @@ float4 Get(const VS_INPUT xIn, const uint index)
     if(index == normal) return xIn.normal;
     if(index == diffuse) return xIn.color[0];
     if(index == specular) return xIn.color[1];
+    if(index == fogCoord) return xIn.fogCoord;
+    if(index == pointSize) return xIn.pointSize;
     if(index == backDiffuse) return xIn.backColor[0];
     if(index == backSpecular) return xIn.backColor[1];
     if(index == texcoord0) return xIn.texcoord[0];
     if(index == texcoord1) return xIn.texcoord[1];
     if(index == texcoord2) return xIn.texcoord[2];
     if(index == texcoord3) return xIn.texcoord[3];
+    if(index == reserved0) return xIn.reserved[0];
+    if(index == reserved1) return xIn.reserved[1];
+    if(index == reserved2) return xIn.reserved[2];
     return 1;
 #endif
 }
