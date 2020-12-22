@@ -190,7 +190,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
     dword_xt                       Index
 );
 
-xbox::hresult_xt __stdcall EMUPATCH(D3DDevice_EndVisibilityTest_0)();
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndVisibilityTest_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_GetVisibilityTestResult
@@ -216,8 +216,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
     dword_xt                       Address
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_LoadVertexShader_0)();
-xbox::void_xt EMUPATCH(D3DDevice_LoadVertexShader_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_4)
 (
     dword_xt                       Address
 );
@@ -231,8 +231,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
     dword_xt                       Address
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SelectVertexShader_0)();
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SelectVertexShader_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_4)
 (
     dword_xt                       Address
 );
@@ -362,10 +362,10 @@ xbox::void_xt __stdcall EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
-    xbox::X_VERTEXSHADERCONSTANTMODE Mode
+    X_VERTEXSHADERCONSTANTMODE Mode
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_Reset
@@ -663,7 +663,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_Begin)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 (
-    int     Register,
+    int_xt     Register,
     float_xt   a,
     float_xt   b
 );
@@ -673,7 +673,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 (
-    int     Register,
+    int_xt     Register,
     short_xt   a,
     short_xt   b
 );
@@ -683,7 +683,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4f)
 (
-    int     Register,
+    int_xt     Register,
     float_xt   a,
     float_xt   b,
     float_xt   c,
@@ -706,7 +706,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4f_16)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4ub)
 (
-	int_xt		Register,
+	int_xt	Register,
 	byte_xt	a,
 	byte_xt	b,
 	byte_xt	c,
@@ -730,7 +730,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4s)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexDataColor)
 (
-    int         Register,
+    int_xt      Register,
     D3DCOLOR    Color
 );
 
@@ -780,7 +780,7 @@ dword_xt WINAPI EMUPATCH(D3DDevice_Swap)
     dword_xt Flags
 );
 
-dword_xt EMUPATCH(D3DDevice_Swap_0)();
+dword_xt WINAPI EMUPATCH(D3DDevice_Swap_0)();
 
 // ******************************************************************
 // * patch: IDirect3DResource8_Register
@@ -1555,17 +1555,17 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette_4)
 // ******************************************************************
 // * patch: D3DDevice_SetFlickerFilter
 // ******************************************************************
-void WINAPI EMUPATCH(D3DDevice_SetFlickerFilter)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetFlickerFilter)
 (
     dword_xt         Filter
 );
 
-xbox::void_xt __stdcall EMUPATCH(D3DDevice_SetFlickerFilter_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetFlickerFilter_0)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetSoftDisplayFilter
 // ******************************************************************
-void WINAPI EMUPATCH(D3DDevice_SetSoftDisplayFilter)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 (
     bool_xt Enable
 );
