@@ -46,6 +46,7 @@ public:
     void SetWireFrameMode(int mode);
     void SetDirty();
     uint32_t GetXboxRenderState(uint32_t State);
+    float GetXboxRenderStateAsFloat(uint32_t State);
 private:
     void VerifyAndFixDeferredRenderStateOffset();
     void DeriveRenderStateOffsetFromDeferredRenderStateOffset();
