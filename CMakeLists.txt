@@ -97,7 +97,6 @@ file (GLOB CXBXR_HEADER_GUIv1
  "${CXBXR_ROOT_DIR}/src/common/input/Button.h"
  "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.h"
  "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.h"
- "${CXBXR_ROOT_DIR}/src/gui/DbgConsole.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAbout.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAudioConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgInputConfig.h"
@@ -227,7 +226,6 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.cpp"
  "${CXBXR_ROOT_DIR}/src/CxbxVersion.cpp"
- "${CXBXR_ROOT_DIR}/src/gui/DbgConsole.cpp"
  "${CXBXR_ROOT_DIR}/src/HighPerformanceGraphicsEnabler.c"
 )
 
