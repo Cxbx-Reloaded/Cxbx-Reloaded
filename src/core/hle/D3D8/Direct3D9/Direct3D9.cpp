@@ -26,11 +26,6 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
-#ifdef CXBXR_EMU_EXPORTS // DbgConsole only in Cxbx/cxbxr, not in cxbxr-emu
-	#undef INCLUDE_DBG_CONSOLE
-#else
-	#define INCLUDE_DBG_CONSOLE
-#endif
 #include "common\util\hasher.h" // For ComputeHash
 #include <condition_variable>
 #include <stack>
@@ -42,9 +37,6 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
-#ifdef INCLUDE_DBG_CONSOLE
-#include "gui\DbgConsole.h"
-#endif
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For LPDIRECTDRAWSURFACE7
 #include "core\hle\D3D8\XbVertexBuffer.h"
@@ -1737,50 +1729,22 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
 
     SetFocus(g_hEmuWindow);
 
-#ifdef INCLUDE_DBG_CONSOLE
-	DbgConsole *dbgConsole = new DbgConsole();
-#endif
-
     SetEvent(*reinterpret_cast<PHANDLE>(lpParam));
 
     // message processing loop
     {
         MSG msg;
-
-        ZeroMemory(&msg, sizeof(msg));
-
-        bool lPrintfOn = g_bPrintfOn;
-
-        while(msg.message != WM_QUIT)
+        BOOL bRet;
+        while((bRet = GetMessage(&msg, NULL, 0U, 0U)) != FALSE)
         {
-            if(PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+            if(bRet == -1)
             {
-                TranslateMessage(&msg);
-                DispatchMessage(&msg);
+                CxbxKrnlCleanup("GetMessage failed!");
             }
-            else
-            {
-				Sleep(0);
 
-#ifdef INCLUDE_DBG_CONSOLE
-                // if we've just switched back to display off, clear buffer & display prompt
-                if(!g_bPrintfOn && lPrintfOn)
-                {
-					dbgConsole->Reset();
-                }
-#endif
-
-                lPrintfOn = g_bPrintfOn;
-
-#ifdef INCLUDE_DBG_CONSOLE
-				dbgConsole->Process();
-#endif
-            }
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
-
-#ifdef INCLUDE_DBG_CONSOLE
-		delete dbgConsole;
-#endif
 
         CxbxKrnlCleanup(nullptr);
     }
