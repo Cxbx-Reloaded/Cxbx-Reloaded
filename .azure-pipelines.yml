@@ -46,6 +46,11 @@ jobs:
         configuration: Debug
 
   steps:
+  - script: |
+      echo "This CI isn't tested against master, and therefore, isn't guaranteed to work. Pull requests are welcome."
+      echo "If it doesn't work and you'd rather not fix it, it's recommended to use GitHub Actions CI instead."
+    displayName: 'Third-Party CI Warning'
+
   - checkout: self
     submodules: recursive
 
