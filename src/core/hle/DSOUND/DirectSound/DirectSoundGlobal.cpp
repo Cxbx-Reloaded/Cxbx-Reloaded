@@ -24,7 +24,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-
+#define LOG_PREFIX CXBXR_MODULE::DSOUND
 
 #include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
@@ -50,3 +50,84 @@ unsigned int                        g_iDSoundSynchPlaybackCounter = 0;
 DWORD                               g_dwXbMemAllocated = 0;
 DWORD                               g_dwFree2DBuffers = 0;
 DWORD                               g_dwFree3DBuffers = 0;
+
+void DSound_PrintStats()
+{
+    DSoundMutexGuardLock;
+
+    std::stringstream ss;
+    ss << "Stats:"
+        "\n--DirectSound Cache--";
+    ss << "\n\tTotal DSBuffer cache = " << g_pDSoundBufferCache.size();
+    ss << "\n\tTotal DSStream cache = " << g_pDSoundStreamCache.size();
+
+    // Generate DSBuffer stats
+
+    DWORD dwStatus;
+    HRESULT hRet;
+    unsigned index = 0, isActive = 0;
+
+    ss << "\nActive DSBuffer cache:";
+
+    for (const auto& i : g_pDSoundBufferCache) {
+        const auto& buffer = i->emuDSBuffer;
+        hRet = buffer->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+        if (hRet == DS_OK && (dwStatus & DSBSTATUS_PLAYING) != 0) {
+            isActive++;
+            ss << "\n\tDSBufferCache[" << index << "] = " << reinterpret_cast<void*>(i);
+            ss << "\n\t\tstatus = ";
+            if ((dwStatus & DSBSTATUS_LOOPING) != 0) {
+                ss << "looping";
+            }
+            else {
+                ss << "play once";
+            }
+            ss << "\n\t\tX_BufferCacheSize = " << buffer->X_BufferCacheSize;
+            ss << "\n\t\tEmuFlags = " << buffer->EmuFlags;
+            ss << "\n\t\tEmuRegionToggle = " << buffer->EmuBufferToggle;
+            if (buffer->EmuBufferToggle == xbox::X_DSB_TOGGLE_PLAY) {
+                ss << "\n\t\t\tEmuRegionPlayStartOffset = " << buffer->EmuRegionPlayStartOffset;
+                ss << "\n\t\t\tEmuRegionPlayLength = " << buffer->EmuRegionPlayLength;
+            }
+            else if (buffer->EmuBufferToggle == xbox::X_DSB_TOGGLE_LOOP) {
+                ss << "\n\t\t\tEmuRegionLoopStartOffset = " << buffer->EmuRegionLoopStartOffset;
+                ss << "\n\t\t\tEmuRegionLoopLength = " << buffer->EmuRegionLoopLength;
+            }
+        }
+        index++;
+    }
+
+    if (isActive == 0) {
+        ss << "\n\t(none)";
+    }
+
+    ss << "\nTotal active DSBuffer = " << isActive;
+
+    // Generate DSStream stats
+
+    index = 0;
+    isActive = 0;
+
+    ss << "\nActive DSStream cache:";
+    for (const auto& i : g_pDSoundStreamCache) {
+        hRet = i->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+        if (hRet == DS_OK && (dwStatus & DSBSTATUS_PLAYING) != 0) {
+            isActive++;
+            ss << "\n\tDSStreamCache[" << index << "] = " << reinterpret_cast<void*>(i);
+            ss << "\n\t\tMax packets allow = " << i->X_MaxAttachedPackets;
+            ss << "\n\t\tTotal packets = " << i->Host_BufferPacketArray.size();
+            ss << "\n\t\tis processing = " << i->Host_isProcessing;
+            ss << "\n\t\tEmuFlags = " <<  i->EmuFlags;
+            ss << "\n\t\tXb_Status = " << i->Xb_Status;
+        }
+        index++;
+    }
+
+    if (isActive == 0) {
+        ss << "\n\t(none)";
+    }
+
+    ss << "\nTotal active DSStream = " << isActive;
+
+    EmuLog(LOG_LEVEL::INFO, ss.str().c_str());
+}

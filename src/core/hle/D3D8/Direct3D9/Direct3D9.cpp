@@ -1894,6 +1894,9 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if (wParam == VK_F1)
             {
                 VertexBufferConverter.PrintStats();
+
+                extern void DSound_PrintStats(); //TODO: move into plugin class usage.
+                DSound_PrintStats();
             }
             else if (wParam == VK_F3)
             {
