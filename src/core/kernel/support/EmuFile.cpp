@@ -554,29 +554,39 @@ XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
 int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevicePath, bool IsFile)
 {
 	int result = -1;
-	NTSTATUS status = (NTSTATUS)-1;
 
 	XboxDevice newDevice;
 	newDevice.XboxDevicePath = XboxDevicePath;
 	newDevice.HostDevicePath = HostDevicePath;
 
+	bool succeeded{ false };
+
 	// All HDD partitions have a .bin file to allow direct file io on the partition info
 	if (_strnicmp(XboxDevicePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
-		std::string partitionHeaderPath = (HostDevicePath + ".bin").c_str();
-		if (!PathFileExists(partitionHeaderPath.c_str())) {
+		std::string partitionHeaderPath = HostDevicePath + ".bin";
+		if (!std::filesystem::exists(partitionHeaderPath)) {
 			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0);
 		}
 
-		status = xbox::status_success;
+		succeeded = true;
 	}
 
 	// If this path is not a raw file partition, create the directory for it
 	if (!IsFile) {
-		status = SHCreateDirectoryEx(NULL, HostDevicePath.c_str(), NULL);
+
+		if (std::filesystem::exists(HostDevicePath))
+		{
+			succeeded = true;
+		}
+		else
+		{
+			succeeded = std::filesystem::create_directory(HostDevicePath);
+		}
 	}
 
-	if (status == xbox::status_success || status == ERROR_ALREADY_EXISTS) {
-		Devices.push_back(newDevice);
+	if (succeeded)
+	{
+		Devices.emplace_back(newDevice);
 		result = Devices.size() - 1;
 	}
 
