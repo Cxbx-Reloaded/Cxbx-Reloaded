@@ -553,8 +553,6 @@ XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
 
 int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevicePath, bool IsFile)
 {
-	int result = -1;
-
 	XboxDevice newDevice;
 	newDevice.XboxDevicePath = XboxDevicePath;
 	newDevice.HostDevicePath = HostDevicePath;
@@ -573,24 +571,17 @@ int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevic
 
 	// If this path is not a raw file partition, create the directory for it
 	if (!IsFile) {
-
-		if (std::filesystem::exists(HostDevicePath))
-		{
-			succeeded = true;
-		}
-		else
-		{
-			succeeded = std::filesystem::create_directory(HostDevicePath);
-		}
+		succeeded = std::filesystem::exists(HostDevicePath) || std::filesystem::create_directory(HostDevicePath);
 	}
 
-	if (succeeded)
-	{
-		Devices.emplace_back(newDevice);
-		result = Devices.size() - 1;
+	if (succeeded) {
+		Devices.push_back(newDevice);
+		return static_cast<int>(Devices.size()) - 1;
 	}
 
-	return result;
+	EmuLog(LOG_LEVEL::FATAL, "Failed to register host device (%s)\n", HostDevicePath.c_str());
+
+	return -1;
 }
 
 
