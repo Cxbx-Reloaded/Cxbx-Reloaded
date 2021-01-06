@@ -169,7 +169,7 @@ void XboxTextureStateConverter::Apply()
     bool pointSpriteOverride = false;
     bool pointSpritesEnabled = false;
     if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
-		pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+        pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
         if (pointSpritesEnabled) {
             pointSpriteOverride = true;
         }
