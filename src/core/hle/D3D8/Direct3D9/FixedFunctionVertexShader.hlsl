@@ -397,12 +397,13 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
 float DoPointSpriteSize()
 {
     const PointSprite ps = state.PointSprite;
-    float pointSize = ps.PointSize;
-    float A = ps.ScaleABC.x;
-    float B = ps.ScaleABC.y;
-    float C = ps.ScaleABC.z;
 
-    // Note : if (ps.PointScaleEnable) not required because when disabled, CPU sets RenderTargetHeight and ScaleA to 1, and ScaleB and ScaleC to 0
+    const float pointSize = ps.PointSize;
+    const float A = ps.PointScaleABC.x;
+    const float B = ps.PointScaleABC.y;
+    const float C = ps.PointScaleABC.z;
+
+    // Note : if (ps.PointScaleEnable) not required because when disabled, CPU sets RenderTargetHeight and PointScale _A to 1, and _B and _C to 0
     {
         const float eyeDistance = length(View.Position);
         const float factor = A + (B * eyeDistance) + (C * (eyeDistance * eyeDistance));
