@@ -1,0 +1,74 @@
+#labels are sorted by alphabet order.
+
+cmake:
+  - CMake*
+  - '**/CMakeLists.txt'
+  - '**/*.cmake'
+
+cpu-emulation:
+  - src/devices/x86/**
+
+deployment:
+  - '*.yml'
+  - .github/workflows/CI.yml
+
+file-system:
+  - src/core/kernel/support/EmuFile*
+
+graphics:
+  - src/core/hle/D3D8/**
+  - src/core/hle/XGRAPHIC/**
+  - src/devices/video/**
+  - src/gui/*Video*
+
+HLE:
+  - src/core/hle/**
+  - src/core/kernel/**
+
+informational:
+  - '**/*Logging*'
+  - '**/*Logging*/**'
+
+input:
+  - src/common/input/**
+  - src/core/hle/XAPI/input/**
+  - src/devices/usb/**
+  - src/gui/controllers/**
+  - src/gui/*Input*
+
+kernel:
+  - src/core/kernel/**
+
+LLE:
+  - src/devices/**
+
+memory:
+  - src/core/kernel/memory-manager/**
+
+networking:
+  - src/core/hle/XONLINE/**
+  - src/devices/network/**
+  - src/gui/*Network*
+
+sound:
+  - src/common/audio/**
+  - src/core/hle/DSOUND/**
+  - src/core/hle/XACTENG/**
+  - src/devices/audio/**
+  - src/gui/*Audio*
+
+modules:
+  - import/**
+
+threading:
+  - src/core/kernel/support/EmuFS*
+
+timing:
+  - src/common/Timer*
+
+user interface:
+  - src/gui/**
+# - TODO: Dear Imgui location, maybe in src/core/gui path.
+
+xbdm:
+  - src/common/xbdm/**
