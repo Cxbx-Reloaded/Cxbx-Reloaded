@@ -216,7 +216,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader)
     dword_xt                       Address
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle)();
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_4)
 (
     dword_xt                       Address
