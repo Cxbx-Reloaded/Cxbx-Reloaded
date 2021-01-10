@@ -272,7 +272,6 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_LightEnable,                              (xbox::dword_xt, xbox::bool_xt)                                                                       );  \
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader,                         (xbox::dword_xt, xbox::dword_xt)                                                                      );*/\
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShaderProgram,                  (CONST xbox::dword_xt*, xbox::dword_xt)                                                               );*/\
-  /*XB_MACRO(xbox::void_xt,       __stdcall,  D3DDevice_LoadVertexShader_0,                       ()                                                                                                    );*/\
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader_4,                       (xbox::dword_xt)                                                                                      );*/\
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_PersistDisplay,                           (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_Reset,                                    (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
@@ -3603,7 +3602,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 }
 
 // Overload for logging
-static void D3DDevice_LoadVertexShader_0
+static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle
 (
     xbox::dword_xt                 Handle,
     xbox::dword_xt                 Address
@@ -3618,7 +3617,7 @@ static void D3DDevice_LoadVertexShader_0
 // LTCG specific D3DDevice_LoadVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX, ECX
 // Test-case: Aggressive Inline
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle)
 (
 )
 {
@@ -3631,7 +3630,46 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader
     }
 
     // Log
-    D3DDevice_LoadVertexShader_0(Handle, Address);
+    D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle(Handle, Address);
+
+    CxbxImpl_LoadVertexShader(Handle, Address);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
+}
+
+// Overload for logging
+static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+    LOG_FUNC_END;
+}
+
+// LTCG specific D3DDevice_LoadVertexShader function...
+// This uses a custom calling convention where parameter is passed in EAX, EDX
+// Test-case: World Racing 2, Project Zero 2 (PAL)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle)
+(
+)
+{
+    dword_xt Handle;
+    dword_xt Address;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Address, eax
+        mov  Handle, edx
+    }
+
+    // Log
+    D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle(Handle, Address);
 
     CxbxImpl_LoadVertexShader(Handle, Address);
 
