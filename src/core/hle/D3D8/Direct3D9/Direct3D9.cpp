@@ -4874,6 +4874,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 
 	DWORD HostFlags = 0;
 
+	// Clear requires the Xbox viewport to be applied
+	CxbxUpdateNativeD3DResources();
+
     // make adjustments to parameters to make sense with windows d3d
     {
 		if (Flags & X_D3DCLEAR_TARGET) {
