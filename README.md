@@ -23,14 +23,12 @@ Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-relea
   * *[Full build history](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=workflow%3A%22GitHub+CI%22)*
 
 ## Compatibility
-Cxbx-Reloaded has a [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility#cxbx-reloaded-game-compatibility-project).
+Cxbx-Reloaded has a [compatibility list](https://cxbx-reloaded.co.uk/compatibility).
 
-If you have something to report on a title, please create or update the issue for it there.
-
-Please read the [Readme file](https://github.com/Cxbx-Reloaded/game-compatibility/blob/master/README.md) first!
+If you would like to submit compatibility reports, please request permission in our Discord server.
 
 ## Bug Reports
-Game or software specific issues can be reported in the [compatibility list](https://github.com/Cxbx-Reloaded/game-compatibility#cxbx-reloaded-game-compatibility-project).
+Game or software specific issues can be reported in the [compatibility website](https://cxbx-reloaded.co.uk/compatibility).
 
 For emulation issues that are not specific to any single piece of software, a bug report can be submitted at [the Cxbx-Reloaded issue tracker](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues).
 
