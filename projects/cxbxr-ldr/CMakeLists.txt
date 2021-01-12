@@ -31,6 +31,7 @@ file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/loader/cxbxr-ldr.cpp"
+ ${CXBXR_SOURCE_EXECUTABLES}
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES ${HEADERS})
