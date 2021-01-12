@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::GUI
 
 #include "Windows.h"
-#include "resource/ResCxbx.h"
+#include "gui/resource/ResCxbx.h"
 #include "input\InputWindow.h"
 #include "gui\DlgInputConfig.h"
 #include "common/Logging.h"

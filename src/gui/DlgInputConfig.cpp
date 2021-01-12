@@ -26,7 +26,7 @@
 // ******************************************************************
 
 #include "windows.h"
-#include "DlgDukeControllerConfig.h"
+#include "controllers/DlgDukeControllerConfig.h"
 #include "resource/ResCxbx.h"
 #include "input\InputManager.h"
 #include "Logging.h"
