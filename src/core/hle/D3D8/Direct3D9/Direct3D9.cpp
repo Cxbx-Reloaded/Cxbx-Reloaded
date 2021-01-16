@@ -2702,7 +2702,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	}
 
 	// Poor-mans eviction policy : when exceeding treshold, clear entire cache :
-	if (g_IndexBufferCache.size() > 256) {
+	if (g_IndexBufferCache.size() > 10000) {
 		g_IndexBufferCache.clear(); // Note : ConvertedIndexBuffer destructor will release any assigned pHostIndexBuffer
 	}
 
