@@ -85,7 +85,7 @@ class CxbxVertexBufferConverter
         ULONG m_TotalCacheHits = 0;
         ULONG m_TotalCacheMisses = 0;
 
-        UINT m_MaxCacheSize = 2000;                                        // Maximum number of entries in the cache
+        UINT m_MaxCacheSize = 10000;                                        // Maximum number of entries in the cache
         UINT m_CacheElasticity = 200;                                      // Cache is allowed to grow this much more than maximum before being purged to maximum
         std::unordered_map<uint64_t, std::list<CxbxPatchedStream>::iterator> m_PatchedStreams;  // Stores references to patched streams for fast lookup
         std::list<CxbxPatchedStream> m_PatchedStreamUsageList;             // Linked list of vertex streams, least recently used is last in the list
