@@ -46,12 +46,8 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
 ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, DWORD *pXboxFunctionSize) {
 	IntermediateVertexShader intermediateShader;
 
-	// Parse into intermediate format
-	EmuParseVshFunction((DWORD*)pXboxFunction,
-		pXboxFunctionSize,
-		&intermediateShader);
+	*pXboxFunctionSize = GetVshFunctionSize(pXboxFunction);
 
-	// FIXME ignore shader header when creating key
 	ShaderKey key = ComputeHash((void*)pXboxFunction, *pXboxFunctionSize);
 
 	// Check if we need to create the shader
@@ -64,13 +60,14 @@ ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, 
 		return key;
 	}
 
+	// Parse into intermediate format
+	EmuParseVshFunction((DWORD*)pXboxFunction, &intermediateShader);
+
 	// We're going to create a new shader
 	auto newShader = LazyVertexShader();
 	newShader.referenceCount = 1;
 
-	auto shaderType = EmuGetShaderInfo(&intermediateShader);
-
-	if (shaderType == ShaderType::Compilable)
+	if (!intermediateShader.Instructions.empty())
 	{
 		// Start compiling the shader in the background
 		// TODO proper threading / threadpool.
@@ -80,6 +77,8 @@ ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, 
 	}
 	else {
 		// We can't do anything with this shader
+		// Test case: ???
+		EmuLog(LOG_LEVEL::WARNING, "Empty vertex shader");
 		newShader.isReady = true;
 		newShader.pHostVertexShader = nullptr;
 	}
