@@ -226,6 +226,7 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.cpp"
  "${CXBXR_ROOT_DIR}/src/CxbxVersion.cpp"
+ "${CXBXR_ROOT_DIR}/src/HighPerformanceGraphicsEnabler.c"
 )
 
 # GUI v1
@@ -246,11 +247,6 @@ file (GLOB CXBXR_SOURCE_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.cpp"
 )
 
-# Executables (cxbx and cxbxr-ldr)
-file (GLOB CXBXR_SOURCE_EXECUTABLES
- "${CXBXR_ROOT_DIR}/src/HighPerformanceGraphicsEnabler.c"
-)
-
 # Emulator (module)
 # TODO: Merge CXBXR_KRNL_CPP into CXBXR_SOURCE_EMU once cxbx project is removed.
 file (GLOB CXBXR_KRNL_CPP
@@ -258,6 +254,7 @@ file (GLOB CXBXR_KRNL_CPP
 )
 file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_KRNL_CPP}"
+ "${CXBXR_ROOT_DIR}/HighPerformanceGraphicsEnabler.c"
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/VerifyAddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.cpp"
