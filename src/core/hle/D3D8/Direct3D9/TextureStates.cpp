@@ -34,6 +34,7 @@
 #include "core/hle/Intercept.hpp"
 #include "RenderStates.h"
 #include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For g_pD3DDevice
+#include <optional>
 
 typedef struct {
     char* S;                // String representation.
@@ -74,13 +75,6 @@ TextureStateInfo CxbxTextureStateInfo[] = {
     { "D3DTSS_BORDERCOLOR",             true,   D3DSAMP_BORDERCOLOR },
     { "D3DTSS_COLORKEYCOLOR",           false,  0 },
 };
-
-// Keep track of the last state that was set
-typedef struct {
-    bool HasBeenSet = false;
-    DWORD LastValue = 0;
-} PreviousState;
-PreviousState PreviousStates[xbox::X_D3DTS_STAGECOUNT][xbox::X_D3DTSS_LAST + 1] = {};
 
 bool XboxTextureStateConverter::Init(XboxRenderStateConverter* pState)
 {
@@ -188,7 +182,7 @@ void XboxTextureStateConverter::Apply()
 
             // If the state hasn't changed, skip setting it
             auto lastState = &PreviousStates[XboxStage][State];
-            if (lastState->HasBeenSet && lastState->LastValue == XboxValue) {
+            if (*lastState == XboxValue) {
                 continue;
             }
 
@@ -307,8 +301,7 @@ void XboxTextureStateConverter::Apply()
             }
 
             // Record we set a state
-            lastState->HasBeenSet = true;
-            lastState->LastValue = XboxValue;
+            lastState->emplace(XboxValue);
         }
 
         // Make sure we only do this once

@@ -2,7 +2,7 @@
 
 #include "VertexShaderSource.h"
 
-#include "Logging.h"
+#include "core/kernel/init/CxbxKrnl.h"
 #include "util/hasher.h"
 #include "core/kernel/support/Emu.h"
 
@@ -78,7 +78,7 @@ ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, 
 	else {
 		// We can't do anything with this shader
 		// Test case: ???
-		EmuLog(LOG_LEVEL::WARNING, "Empty vertex shader");
+		LOG_TEST_CASE("Empty vertex shader");
 		newShader.isReady = true;
 		newShader.pHostVertexShader = nullptr;
 	}

@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <array>
 #include "core\hle\D3D8\XbD3D8Types.h"
+#include <optional>
 
 #define CXBX_D3DRS_UNSUPPORTED (xbox::X_D3DRS_LAST + 1)
 
@@ -47,4 +48,6 @@ private:
     uint32_t* D3D__TextureState = nullptr;
     std::array<int, xbox::X_D3DTSS_LAST + 1> XboxTextureStateOffsets;
     XboxRenderStateConverter* pXboxRenderStates;
+    // Holds the last state that was set, so we don't set it again
+    std::optional<DWORD> PreviousStates[xbox::X_D3DTS_STAGECOUNT][xbox::X_D3DTSS_LAST + 1] = {};
 };

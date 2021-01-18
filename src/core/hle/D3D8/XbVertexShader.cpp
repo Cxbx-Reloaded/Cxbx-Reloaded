@@ -1563,7 +1563,7 @@ extern void EmuParseVshFunction
 )
 {
 	// Decode the vertex shader program tokens into an intermediate representation
-	uint32_t* pCurToken = (uint32_t*)((uintptr_t)pXboxFunction);
+	auto pCurToken = (uint32_t*)pXboxFunction;
 
 	// Decode until we hit a token marked final
 	// Note : CxbxSetVertexShaderSlots makes sure this always stops
