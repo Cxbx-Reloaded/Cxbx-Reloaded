@@ -237,6 +237,7 @@ extern std::string CxbxGetLastErrorString(char * lpszFunction);
 
 // The reason of having EmuLogOutputEx in LOG_TEST_CASE is to allow dump to log directly for any test cases triggered.
 // Which will make developers easier to note which applications has triggered quicker, easier, and doesn't require any individual log enabled to capture them.
+// NOTE: This #define is here rather than Logging.h, because it has a dependency on CxbxKrnl_Xbe
 #define LOG_TEST_CASE(message) do { \
 	static bool bTestCaseLogged = false; \
 	if (bTestCaseLogged) break; \
