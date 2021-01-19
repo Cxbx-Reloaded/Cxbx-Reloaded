@@ -27,33 +27,4 @@
 
 #pragma once
 
-#include "windows.h"
-#include <Commctrl.h>
-#include <string>
-
-#define XBOX_CTRL_NUM_BUTTONS 25
-#define SBC_NUM_BUTTONS 65
-#define HIGHEST_NUM_BUTTONS SBC_NUM_BUTTONS
-
-
-/* Represents the gui buttons of the xbox device currently being configured */
-class Button
-{
-public:
-	Button(int id, int index, HWND hwnd) : m_id(id), m_index(index), m_button_hwnd(GetDlgItem(hwnd, m_id)) {};
-	void EnableButton(bool enable) const;
-	void UpdateText(const char* text) const;
-	void ClearText() const;
-	void GetText(char* const text, size_t size) const;
-	std::string GetName(int api, int idx) const;
-	int GetId() const { return m_id; }
-	int GetIndex() const { return m_index; }
-
-
-private:
-	int m_id;
-	int m_index;
-	HWND m_button_hwnd;
-};
-
-LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

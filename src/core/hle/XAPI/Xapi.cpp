@@ -61,6 +61,7 @@ PFARPROC1 fnCxbxVSBCOpen;
 //typedef DWORD(*fnCxbxVSBCSetState)(UCHAR *);
 //typedef DWORD(*fnCxbxVSBCGetState)(UCHAR *);
 xbox::PXPP_DEVICE_TYPE g_DeviceType_Gamepad = nullptr;
+xbox::PXPP_DEVICE_TYPE g_DeviceType_SBC = nullptr; //deviceTable[i]->XppType?
 
 // Flag is unset after initialize devices is done by simulate LLE USB thread.
 std::atomic<bool> g_bIsDevicesInitializing = true;
@@ -87,11 +88,17 @@ bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 	}
 	break;
 
+	case XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER: {
+		if (XppType == g_DeviceType_SBC) {
+			return true;
+		}
+	}
+	break;
+
 	case XBOX_INPUT_DEVICE::LIGHT_GUN:
 	case XBOX_INPUT_DEVICE::STEERING_WHEEL:
 	case XBOX_INPUT_DEVICE::MEMORY_UNIT:
 	case XBOX_INPUT_DEVICE::IR_DONGLE:
-	case XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER:
 	default:
 		break;
 	}
@@ -140,7 +147,17 @@ bool ConstructHleInputDevice(int Type, int Port)
     }
 	break;
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
-		// TODO
+		g_XboxControllerHostBridge[Port].XboxPort = Port;
+        g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER;
+        g_XboxControllerHostBridge[Port].InState = new SBCInput();
+        g_XboxControllerHostBridge[Port].bPendingRemoval = false;
+        g_XboxControllerHostBridge[Port].bSignaled = false;
+        g_XboxControllerHostBridge[Port].bIoInProgress = false;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_STEELBATTALION;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = 0x18;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = 0x14;
+        g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
 	}
 	break;
 
@@ -224,8 +241,9 @@ void SetupXboxDeviceTypes()
                     g_DeviceType_Gamepad = deviceTable[i]->XppType;
                     printf("XDEVICE_TYPE_GAMEPAD)\n");
                     break;
-                case XINPUT_DEVTYPE_STEELBATALION:
-                    printf("XDEVICE_TYPE_STEELBATALION)\n");
+                case XINPUT_DEVTYPE_STEELBATTALION:
+					g_DeviceType_SBC = deviceTable[i]->XppType;
+                    printf("XDEVICE_TYPE_STEELBATTALION)\n");
                     break;
 				default:
 					printf("Unknown device type)\n");
@@ -510,13 +528,16 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetCapabilities)
 	RETURN(ret);
 }
 
-//variable names correlated to X_SBC_FEEDBACK, mapped to each nibble accordingly.
+//variable names correlated to SBC_FEEDBACK, mapped to each nibble accordingly.
 char * XboxSBCFeedbackNames[] = {
     "EmergencyEject",
     "CockpitHatch",
     "Ignition",
     "Start",
     "OpenClose",
+	"RightJoyMainWeapon",
+	"RightJoyLockOn",
+	"RightJoyFire",
     "MapZoomInOut",
     "ModeSelect",
     "SubMonitorModeSelect",
@@ -553,12 +574,12 @@ char * XboxSBCFeedbackNames[] = {
 };
 
 //keep last SBC_GAMEPAD status, for DIP switch and GearLever
-xbox::X_SBC_GAMEPAD XboxSBCGamepad = {};
+xbox::SBC_GAMEPAD XboxSBCGamepad = {};
 
-//virtual SteelBatalion controller GetState, using port 0 from XInput and DirectInput to emulate virtual controller.
-void EmuSBCGetState(xbox::PX_SBC_GAMEPAD pSBCGamepad, xbox::PXINPUT_GAMEPAD pXIGamepad, xbox::PXINPUT_GAMEPAD pDIGamepad)
+//virtual SteelBattalion controller GetState, using port 0 from XInput and DirectInput to emulate virtual controller.
+void EmuSBCGetState(xbox::PSBC_GAMEPAD pSBCGamepad, xbox::PXINPUT_GAMEPAD pXIGamepad, xbox::PXINPUT_GAMEPAD pDIGamepad)
 {
-    // Now convert those values to SteelBatalion Gamepad
+    // Now convert those values to SteelBattalion Gamepad
 
     //restore certain variables such as GerLever and Toggle Switches.
 

@@ -85,7 +85,7 @@ CXBX_CONTROLLER_HOST_BRIDGE, *PCXBX_CONTROLLER_HOST_BRIDGE;
 #define CXBX_XINPUT_GAMEPAD_RIGHT_THUMB      0x00000080
 
 // ******************************************************************
-// * masks for digital buttons of X_SBC_GAMEPAD
+// * masks for digital buttons of SBC_GAMEPAD
 // ******************************************************************
 
 #define    CXBX_SBC_GAMEPAD_W0_RIGHTJOYMAINWEAPON      0x0001
@@ -129,7 +129,7 @@ CXBX_CONTROLLER_HOST_BRIDGE, *PCXBX_CONTROLLER_HOST_BRIDGE;
 #define    CXBX_SBC_GAMEPAD_W2_TOGGLEVTLOCATION        0x0040
 
 // ******************************************************************
-// * enum for feedback status variables of X_SBC_FEEDBACK, it's a byte array after FeedbackHeader, each variable take 1 nibble, that's half byte.
+// * enum for feedback status variables of SBC_FEEDBACK, it's a byte array after FeedbackHeader, each variable take 1 nibble, that's half byte.
 // ******************************************************************
 #define    CXBX_SBC_FEEDBACK_EMERGENCYEJECT            0
 #define    CXBX_SBC_FEEDBACK_COCKPITHATCH              1

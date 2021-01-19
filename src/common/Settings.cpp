@@ -34,7 +34,7 @@
 #include "EmuShared.h"
 #include <filesystem>
 #include "common\input\InputManager.h"
-#include "common\input\layout_xbox_controller.h"
+#include "common\input\layout_xbox_device.h"
 #include <fstream>
 #include "common/util/cliConfig.hpp"
 
