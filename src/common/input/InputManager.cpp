@@ -64,7 +64,7 @@ int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	0,
 	0,
 	0,
-	0,
+	XBOX_CTRL_NUM_BUTTONS, // STEEL_BATTALION_CONTROLLER This probably isn't correct?? Let's see what happens
 };
 
 extern CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4]; // hle xinput
@@ -352,11 +352,15 @@ bool InputDeviceManager::UpdateXboxPortInput(int usb_port, void* Buffer, int Dir
 				}
 				break;
 
+				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
+					has_changed = UpdateInputSBC(dev_ptr, Buffer, Direction);
+				}
+				break;
+
 				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
 				case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
-				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
-				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
+				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE): {
 					EmuLog(LOG_LEVEL::WARNING, "An unsupported device is attached at port %d! The device was %s",
 						Gui2XboxPortArray[usb_port], GetInputDeviceName(xid_type).c_str());
 				}
@@ -425,6 +429,75 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 				in_buf->sThumbRY = static_cast<int16_t>(state);
 			}
 			break;
+
+			default: {
+				// unreachable
+			}
+			}
+		}
+	}
+	else {
+		if (bindings[24] != nullptr) {
+			//XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
+			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(Buffer);
+			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
+				out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
+		}
+	}
+	return true;
+}
+
+bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction)
+{
+	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings();
+	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER)]));
+
+	if (Direction == DIRECTION_IN) {
+		//XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
+		XpadInput* in_buf = reinterpret_cast<XpadInput*>(Buffer);
+		if (!Device->UpdateInput()) {
+			return false;
+		}
+
+		for (int i = 0; i < 8; i++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+			if (state) {
+				in_buf->wButtons |= (1 << i);
+			}
+			else {
+				in_buf->wButtons &= ~(1 << i);
+			}
+		}
+		for (int i = 8, j = 0; i < 16; i++, j++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+			in_buf->bAnalogButtons[j] = static_cast<uint8_t>(state * 0xFF);
+		}
+
+		for (int i = 16, j = 0; i < 24; i += 2, j++) {
+			ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+			ControlState state_minus = (bindings[i + 1] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i + 1])->GetState() : 0.0;
+			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? -state_minus * 0x8000 : 0.0;
+			switch (j)
+			{
+			case 0: {
+				in_buf->sThumbLX = static_cast<int16_t>(state);
+			}
+				  break;
+
+			case 1: {
+				in_buf->sThumbLY = static_cast<int16_t>(state);
+			}
+				  break;
+
+			case 2: {
+				in_buf->sThumbRX = static_cast<int16_t>(state);
+			}
+				  break;
+
+			case 3: {
+				in_buf->sThumbRY = static_cast<int16_t>(state);
+			}
+				  break;
 
 			default: {
 				// unreachable

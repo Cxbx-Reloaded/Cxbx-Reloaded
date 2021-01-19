@@ -27,17 +27,18 @@
 
 #include"Button.h"
 #include "InputManager.h"
-#include "layout_xbox_controller.h"
+#include "layout_xbox_device.h"
 #include "gui/resource/ResCxbx.h"
 
 
 EmuDevice::EmuDevice(int type, HWND hwnd)
 {
+	m_hwnd = hwnd;
+
 	switch (type)
 	{
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
-		m_hwnd = hwnd;
 		for (size_t i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd));
 
@@ -47,8 +48,17 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 	}
 	break;
 
-	default:
-		break;
+	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
+		for (size_t i = 0; i < ARRAY_SIZE(button_sbc_id); i++) {
+			m_buttons.push_back(new Button(button_sbc_id[i], i, hwnd));
+
+			// Not sure yet if this is necessary
+			// Install the subclass for the button control
+			//SetWindowSubclass(GetDlgItem(hwnd, button_sbc_id[i]), ButtonSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
+		}
+	}
+	break;
+
 	}
 }
 
