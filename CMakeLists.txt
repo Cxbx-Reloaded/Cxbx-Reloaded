@@ -226,6 +226,7 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.cpp"
  "${CXBXR_ROOT_DIR}/src/CxbxVersion.cpp"
+ "${CXBXR_ROOT_DIR}/src/HighPerformanceGraphicsEnabler.c"
 )
 
 # GUI v1
@@ -244,11 +245,6 @@ file (GLOB CXBXR_SOURCE_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/WinMain.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/Wnd.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.cpp"
-)
-
-# Executables (cxbx and cxbxr-ldr)
-file (GLOB CXBXR_SOURCE_EXECUTABLES
- "${CXBXR_ROOT_DIR}/src/HighPerformanceGraphicsEnabler.c"
 )
 
 # Emulator (module)
