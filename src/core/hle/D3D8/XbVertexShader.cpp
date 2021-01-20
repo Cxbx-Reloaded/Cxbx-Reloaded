@@ -371,9 +371,8 @@ xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber)
 // * Vertex shader function recompiler
 // ****************************************************************************
 
-class XboxVertexShaderDecoder
+namespace XboxVertexShaderDecoder
 {
-private:
 	// Xbox Vertex SHader microcode types
 
 	enum VSH_OUTPUT_TYPE {
@@ -539,7 +538,7 @@ private:
 		Param.Swizzle[3] = (VSH_SWIZZLE)VshGetField(pShaderToken, (VSH_FIELD_NAME)(d + FLD_A_SWZ_W));
 	}
 
-	void VshAddIntermediateInstruction(
+	static void VshAddIntermediateInstruction(
 		uint32_t* pShaderToken,
 		IntermediateVertexShader* pShader,
 		VSH_MAC MAC,
@@ -592,8 +591,7 @@ private:
 		pShader->Instructions.push_back(intermediate);
 	}
 
-public:
-	bool VshConvertToIntermediate(uint32_t* pShaderToken, IntermediateVertexShader* pShader)
+	static bool VshConvertToIntermediate(uint32_t* pShaderToken, IntermediateVertexShader* pShader)
 	{
 		// First get the instruction(s).
 		VSH_ILU ILU = (VSH_ILU)VshGetField(pShaderToken, FLD_ILU);
@@ -648,8 +646,20 @@ public:
 
 		return VshGetField(pShaderToken, FLD_FINAL) == 0;
 	}
-
 };
+
+// Get the function size excluding the final field
+size_t GetVshFunctionSize(const xbox::dword_xt* pXboxFunction) {
+	auto curToken = (uint32_t*)pXboxFunction;
+
+	while (!XboxVertexShaderDecoder::VshGetField(curToken, XboxVertexShaderDecoder::FLD_FINAL)) {
+		curToken += X_VSH_INSTRUCTION_SIZE; // TODO use a struct to represent these instructions
+	}
+
+	curToken += X_VSH_INSTRUCTION_SIZE; // For the final instruction
+
+	return (curToken - pXboxFunction) * sizeof(xbox::dword_xt);
+}
 
 // ****************************************************************************
 // * Vertex shader declaration recompiler
@@ -1547,54 +1557,18 @@ void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD C
 // parse xbox vertex shader function into an intermediate format
 extern void EmuParseVshFunction
 (
+	// Pointer to raw Xbox vertex shader instruction slots
 	DWORD* pXboxFunction,
-	DWORD* pXboxFunctionSize,
 	IntermediateVertexShader* pShader
 )
 {
-	auto VshDecoder = XboxVertexShaderDecoder();
-
-	*pXboxFunctionSize = 0;
-
-	// FIXME tidy handling of the header vs headerless cases
-	// Normally, pXboxFunction has a shader header before the shader tokens
-	// But we can also load shader tokens directly from the Xbox vertex shader slots too
-
-	bool headerless = pXboxFunction[0] == 0; // if its a token instead of a header, first DWORD is unused
-	auto headerSize = headerless ? 0 : sizeof(xbox::X_VSH_SHADER_HEADER);
-
 	// Decode the vertex shader program tokens into an intermediate representation
-	uint32_t* pCurToken = (uint32_t*)((uintptr_t)pXboxFunction + headerSize);
+	auto pCurToken = (uint32_t*)pXboxFunction;
 
-	if (headerless) {
-		// We've been fed shader slots. Make up a header...
-		pShader->Header.Version = VERSION_XVS;
-		pShader->Header.NumInst = (uint16_t)pShader->Instructions.size();
-
-		// Decode until we hit a token marked final
-		// Note : CxbxSetVertexShaderSlots makes sure this always stops
-		// after X_VSH_MAX_INSTRUCTION_COUNT, by setting FLD_FINAL in there.
-		while (VshDecoder.VshConvertToIntermediate(pCurToken, pShader)) {
-			pCurToken += X_VSH_INSTRUCTION_SIZE;
-		}
+	// Decode until we hit a token marked final
+	// Note : CxbxSetVertexShaderSlots makes sure this always stops
+	// after X_VSH_MAX_INSTRUCTION_COUNT, by setting FLD_FINAL in there.
+	while (XboxVertexShaderDecoder::VshConvertToIntermediate(pCurToken, pShader)) {
+		pCurToken += X_VSH_INSTRUCTION_SIZE;
 	}
-	else {
-		pShader->Header = *(xbox::X_VSH_SHADER_HEADER*)pXboxFunction;
-		// Decode only up to the number of instructions in the header
-		// The last instruction may not be marked final:
-		// Test case: Multiple Vertex Shaders sample
-		for (int i = 0; i < pShader->Header.NumInst; i++) {
-			if (!VshDecoder.VshConvertToIntermediate(pCurToken, pShader)) {
-				if (i < pShader->Header.NumInst - 1) {
-					LOG_TEST_CASE("Shader instructions after final instruction");
-				}
-				break;
-			}
-			pCurToken += X_VSH_INSTRUCTION_SIZE;
-		}
-	}
-
-	// The size of the shader is
-	pCurToken += X_VSH_INSTRUCTION_SIZE; // always at least one token
-	*pXboxFunctionSize = (intptr_t)pCurToken - (intptr_t)pXboxFunction;
 }

@@ -175,6 +175,8 @@ xbox::X_D3DVIEWPORT8 g_Xbox_Viewport = { 0 };
 float g_Xbox_BackbufferScaleX = 1;
 float g_Xbox_BackbufferScaleY = 1;
 
+static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
+
 /* Unused :
 static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
 */
@@ -2641,8 +2643,8 @@ public:
 	}
 };
 
-std::unordered_map<uint32_t, ConvertedIndexBuffer> g_IndexBufferCache;
-	
+	std::unordered_map<uint32_t, ConvertedIndexBuffer> g_IndexBufferCache;
+
 void CxbxRemoveIndexBuffer(PWORD pData)
 {
 	// HACK: Never Free
@@ -2702,7 +2704,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	}
 
 	// Poor-mans eviction policy : when exceeding treshold, clear entire cache :
-	if (g_IndexBufferCache.size() > 256) {
+	if (g_IndexBufferCache.size() > INDEX_BUFFER_CACHE_SIZE) {
 		g_IndexBufferCache.clear(); // Note : ConvertedIndexBuffer destructor will release any assigned pHostIndexBuffer
 	}
 
