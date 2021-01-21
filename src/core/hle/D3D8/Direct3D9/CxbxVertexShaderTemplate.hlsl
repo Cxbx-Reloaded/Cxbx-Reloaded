@@ -288,6 +288,14 @@ float4 reverseScreenspaceTransform(float4 oPos)
 
 VS_OUTPUT main(const VS_INPUT xIn)
 {
+	// Output variables
+	float4 oPos, oD0, oD1, oB0, oB1, oT0, oT1, oT2, oT3;
+	oPos = oD0 = oD1 = oB0 = oB1 = oT0 = oT1 = oT2 = oT3 = float4(0, 0, 0, 1); // Pre-initialize w component of outputs to 1
+
+	// Single component outputs
+	float4 oFog, oPts; // x is write-only on Xbox. Use float4 as some games use incorrect masks
+	oFog = oPts = 0;
+
 	// Address (index) register
 	int1 a0 = 0;
 
@@ -310,22 +318,6 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	init_v( 4); init_v( 5); init_v( 6); init_v( 7);
 	init_v( 8); init_v( 9); init_v(10); init_v(11);
 	init_v(12); init_v(13); init_v(14); init_v(15);
-
-    // Output variables
-    // Initialize to vertex attribute values
-    // Note only the x component matters for oFog and oPts
-    // but we still use float4 as some games use incorrect masks
-    float4 oPos = v0;
-    float4 oD0 = v3;
-    float4 oD1 = v4;
-    float4 oFog = v5;
-    float4 oPts = v6;
-    float4 oB0 = v7;
-    float4 oB1 = v8;
-    float4 oT0 = v9;
-    float4 oT1 = v10;
-    float4 oT2 = v11;
-    float4 oT3 = v12;
 
 	// Xbox shader program)DELIMITER", /* This terminates the header raw string" // */
 
