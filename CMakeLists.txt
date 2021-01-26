@@ -373,30 +373,46 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-ldr")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 
-# Issues with compile (the same with develop branch) and
-# for some reason did not put the files into virtual folder?
-# Might need to put the list in the source folder for workaround fix.
-if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
-  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
-endif()
+set(cxbxr_INSTALL_files "COPYING" "README.md")
+
+# Cxbx-Reloaded project with third-party libraries
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook libXbSymbolDatabase libtommath libtomcrypt
+ PROPERTIES FOLDER Cxbx-Reloaded
+)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # Configure startup project
  set_property(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}" PROPERTY VS_STARTUP_PROJECT cxbx)
 endif()
 
+# Check if generator is Visual Studio then enable Cxbxr-Debugger project.
+# Since C# is currently supported with Visual Studio for now.
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
-  set_target_properties(Tests_cs_x86
-   PROPERTIES EXCLUDE_FROM_ALL TRUE
-  )
+ # Issues with compile (the same with develop branch) and
+ # for some reason did not put the files into virtual folder?
+ # Might need to put the list in the source folder for workaround fix.
+ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
 
-  # Cxbx-Debugger project with third-party libraries
-  set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared
-   PROPERTIES FOLDER Cxbx-Reloaded/debugger
-  )
+ set_target_properties(Tests_cs_x86
+  PROPERTIES EXCLUDE_FROM_ALL TRUE
+ )
+
+ # Cxbx-Debugger project with third-party libraries
+ set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared
+  PROPERTIES FOLDER Cxbx-Reloaded/debugger
+ )
 endif()
 
-# Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook libXbSymbolDatabase libtommath libtomcrypt
- PROPERTIES FOLDER Cxbx-Reloaded
+install(FILES ${cxbxr_INSTALL_files}
+  DESTINATION bin
+)
+
+set(cxbxr_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
+
+install(PROGRAMS ${cxbxr_GLEW_DLL}
+  DESTINATION bin
+)
+
+install(PROGRAMS $<TARGET_FILE_DIR:cxbx>/${CMAKE_SHARED_LIBRARY_PREFIX}subhook${CMAKE_SHARED_LIBRARY_SUFFIX}
+  DESTINATION bin
 )

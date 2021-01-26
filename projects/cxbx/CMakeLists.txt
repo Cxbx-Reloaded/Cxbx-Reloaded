@@ -185,6 +185,10 @@ target_link_libraries(cxbx
  ${WINS_LIB}
 )
 
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+)
+
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
   add_dependencies(cxbx cxbxr-debugger)
 endif()

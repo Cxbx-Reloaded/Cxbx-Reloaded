@@ -41,9 +41,7 @@ build_script:
 on_success:
   - ps: |-
       If ($env:configuration -eq 'Release') {
-        cd bin\$env:configuration
-        7z u "$env:configuration.zip" ..\..\..\COPYING ..\..\..\README.md
-        7z u "$env:configuration.zip" cxbx.exe cxbxr-ldr.exe cxbxr-emu.dll glew32.dll subhook.dll SDL2.dll
-        7z u "$env:configuration.zip" cxbxr-debugger.exe capstone.dll cs_x86.dll
+        cmake --install . --config $env:configuration --prefix artifacts
+        7z a "$env:configuration.zip" ./artifacts/bin/*
         Get-ChildItem .\*.zip | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
       }

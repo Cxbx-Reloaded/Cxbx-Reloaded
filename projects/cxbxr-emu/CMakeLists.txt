@@ -161,4 +161,8 @@ target_link_libraries(cxbxr-emu
  ${WINS_LIB}
 )
 
+install(TARGETS ${PROJECT_NAME}
+  RUNTIME DESTINATION bin
+)
+
 add_dependencies(cxbxr-emu cxbxr-ldr misc-batch)
