@@ -1824,6 +1824,10 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			{
 				DrawUEM(hWnd);
 			}
+			else
+			{
+				DefWindowProc(hWnd, msg, wParam, lParam);
+			}
 		}
 		break;
 
