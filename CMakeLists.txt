@@ -195,6 +195,11 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/devices/Xbox.h"
 )
 
+# filter hlsl files into its own list
+# excluding hlsli file(s)
+set(CXBXR_HEADER_HLSL ${CXBXR_HEADER_EMU})
+list(FILTER CXBXR_HEADER_HLSL INCLUDE REGEX ".*\\.hlsl$")
+
 # Common (GUI and Emulator)
 file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/crypto/EmuDes.cpp"
@@ -413,9 +418,9 @@ install(FILES ${cxbxr_INSTALL_files}
 )
 
 install(FILES
-	"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
-	"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
-	DESTINATION bin/hlsl
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
+ DESTINATION bin/hlsl
 )
 
 set(cxbxr_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
