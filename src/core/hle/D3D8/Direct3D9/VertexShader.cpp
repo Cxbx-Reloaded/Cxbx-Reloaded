@@ -6,7 +6,7 @@
 
 #include <sstream>
 
-extern const char* g_vs_model = vs_model_3_0;
+extern const char* g_vs_model = vs_model_2_a;
 
 // HLSL generation
 void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
@@ -201,6 +201,7 @@ HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char
 	ID3DBlob* pErrors = nullptr;
 	ID3DBlob* pErrorsCompatibility = nullptr;
 	HRESULT             hRet = 0;
+	auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
 
 	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL3;
 	hRet = D3DCompile(
@@ -216,6 +217,34 @@ HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char
 		ppHostShader, // out
 		&pErrors // ppErrorMsgs out
 	);
+
+	// If the shader failed in the default vertex shader model, retry in vs_model_3_0
+	// This allows shaders too large for 2_a to be compiled (Test Case: Shenmue 2)
+	if (FAILED(hRet)) {
+		if (pErrors) {
+			// Log HLSL compiler errors
+			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
+			pErrors->Release();
+			pErrors = nullptr;
+		}
+
+		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Retrying with shader model 3.0");
+		hRet = D3DCompile(
+			hlsl.c_str(),
+			hlsl.length(),
+			pSourceName, // pSourceName
+			nullptr, // pDefines
+			D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
+			"main", // shader entry poiint
+			vs_model_3_0, // shader profile
+			flags1, // flags1
+			0, // flags2
+			ppHostShader, // out
+			&pErrors // ppErrorMsgs out
+		);
+	}
+
+	// If the shader failed again, retry in compatibility mode
 	if (FAILED(hRet)) {
 		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Recompiling in compatibility mode");
 		// Attempt to retry in compatibility mode, this allows some vertex-state shaders to compile
@@ -242,7 +271,6 @@ HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char
 	}
 
 	// Determine the log level
-	auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
 	if (pErrors) {
 		// Log HLSL compiler errors
 		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
