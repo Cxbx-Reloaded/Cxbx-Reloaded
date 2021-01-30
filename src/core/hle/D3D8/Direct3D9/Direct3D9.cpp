@@ -1634,17 +1634,6 @@ void EmuD3DInit()
 		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
 		std::cout << "----------------------------------------\n";
 	}
-
-	// AMD compatibility workaround since VS model 3.0 doesn't work as intended with Direct3D9.
-	{
-		D3DADAPTER_IDENTIFIER9 adapter_info;
-		HRESULT status = g_pDirect3D->GetAdapterIdentifier(g_EmuCDPD.Adapter, 0, &adapter_info);
-		// 1002 and 1022 are vendor ids of AMD gpus
-		if (status == D3D_OK && (adapter_info.VendorId == 0x1002 || adapter_info.VendorId == 0x1022)) {
-			g_vs_model = vs_model_2_a;
-			EmuLogInit(LOG_LEVEL::WARNING, "AMD GPU Detected, falling back to shader model 2.X to prevent missing polygons");
-		}
-	}
 }
 
 // cleanup Direct3D
