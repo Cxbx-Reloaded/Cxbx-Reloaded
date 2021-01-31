@@ -46,7 +46,7 @@ struct PS_OUTPUT
 // Constant registers
 uniform const float4 c0_[8] : register(c0);
 uniform const float4 c1_[8] : register(c8);
-uniform const float4 c_fog : register(c16); // Note : Maps to PSH_XBOX_CONSTANT_FOG, assigned to fog.rgb
+uniform const float4 c_fog : register(c18); // Note : Maps to PSH_XBOX_CONSTANT_FOG, assigned to fog.rgb
 
 // Constant registers used only in final combiner stage (xfc 'opcode') :
 uniform const float4 FC0 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC0, must be generated as argument to xfc instead of C0
