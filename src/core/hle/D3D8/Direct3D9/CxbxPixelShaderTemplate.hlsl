@@ -24,14 +24,14 @@ struct PS_OUTPUT
 
 // Source register modifier macro's, based on enum PS_INPUTMAPPING :
 // TODO : Should all these 'max(0, x)' actually be 'saturate(x)'? This, because the operation may actually clamp the register value to the range [0..1]
-#define s_sat(x)         saturate(x)       // PS_INPUTMAPPING_UNSIGNED_IDENTITY= 0x00L, // OK for final combiner      // Clamps negative x to 0 // Was :        max(0, x)
-#define s_comp(x)    1 - saturate(x)       // PS_INPUTMAPPING_UNSIGNED_INVERT=   0x20L, // OK for final combiner      // Complements x (1-x)    // Was : 1- min(max(0, x), 1)
-#define s_bx2(x)     ( 2 * max(0, x)) - 1  // PS_INPUTMAPPING_EXPAND_NORMAL=     0x40L, // invalid for final combiner // Shifts range from [0..1] to [-1..1]
-#define s_negbx2(x)  (-2 * max(0, x)) + 1  // PS_INPUTMAPPING_EXPAND_NEGATE=     0x60L, // invalid for final combiner // Shifts range from [0..1] to [-1..1] and then negates
-#define s_bias(x)          max(0, x) - 0.5 // PS_INPUTMAPPING_HALFBIAS_NORMAL=   0x80L, // invalid for final combiner // Clamps negative x to 0 and then subtracts 0.5
-#define s_negbias(x)      -max(0, x) + 0.5 // PS_INPUTMAPPING_HALFBIAS_NEGATE=   0xa0L, // invalid for final combiner // Clamps negative x to 0, subtracts 0.5, and then negates
-#define s_ident(x)                x        // PS_INPUTMAPPING_SIGNED_IDENTITY=   0xc0L, // invalid for final combiner // No modifier, x is passed without alteration
-#define s_neg(x)                 -x        // PS_INPUTMAPPING_SIGNED_NEGATE=     0xe0L, // invalid for final combiner // Negate
+#define s_sat(x)         saturate(x)        // PS_INPUTMAPPING_UNSIGNED_IDENTITY= 0x00L, // OK for final combiner      // Clamps negative x to 0 // Was :        max(0, x)
+#define s_comp(x)   (1 - saturate(x))       // PS_INPUTMAPPING_UNSIGNED_INVERT=   0x20L, // OK for final combiner      // Complements x (1-x)    // Was : 1- min(max(0, x), 1)
+#define s_bx2(x)    (( 2 * max(0, x)) - 1)  // PS_INPUTMAPPING_EXPAND_NORMAL=     0x40L, // invalid for final combiner // Shifts range from [0..1] to [-1..1]
+#define s_negbx2(x) ((-2 * max(0, x)) + 1)  // PS_INPUTMAPPING_EXPAND_NEGATE=     0x60L, // invalid for final combiner // Shifts range from [0..1] to [-1..1] and then negates
+#define s_bias(x)         (max(0, x) - 0.5) // PS_INPUTMAPPING_HALFBIAS_NORMAL=   0x80L, // invalid for final combiner // Clamps negative x to 0 and then subtracts 0.5
+#define s_negbias(x)     (-max(0, x) + 0.5) // PS_INPUTMAPPING_HALFBIAS_NEGATE=   0xa0L, // invalid for final combiner // Clamps negative x to 0, subtracts 0.5, and then negates
+#define s_ident(x)                x         // PS_INPUTMAPPING_SIGNED_IDENTITY=   0xc0L, // invalid for final combiner // No modifier, x is passed without alteration
+#define s_neg(x)                (-x)        // PS_INPUTMAPPING_SIGNED_NEGATE=     0xe0L, // invalid for final combiner // Negate
 
 // Destination register modifier macro's, based on enum PS_COMBINEROUTPUT :
 #define d_ident(x) x              // PS_COMBINEROUTPUT_IDENTITY=            0x00L, // 
