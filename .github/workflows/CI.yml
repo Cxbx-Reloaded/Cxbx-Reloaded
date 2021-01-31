@@ -3,32 +3,24 @@ name: GitHub CI
 on:
   push:
     paths-ignore:
-      - '.github/CONTRIBUTING.md'
-      - '.github/FUNDING.md'
-      - '.github/ISSUE_TEMPLATE/*'
-      - 'doc/*'
-      - 'doc/*/*'
-      - '.appveyor.yml'
-      - '.azure-pipelines.yml'
-      - '.travis.yml'
-      - 'gen-msvc-project.bat'
-      - 'setup.bat'
+      - '.github/*'
+      - '.github/*_TEMPLATE/**'
+      - '*.bat'
+      - '*.yml'
+      - 'doc/**'
   pull_request:
     paths-ignore:
-      - '.github/CONTRIBUTING.md'
-      - '.github/FUNDING.md'
-      - '.github/ISSUE_TEMPLATE/*'
-      - 'doc/*'
-      - 'doc/*/*'
-      - '.appveyor.yml'
-      - '.azure-pipelines.yml'
-      - '.travis.yml'
-      - 'gen-msvc-project.bat'
-      - 'setup.bat'
+      - '.github/*'
+      - '.github/*_TEMPLATE/**'
+      - '*.bat'
+      - '*.yml'
+      - 'doc/**'
 
 jobs:
   build-windows:
     runs-on: ${{ matrix.os }}
+    env:
+      POWERSHELL_TELEMETRY_OPTOUT: 1
     strategy:
       fail-fast: false
       matrix:
@@ -37,15 +29,19 @@ jobs:
         include:
           - vsver: VS2019
             os: windows-latest
-          - vsver: VS2017    # TODO: Remove VS2017 once WINE supports VS2019 runtimes;
-            os: windows-2016 # https://github.com/actions/virtual-environments/issues/68#issuecomment-602652021
+          - vsver: VS2017
+            os: windows-2016
+    outputs:
+      tag_name: ${{ steps.get_tag.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           submodules: recursive
-      - name: Generate cmake files
+      - name: Generate CMake files
         run: |
-          mkdir build && cd build
+          mkdir build | Out-Null
+          cd build
           cmake .. -A Win32
       - name: Build
         working-directory: build
@@ -53,63 +49,51 @@ jobs:
       - name: Prepare artifacts
         if: matrix.configuration == 'Release'
         working-directory: build
-        run: cmake --install . --config ${{ matrix.configuration }} --prefix ../artifacts
+        run: cmake --install . --config ${{ matrix.configuration }} --prefix ..\artifacts
       - uses: actions/upload-artifact@v2
         if: matrix.configuration == 'Release'
         with:
           name: CxbxReloaded-${{ matrix.configuration }}-${{ matrix.vsver }}
-          path: artifacts/bin/**
+          path: artifacts\bin
+          if-no-files-found: error
 
   release:
     if: |
       github.event.action != 'pull_request' &&
-      github.ref == 'refs/heads/master' &&
+      github.ref == 'refs/heads/master'     &&
       github.repository == 'Cxbx-Reloaded/Cxbx-Reloaded'
     needs: build-windows
-    env:
-      artifact_1: CxbxReloaded-Release-VS2019
-      artifact_2: CxbxReloaded-Release-VS2017
-    # Use the Ubuntu image to make releases quicker.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 # TODO: Switch to ubuntu-latest once it's ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Download artifacts (1)
-        uses: actions/download-artifact@v1
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
         with:
-          name: ${{ env.artifact_1 }}
-      - name: Download artifacts (2)
-        uses: actions/download-artifact@v1
-        with:
-          name: ${{ env.artifact_2 }}
-      - name: Prepare artifacts for release
-        run: | # download-artifact doesn't download a zip, so rezip it
-          echo "short_commit_sha=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-          7z a -mx1 "${{ env.artifact_1 }}.zip" "./${{ env.artifact_1 }}/*"
-          7z a -mx1 "${{ env.artifact_2 }}.zip" "./${{ env.artifact_2 }}/*"
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.1
+          path: artifacts
+      - name: Re-zip Artifacts
+        id: git
+        run: |
+          for artifact in artifacts/*; do
+            7z a $artifact.zip "./$artifact/*"
+            if [[ $(stat -c %s $artifact.zip) -le 1000 ]]; then
+              echo "Error: Archive $artifact.zip too small!"
+              exit 1
+            fi
+          done
+          echo "::set-output name=tag_name::CI-$(git rev-parse --short HEAD)"
+      - uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: CI-${{ env.short_commit_sha }}
-          release_name: CI-${{ env.short_commit_sha }}
+          tag_name: ${{ steps.git.outputs.tag_name }}
+          release_name: ${{ steps.git.outputs.tag_name }}
           prerelease: true
-      - name: Upload Release Asset (1)
-        uses: actions/upload-release-asset@v1
+      - name: Upload Release Asset(s)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.artifact_1 }}.zip
-          asset_name: ${{ env.artifact_1 }}.zip
-          asset_content_type: application/zip
-      - name: Upload Release Asset (2)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ env.artifact_2 }}.zip
-          asset_name: ${{ env.artifact_2 }}.zip
-          asset_content_type: application/zip
+        run: |
+          assets=()
+          for asset in artifacts/*.zip; do
+            assets+=("-a" "$asset")
+          done
+          hub release edit "${assets[@]}" -m "" "${{ steps.git.outputs.tag_name }}"
