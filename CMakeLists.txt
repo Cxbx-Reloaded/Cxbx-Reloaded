@@ -117,10 +117,14 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"
  "${CXBXR_ROOT_DIR}/src/common/XADPCM.h"
  "${CXBXR_ROOT_DIR}/src/common/xbox/Logging.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShader.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShaderSource.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/WalkIndexBuffer.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/FixedFunctionState.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/ResourceTracker.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbConvert.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Logging.h"
@@ -190,6 +194,11 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/devices/x86/EmuX86.h"
  "${CXBXR_ROOT_DIR}/src/devices/Xbox.h"
 )
+
+# filter hlsl files into its own list
+# excluding hlsli file(s)
+set(CXBXR_HEADER_HLSL ${CXBXR_HEADER_EMU})
+list(FILTER CXBXR_HEADER_HLSL INCLUDE REGEX ".*\\.hlsl$")
 
 # Common (GUI and Emulator)
 file (GLOB CXBXR_SOURCE_COMMON
@@ -266,6 +275,7 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShader.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShaderSource.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/WalkIndexBuffer.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/FixedFunctionState.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/ResourceTracker.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbConvert.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Logging.cpp"
@@ -405,6 +415,12 @@ endif()
 
 install(FILES ${cxbxr_INSTALL_files}
   DESTINATION bin
+)
+
+install(FILES
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
+ DESTINATION bin/hlsl
 )
 
 set(cxbxr_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")

@@ -80,6 +80,17 @@ typedef struct _CxbxVertexDeclaration
 }
 CxbxVertexDeclaration;
 
+enum class VertexShaderMode {
+	FixedFunction,
+	// When titles use Xbox fixed function with pre-transformed vertices
+	// it actually uses a special "passthrough" shader program
+	Passthrough,
+	ShaderProgram
+};
+
+extern VertexShaderMode g_Xbox_VertexShaderMode;
+extern bool g_UseFixedFunctionVertexShader;
+
 // Intermediate vertex shader structures
 
 enum VSH_OREG_NAME {
@@ -200,6 +211,9 @@ extern size_t GetVshFunctionSize(const xbox::dword_xt* pXboxFunction);
 inline boolean VshHandleIsVertexShader(DWORD Handle) { return (Handle & X_D3DFVF_RESERVED0) ? TRUE : FALSE; }
 inline xbox::X_D3DVertexShader *VshHandleToXboxVertexShader(DWORD Handle) { return (xbox::X_D3DVertexShader *)(Handle & ~X_D3DFVF_RESERVED0);}
 
+// Get the number of components represented by the given xbox vertex data type
+extern int GetXboxVertexDataComponentCount(int d3dvsdt);
+
 extern bool g_Xbox_VertexShader_IsFixedFunction;
 
 extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();
@@ -214,4 +228,5 @@ extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::
 extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
 extern void CxbxImpl_DeleteVertexShader(DWORD Handle);
 extern void CxbxVertexShaderSetFlags();
+extern HRESULT SetVertexShader(IDirect3DVertexShader* pShader);
 #endif

@@ -396,14 +396,13 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
 
 	switch (State) {
         case xbox::X_D3DRS_VERTEXBLEND:
-            // convert from Xbox direct3d to PC direct3d enumeration
-            if (Value <= 1) {
-                Value = Value;
-            } else if (Value == 3) {
-                Value = 2;
-            } else if (Value == 5) {
-                Value = 3;
-            } else {
+            // convert from Xbox X_D3DVERTEXBLENDFLAGS to PC D3DVERTEXBLENDFLAGS enumeration
+            switch (Value) {
+            case xbox::X_D3DVBF_DISABLE: Value = D3DVBF_DISABLE; break;
+            case xbox::X_D3DVBF_1WEIGHTS: Value = D3DVBF_1WEIGHTS; break;
+            case xbox::X_D3DVBF_2WEIGHTS: Value = D3DVBF_2WEIGHTS; break;
+            case xbox::X_D3DVBF_3WEIGHTS: Value = D3DVBF_3WEIGHTS; break;
+            default:
                 LOG_TEST_CASE("Unsupported D3DVERTEXBLENDFLAGS (%d)");
                 return;
             }

@@ -4,6 +4,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 
+#include <fstream>
 #include <sstream>
 
 extern const char* g_vs_model = vs_model_2_a;
@@ -266,24 +267,25 @@ HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char
 
 		if (FAILED(hRet)) {
 			LOG_TEST_CASE("Couldn't assemble vertex shader");
-			//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled vertex shader");
 		}
 	}
 
 	// Determine the log level
 	if (pErrors) {
-		// Log HLSL compiler errors
+		// Log errors from the initial compilation
 		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
 		pErrors->Release();
 		pErrors = nullptr;
-		if (pErrorsCompatibility != nullptr) {
-			pErrorsCompatibility->Release();
-			pErrorsCompatibility = nullptr;
-		}
 	}
 
-	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG)
-		if (g_bPrintfOn)
+	// Failure to recompile in compatibility mode ignored for now
+	if (pErrorsCompatibility != nullptr) {
+		pErrorsCompatibility->Release();
+		pErrorsCompatibility = nullptr;
+	}
+
+	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
+		if (g_bPrintfOn) {
 			if (!FAILED(hRet)) {
 				// Log disassembly
 				hRet = D3DDisassemble(
@@ -298,6 +300,8 @@ HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char
 					pErrors->Release();
 				}
 			}
+		}
+	}
 
 	return hRet;
 }
@@ -328,6 +332,31 @@ extern HRESULT EmuCompileShader
 
 	return CompileHlsl(hlsl_str, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
 }
+
+extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
+{
+	static ID3DBlob* pShader = nullptr;
+
+	// TODO does this need to be thread safe?
+	if (pShader == nullptr) {
+		// Determine the filename and directory for the fixed function shader
+		auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
+			.parent_path()
+			.append("hlsl");
+
+		auto sourceFile = hlslDir.append("FixedFunctionVertexShader.hlsl").string();
+
+		// Load the shader into a string
+		std::ifstream hlslStream(sourceFile);
+		std::stringstream hlsl;
+		hlsl << hlslStream.rdbuf();
+
+		// Compile the shader
+		CompileHlsl(hlsl.str(), &pShader, sourceFile.c_str());
+	}
+
+	*ppHostShader = pShader;
+};
 
 static ID3DBlob* pPassthroughShader = nullptr;
 
