@@ -410,7 +410,7 @@ float DoPointSpriteSize()
 {
     const PointSprite ps = state.PointSprite;
 
-    const float pointSize = ps.PointSize;
+    float pointSize = ps.PointSize;
     const float A = ps.PointScaleABC.x;
     const float B = ps.PointScaleABC.y;
     const float C = ps.PointScaleABC.z;
@@ -423,7 +423,7 @@ float DoPointSpriteSize()
         pointSize *= ps.XboxRenderTargetHeight * sqrt(1 / factor);
     }
 
-    return clamp(pointSize, ps.PointSizeMin, ps.PointSizeMax) * ps.RenderUpscaleFactor;
+    return clamp(pointSize, ps.PointSize_Min, ps.PointSize_Max) * ps.RenderUpscaleFactor;
 }
 
 VS_INPUT InitializeInputRegisters(const VS_INPUT xInput)
@@ -444,16 +444,21 @@ VS_INPUT InitializeInputRegisters(const VS_INPUT xInput)
             if(i == normal) xIn.normal = value;
             if(i == diffuse) xIn.color[0] = value;
             if(i == specular) xIn.color[1] = value;
+            if(i == fogCoord) xIn.fogCoord = value.x; // Note : Untested
+            if(i == pointSize) xIn.pointSize = value.x; // Note : Untested
             if(i == backDiffuse) xIn.backColor[0] = value;
             if(i == backSpecular) xIn.backColor[1] = value;
             if(i == texcoord0) xIn.texcoord[0] = value;
             if(i == texcoord1) xIn.texcoord[1] = value;
             if(i == texcoord2) xIn.texcoord[2] = value;
             if(i == texcoord3) xIn.texcoord[3] = value;
+            if(i == reserved0) xIn.reserved[0] = value; // Note : Untested
+            if(i == reserved1) xIn.reserved[1] = value; // Note : Untested
+            if(i == reserved2) xIn.reserved[2] = value; // Note : Untested
         #endif
     }
 
-    return xIn;
+    return xIn; // Note : Untested setters are required to avoid "variable 'xIn' used without having been completely initialized" here
 }
 
 VS_OUTPUT main(const VS_INPUT xInput)
