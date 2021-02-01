@@ -6405,9 +6405,18 @@ void UpdateFixedFunctionVertexShaderState()
 	ffShaderState.PointSprite.RenderUpscaleFactor = g_RenderUpscaleFactor;
 
 	// Fog
+	// Determine how the fog depth is transformed into the fog factor
+	auto fogEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGENABLE);
+	auto fogTableMode = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE);
+	ffShaderState.Fog.Enable = fogEnable;
+	// FIXME remove when fixed function PS is implemented
+	// Note if we are using the fixed function pixel shader
+	// We only want to produce the fog depth value in the VS, not the fog factor
+	auto psIsFixedFunction = g_pXbox_PixelShader == nullptr;
+	ffShaderState.Fog.TableMode = psIsFixedFunction ? D3DFOG_NONE : fogTableMode;
+
 	// Determine how fog depth is calculated
-	if (XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGENABLE) &&
-		XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE) != D3DFOG_NONE) {
+	if (fogEnable && fogTableMode != D3DFOG_NONE) {
 		auto proj = &ffShaderState.Transforms.Projection;
 
 		if (XboxRenderStates.GetXboxRenderState(X_D3DRS_RANGEFOGENABLE)) {
@@ -6427,6 +6436,13 @@ void UpdateFixedFunctionVertexShaderState()
 			// JSRF (non-compliant projection matrix)
 			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_W;
 		}
+
+		auto density = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGDENSITY);
+		auto fogStart = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGSTART);
+		auto fogEnd = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGEND);
+		ffShaderState.Fog.Density = *reinterpret_cast<float*>(&density);
+		ffShaderState.Fog.Start = *reinterpret_cast<float*>(&fogStart);
+		ffShaderState.Fog.End = *reinterpret_cast<float*>(&fogEnd);
 	}
 	else {
 		ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_NONE;
