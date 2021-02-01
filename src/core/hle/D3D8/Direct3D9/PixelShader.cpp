@@ -76,14 +76,14 @@ void InputRegisterHLSL(std::stringstream& hlsl, RPSInputRegister &input, unsigne
 		// [*][0] = PS_REGISTER_ZERO-derived constants, based on enum PS_INPUTMAPPING :
 		// [*][1] = Source register modifier macro's, based on enum PS_INPUTMAPPING :
 		// [*][2] = Final combiner source register modifier macro's, based on enum PS_INPUTMAPPING :
-		"zero",  "s_sat",     "abs", //           saturate(x)        // PS_INPUTMAPPING_UNSIGNED_IDENTITY= 0x00L, OK for final combiner      // Clamps negative x to 0 
-		"one",   "s_comp",    "",    // ( 1.0   - saturate(x)      ) // PS_INPUTMAPPING_UNSIGNED_INVERT=   0x20L, OK for final combiner      // Complements x (1-x)
-		"-one",  "s_bx2",     "N/A", // ( 2.0 *   max(0.0, x) - 1.0) // PS_INPUTMAPPING_EXPAND_NORMAL=     0x40L, invalid for final combiner // Shifts range from [0..1] to [-1..1]
-		"one",   "s_negbx2",  "N/A", // (-2.0 *   max(0.0, x) + 1.0) // PS_INPUTMAPPING_EXPAND_NEGATE=     0x60L, invalid for final combiner // Shifts range from [0..1] to [-1..1] and then negates 
-		"-half", "s_bias",    "N/A", //          (max(0.0, x) - 0.5) // PS_INPUTMAPPING_HALFBIAS_NORMAL=   0x80L, invalid for final combiner // Clamps negative x to 0 and then subtracts 0.5 
-		"half",  "s_negbias", "N/A", //         (-max(0.0, x) + 0.5) // PS_INPUTMAPPING_HALFBIAS_NEGATE=   0xa0L, invalid for final combiner // Clamps negative x to 0, subtracts 0.5, and then negates
-		"zero",  "s_ident",   "N/A", //                    x         // PS_INPUTMAPPING_SIGNED_IDENTITY=   0xc0L, invalid for final combiner // No modifier, x is passed without alteration
-		"zero",  "s_neg",     "N/A"  //                   -x         // PS_INPUTMAPPING_SIGNED_NEGATE=     0xe0L, invalid for final combiner // Negate
+		"zero",  "s_sat",     "abs",    //           saturate(x)        // PS_INPUTMAPPING_UNSIGNED_IDENTITY= 0x00L, OK for final combiner      // Clamps negative x to 0 
+		"one",   "s_comp",    "s_comp", // ( 1.0   - saturate(x)      ) // PS_INPUTMAPPING_UNSIGNED_INVERT=   0x20L, OK for final combiner      // Complements x (1-x)
+		"-one",  "s_bx2",     "N/A",    // ( 2.0 *   max(0.0, x) - 1.0) // PS_INPUTMAPPING_EXPAND_NORMAL=     0x40L, invalid for final combiner // Shifts range from [0..1] to [-1..1]
+		"one",   "s_negbx2",  "N/A",    // (-2.0 *   max(0.0, x) + 1.0) // PS_INPUTMAPPING_EXPAND_NEGATE=     0x60L, invalid for final combiner // Shifts range from [0..1] to [-1..1] and then negates 
+		"-half", "s_bias",    "N/A",    //          (max(0.0, x) - 0.5) // PS_INPUTMAPPING_HALFBIAS_NORMAL=   0x80L, invalid for final combiner // Clamps negative x to 0 and then subtracts 0.5 
+		"half",  "s_negbias", "N/A",    //         (-max(0.0, x) + 0.5) // PS_INPUTMAPPING_HALFBIAS_NEGATE=   0xa0L, invalid for final combiner // Clamps negative x to 0, subtracts 0.5, and then negates
+		"zero",  "s_ident",   "N/A",    //                    x         // PS_INPUTMAPPING_SIGNED_IDENTITY=   0xc0L, invalid for final combiner // No modifier, x is passed without alteration
+		"zero",  "s_neg",     "N/A"     //                   -x         // PS_INPUTMAPPING_SIGNED_NEGATE=     0xe0L, invalid for final combiner // Negate
 	};
 
 	// Generate channel selector
