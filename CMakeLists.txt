@@ -116,6 +116,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"
  "${CXBXR_ROOT_DIR}/src/common/audio/XADPCM.h"
  "${CXBXR_ROOT_DIR}/src/common/xbox/Logging.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxPixelShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
@@ -421,6 +422,7 @@ install(FILES ${cxbxr_INSTALL_files}
 )
 
 install(FILES
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/CxbxPixelShaderTemplate.hlsl"
  "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
  "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
  DESTINATION bin/hlsl
