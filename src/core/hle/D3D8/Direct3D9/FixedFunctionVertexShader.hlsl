@@ -273,11 +273,11 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
 
 float DoFog(const VS_INPUT xIn)
 {
-    // TODO implement properly
-    // Until we have pixel shader HLSL we are still leaning on D3D renderstates for fogging
-    // So we are not doing any fog density calculations here
+    if (!state.Fog.Enable)
+        return 1; // No fog!
     // http://developer.download.nvidia.com/assets/gamedev/docs/Fog2.pdf
 
+    // Obtain the fog depth value 'd'
     float fogDepth;
 
     if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_NONE)
@@ -289,7 +289,19 @@ float DoFog(const VS_INPUT xIn)
     if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_W)
         fogDepth = Projection.Position.w;
 
-    return fogDepth;
+    // Calculate the fog factor
+    // Some of this might be better done in the pixel shader?
+    float fogFactor;
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_NONE)
+        fogFactor = fogDepth;
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_EXP)
+        fogFactor = 1 / exp(fogDepth * state.Fog.Density); // 1 / e^(d * density)
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_EXP2)
+        fogFactor = 1 / exp(pow(fogDepth * state.Fog.Density, 2)); // 1 / e^((d * density)^2)
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_LINEAR)
+        fogFactor = (state.Fog.End - fogDepth) / (state.Fog.End - state.Fog.Start); // (end - d) / (end - start)
+
+    return fogFactor;
 }
 
 float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
