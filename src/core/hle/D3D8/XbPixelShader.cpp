@@ -546,27 +546,31 @@ typedef struct s_CxbxPSDef {
 
 		// Since we're HLE'ing Xbox D3D, mimick how it configures the final combiner when PSDef doesn't :
 		// TODO : Use the same final combiner when no pixel shader is set! Possibly by generating a DecodedRegisterCombiner with PSCombinerCount zero?
-		if (RenderStateFogEnable) {
-			// Configure final combiner to perform this operation :
-			// if (X_D3DRS_SPECULARENABLE) r0.rgb = lerp(fog.rgb, r0.rgb + v1.rgb, fog.a);
-			//                        else r0.rgb = lerp(fog.rgb, r0.rgb         , fog.a);
-			// r0.a = abs(r0.a);
-			RC.FinalCombiner.Input[0/*A*/].Reg = PS_REGISTER_FOG;
-			RC.FinalCombiner.Input[0/*A*/].Channel = PS_CHANNEL_ALPHA;
-			RC.FinalCombiner.Input[1/*B*/].Reg = RenderStateSpecularEnable ? PS_REGISTER_V1R0_SUM : PS_REGISTER_R0;
-			RC.FinalCombiner.Input[1/*B*/].Channel = PS_CHANNEL_RGB; // Note : Not really needed, should be 0 already
-			RC.FinalCombiner.Input[2/*C*/].Reg = PS_REGISTER_FOG;
-			RC.FinalCombiner.Input[2/*C*/].Channel = PS_CHANNEL_RGB; // Note : Not really needed, should be 0 already
-			RC.FinalCombiner.Input[6/*G*/].Reg = PS_REGISTER_R0;
-			RC.FinalCombiner.Input[6/*G*/].InputMapping = PS_INPUTMAPPING_UNSIGNED_IDENTITY;
-			RC.FinalCombiner.Input[6/*G*/].Channel = PS_CHANNEL_ALPHA;
-		}
-		else {
-			//  if (X_D3DRS_SPECULARENABLE) r0.rgb = r0.rgb + v1.rgb;
-			//                         else r0.rgb = r0.rgb;
-			RC.FinalCombiner.Input[3/*D*/].Reg = RenderStateSpecularEnable ? PS_REGISTER_V1R0_SUM : PS_REGISTER_R0;
-			RC.FinalCombiner.Input[3/*D*/].Channel = PS_CHANNEL_RGB; // Note : Not really needed, should be 0 already
-		}
+		// (This forms the entire Xbox fixed function pixel pipeline, which uses only two renderstates : X_D3DRS_SPECULARENABLE and X_D3DRS_SPECULARENABLE.)
+		//
+		// If X_D3DRS_FOGENABLE, configure final combiner to perform this operation :
+		//   if (X_D3DRS_SPECULARENABLE) r0.rgb = lerp(fog.rgb, r0.rgb, fog.a) + v1.rgb;
+		//                          else r0.rgb = lerp(fog.rgb, r0.rgb, fog.a);
+		//   r0.a = abs(r0.a);
+		// Otherwise, if not X_D3DRS_FOGENABLE, configure final combiner to perform this operation :
+		//   if (X_D3DRS_SPECULARENABLE) r0.rgb = r0.rgb + v1.rgb;
+		//                          else r0.rgb = r0.rgb;
+		// Remember : 
+		//   xfc.rgb = lerp(C, B, A) + D
+		//   xfc.a = G.b
+		// Whereby A, B, C and G can use the two xfc-special purpose registers :
+		//   V1R0 = V1 + R0
+		//   EFPROD = E * F
+		// ( Or in shorthand : sum=r0+v1, prod=s4*s5, r0.rgb=s0*s1+{1-s0}*s2+s3, r0.a=s6.b )
+		RC.FinalCombiner.Input[0/*A*/].Channel = PS_CHANNEL_ALPHA;
+		RC.FinalCombiner.Input[0/*A*/].Reg = RenderStateFogEnable ? PS_REGISTER_FOG : PS_REGISTER_ZERO;
+		RC.FinalCombiner.Input[1/*B*/].Reg = RenderStateFogEnable ? PS_REGISTER_FOG : PS_REGISTER_ZERO;
+		RC.FinalCombiner.Input[2/*C*/].Reg = PS_REGISTER_R0;
+		RC.FinalCombiner.Input[3/*D*/].Reg = RenderStateSpecularEnable ? PS_REGISTER_V1 : PS_REGISTER_ZERO;
+		RC.FinalCombiner.Input[4/*E*/].Reg = PS_REGISTER_ZERO; // Note : Not really needed, should be 0 already
+		RC.FinalCombiner.Input[5/*F*/].Reg = PS_REGISTER_ZERO; // Note : Not really needed, should be 0 already
+		RC.FinalCombiner.Input[6/*G*/].Reg = PS_REGISTER_R0;
+		RC.FinalCombiner.Input[6/*G*/].Channel = PS_CHANNEL_ALPHA;
 	}
 
 	void PerformRuntimeAdjustments(DecodedRegisterCombiner &RC)
