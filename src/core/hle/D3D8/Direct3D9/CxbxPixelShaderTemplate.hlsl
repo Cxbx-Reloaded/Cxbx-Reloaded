@@ -49,8 +49,8 @@ uniform const float4 c1_[8] : register(c8);
 uniform const float4 c_fog : register(c18); // Note : Maps to PSH_XBOX_CONSTANT_FOG, assigned to fog.rgb
 
 // Constant registers used only in final combiner stage (xfc 'opcode') :
-uniform const float4 FC0 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC0, must be generated as argument to xfc instead of C0
-uniform const float4 FC1 : register(c18); // Note : Maps to PSH_XBOX_CONSTANT_FC1, must be generated as argument to xfc instead of C1
+uniform const float4 FC0 : register(c16); // Note : Maps to PSH_XBOX_CONSTANT_FC0, must be generated as argument to xfc instead of C0
+uniform const float4 FC1 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC1, must be generated as argument to xfc instead of C1
 uniform const float4 BEM[4] : register(c19); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
 uniform const float4 LUM[4] : register(c23); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
 
