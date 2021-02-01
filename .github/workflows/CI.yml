@@ -30,18 +30,14 @@ jobs:
           - vsver: VS2019
             os: windows-latest
           - vsver: VS2017
-            os: windows-2016
-    outputs:
-      tag_name: ${{ steps.get_tag.outputs.tag_name }}
+            os: windows-2016 # https://github.com/actions/virtual-environments/issues/68#issuecomment-602652021
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 0
           submodules: recursive
       - name: Generate CMake files
         run: |
-          mkdir build | Out-Null
-          cd build
+          mkdir build && cd build
           cmake .. -A Win32
       - name: Build
         working-directory: build
@@ -49,12 +45,12 @@ jobs:
       - name: Prepare artifacts
         if: matrix.configuration == 'Release'
         working-directory: build
-        run: cmake --install . --config ${{ matrix.configuration }} --prefix ..\artifacts
+        run: cmake --install . --config ${{ matrix.configuration }} --prefix ../artifacts
       - uses: actions/upload-artifact@v2
         if: matrix.configuration == 'Release'
         with:
           name: CxbxReloaded-${{ matrix.configuration }}-${{ matrix.vsver }}
-          path: artifacts\bin
+          path: artifacts/bin
           if-no-files-found: error
 
   release:
