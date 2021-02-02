@@ -17,7 +17,6 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
     * Make sure to enable winpcap compatibility mode!
 
 ### Wine
-
 **NOTICE: Please use latest stable release version of Wine. If it does not work for you, then roll back to Wine 5.0.3 as last known working version.**
   * Winetricks
     * `vcrun2017` or `vcrun2019`
