@@ -28,9 +28,9 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 
 
 ## Automated Builds
-Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from the Releases tab, or the links below:
+Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from our official website's download page, or the links below:
 
-  * **[Release Builds](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/releases)**
+  * **[Release Builds](https://cxbx-reloaded.co.uk/download)**
     * **Wine users will need to use `CxbxReloaded-Release-VS2017.zip` for it to run correctly.**
   * *[Full build history](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=workflow%3A%22GitHub+CI%22)*
 
