@@ -10,10 +10,21 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * OS: Windows 7+ x64, or x86-64 Linux with Wine. 32-bit is not supported.
   * GPU: Direct3D 9.0c with Pixel Shader Model 2.x, and Vertex Shader Model 3.0.
 
-### Prerequisites
+## Prerequisites
+### Windows
   * [32-bit (x86) Visual C++ 2019 Redistributable](https://aka.ms/vs/16/release/vc_redist.x86.exe)
   * [Npcap *(used for network emulation)*](https://nmap.org/npcap/#download)
     * Make sure to enable winpcap compatibility mode!
+
+### Wine
+**NOTICE: Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 5.0.3 which is the last known working version.**
+  * Winetricks
+    * `vcrun2017` or `vcrun2019`
+      * NOTE: vcrun2019 requires the latest winetricks script!
+    * `d3dcompiler_47`
+      * NOTE: May be subject to change over time.
+  * Winpcap is built-in, no installation is required.
+
 
 ## Automated Builds
 Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from the Releases tab, or the links below:
