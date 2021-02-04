@@ -630,8 +630,10 @@ constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_CONSTANT_FC1 + 1; // = 18
 constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_FOG + 1; // = 19..22
 // Bump map Luminance registers
 constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 23..26
+// Which winding order to consider as the front face
+constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; // = 27
 // This concludes the set of constants that need to be set on host :
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_LUM + 4; // = 27
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
 
 void DxbxUpdateActivePixelShader() // NOPATCH
 {
@@ -767,6 +769,21 @@ void DxbxUpdateActivePixelShader() // NOPATCH
     }
   }
 #endif
+
+  // Control whether to use front or back diffuse/specular colours
+  // This factor should be multipled with VFACE
+  // Test cases:
+  // Amped (snowboard trails should use front colours, but use both CW and CCW winding)
+  // TwoSidedLighting sample
+  float frontfaceFactor = 0; // 0 == always use the front colours
+  if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING)) {
+	  LOG_TEST_CASE("Two sided lighting");
+	  // VFACE is positive for clockwise faces
+	  // If Xbox designates counter-clockwise as front-facing, we invert VFACE
+	  auto cwFrontface = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FRONTFACE) == 0x900; // clockwise;
+	  frontfaceFactor = cwFrontface ? 1 : -1;
+  }
+  fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
 
   // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
   // Read the color from the corresponding render state slot :
