@@ -53,6 +53,7 @@ uniform const float4 FC0 : register(c16); // Note : Maps to PSH_XBOX_CONSTANT_FC
 uniform const float4 FC1 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC1, must be generated as argument to xfc instead of C1
 uniform const float4 BEM[4] : register(c19); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
 uniform const float4 LUM[4] : register(c23); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
+uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
 
 
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
@@ -335,11 +336,14 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	float3 s;              // Actual texture coordinate sampling coordinates (temporary)
 	float4 v;              // Texture value (temporary)
 
+	// Determine if this is a front face or backface
+	bool isFrontFace = (xIn.iFF * FRONTFACE_FACTOR) >= 0;
+
 	// Initialize variables
 	r0 = r1 = black; // Note : r0.a/r1.a will be overwritten by t0.a/t1.a (opaque_black will be retained for PS_TEXTUREMODES_NONE)
 	// Note : VFACE/FrontFace has been unreliable, investigate again if some test-case shows bland colors
-	v0 = xIn.iFF > 0 ? xIn.iD0 : xIn.iB0; // Diffuse front/back
-	v1 = xIn.iFF > 0 ? xIn.iD1 : xIn.iB1; // Specular front/back
+	v0 = isFrontFace ? xIn.iD0 : xIn.iB0; // Diffuse front/back
+	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
 	fog = float4(c_fog.rgb, xIn.iFog); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
 
 	// Xbox shader program
