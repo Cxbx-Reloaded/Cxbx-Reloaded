@@ -25,7 +25,7 @@
 // *
 // ******************************************************************
 
-#define LOG_PREFIX CXBXR_MODULE::VTXSH
+#define LOG_PREFIX CXBXR_MODULE::PXSH
 
 #include <sstream> // std::stringstream
 #include "Shader.h" // EmuCompileShader
