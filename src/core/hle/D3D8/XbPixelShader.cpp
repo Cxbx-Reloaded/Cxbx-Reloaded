@@ -544,6 +544,8 @@ typedef struct s_CxbxPSDef {
 	{
 		if (RC.hasFinalCombiner) return;
 
+		RC.hasFinalCombiner = true;
+
 		// Since we're HLE'ing Xbox D3D, mimick how it configures the final combiner when PSDef doesn't :
 		// TODO : Use the same final combiner when no pixel shader is set! Possibly by generating a DecodedRegisterCombiner with PSCombinerCount zero?
 		// (This forms the entire Xbox fixed function pixel pipeline, which uses only two renderstates : X_D3DRS_SPECULARENABLE and X_D3DRS_SPECULARENABLE.)
@@ -563,9 +565,9 @@ typedef struct s_CxbxPSDef {
 		//   EFPROD = E * F
 		// ( Or in shorthand : sum=r0+v1, prod=s4*s5, r0.rgb=s0*s1+{1-s0}*s2+s3, r0.a=s6.b )
 		RC.FinalCombiner.Input[0/*A*/].Channel = PS_CHANNEL_ALPHA;
-		RC.FinalCombiner.Input[0/*A*/].Reg = RenderStateFogEnable ? PS_REGISTER_FOG : PS_REGISTER_ZERO;
-		RC.FinalCombiner.Input[1/*B*/].Reg = RenderStateFogEnable ? PS_REGISTER_FOG : PS_REGISTER_ZERO;
-		RC.FinalCombiner.Input[2/*C*/].Reg = PS_REGISTER_R0;
+		RC.FinalCombiner.Input[0/*A*/].Reg = RenderStateFogEnable ? PS_REGISTER_FOG : PS_REGISTER_ONE;
+		RC.FinalCombiner.Input[1/*B*/].Reg = PS_REGISTER_R0;
+		RC.FinalCombiner.Input[2/*C*/].Reg = PS_REGISTER_FOG;
 		RC.FinalCombiner.Input[3/*D*/].Reg = RenderStateSpecularEnable ? PS_REGISTER_V1 : PS_REGISTER_ZERO;
 		RC.FinalCombiner.Input[4/*E*/].Reg = PS_REGISTER_ZERO; // Note : Not really needed, should be 0 already
 		RC.FinalCombiner.Input[5/*F*/].Reg = PS_REGISTER_ZERO; // Note : Not really needed, should be 0 already
@@ -592,7 +594,7 @@ typedef struct _PSH_RECOMPILED_SHADER {
 
 PSH_RECOMPILED_SHADER CxbxRecompilePixelShader(CxbxPSDef &CompletePSDef)
 {
-	DecodedRegisterCombiner RC;
+	DecodedRegisterCombiner RC = {};
 	RC.Decode(&(CompletePSDef.PSDef));
 	CompletePSDef.PerformRuntimeAdjustments(RC);
 
