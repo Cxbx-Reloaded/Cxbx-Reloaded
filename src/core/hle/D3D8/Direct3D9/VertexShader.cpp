@@ -8,7 +8,7 @@
 #include <fstream>
 #include <sstream> // std::stringstream
 
-extern const char* g_vs_model = vs_model_2_a;
+extern const char* g_vs_model = vs_model_3_0;
 
 // HLSL generation
 void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
