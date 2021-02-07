@@ -37,8 +37,6 @@ add_custom_target(misc-batch
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
 
-#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/vsbc")
-
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
 # Then move only specific project files into their

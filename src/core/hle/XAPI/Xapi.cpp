@@ -40,7 +40,6 @@
 #include "core\kernel\support\EmuFile.h"
 #include "EmuShared.h"
 #include "core\hle\Intercept.hpp"
-#include "vsbc\CxbxVSBC.h"
 #include "Windef.h"
 #include <vector>
 #include "core\hle\XAPI\Xapi.h"
