@@ -111,13 +111,13 @@ typedef struct _XID_TYPE_INFORMATION
 {
 	xbox::uchar_xt				ucType;
     xbox::byte_xt				bRemainingHandles;
-	xbox::uchar_xt				ucUnknown[2];//probably for xbox::dword_xt align
-	PXPP_DEVICE_TYPE    XppType;//pointer to DeviceType structure.
-    PXPP_DEVICE_INPUTSTATE_DESC pInputStateDesc;//pointer to InputStateDesc structure
-    PXPP_DEVICE_FEEDBACK_DESC pFeedbackDesc;//pointer to FeedbackDesc structure
-    xbox::dword_xt *             pConstant;//always 0x0801
-    void *              pFunction;//unknown function for device related process
-    xbox::dword_xt				dwEndZero;//last DWROD, always 0
+	xbox::uchar_xt				ucUnknown[2];      // probably for xbox::dword_xt align
+	PXPP_DEVICE_TYPE            XppType;           // pointer to DeviceType structure.
+    PXPP_DEVICE_INPUTSTATE_DESC pInputStateDesc;   // pointer to InputStateDesc structure
+    PXPP_DEVICE_FEEDBACK_DESC   pFeedbackDesc;     // pointer to FeedbackDesc structure
+    xbox::dword_xt *            pConstant;         // always 0x0801
+    void *                      pFunction;         // unknown function for device related process
+    xbox::dword_xt				dwEndZero;         // last DWROD, always 0
 } XID_TYPE_INFORMATION, *PXID_TYPE_INFORMATION;
 
 // ******************************************************************
@@ -130,6 +130,7 @@ typedef struct _XDEVICE_PREALLOC_TYPE
 } 
 XDEVICE_PREALLOC_TYPE, *PXDEVICE_PREALLOC_TYPE;
 
+#pragma pack(1)
 // ******************************************************************
 // * XINPUT_GAMEPAD for xbox, xbox's GAMEPAD struct differs from PC's
 // ******************************************************************
@@ -145,43 +146,24 @@ typedef struct _XINPUT_GAMEPAD
 XINPUT_GAMEPAD, *PXINPUT_GAMEPAD;
 
 // ******************************************************************
-// * X_SBC_GAMEPAD for xbox SteelBattalion GAMEPAD struc 
+// * X_SBC_GAMEPAD for xbox SteelBattalion GAMEPAD struct
 // ******************************************************************
 typedef struct _SBC_GAMEPAD {
     xbox::word_xt    wButtons[3];
-    xbox::short_xt   sAimingX;
-    xbox::short_xt   sAimingY;
-    xbox::short_xt   sRotationLever;//maybe only high byte was used.
+    xbox::ushort_xt  sAimingX;
+    xbox::ushort_xt  sAimingY;
+    xbox::short_xt   sRotationLever; //maybe only high byte was used.
     xbox::short_xt   sSightChangeX;
     xbox::short_xt   sSightChangeY;
-    xbox::word_xt    wLeftPedal;//maybe only high byte was used.
-    xbox::word_xt    wMiddlePedal;//maybe only high byte was used.
-    xbox::word_xt    wRightPedal;//maybe only high byte was used.
-    xbox::uchar_xt   ucTunerDial;//low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12. The blank area between the 6 and 9 o'clock positions is 13, 14, and 15 clockwise.
-    xbox::uchar_xt   ucGearLever;//GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
+    xbox::word_xt    wLeftPedal;     //maybe only high byte was used.
+    xbox::word_xt    wMiddlePedal;   //maybe only high byte was used.
+    xbox::word_xt    wRightPedal;    //maybe only high byte was used.
+    xbox::uchar_xt   ucTunerDial;    //low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12. The blank area between the 6 and 9 o'clock positions is 13, 14, and 15 clockwise.
+    xbox::uchar_xt   ucGearLever;    //GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
 }
 SBC_GAMEPAD, *PSBC_GAMEPAD;
 
-// ergo720: from the description of the above gear levers, the gear to use is probably interpreted by looking at the first 3 bits of ucGearLever.
-// Remove this when this theory is confirmed to be true or false
-/*
-0000 0000  -> should be N ??
-0000 0001  1
-0000 0010  2
-0000 0011  3
-0000 0100  4
-0000 0101  5
-0000 0110
-0000 0111  R
-0000 1000  N
-0000 1001  1
-0000 1010  2
-0000 1011  3
-0000 1100  4
-0000 1101  5
-0000 1110
-0000 1111  R
-*/
+#pragma pack()
 
 // ******************************************************************
 // * XINPUT_RUMBLE
@@ -223,7 +205,7 @@ XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
 // all game controller use 0x01 GAMEPAD device type. then specify the subtype in returned Capabilities when XInputGetCapabilities called.
 #define XINPUT_DEVTYPE_GAMEPAD              0x01
 // SteelBattalion controller is the only one with special device type other than 1.
-#define XINPUT_DEVTYPE_STEELBATTALION        0x80
+#define XINPUT_DEVTYPE_STEELBATTALION       0x80
 
 // ******************************************************************
 // * Device XBOX Input Device SubTypes, for use in XINPUT_CAPABILITIES

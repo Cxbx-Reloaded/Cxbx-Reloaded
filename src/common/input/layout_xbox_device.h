@@ -27,6 +27,8 @@
 
 #pragma once
 
+#define BUF_NAME_LENGTH 30
+
 #ifndef CXBXR_EMU_EXPORTS
 #include "gui/resource/ResCxbx.h"
 
@@ -104,7 +106,8 @@ inline int button_sbc_id[SBC_NUM_BUTTONS] = {
 	IDC_AIMING_NEGX,
 	IDC_AIMING_POSY,
 	IDC_AIMING_NEGY,
-	IDC_ROTATION_LEVER,
+	IDC_LEVER_LEFT,
+	IDC_LEVER_RIGHT,
 	IDC_SIGHT_CHANGE_POSX,
 	IDC_SIGHT_CHANGE_NEGX,
 	IDC_SIGHT_CHANGE_POSY,
@@ -112,47 +115,129 @@ inline int button_sbc_id[SBC_NUM_BUTTONS] = {
 	IDC_BTN_LEFT_PEDAL,
 	IDC_BTN_MIDDLE_PEDAL,
 	IDC_BTN_RIGHT_PEDAL,
-	IDC_RADIO_TD0,
-	IDC_RADIO_TD1,
-	IDC_RADIO_TD2,
-	IDC_RADIO_TD3,
-	IDC_RADIO_TD4,
-	IDC_RADIO_TD5,
-	IDC_RADIO_TD6,
-	IDC_RADIO_TD7,
-	IDC_RADIO_TD8,
-	IDC_RADIO_TD9,
-	IDC_RADIO_TD10,
-	IDC_RADIO_TD11,
-	IDC_RADIO_TD12,
-	IDC_GEAR_LEVER,
+	IDC_RADIO_TD_UP,
+	IDC_RADIO_TD_DOWN,
+	IDC_GEAR_UP,
+	IDC_GEAR_DOWN,
 };
 #endif
 
-inline const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS][3] = {
-	"D Pad Up",      "Pad N",      "UP",
-	"D Pad Down",    "Pad S",      "DOWN",
-	"D Pad Left",    "Pad W",      "LEFT",
-	"D Pad Right",   "Pad E",      "RIGHT",
-	"Start",         "Start",      "RETURN",
-	"Back",          "Back",       "SPACE",
-	"L Thumb",       "Thumb L",    "B",
-	"R Thumb",       "Thumb R",    "M",
-	"A",             "Button A",   "S",
-	"B",             "Button B",   "D",
-	"X",             "Button X",   "W",
-	"Y",             "Button Y",   "E",
-	"Black",         "Shoulder R", "C",
-	"White",         "Shoulder L", "X",
-	"L Trigger",     "Trigger L",  "Q",
-	"R Trigger",     "Trigger R",  "R",
-	"Left Axis X+",  "Left X+",    "H",
-	"Left Axis X-",  "Left X-",    "F",
-	"Left Axis Y+",  "Left Y+",    "T",
-	"Left Axis Y-",  "Left Y-",    "G",
-	"Right Axis X+", "Right X+",   "L",
-	"Right Axis X-", "Right X-",   "J",
-	"Right Axis Y+", "Right Y+",   "I",
-	"Right Axis Y-", "Right Y-",   "K",
-	"Motor",         "LeftRight",  "",
+inline constexpr const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS] = {
+	"D Pad Up",
+	"D Pad Down",
+	"D Pad Left",
+	"D Pad Right",
+	"Start",
+	"Back",
+	"L Thumb",
+	"R Thumb",
+	"A",
+	"B",
+	"X",
+	"Y",
+	"Black",
+	"White",
+	"L Trigger",
+	"R Trigger",
+	"Left Axis X+",
+	"Left Axis X-",
+	"Left Axis Y+",
+	"Left Axis Y-",
+	"Right Axis X+",
+	"Right Axis X-",
+	"Right Axis Y+",
+	"Right Axis Y-",
+	"Motor",
 };
+
+inline constexpr const char *button_sbc_names[SBC_NUM_BUTTONS] = {
+	"RightJoyMainWeapon",
+	"RightJoyFire",
+	"RightJoyLockOn",
+	"Eject",
+	"CockpitHatch",
+	"Ignition",
+	"Start",
+	"MultiMonOpenClose",
+	"MultiMonMapZoomInOut",
+	"MultiMonModeSelect",
+	"MultiMonSubMonitor",
+	"MainMonZoomIn",
+	"MainMonZoomOut",
+	"FunctionFSS",
+	"FunctionManipulator",
+	"FunctionLineColorChange",
+	"Washing",
+	"Extinguisher",
+	"Chaff",
+	"FunctionTankDetach",
+	"FunctionOverride",
+	"FunctionNightScope",
+	"FunctionF1",
+	"FunctionF2",
+	"FunctionF3",
+	"WeaponConMain",
+	"WeaponConSub",
+	"WeaponConMagazine",
+	"Comm1",
+	"Comm2",
+	"Comm3",
+	"Comm4",
+	"Comm5",
+	"LeftJoySightChange",
+	"ToggleFilterControl",
+	"ToggleOxygenSupply",
+	"ToggleFuelFlowRate",
+	"ToggleBufferMaterial",
+	"ToggleVTLocation",
+	"Aiming X+",
+	"Aiming X-",
+	"Aiming Y+",
+	"Aiming Y-",
+	"LeverLeft",
+	"LeverRight",
+	"SightChange X+",
+	"SightChange X-",
+	"SightChange Y+",
+	"SightChange Y-",
+	"LeftPedal",
+	"MiddlePedal",
+	"RightPedal",
+	"TunerDial Up",
+	"TunerDial Down",
+	"GearLever Up",
+	"GearLever Down",
+};
+
+constexpr bool check_button_name_size(unsigned max_num_buttons)
+{
+	switch (max_num_buttons)
+	{
+	case XBOX_CTRL_NUM_BUTTONS: {
+		for (unsigned i = 0; i < max_num_buttons; i++) {
+			if (std::char_traits<char>::length(button_xbox_ctrl_names[i]) > (BUF_NAME_LENGTH - 1)) {
+				return false;
+			}
+		}
+	}
+	break;
+
+	case SBC_NUM_BUTTONS: {
+		for (unsigned i = 0; i < max_num_buttons; i++) {
+			if (std::char_traits<char>::length(button_sbc_names[i]) > (BUF_NAME_LENGTH - 1)) {
+				return false;
+			}
+		}
+	}
+	break;
+
+	default:
+		return false;
+	}
+
+	return true;
+}
+
+// Sanity checks: the button buffers used in the input system are 30 bytes large, so ensure that we do not exceed them
+static_assert(check_button_name_size(XBOX_CTRL_NUM_BUTTONS));
+static_assert(check_button_name_size(SBC_NUM_BUTTONS));

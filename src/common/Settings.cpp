@@ -471,21 +471,34 @@ bool Settings::LoadConfig()
 	// ==== Input Port End ==============
 
 	// ==== Input Profile Begin ====
-	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
 
+	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
 	for (int device = 0; device < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); device++) {
-		if (dev_num_buttons[device] == 0) {
+		int num_buttons = dev_num_buttons[device];
+		if (num_buttons == 0) {
 			continue;
 		}
 
-		for (int i = 0; i < dev_num_buttons[device]; i++) {
-			char control_name[30];
-			std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
-			control_names[device].push_back(control_name);
+		auto &lambda = [&control_names, &device](int num_buttons, const char *const ctrl_names[]) {
+			for (int i = 0; i < num_buttons; i++) {
+				char control_name[BUF_NAME_LENGTH];
+				std::sprintf(control_name, sect_input_profiles.control, ctrl_names[i]);
+				control_names[device].push_back(control_name);
+			}
+		};
+
+		switch (num_buttons)
+		{
+		case XBOX_CTRL_NUM_BUTTONS:
+			lambda(XBOX_CTRL_NUM_BUTTONS, button_xbox_ctrl_names);
+			break;
+
+		case SBC_NUM_BUTTONS:
+			lambda(SBC_NUM_BUTTONS, button_sbc_names);
+			break;
+
 		}
 	}
-
-	// TODO: add the control names of the other devices
 
 	index = 0;
 	while (true) {
@@ -621,18 +634,31 @@ bool Settings::Save(std::string file_path)
 
 	std::array<std::vector<std::string>, to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)> control_names;
 	for (int device = 0; device < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); device++) {
-		if (dev_num_buttons[device] == 0) {
+		int num_buttons = dev_num_buttons[device];
+		if (num_buttons == 0) {
 			continue;
 		}
 
-		for (int i = 0; i < dev_num_buttons[device]; i++) {
-			char control_name[30];
-			std::sprintf(control_name, sect_input_profiles.control, button_xbox_ctrl_names[i][0]);
-			control_names[device].push_back(control_name);
+		auto &lambda = [&control_names, &device](int num_buttons, const char *const ctrl_names[]) {
+			for (int i = 0; i < num_buttons; i++) {
+				char control_name[BUF_NAME_LENGTH];
+				std::sprintf(control_name, sect_input_profiles.control, ctrl_names[i]);
+				control_names[device].push_back(control_name);
+			}
+		};
+
+		switch (num_buttons)
+		{
+		case XBOX_CTRL_NUM_BUTTONS:
+			lambda(XBOX_CTRL_NUM_BUTTONS, button_xbox_ctrl_names);
+			break;
+
+		case SBC_NUM_BUTTONS:
+			lambda(SBC_NUM_BUTTONS, button_sbc_names);
+			break;
+
 		}
 	}
-
-	// TODO: add the control names of the other devices
 
 	int profile_num = 0;
 	for (int i = 0; i < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX); i++) {
@@ -713,7 +739,7 @@ void Settings::SyncToEmulator()
 	// register Network settings
 	g_EmuShared->SetNetworkSettings(&m_network);
 
-	// register input settings
+	// register Input settings
 	for (int i = 0; i < 4; i++) {
 		g_EmuShared->SetInputDevTypeSettings(&m_input_port[i].Type, i);
 		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
@@ -726,11 +752,11 @@ void Settings::SyncToEmulator()
 					return false;
 				});
 			if (it != m_input_profiles[m_input_port[i].Type].end()) {
-				char controls_name[XBOX_CTRL_NUM_BUTTONS][30];
+				char controls_name[HIGHEST_NUM_BUTTONS][30];
 				for (int index = 0; index < dev_num_buttons[m_input_port[i].Type]; index++) {
 					strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
 				}
-				g_EmuShared->SetInputBindingsSettings(controls_name, XBOX_CTRL_NUM_BUTTONS, i);
+				g_EmuShared->SetInputBindingsSettings(controls_name, dev_num_buttons[m_input_port[i].Type], i);
 			}
 		}
 	}

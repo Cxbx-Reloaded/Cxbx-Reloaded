@@ -19,7 +19,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2019 ergo720
+// *  (c) 2021 ergo720
 // *
 // *  All rights reserved
 // *
@@ -32,6 +32,87 @@
 #include "input\InputWindow.h"
 #include "gui\DlgInputConfig.h"
 #include "common/Logging.h"
+
+
+static SbcInputWindow *g_InputWindow = nullptr;
+
+void SbcInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
+{
+	// Save window/device specific variables
+	m_hwnd_window = hwnd;
+	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
+	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_PROFILE_NAME);
+	m_dev_type = dev_type;
+	m_max_num_buttons = dev_num_buttons[dev_type];
+	m_port_num = port_num;
+	m_bHasChanges = false;
+	m_bIsBinding = false;
+
+	// Set window icon
+	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
+
+	// Set window title
+	std::string title("Steel Battalion Controller at port ");
+	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
+		reinterpret_cast<LPARAM>((title + std::to_string(PORT_INC(m_port_num))).c_str()));
+
+	// Set the maximum profile name lenght the user can enter in the profile combobox
+	SendMessage(m_hwnd_profile_list, CB_LIMITTEXT, 49, 0);
+
+	// construct emu device
+	m_DeviceConfig = new EmuDevice(m_dev_type, m_hwnd_window, this);
+
+	// Enumerate devices
+	UpdateDeviceList();
+
+	// Load currently saved profile for this port/device type
+	LoadDefaultProfile();
+
+	// Load currently selected host device
+	UpdateCurrentDevice();
+
+	// Install the subclass for the profile combobox
+	SetWindowSubclass(GetWindow(m_hwnd_profile_list, GW_CHILD), ProfileNameSubclassProc, 0, 0);
+}
+
+void SbcInputWindow::ClearBindings()
+{
+	m_DeviceConfig->ClearButtons();
+	m_bHasChanges = true;
+}
+
+void SbcInputWindow::UpdateProfile(const std::string &name, int command)
+{
+	switch (command)
+	{
+	case PROFILE_LOAD: {
+		LoadProfile(name);
+	}
+	break;
+
+	case PROFILE_SAVE: {
+		SaveProfile(name);
+	}
+	break;
+
+	case PROFILE_DELETE: {
+		DeleteProfile(name);
+	}
+	break;
+
+	case BUTTON_CLEAR: {
+		m_bHasChanges = true;
+	}
+	break;
+
+	}
+}
+
+int SbcInputWindow::EnableDefaultButton()
+{
+	// The SBC window does not have a default button, so we return a dummy value here
+	return -1;
+}
 
 INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -46,9 +127,9 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		assert(port_num >= PORT_1 && port_num <= PORT_4);
 
 		// Ensure that the controller type is valid
-			dev_type == to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER);
+		assert(dev_type == to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER));
 
-		g_InputWindow = new InputWindow;
+		g_InputWindow = new SbcInputWindow;
 		g_InputWindow->Initialize(hWndDlg, port_num, dev_type);
 	}
 	break;
@@ -74,10 +155,10 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		}
 		break;
 
-		case IDC_XID_PROFILE_NAME: {
+		case IDC_PROFILE_NAME: {
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
 				char name[50];
-				HWND hwnd = GetDlgItem(hWndDlg, IDC_XID_PROFILE_NAME);
+				HWND hwnd = GetDlgItem(hWndDlg, IDC_PROFILE_NAME);
 				LRESULT str_idx = SendMessage(hwnd, CB_GETCURSEL, 0, 0);
 				if (str_idx != CB_ERR) {
 					SendMessage(hwnd, CB_GETLBTEXT, str_idx, reinterpret_cast<LPARAM>(name));
@@ -87,25 +168,18 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		}
 		break;
 
-		case IDC_XID_PROFILE_SAVE:
-		case IDC_XID_PROFILE_DELETE: {
+		case IDC_PROFILE_SAVE:
+		case IDC_PROFILE_DELETE: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				char name[50];
-				SendMessage(GetDlgItem(hWndDlg, IDC_XID_PROFILE_NAME), WM_GETTEXT,
+				SendMessage(GetDlgItem(hWndDlg, IDC_PROFILE_NAME), WM_GETTEXT,
 					sizeof(name), reinterpret_cast<LPARAM>(name));
-				g_InputWindow->UpdateProfile(std::string(name), (LOWORD(wParam) == IDC_XID_PROFILE_SAVE) ? PROFILE_SAVE : PROFILE_DELETE);
+				g_InputWindow->UpdateProfile(std::string(name), (LOWORD(wParam) == IDC_PROFILE_SAVE) ? PROFILE_SAVE : PROFILE_DELETE);
 			}
 		}
 		break;
 
-		case IDC_XID_DEFAULT: {
-			if (HIWORD(wParam) == BN_CLICKED) {
-				g_InputWindow->BindDefault();
-			}
-		}
-		break;
-
-		case IDC_XID_CLEAR: {
+		case IDC_CLEAR: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				if (PopupQuestionEx(hWndDlg, LOG_LEVEL::WARNING, PopupButtons::YesNo, PopupReturn::No, "Are you sure you want to remove all button bindings?") == PopupReturn::Yes) {
 					g_InputWindow->ClearBindings();
@@ -121,81 +195,9 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		}
 		break;
 
-		case IDC_SET_X:
-		case IDC_SET_Y:
-		case IDC_SET_A:
-		case IDC_SET_B:
-		case IDC_SET_WHITE:
-		case IDC_SET_BLACK:
-		case IDC_SET_LTRIGGER:
-		case IDC_SET_RTRIGGER:
-		case IDC_SET_LTHUMB:
-		case IDC_SET_RTHUMB:
-		case IDC_SET_START:
-		case IDC_SET_BACK:
-		case IDC_SET_DPAD_LEFT:
-		case IDC_SET_DPAD_RIGHT:
-		case IDC_SET_DPAD_UP:
-		case IDC_SET_DPAD_DOWN:
-		case IDC_SET_LEFT_POSY:
-		case IDC_SET_LEFT_NEGX:
-		case IDC_SET_LEFT_NEGY:
-		case IDC_SET_LEFT_POSX:
-		case IDC_SET_RIGHT_POSY:
-		case IDC_SET_RIGHT_NEGY:
-		case IDC_SET_RIGHT_NEGX:
-		case IDC_SET_RIGHT_POSX:
-		case IDC_GEAR_0:
-		case IDC_GEAR_1:
-		case IDC_GEAR_2:
-		case IDC_GEAR_3:
-		case IDC_GEAR_4:
-		case IDC_GEAR_5:
-		case IDC_GEAR_R:
-		case IDC_SIGHT_CHANGE_NEGY:
-		case IDC_OXYGEN_SUPPLY_SYSTEM:
-		case IDC_FILT_CONTROL_SYSTEM:
-		case IDC_FUEL_FLOW_RATE:
-		case IDC_BUFFER_MATERIAL:
-		case IDC_VT_LOCATION_MEASUREMENT:
-		case IDC_ROTATION_LEVER:
-		case IDC_BTN_SIGHT_CHANGE:
-		case IDC_BTN_COM1:
-		case IDC_BTN_COM2:
-		case IDC_BTN_COM3:
-		case IDC_BTN_COM4:
-		case IDC_BTN_COM5:
-		case IDC_BTN_MAIN_WEAPON_CONTROL:
-		case IDC_BTN_SUB_WEAPON_CONTROL:
-		case IDC_BTN_MAGAZINE_CHANGE:
-		case IDC_BTN_WASHING:
-		case IDC_BTN_EXTINGUISHER:
-		case IDC_BTN_CHAFF:
-		case IDC_BTN_FUNC3:
-		case IDC_BTN_FUNC2:
-		case IDC_BTN_FUNC1:
-		case IDC_BTN_NIGHT_SCOPE:
-		case IDC_BTN_LINE_COLOR_CHANGE:
-		case IDC_BTN_OVERRIDE:
-		case IDC_BTN_MANIPULATOR:
-		case IDC_BTN_TANK_DETACH:
-		case IDC_BTN_FSS:
-		case IDC_RADIO_TD0:
-		case IDC_RADIO_TD1:
-		case IDC_RADIO_TD2:
-		case IDC_RADIO_TD3:
-		case IDC_RADIO_TD4:
-		case IDC_RADIO_TD5:
-		case IDC_RADIO_TD6:
-		case IDC_RADIO_TD7:
-		case IDC_RADIO_TD8:
-		case IDC_RADIO_TD9:
-		case IDC_RADIO_TD10:
-		case IDC_RADIO_TD11:
-		case IDC_RADIO_TD12:
-		case IDC_BTN_LOCK_ON:
-		case IDC_BTN_SUB_WEAPON:
 		case IDC_BTN_MAIN_WEAPON:
+		case IDC_BTN_SUB_WEAPON:
+		case IDC_BTN_LOCK_ON:
 		case IDC_BTN_EJECT:
 		case IDC_BTN_COCKPIT_HATCH:
 		case IDC_BTN_IGNITION:
@@ -206,9 +208,49 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		case IDC_BTN_SUB_MONITOR_MODE_SELECT:
 		case IDC_BTN_ZOOM_IN:
 		case IDC_BTN_ZOOM_OUT:
+		case IDC_BTN_FSS:
+		case IDC_BTN_MANIPULATOR:
+		case IDC_BTN_LINE_COLOR_CHANGE:
+		case IDC_BTN_WASHING:
+		case IDC_BTN_EXTINGUISHER:
+		case IDC_BTN_CHAFF:
+		case IDC_BTN_TANK_DETACH:
+		case IDC_BTN_OVERRIDE:
+		case IDC_BTN_NIGHT_SCOPE:
+		case IDC_BTN_FUNC1:
+		case IDC_BTN_FUNC2:
+		case IDC_BTN_FUNC3:
+		case IDC_BTN_MAIN_WEAPON_CONTROL:
+		case IDC_BTN_SUB_WEAPON_CONTROL:
+		case IDC_BTN_MAGAZINE_CHANGE:
+		case IDC_BTN_COM1:
+		case IDC_BTN_COM2:
+		case IDC_BTN_COM3:
+		case IDC_BTN_COM4:
+		case IDC_BTN_COM5:
+		case IDC_BTN_SIGHT_CHANGE:
+		case IDC_FILT_CONTROL_SYSTEM:
+		case IDC_OXYGEN_SUPPLY_SYSTEM:
+		case IDC_FUEL_FLOW_RATE:
+		case IDC_BUFFER_MATERIAL:
+		case IDC_VT_LOCATION_MEASUREMENT:
+		case IDC_AIMING_POSX:
+		case IDC_AIMING_NEGX:
+		case IDC_AIMING_POSY:
+		case IDC_AIMING_NEGY:
+		case IDC_LEVER_LEFT:
+		case IDC_LEVER_RIGHT:
+		case IDC_SIGHT_CHANGE_POSX:
+		case IDC_SIGHT_CHANGE_NEGX:
+		case IDC_SIGHT_CHANGE_POSY:
+		case IDC_SIGHT_CHANGE_NEGY:
 		case IDC_BTN_LEFT_PEDAL:
 		case IDC_BTN_MIDDLE_PEDAL:
-		case IDC_BTN_RIGHT_PEDAL: {
+		case IDC_BTN_RIGHT_PEDAL:
+		case IDC_RADIO_TD_UP:
+		case IDC_RADIO_TD_DOWN:
+		case IDC_GEAR_UP:
+		case IDC_GEAR_DOWN: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				g_InputWindow->BindButton(LOWORD(wParam));
 			}

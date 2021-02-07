@@ -51,28 +51,45 @@ void Button::GetText(char* const text, size_t size) const
 	SendMessage(m_button_hwnd, WM_GETTEXT, size, reinterpret_cast<LPARAM>(text));
 }
 
-std::string Button::GetName(int api, int idx) const
-{
-	assert(api == XINPUT_DEFAULT || api == DINPUT_DEFAULT);
-	return button_xbox_ctrl_names[idx][api];
-}
-
-LRESULT CALLBACK ButtonSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+LRESULT CALLBACK ButtonDukeSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	switch (uMsg)
 	{
 	// Remove the window subclass when this window is destroyed
 	case WM_NCDESTROY: {
-		RemoveWindowSubclass(hWnd, ButtonSubclassProc, uIdSubclass);
+		RemoveWindowSubclass(hWnd, ButtonDukeSubclassProc, uIdSubclass);
 	}
 	break;
 
 	case WM_RBUTTONDOWN: {
-		reinterpret_cast<Button*>(dwRefData)->ClearText();
-		g_InputWindow->UpdateProfile(std::string(), BUTTON_CLEAR);
-		if (reinterpret_cast<Button*>(dwRefData)->GetId() == IDC_SET_MOTOR) {
-			g_InputWindow->UpdateProfile(std::string(), RUMBLE_CLEAR);
+		Button *button = reinterpret_cast<Button *>(dwRefData);
+		button->ClearText();
+		static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
+		if (button->GetId() == IDC_SET_MOTOR) {
+			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), RUMBLE_CLEAR);
 		}
+	}
+	break;
+
+	}
+
+	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	switch (uMsg)
+	{
+		// Remove the window subclass when this window is destroyed
+	case WM_NCDESTROY: {
+		RemoveWindowSubclass(hWnd, ButtonSbcSubclassProc, uIdSubclass);
+	}
+	break;
+
+	case WM_RBUTTONDOWN: {
+		Button *button = reinterpret_cast<Button *>(dwRefData);
+		button->ClearText();
+		static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
 	}
 	break;
 

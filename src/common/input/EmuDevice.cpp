@@ -25,13 +25,13 @@
 // *
 // ******************************************************************
 
-#include"Button.h"
+#include "Button.h"
 #include "InputManager.h"
 #include "layout_xbox_device.h"
 #include "gui/resource/ResCxbx.h"
 
 
-EmuDevice::EmuDevice(int type, HWND hwnd)
+EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 {
 	m_hwnd = hwnd;
 
@@ -40,21 +40,21 @@ EmuDevice::EmuDevice(int type, HWND hwnd)
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
-			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd));
+			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd, wnd));
 
 			// Install the subclass for the button control
-			SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
+			SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonDukeSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
 		}
 	}
 	break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_sbc_id); i++) {
-			m_buttons.push_back(new Button(button_sbc_id[i], i, hwnd));
+			printf("button id: %d, button idx: %d\n", button_sbc_id[i], i);
+			m_buttons.push_back(new Button(button_sbc_id[i], i, hwnd, wnd));
 
-			// Not sure yet if this is necessary
 			// Install the subclass for the button control
-			//SetWindowSubclass(GetDlgItem(hwnd, button_sbc_id[i]), ButtonSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
+			SetWindowSubclass(GetDlgItem(hwnd, button_sbc_id[i]), ButtonSbcSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
 		}
 	}
 	break;
@@ -86,10 +86,11 @@ Button* EmuDevice::FindButtonByIndex(int index)
 	return m_buttons[index];
 }
 
-void EmuDevice::BindDefault(int api)
+template<size_t size>
+void EmuDevice::BindDefault(const std::array<const char *, size> &arr)
 {
-	std::for_each(m_buttons.begin(), m_buttons.end(), [&api](const auto button) {
-		button->UpdateText(button->GetName(api, button->GetIndex()).c_str());
+	std::for_each(m_buttons.begin(), m_buttons.end(), [&arr](const auto button) {
+		button->UpdateText(arr[button->GetIndex()]);
 		});
 }
 

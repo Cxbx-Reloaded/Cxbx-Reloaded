@@ -34,6 +34,205 @@
 #include "common/Logging.h"
 
 
+static constexpr std::array<std::array<const char *, XBOX_CTRL_NUM_BUTTONS>, 2> button_xbox_ctrl_default = { {
+	{ "Pad N", "Pad S", "Pad W", "Pad E", "Start", "Back", "Thumb L", "Thumb R", "Button A", "Button B", "Button X", "Button Y", "Shoulder R", "Shoulder L", "Trigger L",
+	"Trigger R", "Left X+", "Left X-", "Left Y+", "Left Y-", "Right X+", "Right X-", "Right Y+", "Right Y-", "LeftRight" },
+	{ "UP", "DOWN", "LEFT", "RIGHT", "RETURN", "SPACE", "B", "M", "S", "D", "W", "E", "C", "X", "Q", "R", "H", "F", "T", "G", "L", "J", "I", "K", "" }
+} };
+
+static DukeInputWindow *g_InputWindow = nullptr;
+
+void DukeInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
+{
+	// Save window/device specific variables
+	m_hwnd_window = hwnd;
+	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
+	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_PROFILE_NAME);
+	m_hwnd_default = GetDlgItem(m_hwnd_window, IDC_DEFAULT);
+	m_dev_type = dev_type;
+	m_max_num_buttons = dev_num_buttons[dev_type];
+	m_port_num = port_num;
+	m_bHasChanges = false;
+	m_bIsBinding = false;
+
+	// Set window icon
+	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
+
+	// Set window title
+	std::string title;
+	switch (m_dev_type)
+	{
+	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
+		title += "Xbox Controller Duke at port ";
+	}
+	break;
+
+	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
+		title += "Xbox Controller S at port ";
+	}
+	break;
+
+	}
+	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
+		reinterpret_cast<LPARAM>((title + std::to_string(PORT_INC(m_port_num))).c_str()));
+
+	// Set the maximum profile name lenght the user can enter in the profile combobox
+	SendMessage(m_hwnd_profile_list, CB_LIMITTEXT, 49, 0);
+
+	// construct emu device
+	m_DeviceConfig = new EmuDevice(m_dev_type, m_hwnd_window, this);
+
+	// Enumerate devices
+	UpdateDeviceList();
+
+	// Load currently saved profile for this port/device type
+	LoadDefaultProfile();
+
+	// Load currently selected host device
+	UpdateCurrentDevice();
+
+	// Load rumble binding
+	char rumble[30];
+	m_DeviceConfig->FindButtonByIndex(m_max_num_buttons - 1)->GetText(rumble, sizeof(rumble));
+	m_rumble = rumble;
+
+	// Install the subclass for the profile combobox
+	SetWindowSubclass(GetWindow(m_hwnd_profile_list, GW_CHILD), ProfileNameSubclassProc, 0, 0);
+}
+
+void DukeInputWindow::InitRumble(HWND hwnd)
+{
+	m_hwnd_rumble = hwnd;
+	m_hwnd_rumble_list = GetDlgItem(m_hwnd_rumble, IDC_RUMBLE_LIST);
+	SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(""));
+	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
+	if (dev != nullptr) {
+		auto outputs = dev->GetOutputs();
+		for (const auto out : outputs) {
+			SendMessage(m_hwnd_rumble_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(out->GetName().c_str()));
+		}
+	}
+	SendMessage(m_hwnd_rumble_list, CB_SETCURSEL, SendMessage(m_hwnd_rumble_list, CB_FINDSTRINGEXACT, 1,
+		reinterpret_cast<LPARAM>(m_rumble.c_str())), 0);
+}
+
+void DukeInputWindow::UpdateRumble(int command)
+{
+	switch (command)
+	{
+	case RUMBLE_SET: {
+		char rumble[30];
+		SendMessage(m_hwnd_rumble_list, WM_GETTEXT, sizeof(rumble), reinterpret_cast<LPARAM>(rumble));
+		m_rumble = rumble;
+	}
+	break;
+
+	case RUMBLE_UPDATE: {
+		m_DeviceConfig->FindButtonByIndex(m_max_num_buttons - 1)->UpdateText(m_rumble.c_str());
+	}
+	break;
+
+	case RUMBLE_TEST: {
+		DetectOutput(OUTPUT_TIMEOUT);
+	}
+	break;
+
+	}
+}
+
+void DukeInputWindow::BindDefault()
+{
+	int api = EnableDefaultButton();
+	if (api != -1) {
+		m_DeviceConfig->BindDefault<XBOX_CTRL_NUM_BUTTONS>(button_xbox_ctrl_default[api]);
+		m_bHasChanges = true;
+	}
+}
+
+int DukeInputWindow::EnableDefaultButton()
+{
+	if (std::strncmp(m_host_dev.c_str(), "XInput", std::strlen("XInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return XINPUT_DEFAULT;
+	}
+	else if (std::strncmp(m_host_dev.c_str(), "DInput", std::strlen("DInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return DINPUT_DEFAULT;
+	}
+	else {
+		EnableWindow(m_hwnd_default, FALSE);
+		return -1;
+	}
+}
+
+void DukeInputWindow::ClearBindings()
+{
+	m_DeviceConfig->ClearButtons();
+	m_rumble = std::string();
+	m_bHasChanges = true;
+}
+
+void DukeInputWindow::UpdateProfile(const std::string &name, int command)
+{
+	switch (command)
+	{
+	case PROFILE_LOAD: {
+		LoadProfile(name);
+	}
+	break;
+
+	case PROFILE_SAVE: {
+		SaveProfile(name);
+	}
+	break;
+
+	case PROFILE_DELETE: {
+		DeleteProfile(name);
+	}
+	break;
+
+	case RUMBLE_CLEAR: {
+		m_rumble = std::string();
+	}
+	break;
+
+	case BUTTON_CLEAR: {
+		m_bHasChanges = true;
+	}
+	break;
+
+	}
+}
+
+void DukeInputWindow::DetectOutput(int ms)
+{
+	if (m_rumble == std::string()) {
+		return;
+	}
+	auto dev = g_InputDeviceManager.FindDevice(m_host_dev);
+	if (dev != nullptr) {
+		// Don't block the message processing loop
+		std::thread([this, dev, ms]() {
+			EnableWindow(m_hwnd_rumble, FALSE);
+			SendMessage(m_hwnd_rumble_list, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("..."));
+			auto outputs = dev->GetOutputs();
+			for (const auto out : outputs) {
+				if (out->GetName() == m_rumble) {
+					out->SetState(1.0, 1.0);
+				}
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+			for (const auto out : outputs) {
+				if (out->GetName() == m_rumble) {
+					out->SetState(0.0, 0.0);
+				}
+			}
+			SendMessage(m_hwnd_rumble_list, WM_SETTEXT, 0, reinterpret_cast<LPARAM>("Test"));
+			EnableWindow(m_hwnd_rumble, TRUE);
+			}).detach();
+	}
+}
+
 static INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -52,7 +251,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		assert(dev_type == to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) ||
 			dev_type == to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S));
 
-		g_InputWindow = new InputWindow;
+		g_InputWindow = new DukeInputWindow;
 		g_InputWindow->Initialize(hWndDlg, port_num, dev_type);
 	}
 	break;
@@ -78,10 +277,10 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		}
 		break;
 
-		case IDC_XID_PROFILE_NAME: {
+		case IDC_PROFILE_NAME: {
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
 				char name[50];
-				HWND hwnd = GetDlgItem(hWndDlg, IDC_XID_PROFILE_NAME);
+				HWND hwnd = GetDlgItem(hWndDlg, IDC_PROFILE_NAME);
 				LRESULT str_idx = SendMessage(hwnd, CB_GETCURSEL, 0, 0);
 				if (str_idx != CB_ERR) {
 					SendMessage(hwnd, CB_GETLBTEXT, str_idx, reinterpret_cast<LPARAM>(name));
@@ -91,25 +290,25 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		}
 		break;
 
-		case IDC_XID_PROFILE_SAVE:
-		case IDC_XID_PROFILE_DELETE: {
+		case IDC_PROFILE_SAVE:
+		case IDC_PROFILE_DELETE: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				char name[50];
-				SendMessage(GetDlgItem(hWndDlg, IDC_XID_PROFILE_NAME), WM_GETTEXT,
+				SendMessage(GetDlgItem(hWndDlg, IDC_PROFILE_NAME), WM_GETTEXT,
 					sizeof(name), reinterpret_cast<LPARAM>(name));
-				g_InputWindow->UpdateProfile(std::string(name), (LOWORD(wParam) == IDC_XID_PROFILE_SAVE) ? PROFILE_SAVE : PROFILE_DELETE);
+				g_InputWindow->UpdateProfile(std::string(name), (LOWORD(wParam) == IDC_PROFILE_SAVE) ? PROFILE_SAVE : PROFILE_DELETE);
 			}
 		}
 		break;
 
-		case IDC_XID_DEFAULT: {
+		case IDC_DEFAULT: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				g_InputWindow->BindDefault();
 			}
 		}
 		break;
 
-		case IDC_XID_CLEAR: {
+		case IDC_CLEAR: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				if (PopupQuestionEx(hWndDlg, LOG_LEVEL::WARNING, PopupButtons::YesNo, PopupReturn::No, "Are you sure you want to remove all button bindings?") == PopupReturn::Yes) {
 					g_InputWindow->ClearBindings();
