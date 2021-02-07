@@ -2878,6 +2878,20 @@ void GetMultiSampleScaleRaw(float& xScale, float& yScale) {
 // Titles can render pre-transformed vertices to screen space (using XYZRHW vertex position data or otherwise)
 // so we need to know the space they are in to interpret it correctly
 void GetScreenScaleFactors(float& scaleX, float& scaleY) {
+	scaleX = 1;
+	scaleY = 1;
+
+	// With fixed-function mode, titles don't have to account for these scale factors,
+	// so we don't have reverse them.
+	// Test cases:
+	// Fixed-func passthrough, title does not apply SSAA scale:
+	// - Shenmue II (Menu)
+	// Fixed-func passthrough, title does not apply backbuffer scale:
+	// - Antialias sample(background gradient)
+	if (g_Xbox_VertexShaderMode != VertexShaderMode::ShaderProgram) {
+		return;
+	}
+
 	// Example:
 	// NFS HP2 renders in-game at 640*480
 	// The title uses MSAA, which increases the rendertarget size, but leaves the screen scale unaffected
@@ -2894,23 +2908,13 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	if (isMultiSampleEnabled && isSuperSampleMode) {
 		GetMultiSampleScaleRaw(scaleX, scaleY);
 	}
-	else {
-		scaleX = 1;
-		scaleY = 1;
-	}
 
 	// Account for the backbuffer scale
-	// Fixed-function rendering doesn't have to account for backbuffer scale
-	// So XYZRHW passthrough vertex positions will not be pre-scaled by the title
 	// Test cases:
-	// Fixed function passthrough (title does not apply backbuffer scale):
-	// - Antialias sample (background gradient)
 	// Vertex program passthrough equivalent (title does apply backbuffer scale):
 	// - NFS:HP2 (car speed and other in-game UI elements)
-	if (g_Xbox_VertexShaderMode != VertexShaderMode::Passthrough) {
-		scaleX *= g_Xbox_BackbufferScaleX;
-		scaleY *= g_Xbox_BackbufferScaleY;
-	}
+	scaleX *= g_Xbox_BackbufferScaleX;
+	scaleY *= g_Xbox_BackbufferScaleY;
 }
 
 // Get the raw subpixel dimensions of the rendertarget buffer
