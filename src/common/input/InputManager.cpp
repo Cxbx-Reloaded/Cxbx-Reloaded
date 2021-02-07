@@ -48,7 +48,6 @@
 
 // hle input specific
 #include "core\hle\XAPI\Xapi.h"
-#include "core\hle\XAPI\XapiCxbxr.h"
 
 int Gui2XboxPortArray[4] = {
 	3,

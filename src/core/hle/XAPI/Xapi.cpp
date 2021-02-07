@@ -43,7 +43,6 @@
 #include "Windef.h"
 #include <vector>
 #include "core\hle\XAPI\Xapi.h"
-#include "core\hle\XAPI\XapiCxbxr.h"
 
 
 xbox::PXPP_DEVICE_TYPE g_DeviceType_Gamepad = nullptr;

@@ -85,6 +85,34 @@ struct SBCOutput {
 #pragma pack()
 
 
+// hle specific input types
+typedef struct _CXBX_XINPUT_DEVICE_INFO {
+	uint8_t  ucType;            // xbox controller type
+	uint8_t  ucSubType;         // xbox controller subtype
+	uint8_t  ucInputStateSize;  // xbox controller input state size in bytes, not include dwPacketNumber
+	uint8_t  ucFeedbackSize;    // xbox controller feedback size in bytes, not include FeedbackHeader
+	uint16_t dwPacketNumber;
+}
+CXBX_XINPUT_DEVICE_INFO, *PCXBX_XINPUT_DEVICE_INFO;
+
+union CXBX_XINPUT_IN_STATE {
+	XpadInput Gamepad;
+	SBCInput SBC;
+};
+
+// this structure is for use of tracking the xbox controllers assigned to 4 ports.
+typedef struct _CXBX_CONTROLLER_HOST_BRIDGE {
+	HANDLE                  hXboxDevice;      // xbox device handle to this device, we use the address of this bridge as the handle, only set after opened. cleared after closed.
+	int                     XboxPort;         // xbox port# for this xbox controller
+	XBOX_INPUT_DEVICE       XboxType;         // xbox device type
+	CXBX_XINPUT_IN_STATE    *InState;
+	bool                    bPendingRemoval;
+	bool                    bSignaled;
+	bool                    bIoInProgress;
+	CXBX_XINPUT_DEVICE_INFO XboxDeviceInfo;
+}
+CXBX_CONTROLLER_HOST_BRIDGE, *PCXBX_CONTROLLER_HOST_BRIDGE;
+
 class InputDeviceManager
 {
 public:
