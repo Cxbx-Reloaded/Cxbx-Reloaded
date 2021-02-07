@@ -346,7 +346,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int usb_port, void* Buffer, int Dir
 				switch (xid_type)
 				{
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
-                case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
+				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 					has_changed = UpdateInputXpad(dev_ptr, Buffer, Direction);
 				}
 				break;

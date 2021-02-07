@@ -109,15 +109,15 @@ XPP_DEVICE_FEEDBACK_DESC, *PXPP_DEVICE_FEEDBACK_DESC;
 // ******************************************************************
 typedef struct _XID_TYPE_INFORMATION
 {
-	xbox::uchar_xt				ucType;
-    xbox::byte_xt				bRemainingHandles;
-	xbox::uchar_xt				ucUnknown[2];      // probably for xbox::dword_xt align
-	PXPP_DEVICE_TYPE            XppType;           // pointer to DeviceType structure.
+    xbox::uchar_xt              ucType;
+    xbox::byte_xt               bRemainingHandles;
+    xbox::uchar_xt              ucUnknown[2];      // probably for xbox::dword_xt align
+    PXPP_DEVICE_TYPE            XppType;           // pointer to DeviceType structure.
     PXPP_DEVICE_INPUTSTATE_DESC pInputStateDesc;   // pointer to InputStateDesc structure
     PXPP_DEVICE_FEEDBACK_DESC   pFeedbackDesc;     // pointer to FeedbackDesc structure
     xbox::dword_xt *            pConstant;         // always 0x0801
     void *                      pFunction;         // unknown function for device related process
-    xbox::dword_xt				dwEndZero;         // last DWROD, always 0
+    xbox::dword_xt              dwEndZero;         // last DWORD, always 0
 } XID_TYPE_INFORMATION, *PXID_TYPE_INFORMATION;
 
 // ******************************************************************
@@ -146,20 +146,20 @@ typedef struct _XINPUT_GAMEPAD
 XINPUT_GAMEPAD, *PXINPUT_GAMEPAD;
 
 // ******************************************************************
-// * X_SBC_GAMEPAD for xbox SteelBattalion GAMEPAD struct
+// * SBC_GAMEPAD for xbox SteelBattalion GAMEPAD struct
 // ******************************************************************
 typedef struct _SBC_GAMEPAD {
     xbox::word_xt    wButtons[3];
     xbox::ushort_xt  sAimingX;
     xbox::ushort_xt  sAimingY;
-    xbox::short_xt   sRotationLever; //maybe only high byte was used.
-    xbox::short_xt   sSightChangeX;
-    xbox::short_xt   sSightChangeY;
-    xbox::word_xt    wLeftPedal;     //maybe only high byte was used.
-    xbox::word_xt    wMiddlePedal;   //maybe only high byte was used.
-    xbox::word_xt    wRightPedal;    //maybe only high byte was used.
-    xbox::uchar_xt   ucTunerDial;    //low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12. The blank area between the 6 and 9 o'clock positions is 13, 14, and 15 clockwise.
-    xbox::uchar_xt   ucGearLever;    //GearLever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R. we use the continues range from 7~13
+    xbox::short_xt   sRotationLever; // only high byte is used
+    xbox::short_xt   sSightChangeX;  // only high byte is used
+    xbox::short_xt   sSightChangeY;  // only high byte is used
+    xbox::word_xt    wLeftPedal;     // only high byte is used
+    xbox::word_xt    wMiddlePedal;   // only high byte is used
+    xbox::word_xt    wRightPedal;    // only high byte is used
+    xbox::uchar_xt   ucTunerDial;    // low nibble, The 9 o'clock postion is 0, and the 6 o'clock position is 12
+    xbox::uchar_xt   ucGearLever;    // gear lever 1~5 for gear 1~5, 7~13 for gear R,N,1~5, 15 for gear R
 }
 SBC_GAMEPAD, *PSBC_GAMEPAD;
 

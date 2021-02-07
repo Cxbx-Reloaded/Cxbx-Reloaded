@@ -53,7 +53,7 @@ std::atomic<bool> g_bIsDevicesInitializing = true;
 std::atomic<bool> g_bIsDevicesEmulating = false;
 static CXBX_XINPUT_IN_STATE InState[4];
 
-//global bridge for xbox controller to host, 4 elements for 4 ports.
+// Global bridge for xbox controller to host, 4 elements for 4 ports.
 CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
 	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &InState[0], false, false, false, { 0, 0, 0, 0, 0 } },
 	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &InState[1], false, false, false, { 0, 0, 0, 0, 0 } },
@@ -67,7 +67,7 @@ bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 	switch (XidType)
 	{
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
-    case XBOX_INPUT_DEVICE::MS_CONTROLLER_S: {
+	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S: {
 		if (XppType == g_DeviceType_Gamepad) {
 			return true;
 		}
@@ -119,35 +119,35 @@ bool ConstructHleInputDevice(int Type, int Port)
 	}
 	break;
 
-    case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
-        g_XboxControllerHostBridge[Port].XboxPort = Port;
-        g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::MS_CONTROLLER_S;
-        g_XboxControllerHostBridge[Port].bPendingRemoval = false;
-        g_XboxControllerHostBridge[Port].bSignaled = false;
-        g_XboxControllerHostBridge[Port].bIoInProgress = false;
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(XpadOutput);
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
+	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
+		g_XboxControllerHostBridge[Port].XboxPort = Port;
+		g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::MS_CONTROLLER_S;
+		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
+		g_XboxControllerHostBridge[Port].bSignaled = false;
+		g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(XpadOutput);
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
 		ret = true;
     }
 	break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 		g_XboxControllerHostBridge[Port].XboxPort = Port;
-        g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER;
+		g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER;
 		g_XboxControllerHostBridge[Port].InState->SBC.ucGearLever = 8;
 		g_XboxControllerHostBridge[Port].InState->SBC.sAimingX = static_cast<uint8_t>(0x7F);
 		g_XboxControllerHostBridge[Port].InState->SBC.sAimingY = static_cast<uint8_t>(0x7F);
-        g_XboxControllerHostBridge[Port].bPendingRemoval = false;
-        g_XboxControllerHostBridge[Port].bSignaled = false;
-        g_XboxControllerHostBridge[Port].bIoInProgress = false;
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_STEELBATTALION;
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(SBCInput);
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(SBCOutput);
-        g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
+		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
+		g_XboxControllerHostBridge[Port].bSignaled = false;
+		g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_STEELBATTALION;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(SBCInput);
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(SBCOutput);
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
 		ret = true;
 	}
 	break;
@@ -224,16 +224,16 @@ void SetupXboxDeviceTypes()
 				EmuLog(LOG_LEVEL::INFO, "----------------------------------------");
 				EmuLog(LOG_LEVEL::INFO, "DeviceTable[%u]->ucType = %d", i, deviceTable[i]->ucType);
 
-                switch (deviceTable[i]->ucType) {
-                case XINPUT_DEVTYPE_GAMEPAD:
-                    g_DeviceType_Gamepad = deviceTable[i]->XppType;
+				switch (deviceTable[i]->ucType) {
+				case XINPUT_DEVTYPE_GAMEPAD:
+					g_DeviceType_Gamepad = deviceTable[i]->XppType;
 					EmuLog(LOG_LEVEL::INFO, "DeviceTable[%u]->XppType = 0x%08X (XDEVICE_TYPE_GAMEPAD)", i, (uintptr_t)g_DeviceType_Gamepad);
-                    break;
+					break;
 
-                case XINPUT_DEVTYPE_STEELBATTALION:
+				case XINPUT_DEVTYPE_STEELBATTALION:
 					g_DeviceType_SBC = deviceTable[i]->XppType;
 					EmuLog(LOG_LEVEL::INFO, "DeviceTable[%u]->XppType = 0x%08X (XDEVICE_TYPE_STEELBATTALION)", i, (uintptr_t)g_DeviceType_SBC);
-                    break;
+					break;
 
 				default:
 					EmuLog(LOG_LEVEL::WARNING, "DeviceTable[%u]->XppType = 0x%08X (Unknown device type)", i, (uintptr_t)deviceTable[i]->XppType);
