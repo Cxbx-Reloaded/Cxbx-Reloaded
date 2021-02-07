@@ -2918,21 +2918,34 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 }
 
 // Get the raw subpixel dimensions of the rendertarget buffer
-void GetRenderTargetRawDimensions(float& x, float&y) {
-	x = (float) GetPixelContainerWidth(g_pXbox_RenderTarget);
-	y = (float) GetPixelContainerHeight(g_pXbox_RenderTarget);
+void GetRenderTargetRawDimensions(float& x, float&y, xbox::X_D3DSurface* rt) {
+	x = (float) GetPixelContainerWidth(rt);
+	y = (float) GetPixelContainerHeight(rt);
 }
 
 // Get the base rendertarget dimensions excluding multisample scaling
 // e.g. a raw 1280*960 rendertarget with 2x MSAA would be have a base 640*480
 void GetRenderTargetBaseDimensions(float& x, float& y) {
-	GetRenderTargetRawDimensions(x, y);
+	GetRenderTargetRawDimensions(x, y, g_pXbox_RenderTarget);
 
 	float aaX, aaY;
 	GetMultiSampleScaleRaw(aaX, aaY);
 
 	x /= aaX;
 	y /= aaY;
+}
+
+// Get the pixel dimensions of the backbuffer, accounting for multisample mode
+void GetBackBufferPixelDimensions(float& x, float& y) {
+	GetRenderTargetRawDimensions(x, y, g_pXbox_BackBufferSurface);
+
+	// MSAA introduces subpixels, so scale them away
+	if (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) {
+		float aaX, aaY;
+		GetMultiSampleScaleRaw(aaX, aaY);
+		x /= aaX;
+		y /= aaY;
+	}
 }
 
 void Direct3D_CreateDevice_Start
@@ -7385,9 +7398,20 @@ void CxbxUpdateHostTextureScaling()
 			// Set scaling factor for this texture, which will be applied to
 			// all texture-coordinates in CxbxVertexShaderTemplate.hlsl
 			// Note : Linear textures are two-dimensional at most (right?)
+			float width, height;
+			if ((xbox::X_D3DSurface*)pXboxBaseTexture == g_pXbox_BackBufferSurface) {
+				// Account for MSAA
+				// Test case: Max Payne 2 (bullet time)
+				GetBackBufferPixelDimensions(width, height);
+			}
+			else {
+				width = (float)GetPixelContainerWidth(pXboxBaseTexture);
+				height = (float)GetPixelContainerHeight(pXboxBaseTexture);
+			}
+
 			*texCoordScale = {
-				(float)GetPixelContainerWidth(pXboxBaseTexture),
-				(float)GetPixelContainerHeight(pXboxBaseTexture),
+				width,
+				height,
 				(float)CxbxGetPixelContainerDepth(pXboxBaseTexture),
 				1.0f
 			};
