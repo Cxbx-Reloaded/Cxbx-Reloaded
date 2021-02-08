@@ -51,14 +51,14 @@ xbox::PXPP_DEVICE_TYPE g_DeviceType_SBC = nullptr;
 // Flag is unset after initialize devices is done by simulate LLE USB thread.
 std::atomic<bool> g_bIsDevicesInitializing = true;
 std::atomic<bool> g_bIsDevicesEmulating = false;
-static CXBX_XINPUT_IN_STATE InState[4];
+static CXBX_XINPUT_IN_STATE g_InState[4];
 
 // Global bridge for xbox controller to host, 4 elements for 4 ports.
 CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &InState[0], false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &InState[1], false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &InState[2], false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &InState[3], false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[0], false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[1], false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[2], false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[3], false, false, false, { 0, 0, 0, 0, 0 } },
 };
 
 
@@ -100,7 +100,7 @@ bool operator!=(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 bool ConstructHleInputDevice(int Type, int Port)
 {
 	g_bIsDevicesEmulating = true;
-	bool ret;
+	bool ret = true;
 
 	switch (Type)
 	{
@@ -115,7 +115,6 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(XpadOutput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
-		ret = true;
 	}
 	break;
 
@@ -130,7 +129,6 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(XpadOutput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
-		ret = true;
     }
 	break;
 
@@ -148,7 +146,6 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(SBCInput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(SBCOutput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
-		ret = true;
 	}
 	break;
 
@@ -184,7 +181,7 @@ void DestructHleInputDevice(int Port)
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
-	std::memset(&InState[Port], 0, sizeof(CXBX_XINPUT_IN_STATE));
+	std::memset(&g_InState[Port], 0, sizeof(CXBX_XINPUT_IN_STATE));
 
 	g_bIsDevicesEmulating = false;
 }

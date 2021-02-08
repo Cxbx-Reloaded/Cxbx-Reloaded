@@ -121,7 +121,7 @@ void DukeInputWindow::UpdateRumble(int command)
 	switch (command)
 	{
 	case RUMBLE_SET: {
-		char rumble[30];
+		char rumble[HOST_BUTTON_NAME_LENGTH];
 		SendMessage(m_hwnd_rumble_list, WM_GETTEXT, sizeof(rumble), reinterpret_cast<LPARAM>(rumble));
 		m_rumble = rumble;
 	}

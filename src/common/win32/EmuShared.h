@@ -130,21 +130,21 @@ class EmuShared : public Mutex
 		void SetInputDevTypeSettings(const int* type, int port) { Lock(); m_DeviceType[port] = *type; Unlock(); }
 		void GetInputDevNameSettings(char* name, int port) { Lock(); strncpy(name, m_DeviceName[port], 50); Unlock(); }
 		void SetInputDevNameSettings(const char* name, int port) { Lock(); strncpy(m_DeviceName[port], name, 50); Unlock(); }
-		void GetInputBindingsSettings(char button_str[][30], int max_num_buttons, int port)
+		void GetInputBindingsSettings(char button_str[][HOST_BUTTON_NAME_LENGTH], int max_num_buttons, int port)
 		{
 			assert(max_num_buttons <= HIGHEST_NUM_BUTTONS);
 			Lock();
 			for (int i = 0; i < max_num_buttons; i++) {
-				strncpy(button_str[i], m_DeviceControlNames[port][i], 30);
+				strncpy(button_str[i], m_DeviceControlNames[port][i], HOST_BUTTON_NAME_LENGTH);
 			}
 			Unlock();
 		}
-		void SetInputBindingsSettings(const char button_str[][30], int max_num_buttons, int port)
+		void SetInputBindingsSettings(const char button_str[][HOST_BUTTON_NAME_LENGTH], int max_num_buttons, int port)
 		{
 			assert(max_num_buttons <= HIGHEST_NUM_BUTTONS);
 			Lock();
 			for (int i = 0; i < max_num_buttons; i++) {
-				strncpy(m_DeviceControlNames[port][i], button_str[i], 30);
+				strncpy(m_DeviceControlNames[port][i], button_str[i], HOST_BUTTON_NAME_LENGTH);
 			}
 			Unlock();
 		}
@@ -303,7 +303,7 @@ class EmuShared : public Mutex
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
-		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][30];
+		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
 		long         m_MoAxisRange;
 		long         m_MoWheelRange;

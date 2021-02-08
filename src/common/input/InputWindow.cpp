@@ -158,7 +158,7 @@ void InputWindow::BindButton(int ControlID)
 		// Don't block the message processing loop
 		std::thread([this, dev, ControlID]() {
 			EnableWindow(m_hwnd_window, FALSE);
-			char current_text[30];
+			char current_text[HOST_BUTTON_NAME_LENGTH];
 			Button* xbox_button = m_DeviceConfig->FindButtonById(ControlID);
 			xbox_button->GetText(current_text, sizeof(current_text));
 			xbox_button->UpdateText("...");
@@ -227,7 +227,7 @@ bool InputWindow::SaveProfile(const std::string& name)
 	profile.ProfileName = name;
 	profile.DeviceName = m_host_dev;
 	for (int index = 0; index < m_max_num_buttons; index++) {
-		char dev_button[30];
+		char dev_button[HOST_BUTTON_NAME_LENGTH];
 		m_DeviceConfig->FindButtonByIndex(index)->GetText(dev_button, sizeof(dev_button));
 		profile.ControlList.push_back(dev_button);
 	}

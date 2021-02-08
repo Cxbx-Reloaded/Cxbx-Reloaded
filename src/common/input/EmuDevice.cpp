@@ -50,7 +50,6 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_sbc_id); i++) {
-			printf("button id: %d, button idx: %d\n", button_sbc_id[i], i);
 			m_buttons.push_back(new Button(button_sbc_id[i], i, hwnd, wnd));
 
 			// Install the subclass for the button control

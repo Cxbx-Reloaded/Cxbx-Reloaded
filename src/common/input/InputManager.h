@@ -39,6 +39,13 @@
 
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
+inline XBOX_INPUT_DEVICE input_support_list[] = {
+	XBOX_INPUT_DEVICE::DEVICE_INVALID,
+	XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE,
+	XBOX_INPUT_DEVICE::MS_CONTROLLER_S,
+	XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER,
+};
+
 #pragma pack(1)
 
 // xpad in/out buffers stripped of the first two bytes

@@ -323,7 +323,7 @@ void InputDeviceManager::DisconnectDevice(int port, int usb_port, bool ack)
 void InputDeviceManager::BindHostDevice(int port, int usb_port, int type)
 {
 	char dev_name[50];
-	char dev_control_names[HIGHEST_NUM_BUTTONS][30];
+	char dev_control_names[HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 
 	g_EmuShared->GetInputDevNameSettings(dev_name, port);
 	g_EmuShared->GetInputBindingsSettings(dev_control_names, dev_num_buttons[type], port);

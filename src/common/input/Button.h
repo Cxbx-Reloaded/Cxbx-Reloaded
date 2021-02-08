@@ -35,6 +35,8 @@
 #define SBC_NUM_BUTTONS 56
 #define HIGHEST_NUM_BUTTONS SBC_NUM_BUTTONS
 
+#define XBOX_BUTTON_NAME_LENGTH 30
+#define HOST_BUTTON_NAME_LENGTH 30
 
 /* Represents the gui buttons of the xbox device currently being configured */
 class Button

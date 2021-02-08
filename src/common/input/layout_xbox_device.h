@@ -27,8 +27,6 @@
 
 #pragma once
 
-#define BUF_NAME_LENGTH 30
-
 #ifndef CXBXR_EMU_EXPORTS
 #include "gui/resource/ResCxbx.h"
 
@@ -215,7 +213,7 @@ constexpr bool check_button_name_size(unsigned max_num_buttons)
 	{
 	case XBOX_CTRL_NUM_BUTTONS: {
 		for (unsigned i = 0; i < max_num_buttons; i++) {
-			if (std::char_traits<char>::length(button_xbox_ctrl_names[i]) > (BUF_NAME_LENGTH - 1)) {
+			if (std::char_traits<char>::length(button_xbox_ctrl_names[i]) > (XBOX_BUTTON_NAME_LENGTH - 1)) {
 				return false;
 			}
 		}
@@ -224,7 +222,7 @@ constexpr bool check_button_name_size(unsigned max_num_buttons)
 
 	case SBC_NUM_BUTTONS: {
 		for (unsigned i = 0; i < max_num_buttons; i++) {
-			if (std::char_traits<char>::length(button_sbc_names[i]) > (BUF_NAME_LENGTH - 1)) {
+			if (std::char_traits<char>::length(button_sbc_names[i]) > (XBOX_BUTTON_NAME_LENGTH - 1)) {
 				return false;
 			}
 		}
