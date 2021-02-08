@@ -176,7 +176,6 @@ void DestructHleInputDevice(int Port)
 	g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 	g_XboxControllerHostBridge[Port].XboxPort = PORT_INVALID;
 	while (g_XboxControllerHostBridge[Port].bIoInProgress) {}
-	std::memset(&InState[Port], 0, g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize);
 	g_XboxControllerHostBridge[Port].bPendingRemoval = false;
 	g_XboxControllerHostBridge[Port].bSignaled = false;
 	g_XboxControllerHostBridge[Port].bIoInProgress = false;
@@ -185,6 +184,7 @@ void DestructHleInputDevice(int Port)
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
+	std::memset(&InState[Port], 0, sizeof(CXBX_XINPUT_IN_STATE));
 
 	g_bIsDevicesEmulating = false;
 }
@@ -298,24 +298,21 @@ void UpdateConnectedDeviceState(xbox::PXPP_DEVICE_TYPE DeviceType) {
 
 	int Port, PortMask;
 	for (Port = PORT_1, PortMask = 1; Port <= PORT_4; Port++, PortMask <<= 1) {
-		if (DeviceType == g_XboxControllerHostBridge[Port].XboxType) {
-			if (!g_XboxControllerHostBridge[Port].bPendingRemoval) {
-				DeviceType->CurrentConnected |= PortMask;
-			}
-			else {
-				if (!g_XboxControllerHostBridge[Port].bSignaled) {
-					g_XboxControllerHostBridge[Port].bSignaled = true;
-					SDL_Event DeviceRemoveEvent;
-					SDL_memset(&DeviceRemoveEvent, 0, sizeof(SDL_Event));
-					DeviceRemoveEvent.type = Sdl::DeviceRemoveAck_t;
-					DeviceRemoveEvent.user.data1 = new int(Port);
-					SDL_PushEvent(&DeviceRemoveEvent);
-				}
-				DeviceType->CurrentConnected &= ~PortMask;
-			}
+		if (DeviceType == g_XboxControllerHostBridge[Port].XboxType && !g_XboxControllerHostBridge[Port].bPendingRemoval) {
+			DeviceType->CurrentConnected |= PortMask;
 		}
 		else {
 			DeviceType->CurrentConnected &= ~PortMask;
+		}
+
+		if (static_cast<uint8_t>(g_XboxControllerHostBridge[Port].bPendingRemoval) &
+			~(static_cast<uint8_t>(g_XboxControllerHostBridge[Port].bSignaled))) {
+			g_XboxControllerHostBridge[Port].bSignaled = true;
+			SDL_Event DeviceRemoveEvent;
+			SDL_memset(&DeviceRemoveEvent, 0, sizeof(SDL_Event));
+			DeviceRemoveEvent.type = Sdl::DeviceRemoveAck_t;
+			DeviceRemoveEvent.user.data1 = new int(Port);
+			SDL_PushEvent(&DeviceRemoveEvent);
 		}
 	}
 	DeviceType->ChangeConnected = DeviceType->PreviousConnected ^ DeviceType->CurrentConnected;

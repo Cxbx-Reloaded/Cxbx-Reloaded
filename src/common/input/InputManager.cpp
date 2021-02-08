@@ -206,6 +206,19 @@ void InputDeviceManager::UpdateDevices(int port, bool ack)
 			dev->SetPort(usb_port, false);
 		}
 		if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+			if (type != to_underlying(g_XboxControllerHostBridge[port].XboxType)) {
+				// this will happen when the user changes the type of an existing xbox device type connected to a port
+				if (g_XboxControllerHostBridge[port].bPendingRemoval == false) {
+					g_XboxControllerHostBridge[port].bPendingRemoval = true;
+					return;
+				}
+				else {
+					DestructHleInputDevice(port);
+					if (!ConstructHleInputDevice(type, port)) {
+						return;
+					}
+				}
+			}
 			BindHostDevice(port, usb_port, type);
 		}
 	}
