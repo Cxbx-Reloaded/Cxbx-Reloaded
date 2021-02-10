@@ -93,6 +93,7 @@ public:
 	{
 	public:
 		virtual ControlState GetState() const = 0;
+		virtual bool IsDetectable() const { return true; };
 	};
 
 	class Output : public IoControl

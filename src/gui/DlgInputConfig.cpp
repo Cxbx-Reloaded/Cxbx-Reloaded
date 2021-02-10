@@ -98,7 +98,7 @@ void UpdateInputOpt(HWND hwnd)
 
 void ShowInputConfig(HWND hwnd, HWND ChildWnd)
 {
-	g_InputDeviceManager.Initialize(true);
+	g_InputDeviceManager.Initialize(true, hwnd);
 	g_ChildWnd = ChildWnd;
 
 	// Show dialog box

@@ -196,7 +196,8 @@ void DukeInputWindow::UpdateProfile(const std::string &name, int command)
 	}
 	break;
 
-	case BUTTON_CLEAR: {
+	case BUTTON_CLEAR:
+	case BUTTON_SWAP: {
 		m_bHasChanges = true;
 	}
 	break;

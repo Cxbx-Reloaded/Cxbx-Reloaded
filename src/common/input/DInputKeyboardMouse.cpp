@@ -137,6 +137,12 @@ namespace DInput
 			AddInput(new Axis(i, ax, (2 == i) ? mo_wheel_range_neg : mo_axis_range_neg));
 			AddInput(new Axis(i, ax, (2 == i) ? mo_wheel_range_pos : mo_axis_range_pos));
 		}
+
+		// mouse cursor
+		AddInput(new Cursor(0, m_state_in.cursor.x, -1.0));
+		AddInput(new Cursor(0, m_state_in.cursor.x,  1.0));
+		AddInput(new Cursor(1, m_state_in.cursor.y, -1.0));
+		AddInput(new Cursor(1, m_state_in.cursor.y,  1.0));
 	}
 
 	KeyboardMouse::~KeyboardMouse()
@@ -178,11 +184,27 @@ namespace DInput
 			}
 
 			std::memcpy(m_state_in.mouse.rgbButtons, tmp_mouse.rgbButtons, sizeof(m_state_in.mouse.rgbButtons));
+			UpdateCursorPosition();
 
 			return true;
 		}
 
 		return false;
+	}
+
+	void KeyboardMouse::UpdateCursorPosition()
+	{
+		POINT point = {};
+		GetCursorPos(&point);
+		ScreenToClient(m_hwnd, &point);
+		RECT rect;
+		GetClientRect(m_hwnd, &rect);
+		const auto width = std::max(rect.right - rect.left, 1l);
+		const auto height = std::max(rect.bottom - rect.top, 1l);
+
+		// Convert the window client coordinates to normalized device coordinates
+		m_state_in.cursor.x = ((2 * static_cast<ControlState>(point.x)) / width) - 1;
+		m_state_in.cursor.y = ((-2 * static_cast<ControlState>(point.y)) / height) + 1;
 	}
 
 	std::string KeyboardMouse::GetDeviceName() const
@@ -213,6 +235,14 @@ namespace DInput
 		return tmpstr;
 	}
 
+	std::string KeyboardMouse::Cursor::GetName() const
+	{
+		static char tmpstr[] = "Cursor ..";
+		tmpstr[7] = (char)('X' + m_index);
+		tmpstr[8] = (m_range == 1.0 ? '+' : '-');
+		return tmpstr;
+	}
+
 	ControlState KeyboardMouse::Key::GetState() const
 	{
 		return (m_key != 0);
@@ -226,5 +256,10 @@ namespace DInput
 	ControlState KeyboardMouse::Axis::GetState() const
 	{
 		return std::clamp(ControlState(m_axis) / m_range, 0.0, 1.0);
+	}
+
+	ControlState KeyboardMouse::Cursor::GetState() const
+	{
+		return std::max(0.0, m_cursor / m_range);
 	}
 }

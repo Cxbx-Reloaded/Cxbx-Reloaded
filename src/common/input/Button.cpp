@@ -63,10 +63,16 @@ LRESULT CALLBACK ButtonDukeSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 
 	case WM_RBUTTONDOWN: {
 		Button *button = reinterpret_cast<Button *>(dwRefData);
-		button->ClearText();
-		static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
-		if (button->GetId() == IDC_SET_MOTOR) {
-			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), RUMBLE_CLEAR);
+		if (wParam & MK_SHIFT) {
+			static_cast<DukeInputWindow *>(button->GetWnd())->SwapMoCursorAxis(button);
+			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_SWAP);
+		}
+		else if (!(wParam & ~MK_RBUTTON)) {
+			button->ClearText();
+			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
+			if (button->GetId() == IDC_SET_MOTOR) {
+				static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), RUMBLE_CLEAR);
+			}
 		}
 	}
 	break;
@@ -88,8 +94,14 @@ LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 	case WM_RBUTTONDOWN: {
 		Button *button = reinterpret_cast<Button *>(dwRefData);
-		button->ClearText();
-		static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
+		if (wParam & MK_SHIFT) {
+			static_cast<SbcInputWindow *>(button->GetWnd())->SwapMoCursorAxis(button);
+			static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_SWAP);
+		}
+		else if (!(wParam & ~MK_RBUTTON)) {
+			button->ClearText();
+			static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
+		}
 	}
 	break;
 
