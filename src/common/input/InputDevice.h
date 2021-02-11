@@ -157,7 +157,7 @@ private:
 	// all the output controls detected and usable on this device
 	std::vector<Output*> m_Outputs;
 	// xbox port(s) this device is attached to
-	bool m_XboxPort[4] = { false };
+	bool m_XboxPort[4] = { false, false, false, false };
 	// button bindings to the xbox device buttons
 	std::map<int, IoControl*> m_Bindings;
 };

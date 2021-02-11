@@ -37,8 +37,6 @@ add_custom_target(misc-batch
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
 
-#add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/vsbc")
-
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
 # Then move only specific project files into their
@@ -58,7 +56,7 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/Error.h"
  "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardCodes.h"
  "${CXBXR_ROOT_DIR}/src/common/input/DInputKeyboardMouse.h"
- "${CXBXR_ROOT_DIR}/src/common/input/layout_xbox_controller.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/layout_xbox_device.h"
  "${CXBXR_ROOT_DIR}/src/common/input/InputDevice.h"
  "${CXBXR_ROOT_DIR}/src/common/input/InputManager.h"
  "${CXBXR_ROOT_DIR}/src/common/input/SdlJoystick.h"
@@ -98,6 +96,7 @@ file (GLOB CXBXR_HEADER_GUIv1
  "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.h"
  "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.h"
  "${CXBXR_ROOT_DIR}/src/gui/controllers/DlgDukeControllerConfig.h"
+ "${CXBXR_ROOT_DIR}/src/gui/controllers/DlgSBControllerConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAbout.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAudioConfig.h"
  "${CXBXR_ROOT_DIR}/src/gui/DlgInputConfig.h"
@@ -148,7 +147,6 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/Patches.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/XACTENG/XactEng.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/Xapi.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/XapiCxbxr.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XGRAPHIC/XGraphic.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XONLINE/XOnline.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/common/strings.hpp"
@@ -244,6 +242,7 @@ file (GLOB CXBXR_SOURCE_GUIv1
  "${CXBXR_ROOT_DIR}/src/common/input/EmuDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/InputWindow.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/controllers/DlgDukeControllerConfig.cpp"
+ "${CXBXR_ROOT_DIR}/src/gui/controllers/DlgSBControllerConfig.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAbout.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgAudioConfig.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/DlgInputConfig.cpp"

@@ -39,15 +39,11 @@
 
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
-typedef struct _input_controller {
-	XBOX_INPUT_DEVICE type;
-	const char* name;
-} input_controller;
-
-static input_controller input_support_list[] = {
-	{ XBOX_INPUT_DEVICE::DEVICE_INVALID, "None" },
-	{ XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE, "MS Controller Duke" },
-	{ XBOX_INPUT_DEVICE::MS_CONTROLLER_S, "MS Controller S" },
+inline XBOX_INPUT_DEVICE input_support_list[] = {
+	XBOX_INPUT_DEVICE::DEVICE_INVALID,
+	XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE,
+	XBOX_INPUT_DEVICE::MS_CONTROLLER_S,
+	XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER,
 };
 
 #pragma pack(1)
@@ -67,8 +63,62 @@ struct XpadOutput {
 	uint16_t right_actuator_strength;
 };
 
+struct SBCInput {
+	uint16_t wButtons[3];
+	uint8_t  bPad1;
+	uint8_t  sAimingX;
+	uint8_t  bPad2;
+	uint8_t  sAimingY;
+	uint8_t  bPad3;
+	int8_t   sRotationLever;
+	uint8_t  bPad4;
+	int8_t   sSightChangeX;
+	uint8_t  bPad5;
+	int8_t   sSightChangeY;
+	uint8_t  bPad6;
+	uint8_t  wLeftPedal;
+	uint8_t  bPad7;
+	uint8_t  wMiddlePedal;
+	uint8_t  bPad8;
+	uint8_t  wRightPedal;
+	uint8_t  ucTunerDial;
+	uint8_t  ucGearLever;
+};
+
+struct SBCOutput {
+	uint8_t  LedState[20];
+};
+
 #pragma pack()
 
+
+// hle specific input types
+typedef struct _CXBX_XINPUT_DEVICE_INFO {
+	uint8_t  ucType;            // xbox controller type
+	uint8_t  ucSubType;         // xbox controller subtype
+	uint8_t  ucInputStateSize;  // xbox controller input state size in bytes, not include dwPacketNumber
+	uint8_t  ucFeedbackSize;    // xbox controller feedback size in bytes, not include FeedbackHeader
+	uint16_t dwPacketNumber;
+}
+CXBX_XINPUT_DEVICE_INFO, *PCXBX_XINPUT_DEVICE_INFO;
+
+union CXBX_XINPUT_IN_STATE {
+	XpadInput Gamepad;
+	SBCInput SBC;
+};
+
+// this structure is for use of tracking the xbox controllers assigned to 4 ports.
+typedef struct _CXBX_CONTROLLER_HOST_BRIDGE {
+	HANDLE                  hXboxDevice;      // xbox device handle to this device, we use the address of this bridge as the handle, only set after opened. cleared after closed.
+	int                     XboxPort;         // xbox port# for this xbox controller
+	XBOX_INPUT_DEVICE       XboxType;         // xbox device type
+	CXBX_XINPUT_IN_STATE    *InState;
+	bool                    bPendingRemoval;
+	bool                    bSignaled;
+	bool                    bIoInProgress;
+	CXBX_XINPUT_DEVICE_INFO XboxDeviceInfo;
+}
+CXBX_CONTROLLER_HOST_BRIDGE, *PCXBX_CONTROLLER_HOST_BRIDGE;
 
 class InputDeviceManager
 {
@@ -100,6 +150,8 @@ public:
 private:
 	// update input for an xbox controller
 	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction);
+	// update input for a Steel Battalion controller
+	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port);
 	// bind a host device to an emulated device
 	void BindHostDevice(int port, int usb_port, int type);
 	// connect a device to the emulated machine

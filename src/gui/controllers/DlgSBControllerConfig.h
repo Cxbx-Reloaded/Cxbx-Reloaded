@@ -1,3 +1,5 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *  This file is part of the Cxbx project.
@@ -17,20 +19,12 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
+// *  (c) 2019 ergo720
 // *
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef DLGVIRTUALSBCFEEDBAC_H
-#define DLGVIRTUALSBCFEEDBAC_H
 
-#include <windows.h>
-namespace DlgVSBCFeedback
-{
-/*! show controller configuration dialog */
-extern int ShowVirtualSBCFeedback(HWND hwnd);
-extern void UpdateVirtualSBCFeedbackDlg(UCHAR * pXboxSBCFeedback);
-extern HWND GetDlgVirtualSBCFeedbackHandle(void);
-}
-#endif
+#pragma once
+
+INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

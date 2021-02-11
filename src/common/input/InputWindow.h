@@ -40,8 +40,11 @@
 #define RUMBLE_CLEAR   7
 #define BUTTON_CLEAR   8
 
-#define XINPUT_DEFAULT 1
-#define DINPUT_DEFAULT 2
+#define XINPUT_DEFAULT 0
+#define DINPUT_DEFAULT 1
+
+#define INPUT_TIMEOUT  5000
+#define OUTPUT_TIMEOUT 3000
 
 LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
@@ -49,30 +52,26 @@ LRESULT CALLBACK ProfileNameSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 class InputWindow
 {
 public:
-	void Initialize(HWND hwnd, int port_num, int dev_type);
-	void InitRumble(HWND hwnd);
+	virtual void Initialize(HWND hwnd, int port_num, int dev_type) = 0;
 	~InputWindow();
 	void UpdateDeviceList();
 	void BindButton(int ControlID);
-	void BindDefault();
-	void ClearBindings();
-	void UpdateProfile(const std::string& name, int command);
-	void UpdateRumble(int command);
+	virtual void ClearBindings() = 0;
+	virtual void UpdateProfile(const std::string& name, int command) = 0;
 	void UpdateCurrentDevice();
 	bool IsProfileSaved();
 
 
-private:
+protected:
 	typedef std::vector<Settings::s_input_profiles>::iterator ProfileIt;
 	InputDevice::Input* DetectInput(InputDevice* const Device, int ms);
-	void DetectOutput(int ms);
 	ProfileIt FindProfile(const std::string& name);
 	void LoadProfile(const std::string& name);
 	bool SaveProfile(const std::string& name);
 	void DeleteProfile(const std::string& name);
 	void OverwriteProfile(const std::string& name);
 	void LoadDefaultProfile();
-	int EnableDefaultButton();
+	virtual int EnableDefaultButton() = 0;
 
 	// xbox device under configuration
 	EmuDevice* m_DeviceConfig;
@@ -82,12 +81,6 @@ private:
 	HWND m_hwnd_device_list;
 	// handle of the profile list combobox
 	HWND m_hwnd_profile_list;
-	// handle of the rumble window
-	HWND m_hwnd_rumble;
-	// handle of the rumble combobox
-	HWND m_hwnd_rumble_list;
-	// handle of the default bindings button
-	HWND m_hwnd_default;
 	// type of the device
 	int m_dev_type;
 	// num of buttons of device under configuration
@@ -96,12 +89,45 @@ private:
 	int m_port_num;
 	// host device under configuration
 	std::string m_host_dev;
-	// currently selected rumble control
-	std::string m_rumble;
 	// indicates if the current profile has unsaved changes
 	bool m_bHasChanges;
 	// prevent current input attempt to set the previous input at same time
 	std::atomic<bool> m_bIsBinding;
 };
 
-extern InputWindow* g_InputWindow;
+class DukeInputWindow : public InputWindow
+{
+public:
+	void Initialize(HWND hwnd, int port_num, int dev_type) override;
+	void InitRumble(HWND hwnd);
+	void UpdateRumble(int command);
+	void BindDefault();
+	void ClearBindings() override;
+	void UpdateProfile(const std::string &name, int command) override;
+
+
+private:
+	int EnableDefaultButton() override;
+	void DetectOutput(int ms);
+
+	// handle of the default bindings button
+	HWND m_hwnd_default;
+	// handle of the rumble window
+	HWND m_hwnd_rumble;
+	// handle of the rumble combobox
+	HWND m_hwnd_rumble_list;
+	// currently selected rumble control
+	std::string m_rumble;
+};
+
+class SbcInputWindow : public InputWindow
+{
+public:
+	void Initialize(HWND hwnd, int port_num, int dev_type) override;
+	void ClearBindings() override;
+	void UpdateProfile(const std::string &name, int command) override;
+
+
+private:
+	int EnableDefaultButton() override;
+};
