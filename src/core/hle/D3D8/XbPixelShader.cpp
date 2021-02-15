@@ -565,9 +565,10 @@ typedef struct s_CxbxPSDef {
 		//   EFPROD = E * F
 		// ( Or in shorthand : sum=r0+v1, prod=s4*s5, r0.rgb=s0*s1+{1-s0}*s2+s3, r0.a=s6.b )
 		RC.FinalCombiner.Input[0/*A*/].Channel = PS_CHANNEL_ALPHA;
-		RC.FinalCombiner.Input[0/*A*/].Reg = RenderStateFogEnable ? PS_REGISTER_FOG : PS_REGISTER_ONE;
+		RC.FinalCombiner.Input[0/*A*/].Reg = PS_REGISTER_FOG;
 		RC.FinalCombiner.Input[1/*B*/].Reg = PS_REGISTER_R0;
-		RC.FinalCombiner.Input[2/*C*/].Reg = PS_REGISTER_FOG;
+		// If fog is disabled, blend R0 with itself
+		RC.FinalCombiner.Input[2/*C*/].Reg = RenderStateFogEnable ? PS_REGISTER_FOG : PS_REGISTER_R0;
 		RC.FinalCombiner.Input[3/*D*/].Reg = RenderStateSpecularEnable ? PS_REGISTER_V1 : PS_REGISTER_ZERO;
 		RC.FinalCombiner.Input[4/*E*/].Reg = PS_REGISTER_ZERO; // Note : Not really needed, should be 0 already
 		RC.FinalCombiner.Input[5/*F*/].Reg = PS_REGISTER_ZERO; // Note : Not really needed, should be 0 already
