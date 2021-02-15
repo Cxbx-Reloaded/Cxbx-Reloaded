@@ -304,10 +304,12 @@ enum PS_REGISTER
     PS_REGISTER_V1R0_SUM=          0x0eL, // r    A.k.a. _REG_SPECLIT
     PS_REGISTER_EF_PROD=           0x0fL, // r    A.k.a. _REG_EF_PROD
 
-    PS_REGISTER_ONE=               PS_REGISTER_ZERO | PS_INPUTMAPPING_UNSIGNED_INVERT, // 0x20 r OK for final combiner
-    PS_REGISTER_NEGATIVE_ONE=      PS_REGISTER_ZERO | PS_INPUTMAPPING_EXPAND_NORMAL,   // 0x40 r invalid for final combiner
-    PS_REGISTER_ONE_HALF=          PS_REGISTER_ZERO | PS_INPUTMAPPING_HALFBIAS_NEGATE, // 0xa0 r invalid for final combiner
-    PS_REGISTER_NEGATIVE_ONE_HALF= PS_REGISTER_ZERO | PS_INPUTMAPPING_HALFBIAS_NORMAL, // 0x80 r invalid for final combiner
+    // These constant values can be represented as a combination of 0, and an input modifier
+    // But they're not registers
+    // PS_REGISTER_ONE=               PS_REGISTER_ZERO | PS_INPUTMAPPING_UNSIGNED_INVERT, // 0x20 r OK for final combiner
+    // PS_REGISTER_NEGATIVE_ONE=      PS_REGISTER_ZERO | PS_INPUTMAPPING_EXPAND_NORMAL,   // 0x40 r invalid for final combiner
+    // PS_REGISTER_ONE_HALF=          PS_REGISTER_ZERO | PS_INPUTMAPPING_HALFBIAS_NEGATE, // 0xa0 r invalid for final combiner
+    // PS_REGISTER_NEGATIVE_ONE_HALF= PS_REGISTER_ZERO | PS_INPUTMAPPING_HALFBIAS_NORMAL, // 0x80 r invalid for final combiner
 
     // Cxbx extension; Separate final combiner constant registers  (values not encoded on NV2A, as outside of available bits range) :
     PS_REGISTER_FC0=              0x10,
