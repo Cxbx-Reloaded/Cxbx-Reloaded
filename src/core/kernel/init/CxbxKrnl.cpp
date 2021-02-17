@@ -1398,7 +1398,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xbox::XeImageFileName.MaximumLength = MAX_PATH;
-		xbox::XeImageFileName.Buffer = (PCHAR)g_VMManager.Allocate(MAX_PATH);
+		xbox::XeImageFileName.Buffer = (PCHAR)xbox::ExAllocatePool(MAX_PATH);
 		sprintf(xbox::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
 		xbox::XeImageFileName.Length = (USHORT)strlen(xbox::XeImageFileName.Buffer);
 		EmuLogInit(LOG_LEVEL::INFO, "XeImageFileName = %s", xbox::XeImageFileName.Buffer);

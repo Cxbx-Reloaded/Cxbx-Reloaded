@@ -1269,7 +1269,7 @@ int GetD3DResourceRefCount(IDirect3DResource *EmuResource)
 /*
 xbox::X_D3DSurface *EmuNewD3DSurface()
 {
-	xbox::X_D3DSurface *result = (xbox::X_D3DSurface *)g_VMManager.AllocateZeroed(sizeof(xbox::X_D3DSurface));
+	xbox::X_D3DSurface *result = (xbox::X_D3DSurface *)xbox::ExAllocatePool(sizeof(xbox::X_D3DSurface));
 	result->Common = X_D3DCOMMON_D3DCREATED | X_D3DCOMMON_TYPE_SURFACE | 1; // Set refcount to 1
 	return result;
 }

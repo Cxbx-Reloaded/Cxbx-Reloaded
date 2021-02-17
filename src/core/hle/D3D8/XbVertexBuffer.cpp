@@ -863,8 +863,8 @@ void CxbxImpl_End()
 	g_InlineVertexBuffer_DeclarationOverride = false;
 
 	// TODO: Should technically clean this up at some point..but on XP doesnt matter much
-	//	g_VMManager.Deallocate((VAddr)g_InlineVertexBuffer_pData);
-	//	g_VMManager.Deallocate((VAddr)g_InlineVertexBuffer_Table);
+	//	ExFreePool(g_InlineVertexBuffer_pData);
+	//	ExFreePool(g_InlineVertexBuffer_Table);
 }
 
 void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)

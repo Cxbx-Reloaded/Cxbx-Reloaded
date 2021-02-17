@@ -102,10 +102,6 @@ class VMManager : public PhysicalMemory
 		void Initialize(unsigned int SystemType, int BootFlags, blocks_reserved_t blocks_reserved);
 		// retrieves memory statistics
 		void MemoryStatistics(xbox::PMM_STATISTICS memory_statistics);
-		// allocates memory in the user region
-		VAddr Allocate(size_t Size);
-		// allocates memory in the user region and zeros it
-		VAddr AllocateZeroed(size_t size);
 		// allocates memory in the system region
 		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage);
 		// allocates memory in the contiguous region
@@ -118,8 +114,6 @@ class VMManager : public PhysicalMemory
 		void DeallocateContiguousMemory(VAddr addr);
 		// unmaps device memory in the system region
 		void UnmapDeviceMemory(VAddr addr, size_t Size);
-		// deallocates memory in the user region
-		void Deallocate(VAddr addr);
 		// changes the protections of a memory region
 		void Protect(VAddr addr, size_t Size, DWORD NewPerms);
 		// checks if a VAddr is valid
