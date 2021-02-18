@@ -50,6 +50,7 @@ public:
 	int GetId() const { return m_id; }
 	int GetIndex() const { return m_index; }
 	void *GetWnd() const { return m_wnd; }
+	void AddTooltip(HWND hwnd, HWND tooltip_hwnd, char *text) const;
 
 
 private:

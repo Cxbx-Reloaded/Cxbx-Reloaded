@@ -31,9 +31,12 @@
 #include "gui/resource/ResCxbx.h"
 
 
+static char *tooltip_text = "Left-click: start input detection\nRight-click: clear binding\nShift + right-click: toggle mouse input mode";
+
 EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 {
 	m_hwnd = hwnd;
+	CreateTooltipWindow();
 
 	switch (type)
 	{
@@ -41,6 +44,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd, wnd));
+			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text);
 
 			// Install the subclass for the button control
 			SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonDukeSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
@@ -51,6 +55,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_sbc_id); i++) {
 			m_buttons.push_back(new Button(button_sbc_id[i], i, hwnd, wnd));
+			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text);
 
 			// Install the subclass for the button control
 			SetWindowSubclass(GetDlgItem(hwnd, button_sbc_id[i]), ButtonSbcSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
@@ -63,6 +68,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 
 EmuDevice::~EmuDevice()
 {
+	DestroyWindow(m_tooltip_hwnd);
 	for (auto button : m_buttons) {
 		delete button;
 	}
@@ -98,4 +104,18 @@ void EmuDevice::ClearButtons()
 	std::for_each(m_buttons.begin(), m_buttons.end(), [](const auto button) {
 		button->ClearText();
 		});
+}
+
+void EmuDevice::CreateTooltipWindow()
+{
+	m_tooltip_hwnd = CreateWindow(TOOLTIPS_CLASS, NULL,
+		WS_POPUP | TTS_ALWAYSTIP,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		m_hwnd, NULL,
+		GetModuleHandle(NULL), NULL);
+
+	SendMessage(m_tooltip_hwnd, TTM_ACTIVATE, TRUE, 0);
+	SendMessage(m_tooltip_hwnd, TTM_SETMAXTIPWIDTH, 0, 500);
+	SendMessage(m_tooltip_hwnd, TTM_SETDELAYTIME, TTDT_AUTOPOP, 15000);
 }

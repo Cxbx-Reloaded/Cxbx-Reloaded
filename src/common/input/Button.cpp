@@ -51,6 +51,19 @@ void Button::GetText(char* const text, size_t size) const
 	SendMessage(m_button_hwnd, WM_GETTEXT, size, reinterpret_cast<LPARAM>(text));
 }
 
+void Button::AddTooltip(HWND hwnd, HWND tooltip_hwnd, char *text) const
+{
+	assert((hwnd != NULL) && (tooltip_hwnd != NULL));
+
+	TOOLINFO tool = { 0 };
+	tool.cbSize = sizeof(tool);
+	tool.hwnd = hwnd;
+	tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+	tool.uId = reinterpret_cast<UINT_PTR>(m_button_hwnd);
+	tool.lpszText = text;
+	SendMessage(tooltip_hwnd, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&tool));
+}
+
 LRESULT CALLBACK ButtonDukeSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	switch (uMsg)

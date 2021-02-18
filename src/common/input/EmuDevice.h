@@ -46,8 +46,11 @@ public:
 
 
 private:
+	void CreateTooltipWindow();
+
 	std::vector<Button*> m_buttons;
 	HWND m_hwnd;
+	HWND m_tooltip_hwnd;
 };
 
 template void EmuDevice::BindDefault(const std::array<const char *, XBOX_CTRL_NUM_BUTTONS> &arr);
