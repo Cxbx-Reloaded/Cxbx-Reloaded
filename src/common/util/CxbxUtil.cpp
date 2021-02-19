@@ -280,3 +280,27 @@ std::string StripQuotes(const std::string& str)
 {
 	return StripChars(str, "\"");
 }
+
+// NOTE: with C++20, this can be replaced by simply calling full_str.ends_with()
+bool StrEndsWith(const std::string &full_str, const std::string &substr)
+{
+	if (full_str.length() >= substr.length()) {
+		if (full_str.compare(full_str.length() - substr.length(), substr.length(), substr) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+// NOTE: with C++20, this can be replaced by simply calling full_str.starts_with()
+bool StrStartsWith(const std::string &full_str, const std::string &substr)
+{
+	if (!full_str.empty()) {
+		if (full_str.rfind(substr, 0) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}

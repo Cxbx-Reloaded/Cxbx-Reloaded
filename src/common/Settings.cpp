@@ -947,12 +947,9 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 			std::string current_section = std::string(section_input_port) + std::to_string(port_num);
 			std::string device_name = m_si.GetValue(current_section.c_str(), sect_input_port.device, "");
 
-			// NOTE: with C++20, this can be simplified by simply calling device_name.ends_with()
-			if (device_name.length() >= kb_str.length()) {
-				if (device_name.compare(device_name.length() - kb_str.length(), kb_str.length(), kb_str) == 0) {
-					device_name += "Mouse";
-					m_si.SetValue(current_section.c_str(), sect_input_port.device, device_name.c_str(), nullptr, true);
-				}
+			if (StrEndsWith(device_name, kb_str)) {
+				device_name += "Mouse";
+				m_si.SetValue(current_section.c_str(), sect_input_port.device, device_name.c_str(), nullptr, true);
 			}
 		}
 

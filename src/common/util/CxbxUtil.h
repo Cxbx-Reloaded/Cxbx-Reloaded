@@ -67,6 +67,8 @@ bool Memory_RW(void* Addr, void* Buf, size_t Num, bool bIsWrite);
 void unix2dos(std::string& string);
 std::string StripSpaces(const std::string& str);
 std::string StripQuotes(const std::string& str);
+bool StrEndsWith(const std::string &full_str, const std::string &substr);
+bool StrStartsWith(const std::string &full_str, const std::string &substr);
 
 // Retrieves the underlying integer value of a scoped enumerator. It allows to avoid using static_cast every time
 template <typename E>

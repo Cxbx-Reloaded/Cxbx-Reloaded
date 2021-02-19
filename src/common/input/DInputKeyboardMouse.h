@@ -51,6 +51,7 @@ namespace DInput
 		std::string GetDeviceName() const override;
 		std::string GetAPI() const override;
 		bool UpdateInput() override;
+		void SetHwnd(HWND hwnd) { m_hwnd = hwnd; }
 
 
 	private:
@@ -78,6 +79,7 @@ namespace DInput
 			const uint8_t m_index;
 		};
 
+		// gives mouse input based on relative motion
 		class Axis : public Input
 		{
 		public:
@@ -91,14 +93,37 @@ namespace DInput
 			const uint8_t m_index;
 		};
 
+		// gives mouse input based on cursor position relative to the rendering window
+		class Cursor : public Input
+		{
+		public:
+			Cursor(uint8_t index, const ControlState &cursor, const ControlState range)
+				: m_cursor(cursor), m_index(index), m_range(range) {}
+			std::string GetName() const override;
+			ControlState GetState() const override;
+			bool IsDetectable() const override { return false; }
+
+		private:
+			const ControlState &m_cursor;
+			const ControlState m_range;
+			const uint8_t m_index;
+		};
+
 		struct State
 		{
 			BYTE keyboard[256];
 			DIMOUSESTATE2 mouse;
+			struct
+			{
+				ControlState x, y;
+			} cursor;
 		};
+
+		void UpdateCursorPosition();
 
 		const LPDIRECTINPUTDEVICE8 m_kb_device;
 		const LPDIRECTINPUTDEVICE8 m_mo_device;
 		State m_state_in;
+		HWND m_hwnd;
 	};
 }

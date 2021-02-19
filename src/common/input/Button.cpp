@@ -51,6 +51,19 @@ void Button::GetText(char* const text, size_t size) const
 	SendMessage(m_button_hwnd, WM_GETTEXT, size, reinterpret_cast<LPARAM>(text));
 }
 
+void Button::AddTooltip(HWND hwnd, HWND tooltip_hwnd, char *text) const
+{
+	assert((hwnd != NULL) && (tooltip_hwnd != NULL));
+
+	TOOLINFO tool = { 0 };
+	tool.cbSize = sizeof(tool);
+	tool.hwnd = hwnd;
+	tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+	tool.uId = reinterpret_cast<UINT_PTR>(m_button_hwnd);
+	tool.lpszText = text;
+	SendMessage(tooltip_hwnd, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&tool));
+}
+
 LRESULT CALLBACK ButtonDukeSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	switch (uMsg)
@@ -63,10 +76,16 @@ LRESULT CALLBACK ButtonDukeSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 
 	case WM_RBUTTONDOWN: {
 		Button *button = reinterpret_cast<Button *>(dwRefData);
-		button->ClearText();
-		static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
-		if (button->GetId() == IDC_SET_MOTOR) {
-			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), RUMBLE_CLEAR);
+		if (wParam & MK_SHIFT) {
+			static_cast<DukeInputWindow *>(button->GetWnd())->SwapMoCursorAxis(button);
+			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_SWAP);
+		}
+		else if (!(wParam & ~MK_RBUTTON)) {
+			button->ClearText();
+			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
+			if (button->GetId() == IDC_SET_MOTOR) {
+				static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), RUMBLE_CLEAR);
+			}
 		}
 	}
 	break;
@@ -88,8 +107,14 @@ LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 	case WM_RBUTTONDOWN: {
 		Button *button = reinterpret_cast<Button *>(dwRefData);
-		button->ClearText();
-		static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
+		if (wParam & MK_SHIFT) {
+			static_cast<SbcInputWindow *>(button->GetWnd())->SwapMoCursorAxis(button);
+			static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_SWAP);
+		}
+		else if (!(wParam & ~MK_RBUTTON)) {
+			button->ClearText();
+			static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
+		}
 	}
 	break;
 

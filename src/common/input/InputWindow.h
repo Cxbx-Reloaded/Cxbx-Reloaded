@@ -39,6 +39,7 @@
 #define RUMBLE_TEST    6
 #define RUMBLE_CLEAR   7
 #define BUTTON_CLEAR   8
+#define BUTTON_SWAP    9
 
 #define XINPUT_DEFAULT 0
 #define DINPUT_DEFAULT 1
@@ -60,6 +61,7 @@ public:
 	virtual void UpdateProfile(const std::string& name, int command) = 0;
 	void UpdateCurrentDevice();
 	bool IsProfileSaved();
+	void SwapMoCursorAxis(Button *button);
 
 
 protected:

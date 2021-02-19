@@ -121,7 +121,7 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 		Device->UpdateInput();
 		std::vector<bool>::iterator state = initial_states.begin();
 		for (; i != e && s == e; i++, state++) {
-			if ((*i)->GetState() > INPUT_DETECT_THRESHOLD) {
+			if ((*i)->IsDetectable() && ((*i)->GetState() > INPUT_DETECT_THRESHOLD)) {
 				if (*state == false) {
 					// input was not initially pressed or it was but released afterwards
 					s = i;
@@ -289,4 +289,66 @@ void InputWindow::UpdateCurrentDevice()
 	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
 	m_host_dev = device_name;
 	EnableDefaultButton();
+}
+
+void InputWindow::SwapMoCursorAxis(Button *button)
+{
+	// Axis X+ <-> Cursor X+
+	// Axis X- <-> Cursor X-
+	// Axis Y+ <-> Cursor Y-
+	// Axis Y- <-> Cursor Y+
+	if (StrEndsWith(m_host_dev, "KeyboardMouse")) {
+		assert(button != nullptr);
+		char control_name[HOST_BUTTON_NAME_LENGTH];
+		button->GetText(control_name, sizeof(control_name));
+		if (StrStartsWith(control_name, "Axis")) {
+			switch (control_name[5])
+			{
+			case 'X':
+				if (control_name[6] == '+') {
+					button->UpdateText("Cursor X+");
+				}
+				else {
+					button->UpdateText("Cursor X-");
+				}
+				break;
+
+			case 'Y':
+				if (control_name[6] == '+') {
+					button->UpdateText("Cursor Y-");
+				}
+				else {
+					button->UpdateText("Cursor Y+");
+				}
+				break;
+
+			}
+
+			return;
+		}
+
+		if (StrStartsWith(control_name, "Cursor")) {
+			switch (control_name[7])
+			{
+			case 'X':
+				if (control_name[8] == '+') {
+					button->UpdateText("Axis X+");
+				}
+				else {
+					button->UpdateText("Axis X-");
+				}
+				break;
+
+			case 'Y':
+				if (control_name[8] == '+') {
+					button->UpdateText("Axis Y-");
+				}
+				else {
+					button->UpdateText("Axis Y+");
+				}
+				break;
+
+			}
+		}
+	}
 }
