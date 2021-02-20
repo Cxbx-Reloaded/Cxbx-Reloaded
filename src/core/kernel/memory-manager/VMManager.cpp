@@ -667,72 +667,6 @@ void VMManager::PersistMemory(VAddr addr, size_t Size, bool bPersist)
 	Unlock();
 }
 
-VAddr VMManager::Allocate(size_t Size)
-{
-	LOG_FUNC_ONE_ARG(Size);
-
-	MMPTE TempPte;
-	PMMPTE PointerPte;
-	PMMPTE EndingPte;
-	PFN pfn;
-	PFN_COUNT PteNumber;
-	VAddr addr;
-
-	if (!Size) { RETURN(NULL); }
-
-	Lock();
-
-	PteNumber = ROUND_UP_4K(Size) >> PAGE_SHIFT;
-
-	if (!IsMappable(PteNumber, true, m_MmLayoutDebug && m_bAllowNonDebuggerOnTop64MiB ? true : false)) { goto Fail; }
-
-	ConvertXboxToPtePermissions(XBOX_PAGE_EXECUTE_READWRITE, &TempPte);
-
-	addr = MapMemoryBlock(UserRegion, PteNumber, MEM_RESERVE | MEM_COMMIT, false);
-	if (!addr) { goto Fail; }
-
-	// Check if we have to construct the PT's for this allocation
-	if (!AllocatePT(PteNumber << PAGE_SHIFT, addr))
-	{
-		VirtualFree((void*)addr, 0, MEM_RELEASE);
-		goto Fail;
-	}
-
-	// Finally, write the pte's and the pfn's
-	PointerPte = GetPteAddress(addr);
-	EndingPte = PointerPte + PteNumber - 1;
-
-	while (PointerPte <= EndingPte)
-	{
-		RemoveFree(1, &pfn, 0, 0, m_MmLayoutDebug && !m_bAllowNonDebuggerOnTop64MiB ? XBOX_HIGHEST_PHYSICAL_PAGE
-			: m_HighestPage);
-		WritePfn(pfn, pfn, PointerPte, ImageType);
-		WritePte(PointerPte, PointerPte, TempPte, pfn);
-
-		PointerPte++;
-	}
-
-	ConstructVMA(addr, PteNumber << PAGE_SHIFT, UserRegion, AllocatedVma);
-	UpdateMemoryPermissions(addr, PteNumber << PAGE_SHIFT, XBOX_PAGE_EXECUTE_READWRITE);
-
-	Unlock();
-	RETURN(addr);
-
-	Fail:
-	Unlock();
-	RETURN(NULL);
-}
-
-VAddr VMManager::AllocateZeroed(size_t Size)
-{
-	LOG_FORWARD("g_VMManager.Allocate");
-
-	VAddr addr = Allocate(Size);
-	if (addr) { xbox::RtlFillMemoryUlong((void*)addr, ROUND_UP_4K(Size), 0); }
-
-	RETURN(addr);
-}
-
 VAddr VMManager::AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage)
 {
 	LOG_FUNC_BEGIN
@@ -966,54 +900,6 @@ VAddr VMManager::MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms)
 	Fail:
 	Unlock();
 	RETURN(NULL);
-}
-
-void VMManager::Deallocate(VAddr addr)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(addr)
-	LOG_FUNC_END;
-
-	PMMPTE PointerPte;
-	PMMPTE StartingPte;
-	PMMPTE EndingPte;
-	PFN pfn;
-	PFN_COUNT PteNumber;
-	VMAIter it;
-	bool bOverflow;
-
-	assert(CHECK_ALIGNMENT(addr, PAGE_SIZE)); // all starting addresses in the user region are page aligned
-	assert(IS_USER_ADDRESS(addr));
-
-	Lock();
-
-	it = CheckConflictingVMA(addr, 0, UserRegion, &bOverflow);
-
-	if (it == m_MemoryRegionArray[UserRegion].RegionMap.end() || bOverflow)
-	{
-		Unlock();
-		return;
-	}
-
-	PointerPte = GetPteAddress(addr);
-	EndingPte = PointerPte + (it->second.size >> PAGE_SHIFT) - 1;
-	StartingPte = PointerPte;
-	PteNumber = EndingPte - StartingPte + 1;
-
-	while (PointerPte <= EndingPte)
-	{
-		pfn = PointerPte->Hardware.PFN;
-		InsertFree(pfn, pfn);
-		WritePfn(pfn, pfn, PointerPte, ImageType, true);
-
-		PointerPte++;
-	}
-
-	WritePte(StartingPte, EndingPte, *StartingPte, 0, true);
-	DestructVMA(it->first, UserRegion, it->second.size);
-	DeallocatePT(PteNumber << PAGE_SHIFT, addr);
-
-	Unlock();
 }
 
 void VMManager::DeallocateContiguousMemory(VAddr addr)
