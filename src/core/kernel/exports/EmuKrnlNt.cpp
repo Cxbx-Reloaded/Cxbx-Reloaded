@@ -142,7 +142,7 @@ XBSYSAPI EXPORTNUM(187) xbox::ntstatus_xt NTAPI xbox::NtClose
 
 	NTSTATUS ret = xbox::status_success;
 
-	if (IsEmuHandle(Handle))
+	if (EmuHandle::IsEmuHandle(Handle))
 	{
 		// delete 'special' handles
 		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
@@ -682,7 +682,7 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 
 	NTSTATUS ret = xbox::status_success;
 
-	if (IsEmuHandle(SourceHandle)) {
+	if (EmuHandle::IsEmuHandle(SourceHandle)) {
 		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
 		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
 /*
@@ -739,7 +739,7 @@ XBSYSAPI EXPORTNUM(198) xbox::ntstatus_xt NTAPI xbox::NtFlushBuffersFile
 		LOG_FUNC_END;
 	NTSTATUS ret = xbox::status_success;
 	
-	if (IsEmuHandle(FileHandle)) 
+	if (EmuHandle::IsEmuHandle(FileHandle))
 		LOG_UNIMPLEMENTED();
 	else
 		ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);

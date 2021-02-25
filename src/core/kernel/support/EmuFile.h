@@ -30,6 +30,8 @@
 #include <cstdio>
 #include <string>
 #include <memory>
+#include <unordered_map>
+#include <mutex>
 
 // ******************************************************************
 // * prevent name collisions
@@ -160,10 +162,21 @@ NTSTATUS CxbxConvertFilePath(std::string RelativeXboxPath, OUT std::wstring &Rel
 class EmuHandle
 {
 public:
-	EmuHandle(EmuNtObject* ntObject);
 	NTSTATUS NtClose();
 	NTSTATUS NtDuplicateObject(PHANDLE TargetHandle, DWORD Options);
 	EmuNtObject* NtObject;
+
+	static EmuHandle* CreateEmuHandle(EmuNtObject* ntObject);
+	static bool IsEmuHandle(HANDLE Handle);
+private:
+	EmuHandle(EmuNtObject* ntObject);
+	// Keep track of every EmuHandle wrapper
+	// If we remember what EmuHandle objects we hand out, we can tell the difference between an EmuHandle and garbage
+	// We used to rely on the high bit to differentiatean EmuHandles
+	// But titles may attempt to operate on invalid handles with the high bit set
+	// Test case: Amped sets a handle value to 0xFDFDFDFD (coincidentally a VS debugger guard value)
+	static std::unordered_map<HANDLE, EmuHandle*> EmuHandleLookup;
+	static std::mutex EmuHandleLookupLock;
 };
 
 // ******************************************************************
@@ -207,7 +220,6 @@ struct XboxDevice {
 // ******************************************************************
 // * is Handle a 'special' emulated handle?
 // ******************************************************************
-bool IsEmuHandle(HANDLE Handle);
 EmuHandle* HandleToEmuHandle(HANDLE Handle);
 HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
 
