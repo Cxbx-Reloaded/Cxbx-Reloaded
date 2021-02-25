@@ -31,7 +31,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
-#include <mutex>
+#include <shared_mutex>
 
 // ******************************************************************
 // * prevent name collisions
@@ -176,7 +176,7 @@ private:
 	// But titles may attempt to operate on invalid handles with the high bit set
 	// Test case: Amped sets a handle value to 0xFDFDFDFD (coincidentally a VS debugger guard value)
 	static std::unordered_map<HANDLE, EmuHandle*> EmuHandleLookup;
-	static std::mutex EmuHandleLookupLock;
+	static std::shared_mutex EmuHandleLookupLock;
 };
 
 // ******************************************************************

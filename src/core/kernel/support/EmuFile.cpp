@@ -256,14 +256,14 @@ EmuHandle::EmuHandle(EmuNtObject* ntObject)
 }
 
 std::unordered_map<HANDLE, EmuHandle*> EmuHandle::EmuHandleLookup = {};
-std::mutex EmuHandle::EmuHandleLookupLock = {};
+std::shared_mutex EmuHandle::EmuHandleLookupLock = {};
 
 EmuHandle* EmuHandle::CreateEmuHandle(EmuNtObject* ntObject) {
 	auto emuHandle = new EmuHandle(ntObject);
 
 	// Register EmuHandle
 	{
-		const std::lock_guard<std::mutex> scopedLock(EmuHandleLookupLock);
+		std::unique_lock scopedLock(EmuHandleLookupLock);
 		EmuHandleLookup.emplace(EmuHandleToHandle(emuHandle), emuHandle);
 	}
 
@@ -276,7 +276,7 @@ NTSTATUS EmuHandle::NtClose()
 
 	// Unregister the handle
 	if (status == STATUS_SUCCESS) {
-		const std::lock_guard<std::mutex> scopedLock(EmuHandleLookupLock);
+		std::unique_lock scopedLock(EmuHandleLookupLock);
 		EmuHandleLookup.erase(EmuHandleToHandle(this));
 	}
 
@@ -285,6 +285,7 @@ NTSTATUS EmuHandle::NtClose()
 
 bool EmuHandle::IsEmuHandle(HANDLE Handle)
 {
+	std::shared_lock scopedLock(EmuHandleLookupLock);
 	auto iter = EmuHandleLookup.find(Handle);
 	return !(iter == EmuHandleLookup.end());
 }
