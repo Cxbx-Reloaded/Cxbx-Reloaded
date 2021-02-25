@@ -262,9 +262,10 @@ EmuHandle* EmuHandle::CreateEmuHandle(EmuNtObject* ntObject) {
 	auto emuHandle = new EmuHandle(ntObject);
 
 	// Register EmuHandle
-	EmuHandleLookupLock.lock();
-	EmuHandleLookup.emplace(EmuHandleToHandle(emuHandle), emuHandle);
-	EmuHandleLookupLock.unlock();
+	{
+		const std::lock_guard<std::mutex> scopedLock(EmuHandleLookupLock);
+		EmuHandleLookup.emplace(EmuHandleToHandle(emuHandle), emuHandle);
+	}
 
 	return emuHandle;
 }
@@ -275,9 +276,8 @@ NTSTATUS EmuHandle::NtClose()
 
 	// Unregister the handle
 	if (status == STATUS_SUCCESS) {
-		EmuHandleLookupLock.lock();
+		const std::lock_guard<std::mutex> scopedLock(EmuHandleLookupLock);
 		EmuHandleLookup.erase(EmuHandleToHandle(this));
-		EmuHandleLookupLock.unlock();
 	}
 
 	return status;
