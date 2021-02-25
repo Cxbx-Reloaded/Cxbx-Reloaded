@@ -145,7 +145,7 @@ XBSYSAPI EXPORTNUM(187) xbox::ntstatus_xt NTAPI xbox::NtClose
 	if (EmuHandle::IsEmuHandle(Handle))
 	{
 		// delete 'special' handles
-		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
+		auto iEmuHandle = (EmuHandle*)Handle;
 		ret = iEmuHandle->NtClose();
 
 		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
@@ -683,7 +683,7 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 	NTSTATUS ret = xbox::status_success;
 
 	if (EmuHandle::IsEmuHandle(SourceHandle)) {
-		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
+		auto iEmuHandle = (EmuHandle*)SourceHandle;
 		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
 /*
 		PVOID Object;
@@ -1377,7 +1377,7 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 	// Check that we actually got an EmuHandle :
 	ret = STATUS_INVALID_HANDLE;
 
-	EmuHandle* iEmuHandle = HandleToEmuHandle(LinkHandle);
+	auto iEmuHandle = (EmuHandle*)LinkHandle;
 	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
 	ret = xbox::status_success;
 	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;

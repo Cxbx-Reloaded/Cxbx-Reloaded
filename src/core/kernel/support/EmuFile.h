@@ -30,7 +30,7 @@
 #include <cstdio>
 #include <string>
 #include <memory>
-#include <unordered_map>
+#include <unordered_set>
 #include <shared_mutex>
 
 // ******************************************************************
@@ -175,7 +175,7 @@ private:
 	// We used to rely on the high bit to differentiatean EmuHandles
 	// But titles may attempt to operate on invalid handles with the high bit set
 	// Test case: Amped sets a handle value to 0xFDFDFDFD (coincidentally a VS debugger guard value)
-	static std::unordered_map<HANDLE, EmuHandle*> EmuHandleLookup;
+	static std::unordered_set<EmuHandle*> EmuHandleLookup;
 	static std::shared_mutex EmuHandleLookupLock;
 };
 
@@ -216,12 +216,6 @@ struct XboxDevice {
 	std::string HostDevicePath;
 	HANDLE HostRootHandle;
 };
-
-// ******************************************************************
-// * is Handle a 'special' emulated handle?
-// ******************************************************************
-EmuHandle* HandleToEmuHandle(HANDLE Handle);
-HANDLE EmuHandleToHandle(EmuHandle* emuHandle);
 
 CHAR* NtStatusToString(IN NTSTATUS Status);
 

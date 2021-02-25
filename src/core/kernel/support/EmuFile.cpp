@@ -255,7 +255,7 @@ EmuHandle::EmuHandle(EmuNtObject* ntObject)
 	NtObject = ntObject;
 }
 
-std::unordered_map<HANDLE, EmuHandle*> EmuHandle::EmuHandleLookup = {};
+std::unordered_set<EmuHandle*> EmuHandle::EmuHandleLookup = {};
 std::shared_mutex EmuHandle::EmuHandleLookupLock = {};
 
 EmuHandle* EmuHandle::CreateEmuHandle(EmuNtObject* ntObject) {
@@ -264,7 +264,7 @@ EmuHandle* EmuHandle::CreateEmuHandle(EmuNtObject* ntObject) {
 	// Register EmuHandle
 	{
 		std::unique_lock scopedLock(EmuHandleLookupLock);
-		EmuHandleLookup.emplace(EmuHandleToHandle(emuHandle), emuHandle);
+		EmuHandleLookup.insert(emuHandle);
 	}
 
 	return emuHandle;
@@ -277,7 +277,7 @@ NTSTATUS EmuHandle::NtClose()
 	// Unregister the handle
 	if (status == STATUS_SUCCESS) {
 		std::unique_lock scopedLock(EmuHandleLookupLock);
-		EmuHandleLookup.erase(EmuHandleToHandle(this));
+		EmuHandleLookup.erase(this);
 	}
 
 	return status;
@@ -286,20 +286,8 @@ NTSTATUS EmuHandle::NtClose()
 bool EmuHandle::IsEmuHandle(HANDLE Handle)
 {
 	std::shared_lock scopedLock(EmuHandleLookupLock);
-	auto iter = EmuHandleLookup.find(Handle);
+	auto iter = EmuHandleLookup.find((EmuHandle*) Handle);
 	return !(iter == EmuHandleLookup.end());
-}
-
-EmuHandle* HandleToEmuHandle(HANDLE Handle)
-{
-	return (EmuHandle*)((uint32_t)Handle & 0x7FFFFFFF);
-}
-
-HANDLE EmuHandleToHandle(EmuHandle* emuHandle)
-{
-	// Set the high bit
-	// Avoids collisions with real Xbox handles..?
-	return (HANDLE)((uint32_t)emuHandle | 0x80000000);
 }
 
 NTSTATUS EmuHandle::NtDuplicateObject(PHANDLE TargetHandle, DWORD Options)
