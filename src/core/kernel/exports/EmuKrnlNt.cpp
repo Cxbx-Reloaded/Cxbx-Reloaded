@@ -1371,11 +1371,14 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 		LOG_FUNC_ARG_OUT(ReturnedLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = 0;
+	NTSTATUS ret = STATUS_INVALID_HANDLE;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
 
-	// Check that we actually got an EmuHandle :
-	ret = STATUS_INVALID_HANDLE;
+	// We expect LinkHandle to always be an EmuHandle
+	if (!EmuHandle::IsEmuHandle(LinkHandle)) {
+		LOG_UNIMPLEMENTED();
+		return ret;
+	}
 
 	auto iEmuHandle = (EmuHandle*)LinkHandle;
 	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
