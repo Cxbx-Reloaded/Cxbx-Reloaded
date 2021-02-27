@@ -40,7 +40,7 @@
 #include "core\kernel\exports\EmuKrnl.h"
 #include "EmuShared.h"
 #include "devices\Xbox.h"
-#include "EmuNVNet.h"
+#include "NVNetDevice.h"
 #include <Iphlpapi.h>
 #include <pcap.h>
 #include <exception>

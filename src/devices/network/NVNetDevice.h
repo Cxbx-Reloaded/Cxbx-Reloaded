@@ -26,7 +26,7 @@
 
 #include <string>
 
-#include "PCIDevice.h" // For PCIDevice
+#include "../PCIDevice.h" // For PCIDevice
 
 // NVNET Register Definitions
 // Taken from XQEMU
