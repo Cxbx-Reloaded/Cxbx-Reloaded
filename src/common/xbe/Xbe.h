@@ -150,7 +150,7 @@ class Xbe : public Error
             uint32_t  dwSize;                               // 0x0000 - size of certificate
             uint32_t  dwTimeDate;                           // 0x0004 - timedate stamp
             uint32_t  dwTitleId;                            // 0x0008 - title id
-            wchar_t wszTitleName[40];                       // 0x000C - title name (unicode)
+            wchar_t wsTitleName[40];                       // 0x000C - title name (unicode)
             uint32_t  dwAlternateTitleId[0x10];             // 0x005C - alternate title ids
             uint32_t  dwAllowedMedia;                       // 0x009C - allowed media types
             uint32_t  dwGameRegion;                         // 0x00A0 - game region
@@ -257,7 +257,7 @@ class Xbe : public Error
         char m_szPath[MAX_PATH];
 
         // Xbe ascii title, translated from certificate title
-        char m_szAsciiTitle[40];
+        char m_szAsciiTitle[41];
 
         // retrieve thread local storage data address
         uint8_t *GetTLSData() { if(m_TLS == 0) return 0; else return GetAddr(m_TLS->dwDataStartAddr); }

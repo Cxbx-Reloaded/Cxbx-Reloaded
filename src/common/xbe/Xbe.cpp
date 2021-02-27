@@ -160,7 +160,8 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
         setlocale( LC_ALL, "English" );
 
-        wcstombs(m_szAsciiTitle, m_Certificate.wszTitleName, 40);
+        wcstombs(m_szAsciiTitle, m_Certificate.wsTitleName, 40);
+        m_szAsciiTitle[40] = '\0'; // ensure null terminated
 
         printf("OK\n");
 
