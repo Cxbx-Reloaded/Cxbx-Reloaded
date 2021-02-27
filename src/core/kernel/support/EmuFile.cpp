@@ -255,9 +255,39 @@ EmuHandle::EmuHandle(EmuNtObject* ntObject)
 	NtObject = ntObject;
 }
 
+std::unordered_set<EmuHandle*> EmuHandle::EmuHandleLookup = {};
+std::shared_mutex EmuHandle::EmuHandleLookupLock = {};
+
+EmuHandle* EmuHandle::CreateEmuHandle(EmuNtObject* ntObject) {
+	auto emuHandle = new EmuHandle(ntObject);
+
+	// Register EmuHandle
+	{
+		std::unique_lock scopedLock(EmuHandleLookupLock);
+		EmuHandleLookup.insert(emuHandle);
+	}
+
+	return emuHandle;
+}
+
 NTSTATUS EmuHandle::NtClose()
 {
-	return NtObject->NtClose();
+	auto status = NtObject->NtClose();
+
+	// Unregister the handle
+	if (status == STATUS_SUCCESS) {
+		std::unique_lock scopedLock(EmuHandleLookupLock);
+		EmuHandleLookup.erase(this);
+	}
+
+	return status;
+}
+
+bool EmuHandle::IsEmuHandle(HANDLE Handle)
+{
+	std::shared_lock scopedLock(EmuHandleLookupLock);
+	auto iter = EmuHandleLookup.find((EmuHandle*) Handle);
+	return !(iter == EmuHandleLookup.end());
 }
 
 NTSTATUS EmuHandle::NtDuplicateObject(PHANDLE TargetHandle, DWORD Options)
@@ -274,7 +304,7 @@ EmuNtObject::EmuNtObject()
 HANDLE EmuNtObject::NewHandle()
 {
 	RefCount++;
-	return EmuHandleToHandle(new EmuHandle(this));
+	return EmuHandle::CreateEmuHandle(this);
 }
 
 NTSTATUS EmuNtObject::NtClose()
@@ -290,21 +320,6 @@ EmuNtObject* EmuNtObject::NtDuplicateObject(DWORD Options)
 {
 	RefCount++;
 	return this;
-}
-
-bool IsEmuHandle(HANDLE Handle)
-{
-	return ((uint32_t)Handle > 0x80000000) && ((uint32_t)Handle < 0xFFFFFFFE);
-}
-
-EmuHandle* HandleToEmuHandle(HANDLE Handle)
-{
-	return (EmuHandle*)((uint32_t)Handle & 0x7FFFFFFF);
-}
-
-HANDLE EmuHandleToHandle(EmuHandle* emuHandle)
-{
-	return (HANDLE)((uint32_t)emuHandle | 0x80000000);
 }
 
 std::wstring string_to_wstring(std::string const & src)

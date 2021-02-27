@@ -142,10 +142,10 @@ XBSYSAPI EXPORTNUM(187) xbox::ntstatus_xt NTAPI xbox::NtClose
 
 	NTSTATUS ret = xbox::status_success;
 
-	if (IsEmuHandle(Handle))
+	if (EmuHandle::IsEmuHandle(Handle))
 	{
 		// delete 'special' handles
-		EmuHandle *iEmuHandle = HandleToEmuHandle(Handle);
+		auto iEmuHandle = (EmuHandle*)Handle;
 		ret = iEmuHandle->NtClose();
 
 		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
@@ -682,8 +682,8 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 
 	NTSTATUS ret = xbox::status_success;
 
-	if (IsEmuHandle(SourceHandle)) {
-		EmuHandle* iEmuHandle = HandleToEmuHandle(SourceHandle);
+	if (EmuHandle::IsEmuHandle(SourceHandle)) {
+		auto iEmuHandle = (EmuHandle*)SourceHandle;
 		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
 /*
 		PVOID Object;
@@ -739,7 +739,7 @@ XBSYSAPI EXPORTNUM(198) xbox::ntstatus_xt NTAPI xbox::NtFlushBuffersFile
 		LOG_FUNC_END;
 	NTSTATUS ret = xbox::status_success;
 	
-	if (IsEmuHandle(FileHandle)) 
+	if (EmuHandle::IsEmuHandle(FileHandle))
 		LOG_UNIMPLEMENTED();
 	else
 		ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
@@ -1371,13 +1371,16 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 		LOG_FUNC_ARG_OUT(ReturnedLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = 0;
+	NTSTATUS ret = STATUS_INVALID_HANDLE;
 	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
 
-	// Check that we actually got an EmuHandle :
-	ret = STATUS_INVALID_HANDLE;
+	// We expect LinkHandle to always be an EmuHandle
+	if (!EmuHandle::IsEmuHandle(LinkHandle)) {
+		LOG_UNIMPLEMENTED();
+		return ret;
+	}
 
-	EmuHandle* iEmuHandle = HandleToEmuHandle(LinkHandle);
+	auto iEmuHandle = (EmuHandle*)LinkHandle;
 	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
 	ret = xbox::status_success;
 	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;
