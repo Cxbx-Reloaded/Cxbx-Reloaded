@@ -31,7 +31,7 @@
 #include "MCPXDevice.h" // For MCPXDevice
 #include "SMCDevice.h" // For SMCDevice
 #include "EEPROMDevice.h" // For EEPROMDevice
-#include "EmuNVNet.h" // For NVNetDevice
+#include "network/NVNetDevice.h" // For NVNetDevice
 #include "ADM1032Device.h" // For ADM1032
 #include "devices\video\nv2a.h" // For NV2ADevice
 #include "Usb\USBDevice.h" // For USBDevice

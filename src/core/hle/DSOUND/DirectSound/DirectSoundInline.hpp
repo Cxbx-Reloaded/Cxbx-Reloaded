@@ -29,7 +29,7 @@
 #include <mutex>
 #include <optional>
 
-#include "common/XADPCM.h"
+#include "common/audio/XADPCM.h"
 #include "core/hle/DSOUND/XbDSoundTypes.h"
 #include "core/hle/DSOUND/common/windows/WFXformat.hpp"
 
