@@ -387,8 +387,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	std::stringstream sstream;
 	char tAsciiTitle[40] = "Unknown";
 	std::setlocale(LC_ALL, "English");
-	std::wcstombs(tAsciiTitle, CxbxKrnl_Xbe->m_Certificate.wszTitleName, sizeof(tAsciiTitle));
-	std::string szTitleName(tAsciiTitle);
+	std::wcstombs(tAsciiTitle, CxbxKrnl_Xbe->m_Certificate.wsTitleName, sizeof(tAsciiTitle));
+	std::string szTitleName(tAsciiTitle, sizeof(tAsciiTitle));
 	CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
 	sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
