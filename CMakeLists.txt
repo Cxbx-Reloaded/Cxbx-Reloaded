@@ -114,7 +114,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/common/audio/converter.hpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.h"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"
- "${CXBXR_ROOT_DIR}/src/common/XADPCM.h"
+ "${CXBXR_ROOT_DIR}/src/common/audio/XADPCM.h"
  "${CXBXR_ROOT_DIR}/src/common/xbox/Logging.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.h"
