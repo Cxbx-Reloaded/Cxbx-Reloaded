@@ -4197,6 +4197,12 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 	GetScreenScaleFactors(screenScaleX, screenScaleY);
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
 
+	// Add D3D9 half-pixel offset (-0.5 given this offset is subtracted)
+	// We should be able to remove this when off D3D9
+	// https://aras-p.info/blog/2016/04/08/solving-dx9-half-pixel-offset/
+	aaOffsetX -= 0.5f;
+	aaOffsetY -= 0.5f;
+
 	float xboxScreenspaceWidth = xboxRenderTargetWidth * screenScaleX;
 	float xboxScreenspaceHeight = xboxRenderTargetHeight * screenScaleY;
 
