@@ -20,3 +20,6 @@
 *.hpp text eol=lf
 *.unused-patches text eol=lf
 *.rc text eol=lf
+
+# All module imports are vendor, remove them from linguist stats chart for accurate stats.
+import/* linguist-vendored
