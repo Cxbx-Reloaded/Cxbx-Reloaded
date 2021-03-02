@@ -1,0 +1,14 @@
+name: Pull Request Manager
+
+on:
+  pull_request_target:
+
+jobs:
+  pr_manager:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Labeler
+        uses: actions/labeler@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          sync-labels: true
