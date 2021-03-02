@@ -41,7 +41,8 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 	switch (type)
 	{
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
-	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
+	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+	case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd, wnd));
 			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text);

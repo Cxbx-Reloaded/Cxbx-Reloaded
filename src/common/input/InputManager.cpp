@@ -64,6 +64,7 @@ int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	0,
 	0,
 	SBC_NUM_BUTTONS, // STEEL_BATTALION_CONTROLLER
+	XBOX_CTRL_NUM_BUTTONS, // ARCADE_STICK
 };
 
 extern CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4]; // hle xinput
@@ -360,7 +361,8 @@ bool InputDeviceManager::UpdateXboxPortInput(int usb_port, void* Buffer, int Dir
 				switch (xid_type)
 				{
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
-				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
+				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK): {
 					has_changed = UpdateInputXpad(dev_ptr, Buffer, Direction);
 				}
 				break;

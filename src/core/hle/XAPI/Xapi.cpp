@@ -67,7 +67,8 @@ bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 	switch (XidType)
 	{
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
-	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S: {
+	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S:
+	case XBOX_INPUT_DEVICE::ARCADE_STICK: {
 		if (XppType == g_DeviceType_Gamepad) {
 			return true;
 		}
@@ -145,6 +146,20 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(SBCInput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(SBCOutput);
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
+	}
+	break;
+
+	case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK): {
+		g_XboxControllerHostBridge[Port].XboxPort = Port;
+		g_XboxControllerHostBridge[Port].XboxType = XBOX_INPUT_DEVICE::ARCADE_STICK;
+		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
+		g_XboxControllerHostBridge[Port].bSignaled = false;
+		g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_ARCADE_STICK;
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
+		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucFeedbackSize = sizeof(XpadOutput);
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber = 0;
 	}
 	break;
