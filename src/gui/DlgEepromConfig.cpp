@@ -62,6 +62,14 @@ static unsigned int ComboboxArray[] = {
 	DVD_REGION_FREE, DVD_REGION_US, DVD_REGION_EU, DVD_REGION_SE_ASIA, DVD_REGION_OCEANIA, DVD_REGION_AFRICA, DVD_REGION_CHINA,
 	DVD_REGION_RESERVED, DVD_REGION_INTERNATIONAL
 };
+// Hide sensitive inputs by default until it is focus.
+static const int g_sensitive_inputs[] = {
+	IDC_EE_HDDKEY,
+	IDC_EE_SERIAL_NUMBER,
+	IDC_EE_MAC_ADDRESS,
+	IDC_EE_ONLINE_KEY,
+};
+static int g_sensitive_char = 0;
 
 void WriteEepromInMemory(HWND hDlg)
 {
@@ -229,6 +237,14 @@ static void RefreshEepromDialog(HWND hWndDlg)
 
 	// Set window icon
 	SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
+	
+	// Initialize hide sensitive inputs
+	if (g_sensitive_char == 0) {
+		g_sensitive_char = (int)SendMessageW(GetDlgItem(hWndDlg, IDC_EE_PRTL_PASS), EM_GETPASSWORDCHAR, 0, 0 );
+	}
+	for (auto i : g_sensitive_inputs) {
+		(void)SendMessageW(GetDlgItem(hWndDlg, i), EM_SETPASSWORDCHAR, g_sensitive_char, 0 );
+	}
 
 	// Initialize the values of the drop-down lists
 	offset = 0;
@@ -497,6 +513,22 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 							Text.append(MaxSize - CurrentSize, '0');
 							SendMessage(hEditControl, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(Text.c_str()));
 							delete[] pBuffer; pBuffer = nullptr;
+						}
+						
+						// Hide inactive sensitive input
+						for (auto i : g_sensitive_inputs) {
+							if (i == LOWORD(wParam)) {
+								(void)SendMessageW(GetDlgItem(hWndDlg, i), EM_SETPASSWORDCHAR, g_sensitive_char, 0 );
+								break;
+							}
+						}
+					} else if (HIWORD(wParam) == EN_SETFOCUS) {
+						// Show active sensitive input
+						for (auto i : g_sensitive_inputs) {
+							if (i == LOWORD(wParam)) {
+								(void)SendMessage(GetDlgItem(hWndDlg, i), EM_SETPASSWORDCHAR, 0, 0 );
+								break;
+							}
 						}
 					}
 				}
