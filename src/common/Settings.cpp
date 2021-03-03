@@ -490,6 +490,7 @@ bool Settings::LoadConfig()
 		{
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+		case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
 			lambda(dev_num_buttons[device], button_xbox_ctrl_names);
 			break;
 
@@ -650,6 +651,7 @@ bool Settings::Save(std::string file_path)
 		{
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 		case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
+		case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
 			lambda(dev_num_buttons[device], button_xbox_ctrl_names);
 			break;
 

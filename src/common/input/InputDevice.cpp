@@ -71,6 +71,10 @@ std::string GetInputDeviceName(int dev_type)
 		str = "Steel battalion controller";
 		break;
 
+	case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
+		str = "Arcade joystick";
+		break;
+
 	case to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID):
 		str = "None";
 		break;
