@@ -76,6 +76,7 @@ void SyncInputSettings(int port_num, int dev_type, bool is_opt)
 		else {
 			g_EmuShared->SetInputMoAxisSettings(g_Settings->m_input_general.MoAxisRange);
 			g_EmuShared->SetInputMoWheelSettings(g_Settings->m_input_general.MoWheelRange);
+			g_EmuShared->SetInputKbMoUnfocusSettings(g_Settings->m_input_general.IgnoreKbMoUnfocus);
 			port_num = PORT_INVALID;
 		}
 #if 0 // lle usb
@@ -94,6 +95,8 @@ void UpdateInputOpt(HWND hwnd)
 	g_Settings->m_input_general.MoAxisRange = std::stol(buffer);
 	SendMessage(GetDlgItem(hwnd, IDC_WHEEL_RANGE), WM_GETTEXT, 30, reinterpret_cast<LPARAM>(buffer));
 	g_Settings->m_input_general.MoWheelRange = std::stol(buffer);
+	LRESULT ret = SendMessage(GetDlgItem(hwnd, IDC_IGNORE_KBMO_UNFOCUS), BM_GETCHECK, 0, 0);
+	g_Settings->m_input_general.IgnoreKbMoUnfocus = (ret == BST_CHECKED);
 }
 
 void ShowInputConfig(HWND hwnd, HWND ChildWnd)
@@ -138,6 +141,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				std::to_string(g_Settings->m_input_general.MoAxisRange).c_str() :
 				std::to_string(g_Settings->m_input_general.MoWheelRange).c_str()));
 		}
+		SendMessage(GetDlgItem(hWndDlg, IDC_IGNORE_KBMO_UNFOCUS), BM_SETCHECK, static_cast<WPARAM>(g_Settings->m_input_general.IgnoreKbMoUnfocus), 0);
 
 		// Reset option/input changes flag
 		g_bHasOptChanges = false;
@@ -251,6 +255,16 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				g_bHasOptChanges = true;
 			}
 		}
+		break;
+
+		case IDC_IGNORE_KBMO_UNFOCUS:
+		{
+			if (HIWORD(wParam) == BN_CLICKED) {
+				g_bHasOptChanges = true;
+			}
+		}
+		break;
+
 		}
 	}
 	break;

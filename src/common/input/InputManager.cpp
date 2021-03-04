@@ -701,12 +701,15 @@ void InputDeviceManager::UpdateOpt(bool is_gui)
 {
 	if (!is_gui) {
 		long axis_range, wheel_range;
+		bool ignore_kbmo;
 		g_EmuShared->GetInputMoAxisSettings(&axis_range);
 		g_EmuShared->GetInputMoWheelSettings(&wheel_range);
+		g_EmuShared->GetInputKbMoUnfocusSettings(&ignore_kbmo);
 		DInput::mo_axis_range_pos = axis_range;
 		DInput::mo_wheel_range_pos = wheel_range;
 		DInput::mo_axis_range_neg = -(axis_range);
 		DInput::mo_wheel_range_neg = -(wheel_range);
+		DInput::IgnoreKbMoUnfocus = ignore_kbmo;
 	}
 	else {
 		DInput::mo_axis_range_pos = g_Settings->m_input_general.MoAxisRange;

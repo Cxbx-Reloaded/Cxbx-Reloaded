@@ -137,6 +137,7 @@ public:
 	struct s_input_general {
 		long MoAxisRange;
 		long MoWheelRange;
+		bool IgnoreKbMoUnfocus;
 	};
 	s_input_general m_input_general;
 
