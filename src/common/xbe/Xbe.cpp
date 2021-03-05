@@ -194,25 +194,18 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
     // read Xbe section headers
     {
-        printf("Xbe::Xbe: Reading Section Headers...\n");
+        printf("Xbe::Xbe: Reading Section Headers...");
 
         fseek(XbeFile, m_Header.dwSectionHeadersAddr - m_Header.dwBaseAddr, SEEK_SET);
 
         m_SectionHeader = new SectionHeader[m_Header.dwSections];
-
-        for(uint32_t v=0;v<m_Header.dwSections;v++)
+        if (fread(m_SectionHeader, sizeof(*m_SectionHeader), m_Header.dwSections, XbeFile) != m_Header.dwSections)
         {
-            printf("Xbe::Xbe: Reading Section Header 0x%.04X...", v);
-
-            if(fread(&m_SectionHeader[v], sizeof(*m_SectionHeader), 1, XbeFile) != 1)
-            {
-                sprintf(szBuffer, "Unexpected end of file while reading Xbe Section Header %d (%Xh)", v, v);
-                SetFatalError(szBuffer);
-                goto cleanup;
-            }
-
-            printf("OK\n");
+            SetFatalError("Unexpected end of file while reading Xbe Section Headers");
+            goto cleanup;
         }
+
+        printf("OK\n");
     }
 
     // read Xbe section names
@@ -246,25 +239,18 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
     // read Xbe library versions
 	if (m_Header.dwLibraryVersionsAddr != 0)
 	{
-		printf("Xbe::Xbe: Reading Library Versions...\n");
+		printf("Xbe::Xbe: Reading Library Versions...");
 
 		fseek(XbeFile, m_Header.dwLibraryVersionsAddr - m_Header.dwBaseAddr, SEEK_SET);
 
 		m_LibraryVersion = new LibraryVersion[m_Header.dwLibraryVersions];
-
-		for (uint32_t v = 0; v < m_Header.dwLibraryVersions; v++)
+		if (fread(m_LibraryVersion, sizeof(*m_LibraryVersion), m_Header.dwLibraryVersions, XbeFile) != m_Header.dwLibraryVersions)
 		{
-			printf("Xbe::Xbe: Reading Library Version 0x%.04X...", v);
-
-			if (fread(&m_LibraryVersion[v], sizeof(*m_LibraryVersion), 1, XbeFile) != 1)
-			{
-				sprintf(szBuffer, "Unexpected end of file while reading Xbe Library Version %d (%Xh)", v, v);
-				SetFatalError(szBuffer);
-				goto cleanup;
-			}
-
-			printf("OK\n");
+			SetFatalError("Unexpected end of file while reading Xbe Library Versions");
+			goto cleanup;
 		}
+
+		printf("OK\n");
 	}
 
     // read Xbe sections
