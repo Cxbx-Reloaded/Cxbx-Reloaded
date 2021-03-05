@@ -387,8 +387,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	std::stringstream sstream;
 	char tAsciiTitle[40] = "Unknown";
 	std::setlocale(LC_ALL, "English");
+	// Convert the title name character buffer into a string
+	// If all chars are used, it won't be null terminated - we make sure to get the correct length
 	std::wcstombs(tAsciiTitle, CxbxKrnl_Xbe->m_Certificate.wsTitleName, sizeof(tAsciiTitle));
-	std::string szTitleName(tAsciiTitle, sizeof(tAsciiTitle));
+	std::string szTitleName(tAsciiTitle, strnlen_s(tAsciiTitle, sizeof(tAsciiTitle)));
 	CxbxKrnl_Xbe->PurgeBadChar(szTitleName);
 	sstream << cachePath << szTitleName << "-" << std::hex << uiHash << ".ini";
 	std::string filename = sstream.str();
