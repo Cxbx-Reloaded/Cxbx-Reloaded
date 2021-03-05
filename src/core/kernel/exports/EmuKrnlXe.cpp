@@ -126,9 +126,8 @@ XBSYSAPI EXPORTNUM(328) xbox::ntstatus_xt NTAPI xbox::XeUnloadSection
 
 		// Free the section and the physical memory in use if necessary
 		if (Section->SectionReferenceCount == 0) {
-			memset(Section->VirtualAddress, 0, Section->VirtualSize);
-
 			// REMARK: the following can be tested with Broken Sword - The Sleeping Dragon, RalliSport Challenge, ...
+			// Test-case: Apex/Racing Evoluzione requires the memory NOT to be zeroed
 
 			VAddr BaseAddress = (VAddr)Section->VirtualAddress;
 			VAddr EndingAddress = (VAddr)Section->VirtualAddress + Section->VirtualSize;
