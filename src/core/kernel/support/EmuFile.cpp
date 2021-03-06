@@ -177,7 +177,7 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	// Previously, we deleted and re-created the folder, but that caused permission issues for some users
 	try
 	{
-		for (auto& directoryEntry : std::filesystem::recursive_directory_iterator(partitionPath)) {
+		for (auto& directoryEntry : std::filesystem::directory_iterator(partitionPath)) {
 			std::filesystem::remove_all(directoryEntry);
 		}
 	}
