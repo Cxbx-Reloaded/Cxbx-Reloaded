@@ -132,42 +132,55 @@ FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber)
 	return superblock;
 }
 
-int CxbxGetPartitionNumberFromHandle(HANDLE hFile)	
+static std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 {
-	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
-	char buffer[MAX_PATH] = {0};
-	if (!GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS)) {
+	constexpr size_t INITIAL_BUF_SIZE = MAX_PATH;
+	std::wstring path(INITIAL_BUF_SIZE, '\0');
+
+	DWORD size = GetFinalPathNameByHandleW(hFile, path.data(), INITIAL_BUF_SIZE, VOLUME_NAME_DOS);
+	if (size == 0) {
 		CxbxKrnlCleanup("CxbxGetPartitionNumberFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
 	}
 
-	std::string bufferString(buffer);
-	std::string partitionString = "\\Partition";
-	std::string partitionNumberString = bufferString.substr(bufferString.find(partitionString) + partitionString.length(), 1);
+	// If the function fails because lpszFilePath is too small to hold the string plus the terminating null character,
+	// the return value is the required buffer size, in TCHARs. This value includes the size of the terminating null character.
+	if (size >= INITIAL_BUF_SIZE) {
+		path.resize(size);
+		size = GetFinalPathNameByHandleW(hFile, path.data(), size, VOLUME_NAME_DOS);
+	}
+	path.resize(size);
 
-	// atoi returns 0 on non-numeric characters, so we don't need to error check here
-	return atoi(partitionNumberString.c_str());
+	return path;
 }
 
-std::string CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
+int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
 {
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
-	char buffer[MAX_PATH] = {0};
-	if (!GetFinalPathNameByHandle(hFile, buffer, MAX_PATH, VOLUME_NAME_DOS)) {
-		CxbxKrnlCleanup("CxbxGetPartitionDataPathFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
-	}
+	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
 
-	std::string bufferString(buffer);
-	std::string partitionString = "\\Partition";
-	std::string partitionPath = bufferString.substr(0, bufferString.find(partitionString) + partitionString.length() + 1);
+	const std::wstring_view partitionString = L"\\Partition";
+	const std::wstring partitionNumberString = path.substr(path.find(partitionString) + partitionString.length(), 1);
+
+	// wcstol returns 0 on non-numeric characters, so we don't need to error check here
+	return wcstol(partitionNumberString.c_str(), nullptr, 0);
+}
+
+std::wstring CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
+{
+	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
+
+	const std::wstring_view partitionString = L"\\Partition";
+	const std::wstring partitionPath = path.substr(0, path.find(partitionString) + partitionString.length() + 1);
 	return partitionPath;
 }
 
 void CxbxFormatPartitionByHandle(HANDLE hFile)
 {
-	std::string partitionPath = CxbxGetPartitionDataPathFromHandle(hFile);
+	const std::wstring partitionPath = CxbxGetPartitionDataPathFromHandle(hFile);
 
 	// Sanity check, make sure we are actually deleting something within the Cxbx-Reloaded folder
-	if (partitionPath.find("Cxbx-Reloaded") == std::string::npos) {
+	if (partitionPath.find(L"\\Cxbx-Reloaded\\") == std::string::npos) {
 		EmuLog(LOG_LEVEL::WARNING, "Attempting to format a path that is not within a Cxbx-Reloaded data folder... Ignoring!\n");
 		return;
 	}
