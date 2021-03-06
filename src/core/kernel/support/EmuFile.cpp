@@ -175,17 +175,12 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 
 	// Format the partition, by iterating through the contents and removing all files/folders within
 	// Previously, we deleted and re-created the folder, but that caused permission issues for some users
-	try
-	{
-		for (auto& directoryEntry : std::filesystem::directory_iterator(partitionPath)) {
-			std::filesystem::remove_all(directoryEntry);
+	std::error_code er;
+	for (const auto& directoryEntry : std::filesystem::directory_iterator(partitionPath, er)) {
+		if (!er) {
+			std::filesystem::remove_all(directoryEntry, er);
 		}
 	}
-	catch (std::filesystem::filesystem_error fsException)
-	{
-		printf("std::filesystem failed with message: %s\n", fsException.what());
-	}
-
 
 	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
