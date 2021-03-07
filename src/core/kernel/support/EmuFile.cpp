@@ -153,34 +153,55 @@ static std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 	return path;
 }
 
+static bool CxbxIsPathInsideEmuDisk(const std::filesystem::path& path)
+{
+	std::error_code rootError, finalError;
+
+	const std::filesystem::path rootPath = std::filesystem::canonical(CxbxBasePath, rootError);
+	const std::filesystem::path finalPath = std::filesystem::canonical(path, finalError);
+	if (rootError || finalError) {
+		return false;
+	}
+	auto match = std::mismatch(rootPath.begin(), rootPath.end(), finalPath.begin(), finalPath.end());
+	return match.first == rootPath.end();
+}
+
 int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
 {
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
 	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
 
-	const std::wstring_view partitionString = L"\\Partition";
-	const std::wstring partitionNumberString = path.substr(path.find(partitionString) + partitionString.length(), 1);
+	const std::wstring_view partitionString = L"\\EmuDisk\\Partition";
+	const size_t pos = path.rfind(partitionString);
+	if (pos == std::string::npos) {
+		return 0;
+	}
+	const std::wstring partitionNumberString = path.substr(pos + partitionString.length(), 1);
 
 	// wcstol returns 0 on non-numeric characters, so we don't need to error check here
 	return wcstol(partitionNumberString.c_str(), nullptr, 0);
 }
 
-std::wstring CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
+std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
 {
 	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
 	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
 
-	const std::wstring_view partitionString = L"\\Partition";
-	const std::wstring partitionPath = path.substr(0, path.find(partitionString) + partitionString.length() + 1);
+	std::wstring partitionPath;
+	const std::wstring_view partitionString = L"\\EmuDisk\\Partition";
+	const size_t pos = path.rfind(partitionString);
+	if (pos != std::string::npos) {
+		partitionPath = path.substr(0, path.find(partitionString) + partitionString.length() + 1);
+	}
 	return partitionPath;
 }
 
 void CxbxFormatPartitionByHandle(HANDLE hFile)
 {
-	const std::wstring partitionPath = CxbxGetPartitionDataPathFromHandle(hFile);
+	const std::filesystem::path partitionPath = CxbxGetPartitionDataPathFromHandle(hFile);
 
 	// Sanity check, make sure we are actually deleting something within the Cxbx-Reloaded folder
-	if (partitionPath.find(L"\\Cxbx-Reloaded\\") == std::string::npos) {
+	if (!CxbxIsPathInsideEmuDisk(partitionPath)) {
 		EmuLog(LOG_LEVEL::WARNING, "Attempting to format a path that is not within a Cxbx-Reloaded data folder... Ignoring!\n");
 		return;
 	}
