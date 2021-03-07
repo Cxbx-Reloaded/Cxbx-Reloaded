@@ -2182,8 +2182,9 @@ static void SetupPresentationParameters
     // TODO: Investigate the best option for this
     params.SwapEffect = D3DSWAPEFFECT_COPY;
 
-    // Attempt to match backbuffer format, this is not *required*, but leads to faster blitting/swapping
-    params.BackBufferFormat = EmuXB2PC_D3DFormat(pXboxPresentationParameters->BackBufferFormat);
+    // Any backbuffer format should do, since we render to a separate xbox backbuffer
+    // Rather than directly to the host backbuffer
+    params.BackBufferFormat = D3DFMT_UNKNOWN;
 
     params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->PresentationInterval;
@@ -2214,25 +2215,9 @@ static void SetupPresentationParameters
         params.FullScreen_RefreshRateInHz = pXboxPresentationParameters->FullScreen_RefreshRateInHz;
     }
 
-    if(params.Windowed)
-    {
-        D3DDISPLAYMODE D3DDisplayMode;
-        g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
-
-        params.BackBufferFormat = D3DDisplayMode.Format;
+    if (params.Windowed) {
+        // Refresh rate must be 0 in windowed mode, as is documented
         params.FullScreen_RefreshRateInHz = 0;
-    }
-    else
-    {
-        // In exclusive fullscreen mode, make *sure* to use the info that was in the resolution string
-        if (strcmp(szBackBufferFormat, "x1r5g5b5") == 0)
-            params.BackBufferFormat = D3DFMT_X1R5G5B5;
-        else if (strcmp(szBackBufferFormat, "r5g6r5") == 0)
-            params.BackBufferFormat = D3DFMT_R5G6B5;
-        else if (strcmp(szBackBufferFormat, "x8r8g8b8") == 0)
-            params.BackBufferFormat = D3DFMT_X8R8G8B8;
-        else if (strcmp(szBackBufferFormat, "a8r8g8b8") == 0)
-            params.BackBufferFormat = D3DFMT_A8R8G8B8;
     }
 }
 
@@ -5679,11 +5664,6 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			if (IsSupportedFormat(X_Format, XboxResourceType, D3DUsage)) {
 				// Then use matching host format
 				PCFormat = EmuXB2PC_D3DFormat(X_Format);
-
-				// If, and ONLY if this is the default backbuffer, make sure the format matches the host backbuffer
-				if (pResource == g_pXbox_BackBufferSurface) {
-					PCFormat = g_EmuCDPD.HostPresentationParameters.BackBufferFormat;
-				}
 			}
 			else {
 				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
