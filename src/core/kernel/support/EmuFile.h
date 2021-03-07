@@ -307,7 +307,7 @@ typedef struct _FATX_SUPERBLOCK
 XboxPartitionTable CxbxGetPartitionTable();
 FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber);
 int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
-std::wstring CxbxGetPartitionDataPathFromHandle(HANDLE hFile);
+std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile);
 void CxbxFormatPartitionByHandle(HANDLE hFile);
 
 // Ensures that an original IoStatusBlock gets passed to the completion callback
