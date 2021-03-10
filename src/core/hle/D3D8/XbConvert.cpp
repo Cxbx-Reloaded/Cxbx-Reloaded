@@ -900,7 +900,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x16 X_D3DFMT_LIN_R8B8     */ { 16, Linear, ____R8B8, D3DFMT_R5G6B5    , Texture, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" },
 	/* 0x17 X_D3DFMT_LIN_G8B8     */ { 16, Linear, ____G8B8, D3DFMT_R5G6B5    , RenderTarget, "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Alias : X_D3DFMT_LIN_V8U8
 	/* 0x18 undefined             */ {},
-	/* 0x19 X_D3DFMT_A8           */ {  8, Swzzld, ______A8, D3DFMT_A8        , Texture, "X_D3DFMT_LIN_A8 -> D3DFMT_A8R8G8B8" },  // D3D9 sets RGB = 0 instead of 1
+	/* 0x19 X_D3DFMT_A8           */ {  8, Swzzld, ______A8, D3DFMT_A8        , Texture, "X_D3DFMT_A8 -> D3DFMT_A8R8G8B8" },  // D3D9 sets RGB = 0 instead of 1
 	/* 0x1A X_D3DFMT_A8L8         */ { 16, Swzzld, ____A8L8, D3DFMT_A8L8      },
 	/* 0x1B X_D3DFMT_LIN_AL8      */ {  8, Linear, _____AL8, D3DFMT_L8        , Texture, "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" },
 	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, D3DFMT_X1R5G5B5  , RenderTarget },
