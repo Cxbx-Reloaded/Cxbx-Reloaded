@@ -5985,7 +5985,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			for (unsigned int mipmap_level = 0; mipmap_level < dwMipMapLevels; mipmap_level++) {
 
 				// Calculate size of this mipmap level
-				auto numRows = pxMipHeight;
+				DWORD numRows = pxMipHeight;
 
 				if (bCompressed) {
 					// Each row contains a 4x4 pixel blocks, instead of single pixels
