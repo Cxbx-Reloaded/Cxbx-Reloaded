@@ -1542,6 +1542,14 @@ bool ConvertD3DTextureToARGBBuffer(
 		AdditionalArgument = DstRowPitch;
 
 	if (EmuXBFormatIsCompressed(X_Format)) {
+		if (SrcWidth < 4 || SrcHeight < 4) {
+			// HACK: The compressed DXT conversion code currently writes more pixels than it should, which can cause a crash.
+			// This code will get hit when converting compressed texture mipmaps on hardware that somehow doesn't support DXT natively
+			// (or lied when Cxbx asked it if it does!)
+			EmuLog(LOG_LEVEL::WARNING, "Converting DXT textures smaller than a block is not currently implemented. Ignoring conversion!");
+			return true;
+		}
+
 		// All compressed formats (DXT1, DXT3 and DXT5) encode blocks of 4 pixels on 4 lines
 		SrcHeight = (SrcHeight + 3) / 4;
 		DstRowPitch *= 4;
