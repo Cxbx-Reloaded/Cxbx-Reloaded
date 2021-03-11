@@ -93,17 +93,6 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
 // Second raw string :
 R"DELIMITER(
 
-// Define defaults when their inverses are not defined (handy while compiler isn't yet providing these) :
-#ifndef PS_COMBINERCOUNT_SAME_C0
-	#define PS_COMBINERCOUNT_UNIQUE_C0
-#endif
-#ifndef PS_COMBINERCOUNT_SAME_C1
-	#define PS_COMBINERCOUNT_UNIQUE_C1
-#endif
-#ifndef PS_COMBINERCOUNT_MUX_LSB
-	#define PS_COMBINERCOUNT_MUX_MSB
-#endif
-
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
 	#define C0 c0_[stage] // concatenate stage to form c0_0 .. c0_7
