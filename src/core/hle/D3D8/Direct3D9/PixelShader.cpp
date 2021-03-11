@@ -219,12 +219,24 @@ void FinalCombinerStageHlsl(std::stringstream& hlsl, RPSFinalCombiner& fc)
 	hlsl << "\n	" << opcode_comment[5][0] << "(" << arguments.str() << "); // " << opcode_comment[5][1];
 }
 
-void OutputDefine(std::stringstream& hlsl, std::string define_str, bool enabled)
+void OutputDefineFlag(std::stringstream& hlsl, bool enabled, std::string_view define_enabled, std::string_view define_disabled = "")
 {
-	if (enabled)
-		hlsl << "\n#define " << define_str;
-	else
-		hlsl << "\n#undef " << define_str;
+	if (define_disabled.length() > 0) {
+		if (enabled) {
+			hlsl << "\n#define " << define_enabled << " // not " << define_disabled;
+		}
+		else {
+			hlsl << "\n#define " << define_disabled << " // not " << define_enabled;
+		}
+	}
+	else {
+		if (enabled) {
+			hlsl << "\n#define " << define_enabled;
+		}
+		else {
+			hlsl << "\n#undef " << define_enabled;
+		}
+	}
 }
 
 /* Disabled, until BumpDemo is fixed (which with this code, inadvertedly skips stage 1 and 2 dotproducts) :
@@ -285,9 +297,9 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 
 	hlsl << "\n#define PS_COMBINERCOUNT " << pShader->NumberOfCombiners;
 	if (pShader->NumberOfCombiners > 0) {
-		OutputDefine(hlsl, "PS_COMBINERCOUNT_UNIQUE_C0", pShader->CombinerHasUniqueC0);
-		OutputDefine(hlsl, "PS_COMBINERCOUNT_UNIQUE_C1", pShader->CombinerHasUniqueC1);
-		OutputDefine(hlsl, "PS_COMBINERCOUNT_MUX_MSB", pShader->CombinerMuxesOnMsb);
+		OutputDefineFlag(hlsl, pShader->CombinerHasUniqueC0, "PS_COMBINERCOUNT_UNIQUE_C0", "PS_COMBINERCOUNT_SAME_C0");
+		OutputDefineFlag(hlsl, pShader->CombinerHasUniqueC1, "PS_COMBINERCOUNT_UNIQUE_C1", "PS_COMBINERCOUNT_SAME_C1");
+		OutputDefineFlag(hlsl, pShader->CombinerMuxesOnMsb, "PS_COMBINERCOUNT_MUX_MSB", "PS_COMBINERCOUNT_MUX_LSB");
 	}
 
 	for (unsigned i = 0; i < PSH_XBOX_MAX_T_REGISTER_COUNT; i++) {
@@ -320,9 +332,9 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 	}
 
 	if (pShader->hasFinalCombiner) {
-		OutputDefine(hlsl, "PS_FINALCOMBINERSETTING_COMPLEMENT_V1", pShader->FinalCombiner.ComplementV1);
-		OutputDefine(hlsl, "PS_FINALCOMBINERSETTING_COMPLEMENT_R0", pShader->FinalCombiner.ComplementR0);
-		OutputDefine(hlsl, "PS_FINALCOMBINERSETTING_CLAMP_SUM", pShader->FinalCombiner.ClampSum);
+		OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementV1, "PS_FINALCOMBINERSETTING_COMPLEMENT_V1");
+		OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementR0, "PS_FINALCOMBINERSETTING_COMPLEMENT_R0");
+		OutputDefineFlag(hlsl, pShader->FinalCombiner.ClampSum, "PS_FINALCOMBINERSETTING_CLAMP_SUM");
 	}
 
 	hlsl << hlsl_template[1];
