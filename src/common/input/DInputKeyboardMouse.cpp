@@ -158,7 +158,7 @@ namespace DInput
 
 	bool KeyboardMouse::UpdateInput()
 	{
-		if (mo_leave_wnd) {
+		if (static_cast<uint8_t>(mo_leave_wnd) & static_cast<uint8_t>(IgnoreKbMoUnfocus)) {
 			std::memset(&m_state_in, 0, sizeof(m_state_in));
 			return true;
 		}

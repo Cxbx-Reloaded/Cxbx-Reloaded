@@ -131,6 +131,7 @@ static const char *section_input_general = "input-general";
 static struct {
 	const char *mo_axis_range = "MouseAxisRange";
 	const char *mo_wheel_range = "MouseWheelRange";
+	const char *ignore_kbmo_unfocus = "IgnoreKbMoUnfocus";
 } sect_input_general;
 
 static const char* section_controller_dinput = "controller-dinput";
@@ -451,6 +452,7 @@ bool Settings::LoadConfig()
 
 	m_input_general.MoAxisRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_axis_range, MO_AXIS_DEFAULT_RANGE);
 	m_input_general.MoWheelRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_wheel_range, MO_WHEEL_DEFAULT_RANGE);
+	m_input_general.IgnoreKbMoUnfocus = m_si.GetLongValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, 1);
 
 	// ==== Input General End ==============
 
@@ -615,6 +617,7 @@ bool Settings::Save(std::string file_path)
 
 	m_si.SetLongValue(section_input_general, sect_input_general.mo_axis_range, m_input_general.MoAxisRange, nullptr, false, true);
 	m_si.SetLongValue(section_input_general, sect_input_general.mo_wheel_range, m_input_general.MoWheelRange, nullptr, false, true);
+	m_si.SetLongValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, m_input_general.IgnoreKbMoUnfocus, nullptr, false, true);
 
 	// ==== Input General End =========
 
@@ -765,6 +768,7 @@ void Settings::SyncToEmulator()
 
 	g_EmuShared->SetInputMoAxisSettings(m_input_general.MoAxisRange);
 	g_EmuShared->SetInputMoWheelSettings(m_input_general.MoWheelRange);
+	g_EmuShared->SetInputKbMoUnfocusSettings(m_input_general.IgnoreKbMoUnfocus);
 
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&m_hacks);

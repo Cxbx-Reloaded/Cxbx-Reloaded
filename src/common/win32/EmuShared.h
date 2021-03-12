@@ -156,6 +156,8 @@ class EmuShared : public Mutex
 		void SetInputMoAxisSettings(const long axis) { Lock(); m_MoAxisRange = axis; Unlock(); }
 		void GetInputMoWheelSettings(long *wheel) { Lock(); *wheel = m_MoWheelRange; Unlock(); }
 		void SetInputMoWheelSettings(const long wheel) { Lock(); m_MoWheelRange = wheel; Unlock(); }
+		void GetInputKbMoUnfocusSettings(bool *flag) { Lock(); *flag = m_bIgnoreKbMoUnfocus; Unlock(); }
+		void SetInputKbMoUnfocusSettings(const bool flag) { Lock(); m_bIgnoreKbMoUnfocus = flag; Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
@@ -299,7 +301,7 @@ class EmuShared : public Mutex
 #endif
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;
-		bool         m_bReserved3;
+		bool         m_bIgnoreKbMoUnfocus;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
