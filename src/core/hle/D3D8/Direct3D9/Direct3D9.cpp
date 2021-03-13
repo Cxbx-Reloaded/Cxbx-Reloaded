@@ -4107,7 +4107,7 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     }
 }
 
-float GetZScaleForSurface(xbox::X_D3DSurface* pSurface)
+float GetZScaleForPixelContainer(xbox::X_D3DPixelContainer* pSurface)
 {
     // If no surface was present, fallback to 1
     if (pSurface == xbox::zeroptr) {
@@ -7439,9 +7439,21 @@ void CxbxUpdateHostTextureScaling()
 			*texCoordScale = {
 				width,
 				height,
-				(float)CxbxGetPixelContainerDepth(pXboxBaseTexture),
+				1.0f, // TODO should this be mip levels for volume textures?
 				1.0f
 			};
+		}
+
+		// When a depth buffer is used as a texture
+		// We do 'Native Shadow Mapping'
+		// https://aras-p.info/texts/D3D9GPUHacks.html
+		// The z texture coordinate component holds a depth value, which needs to be normalized
+		// TODO implement handling for
+		// - X_D3DRS_SHADOWFUNC
+		// - X_D3DRS_POLYGONOFFSETZSLOPESCALE
+		// - X_D3DRS_POLYGONOFFSETZOFFSET
+		if (EmuXBFormatIsDepthBuffer(XboxFormat)) {
+			(*texCoordScale)[2] = (float)GetZScaleForPixelContainer(pXboxBaseTexture);
 		}
 	}
 	// Pass above determined texture scaling factors to our HLSL shader.
@@ -8273,7 +8285,7 @@ static void CxbxImpl_SetRenderTarget
 
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
 	g_pXbox_DepthStencil = pNewZStencil;
-	g_ZScale = GetZScaleForSurface(g_pXbox_DepthStencil); // TODO : Discern between Xbox and host and do this in UpdateDepthStencilFlags?
+	g_ZScale = GetZScaleForPixelContainer(g_pXbox_DepthStencil); // TODO : Discern between Xbox and host and do this in UpdateDepthStencilFlags?
     pHostDepthStencil = GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL);
 
 	HRESULT hRet;
