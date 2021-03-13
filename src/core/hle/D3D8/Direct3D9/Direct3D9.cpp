@@ -5982,6 +5982,12 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
             DWORD dwMipRowPitch = dwRowPitch;
 			DWORD dwSrcSlicePitch = dwMipRowPitch * pxMipHeight; // TODO
 
+			// Block size only applies to compressed DXT formats
+			// DXT1 block size is 8 bytes
+			// Other Xbox DXT formats are 16 bytes
+			DWORD blockSize = 0;
+			blockSize = X_Format == xbox::X_D3DFMT_DXT1 ? 8 : 16;
+
 			for (unsigned int mipmap_level = 0; mipmap_level < dwMipMapLevels; mipmap_level++) {
 
 				// Calculate size of this mipmap level
@@ -5991,15 +5997,6 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// Each row contains a 4x4 pixel blocks, instead of single pixels
 					// So divide by 4 to get the number of rows
 					numRows = (numRows + 3) / 4;
-
-					// The row pitch can't be smaller than a single 4x4 block
-					// even if we need to store just one pixel
-					// DXT1 block size is 8 bytes
-					// Other Xbox DXT formats are 16 bytes
-					auto blockSize = X_Format == xbox::X_D3DFMT_DXT1 ? 8 : 16;
-					if (dwMipRowPitch < blockSize) {
-						dwMipRowPitch = blockSize;
-					}
 				}
 
 				DWORD dwMipSize = dwMipRowPitch * numRows;
@@ -6155,6 +6152,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 					// Update the row pitch
 					dwMipRowPitch /= 2;
+
+					// The pitch can't be less than a block
+					if (dwMipRowPitch < blockSize) {
+						dwMipRowPitch = blockSize;
+					}
 				}
 
 				if (pxMipHeight > 1) {
