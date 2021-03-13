@@ -5973,6 +5973,15 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		DWORD dwCubeFaceOffset = 0;
 		DWORD dwCubeFaceSize = 0;
 		D3DCUBEMAP_FACES last_face = (bCubemap) ? D3DCUBEMAP_FACE_NEGATIVE_Z : D3DCUBEMAP_FACE_POSITIVE_X;
+
+		// Block size only applies to compressed DXT formats
+		// DXT1 block size is 8 bytes
+		// Other Xbox DXT formats are 16 bytes
+		DWORD blockSize = 0;
+		if (bCompressed) {
+			blockSize = X_Format == xbox::X_D3DFMT_DXT1 ? 8 : 16;
+		}
+
 		for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
 			// As we iterate through mipmap levels, we'll adjust the source resource offset
 			DWORD dwMipOffset = 0;
@@ -5981,12 +5990,6 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			DWORD pxMipDepth = dwDepth;
             DWORD dwMipRowPitch = dwRowPitch;
 			DWORD dwSrcSlicePitch = dwMipRowPitch * pxMipHeight; // TODO
-
-			// Block size only applies to compressed DXT formats
-			// DXT1 block size is 8 bytes
-			// Other Xbox DXT formats are 16 bytes
-			DWORD blockSize = 0;
-			blockSize = X_Format == xbox::X_D3DFMT_DXT1 ? 8 : 16;
 
 			for (unsigned int mipmap_level = 0; mipmap_level < dwMipMapLevels; mipmap_level++) {
 
