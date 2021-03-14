@@ -6611,9 +6611,9 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
         LOG_FUNC_ARG(Method)
         LOG_FUNC_ARG(Value)
         LOG_FUNC_END;
-		
-	//Placed this here Purely because almost every game hit is
-	//gequently enough to keep the data curent
+
+	// Placed this here Purely because almost every game hits it
+	// frequently enough to keep the data curent
 	// if a better location is viable, i am all for it
 	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGSTART);
 	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGEND);
