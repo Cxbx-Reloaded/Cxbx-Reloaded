@@ -28,6 +28,9 @@ struct VS_OUTPUT // Declared identical to pixel shader input (see PS_INPUT)
 // Xbox constant registers
 uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 
+// External Passthru
+float4 foginfo : register(c230);
+
 // Default values for vertex registers, and whether to use them
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
 uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
@@ -326,10 +329,29 @@ R"DELIMITER(
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
 
+    float fogFactor;
+    /* foginfo is broken down into 
+       foginfo.x = fogstart
+       foginfo.y = fogend
+       foginfo.z = density
+       foginfo.w = fogTableMode */
+    
+    if(foginfo.w == 0)
+        fogFactor = oFog.x;
+    if(foginfo.w == 1)
+        fogFactor = 1 / exp(oFog.x * foginfo.z); /* / 1 / e^(d * density)*/
+    if(foginfo.w == 2)
+        fogFactor = 1 / exp(pow(oFog.x * foginfo.z, 2)); /* / 1 / e^((d * density)^2)*/
+    if(foginfo.w == 3)
+        fogFactor = saturate((foginfo.y - oFog.x) / (foginfo.y - foginfo.x)) ;
+     /*For now linear mode needs Saturation (other modes may as well, *Needs testing*) 
+       or the results in PS are inconsistant PS fog in may be incorrect*/
+       
+
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = oFog.x; // Note : Xbox clamps fog in pixel shader
+	xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader /was oFog.x
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);
