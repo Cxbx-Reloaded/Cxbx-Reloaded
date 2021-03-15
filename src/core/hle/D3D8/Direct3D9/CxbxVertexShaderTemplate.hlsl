@@ -328,13 +328,13 @@ R"DELIMITER(
 
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
-float  fogDepth   =   oFog.x; 
-float  fogMode    =   CxbxFogInfo.x;
-float  fogDensity =   CxbxFogInfo.y;
-float  fogStart   =   CxbxFogInfo.z;
-float  fogEnd     =   CxbxFogInfo.w;
+const float  fogDepth   =   oFog.x; 
+const float  fogMode    =   CxbxFogInfo.x;
+const float  fogDensity =   CxbxFogInfo.y;
+const float  fogStart   =   CxbxFogInfo.z;
+const float  fogEnd     =   CxbxFogInfo.w;
     
-float fogFactor;
+const float fogFactor;
 
     if(fogMode == 0)
     fogFactor = fogDepth;
