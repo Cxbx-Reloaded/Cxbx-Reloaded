@@ -7480,7 +7480,7 @@ void CxbxUpdateHostVertexShaderConstants()
 	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
 	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
 	float fogStuff[4] = { fogTableMode, fogDensity, fogStart, fogEnd };
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_FOGINFO_CONST, fogStuff, 1);
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
 
 }
 
