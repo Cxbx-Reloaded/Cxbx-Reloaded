@@ -330,7 +330,7 @@ R"DELIMITER(
 	VS_OUTPUT xOut;
 float  fogDepth   =   oFog.x; 
 float  fogMode    =   CxbxFogInfo.x;
-float  fpgDensity =   CxbxFogInfo.y;
+float  fogDensity =   CxbxFogInfo.y;
 float  fogStart   =   CxbxFogInfo.z;
 float  fogEnd     =   CxbxFogInfo.w;
     
