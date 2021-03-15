@@ -1033,11 +1033,12 @@ typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 #define X_D3DSCM_CORRECTION                 96 // Add 96 to arrive at the range 0..191 (instead of -96..95)
 #define X_D3DVS_CONSTREG_COUNT              192
 
+
 // Special Registers, used to pass additional information to the shaders
 // TODO co-locate shader workaround constants with shader code
 #define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE      (X_D3DVS_CONSTREG_COUNT)
 #define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_SIZE      16
-
+#define CXBX_D3DVS_FOGINFO_CONST                   230
 #define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE (CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + CXBX_D3DVS_CONSTREG_VREGDEFAULTS_SIZE)
 #define CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE 4
 

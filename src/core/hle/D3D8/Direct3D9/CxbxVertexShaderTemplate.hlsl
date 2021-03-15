@@ -31,6 +31,8 @@ uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 // External Passthru
 float4 foginfo : register(c230);
 
+
+
 // Default values for vertex registers, and whether to use them
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
 uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
@@ -329,21 +331,21 @@ R"DELIMITER(
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
 
+    float  fstart   =   foginfo.x;
+    float  fend     =   foginfo.y;
+    float  fdensity =   foginfo.z;
+    float  fmode    =   foginfo.w;
+    float  fdepth   =   oFog.x; 
     float fogFactor;
-    /* foginfo is broken down into 
-       foginfo.x = fogstart
-       foginfo.y = fogend
-       foginfo.z = density
-       foginfo.w = fogTableMode */
-    
-    if(foginfo.w == 0)
-        fogFactor = oFog.x;
-    if(foginfo.w == 1)
-        fogFactor = 1 / exp(oFog.x * foginfo.z); /* / 1 / e^(d * density)*/
-    if(foginfo.w == 2)
-        fogFactor = 1 / exp(pow(oFog.x * foginfo.z, 2)); /* / 1 / e^((d * density)^2)*/
-    if(foginfo.w == 3)
-        fogFactor = saturate((foginfo.y - oFog.x) / (foginfo.y - foginfo.x)) ;
+
+    if(fmode == 0)
+        fogFactor = fdepth;
+    if(fmode == 1)
+        fogFactor = saturate(1 / exp(fdepth * fdensity)); /* / 1 / e^(d * density)*/
+    if(fmode == 2)
+        fogFactor = saturate(1 / exp(pow(fdepth * fdensity, 2))); /* / 1 / e^((d * density)^2)*/
+    if(fmode == 3)
+        fogFactor = saturate((fend - fdepth) / (fend - fstart)) ;
      /*For now linear mode needs Saturation (other modes may as well, *Needs testing*) 
        or the results in PS are inconsistant PS fog in may be incorrect*/
        

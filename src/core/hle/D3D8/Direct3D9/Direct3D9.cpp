@@ -6617,11 +6617,10 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
 	// if a better location is viable, i am all for it
 	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGSTART);
 	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGEND);
-	auto fogEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGENABLE);
 	auto fogTableMode = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE);
 	auto density = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGDENSITY);
 	float fogStuff[4] = { fogStart, fogEnd, density, fogTableMode };
-	g_pD3DDevice->SetVertexShaderConstantF(230, fogStuff, 1);
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_FOGINFO_CONST, fogStuff, 1);
 
     XB_TRMP(D3DDevice_SetRenderState_Simple)(Method, Value);
 
