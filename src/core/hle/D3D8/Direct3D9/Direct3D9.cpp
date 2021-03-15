@@ -6612,16 +6612,6 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
         LOG_FUNC_ARG(Value)
         LOG_FUNC_END;
 
-	// Placed this here Purely because almost every game hits it
-	// frequently enough to keep the data curent
-	// if a better location is viable, i am all for it
-	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGSTART);
-	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGEND);
-	auto fogTableMode = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE);
-	auto density = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGDENSITY);
-	float fogStuff[4] = { fogStart, fogEnd, density, fogTableMode };
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_FOGINFO_CONST, fogStuff, 1);
-
     XB_TRMP(D3DDevice_SetRenderState_Simple)(Method, Value);
 
     // Fetch the RenderState conversion info for the given input
@@ -7468,6 +7458,14 @@ extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // 
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()
 {
+    // Placed this here until we find a better place
+	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+	auto fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+	auto density = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+	float fogStuff[4] = { fogStart, fogEnd, density, fogTableMode };
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_FOGINFO_CONST, fogStuff, 1);
+
 	// Copy all constants (as they may have been overwritten with fixed-function mode)
 	// Though we should only have to copy overwritten or dirty constants
 	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(0);
