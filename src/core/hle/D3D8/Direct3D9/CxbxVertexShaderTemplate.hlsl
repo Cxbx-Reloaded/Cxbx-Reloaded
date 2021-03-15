@@ -28,10 +28,8 @@ struct VS_OUTPUT // Declared identical to pixel shader input (see PS_INPUT)
 // Xbox constant registers
 uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 
-// External Passthru
-float4 foginfo : register(c230);
-
-
+// Parameters for mapping the shader's fog output value to a fog factor
+float4  CxbxFogInfo: register(c230); // = CXBX_D3DVS_CONSTREG_FOGINFO
 
 // Default values for vertex registers, and whether to use them
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
@@ -330,30 +328,30 @@ R"DELIMITER(
 
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
+float  fogDepth   =   oFog.x; 
+float  fogMode    =   CxbxFogInfo.x;
+float  fpgDensity =   CxbxFogInfo.y;
+float  fogStart   =   CxbxFogInfo.z;
+float  fogEnd     =   CxbxFogInfo.w;
+    
+float fogFactor;
 
-    float  fstart   =   foginfo.x;
-    float  fend     =   foginfo.y;
-    float  fdensity =   foginfo.z;
-    float  fmode    =   foginfo.w;
-    float  fdepth   =   oFog.x; 
-    float fogFactor;
-
-    if(fmode == 0)
-        fogFactor = fdepth;
-    if(fmode == 1)
-        fogFactor = saturate(1 / exp(fdepth * fdensity)); /* / 1 / e^(d * density)*/
-    if(fmode == 2)
-        fogFactor = saturate(1 / exp(pow(fdepth * fdensity, 2))); /* / 1 / e^((d * density)^2)*/
-    if(fmode == 3)
-        fogFactor = saturate((fend - fdepth) / (fend - fstart)) ;
-     /*For now linear mode needs Saturation (other modes may as well, *Needs testing*) 
-       or the results in PS are inconsistant PS fog in may be incorrect*/
+    if(fogMode == 0)
+    fogFactor = fogDepth;
+    if(fogMode == 1)
+    fogFactor = saturate(1 / exp(fogDepth * fogDensity)); /* / 1 / e^(d * density)*/
+    if(fogMode == 2)
+    fogFactor = saturate(1 / exp(pow(fogDepth * fogDensity, 2))); /* / 1 / e^((d * density)^2)*/
+    if(fogMode == 3)
+    fogFactor = saturate((fogEnd - fogDepth) / (fogEnd - fogStart)) ;
+    //For now linear mode needs Saturation (other modes may as well, *Needs testing*) 
+    // or the results in PS are inconsistant PS fog in may be incorrect
        
 
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader /was oFog.x
+	xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);

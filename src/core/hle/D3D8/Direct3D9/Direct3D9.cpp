@@ -7458,18 +7458,11 @@ extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // 
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()
 {
-    // Placed this here until we find a better place
-	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
-	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
-	auto fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
-	auto density = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
-	float fogStuff[4] = { fogStart, fogEnd, density, fogTableMode };
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_FOGINFO_CONST, fogStuff, 1);
-
 	// Copy all constants (as they may have been overwritten with fixed-function mode)
 	// Though we should only have to copy overwritten or dirty constants
 	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(0);
 	g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
+
 
 	// FIXME our viewport constants don't match Xbox values
 	// If we write them to pgraph constants, like we do with constants set by the title,
@@ -7480,6 +7473,15 @@ void CxbxUpdateHostVertexShaderConstants()
 	// Xbox dashboard (during initial fade from black)
 	// Need for Speed: Hot Pursuit 2 (car select)
 	CxbxUpdateHostViewPortOffsetAndScaleConstants();
+
+	 // Placed this here until we find a better place
+	auto fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+	auto fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+	float fogStuff[4] = { fogTableMode, fogDensity, fogStart, fogEnd };
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_FOGINFO_CONST, fogStuff, 1);
+
 }
 
 void CxbxUpdateHostViewport() {
