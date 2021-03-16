@@ -9,6 +9,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  )
 endif()
 
+# Add any defines from imconfig.h file in here without need to use import file directly.
+add_compile_definitions(
+ IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
+ IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
+)
+
 file (GLOB HEADERS
  "${CXBXR_ROOT_DIR}/import/imgui/imconfig.h"
  "${CXBXR_ROOT_DIR}/import/imgui/imgui.h"
