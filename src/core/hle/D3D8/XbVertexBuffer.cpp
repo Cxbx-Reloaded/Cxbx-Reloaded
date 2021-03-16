@@ -193,6 +193,7 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey,
 
     auto it = m_PatchedStreams.find(key);
     if (it != m_PatchedStreams.end()) {
+        m_TotalLookupSuccesses++;
         m_PatchedStreamUsageList.splice(m_PatchedStreamUsageList.begin(), m_PatchedStreamUsageList, it->second);
         return *it->second;
     }
@@ -219,9 +220,16 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey,
 
 void CxbxVertexBufferConverter::ShowImGuiStats()
 {
+	const ULONG falsePositives = std::exchange(m_TotalLookupSuccesses, 0) - m_TotalCacheHits;
+	const ULONG totalMisses = m_VertexStreamHashMisses + m_DataNotInCacheMisses;
+
 	ImGui::Text("Cache Size: %u", m_PatchedStreams.size());
 	ImGui::Text("Hits: %u", std::exchange(m_TotalCacheHits, 0));
-	ImGui::Text("Misses: %u", std::exchange(m_TotalCacheMisses, 0));
+	ImGui::Text("Total misses: %u", totalMisses);
+	ImGui::Separator();
+	ImGui::TextUnformatted("Cache miss details:");
+	ImGui::TextWrapped("Vertex stream hash miss: %u", std::exchange(m_VertexStreamHashMisses, 0));
+	ImGui::TextWrapped("Data not in cache: %u", std::exchange(m_DataNotInCacheMisses, 0));
 }
 
 void CxbxVertexBufferConverter::ConvertStream
@@ -340,7 +348,11 @@ void CxbxVertexBufferConverter::ConvertStream
         return;
     }
 
-    m_TotalCacheMisses++;
+	// Gather stats
+    if (patchedStream.uiVertexStreamInformationHash != pVertexShaderSteamInfoHash)
+		m_VertexStreamHashMisses++;
+	else
+		m_DataNotInCacheMisses++;
 
     // If execution reaches here, the cached vertex buffer was not valid and we must reconvert the data
     // Free the existing buffers

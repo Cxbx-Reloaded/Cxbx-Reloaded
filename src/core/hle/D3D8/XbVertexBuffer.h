@@ -99,7 +99,9 @@ class CxbxVertexBufferConverter
 
         // Stack tracking
         ULONG m_TotalCacheHits = 0;
-        ULONG m_TotalCacheMisses = 0;
+        ULONG m_TotalLookupSuccesses = 0;
+        ULONG m_VertexStreamHashMisses = 0;
+        ULONG m_DataNotInCacheMisses = 0;
 
         const UINT m_MaxCacheSize = 10000;                                        // Maximum number of entries in the cache
         const UINT m_CacheElasticity = 200;                                      // Cache is allowed to grow this much more than maximum before being purged to maximum
