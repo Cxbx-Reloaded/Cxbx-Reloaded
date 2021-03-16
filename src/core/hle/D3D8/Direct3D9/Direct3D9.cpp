@@ -186,11 +186,22 @@ float g_Xbox_BackbufferScaleY = 1;
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
 
 // ImGui
+static bool imGuiShown = false;
 static void CxbxImGui_DrawWidgets()
 {
+	if (!imGuiShown) return;
+
 	// Put all ImGui drawing here
 
-	ImGui::ShowDemoWindow();
+	constexpr float DIST_FROM_CORNER = 10.0f;
+	ImGui::SetNextWindowPos(ImVec2(DIST_FROM_CORNER, DIST_FROM_CORNER), ImGuiCond_Once, ImVec2(0.0f, 0.0f));
+	ImGui::SetNextWindowSize(ImVec2(200, 275), ImGuiCond_Once);
+	if (ImGui::Begin("Debugging stats", &imGuiShown, ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+		if (ImGui::CollapsingHeader("Vertex Buffers", ImGuiTreeNodeFlags_DefaultOpen)) {
+			VertexBufferConverter.ShowImGuiStats();
+		}
+		ImGui::End();
+	}
 }
 
 static std::mutex imGuiMutex;
@@ -1946,10 +1957,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             }
             else if (wParam == VK_F1)
             {
-                VertexBufferConverter.PrintStats();
-
-                extern void DSound_PrintStats(); //TODO: move into plugin class usage.
-                DSound_PrintStats();
+                imGuiShown = !imGuiShown;
             }
 			else if (wParam == VK_F2)
 			{
@@ -1967,6 +1975,11 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                     CxbxReleaseCursor();
                 }
             }
+			else if (wParam == VK_F4)
+			{
+                extern void DSound_PrintStats(); //TODO: move into plugin class usage.
+                DSound_PrintStats();
+			}
             else if (wParam == VK_F6)
             {
                 // For some unknown reason, F6 isn't handled in WndMain::WndProc

@@ -78,7 +78,7 @@ class CxbxVertexBufferConverter
     public:
         CxbxVertexBufferConverter() = default;
         void Apply(CxbxDrawContext *pPatchDesc);
-        void PrintStats();
+        void ShowImGuiStats();
     private:
         struct StreamKey
         {

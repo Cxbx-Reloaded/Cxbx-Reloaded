@@ -38,6 +38,8 @@
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
 
+#include <imgui.h>
+
 #include <ctime>
 #include <chrono>
 #include <algorithm>
@@ -215,12 +217,11 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey,
     return stream;
 }
 
-void CxbxVertexBufferConverter::PrintStats()
+void CxbxVertexBufferConverter::ShowImGuiStats()
 {
-    printf("Vertex Buffer Cache Status: \n");
-    printf("- Cache Size: %d\n", m_PatchedStreams.size());
-    printf("- Hits: %d\n", m_TotalCacheHits);
-    printf("- Misses: %d\n", m_TotalCacheMisses);
+	ImGui::Text("Cache Size: %u", m_PatchedStreams.size());
+	ImGui::Text("Hits: %u", std::exchange(m_TotalCacheHits, 0));
+	ImGui::Text("Misses: %u", std::exchange(m_TotalCacheMisses, 0));
 }
 
 void CxbxVertexBufferConverter::ConvertStream
