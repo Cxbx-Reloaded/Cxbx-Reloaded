@@ -332,18 +332,17 @@ const float  fogDepth   =   oFog.x;
 const float  fogMode    =   CxbxFogInfo.x;
 const float  fogDensity =   CxbxFogInfo.y;
 const float  fogStart   =   CxbxFogInfo.z;
-const float  fogEnd     =   CxbxFogInfo.w;
-    
-const float fogFactor;
-
+const float  fogEnd     =   CxbxFogInfo.w;  
+ 
+float fogFactor;
     if(fogMode == 0)
-    fogFactor = fogDepth;
+    fogFactor = abs(fogDepth);
     if(fogMode == 1)
-    fogFactor = saturate(1 / exp(fogDepth * fogDensity)); /* / 1 / e^(d * density)*/
+    fogFactor = 1 / exp(abs(fogDepth) * fogDensity); /* / 1 / e^(d * density)*/
     if(fogMode == 2)
-    fogFactor = saturate(1 / exp(pow(fogDepth * fogDensity, 2))); /* / 1 / e^((d * density)^2)*/
+    fogFactor = 1 / exp(pow(abs(fogDepth) * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
     if(fogMode == 3)
-    fogFactor = saturate((fogEnd - fogDepth) / (fogEnd - fogStart)) ;
+    fogFactor = (fogEnd - abs(fogDepth)) / (fogEnd - fogStart) ;
     //For now linear mode needs Saturation (other modes may as well, *Needs testing*) 
     // or the results in PS are inconsistant PS fog in may be incorrect
        
