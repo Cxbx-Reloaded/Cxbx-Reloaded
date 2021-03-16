@@ -27,7 +27,7 @@ void InitHasher()
     }
 }
 
-uint64_t ComputeHash(void* data, size_t len)
+uint64_t ComputeHash(const void* data, size_t len)
 {
     if (g_HashAlgorithm == HASH_NONE) {
         InitHasher();

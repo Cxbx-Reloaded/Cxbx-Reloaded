@@ -29,6 +29,6 @@
 
 #include <stdint.h>
 
-uint64_t ComputeHash(void* data, size_t len);
+uint64_t ComputeHash(const void* data, size_t len);
 
 #endif
