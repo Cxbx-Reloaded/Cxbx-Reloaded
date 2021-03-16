@@ -61,6 +61,10 @@
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderSource.h"
 
+#include <imgui.h>
+#include <backends/imgui_impl_dx9.h>
+#include <backends/imgui_impl_win32.h>
+
 #include <assert.h>
 #include <process.h>
 #include <clocale>
@@ -180,6 +184,42 @@ float g_Xbox_BackbufferScaleX = 1;
 float g_Xbox_BackbufferScaleY = 1;
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
+
+// ImGui
+static void CxbxImGui_DrawWidgets()
+{
+	// Put all ImGui drawing here
+
+	ImGui::ShowDemoWindow();
+}
+
+static std::mutex imGuiMutex;
+static void CxbxImGui_Render(IDirect3DSurface9* renderTarget)
+{
+	// Some games seem to call Swap concurrently, so we need to ensure only one thread
+	// at a time can render ImGui
+	std::unique_lock lock(imGuiMutex, std::try_to_lock);
+	if (!lock) return;
+
+	ImGui_ImplDX9_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	CxbxImGui_DrawWidgets();
+
+	ImGui::Render();
+	ImDrawData* drawData = ImGui::GetDrawData();
+	if (drawData->TotalVtxCount > 0) {
+		IDirect3DSurface9* pExistingRenderTarget = nullptr;
+		if (SUCCEEDED(g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget))) {
+			g_pD3DDevice->SetRenderTarget(0, renderTarget);
+			ImGui_ImplDX9_RenderDrawData(drawData);
+			g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
+			pExistingRenderTarget->Release();
+		}
+	}
+}
+
 
 /* Unused :
 static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
@@ -633,6 +673,7 @@ void CxbxInitWindow(bool bFullInit)
     }
 
 	SetFocus(g_hEmuWindow);
+	ImGui_ImplWin32_Init(g_hEmuWindow);
 }
 
 void DrawUEM(HWND hWnd)
@@ -1804,10 +1845,15 @@ void ToggleFauxFullscreen(HWND hWnd)
     g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 // rendering window message procedure
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static bool bAutoPaused = false;
+
+	const LRESULT imguiResult = ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+	if (imguiResult != 0) return imguiResult;
 
     switch(msg)
     {
@@ -2449,6 +2495,9 @@ static void CreateDefaultD3D9Device
 
     // Set up cache
     g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
+
+	// Set up ImGui
+	ImGui_ImplDX9_Init(g_pD3DDevice);
 }
 
 
@@ -5347,6 +5396,9 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 pTemporaryOverlaySurface->Release();
             }
 		}
+
+		// Render ImGui
+		CxbxImGui_Render(pCurrentHostBackBuffer);
 
 		pCurrentHostBackBuffer->Release();
 	}

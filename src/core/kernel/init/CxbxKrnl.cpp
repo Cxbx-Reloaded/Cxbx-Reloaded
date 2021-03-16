@@ -53,6 +53,7 @@
 #include "common/ReserveAddressRanges.h"
 #include "common/xbox/Types.hpp"
 #include "common/win32/WineEnv.h"
+#include <imgui.h>
 
 #include <clocale>
 #include <process.h>
@@ -1156,6 +1157,17 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	}
 
 	g_ExceptionManager = new ExceptionManager(); // If in need to add VEHs, move this line earlier. (just in case)
+
+	// Initialize ImGui
+	{
+		IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+
+        ImGuiIO& io = ImGui::GetIO();
+        io.IniFilename = nullptr;
+
+        ImGui::StyleColorsDark();
+	}
 
 	// Launch the XBE :
 	{
