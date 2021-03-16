@@ -343,10 +343,7 @@ float fogFactor;
     fogFactor = 1 / exp(pow(abs(fogDepth) * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
     if(fogMode == 3)
     fogFactor = (fogEnd - abs(fogDepth)) / (fogEnd - fogStart) ;
-    //For now linear mode needs Saturation (other modes may as well, *Needs testing*) 
-    // or the results in PS are inconsistant PS fog in may be incorrect
        
-
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
