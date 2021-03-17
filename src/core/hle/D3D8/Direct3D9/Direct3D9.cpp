@@ -7650,6 +7650,14 @@ void CxbxUpdateHostVertexShaderConstants()
 		// Need for Speed: Hot Pursuit 2 (car select)
 		CxbxUpdateHostViewPortOffsetAndScaleConstants();
 	}
+
+	// Placed this here until we find a better place
+	const uint32_t fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+	const float fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+	const float fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+	const float fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+	float fogStuff[4] = { (float)fogTableMode, fogDensity, fogStart, fogEnd };
+	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
 }
 
 void CxbxUpdateHostViewport() {
