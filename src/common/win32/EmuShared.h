@@ -196,7 +196,7 @@ class EmuShared : public Mutex
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
-		void SetDebuggingFlag(const bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
+		void SetDebuggingFlag(const bool value) { Lock(); m_bDebugging = value; Unlock(); }
 #ifndef CXBX_LOADER // Temporary usage for cxbx.exe's emu
 		// ******************************************************************
 		// * Previous Memory Layout value Accessors
@@ -246,7 +246,7 @@ class EmuShared : public Mutex
 		// * ClipCursor flag Accessors
 		// ******************************************************************
 		void GetClipCursorFlag(bool *value) { Lock(); *value = m_bClipCursor; Unlock(); }
-		void SetClipCursorFlag(const bool *value) { Lock(); m_bClipCursor = *value; Unlock(); }
+		void SetClipCursorFlag(const bool value) { Lock(); m_bClipCursor = value; Unlock(); }
 
 		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.

@@ -2330,7 +2330,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 		}
 
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
-		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
+		g_EmuShared->SetDebuggingFlag(AttachLocalDebugger);
 
         /* Main process to generate emulation command line begin. */
         // If we are adding more arguments, this is the place to do so.

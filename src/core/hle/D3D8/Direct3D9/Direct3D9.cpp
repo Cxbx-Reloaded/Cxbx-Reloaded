@@ -1966,7 +1966,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if (wParam == VK_F3)
             {
                 g_bClipCursor = !g_bClipCursor;
-                g_EmuShared->SetClipCursorFlag(&g_bClipCursor);
+                g_EmuShared->SetClipCursorFlag(g_bClipCursor);
 
                 if (g_bClipCursor) {
                     CxbxClipCursor(hWnd);
