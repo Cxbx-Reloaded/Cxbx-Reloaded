@@ -7463,7 +7463,6 @@ void CxbxUpdateHostVertexShaderConstants()
 	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(0);
 	g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
 
-
 	// FIXME our viewport constants don't match Xbox values
 	// If we write them to pgraph constants, like we do with constants set by the title,
 	// the Xbox could overwrite them (at any time?) and we get flickering geometry.
@@ -7474,14 +7473,13 @@ void CxbxUpdateHostVertexShaderConstants()
 	// Need for Speed: Hot Pursuit 2 (car select)
 	CxbxUpdateHostViewPortOffsetAndScaleConstants();
 
-	 // Placed this here until we find a better place
-	auto fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
-	auto fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
-	auto fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
-	auto fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
-	float fogStuff[4] = { fogTableMode, fogDensity, fogStart, fogEnd };
+	// Placed this here until we find a better place
+	const uint32_t fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+	const float fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+	const float fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+	const float fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+	float fogStuff[4] = { (float)fogTableMode, fogDensity, fogStart, fogEnd };
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
-
 }
 
 void CxbxUpdateHostViewport() {

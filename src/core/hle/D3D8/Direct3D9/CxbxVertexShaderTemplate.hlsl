@@ -29,7 +29,7 @@ struct VS_OUTPUT // Declared identical to pixel shader input (see PS_INPUT)
 uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 
 // Parameters for mapping the shader's fog output value to a fog factor
-float4  CxbxFogInfo: register(c230); // = CXBX_D3DVS_CONSTREG_FOGINFO
+uniform float4  CxbxFogInfo: register(c218); // = CXBX_D3DVS_CONSTREG_FOGINFO
 
 // Default values for vertex registers, and whether to use them
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
@@ -327,22 +327,28 @@ VS_OUTPUT main(const VS_INPUT xIn)
 R"DELIMITER(
 
 	// Copy variables to output struct
-	VS_OUTPUT xOut;
-const float  fogDepth   =   oFog.x; 
-const float  fogMode    =   CxbxFogInfo.x;
-const float  fogDensity =   CxbxFogInfo.y;
-const float  fogStart   =   CxbxFogInfo.z;
-const float  fogEnd     =   CxbxFogInfo.w;  
+    VS_OUTPUT xOut;
+
+	const float fogDepth      =   abs(oFog.x); 
+	const float fogTableMode  =   CxbxFogInfo.x;
+	const float fogDensity    =   CxbxFogInfo.y;
+	const float fogStart      =   CxbxFogInfo.z;
+	const float fogEnd        =   CxbxFogInfo.w;  
+
+	const float FOG_TABLE_NONE    = 0;
+	const float FOG_TABLE_EXP     = 1;
+	const float FOG_TABLE_EXP2    = 2;
+	const float FOG_TABLE_LINEAR  = 3;
  
-float fogFactor;
-    if(fogMode == 0)
-    fogFactor = abs(fogDepth);
-    if(fogMode == 1)
-    fogFactor = 1 / exp(abs(fogDepth) * fogDensity); /* / 1 / e^(d * density)*/
-    if(fogMode == 2)
-    fogFactor = 1 / exp(pow(abs(fogDepth) * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
-    if(fogMode == 3)
-    fogFactor = (fogEnd - abs(fogDepth)) / (fogEnd - fogStart) ;
+    float fogFactor;
+    if(fogTableMode == FOG_TABLE_NONE) 
+       fogFactor = fogDepth;
+    if(fogTableMode == FOG_TABLE_EXP) 
+       fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
+    if(fogTableMode == FOG_TABLE_EXP2) 
+       fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
+    if(fogTableMode == FOG_TABLE_LINEAR) 
+       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart) ;
        
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
