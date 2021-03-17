@@ -195,9 +195,11 @@ inline FLOAT ByteToFloat(const BYTE value)
 	return ((FLOAT)value) / 255.0f;
 }
 
-CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t key)
+CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey, uint64_t streamInfoKey)
 {
     // First, attempt to fetch an existing patched stream
+    const StreamKey key{ dataKey, streamInfoKey };
+
     auto it = m_PatchedStreams.find(key);
     if (it != m_PatchedStreams.end()) {
         m_PatchedStreamUsageList.splice(m_PatchedStreamUsageList.begin(), m_PatchedStreamUsageList, it->second);
@@ -214,7 +216,9 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t key)
     // If the cache has exceeded it's upper bound, discard the oldest entries in the cache
     if (m_PatchedStreams.size() > (m_MaxCacheSize + m_CacheElasticity)) {
         while (m_PatchedStreams.size() > m_MaxCacheSize) {
-            m_PatchedStreams.erase(m_PatchedStreamUsageList.back().uiVertexDataHash);
+            const CxbxPatchedStream& streamToDelete = m_PatchedStreamUsageList.back();
+
+            m_PatchedStreams.erase({ streamToDelete.uiVertexDataHash, streamToDelete.uiVertexStreamInformationHash });
             m_PatchedStreamUsageList.pop_back();
         }
     }
@@ -327,20 +331,16 @@ void CxbxVertexBufferConverter::ConvertStream
     const UINT uiVertexCount = pDrawContext->NumVerticesToUse;
     const DWORD dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
     const DWORD xboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
-    uint64_t vertexDataHash = ComputeHash(pXboxVertexData, xboxVertexDataSize);
-    uint64_t pVertexShaderSteamInfoHash = 0;
-
-    if (pVertexShaderStreamInfo != nullptr) {
-        pVertexShaderSteamInfoHash = ComputeHash(pVertexShaderStreamInfo, sizeof(CxbxVertexShaderStreamInfo));
-    }
+    const uint64_t vertexDataHash = ComputeHash(pXboxVertexData, xboxVertexDataSize);
+    const uint64_t pVertexShaderSteamInfoHash = pVertexShaderStreamInfo != nullptr ? ComputeHash(pVertexShaderStreamInfo->VertexElements,
+            sizeof(pVertexShaderStreamInfo->VertexElements[0]) * pVertexShaderStreamInfo->NumberOfVertexElements) : 0;
 
     // Lookup implicity inserts a new entry if not exists, so this always works
-    CxbxPatchedStream& patchedStream = GetPatchedStream(vertexDataHash);
+    CxbxPatchedStream& patchedStream = GetPatchedStream(vertexDataHash, pVertexShaderSteamInfoHash);
 
     // We check a few fields of the patched stream to protect against hash collisions (rare)
     // but also to protect against games using the exact same vertex data for different vertex formats (Test Case: Burnout)
     if (patchedStream.isValid && // Check that we found a cached stream
-        patchedStream.uiVertexStreamInformationHash == pVertexShaderSteamInfoHash && // Check that the vertex conversion is valid
         patchedStream.uiCachedHostVertexStride == patchedStream.uiCachedHostVertexStride && // Make sure the host stride didn't change
         patchedStream.uiCachedXboxVertexStride == uiXboxVertexStride && // Make sure the Xbox Stride didn't change
         patchedStream.uiCachedXboxVertexDataSize == xboxVertexDataSize ) { // Make sure the Xbox Data Size also didn't change

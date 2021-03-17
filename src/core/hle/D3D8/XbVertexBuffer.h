@@ -31,6 +31,7 @@
 #include "Cxbx.h"
 
 #include "core\hle\D3D8\XbVertexShader.h"
+#include "common\util\hasher.h" // For ComputeHash
 
 typedef struct _CxbxDrawContext
 {
@@ -79,6 +80,23 @@ class CxbxVertexBufferConverter
         void Apply(CxbxDrawContext *pPatchDesc);
         void PrintStats();
     private:
+        struct StreamKey
+        {
+            uint64_t dataKey;
+            uint64_t streamInfoKey;
+
+            bool operator==(const StreamKey& rhs) const {
+                return this->dataKey == rhs.dataKey && this->streamInfoKey == rhs.streamInfoKey;
+            }
+        };
+
+        struct StreamKeyHash
+        {
+            std::size_t operator()(const StreamKey& k) const {
+                return static_cast<std::size_t>(ComputeHash(&k, sizeof(k)));
+            }
+        };
+
         UINT m_uiNbrStreams;
 
         // Stack tracking
@@ -87,9 +105,9 @@ class CxbxVertexBufferConverter
 
         UINT m_MaxCacheSize = 10000;                                        // Maximum number of entries in the cache
         UINT m_CacheElasticity = 200;                                      // Cache is allowed to grow this much more than maximum before being purged to maximum
-        std::unordered_map<uint64_t, std::list<CxbxPatchedStream>::iterator> m_PatchedStreams;  // Stores references to patched streams for fast lookup
+        std::unordered_map<StreamKey, std::list<CxbxPatchedStream>::iterator, StreamKeyHash> m_PatchedStreams; // Stores references to patched streams for fast lookup
         std::list<CxbxPatchedStream> m_PatchedStreamUsageList;             // Linked list of vertex streams, least recently used is last in the list
-        CxbxPatchedStream& GetPatchedStream(uint64_t);                     // Fetches (or inserts) a patched stream associated with the given key
+        CxbxPatchedStream& GetPatchedStream(uint64_t dataKey, uint64_t streamInfoKey); // Fetches (or inserts) a patched stream associated with the given key
 
         CxbxVertexDeclaration *m_pCxbxVertexDeclaration;
 
