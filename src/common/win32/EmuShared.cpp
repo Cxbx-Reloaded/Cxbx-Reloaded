@@ -152,7 +152,6 @@ EmuShared::EmuShared()
 	m_bEmulating_status = false;
 	m_bFirstLaunch = false;
 	m_bClipCursor = false;
-	m_bIgnoreKbMoUnfocus = true;
 
 	// Reserve space (default to 0)
 	m_bReserved4 = false;

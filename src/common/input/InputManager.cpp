@@ -706,16 +706,13 @@ std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(int usb_port, int du
 void InputDeviceManager::UpdateOpt(bool is_gui)
 {
 	if (!is_gui) {
-		long axis_range, wheel_range;
-		bool ignore_kbmo;
-		g_EmuShared->GetInputMoAxisSettings(&axis_range);
-		g_EmuShared->GetInputMoWheelSettings(&wheel_range);
-		g_EmuShared->GetInputKbMoUnfocusSettings(&ignore_kbmo);
-		DInput::mo_axis_range_pos = axis_range;
-		DInput::mo_wheel_range_pos = wheel_range;
-		DInput::mo_axis_range_neg = -(axis_range);
-		DInput::mo_wheel_range_neg = -(wheel_range);
-		DInput::IgnoreKbMoUnfocus = ignore_kbmo;
+		Settings::s_input_general input_general;
+		g_EmuShared->GetInputGeneralSettings(&input_general);
+		DInput::mo_axis_range_pos = input_general.MoAxisRange;
+		DInput::mo_wheel_range_pos = input_general.MoWheelRange;
+		DInput::mo_axis_range_neg = -(input_general.MoAxisRange);
+		DInput::mo_wheel_range_neg = -(input_general.MoWheelRange);
+		DInput::IgnoreKbMoUnfocus = input_general.IgnoreKbMoUnfocus;
 	}
 	else {
 		DInput::mo_axis_range_pos = g_Settings->m_input_general.MoAxisRange;

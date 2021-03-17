@@ -744,7 +744,7 @@ void Settings::SyncToEmulator()
 	// register Network settings
 	g_EmuShared->SetNetworkSettings(&m_network);
 
-	// register Input settings
+	// register Input gamepad settings
 	for (int i = 0; i < 4; i++) {
 		g_EmuShared->SetInputDevTypeSettings(&m_input_port[i].Type, i);
 		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
@@ -766,9 +766,8 @@ void Settings::SyncToEmulator()
 		}
 	}
 
-	g_EmuShared->SetInputMoAxisSettings(m_input_general.MoAxisRange);
-	g_EmuShared->SetInputMoWheelSettings(m_input_general.MoWheelRange);
-	g_EmuShared->SetInputKbMoUnfocusSettings(m_input_general.IgnoreKbMoUnfocus);
+	// register Input general settings
+	g_EmuShared->SetInputGeneralSettings(&m_input_general);
 
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&m_hacks);

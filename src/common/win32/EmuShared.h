@@ -152,12 +152,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Input option Accessors
 		// ******************************************************************
-		void GetInputMoAxisSettings(long *axis) { Lock(); *axis = m_MoAxisRange; Unlock(); }
-		void SetInputMoAxisSettings(const long axis) { Lock(); m_MoAxisRange = axis; Unlock(); }
-		void GetInputMoWheelSettings(long *wheel) { Lock(); *wheel = m_MoWheelRange; Unlock(); }
-		void SetInputMoWheelSettings(const long wheel) { Lock(); m_MoWheelRange = wheel; Unlock(); }
-		void GetInputKbMoUnfocusSettings(bool *flag) { Lock(); *flag = m_bIgnoreKbMoUnfocus; Unlock(); }
-		void SetInputKbMoUnfocusSettings(const bool flag) { Lock(); m_bIgnoreKbMoUnfocus = flag; Unlock(); }
+		void GetInputGeneralSettings(Settings::s_input_general *input_general) { Lock(); *input_general = m_input_general; Unlock(); }
+		void SetInputGeneralSettings(const Settings::s_input_general *input_general) { Lock(); m_input_general = *input_general; Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
@@ -301,15 +297,13 @@ class EmuShared : public Mutex
 #endif
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;
-		bool         m_bIgnoreKbMoUnfocus;
+		bool         m_bReserved3;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
 		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
-		long         m_MoAxisRange;
-		long         m_MoWheelRange;
-		int          m_Reserved99[26]; // Reserve space
+		int          m_Reserved99[28]; // Reserve space
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.
@@ -317,6 +311,7 @@ class EmuShared : public Mutex
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
 		Settings::s_network m_network;
+		Settings::s_input_general m_input_general;
 		Settings::s_hack m_hacks;
 };
 
