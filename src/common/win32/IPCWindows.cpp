@@ -65,6 +65,10 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 			cmdParam = ID_GUI_STATUS_KRNL_IS_READY;
 			break;
 
+		case IPC_UPDATE_GUI::OVERLAY:
+			cmdParam = ID_GUI_STATUS_OVERLAY;
+			break;
+
 		default:
 			cmdParam = 0;
 			break;

@@ -64,6 +64,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_dx9.h>
 #include <backends/imgui_impl_win32.h>
+#include "core/common/video/RenderBase.hpp"
 
 #include <assert.h>
 #include <process.h>
@@ -186,37 +187,28 @@ float g_Xbox_BackbufferScaleY = 1;
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
 
 // ImGui
-static bool imGuiShown = false;
-static void CxbxImGui_DrawWidgets()
+void CxbxImGui_Video_DrawWidgets(bool is_focus, ImGuiWindowFlags input_handler, bool show_vertex_stats)
 {
-	if (!imGuiShown) return;
-
-	// Put all ImGui drawing here
-
-	constexpr float DIST_FROM_CORNER = 10.0f;
-	ImGui::SetNextWindowPos(ImVec2(DIST_FROM_CORNER, DIST_FROM_CORNER), ImGuiCond_Once, ImVec2(0.0f, 0.0f));
-	ImGui::SetNextWindowSize(ImVec2(200, 275), ImGuiCond_Once);
-	if (ImGui::Begin("Debugging stats", &imGuiShown, ImGuiWindowFlags_NoCollapse|ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-		if (ImGui::CollapsingHeader("Vertex Buffers", ImGuiTreeNodeFlags_DefaultOpen)) {
-			VertexBufferConverter.ShowImGuiStats();
+	if (show_vertex_stats) {
+		ImGui::SetNextWindowPos(ImVec2(IMGUI_MIN_DIST_SIDE, IMGUI_MIN_DIST_TOP), ImGuiCond_FirstUseEver, ImVec2(0.0f, 0.0f));
+		ImGui::SetNextWindowSize(ImVec2(200, 275), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("Debugging stats", nullptr, input_handler | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+			if (ImGui::CollapsingHeader("Vertex Buffers", ImGuiTreeNodeFlags_DefaultOpen)) {
+				VertexBufferConverter.ShowImGuiStats();
+			}
+			ImGui::End();
 		}
-		ImGui::End();
 	}
 }
 
-static std::mutex imGuiMutex;
-static void CxbxImGui_Render(IDirect3DSurface9* renderTarget)
+static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarget)
 {
-	// Some games seem to call Swap concurrently, so we need to ensure only one thread
-	// at a time can render ImGui
-	std::unique_lock lock(imGuiMutex, std::try_to_lock);
-	if (!lock) return;
-
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	CxbxImGui_DrawWidgets();
+	m_imgui->DrawMenu();
+	m_imgui->DrawWidgets();
 
 	ImGui::Render();
 	ImDrawData* drawData = ImGui::GetDrawData();
@@ -684,6 +676,8 @@ void CxbxInitWindow(bool bFullInit)
     }
 
 	SetFocus(g_hEmuWindow);
+	g_renderbase = std::unique_ptr<RenderBase>(new RenderBase());
+	g_renderbase->Initialize();
 	ImGui_ImplWin32_Init(g_hEmuWindow);
 }
 
@@ -770,7 +764,7 @@ static void CxbxUpdateCursor(bool forceShow = false) {
 		return;
 	}
 
-	if (imGuiShown || forceShow) {
+	if (g_renderbase->IsImGuiFocus() || forceShow) {
 		if (cursorInfo.flags == 0) {
 			ShowCursor(TRUE);
 		}
@@ -1889,16 +1883,11 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
     switch(msg)
     {
-        case WM_CREATE:
-        {
-            CxbxUpdateCursor();
-        }
-        break;
-
         case WM_DESTROY:
         {
             CxbxReleaseCursor();
             DeleteObject(g_hBgBrush);
+            g_renderbase->Shutdown();  // TODO: This needs a fix since it may not process correctly due to render thread did not get terminated properly.
             PostQuitMessage(0);
             return D3D_OK; // = 0
         }
@@ -1984,7 +1973,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             }
             else if (wParam == VK_F1)
             {
-                imGuiShown = !imGuiShown;
+				g_renderbase->ToggleImGui();
                 CxbxUpdateCursor();
             }
 			else if (wParam == VK_F2)
@@ -2003,11 +1992,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                     CxbxReleaseCursor();
                 }
             }
-			else if (wParam == VK_F4)
-			{
-                extern void DSound_PrintStats(); //TODO: move into plugin class usage.
-                DSound_PrintStats();
-			}
             else if (wParam == VK_F6)
             {
                 // For some unknown reason, F6 isn't handled in WndMain::WndProc
@@ -2143,7 +2127,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 SetCursor(NULL);
                 return S_OK; // = Is not part of D3D8 handling.
             }
-
             return DefWindowProc(hWnd, msg, wParam, lParam);
         }
         break;
@@ -2438,6 +2421,7 @@ static void CreateDefaultD3D9Device
         // Final release of IDirect3DDevice9 must be called from the window message thread
         // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
         RunOnWndMsgThread([] {
+            ImGui_ImplDX9_Shutdown();
             g_pD3DDevice->Release();
         });
     }
@@ -2537,8 +2521,8 @@ static void CreateDefaultD3D9Device
     // Set up cache
     g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
 
-	// Set up ImGui
-	ImGui_ImplDX9_Init(g_pD3DDevice);
+    // Set up ImGui
+    ImGui_ImplDX9_Init(g_pD3DDevice);
 }
 
 
@@ -5439,7 +5423,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		}
 
 		// Render ImGui
-		CxbxImGui_Render(pCurrentHostBackBuffer);
+		static std::function<void(ImGuiUI*, IDirect3DSurface*)> internal_render = &CxbxImGui_RenderD3D9;
+		g_renderbase->Render(internal_render, pCurrentHostBackBuffer);
 
 		pCurrentHostBackBuffer->Release();
 	}

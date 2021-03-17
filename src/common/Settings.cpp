@@ -112,6 +112,12 @@ static struct {
 	const char* RenderResolution = "RenderResolution";
 } sect_video_keys;
 
+static const char* section_overlay = "overlay";
+static struct {
+	const char* FPS = "FPS";
+	const char* hle_lle_stats = "HLE/LLE Stats";
+} sect_overlay_keys;
+
 static const char* section_audio = "audio";
 static struct {
 	const char* adapter = "adapter";
@@ -523,6 +529,13 @@ bool Settings::LoadConfig()
 
 	// ==== Input Profile End ======
 
+	// ==== Overlay Begin =========
+
+	m_overlay.fps = m_si.GetBoolValue(section_overlay, sect_overlay_keys.FPS, true);
+	m_overlay.hle_lle_stats = m_si.SetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, true);
+
+	// ==== Overlay End ===========
+
 	return true;
 }
 
@@ -588,6 +601,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_video, sect_video_keys.FullScreen, m_video.bFullScreen, nullptr, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.MaintainAspect, m_video.bMaintainAspect, nullptr, true);
 	m_si.SetLongValue(section_video, sect_video_keys.RenderResolution, m_video.renderScaleFactor, nullptr, false, true);
+
 	// ==== Video End ===========
 
 	// ==== Audio Begin =========
@@ -700,6 +714,13 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Input Profile End ======
 
+	// ==== Overlay Begin =======
+
+	m_si.SetBoolValue(section_overlay, sect_overlay_keys.FPS, m_overlay.fps, nullptr, true);
+	m_si.SetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, m_overlay.hle_lle_stats, nullptr, true);
+
+	// ==== Overlay End =========
+
 	// ==== Hack Begin ==========
 
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
@@ -737,6 +758,7 @@ void Settings::SyncToEmulator()
 
 	// register Video settings
 	g_EmuShared->SetVideoSettings(&m_video);
+	g_EmuShared->SetOverlaySettings(&m_overlay);
 
 	// register Audio settings
 	g_EmuShared->SetAudioSettings(&m_audio);

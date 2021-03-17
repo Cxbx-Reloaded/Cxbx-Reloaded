@@ -9,7 +9,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  )
 endif()
 
-# Add any defines from imconfig.h file in here without need to use import file directly.
+# Add any defines from imconfig.h file in here without need to edit import file directly.
 add_compile_definitions(
  IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
  IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS

@@ -34,6 +34,8 @@
 #include <string>
 #include <array>
 
+#include "core/common/imgui/settings.h"
+
 extern std::string g_exec_filepath;
 
 // Individual library version
@@ -180,6 +182,8 @@ public:
 		int  Reserved99[8] = { 0 };
 	} m_hacks;
 	static_assert(sizeof(s_hack) == 0x28, assert_check_shared_memory(s_hack));
+
+	overlay_settings m_overlay;
 
 private:
 	void RemoveLegacyConfigs(unsigned int CurrentRevision);

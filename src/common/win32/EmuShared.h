@@ -30,6 +30,7 @@
 #include "Mutex.h"
 #include "common\IPCHybrid.hpp"
 #include "common\input\Button.h"
+#include "core/common/imgui/settings.h"
 
 #include <memory.h>
 
@@ -249,6 +250,43 @@ class EmuShared : public Mutex
 		void SetClipCursorFlag(const bool value) { Lock(); m_bClipCursor = value; Unlock(); }
 
 		// ******************************************************************
+		// * ImGui Accessors
+		// ******************************************************************
+		void GetImGuiFocusFlag(bool *value) { Lock(); *value = m_imgui_general.is_focus; Unlock(); }
+		void SetImGuiFocusFlag(const bool value) { Lock(); m_imgui_general.is_focus = value; Unlock(); }
+
+		void GetImGuiIniSettings(char value[IMGUI_INI_SIZE_MAX]) {
+			Lock();
+			if (m_imgui_general.ini_size < IMGUI_INI_SIZE_MAX) {
+				value = '\0';
+				return;
+			}
+			strcpy_s(value, IMGUI_INI_SIZE_MAX, m_imgui_general.ini_settings);
+			Unlock();
+		}
+		void SetImGuiIniSettings(const char value[IMGUI_INI_SIZE_MAX]) {
+			Lock();
+			// Do not save if external size is less than internal limit
+			if (m_imgui_general.ini_size < IMGUI_INI_SIZE_MAX) {
+				return;
+			}
+			strcpy_s(m_imgui_general.ini_settings, IMGUI_INI_SIZE_MAX, value);
+			Unlock();
+		}
+
+		void GetImGuiAudioWindows(imgui_audio_windows *value) { Lock(); *value = m_imgui_audio_windows; Unlock(); }
+		void SetImGuiAudioWindows(const imgui_audio_windows* value) { Lock(); m_imgui_audio_windows = *value; Unlock(); }
+		void GetImGuiVideoWindows(imgui_video_windows*value) { Lock(); *value = m_imgui_video_windows; Unlock(); }
+		void SetImGuiVideoWindows(const imgui_video_windows* value) { Lock(); m_imgui_video_windows = *value; Unlock(); }
+
+
+		// ******************************************************************
+		// * Overlay Accessors
+		// ******************************************************************
+		void GetOverlaySettings(overlay_settings *value) { Lock(); *value = m_imgui_overlay_settings; Unlock(); }
+		void SetOverlaySettings(const overlay_settings* value) { Lock(); m_imgui_overlay_settings = *value; Unlock(); }
+
+		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
 		// ******************************************************************
 		void ResetKrnl()
@@ -313,6 +351,10 @@ class EmuShared : public Mutex
 		Settings::s_network m_network;
 		Settings::s_input_general m_input_general;
 		Settings::s_hack m_hacks;
+		imgui_general m_imgui_general;
+		overlay_settings m_imgui_overlay_settings;
+		imgui_audio_windows m_imgui_audio_windows;
+		imgui_video_windows m_imgui_video_windows;
 };
 
 // ******************************************************************

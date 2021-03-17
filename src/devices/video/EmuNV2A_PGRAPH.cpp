@@ -705,6 +705,23 @@ void OpenGL_draw_inline_elements(NV2AState *d)
 	OpenGL_draw_end(d);
 }
 
+static void CxbxImGui_RenderOpenGL(ImGuiUI* m_imgui, std::nullptr_t unused)
+{
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	m_imgui->DrawMenu();
+	m_imgui->DrawWidgets();
+
+	ImGui::Render();
+
+	ImDrawData* drawData = ImGui::GetDrawData();
+	if (drawData->TotalVtxCount > 0) {
+		ImGui_ImplOpenGL3_RenderDrawData(drawData);
+	}
+}
+
 void OpenGL_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -893,6 +910,10 @@ void OpenGL_draw_state_update(NV2AState *d)
 			pg->gl_zpass_pixel_count_query_count - 1] = gl_query;
 		glBeginQuery(GL_SAMPLES_PASSED, gl_query);
 	}
+
+	// Render ImGui
+	static std::function<void(ImGuiUI*, std::nullptr_t)> internal_render = &CxbxImGui_RenderOpenGL;
+	g_renderbase->Render(internal_render, nullptr);
 }
 
 void OpenGL_draw_end(NV2AState *d)
@@ -2988,6 +3009,10 @@ void pgraph_init(NV2AState *d)
 #endif
 
     glextensions_init();
+
+	// ImGui
+	//ImGui_ImplSDL2_InitForOpenGL(window, pg->gl_context);
+	ImGui_ImplOpenGL3_Init();
 
     /* DXT textures */
     assert(glo_check_extension("GL_EXT_texture_compression_s3tc"));

@@ -45,6 +45,7 @@
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 #include "EmuShared.h"
 #include "devices\usb\OHCI.h"
+#include "core/common/video/RenderBase.hpp"
 
 // hle input specific
 #include "core\hle\XAPI\Xapi.h"
@@ -360,8 +361,9 @@ bool InputDeviceManager::UpdateXboxPortInput(int usb_port, void* Buffer, int Dir
 		xid_type < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX));
 	bool has_changed = false;
 
+	// First check if ImGui is focus, then ignore any input update occur.
 	// If somebody else is currently holding the lock, we won't wait and instead report no input changes
-	if (m_Mtx.try_lock()) {
+	if (!g_renderbase->IsImGuiFocus() && m_Mtx.try_lock()) {
 		for (auto &dev_ptr : m_Devices) {
 			if (dev_ptr->GetPort(usb_port)) {
 				switch (xid_type)
