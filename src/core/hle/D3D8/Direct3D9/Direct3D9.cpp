@@ -761,6 +761,27 @@ void CxbxReleaseCursor()
 	ClipCursor(nullptr);
 }
 
+static void CxbxUpdateCursor(bool forceShow = false) {
+	// Getting cursor info is a requirement in order to prevent a bug occur with ShowCursor redundant calls.
+	CURSORINFO cursorInfo;
+	cursorInfo.cbSize = sizeof(cursorInfo);
+	if (!GetCursorInfo(&cursorInfo)) {
+		// If cursor info is not available, then ignore the cursor update.
+		return;
+	}
+
+	if (imGuiShown || forceShow) {
+		if (cursorInfo.flags == 0) {
+			ShowCursor(TRUE);
+		}
+	}
+	else {
+		if ((cursorInfo.flags & CURSOR_SHOWING) != 0) {
+			ShowCursor(FALSE);
+		}
+	}
+}
+
 inline DWORD GetXboxCommonResourceType(const xbox::dword_xt XboxResource_Common)
 {
 	DWORD dwCommonType = XboxResource_Common & X_D3DCOMMON_TYPE_MASK;
@@ -1868,6 +1889,12 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
     switch(msg)
     {
+        case WM_CREATE:
+        {
+            CxbxUpdateCursor();
+        }
+        break;
+
         case WM_DESTROY:
         {
             CxbxReleaseCursor();
@@ -1958,6 +1985,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if (wParam == VK_F1)
             {
                 imGuiShown = !imGuiShown;
+                CxbxUpdateCursor();
             }
 			else if (wParam == VK_F2)
 			{
@@ -2066,7 +2094,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             DInput::mo_leave_wnd = true;
             g_bIsTrackingMoLeave = false;
             g_bIsTrackingMoMove = true;
-            ShowCursor(TRUE);
+            CxbxUpdateCursor(true);
         }
         break;
 
@@ -2083,7 +2111,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 tme.dwFlags = TME_LEAVE;
                 TrackMouseEvent(&tme);
                 g_bIsTrackingMoLeave = true;
-                ShowCursor(FALSE);
+                CxbxUpdateCursor();
 
                 if (g_bIsTrackingMoMove) {
                     DInput::mo_leave_wnd = false;
