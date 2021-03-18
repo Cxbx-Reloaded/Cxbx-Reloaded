@@ -111,11 +111,6 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamN
 	}
 }
 
-CxbxPatchedStream::CxbxPatchedStream()
-{
-    isValid = false;
-}
-
 void CxbxPatchedStream::Clear()
 {
     if (bCachedHostVertexStreamZeroDataIsAllocated) {
@@ -136,12 +131,6 @@ CxbxPatchedStream::~CxbxPatchedStream()
 	Clear();
 }
 
-CxbxVertexBufferConverter::CxbxVertexBufferConverter()
-{
-    m_uiNbrStreams = 0;
-    m_pCxbxVertexDeclaration = nullptr;
-}
-
 // TODO: CountActiveD3DStreams must be removed once we can rely on CxbxGetVertexDeclaration always being set
 int CountActiveD3DStreams()
 {
@@ -155,7 +144,7 @@ int CountActiveD3DStreams()
 	return StreamCount;
 }
 
-UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext)
+UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext) const
 {
 	// Draw..Up always have one stream
 	if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {
@@ -195,9 +184,11 @@ inline FLOAT ByteToFloat(const BYTE value)
 	return ((FLOAT)value) / 255.0f;
 }
 
-CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t key)
+CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey, uint64_t streamInfoKey)
 {
     // First, attempt to fetch an existing patched stream
+    const StreamKey key{ dataKey, streamInfoKey };
+
     auto it = m_PatchedStreams.find(key);
     if (it != m_PatchedStreams.end()) {
         m_PatchedStreamUsageList.splice(m_PatchedStreamUsageList.begin(), m_PatchedStreamUsageList, it->second);
@@ -214,7 +205,9 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t key)
     // If the cache has exceeded it's upper bound, discard the oldest entries in the cache
     if (m_PatchedStreams.size() > (m_MaxCacheSize + m_CacheElasticity)) {
         while (m_PatchedStreams.size() > m_MaxCacheSize) {
-            m_PatchedStreams.erase(m_PatchedStreamUsageList.back().uiVertexDataHash);
+            const CxbxPatchedStream& streamToDelete = m_PatchedStreamUsageList.back();
+
+            m_PatchedStreams.erase({ streamToDelete.uiVertexDataHash, streamToDelete.uiVertexStreamInformationHash });
             m_PatchedStreamUsageList.pop_back();
         }
     }
@@ -232,7 +225,8 @@ void CxbxVertexBufferConverter::PrintStats()
 
 void CxbxVertexBufferConverter::ConvertStream
 (
-	CxbxDrawContext *pDrawContext,
+    CxbxDrawContext *pDrawContext,
+    CxbxVertexDeclaration* pCxbxVertexDeclaration,
     UINT             uiStream
 )
 {
@@ -241,13 +235,13 @@ void CxbxVertexBufferConverter::ConvertStream
 
 	CxbxVertexShaderStreamInfo *pVertexShaderStreamInfo = nullptr;
 	UINT XboxStreamNumber = uiStream;
-	if (m_pCxbxVertexDeclaration != nullptr) {
-		if (uiStream > m_pCxbxVertexDeclaration->NumberOfVertexStreams) {
+	if (pCxbxVertexDeclaration != nullptr) {
+		if (uiStream > pCxbxVertexDeclaration->NumberOfVertexStreams) {
 			LOG_TEST_CASE("uiStream > NumberOfVertexStreams");
 			return;
 		}
 
-		pVertexShaderStreamInfo = &(m_pCxbxVertexDeclaration->VertexStreams[uiStream]);
+		pVertexShaderStreamInfo = &(pCxbxVertexDeclaration->VertexStreams[uiStream]);
 		XboxStreamNumber = pVertexShaderStreamInfo->XboxStreamIndex;
 	}
 
@@ -327,20 +321,16 @@ void CxbxVertexBufferConverter::ConvertStream
     const UINT uiVertexCount = pDrawContext->NumVerticesToUse;
     const DWORD dwHostVertexDataSize = uiVertexCount * uiHostVertexStride;
     const DWORD xboxVertexDataSize = uiVertexCount * uiXboxVertexStride;
-    uint64_t vertexDataHash = ComputeHash(pXboxVertexData, xboxVertexDataSize);
-    uint64_t pVertexShaderSteamInfoHash = 0;
-
-    if (pVertexShaderStreamInfo != nullptr) {
-        pVertexShaderSteamInfoHash = ComputeHash(pVertexShaderStreamInfo, sizeof(CxbxVertexShaderStreamInfo));
-    }
+    const uint64_t vertexDataHash = ComputeHash(pXboxVertexData, xboxVertexDataSize);
+    const uint64_t pVertexShaderSteamInfoHash = pVertexShaderStreamInfo != nullptr ? ComputeHash(pVertexShaderStreamInfo->VertexElements,
+            sizeof(pVertexShaderStreamInfo->VertexElements[0]) * pVertexShaderStreamInfo->NumberOfVertexElements) : 0;
 
     // Lookup implicity inserts a new entry if not exists, so this always works
-    CxbxPatchedStream& patchedStream = GetPatchedStream(vertexDataHash);
+    CxbxPatchedStream& patchedStream = GetPatchedStream(vertexDataHash, pVertexShaderSteamInfoHash);
 
     // We check a few fields of the patched stream to protect against hash collisions (rare)
     // but also to protect against games using the exact same vertex data for different vertex formats (Test Case: Burnout)
     if (patchedStream.isValid && // Check that we found a cached stream
-        patchedStream.uiVertexStreamInformationHash == pVertexShaderSteamInfoHash && // Check that the vertex conversion is valid
         patchedStream.uiCachedHostVertexStride == patchedStream.uiCachedHostVertexStride && // Make sure the host stride didn't change
         patchedStream.uiCachedXboxVertexStride == uiXboxVertexStride && // Make sure the Xbox Stride didn't change
         patchedStream.uiCachedXboxVertexDataSize == xboxVertexDataSize ) { // Make sure the Xbox Data Size also didn't change
@@ -631,7 +621,7 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	if ((pDrawContext->XboxPrimitiveType < xbox::X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > xbox::X_D3DPT_POLYGON))
 		CxbxKrnlCleanup("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
-	m_pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
+	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
 
 	// When this is an indexed draw, take the index buffer into account
 	if (pDrawContext->pXboxIndexData) {
@@ -652,14 +642,14 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	}
 
     // Get the number of streams
-    m_uiNbrStreams = GetNbrStreams(pDrawContext);
-	if (m_uiNbrStreams > X_VSH_MAX_STREAMS) {
-		LOG_TEST_CASE("m_uiNbrStreams count > max number of streams");
-		m_uiNbrStreams = X_VSH_MAX_STREAMS;
-	}
+    UINT nbrStreams = GetNbrStreams(pDrawContext);
+    if (nbrStreams > X_VSH_MAX_STREAMS) {
+        LOG_TEST_CASE("nbrStreams count > max number of streams");
+        nbrStreams = X_VSH_MAX_STREAMS;
+    }
 
-    for(UINT i = 0; i < m_uiNbrStreams; i++) {
-		ConvertStream(pDrawContext, i);
+    for(UINT i = 0; i < nbrStreams; i++) {
+		ConvertStream(pDrawContext, pCxbxVertexDeclaration, i);
     }
 
 	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
