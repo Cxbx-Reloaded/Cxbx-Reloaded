@@ -2191,8 +2191,11 @@ static void SetupPresentationParameters
     params.SwapEffect = D3DSWAPEFFECT_COPY;
 
     // Any backbuffer format should do, since we render to a separate xbox backbuffer
-    // Rather than directly to the host backbuffer
-    params.BackBufferFormat = D3DFMT_UNKNOWN;
+    // We need to specify something to support fullscreen exclusive mode
+    // Take the current displaymode format
+    D3DDISPLAYMODE D3DDisplayMode;
+    g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
+    params.BackBufferFormat = D3DDisplayMode.Format;
 
     params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->PresentationInterval;
