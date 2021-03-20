@@ -145,7 +145,6 @@ static bool                         g_bHack_DisableHostGPUQueries = false; // TO
 static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
 static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
 static int                          g_RenderUpscaleFactor = 1;
-static int                          g_RenderTargetUpscaleFactor = 1;
 
 static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
 static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
@@ -2357,7 +2356,6 @@ static void CreateDefaultD3D9Device
 
     // Apply render scale factor for high-resolution rendering
     g_RenderUpscaleFactor = g_XBVideo.renderScaleFactor;
-    g_RenderTargetUpscaleFactor = 1;
 
     // Setup the HostPresentationParameters
     SetupPresentationParameters(pPresentationParameters);
@@ -3008,9 +3006,7 @@ void Direct3D_CreateDevice_End
             CxbxKrnlCleanup("Unable to determine default Xbox backbuffer");
         }
 
-        // We must also properly setup the host state
-        // Update only the Back buffer, not the depth buffer
-        // This will also update g_RenderTargetUpscaleFactor and g_ZScale
+        // Set the backbuffer as the initial rendertarget
         CxbxImpl_SetRenderTarget(g_pXbox_BackBufferSurface, xbox::zeroptr);
     }
 
@@ -4097,8 +4093,8 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     // Because of this, we need to validate that the associated host resource still matches the dimensions of the Xbox Render Target
     // If not, we must force them to be re-created
     // TEST CASE: Chihiro Factory Test Program
-    DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * g_RenderTargetUpscaleFactor;
-    DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * g_RenderTargetUpscaleFactor;
+    DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * g_RenderUpscaleFactor;
+    DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * g_RenderUpscaleFactor;
     if (HostRenderTarget_Width != XboxRenderTarget_Width_Scaled || HostRenderTarget_Height != XboxRenderTarget_Height_Scaled) {
         LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
@@ -4935,8 +4931,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
         // Scale the fill based on our scale factor and MSAA scale
 		float aaX, aaY;
 		GetMultiSampleScaleRaw(aaX, aaY);
-		aaX *= g_RenderTargetUpscaleFactor;
-		aaY *= g_RenderTargetUpscaleFactor;
+		aaX *= g_RenderUpscaleFactor;
+		aaY *= g_RenderUpscaleFactor;
 
         std::vector<D3DRECT> rects(Count);
         for (DWORD i = 0; i < Count; i++) {
@@ -5710,10 +5706,19 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		bool bCompressed = EmuXBFormatIsCompressed(X_Format);
 		UINT dwBPP = EmuXBFormatBytesPerPixel(X_Format);
 		UINT dwMipMapLevels = CxbxGetPixelContainerMipMapLevels(pPixelContainer);
-		UINT dwWidth, dwHeight, dwDepth, dwRowPitch, dwSlicePitch;
+		UINT xboxWidth, xboxHeight, dwDepth, dwRowPitch, dwSlicePitch;
 
 		// Interpret Width/Height/BPP
-		CxbxGetPixelContainerMeasures(pPixelContainer, 0, &dwWidth, &dwHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
+		CxbxGetPixelContainerMeasures(pPixelContainer, 0, &xboxWidth, &xboxHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
+
+		// Host width and height dimensions
+		UINT hostWidth = xboxWidth;
+		UINT hostHeight = xboxHeight;
+		// Upscale rendertargets and depth surfaces
+		if (D3DUsage & (X_D3DUSAGE_DEPTHSTENCIL | X_D3DUSAGE_RENDERTARGET)) {
+			hostWidth *= g_RenderUpscaleFactor;
+			hostHeight *= g_RenderUpscaleFactor;
+		}
 
 		// Each mip-map level is 1/2 the size of the previous level
 		// D3D9 forbids creation of a texture with more mip-map levels than it is divisible
@@ -5722,7 +5727,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		if (dwMipMapLevels > 0) {
 			// Calculate how many mip-map levels it takes to get to a texture of 1 pixels in either dimension
 			UINT highestMipMapLevel = 1;
-			UINT width = dwWidth; UINT height = dwHeight;
+			UINT width = xboxWidth; UINT height = xboxHeight;
 			while (width > 1 || height > 1) {
 				width /= 2;
 				height /= 2;
@@ -5758,7 +5763,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		switch (XboxResourceType) {
 		case xbox::X_D3DRTYPE_SURFACE: {
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
-				hRet = g_pD3DDevice->CreateDepthStencilSurface(dwWidth * g_RenderUpscaleFactor, dwHeight * g_RenderUpscaleFactor, PCFormat,
+				hRet = g_pD3DDevice->CreateDepthStencilSurface(hostWidth, hostHeight, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
 					0, // MultisampleQuality
 					false, // Discard
@@ -5769,7 +5774,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 			else {
 				// Note : This handles both (D3DUsage & D3DUSAGE_RENDERTARGET) and otherwise alike
-				hRet = g_pD3DDevice->CreateTexture(dwWidth * g_RenderUpscaleFactor, dwHeight * g_RenderUpscaleFactor,
+				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight,
 					1, // Levels
 					D3DUSAGE_RENDERTARGET, // Usage always as render target
 					PCFormat,
@@ -5800,7 +5805,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 
 				EmuLog(LOG_LEVEL::WARNING, "Trying Fallback");
-				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(dwWidth, dwHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
+				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(hostWidth, hostHeight, PCFormat, D3DPool, &pNewHostSurface, nullptr);
 			}
 
 			// If the fallback failed, show an error and exit execution.
@@ -5814,7 +5819,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostSurface);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Width : %d, Height : %d, Format : %d",
-				dwWidth, dwHeight, PCFormat);
+				hostWidth, hostHeight, PCFormat);
 			break;
 		}
 
@@ -5832,7 +5837,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		case xbox::X_D3DRTYPE_TEXTURE: {
-			hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
+			hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
 				D3DUsage, PCFormat, D3DPool, &pNewHostTexture,
 				nullptr
 			);
@@ -5840,7 +5845,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			// If the above failed, we might be able to use an ARGB texture instead
 			if ((hRet != D3D_OK) && (PCFormat != D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
-				hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
+				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
 					D3DUsage, D3DFMT_A8R8G8B8, D3DPool, &pNewHostTexture,
 					nullptr
 				);
@@ -5855,7 +5860,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
             // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
             if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
-                hRet = g_pD3DDevice->CreateTexture(dwWidth, dwHeight, dwMipMapLevels,
+                hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
                     0, PCFormat, D3DPOOL_SYSTEMMEM, &pIntermediateHostTexture,
                     nullptr
                 );
@@ -5875,7 +5880,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			if (hRet != D3D_OK) {
 				CxbxKrnlCleanup("CreateTexture Failed!\n\n"
-					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, dwWidth, dwHeight);
+					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, hostWidth, hostHeight);
 			}
 
 			SetHostTexture(pResource, pNewHostTexture, iTextureStage);
@@ -5885,7 +5890,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		case xbox::X_D3DRTYPE_VOLUMETEXTURE: {
-			hRet = g_pD3DDevice->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
+			hRet = g_pD3DDevice->CreateVolumeTexture(hostWidth, hostHeight, dwDepth,
 				dwMipMapLevels, D3DUsage, PCFormat, D3DPool, &pNewHostVolumeTexture,
 				nullptr
 			);
@@ -5893,7 +5898,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
             // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
             if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
-                hRet = g_pD3DDevice->CreateVolumeTexture(dwWidth, dwHeight, dwDepth,
+                hRet = g_pD3DDevice->CreateVolumeTexture(hostWidth, hostHeight, dwDepth,
                     dwMipMapLevels, 0, PCFormat, D3DPOOL_SYSTEMMEM, &pIntermediateHostVolumeTexture,
                     nullptr
                 );
@@ -5911,10 +5916,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		case xbox::X_D3DRTYPE_CUBETEXTURE: {
-			EmuLog(LOG_LEVEL::DEBUG, "CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_DEFAULT)", dwWidth,
+			EmuLog(LOG_LEVEL::DEBUG, "CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_DEFAULT)", hostWidth,
 				dwMipMapLevels, PCFormat);
 
-			hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, D3DUsage,
+			hRet = g_pD3DDevice->CreateCubeTexture(hostWidth, dwMipMapLevels, D3DUsage,
 				PCFormat, D3DPool, &pNewHostCubeTexture,
 				nullptr
 			);
@@ -5922,7 +5927,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
             // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
             if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
-                hRet = g_pD3DDevice->CreateCubeTexture(dwWidth, dwMipMapLevels, 0,
+                hRet = g_pD3DDevice->CreateCubeTexture(hostWidth, dwMipMapLevels, 0,
                     PCFormat, D3DPOOL_SYSTEMMEM, &pIntermediateHostCubeTexture,
                     nullptr
                 );
@@ -5968,8 +5973,8 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
 			// As we iterate through mipmap levels, we'll adjust the source resource offset
 			DWORD dwMipOffset = 0;
-			DWORD pxMipWidth = dwWidth;
-			DWORD pxMipHeight = dwHeight;
+			DWORD pxMipWidth = xboxWidth;
+			DWORD pxMipHeight = xboxHeight;
 			DWORD pxMipDepth = dwDepth;
             DWORD dwMipRowPitch = dwRowPitch;
 			DWORD dwSrcSlicePitch = dwMipRowPitch * pxMipHeight; // TODO
@@ -7465,8 +7470,8 @@ void CxbxUpdateHostViewport() {
 		LOG_TEST_CASE("Could not get rendertarget dimensions while setting the viewport");
 	}
 
-	aaScaleX *= g_RenderTargetUpscaleFactor;
-	aaScaleY *= g_RenderTargetUpscaleFactor;
+	aaScaleX *= g_RenderUpscaleFactor;
+	aaScaleY *= g_RenderUpscaleFactor;
 
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
@@ -8222,10 +8227,6 @@ static void CxbxImpl_SetRenderTarget
 			pRenderTarget = g_pXbox_BackBufferSurface;
 		}
     }
-
-	// Get the host upscale factor for the current rendertarget
-	// Currently, only the host backbuffer is upscaled
-	g_RenderTargetUpscaleFactor = (g_pXbox_RenderTarget == g_pXbox_BackBufferSurface) ? g_RenderUpscaleFactor : 1;
 
 	// Set default viewport now we've updated the rendertarget
 	// Note the Xbox does this, but before _our_ SetRenderTarget sets up the render target
