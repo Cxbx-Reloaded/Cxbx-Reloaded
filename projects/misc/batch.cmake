@@ -32,6 +32,8 @@ file(COPY ${CXBXR_GLEW_DLL} DESTINATION  ${TargetRunTimeDir})
 set(CXBXR_HLSL_FILES
 "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
 "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
+"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsli"
+"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsl"
 )
 set(HlslOutputDir ${TargetRunTimeDir}/hlsl)
 file(MAKE_DIRECTORY ${HlslOutputDir})
