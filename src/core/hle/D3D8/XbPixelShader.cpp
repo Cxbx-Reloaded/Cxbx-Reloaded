@@ -44,10 +44,14 @@
 #include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup()
+#include "util\hasher.h"
+#include "core\hle\D3D8\Direct3D9\FixedFunctionPixelShader.hlsli"
 
 #include <assert.h> // assert()
 #include <process.h>
 #include <locale.h>
+#include <fstream>
+#include <sstream>
 
 #include "Direct3D9\RenderStates.h" // For XboxRenderStateConverter
 #include "Direct3D9\TextureStates.h" // For XboxTextureStateConverter
@@ -638,6 +642,306 @@ constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; //
 // This concludes the set of constants that need to be set on host :
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
 
+std::string GetFixedFunctionShaderTemplate() {
+	static bool loaded = false;
+	static std::string hlslString;
+
+	// TODO does this need to be thread safe?
+	if (!loaded) {
+		loaded = true;
+
+		// Determine the filename and directory for the fixed function shader
+		// TODO make this a relative path so we guarantee an LPCSTR for D3DCompile
+		auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
+			.parent_path()
+			.append("hlsl");
+
+		auto sourceFile = hlslDir.append("FixedFunctionPixelShader.hlsl").string();
+
+		// Load the shader into a string
+		std::ifstream hlslStream(sourceFile);
+		std::stringstream hlsl;
+		hlsl << hlslStream.rdbuf();
+
+		hlslString = hlsl.str();
+	}
+
+	return hlslString;
+}
+
+std::string_view GetD3DTOPString(int d3dtop) {
+	static constexpr std::string_view opToString[] = {
+		"UNDEFINED", // 0
+		"X_D3DTOP_DISABLE", // 1
+		"X_D3DTOP_SELECTARG1", // 2
+		"X_D3DTOP_SELECTARG2", // 3
+		"X_D3DTOP_MODULATE", // 4
+		"X_D3DTOP_MODULATE2X", // 5
+		"X_D3DTOP_MODULATE4X", // 6
+		"X_D3DTOP_ADD", // 7
+		"X_D3DTOP_ADDSIGNED", // 8
+		"X_D3DTOP_ADDSIGNED2X", // 9
+		"X_D3DTOP_SUBTRACT", // 10
+		"X_D3DTOP_ADDSMOOTH", // 11
+		"X_D3DTOP_BLENDDIFFUSEALPHA", // 12
+		"X_D3DTOP_BLENDCURRENTALPHA", // 13
+		"X_D3DTOP_BLENDTEXTUREALPHA", // 14
+		"X_D3DTOP_BLENDFACTORALPHA", // 15
+		"X_D3DTOP_BLENDTEXTUREALPHAPM", // 16
+		"X_D3DTOP_PREMODULATE", // 17
+		"X_D3DTOP_MODULATEALPHA_ADDCOLOR", // 18
+		"X_D3DTOP_MODULATECOLOR_ADDALPHA", // 19
+		"X_D3DTOP_MODULATEINVALPHA_ADDCOLOR", // 20
+		"X_D3DTOP_MODULATEINVCOLOR_ADDALPHA", // 21
+		"X_D3DTOP_DOTPRODUCT3", // 22
+		"X_D3DTOP_MULTIPLYADD", // 23
+		"X_D3DTOP_LERP", // 24
+		"X_D3DTOP_BUMPENVMAP", // 25
+		"X_D3DTOP_BUMPENVMAPLUMINANCE", // 26
+	};
+
+	if (d3dtop < 1 || d3dtop > 26) {
+		EmuLog(LOG_LEVEL::ERROR2, "Unmapped texture operation %d", d3dtop);
+		d3dtop = 0; // undefined
+	}
+
+	return opToString[d3dtop];
+}
+
+// Get a string equivalent of '<Texture Argument> + <Modifier>'
+std::string GetD3DTASumString(int d3dta, bool allowModifier = true) {
+	using namespace FixedFunctionPixelShader;
+
+	static const std::string argToString[] = {
+		"X_D3DTA_DIFFUSE", // 0
+		"X_D3DTA_CURRENT", // 1
+		"X_D3DTA_TEXTURE", // 2
+		"X_D3DTA_TFACTOR", // 3
+		"X_D3DTA_SPECULAR", // 4
+		"X_D3DTA_TEMP", // 5
+		"X_D3DTA_CONSTANT", // 6
+		"UNDEFINED", // 7
+	};
+
+	// Write a texture argument
+	const int flagMask = 0x30;
+	int iFlags = d3dta & flagMask;
+	int i = d3dta & ~flagMask;
+
+	if (i < 0 || i > 6) {
+		EmuLog(LOG_LEVEL::ERROR2, "Unmapped texture argument %d on texture arg", i);
+		i = 7; // undefined
+	}
+
+	auto str = argToString[i];
+	if (iFlags) {
+		if (!allowModifier) {
+			EmuLog(LOG_LEVEL::ERROR2, "Modifier not expected on texture argument");
+		}
+
+		if (iFlags == X_D3DTA_COMPLEMENT)
+			str += " + X_D3DTA_COMPLEMENT";
+		else if (iFlags == X_D3DTA_ALPHAREPLICATE)
+			str += " + X_D3DTA_ALPHAREPLICATE";
+		else {
+			EmuLog(LOG_LEVEL::ERROR2, "Unmapped texture modifier %d", iFlags);
+			str += " /* + UNKNOWN MODIFIER */";
+		}
+	}
+
+	return str;
+}
+
+// TODO we have to create and cache shaders over and over and over and over
+// Deduplicate this resource management
+IDirect3DPixelShader9* GetFixedFunctionShader()
+{
+	using namespace FixedFunctionPixelShader;
+
+	// TODO move this cache elsewhere - and flush it when the device is released!
+	static std::unordered_map<uint64_t, IDirect3DPixelShader9*> ffPsCache = {};
+
+	// Create a key from state that will be baked in to the shader
+	PsTextureHardcodedState states[4] = {};
+	int sampleType[4] = { SAMPLE_2D, SAMPLE_2D, SAMPLE_2D, SAMPLE_2D };
+	bool pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+
+	bool previousStageDisabled = false;
+	for (int i = 0; i < 4; i++) {
+		// Determine the COLOROP
+		// Usually we execute stages up to the first disabled stage
+		// However, if point sprites are enabled, we just execute stage 3
+		bool forceDisable =
+			(!pointSpriteEnable && previousStageDisabled) ||
+			(pointSpriteEnable && i < 3);
+		auto colorOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
+		states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : colorOp;
+
+		// If the stage is disabled we don't want its configuration to affect the key
+		// Move on to the next stage
+		if (colorOp == X_D3DTOP_DISABLE) {
+			previousStageDisabled = true;
+			continue;
+		}
+
+		// Get sample type
+		// TODO move XD3D8 resource query functions out of Direct3D9.cpp so we can use them here
+		if (g_pXbox_SetTexture[i]) {
+			auto format = g_pXbox_SetTexture[i]->Format;
+			// SampleType is initialized to SAMPLE_2D
+			if (format & X_D3DFORMAT_CUBEMAP)
+				sampleType[i] = SAMPLE_CUBE;
+			else if (((format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT) > 2)
+				sampleType[i] = SAMPLE_3D;
+		}
+
+		states[i].COLORARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);
+		states[i].COLORARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);
+		states[i].COLORARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);
+
+		states[i].ALPHAOP = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);
+		states[i].ALPHAARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);
+		states[i].ALPHAARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);
+		states[i].ALPHAARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);
+
+		states[i].RESULTARG = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);
+	}
+
+	// Create a key from the shader state
+	// Note currently this is padded since it's what we send to the GPU
+	auto key = 3 * ComputeHash(states, sizeof(states))
+		+ ComputeHash(sampleType, sizeof(sampleType));
+
+	auto got = ffPsCache.find(key);
+	if (got != ffPsCache.end()) {
+		// We have a shader. Great!
+		return got->second;
+	}
+
+	// Build and compile a new shader
+	auto hlslTemplate = GetFixedFunctionShaderTemplate();
+
+	// In D3D9 it seems we need to know hardcode if we're doing a 2D or 3D lookup
+	const std::string sampleTypePattern = "TEXTURE_SAMPLE_TYPE;";
+	auto sampleTypeReplace = hlslTemplate.find(sampleTypePattern);
+
+	static constexpr std::string_view typeToString[] = {
+		"SAMPLE_2D",
+		"SAMPLE_3D",
+		"SAMPLE_CUBE"
+	};
+
+	std::stringstream sampleTypeString;
+	sampleTypeString << "{"
+		<< typeToString[sampleType[0]] << ", "
+		<< typeToString[sampleType[1]] << ", "
+		<< typeToString[sampleType[2]] << ", "
+		<< typeToString[sampleType[3]] << "};";
+
+	auto finalShader = hlslTemplate.replace(sampleTypeReplace, sampleTypePattern.size(), sampleTypeString.str());
+
+	// Hardcode the texture stage operations and arguments
+	// So the shader handles exactly one combination of values
+	const std::string stageDef = "// STAGE DEFINITIONS";
+	auto stageDefInsert = finalShader.find(stageDef) + stageDef.size();
+
+	std::stringstream stageSetup;
+	stageSetup << '\n';
+
+	for (int i = 0; i < 4; i++) {
+		// The stage is initialized to be disabled
+		// We don't have to output anything
+		if (states[i].COLOROP == X_D3DTOP_DISABLE)
+			continue;
+
+		std::string target = "stages[" + std::to_string(i) + "].";
+
+		auto s = states[i];
+		stageSetup << target << "COLOROP = " << GetD3DTOPString(s.COLOROP) << ";\n";
+
+		// TODO handle texture arg flags
+		stageSetup << target << "COLORARG0 = " << GetD3DTASumString(s.COLORARG0) << ";\n";
+		stageSetup << target << "COLORARG1 = " << GetD3DTASumString(s.COLORARG1) << ";\n";
+		stageSetup << target << "COLORARG2 = " << GetD3DTASumString(s.COLORARG2) << ";\n";
+
+		stageSetup << target << "ALPHAOP = " << GetD3DTOPString(s.ALPHAOP) << ";\n";
+
+		if (states[i].ALPHAOP != X_D3DTOP_DISABLE) {
+			stageSetup << target << "ALPHAARG0 = " << GetD3DTASumString(s.ALPHAARG0) << ";\n";
+			stageSetup << target << "ALPHAARG1 = " << GetD3DTASumString(s.ALPHAARG1) << ";\n";
+			stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(s.ALPHAARG2) << ";\n";
+		}
+
+		stageSetup << target << "RESULTARG = " << GetD3DTASumString(s.RESULTARG, false) << ";\n";
+		stageSetup << '\n';
+	}
+
+	finalShader = finalShader.insert(stageDefInsert, stageSetup.str());
+
+	// Compile the shader
+	ID3DBlob* pShaderBlob;
+
+	auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
+		.parent_path()
+		.append("hlsl");
+
+	auto pseudoFileName = "FixedFunctionPixelShader-" + std::to_string(key) + ".hlsl";
+	auto pseudoSourceFile = hlslDir.append(pseudoFileName).string();
+	EmuCompileShader(finalShader, "ps_3_0", &pShaderBlob, pseudoSourceFile.c_str());
+
+	// Create shader object for the device
+	IDirect3DPixelShader9* pShader = nullptr;
+	auto hRet = g_pD3DDevice->CreatePixelShader((DWORD*)pShaderBlob->GetBufferPointer(), &pShader);
+	if (hRet != S_OK)
+		CxbxKrnlCleanup("Failed to compile fixed function pixel shader");
+	pShaderBlob->Release();
+
+	// Insert the shader into the cache
+	ffPsCache[key] = pShader;
+
+	return pShader;
+};
+
+float AsFloat(uint32_t value) {
+	auto v = value;
+	return *(float*)&v;
+}
+
+// Set constant state for the fixed function pixel shader
+void UpdateFixedFunctionPixelShaderState()
+{
+	using namespace FixedFunctionPixelShader;
+
+	FixedFunctionPixelShaderState ffPsState;
+	ffPsState.TextureFactor = (D3DXVECTOR4)((D3DXCOLOR)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
+	ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
+	ffPsState.FogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
+	ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
+
+	// Texture state
+	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+
+		auto stage = &ffPsState.stages[i];
+
+		stage->COLORKEYOP = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
+		stage->COLORSIGN = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
+		stage->ALPHAKILL = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
+		stage->BUMPENVMAT00 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT00));
+		stage->BUMPENVMAT01 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT01));
+		stage->BUMPENVMAT10 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT10));
+		stage->BUMPENVMAT11 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT11));
+		stage->BUMPENVLSCALE = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLSCALE));
+		stage->BUMPENVLOFFSET = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLOFFSET));
+		stage->COLORKEYCOLOR = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
+
+		stage->IsTextureSet = g_pXbox_SetTexture[i] != nullptr;
+	}
+
+	const int size = (sizeof(FixedFunctionPixelShaderState) + 16 - 1) / 16;
+	g_pD3DDevice->SetPixelShaderConstantF(0, (float*)&ffPsState, size);
+}
+
+bool g_UseFixedFunctionPixelShader = true;
 void DxbxUpdateActivePixelShader() // NOPATCH
 {
   // The first RenderState is PSAlpha,
@@ -654,7 +958,13 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 
   const xbox::X_D3DPIXELSHADERDEF *pPSDef = g_pXbox_PixelShader != nullptr ? (xbox::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
   if (pPSDef == nullptr) {
-    g_pD3DDevice->SetPixelShader(nullptr);
+	IDirect3DPixelShader9* pShader = nullptr;
+	if (g_UseFixedFunctionPixelShader) {
+		pShader = GetFixedFunctionShader();
+		UpdateFixedFunctionPixelShaderState();
+	}
+
+    g_pD3DDevice->SetPixelShader(pShader);
     return;
   }
 

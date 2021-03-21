@@ -1980,7 +1980,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             }
 			else if (wParam == VK_F2)
 			{
-				g_UseFixedFunctionVertexShader = !g_UseFixedFunctionVertexShader;
+				g_UseFixedFunctionPixelShader = !g_UseFixedFunctionPixelShader;
 			}
             else if (wParam == VK_F3)
             {
@@ -6406,11 +6406,6 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	pShaderLight->SpotIntensityDivisor = cos(d3dLight->Theta / 2) - cos(d3dLight->Phi / 2);
 }
 
-float AsFloat(uint32_t value) {
-	auto v = value;
-	return *(float*)&v;
-}
-
 void UpdateFixedFunctionVertexShaderState()
 {
 	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
@@ -6498,8 +6493,7 @@ void UpdateFixedFunctionVertexShaderState()
 	// FIXME remove when fixed function PS is implemented
 	// Note if we are using the fixed function pixel shader
 	// We only want to produce the fog depth value in the VS, not the fog factor
-	auto psIsFixedFunction = g_pXbox_PixelShader == nullptr;
-	ffShaderState.Fog.TableMode = psIsFixedFunction ? D3DFOG_NONE : fogTableMode;
+	ffShaderState.Fog.TableMode = !g_UseFixedFunctionPixelShader ? D3DFOG_NONE : fogTableMode;
 
 	// Determine how fog depth is calculated
 	if (fogEnable && fogTableMode != D3DFOG_NONE) {
