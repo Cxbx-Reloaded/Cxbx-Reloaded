@@ -691,6 +691,7 @@ BEGIN
             MENUITEM "&Clear entire Symbol Cache",  ID_CACHE_CLEARHLECACHE_ALL,MFT_STRING,MFS_ENABLED
             MENUITEM "&Rescan title Symbol Cache",  ID_CACHE_CLEARHLECACHE_CURRENT,MFT_STRING,MFS_ENABLED
         END
+        MENUITEM "Clear Cache Partitions",  ID_SETTINGS_CLEAR_PARTITIONS,MFT_STRING,MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         POPUP "Experimental",                   65535,MFT_STRING,MFS_ENABLED
         BEGIN
