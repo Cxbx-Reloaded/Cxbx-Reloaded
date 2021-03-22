@@ -104,7 +104,7 @@ unsigned ClearCachePartitions()
 	std::error_code err;
 	unsigned has_any_err = 0;
 
-	for (int partition_num = 3; partition_num < 8; ++partition_num) {
+	for (int partition_num = 3; partition_num < 6; ++partition_num) {
 		const std::string &partition = partition_path + std::to_string(partition_num);
 		for (const auto &directory_entry : std::filesystem::directory_iterator(partition, err)) {
 			if (err) {
