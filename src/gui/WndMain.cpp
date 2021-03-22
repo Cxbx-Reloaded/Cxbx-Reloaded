@@ -98,6 +98,36 @@ void ClearSymbolCache(const char sStorageLocation[MAX_PATH])
 	printf("Cleared HLE Cache\n");
 }
 
+unsigned ClearCachePartitions()
+{
+	const std::string &partition_path = g_Settings->GetDataLocation() + "\\EmuDisk\\Partition";
+	std::error_code err;
+	unsigned has_any_err = 0;
+
+	for (int partition_num = 3; partition_num < 8; ++partition_num) {
+		const std::string &partition = partition_path + std::to_string(partition_num);
+		for (const auto &directory_entry : std::filesystem::directory_iterator(partition, err)) {
+			if (err) {
+				has_any_err |= 1;
+			}
+			else {
+				std::filesystem::remove_all(directory_entry, err);
+				if (err) {
+					has_any_err |= 1;
+				}
+			}
+		}
+
+		const std::string &partition_bin = partition + ".bin";
+		std::filesystem::remove(partition_bin, err);
+		if (err) {
+			has_any_err |= 1;
+		}
+	}
+
+	return has_any_err;
+}
+
 void WndMain::InitializeSettings()
 {
 	g_Settings->Delete();
@@ -1084,6 +1114,22 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 				if (std::filesystem::remove(fullpath)) {
 					PopupInfo(m_hwnd, "This title's Symbol Cache entry has been cleared.");
+				}
+			}
+			break;
+
+			case ID_SETTINGS_CLEAR_PARTITIONS:
+			{
+				if (m_bIsStarted) {
+					PopupError(m_hwnd, "Cannot clear the cache partitions while a title is running.");
+				}
+				else {
+					if (ClearCachePartitions()) {
+						PopupError(m_hwnd, "An errror has occoured while clearing the cache partitions.");
+					}
+					else {
+						PopupInfo(m_hwnd, "Cleared the cache partitions.");
+					}
 				}
 			}
 			break;
