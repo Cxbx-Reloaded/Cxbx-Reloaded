@@ -289,7 +289,7 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 
 	hlsl << hlsl_template[0]; // Start with the HLSL template header
 
-	hlsl << "\nbool alphakill[4] = {"
+	hlsl << "\nstatic bool alphakill[4] = {"
 		<< (pShader->AlphaKill[0] ? "true, " : "false, ")
 		<< (pShader->AlphaKill[1] ? "true, " : "false, ")
 		<< (pShader->AlphaKill[2] ? "true, " : "false, ")
