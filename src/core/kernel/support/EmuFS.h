@@ -34,6 +34,8 @@ extern void EmuInitFS();
 
 // generate fs segment selector
 extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
+// free resources allocated for the thread
+void EmuKeFreePcr();
 
 typedef struct
 {
