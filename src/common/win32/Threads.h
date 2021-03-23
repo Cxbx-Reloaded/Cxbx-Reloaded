@@ -25,4 +25,25 @@
 
 #pragma once
 
+#include <memory>
+
 void SetCurrentThreadName(const char* szThreadName);
+
+// A helper class to pin game/other threads to specific CPU cores
+// Implemented different depending on the host OS, so exposes itself as an interface
+// If "All Cores Hack" is enabled (or the host system is single core), an empty implementation is used
+class AffinityPolicy
+{
+public:
+	~AffinityPolicy() = default;
+
+	virtual void SetAffinityXbox(void* thread) const = 0;
+	virtual void SetAffinityOther(void* thread) const = 0;
+
+	void SetAffinityXbox() const;
+	void SetAffinityOther() const;
+
+	static std::unique_ptr<AffinityPolicy> InitPolicy();
+};
+
+extern std::unique_ptr<AffinityPolicy> g_AffinityPolicy;

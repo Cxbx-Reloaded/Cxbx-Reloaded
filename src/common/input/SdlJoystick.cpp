@@ -84,8 +84,6 @@ namespace Sdl
 		UpdateInputEvent_t = CustomEvent_t + 2;
 		DeviceRemoveAck_t = CustomEvent_t + 3;
 
-		SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
-
 		// Drain all joystick add/remove events to avoid creating duplicated
 		// devices when we call PopulateDevices
 		while (SDL_PollEvent(&Event))

@@ -478,7 +478,7 @@ void EmuNVNet_Write(xbox::addr_xt addr, uint32_t value, int size)
 std::thread NVNetRecvThread;
 static void NVNetRecvThreadProc(NvNetState_t *s)
 {
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+	g_AffinityPolicy->SetAffinityOther();
 	uint8_t packet[65536];
 	while (true) {
 		int size = g_NVNet->PCAPReceive(packet, 65536);

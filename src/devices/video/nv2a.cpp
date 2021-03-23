@@ -54,6 +54,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\hle\Intercept.hpp"
+#include "common/win32/Threads.h"
 #include "Logging.h"
 
 #include "vga.h"
@@ -1099,7 +1100,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 // TODO: Fix this properly
 static void nv2a_vblank_thread(NV2AState *d)
 {
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+	g_AffinityPolicy->SetAffinityOther();
 	CxbxSetThreadName("Cxbx NV2A VBLANK");
 	auto nextVBlankTime = GetNextVBlankTime();
 

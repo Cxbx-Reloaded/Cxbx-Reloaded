@@ -97,8 +97,6 @@ Xbe* CxbxKrnl_Xbe = NULL;
 bool g_bIsChihiro = false;
 bool g_bIsDebug = false;
 bool g_bIsRetail = false;
-DWORD_PTR g_CPUXbox = 0;
-DWORD_PTR g_CPUOthers = 0;
 
 // Indicates to disable/enable all interrupts when cli and sti instructions are executed
 std::atomic_bool g_bEnableAllInterrupts = true;
@@ -377,7 +375,8 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 	CxbxSetThreadName("CxbxKrnl Interrupts");
 
 	// Make sure Xbox1 code runs on one core :
-	InitXboxThread(g_CPUXbox);
+	InitXboxThread();
+	g_AffinityPolicy->SetAffinityXbox();
 
 #if 0
 	InitSoftwareInterrupts();
@@ -1437,22 +1436,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Determining CPU affinity.");
-	{
-		if (!GetProcessAffinityMask(g_CurrentProcessHandle, &g_CPUXbox, &g_CPUOthers))
-			CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "GetProcessAffinityMask failed.");
-
-		// For the other threads, remove one bit from the processor mask:
-		g_CPUOthers = ((g_CPUXbox - 1) & g_CPUXbox);
-
-		// Test if there are any other cores available :
-		if (g_CPUOthers > 0) {
-			// If so, make sure the Xbox threads run on the core NOT running Xbox code :
-			g_CPUXbox = g_CPUXbox & (~g_CPUOthers);
-		} else {
-			// Else the other threads must run on the same core as the Xbox code :
-			g_CPUOthers = g_CPUXbox;
-		}
-	}
+	g_AffinityPolicy = AffinityPolicy::InitPolicy();
 
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
@@ -1534,7 +1518,8 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	EmuInitFS();
 
-	InitXboxThread(g_CPUXbox);
+	InitXboxThread();
+	g_AffinityPolicy->SetAffinityXbox();
 	xbox::ObInitSystem();
 	xbox::KiInitSystem();
 
@@ -1543,7 +1528,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	DWORD dwThreadId;
 	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (unsigned int*)&dwThreadId);
 	// Start the kernel clock thread
-	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", &g_CPUOthers);
+	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", false);
 	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
 
 	EmuLogInit(LOG_LEVEL::DEBUG, "Calling XBE entry point...");

@@ -877,7 +877,7 @@ void OHCI::OHCI_StateReset()
 void OHCI::OHCI_BusStart()
 {
 	// Create the EOF timer.
-	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, "", nullptr);
+	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, "", false);
 
 	EmuLog(LOG_LEVEL::DEBUG, "Operational event");
 

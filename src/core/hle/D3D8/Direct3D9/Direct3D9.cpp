@@ -599,6 +599,7 @@ void CxbxInitWindow(bool bFullInit)
         HANDLE hThread = CreateThread(nullptr, 0, EmuUpdateTickCount, nullptr, 0, nullptr);
         // We set the priority of this thread a bit higher, to assure reliable timing :
         SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
+        g_AffinityPolicy->SetAffinityOther(hThread);
 
         CxbxKrnlRegisterThread(hThread);
         CloseHandle(hThread); // CxbxKrnlRegisterThread duplicates the handle so we can close this one
@@ -623,7 +624,7 @@ void CxbxInitWindow(bool bFullInit)
 			EmuShared::Cleanup();
 			ExitProcess(0);
 		}
-		SetThreadAffinityMask(hRenderWindowThread, g_CPUOthers);
+		g_AffinityPolicy->SetAffinityOther(hRenderWindowThread);
 
 		// Wait for the window to create
 		WaitForSingleObject(hStartEvent, INFINITE);
@@ -2092,7 +2093,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 	CxbxSetThreadName("Cxbx Timing Thread");
 
     // since callbacks come from here
-	InitXboxThread(g_CPUOthers); // avoid Xbox1 core for lowest possible latency
+	InitXboxThread();
 
     EmuLog(LOG_LEVEL::DEBUG, "Timing thread is running.");
 

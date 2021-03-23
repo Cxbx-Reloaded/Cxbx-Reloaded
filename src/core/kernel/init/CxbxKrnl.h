@@ -204,7 +204,7 @@ extern ULONG g_CxbxFatalErrorCode;
 
 extern size_t g_SystemMaxMemory;
 
-void InitXboxThread(DWORD_PTR cores);
+void InitXboxThread();
 
 /*! thread local storage structure */
 extern Xbe::TLS *CxbxKrnl_TLS;

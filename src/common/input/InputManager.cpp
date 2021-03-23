@@ -80,6 +80,12 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 	m_hwnd = hwnd;
 
 	m_PollingThread = std::thread([this, is_gui]() {
+		// This code can run in both cxbx.exe and cxbxr-ldr.exe, but will not have
+		// the affinity policy when running in the former.
+		if (g_AffinityPolicy) {
+			g_AffinityPolicy->SetAffinityOther();
+		}
+
 		XInput::Init(m_Mtx);
 		Sdl::Init(m_Mtx, m_Cv, is_gui);
 		});

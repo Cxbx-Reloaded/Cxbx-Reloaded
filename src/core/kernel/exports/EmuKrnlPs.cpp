@@ -86,16 +86,6 @@ void InitXboxThread()
 	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 }
 
-void InitXboxThread(DWORD_PTR cores)
-{
-	InitXboxThread();
-
-	if (!g_UseAllCores) {
-		// Run this thread solely on the indicated core(s) :
-		SetThreadAffinityMask(GetCurrentThread(), cores);
-	}
-}
-
 // PsCreateSystemThread proxy procedure
 // Dxbx Note : The signature of PCSTProxy should conform to System.TThreadFunc !
 static unsigned int WINAPI PCSTProxy
@@ -272,11 +262,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
         if (ThreadId != NULL)
             *ThreadId = dwThreadId;
 
-		if (!g_UseAllCores) {
-			// Run this thread solely on the indicated core(s) :
-			SetThreadAffinityMask(handle, g_CPUXbox);
-		}
-
+		g_AffinityPolicy->SetAffinityXbox(handle);
 		CxbxKrnlRegisterThread(handle);
 
 		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
