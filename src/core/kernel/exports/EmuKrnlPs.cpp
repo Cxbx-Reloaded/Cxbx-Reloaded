@@ -264,6 +264,10 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		}*/
 
         HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, reinterpret_cast<unsigned int*>(&dwThreadId)));
+		if (handle == NULL) {
+			delete iPCSTProxyParam;
+			RETURN(xbox::status_insufficient_resources);
+		}
 		*ThreadHandle = handle;
         if (ThreadId != NULL)
             *ThreadId = dwThreadId;
@@ -378,6 +382,7 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 		}
 	}*/
 
+	EmuKeFreePcr();
 	_endthreadex(ExitStatus);
 	// ExitThread(ExitStatus);
 	// CxbxKrnlTerminateThread();
