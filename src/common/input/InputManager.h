@@ -99,7 +99,7 @@ typedef struct _CXBX_XINPUT_DEVICE_INFO {
 	uint8_t  ucSubType;         // xbox controller subtype
 	uint8_t  ucInputStateSize;  // xbox controller input state size in bytes, not include dwPacketNumber
 	uint8_t  ucFeedbackSize;    // xbox controller feedback size in bytes, not include FeedbackHeader
-	uint16_t dwPacketNumber;
+	uint32_t dwPacketNumber;
 }
 CXBX_XINPUT_DEVICE_INFO, *PCXBX_XINPUT_DEVICE_INFO;
 
@@ -117,6 +117,7 @@ typedef struct _CXBX_CONTROLLER_HOST_BRIDGE {
 	bool                    bPendingRemoval;
 	bool                    bSignaled;
 	bool                    bIoInProgress;
+	bool                    bAutoPoll;       // autopoll on/off, as instructed by the title in XInputOpen
 	CXBX_XINPUT_DEVICE_INFO XboxDeviceInfo;
 }
 CXBX_CONTROLLER_HOST_BRIDGE, *PCXBX_CONTROLLER_HOST_BRIDGE;
