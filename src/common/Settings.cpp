@@ -458,7 +458,7 @@ bool Settings::LoadConfig()
 
 	m_input_general.MoAxisRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_axis_range, MO_AXIS_DEFAULT_RANGE);
 	m_input_general.MoWheelRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_wheel_range, MO_WHEEL_DEFAULT_RANGE);
-	m_input_general.IgnoreKbMoUnfocus = m_si.GetLongValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, 1);
+	m_input_general.IgnoreKbMoUnfocus = m_si.GetBoolValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, true);
 
 	// ==== Input General End ==============
 
@@ -631,7 +631,7 @@ bool Settings::Save(std::string file_path)
 
 	m_si.SetLongValue(section_input_general, sect_input_general.mo_axis_range, m_input_general.MoAxisRange, nullptr, false, true);
 	m_si.SetLongValue(section_input_general, sect_input_general.mo_wheel_range, m_input_general.MoWheelRange, nullptr, false, true);
-	m_si.SetLongValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, m_input_general.IgnoreKbMoUnfocus, nullptr, false, true);
+	m_si.SetBoolValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, m_input_general.IgnoreKbMoUnfocus, nullptr, true);
 
 	// ==== Input General End =========
 
