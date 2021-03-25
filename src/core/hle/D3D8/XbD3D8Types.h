@@ -83,6 +83,8 @@
 #define IDirect3DSwapChain              IDirect3DSwapChain9
 #define IDirect3DQuery                  IDirect3DQuery9
 
+typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
+
 namespace xbox {
 
 // TODO : Declare these aliasses as Xbox type
