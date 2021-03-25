@@ -46,6 +46,8 @@
 
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
+CxbxVertexBufferConverter VertexBufferConverter = {};
+
 // Inline vertex buffer emulation
 xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
 uint32_t                      g_InlineVertexBuffer_WrittenRegisters = 0; // A bitmask, indicating which registers have been set in g_InlineVertexBuffer_Table
@@ -218,7 +220,7 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey,
     return stream;
 }
 
-void CxbxVertexBufferConverter::ShowImGuiStats()
+void CxbxVertexBufferConverter::DrawCacheStats()
 {
 	const ULONG falsePositives = std::exchange(m_TotalLookupSuccesses, 0) - m_TotalCacheHits;
 	const ULONG totalMisses = m_VertexStreamHashMisses + m_DataNotInCacheMisses;

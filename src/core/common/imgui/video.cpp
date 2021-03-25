@@ -12,6 +12,7 @@
 #include "EmuShared.h"
 
 #include "core/kernel/init/CxbxKrnl.h"
+#include "core/hle/D3D8/XbVertexBuffer.h"
 
 bool ImGuiVideo::Initialize()
 {
@@ -27,14 +28,22 @@ void ImGuiVideo::Shutdown()
 void ImGuiVideo::DrawMenu()
 {
 	if (ImGui::BeginMenu("Video")) {
-		ImGui::MenuItem("Show Vertex Stats", NULL, &m_windows.cache_stats_vertex);
+		ImGui::MenuItem("Debug Vertex Buffer Cache Stats", NULL, &m_windows.cache_stats_vertex);
 		ImGui::EndMenu();
 	}
 }
 
 void ImGuiVideo::DrawWidgets(bool is_focus, ImGuiWindowFlags input_handler)
 {
-	//TODO: move into plugin class usage.
-	extern void CxbxImGui_Video_DrawWidgets(bool, ImGuiWindowFlags, bool);
-	CxbxImGui_Video_DrawWidgets(is_focus, input_handler, m_windows.cache_stats_vertex);
+	// Render vertex buffer cache stats
+	if (m_windows.cache_stats_vertex) {
+		ImGui::SetNextWindowPos(ImVec2(IMGUI_MIN_DIST_SIDE, IMGUI_MIN_DIST_TOP), ImGuiCond_FirstUseEver, ImVec2(0.0f, 0.0f));
+		ImGui::SetNextWindowSize(ImVec2(200, 275), ImGuiCond_FirstUseEver);
+		if (ImGui::Begin("Debugging stats", nullptr, input_handler | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+			if (ImGui::CollapsingHeader("Vertex Buffer Cache", ImGuiTreeNodeFlags_DefaultOpen)) {
+				VertexBufferConverter.DrawCacheStats();
+			}
+			ImGui::End();
+		}
+	}
 }

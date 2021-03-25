@@ -128,8 +128,6 @@ static size_t                       g_QuadToTriangleHostIndexBuffer_Size = 0; //
 static INDEX16                     *g_pQuadToTriangleIndexData = nullptr;
 static size_t                       g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
 
-static CxbxVertexBufferConverter VertexBufferConverter = {};
-
 struct {
 	xbox::X_D3DSurface Surface;
 	RECT SrcRect;
@@ -185,21 +183,6 @@ float g_Xbox_BackbufferScaleX = 1;
 float g_Xbox_BackbufferScaleY = 1;
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
-
-// ImGui
-void CxbxImGui_Video_DrawWidgets(bool is_focus, ImGuiWindowFlags input_handler, bool show_vertex_stats)
-{
-	if (show_vertex_stats) {
-		ImGui::SetNextWindowPos(ImVec2(IMGUI_MIN_DIST_SIDE, IMGUI_MIN_DIST_TOP), ImGuiCond_FirstUseEver, ImVec2(0.0f, 0.0f));
-		ImGui::SetNextWindowSize(ImVec2(200, 275), ImGuiCond_FirstUseEver);
-		if (ImGui::Begin("Debugging stats", nullptr, input_handler | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-			if (ImGui::CollapsingHeader("Vertex Buffers", ImGuiTreeNodeFlags_DefaultOpen)) {
-				VertexBufferConverter.ShowImGuiStats();
-			}
-			ImGui::End();
-		}
-	}
-}
 
 static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarget)
 {

@@ -78,7 +78,7 @@ class CxbxVertexBufferConverter
     public:
         CxbxVertexBufferConverter() = default;
         void Apply(CxbxDrawContext *pPatchDesc);
-        void ShowImGuiStats();
+        void DrawCacheStats();
     private:
         struct StreamKey
         {
@@ -115,6 +115,8 @@ class CxbxVertexBufferConverter
         // Patches the types of the stream
         void ConvertStream(CxbxDrawContext *pPatchDesc, CxbxVertexDeclaration* pCxbxVertexDeclaration, UINT uiStream);
 };
+
+extern CxbxVertexBufferConverter VertexBufferConverter;
 
 // Inline vertex buffer emulation
 extern xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType;
