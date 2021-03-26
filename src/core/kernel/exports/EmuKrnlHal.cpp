@@ -495,6 +495,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 	case ReturnFirmwareReboot:
 		LOG_UNIMPLEMENTED(); // fall through
+		[[fallthrough]];
 	case ReturnFirmwareQuickReboot:
 	{
 		if (xbox::LaunchDataPage == NULL)
