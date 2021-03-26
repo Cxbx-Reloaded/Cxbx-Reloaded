@@ -62,7 +62,6 @@ void ImGuiUI::Shutdown()
 	g_EmuShared->SetOverlaySettings(&m_settings);
 	m_audio.Shutdown();
 	m_video.Shutdown();
-	ImGui::EndFrame();
 	ImGui::DestroyContext(m_imgui_context);
 }
 
