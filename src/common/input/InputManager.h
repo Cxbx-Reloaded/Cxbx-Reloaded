@@ -117,7 +117,8 @@ typedef struct _CXBX_CONTROLLER_HOST_BRIDGE {
 	bool                    bPendingRemoval;
 	bool                    bSignaled;
 	bool                    bIoInProgress;
-	bool                    bAutoPoll;       // autopoll on/off, as instructed by the title in XInputOpen
+	bool                    bAutoPoll;         // autopoll on/off, as instructed by the title in XInputOpen
+	bool                    bAutoPollDefault;  // default autopoll value, depending on device type
 	CXBX_XINPUT_DEVICE_INFO XboxDeviceInfo;
 }
 CXBX_CONTROLLER_HOST_BRIDGE, *PCXBX_CONTROLLER_HOST_BRIDGE;
