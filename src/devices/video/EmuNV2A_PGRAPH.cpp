@@ -3010,9 +3010,12 @@ void pgraph_init(NV2AState *d)
 
     glextensions_init();
 
-	// ImGui
+	// Set up ImGui's render backend
 	//ImGui_ImplSDL2_InitForOpenGL(window, pg->gl_context);
 	ImGui_ImplOpenGL3_Init();
+	g_renderbase->SetDeviceRelease([] {
+		ImGui_ImplOpenGL3_Shutdown();
+	});
 
     /* DXT textures */
     assert(glo_check_extension("GL_EXT_texture_compression_s3tc"));

@@ -1160,9 +1160,7 @@ NV2ADevice::~NV2ADevice()
 {
 	Reset(); // TODO : Review this
 
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	g_renderbase->Shutdown();
+	g_renderbase->DeviceRelease();
 
 	delete m_nv2a_state;
 }

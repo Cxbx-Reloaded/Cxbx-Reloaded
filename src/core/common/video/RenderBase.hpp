@@ -24,6 +24,28 @@ public:
 	{
 		ImGuiUI::Render(callback, arg);
 	}
+
+	// When video backends has its own class, make DeviceRelease call as virtual requirement for parent class usage.
+	void SetDeviceRelease(const std::function<void()>& func_register) {
+		m_device_release = func_register;
+	}
+
+	void DeviceRelease() {
+		m_device_release();
+	}
+
+	void SetWindowRelease(const std::function<void()>& func_register) {
+		m_window_release = func_register;
+	}
+
+	void WindowRelease() {
+		m_window_release();
+	}
+
+protected:
+
+	std::function<void()> m_device_release;
+	std::function<void()> m_window_release;
 };
 
 extern std::unique_ptr<RenderBase> g_renderbase;

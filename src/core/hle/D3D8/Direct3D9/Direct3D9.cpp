@@ -193,6 +193,8 @@ static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarg
 	m_imgui->DrawMenu();
 	m_imgui->DrawWidgets();
 
+	ImGui::EndFrame();
+
 	ImGui::Render();
 	ImDrawData* drawData = ImGui::GetDrawData();
 	if (drawData->TotalVtxCount > 0) {
@@ -661,7 +663,11 @@ void CxbxInitWindow(bool bFullInit)
 	SetFocus(g_hEmuWindow);
 	g_renderbase = std::unique_ptr<RenderBase>(new RenderBase());
 	g_renderbase->Initialize();
+
 	ImGui_ImplWin32_Init(g_hEmuWindow);
+	g_renderbase->SetWindowRelease([] {
+		ImGui_ImplWin32_Shutdown();
+	});
 }
 
 void DrawUEM(HWND hWnd)
@@ -1870,7 +1876,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         {
             CxbxReleaseCursor();
             DeleteObject(g_hBgBrush);
-            g_renderbase->Shutdown();  // TODO: This needs a fix since it may not process correctly due to render thread did not get terminated properly.
             PostQuitMessage(0);
             return D3D_OK; // = 0
         }
@@ -2091,7 +2096,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         case WM_CLOSE:
             CxbxReleaseCursor();
             DestroyWindow(hWnd);
-			CxbxKrnlShutDown();
+            CxbxKrnlShutDown();
             break;
 
         case WM_SETFOCUS:
@@ -2404,8 +2409,8 @@ static void CreateDefaultD3D9Device
         // Final release of IDirect3DDevice9 must be called from the window message thread
         // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
         RunOnWndMsgThread([] {
-            ImGui_ImplDX9_Shutdown();
-            g_pD3DDevice->Release();
+            // We only need to call bundled device release once here.
+            g_renderbase->DeviceRelease();
         });
     }
 
@@ -2504,8 +2509,12 @@ static void CreateDefaultD3D9Device
     // Set up cache
     g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
 
-    // Set up ImGui
+    // Set up ImGui's render backend
     ImGui_ImplDX9_Init(g_pD3DDevice);
+    g_renderbase->SetDeviceRelease([] {
+        ImGui_ImplDX9_Shutdown();
+        g_pD3DDevice->Release();
+    });
 }
 
 

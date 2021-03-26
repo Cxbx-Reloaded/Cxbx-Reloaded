@@ -53,7 +53,7 @@
 #include "common/ReserveAddressRanges.h"
 #include "common/xbox/Types.hpp"
 #include "common/win32/WineEnv.h"
-#include <imgui.h>
+#include "core/common/video/RenderBase.hpp"
 
 #include <clocale>
 #include <process.h>
@@ -1754,11 +1754,13 @@ void CxbxKrnlResume()
     g_bEmuSuspended = false;
 }
 
-void CxbxKrnlShutDown()
+void CxbxKrnlShutDown(bool is_reboot)
 {
-	// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
-	int BootFlags = 0;
-	g_EmuShared->SetBootFlags(&BootFlags);
+	if (!is_reboot) {
+		// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
+		int BootFlags = 0;
+		g_EmuShared->SetBootFlags(&BootFlags);
+	}
 
 	// NOTE: This causes a hang when exiting while NV2A is processing
 	// This is okay for now: It won't leak memory or resources since TerminateProcess will free everything
@@ -1770,9 +1772,14 @@ void CxbxKrnlShutDown()
 	// Shutdown the memory manager
 	g_VMManager.Shutdown();
 
+	// Shutdown the render manager
+	g_renderbase->Shutdown();
+	g_renderbase.release();
+	g_renderbase = nullptr;
+
 	CxbxUnlockFilePath();
 
-	if (CxbxKrnl_hEmuParent != NULL) {
+	if (CxbxKrnl_hEmuParent != NULL && !is_reboot) {
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 	}
 

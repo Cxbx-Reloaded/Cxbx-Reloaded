@@ -166,7 +166,7 @@ void CxbxKrnlSuspend();
 void CxbxKrnlResume();
 
 /*! terminate gracefully the emulation */
-void CxbxKrnlShutDown();
+void CxbxKrnlShutDown(bool is_reboot = false);
 
 /*! display the fatal error message*/
 void CxbxKrnlPrintUEM(ULONG ErrorCode);

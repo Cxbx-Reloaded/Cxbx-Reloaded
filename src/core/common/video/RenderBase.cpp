@@ -27,5 +27,9 @@ bool RenderBase::Initialize()
 
 void RenderBase::Shutdown()
 {
+	DeviceRelease();
+	m_device_release = std::function<void()>{};
+	WindowRelease();
+	m_window_release = std::function<void()>{};
 	ImGuiUI::Shutdown();
 }
