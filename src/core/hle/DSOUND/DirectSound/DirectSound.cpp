@@ -376,7 +376,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(DirectSoundDoWork)()
 // For Async process purpose only
 static void dsound_thread_worker(LPVOID nullPtr)
 {
-	SetThreadAffinityMask(GetCurrentThread(), g_CPUOthers);
+    g_AffinityPolicy->SetAffinityOther();
 
     while (true) {
         // Testcase: Gauntlet Dark Legacy, if Sleep(1) then intro videos start to starved often

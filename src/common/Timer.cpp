@@ -102,9 +102,13 @@ void ClockThread(TimerObject* Timer)
 	if (!Timer->Name.empty()) {
 		CxbxSetThreadName(Timer->Name.c_str());
 	}
-	if (Timer->CpuAffinity != nullptr) {
-		InitXboxThread(*Timer->CpuAffinity);
+	if (Timer->IsXboxTimer) {
+		InitXboxThread();
+		g_AffinityPolicy->SetAffinityXbox();
+	} else {
+		g_AffinityPolicy->SetAffinityOther();
 	}
+
 	NewExpireTime = GetNextExpireTime(Timer);
 
 	while (true) {
@@ -133,7 +137,7 @@ void Timer_Exit(TimerObject* Timer)
 }
 
 // Allocates the memory for the timer object
-TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, unsigned long* Affinity)
+TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, bool IsXboxTimer)
 {
 	std::lock_guard<std::mutex>lock(TimerMtx);
 	TimerObject* pTimer = new TimerObject;
@@ -142,8 +146,8 @@ TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, unsigne
 	pTimer->ExpireTime_MS.store(0);
 	pTimer->Exit.store(false);
 	pTimer->Opaque = Arg;
-	Name.empty() ? pTimer->Name = "Unnamed thread" : pTimer->Name = Name;
-	pTimer->CpuAffinity = Affinity;
+	pTimer->Name = Name.empty() ? "Unnamed thread" : std::move(Name);
+	pTimer->IsXboxTimer = IsXboxTimer;
 	TimerList.emplace_back(pTimer);
 
 	return pTimer;

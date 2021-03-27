@@ -142,7 +142,8 @@ xbox::KPCR* WINAPI KeGetPcr()
 	if (Pcr == nullptr) {
 		EmuLog(LOG_LEVEL::WARNING, "KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
 		// Attempt to salvage the situation by calling InitXboxThread to setup KPCR in place
-		InitXboxThread(g_CPUXbox);
+		InitXboxThread();
+		g_AffinityPolicy->SetAffinityXbox();
 		Pcr = (xbox::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
 	}
 

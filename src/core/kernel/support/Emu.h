@@ -74,9 +74,6 @@ extern HWND   g_hEmuWindow;
 extern PVOID g_pfnThreadNotification[16];
 extern int g_iThreadNotificationCount;
 
-extern DWORD_PTR g_CPUXbox;
-extern DWORD_PTR g_CPUOthers;
-
 extern HANDLE g_CurrentProcessHandle; // Set in CxbxKrnlMain
 
 // Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime

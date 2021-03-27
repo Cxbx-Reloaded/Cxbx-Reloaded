@@ -50,14 +50,14 @@ typedef struct _TimerObject
 	TimerCB Callback;                    // function to call when the timer expires
 	void* Opaque;                        // opaque argument to pass to the callback
 	std::string Name;                    // the name of the timer thread (if any)
-	unsigned long* CpuAffinity;          // the cpu affinity of the timer thread (if any)
+	bool IsXboxTimer;                    // indicates that the timer should run on the Xbox CPU
 }
 TimerObject;
 
 extern uint64_t HostClockFrequency;
 
 /* Timer exported functions */
-TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, unsigned long* Affinity);
+TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, bool IsXboxTimer);
 void Timer_Start(TimerObject* Timer, uint64_t Expire_MS);
 void Timer_Exit(TimerObject* Timer);
 void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);
