@@ -55,10 +55,10 @@ static CXBX_XINPUT_IN_STATE g_InState[4];
 
 // Global bridge for xbox controller to host, 4 elements for 4 ports.
 CXBX_CONTROLLER_HOST_BRIDGE g_XboxControllerHostBridge[4] = {
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[0], false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[1], false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[2], false, false, false, { 0, 0, 0, 0, 0 } },
-	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[3], false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[0], false, false, false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[1], false, false, false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[2], false, false, false, false, false, { 0, 0, 0, 0, 0 } },
+	{ NULL, PORT_INVALID, XBOX_INPUT_DEVICE::DEVICE_INVALID, &g_InState[3], false, false, false, false, false, { 0, 0, 0, 0, 0 } },
 };
 
 
@@ -103,6 +103,7 @@ bool ConstructHleInputDevice(int Type, int Port)
 	g_bIsDevicesEmulating = true;
 	bool ret = true;
 
+	// NOTE: initialize bAutoPollDefault to its default state, which varies depending on the device type
 	switch (Type)
 	{
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE): {
@@ -111,6 +112,7 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
 		g_XboxControllerHostBridge[Port].bSignaled = false;
 		g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		g_XboxControllerHostBridge[Port].bAutoPollDefault = true;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
@@ -125,6 +127,7 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
 		g_XboxControllerHostBridge[Port].bSignaled = false;
 		g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		g_XboxControllerHostBridge[Port].bAutoPollDefault = true;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
@@ -142,6 +145,7 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
 		g_XboxControllerHostBridge[Port].bSignaled = false;
 		g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		g_XboxControllerHostBridge[Port].bAutoPollDefault = true;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_STEELBATTALION;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(SBCInput);
@@ -156,6 +160,7 @@ bool ConstructHleInputDevice(int Type, int Port)
 		g_XboxControllerHostBridge[Port].bPendingRemoval = false;
 		g_XboxControllerHostBridge[Port].bSignaled = false;
 		g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		g_XboxControllerHostBridge[Port].bAutoPollDefault = true;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = XINPUT_DEVTYPE_GAMEPAD;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = XINPUT_DEVSUBTYPE_GC_ARCADE_STICK;
 		g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = sizeof(XpadInput);
@@ -191,6 +196,7 @@ void DestructHleInputDevice(int Port)
 	g_XboxControllerHostBridge[Port].bPendingRemoval = false;
 	g_XboxControllerHostBridge[Port].bSignaled = false;
 	g_XboxControllerHostBridge[Port].bIoInProgress = false;
+	g_XboxControllerHostBridge[Port].bAutoPollDefault = false;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucType = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucSubType = 0;
 	g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize = 0;
@@ -330,6 +336,33 @@ void UpdateConnectedDeviceState(xbox::PXPP_DEVICE_TYPE DeviceType) {
 	DeviceType->ChangeConnected = DeviceType->PreviousConnected ^ DeviceType->CurrentConnected;
 }
 
+template<bool IsXInputPoll>
+xbox::dword_xt CxbxImpl_XInputHandler(xbox::HANDLE hDevice, xbox::PXINPUT_STATE pState)
+{
+	xbox::dword_xt status = ERROR_DEVICE_NOT_CONNECTED;
+	PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
+	int Port = Device->XboxPort;
+
+	if ((g_XboxControllerHostBridge[Port].hXboxDevice == hDevice) && !g_XboxControllerHostBridge[Port].bPendingRemoval) {
+		if (g_XboxControllerHostBridge[Port].bAutoPoll != IsXInputPoll) {
+			g_XboxControllerHostBridge[Port].bIoInProgress = true;
+			if (g_InputDeviceManager.UpdateXboxPortInput(Port, g_XboxControllerHostBridge[Port].InState, DIRECTION_IN, to_underlying(g_XboxControllerHostBridge[Port].XboxType))) {
+				g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber++;
+			}
+			g_XboxControllerHostBridge[Port].bIoInProgress = false;
+		}
+
+		if constexpr (!IsXInputPoll) {
+			std::memcpy((void *)&pState->Gamepad, g_XboxControllerHostBridge[Port].InState, g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize);
+			pState->dwPacketNumber = g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber;
+		}
+
+		status = ERROR_SUCCESS;
+	}
+
+	return status;
+}
+
 // ******************************************************************
 // * patch: XGetDevices
 // * Note: This could be unpatched however,
@@ -433,10 +466,11 @@ xbox::HANDLE WINAPI xbox::EMUPATCH(XInputOpen)
 
     if (dwPort >= PORT_1 && dwPort <= PORT_4) {
         if (DeviceType == g_XboxControllerHostBridge[dwPort].XboxType) {
+			g_XboxControllerHostBridge[dwPort].bAutoPoll = pPollingParameters != xbox::zeroptr ?
+				pPollingParameters->fAutoPoll : g_XboxControllerHostBridge[dwPort].bAutoPollDefault;
 			g_XboxControllerHostBridge[dwPort].hXboxDevice = &g_XboxControllerHostBridge[dwPort];
 			RETURN(g_XboxControllerHostBridge[dwPort].hXboxDevice);
         }
-        
     }
     
 	RETURN(NULL);
@@ -469,9 +503,10 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputPoll)
 {
 	LOG_FUNC_ONE_ARG(hDevice);
 
-	// Nothing to do
+	// Test cases: Oddworld: Stranger's Wrath, Jet Set Radio Future, Splinter Cell 2, Panzer Dragoon Orta and 1
+	dword_xt ret = CxbxImpl_XInputHandler<true>(hDevice, nullptr);
 
-	RETURN(ERROR_SUCCESS);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -517,20 +552,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetState)
 		LOG_FUNC_ARG_OUT(pState)
 		LOG_FUNC_END;
 
-    dword_xt ret = ERROR_DEVICE_NOT_CONNECTED;
-    PCXBX_CONTROLLER_HOST_BRIDGE Device = (PCXBX_CONTROLLER_HOST_BRIDGE)hDevice;
-    int Port = Device->XboxPort;
-    if (g_XboxControllerHostBridge[Port].hXboxDevice == hDevice) {
-        if (!g_XboxControllerHostBridge[Port].bPendingRemoval) {
-            g_XboxControllerHostBridge[Port].bIoInProgress = true;
-            if (g_InputDeviceManager.UpdateXboxPortInput(Port, g_XboxControllerHostBridge[Port].InState, DIRECTION_IN, to_underlying(g_XboxControllerHostBridge[Port].XboxType))) {
-                pState->dwPacketNumber = g_XboxControllerHostBridge[Port].XboxDeviceInfo.dwPacketNumber++;
-            }
-            memcpy((void*)&pState->Gamepad, g_XboxControllerHostBridge[Port].InState, g_XboxControllerHostBridge[Port].XboxDeviceInfo.ucInputStateSize);
-            g_XboxControllerHostBridge[Port].bIoInProgress = false;
-            ret = ERROR_SUCCESS;
-        }
-    }
+	dword_xt ret = CxbxImpl_XInputHandler<false>(hDevice, pState);
     
 	RETURN(ret);
 }
