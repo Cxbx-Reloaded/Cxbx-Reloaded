@@ -30,6 +30,7 @@
 #include "Mutex.h"
 #include "common\IPCHybrid.hpp"
 #include "common\input\Button.h"
+#include "common/xbox_types.h"
 #include "CxbxVersion.h"
 #include "core/common/imgui/settings.h"
 #include <memory.h>
@@ -245,8 +246,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * File storage location
 		// ******************************************************************
-		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_core.szStorageLocation, MAX_PATH); Unlock(); }
-		void SetStorageLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, MAX_PATH); Unlock(); }
+		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_core.szStorageLocation, xbox::max_path); Unlock(); }
+		void SetStorageLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, xbox::max_path); Unlock(); }
 
 		// ******************************************************************
 		// * ClipCursor flag Accessors
@@ -302,6 +303,22 @@ class EmuShared : public Mutex
 		}
 
 		// ******************************************************************
+		// * TitleMountPath Accessor
+		// ******************************************************************
+		void GetTitleMountPath(char *value)
+		{
+			Lock();
+			std::strncpy(value, m_TitleMountPath, sizeof(m_TitleMountPath));
+			Unlock();
+		}
+		void SetTitleMountPath(const char* value)
+		{
+			Lock();
+			std::strncpy(m_TitleMountPath, value, sizeof(m_TitleMountPath) - 1);
+			Unlock();
+		}
+
+		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
 		// ******************************************************************
 		void ResetKrnl()
@@ -351,6 +368,7 @@ class EmuShared : public Mutex
 		int          m_DeviceType[4];
 		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
+		char         m_TitleMountPath[xbox::max_path];
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.
