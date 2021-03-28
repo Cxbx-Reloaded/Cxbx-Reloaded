@@ -724,7 +724,7 @@ XBSYSAPI EXPORTNUM(108) xbox::void_xt NTAPI xbox::KeInitializeEvent
 		LOG_FUNC_END;
 
 	// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
-	// In this case, it is already initialized so no need tod o anything
+	// In this case, it is already initialized so no need todo anything
 	// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
 	DWORD flags = 0;
 	if (GetHandleInformation((HANDLE)Event, &flags)) {

@@ -42,11 +42,11 @@
 #pragma warning(default:4005)
 
 #define INITIALIZED_OBJECT_STRING(ObjectString, Value)                  \
-	xbox::char_xt ObjectString##Buffer[] = Value;                      \
-	xbox::OBJECT_STRING ObjectString = {							\
-	sizeof(Value) - sizeof(CHAR),                                      \
-	sizeof(Value),                                                      \
-	ObjectString##Buffer                                                \
+    xbox::char_xt ObjectString##Buffer[] = Value;                       \
+    xbox::OBJECT_STRING ObjectString = {                                \
+    sizeof(Value) - sizeof(xbox::char_xt),                              \
+    sizeof(Value),                                                      \
+    ObjectString##Buffer                                                \
 }
 
 INITIALIZED_OBJECT_STRING(ObpDosDevicesString, "\\??");
@@ -65,8 +65,8 @@ XBSYSAPI EXPORTNUM(245) xbox::OBJECT_HANDLE_TABLE xbox::ObpObjectHandleTable = {
 xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
 
 xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
-	IN xbox::POBJECT_STRING DirectoryName OPTIONAL,
-	OUT xbox::POBJECT_DIRECTORY *DirectoryObject
+	IN POBJECT_STRING DirectoryName OPTIONAL,
+	OUT POBJECT_DIRECTORY *DirectoryObject
 )
 {
 	LOG_FUNC_BEGIN
@@ -128,23 +128,25 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 			FoundObject = (POBJECT_DIRECTORY)ObpGetObjectHandleContents(RootDirectoryHandle);
 
 			if (FoundObject == NULL) {
-				status = STATUS_INVALID_HANDLE;
+				status = xbox::status_invalid_handle;
 				goto CleanupAndExit;
 			}
 		}
 
 		if ((RemainingName.Length != 0) &&
 			(RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR)) {
-			status = STATUS_OBJECT_NAME_INVALID;
+			status = xbox::status_object_name_invalid;
 			goto CleanupAndExit;
 		}
 
 		goto OpenRootDirectory;
 	}
 
+	FoundObject = ObpRootDirectoryObject;
+
 	if ((RemainingName.Length == 0) ||
 		(RemainingName.Buffer[0] != OBJ_NAME_PATH_SEPARATOR)) {
-		status = STATUS_OBJECT_NAME_INVALID;
+		status = xbox::status_object_name_invalid;
 		goto CleanupAndExit;
 	}
 
@@ -162,7 +164,7 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 
 		if (RemainingName.Length != 0) {
 			if (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) {
-				status = STATUS_OBJECT_NAME_INVALID;
+				status = xbox::status_object_name_invalid;
 				goto CleanupAndExit;
 			}
 		} else {
@@ -444,7 +446,7 @@ XBSYSAPI EXPORTNUM(239) xbox::ntstatus_xt NTAPI xbox::ObCreateObject
 	POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)(ObjectNameInfo + 1);
 	ObjectNameInfo->ChainLink = NULL;
 	ObjectNameInfo->Directory = NULL;
-	ObjectNameInfo->Name.Buffer = (PSTR)((PUCHAR)&ObjectHeader->Body +	ObjectBodySize);
+	ObjectNameInfo->Name.Buffer = (PSTR)((PUCHAR)&ObjectHeader->Body + ObjectBodySize);
 	ObjectNameInfo->Name.Length = ElementName.Length;
 	ObjectNameInfo->Name.MaximumLength = ElementName.Length;
 
