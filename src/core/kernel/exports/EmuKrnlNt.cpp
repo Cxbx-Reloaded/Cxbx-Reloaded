@@ -873,33 +873,9 @@ XBSYSAPI EXPORTNUM(203) xbox::ntstatus_xt NTAPI xbox::NtOpenSymbolicLinkObject
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 )
 {
-	/* TODO :
 	LOG_FORWARD("ObOpenObjectByName");
 
 	return ObOpenObjectByName(ObjectAttributes, &ObSymbolicLinkObjectType, NULL, LinkHandle);
-	*/
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(LinkHandle)
-		LOG_FUNC_ARG(ObjectAttributes)
-		LOG_FUNC_END;
-
-	NTSTATUS ret = STATUS_OBJECT_PATH_NOT_FOUND;
-	EmuNtSymbolicLinkObject* symbolicLinkObject =
-		FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
-
-	if (symbolicLinkObject != NULL)
-	{
-		// Return a new handle (which is an EmuHandle, actually) :
-		*LinkHandle = symbolicLinkObject->NewHandle();
-		ret = xbox::status_success;
-	}
-
-	if (ret != xbox::status_success)
-		EmuLog(LOG_LEVEL::WARNING, "NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(ret));
-	else
-		EmuLog(LOG_LEVEL::DEBUG, "NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X", *LinkHandle);
-
-	RETURN(ret);
 }
 
 // ******************************************************************

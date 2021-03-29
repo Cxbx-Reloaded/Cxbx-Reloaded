@@ -774,10 +774,63 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-	assert(false);
+#if 0 // Enable when ObInitSystem/IoCreateDevice are functional.
 
-	RETURN(xbox::status_success);
+	PVOID Object;
+	HANDLE newHandle = nullptr;
+	ntstatus_xt result = ObpReferenceObjectByName(ObjectAttributes->RootDirectory, ObjectAttributes->ObjectName,
+		ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
+
+	if (nt_success(result)) {
+		KIRQL oldIrql = KeRaiseIrqlToDpcLevel();
+
+		newHandle = ObpCreateObjectHandle(Object);
+
+		KfLowerIrql(oldIrql);
+
+		if (newHandle == nullptr) {
+			ObfDereferenceObject(Object);
+			result = xbox::status_insufficient_resources;
+		}
+	}
+
+	*Handle = newHandle;
+
+	RETURN(result);
+
+#endif
+
+	ntstatus_xt result = STATUS_OBJECT_PATH_NOT_FOUND;
+
+	// Use this place for any interface implementation since
+	// it is origin of creating new handle. In other case, "ObpCreateObjectHandle" handle it directly.
+	// But global variables with POBJECT_DIRECTORY are not initialized properly.
+	// Along with IoCreateSymbolicLink for ObSymbolicLinkObjectType linkage in order to work.
+	if (ObjectType == &ObSymbolicLinkObjectType) {
+		EmuNtSymbolicLinkObject* symbolicLinkObject =
+			FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
+
+		if (symbolicLinkObject != nullptr)
+		{
+			// Return a new handle (which is an EmuHandle, actually) :
+			*Handle = symbolicLinkObject->NewHandle();
+			result = xbox::status_success;
+		}
+
+		if (!nt_success(result)) {
+			EmuLog(LOG_LEVEL::WARNING, "NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(result));
+		}
+		else {
+			EmuLog(LOG_LEVEL::DEBUG, "NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X", *Handle);
+		}
+	}
+	else {
+		LOG_UNIMPLEMENTED();
+		assert(false);
+		result = xbox::status_success;
+	}
+
+	RETURN(result);
 }
 
 // ******************************************************************
