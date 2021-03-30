@@ -233,24 +233,22 @@ XBSYSAPI EXPORTNUM(189) xbox::ntstatus_xt NTAPI xbox::NtCreateEvent
 		LOG_FUNC_ARG(InitialState)
 		LOG_FUNC_END;
 
-/*
-	NTSTATUS Status;
-
+	ntstatus_xt result;
+#ifdef CXBX_KERNEL_REWORK_ENABLED
 	if ((EventType != NotificationEvent) && (EventType != SynchronizationEvent)) {
-		Status = STATUS_INVALID_PARAMETER;
+		result = STATUS_INVALID_PARAMETER;
 	}
 	else {
 		PKEVENT Event;
 
-		Status = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
-		if (nt_success(Status)) {
+		result = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
+		if (nt_success(result)) {
 			KeInitializeEvent(Event, EventType, InitialState);
-			Status = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
+			result = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
 		}
 	}
+#else
 
-	RETURN(Status);
-*/
 	LOG_INCOMPLETE(); // TODO : Verify arguments, use ObCreateObject, KeInitializeEvent and ObInsertObject instead of this:
 
 	// initialize object attributes
@@ -261,7 +259,7 @@ XBSYSAPI EXPORTNUM(189) xbox::ntstatus_xt NTAPI xbox::NtCreateEvent
 	const ACCESS_MASK DesiredAccess = EVENT_ALL_ACCESS;
 
 	// redirect to Win2k/XP
-	NTSTATUS ret = NtDll::NtCreateEvent(
+	result = NtDll::NtCreateEvent(
 		/*OUT*/EventHandle,
 		DesiredAccess,
 		nativeObjectAttributes.NtObjAttrPtr,
@@ -271,28 +269,29 @@ XBSYSAPI EXPORTNUM(189) xbox::ntstatus_xt NTAPI xbox::NtCreateEvent
 	// TODO : Instead of the above, we should consider using the Ke*Event APIs, but
 	// that would require us to create the event's kernel object with the Ob* api's too!
 
-	if (FAILED(ret))
+	if (FAILED(result))
 	{
-		EmuLog(LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", ret);
+		EmuLog(LOG_LEVEL::WARNING, "Trying fallback (without object attributes)...\nError code 0x%X", result);
 
 		// If it fails, try again but without the object attributes stucture
 		// This fixes Panzer Dragoon games on non-Vista OSes.
-		ret = NtDll::NtCreateEvent(
+		result = NtDll::NtCreateEvent(
 			/*OUT*/EventHandle,
 			DesiredAccess,
 			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
 			(NtDll::EVENT_TYPE)EventType,
 			InitialState);
 
-		if(FAILED(ret))
+		if(FAILED(result))
 			EmuLog(LOG_LEVEL::WARNING, "NtCreateEvent Failed!");
 		else
 			EmuLog(LOG_LEVEL::DEBUG, "NtCreateEvent EventHandle = 0x%.8X", *EventHandle);
 	}
 	else
 		EmuLog(LOG_LEVEL::DEBUG, "NtCreateEvent EventHandle = 0x%.8X", *EventHandle);
+#endif
 
-	RETURN(ret);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -680,25 +679,26 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = xbox::status_success;
+	NTSTATUS result = xbox::status_success;
+
+#ifdef CXBX_KERNEL_REWORK_ENABLED
+	PVOID Object;
+
+	result = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=*/nullptr, &Object);
+	if (nt_success(result)) {
+		if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
+			NtClose(SourceHandle);
+
+		result = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT*/TargetHandle);
+		ObfDereferenceObject(Object);
+	}
+	else
+		*TargetHandle = NULL;
+#else
 
 	if (EmuHandle::IsEmuHandle(SourceHandle)) {
 		auto iEmuHandle = (EmuHandle*)SourceHandle;
-		ret = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
-/*
-		PVOID Object;
-
-		ret = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=* /NULL, &Object);
-		if (nt_success(ret)) {
-			if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
-				NtClose(SourceHandle);
-
-			status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT* /TargetHandle);
-			ObDereferenceObject(Object);
-		}
-		else
-			*TargetHandle = NULL;
-*/
+		result = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
 	}
 	else
 	{
@@ -708,7 +708,7 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		Options |= (DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
 
 		// redirect to Win2k/XP
-		ret = NtDll::NtDuplicateObject(
+		result = NtDll::NtDuplicateObject(
 			/*SourceProcessHandle=*/g_CurrentProcessHandle,
 			SourceHandle,
 			/*TargetProcessHandle=*/g_CurrentProcessHandle,
@@ -718,10 +718,11 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 			Options);
 	}
 
-	if (ret != xbox::status_success)
+	if (result != xbox::status_success)
 		EmuLog(LOG_LEVEL::WARNING, "Object was not duplicated!");
+#endif
 
-	RETURN(ret);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -1448,8 +1449,8 @@ XBSYSAPI EXPORTNUM(217) xbox::ntstatus_xt NTAPI xbox::NtQueryVirtualMemory
 	}
 
 	#if 0
-	if (FAILED(ret)) {
-		EmuLog(LOG_LEVEL::WARNING, "NtQueryVirtualMemory failed (%s)!", NtStatusToString(ret));
+	if (FAILED(result)) {
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryVirtualMemory failed (%s)!", NtStatusToString(result));
 
 		// Bugfix for "Forza Motorsport", which iterates over 2 Gb of memory in 64kb chunks,
 		// but fails on this last query. It's not done though, as after this Forza tries to
@@ -1466,7 +1467,7 @@ XBSYSAPI EXPORTNUM(217) xbox::ntstatus_xt NTAPI xbox::NtQueryVirtualMemory
 			Buffer->Protect = PAGE_READONLY;            // One of the flags listed for the AllocationProtect member is specified
 			Buffer->Type = 262144;                      // Specifies the type of pages in the region. (MEM_IMAGE, MEM_MAPPED or MEM_PRIVATE)
 
-			ret = xbox::status_success;
+			result = xbox::status_success;
 
 			EmuLog(LOG_LEVEL::DEBUG, "NtQueryVirtualMemory: Applied fix for Forza Motorsport!");
 		}
@@ -1704,7 +1705,7 @@ XBSYSAPI EXPORTNUM(221) xbox::ntstatus_xt NTAPI xbox::NtReleaseMutant
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtReleaseMutant Failed!");
 
-	RETURN(xbox::status_success); // TODO : RETURN(ret);
+	RETURN(xbox::status_success); // TODO : RETURN(result);
 }
 
 // ******************************************************************

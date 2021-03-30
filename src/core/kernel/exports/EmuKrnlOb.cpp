@@ -389,6 +389,25 @@ xbox::void_xt xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, 
 	return;
 }
 
+static inline xbox::HANDLE ObpGetHandleByObjectThenDereferenceInline(const xbox::PVOID Object, xbox::ntstatus_xt& result) {
+	xbox::HANDLE newHandle = nullptr;
+
+	if (xbox::nt_success(result)) {
+		xbox::KIRQL oldIrql = xbox::KeRaiseIrqlToDpcLevel();
+
+		newHandle = xbox::ObpCreateObjectHandle(Object);
+
+		xbox::KfLowerIrql(oldIrql);
+
+		if (newHandle == nullptr) {
+			xbox::ObfDereferenceObject(Object);
+			result = xbox::status_insufficient_resources;
+		}
+	}
+
+	return newHandle;
+}
+
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
@@ -781,31 +800,13 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-#if 0 // Enable when ObInitSystem/IoCreateDevice are functional.
-
+#ifdef CXBX_KERNEL_REWORK_ENABLED
 	PVOID Object;
-	HANDLE newHandle = nullptr;
 	ntstatus_xt result = ObpReferenceObjectByName(ObjectAttributes->RootDirectory, ObjectAttributes->ObjectName,
 		ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
 
-	if (nt_success(result)) {
-		KIRQL oldIrql = KeRaiseIrqlToDpcLevel();
-
-		newHandle = ObpCreateObjectHandle(Object);
-
-		KfLowerIrql(oldIrql);
-
-		if (newHandle == nullptr) {
-			ObfDereferenceObject(Object);
-			result = xbox::status_insufficient_resources;
-		}
-	}
-
-	*Handle = newHandle;
-
-	RETURN(result);
-
-#endif
+	*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
+#else
 
 	ntstatus_xt result = STATUS_OBJECT_PATH_NOT_FOUND;
 
@@ -836,6 +837,7 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 		assert(false);
 		result = xbox::status_success;
 	}
+#endif
 
 	RETURN(result);
 }
@@ -856,10 +858,17 @@ XBSYSAPI EXPORTNUM(244) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByPointer
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
+#ifdef CXBX_KERNEL_REWORK_ENABLED
+	ntstatus_xt result = ObReferenceObjectByPointer(Object, ObjectType);
+
+	*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
+	RETURN(result);
+#else
 	LOG_UNIMPLEMENTED();
 	assert(false);
 
 	RETURN(xbox::status_success);
+#endif
 }
 
 // ******************************************************************
