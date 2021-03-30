@@ -28,6 +28,13 @@
 
 #define LOG_PREFIX CXBXR_MODULE::OB
 
+// TODO: What needs proper implement from Ob functions' side: (use CXBX_KERNEL_REWORK_ENABLED defined to evaluate what needs fixing)
+// ObpDeleteSymbolicLink - internal function which would need a call to ObDereferenceObject with LinkTargetObject pass down.
+//   Plus it require proper IoCreateSymbolicLink implement as well, not emulated implement method.
+// ObpDefaultObject - Find out how to initialize this. Then connect the dots from TODO message.
+// OBJECT_DIRECTORY interface (root, dos, device, and named object, you can find global varables about 30 lines below)
+// etc (add more above this line)
+
 
 #include <core\kernel\exports\xboxkrnl.h> // For ObDirectoryObjectType, etc.
 #include "Logging.h" // For LOG_FUNC()
