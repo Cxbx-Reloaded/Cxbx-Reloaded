@@ -28,9 +28,6 @@ struct VS_OUTPUT // Declared identical to pixel shader input (see PS_INPUT)
 // Xbox constant registers
 uniform float4 C[X_D3DVS_CONSTREG_COUNT] : register(c0);
 
-// Parameters for mapping the shader's fog output value to a fog factor
-uniform float4  CxbxFogInfo: register(c218); // = CXBX_D3DVS_CONSTREG_FOGINFO
-
 // Default values for vertex registers, and whether to use them
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
 uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
@@ -39,6 +36,9 @@ uniform float4 xboxScreenspaceScale : register(c212);
 uniform float4 xboxScreenspaceOffset : register(c213);
 
 uniform float4 xboxTextureScale[4] : register(c214);
+
+// Parameters for mapping the shader's fog output value to a fog factor
+uniform float4  CxbxFogInfo: register(c218); // = CXBX_D3DVS_CONSTREG_FOGINFO
 
 // Overloaded casts, assuring all inputs are treated as float4
 float4 _tof4(float  src) { return float4(src, src, src, src); }
@@ -329,6 +329,8 @@ R"DELIMITER(
 	// Copy variables to output struct
     VS_OUTPUT xOut;
 
+	// Fogging
+	// TODO deduplicate
 	const float fogDepth      =   abs(oFog.x); 
 	const float fogTableMode  =   CxbxFogInfo.x;
 	const float fogDensity    =   CxbxFogInfo.y;
@@ -348,7 +350,7 @@ R"DELIMITER(
     if(fogTableMode == FOG_TABLE_EXP2) 
        fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
     if(fogTableMode == FOG_TABLE_LINEAR) 
-       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart) ;
+       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
        
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
