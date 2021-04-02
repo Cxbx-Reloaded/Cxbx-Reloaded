@@ -85,7 +85,7 @@ namespace xbox
 	// ******************************************************************
 	typedef char_xt *PCHAR;
 	typedef char_xt *PSZ;
-	typedef char_xt *PCSZ;
+	typedef const char_xt *PCSZ;
 	typedef byte_xt *PBYTE;
 	typedef boolean_xt *PBOOLEAN;
 	typedef uchar_xt *PUCHAR;

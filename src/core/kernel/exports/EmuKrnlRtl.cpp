@@ -1072,10 +1072,10 @@ XBSYSAPI EXPORTNUM(289) xbox::void_xt NTAPI xbox::RtlInitAnsiString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	DestinationString->Buffer = SourceString;
+	DestinationString->Buffer = const_cast<PCHAR>(SourceString);
 	if (SourceString != NULL) {
 		CCHAR *pSourceString = (CCHAR*)(SourceString);
-		DestinationString->Buffer = SourceString;
+		DestinationString->Buffer = const_cast<PCHAR>(SourceString);
 		DestinationString->Length = (USHORT)strlen(pSourceString);
 		DestinationString->MaximumLength = DestinationString->Length + 1;
 	}
