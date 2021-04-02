@@ -360,11 +360,19 @@ std::wstring string_to_wstring(std::string const & src)
 
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src)
 {
-return std::wstring(src->Buffer, src->Length / sizeof(NtDll::WCHAR));
+	if (src == nullptr) {
+		return L"";
+	}
+
+	return std::wstring(src->Buffer, src->Length / sizeof(NtDll::WCHAR));
 }
 
 std::string PSTRING_to_string(xbox::PSTRING const & src)
 {
+	if (src == nullptr) {
+		return "";
+	}
+
 	return std::string(src->Buffer, src->Length);
 }
 
