@@ -28,6 +28,13 @@
 
 #define LOG_PREFIX CXBXR_MODULE::OB
 
+// TODO: What needs proper implement from Ob functions' side: (use CXBX_KERNEL_REWORK_ENABLED defined to evaluate what needs fixing)
+// ObpDeleteSymbolicLink - internal function which would need a call to ObDereferenceObject with LinkTargetObject pass down.
+//   Plus it require proper IoCreateSymbolicLink implement as well, not emulated implement method.
+// ObpDefaultObject - Find out how to initialize this. Then connect the dots from TODO message.
+// OBJECT_DIRECTORY interface (root, dos, device, and named object, you can find global varables about 30 lines below)
+// etc (add more above this line)
+
 
 #include <core\kernel\exports\xboxkrnl.h> // For ObDirectoryObjectType, etc.
 #include "Logging.h" // For LOG_FUNC()
@@ -42,11 +49,11 @@
 #pragma warning(default:4005)
 
 #define INITIALIZED_OBJECT_STRING(ObjectString, Value)                  \
-	xbox::char_xt ObjectString##Buffer[] = Value;                      \
-	xbox::OBJECT_STRING ObjectString = {							\
-	sizeof(Value) - sizeof(CHAR),                                      \
-	sizeof(Value),                                                      \
-	ObjectString##Buffer                                                \
+    xbox::char_xt ObjectString##Buffer[] = Value;                       \
+    xbox::OBJECT_STRING ObjectString = {                                \
+    sizeof(Value) - sizeof(xbox::char_xt),                              \
+    sizeof(Value),                                                      \
+    ObjectString##Buffer                                                \
 }
 
 INITIALIZED_OBJECT_STRING(ObpDosDevicesString, "\\??");
@@ -65,8 +72,8 @@ XBSYSAPI EXPORTNUM(245) xbox::OBJECT_HANDLE_TABLE xbox::ObpObjectHandleTable = {
 xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
 
 xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
-	IN xbox::POBJECT_STRING DirectoryName OPTIONAL,
-	OUT xbox::POBJECT_DIRECTORY *DirectoryObject
+	IN POBJECT_STRING DirectoryName OPTIONAL,
+	OUT POBJECT_DIRECTORY *DirectoryObject
 )
 {
 	LOG_FUNC_BEGIN
@@ -128,23 +135,25 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 			FoundObject = (POBJECT_DIRECTORY)ObpGetObjectHandleContents(RootDirectoryHandle);
 
 			if (FoundObject == NULL) {
-				status = STATUS_INVALID_HANDLE;
+				status = xbox::status_invalid_handle;
 				goto CleanupAndExit;
 			}
 		}
 
 		if ((RemainingName.Length != 0) &&
 			(RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR)) {
-			status = STATUS_OBJECT_NAME_INVALID;
+			status = xbox::status_object_name_invalid;
 			goto CleanupAndExit;
 		}
 
 		goto OpenRootDirectory;
 	}
 
+	FoundObject = ObpRootDirectoryObject;
+
 	if ((RemainingName.Length == 0) ||
 		(RemainingName.Buffer[0] != OBJ_NAME_PATH_SEPARATOR)) {
-		status = STATUS_OBJECT_NAME_INVALID;
+		status = xbox::status_object_name_invalid;
 		goto CleanupAndExit;
 	}
 
@@ -162,7 +171,7 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 
 		if (RemainingName.Length != 0) {
 			if (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) {
-				status = STATUS_OBJECT_NAME_INVALID;
+				status = xbox::status_object_name_invalid;
 				goto CleanupAndExit;
 			}
 		} else {
@@ -380,6 +389,25 @@ xbox::void_xt xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, 
 	return;
 }
 
+static inline xbox::HANDLE ObpGetHandleByObjectThenDereferenceInline(const xbox::PVOID Object, xbox::ntstatus_xt& result) {
+	xbox::HANDLE newHandle = nullptr;
+
+	if (xbox::nt_success(result)) {
+		xbox::KIRQL oldIrql = xbox::KeRaiseIrqlToDpcLevel();
+
+		newHandle = xbox::ObpCreateObjectHandle(Object);
+
+		xbox::KfLowerIrql(oldIrql);
+
+		if (newHandle == nullptr) {
+			xbox::ObfDereferenceObject(Object);
+			result = xbox::status_insufficient_resources;
+		}
+	}
+
+	return newHandle;
+}
+
 // ******************************************************************
 // * 0x00EF - ObCreateObject()
 // ******************************************************************
@@ -444,7 +472,7 @@ XBSYSAPI EXPORTNUM(239) xbox::ntstatus_xt NTAPI xbox::ObCreateObject
 	POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)(ObjectNameInfo + 1);
 	ObjectNameInfo->ChainLink = NULL;
 	ObjectNameInfo->Directory = NULL;
-	ObjectNameInfo->Name.Buffer = (PSTR)((PUCHAR)&ObjectHeader->Body +	ObjectBodySize);
+	ObjectNameInfo->Name.Buffer = (PSTR)((PUCHAR)&ObjectHeader->Body + ObjectBodySize);
 	ObjectNameInfo->Name.Length = ElementName.Length;
 	ObjectNameInfo->Name.MaximumLength = ElementName.Length;
 
@@ -772,10 +800,46 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
-	assert(false);
+#ifdef CXBX_KERNEL_REWORK_ENABLED
+	PVOID Object;
+	ntstatus_xt result = ObpReferenceObjectByName(ObjectAttributes->RootDirectory, ObjectAttributes->ObjectName,
+		ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
 
-	RETURN(xbox::status_success);
+	*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
+#else
+
+	ntstatus_xt result = STATUS_OBJECT_PATH_NOT_FOUND;
+
+	// Use this place for any interface implementation since
+	// it is origin of creating new handle. In other case, "ObpCreateObjectHandle" handle it directly.
+	// But global variables with POBJECT_DIRECTORY are not initialized properly.
+	// Along with IoCreateSymbolicLink for ObSymbolicLinkObjectType linkage in order to work.
+	if (ObjectType == &ObSymbolicLinkObjectType) {
+		EmuNtSymbolicLinkObject* symbolicLinkObject =
+			FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
+
+		if (symbolicLinkObject != nullptr)
+		{
+			// Return a new handle (which is an EmuHandle, actually) :
+			*Handle = symbolicLinkObject->NewHandle();
+			result = xbox::status_success;
+		}
+
+		if (!nt_success(result)) {
+			EmuLog(LOG_LEVEL::WARNING, "NtOpenSymbolicLinkObject failed! (%s)", NtStatusToString(result));
+		}
+		else {
+			EmuLog(LOG_LEVEL::DEBUG, "NtOpenSymbolicLinkObject LinkHandle^ = 0x%.8X", *Handle);
+		}
+	}
+	else {
+		LOG_UNIMPLEMENTED();
+		assert(false);
+		result = xbox::status_success;
+	}
+#endif
+
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -794,10 +858,17 @@ XBSYSAPI EXPORTNUM(244) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByPointer
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
+#ifdef CXBX_KERNEL_REWORK_ENABLED
+	ntstatus_xt result = ObReferenceObjectByPointer(Object, ObjectType);
+
+	*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
+	RETURN(result);
+#else
 	LOG_UNIMPLEMENTED();
 	assert(false);
 
 	RETURN(xbox::status_success);
+#endif
 }
 
 // ******************************************************************

@@ -193,12 +193,12 @@ XBSYSAPI EXPORTNUM(64) xbox::OBJECT_TYPE xbox::IoCompletionObjectType =
 // ******************************************************************
 XBSYSAPI EXPORTNUM(65) xbox::ntstatus_xt NTAPI xbox::IoCreateDevice
 (
-	IN  PDRIVER_OBJECT		DriverObject,
-	IN  ulong_xt				DeviceExtensionSize,
-	IN  PSTRING				DeviceName OPTIONAL,
-	IN  ulong_xt				DeviceType,
-	IN  boolean_xt				Exclusive,
-	OUT PDEVICE_OBJECT*		DeviceObject
+	IN  PDRIVER_OBJECT      DriverObject,
+	IN  ulong_xt            DeviceExtensionSize,
+	IN  PSTRING             DeviceName OPTIONAL,
+	IN  ulong_xt            DeviceType,
+	IN  boolean_xt          Exclusive,
+	OUT PDEVICE_OBJECT*     DeviceObject
 )
 {
 	LOG_FUNC_BEGIN
@@ -210,6 +210,9 @@ XBSYSAPI EXPORTNUM(65) xbox::ntstatus_xt NTAPI xbox::IoCreateDevice
 		LOG_FUNC_ARG_OUT(DeviceObject)
 		LOG_FUNC_END;
 
+	// TODO: IoCreateDevice is critical to enable support for devices interface.
+	//       Which include disk, dvd-rom, memory unit cards, etc.
+	//       Find a way to coexist with host interface from here.
 	LOG_UNIMPLEMENTED();
 
 	RETURN(xbox::status_success);

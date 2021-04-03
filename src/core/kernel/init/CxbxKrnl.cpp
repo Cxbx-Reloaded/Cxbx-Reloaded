@@ -1520,7 +1520,10 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	InitXboxThread();
 	g_AffinityPolicy->SetAffinityXbox();
-	xbox::ObInitSystem();
+	if (!xbox::ObInitSystem()) {
+		// TODO: Replace EmuLogEx to CxbxKrnlCleanupEx when ObInitSystem's calls are properly implement.
+		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::WARNING, "Unable to intialize xbox::ObInitSystem.");
+	}
 	xbox::KiInitSystem();
 
 	EmuX86_Init();

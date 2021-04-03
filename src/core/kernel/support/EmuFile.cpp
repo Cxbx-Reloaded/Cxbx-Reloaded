@@ -276,7 +276,7 @@ const std::string DeviceHarddisk0Partition20 = DeviceHarddisk0PartitionPrefix + 
 const char CxbxDefaultXbeDriveLetter = 'D';
 
 int CxbxDefaultXbeDriveIndex = -1;
-EmuNtSymbolicLinkObject* NtSymbolicLinkObjects[26];
+EmuNtSymbolicLinkObject* NtSymbolicLinkObjects['Z' - 'A' + 1];
 std::vector<XboxDevice> Devices;
 
 EmuHandle::EmuHandle(EmuNtObject* ntObject)
@@ -360,11 +360,19 @@ std::wstring string_to_wstring(std::string const & src)
 
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src)
 {
-return std::wstring(src->Buffer, src->Length / sizeof(NtDll::WCHAR));
+	if (src == nullptr) {
+		return L"";
+	}
+
+	return std::wstring(src->Buffer, src->Length / sizeof(NtDll::WCHAR));
 }
 
 std::string PSTRING_to_string(xbox::PSTRING const & src)
 {
+	if (src == nullptr) {
+		return "";
+	}
+
 	return std::string(src->Buffer, src->Length);
 }
 
@@ -461,13 +469,13 @@ NTSTATUS CxbxConvertFilePath(
 					// Assume relative to Xbe path
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 				}
-				else if (*RootDirectory == (NtDll::HANDLE)-3) {
+				else if (*RootDirectory == ObDosDevicesDirectory()) {
 					// This is a special handle that tells the API that this is a DOS device
 					// We can safely remove it and forward to the Xbe directory.
 					// Test case GTA3
 					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
 				}
-				else if (*RootDirectory == (NtDll::HANDLE)-4) {
+				else if (*RootDirectory == ObWin32NamedObjectsDirectory()) {
 					// NOTE: A handle of -4 on the Xbox signifies the path should be in the BaseNamedObjects namespace.
 					// This handle doesn't exist on Windows, so we prefix the name instead. (note from LukeUsher)
 					// Handle special root directory constants
@@ -705,7 +713,6 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 						HostSymbolicLinkPath = HostSymbolicLinkPath + ExtraPath;
 				}
 
-				SHCreateDirectoryEx(NULL, HostSymbolicLinkPath.c_str(), NULL);
 				RootDirectoryHandle = CreateFile(HostSymbolicLinkPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 				if (RootDirectoryHandle == INVALID_HANDLE_VALUE)
 				{
