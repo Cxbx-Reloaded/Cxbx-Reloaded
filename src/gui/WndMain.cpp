@@ -387,6 +387,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							g_EmuShared->SetIsReady(true);
 						}
 						break;
+
 						case ID_GUI_STATUS_OVERLAY:
 							g_EmuShared->GetOverlaySettings(&g_Settings->m_overlay);
 							break;

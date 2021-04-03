@@ -766,7 +766,7 @@ void Settings::SyncToEmulator()
 	// register Network settings
 	g_EmuShared->SetNetworkSettings(&m_network);
 
-	// register Input gamepad settings
+	// register xbox device input settings
 	for (int i = 0; i < 4; i++) {
 		g_EmuShared->SetInputDevTypeSettings(&m_input_port[i].Type, i);
 		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
