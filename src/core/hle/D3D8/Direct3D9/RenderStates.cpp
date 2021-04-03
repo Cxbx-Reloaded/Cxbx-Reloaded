@@ -435,11 +435,13 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_NORMALIZENORMALS:
         case xbox::X_D3DRS_ZENABLE:
         case xbox::X_D3DRS_STENCILENABLE:
-        case xbox::X_D3DRS_STENCILFAIL:
         case xbox::X_D3DRS_TEXTUREFACTOR:
         case xbox::X_D3DRS_EDGEANTIALIAS:
         case xbox::X_D3DRS_MULTISAMPLEANTIALIAS:
         case xbox::X_D3DRS_MULTISAMPLEMASK:
+            break;
+        case xbox::X_D3DRS_STENCILFAIL:
+            Value = EmuXB2PC_D3DSTENCILOP(Value);
             break;
         case xbox::X_D3DRS_MULTISAMPLETYPE:
             SetXboxMultiSampleType(Value);
