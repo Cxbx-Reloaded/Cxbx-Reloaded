@@ -6453,7 +6453,11 @@ void UpdateFixedFunctionVertexShaderState()
 	}
 
 	// Lighting
-	ffShaderState.Modes.Lighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
+	// Point sprites aren't lit - 'each point is always rendered with constant colors.'
+	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/point-sprites
+	bool PointSpriteEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
+	bool LightingEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
+	ffShaderState.Modes.Lighting = LightingEnable && !PointSpriteEnable;
 	ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
 	ffShaderState.Modes.LocalViewer = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
 
@@ -6469,7 +6473,6 @@ void UpdateFixedFunctionVertexShaderState()
 	ffShaderState.Modes.BackEmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
 
 	// Point sprites; Fetch required variables
-	bool PointSpriteEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
 	float pointSize = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE);
 	float pointSize_Min = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MIN);
 	float pointSize_Max = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MAX);
