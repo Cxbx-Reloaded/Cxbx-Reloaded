@@ -360,6 +360,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						DrawLedBitmap(hwnd, true);
 					}
 				}
+				break;
+
 				case WM_COMMAND:
 				{
 					switch (HIWORD(wParam)) {
