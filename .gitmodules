@@ -31,3 +31,7 @@
 	url = https://github.com/Cyan4973/xxHash.git
 	branch = release
 	shallow = true
+[submodule "import/imgui"]
+	path = import/imgui
+	url = https://github.com/ocornut/imgui.git
+	shadow = true

@@ -30,6 +30,7 @@
 #include "Mutex.h"
 #include "common\IPCHybrid.hpp"
 #include "common\input\Button.h"
+#include "core/common/imgui/settings.h"
 
 #include <memory.h>
 
@@ -152,12 +153,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * Input option Accessors
 		// ******************************************************************
-		void GetInputMoAxisSettings(long *axis) { Lock(); *axis = m_MoAxisRange; Unlock(); }
-		void SetInputMoAxisSettings(const long axis) { Lock(); m_MoAxisRange = axis; Unlock(); }
-		void GetInputMoWheelSettings(long *wheel) { Lock(); *wheel = m_MoWheelRange; Unlock(); }
-		void SetInputMoWheelSettings(const long wheel) { Lock(); m_MoWheelRange = wheel; Unlock(); }
-		void GetInputKbMoUnfocusSettings(bool *flag) { Lock(); *flag = m_bIgnoreKbMoUnfocus; Unlock(); }
-		void SetInputKbMoUnfocusSettings(const bool flag) { Lock(); m_bIgnoreKbMoUnfocus = flag; Unlock(); }
+		void GetInputGeneralSettings(Settings::s_input_general *input_general) { Lock(); *input_general = m_input_general; Unlock(); }
+		void SetInputGeneralSettings(const Settings::s_input_general *input_general) { Lock(); m_input_general = *input_general; Unlock(); }
 
 		// ******************************************************************
 		// * LLE Flags Accessors
@@ -200,7 +197,7 @@ class EmuShared : public Mutex
 		// * Debugging flag Accessors
 		// ******************************************************************
 		void GetDebuggingFlag(bool *value) { Lock(); *value = m_bDebugging; Unlock(); }
-		void SetDebuggingFlag(const bool *value) { Lock(); m_bDebugging = *value; Unlock(); }
+		void SetDebuggingFlag(const bool value) { Lock(); m_bDebugging = value; Unlock(); }
 #ifndef CXBX_LOADER // Temporary usage for cxbx.exe's emu
 		// ******************************************************************
 		// * Previous Memory Layout value Accessors
@@ -250,7 +247,44 @@ class EmuShared : public Mutex
 		// * ClipCursor flag Accessors
 		// ******************************************************************
 		void GetClipCursorFlag(bool *value) { Lock(); *value = m_bClipCursor; Unlock(); }
-		void SetClipCursorFlag(const bool *value) { Lock(); m_bClipCursor = *value; Unlock(); }
+		void SetClipCursorFlag(const bool value) { Lock(); m_bClipCursor = value; Unlock(); }
+
+		// ******************************************************************
+		// * ImGui Accessors
+		// ******************************************************************
+		void GetImGuiFocusFlag(bool *value) { Lock(); *value = m_imgui_general.is_focus; Unlock(); }
+		void SetImGuiFocusFlag(const bool value) { Lock(); m_imgui_general.is_focus = value; Unlock(); }
+
+		void GetImGuiIniSettings(char value[IMGUI_INI_SIZE_MAX]) {
+			Lock();
+			if (m_imgui_general.ini_size < IMGUI_INI_SIZE_MAX) {
+				value = '\0';
+				return;
+			}
+			strcpy_s(value, IMGUI_INI_SIZE_MAX, m_imgui_general.ini_settings);
+			Unlock();
+		}
+		void SetImGuiIniSettings(const char value[IMGUI_INI_SIZE_MAX]) {
+			Lock();
+			// Do not save if external size is less than internal limit
+			if (m_imgui_general.ini_size < IMGUI_INI_SIZE_MAX) {
+				return;
+			}
+			strcpy_s(m_imgui_general.ini_settings, IMGUI_INI_SIZE_MAX, value);
+			Unlock();
+		}
+
+		void GetImGuiAudioWindows(imgui_audio_windows *value) { Lock(); *value = m_imgui_audio_windows; Unlock(); }
+		void SetImGuiAudioWindows(const imgui_audio_windows* value) { Lock(); m_imgui_audio_windows = *value; Unlock(); }
+		void GetImGuiVideoWindows(imgui_video_windows*value) { Lock(); *value = m_imgui_video_windows; Unlock(); }
+		void SetImGuiVideoWindows(const imgui_video_windows* value) { Lock(); m_imgui_video_windows = *value; Unlock(); }
+
+
+		// ******************************************************************
+		// * Overlay Accessors
+		// ******************************************************************
+		void GetOverlaySettings(overlay_settings *value) { Lock(); *value = m_imgui_overlay_settings; Unlock(); }
+		void SetOverlaySettings(const overlay_settings* value) { Lock(); m_imgui_overlay_settings = *value; Unlock(); }
 
 		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
@@ -301,15 +335,13 @@ class EmuShared : public Mutex
 #endif
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;
-		bool         m_bIgnoreKbMoUnfocus;
+		bool         m_bReserved3;
 		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
 		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
-		long         m_MoAxisRange;
-		long         m_MoWheelRange;
-		int          m_Reserved99[26]; // Reserve space
+		int          m_Reserved99[28]; // Reserve space
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.
@@ -317,7 +349,12 @@ class EmuShared : public Mutex
 		Settings::s_video m_video;
 		Settings::s_audio m_audio;
 		Settings::s_network m_network;
+		Settings::s_input_general m_input_general;
 		Settings::s_hack m_hacks;
+		imgui_general m_imgui_general;
+		overlay_settings m_imgui_overlay_settings;
+		imgui_audio_windows m_imgui_audio_windows;
+		imgui_video_windows m_imgui_video_windows;
 };
 
 // ******************************************************************

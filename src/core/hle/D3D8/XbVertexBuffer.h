@@ -40,7 +40,7 @@ typedef struct _CxbxDrawContext
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
 	IN	   PWORD				 pXboxIndexData; // Set by D3DDevice_DrawIndexedVertices, D3DDevice_DrawIndexedVerticesUP and HLE_draw_inline_elements
 	IN	   DWORD				 dwBaseVertexIndex; // Set to g_Xbox_BaseVertexIndex in D3DDevice_DrawIndexedVertices
-	IN	   INDEX16				 LowIndex, HighIndex; // Set when pXboxIndexData is set
+	IN	   INDEX16               LowIndex, HighIndex; // Set when pXboxIndexData is set
 	IN	   UINT 				 NumVerticesToUse; // Set by CxbxVertexBufferConverter::Apply
     // Data if Draw...UP call
     IN PVOID                     pXboxVertexStreamZeroData;
@@ -78,7 +78,7 @@ class CxbxVertexBufferConverter
     public:
         CxbxVertexBufferConverter() = default;
         void Apply(CxbxDrawContext *pPatchDesc);
-        void PrintStats();
+        void DrawCacheStats();
     private:
         struct StreamKey
         {
@@ -99,7 +99,9 @@ class CxbxVertexBufferConverter
 
         // Stack tracking
         ULONG m_TotalCacheHits = 0;
-        ULONG m_TotalCacheMisses = 0;
+        ULONG m_TotalLookupSuccesses = 0;
+        ULONG m_VertexStreamHashMisses = 0;
+        ULONG m_DataNotInCacheMisses = 0;
 
         const UINT m_MaxCacheSize = 10000;                                        // Maximum number of entries in the cache
         const UINT m_CacheElasticity = 200;                                      // Cache is allowed to grow this much more than maximum before being purged to maximum
@@ -113,6 +115,8 @@ class CxbxVertexBufferConverter
         // Patches the types of the stream
         void ConvertStream(CxbxDrawContext *pPatchDesc, CxbxVertexDeclaration* pCxbxVertexDeclaration, UINT uiStream);
 };
+
+extern CxbxVertexBufferConverter VertexBufferConverter;
 
 // Inline vertex buffer emulation
 extern xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType;

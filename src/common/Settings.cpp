@@ -112,6 +112,12 @@ static struct {
 	const char* RenderResolution = "RenderResolution";
 } sect_video_keys;
 
+static const char* section_overlay = "overlay";
+static struct {
+	const char* FPS = "FPS";
+	const char* hle_lle_stats = "HLE/LLE Stats";
+} sect_overlay_keys;
+
 static const char* section_audio = "audio";
 static struct {
 	const char* adapter = "adapter";
@@ -452,7 +458,7 @@ bool Settings::LoadConfig()
 
 	m_input_general.MoAxisRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_axis_range, MO_AXIS_DEFAULT_RANGE);
 	m_input_general.MoWheelRange = m_si.GetLongValue(section_input_general, sect_input_general.mo_wheel_range, MO_WHEEL_DEFAULT_RANGE);
-	m_input_general.IgnoreKbMoUnfocus = m_si.GetLongValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, 1);
+	m_input_general.IgnoreKbMoUnfocus = m_si.GetBoolValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, true);
 
 	// ==== Input General End ==============
 
@@ -523,6 +529,13 @@ bool Settings::LoadConfig()
 
 	// ==== Input Profile End ======
 
+	// ==== Overlay Begin =========
+
+	m_overlay.fps = m_si.GetBoolValue(section_overlay, sect_overlay_keys.FPS, true);
+	m_overlay.hle_lle_stats = m_si.SetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, true);
+
+	// ==== Overlay End ===========
+
 	return true;
 }
 
@@ -588,6 +601,7 @@ bool Settings::Save(std::string file_path)
 	m_si.SetBoolValue(section_video, sect_video_keys.FullScreen, m_video.bFullScreen, nullptr, true);
 	m_si.SetBoolValue(section_video, sect_video_keys.MaintainAspect, m_video.bMaintainAspect, nullptr, true);
 	m_si.SetLongValue(section_video, sect_video_keys.RenderResolution, m_video.renderScaleFactor, nullptr, false, true);
+
 	// ==== Video End ===========
 
 	// ==== Audio Begin =========
@@ -617,7 +631,7 @@ bool Settings::Save(std::string file_path)
 
 	m_si.SetLongValue(section_input_general, sect_input_general.mo_axis_range, m_input_general.MoAxisRange, nullptr, false, true);
 	m_si.SetLongValue(section_input_general, sect_input_general.mo_wheel_range, m_input_general.MoWheelRange, nullptr, false, true);
-	m_si.SetLongValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, m_input_general.IgnoreKbMoUnfocus, nullptr, false, true);
+	m_si.SetBoolValue(section_input_general, sect_input_general.ignore_kbmo_unfocus, m_input_general.IgnoreKbMoUnfocus, nullptr, true);
 
 	// ==== Input General End =========
 
@@ -700,6 +714,13 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Input Profile End ======
 
+	// ==== Overlay Begin =======
+
+	m_si.SetBoolValue(section_overlay, sect_overlay_keys.FPS, m_overlay.fps, nullptr, true);
+	m_si.SetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, m_overlay.hle_lle_stats, nullptr, true);
+
+	// ==== Overlay End =========
+
 	// ==== Hack Begin ==========
 
 	m_si.SetBoolValue(section_hack, sect_hack_keys.DisablePixelShaders, m_hacks.DisablePixelShaders, nullptr, true);
@@ -737,6 +758,7 @@ void Settings::SyncToEmulator()
 
 	// register Video settings
 	g_EmuShared->SetVideoSettings(&m_video);
+	g_EmuShared->SetOverlaySettings(&m_overlay);
 
 	// register Audio settings
 	g_EmuShared->SetAudioSettings(&m_audio);
@@ -744,7 +766,7 @@ void Settings::SyncToEmulator()
 	// register Network settings
 	g_EmuShared->SetNetworkSettings(&m_network);
 
-	// register Input settings
+	// register xbox device input settings
 	for (int i = 0; i < 4; i++) {
 		g_EmuShared->SetInputDevTypeSettings(&m_input_port[i].Type, i);
 		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
@@ -766,9 +788,8 @@ void Settings::SyncToEmulator()
 		}
 	}
 
-	g_EmuShared->SetInputMoAxisSettings(m_input_general.MoAxisRange);
-	g_EmuShared->SetInputMoWheelSettings(m_input_general.MoWheelRange);
-	g_EmuShared->SetInputKbMoUnfocusSettings(m_input_general.IgnoreKbMoUnfocus);
+	// register Input general settings
+	g_EmuShared->SetInputGeneralSettings(&m_input_general);
 
 	// register Hacks settings
 	g_EmuShared->SetHackSettings(&m_hacks);

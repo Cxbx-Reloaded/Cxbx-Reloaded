@@ -488,13 +488,17 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 {
 	LOG_FUNC_ONE_ARG(Routine);
 
+	bool is_reboot = false;
+
 	switch (Routine) {
 	case ReturnFirmwareHalt:
 		CxbxKrnlCleanup("Emulated Xbox is halted");
 		break;
 
 	case ReturnFirmwareReboot:
-		LOG_UNIMPLEMENTED(); // fall through
+		LOG_UNIMPLEMENTED();
+		[[fallthrough]];
+
 	case ReturnFirmwareQuickReboot:
 	{
 		if (xbox::LaunchDataPage == NULL)
@@ -585,6 +589,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 				g_EmuShared->GetBootFlags(&QuickReboot);
 				QuickReboot |= BOOT_QUICK_REBOOT;
 				g_EmuShared->SetBootFlags(&QuickReboot);
+				is_reboot = true;
 
 				g_VMManager.SavePersistentMemory();
 
@@ -665,7 +670,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 		LOG_UNIMPLEMENTED();
 	}
 
-	EmuShared::Cleanup();
+	CxbxKrnlShutDown(is_reboot);
 	TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
 }
 

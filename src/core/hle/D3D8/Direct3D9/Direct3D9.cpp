@@ -61,6 +61,11 @@
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderSource.h"
 
+#include <imgui.h>
+#include <backends/imgui_impl_dx9.h>
+#include <backends/imgui_impl_win32.h>
+#include "core/common/video/RenderBase.hpp"
+
 #include <assert.h>
 #include <process.h>
 #include <clocale>
@@ -123,8 +128,6 @@ static size_t                       g_QuadToTriangleHostIndexBuffer_Size = 0; //
 static INDEX16                     *g_pQuadToTriangleIndexData = nullptr;
 static size_t                       g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
 
-static CxbxVertexBufferConverter VertexBufferConverter = {};
-
 struct {
 	xbox::X_D3DSurface Surface;
 	RECT SrcRect;
@@ -180,6 +183,31 @@ float g_Xbox_BackbufferScaleX = 1;
 float g_Xbox_BackbufferScaleY = 1;
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
+
+static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarget)
+{
+	ImGui_ImplDX9_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	m_imgui->DrawMenu();
+	m_imgui->DrawWidgets();
+
+	ImGui::EndFrame();
+
+	ImGui::Render();
+	ImDrawData* drawData = ImGui::GetDrawData();
+	if (drawData->TotalVtxCount > 0) {
+		IDirect3DSurface9* pExistingRenderTarget = nullptr;
+		if (SUCCEEDED(g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget))) {
+			g_pD3DDevice->SetRenderTarget(0, renderTarget);
+			ImGui_ImplDX9_RenderDrawData(drawData);
+			g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
+			pExistingRenderTarget->Release();
+		}
+	}
+}
+
 
 /* Unused :
 static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
@@ -633,6 +661,13 @@ void CxbxInitWindow(bool bFullInit)
     }
 
 	SetFocus(g_hEmuWindow);
+	g_renderbase = std::unique_ptr<RenderBase>(new RenderBase());
+	g_renderbase->Initialize();
+
+	ImGui_ImplWin32_Init(g_hEmuWindow);
+	g_renderbase->SetWindowRelease([] {
+		ImGui_ImplWin32_Shutdown();
+	});
 }
 
 void DrawUEM(HWND hWnd)
@@ -707,6 +742,27 @@ void CxbxClipCursor(HWND hWnd)
 void CxbxReleaseCursor()
 {
 	ClipCursor(nullptr);
+}
+
+static void CxbxUpdateCursor(bool forceShow = false) {
+	// Getting cursor info is a requirement in order to prevent a bug occur with ShowCursor redundant calls.
+	CURSORINFO cursorInfo;
+	cursorInfo.cbSize = sizeof(cursorInfo);
+	if (!GetCursorInfo(&cursorInfo)) {
+		// If cursor info is not available, then ignore the cursor update.
+		return;
+	}
+
+	if (g_renderbase->IsImGuiFocus() || forceShow) {
+		if (cursorInfo.flags == 0) {
+			ShowCursor(TRUE);
+		}
+	}
+	else {
+		if ((cursorInfo.flags & CURSOR_SHOWING) != 0) {
+			ShowCursor(FALSE);
+		}
+	}
 }
 
 inline DWORD GetXboxCommonResourceType(const xbox::dword_xt XboxResource_Common)
@@ -1804,10 +1860,15 @@ void ToggleFauxFullscreen(HWND hWnd)
     g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
 }
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 // rendering window message procedure
 static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     static bool bAutoPaused = false;
+
+	const LRESULT imguiResult = ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+	if (imguiResult != 0) return imguiResult;
 
     switch(msg)
     {
@@ -1900,10 +1961,8 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             }
             else if (wParam == VK_F1)
             {
-                VertexBufferConverter.PrintStats();
-
-                extern void DSound_PrintStats(); //TODO: move into plugin class usage.
-                DSound_PrintStats();
+				g_renderbase->ToggleImGui();
+                CxbxUpdateCursor();
             }
 			else if (wParam == VK_F2)
 			{
@@ -1912,7 +1971,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             else if (wParam == VK_F3)
             {
                 g_bClipCursor = !g_bClipCursor;
-                g_EmuShared->SetClipCursorFlag(&g_bClipCursor);
+                g_EmuShared->SetClipCursorFlag(g_bClipCursor);
 
                 if (g_bClipCursor) {
                     CxbxClipCursor(hWnd);
@@ -2007,7 +2066,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             DInput::mo_leave_wnd = true;
             g_bIsTrackingMoLeave = false;
             g_bIsTrackingMoMove = true;
-            ShowCursor(TRUE);
+            CxbxUpdateCursor(true);
         }
         break;
 
@@ -2024,7 +2083,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 tme.dwFlags = TME_LEAVE;
                 TrackMouseEvent(&tme);
                 g_bIsTrackingMoLeave = true;
-                ShowCursor(FALSE);
+                CxbxUpdateCursor();
 
                 if (g_bIsTrackingMoMove) {
                     DInput::mo_leave_wnd = false;
@@ -2037,7 +2096,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         case WM_CLOSE:
             CxbxReleaseCursor();
             DestroyWindow(hWnd);
-			CxbxKrnlShutDown();
+            CxbxKrnlShutDown();
             break;
 
         case WM_SETFOCUS:
@@ -2056,7 +2115,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 SetCursor(NULL);
                 return S_OK; // = Is not part of D3D8 handling.
             }
-
             return DefWindowProc(hWnd, msg, wParam, lParam);
         }
         break;
@@ -2351,7 +2409,8 @@ static void CreateDefaultD3D9Device
         // Final release of IDirect3DDevice9 must be called from the window message thread
         // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
         RunOnWndMsgThread([] {
-            g_pD3DDevice->Release();
+            // We only need to call bundled device release once here.
+            g_renderbase->DeviceRelease();
         });
     }
 
@@ -2449,6 +2508,13 @@ static void CreateDefaultD3D9Device
 
     // Set up cache
     g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
+
+    // Set up ImGui's render backend
+    ImGui_ImplDX9_Init(g_pD3DDevice);
+    g_renderbase->SetDeviceRelease([] {
+        ImGui_ImplDX9_Shutdown();
+        g_pD3DDevice->Release();
+    });
 }
 
 
@@ -5347,6 +5413,10 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 pTemporaryOverlaySurface->Release();
             }
 		}
+
+		// Render ImGui
+		static std::function<void(ImGuiUI*, IDirect3DSurface*)> internal_render = &CxbxImGui_RenderD3D9;
+		g_renderbase->Render(internal_render, pCurrentHostBackBuffer);
 
 		pCurrentHostBackBuffer->Release();
 	}

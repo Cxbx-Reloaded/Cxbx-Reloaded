@@ -26,6 +26,9 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::DSOUND
 
+#include <imgui.h>
+#include "core/common/imgui/ui.hpp"
+
 #include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp"
@@ -51,83 +54,102 @@ DWORD                               g_dwXbMemAllocated = 0;
 DWORD                               g_dwFree2DBuffers = 0;
 DWORD                               g_dwFree3DBuffers = 0;
 
-void DSound_PrintStats()
+void DSound_PrintStats(bool is_focus, ImGuiWindowFlags input_handler, bool m_show_audio_stats)
 {
     DSoundMutexGuardLock;
 
-    std::stringstream ss;
-    ss << "Stats:"
-        "\n--DirectSound Cache--";
-    ss << "\n\tTotal DSBuffer cache = " << g_pDSoundBufferCache.size();
-    ss << "\n\tTotal DSStream cache = " << g_pDSoundStreamCache.size();
+    if (m_show_audio_stats) {
 
-    // Generate DSBuffer stats
+        ImGui::SetNextWindowPos(ImVec2(IMGUI_MIN_DIST_SIDE, IMGUI_MIN_DIST_TOP), ImGuiCond_FirstUseEver, ImVec2(0.0f, 0.0f));
+        ImGui::SetNextWindowSize(ImVec2(200, 275), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Debugging stats", nullptr, input_handler | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+            if (ImGui::CollapsingHeader("Audio Buffers", ImGuiTreeNodeFlags_DefaultOpen)) {
 
-    DWORD dwStatus;
-    HRESULT hRet;
-    unsigned index = 0, isActive = 0;
+                ImGui::Text("DirectSound Cache:");
+                ImGui::BulletText("Total DSBuffer cache = %u", g_pDSoundBufferCache.size());
+                ImGui::BulletText("Total DSStream cache = %u", g_pDSoundStreamCache.size());
+                ImGui::Separator();
 
-    ss << "\nActive DSBuffer cache:";
+                // Generate DSBuffer stats
 
-    for (const auto& i : g_pDSoundBufferCache) {
-        const auto& buffer = i->emuDSBuffer;
-        hRet = buffer->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
-        if (hRet == DS_OK && (dwStatus & DSBSTATUS_PLAYING) != 0) {
-            isActive++;
-            ss << "\n\tDSBufferCache[" << index << "] = " << reinterpret_cast<void*>(i);
-            ss << "\n\t\tstatus = ";
-            if ((dwStatus & DSBSTATUS_LOOPING) != 0) {
-                ss << "looping";
+                DWORD dwStatus;
+                HRESULT hRet;
+                unsigned index = 0, isActive = 0;
+
+                if (ImGui::CollapsingHeader("Active DSBuffer cache")) {
+
+                    for (const auto& i : g_pDSoundBufferCache) {
+                        const auto& buffer = i->emuDSBuffer;
+                        hRet = buffer->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+                        if (hRet == DS_OK && (dwStatus & DSBSTATUS_PLAYING) != 0) {
+                            if (isActive) {
+                                ImGui::Separator();
+                            }
+                            isActive++;
+
+                            ImGui::BulletText("DSBufferCache[%u] = 0x%p", index, reinterpret_cast<void*>(i));
+                            ImGui::Indent();
+                            ImGui::BulletText("status = %s", ((dwStatus & DSBSTATUS_LOOPING) != 0) ? "looping" : "play once");
+
+                            ImGui::BulletText("X_BufferCacheSize = 0x%u", buffer->X_BufferCacheSize);
+                            ImGui::BulletText("EmuFlags = %X", buffer->EmuFlags);
+                            ImGui::BulletText("EmuRegionToggle = 0x%X", buffer->EmuBufferToggle);
+                            if (buffer->EmuBufferToggle == xbox::X_DSB_TOGGLE_PLAY) {
+                                ImGui::Indent();
+                                ImGui::BulletText("EmuRegionPlayStartOffset = 0x%X", buffer->EmuRegionPlayStartOffset);
+                                ImGui::BulletText("EmuRegionPlayLength = 0x%X", buffer->EmuRegionPlayLength);
+                                ImGui::Unindent();
+                            }
+                            else if (buffer->EmuBufferToggle == xbox::X_DSB_TOGGLE_LOOP) {
+                                ImGui::Indent();
+                                ImGui::BulletText("EmuRegionLoopStartOffset = 0x%X", buffer->EmuRegionLoopStartOffset);
+                                ImGui::BulletText("EmuRegionLoopLength = 0x%X", buffer->EmuRegionLoopLength);
+                                ImGui::Unindent();
+                            }
+                            ImGui::Unindent();
+                        }
+                        index++;
+                    }
+
+                    if (isActive == 0) {
+                        ImGui::BulletText("(none)");
+                    }
+
+                    ImGui::Text("Total active DSBuffer = %u", isActive);
+                }
+                // Generate DSStream stats
+
+                index = 0;
+                isActive = 0;
+
+                if (ImGui::CollapsingHeader("Active DSStream cache")) {
+                    for (const auto& i : g_pDSoundStreamCache) {
+                        hRet = i->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+                        if (hRet == DS_OK && (dwStatus & DSBSTATUS_PLAYING) != 0) {
+                            if (isActive) {
+                                ImGui::Separator();
+                            }
+                            isActive++;
+                            ImGui::BulletText("DSStreamCache[%u] = 0x%p", index, reinterpret_cast<void*>(i));
+                            ImGui::Indent();
+                            ImGui::BulletText("Max packets allow = %u", i->X_MaxAttachedPackets);
+                            ImGui::BulletText("Total packets = %u", i->Host_BufferPacketArray.size());
+                            ImGui::BulletText("is processing = %d", i->Host_isProcessing);
+                            ImGui::BulletText("EmuFlags = %X", i->EmuFlags);
+                            ImGui::BulletText("Xb_Status = %X", i->Xb_Status);
+                            ImGui::Unindent();
+                        }
+                        index++;
+                    }
+
+                    if (isActive == 0) {
+                        ImGui::BulletText("(none)");
+                    }
+
+                    ImGui::Text("Total active DSStream = %u", isActive);
+                }
             }
-            else {
-                ss << "play once";
-            }
-            ss << "\n\t\tX_BufferCacheSize = " << buffer->X_BufferCacheSize;
-            ss << "\n\t\tEmuFlags = " << buffer->EmuFlags;
-            ss << "\n\t\tEmuRegionToggle = " << buffer->EmuBufferToggle;
-            if (buffer->EmuBufferToggle == xbox::X_DSB_TOGGLE_PLAY) {
-                ss << "\n\t\t\tEmuRegionPlayStartOffset = " << buffer->EmuRegionPlayStartOffset;
-                ss << "\n\t\t\tEmuRegionPlayLength = " << buffer->EmuRegionPlayLength;
-            }
-            else if (buffer->EmuBufferToggle == xbox::X_DSB_TOGGLE_LOOP) {
-                ss << "\n\t\t\tEmuRegionLoopStartOffset = " << buffer->EmuRegionLoopStartOffset;
-                ss << "\n\t\t\tEmuRegionLoopLength = " << buffer->EmuRegionLoopLength;
-            }
+            ImGui::End();
         }
-        index++;
     }
-
-    if (isActive == 0) {
-        ss << "\n\t(none)";
-    }
-
-    ss << "\nTotal active DSBuffer = " << isActive;
-
-    // Generate DSStream stats
-
-    index = 0;
-    isActive = 0;
-
-    ss << "\nActive DSStream cache:";
-    for (const auto& i : g_pDSoundStreamCache) {
-        hRet = i->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
-        if (hRet == DS_OK && (dwStatus & DSBSTATUS_PLAYING) != 0) {
-            isActive++;
-            ss << "\n\tDSStreamCache[" << index << "] = " << reinterpret_cast<void*>(i);
-            ss << "\n\t\tMax packets allow = " << i->X_MaxAttachedPackets;
-            ss << "\n\t\tTotal packets = " << i->Host_BufferPacketArray.size();
-            ss << "\n\t\tis processing = " << i->Host_isProcessing;
-            ss << "\n\t\tEmuFlags = " <<  i->EmuFlags;
-            ss << "\n\t\tXb_Status = " << i->Xb_Status;
-        }
-        index++;
-    }
-
-    if (isActive == 0) {
-        ss << "\n\t(none)";
-    }
-
-    ss << "\nTotal active DSStream = " << isActive;
-
-    EmuLog(LOG_LEVEL::INFO, ss.str().c_str());
 }

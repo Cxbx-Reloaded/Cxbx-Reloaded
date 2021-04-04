@@ -360,6 +360,8 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						DrawLedBitmap(hwnd, true);
 					}
 				}
+				break;
+
 				case WM_COMMAND:
 				{
 					switch (HIWORD(wParam)) {
@@ -387,6 +389,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 							g_EmuShared->SetIsReady(true);
 						}
 						break;
+
+						case ID_GUI_STATUS_OVERLAY:
+							g_EmuShared->GetOverlaySettings(&g_Settings->m_overlay);
+							break;
 					}
 				}
 				break;
@@ -2330,7 +2336,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 		}
 
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
-		g_EmuShared->SetDebuggingFlag(&AttachLocalDebugger);
+		g_EmuShared->SetDebuggingFlag(AttachLocalDebugger);
 
         /* Main process to generate emulation command line begin. */
         // If we are adding more arguments, this is the place to do so.

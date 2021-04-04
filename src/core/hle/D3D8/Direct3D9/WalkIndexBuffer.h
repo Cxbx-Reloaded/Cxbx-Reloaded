@@ -1,7 +1,7 @@
 #ifndef WALKINDEXBUFFER_H
 #define WALKINDEXBUFFER_H
 
-#include "core\kernel\support\Emu.h"
+#include "core/hle/D3D8/XbD3D8Types.h"
 
 extern void(*WalkIndexBuffer)
 (

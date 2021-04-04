@@ -34,6 +34,8 @@
 #include <string>
 #include <array>
 
+#include "core/common/imgui/settings.h"
+
 extern std::string g_exec_filepath;
 
 // Individual library version
@@ -134,12 +136,14 @@ public:
 	} m_audio;
 	static_assert(sizeof(s_audio) == 0x4C, assert_check_shared_memory(s_audio));
 
+	// Input general settings
 	struct s_input_general {
 		long MoAxisRange;
 		long MoWheelRange;
 		bool IgnoreKbMoUnfocus;
-	};
-	s_input_general m_input_general;
+		bool Reserved1[3];
+	} m_input_general;
+	static_assert(sizeof(s_input_general) == 0xC, assert_check_shared_memory(s_input_general));
 
 	struct s_input_port {
 		int Type;
@@ -178,6 +182,8 @@ public:
 		int  Reserved99[8] = { 0 };
 	} m_hacks;
 	static_assert(sizeof(s_hack) == 0x28, assert_check_shared_memory(s_hack));
+
+	overlay_settings m_overlay;
 
 private:
 	void RemoveLegacyConfigs(unsigned int CurrentRevision);

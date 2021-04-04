@@ -35,7 +35,11 @@ add_custom_target(misc-batch
   WORKING_DIRECTORY ${CXBXR_ROOT_DIR}
 )
 
+# Custom CMake projects since some import libraries doesn't have it.
+
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
+
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/imgui")
 
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
@@ -109,6 +113,11 @@ file (GLOB CXBXR_HEADER_GUIv1
 )
 
 # Emulator (module)
+file (GLOB CXBXR_HEADER_EMU_IMPORT
+ "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.h"
+ "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_opengl3.h"
+ "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_win32.h"
+)
 file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
  "${CXBXR_ROOT_DIR}/src/common/audio/converter.hpp"
@@ -116,6 +125,11 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"
  "${CXBXR_ROOT_DIR}/src/common/audio/XADPCM.h"
  "${CXBXR_ROOT_DIR}/src/common/xbox/Logging.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/imgui/audio.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/imgui/ui.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/imgui/settings.h"
+ "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
@@ -260,6 +274,11 @@ file (GLOB CXBXR_SOURCE_GUIv1
 file (GLOB CXBXR_KRNL_CPP
  "${CXBXR_ROOT_DIR}/src/core/kernel/init/CxbxKrnl.cpp"
 )
+file (GLOB CXBXR_SOURCE_EMU_IMPORT
+ "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.cpp"
+ "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_opengl3.cpp"
+ "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_win32.cpp"
+)
 file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_KRNL_CPP}"
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
@@ -268,6 +287,10 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_common.cpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen_wgl.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xbox/Logging.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/imgui/audio.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/imgui/ui.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/RenderStates.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/TextureStates.cpp"
@@ -385,7 +408,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 set(cxbxr_INSTALL_files "COPYING" "README.md")
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook libXbSymbolDatabase libtommath libtomcrypt
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook libXbSymbolDatabase libtommath libtomcrypt imgui
  PROPERTIES FOLDER Cxbx-Reloaded
 )
 

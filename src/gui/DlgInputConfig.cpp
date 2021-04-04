@@ -74,9 +74,7 @@ void SyncInputSettings(int port_num, int dev_type, bool is_opt)
 			}
 		}
 		else {
-			g_EmuShared->SetInputMoAxisSettings(g_Settings->m_input_general.MoAxisRange);
-			g_EmuShared->SetInputMoWheelSettings(g_Settings->m_input_general.MoWheelRange);
-			g_EmuShared->SetInputKbMoUnfocusSettings(g_Settings->m_input_general.IgnoreKbMoUnfocus);
+			g_EmuShared->SetInputGeneralSettings(&g_Settings->m_input_general);
 			port_num = PORT_INVALID;
 		}
 #if 0 // lle usb

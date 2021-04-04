@@ -38,11 +38,15 @@
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
 
+#include <imgui.h>
+
 #include <ctime>
 #include <chrono>
 #include <algorithm>
 
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
+
+CxbxVertexBufferConverter VertexBufferConverter = {};
 
 // Inline vertex buffer emulation
 xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
@@ -191,6 +195,7 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey,
 
     auto it = m_PatchedStreams.find(key);
     if (it != m_PatchedStreams.end()) {
+        m_TotalLookupSuccesses++;
         m_PatchedStreamUsageList.splice(m_PatchedStreamUsageList.begin(), m_PatchedStreamUsageList, it->second);
         return *it->second;
     }
@@ -215,12 +220,18 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey,
     return stream;
 }
 
-void CxbxVertexBufferConverter::PrintStats()
+void CxbxVertexBufferConverter::DrawCacheStats()
 {
-    printf("Vertex Buffer Cache Status: \n");
-    printf("- Cache Size: %d\n", m_PatchedStreams.size());
-    printf("- Hits: %d\n", m_TotalCacheHits);
-    printf("- Misses: %d\n", m_TotalCacheMisses);
+	const ULONG falsePositives = std::exchange(m_TotalLookupSuccesses, 0) - m_TotalCacheHits;
+	const ULONG totalMisses = m_VertexStreamHashMisses + m_DataNotInCacheMisses;
+
+	ImGui::Text("Cache Size: %u", m_PatchedStreams.size());
+	ImGui::Text("Hits: %u", std::exchange(m_TotalCacheHits, 0));
+	ImGui::Text("Total misses: %u", totalMisses);
+	ImGui::Separator();
+	ImGui::TextUnformatted("Cache miss details:");
+	ImGui::TextWrapped("Vertex stream hash miss: %u", std::exchange(m_VertexStreamHashMisses, 0));
+	ImGui::TextWrapped("Data not in cache: %u", std::exchange(m_DataNotInCacheMisses, 0));
 }
 
 void CxbxVertexBufferConverter::ConvertStream
@@ -339,7 +350,11 @@ void CxbxVertexBufferConverter::ConvertStream
         return;
     }
 
-    m_TotalCacheMisses++;
+	// Gather stats
+    if (patchedStream.uiVertexStreamInformationHash != pVertexShaderSteamInfoHash)
+		m_VertexStreamHashMisses++;
+	else
+		m_DataNotInCacheMisses++;
 
     // If execution reaches here, the cached vertex buffer was not valid and we must reconvert the data
     // Free the existing buffers

@@ -68,6 +68,10 @@ file (GLOB RESOURCES
  "${CXBXR_ROOT_DIR}/README.md"
 )
 
+source_group(TREE ${CXBXR_ROOT_DIR}/import PREFIX import FILES
+ ${CXBXR_HEADER_EMU_IMPORT}
+)
+
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES
  ${CXBXR_HEADER_GUIv1}
  ${CXBXR_HEADER_COMMON}
@@ -75,7 +79,11 @@ source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES
  "${CXBXR_ROOT_DIR}/src/emulator/targetver.h"
 )
 
-source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES 
+source_group(TREE ${CXBXR_ROOT_DIR}/import PREFIX import FILES
+ ${CXBXR_SOURCE_EMU_IMPORT}
+)
+
+source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES
  ${CXBXR_SOURCE_GUIv1}
  ${CXBXR_SOURCE_COMMON}
  ${CXBXR_SOURCE_EMU}
@@ -87,9 +95,11 @@ source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
 
 add_library(cxbxr-emu SHARED ${RESOURCES}
  ${CXBXR_HEADER_COMMON}
+ ${CXBXR_HEADER_EMU_IMPORT}
  ${CXBXR_HEADER_EMU}
  "${CXBXR_ROOT_DIR}/src/emulator/targetver.h"
  ${CXBXR_SOURCE_COMMON}
+ ${CXBXR_SOURCE_EMU_IMPORT}
  ${CXBXR_SOURCE_EMU}
  ${CXBXR_GIT_VERSION_H}
  "${CXBXR_ROOT_DIR}/src/emulator/cxbxr-emu.cpp"
@@ -157,6 +167,7 @@ target_link_libraries(cxbxr-emu
  subhook
  libtomcrypt
  SDL2
+ imgui
 
  ${WINS_LIB}
 )

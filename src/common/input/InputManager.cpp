@@ -45,6 +45,7 @@
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 #include "EmuShared.h"
 #include "devices\usb\OHCI.h"
+#include "core/common/video/RenderBase.hpp"
 
 // hle input specific
 #include "core\hle\XAPI\Xapi.h"
@@ -360,8 +361,9 @@ bool InputDeviceManager::UpdateXboxPortInput(int usb_port, void* Buffer, int Dir
 		xid_type < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX));
 	bool has_changed = false;
 
+	// First check if ImGui is focus, then ignore any input update occur.
 	// If somebody else is currently holding the lock, we won't wait and instead report no input changes
-	if (m_Mtx.try_lock()) {
+	if (static_cast<uint8_t>(!g_renderbase->IsImGuiFocus()) & static_cast<uint8_t>(m_Mtx.try_lock())) {
 		for (auto &dev_ptr : m_Devices) {
 			if (dev_ptr->GetPort(usb_port)) {
 				switch (xid_type)
@@ -706,16 +708,13 @@ std::shared_ptr<InputDevice> InputDeviceManager::FindDevice(int usb_port, int du
 void InputDeviceManager::UpdateOpt(bool is_gui)
 {
 	if (!is_gui) {
-		long axis_range, wheel_range;
-		bool ignore_kbmo;
-		g_EmuShared->GetInputMoAxisSettings(&axis_range);
-		g_EmuShared->GetInputMoWheelSettings(&wheel_range);
-		g_EmuShared->GetInputKbMoUnfocusSettings(&ignore_kbmo);
-		DInput::mo_axis_range_pos = axis_range;
-		DInput::mo_wheel_range_pos = wheel_range;
-		DInput::mo_axis_range_neg = -(axis_range);
-		DInput::mo_wheel_range_neg = -(wheel_range);
-		DInput::IgnoreKbMoUnfocus = ignore_kbmo;
+		Settings::s_input_general input_general;
+		g_EmuShared->GetInputGeneralSettings(&input_general);
+		DInput::mo_axis_range_pos = input_general.MoAxisRange;
+		DInput::mo_wheel_range_pos = input_general.MoWheelRange;
+		DInput::mo_axis_range_neg = -(input_general.MoAxisRange);
+		DInput::mo_wheel_range_neg = -(input_general.MoWheelRange);
+		DInput::IgnoreKbMoUnfocus = input_general.IgnoreKbMoUnfocus;
 	}
 	else {
 		DInput::mo_axis_range_pos = g_Settings->m_input_general.MoAxisRange;
