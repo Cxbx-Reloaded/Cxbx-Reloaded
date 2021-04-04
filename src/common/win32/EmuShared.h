@@ -30,8 +30,8 @@
 #include "Mutex.h"
 #include "common\IPCHybrid.hpp"
 #include "common\input\Button.h"
+#include "CxbxVersion.h"
 #include "core/common/imgui/settings.h"
-
 #include <memory.h>
 
 extern HMODULE hActiveModule; // Equals EXE Module handle in (GUI) Cxbx.exe / cxbxr.exe, equals DLL Module handle in cxbxr-emu.dll
@@ -65,6 +65,11 @@ class EmuShared : public Mutex
 		// * Fixed memory allocation size
 		// ******************************************************************
 		unsigned int m_size;
+
+		// ******************************************************************
+		// * Git version string of cxbx.exe
+		// ******************************************************************
+		char m_git_version[GitVersionMaxLength];
 
 		// ******************************************************************
 		// * Each process needs to call this to initialize shared memory
@@ -287,6 +292,16 @@ class EmuShared : public Mutex
 		void SetOverlaySettings(const overlay_settings* value) { Lock(); m_imgui_overlay_settings = *value; Unlock(); }
 
 		// ******************************************************************
+		// * Git version Accessor (only the get method is provided because it should not be changed
+		// ******************************************************************
+		void GetGitVersion(char *value)
+		{
+			Lock();
+			std::strncpy(value, m_git_version, GitVersionLength + 1);
+			Unlock();
+		}
+
+		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
 		// ******************************************************************
 		void ResetKrnl()
@@ -329,9 +344,8 @@ class EmuShared : public Mutex
 		bool         m_bEmulating_status;
 #ifndef CXBX_LOADER // Temporary usage for cxbx.exe's emu
 		unsigned int m_PreviousMmLayout;
-		int          m_Reserved7[3];
 #else
-		int          m_Reserved7[4];
+		unsigned int m_Reserved;
 #endif
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;

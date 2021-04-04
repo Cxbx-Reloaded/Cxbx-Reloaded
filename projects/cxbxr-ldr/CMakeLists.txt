@@ -25,6 +25,8 @@ endif()
 file (GLOB HEADERS
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
  "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.h"
+ "${CXBXR_ROOT_DIR}/src/CxbxVersion.h"
+ "${CXBXR_ROOT_DIR}/src/version.h"
 )
 
 file (GLOB SOURCES

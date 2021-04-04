@@ -685,6 +685,17 @@ bool HandleFirstLaunch()
 
 void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
 {
+#ifdef CXBXR_EMU
+	// First of all, check if the emulation dll version matches the gui version and abort otherwise
+	char GitVersionGui[GitVersionMaxLength];
+	g_EmuShared->GetGitVersion(GitVersionGui);
+	if (std::strncmp(GitVersionGui, CxbxGitVersion, GitVersionLength) != 0) {
+		PopupError(nullptr, "Mismatch detected between cxbx.exe and cxbxr-emu.dll, aborting.");
+		CxbxKrnlShutDown();
+		return;
+	}
+#endif
+
 	std::string tempStr;
 
 	// NOTE: This is designated for standalone kernel mode launch without GUI
