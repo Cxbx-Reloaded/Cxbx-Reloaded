@@ -363,7 +363,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int usb_port, void* Buffer, int Dir
 
 	// First check if ImGui is focus, then ignore any input update occur.
 	// If somebody else is currently holding the lock, we won't wait and instead report no input changes
-	if (static_cast<uint8_t>(!g_renderbase->IsImGuiFocus()) & static_cast<uint8_t>(m_Mtx.try_lock())) {
+	if (!g_renderbase->IsImGuiFocus() && m_Mtx.try_lock()) {
 		for (auto &dev_ptr : m_Devices) {
 			if (dev_ptr->GetPort(usb_port)) {
 				switch (xid_type)
