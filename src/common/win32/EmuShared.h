@@ -335,8 +335,6 @@ class EmuShared : public Mutex
 		// * Shared configuration
 		// ******************************************************************
 		int          m_BootFlags_status;
-		unsigned int m_Reserved5;
-		float        m_Reserved6;
 		float        m_FPS_status; // NOTE: If move into ipc_send_gui_update will spam GUI's message system (one message per frame)
 		bool         m_Krnl_Log_enabled; // Is require in order to preserve previous set for support multi-xbe.
 		bool         m_bDebugging;
@@ -349,13 +347,10 @@ class EmuShared : public Mutex
 #endif
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;
-		bool         m_bReserved3;
-		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
 		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
-		int          m_Reserved99[28]; // Reserve space
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.
