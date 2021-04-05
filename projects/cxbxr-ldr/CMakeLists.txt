@@ -70,3 +70,5 @@ target_link_libraries(cxbxr-ldr
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin
 )
+
+add_dependencies(cxbxr-ldr misc-batch)
