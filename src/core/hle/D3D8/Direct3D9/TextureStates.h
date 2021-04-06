@@ -45,6 +45,8 @@ private:
     void BuildTextureStateMappingTable();
     DWORD GetHostTextureOpValue(DWORD XboxTextureOp);
 
+    // Pointer to Xbox texture states
+    // Note mappings may change between XDK versions
     uint32_t* D3D__TextureState = nullptr;
     std::array<int, xbox::X_D3DTSS_LAST + 1> XboxTextureStateOffsets;
     XboxRenderStateConverter* pXboxRenderStates;
