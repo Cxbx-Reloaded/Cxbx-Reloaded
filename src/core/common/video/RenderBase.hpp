@@ -31,7 +31,9 @@ public:
 	}
 
 	void DeviceRelease() {
-		m_device_release();
+		if (m_device_release) {
+			m_device_release();
+		}
 	}
 
 	void SetWindowRelease(const std::function<void()>& func_register) {
@@ -39,7 +41,9 @@ public:
 	}
 
 	void WindowRelease() {
-		m_window_release();
+		if (m_window_release) {
+			m_window_release();
+		}
 	}
 
 protected:

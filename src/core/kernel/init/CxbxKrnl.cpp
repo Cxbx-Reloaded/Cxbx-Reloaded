@@ -1783,9 +1783,10 @@ void CxbxKrnlShutDown(bool is_reboot)
 	g_VMManager.Shutdown();
 
 	// Shutdown the render manager
-	g_renderbase->Shutdown();
-	g_renderbase.release();
-	g_renderbase = nullptr;
+	if (g_renderbase != nullptr) {
+		g_renderbase->Shutdown();
+		g_renderbase = nullptr;
+	}
 
 	CxbxUnlockFilePath();
 
