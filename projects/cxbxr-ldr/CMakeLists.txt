@@ -25,11 +25,14 @@ endif()
 file (GLOB HEADERS
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
  "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.h"
+ "${CXBXR_ROOT_DIR}/src/CxbxVersion.h"
+ "${CXBXR_ROOT_DIR}/src/version.h"
 )
 
 file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
+ "${CXBXR_ROOT_DIR}/src/CxbxVersion.cpp"
  "${CXBXR_ROOT_DIR}/src/loader/cxbxr-ldr.cpp"
 )
 
@@ -68,3 +71,5 @@ target_link_libraries(cxbxr-ldr
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin
 )
+
+add_dependencies(cxbxr-ldr misc-batch)

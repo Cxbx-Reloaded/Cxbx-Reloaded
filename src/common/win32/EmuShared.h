@@ -30,8 +30,8 @@
 #include "Mutex.h"
 #include "common\IPCHybrid.hpp"
 #include "common\input\Button.h"
+#include "CxbxVersion.h"
 #include "core/common/imgui/settings.h"
-
 #include <memory.h>
 
 extern HMODULE hActiveModule; // Equals EXE Module handle in (GUI) Cxbx.exe / cxbxr.exe, equals DLL Module handle in cxbxr-emu.dll
@@ -65,6 +65,11 @@ class EmuShared : public Mutex
 		// * Fixed memory allocation size
 		// ******************************************************************
 		unsigned int m_size;
+
+		// ******************************************************************
+		// * Git version string of the executable that first launched
+		// ******************************************************************
+		char m_git_version[GitVersionMaxLength];
 
 		// ******************************************************************
 		// * Each process needs to call this to initialize shared memory
@@ -287,6 +292,16 @@ class EmuShared : public Mutex
 		void SetOverlaySettings(const overlay_settings* value) { Lock(); m_imgui_overlay_settings = *value; Unlock(); }
 
 		// ******************************************************************
+		// * Git version Accessor (only the get method is provided because it should not be changed)
+		// ******************************************************************
+		void GetGitVersion(char *value)
+		{
+			Lock();
+			std::strncpy(value, m_git_version, GetGitVersionLength() + 1);
+			Unlock();
+		}
+
+		// ******************************************************************
 		// * Reset specific variables to default for kernel mode.
 		// ******************************************************************
 		void ResetKrnl()
@@ -320,8 +335,6 @@ class EmuShared : public Mutex
 		// * Shared configuration
 		// ******************************************************************
 		int          m_BootFlags_status;
-		unsigned int m_Reserved5;
-		float        m_Reserved6;
 		float        m_FPS_status; // NOTE: If move into ipc_send_gui_update will spam GUI's message system (one message per frame)
 		bool         m_Krnl_Log_enabled; // Is require in order to preserve previous set for support multi-xbe.
 		bool         m_bDebugging;
@@ -329,19 +342,15 @@ class EmuShared : public Mutex
 		bool         m_bEmulating_status;
 #ifndef CXBX_LOADER // Temporary usage for cxbx.exe's emu
 		unsigned int m_PreviousMmLayout;
-		int          m_Reserved7[3];
 #else
-		int          m_Reserved7[4];
+		unsigned int m_Reserved;
 #endif
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;
-		bool         m_bReserved3;
-		bool         m_bReserved4;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
 		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
-		int          m_Reserved99[28]; // Reserve space
 
 		// Settings class in memory should not be tampered by third-party.
 		// Third-party program should only be allow to edit settings.ini file.

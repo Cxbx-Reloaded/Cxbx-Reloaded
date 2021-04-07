@@ -29,6 +29,7 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 #include <Windows.h> // For LPTSTR, FormatMessage, GetSystemInfo, etc
 
+#include "..\CxbxVersion.h"
 #include "..\Common\AddressRanges.h"
 #include "..\Common\ReserveAddressRanges.h"
 
@@ -191,6 +192,17 @@ DWORD CALLBACK rawMain()
 		}
 
 		return ERROR_RESOURCE_NOT_FOUND;
+	}
+
+	// We cannot just pass the git version of the loader via the Emulate function. This, because if the user mixes a version which does the check (and thus expects 3 arguments)
+	// with an old version which doesn't do the check (and thus only has 2 arguments), the behavior will be undefined since the new version will attempt to use a
+	// non-existent argument. We instead pass the version string in the contiguous memory, which must have been successfully reserved by now or else the loader would
+	// have already aborted execution. This memory is backed by the paging file, and thus its contents will always be initialized to zero. Thus, in the above scenerio
+	// the check will fail because a version string cannot be zero.
+	// NOTE1: the loader doesn't link against the CRT, which means we cannot just use strncpy here, and thus we use a for loop instead
+	// NOTE2: we choose 0x80001000 as address because the first page is used by d3d to initialize the push buffer of the nv2a, so we avoid to write a string to it
+	for (unsigned i = 0; i < GetGitVersionLength(); ++i) {
+		*(reinterpret_cast<char *>(PHYSICAL_MAP1_BASE + 0x1000) + i) = GetGitVersionStr()[i];
 	}
 
 	// Find the main emulation function in our DLL
