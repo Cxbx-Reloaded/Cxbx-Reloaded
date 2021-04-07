@@ -166,11 +166,9 @@ DWORD WINAPI Emulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		return EXIT_FAILURE;
 	}
 
-	// Check if the loader version matches the gui version and abort otherwise
-	char GitVersionGui[GitVersionMaxLength];
-	g_EmuShared->GetGitVersion(GitVersionGui);
-	if (std::strncmp(GitVersionGui, reinterpret_cast<char *>(PHYSICAL_MAP1_BASE + 0x1000), GitVersionLength) != 0) {
-		PopupError(nullptr, "Mismatch detected between cxbx.exe and cxbxr-ldr.exe, aborting.");
+	// Check if the loader version matches the emu version and abort otherwise
+	if (std::strncmp(GetGitVersionStr(), reinterpret_cast<char *>(PHYSICAL_MAP1_BASE + 0x1000), GetGitVersionLength()) != 0) {
+		PopupError(nullptr, "Mismatch detected between cxbxr-ldr.exe and cxbxr-emu.dll, aborting.");
 		EmuShared::Cleanup();
 		return EXIT_FAILURE;
 	}

@@ -32,6 +32,7 @@ file (GLOB HEADERS
 file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.cpp"
  "${CXBXR_ROOT_DIR}/src/common/ReserveAddressRanges.cpp"
+ "${CXBXR_ROOT_DIR}/src/CxbxVersion.cpp"
  "${CXBXR_ROOT_DIR}/src/loader/cxbxr-ldr.cpp"
 )
 

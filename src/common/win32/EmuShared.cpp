@@ -162,7 +162,7 @@ EmuShared::EmuShared()
 	for (auto& i : m_DeviceType) {
 		i = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
 	}
-    std::strncpy(m_git_version, CxbxGitVersion, GitVersionLength);
+    std::strncpy(m_git_version, GetGitVersionStr(), GetGitVersionLength());
 }
 
 // ******************************************************************

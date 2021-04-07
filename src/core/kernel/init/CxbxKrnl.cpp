@@ -685,16 +685,15 @@ bool HandleFirstLaunch()
 
 void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
 {
-#ifdef CXBXR_EMU
-	// First of all, check if the emulation dll version matches the gui version and abort otherwise
-	char GitVersionGui[GitVersionMaxLength];
-	g_EmuShared->GetGitVersion(GitVersionGui);
-	if (std::strncmp(GitVersionGui, CxbxGitVersion, GitVersionLength) != 0) {
-		PopupError(nullptr, "Mismatch detected between cxbx.exe and cxbxr-emu.dll, aborting.");
+	// First of all, check if the EmuShared version matches the emu version and abort otherwise
+	char GitVersionEmuShared[GitVersionMaxLength];
+	g_EmuShared->GetGitVersion(GitVersionEmuShared);
+	if (std::strncmp(GitVersionEmuShared, GetGitVersionStr(), GetGitVersionLength()) != 0) {
+		PopupError(nullptr, "Mismatch detected between EmuShared and cxbx.exe/cxbxr-emu.dll, aborting."
+			"\n\nPlease extract all contents from zip file and do not mix with older/newer builds.");
 		CxbxKrnlShutDown();
 		return;
 	}
-#endif
 
 	std::string tempStr;
 

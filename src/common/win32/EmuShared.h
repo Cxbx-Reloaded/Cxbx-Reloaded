@@ -67,7 +67,7 @@ class EmuShared : public Mutex
 		unsigned int m_size;
 
 		// ******************************************************************
-		// * Git version string of cxbx.exe
+		// * Git version string of the executable that first launched
 		// ******************************************************************
 		char m_git_version[GitVersionMaxLength];
 
@@ -292,12 +292,12 @@ class EmuShared : public Mutex
 		void SetOverlaySettings(const overlay_settings* value) { Lock(); m_imgui_overlay_settings = *value; Unlock(); }
 
 		// ******************************************************************
-		// * Git version Accessor (only the get method is provided because it should not be changed
+		// * Git version Accessor (only the get method is provided because it should not be changed)
 		// ******************************************************************
 		void GetGitVersion(char *value)
 		{
 			Lock();
-			std::strncpy(value, m_git_version, GitVersionLength + 1);
+			std::strncpy(value, m_git_version, GetGitVersionLength() + 1);
 			Unlock();
 		}
 
