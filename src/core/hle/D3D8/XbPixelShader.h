@@ -507,6 +507,7 @@ struct DecodedRegisterCombiner {
 	void Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef);
 };
 
+extern bool g_UseFixedFunctionPixelShader;
 
 // PatrickvL's Dxbx pixel shader translation
 void DxbxUpdateActivePixelShader(); // NOPATCH
