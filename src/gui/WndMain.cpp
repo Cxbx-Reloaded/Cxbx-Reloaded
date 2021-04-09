@@ -884,21 +884,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_EDIT_PATCH_ALLOW64MB:
-			{
-				m_bXbeChanged = true;
-
-				m_Xbe->m_Header.dwInitFlags.bLimit64MB = !m_Xbe->m_Header.dwInitFlags.bLimit64MB;
-
-				RefreshMenus();
-
-				if (m_Xbe->m_Header.dwInitFlags.bLimit64MB)
-					printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-				else
-					printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-			}
-			break;
-
 			case ID_EDIT_PATCH_DEBUGMODE:
 			{
 				m_bXbeChanged = true;
@@ -1712,14 +1697,6 @@ void WndMain::RefreshMenus()
 
             // patch menu
             {
-                // check "allow >64 MB" if appropriate
-                if(m_Xbe != nullptr)
-                {
-                    UINT chk_flag = (m_Xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
-
-                    CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
-                }
-
                 // check "debug mode" if appropriate
                 if(m_Xbe != nullptr)
                 {

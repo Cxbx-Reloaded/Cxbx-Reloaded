@@ -649,7 +649,6 @@ BEGIN
         END
         POPUP "&Patch",                         65535,MFT_STRING,MFS_ENABLED
         BEGIN
-            MENUITEM "&Allow >64 MB",               ID_EDIT_PATCH_ALLOW64MB,MFT_STRING,MFS_ENABLED
             MENUITEM "&Debug Mode",                 ID_EDIT_PATCH_DEBUGMODE,MFT_STRING,MFS_ENABLED
         END
         MENUITEM "", -1, MFT_SEPARATOR
