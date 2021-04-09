@@ -63,9 +63,10 @@ namespace FixedFunctionPixelShader {
 	const float X_D3DTA_COMPLEMENT = 0x00000010;  // take 1.0 - x (read modifier)
 	const float X_D3DTA_ALPHAREPLICATE = 0x00000020;  // replicate alpha to color components (read modifier)
 
-	const int SAMPLE_2D = 0;
-	const int SAMPLE_3D = 1;
-	const int SAMPLE_CUBE = 2;
+	const int SAMPLE_NONE = 0;
+	const int SAMPLE_2D = 1;
+	const int SAMPLE_3D = 2;
+	const int SAMPLE_CUBE = 3;
 
 	// This state is passed to the shader
 	struct PsTextureStageState {
@@ -97,9 +98,6 @@ namespace FixedFunctionPixelShader {
 		// TEXCOORDINDEX handled by the VS
 		// BORDERCOLOR set on sampler
 		alignas(16) float COLORKEYCOLOR; // Unimplemented Xbox extension!
-
-		// Misc properties
-		alignas(16) float IsTextureSet;
 	};
 
 	// This state is compiled into the shader
