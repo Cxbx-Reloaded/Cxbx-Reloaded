@@ -763,7 +763,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 	// Create a key from state that will be baked in to the shader
 	PsTextureHardcodedState states[4] = {};
-	int sampleType[4] = { SAMPLE_2D, SAMPLE_2D, SAMPLE_2D, SAMPLE_2D };
+	int sampleType[4] = { SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE };
 	bool pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
 
 	bool previousStageDisabled = false;
@@ -788,11 +788,12 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		// TODO move XD3D8 resource query functions out of Direct3D9.cpp so we can use them here
 		if (g_pXbox_SetTexture[i]) {
 			auto format = g_pXbox_SetTexture[i]->Format;
-			// SampleType is initialized to SAMPLE_2D
 			if (format & X_D3DFORMAT_CUBEMAP)
 				sampleType[i] = SAMPLE_CUBE;
 			else if (((format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT) > 2)
 				sampleType[i] = SAMPLE_3D;
+			else
+				sampleType[i] = SAMPLE_2D;
 		}
 
 		states[i].COLORARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);
@@ -826,6 +827,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	auto sampleTypeReplace = hlslTemplate.find(sampleTypePattern);
 
 	static constexpr std::string_view typeToString[] = {
+		"SAMPLE_NONE",
 		"SAMPLE_2D",
 		"SAMPLE_3D",
 		"SAMPLE_CUBE"
@@ -933,8 +935,6 @@ void UpdateFixedFunctionPixelShaderState()
 		stage->BUMPENVLSCALE = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLSCALE));
 		stage->BUMPENVLOFFSET = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLOFFSET));
 		stage->COLORKEYCOLOR = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
-
-		stage->IsTextureSet = g_pXbox_SetTexture[i] != nullptr;
 	}
 
 	const int size = (sizeof(FixedFunctionPixelShaderState) + 16 - 1) / 16;

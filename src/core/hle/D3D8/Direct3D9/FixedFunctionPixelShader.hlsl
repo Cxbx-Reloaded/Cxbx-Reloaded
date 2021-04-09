@@ -174,16 +174,16 @@ TextureArgs ExecuteTextureStage(
 	}
 
 	// Sample the texture
-	float4 t = float4(1, 1, 1, 1);
-	if (stage.IsTextureSet) {
-		int type = TextureSampleType[i];
-		if (type == SAMPLE_2D)
-			t = tex2D(samplers[i], TexCoords[i].xy + offset.xy);
-		else if (type == SAMPLE_3D)
-			t = tex3D(samplers[i], TexCoords[i].xyz + offset.xyz);
-		else if (type == SAMPLE_CUBE)
-			t = texCUBE(samplers[i], TexCoords[i].xyz + offset.xyz);
-	}
+	float4 t;
+	int type = TextureSampleType[i];
+	if (type == SAMPLE_NONE)
+		t = 1; // Test case JSRF
+	else if (type == SAMPLE_2D)
+		t = tex2D(samplers[i], TexCoords[i].xy + offset.xy);
+	else if (type == SAMPLE_3D)
+		t = tex3D(samplers[i], TexCoords[i].xyz + offset.xyz);
+	else if (type == SAMPLE_CUBE)
+		t = texCUBE(samplers[i], TexCoords[i].xyz + offset.xyz);
 
 	// Assign the final value for TEXTURE
 	ctx.TEXTURE = t * factor;
