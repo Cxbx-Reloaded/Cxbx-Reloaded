@@ -634,19 +634,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
-			case ID_FILE_SAVEXBEFILE:
-			{
-				if (m_XbeFilename[0] == '\0')
-					SaveXbeAs();
-				else
-					SaveXbe(m_XbeFilename);
-			}
-			break;
-
-			case ID_FILE_SAVEXBEFILEAS:
-				SaveXbeAs();
-				break;
-
 			case ID_FILE_RXBE_0:
 			case ID_FILE_RXBE_1:
 			case ID_FILE_RXBE_2:
@@ -881,56 +868,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						}
 					}
 				}
-			}
-			break;
-
-			case ID_EDIT_PATCH_ALLOW64MB:
-			{
-				m_bXbeChanged = true;
-
-				m_Xbe->m_Header.dwInitFlags.bLimit64MB = !m_Xbe->m_Header.dwInitFlags.bLimit64MB;
-
-				RefreshMenus();
-
-				if (m_Xbe->m_Header.dwInitFlags.bLimit64MB)
-					printf("WndMain: %s was patched to limit to 64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-				else
-					printf("WndMain: %s was patched to allow >64MB of memory usage.\n", m_Xbe->m_szAsciiTitle);
-			}
-			break;
-
-			case ID_EDIT_PATCH_DEBUGMODE:
-			{
-				m_bXbeChanged = true;
-
-				// patch to/from debug mode
-				if ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000)
-				{
-					// we're in debug mode, so switch over to retail
-					uint32_t ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL;            // decode from debug mode
-					uint32_t kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_DEBUG;  // decode from debug mode
-
-					m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_DEBUG;                    // encode to retail mode
-					m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_RETAIL;        // encode to retail mode
-				}
-				else
-				{
-					// we're in retail mode, so switch to debug
-					uint32_t ep = m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_DEBUG;             // decode from retail mode
-					uint32_t kt = m_Xbe->m_Header.dwKernelImageThunkAddr ^ XOR_KT_RETAIL; // decode from retail mode
-
-					m_Xbe->m_Header.dwEntryAddr = ep ^ XOR_EP_RETAIL;                   // encode to debug mode
-					m_Xbe->m_Header.dwKernelImageThunkAddr = kt ^ XOR_KT_DEBUG;         // encode to debug mode
-				}
-
-				RefreshMenus();
-
-				bool res = (m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000;
-
-				if (res)
-					printf("WndMain: %s was converted to debug mode.\n", m_Xbe->m_szAsciiTitle);
-				else
-					printf("WndMain: %s was converted to retail mode.\n", m_Xbe->m_szAsciiTitle);
 			}
 			break;
 
@@ -1678,15 +1615,9 @@ void WndMain::RefreshMenus()
             // enable/disable close .xbe file
             EnableMenuItem(file_menu, ID_FILE_CLOSE_XBE, MF_BYCOMMAND | MF_WhenXbeLoaded);
 
-            // enable/disable save .xbe file
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILE, MF_BYCOMMAND | MF_WhenXbeLoaded);
-
-            // enable/disable save .xbe file as
-            EnableMenuItem(file_menu, ID_FILE_SAVEXBEFILEAS, MF_BYCOMMAND | MF_WhenXbeLoaded);
-
             // recent xbe files menu
             {
-                HMENU rxbe_menu = GetSubMenu(file_menu, 7);
+                HMENU rxbe_menu = GetSubMenu(file_menu, 4);
 
                 int max = m_dwRecentXbe;
                 for(int v=0;v<max;v++)
@@ -1698,7 +1629,6 @@ void WndMain::RefreshMenus()
         {
             HMENU edit_menu = GetSubMenu(menu, 1);
             HMENU logo_menu = GetSubMenu(edit_menu, 0);
-            HMENU pach_menu = GetSubMenu(edit_menu, 1);
 
             // enable export .xbe info
             EnableMenuItem(edit_menu, ID_EDIT_DUMPXBEINFOTO_FILE, MF_BYCOMMAND | MF_WhenXbeLoaded);
@@ -1709,25 +1639,6 @@ void WndMain::RefreshMenus()
 
             // enable patch menu
             EnableMenuItem(edit_menu, 1, MF_BYPOSITION | MF_WhenXbeLoaded);
-
-            // patch menu
-            {
-                // check "allow >64 MB" if appropriate
-                if(m_Xbe != nullptr)
-                {
-                    UINT chk_flag = (m_Xbe->m_Header.dwInitFlags.bLimit64MB) ? MF_UNCHECKED : MF_CHECKED;
-
-                    CheckMenuItem(pach_menu, ID_EDIT_PATCH_ALLOW64MB, chk_flag);
-                }
-
-                // check "debug mode" if appropriate
-                if(m_Xbe != nullptr)
-                {
-                    UINT chk_flag = ((m_Xbe->m_Header.dwEntryAddr ^ XOR_EP_RETAIL) > 0x01000000) ? MF_CHECKED : MF_UNCHECKED;
-
-                    CheckMenuItem(pach_menu, ID_EDIT_PATCH_DEBUGMODE, chk_flag);
-                }
-            }
         }
 
         // view menu
@@ -1918,7 +1829,7 @@ void WndMain::UpdateDebugConsoles()
 void WndMain::UpdateRecentFiles()
 {
     HMENU FileMenu = GetSubMenu(GetMenu(m_hwnd), 0);
-    HMENU RXbeMenu = GetSubMenu(FileMenu, 7);
+    HMENU RXbeMenu = GetSubMenu(FileMenu, 4);
 
     // clear existing menu items
     {
@@ -2206,7 +2117,7 @@ void WndMain::OpenMRU(int mru)
 {
 	HMENU menu = GetMenu(m_hwnd);
 	HMENU file_menu = GetSubMenu(menu, 0);
-	HMENU rxbe_menu = GetSubMenu(file_menu, 7);
+	HMENU rxbe_menu = GetSubMenu(file_menu, 4);
 
 	char szBuffer[270];
 
