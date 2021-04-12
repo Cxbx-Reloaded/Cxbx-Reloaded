@@ -531,8 +531,8 @@ bool Settings::LoadConfig()
 
 	// ==== Overlay Begin =========
 
-	m_overlay.fps = m_si.GetBoolValue(section_overlay, sect_overlay_keys.FPS, true);
-	m_overlay.hle_lle_stats = m_si.SetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, true);
+	m_overlay.fps = m_si.GetBoolValue(section_overlay, sect_overlay_keys.FPS, false);
+	m_overlay.hle_lle_stats = m_si.GetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, false);
 
 	// ==== Overlay End ===========
 
