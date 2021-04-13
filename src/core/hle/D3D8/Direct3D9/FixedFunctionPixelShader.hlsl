@@ -121,7 +121,11 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 	else if (op == X_D3DTOP_MODULATEINVCOLOR_ADDALPHA)
 		return float4((1 - arg1.rgb) * arg2.rgb + arg1.a, 1);
 	else if (op == X_D3DTOP_DOTPRODUCT3)
-		return dot(arg1.rgb, arg2.rgb).rrrr;
+		// Test case: PerPixelLighting
+		return saturate(dot(
+			(arg1.rgb - 0.5) * 2,
+			(arg2.rgb - 0.5) * 2
+		));
 	// Note arg0 below is arg1 in D3D docs
 	// since it becomes the first argument for operations supporting 3 arguments...
 	else if (op == X_D3DTOP_MULTIPLYADD)
