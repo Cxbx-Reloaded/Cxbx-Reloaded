@@ -101,26 +101,19 @@ void ARX_WR(void *Ptr, xbox::uchar_xt i, xbox::uchar_xt d)
 	g_NV2A->BlockWrite(block, NV_PRMCIO_ARX, d, sizeof(uint8_t));
 }
 
-
-// Global Variable(s)
-PVOID g_pPersistedData = NULL;
-ULONG AvpCurrentMode = 0;
-
 ULONG AvSMCVideoModeToAVPack(ULONG VideoMode)
 {
-	switch (VideoMode)
-	{
-	case 0x0: return AV_PACK_SCART;
-	case 0x1: return AV_PACK_HDTV;
-	case 0x2: return AV_PACK_VGA;
-	case 0x3: return AV_PACK_RFU;
-	case 0x4: return AV_PACK_SVIDEO;
-	case 0x6: return AV_PACK_STANDARD;
+	switch (VideoMode) {
+		case 0x0: return g_bIsChihiro ? AV_PACK_VGA : AV_PACK_SCART; // Scart on Retail/Debug, VGA on Chihiro
+		case 0x1: return AV_PACK_HDTV;
+		case 0x2: return AV_PACK_VGA;
+		case 0x3: return AV_PACK_RFU;
+		case 0x4: return AV_PACK_SVIDEO;
+		case 0x6: return AV_PACK_STANDARD;
 	}
 
 	return AV_PACK_NONE;
 }
-
 
 ULONG AvQueryAvCapabilities()
 {
@@ -306,6 +299,7 @@ XBSYSAPI EXPORTNUM(3) xbox::ulong_xt NTAPI xbox::AvSetDisplayMode
 
 	Pitch /= 8;
 
+	static xbox::ulong_xt AvpCurrentMode = 0;
 	if (AvpCurrentMode == Mode) {
 		REG_WR32(RegisterBase, NV_PRAMDAC_GENERAL_CONTROL, GeneralControl);
 		CRTC_WR(RegisterBase, NV_CIO_SR_LOCK_INDEX /*=0x1c*/, NV_CIO_SR_UNLOCK_RW_VALUE); /* crtc lock */

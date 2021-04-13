@@ -774,8 +774,8 @@ bool Xbe::CheckSignature()
 	// Hash against all currently known public keys, if these pass, we can guarantee the Xbe is unmodified
 	std::array<RSA_PUBLIC_KEY, 3> keys = { 0 };
 	memcpy(keys[0].Default, (void*)xbox::XePublicKeyDataRetail, 284);
-	memcpy(keys[1].Default, (void*)xbox::XePublicKeyDataChihiroGame, 284);
-	memcpy(keys[2].Default, (void*)xbox::XePublicKeyDataChihiroBoot, 284);
+	memcpy(keys[1].Default, (void*)xbox::XePublicKeyDataDebug, 284);
+	memcpy(keys[2].Default, (void*)xbox::XePublicKeyDataChihiro, 284);
 	// TODO: memcpy(keys[3].Default, (void*)xbox::XePublicKeyDataDebug, 284);
 
 	for (unsigned int i = 0; i < keys.size(); i++) {
