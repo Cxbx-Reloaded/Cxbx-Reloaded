@@ -39,10 +39,10 @@
 #pragma warning(default:4005)
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
-#include "common/util/strConverter.hpp"
+#include "common/util/strConverter.hpp" // utf16_to_ascii
 
 #include <filesystem>
-#pragma optimize("", off)
+
 // Default Xbox Partition Table
 #define PE_PARTFLAGS_IN_USE	0x80000000
 #define XBOX_SWAPPART1_LBA_START		0x400
@@ -445,10 +445,12 @@ NTSTATUS CxbxConvertFilePath(
 				if (RelativePath.compare(0, 7, "serial:") == 0)
 					return STATUS_UNRECOGNIZED_VOLUME;
 
+				// TODO: CDROM0: need access to raw file handle which doesn't exist in file system.
+				//       Similar concept with serial: and perhaps mediaboards.
 				// Raw handle access to the CDROM0:
 				/*if (RelativePath.compare(0, 7, "CDROM0:") == 0) {
-					RelativePath = DeviceCdrom0 + "\\CDROM0.bin";
 					// we should have a return and likely forward to special handler function, including serial: above.
+					return ?;
 				}*/
 
 				// The path seems to be a device path, look it up :
@@ -625,31 +627,30 @@ XboxDevice *CxbxDeviceByHostPath(const std::string HostDevicePath)
 	return nullptr;
 }
 
-std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath) {
-	std::string XbePath;
-	// Convert Xbox XBE Path to Host Path
-	{
-		HANDLE rootDirectoryHandle = nullptr;
-		std::wstring wXbePath;
-		// We pretend to come from NtCreateFile to force symbolic link resolution
-		CxbxConvertFilePath(XboxDevicePath.data(), wXbePath, &rootDirectoryHandle, "NtCreateFile");
+// Convert Xbox XBE Path to Host Path
+std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
+{
+	HANDLE rootDirectoryHandle = nullptr;
+	std::wstring wXbePath;
+	// We pretend to come from NtCreateFile to force symbolic link resolution
+	CxbxConvertFilePath(XboxDevicePath.data(), wXbePath, &rootDirectoryHandle, "NtCreateFile");
 
-		// Convert Wide String as returned by above to a string, for XbePath
-		XbePath = utf16_to_ascii(wXbePath.c_str());
+	// Convert Wide String as returned by above to a string, for XbePath
+	std::string XbePath = utf16_to_ascii(wXbePath.c_str());
 
-		// If the rootDirectoryHandle is not null, we have a relative path
-		// We need to prepend the path of the root directory to get a full DOS path
-		if (rootDirectoryHandle != nullptr) {
-			char directoryPathBuffer[MAX_PATH];
-			GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
-			XbePath = directoryPathBuffer + std::string("\\") + XbePath;
+	// If the rootDirectoryHandle is not null, we have a relative path
+	// We need to prepend the path of the root directory to get a full DOS path
+	if (rootDirectoryHandle != nullptr) {
+		char directoryPathBuffer[MAX_PATH];
+		GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
+		XbePath = directoryPathBuffer + std::string("\\") + XbePath;
 
-			// Trim \\?\ from the output string, as we want the raw DOS path, not NT path
-			// We can do this always because GetFinalPathNameByHandle ALWAYS returns this format
-			// Without exception
-			XbePath.erase(0, 4);
-		}
+		// Trim \\?\ from the output string, as we want the raw DOS path, not NT path
+		// We can do this always because GetFinalPathNameByHandle ALWAYS returns this format
+		// Without exception
+		XbePath.erase(0, 4);
 	}
+
 	return XbePath;
 }
 
@@ -673,7 +674,7 @@ int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::strin
 
 	// If this path is not a raw file partition, create the directory for it
 	if (!IsFile) {
-		std::error_code error;
+		std::error_code error; // We do not want filesystem to throw an exception on directory creation. Instead, listen for return value to fail.
 		succeeded = std::filesystem::exists(HostDevicePath) || std::filesystem::create_directory(HostDevicePath, error);
 	}
 
@@ -770,7 +771,6 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 						HostSymbolicLinkPath = HostSymbolicLinkPath + ExtraPath;
 					}
 				}
-
 
 				RootDirectoryHandle = CreateFile(HostSymbolicLinkPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 				if (RootDirectoryHandle == INVALID_HANDLE_VALUE)

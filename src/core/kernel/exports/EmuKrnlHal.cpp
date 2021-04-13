@@ -27,7 +27,6 @@
 // ******************************************************************
 
 #define LOG_PREFIX CXBXR_MODULE::HAL
-#pragma optimize("", off)
 
 #include <core\kernel\exports\xboxkrnl.h> // For HalReadSMCTrayState, etc.
 #include <Shlwapi.h> // For PathRemoveFileSpec()

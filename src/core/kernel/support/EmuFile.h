@@ -91,7 +91,7 @@ extern const std::string DeviceHarddisk0Partition17;
 extern const std::string DeviceHarddisk0Partition18;
 extern const std::string DeviceHarddisk0Partition19;
 extern const std::string DeviceHarddisk0Partition20;
-static constexpr char CxbxDelimiterAutoMountDriveLetter = 'D';
+constexpr char CxbxAutoMountDriveLetter = 'D';
 
 extern std::string CxbxBasePath;
 extern HANDLE CxbxBasePathHandle;

@@ -997,7 +997,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		// Remove extra slashes.
 		std::string slash_search[] = { "\\\\", "//" };
 		std::string slash_str = "/";
-		for (n = 0, i = 1; i < slash_search->size(); i++, n = 0) {
+		for (n = 0, i = 0; i < slash_search->size(); i++, n = 0) {
 			while ((n = xbePath.find(slash_search[i], n)) != std::string::npos) {
 				xbePath.replace(n, slash_search[i].size(), slash_str);
 				n += slash_str.size();
@@ -1230,7 +1230,7 @@ void LoadXboxKeys(std::string path)
 	// If we didn't already exit the function, keys.bin could not be loaded
 	EmuLog(LOG_LEVEL::WARNING, "Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
-#pragma optimize("", off)
+
 __declspec(noreturn) void CxbxKrnlInit
 (
 	void                   *pTLSData,
@@ -1406,7 +1406,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Create default symbolic links :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");
 	{
-		// TODO: DriveD should auto mount base on launchdata page's ; delimiter xbe path.
+		// TODO: DriveD should auto mount based on the launchdata page's ; delimiter in the xbe path.
 		// This is the only symbolic link the Xbox Kernel sets, the rest are set by the application, usually via XAPI.
 		// If the Xbe is located outside of the emulated HDD, mounting it as DeviceCdrom0 is correct
 		// If the Xbe is located inside the emulated HDD, the full path should be used, eg: "\\Harddisk0\\partition2\\xboxdash.xbe"
@@ -1419,7 +1419,7 @@ __declspec(noreturn) void CxbxKrnlInit
 #endif
 			CxbxCreateSymbolicLink(DriveD, mount_d_dir);
 			// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-			EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxDelimiterAutoMountDriveLetter);
+			EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxAutoMountDriveLetter);
 			g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 		}
 	}
@@ -1439,7 +1439,7 @@ __declspec(noreturn) void CxbxKrnlInit
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
 		xbox::XeImageFileName.MaximumLength = xbox::max_path;
 		xbox::XeImageFileName.Buffer = (PCHAR)xbox::ExAllocatePool(xbox::max_path);
-		sprintf(xbox::XeImageFileName.Buffer, "%c:\\%s", CxbxDelimiterAutoMountDriveLetter, fileName.c_str());
+		sprintf(xbox::XeImageFileName.Buffer, "%c:\\%s", CxbxAutoMountDriveLetter, fileName.c_str());
 		xbox::XeImageFileName.Length = (USHORT)strlen(xbox::XeImageFileName.Buffer);
 		EmuLogInit(LOG_LEVEL::INFO, "XeImageFileName = %s", xbox::XeImageFileName.Buffer);
 	}
