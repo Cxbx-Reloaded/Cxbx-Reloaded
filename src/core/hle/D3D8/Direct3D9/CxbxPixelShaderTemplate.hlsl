@@ -263,6 +263,7 @@ float4 Sample6F(int st, float3 s)
 #define src(st) t[PS_INPUTTEXTURE_[st]]
 
 // Calculate the dot result for a given stage. Since any given stage is input-mapped to always be less than or equal the stage it appears in, this won't cause read-ahead issues
+// Test case: BumpDemo demo
 #define CalcDot(st) PS_DOTMAPPING_ ## st(src(st)); dot_[st] = dot(iT[st].xyz, dm)
 
 // Addressing operations
@@ -271,7 +272,7 @@ float4 Sample6F(int st, float3 s)
 #define Normal2(st)   float3(dot_[st-1], dot_[st],   0)                     // Preceding and current stage dot result. Will be input for Sample2D.
 #define Normal3(st)   float3(dot_[st-2], dot_[st-1], dot_[st])              // Two preceding and current stage dot result.
 #define Eye           float3(iT[1].w,    iT[2].w,    iT[3].w)               // 4th (q) component of input texture coordinates 1, 2 and 3. Only used by texm3x3vspec/PS_TEXTUREMODES_DOT_RFLCT_SPEC, always at stage 3. TODO : Map iT[1/2/3] through PS_INPUTTEXTURE_[]?
-#define Reflect(n, e) (2 * n * dot(n, e)) / dot(n, n)                       // TODO : Prevent division by zero when n == 0?
+#define Reflect(n, e) 2 * (dot(n, e) / dot(n, n)) * n - e                   // https://documentation.help/directx8_c/texm3x3vspec.htm
 #define BumpEnv(st)   float3(iT[st].x + (BEM[st].x * src(st).r) + (BEM[st].y * src(st).g), iT[st].y + (BEM[st].z * src(st).r) + (BEM[st].w * src(st).g), 0) // Will be input for Sample2D. TODO : Compact into a regular 2x2 maxtrix multiplication.
 #define LSO(st)       (LUM[st].x * src(st).b) + LUM[st].y                   // Uses PSH_XBOX_CONSTANT_LUM .x = D3DTSS_BUMPENVLSCALE .y = D3DTSS_BUMPENVLOFFSET
 
@@ -294,6 +295,7 @@ float4 Sample6F(int st, float3 s)
 /*---3 texm3x3tex   */ #define PS_TEXTUREMODES_DOT_STR_CUBE(st)         CalcDot(st); n = Normal3(st); s = n;               v = Sample6F(st, s); t[st] = v // TODO : Test
 /*-123 texreg2ar    */ #define PS_TEXTUREMODES_DPNDNT_AR(st)                                          s = src(st).arg;     v = Sample2D(st, s); t[st] = v // TODO : Test [1]
 /*-123 texreg2bg    */ #define PS_TEXTUREMODES_DPNDNT_GB(st)                                          s = src(st).gba;     v = Sample2D(st, s); t[st] = v // TODO : Test [1]
+// TODO replace dm with dot_[st]? Confirm BumpDemo 'Cubemap only' modes
 /*-12- texm3x2pad   */ #define PS_TEXTUREMODES_DOTPRODUCT(st)           CalcDot(st);                                       v = float4(dm, 0);   t[st] = v // TODO : Test all dot mapping (setting texture register, in case it gets read - test-case : BumpDemo) 
 /*---3 texm3x3spec  */ #define PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST(st) CalcDot(st); n = Normal3(st); s = Reflect(n, c0);  v = Sample6F(st, s); t[st] = v // TODO : Test
 // [1] Note : 3rd component set to s.z is just an (ignored) placeholder to produce a float3 (made unique, to avoid the potential complexity of repeated components)
