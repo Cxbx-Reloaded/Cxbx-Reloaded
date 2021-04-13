@@ -1231,6 +1231,18 @@ void LoadXboxKeys(std::string path)
 	EmuLog(LOG_LEVEL::WARNING, "Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
+//TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
+// Let filesystem library clean it up for us, including resolve host's symbolic link path.
+// Since internal kernel do translate to full path than preserved host symoblic link path.
+static inline void CxbxResolveHostToFullPath(std::string& file_path, std::string_view finish_error_sentence) {
+	std::error_code error;
+	std::filesystem::path sanityPath = std::filesystem::canonical(file_path, error);
+	if (error.value() != 0) {
+		CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s", finish_error_sentence.data(), file_path.c_str());
+	}
+	file_path = sanityPath.string();
+}
+
 __declspec(noreturn) void CxbxKrnlInit
 (
 	void                   *pTLSData,
@@ -1344,16 +1356,22 @@ __declspec(noreturn) void CxbxKrnlInit
 	char szBuffer[sizeof(szFilePath_Xbe)];
 	g_EmuShared->GetStorageLocation(szBuffer);
 
-	CxbxBasePath = std::filesystem::path(std::string(szBuffer) + "\\EmuDisk\\").make_preferred().string(); // Let filesystem library clean it up for us.
+	CxbxBasePath = std::string(szBuffer) + "\\EmuDisk";
+	CxbxResolveHostToFullPath(CxbxBasePath, "Cxbx-Reloaded's EmuDisk directory");
+	// Since canonical always remove the extra slash, we need to manually add it back.
+	CxbxBasePath = std::filesystem::path(CxbxBasePath + "\\").make_preferred().string();
 
-	// Determine XBE Path
+	// Determine xbe path
 	strncpy(szBuffer, szFilePath_Xbe, sizeof(szBuffer)-1);
 	szBuffer[sizeof(szBuffer) - 1] = '\0'; // Safely null terminate at the end.
 
 	std::string xbePath(szBuffer);
 	std::replace(xbePath.begin(), xbePath.end(), ';', '/');
-	xbePath = std::filesystem::path(xbePath).make_preferred().string(); // Let filesystem library clean it up for us.
+	CxbxResolveHostToFullPath(xbePath, "xbe's file");
 
+	// Determine location for where possible auto mount D letter if ";" delimiter exist.
+	// Also used to store in EmuShared's title mount path permanent storage on first emulation launch.
+	// Unless it's launch within Cxbx-Reloaded's EmuDisk directly, then we don't store anything in title mount path storage.
 	std::string mount_d_dir(szBuffer);
 	size_t lastFind = mount_d_dir.find(';');
 	// First find if there is a semicolon when dashboard or title disc (such as demo disc) has it.
@@ -1367,7 +1385,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	else {
 		mount_d_dir = mount_d_dir.substr(0, mount_d_dir.find_last_of("\\/"));
 	}
-	mount_d_dir = std::filesystem::path(mount_d_dir).make_preferred().string(); // Let filesystem library clean it up for us.
+	CxbxResolveHostToFullPath(mount_d_dir, "xbe's directory");
 
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 	// Titles may assume they are running from CdRom0/Mbfs :
