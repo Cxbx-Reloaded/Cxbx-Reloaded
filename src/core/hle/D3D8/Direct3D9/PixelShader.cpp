@@ -191,7 +191,7 @@ void CombinerStageHlsl(std::stringstream& hlsl, RPSCombinerStageChannel& stage, 
 		"d_bd2"    // y = (x - 0.5) / 2  // PS_COMBINEROUTPUT_OUTPUTMAPPING_SHIFTRIGHT_1_BIAS=   0x38L // Subtracts 0.5 from outputs and divides by 2
 	};
 
-	std::string output_modifier = output_modifier_str[(stage.CombinerOutputMapping & 0x38) >> 3];
+	std::string output_modifier = output_modifier_str[stage.CombinerOutputMapping >> 3];
 
 	// Concatenate it all together into an opcode 'call' (which resolves into macro expressions)
 	hlsl << opcode_comment[opcode][0] << '(' << arguments.str() << ' ' << output_modifier;
@@ -296,11 +296,11 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 
 	hlsl << hlsl_template[0]; // Start with the HLSL template header
 
-	hlsl << "\nstatic bool alphakill[4] = {"
+	hlsl << "\n#define ALPHAKILL {"
 		<< (pShader->AlphaKill[0] ? "true, " : "false, ")
 		<< (pShader->AlphaKill[1] ? "true, " : "false, ")
 		<< (pShader->AlphaKill[2] ? "true, " : "false, ")
-		<< (pShader->AlphaKill[3] ? "true};" : "false};");
+		<< (pShader->AlphaKill[3] ? "true}"  : "false}");
 
 	hlsl << "\n#define PS_COMBINERCOUNT " << pShader->NumberOfCombiners;
 	if (pShader->NumberOfCombiners > 0) {

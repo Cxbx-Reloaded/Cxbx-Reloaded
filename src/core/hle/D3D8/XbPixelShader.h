@@ -107,6 +107,8 @@ enum PS_TEXTUREMODES
     PS_TEXTUREMODES_DOTPRODUCT=           0x11L, // - * * - PSInputTexture
     PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST= 0x12L, // - - - * Sample, PSInputTexture, PSDotMapping
     // 0x13-0x1f reserved
+
+    PS_TEXTUREMODES_MASK=                 0x1fL
 };
 
 // =========================================================================================================
@@ -137,6 +139,8 @@ enum PS_DOTMAPPING
     PS_DOTMAPPING_HILO_HEMISPHERE_D3D= 0x05L, // - * * *
     PS_DOTMAPPING_HILO_HEMISPHERE_GL=  0x06L, // - * * *
     PS_DOTMAPPING_HILO_HEMISPHERE=     0x07L, // - * * *
+
+    PS_DOTMAPPING_MASK=                0x07L
 };
 
 // =========================================================================================================
@@ -161,6 +165,8 @@ enum PS_COMPAREMODE
 
     PS_COMPAREMODE_Q_LT= 0x00L,
     PS_COMPAREMODE_Q_GE= 0x08L,
+
+    PS_COMPAREMODE_MASK= 0x0fL
 };
 
 // =========================================================================================================
@@ -284,6 +290,8 @@ enum PS_INPUTMAPPING
     PS_INPUTMAPPING_HALFBIAS_NEGATE=   0xa0L, // 1/2 -   max(0,x)       = -1*max(0,x) + 0.5   invalid for final combiner
     PS_INPUTMAPPING_SIGNED_IDENTITY=   0xc0L, //               x        =  1*      x  + 0.0   invalid for final combiner
     PS_INPUTMAPPING_SIGNED_NEGATE=     0xe0L, //              -x        = -1*      x  + 0.0   invalid for final combiner
+
+    PS_INPUTMAPPING_MASK=              0xe0L
 };
 
 enum PS_REGISTER
@@ -303,6 +311,8 @@ enum PS_REGISTER
     PS_REGISTER_R1=                0x0dL, // r/w  A.k.a. _REG_D
     PS_REGISTER_V1R0_SUM=          0x0eL, // r    A.k.a. _REG_SPECLIT
     PS_REGISTER_EF_PROD=           0x0fL, // r    A.k.a. _REG_EF_PROD
+
+    PS_REGISTER_MASK=              0x0fL,
 
     // These constant values can be represented as a combination of 0, and an input modifier
     // But they're not registers
@@ -326,6 +336,8 @@ enum PS_CHANNEL
     PS_CHANNEL_RGB=   0x00, // used as RGB source
     PS_CHANNEL_BLUE=  0x00, // used as ALPHA source
     PS_CHANNEL_ALPHA= 0x10, // used as RGB or ALPHA source
+
+    PS_CHANNEL_MASK=  0x10
 };
 
 enum PS_FINALCOMBINERSETTING
@@ -362,6 +374,8 @@ enum PS_COMBINEROUTPUT_OUTPUTMAPPING
     PS_COMBINEROUTPUT_OUTPUTMAPPING_SHIFTLEFT_2_BIAS=    0x28L, // y = (x - 0.5) * 4  Note : Cxbx inferred method; May not be supported on NV2A
     PS_COMBINEROUTPUT_OUTPUTMAPPING_SHIFTRIGHT_1=        0x30L, // y =  x        / 2
     PS_COMBINEROUTPUT_OUTPUTMAPPING_SHIFTRIGHT_1_BIAS=   0x38L, // y = (x - 0.5) / 2  Note : Cxbx inferred method; May not be supported on NV2A
+
+    PS_COMBINEROUTPUT_OUTPUTMAPPING_MASK=                0x38L
 };
 
 enum PS_COMBINEROUTPUT
@@ -429,6 +443,8 @@ enum PS_GLOBALFLAGS
 
     PS_GLOBALFLAGS_NO_TEXMODE_ADJUST=     0x0000L, // don't adjust texture modes
     PS_GLOBALFLAGS_TEXMODE_ADJUST=        0x0001L, // adjust texture modes according to set texture
+
+    PS_GLOBALFLAGS_SHIFT= 8
 };
 
 
@@ -464,7 +480,7 @@ struct RPSCombinerStageChannel {
 	RPSCombinerOutput OutputAB; // Contains InputA and InputB (as Input1 and Input2)
 	RPSRegisterObject OutputMUX_SUM;
 	bool AB_CD_MUX; // False=AB+CD, True=MUX(AB,CD) based on R0.a
-	PS_COMBINEROUTPUT CombinerOutputMapping;
+	PS_COMBINEROUTPUT_OUTPUTMAPPING CombinerOutputMapping;
 
 	void Decode(uint32_t PSInputs, uint32_t PSOutputs, unsigned stage_nr, bool isRGB);
 };
