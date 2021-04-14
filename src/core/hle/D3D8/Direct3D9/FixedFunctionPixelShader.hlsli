@@ -87,7 +87,11 @@ namespace FixedFunctionPixelShader {
 
 		alignas(16) float COLORKEYOP; // Unimplemented Xbox extension!
 		alignas(16) float COLORSIGN; // Unimplemented Xbox extension!
+#ifdef ENABLE_FF_ALPHAKILL
+		alignas(16) float ALPHAKILL; // Xbox extension!
+#else
 		alignas(16) float ALPHAKILL; // Unimplemented Xbox extension!
+#endif
 		// TEXTURETRANSFORMFLAGS handled by the VS
 		alignas(16) float BUMPENVMAT00;
 		alignas(16) float BUMPENVMAT01;

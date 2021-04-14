@@ -102,9 +102,9 @@ extern XboxTextureStateConverter XboxTextureStates; // Declared in Direct3D9.cpp
 
 void RPSRegisterObject::Decode(uint8_t Value)
 {
-	Reg = (PS_REGISTER)(Value & PS_REGISTER_EF_PROD); // = mask = 0x0f
+	Reg = (PS_REGISTER)(Value & PS_REGISTER_MASK); // = 0x0f
 
-	// Validate correctness
+	// Validate correctness (see NOTE below)
 	if (Reg == 6) LOG_TEST_CASE("Unknown PS_REGISTER : 6");
 	if (Reg == 7) LOG_TEST_CASE("Unknown PS_REGISTER : 7");
 }
@@ -115,8 +115,8 @@ void RPSInputRegister::Decode(uint8_t Value, unsigned stage_nr, bool isRGB)
 {
 	RPSRegisterObject::Decode(Value);
 
-	Channel = (PS_CHANNEL)(Value & PS_CHANNEL_ALPHA); // = mask = 0x10
-	InputMapping = (PS_INPUTMAPPING)(Value & PS_INPUTMAPPING_SIGNED_NEGATE); // = mask = 0xe0
+	Channel = (PS_CHANNEL)(Value & PS_CHANNEL_MASK); // = 0x10
+	InputMapping = (PS_INPUTMAPPING)(Value & PS_INPUTMAPPING_MASK); // = 0xe0
 
 	if (stage_nr == 9) {
 		// In final combiner stage, convert C0 into FC0, and C1 into FC1, to discern them as separate registers
@@ -124,7 +124,7 @@ void RPSInputRegister::Decode(uint8_t Value, unsigned stage_nr, bool isRGB)
 		if (Reg == PS_REGISTER_C1) Reg = PS_REGISTER_FC1;
 	}
 
-	// Validate correctness
+	// Validate correctness (see NOTE below)
 	if (stage_nr <= xbox::X_PSH_COMBINECOUNT) {
 		if (Reg == PS_REGISTER_FOG) {
 			if (!isRGB) LOG_TEST_CASE("PS_REGISTER_FOG input not allowed in Alpha register combiner");
@@ -150,10 +150,10 @@ void RPSCombinerOutput::Decode(uint8_t Value, uint16_t PSInputs, unsigned stage_
 	RPSRegisterObject::Decode(Value);
 
 	// Decode PSAlphaInputs / PSRGBInputs :
-	Input[0].Decode((PSInputs >> 8) & 0xFF, stage_nr, isRGB);
-	Input[1].Decode((PSInputs >> 0) & 0xFF, stage_nr, isRGB);
+	Input[0].Decode((uint8_t)(PSInputs >> 8), stage_nr, isRGB);
+	Input[1].Decode((uint8_t)(PSInputs >> 0), stage_nr, isRGB);
 
-	// Validate correctness
+	// Validate correctness (see NOTE below)
 	if (Reg == PS_REGISTER_C0) LOG_TEST_CASE("PS_REGISTER_C0 not allowed as output");
 	if (Reg == PS_REGISTER_C1) LOG_TEST_CASE("PS_REGISTER_C1 not allowed as output");
 	if (Reg == PS_REGISTER_FOG) LOG_TEST_CASE("PS_REGISTER_FOG not allowed as output");
@@ -166,9 +166,9 @@ void RPSCombinerOutput::Decode(uint8_t Value, uint16_t PSInputs, unsigned stage_
 void RPSCombinerStageChannel::Decode(uint32_t PSInputs, uint32_t PSOutputs, unsigned stage_nr, bool isRGB)
 {
 	// Decode PSAlphaOutputs / PSRGBOutputs and PSAlphaInputs / PSRGBInputs :
-	OutputCD.Decode((PSOutputs >> 0) & 0xF, (PSInputs >> 0 ) & 0xFFFF, stage_nr, isRGB);
-	OutputAB.Decode((PSOutputs >> 4) & 0xF, (PSInputs >> 16) & 0xFFFF, stage_nr, isRGB);
-	OutputMUX_SUM.Decode((PSOutputs >> 8) & 0xF);
+	OutputCD.Decode((uint8_t)(PSOutputs >> 0), (uint16_t)(PSInputs >> 0 ), stage_nr, isRGB);
+	OutputAB.Decode((uint8_t)(PSOutputs >> 4), (uint16_t)(PSInputs >> 16), stage_nr, isRGB);
+	OutputMUX_SUM.Decode((uint8_t)(PSOutputs >> 8));
 
 	// Get the combiner output flags :
 	PS_COMBINEROUTPUT CombinerOutputFlags = (PS_COMBINEROUTPUT)(PSOutputs >> 12);
@@ -177,11 +177,11 @@ void RPSCombinerStageChannel::Decode(uint32_t PSInputs, uint32_t PSOutputs, unsi
 	OutputCD.DotProduct = (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_DOT_PRODUCT) > 0; // False=Multiply, True=DotProduct
 	OutputAB.DotProduct = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_DOT_PRODUCT) > 0; // False=Multiply, True=DotProduct
 	AB_CD_MUX = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_CD_MUX) > 0; // False=AB+CD, True=MUX(AB,CD) based on R0.a
-	CombinerOutputMapping = (PS_COMBINEROUTPUT)(CombinerOutputFlags & PS_COMBINEROUTPUT_OUTPUTMAPPING_SHIFTRIGHT_1_BIAS); // = mask = 0x38
+	CombinerOutputMapping = (PS_COMBINEROUTPUT_OUTPUTMAPPING)(CombinerOutputFlags & PS_COMBINEROUTPUT_OUTPUTMAPPING_MASK); // = 0x38
 	OutputCD.BlueToAlpha = (CombinerOutputFlags & PS_COMBINEROUTPUT_CD_BLUE_TO_ALPHA) >> 6; // 0=Alpha-to-Alpha, 1=Blue-to-Alpha
 	OutputAB.BlueToAlpha = (CombinerOutputFlags & PS_COMBINEROUTPUT_AB_BLUE_TO_ALPHA) >> 7; // 0=Alpha-to-Alpha, 1=Blue-to-Alpha
 
-	// Discover test-cases
+	// Discover test-cases (see TODO below)
 	// Check for 'discard-all-outputs'
 	if (OutputAB.DotProduct || OutputCD.DotProduct) {
 		if ((OutputAB.Reg == PS_REGISTER_DISCARD) && (OutputCD.Reg == PS_REGISTER_DISCARD)) LOG_TEST_CASE("All two outputs discarded");
@@ -189,7 +189,7 @@ void RPSCombinerStageChannel::Decode(uint32_t PSInputs, uint32_t PSOutputs, unsi
 		// if ((OutputAB.Reg == PS_REGISTER_DISCARD) && (OutputCD.Reg == PS_REGISTER_DISCARD) && (OutputMUX_SUM.Reg == PS_REGISTER_DISCARD)) LOG_TEST_CASE("All three outputs discarded"); // Test-case : XDK sample : Minnaert (on Stage2.Alpha)
 	}
 
-	// Validate correctness
+	// Validate correctness (see NOTE below)
 	if ((PSOutputs & ~0x000FFFFF) > 0) LOG_TEST_CASE("Unknown PS_COMBINEROUTPUT flag bits detected");
 	if (CombinerOutputMapping == PS_COMBINEROUTPUT_OUTPUTMAPPING_SHIFTLEFT_2_BIAS) LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTLEFT_2_BIAS unsupported on NV2A?");
 	if (CombinerOutputMapping == PS_COMBINEROUTPUT_OUTPUTMAPPING_SHIFTRIGHT_1_BIAS) LOG_TEST_CASE("PS_COMBINEROUTPUT_SHIFTRIGHT_1_BIAS unsupported on NV2A?");
@@ -211,27 +211,27 @@ void RPSCombinerStageChannel::Decode(uint32_t PSInputs, uint32_t PSOutputs, unsi
 
 void RPSFinalCombiner::Decode(const uint32_t PSFinalCombinerInputsABCD, const uint32_t PSFinalCombinerInputsEFG)
 {
-	Input[0].Decode((PSFinalCombinerInputsABCD >> 24) & 0xFF, /*stage_nr=*/9, /*isRGB=*/true);
-	Input[1].Decode((PSFinalCombinerInputsABCD >> 16) & 0xFF, /*stage_nr=*/9, /*isRGB=*/true);
-	Input[2].Decode((PSFinalCombinerInputsABCD >>  8) & 0xFF, /*stage_nr=*/9, /*isRGB=*/true);
-	Input[3].Decode((PSFinalCombinerInputsABCD >>  0) & 0xFF, /*stage_nr=*/9, /*isRGB=*/true);
-	Input[4].Decode((PSFinalCombinerInputsEFG  >> 24) & 0xFF, /*stage_nr=*/9, /*isRGB=*/true);
-	Input[5].Decode((PSFinalCombinerInputsEFG  >> 16) & 0xFF, /*stage_nr=*/9, /*isRGB=*/true);
-	Input[6].Decode((PSFinalCombinerInputsEFG  >>  8) & 0xFF, /*stage_nr=*/9, /*isRGB=*/false); // Note : Final combiner input G must be a single component, and must thus be decoded as Alpha
+	Input[0].Decode((uint8_t)(PSFinalCombinerInputsABCD >> 24), /*stage_nr=*/9, /*isRGB=*/true);
+	Input[1].Decode((uint8_t)(PSFinalCombinerInputsABCD >> 16), /*stage_nr=*/9, /*isRGB=*/true);
+	Input[2].Decode((uint8_t)(PSFinalCombinerInputsABCD >>  8), /*stage_nr=*/9, /*isRGB=*/true);
+	Input[3].Decode((uint8_t)(PSFinalCombinerInputsABCD >>  0), /*stage_nr=*/9, /*isRGB=*/true);
+	Input[4].Decode((uint8_t)(PSFinalCombinerInputsEFG  >> 24), /*stage_nr=*/9, /*isRGB=*/true);
+	Input[5].Decode((uint8_t)(PSFinalCombinerInputsEFG  >> 16), /*stage_nr=*/9, /*isRGB=*/true);
+	Input[6].Decode((uint8_t)(PSFinalCombinerInputsEFG  >>  8), /*stage_nr=*/9, /*isRGB=*/false); // Note : Final combiner input G must be a single component, and must thus be decoded as Alpha
 	PS_FINALCOMBINERSETTING FinalCombinerSettingFlags = (PS_FINALCOMBINERSETTING)((PSFinalCombinerInputsEFG >> 0) & 0xFF);
 
-	ComplementV1 = FinalCombinerSettingFlags & PS_FINALCOMBINERSETTING_COMPLEMENT_V1;
-	ComplementR0 = FinalCombinerSettingFlags & PS_FINALCOMBINERSETTING_COMPLEMENT_R0;
-	ClampSum = FinalCombinerSettingFlags & PS_FINALCOMBINERSETTING_CLAMP_SUM;
+	ComplementV1 = (FinalCombinerSettingFlags & PS_FINALCOMBINERSETTING_COMPLEMENT_V1) > 0;
+	ComplementR0 = (FinalCombinerSettingFlags & PS_FINALCOMBINERSETTING_COMPLEMENT_R0) > 0;
+	ClampSum = (FinalCombinerSettingFlags & PS_FINALCOMBINERSETTING_CLAMP_SUM) > 0;
 
-	// Discover test-cases
+	// Discover test-cases (see TODO below)
 	// if (Input[0].Channel != PS_CHANNEL_ALPHA) LOG_TEST_CASE("PS_CHANNEL_RGB/PS_CHANNEL_BLUE detected on final combiner A input"); // Note : test-case ModifyPixelShader uses PS_REGISTER_FOG.rgb and seems to expect .rgb handling (not PS_CHANNEL_BLUE's .b)
 	if (Input[4].Channel == PS_CHANNEL_ALPHA) LOG_TEST_CASE("PS_CHANNEL_ALPHA detected on final combiner E input"); // Need test-case to determine how this should behave (calculating EF_PROD) : .aaa instead of .rgb?
 	if (Input[5].Channel == PS_CHANNEL_ALPHA) LOG_TEST_CASE("PS_CHANNEL_ALPHA detected on final combiner F input"); // Need test-case to determine how this should behave (calculating EF_PROD) : .aaa instead of .rgb?
 	// if (Input[6].Channel == PS_CHANNEL_BLUE) LOG_TEST_CASE("PS_CHANNEL_ALPHA detected on final combiner G input"); // PS_CHANNEL_BLUE (==0==PS_CHANNEL_RGB) uses G.b
 	// if (Input[6].Channel == PS_CHANNEL_ALPHA) LOG_TEST_CASE("PS_CHANNEL_ALPHA detected on final combiner G input"); // PS_CHANNEL_ALPHA (==1) uses .a  Test-case : XDK samples BumpDemo,BumpEarth,BumpLens,Explosion
 
-	// Validate correctness
+	// Validate correctness (see NOTE below)
 	if ((FinalCombinerSettingFlags & ~0xE0) > 0) LOG_TEST_CASE("Unknown FinalCombinerSetting bits detected");
 }
 
@@ -240,9 +240,9 @@ void RPSFinalCombiner::Decode(const uint32_t PSFinalCombinerInputsABCD, const ui
 void DecodedRegisterCombiner::GetPSTextureModes(xbox::X_D3DPIXELSHADERDEF* pPSDef, PS_TEXTUREMODES psTextureModes[xbox::X_D3DTS_STAGECOUNT])
 {
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-		psTextureModes[i] = (PS_TEXTUREMODES)((pPSDef->PSTextureModes >> (i * 5)) & 0x1F);
+		psTextureModes[i] = (PS_TEXTUREMODES)((pPSDef->PSTextureModes >> (i * 5)) & PS_TEXTUREMODES_MASK);
 
-		// Discover test-cases
+		// Discover test-cases (see TODO below)
 		// if (psTextureModes[i] == PS_TEXTUREMODES_NONE) LOG_TEST_CASE("PS_TEXTUREMODES_NONE");
 		// if (psTextureModes[i] == PS_TEXTUREMODES_PROJECT2D) LOG_TEST_CASE("PS_TEXTUREMODES_PROJECT2D");
 		if (psTextureModes[i] == PS_TEXTUREMODES_PROJECT3D) LOG_TEST_CASE("PS_TEXTUREMODES_PROJECT3D"); // Test-case: XDK sample TechCertGame,NoSortAlphaBlend,VolumeLight
@@ -263,7 +263,7 @@ void DecodedRegisterCombiner::GetPSTextureModes(xbox::X_D3DPIXELSHADERDEF* pPSDe
 		if (psTextureModes[i] == PS_TEXTUREMODES_DOTPRODUCT) LOG_TEST_CASE("PS_TEXTUREMODES_DOTPRODUCT");
 		if (psTextureModes[i] == PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST) LOG_TEST_CASE("PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST");
 
-		// Validate correctness
+		// Validate correctness (see NOTE below)
 		if (psTextureModes[i] == PS_TEXTUREMODES_BUMPENVMAP) if (i < 1) LOG_TEST_CASE("PS_TEXTUREMODES_BUMPENVMAP only allowed in stage 1, 2 or 3");
 		if (psTextureModes[i] == PS_TEXTUREMODES_BUMPENVMAP_LUM) if (i < 1) LOG_TEST_CASE("PS_TEXTUREMODES_BUMPENVMAP_LUM only allowed in stage 1, 2 or 3"); 
 		if (psTextureModes[i] == PS_TEXTUREMODES_BRDF) if (i < 2) LOG_TEST_CASE("PS_TEXTUREMODES_BRDF only allowed in stage 2 or 3");
@@ -286,7 +286,7 @@ void DecodedRegisterCombiner::GetPSTextureModes(xbox::X_D3DPIXELSHADERDEF* pPSDe
 		if (psTextureModes[i] > PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST) LOG_TEST_CASE("Invalid PS_TEXTUREMODES in stage?");
 	}
 
-	// Validate correctness
+	// Validate correctness (see NOTE below)
 	if ((pPSDef->PSTextureModes  & ~0x000FFFFF) > 0) LOG_TEST_CASE("Unknown PSTextureModes bits detected");
 }
 
@@ -294,9 +294,9 @@ void DecodedRegisterCombiner::GetPSDotMapping(xbox::X_D3DPIXELSHADERDEF* pPSDef,
 {
 	psDotMapping[0] = (PS_DOTMAPPING)(0);
 	for (int i = 1; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-		psDotMapping[i] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> ((i - 1) * 4)) & 0x7);
+		psDotMapping[i] = (PS_DOTMAPPING)((pPSDef->PSDotMapping >> ((i - 1) * 4)) & PS_DOTMAPPING_MASK);
 
-		// Discover test-cases
+		// Discover test-cases (see TODO below)
 		// if (psDotMapping[i] == PS_DOTMAPPING_ZERO_TO_ONE) LOG_TEST_CASE("PS_DOTMAPPING_ZERO_TO_ONE"); // Note : Most common scenario, no need for test-cases
 		if (psDotMapping[i] == PS_DOTMAPPING_MINUS1_TO_1_D3D) LOG_TEST_CASE("PS_DOTMAPPING_MINUS1_TO_1_D3D"); // Test-case : XDK samples BumpDemo, Minnaert
 		if (psDotMapping[i] == PS_DOTMAPPING_MINUS1_TO_1_GL) LOG_TEST_CASE("PS_DOTMAPPING_MINUS1_TO_1_GL");
@@ -307,22 +307,22 @@ void DecodedRegisterCombiner::GetPSDotMapping(xbox::X_D3DPIXELSHADERDEF* pPSDef,
 		if (psDotMapping[i] == PS_DOTMAPPING_HILO_HEMISPHERE) LOG_TEST_CASE("PS_DOTMAPPING_HILO_HEMISPHERE");
 	}
 
-	// Validate correctness
-	if ((pPSDef->PSDotMapping    & ~0x00000777) > 0) LOG_TEST_CASE("Unknown PSDotMapping bits detected");
+	// Validate correctness (see NOTE below)
+	if ((pPSDef->PSDotMapping & ~0x00000777) > 0) LOG_TEST_CASE("Unknown PSDotMapping bits detected");
 }
 
 void DecodedRegisterCombiner::GetPSCompareModes(xbox::X_D3DPIXELSHADERDEF* pPSDef, bool psCompareModes[xbox::X_D3DTS_STAGECOUNT][4])
 {
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-		uint32_t CompareMode = (pPSDef->PSCompareMode >> (i * 4)) & 0xF;
+		uint32_t CompareMode = (pPSDef->PSCompareMode >> (i * 4)) & PS_COMPAREMODE_MASK;
 		psCompareModes[i][0] = (CompareMode & PS_COMPAREMODE_S_GE) > 0;
 		psCompareModes[i][1] = (CompareMode & PS_COMPAREMODE_T_GE) > 0;
 		psCompareModes[i][2] = (CompareMode & PS_COMPAREMODE_R_GE) > 0;
 		psCompareModes[i][3] = (CompareMode & PS_COMPAREMODE_Q_GE) > 0;
 	}
 
-	// Validate correctness
-	if ((pPSDef->PSCompareMode   & ~0x0000FFFF) > 0) LOG_TEST_CASE("Unknown PSCompareMode bits detected");
+	// Validate correctness (see NOTE below)
+	if ((pPSDef->PSCompareMode & ~0x0000FFFF) > 0) LOG_TEST_CASE("Unknown PSCompareMode bits detected");
 }
 
 void DecodedRegisterCombiner::GetPSInputTexture(xbox::X_D3DPIXELSHADERDEF* pPSDef, int psInputTexture[xbox::X_D3DTS_STAGECOUNT])
@@ -332,21 +332,22 @@ void DecodedRegisterCombiner::GetPSInputTexture(xbox::X_D3DPIXELSHADERDEF* pPSDe
 	psInputTexture[2] = (pPSDef->PSInputTexture >> 16) & 0x1; // Stage 2 can use stage 0 or 1
 	psInputTexture[3] = (pPSDef->PSInputTexture >> 20) & 0x3; // Stage 3 can only use stage 0, 1 or 2
 
-	// Discover test-cases
+	// Discover test-cases (see TODO below)
+	if (psInputTexture[2] == 0) LOG_TEST_CASE("PS_INPUTTEXTURE(2) uses texture 0");
 	// if (psInputTexture[2] == 1) LOG_TEST_CASE("PS_INPUTTEXTURE(2) uses texture 1"); // Test-case : XDK sample BumpEarth,Explosion,ZSprite
-	if (psInputTexture[2] == 2) LOG_TEST_CASE("PS_INPUTTEXTURE(2) uses texture 2");
+	if (psInputTexture[3] == 0) LOG_TEST_CASE("PS_INPUTTEXTURE(3) uses texture 0");
 	// if (psInputTexture[3] == 1) LOG_TEST_CASE("PS_INPUTTEXTURE(3) uses texture 1"); // Test-case : XDK sample Explosion,ZSprite
 	if (psInputTexture[3] == 2) LOG_TEST_CASE("PS_INPUTTEXTURE(3) uses texture 2");
-	if (psInputTexture[3] == 3) LOG_TEST_CASE("PS_INPUTTEXTURE(3) uses texture 3");
 
-	// Validate correctness
-	if ((pPSDef->PSInputTexture  & ~0x00310000) > 0) LOG_TEST_CASE("Unknown PSInputTexture bits detected");
+	// Validate correctness (see NOTE below)
+	if (psInputTexture[3] == 3) LOG_TEST_CASE("PS_INPUTTEXTURE(3) incorrectly uses texture 3");
+	if ((pPSDef->PSInputTexture & ~0x00310000) > 0) LOG_TEST_CASE("Unknown PSInputTexture bits detected");
 }
 
 void DecodedRegisterCombiner::Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
-	uint32_t CombinerCountFlags = (pPSDef->PSCombinerCount >> 8);
+	uint32_t CombinerCountFlags = (pPSDef->PSCombinerCount >> 8); // = PS_COMBINERCOUNTFLAGS
 
 	CombinerMuxesOnMsb = (CombinerCountFlags & PS_COMBINERCOUNT_MUX_MSB) > 0;
 	CombinerHasUniqueC0 = (CombinerCountFlags & PS_COMBINERCOUNT_UNIQUE_C0) > 0;
@@ -368,17 +369,20 @@ void DecodedRegisterCombiner::Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 		FinalCombiner.Decode(pPSDef->PSFinalCombinerInputsABCD, pPSDef->PSFinalCombinerInputsEFG);
 	}
 
-	TexModeAdjust = (pPSDef->PSFinalCombinerConstants >> 8) & PS_GLOBALFLAGS_TEXMODE_ADJUST;
+	TexModeAdjust = ((pPSDef->PSFinalCombinerConstants >> PS_GLOBALFLAGS_SHIFT) & PS_GLOBALFLAGS_TEXMODE_ADJUST) > 0;
 
-	// Discover test-cases
+	// Discover test-cases (see TODO below)
 	if (NumberOfCombiners == 0) LOG_TEST_CASE("NumberOfCombiners is zero");
 	if (!CombinerMuxesOnMsb) LOG_TEST_CASE("PS_COMBINERCOUNT_MUX_LSB detected"); // Test case required for how to implement the FCS_MUX check on LSB (see PS_COMBINERCOUNT_MUX_LSB in CxbxPixelShaderTemplate.hlsl) Note : test-case ModifyPixelShader hits this by mistake
 	if (TexModeAdjust) LOG_TEST_CASE("PS_GLOBALFLAGS_TEXMODE_ADJUST detected");
 
-	// Validate correctness
+	// Validate correctness (see NOTE below)
 	if (NumberOfCombiners > 8) LOG_TEST_CASE("NumberOfCombiners bigger than maximum (of 8)");
 	if ((pPSDef->PSCombinerCount & ~0x0001110F) > 0) LOG_TEST_CASE("Unknown PSCombinerCount bits detected");
 }
+
+// * TODO : For all "Discover test-cases" LOG_TEST_CASE's that lack sufficient test-case mentions, find some, note them in an EOL comment, and comment out the entire check.
+// * NOTE : For all "Validate correctness" LOG_TEST_CASE's that ever get hit, investigate what caused it, what should be done, implement that, and update the verification.
 
 /* PSH_RECOMPILED_SHADER */
 
@@ -466,7 +470,7 @@ typedef struct s_CxbxPSDef {
 		}
 
 		// Pre-decode TexModeAdjust, which impacts AdjustTextureModes
-		DecodedTexModeAdjust = (PSDef.PSFinalCombinerConstants >> 8) & PS_GLOBALFLAGS_TEXMODE_ADJUST;
+		DecodedTexModeAdjust = ((PSDef.PSFinalCombinerConstants >> PS_GLOBALFLAGS_SHIFT) & PS_GLOBALFLAGS_TEXMODE_ADJUST) > 0;
 
 		// Pre-decode hasFinalCombiner, which impacts AdjustFinalCombiner
 		DecodedHasFinalCombiner = (PSDef.PSFinalCombinerInputsABCD > 0) || (PSDef.PSFinalCombinerInputsEFG > 0);
@@ -669,7 +673,11 @@ std::string GetFixedFunctionShaderTemplate() {
 
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
+#ifdef ENABLE_FF_ALPHAKILL
+		"X_D3DTOP_DISABLE", // 0 (Was UNDEFINED, but that doesn't compile)
+#else
 		"UNDEFINED", // 0
+#endif
 		"X_D3DTOP_DISABLE", // 1
 		"X_D3DTOP_SELECTARG1", // 2
 		"X_D3DTOP_SELECTARG2", // 3
@@ -698,7 +706,11 @@ std::string_view GetD3DTOPString(int d3dtop) {
 		"X_D3DTOP_BUMPENVMAPLUMINANCE", // 26
 	};
 
+#ifdef ENABLE_FF_ALPHAKILL
+	if (d3dtop < 0 || d3dtop > 26) {
+#else
 	if (d3dtop < 1 || d3dtop > 26) {
+#endif
 		EmuLog(LOG_LEVEL::ERROR2, "Unmapped texture operation %d", d3dtop);
 		d3dtop = 0; // undefined
 	}
@@ -872,11 +884,16 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	stageSetup << '\n';
 
 	for (int i = 0; i < 4; i++) {
+#ifdef ENABLE_FF_ALPHAKILL
+		// Even when a stage is disabled, we still have to fully initialize it's values, to prevent
+		// "error X4000: variable 'stages' used without having been completely initialized"
+#else
 		// The stage is initialized to be disabled
 		// We don't have to output anything
 		if (states[i].COLOROP == X_D3DTOP_DISABLE)
 			continue;
 
+#endif
 		std::string target = "stages[" + std::to_string(i) + "].";
 
 		auto s = states[i];
@@ -1111,8 +1128,8 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  LOG_TEST_CASE("Two sided lighting");
 	  // VFACE is positive for clockwise faces
 	  // If Xbox designates counter-clockwise as front-facing, we invert VFACE
-	  auto cwFrontface = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FRONTFACE) == 0x900; // clockwise;
-	  frontfaceFactor = cwFrontface ? 1 : -1;
+	  auto cwFrontface = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FRONTFACE) == 0x900; // clockwise; = NV097_SET_FRONT_FACE_V_CW = NV2A_FRONT_FACE_CW
+	  frontfaceFactor = cwFrontface ? 1.0 : -1.0;
   }
   fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
 
