@@ -103,6 +103,7 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
 std::atomic_bool g_CurrentLogPopupTestCase = true;
+std::FILE *g_PopupFileStream = nullptr;
 static bool g_disablePopupMessages = false;
 
 const char log_debug[] = "DEBUG: ";
@@ -113,6 +114,7 @@ const char log_fatal[] = "FATAL: ";
 const char log_unkwn[] = "???? : ";
 
 // Do not use EmuLogOutput function outside of this file.
+template<bool is_popup>
 void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, const va_list argp)
 {
 	LOG_THREAD_INIT;
@@ -139,20 +141,27 @@ void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 			break;
 	}
 
-	std::cout << _logThreadPrefix << level_str
-		<< g_EnumModules2String[to_underlying(cxbxr_module)];
+	std::FILE *file_stream;
+	if constexpr (is_popup) {
+		file_stream = g_PopupFileStream;
+	}
+	else {
+		std::cout << _logThreadPrefix << level_str
+			<< g_EnumModules2String[to_underlying(cxbxr_module)];
+		file_stream = stdout;
+	}
 
-	vfprintf(stdout, szWarningMessage, argp);
-
-	fprintf(stdout, "\n");
-
-	fflush(stdout);
+	std::vfprintf(file_stream, szWarningMessage, argp);
+	std::fprintf(file_stream, "\n");
+	std::fflush(file_stream);
 }
+
+template<bool is_popup>
 inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	va_list argp;
 	va_start(argp, szWarningMessage);
-	EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
+	EmuLogOutput<is_popup>(cxbxr_module, level, szWarningMessage, argp);
 	va_end(argp);
 }
 
@@ -171,7 +180,7 @@ void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWa
 			va_list argp;
 			va_start(argp, szWarningMessage);
 
-			EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
+			EmuLogOutput<false>(cxbxr_module, level, szWarningMessage, argp);
 
 			va_end(argp);
 		}
@@ -187,7 +196,7 @@ void NTAPI EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...)
 	va_list argp;
 	va_start(argp, szWarningMessage);
 
-	EmuLogOutput(CXBXR_MODULE::INIT, level, szWarningMessage, argp);
+	EmuLogOutput<false>(CXBXR_MODULE::INIT, level, szWarningMessage, argp);
 
 	va_end(argp);
 }
@@ -330,7 +339,7 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
 	vsnprintf(Buffer.data(), Buffer.size(), message, argp);
 	va_end(argp);
 
-	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
+	EmuLogOutputEx<false>(cxbxr_module, level, "Popup : %s", Buffer);
 
 	// If user is using exclusive fullscreen, we need to refrain all popups.
 	if (g_disablePopupMessages) {
@@ -501,3 +510,6 @@ LOGRENDER_HEADER_BY_REF(PVOID)
 {
 	return os << hex4((uint32_t)value);
 }
+
+template void EmuLogOutputEx<true>(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
+template void EmuLogOutputEx<false>(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);

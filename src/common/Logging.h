@@ -117,6 +117,7 @@ extern std::atomic_bool g_EnabledModules[to_underlying(CXBXR_MODULE::MAX)];
 extern const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)];
 extern std::atomic_int g_CurrentLogLevel;
 extern std::atomic_bool g_CurrentLogPopupTestCase;
+extern std::FILE *g_PopupFileStream;
 
 // print out a log message to the console or kernel debug log file if level is high enough
 void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
@@ -181,7 +182,7 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
 #define PopupFatal(hwnd, fmt, ...) (void)PopupFatalEx(hwnd, PopupButtons::Ok, PopupReturn::Ok, fmt, ## __VA_ARGS__)
 
 // For LOG_TEST_CASE
-extern inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
+template<bool is_popup> inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
 
 //
 // __FILENAME__
@@ -609,5 +610,8 @@ LOGRENDER_HEADER_BY_REF(Type)                                   \
 //
 
 LOGRENDER_HEADER_BY_REF(PVOID);
+
+extern template void EmuLogOutputEx<true>(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
+extern template void EmuLogOutputEx<false>(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...);
 
 #endif _LOGGING_H

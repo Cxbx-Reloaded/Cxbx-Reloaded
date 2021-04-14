@@ -844,22 +844,49 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 		}
+
+		g_PopupFileStream = stdout;
 	}
 	else
 	{
 		FreeConsole();
 		if (DbgMode == DM_FILE) {
+			std::string OpenMode = (BootFlags == DebugMode::DM_NONE) ? "wt" : "at";
 			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
-			krnlLog = freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+			krnlLog = freopen(DebugFileName.c_str(), OpenMode.c_str(), stdout);
 			// Append separator for better readability after reboot.
 			if (BootFlags != DebugMode::DM_NONE) {
 				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
 			}
+
+			g_PopupFileStream = stdout;
+			size_t pos = DebugFileName.find_last_of('\\', DebugFileName.length());
+			if (pos != std::string::npos) {
+				std::string PopupFileName = (DebugFileName.substr(0, pos + 1) + "PopupDebug.txt");
+				g_PopupFileStream = std::fopen(PopupFileName.c_str(), OpenMode.c_str());
+				if (g_PopupFileStream == nullptr) {
+					// If fopen somehow failed, we revert to the old behaviour and write to the kernel log file instead
+					g_PopupFileStream = stdout;
+					std::cout << "Could not write to PopupDebug.txt, writing popups to the kernel log file instead" << std::endl;
+				}
+				else {
+					if (BootFlags != DebugMode::DM_NONE) {
+						std::fprintf(g_PopupFileStream, "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n\n");
+					}
+					else {
+						std::fprintf(g_PopupFileStream, "Cxbx-Reloaded Version %s\n", CxbxVersionStr);
+					}
+					std::fflush(g_PopupFileStream);
+				}
+			}
 		}
 		else {
 			char buffer[16];
-			if (GetConsoleTitle(buffer, 16) != NULL)
+			if (GetConsoleTitle(buffer, 16) != NULL) {
 				(void)freopen("nul", "w", stdout);
+			}
+
+			g_PopupFileStream = stdout;
 		}
 	}
 
@@ -1418,6 +1445,10 @@ __declspec(noreturn) void CxbxKrnlInit
 	{
 		if (CxbxKrnl_Xbe != nullptr) {
 			EmuLogInit(LOG_LEVEL::INFO, "Title : %s", CxbxKrnl_Xbe->m_szAsciiTitle);
+			if ((DbgMode == DM_FILE) && (g_PopupFileStream != stdout)) {
+				std::fprintf(g_PopupFileStream, "Title : %s\n", CxbxKrnl_Xbe->m_szAsciiTitle);
+				std::fflush(g_PopupFileStream);
+			}
 		}
 
 		// Dump Xbe certificate

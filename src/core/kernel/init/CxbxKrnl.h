@@ -246,7 +246,7 @@ extern std::string CxbxGetLastErrorString(char * lpszFunction);
 			continue; \
 		} \
 	} \
-	EmuLogOutputEx(LOG_PREFIX, LOG_LEVEL::INFO, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
+	EmuLogOutputEx<true>(LOG_PREFIX, LOG_LEVEL::INFO, "Please report that %s shows the following message:\nLOG_TEST_CASE: %s\nIn %s (%s line %d)", \
 	CxbxKrnl_Xbe->m_szAsciiTitle, message, __func__, __FILE__, __LINE__); \
 } while (0)
 // was g_pCertificate->wszTitleName
