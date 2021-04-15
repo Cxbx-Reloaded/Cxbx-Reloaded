@@ -609,18 +609,18 @@ int CxbxDeviceIndexByHostPath(const char * HostDevicePath)
 	return -1;
 }
 
-XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
+XboxDevice *CxbxDeviceByDevicePath(const std::string_view XboxDevicePath)
 {
-	int DeviceIndex = CxbxDeviceIndexByDevicePath(XboxDevicePath.c_str());
+	int DeviceIndex = CxbxDeviceIndexByDevicePath(XboxDevicePath.data());
 	if (DeviceIndex >= 0)
 		return &Devices[DeviceIndex];
 
 	return nullptr;
 }
 
-XboxDevice *CxbxDeviceByHostPath(const std::string HostDevicePath)
+XboxDevice *CxbxDeviceByHostPath(const std::string_view HostDevicePath)
 {
-	int DeviceIndex = CxbxDeviceIndexByHostPath(HostDevicePath.c_str());
+	int DeviceIndex = CxbxDeviceIndexByHostPath(HostDevicePath.data());
 	if (DeviceIndex >= 0)
 		return &Devices[DeviceIndex];
 

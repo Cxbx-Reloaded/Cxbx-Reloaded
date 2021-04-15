@@ -220,8 +220,8 @@ CHAR* NtStatusToString(IN NTSTATUS Status);
 
 int CxbxRegisterDeviceHostPath(std::string_view XboxFullPath, std::string HostDevicePath, bool IsFile = false);
 int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath);
-XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath);
-XboxDevice* CxbxDeviceByHostPath(const std::string HostPath);
+XboxDevice *CxbxDeviceByDevicePath(const std::string_view XboxDevicePath);
+XboxDevice* CxbxDeviceByHostPath(const std::string_view HostPath);
 std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath);
 
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
