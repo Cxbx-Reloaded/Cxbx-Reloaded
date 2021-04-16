@@ -1677,10 +1677,9 @@ XBSYSAPI EXPORTNUM(307) xbox::ulong_xt FASTCALL xbox::RtlUlongByteSwap
 	RETURN(ret);
 }
 
-xbox::dword_xt WINAPI RtlUnicodeStringToAnsiSize(const xbox::UNICODE_STRING *str)
+static xbox::dword_xt RtlUnicodeStringToAnsiSize(const xbox::UNICODE_STRING *str)
 {
-	const wchar_t *src = (const wchar_t *)(str->Buffer);
-	xbox::dword_xt ret = wcsrtombs(nullptr, &src, (size_t)str->Length, nullptr);
+	xbox::dword_xt ret = str->Length / sizeof(xbox::ushort_xt);
 	return ret + 1; // +1 for the terminating null character
 }
 
@@ -1691,7 +1690,7 @@ XBSYSAPI EXPORTNUM(308) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToAnsiStri
 (
 	IN OUT PSTRING         DestinationString,
 	IN     PUNICODE_STRING SourceString,
-	IN     boolean_xt         AllocateDestinationString
+	IN     boolean_xt      AllocateDestinationString
 )
 {
 	LOG_FUNC_BEGIN
@@ -1700,26 +1699,35 @@ XBSYSAPI EXPORTNUM(308) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToAnsiStri
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-    NTSTATUS ret = xbox::status_success;
-    dword_xt len = RtlUnicodeStringToAnsiSize(SourceString);
+	ntstatus_xt ret = xbox::status_success;
+	dword_xt len = RtlUnicodeStringToAnsiSize(SourceString);
 
 	DestinationString->Length = (USHORT)(len - 1);
-    if (AllocateDestinationString) {
+	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)len;
 		if (!(DestinationString->Buffer = (PCHAR)ExAllocatePoolWithTag(len, 'grtS'))) {
 			return xbox::status_no_memory;
 		}
-    }
-    else if (DestinationString->MaximumLength < len) {
+	}
+	else if (DestinationString->MaximumLength < len) {
 		if (!DestinationString->MaximumLength) {
 			return xbox::status_buffer_overflow;
 		}
 
 		DestinationString->Length = DestinationString->MaximumLength - 1;
-        ret = xbox::status_buffer_overflow;
-    }
+		ret = xbox::status_buffer_overflow;
+	}
 
-    RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, NULL, (PWSTR)SourceString->Buffer, (ULONG)SourceString->Length);
+	ntstatus_xt result = RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, NULL, (PWSTR)SourceString->Buffer, (ULONG)SourceString->Length);
+
+	if (!nt_success(result)) {
+		if (AllocateDestinationString) {
+			ExFreePool(DestinationString->Buffer);
+			DestinationString->Buffer = zeroptr;
+		}
+		RETURN(ret);
+	}
+
 	DestinationString->Buffer[DestinationString->Length] = 0;
 
 	RETURN(ret);
