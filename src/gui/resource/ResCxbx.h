@@ -246,7 +246,6 @@
 #define IDC_RUMBLE_LIST                 1301
 #define IDC_RUMBLE_TEST                 1302
 #define IDC_NETWORK_ADAPTER             1303
-#define IDC_LOG_POPUP_TESTCASE          1304
 #define IDC_INPUT_OPTIONS               1305
 #define IDC_MOUSE_RANGE                 1306
 #define IDC_WHEEL_RANGE                 1307
@@ -281,6 +280,8 @@
 #define ID_EMULATION_LLE_APU            40039
 #define ID_EMULATION_LLE_GPU            40040
 #define ID_EMULATION_LLE_JIT            40041
+#define ID_EMULATION_DEBUGOUTPUTTEST_SHOW 40042
+#define ID_EMULATION_DEBUGOUTPUTTEST_FILE 40043
 #define ID_SETTINGS_CONFIG_INPUT        40046
 #define ID_SETTINGS_CONFIG_VIDEO        40047
 #define ID_SETTINGS_CONFIG_AUDIO        40048

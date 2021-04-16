@@ -98,6 +98,7 @@ static struct {
 	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
 	const char* LoaderExecutable = "LoaderExecutable";
+	const char* LogFileTestCase = "LogFileTestCase";
 	const char* LogPopupTestCase = "LogPopupTestCase";
 } sect_core_keys;
 
@@ -375,7 +376,8 @@ bool Settings::LoadConfig()
 		m_core.LoggedModules[index] = 0;
 		index++;
 	}
-	m_core.bLogPopupTestCase = m_si.GetBoolValue(section_core, sect_core_keys.LogPopupTestCase, /*Default=*/true);
+	m_core.bLogFileTestCase = m_si.GetBoolValue(section_core, sect_core_keys.LogFileTestCase, /*Default=*/true);
+	m_core.bLogPopupTestCase = m_si.GetBoolValue(section_core, sect_core_keys.LogPopupTestCase, /*Default=*/false);
 
 	m_core.bUseLoaderExec = m_si.GetBoolValue(section_core, sect_core_keys.LoaderExecutable, /*Default=*/true);
 
@@ -585,6 +587,7 @@ bool Settings::Save(std::string file_path)
 		stream << "0x" << std::hex << m_core.LoggedModules[i];
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
+	m_si.SetBoolValue(section_core, sect_core_keys.LogFileTestCase, m_core.bLogFileTestCase, nullptr, true);
 	m_si.SetBoolValue(section_core, sect_core_keys.LogPopupTestCase, m_core.bLogPopupTestCase, nullptr, true);
 
 	m_si.SetBoolValue(section_core, sect_core_keys.LoaderExecutable, m_core.bUseLoaderExec, nullptr, true);

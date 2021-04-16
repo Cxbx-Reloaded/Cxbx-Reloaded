@@ -102,7 +102,7 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 	"XE      ",
 };
 std::atomic_int g_CurrentLogLevel = to_underlying(LOG_LEVEL::INFO);
-std::atomic_bool g_CurrentLogPopupTestCase = true;
+std::atomic_bool g_CurrentLogPopupTestCase = false;
 std::FILE *g_PopupFileStream = nullptr;
 static bool g_disablePopupMessages = false;
 
@@ -141,13 +141,17 @@ void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 			break;
 	}
 
+	std::cout << _logThreadPrefix << level_str
+		<< g_EnumModules2String[to_underlying(cxbxr_module)];
+
 	std::FILE *file_stream;
 	if constexpr (is_popup) {
 		file_stream = g_PopupFileStream;
+		std::vfprintf(stdout, szWarningMessage, argp);
+		std::fprintf(stdout, "\n");
+		std::fflush(stdout);
 	}
 	else {
-		std::cout << _logThreadPrefix << level_str
-			<< g_EnumModules2String[to_underlying(cxbxr_module)];
 		file_stream = stdout;
 	}
 

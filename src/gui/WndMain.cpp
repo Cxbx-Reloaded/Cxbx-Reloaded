@@ -1206,6 +1206,23 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
+			case ID_EMULATION_DEBUGOUTPUTTEST_SHOW:
+			{
+				g_Settings->m_core.bLogPopupTestCase = !g_Settings->m_core.bLogPopupTestCase;
+				g_EmuShared->SetLogPopupTestCase(g_Settings->m_core.bLogPopupTestCase);
+				ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_LOGGING_SYNC, 0, reinterpret_cast<std::uintptr_t>(m_hwndChild));
+				RefreshMenus();
+			}
+			break;
+
+			case ID_EMULATION_DEBUGOUTPUTTEST_FILE:
+			{
+				g_Settings->m_core.bLogFileTestCase = !g_Settings->m_core.bLogFileTestCase;
+				PopupInfo(m_hwnd, "This will not take effect until the next time emulation is started.");
+				RefreshMenus();
+			}
+			break;
+
 			case ID_EMULATION_LLE_JIT:
 			{
 				g_Settings->m_core.FlagsLLE = g_Settings->m_core.FlagsLLE ^ LLE_JIT;
@@ -1646,6 +1663,7 @@ void WndMain::RefreshMenus()
 			HMENU view_menu = GetSubMenu(menu, 2);
 			HMENU emul_debg = GetSubMenu(view_menu, 0);
 			HMENU emul_krnl = GetSubMenu(view_menu, 1);
+			HMENU emul_testcase = GetSubMenu(view_menu, 2);
 
 			switch (g_Settings->m_core.KrnlDebugMode) {
 				case DM_CONSOLE:
@@ -1680,6 +1698,21 @@ void WndMain::RefreshMenus()
 					CheckMenuItem(emul_debg, ID_EMULATION_DEBUGOUTPUTGUI_FILE, MF_UNCHECKED);
 					break;
 			}
+
+			if (g_Settings->m_core.bLogPopupTestCase) {
+				CheckMenuItem(emul_testcase, ID_EMULATION_DEBUGOUTPUTTEST_SHOW, MF_CHECKED);
+			}
+			else {
+				CheckMenuItem(emul_testcase, ID_EMULATION_DEBUGOUTPUTTEST_SHOW, MF_UNCHECKED);
+			}
+
+			if (g_Settings->m_core.bLogFileTestCase) {
+				CheckMenuItem(emul_testcase, ID_EMULATION_DEBUGOUTPUTTEST_FILE, MF_CHECKED);
+			}
+			else {
+				CheckMenuItem(emul_testcase, ID_EMULATION_DEBUGOUTPUTTEST_FILE, MF_UNCHECKED);
+			}
+
 			UpdateLogStatus();
 		}
 

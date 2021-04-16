@@ -105,11 +105,12 @@ public:
 		int LogLevel = 1;
 		bool bUseLoaderExec;
 		bool allowAdminPrivilege;
+		bool bLogFileTestCase;
 		bool bLogPopupTestCase;
 		bool Reserved4 = 0;
 		int  Reserved99[10] = { 0 };
 	} m_core;
-	static_assert(sizeof(s_core) == 0x24C, assert_check_shared_memory(s_core));
+	static_assert(sizeof(s_core) == 0x250, assert_check_shared_memory(s_core));
 
 	// Video settings
 	struct s_video {

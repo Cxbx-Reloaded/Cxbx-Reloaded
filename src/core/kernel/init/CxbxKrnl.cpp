@@ -844,50 +844,52 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
 			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
 		}
-
-		g_PopupFileStream = stdout;
 	}
 	else
 	{
 		FreeConsole();
 		if (DbgMode == DM_FILE) {
-			std::string OpenMode = (BootFlags == DebugMode::DM_NONE) ? "wt" : "at";
 			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
-			krnlLog = freopen(DebugFileName.c_str(), OpenMode.c_str(), stdout);
+			krnlLog = freopen(DebugFileName.c_str(), (BootFlags == DebugMode::DM_NONE) ? "wt" : "at", stdout);
 			// Append separator for better readability after reboot.
 			if (BootFlags != DebugMode::DM_NONE) {
 				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
 			}
-
-			g_PopupFileStream = stdout;
-			size_t pos = DebugFileName.find_last_of('\\', DebugFileName.length());
-			if (pos != std::string::npos) {
-				std::string PopupFileName = (DebugFileName.substr(0, pos + 1) + "PopupDebug.txt");
-				g_PopupFileStream = std::fopen(PopupFileName.c_str(), OpenMode.c_str());
-				if (g_PopupFileStream == nullptr) {
-					// If fopen somehow failed, we revert to the old behaviour and write to the kernel log file instead
-					g_PopupFileStream = stdout;
-					std::cout << "Could not write to PopupDebug.txt, writing popups to the kernel log file instead" << std::endl;
-				}
-				else {
-					if (BootFlags != DebugMode::DM_NONE) {
-						std::fprintf(g_PopupFileStream, "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n\n");
-					}
-					else {
-						std::fprintf(g_PopupFileStream, "Cxbx-Reloaded Version %s\n", CxbxVersionStr);
-					}
-					std::fflush(g_PopupFileStream);
-				}
-			}
 		}
 		else {
 			char buffer[16];
-			if (GetConsoleTitle(buffer, 16) != NULL) {
+			if (GetConsoleTitle(buffer, 16) != NULL)
 				(void)freopen("nul", "w", stdout);
-			}
-
-			g_PopupFileStream = stdout;
 		}
+	}
+
+	bool popup_file_enabled;
+	g_EmuShared->GetLogFileTestCase(&popup_file_enabled);
+	if (popup_file_enabled) {
+		char szBuffer[MAX_PATH];
+		g_EmuShared->GetStorageLocation(szBuffer);
+		g_PopupFileStream = std::fopen(std::strncat(szBuffer, "\\PopupDebug.txt", MAX_PATH - std::strlen(szBuffer) - 1),
+			(BootFlags == DebugMode::DM_NONE) ? "wt" : "at");
+		if (g_PopupFileStream == nullptr) {
+			// If fopen somehow failed, we send the popup messages to the null device
+			g_PopupFileStream = std::fopen("nul", "w");
+			assert(g_PopupFileStream != nullptr);
+			PopupError(nullptr, "Could not write to PopupDebug.txt, the popup messages will be discarded");
+		}
+		else {
+			if (BootFlags != DebugMode::DM_NONE) {
+				std::fprintf(g_PopupFileStream, "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n\n");
+			}
+			else {
+				std::fprintf(g_PopupFileStream, "Cxbx-Reloaded Version %s\n", CxbxVersionStr);
+			}
+			std::fflush(g_PopupFileStream);
+		}
+	}
+	else {
+		// If the user doesn't want popup messages, we send them to the null device
+		g_PopupFileStream = std::fopen("nul", "w");
+		assert(g_PopupFileStream != nullptr);
 	}
 
 	bool isLogEnabled;
