@@ -1700,36 +1700,41 @@ XBSYSAPI EXPORTNUM(308) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToAnsiStri
 		LOG_FUNC_END;
 
 	ntstatus_xt ret = xbox::status_success;
-	dword_xt len = RtlUnicodeStringToAnsiSize(SourceString);
+	dword_xt AnsiMaxLength = RtlUnicodeStringToAnsiSize(SourceString);
 
-	DestinationString->Length = (USHORT)(len - 1);
+	DestinationString->Length = (ushort_xt)(AnsiMaxLength - 1);
 	if (AllocateDestinationString) {
-		DestinationString->MaximumLength = (USHORT)len;
-		if (!(DestinationString->Buffer = (PCHAR)ExAllocatePoolWithTag(len, 'grtS'))) {
-			return xbox::status_no_memory;
+		DestinationString->MaximumLength = (ushort_xt)AnsiMaxLength;
+		if (!(DestinationString->Buffer = (PCHAR)ExAllocatePoolWithTag(AnsiMaxLength, 'grtS'))) {
+			ret = xbox::status_no_memory;
+			goto forceReturn;
 		}
 	}
-	else if (DestinationString->MaximumLength < len) {
+	else if (DestinationString->MaximumLength < AnsiMaxLength) {
+		ret = xbox::status_buffer_overflow;
+
 		if (!DestinationString->MaximumLength) {
-			return xbox::status_buffer_overflow;
+			goto forceReturn;
 		}
 
 		DestinationString->Length = DestinationString->MaximumLength - 1;
-		ret = xbox::status_buffer_overflow;
 	}
 
-	ntstatus_xt result = RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, NULL, (PWSTR)SourceString->Buffer, (ULONG)SourceString->Length);
+	xbox::ulong_xt index = 0;
+	ntstatus_xt result = RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, &index, (PWSTR)SourceString->Buffer, SourceString->Length);
 
-	if (!nt_success(result)) {
+	if (nt_success(result)) {
+		DestinationString->Buffer[index] = 0;
+	}
+	else {
 		if (AllocateDestinationString) {
 			ExFreePool(DestinationString->Buffer);
 			DestinationString->Buffer = zeroptr;
 		}
-		RETURN(ret);
+		ret = result;
 	}
 
-	DestinationString->Buffer[DestinationString->Length] = 0;
-
+	forceReturn:
 	RETURN(ret);
 }
 
