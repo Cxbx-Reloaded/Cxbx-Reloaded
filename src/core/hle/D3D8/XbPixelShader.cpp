@@ -788,7 +788,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
 		// Test case: Crash Nitro Kart (engine speed UI)
 		if (!g_pXbox_SetTexture[i]
-			&& XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) == X_D3DTA_TEXTURE
+			&& (XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE
 			&& colorOp != xbox::X_D3DTOP_SELECTARG2)
 		{
 			forceDisable = true;
