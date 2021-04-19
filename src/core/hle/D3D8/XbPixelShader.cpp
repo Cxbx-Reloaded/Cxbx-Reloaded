@@ -774,6 +774,21 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		bool forceDisable =
 			(!pointSpriteEnable && previousStageDisabled) ||
 			(pointSpriteEnable && i < 3);
+
+		// When a texture stage has D3DTSS_COLORARG1 equal to D3DTA_TEXTURE
+		// and the texture pointer for the stage is NULL, this stage
+		// and all stages after it are not processed.
+		// Test cases: Red Dead Revolver, JSRF
+		// https://docs.microsoft.com/en-us/windows/win32/direct3d9/texture-blending
+		// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
+		// Test case: Crash Nitro Kart (engine speed UI)
+		if (!g_pXbox_SetTexture[i]
+			&& XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) == X_D3DTA_TEXTURE
+			&& XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP) != xbox::X_D3DTOP_SELECTARG2)
+		{
+			forceDisable = true;
+		}
+
 		auto colorOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
 		states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : colorOp;
 
