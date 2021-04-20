@@ -77,9 +77,9 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 
 	// X_D3DTOP_DISABLE can only be reached by ALPHAOP
 	// It's documented as undefined behaviour
-	// Test case: DoA:Xtreme menu
+	// Test case: DoA:Xtreme menu, GTA III logos
 	if (op == X_D3DTOP_DISABLE)
-		return ctx.CURRENT;
+		return 1;
 	else if (op == X_D3DTOP_SELECTARG1)
 		return arg1;
 	else if (op == X_D3DTOP_SELECTARG2)
