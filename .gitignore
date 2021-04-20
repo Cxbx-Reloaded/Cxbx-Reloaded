@@ -2,6 +2,10 @@
 [Bb]uild/
 [Bb]uild-*/
 
+# CLion
+.idea/
+cmake-build-*/
+
 # Visual Studio Cache
 .vs/
 
