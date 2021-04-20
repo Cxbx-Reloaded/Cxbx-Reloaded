@@ -768,13 +768,33 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 	bool previousStageDisabled = false;
 	for (int i = 0; i < 4; i++) {
-		// Determine the COLOROP
+		// Determine COLOROP
+		// This controls both the texture operation for the colour of the stage
+		// and when to stop processing
+		// Under certain circumstances we force it to be DISABLE
+		auto colorOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
+
 		// Usually we execute stages up to the first disabled stage
 		// However, if point sprites are enabled, we just execute stage 3
 		bool forceDisable =
 			(!pointSpriteEnable && previousStageDisabled) ||
 			(pointSpriteEnable && i < 3);
-		auto colorOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
+
+		// When a texture stage has D3DTSS_COLORARG1 equal to D3DTA_TEXTURE
+		// and the texture pointer for the stage is NULL, this stage
+		// and all stages after it are not processed.
+		// Test cases: Red Dead Revolver, JSRF
+		// https://docs.microsoft.com/en-us/windows/win32/direct3d9/texture-blending
+		// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
+		// Test case: Crash Nitro Kart (engine speed UI)
+		if (!g_pXbox_SetTexture[i]
+			&& (XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE
+			&& colorOp != xbox::X_D3DTOP_SELECTARG2)
+		{
+			forceDisable = true;
+		}
+
+		// Set the final COLOROP value
 		states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : colorOp;
 
 		// If the stage is disabled we don't want its configuration to affect the key
