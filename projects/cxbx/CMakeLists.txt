@@ -168,6 +168,7 @@ set(WINS_LIB
  legacy_stdio_definitions
  d3d9
  d3dcompiler
+ delayimp
  dinput8
  dxguid
  odbc32
