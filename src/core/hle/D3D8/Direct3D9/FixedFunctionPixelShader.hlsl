@@ -74,13 +74,7 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 
 	// Note if we use ifs here instead of else if
 	// D3DCompile may stackoverflow at runtime
-
-	// X_D3DTOP_DISABLE can only be reached by ALPHAOP
-	// It's documented as undefined behaviour
-	// Test case: DoA:Xtreme menu, GTA III logos
-	if (op == X_D3DTOP_DISABLE)
-		return 1;
-	else if (op == X_D3DTOP_SELECTARG1)
+	if (op == X_D3DTOP_SELECTARG1)
 		return arg1;
 	else if (op == X_D3DTOP_SELECTARG2)
 		return arg2;
@@ -213,9 +207,14 @@ TextureArgs ExecuteTextureStage(
 	float4 aArg0 = GetArg(s.ALPHAARG0, ctx);
 
 	// Execute texture operation
-	float4 value;
+	// ALPHAOP == X_D3DTOP_DISABLE is undefined behaviour
+	// Using an intermediate value matches known cases...
+	// Test case: DoA:Xtreme (menu water), GTA III (logos), Crash Wrath of Cortex (relics UI)
+	static float4 value = 1;
 	value.rgb = ExecuteTextureOp(s.COLOROP, cArg1, cArg2, cArg0, ctx, stage).rgb;
-	value.a = ExecuteTextureOp(s.ALPHAOP, aArg1, aArg2, aArg0, ctx, stage).a;
+	if (s.ALPHAOP != X_D3DTOP_DISABLE) {
+		value.a = ExecuteTextureOp(s.ALPHAOP, aArg1, aArg2, aArg0, ctx, stage).a;
+	}
 
 	// Save the result
 	// Note RESULTARG should either be CURRENT or TEMP
