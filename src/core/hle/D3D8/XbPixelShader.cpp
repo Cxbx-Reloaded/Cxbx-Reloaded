@@ -818,7 +818,10 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		states[i].COLORARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);
 		states[i].COLORARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);
 
-		states[i].ALPHAOP = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);
+		auto alphaOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);
+		if (alphaOp == X_D3DTOP_DISABLE) LOG_TEST_CASE("Alpha stage disabled when colour stage is enabled");
+
+		states[i].ALPHAOP = (float)alphaOp;
 		states[i].ALPHAARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);
 		states[i].ALPHAARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);
 		states[i].ALPHAARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);
@@ -879,18 +882,15 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		auto s = states[i];
 		stageSetup << target << "COLOROP = " << GetD3DTOPString(s.COLOROP) << ";\n";
 
-		// TODO handle texture arg flags
 		stageSetup << target << "COLORARG0 = " << GetD3DTASumString(s.COLORARG0) << ";\n";
 		stageSetup << target << "COLORARG1 = " << GetD3DTASumString(s.COLORARG1) << ";\n";
 		stageSetup << target << "COLORARG2 = " << GetD3DTASumString(s.COLORARG2) << ";\n";
 
 		stageSetup << target << "ALPHAOP = " << GetD3DTOPString(s.ALPHAOP) << ";\n";
 
-		if (states[i].ALPHAOP != X_D3DTOP_DISABLE) {
-			stageSetup << target << "ALPHAARG0 = " << GetD3DTASumString(s.ALPHAARG0) << ";\n";
-			stageSetup << target << "ALPHAARG1 = " << GetD3DTASumString(s.ALPHAARG1) << ";\n";
-			stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(s.ALPHAARG2) << ";\n";
-		}
+		stageSetup << target << "ALPHAARG0 = " << GetD3DTASumString(s.ALPHAARG0) << ";\n";
+		stageSetup << target << "ALPHAARG1 = " << GetD3DTASumString(s.ALPHAARG1) << ";\n";
+		stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(s.ALPHAARG2) << ";\n";
 
 		stageSetup << target << "RESULTARG = " << GetD3DTASumString(s.RESULTARG, false) << ";\n";
 		stageSetup << '\n';
