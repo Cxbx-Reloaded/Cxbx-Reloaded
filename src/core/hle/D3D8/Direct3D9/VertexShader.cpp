@@ -57,6 +57,20 @@ void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 	// Write the mask as a separate argument to the opcode defines
 	// (No space, so that "dest,mask, ..." looks close to "dest.mask, ...")
 	hlsl << ",";
+
+	// Detect oFog masks other than x
+	// Test case: Lego Star Wars II (menu)
+	if (dest.Type == IMD_OUTPUT_O &&
+		dest.Address == OREG_OFOG &&
+		dest.Mask != MASK_X)
+	{
+		LOG_TEST_CASE("Vertex shader uses oFog mask other than x");
+		EmuLog(LOG_LEVEL::WARNING, "oFog mask was %#x", dest.Mask);
+		hlsl << "x"; // write to x instead
+		return;
+	}
+
+	// Write the mask
 	if (dest.Mask & MASK_X) hlsl << "x";
 	if (dest.Mask & MASK_Y) hlsl << "y";
 	if (dest.Mask & MASK_Z) hlsl << "z";
