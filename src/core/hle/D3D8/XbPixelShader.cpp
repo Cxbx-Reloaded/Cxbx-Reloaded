@@ -548,8 +548,6 @@ typedef struct s_CxbxPSDef {
 	{
 		if (RC.hasFinalCombiner) return;
 
-		RC.hasFinalCombiner = true;
-
 		// Since we're HLE'ing Xbox D3D, mimick how it configures the final combiner when PSDef doesn't :
 		// TODO : Use the same final combiner when no pixel shader is set! Possibly by generating a DecodedRegisterCombiner with PSCombinerCount zero?
 		// (This forms the entire Xbox fixed function pixel pipeline, which uses only two renderstates : X_D3DRS_SPECULARENABLE and X_D3DRS_SPECULARENABLE.)
