@@ -47,19 +47,19 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
  set_target_properties(cxbxr-ldr PROPERTIES
   LINK_FLAGS "
-  /LARGEADDRESSAWARE
-  /FIXED
-  /DYNAMICBASE:NO
-  /BASE:0x10000
-  /STACK:65536,65536
-  /NODEFAULTLIB
-  /ENTRY:rawMain
+  /LARGEADDRESSAWARE \
+  /FIXED \
+  /DYNAMICBASE:NO \
+  /BASE:0x10000 \
+  /STACK:65536,65536 \
+  /NODEFAULTLIB \
+  /ENTRY:rawMain \
   "
  )
 
  # Set optimization options for release build
- set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}
-  /Oi
+ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} \
+  /Oi \
   "
  )
 endif()

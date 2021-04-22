@@ -117,19 +117,19 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
  set_target_properties(cxbx PROPERTIES
   LINK_FLAGS "
-  /INCREMENTAL:NO
-  /LARGEADDRESSAWARE
-  /FIXED
-  /SAFESEH:NO
-  /DYNAMICBASE:NO
-  /BASE:0x10000
-  /STACK:65536,65536
-  /NODEFAULTLIB:libcmt
-  /DELAYLOAD:wpcap.dll
+  /INCREMENTAL:NO \
+  /LARGEADDRESSAWARE \
+  /FIXED \
+  /SAFESEH:NO \
+  /DYNAMICBASE:NO \
+  /BASE:0x10000 \
+  /STACK:65536,65536 \
+  /NODEFAULTLIB:libcmt \
+  /DELAYLOAD:wpcap.dll \
   "
   LINK_FLAGS_RELEASE "
-  /LTCG
-  /DEBUG
+  /LTCG \
+  /DEBUG \
   "
  )
 
@@ -144,16 +144,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # /Qpar = Enable automatic parallelize loops in the code
 
  # Set optimization options for release build
- set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}
-  /Zi
-  /Ob2
-  /Oi
-  /Ot
-  /GL
-
-  /GS-
-  /Gy
-  /Qpar
+ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} \
+  /Zi \
+  /Ob2 \
+  /Oi \
+  /Ot \
+  /GL \
+  \
+  /GS- \
+  /Gy \
+  /Qpar \
   "
  )
  
