@@ -203,9 +203,16 @@ void CombinerStageHlsl(std::stringstream& hlsl, RPSCombinerStageChannel& stage, 
 	hlsl << "); // " << opcode_comment[opcode][1];
 }
 
-void FinalCombinerStageHlsl(std::stringstream& hlsl, RPSFinalCombiner& fc)
+void FinalCombinerStageHlsl(std::stringstream& hlsl, RPSFinalCombiner& fc, bool hasFinalCombiner)
 {
 	std::stringstream arguments;
+
+	if (hasFinalCombiner) {
+		hlsl << "\n    // Final combiner xfc was defined in the shader";
+	}
+	else {
+		hlsl << "\n    // Final combiner xfc generated from XD3D8 renderstates";
+	}
 
 	for (unsigned i = 0; i < 7; i++) { // Generate A, B, C, D, E, F, G input arguments
 		// Note : Most final combiner inputs are treated as RGB, but G is single-channel (.a or .b)
@@ -331,11 +338,9 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 		hlsl << "\n#define PS_DOTMAPPING_" << i << " " << dotmapping_str[(unsigned)pShader->PSDotMapping[i]];
 	}
 
-	if (pShader->hasFinalCombiner) {
-		OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementV1, "PS_FINALCOMBINERSETTING_COMPLEMENT_V1");
-		OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementR0, "PS_FINALCOMBINERSETTING_COMPLEMENT_R0");
-		OutputDefineFlag(hlsl, pShader->FinalCombiner.ClampSum, "PS_FINALCOMBINERSETTING_CLAMP_SUM");
-	}
+	OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementV1, "PS_FINALCOMBINERSETTING_COMPLEMENT_V1");
+	OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementR0, "PS_FINALCOMBINERSETTING_COMPLEMENT_R0");
+	OutputDefineFlag(hlsl, pShader->FinalCombiner.ClampSum, "PS_FINALCOMBINERSETTING_CLAMP_SUM");
 
 	hlsl << hlsl_template[1];
 	hlsl << hlsl_template[2];
@@ -383,9 +388,7 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 		CombinerStageHlsl(hlsl, pShader->Combiners[i].Alpha, channel_index_Alpha);
 	}
 
-	if (pShader->hasFinalCombiner) {
-		FinalCombinerStageHlsl(hlsl, pShader->FinalCombiner);
-	}
+	FinalCombinerStageHlsl(hlsl, pShader->FinalCombiner, pShader->hasFinalCombiner);
 
 	hlsl << hlsl_template[3]; // Finish with the HLSL template footer
 }
