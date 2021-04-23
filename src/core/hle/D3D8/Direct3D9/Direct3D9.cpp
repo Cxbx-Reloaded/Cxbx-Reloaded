@@ -3028,6 +3028,11 @@ void Direct3D_CreateDevice_Start
 
 	// create default device *before* calling Xbox Direct3D_CreateDevice trampoline
 	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
+
+	if (g_pD3DDevice != nullptr) { // Check to make sure device is null, otherwise no need to create it
+		return;
+	}
+
 	CreateDefaultD3D9Device(pPresentationParameters);
 }
 
