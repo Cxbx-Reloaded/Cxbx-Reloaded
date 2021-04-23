@@ -332,7 +332,7 @@ R"DELIMITER(
 
 	// Fogging
 	// TODO deduplicate
-	const float fogDepth      =   abs(oFog.x); 
+	const float fogDepth      =   oFog.x; // Don't abs this value! Test-case : DolphinClassic xdk sample
 	const float fogTableMode  =   CxbxFogInfo.x;
 	const float fogDensity    =   CxbxFogInfo.y;
 	const float fogStart      =   CxbxFogInfo.z;
