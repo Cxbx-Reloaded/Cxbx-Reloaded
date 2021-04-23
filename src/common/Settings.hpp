@@ -100,7 +100,7 @@ public:
         unsigned int FlagsLLE;
 		DebugMode KrnlDebugMode;
 		char szKrnlDebug[MAX_PATH] = "";
-		char szStorageLocation[MAX_PATH] = "";
+		char szStorageLocation[xbox::max_path] = "";
         unsigned int LoggedModules[NUM_INTEGERS_LOG];
 		int LogLevel = 1;
 		bool bUseLoaderExec;

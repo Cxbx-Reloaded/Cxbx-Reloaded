@@ -90,7 +90,7 @@ static std::vector<HANDLE> g_hThreads;
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
-char szFilePath_Xbe[MAX_PATH*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is MAX_PATH*2 = 520
+char szFilePath_Xbe[xbox::max_path*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is xbox::max_path*2 = 520
 
 std::string CxbxBasePath;
 HANDLE CxbxBasePathHandle;
@@ -1005,7 +1005,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		}
 
 		// Once clean up process is done, proceed set to global variable string.
-		strncpy(szFilePath_Xbe, xbePath.c_str(), MAX_PATH - 1);
+		strncpy(szFilePath_Xbe, xbePath.c_str(), xbox::max_path - 1);
 		std::replace(xbePath.begin(), xbePath.end(), ';', '/');
 		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
 		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
@@ -1231,6 +1231,24 @@ void LoadXboxKeys(std::string path)
 	EmuLog(LOG_LEVEL::WARNING, "Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
+//TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
+// Let filesystem library clean it up for us, including resolve host's symbolic link path.
+// Since internal kernel do translate to full path than preserved host symoblic link path.
+static inline void CxbxResolveHostToFullPath(std::filesystem::path& file_path, std::string_view finish_error_sentence) {
+	std::error_code error;
+	std::filesystem::path sanityPath = std::filesystem::canonical(file_path, error);
+	if (error.value() != 0) {
+		CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s", finish_error_sentence.data(), file_path.string().c_str());
+	}
+	file_path = sanityPath;
+}
+// TODO: Eventually, we should remove this function to start using std::filesystem::path method for all host paths.
+static inline void CxbxResolveHostToFullPath(std::string& file_path, std::string_view finish_error_sentence) {
+	std::filesystem::path sanityPath(file_path);
+	CxbxResolveHostToFullPath(sanityPath, finish_error_sentence);
+	file_path = sanityPath.string();
+}
+
 __declspec(noreturn) void CxbxKrnlInit
 (
 	void                   *pTLSData,
@@ -1341,34 +1359,67 @@ __declspec(noreturn) void CxbxKrnlInit
 #endif
 	
 	// Initialize devices :
-	char szBuffer[sizeof(szFilePath_Xbe)];
-	g_EmuShared->GetStorageLocation(szBuffer);
+	{
+		char szBuffer[sizeof(szFilePath_Xbe)];
+		g_EmuShared->GetStorageLocation(szBuffer);
 
-	CxbxBasePath = std::string(szBuffer) + "\\EmuDisk\\";
+		CxbxBasePath = std::string(szBuffer) + "\\EmuDisk";
+		CxbxResolveHostToFullPath(CxbxBasePath, "Cxbx-Reloaded's EmuDisk directory");
+		// Since canonical always remove the extra slash, we need to manually add it back.
+		// TODO: Once CxbxBasePath is filesystem::path, replace CxbxBasePath's + operators to / for include path separator internally.
+		CxbxBasePath = std::filesystem::path(CxbxBasePath).append("").string();
+	}
 
-	// Determine XBE Path
-	strncpy(szBuffer, szFilePath_Xbe, sizeof(szBuffer)-1);
-	szBuffer[sizeof(szBuffer) - 1] = '\0'; // Safely null terminate at the end.
+	// Determine xbe path
+	std::filesystem::path xbePath;
+	{
+		std::string szBuffer(szFilePath_Xbe);
+		std::replace(szBuffer.begin(), szBuffer.end(), ';', '/');
+		xbePath = szBuffer;
+	}
+	CxbxResolveHostToFullPath(xbePath, "xbe's file");
 
-	std::string xbePath(szBuffer);
-	std::replace(xbePath.begin(), xbePath.end(), ';', '/');
-	std::string xbeDirectory(szBuffer);
-	size_t lastFind = xbeDirectory.find(';');
+	// Determine location for where possible auto mount D letter if ";" delimiter exist.
+	// Also used to store in EmuShared's title mount path permanent storage on first emulation launch.
+	// Unless it's launch within Cxbx-Reloaded's EmuDisk directly, then we don't store anything in title mount path storage.
+	std::string relative_path(szFilePath_Xbe);
+	size_t lastFind = relative_path.find(';');
 	// First find if there is a semicolon when dashboard or title disc (such as demo disc) has it.
 	// Then we must obey the current directory it asked for.
 	if (lastFind != std::string::npos) {
-		if (xbeDirectory.find(';', lastFind + 1) != std::string::npos) {
+		if (relative_path.find(';', lastFind + 1) != std::string::npos) {
 			CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Cannot contain multiple of ; symbol.");
 		}
-		xbeDirectory = xbeDirectory.substr(0, lastFind);
+		relative_path = relative_path.substr(0, lastFind);
 	}
 	else {
-		xbeDirectory = xbeDirectory.substr(0, xbeDirectory.find_last_of("\\/"));
+		relative_path = relative_path.substr(0, relative_path.find_last_of("\\/"));
 	}
+	CxbxResolveHostToFullPath(relative_path, "xbe's directory");
+
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	memset(szBuffer, 0, sizeof(szBuffer));
-	// Games may assume they are running from CdRom :
-	CxbxDefaultXbeDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, xbeDirectory);
+	// Titles may assume they are running from CdRom0/Mbfs :
+	std::string_view titleDevice = g_bIsChihiro ? DriveMbfs : DeviceCdrom0;
+	int CxbxTitleDeviceDriveIndex = -1;
+	bool isEmuDisk = _strnicmp(relative_path.c_str(), CxbxBasePath.c_str(), CxbxBasePath.size() - 1) == 0;
+	if (BootFlags == BOOT_NONE) {
+		// Remember our first initialize mount path for CdRom0/Mbfs.
+		if (!isEmuDisk) {
+			g_EmuShared->SetTitleMountPath(relative_path.c_str());
+			CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(titleDevice, relative_path);
+		}
+		else {
+			g_EmuShared->SetTitleMountPath("");
+		}
+	}
+	else {
+		char szBuffer[sizeof(szFilePath_Xbe)];
+		g_EmuShared->GetTitleMountPath(szBuffer);
+		if (szBuffer[0] != '\0') {
+			CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(titleDevice, szBuffer);
+		}
+	}
+
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
 	// The first two partitions are for Data and Shell files, respectively :
@@ -1384,33 +1435,69 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Create default symbolic links :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");
 	{
-		// TODO: DriveD should always point to the Xbe Path
+		// TODO: DriveD should auto mount based on the launchdata page's ; delimiter in the xbe path.
 		// This is the only symbolic link the Xbox Kernel sets, the rest are set by the application, usually via XAPI.
 		// If the Xbe is located outside of the emulated HDD, mounting it as DeviceCdrom0 is correct
 		// If the Xbe is located inside the emulated HDD, the full path should be used, eg: "\\Harddisk0\\partition2\\xboxdash.xbe"
-		CxbxCreateSymbolicLink(DriveD, DeviceCdrom0);
-		// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-		EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxDefaultXbeDriveLetter);
-		g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
+#ifdef CXBX_KERNEL_REWORK_ENABLED
+		if (lastFind != std::string::npos) {
+#else
+		// HACK: It is a hack to override XDK's default mount to CdRom0 which may not exist when launch to dashboard directly.
+		// Otherwise, titles may launch to dashboard, more specifically xbox live title, and back.
+		if (CxbxTitleDeviceDriveIndex == -1 || lastFind != std::string::npos) {
+#endif
+			CxbxCreateSymbolicLink(DriveD, relative_path);
+			// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
+			EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxAutoMountDriveLetter);
+			g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
+		}
 	}
 
 	// Determine Xbox path to XBE and place it in XeImageFileName
 	{
-		std::string fileName(xbePath);
-		// Strip out the path, leaving only the XBE file name
-		// NOTE: we assume that the XBE is always on the root of the D: drive
-		// This is a safe assumption as the Xbox kernel ALWAYS mounts D: as the Xbe Path
-		if (fileName.rfind('\\') != std::string::npos)
-			fileName = fileName.substr(fileName.rfind('\\') + 1);
+		std::string fileName;
+		if (xbox::LaunchDataPage == xbox::zeroptr) {
+			// First launch and possible launch to dashboard
+			if (isEmuDisk) {
+				XboxDevice* xbeLoc = CxbxDeviceByHostPath(xbePath.string());
+				fileName = xbeLoc->XboxDevicePath;
+			}
+			// Otherwise it might be from titleDevice source.
+			else {
+				fileName = titleDevice;
+			}
 
-		if (xbox::XeImageFileName.Buffer != NULL)
-			free(xbox::XeImageFileName.Buffer);
+			// Strip out the path, leaving only the XBE file name to append.
+			if (xbePath.has_filename()) {
+				fileName += "\\" + xbePath.filename().string();
+			}
+		}
+		else {
+			// One way to say launch to dashboard. We already load the xbe and check it's xbe type.
+			if (xbox::LaunchDataPage->Header.szLaunchPath[0] == '\0') {
+				fileName = DeviceHarddisk0Partition2;
+
+				// Strip out the path, leaving only the XBE file name to append.
+				if (xbePath.has_filename()) {
+					fileName += "\\" + xbePath.filename().string();
+				}
+			}
+			// Otherwise, preserve the launch path and replace delimiter.
+			else {
+				fileName = xbox::LaunchDataPage->Header.szLaunchPath;
+				std::replace(fileName.begin(), fileName.end(), ';', '\\');
+			}
+		}
+
+		if (xbox::XeImageFileName.Buffer != xbox::zeroptr) {
+			xbox::ExFreePool(xbox::XeImageFileName.Buffer);
+		}
 
 		// Assign the running Xbe path, so it can be accessed via the kernel thunk 'XeImageFileName' :
-		xbox::XeImageFileName.MaximumLength = MAX_PATH;
-		xbox::XeImageFileName.Buffer = (PCHAR)xbox::ExAllocatePool(MAX_PATH);
-		sprintf(xbox::XeImageFileName.Buffer, "%c:\\%s", CxbxDefaultXbeDriveLetter, fileName.c_str());
-		xbox::XeImageFileName.Length = (USHORT)strlen(xbox::XeImageFileName.Buffer);
+		xbox::XeImageFileName.Length = static_cast<xbox::ushort_xt>(fileName.size());
+		xbox::XeImageFileName.MaximumLength = xbox::XeImageFileName.Length + 1;
+		xbox::XeImageFileName.Buffer = (PCHAR)xbox::ExAllocatePoolWithTag(xbox::XeImageFileName.MaximumLength, 'nFeX');
+		strncpy_s(xbox::XeImageFileName.Buffer, xbox::XeImageFileName.MaximumLength,fileName.c_str(), fileName.size());
 		EmuLogInit(LOG_LEVEL::INFO, "XeImageFileName = %s", xbox::XeImageFileName.Buffer);
 	}
 

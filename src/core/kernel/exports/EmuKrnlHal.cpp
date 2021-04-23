@@ -28,7 +28,6 @@
 
 #define LOG_PREFIX CXBXR_MODULE::HAL
 
-
 #include <core\kernel\exports\xboxkrnl.h> // For HalReadSMCTrayState, etc.
 #include <Shlwapi.h> // For PathRemoveFileSpec()
 #include "Logging.h" // For LOG_FUNC()
@@ -540,7 +539,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 
 			std::string TitlePath = xbox::LaunchDataPage->Header.szLaunchPath;
-			char szWorkingDirectoy[MAX_PATH];
+			char szWorkingDirectoy[xbox::max_path];
 
 			// If the title path starts with a semicolon, remove it
 			if (TitlePath.length() > 0 && TitlePath[0] == ';') {
@@ -552,30 +551,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 				TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
 			}
 
-			std::string XbePath = TitlePath;
-			// Convert Xbox XBE Path to Windows Path
-			{
-				HANDLE rootDirectoryHandle = nullptr;
-				std::wstring wXbePath;
-				// We pretend to come from NtCreateFile to force symbolic link resolution
-				CxbxConvertFilePath(TitlePath, wXbePath, &rootDirectoryHandle, "NtCreateFile");
-
-				// Convert Wide String as returned by above to a string, for XbePath
-				XbePath = utf16_to_ascii(wXbePath.c_str());
-
-				// If the rootDirectoryHandle is not null, we have a relative path
-				// We need to prepend the path of the root directory to get a full DOS path
-				if (rootDirectoryHandle != nullptr) {
-					char directoryPathBuffer[MAX_PATH];
-					GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
-					XbePath = directoryPathBuffer + std::string("\\") + XbePath;
-
-					// Trim \\?\ from the output string, as we want the raw DOS path, not NT path
-					// We can do this always because GetFinalPathNameByHandle ALWAYS returns this format
-					// Without exception
-					XbePath.erase(0, 4);
-				}
-			}
+			std::string& XbePath = CxbxConvertXboxToHostPath(TitlePath);
 
 			// Determine Working Directory
 			{

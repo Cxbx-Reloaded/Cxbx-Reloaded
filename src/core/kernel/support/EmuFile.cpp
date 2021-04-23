@@ -39,6 +39,7 @@
 #pragma warning(default:4005)
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
+#include "common/util/strConverter.hpp" // utf16_to_ascii
 
 #include <filesystem>
 
@@ -273,9 +274,7 @@ const std::string DeviceHarddisk0Partition17 = DeviceHarddisk0PartitionPrefix + 
 const std::string DeviceHarddisk0Partition18 = DeviceHarddisk0PartitionPrefix + "18";
 const std::string DeviceHarddisk0Partition19 = DeviceHarddisk0PartitionPrefix + "19";
 const std::string DeviceHarddisk0Partition20 = DeviceHarddisk0PartitionPrefix + "20"; // 20 = Largest possible partition number
-const char CxbxDefaultXbeDriveLetter = 'D';
 
-int CxbxDefaultXbeDriveIndex = -1;
 EmuNtSymbolicLinkObject* NtSymbolicLinkObjects['Z' - 'A' + 1];
 std::vector<XboxDevice> Devices;
 
@@ -446,6 +445,14 @@ NTSTATUS CxbxConvertFilePath(
 				if (RelativePath.compare(0, 7, "serial:") == 0)
 					return STATUS_UNRECOGNIZED_VOLUME;
 
+				// TODO: CDROM0: need access to raw file handle which doesn't exist in file system.
+				//       Similar concept with serial: and perhaps mediaboards.
+				// Raw handle access to the CDROM0:
+				/*if (RelativePath.compare(0, 7, "CDROM0:") == 0) {
+					// we should have a return and likely forward to special handler function, including serial: above.
+					return ?;
+				}*/
+
 				// The path seems to be a device path, look it up :
 				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
 				// Fixup RelativePath path here
@@ -593,16 +600,61 @@ int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath)
 	return -1;
 }
 
-XboxDevice *CxbxDeviceByDevicePath(const std::string XboxDevicePath)
+int CxbxDeviceIndexByHostPath(const char * HostDevicePath)
 {
-	int DeviceIndex = CxbxDeviceIndexByDevicePath(XboxDevicePath.c_str());
+	for (size_t i = 0; i < Devices.size(); i++)
+		if (_strnicmp(HostDevicePath, Devices[i].HostDevicePath.c_str(), Devices[i].HostDevicePath.length()) == 0)
+			return(i);
+
+	return -1;
+}
+
+XboxDevice *CxbxDeviceByDevicePath(const std::string_view XboxDevicePath)
+{
+	int DeviceIndex = CxbxDeviceIndexByDevicePath(XboxDevicePath.data());
 	if (DeviceIndex >= 0)
 		return &Devices[DeviceIndex];
 
 	return nullptr;
 }
 
-int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevicePath, bool IsFile)
+XboxDevice *CxbxDeviceByHostPath(const std::string_view HostDevicePath)
+{
+	int DeviceIndex = CxbxDeviceIndexByHostPath(HostDevicePath.data());
+	if (DeviceIndex >= 0)
+		return &Devices[DeviceIndex];
+
+	return nullptr;
+}
+
+// Convert Xbox XBE Path to Host Path
+std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
+{
+	HANDLE rootDirectoryHandle = nullptr;
+	std::wstring wXbePath;
+	// We pretend to come from NtCreateFile to force symbolic link resolution
+	CxbxConvertFilePath(XboxDevicePath.data(), wXbePath, &rootDirectoryHandle, "NtCreateFile");
+
+	// Convert Wide String as returned by above to a string, for XbePath
+	std::string XbePath = utf16_to_ascii(wXbePath.c_str());
+
+	// If the rootDirectoryHandle is not null, we have a relative path
+	// We need to prepend the path of the root directory to get a full DOS path
+	if (rootDirectoryHandle != nullptr) {
+		char directoryPathBuffer[MAX_PATH];
+		GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
+		XbePath = directoryPathBuffer + std::string("\\") + XbePath;
+
+		// Trim \\?\ from the output string, as we want the raw DOS path, not NT path
+		// We can do this always because GetFinalPathNameByHandle ALWAYS returns this format
+		// Without exception
+		XbePath.erase(0, 4);
+	}
+
+	return XbePath;
+}
+
+int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::string HostDevicePath, bool IsFile)
 {
 	XboxDevice newDevice;
 	newDevice.XboxDevicePath = XboxDevicePath;
@@ -611,7 +663,7 @@ int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevic
 	bool succeeded{ false };
 
 	// All HDD partitions have a .bin file to allow direct file io on the partition info
-	if (_strnicmp(XboxDevicePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+	if (_strnicmp(XboxDevicePath.data(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
 		std::string partitionHeaderPath = HostDevicePath + ".bin";
 		if (!std::filesystem::exists(partitionHeaderPath)) {
 			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0);
@@ -622,7 +674,8 @@ int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevic
 
 	// If this path is not a raw file partition, create the directory for it
 	if (!IsFile) {
-		succeeded = std::filesystem::exists(HostDevicePath) || std::filesystem::create_directory(HostDevicePath);
+		std::error_code error; // We do not want filesystem to throw an exception on directory creation. Instead, listen for return value to fail.
+		succeeded = std::filesystem::exists(HostDevicePath) || std::filesystem::create_directory(HostDevicePath, error);
 	}
 
 	if (succeeded) {
@@ -636,14 +689,15 @@ int CxbxRegisterDeviceHostPath(std::string XboxDevicePath, std::string HostDevic
 }
 
 
-NTSTATUS CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath)
+xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath)
 {
-	NTSTATUS result = 0;
+	xbox::ntstatus_xt result = 0;
 	EmuNtSymbolicLinkObject* SymbolicLinkObject = FindNtSymbolicLinkObjectByName(SymbolicLinkName);
 	
-	if (SymbolicLinkObject != NULL)
-		// In that case, close it (will also delete if reference count drops to zero)
-		SymbolicLinkObject->NtClose();
+	// If symbolic link exist, return object name collsion. Do NOT delete existing symlink object!
+	if (SymbolicLinkObject != NULL) {
+		return xbox::status_object_name_collision;
+	}
 
 	// Now (re)create a symbolic link object, and initialize it with the new definition :
 	SymbolicLinkObject = new EmuNtSymbolicLinkObject();
@@ -660,7 +714,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 {
 	NTSTATUS result = STATUS_OBJECT_NAME_INVALID;
 	int i = 0;
-	int DeviceIndex = 0;
+	int DeviceIndex = -1;
 
 	// If aFullPath is an empty string, set it to the CD-ROM drive
 	// This should work for all titles, as CD-ROM is mapped to the current working directory
@@ -688,29 +742,34 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 
  		    // Make a distinction between Xbox paths (starting with '\Device'...) and host paths :
 			IsHostBasedPath = _strnicmp(aFullPath.c_str(), DevicePrefix.c_str(), DevicePrefix.length()) != 0;
-			if (IsHostBasedPath)
-				DeviceIndex = CxbxDefaultXbeDriveIndex;
-			else
+			if (IsHostBasedPath) {
+				DeviceIndex = CxbxDeviceIndexByHostPath(aFullPath.c_str());
+			}
+			else {
 				DeviceIndex = CxbxDeviceIndexByDevicePath(aFullPath.c_str());
+			}
 
 			if (DeviceIndex >= 0)
 			{
 				result = xbox::status_success;
 				SymbolicLinkName = aSymbolicLinkName;
-				if (IsHostBasedPath)
-				{
-					XboxSymbolicLinkPath = "";
+				if (IsHostBasedPath) {
+					// Handle the case where a sub folder of the partition is mounted (instead of it's root) :
+					std::string ExtraPath = aFullPath.substr(Devices[DeviceIndex].HostDevicePath.length(), std::string::npos);
+
+					XboxSymbolicLinkPath = Devices[DeviceIndex].XboxDevicePath + ExtraPath;
 					HostSymbolicLinkPath = aFullPath;
+
 				}
-				else
-				{
+				else {
 					XboxSymbolicLinkPath = aFullPath;
 					HostSymbolicLinkPath = Devices[DeviceIndex].HostDevicePath;
 					// Handle the case where a sub folder of the partition is mounted (instead of it's root) :
 					std::string ExtraPath = aFullPath.substr(Devices[DeviceIndex].XboxDevicePath.length(), std::string::npos);
 
-					if (!ExtraPath.empty())
+					if (!ExtraPath.empty()) {
 						HostSymbolicLinkPath = HostSymbolicLinkPath + ExtraPath;
+					}
 				}
 
 				RootDirectoryHandle = CreateFile(HostSymbolicLinkPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
