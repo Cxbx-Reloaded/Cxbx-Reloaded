@@ -539,7 +539,6 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 
 			std::string TitlePath = xbox::LaunchDataPage->Header.szLaunchPath;
-			char szWorkingDirectoy[xbox::max_path];
 
 			// If the title path starts with a semicolon, remove it
 			if (TitlePath.length() > 0 && TitlePath[0] == ';') {
@@ -552,12 +551,6 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 			}
 
 			std::string& XbePath = CxbxConvertXboxToHostPath(TitlePath);
-
-			// Determine Working Directory
-			{
-				strncpy_s(szWorkingDirectoy, XbePath.c_str(), MAX_PATH);
-				PathRemoveFileSpec(szWorkingDirectoy);
-			}
 
 			// Relaunch Cxbx, to load another Xbe
 			{
