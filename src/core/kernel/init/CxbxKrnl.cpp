@@ -1398,25 +1398,26 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxResolveHostToFullPath(relative_path, "xbe's directory");
 
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	// Titles may assume they are running from CdRom0/Mbfs :
-	std::string_view titleDevice = g_bIsChihiro ? DriveMbfs : DeviceCdrom0;
 	int CxbxTitleDeviceDriveIndex = -1;
 	bool isEmuDisk = _strnicmp(relative_path.c_str(), CxbxBasePath.c_str(), CxbxBasePath.size() - 1) == 0;
-	if (BootFlags == BOOT_NONE) {
-		// Remember our first initialize mount path for CdRom0/Mbfs.
+	// Check if title mounth path is already set. This may occur from early boot of Chihiro title.
+	char title_mount_path[sizeof(szFilePath_Xbe)];
+	const char* tmp_buffer = title_mount_path;
+	g_EmuShared->GetTitleMountPath(title_mount_path);
+
+	if (tmp_buffer[0] == '\0' && BootFlags == BOOT_NONE) {
+		// Remember our first initialize mount path for CdRom0 and Mbfs.
 		if (!isEmuDisk) {
 			g_EmuShared->SetTitleMountPath(relative_path.c_str());
-			CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(titleDevice, relative_path);
-		}
-		else {
-			g_EmuShared->SetTitleMountPath("");
+			tmp_buffer = relative_path.c_str();
 		}
 	}
-	else {
-		char szBuffer[sizeof(szFilePath_Xbe)];
-		g_EmuShared->GetTitleMountPath(szBuffer);
-		if (szBuffer[0] != '\0') {
-			CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(titleDevice, szBuffer);
+
+	// TODO: Find a place to make permanent placement for DeviceCdrom0 that does not have disc loaded.
+	if (tmp_buffer[0] != '\0') {
+		CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, tmp_buffer);
+		if (g_bIsChihiro) {
+			CxbxRegisterDeviceHostPath(DriveMbfs, tmp_buffer);
 		}
 	}
 
@@ -1462,9 +1463,9 @@ __declspec(noreturn) void CxbxKrnlInit
 				XboxDevice* xbeLoc = CxbxDeviceByHostPath(xbePath.string());
 				fileName = xbeLoc->XboxDevicePath;
 			}
-			// Otherwise it might be from titleDevice source.
+			// Otherwise it might be from CdRom0 device.
 			else {
-				fileName = titleDevice;
+				fileName = DeviceCdrom0;
 			}
 
 			// Strip out the path, leaving only the XBE file name to append.

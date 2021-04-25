@@ -216,18 +216,24 @@ struct XboxDevice {
 	HANDLE HostRootHandle;
 };
 
+struct EmuDirPath {
+	std::string_view XboxDirPath;
+	std::string_view HostDirPath;
+	HANDLE HostDirHandle;
+};
+
 CHAR* NtStatusToString(IN NTSTATUS Status);
 
 int CxbxRegisterDeviceHostPath(std::string_view XboxFullPath, std::string HostDevicePath, bool IsFile = false);
 int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath);
-XboxDevice *CxbxDeviceByDevicePath(const std::string_view XboxDevicePath);
+XboxDevice* CxbxDeviceByDevicePath(const std::string_view XboxDevicePath);
 XboxDevice* CxbxDeviceByHostPath(const std::string_view HostPath);
 std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath);
 
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveLetter);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName);
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName);
+void FindEmuDirPathByDevice(std::string DeviceName, EmuDirPath& hybrid_path);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(HANDLE Handle);
 void CleanupSymbolicLinks();
 
@@ -321,5 +327,7 @@ void NTAPI CxbxIoApcDispatcher
 	xbox::PIO_STATUS_BLOCK IoStatusBlock,
 	xbox::ulong_xt         Reserved
 );
+
+void CxbxLaunchNewXbe(const std::string& XbePath);
 
 #endif
