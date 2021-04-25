@@ -85,13 +85,6 @@ namespace FixedFunctionPixelShader {
 		constexpr DWORD X_D3DTSS_MAXANISOTROPY = 8;
 		*/
 
-		alignas(16) float COLORKEYOP; // Unimplemented Xbox extension!
-		alignas(16) float COLORSIGN; // Unimplemented Xbox extension!
-#ifdef ENABLE_FF_ALPHAKILL
-		alignas(16) float ALPHAKILL; // Xbox extension!
-#else
-		alignas(16) float ALPHAKILL; // Unimplemented Xbox extension!
-#endif
 		// TEXTURETRANSFORMFLAGS handled by the VS
 		alignas(16) float BUMPENVMAT00;
 		alignas(16) float BUMPENVMAT01;
@@ -101,7 +94,6 @@ namespace FixedFunctionPixelShader {
 		alignas(16) float BUMPENVLOFFSET;
 		// TEXCOORDINDEX handled by the VS
 		// BORDERCOLOR set on sampler
-		alignas(16) float COLORKEYCOLOR; // Unimplemented Xbox extension!
 	};
 
 	// This state is compiled into the shader
@@ -117,6 +109,14 @@ namespace FixedFunctionPixelShader {
 		alignas(16) float ALPHAARG1;
 		alignas(16) float ALPHAARG2;
 		alignas(16) float RESULTARG;
+		alignas(16) float COLORKEYOP; // Unimplemented Xbox extension!
+		alignas(16) float4 COLORKEYCOLOR; // Unimplemented Xbox extension!
+		alignas(16) float4 COLORSIGN; // Unimplemented Xbox extension!
+#ifdef ENABLE_FF_ALPHAKILL
+		alignas(16) float ALPHAKILL; // Xbox extension!
+#else
+		alignas(16) float ALPHAKILL; // Unimplemented Xbox extension!
+#endif
 	};
 
 	struct FixedFunctionPixelShaderState {

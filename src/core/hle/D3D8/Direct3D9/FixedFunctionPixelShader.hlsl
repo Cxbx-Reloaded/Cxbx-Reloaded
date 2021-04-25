@@ -184,11 +184,11 @@ TextureArgs ExecuteTextureStage(
 		t = texCUBE(samplers[i], TexCoords[i].xyz + offset.xyz);
 
 #ifdef ENABLE_FF_ALPHAKILL
-	if (stage.ALPHAKILL)
+	if (s.ALPHAKILL)
 		if (t.a == 0)
 			discard;
-
 #endif
+
 	// Assign the final value for TEXTURE
 	ctx.TEXTURE = t * factor;
 

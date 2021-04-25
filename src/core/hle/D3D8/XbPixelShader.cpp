@@ -839,6 +839,14 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		states[i].ALPHAARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);
 
 		states[i].RESULTARG = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);
+
+		auto colorSign = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
+		if (colorSign) LOG_TEST_CASE("FF COLORSIGN");
+		float fColorSign[4] = { colorSign & 8, colorSign & 4, colorSign & 2, colorSign & 1 };
+		states[i].COLORSIGN = fColorSign;
+		states[i].ALPHAKILL = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
+		states[i].COLORKEYOP = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
+		states[i].COLORKEYCOLOR = (D3DXVECTOR4)((D3DXCOLOR)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR));
 	}
 
 	// Create a key from the shader state
@@ -897,6 +905,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		std::string target = "stages[" + std::to_string(i) + "].";
 
 		auto s = states[i];
+		// Texture stage ops and args
 		stageSetup << target << "COLOROP = " << GetD3DTOPString(s.COLOROP) << ";\n";
 
 		stageSetup << target << "COLORARG0 = " << GetD3DTASumString(s.COLORARG0) << ";\n";
@@ -910,6 +919,23 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(s.ALPHAARG2) << ";\n";
 
 		stageSetup << target << "RESULTARG = " << GetD3DTASumString(s.RESULTARG, false) << ";\n";
+
+		// Xbox extension states
+		stageSetup << target << "COLORSIGN = " << "float4("
+			<< s.COLORSIGN[0] << ", "
+			<< s.COLORSIGN[1] << ", "
+			<< s.COLORSIGN[2] << ", "
+			<< s.COLORSIGN[3] << ");\n";
+
+		stageSetup << target << "ALPHAKILL = " << s.ALPHAKILL << ";\n";
+
+		stageSetup << target << "COLORKEYOP = " << s.COLORKEYOP << ";\n";
+		stageSetup << target << "COLORKEYCOLOR = " << "float4("
+			<< s.COLORKEYCOLOR[0] << ", "
+			<< s.COLORKEYCOLOR[1] << ", "
+			<< s.COLORKEYCOLOR[2] << ", "
+			<< s.COLORKEYCOLOR[3] << ");\n";
+
 		stageSetup << '\n';
 	}
 
@@ -960,16 +986,12 @@ void UpdateFixedFunctionPixelShaderState()
 
 		auto stage = &ffPsState.stages[i];
 
-		stage->COLORKEYOP = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
-		stage->COLORSIGN = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
-		stage->ALPHAKILL = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
 		stage->BUMPENVMAT00 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT00));
 		stage->BUMPENVMAT01 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT01));
 		stage->BUMPENVMAT10 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT10));
 		stage->BUMPENVMAT11 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT11));
 		stage->BUMPENVLSCALE = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLSCALE));
 		stage->BUMPENVLOFFSET = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLOFFSET));
-		stage->COLORKEYCOLOR = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
 	}
 
 	const int size = (sizeof(FixedFunctionPixelShaderState) + 16 - 1) / 16;
