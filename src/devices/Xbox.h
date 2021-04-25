@@ -35,6 +35,7 @@
 #include "ADM1032Device.h" // For ADM1032
 #include "devices\video\nv2a.h" // For NV2ADevice
 #include "Usb\USBDevice.h" // For USBDevice
+#include "chihiro\MediaBoard.h"
 
 #define SMBUS_ADDRESS_MCPX 0x10 // = Write; Read = 0x11
 #define SMBUS_ADDRESS_TV_ENCODER 0x88 // = Write; Read = 0x89
@@ -71,5 +72,6 @@ extern EEPROMDevice* g_EEPROM;
 extern NVNetDevice* g_NVNet;
 extern NV2ADevice* g_NV2A;
 extern USBDevice* g_USB0;
+extern MediaBoard* g_MediaBoard;
 
 extern void InitXboxHardware(HardwareModel hardwareModel);

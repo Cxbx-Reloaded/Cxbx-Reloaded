@@ -61,6 +61,13 @@ static thread_local bool g_tls_isEmuX86Managed;
 
 uint32_t EmuX86_IORead(xbox::addr_xt addr, int size)
 {
+	// If we are running a Chihiro game, emulate the Chihiro LPC device
+	if (g_bIsChihiro) {
+		if (addr >= 0x4000 && addr <= 0x40FF) {
+			return g_MediaBoard->LpcRead(addr, size);
+		}
+	}
+
 	switch (addr) {
 	case 0x8008: { // TODO : Move 0x8008 TIMER to a device
 		if (size == sizeof(uint32_t)) {
@@ -95,6 +102,14 @@ uint32_t EmuX86_IORead(xbox::addr_xt addr, int size)
 
 void EmuX86_IOWrite(xbox::addr_xt addr, uint32_t value, int size)
 {
+	// If we are running a Chihiro game, emulate the Chihiro LPC device
+	if (g_bIsChihiro) {
+		if (addr >= 0x4000 && addr <= 0x40FF) {
+			g_MediaBoard->LpcWrite(addr, value, size);
+			return;
+		}
+	}
+
 	// Pass the IO Write to the PCI Bus, this will handle devices with BARs set to IO addresses
 	if (g_PCIBus->IOWrite(addr, value, size)) {
 		return;

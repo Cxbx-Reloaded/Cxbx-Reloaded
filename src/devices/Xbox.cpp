@@ -28,6 +28,7 @@
 #include "Xbox.h" // For HardwareModel
 #include "common\xbe\Xbe.h"  // Without this HLEIntercept complains about some undefined xbe variables
 #include "core\hle\Intercept.hpp"
+#include "EmuShared.h"
 
 PCIBus* g_PCIBus;
 SMBus* g_SMBus;
@@ -38,6 +39,7 @@ NVNetDevice* g_NVNet;
 NV2ADevice* g_NV2A;
 ADM1032Device* g_ADM1032;
 USBDevice* g_USB0;
+MediaBoard* g_MediaBoard;
 
 MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 {
@@ -117,8 +119,10 @@ void InitXboxHardware(HardwareModel hardwareModel)
 
 	// Create devices
 	g_MCPX = new MCPXDevice(mcpx_revision);
-															
-	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
+
+	// TODO: For Chihiro, different games modes require different DIP switch settings
+	// Chihiro FilterBoard dip-switches 6,7,8 change this value!
+	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 0 : 1); // 0 = AV_PACK_SCART, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
 															   // SMC uses different AV_PACK values than the Kernel
 															   // See https://xboxdevwiki.net/PIC#The_AV_Pack
 	g_EEPROM = new EEPROMDevice();
@@ -127,6 +131,13 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	g_ADM1032 = new ADM1032Device();
 	if (bLLE_USB) {
 		g_USB0 = new USBDevice();
+	}
+
+	if (g_bIsChihiro) {
+        g_MediaBoard = new MediaBoard();
+        char MediaBoardMountPath[xbox::max_path];
+        g_EmuShared->GetTitleMountPath(MediaBoardMountPath);
+        g_MediaBoard->SetMountPath(MediaBoardMountPath);
 	}
 
 	// Connect devices to SM bus

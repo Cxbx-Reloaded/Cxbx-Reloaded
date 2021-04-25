@@ -29,6 +29,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9/Direct3D9.h"
+#include "core\hle\JVS\JVS.h"
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
 #include "Patches.hpp"
 #include "Intercept.hpp"
@@ -375,6 +376,54 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	//PATCH_ENTRY("timeSetEvent", xbox::EMUPATCH(timeSetEvent), PATCH_ALWAYS),
 	PATCH_ENTRY("XReadMUMetaData", xbox::EMUPATCH(XReadMUMetaData), PATCH_ALWAYS),
 	PATCH_ENTRY("XUnmountMU", xbox::EMUPATCH(XUnmountMU), PATCH_ALWAYS),
+
+	// JVS Functions
+	PATCH_ENTRY("JVS_SendCommand", xbox::EMUPATCH(JVS_SendCommand), PATCH_ALWAYS),
+	PATCH_ENTRY("JVS_SendCommand2", xbox::EMUPATCH(JVS_SendCommand), PATCH_ALWAYS),
+	PATCH_ENTRY("JVS_SendCommand3", xbox::EMUPATCH(JVS_SendCommand), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsBACKUP_Read", xbox::EMUPATCH(JvsBACKUP_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsBACKUP_Read2", xbox::EMUPATCH(JvsBACKUP_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsBACKUP_Read3", xbox::EMUPATCH(JvsBACKUP_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsBACKUP_Write", xbox::EMUPATCH(JvsBACKUP_Write), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsBACKUP_Write2", xbox::EMUPATCH(JvsBACKUP_Write), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsEEPROM_Read", xbox::EMUPATCH(JvsEEPROM_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsEEPROM_Read2", xbox::EMUPATCH(JvsEEPROM_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsEEPROM_Read3", xbox::EMUPATCH(JvsEEPROM_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsEEPROM_Write", xbox::EMUPATCH(JvsEEPROM_Write), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsEEPROM_Write2", xbox::EMUPATCH(JvsEEPROM_Write), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsEEPROM_Write3", xbox::EMUPATCH(JvsEEPROM_Write), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareDownload", xbox::EMUPATCH(JvsFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareDownload2", xbox::EMUPATCH(JvsFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareDownload3", xbox::EMUPATCH(JvsFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareDownload4", xbox::EMUPATCH(JvsFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareUpload", xbox::EMUPATCH(JvsFirmwareUpload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareUpload2", xbox::EMUPATCH(JvsFirmwareUpload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareUpload3", xbox::EMUPATCH(JvsFirmwareUpload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsFirmwareUpload4", xbox::EMUPATCH(JvsFirmwareUpload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsNodeReceivePacket", xbox::EMUPATCH(JvsNodeReceivePacket), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsNodeReceivePacket2", xbox::EMUPATCH(JvsNodeReceivePacket), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsNodeSendPacket", xbox::EMUPATCH(JvsNodeSendPacket), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsNodeSendPacket2", xbox::EMUPATCH(JvsNodeSendPacket), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsRTC_Read", xbox::EMUPATCH(JvsRTC_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsRTC_Read2", xbox::EMUPATCH(JvsRTC_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsRTC_Read3", xbox::EMUPATCH(JvsRTC_Read), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsRTC_Write", xbox::EMUPATCH(JvsRTC_Write), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsRTC_Write2", xbox::EMUPATCH(JvsRTC_Write), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScFirmwareDownload", xbox::EMUPATCH(JvsScFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScFirmwareDownload2", xbox::EMUPATCH(JvsScFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScFirmwareDownload3", xbox::EMUPATCH(JvsScFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScFirmwareDownload4", xbox::EMUPATCH(JvsScFirmwareDownload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScFirmwareUpload", xbox::EMUPATCH(JvsScFirmwareUpload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScFirmwareUpload2", xbox::EMUPATCH(JvsScFirmwareUpload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScFirmwareUpload3", xbox::EMUPATCH(JvsScFirmwareUpload), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScReceiveMidi", xbox::EMUPATCH(JvsScReceiveMidi), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScReceiveMidi2", xbox::EMUPATCH(JvsScReceiveMidi), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScReceiveRs323c", xbox::EMUPATCH(JvsScReceiveRs323c), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScReceiveRs323c2", xbox::EMUPATCH(JvsScReceiveRs323c), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScSendMidi", xbox::EMUPATCH(JvsScSendMidi), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScSendMidi2", xbox::EMUPATCH(JvsScSendMidi), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScSendRs323c", xbox::EMUPATCH(JvsScSendRs323c), PATCH_ALWAYS),
+	PATCH_ENTRY("JvsScSendRs323c2", xbox::EMUPATCH(JvsScSendRs323c), PATCH_ALWAYS),
 };
 
 std::unordered_map<std::string, subhook::Hook> g_FunctionHooks;
