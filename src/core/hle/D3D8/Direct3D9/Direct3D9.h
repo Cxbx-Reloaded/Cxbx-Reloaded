@@ -1370,6 +1370,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource)
     uint_xt                Stride
 );
 
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride)();
+
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_4)
 (
     uint_xt                Stride
