@@ -1448,9 +1448,6 @@ __declspec(noreturn) void CxbxKrnlInit
 		if (CxbxTitleDeviceDriveIndex == -1 || lastFind != std::string::npos) {
 #endif
 			CxbxCreateSymbolicLink(DriveD, relative_path);
-			// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-			EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxAutoMountDriveLetter);
-			g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 		}
 	}
 

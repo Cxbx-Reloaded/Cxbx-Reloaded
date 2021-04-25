@@ -715,8 +715,12 @@ xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::stri
 	SymbolicLinkObject = new EmuNtSymbolicLinkObject();
 	result = SymbolicLinkObject->Init(SymbolicLinkName, FullPath);
 
-	if (result != xbox::status_success)
+	if (result != xbox::status_success) {
 		SymbolicLinkObject->NtClose();
+	}
+	else if (SymbolicLinkObject->DriveLetter == CxbxAutoMountDriveLetter) {
+		g_hCurDir = SymbolicLinkObject->RootDirectoryHandle;
+	}
 
 	return result;
 }
@@ -807,6 +811,9 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 	if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
 		NtSymbolicLinkObjects[DriveLetter - 'A'] = NULL;
 		NtDll::NtClose(RootDirectoryHandle);
+		if (DriveLetter == CxbxAutoMountDriveLetter) {
+			g_hCurDir = NULL;
+		}
 	}
 }
 
