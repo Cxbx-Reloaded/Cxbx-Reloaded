@@ -111,30 +111,30 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
  set_target_properties(cxbxr-emu PROPERTIES
   LINK_FLAGS "
-  /INCREMENTAL:NO
-  /LARGEADDRESSAWARE
-  /SAFESEH:NO
-  /STACK:65536,65536
-  /NODEFAULTLIB:libcmt
-  /DELAYLOAD:wpcap.dll
+  /INCREMENTAL:NO \
+  /LARGEADDRESSAWARE \
+  /SAFESEH:NO \
+  /STACK:65536,65536 \
+  /NODEFAULTLIB:libcmt \
+  /DELAYLOAD:wpcap.dll \
   "
   LINK_FLAGS_RELEASE "
-  /LTCG
-  /DEBUG
+  /LTCG \
+  /DEBUG \
   "
  )
 
  # Set optimization options for release build
- set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}
-  /Zi
-  /Ob2
-  /Oi
-  /Ot
-  /GL
-
-  /GS-
-  /Gy
-  /Qpar
+ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} \
+  /Zi \
+  /Ob2 \
+  /Oi \
+  /Ot \
+  /GL \
+  \
+  /GS- \
+  /Gy \
+  /Qpar \
   "
  )
 endif()
