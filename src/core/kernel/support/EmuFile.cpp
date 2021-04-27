@@ -46,6 +46,9 @@
 
 #include <filesystem>
 
+// partition emulation directory handles
+HANDLE           g_hCurDir_hack = NULL; // HACK: We should not be depending on this variable. Instead, we should fix/implement Ob/Io objects such as IoCreateDevice.
+
 // Default Xbox Partition Table
 #define PE_PARTFLAGS_IN_USE	0x80000000
 #define XBOX_SWAPPART1_LBA_START		0x400
@@ -433,7 +436,7 @@ NTSTATUS CxbxConvertFilePath(
 			else if (RelativePath[0] == '$') {
 				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
 				{
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
 					RelativePath.erase(0, 5); // Remove '$HOME'
 				}
 				else
@@ -441,7 +444,7 @@ NTSTATUS CxbxConvertFilePath(
 			}
 			// Check if the path starts with a relative path indicator :
 			else if (RelativePath[0] == '.') {// "4x4 Evo 2" needs this
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
 				RelativePath.erase(0, 1); // Remove the '.'
 			}
 			else {
@@ -467,7 +470,7 @@ NTSTATUS CxbxConvertFilePath(
 			}
 
 			if (NtSymbolicLinkObject != nullptr || !find_path.HostDirPath.empty()) {
-				/// If found, then we can skip misc checks below.
+				// If found, then we can skip misc checks below.
 			}
 			// Check if the path accesses a partition from Harddisk0 :
 			else if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
@@ -481,13 +484,13 @@ NTSTATUS CxbxConvertFilePath(
 			// NOTE: RootDirectory cannot be ignored.
 			// Any special handling for it should be done below.
 			else if (*RootDirectory == nullptr) {
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
 			}
 			else if (*RootDirectory == ObDosDevicesDirectory()) {
 				// This is a special handle that tells the API that this is a DOS device
 				// We can safely remove it and forward to the Xbe directory.
 				// Test case GTA3
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
 			}
 			else if (*RootDirectory == ObWin32NamedObjectsDirectory()) {
 				// NOTE: A handle of -4 on the Xbox signifies the path should be in the BaseNamedObjects namespace.
@@ -718,8 +721,9 @@ xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::stri
 	if (result != xbox::status_success) {
 		SymbolicLinkObject->NtClose();
 	}
+	// TODO: Remove whole else if statement below, see g_hCurDir_hack's comment for remark.
 	else if (SymbolicLinkObject->DriveLetter == CxbxAutoMountDriveLetter) {
-		g_hCurDir = SymbolicLinkObject->RootDirectoryHandle;
+		g_hCurDir_hack = SymbolicLinkObject->RootDirectoryHandle;
 	}
 
 	return result;
@@ -811,8 +815,9 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 	if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
 		NtSymbolicLinkObjects[DriveLetter - 'A'] = NULL;
 		NtDll::NtClose(RootDirectoryHandle);
+		// TODO: Remove whole if statement below, see g_hCurDir_hack's comment for remark.
 		if (DriveLetter == CxbxAutoMountDriveLetter) {
-			g_hCurDir = NULL;
+			g_hCurDir_hack = NULL;
 		}
 	}
 }

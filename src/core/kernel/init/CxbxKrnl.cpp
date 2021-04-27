@@ -1398,7 +1398,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxResolveHostToFullPath(relative_path, "xbe's directory");
 
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	int CxbxTitleDeviceDriveIndex = -1;
+	int CxbxCdrom0DeviceIndex = -1;
 	bool isEmuDisk = _strnicmp(relative_path.c_str(), CxbxBasePath.c_str(), CxbxBasePath.size() - 1) == 0;
 	// Check if title mounth path is already set. This may occur from early boot of Chihiro title.
 	char title_mount_path[sizeof(szFilePath_Xbe)];
@@ -1415,9 +1415,10 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// TODO: Find a place to make permanent placement for DeviceCdrom0 that does not have disc loaded.
 	if (tmp_buffer[0] != '\0') {
-		CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, tmp_buffer);
+		CxbxCdrom0DeviceIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, tmp_buffer);
+		// Since Chihiro also map Mbfs to the same path as Cdrom0, we'll map it the same way.
 		if (g_bIsChihiro) {
-			CxbxRegisterDeviceHostPath(DriveMbfs, tmp_buffer);
+			(void)CxbxRegisterDeviceHostPath(DriveMbfs, tmp_buffer);
 		}
 	}
 
@@ -1445,7 +1446,7 @@ __declspec(noreturn) void CxbxKrnlInit
 #else
 		// HACK: It is a hack to override XDK's default mount to CdRom0 which may not exist when launch to dashboard directly.
 		// Otherwise, titles may launch to dashboard, more specifically xbox live title, and back.
-		if (CxbxTitleDeviceDriveIndex == -1 || lastFind != std::string::npos) {
+		if (CxbxCdrom0DeviceIndex == -1 || lastFind != std::string::npos) {
 #endif
 			CxbxCreateSymbolicLink(DriveD, relative_path);
 		}

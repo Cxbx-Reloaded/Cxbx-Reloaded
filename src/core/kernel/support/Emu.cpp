@@ -42,8 +42,6 @@ CRITICAL_SECTION dbgCritical;
 #endif
 
 // Global Variable(s)
-HANDLE           g_hCurDir    = NULL;
-CHAR            *g_strCurDrive= NULL;
 volatile thread_local  bool    g_bEmuException = false;
 static thread_local bool bOverrideEmuException;
 volatile bool    g_bEmuSuspended = false;
