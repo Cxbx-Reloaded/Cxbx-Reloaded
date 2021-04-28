@@ -333,7 +333,8 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
     // Get texture coordinates
     // Coordinates are either from the vertex texcoord data
     // Or generated
-    float4 texCoord = float4(0, 0, 0, 0);
+    // Note w can be used in the pixel shader, init to 1
+    float4 texCoord = float4(0, 0, 0, 1);
     if (tState.TexCoordIndexGen == TCI_PASSTHRU)
     {
         // Get from vertex data
@@ -351,11 +352,9 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
        // TODO move alongside the texture transformation when it stops angering the HLSL compiler
         const float componentCount = state.TexCoordComponentCount[texCoordIndex];
         if (componentCount == 1)
-            texCoord.yzw = float3(1, 0, 0);
+            texCoord.yz = float2(1, 0);
         if (componentCount == 2)
-            texCoord.zw = float2(1, 0);
-        if (componentCount == 3)
-            texCoord.w = 1;
+            texCoord.z = 1;
     }   // Generate texture coordinates
     else if (tState.TexCoordIndexGen == TCI_CAMERASPACENORMAL)
         texCoord = float4(View.Normal, 1);
@@ -385,17 +384,16 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
 
     // We always send four coordinates
     // If we are supposed to send less than four
-    // then copy the last coordinate to the remaining coordinates
+    // then copy the last coordinate to w
     // For D3DTTFF_PROJECTED, the value of the *last* coordinate is important
     // Test case: ProjectedTexture sample, which uses 3 coordinates
-    // We'll need to implement the divide when D3D stops handling it for us?
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtexturetransformflags
     if (projected)
     {
         if (countFlag == 1)
-            texCoord.yzw = texCoord.x;
+            texCoord.w = texCoord.x;
         if (countFlag == 2)
-            texCoord.zw = texCoord.y;
+            texCoord.w = texCoord.y;
         if (countFlag == 3)
             texCoord.w = texCoord.z;
     }

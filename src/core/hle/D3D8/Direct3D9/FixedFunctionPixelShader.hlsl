@@ -174,14 +174,20 @@ TextureArgs ExecuteTextureStage(
 	// Sample the texture
 	float4 t;
 	int type = TextureSampleType[i];
+	// Divide texcoords by w when sampling
+	// Which corresponds to D3DTTFF_PROJECTED behaviour
+	// The w component can be set by titles in vertex shaders
+	// without using texture transform flags
+	// Test case: DoA 3 reflections on 'Ice Stage'
+	float4 coords = TexCoords[i].xyzw / TexCoords[i].w;
 	if (type == SAMPLE_NONE)
 		t = 1; // Test case JSRF
 	else if (type == SAMPLE_2D)
-		t = tex2D(samplers[i], TexCoords[i].xy + offset.xy);
+		t = tex2D(samplers[i], coords.xy + offset.xy);
 	else if (type == SAMPLE_3D)
-		t = tex3D(samplers[i], TexCoords[i].xyz + offset.xyz);
+		t = tex3D(samplers[i], coords.xyz + offset.xyz);
 	else if (type == SAMPLE_CUBE)
-		t = texCUBE(samplers[i], TexCoords[i].xyz + offset.xyz);
+		t = texCUBE(samplers[i], coords.xyz + offset.xyz);
 
 #ifdef ENABLE_FF_ALPHAKILL
 	if (s.ALPHAKILL)
