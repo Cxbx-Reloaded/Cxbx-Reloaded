@@ -191,15 +191,15 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
 
-	char buffer[256];
-	sprintf(buffer,
-		"Received Exception Code 0x%.08X @ EIP := %s\n"
+	std::printf("Received Exception Code 0x%.08X @ EIP := %s\n",
+		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
+	std::fflush(stdout);
+
+	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok,
+		"  The running xbe has encountered an unrecoverable error.\n"
 		"\n"
 		"  Press \"OK\" to terminate emulation.\n"
-		"  Press \"Cancel\" to debug.",
-		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
-
-	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok, buffer) == PopupReturn::Ok)
+		"  Press \"Cancel\" to debug.") == PopupReturn::Ok)
 	{
 		EmuExceptionExitProcess();
 	}
