@@ -322,6 +322,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*)                                                            );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTarget_0,                        ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetStreamSource,                          (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride, ()                                                                         );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetStreamSource_4,                        (xbox::uint_xt)                                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetStreamSource_8,                        (xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                                             );  \
     XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber, (void*, xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                       );  \
@@ -6877,6 +6878,52 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 
 	// Mark the resource as modified
 	ForceResourceRehash(pPixelContainer);
+}
+
+// Overload for logging
+static void D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride
+(
+    xbox::uint_xt            StreamNumber,
+    xbox::X_D3DVertexBuffer *pStreamData,
+    xbox::uint_xt            Stride
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(StreamNumber)
+        LOG_FUNC_ARG(pStreamData)
+        LOG_FUNC_ARG(Stride)
+        LOG_FUNC_END;
+}
+
+// LTCG specific D3DDevice_SetStreamSource function...
+// This uses a custom calling convention where parameters are passed in EAX, EDI, EBX
+// Test-case: Juiced
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride)()
+{
+    uint_xt StreamNumber;
+    X_D3DVertexBuffer *pStreamData;
+    uint_xt Stride;
+    __asm {
+        LTCG_PROLOGUE
+        mov  StreamNumber, eax
+        mov  pStreamData, edi
+        mov  Stride, ebx
+    }
+
+    // Log
+    D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride(StreamNumber, pStreamData, Stride);
+
+    CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+    __asm {
+        mov  eax, StreamNumber
+        mov  edi, pStreamData
+        mov  ebx, Stride
+        call XB_TRMP(D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride)
+
+        LTCG_EPILOGUE
+        ret
+    }
 }
 
 // Overload for logging
