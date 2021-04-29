@@ -191,10 +191,6 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
 
-	std::printf("Received Exception Code 0x%.08X @ EIP := %s\n",
-		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
-	std::fflush(stdout);
-
 	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok,
 		"  The running xbe has encountered an unhandled exception (Code := 0x%.8X) at address 0x%.08X.\n"
 		"\n"
