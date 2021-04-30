@@ -13,14 +13,14 @@ endif()
 
 set(SUBHOOK_TESTS OFF)
 set(SUBHOOK_INSTALL OFF)
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/subhook")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/subhook" EXCLUDE_FROM_ALL)
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/XbSymbolDatabase")
 
 # Not require since only include a header file
 #add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/simpleini")
 
-add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2" EXCLUDE_FROM_ALL)
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
@@ -408,7 +408,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 set(cxbxr_INSTALL_files "COPYING" "README.md")
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch subhook libXbSymbolDatabase libtommath libtomcrypt imgui
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch SDL2 subhook libXbSymbolDatabase libtommath libtomcrypt imgui
  PROPERTIES FOLDER Cxbx-Reloaded
 )
 
@@ -452,5 +452,9 @@ install(PROGRAMS ${cxbxr_GLEW_DLL}
 )
 
 install(PROGRAMS $<TARGET_FILE_DIR:cxbx>/${CMAKE_SHARED_LIBRARY_PREFIX}subhook${CMAKE_SHARED_LIBRARY_SUFFIX}
+  DESTINATION bin
+)
+
+install(PROGRAMS $<TARGET_FILE_DIR:cxbx>/${CMAKE_SHARED_LIBRARY_PREFIX}SDL2${CMAKE_SHARED_LIBRARY_SUFFIX}
   DESTINATION bin
 )
