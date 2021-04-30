@@ -36,9 +36,7 @@ jobs:
         with:
           submodules: recursive
       - name: Generate CMake files
-        run: |
-          mkdir build && cd build
-          cmake .. -A Win32
+        run: cmake -B build -A Win32
       - name: Build
         working-directory: build
         run: cmake --build . --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
