@@ -191,15 +191,12 @@ void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
 
-	char buffer[256];
-	sprintf(buffer,
-		"Received Exception Code 0x%.08X @ EIP := %s\n"
+	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok,
+		"  The running xbe has encountered an unhandled exception (Code := 0x%.8X) at address 0x%.08X.\n"
 		"\n"
 		"  Press \"OK\" to terminate emulation.\n"
 		"  Press \"Cancel\" to debug.",
-		e->ExceptionRecord->ExceptionCode, EIPToString(e->ContextRecord->Eip).c_str());
-
-	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok, buffer) == PopupReturn::Ok)
+		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip) == PopupReturn::Ok)
 	{
 		EmuExceptionExitProcess();
 	}
