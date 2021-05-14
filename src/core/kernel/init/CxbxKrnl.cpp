@@ -1801,18 +1801,6 @@ void CxbxKrnlSuspend()
         }
     }
 
-    // append 'paused' to rendering window caption text
-    {
-        char szBuffer[256];
-
-        HWND hWnd = GET_FRONT_WINDOW_HANDLE;
-
-        GetWindowText(hWnd, szBuffer, 255 - 10);
-
-        strcat(szBuffer, " (paused)");
-        SetWindowText(hWnd, szBuffer);
-    }
-
     g_bEmuSuspended = true;
 }
 
@@ -1820,19 +1808,6 @@ void CxbxKrnlResume()
 {
     if(!g_bEmuSuspended)
         return;
-
-    // remove 'paused' from rendering window caption text
-    {
-        char szBuffer[256];
-
-        HWND hWnd = GET_FRONT_WINDOW_HANDLE;
-
-        GetWindowText(hWnd, szBuffer, 255);
-
-        szBuffer[strlen(szBuffer)-9] = '\0';
-
-        SetWindowText(hWnd, szBuffer);
-    }
 
 	for (auto it = g_hThreads.begin(); it != g_hThreads.end(); ++it)
 	{
