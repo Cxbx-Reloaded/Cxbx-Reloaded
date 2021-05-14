@@ -5492,16 +5492,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 	{
-		// Put primitives per frame in the title
-		/*{
-			char szString[64];
-
-			sprintf( szString, "Cxbx: PPF(%d)", g_dwPrimPerFrame );
-
-			SetWindowText( CxbxKrnl_hEmuParent, szString );
-
-			g_dwPrimPerFrame = 0;
-		}*/
+		// TODO: print the primitives per frame with ImGui
 
 		// TODO : Check if this should be done at Swap-not-Present-time too :
 		// not really accurate because you definately dont always present on every vblank
