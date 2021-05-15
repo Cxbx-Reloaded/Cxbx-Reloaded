@@ -228,36 +228,46 @@ sampler samplers[4] : register(s0);
 #endif
 static bool alphakill[4] = ALPHAKILL;
 
+float4 PostProcessTexel(const int ts, float4 t)
+{
+	if (alphakill[ts])
+		if (t.a == 0)
+			discard;
+
+	return t;
+}
+
 // Actual texture sampling per texture stage (ts), using the sampling vector (s) as input,
 // abstracting away the specifics of accessing above sampler declarations (usefull for future Direct3D 10+ sampler arrays)
 float4 Sample2D(int ts, float3 s)
 {
 	float4 result = tex2D(samplers[ts], s.xy); // Ignores s.z (and whatever it's set to, will be optimized away by the compiler, see [1] below)
-	if (alphakill[ts])
-		if (result.a == 0)
-			discard;
-
-	return result;
+	return PostProcessTexel(ts, result);
 }
 
 float4 Sample3D(int ts, float3 s)
 {
 	float4 result = tex3D(samplers[ts], s.xyz);
-	if (alphakill[ts])
-		if (result.a == 0)
-			discard;
-
-	return result;
+	return PostProcessTexel(ts, result);
 }
 
 float4 Sample6F(int ts, float3 s)
 {
 	float4 result = texCUBE(samplers[ts], s.xyz);
-	if (alphakill[ts])
-		if (result.a == 0)
-			discard;
+	return PostProcessTexel(ts, result);
+}
 
-	return result;
+// Test-case JSRF (boost-dash effect).
+float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 src)
+{
+	// Convert the input bump map (source texture) value range into two's complement signed values (from (0, +1) to (-1, +1), using s_bx2):
+	const float4 BumpMap = s_bx2(src); // Note : medieval discovered s_bias improved JSRF, PatrickvL changed it into s_bx2 thanks to http://www.rastertek.com/dx11tut20.html
+	// TODO : The above should be removed, and replaced by some form of COLORSIGN handling, which may not be possible inside this pixel shader, because filtering-during-sampling would cause artifacts.
+
+	const float u = TexCoord.x + (BumpEnvMat.x * BumpMap.r) + (BumpEnvMat.z * BumpMap.g); // Or : TexCoord.x + dot(BumpEnvMat.xz, BumpMap.rg)
+	const float v = TexCoord.y + (BumpEnvMat.y * BumpMap.r) + (BumpEnvMat.w * BumpMap.g); // Or : TexCoord.y + dot(BumpEnvMat.yw, BumpMap.rg)
+
+	return float3(u, v, 0);
 }
 
 // Map texture registers to their array elements. Having texture registers in an array allows indexed access to them
@@ -280,7 +290,7 @@ float4 Sample6F(int ts, float3 s)
 #define Normal3(ts)   float3(dot_[ts-2], dot_[ts-1], dot_[ts])              // Two preceding and current stage dot result.
 #define Eye           float3(iT[1].w,    iT[2].w,    iT[3].w)               // 4th (q) component of input texture coordinates 1, 2 and 3. Only used by texm3x3vspec/PS_TEXTUREMODES_DOT_RFLCT_SPEC, always at stage 3. TODO : Map iT[1/2/3] through PS_INPUTTEXTURE_[]?
 #define Reflect(n, e) 2 * (dot(n, e) / dot(n, n)) * n - e                   // https://documentation.help/directx8_c/texm3x3vspec.htm
-#define BumpEnv(ts)   float3(iT[ts].x + (BEM[ts].x * src(ts).r) + (BEM[ts].y * src(ts).g), iT[ts].y + (BEM[ts].z * src(ts).r) + (BEM[ts].w * src(ts).g), 0) // Will be input for Sample2D. TODO : Compact into a regular 2x2 maxtrix multiplication.
+#define BumpEnv(ts)   DoBumpEnv(iT[ts], BEM[ts], src(ts))                   // Will be input for Sample2D.
 #define LSO(ts)       (LUM[ts].x * src(ts).b) + LUM[ts].y                   // Uses PSH_XBOX_CONSTANT_LUM .x = D3DTSS_BUMPENVLSCALE .y = D3DTSS_BUMPENVLOFFSET
 
 // Implementations for all possible texture modes, with stage as argument (prefixed with valid stages and corresponding pixel shader 1.3 assembly texture addressing instructions)
