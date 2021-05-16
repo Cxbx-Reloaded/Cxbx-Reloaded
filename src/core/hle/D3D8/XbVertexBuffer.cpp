@@ -706,12 +706,15 @@ void CxbxImpl_End()
 	}
 
 	// Compose an Xbox vertex attribute format to pass through all registers
-	UINT uiStride = 0;
-	g_InlineVertexBuffer_AttributeFormat = {};
-	for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = X_D3DVSDT_FLOAT4;
-		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-		uiStride += sizeof(float) * 4;
+	static UINT uiStride = 0;
+	static bool isIvbFormatInitialized = false;
+	if (!isIvbFormatInitialized) {
+		isIvbFormatInitialized = true;
+		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = X_D3DVSDT_FLOAT4;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+			uiStride += sizeof(float) * 4;
+		}
 	}
 
 	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
