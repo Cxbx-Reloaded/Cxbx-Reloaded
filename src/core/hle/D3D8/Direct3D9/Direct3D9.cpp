@@ -91,14 +91,14 @@ bool                                g_bClipCursor  = false; // indicates that th
 IDirect3DDevice9Ex                 *g_pD3DDevice   = nullptr; // Direct3D Device
 
 // Static Variable(s)
-static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
-static bool                         g_bSupportsFormatSurfaceRenderTarget[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
-static bool                         g_bSupportsFormatSurfaceDepthStencil[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
-static bool                         g_bSupportsFormatTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support texture format?
-static bool                         g_bSupportsFormatTextureRenderTarget[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support texture format?
-static bool                         g_bSupportsFormatTextureDepthStencil[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support texture format?
-static bool                         g_bSupportsFormatVolumeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
-static bool                         g_bSupportsFormatCubeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LAST + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceRenderTarget[xbox::X_D3DFMT_LAST + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatSurfaceDepthStencil[xbox::X_D3DFMT_LAST + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatTexture[xbox::X_D3DFMT_LAST + 1]; // Does device support texture format?
+static bool                         g_bSupportsFormatTextureRenderTarget[xbox::X_D3DFMT_LAST + 1]; // Does device support texture format?
+static bool                         g_bSupportsFormatTextureDepthStencil[xbox::X_D3DFMT_LAST + 1]; // Does device support texture format?
+static bool                         g_bSupportsFormatVolumeTexture[xbox::X_D3DFMT_LAST + 1]; // Does device support surface format?
+static bool                         g_bSupportsFormatCubeTexture[xbox::X_D3DFMT_LAST + 1]; // Does device support surface format?
 static HBRUSH                       g_hBgBrush = NULL; // Background Brush
 static BOOL                         g_bIsFauxFullscreen = FALSE;
 static DWORD						g_OverlaySwap = 0; // Set in D3DDevice_UpdateOverlay
@@ -2311,9 +2311,10 @@ static void DetermineSupportedD3DFormats
     memset(g_bSupportsFormatTextureDepthStencil, false, sizeof(g_bSupportsFormatTextureDepthStencil));
     memset(g_bSupportsFormatVolumeTexture, false, sizeof(g_bSupportsFormatVolumeTexture));
     memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
-    for (int X_Format = xbox::X_D3DFMT_L8; X_Format <= xbox::X_D3DFMT_LIN_R8G8B8A8; X_Format++) {
+    for (int X_Format = xbox::X_D3DFMT_FIRST; X_Format <= xbox::X_D3DFMT_LAST; X_Format++) {
         // Only process Xbox formats that are directly mappable to host
-        if (!EmuXBFormatRequiresConversionToARGB((xbox::X_D3DFORMAT)X_Format)) {
+		D3DFORMAT PCFormat; // ignored
+        if (!EmuXBFormatRequiresConversion((xbox::X_D3DFORMAT)X_Format, /*&*/PCFormat)) {
             // Convert the Xbox format into host format (without warning, thanks to the above restriction)
             const D3DFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
             if (PCFormat != D3DFMT_UNKNOWN) {
@@ -5719,11 +5720,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 		// Determine the format we'll be using on host D3D
 		D3DFORMAT PCFormat;
-		bool bConvertToARGB = false;
+		bool bConvertTextureFormat = false;
 
-		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
-			bConvertToARGB = true;
-			PCFormat = D3DFMT_A8R8G8B8;
+		if (EmuXBFormatRequiresConversion(X_Format, /*&*/PCFormat)) {
+			bConvertTextureFormat = true;
 
 			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
 			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
@@ -5740,10 +5740,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// If it was a depth stencil, fall back to a known supported depth format
 					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to D3DFMT_D24S8", ResourceTypeName, X_Format);
 					PCFormat = D3DFMT_D24S8;
-				} else if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
+				} else if (EmuXBFormatCanBeConverted(X_Format, /*&*/PCFormat)) {
 					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
-					bConvertToARGB = true;
-					PCFormat = D3DFMT_A8R8G8B8;
+					bConvertTextureFormat = true;
 				} else {
 					// Otherwise, use a best matching format
 					/*CxbxKrnlCleanup*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
@@ -5907,17 +5906,18 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture");
 
 			// If the above failed, we might be able to use an ARGB texture instead
-			if ((hRet != D3D_OK) && (PCFormat != D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
+			D3DFORMAT TmpPCFormat;
+			if ((hRet != D3D_OK) && (PCFormat != D3DFMT_A8R8G8B8) && EmuXBFormatCanBeConverted(X_Format, TmpPCFormat)) {
 				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
-					D3DUsage, D3DFMT_A8R8G8B8, D3DPool, &pNewHostTexture,
+					D3DUsage, TmpPCFormat, D3DPool, &pNewHostTexture,
 					nullptr
 				);
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(D3DFMT_A8R8G8B8)");
 
 				if (hRet == D3D_OK) {
 					// Okay, now this works, make sure the texture gets converted
-					bConvertToARGB = true;
-					PCFormat = D3DFMT_A8R8G8B8;
+					bConvertTextureFormat = true;
+					PCFormat = TmpPCFormat;
 				}
 			}
 
@@ -6105,7 +6105,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwMipOffset;
 
 				// Do we need to convert to ARGB?
-				if (bConvertToARGB) {
+				if (bConvertTextureFormat) {
 					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
 					// In case where there is a palettized texture without a palette attached,
@@ -6144,7 +6144,8 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 				else {
 					/* TODO : // Let DirectX convert the surface (including palette formats) :
-					if(!EmuXBFormatRequiresConversionToARGB) {
+					D3DFORMAT PCFormat;
+					if(!EmuXBFormatRequiresConversionToARGB, /*&* /PCFormat) {
 						D3DXLoadSurfaceFromMemory(
 							GetHostSurface(pResource),
 							nullptr, // no destination palette
