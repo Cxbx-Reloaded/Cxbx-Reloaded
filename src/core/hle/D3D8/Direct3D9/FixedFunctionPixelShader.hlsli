@@ -85,38 +85,38 @@ namespace FixedFunctionPixelShader {
 		constexpr DWORD X_D3DTSS_MAXANISOTROPY = 8;
 		*/
 
-		alignas(16) float COLORKEYOP; // Unimplemented Xbox extension!
-		alignas(16) float COLORSIGN; // Unimplemented Xbox extension!
-#ifdef ENABLE_FF_ALPHAKILL
-		alignas(16) float ALPHAKILL; // Xbox extension!
-#else
-		alignas(16) float ALPHAKILL; // Unimplemented Xbox extension!
-#endif
-		// TEXTURETRANSFORMFLAGS handled by the VS
-		alignas(16) float BUMPENVMAT00;
-		alignas(16) float BUMPENVMAT01;
-		alignas(16) float BUMPENVMAT11;
-		alignas(16) float BUMPENVMAT10;
-		alignas(16) float BUMPENVLSCALE;
-		alignas(16) float BUMPENVLOFFSET;
-		// TEXCOORDINDEX handled by the VS
-		// BORDERCOLOR set on sampler
-		alignas(16) float COLORKEYCOLOR; // Unimplemented Xbox extension!
+		alignas(16) float COLORKEYOP; // = 9; Xbox extension!
+		alignas(16) float4 COLORSIGN; // = 10; Xbox extension!
+		alignas(16) float ALPHAKILL; // = 11; Xbox extension!
+
+		// 12 .. 20 are moved into PsTextureHardcodedState, which are compiled into the shader
+
+		// TEXTURETRANSFORMFLAGS // = 21; handled by the VS
+		alignas(16) float BUMPENVMAT00; // = 22;
+		alignas(16) float BUMPENVMAT01; // = 23;
+		alignas(16) float BUMPENVMAT11; // = 24;
+		alignas(16) float BUMPENVMAT10; // = 25;
+		alignas(16) float BUMPENVLSCALE; // = 26;
+		alignas(16) float BUMPENVLOFFSET; // = 27;
+		// TEXCOORDINDEX // = 28; handled by the VS
+		// BORDERCOLOR // = 29; set on sampler
+		alignas(16) float4 COLORKEYCOLOR; // = 30; Xbox extension!
+		// UNSUPPORTED // = 31; // Note : Somehow, this one comes through D3DDevice_SetTextureStageStateNotInline sometimes
 	};
 
 	// This state is compiled into the shader
 	// Values correspond to XD3D8 version of D3DTEXTURESTAGESTATETYPE
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtexturestagestatetype
 	struct PsTextureHardcodedState {
-		alignas(16) float COLOROP;
-		alignas(16) float COLORARG0;
-		alignas(16) float COLORARG1;
-		alignas(16) float COLORARG2;
-		alignas(16) float ALPHAOP;
-		alignas(16) float ALPHAARG0;
-		alignas(16) float ALPHAARG1;
-		alignas(16) float ALPHAARG2;
-		alignas(16) float RESULTARG;
+		alignas(16) float COLOROP; // = 12;
+		alignas(16) float COLORARG0; // = 13;
+		alignas(16) float COLORARG1; // = 14;
+		alignas(16) float COLORARG2; // = 15;
+		alignas(16) float ALPHAOP; // = 16;
+		alignas(16) float ALPHAARG0; // = 17;
+		alignas(16) float ALPHAARG1; // = 18;
+		alignas(16) float ALPHAARG2; // = 19;
+		alignas(16) float RESULTARG; // = 20;
 	};
 
 	struct FixedFunctionPixelShaderState {
