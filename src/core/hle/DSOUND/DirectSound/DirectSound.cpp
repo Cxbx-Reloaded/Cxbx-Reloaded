@@ -536,26 +536,40 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSound_DownloadEffectsImage)
 
 	// This function is relative to DSP for Interactive 3-D Audio Level 2 (I3DL2)
 
-	LOG_NOT_SUPPORTED();
-	if(ppImageDesc)//If the guest code request a pointer to ImageDesc structure to be returned, then we should allocate a memory and create ImageDesc.
+	LOG_INCOMPLETE();
+
+	if (ppImageDesc) //If the guest code request a pointer to ImageDesc structure to be returned, then we should allocate a memory and create ImageDesc.
 	{
 		// Code block below is reversed from Otogi.
 		// ImageBuffer header starts from offset ox800 and ends in offset 0x817. actual DSP code segment starts from offset 0x818.
 		// DWORD at offset 0x804 and offset 0x80C should be the code segment sizes in dwords.
 		// ImageDesc is appended after code segments. There are additional two DWORDs data for each effect appended after ImageDesc which I have no idea what they are for.
-		DWORD N1 = *(DWORD *)((BYTE *)pvImageBuffer + 0x804); //first code segment size in dwords
-		DWORD N2 = *(DWORD *)((BYTE *)pvImageBuffer + 0x80C); //2nd code segment size in dwords
-		BYTE * pImageDesc = ((BYTE *)pvImageBuffer + 0x818 + 4 * (N1 + N2)); //calculate the starting address of ImageDesc inside the imagebuffer
-		DWORD EffectCount = *(DWORD *)pImageDesc; //the first DWORD in ImageDesc is EffectCount.
-		DWORD ImageDescSize = 8 + 32 * EffectCount; //The size of ImageDesc is two Dwords (8 bytes) + 8 DWORS (32 bytes) for each effects.
-		if (*ppImageDesc = malloc(ImageDescSize)) //allocate a new memory to keep the ImageDesc for guest code since the imagebuffer should be freed after the image were downloaded.
-		{
-			memcpy(*ppImageDesc, pImageDesc, ImageDescSize); //copy the ImageDesc from ImageBuffer.
-		}
+        dword_xt N1 = *(PDWORD)((PBYTE)pvImageBuffer + 0x804); //first code segment size in dwords
+        dword_xt N2 = *(PDWORD)((PBYTE)pvImageBuffer + 0x80C); //2nd code segment size in dwords
+        PBYTE pImageDesc = ((PBYTE)pvImageBuffer + 0x818 + 4 * (N1 + N2)); //calculate the starting address of ImageDesc inside the imagebuffer
+        DWORD EffectCount = *(PDWORD)pImageDesc; //the first DWORD in ImageDesc is EffectCount.
+        dword_xt ImageDescSize = 8 + 32 * EffectCount; //The size of ImageDesc is two Dwords (8 bytes) + 8 DWORS (32 bytes) for each effects.
+
+        // NOTE: this buffer should also be freed in IDirectSound_Release when the ref counter drops to zero, but that function is currently not implemented.
+        static PBYTE ImageDescBuffer = zeroptr;
+        if (ImageDescBuffer != zeroptr) {
+            ExFreePool(ImageDescBuffer);
+        }
+
+        ImageDescBuffer = static_cast<PBYTE>(ExAllocatePool(ImageDescSize));
+        if (ImageDescBuffer == zeroptr) {
+            return E_OUTOFMEMORY;
+        }
+
+        // NOTE: this is very wrong. The dsp image is encrypted, and thus simply copying the original encrypted image won't do any good.
+        *ppImageDesc = ImageDescBuffer;
+        std::memcpy(*ppImageDesc, pImageDesc, ImageDescSize);
+
 		// with the code above, we could easily retrieve the address and size of ImageDesc within the image buffer.
 		// then we can allocate a new memory, copy the imageDesc from the image buffer to the newly allocated memory,
 		// then assign the newly allocated memory to the ppImageDesc. that's all.
 	}
+
 	return S_OK;
 }
 
