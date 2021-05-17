@@ -714,7 +714,12 @@ private:
 			case xbox::X_D3DVSDE_TEXCOORD1   /*=10*/: UsageIndex = 1; return D3DDECLUSAGE_TEXCOORD;
 			case xbox::X_D3DVSDE_TEXCOORD2   /*=11*/: UsageIndex = 2; return D3DDECLUSAGE_TEXCOORD;
 			case xbox::X_D3DVSDE_TEXCOORD3   /*=12*/: UsageIndex = 3; return D3DDECLUSAGE_TEXCOORD;
-			default /*13-15*/ :
+			// Unused registers. Assign them a semantic anyway so we don't have to worry about
+			// binding a vertex declaration with them in it
+			case 13: UsageIndex = 4; return D3DDECLUSAGE_TEXCOORD;
+			case 14: UsageIndex = 5; return D3DDECLUSAGE_TEXCOORD;
+			case 15: UsageIndex = 6; return D3DDECLUSAGE_TEXCOORD;
+			default:
 				return D3DDECLUSAGE_UNSUPPORTED;
 		}
 	}

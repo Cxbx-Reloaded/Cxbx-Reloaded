@@ -7366,16 +7366,11 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		// Convert quad vertex-count to triangle vertex count :
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
-		// Instead of calling WalkIndexBuffer on pQuadToTriangleIndexBuffer,
-		// we can derive the LowIndex and HighIndexes ourselves here
-		INDEX16 LowIndex = 0;
-		INDEX16 HighIndex = (INDEX16)(DrawContext.dwVertexCount - 1);
-
 		// Draw indexed triangles instead of quads
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
-			/*MinVertexIndex=*/LowIndex,
-			/*NumVertexIndices=*/(HighIndex - LowIndex) + 1,
+			/*MinVertexIndex=*/0, // Always 0 for converted quadlist data
+			/*NumVertices=*/DrawContext.dwVertexCount,
 			PrimitiveCount,
 			pIndexData,
 			/*IndexDataFormat=*/D3DFMT_INDEX16,
