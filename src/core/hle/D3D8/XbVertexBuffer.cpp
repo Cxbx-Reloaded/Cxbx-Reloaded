@@ -749,9 +749,6 @@ void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 
 	HRESULT hRet = D3D_OK;
 
-	// Always update our attribute storage with the most recently set register value
-	CxbxSetVertexAttribute(Register, a, b, c, d);
-
 	// Grow g_InlineVertexBuffer_Table to contain at least current, and a potentially next vertex
 	if (g_InlineVertexBuffer_TableLength <= g_InlineVertexBuffer_TableOffset + 1) {
 		UINT InlineVertexBuffer_TableLength_Original = g_InlineVertexBuffer_TableLength;
@@ -790,6 +787,9 @@ void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 		int index = Register;
 		if (Register == X_D3DVSDE_VERTEX)
 			index = X_D3DVSDE_POSITION;
+
+		// Always update our attribute storage with the most recently set register value
+		CxbxSetVertexAttribute(index, a, b, c, d);
 
 		unsigned o = g_InlineVertexBuffer_TableOffset;
 		g_InlineVertexBuffer_Table[o].Slots[index] = D3DXVECTOR4(a, b, c, d);
