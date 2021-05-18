@@ -1402,23 +1402,23 @@ __declspec(noreturn) void CxbxKrnlInit
 	bool isEmuDisk = _strnicmp(relative_path.c_str(), CxbxBasePath.c_str(), CxbxBasePath.size() - 1) == 0;
 	// Check if title mounth path is already set. This may occur from early boot of Chihiro title.
 	char title_mount_path[sizeof(szFilePath_Xbe)];
-	const char* tmp_buffer = title_mount_path;
+	const char* p_default_mount_path = title_mount_path;
 	g_EmuShared->GetTitleMountPath(title_mount_path);
 
-	if (tmp_buffer[0] == '\0' && BootFlags == BOOT_NONE) {
+	if (p_default_mount_path[0] == '\0' && BootFlags == BOOT_NONE) {
 		// Remember our first initialize mount path for CdRom0 and Mbfs.
 		if (!isEmuDisk) {
 			g_EmuShared->SetTitleMountPath(relative_path.c_str());
-			tmp_buffer = relative_path.c_str();
+			p_default_mount_path = relative_path.c_str();
 		}
 	}
 
 	// TODO: Find a place to make permanent placement for DeviceCdrom0 that does not have disc loaded.
-	if (tmp_buffer[0] != '\0') {
-		CxbxCdrom0DeviceIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, tmp_buffer);
+	if (p_default_mount_path[0] != '\0') {
+		CxbxCdrom0DeviceIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, p_default_mount_path);
 		// Since Chihiro also map Mbfs to the same path as Cdrom0, we'll map it the same way.
 		if (g_bIsChihiro) {
-			(void)CxbxRegisterDeviceHostPath(DriveMbfs, tmp_buffer);
+			(void)CxbxRegisterDeviceHostPath(DriveMbfs, p_default_mount_path);
 		}
 	}
 
