@@ -38,6 +38,8 @@
 
 #include "DirectSoundInline.hpp"
 
+#include <core\kernel\support\EmuFile.h>
+
 // TODO: Tasks need to do for DirectSound HLE
 // * Need create patches
 //   * Ac97CreateMediaObject (Need OOVPA)
@@ -115,9 +117,36 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
 		LOG_FUNC_ARG(ppImageDesc)
 		LOG_FUNC_END;
 
-	LOG_NOT_SUPPORTED();
+	LOG_INCOMPLETE();
+	LPDIRECTSOUND8  pThis_tmp= zeroptr;
+	PBYTE           pvImageBuffer;
+	dword_xt        dwImageSize;
 
-    return S_OK;
+	HANDLE hFile;
+	DWORD dwBytesRead;
+	LPSTR pszScratchFile;
+
+	//convert_pszImageName_to_pszScratchFile();
+	std::string hostpath = CxbxConvertXboxToHostPath(std::string_view (pszImageName));
+	
+	hFile = CreateFile(hostpath.c_str(),GENERIC_READ,0,NULL,OPEN_EXISTING,0,NULL);
+
+	dwImageSize = GetFileSize(hFile, NULL);
+
+	pvImageBuffer = new BYTE[dwImageSize];
+
+	BOOL bResult = ReadFile(hFile,pvImageBuffer,dwImageSize,&dwBytesRead,0);
+
+	xbox::hresult_xt result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(pThis_tmp, pvImageBuffer,dwImageSize,pImageLoc,ppImageDesc);
+
+	delete[] pvImageBuffer;
+
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle(hFile);
+	}
+	
+	return result;// result;
 }
 
 // ******************************************************************

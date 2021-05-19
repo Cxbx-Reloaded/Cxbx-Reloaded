@@ -127,6 +127,50 @@ struct SharedDSBuffer : DSBUFFER_S {
     }
 };
 
+typedef struct _DSEFFECTMAP {
+	LPVOID lpvCodeSegment;
+	DWORD dwCodeSize;
+	LPVOID lpvStateSegment;
+	DWORD dwStateSize;
+	LPVOID lpvYMemorySegment;
+	DWORD dwYMemorySize;
+	LPVOID lpvScratchSegment;
+	DWORD dwScratchSize;
+} DSEFFECTMAP, *LPDSEFFECTMAP;
+/*Members
+lpvCodeSegment
+Starting address of the DSP code segment for this effect.
+dwCodeSize
+Value that contains the code segment size, in DWORDs.
+lpvStateSegment
+Starting address of the effect state segment.
+dwStateSize
+Value that contains the size of the effect state segment, in DWORDs.
+lpvYMemorySegment
+Starting address of the DSP Y-memory segment.
+dwYMemorySize
+Value that contains the Y-memory segment size, in DWORDs.
+lpvScratchSegment
+Starting address of the scratch memory segment.
+dwScratchSize
+Value that contains the size of the scratch segment, in DWORDs.
+*/
+
+typedef struct _DSEFFECTIMAGEDESC {
+	DWORD dwEffectCount;
+	DWORD dwTotalScratchSize;
+	DSEFFECTMAP aEffectMaps[1];
+} DSEFFECTIMAGEDESC, *LPDSEFFECTIMAGEDESC;
+
+/*Members
+dwEffectCount 
+Value that contains the number of effects in the image. 
+dwTotalScratchSize 
+Value that contains the total amount of space required by effects that use scratch space for delay lines. 
+aEffectMaps 
+Variable-length array that contains the effect descriptions. 
+*/
+
 //Custom flags (4 bytes support up to 31 shifts,starting from 0)
 #define DSE_FLAG_PCM                    (1 << 0)
 #define DSE_FLAG_XADPCM                 (1 << 1)
@@ -414,9 +458,9 @@ xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_SynchPlayback)
 );
 
 // ******************************************************************
-// * patch: IDirectSound_DownloadEffectsImage
+// * patch: CDirectSound_DownloadEffectsImage
 // ******************************************************************
-xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_DownloadEffectsImage)
+xbox::hresult_xt WINAPI EMUPATCH(CDirectSound_DownloadEffectsImage)
 (
     LPDIRECTSOUND8          pThis,
     LPCVOID                 pvImageBuffer,
