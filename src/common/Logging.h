@@ -88,6 +88,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 	DSSTREAM,
 	DS3DCALC,
 	XMO,
+	RINP,
 	// kernel
 	KRNL,
 	LOG,

@@ -104,9 +104,11 @@ namespace Sdl
 		{
 			if (Event.type == SDL_JOYDEVICEADDED) {
 				OpenSdlDevice(Event.jdevice.which);
+				g_InputDeviceManager.HotplugHandler(true);
 			}
 			else if (Event.type == SDL_JOYDEVICEREMOVED) {
 				CloseSdlDevice(Event.jdevice.which);
+				g_InputDeviceManager.HotplugHandler(true);
 			}
 			else if (Event.type == SDL_JOYAXISMOTION ||
 				Event.type == SDL_JOYHATMOTION ||
