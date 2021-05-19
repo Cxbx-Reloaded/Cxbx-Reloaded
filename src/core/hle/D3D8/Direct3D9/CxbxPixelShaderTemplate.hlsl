@@ -284,7 +284,11 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 #define CalcDot(ts) PS_DOTMAPPING_ ## ts(src(ts)); dot_[ts] = dot(iT[ts].xyz, dm)
 
 // Addressing operations
-#define Passthru(ts)  float4(saturate(iT[ts].xyz), 1)                       // Clamps input texture coordinates to the range [0..1]
+
+// Clamps input texture coordinates to the range [0..1]
+// Note alpha is passed through rather than set to one like ps_1_3 'texcoord'
+// Test case: Metal Arms (menu skybox clouds, alpha is specifically set in the VS)
+#define Passthru(ts)  float4(saturate(iT[ts]))
 #define Brdf(ts)      float3(t[ts-2].y,  t[ts-1].y,  t[ts-2].x - t[ts-1].x) // TODO : Complete 16 bit phi/sigma retrieval from float4 texture register. Perhaps use CalcHiLo?
 #define Normal2(ts)   float3(dot_[ts-1], dot_[ts],   0)                     // Preceding and current stage dot result. Will be input for Sample2D.
 #define Normal3(ts)   float3(dot_[ts-2], dot_[ts-1], dot_[ts])              // Two preceding and current stage dot result.
