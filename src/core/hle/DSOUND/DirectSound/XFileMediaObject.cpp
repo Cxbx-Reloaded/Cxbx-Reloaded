@@ -118,35 +118,160 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
 		LOG_FUNC_END;
 
 	LOG_INCOMPLETE();
-	LPDIRECTSOUND8  pThis_tmp= zeroptr;
-	PBYTE           pvImageBuffer;
-	dword_xt        dwImageSize;
 
-	HANDLE hFile;
-	DWORD dwBytesRead;
-	LPSTR pszScratchFile;
+	xbox::hresult_xt result = S_OK;
+	if(ppImageDesc){ //only process image section/file which the guest code asks for ImageDesc.
 
-	//convert_pszImageName_to_pszScratchFile();
-	std::string hostpath = CxbxConvertXboxToHostPath(std::string_view (pszImageName));
+		PBYTE           pvImageBuffer;
+		dword_xt        dwImageSize;
+
+		if (dwFlags & 1) { // dwFlags == XAUDIO_DOWNLOADFX_XBESECTION, The DSP effects image is located in a section of the XBE.
+			/*
+			//future code for loading imgae from XBE section. these codes are reversd from PGR2.
+
+			PXBEIMAGE_SECTION pImageSectionHandle=XGetSectionHandle(pszImageName);    //get section handle by section name, not implemented yet.
+			// perhaps use pImageSectionHandle = CxbxKrnl_Xbe->FindSection(pszImageName); will be easier. 
+
+			
+			if(XeLoadSection(pImageSectionHandle)>0{		//load section handle and get the loaded address.
+				pvImageBuffer=	pImageSectionHandle->VirtualAddress;		//note this sction must be freed after the internal image bacup and ImageDesc was created.
+																			//EmuKnrlXe.cpp implements XeLoadSection(). could reference that code.
+			dwImageSize=pImageSectionHandle->VirtualSize;  //get section size by section handle.
+
+			result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(pThis_tmp, pvImageBuffer,dwImageSize,pImageLoc,ppImageDesc);
+
+			if(pImageSectionHandle<>0 && pImageSectionHandle!=-1)
+				XeUnloadSection(pImageSectionHandle);
+
+			*/
+
+			result = S_OK;//this line should be removed once the section loading code was implemented.
+		}
+		else { // load from file
 	
-	hFile = CreateFile(hostpath.c_str(),GENERIC_READ,0,NULL,OPEN_EXISTING,0,NULL);
+	
+			LPDIRECTSOUND8  pThis_tmp= zeroptr;
 
-	dwImageSize = GetFileSize(hFile, NULL);
+			HANDLE hFile;
+			DWORD dwBytesRead;
+		
+			// using xbox::NtCreateFile() directly instead of Host CreateFile();
+			OBJECT_ATTRIBUTES obj;
+			ANSI_STRING file_name;
+			IO_STATUS_BLOCK io_status_block;
+			RtlInitAnsiString(&file_name, pszImageName);
+			
+			XB_InitializeObjectAttributes(&obj, &file_name, OBJ_CASE_INSENSITIVE, ObDosDevicesDirectory());
+			ntstatus_xt NtStatusCreateFile;
+			//LARGE_INTEGER tmp_LargeInt;
+			//tmp_LargeInt.QuadPart= dwImageSize;
+			NtStatusCreateFile=NtCreateFile(
+				&hFile,//OUT PHANDLE  &hFile,
+				FILE_GENERIC_READ,//FILE_READ_DATA,//GENERIC_READ,//IN  access_mask_xt   DesiredAccess,
+				&obj,//IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+				&io_status_block,//OUT PIO_STATUS_BLOCK   IoStatusBlock,
+				zeroptr,//IN  PLARGE_INTEGER   AllocationSize OPTIONAL, must be none zero, no effect for read acceess.
+				FILE_ATTRIBUTE_NORMAL,//IN  ulong_xt  FileAttributes,
+				FILE_SHARE_READ,//IN  ulong_xt   ShareAccess,
+				FILE_OPEN,//IN  ulong_xt   CreateDisposition,
+				FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);//IN  ulong_xt     CreateOptions); CreateFileA Convert dwCreationDisposition== 3 OPEN_EXISTING  to CreateOptions = 1 FILE_DIRECTORY_FILE!!?? but with 1, this will fail.
+			//process possible error with NtCreateFile()
+			if (NtStatusCreateFile < 0)//something wrong
+			{
+				//ULONG DOSERRORNtCreateFile=RtlNtStatusToDosError(NtStatusCreateFile);
+				EmuLog(LOG_LEVEL::WARNING, "EmuXAudioDownloadEffectsImage: Image file NtCreateFile() error");
+				if (NtStatusCreateFile == 0xC0000035)//STATUS_OBJECT_NAME_COLLISION
+				{
+					EmuLog(LOG_LEVEL::WARNING, "EmuXAudioDownloadEffectsImage: Image file name collision");
+				}
+				else if (NtStatusCreateFile == 0xC00000BA)//STATUS_FILE_IS_A_DIRECTORY
+				{
+						EmuLog(LOG_LEVEL::WARNING, "EmuXAudioDownloadEffectsImage: Image file name is a directory or invalid");
+				}
+				hFile= INVALID_HANDLE_VALUE;
+			}
 
-	pvImageBuffer = new BYTE[dwImageSize];
+			if(hFile!=INVALID_HANDLE_VALUE){
 
-	BOOL bResult = ReadFile(hFile,pvImageBuffer,dwImageSize,&dwBytesRead,0);
+				FILE_STANDARD_INFORMATION FileStdInfo;
 
-	xbox::hresult_xt result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(pThis_tmp, pvImageBuffer,dwImageSize,pImageLoc,ppImageDesc);
+				NTSTATUS NtStatusQueryInfoFile = NtQueryInformationFile(
+					hFile,//IN  HANDLE                      FileHandle,
+					&io_status_block,//OUT PIO_STATUS_BLOCK            IoStatusBlock,
+					&FileStdInfo,//OUT PVOID                       FileInformation, //File_Information Class Structure address.
+					sizeof(FILE_STANDARD_INFORMATION),//IN  ulong_xt  Length, //Length of the file information class structure buffer.
+					FileStandardInformation);//34);//IN  FILE_INFORMATION_CLASS      FileInformationClass // Enumation of the file information class.
+				if (NtStatusQueryInfoFile >= 0)
+				{
+					dwImageSize = FileStdInfo.EndOfFile.u.LowPart;					
+				}
+				else
+				{
+					EmuLog(LOG_LEVEL::WARNING, "EmuXAudioDownloadEffectsImage: Image file NtQueryInformationFile() error.");
+					dwImageSize = 0;
+				}
 
-	delete[] pvImageBuffer;
+				if(dwImageSize>0)//proceed the process only if the file size > 0
+				{
+					pvImageBuffer = new BYTE[dwImageSize]; //allocate buffer to read in to image file.
 
-	if (hFile != INVALID_HANDLE_VALUE)
-	{
-		CloseHandle(hFile);
+					//use NtReadFile() to replace host CreatFile();
+					ntstatus_xt NtStatusReadFile =NtReadFile(
+						hFile,//IN  HANDLE          FileHandle
+						0,//IN  HANDLE          Event OPTIONAL
+						0, //IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+						0,//IN  PVOID           ApcContext,
+						&io_status_block,//OUT PIO_STATUS_BLOCK IoStatusBlock,
+						pvImageBuffer,//OUT PVOID           Buffer,
+						dwImageSize,//IN  ulong_xt           Length,
+						zeroptr); //IN  PLARGE_INTEGER  ByteOffset OPTIONAL
+
+					DWORD dwBytesRead = 0;
+					if (NtStatusReadFile == 0x103)//STATUS_PENDING
+					{
+						NtStatusReadFile = NtWaitForSingleObject(hFile, 0, 0);
+						if (NtStatusReadFile < 0){//something wrong
+							EmuLog(LOG_LEVEL::WARNING, "EmuXAudioDownloadEffectsImage: Image file NtReadFile error");
+							if (NtStatusReadFile != 0xC0000011)//STATUS_END_OF_FILE
+							{
+								if ((NtStatusReadFile & 0xC0000000) == 0x80000000)//Error happened during file reading
+								{
+									dwBytesRead = io_status_block.Information;
+									EmuLog(LOG_LEVEL::WARNING, "EmuXAudioDownloadEffectsImage: NtReadFile read file end");
+									//ULONG DOSErrorNtReadFile = RtlNtStatusToDosError(NtStatusReadFile);// this is supposed to be the error code of xbox::CreateFile()
+								}
+							}else{
+								dwBytesRead = 0;
+							}
+						}
+						NtStatusReadFile = io_status_block.Status;
+					}
+					if (NtStatusReadFile >= 0)
+					{
+						dwBytesRead = io_status_block.Information;
+					}
+		
+
+					if(dwBytesRead == dwImageSize){//only process the image if the whole image was read successfully.
+						result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(pThis_tmp, pvImageBuffer,dwImageSize,pImageLoc,ppImageDesc);
+					}
+					else {
+						EmuLog(LOG_LEVEL::WARNING, "EmuXAudioDownloadEffectsImage: Image file NtReadFile read in lenth not enough");
+					}
+
+					if(pvImageBuffer)
+					{
+						delete[] pvImageBuffer;
+					}
+					if (hFile != INVALID_HANDLE_VALUE)
+					{
+						NtClose(hFile);
+					}
+				}
+			}
+		}
 	}
-	
-	return result;// result;
+	return result;
 }
 
 // ******************************************************************
