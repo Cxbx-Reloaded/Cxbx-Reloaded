@@ -40,8 +40,14 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 #include "common/util/strConverter.hpp" // utf16_to_ascii
+#include "common/util/cliConfig.hpp"
+#include "common/CxbxDebugger.h"
+#include "EmuShared.h"
 
 #include <filesystem>
+
+// partition emulation directory handles
+HANDLE           g_hCurDir_hack = NULL; // HACK: We should not be depending on this variable. Instead, we should fix/implement Ob/Io objects such as IoCreateDevice.
 
 // Default Xbox Partition Table
 #define PE_PARTFLAGS_IN_USE	0x80000000
@@ -402,7 +408,8 @@ NTSTATUS CxbxConvertFilePath(
 	std::string RelativePath = RelativeXboxPath;
 	std::string XboxFullPath;
 	std::string HostPath;
-	EmuNtSymbolicLinkObject* NtSymbolicLinkObject = NULL;
+	EmuNtSymbolicLinkObject* NtSymbolicLinkObject = nullptr;
+	EmuDirPath find_path;
 
 	// Always trim '\??\' off :
 	if (RelativePath.compare(0, DrivePrefix.length(), DrivePrefix.c_str()) == 0)
@@ -429,7 +436,7 @@ NTSTATUS CxbxConvertFilePath(
 			else if (RelativePath[0] == '$') {
 				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
 				{
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
 					RelativePath.erase(0, 5); // Remove '$HOME'
 				}
 				else
@@ -437,13 +444,14 @@ NTSTATUS CxbxConvertFilePath(
 			}
 			// Check if the path starts with a relative path indicator :
 			else if (RelativePath[0] == '.') {// "4x4 Evo 2" needs this
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
 				RelativePath.erase(0, 1); // Remove the '.'
 			}
 			else {
 				// TODO : How should we handle accesses to the serial: (?semi-)volume?
-				if (RelativePath.compare(0, 7, "serial:") == 0)
+				if (RelativePath.compare(0, 7, "serial:") == 0) {
 					return STATUS_UNRECOGNIZED_VOLUME;
+				}
 
 				// TODO: CDROM0: need access to raw file handle which doesn't exist in file system.
 				//       Similar concept with serial: and perhaps mediaboards.
@@ -454,57 +462,63 @@ NTSTATUS CxbxConvertFilePath(
 				}*/
 
 				// The path seems to be a device path, look it up :
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDevice(RelativePath);
+				FindEmuDirPathByDevice(RelativePath, find_path);
 				// Fixup RelativePath path here
-				if (NtSymbolicLinkObject != NULL)
-					RelativePath.erase(0, NtSymbolicLinkObject->XboxSymbolicLinkPath.length()); // Remove '\Device\Harddisk0\Partition2'
+				if (!find_path.HostDirPath.empty()) {
+					RelativePath.erase(0, find_path.XboxDirPath.length()); // Remove '\Device\Harddisk0\Partition2'
+				}
 			}
 
-			if (NtSymbolicLinkObject == NULL) {
-				// Check if the path accesses a partition from Harddisk0 :
-				if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
-					XboxFullPath = RelativePath;
-					// Remove Harddisk0 prefix, in the hope that the remaining path might work :
-					RelativePath.erase(0, DeviceHarddisk0.length() + 1);
-					// And set Root to the folder containing the partition-folders :
-					*RootDirectory = CxbxBasePathHandle;
-					HostPath = CxbxBasePath;
-				}
-				// NOTE: RootDirectory cannot be ignored.
-				// Any special handling for it should be done below.
-				else if (*RootDirectory == nullptr) {
-					// Assume relative to Xbe path
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-				}
-				else if (*RootDirectory == ObDosDevicesDirectory()) {
-					// This is a special handle that tells the API that this is a DOS device
-					// We can safely remove it and forward to the Xbe directory.
-					// Test case GTA3
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir);
-				}
-				else if (*RootDirectory == ObWin32NamedObjectsDirectory()) {
-					// NOTE: A handle of -4 on the Xbox signifies the path should be in the BaseNamedObjects namespace.
-					// This handle doesn't exist on Windows, so we prefix the name instead. (note from LukeUsher)
-					// Handle special root directory constants
-					*RootDirectory = NULL;
-
-					if (OriginalPath.size() == 0){
-						RelativePath = "\\BaseNamedObjects";
-					} else {
-						RelativePath = "\\BaseNamedObjects\\" + OriginalPath;
-					}
-				}
-				// else {} // NOTE: Allow RootDirectory handle to take control of relative path.
-				// Test-case: Turok Evolution
+			if (NtSymbolicLinkObject != nullptr || !find_path.HostDirPath.empty()) {
+				// If found, then we can skip misc checks below.
 			}
+			// Check if the path accesses a partition from Harddisk0 :
+			else if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+				XboxFullPath = RelativePath;
+				// Remove Harddisk0 prefix, in the hope that the remaining path might work :
+				RelativePath.erase(0, DeviceHarddisk0.length() + 1);
+				// And set Root to the folder containing the partition-folders :
+				*RootDirectory = CxbxBasePathHandle;
+				HostPath = CxbxBasePath;
+			}
+			// NOTE: RootDirectory cannot be ignored.
+			// Any special handling for it should be done below.
+			else if (*RootDirectory == nullptr) {
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
+			}
+			else if (*RootDirectory == ObDosDevicesDirectory()) {
+				// This is a special handle that tells the API that this is a DOS device
+				// We can safely remove it and forward to the Xbe directory.
+				// Test case GTA3
+				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
+			}
+			else if (*RootDirectory == ObWin32NamedObjectsDirectory()) {
+				// NOTE: A handle of -4 on the Xbox signifies the path should be in the BaseNamedObjects namespace.
+				// This handle doesn't exist on Windows, so we prefix the name instead. (note from LukeUsher)
+				// Handle special root directory constants
+				*RootDirectory = NULL;
 
-			if (NtSymbolicLinkObject != NULL) {
+				if (OriginalPath.size() == 0){
+					RelativePath = "\\BaseNamedObjects";
+				} else {
+					RelativePath = "\\BaseNamedObjects\\" + OriginalPath;
+				}
+			}
+			// else {} // NOTE: Allow RootDirectory handle to take control of relative path.
+			// Test-case: Turok Evolution
+
+			if (NtSymbolicLinkObject != nullptr) {
 				HostPath = NtSymbolicLinkObject->HostSymbolicLinkPath;
 
 				XboxFullPath = NtSymbolicLinkObject->XboxSymbolicLinkPath;
 
 				// If accessing a partition as a directly, set the root directory handle and keep relative path as is
 				*RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
+			}
+			else if (!find_path.HostDirPath.empty()) {
+				HostPath = find_path.HostDirPath;
+				XboxFullPath = find_path.XboxDirPath;
+				*RootDirectory = find_path.HostDirHandle;
 			}
 		} else {
 			*RootDirectory = CxbxBasePathHandle;
@@ -679,6 +693,7 @@ int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::strin
 	}
 
 	if (succeeded) {
+		newDevice.HostRootHandle = CreateFile(newDevice.HostDevicePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 		Devices.push_back(newDevice);
 		return static_cast<int>(Devices.size()) - 1;
 	}
@@ -703,8 +718,13 @@ xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::stri
 	SymbolicLinkObject = new EmuNtSymbolicLinkObject();
 	result = SymbolicLinkObject->Init(SymbolicLinkName, FullPath);
 
-	if (result != xbox::status_success)
+	if (result != xbox::status_success) {
 		SymbolicLinkObject->NtClose();
+	}
+	// TODO: Remove whole else if statement below, see g_hCurDir_hack's comment for remark.
+	else if (SymbolicLinkObject->DriveLetter == CxbxAutoMountDriveLetter) {
+		g_hCurDir_hack = SymbolicLinkObject->RootDirectoryHandle;
+	}
 
 	return result;
 }
@@ -795,6 +815,10 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 	if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
 		NtSymbolicLinkObjects[DriveLetter - 'A'] = NULL;
 		NtDll::NtClose(RootDirectoryHandle);
+		// TODO: Remove whole if statement below, see g_hCurDir_hack's comment for remark.
+		if (DriveLetter == CxbxAutoMountDriveLetter) {
+			g_hCurDir_hack = NULL;
+		}
 	}
 }
 
@@ -833,16 +857,18 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLink
 }
 
 
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDevice(std::string DeviceName)
+void FindEmuDirPathByDevice(std::string DeviceName, EmuDirPath& hybrid_path)
 {
-	for (char DriveLetter = 'A';  DriveLetter <= 'Z'; DriveLetter++)
-	{
-		EmuNtSymbolicLinkObject* result = NtSymbolicLinkObjects[DriveLetter - 'A'];
-		if ((result != NULL) && _strnicmp(DeviceName.c_str(), result->XboxSymbolicLinkPath.c_str(), result->XboxSymbolicLinkPath.length()) == 0)
-			return result;
+	for (auto device = Devices.begin(); device != Devices.end(); device++) {
+		if (_strnicmp(DeviceName.c_str(), device->XboxDevicePath.c_str(), device->XboxDevicePath.length()) == 0) {
+			hybrid_path.XboxDirPath = device->XboxDevicePath;
+			hybrid_path.HostDirPath = device->HostDevicePath;
+			hybrid_path.HostDirHandle = device->HostRootHandle;
+			return;
+		}
 	}
 
-	return NULL;
+	hybrid_path.HostDirPath = "";
 }
 
 
@@ -1140,6 +1166,52 @@ NTSTATUS NTToXboxFileInformation
 	}
 
 	return result;
+}
+
+void CxbxLaunchNewXbe(const std::string& XbePath) {
+	cli_config::SetLoad(XbePath);
+
+	bool Debugging{ false };
+	g_EmuShared->GetDebuggingFlag(&Debugging);
+
+	if (Debugging)
+	{
+		std::string cliCommands;
+		if (!cli_config::GenCMD(cliCommands))
+		{
+			CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+		}
+
+		CxbxDebugger::ReportNewTarget(cliCommands.c_str());
+
+		// The debugger will execute this process
+	}
+	else
+	{
+		if (!CxbxExec(false, nullptr, false))
+		{
+			CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+		}
+	}
+
+	// This is a requirement to have shared memory buffers remain alive and transfer to new emulation process.
+	unsigned int retryAttempt = 0;
+	unsigned int curProcID = 0;
+	unsigned int oldProcID = GetCurrentProcessId();
+	while (true) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		g_EmuShared->GetKrnlProcID(&curProcID);
+		// Break when new emulation process has take over.
+		if (curProcID != oldProcID) {
+			break;
+		}
+		retryAttempt++;
+		// Terminate after 5 seconds of failure.
+		if (retryAttempt >= (5 * (1000 / 100))) {
+			PopupError(nullptr, "Could not reboot; New emulation process did not take over.");
+			break;
+		}
+	}
 }
 
 // TODO: FS_INFORMATION_CLASS and its related structs most likely need to be converted too

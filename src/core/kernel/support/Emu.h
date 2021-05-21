@@ -63,9 +63,6 @@ extern volatile bool g_bEmuSuspended;
 // global exception patching address
 extern void * funcExclude[2048];
 
-// partition emulation directory handles
-extern HANDLE g_hCurDir;
-extern CHAR  *g_strCurDrive;
 extern HWND   g_hEmuWindow;
 
 #define GET_FRONT_WINDOW_HANDLE ((CxbxKrnl_hEmuParent != nullptr) ? CxbxKrnl_hEmuParent : g_hEmuWindow)

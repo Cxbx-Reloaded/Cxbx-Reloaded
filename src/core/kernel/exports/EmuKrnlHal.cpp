@@ -44,8 +44,6 @@
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "common/util/strConverter.hpp" // for utf16_to_ascii
 #include "core\kernel\memory-manager\VMManager.h"
-#include "common/util/cliConfig.hpp"
-#include "common/CxbxDebugger.h"
 
 #include <algorithm> // for std::replace
 #include <locale>
@@ -539,7 +537,6 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 
 			std::string TitlePath = xbox::LaunchDataPage->Header.szLaunchPath;
-			char szWorkingDirectoy[xbox::max_path];
 
 			// If the title path starts with a semicolon, remove it
 			if (TitlePath.length() > 0 && TitlePath[0] == ';') {
@@ -552,12 +549,6 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 			}
 
 			std::string& XbePath = CxbxConvertXboxToHostPath(TitlePath);
-
-			// Determine Working Directory
-			{
-				strncpy_s(szWorkingDirectoy, XbePath.c_str(), MAX_PATH);
-				PathRemoveFileSpec(szWorkingDirectoy);
-			}
 
 			// Relaunch Cxbx, to load another Xbe
 			{
@@ -572,49 +563,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 				// Some titles (Xbox Dashboard and retail/demo discs) use ";" as a current directory path seperator
 				// This process is handled during initialization. No special handling here required.
 
-				cli_config::SetLoad(XbePath);
-
-				bool Debugging{ false };
-				g_EmuShared->GetDebuggingFlag(&Debugging);
-
-				if (Debugging)
-				{
-					std::string cliCommands;
-					if (!cli_config::GenCMD(cliCommands))
-					{
-						CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
-					}
-
-					CxbxDebugger::ReportNewTarget(cliCommands.c_str());
-
-					// The debugger will execute this process
-				}
-				else
-				{
-					if (!CxbxExec(false, nullptr, false))
-					{
-						CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
-					}
-				}
-
-				// This is a requirement to have shared memory buffers remain alive and transfer to new emulation process.
-				unsigned int retryAttempt = 0;
-				unsigned int curProcID = 0;
-				unsigned int oldProcID = GetCurrentProcessId();
-				while(true) {
-					std::this_thread::sleep_for(std::chrono::milliseconds(100));
-					g_EmuShared->GetKrnlProcID(&curProcID);
-					// Break when new emulation process has take over.
-					if (curProcID != oldProcID) {
-						break;
-					}
-					retryAttempt++;
-					// Terminate after 5 seconds of failure.
-					if (retryAttempt >= (5 * (1000 / 100))) {
-						PopupError(nullptr, "Could not reboot; New emulation process did not take over.");
-						break;
-					}
-				}
+				CxbxLaunchNewXbe(XbePath);
 
 			}
 		}
@@ -631,10 +580,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 		g_VMManager.SavePersistentMemory();
 
-		cli_config::SetLoad(szFilePath_Xbe);
-		if (!CxbxExec(false, nullptr, false)) {
-			CxbxKrnlCleanup("Could not launch %s", szFilePath_Xbe);
-		}
+		CxbxLaunchNewXbe(szFilePath_Xbe);
 		break;
 	}
 

@@ -796,6 +796,9 @@ void Settings::SyncToEmulator()
 
 	// register data location setting
 	g_EmuShared->SetStorageLocation(GetDataLocation().c_str());
+
+	// reset title mount path
+	g_EmuShared->SetTitleMountPath("");
 }
 
 void verifyDebugFilePath(DebugMode& debug_mode, std::string& file_path)

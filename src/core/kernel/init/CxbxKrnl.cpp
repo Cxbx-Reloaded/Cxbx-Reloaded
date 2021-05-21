@@ -1398,25 +1398,27 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxResolveHostToFullPath(relative_path, "xbe's directory");
 
 	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-	// Titles may assume they are running from CdRom0/Mbfs :
-	std::string_view titleDevice = g_bIsChihiro ? DriveMbfs : DeviceCdrom0;
-	int CxbxTitleDeviceDriveIndex = -1;
+	int CxbxCdrom0DeviceIndex = -1;
 	bool isEmuDisk = _strnicmp(relative_path.c_str(), CxbxBasePath.c_str(), CxbxBasePath.size() - 1) == 0;
-	if (BootFlags == BOOT_NONE) {
-		// Remember our first initialize mount path for CdRom0/Mbfs.
+	// Check if title mounth path is already set. This may occur from early boot of Chihiro title.
+	char title_mount_path[sizeof(szFilePath_Xbe)];
+	const char* p_default_mount_path = title_mount_path;
+	g_EmuShared->GetTitleMountPath(title_mount_path);
+
+	if (p_default_mount_path[0] == '\0' && BootFlags == BOOT_NONE) {
+		// Remember our first initialize mount path for CdRom0 and Mbfs.
 		if (!isEmuDisk) {
 			g_EmuShared->SetTitleMountPath(relative_path.c_str());
-			CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(titleDevice, relative_path);
-		}
-		else {
-			g_EmuShared->SetTitleMountPath("");
+			p_default_mount_path = relative_path.c_str();
 		}
 	}
-	else {
-		char szBuffer[sizeof(szFilePath_Xbe)];
-		g_EmuShared->GetTitleMountPath(szBuffer);
-		if (szBuffer[0] != '\0') {
-			CxbxTitleDeviceDriveIndex = CxbxRegisterDeviceHostPath(titleDevice, szBuffer);
+
+	// TODO: Find a place to make permanent placement for DeviceCdrom0 that does not have disc loaded.
+	if (p_default_mount_path[0] != '\0') {
+		CxbxCdrom0DeviceIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, p_default_mount_path);
+		// Since Chihiro also map Mbfs to the same path as Cdrom0, we'll map it the same way.
+		if (g_bIsChihiro) {
+			(void)CxbxRegisterDeviceHostPath(DriveMbfs, p_default_mount_path);
 		}
 	}
 
@@ -1444,12 +1446,9 @@ __declspec(noreturn) void CxbxKrnlInit
 #else
 		// HACK: It is a hack to override XDK's default mount to CdRom0 which may not exist when launch to dashboard directly.
 		// Otherwise, titles may launch to dashboard, more specifically xbox live title, and back.
-		if (CxbxTitleDeviceDriveIndex == -1 || lastFind != std::string::npos) {
+		if (CxbxCdrom0DeviceIndex == -1 || lastFind != std::string::npos) {
 #endif
 			CxbxCreateSymbolicLink(DriveD, relative_path);
-			// Arrange that the Xbe path can reside outside the partitions, and put it to g_hCurDir :
-			EmuNtSymbolicLinkObject* xbePathSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(CxbxAutoMountDriveLetter);
-			g_hCurDir = xbePathSymbolicLinkObject->RootDirectoryHandle;
 		}
 	}
 
@@ -1462,9 +1461,9 @@ __declspec(noreturn) void CxbxKrnlInit
 				XboxDevice* xbeLoc = CxbxDeviceByHostPath(xbePath.string());
 				fileName = xbeLoc->XboxDevicePath;
 			}
-			// Otherwise it might be from titleDevice source.
+			// Otherwise it might be from CdRom0 device.
 			else {
-				fileName = titleDevice;
+				fileName = DeviceCdrom0;
 			}
 
 			// Strip out the path, leaving only the XBE file name to append.
