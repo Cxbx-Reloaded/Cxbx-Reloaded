@@ -145,6 +145,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
 
             */
 
+            LOG_TEST_CASE("Loading dsp images from xbe sections is currently not yet supported");
+
             result = S_OK;//this line should be removed once the section loading code was implemented.
         }
         else { // load from file
@@ -157,7 +159,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
             ANSI_STRING file_name;
             IO_STATUS_BLOCK io_status_block;
             RtlInitAnsiString(&file_name, pszImageName);
-            XB_InitializeObjectAttributes(&obj, &file_name, OBJ_CASE_INSENSITIVE, ObDosDevicesDirectory());
+            XB_InitializeObjectAttributes(&obj, &file_name, obj_case_insensitive, ObDosDevicesDirectory());
             ntstatus_xt NtStatusCreateFile;
             //LARGE_INTEGER tmp_LargeInt;
             //tmp_LargeInt.QuadPart= dwImageSize;

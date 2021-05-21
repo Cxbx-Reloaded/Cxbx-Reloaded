@@ -35,7 +35,7 @@ typedef struct _OBJECT_HEADER_NAME_INFO {
 	OBJECT_STRING Name;
 } OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
 
-#define OBJ_CASE_INSENSITIVE 0x40
+inline constexpr dword_xt obj_case_insensitive = 0x40;
 
 #define ObDosDevicesDirectory()         ((HANDLE)-3)
 #define ObWin32NamedObjectsDirectory()  ((HANDLE)-4)
