@@ -518,91 +518,86 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSound_SetEffectData)
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)
 (
-	LPDIRECTSOUND8  pThis,
-	LPCVOID         pvImageBuffer,
-	dword_xt           dwImageSize,
-	PVOID           pImageLoc,      // TODO: Use this param
-	PVOID*          ppImageDesc)    // TODO: Use this param
+    LPDIRECTSOUND8  pThis,
+    LPCVOID         pvImageBuffer,
+    dword_xt           dwImageSize,
+    PVOID           pImageLoc,      // TODO: Use this param
+    PVOID*          ppImageDesc)    // TODO: Use this param
 {
-	DSoundMutexGuardLock;
+    DSoundMutexGuardLock;
 
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pThis)
-		LOG_FUNC_ARG(pvImageBuffer)
-		LOG_FUNC_ARG(dwImageSize)
-		LOG_FUNC_ARG(pImageLoc)
-		LOG_FUNC_ARG(ppImageDesc)
-		LOG_FUNC_END;
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pThis)
+        LOG_FUNC_ARG(pvImageBuffer)
+        LOG_FUNC_ARG(dwImageSize)
+        LOG_FUNC_ARG(pImageLoc)
+        LOG_FUNC_ARG(ppImageDesc)
+        LOG_FUNC_END;
 
-	// This function is relative to DSP for Interactive 3-D Audio Level 2 (I3DL2)
+    // This function is relative to DSP for Interactive 3-D Audio Level 2 (I3DL2)
 
-	LOG_INCOMPLETE();
-	if(ppImageDesc)//If the guest code request a pointer to ImageDesc structure to be returned, then we should allocate a memory and create ImageDesc.
-	{
-		// Code block below is reversed from Otogi.
-		// ImageBuffer header starts from offset ox800 and ends in offset 0x817. actual DSP code segment starts from offset 0x818.
-		// DWORD at offset 0x804 and offset 0x80C should be the code segment sizes in dwords.
-		// ImageDesc is appended after code segments. There are additional two DWORDs data for each effect appended after ImageDesc which I have no idea what they are for.
+    LOG_INCOMPLETE();
 
-		// Image buffer must be copied to internal and backed up 1st. the data might be referenced by the guest code later.
-		// The Code Segment Address and State address in DSEFFECTMAP aEffectMaps[1] must be rebased to the internal buffer.
+    if (ppImageDesc) { // If the guest code request a pointer to ImageDesc structure to be returned, then we should allocate a memory and create ImageDesc.
+        // Code block below is reversed from Otogi.
+        // ImageBuffer header starts from offset ox800 and ends in offset 0x817. actual DSP code segment starts from offset 0x818.
+        // DWORD at offset 0x804 and offset 0x80C should be the code segment sizes in dwords.
+        // ImageDesc is appended after code segments. There are additional two DWORDs data for each effect appended after ImageDesc which I have no idea what they are for.
 
+        // Image buffer must be copied to internal and backed up 1st. the data might be referenced by the guest code later.
+        // The Code Segment Address and State address in DSEFFECTMAP aEffectMaps[1] must be rebased to the internal buffer.
 
-		// NOTE: this buffer should also be freed in IDirectSound_Release when the ref counter drops to zero, but that function is currently not implemented.
-		static PBYTE ImageBufferBackup = zeroptr; //The image buffer must be backed up since some game might reference ths data. ex. PGR2. 
-		if (ImageBufferBackup != zeroptr) {
-			ExFreePool(ImageBufferBackup);
-		}
+        // NOTE: this buffer should also be freed in IDirectSound_Release when the ref counter drops to zero, but that function is currently not implemented.
+        static PBYTE ImageBufferBackup = zeroptr; //The image buffer must be backed up since some game might reference ths data. ex. PGR2.
+        if (ImageBufferBackup != zeroptr) {
+            ExFreePool(ImageBufferBackup);
+        }
 
-		ImageBufferBackup = static_cast<PBYTE>(ExAllocatePool(dwImageSize));
-		if (ImageBufferBackup == zeroptr) {
-			return E_OUTOFMEMORY;
-		}
+        ImageBufferBackup = static_cast<PBYTE>(ExAllocatePool(dwImageSize));
+        if (ImageBufferBackup == zeroptr) {
+            return E_OUTOFMEMORY;
+        }
 
-		std::memcpy(ImageBufferBackup, pvImageBuffer, dwImageSize); //Copy the ImageBuffer to internal backup Buffer.
+        std::memcpy(ImageBufferBackup, pvImageBuffer, dwImageSize); // Copy the ImageBuffer to internal backup Buffer.
 
-		//from here, all process should base on internal image buffer.
-		
-		dword_xt N1 = *(PDWORD)(ImageBufferBackup + 0x804); //Total code segment size in dwords
-		dword_xt N2 = *(PDWORD)(ImageBufferBackup + 0x80C); //Total state segment size in dwords
-		PBYTE pImageDesc = ImageBufferBackup + 0x818 + 4 * (N1 + N2); //calculate the starting address of ImageDesc in image buffer
-		DWORD EffectCount = ((LPDSEFFECTIMAGEDESC)pImageDesc)->dwEffectCount; //the first DWORD in ImageDesc is EffectCount.
-		dword_xt ImageDescSize = 8 + 32 * EffectCount; //The size of ImageDesc is two Dwords (8 bytes) + 8 DWORS (32 bytes) for each effects.
+        // from here, all process should base on internal image buffer.
+        dword_xt N1 = *(PDWORD)(ImageBufferBackup + 0x804); //Total code segment size in dwords
+        dword_xt N2 = *(PDWORD)(ImageBufferBackup + 0x80C); //Total state segment size in dwords
+        PBYTE pImageDesc = ImageBufferBackup + 0x818 + 4 * (N1 + N2); //calculate the starting address of ImageDesc in image buffer
+        DWORD EffectCount = ((LPDSEFFECTIMAGEDESC)pImageDesc)->dwEffectCount; //the first DWORD in ImageDesc is EffectCount.
+        dword_xt ImageDescSize = 8 + 32 * EffectCount; //The size of ImageDesc is two Dwords (8 bytes) + 8 DWORS (32 bytes) for each effects.
 
-		//Process the DSEFFECTMAP in internal image buffer, rebase code segmemt address and state segment address of each effect.
-		PBYTE pEffectMaps = (pImageDesc + 8); //EffectMaps array start from here.
-		for (int effect_loop = 0; effect_loop < EffectCount; effect_loop++)
-		{
+        // Process the DSEFFECTMAP in internal image buffer, rebase code segmemt address and state segment address of each effect.
+        PBYTE pEffectMaps = (pImageDesc + 8); //EffectMaps array start from here.
+        for (int effect_loop = 0; effect_loop < EffectCount; effect_loop++) {
+            PBYTE pCodeSeg = pEffectMaps + effect_loop * 32;
+            *(PDWORD)pCodeSeg += (DWORD)ImageBufferBackup;
 
-			PBYTE pCodeSeg = pEffectMaps + effect_loop * 32;
-			*(PDWORD)pCodeSeg += (DWORD)ImageBufferBackup;
+            PBYTE pStateSeg = pEffectMaps + effect_loop * 32+8;
+            *(PDWORD)pStateSeg += (DWORD)ImageBufferBackup;
+        }
 
-			PBYTE pStateSeg = pEffectMaps + effect_loop * 32+8;
-			*(PDWORD)pStateSeg += (DWORD)ImageBufferBackup;
+        // NOTE: this buffer should also be freed in IDirectSound_Release when the ref counter drops to zero, but that function is currently not implemented.
+        static PBYTE ImageDescBuffer = zeroptr;
+        if (ImageDescBuffer != zeroptr) {
+            ExFreePool(ImageDescBuffer);
+        }
 
-		}
+        ImageDescBuffer = static_cast<PBYTE>(ExAllocatePool(ImageDescSize));
+        if (ImageDescBuffer == zeroptr) {
+            return E_OUTOFMEMORY;
+        }
 
+        // NOTE: this is very wrong. The dsp image is encrypted, and thus simply copying the original encrypted image won't do any good.
+        *ppImageDesc = ImageDescBuffer;
+        std::memcpy(*ppImageDesc, pImageDesc, ImageDescSize);
 
-		// NOTE: this buffer should also be freed in IDirectSound_Release when the ref counter drops to zero, but that function is currently not implemented.
-		static PBYTE ImageDescBuffer = zeroptr;
-		if (ImageDescBuffer != zeroptr) {
-			ExFreePool(ImageDescBuffer);
-		}
+        // with the code above, we could easily retrieve the address and size of ImageDesc within the image buffer.
+        // then we can allocate a new memory, copy the imageDesc from the image buffer to the newly allocated memory,
+        // then assign the newly allocated memory to the ppImageDesc. that's all.
+    }
 
-		ImageDescBuffer = static_cast<PBYTE>(ExAllocatePool(ImageDescSize));
-		if (ImageDescBuffer == zeroptr) {
-			return E_OUTOFMEMORY;
-		}
-
-		// NOTE: this is very wrong. The dsp image is encrypted, and thus simply copying the original encrypted image won't do any good.
-		*ppImageDesc = ImageDescBuffer;
-		std::memcpy(*ppImageDesc, pImageDesc, ImageDescSize);
-
-		// with the code above, we could easily retrieve the address and size of ImageDesc within the image buffer.
-		// then we can allocate a new memory, copy the imageDesc from the image buffer to the newly allocated memory,
-		// then assign the newly allocated memory to the ppImageDesc. that's all.
-	}
-	return S_OK;
+    return S_OK;
 }
 
 // ******************************************************************
