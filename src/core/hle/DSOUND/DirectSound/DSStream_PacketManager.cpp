@@ -308,6 +308,8 @@ bool DSStream_Packet_Process(
                         }
                         return 0;
                     }
+                    //the iterator might be invalidated, so we update it again.
+                    packetCurrent = pThis->Host_BufferPacketArray.begin();
 #if 0               // Extend debug verification
                     EmuLog(LOG_LEVEL::DEBUG, "nextBuffer: %08X; packetCurrent->bufPlayed: %08X; bufPlayed: %08X;\n",
                         packetCurrent._Ptr,
