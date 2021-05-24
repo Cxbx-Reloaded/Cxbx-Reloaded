@@ -1928,7 +1928,9 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 		{
 			// sent by rawinput when it detects changes for the registered device types
 
-			g_InputDeviceManager.HotplugHandler(false);
+			if (wParam == GIDC_ARRIVAL) {
+				g_InputDeviceManager.HotplugHandler(false);
+			}
 			return DefWindowProc(hWnd, msg, wParam, lParam);
 		}
 		break;
