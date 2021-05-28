@@ -80,6 +80,7 @@ const char* g_EnumModules2String[to_underlying(CXBXR_MODULE::MAX)] = {
 	"DSSTREAM",
 	"DS3DCALC",
 	"XMO     ",
+	"RINP    ",
 	"KRNL    ",
 	"LOG     ",
 	"XBOX    ",

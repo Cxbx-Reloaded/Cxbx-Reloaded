@@ -39,6 +39,7 @@
 #include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
 #include "SdlJoystick.h"
 #include "XInputPad.h"
+#include "RawDevice.h"
 #include "DInputKeyboardMouse.h"
 #include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
@@ -88,16 +89,18 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 		}
 
 		XInput::Init(m_Mtx);
+		RawInput::Init(m_Mtx, is_gui, m_hwnd);
 		Sdl::Init(m_Mtx, m_Cv, is_gui);
 		});
 
 	m_Cv.wait(lck, []() {
 		return (Sdl::SdlInitStatus != Sdl::SDL_NOT_INIT) &&
-			(XInput::XInputInitStatus != XInput::XINPUT_NOT_INIT);
+			(XInput::XInputInitStatus != XInput::XINPUT_NOT_INIT) &&
+			(RawInput::RawInputInitStatus != RawInput::RAWINPUT_NOT_INIT);
 		});
 	lck.unlock();
 
-	if (Sdl::SdlInitStatus < 0 || XInput::XInputInitStatus < 0) {
+	if (Sdl::SdlInitStatus < 0 || XInput::XInputInitStatus < 0 || RawInput::RawInputInitStatus < 0) {
 		CxbxKrnlCleanup("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
@@ -110,6 +113,8 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 		UpdateDevices(PORT_3, false);
 		UpdateDevices(PORT_4, false);
 	}
+
+	RawInput::IgnoreHotplug = false;
 }
 
 void InputDeviceManager::Shutdown()
@@ -128,6 +133,7 @@ void InputDeviceManager::Shutdown()
 	m_Devices.clear();
 
 	XInput::DeInit();
+	RawInput::DeInit();
 	Sdl::DeInit(m_PollingThread);
 }
 
@@ -721,5 +727,42 @@ void InputDeviceManager::UpdateOpt(bool is_gui)
 		DInput::mo_wheel_range_pos = g_Settings->m_input_general.MoWheelRange;
 		DInput::mo_axis_range_neg = -(g_Settings->m_input_general.MoAxisRange);
 		DInput::mo_wheel_range_neg = -(g_Settings->m_input_general.MoWheelRange);
+	}
+}
+
+void InputDeviceManager::HotplugHandler(bool is_sdl)
+{
+	// RawInput will start to send WM_INPUT_DEVICE_CHANGE as soon as RegisterRawInputDevices succeeds, but at that point, the input manager
+	// is still not completely initialized, so we ignore hotplug events during initialization
+	if (m_bPendingShutdown || RawInput::IgnoreHotplug) {
+		return;
+	}
+
+	// NOTE1: sdl devices are monitored by sdl with the SDL_JOYDEVICEADDED and SDL_JOYDEVICEREMOVED messages,
+	// and xinput devices are monitored by rawinput with the WM_INPUT_DEVICE_CHANGE message
+	// NOTE2: sdl devices are already added/removed to/from m_Devices with the above events, so don't need to update m_Devices here again
+	if (!is_sdl) {
+		std::unique_lock<std::mutex> lck(m_Mtx);
+
+		auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [](const auto &Device) {
+			if (StrStartsWith(Device->GetAPI(), "XInput")) {
+				return true;
+			}
+			return false;
+			});
+		if (it != m_Devices.end()) {
+			m_Devices.erase(it, m_Devices.end());
+		}
+
+		lck.unlock();
+		XInput::PopulateDevices();
+	}
+
+	for (int port = PORT_1; port <= PORT_4; ++port) {
+		int type;
+		g_EmuShared->GetInputDevTypeSettings(&type, port);
+		if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+			BindHostDevice(port, port, type);
+		}
 	}
 }

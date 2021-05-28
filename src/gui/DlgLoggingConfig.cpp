@@ -79,6 +79,7 @@ static int g_DlgIndexes[] = {
 	IDC_LOG_DSSTREAM,
 	IDC_LOG_DS3DCALC,
 	IDC_LOG_XMO,
+	IDC_LOG_RINP,
 	// Kernel
 	IDC_LOG_KRNL,
 	IDC_LOG_LOG,
