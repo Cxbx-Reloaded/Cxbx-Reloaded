@@ -98,11 +98,6 @@ uniform const float  FRONTFACE_FACTOR : register(c31); // Note : PSH_XBOX_CONSTA
    #define PS_FINALCOMBINERSETTING_CLAMP_SUM
 #endif
 
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
-
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
 	#define C0 c0_[stage] // concatenate stage to form c0_0 .. c0_7
@@ -123,7 +118,7 @@ R"DELIMITER(
 #ifdef PS_COMBINERCOUNT_MUX_MSB
 	#define FCS_MUX (r0.a >= 0.5) // Check r0.a MSB; Having range upto 1 this should be equal to : (((r0.a * 255) /*mod 256*/) >= 128)
 #else // PS_COMBINERCOUNT_MUX_LSB
-	#define FCS_MUX (((r0.a * 255) % 2) >= 1) // Check r0.b LSB; Get LSB by converting 1 into 255 (highest 8-bit value) and using modulo 2. TODO : Verify correctness
+	#define FCS_MUX (((r0.a * 255) mod 2) >= 1) // Check r0.b LSB; Get LSB by converting 1 into 255 (highest 8-bit value) and using modulo 2. TODO : Verify correctness
 #endif
 
 // PS_FINALCOMBINERSETTING_COMPLEMENT_V1, when defined, applies a modifier to the v1 input when calculating the sum register
@@ -147,7 +142,10 @@ R"DELIMITER(
 	#define FCS_SUM s_ident // otherwise identity mapping. TODO : Confirm correctness
 #endif
 
-#define xdot(s0, s1) dot((s0).rgb, (s1).rgb)
+)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
+// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
+// Second raw string :
+R"DELIMITER(
 
 // Xbox supports only one 'pixel shader' opcode, but bit flags tunes it's function;
 // Here, effective all 5 Xbox opcodes, extended with a variable macro {xop_m(m,...)} for destination modifier :
@@ -155,9 +153,9 @@ R"DELIMITER(
 #define xmma(d0, d1, d2,  s0, s1, s2, s3, m, tmp) tmp = d0 = m(s0 * s1); d1 = m(s2 * s3); d2 =           d1 + tmp // PS_COMBINEROUTPUT_AB_CD_SUM=           0x00L, // 3rd output is AB+CD
 #define xmmc(d0, d1, d2,  s0, s1, s2, s3, m, tmp) tmp = d0 = m(s0 * s1); d1 = m(s2 * s3); d2 = FCS_MUX ? d1 : tmp // PS_COMBINEROUTPUT_AB_CD_MUX=           0x04L, // 3rd output is MUX(AB,CD) based on R0.a
 
-#define xdm(d0, d1,  s0, s1, s2, s3, m) d0 = m(xdot(s0 , s1)); d1 = m(     s2 * s3 )                              // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x00L,
-#define xdd(d0, d1,  s0, s1, s2, s3, m) d0 = m(xdot(s0 , s1)); d1 = m(xdot(s2 , s3))                              // PS_COMBINEROUTPUT_CD_DOT_PRODUCT=      0x01L, // RGB only // PS_COMBINEROUTPUT_AB_MULTIPLY=         0x00L, 
-#define xmd(d0, d1,  s0, s1, s2, s3, m) d0 = m(     s0 * s1 ); d1 = m(xdot(s2 , s3))                              // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x01L,
+#define xdm(d0, d1,  s0, s1, s2, s3, m) d0 = m(dot(s0 , s1)); d1 = m(    s2 * s3 )                                // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x00L,
+#define xdd(d0, d1,  s0, s1, s2, s3, m) d0 = m(dot(s0 , s1)); d1 = m(dot(s2 , s3))                                // PS_COMBINEROUTPUT_CD_DOT_PRODUCT=      0x01L, // RGB only // PS_COMBINEROUTPUT_AB_MULTIPLY=         0x00L, 
+#define xmd(d0, d1,  s0, s1, s2, s3, m) d0 = m(    s0 * s1 ); d1 = m(dot(s2 , s3))                                // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x01L,
 
 // After the register combiner stages, there's one (optional) final combiner step, consisting of 4 parts;
 // All the 7 final combiner inputs operate on rgb only and clamp negative input to zero:
@@ -179,10 +177,6 @@ R"DELIMITER(
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
 
 float m21d(const float input)
 {
@@ -211,39 +205,20 @@ float m21(const float input)
 	return (float)tmp / 127; // -128 scales to -1.007874016, 0 scales to 0.0, 127 scales to 1.0
 }
 
-float hls(float input) // 0..65535 range
-{
-	float tmp = (float)(input); 
-	tmp = (input < 32768) ? tmp / 32767 : (tmp - 65536) / 32767; // -1..1
-	return (float)tmp;
-}
-
-float hlu(float input) // 0..65535 range
-{
-	return (float)input / 65535; // 0..1
-}
-
-float p2(float input) // power of 2
-{
-return input * input;
-}
-
 // Note : each component seems already in range [0..1], but two must be combined into one
-             
-#define TwoIntoOne(a,b) (((a * 256) + b) * 255) 
+#define TwoIntoOne(a,b) (((a * 255) * 256) + (b * 255)) / 255               // TODO : Verify whether this works at all !
 #define CalcHiLo(in) H = TwoIntoOne(in.x, in.y); L = TwoIntoOne(in.z, in.w) // TODO : Verify whether this works at all !
-
 
 // Dot mappings over the output value of a (4 component 8 bit unsigned) texture stage register into a (3 component float) vector value, for use in a dot product calculation:
 #define PS_DOTMAPPING_ZERO_TO_ONE(in)         dm = in.rgb                                          // :r8g8b8a8->(r,g,b):                                                   0x00=>0,                       0xff=>1 thus : output =                     (input / 0xff  )
 #define PS_DOTMAPPING_MINUS1_TO_1_D3D(in)     dm = float3(m21d(in.x), m21d(in.y), m21d(in.z))      // :r8g8b8a8->(r,g,b):               0x00=>-128/127,         0x01=>-1,   0x80=>0,                       0xff=>1 thus : output =                                        ((input - 0x100  ) / 0x7f  )
 #define PS_DOTMAPPING_MINUS1_TO_1_GL(in)      dm = float3(m21g(in.x), m21g(in.y), m21g(in.z))      // :r8g8b8a8->(r,g,b):                                       0x80=>-1,   0x00=>0,                       0x7f=>1 thus : output =  (input < 0x80  ) ? (input / 0x7f  ) : ((input - 0x100  ) / 0x80  ) (see https://en.wikipedia.org/wiki/Two's_complement)
-#define PS_DOTMAPPING_MINUS1_TO_1(in)         dm = float3(m21( in.x), m21( in.y), m21( in.z))      // :r8g8b8a8->(r,g,b):               0x80=>-128/127,        ?0x81=>-1,   0x00=>0,                       0x7f=>1 thus : output =  (input < 0x80  ) ? (input / 0x7f  ) : ((input - 0x100  ) / 0x7f  ) (see https://en.wikipedia.org/wiki/Two's_complement)
+#define PS_DOTMAPPING_MINUS1_TO_1(in)         dm = float3(m21(in.x),  m21(in.y),  m21(in.z))       // :r8g8b8a8->(r,g,b):               0x80=>-128/127,        ?0x81=>-1,   0x00=>0,                       0x7f=>1 thus : output =  (input < 0x80  ) ? (input / 0x7f  ) : ((input - 0x100  ) / 0x7f  ) (see https://en.wikipedia.org/wiki/Two's_complement)
 
-#define PS_DOTMAPPING_HILO_1(in)              CalcHiLo(in); dm = float3(hlu(H), hlu(L), 1)                   // :H16L16  ->(H,L,1):                                                 0x0000=>0,                     0xffff=>1 thus : output =                     (input / 0xffff)
-#define PS_DOTMAPPING_HILO_HEMISPHERE_D3D(in) CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0, 0x7fff=32767/32768            thus : output =                                        ((input - 0x10000) / 0x7fff)
-#define PS_DOTMAPPING_HILO_HEMISPHERE_GL(in)  CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x8000)
-#define PS_DOTMAPPING_HILO_HEMISPHERE(in)     CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)): 0x8000=>-32768/32767, 0x8001=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x7fff)
+#define PS_DOTMAPPING_HILO_1(in)              CalcHiLo(in); dm = float3(H, L, 1)                   // :H16L16  ->(H,L,1):                                                 0x0000=>0,                     0xffff=>1 thus : output =                     (input / 0xffff)
+#define PS_DOTMAPPING_HILO_HEMISPHERE_D3D(in) CalcHiLo(in); dm = float3(H, L, sqrt(1-(H*H)-(L*L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0, 0x7fff=32767/32768            thus : output =                                        ((input - 0x10000) / 0x7fff)
+#define PS_DOTMAPPING_HILO_HEMISPHERE_GL(in)  CalcHiLo(in); dm = float3(H, L, sqrt(1-(H*H)-(L*L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x8000)
+#define PS_DOTMAPPING_HILO_HEMISPHERE(in)     CalcHiLo(in); dm = float3(H, L, sqrt(1-(H*H)-(L*L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)): 0x8000=>-32768/32767, 0x8001=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x7fff)
 
 // Declare one sampler per each {Sampler Type, Texture Stage} combination
 // TODO : Generate sampler status?
@@ -255,18 +230,31 @@ sampler samplers[4] : register(s0);
 #endif
 static bool alphakill[4] = ALPHAKILL;
 
+)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
+// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
+// Second raw string :
+R"DELIMITER(
 #if 1 // TODO : Move these (and other) helper functions to a (potentially pre-compiled) hlsl(i) file, to be shared with FixedFunctionPixelShader.hlsl
 
 static const float4 WarningColor = float4(0, 1, 1, 1); // Returned when unhandled scenario is encountered
 
+#define unsigned_to_signed(x) (((x) * 2) - 1) // Shifts range from [0..1] to [-1..1] (just like s_bx2)
+#define signed_to_unsigned(x) (((x) + 1) / 2) // Shifts range from [-1..1] to [0..1]
+
 float4 PerformColorSign(const float4 ColorSign, float4 t)
 {
-	// Per color channel, optionally convert the value range into two's complement signed values (from (0, +1) to (-1, +1), using s_bx2):
-	// This is often used for bumpmaps
-	if (ColorSign.r > 0) t.r = s_bx2(t.r);
-	if (ColorSign.g > 0) t.g = s_bx2(t.g);
-	if (ColorSign.b > 0) t.b = s_bx2(t.b);
-	if (ColorSign.a > 0) t.a = s_bx2(t.a);
+	// Per color channel, based on the ColorSign setting :
+	// either keep the value range as-is (when ColorSign is zero)
+	// or convert from [0..1] to [-1..+1] (when ColorSign is more than zero, often used for bumpmaps),
+	// or convert from [-1..1] to [0..1] (when ColorSign is less than zero):
+	if (ColorSign.r > 0) t.r = unsigned_to_signed(t.r);
+	if (ColorSign.g > 0) t.g = unsigned_to_signed(t.g);
+	if (ColorSign.b > 0) t.b = unsigned_to_signed(t.b);
+	if (ColorSign.a > 0) t.a = unsigned_to_signed(t.a);
+	if (ColorSign.r < 0) t.r = signed_to_unsigned(t.r);
+	if (ColorSign.g < 0) t.g = signed_to_unsigned(t.g);
+	if (ColorSign.b < 0) t.b = signed_to_unsigned(t.b);
+	if (ColorSign.a < 0) t.a = signed_to_unsigned(t.a);
 	// TODO : Instead of the above, create a mirror texture with a host format that has identical component layout, but with all components signed.
 	// Then, in here, when any component has to be read as signed, sample the signed texture (ouch : with what dimension and coordinate?!)
 	// and replace the components that we read from the unsigned texture, but which have to be signed, with the signed components read from the signed mirror texture.
