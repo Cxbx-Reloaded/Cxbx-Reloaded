@@ -184,6 +184,7 @@ static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOU
 static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
 
+             D3DFORMAT               g_HostTextureFormats[xbox::X_D3DTS_STAGECOUNT]; // Updated by CxbxUpdateHostTextures(), read by CxbxCalcColorSign
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
 static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
@@ -905,8 +906,13 @@ void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource)
 	return (uint8_t*)pData;
 }
 
+DWORD D3DUSAGE_INVALID = -1;
+
 typedef struct _resource_info_t {
+	
 	ComPtr<IDirect3DResource> pHostResource;
+	D3DFORMAT HostFormat = D3DFMT_UNKNOWN;
+	DWORD HostUsage = D3DUSAGE_INVALID;
 	DWORD dwXboxResourceType = 0;
 	void* pXboxData = xbox::zeroptr;
 	size_t szXboxDataSize = 0;
@@ -1149,6 +1155,42 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 	resourceInfo.forceRehash = false;
+
+	HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
+	D3DSURFACE_DESC surfaceDesc;
+	D3DVOLUME_DESC volumeDesc;
+	UINT Level = 0; // TODO : When should Level every be something other than zero, and if so : what other value?
+	switch (resourceInfo.dwXboxResourceType) {// TODO : Better check pHostResource class type
+	case xbox::X_D3DRTYPE_SURFACE:
+		hRet = ((IDirect3DSurface*)pHostResource)->GetDesc(&surfaceDesc);
+		break;
+	case xbox::X_D3DRTYPE_TEXTURE:
+		hRet = ((IDirect3DTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
+		break;
+	case xbox::X_D3DRTYPE_VOLUMETEXTURE: {
+		hRet = ((IDirect3DVolumeTexture*)pHostResource)->GetLevelDesc(Level, &volumeDesc);
+		break; }
+	case xbox::X_D3DRTYPE_CUBETEXTURE:
+		hRet = ((IDirect3DCubeTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
+		break;
+	}
+
+	D3DFORMAT hostFormat = D3DFMT_UNKNOWN;
+	DWORD hostUsage = D3DUSAGE_INVALID;
+
+	if (SUCCEEDED(hRet)) {
+		if (resourceInfo.dwXboxResourceType == xbox::X_D3DRTYPE_VOLUMETEXTURE) {
+			hostFormat = volumeDesc.Format;
+			hostUsage = volumeDesc.Usage;
+		}
+		else {
+			hostFormat = surfaceDesc.Format;
+			hostUsage = surfaceDesc.Usage;
+		}
+	}
+
+	resourceInfo.HostFormat = hostFormat;
+	resourceInfo.HostUsage = hostUsage;
 }
 
 IDirect3DSurface *GetHostSurface(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
@@ -2280,30 +2322,20 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 	auto& ResourceCache = GetResourceCache(key);
 	auto it = ResourceCache.find(key);
 	if (it != ResourceCache.end()) {
+		// TODO : Should this check be (D3DUsage & D3DUSAGE_RENDERTARGET) instead?
 		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource) && EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat((xbox::X_D3DPixelContainer*)pResource))) {
             // Render targets have special behavior: We can't trash them on guest modification
             // this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
             // would be overwritten by the surface created in SetRenderTarget
             // However, if a non-rendertarget surface is used here, we'll need to recreate it as a render target!
-            auto hostResource = it->second.pHostResource.Get();
-            auto xboxSurface = (xbox::X_D3DSurface*)pResource;
-            auto xboxTexture = (xbox::X_D3DTexture*)pResource;
-            auto xboxResourceType = GetXboxD3DResourceType(pResource);
-
-            // Determine if the associated host resource is a render target already, if so, do nothing
-            HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
-            D3DSURFACE_DESC surfaceDesc;
-            if (xboxResourceType == xbox::X_D3DRTYPE_SURFACE) {
-                hRet = ((IDirect3DSurface*)hostResource)->GetDesc(&surfaceDesc);
-            } else if (xboxResourceType == xbox::X_D3DRTYPE_TEXTURE) {
-                hRet = ((IDirect3DTexture*)hostResource)->GetLevelDesc(0, &surfaceDesc);
-            }
+            auto hostResource = it->second.pHostResource;
+            assert(xboxResourceType == GetXboxD3DResourceType(pResource));
 
             // Only continue checking if we were able to get the surface desc, if it failed, we fall-through
             // to previous resource management behavior
-            if (SUCCEEDED(hRet)) {
+            if (it->second.HostUsage != D3DUSAGE_INVALID) {
                 // If this resource is already created as a render target on the host, simply return
-                if (surfaceDesc.Usage & D3DUSAGE_RENDERTARGET) {
+                if (it->second.HostUsage & D3DUSAGE_RENDERTARGET) {
                     return;
                 }
 
@@ -2311,6 +2343,8 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
                 // We need to re-create it as a render target
                 switch (xboxResourceType) {
                     case xbox::X_D3DRTYPE_SURFACE: {
+                        auto xboxSurface = (xbox::X_D3DSurface*)pResource;
+
                         // Free the host surface
                         FreeHostResource(key);
 
@@ -7301,7 +7335,6 @@ void CxbxUpdateHostTextures()
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
 		IDirect3DBaseTexture* pHostBaseTexture = nullptr;
 		bool bNeedRelease = false;
-
 		if (pXboxBaseTexture != xbox::zeroptr) {
 			DWORD XboxResourceType = GetXboxCommonResourceType(pXboxBaseTexture);
 			switch (XboxResourceType) {
@@ -7319,6 +7352,15 @@ void CxbxUpdateHostTextures()
 			default:
 				LOG_TEST_CASE("ActiveTexture set to an unhandled resource type!");
 				break;
+			}
+
+			// Read HostFormat from GetResourceCache :
+			// TODO : Optimize this, as we're doing the lookup twice (once in GetHostBaseTexture, once here)
+			auto key = GetHostResourceKey(pXboxBaseTexture, stage);
+			auto& ResourceCache = GetResourceCache(key);
+			auto it = ResourceCache.find(key);
+			if (it != ResourceCache.end()) {
+				g_HostTextureFormats[stage] = it->second.HostFormat;
 			}
 		}
 

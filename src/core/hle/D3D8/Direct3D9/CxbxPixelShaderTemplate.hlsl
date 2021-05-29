@@ -253,14 +253,23 @@ static bool alphakill[4] = ALPHAKILL;
 
 static const float4 WarningColor = float4(0, 1, 1, 1); // Returned when unhandled scenario is encountered
 
+#define unsigned_to_signed(x) (((x) * 2) - 1) // Shifts range from [0..1] to [-1..1] (just like s_bx2)
+#define signed_to_unsigned(x) (((x) + 1) / 2) // Shifts range from [-1..1] to [0..1]
+
 float4 PerformColorSign(const float4 ColorSign, float4 t)
 {
-	// Per color channel, optionally convert the value range into two's complement signed values (from (0, +1) to (-1, +1), using s_bx2):
-	// This is often used for bumpmaps
-	if (ColorSign.r > 0) t.r = s_bx2(t.r);
-	if (ColorSign.g > 0) t.g = s_bx2(t.g);
-	if (ColorSign.b > 0) t.b = s_bx2(t.b);
-	if (ColorSign.a > 0) t.a = s_bx2(t.a);
+	// Per color channel, based on the ColorSign setting :
+	// either keep the value range as-is (when ColorSign is zero)
+	// or convert from [0..1] to [-1..+1] (when ColorSign is more than zero, often used for bumpmaps),
+	// or convert from [-1..1] to [0..1] (when ColorSign is less than zero):
+	if (ColorSign.r > 0) t.r = unsigned_to_signed(t.r);
+	if (ColorSign.g > 0) t.g = unsigned_to_signed(t.g);
+	if (ColorSign.b > 0) t.b = unsigned_to_signed(t.b);
+	if (ColorSign.a > 0) t.a = unsigned_to_signed(t.a);
+	if (ColorSign.r < 0) t.r = signed_to_unsigned(t.r);
+	if (ColorSign.g < 0) t.g = signed_to_unsigned(t.g);
+	if (ColorSign.b < 0) t.b = signed_to_unsigned(t.b);
+	if (ColorSign.a < 0) t.a = signed_to_unsigned(t.a);
 	// TODO : Instead of the above, create a mirror texture with a host format that has identical component layout, but with all components signed.
 	// Then, in here, when any component has to be read as signed, sample the signed texture (ouch : with what dimension and coordinate?!)
 	// and replace the components that we read from the unsigned texture, but which have to be signed, with the signed components read from the signed mirror texture.
