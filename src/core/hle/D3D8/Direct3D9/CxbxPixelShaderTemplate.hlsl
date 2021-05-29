@@ -98,11 +98,6 @@ uniform const float  FRONTFACE_FACTOR : register(c31); // Note : PSH_XBOX_CONSTA
    #define PS_FINALCOMBINERSETTING_CLAMP_SUM
 #endif
 
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
-
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
 	#define C0 c0_[stage] // concatenate stage to form c0_0 .. c0_7
@@ -147,6 +142,11 @@ R"DELIMITER(
 	#define FCS_SUM s_ident // otherwise identity mapping. TODO : Confirm correctness
 #endif
 
+)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
+// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
+// Second raw string :
+R"DELIMITER(
+
 // Xbox supports only one 'pixel shader' opcode, but bit flags tunes it's function;
 // Here, effective all 5 Xbox opcodes, extended with a variable macro {xop_m(m,...)} for destination modifier :
 // Note : Since both d0 AND d1 could be the same output register, calculation of d2 can re-use only one (d0 or d1)
@@ -177,10 +177,6 @@ R"DELIMITER(
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
 
 float m21d(const float input)
 {
@@ -234,18 +230,31 @@ sampler samplers[4] : register(s0);
 #endif
 static bool alphakill[4] = ALPHAKILL;
 
+)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
+// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
+// Second raw string :
+R"DELIMITER(
 #if 1 // TODO : Move these (and other) helper functions to a (potentially pre-compiled) hlsl(i) file, to be shared with FixedFunctionPixelShader.hlsl
 
 static const float4 WarningColor = float4(0, 1, 1, 1); // Returned when unhandled scenario is encountered
 
+#define unsigned_to_signed(x) (((x) * 2) - 1) // Shifts range from [0..1] to [-1..1] (just like s_bx2)
+#define signed_to_unsigned(x) (((x) + 1) / 2) // Shifts range from [-1..1] to [0..1]
+
 float4 PerformColorSign(const float4 ColorSign, float4 t)
 {
-	// Per color channel, optionally convert the value range into two's complement signed values (from (0, +1) to (-1, +1), using s_bx2):
-	// This is often used for bumpmaps
-	if (ColorSign.r > 0) t.r = s_bx2(t.r);
-	if (ColorSign.g > 0) t.g = s_bx2(t.g);
-	if (ColorSign.b > 0) t.b = s_bx2(t.b);
-	if (ColorSign.a > 0) t.a = s_bx2(t.a);
+	// Per color channel, based on the ColorSign setting :
+	// either keep the value range as-is (when ColorSign is zero)
+	// or convert from [0..1] to [-1..+1] (when ColorSign is more than zero, often used for bumpmaps),
+	// or convert from [-1..1] to [0..1] (when ColorSign is less than zero):
+	if (ColorSign.r > 0) t.r = unsigned_to_signed(t.r);
+	if (ColorSign.g > 0) t.g = unsigned_to_signed(t.g);
+	if (ColorSign.b > 0) t.b = unsigned_to_signed(t.b);
+	if (ColorSign.a > 0) t.a = unsigned_to_signed(t.a);
+	if (ColorSign.r < 0) t.r = signed_to_unsigned(t.r);
+	if (ColorSign.g < 0) t.g = signed_to_unsigned(t.g);
+	if (ColorSign.b < 0) t.b = signed_to_unsigned(t.b);
+	if (ColorSign.a < 0) t.a = signed_to_unsigned(t.a);
 	// TODO : Instead of the above, create a mirror texture with a host format that has identical component layout, but with all components signed.
 	// Then, in here, when any component has to be read as signed, sample the signed texture (ouch : with what dimension and coordinate?!)
 	// and replace the components that we read from the unsigned texture, but which have to be signed, with the signed components read from the signed mirror texture.
