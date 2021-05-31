@@ -2168,50 +2168,51 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
     EmuLog(LOG_LEVEL::DEBUG, "Timing thread is running.");
 
-    // current vertical blank count
-    int curvb = 0;
+	// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
+	if (bLLE_GPU)
+		return 0;
 
-	// Calculate Next VBlank time
-	auto nextVBlankTime = GetNextVBlankTime();
+    // Create VBlank timer
+	LARGE_INTEGER dueTime;
+	dueTime.QuadPart = -16.6666666667 * 10000; // ~60 fps in 100 nanosecond units
+	HANDLE vblankTimer = CreateWaitableTimer(NULL, false, "cxbx-vblank");
+	if (vblankTimer == NULL) {
+		CxbxKrnlCleanup("Failed to create VBLANK timer");
+	}
+
+	SetWaitableTimer(vblankTimer, &dueTime, 0, NULL, NULL, TRUE);
 
     while(true)
     {
-		SwitchToThread();
-
-		// If VBlank Interval has passed, trigger VBlank callback
+		// Wait for VBlank
         // Note: This whole code block can be removed once NV2A interrupts are implemented
 		// And Both Swap and Present can be ran unpatched
 		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
-		// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
-		if (!(bLLE_GPU) && std::chrono::steady_clock::now() > nextVBlankTime)
+		WaitForSingleObject(vblankTimer, INFINITE);
+		SetWaitableTimer(vblankTimer, &dueTime, 0, NULL, NULL, TRUE);
+
+		// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
+		std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+		g_Xbox_VBlankData.VBlank++;
+		g_VBConditionVariable.notify_all();
+
+		// TODO: Fixme.  This may not be right...
+		g_Xbox_SwapData.SwapVBlank = 1;
+
+        if(g_pXbox_VerticalBlankCallback != xbox::zeroptr)
         {
-			nextVBlankTime = GetNextVBlankTime();
-
-			// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
-			std::unique_lock<std::mutex> lk(g_VBConditionMutex);
-			g_Xbox_VBlankData.VBlank++;
-			g_VBConditionVariable.notify_all();
-
-			// TODO: Fixme.  This may not be right...
-			g_Xbox_SwapData.SwapVBlank = 1;
-
-            if(g_pXbox_VerticalBlankCallback != xbox::zeroptr)
-            {
-                    
-                g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
-                    
-            }
-
-            g_Xbox_VBlankData.Swap = 0;
-
-			// TODO: This can't be accurate...
-			g_Xbox_SwapData.TimeUntilSwapVBlank = 0;
-
-			// TODO: Recalculate this for PAL version if necessary.
-			// Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
-		//	g_Xbox_SwapData.TimeBetweenSwapVBlanks = 1/60;
-			g_Xbox_SwapData.TimeBetweenSwapVBlanks = 0;
+            g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
         }
+
+        g_Xbox_VBlankData.Swap = 0;
+
+		// TODO: This can't be accurate...
+		g_Xbox_SwapData.TimeUntilSwapVBlank = 0;
+
+		// TODO: Recalculate this for PAL version if necessary.
+		// Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
+	//	g_Xbox_SwapData.TimeBetweenSwapVBlanks = 1/60;
+		g_Xbox_SwapData.TimeBetweenSwapVBlanks = 0;
     }
 }
 
