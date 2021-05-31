@@ -5483,17 +5483,23 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
         auto actualDuration = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - frameStartTime);
         auto startTimeAjustment = actualDuration - targetDuration;
 
+        // TODO use waitable timers?
+        // TODO fetch the timer resolution to determine the sleep threshold?
+        constexpr double sleepThresholdMs = 2; // Minimum remaining time before we attempt to use sleep
+
         // Only enter the wait loop if the frame took too long
         if (actualDuration < targetDuration) {
-            // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
-            if ((targetTimestamp - std::chrono::steady_clock::now()) > std::chrono::duration<double, std::milli>(16.0)) {
-                std::this_thread::sleep_until(targetTimestamp);
-            } else {
-                // Otherwise, we fall-through and just keep polling
-                // This prevents large waits from hogging CPU power, but allows small waits/ to remain precice.
-                while (std::chrono::steady_clock::now() < targetTimestamp) {
-                    ;
-                }
+            // If we have some time remaining until swap time, try to sleep closer to it
+			// This prevents large waits from hogging CPU power, but allows small waits/ to remain precise.
+            if ((targetTimestamp - std::chrono::steady_clock::now()) > std::chrono::duration<double, std::milli>(sleepThresholdMs)) {
+                // We expect sleep to overshoot, so give ourselves some extra time
+                auto sleepTarget = targetTimestamp - std::chrono::duration<double, std::milli>(sleepThresholdMs);
+                std::this_thread::sleep_until(targetTimestamp - std::chrono::duration<double, std::milli>(sleepThresholdMs));
+            }
+
+            // Spinwait until it's time to swap
+            while (std::chrono::steady_clock::now() < targetTimestamp) {
+                ;
             }
         }
     }
