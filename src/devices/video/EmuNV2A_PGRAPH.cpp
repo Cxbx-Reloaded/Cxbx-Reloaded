@@ -178,12 +178,10 @@ typedef struct ColorFormatInfo {
 // Resulting gl_internal_format, gl_format and gl_type values, for formats handled by convert_texture_data()
 #define GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV
 
-static GLint gl_swizzle_mask_0RG1[4] = { GL_ZERO, GL_RED, GL_GREEN, GL_ONE };
 static GLint gl_swizzle_mask_111R[4] = { GL_ONE, GL_ONE, GL_ONE, GL_RED };
-static GLint gl_swizzle_mask_ARGB[4] = { GL_ALPHA, GL_RED, GL_GREEN, GL_BLUE };
-static GLint gl_swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA };
-static GLint gl_swizzle_mask_GGGR[4] = { GL_GREEN, GL_GREEN, GL_GREEN, GL_RED };
-static GLint gl_swizzle_mask_R0G1[4] = { GL_RED, GL_ZERO, GL_GREEN, GL_ONE };
+static GLint gl_swizzle_mask_1GR1[4] = { GL_ONE, GL_GREEN, GL_RED, GL_ONE };
+static GLint gl_swizzle_mask_BGRA[4] = { GL_BLUE, GL_GREEN, GL_RED, GL_ALPHA }; // Used in cxbx_gl_render_overlays()
+static GLint gl_swizzle_mask_G1R1[4] = { GL_GREEN, GL_ONE, GL_RED, GL_ONE };
 static GLint gl_swizzle_mask_RRR1[4] = { GL_RED, GL_RED, GL_RED, GL_ONE };
 static GLint gl_swizzle_mask_RRRG[4] = { GL_RED, GL_RED, GL_RED, GL_GREEN };
 static GLint gl_swizzle_mask_RRRR[4] = { GL_RED, GL_RED, GL_RED, GL_RED };
@@ -243,20 +241,20 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
 		{2, linear, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
 	//0x16 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_R8B8] =
         {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_R0G1}, // TODO : Verify
+         gl_swizzle_mask_G1R1}, // TODO : Verify
 	//0x17 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_G8B8] =
         {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_0RG1}, // TODO : Verify
+         gl_swizzle_mask_1GR1}, // TODO : Verify
 	//0x18 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_SG8SB8] =
         {2, linear, GL_RG8_SNORM, GL_RG, GL_BYTE,
-         gl_swizzle_mask_0RG1}, // TODO : Verify
+         gl_swizzle_mask_1GR1}, // TODO : Verify
 
     //0x19 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8] =
         {1, swizzled, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          gl_swizzle_mask_111R},
     //0x1A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_A8Y8] =
         {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_GGGR},
+         gl_swizzle_mask_RRRG},
     //0x1B [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_AY8] =
         {1, linear, GL_R8, GL_RED, GL_UNSIGNED_BYTE,
          gl_swizzle_mask_RRRR},
@@ -271,7 +269,7 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
          gl_swizzle_mask_111R},
     //0x20 [NV097_SET_TEXTURE_FORMAT_COLOR_LU_IMAGE_A8Y8] =
         {2, linear, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_GGGR},
+         gl_swizzle_mask_RRRG},
 	//0x21 [?] =
 		{},
 	//0x22 [?] =
@@ -289,10 +287,10 @@ static const ColorFormatInfo kelvin_color_format_map[256] = {
         {2, swizzled, GL_CONVERT_TEXTURE_DATA_RESULTING_FORMAT}, // TODO : Verify
     //0x28 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_G8B8] =
         {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_0RG1},
+         gl_swizzle_mask_1GR1},
     //0x29 [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_R8B8] =
         {2, swizzled, GL_RG8, GL_RG, GL_UNSIGNED_BYTE,
-         gl_swizzle_mask_R0G1},
+         gl_swizzle_mask_G1R1},
 	//0x2A [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_X8_Y24_FIXED] =
 		{4, swizzled, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8}, // TODO : Verify
 	//0x2B [NV097_SET_TEXTURE_FORMAT_COLOR_SZ_DEPTH_X8_Y24_FLOAT] =
@@ -380,9 +378,9 @@ static const SurfaceColorFormatInfo kelvin_surface_color_format_map[16] = {
     //0x08 [NV097_SET_SURFACE_FORMAT_COLOR_LE_A8R8G8B8] =
         {4, GL_RGBA8, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV},
 	//0x09 [NV097_SET_SURFACE_FORMAT_COLOR_LE_B8] =
-		{}, // TODO : {1, GL_R8, GL_RED, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
+		{1, GL_R8, GL_RED, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
 	//0x0A [NV097_SET_SURFACE_FORMAT_COLOR_LE_G8B8] =
-		{}, // TODO : {2, GL_RG8, GL_RG, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
+		{2, GL_RG8, GL_RG, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate; xemu uses GL_UNSIGNED_SHORT?
 	//0x0B [?] = 
 		{},
 	//0x0C [?] = 
