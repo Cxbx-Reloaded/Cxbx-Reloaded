@@ -1135,7 +1135,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, xbox::X_D3DResource* pXboxRe
 	return modified;
 }
 
-void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD dwSize = 0)
+void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD D3DUsage = D3DUSAGE_INVALID, D3DFORMAT PCFormat = D3DFMT_UNKNOWN)
 {
 	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
 	auto& ResourceCache = GetResourceCache(key);
@@ -1149,48 +1149,39 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.pHostResource = pHostResource;
 	resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxResource);
 	resourceInfo.pXboxData = GetDataFromXboxResource(pXboxResource);
-	resourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
+	resourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxResource);
 	resourceInfo.hash = ComputeHash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize);
 	resourceInfo.hashLifeTime = 1ms;
 	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 	resourceInfo.forceRehash = false;
-
-	HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
-	D3DSURFACE_DESC surfaceDesc;
-	D3DVOLUME_DESC volumeDesc;
-	UINT Level = 0; // TODO : When should Level every be something other than zero, and if so : what other value?
-	switch (resourceInfo.dwXboxResourceType) {// TODO : Better check pHostResource class type
-	case xbox::X_D3DRTYPE_SURFACE:
-		hRet = ((IDirect3DSurface*)pHostResource)->GetDesc(&surfaceDesc);
-		break;
-	case xbox::X_D3DRTYPE_TEXTURE:
-		hRet = ((IDirect3DTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
-		break;
-	case xbox::X_D3DRTYPE_VOLUMETEXTURE: {
-		hRet = ((IDirect3DVolumeTexture*)pHostResource)->GetLevelDesc(Level, &volumeDesc);
-		break; }
-	case xbox::X_D3DRTYPE_CUBETEXTURE:
-		hRet = ((IDirect3DCubeTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
-		break;
-	}
-
-	D3DFORMAT hostFormat = D3DFMT_UNKNOWN;
-	DWORD hostUsage = D3DUSAGE_INVALID;
-
-	if (SUCCEEDED(hRet)) {
-		if (resourceInfo.dwXboxResourceType == xbox::X_D3DRTYPE_VOLUMETEXTURE) {
-			hostFormat = volumeDesc.Format;
-			hostUsage = volumeDesc.Usage;
+	if (PCFormat == D3DFMT_UNKNOWN) {
+		HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
+		D3DSURFACE_DESC surfaceDesc;
+		D3DVOLUME_DESC volumeDesc;
+		UINT Level = 0; // TODO : When should Level every be something other than zero, and if so : what other value?
+		switch (resourceInfo.dwXboxResourceType) {// TODO : Better check pHostResource class type
+		case xbox::X_D3DRTYPE_SURFACE:
+			hRet = ((IDirect3DSurface*)pHostResource)->GetDesc(&surfaceDesc);
+			break;
+		case xbox::X_D3DRTYPE_TEXTURE:
+			hRet = ((IDirect3DTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
+			break;
+		case xbox::X_D3DRTYPE_VOLUMETEXTURE: {
+			hRet = ((IDirect3DVolumeTexture*)pHostResource)->GetLevelDesc(Level, &volumeDesc);
+			break; }
+		case xbox::X_D3DRTYPE_CUBETEXTURE:
+			hRet = ((IDirect3DCubeTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
+			break;
 		}
-		else {
-			hostFormat = surfaceDesc.Format;
-			hostUsage = surfaceDesc.Usage;
+
+		if (SUCCEEDED(hRet)) {
+			PCFormat = (resourceInfo.dwXboxResourceType == xbox::X_D3DRTYPE_VOLUMETEXTURE) ? volumeDesc.Format : surfaceDesc.Format;
 		}
 	}
 
-	resourceInfo.HostFormat = hostFormat;
-	resourceInfo.HostUsage = hostUsage;
+	resourceInfo.HostFormat = PCFormat;
+	resourceInfo.HostUsage = D3DUsage;
 }
 
 IDirect3DSurface *GetHostSurface(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
@@ -1255,55 +1246,6 @@ IDirect3DIndexBuffer *GetHostIndexBuffer(xbox::X_D3DResource *pXboxResource)
 	return (IDirect3DIndexBuffer*)GetHostResource(pXboxResource);
 }
 #endif
-
-void SetHostSurface(xbox::X_D3DResource *pXboxResource, IDirect3DSurface *pHostSurface, int iTextureStage)
-{
-	assert(pXboxResource != xbox::zeroptr);
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_SURFACE);
-
-	SetHostResource(pXboxResource, pHostSurface, iTextureStage);
-}
-
-void SetHostTexture(xbox::X_D3DResource *pXboxResource, IDirect3DTexture *pHostTexture, int iTextureStage)
-{
-	assert(pXboxResource != xbox::zeroptr);
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
-
-	SetHostResource(pXboxResource, pHostTexture, iTextureStage);
-}
-
-void SetHostCubeTexture(xbox::X_D3DResource *pXboxResource, IDirect3DCubeTexture *pHostCubeTexture, int iTextureStage)
-{
-	assert(pXboxResource != xbox::zeroptr);
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
-
-	SetHostResource(pXboxResource, pHostCubeTexture, iTextureStage);
-}
-
-void SetHostVolumeTexture(xbox::X_D3DResource *pXboxResource, IDirect3DVolumeTexture *pHostVolumeTexture, int iTextureStage)
-{
-	assert(pXboxResource != xbox::zeroptr);
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
-
-	SetHostResource(pXboxResource, pHostVolumeTexture, iTextureStage);
-}
-
-void SetHostVolume(xbox::X_D3DResource *pXboxResource, IDirect3DVolume *pHostVolume, int iTextureStage)
-{
-	assert(pXboxResource != xbox::zeroptr);
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_TEXTURE);
-
-	// TODO: IDirect3DVolume9 is not a IDirect3DResource9!
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolume, iTextureStage);
-}
-
-void SetHostIndexBuffer(xbox::X_D3DResource *pXboxResource, IDirect3DIndexBuffer *pHostIndexBuffer)
-{
-	assert(pXboxResource != xbox::zeroptr);
-	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
-
-	SetHostResource(pXboxResource, pHostIndexBuffer);
-}
 
 int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size)
 {
@@ -3861,21 +3803,24 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 	if(BackBuffer == -1) {
 		static IDirect3DSurface *pCachedPrimarySurface = nullptr;
 
+		D3DFORMAT PCFormat = D3DFMT_A8R8G8B8;
 		if(pCachedPrimarySurface == nullptr) {
 			// create a buffer to return
 			// TODO: Verify the surface is always 640x480
-			hRet = g_pD3DDevice->CreateOffscreenPlainSurface(640, 480, D3DFMT_A8R8G8B8, /*D3DPool=* /0, &pCachedPrimarySurface, nullptr);
+			hRet = g_pD3DDevice->CreateOffscreenPlainSurface(640, 480, PCFormat, /*D3DPool=* /0, &pCachedPrimarySurface, nullptr);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
 		}
 
-		SetHostSurface(pXboxBackBuffer, pCachedPrimarySurface); // No iTextureStage!
+		int iTextureStage = -1; // No iTextureStage!
+		SetHostResource(pXboxBackBuffer, (IDirect3DResource*)pCachedPrimarySurface, iTextureStage, 0, PCFormat);
+
 
 		hRet = g_pD3DDevice->GetFrontBuffer(pCachedPrimarySurface);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetFrontBuffer");
 
 		if (FAILED(hRet)) {
 			EmuLog(LOG_LEVEL::WARNING, "Could not retrieve primary surface, using backbuffer");
-			SetHostSurface(pXboxBackBuffer, nullptr); // No iTextureStage!
+			SetHostResource(pXboxBackBuffer, nullptr); // No iTextureStage!
 			pCachedPrimarySurface->Release();
 			pCachedPrimarySurface = nullptr;
 			BackBuffer = 0;
@@ -3908,7 +3853,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 	if (FAILED(hRet))
 		CxbxrAbort("Unable to retrieve back buffer");
 
-	SetHostSurface(pXboxBackBuffer, pCurrentHostBackBuffer); // No iTextureStage!
+	SetHostResource(pXboxBackBuffer, (IDirect3DResource*)pCurrentHostBackBuffer); // No iTextureStage! TODO : Pass in D3DUsage, PCFormat
 
 	// Increment reference count
 	pXboxBackBuffer->Common++; // EMUPATCH(D3DResource_AddRef)(pXboxBackBuffer);
@@ -5523,6 +5468,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(pResource)
+		LOG_FUNC_ARG(D3DUsage)
 		LOG_FUNC_ARG(iTextureStage)
 		LOG_FUNC_ARG(dwSize)
 		LOG_FUNC_ARG(ResourceTypeName)
@@ -5574,7 +5520,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
                 DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetCubeMapSurface");
                 if (hRet == D3D_OK) {
-                    SetHostSurface(pXboxSurface, pNewHostSurface.Get(), iTextureStage);
+                    SetHostResource(pXboxSurface, (IDirect3DResource*)pNewHostSurface.Get(), iTextureStage, D3DUsage); // Note : Final PCFormat argument will be derived from the host resource
                     EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created CubeTexture surface level (Face: %u, Level: %u, pResource: 0x%.08X, pNewHostSurface: 0x%.08X)",
                         CubeMapFace, SurfaceLevel, pResource, pNewHostSurface.Get());
                     return;
@@ -5591,7 +5537,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 				DEBUG_D3DRESULT(hRet, "pHostParentTexture->GetSurfaceLevel");
 				if (hRet == D3D_OK) {
-					SetHostSurface(pXboxSurface, pNewHostSurface.Get(), iTextureStage);
+					SetHostResource(pResource, (IDirect3DResource*)pNewHostSurface.Get(), iTextureStage, D3DUsage); // Note : Final PCFormat argument will be derived from the host resource
                     EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created Texture surface level (Level: %u, pResource: 0x%.08X, pNewHostSurface: 0x%.08X)",
 						SurfaceLevel, pResource, pNewHostSurface.Get());
 					return;
@@ -5602,7 +5548,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host surface level - falling through to regular surface creation");
 		}
-		// fall through
+		[[fallthrough]];
 	}
 	case xbox::X_D3DRTYPE_VOLUME: {
 		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design) 
@@ -5616,7 +5562,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			HRESULT hRet = pParentHostVolumeTexture->GetVolumeLevel(VolumeLevel, pNewHostVolume.GetAddressOf());
 			DEBUG_D3DRESULT(hRet, "pParentHostVolumeTexture->GetVolumeLevel");
 			if (hRet == D3D_OK) {
-				SetHostVolume(pXboxVolume, pNewHostVolume.Get(), iTextureStage);
+				SetHostResource(pResource, (IDirect3DResource*)pNewHostVolume.Get(), iTextureStage, D3DUsage); // Note : Final PCFormat argument will be derived from the host resource
 				EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created volume level (%u, 0x%.08X, 0x%.08X)",
 					VolumeLevel, pResource, pNewHostVolume.Get());
 				return;
@@ -5624,7 +5570,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host volume level - falling through to regular volume creation");
 		}
-		// fall through
+		[[fallthrough]];
 	}
 	case xbox::X_D3DRTYPE_TEXTURE:
 	case xbox::X_D3DRTYPE_VOLUMETEXTURE:
@@ -5761,9 +5707,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 			else {
 				// Note : This handles both (D3DUsage & D3DUSAGE_RENDERTARGET) and otherwise alike
+				D3DUsage = D3DUSAGE_RENDERTARGET, // Usage always as render target
 				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight,
 					1, // Levels
-					D3DUSAGE_RENDERTARGET, // Usage always as render target
+					D3DUsage,
 					PCFormat,
 					D3DPool, // D3DPOOL_DEFAULT
 					pNewHostTexture.GetAddressOf(),
@@ -5801,7 +5748,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
-			SetHostSurface(pResource, pNewHostSurface.Get(), iTextureStage);
+			SetHostResource(pResource, (IDirect3DResource*)pNewHostSurface.Get(), iTextureStage, D3DUsage, PCFormat);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostSurface.Get());
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Width : %d, Height : %d, Format : %d",
@@ -5816,7 +5763,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// So, we need to do this differently - we need to step up to the containing VolumeTexture,
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
 			pNewHostVolume = nullptr;
-			// SetHostVolume(pResource, pNewHostVolume, iTextureStage);
+			// SetHostResource(pResource, (IDirect3DResource*)pNewHostVolume, iTextureStage, D3DUsage, PCFormat);
 			// EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 			//	ResourceTypeName, pResource, pNewHostVolume);
 			break;
@@ -5845,14 +5792,6 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 			}
 
-            // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
-            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
-                hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
-                    0, PCFormat, D3DPOOL_SYSTEMMEM, pIntermediateHostTexture.GetAddressOf(),
-                    nullptr
-                );
-            }
-
 			/*if(FAILED(hRet))
 			{
 				hRet = g_pD3DDevice->CreateTexture
@@ -5864,13 +5803,20 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(D3DPOOL_SYSTEMMEM)");
 			}*/
 
+            // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
+            if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
+                hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
+                    0, PCFormat, D3DPOOL_SYSTEMMEM, pIntermediateHostTexture.GetAddressOf(),
+                    nullptr
+                );
+            }
 
 			if (hRet != D3D_OK) {
 				CxbxrAbort("CreateTexture Failed!\n\n"
 					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, hostWidth, hostHeight);
 			}
 
-			SetHostTexture(pResource, pNewHostTexture.Get(), iTextureStage);
+			SetHostResource(pResource, (IDirect3DResource*)pNewHostTexture.Get(), iTextureStage, D3DUsage, PCFormat);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostTexture.Get());
 			break;
@@ -5896,7 +5842,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
-			SetHostVolumeTexture(pResource, pNewHostVolumeTexture.Get(), iTextureStage);
+			SetHostResource(pResource, (IDirect3DResource*)pNewHostVolumeTexture.Get(), iTextureStage, D3DUsage, PCFormat);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostVolumeTexture.Get());
 			break;
@@ -5925,7 +5871,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
-			SetHostCubeTexture(pResource, pNewHostCubeTexture.Get(), iTextureStage);
+			SetHostResource(pResource, (IDirect3DResource*)pNewHostCubeTexture.Get(), iTextureStage, D3DUsage, PCFormat);
 			// TODO : Cube face surfaces can be used as a render-target,
 			// so we need to associate host surfaces to each surface of this cube texture
             // However, we can't do it here: On Xbox, a new Surface is created on every call to
@@ -6392,7 +6338,7 @@ void UpdateFixedFunctionVertexShaderState()
 	ffShaderState.PointSprite.PointScaleABC.y = PointScaleEnable ? pointScale_B : 0.0f;
 	ffShaderState.PointSprite.PointScaleABC.z = PointScaleEnable ? pointScale_C : 0.0f;
 	ffShaderState.PointSprite.XboxRenderTargetHeight = PointScaleEnable ? renderTargetHeight : 1.0f;
-	ffShaderState.PointSprite.RenderUpscaleFactor = g_RenderUpscaleFactor;
+	ffShaderState.PointSprite.RenderUpscaleFactor = (float)g_RenderUpscaleFactor;
 
 	// Fog
 	// Determine how the fog depth is transformed into the fog factor

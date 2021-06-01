@@ -985,7 +985,7 @@ float CxbxComponentColorSignFromXboxAndHost(bool XboxMarksComponentSigned, bool 
 
 D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 {
-	// Without overrides, just use what the running executable put in COLORSIGN :
+	// Initially use what the running executable put in COLORSIGN :
 	DWORD XboxColorSign = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORSIGN);
 
 	{ // This mimicks behaviour of XDK LazySetShaderStageProgram, which we bypass due to our drawing patches without trampolines.
@@ -1006,9 +1006,9 @@ D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 	// Host D3DFMT's with one or more signed components : D3DFMT_V8U8, D3DFMT_Q8W8V8U8, D3DFMT_V16U16, D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8
 	D3DFORMAT HostTextureFormat = g_HostTextureFormats[stage_nr];
 	bool HostTextureFormatIsSignedForA = (HostTextureFormat == D3DFMT_Q8W8V8U8); // No need to check for unused formats : D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8, D3DFMT_A2W10V10U10
-	bool HostTextureFormatIsSignedForR = (HostTextureFormat == D3DFMT_V8U8) || (HostTextureFormat == D3DFMT_V16U16) || (HostTextureFormat == D3DFMT_L6V5U5) || (HostTextureFormat == D3DFMT_X8L8V8U8) || HostTextureFormatIsSignedForA;
-	bool HostTextureFormatIsSignedForG = HostTextureFormatIsSignedForR;
-	bool HostTextureFormatIsSignedForB = HostTextureFormatIsSignedForA;
+	bool HostTextureFormatIsSignedForR = (HostTextureFormat == D3DFMT_V8U8) || (HostTextureFormat == D3DFMT_V16U16) || (HostTextureFormat == D3DFMT_X8L8V8U8) || HostTextureFormatIsSignedForA;
+	bool HostTextureFormatIsSignedForG = HostTextureFormatIsSignedForR || (HostTextureFormat == D3DFMT_L6V5U5);
+	bool HostTextureFormatIsSignedForB = HostTextureFormatIsSignedForA || (HostTextureFormat == D3DFMT_L6V5U5);
 
 	D3DXCOLOR CxbxColorSign;
 	CxbxColorSign.r = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_RSIGNED, HostTextureFormatIsSignedForR); // Maps to COLORSIGN.r
