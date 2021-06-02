@@ -2171,7 +2171,9 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
     EmuLog(LOG_LEVEL::DEBUG, "Timing thread is running.");
 
 	// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
-	if (bLLE_GPU) return 0;
+	if (bLLE_GPU) {
+		return 0;
+	}
 
 	auto nextVBlankTime = GetNextVBlankTime();
 
