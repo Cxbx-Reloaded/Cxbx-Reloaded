@@ -64,6 +64,8 @@ void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);
 uint64_t GetTime_NS(TimerObject* Timer);
 void Timer_Init();
 
+void SleepPrecise(std::chrono::steady_clock::time_point targetTime);
+
 // A stateful replacement for QueryPerformanceCounter, ticking at an arbitrary frequency
 // Thread-safe and designed to avoid overflows at all cost
 class ScaledPerformanceCounter
