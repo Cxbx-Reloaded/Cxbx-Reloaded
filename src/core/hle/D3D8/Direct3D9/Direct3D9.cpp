@@ -7561,20 +7561,29 @@ extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // 
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()
 {
-	// Copy all constants (as they may have been overwritten with fixed-function mode)
-	// Though we should only have to copy overwritten or dirty constants
-	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(0);
-	g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
+	// For Xbox vertex shader programs, the Xbox vertex shader constants
+	// are mirrored on the host.
+	// Otherwise, the same set of constants is used for the fixed function vertex shader
+	// implementation instead
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
+		UpdateFixedFunctionVertexShaderState();
+	}
+	else {
+		// Copy all constants (as they may have been overwritten with fixed-function mode)
+		// Though we should only have to copy overwritten or dirty constants
+		float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(0);
+		g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
 
-	// FIXME our viewport constants don't match Xbox values
-	// If we write them to pgraph constants, like we do with constants set by the title,
-	// the Xbox could overwrite them (at any time?) and we get flickering geometry.
-	// For now, set our viewport constants directly in the call below,
-	// overwriting whatever was in pgraph
-	// Test case:
-	// Xbox dashboard (during initial fade from black)
-	// Need for Speed: Hot Pursuit 2 (car select)
-	CxbxUpdateHostViewPortOffsetAndScaleConstants();
+		// FIXME our viewport constants don't match Xbox values
+		// If we write them to pgraph constants, like we do with constants set by the title,
+		// the Xbox could overwrite them (at any time?) and we get flickering geometry.
+		// For now, set our viewport constants directly in the call below,
+		// overwriting whatever was in pgraph
+		// Test case:
+		// Xbox dashboard (during initial fade from black)
+		// Need for Speed: Hot Pursuit 2 (car select)
+		CxbxUpdateHostViewPortOffsetAndScaleConstants();
+	}
 }
 
 void CxbxUpdateHostViewport() {
@@ -7655,11 +7664,6 @@ void CxbxUpdateNativeD3DResources()
 	CxbxUpdateHostVertexShaderConstants();
 
 	CxbxUpdateHostViewport();
-	
-	// Update fixed function vertex shader state
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
-		UpdateFixedFunctionVertexShaderState();
-	}
 
 	// NOTE: Order is important here
     // Some Texture States depend on RenderState values (Point Sprites)
