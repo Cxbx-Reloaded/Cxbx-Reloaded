@@ -92,6 +92,7 @@
 #define IDC_LOG_DS3DCALC                960
 #define IDC_LOG_XMO                     961
 #define IDC_LOG_VSHCACHE                962
+#define IDC_LOG_RINP                    963
 #define IDC_SET_MOTOR                   999
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001

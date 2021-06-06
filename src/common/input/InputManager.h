@@ -148,6 +148,8 @@ public:
 	void UpdateDevices(int port, bool ack);
 	// update input options
 	void UpdateOpt(bool is_gui);
+	// device hotplug event handler
+	void HotplugHandler(bool is_sdl);
 
 
 private:

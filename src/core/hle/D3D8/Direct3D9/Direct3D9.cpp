@@ -58,6 +58,7 @@
 #include "core\kernel\common\strings.hpp" // For uem_str
 #include "common\input\SdlJoystick.h"
 #include "common\input\DInputKeyboardMouse.h"
+#include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderSource.h"
 
@@ -1920,6 +1921,17 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				default:
 					break;
 			}
+		}
+		break;
+
+		case WM_INPUT_DEVICE_CHANGE:
+		{
+			// sent by rawinput when it detects changes for the registered device types
+
+			if (wParam == GIDC_ARRIVAL) {
+				g_InputDeviceManager.HotplugHandler(false);
+			}
+			return DefWindowProc(hWnd, msg, wParam, lParam);
 		}
 		break;
 
