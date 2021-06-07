@@ -7555,26 +7555,80 @@ void CxbxUpdateHostTextureScaling()
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_TEXTURES_SCALE_BASE, (float*)texcoordScales.data(), CXBX_D3DVS_TEXTURES_SCALE_SIZE);
 }
 
-extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
+void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
+	// Reduce the number of calls to D3D9 by updating contiguous "batches"
+	// of dirty states
+	int batchStartIndex = -1; // -1 means we aren't in a batch
 
+	for (int i = 0; i < X_D3DVS_CONSTREG_COUNT; i++) {
+		if (batchStartIndex == -1 && dirty[i]) {
+			batchStartIndex = i; // Start a batch
+		}
+		else if (batchStartIndex != -1 && !dirty[i]) {
+			// Finish the batch
+			int count = i - batchStartIndex;
+			g_pD3DDevice->SetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
+			batchStartIndex = -1;
+		}
+
+		// Constant is no longer dirty
+		dirty[i] = false;
+	}
+
+	// Send the final batch
+	if (batchStartIndex != -1) {
+		int count = X_D3DVS_CONSTREG_COUNT - batchStartIndex + 1;
+		g_pD3DDevice->SetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
+	}
+}
+
+extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
 // TODO : Once we're able to flush the NV2A push buffer
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()
 {
-	// Copy all constants (as they may have been overwritten with fixed-function mode)
-	// Though we should only have to copy overwritten or dirty constants
-	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(0);
-	g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
+	// For Xbox vertex shader programs, the Xbox vertex shader constants
+	// are mirrored on the host.
+	// Otherwise, the same set of constants is used for the fixed function vertex shader
+	// implementation instead
 
-	// FIXME our viewport constants don't match Xbox values
-	// If we write them to pgraph constants, like we do with constants set by the title,
-	// the Xbox could overwrite them (at any time?) and we get flickering geometry.
-	// For now, set our viewport constants directly in the call below,
-	// overwriting whatever was in pgraph
-	// Test case:
-	// Xbox dashboard (during initial fade from black)
-	// Need for Speed: Hot Pursuit 2 (car select)
-	CxbxUpdateHostViewPortOffsetAndScaleConstants();
+	// Track which constants are currently written
+	// So we can skip updates
+	static bool isXboxConstants = false;
+
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
+		// Write host FF shader state
+		// TODO dirty tracking like for Xbox constants?
+		UpdateFixedFunctionVertexShaderState();
+		isXboxConstants = false;
+	}
+	else {
+		// Write Xbox constants
+		auto pg = &(g_NV2A->GetDeviceState()->pgraph);
+		auto constant_floats = (float*)pg->vsh_constants;
+
+		if (isXboxConstants) {
+			// Only need to overwrite what's changed
+			CxbxUpdateDirtyVertexShaderConstants(constant_floats, pg->vsh_constants_dirty);
+		}
+		else {
+			// We need to update everything
+			g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
+		}
+
+		// We've written the Xbox constants
+		isXboxConstants = true;
+
+		// FIXME our viewport constants don't match Xbox values
+		// If we write them to pgraph constants, like we do with constants set by the title,
+		// the Xbox could overwrite them (at any time?) and we get flickering geometry.
+		// For now, set our viewport constants directly in the call below,
+		// overwriting whatever was in pgraph
+		// Test case:
+		// Xbox dashboard (during initial fade from black)
+		// Need for Speed: Hot Pursuit 2 (car select)
+		CxbxUpdateHostViewPortOffsetAndScaleConstants();
+	}
 }
 
 void CxbxUpdateHostViewport() {
@@ -7655,11 +7709,6 @@ void CxbxUpdateNativeD3DResources()
 	CxbxUpdateHostVertexShaderConstants();
 
 	CxbxUpdateHostViewport();
-	
-	// Update fixed function vertex shader state
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
-		UpdateFixedFunctionVertexShaderState();
-	}
 
 	// NOTE: Order is important here
     // Some Texture States depend on RenderState values (Point Sprites)
