@@ -29,6 +29,12 @@ namespace FixedFunctionVertexShader {
     const float FOG_DEPTH_W = 2;
 	// Fog depth is based distance of the vertex from the eye position
     const float FOG_DEPTH_RANGE = 3;
+
+    // https://docs.microsoft.com/en-us/windows/win32/direct3d9/fog-formulas
+    const float FOG_TABLE_NONE = 0;
+    const float FOG_TABLE_EXP = 1;
+    const float FOG_TABLE_EXP2 = 2;
+    const float FOG_TABLE_LINEAR = 3;
 }
 
 // Shared HLSL structures
@@ -105,11 +111,11 @@ struct Modes {
 
 struct PointSprite {
     alignas(16) float PointSize;
-	alignas(16) float PointSizeMin;
-	alignas(16) float PointSizeMax;
+    alignas(16) float PointSize_Min;
+    alignas(16) float PointSize_Max;
 //  alignas(16) float PointScaleEnable;
     alignas(16) float XboxRenderTargetHeight;
-    alignas(16) float3 ScaleABC;
+    alignas(16) float3 PointScaleABC;
     alignas(16) float RenderUpscaleFactor;
 };
 
@@ -121,7 +127,12 @@ struct TextureState {
 };
 
 struct Fog {
+    alignas(16) float Enable;
     alignas(16) float DepthMode;
+    alignas(16) float TableMode;
+    alignas(16) float Density; // EXP fog density
+    alignas(16) float Start; // LINEAR fog start
+    alignas(16) float End; // LINEAR fog end
 };
 
 // Vertex lighting

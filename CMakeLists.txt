@@ -131,10 +131,15 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/settings.h"
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.hpp"
  "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.hpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxPixelShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsli"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/PixelShader.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Shader.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShader.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShaderSource.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/WalkIndexBuffer.h"
@@ -294,7 +299,9 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.cpp"
  "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/PixelShader.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/RenderStates.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Shader.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/TextureStates.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShader.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShaderSource.cpp"
@@ -442,6 +449,9 @@ install(FILES ${cxbxr_INSTALL_files}
 )
 
 install(FILES
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/CxbxPixelShaderTemplate.hlsl"
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsl"
+ "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsli"
  "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
  "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
  DESTINATION bin/hlsl

@@ -19,10 +19,13 @@ struct VS_INPUT
 #else
     float4 pos : POSITION;
     float4 bw : BLENDWEIGHT;
-    float4 color[2] : COLOR;
+	float4 normal : NORMAL;
+	float4 color[2] : COLOR;
+	float1 fogCoord : FOG;
+	float1 pointSize : PSIZE;
     float4 backColor[2] : TEXCOORD4;
-    float4 normal : NORMAL;
     float4 texcoord[4] : TEXCOORD;
+	float4 reserved[3] : TEXCOORD6;
 #endif
 };
 
@@ -59,12 +62,17 @@ float4 Get(const VS_INPUT xIn, const uint index)
     if(index == normal) return xIn.normal;
     if(index == diffuse) return xIn.color[0];
     if(index == specular) return xIn.color[1];
+    if(index == fogCoord) return xIn.fogCoord;
+    if(index == pointSize) return xIn.pointSize;
     if(index == backDiffuse) return xIn.backColor[0];
     if(index == backSpecular) return xIn.backColor[1];
     if(index == texcoord0) return xIn.texcoord[0];
     if(index == texcoord1) return xIn.texcoord[1];
     if(index == texcoord2) return xIn.texcoord[2];
     if(index == texcoord3) return xIn.texcoord[3];
+    if(index == reserved0) return xIn.reserved[0];
+    if(index == reserved1) return xIn.reserved[1];
+    if(index == reserved2) return xIn.reserved[2];
     return 1;
 #endif
 }
@@ -265,11 +273,11 @@ Material DoMaterial(const uint index, const uint diffuseReg, const uint specular
 
 float DoFog(const VS_INPUT xIn)
 {
-    // TODO implement properly
-    // Until we have pixel shader HLSL we are still leaning on D3D renderstates for fogging
-    // So we are not doing any fog density calculations here
+    if (!state.Fog.Enable)
+        return 1; // No fog!
     // http://developer.download.nvidia.com/assets/gamedev/docs/Fog2.pdf
 
+    // Obtain the fog depth value 'd'
     float fogDepth;
 
     if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_NONE)
@@ -281,7 +289,19 @@ float DoFog(const VS_INPUT xIn)
     if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_W)
         fogDepth = Projection.Position.w;
 
-    return fogDepth;
+    // Calculate the fog factor
+    // Some of this might be better done in the pixel shader?
+    float fogFactor;
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_NONE)
+        fogFactor = fogDepth;
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_EXP)
+        fogFactor = 1 / exp(fogDepth * state.Fog.Density); // 1 / e^(d * density)
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_EXP2)
+        fogFactor = 1 / exp(pow(fogDepth * state.Fog.Density, 2)); // 1 / e^((d * density)^2)
+    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_LINEAR)
+        fogFactor = (state.Fog.End - fogDepth) / (state.Fog.End - state.Fog.Start); // (end - d) / (end - start)
+
+    return fogFactor;
 }
 
 float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
@@ -389,12 +409,13 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
 float DoPointSpriteSize()
 {
     const PointSprite ps = state.PointSprite;
-    float pointSize = ps.PointSize;
-    float A = ps.ScaleABC.x;
-    float B = ps.ScaleABC.y;
-    float C = ps.ScaleABC.z;
 
-    // Note : if (ps.PointScaleEnable) not required because when disabled, CPU sets RenderTargetHeight and ScaleA to 1, and ScaleB and ScaleC to 0
+    float pointSize = ps.PointSize;
+    const float A = ps.PointScaleABC.x;
+    const float B = ps.PointScaleABC.y;
+    const float C = ps.PointScaleABC.z;
+
+    // Note : if (ps.PointScaleEnable) not required because when disabled, CPU sets RenderTargetHeight and PointScale _A to 1, and _B and _C to 0
     {
         const float eyeDistance = length(View.Position);
         const float factor = A + (B * eyeDistance) + (C * (eyeDistance * eyeDistance));
@@ -402,7 +423,7 @@ float DoPointSpriteSize()
         pointSize *= ps.XboxRenderTargetHeight * sqrt(1 / factor);
     }
 
-    return clamp(pointSize, ps.PointSizeMin, ps.PointSizeMax) * ps.RenderUpscaleFactor;
+    return clamp(pointSize, ps.PointSize_Min, ps.PointSize_Max) * ps.RenderUpscaleFactor;
 }
 
 VS_INPUT InitializeInputRegisters(const VS_INPUT xInput)
@@ -423,16 +444,21 @@ VS_INPUT InitializeInputRegisters(const VS_INPUT xInput)
             if(i == normal) xIn.normal = value;
             if(i == diffuse) xIn.color[0] = value;
             if(i == specular) xIn.color[1] = value;
+            if(i == fogCoord) xIn.fogCoord = value.x; // Note : Untested
+            if(i == pointSize) xIn.pointSize = value.x; // Note : Untested
             if(i == backDiffuse) xIn.backColor[0] = value;
             if(i == backSpecular) xIn.backColor[1] = value;
             if(i == texcoord0) xIn.texcoord[0] = value;
             if(i == texcoord1) xIn.texcoord[1] = value;
             if(i == texcoord2) xIn.texcoord[2] = value;
             if(i == texcoord3) xIn.texcoord[3] = value;
+            if(i == reserved0) xIn.reserved[0] = value; // Note : Untested
+            if(i == reserved1) xIn.reserved[1] = value; // Note : Untested
+            if(i == reserved2) xIn.reserved[2] = value; // Note : Untested
         #endif
     }
 
-    return xIn;
+    return xIn; // Note : Untested setters are required to avoid "variable 'xIn' used without having been completely initialized" here
 }
 
 VS_OUTPUT main(const VS_INPUT xInput)

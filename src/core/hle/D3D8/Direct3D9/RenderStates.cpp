@@ -186,6 +186,16 @@ uint32_t XboxRenderStateConverter::GetXboxRenderState(uint32_t State)
     return D3D__RenderState[XboxRenderStateOffsets[State]];
 }
 
+float XboxRenderStateConverter::GetXboxRenderStateAsFloat(uint32_t State)
+{
+    if (!XboxRenderStateExists(State)) {
+        EmuLog(LOG_LEVEL::WARNING, "Attempt to read a Renderstate (%s) that does not exist in the current D3D8 XDK Version (%d)", GetDxbxRenderStateInfo(State).S, g_LibVersion_D3D8);
+        return 0;
+    }
+
+    return *reinterpret_cast<float*>(&(D3D__RenderState[XboxRenderStateOffsets[State]]));
+}
+
 void XboxRenderStateConverter::StoreInitialValues()
 {
     for (unsigned int RenderState = xbox::X_D3DRS_FIRST; RenderState <= xbox::X_D3DRS_LAST; RenderState++) {

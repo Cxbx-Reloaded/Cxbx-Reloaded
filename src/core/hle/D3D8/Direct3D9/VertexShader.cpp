@@ -1,13 +1,14 @@
 #define LOG_PREFIX CXBXR_MODULE::VTXSH
 
-#include "VertexShader.h"
-#include "core\kernel\init\CxbxKrnl.h"
-#include "core\kernel\support\Emu.h"
+#include "Shader.h" // EmuCompileShader
+#include "VertexShader.h" // EmuCompileVertexShader
+#include "core\kernel\init\CxbxKrnl.h" // implicit CxbxKrnl_Xbe used in LOG_TEST_CASE
+#include "core\kernel\support\Emu.h" // LOG_TEST_CASE (via Logging.h)
 
 #include <fstream>
-#include <sstream>
+#include <sstream> // std::stringstream
 
-extern const char* g_vs_model = vs_model_2_a;
+extern const char* g_vs_model = vs_model_3_0;
 
 // HLSL generation
 void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
@@ -56,6 +57,20 @@ void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 	// Write the mask as a separate argument to the opcode defines
 	// (No space, so that "dest,mask, ..." looks close to "dest.mask, ...")
 	hlsl << ",";
+
+	// Detect oFog masks other than x
+	// Test case: Lego Star Wars II (menu)
+	if (dest.Type == IMD_OUTPUT_O &&
+		dest.Address == OREG_OFOG &&
+		dest.Mask != MASK_X)
+	{
+		LOG_TEST_CASE("Vertex shader uses oFog mask other than x");
+		EmuLog(LOG_LEVEL::WARNING, "oFog mask was %#x", dest.Mask);
+		hlsl << "x"; // write to x instead
+		return;
+	}
+
+	// Write the mask
 	if (dest.Mask & MASK_X) hlsl << "x";
 	if (dest.Mask & MASK_Y) hlsl << "y";
 	if (dest.Mask & MASK_Z) hlsl << "z";
@@ -181,133 +196,8 @@ void BuildShader(IntermediateVertexShader* pShader, std::stringstream& hlsl)
 	}
 }
 
-std::string DebugPrependLineNumbers(std::string shaderString) {
-	std::stringstream shader(shaderString);
-	auto debugShader = std::stringstream();
-
-	int i = 1;
-	for (std::string line; std::getline(shader, line); ) {
-		auto lineNumber = std::to_string(i++);
-		auto paddedLineNumber = lineNumber.insert(0, 3 - lineNumber.size(), ' ');
-		debugShader << "/* " << paddedLineNumber << " */ " << line << "\n";
-	}
-
-	return debugShader.str();
-}
-
-HRESULT CompileHlsl(const std::string& hlsl, ID3DBlob** ppHostShader, const char* pSourceName)
-{
-	// TODO include header in vertex shader
-	//xbox::X_VSH_SHADER_HEADER* pXboxVertexShaderHeader = (xbox::X_VSH_SHADER_HEADER*)pXboxFunction;
-	ID3DBlob* pErrors = nullptr;
-	ID3DBlob* pErrorsCompatibility = nullptr;
-	HRESULT             hRet = 0;
-	auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
-
-	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL3;
-	hRet = D3DCompile(
-		hlsl.c_str(),
-		hlsl.length(),
-		pSourceName, // pSourceName
-		nullptr, // pDefines
-		D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
-		"main", // shader entry poiint
-		g_vs_model, // shader profile
-		flags1, // flags1
-		0, // flags2
-		ppHostShader, // out
-		&pErrors // ppErrorMsgs out
-	);
-
-	// If the shader failed in the default vertex shader model, retry in vs_model_3_0
-	// This allows shaders too large for 2_a to be compiled (Test Case: Shenmue 2)
-	if (FAILED(hRet)) {
-		if (pErrors) {
-			// Log HLSL compiler errors
-			EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-			pErrors->Release();
-			pErrors = nullptr;
-		}
-
-		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Retrying with shader model 3.0");
-		hRet = D3DCompile(
-			hlsl.c_str(),
-			hlsl.length(),
-			pSourceName, // pSourceName
-			nullptr, // pDefines
-			D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
-			"main", // shader entry poiint
-			vs_model_3_0, // shader profile
-			flags1, // flags1
-			0, // flags2
-			ppHostShader, // out
-			&pErrors // ppErrorMsgs out
-		);
-	}
-
-	// If the shader failed again, retry in compatibility mode
-	if (FAILED(hRet)) {
-		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Recompiling in compatibility mode");
-		// Attempt to retry in compatibility mode, this allows some vertex-state shaders to compile
-		// Test Case: Spy vs Spy
-		flags1 |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY | D3DCOMPILE_AVOID_FLOW_CONTROL;
-		hRet = D3DCompile(
-			hlsl.c_str(),
-			hlsl.length(),
-			pSourceName, // pSourceName
-			nullptr, // pDefines
-			D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
-			"main", // shader entry poiint
-			g_vs_model, // shader profile
-			flags1, // flags1
-			0, // flags2
-			ppHostShader, // out
-			&pErrorsCompatibility // ppErrorMsgs out
-		);
-
-		if (FAILED(hRet)) {
-			LOG_TEST_CASE("Couldn't assemble vertex shader");
-		}
-	}
-
-	// Determine the log level
-	if (pErrors) {
-		// Log errors from the initial compilation
-		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-		pErrors->Release();
-		pErrors = nullptr;
-	}
-
-	// Failure to recompile in compatibility mode ignored for now
-	if (pErrorsCompatibility != nullptr) {
-		pErrorsCompatibility->Release();
-		pErrorsCompatibility = nullptr;
-	}
-
-	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) {
-		if (g_bPrintfOn) {
-			if (!FAILED(hRet)) {
-				// Log disassembly
-				hRet = D3DDisassemble(
-					(*ppHostShader)->GetBufferPointer(),
-					(*ppHostShader)->GetBufferSize(),
-					D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS | D3D_DISASM_ENABLE_INSTRUCTION_NUMBERING,
-					NULL,
-					&pErrors
-				);
-				if (pErrors) {
-					EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
-					pErrors->Release();
-				}
-			}
-		}
-	}
-
-	return hRet;
-}
-
 // recompile xbox vertex shader function
-extern HRESULT EmuCompileShader
+extern HRESULT EmuCompileVertexShader
 (
 	IntermediateVertexShader* pIntermediateShader,
 	ID3DBlob** ppHostShader
@@ -326,11 +216,16 @@ extern HRESULT EmuCompileShader
 	hlsl_stream << hlsl_template[1]; // Finish with the HLSL template footer
 	std::string hlsl_str = hlsl_stream.str();
 
-	EmuLog(LOG_LEVEL::DEBUG, "--- HLSL conversion ---");
-	EmuLog(LOG_LEVEL::DEBUG, DebugPrependLineNumbers(hlsl_str).c_str());
-	EmuLog(LOG_LEVEL::DEBUG, "-----------------------");
-
-	return CompileHlsl(hlsl_str, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
+	HRESULT hRet = EmuCompileShader(hlsl_str, g_vs_model, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
+	
+	if (FAILED(hRet) && (g_vs_model != vs_model_3_0)) {
+		// If the shader failed in the default vertex shader model, retry in vs_model_3_0
+		// This allows shaders too large for 2_a to be compiled (Test Case: Shenmue 2)
+		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Retrying with shader model 3.0");
+		hRet = EmuCompileShader(hlsl_str, vs_model_3_0, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
+	}
+		
+	return hRet;
 }
 
 extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
@@ -352,7 +247,7 @@ extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
 		hlsl << hlslStream.rdbuf();
 
 		// Compile the shader
-		CompileHlsl(hlsl.str(), &pShader, sourceFile.c_str());
+		EmuCompileShader(hlsl.str(), g_vs_model, &pShader, sourceFile.c_str());
 	}
 
 	*ppHostShader = pShader;
@@ -377,6 +272,9 @@ uniform float4 xboxScreenspaceOffset : register(c213);
 
 
 uniform float4 xboxTextureScale[4] : register(c214);
+
+// Parameters for mapping the shader's fog output value to a fog factor
+uniform float4  CxbxFogInfo: register(c218); // = CXBX_D3DVS_CONSTREG_FOGINFO
 
 struct VS_INPUT
 {
@@ -456,10 +354,33 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Copy variables to output struct
 	VS_OUTPUT xOut;
 
+	// Fogging
+	// TODO deduplicate
+	const float fogDepth      =   abs(oFog.x); 
+	const float fogTableMode  =   CxbxFogInfo.x;
+	const float fogDensity    =   CxbxFogInfo.y;
+	const float fogStart      =   CxbxFogInfo.z;
+	const float fogEnd        =   CxbxFogInfo.w;  
+
+	const float FOG_TABLE_NONE    = 0;
+	const float FOG_TABLE_EXP     = 1;
+	const float FOG_TABLE_EXP2    = 2;
+	const float FOG_TABLE_LINEAR  = 3;
+ 
+    float fogFactor;
+    if(fogTableMode == FOG_TABLE_NONE) 
+       fogFactor = fogDepth;
+    if(fogTableMode == FOG_TABLE_EXP) 
+       fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
+    if(fogTableMode == FOG_TABLE_EXP2) 
+       fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
+    if(fogTableMode == FOG_TABLE_LINEAR) 
+       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
+
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = oFog.x; // Note : Xbox clamps fog in pixel shader
+	xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);
@@ -473,7 +394,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 }
 )";
 
-		CompileHlsl(hlsl, &pPassthroughShader, "passthrough.hlsl");
+		EmuCompileShader(hlsl, g_vs_model, &pPassthroughShader, "passthrough.hlsl");
 	}
 
 	*ppHostShader = pPassthroughShader;

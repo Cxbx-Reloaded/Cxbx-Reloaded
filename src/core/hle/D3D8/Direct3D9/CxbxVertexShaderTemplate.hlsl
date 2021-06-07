@@ -7,13 +7,13 @@ struct VS_INPUT
 };
 
 // Output registers
-struct VS_OUTPUT
+struct VS_OUTPUT // Declared identical to pixel shader input (see PS_INPUT)
 {
 	float4 oPos : POSITION;  // Homogeneous clip space position
 	float4 oD0  : COLOR0;    // Primary color (front-facing)
 	float4 oD1  : COLOR1;    // Secondary color (front-facing)
 	float  oFog : FOG;       // Fog coordinate
-	float  oPts : PSIZE;	 // Point size
+	float  oPts : PSIZE;     // Point size
 	float4 oB0  : TEXCOORD4; // Back-facing primary color
 	float4 oB1  : TEXCOORD5; // Back-facing secondary color
 	float4 oT0  : TEXCOORD0; // Texture coordinate set 0
@@ -36,6 +36,9 @@ uniform float4 xboxScreenspaceScale : register(c212);
 uniform float4 xboxScreenspaceOffset : register(c213);
 
 uniform float4 xboxTextureScale[4] : register(c214);
+
+// Parameters for mapping the shader's fog output value to a fog factor
+uniform float4  CxbxFogInfo: register(c218); // = CXBX_D3DVS_CONSTREG_FOGINFO
 
 // Overloaded casts, assuring all inputs are treated as float4
 float4 _tof4(float  src) { return float4(src, src, src, src); }
@@ -294,7 +297,8 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Single component outputs
 	float4 oFog, oPts; // x is write-only on Xbox. Use float4 as some games use incorrect masks
-	oFog = oPts = 0;
+	oFog = 1; // Default to no fog. Test case: Lego Star Wars II
+	oPts = 0;
 
 	// Address (index) register
 	int1 a0 = 0;
@@ -324,12 +328,35 @@ VS_OUTPUT main(const VS_INPUT xIn)
 R"DELIMITER(
 
 	// Copy variables to output struct
-	VS_OUTPUT xOut;
+    VS_OUTPUT xOut;
 
+	// Fogging
+	// TODO deduplicate
+	const float fogDepth      =   oFog.x; // Don't abs this value! Test-case : DolphinClassic xdk sample
+	const float fogTableMode  =   CxbxFogInfo.x;
+	const float fogDensity    =   CxbxFogInfo.y;
+	const float fogStart      =   CxbxFogInfo.z;
+	const float fogEnd        =   CxbxFogInfo.w;  
+
+	const float FOG_TABLE_NONE    = 0;
+	const float FOG_TABLE_EXP     = 1;
+	const float FOG_TABLE_EXP2    = 2;
+	const float FOG_TABLE_LINEAR  = 3;
+ 
+    float fogFactor;
+    if(fogTableMode == FOG_TABLE_NONE) 
+       fogFactor = fogDepth;
+    if(fogTableMode == FOG_TABLE_EXP) 
+       fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
+    if(fogTableMode == FOG_TABLE_EXP2) 
+       fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
+    if(fogTableMode == FOG_TABLE_LINEAR) 
+       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
+       
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = oFog.x; // Note : Xbox clamps fog in pixel shader
+	xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);

@@ -38,6 +38,7 @@
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
+#include "devices\xbox.h"
 #include "core\hle\D3D8\XbConvert.h" // For NV2A_VP_UPLOAD_INST, NV2A_VP_UPLOAD_CONST_ID, NV2A_VP_UPLOAD_CONST
 #include "devices\video\nv2a.h" // For D3DPUSH_DECODE
 #include "common\Logging.h" // For LOG_INIT
@@ -98,7 +99,7 @@ void CxbxVertexShaderSetFlags()
 // Note : Temporary, until we reliably locate the Xbox internal state for this
 // See D3DXDeclaratorFromFVF docs https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dxdeclaratorfromfvf
 // and https://github.com/reactos/wine/blob/2e8dfbb1ad71f24c41e8485a39df01bb9304127f/dlls/d3dx9_36/mesh.c#L2041
-static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf)
+static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf) // TODO : Rename CxbxFVFToXboxVertexAttributeFormat?
 {
 	using namespace xbox;
 
@@ -127,17 +128,14 @@ static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf)
 	unsigned offset = 0;
 	DWORD position = (xboxFvf & X_D3DFVF_POSITION_MASK);
 	switch (position) {
-	case 0: nrPositionFloats = 0; LOG_TEST_CASE("FVF without position"); break; // Note : Remove logging if this occurs often
-	case X_D3DFVF_XYZ: /*nrPositionFloats is set to 3 by default*/ break;
-	case X_D3DFVF_XYZRHW:
-		g_Xbox_VertexShader_ForFVF.Flags |= X_VERTEXSHADER_FLAG_PASSTHROUGH;
-		nrPositionFloats = 4;
-		break;
-	case X_D3DFVF_XYZB1: nrBlendWeights = 1; break;
-	case X_D3DFVF_XYZB2: nrBlendWeights = 2; break;
-	case X_D3DFVF_XYZB3: nrBlendWeights = 3; break;
-	case X_D3DFVF_XYZB4: nrBlendWeights = 4; break;
-	case X_D3DFVF_POSITION_MASK: /*Keep nrPositionFloats set to 3*/ LOG_TEST_CASE("FVF invalid (5th blendweight?)"); break;
+		case 0: nrPositionFloats = 0; LOG_TEST_CASE("FVF without position"); break; // Note : Remove logging if this occurs often
+		case X_D3DFVF_XYZ: /*nrPositionFloats is set to 3 by default*/ break;
+		case X_D3DFVF_XYZRHW: nrPositionFloats = 4; g_Xbox_VertexShader_ForFVF.Flags |= X_VERTEXSHADER_FLAG_PASSTHROUGH; break;
+		case X_D3DFVF_XYZB1: nrBlendWeights = 1; break;
+		case X_D3DFVF_XYZB2: nrBlendWeights = 2; break;
+		case X_D3DFVF_XYZB3: nrBlendWeights = 3; break;
+		case X_D3DFVF_XYZB4: nrBlendWeights = 4; break;
+		case X_D3DFVF_POSITION_MASK: /*Keep nrPositionFloats set to 3*/ LOG_TEST_CASE("FVF invalid (5th blendweight?)"); break;
 		DEFAULT_UNREACHABLE;
 	}
 
@@ -158,6 +156,7 @@ static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf)
 			offset += sizeof(float) * nrBlendWeights;
 		}
 	}
+	else if (nrBlendWeights > 0) LOG_TEST_CASE("BlendWeights given without position?");
 
 	// Write Normal, Diffuse, and Specular
 	if (xboxFvf & X_D3DFVF_NORMAL) {
@@ -193,18 +192,23 @@ static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf)
 		LOG_TEST_CASE("Limiting FVF to 4 textures");
 		textureCount = 4; // Safeguard, since the X_D3DFVF_TEXCOUNT bitfield could contain invalid values (5 up to 15)
 	}
+
 	for (int i = 0; i < textureCount; i++) {
-		int numberOfCoordinates = 0;
 		auto FVFTextureFormat = (xboxFvf >> X_D3DFVF_TEXCOORDSIZE_SHIFT(i)) & 0x003;
-		switch (FVFTextureFormat) {
-		case X_D3DFVF_TEXTUREFORMAT1: numberOfCoordinates = 1; break;
-		case X_D3DFVF_TEXTUREFORMAT2: numberOfCoordinates = 2; break;
-		case X_D3DFVF_TEXTUREFORMAT3: numberOfCoordinates = 3; break;
-		case X_D3DFVF_TEXTUREFORMAT4: numberOfCoordinates = 4; break;
-			DEFAULT_UNREACHABLE;
+#if 1
+		int numberOfCoordinates = ((FVFTextureFormat + 1) & 3) + 1;
+#else
+		int numberOfCoordinates = 0;
+		switch (FVFTextureFormat) { // Note : Below enums are not ordered; In a math expression mapped as :
+			case X_D3DFVF_TEXTUREFORMAT1: numberOfCoordinates = 1; break; // input = 3 -> 4 -> 0 -> 1 = output
+			case X_D3DFVF_TEXTUREFORMAT2: numberOfCoordinates = 2; break; // input = 0 -> 1 -> 1 -> 2 = output
+			case X_D3DFVF_TEXTUREFORMAT3: numberOfCoordinates = 3; break; // input = 1 -> 2 -> 2 -> 3 = output
+			case X_D3DFVF_TEXTUREFORMAT4: numberOfCoordinates = 4; break; // input = 2 -> 3 -> 3 -> 4 = output
+			DEFAULT_UNREACHABLE;                                          // ((input   +1 ) &3 ) +1 ) = output
 		}
 
 		assert(numberOfCoordinates > 0);
+#endif
 		pSlot = &declaration.Slots[X_D3DVSDE_TEXCOORD0 + i];
 		pSlot->Format = X_D3DVSDT_FLOAT[numberOfCoordinates];
 		pSlot->Offset = offset;
