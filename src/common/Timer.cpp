@@ -38,6 +38,35 @@
 #include <time.h>
 #endif
 
+// More precise sleep, but with increased CPU usage
+void SleepPrecise(std::chrono::steady_clock::time_point targetTime)
+{
+	using namespace std::chrono;
+	// If we don't need to wait, return right away
+
+	// TODO use waitable timers?
+	// TODO fetch the timer resolution to determine the sleep threshold?
+	// TODO adaptive wait? https://blat-blatnik.github.io/computerBear/making-accurate-sleep-function/
+
+	// Try to sleep for as much of the wait as we can
+	// to save CPU usage / power
+	// We expect sleep to overshoot, so give ourselves some extra time
+	// Note currently we ask Windows to give us 1ms timer resolution
+	constexpr auto sleepThreshold = 2ms; // Minimum remaining time before we attempt to use sleep
+
+	auto sleepFor = (targetTime - sleepThreshold) - steady_clock::now();
+	auto sleepMs = duration_cast<milliseconds>(sleepFor).count();
+
+	// Sleep if required
+	if (sleepMs >= 0) {
+		Sleep((DWORD)sleepMs);
+	}
+
+	// Spin wait
+	while (steady_clock::now() < targetTime) {
+		;
+	}
+}
 
 // Virtual clocks will probably become useful once LLE CPU is implemented, but for now we don't need them.
 // See the QEMUClockType QEMU_CLOCK_VIRTUAL of XQEMU for more info.

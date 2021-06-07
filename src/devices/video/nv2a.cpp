@@ -322,7 +322,7 @@ const NV2ABlockInfo* EmuNV2A_Block(xbox::addr_xt addr)
 // HACK: Until we implement VGA/proper interrupt generation
 // we simulate VBLANK by calling the interrupt at 60Hz
 std::thread vblank_thread;
-extern std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime();
+extern std::chrono::steady_clock::time_point GetNextVBlankTime();
 
 void _check_gl_reset()
 {

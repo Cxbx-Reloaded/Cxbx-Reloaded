@@ -61,6 +61,7 @@
 #include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderSource.h"
+#include "Timer.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_dx9.h>
@@ -2146,17 +2147,18 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return S_OK; // = Is not part of D3D8 handling.
 }
 
-std::chrono::time_point<std::chrono::steady_clock, std::chrono::duration<double, std::nano>> GetNextVBlankTime()
+std::chrono::steady_clock::time_point GetNextVBlankTime()
 {
+	using namespace std::chrono;
 	// TODO: Read display frequency from Xbox Display Adapter
 	// This is accessed by calling CMiniport::GetRefreshRate(); 
 	// This reads from the structure located at CMinpPort::m_CurrentAvInfo
 	// This will require at least Direct3D_CreateDevice being unpatched
 	// otherwise, m_CurrentAvInfo will never be initialised!
 	// 20ms should be used in the case of 50hz
-	return std::chrono::steady_clock::now() + 16.6666666667ms;
+	auto ms = 16.6666666667ms;
+	return steady_clock::now() + duration_cast<steady_clock::duration>(ms);
 }
-
 
 // timing thread procedure
 static DWORD WINAPI EmuUpdateTickCount(LPVOID)
@@ -2168,51 +2170,45 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
     EmuLog(LOG_LEVEL::DEBUG, "Timing thread is running.");
 
-    // current vertical blank count
-    int curvb = 0;
+	// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
+	if (bLLE_GPU) {
+		return 0;
+	}
 
-	// Calculate Next VBlank time
 	auto nextVBlankTime = GetNextVBlankTime();
 
     while(true)
     {
-		SwitchToThread();
-
-		// If VBlank Interval has passed, trigger VBlank callback
+		// Wait for VBlank
         // Note: This whole code block can be removed once NV2A interrupts are implemented
 		// And Both Swap and Present can be ran unpatched
 		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
-		// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
-		if (!(bLLE_GPU) && std::chrono::steady_clock::now() > nextVBlankTime)
-        {
-			nextVBlankTime = GetNextVBlankTime();
+		SleepPrecise(nextVBlankTime);
+		nextVBlankTime = GetNextVBlankTime();
 
-			// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
-			std::unique_lock<std::mutex> lk(g_VBConditionMutex);
-			g_Xbox_VBlankData.VBlank++;
-			g_VBConditionVariable.notify_all();
+		// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
+		std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+		g_Xbox_VBlankData.VBlank++;
+		g_VBConditionVariable.notify_all();
 
-			// TODO: Fixme.  This may not be right...
-			g_Xbox_SwapData.SwapVBlank = 1;
+		// TODO: Fixme.  This may not be right...
+		g_Xbox_SwapData.SwapVBlank = 1;
 
-            if(g_pXbox_VerticalBlankCallback != xbox::zeroptr)
-            {
-                    
-                g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
-                    
-            }
+		if(g_pXbox_VerticalBlankCallback != xbox::zeroptr)
+		{
+			g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
+		}
 
-            g_Xbox_VBlankData.Swap = 0;
+		g_Xbox_VBlankData.Swap = 0;
 
-			// TODO: This can't be accurate...
-			g_Xbox_SwapData.TimeUntilSwapVBlank = 0;
+		// TODO: This can't be accurate...
+		g_Xbox_SwapData.TimeUntilSwapVBlank = 0;
 
-			// TODO: Recalculate this for PAL version if necessary.
-			// Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
-		//	g_Xbox_SwapData.TimeBetweenSwapVBlanks = 1/60;
-			g_Xbox_SwapData.TimeBetweenSwapVBlanks = 0;
-        }
-    }
+		// TODO: Recalculate this for PAL version if necessary.
+		// Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
+	//	g_Xbox_SwapData.TimeBetweenSwapVBlanks = 1/60;
+		g_Xbox_SwapData.TimeBetweenSwapVBlanks = 0;
+	}
 }
 
 void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
@@ -5171,7 +5167,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 	EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
 }
 
-std::chrono::time_point<std::chrono::steady_clock> frameStartTime;
+std::chrono::steady_clock::time_point frameStartTime;
 
 // LTCG specific swap function...
 // This uses a custom calling convention where parameter is passed in EAX
@@ -5478,24 +5474,11 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 break;
         }
 
-        auto targetDuration = std::chrono::duration<double, std::milli>(((1000.0f / targetRefreshRate) * multiplier));
+        // Wait until it's time for the next frame
+        auto frameMs = (1000.0 / targetRefreshRate) * multiplier;
+        auto targetDuration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(frameMs));
         auto targetTimestamp = frameStartTime + targetDuration;
-        auto actualDuration = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - frameStartTime);
-        auto startTimeAjustment = actualDuration - targetDuration;
-
-        // Only enter the wait loop if the frame took too long
-        if (actualDuration < targetDuration) {
-            // If we need to wait for a larger amount of time (>= 1 frame at 60FPS), we can just sleep
-            if ((targetTimestamp - std::chrono::steady_clock::now()) > std::chrono::duration<double, std::milli>(16.0)) {
-                std::this_thread::sleep_until(targetTimestamp);
-            } else {
-                // Otherwise, we fall-through and just keep polling
-                // This prevents large waits from hogging CPU power, but allows small waits/ to remain precice.
-                while (std::chrono::steady_clock::now() < targetTimestamp) {
-                    ;
-                }
-            }
-        }
+        SleepPrecise(targetTimestamp);
     }
 
     frameStartTime = std::chrono::steady_clock::now();
