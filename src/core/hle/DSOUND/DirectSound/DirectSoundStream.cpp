@@ -173,34 +173,51 @@ xbox::ulong_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Release)
 {
     DSoundMutexGuardLock;
 
-	LOG_FUNC_ONE_ARG(pThis);
+    LOG_FUNC_ONE_ARG(pThis);
 
     ULONG uRet = 0;
     if (pThis != 0 && (pThis->EmuDirectSoundBuffer8 != 0)) {
-        uRet = pThis->EmuDirectSoundBuffer8->Release();
 
-        if (uRet == 0) {
-            if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
-                pThis->EmuDirectSound3DBuffer8->Release();
+        //if (uRet == 0) {
+
+            // 1. remove packet/vector/iterator
+            for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+                //CrashTwinsanity crashed here when interrupt cut scene. the vector iterator is still valid, but the buffer->xmp_data is no longer valid. so we have to free the buffer->xmp_data after we delete the packet.
+                DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
             }
+            // 2. remove the EmuBufferDesc
+            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
+                free(pThis->EmuBufferDesc.lpwfxFormat);
+                pThis->EmuBufferDesc.lpwfxFormat = nullptr;
+            }
+            // NOTE: Do not release X_BufferCache! X_BufferCache is using xbox buffer.
 
-            // remove cache entry
+            // 3. remove cache entry
             vector_ds_stream::iterator ppDSStream = std::find(g_pDSoundStreamCache.begin(), g_pDSoundStreamCache.end(), pThis);
             if (ppDSStream != g_pDSoundStreamCache.end()) {
                 g_pDSoundStreamCache.erase(ppDSStream);
             }
 
-            for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-                DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+            // 4. remove direct sound 3D buffer
+            if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
+                pThis->EmuDirectSound3DBuffer8->Release();
+                pThis->EmuDirectSound3DBuffer8 = nullptr;
             }
 
-            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
-                free(pThis->EmuBufferDesc.lpwfxFormat);
+            //}
+            // 5. release the direct sound buffer
+            if (pThis->EmuDirectSoundBuffer8 != nullptr) {
+                uRet = pThis->EmuDirectSoundBuffer8->Release();
+                pThis->EmuDirectSoundBuffer8 = nullptr;
             }
-            // NOTE: Do not release X_BufferCache! X_BufferCache is using xbox buffer.
 
-            delete pThis;
-        }
+            // 6. remove X_CDirectSoundStream. pThis must be delete in the last. once it's been deleted, all it's members will be unaccessible.
+            //delete pThis;
+        
+
+    }
+    else if (pThis != 0) {
+        delete pThis;
     }
 
     RETURN(uRet);
