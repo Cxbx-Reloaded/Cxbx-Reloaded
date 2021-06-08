@@ -4256,3 +4256,28 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderInput)
 
     return 0;
 }
+
+// ******************************************************************
+// * patch: D3DDevice_GetMaterial
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetMaterial)
+(
+	X_D3DMATERIAL8* pMaterial
+)
+{
+	LOG_FUNC_ONE_ARG(pMaterial);
+
+	HRESULT hRet = D3D_OK;
+
+	if (pMaterial)
+	{
+		hRet = g_pD3DDevice->GetMaterial(pMaterial);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
+	}
+
+	if(FAILED(hRet))
+    {
+		EmuLog(LOG_LEVEL::WARNING, "We're lying about getting a material!");
+        hRet = D3D_OK;
+    }
+}

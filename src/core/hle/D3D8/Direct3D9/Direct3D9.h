@@ -2010,7 +2010,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetBackMaterial)
 (
-	X_D3DMATERIAL8* pMaterial
+	CONST X_D3DMATERIAL8 *pMaterial
 );
 
 #if 0 // patch disabled
@@ -2140,14 +2140,6 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetBackMaterial)
 // * patch: D3D::LazySetPointParams
 // ******************************************************************
 void WINAPI EMUPATCH(D3D_LazySetPointParams)( void* Device );
-
-// ******************************************************************
-// * patch: D3DDevice_GetMaterial
-// ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetMaterial)
-(
-	X_D3DMATERIAL8* pMaterial
-);
 
 } // end of namespace xbox
 

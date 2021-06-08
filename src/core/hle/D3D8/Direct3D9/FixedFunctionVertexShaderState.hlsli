@@ -13,7 +13,11 @@
 
 #define float4x4 D3DMATRIX
 #define float4 D3DXVECTOR4
+#ifdef CXBX_USE_D3D11
+#define float3 xbox::X_D3DVECTOR
+#else
 #define float3 D3DVECTOR
+#endif
 #define float2 D3DXVECTOR2
 #define arr(name, type, length) std::array<type, length> name
 

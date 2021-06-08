@@ -33,7 +33,7 @@
 #ifdef CXBX_USE_D3D11
 // include direct3d 11 headers
 #include <d3d11.h>
-//??#include <DirectXMath.h>
+#include <DirectXMath.h> // XMVECTORF32
 #else
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
@@ -103,14 +103,83 @@ typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
 
 namespace xbox {
 
-// TODO : Declare these aliasses as Xbox type
-typedef D3DLIGHT9 X_D3DLIGHT8;
-typedef D3DMATERIAL9 X_D3DMATERIAL8;
-typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
+// Xbox D3D types, probably just copies of the Windows Direct3D 9 counterparts :
+
+#ifdef CXBX_USE_D3D11
+	typedef struct _X_D3DVECTOR {
+	float x;
+	float y;
+	float z;
+} X_D3DVECTOR;
+#else
+typedef D3DVECTOR X_D3DVECTOR;
+#endif
+
+typedef struct _X_D3DCOLORVALUE {
+	float r;
+	float g;
+	float b;
+	float a;
+} X_D3DCOLORVALUE;
+
+typedef struct _X_D3DMATERIAL8 {
+	X_D3DCOLORVALUE Diffuse;        /* Diffuse color RGBA */
+	X_D3DCOLORVALUE Ambient;        /* Ambient color RGB */
+	X_D3DCOLORVALUE Specular;       /* Specular 'shininess' */
+	X_D3DCOLORVALUE Emissive;       /* Emissive color RGB */
+	float           Power;          /* Sharpness if specular highlight */
+} X_D3DMATERIAL8;
+
+typedef enum _X_D3DLIGHTTYPE {
+	D3DLIGHT_POINT = 1,
+	D3DLIGHT_SPOT = 2,
+	D3DLIGHT_DIRECTIONAL = 3,
+	D3DLIGHT_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
+} X_D3DLIGHTTYPE;
+
+typedef struct _D3DLIGHT8 {
+	X_D3DLIGHTTYPE  Type;            /* Type of light source */
+	X_D3DCOLORVALUE Diffuse;         /* Diffuse color of light */
+	X_D3DCOLORVALUE Specular;        /* Specular color of light */
+	X_D3DCOLORVALUE Ambient;         /* Ambient color of light */
+	X_D3DVECTOR     Position;         /* Position in world space */
+	X_D3DVECTOR     Direction;        /* Direction in world space */
+	float           Range;            /* Cutoff range */
+	float           Falloff;          /* Falloff */
+	float           Attenuation0;     /* Constant attenuation */
+	float           Attenuation1;     /* Linear attenuation */
+	float           Attenuation2;     /* Quadratic attenuation */
+	float           Theta;            /* Inner angle of spotlight cone */
+	float           Phi;              /* Outer angle of spotlight cone */
+} X_D3DLIGHT8;
+
+typedef struct _X_D3DVIEWPORT8 {
+	DWORD       X;
+	DWORD       Y;            /* Viewport Top left */
+	DWORD       Width;
+	DWORD       Height;       /* Viewport Dimensions */
+	float       MinZ;         /* Min/max of clip Volume */
+	float       MaxZ;
+} X_D3DVIEWPORT8;
+
+/* SwapEffects */
+typedef enum _X_D3DSWAPEFFECT
+{
+	D3DSWAPEFFECT_DISCARD = 1,
+	D3DSWAPEFFECT_FLIP = 2,
+	D3DSWAPEFFECT_COPY = 3,
+	D3DSWAPEFFECT_COPY_XBOX = 4, // Unknown, probably copy vsync, collides with Windows Direct3D9Ex D3DSWAPEFFECT_OVERLAY
+
+	D3DSWAPEFFECT_FORCE_DWORD = 0x7fffffff
+} X_D3DSWAPEFFECT;
+
 
 // TODO: fill out these enumeration tables for convienance
-typedef D3DSWAPEFFECT X_D3DSWAPEFFECT;
+#ifdef CXBX_USE_D3D11
+typedef XMVECTORF32 X_D3DXVECTOR4;
+#else
 typedef D3DXVECTOR4 X_D3DXVECTOR4;
+#endif
 typedef DWORD X_D3DBLENDOP;
 typedef DWORD X_D3DBLEND;
 typedef DWORD X_D3DCMPFUNC;
