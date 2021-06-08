@@ -172,7 +172,7 @@ void VertexShaderCache::ReleaseShader(ShaderKey key)
 	}
 }
 
-void VertexShaderCache::ResetD3DDevice(IDirect3DDevice9* newDevice)
+void VertexShaderCache::ResetD3DDevice(IDirect3DDevice* newDevice)
 {
 	EmuLog(LOG_LEVEL::DEBUG, "Resetting D3D device");
 	cache.clear();
