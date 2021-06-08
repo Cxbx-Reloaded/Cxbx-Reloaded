@@ -327,10 +327,12 @@ g_EmuCDPD;
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SelectVertexShader,                       (xbox::dword_xt, xbox::dword_xt)                                                                      );*/\
   /*XB_MACRO(xbox::void_xt,       __stdcall,  D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2,     ()                                                                                                    );*/\
   /*XB_MACRO(xbox::void_xt,       __stdcall,  D3DDevice_SelectVertexShader_4__LTCG_eax1,          (xbox::dword_xt)                                                                                      );*/\
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetBackMaterial,                          (CONST xbox::X_D3DMATERIAL8*)                                                                         );  \
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetGammaRamp,                             (xbox::dword_xt, CONST X_D3DGAMMARAMP*)                                                               );*/\
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetIndices,                               (xbox::X_D3DIndexBuffer*, xbox::uint_xt)                                                              );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetIndices_4,                             (xbox::uint_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_SetLight,                                 (xbox::dword_xt, CONST xbox::X_D3DLIGHT8*)                                                            );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetMaterial,                              (CONST xbox::X_D3DMATERIAL8*)                                                                         );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPixelShader,                           (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPixelShader_0__LTCG_eax_handle,        ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetRenderState_Simple,                    (xbox::dword_xt, xbox::dword_xt)                                                                      );  \
@@ -6237,7 +6239,7 @@ D3DXVECTOR4 toVector(D3DCOLOR color) {
 	return v;
 }
 
-D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
+D3DXVECTOR4 toVector(xbox::X_D3DCOLORVALUE val) {
 	return D3DXVECTOR4(val.r, val.g, val.b, val.a);
 }
 
@@ -7535,11 +7537,13 @@ void CxbxUpdateHostViewport() {
 
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
-		D3DVIEWPORT hostViewport = g_Xbox_Viewport;
-		hostViewport.X *= Xscale;
-		hostViewport.Y *= Yscale;
-		hostViewport.Width *= Xscale;
-		hostViewport.Height *= Yscale;
+		D3DVIEWPORT hostViewport;
+		hostViewport.X = g_Xbox_Viewport.X * Xscale;
+		hostViewport.Y = g_Xbox_Viewport.Y * Yscale;
+		hostViewport.Width = g_Xbox_Viewport.Width * Xscale;
+		hostViewport.Height = g_Xbox_Viewport.Height * Yscale;
+		hostViewport.MinZ = g_Xbox_Viewport.MinZ; // ?? * Zscale;
+		hostViewport.MaxZ = g_Xbox_Viewport.MaxZ; // ?? * Zscale;
 		g_pD3DDevice->SetViewport(&hostViewport);
 
 		// Reset scissor rect
@@ -8217,10 +8221,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 
 	d3d8LightState.Lights[Index] = *pLight;
 
-    HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
-
-    return hRet;
+    return S_OK;
 }
 
 // ******************************************************************
@@ -8233,14 +8234,32 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 {
 	LOG_FUNC_ONE_ARG(pMaterial);
 
+	XB_TRMP(D3DDevice_SetMaterial)(pMaterial);
+
 	ffShaderState.Materials[0].Ambient = toVector(pMaterial->Ambient);
 	ffShaderState.Materials[0].Diffuse = toVector(pMaterial->Diffuse);
 	ffShaderState.Materials[0].Specular = toVector(pMaterial->Specular);
 	ffShaderState.Materials[0].Emissive = toVector(pMaterial->Emissive);
 	ffShaderState.Materials[0].Power = pMaterial->Power;
+}
 
-    HRESULT hRet = g_pD3DDevice->SetMaterial(pMaterial);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
+// ******************************************************************
+// * patch: D3DDevice_SetBackMaterial
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackMaterial)
+(
+	CONST X_D3DMATERIAL8 *pMaterial
+)
+{
+	LOG_FUNC_ONE_ARG(pMaterial);
+
+	XB_TRMP(D3DDevice_SetBackMaterial)(pMaterial);
+
+	ffShaderState.Materials[1].Ambient = toVector(pMaterial->Ambient);
+	ffShaderState.Materials[1].Diffuse = toVector(pMaterial->Diffuse);
+	ffShaderState.Materials[1].Specular = toVector(pMaterial->Specular);
+	ffShaderState.Materials[1].Emissive = toVector(pMaterial->Emissive);
+	ffShaderState.Materials[1].Power = pMaterial->Power;
 }
 
 // ******************************************************************
@@ -9424,29 +9443,4 @@ void WINAPI xbox::EMUPATCH(D3D_LazySetPointParams)
 	LOG_FUNC_ONE_ARG(Device);
 
 	LOG_UNIMPLEMENTED();
-}
-
-// ******************************************************************
-// * patch: D3DDevice_GetMaterial
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetMaterial)
-(
-	X_D3DMATERIAL8* pMaterial
-)
-{
-	LOG_FUNC_ONE_ARG(pMaterial);
-
-	HRESULT hRet = D3D_OK;
-
-	if (pMaterial)
-	{
-		hRet = g_pD3DDevice->GetMaterial(pMaterial);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetMaterial");
-	}
-
-	if(FAILED(hRet))
-    {
-		EmuLog(LOG_LEVEL::WARNING, "We're lying about getting a material!");
-        hRet = D3D_OK;
-    }
 }
