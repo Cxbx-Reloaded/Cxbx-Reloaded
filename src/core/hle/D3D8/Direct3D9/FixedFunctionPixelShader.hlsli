@@ -2,9 +2,13 @@
 #ifdef  __cplusplus
 #pragma once
 
+#ifdef CXBX_USE_D3D11
+#include <d3d11.h>
+#else
 #include <d3d9.h>
 #include <d3d9types.h> // for D3DFORMAT, D3DLIGHT9, etc
 #include <d3dx9math.h> // for D3DXVECTOR4, etc
+#endif
 #include <array>
 
 #define float4x4 D3DMATRIX

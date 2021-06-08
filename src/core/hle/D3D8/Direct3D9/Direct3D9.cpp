@@ -68,7 +68,11 @@
 #include "Timer.h"
 
 #include <imgui.h>
+#ifdef CXBX_USE_D3D11
+#include <backends/imgui_impl_dx11.h>
+#else
 #include <backends/imgui_impl_dx9.h>
+#endif
 #include <backends/imgui_impl_win32.h>
 #include "core/common/video/RenderBase.hpp"
 
@@ -98,7 +102,7 @@ using namespace std::literals::chrono_literals;
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
 bool                                g_bClipCursor  = false; // indicates that the mouse cursor should be confined inside the rendering window
-IDirect3DDevice9Ex                 *g_pD3DDevice   = nullptr; // Direct3D Device
+IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
 
 // Static Variable(s)
 static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
@@ -2259,11 +2263,19 @@ static void CreateDefaultD3D9Device
     g_VertexShaderCache.ResetD3DDevice(g_pD3DDevice);
 
     // Set up ImGui's render backend
+#ifdef CXBX_USE_D3D11
+	ImGui_ImplDX11_Init(g_pD3DDevice);
+    g_renderbase->SetDeviceRelease([] {
+        ImGui_ImplDX11_Shutdown();
+        g_pD3DDevice->Release();
+    });
+#else
     ImGui_ImplDX9_Init(g_pD3DDevice);
     g_renderbase->SetDeviceRelease([] {
         ImGui_ImplDX9_Shutdown();
         g_pD3DDevice->Release();
     });
+#endif
 }
 
 

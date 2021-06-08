@@ -30,6 +30,11 @@
 // NOTE: required because XbD3D8Types.h is included in places where xbox_types.h is not, which causes compiler errors because of the undefined types
 #include "xbox_types.h"
 
+#ifdef CXBX_USE_D3D11
+// include direct3d 11 headers
+#include <d3d11.h>
+//??#include <DirectXMath.h>
+#else
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
 #include <d3d9.h>
@@ -40,6 +45,7 @@
 
 #include <dxerr9.h>
 //#pragma comment(lib, "dxerr.lib") // See https://blogs.msdn.microsoft.com/chuckw/2012/04/24/wheres-dxerr-lib/
+#endif
 
 // If the above doesn't compile, install the June 2010 DirectX SDK
 // from https://www.microsoft.com/en-us/download/details.aspx?id=6812
@@ -52,8 +58,17 @@
 // For transforming code that's written for Direct3D 8 into Direct3D 9,
 // See "Converting to Direct3D 9" https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx
 
+// For transforming code that's written for Direct3D 9 into Direct3D 11,
+// See "DirectX 9 to DirectX 11" https://docs.microsoft.com/en-us/windows/uwp/gaming/porting-considerations
+
 // See https://msdn.microsoft.com/en-us/library/windows/desktop/bb204851(v=vs.85).aspx#D3DENUM_NO_WHQL_LEVEL_Changes
 #define D3DENUM_NO_WHQL_LEVEL 0 // default in Direct3D 9
+
+#ifdef CXBX_USE_D3D11
+#define _9_11(_9, _11) _11
+#else
+#define _9_11(_9, _11) _9
+#endif
 
 // Alias all host Direct3D 9 symbols to generic symbols
 #define DXGetErrorString                DXGetErrorString9A
@@ -67,17 +82,18 @@
 #define D3DVERTEXELEMENT                D3DVERTEXELEMENT9
 #define D3DVIEWPORT                     D3DVIEWPORT9
 
+#define IDirect3DDevice                 _9_11(IDirect3DDevice9Ex,          ID3D11Device)
 #define IDirect3DStateBlock             IDirect3DStateBlock9 // unused
-#define IDirect3DVertexDeclaration      IDirect3DVertexDeclaration9
-#define IDirect3DVertexShader           IDirect3DVertexShader9
-#define IDirect3DPixelShader            IDirect3DPixelShader9
-#define IDirect3DResource               IDirect3DResource9
-#define IDirect3DBaseTexture            IDirect3DBaseTexture9
-#define IDirect3DTexture                IDirect3DTexture9
-#define IDirect3DVolumeTexture          IDirect3DVolumeTexture9
-#define IDirect3DCubeTexture            IDirect3DCubeTexture9
-#define IDirect3DVertexBuffer           IDirect3DVertexBuffer9
-#define IDirect3DIndexBuffer            IDirect3DIndexBuffer9
+#define IDirect3DVertexDeclaration      _9_11(IDirect3DVertexDeclaration9, ID3D11InputLayout)
+#define IDirect3DVertexShader           _9_11(IDirect3DVertexShader9,      ID3D11VertexShader)
+#define IDirect3DPixelShader            _9_11(IDirect3DPixelShader9,       ID3D11PixelShader)
+#define IDirect3DResource               _9_11(IDirect3DResource9,          ID3D11Resource)
+#define IDirect3DBaseTexture            _9_11(IDirect3DBaseTexture9,       ID3D11Resource)
+#define IDirect3DTexture                _9_11(IDirect3DTexture9,           ID3D11Texture2D)
+#define IDirect3DVolumeTexture          _9_11(IDirect3DVolumeTexture9,     ID3D11Texture3D)
+#define IDirect3DCubeTexture            _9_11(IDirect3DCubeTexture9,       ID3D11Texture2D) // array of six 2D textures (one for each face)
+#define IDirect3DVertexBuffer           _9_11(IDirect3DVertexBuffer9,      ID3D11Buffer)
+#define IDirect3DIndexBuffer            _9_11(IDirect3DIndexBuffer9,       ID3D11Buffer) // or ID3D11ShaderResourceView ?
 #define IDirect3DSurface                IDirect3DSurface9
 #define IDirect3DVolume                 IDirect3DVolume9
 #define IDirect3DSwapChain              IDirect3DSwapChain9
