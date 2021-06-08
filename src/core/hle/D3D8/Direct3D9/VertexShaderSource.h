@@ -15,7 +15,7 @@ public:
 	IDirect3DVertexShader *GetShader(ShaderKey key);
 	void ReleaseShader(ShaderKey key);
 
-	void ResetD3DDevice(IDirect3DDevice9* pD3DDevice);
+	void ResetD3DDevice(IDirect3DDevice* pD3DDevice);
 
 	// TODO
 	// WriteCacheToDisk
