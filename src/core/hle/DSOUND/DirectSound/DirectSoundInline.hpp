@@ -371,11 +371,18 @@ static inline void DSoundGenericUnlock(
 static inline HRESULT DSoundBufferCreate(LPDSBUFFERDESC pDSBufferDesc, LPDIRECTSOUNDBUFFER8 &pDSBuffer)
 {
     LPDIRECTSOUNDBUFFER pTempBuffer;
+    //Todo:shall we check the pDSBufferDesc->dwBufferBytes with legal ranges between DSBSIZE_MIN and DSBSIZE_MAX again?
     HRESULT hRetDS = g_pDSound8->CreateSoundBuffer(pDSBufferDesc, &pTempBuffer, nullptr);
 
     if (hRetDS == DS_OK) {
         hRetDS = pTempBuffer->QueryInterface(IID_IDirectSoundBuffer8, (LPVOID*)&(pDSBuffer));
         pTempBuffer->Release();
+        if (pDSBuffer == nullptr) {
+            EmuLog(LOG_LEVEL::WARNING, "CreateSoundBuffer:QueryInterface Failed!");
+        }
+    }
+    else {
+        EmuLog(LOG_LEVEL::WARNING, "CreateSoundBuffer Failed!");
     }
     return hRetDS;
 }
@@ -426,9 +433,9 @@ static inline void DSoundBufferTransferSettings(
     LONG lVolume, lPan;
     DS3DBUFFER ds3dBuffer;
 
-	if (pDSBufferOld == nullptr) {
-		return;
-	}
+    if (pDSBufferOld == nullptr) {
+        return;
+    }
 
     // if sync current frequency used (then use pitch only).
     uint32_t freq = converter_pitch2freq(Xb_Voice->GetPitch());
@@ -456,13 +463,17 @@ static inline void DSoundBufferReCreate(
     xbox::CDirectSoundVoice*     Xb_Voice) {
 
 
-    DSoundBufferCreate(&DSBufferDesc, pDSBufferNew);
-
-    if (pDS3DBuffer != nullptr) {
+    HRESULT hretDS = DSoundBufferCreate(&DSBufferDesc, pDSBufferNew);
+    //create new DS3DBuffer from the new DSBuffer if the new DSBuffer is created successfully.
+    if (pDSBufferNew != nullptr) {
         DSound3DBufferCreate(pDSBufferNew, pDS3DBufferNew);
+        DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew, Xb_Voice);//Sanity checks inside.
+    }
+    else {
+        EmuLog(LOG_LEVEL::WARNING, "DSoundBufferReCreate Failed!");
     }
 
-    DSoundBufferTransferSettings(pDSBuffer, pDSBufferNew, pDS3DBuffer, pDS3DBufferNew, Xb_Voice);
+    
 }
 
 static inline void DSoundBufferRelease(
@@ -503,8 +514,12 @@ static inline void DSoundBufferResizeSetSize(
         return;
     }
 
-    pThis->EmuBufferDesc.dwBufferBytes = Host_dwByteLength;
-
+    if (Host_dwByteLength< DSBSIZE_MIN) { //the min. buffer bytes must be equal or greater then DSBSIZE_MIN
+        pThis->EmuBufferDesc.dwBufferBytes = DSBSIZE_MIN;
+    }
+    else {
+        pThis->EmuBufferDesc.dwBufferBytes = Host_dwByteLength;
+    }
     // NOTE: Test case JSRF, if we allow to re-alloc without checking allocated buffer size.
     // Then it is somehow binded to IDirectSound_SetPosition control for any allocated audio afterward.
 
