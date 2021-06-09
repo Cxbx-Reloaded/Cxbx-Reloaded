@@ -73,17 +73,15 @@
 // Alias all host Direct3D 9 symbols to generic symbols
 #define DXGetErrorString                DXGetErrorString9A
 #define DXGetErrorDescription           DXGetErrorDescription9A
-#define D3DXAssembleShader		        D3DXAssembleShader
 #define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
 #define D3DLockData                     void
 
 #define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                         D3DCAPS9
 #define D3DVERTEXELEMENT                D3DVERTEXELEMENT9
-#define D3DVIEWPORT                     D3DVIEWPORT9
+#define D3DVIEWPORT                     _9_11(D3DVIEWPORT9,                D3D11_VIEWPORT)
 
 #define IDirect3DDevice                 _9_11(IDirect3DDevice9Ex,          ID3D11Device)
-#define IDirect3DStateBlock             IDirect3DStateBlock9 // unused
 #define IDirect3DVertexDeclaration      _9_11(IDirect3DVertexDeclaration9, ID3D11InputLayout)
 #define IDirect3DVertexShader           _9_11(IDirect3DVertexShader9,      ID3D11VertexShader)
 #define IDirect3DPixelShader            _9_11(IDirect3DPixelShader9,       ID3D11PixelShader)
@@ -96,7 +94,6 @@
 #define IDirect3DIndexBuffer            _9_11(IDirect3DIndexBuffer9,       ID3D11Buffer) // or ID3D11ShaderResourceView ?
 #define IDirect3DSurface                IDirect3DSurface9
 #define IDirect3DVolume                 IDirect3DVolume9
-#define IDirect3DSwapChain              IDirect3DSwapChain9
 #define IDirect3DQuery                  IDirect3DQuery9
 
 typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
@@ -106,7 +103,7 @@ namespace xbox {
 // Xbox D3D types, probably just copies of the Windows Direct3D 9 counterparts :
 
 #ifdef CXBX_USE_D3D11
-	typedef struct _X_D3DVECTOR {
+typedef struct _X_D3DVECTOR {
 	float x;
 	float y;
 	float z;
