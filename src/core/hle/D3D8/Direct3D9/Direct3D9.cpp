@@ -7485,12 +7485,12 @@ void CxbxUpdateHostViewport() {
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
 		D3DVIEWPORT hostViewport;
-		hostViewport.X = g_Xbox_Viewport.X * Xscale;
-		hostViewport.Y = g_Xbox_Viewport.Y * Yscale;
+		hostViewport._9_11(X, TopLeftX) = g_Xbox_Viewport.X * Xscale;
+		hostViewport._9_11(Y, TopLeftY) = g_Xbox_Viewport.Y * Yscale;
 		hostViewport.Width = g_Xbox_Viewport.Width * Xscale;
 		hostViewport.Height = g_Xbox_Viewport.Height * Yscale;
-		hostViewport.MinZ = g_Xbox_Viewport.MinZ; // ?? * Zscale;
-		hostViewport.MaxZ = g_Xbox_Viewport.MaxZ; // ?? * Zscale;
+		hostViewport._9_11(MinZ, MinDepth) = g_Xbox_Viewport.MinZ; // ?? * Zscale;
+		hostViewport._9_11(MaxZ, MaxDepth) = g_Xbox_Viewport.MaxZ; // ?? * Zscale;
 		g_pD3DDevice->SetViewport(&hostViewport);
 
 		// Reset scissor rect
@@ -8261,8 +8261,8 @@ static void CxbxImpl_SetRenderTarget
 	defaultViewport.Y = 0;
 	defaultViewport.Width = INT_MAX;
 	defaultViewport.Height = INT_MAX;
-	defaultViewport.MinZ = 0;
-	defaultViewport.MaxZ = 1;
+	defaultViewport.MinZ = 0.0f;
+	defaultViewport.MaxZ = 1.0f;
 	CxbxImpl_SetViewport(&defaultViewport);
 
 	pHostRenderTarget = GetHostSurface(pRenderTarget, D3DUSAGE_RENDERTARGET);

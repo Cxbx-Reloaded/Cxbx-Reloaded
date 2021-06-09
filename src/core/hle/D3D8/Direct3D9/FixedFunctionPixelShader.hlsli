@@ -3,18 +3,20 @@
 #pragma once
 
 #ifdef CXBX_USE_D3D11
-#include <d3d11.h>
+#include <DirectXMath.h> // for XMFLOAT2, XMFLOAT3, XMFLOAT4, XMMATRIX
+#define float2 XMFLOAT2
+#define float3 XMFLOAT3
+#define float4 XMFLOAT4
+#define float4x4 XMMATRIX
 #else
-#include <d3d9.h>
-#include <d3d9types.h> // for D3DFORMAT, D3DLIGHT9, etc
-#include <d3dx9math.h> // for D3DXVECTOR4, etc
-#endif
-#include <array>
-
-#define float4x4 D3DMATRIX
-#define float4 D3DXVECTOR4
-#define float3 D3DVECTOR
+#include <d3dx9math.h> // for D3DXVECTOR2, D3DVECTOR, D3DXVECTOR4, D3DMATRIX
 #define float2 D3DXVECTOR2
+#define float3 D3DVECTOR
+#define float4 D3DXVECTOR4
+#define float4x4 D3DMATRIX
+#endif
+
+#include <array> // for std::array<>
 #define arr(name, type, length) std::array<type, length> name
 
 #else
@@ -135,13 +137,13 @@ namespace FixedFunctionPixelShader {
 #endif
 
 #ifdef  __cplusplus
-#undef float4x4
-#undef float4
-#undef float3
 #undef float2
-#undef arr
+#undef float3
+#undef float4
+#undef float4x4
 #else // HLSL
-#undef arr
 #undef alignas
 #undef const
 #endif //  __cplusplus
+
+#undef arr
