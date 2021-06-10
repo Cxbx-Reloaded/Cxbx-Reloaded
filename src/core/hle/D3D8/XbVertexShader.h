@@ -42,7 +42,7 @@ typedef struct _CxbxVertexShaderStreamElement
 {
 	UINT XboxType; // The stream element data type (xbox)
 	UINT XboxByteSize; // The stream element data size (xbox)
-	BYTE HostDataType; // The stream element data type (pc)
+	_9_11(BYTE, DXGI_FORMAT) HostDataType; // The stream element data type (pc)
 	UINT HostByteSize; // The stream element data size (pc)
 }
 CxbxVertexShaderStreamElement;
@@ -56,6 +56,17 @@ CxbxVertexShaderStreamElement;
 	BYTE    Usage;      // Semantics
 	BYTE    UsageIndex; // Semantic index
 } D3DVERTEXELEMENT9, *LPD3DVERTEXELEMENT9;
+
+typedef struct D3D11_INPUT_ELEMENT_DESC
+	{
+	LPCSTR SemanticName;
+	UINT SemanticIndex;
+	DXGI_FORMAT Format;
+	UINT InputSlot;
+	UINT AlignedByteOffset;
+	D3D11_INPUT_CLASSIFICATION InputSlotClass;
+	UINT InstanceDataStepRate;
+} 	D3D11_INPUT_ELEMENT_DESC;
 */
 
 typedef struct _CxbxVertexShaderStreamInfo
