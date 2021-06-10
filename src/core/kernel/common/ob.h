@@ -75,7 +75,7 @@ ntstatus_xt ObpReferenceObjectByName(
 	OUT PVOID *ReturnedObject
 );
 
-#define XB_InitializeObjectAttributes(p, n, a, r, s){\
+#define XB_InitializeObjectAttributes(p, n, a, r){\
 	(p)->RootDirectory = r;   \
 	(p)->Attributes = a;      \
 	(p)->ObjectName = n;      \
