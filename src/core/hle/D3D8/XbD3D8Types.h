@@ -77,7 +77,7 @@
 
 #define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                         D3DCAPS9
-#define D3DVERTEXELEMENT                D3DVERTEXELEMENT9
+#define D3DVERTEXELEMENT                _9_11(D3DVERTEXELEMENT9,           D3D11_INPUT_ELEMENT_DESC)
 #define D3DVIEWPORT                     _9_11(D3DVIEWPORT9,                D3D11_VIEWPORT)
 
 #define IDirect3DDevice                 _9_11(IDirect3DDevice9Ex,          ID3D11Device)
