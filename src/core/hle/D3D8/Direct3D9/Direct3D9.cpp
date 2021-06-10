@@ -2128,9 +2128,24 @@ static void DetermineSupportedD3DFormats
         // Only process Xbox formats that are directly mappable to host
         if (!EmuXBFormatRequiresConversionToARGB((xbox::X_D3DFORMAT)X_Format)) {
             // Convert the Xbox format into host format (without warning, thanks to the above restriction)
-            const D3DFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
-            if (PCFormat != D3DFMT_UNKNOWN) {
+            const CXBXFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
+            if (PCFormat != _9_11(D3DFMT_UNKNOWN, DXGI_FORMAT_UNKNOWN)) {
                 // Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
+#ifdef CBXB_USE_D3D11
+                UINT FormatSupport = 0;
+                g_pDirect3D->CheckFormatSupport(Format, &FormatSupport);
+
+                g_bSupportsFormatSurface[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURE2D;
+                g_bSupportsFormatSurfaceRenderTarget[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_RENDER_TARGET;
+                g_bSupportsFormatSurfaceDepthStencil[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_DEPTH_STENCIL;
+                // TODO : How to make a distinction between surfaces above and textures below?
+                g_bSupportsFormatTexture[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURE2D;
+                g_bSupportsFormatTextureRenderTarget[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_RENDER_TARGET;
+                g_bSupportsFormatTextureDepthStencil[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_DEPTH_STENCIL;
+
+                g_bSupportsFormatVolumeTexture[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURE3D;
+                g_bSupportsFormatCubeTexture[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURECUBE;
+#else
                 g_bSupportsFormatSurface[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
                         g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
                         g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
@@ -2170,6 +2185,7 @@ static void DetermineSupportedD3DFormats
                         g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
                         g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
                         D3DRTYPE_CUBETEXTURE, PCFormat));
+#endif
             }
         }
     }
@@ -5168,7 +5184,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 			// Interpret the Xbox overlay data (depending the color space conversion render state)
 			// as either YUV or RGB format (note that either one must be a 3 bytes per pixel format)
-			D3DFORMAT PCFormat;
+			CXBXFORMAT PCFormat;
 			// TODO : Before reading from pgraph, flush all pending push-buffer commands
 			switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV_PGRAPH_CONTROL_0), NV_PGRAPH_CONTROL_0_CSCONVERT)) {
 			case 0:  // = pass-through
@@ -5601,7 +5617,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		// Determine the format we'll be using on host D3D
-		D3DFORMAT PCFormat;
+		CXBXFORMAT PCFormat;
 		bool bConvertToARGB = false;
 
 		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
@@ -8185,11 +8201,11 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 		LOG_FUNC_ARG(pLight)
 		LOG_FUNC_END;
 
-	XB_TRMP(D3DDevice_SetLight)(Index, pLight);
+	xbox::hresult_xt hRet = XB_TRMP(D3DDevice_SetLight)(Index, pLight);
 
 	d3d8LightState.Lights[Index] = *pLight;
 
-    return S_OK;
+    return hRet;
 }
 
 // ******************************************************************
@@ -8244,12 +8260,15 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 		LOG_FUNC_ARG(bEnable)
 		LOG_FUNC_END;
 
-	XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
+	xbox::hresult_xt hRet = XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
 
 	d3d8LightState.EnableLight(Index, bEnable);
-
-    HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
+#ifdef CXBX_USE_D3D11
+	// Under D3D11, LightEnable relies on our fixed function shader (see if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
+#else
+	HRESULT hRet_host = g_pD3DDevice->LightEnable(Index, bEnable);
+	DEBUG_D3DRESULT(hRet_host, "g_pD3DDevice->LightEnable");
+#endif
 
     return hRet;
 }

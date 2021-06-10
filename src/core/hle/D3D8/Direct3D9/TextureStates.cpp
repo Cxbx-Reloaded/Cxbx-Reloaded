@@ -301,9 +301,59 @@ void XboxTextureStateConverter::Apply()
             }
 
             if (CxbxTextureStateInfo[State].IsSamplerState) {
+#ifdef CXBX_USE_D3D11
+				static D3D11_SAMPLER_DESC g_GlobalSamplerDesc = {}; // TODO : Move to globals section
+
+				switch (State) {
+				case xbox::X_D3DTSS_ADDRESSU: g_GlobalSamplerDesc.AddressU = pcValue; break;
+				case xbox::X_D3DTSS_ADDRESSV: g_GlobalSamplerDesc.AddressV = pcValue; break;
+				case xbox::X_D3DTSS_ADDRESSW: g_GlobalSamplerDesc.AddressW = pcValue; break;
+				case xbox::X_D3DTSS_MAGFILTER: g_GlobalSamplerDesc.Filter = pcValue; break; // TODO : Which Filter??
+				case xbox::X_D3DTSS_MINFILTER: g_GlobalSamplerDesc.Filter = pcValue; break;	// TODO : Which Filter??
+				case xbox::X_D3DTSS_MIPFILTER: g_GlobalSamplerDesc.Filter = pcValue; break;	// TODO : Which Filter??
+				case xbox::X_D3DTSS_MIPMAPLODBIAS: g_GlobalSamplerDesc.MipLODBias = pcValue; break;
+				case xbox::X_D3DTSS_MAXMIPLEVEL: g_GlobalSamplerDesc.MaxLOD = pcValue; break; // TODO : What about MinLOD?
+				case xbox::X_D3DTSS_MAXANISOTROPY: g_GlobalSamplerDesc.MaxAnisotropy = pcValue; break;
+				case xbox::X_D3DTSS_BORDERCOLOR: g_GlobalSamplerDesc.BorderColor = D3DCOLOR(pcValue); break;
+				}
+
+				ID3D11SamplerState *pSamplerState = nullptr;
+				HRESULT hRet;
+
+				hRet = g_pD3DDevice->CreateSamplerState(&g_GlobalSamplerDesc, &pSamplerState); // TODO : What about lifetime management?
+				hRet = g_pD3DDeviceContext->PSSetSamplers(0, 1, pSamplerState);
+#else
                 g_pD3DDevice->SetSamplerState(HostStage, (D3DSAMPLERSTATETYPE)CxbxTextureStateInfo[State].PC, PcValue);
+#endif
             } else {
+#ifdef CXBX_USE_D3D11
+				switch (State) {
+				case xbox::X_D3DTSS_COLORKEYOP: break;
+				case xbox::X_D3DTSS_COLORSIGN: break;
+				case xbox::X_D3DTSS_ALPHAKILL: break;
+				case xbox::X_D3DTSS_COLOROP: break;
+				case xbox::X_D3DTSS_COLORARG0: break;
+				case xbox::X_D3DTSS_COLORARG1: break;
+				case xbox::X_D3DTSS_COLORARG2: break;
+				case xbox::X_D3DTSS_ALPHAOP: break;
+				case xbox::X_D3DTSS_ALPHAARG0: break;
+				case xbox::X_D3DTSS_ALPHAARG1: break;
+				case xbox::X_D3DTSS_ALPHAARG2: break;
+				case xbox::X_D3DTSS_RESULTARG: break;
+				case xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS: break;
+				case xbox::X_D3DTSS_BUMPENVMAT00: break;
+				case xbox::X_D3DTSS_BUMPENVMAT01: break;
+				case xbox::X_D3DTSS_BUMPENVMAT11: break;
+				case xbox::X_D3DTSS_BUMPENVMAT10: break;
+				case xbox::X_D3DTSS_BUMPENVLSCALE: break;
+				case xbox::X_D3DTSS_BUMPENVLOFFSET: break;
+				case xbox::X_D3DTSS_TEXCOORDINDEX: break;
+				}
+				// TODO : Are the above all catered for in our fixed function shader, and ignored otherwise?
+				// If not, see which of D3D11_RASTERIZER_DESC1, D3D11_DEPTH_STENCIL_DESC, D3D11_BLEND_DESC1 covers this...
+#else
                 g_pD3DDevice->SetTextureStageState(HostStage, (D3DTEXTURESTAGESTATETYPE)CxbxTextureStateInfo[State].PC, PcValue);
+#endif
             }
 
             // Record we set a state
