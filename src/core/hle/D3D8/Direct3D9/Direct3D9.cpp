@@ -197,7 +197,7 @@ xbox::X_D3DSWAP g_LastD3DSwap = (xbox::X_D3DSWAP) -1;
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
 
-static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarget)
+static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget)
 {
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
@@ -211,7 +211,7 @@ static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarg
 	ImGui::Render();
 	ImDrawData* drawData = ImGui::GetDrawData();
 	if (drawData->TotalVtxCount > 0) {
-		IDirect3DSurface9* pExistingRenderTarget = nullptr;
+		IDirect3DSurface* pExistingRenderTarget = nullptr;
 		if (SUCCEEDED(g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget))) {
 			g_pD3DDevice->SetRenderTarget(0, renderTarget);
 			ImGui_ImplDX9_RenderDrawData(drawData);
@@ -2023,7 +2023,7 @@ static void SetupPresentationParameters
     params.BackBufferFormat = D3DDisplayMode.Format;
 
     params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-    g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->PresentationInterval;
+    g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->FullScreen_PresentationInterval;
 
     // We only want *one* backbuffer on the host, triple buffering, etc should be handled by our Present/Swap impl
     params.BackBufferCount = 1;

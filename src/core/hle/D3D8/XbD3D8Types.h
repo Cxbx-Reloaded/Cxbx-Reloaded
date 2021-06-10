@@ -73,7 +73,6 @@
 // Alias all host Direct3D 9 symbols to generic symbols
 #define DXGetErrorString                DXGetErrorString9A
 #define DXGetErrorDescription           DXGetErrorDescription9A
-#define FullScreen_PresentationInterval PresentationInterval // a field in D3DPRESENT_PARAMETERS
 #define D3DLockData                     void
 
 #define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
