@@ -82,7 +82,7 @@ xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 		LOG_FUNC_END;
 
 	OBJECT_ATTRIBUTES ObjectAttributes;
-	XB_InitializeObjectAttributes(&ObjectAttributes, DirectoryName, OBJ_PERMANENT, NULL, NULL);
+	XB_InitializeObjectAttributes(&ObjectAttributes, DirectoryName, OBJ_PERMANENT, NULL);
 
 	HANDLE Handle;
 	NTSTATUS status = NtCreateDirectoryObject(&Handle, &ObjectAttributes);

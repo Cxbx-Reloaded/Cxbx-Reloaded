@@ -152,7 +152,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
         else { // load from file
             LPDIRECTSOUND8  pThis_tmp = zeroptr;
             HANDLE hFile;
-            DWORD dwBytesRead;
 
             // using xbox::NtCreateFile() directly instead of Host CreateFile();
             OBJECT_ATTRIBUTES obj;
