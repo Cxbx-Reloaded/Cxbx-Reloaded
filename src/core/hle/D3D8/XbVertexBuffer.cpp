@@ -61,10 +61,28 @@ xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note :
 
 extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); // Declared in PushBuffer.cpp
 
-void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
-bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
-uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer* pPixelContainer);
-uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer* pPixelContainer);
+extern void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource); // Declared in Direct3D.cpp
+
+HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer *pHostVertexBuffer, UINT VertexStride)
+{
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+	hRet = g_pD3DDeviceContext->IASetVertexBuffers(
+		0, // StartSlot
+		1, // NumBuffers
+		pHostVertexBuffer,
+		&VertexStride,
+		nullptr);
+#else
+	hRet = g_pD3DDevice->SetStreamSource(
+		HostStreamNumber,
+		pHostVertexBuffer,
+		0, // OffsetInBytes
+		VertexStride);
+#endif
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
+	 return hRet;
+}
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamNumber) const
 {
@@ -77,12 +95,10 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamN
 		pDrawContext->uiHostVertexStreamZeroStride = uiCachedHostVertexStride;
 	}
 	else {
-		HRESULT hRet = g_pD3DDevice->SetStreamSource(
+		HRESULT hRet = CxbxSetStreamSource(
 			HostStreamNumber,
 			pCachedHostVertexBuffer, 
-			0, // OffsetInBytes
 			uiCachedHostVertexStride);
-		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
 			CxbxrAbort("Failed to set the type patched buffer as the new stream source!\n");
 			// TODO : test-case : XDK Cartoon hits the above case when the vertex cache size is 0.
@@ -255,12 +271,10 @@ void CxbxVertexBufferConverter::ConvertStream
 		xbox::X_D3DVertexBuffer *pXboxVertexBuffer = XboxStreamInput.VertexBuffer;
         pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == xbox::zeroptr) {
-			HRESULT hRet = g_pD3DDevice->SetStreamSource(
+			HRESULT hRet = CxbxSetStreamSource(
 				HostStreamNumber,
 				nullptr, 
-				0, // OffsetInBytes
 				0);
-//			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
 				EmuLog(LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(HostStreamNumber, nullptr, 0)");
 			}
