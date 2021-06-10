@@ -55,7 +55,8 @@ class Xbe : public Error
        ~Xbe();
 
 		// find an section by name
-		void *FindSection(char *zsSectionName);
+        template<bool want_pxbe_ret>
+        auto FindSection(const char *zsSectionName);
 
 		// Find a section by its definition
 		void* FindSection(xbox::PXBEIMAGE_SECTION section);
@@ -355,6 +356,37 @@ class Xbe : public Error
 		#include "AlignPosfix1.h"
 		*m_xprImage;
 };
+
+template<bool want_pxbe_ret>
+auto Xbe::FindSection(const char *zsSectionName)
+{
+    if constexpr (want_pxbe_ret) { // returns a ptr to xbe section of xbe loaded in placeholder memory
+        xbox::PXBEIMAGE_SECTION sectionHeaders = (xbox::PXBEIMAGE_SECTION)m_Header.dwSectionHeadersAddr;
+        for (uint32_t v = 0; v < m_Header.dwSections; v++) {
+            if (strcmp(sectionHeaders[v].SectionName, zsSectionName) == 0) {
+                if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
+                    return &sectionHeaders[v];
+                }
+            }
+        }
+
+        return static_cast<xbox::PXBEIMAGE_SECTION>(nullptr);
+    }
+    else { // returns a ptr to xbe section of xbe loaded by this class
+        for (uint32_t v = 0; v < m_Header.dwSections; v++) {
+            if (strcmp(m_szSectionName[v], zsSectionName) == 0) {
+                if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
+                    return static_cast<void *>(m_bzSection[v]);
+                }
+            }
+        }
+
+        return static_cast<void *>(nullptr);
+    }
+}
+
+extern template auto Xbe::FindSection<true>(const char *zsSectionName);
+extern template auto Xbe::FindSection<false>(const char *zsSectionName);
 
 // debug/retail XOR keys
 const uint32_t XOR_EP_DEBUG                            = 0x94859D4B; // Entry Point (Debug)
