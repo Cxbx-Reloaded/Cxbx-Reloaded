@@ -744,15 +744,15 @@ private:
 				// because these could all go through an Xbox to host conversion step, so must be copied over afterwards.
 				pCurrentHostVertexElement->Method = D3DDECLMETHOD_CROSSUV; // for D3DVSD_TESSNORMAL
 				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // TODO : Is this correct?
-				pCurrentHostVertexElement->UsageIndex = 0; // Note : 1 would be wrong
+				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 0; // Note : 1 would be wrong
 				return true;
 			case 2: // AUTOTEXCOORD
 				// pCurrentHostVertexElement->Stream = 0; // The input stream is unused (but must be set to 0), which is the current default value
-				// pCurrentHostVertexElement->Offset = 0; // The input offset is unused (but must be set to 0), which is the current default value
-				pCurrentHostVertexElement->Type = D3DDECLTYPE_UNUSED; // The input type for D3DDECLMETHOD_UV must be D3DDECLTYPE_UNUSED (the output type implied by D3DDECLMETHOD_UV is D3DDECLTYPE_FLOAT2)
+				// pCurrentHostVertexElement->_9_11(Offset, AlignedByteOffset) = 0; // The input offset is unused (but must be set to 0), which is the current default value
+				pCurrentHostVertexElement->_9_11(Type, Format) = _9_11(D3DDECLTYPE_UNUSED, DXGI_FORMAT_UNKNOWN); // The input type for D3DDECLMETHOD_UV must be D3DDECLTYPE_UNUSED (the output type implied by D3DDECLMETHOD_UV is D3DDECLTYPE_FLOAT2)
 				pCurrentHostVertexElement->Method = D3DDECLMETHOD_UV; // For X_D3DVSD_MASK_TESSUV
 				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // Note : In Fixed Function Vertex Pipeline, D3DDECLMETHOD_UV must specify usage D3DDECLUSAGE_TEXCOORD or D3DDECLUSAGE_BLENDWEIGHT. TODO : So, what to do?
-				pCurrentHostVertexElement->UsageIndex = 1; // TODO ; Is this correct?
+				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 1; // TODO ; Is this correct?
 				return true;
 			default:
 				LOG_TEST_CASE("invalid TessellationType");
@@ -761,121 +761,121 @@ private:
 		}
 
 		WORD XboxVertexElementByteSize = 0; // When set above 0, implies NeedPatching
-		BYTE HostVertexElementDataType = 0;
+		_9_11(BYTE, DXGI_FORMAT) HostVertexElementDataType = _9_11(0, DXGI_FORMAT_UNKNOWN);
 		WORD HostVertexElementByteSize = 0;
 
 		switch (XboxVertexElementDataType) {
 		case xbox::X_D3DVSDT_FLOAT1: // 0x12:
-			HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT1, DXGI_FORMAT_R32_FLOAT);
 			HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			break;
 		case xbox::X_D3DVSDT_FLOAT2: // 0x22:
-			HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT2, DXGI_FORMAT_R32G32_FLOAT);
 			HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			break;
 		case xbox::X_D3DVSDT_FLOAT3: // 0x32:
-			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT);
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			break;
 		case xbox::X_D3DVSDT_FLOAT4: // 0x42:
-			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT);
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
 			break;
 		case xbox::X_D3DVSDT_D3DCOLOR: // 0x40:
-			HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_D3DCOLOR, DXGI_FORMAT_R8G8B8A8_UNORM); // D3D11 docs state: "not available"?
 			HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
 			break;
 		case xbox::X_D3DVSDT_SHORT2: // 0x25:
-			HostVertexElementDataType = D3DDECLTYPE_SHORT2;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2, DXGI_FORMAT_R16G16_SINT);
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
 			break;
 		case xbox::X_D3DVSDT_SHORT4: // 0x45:
-			HostVertexElementDataType = D3DDECLTYPE_SHORT4;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT4, DXGI_FORMAT_R16G16B16A16_SINT);
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT1: // 0x11:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
-				HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2N, DXGI_FORMAT_R16G16_SNORM);
 				HostVertexElementByteSize = 2 * sizeof(SHORT);
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT1, DXGI_FORMAT_R32_FLOAT);
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(xbox::short_xt);
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT2: // 0x21:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
-				HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2N, DXGI_FORMAT_R16G16_SNORM);
 				HostVertexElementByteSize = 2 * sizeof(SHORT);
 				// No need for patching in D3D9
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT2, DXGI_FORMAT_R32G32_FLOAT);
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 2 * sizeof(xbox::short_xt);
 			}
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT3: // 0x31:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
-				HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT4N, DXGI_FORMAT_R16G16B16A16_SNORM);
 				HostVertexElementByteSize = 4 * sizeof(SHORT);
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT);
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(xbox::short_xt);
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT4: // 0x41:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
-				HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT4N, DXGI_FORMAT_R16G16B16A16_SNORM);
 				HostVertexElementByteSize = 4 * sizeof(SHORT);
 				// No need for patching in D3D9
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT);
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(xbox::short_xt);
 			}
 			break;
 		case xbox::X_D3DVSDT_NORMPACKED3: // 0x16:
-			HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT);
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 1 * sizeof(xbox::dword_xt);
 			break;
 		case xbox::X_D3DVSDT_SHORT1: // 0x15:
-			HostVertexElementDataType = D3DDECLTYPE_SHORT2;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2, DXGI_FORMAT_R16G16_SINT);;
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
 			XboxVertexElementByteSize = 1 * sizeof(xbox::short_xt);
 			break;
 		case xbox::X_D3DVSDT_SHORT3: // 0x35:
-			HostVertexElementDataType = D3DDECLTYPE_SHORT4;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT4, DXGI_FORMAT_R16G16B16A16_SINT);
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 			XboxVertexElementByteSize = 3 * sizeof(xbox::short_xt);
 			break;
 		case xbox::X_D3DVSDT_PBYTE1: // 0x14:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT1, DXGI_FORMAT_R32_FLOAT);
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(xbox::byte_xt);
 			break;
 		case xbox::X_D3DVSDT_PBYTE2: // 0x24:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT2, DXGI_FORMAT_R32G32_FLOAT);
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 2 * sizeof(xbox::byte_xt);
 			break;
 		case xbox::X_D3DVSDT_PBYTE3: // 0x34:
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT);
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 3 * sizeof(xbox::byte_xt);
@@ -883,17 +883,17 @@ private:
 		case xbox::X_D3DVSDT_PBYTE4: // 0x44:
 			// Test-case : Panzer
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 				// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
 			} else {
-				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT);
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(xbox::byte_xt);
 			}
 			break;
 		case xbox::X_D3DVSDT_FLOAT2H: // 0x72:
-			HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT);
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 3 * sizeof(FLOAT);
 			break;
@@ -945,11 +945,11 @@ private:
 		// Convert to host vertex element
 		pCurrentHostVertexElement->Stream = pCurrentVertexShaderStreamInfo->XboxStreamIndex; // Use Xbox stream index on host
 		// FIXME Don't assume vertex elements are contiguous!
-		pCurrentHostVertexElement->Offset = pCurrentVertexShaderStreamInfo->HostVertexStride;
-		pCurrentHostVertexElement->Type = pCurrentVertexShaderStreamElementInfo->HostDataType;
+		pCurrentHostVertexElement->_9_11(Offset, AlignedByteOffset) = pCurrentVertexShaderStreamInfo->HostVertexStride;
+		pCurrentHostVertexElement->_9_11(Type, Format) = pCurrentVertexShaderStreamElementInfo->HostDataType;
 		pCurrentHostVertexElement->Method = D3DDECLMETHOD_DEFAULT;
 		if (IsFixedFunction) {
-			pCurrentHostVertexElement->Usage = Xb2PCRegisterType(VertexRegister, /*&*/pCurrentHostVertexElement->UsageIndex);
+			pCurrentHostVertexElement->Usage = Xb2PCRegisterType(VertexRegister, /*&*/pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex));
 		}
 		else {
 			// D3DDECLUSAGE_TEXCOORD can be useds for any user-defined data
@@ -958,7 +958,7 @@ private:
 			// So we treat them all as 'user-defined' with an Index of the Vertex Register Index
 			// this prevents information loss in shaders due to non-matching dcl types!
 			pCurrentHostVertexElement->Usage = D3DDECLUSAGE_TEXCOORD;
-			pCurrentHostVertexElement->UsageIndex = (BYTE)VertexRegister;
+			pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = (BYTE)VertexRegister;
 		}
 
 		pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
@@ -1016,7 +1016,11 @@ public:
 					EmuLog(LOG_LEVEL::DEBUG, "\tXbox Stream %d, Offset %d, Format %d, Slot %d",
 						slot.StreamIndex, slot.Offset, slot.Format, regIndex);
 					EmuLog(LOG_LEVEL::DEBUG, "\tHost Stream %d, Offset %d, Format %d, Usage %d-%d",
-						pCurrentHostVertexElement->Stream, pCurrentHostVertexElement->Offset, pCurrentHostVertexElement->Type, pCurrentHostVertexElement->Usage, pCurrentHostVertexElement->UsageIndex);
+						pCurrentHostVertexElement->Stream,
+						pCurrentHostVertexElement->_9_11(Offset, AlignedByteOffset),
+						pCurrentHostVertexElement->Type,
+						pCurrentHostVertexElement->Usage,
+						pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex));
 				}
 			}
 		}
@@ -1032,7 +1036,7 @@ public:
 				auto pSourceElement = HostVertexElementPerRegister[TessellationSource];
 				// Copy over the Stream, Offset and Type of the host vertex element that serves as 'TessellationSource' :
 				pHostElement->Stream = pSourceElement->Stream;
-				pHostElement->Offset = pSourceElement->Offset;
+				pHostElement->_9_11(Offset, AlignedByteOffset) = pSourceElement->_9_11(Offset, AlignedByteOffset);
 				pHostElement->Type = pSourceElement->Type;
 				// Note, the input type for D3DDECLMETHOD_CROSSUV can be D3DDECLTYPE_FLOAT[43], D3DDECLTYPE_D3DCOLOR, D3DDECLTYPE_UBYTE4, or D3DDECLTYPE_SHORT4
 				// (the output type implied by D3DDECLMETHOD_CROSSUV is D3DDECLTYPE_FLOAT3).
@@ -1045,7 +1049,7 @@ public:
 		// Test case: King Kong (due to register redefinition)
 		// Note : Xbox slots might use non-ordered stream indices, so we can't rely on the output ordering of our converted elements!
 		std::sort(/*First=*/HostVertexElements, /*Last=*/pCurrentHostVertexElement, /*Pred=*/[] (const auto& x, const auto& y)
-			{ return std::tie(x.Stream, x.Method, x.Offset) < std::tie(y.Stream, y.Method, y.Offset); });
+			{ return std::tie(x.Stream, x.Method, x._9_11(Offset, AlignedByteOffset)) < std::tie(y.Stream, y.Method, y._9_11(Offset, AlignedByteOffset)); });
 
 		// Record which registers are in the vertex declaration
 		for (size_t i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
