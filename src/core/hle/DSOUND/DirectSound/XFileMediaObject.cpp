@@ -115,54 +115,28 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
         LOG_FUNC_ARG(ppImageDesc)
         LOG_FUNC_END;
 
-    LOG_INCOMPLETE();
-
-    xbox::hresult_xt result = S_OK;
+    xbox::hresult_xt result = E_FAIL;
     if (ppImageDesc) { //only process image section/file which the guest code asks for ImageDesc.
 
-        PBYTE           pvImageBuffer;
-        dword_xt        dwImageSize;
-
-        if (dwFlags & 1) { // dwFlags == XAUDIO_DOWNLOADFX_XBESECTION, The DSP effects image is located in a section of the XBE.
-            /*
-            //future code for loading imgae from XBE section. these codes are reversd from PGR2.
-
-            PXBEIMAGE_SECTION pImageSectionHandle=XGetSectionHandle(pszImageName);    //get section handle by section name, not implemented yet.
-            // perhaps use pImageSectionHandle = CxbxKrnl_Xbe->FindSection(pszImageName); will be easier.
-
-            if (XeLoadSection(pImageSectionHandle) > 0) {  //load section handle and get the loaded address.
-            //note this sction must be freed after the internal image bacup and ImageDesc was created.
-            //EmuKnrlXe.cpp implements XeLoadSection(). could reference that code.
-                pvImageBuffer = pImageSectionHandle->VirtualAddress;
+        if (dwFlags & 1) { // load from xbe section. Test case: Halo 2
+            PXBEIMAGE_SECTION pSection = CxbxKrnl_Xbe->FindSection<true>(pszImageName);
+            if (pSection != nullptr) {
+                if (XeLoadSection(pSection) == xbox::status_success) {
+                    result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(zeroptr, pSection->VirtualAddress, pSection->VirtualSize, pImageLoc, ppImageDesc);
+                    XeUnloadSection(pSection);
+                }
             }
-
-            dwImageSize=pImageSectionHandle->VirtualSize;  //get section size by section handle.
-
-            result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(pThis_tmp, pvImageBuffer,dwImageSize,pImageLoc,ppImageDesc);
-
-            if(pImageSectionHandle<>0 && pImageSectionHandle!=-1)
-                XeUnloadSection(pImageSectionHandle);
-
-            */
-
-            LOG_TEST_CASE("Loading dsp images from xbe sections is currently not yet supported");
-
-            result = S_OK;//this line should be removed once the section loading code was implemented.
         }
         else { // load from file
-            LPDIRECTSOUND8  pThis_tmp = zeroptr;
-            HANDLE hFile;
-
             // using xbox::NtCreateFile() directly instead of Host CreateFile();
             OBJECT_ATTRIBUTES obj;
             ANSI_STRING file_name;
             IO_STATUS_BLOCK io_status_block;
             RtlInitAnsiString(&file_name, pszImageName);
             XB_InitializeObjectAttributes(&obj, &file_name, obj_case_insensitive, ObDosDevicesDirectory());
-            ntstatus_xt NtStatusCreateFile;
-            //LARGE_INTEGER tmp_LargeInt;
-            //tmp_LargeInt.QuadPart= dwImageSize;
-            NtStatusCreateFile = NtCreateFile(
+
+            HANDLE hFile;
+            ntstatus_xt NtStatusCreateFile = NtCreateFile(
                 &hFile,
                 FILE_GENERIC_READ, // FILE_READ_DATA, GENERIC_READ, DesiredAccess,
                 &obj,
@@ -194,6 +168,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
                     &FileStdInfo, // FileInformation
                     sizeof(FILE_STANDARD_INFORMATION),
                     FileStandardInformation); // FileInformationClass; Enumation of the file information class.
+
+                dword_xt dwImageSize;
                 if (NtStatusQueryInfoFile >= 0) {
                     dwImageSize = FileStdInfo.EndOfFile.u.LowPart;
                 }
@@ -203,7 +179,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
                 }
 
                 if (dwImageSize > 0) { //proceed the process only if the file size > 0
-                    pvImageBuffer = new BYTE[dwImageSize]; //allocate buffer to read in to image file.
+                    PBYTE pvImageBuffer = new BYTE[dwImageSize]; //allocate buffer to read in to image file.
 
                     //use NtReadFile() to replace host CreatFile();
                     ntstatus_xt NtStatusReadFile = NtReadFile(
@@ -238,7 +214,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
                     }
 
                     if (dwBytesRead == dwImageSize) { // only process the image if the whole image was read successfully.
-                        result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(pThis_tmp, pvImageBuffer,dwImageSize,pImageLoc,ppImageDesc);
+                        result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(zeroptr, pvImageBuffer,dwImageSize,pImageLoc,ppImageDesc);
                     }
                     else {
                         EmuLog(LOG_LEVEL::WARNING, "%s: Image file NtReadFile read in lenth not enough", __func__);
@@ -254,6 +230,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
                 }
             }
         }
+    }
+    else {
+        result = S_OK;
     }
 
     return result;

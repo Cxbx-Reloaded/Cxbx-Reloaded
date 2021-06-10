@@ -698,19 +698,6 @@ uint8_t *Xbe::GetLogoBitmap(uint32_t x_dwSize)
     return 0;
 }
 
-void *Xbe::FindSection(char *zsSectionName)
-{
-	for (uint32_t v = 0; v < m_Header.dwSections; v++) {
-		if (strcmp(m_szSectionName[v], zsSectionName) == 0) {
-			if (m_SectionHeader[v].dwVirtualAddr > 0 && m_SectionHeader[v].dwVirtualSize > 0) {
-				return m_bzSection[v];
-			}
-		}
-	}
-
-	return nullptr;
-}
-
 void* Xbe::FindSection(xbox::PXBEIMAGE_SECTION section)
 {
 	for (uint32_t v = 0; v < m_Header.dwSections; v++) {
@@ -827,3 +814,6 @@ XbeType Xbe::GetXbeType()
 	// Otherwise, the XBE is a Retail build :
 	return XbeType::xtRetail;
 }
+
+template auto Xbe::FindSection<true>(const char *zsSectionName);
+template auto Xbe::FindSection<false>(const char *zsSectionName);
