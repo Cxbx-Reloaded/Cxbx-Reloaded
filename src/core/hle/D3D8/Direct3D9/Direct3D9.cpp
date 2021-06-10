@@ -6123,9 +6123,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					if (!skipDueToNoPalette) {
 						if (!ConvertD3DTextureToARGBBuffer(
 							X_Format,
-							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, dwSrcSlicePitch,
+							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, dwMipSize,//use dwMipSize instaed of dwSrcSlicePitch here, because the mipSize changed in 3D mip map.
 							pDst, dwDstRowPitch, dwDstSlicePitch,
-							dwDepth,
+							pxMipDepth,//usd pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
 							iTextureStage)) {
 							CxbxKrnlCleanup("Unhandled conversion!");
 						}
@@ -6196,11 +6196,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 
 				if (face == D3DCUBEMAP_FACE_POSITIVE_X) {
-					dwCubeFaceSize += dwDepth * dwMipSize;
+					dwCubeFaceSize += pxMipDepth * dwMipSize;
 				}
 
 				// Calculate the next mipmap level dimensions
-				dwMipOffset += dwMipSize;
+				dwMipOffset += pxMipDepth * dwMipSize;//for 3D volumeTexture, the dwDepth >1 in mip_level 0, pxMipDepth must be multiplied.
 				if (pxMipWidth > 1) {
 					pxMipWidth /= 2;
 
@@ -6218,7 +6218,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 
 				if (pxMipDepth > 1) {
-					pxMipDepth /= 2;
+					pxMipDepth /= 2;//this is for 3D volumeTexture mip-map, it shrinked down to 1/2 in 3 diemesions. this variable should be used.
 				}
 			} // for mipmap levels
 
