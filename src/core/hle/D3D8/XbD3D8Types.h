@@ -77,6 +77,7 @@
 
 #define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                         D3DCAPS9
+#define CXBXFORMAT                      _9_11(D3DFORMAT,                   DXGI_FORMAT)
 #define D3DVERTEXELEMENT                _9_11(D3DVERTEXELEMENT9,           D3D11_INPUT_ELEMENT_DESC)
 #define D3DVIEWPORT                     _9_11(D3DVIEWPORT9,                D3D11_VIEWPORT)
 
