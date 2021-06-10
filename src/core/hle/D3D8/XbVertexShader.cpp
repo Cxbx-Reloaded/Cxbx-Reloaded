@@ -1303,7 +1303,11 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 void CxbxUpdateHostVertexDeclaration()
 {
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
+#ifdef CXBX_USE_D3D11
+	HRESULT hRet = g_pD3DDeviceContext->IASetInputLayout(pCxbxVertexDeclaration->pHostVertexDeclaration);
+#else
 	HRESULT hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration->pHostVertexDeclaration);
+#endif
 
 	// Titles can specify default values for registers via calls like SetVertexData4f
 	// HLSL shaders need to know whether to use vertex data or default vertex shader values

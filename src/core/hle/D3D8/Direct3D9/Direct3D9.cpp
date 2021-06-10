@@ -98,6 +98,9 @@ using namespace std::literals::chrono_literals;
 HWND                                g_hEmuWindow   = NULL; // rendering window
 bool                                g_bClipCursor  = false; // indicates that the mouse cursor should be confined inside the rendering window
 IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
+#ifdef CXBX_USE_D3D11
+ID3D11DeviceContext                *g_pD3DDeviceContext = nullptr;
+#endif
 
 // Static Variable(s)
 static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
@@ -197,6 +200,58 @@ xbox::X_D3DSWAP g_LastD3DSwap = (xbox::X_D3DSWAP) -1;
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
 
+static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+	hRet = g_pD3DDeviceContext->OMSetRenderTargets(1, &pHostRenderTarget, NULL);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDeviceContext->OMSetRenderTargets");
+#else
+	hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+#endif
+
+	return hRet;
+}
+
+static void CxbxSetViewport(D3DVIEWPORT *pHostViewport)
+{
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->RSSetViewports(1, pHostViewport);
+#else
+	g_pD3DDevice->SetViewport(pHostViewport);
+#endif
+}
+
+static void CxbxSetScissorRect(CONST RECT *pHostViewportRect)
+{
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->RSSetScissorRects(1, pHostViewportRect);
+#else
+	g_pD3DDevice->SetScissorRect(pHostViewportRect);
+#endif
+}
+
+static HRESULT CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+	hRet = g_pD3DDeviceContext->IASetIndexBuffer(pHostIndexBuffer, /*Format=*/DXGI_FORMAT_R16_UINT, /*Offset=*/0);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDeviceContext->IASetIndexBuffer");
+#else
+	hRet = g_pD3DDevice->SetIndices(pHostIndexBuffer);
+	// Note : Under Direct3D 9, the BaseVertexIndex argument is moved towards DrawIndexedPrimitive
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
+#endif
+
+	if (FAILED(hRet))
+		CxbxrAbort("CxbxSetIndices: SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
+}
+
 static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget)
 {
 	ImGui_ImplDX9_NewFrame();
@@ -213,9 +268,9 @@ static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface* renderTarge
 	if (drawData->TotalVtxCount > 0) {
 		IDirect3DSurface* pExistingRenderTarget = nullptr;
 		if (SUCCEEDED(g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget))) {
-			g_pD3DDevice->SetRenderTarget(0, renderTarget);
+			(void)CxbxSetRenderTarget(renderTarget);
 			ImGui_ImplDX9_RenderDrawData(drawData);
-			g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
+			(void)CxbxSetRenderTarget(pExistingRenderTarget);
 			pExistingRenderTarget->Release();
 		}
 	}
@@ -2600,12 +2655,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	}
 
 	// Activate the new native index buffer :
-	HRESULT hRet = g_pD3DDevice->SetIndices(CacheEntry.pHostIndexBuffer);
-	// Note : Under Direct3D 9, the BaseVertexIndex argument is moved towards DrawIndexedPrimitive
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
-
-	if (FAILED(hRet))
-		CxbxrAbort("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
+	(void)CxbxSetIndices(CacheEntry.pHostIndexBuffer);
 
 	return CacheEntry;
 }
@@ -3717,7 +3767,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
     }
 
 #if 0 // TODO : Why is this disabled?
-	g_pD3DDevice->SetGammaRamp(
+	g_pD3DDevice->SetGammaRamp( // TODO : For D3D11 use  IDXGIOutput::SetGammaControl
 		0, // iSwapChain
 		dwPCFlags, &PCRamp);
 #endif
@@ -5062,7 +5112,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
         IDirect3DSurface* pExistingRenderTarget = nullptr;
         hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
         if (hRet == D3D_OK) {
-            g_pD3DDevice->SetRenderTarget(0, pCurrentHostBackBuffer);
+            (void)CxbxSetRenderTarget(pCurrentHostBackBuffer);
             g_pD3DDevice->Clear(
                 /*Count=*/0,
                 /*pRects=*/nullptr,
@@ -5070,7 +5120,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 /*Color=*/0xFF000000, // TODO : Use constant for this
                 /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
                 /*Stencil=*/0);
-            g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
+            (void)CxbxSetRenderTarget(pExistingRenderTarget);
             pExistingRenderTarget->Release();
         }
         
@@ -7009,11 +7059,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 	}
 
 	// Activate the new native index buffer :
-	hRet = g_pD3DDevice->SetIndices(g_pQuadToTriangleHostIndexBuffer);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
-
-	if (FAILED(hRet))
-		CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
+	hRet = CxbxSetIndices(g_pQuadToTriangleHostIndexBuffer);
 }
 
 // TODO : Move to own file
@@ -7041,8 +7087,7 @@ void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex)
 	hRet = g_pClosingLineLoopHostIndexBuffer->Unlock();
 	DEBUG_D3DRESULT(hRet, "g_pClosingLineLoopHostIndexBuffer->Unlock");
 
-	hRet = g_pD3DDevice->SetIndices(g_pClosingLineLoopHostIndexBuffer);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
+	hRet = CxbxSetIndices(g_pClosingLineLoopHostIndexBuffer);
 
 	hRet = g_pD3DDevice->DrawIndexedPrimitive(
 		/*PrimitiveType=*/D3DPT_LINELIST,
@@ -7491,7 +7536,7 @@ void CxbxUpdateHostViewport() {
 		hostViewport.Height = g_Xbox_Viewport.Height * Yscale;
 		hostViewport._9_11(MinZ, MinDepth) = g_Xbox_Viewport.MinZ; // ?? * Zscale;
 		hostViewport._9_11(MaxZ, MaxDepth) = g_Xbox_Viewport.MaxZ; // ?? * Zscale;
-		g_pD3DDevice->SetViewport(&hostViewport);
+		CxbxSetViewport(&hostViewport);
 
 		// Reset scissor rect
 		RECT viewportRect;
@@ -7499,7 +7544,7 @@ void CxbxUpdateHostViewport() {
 		viewportRect.top = 0;
 		viewportRect.right = HostRenderTarget_Width;
 		viewportRect.bottom = HostRenderTarget_Height;
-		g_pD3DDevice->SetScissorRect(&viewportRect);
+		CxbxSetScissorRect(&viewportRect);
 	}
 	else {
 		// Set default viewport over the whole screen
@@ -7516,7 +7561,7 @@ void CxbxUpdateHostViewport() {
 		hostViewport.MinZ = 0.0f;
 		hostViewport.MaxZ = 1.0f;
 
-		g_pD3DDevice->SetViewport(&hostViewport);
+		CxbxSetViewport(&hostViewport);
 
 		// We still need to clip to the viewport
 		// Scissor to viewport
@@ -7526,7 +7571,7 @@ void CxbxUpdateHostViewport() {
 		viewportRect.top = g_Xbox_Viewport.Y * Yscale;
 		viewportRect.right = viewportRect.left + (g_Xbox_Viewport.Width * Xscale);
 		viewportRect.bottom = viewportRect.top + (g_Xbox_Viewport.Height * Yscale);
-		g_pD3DDevice->SetScissorRect(&viewportRect);
+		CxbxSetScissorRect(&viewportRect);
 	}
 }
 
@@ -8275,8 +8320,7 @@ static void CxbxImpl_SetRenderTarget
 	HRESULT hRet;
 	// Mimick Direct3D 8 SetRenderTarget by only setting render target if non-null
 	if (pHostRenderTarget) {
-		hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+		hRet = CxbxSetRenderTarget(pHostRenderTarget);
 		if (FAILED(hRet)) {
 			// If Direct3D 9 SetRenderTarget failed, skip setting depth stencil
 			return;
