@@ -794,103 +794,155 @@ private:
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT1: // 0x11:
+			// Test-cases : Halo - Combat Evolved
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R16_SNORM;
+			HostVertexElementByteSize = 1 * sizeof(SHORT);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2N, DXGI_FORMAT_R16G16_SNORM);
+				HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
 				HostVertexElementByteSize = 2 * sizeof(SHORT);
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT1, DXGI_FORMAT_R32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(xbox::short_xt);
+#endif
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT2: // 0x21:
+			// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R16G16_SNORM;
+			HostVertexElementByteSize = 2 * sizeof(SHORT);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2N, DXGI_FORMAT_R16G16_SNORM);
+				HostVertexElementDataType = D3DDECLTYPE_SHORT2N;
 				HostVertexElementByteSize = 2 * sizeof(SHORT);
 				// No need for patching in D3D9
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT2, DXGI_FORMAT_R32G32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 2 * sizeof(xbox::short_xt);
 			}
+#endif
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT3: // 0x31:
+			// Test-cases : Cel Damage, Constantine, Destroy All Humans!
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R16G16B16A16_SNORM;
+			HostVertexElementByteSize = 4 * sizeof(SHORT);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT4N, DXGI_FORMAT_R16G16B16A16_SNORM);
+				HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
 				HostVertexElementByteSize = 4 * sizeof(SHORT);
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
+#endif
 			XboxVertexElementByteSize = 3 * sizeof(xbox::short_xt);
 			break;
 		case xbox::X_D3DVSDT_NORMSHORT4: // 0x41:
+			// Test-cases : Judge Dredd: Dredd vs Death, NHL Hitz 2002, Silent Hill 2, Sneakers, Tony Hawk Pro Skater 4
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R16G16B16A16_SNORM;
+			HostVertexElementByteSize = 4 * sizeof(SHORT);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT4N, DXGI_FORMAT_R16G16B16A16_SNORM);
+				HostVertexElementDataType = D3DDECLTYPE_SHORT4N;
 				HostVertexElementByteSize = 4 * sizeof(SHORT);
 				// No need for patching in D3D9
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(xbox::short_xt);
 			}
+#endif
 			break;
 		case xbox::X_D3DVSDT_NORMPACKED3: // 0x16:
-			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT);
+			// Test-cases : Dashboard
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT); // D3D11 Note : DXGI_FORMAT_R11G11B10_FLOAT can't be used (it contains floats, while X_D3DVSDT_NORMPACKED3 contains ints) and DXGI_FORMAT_R11G11B10_SNORM doesn't exist
 			HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			XboxVertexElementByteSize = 1 * sizeof(xbox::dword_xt);
 			break;
 		case xbox::X_D3DVSDT_SHORT1: // 0x15:
-			HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2, DXGI_FORMAT_R16G16_SINT);;
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R16_SINT;
+			HostVertexElementByteSize = 1 * sizeof(SHORT);
+#else
+			HostVertexElementDataType = D3DDECLTYPE_SHORT2;
 			HostVertexElementByteSize = 2 * sizeof(SHORT);
 			XboxVertexElementByteSize = 1 * sizeof(xbox::short_xt);
+#endif
 			break;
 		case xbox::X_D3DVSDT_SHORT3: // 0x35:
+			// Test-cases : Turok
 			HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT4, DXGI_FORMAT_R16G16B16A16_SINT);
 			HostVertexElementByteSize = 4 * sizeof(SHORT);
 			XboxVertexElementByteSize = 3 * sizeof(xbox::short_xt);
 			break;
 		case xbox::X_D3DVSDT_PBYTE1: // 0x14:
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R8_UNORM;
+			HostVertexElementByteSize = 1 * sizeof(BYTE);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
+				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT1, DXGI_FORMAT_R32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT1;
 				HostVertexElementByteSize = 1 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 1 * sizeof(xbox::byte_xt);
+#endif
 			break;
 		case xbox::X_D3DVSDT_PBYTE2: // 0x24:
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R8G8_UNORM;
+			HostVertexElementByteSize = 2 * sizeof(BYTE);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
+				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT2, DXGI_FORMAT_R32G32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT2;
 				HostVertexElementByteSize = 2 * sizeof(FLOAT);
 			}
 			XboxVertexElementByteSize = 2 * sizeof(xbox::byte_xt);
+#endif
 			break;
 		case xbox::X_D3DVSDT_PBYTE3: // 0x34:
+			// Test-cases : Turok
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R8G8B8A8_UNORM; // D3D11 note : DXGI_FORMAT_R8G8B8_UNORM doesn't exist, so expand to 4 bytes
+			HostVertexElementByteSize = 4 * sizeof(BYTE);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
+				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT3, DXGI_FORMAT_R32G32B32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT3;
 				HostVertexElementByteSize = 3 * sizeof(FLOAT);
 			}
+#endif
 			XboxVertexElementByteSize = 3 * sizeof(xbox::byte_xt);
 			break;
 		case xbox::X_D3DVSDT_PBYTE4: // 0x44:
-			// Test-case : Panzer
+			// Test-case : Jet Set Radio Future, Panzer
+#ifdef CXBX_USE_D3D11
+			HostVertexElementDataType = DXGI_FORMAT_R8G8B8A8_UNORM;
+			HostVertexElementByteSize = 4 * sizeof(BYTE);
+#else
 			if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_UBYTE4N, DXGI_FORMAT_R8G8B8A8_UNORM);
+				HostVertexElementDataType = D3DDECLTYPE_UBYTE4N;
 				HostVertexElementByteSize = 4 * sizeof(BYTE);
 				// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
 			} else {
-				HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT);
+				HostVertexElementDataType = D3DDECLTYPE_FLOAT4;
 				HostVertexElementByteSize = 4 * sizeof(FLOAT);
 				XboxVertexElementByteSize = 4 * sizeof(xbox::byte_xt);
 			}
+#endif
 			break;
 		case xbox::X_D3DVSDT_FLOAT2H: // 0x72:
 			HostVertexElementDataType = _9_11(D3DDECLTYPE_FLOAT4, DXGI_FORMAT_R32G32B32A32_FLOAT);
