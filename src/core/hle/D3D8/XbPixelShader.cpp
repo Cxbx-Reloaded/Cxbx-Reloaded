@@ -1103,7 +1103,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
       case PSH_XBOX_CONSTANT_BEM + 3:
       {
         int stage_nr = i - PSH_XBOX_CONSTANT_BEM;
-        DWORD* value = (DWORD*)&fColor[i];; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
+        DWORD* value = (DWORD*)&fColor[i]; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
 
         g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVMAT00, &value[0]); // Maps to BEM[stage].x
         g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVMAT01, &value[1]); // Maps to BEM[stage].y
