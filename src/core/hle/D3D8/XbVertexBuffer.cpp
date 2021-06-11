@@ -402,8 +402,8 @@ void CxbxVertexBufferConverter::ConvertStream
 				// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
 				// All other cases are catched by the memcpy in the default-block.
 				switch (pVertexShaderStreamInfo->VertexElements[uiElement].XboxType) {
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16_SNORM
 				case xbox::X_D3DVSDT_NORMSHORT1: { // 0x11:
-					// Test-cases : Halo - Combat Evolved
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// Make it SHORT2N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
@@ -415,8 +415,9 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16G16_SNORM
 				case xbox::X_D3DVSDT_NORMSHORT2: { // 0x21:
-					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT2N
 						// TODO : goto default; // ??
@@ -431,8 +432,15 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_NORMSHORT3: { // 0x31:
-					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
+#ifdef CXBX_USE_D3D11 // D3D11 uses DXGI_FORMAT_R16G16B16A16_SNORM
+					// Make it SHORT4N
+					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
+					pHostVertexAsShort[2] = pXboxVertexAsShort[2];
+					pHostVertexAsShort[3] = 32767; // TODO : verify
+#else
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// Make it SHORT4N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
@@ -447,8 +455,9 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16G16B16A16_SNORM
 				case xbox::X_D3DVSDT_NORMSHORT4: { // 0x41:
-					// Test-cases : Judge Dredd: Dredd vs Death, NHL Hitz 2002, Silent Hill 2, Sneakers, Tony Hawk Pro Skater 4
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT4N
 						// TODO : goto default; // ??
@@ -467,8 +476,8 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_NORMPACKED3: { // 0x16:
-					// Test-cases : Dashboard
 					// Make it FLOAT3
 					union {
                         int32_t value;
@@ -486,14 +495,15 @@ void CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsFloat[2] = PackedIntToFloat(NormPacked3.z, 511.0f, 512.f);
 					break;
 				}
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16_SINT
 				case xbox::X_D3DVSDT_SHORT1: { // 0x15:
 					// Make it SHORT2 and set the second short to 0
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = 0;
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_SHORT3: { // 0x35:
-					// Test-cases : Turok
 					// Make it a SHORT4 and set the fourth short to 1
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
@@ -501,6 +511,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsShort[3] = 1; // Turok verified (character disappears when this is 32767)
 					break;
 				}
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R8_UNORM
 				case xbox::X_D3DVSDT_PBYTE1: { // 0x14:
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
@@ -514,6 +525,8 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R8G8_UNORM
 				case xbox::X_D3DVSDT_PBYTE2: { // 0x24:
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
@@ -528,8 +541,15 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_PBYTE3: { // 0x34:
-					// Test-cases : Turok
+#ifdef CXBX_USE_D3D11 // D3D11 uses DXGI_FORMAT_R8G8B8A8_UNORM
+					// Make it UBYTE4N
+					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+					pHostVertexAsByte[1] = pXboxVertexAsByte[1];
+					pHostVertexAsByte[2] = pXboxVertexAsByte[2];
+					pHostVertexAsByte[3] = 255; // TODO : Verify
+#else
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
 						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
@@ -543,9 +563,10 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
 					}
 					break;
+#endif
 				}
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R8G8B8A8_UNORM
 				case xbox::X_D3DVSDT_PBYTE4: { // 0x44:
-					// Test-case : Jet Set Radio Future
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
 						// TODO : goto default; // ??
@@ -564,6 +585,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_FLOAT2H: { // 0x72:
 					// Make it FLOAT4 and set the third float to 0.0
 					pHostVertexAsFloat[0] = pXboxVertexAsFloat[0];
@@ -579,6 +601,22 @@ void CxbxVertexBufferConverter::ConvertStream
 					// No host element data (but Xbox size can be above zero, when used for X_D3DVSD_MASK_SKIP*
 					break;
 				}
+				case xbox::X_D3DVSDT_D3DCOLOR: [[fallthrough]]; // 0x40: DXGI_FORMAT_R8G8B8A8_UNORM
+				case xbox::X_D3DVSDT_FLOAT1: [[fallthrough]]; // 0x12: DXGI_FORMAT_R32_FLOAT
+				case xbox::X_D3DVSDT_FLOAT2: [[fallthrough]]; // 0x22: DXGI_FORMAT_R32G32_FLOAT
+				case xbox::X_D3DVSDT_FLOAT3: [[fallthrough]]; // 0x32: DXGI_FORMAT_R32G32B32_FLOAT
+				case xbox::X_D3DVSDT_FLOAT4: [[fallthrough]]; // 0x42: DXGI_FORMAT_R32G32B32A32_FLOAT
+#ifdef CXBX_USE_D3D11
+				case xbox::X_D3DVSDT_NORMSHORT1: [[fallthrough]]; // 0x11: DXGI_FORMAT_R16_SNORM
+				case xbox::X_D3DVSDT_NORMSHORT2: [[fallthrough]]; // 0x21: DXGI_FORMAT_R16G16_SNORM
+				case xbox::X_D3DVSDT_NORMSHORT4: [[fallthrough]]; // 0x41: DXGI_FORMAT_R16G16B16A16_SNORM
+				case xbox::X_D3DVSDT_PBYTE1: [[fallthrough]]; // 0x14: DXGI_FORMAT_R8_UNORM
+				case xbox::X_D3DVSDT_PBYTE2: [[fallthrough]]; // 0x24: DXGI_FORMAT_R8G8_UNORM
+				case xbox::X_D3DVSDT_PBYTE4: [[fallthrough]]; // 0x44: DXGI_FORMAT_R8G8B8A8_UNORM
+				case xbox::X_D3DVSDT_SHORT1: [[fallthrough]]; // 0x15: DXGI_FORMAT_R16_SINT
+#endif
+				case xbox::X_D3DVSDT_SHORT2: [[fallthrough]]; // 0x25: DXGI_FORMAT_R16G16_SINT
+				case xbox::X_D3DVSDT_SHORT4: [[fallthrough]]; // 0x45: DXGI_FORMAT_R16G16B16A16_SINT
 				default: {
 					// Generic 'conversion' - just make a copy :
 					memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
