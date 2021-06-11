@@ -64,7 +64,7 @@ XBSYSAPI EXPORTNUM(327) xbox::ntstatus_xt NTAPI xbox::XeLoadSection
 		LOG_FUNC_ARG(Section)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = xbox::status_success;
+	NTSTATUS ret = status_success;
 
 	void* sectionData = CxbxKrnl_Xbe->FindSection(Section);
 	if (sectionData != nullptr) {
@@ -96,6 +96,9 @@ XBSYSAPI EXPORTNUM(327) xbox::ntstatus_xt NTAPI xbox::XeLoadSection
 
 		// Increment the reference count
 		Section->SectionReferenceCount++;
+	}
+	else {
+		ret = status_invalid_handle;
 	}
 	
 	RETURN(ret);
