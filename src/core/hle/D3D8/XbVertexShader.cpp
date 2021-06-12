@@ -686,7 +686,9 @@ size_t GetVshFunctionSize(const xbox::dword_xt* pXboxFunction) {
 // * Vertex shader declaration recompiler
 // ****************************************************************************
 
+#ifndef CXBX_USE_D3D11
 extern D3DCAPS g_D3DCaps;
+#endif
 
 class XboxVertexDeclarationConverter
 {

@@ -99,7 +99,7 @@ HWND                                g_hEmuWindow   = NULL; // rendering window
 bool                                g_bClipCursor  = false; // indicates that the mouse cursor should be confined inside the rendering window
 IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
 #ifdef CXBX_USE_D3D11
-ID3D11DeviceContext                *g_pD3DDeviceContext = nullptr;
+ID3D11DeviceContext                *g_pD3DDeviceContext = nullptr; // Direct3D 11 Device Context
 #endif
 
 // Static Variable(s)
@@ -128,8 +128,10 @@ static D3DSURFACE_DESC              g_HostBackBufferDesc;
 static Settings::s_video            g_XBVideo;
 
 // D3D based variables
+#ifndef CXBX_USE_D3D11
 static IDirect3D9Ex                *g_pDirect3D = nullptr;
        D3DCAPS						g_D3DCaps = {};         // Direct3D Caps
+#endif
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
 
@@ -234,7 +236,7 @@ static void CxbxSetScissorRect(CONST RECT *pHostViewportRect)
 #endif
 }
 
-static HRESULT CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
+static void CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
@@ -250,8 +252,6 @@ static HRESULT CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
 
 	if (FAILED(hRet))
 		CxbxrAbort("CxbxSetIndices: SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
-
-	return hRet;
 }
 
 static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget)
@@ -352,8 +352,8 @@ typedef struct resource_key_hash {
 struct EmuD3D8CreateDeviceProxyData
 {
 	// Set by EmuD3DInit()
-    xbox::uint_xt                        Adapter;
-    D3DDEVTYPE                       DeviceType;
+    _9_11(xbox::uint_xt, IDXGIAdapter*)  Adapter;
+    _9_11(D3DDEVTYPE, D3D_DRIVER_TYPE)   DeviceType;
 	// Set by EmuCreateDeviceProxy()
 	D3DPRESENT_PARAMETERS            HostPresentationParameters;
 }
@@ -1534,10 +1534,16 @@ void EmuD3DInit()
 
 	// Initialise CreateDevice Proxy Data struct
 	{
+#ifdef CXBX_USE_D3D11
+		g_EmuCDPD.Adapter = nullptr; // Specify nullptr to use the default adapter. TODO : Use g_XBVideo.adapter
+		g_EmuCDPD.DeviceType = (g_XBVideo.direct3DDevice == 0) ? D3D_DRIVER_TYPE_HARDWARE : D3D_DRIVER_TYPE_REFERENCE;
+#else
 		g_EmuCDPD.Adapter = g_XBVideo.adapter;
 		g_EmuCDPD.DeviceType = (g_XBVideo.direct3DDevice == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
+#endif
 	}
 
+#ifndef CXBX_USE_D3D11 // Based on : https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
 	// create Direct3D8 and retrieve caps
     {
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
@@ -1551,6 +1557,7 @@ void EmuD3DInit()
 		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
 		std::cout << "----------------------------------------\n";
 	}
+#endif
 }
 
 // cleanup Direct3D
@@ -2135,7 +2142,7 @@ static void DetermineSupportedD3DFormats
                 // Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
 #ifdef CBXB_USE_D3D11
                 UINT FormatSupport = 0;
-                g_pDirect3D->CheckFormatSupport(Format, &FormatSupport);
+				g_pD3DDevice->CheckFormatSupport(Format, &FormatSupport);
 
                 g_bSupportsFormatSurface[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURE2D;
                 g_bSupportsFormatSurfaceRenderTarget[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_RENDER_TARGET;
@@ -2294,6 +2301,91 @@ static void CreateDefaultD3D9Device
 		displayMode.ScanLineOrdering = D3DSCANLINEORDERING_PROGRESSIVE;
 	}
 
+#ifdef CXBX_USE_D3D11
+	// This flag adds support for surfaces with a different color channel 
+	// ordering than the API default. It is required for compatibility with
+	// Direct2D.
+	UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT; // See enum D3D11_CREATE_DEVICE_FLAG
+#if defined(_DEBUG)
+	// If the project is in a debug build, enable debugging via SDK Layers.
+	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+	// only use feature level 11.1.
+	D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_11_1 };
+	// Create the Direct3D 11 API device object and a corresponding context.
+	ComPtr<ID3D11Device> device;
+	ComPtr<ID3D11DeviceContext> context;
+	HRESULT hr = D3D11CreateDevice(
+		g_EmuCDPD.Adapter,
+		g_EmuCDPD.DeviceType,
+		nullptr,
+		creationFlags,
+		featureLevels,
+		ARRAYSIZE(featureLevels),
+		D3D11_SDK_VERSION, // UWP apps must set this to D3D11_SDK_VERSION.
+		&device, // Returns the Direct3D device created.
+		nullptr, // pFeatureLevel
+		&context // Returns the device immediate context.
+	);
+    DEBUG_D3DRESULT(hr, "D3D11CreateDevice");
+	// Store pointers to the Direct3D 11.2 API device and immediate context.
+	device.As(&g_pD3DDevice);
+	context.As(&g_pD3DDeviceContext);
+
+	// Create a swap chain
+	ComPtr<IDXGIDevice2> dxgiDevice;
+	g_pD3DDevice.As(&dxgiDevice);
+
+	// Then, the adapter hosting the device;
+	ComPtr<IDXGIAdapter> dxgiAdapter;
+	dxgiDevice->GetAdapter(&dxgiAdapter);
+
+	// Then, the factory that created the adapter interface:
+	ComPtr<IDXGIFactory2> dxgiFactory;
+	dxgiAdapter->GetParent(
+		__uuidof(IDXGIFactory2),
+		&dxgiFactory
+	);
+
+	ComPtr<IDXGISwapChain1> swapChain;
+	dxgiFactory->CreateSwapChainForCoreWindow(
+		g_pD3DDevice.Get(),
+		reinterpret_cast<IUnknown*>(window),
+		&swapChainDesc,
+		nullptr,
+		&swapChain
+	);
+	swapChain.As(&m_swapChain);
+
+	dxgiDevice->SetMaximumFrameLatency(1);
+
+	// Configure the back buffer as a render target
+	ComPtr<ID3D11Texture2D> backBuffer;
+	m_swapChain->GetBuffer(
+		0,
+		__uuidof(ID3D11Texture2D),
+		&backBuffer
+	);
+
+	// Create a render target view on the back buffer.
+	g_pD3DDevice->CreateRenderTargetView(
+		backBuffer.Get(),
+		nullptr,
+		&m_renderTargetView
+	);
+
+	D3D11_TEXTURE2D_DESC backBufferDesc = { 0 };
+	backBuffer->GetDesc(&backBufferDesc);
+
+	CD3D11_VIEWPORT viewport(
+		0.0f,
+		0.0f,
+		static_cast<float>(backBufferDesc.Width),
+		static_cast<float>(backBufferDesc.Height)
+	);
+
+	g_pD3DDeviceContext->RSSetViewports(1, &viewport);
+#else
     // IDirect3D9::CreateDevice must be called from the window message thread
     // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
     HRESULT hr;
@@ -2311,20 +2403,26 @@ static void CreateDefaultD3D9Device
 
     if(FAILED(hr))
         CxbxrAbort("IDirect3D::CreateDeviceEx failed");
+#endif
 
     // Which texture formats does this device support?
     DetermineSupportedD3DFormats();
 
+#ifdef CXBX_USE_D3D11
+	D3D11_QUERY_DESC QueryDesc;
+	QueryDesc.Query = D3D11_QUERY_EVENT;
+	QueryDesc.MiscFlags = 0;
+#endif
     // Can host driver create event queries?
-    if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, nullptr))) {
+    if (SUCCEEDED(g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), nullptr))) {
         // Is host GPU query creation enabled?
         if (!g_bHack_DisableHostGPUQueries) {
             // Create a D3D event query to handle "wait-for-idle" with
-            hr = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryWaitForIdle);
+            hr = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), &g_pHostQueryWaitForIdle);
             DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (wait for idle)");
 
             // Create a D3D event query to handle "callback events" with
-            hr = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_EVENT, &g_pHostQueryCallbackEvent);
+            hr = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), &g_pHostQueryCallbackEvent);
             DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (callback event)");
         }
     } else {
@@ -2332,8 +2430,11 @@ static void CreateDefaultD3D9Device
     }
 
     // Can host driver create occlusion queries?
+#ifdef CXBX_USE_D3D11
+	QueryDesc.Query = D3D11_QUERY_OCCLUSION;
+#endif
     g_bEnableHostQueryVisibilityTest = false;
-    if (SUCCEEDED(g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, nullptr))) {
+    if (SUCCEEDED(g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_OCCLUSION, &QueryDesc), nullptr))) {
         // Is host GPU query creation enabled?
         if (!g_bHack_DisableHostGPUQueries) {
             g_bEnableHostQueryVisibilityTest = true;
@@ -2673,7 +2774,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	}
 
 	// Activate the new native index buffer :
-	(void)CxbxSetIndices(CacheEntry.pHostIndexBuffer);
+	CxbxSetIndices(CacheEntry.pHostIndexBuffer);
 
 	return CacheEntry;
 }
@@ -3391,9 +3492,14 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 	LOG_FUNC();
 
 	if (g_bEnableHostQueryVisibilityTest) {
+#ifdef CXBX_USE_D3D11
+		D3D11_QUERY_DESC QueryDesc;
+		QueryDesc.Query = D3D11_QUERY_OCCLUSION;
+		QueryDesc.MiscFlags = 0;
+#endif
 		// Create a D3D occlusion query to handle "visibility test" with
 		IDirect3DQuery* pHostQueryVisibilityTest = nullptr;
-		HRESULT hRet = g_pD3DDevice->CreateQuery(D3DQUERYTYPE_OCCLUSION, &pHostQueryVisibilityTest);
+		HRESULT hRet = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_OCCLUSION, &QueryDesc), &pHostQueryVisibilityTest);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (visibility test)");
 		if (pHostQueryVisibilityTest != nullptr) {
 			hRet = pHostQueryVisibilityTest->Issue(D3DISSUE_BEGIN);
@@ -7045,8 +7151,6 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
 
-	HRESULT hRet;
-
 	if (g_QuadToTriangleHostIndexBuffer_Size < NrOfQuadIndices)
 	{
 		// Round the number of indices up so we'll allocate whole pages
@@ -7066,7 +7170,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 
 		// Put quadlist-to-triangle-list index mappings into this buffer :
 		INDEX16* pHostIndexBufferData = nullptr;
-		hRet = g_pQuadToTriangleHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
+		HRESULT hRet = g_pQuadToTriangleHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
 		DEBUG_D3DRESULT(hRet, "g_pQuadToTriangleHostIndexBuffer->Lock");
 		if (pHostIndexBufferData == nullptr)
 			CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
@@ -7077,7 +7181,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 	}
 
 	// Activate the new native index buffer :
-	hRet = CxbxSetIndices(g_pQuadToTriangleHostIndexBuffer);
+	CxbxSetIndices(g_pQuadToTriangleHostIndexBuffer);
 }
 
 // TODO : Move to own file
@@ -7105,7 +7209,7 @@ void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex)
 	hRet = g_pClosingLineLoopHostIndexBuffer->Unlock();
 	DEBUG_D3DRESULT(hRet, "g_pClosingLineLoopHostIndexBuffer->Unlock");
 
-	hRet = CxbxSetIndices(g_pClosingLineLoopHostIndexBuffer);
+	CxbxSetIndices(g_pClosingLineLoopHostIndexBuffer);
 
 	hRet = g_pD3DDevice->DrawIndexedPrimitive(
 		/*PrimitiveType=*/D3DPT_LINELIST,
