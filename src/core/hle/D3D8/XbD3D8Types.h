@@ -94,7 +94,7 @@
 #define IDirect3DIndexBuffer            _9_11(IDirect3DIndexBuffer9,       ID3D11Buffer) // or ID3D11ShaderResourceView ?
 #define IDirect3DSurface                IDirect3DSurface9
 #define IDirect3DVolume                 IDirect3DVolume9
-#define IDirect3DQuery                  IDirect3DQuery9
+#define IDirect3DQuery                  _9_11(IDirect3DQuery9,             ID3D11Query)
 
 typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
 
