@@ -232,8 +232,10 @@ void CxbxVertexBufferConverter::ConvertStream
     UINT             uiStream
 )
 {
+#ifndef CXBX_USE_D3D11
 	extern D3DCAPS g_D3DCaps;
-		//X_D3DBaseTexture *pLinearBaseTexture[xbox::X_D3DTS_STAGECOUNT];
+#endif
+	//X_D3DBaseTexture *pLinearBaseTexture[xbox::X_D3DTS_STAGECOUNT];
 
 	CxbxVertexShaderStreamInfo *pVertexShaderStreamInfo = nullptr;
 	UINT XboxStreamNumber = uiStream;
