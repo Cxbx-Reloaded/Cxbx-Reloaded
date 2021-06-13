@@ -148,6 +148,8 @@ static struct {
 	const char* type = "Type";
 	const char* device = "DeviceName";
 	const char* config = "ProfileName";
+	const char *top_slot = "TopSlot";
+	const char *bottom_slot = "BottomSlot";
 } sect_input_port;
 
 static const char* section_input_profiles = "input-profile-";
@@ -465,15 +467,25 @@ bool Settings::LoadConfig()
 	// ==== Input Port Begin ====
 
 	for (int port_num = 0; port_num < 4; port_num++) {
+		m_input_port[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+		m_input_port[port_num].TopSlotType = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+		m_input_port[port_num].BottomSlotType = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+
 		std::string current_section = std::string(section_input_port) + std::to_string(port_num);
 		int ret = m_si.GetLongValue(current_section.c_str(), sect_input_port.type, -2);
 		if (ret == -2) {
-			m_input_port[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
 			continue;
 		}
 		m_input_port[port_num].Type = ret;
 		m_input_port[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input_port.device);
 		m_input_port[port_num].ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input_port.config));
+		ret = m_si.GetLongValue(current_section.c_str(), sect_input_port.top_slot, -2);
+		if (ret == -2) {
+			continue;
+		}
+		m_input_port[port_num].TopSlotType = ret;
+		m_input_port[port_num].BottomSlotType = m_si.GetLongValue(current_section.c_str(), sect_input_port.bottom_slot, -2);
+		assert(m_input_port[port_num].BottomSlotType != -2);
 	}
 
 	// ==== Input Port End ==============
@@ -644,6 +656,8 @@ bool Settings::Save(std::string file_path)
 		m_si.SetLongValue(current_section.c_str(), sect_input_port.type, m_input_port[port_num].Type, nullptr, false, true);
 		m_si.SetValue(current_section.c_str(), sect_input_port.device, m_input_port[port_num].DeviceName.c_str(), nullptr, true);
 		m_si.SetValue(current_section.c_str(), sect_input_port.config, quoted_prf_str.c_str(), nullptr, true);
+		m_si.SetLongValue(current_section.c_str(), sect_input_port.top_slot, m_input_port[port_num].TopSlotType, nullptr, false, true);
+		m_si.SetLongValue(current_section.c_str(), sect_input_port.bottom_slot, m_input_port[port_num].BottomSlotType, nullptr, false, true);
 	}
 
 	// ==== Input Port End ==============

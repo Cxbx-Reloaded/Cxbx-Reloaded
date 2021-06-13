@@ -149,6 +149,8 @@ public:
 		int Type;
 		std::string DeviceName;
 		std::string ProfileName;
+		int TopSlotType;
+		int BottomSlotType;
 	};
 	std::array<s_input_port, 4> m_input_port;
 

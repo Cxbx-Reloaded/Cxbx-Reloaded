@@ -96,6 +96,7 @@ char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_Xbe[xbox::max_path*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is xbox::max_path*2 = 520
 
 std::string CxbxBasePath;
+std::string MuBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
 bool g_bIsChihiro = false;
@@ -1433,11 +1434,14 @@ __declspec(noreturn) void CxbxKrnlInit
 		char szBuffer[sizeof(szFilePath_Xbe)];
 		g_EmuShared->GetStorageLocation(szBuffer);
 
+		MuBasePath = std::string(szBuffer) + "\\EmuMu";
 		CxbxBasePath = std::string(szBuffer) + "\\EmuDisk";
 		CxbxResolveHostToFullPath(CxbxBasePath, "Cxbx-Reloaded's EmuDisk directory");
+		CxbxResolveHostToFullPath(MuBasePath, "Cxbx-Reloaded's EmuMu directory");
 		// Since canonical always remove the extra slash, we need to manually add it back.
 		// TODO: Once CxbxBasePath is filesystem::path, replace CxbxBasePath's + operators to / for include path separator internally.
 		CxbxBasePath = std::filesystem::path(CxbxBasePath).append("").string();
+		MuBasePath = std::filesystem::path(MuBasePath).append("").string();
 	}
 
 	// Determine xbe path
@@ -1504,6 +1508,17 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", CxbxBasePath + "Chihiro");
+
+	// Create MU directories
+	for (unsigned i = 0; i < 8; ++i) {
+		std::error_code error;
+		static char mu_letter = 'F';
+		std::string mu_path = MuBasePath + mu_letter;
+		if (!(std::filesystem::exists(mu_path) || std::filesystem::create_directory(mu_path, error))) {
+			CxbxKrnlCleanup("Failed to create memory unit directories");
+		}
+		++mu_letter;
+	}
 
 	// Create default symbolic links :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");
@@ -1745,6 +1760,13 @@ void CxbxInitFilePaths()
 	result = std::filesystem::exists(emuDisk);
 	if (!result && !std::filesystem::create_directory(emuDisk)) {
 		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
+	}
+
+	// Make sure the EmuDMu folder exists
+	std::string emuMu = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuMu");
+	result = std::filesystem::exists(emuMu);
+	if (!result && !std::filesystem::create_directory(emuMu)) {
+		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuMu folder!", __func__);
 	}
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
