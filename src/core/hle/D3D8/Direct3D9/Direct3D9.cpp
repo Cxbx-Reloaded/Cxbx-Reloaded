@@ -5754,7 +5754,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 					// If it was a depth stencil, fall back to a known supported depth format
 					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to D3DFMT_D24S8", ResourceTypeName, X_Format);
-					PCFormat = D3DFMT_D24S8;
+					PCFormat = _9_11(D3DFMT_D24S8, DXGI_FORMAT_D24_UNORM_S8_UINT);
 				} else if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
 					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
 					bConvertToARGB = true;
@@ -5844,6 +5844,23 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		// Create the surface/volume/(volume/cube/)texture
 		switch (XboxResourceType) {
 		case xbox::X_D3DRTYPE_SURFACE: {
+#ifdef CXBX_USE_D3D11
+			D3D11_TEXTURE2D_DESC desc;
+			desc.Width = hostWidth;
+			desc.Height = hostHeight;
+			desc.MipLevels = 1;
+			desc.ArraySize = 1;
+			desc.Format = PCFormat;
+			desc.SampleDesc.Count = 1; // TODO : Use g_EmuCDPD.HostPresentationParameters.MultiSampleType ?
+			desc.SampleDesc.Quality = 0;
+			desc.Usage = D3D11_USAGE_DYNAMIC;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | (D3DUsage & D3DUSAGE_DEPTHSTENCIL) ? D3D11_BIND_DEPTH_STENCIL : 0;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			desc.MiscFlags = 0;
+
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, &pNewHostResource);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
+#else
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 				hRet = g_pD3DDevice->CreateDepthStencilSurface(hostWidth, hostHeight, PCFormat,
 					g_EmuCDPD.HostPresentationParameters.MultiSampleType,
@@ -5888,7 +5905,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				EmuLog(LOG_LEVEL::WARNING, "Trying Fallback");
 				hRet = g_pD3DDevice->CreateOffscreenPlainSurface(hostWidth, hostHeight, PCFormat, D3DPool, pNewHostSurface.GetAddressOf(), nullptr);
 			}
-
+#endif
 			// If the fallback failed, show an error and exit execution.
 			if (hRet != D3D_OK) {
 				// We cannot safely continue in this state.
@@ -5896,9 +5913,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
-			SetHostSurface(pResource, pNewHostSurface.Get(), iTextureStage);
+			SetHostSurface(pResource, _9_11(pNewHostSurface.Get(), pNewHostResource.Get()), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, pNewHostSurface.Get());
+				ResourceTypeName, pResource, _9_11(pNewHostSurface.Get(), pNewHostResource.Get()));
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Width : %d, Height : %d, Format : %d",
 				hostWidth, hostHeight, PCFormat);
 			break;
@@ -5911,9 +5928,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// So, we need to do this differently - we need to step up to the containing VolumeTexture,
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
 			pNewHostVolume = nullptr;
-			// SetHostVolume(pResource, pNewHostVolume, iTextureStage);
+			// SetHostVolume(pResource, _9_11(pNewHostVolume.Get(), pNewHostResource.Get()), iTextureStage);
 			// EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-			//	ResourceTypeName, pResource, pNewHostVolume);
+			//	ResourceTypeName, pResource, _9_11(pNewHostVolume.Get(), pNewHostResource.Get()));
 			break;
 		}
 
@@ -5977,9 +5994,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 #endif
 
-			SetHostTexture(pResource, pNewHostTexture.Get(), iTextureStage);
+			SetHostTexture(pResource, _9_11(pNewHostTexture.Get(), pNewHostResource.Get()), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, pNewHostTexture.Get());
+				ResourceTypeName, pResource, _9_11(pNewHostTexture.Get(), pNewHostResource.Get()));
 			break;
 		}
 
@@ -6019,9 +6036,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 #endif
 
-			SetHostVolumeTexture(pResource, pNewHostVolumeTexture.Get(), iTextureStage);
+			SetHostVolumeTexture(pResource, _9_11(pNewHostVolumeTexture.Get(), pNewHostResource.Get()), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, pNewHostVolumeTexture.Get());
+				ResourceTypeName, pResource, _9_11(pNewHostVolumeTexture.Get(), pNewHostResource.Get()));
 			break;
 		}
 
@@ -6066,7 +6083,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
-			SetHostCubeTexture(pResource, pNewHostCubeTexture.Get(), iTextureStage);
+			SetHostCubeTexture(pResource, pNewHostCubeTexture, iTextureStage);
 			// TODO : Cube face surfaces can be used as a render-target,
 			// so we need to associate host surfaces to each surface of this cube texture
             // However, we can't do it here: On Xbox, a new Surface is created on every call to
@@ -6121,14 +6138,15 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				DWORD mip2dSize = dwMipRowPitch * numRows; // the size of one layer of the mip slice
 				DWORD mipSlicePitch = mip2dSize * pxMipDepth; // the total size of the mip slice (depth is only > 1 for volume textures)
 
-				// Lock the host resource
 #ifdef CXBX_USE_D3D11
+				// Map the host resource
 				UINT Subresource = (face * dwMipMapLevels) + mipmap_level;
 				// See https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-subresources
 				D3D11_MAPPED_SUBRESOURCE MappedResource;
 
 				hRet = g_pD3DDeviceContext->Map(pNewHostResource, Subresource, D3D11_MAP_WRITE_DISCARD, D3D11_MAP_FLAG_DO_NOT_WAIT, &MappedResource);
 #else
+				// Lock the host resource
 				D3DLOCKED_RECT LockedRect = {};
 				D3DLOCKED_BOX LockedBox = {};
 				DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
@@ -6235,10 +6253,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					}
 				}
 
-				// Unlock the host resource
 #ifdef CXBX_USE_D3D11
+				// Unmap the host resource
 				g_pD3DDeviceContext->Unmap(pNewHostResource, Subresource);
 #else
+				// Unlock the host resource
 				switch (XboxResourceType) {
 				case xbox::X_D3DRTYPE_SURFACE:
 					hRet = pNewHostSurface->UnlockRect();
