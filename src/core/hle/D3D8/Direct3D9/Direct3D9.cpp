@@ -1428,7 +1428,7 @@ uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer *pPixelContainer)
 	return Result;
 }
 
-void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D3DBaseTexture* pTexture, UINT& Level, D3DCUBEMAP_FACES& Face)
+void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D3DBaseTexture* pTexture, UINT& Level, _9_11(D3DCUBEMAP_FACES, int)& Face)
 {
     auto pSurfaceData = (uintptr_t)GetDataFromXboxResource(pSurface);
     auto pTextureData = (uintptr_t)GetDataFromXboxResource(pTexture);
@@ -1436,7 +1436,7 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
     // Fast path: If the data pointers match, this must be the first surface within the texture
     if (pSurfaceData == pTextureData) {
         Level = 0;
-        Face = D3DCUBEMAP_FACE_POSITIVE_X;
+        Face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
         return;
     }
 
@@ -1458,7 +1458,7 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
     int cubeFaceOffset = 0; int cubeFaceSize = 0;
     auto pData = pTextureData;
 
-    for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= numFaces; face++) {
+    for (int face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0); face < numFaces; face++) {
         int mipWidth = textureWidth;
         int mipHeight = textureHeight;
         int mipDepth = textureDepth;
@@ -1468,7 +1468,7 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
         for (int level = 0; level < numLevels; level++) {
             if (pData == pSurfaceData) {
                 Level = level;
-                Face = (D3DCUBEMAP_FACES)face;
+                Face = (_9_11(D3DCUBEMAP_FACES, int))face;
                 return;
             }
 
@@ -1479,7 +1479,7 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
             }
 
             // If this is the first face, set the cube face size
-            if (face == D3DCUBEMAP_FACE_POSITIVE_X) {
+            if (face == _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0)) {
                 cubeFaceSize = ROUND_UP(textureDepth * dwMipSize, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
             }
 
@@ -1506,7 +1506,7 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
 
     LOG_TEST_CASE("Could not find Surface within Texture, falling back to Level = 0, Face = D3DCUBEMAP_FACE_POSITIVE_X");
     Level = 0;
-    Face = D3DCUBEMAP_FACE_POSITIVE_X;
+    Face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
 }
 
 // Wrapper function to allow calling without passing a face
@@ -5833,7 +5833,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
                 // test-case : Burnout
                 auto pParentHostTexture = (IDirect3DCubeTexture*)pParentHostBaseTexture;
 
-                D3DCUBEMAP_FACES CubeMapFace = D3DCUBEMAP_FACE_POSITIVE_X;
+                _9_11(D3DCUBEMAP_FACES, int) CubeMapFace = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
                 UINT SurfaceLevel = 0;
                 GetSurfaceFaceAndLevelWithinTexture(pXboxSurface, pParentXboxTexture, SurfaceLevel, CubeMapFace);
 
@@ -6002,6 +6002,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 		// One of these will be created : each also has an intermediate copy to allow UpdateTexture to work
         // This means we don't need to lock the GPU resource anymore, so we can use D3DPOOL_DEFAULT to allow Stretch/CopyRects to work!
+#ifdef CXBX_USE_D3D11
+		ComPtr<ID3D11Resource> pNewHostResource;
+#else
 		ComPtr<IDirect3DSurface> pNewHostSurface; // for X_D3DRTYPE_SURFACE
 		ComPtr<IDirect3DVolume> pNewHostVolume; // for X_D3DRTYPE_VOLUME
 		ComPtr<IDirect3DTexture> pNewHostTexture; // for X_D3DRTYPE_TEXTURE
@@ -6010,6 +6013,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		ComPtr<IDirect3DVolumeTexture> pIntermediateHostVolumeTexture;
 		ComPtr<IDirect3DCubeTexture> pNewHostCubeTexture; // for X_D3DRTYPE_CUBETEXTURE
 		ComPtr<IDirect3DCubeTexture> pIntermediateHostCubeTexture;
+#endif
 
 		HRESULT hRet;
 
@@ -6099,12 +6103,13 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			desc.ArraySize = 1;
 			desc.Format = PCFormat;
 			desc.SampleDesc.Count = 1;
+			desc.SampleDesc.Quality = 0;
 			desc.Usage = D3D11_USAGE_DYNAMIC;
 			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = 0;
 
-			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostTexture.GetAddressOf());
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf()); // TODO : pNewHostResource.Get() ?
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 			hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -6119,7 +6124,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			if ((hRet != D3D_OK) && (PCFormat != _9_11(D3DFMT_A8R8G8B8, DXGI_FORMAT_B8G8R8A8_UNORM)) && EmuXBFormatCanBeConverted(X_Format, TmpPCFormat)) {
 #ifdef CXBX_USE_D3D11
 				desc.Format = TmpPCFormat;
-				hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostTexture.GetAddressOf());
+				hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf()); // TODO : pNewHostResource.Get() ?
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -6135,6 +6140,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 			}
 
+#ifndef CXBX_USE_D3D11
             // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
             if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
                 hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -6147,6 +6153,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				CxbxrAbort("CreateTexture Failed!\n\n"
 					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, hostWidth, hostHeight);
 			}
+#endif
 
 			SetHostResource(pResource, (IDirect3DResource*)pNewHostTexture.Get(), iTextureStage, D3DUsage, PCFormat);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
@@ -6155,6 +6162,21 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		case xbox::X_D3DRTYPE_VOLUMETEXTURE: {
+#ifdef CXBX_USE_D3D11
+			D3D11_TEXTURE3D_DESC desc;
+			desc.Width = hostWidth;
+			desc.Height = hostHeight;
+			desc.Depth = dwDepth;
+			desc.MipLevels = dwMipMapLevels;
+			desc.Format = PCFormat;
+			desc.Usage = D3D11_USAGE_DYNAMIC;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			desc.MiscFlags = 0;
+
+			hRet = g_pD3DDevice->CreateTexture3D(&desc, NULL, pNewHostResource.GetAddressOf());
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture3D");
+#else
 			hRet = g_pD3DDevice->CreateVolumeTexture(hostWidth, hostHeight, dwDepth,
 				dwMipMapLevels, D3DUsage, PCFormat, D3DPool, pNewHostVolumeTexture.GetAddressOf(),
 				nullptr
@@ -6173,6 +6195,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				CxbxrAbort("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
+#endif
 
 			SetHostResource(pResource, (IDirect3DResource*)pNewHostVolumeTexture.Get(), iTextureStage, D3DUsage, PCFormat);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
@@ -6184,6 +6207,23 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			EmuLog(LOG_LEVEL::DEBUG, "CreateCubeTexture(%d, %d, 0, %d, D3DPOOL_DEFAULT)", hostWidth,
 				dwMipMapLevels, PCFormat);
 
+#ifdef CXBX_USE_D3D11
+			D3D11_TEXTURE2D_DESC desc;
+			desc.Width = hostWidth;
+			desc.Height = hostHeight;
+			desc.MipLevels = dwMipMapLevels;
+			desc.ArraySize = 6;
+			desc.Format = PCFormat;
+			desc.SampleDesc.Count = 1;
+			desc.SampleDesc.Quality = 0;
+			desc.Usage = D3D11_USAGE_DYNAMIC;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf()); // TODO : pNewHostResource.Get()?
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
+#else
 			hRet = g_pD3DDevice->CreateCubeTexture(hostWidth, dwMipMapLevels, D3DUsage,
 				PCFormat, D3DPool, pNewHostCubeTexture.GetAddressOf(),
 				nullptr
@@ -6197,6 +6237,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
                     nullptr
                 );
             }
+#endif
 
 			if (hRet != D3D_OK) {
 				CxbxrAbort("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
@@ -6222,7 +6263,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
         }
 
 		DWORD dwCubeFaceOffset = 0;
-		D3DCUBEMAP_FACES last_face = (bCubemap) ? D3DCUBEMAP_FACE_NEGATIVE_Z : D3DCUBEMAP_FACE_POSITIVE_X;
+		_9_11(D3DCUBEMAP_FACES, int) last_face = (bCubemap) ? _9_11(D3DCUBEMAP_FACE_NEGATIVE_Z, 5) : _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
 
 		// Block size only applies to compressed DXT formats
 		// DXT1 block size is 8 bytes
@@ -6233,7 +6274,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		DWORD actualSlicePitch = dwSlicePitch;
-		for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
+		for (int face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0); face <= last_face; face++) {
 			// As we iterate through mipmap levels, we'll adjust the source resource offset
 			DWORD dwMipOffset = 0;
 			DWORD pxMipWidth = xboxWidth; // the current mip width in pixels
@@ -6260,6 +6301,13 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				DWORD mipSlicePitch = mip2dSize * pxMipDepth; // the total size of the mip slice (depth is only > 1 for volume textures)
 
 				// Lock the host resource
+#ifdef CXBX_USE_D3D11
+				UINT Subresource = (face * dwMipMapLevels) + mipmap_level;
+				// See https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-subresources
+				D3D11_MAPPED_SUBRESOURCE MappedResource;
+
+				hRet = g_pD3DDeviceContext->Map(pNewHostResource, Subresource, D3D11_MAP_WRITE_DISCARD, D3D11_MAP_FLAG_DO_NOT_WAIT, &MappedResource);
+#else
 				D3DLOCKED_RECT LockedRect = {};
 				D3DLOCKED_BOX LockedBox = {};
 				DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
@@ -6283,6 +6331,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				default:
 					assert(false);
 				} // switch XboxResourceType
+#endif
 
 				if (hRet != D3D_OK) {
 					EmuLog(LOG_LEVEL::WARNING, "Locking host %s failed!", ResourceTypeName);
@@ -6294,6 +6343,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				DWORD dwDstRowPitch;
 				DWORD dwDstSlicePitch;
 
+#ifdef CXBX_USE_D3D11
+				pDst = (uint8_t *)MappedResource.pData;
+				dwDstRowPitch = MappedResource.RowPitch;
+				dwDstSlicePitch = MappedResource.DepthPitch;
+#else
 				switch (XboxResourceType) {
 				case xbox::X_D3DRTYPE_VOLUME:
 				case xbox::X_D3DRTYPE_VOLUMETEXTURE:
@@ -6306,7 +6360,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					dwDstRowPitch = LockedRect.Pitch;
 					dwDstSlicePitch = 0;
 				}
-
+#endif
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
 
 				// If this is the final mip of the first cube face, set the cube face size
@@ -6366,6 +6420,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 
 				// Unlock the host resource
+#ifdef CXBX_USE_D3D11
+				g_pD3DDeviceContext->Unmap(pNewHostResource, Subresource);
+#else
 				switch (XboxResourceType) {
 				case xbox::X_D3DRTYPE_SURFACE:
 					hRet = pNewHostSurface->UnlockRect();
@@ -6389,6 +6446,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				if (hRet != D3D_OK) {
 					EmuLog(LOG_LEVEL::WARNING, "Unlocking host %s failed!", ResourceTypeName);
 				}
+#endif
 
 				// Calculate the next mipmap level dimensions
 				dwMipOffset += mipSlicePitch;
@@ -6416,7 +6474,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			dwCubeFaceOffset += actualSlicePitch;
 		} // for cube faces
 
-
+#ifndef CXBX_USE_D3D11
         // Copy from the intermediate resource to the final host resource
         // This is necessary because CopyRects/StretchRects only works on resources in the DEFAULT pool
         // But resources in this pool are not lockable: We must use UpdateSurface/UpdateTexture instead!
@@ -6441,6 +6499,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
         if (hRet != D3D_OK) {
             EmuLog(LOG_LEVEL::WARNING, "Updating host %s failed!", ResourceTypeName);
         }
+#endif
 
 		// Debug resource dumping
 //#define _DEBUG_DUMP_TEXTURE_REGISTER "D:\\"
@@ -6472,9 +6531,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 			case xbox::X_D3DRTYPE_CUBETEXTURE: {
 				static int dwDumpCubeTexture = 0;
-				for (unsigned int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= D3DCUBEMAP_FACE_NEGATIVE_Z; face++) {
+				for (unsigned int face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0); face <= _9_11(D3DCUBEMAP_FACE_NEGATIVE_Z, 5); face++) {
 					IDirect3DSurface *pSurface;
-					if (D3D_OK == pNewHostCubeTexture->GetCubeMapSurface((D3DCUBEMAP_FACES)face, 0, &pSurface)) {
+					if (D3D_OK == pNewHostCubeTexture->GetCubeMapSurface((_9_11(D3DCUBEMAP_FACES, int))face, 0, &pSurface)) {
 						sprintf(szFilePath, _DEBUG_DUMP_TEXTURE_REGISTER "%.03d-CubeTexure%.03d-%d.dds", X_Format, dwDumpCubeTexture, face);
 						D3DXSaveSurfaceToFileA(szFilePath, D3DXIFF_DDS, pSurface, nullptr, nullptr);
 						pSurface->Release();
