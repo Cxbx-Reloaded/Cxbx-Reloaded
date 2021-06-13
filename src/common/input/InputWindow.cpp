@@ -177,6 +177,29 @@ void InputWindow::BindButton(int ControlID)
 	}
 }
 
+void InputWindow::UpdateProfile(const std::string &name, int command)
+{
+	switch (command)
+	{
+	case PROFILE_LOAD:
+		LoadProfile(name);
+		break;
+
+	case PROFILE_SAVE:
+		SaveProfile(name);
+		break;
+
+	case PROFILE_DELETE:
+		DeleteProfile(name);
+		break;
+
+	case BUTTON_CLEAR:
+	case BUTTON_SWAP:
+		m_bHasChanges = true;
+		break;
+	}
+}
+
 InputWindow::ProfileIt InputWindow::FindProfile(const std::string& name)
 {
 	auto it = std::find_if(g_Settings->m_input_profiles[m_dev_type].begin(),

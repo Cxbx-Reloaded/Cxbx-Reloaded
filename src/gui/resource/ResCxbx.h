@@ -1,4 +1,4 @@
-//{{NO_DEPENDENCIES}}
+﻿//{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
 // Used by Cxbx.rc
 //
@@ -94,6 +94,10 @@
 #define IDC_LOG_VSHCACHE                962
 #define IDC_LOG_RINP                    963
 #define IDC_LOG_JVS                     964
+#define IDC_DEVICE_LIST_TOP_SLOT        995
+#define IDC_DEVICE_LIST_BOTTOM_SLOT     996
+#define IDC_DEVICE_TOP_SLOT             997
+#define IDC_DEVICE_BOTTOM_SLOT          998
 #define IDC_SET_MOTOR                   999
 #define IDC_SET_X                       1000
 #define IDC_SET_Y                       1001

@@ -783,6 +783,8 @@ void Settings::SyncToEmulator()
 	// register xbox device input settings
 	for (int i = 0; i < 4; i++) {
 		g_EmuShared->SetInputDevTypeSettings(&m_input_port[i].Type, i);
+		g_EmuShared->SetInputSlotTypeSettings(&m_input_port[i].TopSlotType, i, MU_SLOT_TOP);
+		g_EmuShared->SetInputSlotTypeSettings(&m_input_port[i].BottomSlotType, i, MU_SLOT_BOTTOM);
 		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 			g_EmuShared->SetInputDevNameSettings(m_input_port[i].DeviceName.c_str(), i);
 			auto it = std::find_if(m_input_profiles[m_input_port[i].Type].begin(),

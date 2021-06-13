@@ -40,6 +40,7 @@
 #define RUMBLE_CLEAR   7
 #define BUTTON_CLEAR   8
 #define BUTTON_SWAP    9
+#define SLOTS_CHANGED  10
 
 #define XINPUT_DEFAULT 0
 #define DINPUT_DEFAULT 1
@@ -58,9 +59,9 @@ public:
 	void UpdateDeviceList();
 	void BindButton(int ControlID);
 	virtual void ClearBindings() = 0;
-	virtual void UpdateProfile(const std::string& name, int command) = 0;
+	virtual void UpdateProfile(const std::string& name, int command);
 	void UpdateCurrentDevice();
-	bool IsProfileSaved();
+	virtual bool IsProfileSaved();
 	void SwapMoCursorAxis(Button *button);
 
 
@@ -106,6 +107,7 @@ public:
 	void BindDefault();
 	void ClearBindings() override;
 	void UpdateProfile(const std::string &name, int command) override;
+	bool IsProfileSaved() override;
 
 
 private:
@@ -118,6 +120,10 @@ private:
 	HWND m_hwnd_rumble;
 	// handle of the rumble combobox
 	HWND m_hwnd_rumble_list;
+	// handle of the top slot combobox
+	HWND m_hwnd_top_slot_list;
+	// handle of the bottom slot combobox
+	HWND m_hwnd_bottom_slot_list;
 	// currently selected rumble control
 	std::string m_rumble;
 };
@@ -127,7 +133,6 @@ class SbcInputWindow : public InputWindow
 public:
 	void Initialize(HWND hwnd, int port_num, int dev_type) override;
 	void ClearBindings() override;
-	void UpdateProfile(const std::string &name, int command) override;
 
 
 private:

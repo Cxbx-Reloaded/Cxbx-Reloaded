@@ -81,34 +81,6 @@ void SbcInputWindow::ClearBindings()
 	m_bHasChanges = true;
 }
 
-void SbcInputWindow::UpdateProfile(const std::string &name, int command)
-{
-	switch (command)
-	{
-	case PROFILE_LOAD: {
-		LoadProfile(name);
-	}
-	break;
-
-	case PROFILE_SAVE: {
-		SaveProfile(name);
-	}
-	break;
-
-	case PROFILE_DELETE: {
-		DeleteProfile(name);
-	}
-	break;
-
-	case BUTTON_CLEAR:
-	case BUTTON_SWAP: {
-		m_bHasChanges = true;
-	}
-	break;
-
-	}
-}
-
 int SbcInputWindow::EnableDefaultButton()
 {
 	// The SBC window does not have a default button, so we return a dummy value here

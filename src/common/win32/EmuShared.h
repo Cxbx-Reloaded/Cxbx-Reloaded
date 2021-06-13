@@ -135,6 +135,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		void GetInputDevTypeSettings(int* type, int port) { Lock(); *type = m_DeviceType[port]; Unlock(); }
 		void SetInputDevTypeSettings(const int* type, int port) { Lock(); m_DeviceType[port] = *type; Unlock(); }
+		void GetInputSlotTypeSettings(int *type, int port, int slot) { Lock(); *type = m_SlotDeviceType[port][slot]; Unlock(); }
+		void SetInputSlotTypeSettings(const int *type, int port, int slot) { Lock(); m_SlotDeviceType[port][slot] = *type; Unlock(); }
 		void GetInputDevNameSettings(char* name, int port) { Lock(); strncpy(name, m_DeviceName[port], 50); Unlock(); }
 		void SetInputDevNameSettings(const char* name, int port) { Lock(); strncpy(m_DeviceName[port], name, 50); Unlock(); }
 		void GetInputBindingsSettings(char button_str[][HOST_BUTTON_NAME_LENGTH], int max_num_buttons, int port)
@@ -366,6 +368,7 @@ class EmuShared : public Mutex
 		bool         m_bClipCursor;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
+		int          m_SlotDeviceType[4][MU_NUM_SLOTS];
 		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
 		char         m_TitleMountPath[xbox::max_path];

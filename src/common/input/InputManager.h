@@ -37,6 +37,9 @@
 #undef SetPort
 #endif
 
+#define MU_SLOT_TOP     0
+#define MU_SLOT_BOTTOM  1
+
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
 inline XBOX_INPUT_DEVICE input_support_list[] = {
