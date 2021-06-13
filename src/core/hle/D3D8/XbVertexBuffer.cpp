@@ -374,7 +374,7 @@ void CxbxVertexBufferConverter::ConvertStream
             D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
             0,
             D3DPOOL_DEFAULT,
-            &pNewHostVertexBuffer,
+            &pNewHostVertexBuffer, // TODO : pNewHostVertexBuffer.GetAddressOf() ?
             nullptr
         );
 
