@@ -368,7 +368,7 @@ class EmuShared : public Mutex
 		bool         m_bClipCursor;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
 		int          m_DeviceType[4];
-		int          m_SlotDeviceType[4][MU_NUM_SLOTS];
+		int          m_SlotDeviceType[4][XBOX_CTRL_NUM_SLOTS];
 		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
 		char         m_DeviceName[4][50];
 		char         m_TitleMountPath[xbox::max_path];

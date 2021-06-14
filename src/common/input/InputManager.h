@@ -37,8 +37,8 @@
 #undef SetPort
 #endif
 
-#define MU_SLOT_TOP     0
-#define MU_SLOT_BOTTOM  1
+#define SLOT_TOP     0
+#define SLOT_BOTTOM  1
 
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
@@ -48,6 +48,11 @@ inline XBOX_INPUT_DEVICE input_support_list[] = {
 	XBOX_INPUT_DEVICE::MS_CONTROLLER_S,
 	XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER,
 	XBOX_INPUT_DEVICE::ARCADE_STICK,
+};
+
+inline XBOX_INPUT_DEVICE slot_support_list[] = {
+	XBOX_INPUT_DEVICE::DEVICE_INVALID,
+	XBOX_INPUT_DEVICE::MEMORY_UNIT,
 };
 
 #pragma pack(1)

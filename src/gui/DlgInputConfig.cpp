@@ -51,8 +51,8 @@ void SyncInputSettings(int port_num, int dev_type, bool is_opt)
 		if (!is_opt) {
 			// Sync updated input to kernel process to use run-time settings.
 			g_EmuShared->SetInputDevTypeSettings(&g_Settings->m_input_port[port_num].Type, port_num);
-			g_EmuShared->SetInputSlotTypeSettings(&g_Settings->m_input_port[port_num].TopSlotType, port_num, MU_SLOT_TOP);
-			g_EmuShared->SetInputSlotTypeSettings(&g_Settings->m_input_port[port_num].BottomSlotType, port_num, MU_SLOT_BOTTOM);
+			g_EmuShared->SetInputSlotTypeSettings(&g_Settings->m_input_port[port_num].TopSlotType, port_num, SLOT_TOP);
+			g_EmuShared->SetInputSlotTypeSettings(&g_Settings->m_input_port[port_num].BottomSlotType, port_num, SLOT_BOTTOM);
 
 			if (dev_type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 				std::string dev_name = g_Settings->m_input_port[port_num].DeviceName;

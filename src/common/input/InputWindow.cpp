@@ -43,7 +43,7 @@ InputWindow::~InputWindow()
 	m_DeviceConfig = nullptr;
 }
 
-bool InputWindow::IsProfileSaved()
+int InputWindow::IsProfileSaved()
 {
 	if (m_bHasChanges) {
 		PopupReturn ret = PopupQuestion(m_hwnd_window, "Current configuration is not saved. Save before closing?");
@@ -53,23 +53,24 @@ bool InputWindow::IsProfileSaved()
 			char name[50];
 			SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(name), reinterpret_cast<LPARAM>(name));
 			if (SaveProfile(std::string(name))) {
-				return true;
+				return EXIT_SAVE;
 			}
-			return false;
+			return EXIT_ABORT;
 		}
 
 		case PopupReturn::No: {
-			return true;
+			return EXIT_IGNORE;
 		}
 
 		case PopupReturn::Cancel:
 		default: {
-			return false;
+			return EXIT_ABORT;
 		}
 
 		}
 	}
-	return true;
+
+	return EXIT_IGNORE;
 }
 
 void InputWindow::UpdateDeviceList()
@@ -259,6 +260,10 @@ bool InputWindow::SaveProfile(const std::string& name)
 	g_Settings->m_input_port[m_port_num].DeviceName = profile.DeviceName;
 	g_Settings->m_input_port[m_port_num].ProfileName = profile.ProfileName;
 	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
+	if (auto duke_wnd = dynamic_cast<DukeInputWindow *>(this)) {
+		duke_wnd->SaveSlotConfig();
+	}
+
 	m_bHasChanges = false;
 	return true;
 }

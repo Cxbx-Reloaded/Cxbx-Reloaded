@@ -1239,6 +1239,27 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMURootA)
 }
 
 // ******************************************************************
+// * patch: XUnmountMU
+// ******************************************************************
+xbox::dword_xt WINAPI xbox::EMUPATCH(XUnmountMU)
+(
+	dword_xt dwPort,
+	dword_xt dwSlot
+)
+{
+
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwPort)
+		LOG_FUNC_ARG(dwSlot)
+	LOG_FUNC_END;
+
+	LOG_UNIMPLEMENTED();
+
+	RETURN(ERROR_SUCCESS);
+}
+
+// ******************************************************************
 // * patch: OutputDebugStringA
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(OutputDebugStringA)

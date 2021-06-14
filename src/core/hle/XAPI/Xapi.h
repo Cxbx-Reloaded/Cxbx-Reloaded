@@ -685,6 +685,15 @@ xbox::dword_xt WINAPI EMUPATCH(XMountMURootA)
 );
 
 // ******************************************************************
+// * patch: XUnmountMU
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(XUnmountMU)
+(
+    dword_xt dwPort,
+    dword_xt dwSlot
+);
+
+// ******************************************************************
 // * patch: XMountAlternateTitleA
 // ******************************************************************
 /*xbox::dword_xt WINAPI EMUPATCH(XMountAlternateTitleA)
