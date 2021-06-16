@@ -105,6 +105,7 @@ namespace xbox {
 typedef ::HWND X_HWND;
 typedef ::RECT X_RECT;
 typedef ::POINT X_POINT;
+typedef ::DWORD X_D3DPOOL; // Note : Seems to be ignored in all XDK API's
 
 /* Back buffer types */
 typedef enum _X_D3DBACKBUFFER_TYPE
