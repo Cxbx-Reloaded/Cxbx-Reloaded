@@ -103,6 +103,8 @@ namespace xbox {
 // Xbox D3D types, probably just copies of the Windows Direct3D 9 counterparts :
 
 typedef ::HWND X_HWND;
+typedef ::RECT X_RECT;
+typedef ::POINT X_POINT;
 
 /* CubeMap Face identifiers */
 typedef enum _X_D3DCUBEMAP_FACES
