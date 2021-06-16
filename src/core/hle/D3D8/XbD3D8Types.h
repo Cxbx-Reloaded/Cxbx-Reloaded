@@ -106,6 +106,16 @@ typedef ::HWND X_HWND;
 typedef ::RECT X_RECT;
 typedef ::POINT X_POINT;
 
+/* Back buffer types */
+typedef enum _X_D3DBACKBUFFER_TYPE
+{
+	X_D3DBACKBUFFER_TYPE_MONO = 0,
+	X_D3DBACKBUFFER_TYPE_LEFT = 1, // TODO : Remove, likely not present on Xbox
+	X_D3DBACKBUFFER_TYPE_RIGHT = 2, // TODO : Remove, likely not present on Xbox
+
+	X_D3DBACKBUFFER_TYPE_FORCE_DWORD = 0x7fffffff
+} X_D3DBACKBUFFER_TYPE;
+
 /* CubeMap Face identifiers */
 typedef enum _X_D3DCUBEMAP_FACES
 {
