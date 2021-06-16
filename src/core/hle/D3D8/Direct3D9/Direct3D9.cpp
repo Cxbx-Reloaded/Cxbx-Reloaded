@@ -1512,7 +1512,7 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
 // Wrapper function to allow calling without passing a face
 void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D3DBaseTexture* pBaseTexture, UINT& Level)
 {
-    D3DCUBEMAP_FACES face;
+    _9_11(D3DCUBEMAP_FACES, int) face;
     GetSurfaceFaceAndLevelWithinTexture(pSurface, pBaseTexture, Level, face);
 }
 
@@ -7203,7 +7203,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransfor
 xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 (
 	X_D3DPixelContainer *pPixelContainer,
-	D3DCUBEMAP_FACES     FaceType,
+	X_D3DCUBEMAP_FACES   FaceType,
 	uint_xt              Level,
 	D3DLOCKED_RECT      *pLockedRect,
 	RECT                *pRect,
