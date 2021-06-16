@@ -4069,7 +4069,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 
 	// This also updates the reference count, so we don't need to do this ourselves
 	if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
-		XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
+		XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, xbox::X_D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
 	}
 	else if (XB_TRMP(D3DDevice_GetBackBuffer_8__LTCG_eax1) != nullptr) {
 		__asm {
@@ -4186,9 +4186,9 @@ __declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuf
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
 (
-    int_xt              BackBuffer,
-    D3DBACKBUFFER_TYPE  Type,
-    X_D3DSurface      **ppBackBuffer
+    int_xt                BackBuffer,
+    X_D3DBACKBUFFER_TYPE  Type,
+    X_D3DSurface        **ppBackBuffer
 )
 {
 	LOG_FORWARD("D3DDevice_GetBackBuffer2");
