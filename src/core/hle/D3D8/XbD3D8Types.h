@@ -102,6 +102,8 @@ namespace xbox {
 
 // Xbox D3D types, probably just copies of the Windows Direct3D 9 counterparts :
 
+typedef ::HWND X_HWND;
+
 /* CubeMap Face identifiers */
 typedef enum _X_D3DCUBEMAP_FACES
 {
@@ -472,7 +474,7 @@ typedef struct _X_D3DPRESENT_PARAMETERS
     X_D3DMULTISAMPLE_TYPE MultiSampleType;
 
     X_D3DSWAPEFFECT     SwapEffect;
-    HWND                hDeviceWindow;
+	X_HWND              hDeviceWindow;
     BOOL                Windowed;
     BOOL                EnableAutoDepthStencil;
     X_D3DFORMAT         AutoDepthStencilFormat;
