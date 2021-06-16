@@ -537,7 +537,14 @@ LOGRENDER(D3DLOCKED_RECT)
 		LOGRENDER_MEMBER(pBits);
 }
 
-LOGRENDER(RECT)
+// prevent name collisions
+namespace xbox {
+
+//
+// Cxbx D3D LOGRENDER(Type) implementations
+//
+
+LOGRENDER(X_RECT)
 {
 	return os
 		LOGRENDER_MEMBER(left)
@@ -545,14 +552,6 @@ LOGRENDER(RECT)
 		LOGRENDER_MEMBER(right)
 		LOGRENDER_MEMBER(bottom);
 }
-
-
-// prevent name collisions
-namespace xbox {
-
-//
-// Cxbx D3D LOGRENDER(Type) implementations
-//
 
 ENUM2STR_START(X_D3DCUBEMAP_FACES)
 	ENUM2STR_CASE(X_D3DCUBEMAP_FACE_POSITIVE_X)
