@@ -68,26 +68,26 @@ namespace xbox {
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice)
 (
-    uint_xt                        Adapter,
-    D3DDEVTYPE                  DeviceType,
+    uint_xt                     Adapter,
+	X_D3DDEVTYPE                DeviceType,
     HWND                        hFocusWindow,
-    dword_xt                       BehaviorFlags,
+    dword_xt                    BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
     X_D3DDevice           **ppReturnedDeviceInterface
 );
 
 xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
 (
-    uint_xt                        Adapter,
-    D3DDEVTYPE                  DeviceType,
+    uint_xt                     Adapter,
+	X_D3DDEVTYPE                DeviceType,
     HWND                        hFocusWindow,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters
 );
 
 xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface)
 (
-    uint_xt                        Adapter,
-    D3DDEVTYPE                  DeviceType,
+    uint_xt                     Adapter,
+	X_D3DDEVTYPE                DeviceType,
     HWND                        hFocusWindow,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters
 );
@@ -116,10 +116,10 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetCreationParameters)
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3D_CheckDeviceFormat)
 (
-    uint_xt                        Adapter,
-    D3DDEVTYPE                  DeviceType,
+    uint_xt                     Adapter,
+	X_D3DDEVTYPE                DeviceType,
     X_D3DFORMAT                 AdapterFormat,
-    dword_xt                       Usage,
+    dword_xt                    Usage,
     X_D3DRESOURCETYPE           RType,
     X_D3DFORMAT                 CheckFormat
 );
@@ -1725,10 +1725,10 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DTexture_GetLevelDesc)
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 (
-    uint_xt                 Adapter,
-    D3DDEVTYPE           DeviceType,
+    uint_xt              Adapter,
+	X_D3DDEVTYPE         DeviceType,
     X_D3DFORMAT          SurfaceFormat,
-    bool_xt                 Windowed,
+    bool_xt              Windowed,
     D3DMULTISAMPLE_TYPE  MultiSampleType
 );
 #endif
@@ -1739,9 +1739,9 @@ xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3D_GetDeviceCaps)
 (
-    uint_xt        Adapter,
-    D3DDEVTYPE  DeviceType,
-    X_D3DCAPS  *pCaps
+    uint_xt       Adapter,
+	X_D3DDEVTYPE  DeviceType,
+    X_D3DCAPS    *pCaps
 );
 #endif
 

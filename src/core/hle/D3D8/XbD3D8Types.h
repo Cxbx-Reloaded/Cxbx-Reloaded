@@ -102,6 +102,17 @@ namespace xbox {
 
 // Xbox D3D types, probably just copies of the Windows Direct3D 9 counterparts :
 
+typedef enum _X_D3DDEVTYPE
+{
+	X_D3DDEVTYPE_HAL = 1,
+	X_D3DDEVTYPE_REF = 2,
+	X_D3DDEVTYPE_SW = 3,
+
+	X_D3DDEVTYPE_NULLREF = 4, // TODO : Remove, likely not present on Xbox
+
+	X_D3DDEVTYPE_FORCE_DWORD = 0x7fffffff
+} X_D3DDEVTYPE;
+
 #ifdef CXBX_USE_D3D11
 typedef struct _X_D3DVECTOR {
 	float x;
