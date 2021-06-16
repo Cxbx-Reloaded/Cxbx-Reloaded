@@ -311,9 +311,9 @@ X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetBackBuffer)
 (
-    int_xt                 BackBuffer,
-    D3DBACKBUFFER_TYPE  Type,
-    X_D3DSurface      **ppBackBuffer
+    int_xt                BackBuffer,
+	X_D3DBACKBUFFER_TYPE  Type,
+    X_D3DSurface        **ppBackBuffer
 );
 
 // ******************************************************************

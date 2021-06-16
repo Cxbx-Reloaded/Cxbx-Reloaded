@@ -373,7 +373,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_CreateVertexShader,                       (CONST xbox::dword_xt*, CONST xbox::dword_xt*, xbox::dword_xt*, xbox::dword_xt)                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader,                       (xbox::dword_xt)                                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0,                     ()                                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                                              );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, xbox::X_D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                                      );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                                        );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetDepthStencilSurface,                   (xbox::X_D3DSurface**)                                                                                                );  \
@@ -4082,7 +4082,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 
 	// This also updates the reference count, so we don't need to do this ourselves
 	if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
-		XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
+		XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, xbox::X_D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
 	}
 	else if (XB_TRMP(D3DDevice_GetBackBuffer2) != nullptr) {
 		pXboxBackBuffer = XB_TRMP(D3DDevice_GetBackBuffer2)(BackBuffer);
@@ -4190,9 +4190,9 @@ __declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuf
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
 (
-    int_xt                 BackBuffer,
-    D3DBACKBUFFER_TYPE  Type,
-    X_D3DSurface      **ppBackBuffer
+    int_xt                BackBuffer,
+    X_D3DBACKBUFFER_TYPE  Type,
+    X_D3DSurface        **ppBackBuffer
 )
 {
 	LOG_FORWARD("D3DDevice_GetBackBuffer2");
