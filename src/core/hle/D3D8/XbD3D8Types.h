@@ -102,6 +102,19 @@ namespace xbox {
 
 // Xbox D3D types, probably just copies of the Windows Direct3D 9 counterparts :
 
+/* CubeMap Face identifiers */
+typedef enum _X_D3DCUBEMAP_FACES
+{
+	X_D3DCUBEMAP_FACE_POSITIVE_X = 0,
+	X_D3DCUBEMAP_FACE_NEGATIVE_X = 1,
+	X_D3DCUBEMAP_FACE_POSITIVE_Y = 2,
+	X_D3DCUBEMAP_FACE_NEGATIVE_Y = 3,
+	X_D3DCUBEMAP_FACE_POSITIVE_Z = 4,
+	X_D3DCUBEMAP_FACE_NEGATIVE_Z = 5,
+
+	X_D3DCUBEMAP_FACE_FORCE_DWORD = 0x7fffffff
+} X_D3DCUBEMAP_FACES;
+
 typedef enum _X_D3DDEVTYPE
 {
 	X_D3DDEVTYPE_HAL = 1,
