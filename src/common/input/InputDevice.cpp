@@ -35,6 +35,7 @@
 #include "InputDevice.h"
 #include "common\util\CxbxUtil.h"
 #include <algorithm>
+#include <charconv>
 
 
 std::string GetInputDeviceName(int dev_type)
@@ -90,6 +91,33 @@ std::string GetInputDeviceName(int dev_type)
 	return str;
 }
 
+std::string PortUserFormat(std::string_view port)
+{
+	int port1, slot;
+	PortStr2Int(port, &port1, &slot);
+	++port1;
+	if (slot != PORT_INVALID) {
+		++slot;
+		return std::to_string(port1) + "." + std::to_string(slot);
+	}
+	else {
+		return std::to_string(port1);
+	}
+}
+
+void PortStr2Int(std::string_view port, int *port1, int *slot)
+{
+	*slot = PORT_INVALID;
+	auto &ret = std::from_chars(port.data(), port.data() + port.size(), *port1);
+	assert(ret.ec != std::errc::invalid_argument);
+	if (ret.ptr != port.data() + port.size()) {
+		++ret.ptr;
+		ret = std::from_chars(ret.ptr, port.data() + port.size(), *slot);
+		assert(ret.ec != std::errc::invalid_argument);
+		assert(ret.ptr == port.data() + port.size());
+	}
+}
+
 // Destructor, delete all inputs/outputs on device destruction
 InputDevice::~InputDevice()
 {
@@ -129,4 +157,32 @@ const std::vector<InputDevice::IoControl*> InputDevice::GetIoControls()
 		vec.push_back(dynamic_cast<IoControl*>(output));
 		});
 	return vec;
+}
+
+void InputDevice::SetPort(std::string_view Port, bool Connect)
+{
+	if (Connect) {
+		m_XboxPort.emplace_back(Port);
+	}
+	else {
+		const auto &it = FindPort(Port);
+		if (it != m_XboxPort.end()) {
+			m_XboxPort.erase(it);
+		}
+	}
+}
+
+bool InputDevice::GetPort(std::string_view Port) const
+{
+	return FindPort(Port) != m_XboxPort.end() ? true : false;
+}
+
+const auto InputDevice::FindPort(std::string_view Port) const
+{
+	return std::find_if(m_XboxPort.begin(), m_XboxPort.end(), [Port](std::string_view Port1) {
+		if (Port1 == Port) {
+			return true;
+		}
+		return false;
+		});
 }

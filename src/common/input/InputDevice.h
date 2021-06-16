@@ -42,9 +42,6 @@
 #define PORT_3            2
 #define PORT_4            3
 
-#define PORT_INC(port) ((port) + 1)
-#define PORT_DEC(port) ((port) - 1)
-
 #define DIRECTION_IN      0
 #define DIRECTION_OUT     1
 
@@ -75,8 +72,12 @@ inline bool g_bIsTrackingMoMove = false;
 // Lookup array used to translate a gui port to an xbox usb port and vice versa
 extern int Gui2XboxPortArray[4];
 
-// Global function used to retrieve the printable name of a xid type
+// Retrieves the printable name of a xid type
 std::string GetInputDeviceName(int dev_type);
+// Converts the port number in the user format
+std::string PortUserFormat(std::string_view);
+// Extracts port and slot number from a port formatted as a string
+void PortStr2Int(std::string_view port, int *port1, int *slot);
 
 /* Abstract class which represents a host device usable for input/output */
 class InputDevice
@@ -124,9 +125,9 @@ public:
 	// sets the ID of this device
 	void SetId(int ID) { m_ID = ID; }
 	// retrieves the port this device is attached to
-	bool GetPort(int Port) const { return m_XboxPort[Port]; }
+	bool GetPort(std::string_view Port) const;
 	// sets the port this device is attached to
-	void SetPort(int Port, bool Connect) { m_XboxPort[Port] = Connect; }
+	void SetPort(std::string_view Port, bool Connect);
 
 
 protected:
@@ -134,6 +135,8 @@ protected:
 	void AddInput(Input* const In);
 	// adds an output control to the device
 	void AddOutput(Output* const Out);
+	// searches for a port
+	const auto FindPort(std::string_view Port) const;
 	// indicates that the device has new input data available
 	bool m_bDirty;
 	// lock for the bindings map
@@ -159,7 +162,7 @@ private:
 	// all the output controls detected and usable on this device
 	std::vector<Output*> m_Outputs;
 	// xbox port(s) this device is attached to
-	bool m_XboxPort[4] = { false, false, false, false };
+	std::vector<std::string> m_XboxPort;
 	// button bindings to the xbox device buttons
 	std::map<int, IoControl*> m_Bindings;
 };

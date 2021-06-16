@@ -54,7 +54,7 @@ void SbcInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	// Set window title
 	std::string title("Steel Battalion Controller at port ");
 	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
-		reinterpret_cast<LPARAM>((title + std::to_string(PORT_INC(m_port_num))).c_str()));
+		reinterpret_cast<LPARAM>((title + PortUserFormat(std::to_string(m_port_num))).c_str()));
 
 	// Set the maximum profile name lenght the user can enter in the profile combobox
 	SendMessage(m_hwnd_profile_list, CB_LIMITTEXT, 49, 0);

@@ -160,7 +160,15 @@ namespace Sdl
 				else {
 					XInput::GetDeviceChanges();
 					DInput::GetDeviceChanges();
-					g_InputDeviceManager.UpdateDevices(*static_cast<int *>(Event.user.data1), false);
+					std::string port = std::to_string(*static_cast<int *>(Event.user.data1));
+					int port1, slot;
+					PortStr2Int(port, &port1, &slot);
+					if (g_devs[port1].type == XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE || g_devs[port1].type == XBOX_INPUT_DEVICE::MS_CONTROLLER_S) {
+						// Force an update of the entire slot connectivity of this port
+						g_InputDeviceManager.UpdateDevices(port + ".0", false);
+						g_InputDeviceManager.UpdateDevices(port + ".1", false);
+					}
+					g_InputDeviceManager.UpdateDevices(port, false);
 				}
 
 				delete Event.user.data1;
