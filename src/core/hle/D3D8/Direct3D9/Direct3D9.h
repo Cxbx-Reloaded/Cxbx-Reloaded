@@ -843,7 +843,7 @@ xbox::bool_xt WINAPI EMUPATCH(D3DResource_IsBusy)
 xbox::void_xt WINAPI EMUPATCH(Lock2DSurface)
 (
     X_D3DPixelContainer *pPixelContainer,
-    D3DCUBEMAP_FACES     FaceType,
+    X_D3DCUBEMAP_FACES   FaceType,
     uint_xt              Level,
     D3DLOCKED_RECT      *pLockedRect,
     RECT                *pRect,
@@ -856,7 +856,7 @@ xbox::void_xt WINAPI EMUPATCH(Lock2DSurface)
 xbox::void_xt WINAPI EMUPATCH(Lock2DSurface_16__LTCG_esi4_eax5)
 (
     X_D3DPixelContainer *pPixelContainer,
-    D3DCUBEMAP_FACES     FaceType,
+    X_D3DCUBEMAP_FACES   FaceType,
     uint_xt              Level,
     dword_xt             Flags
 );
@@ -972,11 +972,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DVolumeTexture_LockBox)
 xbox::void_xt WINAPI EMUPATCH(D3DCubeTexture_LockRect)
 (
     X_D3DCubeTexture   *pThis,
-    D3DCUBEMAP_FACES    FaceType,
-    uint_xt                Level,
+    X_D3DCUBEMAP_FACES  FaceType,
+    uint_xt             Level,
     D3DLOCKED_RECT     *pLockedBox,
     CONST RECT         *pRect,
-    dword_xt               Flags
+    dword_xt            Flags
 );
 
 // ******************************************************************
@@ -2183,7 +2183,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetPushBufferOffset)
 xbox::hresult_xt WINAPI EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 (
 	X_D3DCubeTexture*	pThis,
-	D3DCUBEMAP_FACES	FaceType,
+	X_D3DCUBEMAP_FACES	FaceType,
 	uint_xt				Level,
 	X_D3DSurface**		ppCubeMapSurface
 );
@@ -2194,7 +2194,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 X_D3DSurface* WINAPI EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 (
 	X_D3DCubeTexture*	pThis,
-	D3DCUBEMAP_FACES	FaceType,
+	X_D3DCUBEMAP_FACES	FaceType,
 	uint_xt				Level
 );
 
