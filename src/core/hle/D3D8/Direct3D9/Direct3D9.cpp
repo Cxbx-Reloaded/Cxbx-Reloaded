@@ -426,7 +426,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface, (xbox::uint_xt, xbox::X_D3DDEVTYPE, xbox::X_HWND, xbox::X_D3DPRESENT_PARAMETERS*)         );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface, (xbox::uint_xt, xbox::X_D3DDEVTYPE, xbox::X_HWND, xbox::X_D3DPRESENT_PARAMETERS*)         );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4,                            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                                      );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::X_D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt)         );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::X_D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, xbox::X_RECT*, xbox::dword_xt) );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                                  );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                                     );  \
 
@@ -5107,11 +5107,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 (
-    X_D3DSurface* pSourceSurface,
-    CONST RECT* pSourceRectsArray,
-    uint_xt                cRects,
-    X_D3DSurface* pDestinationSurface,
-    CONST POINT* pDestPointsArray
+    X_D3DSurface*  pSourceSurface,
+    CONST X_RECT*  pSourceRectsArray,
+    uint_xt        cRects,
+    X_D3DSurface*  pDestinationSurface,
+    CONST X_POINT* pDestPointsArray
 )
 {
     LOG_FUNC_BEGIN
@@ -5164,7 +5164,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
         RECT SourceRect, DestRect;
 
         if (pSourceRectsArray != nullptr) {
-            SourceRect = pSourceRectsArray[i];
+            SourceRect.left = pSourceRectsArray[i].left;
+            SourceRect.right = pSourceRectsArray[i].right;
+            SourceRect.top = pSourceRectsArray[i].top;
+            SourceRect.bottom = pSourceRectsArray[i].bottom;
         } else {
             SourceRect.left = 0;
             SourceRect.right = xboxSourceWidth;
@@ -5221,10 +5224,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 (
-    CONST RECT* pSourceRect,
-    CONST RECT* pDestRect,
-    PVOID       pDummy1,
-    PVOID       pDummy2
+    CONST X_RECT* pSourceRect,
+    CONST X_RECT* pDestRect,
+    PVOID         pDummy1,
+    PVOID         pDummy2
 )
 {
 	// LOG_FORWARD("D3DDevice_Swap");
@@ -6759,9 +6762,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_UpdateOverlay)
 (
 	X_D3DSurface *pSurface,
-	CONST RECT   *SrcRect,
-	CONST RECT   *DstRect,
-	bool_xt          EnableColorKey,
+	CONST X_RECT *SrcRect,
+	CONST X_RECT *DstRect,
+	bool_xt       EnableColorKey,
 	D3DCOLOR      ColorKey
 )
 {
@@ -6971,7 +6974,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	X_D3DCUBEMAP_FACES   FaceType,
 	uint_xt              Level,
 	D3DLOCKED_RECT      *pLockedRect,
-	RECT                *pRect,
+	X_RECT              *pRect,
 	dword_xt             Flags
 )
 {
