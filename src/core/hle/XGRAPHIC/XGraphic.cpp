@@ -213,7 +213,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XGSetTextureHeader)
 	uint_xt			Levels,
 	DWORD			Usage,
 	X_D3DFORMAT		Format,
-	D3DPOOL			Pool,
+	X_D3DPOOL		Pool,
 	X_D3DTexture*	pTexture,
 	uint_xt			Data,
 	uint_xt			Pitch
@@ -225,7 +225,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XGSetTextureHeader)
 		LOG_FUNC_ARG(Levels)
 		LOG_FUNC_ARG_TYPE(X_D3DUSAGE, Usage) // TODO : How to embed this?
 		LOG_FUNC_ARG(Format)
-		LOG_FUNC_ARG(Pool) // TODO : How to embed this?
+		LOG_FUNC_ARG(Pool) // Note : Seems to be ignored in all XDK API's
 		LOG_FUNC_ARG(pTexture)
 		LOG_FUNC_ARG(Data)
 		LOG_FUNC_ARG(Pitch)
