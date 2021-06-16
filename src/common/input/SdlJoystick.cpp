@@ -175,7 +175,7 @@ namespace Sdl
 				Event.user.data1 = nullptr;
 			}
 			else if (Event.type == DeviceRemoveAck_t) {
-				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1), true);
+				g_InputDeviceManager.UpdateDevices(std::string(static_cast<char *>(Event.user.data1)), true);
 				delete Event.user.data1;
 				Event.user.data1 = nullptr;
 			}

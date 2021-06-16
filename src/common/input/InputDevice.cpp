@@ -159,6 +159,16 @@ const std::vector<InputDevice::IoControl*> InputDevice::GetIoControls()
 	return vec;
 }
 
+const auto InputDevice::FindPort(std::string_view Port) const
+{
+	return std::find_if(m_XboxPort.begin(), m_XboxPort.end(), [Port](std::string_view Port1) {
+		if (Port1 == Port) {
+			return true;
+		}
+		return false;
+		});
+}
+
 void InputDevice::SetPort(std::string_view Port, bool Connect)
 {
 	if (Connect) {
@@ -175,14 +185,4 @@ void InputDevice::SetPort(std::string_view Port, bool Connect)
 bool InputDevice::GetPort(std::string_view Port) const
 {
 	return FindPort(Port) != m_XboxPort.end() ? true : false;
-}
-
-const auto InputDevice::FindPort(std::string_view Port) const
-{
-	return std::find_if(m_XboxPort.begin(), m_XboxPort.end(), [Port](std::string_view Port1) {
-		if (Port1 == Port) {
-			return true;
-		}
-		return false;
-		});
 }

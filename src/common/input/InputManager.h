@@ -103,7 +103,12 @@ struct SBCOutput {
 
 #pragma pack()
 
-struct CommonCtrlInfo {
+union InputBuff {
+	XpadInput ctrl;
+	SBCInput sbc;
+};
+
+struct DeviceInfo {
 	xbox::HANDLE hhandle;      // device handle returned by xapi
 	bool bAutoPoll;            // autopoll on/off, as instructed by the title in XInputOpen
 	bool bAutoPollDefault;     // default autopoll value, depending on device type
@@ -112,38 +117,18 @@ struct CommonCtrlInfo {
 	uint8_t ucInputStateSize;  // input state size in bytes, does not include dwPacketNumber
 	uint8_t ucFeedbackSize;    // feedback size in bytes, does not include FeedbackHeader
 	uint32_t dwPacketNumber;
-};
-
-struct DeviceState;
-struct CtrlInfo {
-	CommonCtrlInfo common;
-	XpadInput in_buffer;
-	DeviceState *slots[XBOX_CTRL_NUM_SLOTS];
-};
-
-struct ArcadeCtrlInfo {
-	CommonCtrlInfo common;
-	XpadInput in_buffer;
-};
-
-struct SbcInfo {
-	CommonCtrlInfo common;
-	SBCInput in_buffer;
-};
-
-union DeviceInfo {
-	CtrlInfo ctrl;
-	ArcadeCtrlInfo arcade;
-	SbcInfo sbc;
+	InputBuff buff;
 };
 
 struct DeviceState {
 	DeviceState *upstream;
 	std::string port;
+	int port_idx;
 	XBOX_INPUT_DEVICE type;
 	bool bPendingRemoval;
 	bool bSignaled;
 	DeviceInfo info;
+	DeviceState *slots[XBOX_CTRL_NUM_SLOTS];
 };
 
 extern DeviceState g_devs[4 + 8];

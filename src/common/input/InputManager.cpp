@@ -235,7 +235,7 @@ void InputDeviceManager::UpdateDevices(std::string_view port, bool ack)
 		assert(dev->type == XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE ||
 			dev->type == XBOX_INPUT_DEVICE::MS_CONTROLLER_S);
 		upstream = dev;
-		dev = dev->info.ctrl.slots[slot];
+		dev = dev->slots[slot];
 		g_EmuShared->GetInputSlotTypeSettings(&type, port1, slot);
 	}
 
