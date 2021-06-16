@@ -128,6 +128,15 @@ typedef enum _X_D3DDEVTYPE
 	X_D3DDEVTYPE_FORCE_DWORD = 0x7fffffff
 } X_D3DDEVTYPE;
 
+/* Creation Parameters */
+typedef struct _X_D3DDEVICE_CREATION_PARAMETERS
+{
+	UINT            AdapterOrdinal;
+	X_D3DDEVTYPE    DeviceType;
+	X_HWND          hFocusWindow;
+	DWORD           BehaviorFlags;
+} X_D3DDEVICE_CREATION_PARAMETERS;
+
 #ifdef CXBX_USE_D3D11
 typedef struct _X_D3DVECTOR {
 	float x;

@@ -102,13 +102,15 @@ xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_4)
 // ******************************************************************
 xbox::bool_xt WINAPI EMUPATCH(D3DDevice_IsBusy)();
 
+#if 0
 // ******************************************************************
 // * patch: D3DDevice_GetCreationParameters
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetCreationParameters)
 (
-	D3DDEVICE_CREATION_PARAMETERS *pParameters
+	X_D3DDEVICE_CREATION_PARAMETERS *pParameters
 );
+#endif
 
 #if 0 // patch disabled
 // ******************************************************************
