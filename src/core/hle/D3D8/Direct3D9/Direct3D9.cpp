@@ -5212,11 +5212,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 (
-    X_D3DSurface* pSourceSurface,
-    CONST RECT* pSourceRectsArray,
-    uint_xt                cRects,
-    X_D3DSurface* pDestinationSurface,
-    CONST POINT* pDestPointsArray
+    X_D3DSurface*  pSourceSurface,
+    CONST X_RECT*  pSourceRectsArray,
+    uint_xt        cRects,
+    X_D3DSurface*  pDestinationSurface,
+    CONST X_POINT* pDestPointsArray
 )
 {
     LOG_FUNC_BEGIN
@@ -5269,7 +5269,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
         RECT SourceRect, DestRect;
 
         if (pSourceRectsArray != nullptr) {
-            SourceRect = pSourceRectsArray[i];
+            SourceRect.left = pSourceRectsArray[i].left;
+            SourceRect.right = pSourceRectsArray[i].right;
+            SourceRect.top = pSourceRectsArray[i].top;
+            SourceRect.bottom = pSourceRectsArray[i].bottom;
         } else {
             SourceRect.left = 0;
             SourceRect.right = xboxSourceWidth;
@@ -5326,10 +5329,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 (
-    CONST RECT* pSourceRect,
-    CONST RECT* pDestRect,
-    PVOID       pDummy1,
-    PVOID       pDummy2
+    CONST X_RECT* pSourceRect,
+    CONST X_RECT* pDestRect,
+    PVOID         pDummy1,
+    PVOID         pDummy2
 )
 {
 	// LOG_FORWARD("D3DDevice_Swap");
@@ -6876,11 +6879,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay_0__LTCG)()
 
 static void CxbxrImpl_UpdateOverlay
 (
-	xbox::X_D3DSurface *pSurface,
-	CONST RECT         *SrcRect,
-	CONST RECT         *DstRect,
-	xbox::bool_xt       EnableColorKey,
-	D3DCOLOR            ColorKey
+	X_D3DSurface *pSurface,
+	CONST X_RECT *SrcRect,
+	CONST X_RECT *DstRect,
+	bool_xt       EnableColorKey,
+	D3DCOLOR      ColorKey
 )
 {
 	using namespace xbox;
@@ -7206,7 +7209,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	X_D3DCUBEMAP_FACES   FaceType,
 	uint_xt              Level,
 	D3DLOCKED_RECT      *pLockedRect,
-	RECT                *pRect,
+	X_RECT              *pRect,
 	dword_xt             Flags
 )
 {
