@@ -1501,25 +1501,48 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 	if ((DWORD)FileInformationClass == FileFsSizeInformation) {
 		PFILE_FS_SIZE_INFORMATION XboxSizeInfo = (PFILE_FS_SIZE_INFORMATION)FileInformation;
 
-		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
-		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-		FATX_SUPERBLOCK superBlock = CxbxGetFatXSuperBlock(partitionNumber);
+		// This might access the HDD or a MU, so we need to figure out the correct one first
+		const std::wstring path = CxbxGetFinalPathNameByHandle(FileHandle);
+		size_t pos = path.rfind(L"\\EmuDisk\\Partition");
+		if (pos != std::string::npos) {
+			// We are accessing a disk partition
 
-		XboxSizeInfo->BytesPerSector = 512;
+			XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+			int partitionNumber = CxbxGetPartitionNumberFromPath(path);
+			FATX_SUPERBLOCK superBlock = CxbxGetFatXSuperBlock(partitionNumber);
 
-		// In some cases, the emulated partition hasn't been formatted yet, as these are forwarded to a real folder, this doesn't actually matter.
-		// We just pretend they are valid by defaulting the SectorsPerAllocationUnit value to the most common for system partitions
-		XboxSizeInfo->SectorsPerAllocationUnit = 32;
+			XboxSizeInfo->BytesPerSector = 512;
 
-		// If there is a valid cluster size, we calculate SectorsPerAllocationUnit from that instead
-		if (superBlock.ClusterSize > 0) {
-			XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize;
+			// In some cases, the emulated partition hasn't been formatted yet, as these are forwarded to a real folder, this doesn't actually matter.
+			// We just pretend they are valid by defaulting the SectorsPerAllocationUnit value to the most common for system partitions
+			XboxSizeInfo->SectorsPerAllocationUnit = 32;
+
+			// If there is a valid cluster size, we calculate SectorsPerAllocationUnit from that instead
+			if (superBlock.ClusterSize > 0) {
+				XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize;
+			}
+
+			XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
+			XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
+
+			RETURN(xbox::status_success);
 		}
 
-		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
-		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
+		pos = path.rfind(L"\\EmuMu");
+		if (pos != std::string::npos) {
+			// We are accessing a MU
 
-		RETURN(xbox::status_success);
+			XboxSizeInfo->BytesPerSector = 512;
+			XboxSizeInfo->SectorsPerAllocationUnit = 32;
+			XboxSizeInfo->TotalAllocationUnits.QuadPart = 512; // 8MB -> ((1024)^2 * 8) / (BytesPerSector * SectorsPerAllocationUnit)
+			XboxSizeInfo->AvailableAllocationUnits.QuadPart = 512; // constant, so there's always free space available to write stuff
+
+			RETURN(xbox::status_success);
+		}
+
+		EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with class FileFsSizeInformation", __func__, FileHandle);
+
+		RETURN(xbox::status_invalid_handle);
 	}
 
 	// Get the required size for the host buffer

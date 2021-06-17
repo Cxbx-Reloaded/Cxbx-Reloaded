@@ -59,10 +59,38 @@ std::atomic<bool> g_bIsDevicesEmulating = false;
 // Protects access to xpp types
 std::atomic<bool> g_bXppGuard = false;
 
-// allocate enough memory for the max number of devices we can support simultaneously
+// Allocate enough memory for the max number of devices we can support simultaneously
 // 4 duke / S / sbc / arcade joystick (mutually exclusive) + 8 memory units
 DeviceState g_devs[4 + 8];
 
+xbox::ulong_xt g_Mounted_MUs = 0; // fallback if XapiMountedMUs is not found
+xbox::ulong_xt *g_XapiMountedMUs = &g_Mounted_MUs;
+std::mutex g_MuLock;
+
+static inline xbox::char_xt MuPort2Lett(xbox::dword_xt port, xbox::dword_xt slot)
+{
+	return 'F' + (XBOX_CTRL_NUM_SLOTS * port) + slot;
+}
+
+static inline int MuPort2Idx(xbox::dword_xt port, xbox::dword_xt slot)
+{
+	return (port << 1) + slot;
+}
+
+static inline bool MuIsMounted(xbox::char_xt lett)
+{
+	return *g_XapiMountedMUs & (1 << (lett - 'F'));
+}
+
+static inline void MuSetMounted(xbox::char_xt lett)
+{
+	*g_XapiMountedMUs |= (1 << (lett - 'F'));
+}
+
+static inline void MuClearMounted(xbox::char_xt lett)
+{
+	*g_XapiMountedMUs &= ~(1 << (lett - 'F'));
+}
 
 bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 {
@@ -103,7 +131,7 @@ bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 
 void UpdateXppState(DeviceState *dev, XBOX_INPUT_DEVICE type, std::string_view port)
 {
-	xbox::PXPP_DEVICE_TYPE xpp;
+	xbox::PXPP_DEVICE_TYPE xpp = nullptr;
 	switch (type)
 	{
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
@@ -121,44 +149,38 @@ void UpdateXppState(DeviceState *dev, XBOX_INPUT_DEVICE type, std::string_view p
 		break;
 
 	default:
-		xpp = nullptr;
+		assert(0);
 	}
 
-	assert(xpp != nullptr);
+	if (xpp == nullptr) {
+		// This will happen with xbes that act like launchers, and don't link against the xinput libraries, which results in all the global
+		// xpp types being nullptr. Test case: Innocent Tears
+		return;
+	}
 
 	int port1, slot;
 	PortStr2Int(port, &port1, &slot);
 	xbox::ulong_xt port_mask = 1 << port1;
+	xbox::ulong_xt slot_mask = 0;
 
 	// Guard against the unfortunate case where XGetDevices or XGetDeviceChanges have already checked for g_bIsDevicesInitializing
 	// and g_bIsDevicesEmulating and a thread switch happens to this function
 	while (g_bXppGuard) {}
 
 	if (xpp == g_DeviceType_MU) {
-		if ((dev->upstream->type != XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) ||
-			(dev->upstream->type != XBOX_INPUT_DEVICE::MS_CONTROLLER_S) ||
-			dev->upstream->bPendingRemoval) {
-			xpp->CurrentConnected &= ~port_mask;
-			xpp->CurrentConnected &= ~(port_mask << 16);
-		}
-		else {
-			for (unsigned i = 0, j = 0; i < XBOX_CTRL_NUM_SLOTS; ++i, j += 16) {
-				if (xpp == dev->type && !dev->bPendingRemoval) {
-					xpp->CurrentConnected |= (port_mask << j);
-				}
-				else {
-					xpp->CurrentConnected &= ~(port_mask << j);
-				}
-			}
+		assert((dev->upstream->type == XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) ||
+			(dev->upstream->type == XBOX_INPUT_DEVICE::MS_CONTROLLER_S));
+		assert(slot != PORT_INVALID);
+		if (slot == 1) {
+			slot_mask = 16;
 		}
 	}
+
+	if (xpp == dev->type && !dev->bPendingRemoval) {
+		xpp->CurrentConnected |= (port_mask << slot_mask);
+	}
 	else {
-		if (xpp == dev->type && !dev->bPendingRemoval) {
-			xpp->CurrentConnected |= port_mask;
-		}
-		else {
-			xpp->CurrentConnected &= ~port_mask;
-		}
+		xpp->CurrentConnected &= ~(port_mask << slot_mask);
 	}
 
 	xpp->ChangeConnected = xpp->PreviousConnected ^ xpp->CurrentConnected;
@@ -424,6 +446,34 @@ void SetupXboxDeviceTypes()
 	}
 	else {
 		EmuLog(LOG_LEVEL::INFO, "XDEVICE_TYPE_MEMORY_UNIT was not found because MU_Init could not be found");
+	}
+
+	// Temporary code until XapiMountedMUs is derived by XbSymbolDatabase
+	Xbe::LibraryVersion *pLibraryVersion = reinterpret_cast<Xbe::LibraryVersion *>(CxbxKrnl_Xbe->m_Header.dwLibraryVersionsAddr);
+	if (pLibraryVersion != nullptr) {
+		if (uint8_t *start = reinterpret_cast<uint8_t *>(g_SymbolAddresses["XUnmountMU"])) {
+			uint32_t offset = 0;
+			for (unsigned v = 0; v < CxbxKrnl_Xbe->m_Header.dwLibraryVersions; ++v) {
+				if (std::strcmp(pLibraryVersion[v].szName, "XAPILIB") == 0) {
+					if (pLibraryVersion[v].wBuildVersion < 4242) {
+						offset = 0x1D;
+					}
+					else {
+						offset = 0x2A;
+					}
+					break;
+				}
+			}
+			// skip 2 because the address is hard-coded inside a test instruction
+			g_XapiMountedMUs = reinterpret_cast<xbox::ulong_xt *>(*reinterpret_cast<uint32_t *>((g_SymbolAddresses["XUnmountMU"] + offset + 2)));
+			EmuLog(LOG_LEVEL::INFO, "XapiMountedMUs found at 0x%08X", reinterpret_cast<uintptr_t>(g_XapiMountedMUs));
+		}
+		else {
+			EmuLog(LOG_LEVEL::WARNING, "XapiMountedMUs was not found because XUnmountMU could not be found");
+		}
+	}
+	else {
+		EmuLog(LOG_LEVEL::WARNING, "XapiMountedMUs was not found because this xbe does not have a library version address");
 	}
 }
 
@@ -1318,18 +1368,28 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 	PCHAR pchDrive               
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPort)
 		LOG_FUNC_ARG(dwSlot)
 		LOG_FUNC_ARG(pchDrive)
 		LOG_FUNC_END;
 
-	// TODO: Actually allow memory card emulation? This might make transferring
-	// game saves a bit easier if the memory card directory was configurable. =]
+	std::lock_guard lock(g_MuLock);
 
-	RETURN(E_FAIL);
+	char lett = MuPort2Lett(dwPort, dwSlot);
+	if (MuIsMounted(lett)) {
+		if (pchDrive != zeroptr) {
+			*pchDrive = lett;
+		}
+		RETURN(ERROR_ALREADY_ASSIGNED);
+	}
+
+	MuSetMounted(lett);
+	if (pchDrive != zeroptr) {
+		*pchDrive = lett;
+	}
+
+	RETURN(ERROR_SUCCESS);
 }
 
 // ******************************************************************
@@ -1378,16 +1438,41 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMURootA)
 	PCHAR pchDrive               
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPort)
 		LOG_FUNC_ARG(dwSlot)
 		LOG_FUNC_ARG(pchDrive)
 		LOG_FUNC_END;
 
-	// TODO: The params are probably wrong...
-	LOG_UNIMPLEMENTED();
+	std::lock_guard lock(g_MuLock);
+
+	char_xt lett = MuPort2Lett(dwPort, dwSlot);
+	if (MuIsMounted(lett)) {
+		if (pchDrive != zeroptr) {
+			*pchDrive = lett;
+		}
+		RETURN(ERROR_ALREADY_ASSIGNED);
+	}
+
+	std::string mu_path_str(DrivePrefix + lett + ":");
+	std::string mu_dev_str(DeviceMU + std::to_string(MuPort2Idx(dwPort, dwSlot)));
+	ANSI_STRING mu_dev, mu_path;
+	RtlInitAnsiString(&mu_path, mu_path_str.data());
+	RtlInitAnsiString(&mu_dev, mu_dev_str.data());
+	ntstatus_xt status = IoCreateSymbolicLink(&mu_path, &mu_dev);
+
+	if (!nt_success(status)) {
+		if (pchDrive != zeroptr) {
+			*pchDrive = 0;
+		}
+		RtlNtStatusToDosError(status);
+		RETURN(status);
+	}
+
+	MuSetMounted(lett);
+	if (pchDrive != zeroptr) {
+		*pchDrive = lett;
+	}
 
 	RETURN(ERROR_SUCCESS);
 }
@@ -1401,14 +1486,29 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XUnmountMU)
 	dword_xt dwSlot
 )
 {
-
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwPort)
 		LOG_FUNC_ARG(dwSlot)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	std::lock_guard lock(g_MuLock);
+
+	char_xt lett = MuPort2Lett(dwPort, dwSlot);
+	if (!MuIsMounted(lett)) {
+		RETURN(ERROR_INVALID_DRIVE);
+	}
+
+	std::string mu_path_str(DrivePrefix + lett + ":");
+	ANSI_STRING mu_path;
+	RtlInitAnsiString(&mu_path, mu_path_str.data());
+	ntstatus_xt status = IoDeleteSymbolicLink(&mu_path);
+
+	if (!nt_success(status)) {
+		RtlNtStatusToDosError(status);
+		RETURN(status);
+	}
+
+	MuClearMounted(lett);
 
 	RETURN(ERROR_SUCCESS);
 }

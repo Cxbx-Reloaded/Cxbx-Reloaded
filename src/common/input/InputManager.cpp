@@ -117,18 +117,19 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 		for (unsigned i = 0; i < 4; ++i) {
 			int type;
 			g_EmuShared->GetInputDevTypeSettings(&type, i);
-			std::string port = std::to_string(i);
 			if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
+				std::string port = std::to_string(i);
 				switch (type)
 				{
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S): {
 					ConstructHleInputDevice(&g_devs[CTRL_OFFSET + i], nullptr, type, port);
+					BindHostDevice(type, port);
 					for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
 						g_EmuShared->GetInputSlotTypeSettings(&type, i, slot);
 						if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 							assert(type == to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT));
-							ConstructHleInputDevice(&g_devs[MU_OFFSET + slot], &g_devs[CTRL_OFFSET + i], type, port + std::to_string(slot));
+							ConstructHleInputDevice(&g_devs[MU_OFFSET + slot], &g_devs[CTRL_OFFSET + i], type, port + "." + std::to_string(slot));
 						}
 					}
 				}
@@ -137,6 +138,7 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
 					ConstructHleInputDevice(&g_devs[CTRL_OFFSET + i], nullptr, type, port);
+					BindHostDevice(type, port);
 					break;
 
 				default:
@@ -224,8 +226,8 @@ void InputDeviceManager::UpdateDevices(std::string_view port, bool ack)
 {
 	DeviceState *dev, *upstream;
 	int port1, type, slot;
-	dev = &g_devs[port1];
 	PortStr2Int(port, &port1, &slot);
+	dev = &g_devs[port1];
 
 	if (slot == PORT_INVALID) { // Port references a device attached to an xbox port
 		upstream = nullptr;

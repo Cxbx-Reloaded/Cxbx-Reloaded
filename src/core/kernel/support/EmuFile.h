@@ -73,6 +73,7 @@ extern const std::string DriveZ;
 extern const std::string DevicePrefix;
 extern const std::string DeviceCdrom0;
 extern const std::string DeviceHarddisk0;
+extern const std::string DeviceMU;
 extern const std::string DeviceHarddisk0PartitionPrefix;
 extern const std::string DeviceHarddisk0Partition0;
 extern const std::string DeviceHarddisk0Partition1;
@@ -95,6 +96,14 @@ extern const std::string DeviceHarddisk0Partition17;
 extern const std::string DeviceHarddisk0Partition18;
 extern const std::string DeviceHarddisk0Partition19;
 extern const std::string DeviceHarddisk0Partition20;
+extern const std::string DeviceMU0;
+extern const std::string DeviceMU1;
+extern const std::string DeviceMU2;
+extern const std::string DeviceMU3;
+extern const std::string DeviceMU4;
+extern const std::string DeviceMU5;
+extern const std::string DeviceMU6;
+extern const std::string DeviceMU7;
 constexpr char CxbxAutoMountDriveLetter = 'D';
 
 extern std::string CxbxBasePath;
@@ -318,6 +327,8 @@ typedef struct _FATX_SUPERBLOCK
 XboxPartitionTable CxbxGetPartitionTable();
 FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber);
 int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
+int CxbxGetPartitionNumberFromPath(const std::wstring_view path);
+std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile);
 std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile);
 void CxbxFormatPartitionByHandle(HANDLE hFile);
 

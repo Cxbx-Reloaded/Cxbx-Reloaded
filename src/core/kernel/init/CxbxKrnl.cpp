@@ -1509,16 +1509,15 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", CxbxBasePath + "Chihiro");
 
-	// Create MU directories
-	for (unsigned i = 0; i < 8; ++i) {
-		std::error_code error;
-		static char mu_letter = 'F';
-		std::string mu_path = MuBasePath + mu_letter;
-		if (!(std::filesystem::exists(mu_path) || std::filesystem::create_directory(mu_path, error))) {
-			CxbxKrnlCleanup("Failed to create memory unit directories");
-		}
-		++mu_letter;
-	}
+	// Create the MU directories
+	CxbxRegisterDeviceHostPath(DeviceMU0, MuBasePath + "F");
+	CxbxRegisterDeviceHostPath(DeviceMU1, MuBasePath + "G");
+	CxbxRegisterDeviceHostPath(DeviceMU2, MuBasePath + "H");
+	CxbxRegisterDeviceHostPath(DeviceMU3, MuBasePath + "I");
+	CxbxRegisterDeviceHostPath(DeviceMU4, MuBasePath + "J");
+	CxbxRegisterDeviceHostPath(DeviceMU5, MuBasePath + "K");
+	CxbxRegisterDeviceHostPath(DeviceMU6, MuBasePath + "L");
+	CxbxRegisterDeviceHostPath(DeviceMU7, MuBasePath + "M");
 
 	// Create default symbolic links :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");

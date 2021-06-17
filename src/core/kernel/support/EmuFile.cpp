@@ -139,7 +139,7 @@ FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber)
 	return superblock;
 }
 
-static std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
+std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 {
 	constexpr size_t INITIAL_BUF_SIZE = MAX_PATH;
 	std::wstring path(INITIAL_BUF_SIZE, '\0');
@@ -173,20 +173,30 @@ static bool CxbxIsPathInsideEmuDisk(const std::filesystem::path& path)
 	return match.first == rootPath.end();
 }
 
-int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
+static int CxbxGetPartitionNumber(const std::wstring_view path)
 {
-	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
-	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
-
 	const std::wstring_view partitionString = L"\\EmuDisk\\Partition";
 	const size_t pos = path.rfind(partitionString);
 	if (pos == std::string::npos) {
 		return 0;
 	}
-	const std::wstring partitionNumberString = path.substr(pos + partitionString.length(), 1);
+	const std::wstring_view partitionNumberString = path.substr(pos + partitionString.length(), 1);
 
 	// wcstol returns 0 on non-numeric characters, so we don't need to error check here
-	return wcstol(partitionNumberString.c_str(), nullptr, 0);
+	return wcstol(partitionNumberString.data(), nullptr, 0);
+}
+
+int CxbxGetPartitionNumberFromPath(const std::wstring_view path)
+{
+	return CxbxGetPartitionNumber(path);
+}
+
+int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
+{
+	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
+
+	return CxbxGetPartitionNumber(path);
 }
 
 std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
@@ -267,6 +277,7 @@ const std::string DriveZ = DrivePrefix + "Z:"; // Z: is Title utility data regio
 const std::string DevicePrefix = "\\Device";
 const std::string DeviceCdrom0 = DevicePrefix + "\\CdRom0";
 const std::string DeviceHarddisk0 = DevicePrefix + "\\Harddisk0";
+const std::string DeviceMU = DevicePrefix + "\\MU_";
 const std::string DeviceHarddisk0PartitionPrefix = DevicePrefix + "\\Harddisk0\\partition";
 const std::string DeviceHarddisk0Partition0 = DeviceHarddisk0PartitionPrefix + "0"; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
 const std::string DeviceHarddisk0Partition1 = DeviceHarddisk0PartitionPrefix + "1"; // Data partition. Contains TDATA and UDATA folders.
@@ -289,6 +300,14 @@ const std::string DeviceHarddisk0Partition17 = DeviceHarddisk0PartitionPrefix + 
 const std::string DeviceHarddisk0Partition18 = DeviceHarddisk0PartitionPrefix + "18";
 const std::string DeviceHarddisk0Partition19 = DeviceHarddisk0PartitionPrefix + "19";
 const std::string DeviceHarddisk0Partition20 = DeviceHarddisk0PartitionPrefix + "20"; // 20 = Largest possible partition number
+const std::string DeviceMU0 = DeviceMU + "0";
+const std::string DeviceMU1 = DeviceMU + "1";
+const std::string DeviceMU2 = DeviceMU + "2";
+const std::string DeviceMU3 = DeviceMU + "3";
+const std::string DeviceMU4 = DeviceMU + "4";
+const std::string DeviceMU5 = DeviceMU + "5";
+const std::string DeviceMU6 = DeviceMU + "6";
+const std::string DeviceMU7 = DeviceMU + "7"; // 7 = Largest possible mu number
 
 EmuNtSymbolicLinkObject* NtSymbolicLinkObjects['Z' - 'A' + 1];
 std::vector<XboxDevice> Devices;

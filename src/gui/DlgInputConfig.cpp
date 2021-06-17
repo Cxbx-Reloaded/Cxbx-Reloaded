@@ -161,7 +161,7 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + port);
 				int DeviceType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
 				g_Settings->m_input_port[port].Type = DeviceType;
-				if (DeviceType != to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) ||
+				if (DeviceType != to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) &&
 					DeviceType != to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S)) {
 					// Forcefully set the child devices to none. This will happen if the user sets MUs in the controller dialog but
 					// then they set the parent device to a device that cannot support them in the input dialog
