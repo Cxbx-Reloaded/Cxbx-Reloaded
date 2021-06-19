@@ -377,7 +377,9 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_VTXSH:
 				case IDC_LOG_VSHCACHE:
 				case IDC_LOG_VTXB:
+				case IDC_LOG_INPSYS:
 				case IDC_LOG_DINP:
+				case IDC_LOG_RINP:
 				case IDC_LOG_XINP:
 				case IDC_LOG_JVS:
 				case IDC_LOG_SDL:
@@ -393,7 +395,6 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_HUB:
 				case IDC_LOG_XIDCTRL:
 				case IDC_LOG_ADM:
-				case IDC_LOG_INPSYS:
 				case IDC_LOG_KRNL:
 				case IDC_LOG_LOG:
 				case IDC_LOG_XBOX:
