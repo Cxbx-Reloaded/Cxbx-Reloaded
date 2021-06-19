@@ -1068,7 +1068,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				}
 				else {
 					if (ClearCachePartitions()) {
-						PopupError(m_hwnd, "An errror has occoured while clearing the cache partitions.");
+						PopupError(m_hwnd, "An error has occurred while cleaning the cache partitions.");
 					}
 					else {
 						PopupInfo(m_hwnd, "Cleared the cache partitions.");
