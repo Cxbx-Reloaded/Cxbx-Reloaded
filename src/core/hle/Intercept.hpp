@@ -37,6 +37,7 @@ extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
 void EmuHLEIntercept(Xbe::Header *XbeHeader);
 
 std::string GetDetectedSymbolName(const xbox::addr_xt address, int * const symbolOffset);
+void* GetXboxSymbolPointer(std::string functionName);
 void* GetXboxFunctionPointer(std::string functionName);
 
 #define XB_TYPE(func) XB_TRAMPOLINE_##func##_t

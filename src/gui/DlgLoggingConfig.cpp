@@ -80,6 +80,7 @@ static int g_DlgIndexes[] = {
 	IDC_LOG_DS3DCALC,
 	IDC_LOG_XMO,
 	IDC_LOG_RINP,
+	IDC_LOG_JVS,
 	// Kernel
 	IDC_LOG_KRNL,
 	IDC_LOG_LOG,
@@ -378,6 +379,7 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				case IDC_LOG_VTXB:
 				case IDC_LOG_DINP:
 				case IDC_LOG_XINP:
+				case IDC_LOG_JVS:
 				case IDC_LOG_SDL:
 				case IDC_LOG_FILE:
 				case IDC_LOG_X86:

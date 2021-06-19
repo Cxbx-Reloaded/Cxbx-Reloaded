@@ -44,6 +44,9 @@
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow, EmuD3DInit
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp" // For CxbxInitAudio
+#ifdef CHIHIRO_WORK
+#include "core\hle\JVS\JVS.h" // For JVS_Init
+#endif
 #include "core\hle\Intercept.hpp"
 #include "ReservedMemory.h" // For virtual_memory_placeholder
 #include "core\kernel\memory-manager\VMManager.h"
@@ -1008,6 +1011,79 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		strncpy(szFilePath_Xbe, xbePath.c_str(), xbox::max_path - 1);
 		std::replace(xbePath.begin(), xbePath.end(), ';', '/');
 		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
+		std::filesystem::path xbeDirectory = std::filesystem::path(xbePath).parent_path();
+
+#ifdef CHIHIRO_WORK
+		// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
+		// If the XBE path contains a boot.id, it must be a Chihiro title
+		// This is necessary as some Chihiro games use the Debug xor instead of the Chihiro ones
+		// which means we cannot rely on that alone.
+		if (BootFlags == BOOT_NONE && std::filesystem::exists(xbeDirectory / "boot.id")) {
+
+			std::string chihiroMediaBoardRom = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardRomFile;
+			if (!std::filesystem::exists(chihiroMediaBoardRom)) {
+				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
+			}
+
+			// Open a handle to the mediaboard rom
+			FILE* fpRom = fopen(chihiroMediaBoardRom.c_str(), "rb");
+			if (fpRom == nullptr) {
+				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not opened for read");
+			}
+
+			// Verify the size of media board rom
+			fseek(fpRom, 0, SEEK_END);
+			auto length = ftell(fpRom);
+			if (length != 2 * ONE_MB) {
+				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) has an invalid size");
+
+			}
+			fseek(fpRom, 0, SEEK_SET);
+
+			// Extract SEGABOOT_OLD.XBE and SEGABOOT.XBE from Media Rom
+			// We only do this if SEGABOOT_OLD and SEGABOOT.XBE are *not* already present
+			std::string chihiroSegaBootOld = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardSegaBoot0;
+			std::string chihiroSegaBootNew = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardSegaBoot1;
+			if (!std::filesystem::exists(chihiroSegaBootOld) || !std::filesystem::exists(chihiroSegaBootNew)) {
+				FILE* fpSegaBootOld = fopen(chihiroSegaBootOld.c_str(), "wb");
+				FILE* fpSegaBootNew = fopen(chihiroSegaBootNew.c_str(), "wb");
+				if (fpSegaBootNew == nullptr || fpSegaBootOld == nullptr) {
+					CxbxKrnlCleanup("Could not open SEGABOOT for writing");
+
+				}
+
+				// Extract SEGABOOT (Old)
+				void* buffer = malloc(ONE_MB);
+				if (buffer == nullptr) {
+					CxbxKrnlCleanup("Could not allocate buffer for SEGABOOT");
+
+				}
+
+				fread(buffer, 1, ONE_MB, fpRom);
+				fwrite(buffer, 1, ONE_MB, fpSegaBootOld);
+
+				// Extract SEGABOOT (New)
+				fread(buffer, 1, ONE_MB, fpRom);
+				fwrite(buffer, 1, ONE_MB, fpSegaBootNew);
+
+				free(buffer);
+
+				fclose(fpSegaBootOld);
+				fclose(fpSegaBootNew);
+				fclose(fpRom);
+
+			}
+
+			g_EmuShared->SetTitleMountPath(xbeDirectory.string().c_str());
+
+			// Launch Segaboot
+			CxbxLaunchNewXbe(chihiroSegaBootNew);
+			CxbxKrnlShutDown(true);
+			TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
+
+		}
+#endif // Chihiro wip block
+
 		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 		if (CxbxKrnl_Xbe->HasFatalError()) {
@@ -1084,21 +1160,15 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		g_bIsDebug = (xbeType == XbeType::xtDebug);
 		g_bIsRetail = (xbeType == XbeType::xtRetail);
 
-		// Disabled: The media board rom fails to run because it REQUIRES LLE USB, which is not yet enabled.
-		// Chihiro games can be ran directly for now. 
-		// This just means that you cannot access the Chihiro test menus and related stuff, games should still be okay
-#if 0   
-		// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
-		// TODO: We also need to store the path of the loaded game, and mount it as the mediaboard filesystem
-		// TODO: How to we detect who launched us, to prevent a reboot-loop
+#ifdef CHIHIRO_WORK
+		// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
+		// The Chihiro kernel does this, so we should too!
 		if (g_bIsChihiro) {
-			std::string chihiroMediaBoardRom = std::string(szFolder_CxbxReloadedData) + std::string("/EmuDisk/") + MediaBoardRomFile;
-			if (!std::filesystem::exists(chihiroMediaBoardRom)) {
-				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
-			}
-
-			delete CxbxKrnl_Xbe;
-			CxbxKrnl_Xbe = new Xbe(chihiroMediaBoardRom.c_str(), false);
+			CxbxKrnl_Xbe->m_Header.dwInitFlags.bDontSetupHarddisk = true;
+		}
+#else
+		if (g_bIsChihiro) {
+			CxbxKrnlCleanup("Emulating Chihiro mode does not work yet. Please use different title to emulate.");
 		}
 #endif
 
@@ -1433,6 +1503,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
+	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", CxbxBasePath + "Chihiro");
 
 	// Create default symbolic links :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");
@@ -1622,6 +1693,13 @@ __declspec(noreturn) void CxbxKrnlInit
 		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::WARNING, "Unable to intialize xbox::ObInitSystem.");
 	}
 	xbox::KiInitSystem();
+
+#ifdef CHIHIRO_WORK
+	// If this title is Chihiro, Setup JVS
+	if (g_bIsChihiro) {
+		JVS_Init();
+	}
+#endif
 
 	EmuX86_Init();
 	// Create the interrupt processing thread

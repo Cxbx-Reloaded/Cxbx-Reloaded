@@ -544,8 +544,14 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 			}
 
 			// If the title path was an empty string, we need to launch the dashboard
+			// Or in the case of Chihiro: SEGABOOT
 			if (TitlePath.length() == 0) {
-				TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
+				if (g_bIsChihiro) {
+					TitlePath = DevicePrefix + "\\" + MediaBoardRomFile;
+				}
+				else {
+					TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
+				}
 			}
 
 			std::string& XbePath = CxbxConvertXboxToHostPath(TitlePath);
