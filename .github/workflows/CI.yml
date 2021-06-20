@@ -75,19 +75,8 @@ jobs:
             fi
           done
           echo "::set-output name=tag_name::CI-$(git rev-parse --short HEAD)"
-      - uses: actions/create-release@v1
+      - name: Create Release
         env:
+          GH_REPO: ${{ github.repository }} # https://github.com/cli/cli/issues/3556
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.git.outputs.tag_name }}
-          release_name: ${{ steps.git.outputs.tag_name }}
-          prerelease: true
-      - name: Upload Release Asset(s)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          assets=()
-          for asset in artifacts/*.zip; do
-            assets+=("-a" "$asset")
-          done
-          hub release edit "${assets[@]}" -m "" "${{ steps.git.outputs.tag_name }}"
+        run: gh release create ${{ steps.git.outputs.tag_name }} artifacts/*.zip -p --target $GITHUB_SHA
