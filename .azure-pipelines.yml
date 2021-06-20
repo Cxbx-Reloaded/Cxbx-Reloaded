@@ -7,7 +7,6 @@ trigger:
     - '.github/**'
     - '*.bat'
     - '.appveyor.yml'
-    - '.travis.yml'
     - 'doc/**'
 
 pr:
@@ -19,7 +18,6 @@ pr:
     - '.github/**'
     - '*.bat'
     - '.appveyor.yml'
-    - '.travis.yml'
     - 'doc/**'
 
 pool:

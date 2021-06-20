@@ -8,7 +8,6 @@ skip_commits:
     - .github/*
     - .github/*/*
     - .azure-pipelines.yml
-    - .travis.yml
     - CONTRIBUTORS
     - COPYING
     - README.md
