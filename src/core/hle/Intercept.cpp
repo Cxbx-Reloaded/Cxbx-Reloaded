@@ -80,6 +80,16 @@ bool bLLE_GPU = false; // Set this to true for experimental GPU (graphics) LLE
 bool bLLE_USB = false; // Set this to true for experimental USB (input) LLE
 bool bLLE_JIT = false; // Set this to true for experimental JIT
 
+void* GetXboxSymbolPointer(std::string symbolName)
+{
+    auto symbol = g_SymbolAddresses.find(symbolName);
+    if (symbol != g_SymbolAddresses.end()) {
+        return (void*)symbol->second;
+    }
+
+    return nullptr;
+}
+
 void* GetXboxFunctionPointer(std::string functionName)
 {
 	void* ptr = GetPatchedFunctionTrampoline(functionName);
@@ -89,13 +99,7 @@ void* GetXboxFunctionPointer(std::string functionName)
 
     // If we got here, the function wasn't patched, so we can just look it up the symbol cache
     // and return the correct offset
-    auto symbol = g_SymbolAddresses.find(functionName);
-    if (symbol != g_SymbolAddresses.end()) {
-        return (void*)symbol->second;
-    }
-
-    // Finally, if none of the above were matched, return nullptr
-    return nullptr;
+    return GetXboxSymbolPointer(functionName);
 }
 
 // NOTE: GetDetectedSymbolName do not get to be in XbSymbolDatabase, get symbol string in Cxbx project only.

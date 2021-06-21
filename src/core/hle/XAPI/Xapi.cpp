@@ -103,6 +103,12 @@ bool ConstructHleInputDevice(int Type, int Port)
 	g_bIsDevicesEmulating = true;
 	bool ret = true;
 
+	if (g_bIsChihiro) {
+		// Don't emulate XID devices during Chihiro Emulation
+		g_bIsDevicesEmulating = false;
+		return ret;
+	}
+
 	// NOTE: initialize bAutoPollDefault to its default state, which varies depending on the device type
 	switch (Type)
 	{

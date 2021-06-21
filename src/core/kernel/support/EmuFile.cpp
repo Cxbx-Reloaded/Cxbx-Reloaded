@@ -235,6 +235,8 @@ void NTAPI CxbxIoApcDispatcher(PVOID ApcContext, xbox::PIO_STATUS_BLOCK /*IoStat
 }
 
 const std::string MediaBoardRomFile = "Chihiro\\fpr21042_m29w160et.bin";
+const std::string MediaBoardSegaBoot0 = "Chihiro\\SEGABOOT_MBROM0.XBE";
+const std::string MediaBoardSegaBoot1 = "Chihiro\\SEGABOOT_MBROM1.XBE";
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
 const std::string DriveCdRom0 = DrivePrefix + "CdRom0:"; // CD-ROM device
@@ -417,10 +419,15 @@ NTSTATUS CxbxConvertFilePath(
 
 	// Check if we where called from a File-handling API :
 	if (!aFileAPIName.empty()) {
-		if (RelativePath.compare(DriveMbrom0) == 0 || RelativePath.compare(DriveMbrom1) == 0) {
+		if (RelativePath.compare(DriveMbrom0) == 0) {
 			*RootDirectory = CxbxBasePathHandle;
 			HostPath = CxbxBasePath;
-			RelativePath = MediaBoardRomFile;
+			RelativePath = MediaBoardSegaBoot0;
+		}
+		else if (RelativePath.compare(DriveMbrom1) == 0) {
+			*RootDirectory = CxbxBasePathHandle;
+			HostPath = CxbxBasePath;
+			RelativePath = MediaBoardSegaBoot1;
 		}
 		else if (!partitionHeader) {
 			// Check if the path starts with a volume indicator :
