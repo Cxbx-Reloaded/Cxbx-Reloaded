@@ -88,6 +88,14 @@ void DukeInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 
 	if (m_dev_type == to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK)) {
 		// The arcade joystick does not have slot ports so we always disable the corresponding options
+		LRESULT index_top = SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_ADDSTRING, 0,
+			reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)).c_str()));
+		LRESULT index_bottom = SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_ADDSTRING, 0,
+			reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)).c_str()));
+		SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_SETITEMDATA, index_top, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
+		SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_SETITEMDATA, index_bottom, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
+		SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_SETCURSEL, index_top, 0);
+		SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_SETCURSEL, index_bottom, 0);
 		EnableWindow(m_hwnd_slot_list[SLOT_TOP], FALSE);
 		EnableWindow(m_hwnd_slot_list[SLOT_BOTTOM], FALSE);
 	}
@@ -246,24 +254,6 @@ void DukeInputWindow::DetectOutput(int ms)
 			EnableWindow(m_hwnd_rumble, TRUE);
 			}).detach();
 	}
-}
-
-int DukeInputWindow::IsProfileSaved()
-{
-	if (int ret = InputWindow::IsProfileSaved()) {
-		if (ret == EXIT_IGNORE) {
-			return EXIT_IGNORE;
-		}
-		else {
-			if (m_dev_type != to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK)) {
-				SaveSlotConfig();
-			}
-
-			return EXIT_SAVE;
-		}
-	}
-
-	return EXIT_ABORT;
 }
 
 void DukeInputWindow::SaveSlotConfig()

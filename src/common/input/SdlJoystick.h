@@ -43,12 +43,6 @@ namespace Sdl
 	}
 	SDL_INIT_STATUS;
 
-	struct UPDATE_INPUT_DATA {
-		int Port;
-		int Slot;
-		bool Opt;
-	};
-
 	extern uint32_t ExitEvent_t;
 	extern uint32_t PopulateEvent_t;
 	extern uint32_t UpdateInputEvent_t;

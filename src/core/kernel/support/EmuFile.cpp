@@ -31,13 +31,13 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cassert>
 #include <Shlobj.h>
 #include <Shlwapi.h>
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
 #pragma warning(default:4005)
-#include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 #include "common/util/strConverter.hpp" // utf16_to_ascii
 #include "common/util/cliConfig.hpp"
@@ -84,7 +84,102 @@ XboxPartitionTable BackupPartTbl =
 	}
 };
 
-void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false)
+io_mu_metadata *g_io_mu_metadata = nullptr;
+
+io_mu_metadata::io_mu_metadata(const std::wstring_view root_path) : m_root_path(root_path)
+{
+	for (unsigned i = 0; i < 8; ++i) {
+		m_buff[i] = new char[sizeof(FATX_SUPERBLOCK)];
+		assert(m_buff[i] != nullptr);
+		std::wstring path = m_root_path + static_cast<wchar_t>(L'F' + i) + L".bin";
+		std::fstream fs(path, std::ios_base::in | std::ios_base::out | std::ios_base::binary);
+		if (!fs.is_open()) {
+			CxbxKrnlCleanup("%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
+		}
+		fs.seekg(0);
+		fs.read(m_buff[i], sizeof(FATX_SUPERBLOCK));
+		// if the signature is not "fatx" or we read less bytes than expected, then we assume the bin file is either corrupted or
+		// unformatted, so we reformat it now
+		FATX_SUPERBLOCK *volume = reinterpret_cast<FATX_SUPERBLOCK *>(m_buff[i]);
+		if ((fs.gcount() != sizeof(FATX_SUPERBLOCK)) || (volume->Signature != fatx_signature)) {
+			volume->Signature = fatx_signature;
+			volume->VolumeID = 0x11223344 + i;
+			volume->ClusterSize = 32;
+			volume->FatCopies = 1;
+			std::memset(volume->Name, 0, mu_max_name_lenght);
+			std::memset(volume->OnlineData, 0, fatx_online_data_length);
+			std::memset(volume->Unused, 0xFF, fatx_reserved_length);
+			fs.write(m_buff[i], sizeof(FATX_SUPERBLOCK));
+		}
+	}
+}
+
+io_mu_metadata::~io_mu_metadata()
+{
+	std::unique_lock<std::shared_mutex> lck(m_rw_lock);
+	for (unsigned i = 0; i < 8; ++i) {
+		std::wstring path = m_root_path + static_cast<wchar_t>(L'F' + i) + L".bin";
+		std::ofstream ofs(path, std::ios_base::out | std::ios_base::binary);
+		if (!ofs.is_open()) {
+			EmuLog(LOG_LEVEL::ERROR2, "%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
+			delete[] m_buff[i];
+			continue;
+		}
+		ofs.seekp(0);
+		ofs.write(m_buff[i], sizeof(FATX_SUPERBLOCK));
+		delete[] m_buff[i];
+	}
+}
+
+void io_mu_metadata::read(const wchar_t lett, std::size_t offset, char *buff, std::size_t size)
+{
+	std::shared_lock<std::shared_mutex> lck(m_rw_lock); // allows for concurrent reads
+	std::memcpy(buff, m_buff[lett - L'F'] + offset, size);
+}
+
+void io_mu_metadata::write(const wchar_t lett, std::size_t offset, const char *buff, std::size_t size)
+{
+	std::unique_lock<std::shared_mutex> lck(m_rw_lock); // blocks when there is rw in progress
+	std::memcpy(m_buff[lett - L'F'] + offset, buff, size);
+}
+
+void io_mu_metadata::flush(const wchar_t lett)
+{
+	std::unique_lock<std::shared_mutex> lck(m_rw_lock);
+	std::wstring path = m_root_path + lett + L".bin";
+	std::ofstream ofs(path, std::ios_base::out | std::ios_base::binary);
+	if (!ofs.is_open()) {
+		EmuLog(LOG_LEVEL::ERROR2, "%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
+		return;
+	}
+	ofs.seekp(0);
+	ofs.write(m_buff[lett - L'F'], sizeof(FATX_SUPERBLOCK));
+	ofs.flush();
+}
+
+DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile)
+{
+	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
+
+	size_t pos = path.rfind(L"\\EmuDisk\\Partition");
+	if (pos != std::string::npos) {
+		return DeviceType::Harddisk0;
+	}
+
+	pos = path.rfind(L"\\EmuMu");
+	if (pos != std::string::npos) {
+		return DeviceType::MU;
+	}
+
+	EmuNtSymbolicLinkObject *ret = FindNtSymbolicLinkObjectByDevice(DeviceCdrom0);
+	if (ret != nullptr && path.rfind(ret->wHostSymbolicLinkPath) != std::string::npos) {
+		return DeviceType::Cdrom0;
+	}
+
+	return DeviceType::Invalid;
+}
+
+void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false, std::size_t size = 512 * ONE_KB)
 {
 	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 	if (!hf) {
@@ -98,7 +193,7 @@ void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false
 		WriteFile(hf, &BackupPartTbl, sizeof(XboxPartitionTable), &NumberOfBytesWritten, 0);
 	}
 
-	SetFilePointer(hf, 512 * ONE_KB, 0, FILE_BEGIN);
+	SetFilePointer(hf, size, 0, FILE_BEGIN);
 	SetEndOfFile(hf);
 	CloseHandle(hf);
 }
@@ -701,7 +796,7 @@ std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
 	return XbePath;
 }
 
-int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::string HostDevicePath, bool IsFile)
+int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::string HostDevicePath, bool IsFile, std::size_t size)
 {
 	XboxDevice newDevice;
 	newDevice.XboxDevicePath = XboxDevicePath;
@@ -709,11 +804,12 @@ int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::strin
 
 	bool succeeded{ false };
 
-	// All HDD partitions have a .bin file to allow direct file io on the partition info
-	if (_strnicmp(XboxDevicePath.data(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+	// All HDD and MU partitions have a .bin file to allow direct file io on the partition info
+	if (_strnicmp(XboxDevicePath.data(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0 ||
+		_strnicmp(XboxDevicePath.data(), DeviceMU.c_str(), DeviceMU.length()) == 0) {
 		std::string partitionHeaderPath = HostDevicePath + ".bin";
 		if (!std::filesystem::exists(partitionHeaderPath)) {
-			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0);
+			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0, size);
 		}
 
 		succeeded = true;
@@ -833,6 +929,10 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 				}
 				else
 				{
+					std::mbstate_t ps = std::mbstate_t();
+					const char *src = HostSymbolicLinkPath.c_str();
+					wHostSymbolicLinkPath.resize(HostSymbolicLinkPath.size());
+					std::mbsrtowcs(wHostSymbolicLinkPath.data(), &src, wHostSymbolicLinkPath.size(), &ps);
 					NtSymbolicLinkObjects[DriveLetter - 'A'] = this;
 					EmuLog(LOG_LEVEL::DEBUG, "Linked \"%s\" to \"%s\" (residing at \"%s\")", aSymbolicLinkName.c_str(), aFullPath.c_str(), HostSymbolicLinkPath.c_str());
 				}
@@ -915,6 +1015,19 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handl
 	}
 	
 	return NULL;
+}
+
+
+EmuNtSymbolicLinkObject *FindNtSymbolicLinkObjectByDevice(const std::string_view Device)
+{
+	for (char DriveLetter = 'A'; DriveLetter <= 'Z'; DriveLetter++)
+	{
+		EmuNtSymbolicLinkObject *result = NtSymbolicLinkObjects[DriveLetter - 'A'];
+		if ((result != nullptr) && (result->XboxSymbolicLinkPath == Device))
+			return result;
+	}
+
+	return nullptr;
 }
 
 

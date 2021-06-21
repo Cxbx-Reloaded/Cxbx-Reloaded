@@ -43,7 +43,7 @@ InputWindow::~InputWindow()
 	m_DeviceConfig = nullptr;
 }
 
-int InputWindow::IsProfileSaved()
+bool InputWindow::IsProfileSaved()
 {
 	if (m_bHasChanges) {
 		PopupReturn ret = PopupQuestion(m_hwnd_window, "Current configuration is not saved. Save before closing?");
@@ -53,24 +53,24 @@ int InputWindow::IsProfileSaved()
 			char name[50];
 			SendMessage(m_hwnd_profile_list, WM_GETTEXT, sizeof(name), reinterpret_cast<LPARAM>(name));
 			if (SaveProfile(std::string(name))) {
-				return EXIT_SAVE;
+				return true;
 			}
-			return EXIT_ABORT;
+			return false;
 		}
 
 		case PopupReturn::No: {
-			return EXIT_IGNORE;
+			return true;
 		}
 
 		case PopupReturn::Cancel:
 		default: {
-			return EXIT_ABORT;
+			return false;
 		}
 
 		}
 	}
 
-	return EXIT_IGNORE;
+	return true;
 }
 
 void InputWindow::UpdateDeviceList()

@@ -165,9 +165,9 @@ public:
 
 private:
 	// update input for an xbox controller
-	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction);
+	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port1);
 	// update input for a Steel Battalion controller
-	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port);
+	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port, const std::string &Port1);
 	// bind a host device to an emulated device
 	void BindHostDevice(int type, std::string_view port);
 	// connect a device to the emulated machine

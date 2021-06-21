@@ -26,6 +26,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h>
+#include "core\kernel\init\CxbxKrnl.h"
 #include <vector>
 #include <cstdio>
 #include <string>
@@ -106,6 +107,18 @@ extern const std::string DeviceMU6;
 extern const std::string DeviceMU7;
 constexpr char CxbxAutoMountDriveLetter = 'D';
 
+enum class DeviceType : int {
+	Invalid = -1,
+	Cdrom0,
+	Harddisk0,
+	MU,
+};
+
+inline constexpr xbox::ulong_xt fsctl_dismount_volume = 0x00090020;
+inline constexpr xbox::ulong_xt fsctl_read_fatx_metadata = 0x0009411C;
+inline constexpr xbox::ulong_xt fsctl_write_fatx_metadata = 0x00098120;
+
+inline constexpr std::size_t mu_max_name_lenght = 32 * sizeof(xbox::wchar_xt); // MU names are in wide chars
 extern std::string CxbxBasePath;
 extern HANDLE CxbxBasePathHandle;
 
@@ -218,6 +231,7 @@ public:
 	bool IsHostBasedPath;
 	std::string XboxSymbolicLinkPath;
 	std::string HostSymbolicLinkPath;
+	std::wstring wHostSymbolicLinkPath;
 	HANDLE RootDirectoryHandle;
 	NTSTATUS Init(std::string aSymbolicLinkName, std::string aFullPath);
 	~EmuNtSymbolicLinkObject();
@@ -235,9 +249,31 @@ struct EmuDirPath {
 	HANDLE HostDirHandle;
 };
 
+typedef struct _fatx_volume_metadata {
+	xbox::dword_xt offset;
+	xbox::dword_xt length;
+	xbox::PVOID buffer;
+} fatx_volume_metadata, *pfatx_volume_metadata;
+
 CHAR* NtStatusToString(IN NTSTATUS Status);
 
-int CxbxRegisterDeviceHostPath(std::string_view XboxFullPath, std::string HostDevicePath, bool IsFile = false);
+class io_mu_metadata
+{
+public:
+	io_mu_metadata(const std::wstring_view root_path);
+	~io_mu_metadata();
+	void read(const wchar_t lett, std::size_t offset, char *buff, std::size_t size);
+	void write(const wchar_t lett, std::size_t offset, const char *buff, std::size_t size);
+	void flush(const wchar_t lett);
+
+private:
+	char *m_buff[8];
+	const std::wstring m_root_path;
+	std::shared_mutex m_rw_lock;
+};
+extern io_mu_metadata *g_io_mu_metadata;
+
+int CxbxRegisterDeviceHostPath(std::string_view XboxFullPath, std::string HostDevicePath, bool IsFile = false, std::size_t size = 512 * ONE_KB);
 int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath);
 XboxDevice* CxbxDeviceByDevicePath(const std::string_view XboxDevicePath);
 XboxDevice* CxbxDeviceByHostPath(const std::string_view HostPath);
@@ -248,6 +284,8 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveL
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName);
 void FindEmuDirPathByDevice(std::string DeviceName, EmuDirPath& hybrid_path);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(HANDLE Handle);
+EmuNtSymbolicLinkObject *FindNtSymbolicLinkObjectByDevice(const std::string_view Device);
+DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile);
 void CleanupSymbolicLinks();
 
 HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
@@ -314,15 +352,24 @@ typedef struct
 	XboxPartitionTableEntry	TableEntries[14];
 } XboxPartitionTable;
 
+inline constexpr xbox::ulong_xt fatx_name_length = 32;
+inline constexpr xbox::ulong_xt fatx_online_data_length = 2048;
+inline constexpr xbox::ulong_xt fatx_reserved_length = 1968;
+
+inline constexpr xbox::ulong_xt fatx_signature = 'XTAF';
+
 typedef struct _FATX_SUPERBLOCK
 {
-	char	Tag[4];
-	unsigned int VolumeID;
-	unsigned int ClusterSize;
-	USHORT	FatCopies;
-	int		Resvd;
-	char	Unused[4078];
+	xbox::ulong_xt Signature;
+	xbox::ulong_xt VolumeID;
+	xbox::ulong_xt ClusterSize;
+	xbox::ulong_xt FatCopies;
+	xbox::wchar_xt Name[fatx_name_length];
+	xbox::uchar_xt OnlineData[fatx_online_data_length];
+	xbox::uchar_xt Unused[fatx_reserved_length];
 } FATX_SUPERBLOCK;
+
+static_assert(sizeof(FATX_SUPERBLOCK) == PAGE_SIZE);
 
 XboxPartitionTable CxbxGetPartitionTable();
 FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber);

@@ -144,18 +144,23 @@ protected:
 
 public:
 	// retrieves the map of input bindings
-	const std::map<int, IoControl*> GetBindings() const {
+	const std::map<int, IoControl*> GetBindings(const std::string &Port) const {
 		std::lock_guard<std::mutex> lck(m_BindingsMtx);
-		return m_Bindings;
+		return m_Bindings.find(Port)->second;
 	}
 	// sets a pair in the map of the input bindings
-	void SetBindings(int XButton, IoControl* Control) {
+	void SetBindings(int XButton, IoControl* Control, const std::string &Port) {
 		std::lock_guard<std::mutex> lck(m_BindingsMtx);
-		m_Bindings[XButton] = Control;
+		m_Bindings[Port][XButton] = Control;
+	}
+	// clears all input bindings for the specified xbox port
+	void ClearBindings(const std::string &Port) {
+		std::lock_guard<std::mutex> lck(m_BindingsMtx);
+		m_Bindings[Port].clear();
 	}
 
 private:
-	// arbitrary ID assigned by to the device
+	// arbitrary ID assigned to the device
 	int m_ID;
 	// all the input controls detected and usable on this device
 	std::vector<Input*> m_Inputs;
@@ -163,8 +168,8 @@ private:
 	std::vector<Output*> m_Outputs;
 	// xbox port(s) this device is attached to
 	std::vector<std::string> m_XboxPort;
-	// button bindings to the xbox device buttons
-	std::map<int, IoControl*> m_Bindings;
+	// per xbox port button bindings to the xbox device buttons
+	std::unordered_map<std::string, std::map<int, IoControl*>> m_Bindings;
 };
 
 #endif

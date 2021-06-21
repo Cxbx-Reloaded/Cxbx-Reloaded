@@ -1509,15 +1509,21 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", CxbxBasePath + "Chihiro");
 
-	// Create the MU directories
-	CxbxRegisterDeviceHostPath(DeviceMU0, MuBasePath + "F");
-	CxbxRegisterDeviceHostPath(DeviceMU1, MuBasePath + "G");
-	CxbxRegisterDeviceHostPath(DeviceMU2, MuBasePath + "H");
-	CxbxRegisterDeviceHostPath(DeviceMU3, MuBasePath + "I");
-	CxbxRegisterDeviceHostPath(DeviceMU4, MuBasePath + "J");
-	CxbxRegisterDeviceHostPath(DeviceMU5, MuBasePath + "K");
-	CxbxRegisterDeviceHostPath(DeviceMU6, MuBasePath + "L");
-	CxbxRegisterDeviceHostPath(DeviceMU7, MuBasePath + "M");
+	// Create the MU directories and the bin files
+	CxbxRegisterDeviceHostPath(DeviceMU0, MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU1, MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU2, MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU3, MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU4, MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU5, MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU6, MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU7, MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
+
+	std::mbstate_t ps = std::mbstate_t();
+	const char *src = MuBasePath.c_str();
+	std::wstring wMuBasePath(MuBasePath.size(), L'0');
+	std::mbsrtowcs(wMuBasePath.data(), &src, wMuBasePath.size(), &ps);
+	g_io_mu_metadata = new io_mu_metadata(wMuBasePath);
 
 	// Create default symbolic links :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");
@@ -1941,6 +1947,11 @@ void CxbxKrnlShutDown(bool is_reboot)
 
 	// Shutdown the memory manager
 	g_VMManager.Shutdown();
+
+	if (g_io_mu_metadata) {
+		delete g_io_mu_metadata;
+		g_io_mu_metadata = nullptr;
+	}
 
 	// Shutdown the render manager
 	if (g_renderbase != nullptr) {

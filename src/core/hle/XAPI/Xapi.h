@@ -694,6 +694,18 @@ xbox::dword_xt WINAPI EMUPATCH(XUnmountMU)
 );
 
 // ******************************************************************
+// * patch: XReadMUMetaData
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(XReadMUMetaData)
+(
+    IN dword_xt dwPort,
+    IN dword_xt dwSlot,
+    IN LPVOID lpBuffer,
+    IN dword_xt dwByteOffset,
+    IN dword_xt dwNumberOfBytesToRead
+);
+
+// ******************************************************************
 // * patch: XMountAlternateTitleA
 // ******************************************************************
 /*xbox::dword_xt WINAPI EMUPATCH(XMountAlternateTitleA)

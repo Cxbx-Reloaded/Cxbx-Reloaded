@@ -163,20 +163,19 @@ namespace Sdl
 					std::string port = std::to_string(*static_cast<int *>(Event.user.data1));
 					int port1, slot;
 					PortStr2Int(port, &port1, &slot);
-					if (g_devs[port1].type == XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE || g_devs[port1].type == XBOX_INPUT_DEVICE::MS_CONTROLLER_S) {
-						// Force an update of the entire slot connectivity of this port
-						g_InputDeviceManager.UpdateDevices(port + ".0", false);
-						g_InputDeviceManager.UpdateDevices(port + ".1", false);
-					}
+
 					g_InputDeviceManager.UpdateDevices(port, false);
+					// Force an update of the entire slot connectivity of this port
+					g_InputDeviceManager.UpdateDevices(port + ".0", false);
+					g_InputDeviceManager.UpdateDevices(port + ".1", false);
 				}
 
-				delete Event.user.data1;
+				delete static_cast<int *>(Event.user.data1);
 				Event.user.data1 = nullptr;
 			}
 			else if (Event.type == DeviceRemoveAck_t) {
-				g_InputDeviceManager.UpdateDevices(std::string(static_cast<char *>(Event.user.data1)), true);
-				delete Event.user.data1;
+				g_InputDeviceManager.UpdateDevices(*static_cast<std::string *>(Event.user.data1), true);
+				delete static_cast<std::string *>(Event.user.data1);
 				Event.user.data1 = nullptr;
 			}
 		}

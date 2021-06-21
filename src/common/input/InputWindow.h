@@ -42,10 +42,6 @@
 #define BUTTON_SWAP    9
 #define SLOTS_CHANGED  10
 
-#define EXIT_ABORT     0
-#define EXIT_SAVE      1
-#define EXIT_IGNORE    2
-
 #define XINPUT_DEFAULT 0
 #define DINPUT_DEFAULT 1
 
@@ -65,7 +61,7 @@ public:
 	virtual void ClearBindings() = 0;
 	virtual void UpdateProfile(const std::string& name, int command);
 	void UpdateCurrentDevice();
-	virtual int IsProfileSaved();
+	bool IsProfileSaved();
 	void SwapMoCursorAxis(Button *button);
 
 
@@ -111,7 +107,6 @@ public:
 	void BindDefault();
 	void ClearBindings() override;
 	void UpdateProfile(const std::string &name, int command) override;
-	int IsProfileSaved() override;
 	void SaveSlotConfig();
 
 

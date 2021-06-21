@@ -365,6 +365,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("XSetProcessQuantumLength", xbox::EMUPATCH(XSetProcessQuantumLength), PATCH_ALWAYS),
 	PATCH_ENTRY("timeKillEvent", xbox::EMUPATCH(timeKillEvent), PATCH_ALWAYS),
 	PATCH_ENTRY("timeSetEvent", xbox::EMUPATCH(timeSetEvent), PATCH_ALWAYS),
+	PATCH_ENTRY("XReadMUMetaData", xbox::EMUPATCH(XReadMUMetaData), PATCH_ALWAYS),
 	PATCH_ENTRY("XUnmountMU", xbox::EMUPATCH(XUnmountMU), PATCH_ALWAYS),
 };
 
@@ -445,7 +446,8 @@ void EmuInstallPatches()
 		EmuInstallPatch(it.first, it.second);
 	}
 
-	LookupTrampolines();
+	LookupTrampolinesD3D();
+	LookupTrampolinesXAPI();
 }
 
 void* GetPatchedFunctionTrampoline(const std::string functionName)

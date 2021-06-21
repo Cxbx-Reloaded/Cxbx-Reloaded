@@ -37,7 +37,8 @@
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
 
-extern void LookupTrampolines();
+extern void LookupTrampolinesD3D();
+extern void LookupTrampolinesXAPI();
 
 // initialize render window
 extern void CxbxInitWindow(bool bFullInit);
