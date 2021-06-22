@@ -138,6 +138,10 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"6x (3840x2880)");
 				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"7x (4480x3360)");
 				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"8x (5120x3840)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"9x (5760x4320)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"10x (6400x4800)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"11x (7040x5280)");
+				SendMessage(g_hRenderResolution, CB_ADDSTRING, 0, (LPARAM)"12x (7680x5760)");
 				SendMessage(g_hRenderResolution, CB_SETCURSEL, dwRenderResolution - 1, 0);
 			}
 
