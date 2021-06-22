@@ -54,7 +54,7 @@ IF "%2"=="2017" (
 SET msvc_compiler=Visual Studio 15 2017
 )
 IF "%2"=="" (
-SET msvc_compiler=Visual Studio 15 2017
+SET msvc_compiler=Visual Studio 16 2019
 )
 IF NOT DEFINED msvc_compiler (
 GOTO :helpInfo
