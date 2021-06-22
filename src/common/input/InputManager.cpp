@@ -297,16 +297,12 @@ void InputDeviceManager::ConnectDevice(DeviceState *dev, DeviceState *upstream, 
 {
 	ConstructHleInputDevice(dev, upstream, type, port);
 	BindHostDevice(type, port);
-	EmuLog(LOG_LEVEL::INFO, "Attached device %s to port %d", GetInputDeviceName(type).c_str(),
-		PortUserFormat(port).c_str());
 }
 
 void InputDeviceManager::DisconnectDevice(DeviceState *dev, std::string_view port, bool ack)
 {
 	if (ack) {
-		int type = to_underlying(dev->type);
 		DestructHleInputDevice(dev);
-		EmuLog(LOG_LEVEL::INFO, "Detached device %s from port %d", GetInputDeviceName(type).c_str(), PortUserFormat(port).c_str());
 	}
 	else {
 		dev->bPendingRemoval = true;

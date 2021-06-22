@@ -467,25 +467,24 @@ bool Settings::LoadConfig()
 	// ==== Input Port Begin ====
 
 	for (int port_num = 0; port_num < 4; port_num++) {
-		m_input_port[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
-		m_input_port[port_num].TopSlotType = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
-		m_input_port[port_num].BottomSlotType = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+		for (int slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+			m_input_port[port_num].Type = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+			m_input_port[port_num].SlotType[slot] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
 
-		std::string current_section = std::string(section_input_port) + std::to_string(port_num);
-		int ret = m_si.GetLongValue(current_section.c_str(), sect_input_port.type, -2);
-		if (ret == -2) {
-			continue;
+			std::string current_section = std::string(section_input_port) + std::to_string(port_num);
+			int ret = m_si.GetLongValue(current_section.c_str(), sect_input_port.type, -2);
+			if (ret == -2) {
+				continue;
+			}
+			m_input_port[port_num].Type = ret;
+			m_input_port[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input_port.device);
+			m_input_port[port_num].ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input_port.config));
+			ret = m_si.GetLongValue(current_section.c_str(), slot == 0 ? sect_input_port.top_slot : sect_input_port.bottom_slot, -2);
+			if (ret == -2) {
+				continue;
+			}
+			m_input_port[port_num].SlotType[slot] = ret;
 		}
-		m_input_port[port_num].Type = ret;
-		m_input_port[port_num].DeviceName = m_si.GetValue(current_section.c_str(), sect_input_port.device);
-		m_input_port[port_num].ProfileName = TrimQuoteFromString(m_si.GetValue(current_section.c_str(), sect_input_port.config));
-		ret = m_si.GetLongValue(current_section.c_str(), sect_input_port.top_slot, -2);
-		if (ret == -2) {
-			continue;
-		}
-		m_input_port[port_num].TopSlotType = ret;
-		m_input_port[port_num].BottomSlotType = m_si.GetLongValue(current_section.c_str(), sect_input_port.bottom_slot, -2);
-		assert(m_input_port[port_num].BottomSlotType != -2);
 	}
 
 	// ==== Input Port End ==============
@@ -656,8 +655,8 @@ bool Settings::Save(std::string file_path)
 		m_si.SetLongValue(current_section.c_str(), sect_input_port.type, m_input_port[port_num].Type, nullptr, false, true);
 		m_si.SetValue(current_section.c_str(), sect_input_port.device, m_input_port[port_num].DeviceName.c_str(), nullptr, true);
 		m_si.SetValue(current_section.c_str(), sect_input_port.config, quoted_prf_str.c_str(), nullptr, true);
-		m_si.SetLongValue(current_section.c_str(), sect_input_port.top_slot, m_input_port[port_num].TopSlotType, nullptr, false, true);
-		m_si.SetLongValue(current_section.c_str(), sect_input_port.bottom_slot, m_input_port[port_num].BottomSlotType, nullptr, false, true);
+		m_si.SetLongValue(current_section.c_str(), sect_input_port.top_slot, m_input_port[port_num].SlotType[SLOT_TOP], nullptr, false, true);
+		m_si.SetLongValue(current_section.c_str(), sect_input_port.bottom_slot, m_input_port[port_num].SlotType[SLOT_BOTTOM], nullptr, false, true);
 	}
 
 	// ==== Input Port End ==============
@@ -783,8 +782,8 @@ void Settings::SyncToEmulator()
 	// register xbox device input settings
 	for (int i = 0; i < 4; i++) {
 		g_EmuShared->SetInputDevTypeSettings(&m_input_port[i].Type, i);
-		g_EmuShared->SetInputSlotTypeSettings(&m_input_port[i].TopSlotType, i, SLOT_TOP);
-		g_EmuShared->SetInputSlotTypeSettings(&m_input_port[i].BottomSlotType, i, SLOT_BOTTOM);
+		g_EmuShared->SetInputSlotTypeSettings(&m_input_port[i].SlotType[SLOT_TOP], i, SLOT_TOP);
+		g_EmuShared->SetInputSlotTypeSettings(&m_input_port[i].SlotType[SLOT_BOTTOM], i, SLOT_BOTTOM);
 		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 			g_EmuShared->SetInputDevNameSettings(m_input_port[i].DeviceName.c_str(), i);
 			auto it = std::find_if(m_input_profiles[m_input_port[i].Type].begin(),

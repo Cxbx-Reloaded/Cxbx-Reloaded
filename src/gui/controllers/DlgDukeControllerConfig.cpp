@@ -88,31 +88,24 @@ void DukeInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 
 	if (m_dev_type == to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK)) {
 		// The arcade joystick does not have slot ports so we always disable the corresponding options
-		LRESULT index_top = SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_ADDSTRING, 0,
-			reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)).c_str()));
-		LRESULT index_bottom = SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_ADDSTRING, 0,
-			reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)).c_str()));
-		SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_SETITEMDATA, index_top, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
-		SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_SETITEMDATA, index_bottom, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
-		SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_SETCURSEL, index_top, 0);
-		SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_SETCURSEL, index_bottom, 0);
-		EnableWindow(m_hwnd_slot_list[SLOT_TOP], FALSE);
-		EnableWindow(m_hwnd_slot_list[SLOT_BOTTOM], FALSE);
+		for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+			LRESULT index = SendMessage(m_hwnd_slot_list[slot], CB_ADDSTRING, 0,
+				reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)).c_str()));
+			SendMessage(m_hwnd_slot_list[slot], CB_SETITEMDATA, index, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
+			SendMessage(m_hwnd_slot_list[slot], CB_SETCURSEL, index, 0);
+			EnableWindow(m_hwnd_slot_list[slot], FALSE);
+		}
 	}
 	else {
 		// Set up the device types we support in the slot ports
 		for (auto slot_type : slot_support_list) {
-			LRESULT index_top = SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_ADDSTRING, 0,
-				reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(slot_type)).c_str()));
-			LRESULT index_bottom = SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_ADDSTRING, 0,
-				reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(slot_type)).c_str()));
-			SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_SETITEMDATA, index_top, to_underlying(slot_type));
-			SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_SETITEMDATA, index_bottom, to_underlying(slot_type));
-			if (g_Settings->m_input_port[m_port_num].TopSlotType == to_underlying(slot_type)) {
-				SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_SETCURSEL, index_top, 0);
-			}
-			if (g_Settings->m_input_port[m_port_num].BottomSlotType == to_underlying(slot_type)) {
-				SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_SETCURSEL, index_bottom, 0);
+			for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+				LRESULT index = SendMessage(m_hwnd_slot_list[slot], CB_ADDSTRING, 0,
+					reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(slot_type)).c_str()));
+				SendMessage(m_hwnd_slot_list[slot], CB_SETITEMDATA, index, to_underlying(slot_type));
+				if (g_Settings->m_input_port[m_port_num].SlotType[slot] == to_underlying(slot_type)) {
+					SendMessage(m_hwnd_slot_list[slot], CB_SETCURSEL, index, 0);
+				}
 			}
 		}
 	}
@@ -218,10 +211,6 @@ void DukeInputWindow::UpdateProfile(const std::string &name, int command)
 		m_rumble = std::string();
 		break;
 
-	case SLOTS_CHANGED:
-		m_bHasChanges = true;
-		break;
-
 	default:
 		InputWindow::UpdateProfile(name, command);
 	}
@@ -258,10 +247,10 @@ void DukeInputWindow::DetectOutput(int ms)
 
 void DukeInputWindow::SaveSlotConfig()
 {
-	int DeviceType = SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_GETITEMDATA, SendMessage(m_hwnd_slot_list[SLOT_TOP], CB_GETCURSEL, 0, 0), 0);
-	g_Settings->m_input_port[m_port_num].TopSlotType = DeviceType;
-	DeviceType = SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_GETITEMDATA, SendMessage(m_hwnd_slot_list[SLOT_BOTTOM], CB_GETCURSEL, 0, 0), 0);
-	g_Settings->m_input_port[m_port_num].BottomSlotType = DeviceType;
+	for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+		g_Settings->m_input_port[m_port_num].SlotType[slot] = SendMessage(m_hwnd_slot_list[slot], CB_GETITEMDATA,
+			SendMessage(m_hwnd_slot_list[slot], CB_GETCURSEL, 0, 0), 0);
+	}
 }
 
 static INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -291,6 +280,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 	case WM_CLOSE:
 	{
 		if (g_InputWindow->IsProfileSaved()) {
+			g_InputWindow->SaveSlotConfig();
 			delete g_InputWindow;
 			g_InputWindow = nullptr;
 			EndDialog(hWndDlg, wParam);
@@ -305,14 +295,6 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 		case IDC_DEVICE_LIST: {
 			if (HIWORD(wParam) == CBN_SELCHANGE) {
 				g_InputWindow->UpdateCurrentDevice();
-			}
-		}
-		break;
-
-		case IDC_DEVICE_LIST_TOP_SLOT:
-		case IDC_DEVICE_LIST_BOTTOM_SLOT: {
-			if (HIWORD(wParam) == CBN_SELCHANGE) {
-				g_InputWindow->UpdateProfile(std::string(), SLOTS_CHANGED);
 			}
 		}
 		break;

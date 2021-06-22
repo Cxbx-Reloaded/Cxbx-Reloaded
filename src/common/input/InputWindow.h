@@ -40,7 +40,6 @@
 #define RUMBLE_CLEAR   7
 #define BUTTON_CLEAR   8
 #define BUTTON_SWAP    9
-#define SLOTS_CHANGED  10
 
 #define XINPUT_DEFAULT 0
 #define DINPUT_DEFAULT 1
@@ -75,6 +74,7 @@ protected:
 	void OverwriteProfile(const std::string& name);
 	void LoadDefaultProfile();
 	virtual int EnableDefaultButton() = 0;
+	virtual void SaveSlotConfig() = 0;
 
 	// xbox device under configuration
 	EmuDevice* m_DeviceConfig;
@@ -107,7 +107,7 @@ public:
 	void BindDefault();
 	void ClearBindings() override;
 	void UpdateProfile(const std::string &name, int command) override;
-	void SaveSlotConfig();
+	void SaveSlotConfig() override;
 
 
 private:
@@ -131,6 +131,7 @@ class SbcInputWindow : public InputWindow
 public:
 	void Initialize(HWND hwnd, int port_num, int dev_type) override;
 	void ClearBindings() override;
+	void SaveSlotConfig() override;
 
 
 private:

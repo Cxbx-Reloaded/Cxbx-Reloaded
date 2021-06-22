@@ -147,10 +147,9 @@ public:
 
 	struct s_input_port {
 		int Type;
+		int SlotType[2];
 		std::string DeviceName;
 		std::string ProfileName;
-		int TopSlotType;
-		int BottomSlotType;
 	};
 	std::array<s_input_port, 4> m_input_port;
 

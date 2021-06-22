@@ -87,6 +87,13 @@ int SbcInputWindow::EnableDefaultButton()
 	return -1;
 }
 
+void SbcInputWindow::SaveSlotConfig()
+{
+	for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+		g_Settings->m_input_port[m_port_num].SlotType[slot] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+	}
+}
+
 INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
@@ -110,6 +117,7 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 	case WM_CLOSE:
 	{
 		if (g_InputWindow->IsProfileSaved()) {
+			g_InputWindow->SaveSlotConfig();
 			delete g_InputWindow;
 			g_InputWindow = nullptr;
 			EndDialog(hWndDlg, wParam);

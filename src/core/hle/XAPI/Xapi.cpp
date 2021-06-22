@@ -277,6 +277,8 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 	UpdateXppState(dev, static_cast<XBOX_INPUT_DEVICE>(type), port);
 
 	g_bIsDevicesEmulating = false;
+
+	EmuLogEx(CXBXR_MODULE::INPSYS, LOG_LEVEL::INFO, "Attached device %s to port %s", GetInputDeviceName(type).c_str(), PortUserFormat(port).c_str());
 }
 
 void DestructHleInputDevice(DeviceState *dev)
@@ -343,6 +345,8 @@ void DestructHleInputDevice(DeviceState *dev)
 	dev->upstream = nullptr;
 
 	g_bIsDevicesEmulating = false;
+
+	EmuLogEx(CXBXR_MODULE::INPSYS, LOG_LEVEL::INFO, "Detached device %s from port %s", GetInputDeviceName(to_underlying(type)).c_str(), PortUserFormat(port).c_str());
 }
 
 void SetupXboxDeviceTypes()

@@ -260,9 +260,6 @@ bool InputWindow::SaveProfile(const std::string& name)
 	g_Settings->m_input_port[m_port_num].DeviceName = profile.DeviceName;
 	g_Settings->m_input_port[m_port_num].ProfileName = profile.ProfileName;
 	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
-	if (auto duke_wnd = dynamic_cast<DukeInputWindow *>(this)) {
-		duke_wnd->SaveSlotConfig();
-	}
 
 	m_bHasChanges = false;
 	return true;
