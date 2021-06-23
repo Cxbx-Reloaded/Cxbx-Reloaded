@@ -3,11 +3,13 @@ trigger:
     include:
     - '*'
   paths:
-    exclude:
-    - '.github/**'
+    exclude:      # Azure Pipelines doesn't support recursive wildcards, see
+    - '.github/*' # https://developercommunity.visualstudio.com/t/support-wildcards-in-trigger-path-filters-1/366363
+    - '.github/*/*'
     - '*.bat'
     - '.appveyor.yml'
-    - 'doc/**'
+    - 'doc/*/*'
+    - 'doc/*'
 
 pr:
   branches:
@@ -15,10 +17,12 @@ pr:
     - '*'
   paths:
     exclude:
-    - '.github/**'
+    - '.github/*'
+    - '.github/*/*'
     - '*.bat'
     - '.appveyor.yml'
-    - 'doc/**'
+    - 'doc/*/*'
+    - 'doc/*'
 
 pool:
   vmImage: windows-latest
