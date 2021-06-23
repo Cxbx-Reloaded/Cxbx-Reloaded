@@ -77,6 +77,5 @@ jobs:
           echo "::set-output name=tag_name::CI-$(git rev-parse --short HEAD)"
       - name: Create Release
         env:
-          GH_REPO: ${{ github.repository }} # https://github.com/cli/cli/issues/3556
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release create ${{ steps.git.outputs.tag_name }} artifacts/*.zip -p --target $GITHUB_SHA --title '${{ steps.git.outputs.tag_name }}'
