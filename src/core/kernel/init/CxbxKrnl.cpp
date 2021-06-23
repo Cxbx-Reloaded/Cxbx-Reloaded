@@ -1945,13 +1945,13 @@ void CxbxKrnlShutDown(bool is_reboot)
 	// Shutdown the input device manager
 	g_InputDeviceManager.Shutdown();
 
-	// Shutdown the memory manager
-	g_VMManager.Shutdown();
-
 	if (g_io_mu_metadata) {
 		delete g_io_mu_metadata;
 		g_io_mu_metadata = nullptr;
 	}
+
+	// Shutdown the memory manager
+	g_VMManager.Shutdown();
 
 	// Shutdown the render manager
 	if (g_renderbase != nullptr) {

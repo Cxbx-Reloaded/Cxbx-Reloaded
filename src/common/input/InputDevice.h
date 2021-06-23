@@ -36,12 +36,6 @@
 #include <condition_variable>
 #include "SDL.h"
 
-#define PORT_INVALID     -1
-#define PORT_1            0
-#define PORT_2            1
-#define PORT_3            2
-#define PORT_4            3
-
 #define DIRECTION_IN      0
 #define DIRECTION_OUT     1
 
@@ -69,15 +63,13 @@ XBOX_INPUT_DEVICE;
 inline bool g_bIsTrackingMoLeave = false;
 inline bool g_bIsTrackingMoMove = false;
 
-// Lookup array used to translate a gui port to an xbox usb port and vice versa
-extern int Gui2XboxPortArray[4];
 
 // Retrieves the printable name of a xid type
 std::string GetInputDeviceName(int dev_type);
 // Converts the port number in the user format
 std::string PortUserFormat(std::string_view);
 // Extracts port and slot number from a port formatted as a string
-void PortStr2Int(std::string_view port, int *port1, int *slot);
+void PortStr2Int(std::string_view port, int *port_num, int *slot);
 
 /* Abstract class which represents a host device usable for input/output */
 class InputDevice

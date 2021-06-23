@@ -367,10 +367,10 @@ class EmuShared : public Mutex
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.
-		int          m_DeviceType[4];
-		int          m_SlotDeviceType[4][XBOX_CTRL_NUM_SLOTS];
-		char         m_DeviceControlNames[4][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
-		char         m_DeviceName[4][50];
+		int          m_DeviceType[XBOX_NUM_PORTS];
+		int          m_SlotDeviceType[XBOX_NUM_PORTS][XBOX_CTRL_NUM_SLOTS];
+		char         m_DeviceControlNames[XBOX_NUM_PORTS][HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
+		char         m_DeviceName[XBOX_NUM_PORTS][50];
 		char         m_TitleMountPath[xbox::max_path];
 
 		// Settings class in memory should not be tampered by third-party.

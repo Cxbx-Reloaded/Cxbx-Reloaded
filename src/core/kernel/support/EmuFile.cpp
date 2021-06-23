@@ -171,8 +171,9 @@ DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile)
 		return DeviceType::MU;
 	}
 
-	EmuNtSymbolicLinkObject *ret = FindNtSymbolicLinkObjectByDevice(DeviceCdrom0);
-	if (ret != nullptr && path.rfind(ret->wHostSymbolicLinkPath) != std::string::npos) {
+	EmuDirPath hybrid_path;
+	FindEmuDirPathByDevice(DeviceCdrom0, hybrid_path);
+	if (hybrid_path.HostDirPath != "") {
 		return DeviceType::Cdrom0;
 	}
 
@@ -929,10 +930,6 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 				}
 				else
 				{
-					std::mbstate_t ps = std::mbstate_t();
-					const char *src = HostSymbolicLinkPath.c_str();
-					wHostSymbolicLinkPath.resize(HostSymbolicLinkPath.size());
-					std::mbsrtowcs(wHostSymbolicLinkPath.data(), &src, wHostSymbolicLinkPath.size(), &ps);
 					NtSymbolicLinkObjects[DriveLetter - 'A'] = this;
 					EmuLog(LOG_LEVEL::DEBUG, "Linked \"%s\" to \"%s\" (residing at \"%s\")", aSymbolicLinkName.c_str(), aFullPath.c_str(), HostSymbolicLinkPath.c_str());
 				}
@@ -1015,19 +1012,6 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handl
 	}
 	
 	return NULL;
-}
-
-
-EmuNtSymbolicLinkObject *FindNtSymbolicLinkObjectByDevice(const std::string_view Device)
-{
-	for (char DriveLetter = 'A'; DriveLetter <= 'Z'; DriveLetter++)
-	{
-		EmuNtSymbolicLinkObject *result = NtSymbolicLinkObjects[DriveLetter - 'A'];
-		if ((result != nullptr) && (result->XboxSymbolicLinkPath == Device))
-			return result;
-	}
-
-	return nullptr;
 }
 
 

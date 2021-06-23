@@ -33,15 +33,15 @@
 
 namespace RawInput
 {
-	typedef enum _RAWINPUT_INIT_STATUS : int
+	typedef enum _INIT_STATUS : int
 	{
-		RAWINPUT_NOT_INIT = -2,
-		RAWINPUT_INIT_ERROR,
-		RAWINPUT_INIT_SUCCESS,
+		NOT_INIT = -2,
+		INIT_ERROR,
+		INIT_SUCCESS,
 	}
-	RAWINPUT_INIT_STATUS;
+	INIT_STATUS;
 
-	extern int RawInputInitStatus;
+	extern int InitStatus;
 	extern bool IgnoreHotplug;
 
 	// initialize RawInput

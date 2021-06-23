@@ -835,6 +835,7 @@ XBSYSAPI EXPORTNUM(200) xbox::ntstatus_xt NTAPI xbox::NtFsControlFile
 	switch (FsControlCode)
 	{
 	case fsctl_dismount_volume: {
+		// HACK: this should just free the resources assocoated with the volume, it should not reformat it
 		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
 		if (partitionNumber > 0) {
 			CxbxFormatPartitionByHandle(FileHandle);

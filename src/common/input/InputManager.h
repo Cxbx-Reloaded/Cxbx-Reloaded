@@ -37,11 +37,20 @@
 #undef SetPort
 #endif
 
-#define SLOT_TOP     0
-#define SLOT_BOTTOM  1
+#define PORT_INVALID     -1
+#define PORT_1            0
+#define PORT_2            1
+#define PORT_3            2
+#define PORT_4            3
+#define XBOX_NUM_PORTS    4
+
+#define SLOT_TOP             0
+#define SLOT_BOTTOM          1
+#define XBOX_CTRL_NUM_SLOTS  2
 
 #define CTRL_OFFSET 0
 #define MU_OFFSET   4
+#define MAX_DEVS    (XBOX_NUM_PORTS + XBOX_CTRL_NUM_SLOTS * XBOX_NUM_PORTS)
 
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
@@ -56,6 +65,8 @@ inline XBOX_INPUT_DEVICE input_support_list[] = {
 inline XBOX_INPUT_DEVICE slot_support_list[] = {
 	XBOX_INPUT_DEVICE::DEVICE_INVALID,
 	XBOX_INPUT_DEVICE::MEMORY_UNIT,
+	// Microphone
+	// Phantasy star online keyboard
 };
 
 #pragma pack(1)
@@ -109,7 +120,7 @@ union InputBuff {
 };
 
 struct DeviceInfo {
-	xbox::HANDLE hhandle;      // device handle returned by xapi
+	xbox::HANDLE hHandle;      // device handle returned by xapi
 	bool bAutoPoll;            // autopoll on/off, as instructed by the title in XInputOpen
 	bool bAutoPollDefault;     // default autopoll value, depending on device type
 	uint8_t ucType;            // xapi type
@@ -121,7 +132,6 @@ struct DeviceInfo {
 };
 
 struct DeviceState {
-	DeviceState *upstream;
 	std::string port;
 	int port_idx;
 	XBOX_INPUT_DEVICE type;
@@ -129,9 +139,10 @@ struct DeviceState {
 	bool bSignaled;
 	DeviceInfo info;
 	DeviceState *slots[XBOX_CTRL_NUM_SLOTS];
+	DeviceState *upstream;
 };
 
-extern DeviceState g_devs[4 + 8];
+extern DeviceState g_devs[MAX_DEVS];
 
 
 class InputDeviceManager
@@ -165,9 +176,9 @@ public:
 
 private:
 	// update input for an xbox controller
-	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port1);
+	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port);
 	// update input for a Steel Battalion controller
-	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port, const std::string &Port1);
+	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port);
 	// bind a host device to an emulated device
 	void BindHostDevice(int type, std::string_view port);
 	// connect a device to the emulated machine

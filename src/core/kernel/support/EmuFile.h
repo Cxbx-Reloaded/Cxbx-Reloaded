@@ -231,7 +231,6 @@ public:
 	bool IsHostBasedPath;
 	std::string XboxSymbolicLinkPath;
 	std::string HostSymbolicLinkPath;
-	std::wstring wHostSymbolicLinkPath;
 	HANDLE RootDirectoryHandle;
 	NTSTATUS Init(std::string aSymbolicLinkName, std::string aFullPath);
 	~EmuNtSymbolicLinkObject();
@@ -284,7 +283,6 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveL
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName);
 void FindEmuDirPathByDevice(std::string DeviceName, EmuDirPath& hybrid_path);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(HANDLE Handle);
-EmuNtSymbolicLinkObject *FindNtSymbolicLinkObjectByDevice(const std::string_view Device);
 DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile);
 void CleanupSymbolicLinks();
 

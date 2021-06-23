@@ -59,7 +59,7 @@ std::atomic<bool> g_bXppGuard = false;
 
 // Allocate enough memory for the max number of devices we can support simultaneously
 // 4 duke / S / sbc / arcade joystick (mutually exclusive) + 8 memory units
-DeviceState g_devs[4 + 8];
+DeviceState g_devs[MAX_DEVS];
 
 xbox::ulong_xt g_Mounted_MUs = 0;
 xbox::char_xt g_AltLett_MU = 0;
@@ -173,9 +173,9 @@ void UpdateXppState(DeviceState *dev, XBOX_INPUT_DEVICE type, std::string_view p
 		return;
 	}
 
-	int port1, slot;
-	PortStr2Int(port, &port1, &slot);
-	xbox::ulong_xt port_mask = 1 << port1;
+	int port_num, slot;
+	PortStr2Int(port, &port_num, &slot);
+	xbox::ulong_xt port_mask = 1 << port_num;
 	xbox::ulong_xt slot_mask = 0;
 
 	// Guard against the unfortunate case where XGetDevices or XGetDeviceChanges have already checked for g_bIsDevicesInitializing
@@ -209,11 +209,11 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		return;
 	}
 	// Set up common device state
-	int port1, slot;
-	PortStr2Int(port, &port1, &slot);
+	int port_num, slot;
+	PortStr2Int(port, &port_num, &slot);
 	dev->upstream = nullptr;
 	dev->port = port;
-	dev->port_idx = port1;
+	dev->port_idx = port_num;
 	dev->bPendingRemoval = false;
 	dev->bSignaled = false;
 	dev->info.dwPacketNumber = 0;
@@ -330,8 +330,8 @@ void DestructHleInputDevice(DeviceState *dev)
 
 	case XBOX_INPUT_DEVICE::MEMORY_UNIT: {
 		assert(dev->upstream != nullptr);
-		int port1, slot;
-		PortStr2Int(port, &port1, &slot);
+		int port_num, slot;
+		PortStr2Int(port, &port_num, &slot);
 		assert(slot != PORT_INVALID);
 		dev->upstream->slots[slot] = nullptr;
 	}
@@ -446,7 +446,7 @@ xbox::dword_xt CxbxImpl_XInputHandler(xbox::HANDLE hDevice, xbox::PXINPUT_STATE 
 	DeviceState *dev = static_cast<DeviceState *>(hDevice);
 	int port = dev->port_idx;
 
-	if ((g_devs[port].info.hhandle == hDevice) && !g_devs[port].bPendingRemoval) {
+	if ((g_devs[port].info.hHandle == hDevice) && !g_devs[port].bPendingRemoval) {
 		if (g_devs[port].info.bAutoPoll != IsXInputPoll) {
 			if (g_InputDeviceManager.UpdateXboxPortInput(port, &g_devs[port].info.buff, DIRECTION_IN, to_underlying(g_devs[port].type))) {
 				g_devs[port].info.dwPacketNumber++;
@@ -639,8 +639,8 @@ xbox::HANDLE WINAPI xbox::EMUPATCH(XInputOpen)
         if (DeviceType == g_devs[dwPort].type) {
 			g_devs[dwPort].info.bAutoPoll = pPollingParameters != xbox::zeroptr ?
 				pPollingParameters->fAutoPoll : g_devs[dwPort].info.bAutoPollDefault;
-			g_devs[dwPort].info.hhandle = &g_devs[dwPort];
-			RETURN(g_devs[dwPort].info.hhandle);
+			g_devs[dwPort].info.hHandle = &g_devs[dwPort];
+			RETURN(g_devs[dwPort].info.hHandle);
         }
     }
     
@@ -658,8 +658,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XInputClose)
 	LOG_FUNC_ONE_ARG(hDevice);
 
 	DeviceState *dev = static_cast<DeviceState *>(hDevice);
-	if (g_devs[dev->port_idx].info.hhandle == hDevice) {
-		dev->info.hhandle = NULL;
+	if (g_devs[dev->port_idx].info.hHandle == hDevice) {
+		dev->info.hHandle = NULL;
 	}
 }
 
@@ -696,7 +696,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetCapabilities)
     dword_xt ret = ERROR_DEVICE_NOT_CONNECTED;
 	DeviceState *dev = static_cast<DeviceState *>(hDevice);
 	int port = dev->port_idx;
-    if (g_devs[port].info.hhandle == hDevice && !g_devs[port].bPendingRemoval) {
+    if (g_devs[port].info.hHandle == hDevice && !g_devs[port].bPendingRemoval) {
         pCapabilities->SubType = g_devs[port].info.ucSubType;
         UCHAR* pCap = (UCHAR*)(&pCapabilities->In);
         std::memset(pCap, 0xFF, g_devs[port].info.ucInputStateSize + g_devs[port].info.ucFeedbackSize);
@@ -745,7 +745,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetState)
 
 	DeviceState *dev = static_cast<DeviceState *>(hDevice);
 	int port = dev->port_idx;
-    if (g_devs[port].info.hhandle == hDevice && !g_devs[port].bPendingRemoval) {
+    if (g_devs[port].info.hHandle == hDevice && !g_devs[port].bPendingRemoval) {
         pFeedback->Header.dwStatus = ERROR_IO_PENDING;
         g_InputDeviceManager.UpdateXboxPortInput(port, (void*)&pFeedback->Rumble, DIRECTION_OUT, to_underlying(g_devs[port].type));
         pFeedback->Header.dwStatus = ERROR_SUCCESS;

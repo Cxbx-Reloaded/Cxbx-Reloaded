@@ -121,7 +121,7 @@ private:
 	// handle of the rumble combobox
 	HWND m_hwnd_rumble_list;
 	// handles of the slot combobox
-	HWND m_hwnd_slot_list[2];
+	HWND m_hwnd_slot_list[XBOX_CTRL_NUM_SLOTS];
 	// currently selected rumble control
 	std::string m_rumble;
 };

@@ -25,6 +25,8 @@
 #ifndef XAPI_H
 #define XAPI_H
 
+void LookupTrampolinesXAPI();
+
 #include "xbox_types.h"
 
 namespace xbox {

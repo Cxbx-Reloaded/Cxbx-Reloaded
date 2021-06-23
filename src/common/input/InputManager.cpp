@@ -52,12 +52,6 @@
 // hle input specific
 #include "core\hle\XAPI\Xapi.h"
 
-int Gui2XboxPortArray[4] = {
-	3,
-	4,
-	1,
-	2
-};
 
 int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_DUKE
@@ -95,13 +89,13 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 		});
 
 	m_Cv.wait(lck, []() {
-		return (Sdl::SdlInitStatus != Sdl::SDL_NOT_INIT) &&
-			(XInput::XInputInitStatus != XInput::XINPUT_NOT_INIT) &&
-			(RawInput::RawInputInitStatus != RawInput::RAWINPUT_NOT_INIT);
+		return (Sdl::InitStatus != Sdl::NOT_INIT) &&
+			(XInput::InitStatus != XInput::NOT_INIT) &&
+			(RawInput::InitStatus != RawInput::NOT_INIT);
 		});
 	lck.unlock();
 
-	if (Sdl::SdlInitStatus < 0 || XInput::XInputInitStatus < 0 || RawInput::RawInputInitStatus < 0) {
+	if (Sdl::InitStatus < 0 || XInput::InitStatus < 0 || RawInput::InitStatus < 0) {
 		CxbxKrnlCleanup("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
@@ -109,12 +103,12 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 	RefreshDevices();
 
 	if (!is_gui) {
-		for (unsigned i = 0; i < 12; ++i) {
+		for (unsigned i = 0; i < MAX_DEVS; ++i) {
 			g_devs[i].type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 			g_devs[i].port = std::to_string(PORT_INVALID);
 		}
 
-		for (unsigned i = 0; i < 4; ++i) {
+		for (unsigned i = 0; i < XBOX_NUM_PORTS; ++i) {
 			int type;
 			g_EmuShared->GetInputDevTypeSettings(&type, i);
 			if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
@@ -225,31 +219,31 @@ void InputDeviceManager::RemoveDevice(std::function<bool(const InputDevice*)> Ca
 void InputDeviceManager::UpdateDevices(std::string_view port, bool ack)
 {
 	DeviceState *dev, *upstream;
-	int port1, slot, type;
-	PortStr2Int(port, &port1, &slot);
-	dev = &g_devs[port1];
+	int port_num, slot, type;
+	PortStr2Int(port, &port_num, &slot);
+	dev = &g_devs[port_num];
 
 	if (slot == PORT_INVALID) { // Port references a device attached to an xbox port
 		upstream = nullptr;
-		g_EmuShared->GetInputDevTypeSettings(&type, port1);
+		g_EmuShared->GetInputDevTypeSettings(&type, port_num);
 	}
 	else { // Port references a device attached to a slot port
 		upstream = dev;
 		dev = dev->slots[slot];
-		g_EmuShared->GetInputSlotTypeSettings(&type, port1, slot);
+		g_EmuShared->GetInputSlotTypeSettings(&type, port_num, slot);
 	}
 
 	// updating a slot
 	if (dev == nullptr) {
 		// connect slot
 		if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
-			g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port1) + slot].type == XBOX_INPUT_DEVICE::DEVICE_INVALID) {
-			ConnectDevice(&g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port1) + slot], upstream, type, port);
+			g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port_num) + slot].type == XBOX_INPUT_DEVICE::DEVICE_INVALID) {
+			ConnectDevice(&g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port_num) + slot], upstream, type, port);
 		}
 		// disconnect slot
 		else if (type == to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
-			g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port1) + slot].type != XBOX_INPUT_DEVICE::DEVICE_INVALID) {
-			DisconnectDevice(&g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port1) + slot], port, ack);
+			g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port_num) + slot].type != XBOX_INPUT_DEVICE::DEVICE_INVALID) {
+			DisconnectDevice(&g_devs[MU_OFFSET + (XBOX_CTRL_NUM_SLOTS * port_num) + slot], port, ack);
 		}
 		// update bindings slot
 		else {
@@ -270,9 +264,9 @@ void InputDeviceManager::UpdateDevices(std::string_view port, bool ack)
 	}
 	// update bindings
 	else {
-		auto dev1 = g_InputDeviceManager.FindDevice(port);
-		if (dev1 != nullptr) {
-			dev1->SetPort(port, false);
+		auto host_dev = g_InputDeviceManager.FindDevice(port);
+		if (host_dev != nullptr) {
+			host_dev->SetPort(port, false);
 		}
 		if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 			if (type != to_underlying(dev->type)) {
@@ -307,9 +301,9 @@ void InputDeviceManager::DisconnectDevice(DeviceState *dev, std::string_view por
 	else {
 		dev->bPendingRemoval = true;
 	}
-	auto dev1 = g_InputDeviceManager.FindDevice(port);
-	if (dev1 != nullptr) {
-		dev1->SetPort(port, false);
+	auto host_dev = g_InputDeviceManager.FindDevice(port);
+	if (host_dev != nullptr) {
+		host_dev->SetPort(port, false);
 	}
 }
 
@@ -322,15 +316,15 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 
 	char dev_name[50];
 	char dev_control_names[HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
-	int port1, slot;
-	PortStr2Int(port, &port1, &slot);
-	g_EmuShared->GetInputDevNameSettings(dev_name, port1);
-	g_EmuShared->GetInputBindingsSettings(dev_control_names, dev_num_buttons[type], port1);
+	int port_num, slot;
+	PortStr2Int(port, &port_num, &slot);
+	g_EmuShared->GetInputDevNameSettings(dev_name, port_num);
+	g_EmuShared->GetInputBindingsSettings(dev_control_names, dev_num_buttons[type], port_num);
 
 	auto dev = FindDevice(std::string(dev_name));
 	if (dev != nullptr) {
-		std::string port1(port);
-		dev->ClearBindings(port1);
+		std::string port_str(port);
+		dev->ClearBindings(port_str);
 		std::vector<InputDevice::IoControl *> controls = dev->GetIoControls();
 		for (int index = 0; index < dev_num_buttons[type]; index++) {
 			std::string dev_button(dev_control_names[index]);
@@ -340,7 +334,7 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 				}
 				return false;
 				});
-			dev->SetBindings(index, (it != controls.end()) ? *it : nullptr, port1);
+			dev->SetBindings(index, (it != controls.end()) ? *it : nullptr, port_str);
 		}
 		dev->SetPort(port, true);
 	}
@@ -357,19 +351,19 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 	// If somebody else is currently holding the lock, we won't wait and instead report no input changes
 	if (!g_renderbase->IsImGuiFocus() && m_Mtx.try_lock()) {
 		for (auto &dev : m_Devices) {
-			std::string port1 = std::to_string(port);
-			if (dev->GetPort(port1)) {
+			std::string port_str = std::to_string(port);
+			if (dev->GetPort(port_str)) {
 				switch (type)
 				{
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
 				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
-					has_changed = UpdateInputXpad(dev, buffer, direction, port1);
+					has_changed = UpdateInputXpad(dev, buffer, direction, port_str);
 					m_Mtx.unlock();
 					return has_changed;
 
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
-					has_changed = UpdateInputSBC(dev, buffer, direction, port, port1);
+					has_changed = UpdateInputSBC(dev, buffer, direction, port, port_str);
 					m_Mtx.unlock();
 					return has_changed;
 
@@ -381,7 +375,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
 				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
 					EmuLog(LOG_LEVEL::ERROR2, "An unsupported device is attached at port %d! The device was %s",
-						Gui2XboxPortArray[port], GetInputDeviceName(type).c_str());
+						PortUserFormat(port_str).c_str(), GetInputDeviceName(type).c_str());
 					break;
 
 				}
@@ -393,9 +387,9 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 	return has_changed;
 }
 
-bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port1)
+bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port)
 {
-	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port1);
+	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port);
 	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE)]));
 
 	if (Direction == DIRECTION_IN) {
@@ -457,9 +451,9 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	return true;
 }
 
-bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port, const std::string &Port1)
+bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port)
 {
-	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port1);
+	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port);
 	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER)]));
 
 	// NOTE: the output state is not supported
@@ -480,7 +474,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		// 8  -> TunerDial Down
 		// 9  -> GearLever Up
 		// 10 -> GearLever Down
-		static uint16_t last_in_state[4] = { 0, 0, 0, 0 };
+		static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
 		SBCInput *in_buf = static_cast<SBCInput *>(Buffer);
 		for (int i = 0; i < 4; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
@@ -496,10 +490,10 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 4, j = 0; i < 6; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port] >> j) & 1)) {
+			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
 				in_buf->wButtons[0] ^= (1 << i);
 			}
-			(last_in_state[Port] &= ~(1 << j)) |= (curr_in_state << j);
+			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
 		}
 
 		for (int i = 6; i < 34; i++) {
@@ -516,10 +510,10 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 34, j = 2; i < 39; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port] >> j) & 1)) {
+			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
 				in_buf->wButtons[2] ^= (1 << (i % 16));
 			}
-			(last_in_state[Port] &= ~(1 << j)) |= (curr_in_state << j);
+			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
 		}
 
 		for (int i = 39; i < 49; i += 2) {
@@ -578,7 +572,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 52, j = 7; i < 56; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port] >> j) & 1)) {
+			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
 				switch (i)
 				{
 				case 52:
@@ -606,7 +600,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 					break;
 				}
 			}
-			(last_in_state[Port] &= ~(1 << j)) |= (curr_in_state << j);
+			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
 		}
 	}
 
@@ -616,7 +610,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 void InputDeviceManager::RefreshDevices()
 {
 	std::unique_lock<std::mutex> lck(m_Mtx);
-	Sdl::SdlPopulateOK = false;
+	Sdl::PopulateOK = false;
 	m_Devices.clear();
 	lck.unlock();
 	XInput::PopulateDevices();
@@ -624,7 +618,7 @@ void InputDeviceManager::RefreshDevices()
 	Sdl::PopulateDevices();
 	lck.lock();
 	m_Cv.wait(lck, []() {
-		return Sdl::SdlPopulateOK;
+		return Sdl::PopulateOK;
 		});
 	for (auto &dev : m_Devices) {
 		if (StrStartsWith(dev->GetDeviceName(), "KeyboardMouse")) {

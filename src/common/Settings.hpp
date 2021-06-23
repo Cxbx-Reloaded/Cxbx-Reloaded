@@ -29,7 +29,7 @@
 #include "Cxbx.h"
 
 #include "SimpleIni.h"
-#include "input\InputDevice.h"
+#include "common\input\InputManager.h"
 #include "common\util\CxbxUtil.h"
 #include <string>
 #include <array>
@@ -147,7 +147,7 @@ public:
 
 	struct s_input_port {
 		int Type;
-		int SlotType[2];
+		int SlotType[XBOX_CTRL_NUM_SLOTS];
 		std::string DeviceName;
 		std::string ProfileName;
 	};
