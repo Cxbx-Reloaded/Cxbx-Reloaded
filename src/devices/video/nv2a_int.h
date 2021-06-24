@@ -458,7 +458,7 @@ typedef struct NV097KelvinPrimitive{
 	float SetBackMaterialEmission[3];	//0x000017B0
 	uint32_t SetLogicOpEnable;
 	uint32_t SetLogicOp;
-	uint32_t SetTwoSideLightEn;
+	uint32_t SetTwoSidedLightEn;
 	uint32_t ClearReportValue;
 	uint32_t SetZpassPixelCountEnable;
 	uint32_t GetReport;

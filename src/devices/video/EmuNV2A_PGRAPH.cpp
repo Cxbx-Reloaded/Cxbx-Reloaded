@@ -2633,7 +2633,7 @@ int pgraph_handle_method(
                     //		 NV_PGRAPH_BLEND_LOGICOP, arg0 & 0xF);
                     break;
 
-                case NV097_SET_TWO_SIDE_LIGHT_EN:break;  //not implement //pg->KelvinPrimitive.SetTwoSideLightEn
+                case NV097_SET_TWO_SIDED_LIGHT_EN:break;  //not implement //pg->KelvinPrimitive.SetTwoSidedLightEn
 
                 case NV097_CLEAR_REPORT_VALUE://done //pg->KelvinPrimitive.ClearReportValue
 

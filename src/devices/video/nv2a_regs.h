@@ -280,7 +280,6 @@
 #   define NV_PGRAPH_INTR_EN_SINGLE_STEP                     (1 << 24)
 #define NV_PGRAPH_CTX_CONTROL                            0x00000144    //***NOT USED, Set by EmuExecutePushBufferRaw() to avoid assert check in pgraph_handle_method(), pgraph_switch_context() also check this, but not using it.
 #   define NV_PGRAPH_CTX_CONTROL_MINIMUM_TIME                 0x00000003
-#   define NV_PGRAPH_CTX_CONTROL_MINIMUM_TIME                 0x00000003
 #   define NV_PGRAPH_CTX_CONTROL_TIME                           (1 << 8)
 #   define NV_PGRAPH_CTX_CONTROL_CHID                          (1 << 16)
 #   define NV_PGRAPH_CTX_CONTROL_CHANGE                        (1 << 20)
@@ -1419,7 +1418,7 @@
 #   define NV097_SET_LIGHT_SPOT_DIRECTION                     0x0000104C // [8.7]
 #   define NV097_SET_LIGHT_LOCAL_POSITION                     0x0000105C // [8.8][3]
 #   define NV097_SET_LIGHT_LOCAL_ATTENUATION                  0x00001068 // [8.9][3]
-#   define NV097_SET_STIPPLE_CONTROL                          0x0000147C // 
+#   define NV097_SET_STIPPLE_CONTROL                          0x0000147C  
 #   define NV097_SET_STIPPLE_PATTERN                          0x00001480 // [32]
 #   define NV097_SET_VERTEX3F                                 0x00001500 // [3]
 #   define NV097_SET_VERTEX4F                                 0x00001518 // [4]
@@ -1478,7 +1477,7 @@
 #   define NV097_SET_BACK_MATERIAL_EMISSIONR                  0x000017B0 // [3]
 #   define NV097_SET_LOGIC_OP_ENABLE                          0x000017BC
 #   define NV097_SET_LOGIC_OP                                 0x000017C0
-#   define NV097_SET_TWO_SIDE_LIGHT_EN                       0x000017C4
+#   define NV097_SET_TWO_SIDED_LIGHT_EN                       0x000017C4
 #   define NV097_CLEAR_REPORT_VALUE                           0x000017C8
 #       define NV097_CLEAR_REPORT_VALUE_TYPE                      0xFFFFFFFF
 #           define NV097_CLEAR_REPORT_VALUE_TYPE_ZPASS_PIXEL_CNT      1

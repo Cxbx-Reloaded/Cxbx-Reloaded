@@ -537,7 +537,7 @@ extern void EmuExecutePushBufferRaw
             //because the jump address is obviously not in the VRAM range. perhaps a memory range transform must be applied first?
 
         case COMMAND_TYPE_NONE:
-            if (command.instruction == 1) {//old jump
+            if (command.instruction == COMMAND_INSTRUCTION_JUMP) {//old jump
                 LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
                 dma_get_jmp_shadow = dma_get;
                 dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
@@ -602,7 +602,8 @@ extern void EmuExecutePushBufferRaw
             dma_state.mcnt = command.method_count;
             break; // fall through
         case COMMAND_FLAGS_RETURN: // Note : NV2A return shouldn't be used because the NV2A call is used as jump and the subr_return is used as an flag of where the jump was from.
-            LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN, not supposed to be used!");
+			//considering move this case to the same code block with old jump, RETURN can be tested with word & 0xE0030003 == 0x00020000. 
+			LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN, not supposed to be used!");
             if (word != 0x00020000) {
                 LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
 				if (p_dma_get != nullptr)
