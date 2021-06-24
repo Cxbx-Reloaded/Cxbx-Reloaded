@@ -3333,7 +3333,8 @@ xbox::PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_4)(dword_xt Count)
 	}
 
 	dword_xt *pRet = new dword_xt[Count];
-
+	//we should setup an PFIFO pusher interceptor to record the pushbuffer
+	//this won't work in any near future if we keep patching any D3D functions which might be recorded in the pushbuffer.
     g_pXbox_BeginPush_Buffer = pRet;
 
     return pRet;
@@ -3358,7 +3359,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_8)(dword_xt Count, dword
 	}
 
 	dword_xt *pRet = new dword_xt[Count];
-
+	//we should setup an PFIFO pusher interceptor to record the pushbuffer 
+	//this won't work in any near future if we keep patching any D3D functions which might be recorded in the pushbuffer.
 	g_pXbox_BeginPush_Buffer = pRet;
 
 	*ppPush=pRet;
@@ -3376,9 +3378,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	else
 	{
         // Note: We don't use the count from BeginPush because that specifies the *maximum* count
-        // rather than the count actually in the pushbuffer. 
-		EmuExecutePushBufferRaw(g_pXbox_BeginPush_Buffer, (uintptr_t)pPush - (uintptr_t)g_pXbox_BeginPush_Buffer);
-
+        // rather than the count actually in the pushbuffer.
+		// D3DDevice_BeginPush and D3DDevice_EndPush are used to RECORD a pushbuffer, not to execute a pushbuffer.
+		//EmuExecutePushBufferRaw(g_pXbox_BeginPush_Buffer, (uintptr_t)pPush - (uintptr_t)g_pXbox_BeginPush_Buffer);
+		//we should setup an PFIFO pusher interceptor to record the pushbuffer, and stop here then setup the size of recorded pushbuffer.
+		//this won't work in any near future if we keep patching any D3D functions which might be recorded in the pushbuffer.
+		//for now, the pPush-> shall be cleared, or atleat the pPush->size shall be zero out to prevent errors in executing pPush in later guest codes.
 		delete[] g_pXbox_BeginPush_Buffer;
 		g_pXbox_BeginPush_Buffer = nullptr;
 	}
@@ -5189,7 +5194,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 			// as either YUV or RGB format (note that either one must be a 3 bytes per pixel format)
 			D3DFORMAT PCFormat;
 			// TODO : Before reading from pgraph, flush all pending push-buffer commands
-			switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV_PGRAPH_CONTROL_0), NV_PGRAPH_CONTROL_0_CSCONVERT)) {
+			//switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV_PGRAPH_CONTROL_0), NV_PGRAPH_CONTROL_0_CSCONVERT)) {
+			switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV097_SET_CONTROL0), NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)) {
 			case 0:  // = pass-through
 				PCFormat = D3DFMT_YUY2;
 				break;

@@ -213,29 +213,35 @@ static void append_skinning_code(QString* str, bool mix,
     } else {
         qstring_append_fmt(str, "%s %s = %s(0.0);\n", type, output, type);
         if (mix) {
-            /* Tweening */
-            if (count == 2) {
-                qstring_append_fmt(str,
-                                   "%s += mix((%s * %s1).%s,\n"
-                                   "          (%s * %s0).%s, weight.x);\n",
-                                   output,
-                                   input, matrix, swizzle,
-                                   input, matrix, swizzle);
-            } else {
-                /* FIXME: Not sure how blend weights are calculated */
-                assert(false);
-            }
-        } else {
-            /* Individual matrices */
-            unsigned int i;
-            for (i = 0; i < count; i++) {
-                char c = "xyzw"[i];
-                qstring_append_fmt(str, "%s += (%s * %s%d * weight.%c).%s;\n",
-                                   output, input, matrix, i, c,
-                                   swizzle);
-            }
-            assert(false); /* FIXME: Untested */
-        }
+			/* Generated final weight (like GL_WEIGHT_SUM_UNITY_ARB) */
+			qstring_append(str, "{\n"
+				"  float weight_i;\n"
+				"  float weight_n = 1.0;\n");
+			int i;
+			for (i = 0; i < count; i++) {
+				if (i < (count - 1)) {
+					char c = "xyzw"[i];
+					qstring_append_fmt(str, "  weight_i = weight.%c;\n"
+						"  weight_n -= weight_i;\n",
+						c);
+				}
+				else {
+					qstring_append(str, "  weight_i = weight_n;\n");
+				}
+				qstring_append_fmt(str, "  %s += (%s * %s%d).%s * weight_i;\n",
+					output, input, matrix, i, swizzle);
+			}
+			qstring_append(str, "}\n");
+		}
+		else {
+			/* Individual weights */
+			int i;
+			for (i = 0; i < count; i++) {
+				char c = "xyzw"[i];
+				qstring_append_fmt(str, "%s += (%s * %s%d).%s * weight.%c;\n",
+					output, input, matrix, i, swizzle, c);
+			}
+		}
     }
 }
 
@@ -327,6 +333,7 @@ GLSL_DEFINE(eyePosition, GLSL_C(NV_IGRAPH_XF_XFCTX_EYEP))
     "ltc1[" stringify(NV_IGRAPH_XF_LTC1_r0) " + (i)].x\n"
 "\n"
 GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
+GLSL_DEFINE(materialEmissionColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_CM_COL) ".xyz")
 "\n"
 "uniform mat4 invViewport;\n"
 "\n");
@@ -339,14 +346,14 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
         mix = false; count = 0; break;
     case SKINNING_1WEIGHTS:
         mix = true; count = 2; break;
-    case SKINNING_2WEIGHTS:
+	case SKINNING_2WEIGHTS2MATRICES:
+		mix = false; count = 2; break;
+	case SKINNING_2WEIGHTS:
         mix = true; count = 3; break;
-    case SKINNING_3WEIGHTS:
+	case SKINNING_3WEIGHTS3MATRICES:
+		mix = false; count = 3; break;
+	case SKINNING_3WEIGHTS:
         mix = true; count = 4; break;
-    case SKINNING_2WEIGHTS2MATRICES:
-        mix = false; count = 2; break;
-    case SKINNING_3WEIGHTS3MATRICES:
-        mix = false; count = 3; break;
     case SKINNING_4WEIGHTS4MATRICES:
         mix = false; count = 4; break;
     default:
@@ -393,7 +400,7 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
                 assert(false); /* Untested */
                 break;
             case TEXGEN_SPHERE_MAP:
-                assert(i < 2);  /* Channels S,T only! */
+                assert(j < 2);  /* Channels S,T only! */
                 qstring_append(body, "{\n");
                 /* FIXME: u, r and m only have to be calculated once */
                 qstring_append(body, "  vec3 u = normalize(tPosition.xyz);\n");
@@ -414,7 +421,7 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
                 assert(false); /* Untested */
                 break;
             case TEXGEN_REFLECTION_MAP:
-                assert(i < 3); /* Channels S,T,R only! */
+                assert(j < 3); /* Channels S,T,R only! */
                 qstring_append(body, "{\n");
                 /* FIXME: u and r only have to be calculated once, can share the one from SPHERE_MAP */
                 qstring_append(body, "  vec3 u = normalize(tPosition.xyz);\n");
@@ -424,7 +431,7 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
                 qstring_append(body, "}\n");
                 break;
             case TEXGEN_NORMAL_MAP:
-                assert(i < 3); /* Channels S,T,R only! */
+                assert(j < 3); /* Channels S,T,R only! */
                 qstring_append_fmt(body, "oT%d.%c = tNormal.%c;\n",
                                    i, c, c);
                 break;
@@ -448,8 +455,29 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
     if (state.lighting) {
 
         //FIXME: Do 2 passes if we want 2 sided-lighting?
-        qstring_append(body, "oD0 = vec4(sceneAmbientColor, diffuse.a);\n");
-        qstring_append(body, "oD1 = vec4(0.0, 0.0, 0.0, specular.a);\n");
+
+		if (state.ambient_src == MATERIAL_COLOR_SRC_MATERIAL) {
+				qstring_append(body, "oD0 = vec4(sceneAmbientColor, diffuse.a);\n");
+		}
+		else if (state.ambient_src == MATERIAL_COLOR_SRC_DIFFUSE) {
+			qstring_append(body, "oD0 = vec4(diffuse.rgb, diffuse.a);\n");
+		}
+		else if (state.ambient_src == MATERIAL_COLOR_SRC_SPECULAR) {
+			qstring_append(body, "oD0 = vec4(specular.rgb, diffuse.a);\n");
+		}
+
+		qstring_append(body, "oD0.rgb *= materialEmissionColor.rgb;\n");
+		if (state.emission_src == MATERIAL_COLOR_SRC_MATERIAL) {
+			qstring_append(body, "oD0.rgb += sceneAmbientColor;\n");
+		}
+		else if (state.emission_src == MATERIAL_COLOR_SRC_DIFFUSE) {
+			qstring_append(body, "oD0.rgb += diffuse.rgb;\n");
+		}
+		else if (state.emission_src == MATERIAL_COLOR_SRC_SPECULAR) {
+			qstring_append(body, "oD0.rgb += specular.rgb;\n");
+		}
+
+		qstring_append(body, "oD1 = vec4(0.0, 0.0, 0.0, specular.a);\n");
 
         for (i = 0; i < NV2A_MAX_LIGHTS; i++) {
             if (state.light[i] == LIGHT_OFF) {
@@ -510,9 +538,22 @@ GLSL_DEFINE(sceneAmbientColor, GLSL_LTCTXA(NV_IGRAPH_XF_LTCTXA_FR_AMB) ".xyz")
                 /* Everything done already */
                 break;
             case LIGHT_SPOT:
-                assert(false);
-                /*FIXME: calculate falloff */
-                break;
+				/* https://docs.microsoft.com/en-us/windows/win32/direct3d9/attenuation-and-spotlight-factor#spotlight-factor */
+				qstring_append_fmt(body,
+					"  vec4 spotDir = lightSpotDirection(%d);\n"
+					"  float invScale = 1/length(spotDir.xyz);\n"
+					"  float cosHalfPhi = -invScale*spotDir.w;\n"
+					"  float cosHalfTheta = invScale + cosHalfPhi;\n"
+					"  float spotDirDotVP = dot(spotDir.xyz, VP);\n"
+					"  float rho = invScale*spotDirDotVP;\n"
+					"  if (rho > cosHalfTheta) {\n"
+					"  } else if (rho <= cosHalfPhi) {\n"
+					"    attenuation = 0.0;\n"
+					"  } else {\n"
+					"    attenuation *= spotDirDotVP + spotDir.w;\n" /* FIXME: lightSpotFalloff */
+					"  }\n",
+					i);
+				break;
             default:
                 assert(false);
                 break;
@@ -595,7 +636,7 @@ static QString *generate_vertex_shader(const ShaderState state,
 {
     int i;
     QString *header = qstring_from_str(
-"#version 330\n"
+"#version 400\n"
 "\n"
 "uniform vec2 clipRange;\n"
 "uniform vec2 surfaceSize;\n"
@@ -640,19 +681,39 @@ GLSL_DEFINE(texMat3, GLSL_C_MAT4(NV_IGRAPH_XF_XFCTX_T3MAT))
 "vec4 oT2 = vec4(0.0,0.0,0.0,1.0);\n"
 "vec4 oT3 = vec4(0.0,0.0,0.0,1.0);\n"
 "\n"
+"vec4 decompress_11_11_10(int cmp) {\n"
+"    float x = float(bitfieldExtract(cmp, 0,  11)) / 1023.0;\n"
+"    float y = float(bitfieldExtract(cmp, 11, 11)) / 1023.0;\n"
+"    float z = float(bitfieldExtract(cmp, 22, 10)) / 511.0;\n"
+"    return vec4(x, y, z, 1);\n"
+"}\n"
 STRUCT_VERTEX_DATA);
 
-    qstring_append_fmt(header, "noperspective out VertexData %c_vtx;\n",
-                       vtx_prefix);
-    qstring_append_fmt(header, "#define vtx %c_vtx\n",
-                       vtx_prefix);
-    qstring_append(header, "\n");
-    for(i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-        qstring_append_fmt(header, "in vec4 v%d;\n", i);
-    }
-    qstring_append(header, "\n");
+	qstring_append_fmt(header, "noperspective out VertexData %c_vtx;\n",
+		vtx_prefix);
+	qstring_append_fmt(header, "#define vtx %c_vtx\n",
+		vtx_prefix);
+	qstring_append(header, "\n");
+	for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+		if (state.compressed_attrs & (1 << i)) {
+			qstring_append_fmt(header,
+				"layout(location = %d) in int v%d_cmp;\n", i, i);
+		}
+		else {
+			qstring_append_fmt(header, "layout(location = %d) in vec4 v%d;\n",
+				i, i);
+		}
+	}
+	qstring_append(header, "\n");
 
-    QString *body = qstring_from_str("void main() {\n");
+	QString *body = qstring_from_str("void main() {\n");
+
+	for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+		if (state.compressed_attrs & (1 << i)) {
+			qstring_append_fmt(
+				body, "vec4 v%d = decompress_11_11_10(v%d_cmp);\n", i, i);
+		}
+	}
 
     if (state.fixed_function) {
         generate_fixed_function(state, header, body);

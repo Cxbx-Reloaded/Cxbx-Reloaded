@@ -84,10 +84,10 @@ void EmuExecutePushBuffer
 			The subsequent DWORDS are the data to be copied. This encoding repeats for every fix-up to be done,
 			until it terminates with a size value of 0xffffffff.
 			The offsets must be in an increasing order.
-			*/
-		}
+            */
+        }
 	}
-    EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size);
+    EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
 
     return;
 }
@@ -207,7 +207,7 @@ void HLE_draw_state_update(NV2AState *d)
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 	// Unused : D3DRS_FOGVERTEXMODE
 
-	uint32_t fog_color = pg->regs[NV_PGRAPH_FOGCOLOR];
+	uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
 
 // Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
@@ -260,12 +260,18 @@ void HLE_init_pgraph_plugins()
 	pgraph_draw_state_update = HLE_draw_state_update;
 	pgraph_draw_clear = HLE_draw_clear;
 }
-
-extern void pgraph_handle_method(
+//int pgraph_handle_method(NV2AState *d, unsigned int subchannel,
+//unsigned int method, uint32_t parameter,
+//uint32_t *parameters, size_t method count,
+//size_t max_lookahead_words)
+extern int pgraph_handle_method(
 	NV2AState *d,
 	unsigned int subchannel,
 	unsigned int method,
-	uint32_t parameter);
+	uint32_t parameter,
+	uint32_t *parameters,
+	uint32_t method_count,
+	uint32_t max_lookahead_words);
 
 // LLE NV2A
 extern NV2ADevice* g_NV2A;
@@ -314,10 +320,10 @@ float *HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index)
 // Note 2 : d is read from local scope, and ni is unused (same in LLE)
 // Note 3 : Keep EmuExecutePushBufferRaw skipping all commands not intended for channel 0 (3D)
 // Note 4 : Prevent a crash during shutdown when g_NV2A gets deleted
-#define CACHE_PUSH(subc, mthd, word, ni) \
+#define CACHE_PUSH(subc, mthd, word, dma_get, mcnt,max_words_available, ni) \
 	if (subc == 0) { \
 		if (g_NV2A) { \
-			pgraph_handle_method(d, subc, mthd << 2, word); \
+			pgraph_handle_method(d, subc, mthd << 2, word, dma_get, mcnt,max_words_available); \
 		} \
 	}
 
@@ -361,197 +367,291 @@ typedef union {
 
 extern void EmuExecutePushBufferRaw
 (
-	void *pPushData,
-	uint32_t uSizeInBytes
+    void *pPushData,
+    uint32_t uSizeInBytes,
+    uint32_t **p_dma_get, //pass in pointer of dma_get, when called via pfifo_run_pusher()
+    uint32_t **p_dma_put,  //pass in pointer of dma_put, when called via pfifo_run_pusher()
+	uint8_t *dma
 )
 {
-	// Test-case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
-	// Test-case : Crash 'n' Burn [45530014]
-	// Test-case : CrimsonSea [4B4F0002]
-	// Test-case : Freedom Fighters
-	// Test-case : Hot Wheels Stunt Track Challenge [54510089] (while running hw2F.xbe)
-	// Test-case : Hunter Redeemer
-	// Test-case : Inside Pitch 2003 [4D530034]
-	// Test-case : Need for Speed Most Wanted [4541007B]
-	// Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
-	// Test-case : Prince of Persia: The Sands of Time [5553001d]
-	// Test-case : RalliSport (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
-	// Test-case : RPM Tuning [Top Gear RPM Tuning] [4B420007]
-	// Test-case : SpyHunter 2 [4D57001B]
-	// Test-case : Star Wars Jedi Academy (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
-	// Test-case : Turok (in main menu)
-	// Test-case : Whiplash
+    // Test-case : Azurik (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/360)
+    // Test-case : Crash 'n' Burn [45530014]
+    // Test-case : CrimsonSea [4B4F0002]
+    // Test-case : Freedom Fighters
+    // Test-case : Hot Wheels Stunt Track Challenge [54510089] (while running hw2F.xbe)
+    // Test-case : Hunter Redeemer
+    // Test-case : Inside Pitch 2003 [4D530034]
+    // Test-case : Need for Speed Most Wanted [4541007B]
+    // Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
+    // Test-case : Prince of Persia: The Sands of Time [5553001d]
+    // Test-case : RalliSport (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
+    // Test-case : RPM Tuning [Top Gear RPM Tuning] [4B420007]
+    // Test-case : SpyHunter 2 [4D57001B]
+    // Test-case : Star Wars Jedi Academy (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/904#issuecomment-362929801)
+    // Test-case : Turok (in main menu)
+    // Test-case : Whiplash
 
-	assert(pPushData);
-	assert(uSizeInBytes >= 4);
+    assert(pPushData);
+    assert(uSizeInBytes >= 4);
 
-	// Retrieve NV2AState via the (LLE) NV2A device :
-	NV2AState *d = g_NV2A->GetDeviceState();
-	d->pgraph.regs[NV_PGRAPH_CTX_CONTROL] |= NV_PGRAPH_CTX_CONTROL_CHID; // avoid assert in pgraph_handle_method()
+    // Retrieve NV2AState via the (LLE) NV2A device :
+    NV2AState *d = g_NV2A->GetDeviceState();
+    d->pgraph.regs[NV_PGRAPH_CTX_CONTROL/4] |= NV_PGRAPH_CTX_CONTROL_CHID; // avoid assert in pgraph_handle_method()
 
 
-	// DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
+    // DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
 #if 0
-	static xbox::addr_xt dma_pushbuffer; // the pushbuffer and IB DMA object
+    static xbox::addr_xt dma_pushbuffer; // the pushbuffer and IB DMA object
 #endif
-	uint32_t *dma_limit; // pushbuffer size limit
-	uint32_t *dma_put; // pushbuffer current end address
-	uint32_t *dma_get; //pushbuffer current read address
-	struct {
-		xbox::NV2AMETHOD mthd; // Current method
-		uint32_t subc; // :3 = Current subchannel
-		uint32_t mcnt; // :24 = Current method count
-		bool ni; // Current command's NI (non-increasing) flag
-	} dma_state;
+    uint32_t *dma_limit; // pushbuffer size limit
+    uint32_t *dma_put; // pushbuffer current end address
+    uint32_t *dma_get; //pushbuffer current read address
+    struct {
+        xbox::NV2AMETHOD mthd; // Current method
+        uint32_t subc; // :3 = Current subchannel
+        uint32_t mcnt; // :24 = Current method count
+        bool ni; // Current command's NI (non-increasing) flag
+        bool lenp;// Current command's long non-increasing method flag
+    } dma_state;
 
-	static uint32_t dcount_shadow = 0; // [NV5:] Number of already-processed methods in cmd]
-	static bool subr_active = false; // Subroutine active
-	static uint32_t *subr_return = nullptr; // Subroutine return address
-	// static bool big_endian = false; // Pushbuffer endian switch
+    static uint32_t dcount_shadow = 0; // [NV5:] Number of already-processed methods in cmd]
+    static bool subr_active = false; // Subroutine active
+    static uint32_t *subr_return = nullptr; // Subroutine return address
+    // static bool big_endian = false; // Pushbuffer endian switch
 
-	// DMA troubleshooting values -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#errors
-	static uint32_t *dma_get_jmp_shadow = nullptr; // value of dma_get before the last jump
-	static uint32_t rsvd_shadow = 0; // the first word of last-read command
-	static uint32_t data_shadow = 0; // the last-read data word
+    // DMA troubleshooting values -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#errors
+    static uint32_t *dma_get_jmp_shadow = nullptr; // value of dma_get before the last jump
+    static uint32_t rsvd_shadow = 0; // the first word of last-read command
+    static uint32_t data_shadow = 0; // the last-read data word
 
-	// Overlay, to ease decoding the PFIFO command word
-	union {
-		uint32_t word;
-		nv_fifo_command command;
-	};
+    // Overlay, to ease decoding the PFIFO command word
+    union {
+        uint32_t word;
+        nv_fifo_command command;
+    };
 
-	// Initialize working variables
-	dma_limit = (uint32_t*)((xbox::addr_xt)pPushData + uSizeInBytes); // TODO : If this an absolute addresss?
-	dma_put = (uint32_t*)((xbox::addr_xt)pPushData + uSizeInBytes);
-	dma_get = (uint32_t*)pPushData;
-	dma_state = {};
+    // Initialize working variables
+    dma_limit = (uint32_t*)((xbox::addr_xt)pPushData + uSizeInBytes); // TODO : If this an absolute addresss?
+    dma_put = (uint32_t*)((xbox::addr_xt)pPushData + uSizeInBytes);
+    dma_get = (uint32_t*)pPushData;
+    dma_state = {};
 
-	// NV-4-style PFIFO DMA command stream pusher
-	// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-pusher-pseudocode-pre-gf100
+    // NV-4-style PFIFO DMA command stream pusher
+    // See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-pusher-pseudocode-pre-gf100
     while (dma_get != dma_put) {
-		// Check if loop reaches end of pushbuffer
-		if (dma_get >= dma_limit) {
-			LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
-			// TODO : throw DMA_PUSHER(MEM_FAULT);
-			return; // For now, don't even attempt to run through
-		}
+        // Check if loop reaches end of pushbuffer
+        if (dma_get >= dma_limit) {
+            LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
+            // TODO : throw DMA_PUSHER(MEM_FAULT);
+            return; // For now, don't even attempt to run through
+        }
 
-		// Read a DWORD from the current push buffer pointer
-		word = *dma_get++;
-		/* now, see if we're in the middle of a command */
-		if (dma_state.mcnt) {
-			/* data word of methods command */
-			data_shadow = word;
+        // Read a DWORD from the current push buffer pointer
+        uint32_t * word_ptr = dma_get;//shadow copy of dma_get before it gets advanced after the word was read.
+        word = *dma_get++;
+        /* now, see if we're in the middle of a long command */
+        if (dma_state.lenp) {
+            dma_state.lenp = 0;
+            dma_state.mcnt = word & 0xffffff;
+            continue;// while for next word
+        }
+        else if (dma_state.mcnt) {
+            /* data word of methods command */
+            data_shadow = word;
 #if 0
-			if (!PULLER_KNOWS_MTHD(dma_state.mthd)) {
-				throw DMA_PUSHER(INVALID_MTHD);				
-				return; // For now, don't even attempt to run through
-			}
-
+            if (!PULLER_KNOWS_MTHD(dma_state.mthd)) {
+                throw DMA_PUSHER(INVALID_MTHD);				
+                return; // For now, don't even attempt to run through
+            }
+            
 #endif
-			CACHE_PUSH(dma_state.subc, dma_state.mthd, word, dma_state.ni);
-			if (!dma_state.ni) {
-				dma_state.mthd++;
-			}
+            //words still available in the pushbuffer.
+            uint32_t max_words_available = ((uint32_t)dma_limit - (uint32_t)word_ptr) / 4;
 
-			dma_state.mcnt--;
-			dcount_shadow++;
-			continue; // while
-		}
+            //pgraph_handle_method(
+            //	d,						//NV2AState
+            //	subc,					//Subchannel
+            //	mthd << 2,				//method
+            //	word,					//first parameter
+            //	dma_get,				//parameters, pointer to 1st parameter, which is exact parameter in the args.
+            //	mcnt,					//method count
+            //	max_words_available);   //words still available in the pushbuffer
 
-		/* no command active - this is the first word of a new one */
-		rsvd_shadow = word;
-		// Check and handle command type, then instruction, then flags
-		switch (command.type) {
-		case COMMAND_TYPE_NONE:
-			break; // fall through
-		case COMMAND_TYPE_JUMP_LONG:
-			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
-			dma_get_jmp_shadow = dma_get;
-			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
-			continue; // while
-		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
-			if (subr_active) {
-				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
-				// TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
+            uint32_t num_processed = 1;
+
+            //this is not supposed to happen. if the pushbuffer is correct, and the method handler works right. method count always represents the dwords of
+            //the parameters required by the method. so at least there should be method count dwords left in the buffer for the method to use.
+            if (dma_state.mcnt > max_words_available) { 
+                LOG_TEST_CASE("Pushbuffer data not enough for method count!");
+                if (p_dma_get != nullptr)
+                    *p_dma_get = (uint32_t*)((uint32_t)dma_put- (uint32_t)dma);       //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
+                return;//we shall not run through this situation.
+            }
+            
+            if (dma_state.subc < 8) {//subchannel must be less than 8
+                
+                    if (g_NV2A) {
+                        //return num_processed, the words processed here by the method handler. so the caller can advance the dma_get pointer of the pushbuffer
+                        //num_processed default to 1, which represent the first parameter passed in this call.
+                        //but that word is advanced by the caller already. it's the caller's duty to subtract that word from the num_processed;
+                        num_processed=pgraph_handle_method(
+                            d,
+                            dma_state.subc,
+                            dma_state.mthd << 2,
+                            word,
+                            word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
+                            dma_state.mcnt,
+                            max_words_available);
+                    } 
+            }
+
+            //if (!dma_state.ni) {
+            //	dma_state.mthd++;
+            //}
+
+            //if (num_processed > 1) {
+                dma_get=word_ptr+ num_processed;//num_processed default to 1.
+                if (p_dma_get != nullptr)
+                    *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
+                dma_state.mcnt-= num_processed;
+                if (dma_state.mcnt != 0) {
+                    //assert(dma_state.mcnt == 0);
+                    LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
+                    dma_state.mcnt = 0;
+                }
+                dcount_shadow+= num_processed;
+            //}
+            //else {
+                //dma_state.mcnt--;
+                //dcount_shadow++;
+            //}
+            continue; // while for next word
+        }
+
+        /* no command active - this is the first word of a new one */
+        rsvd_shadow = word;
+        // Check and handle command type, then instruction, then flags
+        switch (command.type) {
+
+            //***************************we need to check the jump address once we encounter these methods.
+            //because the jump address is obviously not in the VRAM range. perhaps a memory range transform must be applied first?
+
+        case COMMAND_TYPE_NONE:
+            if (command.instruction == 1) {//old jump
+                LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
+                dma_get_jmp_shadow = dma_get;
+                dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
+                if (p_dma_get != nullptr)
+                    *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
+                continue; // while
+            }
+            break; // fall through
+        case COMMAND_TYPE_JUMP_LONG:
+            LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
+            dma_get_jmp_shadow = dma_get;
+            dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
+            if (p_dma_get != nullptr)
+                *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
+            continue; // while
+        case COMMAND_TYPE_CALL: // Note : NV2A call is used as jump, the sub_return is used as a flag to indicate where the jump was orginated.
+            if (subr_active) {
+                LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
+                // TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
+				if (p_dma_get != nullptr)
+					*p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma); //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
 				return; // For now, don't even attempt to run through
-			}
-			else {
-				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
-			}
+            }
+            else {
+                LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
+            }
 
-			subr_return = dma_get;
-			subr_active = true;
-			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
-			continue; // while
-		default:
-			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
-			// TODO : throw DMA_PUSHER(INVALID_CMD);
-			return; // For now, don't even attempt to run through
-		} // switch type
+            subr_return = dma_get;
+            subr_active = true;
+            dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
+            if (p_dma_get != nullptr)
+                *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
+            continue; // while
+        default:
+            LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
+            // TODO : throw DMA_PUSHER(INVALID_CMD);
+            if (p_dma_get != nullptr)
+                *p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma);       //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
+            return; // For now, don't even attempt to run through
+        } // switch type
 
-		switch (command.instruction) {
-		case COMMAND_INSTRUCTION_INCREASING_METHODS:
-			dma_state.ni = false;
-			break;
-		case COMMAND_INSTRUCTION_JUMP:
-			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
-			dma_get_jmp_shadow = dma_get;
-			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
-			continue; // while
-		case COMMAND_INSTRUCTION_NON_INCREASING_METHODS:
-			dma_state.ni = true;
-			break;
-		default:
-			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION unknown");
-			// TODO : throw DMA_PUSHER(INVALID_CMD);
-			return; // For now, don't even attempt to run through
-		} // switch instruction
+        switch (command.instruction) {
+        case COMMAND_INSTRUCTION_INCREASING_METHODS:
+            dma_state.ni = false;
+            break;
+        //case COMMAND_INSTRUCTION_JUMP:  //move jump handler to the front, together with other jump/call handlers.
+        case COMMAND_INSTRUCTION_NON_INCREASING_METHODS:
+            dma_state.ni = true;
+            break;
+        default:
+            LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION unknown");
+            // TODO : throw DMA_PUSHER(INVALID_CMD);
+            if (p_dma_get != nullptr)
+                *p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma);       //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
+            return; // For now, don't even attempt to run through
+        } // switch instruction
 
-		switch (command.flags) {
-		case COMMAND_FLAGS_NONE: // Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
-			dma_state.mthd = command.method;
-			dma_state.subc = command.subchannel;
-			dma_state.mcnt = command.method_count;
-			break; // fall through
-		case COMMAND_FLAGS_RETURN: // Note : NV2A return is said not to work?
-			if (word != 0x00020000) {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
+        switch (command.flags) {
+        case COMMAND_FLAGS_NONE: // Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
+            dma_state.mthd = command.method;
+            dma_state.subc = command.subchannel;
+            dma_state.mcnt = command.method_count;
+            break; // fall through
+        case COMMAND_FLAGS_RETURN: // Note : NV2A return shouldn't be used because the NV2A call is used as jump and the subr_return is used as an flag of where the jump was from.
+            LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN, not supposed to be used!");
+            if (word != 0x00020000) {
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
+				if (p_dma_get != nullptr)
+					*p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma); //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
 				return; // For now, don't even attempt to run through
-			}
-			else {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
-			}
+            }
+            else {
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
+            }
 
-			if (!subr_active) {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
-				// TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
+            if (!subr_active) {
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
+                // TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
+				if (p_dma_get != nullptr)
+					*p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma); //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
 				return; // For now, don't even attempt to run through
-			}
+            }
 
-			dma_get = subr_return;
-			subr_active = false;
-			continue; // while
-		default:
-			if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
-			} else if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
-				/// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
-				/// dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
-				/// dma_get += dma_state.mcnt; // To be safe, skip method data
-				/// continue;
-			} else {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
-			}
+            dma_get = subr_return;
+            if (p_dma_get != nullptr)
+                *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
+            subr_active = false;
+            continue; // while
+        case COMMAND_FLAGS_LONG_NON_INCREASING_METHODS:
+            dma_state.lenp = true;
+            LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS");
+            break;
+        default:
+            if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
+            } else if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
+                /// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
+                /// dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
+                /// dma_get += dma_state.mcnt; // To be safe, skip method data
+                /// continue;
+            } else {
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
+            }
 
-			/// dma_get += command.method_count; // To be safe, skip method data
-			/// continue;
-			// TODO : throw DMA_PUSHER(INVALID_CMD);
-			return; // For now, don't even attempt to run through
-		} // switch flags
+            /// dma_get += command.method_count; // To be safe, skip method data
+            /// continue;
+            // TODO : throw DMA_PUSHER(INVALID_CMD);
+            if (p_dma_get != nullptr)
+                *p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma);       //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
+            return; // For now, don't even attempt to run through
+        } // switch flags
 
-		dcount_shadow = 0;
+        dcount_shadow = 0;
     } // while (dma_get != dma_put)
 }
 

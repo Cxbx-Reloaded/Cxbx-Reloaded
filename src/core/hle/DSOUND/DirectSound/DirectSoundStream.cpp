@@ -171,39 +171,39 @@ xbox::ulong_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_Release)
 (
     X_CDirectSoundStream*   pThis)
 {
-    DSoundMutexGuardLock;
+	DSoundMutexGuardLock;
 
 	LOG_FUNC_ONE_ARG(pThis);
 
-    ULONG uRet = 0;
-    if (pThis != 0 && (pThis->EmuDirectSoundBuffer8 != 0)) {
-        uRet = pThis->EmuDirectSoundBuffer8->Release();
+	ULONG uRet = 0;
+	if (pThis != 0 && (pThis->EmuDirectSoundBuffer8 != 0)) {
+		uRet = pThis->EmuDirectSoundBuffer8->Release();
 
-        if (uRet == 0) {
-            if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
-                pThis->EmuDirectSound3DBuffer8->Release();
-            }
+		if (uRet == 0) {
+			if (pThis->EmuDirectSound3DBuffer8 != nullptr) {
+				pThis->EmuDirectSound3DBuffer8->Release();
+			}
 
-            // remove cache entry
-            vector_ds_stream::iterator ppDSStream = std::find(g_pDSoundStreamCache.begin(), g_pDSoundStreamCache.end(), pThis);
-            if (ppDSStream != g_pDSoundStreamCache.end()) {
-                g_pDSoundStreamCache.erase(ppDSStream);
-            }
+			// remove cache entry
+			vector_ds_stream::iterator ppDSStream = std::find(g_pDSoundStreamCache.begin(), g_pDSoundStreamCache.end(), pThis);
+			if (ppDSStream != g_pDSoundStreamCache.end()) {
+				g_pDSoundStreamCache.erase(ppDSStream);
+			}
 
-            for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
-                DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
-            }
+			for (auto buffer = pThis->Host_BufferPacketArray.begin(); buffer != pThis->Host_BufferPacketArray.end();) {
+				DSStream_Packet_Clear(buffer, XMP_STATUS_FLUSHED, pThis->Xb_lpfnCallback, pThis->Xb_lpvContext, pThis);
+			}
 
-            if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
-                free(pThis->EmuBufferDesc.lpwfxFormat);
-            }
-            // NOTE: Do not release X_BufferCache! X_BufferCache is using xbox buffer.
+			if (pThis->EmuBufferDesc.lpwfxFormat != nullptr) {
+				free(pThis->EmuBufferDesc.lpwfxFormat);
+			}
+			// NOTE: Do not release X_BufferCache! X_BufferCache is using xbox buffer.
 
-            delete pThis;
-        }
-    }
+			delete pThis;
+		}
+	}
 
-    RETURN(uRet);
+	RETURN(uRet);
 }
 
 // ******************************************************************

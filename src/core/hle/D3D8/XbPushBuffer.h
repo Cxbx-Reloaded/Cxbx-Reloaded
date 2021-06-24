@@ -38,8 +38,11 @@ extern void EmuExecutePushBuffer
 
 extern void EmuExecutePushBufferRaw
 (
-	void *pPushData,
-	uint32_t uSizeInBytes
+    void *pPushData,
+    uint32_t uSizeInBytes,
+    uint32_t **p_dma_get,
+    uint32_t **p_dma_put,
+	uint8_t *dma
 );
 
 #endif

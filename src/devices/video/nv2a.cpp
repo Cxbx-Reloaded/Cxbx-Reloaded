@@ -221,7 +221,10 @@ static void *nv_dma_map(NV2AState *d, xbox::addr_xt dma_obj_address, xbox::addr_
 	return d->vram_ptr + dma.address;
 //	return (void*)(PHYSICAL_MAP_BASE  + dma.address);
 }
-
+void *ext_nv_dma_map(NV2AState *d, xbox::addr_xt dma_obj_address, xbox::addr_xt *len)
+{
+	return nv_dma_map(d, dma_obj_address, len);
+}
 #include "EmuNV2A_PBUS.cpp"
 #include "EmuNV2A_PCRTC.cpp"
 #include "EmuNV2A_PFB.cpp"
@@ -1205,14 +1208,13 @@ void NV2ADevice::Init()
     vblank_thread = std::thread(nv2a_vblank_thread, d);
 
     qemu_mutex_init(&d->pfifo.pfifo_lock);
-    qemu_cond_init(&d->pfifo.puller_cond);
+    //qemu_cond_init(&d->pfifo.puller_cond);
     qemu_cond_init(&d->pfifo.pusher_cond);
-
     d->pfifo.regs[NV_PFIFO_CACHE1_STATUS] |= NV_PFIFO_CACHE1_STATUS_LOW_MARK;
 
     /* fire up puller */
-	d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
-    /* fire up pusher */
+	//d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);
+	/* fire up pusher */
 	d->pfifo.pusher_thread = std::thread(pfifo_pusher_thread, d);
 }
 
@@ -1223,9 +1225,9 @@ void NV2ADevice::Reset()
 
 	d->exiting = true;
 
-	qemu_cond_broadcast(&d->pfifo.puller_cond);
+	//qemu_cond_broadcast(&d->pfifo.puller_cond);
 	qemu_cond_broadcast(&d->pfifo.pusher_cond);
-	d->pfifo.puller_thread.join();
+	//d->pfifo.puller_thread.join();
 	d->pfifo.pusher_thread.join();
 	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cbxbx addition
 	if (d->pgraph.opengl_enabled) {
