@@ -1827,8 +1827,8 @@ XBSYSAPI EXPORTNUM(150) xbox::boolean_xt NTAPI xbox::KeSetTimerEx
 	}
 
 	/* Exit the dispatcher */
-	KiUnlockDispatcherDatabase(OldIrql);
 	KiTimerUnlock();
+	KiUnlockDispatcherDatabase(OldIrql);
 
 	RETURN(Inserted);
 }
