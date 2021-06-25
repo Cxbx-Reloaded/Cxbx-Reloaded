@@ -2964,6 +2964,7 @@ int pgraph_handle_method(
                         //this code may be wrong, part wil always be 0, because this method always transfer (a,b) in the same time.
                         //if ((slot == 0) && (part == 1)) {
                         if ((slot == 0)) {//D3DVSDE_POSITION 
+                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
                     }
@@ -2997,6 +2998,7 @@ int pgraph_handle_method(
                         //
                         //if ((slot == 0) && (part == 3)) {
                         if ((slot == 0)) {//D3DVSDE_POSITION 
+                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
 
@@ -3016,7 +3018,7 @@ int pgraph_handle_method(
                         arg0 = argv[argc];
 
                         slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
-                        assert(false); /* FIXME: Untested! */
+                        //assert(false); /* FIXME: Untested! */
                         VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
                         pgraph_allocate_inline_buffer_vertices(pg, slot);
                         vertex_attribute->inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
@@ -3024,6 +3026,7 @@ int pgraph_handle_method(
                         vertex_attribute->inline_value[2] = 0.0f;
                         vertex_attribute->inline_value[3] = 1.0f;
                         if (slot == 0) {//D3DVSDE_POSITION 
+                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
 
@@ -3042,6 +3045,15 @@ int pgraph_handle_method(
 
                 CASE_16(NV097_SET_VERTEX_DATA4UB, 4) : {//done //pg->KelvinPrimitive.SetVertexData4ub[16]
                     //pg->KelvinPrimitive.SetVertexData4ub[16] seems to be also holding state setting for NV2A fixed function for registers other then D3DVSDE_POSITION 
+                    /*
+                    IDirect3DDevice8::SetVertexDataColor
+                        Sets the initial values of a given vertex attribute. This function sets persistent vertex attributes that may be used in vertex shaders and Begin/End blocks.
+                    the following two lines are equivalent:
+
+                    pDevice->SetVertexData4ub( register, r, g, b, a ); //notice that R and B are swapped before sent to NV2A.
+                    pDevice->SetVertexDataColor( register, D3DCOLOR_ARGB( a, r, g, b ) );
+                    Vertex attributes will remain set unless overwritten by the vertex buffer data stream.
+                    */
                     //register is set one at a time per method, for loop should be redundant.
                     for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
                         arg0 = argv[argc];
@@ -3049,7 +3061,7 @@ int pgraph_handle_method(
                         slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
                         VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
                         pgraph_allocate_inline_buffer_vertices(pg, slot);
-                        //why the value be divided by 255.0f?
+                        //why the value be divided by 255.0f? normalized to 0.0~1.0?
                         vertex_attribute->inline_value[0] = (arg0 & 0xFF) / 255.0f;
                         vertex_attribute->inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
                         vertex_attribute->inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
@@ -3078,7 +3090,7 @@ int pgraph_handle_method(
                         slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
                         //unsigned int part = argc % 2;
                         slot /= 2;//register
-                        assert(false); /* FIXME: Untested! */
+                        //assert(false); /* FIXME: Untested! */
                         VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
                         pgraph_allocate_inline_buffer_vertices(pg, slot);
                         /* FIXME: Is mapping to [-1,+1] correct? */
@@ -3092,6 +3104,7 @@ int pgraph_handle_method(
                             * 2.0f + 1) / 65535.0f;
                         //if ((slot == 0) && (part == 1)) {
                         if ((slot == 0)) {//D3DVSDE_POSITION
+                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
                     }
