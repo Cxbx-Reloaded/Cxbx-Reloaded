@@ -2908,102 +2908,192 @@ int pgraph_handle_method(
 
                 case NV097_INLINE_VERTEX_REUSE:break;//not implement //pg->KelvinPrimitive.InlineVertexReuse
 
-                CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {// //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
+                /*
+
+                D3DVSDE_POSITION
+                Register 0. This is used to kick off vertex to NV2A GPU. This register should only be used inside NV097_SET_BEGIN_END block.
+                D3DVSDE_BLENDWEIGHT
+                Register 1.
+                D3DVSDE_NORMAL
+                Register 2.
+                D3DVSDE_DIFFUSE
+                Register 3. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f.
+                D3DVSDE_SPECULAR
+                Register 4. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f.
+                D3DVSDE_FOG
+                Register 5. Xbox extension.
+                D3DVSDE_BACKDIFFUSE
+                Register 7. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f. Xbox extension.
+                D3DVSDE_BACKSPECULAR
+                Register 8. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f. Xbox extension.
+                D3DVSDE_TEXCOORD0
+                Register 9.
+                D3DVSDE_TEXCOORD1
+                Register 10.
+                D3DVSDE_TEXCOORD2
+                Register 11.
+                D3DVSDE_TEXCOORD3
+                Register 12.
+                */
+
+                /*
+                HRESULT IDirect3DDevice8::SetVertexData2f(
+                   INT  	Register,
+                   FLOAT 	a,
+                   FLOAT 	b
+                   );
+                */
+                CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
+                    //register is set one at a time per method, for loop should be redundant.
                     for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
                         arg0 = argv[argc];
 
 
                         slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
-                        unsigned int part = argc % 2;
-                        unsigned int index = argc / 2;
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[index];
-                        pgraph_allocate_inline_buffer_vertices(pg, index);
-                        vertex_attribute->inline_value[part] = *(float*)&arg0;
+                        unsigned int part = slot % 2;// 0:a or 1:b
+                        slot /= 2;//register
+                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                        pgraph_allocate_inline_buffer_vertices(pg, slot);
+                        //M[a,b] are sent in the same time. shall be processed together.
+                        //vertex_attribute->inline_value[part] = *(float*)&arg0;
+                        vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData2f[slot].M[0];
+                        vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData2f[slot].M[1];
                         /* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
                         vertex_attribute->inline_value[2] = 0.0f;
                         vertex_attribute->inline_value[3] = 1.0f;
-                        if ((index == 0) && (part == 1)) {
+                        //this code may be wrong, part wil always be 0, because this method always transfer (a,b) in the same time.
+                        //if ((slot == 0) && (part == 1)) {
+                        if ((slot == 0)) {//D3DVSDE_POSITION 
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
-
                     }
                     break;
                 }
 
-                CASE_64(NV097_SET_VERTEX_DATA4F_M, 4): {// //pg->KelvinPrimitive.SetVertexData4f[16].M[4]
+                /*
+                HRESULT IDirect3DDevice8::SetVertexData4f(
+                   INT Register,
+                   FLOAT a,
+                   FLOAT b,
+                   FLOAT c,
+                   FLOAT d
+                   );
+                */
+                CASE_64(NV097_SET_VERTEX_DATA4F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData4f[16].M[4]
+                    //register is set one at a time per method, for loop should be redundant.
                     for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
                         arg0 = argv[argc];
 
                         slot = (method - NV097_SET_VERTEX_DATA4F_M) / 4;
-                        unsigned int part = argc % 4;
-                        unsigned int index = argc / 4;
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[argc];
-                        pgraph_allocate_inline_buffer_vertices(pg, index);
-                        vertex_attribute->inline_value[part] = *(float*)&arg0;
-                        if ((index == 0) && (part == 3)) {
+                        unsigned int part = slot % 4;//index in M[]
+                        slot /= 4;//register
+                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                        pgraph_allocate_inline_buffer_vertices(pg, slot);
+                        //vertex_attribute->inline_value[part] = *(float*)&arg0;
+                        vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
+                        vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData4f[slot].M[1];
+                        vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertexData4f[slot].M[2];
+                        vertex_attribute->inline_value[3] = pg->KelvinPrimitive.SetVertexData4f[slot].M[3];
+                        //
+                        //if ((slot == 0) && (part == 3)) {
+                        if ((slot == 0)) {//D3DVSDE_POSITION 
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
 
                     }
                     break;
                 }
-            CASE_16(NV097_SET_VERTEX_DATA2S, 4): {// //pg->KelvinPrimitive.SetVertexData2s[16]
+            /*
+            HRESULT IDirect3DDevice8::SetVertexData2s(
+               INT Register,
+               SHORT a,
+               SHORT b
+               );
+            */
+            CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
+                    //register is set one at a time per method, for loop should be redundant.
                     for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
                         arg0 = argv[argc];
 
                         slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
                         assert(false); /* FIXME: Untested! */
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[argc];
-                        pgraph_allocate_inline_buffer_vertices(pg, argc);
+                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                        pgraph_allocate_inline_buffer_vertices(pg, slot);
                         vertex_attribute->inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
                         vertex_attribute->inline_value[1] = (float)(int16_t)(arg0 >> 16);
                         vertex_attribute->inline_value[2] = 0.0f;
                         vertex_attribute->inline_value[3] = 1.0f;
-                        if (argc == 0) {
+                        if (slot == 0) {//D3DVSDE_POSITION 
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
 
                     }
                     break;
                 }
-                CASE_16(NV097_SET_VERTEX_DATA4UB, 4) : {//seems to be data for NV2A fixed function //pg->KelvinPrimitive.SetVertexData4ub[16]
+                /*
+                HRESULT IDirect3DDevice8::SetVertexData4ub(
+                   INT Register,
+                   BYTE a,
+                   BYTE b,
+                   BYTE c,
+                   BYTE d
+                   );
+                */
+
+                CASE_16(NV097_SET_VERTEX_DATA4UB, 4) : {//done //pg->KelvinPrimitive.SetVertexData4ub[16]
+                    //pg->KelvinPrimitive.SetVertexData4ub[16] seems to be also holding state setting for NV2A fixed function for registers other then D3DVSDE_POSITION 
+                    //register is set one at a time per method, for loop should be redundant.
                     for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
                         arg0 = argv[argc];
 
                         slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[argc];
-                        pgraph_allocate_inline_buffer_vertices(pg, argc);
+                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                        pgraph_allocate_inline_buffer_vertices(pg, slot);
+                        //why the value be divided by 255.0f?
                         vertex_attribute->inline_value[0] = (arg0 & 0xFF) / 255.0f;
                         vertex_attribute->inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
                         vertex_attribute->inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
                         vertex_attribute->inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
-                        if (argc == 0) {
+                        if (slot == 0) {//D3DVSDE_POSITION 
                             pgraph_finish_inline_buffer_vertex(pg);
                             assert(false); /* FIXME: Untested */
                         }
-
                     }
                     break;
                 }
-                CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {// //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
+                /*
+                HRESULT IDirect3DDevice8::SetVertexData4s(
+                   INT Register,
+                   SHORT a,
+                   SHORT b,
+                   SHORT c,
+                   SHORT d
+                   );
+                */
+                CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
+                    //register is set one at a time per method, for loop should be redundant.
                     for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
                         arg0 = argv[argc];
 
                         slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
-                        unsigned int part = argc % 2;
-                        unsigned int index = argc / 2;
+                        //unsigned int part = argc % 2;
+                        slot /= 2;//register
                         assert(false); /* FIXME: Untested! */
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[index];
-                        pgraph_allocate_inline_buffer_vertices(pg, index);
+                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                        pgraph_allocate_inline_buffer_vertices(pg, slot);
                         /* FIXME: Is mapping to [-1,+1] correct? */
-                        vertex_attribute->inline_value[part * 2 + 0] = ((int16_t)(arg0 & 0xFFFF)
+                        vertex_attribute->inline_value[0] = ((int16_t)(arg0 & 0xFFFF)
                             * 2.0f + 1) / 65535.0f;
-                        vertex_attribute->inline_value[part * 2 + 1] = ((int16_t)(arg0 >> 16)
+                        vertex_attribute->inline_value[1] = ((int16_t)(arg0 >> 16)
                             * 2.0f + 1) / 65535.0f;
-                        if ((index == 0) && (part == 1)) {
+                        vertex_attribute->inline_value[2] = ((int16_t)(argv[1] & 0xFFFF)
+                            * 2.0f + 1) / 65535.0f;
+                        vertex_attribute->inline_value[3] = ((int16_t)(argv[1] >> 16)
+                            * 2.0f + 1) / 65535.0f;
+                        //if ((slot == 0) && (part == 1)) {
+                        if ((slot == 0)) {//D3DVSDE_POSITION
                             pgraph_finish_inline_buffer_vertex(pg);
                         }
-
                     }
                     break;
                 }
