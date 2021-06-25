@@ -41,26 +41,26 @@ DEVICE_READ32(USER)
 
 	qemu_mutex_lock(&d->pfifo.pfifo_lock);
 
-	uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE];
+	uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE/4];
 
 	uint32_t result = 0;
 	if (channel_modes & (1 << channel_id)) {
 		/* DMA Mode */
 
 		unsigned int cur_channel_id =
-			GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1],
+			GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1/4],
 				NV_PFIFO_CACHE1_PUSH1_CHID);
 
 		if (channel_id == cur_channel_id) {
 			switch(addr & 0xFFFF) { // Was DEVICE_READ32_SWITCH()
 				case NV_USER_DMA_PUT:
-					result = d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUT];
+					result = d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUT/4];
 					break;
 				case NV_USER_DMA_GET:
-					result = d->pfifo.regs[NV_PFIFO_CACHE1_DMA_GET];
+					result = d->pfifo.regs[NV_PFIFO_CACHE1_DMA_GET/4];
 					break;
 				case NV_USER_REF:
-					result = d->pfifo.regs[NV_PFIFO_CACHE1_REF];
+					result = d->pfifo.regs[NV_PFIFO_CACHE1_REF/4];
 					break;
 				default:
 					DEBUG_READ32_UNHANDLED(USER);
@@ -87,23 +87,23 @@ DEVICE_WRITE32(USER)
 
 	qemu_mutex_lock(&d->pfifo.pfifo_lock);
 
-	uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE];
+	uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE/4];
 	if (channel_modes & (1 << channel_id)) {
 		/* DMA Mode */
 		unsigned int cur_channel_id =
-			GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1],
+			GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1/4],
 				NV_PFIFO_CACHE1_PUSH1_CHID);
 
 		if (channel_id == cur_channel_id) {
 			switch (addr & 0xFFFF) {
 			case NV_USER_DMA_PUT:
-				d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUT] = value;
+				d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUT/4] = value;
 				break;
 			case NV_USER_DMA_GET:
-				d->pfifo.regs[NV_PFIFO_CACHE1_DMA_GET] = value;
+				d->pfifo.regs[NV_PFIFO_CACHE1_DMA_GET/4] = value;
 				break;
 			case NV_USER_REF:
-				d->pfifo.regs[NV_PFIFO_CACHE1_REF] = value;
+				d->pfifo.regs[NV_PFIFO_CACHE1_REF/4] = value;
 				break;
 			default:
 				assert(false);

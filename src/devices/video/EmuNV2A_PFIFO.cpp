@@ -104,13 +104,13 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
 //static void pfifo_run_puller(NV2AState *d)
 {
     int num_processed = 0;
-    uint32_t *pull0 = &d->pfifo.regs[NV_PFIFO_CACHE1_PULL0];
-    uint32_t *pull1 = &d->pfifo.regs[NV_PFIFO_CACHE1_PULL1];
-    uint32_t *engine_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_ENGINE];
+    uint32_t *pull0 = &d->pfifo.regs[NV_PFIFO_CACHE1_PULL0/4];
+    uint32_t *pull1 = &d->pfifo.regs[NV_PFIFO_CACHE1_PULL1/4];
+    uint32_t *engine_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_ENGINE/4];
 
-    uint32_t *status = &d->pfifo.regs[NV_PFIFO_CACHE1_STATUS];
-    uint32_t *get_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_GET];
-    uint32_t *put_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_PUT];
+    uint32_t *status = &d->pfifo.regs[NV_PFIFO_CACHE1_STATUS/4];
+    uint32_t *get_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_GET/4];
+    uint32_t *put_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_PUT/4];
 
     // TODO
     // CacheEntry working_cache[NV2A_CACHE1_SIZE];
@@ -129,10 +129,10 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
         uint32_t put = *put_reg;
 
         assert(get < 128*4 && (get % 4) == 0);
-        uint32_t method_entry = d->pfifo.regs[NV_PFIFO_CACHE1_METHOD + get*2];
-        uint32_t parameter = d->pfifo.regs[NV_PFIFO_CACHE1_DATA + get*2];
+        uint32_t method_entry = d->pfifo.regs[NV_PFIFO_CACHE1_METHOD/4 + get/4];// /4?
+        uint32_t parameter = d->pfifo.regs[NV_PFIFO_CACHE1_DATA/4 + get/4];// /4?
 
-        uint32_t *parameters=&(d->pfifo.regs[NV_PFIFO_CACHE1_DATA + get * 2]);
+        uint32_t *parameters=&(d->pfifo.regs[NV_PFIFO_CACHE1_DATA/4 + get/4]);// /4?
 
         uint32_t new_get = (get+4) & 0x1fc;
         *get_reg = new_get;
@@ -339,18 +339,18 @@ extern void EmuExecutePushBufferRaw
 static void pfifo_run_pusher(NV2AState *d)
 {
     //for dma access to pull pushbuffer data.
-    uint32_t *p_push0 = &d->pfifo.regs[NV_PFIFO_CACHE1_PUSH0];
-    uint32_t *p_push1 = &d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1];
-    uint32_t *p_dma_subroutine = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_SUBROUTINE];
-    uint32_t *p_dma_state = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_STATE];
-    uint32_t *p_dma_push = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUSH];
-    uint32_t **p_dma_get = (uint32_t **)&d->pfifo.regs[NV_PFIFO_CACHE1_DMA_GET];
-    uint32_t **p_dma_put = (uint32_t **)&d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUT];
-    uint32_t *p_dma_dcount = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_DCOUNT];
+    uint32_t *p_push0 = &d->pfifo.regs[NV_PFIFO_CACHE1_PUSH0/4];
+    uint32_t *p_push1 = &d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1/4];
+    uint32_t *p_dma_subroutine = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_SUBROUTINE/4];
+    uint32_t *p_dma_state = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_STATE/4];
+    uint32_t *p_dma_push = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUSH/4];
+    uint32_t **p_dma_get = (uint32_t **)&d->pfifo.regs[NV_PFIFO_CACHE1_DMA_GET/4];
+    uint32_t **p_dma_put = (uint32_t **)&d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUT/4];
+    uint32_t *p_dma_dcount = &d->pfifo.regs[NV_PFIFO_CACHE1_DMA_DCOUNT/4];
     //for the PFIFO cache access to push data to puller.
-    uint32_t *p_status = &d->pfifo.regs[NV_PFIFO_CACHE1_STATUS];
-    uint32_t *p_get_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_GET];
-    uint32_t *p_put_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_PUT];
+    uint32_t *p_status = &d->pfifo.regs[NV_PFIFO_CACHE1_STATUS/4];
+    uint32_t *p_get_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_GET/4];
+    uint32_t *p_put_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_PUT/4];
 
     if (!GET_MASK(*p_push0, NV_PFIFO_CACHE1_PUSH0_ACCESS)) return;
     if (!GET_MASK(*p_dma_push, NV_PFIFO_CACHE1_DMA_PUSH_ACCESS)) return;
@@ -366,7 +366,7 @@ static void pfifo_run_pusher(NV2AState *d)
 
 
     /* Channel running DMA */
-    uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE];
+    uint32_t channel_modes = d->pfifo.regs[NV_PFIFO_MODE/4];
     assert(channel_modes & (1 << channel_id));
 
     assert(GET_MASK(*p_push1, NV_PFIFO_CACHE1_PUSH1_MODE)
@@ -377,7 +377,7 @@ static void pfifo_run_pusher(NV2AState *d)
             == NV_PFIFO_CACHE1_DMA_STATE_ERROR_NONE);
 
     hwaddr dma_instance =
-        GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_DMA_INSTANCE],
+        GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_DMA_INSTANCE/4],
                  NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MASK) << 4; // TODO : Use NV_PFIFO_CACHE1_DMA_INSTANCE_ADDRESS_MOVE?
 
     hwaddr dma_len;
@@ -605,7 +605,7 @@ int pfifo_pusher_thread(NV2AState *d) // thread fire up at nv2a.cpp::void NV2ADe
 unsigned int ramht_size(NV2AState *d)
 {
 	return 
-		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
+		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT/4], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
 }
 
 static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
@@ -619,7 +619,7 @@ static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
 		handle >>= bits;
 	}
 
-    unsigned int channel_id = GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1],
+    unsigned int channel_id = GET_MASK(d->pfifo.regs[NV_PFIFO_CACHE1_PUSH1/4],
                                        NV_PFIFO_CACHE1_PUSH1_CHID);
     hash ^= channel_id << (bits - 4);
 
@@ -632,7 +632,7 @@ static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
 	assert(hash * 8 < ramht_size(d));
 
 	xbox::addr_xt ramht_address =
-		GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT],
+		GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT/4],
 			NV_PFIFO_RAMHT_BASE_ADDRESS_MASK) << 12;
 
 	uint8_t *entry_ptr = d->pramin.ramin_ptr + ramht_address + hash * 8;

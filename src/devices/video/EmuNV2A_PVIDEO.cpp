@@ -35,9 +35,9 @@
 
 static void pvideo_vga_invalidate(NV2AState *d)
 {
-    int y1 = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(0)],
+    int y1 = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(0)/4],
                       NV_PVIDEO_POINT_OUT_Y);
-    int y2 = y1 + GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(0)],
+    int y2 = y1 + GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(0)/4],
                            NV_PVIDEO_SIZE_OUT_HEIGHT);
     NV2A_DPRINTF("pvideo_vga_invalidate %d %d\n", y1, y2);
 	// TODO : vga_invalidate_scanlines(&d->vga, y1, y2);
@@ -81,12 +81,12 @@ DEVICE_WRITE32(PVIDEO)
 		update_irq(d);
 		break;
 	case NV_PVIDEO_BUFFER:
-		d->pvideo.regs[NV_PVIDEO_BUFFER] = value;
+		d->pvideo.regs[NV_PVIDEO_BUFFER/4] = value;
 		d->enable_overlay = (value != 0);
 		pvideo_vga_invalidate(d);
 		break;
 	case NV_PVIDEO_STOP:
-		d->pvideo.regs[NV_PVIDEO_BUFFER] = 0;
+		d->pvideo.regs[NV_PVIDEO_BUFFER/4] = 0;
 		d->enable_overlay = false;
 		pvideo_vga_invalidate(d);
 		break;

@@ -396,7 +396,7 @@ extern void EmuExecutePushBufferRaw
 
     // Retrieve NV2AState via the (LLE) NV2A device :
     NV2AState *d = g_NV2A->GetDeviceState();
-    d->pgraph.regs[NV_PGRAPH_CTX_CONTROL/4] |= NV_PGRAPH_CTX_CONTROL_CHID; // avoid assert in pgraph_handle_method()
+    d->pgraph.pgraph_regs[NV_PGRAPH_CTX_CONTROL/4] |= NV_PGRAPH_CTX_CONTROL_CHID; // avoid assert in pgraph_handle_method()
 
 
     // DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
@@ -494,10 +494,11 @@ extern void EmuExecutePushBufferRaw
                         //return num_processed, the words processed here by the method handler. so the caller can advance the dma_get pointer of the pushbuffer
                         //num_processed default to 1, which represent the first parameter passed in this call.
                         //but that word is advanced by the caller already. it's the caller's duty to subtract that word from the num_processed;
-                        num_processed=pgraph_handle_method(
+						uint32_t method = dma_state.mthd << 2;
+						num_processed=pgraph_handle_method(
                             d,
                             dma_state.subc,
-                            dma_state.mthd << 2,
+                            method,
                             word,
                             word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
                             dma_state.mcnt,
@@ -510,16 +511,17 @@ extern void EmuExecutePushBufferRaw
             //}
 
             //if (num_processed > 1) {
-                dma_get=word_ptr+ num_processed;//num_processed default to 1.
+                dma_get=word_ptr+ dma_state.mcnt;//num_processed default to 1.
                 if (p_dma_get != nullptr)
                     *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
-                dma_state.mcnt-= num_processed;
-                if (dma_state.mcnt != 0) {
+				dcount_shadow += num_processed;
+				dma_state.mcnt= 0;
+                //if (dma_state.mcnt != 0) {
                     //assert(dma_state.mcnt == 0);
-                    LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
-                    dma_state.mcnt = 0;
-                }
-                dcount_shadow+= num_processed;
+                //    LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
+                //    dma_state.mcnt = 0;
+                // }
+                
             //}
             //else {
                 //dma_state.mcnt--;

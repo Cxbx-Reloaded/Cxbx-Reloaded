@@ -164,11 +164,11 @@ static void update_irq(NV2AState *d)
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbox::addr_xt addr)
 #define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
-#define DEVICE_READ32_REG(dev) result = d->dev.regs[addr]
+#define DEVICE_READ32_REG(dev) result = d->dev.regs[addr/4]
 #define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
 
 #define DEVICE_WRITE32(DEV) void EmuNV2A_##DEV##_Write32(NV2AState *d, xbox::addr_xt addr, uint32_t value)
-#define DEVICE_WRITE32_REG(dev) d->dev.regs[addr] = value
+#define DEVICE_WRITE32_REG(dev) d->dev.regs[addr/4] = value
 #define DEVICE_WRITE32_END(DEV) DEBUG_WRITE32(DEV)
 
 static inline uint32_t ldl_le_p(const void *p)
@@ -628,7 +628,7 @@ void cxbx_gl_update_displaymode(NV2AState *d) {
 
 	// Derive display mode and bytes per pixel from actual hardware register contents:
 	// This is required for titles that use a non ARGB framebuffer, such as Beats of Rage
-	bool alt_mode = d->pramdac.regs[NV_PRAMDAC_GENERAL_CONTROL & (NV_PRAMDAC_SIZE - 1)]
+	bool alt_mode = d->pramdac.regs[(NV_PRAMDAC_GENERAL_CONTROL/4 & (NV_PRAMDAC_SIZE - 1))]
 		& NV_PRAMDAC_GENERAL_CONTROL_ALT_MODE_SEL;
 	switch (d->prmcio.cr[NV_CIO_CRE_PIXEL_INDEX] & 0x03) {
 	case 1: // 8bpp
@@ -854,14 +854,14 @@ void cxbx_gl_parse_overlay(NV2AState *d, int v)
 	OverlayState &overlay = d->pvideo.overlays[v];
 
 	uint32_t video_buffer_use = (v == 0) ? NV_PVIDEO_BUFFER_0_USE : NV_PVIDEO_BUFFER_1_USE;
-	overlay.video_buffer_use = d->pvideo.regs[NV_PVIDEO_BUFFER] & video_buffer_use;
+	overlay.video_buffer_use = d->pvideo.regs[NV_PVIDEO_BUFFER/4] & video_buffer_use;
 
 	// Get overlay measures (from xqemu nv2a_overlay_draw_line) :
-	uint32_t overlay_offset_high_26 = d->pvideo.regs[NV_PVIDEO_OFFSET(v)];
-	uint32_t overlay_offset_lower_6 = d->pvideo.regs[NV_PVIDEO_POINT_IN(v)] >> 3;
-	uint32_t overlay_size_in = d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)];
-	uint32_t overlay_color_key = d->pvideo.regs[NV_PVIDEO_COLOR_KEY(v)];
-	uint32_t overlay_format = d->pvideo.regs[NV_PVIDEO_FORMAT(v)];
+	uint32_t overlay_offset_high_26 = d->pvideo.regs[NV_PVIDEO_OFFSET(v)/4];
+	uint32_t overlay_offset_lower_6 = d->pvideo.regs[NV_PVIDEO_POINT_IN(v)/4] >> 3;
+	uint32_t overlay_size_in = d->pvideo.regs[NV_PVIDEO_SIZE_IN(v)/4];
+	uint32_t overlay_color_key = d->pvideo.regs[NV_PVIDEO_COLOR_KEY(v)/4];
+	uint32_t overlay_format = d->pvideo.regs[NV_PVIDEO_FORMAT(v)/4];
 
 #ifdef DEBUG
 	// Check a few assumptions
@@ -881,10 +881,10 @@ void cxbx_gl_parse_overlay(NV2AState *d, int v)
 	overlay.in_height = overlay_size_in_height_width >> 16;
 	overlay.in_width = overlay_size_in_height_width & 0xFFFF;
 
-	overlay.out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_X);
-	overlay.out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)], NV_PVIDEO_POINT_OUT_Y);
-	overlay.out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_WIDTH);
-	overlay.out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)], NV_PVIDEO_SIZE_OUT_HEIGHT);
+	overlay.out_x = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)/4], NV_PVIDEO_POINT_OUT_X);
+	overlay.out_y = GET_MASK(d->pvideo.regs[NV_PVIDEO_POINT_OUT(v)/4], NV_PVIDEO_POINT_OUT_Y);
+	overlay.out_width = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)/4], NV_PVIDEO_SIZE_OUT_WIDTH);
+	overlay.out_height = GET_MASK(d->pvideo.regs[NV_PVIDEO_SIZE_OUT(v)/4], NV_PVIDEO_SIZE_OUT_HEIGHT);
 
 	// Detect changes in overlay dimensions
 	if (overlay.old_in_width != overlay.in_width
@@ -1210,7 +1210,7 @@ void NV2ADevice::Init()
     qemu_mutex_init(&d->pfifo.pfifo_lock);
     //qemu_cond_init(&d->pfifo.puller_cond);
     qemu_cond_init(&d->pfifo.pusher_cond);
-    d->pfifo.regs[NV_PFIFO_CACHE1_STATUS] |= NV_PFIFO_CACHE1_STATUS_LOW_MARK;
+    d->pfifo.regs[NV_PFIFO_CACHE1_STATUS/4] |= NV_PFIFO_CACHE1_STATUS_LOW_MARK;
 
     /* fire up puller */
 	//d->pfifo.puller_thread = std::thread(pfifo_puller_thread, d);

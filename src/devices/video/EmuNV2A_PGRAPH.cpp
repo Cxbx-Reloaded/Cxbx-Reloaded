@@ -1114,6 +1114,35 @@ void OpenGL_init_pgraph_plugins()
 }
 
 
+//Contex Handle Define
+#define NV_DD_DMA_PUSHER_SYNC_NOTIFIER_CONTEXT_DMA_TO_MEMORY    2 
+#define NV_DD_DMA_CONTEXT_DMA_IN_VIDEO_MEMORY                   3 
+#define NV_DD_DMA_CONTEXT_DMA_TO_VIDEO_MEMORY                   4 
+#define NV_DD_DMA_CONTEXT_DMA_FROM_VIDEO_MEMORY                 5 
+#define NV_DD_DMA_PUSHER_CONTEXT_DMA_FROM_MEMORY                6 
+#define D3D_MEMCOPY_NOTIFIER_CONTEXT_DMA_TO_MEMORY              7 
+#define D3D_SEMAPHORE_CONTEXT_DMA_IN_MEMORY                     8
+#define D3D_COLOR_CONTEXT_DMA_IN_VIDEO_MEMORY                   9
+#define D3D_ZETA_CONTEXT_DMA_IN_VIDEO_MEMORY                   10
+#define D3D_COPY_CONTEXT_DMA_IN_VIDEO_MEMORY                   11
+#define D3D_CONTEXT_IN_CACHED_MEMORY                           12
+
+#define D3D_KELVIN_PRIMITIVE                                   13 
+#define D3D_MEMORY_TO_MEMORY_COPY                              14 
+#define D3D_SCALED_IMAGE_FROM_MEMORY                           15   
+#define D3D_RECTANGLE_COPY                                     16
+#define D3D_RECTANGLE_COPY_SURFACES                            17
+
+#define D3D_RECTANGLE_COPY_PATTERN                             18
+#define D3D_RECTANGLE_COPY_COLOR_KEY                           19
+#define D3D_RECTANGLE_COPY_ROP                                 20
+#define D3D_RECTANGLE_COPY_BETA1                               21
+#define D3D_RECTANGLE_COPY_BETA4                               22
+#define D3D_RECTANGLE_COPY_CLIP_RECTANGLE                      24
+
+static uint32_t subchannel_to_graphic_class[8] = { NV_KELVIN_PRIMITIVE,NV_MEMORY_TO_MEMORY_FORMAT,NV_IMAGE_BLIT,NV_CONTEXT_SURFACES_2D,0,NV_CONTEXT_PATTERN,0,0, };
+
+
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
 int pgraph_handle_method(
@@ -1152,6 +1181,10 @@ int pgraph_handle_method(
     //the arg0 is object handle,rather than an address here. need to use a function called ramht_look() to lookup the object entry.
     //quesiton is that the object was created and binded using xbx d3d routine which we didn't patch. need further study.
     if (method == NV_SET_OBJECT) {
+		/*during init, arg0 = Handle of Miniport GraphicObject Handle,
+		we must setup links between subchannel used here with the handle and the graphic class associate with that handle.
+		the link could be changed dynamicaly using the NV_SET_OBJECT method.
+		*/
         assert(arg0 < d->pramin.ramin_size);
         uint8_t *obj_ptr = d->pramin.ramin_ptr + arg0;
 
@@ -1167,6 +1200,28 @@ int pgraph_handle_method(
         pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 / 4 + subchannel ] = ctx_3;
         pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 / 4 + subchannel ] = ctx_4;
         pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 / 4 + subchannel ] = ctx_5;
+
+        switch (arg0) {
+        case D3D_KELVIN_PRIMITIVE:
+            subchannel_to_graphic_class[subchannel]= NV_KELVIN_PRIMITIVE;
+            break;
+        case D3D_MEMORY_TO_MEMORY_COPY:
+            subchannel_to_graphic_class[subchannel] = NV_MEMORY_TO_MEMORY_FORMAT;//should be copy, supposed to dma copy an image rect and change the pixel format in the same time. need further study.
+            break;
+        case D3D_RECTANGLE_COPY:
+            subchannel_to_graphic_class[subchannel] = NV_IMAGE_BLIT;
+            break;
+        case D3D_RECTANGLE_COPY_SURFACES:
+            subchannel_to_graphic_class[subchannel] = NV_CONTEXT_SURFACES_2D;
+            break;
+        case D3D_RECTANGLE_COPY_PATTERN:
+            subchannel_to_graphic_class[subchannel] = NV_CONTEXT_PATTERN;
+            break;
+        default:
+            assert(0);
+            break;
+        }
+
     }
 
     // is this right? needs double check.
@@ -1177,12 +1232,14 @@ int pgraph_handle_method(
     pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH5/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 + subchannel ];
 
     //if the graphics_class doesn't work, we have to switch to use subchannel instead.
-    uint32_t graphics_class = GET_MASK(pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4],
+	uint32_t graphics_class = GET_MASK(pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4],
                                        NV_PGRAPH_CTX_SWITCH1_GRCLASS);
+	graphics_class = subchannel_to_graphic_class[subchannel];
     //if graphic_class not set correctly, use subchannel instead.
     //xbox d3d binds subchannel with specific graphic class, this binding could change, need more verificaiton. or we could implement the set_object
     //the binding here are reverse engineered from xdk pushbuffer sample.
-    if (graphics_class == 0) {
+	/*
+	if (graphics_class == 0) {
         switch (subchannel) {
             case 0:
                 graphics_class = NV_KELVIN_PRIMITIVE;
@@ -1207,7 +1264,7 @@ int pgraph_handle_method(
                 break;
         }
     }
-
+	*/
     // Logging is slow.. disable for now..
     //pgraph_log_method(subchannel, graphics_class, method, parameter);
 
@@ -1376,10 +1433,10 @@ int pgraph_handle_method(
                 case NV097_SET_TRANSFORM_CONSTANT://this sets the vertex constant register/slots using index from NV097_SET_TRANSFORM_CONSTANT_LOAD, not the transform constants in KelvinPrime.
                 case NV097_SET_TRANSFORM_PROGRAM://this sets the vertex shader using index from NV097_SET_TRANSFORM_PROGRAM_LOAD, not the transform program in KelvinPrime.
 
-                case NV097_ARRAY_ELEMENT16: //NON_INC
-                case NV097_ARRAY_ELEMENT32: //NON_INC
-				case NV097_DRAW_ARRAYS:		//NON_INC
-				case NV097_INLINE_ARRAY:	//NON_INC
+                case NV097_ARRAY_ELEMENT16: //PUSH_INSTR_IMM_NOINC
+                case NV097_ARRAY_ELEMENT32: //PUSH_INSTR_IMM_NOINC
+				case NV097_DRAW_ARRAYS:		//PUSH_INSTR_IMM_NOINC
+				case NV097_INLINE_ARRAY:	//PUSH_INSTR_IMM_NOINC
                     break;
 
                 default:
@@ -1672,21 +1729,21 @@ int pgraph_handle_method(
                     break;
                 }
                 case NV097_SET_FOG_GEN_MODE: {//done //pg->KelvinPrimitive.SetFogGenMode
-                    unsigned int mode;
+                    unsigned int mode; 
                     switch (arg0) {
                     case NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA:
-                        mode = NV_PGRAPH_CSV0_D_FOGGENMODE_SPEC_ALPHA; break;
+                        mode = FOG_MODE_LINEAR; break;
                     case NV097_SET_FOG_GEN_MODE_V_RADIAL:
-                        mode = NV_PGRAPH_CSV0_D_FOGGENMODE_RADIAL; break;
+                        mode = FOG_MODE_EXP; break;
                     case NV097_SET_FOG_GEN_MODE_V_PLANAR:
-                        mode = NV_PGRAPH_CSV0_D_FOGGENMODE_PLANAR; break;
+                        mode = FOG_MODE_ERROR2; break;
                     case NV097_SET_FOG_GEN_MODE_V_ABS_PLANAR:
-                        mode = NV_PGRAPH_CSV0_D_FOGGENMODE_ABS_PLANAR; break;
+                        mode = FOG_MODE_EXP2; break;
                     case NV097_SET_FOG_GEN_MODE_V_FOG_X:
-                        mode = NV_PGRAPH_CSV0_D_FOGGENMODE_FOG_X; break;
+                        mode = FOG_MODE_LINEAR_ABS; break;
                     default:
                         assert(false);
-                        mode = NV_PGRAPH_CSV0_D_FOGGENMODE_SPEC_ALPHA;
+                        mode = FOG_MODE_LINEAR;
                         break;
                     }
                     // SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_FOGGENMODE, mode);
@@ -1798,10 +1855,10 @@ int pgraph_handle_method(
                     unsigned int factor=arg0;
                     if (factor > 15) {
                         fprintf(stderr, "Unknown blend source factor: 0x%x, reset to NV_PGRAPH_BLEND_SFACTOR_ZERO\n", arg0);
-                        assert(false);
+                        //assert(false);
                         //set factor a default value, even this is not supposed to happen.
-                        factor = NV_PGRAPH_BLEND_SFACTOR_ZERO;
-                        pg->KelvinPrimitive.SetBlendFuncSfactor= NV_PGRAPH_BLEND_SFACTOR_ZERO;
+						// pushbuffer sample using method 304 with arg0 0x302.
+						pg->KelvinPrimitive.SetBlendFuncSfactor= factor & 0x0F;
                     }
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_SFACTOR, factor);
                     break;
@@ -2812,7 +2869,7 @@ int pgraph_handle_method(
                     // Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
                     
         //***NON_INC_METHOD
-                    for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
+                    for (size_t argc = 0; argc < method_count; argc++) {
                         arg0 = argv[argc];
                         assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
                         pg->inline_elements[
@@ -2829,7 +2886,7 @@ int pgraph_handle_method(
                     // Test-case : Turok (in main menu)
                     
         //***NON_INC_METHOD
-                    for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
+                    for (size_t argc = 0; argc < method_count; argc++) {
                         arg0 = argv[argc];
                         assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
                         pg->inline_elements[
@@ -2894,12 +2951,11 @@ int pgraph_handle_method(
 					//->last batch (NV097_INLINE_ARRAY, count), count= last remained vertex count * dwords/vertex.
 					//->(NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END)
         //***NON_INC_METHOD
-                    for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
+                    for (size_t argc = 0; argc < method_count; argc++) {
                         arg0 = argv[argc];
                         assert(pg->inline_array_length < NV2A_MAX_BATCH_LENGTH);
                         pg->inline_array[
                             pg->inline_array_length++] = arg0;
-
                     }
 
                     break;
@@ -3270,8 +3326,9 @@ int pgraph_handle_method(
 
                     //qemu_mutex_unlock(&pg->pgraph_lock);
                     //qemu_mutex_lock_iothread();
-
-                    uint32_t semaphore_offset = pg->pgraph_regs[NV_PGRAPH_SEMAPHOREOFFSET];
+					//we're not emulating SEMAPHORE, disable this code for now.
+					/*
+                    uint32_t semaphore_offset = pg->pgraph_regs[NV_PGRAPH_SEMAPHOREOFFSET/4];
 
                     xbox::addr_xt semaphore_dma_len;
                     uint8_t *semaphore_data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaSemaphore,
@@ -3280,7 +3337,7 @@ int pgraph_handle_method(
                     semaphore_data += semaphore_offset;
 
                     stl_le_p((uint32_t*)semaphore_data, arg0);
-
+					*/
                     //qemu_mutex_lock(&pg->pgraph_lock);
                     //qemu_mutex_unlock_iothread();
 
