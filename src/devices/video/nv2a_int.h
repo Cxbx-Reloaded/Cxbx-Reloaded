@@ -148,7 +148,7 @@ typedef struct VertexAttribute {
 	uint32_t stride;
 
 	bool needs_conversion;
-	uint8_t *converted_buffer;
+	uint8_t *converted_buffer=nullptr;
 	unsigned int converted_elements;
 	unsigned int converted_size;
 	unsigned int converted_count;

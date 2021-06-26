@@ -51,7 +51,7 @@ CxbxVertexBufferConverter VertexBufferConverter = {};
 // Inline vertex buffer emulation
 xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
 xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat = {};
-bool                          g_InlineVertexBuffer_DeclarationOverride = false;
+int                          g_InlineVertexBuffer_DeclarationOverride = 0;
 std::vector<D3DIVB>           g_InlineVertexBuffer_Table;
 UINT                          g_InlineVertexBuffer_TableLength = 0;
 UINT                          g_InlineVertexBuffer_TableOffset = 0;
@@ -719,7 +719,7 @@ void CxbxImpl_End()
 
 	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
 	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = true;
+	g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
@@ -736,7 +736,7 @@ void CxbxImpl_End()
 	CxbxDrawPrimitiveUP(DrawContext);
 
 	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-	g_InlineVertexBuffer_DeclarationOverride = false;
+	g_InlineVertexBuffer_DeclarationOverride = 0;
 
 	// TODO: Should technically clean this up at some point..but on XP doesnt matter much
 	//	ExFreePool(g_InlineVertexBuffer_pData);

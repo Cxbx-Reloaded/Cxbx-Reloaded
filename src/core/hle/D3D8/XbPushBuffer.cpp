@@ -140,6 +140,9 @@ void HLE_draw_inline_buffer(NV2AState *d)
 
 	LOG_UNIMPLEMENTED(); // TODO : Implement HLE_draw_inline_buffer
 }
+extern int pgraph_get_inline_array_stride(PGRAPHState *pg);
+extern int g_InlineVertexBuffer_DeclarationOverride; // TMP glue
+xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat = {};
 
 void HLE_draw_inline_array(NV2AState *d)
 {
@@ -155,7 +158,115 @@ void HLE_draw_inline_array(NV2AState *d)
 	}
 	// render vertices
 	else {
-		DWORD dwVertexStride = CxbxGetStrideFromVertexDeclaration(CxbxGetVertexDeclaration());
+		//DWORD dwVertexStride = CxbxGetStrideFromVertexDeclaration(CxbxGetVertexDeclaration());
+		//vertex stride can be set via NV097_SET_VERTEX_DATA_ARRAY_FORMAT, which is then stored in pg->vertex_attributes[slot].stride where slot is the vertex shader slot being used.
+		//don't know how to retrive the slot, set it as 0 here for now.
+
+
+
+		DWORD dwVertexStride =pgraph_get_inline_array_stride(pg);
+		int uiStride = 0;
+		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+			//format was set in NV097_SET_VERTEX_DATA_ARRAY_FORMAT
+			//g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = pg->vertex_attributes[reg].format;
+			uiStride += pg->vertex_attributes[reg].count * pg->vertex_attributes[reg].size;
+			g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+			//g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+			//set attritute Format if attribute existed.
+			//the format could be retrived from NV097_SET_VERTEX_DATA_ARRAY_OFFSET, but sometimes draw call calls NV097_SET_VERTEX_DATA_ARRAY_FORMAT only.
+			//in that case, we'll have to generate the Format using existing info.
+			//this is for the ease of using existing drawing routines.
+			if(pg->vertex_attributes[reg].count>0){
+				switch (reg) {
+					case xbox::X_D3DVSDE_POSITION:
+						if (pg->vertex_attributes[reg].gl_type == GL_FLOAT){
+							switch (pg->vertex_attributes[reg].count) {
+							case 1:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_FLOAT1;
+								break;
+							case 2:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_FLOAT2;
+								break;
+							case 3:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_FLOAT3;
+								break;
+							case 4:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_FLOAT4;
+								break;
+							}
+						}
+						else if (pg->vertex_attributes[reg].gl_type == GL_SHORT) {
+							switch (pg->vertex_attributes[reg].count) {
+							case 1:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_SHORT1;
+								break;
+							case 2:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_SHORT2;
+								break;
+							case 3:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_SHORT3;
+								break;
+							case 4:
+								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_SHORT4;
+								break;
+							}
+						}
+						break;
+					case xbox::X_D3DVSDE_BLENDWEIGHT:
+						if (pg->vertex_attributes[reg].gl_type == GL_UNSIGNED_BYTE) {
+							switch (pg->vertex_attributes[reg].count) {
+								case 1:
+									g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_PBYTE1;
+									break;
+								case 2:
+									g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_PBYTE2;
+									break;
+								case 3:
+									g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_PBYTE3;
+									break;
+								case 4:
+									g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_PBYTE4;
+									break;
+							}
+						}
+						break;
+					case xbox::X_D3DVSDE_NORMAL:
+						break;
+					case xbox::X_D3DVSDE_DIFFUSE:
+						//not sure how the format ENUM should be? use FVF for now
+						//4D packed unsigned bytes mapped to 0.0 to 1.0 range. In double-word format this is ARGB, or in byte ordering it would be B, G, R, A. 
+						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_D3DCOLOR;
+						break;
+					case xbox::X_D3DVSDE_SPECULAR:
+						//not sure how the format ENUM should be? use FVF for now
+						//4D packed unsigned bytes mapped to 0.0 to 1.0 range. In double-word format this is ARGB, or in byte ordering it would be B, G, R, A. 
+						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_D3DCOLOR;
+						break;
+					case xbox::X_D3DVSDE_FOG:
+						break;
+					case xbox::X_D3DVSDE_POINTSIZE:
+						break;
+					case xbox::X_D3DVSDE_BACKDIFFUSE:
+						break;
+					case xbox::X_D3DVSDE_BACKSPECULAR:
+						break;
+					case xbox::X_D3DVSDE_TEXCOORD0:
+						break;
+					case xbox::X_D3DVSDE_TEXCOORD1:
+						break;
+					case xbox::X_D3DVSDE_TEXCOORD2:
+						break;
+					case xbox::X_D3DVSDE_TEXCOORD3:
+						break;
+				}
+			}
+			else {
+				g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_NONE;
+			}
+		}
+        //uiStride should end up as overall vertex stride.
+
+
 		if (dwVertexStride > 0) {
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
@@ -165,7 +276,16 @@ void HLE_draw_inline_array(NV2AState *d)
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
+
+			// Arrange for g_NV2AInlineArrayVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+			// so that our above composed declaration will be used for the next draw :
+			g_InlineVertexBuffer_DeclarationOverride = 2;
+
 			CxbxDrawPrimitiveUP(DrawContext);
+
+			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+			g_InlineVertexBuffer_DeclarationOverride = 0;
+
 		}
 	}
 }
