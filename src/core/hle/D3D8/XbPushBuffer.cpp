@@ -176,6 +176,7 @@ void HLE_draw_inline_array(NV2AState *d)
 			//the format could be retrived from NV097_SET_VERTEX_DATA_ARRAY_OFFSET, but sometimes draw call calls NV097_SET_VERTEX_DATA_ARRAY_FORMAT only.
 			//in that case, we'll have to generate the Format using existing info.
 			//this is for the ease of using existing drawing routines.
+			/*
 			if(pg->vertex_attributes[reg].count>0){
 				switch (reg) {
 					case xbox::X_D3DVSDE_POSITION:
@@ -259,10 +260,14 @@ void HLE_draw_inline_array(NV2AState *d)
 					case xbox::X_D3DVSDE_TEXCOORD3:
 						break;
 				}
+
 			}
 			else {
 				g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_NONE;
 			}
+			*/
+			//this should work, and much easier.
+			g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
 		}
         //uiStride should end up as overall vertex stride.
 
@@ -271,11 +276,11 @@ void HLE_draw_inline_array(NV2AState *d)
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
 
+			DrawContext.pXboxIndexData = false;
 			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-
 
 			// Arrange for g_NV2AInlineArrayVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
 			// so that our above composed declaration will be used for the next draw :
