@@ -1389,56 +1389,65 @@ void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
 	CxbxSetVertexShaderSlots(tokens, Address, shaderHeader.NumInst);
 }
 
-void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address)
+void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
 {
 	// Handle is always address of an X_D3DVertexShader struct, thus always or-ed with 1 (X_D3DFVF_RESERVED0)
-	// Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
-	// D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
+    // Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
+    // D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
 
-	xbox::X_D3DVertexShader* pXboxVertexShader = VshHandleToXboxVertexShader(Handle);
+    xbox::X_D3DVertexShader* pXboxVertexShader = VshHandleToXboxVertexShader(Handle);
 
-	DWORD NrTokens;
-	DWORD* pNV2ATokens = CxbxGetVertexShaderTokens(pXboxVertexShader, &NrTokens);
+    DWORD NrTokens;
+    DWORD* pProgramAndConstants = CxbxGetVertexShaderTokens(pXboxVertexShader, &NrTokens);
 
 #if 1 // TODO : Remove dirty hack (?once CreateVertexShader trampolines to Xbox code that sets ProgramAndConstantsDwords correctly?) :
-	if (NrTokens == 0)
-		NrTokens = 10000;
+    if (NrTokens == 0)
+        NrTokens = 10000;
 #endif
+    //xbox d3d LoadVertexShader() always push (NV097_SET_TRANSFORM_PROGRAM,0, method count 1) first, set the starting load register 0.
+    //since it's always starting with register 0. we simply skip setting/reading NV097_SET_TRANSFORM_PROGRAM
+    static unsigned ConstantRegister = 0;
+    //ProgramAndConstantsDwords is the total length of the pushbuffer snapshot.
+    DWORD* pEnd = &pProgramAndConstants[pXboxVertexShader->ProgramAndConstantsDwords];
+    DWORD* argv = nullptr;
+    while (pProgramAndConstants < pEnd) {
+        DWORD dwMethod, dwSubChannel, nrDWORDS;
+        D3DPUSH_DECODE(*pProgramAndConstants++, dwMethod, dwSubChannel, nrDWORDS);
+        argv = pProgramAndConstants;
+        if (nrDWORDS == 0) { LOG_TEST_CASE("Zero-length NV2A method detected!"); break; }
+        switch (dwMethod) {
+        case NV097_SET_TRANSFORM_PROGRAM: { // = 0x00000B00
+            if ((nrDWORDS & 3) != 0) LOG_TEST_CASE("NV2A_VP_UPLOAD_INST arguments should be a multiple of 4!");
+            unsigned nrSlots = nrDWORDS / X_VSH_INSTRUCTION_SIZE;
+            CxbxSetVertexShaderSlots(pProgramAndConstants, ProgramRegister, nrSlots);
+            ProgramRegister += nrSlots;
+            
+            break;
+        }
+        case NV097_SET_TRANSFORM_CONSTANT_LOAD: // = 0x00001EA4
+            if (nrDWORDS != 1) LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST_ID should have one argument!");
+            ConstantRegister = argv[0];
+            
+            break;
+        case NV097_SET_TRANSFORM_CONSTANT: { // = 0x00000B80
+            if ((nrDWORDS & 3) != 0) LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST arguments should be a multiple of 4!");
+            unsigned nrConstants = nrDWORDS / X_VSH_INSTRUCTION_SIZE;
+            // TODO : FIXME : Implement and call SetVertexShaderConstants(pNV2ATokens, ConstantAddress, nrConstants);
+            //CxbxImpl_SetVertexShaderConstant() uses Register -96~96. vertex shader pushbuffer snapshot uses 0~192.
+            CxbxImpl_SetVertexShaderConstant(ConstantRegister- X_D3DSCM_CORRECTION, argv, nrConstants);
+            ConstantRegister += nrConstants;
+            
+            break;
+        }
+        default:
+            // TODO : Remove this break-out hack once NrTokens is reliable and instead have: DEFAULT_UNREACHABLE;
+            LOG_TEST_CASE("Stopping at unexpected NV2A method");
+            pEnd = pProgramAndConstants;
+            break;
+        }
 
-	static unsigned ConstantAddress = 0;
-	DWORD* pEnd = pNV2ATokens + NrTokens;
-	while (pNV2ATokens < pEnd) {
-		DWORD dwMethod, dwSubChannel, nrDWORDS;
-		D3DPUSH_DECODE(*pNV2ATokens++, dwMethod, dwSubChannel, nrDWORDS);
-		if (nrDWORDS == 0) { LOG_TEST_CASE("Zero-length NV2A method detected!"); break; }
-		switch (dwMethod) {
-		case NV2A_VP_UPLOAD_INST(0): { // = 0x00000B00
-			if ((nrDWORDS & 3) != 0) LOG_TEST_CASE("NV2A_VP_UPLOAD_INST arguments should be a multiple of 4!");
-			unsigned nrSlots = nrDWORDS / X_VSH_INSTRUCTION_SIZE;
-			CxbxSetVertexShaderSlots(pNV2ATokens, Address, nrSlots);
-			Address += nrSlots;
-			break;
-		}
-		case NV2A_VP_UPLOAD_CONST_ID: // = 0x00001EA4
-			if (nrDWORDS != 1) LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST_ID should have one argument!");
-			ConstantAddress = *pNV2ATokens;
-			break;
-		case NV2A_VP_UPLOAD_CONST(0): { // = 0x00000B80
-			if ((nrDWORDS & 3) != 0) LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST arguments should be a multiple of 4!");
-			unsigned nrConstants = nrDWORDS / X_VSH_INSTRUCTION_SIZE;
-			// TODO : FIXME : Implement and call SetVertexShaderConstants(pNV2ATokens, ConstantAddress, nrConstants);
-			ConstantAddress += nrConstants;
-			break;
-		}
-		default:
-			// TODO : Remove this break-out hack once NrTokens is reliable and instead have: DEFAULT_UNREACHABLE;
-			LOG_TEST_CASE("Stopping at unexpected NV2A method");
-			pEnd = pNV2ATokens;
-			break;
-		}
-
-		pNV2ATokens += nrDWORDS;
-	}
+        pProgramAndConstants += nrDWORDS;
+    }
 }
 
 // Set default values for attributes missing from vertex declaration
