@@ -2465,13 +2465,18 @@ int pgraph_handle_method(
 
 				}
 
-				try to create a vertex shader handle with feasible structure and set g_Xbox_VertexShader_Handle = Handle; should work.
+				try to create a vertex shader handle with feasible structure and set
+				    g_Xbox_VertexShader_Handle = Handle; should work.
 				HLE g_Xbox_VertexShader_Handle = xbox vertex shader handle.
 				    vertex shader address = vertex shader handle - 0x01.
 				HLE g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction/Passthrough/ShaderProgram
 				HLE XbVertexShader.cpp::CxbxUpdateHostVertexShader()
 				HLE XbVertexShader.cpp::CxbxUpdateHostVertexShaderConstants();
 				HLE XbVertexShader.cpp::CxbxSetVertexShaderSlots(DWORD* pTokens, DWORD Address, DWORD NrInstructions)
+				    DWORD * HLE_get_NV2A_vertex_program_register_ptr(unsigned const_index)
+				    GetCxbxVertexShaderSlotPtr(Address)  // remapped to DWORD * HLE_get_NV2A_vertex_program_register_ptr(unsigned const_index)
+					    return &g_Xbox_VertexShader_FunctionSlots[SlotIndexAddress * X_VSH_INSTRUCTION_SIZE];
+						//remapped to return xbox::dword_xt * HLE_get_NV2A_vertex_program_register_ptr(unsigned const_index)
 				HLE XbVertexShader.cpp::CxbxSetVertexShaderPassthroughProgram()
 				HLE XbVertexShader.cpp::CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)
 					HLE_get_NV2A_vertex_constant_float4_ptr(Register)
@@ -2481,8 +2486,8 @@ int pgraph_handle_method(
 				    DWORD g_Xbox_VertexShader_FunctionSlots[137*4];
 					pg->program_data[136][4]
 				for vertex shader program:
-					HLE uses g_Xbox_VertexShader_FunctionSlots[137*4]
-					PGRAPH uses pg->program_data[136][4]
+					HLE uses g_Xbox_VertexShader_FunctionSlots[137*4], remapped to pg->program_data
+					PGRAPH uses pg->program_data[136][4] //extend to [137][1] and set last slot [1,1,1,1] FLD_FINAL 
 				for vertex shder constants
 					HLE uses pg->vsh_constants[192][4]
 					PGRAPH use pg->vsh_constants[192][4]

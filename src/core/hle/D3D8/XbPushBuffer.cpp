@@ -345,6 +345,17 @@ float *HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index)
 	return (float*)&(pg->vsh_constants[const_index][0]);
 }
 
+xbox::dword_xt * HLE_get_NV2A_vertex_program_register_ptr(unsigned const_index)
+{
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
+
+	// See CASE_32(NV097_SET_TRANSFORM_CONSTANT, 4) in LLE pgraph_handle_method()
+	assert(const_index < NV2A_VERTEXSHADER_CONSTANTS);
+	return (xbox::dword_xt*)&(pg->vsh_constants[const_index][0]);
+}
+
+
 // For now, skip the cache, but handle the pgraph method directly
 // Note : Here's where the method gets multiplied by four!
 // Note 2 : d is read from local scope, and ni is unused (same in LLE)

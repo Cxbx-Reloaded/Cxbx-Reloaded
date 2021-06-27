@@ -630,8 +630,8 @@ typedef struct PGRAPHState {
     //pg->clear_surface  
 	//pg->KelvinPrimitive.SetTransformProgramCxtWriteEn
 	//bool enable_vertex_program_write;
-	
-	uint32_t program_data[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH][VSH_TOKEN_SIZE];
+	//add extra slot for edge case in token parsing. FLD_FINAL
+	uint32_t program_data[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH+1][VSH_TOKEN_SIZE];
 
 	uint32_t vsh_constants[NV2A_VERTEXSHADER_CONSTANTS][4];
 	bool vsh_constants_dirty[NV2A_VERTEXSHADER_CONSTANTS];
