@@ -405,7 +405,7 @@ void (*pgraph_draw_state_update)(NV2AState *d);
 void (*pgraph_draw_clear)(NV2AState *d);
 
 //static void pgraph_set_context_user(NV2AState *d, uint32_t value);
-void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
+//void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
 static void pgraph_log_method(unsigned int subchannel, unsigned int graphics_class, unsigned int method, uint32_t parameter);
 static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg, unsigned int attr);
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg);
@@ -1198,7 +1198,8 @@ int pgraph_handle_method(
 		we must setup links between subchannel used here with the handle and the graphic class associate with that handle.
 		the link could be changed dynamicaly using the NV_SET_OBJECT method.
 		*/
-        assert(arg0 < d->pramin.ramin_size);
+		/*
+		assert(arg0 < d->pramin.ramin_size);
         uint8_t *obj_ptr = d->pramin.ramin_ptr + arg0;
 
         uint32_t ctx_1 = ldl_le_p((uint32_t*)obj_ptr);
@@ -1213,7 +1214,7 @@ int pgraph_handle_method(
         pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 / 4 + subchannel ] = ctx_3;
         pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 / 4 + subchannel ] = ctx_4;
         pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 / 4 + subchannel ] = ctx_5;
-
+		*/
         switch (arg0) {
         case D3D_KELVIN_PRIMITIVE:
             subchannel_to_graphic_class[subchannel]= NV_KELVIN_PRIMITIVE;
@@ -2484,10 +2485,10 @@ int pgraph_handle_method(
 
 				HLE vertex program slots stored in
 				    DWORD g_Xbox_VertexShader_FunctionSlots[137*4];
-					pg->program_data[136][4]
+					pg->vsh_program_slots[136][4]
 				for vertex shader program:
-					HLE uses g_Xbox_VertexShader_FunctionSlots[137*4], remapped to pg->program_data
-					PGRAPH uses pg->program_data[136][4] //extend to [137][1] and set last slot [1,1,1,1] FLD_FINAL 
+					HLE uses g_Xbox_VertexShader_FunctionSlots[137*4], remapped to pg->vsh_program_slots
+					PGRAPH uses pg->vsh_program_slots[136][4] //extend to [137][1] and set last slot [1,1,1,1] FLD_FINAL 
 				for vertex shder constants
 					HLE uses pg->vsh_constants[192][4]
 					PGRAPH use pg->vsh_constants[192][4]
@@ -2510,8 +2511,8 @@ int pgraph_handle_method(
                             int program_load = pg->KelvinPrimitive.SetTransformProgramLoad;
 
                             assert(program_load < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
-                            //pg->KelvinPrimitive.SetTransformProgram[32] is not enough for xbox d3d, pgraph uses program_data[136][4] to store vertex shader program
-                            pg->program_data[program_load][slot % 4] = arg0;
+                            //pg->KelvinPrimitive.SetTransformProgram[32] is not enough for xbox d3d, pgraph uses vsh_program_slots[136][4] to store vertex shader program
+                            pg->vsh_program_slots[program_load][slot % 4] = arg0;
 
                             if (slot % 4 == 3) {
                                 pg->KelvinPrimitive.SetTransformProgramLoad= program_load + 1; //KelvinPrimitive.SetTransformProgramLoad must be advanced
@@ -2650,8 +2651,9 @@ int pgraph_handle_method(
                                 //pg->light_local_attenuation[light_index][part] = *(float*)&arg0;
                                 break;
                             default:
-                                assert(false);
-                                break;
+                                //assert(false);
+								//Rev_1074[3]
+								break;
                         }
 
                     }
@@ -4255,13 +4257,13 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
     state.polygon_back_mode = (enum ShaderPolygonMode)pg->KelvinPrimitive.SetBackPolygonMode;
 
     state.program_length = 0;
-    memset(state.program_data, 0, sizeof(state.program_data));
+    memset(state.vsh_program_copy, 0, sizeof(state.vsh_program_copy));
 
     if (vertex_program) {
         // copy in vertex program tokens
         for (i = program_start; i < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH; i++) {
-            uint32_t *cur_token = (uint32_t*)&pg->program_data[i];
-            memcpy(&state.program_data[state.program_length],
+            uint32_t *cur_token = (uint32_t*)&pg->vsh_program_slots[i];
+            memcpy(&state.vsh_program_copy[state.program_length],
                    cur_token,
                    VSH_TOKEN_SIZE * sizeof(uint32_t));
             state.program_length++;
@@ -4792,7 +4794,7 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
         memcpy(&pg->last_surface_shape, &pg->surface_shape,
             sizeof(SurfaceShape));
     }
-
+	/* //disable for now ,since it's using LLE dma object. we're wait for our HLE alternative.
     if ((color_write || (!upload && pg->surface_color.write_enabled_cache))
         && (upload || pg->surface_color.draw_dirty)) {
         pgraph_update_surface_part(d, upload, true);
@@ -4803,7 +4805,7 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
         && (upload || pg->surface_zeta.draw_dirty)) {
         pgraph_update_surface_part(d, upload, false);
     }
-
+	*/
 }
 
 static void pgraph_bind_textures(NV2AState *d)

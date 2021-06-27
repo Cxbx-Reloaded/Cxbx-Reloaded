@@ -720,7 +720,7 @@ STRUCT_VERTEX_DATA);
 
     } else if (state.vertex_program) {
         vsh_translate(VSH_VERSION_XVS,
-                      (uint32_t*)state.program_data,
+                      (uint32_t*)state.vsh_program_copy,
                       state.program_length,
                       state.z_perspective,
                       header, body);

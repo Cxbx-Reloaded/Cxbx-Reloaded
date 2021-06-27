@@ -72,7 +72,10 @@ void EmuExecutePushBuffer
 			//fixup must not exceed the pushbuffer data range.
 			if ((OffsetInBytes + SizeInBytes) <= pPushBuffer->Size)
 			{
-				memcpy(pPushBufferData + OffsetInBytes, pFixupData, SizeInBytes);
+				//disable fixup for now. currently fixup doesn't work correctly for realtime recorded pushbuffer.
+				//that's because we patch HLE calls and for those calls without trampoline, pushbuffer command wasn't sent.
+				//but fixup keep the reference and tried to fixup the pushbuffer command. for example, SetVertexConstants().
+				//memcpy(pPushBufferData + OffsetInBytes, pFixupData, SizeInBytes);
 			}
 			pFixupData += SizeInBytes;
 			/*
@@ -87,7 +90,10 @@ void EmuExecutePushBuffer
             */
         }
 	}
-    EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
+	//the pushbuffer size must be subtracted with 4, because xbox d3d append 1 dwords at the end of original pushbuffer when creating a new pushbuffer,
+	//the appended dword is 0xbaadf00d, and when execute the pushbuffer, it insert a jump command in that dword to jump back to main pushbuffer.
+	//pDevice-PUSH. but here we do doing HLE, we are not using real push buffer and real dma. so exclude the last dword.
+    EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
 
     return;
 }
@@ -312,17 +318,7 @@ uint32_t HLE_read_NV2A_pgraph_register(const int reg)
 	PGRAPHState *pg = &(dev->pgraph);
 	return pg->regs[reg];
 }
-
-float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
-{
-	NV2AState* dev = g_NV2A->GetDeviceState();
-	PGRAPHState *pg = &(dev->pgraph);
-
-	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
-	VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-	return vertex_attribute->inline_value;
-}
-
+/* //disable for now, use HLE_get_NV2A_vertex_program_slot_ptr(const DWORD slot_index) instead.
 uint32_t HLE_read_NV2A_vertex_program_slot(unsigned program_load, unsigned slot)
 {
 	NV2AState* dev = g_NV2A->GetDeviceState();
@@ -334,7 +330,7 @@ uint32_t HLE_read_NV2A_vertex_program_slot(unsigned program_load, unsigned slot)
 
 	return value;
 }
-
+*/
 float *HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index)
 {
 	NV2AState* dev = g_NV2A->GetDeviceState();
@@ -476,10 +472,15 @@ extern void EmuExecutePushBufferRaw
     dma_put = (uint32_t*)((xbox::addr_xt)pPushData + uSizeInBytes);
     dma_get = (uint32_t*)pPushData;
     dma_state = {};
-
+    if (dma_get >= dma_put) {
+        
+        //dma_get = dma_put;
+        //dma starving, shall we wait or sleep for a while?
+        return;
+    }
     // NV-4-style PFIFO DMA command stream pusher
     // See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-pusher-pseudocode-pre-gf100
-    while (dma_get != dma_put) {
+    while (dma_get < dma_put) {
         // Check if loop reaches end of pushbuffer
         if (dma_get >= dma_limit) {
             LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
@@ -574,7 +575,12 @@ extern void EmuExecutePushBufferRaw
         /* no command active - this is the first word of a new one */
         rsvd_shadow = word;
         // Check and handle command type, then instruction, then flags
-        switch (command.type) {
+		if (word == 0x00000000) {
+			//real NOP;
+			continue;
+		}
+
+		switch (command.type) {
 
             //***************************we need to check the jump address once we encounter these methods.
             //because the jump address is obviously not in the VRAM range. perhaps a memory range transform must be applied first?

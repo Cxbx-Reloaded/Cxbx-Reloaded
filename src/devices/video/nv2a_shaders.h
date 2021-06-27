@@ -81,7 +81,7 @@ typedef struct ShaderState {
 
     /* vertex program */
     bool vertex_program;
-    uint32_t program_data[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH][VSH_TOKEN_SIZE];
+    uint32_t vsh_program_copy[NV2A_MAX_TRANSFORM_PROGRAM_LENGTH][VSH_TOKEN_SIZE];
     int program_length;
     bool z_perspective;
 
@@ -106,7 +106,7 @@ typedef struct ShaderBinding {
     GLint clip_range_loc;
 
     GLint vsh_constant_loc[NV2A_VERTEXSHADER_CONSTANTS];
-	uint32_t vsh_constants[NV2A_VERTEXSHADER_CONSTANTS][4];
+	//uint32_t vsh_constants[NV2A_VERTEXSHADER_CONSTANTS][4];  //never used
 
     GLint inv_viewport_loc;
     GLint ltctxa_loc[NV2A_LTCTXA_COUNT];

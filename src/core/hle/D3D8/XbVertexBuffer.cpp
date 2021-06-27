@@ -37,6 +37,9 @@
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
+#include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
+#include "devices/video/nv2a_int.h" // For NV** defines
+
 
 #include <imgui.h>
 
@@ -818,3 +821,16 @@ void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStrea
 	g_Xbox_SetStreamSource[StreamNumber].VertexBuffer = pStreamData;
 	g_Xbox_SetStreamSource[StreamNumber].Stride = Stride;
 }
+
+extern NV2ADevice* g_NV2A;// TMP glue
+
+float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
+{
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState *pg = &(dev->pgraph);
+
+	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
+	VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+	return vertex_attribute->inline_value;
+}
+

@@ -390,20 +390,25 @@ static void pfifo_run_pusher(NV2AState *d)
 //		NV2A_DPRINTF("PFIFO run_pusher dma_get/put nullptr! get 0x%08X, put 0x%08X\n", dma_get,dma_put);
 //		return;
 //	}
-	if (dma_get == dma_put) {
+	if (dma_get >= dma_put) {
 		//no data available pushbuffer yet, or xbox d3d hasn't kickoff pushbuffer yet. shall we add sleep() or wait() here?
 		NV2A_DPRINTF("PFIFO run_pusher dma_get==dma_put ! get 0x%08X, put 0x%08X\n", dma_get, dma_put);
+		//
+		//dma_get = dma_put;
+		//dma starvin, shall we sleep for a while?
 		return;
 	}
-		
+
 	if (dma_get >= (uint32_t *)dma_len) {
 		//this check is probably redundant. 
 		NV2A_DPRINTF("PFIFO run_pusher dma_get>=dma_len ! get 0x%08X, put 0x%08X\n", dma_get, dma_len);
-		assert(false);
-		SET_MASK(*p_dma_state, NV_PFIFO_CACHE1_DMA_STATE_ERROR,
-			NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION);
+		//assert(false);
+		//SET_MASK(*p_dma_state, NV_PFIFO_CACHE1_DMA_STATE_ERROR,
+			//NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION);
+		dma_get = dma_put;
 		return;
 	}
+
 	EmuExecutePushBufferRaw
     (
         (void  *)((uint32_t)*p_dma_get+ (uint32_t)dma),	//use dma starting adder as pushbuffer starting address
