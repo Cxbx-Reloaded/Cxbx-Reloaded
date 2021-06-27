@@ -1073,12 +1073,12 @@ static bool FreeCxbxVertexDeclaration(CxbxVertexDeclaration *pCxbxVertexDeclarat
 
 	return false;
 }
-extern xbox::dword_xt * HLE_get_NV2A_vertex_program_register_ptr(unsigned const_index);
+extern xbox::dword_xt * HLE_get_NV2A_vertex_program_slot_ptr(const DWORD slot_index);
 xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress)
 {
 	if (SlotIndexAddress < X_VSH_MAX_INSTRUCTION_COUNT) {
 		//return &g_Xbox_VertexShader_FunctionSlots[SlotIndexAddress * X_VSH_INSTRUCTION_SIZE];
-		return HLE_get_NV2A_vertex_program_register_ptr(SlotIndexAddress);
+		return HLE_get_NV2A_vertex_program_slot_ptr(SlotIndexAddress);
 	} else {
 		LOG_TEST_CASE("SlotIndexAddress out of range"); // FIXME : extend with value (once supported by LOG_TEST_CASE)
 		return nullptr;
@@ -1200,7 +1200,7 @@ void CxbxSetVertexShaderSlots(DWORD* pTokens, DWORD Address, DWORD NrInstruction
 	// Make sure slot parsing in EmuParseVshFunction (VshConvertToIntermediate) stops after the last slot;
 	// Just setting bit 0 in 3rd DWORD suffices (see XboxVertexShaderDecoder.VshGetField.FieldMapping[FLD_FINAL]) :
 	//g_Xbox_VertexShader_FunctionSlots[(X_VSH_MAX_INSTRUCTION_COUNT * X_VSH_INSTRUCTION_SIZE) + 3] = 1;
-	HLE_get_NV2A_vertex_program_register_ptr(136)[3] = 1;
+	HLE_get_NV2A_vertex_program_slot_ptr(X_VSH_MAX_INSTRUCTION_COUNT)[3] = 1;
 }
 
 static void CxbxSetVertexShaderPassthroughProgram()

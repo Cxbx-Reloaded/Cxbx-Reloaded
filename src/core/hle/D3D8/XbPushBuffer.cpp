@@ -330,7 +330,7 @@ uint32_t HLE_read_NV2A_vertex_program_slot(unsigned program_load, unsigned slot)
 
 	// See CASE_32(NV097_SET_TRANSFORM_PROGRAM, 4) in LLE pgraph_handle_method()
 	assert(program_load < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
-	uint32_t value = pg->program_data[program_load][slot % 4];
+	uint32_t value = pg->vsh_program_slots[program_load][slot % 4];
 
 	return value;
 }
@@ -345,14 +345,14 @@ float *HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index)
 	return (float*)&(pg->vsh_constants[const_index][0]);
 }
 
-xbox::dword_xt * HLE_get_NV2A_vertex_program_register_ptr(unsigned const_index)
+xbox::dword_xt * HLE_get_NV2A_vertex_program_slot_ptr(const DWORD slot_index)
 {
 	NV2AState* dev = g_NV2A->GetDeviceState();
 	PGRAPHState* pg = &(dev->pgraph);
 
 	// See CASE_32(NV097_SET_TRANSFORM_CONSTANT, 4) in LLE pgraph_handle_method()
-	assert(const_index < NV2A_VERTEXSHADER_CONSTANTS);
-	return (xbox::dword_xt*)&(pg->vsh_constants[const_index][0]);
+	assert(slot_index < NV2A_VERTEXSHADER_CONSTANTS);
+	return (xbox::dword_xt*)&(pg->vsh_program_slots[slot_index][0]);
 }
 
 
