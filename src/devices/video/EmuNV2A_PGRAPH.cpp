@@ -1155,7 +1155,7 @@ int pgraph_get_inline_array_stride(PGRAPHState *pg)
 //extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat = {};//tmp glue
 
 static uint32_t subchannel_to_graphic_class[8] = { NV_KELVIN_PRIMITIVE,NV_MEMORY_TO_MEMORY_FORMAT,NV_IMAGE_BLIT,NV_CONTEXT_SURFACES_2D,0,NV_CONTEXT_PATTERN,0,0, };
-
+extern IDirect3DDevice9Ex *g_pD3DDevice;
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
 int pgraph_handle_method(
@@ -1793,21 +1793,24 @@ int pgraph_handle_method(
                     pg->KelvinPrimitive.SetWindowClipType &= 0x1;
                     break;
 
-                case NV097_SET_ALPHA_TEST_ENABLE://done //pg->KelvinPrimitive.SetAlphaTestEnable
+                case NV097_SET_ALPHA_TEST_ENABLE://D3DRS_CULLMODE //pg->KelvinPrimitive.SetAlphaTestEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_ALPHATESTENABLE, arg0);
-                    break;
+					g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+					break;
 
-                case NV097_SET_BLEND_ENABLE://done //pg->KelvinPrimitive.SetBlendEnable
+                case NV097_SET_BLEND_ENABLE://D3DRS_ALPHABLENDENABLE //pg->KelvinPrimitive.SetBlendEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_EN, arg0);
-                    break;
+					g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+					break;
 
-                case NV097_SET_CULL_FACE_ENABLE://done //pg->KelvinPrimitive.SetBlendEnable
+                case NV097_SET_CULL_FACE_ENABLE://D3DRS_CULLMODE //pg->KelvinPrimitive.SetCullFaceEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_CULLENABLE,
                     //	arg0);
-                    break;
-                case NV097_SET_DEPTH_TEST_ENABLE://done //pg->KelvinPrimitive.SetCullFaceEnable
+					g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+					break;
+                case NV097_SET_DEPTH_TEST_ENABLE://done //pg->KelvinPrimitive.SetDepthTestEnable
                     // Test-case : Whiplash
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4], NV_PGRAPH_CONTROL_0_ZENABLE,
                     //	arg0);
@@ -1816,10 +1819,11 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_DITHERENABLE, arg0);
                     break;
-                case NV097_SET_LIGHTING_ENABLE://done //pg->KelvinPrimitive.SetDitherEnable
+                case NV097_SET_LIGHTING_ENABLE://done //pg->KelvinPrimitive.SetLightingEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_LIGHTING,
                     //	arg0);
-                    break;
+					g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
+					break;
                 case NV097_SET_POINT_PARAMS_ENABLE://done //pg->KelvinPrimitive.SetPointParamsEnable
                     //this state is not used yet.
                     break;
@@ -2367,7 +2371,105 @@ int pgraph_handle_method(
                     break;
 //*****************************************************************************
 //NV097_SET_TRANSFORM_PROGRAM require further verification with xbox d3d setvertexshader() with actual vertex data push in pushbuffer.
-                CASE_32(NV097_SET_TRANSFORM_PROGRAM, 4) : {//not done yet //pg->KelvinPrimitive.SetTransformProgram[32]
+
+				/*
+				D3DDevice_SetVertexShader(Handle)
+				{
+					if Program Shader
+						D3DDevice_LoadVertexShader(Handle, 0);
+						D3DDevice_SelectVertexShader(Handle, 0);
+					else //FVF fixed function
+						if D3DFVF_DIFFUSE //Flags & VERTEXSHADER_HASDIFFUSE 0x400
+							(NV097_SET_VERTEX_DATA4UB(SLOT_DIFFUSE), -1, method count 1) 
+						if D3DFVF_SPECULAR  //Flags & VERTEXSHADER_HASSPECULAR 0x800
+							(NV097_SET_VERTEX_DATA4UB(SLOT_SPECULAR), 0, method count 1)
+						if D3DFVF_BACKDIFFUSE  //Flags & VERTEXSHADER_HASBACKDIFFUSE 0x1000
+							(NV097_SET_VERTEX_DATA4UB(SLOT_BACK_DIFFUSE), -1, method count 1)
+						if D3DFVF_BACKSPECULAR  //Flags & VERTEXSHADER_HASBACKSPECULAR 0x2000
+							(NV097_SET_VERTEX_DATA4UB(SLOT_BACK_SPECULAR), 0, method count 1)
+						if D3DFVF_PASSTHROUGH  //Flags & VERTEXSHADER_PASSTHROUGH 0x2
+							(NV097_SET_TRANSFORM_PROGRAM_START, 0, method count 1)
+							(NV097_SET_TRANSFORM_EXECUTION_MODE,
+							 NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV,
+							 NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY,
+							 method count 2)
+							 SetupPasstrhouProgram()
+								(NV097_SET_TRANSFORM_CONSTANT_LOAD, 0,method count 1)
+								(NV097_SET_TRANSFORM_CONSTANT(0),method count  8)
+								    if (D3DRenderState.SetFogTableMode == D3DFOG_NONE)
+									{
+										prog_size_dwords = sizeof(FVFPassthruProgramSpecularFog) / sizeof(DWORD) //48 dwords
+										pProgram = &FVFPassthruProgramSpecularFog;
+									}
+									else if (pDevice->m_StateFlags & STATE_FOGSOURCEZ)
+									{
+										prog_size_dwords = sizeof(FVFPassthruProgramZFog) / sizeof(DWORD); //44 dwords
+										pProgram = &FVFPassthruProgramZFog;
+									}
+									else
+									{
+										prog_size_dwords = sizeof(FVFPassthruProgramWFog) / sizeof(DWORD); //48 dwords
+										pProgram = &FVFPassthruProgramWFog;
+									}
+									Scale=?(D3DRenderState.SetZEnable == D3DZB_USEW )pDevice->SetInverseWFar * pDevice->SetZScale  : 1.0f
+									argv[0]=pDevice->SetSuperSampleScaleX
+									argv[1]=pDevice->SetSuperSampleScaleY
+									argv[2]=pDevice->SetZScale
+									argv[3]=Scale
+									m_off=?(D3DRenderState.SetMultiSampleAntiAlias))0.5f:0.0f
+									argv[5]=pDevice->SetScreenSpaceOffsetX - m_off
+									argv[6]=pDevice->SetScreenSpaceOffsetY - m_off
+									argv[7]=0.0f;
+									argv[8]=0.0f;
+									(NV097_SET_TRANSFORM_PROGRAM_LOAD, 0, method count 1)
+									prog_ind=0
+									do
+									    batch=MIN(32,prog_size_dwords)
+									    (NV097_SET_TRANSFORM_PROGRAM(0), method count batch)
+										    arg[0...batch-1]=pProgram[prog_ind+0...prog_ind+batch-1]
+										prog_size_dwords - =batch
+										prog_ind + =batch
+
+									while (prog_size_dwords  !=0)
+
+
+						else //not pass through
+							setviewport()
+								if(! FVF)
+									(NV097_SET_VIEWPORT_OFFSET(0), A,   B,   C,   0.0f, method count 4)
+									(NV097_SET_VIEWPORT_SCALE(0), X,Y,Z,0.0f, method count 4)
+								else //FVF
+									(NV097_SET_VIEWPORT_OFFSET(0),X,Y,0.0f,0.0f,method count 4)
+								(NV097_SET_CLIP_MIN, ClipMin, ClipMax, method count 2)
+				}
+
+				D3DDevice_LoadVertexShader(Handle, addr=0)
+				{
+					(NV097_SET_TRANSFORM_PROGRAM_LOAD, addr ,method count 1)
+					vertexshader.programdata_and_constants; //this data includes the push buffer command NV097_SET_TRANSFORM_PROGRAM to load following program data.
+				}
+
+				D3DDevice_SelectVertexShader(Handle, addr=0)
+				{
+					(NV097_SET_LIGHTING_ENABLE,0, method count 1)
+				    (NV097_SET_TRANSFORM_EXECUTION_MODE,NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV, method count 1)
+					setviewport()
+						if(! FVF)
+							(NV097_SET_VIEWPORT_OFFSET(0), A,   B,   C,   0.0f, method count 4)
+							(NV097_SET_VIEWPORT_SCALE(0), X,Y,Z,0.0f, method count 4)
+						else //FVF
+							(NV097_SET_VIEWPORT_OFFSET(0),X,Y,0.0f,0.0f,method count 4)
+						(NV097_SET_CLIP_MIN, ClipMin, ClipMax, method count 2)
+
+					(NV097_SET_TRANSFORM_PROGRAM_START, addr , method count 1)
+
+				}
+
+				try to create a vertex shader handle with feasible structure and set g_Xbox_VertexShader_Handle = Handle; should work.
+
+				*/
+
+				CASE_32(NV097_SET_TRANSFORM_PROGRAM, 4) : {//not done yet //pg->KelvinPrimitive.SetTransformProgram[32]
                         //KelvinPrimitive.SetTransformProgram[32] is update already. we update the extra vertex shader program as well.
 						//KelvinPrimitive.SetTransformProgram[32] holds only 32 slots. for program larger than 32 slots, must be split to batches.
 					    //before the first batch, NV097_SET_TRANSFORM_PROGRAM_LOAD must be called to set the beginning slot of loading.
@@ -3512,7 +3614,42 @@ int pgraph_handle_method(
 
                 case NV097_SET_SHADOW_DEPTH_FUNC:break;//not implement //pg->KelvinPrimitive.SetShadowDepthFunc
 
-                case NV097_SET_SHADER_STAGE_PROGRAM:break;//done //pg->KelvinPrimitive.SetShaderStageProgram
+				/*
+				D3DDevice_SetPixelShader(Handle)
+				if(Handle==0)//restore to fix function
+				    
+				    (NV097_SET_COMBINER_??,?? ,method count 1 )
+				    (NV097_SET_SHADER_STAGE_PROGRAM,??,  method count 1 )
+					update bump env for each texture stage [1]~[3]
+					(NV097_SET_SHADER_OTHER_STAGE_INPUT,
+					(NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE1_INSTAGE_0 | NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE2_INSTAGE_1 | NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE3_INSTAGE_2, method count 1); //arg0 0x210000
+				else //set user pixel shader
+				    pDevice->SetShaderUsesSpecFog = Handle.pPSDef->PSFinalCombinerInputsABCD | Handle.pPSDef->PSFinalCombinerInputsEFG; //pPSDef[32]|pPSDef[36]
+					pDevice->m_ShaderAdjustsTexMode=pPSDef->PSC0Mapping&0x100;
+
+				    pDevice->SetPSShaderStageProgram = Handle.PSDef->PSTextureModes;
+					D3D__DirtyFlags |= D3DDIRTYFLAG_SHADER_STAGE_PROGRAM; //this shall trigger (NV097_SET_SHADER_STAGE_PROGRAM,pDevice->SetPSShaderStageProgram,method count 1)
+
+					if(previous pixel shader handle == null) //switch from fix function to user program
+					    update bump env for each texture stage [0]~[2]
+					(NV097_SET_COMBINER_ALPHA_ICW(0), , method count  8)
+					    memcpy((argv, &( Handle.PSDef->PSAlphaInputs[0]), 8 * sizeof(DWORD))  //&pPSDef[0]
+					(NV097_SET_COMBINER_FACTOR0(0), , method count   32)
+					    memcpy((argv, &( Handle.PSDef->PSConstant0), 32 * sizeof(DWORD))      ////&pPSDef[10]
+					(NV097_SET_SHADER_CLIP_PLANE_MODE, Handle.pPSDef->PSCompareMode)
+					(NV097_SET_SPECULAR_FOG_FACTOR(0),  method count 2)
+					    memcpy((argv, &( Handle.PSDef->PSFinalCombinerConstant0), 2 * sizeof(DWORD))//&pPSDef[43]
+					(NV097_SET_COMBINER_COLOR_OCW(0), , method count   9)
+					    memcpy((argv, &( Handle.PSDef->PSRGBOutputs[0]), 9 * sizeof(DWORD))//&pPSDef[45]
+					(NV097_SET_DOT_RGBMAPPING,  method count 2)
+						memcpy((argv, &( Handle.PSDef->PSDotMapping), 2 * sizeof(DWORD))//&pPSDef[55]
+					if(pDevice->SetShaderUsesSpecFog != 0)
+					    (NV097_SET_COMBINER_SPECULAR_FOG_CW0,  method count 2)
+						memcpy((argv, &( Handle.PSDef->PSFinalCombinerInputsABCD), 2 * sizeof(DWORD))//&pPSDef[8]
+					
+					   
+				*/
+				case NV097_SET_SHADER_STAGE_PROGRAM:break;//done //pg->KelvinPrimitive.SetShaderStageProgram
 
 
                 case NV097_SET_DOT_RGBMAPPING:{//not implement  //pg->KelvinPrimitive.SetDotRGBMapping
