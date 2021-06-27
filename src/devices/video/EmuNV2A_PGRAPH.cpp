@@ -2466,7 +2466,29 @@ int pgraph_handle_method(
 				}
 
 				try to create a vertex shader handle with feasible structure and set g_Xbox_VertexShader_Handle = Handle; should work.
+				HLE g_Xbox_VertexShader_Handle = xbox vertex shader handle.
+				    vertex shader address = vertex shader handle - 0x01.
+				HLE g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction/Passthrough/ShaderProgram
+				HLE XbVertexShader.cpp::CxbxUpdateHostVertexShader()
+				HLE XbVertexShader.cpp::CxbxUpdateHostVertexShaderConstants();
+				HLE XbVertexShader.cpp::CxbxSetVertexShaderSlots(DWORD* pTokens, DWORD Address, DWORD NrInstructions)
+				HLE XbVertexShader.cpp::CxbxSetVertexShaderPassthroughProgram()
+				HLE XbVertexShader.cpp::CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)
+					HLE_get_NV2A_vertex_constant_float4_ptr(Register)
+						return &pg->vsh_constants[Register][0]
 
+				HLE vertex program slots stored in
+				    DWORD g_Xbox_VertexShader_FunctionSlots[137*4];
+					pg->program_data[136][4]
+				for vertex shader program:
+					HLE uses g_Xbox_VertexShader_FunctionSlots[137*4]
+					PGRAPH uses pg->program_data[136][4]
+				for vertex shder constants
+					HLE uses pg->vsh_constants[192][4]
+					PGRAPH use pg->vsh_constants[192][4]
+
+				whenever the vertex constants are update by either side, both side see the same register.
+				for program set via pushbuffer directly. we need to update to HLE side and set g_Xbox_VertexShader_Handle and g_Xbox_VertexShaderMode
 				*/
 
 				CASE_32(NV097_SET_TRANSFORM_PROGRAM, 4) : {//not done yet //pg->KelvinPrimitive.SetTransformProgram[32]
