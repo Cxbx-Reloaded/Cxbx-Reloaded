@@ -70,7 +70,7 @@ namespace XInput
 	static XInputGetState_t PXInputGetState = nullptr;
 
 	static bool haveGuideButton = false;
-	int XInputInitStatus = XINPUT_NOT_INIT;
+	int InitStatus = NOT_INIT;
 	uint8_t DevicesConnected = 0;
 
 	static const struct
@@ -118,7 +118,7 @@ namespace XInput
 				hXInput = ::LoadLibrary(TEXT(xinput_dll_name.c_str()));
 				if (!hXInput) {
 					EmuLog(LOG_LEVEL::ERROR2, "Failed to initialize XInput subsystem!");
-					XInputInitStatus = XINPUT_INIT_ERROR;
+					InitStatus = INIT_ERROR;
 					return;
 				}
 			}
@@ -147,15 +147,15 @@ namespace XInput
 			::FreeLibrary(hXInput);
 			hXInput = nullptr;
 			EmuLog(LOG_LEVEL::ERROR2, "Failed to find XInput functions!");
-			XInputInitStatus = XINPUT_INIT_ERROR;
+			InitStatus = INIT_ERROR;
 			return;
 		}
-		XInputInitStatus = XINPUT_INIT_SUCCESS;
+		InitStatus = INIT_SUCCESS;
 	}
 
 	void DeInit()
 	{
-		XInputInitStatus = XINPUT_NOT_INIT;
+		InitStatus = NOT_INIT;
 		if (hXInput)
 		{
 			::FreeLibrary(hXInput);

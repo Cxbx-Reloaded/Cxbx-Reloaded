@@ -58,7 +58,7 @@ public:
 	void UpdateDeviceList();
 	void BindButton(int ControlID);
 	virtual void ClearBindings() = 0;
-	virtual void UpdateProfile(const std::string& name, int command) = 0;
+	virtual void UpdateProfile(const std::string& name, int command);
 	void UpdateCurrentDevice();
 	bool IsProfileSaved();
 	void SwapMoCursorAxis(Button *button);
@@ -74,6 +74,7 @@ protected:
 	void OverwriteProfile(const std::string& name);
 	void LoadDefaultProfile();
 	virtual int EnableDefaultButton() = 0;
+	virtual void SaveSlotConfig() = 0;
 
 	// xbox device under configuration
 	EmuDevice* m_DeviceConfig;
@@ -106,6 +107,7 @@ public:
 	void BindDefault();
 	void ClearBindings() override;
 	void UpdateProfile(const std::string &name, int command) override;
+	void SaveSlotConfig() override;
 
 
 private:
@@ -118,6 +120,8 @@ private:
 	HWND m_hwnd_rumble;
 	// handle of the rumble combobox
 	HWND m_hwnd_rumble_list;
+	// handles of the slot combobox
+	HWND m_hwnd_slot_list[XBOX_CTRL_NUM_SLOTS];
 	// currently selected rumble control
 	std::string m_rumble;
 };
@@ -127,7 +131,7 @@ class SbcInputWindow : public InputWindow
 public:
 	void Initialize(HWND hwnd, int port_num, int dev_type) override;
 	void ClearBindings() override;
-	void UpdateProfile(const std::string &name, int command) override;
+	void SaveSlotConfig() override;
 
 
 private:

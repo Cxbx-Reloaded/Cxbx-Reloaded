@@ -69,6 +69,7 @@ bool InputWindow::IsProfileSaved()
 
 		}
 	}
+
 	return true;
 }
 
@@ -177,6 +178,29 @@ void InputWindow::BindButton(int ControlID)
 	}
 }
 
+void InputWindow::UpdateProfile(const std::string &name, int command)
+{
+	switch (command)
+	{
+	case PROFILE_LOAD:
+		LoadProfile(name);
+		break;
+
+	case PROFILE_SAVE:
+		SaveProfile(name);
+		break;
+
+	case PROFILE_DELETE:
+		DeleteProfile(name);
+		break;
+
+	case BUTTON_CLEAR:
+	case BUTTON_SWAP:
+		m_bHasChanges = true;
+		break;
+	}
+}
+
 InputWindow::ProfileIt InputWindow::FindProfile(const std::string& name)
 {
 	auto it = std::find_if(g_Settings->m_input_profiles[m_dev_type].begin(),
@@ -236,6 +260,7 @@ bool InputWindow::SaveProfile(const std::string& name)
 	g_Settings->m_input_port[m_port_num].DeviceName = profile.DeviceName;
 	g_Settings->m_input_port[m_port_num].ProfileName = profile.ProfileName;
 	g_Settings->m_input_profiles[m_dev_type].push_back(std::move(profile));
+
 	m_bHasChanges = false;
 	return true;
 }

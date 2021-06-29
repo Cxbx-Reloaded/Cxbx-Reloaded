@@ -96,6 +96,7 @@ char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_Xbe[xbox::max_path*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is xbox::max_path*2 = 520
 
 std::string CxbxBasePath;
+std::string MuBasePath;
 HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
 bool g_bIsChihiro = false;
@@ -1433,11 +1434,14 @@ __declspec(noreturn) void CxbxKrnlInit
 		char szBuffer[sizeof(szFilePath_Xbe)];
 		g_EmuShared->GetStorageLocation(szBuffer);
 
+		MuBasePath = std::string(szBuffer) + "\\EmuMu";
 		CxbxBasePath = std::string(szBuffer) + "\\EmuDisk";
 		CxbxResolveHostToFullPath(CxbxBasePath, "Cxbx-Reloaded's EmuDisk directory");
+		CxbxResolveHostToFullPath(MuBasePath, "Cxbx-Reloaded's EmuMu directory");
 		// Since canonical always remove the extra slash, we need to manually add it back.
 		// TODO: Once CxbxBasePath is filesystem::path, replace CxbxBasePath's + operators to / for include path separator internally.
 		CxbxBasePath = std::filesystem::path(CxbxBasePath).append("").string();
+		MuBasePath = std::filesystem::path(MuBasePath).append("").string();
 	}
 
 	// Determine xbe path
@@ -1504,6 +1508,22 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
 	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
 	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", CxbxBasePath + "Chihiro");
+
+	// Create the MU directories and the bin files
+	CxbxRegisterDeviceHostPath(DeviceMU0, MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU1, MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU2, MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU3, MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU4, MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU5, MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU6, MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU7, MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
+
+	std::mbstate_t ps = std::mbstate_t();
+	const char *src = MuBasePath.c_str();
+	std::wstring wMuBasePath(MuBasePath.size(), L'0');
+	std::mbsrtowcs(wMuBasePath.data(), &src, wMuBasePath.size(), &ps);
+	g_io_mu_metadata = new io_mu_metadata(wMuBasePath);
 
 	// Create default symbolic links :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Creating default symbolic links.");
@@ -1747,6 +1767,13 @@ void CxbxInitFilePaths()
 		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
 	}
 
+	// Make sure the EmuDMu folder exists
+	std::string emuMu = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuMu");
+	result = std::filesystem::exists(emuMu);
+	if (!result && !std::filesystem::create_directory(emuMu)) {
+		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuMu folder!", __func__);
+	}
+
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 
 	GetModuleFileName(GetModuleHandle(nullptr), szFilePath_CxbxReloaded_Exe, MAX_PATH);
@@ -1917,6 +1944,11 @@ void CxbxKrnlShutDown(bool is_reboot)
 
 	// Shutdown the input device manager
 	g_InputDeviceManager.Shutdown();
+
+	if (g_io_mu_metadata) {
+		delete g_io_mu_metadata;
+		g_io_mu_metadata = nullptr;
+	}
 
 	// Shutdown the memory manager
 	g_VMManager.Shutdown();

@@ -352,7 +352,7 @@ g_EmuCDPD;
 
 XB_TRAMPOLINES(XB_trampoline_declare);
 
-void LookupTrampolines()
+void LookupTrampolinesD3D()
 {
 	XB_TRAMPOLINES(XB_trampoline_lookup);
 }

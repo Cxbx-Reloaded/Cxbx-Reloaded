@@ -619,8 +619,7 @@ XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 
 	switch (IoControlCode)
 	{
-	case 0x4D014: // IOCTL_SCSI_PASS_THROUGH_DIRECT
-	{
+	case 0x4D014: { // IOCTL_SCSI_PASS_THROUGH_DIRECT
 		PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
 		PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
 
@@ -628,34 +627,63 @@ XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 		Authentication->AuthenticationPage.CDFValid = 1;
 		Authentication->AuthenticationPage.PartitionArea = 1;
 		Authentication->AuthenticationPage.Authentication = 1;
-		break;
 	}
-	case 0x70000: // IOCTL_DISK_GET_DRIVE_GEOMETRY
-	{
+	break;
+
+	case 0x70000: { // IOCTL_DISK_GET_DRIVE_GEOMETRY
 		PDISK_GEOMETRY DiskGeometry = (PDISK_GEOMETRY)OutputBuffer;
 
-		DiskGeometry->MediaType = FixedMedia;
-		DiskGeometry->TracksPerCylinder = 1;
-		DiskGeometry->SectorsPerTrack = 1;
-		DiskGeometry->BytesPerSector = 512;
-		DiskGeometry->Cylinders.QuadPart = 0x1400000;	// Around 10GB, size of stock xbox HDD
-		break;
+		DeviceType type = CxbxrGetDeviceTypeFromHandle(FileHandle);
+		if (type == DeviceType::Harddisk0) {
+			DiskGeometry->MediaType = FixedMedia;
+			DiskGeometry->TracksPerCylinder = 1;
+			DiskGeometry->SectorsPerTrack = 1;
+			DiskGeometry->BytesPerSector = 512;
+			DiskGeometry->Cylinders.QuadPart = 0x1400000;	// 10GB, size of stock xbox HDD
+		}
+		else if (type == DeviceType::MU) {
+			DiskGeometry->MediaType = FixedMedia;
+			DiskGeometry->TracksPerCylinder = 1;
+			DiskGeometry->SectorsPerTrack = 1;
+			DiskGeometry->BytesPerSector = 512;
+			DiskGeometry->Cylinders.QuadPart = 0x4000;	// 8MB, Microsoft original MUs
+		}
+		else {
+			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_DRIVE_GEOMETRY.", __func__, FileHandle);
+			ret = status_invalid_handle;
+		}
 	}
-	case 0x74004: // IOCTL_DISK_GET_PARTITION_INFO 
-	{
+	break;
+
+	case 0x74004: { // IOCTL_DISK_GET_PARTITION_INFO
 		PPARTITION_INFORMATION partitioninfo = (PPARTITION_INFORMATION)OutputBuffer;
 
-		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
-		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-		
-		// Now we read from the partition table, to fill in the partitionInfo struct
-		partitioninfo->PartitionNumber = partitionNumber;
-		partitioninfo->StartingOffset.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBAStart * 512;
-		partitioninfo->PartitionLength.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * 512;
-		partitioninfo->HiddenSectors = partitionTable.TableEntries[partitionNumber - 1].Reserved;
-		partitioninfo->RecognizedPartition = true;
-		break;
+		DeviceType type = CxbxrGetDeviceTypeFromHandle(FileHandle);
+		if (type == DeviceType::Harddisk0) {
+			XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+
+			// Now we read from the partition table, to fill in the partitionInfo struct
+			partitioninfo->PartitionNumber = partitionNumber;
+			partitioninfo->StartingOffset.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBAStart * 512;
+			partitioninfo->PartitionLength.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * 512;
+			partitioninfo->HiddenSectors = partitionTable.TableEntries[partitionNumber - 1].Reserved;
+			partitioninfo->RecognizedPartition = true;
+		}
+		else if (type == DeviceType::MU) {
+			partitioninfo->PartitionNumber = 0;
+			partitioninfo->StartingOffset.QuadPart = 0; // FIXME: where does the MU partition start?
+			partitioninfo->PartitionLength.QuadPart = 16384; // 8MB
+			partitioninfo->HiddenSectors = 0;
+			partitioninfo->RecognizedPartition = true;
+		}
+		else {
+			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_PARTITION_INFO.", __func__, FileHandle);
+			ret = status_invalid_handle;
+		}
 	}
+	break;
+
 	default:
 		LOG_UNIMPLEMENTED();
 	}
@@ -802,19 +830,56 @@ XBSYSAPI EXPORTNUM(200) xbox::ntstatus_xt NTAPI xbox::NtFsControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_INVALID_PARAMETER;
+	ntstatus_xt ret = STATUS_INVALID_PARAMETER;
 
-	switch (FsControlCode) {
-		case 0x00090020: // FSCTL_DISMOUNT_VOLUME 
-			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-			if (partitionNumber > 0) {
-				CxbxFormatPartitionByHandle(FileHandle);
-				ret = xbox::status_success;
-			}
-			break;
+	switch (FsControlCode)
+	{
+	case fsctl_dismount_volume: {
+		// HACK: this should just free the resources assocoated with the volume, it should not reformat it
+		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+		if (partitionNumber > 0) {
+			CxbxFormatPartitionByHandle(FileHandle);
+			ret = xbox::status_success;
+		}
+	}
+	break;
+
+	case fsctl_read_fatx_metadata: {
+		const std::wstring path = CxbxGetFinalPathNameByHandle(FileHandle);
+		size_t pos = path.rfind(L"\\EmuMu");
+		if (pos != std::string::npos && path[pos + 6] == '\\') {
+			// Ensure that InputBuffer is indeed what we think it is
+			pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
+			assert(InputBufferLength == sizeof(fatx_volume_metadata));
+			g_io_mu_metadata->read(path[pos + 7], volume->offset, static_cast<char *>(volume->buffer), volume->length);
+			ret = xbox::status_success;
+		}
+		else {
+			ret = status_invalid_handle;
+		}
+	}
+	break;
+
+	case fsctl_write_fatx_metadata: {
+		const std::wstring path = CxbxGetFinalPathNameByHandle(FileHandle);
+		size_t pos = path.rfind(L"\\EmuMu");
+		if (pos != std::string::npos && path[pos + 6] == '\\') {
+			// Ensure that InputBuffer is indeed what we think it is
+			pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
+			assert(InputBufferLength == sizeof(fatx_volume_metadata));
+			g_io_mu_metadata->write(path[pos + 7], volume->offset, static_cast<const char *>(volume->buffer), volume->length);
+			ret = xbox::status_success;
+		}
+		else {
+			ret = status_invalid_handle;
+		}
+	}
+	break;
+
 	}
 
-	LOG_UNIMPLEMENTED();
+	LOG_INCOMPLETE();
+
 	RETURN(ret);
 }
 
@@ -1499,27 +1564,56 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 
 	// FileFsSizeInformation is a special case that should read from our emulated partition table
 	if ((DWORD)FileInformationClass == FileFsSizeInformation) {
+		ntstatus_xt status;
 		PFILE_FS_SIZE_INFORMATION XboxSizeInfo = (PFILE_FS_SIZE_INFORMATION)FileInformation;
 
-		XboxPartitionTable partitionTable = CxbxGetPartitionTable();
-		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-		FATX_SUPERBLOCK superBlock = CxbxGetFatXSuperBlock(partitionNumber);
+		// This might access the HDD, a MU or the DVD drive, so we need to figure out the correct one first
+		DeviceType type = CxbxrGetDeviceTypeFromHandle(FileHandle);
+		if (type == DeviceType::Harddisk0) {
 
-		XboxSizeInfo->BytesPerSector = 512;
+			XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+			FATX_SUPERBLOCK superBlock = CxbxGetFatXSuperBlock(partitionNumber);
 
-		// In some cases, the emulated partition hasn't been formatted yet, as these are forwarded to a real folder, this doesn't actually matter.
-		// We just pretend they are valid by defaulting the SectorsPerAllocationUnit value to the most common for system partitions
-		XboxSizeInfo->SectorsPerAllocationUnit = 32;
+			XboxSizeInfo->BytesPerSector = 512;
 
-		// If there is a valid cluster size, we calculate SectorsPerAllocationUnit from that instead
-		if (superBlock.ClusterSize > 0) {
-			XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize;
+			// In some cases, the emulated partition hasn't been formatted yet, as these are forwarded to a real folder, this doesn't actually matter.
+			// We just pretend they are valid by defaulting the SectorsPerAllocationUnit value to the most common for system partitions
+			XboxSizeInfo->SectorsPerAllocationUnit = 32;
+
+			// If there is a valid cluster size, we calculate SectorsPerAllocationUnit from that instead
+			if (superBlock.ClusterSize > 0) {
+				XboxSizeInfo->SectorsPerAllocationUnit = superBlock.ClusterSize;
+			}
+
+			XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
+			XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
+
+			status = status_success;
+		}
+		else if (type == DeviceType::MU) {
+
+			XboxSizeInfo->BytesPerSector = 512;
+			XboxSizeInfo->SectorsPerAllocationUnit = 32;
+			XboxSizeInfo->TotalAllocationUnits.QuadPart = 512; // 8MB -> ((1024)^2 * 8) / (BytesPerSector * SectorsPerAllocationUnit)
+			XboxSizeInfo->AvailableAllocationUnits.QuadPart = 512; // constant, so there's always free space available to write stuff
+
+			status = status_success;
+		}
+		else if (type == DeviceType::Cdrom0) {
+
+			XboxSizeInfo->BytesPerSector = 2048;
+			XboxSizeInfo->SectorsPerAllocationUnit = 1;
+			XboxSizeInfo->TotalAllocationUnits.QuadPart = 3820880; // assuming DVD-9 (dual layer), redump reports a total size in bytes of 7825162240
+
+			status = status_success;
+		}
+		else {
+			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with class FileFsSizeInformation.", __func__, FileHandle);
+			status = status_invalid_handle;
 		}
 
-		XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
-		XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
-
-		RETURN(xbox::status_success);
+		RETURN(status);
 	}
 
 	// Get the required size for the host buffer

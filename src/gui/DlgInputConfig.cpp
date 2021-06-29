@@ -51,6 +51,8 @@ void SyncInputSettings(int port_num, int dev_type, bool is_opt)
 		if (!is_opt) {
 			// Sync updated input to kernel process to use run-time settings.
 			g_EmuShared->SetInputDevTypeSettings(&g_Settings->m_input_port[port_num].Type, port_num);
+			g_EmuShared->SetInputSlotTypeSettings(&g_Settings->m_input_port[port_num].SlotType[SLOT_TOP], port_num, SLOT_TOP);
+			g_EmuShared->SetInputSlotTypeSettings(&g_Settings->m_input_port[port_num].SlotType[SLOT_BOTTOM], port_num, SLOT_BOTTOM);
 
 			if (dev_type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 				std::string dev_name = g_Settings->m_input_port[port_num].DeviceName;
@@ -77,12 +79,8 @@ void SyncInputSettings(int port_num, int dev_type, bool is_opt)
 			g_EmuShared->SetInputGeneralSettings(&g_Settings->m_input_general);
 			port_num = PORT_INVALID;
 		}
-#if 0 // lle usb
-		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, PORT_DEC(Gui2XboxPortArray[port_num]),
-			reinterpret_cast<std::uintptr_t>(g_ChildWnd));
-#else
+
 		ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_INPUT_SYNC, port_num, reinterpret_cast<std::uintptr_t>(g_ChildWnd));
-#endif
 	}
 }
 
@@ -163,6 +161,13 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + port);
 				int DeviceType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
 				g_Settings->m_input_port[port].Type = DeviceType;
+				if (DeviceType != to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) &&
+					DeviceType != to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S)) {
+					// Forcefully set the child devices to none. This will happen if the user sets MUs in the controller dialog but
+					// then they set the parent device to a device that cannot support them in the input dialog
+					g_Settings->m_input_port[port].SlotType[SLOT_TOP] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+					g_Settings->m_input_port[port].SlotType[SLOT_BOTTOM] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+				}
 				SyncInputSettings(port, DeviceType, false);
 			}
 		}

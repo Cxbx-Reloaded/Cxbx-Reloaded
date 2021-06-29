@@ -36,15 +36,6 @@
 #include <condition_variable>
 #include "SDL.h"
 
-#define PORT_INVALID     -1
-#define PORT_1            0
-#define PORT_2            1
-#define PORT_3            2
-#define PORT_4            3
-
-#define PORT_INC(port) ((port) + 1)
-#define PORT_DEC(port) ((port) - 1)
-
 #define DIRECTION_IN      0
 #define DIRECTION_OUT     1
 
@@ -72,11 +63,13 @@ XBOX_INPUT_DEVICE;
 inline bool g_bIsTrackingMoLeave = false;
 inline bool g_bIsTrackingMoMove = false;
 
-// Lookup array used to translate a gui port to an xbox usb port and vice versa
-extern int Gui2XboxPortArray[4];
 
-// Global function used to retrieve the printable name of a xid type
+// Retrieves the printable name of a xid type
 std::string GetInputDeviceName(int dev_type);
+// Converts the port number in the user format
+std::string PortUserFormat(std::string_view);
+// Extracts port and slot number from a port formatted as a string
+void PortStr2Int(std::string_view port, int *port_num, int *slot);
 
 /* Abstract class which represents a host device usable for input/output */
 class InputDevice
@@ -124,9 +117,9 @@ public:
 	// sets the ID of this device
 	void SetId(int ID) { m_ID = ID; }
 	// retrieves the port this device is attached to
-	bool GetPort(int Port) const { return m_XboxPort[Port]; }
+	bool GetPort(std::string_view Port) const;
 	// sets the port this device is attached to
-	void SetPort(int Port, bool Connect) { m_XboxPort[Port] = Connect; }
+	void SetPort(std::string_view Port, bool Connect);
 
 
 protected:
@@ -134,6 +127,8 @@ protected:
 	void AddInput(Input* const In);
 	// adds an output control to the device
 	void AddOutput(Output* const Out);
+	// searches for a port
+	const auto FindPort(std::string_view Port) const;
 	// indicates that the device has new input data available
 	bool m_bDirty;
 	// lock for the bindings map
@@ -141,27 +136,32 @@ protected:
 
 public:
 	// retrieves the map of input bindings
-	const std::map<int, IoControl*> GetBindings() const {
+	const std::map<int, IoControl*> GetBindings(const std::string &Port) const {
 		std::lock_guard<std::mutex> lck(m_BindingsMtx);
-		return m_Bindings;
+		return m_Bindings.find(Port)->second;
 	}
 	// sets a pair in the map of the input bindings
-	void SetBindings(int XButton, IoControl* Control) {
+	void SetBindings(int XButton, IoControl* Control, const std::string &Port) {
 		std::lock_guard<std::mutex> lck(m_BindingsMtx);
-		m_Bindings[XButton] = Control;
+		m_Bindings[Port][XButton] = Control;
+	}
+	// clears all input bindings for the specified xbox port
+	void ClearBindings(const std::string &Port) {
+		std::lock_guard<std::mutex> lck(m_BindingsMtx);
+		m_Bindings[Port].clear();
 	}
 
 private:
-	// arbitrary ID assigned by to the device
+	// arbitrary ID assigned to the device
 	int m_ID;
 	// all the input controls detected and usable on this device
 	std::vector<Input*> m_Inputs;
 	// all the output controls detected and usable on this device
 	std::vector<Output*> m_Outputs;
 	// xbox port(s) this device is attached to
-	bool m_XboxPort[4] = { false, false, false, false };
-	// button bindings to the xbox device buttons
-	std::map<int, IoControl*> m_Bindings;
+	std::vector<std::string> m_XboxPort;
+	// per xbox port button bindings to the xbox device buttons
+	std::unordered_map<std::string, std::map<int, IoControl*>> m_Bindings;
 };
 
 #endif

@@ -25,6 +25,8 @@
 #ifndef XAPI_H
 #define XAPI_H
 
+void LookupTrampolinesXAPI();
+
 #include "xbox_types.h"
 
 namespace xbox {
@@ -682,6 +684,27 @@ xbox::dword_xt WINAPI EMUPATCH(XMountMURootA)
 	dword_xt dwPort,
 	dword_xt dwSlot,
 	PCHAR pchDrive
+);
+
+// ******************************************************************
+// * patch: XUnmountMU
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(XUnmountMU)
+(
+    dword_xt dwPort,
+    dword_xt dwSlot
+);
+
+// ******************************************************************
+// * patch: XReadMUMetaData
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(XReadMUMetaData)
+(
+    IN dword_xt dwPort,
+    IN dword_xt dwSlot,
+    IN LPVOID lpBuffer,
+    IN dword_xt dwByteOffset,
+    IN dword_xt dwNumberOfBytesToRead
 );
 
 // ******************************************************************

@@ -34,15 +34,15 @@
 
 namespace XInput
 {
-	typedef enum _XINPUT_INIT_STATUS : int
+	typedef enum _INIT_STATUS : int
 	{
-		XINPUT_NOT_INIT = -2,
-		XINPUT_INIT_ERROR,
-		XINPUT_INIT_SUCCESS,
+		NOT_INIT = -2,
+		INIT_ERROR,
+		INIT_SUCCESS,
 	}
-	XINPUT_INIT_STATUS;
+	INIT_STATUS;
 
-	extern int XInputInitStatus;
+	extern int InitStatus;
 	extern uint8_t DevicesConnected;
 
 	// initialize XInput

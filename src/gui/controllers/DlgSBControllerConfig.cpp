@@ -54,7 +54,7 @@ void SbcInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	// Set window title
 	std::string title("Steel Battalion Controller at port ");
 	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
-		reinterpret_cast<LPARAM>((title + std::to_string(PORT_INC(m_port_num))).c_str()));
+		reinterpret_cast<LPARAM>((title + PortUserFormat(std::to_string(m_port_num))).c_str()));
 
 	// Set the maximum profile name lenght the user can enter in the profile combobox
 	SendMessage(m_hwnd_profile_list, CB_LIMITTEXT, 49, 0);
@@ -81,38 +81,17 @@ void SbcInputWindow::ClearBindings()
 	m_bHasChanges = true;
 }
 
-void SbcInputWindow::UpdateProfile(const std::string &name, int command)
-{
-	switch (command)
-	{
-	case PROFILE_LOAD: {
-		LoadProfile(name);
-	}
-	break;
-
-	case PROFILE_SAVE: {
-		SaveProfile(name);
-	}
-	break;
-
-	case PROFILE_DELETE: {
-		DeleteProfile(name);
-	}
-	break;
-
-	case BUTTON_CLEAR:
-	case BUTTON_SWAP: {
-		m_bHasChanges = true;
-	}
-	break;
-
-	}
-}
-
 int SbcInputWindow::EnableDefaultButton()
 {
 	// The SBC window does not have a default button, so we return a dummy value here
 	return -1;
+}
+
+void SbcInputWindow::SaveSlotConfig()
+{
+	for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+		g_Settings->m_input_port[m_port_num].SlotType[slot] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+	}
 }
 
 INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -138,6 +117,7 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 	case WM_CLOSE:
 	{
 		if (g_InputWindow->IsProfileSaved()) {
+			g_InputWindow->SaveSlotConfig();
 			delete g_InputWindow;
 			g_InputWindow = nullptr;
 			EndDialog(hWndDlg, wParam);

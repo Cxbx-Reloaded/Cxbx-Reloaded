@@ -54,8 +54,8 @@ namespace Sdl
 	uint32_t PopulateEvent_t;
 	uint32_t UpdateInputEvent_t;
 	uint32_t DeviceRemoveAck_t;
-	int SdlInitStatus = SDL_NOT_INIT;
-	bool SdlPopulateOK = false;
+	int InitStatus = NOT_INIT;
+	bool PopulateOK = false;
 
 	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool is_gui)
 	{
@@ -65,7 +65,7 @@ namespace Sdl
 
 		if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC) < 0) {
 			EmuLog(LOG_LEVEL::ERROR2, "Failed to initialize SDL subsystem! The error was: %s", SDL_GetError());
-			SdlInitStatus = SDL_INIT_ERROR;
+			InitStatus = INIT_ERROR;
 			lck.unlock();
 			Cv.notify_one();
 			return;
@@ -74,7 +74,7 @@ namespace Sdl
 		if (CustomEvent_t == (uint32_t)-1) {
 			SDL_Quit();
 			EmuLog(LOG_LEVEL::ERROR2, "Failed to create SDL custom events!");
-			SdlInitStatus = SDL_INIT_ERROR;
+			InitStatus = INIT_ERROR;
 			lck.unlock();
 			Cv.notify_one();
 			return;
@@ -96,7 +96,7 @@ namespace Sdl
 				break;
 			}
 		}
-		SdlInitStatus = SDL_INIT_SUCCESS;
+		InitStatus = INIT_SUCCESS;
 		lck.unlock();
 		Cv.notify_one();
 
@@ -133,10 +133,6 @@ namespace Sdl
 				case SDL_JOYBUTTONUP:
 					id = Event.jbutton.which;
 					break;
-
-				default: {
-					// unreachable
-				}
 				}
 				auto dev = g_InputDeviceManager.FindDevice(id);
 				if (dev != nullptr) {
@@ -147,7 +143,7 @@ namespace Sdl
 				for (int i = 0; i < SDL_NumJoysticks(); i++) {
 					OpenSdlDevice(i);
 				}
-				SdlPopulateOK = true;
+				PopulateOK = true;
 				Cv.notify_one();
 			}
 			else if (Event.type == ExitEvent_t) {
@@ -160,15 +156,22 @@ namespace Sdl
 				else {
 					XInput::GetDeviceChanges();
 					DInput::GetDeviceChanges();
-					g_InputDeviceManager.UpdateDevices(*static_cast<int *>(Event.user.data1), false);
+					std::string port = std::to_string(*static_cast<int *>(Event.user.data1));
+					int port_num, slot;
+					PortStr2Int(port, &port_num, &slot);
+
+					g_InputDeviceManager.UpdateDevices(port, false);
+					// Force an update of the entire slot connectivity of this port
+					g_InputDeviceManager.UpdateDevices(port + ".0", false);
+					g_InputDeviceManager.UpdateDevices(port + ".1", false);
 				}
 
-				delete Event.user.data1;
+				delete static_cast<int *>(Event.user.data1);
 				Event.user.data1 = nullptr;
 			}
 			else if (Event.type == DeviceRemoveAck_t) {
-				g_InputDeviceManager.UpdateDevices(*static_cast<int*>(Event.user.data1), true);
-				delete Event.user.data1;
+				g_InputDeviceManager.UpdateDevices(*static_cast<std::string *>(Event.user.data1), true);
+				delete static_cast<std::string *>(Event.user.data1);
 				Event.user.data1 = nullptr;
 			}
 		}
@@ -178,7 +181,7 @@ namespace Sdl
 
 	void DeInit(std::thread& Thr)
 	{
-		SdlInitStatus = SDL_NOT_INIT;
+		InitStatus = NOT_INIT;
 		if (!Thr.joinable()) {
 			return;
 		}

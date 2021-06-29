@@ -31,13 +31,13 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cassert>
 #include <Shlobj.h>
 #include <Shlwapi.h>
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
 #pragma warning(default:4005)
-#include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 #include "common/util/strConverter.hpp" // utf16_to_ascii
 #include "common/util/cliConfig.hpp"
@@ -84,7 +84,103 @@ XboxPartitionTable BackupPartTbl =
 	}
 };
 
-void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false)
+io_mu_metadata *g_io_mu_metadata = nullptr;
+
+io_mu_metadata::io_mu_metadata(const std::wstring_view root_path) : m_root_path(root_path)
+{
+	for (unsigned i = 0; i < 8; ++i) {
+		m_buff[i] = new char[sizeof(FATX_SUPERBLOCK)];
+		assert(m_buff[i] != nullptr);
+		std::wstring path = m_root_path + static_cast<wchar_t>(L'F' + i) + L".bin";
+		std::fstream fs(path, std::ios_base::in | std::ios_base::out | std::ios_base::binary);
+		if (!fs.is_open()) {
+			CxbxKrnlCleanup("%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
+		}
+		fs.seekg(0);
+		fs.read(m_buff[i], sizeof(FATX_SUPERBLOCK));
+		// if the signature is not "fatx" or we read less bytes than expected, then we assume the bin file is either corrupted or
+		// unformatted, so we reformat it now
+		FATX_SUPERBLOCK *volume = reinterpret_cast<FATX_SUPERBLOCK *>(m_buff[i]);
+		if ((fs.gcount() != sizeof(FATX_SUPERBLOCK)) || (volume->Signature != fatx_signature)) {
+			volume->Signature = fatx_signature;
+			volume->VolumeID = 0x11223344 + i;
+			volume->ClusterSize = 32;
+			volume->FatCopies = 1;
+			std::memset(volume->Name, 0, mu_max_name_lenght);
+			std::memset(volume->OnlineData, 0, fatx_online_data_length);
+			std::memset(volume->Unused, 0xFF, fatx_reserved_length);
+			fs.write(m_buff[i], sizeof(FATX_SUPERBLOCK));
+		}
+	}
+}
+
+io_mu_metadata::~io_mu_metadata()
+{
+	std::unique_lock<std::shared_mutex> lck(m_rw_lock);
+	for (unsigned i = 0; i < 8; ++i) {
+		std::wstring path = m_root_path + static_cast<wchar_t>(L'F' + i) + L".bin";
+		std::ofstream ofs(path, std::ios_base::out | std::ios_base::binary);
+		if (!ofs.is_open()) {
+			EmuLog(LOG_LEVEL::ERROR2, "%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
+			delete[] m_buff[i];
+			continue;
+		}
+		ofs.seekp(0);
+		ofs.write(m_buff[i], sizeof(FATX_SUPERBLOCK));
+		delete[] m_buff[i];
+	}
+}
+
+void io_mu_metadata::read(const wchar_t lett, std::size_t offset, char *buff, std::size_t size)
+{
+	std::shared_lock<std::shared_mutex> lck(m_rw_lock); // allows for concurrent reads
+	std::memcpy(buff, m_buff[lett - L'F'] + offset, size);
+}
+
+void io_mu_metadata::write(const wchar_t lett, std::size_t offset, const char *buff, std::size_t size)
+{
+	std::unique_lock<std::shared_mutex> lck(m_rw_lock); // blocks when there is rw in progress
+	std::memcpy(m_buff[lett - L'F'] + offset, buff, size);
+}
+
+void io_mu_metadata::flush(const wchar_t lett)
+{
+	std::unique_lock<std::shared_mutex> lck(m_rw_lock);
+	std::wstring path = m_root_path + lett + L".bin";
+	std::ofstream ofs(path, std::ios_base::out | std::ios_base::binary);
+	if (!ofs.is_open()) {
+		EmuLog(LOG_LEVEL::ERROR2, "%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
+		return;
+	}
+	ofs.seekp(0);
+	ofs.write(m_buff[lett - L'F'], sizeof(FATX_SUPERBLOCK));
+	ofs.flush();
+}
+
+DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile)
+{
+	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
+
+	size_t pos = path.rfind(L"\\EmuDisk\\Partition");
+	if (pos != std::string::npos) {
+		return DeviceType::Harddisk0;
+	}
+
+	pos = path.rfind(L"\\EmuMu");
+	if (pos != std::string::npos) {
+		return DeviceType::MU;
+	}
+
+	EmuDirPath hybrid_path;
+	FindEmuDirPathByDevice(DeviceCdrom0, hybrid_path);
+	if (hybrid_path.HostDirPath != "") {
+		return DeviceType::Cdrom0;
+	}
+
+	return DeviceType::Invalid;
+}
+
+void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false, std::size_t size = 512 * ONE_KB)
 {
 	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 	if (!hf) {
@@ -98,7 +194,7 @@ void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false
 		WriteFile(hf, &BackupPartTbl, sizeof(XboxPartitionTable), &NumberOfBytesWritten, 0);
 	}
 
-	SetFilePointer(hf, 512 * ONE_KB, 0, FILE_BEGIN);
+	SetFilePointer(hf, size, 0, FILE_BEGIN);
 	SetEndOfFile(hf);
 	CloseHandle(hf);
 }
@@ -139,7 +235,7 @@ FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber)
 	return superblock;
 }
 
-static std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
+std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 {
 	constexpr size_t INITIAL_BUF_SIZE = MAX_PATH;
 	std::wstring path(INITIAL_BUF_SIZE, '\0');
@@ -173,20 +269,30 @@ static bool CxbxIsPathInsideEmuDisk(const std::filesystem::path& path)
 	return match.first == rootPath.end();
 }
 
-int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
+static int CxbxGetPartitionNumber(const std::wstring_view path)
 {
-	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
-	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
-
 	const std::wstring_view partitionString = L"\\EmuDisk\\Partition";
 	const size_t pos = path.rfind(partitionString);
 	if (pos == std::string::npos) {
 		return 0;
 	}
-	const std::wstring partitionNumberString = path.substr(pos + partitionString.length(), 1);
+	const std::wstring_view partitionNumberString = path.substr(pos + partitionString.length(), 1);
 
 	// wcstol returns 0 on non-numeric characters, so we don't need to error check here
-	return wcstol(partitionNumberString.c_str(), nullptr, 0);
+	return wcstol(partitionNumberString.data(), nullptr, 0);
+}
+
+int CxbxGetPartitionNumberFromPath(const std::wstring_view path)
+{
+	return CxbxGetPartitionNumber(path);
+}
+
+int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
+{
+	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
+
+	return CxbxGetPartitionNumber(path);
 }
 
 std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
@@ -248,7 +354,14 @@ const std::string DriveA = DrivePrefix + "A:"; // A: could be CDROM
 const std::string DriveC = DrivePrefix + "C:"; // C: is HDD0
 const std::string DriveD = DrivePrefix + "D:"; // D: is DVD Player
 const std::string DriveE = DrivePrefix + "E:";
-const std::string DriveF = DrivePrefix + "F:";
+const std::string DriveF = DrivePrefix + "F:"; // MU port 0, slot top
+const std::string DriveG = DrivePrefix + "G:"; // MU port 0, slot bottom
+const std::string DriveH = DrivePrefix + "H:"; // MU port 1, slot top
+const std::string DriveI = DrivePrefix + "I:"; // MU port 1, slot bottom
+const std::string DriveJ = DrivePrefix + "J:"; // MU port 2, slot top
+const std::string DriveK = DrivePrefix + "K:"; // MU port 2, slot bottom
+const std::string DriveL = DrivePrefix + "L:"; // MU port 3, slot top
+const std::string DriveM = DrivePrefix + "M:"; // MU port 3, slot bottom
 const std::string DriveS = DrivePrefix + "S:";
 const std::string DriveT = DrivePrefix + "T:"; // T: is Title persistent data region
 const std::string DriveU = DrivePrefix + "U:"; // U: is User persistent data region
@@ -260,6 +373,7 @@ const std::string DriveZ = DrivePrefix + "Z:"; // Z: is Title utility data regio
 const std::string DevicePrefix = "\\Device";
 const std::string DeviceCdrom0 = DevicePrefix + "\\CdRom0";
 const std::string DeviceHarddisk0 = DevicePrefix + "\\Harddisk0";
+const std::string DeviceMU = DevicePrefix + "\\MU_";
 const std::string DeviceHarddisk0PartitionPrefix = DevicePrefix + "\\Harddisk0\\partition";
 const std::string DeviceHarddisk0Partition0 = DeviceHarddisk0PartitionPrefix + "0"; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
 const std::string DeviceHarddisk0Partition1 = DeviceHarddisk0PartitionPrefix + "1"; // Data partition. Contains TDATA and UDATA folders.
@@ -282,6 +396,14 @@ const std::string DeviceHarddisk0Partition17 = DeviceHarddisk0PartitionPrefix + 
 const std::string DeviceHarddisk0Partition18 = DeviceHarddisk0PartitionPrefix + "18";
 const std::string DeviceHarddisk0Partition19 = DeviceHarddisk0PartitionPrefix + "19";
 const std::string DeviceHarddisk0Partition20 = DeviceHarddisk0PartitionPrefix + "20"; // 20 = Largest possible partition number
+const std::string DeviceMU0 = DeviceMU + "0";
+const std::string DeviceMU1 = DeviceMU + "1";
+const std::string DeviceMU2 = DeviceMU + "2";
+const std::string DeviceMU3 = DeviceMU + "3";
+const std::string DeviceMU4 = DeviceMU + "4";
+const std::string DeviceMU5 = DeviceMU + "5";
+const std::string DeviceMU6 = DeviceMU + "6";
+const std::string DeviceMU7 = DeviceMU + "7"; // 7 = Largest possible mu number
 
 EmuNtSymbolicLinkObject* NtSymbolicLinkObjects['Z' - 'A' + 1];
 std::vector<XboxDevice> Devices;
@@ -675,7 +797,7 @@ std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
 	return XbePath;
 }
 
-int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::string HostDevicePath, bool IsFile)
+int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::string HostDevicePath, bool IsFile, std::size_t size)
 {
 	XboxDevice newDevice;
 	newDevice.XboxDevicePath = XboxDevicePath;
@@ -683,11 +805,12 @@ int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::strin
 
 	bool succeeded{ false };
 
-	// All HDD partitions have a .bin file to allow direct file io on the partition info
-	if (_strnicmp(XboxDevicePath.data(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
+	// All HDD and MU partitions have a .bin file to allow direct file io on the partition info
+	if (_strnicmp(XboxDevicePath.data(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0 ||
+		_strnicmp(XboxDevicePath.data(), DeviceMU.c_str(), DeviceMU.length()) == 0) {
 		std::string partitionHeaderPath = HostDevicePath + ".bin";
 		if (!std::filesystem::exists(partitionHeaderPath)) {
-			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0);
+			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0, size);
 		}
 
 		succeeded = true;

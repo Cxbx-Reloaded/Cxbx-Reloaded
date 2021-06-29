@@ -49,6 +49,8 @@ void DukeInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
 	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_PROFILE_NAME);
 	m_hwnd_default = GetDlgItem(m_hwnd_window, IDC_DEFAULT);
+	m_hwnd_slot_list[SLOT_TOP] = GetDlgItem(hwnd, IDC_DEVICE_LIST_TOP_SLOT);
+	m_hwnd_slot_list[SLOT_BOTTOM] = GetDlgItem(hwnd, IDC_DEVICE_LIST_BOTTOM_SLOT);
 	m_dev_type = dev_type;
 	m_max_num_buttons = dev_num_buttons[dev_type];
 	m_port_num = port_num;
@@ -79,10 +81,34 @@ void DukeInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 
 	}
 	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
-		reinterpret_cast<LPARAM>((title + std::to_string(PORT_INC(m_port_num))).c_str()));
+		reinterpret_cast<LPARAM>((title + PortUserFormat(std::to_string(m_port_num))).c_str()));
 
 	// Set the maximum profile name lenght the user can enter in the profile combobox
 	SendMessage(m_hwnd_profile_list, CB_LIMITTEXT, 49, 0);
+
+	if (m_dev_type == to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK)) {
+		// The arcade joystick does not have slot ports so we always disable the corresponding options
+		for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+			LRESULT index = SendMessage(m_hwnd_slot_list[slot], CB_ADDSTRING, 0,
+				reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)).c_str()));
+			SendMessage(m_hwnd_slot_list[slot], CB_SETITEMDATA, index, to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID));
+			SendMessage(m_hwnd_slot_list[slot], CB_SETCURSEL, index, 0);
+			EnableWindow(m_hwnd_slot_list[slot], FALSE);
+		}
+	}
+	else {
+		// Set up the device types we support in the slot ports
+		for (auto slot_type : slot_support_list) {
+			for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+				LRESULT index = SendMessage(m_hwnd_slot_list[slot], CB_ADDSTRING, 0,
+					reinterpret_cast<LPARAM>(GetInputDeviceName(to_underlying(slot_type)).c_str()));
+				SendMessage(m_hwnd_slot_list[slot], CB_SETITEMDATA, index, to_underlying(slot_type));
+				if (g_Settings->m_input_port[m_port_num].SlotType[slot] == to_underlying(slot_type)) {
+					SendMessage(m_hwnd_slot_list[slot], CB_SETCURSEL, index, 0);
+				}
+			}
+		}
+	}
 
 	// construct emu device
 	m_DeviceConfig = new EmuDevice(m_dev_type, m_hwnd_window, this);
@@ -181,32 +207,12 @@ void DukeInputWindow::UpdateProfile(const std::string &name, int command)
 {
 	switch (command)
 	{
-	case PROFILE_LOAD: {
-		LoadProfile(name);
-	}
-	break;
-
-	case PROFILE_SAVE: {
-		SaveProfile(name);
-	}
-	break;
-
-	case PROFILE_DELETE: {
-		DeleteProfile(name);
-	}
-	break;
-
-	case RUMBLE_CLEAR: {
+	case RUMBLE_CLEAR:
 		m_rumble = std::string();
-	}
-	break;
+		break;
 
-	case BUTTON_CLEAR:
-	case BUTTON_SWAP: {
-		m_bHasChanges = true;
-	}
-	break;
-
+	default:
+		InputWindow::UpdateProfile(name, command);
 	}
 }
 
@@ -239,6 +245,14 @@ void DukeInputWindow::DetectOutput(int ms)
 	}
 }
 
+void DukeInputWindow::SaveSlotConfig()
+{
+	for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
+		g_Settings->m_input_port[m_port_num].SlotType[slot] = SendMessage(m_hwnd_slot_list[slot], CB_GETITEMDATA,
+			SendMessage(m_hwnd_slot_list[slot], CB_GETCURSEL, 0, 0), 0);
+	}
+}
+
 static INT_PTR CALLBACK DlgRumbleConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -266,6 +280,7 @@ INT_PTR CALLBACK DlgXidControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPar
 	case WM_CLOSE:
 	{
 		if (g_InputWindow->IsProfileSaved()) {
+			g_InputWindow->SaveSlotConfig();
 			delete g_InputWindow;
 			g_InputWindow = nullptr;
 			EndDialog(hWndDlg, wParam);

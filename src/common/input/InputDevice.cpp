@@ -33,8 +33,10 @@
 // https://github.com/dolphin-emu/dolphin
 
 #include "InputDevice.h"
+#include "InputManager.h"
 #include "common\util\CxbxUtil.h"
 #include <algorithm>
+#include <charconv>
 
 
 std::string GetInputDeviceName(int dev_type)
@@ -90,6 +92,33 @@ std::string GetInputDeviceName(int dev_type)
 	return str;
 }
 
+std::string PortUserFormat(std::string_view port)
+{
+	int port_num, slot;
+	PortStr2Int(port, &port_num, &slot);
+	++port_num;
+	if (slot != PORT_INVALID) {
+		++slot;
+		return std::to_string(port_num) + "." + std::to_string(slot);
+	}
+	else {
+		return std::to_string(port_num);
+	}
+}
+
+void PortStr2Int(std::string_view port, int *port_num, int *slot)
+{
+	*slot = PORT_INVALID;
+	auto &ret = std::from_chars(port.data(), port.data() + port.size(), *port_num);
+	assert(ret.ec != std::errc::invalid_argument);
+	if (ret.ptr != port.data() + port.size()) {
+		++ret.ptr;
+		ret = std::from_chars(ret.ptr, port.data() + port.size(), *slot);
+		assert(ret.ec != std::errc::invalid_argument);
+		assert(ret.ptr == port.data() + port.size());
+	}
+}
+
 // Destructor, delete all inputs/outputs on device destruction
 InputDevice::~InputDevice()
 {
@@ -129,4 +158,32 @@ const std::vector<InputDevice::IoControl*> InputDevice::GetIoControls()
 		vec.push_back(dynamic_cast<IoControl*>(output));
 		});
 	return vec;
+}
+
+const auto InputDevice::FindPort(std::string_view Port) const
+{
+	return std::find_if(m_XboxPort.begin(), m_XboxPort.end(), [Port](std::string_view CurrPort) {
+		if (CurrPort == Port) {
+			return true;
+		}
+		return false;
+		});
+}
+
+void InputDevice::SetPort(std::string_view Port, bool Connect)
+{
+	if (Connect) {
+		m_XboxPort.emplace_back(Port);
+	}
+	else {
+		const auto &it = FindPort(Port);
+		if (it != m_XboxPort.end()) {
+			m_XboxPort.erase(it);
+		}
+	}
+}
+
+bool InputDevice::GetPort(std::string_view Port) const
+{
+	return FindPort(Port) != m_XboxPort.end() ? true : false;
 }

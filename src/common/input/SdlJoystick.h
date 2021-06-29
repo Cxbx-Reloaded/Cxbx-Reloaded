@@ -35,20 +35,20 @@
 
 namespace Sdl
 {
-	typedef enum _SDL_INIT_STATUS : int
+	typedef enum _INIT_STATUS : int
 	{
-		SDL_NOT_INIT = -2,
-		SDL_INIT_ERROR,
-		SDL_INIT_SUCCESS,
+		NOT_INIT = -2,
+		INIT_ERROR,
+		INIT_SUCCESS,
 	}
-	SDL_INIT_STATUS;
+	INIT_STATUS;
 
 	extern uint32_t ExitEvent_t;
 	extern uint32_t PopulateEvent_t;
 	extern uint32_t UpdateInputEvent_t;
 	extern uint32_t DeviceRemoveAck_t;
-	extern int SdlInitStatus;
-	extern bool SdlPopulateOK;
+	extern int InitStatus;
+	extern bool PopulateOK;
 
 	// initialize SDL
 	void Init(std::mutex& Mtx, std::condition_variable& Cv, bool is_gui);

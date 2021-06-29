@@ -35,7 +35,7 @@
 
 namespace RawInput
 {
-    int RawInputInitStatus = RAWINPUT_NOT_INIT;
+    int InitStatus = NOT_INIT;
     bool IgnoreHotplug = true;
 
 	void Init(std::mutex &Mtx, bool is_gui, HWND hwnd)
@@ -44,7 +44,7 @@ namespace RawInput
 
         if (is_gui) {
             // We don't need to monitor xinput device changes from the gui, because there we have the refresh button to detect changes
-            RawInputInitStatus = RAWINPUT_INIT_SUCCESS;
+            InitStatus = INIT_SUCCESS;
             return;
         }
 
@@ -69,16 +69,16 @@ namespace RawInput
             static_cast<UINT>(sizeof(decltype(devices)::value_type))))
         {
             EmuLog(LOG_LEVEL::ERROR2, "RegisterRawInputDevices failed: %i", GetLastError());
-            RawInputInitStatus = RAWINPUT_INIT_ERROR;
+            InitStatus = INIT_ERROR;
             return;
         }
 
-        RawInputInitStatus = RAWINPUT_INIT_SUCCESS;
+        InitStatus = INIT_SUCCESS;
 	}
 
     void DeInit()
     {
-        RawInputInitStatus = RAWINPUT_NOT_INIT;
+        InitStatus = NOT_INIT;
         IgnoreHotplug = true;
     }
 }
