@@ -119,8 +119,9 @@ inline constexpr xbox::ulong_xt fsctl_read_fatx_metadata = 0x0009411C;
 inline constexpr xbox::ulong_xt fsctl_write_fatx_metadata = 0x00098120;
 
 inline constexpr std::size_t mu_max_name_lenght = 32 * sizeof(xbox::wchar_xt); // MU names are in wide chars
-extern std::string CxbxBasePath;
-extern HANDLE CxbxBasePathHandle;
+extern std::string g_DiskBasePath;
+extern std::string g_MuBasePath;
+extern HANDLE g_DiskBasePathHandle;
 
 const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation] = {
 	0,                                                    // (index 0)
@@ -277,6 +278,7 @@ int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath);
 XboxDevice* CxbxDeviceByDevicePath(const std::string_view XboxDevicePath);
 XboxDevice* CxbxDeviceByHostPath(const std::string_view HostPath);
 std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath);
+bool CxbxrIsPathInsideEmuDisk(const std::filesystem::path& path);
 
 char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
 EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveLetter);

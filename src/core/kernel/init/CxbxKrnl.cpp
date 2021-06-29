@@ -95,9 +95,6 @@ char szFolder_CxbxReloadedData[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 char szFilePath_Xbe[xbox::max_path*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is xbox::max_path*2 = 520
 
-std::string CxbxBasePath;
-std::string MuBasePath;
-HANDLE CxbxBasePathHandle;
 Xbe* CxbxKrnl_Xbe = NULL;
 bool g_bIsChihiro = false;
 bool g_bIsDebug = false;
@@ -1431,17 +1428,18 @@ __declspec(noreturn) void CxbxKrnlInit
 	
 	// Initialize devices :
 	{
-		char szBuffer[sizeof(szFilePath_Xbe)];
-		g_EmuShared->GetStorageLocation(szBuffer);
+		char cxbxr_data_path[sizeof(szFilePath_Xbe)];
+		g_EmuShared->GetStorageLocation(cxbxr_data_path);
 
-		MuBasePath = std::string(szBuffer) + "\\EmuMu";
-		CxbxBasePath = std::string(szBuffer) + "\\EmuDisk";
-		CxbxResolveHostToFullPath(CxbxBasePath, "Cxbx-Reloaded's EmuDisk directory");
-		CxbxResolveHostToFullPath(MuBasePath, "Cxbx-Reloaded's EmuMu directory");
+		g_DiskBasePath = std::string(cxbxr_data_path) + "\\EmuDisk";
+		g_MuBasePath = std::string(cxbxr_data_path) + "\\EmuMu";
+		CxbxResolveHostToFullPath(g_DiskBasePath, "Cxbx-Reloaded's EmuDisk directory");
+		CxbxResolveHostToFullPath(g_MuBasePath, "Cxbx-Reloaded's EmuMu directory");
 		// Since canonical always remove the extra slash, we need to manually add it back.
-		// TODO: Once CxbxBasePath is filesystem::path, replace CxbxBasePath's + operators to / for include path separator internally.
-		CxbxBasePath = std::filesystem::path(CxbxBasePath).append("").string();
-		MuBasePath = std::filesystem::path(MuBasePath).append("").string();
+		// TODO: Once g_DiskBasePath is filesystem::path, replace g_DiskBasePath's + operators to / for include path separator internally.
+		g_DiskBasePath = std::filesystem::path(g_DiskBasePath).append("").string();
+		g_MuBasePath = std::filesystem::path(g_MuBasePath).append("").string();
+		// NOTE: Do NOT modify global variables above after this point!
 	}
 
 	// Determine xbe path
@@ -1471,9 +1469,9 @@ __declspec(noreturn) void CxbxKrnlInit
 	}
 	CxbxResolveHostToFullPath(relative_path, "xbe's directory");
 
-	CxbxBasePathHandle = CreateFile(CxbxBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+	g_DiskBasePathHandle = CreateFile(g_DiskBasePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
 	int CxbxCdrom0DeviceIndex = -1;
-	bool isEmuDisk = _strnicmp(relative_path.c_str(), CxbxBasePath.c_str(), CxbxBasePath.size() - 1) == 0;
+	bool isEmuDisk = CxbxrIsPathInsideEmuDisk(relative_path);
 	// Check if title mounth path is already set. This may occur from early boot of Chihiro title.
 	char title_mount_path[sizeof(szFilePath_Xbe)];
 	const char* p_default_mount_path = title_mount_path;
@@ -1489,6 +1487,7 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	// TODO: Find a place to make permanent placement for DeviceCdrom0 that does not have disc loaded.
 	if (p_default_mount_path[0] != '\0') {
+		// NOTE: Don't need to perform CxbxResolveHostToFullPath again for p_default_mount_path.
 		CxbxCdrom0DeviceIndex = CxbxRegisterDeviceHostPath(DeviceCdrom0, p_default_mount_path);
 		// Since Chihiro also map Mbfs to the same path as Cdrom0, we'll map it the same way.
 		if (g_bIsChihiro) {
@@ -1497,31 +1496,31 @@ __declspec(noreturn) void CxbxKrnlInit
 	}
 
 	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, CxbxBasePath + "Partition0", /*IsFile=*/true);
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, g_DiskBasePath + "Partition0", /*IsFile=*/true);
 	// The first two partitions are for Data and Shell files, respectively :
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition1, CxbxBasePath + "Partition1");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition2, CxbxBasePath + "Partition2");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition1, g_DiskBasePath + "Partition1");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition2, g_DiskBasePath + "Partition2");
 	// The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition3, CxbxBasePath + "Partition3");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition4, CxbxBasePath + "Partition4");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition5, CxbxBasePath + "Partition5");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, CxbxBasePath + "Partition6");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, CxbxBasePath + "Partition7");
-	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", CxbxBasePath + "Chihiro");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition3, g_DiskBasePath + "Partition3");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition4, g_DiskBasePath + "Partition4");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition5, g_DiskBasePath + "Partition5");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, g_DiskBasePath + "Partition6");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, g_DiskBasePath + "Partition7");
+	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", g_DiskBasePath + "Chihiro");
 
 	// Create the MU directories and the bin files
-	CxbxRegisterDeviceHostPath(DeviceMU0, MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU1, MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU2, MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU3, MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU4, MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU5, MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU6, MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU7, MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU0, g_MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU1, g_MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU2, g_MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU3, g_MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU4, g_MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU5, g_MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU6, g_MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU7, g_MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
 
 	std::mbstate_t ps = std::mbstate_t();
-	const char *src = MuBasePath.c_str();
-	std::wstring wMuBasePath(MuBasePath.size(), L'0');
+	const char *src = g_MuBasePath.c_str();
+	std::wstring wMuBasePath(g_MuBasePath.size(), L'0');
 	std::mbsrtowcs(wMuBasePath.data(), &src, wMuBasePath.size(), &ps);
 	g_io_mu_metadata = new io_mu_metadata(wMuBasePath);
 
