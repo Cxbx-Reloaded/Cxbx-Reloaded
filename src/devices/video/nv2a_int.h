@@ -44,6 +44,9 @@
 #include "nv2a_shaders.h" // For ShaderBinding, etc
 #include "nv2a_regs.h" // For NV2A_MAX_TEXTURES, etc
 
+#include "core\hle\D3D8\XbVertexBuffer.h" // For EmuPC2XB_D3DFormat
+
+
 
 typedef xbox::addr_xt hwaddr; // Compatibility; Cxbx uses xbox::addr_xt, xqemu and OpenXbox use hwaddr 
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
@@ -133,7 +136,10 @@ typedef struct DMAObject {
 } DMAObject;
 
 typedef struct VertexAttribute {
+	//=0x80000000 if the bbit 31 of vertex buffer address with offset  is set to 1.
+	//we're using UMA, maybe we can directly use 0x8XXXXXXX range?
 	bool dma_select;
+	//vertex attribute vertex buffer address with offset
 	xbox::addr_xt offset;
 
 	/* inline arrays are packed in order?
@@ -141,6 +147,8 @@ typedef struct VertexAttribute {
 	unsigned int inline_array_offset;
 
 	float inline_value[4];
+	//flag to indicate whether the attribute is set during attribute upload process. 
+	bool set_by_inline_buffer = false;
 
 	unsigned int format;
 	unsigned int size; /* size of the data type */
@@ -561,6 +569,7 @@ typedef struct NV097KelvinPrimitive{
 } NV097KelvinPrimitive;
 
 
+
 typedef struct PGRAPHState {
 	bool opengl_enabled; // == bLLE_GPU
 	QemuMutex pgraph_lock;
@@ -673,6 +682,7 @@ typedef struct PGRAPHState {
 	uint16_t inline_elements[NV2A_MAX_BATCH_LENGTH]; // Cxbx-Reloaded TODO : Restore uint32_t once HLE_draw_inline_elements can using that
 
 	unsigned int inline_buffer_length;
+	float inline_buffer[NV2A_MAX_BATCH_LENGTH*4];
 
 	unsigned int draw_arrays_length;
 	unsigned int draw_arrays_max_count;
@@ -697,6 +707,16 @@ typedef struct PGRAPHState {
             uint32_t regs[0x2000/4];//NV097_XXX register offset is in bytes, we're declare this array in dwords. when use register offset as index, the register offset must be divided by 4.
 			NV097KelvinPrimitive KelvinPrimitive;
 	};
+
+	//Host FVF format
+	DWORD HostFVF;
+	//handle for fix function vertex shader.
+	DWORD vsh_FVF_handle;
+	
+	//DrawContext for draw calls to CxbxDrawPrimitive() etc.
+	::CxbxDrawContext DrawContext;
+
+
 } PGRAPHState;
 
 typedef struct OverlayState {

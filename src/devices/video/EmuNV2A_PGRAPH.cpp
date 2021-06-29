@@ -34,7 +34,8 @@
 // ******************************************************************
 
 #include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
-
+#include "core\hle\D3D8\XbVertexShader.h"
+#include "core\hle\D3D8\XbVertexBuffer.h" 
 // FIXME
 #define qemu_mutex_lock_iothread()
 #define qemu_mutex_unlock_iothread()
@@ -1116,10 +1117,10 @@ void OpenGL_init_pgraph_plugins()
 }
 
 //calsulate vertex stride by accumulating the size of each attribute.
-int pgraph_get_inline_array_stride(PGRAPHState *pg)
+int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)
 {
 	int stride = 0;
-	for(int slot=0;slot<16;slot++){
+	for(int slot=0;slot< NV2A_VERTEXSHADER_ATTRIBUTES;slot++){
 		if(pg->vertex_attributes[slot].count>0)
 			stride+= pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
 	}
@@ -1156,6 +1157,61 @@ int pgraph_get_inline_array_stride(PGRAPHState *pg)
 
 static uint32_t subchannel_to_graphic_class[8] = { NV_KELVIN_PRIMITIVE,NV_MEMORY_TO_MEMORY_FORMAT,NV_IMAGE_BLIT,NV_CONTEXT_SURFACES_2D,0,NV_CONTEXT_PATTERN,0,0, };
 extern IDirect3DDevice9Ex *g_pD3DDevice;
+extern VertexShaderMode g_Xbox_VertexShaderMode;
+extern void CxbxUpdateHostVertexShader();
+extern int g_InlineVertexBuffer_DeclarationOverride ;
+//starting address of vertex shader user program
+extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
+//xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
+extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
+extern void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext);
+extern void CxbxDrawIndexed(CxbxDrawContext &DrawContext);
+extern DWORD ABGR_to_ARGB(const uint32_t color);
+xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat = {};
+
+//get Host FVF with pVAF, not implement yet.
+/*
+const DWORD GetHostFVFfromXboxVertexAttributes(xbox::X_VERTEXATTRIBUTEFORMAT *pVAF)
+{
+	DWORD HostFVF = 0;
+	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+		switch (slot) {
+		case xbox::X_D3DVSDE_POSITION:
+			if (pVAF->Slots[slot].Format == 0);
+			break;
+		case xbox::X_D3DVSDE_BLENDWEIGHT:
+			break;
+		case xbox::X_D3DVSDE_NORMAL:
+			break;
+		case xbox::X_D3DVSDE_DIFFUSE:
+			
+			;
+			break;
+		case xbox::X_D3DVSDE_SPECULAR:
+			
+			;
+			break;
+		case xbox::X_D3DVSDE_FOG:
+			break;
+		case xbox::X_D3DVSDE_POINTSIZE:
+			break;
+		case xbox::X_D3DVSDE_BACKDIFFUSE:
+			break;
+		case xbox::X_D3DVSDE_BACKSPECULAR:
+			break;
+		case xbox::X_D3DVSDE_TEXCOORD0:
+			break;
+		case xbox::X_D3DVSDE_TEXCOORD1:
+			break;
+		case xbox::X_D3DVSDE_TEXCOORD2:
+			break;
+		case xbox::X_D3DVSDE_TEXCOORD3:
+			break;
+		}
+	}
+	return HostFVF;
+}
+*/
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
 int pgraph_handle_method(
@@ -1544,11 +1600,11 @@ int pgraph_handle_method(
         #ifdef __APPLE__
                     if (glFrameTerminatorGREMEDY) {
                         glFrameTerminatorGREMEDY();
-                    }
+						}
         #endif // __APPLE__
-                    break;
-                }
-                case NV097_FLIP_STALL://done
+						break;
+					}
+				case NV097_FLIP_STALL://done
                     pgraph_update_surface(d, false, true, true);
                     // TODO: Fix this (why does it hang?)
                     /* while (true) */ {
@@ -2152,92 +2208,86 @@ int pgraph_handle_method(
                 case NV097_SET_POINT_SIZE: break;//done //pg->KelvinPrimitive.SetPointSize
 
                 CASE_16(NV097_SET_PROJECTION_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetProjectionMatrix[16]
-                        //KelvinPrimitive.SetProjectionMatrix[] is update already. we update the vertex shader contant as well.
-						slot = (method - NV097_SET_PROJECTION_MATRIX) / 4;
-						for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            
-                            // pg->projection_matrix[slot] = *(float*)&parameter;
-                            unsigned int row = NV_IGRAPH_XF_XFCTX_PMAT0 + slot / 4;
-                            pg->vsh_constants[row][slot % 4] = arg0;
-                            pg->vsh_constants_dirty[row] = true;
-                        }
-                        break;
+                    //KelvinPrimitive.SetProjectionMatrix[] is update already. we update the vertex shader contant as well.
+					slot = (method - NV097_SET_PROJECTION_MATRIX) / 4;
+					for (int argc = 0; argc < method_count; argc++, slot++) {
+                        arg0 = argv[argc];
+                        // pg->projection_matrix[slot] = *(float*)&parameter;
+                        unsigned int row = NV_IGRAPH_XF_XFCTX_PMAT0 + slot / 4;
+                        pg->vsh_constants[row][slot % 4] = arg0;
+                        pg->vsh_constants_dirty[row] = true;
                     }
-
+                    break;
+                }
+				//Matrix transposed before pushed, always matrix 0, method count 16
                 CASE_64(NV097_SET_MODEL_VIEW_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetModelViewMatrix0[16] SetModelViewMatrix1[16] SetModelViewMatrix2[16] SetModelViewMatrix3[16]
-                         //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
-						slot = (method - NV097_SET_MODEL_VIEW_MATRIX) / 4;
-						for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            
-                            unsigned int matnum = argc / 16;
-                            unsigned int entry = argc % 16;
-                            unsigned int row = NV_IGRAPH_XF_XFCTX_MMAT0 + matnum * 8 + entry / 4;
-                            pg->vsh_constants[row][entry % 4] = arg0;
-                            pg->vsh_constants_dirty[row] = true;
-                        }
-                        break;
+                     //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
+					slot = (method - NV097_SET_MODEL_VIEW_MATRIX) / 4;
+					for (int argc = 0; argc < method_count; argc++, slot++) {
+                        arg0 = argv[argc];
+                        //matnum = argc / 16;
+						unsigned int matnum = slot / 16;
+						unsigned int entry = slot % 16;
+                        unsigned int row = NV_IGRAPH_XF_XFCTX_MMAT0 + matnum * 4 + entry / 4;
+                        pg->vsh_constants[row][entry % 4] = arg0;
+                        pg->vsh_constants_dirty[row] = true;
                     }
-
+                    break;
+                }
+				//Matrix not transposed before pushed, always matrix 0, method count 12
                 CASE_64(NV097_SET_INVERSE_MODEL_VIEW_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetInverseModelViewMatrix0[16] SetInverseModelViewMatrix1[16] SetInverseModelViewMatrix2[16] SetInverseModelViewMatrix3[16]
-                        //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
-						slot = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 4;
-						for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            
-                            unsigned int matnum = slot / 16;
-                            unsigned int entry = slot % 16;
-                            unsigned int row = NV_IGRAPH_XF_XFCTX_IMMAT0 + matnum * 8 + entry / 4;
-                            pg->vsh_constants[row][entry % 4] = arg0;
-                            pg->vsh_constants_dirty[row] = true;
-                        }
-                        break;
+                    //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
+					slot = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 4;
+					for (int argc = 0; argc < method_count; argc++, slot++) {
+                        arg0 = argv[argc];
+						unsigned int matnum = slot / 16;
+                        unsigned int entry = slot % 16;
+                        unsigned int row = NV_IGRAPH_XF_XFCTX_IMMAT0 + matnum * 4 + entry / 4;
+                        pg->vsh_constants[row][entry % 4] = arg0;
+                        pg->vsh_constants_dirty[row] = true;
                     }
-
+                    break;
+                }
+				//Matrix transposed before pushed, always matrix 0, method count 16
                 CASE_16(NV097_SET_COMPOSITE_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetCompositeMatrix[16]
                         //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
-						slot = (method - NV097_SET_COMPOSITE_MATRIX) / 4;
-						for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            
-                            unsigned int row = NV_IGRAPH_XF_XFCTX_CMAT0 + slot / 4;
-                            pg->vsh_constants[row][slot % 4] = arg0;
-                            pg->vsh_constants_dirty[row] = true;
-                        }
-                        break;
+					slot = (method - NV097_SET_COMPOSITE_MATRIX) / 4;
+					for (int argc = 0; argc < method_count; argc++, slot++) {
+                        arg0 = argv[argc];
+                        unsigned int row = NV_IGRAPH_XF_XFCTX_CMAT0 + slot / 4;
+                        pg->vsh_constants[row][slot % 4] = arg0;
+                        pg->vsh_constants_dirty[row] = true;
                     }
+                    break;
+                }
 
                 CASE_64(NV097_SET_TEXTURE_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetInverseModelViewMatrix0[16] SetInverseModelViewMatrix1[16] SetInverseModelViewMatrix2[16] SetInverseModelViewMatrix3[16]
-                        //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
-						slot = (method - NV097_SET_TEXTURE_MATRIX) / 4;
-						for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            
-                            unsigned int tex = slot / 16;
-                            unsigned int entry = slot % 16;
-                            unsigned int row = NV_IGRAPH_XF_XFCTX_T0MAT + tex * 8 + entry / 4;
-                            pg->vsh_constants[row][entry % 4] = arg0;
-                            pg->vsh_constants_dirty[row] = true;
-                        }
-                        break;
+                    //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
+					slot = (method - NV097_SET_TEXTURE_MATRIX) / 4;
+					for (int argc = 0; argc < method_count; argc++, slot++) {
+                        arg0 = argv[argc];
+                        unsigned int tex = slot / 16;
+                        unsigned int entry = slot % 16;
+                        unsigned int row = NV_IGRAPH_XF_XFCTX_T0MAT + tex * 8 + entry / 4;
+                        pg->vsh_constants[row][entry % 4] = arg0;
+                        pg->vsh_constants_dirty[row] = true;
                     }
-
-                    /* Handles NV097_SET_TEXGEN_PLANE_S,T,R,Q */ //KelvinPrimitive.SetTexgenPlane[4]::{S[4],T[4],R[4],Q[4]}
+                    break;
+                }
+                /* Handles NV097_SET_TEXGEN_PLANE_S,T,R,Q */ //KelvinPrimitive.SetTexgenPlane[4]::{S[4],T[4],R[4],Q[4]}
                 CASE_64(NV097_SET_TEXGEN_PLANE_S, 4) : {//done //pg->KelvinPrimitive.SetTexgenPlane[i].S[j] .T[j] .R[j] .Q[j]  tex=i, entry=j
-                        //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
-						slot = (method - NV097_SET_TEXGEN_PLANE_S) / 4;
-						for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            
-                            unsigned int tex = slot / 16;
-                            unsigned int entry = slot % 16;
-                            unsigned int row = NV_IGRAPH_XF_XFCTX_TG0MAT + tex * 8 + entry / 4;
-                            pg->vsh_constants[row][entry % 4] = arg0;
-                            pg->vsh_constants_dirty[row] = true;
-                        }
-                        break;
+                    //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
+					slot = (method - NV097_SET_TEXGEN_PLANE_S) / 4;
+					for (int argc = 0; argc < method_count; argc++, slot++) {
+                        arg0 = argv[argc];
+                        unsigned int tex = slot / 16;
+                        unsigned int entry = slot % 16;
+                        unsigned int row = NV_IGRAPH_XF_XFCTX_TG0MAT + tex * 8 + entry / 4;
+                        pg->vsh_constants[row][entry % 4] = arg0;
+                        pg->vsh_constants_dirty[row] = true;
                     }
+                    break;
+                }
 
                 CASE_3(NV097_SET_FOG_PARAMS, 4) ://done //pg->KelvinPrimitive.SetFogParams[3]
                     //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
@@ -2273,12 +2323,11 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_SPECULAR_PARAMS) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        
                     // this state is not implemented yet.
                         //pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         //pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
                     }
-                break;
+                    break;
 
                 case NV097_SET_SWATH_WIDTH: break;//not implement //pg->KelvinPrimitive.SetSwathWidth
 
@@ -2289,8 +2338,6 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_SCENE_AMBIENT_COLOR) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        
-                        // ??
                         pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
                     }
@@ -2301,7 +2348,6 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
                     }
@@ -2312,7 +2358,6 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        
                     //this state is not implement yet.
                         //pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         //pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
@@ -2324,7 +2369,6 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_EYE_POSITION) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_EYEP][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_EYEP] = true;
                     }
@@ -2365,7 +2409,6 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_SCALE) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPSCL] = true;
                     }
@@ -2453,7 +2496,11 @@ int pgraph_handle_method(
 				D3DDevice_SelectVertexShader(Handle, addr=0)
 				{
 					(NV097_SET_LIGHTING_ENABLE,0, method count 1)
-				    (NV097_SET_TRANSFORM_EXECUTION_MODE,NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV, method count 1)
+				    (NV097_SET_TRANSFORM_EXECUTION_MODE,
+              // NV097_SET_TRANSFORM_EXECUTION_MODE:
+						(DRF_DEF(097, _SET_TRANSFORM_EXECUTION_MODE, _MODE, _PROGRAM) |  DRF_DEF(097, _SET_TRANSFORM_EXECUTION_MODE, _RANGE_MODE, _PRIV)),
+              // NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN:
+			              pVertexShader->Flags & VERTEXSHADER_WRITE (0x3),   method count 2);
 					setviewport()
 						if(! FVF)
 							(NV097_SET_VIEWPORT_OFFSET(0), A,   B,   C,   0.0f, method count 4)
@@ -2503,62 +2550,56 @@ int pgraph_handle_method(
 					    //before the first batch, NV097_SET_TRANSFORM_PROGRAM_LOAD must be called to set the beginning slot of loading.
 					    //NV097_SET_TRANSFORM_PROGRAM will advanced after each execution of NV097_SET_TRANSFORM_PROGRAM.
 					    //for continuous batch NV097_SET_TRANSFORM_PROGRAM methods, it will not have NV097_SET_TRANSFORM_PROGRAM_LOAD in between.
-						slot = (method - NV097_SET_TRANSFORM_PROGRAM) / 4;
-
-						for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            //target program register address is prestored in KelvinPrimitive.SetTransformProgramLoad
-                            int program_load = pg->KelvinPrimitive.SetTransformProgramLoad;
-
-                            assert(program_load < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
-                            //pg->KelvinPrimitive.SetTransformProgram[32] is not enough for xbox d3d, pgraph uses vsh_program_slots[136][4] to store vertex shader program
-                            pg->vsh_program_slots[program_load][slot % 4] = arg0;
-
-                            if (slot % 4 == 3) {
-                                pg->KelvinPrimitive.SetTransformProgramLoad= program_load + 1; //KelvinPrimitive.SetTransformProgramLoad must be advanced
-                                //for single time method program set, we may leave the SET_TRANSFORM_PROGRAM_LOAD along,
-                                //but if the program is large and requires multiple times of method set, the SET_TRANSFORM_PROGRAM_LOAD might need to be update.
-                                //need to check the actual vertex shader data put transfered in the pushbuffer to verify.
-                            }
+					slot = (method - NV097_SET_TRANSFORM_PROGRAM) / 4;
+                    pg->KelvinPrimitive.SetTransformProgramLoad+= slot/4;
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                        arg0 = argv[argc];
+                        //target program register address is prestored in KelvinPrimitive.SetTransformProgramLoad
+                        assert(pg->KelvinPrimitive.SetTransformProgramLoad < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
+                        //pg->KelvinPrimitive.SetTransformProgram[32] is not enough for xbox d3d, pgraph uses vsh_program_slots[136][4] to store vertex shader program
+                        pg->vsh_program_slots[pg->KelvinPrimitive.SetTransformProgramLoad][argc % 4] = arg0;
+                        if (argc % 4 == 3) {
+                            pg->KelvinPrimitive.SetTransformProgramLoad+= + 1; //KelvinPrimitive.SetTransformProgramLoad must be advanced
+                            //for single time method program set, we may leave the SET_TRANSFORM_PROGRAM_LOAD along,
+                            //but if the program is large and requires multiple times of method set, the SET_TRANSFORM_PROGRAM_LOAD might need to be update.
+                            //need to check the actual vertex shader data put transfered in the pushbuffer to verify.
                         }
-                        break;
                     }
+                    break;
+                }
 
                 CASE_32(NV097_SET_TRANSFORM_CONSTANT, 4) : {//done //pg->KelvinPrimitive.SetTransformConstant[32]
-                        //KelvinPrimitive.SetTransformConstant[32] is update already. we update the extra vertex shader contant array as well.
-                        //because KelvinPrimitive.SetTransformConstant[32] can only hold 32 constant slots, so the max. constant slots can be set in one method is 32.
-                        //for constants more than 32, must be split in batches. that is hardware limit.
-                        //before calling the first NV097_SET_TRANSFORM_CONSTANT, NV097_SET_TRANSFORM_CONSTANT_LOAD must be called, or it will be used with the last set value,
-                        //NV097_SET_TRANSFORM_CONSTANT_LOAD will be advanced when NV097_SET_TRANSFORM_CONSTANT was called with the the constant slots set.
-                        //for continuous batch NV097_SET_TRANSFORM_CONSTANT_LOAD operation, NV097_SET_TRANSFORM_CONSTANT_LOAD only has to be set in the very first beginning.
-					slot = (method - NV097_SET_TRANSFORM_CONSTANT) / 4;
-
-					for (int argc = 0; argc < method_count; argc++, slot++) {
-                            arg0 = argv[argc];
-                            //the target constant register address is prestored in NV097_SET_TRANSFORM_CONSTANT_LOAD  KelvinPrimitive.SetTransformConstantLoad
-                            int const_load = pg->KelvinPrimitive.SetTransformConstantLoad;
-
-                            assert(const_load < NV2A_VERTEXSHADER_CONSTANTS);
-                            // VertexShaderConstant *vsh_constant = &pg->vsh_constants[const_load];
-                            pg->vsh_constants_dirty[const_load] |=
-                                (arg0 != pg->vsh_constants[const_load][slot % 4]);
-                            //pg->KelvinPrimitive.SetTransformConstant[32] is not enough for xbox d3d, pgraph uses vsh_constants[192][4] to store vertex shader program
-                            pg->vsh_constants[const_load][slot % 4] = arg0;
-
-                            if (slot % 4 == 3) {
-                                pg->KelvinPrimitive.SetTransformConstantLoad= const_load + 1; //pg->KelvinPrimitive.SetTransformConstantLoad must be advanced.
-                            }
+                    //KelvinPrimitive.SetTransformConstant[32] is update already. we update the extra vertex shader contant array as well.
+                    //because KelvinPrimitive.SetTransformConstant[32] can only hold 32 constant slots, so the max. constant slots can be set in one method is 32.
+                    //for constants more than 32, must be split in batches. that is hardware limit.
+                    //before calling the first NV097_SET_TRANSFORM_CONSTANT, NV097_SET_TRANSFORM_CONSTANT_LOAD must be called, or it will be used with the last set value,
+                    //NV097_SET_TRANSFORM_CONSTANT_LOAD will be advanced when NV097_SET_TRANSFORM_CONSTANT was called with the the constant slots set.
+                    //for continuous batch NV097_SET_TRANSFORM_CONSTANT_LOAD operation, NV097_SET_TRANSFORM_CONSTANT_LOAD only has to be set in the very first beginning.
+                    slot = (method - NV097_SET_TRANSFORM_CONSTANT) / 4;
+                    //slot is sopposed to be 0 here.
+                    pg->KelvinPrimitive.SetTransformConstantLoad+=slot/4;
+                    for (int argc = 0; argc < method_count; argc++) {
+                        arg0 = argv[argc];
+                        //the target constant register address is prestored in NV097_SET_TRANSFORM_CONSTANT_LOAD  KelvinPrimitive.SetTransformConstantLoad
+                        assert(pg->KelvinPrimitive.SetTransformConstantLoad < NV2A_VERTEXSHADER_CONSTANTS);
+                        // VertexShaderConstant *vsh_constant = &pg->vsh_constants[const_load];
+                        if ((arg0 != pg->vsh_constants[pg->KelvinPrimitive.SetTransformConstantLoad][argc % 4])) {
+                            pg->vsh_constants_dirty[pg->KelvinPrimitive.SetTransformConstantLoad] |= 1;
+                            pg->vsh_constants[pg->KelvinPrimitive.SetTransformConstantLoad][argc % 4] = arg0;
                         }
-                        break;
+                        //pg->KelvinPrimitive.SetTransformConstant[32] is not enough for xbox d3d, pgraph uses vsh_constants[192][4] to store vertex shader program
+                        if (argc % 4 == 3) {
+                            pg->KelvinPrimitive.SetTransformConstantLoad+= 1; //pg->KelvinPrimitive.SetTransformConstantLoad must be advanced.
+                        }
                     }
+					break;
+                }
 
                 /* Handles NV097_SET_BACK_LIGHT* */
                 CASE_128(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4): { //done  //pg->KelvinPrimitive.SetBackLight[8]. {AmbientColor[3],DiffuseColor[3],SpecularColor[3],Rev_0c24[7]}
 					slot = (method - NV097_SET_BACK_LIGHT_AMBIENT_COLOR) / 4;
-
 					for (size_t arg_c = 0; arg_c < method_count; arg_c++,slot++) {
                         arg0 = argv[arg_c];
-
                         unsigned int part =  slot % 16;
                         unsigned int light_index = arg_count / 16; /* [Light index], we have 8 lights, each light holds 16 dwords */
                         assert(light_index < 8);
@@ -2585,7 +2626,6 @@ int pgraph_handle_method(
                                 assert(false);
                                 break;
                         }
-
                     }
                     break;
                 }
@@ -2667,36 +2707,43 @@ int pgraph_handle_method(
 
                     break;
 
-                CASE_3(NV097_SET_VERTEX3F, 4) : {//done //pg->KelvinPrimitive.SetVertex3f[3]: 
+                CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
+					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						break;
+					}
 					slot = (method - NV097_SET_VERTEX3F) / 4;
-                    for (size_t argc = 0; argc < method_count; argc++,slot++) {
-                        arg0 = argv[argc];
-                        VertexAttribute *vertex_attribute =
-                            &pg->vertex_attributes[NV2A_VERTEX_ATTR_POSITION];
-                        pgraph_allocate_inline_buffer_vertices(pg, NV2A_VERTEX_ATTR_POSITION);
-                        vertex_attribute->inline_value[slot] = *(float*)&arg0;
-                        vertex_attribute->inline_value[3] = 1.0f;
-                        if (slot == 2) {
-                            pgraph_finish_inline_buffer_vertex(pg);
-                        }
-                    }
+					VertexAttribute *vertex_attribute =
+					&pg->vertex_attributes[slot];
+					//allocate attribute.inline_buffer if it's not allocated yet.
+					//pgraph_allocate_inline_buffer_vertices(pg, slot);
+                    vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertex3f[0];
+					vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertex3f[1];
+					vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertex3f[2];
+					vertex_attribute->inline_value[3] = 1.0f;
                     break;
                 }
 
-                CASE_4(NV097_SET_VERTEX4F, 4): //done //pg->KelvinPrimitive.SetVertex4f[4]
+                CASE_4(NV097_SET_VERTEX4F, 4): //pg->KelvinPrimitive.SetVertex4f[4]
+					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						break;
+					}
 					slot = (method - NV097_SET_VERTEX4F) / 4;
-                    for (size_t argc = 0; argc < method_count; argc++, slot ++) {
-                        arg0 = argv[argc];
-                        VertexAttribute *vertex_attribute =
-                            &pg->vertex_attributes[NV2A_VERTEX_ATTR_POSITION];
-                        pgraph_allocate_inline_buffer_vertices(pg, NV2A_VERTEX_ATTR_POSITION);
-                        vertex_attribute->inline_value[slot] = *(float*)&arg0;
-                        if (slot == 3) {
-                            pgraph_finish_inline_buffer_vertex(pg);
-                        }
-
-                    }
-                    break;
+					VertexAttribute *vertex_attribute =
+					&pg->vertex_attributes[slot];
+					//allocate attribute.inline_buffer if it's not allocated yet.
+					//pgraph_allocate_inline_buffer_vertices(pg, slot);
+					vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertex4f[0];
+					vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertex4f[1];
+					vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertex4f[2];
+					vertex_attribute->inline_value[3] = pg->KelvinPrimitive.SetVertex4f[3];
+					//set flag so when each vertex is completed, it can know which attribute is set and require to be pushed to vertex buffer.
+					vertex_attribute->set_by_inline_buffer = true;
+					if (slot == 0) {//D3DVSDE_POSITION =0     //slot ==0 only happended in NV097_SET_VERTEX_DATA4F
+						//vertex completed, push all attributes to vertex buffer.
+						pgraph_finish_inline_buffer_vertex(pg);
+						pg->inline_buffer_length++;
+					}
+                    break; 
 
 #if(0)  //missing state implememtations, need verifications.
 
@@ -2774,13 +2821,13 @@ int pgraph_handle_method(
 
                 (NV097_SET_VERTEX_DATA_ARRAY_OFFSET(0), 16)
                 for i=0~15
-                    offset[i] = pStreamInputs[pVAF[i].StreamIndex].VertexBuffer->Data
-                     + pStreamInputs[pVAF[i].StreamIndex].Offset
+                    offset[i] = pStreamInputs[pVAF.Input[i].StreamIndex].VertexBuffer->Data
+                     + pStreamInputs[pVAF.Input[i].StreamIndex].Offset
                      + pVAF[i].Offset;
 
                     pg->KelvinPrimitive.SetVertexDataArrayOffset[i] = offset[i];
 
-                    format[i] = (pStreamInputs[pVAF[i].StreamIndex].Stride << 8) + pVAF[i].SizeAndType;
+                    Format[i] = (pStreamInputs[pVAF.Input[i].StreamIndex].Stride << 8) + pVAF.Input[i].Format;
 
                  then calls 
 
@@ -2788,8 +2835,13 @@ int pgraph_handle_method(
                  for i=0~15
                     pg->KelvinPrimitive.SetVertexDataFormat[i]=Format[i];
 
+				for D3D_Draw_UP() calls, vertex are pushed to pushed buffer. there are no stream set.
+				no NV097_SET_VERTEX_DATA_ARRAY_OFFSET is called, only NV097_SET_VERTEX_DATA_ARRAY_FORMAT, and no Stride set in the Format[i]
+
                  */
-				CASE_16(NV097_SET_VERTEX_DATA_ARRAY_OFFSET, 4) : //done //pg->KelvinPrimitive.SetVertexDataArrayOffset[16]
+
+				CASE_16(NV097_SET_VERTEX_DATA_ARRAY_OFFSET, 4) : //pg->KelvinPrimitive.SetVertexDataArrayOffset[16]
+				//pg->KelvinPrimitive.SetVertexDataArrayOffset[i] = vertex buffer address start + offset of Attribute [i]
 					slot = (method - NV097_SET_VERTEX_DATA_ARRAY_OFFSET) / 4;
                     for (size_t argc = 0; argc < method_count; argc++, slot ++) {
                             arg0 = argv[argc];
@@ -2801,13 +2853,21 @@ int pgraph_handle_method(
 
                             pg->vertex_attributes[slot].converted_elements = 0;
 
-                        }
-                    break;
+                    }
 
-                CASE_16(NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 4): //done //pg->KelvinPrimitive.SetVertexDataArrayFormat[16]
+					break;
+
+                CASE_16(NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 4):{ //done //pg->KelvinPrimitive.SetVertexDataArrayFormat[16]
+					//pg->KelvinPrimitive.SetVertexDataArrayFormat[i] = Attribute [i].Format (SizeAndType) &0xFF + if (draw up method?)Stride << 8 : 0
 					slot = (method - NV097_SET_VERTEX_DATA_ARRAY_FORMAT) / 4;
-                    for (size_t argc = 0; argc < method_count; argc++,slot++) {
+					int uiStride = 0;
+					for (size_t argc = 0; argc < method_count; argc++,slot++) {
                         arg0 = argv[argc];
+						//set out own vertex attribute format and offset here.
+						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[argc].Format = argv[argc] & 0xFF;
+						//Attribute.Offset is the offset from start of vertex to start of attribute
+						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[argc].Offset = uiStride;
+						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[argc].StreamIndex = 0;
 
 						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 
@@ -2873,8 +2933,7 @@ int pgraph_handle_method(
                                 assert(false);
                                 break;
                         }
-
-                        if (vertex_attribute->needs_conversion) {
+						if (vertex_attribute->needs_conversion) {
                             vertex_attribute->converted_elements = 0;
                         } else {
                             if (vertex_attribute->converted_buffer) {
@@ -2882,44 +2941,65 @@ int pgraph_handle_method(
                                 vertex_attribute->converted_buffer = NULL;
                             }
                         }
-						//set AttributeFormat per slot.
-						/*
-						switch (slot) {
+						//advance out vertex attribute offset
+						if (vertex_attribute->count > 0) {
+							uiStride += vertex_attribute->converted_size*vertex_attribute->count;
+							switch (argc) {
 							case xbox::X_D3DVSDE_POSITION:
+								pg->HostFVF |= D3DFVF_XYZ;
 								break;
 							case xbox::X_D3DVSDE_BLENDWEIGHT:
+								if (vertex_attribute->size = 1) {
+									switch (vertex_attribute->count) {
+									case 1:pg->HostFVF |= D3DFVF_XYZB1; break;
+									case 2:pg->HostFVF |= D3DFVF_XYZB2; break;
+									case 3:pg->HostFVF |= D3DFVF_XYZB3; break;
+									case 4:pg->HostFVF |= D3DFVF_XYZB4; break;
+									}
+								}
+								else {
+									pg->HostFVF |= D3DFVF_XYZRHW;
+								}
 								break;
 							case xbox::X_D3DVSDE_NORMAL:
+								pg->HostFVF |= D3DFVF_NORMAL;
 								break;
 							case xbox::X_D3DVSDE_DIFFUSE:
-								//not sure how the format ENUM should be? use FVF for now
-								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[slot].Format = xbox::X_D3DVSDT_D3DCOLOR;
+								pg->HostFVF |= D3DFVF_DIFFUSE;
 								break;
 							case xbox::X_D3DVSDE_SPECULAR:
-								//not sure how the format ENUM should be? use FVF for now
-								g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[slot].Format = xbox::X_D3DVSDE_SPECULAR;
+								pg->HostFVF |= D3DFVF_SPECULAR;
 								break;
 							case xbox::X_D3DVSDE_FOG:
+								//pg->HostFVF |= D3DFVF_FOG; //no feasible ENUM
 								break;
 							case xbox::X_D3DVSDE_POINTSIZE:
+								pg->HostFVF |= D3DFVF_PSIZE;
 								break;
 							case xbox::X_D3DVSDE_BACKDIFFUSE:
+								//pg->HostFVF |= D3DFVF_NORMAL; //no feasible ENUM
 								break;
 							case xbox::X_D3DVSDE_BACKSPECULAR:
+								//pg->HostFVF |= D3DFVF_NORMAL; //no feasible ENUM
 								break;
 							case xbox::X_D3DVSDE_TEXCOORD0:
+								pg->HostFVF |= D3DFVF_TEX0;
 								break;
 							case xbox::X_D3DVSDE_TEXCOORD1:
+								pg->HostFVF |= D3DFVF_TEX1;
 								break;
 							case xbox::X_D3DVSDE_TEXCOORD2:
+								pg->HostFVF |= D3DFVF_TEX2;
 								break;
 							case xbox::X_D3DVSDE_TEXCOORD3:
-							break;
+								pg->HostFVF |= D3DFVF_TEX3;
+								break;
+							}
+
 						}
-						*/
                     }
                     break;
-
+				}
                 CASE_3(NV097_SET_BACK_SCENE_AMBIENT_COLOR,4):break;//not implement //pg->KelvinPrimitive.SetBackSceneAmbientColor[3]
                 case NV097_SET_BACK_MATERIAL_ALPHA:break;          //not implement //pg->KelvinPrimitive.SetBackMaterialAlpha
                 CASE_3(NV097_SET_BACK_MATERIAL_EMISSIONR,4):break; //not implement //pg->KelvinPrimitive.SetBackMaterialEmission[3]
@@ -3028,7 +3108,7 @@ int pgraph_handle_method(
 
                     if (arg0 == NV097_SET_BEGIN_END_OP_END) {//the DrawXXX call completes the pushbuffer operation. we can process the rendering.
 
-                        if (pg->draw_arrays_length) {
+                        if (pg->draw_arrays_length>0) {
 
                             NV2A_GL_DPRINTF(false, "Draw Arrays");
 
@@ -3037,21 +3117,76 @@ int pgraph_handle_method(
                             assert(pg->inline_elements_length == 0);
 
                             if (pgraph_draw_arrays != nullptr) {
-							    //shall we calculate the input vertes stride = pgraph_get_inline_array_stride(PGRAPHState *pg)?
-								pgraph_draw_arrays(d);
+							    //shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
+								//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+
+								pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+								pg->DrawContext.pXboxVertexStreamZeroData = (PVOID) pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
+								pg->DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0]>>8;
+
+								for (int array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
+									pg->DrawContext = {};
+
+									pg->DrawContext.pXboxIndexData = false;
+									
+									pg->DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
+									pg->DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
+									CxbxDrawPrimitiveUP(pg->DrawContext);
+									//pgraph_draw_arrays(d);
+
+								}
                             }
-                        } else if (pg->inline_buffer_length) {
+                        } else if (pg->inline_buffer_length) {//for draw calls using SET_BEGIN_ENG(primitive)/SET_VERTEX_DATAXXX ... /SET_BEGIN_ENG(0)
 
                             NV2A_GL_DPRINTF(false, "Inline Buffer");
 
                             assert(pg->draw_arrays_length == 0);
                             assert(pg->inline_array_length == 0);
                             assert(pg->inline_elements_length == 0);
+							unsigned int uiStride = 0;
 
-                            if (pgraph_draw_inline_buffer != nullptr) {
-								//shall we calculate the input vertes stride = pgraph_get_inline_array_stride(PGRAPHState *pg)?
-								pgraph_draw_inline_buffer(d);
+							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+
+								//setup attribute Format and Offset
+								if (pg->vertex_attributes[i].set_by_inline_buffer) {
+									pg->vertex_attributes[i].format= xbox::X_D3DVSDT_FLOAT4;
+									pg->vertex_attributes[i].offset = uiStride;
+									uiStride += 4 * sizeof(float);
+								}
+
+								//reset the attribute flag for next draw call.
+								pg->vertex_attributes[i].set_by_inline_buffer = false;
+							}
+
+							DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+								//apply stride to attributes.
+								pg->vertex_attributes[i].format+= dwVertexStride<<8;
+							}
+
+							if (pgraph_draw_inline_buffer != nullptr) {
+								//stride needs special re-calc
+
+								//xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
+								//extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes; g_Xbox_SetVertexShaderInput_Attributes = g_NV2AInlineArrayVertexBuffer_AttributeFormat;
+
+								if (dwVertexStride > 0) {
+									UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+									pg->DrawContext = {};
+									pg->DrawContext.pXboxIndexData = false;
+									pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+									pg->DrawContext.dwVertexCount = VertexCount;
+									pg->DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
+									pg->DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
+
+									CxbxDrawPrimitiveUP(pg->DrawContext);
+									//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
+									//pgraph_draw_inline_array(d);
+								}
+								//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
+								//pgraph_draw_inline_buffer(d);
                             }
+							
                         } else if (pg->inline_array_length) {
 
                             NV2A_GL_DPRINTF(false, "Inline Array");
@@ -3059,10 +3194,27 @@ int pgraph_handle_method(
                             assert(pg->draw_arrays_length == 0);
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
-                            if (pgraph_draw_inline_array != nullptr) {
-								
-								//calculate the input vertes stride = pgraph_get_inline_array_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
-								pgraph_draw_inline_array(d);
+
+							DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+								//apply stride to attributes.
+								pg->vertex_attributes[i].format += dwVertexStride << 8;
+							}
+
+							if (pgraph_draw_inline_array != nullptr) {
+								if (dwVertexStride > 0) {
+									UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+									pg->DrawContext = {};
+									pg->DrawContext.pXboxIndexData = false;
+									pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+									pg->DrawContext.dwVertexCount = VertexCount;
+									pg->DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
+									pg->DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
+
+									CxbxDrawPrimitiveUP(pg->DrawContext);
+									//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
+									//pgraph_draw_inline_array(d);
+								}
                             }
                         } else if (pg->inline_elements_length) {
 
@@ -3073,13 +3225,26 @@ int pgraph_handle_method(
                             assert(pg->inline_array_length == 0);
 
                             if (pgraph_draw_inline_elements != nullptr) {
-								//shall we calculate the input vertes stride = pgraph_get_inline_array_stride(PGRAPHState *pg)?
-								pgraph_draw_inline_elements(d);
+								unsigned int uiIndexCount = pg->inline_elements_length;
+
+								pg->DrawContext = {};
+								pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+								pg->DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
+								pg->DrawContext.pXboxVertexStreamZeroData = (PVOID)pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
+								pg->DrawContext.dwVertexCount = uiIndexCount;
+								pg->DrawContext.pXboxIndexData = d->pgraph.inline_elements;
+								
+
+								CxbxDrawIndexed(pg->DrawContext);
+
+								//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
+								//pgraph_draw_inline_elements(d);
                             }
                         } else {
                             NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
                             assert(false);
                         }
+
                     } else {
 
                         assert(arg0 <= NV097_SET_BEGIN_END_OP_POLYGON);
@@ -3092,10 +3257,17 @@ int pgraph_handle_method(
 
                         pg->inline_elements_length = 0;
                         pg->inline_array_length = 0;
-                        pg->inline_buffer_length = 0;
                         pg->draw_arrays_length = 0;
                         //pg->draw_arrays_min_start = -1;
                         pg->draw_arrays_max_count = 0;
+
+						pg->inline_buffer_length = 0;
+						//reset attribute flag for in_line_buffer
+						for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+							//reset the attribute flag for next draw call.
+							pg->vertex_attributes[i].set_by_inline_buffer = false;
+						}
+
                     }
 
                     pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
@@ -3114,8 +3286,6 @@ int pgraph_handle_method(
                     // Test-case : Turok (in main menu)	
                     // Test-case : Hunter Redeemer	
                     // Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
-                    
-        //***NON_INC_METHOD
                     for (size_t argc = 0; argc < method_count; argc++) {
                         arg0 = argv[argc];
                         assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
@@ -3123,16 +3293,13 @@ int pgraph_handle_method(
                             pg->inline_elements_length++] = arg0 & 0xFFFF;
                         pg->inline_elements[
                             pg->inline_elements_length++] = arg0 >> 16;
-
                     }
+					break;
 
-                    break;
                 case NV097_ARRAY_ELEMENT32://xbox D3DDevice_DrawIndexedVertices() calls this
 					// xbox d3d uses NV097_ARRAY_ELEMENT32 to send the very last odd vertex of index vertex stream.
 	                //LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");	
                     // Test-case : Turok (in main menu)
-                    
-        //***NON_INC_METHOD
                     for (size_t argc = 0; argc < method_count; argc++) {
                         arg0 = argv[argc];
                         assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
@@ -3142,22 +3309,35 @@ int pgraph_handle_method(
                     }
 
                     break;
-                case NV097_DRAW_ARRAYS: {// verification required. do we need last_block_vertex_count = last_block.count +1 should be +1.
-					                     // vertex count per block 256 verified.
-					//*** strange case xdk push buffer sample uses 
+                case NV097_DRAW_ARRAYS: {
+					/*
+					D3DDevice_DrawVertices(
+						D3DPRIMITIVETYPE PrimitiveType,
+						UINT StartVertex,
+						UINT VertexCount)
+					(NV097_SET_BEGIN_END, PrimitiveType)1
+					BlockSize=256
+					ArraysCount= total vertex count / BlockSize  + 1, min. 1 array
+					(PUSHER_NOINC(NV097_DRAW_ARRAYS), ArraysCount) 1
+					while (VertexCount > BlockSize){
+						(PUSHER_NOINC(NV097_DRAW_ARRAYS), BlockSize - 1) 1
+						VertexCount -= BlockSize
+					}
+					(PUSHER_NOINC(NV097_DRAW_ARRAYS), VertexCount - 1) 1
+					(NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END)1
+
+					*/
+
+					/* strange case xdk push buffer sample uses 
 					//set_vertex_data_array_foramt with stride 0, then begin(triangle_list)/NV097_INLINE_ARRAY with 3 vertex with stride 0x10/end,
 					//then set_vertex_data_array_offset, set_vertex_data_array_foramt with stride 0x10,begin(triangle_list)/NV097_DRAW_ARRAYS with arg0=0x02000000, method count=1, count=2, start offset =0/end.
 					//the actual proper result should be 2 exact triangles reandered side by side.
-					//so a. the vertex shader must perform certain actions including cloneing the vertex buffer?
-					//   b. DRAW_ARRAYS command might not simply be used as vertex data transfer. if the method cound < count+2 in arg0, it acts as drawing arrays using pretransffered vertex data.
-					//both a. and b. require verification.
-		//***NON_INC_METHOD
 					//used in xbox D3DDevice_DrawVertices
 					//  (NV097_SET_BEGIN_END, PrimitiveType)
 					//->(NV097_DRAW_ARRAYS,Method_Count=block_count)
 					//-> loop append each block to pushbuffer
 					//->(NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END)
-
+                     */
 					//start is supposed to be the start vertex index
                     unsigned int start = GET_MASK(arg0, NV097_DRAW_ARRAYS_START_INDEX);
 					//count is supposed to be the block count of vertex to be drawed. NV2A can draw up to 256 vertices in one submission.
@@ -3174,25 +3354,19 @@ int pgraph_handle_method(
 					pg->draw_arrays_max_count = MAX(pg->draw_arrays_max_count, start + total_vertex_count);
 
                     assert(pg->draw_arrays_length < ARRAY_SIZE(pg->gl_draw_arrays_start));
-
-					//for (size_t argc = 0; argc < method_count; argc++ ) {
-						//arg0 = argv[argc];
-						/* Attempt to connect primitives */
-						if (pg->draw_arrays_length > 0) {
-							unsigned int last_start =
-								pg->gl_draw_arrays_start[pg->draw_arrays_length - 1];
-							GLsizei* last_count =
-								&pg->gl_draw_arrays_count[pg->draw_arrays_length - 1];
-							if (start == (last_start + *last_count)) {
-								*last_count += total_vertex_count;
-								break;
-							}
+					if (pg->draw_arrays_length > 0) {
+						unsigned int last_start =
+						pg->gl_draw_arrays_start[pg->draw_arrays_length - 1];
+						GLsizei* plast_count =
+							&pg->gl_draw_arrays_count[pg->draw_arrays_length - 1];
+						if (start == (last_start + *plast_count)) {
+							*plast_count += total_vertex_count;
+							break;
 						}
-
-						pg->gl_draw_arrays_start[pg->draw_arrays_length] = start;
-						pg->gl_draw_arrays_count[pg->draw_arrays_length] = total_vertex_count;
-						pg->draw_arrays_length++;
-					//}
+					}
+					pg->gl_draw_arrays_start[pg->draw_arrays_length] = start;
+					pg->gl_draw_arrays_count[pg->draw_arrays_length] = total_vertex_count;
+					pg->draw_arrays_length  ++;
 					break;
                 }
 
@@ -3204,7 +3378,6 @@ int pgraph_handle_method(
 					//->if(remained vertex count >16) loop batch (NV097_INLINE_ARRAY, count), count= 16* dwords/vertex.
 					//->last batch (NV097_INLINE_ARRAY, count), count= last remained vertex count * dwords/vertex.
 					//->(NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END)
-        //***NON_INC_METHOD
                     for (size_t argc = 0; argc < method_count; argc++) {
                         arg0 = argv[argc];
                         assert(pg->inline_array_length < NV2A_MAX_BATCH_LENGTH);
@@ -3218,7 +3391,7 @@ int pgraph_handle_method(
 
                 case NV097_INLINE_VERTEX_REUSE:break;//not implement //pg->KelvinPrimitive.InlineVertexReuse
 
-                /*
+				/*
 
                 D3DVSDE_POSITION
                 Register 0. This is used to kick off vertex to NV2A GPU. This register should only be used inside NV097_SET_BEGIN_END block.
@@ -3244,39 +3417,33 @@ int pgraph_handle_method(
                 Register 11.
                 D3DVSDE_TEXCOORD3
                 Register 12.
-                */
+                    */
 
-                /*
+                    /*
                 HRESULT IDirect3DDevice8::SetVertexData2f(
                    INT  	Register,
                    FLOAT 	a,
                    FLOAT 	b
                    );
-                */
+                    */
+				
                 CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
-                    //register is set one at a time per method, for loop should be redundant.
+					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						break;
+					}
+					//register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
-					for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
-                        arg0 = argv[argc];
-
-                        unsigned int part = slot % 2;// 0:a or 1:b
-                        slot /= 2;//register
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-                        pgraph_allocate_inline_buffer_vertices(pg, slot);
-                        //M[a,b] are sent in the same time. shall be processed together.
-                        //vertex_attribute->inline_value[part] = *(float*)&arg0;
-                        vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData2f[slot].M[0];
-                        vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData2f[slot].M[1];
-                        /* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
-                        vertex_attribute->inline_value[2] = 0.0f;
-                        vertex_attribute->inline_value[3] = 1.0f;
-                        //this code may be wrong, part wil always be 0, because this method always transfer (a,b) in the same time.
-                        //if ((slot == 0) && (part == 1)) {
-                        if ((slot == 0)) {//D3DVSDE_POSITION 
-                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
-                            pgraph_finish_inline_buffer_vertex(pg);
-                        }
-                    }
+					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                    unsigned int part = slot % 2;// 0:a or 1:b
+                    slot /= 2;//register
+                    //pgraph_allocate_inline_buffer_vertices(pg, slot);
+                    //M[a,b] are sent in the same time. shall be processed together.
+                    //vertex_attribute->inline_value[part] = *(float*)&arg0;
+                    vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData2f[slot].M[0];
+                    vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData2f[slot].M[1];
+                    /* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
+                    vertex_attribute->inline_value[2] = 0.0f;
+                    vertex_attribute->inline_value[3] = 1.0f;
                     break;
                 }
 
@@ -3290,29 +3457,38 @@ int pgraph_handle_method(
                    );
                 */
                 CASE_64(NV097_SET_VERTEX_DATA4F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData4f[16].M[4]
-                    //register is set one at a time per method, for loop should be redundant.
+					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						break;
+					}
+				    //register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4F_M) / 4;
-					for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
-                        arg0 = argv[argc];
+					//for (size_t argc = 0; argc < method_count; argc++) {
+                    //    arg0 = argv[argc];
 
                         unsigned int part = slot % 4;//index in M[]
                         slot /= 4;//register
                         VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-                        pgraph_allocate_inline_buffer_vertices(pg, slot);
+						//allocate attribute.inline_buffer if it's not allocated yet.
+						//pgraph_allocate_inline_buffer_vertices(pg, slot);
                         //vertex_attribute->inline_value[part] = *(float*)&arg0;
-                        vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
+
+						//this is redundant. we're going to copy the inline_value[] to inline_buffer[]
+						vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
                         vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData4f[slot].M[1];
                         vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertexData4f[slot].M[2];
                         vertex_attribute->inline_value[3] = pg->KelvinPrimitive.SetVertexData4f[slot].M[3];
-                        //
-                        //if ((slot == 0) && (part == 3)) {
-                        if ((slot == 0)) {//D3DVSDE_POSITION 
-                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
-                            pgraph_finish_inline_buffer_vertex(pg);
-                        }
-
-                    }
-                    break;
+						vertex_attribute->inline_buffer[pg->inline_buffer_length];
+						//copy the data to attribute.inline_buffer
+						//memcpy(&vertex_attribute->inline_buffer[pg->inline_buffer_length],
+						//	vertex_attribute->inline_value,
+						//	sizeof(float) * 4);
+                    //}
+					//if ((slot == 0) && (part == 3)) {
+					//if ((slot == 0)) {//D3DVSDE_POSITION   //slot ==0 only happended in NV097_SET_VERTEX_DATA4F
+						//shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
+					//	pgraph_finish_inline_buffer_vertex(pg);
+					//}
+					break;
                 }
             /*
             HRESULT IDirect3DDevice8::SetVertexData2s(
@@ -3322,26 +3498,20 @@ int pgraph_handle_method(
                );
             */
             CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
-                    //register is set one at a time per method, for loop should be redundant.
+				if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+					break;
+				}
+				//register is set one at a time per method, for loop should be redundant.
 				slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
-				for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
-                        arg0 = argv[argc];
-
-                        //assert(false); /* FIXME: Untested! */
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-                        pgraph_allocate_inline_buffer_vertices(pg, slot);
-                        vertex_attribute->inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
-                        vertex_attribute->inline_value[1] = (float)(int16_t)(arg0 >> 16);
-                        vertex_attribute->inline_value[2] = 0.0f;
-                        vertex_attribute->inline_value[3] = 1.0f;
-                        if (slot == 0) {//D3DVSDE_POSITION 
-                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
-                            pgraph_finish_inline_buffer_vertex(pg);
-                        }
-
-                    }
-                    break;
-                }
+                //assert(false); /* FIXME: Untested! */
+                VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                //pgraph_allocate_inline_buffer_vertices(pg, slot);
+                vertex_attribute->inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
+                vertex_attribute->inline_value[1] = (float)(int16_t)(arg0 >> 16);
+                vertex_attribute->inline_value[2] = 0.0f;
+                vertex_attribute->inline_value[3] = 1.0f;
+				break;
+            }
                 /*
                 HRESULT IDirect3DDevice8::SetVertexData4ub(
                    INT Register,
@@ -3352,7 +3522,83 @@ int pgraph_handle_method(
                    );
                 */
 
-                CASE_16(NV097_SET_VERTEX_DATA4UB, 4) : {//done //pg->KelvinPrimitive.SetVertexData4ub[16]
+				//if pg->KelvinPrimitive.SetBeginEnd !=0, we're in the Begin/End block, data passed in shall be vertex data.
+			    //else we're outside of Begin/End block, set in here indicate fix function vertexfunciton selection.
+				/*
+				D3DDevice_SetVertexShader(Handle)
+				{
+					if Program Shader
+						D3DDevice_LoadVertexShader(Handle, 0);
+						D3DDevice_SelectVertexShader(Handle, 0);
+					else //FVF fixed function
+						if D3DFVF_DIFFUSE //Flags & VERTEXSHADER_HASDIFFUSE 0x400
+							(NV097_SET_VERTEX_DATA4UB(SLOT_DIFFUSE), -1, method count 1)
+						if D3DFVF_SPECULAR  //Flags & VERTEXSHADER_HASSPECULAR 0x800
+							(NV097_SET_VERTEX_DATA4UB(SLOT_SPECULAR), 0, method count 1)
+						if D3DFVF_BACKDIFFUSE  //Flags & VERTEXSHADER_HASBACKDIFFUSE 0x1000
+							(NV097_SET_VERTEX_DATA4UB(SLOT_BACK_DIFFUSE), -1, method count 1)
+						if D3DFVF_BACKSPECULAR  //Flags & VERTEXSHADER_HASBACKSPECULAR 0x2000
+							(NV097_SET_VERTEX_DATA4UB(SLOT_BACK_SPECULAR), 0, method count 1)
+						if D3DFVF_PASSTHROUGH  //Flags & VERTEXSHADER_PASSTHROUGH 0x2
+							(NV097_SET_TRANSFORM_PROGRAM_START, 0, method count 1)
+							(NV097_SET_TRANSFORM_EXECUTION_MODE,
+							 NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV,
+							 NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY,
+							 method count 2)
+							 SetupPasstrhouProgram()
+								(NV097_SET_TRANSFORM_CONSTANT_LOAD, 0,method count 1)
+								(NV097_SET_TRANSFORM_CONSTANT(0),method count  8)
+									if (D3DRenderState.SetFogTableMode == D3DFOG_NONE)
+									{
+										prog_size_dwords = sizeof(FVFPassthruProgramSpecularFog) / sizeof(DWORD) //48 dwords
+										pProgram = &FVFPassthruProgramSpecularFog;
+									}
+									else if (pDevice->m_StateFlags & STATE_FOGSOURCEZ)
+									{
+										prog_size_dwords = sizeof(FVFPassthruProgramZFog) / sizeof(DWORD); //44 dwords
+										pProgram = &FVFPassthruProgramZFog;
+									}
+									else
+									{
+										prog_size_dwords = sizeof(FVFPassthruProgramWFog) / sizeof(DWORD); //48 dwords
+										pProgram = &FVFPassthruProgramWFog;
+									}
+									Scale=?(D3DRenderState.SetZEnable == D3DZB_USEW )pDevice->SetInverseWFar * pDevice->SetZScale  : 1.0f
+									argv[0]=pDevice->SetSuperSampleScaleX
+									argv[1]=pDevice->SetSuperSampleScaleY
+									argv[2]=pDevice->SetZScale
+									argv[3]=Scale
+									m_off=?(D3DRenderState.SetMultiSampleAntiAlias))0.5f:0.0f
+									argv[5]=pDevice->SetScreenSpaceOffsetX - m_off
+									argv[6]=pDevice->SetScreenSpaceOffsetY - m_off
+									argv[7]=0.0f;
+									argv[8]=0.0f;
+									(NV097_SET_TRANSFORM_PROGRAM_LOAD, 0, method count 1)
+									prog_ind=0
+									do
+										batch=MIN(32,prog_size_dwords)
+										(NV097_SET_TRANSFORM_PROGRAM(0), method count batch)
+											arg[0...batch-1]=pProgram[prog_ind+0...prog_ind+batch-1]
+										prog_size_dwords - =batch
+										prog_ind + =batch
+
+									while (prog_size_dwords  !=0)
+
+
+						else //not pass through
+							setviewport()
+								if(! FVF)
+									(NV097_SET_VIEWPORT_OFFSET(0), A,   B,   C,   0.0f, method count 4)
+									(NV097_SET_VIEWPORT_SCALE(0), X,Y,Z,0.0f, method count 4)
+								else //FVF
+									(NV097_SET_VIEWPORT_OFFSET(0),X,Y,0.0f,0.0f,method count 4)
+								(NV097_SET_CLIP_MIN, ClipMin, ClipMax, method count 2)
+							(NV097_SET_TRANSFORM_EXECUTION_MODE,
+							 NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV,
+							 method count 1)
+				}
+				*/
+				CASE_16(NV097_SET_VERTEX_DATA4UB, 4) : {//pg->KelvinPrimitive.SetVertexData4ub[16]
                     //pg->KelvinPrimitive.SetVertexData4ub[16] seems to be also holding state setting for NV2A fixed function for registers other then D3DVSDE_POSITION 
                     /*
                     IDirect3DDevice8::SetVertexDataColor
@@ -3365,149 +3611,151 @@ int pgraph_handle_method(
                     */
                     //register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
-					for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
-                        arg0 = argv[argc];
-
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-                        pgraph_allocate_inline_buffer_vertices(pg, slot);
-                        //why the value be divided by 255.0f? normalized to 0.0~1.0?
-                        vertex_attribute->inline_value[0] = (arg0 & 0xFF) / 255.0f;
-                        vertex_attribute->inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
-                        vertex_attribute->inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
-                        vertex_attribute->inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
-                        if (slot == 0) {//D3DVSDE_POSITION 
-                            pgraph_finish_inline_buffer_vertex(pg);
-                            assert(false); /* FIXME: Untested */
-                        }
-                    }
-                    break;
-                }
-                /*
-                HRESULT IDirect3DDevice8::SetVertexData4s(
-                   INT Register,
-                   SHORT a,
-                   SHORT b,
-                   SHORT c,
-                   SHORT d
-                   );
-                */
-                CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
-                    //register is set one at a time per method, for loop should be redundant.
+					if (pg->KelvinPrimitive.SetBeginEnd== NV097_SET_BEGIN_END_OP_END) {//we're out side of Begin/End block, should be setting fix function vertex shader
+						//set fix fuction handle. where to set X_D3DFVF_XYZ for X_D3DVSDE_POSITION?
+						if (slot== xbox::X_D3DVSDE_DIFFUSE && arg0 == -1)pg->vsh_FVF_handle |= X_D3DFVF_DIFFUSE;
+						if (slot == xbox::X_D3DVSDE_SPECULAR && arg0 == 0)pg->vsh_FVF_handle |= X_D3DFVF_SPECULAR;
+						//not implement in SetVertexShader
+						//if (slot == xbox::X_D3DVSDE_DIFFUSE && arg0 == -1)pg->vsh_FVF_handle |= 0;//can't find corresponded ENUM
+						//not implement in SetVertexShader
+						//if (slot == xbox::X_D3DVSDE_SPECULAR && arg0 == 0)pg->vsh_FVF_handle |= 0;//can't find corresponded ENUM
+						/*
+							(NV097_SET_TRANSFORM_EXECUTION_MODE,
+							NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED | NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV, 	method count 1)
+							will be called once these setting are completed.
+							we shall create/setup fix function shader there.
+						*/
+					}
+					else {//in Begin/End block. data transferred are vertices.
+						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+						//do we need to swap the color ARGB/ABGR if the slor is D3DVSDE_DIFFUSE or D3DVSDE_SPECULAR ?
+						//don't swap now. let's make the decision of when to swap/whther to swap later.
+						//if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR||slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
+						//	arg0 = ABGR_to_ARGB(arg0);
+						//}
+						vertex_attribute->inline_value[0] = (arg0 & 0xFF) / 255.0f;
+						vertex_attribute->inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
+						vertex_attribute->inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
+						vertex_attribute->inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
+					}
+					   break;
+				}
+					/*
+					HRESULT IDirect3DDevice8::SetVertexData4s(
+					   INT Register,
+					   SHORT a,
+					   SHORT b,
+					   SHORT c,
+					   SHORT d
+					   );
+					*/
+				CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
+					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						break;
+					}
+					//register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
-					for (size_t argc = 0; argc < method_count; argc++, slot += 4) {
-                        arg0 = argv[argc];
+					slot /= 2;//register
+					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+					/* FIXME: Is mapping to [-1,+1] correct? */
+					vertex_attribute->inline_value[0] = ((int16_t)(arg0 & 0xFFFF)
+						* 2.0f + 1) / 65535.0f;
+					vertex_attribute->inline_value[1] = ((int16_t)(arg0 >> 16)
+						* 2.0f + 1) / 65535.0f;
+					vertex_attribute->inline_value[2] = ((int16_t)(argv[1] & 0xFFFF)
+						* 2.0f + 1) / 65535.0f;
+					vertex_attribute->inline_value[3] = ((int16_t)(argv[1] >> 16)
+						* 2.0f + 1) / 65535.0f;
+					break;
+				}
 
-                        //unsigned int part = argc % 2;
-                        slot /= 2;//register
-                        //assert(false); /* FIXME: Untested! */
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-                        pgraph_allocate_inline_buffer_vertices(pg, slot);
-                        /* FIXME: Is mapping to [-1,+1] correct? */
-                        vertex_attribute->inline_value[0] = ((int16_t)(arg0 & 0xFFFF)
-                            * 2.0f + 1) / 65535.0f;
-                        vertex_attribute->inline_value[1] = ((int16_t)(arg0 >> 16)
-                            * 2.0f + 1) / 65535.0f;
-                        vertex_attribute->inline_value[2] = ((int16_t)(argv[1] & 0xFFFF)
-                            * 2.0f + 1) / 65535.0f;
-                        vertex_attribute->inline_value[3] = ((int16_t)(argv[1] >> 16)
-                            * 2.0f + 1) / 65535.0f;
-                        //if ((slot == 0) && (part == 1)) {
-                        if ((slot == 0)) {//D3DVSDE_POSITION
-                            //shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
-                            pgraph_finish_inline_buffer_vertex(pg);
-                        }
-                    }
+				/* begin of SetTexture**************************************************** */
+
+				CASE_4(NV097_SET_TEXTURE_OFFSET, 64) ://KelvinPrimitive.SetTexture[4].Offset , sizeof(SetTexture[])==64
+					//get texture[] index
+					slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
+					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
+					pg->texture_dirty[slot] = true;
+					break;
+				CASE_4(NV097_SET_TEXTURE_FORMAT, 64) : {//KelvinPrimitive.SetTexture[4].Format , sizeof(SetTexture[])==64
+					//get texture[] index
+					slot = (method - NV097_SET_TEXTURE_FORMAT) / 64;
+					bool dma_select =
+					GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA) == 2;
+                    bool cubemap =
+                        arg0 & NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;
+                    unsigned int border_source =
+                        arg0 & NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE;
+                    unsigned int dimensionality =
+                        GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY);
+                    unsigned int color_format =
+                        GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_COLOR);
+                    unsigned int levels =
+                        GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS);
+                    unsigned int log_width =
+                        GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U);
+                    unsigned int log_height =
+                        GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V);
+                    unsigned int log_depth =
+                        GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P);
+
+                    uint32_t *reg = &pg->KelvinPrimitive.SetTexture[slot].Format;
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_CONTEXT_DMA, dma_select);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_CUBEMAPENABLE, cubemap);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BORDER_SOURCE, border_source);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_DIMENSIONALITY, dimensionality);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_COLOR, color_format);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_MIPMAP_LEVELS, levels);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_U, log_width);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_V, log_height);
+                    SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_P, log_depth);
+                    //each texture contents 16 dowrds
+                    pg->texture_dirty[slot] = true;
+                    //double check required.
                     break;
-                }
+				}
 
-        /* begin of SetTexture**************************************************** */
-
-                CASE_4(NV097_SET_TEXTURE_OFFSET, 64) :////KelvinPrimitive.SetTexture[4].Offset , sizeof(SetTexture[])==64
-                        //get texture[] index
-                        slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
-                        //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                        pg->texture_dirty[slot] = true;
-                break;
-                CASE_4(NV097_SET_TEXTURE_FORMAT, 64) : {//KelvinPrimitive.SetTexture[4].Format , sizeof(SetTexture[])==64
-                        //get texture[] index
-                        slot = (method - NV097_SET_TEXTURE_FORMAT) / 64;
-                        
-                        bool dma_select =
-                            GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA) == 2;
-                        bool cubemap =
-                            arg0 & NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;
-                        unsigned int border_source =
-                            arg0 & NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE;
-                        unsigned int dimensionality =
-                            GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY);
-                        unsigned int color_format =
-                            GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_COLOR);
-                        unsigned int levels =
-                            GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS);
-                        unsigned int log_width =
-                            GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U);
-                        unsigned int log_height =
-                            GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V);
-                        unsigned int log_depth =
-                            GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P);
-
-                        uint32_t *reg = &pg->KelvinPrimitive.SetTexture[slot].Format;
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_CONTEXT_DMA, dma_select);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_CUBEMAPENABLE, cubemap);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BORDER_SOURCE, border_source);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_DIMENSIONALITY, dimensionality);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_COLOR, color_format);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_MIPMAP_LEVELS, levels);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_U, log_width);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_V, log_height);
-                        SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_P, log_depth);
-                        //each texture contents 16 dowrds
-                        pg->texture_dirty[slot] = true;
-                        //double check required.
-                    break;
-                }
-
-                CASE_4(NV097_SET_TEXTURE_ADDRESS, 64) :////KelvinPrimitive.SetTexture[4].Address , sizeof(SetTexture[])==64
-                        //get texture[] index
+				CASE_4(NV097_SET_TEXTURE_ADDRESS, 64) :////KelvinPrimitive.SetTexture[4].Address , sizeof(SetTexture[])==64
+                    //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
-                //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                pg->texture_dirty[slot] = true;
-                break;
+					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
+					pg->texture_dirty[slot] = true;
+					break;
 
                 CASE_4(NV097_SET_TEXTURE_CONTROL0, 64) :////KelvinPrimitive.SetTexture[4].Control0 , sizeof(SetTexture[])==64
-                        //get texture[] index
+                    //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
-                //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                pg->texture_dirty[slot] = true;
-                break;
+					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
+					pg->texture_dirty[slot] = true;
+					break;
 
                 CASE_4(NV097_SET_TEXTURE_CONTROL1, 64) :////KelvinPrimitive.SetTexture[4].Control1 , sizeof(SetTexture[])==64
-                        //get texture[] index
+                    //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
-                //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                pg->texture_dirty[slot] = true;
-                break;
+					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
+					pg->texture_dirty[slot] = true;
+					break;
 
                 CASE_4(NV097_SET_TEXTURE_FILTER, 64) :////KelvinPrimitive.SetTexture[4].Filter , sizeof(SetTexture[])==64
-                        //get texture[] index
+                    //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
-                //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                pg->texture_dirty[slot] = true;
-                break;
+					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
+					pg->texture_dirty[slot] = true;
+					break;
 
                 CASE_4(NV097_SET_TEXTURE_IMAGE_RECT, 64) :////KelvinPrimitive.SetTexture[4].ImageRect , sizeof(SetTexture[])==64
                     //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
                     //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
                     pg->texture_dirty[slot] = true;
-                break;
+					break;
 
 
 				CASE_4(NV097_SET_TEXTURE_PALETTE, 64) :{ //KelvinPrimitive.SetTexture[4].Palette , sizeof(SetTexture[])==64
-						//get texture[] index
+					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_PALETTE) / 64;
 
-
+					/*
 					bool dma_select =
 						GET_MASK(arg0, NV097_SET_TEXTURE_PALETTE_CONTEXT_DMA) == 1;
 					unsigned int length =
@@ -3519,7 +3767,7 @@ int pgraph_handle_method(
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_CONTEXT_DMA, dma_select);
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_LENGTH, length);
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_OFFSET, offset);
-
+					*/
 					pg->texture_dirty[slot] = true;
 					//double check required.
 					break;
@@ -3678,7 +3926,12 @@ int pgraph_handle_method(
 					
 					   
 				*/
-				case NV097_SET_SHADER_STAGE_PROGRAM:break;//done //pg->KelvinPrimitive.SetShaderStageProgram
+				case NV097_SET_SHADER_STAGE_PROGRAM:
+					if (pg->KelvinPrimitive.SetShaderStageProgram == 0) {
+						arg0 = 0;
+					}
+
+					break;//done //pg->KelvinPrimitive.SetShaderStageProgram
 
 
                 case NV097_SET_DOT_RGBMAPPING:{//not implement  //pg->KelvinPrimitive.SetDotRGBMapping
@@ -3693,6 +3946,8 @@ int pgraph_handle_method(
 
                 case NV097_LAUNCH_TRANSFORM_PROGRAM:break;//not implement //pg->KelvinPrimitive.LaunchTransformProgram
 
+				extern bool g_bUsePassthroughHLSL;//TMP glue
+
                 case NV097_SET_TRANSFORM_EXECUTION_MODE://done //pg->KelvinPrimitive.SetTransformExecutionMode
                     // Test-case : Whiplash
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_MODE,  //GET_MASK(pg->KelvinPrimitive.SetTransformExecutionMode,NV097_SET_TRANSFORM_EXECUTION_MODE_MODE)
@@ -3701,23 +3956,188 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_RANGE_MODE,  ////GET_MASK(pg->KelvinPrimitive.SetTransformExecutionMode,NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE)
                     //	GET_MASK(arg0,
                     //		NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE));
-                    break;
-                case NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN://done //pg->KelvinPrimitive.SetTransformProgramCxtWriteEn
+					/*
+					user program start program using
+					push (NV097_SET_TRANSFORM_PROGRAM_START, addr , method count 1)
+					after program setup. we don't start user program here.
+
+					*/
+					slot=arg0 & NV097_SET_TRANSFORM_EXECUTION_MODE_MODE;
+					if (slot == NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM ) {//program mode, user program or pass through program
+						//set shader program mode
+						g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
+						//disable fix function program
+						g_UseFixedFunctionVertexShader = false;
+						//reset fix function vertex shader fvf handle when existing FVF
+						pg->vsh_FVF_handle = 0;
+						//Pass through program starts after finishing setup by calling NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM with method count=2,argv[1]=NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY (0)
+						//Starting pass through program, without pushing(NV097_SET_TRANSFORM_PROGRAM_START, Address)
+						/*
+						update, user program also calls NV097_SET_TRANSFORM_EXECUTION_MODE with method count =2, 
+						         (NV097_SET_TRANSFORM_EXECUTION_MODE,
+								  // NV097_SET_TRANSFORM_EXECUTION_MODE:
+									(DRF_DEF(097, _SET_TRANSFORM_EXECUTION_MODE, _MODE, _PROGRAM) |  DRF_DEF(097, _SET_TRANSFORM_EXECUTION_MODE, _RANGE_MODE, _PRIV)),
+								 // NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN:
+								      VertexShader.Flags & VERTEXSHADER_WRITE, method count 2)
+							somehow in prerecorded pushbuffer, the user program vertex shader will have argv[1]==0 in calling NV097_SET_TRANSFORM_EXECUTION_MODE
+							this is causing trouble. we're firing up the program as pass through program,
+							 and then fire it up again when (NV097_SET_TRANSFORM_PROGRAM_START, Address) was pushed. test case pushbuffer sample.
+						*/
+						if (method_count==2){
+							if (argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY) {
+								g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+								//figure out a way to treat the case where pre-recorded pushbuffer user program will be here as well.
+								//xbox d3d shall load the pass through program into program slots.
+								//but our HLE intercept those calls. so during hybring stage, we have to load the pass through program ourselves
+								//there are different pass through programs depending on the KelvinPrimitive states.
+								//check KelvinPrimitiveStates and load corresponded pass through programs.
+								//load pass through program here.
+								//pass through program starts at address 0;
+								xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+								//this is required to enable CxbxUpdateHostVertexShader()
+								g_bUsePassthroughHLSL = true;
+								//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
+								int old_override = g_InlineVertexBuffer_DeclarationOverride;
+								//override might not be needed for vertex shader creation.
+								g_InlineVertexBuffer_DeclarationOverride = 2;
+								//create pass through vertex shader
+								CxbxUpdateHostVertexShader();
+								//do we really have to restore the override?
+								g_InlineVertexBuffer_DeclarationOverride = old_override;
+							}
+						}
+						/*
+						fix function setup finished using 
+						push (NV097_SET_TRANSFORM_EXECUTION_MODE,
+								 NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV, method count 1)
+						to start fix function vertex shader program
+						*/
+					}else if (slot== NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED){//fix function mode
+
+						//Call CxbxImpl_SetVertexShaderInput(pg->vsh_FVF_handle) here? or set the global xbox vertex attribute []
+						//or g_Xbox_SetVertexShaderInput_Attributes = *CxbxGetVertexShaderAttributes(pXboxVertexShader); ??
+						//to set vertex format info, but wihthout stream info.
+
+						//set shader program mode
+						g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction;
+					    //set fix function vertex shader handle position FVF and weight FVF
+						if (pg->vertex_attributes[xbox::X_D3DVSDE_POSITION].count ==3
+							&& pg->vertex_attributes[xbox::X_D3DVSDE_POSITION].size == 4)
+							pg->vsh_FVF_handle |= X_D3DFVF_XYZ;
+						//weight FVF to be implement.
+
+						//for fix function, we need to call selectVertexShader(FVF) first
+						//it sets the g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction or Passthrough in side,
+						//and setup g_Xbox_VertexShader_ForFVF{} for fix function.
+						CxbxImpl_SetVertexShader(pg->vsh_FVF_handle);
+						//CxbxImpl_LoadVertexShader(pg->vsh_FVF_handle,0);
+						//this global is required for CxbxUpdateHostVertexShader() to parse fix function program
+						g_UseFixedFunctionVertexShader = true;
+						//create fix function vertex shader
+						CxbxUpdateHostVertexShader();
+					}
+					break;
+
+
+			    //this is set when Starting pass through vertex shaders.
+				//it's not called directly, it set by calling NV097_SET_TRANSFORM_EXECUTION_MODE with method count=2, argv[1]=NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY
+
+				case NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN://done //pg->KelvinPrimitive.SetTransformProgramCxtWriteEn
                     // Test-case : Whiplash
                     //pg->KelvinPrimitive.SetTransformProgramCxtWriteEn
                     //pg->enable_vertex_program_write = arg0;
-                    break;
+					if (arg0 == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY) {//Starting pass through program
+						g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+
+						//xbox d3d shall load the pass through program into program slots.
+						//but our HLE intercept those calls. so during hybring stage, we have to load the pass through program ourselves
+						//there are different pass through programs depending on the KelvinPrimitive states.
+						//check KelvinPrimitiveStates and load corresponded pass through programs.
+
+						//this is required to enable CxbxUpdateHostVertexShader()
+						g_bUsePassthroughHLSL = true;
+
+						//create pass through vertex shader
+						CxbxUpdateHostVertexShader();
+					}
+
+					break;
                 case NV097_SET_TRANSFORM_PROGRAM_LOAD://done //pg->KelvinPrimitive.SetTransformProgramLoad
                     assert(arg0 < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CHEOPS_OFFSET / 4],
                     //	NV_PGRAPH_CHEOPS_OFFSET_PROG_LD_PTR, arg0);
                     break;
+				/*
+			    this is where xbox d3d SetVertexShader(Handle, address) kick off shader, argv[0]=address, starting program slot.
+				we can call
+				set g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction/Passthrough/ShaderProgram
+				then call CxbxUpdateHostVertexShader(), which will generate host vertex function program and create/set host vertex shader.
+				but we need to set vertex attribute format first. using KelvinPrimitive.SetVertexDataArrayFormat[16]& 0xFF
+				user program start program using
+				push (NV097_SET_TRANSFORM_PROGRAM_START, addr , method count 1)
+				after program setup.
+				*/
 
-                case NV097_SET_TRANSFORM_PROGRAM_START://done //pg->KelvinPrimitive.SetTransformProgramStart
-                    //assert(parameter < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);  //this is a starting address to load the program, shouldn't be checked with the max. program length.
-                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4],
-                    //	NV_PGRAPH_CSV0_C_CHEOPS_PROGRAM_START, arg0);
-                    break;
+				case NV097_SET_TRANSFORM_PROGRAM_START: {//done //pg->KelvinPrimitive.SetTransformProgramStart
+					//assert(parameter < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);  //this is a starting address to load the program, shouldn't be checked with the max. program length.
+					//SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4],
+					//	NV_PGRAPH_CSV0_C_CHEOPS_PROGRAM_START, arg0);
+
+					/*
+					CxbxDrawContext DrawContext = {};
+
+					DrawContext.pXboxIndexData = false;
+					DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+					DrawContext.dwVertexCount = VertexCount;
+					DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
+					DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
+					*/
+					/*
+					what else do I need to do?
+					1. to set g_Xbox_VertexShader_Handle = Handle;? need a dummy Vertex Structure, then create a Vertex Handle.
+					2. find a way to update vertex attribute info to HLE.
+					   setup FVF using g_NV2AInlineArrayVertexBuffer_AttributeFormat, then call IDirect3DDevice9::SetFVF(FVF) shall work.
+					g_d3dDevice->SetFVF(VertexFVF);
+					g_d3dDevice->SetStreamSource(0, pBigSquareVB, 0, sizeof(LVertex));
+					g_d3dDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0 ,2);
+					*/
+
+					//don't set host FVF here, dangerous. need a HLE vertex attribute setting interface.
+					//or an routine to kickoff the g_InlineVertexBuffer_DeclarationOverride
+					//g_pD3DDevice->SetFVF(pg->HostFVF);
+
+					//this is a work around for pre-recorded user program, which will get into pass through mode
+					//shader is alreay update to host in NV097_SET_TRANSFORM_EXECUTION_MODE, so we skip the start here.
+					//really shouldn't do it this way, unless we give up the pass through? or we detect whether we're in prerecorded pushbuffer?
+					if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough) {
+						break;
+					}
+
+
+					//reset fix fuction handle.
+					pg->vsh_FVF_handle = 0;
+
+					//set starting program slot
+					xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = arg0;
+
+					// set vertes attributes and Formats
+
+					//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
+					int old_override = g_InlineVertexBuffer_DeclarationOverride;
+                    //override might not be needed for vertex shader creation.
+					g_InlineVertexBuffer_DeclarationOverride = 2;
+					
+					//set HLE vertex shader mode global
+					//shader program mode shall be set as ShaderProgram  in NV097_SET_TRANSFORM_EXECUTION_MODE
+					//for now we set it as Passthrough  in NV097_SET_TRANSFORM_EXECUTION_MODE,
+					// and in set it as ShaderProgram here to distinguish user program and pass through program.
+					g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
+					//create and set host vertex shader from NV2A shader program slots. for now, just call it.
+					CxbxUpdateHostVertexShader();
+
+					g_InlineVertexBuffer_DeclarationOverride = old_override;
+					break;
+				}
                 case NV097_SET_TRANSFORM_CONSTANT_LOAD://done //pg->KelvinPrimitive.SetTransformConstantLoad
                     assert(arg0 < NV2A_VERTEXSHADER_CONSTANTS);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CHEOPS_OFFSET / 4],
@@ -3731,32 +4151,16 @@ int pgraph_handle_method(
                     NV2A_GL_DPRINTF(true, "    unhandled  (0x%02x 0x%08x)",
                             graphics_class, method);
                     break;
-            }
-                //normal code flow of case NV_KELVIN_PRIMITIVE
-                //check if the method was handled.
-                if (num_words_consumed > 0) {
-                    /* Squash repeated BEGIN,DRAW_ARRAYS,END */
-                    #define LAM(i, mthd) ((argv[i*2+1] & 0x31fff) == (mthd))
-                    #define LAP(i, prm) (argv[i*2+2] == (prm))
-                    #define LAMP(i, mthd, prm) (LAM(i, mthd) && LAP(i, prm))
+			}//end of KELVIN_PRIMITIVE switch(method)
 
-                    if (method == NV097_DRAW_ARRAYS && (max_lookahead_words >= 7) && 
-                        pg->draw_arrays_length <
-                        (ARRAY_SIZE(pg->gl_draw_arrays_start) - 1) &&
-                        LAMP(0, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END) &&
-                        LAMP(1, NV097_SET_BEGIN_END, pg->primitive_mode) &&
-                        LAM(2, NV097_DRAW_ARRAYS)) {
-                        num_words_consumed += 4;
-                    }
-
-                    #undef LAM
-                    #undef LAP
-                    #undef LAMP
-            
-                }
-                num_processed = method_count;//num_processed should always be method_count. if not, then must be something wrong.
-                break;
-            }//end of KELVIN_PRIMITIVE switch(method)
+			//normal code flow of case NV_KELVIN_PRIMITIVE
+			//check if the method was handled.
+			//if (num_words_consumed > 0){
+			//	;
+			//}
+			//num_processed = method_count;//num_processed should always be method_count. if not, then must be something wrong.
+                
+        }//	end of graphic_class KELVIN_PRIMITIVE case
 
         default://graphics_class default case
             NV2A_GL_DPRINTF(true, "Unknown Graphics Class/Method 0x%08X/0x%08X",
@@ -3857,18 +4261,25 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
     unsigned int i;
     VertexAttribute *vertex_attribute = &pg->vertex_attributes[attr];
 
-    if (vertex_attribute->inline_buffer || pg->inline_buffer_length == 0) {
+    //if (vertex_attribute->inline_buffer || pg->inline_buffer_length == 0) {
+	//return if the buffer is already allocated.
+	if (vertex_attribute->inline_buffer) {
         return;
     }
 
-    /* Now upload the previous vertex_attribute value */
+    
+	//allocate the inline buffer for vertex attribute,
     vertex_attribute->inline_buffer = (float*)g_malloc(NV2A_MAX_BATCH_LENGTH
                                                   * sizeof(float) * 4);
-    for (i = 0; i < pg->inline_buffer_length; i++) {
+
+	/* Now upload the previous vertex_attribute value */
+	/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation.
+	for (i = 0; i < pg->inline_buffer_length; i++) {
         memcpy(&vertex_attribute->inline_buffer[i * 4],
                vertex_attribute->inline_value,
                sizeof(float) * 4);
     }
+	*/
 }
 
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
@@ -3879,7 +4290,8 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
 
     for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
-        if (vertex_attribute->inline_buffer) {
+		//process the attribute data if it's been set
+		if (vertex_attribute->set_by_inline_buffer ) {
             memcpy(&vertex_attribute->inline_buffer[
                       pg->inline_buffer_length * 4],
                    vertex_attribute->inline_value,
@@ -3887,7 +4299,7 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
         }
     }
 
-    pg->inline_buffer_length++;
+
 }
 
 void pgraph_init(NV2AState *d)

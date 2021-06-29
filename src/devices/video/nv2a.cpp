@@ -59,6 +59,7 @@
 #include "common/win32/Threads.h"
 #include "Logging.h"
 
+
 #include "vga.h"
 #include "nv2a.h" // For NV2AState
 #include "nv2a_int.h" // from https://github.com/espes/xqemu/tree/xbox/hw/xbox

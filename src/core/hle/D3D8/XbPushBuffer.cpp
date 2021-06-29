@@ -75,7 +75,7 @@ void EmuExecutePushBuffer
 				//disable fixup for now. currently fixup doesn't work correctly for realtime recorded pushbuffer.
 				//that's because we patch HLE calls and for those calls without trampoline, pushbuffer command wasn't sent.
 				//but fixup keep the reference and tried to fixup the pushbuffer command. for example, SetVertexConstants().
-				//memcpy(pPushBufferData + OffsetInBytes, pFixupData, SizeInBytes);
+				memcpy(pPushBufferData + OffsetInBytes, pFixupData, SizeInBytes);
 			}
 			pFixupData += SizeInBytes;
 			/*
@@ -90,10 +90,20 @@ void EmuExecutePushBuffer
             */
         }
 	}
+extern	int                          g_InlineVertexBuffer_DeclarationOverride;//TMP glue
+	//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
+	int old_override = g_InlineVertexBuffer_DeclarationOverride;
+	//override might not be needed for vertex shader creation.
+	g_InlineVertexBuffer_DeclarationOverride = 2;
+
+
 	//the pushbuffer size must be subtracted with 4, because xbox d3d append 1 dwords at the end of original pushbuffer when creating a new pushbuffer,
 	//the appended dword is 0xbaadf00d, and when execute the pushbuffer, it insert a jump command in that dword to jump back to main pushbuffer.
 	//pDevice-PUSH. but here we do doing HLE, we are not using real push buffer and real dma. so exclude the last dword.
     EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
+
+
+	g_InlineVertexBuffer_DeclarationOverride = old_override;
 
     return;
 }
@@ -128,14 +138,52 @@ DWORD CxbxGetStrideFromVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDecla
 
 	return Stride;
 }
+extern int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg);
 
 void HLE_draw_arrays(NV2AState *d)
 {
-	// PGRAPHState *pg = &d->pgraph;
+	PGRAPHState *pg = &d->pgraph;
 
 	LOG_TEST_CASE("HLE_draw_arrays");
 
-	LOG_UNIMPLEMENTED(); // TODO : Implement HLE_draw_arrays
+	LOG_INCOMPLETE(); // TODO : Implement HLE_draw_arrays
+		//DWORD vertex data array, 
+	// To be used as a replacement for DrawVertices, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexInput before calling BeginPush.
+	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
+	// (position followed by weight, normal, diffuse, and so on).
+	// retrieve vertex shader
+	// render vertices
+
+		//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+		//int uiStride = 0;
+
+		//if (dwVertexStride > 0) {
+			//UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+			/*
+			CxbxDrawContext DrawContext = {};
+
+			DrawContext.pXboxIndexData = false;
+			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+			DrawContext.dwVertexCount = VertexCount;
+			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
+			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
+			*/
+			// Arrange for g_NV2AInlineArrayVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+			// so that our above composed declaration will be used for the next draw :
+			//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
+			//we simply set the override and HLE will handle it.
+
+			//int old_override = g_InlineVertexBuffer_DeclarationOverride;
+			//g_InlineVertexBuffer_DeclarationOverride = 2;
+
+			CxbxDrawPrimitiveUP(pg->DrawContext);
+
+			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+			//shall I restore the override to its original state? or reset to 0? or just leave it with the state we set?
+			//g_InlineVertexBuffer_DeclarationOverride = old_override;
+
+		//}
+
 }
 
 void HLE_draw_inline_buffer(NV2AState *d)
@@ -146,9 +194,9 @@ void HLE_draw_inline_buffer(NV2AState *d)
 
 	LOG_UNIMPLEMENTED(); // TODO : Implement HLE_draw_inline_buffer
 }
-extern int pgraph_get_inline_array_stride(PGRAPHState *pg);
+
 extern int g_InlineVertexBuffer_DeclarationOverride; // TMP glue
-xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat = {};
+extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat;
 
 void HLE_draw_inline_array(NV2AState *d)
 {
@@ -170,18 +218,8 @@ void HLE_draw_inline_array(NV2AState *d)
 
 
 
-		DWORD dwVertexStride =pgraph_get_inline_array_stride(pg);
+		DWORD dwVertexStride =pgraph_get_NV2A_vertex_stride(pg);
 		int uiStride = 0;
-		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-			//format was set in NV097_SET_VERTEX_DATA_ARRAY_FORMAT
-			//g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = pg->vertex_attributes[reg].format;
-			g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-			uiStride += pg->vertex_attributes[reg].count * pg->vertex_attributes[reg].size;
-			//this should work, and much easier.
-			g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
-		}
-        //uiStride should end up as overall vertex stride.
-
 
 		if (dwVertexStride > 0) {
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
@@ -195,12 +233,17 @@ void HLE_draw_inline_array(NV2AState *d)
 
 			// Arrange for g_NV2AInlineArrayVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
 			// so that our above composed declaration will be used for the next draw :
-			g_InlineVertexBuffer_DeclarationOverride = 2;
+			//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
+			//we simply set the override and HLE will handle it.
+
+			//int old_override = g_InlineVertexBuffer_DeclarationOverride;
+			//g_InlineVertexBuffer_DeclarationOverride = 2;
 
 			CxbxDrawPrimitiveUP(DrawContext);
 
 			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-			g_InlineVertexBuffer_DeclarationOverride = 0;
+			//shall I restore the override to its original state? or reset to 0? or just leave it with the state we set?
+			//g_InlineVertexBuffer_DeclarationOverride = old_override;
 
 		}
 	}
