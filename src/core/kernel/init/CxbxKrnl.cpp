@@ -86,8 +86,8 @@ Xbe::Header *CxbxKrnl_XbeHeader = NULL;
 bool g_bIsDebugKernel = false;
 
 HWND CxbxKrnl_hEmuParent = NULL;
-DebugMode CxbxKrnl_DebugMode = DebugMode::DM_NONE;
-std::string CxbxKrnl_DebugFileName = "";
+DebugMode CxbxrKrnl_DebugMode = DebugMode::DM_NONE;
+std::string CxbxrKrnl_DebugFileName = "";
 Xbe::Certificate *g_pCertificate = NULL;
 
 /*! thread handles */
@@ -516,6 +516,70 @@ bool HandleFirstLaunch()
 	return true;
 }
 
+FILE* CxbxrKrnlSetupVerboseLog(int BootFlags)
+{
+	std::string tempStr;
+	// Get KernelDebugMode :
+	CxbxrKrnl_DebugMode = DebugMode::DM_NONE;
+	if (cli_config::GetValue(cli_config::debug_mode, &tempStr)) {
+		CxbxrKrnl_DebugMode = (DebugMode)std::atoi(tempStr.c_str());
+	}
+
+	// Get KernelDebugFileName :
+	CxbxrKrnl_DebugFileName = "";
+	if (!cli_config::GetValue(cli_config::debug_file, &CxbxrKrnl_DebugFileName)) {
+		CxbxrKrnl_DebugFileName = "";
+	}
+
+	// debug console allocation (if configured)
+	if (CxbxrKrnl_DebugMode == DM_CONSOLE)
+	{
+		if (AllocConsole())
+		{
+			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+			// Maximise the console scroll buffer height :
+			CONSOLE_SCREEN_BUFFER_INFO coninfo;
+			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
+			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
+			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
+			(void)freopen("CONOUT$", "wt", stdout);
+			(void)freopen("CONIN$", "rt", stdin);
+			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
+			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
+		}
+	}
+	else
+	{
+		FreeConsole();
+		if (CxbxrKrnl_DebugMode == DM_FILE) {
+			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
+			FILE* krnlLog = freopen(CxbxrKrnl_DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
+			// Append separator for better readability after reboot.
+			if (BootFlags != DebugMode::DM_NONE) {
+				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
+			}
+			return krnlLog;
+		}
+		else {
+			char buffer[16];
+			if (GetConsoleTitle(buffer, 16) != NULL)
+				(void)freopen("nul", "w", stdout);
+		}
+	}
+	return nullptr;
+}
+
+/*! initialize emulation */
+static __declspec(noreturn) void CxbxrKrnlInit(
+	void* pTLSData,
+	Xbe::TLS* pTLS,
+	Xbe::LibraryVersion* LibraryVersion,
+	Xbe::Header* XbeHeader,
+	uint32_t XbeHeaderSize,
+	void (*Entry)(),
+	int BootFlags
+);
+
 void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
 {
 	// First of all, check if the EmuShared version matches the emu version and abort otherwise
@@ -573,18 +637,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		hWnd = (HWND)std::atoi(tempStr.c_str());
 	}
 	CxbxKrnl_hEmuParent = IsWindow(hWnd) ? hWnd : nullptr;
-
-	// Get KernelDebugMode :
-	DebugMode DbgMode = DebugMode::DM_NONE;
-	if (cli_config::GetValue(cli_config::debug_mode, &tempStr)) {
-		DbgMode = (DebugMode)std::atoi(tempStr.c_str());
-	}
-
-	// Get KernelDebugFileName :
-	std::string DebugFileName = "";
-	if (cli_config::GetValue(cli_config::debug_file, &tempStr)) {
-		DebugFileName = tempStr;
-	}
 
 	int BootFlags;
 	g_EmuShared->GetBootFlags(&BootFlags);
@@ -660,41 +712,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		return;
 	}
 
-	FILE* krnlLog = nullptr;
-	// debug console allocation (if configured)
-	if (DbgMode == DM_CONSOLE)
-	{
-		if (AllocConsole())
-		{
-			HANDLE StdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-			// Maximise the console scroll buffer height :
-			CONSOLE_SCREEN_BUFFER_INFO coninfo;
-			GetConsoleScreenBufferInfo(StdHandle, &coninfo);
-			coninfo.dwSize.Y = SHRT_MAX - 1; // = 32767-1 = 32766 = maximum value that works
-			SetConsoleScreenBufferSize(StdHandle, coninfo.dwSize);
-			(void)freopen("CONOUT$", "wt", stdout);
-			(void)freopen("CONIN$", "rt", stdin);
-			SetConsoleTitle("Cxbx-Reloaded : Kernel Debug Console");
-			SetConsoleTextAttribute(StdHandle, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_RED);
-		}
-	}
-	else
-	{
-		FreeConsole();
-		if (DbgMode == DM_FILE) {
-			// Peform clean write to kernel log for first boot. Unless multi-xbe boot occur then perform append to existing log.
-			krnlLog = freopen(DebugFileName.c_str(), ((BootFlags == DebugMode::DM_NONE) ? "wt" : "at"), stdout);
-			// Append separator for better readability after reboot.
-			if (BootFlags != DebugMode::DM_NONE) {
-				std::cout << "\n------REBOOT------REBOOT------REBOOT------REBOOT------REBOOT------\n" << std::endl;
-			}
-		}
-		else {
-			char buffer[16];
-			if (GetConsoleTitle(buffer, 16) != NULL)
-				(void)freopen("nul", "w", stdout);
-		}
-	}
+	FILE* krnlLog = CxbxrKrnlSetupVerboseLog(BootFlags);
 
 	bool isLogEnabled;
 	g_EmuShared->GetIsKrnlLogEnabled(&isLogEnabled);
@@ -1068,12 +1086,10 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		xbox::addr_xt EntryPoint = CxbxKrnl_Xbe->m_Header.dwEntryAddr;
 		EntryPoint ^= XOR_EP_KEY[to_underlying(CxbxKrnl_Xbe->GetXbeType())];
 		// Launch XBE
-		CxbxKrnlInit(
+		CxbxrKrnlInit(
 			XbeTlsData, 
 			XbeTls, 
-			CxbxKrnl_Xbe->m_LibraryVersion, 
-			DbgMode,
-			DebugFileName.c_str(),
+			CxbxKrnl_Xbe->m_LibraryVersion,
 			(Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr,
 			CxbxKrnl_Xbe->m_Header.dwSizeofHeaders,
 			(void(*)())EntryPoint,
@@ -1087,13 +1103,11 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 }
 #pragma optimize("", on)
 
-__declspec(noreturn) void CxbxKrnlInit
+static __declspec(noreturn) void CxbxrKrnlInit
 (
 	void                   *pTLSData,
 	Xbe::TLS               *pTLS,
 	Xbe::LibraryVersion    *pLibraryVersion,
-	DebugMode               DbgMode,
-	const char             *szDebugFilename,
 	Xbe::Header            *pXbeHeader,
 	uint32_t                dwXbeHeaderSize,
 	void(*Entry)(),
@@ -1110,8 +1124,6 @@ __declspec(noreturn) void CxbxKrnlInit
 	CxbxKrnl_TLS = pTLS;
 	CxbxKrnl_TLSData = pTLSData;
 	CxbxKrnl_XbeHeader = pXbeHeader;
-	CxbxKrnl_DebugMode = DbgMode;
-	CxbxKrnl_DebugFileName = (char*)szDebugFilename;
 
 	// A patch to dwCertificateAddr is a requirement due to Windows TLS is overwriting dwGameRegion data address.
 	// By using unalternated certificate data, it should no longer cause any problem with titles running and Cxbx's log as well.
@@ -1133,7 +1145,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	{
 #ifdef _DEBUG_TRACE
 		EmuLogInit(LOG_LEVEL::INFO, "Debug Trace Enabled.");
-		EmuLogInit(LOG_LEVEL::INFO, "CxbxKrnlInit\n"
+		EmuLogInit(LOG_LEVEL::INFO, "CxbxrKrnlInit\n"
 			"(\n"
 			"   hwndParent          : 0x%.08p\n"
 			"   pTLSData            : 0x%.08p\n"
@@ -1145,7 +1157,7 @@ __declspec(noreturn) void CxbxKrnlInit
 			"   dwXBEHeaderSize     : 0x%.08X\n"
 			"   Entry               : 0x%.08p\n"
 			");",
-			CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, DbgMode, szDebugFilename, pXbeHeader, dwXbeHeaderSize, Entry);
+			CxbxKrnl_hEmuParent, pTLSData, pTLS, pLibraryVersion, CxbxrKrnl_DebugMode, CxbxrKrnl_DebugFileName.c_str(), pXbeHeader, dwXbeHeaderSize, Entry);
 #else
 		EmuLogInit(LOG_LEVEL::INFO, "Debug Trace Disabled.");
 #endif
