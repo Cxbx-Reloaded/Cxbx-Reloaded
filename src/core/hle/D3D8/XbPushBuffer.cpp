@@ -182,7 +182,7 @@ void HLE_draw_arrays(NV2AState *d)
 
 			
 	CxbxDrawContext DrawContext = {};
-	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was primitive_mode;
 
 	//this is assuming that all attributes are using the same vertex buffer and ordered with the same offset as in the slot.
 	//could be wrong, need polished to use each pg->KelvinPrimitive.SetVertexDataArrayOffset[] for each attributes.
@@ -240,7 +240,7 @@ void HLE_draw_inline_buffer(NV2AState *d)
 
 		CxbxDrawContext DrawContext = {};
 		DrawContext.pXboxIndexData = false;
-		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was primitive_mode;
 		DrawContext.dwVertexCount = VertexCount;
 		DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
 		DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
@@ -297,7 +297,7 @@ void HLE_draw_inline_array(NV2AState *d)
 
 			CxbxDrawContext DrawContext = {};
 			DrawContext.pXboxIndexData = false;
-			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was primitive_mode;
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
@@ -338,7 +338,7 @@ void HLE_draw_inline_elements(NV2AState *d)
 	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
-	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was primitive_mode;
 	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
 	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0]+0x80000000);
 	DrawContext.dwVertexCount = uiIndexCount;
