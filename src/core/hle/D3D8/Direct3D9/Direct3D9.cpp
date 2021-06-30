@@ -223,8 +223,6 @@ static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DRes
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 static void							CxbxImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_D3DSurface *pNewZStencil);
 
-extern void UpdateFPSCounter();
-
 #define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_D3DCREATED)
 
 
@@ -5483,7 +5481,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
     frameStartTime = std::chrono::steady_clock::now();
 
-	UpdateFPSCounter();
+	g_renderbase->UpdateFPSCounter();
 
 	if (Flags == CXBX_SWAP_PRESENT_FORWARD) // Only do this when forwarded from Present
 	{

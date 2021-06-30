@@ -2055,34 +2055,3 @@ void CxbxKrnlPanic()
 {
     CxbxKrnlCleanup("Kernel Panic!");
 }
-
-static clock_t						g_DeltaTime = 0;			 // Used for benchmarking/fps count
-static unsigned int					g_Frames = 0;
-
-// ******************************************************************
-// * update the current milliseconds per frame
-// ******************************************************************
-static void UpdateCurrentMSpFAndFPS() {
-	if (g_EmuShared) {
-		static float currentFPSVal = 30;
-
-		currentFPSVal = (float)(g_Frames*0.5 + currentFPSVal * 0.5);
-		g_EmuShared->SetCurrentFPS(&currentFPSVal);
-	}
-}
-
-void UpdateFPSCounter()
-{
-	static clock_t lastDrawFunctionCallTime = 0;
-	clock_t currentDrawFunctionCallTime = clock();
-
-	g_DeltaTime += currentDrawFunctionCallTime - lastDrawFunctionCallTime;
-	lastDrawFunctionCallTime = currentDrawFunctionCallTime;
-	g_Frames++;
-
-	if (g_DeltaTime >= CLOCKS_PER_SEC) {
-		UpdateCurrentMSpFAndFPS();
-		g_Frames = 0;
-		g_DeltaTime -= CLOCKS_PER_SEC;
-	}
-}

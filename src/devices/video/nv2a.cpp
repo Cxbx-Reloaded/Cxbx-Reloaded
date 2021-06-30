@@ -1040,7 +1040,6 @@ void cxbx_gl_render_overlays(NV2AState *d)
 	}
 }
 
-extern void UpdateFPSCounter();
 void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -1096,7 +1095,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 //	glo_set_current(NULL);
 
-	UpdateFPSCounter();
+	g_renderbase->UpdateFPSCounter();
 }
 
 // TODO: Fix this properly

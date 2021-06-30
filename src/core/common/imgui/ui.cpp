@@ -45,6 +45,11 @@ bool ImGuiUI::Initialize()
 
 	g_EmuShared->GetOverlaySettings(&m_settings);
 	g_EmuShared->GetFlagsLLE(&m_lle_flags);
+
+	// Internal initialize (when necessary, move into its own function.)
+	fps_counter = 30.0f;
+
+	// Miscs
 	m_audio.Initialize();
 	m_video.Initialize();
 
@@ -74,6 +79,36 @@ void ImGuiUI::ToggleImGui()
 {
 	m_is_focus = !m_is_focus;
 	g_EmuShared->SetImGuiFocusFlag(m_is_focus);
+}
+
+static clock_t      g_DeltaTime = 0; // Used for benchmarking/fps count
+static unsigned int g_Frames = 0;
+
+// ******************************************************************
+// * update the current milliseconds per frame
+// ******************************************************************
+void ImGuiUI::UpdateCurrentMSpFAndFPS() {
+	if (g_EmuShared) {
+
+		fps_counter = (float)(g_Frames * 0.5 + fps_counter * 0.5);
+		g_EmuShared->SetCurrentFPS(&fps_counter);
+	}
+}
+
+void ImGuiUI::UpdateFPSCounter()
+{
+	static clock_t lastDrawFunctionCallTime = 0;
+	clock_t currentDrawFunctionCallTime = clock();
+
+	g_DeltaTime += currentDrawFunctionCallTime - lastDrawFunctionCallTime;
+	lastDrawFunctionCallTime = currentDrawFunctionCallTime;
+	g_Frames++;
+
+	if (g_DeltaTime >= CLOCKS_PER_SEC) {
+		UpdateCurrentMSpFAndFPS();
+		g_Frames = 0;
+		g_DeltaTime -= CLOCKS_PER_SEC;
+	}
 }
 
 void ImGuiUI::DrawMenu()
@@ -116,9 +151,6 @@ void ImGuiUI::DrawWidgets()
 			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing)) {
 
 			if (m_settings.fps) {
-
-				float fps_counter;
-				g_EmuShared->GetCurrentFPS(&fps_counter);
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS: %.2f  MS / F : %.2f", fps_counter, (float)(1000.0 / fps_counter));
 			}
 
