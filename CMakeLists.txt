@@ -122,6 +122,7 @@ file (GLOB CXBXR_HEADER_EMU_IMPORT
 )
 file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
+ "${CXBXR_ROOT_DIR}/src/common/FilePaths.hpp"
  "${CXBXR_ROOT_DIR}/src/common/audio/converter.hpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.h"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"

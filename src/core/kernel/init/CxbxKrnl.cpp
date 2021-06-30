@@ -71,6 +71,8 @@
 #include "Timer.h" // For Timer_Init
 #include "common\input\InputManager.h" // For the InputDeviceManager
 
+#include "common/FilePaths.hpp"
+
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
 /*! thread local storage data */
@@ -1732,85 +1734,6 @@ __declspec(noreturn) void CxbxKrnlInit
 
 	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
     CxbxKrnlTerminateThread();
-}
-
-void CxbxInitFilePaths()
-{
-	if (g_Settings) {
-		std::string dataLoc = g_Settings->GetDataLocation();
-		std::strncpy(szFolder_CxbxReloadedData, dataLoc.c_str(), dataLoc.length() + 1);
-	}
-	else {
-		g_EmuShared->GetDataLocation(szFolder_CxbxReloadedData);
-	}
-
-	// Make sure our data folder exists :
-	bool result = std::filesystem::exists(szFolder_CxbxReloadedData);
-	if (!result && !std::filesystem::create_directory(szFolder_CxbxReloadedData)) {
-		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded's data folder!", __func__);
-	}
-
-	// Make sure the EmuDisk folder exists
-	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
-	result = std::filesystem::exists(emuDisk);
-	if (!result && !std::filesystem::create_directory(emuDisk)) {
-		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
-	}
-
-	// Make sure the EmuDMu folder exists
-	std::string emuMu = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuMu");
-	result = std::filesystem::exists(emuMu);
-	if (!result && !std::filesystem::create_directory(emuMu)) {
-		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuMu folder!", __func__);
-	}
-
-	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
-
-	GetModuleFileName(GetModuleHandle(nullptr), szFilePath_CxbxReloaded_Exe, MAX_PATH);
-}
-
-HANDLE hMapDataHash = nullptr;
-
-bool CxbxLockFilePath()
-{
-    std::stringstream filePathHash("Local\\");
-    uint64_t hashValue = XXH3_64bits(szFolder_CxbxReloadedData, strlen(szFolder_CxbxReloadedData) + 1);
-    if (!hashValue) {
-        CxbxKrnlCleanup("%s : Couldn't generate Cxbx-Reloaded's data folder hash!", __func__);
-    }
-
-    filePathHash << std::hex << hashValue;
-
-    hMapDataHash = CreateFileMapping
-    (
-        INVALID_HANDLE_VALUE,       // Paging file
-        nullptr,                    // default security attributes
-        PAGE_READONLY,              // readonly access
-        0,                          // size: high 32 bits
-        /*Dummy size*/4,            // size: low 32 bits
-        filePathHash.str().c_str()  // name of map object
-    );
-
-    if (hMapDataHash == nullptr) {
-        return false;
-    }
-
-    if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        PopupError(nullptr, "Data path directory is currently in use.\nUse a different data path directory or stop emulation from another process.");
-        CloseHandle(hMapDataHash);
-        return false;
-    }
-
-    return true;
-}
-
-void CxbxUnlockFilePath()
-{
-    // Close opened file path lockdown shared memory.
-    if (hMapDataHash) {
-        CloseHandle(hMapDataHash);
-        hMapDataHash = nullptr;
-    }
 }
 
 // REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
