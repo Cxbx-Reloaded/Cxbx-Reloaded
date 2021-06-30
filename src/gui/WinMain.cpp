@@ -112,9 +112,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     WndMain *MainWindow = new WndMain(hInstance);
 
-	// NOTE: CxbxInitFilePaths must be initalize AFTER WndMain for data directory option from user.
-	/* Initialize Cxbx File Paths */
-	CxbxInitFilePaths();
+	// NOTE: CxbxrInitFilePaths must be initalize AFTER WndMain for data directory option from user.
+	/* Initialize Cxbx-Reloaded File Paths */
+	CxbxrInitFilePaths();
 
     /*! wait for window to be created, or failure */
     while(!MainWindow->isCreated() && MainWindow->ProcessMessages())
