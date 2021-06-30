@@ -2723,13 +2723,13 @@ int pgraph_handle_method(
                     break;
                 }
 
-                CASE_4(NV097_SET_VERTEX4F, 4): //pg->KelvinPrimitive.SetVertex4f[4]
+				CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
 						break;
 					}
 					slot = (method - NV097_SET_VERTEX4F) / 4;
 					VertexAttribute *vertex_attribute =
-					&pg->vertex_attributes[slot];
+						&pg->vertex_attributes[slot];
 					//allocate attribute.inline_buffer if it's not allocated yet.
 					//pgraph_allocate_inline_buffer_vertices(pg, slot);
 					vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertex4f[0];
@@ -2743,8 +2743,8 @@ int pgraph_handle_method(
 						pgraph_finish_inline_buffer_vertex(pg);
 						pg->inline_buffer_length++;
 					}
-                    break; 
-
+					break;
+				}
 #if(0)  //missing state implememtations, need verifications.
 
 #   define NV097_SET_VERTEX4S                                 0x00001528 // [2]
