@@ -47,6 +47,9 @@ GOTO :helpInfo
 )
 
 :: Check second arg (Visual Studio version)
+IF "%2"=="2022" (
+SET msvc_compiler=Visual Studio 17 2022
+)
 IF "%2"=="2019" (
 SET msvc_compiler=Visual Studio 16 2019
 )
@@ -100,8 +103,9 @@ ECHO - ARM
 ECHO - ARM64
 ECHO ---
 ECHO arg2
-ECHO - 2017
+ECHO - 2022
 ECHO - 2019
+ECHO - 2017
 PAUSE
 GOTO :end
 
