@@ -1159,7 +1159,7 @@ static uint32_t subchannel_to_graphic_class[8] = { NV_KELVIN_PRIMITIVE,NV_MEMORY
 extern IDirect3DDevice9Ex *g_pD3DDevice;
 extern VertexShaderMode g_Xbox_VertexShaderMode;
 extern void CxbxUpdateHostVertexShader();
-extern int g_InlineVertexBuffer_DeclarationOverride ;
+//extern int g_InlineVertexBuffer_DeclarationOverride ;
 //starting address of vertex shader user program
 extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
 //xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
@@ -2707,6 +2707,7 @@ int pgraph_handle_method(
 
                 CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						assert(0);
 						break;
 					}
 					slot = (method - NV097_SET_VERTEX3F) / 4;
@@ -2723,6 +2724,7 @@ int pgraph_handle_method(
 
 				CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						assert(0);
 						break;
 					}
 					slot = (method - NV097_SET_VERTEX4F) / 4;
@@ -3383,6 +3385,7 @@ int pgraph_handle_method(
 				
                 CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						assert(0);
 						break;
 					}
 					//register is set one at a time per method, for loop should be redundant.
@@ -3412,6 +3415,7 @@ int pgraph_handle_method(
                 */
                 CASE_64(NV097_SET_VERTEX_DATA4F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData4f[16].M[4]
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						assert(0);
 						break;
 					}
 				    //register is set one at a time per method, for loop should be redundant.
@@ -3453,6 +3457,7 @@ int pgraph_handle_method(
             */
             CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
 				if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+					assert(0);
 					break;
 				}
 				//register is set one at a time per method, for loop should be redundant.
@@ -3605,6 +3610,7 @@ int pgraph_handle_method(
 					*/
 				CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+						assert(0);
 						break;
 					}
 					//register is set one at a time per method, for loop should be redundant.
@@ -3919,9 +3925,9 @@ int pgraph_handle_method(
 					slot=arg0 & NV097_SET_TRANSFORM_EXECUTION_MODE_MODE;
 					if (slot == NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM ) {//program mode, user program or pass through program
 						//set shader program mode
-						g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
+						//g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
 						//disable fix function program
-						g_UseFixedFunctionVertexShader = false;
+						//g_UseFixedFunctionVertexShader = false;
 						//reset fix function vertex shader fvf handle when existing FVF
 						pg->vsh_FVF_handle = 0;
 						//Pass through program starts after finishing setup by calling NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM with method count=2,argv[1]=NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY (0)
@@ -3939,7 +3945,7 @@ int pgraph_handle_method(
 						*/
 						if (method_count==2){
 							if (argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY) {
-								g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+								//g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
 								//figure out a way to treat the case where pre-recorded pushbuffer user program will be here as well.
 								//xbox d3d shall load the pass through program into program slots.
 								//but our HLE intercept those calls. so during hybring stage, we have to load the pass through program ourselves
@@ -3947,17 +3953,17 @@ int pgraph_handle_method(
 								//check KelvinPrimitiveStates and load corresponded pass through programs.
 								//load pass through program here.
 								//pass through program starts at address 0;
-								xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+								//xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 								//this is required to enable CxbxUpdateHostVertexShader()
-								g_bUsePassthroughHLSL = true;
+								//g_bUsePassthroughHLSL = true;
 								//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-								int old_override = g_InlineVertexBuffer_DeclarationOverride;
+								//int old_override = g_InlineVertexBuffer_DeclarationOverride;
 								//override might not be needed for vertex shader creation.
-								g_InlineVertexBuffer_DeclarationOverride = 2;
+								//g_InlineVertexBuffer_DeclarationOverride = 2;
 								//create pass through vertex shader
-								CxbxUpdateHostVertexShader();
+								//CxbxUpdateHostVertexShader();
 								//do we really have to restore the override?
-								g_InlineVertexBuffer_DeclarationOverride = old_override;
+								//g_InlineVertexBuffer_DeclarationOverride = old_override;
 							}
 						}
 						/*
@@ -3973,7 +3979,7 @@ int pgraph_handle_method(
 						//to set vertex format info, but wihthout stream info.
 
 						//set shader program mode
-						g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction;
+						//g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction;
 					    //set fix function vertex shader handle position FVF and weight FVF
 						if (pg->vertex_attributes[xbox::X_D3DVSDE_POSITION].count ==3
 							&& pg->vertex_attributes[xbox::X_D3DVSDE_POSITION].size == 4)
@@ -3983,12 +3989,12 @@ int pgraph_handle_method(
 						//for fix function, we need to call selectVertexShader(FVF) first
 						//it sets the g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction or Passthrough in side,
 						//and setup g_Xbox_VertexShader_ForFVF{} for fix function.
-						CxbxImpl_SetVertexShader(pg->vsh_FVF_handle);
+						//CxbxImpl_SetVertexShader(pg->vsh_FVF_handle);
 						//CxbxImpl_LoadVertexShader(pg->vsh_FVF_handle,0);
 						//this global is required for CxbxUpdateHostVertexShader() to parse fix function program
-						g_UseFixedFunctionVertexShader = true;
+						//g_UseFixedFunctionVertexShader = true;
 						//create fix function vertex shader
-						CxbxUpdateHostVertexShader();
+						//CxbxUpdateHostVertexShader();
 					}
 					break;
 
@@ -4001,7 +4007,7 @@ int pgraph_handle_method(
                     //pg->KelvinPrimitive.SetTransformProgramCxtWriteEn
                     //pg->enable_vertex_program_write = arg0;
 					if (arg0 == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY) {//Starting pass through program
-						g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+						//g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
 
 						//xbox d3d shall load the pass through program into program slots.
 						//but our HLE intercept those calls. so during hybring stage, we have to load the pass through program ourselves
@@ -4009,10 +4015,10 @@ int pgraph_handle_method(
 						//check KelvinPrimitiveStates and load corresponded pass through programs.
 
 						//this is required to enable CxbxUpdateHostVertexShader()
-						g_bUsePassthroughHLSL = true;
+						//g_bUsePassthroughHLSL = true;
 
 						//create pass through vertex shader
-						CxbxUpdateHostVertexShader();
+						//CxbxUpdateHostVertexShader();
 					}
 
 					break;
@@ -4063,33 +4069,33 @@ int pgraph_handle_method(
 					//this is a work around for pre-recorded user program, which will get into pass through mode
 					//shader is alreay update to host in NV097_SET_TRANSFORM_EXECUTION_MODE, so we skip the start here.
 					//really shouldn't do it this way, unless we give up the pass through? or we detect whether we're in prerecorded pushbuffer?
-					if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough) {
-						break;
-					}
+					//if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough) {
+					//	break;
+					//}
 
 
 					//reset fix fuction handle.
 					pg->vsh_FVF_handle = 0;
 
 					//set starting program slot
-					xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = arg0;
+					//xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = arg0;
 
 					// set vertes attributes and Formats
 
 					//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-					int old_override = g_InlineVertexBuffer_DeclarationOverride;
+					//int old_override = g_InlineVertexBuffer_DeclarationOverride;
                     //override might not be needed for vertex shader creation.
-					g_InlineVertexBuffer_DeclarationOverride = 2;
+					//g_InlineVertexBuffer_DeclarationOverride = 2;
 					
 					//set HLE vertex shader mode global
 					//shader program mode shall be set as ShaderProgram  in NV097_SET_TRANSFORM_EXECUTION_MODE
 					//for now we set it as Passthrough  in NV097_SET_TRANSFORM_EXECUTION_MODE,
 					// and in set it as ShaderProgram here to distinguish user program and pass through program.
-					g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
+					//g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
 					//create and set host vertex shader from NV2A shader program slots. for now, just call it.
-					CxbxUpdateHostVertexShader();
+					//CxbxUpdateHostVertexShader();
 
-					g_InlineVertexBuffer_DeclarationOverride = old_override;
+					//g_InlineVertexBuffer_DeclarationOverride = old_override;
 					break;
 				}
                 case NV097_SET_TRANSFORM_CONSTANT_LOAD://done //pg->KelvinPrimitive.SetTransformConstantLoad
