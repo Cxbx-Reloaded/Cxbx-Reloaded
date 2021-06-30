@@ -146,9 +146,6 @@ bool HandleFirstLaunch();
 /*! Cxbx Kernel Entry Point */
 void CxbxKrnlEmulate(unsigned int system, blocks_reserved_t blocks_reserved);
 
-/*! initialize emulation */
-__declspec(noreturn) void CxbxKrnlInit(void *pTLSData, Xbe::TLS *pTLS, Xbe::LibraryVersion *LibraryVersion, DebugMode DbgMode, const char *szDebugFilename, Xbe::Header *XbeHeader, uint32_t XbeHeaderSize, void (*Entry)(), int BootFlags);
-
 /*! cleanup emulation */
 __declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
 
@@ -211,8 +208,6 @@ extern Xbe *CxbxKrnl_Xbe;
 
 /*! parent window handle */
 extern HWND CxbxKrnl_hEmuParent;
-extern DebugMode CxbxKrnl_DebugMode;
-extern std::string CxbxKrnl_DebugFileName;
 
 /*! file paths */
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
