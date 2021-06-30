@@ -3173,11 +3173,11 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
 
-							DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+							//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+							//for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
 								//apply stride to attributes.
-								pg->vertex_attributes[i].format += dwVertexStride << 8;
-							}
+								//pg->vertex_attributes[i].format += dwVertexStride << 8;
+							//}
 
 							if (pgraph_draw_inline_array != nullptr) {
 								//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)

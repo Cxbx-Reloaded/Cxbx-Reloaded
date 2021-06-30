@@ -94,7 +94,7 @@ extern	int                          g_InlineVertexBuffer_DeclarationOverride;//T
 	//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
 	int old_override = g_InlineVertexBuffer_DeclarationOverride;
 	//override might not be needed for vertex shader creation.
-	g_InlineVertexBuffer_DeclarationOverride = 2;
+	//g_InlineVertexBuffer_DeclarationOverride = 2;
 
 
 	//the pushbuffer size must be subtracted with 4, because xbox d3d append 1 dwords at the end of original pushbuffer when creating a new pushbuffer,
@@ -103,7 +103,7 @@ extern	int                          g_InlineVertexBuffer_DeclarationOverride;//T
     EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
 
 
-	g_InlineVertexBuffer_DeclarationOverride = old_override;
+	//g_InlineVertexBuffer_DeclarationOverride = old_override;
 
     return;
 }
@@ -138,7 +138,15 @@ DWORD CxbxGetStrideFromVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDecla
 
 	return Stride;
 }
+
 extern int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg);
+//for inline_arrays
+extern int g_InlineVertexBuffer_DeclarationOverride; // TMP glue
+//1 for IVB, using g_InlineVertexBuffer_AttributeFormat. 2 for inline arrays using g_InlineVertexBuffer_DeclarationOverride
+//try always use g_InlineVertexBuffer_AttributeFormat whenever for inline_arrarys or inline_buffers.
+extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat;
+//for IVB, inline_buffer
+extern xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat;
 
 void HLE_draw_arrays(NV2AState *d)
 {
@@ -153,17 +161,37 @@ void HLE_draw_arrays(NV2AState *d)
 	// (position followed by weight, normal, diffuse, and so on).
 	// retrieve vertex shader
 	// render vertices
+
+	// Compose an Xbox vertex attribute format to pass through all registers
+	static UINT uiStride = 0;
+	static bool isIvbFormatInitialized = false;
+	for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
+		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+		uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+	}
+
+
+	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+	// so that our above composed declaration will be used for the next draw :
+	g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+	// Note, that g_Xbox_VertexShaderMode should be left untouched,
+	// because except for the declaration override, the Xbox shader (either FVF
+	// or a program, or even passthrough shaders) should still be in effect!
+	CxbxUpdateNativeD3DResources();
+
 			
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 
 	//this is assuming that all attributes are using the same vertex buffer and ordered with the same offset as in the slot.
 	//could be wrong, need polished to use each pg->KelvinPrimitive.SetVertexDataArrayOffset[] for each attributes.
-	DrawContext.pXboxVertexStreamZeroData = (PVOID)pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
-	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
+	//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0]+ 0x80000000);
+	DrawContext.uiXboxVertexStreamZeroStride = pgraph_get_NV2A_vertex_stride(pg);
 
 	for (int array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
-		DrawContext = {};
+		
 		DrawContext.pXboxIndexData = false;
 
 		DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
@@ -172,7 +200,11 @@ void HLE_draw_arrays(NV2AState *d)
 		//pgraph_draw_arrays(d);
 	}
 
+	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+	g_InlineVertexBuffer_DeclarationOverride = 0;
 
+	//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
+	CxbxUpdateNativeD3DResources();
 }
 
 void HLE_draw_inline_buffer(NV2AState *d)
@@ -189,6 +221,23 @@ void HLE_draw_inline_buffer(NV2AState *d)
 
 	if (dwVertexStride > 0) {
 		UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+
+		// Compose an Xbox vertex attribute format to pass through all registers
+		static UINT uiStride = 0;
+		static bool isIvbFormatInitialized = false;
+		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+			uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+		}
+		// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+		// so that our above composed declaration will be used for the next draw :
+		g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+		// Note, that g_Xbox_VertexShaderMode should be left untouched,
+		// because except for the declaration override, the Xbox shader (either FVF
+		// or a program, or even passthrough shaders) should still be in effect!
+		CxbxUpdateNativeD3DResources();
+
 		CxbxDrawContext DrawContext = {};
 		DrawContext.pXboxIndexData = false;
 		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
@@ -197,11 +246,13 @@ void HLE_draw_inline_buffer(NV2AState *d)
 		DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
 		CxbxDrawPrimitiveUP(DrawContext);
+
+		//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
+		CxbxUpdateNativeD3DResources();
+
 	}
 }
 
-extern int g_InlineVertexBuffer_DeclarationOverride; // TMP glue
-extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat;
 
 void HLE_draw_inline_array(NV2AState *d)
 {
@@ -221,14 +272,29 @@ void HLE_draw_inline_array(NV2AState *d)
 		//vertex stride can be set via NV097_SET_VERTEX_DATA_ARRAY_FORMAT, which is then stored in pg->vertex_attributes[slot].stride where slot is the vertex shader slot being used.
 		//don't know how to retrive the slot, set it as 0 here for now.
 
-
-
 		DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-
-		int uiStride = 0;
 
 		if (dwVertexStride > 0) {
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+
+			// Compose an Xbox vertex attribute format to pass through all registers
+			static UINT uiStride = 0;
+			static bool isIvbFormatInitialized = false;
+			for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+				g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg]&0xFF;
+				g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+				uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+			}
+
+
+			// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+			// so that our above composed declaration will be used for the next draw :
+			g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+			// Note, that g_Xbox_VertexShaderMode should be left untouched,
+			// because except for the declaration override, the Xbox shader (either FVF
+			// or a program, or even passthrough shaders) should still be in effect!
+			CxbxUpdateNativeD3DResources();
+
 			CxbxDrawContext DrawContext = {};
 			DrawContext.pXboxIndexData = false;
 			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
@@ -237,7 +303,12 @@ void HLE_draw_inline_array(NV2AState *d)
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
 			CxbxDrawPrimitiveUP(DrawContext);
-			
+
+			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+			g_InlineVertexBuffer_DeclarationOverride = 0;
+
+			//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
+			CxbxUpdateNativeD3DResources();
 		}
 	}
 }
@@ -248,15 +319,37 @@ void HLE_draw_inline_elements(NV2AState *d)
 
 	unsigned int uiIndexCount = pg->inline_elements_length;
 
+	// Compose an Xbox vertex attribute format to pass through all registers
+	static UINT uiStride = 0;
+	static bool isIvbFormatInitialized = false;
+	for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
+		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
+		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
+		uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+	}
+
+
+	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+	// so that our above composed declaration will be used for the next draw :
+	g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+	// Note, that g_Xbox_VertexShaderMode should be left untouched,
+	// because except for the declaration override, the Xbox shader (either FVF
+	// or a program, or even passthrough shaders) should still be in effect!
+	CxbxUpdateNativeD3DResources();
+
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
-	DrawContext.pXboxVertexStreamZeroData = (PVOID)pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0]+0x80000000);
 	DrawContext.dwVertexCount = uiIndexCount;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 
 
 	CxbxDrawIndexed(DrawContext);
+
+	//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
+	CxbxUpdateNativeD3DResources();
+
 }
 
 DWORD ABGR_to_ARGB(const uint32_t color)
