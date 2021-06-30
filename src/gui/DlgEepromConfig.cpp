@@ -198,7 +198,7 @@ void WriteEepromInMemory(HWND hDlg)
 
 	// Finally, recalculate the hash and the checksums
 	uint8_t EepromKey[16] = { 0 };
-	std::basic_ifstream<uint8_t> EepromFile(std::string(szFolder_CxbxReloadedData) + "\\keys.bin", std::ios::binary);
+	std::basic_ifstream<uint8_t> EepromFile(g_DataFilePath + "\\keys.bin", std::ios::binary);
 	if (EepromFile.is_open()) {
 		EepromFile.read(EepromKey, 16);
 		EepromFile.close();
