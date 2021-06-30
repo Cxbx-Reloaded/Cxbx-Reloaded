@@ -35,7 +35,7 @@
 
 #include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
 #include "core\hle\D3D8\XbVertexShader.h"
-#include "core\hle\D3D8\XbVertexBuffer.h" 
+
 // FIXME
 #define qemu_mutex_lock_iothread()
 #define qemu_mutex_unlock_iothread()
@@ -1164,8 +1164,6 @@ extern int g_InlineVertexBuffer_DeclarationOverride ;
 extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
 //xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
-extern void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext);
-extern void CxbxDrawIndexed(CxbxDrawContext &DrawContext);
 extern DWORD ABGR_to_ARGB(const uint32_t color);
 xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat = {};
 
@@ -3120,21 +3118,7 @@ int pgraph_handle_method(
 							    //shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
 								//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
 
-								pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-								pg->DrawContext.pXboxVertexStreamZeroData = (PVOID) pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
-								pg->DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0]>>8;
-
-								for (int array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
-									pg->DrawContext = {};
-
-									pg->DrawContext.pXboxIndexData = false;
-									
-									pg->DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
-									pg->DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
-									CxbxDrawPrimitiveUP(pg->DrawContext);
-									//pgraph_draw_arrays(d);
-
-								}
+									pgraph_draw_arrays(d);
                             }
                         } else if (pg->inline_buffer_length) {//for draw calls using SET_BEGIN_ENG(primitive)/SET_VERTEX_DATAXXX ... /SET_BEGIN_ENG(0)
 
@@ -3171,17 +3155,9 @@ int pgraph_handle_method(
 								//extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes; g_Xbox_SetVertexShaderInput_Attributes = g_NV2AInlineArrayVertexBuffer_AttributeFormat;
 
 								if (dwVertexStride > 0) {
-									UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
-									pg->DrawContext = {};
-									pg->DrawContext.pXboxIndexData = false;
-									pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-									pg->DrawContext.dwVertexCount = VertexCount;
-									pg->DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
-									pg->DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
-									CxbxDrawPrimitiveUP(pg->DrawContext);
 									//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
-									//pgraph_draw_inline_array(d);
+									pgraph_draw_inline_buffer(d);
 								}
 								//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
 								//pgraph_draw_inline_buffer(d);
@@ -3202,19 +3178,8 @@ int pgraph_handle_method(
 							}
 
 							if (pgraph_draw_inline_array != nullptr) {
-								if (dwVertexStride > 0) {
-									UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
-									pg->DrawContext = {};
-									pg->DrawContext.pXboxIndexData = false;
-									pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-									pg->DrawContext.dwVertexCount = VertexCount;
-									pg->DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
-									pg->DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-
-									CxbxDrawPrimitiveUP(pg->DrawContext);
-									//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
-									//pgraph_draw_inline_array(d);
-								}
+								//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
+								pgraph_draw_inline_array(d);
                             }
                         } else if (pg->inline_elements_length) {
 
@@ -3225,20 +3190,9 @@ int pgraph_handle_method(
                             assert(pg->inline_array_length == 0);
 
                             if (pgraph_draw_inline_elements != nullptr) {
-								unsigned int uiIndexCount = pg->inline_elements_length;
-
-								pg->DrawContext = {};
-								pg->DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-								pg->DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
-								pg->DrawContext.pXboxVertexStreamZeroData = (PVOID)pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
-								pg->DrawContext.dwVertexCount = uiIndexCount;
-								pg->DrawContext.pXboxIndexData = d->pgraph.inline_elements;
-								
-
-								CxbxDrawIndexed(pg->DrawContext);
 
 								//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
-								//pgraph_draw_inline_elements(d);
+								pgraph_draw_inline_elements(d);
                             }
                         } else {
                             NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");

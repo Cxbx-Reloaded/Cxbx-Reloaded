@@ -44,7 +44,7 @@
 #include "nv2a_shaders.h" // For ShaderBinding, etc
 #include "nv2a_regs.h" // For NV2A_MAX_TEXTURES, etc
 
-#include "core\hle\D3D8\XbVertexBuffer.h" // For EmuPC2XB_D3DFormat
+
 
 
 
@@ -712,9 +712,6 @@ typedef struct PGRAPHState {
 	DWORD HostFVF;
 	//handle for fix function vertex shader.
 	DWORD vsh_FVF_handle;
-	
-	//DrawContext for draw calls to CxbxDrawPrimitive() etc.
-	::CxbxDrawContext DrawContext;
 
 
 } PGRAPHState;

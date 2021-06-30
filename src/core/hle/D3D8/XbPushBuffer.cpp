@@ -153,36 +153,25 @@ void HLE_draw_arrays(NV2AState *d)
 	// (position followed by weight, normal, diffuse, and so on).
 	// retrieve vertex shader
 	// render vertices
+			
+	CxbxDrawContext DrawContext = {};
+	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 
-		//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-		//int uiStride = 0;
+	//this is assuming that all attributes are using the same vertex buffer and ordered with the same offset as in the slot.
+	//could be wrong, need polished to use each pg->KelvinPrimitive.SetVertexDataArrayOffset[] for each attributes.
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
+	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
 
-		//if (dwVertexStride > 0) {
-			//UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
-			/*
-			CxbxDrawContext DrawContext = {};
+	for (int array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
+		DrawContext = {};
+		DrawContext.pXboxIndexData = false;
 
-			DrawContext.pXboxIndexData = false;
-			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-			DrawContext.dwVertexCount = VertexCount;
-			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
-			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-			*/
-			// Arrange for g_NV2AInlineArrayVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
-			// so that our above composed declaration will be used for the next draw :
-			//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-			//we simply set the override and HLE will handle it.
+		DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
+		DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
+		CxbxDrawPrimitiveUP(DrawContext);
+		//pgraph_draw_arrays(d);
+	}
 
-			//int old_override = g_InlineVertexBuffer_DeclarationOverride;
-			//g_InlineVertexBuffer_DeclarationOverride = 2;
-
-			CxbxDrawPrimitiveUP(pg->DrawContext);
-
-			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-			//shall I restore the override to its original state? or reset to 0? or just leave it with the state we set?
-			//g_InlineVertexBuffer_DeclarationOverride = old_override;
-
-		//}
 
 }
 
@@ -193,6 +182,22 @@ void HLE_draw_inline_buffer(NV2AState *d)
 	LOG_TEST_CASE("HLE_draw_inline_buffer");
 
 	LOG_UNIMPLEMENTED(); // TODO : Implement HLE_draw_inline_buffer
+	PGRAPHState *pg = &d->pgraph;
+	DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+
+	int uiStride = 0;
+
+	if (dwVertexStride > 0) {
+		UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+		CxbxDrawContext DrawContext = {};
+		DrawContext.pXboxIndexData = false;
+		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+		DrawContext.dwVertexCount = VertexCount;
+		DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
+		DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
+
+		CxbxDrawPrimitiveUP(DrawContext);
+	}
 }
 
 extern int g_InlineVertexBuffer_DeclarationOverride; // TMP glue
@@ -218,33 +223,21 @@ void HLE_draw_inline_array(NV2AState *d)
 
 
 
-		DWORD dwVertexStride =pgraph_get_NV2A_vertex_stride(pg);
+		DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+
 		int uiStride = 0;
 
 		if (dwVertexStride > 0) {
 			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 			CxbxDrawContext DrawContext = {};
-
 			DrawContext.pXboxIndexData = false;
 			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 			DrawContext.dwVertexCount = VertexCount;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
-			// Arrange for g_NV2AInlineArrayVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
-			// so that our above composed declaration will be used for the next draw :
-			//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-			//we simply set the override and HLE will handle it.
-
-			//int old_override = g_InlineVertexBuffer_DeclarationOverride;
-			//g_InlineVertexBuffer_DeclarationOverride = 2;
-
 			CxbxDrawPrimitiveUP(DrawContext);
-
-			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-			//shall I restore the override to its original state? or reset to 0? or just leave it with the state we set?
-			//g_InlineVertexBuffer_DeclarationOverride = old_override;
-
+			
 		}
 	}
 }
@@ -254,11 +247,14 @@ void HLE_draw_inline_elements(NV2AState *d)
 	PGRAPHState *pg = &d->pgraph;
 
 	unsigned int uiIndexCount = pg->inline_elements_length;
-	CxbxDrawContext DrawContext = {};
 
-		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+	CxbxDrawContext DrawContext = {};
+	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)pg->KelvinPrimitive.SetVertexDataArrayOffset[0];
 	DrawContext.dwVertexCount = uiIndexCount;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
+
 
 	CxbxDrawIndexed(DrawContext);
 }
