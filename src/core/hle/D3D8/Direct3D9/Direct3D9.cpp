@@ -6047,6 +6047,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// Each row contains a 4x4 pixel DXT blocks, instead of single pixels
 					// So divide by 4 to get the number of rows
 					numRows = (numRows + 3) / 4;
+
+					if (dwDepth > 1) {
+						LOG_TEST_CASE("Unsupported compressed volume texture");
+					}
 				}
 
 				DWORD mip2dSize = dwMipRowPitch * numRows; // the size of one layer of the mip slice
@@ -6128,7 +6132,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					}
 				}
 				else if (bSwizzled) {
-					// First we need to unswizzle the texture data
+					// Unswizzle the texture data into the host texture
 					EmuUnswizzleBox(
 						pSrc, pxMipWidth, pxMipHeight, pxMipDepth,
 						dwBPP, 
@@ -6139,25 +6143,12 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					memcpy(pDst, pSrc, mip2dSize);
 				}
 				else {
-					/* TODO : // Let DirectX convert the surface (including palette formats) :
-					if(!EmuXBFormatRequiresConversionToARGB) {
-						D3DXLoadSurfaceFromMemory(
-							GetHostSurface(pResource),
-							nullptr, // no destination palette
-							&destRect,
-							pSrc, // Source buffer
-							dwMipPitch, // Source pitch
-							g_pXbox_Palette_Data,
-							&SrcRect,
-							D3DX_DEFAULT, // D3DX_FILTER_NONE,
-							0 // No ColorKey?
-							);
-					} else {
-					*/
-					if ((dwDstRowPitch == dwMipRowPitch) && (dwMipRowPitch == pxMipWidth * dwBPP)) {
+					if (dwDstRowPitch == dwMipRowPitch) {
+						// Source and destination layout match - simple copy
 						memcpy(pDst, pSrc, mip2dSize);
 					}
 					else {
+						// Copy accounting for different row pitch
 						for (DWORD v = 0; v < pxMipHeight; v++) {
 							memcpy(pDst, pSrc, pxMipWidth * dwBPP);
 							pDst += dwDstRowPitch;
