@@ -6102,23 +6102,21 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
 
-				// Do we need to convert to ARGB?
+				// Copy texture data to the host resource
 				if (bConvertToARGB) {
 					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
 					// In case where there is a palettized texture without a palette attached,
 					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
 					// Test case: DRIV3R
-					bool skipDueToNoPalette = false;
-					if (X_Format == xbox::X_D3DFMT_P8 && g_pXbox_Palette_Data[iTextureStage] == nullptr) {
+					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && g_pXbox_Palette_Data[iTextureStage] == nullptr;
+					if (missingPalette) {
 						LOG_TEST_CASE("Palettized texture bound without a palette");
 
 						memset(pDst, 0, dwDstRowPitch * pxMipHeight);
-						skipDueToNoPalette = true;
 					}
-
-					// Convert a row at a time, using a libyuv-like callback approach :
-					if (!skipDueToNoPalette) {
+					else {
+						// Try to convert to ARGB
 						if (!ConvertD3DTextureToARGBBuffer(
 							X_Format,
 							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
