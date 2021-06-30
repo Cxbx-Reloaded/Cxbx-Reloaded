@@ -30,6 +30,7 @@
 
 #include <core\kernel\exports\xboxkrnl.h>
 #include "core\kernel\init\CxbxKrnl.h"
+#include "core/kernel/support/PatchRdtsc.hpp"
 #include "Emu.h"
 #include "devices\x86\EmuX86.h"
 #include "EmuShared.h"
