@@ -27,7 +27,7 @@ bool ImGuiUI::Initialize()
 	ImGuiIO& io = ImGui::GetIO();
 #if 0 // TODO: Currently most voted for memory, so this block of code is disabled. And may will add an option between file vs memory.
 	// May be best ideal to do manual update call than ImGui's internal auto update.
-	g_EmuShared->GetStorageLocation(m_file_path);
+	g_EmuShared->GetDataLocation(m_file_path);
 	if (m_file_path[0] == '\0') {
 		return false;
 	}

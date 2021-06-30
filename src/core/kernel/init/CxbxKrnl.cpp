@@ -1420,7 +1420,7 @@ __declspec(noreturn) void CxbxKrnlInit
 	// Initialize devices :
 	{
 		char cxbxr_data_path[sizeof(szFilePath_Xbe)];
-		g_EmuShared->GetStorageLocation(cxbxr_data_path);
+		g_EmuShared->GetDataLocation(cxbxr_data_path);
 
 		g_DiskBasePath = std::string(cxbxr_data_path) + "\\EmuDisk";
 		g_MuBasePath = std::string(cxbxr_data_path) + "\\EmuMu";
@@ -1741,7 +1741,7 @@ void CxbxInitFilePaths()
 		std::strncpy(szFolder_CxbxReloadedData, dataLoc.c_str(), dataLoc.length() + 1);
 	}
 	else {
-		g_EmuShared->GetStorageLocation(szFolder_CxbxReloadedData);
+		g_EmuShared->GetDataLocation(szFolder_CxbxReloadedData);
 	}
 
 	// Make sure our data folder exists :
