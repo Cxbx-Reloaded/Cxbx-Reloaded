@@ -216,7 +216,7 @@ extern std::string CxbxKrnl_DebugFileName;
 
 /*! file paths */
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
-extern char szFolder_CxbxReloadedData[MAX_PATH];
+extern std::string g_DataFilePath;
 extern char szFilePath_EEPROM_bin[MAX_PATH];
 extern char szFilePath_Xbe[xbox::max_path*2];
 
