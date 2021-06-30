@@ -181,6 +181,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/kernel/memory-manager/VMManager.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/Emu.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuFile.h"
+ "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuFilePaths.hpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuFS.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuNtDll.h"
  "${CXBXR_ROOT_DIR}/src/devices/ADM1032Device.h"
