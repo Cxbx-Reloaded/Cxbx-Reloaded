@@ -6102,7 +6102,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					dwDstSlicePitch = 0;
 				}
 
-				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwMipOffset;
+				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
 
 				// Do we need to convert to ARGB?
 				if (bConvertToARGB) {
