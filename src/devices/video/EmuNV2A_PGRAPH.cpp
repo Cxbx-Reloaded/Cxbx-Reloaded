@@ -1506,12 +1506,14 @@ int pgraph_handle_method(
                 case NV097_ARRAY_ELEMENT32: //PUSH_INSTR_IMM_NOINC
 				case NV097_DRAW_ARRAYS:		//PUSH_INSTR_IMM_NOINC
 				case NV097_INLINE_ARRAY:	//PUSH_INSTR_IMM_NOINC
-					assert(arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All above commands should be non-increasing
+					//disable for now, arg0 is argument after method. this test is for method dword.
+					//assert(arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All above commands should be non-increasing
                     break;
 
                 default:
-					assert(arg0 >> 29 != COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All other commands should not be non-increasing
-					assert(arg0 >> 29 == COMMAND_INSTRUCTION_INCREASING_METHODS); // Actually, all other commands should be increasing (as jumps and unknown bits shouldn't arrive here!)
+					//disable for now, arg0 is argument after method. this test is for method dword.
+					//assert(arg0 >> 29 != COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All other commands should not be non-increasing
+					//assert(arg0 >> 29 == COMMAND_INSTRUCTION_INCREASING_METHODS); // Actually, all other commands should be increasing (as jumps and unknown bits shouldn't arrive here!)
 					
 
 #if 0
