@@ -601,6 +601,257 @@ static void CxbxrKrnlSyncGUI()
 	}
 }
 
+static void CxbxrKrnlSetupMemorySystem(int BootFlags, unsigned emulate_system, unsigned reserved_systems, blocks_reserved_t blocks_reserved)
+{
+#ifndef CXBXR_EMU
+	// Only for GUI executable with emulation code.
+	blocks_reserved_t blocks_reserved_gui = { 0 };
+	// Reserve console system's memory ranges before start initialize.
+	if (!ReserveAddressRanges(emulate_system, blocks_reserved_gui)) {
+		CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
+	}
+	// Initialize the memory manager
+	g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved_gui);
+#else
+	// Release unnecessary memory ranges to allow console/host to use those memory ranges.
+	FreeAddressRanges(emulate_system, reserved_systems, blocks_reserved);
+	// Initialize the memory manager
+	g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved);
+#endif
+
+	// Commit the memory used by the xbe header
+	size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
+	VAddr XbeBase = XBE_IMAGE_BASE;
+	g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &HeaderSize, XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
+
+	// Copy over loaded Xbe Headers to specified base address
+	memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
+	memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
+
+	// Load all sections marked as preload using the in-memory copy of the xbe header
+	xbox::PXBEIMAGE_SECTION sectionHeaders = (xbox::PXBEIMAGE_SECTION)CxbxKrnl_Xbe->m_Header.dwSectionHeadersAddr;
+	for (uint32_t i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
+		if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
+			NTSTATUS result = xbox::XeLoadSection(&sectionHeaders[i]);
+			if (FAILED(result)) {
+				EmuLogInit(LOG_LEVEL::WARNING, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
+			}
+		}
+	}
+}
+
+static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems, blocks_reserved_t blocks_reserved)
+{
+	XbeType xbeType = XbeType::xtRetail;
+	// Get title path :
+	std::string xbePath;
+	cli_config::GetValue(cli_config::load, &xbePath);
+	xbePath = std::filesystem::absolute(std::filesystem::path(xbePath)).string();
+
+	// NOTE: This is a safety to clean the file path for any malicious file path attempt.
+	// Might want to move this into a utility function.
+	size_t n, i;
+	// Remove useless slashes before and after semicolon.
+	std::string semicolon_search[] = { "\\;", ";\\", "/;", ";/" };
+	std::string semicolon_str = ";";
+	for (n = 0, i = 0; i < semicolon_search->size(); i++, n = 0) {
+		while ((n = xbePath.find(semicolon_search[i], n)) != std::string::npos) {
+			xbePath.replace(n, semicolon_search[i].size(), semicolon_str);
+			n += semicolon_str.size();
+		}
+	}
+
+	// Once clean up process is done, proceed set to global variable string.
+	strncpy(szFilePath_Xbe, xbePath.c_str(), xbox::max_path - 1);
+	std::replace(xbePath.begin(), xbePath.end(), ';', '/');
+	// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
+	std::filesystem::path xbeDirectory = std::filesystem::path(xbePath).parent_path();
+
+#ifdef CHIHIRO_WORK
+	// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
+	// If the XBE path contains a boot.id, it must be a Chihiro title
+	// This is necessary as some Chihiro games use the Debug xor instead of the Chihiro ones
+	// which means we cannot rely on that alone.
+	if (BootFlags == BOOT_NONE && std::filesystem::exists(xbeDirectory / "boot.id")) {
+
+		std::string chihiroMediaBoardRom = g_DataFilePath + "/EmuDisk/" + MediaBoardRomFile;
+		if (!std::filesystem::exists(chihiroMediaBoardRom)) {
+			CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
+		}
+
+		// Open a handle to the mediaboard rom
+		FILE* fpRom = fopen(chihiroMediaBoardRom.c_str(), "rb");
+		if (fpRom == nullptr) {
+			CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not opened for read");
+		}
+
+		// Verify the size of media board rom
+		fseek(fpRom, 0, SEEK_END);
+		auto length = ftell(fpRom);
+		if (length != 2 * ONE_MB) {
+			CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) has an invalid size");
+
+		}
+		fseek(fpRom, 0, SEEK_SET);
+
+		// Extract SEGABOOT_OLD.XBE and SEGABOOT.XBE from Media Rom
+		// We only do this if SEGABOOT_OLD and SEGABOOT.XBE are *not* already present
+		std::string chihiroSegaBootOld = g_DataFilePath + "/EmuDisk/" + MediaBoardSegaBoot0;
+		std::string chihiroSegaBootNew = g_DataFilePath + "/EmuDisk/" + MediaBoardSegaBoot1;
+		if (!std::filesystem::exists(chihiroSegaBootOld) || !std::filesystem::exists(chihiroSegaBootNew)) {
+			FILE* fpSegaBootOld = fopen(chihiroSegaBootOld.c_str(), "wb");
+			FILE* fpSegaBootNew = fopen(chihiroSegaBootNew.c_str(), "wb");
+			if (fpSegaBootNew == nullptr || fpSegaBootOld == nullptr) {
+				CxbxKrnlCleanup("Could not open SEGABOOT for writing");
+
+			}
+
+			// Extract SEGABOOT (Old)
+			void* buffer = malloc(ONE_MB);
+			if (buffer == nullptr) {
+				CxbxKrnlCleanup("Could not allocate buffer for SEGABOOT");
+
+			}
+
+			fread(buffer, 1, ONE_MB, fpRom);
+			fwrite(buffer, 1, ONE_MB, fpSegaBootOld);
+
+			// Extract SEGABOOT (New)
+			fread(buffer, 1, ONE_MB, fpRom);
+			fwrite(buffer, 1, ONE_MB, fpSegaBootNew);
+
+			free(buffer);
+
+			fclose(fpSegaBootOld);
+			fclose(fpSegaBootNew);
+			fclose(fpRom);
+
+		}
+
+		g_EmuShared->SetTitleMountPath(xbeDirectory.string().c_str());
+
+		// Launch Segaboot
+		CxbxLaunchNewXbe(chihiroSegaBootNew);
+		CxbxKrnlShutDown(true);
+		TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
+
+	}
+#endif // Chihiro wip block
+
+	CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
+
+	if (CxbxKrnl_Xbe->HasFatalError()) {
+		CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
+		return false;
+	}
+
+	// Check the signature of the xbe
+	if (CxbxKrnl_Xbe->CheckSignature()) {
+		EmuLogInit(LOG_LEVEL::INFO, "Valid xbe signature. Xbe is legit");
+	}
+	else {
+		EmuLogInit(LOG_LEVEL::WARNING, "Invalid xbe signature. Homebrew, tampered or pirated xbe?");
+	}
+
+	// Check the integrity of the xbe sections
+	for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+		if (CxbxKrnl_Xbe->CheckSectionIntegrity(sectionIndex)) {
+			EmuLogInit(LOG_LEVEL::INFO, "SHA hash check of section %s successful", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		}
+		else {
+			EmuLogInit(LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, section is corrupted", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		}
+	}
+
+	// If CLI has given console type, then enforce it.
+	if (cli_config::hasKey(cli_config::system_chihiro)) {
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
+		xbeType = XbeType::xtChihiro;
+	}
+	else if (cli_config::hasKey(cli_config::system_devkit)) {
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
+		xbeType = XbeType::xtDebug;
+	}
+	else if (cli_config::hasKey(cli_config::system_retail)) {
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
+		xbeType = XbeType::xtRetail;
+	}
+	// Otherwise, use auto detect method.
+	else {
+		// Detect XBE type :
+		xbeType = CxbxKrnl_Xbe->GetXbeType();
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
+	}
+
+	EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
+	unsigned int emulate_system = 0;
+	// Set reserved_systems which system we will about to emulate.
+	if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && xbeType == XbeType::xtChihiro) {
+		emulate_system = SYSTEM_CHIHIRO;
+	}
+	else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && xbeType == XbeType::xtDebug) {
+		emulate_system = SYSTEM_DEVKIT;
+	}
+	else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && xbeType == XbeType::xtRetail) {
+		emulate_system = SYSTEM_XBOX;
+	}
+	// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
+	else {
+		CxbxKrnlCleanup("Unable to emulate system type due to host is not able to reserve required memory ranges.");
+		return false;
+	}
+	// Clear emulation system from reserved systems to be free.
+	reserved_systems &= ~emulate_system;
+
+	// Once we have determine which system type to run as, enforce it in future reboots.
+	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
+		const char* system_str = GetSystemTypeToStr(emulate_system);
+		cli_config::SetSystemType(system_str);
+	}
+
+	// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
+	g_bIsChihiro = (xbeType == XbeType::xtChihiro);
+	g_bIsDebug = (xbeType == XbeType::xtDebug);
+	g_bIsRetail = (xbeType == XbeType::xtRetail);
+
+#ifdef CHIHIRO_WORK
+	// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
+	// The Chihiro kernel does this, so we should too!
+	if (g_bIsChihiro) {
+		CxbxKrnl_Xbe->m_Header.dwInitFlags.bDontSetupHarddisk = true;
+	}
+#else
+	if (g_bIsChihiro) {
+		CxbxKrnlCleanup("Emulating Chihiro mode does not work yet. Please use different title to emulate.");
+	}
+#endif
+
+	CxbxrKrnlSetupMemorySystem(BootFlags, emulate_system, reserved_systems, blocks_reserved);
+	return true;
+}
+
+// HACK: Attempt to patch out XBE header reads
+static void CxbxrKrnlXbePatchXBEHSig() {
+	// This works by searching for the XBEH signature and replacing it with what appears in host address space instead
+	// Test case: Half Life 2
+	// Iterate through each CODE section
+	for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+		if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
+			continue;
+		}
+
+		EmuLogInit(LOG_LEVEL::INFO, "Searching for XBEH in section %s", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		xbox::addr_xt startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
+		xbox::addr_xt endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
+		for (xbox::addr_xt addr = startAddr; addr < endAddr; addr++) {
+			if (*(uint32_t*)addr == 0x48454258) {
+				EmuLogInit(LOG_LEVEL::INFO, "Patching XBEH at 0x%08X", addr);
+				*((uint32_t*)addr) = *(uint32_t*)XBE_IMAGE_BASE;
+			}
+		}
+	}
+}
+
 /*! initialize emulation */
 static __declspec(noreturn) void CxbxrKrnlInit(
 	void* pTLSData,
@@ -828,251 +1079,18 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
 	// using XeLoadImage from LaunchDataPage->Header.szLaunchPath
 
-	// Now we can load and run the XBE :
-	// MapAndRunXBE(XbePath, DCHandle);
-	XbeType xbeType = XbeType::xtRetail;
-	{
-		// NOTE: This is a safety to clean the file path for any malicious file path attempt.
-		// Might want to move this into a utility function.
-		size_t n, i;
-		// Remove useless slashes before and after semicolon.
-		std::string semicolon_search[] = { "\\;", ";\\", "/;", ";/" };
-		std::string semicolon_str = ";";
-		for (n = 0, i = 0; i < semicolon_search->size(); i++, n = 0) {
-			while ((n = xbePath.find(semicolon_search[i], n)) != std::string::npos) {
-				xbePath.replace(n, semicolon_search[i].size(), semicolon_str);
-				n += semicolon_str.size();
-			}
-		}
-
-		// Once clean up process is done, proceed set to global variable string.
-		strncpy(szFilePath_Xbe, xbePath.c_str(), xbox::max_path - 1);
-		std::replace(xbePath.begin(), xbePath.end(), ';', '/');
-		// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
-		std::filesystem::path xbeDirectory = std::filesystem::path(xbePath).parent_path();
-
-#ifdef CHIHIRO_WORK
-		// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
-		// If the XBE path contains a boot.id, it must be a Chihiro title
-		// This is necessary as some Chihiro games use the Debug xor instead of the Chihiro ones
-		// which means we cannot rely on that alone.
-		if (BootFlags == BOOT_NONE && std::filesystem::exists(xbeDirectory / "boot.id")) {
-
-			std::string chihiroMediaBoardRom = g_DataFilePath + "/EmuDisk/" + MediaBoardRomFile;
-			if (!std::filesystem::exists(chihiroMediaBoardRom)) {
-				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
-			}
-
-			// Open a handle to the mediaboard rom
-			FILE* fpRom = fopen(chihiroMediaBoardRom.c_str(), "rb");
-			if (fpRom == nullptr) {
-				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not opened for read");
-			}
-
-			// Verify the size of media board rom
-			fseek(fpRom, 0, SEEK_END);
-			auto length = ftell(fpRom);
-			if (length != 2 * ONE_MB) {
-				CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) has an invalid size");
-
-			}
-			fseek(fpRom, 0, SEEK_SET);
-
-			// Extract SEGABOOT_OLD.XBE and SEGABOOT.XBE from Media Rom
-			// We only do this if SEGABOOT_OLD and SEGABOOT.XBE are *not* already present
-			std::string chihiroSegaBootOld = g_DataFilePath + "/EmuDisk/" + MediaBoardSegaBoot0;
-			std::string chihiroSegaBootNew = g_DataFilePath + "/EmuDisk/" + MediaBoardSegaBoot1;
-			if (!std::filesystem::exists(chihiroSegaBootOld) || !std::filesystem::exists(chihiroSegaBootNew)) {
-				FILE* fpSegaBootOld = fopen(chihiroSegaBootOld.c_str(), "wb");
-				FILE* fpSegaBootNew = fopen(chihiroSegaBootNew.c_str(), "wb");
-				if (fpSegaBootNew == nullptr || fpSegaBootOld == nullptr) {
-					CxbxKrnlCleanup("Could not open SEGABOOT for writing");
-
-				}
-
-				// Extract SEGABOOT (Old)
-				void* buffer = malloc(ONE_MB);
-				if (buffer == nullptr) {
-					CxbxKrnlCleanup("Could not allocate buffer for SEGABOOT");
-
-				}
-
-				fread(buffer, 1, ONE_MB, fpRom);
-				fwrite(buffer, 1, ONE_MB, fpSegaBootOld);
-
-				// Extract SEGABOOT (New)
-				fread(buffer, 1, ONE_MB, fpRom);
-				fwrite(buffer, 1, ONE_MB, fpSegaBootNew);
-
-				free(buffer);
-
-				fclose(fpSegaBootOld);
-				fclose(fpSegaBootNew);
-				fclose(fpRom);
-
-			}
-
-			g_EmuShared->SetTitleMountPath(xbeDirectory.string().c_str());
-
-			// Launch Segaboot
-			CxbxLaunchNewXbe(chihiroSegaBootNew);
-			CxbxKrnlShutDown(true);
-			TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
-
-		}
-#endif // Chihiro wip block
-
-		CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
-
-		if (CxbxKrnl_Xbe->HasFatalError()) {
-			CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
-			return;
-		}
-
-		// Check the signature of the xbe
-		if (CxbxKrnl_Xbe->CheckSignature()) {
-			EmuLogInit(LOG_LEVEL::INFO, "Valid xbe signature. Xbe is legit");
-		}
-		else {
-			EmuLogInit(LOG_LEVEL::WARNING, "Invalid xbe signature. Homebrew, tampered or pirated xbe?");
-		}
-
-		// Check the integrity of the xbe sections
-		for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
-			if (CxbxKrnl_Xbe->CheckSectionIntegrity(sectionIndex)) {
-				EmuLogInit(LOG_LEVEL::INFO, "SHA hash check of section %s successful", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-			}
-			else {
-				EmuLogInit(LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, section is corrupted", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-			}
-		}
-
-		// If CLI has given console type, then enforce it.
-		if (cli_config::hasKey(cli_config::system_chihiro)) {
-			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
-			xbeType = XbeType::xtChihiro;
-		}
-		else if (cli_config::hasKey(cli_config::system_devkit)) {
-			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
-			xbeType = XbeType::xtDebug;
-		}
-		else if (cli_config::hasKey(cli_config::system_retail)) {
-			EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
-			xbeType = XbeType::xtRetail;
-		}
-		// Otherwise, use auto detect method.
-		else {
-			// Detect XBE type :
-			xbeType = CxbxKrnl_Xbe->GetXbeType();
-			EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
-		}
-
-		EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
-		unsigned int emulate_system = 0;
-		// Set reserved_systems which system we will about to emulate.
-		if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && xbeType == XbeType::xtChihiro) {
-			emulate_system = SYSTEM_CHIHIRO;
-		}
-		else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && xbeType == XbeType::xtDebug) {
-			emulate_system = SYSTEM_DEVKIT;
-		}
-		else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && xbeType == XbeType::xtRetail) {
-			emulate_system = SYSTEM_XBOX;
-		}
-		// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
-		else {
-			CxbxKrnlCleanup("Unable to emulate system type due to host is not able to reserve required memory ranges.");
-			return;
-		}
-		// Clear emulation system from reserved systems to be free.
-		reserved_systems &= ~emulate_system;
-
-		// Once we have determine which system type to run as, enforce it in future reboots.
-		if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
-			const char* system_str = GetSystemTypeToStr(emulate_system);
-			cli_config::SetSystemType(system_str);
-		}
-
-		// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
-		g_bIsChihiro = (xbeType == XbeType::xtChihiro);
-		g_bIsDebug = (xbeType == XbeType::xtDebug);
-		g_bIsRetail = (xbeType == XbeType::xtRetail);
-
-#ifdef CHIHIRO_WORK
-		// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
-		// The Chihiro kernel does this, so we should too!
-		if (g_bIsChihiro) {
-			CxbxKrnl_Xbe->m_Header.dwInitFlags.bDontSetupHarddisk = true;
-		}
-#else
-		if (g_bIsChihiro) {
-			CxbxKrnlCleanup("Emulating Chihiro mode does not work yet. Please use different title to emulate.");
-		}
-#endif
-
-#ifndef CXBXR_EMU
-		// Only for GUI executable with emulation code.
-		blocks_reserved_t blocks_reserved_gui = { 0 };
-		// Reserve console system's memory ranges before start initialize.
-		if (!ReserveAddressRanges(emulate_system, blocks_reserved_gui)) {
-			CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
-		}
-		// Initialize the memory manager
-		g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved_gui);
-#else
-		// Release unnecessary memory ranges to allow console/host to use those memory ranges.
-		FreeAddressRanges(emulate_system, reserved_systems, blocks_reserved);
-		// Initialize the memory manager
-		g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved);
-#endif
-
-		// Commit the memory used by the xbe header
-		size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
-		VAddr XbeBase = XBE_IMAGE_BASE;
-		g_VMManager.XbAllocateVirtualMemory(&XbeBase, 0, &HeaderSize, XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
-
-
-		// Copy over loaded Xbe Headers to specified base address
-		memcpy((void*)CxbxKrnl_Xbe->m_Header.dwBaseAddr, &CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
-		memcpy((void*)(CxbxKrnl_Xbe->m_Header.dwBaseAddr + sizeof(Xbe::Header)), CxbxKrnl_Xbe->m_HeaderEx, CxbxKrnl_Xbe->m_ExSize);
-
-		// Load all sections marked as preload using the in-memory copy of the xbe header
-		xbox::PXBEIMAGE_SECTION sectionHeaders = (xbox::PXBEIMAGE_SECTION)CxbxKrnl_Xbe->m_Header.dwSectionHeadersAddr;
-		for (uint32_t i = 0; i < CxbxKrnl_Xbe->m_Header.dwSections; i++) {
-			if ((sectionHeaders[i].Flags & XBEIMAGE_SECTION_PRELOAD) != 0) {
-				NTSTATUS result = xbox::XeLoadSection(&sectionHeaders[i]);
-				if (FAILED(result)) {
-					EmuLogInit(LOG_LEVEL::WARNING, "Failed to preload XBE section: %s", CxbxKrnl_Xbe->m_szSectionName[i]);
-				}
-			}
-		}
-
-		// We need to remember a few XbeHeader fields, so we can switch between a valid ExeHeader and XbeHeader :
-		StoreXbeImageHeader();
-
-		// Restore enough of the executable image headers to keep WinAPI's working :
-		RestoreExeImageHeader();
-
-		// HACK: Attempt to patch out XBE header reads
-		// This works by searching for the XBEH signature and replacing it with what appears in host address space instead
-		// Test case: Half Life 2
-		// Iterate through each CODE section
-		for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
-			if (!CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwFlags.bExecutable) {
-				continue;
-			}
-
-			EmuLogInit(LOG_LEVEL::INFO, "Searching for XBEH in section %s", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-			xbox::addr_xt startAddr = CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwVirtualAddr;
-			xbox::addr_xt endAddr = startAddr + CxbxKrnl_Xbe->m_SectionHeader[sectionIndex].dwSizeofRaw;
-			for (xbox::addr_xt addr = startAddr; addr < endAddr; addr++) {
-				if (*(uint32_t*)addr == 0x48454258) {
-					EmuLogInit(LOG_LEVEL::INFO, "Patching XBEH at 0x%08X", addr);
-					*((uint32_t*)addr) = *(uint32_t*)XBE_IMAGE_BASE;
-				}
-			}
-		}
+	// Now we can load the XBE :
+	if (!CxbxrKrnlXbeSystemSelector(BootFlags, reserved_systems, blocks_reserved)) {
+		return;
 	}
+
+	// We need to remember a few XbeHeader fields, so we can switch between a valid ExeHeader and XbeHeader :
+	StoreXbeImageHeader();
+
+	// Restore enough of the executable image headers to keep WinAPI's working :
+	RestoreExeImageHeader();
+
+	CxbxrKrnlXbePatchXBEHSig();
 
 	g_ExceptionManager = new ExceptionManager(); // If in need to add VEHs, move this line earlier. (just in case)
 
