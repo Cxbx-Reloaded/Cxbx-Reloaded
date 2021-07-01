@@ -1102,6 +1102,7 @@ void RegisterCxbxVertexDeclaration(VertexDeclarationKey CacheKey, CxbxVertexDecl
 	auto it = g_CxbxVertexDeclarations.find(CacheKey);
 	if (it != g_CxbxVertexDeclarations.end() && it->second != nullptr) {
 		LOG_TEST_CASE("Overwriting existing Vertex Declaration");
+		//we're not supposed to be here. the g_CxbxVertexDeclarations.find(CacheKey).second was verified == null before we get to here.
 		FreeCxbxVertexDeclaration(it->second); // Avoid memory leak
 	}
 

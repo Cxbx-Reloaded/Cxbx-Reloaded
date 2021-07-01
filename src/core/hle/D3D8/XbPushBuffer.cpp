@@ -202,9 +202,6 @@ void HLE_draw_arrays(NV2AState *d)
 
 	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
 	g_InlineVertexBuffer_DeclarationOverride = 0;
-
-	//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
-	CxbxUpdateNativeD3DResources();
 }
 
 void HLE_draw_inline_buffer(NV2AState *d)
@@ -246,10 +243,6 @@ void HLE_draw_inline_buffer(NV2AState *d)
 		DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
 		CxbxDrawPrimitiveUP(DrawContext);
-
-		//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
-		CxbxUpdateNativeD3DResources();
-
 	}
 }
 
@@ -306,9 +299,6 @@ void HLE_draw_inline_array(NV2AState *d)
 
 			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
 			g_InlineVertexBuffer_DeclarationOverride = 0;
-
-			//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
-			CxbxUpdateNativeD3DResources();
 		}
 	}
 }
@@ -346,10 +336,6 @@ void HLE_draw_inline_elements(NV2AState *d)
 
 
 	CxbxDrawIndexed(DrawContext);
-
-	//should we update the restored D3D resources only when we're leaving pushbuffer, to save overhead?
-	CxbxUpdateNativeD3DResources();
-
 }
 
 DWORD ABGR_to_ARGB(const uint32_t color)

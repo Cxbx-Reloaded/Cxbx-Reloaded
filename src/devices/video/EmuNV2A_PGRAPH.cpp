@@ -1490,7 +1490,8 @@ int pgraph_handle_method(
         //test case:xdk pushbuffer sample.
  
         case NV_KELVIN_PRIMITIVE: {
-
+#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
+#define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
             //update struct KelvinPrimitive/array regs[] in first round, skip special cases. then we process those state variables if necessary in 2nd round.
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
@@ -3191,6 +3192,7 @@ int pgraph_handle_method(
 								//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
 								pgraph_draw_inline_array(d);
                             }
+							
                         } else if (pg->inline_elements_length) {
 
                             NV2A_GL_DPRINTF(false, "Inline Elements");
@@ -3208,12 +3210,14 @@ int pgraph_handle_method(
                             NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
                             assert(false);
                         }
+						//only clear KelvinPrimitive.SetBeginEnd after we finish draw call
+						pg->KelvinPrimitive.SetBeginEnd = NV097_SET_BEGIN_END_OP_END;
 
                     } else {
 
                         assert(arg0 <= NV097_SET_BEGIN_END_OP_POLYGON);
-
-                        //pg->primitive_mode = arg0; // KelvinPrimitive.SetBeginEnd
+						//set KelvinPrimitive.SetBeginEnd with arg0== PrititiveType.
+						pg->KelvinPrimitive.SetBeginEnd = arg0;
 
                         if (pgraph_draw_state_update != nullptr) {
                             pgraph_draw_state_update(d);
@@ -3235,7 +3239,7 @@ int pgraph_handle_method(
                     }
 
                     pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
-                    break;
+					break;
                 }
 
                 case NV097_ARRAY_ELEMENT16://xbox D3DDevice_DrawIndexedVertices() calls this 
