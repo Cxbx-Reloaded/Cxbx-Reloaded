@@ -852,6 +852,32 @@ static void CxbxrKrnlXbePatchXBEHSig() {
 	}
 }
 
+static void CxbxrKrnlRegisterDevicePaths()
+{
+	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, g_DiskBasePath + "Partition0", /*IsFile=*/true);
+	// The first two partitions are for Data and Shell files, respectively :
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition1, g_DiskBasePath + "Partition1");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition2, g_DiskBasePath + "Partition2");
+	// The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition3, g_DiskBasePath + "Partition3");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition4, g_DiskBasePath + "Partition4");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition5, g_DiskBasePath + "Partition5");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, g_DiskBasePath + "Partition6");
+	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, g_DiskBasePath + "Partition7");
+	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", g_DiskBasePath + "Chihiro");
+
+	// Create the MU directories and the bin files
+	CxbxRegisterDeviceHostPath(DeviceMU0, g_MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU1, g_MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU2, g_MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU3, g_MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU4, g_MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU5, g_MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU6, g_MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU7, g_MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
+}
+
 /*! initialize emulation */
 static __declspec(noreturn) void CxbxrKrnlInit(
 	void* pTLSData,
@@ -1278,28 +1304,8 @@ static __declspec(noreturn) void CxbxrKrnlInit
 		}
 	}
 
-	// Partition 0 contains configuration data, and is accessed as a native file, instead as a folder :
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition0, g_DiskBasePath + "Partition0", /*IsFile=*/true);
-	// The first two partitions are for Data and Shell files, respectively :
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition1, g_DiskBasePath + "Partition1");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition2, g_DiskBasePath + "Partition2");
-	// The following partitions are for caching purposes - for now we allocate up to 7 (as xbmp needs that many) :
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition3, g_DiskBasePath + "Partition3");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition4, g_DiskBasePath + "Partition4");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition5, g_DiskBasePath + "Partition5");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition6, g_DiskBasePath + "Partition6");
-	CxbxRegisterDeviceHostPath(DeviceHarddisk0Partition7, g_DiskBasePath + "Partition7");
-	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", g_DiskBasePath + "Chihiro");
+	CxbxrKrnlRegisterDevicePaths();
 
-	// Create the MU directories and the bin files
-	CxbxRegisterDeviceHostPath(DeviceMU0, g_MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU1, g_MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU2, g_MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU3, g_MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU4, g_MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU5, g_MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU6, g_MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU7, g_MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
 
 	std::mbstate_t ps = std::mbstate_t();
 	const char *src = g_MuBasePath.c_str();
