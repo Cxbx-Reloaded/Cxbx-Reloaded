@@ -2732,6 +2732,7 @@ int pgraph_handle_method(
 					vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertex3f[1];
 					vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertex3f[2];
 					vertex_attribute->inline_value[3] = 1.0f;
+					vertex_attribute->set_by_inline_buffer = true;
                     break;
                 }
 
@@ -3147,8 +3148,16 @@ int pgraph_handle_method(
 								//setup attribute Format and Offset
 								if (pg->vertex_attributes[i].set_by_inline_buffer) {
 									pg->vertex_attributes[i].format = xbox::X_D3DVSDT_FLOAT4;
+									pg->vertex_attributes[i].count = 4;
+									pg->vertex_attributes[i].size = 4;
 									pg->vertex_attributes[i].offset = uiStride;
 									uiStride += 4 * sizeof(float);
+								}
+								else {
+									pg->vertex_attributes[i].format = xbox::X_D3DVSDT_NONE;
+									pg->vertex_attributes[i].count = 0;
+									pg->vertex_attributes[i].size = 4;
+									pg->vertex_attributes[i].offset = uiStride;
 								}
 
 								//reset the attribute flag for next draw call.
@@ -3156,10 +3165,6 @@ int pgraph_handle_method(
 							}
 
 							DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-								//apply stride to attributes.
-								pg->vertex_attributes[i].format += dwVertexStride<<8;
-							}
 
 							if (pgraph_draw_inline_buffer != nullptr) {
 								//stride needs special re-calc
@@ -3232,6 +3237,7 @@ int pgraph_handle_method(
                         pg->draw_arrays_max_count = 0;
 
 						pg->inline_buffer_length = 0;
+						pg->inline_buffer_attr_length = 0;
 						//reset attribute flag for in_line_buffer
 						for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
 							//reset the attribute flag for next draw call.
@@ -3413,6 +3419,7 @@ int pgraph_handle_method(
                     /* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
                     vertex_attribute->inline_value[2] = 0.0f;
                     vertex_attribute->inline_value[3] = 1.0f;
+					vertex_attribute->set_by_inline_buffer = true;
                     break;
                 }
 
@@ -3445,7 +3452,7 @@ int pgraph_handle_method(
                         vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData4f[slot].M[1];
                         vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertexData4f[slot].M[2];
                         vertex_attribute->inline_value[3] = pg->KelvinPrimitive.SetVertexData4f[slot].M[3];
-						vertex_attribute->inline_buffer[pg->inline_buffer_length];
+						vertex_attribute->set_by_inline_buffer = true;
 						//copy the data to attribute.inline_buffer
 						//memcpy(&vertex_attribute->inline_buffer[pg->inline_buffer_length],
 						//	vertex_attribute->inline_value,
@@ -3477,6 +3484,7 @@ int pgraph_handle_method(
                 vertex_attribute->inline_value[1] = (float)(int16_t)(arg0 >> 16);
                 vertex_attribute->inline_value[2] = 0.0f;
                 vertex_attribute->inline_value[3] = 1.0f;
+				vertex_attribute->set_by_inline_buffer = true;
 				break;
             }
                 /*
@@ -3600,10 +3608,11 @@ int pgraph_handle_method(
 						//if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR||slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
 						//	arg0 = ABGR_to_ARGB(arg0);
 						//}
-						vertex_attribute->inline_value[0] = (arg0 & 0xFF) / 255.0f;
+						vertex_attribute->inline_value[0] = ((arg0 >> 16) & 0xFF) / 255.0f;//swap R and B
 						vertex_attribute->inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
-						vertex_attribute->inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
+						vertex_attribute->inline_value[2] = (arg0 & 0xFF) / 255.0f;        //swap R and B
 						vertex_attribute->inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
+						vertex_attribute->set_by_inline_buffer = true;
 					}
 					   break;
 				}
@@ -3632,6 +3641,7 @@ int pgraph_handle_method(
 						* 2.0f + 1) / 65535.0f;
 					vertex_attribute->inline_value[3] = ((int16_t)(argv[1] >> 16)
 						* 2.0f + 1) / 65535.0f;
+					vertex_attribute->set_by_inline_buffer = true;
 					break;
 				}
 
@@ -4258,10 +4268,11 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
         VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
 		//process the attribute data if it's been set
 		if (vertex_attribute->set_by_inline_buffer ) {
-            memcpy(&vertex_attribute->inline_buffer[
-                      pg->inline_buffer_length * 4],
+            memcpy(&pg->inline_buffer[
+                      pg->inline_buffer_attr_length * 4],
                    vertex_attribute->inline_value,
                    sizeof(float) * 4);
+			pg->inline_buffer_attr_length++;
         }
     }
 

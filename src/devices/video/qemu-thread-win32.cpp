@@ -66,7 +66,9 @@ int qemu_mutex_trylock(QemuMutex *mutex)
 
 void qemu_mutex_unlock(QemuMutex *mutex)
 {
-    assert(mutex->owner == GetCurrentThreadId());
+	if(mutex->owner!=0){//skip the condition where it's alreay unlocked.
+		assert(mutex->owner == GetCurrentThreadId());
+	}
     mutex->owner = 0;
     LeaveCriticalSection(&mutex->lock);
 }
