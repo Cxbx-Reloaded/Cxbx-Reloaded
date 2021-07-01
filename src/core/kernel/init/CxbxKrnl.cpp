@@ -569,6 +569,38 @@ FILE* CxbxrKrnlSetupVerboseLog(int BootFlags)
 	return nullptr;
 }
 
+static void CxbxrKrnlSyncGUI()
+{
+	if (CxbxKrnl_hEmuParent != NULL) {
+		ipc_send_gui_update(IPC_UPDATE_GUI::KRNL_IS_READY, static_cast<UINT>(GetCurrentProcessId()));
+
+		// Force wait until GUI process is ready
+		do {
+			int waitCounter = 10;
+			bool isReady = false;
+
+			while (waitCounter > 0) {
+				g_EmuShared->GetIsReady(&isReady);
+				if (isReady) {
+					break;
+				}
+				waitCounter--;
+				Sleep(100);
+			}
+			if (!isReady) {
+				EmuLog(LOG_LEVEL::WARNING, "GUI process is not ready!");
+				PopupReturn mbRet = PopupWarningEx(nullptr, PopupButtons::RetryCancel, PopupReturn::Cancel,
+					"GUI process is not ready, do you wish to retry?");
+				if (mbRet == PopupReturn::Retry) {
+					continue;
+				}
+				CxbxKrnlShutDown();
+			}
+			break;
+		} while (true);
+	}
+}
+
 /*! initialize emulation */
 static __declspec(noreturn) void CxbxrKrnlInit(
 	void* pTLSData,
@@ -624,12 +656,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	/* Initialize Cxbx-Reloaded File Paths */
 	CxbxrInitFilePaths();
 
-	// Skip '/load' switch
-	// Get XBE Name :
-	std::string xbePath;
-	cli_config::GetValue(cli_config::load, &xbePath);
-	xbePath = std::filesystem::absolute(std::filesystem::path(xbePath)).string();
-
 	// Get DCHandle :
 	// We must save this handle now to keep the child window working in the case we need to display the UEM
 	HWND hWnd = nullptr;
@@ -651,34 +677,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		g_VMManager.GetPersistentMemory();
 	}
 
-	if (CxbxKrnl_hEmuParent != NULL) {
-		ipc_send_gui_update(IPC_UPDATE_GUI::KRNL_IS_READY, static_cast<UINT>(GetCurrentProcessId()));
-
-		// Force wait until GUI process is ready
-		do {
-			int waitCounter = 10;
-			bool isReady = false;
-
-			while (waitCounter > 0) {
-				g_EmuShared->GetIsReady(&isReady);
-				if (isReady) {
-					break;
-				}
-				waitCounter--;
-				Sleep(100);
-			}
-			if (!isReady) {
-				EmuLog(LOG_LEVEL::WARNING, "GUI process is not ready!");
-				PopupReturn mbRet = PopupWarningEx(nullptr, PopupButtons::RetryCancel, PopupReturn::Cancel,
-					"GUI process is not ready, do you wish to retry?");
-				if (mbRet == PopupReturn::Retry) {
-					continue;
-				}
-				CxbxKrnlShutDown();
-			}
-			break;
-		} while (true);
-	}
+	CxbxrKrnlSyncGUI();
 
 	g_EmuShared->SetIsReady(false);
 
