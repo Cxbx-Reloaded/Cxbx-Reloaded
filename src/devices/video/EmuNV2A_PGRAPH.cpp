@@ -3246,19 +3246,22 @@ int pgraph_handle_method(
                         assert(arg0 <= NV097_SET_BEGIN_END_OP_POLYGON);
 						//set KelvinPrimitive.SetBeginEnd with arg0== PrititiveType.
 						pg->KelvinPrimitive.SetBeginEnd = arg0;
-
-                        if (pgraph_draw_state_update != nullptr) {
-                            pgraph_draw_state_update(d);
-                        }
-
+						//we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
+						//because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
+                        //if (pgraph_draw_state_update != nullptr) {
+                        //    pgraph_draw_state_update(d);
+                        //}
+						//init in inline_elements_length for indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
                         pg->inline_elements_length = 0;
+						//init in inline_array_length for drawUP draw calls, which vertices are pushed to pushbuffer, vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
                         pg->inline_array_length = 0;
-                        pg->draw_arrays_length = 0;
+						//init in inline_elements_length for non indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
+						pg->draw_arrays_length = 0;
                         //pg->draw_arrays_min_start = -1;
                         pg->draw_arrays_max_count = 0;
-
-						pg->inline_buffer_length = 0;
-						pg->inline_buffer_attr_length = 0;
+						//init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
+						pg->inline_buffer_length = 0;//this counts the total vertex count
+						pg->inline_buffer_attr_length = 0;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
 						//reset attribute flag for in_line_buffer
 						for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
 							//reset the attribute flag for next draw call.

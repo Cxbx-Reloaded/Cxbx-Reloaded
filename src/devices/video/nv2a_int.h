@@ -673,18 +673,18 @@ typedef struct PGRAPHState {
 	//float light_local_attenuation[NV2A_MAX_LIGHTS][3];
 
 	VertexAttribute vertex_attributes[NV2A_VERTEXSHADER_ATTRIBUTES];
-
+	//init in inline_array_length for drawUP draw calls, which vertices are pushed to pushbuffer, vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
 	unsigned int inline_array_length;
 	uint32_t inline_array[NV2A_MAX_BATCH_LENGTH];
 	GLuint gl_inline_array_buffer;
-
+	//init in inline_elements_length for indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
 	unsigned int inline_elements_length;
 	uint16_t inline_elements[NV2A_MAX_BATCH_LENGTH]; // Cxbx-Reloaded TODO : Restore uint32_t once HLE_draw_inline_elements can using that
-
-	unsigned int inline_buffer_length;
-	unsigned int inline_buffer_attr_length;
+	//init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
+	unsigned int inline_buffer_length;//this counts the total vertex count
+	unsigned int inline_buffer_attr_length;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
 	float inline_buffer[NV2A_MAX_BATCH_LENGTH*16*4];
-
+	//init in inline_elements_length for non indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
 	unsigned int draw_arrays_length;
 	unsigned int draw_arrays_max_count;
 
