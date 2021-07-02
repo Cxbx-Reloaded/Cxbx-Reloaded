@@ -6019,10 +6019,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
             return;
         }
 
-		DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
-
 		DWORD dwCubeFaceOffset = 0;
-		DWORD dwCubeFaceSize = 0;
 		D3DCUBEMAP_FACES last_face = (bCubemap) ? D3DCUBEMAP_FACE_NEGATIVE_Z : D3DCUBEMAP_FACE_POSITIVE_X;
 
 		// Block size only applies to compressed DXT formats
@@ -6036,11 +6033,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
 			// As we iterate through mipmap levels, we'll adjust the source resource offset
 			DWORD dwMipOffset = 0;
-			DWORD pxMipWidth = xboxWidth;
-			DWORD pxMipHeight = xboxHeight;
-			DWORD pxMipDepth = dwDepth;
-            DWORD dwMipRowPitch = dwRowPitch;
-			DWORD dwSrcSlicePitch = dwMipRowPitch * pxMipHeight; // TODO
+			DWORD pxMipWidth = xboxWidth; // the current mip width in pixels
+			DWORD pxMipHeight = xboxHeight; // the current mip height in pixels
+			DWORD pxMipDepth = dwDepth; // the current mip depth in pixels
+			DWORD dwMipRowPitch = dwRowPitch; // bytes to the next row of pixels (or DXT blocks)
 
 			for (unsigned int mipmap_level = 0; mipmap_level < dwMipMapLevels; mipmap_level++) {
 
@@ -6048,16 +6044,22 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				DWORD numRows = pxMipHeight;
 
 				if (bCompressed) {
-					// Each row contains a 4x4 pixel blocks, instead of single pixels
+					// Each row contains a 4x4 pixel DXT blocks, instead of single pixels
 					// So divide by 4 to get the number of rows
 					numRows = (numRows + 3) / 4;
+
+					if (dwDepth > 1) {
+						LOG_TEST_CASE("Unsupported compressed volume texture");
+					}
 				}
 
-				DWORD dwMipSize = dwMipRowPitch * numRows;
+				DWORD mip2dSize = dwMipRowPitch * numRows; // the size of one layer of the mip slice
+				DWORD mipSlicePitch = mip2dSize * pxMipDepth; // the total size of the mip slice (depth is only > 1 for volume textures)
 
 				// Lock the host resource
 				D3DLOCKED_RECT LockedRect = {};
 				D3DLOCKED_BOX LockedBox = {};
+				DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
 
 				switch (XboxResourceType) {
 				case xbox::X_D3DRTYPE_SURFACE:
@@ -6102,28 +6104,26 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					dwDstSlicePitch = 0;
 				}
 
-				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwMipOffset;
+				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
 
-				// Do we need to convert to ARGB?
+				// Copy texture data to the host resource
 				if (bConvertToARGB) {
 					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
 
 					// In case where there is a palettized texture without a palette attached,
 					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
 					// Test case: DRIV3R
-					bool skipDueToNoPalette = false;
-					if (X_Format == xbox::X_D3DFMT_P8 && g_pXbox_Palette_Data[iTextureStage] == nullptr) {
+					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && g_pXbox_Palette_Data[iTextureStage] == nullptr;
+					if (missingPalette) {
 						LOG_TEST_CASE("Palettized texture bound without a palette");
 
 						memset(pDst, 0, dwDstRowPitch * pxMipHeight);
-						skipDueToNoPalette = true;
 					}
-
-					// Convert a row at a time, using a libyuv-like callback approach :
-					if (!skipDueToNoPalette) {
+					else {
+						// Try to convert to ARGB
 						if (!ConvertD3DTextureToARGBBuffer(
 							X_Format,
-							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, dwMipSize,//use dwMipSize instead of dwSrcSlicePitch here, because the mipSize changed in 3D mip map.
+							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
 							pDst, dwDstRowPitch, dwDstSlicePitch,
 							pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
 							iTextureStage)) {
@@ -6132,7 +6132,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					}
 				}
 				else if (bSwizzled) {
-					// First we need to unswizzle the texture data
+					// Unswizzle the texture data into the host texture
 					EmuUnswizzleBox(
 						pSrc, pxMipWidth, pxMipHeight, pxMipDepth,
 						dwBPP, 
@@ -6140,28 +6140,15 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					);
 				}
 				else if (bCompressed) {
-					memcpy(pDst, pSrc, dwMipSize);
+					memcpy(pDst, pSrc, mip2dSize);
 				}
 				else {
-					/* TODO : // Let DirectX convert the surface (including palette formats) :
-					if(!EmuXBFormatRequiresConversionToARGB) {
-						D3DXLoadSurfaceFromMemory(
-							GetHostSurface(pResource),
-							nullptr, // no destination palette
-							&destRect,
-							pSrc, // Source buffer
-							dwMipPitch, // Source pitch
-							g_pXbox_Palette_Data,
-							&SrcRect,
-							D3DX_DEFAULT, // D3DX_FILTER_NONE,
-							0 // No ColorKey?
-							);
-					} else {
-					*/
-					if ((dwDstRowPitch == dwMipRowPitch) && (dwMipRowPitch == pxMipWidth * dwBPP)) {
-						memcpy(pDst, pSrc, dwMipSize);
+					if (dwDstRowPitch == dwMipRowPitch) {
+						// Source and destination layout match - simple copy
+						memcpy(pDst, pSrc, mip2dSize);
 					}
 					else {
+						// Copy accounting for different row pitch
 						for (DWORD v = 0; v < pxMipHeight; v++) {
 							memcpy(pDst, pSrc, pxMipWidth * dwBPP);
 							pDst += dwDstRowPitch;
@@ -6195,12 +6182,8 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					EmuLog(LOG_LEVEL::WARNING, "Unlocking host %s failed!", ResourceTypeName);
 				}
 
-				if (face == D3DCUBEMAP_FACE_POSITIVE_X) {
-					dwCubeFaceSize += pxMipDepth * dwMipSize;
-				}
-
 				// Calculate the next mipmap level dimensions
-				dwMipOffset += pxMipDepth * dwMipSize;//for 3D volumeTexture, the dwDepth >1 in mip_level 0, pxMipDepth must be multiplied.
+				dwMipOffset += mipSlicePitch;
 				if (pxMipWidth > 1) {
 					pxMipWidth /= 2;
 
@@ -6222,11 +6205,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 			} // for mipmap levels
 
-			if (face == D3DCUBEMAP_FACE_POSITIVE_X) {
-				dwCubeFaceSize = ROUND_UP(dwCubeFaceSize, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
-			}
-
-			dwCubeFaceOffset += dwCubeFaceSize;
+			dwCubeFaceOffset += dwSlicePitch;
 		} // for cube faces
 
 
