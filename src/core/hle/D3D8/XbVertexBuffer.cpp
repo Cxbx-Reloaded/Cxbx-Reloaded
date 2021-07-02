@@ -52,12 +52,13 @@
 CxbxVertexBufferConverter VertexBufferConverter = {};
 
 // Inline vertex buffer emulation
-xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
-xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat = {};
-int                          g_InlineVertexBuffer_DeclarationOverride = 0;
-std::vector<D3DIVB>           g_InlineVertexBuffer_Table;
-UINT                          g_InlineVertexBuffer_TableLength = 0;
-UINT                          g_InlineVertexBuffer_TableOffset = 0;
+xbox::X_D3DPRIMITIVETYPE       g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
+int                            g_InlineVertexBuffer_Stride = 0;
+xbox::X_VERTEXATTRIBUTEFORMAT  g_InlineVertexBuffer_AttributeFormat = {};
+xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride = nullptr;
+std::vector<D3DIVB>            g_InlineVertexBuffer_Table;
+UINT                           g_InlineVertexBuffer_TableLength = 0;
+UINT                           g_InlineVertexBuffer_TableOffset = 0;
 
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
 xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
@@ -708,38 +709,35 @@ void CxbxImpl_End()
 		return;
 	}
 
+	CxbxUpdateNativeD3DResources();
+
 	// Compose an Xbox vertex attribute format to pass through all registers
-	static UINT uiStride = 0;
-	static bool isIvbFormatInitialized = false;
-	if (!isIvbFormatInitialized) {
-		isIvbFormatInitialized = true;
+	if (g_InlineVertexBuffer_Stride == 0) { // Do this just once, as the IVB attributes will always be the same, thus also the stride
 		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = X_D3DVSDT_FLOAT4;
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-			uiStride += sizeof(float) * 4;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_FLOAT4;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = g_InlineVertexBuffer_Stride;
+			g_InlineVertexBuffer_Stride += sizeof(float) * 4;
 		}
 	}
 
 	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
-	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+	// so that that declaration will be used for the next draw :
+	g_InlineVertexBuffer_DeclarationOverride = &g_InlineVertexBuffer_AttributeFormat;
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
-
-	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
 
 	DrawContext.XboxPrimitiveType = g_InlineVertexBuffer_PrimitiveType;
 	DrawContext.dwVertexCount = g_InlineVertexBuffer_TableOffset;
 	DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_Table.data();
-	DrawContext.uiXboxVertexStreamZeroStride = uiStride;
+	DrawContext.uiXboxVertexStreamZeroStride = g_InlineVertexBuffer_Stride;
 
 	CxbxDrawPrimitiveUP(DrawContext);
 
 	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-	g_InlineVertexBuffer_DeclarationOverride = 0;
+	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 
 	// TODO: Should technically clean this up at some point..but on XP doesnt matter much
 	//	ExFreePool(g_InlineVertexBuffer_pData);
@@ -830,7 +828,7 @@ float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
 	PGRAPHState *pg = &(dev->pgraph);
 
 	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
-	VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-	return vertex_attribute->inline_value;
+	// VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+	return pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
 }
 

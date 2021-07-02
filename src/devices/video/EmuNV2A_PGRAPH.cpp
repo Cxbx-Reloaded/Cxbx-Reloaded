@@ -652,7 +652,8 @@ void OpenGL_draw_inline_buffer(NV2AState *d)
         }
         else {
             glDisableVertexAttribArray(i);
-            glVertexAttrib4fv(i, vertex_attribute->inline_value);
+			float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+            glVertexAttrib4fv(i, inline_value);
         }
     }
 
@@ -729,7 +730,7 @@ void OpenGL_draw_state_update(NV2AState *d)
 
     assert(pg->opengl_enabled);
 
-    NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", pg->primitive_mode); // was primitive_mode
+    NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", pg->primitive_mode);
 
     //uint32_t control_0 = pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4];
     //uint32_t control_1 = pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4];
@@ -1153,19 +1154,17 @@ int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)
 #define D3D_RECTANGLE_COPY_BETA4                               22
 #define D3D_RECTANGLE_COPY_CLIP_RECTANGLE                      24
 
-//extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat = {};//tmp glue
-
 static uint32_t subchannel_to_graphic_class[8] = { NV_KELVIN_PRIMITIVE,NV_MEMORY_TO_MEMORY_FORMAT,NV_IMAGE_BLIT,NV_CONTEXT_SURFACES_2D,0,NV_CONTEXT_PATTERN,0,0, };
 extern IDirect3DDevice9Ex *g_pD3DDevice;
 extern VertexShaderMode g_Xbox_VertexShaderMode;
 extern void CxbxUpdateHostVertexShader();
-//extern int g_InlineVertexBuffer_DeclarationOverride ;
 //starting address of vertex shader user program
 extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
 //xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
 extern DWORD ABGR_to_ARGB(const uint32_t color);
-xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat = {};
+
+xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat = {};
 
 //get Host FVF with pVAF, not implement yet.
 /*
@@ -1215,7 +1214,7 @@ const DWORD GetHostFVFfromXboxVertexAttributes(xbox::X_VERTEXATTRIBUTEFORMAT *pV
 int pgraph_handle_method(
     NV2AState *d,
     unsigned int subchannel,
-    unsigned int method,
+    uint32_t command_word,
     uint32_t arg0,
     uint32_t *argv,
     uint32_t method_count,
@@ -1229,6 +1228,7 @@ int pgraph_handle_method(
 
     unsigned int i;
     unsigned int slot;
+	uint32_t method = command_word & COMMAND_WORD_MASK_METHOD;
 
     PGRAPHState *pg = &d->pgraph;
 
@@ -1490,8 +1490,6 @@ int pgraph_handle_method(
         //test case:xdk pushbuffer sample.
  
         case NV_KELVIN_PRIMITIVE: {
-#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
-#define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
             //update struct KelvinPrimitive/array regs[] in first round, skip special cases. then we process those state variables if necessary in 2nd round.
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
@@ -1504,17 +1502,15 @@ int pgraph_handle_method(
 
                 case NV097_ARRAY_ELEMENT16: //PUSH_INSTR_IMM_NOINC
                 case NV097_ARRAY_ELEMENT32: //PUSH_INSTR_IMM_NOINC
-				case NV097_DRAW_ARRAYS:		//PUSH_INSTR_IMM_NOINC
-				case NV097_INLINE_ARRAY:	//PUSH_INSTR_IMM_NOINC
+                case NV097_DRAW_ARRAYS:		//PUSH_INSTR_IMM_NOINC
+                case NV097_INLINE_ARRAY:	//PUSH_INSTR_IMM_NOINC
 					//disable for now, arg0 is argument after method. this test is for method dword.
-					//assert(arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All above commands should be non-increasing
+                    assert(command_word >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All above commands should be non-increasing
                     break;
 
                 default:
-					//disable for now, arg0 is argument after method. this test is for method dword.
-					//assert(arg0 >> 29 != COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All other commands should not be non-increasing
-					//assert(arg0 >> 29 == COMMAND_INSTRUCTION_INCREASING_METHODS); // Actually, all other commands should be increasing (as jumps and unknown bits shouldn't arrive here!)
-					
+                    assert(command_word >> 29 != COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All other commands should not be non-increasing
+                    assert(command_word >> 29 == COMMAND_INSTRUCTION_INCREASING_METHODS); // Actually, all other commands should be increasing (as jumps and unknown bits shouldn't arrive here!)
 
 #if 0
                     for (int argc = 0; argc < method_count; argc++) {
@@ -2730,39 +2726,37 @@ int pgraph_handle_method(
                     break;
 
                 CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
-					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
-					slot = (method - NV097_SET_VERTEX3F) / 4;
+					slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
+					int part = (method - NV097_SET_VERTEX3F) / 4;
 					VertexAttribute *vertex_attribute =
-					&pg->vertex_attributes[slot];
+						&pg->vertex_attributes[slot];
 					//allocate attribute.inline_buffer if it's not allocated yet.
-					//pgraph_allocate_inline_buffer_vertices(pg, slot);
-                    vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertex3f[0];
-					vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertex3f[1];
-					vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertex3f[2];
-					vertex_attribute->inline_value[3] = 1.0f;
-					vertex_attribute->set_by_inline_buffer = true;
+					pgraph_allocate_inline_buffer_vertices(pg, slot);
+					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+                    inline_value[part] = pg->KelvinPrimitive.SetVertex3f[part];
+					if (/*(slot == NV2A_VERTEX_ATTR_POSITION) && */(part == 2)) {
+						inline_value[3] = 1.0f;
+						pgraph_finish_inline_buffer_vertex(pg);
+					}
                     break;
                 }
 
 				CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
-					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
-					slot = (method - NV097_SET_VERTEX4F) / 4;
+					slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
+					int part = (method - NV097_SET_VERTEX4F) / 4;
 					VertexAttribute *vertex_attribute =
 						&pg->vertex_attributes[slot];
 					//allocate attribute.inline_buffer if it's not allocated yet.
-					//pgraph_allocate_inline_buffer_vertices(pg, slot);
-					vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertex4f[0];
-					vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertex4f[1];
-					vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertex4f[2];
-					vertex_attribute->inline_value[3] = pg->KelvinPrimitive.SetVertex4f[3];
-					//set flag so when each vertex is completed, it can know which attribute is set and require to be pushed to vertex buffer.
-					vertex_attribute->set_by_inline_buffer = true;
-					if (slot == 0) {//D3DVSDE_POSITION =0     //slot ==0 only happended in NV097_SET_VERTEX_DATA4F
+					pgraph_allocate_inline_buffer_vertices(pg, slot);
+					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+					inline_value[part] = pg->KelvinPrimitive.SetVertex4f[part];
+					if (/*(slot == NV2A_VERTEX_ATTR_POSITION) && */(part == 3)) {
 						//vertex completed, push all attributes to vertex buffer.
 						pgraph_finish_inline_buffer_vertex(pg);
-						pg->inline_buffer_length++;
 					}
 					break;
 				}
@@ -2880,16 +2874,11 @@ int pgraph_handle_method(
 
                 CASE_16(NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 4):{ //done //pg->KelvinPrimitive.SetVertexDataArrayFormat[16]
 					//pg->KelvinPrimitive.SetVertexDataArrayFormat[i] = Attribute [i].Format (SizeAndType) &0xFF + if (draw up method?)Stride << 8 : 0
-					slot = (method - NV097_SET_VERTEX_DATA_ARRAY_FORMAT) / 4;
 					int uiStride = 0;
 					for (size_t argc = 0; argc < method_count; argc++,slot++) {
                         arg0 = argv[argc];
-						//set out own vertex attribute format and offset here.
-						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[argc].Format = argv[argc] & 0xFF;
-						//Attribute.Offset is the offset from start of vertex to start of attribute
-						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[argc].Offset = uiStride;
-						g_NV2AInlineArrayVertexBuffer_AttributeFormat.Slots[argc].StreamIndex = 0;
-
+						slot = (method - NV097_SET_VERTEX_DATA_ARRAY_FORMAT) / 4;
+						slot += argc;
 						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 
                         vertex_attribute->format =
@@ -2962,9 +2951,10 @@ int pgraph_handle_method(
                                 vertex_attribute->converted_buffer = NULL;
                             }
                         }
+
 						//advance out vertex attribute offset
 						if (vertex_attribute->count > 0) {
-							uiStride += vertex_attribute->converted_size*vertex_attribute->count;
+							uiStride += vertex_attribute->converted_size * vertex_attribute->count;
 							switch (argc) {
 							case xbox::X_D3DVSDE_POSITION:
 								pg->HostFVF |= D3DFVF_XYZ;
@@ -3127,140 +3117,96 @@ int pgraph_handle_method(
                     bool depth_test = pg->KelvinPrimitive.SetCullFaceEnable!=0;
                     bool stencil_test = pg->KelvinPrimitive.SetStencilTestEnable!=0;
 
-                    if (arg0 == NV097_SET_BEGIN_END_OP_END) {//the DrawXXX call completes the pushbuffer operation. we can process the rendering.
+                    if (arg0 == NV097_SET_BEGIN_END_OP_END) { // the DrawXXX call completes the pushbuffer operation. we can process the rendering.
 
-                        if (pg->draw_arrays_length>0) {
+                        //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
+                        //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
+                        if (pgraph_draw_state_update != nullptr) {
+                            pgraph_draw_state_update(d);
+                        }
 
+                        switch (pg->draw_mode) {
+                        case  DrawMode::DrawArrays:  {
                             NV2A_GL_DPRINTF(false, "Draw Arrays");
 
-                            assert(pg->inline_buffer_length == 0);
+                            assert(pg->draw_arrays_length > 0);
                             assert(pg->inline_array_length == 0);
+                            assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
 
                             if (pgraph_draw_arrays != nullptr) {
-							    //shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
-								//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-
-									pgraph_draw_arrays(d);
+                                pgraph_draw_arrays(d);
                             }
-                        } else if (pg->inline_buffer_length) {//for draw calls using SET_BEGIN_ENG(primitive)/SET_VERTEX_DATAXXX ... /SET_BEGIN_ENG(0)
-
+                            break;
+                        }
+                        case DrawMode::InlineBuffer: { // for draw calls using SET_BEGIN_ENG(primitive)/SET_VERTEX_DATAXXX ... /SET_BEGIN_ENG(0)
                             NV2A_GL_DPRINTF(false, "Inline Buffer");
 
                             assert(pg->draw_arrays_length == 0);
                             assert(pg->inline_array_length == 0);
+                            assert(pg->inline_buffer_length > 0);
                             assert(pg->inline_elements_length == 0);
-							unsigned int uiStride = 0;
 
-							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-
-								//setup attribute Format and Offset
-								if (pg->vertex_attributes[i].set_by_inline_buffer) {
-									pg->vertex_attributes[i].format = xbox::X_D3DVSDT_FLOAT4;
-									pg->vertex_attributes[i].count = 4;
-									pg->vertex_attributes[i].size = 4;
-									pg->vertex_attributes[i].offset = uiStride;
-									uiStride += 4 * sizeof(float);
-								}
-								else {
-									pg->vertex_attributes[i].format = xbox::X_D3DVSDT_NONE;
-									pg->vertex_attributes[i].count = 0;
-									pg->vertex_attributes[i].size = 4;
-									pg->vertex_attributes[i].offset = uiStride;
-								}
-
-								//reset the attribute flag for next draw call.
-								pg->vertex_attributes[i].set_by_inline_buffer = false;
-							}
-
-							DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-
-							if (pgraph_draw_inline_buffer != nullptr) {
-								//stride needs special re-calc
-
-								//xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
-								//extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes; g_Xbox_SetVertexShaderInput_Attributes = g_NV2AInlineArrayVertexBuffer_AttributeFormat;
-
-								if (dwVertexStride > 0) {
-
-									//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
-									pgraph_draw_inline_buffer(d);
-								}
-								//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
-								//pgraph_draw_inline_buffer(d);
+                            if (pgraph_draw_inline_buffer != nullptr) {
+                                pgraph_draw_inline_buffer(d);
                             }
-							
-                        } else if (pg->inline_array_length) {
-
+                            break;
+                        }
+                        case DrawMode::InlineArray: {
                             NV2A_GL_DPRINTF(false, "Inline Array");
 
                             assert(pg->draw_arrays_length == 0);
+                            assert(pg->inline_array_length > 0);
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
-							unsigned int uiStride = 0;
 
-							//for inline_array, NV2A_SET_VERTEX_DATA_FORMAT was called already. calculate the attribute offset
-							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-
-								//setup attribute Format and Offset
-								if (pg->vertex_attributes[i].count > 0) {
-									pg->vertex_attributes[i].offset = uiStride;
-									uiStride += 4 * sizeof(float);
-								}
-								else {
-									pg->vertex_attributes[i].format = xbox::X_D3DVSDT_NONE;
-									pg->vertex_attributes[i].count = 0;
-									pg->vertex_attributes[i].size = 4;
-									pg->vertex_attributes[i].offset = uiStride;
-								}
-							}
-							//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-
-							if (pgraph_draw_inline_array != nullptr) {
-								//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
-								pgraph_draw_inline_array(d);
+                            if (pgraph_draw_inline_array != nullptr) {
+                                pgraph_draw_inline_array(d);
                             }
-							
-                        } else if (pg->inline_elements_length) {
-
+                            break;
+                        }
+                        case DrawMode::InlineElements: {
                             NV2A_GL_DPRINTF(false, "Inline Elements");
 
                             assert(pg->draw_arrays_length == 0);
-                            assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_array_length == 0);
+                            assert(pg->inline_buffer_length == 0);
+                            assert(pg->inline_elements_length > 0);
 
                             if (pgraph_draw_inline_elements != nullptr) {
-
-								//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
-								pgraph_draw_inline_elements(d);
+                                pgraph_draw_inline_elements(d);
                             }
-                        } else {
+                            break;
+                        }
+                        default:
                             NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
                             assert(false);
-                        }
-						//only clear KelvinPrimitive.SetBeginEnd after we finish draw call
-						pg->primitive_mode = NV097_SET_BEGIN_END_OP_END;
+                        } // switch
+
+                        pg->draw_mode = DrawMode::None;
+
+                        // Only clear primitive_mode after we finish draw call
+                        pg->primitive_mode = NV097_SET_BEGIN_END_OP_END;
 
                     } else {
 
-                        assert(arg0 <= NV097_SET_BEGIN_END_OP_POLYGON);
-						//set KelvinPrimitive.SetBeginEnd with arg0== PrititiveType.
-						pg->primitive_mode = arg0;
-						//we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
-						//because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
-                        //if (pgraph_draw_state_update != nullptr) {
-                        //    pgraph_draw_state_update(d);
-                        //}
-						//init in inline_elements_length for indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
+                        assert(arg0 == pg->KelvinPrimitive.SetBeginEnd); // Verify pg->regs[NV097_SET_BEGIN_END] is reflected in union KelvinPrimitive.SetBeginEnd
+                        assert(arg0 <= NV097_SET_BEGIN_END_OP_POLYGON); // Verify the specified primitive mode is inside the valid range
+
+                        // Copy arg0/KelvinPrimitive.SetBeginEnd, because we still need this value when
+                        // it gets overwritten by NV097_SET_BEGIN_END_OP_END (which triggers the draw) :
+                        pg->primitive_mode = arg0; // identical to reading pg->KelvinPrimitive.SetBeginEnd
+
+                        //init in inline_elements_length for indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
                         pg->inline_elements_length = 0;
-						//init in inline_array_length for drawUP draw calls, which vertices are pushed to pushbuffer, vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
+                        //init in inline_array_length for drawUP draw calls, which vertices are pushed to pushbuffer, vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
                         pg->inline_array_length = 0;
-						//init in inline_elements_length for non indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
-						pg->draw_arrays_length = 0;
+                        //init in inline_elements_length for non indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
+                        pg->draw_arrays_length = 0;
                         //pg->draw_arrays_min_start = -1;
                         pg->draw_arrays_max_count = 0;
-						//init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
-						pg->inline_buffer_length = 0;//this counts the total vertex count
+                        //init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
+                        pg->inline_buffer_length = 0;//this counts the total vertex count
 						pg->inline_buffer_attr_length = 0;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
 						//reset attribute flag for in_line_buffer
 						for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
@@ -3275,6 +3221,11 @@ int pgraph_handle_method(
                 }
 
                 case NV097_ARRAY_ELEMENT16://xbox D3DDevice_DrawIndexedVertices() calls this 
+					if (pg->draw_mode == DrawMode::None)
+						pg->draw_mode = DrawMode::InlineElements;
+					else
+						assert(pg->draw_mode == DrawMode::InlineElements);
+
 					//NV2A hardware limit 2048 pair of index16 max., xbox d3d block size 511 dword (1022 vertices)max.verified with Otogi
 					//  (NV097_SET_BEGIN_END, PrimitiveType)
 					//->if(alignment required) (NV097_ARRAY_ELEMENT16,alignment)
@@ -3297,6 +3248,11 @@ int pgraph_handle_method(
 					break;
 
                 case NV097_ARRAY_ELEMENT32://xbox D3DDevice_DrawIndexedVertices() calls this
+					if (pg->draw_mode == DrawMode::None)
+						pg->draw_mode = DrawMode::InlineElements;
+					else
+						assert(pg->draw_mode == DrawMode::InlineElements);
+
 					// xbox d3d uses NV097_ARRAY_ELEMENT32 to send the very last odd vertex of index vertex stream.
 	                //LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");	
                     // Test-case : Turok (in main menu)
@@ -3310,6 +3266,11 @@ int pgraph_handle_method(
 
                     break;
                 case NV097_DRAW_ARRAYS: {
+					if (pg->draw_mode == DrawMode::None)
+						pg->draw_mode = DrawMode::DrawArrays;
+					else
+						assert(pg->draw_mode == DrawMode::DrawArrays);
+
 					/*
 					D3DDevice_DrawVertices(
 						D3DPRIMITIVETYPE PrimitiveType,
@@ -3366,11 +3327,16 @@ int pgraph_handle_method(
 					}
 					pg->gl_draw_arrays_start[pg->draw_arrays_length] = start;
 					pg->gl_draw_arrays_count[pg->draw_arrays_length] = total_vertex_count;
-					pg->draw_arrays_length  ++;
+					pg->draw_arrays_length++;
 					break;
                 }
 
 				case NV097_INLINE_ARRAY://xbox D3DDevice_DrawVerticesUP() D3DDevice_DrawIndexedVerticesUP calls this
+					if (pg->draw_mode == DrawMode::None)
+						pg->draw_mode = DrawMode::InlineArray;
+					else
+						assert(pg->draw_mode == DrawMode::InlineArray);
+
 					//we only know how many DWORDs of data is coming.
 					//D3DDevice_DrawVerticesUP() Otogi: max. 16 vertices each batch, but data per vertex is not fixed.
 					//D3DDevice_DrawIndexedVerticesUP:
@@ -3431,19 +3397,20 @@ int pgraph_handle_method(
 					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 					//register is set one at a time per method, for loop should be redundant.
-					slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
-					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+                    slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
                     unsigned int part = slot % 2;// 0:a or 1:b
                     slot /= 2;//register
                     //pgraph_allocate_inline_buffer_vertices(pg, slot);
+                    VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // Was vertex_attribute->inline_value;
+                    inline_value[part] = pg->KelvinPrimitive.SetVertexData2f[slot].M[part];
                     //M[a,b] are sent in the same time. shall be processed together.
                     //vertex_attribute->inline_value[part] = *(float*)&arg0;
-                    vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData2f[slot].M[0];
-                    vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData2f[slot].M[1];
-                    /* FIXME: Should these really be set to 0.0 and 1.0 ? Conditions? */
-                    vertex_attribute->inline_value[2] = 0.0f;
-                    vertex_attribute->inline_value[3] = 1.0f;
-					vertex_attribute->set_by_inline_buffer = true;
+                    if ((slot == NV2A_VERTEX_ATTR_POSITION) && (part == 1)) {
+                        inline_value[2] = 0.0f;
+                        inline_value[3] = 1.0f;
+                        pgraph_finish_inline_buffer_vertex(pg);
+                    }
                     break;
                 }
 
@@ -3460,33 +3427,26 @@ int pgraph_handle_method(
 					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 				    //register is set one at a time per method, for loop should be redundant.
-					slot = (method - NV097_SET_VERTEX_DATA4F_M) / 4;
-					//for (size_t argc = 0; argc < method_count; argc++) {
-                    //    arg0 = argv[argc];
-
+					for (size_t argc = 0; argc < method_count; argc++) {
+                        arg0 = argv[argc];
+						slot = (method - NV097_SET_VERTEX_DATA4F_M) / 4;
+						slot += argc;
                         unsigned int part = slot % 4;//index in M[]
                         slot /= 4;//register
                         VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 						//allocate attribute.inline_buffer if it's not allocated yet.
-						//pgraph_allocate_inline_buffer_vertices(pg, slot);
-                        //vertex_attribute->inline_value[part] = *(float*)&arg0;
+						pgraph_allocate_inline_buffer_vertices(pg, slot);
+						// float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+						// inline_value[part] = *(float*)&arg0; // These values are already generically written to KelvinPrimitive.SetVertexData4f[][]
 
 						//this is redundant. we're going to copy the inline_value[] to inline_buffer[]
-						vertex_attribute->inline_value[0] = pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
-                        vertex_attribute->inline_value[1] = pg->KelvinPrimitive.SetVertexData4f[slot].M[1];
-                        vertex_attribute->inline_value[2] = pg->KelvinPrimitive.SetVertexData4f[slot].M[2];
-                        vertex_attribute->inline_value[3] = pg->KelvinPrimitive.SetVertexData4f[slot].M[3];
-						vertex_attribute->set_by_inline_buffer = true;
-						//copy the data to attribute.inline_buffer
-						//memcpy(&vertex_attribute->inline_buffer[pg->inline_buffer_length],
-						//	vertex_attribute->inline_value,
-						//	sizeof(float) * 4);
-                    //}
-					//if ((slot == 0) && (part == 3)) {
-					//if ((slot == 0)) {//D3DVSDE_POSITION   //slot ==0 only happended in NV097_SET_VERTEX_DATA4F
-						//shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
-					//	pgraph_finish_inline_buffer_vertex(pg);
-					//}
+						// Actually, it's not redundant; Each attribute must keep intact it's most recently assigned values,
+						// so that even a single write will keep on being read when all attribute values are collected to form another vertex
+						if ((slot == NV2A_VERTEX_ATTR_POSITION) && (part == 3)) { // D3DVSDE_POSITION   // slot ==0 only happended in NV097_SET_VERTEX_DATA4F
+							//shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
+							pgraph_finish_inline_buffer_vertex(pg);
+						}
+                    }
 					break;
                 }
             /*
@@ -3503,12 +3463,15 @@ int pgraph_handle_method(
 				slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
                 //assert(false); /* FIXME: Untested! */
                 VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-                //pgraph_allocate_inline_buffer_vertices(pg, slot);
-                vertex_attribute->inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
-                vertex_attribute->inline_value[1] = (float)(int16_t)(arg0 >> 16);
-                vertex_attribute->inline_value[2] = 0.0f;
-                vertex_attribute->inline_value[3] = 1.0f;
-				vertex_attribute->set_by_inline_buffer = true;
+                pgraph_allocate_inline_buffer_vertices(pg, slot);
+				float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+				inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
+                inline_value[1] = (float)(int16_t)(arg0 >> 16);
+				if (slot == NV2A_VERTEX_ATTR_POSITION) {
+					inline_value[2] = 0.0f;
+					inline_value[3] = 1.0f;
+					pgraph_finish_inline_buffer_vertex(pg);
+				}
 				break;
             }
                 /*
@@ -3610,7 +3573,7 @@ int pgraph_handle_method(
                     */
                     //register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
-					if (pg->primitive_mode == NV097_SET_BEGIN_END_OP_END) {//we're out side of Begin/End block, should be setting fix function vertex shader
+					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {//we're out side of Begin/End block, should be setting fix function vertex shader
 						//set fix fuction handle. where to set X_D3DFVF_XYZ for X_D3DVSDE_POSITION?
 						if (slot== xbox::X_D3DVSDE_DIFFUSE && arg0 == -1)pg->vsh_FVF_handle |= X_D3DFVF_DIFFUSE;
 						if (slot == xbox::X_D3DVSDE_SPECULAR && arg0 == 0)pg->vsh_FVF_handle |= X_D3DFVF_SPECULAR;
@@ -3627,15 +3590,17 @@ int pgraph_handle_method(
 					}
 					else {//in Begin/End block. data transferred are vertices.
 						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+						pgraph_allocate_inline_buffer_vertices(pg, slot);
 						//do we need to swap the color ARGB/ABGR if the slor is D3DVSDE_DIFFUSE or D3DVSDE_SPECULAR ?
 						//don't swap now. let's make the decision of when to swap/whther to swap later.
 						//if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR||slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
 						//	arg0 = ABGR_to_ARGB(arg0);
 						//}
-						vertex_attribute->inline_value[0] = ((arg0 >> 16) & 0xFF) / 255.0f;//swap R and B
-						vertex_attribute->inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
-						vertex_attribute->inline_value[2] = (arg0 & 0xFF) / 255.0f;        //swap R and B
-						vertex_attribute->inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
+						float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+						inline_value[0] = ((arg0 >> 16) & 0xFF) / 255.0f;//swap R and B
+						inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
+						inline_value[2] = (arg0 & 0xFF) / 255.0f;        //swap R and B
+						inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
 						vertex_attribute->set_by_inline_buffer = true;
 					}
 					   break;
@@ -3655,16 +3620,14 @@ int pgraph_handle_method(
 					//register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
 					slot /= 2;//register
+					pgraph_allocate_inline_buffer_vertices(pg, slot);
 					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
 					/* FIXME: Is mapping to [-1,+1] correct? */
-					vertex_attribute->inline_value[0] = ((int16_t)(arg0 & 0xFFFF)
-						* 2.0f + 1) / 65535.0f;
-					vertex_attribute->inline_value[1] = ((int16_t)(arg0 >> 16)
-						* 2.0f + 1) / 65535.0f;
-					vertex_attribute->inline_value[2] = ((int16_t)(argv[1] & 0xFFFF)
-						* 2.0f + 1) / 65535.0f;
-					vertex_attribute->inline_value[3] = ((int16_t)(argv[1] >> 16)
-						* 2.0f + 1) / 65535.0f;
+					inline_value[0] = ((int16_t)(arg0 & 0xFFFF)		* 2.0f + 1) / 65535.0f;
+					inline_value[1] = ((int16_t)(arg0 >> 16)		* 2.0f + 1) / 65535.0f;
+					inline_value[2] = ((int16_t)(argv[1] & 0xFFFF)	* 2.0f + 1) / 65535.0f;
+					inline_value[3] = ((int16_t)(argv[1] >> 16)		* 2.0f + 1) / 65535.0f;
 					vertex_attribute->set_by_inline_buffer = true;
 					break;
 				}
@@ -3996,14 +3959,9 @@ int pgraph_handle_method(
 								//xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 								//this is required to enable CxbxUpdateHostVertexShader()
 								//g_bUsePassthroughHLSL = true;
-								//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-								//int old_override = g_InlineVertexBuffer_DeclarationOverride;
-								//override might not be needed for vertex shader creation.
-								//g_InlineVertexBuffer_DeclarationOverride = 2;
+								//g_NV2AVertexAttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
 								//create pass through vertex shader
 								//CxbxUpdateHostVertexShader();
-								//do we really have to restore the override?
-								//g_InlineVertexBuffer_DeclarationOverride = old_override;
 							}
 						}
 						/*
@@ -4087,7 +4045,7 @@ int pgraph_handle_method(
 					CxbxDrawContext DrawContext = {};
 
 					DrawContext.pXboxIndexData = false;
-					DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was pg->primitive_mode;
+					DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 					DrawContext.dwVertexCount = VertexCount;
 					DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 					DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
@@ -4096,7 +4054,7 @@ int pgraph_handle_method(
 					what else do I need to do?
 					1. to set g_Xbox_VertexShader_Handle = Handle;? need a dummy Vertex Structure, then create a Vertex Handle.
 					2. find a way to update vertex attribute info to HLE.
-					   setup FVF using g_NV2AInlineArrayVertexBuffer_AttributeFormat, then call IDirect3DDevice9::SetFVF(FVF) shall work.
+					   setup FVF using g_NV2AVertexAttributeFormat, then call IDirect3DDevice9::SetFVF(FVF) shall work.
 					g_d3dDevice->SetFVF(VertexFVF);
 					g_d3dDevice->SetStreamSource(0, pBigSquareVB, 0, sizeof(LVertex));
 					g_d3dDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0 ,2);
@@ -4122,10 +4080,7 @@ int pgraph_handle_method(
 
 					// set vertes attributes and Formats
 
-					//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-					//int old_override = g_InlineVertexBuffer_DeclarationOverride;
-                    //override might not be needed for vertex shader creation.
-					//g_InlineVertexBuffer_DeclarationOverride = 2;
+					//g_NV2AVertexAttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
 					
 					//set HLE vertex shader mode global
 					//shader program mode shall be set as ShaderProgram  in NV097_SET_TRANSFORM_EXECUTION_MODE
@@ -4134,8 +4089,6 @@ int pgraph_handle_method(
 					//g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
 					//create and set host vertex shader from NV2A shader program slots. for now, just call it.
 					//CxbxUpdateHostVertexShader();
-
-					//g_InlineVertexBuffer_DeclarationOverride = old_override;
 					break;
 				}
                 case NV097_SET_TRANSFORM_CONSTANT_LOAD://done //pg->KelvinPrimitive.SetTransformConstantLoad
@@ -4262,46 +4215,54 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
     unsigned int i;
     VertexAttribute *vertex_attribute = &pg->vertex_attributes[attr];
 
-    //if (vertex_attribute->inline_buffer || pg->inline_buffer_length == 0) {
+	//set flag so when each vertex is completed, it can know which attribute is set and require to be pushed to vertex buffer.
+	vertex_attribute->set_by_inline_buffer = true;
+
+	//if (vertex_attribute->inline_buffer || pg->inline_buffer_length == 0) {
 	//return if the buffer is already allocated.
 	if (vertex_attribute->inline_buffer) {
         return;
     }
 
-    
 	//allocate the inline buffer for vertex attribute,
     vertex_attribute->inline_buffer = (float*)g_malloc(NV2A_MAX_BATCH_LENGTH
                                                   * sizeof(float) * 4);
 
 	/* Now upload the previous vertex_attribute value */
-	/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation.
+	/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation. */
+	float *inline_value = pg->KelvinPrimitive.SetVertexData4f[attr].M; // was vertex_attribute->inline_value;
 	for (i = 0; i < pg->inline_buffer_length; i++) {
-        memcpy(&vertex_attribute->inline_buffer[i * 4],
-               vertex_attribute->inline_value,
+		memcpy(&vertex_attribute->inline_buffer[i * 4],
+               inline_value,
                sizeof(float) * 4);
     }
-	*/
 }
 
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
 {
     unsigned int i;
 
-    assert(pg->inline_buffer_length < NV2A_MAX_BATCH_LENGTH);
+	if (pg->draw_mode == DrawMode::None)
+		pg->draw_mode = DrawMode::InlineBuffer;
+	else
+		assert(pg->draw_mode == DrawMode::InlineBuffer);
+
+	assert(pg->inline_buffer_length < NV2A_MAX_BATCH_LENGTH);
 
     for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
 		//process the attribute data if it's been set
 		if (vertex_attribute->set_by_inline_buffer ) {
-            memcpy(&pg->inline_buffer[
+			float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+			memcpy(&vertex_attribute->inline_buffer[
                       pg->inline_buffer_attr_length * 4],
-                   vertex_attribute->inline_value,
+                   inline_value,
                    sizeof(float) * 4);
 			pg->inline_buffer_attr_length++;
         }
     }
 
-
+    pg->inline_buffer_length++;
 }
 
 void pgraph_init(NV2AState *d)
@@ -4666,7 +4627,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
     state.z_perspective = pg->KelvinPrimitive.SetControl0 & NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE;
 
     /* geometry shader stuff */
-    state.primitive_mode = (enum ShaderPrimitiveMode)pg->primitive_mode; // was primitive_mode;
+    state.primitive_mode = (enum ShaderPrimitiveMode)pg->primitive_mode;
     state.polygon_front_mode = (enum ShaderPolygonMode)pg->KelvinPrimitive.SetFrontPolygonMode;
     state.polygon_back_mode = (enum ShaderPolygonMode)pg->KelvinPrimitive.SetBackPolygonMode;
 
@@ -5627,104 +5588,106 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
 
     for (i=0; i<NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
         VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
-        if (vertex_attribute->count) {
-            uint8_t *data;
-            unsigned int in_stride;
-            if (inline_data && vertex_attribute->needs_conversion) {
-                data = (uint8_t*)pg->inline_array
-                        + vertex_attribute->inline_array_offset;
-                in_stride = inline_stride;
-            } else {
-                hwaddr dma_len;
-                if (vertex_attribute->dma_select) {
-                    data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaVertexB, &dma_len);
-                } else {
-                    data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaVertexA, &dma_len);
-                }
-
-                assert(vertex_attribute->offset < dma_len);
-                data += vertex_attribute->offset;
-
-                in_stride = vertex_attribute->stride;
-            }
-
-            if (vertex_attribute->needs_conversion) {
-                NV2A_DPRINTF("converted %d\n", i);
-
-                unsigned int out_stride = vertex_attribute->converted_size
-                                        * vertex_attribute->converted_count;
-
-                if (num_elements > vertex_attribute->converted_elements) {
-                    vertex_attribute->converted_buffer = (uint8_t*)g_realloc(
-                        vertex_attribute->converted_buffer,
-                        num_elements * out_stride);
-                }
-
-                for (j=vertex_attribute->converted_elements; j<num_elements; j++) {
-                    uint8_t *in = data + j * in_stride;
-                    uint8_t *out = vertex_attribute->converted_buffer + j * out_stride;
-
-                    switch (vertex_attribute->format) {
-                    case NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_CMP: {
-                        uint32_t p = ldl_le_p((uint32_t*)in);
-                        float *xyz = (float*)out;
-                        xyz[0] = ((int32_t)(((p >>  0) & 0x7FF) << 21) >> 21)
-                                                                      / 1023.0f;
-                        xyz[1] = ((int32_t)(((p >> 11) & 0x7FF) << 21) >> 21)
-                                                                      / 1023.0f;
-                        xyz[2] = ((int32_t)(((p >> 22) & 0x3FF) << 22) >> 22)
-                                                                       / 511.0f;
-                        break;
-                    }
-                    default:
-                        assert(false);
-                        break;
-                    }
-                }
-
-
-                glBindBuffer(GL_ARRAY_BUFFER, vertex_attribute->gl_converted_buffer);
-                if (num_elements != vertex_attribute->converted_elements) {
-                    glBufferData(GL_ARRAY_BUFFER,
-                                 num_elements * out_stride,
-                                 vertex_attribute->converted_buffer,
-                                 GL_DYNAMIC_DRAW);
-                    vertex_attribute->converted_elements = num_elements;
-                }
-
-
-                glVertexAttribPointer(i,
-                    vertex_attribute->converted_count,
-                    vertex_attribute->gl_type,
-                    vertex_attribute->gl_normalize,
-                    out_stride,
-                    0);
-            } else if (inline_data) {
-                glBindBuffer(GL_ARRAY_BUFFER, pg->gl_inline_array_buffer);
-                glVertexAttribPointer(i,
-                                      vertex_attribute->gl_count,
-                                      vertex_attribute->gl_type,
-                                      vertex_attribute->gl_normalize,
-                                      inline_stride,
-                                      (void*)(uintptr_t)vertex_attribute->inline_array_offset);
-            } else {
-                hwaddr addr = data - d->vram_ptr;
-                pgraph_update_memory_buffer(d, addr,
-                                            num_elements * vertex_attribute->stride,
-                                            false);
-                glVertexAttribPointer(i,
-                    vertex_attribute->gl_count,
-                    vertex_attribute->gl_type,
-                    vertex_attribute->gl_normalize,
-                    vertex_attribute->stride,
-                    (void*)(uint64_t)(addr));
-            }
-            glEnableVertexAttribArray(i);
-        } else {
+        if (vertex_attribute->count == 0) {
             glDisableVertexAttribArray(i);
-
-            glVertexAttrib4fv(i, vertex_attribute->inline_value);
+			float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+            glVertexAttrib4fv(i, inline_value);
+            continue;
         }
+
+        uint8_t *data;
+        unsigned int in_stride;
+        if (inline_data && vertex_attribute->needs_conversion) {
+            data = (uint8_t*)pg->inline_array
+                    + vertex_attribute->inline_array_offset;
+            in_stride = inline_stride;
+        } else {
+            hwaddr dma_len;
+            if (vertex_attribute->dma_select) {
+                data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaVertexB, &dma_len);
+            } else {
+                data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaVertexA, &dma_len);
+            }
+
+            assert(vertex_attribute->offset < dma_len);
+            data += vertex_attribute->offset;
+
+            in_stride = vertex_attribute->stride;
+        }
+
+        if (vertex_attribute->needs_conversion) {
+            NV2A_DPRINTF("converted %d\n", i);
+
+            unsigned int out_stride = vertex_attribute->converted_size
+                                    * vertex_attribute->converted_count;
+
+            if (num_elements > vertex_attribute->converted_elements) {
+                vertex_attribute->converted_buffer = (uint8_t*)g_realloc(
+                    vertex_attribute->converted_buffer,
+                    num_elements * out_stride);
+            }
+
+            for (j=vertex_attribute->converted_elements; j<num_elements; j++) {
+                uint8_t *in = data + j * in_stride;
+                uint8_t *out = vertex_attribute->converted_buffer + j * out_stride;
+
+                switch (vertex_attribute->format) {
+                case NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE_CMP: {
+                    uint32_t p = ldl_le_p((uint32_t*)in);
+                    float *xyz = (float*)out;
+                    xyz[0] = ((int32_t)(((p >>  0) & 0x7FF) << 21) >> 21)
+                                                                    / 1023.0f;
+                    xyz[1] = ((int32_t)(((p >> 11) & 0x7FF) << 21) >> 21)
+                                                                    / 1023.0f;
+                    xyz[2] = ((int32_t)(((p >> 22) & 0x3FF) << 22) >> 22)
+                                                                    / 511.0f;
+                    break;
+                }
+                default:
+                    assert(false);
+                    break;
+                }
+            }
+
+
+            glBindBuffer(GL_ARRAY_BUFFER, vertex_attribute->gl_converted_buffer);
+            if (num_elements != vertex_attribute->converted_elements) {
+                glBufferData(GL_ARRAY_BUFFER,
+                                num_elements * out_stride,
+                                vertex_attribute->converted_buffer,
+                                GL_DYNAMIC_DRAW);
+                vertex_attribute->converted_elements = num_elements;
+            }
+
+
+            glVertexAttribPointer(i,
+                vertex_attribute->converted_count,
+                vertex_attribute->gl_type,
+                vertex_attribute->gl_normalize,
+                out_stride,
+                0);
+        } else if (inline_data) {
+            glBindBuffer(GL_ARRAY_BUFFER, pg->gl_inline_array_buffer);
+            glVertexAttribPointer(i,
+                                    vertex_attribute->gl_count,
+                                    vertex_attribute->gl_type,
+                                    vertex_attribute->gl_normalize,
+                                    inline_stride,
+                                    (void*)(uintptr_t)vertex_attribute->inline_array_offset);
+        } else {
+            hwaddr addr = data - d->vram_ptr;
+            pgraph_update_memory_buffer(d, addr,
+                                        num_elements * vertex_attribute->stride,
+                                        false);
+            glVertexAttribPointer(i,
+                vertex_attribute->gl_count,
+                vertex_attribute->gl_type,
+                vertex_attribute->gl_normalize,
+                vertex_attribute->stride,
+                (void*)(uint64_t)(addr));
+        }
+
+        glEnableVertexAttribArray(i);
     }
     NV2A_GL_DGROUP_END();
 }

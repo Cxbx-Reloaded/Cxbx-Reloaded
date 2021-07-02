@@ -143,6 +143,7 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
 			//sleep for a while
 			Sleep(1);
         }
+
         if (*status & NV_PFIFO_CACHE1_STATUS_HIGH_MARK) {
             // unset high mark
             *status &= ~NV_PFIFO_CACHE1_STATUS_HIGH_MARK;
@@ -150,14 +151,9 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
             qemu_cond_signal(&d->pfifo.pusher_cond);            
         }
 
-
-        uint32_t method = method_entry & 0x1FFC;// shouldn't it be applied with <<?
-
-        //uint32_t method_new = GET_MASK(method_entry, NV_PFIFO_CACHE1_DMA_STATE_METHOD) << 2;//code from run_pusher compare method and method_new
+        uint32_t subchannel = GET_MASK(method_entry, NV_PFIFO_CACHE1_METHOD_SUBCHANNEL); 
+        uint32_t method = method_entry & NV_PFIFO_CACHE1_METHOD_ADDRESS; // (Same as NV_PFIFO_CACHE1_DMA_STATE_METHOD) Masking is more efficient than GET_MASK(method_entry, NV_PFIFO_CACHE1_DMA_STATE_METHOD) << 2; //code from run_pusher compare method and method_new
         uint32_t method_count =	GET_MASK(method_entry, NV_PFIFO_CACHE1_DMA_STATE_METHOD_COUNT);//code from run_pusher
-
-        uint32_t subchannel = GET_MASK(method_entry, NV_PFIFO_CACHE1_METHOD_SUBCHANNEL);
-
 
         // NV2A_DPRINTF("pull %d 0x%08X 0x%08X - subch %d\n", get/4, method_entry, parameter, subchannel);
 
@@ -187,7 +183,7 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
             //pgraph_handle_method(
             //	d,						//NV2AState
             //	subc,					//Subchannel
-            //	mthd << 2,				//method
+            //	mthd,					//command word
             //	word,					//first parameter
             //	dma_get,				//parameters, pointer to 1st parameter, which is exact parameter in the args.
             //	mcnt,					//method count
@@ -196,7 +192,7 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
             num_processed = pgraph_handle_method(
                 d,						//NV2AState
                 subchannel,				//NV2AState
-                0,						//method
+                0,						//command word
                 entry.instance,			//first parameter
                 &entry.instance,		//parameters, pointer to 1st parameter, which is exact parameter in the args.
                 MIN(method_count, 1),						//method count
@@ -235,13 +231,13 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
             //pgraph_handle_method(
             //	d,						//NV2AState
             //	subc,					//Subchannel
-            //	mthd << 2,				//method
+            //	mthd,					//command word
             //	word,					//first parameter
             //	dma_get,				//parameters, pointer to 1st parameter, which is exact parameter in the args.
             //	mcnt,					//method count
             //	max_words_available);   //words still available in the pushbuffer
 
-            num_processed=pgraph_handle_method(
+            num_processed = pgraph_handle_method(
                 d,
                 subchannel,
                 method,

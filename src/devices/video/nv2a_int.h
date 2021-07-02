@@ -146,9 +146,10 @@ typedef struct VertexAttribute {
 	* Need to pass the offset to converted attributes */
 	unsigned int inline_array_offset;
 
-	float inline_value[4];
+	// float inline_value[4]; replaced by pg->KelvinPrimitive.SetVertexData4f[].M
+
 	//flag to indicate whether the attribute is set during attribute upload process. 
-	bool set_by_inline_buffer = false;
+	bool set_by_inline_buffer = false; // Note : for now, this bool is identical to (inline_buffer != nullptr)
 
 	unsigned int format;
 	unsigned int size; /* size of the data type */
@@ -459,8 +460,8 @@ typedef struct NV097KelvinPrimitive{
 	uint32_t InvalidateVertexFile;
 	uint32_t TlNop;
 	uint32_t TlSync;
-	uint32_t SetVertexDataArrayOffset[16];	//0x00001720
-	uint32_t SetVertexDataArrayFormat[16];	//0x00001760
+	uint32_t SetVertexDataArrayOffset[16];	//0x00001720 See OpenGL vertex_attributes.offset + CONTIGUOUS_MEMORY_BASE
+	uint32_t SetVertexDataArrayFormat[16];	//0x00001760 See OpenGL vertex_attributes.format and .size and .stride
 	float SetBackSceneAmbientColor[3];	//0x000017A0
 	float SetBackMaterialAlpha;
 	float SetBackMaterialEmission[3];	//0x000017B0
@@ -568,7 +569,53 @@ typedef struct NV097KelvinPrimitive{
 	uint32_t Rev_1fe8[0x18 / 4];			//0x00001fe8 Reserved for NV_PGRAPH_XXX registers
 } NV097KelvinPrimitive;
 
+typedef union {
+	/* https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-commands-pre-gf100-format
 
+	    123 12345678901 12 123 12345678901 12
+		000 CCCCCCCCCCC 00 SSS MMMMMMMMMMM 00	increasing methods [NV4+]
+		000 00000000000 10 000 00000000000 00	return [NV1A+, NV4-style only]
+		001 JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 00	old jump [NV4+, NV4-style only]
+		010 CCCCCCCCCCC 00 SSS MMMMMMMMMMM 00	non-increasing methods [NV10+]
+		JJJ JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 01	jump [NV1A+, NV4-style only]
+		JJJ JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 10	call [NV1A+, NV4-style only]
+
+		C = method Count, S = Subchannel, M = first Method, J = Jump address
+	*/
+	// Entire 32 bit command word, and an overlay for the above use-cases :
+	uint32_t            word;                    /*  0 .. 31 */
+	struct {
+		uint32_t        type : 2;        /*  0 ..  1 */
+			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-control-flow-commands
+#define COMMAND_TYPE_NONE        0
+#define COMMAND_TYPE_JUMP_LONG   1
+#define COMMAND_TYPE_CALL        2
+		uint32_t        method : 11;       /*  2 .. 12 */
+		uint32_t        subchannel : 3;        /* 13 .. 15 */
+		uint32_t        flags : 2;        /* 16 .. 17 */
+			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-method-submission-commands
+#define COMMAND_FLAGS_NONE                         0
+#define COMMAND_FLAGS_SLI_CONDITIONAL              1 // (NV40+)
+#define COMMAND_FLAGS_RETURN                       2
+#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS  3 // [IB-mode only] 
+		uint32_t        method_count : 11;       /* 18 .. 28 */
+		uint32_t        instruction : 3;        /* 29 .. 31 */
+#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
+#define COMMAND_INSTRUCTION_JUMP                   1
+#define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
+	};
+#define COMMAND_WORD_MASK_METHOD    0x00001FFC /*  2 .. 12 */ // See NV_PFIFO_CACHE1_DMA_STATE_METHOD, PUSH_METHOD_MASK
+#define COMMAND_WORD_MASK_JUMP      0x1FFFFFFC /*  2 .. 31 */
+#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 28 */
+} nv_fifo_command;
+
+typedef enum class _DrawMode {
+	None,
+	DrawArrays,
+	InlineArray,
+	InlineElements,
+	InlineBuffer,
+} DrawMode;
 
 typedef struct PGRAPHState {
 	bool opengl_enabled; // == bLLE_GPU
@@ -633,7 +680,7 @@ typedef struct PGRAPHState {
 	//KelvinPrimitive.SetContextDmaVertexA , KelvinPrimitive.SetContextDmaVertexB
 	//xbox::addr_xt dma_vertex_a, dma_vertex_b;
 
-	unsigned int primitive_mode; //KelvinPrimitive.SetBeginEnd
+	unsigned int primitive_mode; // Copy of KelvinPrimitive.SetBeginEnd
 
 	//unsigned int clear_surface; using pg->KelvinPrimitive.ClearSurface or pg->regs[NV097_CLEAR_SURFACE] directly
     //pg->clear_surface  
@@ -674,6 +721,7 @@ typedef struct PGRAPHState {
 
 	VertexAttribute vertex_attributes[NV2A_VERTEXSHADER_ATTRIBUTES];
 	//init in inline_array_length for drawUP draw calls, which vertices are pushed to pushbuffer, vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
+	DrawMode draw_mode;
 	unsigned int inline_array_length;
 	uint32_t inline_array[NV2A_MAX_BATCH_LENGTH];
 	GLuint gl_inline_array_buffer;
@@ -683,7 +731,7 @@ typedef struct PGRAPHState {
 	//init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
 	unsigned int inline_buffer_length;//this counts the total vertex count
 	unsigned int inline_buffer_attr_length;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
-	float inline_buffer[NV2A_MAX_BATCH_LENGTH*16*4];
+	//float inline_buffer[NV2A_MAX_BATCH_LENGTH*16*4];
 	//init in inline_elements_length for non indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
 	unsigned int draw_arrays_length;
 	unsigned int draw_arrays_max_count;

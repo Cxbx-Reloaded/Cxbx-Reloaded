@@ -90,20 +90,12 @@ void EmuExecutePushBuffer
             */
         }
 	}
-extern	int                          g_InlineVertexBuffer_DeclarationOverride;//TMP glue
-	//g_NV2AInlineArrayVertexBuffer_AttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-	int old_override = g_InlineVertexBuffer_DeclarationOverride;
-	//override might not be needed for vertex shader creation.
-	//g_InlineVertexBuffer_DeclarationOverride = 2;
-
+	//g_NV2AVertexAttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
 
 	//the pushbuffer size must be subtracted with 4, because xbox d3d append 1 dwords at the end of original pushbuffer when creating a new pushbuffer,
 	//the appended dword is 0xbaadf00d, and when execute the pushbuffer, it insert a jump command in that dword to jump back to main pushbuffer.
 	//pDevice-PUSH. but here we do doing HLE, we are not using real push buffer and real dma. so exclude the last dword.
     EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
-
-
-	//g_InlineVertexBuffer_DeclarationOverride = old_override;
 
     return;
 }
@@ -141,12 +133,8 @@ DWORD CxbxGetStrideFromVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDecla
 
 extern int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg);
 //for inline_arrays
-extern int g_InlineVertexBuffer_DeclarationOverride; // TMP glue
-//1 for IVB, using g_InlineVertexBuffer_AttributeFormat. 2 for inline arrays using g_InlineVertexBuffer_DeclarationOverride
-//try always use g_InlineVertexBuffer_AttributeFormat whenever for inline_arrarys or inline_buffers.
-extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AInlineArrayVertexBuffer_AttributeFormat;
-//for IVB, inline_buffer
-extern xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat;
+extern xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride; // TMP glue
+extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat;
 
 void HLE_draw_arrays(NV2AState *d)
 {
@@ -155,7 +143,8 @@ void HLE_draw_arrays(NV2AState *d)
 	LOG_TEST_CASE("HLE_draw_arrays");
 
 	LOG_INCOMPLETE(); // TODO : Implement HLE_draw_arrays
-		//DWORD vertex data array, 
+
+	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVertices, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexInput before calling BeginPush.
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
 	// (position followed by weight, normal, diffuse, and so on).
@@ -164,93 +153,84 @@ void HLE_draw_arrays(NV2AState *d)
 
 	// Compose an Xbox vertex attribute format to pass through all registers
 	static UINT uiStride = 0;
-	static bool isIvbFormatInitialized = false;
-	for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
-		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-		uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+	//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
+	//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & 0xFF;
+		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
+		uiStride += pg->vertex_attributes[slot].count * pg->vertex_attributes[slot].size;
 	}
 
-
-	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
 	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
 	CxbxUpdateNativeD3DResources();
 
-			
 	CxbxDrawContext DrawContext = {};
-	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode; // was primitive_mode;
+	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 
 	//this is assuming that all attributes are using the same vertex buffer and ordered with the same offset as in the slot.
 	//could be wrong, need polished to use each pg->KelvinPrimitive.SetVertexDataArrayOffset[] for each attributes.
 	//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
-	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0]+ 0x80000000);
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
 	DrawContext.uiXboxVertexStreamZeroStride = pgraph_get_NV2A_vertex_stride(pg);
 
 	for (int array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
-		
 		DrawContext.pXboxIndexData = false;
-
 		DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
 		DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
 		CxbxDrawPrimitiveUP(DrawContext);
-		//pgraph_draw_arrays(d);
 	}
 
 	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-	g_InlineVertexBuffer_DeclarationOverride = 0;
+	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
 void HLE_draw_inline_buffer(NV2AState *d)
 {
-	// PGRAPHState *pg = &d->pgraph;
+	PGRAPHState *pg = &d->pgraph;
 
 	LOG_TEST_CASE("HLE_draw_inline_buffer");
 
-	LOG_UNIMPLEMENTED(); // TODO : Implement HLE_draw_inline_buffer
-	PGRAPHState *pg = &d->pgraph;
-	DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+	LOG_INCOMPLETE(); // TODO : Finish implementation of HLE_draw_inline_buffer
 
-	int uiStride = 0;
+	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
+	// so that our above composed declaration will be used for the next draw :
+	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
 
-	if (dwVertexStride > 0) {
-		UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
+	// Note, that g_Xbox_VertexShaderMode should be left untouched,
+	// because except for the declaration override, the Xbox shader (either FVF
+	// or a program, or even passthrough shaders) should still be in effect!
+	CxbxUpdateNativeD3DResources();
 
-		// Compose an Xbox vertex attribute format to pass through all registers
-		static bool isIvbFormatInitialized = false;
-		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->vertex_attributes[reg].format;
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = pg->vertex_attributes[reg].offset;
-		}
-		// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
-		// so that our above composed declaration will be used for the next draw :
-		g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
-		// Note, that g_Xbox_VertexShaderMode should be left untouched,
-		// because except for the declaration override, the Xbox shader (either FVF
-		// or a program, or even passthrough shaders) should still be in effect!
-		CxbxUpdateNativeD3DResources();
+	CxbxDrawContext DrawContext = {};
+	DrawContext.pXboxIndexData = false;
+	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+	DrawContext.dwVertexCount = pg->inline_buffer_length;
+//	DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
+//	DrawContext.uiXboxVertexStreamZeroStride = g_NV2AInlineArrayVertexBuffer_Stride;
 
-		CxbxDrawContext DrawContext = {};
-		DrawContext.pXboxIndexData = false;
-		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode; // was primitive_mode;
-		DrawContext.dwVertexCount = pg->inline_buffer_length;
-		DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
-		DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
+	CxbxDrawPrimitiveUP(DrawContext);
 
-		CxbxDrawPrimitiveUP(DrawContext);
-
-		// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-		g_InlineVertexBuffer_DeclarationOverride = 0;
-	}
+	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
 
 void HLE_draw_inline_array(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
+
+	//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+	//for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+		//apply stride to attributes.
+		//pg->vertex_attributes[i].format += dwVertexStride << 8;
+	//}
+
+	//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
 
 	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush.
@@ -269,21 +249,18 @@ void HLE_draw_inline_array(NV2AState *d)
 		DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
 
 		if (dwVertexStride > 0) {
-			UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
-
 			// Compose an Xbox vertex attribute format to pass through all registers
 			static UINT uiStride = 0;
-			static bool isIvbFormatInitialized = false;
-			for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-				g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg]&0xFF;
-				g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-				uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+			for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+				g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot]&0xFF;
+				g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
+				uiStride += pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
 			}
 
 
-			// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+			// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
 			// so that our above composed declaration will be used for the next draw :
-			g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+			g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
 			// Note, that g_Xbox_VertexShaderMode should be left untouched,
 			// because except for the declaration override, the Xbox shader (either FVF
 			// or a program, or even passthrough shaders) should still be in effect!
@@ -291,15 +268,15 @@ void HLE_draw_inline_array(NV2AState *d)
 
 			CxbxDrawContext DrawContext = {};
 			DrawContext.pXboxIndexData = false;
-			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode; // was primitive_mode;
-			DrawContext.dwVertexCount = VertexCount;
+			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+			DrawContext.dwVertexCount = pg->inline_array_length;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
 			CxbxDrawPrimitiveUP(DrawContext);
 
 			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-			g_InlineVertexBuffer_DeclarationOverride = 0;
+			g_InlineVertexBuffer_DeclarationOverride = nullptr;
 		}
 	}
 }
@@ -308,35 +285,34 @@ void HLE_draw_inline_elements(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	unsigned int uiIndexCount = pg->inline_elements_length;
-
+	//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
 	// Compose an Xbox vertex attribute format to pass through all registers
 	static UINT uiStride = 0;
-	static bool isIvbFormatInitialized = false;
-	for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
-		g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-		uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); //  = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
+		uiStride += pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
 	}
 
-
-	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
+	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
 	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = 1;//1 for IVB
+	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
 	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
-	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode; // was primitive_mode;
-	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8;
-	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0]+0x80000000);
-	DrawContext.dwVertexCount = uiIndexCount;
+	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
+	DrawContext.dwVertexCount = pg->inline_elements_length;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 
-
 	CxbxDrawIndexed(DrawContext);
+
+	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
 DWORD ABGR_to_ARGB(const uint32_t color)
@@ -385,6 +361,14 @@ void HLE_draw_state_update(NV2AState *d)
 
 //  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
 
+	// set out own vertex attribute format and offset here.
+	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
+		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); // = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+		//Attribute.Offset is the offset from start of vertex to start of attribute
+		g_NV2AVertexAttributeFormat.Slots[slot].Offset = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
+	}
+
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
 }
 
@@ -422,7 +406,7 @@ void HLE_init_pgraph_plugins()
 extern int pgraph_handle_method(
 	NV2AState *d,
 	unsigned int subchannel,
-	unsigned int method,
+	uint32_t command_word,
 	uint32_t parameter,
 	uint32_t *parameters,
 	uint32_t method_count,
@@ -472,54 +456,15 @@ xbox::dword_xt * HLE_get_NV2A_vertex_program_slot_ptr(const DWORD slot_index)
 
 
 // For now, skip the cache, but handle the pgraph method directly
-// Note : Here's where the method gets multiplied by four!
 // Note 2 : d is read from local scope, and ni is unused (same in LLE)
 // Note 3 : Keep EmuExecutePushBufferRaw skipping all commands not intended for channel 0 (3D)
 // Note 4 : Prevent a crash during shutdown when g_NV2A gets deleted
 #define CACHE_PUSH(subc, mthd, word, dma_get, mcnt,max_words_available, ni) \
 	if (subc == 0) { \
 		if (g_NV2A) { \
-			pgraph_handle_method(d, subc, mthd << 2, word, dma_get, mcnt,max_words_available); \
+			pgraph_handle_method(d, subc, mthd, word, dma_get, mcnt,max_words_available); \
 		} \
 	}
-
-typedef union {
-/* https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-commands-pre-gf100-format
-
-	000 CCCCCCCCCCC 00 SSS MMMMMMMMMMM 00	increasing methods [NV4+]
-	000 00000000000 10 000 00000000000 00	return [NV1A+, NV4-style only]
-	001 JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 00	old jump [NV4+, NV4-style only]
-	010 CCCCCCCCCCC 00 SSS MMMMMMMMMMM 00	non-increasing methods [NV10+]
-	JJJ JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 01	jump [NV1A+, NV4-style only]
-	JJJ JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 10	call [NV1A+, NV4-style only]
-
-	C = method Count, S = Subchannel, M = first Method, J = Jump address
-*/
-	// Entire 32 bit command word, and an overlay for the above use-cases :
-	uint32_t            word;                    /*  0 .. 31 */
-	struct {
-		uint32_t        type         : 2;        /*  0 ..  1 */
-			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-control-flow-commands
-				#define COMMAND_TYPE_NONE        0
-				#define COMMAND_TYPE_JUMP_LONG   1
-				#define COMMAND_TYPE_CALL        2
-		uint32_t        method       : 11;       /*  2 .. 12 */
-		uint32_t        subchannel   : 3;        /* 13 .. 15 */
-		uint32_t        flags        : 2;        /* 16 .. 17 */
-			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-method-submission-commands
-				#define COMMAND_FLAGS_NONE                         0
-				#define COMMAND_FLAGS_SLI_CONDITIONAL              1 // (NV40+)
-				#define COMMAND_FLAGS_RETURN                       2
-				#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS  3 // [IB-mode only] 
-		uint32_t        method_count : 11;       /* 18 .. 28 */
-		uint32_t        instruction  : 3;        /* 29 .. 31 */
-				#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
-				#define COMMAND_INSTRUCTION_JUMP                   1
-				#define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
-	};
-	#define COMMAND_WORD_MASK_JUMP      0x1FFFFFFC /*  2 .. 31 */
-	#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 28 */
-} nv_fifo_command;
 
 extern void EmuExecutePushBufferRaw
 (
@@ -597,7 +542,8 @@ extern void EmuExecutePushBufferRaw
         //dma starving, shall we wait or sleep for a while?
         return;
     }
-    // NV-4-style PFIFO DMA command stream pusher
+
+	// NV-4-style PFIFO DMA command stream pusher
     // See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-pusher-pseudocode-pre-gf100
     while (dma_get < dma_put) {
         // Check if loop reaches end of pushbuffer
@@ -610,13 +556,15 @@ extern void EmuExecutePushBufferRaw
         // Read a DWORD from the current push buffer pointer
         uint32_t * word_ptr = dma_get;//shadow copy of dma_get before it gets advanced after the word was read.
         word = *dma_get++;
+
         /* now, see if we're in the middle of a long command */
         if (dma_state.lenp) {
-            dma_state.lenp = 0;
+            dma_state.lenp = false;
             dma_state.mcnt = word & 0xffffff;
             continue;// while for next word
         }
-        else if (dma_state.mcnt) {
+
+        if (dma_state.mcnt) {
             /* data word of methods command */
             data_shadow = word;
 #if 0
@@ -632,7 +580,7 @@ extern void EmuExecutePushBufferRaw
             //pgraph_handle_method(
             //	d,						//NV2AState
             //	subc,					//Subchannel
-            //	mthd << 2,				//method
+            //	mthd,					//command_word
             //	word,					//first parameter
             //	dma_get,				//parameters, pointer to 1st parameter, which is exact parameter in the args.
             //	mcnt,					//method count
@@ -655,11 +603,10 @@ extern void EmuExecutePushBufferRaw
                         //return num_processed, the words processed here by the method handler. so the caller can advance the dma_get pointer of the pushbuffer
                         //num_processed default to 1, which represent the first parameter passed in this call.
                         //but that word is advanced by the caller already. it's the caller's duty to subtract that word from the num_processed;
-						uint32_t method = dma_state.mthd << 2;
-						num_processed=pgraph_handle_method(
+                        num_processed = pgraph_handle_method(
                             d,
                             dma_state.subc,
-                            method,
+                            dma_state.mthd,
                             word,
                             word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
                             dma_state.mcnt,
