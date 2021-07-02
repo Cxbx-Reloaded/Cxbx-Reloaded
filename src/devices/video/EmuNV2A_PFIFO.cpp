@@ -137,9 +137,11 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
         uint32_t new_get = (get+4) & 0x1fc;
         *get_reg = new_get;
 
-        if (new_get == put) {
+        if (new_get >= put) {
             // set low mark
             *status |= NV_PFIFO_CACHE1_STATUS_LOW_MARK;
+			//sleep for a while
+			Sleep(1);
         }
         if (*status & NV_PFIFO_CACHE1_STATUS_HIGH_MARK) {
             // unset high mark
@@ -290,14 +292,14 @@ int pfifo_puller_thread(NV2AState *d)
             parameters,
             method_count,
             max_lookahead_words);
-
-        qemu_cond_wait(&d->pfifo.puller_cond, &d->pfifo.pfifo_lock);
+		//no need to wait here. just keet polling pfifo_run_puller()
+        //qemu_cond_wait(&d->pfifo.puller_cond, &d->pfifo.pfifo_lock);
 
         if (d->exiting) {
             break;
         }
     }
-    qemu_mutex_unlock(&d->pfifo.pfifo_lock);
+    //qemu_mutex_unlock(&d->pfifo.pfifo_lock);
 
     glo_set_current(NULL); // Cxbx addition
 

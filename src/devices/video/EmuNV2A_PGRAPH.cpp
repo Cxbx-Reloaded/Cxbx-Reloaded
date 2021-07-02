@@ -729,7 +729,7 @@ void OpenGL_draw_state_update(NV2AState *d)
 
     assert(pg->opengl_enabled);
 
-    NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", pg->KelvinPrimitive.SetBeginEnd); // was primitive_mode
+    NV2A_GL_DGROUP_BEGIN("NV097_SET_BEGIN_END: 0x%x", pg->primitive_mode); // was primitive_mode
 
     //uint32_t control_0 = pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4];
     //uint32_t control_1 = pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4];
@@ -1498,7 +1498,7 @@ int pgraph_handle_method(
                 case NV097_SET_OBJECT:
                 case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 
-                case NV097_SET_BEGIN_END:   //enclave subset of drawing instructions. need special handling.
+                //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
                 case NV097_SET_TRANSFORM_CONSTANT://this sets the vertex constant register/slots using index from NV097_SET_TRANSFORM_CONSTANT_LOAD, not the transform constants in KelvinPrime.
                 case NV097_SET_TRANSFORM_PROGRAM://this sets the vertex shader using index from NV097_SET_TRANSFORM_PROGRAM_LOAD, not the transform program in KelvinPrime.
 
@@ -1791,7 +1791,7 @@ int pgraph_handle_method(
                     //	(arg0 >> 4) & 3);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_SPECULAR,  //(pg->KelvinPrimitive.SetColorMaterial >> 6) & 3
                     //	(arg0 >> 6) & 3);
-                    //break;
+                    break;
                 }
 
                 case NV097_SET_FOG_MODE: {//done //pg->KelvinPrimitive.SetFogMode
@@ -2730,7 +2730,7 @@ int pgraph_handle_method(
                     break;
 
                 CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 					slot = (method - NV097_SET_VERTEX3F) / 4;
 					VertexAttribute *vertex_attribute =
@@ -2746,7 +2746,7 @@ int pgraph_handle_method(
                 }
 
 				CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 					slot = (method - NV097_SET_VERTEX4F) / 4;
 					VertexAttribute *vertex_attribute =
@@ -3239,13 +3239,13 @@ int pgraph_handle_method(
                             assert(false);
                         }
 						//only clear KelvinPrimitive.SetBeginEnd after we finish draw call
-						pg->KelvinPrimitive.SetBeginEnd = NV097_SET_BEGIN_END_OP_END;
+						pg->primitive_mode = NV097_SET_BEGIN_END_OP_END;
 
                     } else {
 
                         assert(arg0 <= NV097_SET_BEGIN_END_OP_POLYGON);
 						//set KelvinPrimitive.SetBeginEnd with arg0== PrititiveType.
-						pg->KelvinPrimitive.SetBeginEnd = arg0;
+						pg->primitive_mode = arg0;
 						//we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
 						//because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
                         //if (pgraph_draw_state_update != nullptr) {
@@ -3428,7 +3428,7 @@ int pgraph_handle_method(
                     */
 				
                 CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 					//register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
@@ -3457,7 +3457,7 @@ int pgraph_handle_method(
                    );
                 */
                 CASE_64(NV097_SET_VERTEX_DATA4F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData4f[16].M[4]
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 				    //register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4F_M) / 4;
@@ -3497,7 +3497,7 @@ int pgraph_handle_method(
                );
             */
             CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
-				assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+				assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 				//register is set one at a time per method, for loop should be redundant.
 				slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
@@ -3610,7 +3610,7 @@ int pgraph_handle_method(
                     */
                     //register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
-					if (pg->KelvinPrimitive.SetBeginEnd== NV097_SET_BEGIN_END_OP_END) {//we're out side of Begin/End block, should be setting fix function vertex shader
+					if (pg->primitive_mode == NV097_SET_BEGIN_END_OP_END) {//we're out side of Begin/End block, should be setting fix function vertex shader
 						//set fix fuction handle. where to set X_D3DFVF_XYZ for X_D3DVSDE_POSITION?
 						if (slot== xbox::X_D3DVSDE_DIFFUSE && arg0 == -1)pg->vsh_FVF_handle |= X_D3DFVF_DIFFUSE;
 						if (slot == xbox::X_D3DVSDE_SPECULAR && arg0 == 0)pg->vsh_FVF_handle |= X_D3DFVF_SPECULAR;
@@ -3650,7 +3650,7 @@ int pgraph_handle_method(
 					   );
 					*/
 				CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
 
 					//register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
@@ -4087,7 +4087,7 @@ int pgraph_handle_method(
 					CxbxDrawContext DrawContext = {};
 
 					DrawContext.pXboxIndexData = false;
-					DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was primitive_mode;
+					DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was pg->primitive_mode;
 					DrawContext.dwVertexCount = VertexCount;
 					DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 					DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
@@ -4140,6 +4140,7 @@ int pgraph_handle_method(
 				}
                 case NV097_SET_TRANSFORM_CONSTANT_LOAD://done //pg->KelvinPrimitive.SetTransformConstantLoad
                     assert(arg0 < NV2A_VERTEXSHADER_CONSTANTS);
+					assert(arg0 >=0);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CHEOPS_OFFSET / 4],
                     //	NV_PGRAPH_CHEOPS_OFFSET_CONST_LD_PTR, arg0);
                     NV2A_DPRINTF("load to %d\n", arg0);
@@ -4665,7 +4666,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
     state.z_perspective = pg->KelvinPrimitive.SetControl0 & NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE;
 
     /* geometry shader stuff */
-    state.primitive_mode = (enum ShaderPrimitiveMode)pg->KelvinPrimitive.SetBeginEnd; // was primitive_mode;
+    state.primitive_mode = (enum ShaderPrimitiveMode)pg->primitive_mode; // was primitive_mode;
     state.polygon_front_mode = (enum ShaderPolygonMode)pg->KelvinPrimitive.SetFrontPolygonMode;
     state.polygon_back_mode = (enum ShaderPolygonMode)pg->KelvinPrimitive.SetBackPolygonMode;
 

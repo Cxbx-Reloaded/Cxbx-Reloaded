@@ -633,7 +633,7 @@ typedef struct PGRAPHState {
 	//KelvinPrimitive.SetContextDmaVertexA , KelvinPrimitive.SetContextDmaVertexB
 	//xbox::addr_xt dma_vertex_a, dma_vertex_b;
 
-	// unsigned int primitive_mode; KelvinPrimitive.SetBeginEnd
+	unsigned int primitive_mode; //KelvinPrimitive.SetBeginEnd
 
 	//unsigned int clear_surface; using pg->KelvinPrimitive.ClearSurface or pg->regs[NV097_CLEAR_SURFACE] directly
     //pg->clear_surface  
