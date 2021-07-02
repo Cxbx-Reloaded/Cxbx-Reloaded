@@ -220,12 +220,10 @@ void HLE_draw_inline_buffer(NV2AState *d)
 		UINT VertexCount = (pg->inline_array_length * sizeof(DWORD)) / dwVertexStride;
 
 		// Compose an Xbox vertex attribute format to pass through all registers
-		static UINT uiStride = 0;
 		static bool isIvbFormatInitialized = false;
 		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[reg] & 0xFF;
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-			uiStride += pg->vertex_attributes[reg].count*pg->vertex_attributes[reg].size;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = pg->vertex_attributes[reg].format;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = pg->vertex_attributes[reg].offset;
 		}
 		// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
 		// so that our above composed declaration will be used for the next draw :
@@ -238,11 +236,14 @@ void HLE_draw_inline_buffer(NV2AState *d)
 		CxbxDrawContext DrawContext = {};
 		DrawContext.pXboxIndexData = false;
 		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->KelvinPrimitive.SetBeginEnd; // was primitive_mode;
-		DrawContext.dwVertexCount = VertexCount;
+		DrawContext.dwVertexCount = pg->inline_buffer_length;
 		DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
 		DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
 		CxbxDrawPrimitiveUP(DrawContext);
+
+		// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+		g_InlineVertexBuffer_DeclarationOverride = 0;
 	}
 }
 

@@ -1542,26 +1542,34 @@ int pgraph_handle_method(
                      * of the parameter. It's possible a debug register enables this,
                      * but nothing obvious sticks out. Weird.
 
-					// when arg0 !=0, this is an interrupt/call back operation
-					// arg0=operation
-					// WRITE_REGISTER_VALUE(9), from Otogi CommonSetDebugRegisters()
-					//     NV097_SET_ZSTENCIL_CLEAR_VALUE = pushbuffer method (register, method_cout=1)
-					//     NV097_SET_COLOR_CLEAR_VALUE = value to write
-					// 
-					// READ_CALLBACK(7), WRITE_CALLBACK(6), from Otogi D3DDevice_InsertCallback()
-					//     NV097_SET_ZSTENCIL_CLEAR_VALUE 0x00001D8C = NVX_READ_CALLBACK Data 
-					//     NV097_SET_COLOR_CLEAR_VALUE 0x00001D90 = NVX_READ_CALLBACK Context, 
-					// 
-					// xboe d3d instruction pattern
-					// (NV097_SET_ZSTENCIL_CLEAR_VALUE, method_cout=2)
-					// argv[arg0, arg1]
-					// (NV097_NO_OPERATION,method_cout=1 )
-					// argv[Operation]
+					* when arg0 !=0, this is an interrupt/call back operation
+					* arg0=operation
+					* WRITE_REGISTER_VALUE(9), from Otogi SetDebugRegisters(register, value)
+					*     (NV097_SET_ZSTENCIL_CLEAR_VALUE,register, method_cout=1)
+					*     (NV097_SET_COLOR_CLEAR_VALUE,value to write,  method_cout=1)
+					  
+					* READ_CALLBACK(7), WRITE_CALLBACK(6), from Otogi D3DDevice_InsertCallback()
+					*     (NV097_SET_ZSTENCIL_CLEAR_VALUE 0x00001D8C,  READ_CALLBACK Data,  method_cout=1)
+					*     (NV097_SET_COLOR_CLEAR_VALUE 0x00001D90,  READ_CALLBACK Context,  method_cout=1)
+					* 
+					* xboe d3d instruction pattern
+					
+					* (NV097_SET_ZSTENCIL_CLEAR_VALUE, method_cout=2)
+					* argv[]={arg0, arg1,} //arg1 will over write NV097_SET_COLOR_CLEAR_VALUE
+
+					* (NV097_NO_OPERATION,method_cout=1 )
+					* argv[]={Operation,}
+					*
+					
+					
 
 
 					 */
                     if (arg0 != 0) {
-                        assert(!(pg->pending_interrupts & NV_PGRAPH_INTR_ERROR));
+						/*
+						//disable the original code. now we know how this code shall work. but it's not implement yet.
+
+						assert(!(pg->pending_interrupts & NV_PGRAPH_INTR_ERROR));
 
                         SET_MASK(pg->pgraph_regs[NV_PGRAPH_TRAPPED_ADDR / 4],
                             NV_PGRAPH_TRAPPED_ADDR_CHID, channel_id);
@@ -1570,7 +1578,7 @@ int pgraph_handle_method(
                         SET_MASK(pg->pgraph_regs[NV_PGRAPH_TRAPPED_ADDR / 4],
                             NV_PGRAPH_TRAPPED_ADDR_MTHD, method);
                         pg->pgraph_regs[NV_PGRAPH_TRAPPED_DATA_LOW / 4] = arg0;
-                        pg->pgraph_regs[NV_PGRAPH_NSOURCE / 4] = NV_PGRAPH_NSOURCE_NOTIFICATION; /* TODO: check this */
+                        pg->pgraph_regs[NV_PGRAPH_NSOURCE / 4] = NV_PGRAPH_NSOURCE_NOTIFICATION; // TODO: check this 
                         pg->pending_interrupts |= NV_PGRAPH_INTR_ERROR;
 
                         qemu_mutex_unlock(&pg->pgraph_lock);
@@ -1582,6 +1590,7 @@ int pgraph_handle_method(
                         while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
                             qemu_cond_wait(&pg->interrupt_cond, &pg->pgraph_lock);
                         }
+						*/
                     }
                     num_words_consumed = method_count; //test case: xdk pushbuffer sample. 3rd method from file is NOP with method count 0x81.
                     break;
@@ -3188,12 +3197,24 @@ int pgraph_handle_method(
                             assert(pg->draw_arrays_length == 0);
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
+							unsigned int uiStride = 0;
 
+							//for inline_array, NV2A_SET_VERTEX_DATA_FORMAT was called already. calculate the attribute offset
+							for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+
+								//setup attribute Format and Offset
+								if (pg->vertex_attributes[i].count > 0) {
+									pg->vertex_attributes[i].offset = uiStride;
+									uiStride += 4 * sizeof(float);
+								}
+								else {
+									pg->vertex_attributes[i].format = xbox::X_D3DVSDT_NONE;
+									pg->vertex_attributes[i].count = 0;
+									pg->vertex_attributes[i].size = 4;
+									pg->vertex_attributes[i].offset = uiStride;
+								}
+							}
 							//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-							//for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-								//apply stride to attributes.
-								//pg->vertex_attributes[i].format += dwVertexStride << 8;
-							//}
 
 							if (pgraph_draw_inline_array != nullptr) {
 								//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)

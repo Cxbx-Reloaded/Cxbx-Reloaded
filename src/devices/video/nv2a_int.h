@@ -683,7 +683,7 @@ typedef struct PGRAPHState {
 
 	unsigned int inline_buffer_length;
 	unsigned int inline_buffer_attr_length;
-	float inline_buffer[NV2A_MAX_BATCH_LENGTH*4];
+	float inline_buffer[NV2A_MAX_BATCH_LENGTH*16*4];
 
 	unsigned int draw_arrays_length;
 	unsigned int draw_arrays_max_count;
