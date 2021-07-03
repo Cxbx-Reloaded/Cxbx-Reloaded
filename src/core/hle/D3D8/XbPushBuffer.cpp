@@ -362,11 +362,13 @@ void HLE_draw_state_update(NV2AState *d)
 //  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
 
 	// set out own vertex attribute format and offset here.
+	UINT uiStride = 0;
 	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
 		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
 		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); // = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-		//Attribute.Offset is the offset from start of vertex to start of attribute
-		g_NV2AVertexAttributeFormat.Slots[slot].Offset = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
+		//Attribute.Offset is the offset from start of vertex to start of attribute //pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE is the vertex stride of each stream
+		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride ;
+		uiStride+= pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
 	}
 
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
