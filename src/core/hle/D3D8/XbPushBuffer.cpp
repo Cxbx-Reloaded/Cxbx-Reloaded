@@ -507,13 +507,16 @@ extern void EmuExecutePushBufferRaw
     uint32_t *dma_limit; // pushbuffer size limit
     uint32_t *dma_put; // pushbuffer current end address
     uint32_t *dma_get; //pushbuffer current read address
-    struct {
-        xbox::NV2AMETHOD mthd; // Current method
-        uint32_t subc; // :3 = Current subchannel
-        uint32_t mcnt; // :24 = Current method count
-        bool ni; // Current command's NI (non-increasing) flag
-        bool lenp;// Current command's long non-increasing method flag
-    } dma_state;
+	union {
+		DWORD command_dword;
+		struct {
+			xbox::NV2AMETHOD mthd; // Current method
+			uint32_t subc; // :3 = Current subchannel
+			uint32_t mcnt; // :24 = Current method count
+			bool ni; // Current command's NI (non-increasing) flag
+			bool lenp;// Current command's long non-increasing method flag
+		};
+	}dma_state;
 
     static uint32_t dcount_shadow = 0; // [NV5:] Number of already-processed methods in cmd]
     static bool subr_active = false; // Subroutine active
@@ -606,7 +609,7 @@ extern void EmuExecutePushBufferRaw
                         num_processed = pgraph_handle_method(
                             d,
                             dma_state.subc,
-                            dma_state.mthd,
+                            dma_state.command_dword,//dma_state.mthd,
                             word,
                             word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
                             dma_state.mcnt,
@@ -650,6 +653,18 @@ extern void EmuExecutePushBufferRaw
 
             //***************************we need to check the jump address once we encounter these methods.
             //because the jump address is obviously not in the VRAM range. perhaps a memory range transform must be applied first?
+#define COMMAND_TYPE_NONE        0
+#define COMMAND_TYPE_JUMP_LONG   1
+#define COMMAND_TYPE_CALL        2
+#define COMMAND_FLAGS_NONE                         0
+#define COMMAND_FLAGS_SLI_CONDITIONAL              1 // (NV40+)
+#define COMMAND_FLAGS_RETURN                       2
+#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS  3 // [IB-mode only] 
+#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
+#define COMMAND_INSTRUCTION_JUMP                   1
+#define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
+#define COMMAND_WORD_MASK_JUMP      0x1FFFFFFC /*  2 .. 31 */
+#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 28 */
 
         case COMMAND_TYPE_NONE:
             if (command.instruction == COMMAND_INSTRUCTION_JUMP) {//old jump

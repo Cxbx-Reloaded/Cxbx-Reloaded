@@ -240,7 +240,7 @@ static int pfifo_run_puller(NV2AState *d, uint32_t arg_subchannel ,uint32_t arg_
             num_processed = pgraph_handle_method(
                 d,
                 subchannel,
-                method,
+				method_entry,//method,
                 parameter,
                 parameters,
                 MIN(method_count,1),
