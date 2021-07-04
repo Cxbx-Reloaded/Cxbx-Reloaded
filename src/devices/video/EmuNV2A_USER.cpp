@@ -112,7 +112,7 @@ DEVICE_WRITE32(USER)
 
             // kick pfifo
             qemu_cond_broadcast(&d->pfifo.pusher_cond);
-            qemu_cond_broadcast(&d->pfifo.puller_cond);
+            //qemu_cond_broadcast(&d->pfifo.puller_cond);
 		} else {
 			/* ramfc */
 			assert(false);
