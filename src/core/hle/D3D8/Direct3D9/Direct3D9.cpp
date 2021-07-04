@@ -306,6 +306,8 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_CreateVertexShader,                       (CONST xbox::dword_xt*, CONST xbox::dword_xt*, xbox::dword_xt*, xbox::dword_xt)                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader,                       (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0,                     ()                                                                                                    );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_End,                                      ()                                                                                                    );  \
+    XB_MACRO(xbox::dword_xt*,    WINAPI,     D3DDevice_EndPush,                                  (xbox::dword_xt*)                                                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                              );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                        );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                        );  \
@@ -314,6 +316,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetDisplayMode,                           (xbox::X_D3DDISPLAYMODE*)                                                                             );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetRenderTarget,                          (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetRenderTarget2,                         (xbox::void_xt)                                                                                       );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_KickOff,                                  ()                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_LightEnable,                              (xbox::dword_xt, xbox::bool_xt)                                                                       );  \
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader,                         (xbox::dword_xt, xbox::dword_xt)                                                                      );*/\
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShaderProgram,                  (CONST xbox::dword_xt*, xbox::dword_xt)                                                               );*/\
@@ -3326,19 +3329,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_
 xbox::PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_4)(dword_xt Count)
 {
 	LOG_FUNC_ONE_ARG(Count);
-
-	if (g_pXbox_BeginPush_Buffer != nullptr)
-	{
-		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_BeginPush called without D3DDevice_EndPush in between?!");
-		delete[] g_pXbox_BeginPush_Buffer; // prevent a memory leak
-	}
-
-	dword_xt *pRet = new dword_xt[Count];
-	//we should setup an PFIFO pusher interceptor to record the pushbuffer
-	//this won't work in any near future if we keep patching any D3D functions which might be recorded in the pushbuffer.
-    g_pXbox_BeginPush_Buffer = pRet;
-
-    return pRet;
+	xbox::hresult_xt result = 0;
+	return result;
 }
 
 // ******************************************************************
@@ -3352,25 +3344,66 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_8)(dword_xt Count, dword
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_ARG(ppPush)
 		LOG_FUNC_END;
+	xbox::hresult_xt result = 0;
+	return result;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_BeginPushBuffer
+// TODO: Find a test case and verify this
+// Starting from XDK 4531, this changed to 1 parameter only.
+// Is this definition incorrect, or did it change at some point?
+// ******************************************************************
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt Count)
+{
+	LOG_FUNC_ONE_ARG(Count);
 
 	if (g_pXbox_BeginPush_Buffer != nullptr)
 	{
-		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_BeginPush2 called without D3DDevice_EndPush in between?!");
+		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_BeginPush called without D3DDevice_EndPush in between?!");
 		delete[] g_pXbox_BeginPush_Buffer; // prevent a memory leak
 	}
 
 	dword_xt *pRet = new dword_xt[Count];
-	//we should setup an PFIFO pusher interceptor to record the pushbuffer 
+	//we should setup an PFIFO pusher interceptor to record the pushbuffer
 	//this won't work in any near future if we keep patching any D3D functions which might be recorded in the pushbuffer.
 	g_pXbox_BeginPush_Buffer = pRet;
 
-	*ppPush=pRet;
+	//return pRet;
+	xbox::hresult_xt result = 0;
+	return result;
 }
-
+//global for pfifo_run_pusher() to indicate whether it has completed the pushbuffer pasing or not.
+bool g_nv2a_fifo_is_busy = false;
 // ******************************************************************
 // * patch: D3DDevice_EndPush
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
+xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
+{
+	LOG_FUNC_ONE_ARG(pPush);
+    //this is a tmp patch before we remove all HLE patches. only to prevent multi entrance confliction
+	//1st we trampoline back to guest code D3DDevice_EndPush()
+	xbox::dword_xt* result = XB_TRMP(D3DDevice_EndPush)(pPush);
+	//2nd we wait for pfifo_run_pusher() to complete the pushbuffer paring, then we return to guest code.
+	//with this wait, we can make sure the pfifo_run_pusher()running in another thread won't conflict with the following guest code we're going to run.
+	//this wait is not necessary once we remove all HLE patches.
+	g_nv2a_fifo_is_busy = true;//set this flag only after we trampoline the D3DDevice_EndPush, make sure pfifo starts parsing pushbuffer before we set this flag to true.
+	
+	//	we can't use this while loop to wait for the global flag. because XB_TRMP(D3DDevice_EndPush)(pPush) is only update g_pDevice->pPush, not the hardware mPut.
+	//  hardware mPut will only be update by Kickoff(), which will be called inside MakeRequestedSpace(). Only when a segment of pushbuffer was switched, then the hardware mPut will be update.
+	//  we have to figure out a way to force a kickoff here.
+	XB_TRMP(D3DDevice_KickOff)();
+	while(g_nv2a_fifo_is_busy){
+		;
+	}
+	
+	return result;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_EndPushBuffer
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPushBuffer)(dword_xt *pPush)
 {
 	LOG_FUNC_ONE_ARG(pPush);
 
@@ -3378,8 +3411,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
 	else
 	{
-        // Note: We don't use the count from BeginPush because that specifies the *maximum* count
-        // rather than the count actually in the pushbuffer.
+		// Note: We don't use the count from BeginPush because that specifies the *maximum* count
+		// rather than the count actually in the pushbuffer.
 		// D3DDevice_BeginPush and D3DDevice_EndPush are used to RECORD a pushbuffer, not to execute a pushbuffer.
 		//EmuExecutePushBufferRaw(g_pXbox_BeginPush_Buffer, (uintptr_t)pPush - (uintptr_t)g_pXbox_BeginPush_Buffer);
 		//we should setup an PFIFO pusher interceptor to record the pushbuffer, and stop here then setup the size of recorded pushbuffer.
@@ -4603,7 +4636,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 )
 {
 	LOG_FUNC_ONE_ARG(PrimitiveType);
-
+	assert((xbox::X_D3DPRIMITIVETYPE)PrimitiveType != xbox::X_D3DPT_INVALID);
 	CxbxImpl_Begin(PrimitiveType);
 }
 
@@ -4814,11 +4847,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 // ******************************************************************
 // * patch: D3DDevice_End
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
 {
 	LOG_FUNC();
 
-	CxbxImpl_End();
+	CxbxImpl_End(); //we unpatched D3DDevice_End, but found that there are memory corruptions introduced by multi entrance. so we have to come out a workaround.
+
+	//this is a tmp patch before we remove all HLE patches. only to prevent multi entrance confliction
+	//1st we trampoline back to guest code D3DDevice_EndPush()
+
+	hresult_xt result = 0;// XB_TRMP(D3DDevice_End)();
+	//2nd we wait for pfifo_run_pusher() to complete the pushbuffer paring, then we return to guest code.
+	//with this wait, we can make sure the pfifo_run_pusher()running in another thread won't conflict with the following guest code we're going to run.
+	//this wait is not necessary once we remove all HLE patches.
+	/*
+	g_nv2a_fifo_is_parsing = true;//set this flag only after we trampoline the D3DDevice_EndPush, make sure pfifo starts parsing pushbuffer before we set this flag to true.
+	while (true) {
+		if (!g_nv2a_fifo_is_parsing) {
+			break;
+		}
+	}
+	*/
+	return result;
+	
 }
 
 // ******************************************************************
@@ -7267,19 +7318,21 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	assert(DrawContext.dwBaseVertexIndex == 0); // No IndexBase under Draw*UP
 
 	VertexBufferConverter.Apply(&DrawContext);
+	//convert dwHostPrimitiveCount here. the quad to d3d9 triangle is considered already.
+	DrawContext.dwHostPrimitiveCount = EmuXB2PC_D3DPrimitiveCount(DrawContext.dwVertexCount,DrawContext.XboxPrimitiveType);
 	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexData(DrawContext.dwVertexCount);
 		// Convert quad vertex-count to triangle vertex count :
-		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
 		// Draw indexed triangles instead of quads
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
 			/*MinVertexIndex=*/0, // Always 0 for converted quadlist data
 			/*NumVertices=*/DrawContext.dwVertexCount,
-			PrimitiveCount,
+			DrawContext.dwHostPrimitiveCount,
 			pIndexData,
 			/*IndexDataFormat=*/D3DFMT_INDEX16,
 			DrawContext.pHostVertexStreamZeroData,
@@ -7287,10 +7340,13 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
 
-		g_dwPrimPerFrame += PrimitiveCount;
+		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 	}
 	else {
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawPrimitiveUP call :
+		//?? for xbox::X_D3DPT_LINELOOP, we convert it to d3d9 line strip, but that will require an additional repeated vertex of vertex 0 to be appended in the last.
+		//and also update the DrawContext.dwVertexCount and DrawContext.dwHostPrimitiveCount. this needs further verification.
+
 		HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP(
 			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 			DrawContext.dwHostPrimitiveCount,
