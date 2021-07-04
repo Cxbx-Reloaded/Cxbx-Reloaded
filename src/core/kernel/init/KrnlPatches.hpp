@@ -44,3 +44,33 @@ static void CxbxrKrnlSetupDummyHeader() {
 	strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
 	EmuLogInit(LOG_LEVEL::INFO, "Initialized dummy kernel image header.");
 }
+
+static void ApplyMediaPatches()
+{
+	// Patch the XBE Header to allow running from all media types
+	g_pCertificate->dwAllowedMedia |= 0
+		| XBEIMAGE_MEDIA_TYPE_HARD_DISK
+		| XBEIMAGE_MEDIA_TYPE_DVD_X2
+		| XBEIMAGE_MEDIA_TYPE_DVD_CD
+		| XBEIMAGE_MEDIA_TYPE_CD
+		| XBEIMAGE_MEDIA_TYPE_DVD_5_RO
+		| XBEIMAGE_MEDIA_TYPE_DVD_9_RO
+		| XBEIMAGE_MEDIA_TYPE_DVD_5_RW
+		| XBEIMAGE_MEDIA_TYPE_DVD_9_RW
+		;
+	// Patch the XBE Header to allow running on all regions
+	g_pCertificate->dwGameRegion = 0
+		| XBEIMAGE_GAME_REGION_MANUFACTURING
+		| XBEIMAGE_GAME_REGION_NA
+		| XBEIMAGE_GAME_REGION_JAPAN
+		| XBEIMAGE_GAME_REGION_RESTOFWORLD
+		;
+	// Patch the XBE Security Flag
+	// This field is only present if the Xbe Size is >= than our Certificate Structure
+	// This works as our structure is large enough to fit the newer certificate size,
+	// while dwSize is the actual size of the certificate in the Xbe.
+	// Source: Various Hacked Kernels
+	if (g_pCertificate->dwSize >= sizeof(Xbe::Certificate)) {
+		g_pCertificate->dwSecurityFlags &= ~1;
+	}
+}
