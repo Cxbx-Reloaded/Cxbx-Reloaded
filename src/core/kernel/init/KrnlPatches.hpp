@@ -45,6 +45,7 @@ static void CxbxrKrnlSetupDummyHeader() {
 	EmuLogInit(LOG_LEVEL::INFO, "Initialized dummy kernel image header.");
 }
 
+// TODO: If possible, maybe make this as optional patch when kernel emulation is fully done.
 static void ApplyMediaPatches()
 {
 	// Patch the XBE Header to allow running from all media types
