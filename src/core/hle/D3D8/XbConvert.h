@@ -271,6 +271,51 @@ inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(xbox::X_D3DPRIMITIVETYPE XboxP
     return g_XboxPrimitiveTypeToHost[XboxPrimitiveType];
 }
 
+// convert xbox->pc primitive type
+inline DWORD EmuXB2PC_D3DPrimitiveCount(DWORD vertex_count,xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType)
+{
+	if (XboxPrimitiveType >= xbox::X_D3DPT_MAX) {
+		LOG_TEST_CASE("XboxPrimitiveType too large");
+		return D3DPT_FORCE_DWORD;
+	}
+	unsigned int hostprimitivecount = 0;
+	switch (XboxPrimitiveType) {
+		case xbox::X_D3DPT_POINTLIST:
+			hostprimitivecount= vertex_count;//D3D9 converte to point list
+			break;
+		case xbox::X_D3DPT_LINELIST:
+			hostprimitivecount = vertex_count/2;//D3D9 converte to line list
+			break;
+		case xbox::X_D3DPT_LINELOOP:
+			hostprimitivecount = vertex_count;//D3D9 converte to line strip
+			break;
+		case xbox::X_D3DPT_LINESTRIP:
+			hostprimitivecount = vertex_count-1;//D3D9 converte to line strip
+			break;
+		case xbox::X_D3DPT_TRIANGLELIST:
+			hostprimitivecount = vertex_count/3;//D3D9 converte to triangle list
+			break;
+		case xbox::X_D3DPT_TRIANGLESTRIP:
+			hostprimitivecount = vertex_count-2;//D3D9 converte to triangle strip
+			break;
+		case xbox::X_D3DPT_TRIANGLEFAN:
+			hostprimitivecount = vertex_count-2;//D3D9 converte to triangle fan
+			break;
+		case xbox::X_D3DPT_QUADLIST:
+			hostprimitivecount = vertex_count/2;//xbox is vertex_count/4, D3D9 converte to triangle list, so multiply by 2.
+			break;
+		case xbox::X_D3DPT_QUADSTRIP:
+			hostprimitivecount = vertex_count-2;//xbox is vertex_count/2-1, D3D9 converte to triangle strip, so multiply by 2.
+			break;
+		case xbox::X_D3DPT_POLYGON:
+			hostprimitivecount = vertex_count-2;//D3D9 converte to triangle fan
+			break;
+	}
+
+	return hostprimitivecount;
+}
+
+
 extern void EmuUnswizzleBox
 (
 	CONST PVOID pSrcBuff,
