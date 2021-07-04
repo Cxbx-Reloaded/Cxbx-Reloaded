@@ -949,6 +949,88 @@ static void CxbxrKrnlRegisterDevicePaths()
 	CxbxRegisterDeviceHostPath(DeviceMU7, g_MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
 }
 
+static bool CxbxrKrnlPrepareXbeMap()
+{
+
+	// Our executable DOS image header must be loaded at 0x00010000
+	// Assert(ExeDosHeader == XBE_IMAGE_BASE);
+
+	// Determine EXE's header locations & size :
+	ExeNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)ExeDosHeader + ExeDosHeader->e_lfanew); // = + 0x138
+	ExeOptionalHeader = (PIMAGE_OPTIONAL_HEADER) & (ExeNtHeader->OptionalHeader);
+
+	// verify base of code of our executable is 0x00001000
+	if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
+	{
+		PopupFatal(nullptr, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
+		return false; // TODO : Halt(0);
+	}
+
+#ifndef CXBXR_EMU
+	// verify virtual_memory_placeholder is located at 0x00011000
+	if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
+	{
+		PopupFatal(nullptr, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
+		return false; // TODO : Halt(0);
+	}
+#endif
+
+	// Create a safe copy of the complete EXE header:
+	DWORD ExeHeaderSize = ExeOptionalHeader->SizeOfHeaders; // Should end up as 0x400
+	NewDosHeader = (PIMAGE_DOS_HEADER)VirtualAlloc(nullptr, ExeHeaderSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+
+	if (NewDosHeader == nullptr) {
+		PopupFatal(nullptr, "Unable to VirtualAlloc with 0x%X size for NewDosHeader", ExeHeaderSize);
+		return false;
+	}
+
+	memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
+
+	// Determine NewOptionalHeader, required by RestoreExeImageHeader
+	NewNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)NewDosHeader + ExeDosHeader->e_lfanew);
+	NewOptionalHeader = (PIMAGE_OPTIONAL_HEADER) & (NewNtHeader->OptionalHeader);
+
+	// Make sure the new DOS header points to the new relative NtHeader location:
+	NewDosHeader->e_lfanew = (ULONG_PTR)NewNtHeader - XBE_IMAGE_BASE;
+
+	// Note : NewOptionalHeader->ImageBase can stay at ExeOptionalHeader->ImageBase = 0x00010000
+
+	// Note : Since virtual_memory_placeholder prevents overlap between reserved xbox memory
+	// and Cxbx.exe sections, section headers don't have to be patched up.
+
+	// Mark the virtual memory range completely accessible
+	DWORD OldProtection;
+	if (0 == VirtualProtect((void*)XBE_IMAGE_BASE, XBE_MAX_VA - XBE_IMAGE_BASE, PAGE_EXECUTE_READWRITE, &OldProtection)) {
+		DWORD err = GetLastError();
+
+		// Translate ErrorCode to String.
+		LPTSTR Error = 0;
+		if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+			NULL,
+			err,
+			0,
+			(LPTSTR)&Error,
+			0,
+			NULL) == 0) {
+			// Failed in translating.
+		}
+
+		// Free the buffer.
+		if (Error) {
+			::LocalFree(Error);
+			Error = 0;
+		}
+	}
+
+	// Clear out the virtual memory range
+	memset((void*)XBE_IMAGE_BASE, 0, XBE_MAX_VA - XBE_IMAGE_BASE);
+
+	// Restore enough of the executable image headers to keep WinAPI's working :
+	RestoreExeImageHeader();
+
+	return true;
+}
+
 /*! initialize emulation */
 static __declspec(noreturn) void CxbxrKrnlInit(
 	void* pTLSData,
@@ -1090,77 +1172,8 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	}
 
 	// Now we got the arguments, start by initializing the Xbox memory map :
-	// PrepareXBoxMemoryMap()
-	{
-		// Our executable DOS image header must be loaded at 0x00010000
-		// Assert(ExeDosHeader == XBE_IMAGE_BASE);
-
-		// Determine EXE's header locations & size :
-		ExeNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)ExeDosHeader + ExeDosHeader->e_lfanew); // = + 0x138
-		ExeOptionalHeader = (PIMAGE_OPTIONAL_HEADER)&(ExeNtHeader->OptionalHeader);
-
-		// verify base of code of our executable is 0x00001000
-		if (ExeNtHeader->OptionalHeader.BaseOfCode != CXBX_BASE_OF_CODE)
-		{
-			PopupFatal(nullptr, "Cxbx-Reloaded executuable requires it's base of code to be 0x00001000");
-			return; // TODO : Halt(0); 
-		}
-
-#ifndef CXBXR_EMU
-		// verify virtual_memory_placeholder is located at 0x00011000
-		if ((UINT_PTR)(&(virtual_memory_placeholder[0])) != (XBE_IMAGE_BASE + CXBX_BASE_OF_CODE))
-		{
-			PopupFatal(nullptr, "virtual_memory_placeholder is not loaded to base address 0x00011000 (which is a requirement for Xbox emulation)");
-			return; // TODO : Halt(0); 
-		}
-#endif
-
-		// Create a safe copy of the complete EXE header:
-		DWORD ExeHeaderSize = ExeOptionalHeader->SizeOfHeaders; // Should end up as 0x400
-		NewDosHeader = (PIMAGE_DOS_HEADER)VirtualAlloc(nullptr, ExeHeaderSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-		memcpy(NewDosHeader, ExeDosHeader, ExeHeaderSize);
-
-		// Determine NewOptionalHeader, required by RestoreExeImageHeader
-		NewNtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)NewDosHeader + ExeDosHeader->e_lfanew);
-		NewOptionalHeader = (PIMAGE_OPTIONAL_HEADER)&(NewNtHeader->OptionalHeader);
-
-		// Make sure the new DOS header points to the new relative NtHeader location:
-		NewDosHeader->e_lfanew = (ULONG_PTR)NewNtHeader - XBE_IMAGE_BASE;
-
-		// Note : NewOptionalHeader->ImageBase can stay at ExeOptionalHeader->ImageBase = 0x00010000
-
-		// Note : Since virtual_memory_placeholder prevents overlap between reserved xbox memory
-		// and Cxbx.exe sections, section headers don't have to be patched up.
-
-		// Mark the virtual memory range completely accessible
-		DWORD OldProtection;
-		if (0 == VirtualProtect((void*)XBE_IMAGE_BASE, XBE_MAX_VA - XBE_IMAGE_BASE, PAGE_EXECUTE_READWRITE, &OldProtection)) {
-			DWORD err = GetLastError();
-
-			// Translate ErrorCode to String.
-			LPTSTR Error = 0;
-			if (::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-				NULL,
-				err,
-				0,
-				(LPTSTR)&Error,
-				0,
-				NULL) == 0) {
-				// Failed in translating.
-			}
-
-			// Free the buffer.
-			if (Error) {
-				::LocalFree(Error);
-				Error = 0;
-			}
-		}
-
-		// Clear out the virtual memory range
-		memset((void*)XBE_IMAGE_BASE, 0, XBE_MAX_VA - XBE_IMAGE_BASE);
-
-		// Restore enough of the executable image headers to keep WinAPI's working :
-		RestoreExeImageHeader();
+	if (!CxbxrKrnlPrepareXbeMap()) {
+		return; // TODO : Halt(0);
 	}
 
 	// Load Xbox Keys from the Cxbx-Reloaded AppData directory
