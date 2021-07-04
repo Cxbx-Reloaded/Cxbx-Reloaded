@@ -1494,12 +1494,11 @@ int pgraph_handle_method(
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
                 case NV097_SET_OBJECT:
-                case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
-                
+				case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
                 case NV097_SET_TRANSFORM_CONSTANT://this sets the vertex constant register/slots using index from NV097_SET_TRANSFORM_CONSTANT_LOAD, not the transform constants in KelvinPrime.
                 case NV097_SET_TRANSFORM_PROGRAM://this sets the vertex shader using index from NV097_SET_TRANSFORM_PROGRAM_LOAD, not the transform program in KelvinPrime.
-
+					break;
                 case NV097_ARRAY_ELEMENT16: //PUSH_INSTR_IMM_NOINC
                 case NV097_ARRAY_ELEMENT32: //PUSH_INSTR_IMM_NOINC
                 case NV097_DRAW_ARRAYS:		//PUSH_INSTR_IMM_NOINC
@@ -1562,9 +1561,9 @@ int pgraph_handle_method(
 
 					 */
                     if (arg0 != 0) {
-						/*
+						
 						//disable the original code. now we know how this code shall work. but it's not implement yet.
-
+						/*
 						assert(!(pg->pending_interrupts & NV_PGRAPH_INTR_ERROR));
 
                         SET_MASK(pg->pgraph_regs[NV_PGRAPH_TRAPPED_ADDR / 4],
@@ -3220,7 +3219,8 @@ int pgraph_handle_method(
 					break;
                 }
 
-                case NV097_ARRAY_ELEMENT16://xbox D3DDevice_DrawIndexedVertices() calls this 
+                case NV097_ARRAY_ELEMENT16://xbox D3DDevice_DrawIndexedVertices() calls this
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 					if (pg->draw_mode == DrawMode::None)
 						pg->draw_mode = DrawMode::InlineElements;
 					else
@@ -3248,6 +3248,7 @@ int pgraph_handle_method(
 					break;
 
                 case NV097_ARRAY_ELEMENT32://xbox D3DDevice_DrawIndexedVertices() calls this
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 					if (pg->draw_mode == DrawMode::None)
 						pg->draw_mode = DrawMode::InlineElements;
 					else
@@ -3266,6 +3267,7 @@ int pgraph_handle_method(
 
                     break;
                 case NV097_DRAW_ARRAYS: {
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 					if (pg->draw_mode == DrawMode::None)
 						pg->draw_mode = DrawMode::DrawArrays;
 					else
@@ -3332,6 +3334,7 @@ int pgraph_handle_method(
                 }
 
 				case NV097_INLINE_ARRAY://xbox D3DDevice_DrawVerticesUP() D3DDevice_DrawIndexedVerticesUP calls this
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 					if (pg->draw_mode == DrawMode::None)
 						pg->draw_mode = DrawMode::InlineArray;
 					else
@@ -3394,7 +3397,7 @@ int pgraph_handle_method(
                     */
 				
                 CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
-					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
 					//register is set one at a time per method, for loop should be redundant.
                     slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
@@ -3424,7 +3427,7 @@ int pgraph_handle_method(
                    );
                 */
                 CASE_64(NV097_SET_VERTEX_DATA4F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData4f[16].M[4]
-					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
 				    //register is set one at a time per method, for loop should be redundant.
 					for (size_t argc = 0; argc < method_count; argc++) {
@@ -3457,7 +3460,7 @@ int pgraph_handle_method(
                );
             */
             CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
-				assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
+				assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
 				//register is set one at a time per method, for loop should be redundant.
 				slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
@@ -3615,7 +3618,7 @@ int pgraph_handle_method(
 					   );
 					*/
 				CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
-					assert(pg->primitive_mode > NV097_SET_BEGIN_END_OP_END);
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
 					//register is set one at a time per method, for loop should be redundant.
 					slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
@@ -4113,9 +4116,9 @@ int pgraph_handle_method(
 			//	;
 			//}
 			//num_processed = method_count;//num_processed should always be method_count. if not, then must be something wrong.
-                
+			break;//break for KELVIN_PRIMITIVE case    
         }//	end of graphic_class KELVIN_PRIMITIVE case
-
+		    
         default://graphics_class default case
             NV2A_GL_DPRINTF(true, "Unknown Graphics Class/Method 0x%08X/0x%08X",
                             graphics_class, method);

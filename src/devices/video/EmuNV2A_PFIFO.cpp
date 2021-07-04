@@ -388,12 +388,19 @@ static void pfifo_run_pusher(NV2AState *d)
 //		NV2A_DPRINTF("PFIFO run_pusher dma_get/put nullptr! get 0x%08X, put 0x%08X\n", dma_get,dma_put);
 //		return;
 //	}
+	extern bool g_nv2a_fifo_is_busy; //tmp glue, declared in direct3d9.cpp before xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
+
 	if (dma_get >= dma_put) {
 		//no data available pushbuffer yet, or xbox d3d hasn't kickoff pushbuffer yet. shall we add sleep() or wait() here?
 		NV2A_DPRINTF("PFIFO run_pusher dma_get==dma_put ! get 0x%08X, put 0x%08X\n", dma_get, dma_put);
 		//
 		//dma_get = dma_put;
+
+			//CDevice_End()/CDevice_EndPush() patched function is waiting for the completion of pushbuffer parsing. set this flag to false to indicate the completion.
+			//note we can't check and set this flag inside EmuExecutePushBufferRaw(), because EmuExecutePushBufferRaw() will be called every time pPush was update.
+		//g_nv2a_fifo_is_busy = false;
 		//dma starvin, shall we sleep for a while?
+		//Sleep(1);
 		return;
 	}
 
@@ -415,7 +422,7 @@ static void pfifo_run_pusher(NV2AState *d)
         p_dma_put,										//pass in pointer to dma_put, could be useless. be awared dma_put is offset value to the dma base (0x80000000).
 		dma												//pass in dma base address (0x80000000),
 	);
-
+	g_nv2a_fifo_is_busy = false;
     /* based on the convenient pseudocode in envytools */
     //don't need these logic below anymore, the same logic is inside ExecutePushbufferRaw(). we'll handle the same logic in one place. it's easier to focus there.
   #if(0)
@@ -594,8 +601,7 @@ int pfifo_pusher_thread(NV2AState *d) // thread fire up at nv2a.cpp::void NV2ADe
     qemu_mutex_lock(&d->pfifo.pfifo_lock);
     while (true) {
         pfifo_run_pusher(d);
-        qemu_cond_wait(&d->pfifo.pusher_cond, &d->pfifo.pfifo_lock);
-
+		qemu_cond_wait(&d->pfifo.pusher_cond, &d->pfifo.pfifo_lock);
         if (d->exiting) {
             break;
         }
