@@ -178,7 +178,7 @@ void HLE_draw_arrays(NV2AState *d)
 	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
 	DrawContext.uiXboxVertexStreamZeroStride = pgraph_get_NV2A_vertex_stride(pg);
 
-	for (int array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
+	for (unsigned array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
 		DrawContext.pXboxIndexData = false;
 		DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
 		DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
@@ -593,6 +593,27 @@ extern void EmuExecutePushBufferRaw
                     dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
                     continue; // while
                 }
+                if ((command.instruction == COMMAND_INSTRUCTION_INCREASING_METHODS) && (command.flags == COMMAND_FLAGS_RETURN)) {
+                    // Note : NV2A return shouldn't be used because the NV2A call is used as jump and the subr_return is used as an flag of where the jump was from.
+                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN, not supposed to be used!");
+                    if (word != (COMMAND_FLAGS_RETURN << 16)) {
+                        LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
+                        goto finish; // For now, don't even attempt to run through
+                    }
+                    else {
+                        LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
+                    }
+
+                    if (!subr_active) {
+                        LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
+                        // TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
+                        goto finish; // For now, don't even attempt to run through
+                    }
+
+                    dma_get = subr_return;
+                    subr_active = false;
+                    continue; // while
+                }
                 break;
             case COMMAND_TYPE_JUMP_LONG:
                 LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
@@ -643,51 +664,20 @@ extern void EmuExecutePushBufferRaw
                 dma_state.subc = command.subchannel;
                 dma_state.mcnt = command.method_count;
                 break;
-            case COMMAND_FLAGS_RETURN: // Note : NV2A return shouldn't be used because the NV2A call is used as jump and the subr_return is used as an flag of where the jump was from.
-                //considering move this case to the same code block with old jump, RETURN can be tested with word & 0xE0030003 == 0x00020000. 
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN, not supposed to be used!");
-                if (word != 0x00020000) {
-                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
-                    goto finish; // For now, don't even attempt to run through
-                }
-                else {
-                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
-                }
-
-                if (!subr_active) {
-                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
-                    // TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
-                    goto finish; // For now, don't even attempt to run through
-                }
-
-                dma_get = subr_return;
-                subr_active = false;
-                continue; // while
-            case COMMAND_FLAGS_LONG_NON_INCREASING_METHODS:
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS not available on NV2A");
+            case COMMAND_FLAGS_SLI_CONDITIONAL:
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
                 break;
-            default:
-                if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
-                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
-                } else if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
-                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
-                    /// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
-                    /// dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
-                    /// dma_get += dma_state.mcnt; // To be safe, skip method data
-                    /// continue;
-                } else {
-                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
-                }
-
-                /// dma_get += command.method_count; // To be safe, skip method data
-                /// continue;
-                // TODO : throw DMA_PUSHER(INVALID_CMD);
-                goto finish; // For now, don't even attempt to run through
+            case COMMAND_FLAGS_RETURN:
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN should already be handled earlier");
+                break;
+            case COMMAND_FLAGS_LONG_NON_INCREASING_METHODS:
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
+                break;
             } // switch flags
 
             dcount_shadow = 0;
             continue; // while for next word
-        }
+        } // if (dma_state.mcnt == 0)
 
         /* data word of methods command */
         data_shadow = word;
