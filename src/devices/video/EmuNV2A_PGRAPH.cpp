@@ -746,7 +746,7 @@ void OpenGL_draw_state_update(NV2AState *d)
     bool blue = pg->KelvinPrimitive.SetColorMask & NV097_SET_COLOR_MASK_BLUE_WRITE_ENABLE;
     glColorMask(red, green, blue, alpha);
     glDepthMask(!!(pg->KelvinPrimitive.SetDepthMask&0x1!=0));
-    glStencilMask(pg->KelvinPrimitive.SetStencilMask&0xFF);
+    glStencilMask(pg->KelvinPrimitive.SetStencilMask & 0xFF);
 
     //uint32_t blend = pg->pgraph_regs[NV_PGRAPH_BLEND / 4];
     if (pg->KelvinPrimitive.SetBlendEnable!=0) {
@@ -821,7 +821,7 @@ void OpenGL_draw_state_update(NV2AState *d)
     if (depth_test) {
         glEnable(GL_DEPTH_TEST);
 
-        uint32_t depth_func = pg->KelvinPrimitive.SetDepthFunc;
+        uint32_t depth_func = (pg->KelvinPrimitive.SetDepthFunc & 0x0F);
         assert(depth_func < ARRAY_SIZE(pgraph_depth_func_map));
         glDepthFunc(pgraph_depth_func_map[depth_func]);
     }
@@ -832,13 +832,13 @@ void OpenGL_draw_state_update(NV2AState *d)
     if (stencil_test) {
         glEnable(GL_STENCIL_TEST);
 
-        uint32_t stencil_func = pg->KelvinPrimitive.SetStencilFunc &0x0F;
-        uint32_t stencil_ref = pg->KelvinPrimitive.SetStencilFuncRef &0xFF;
-        uint32_t func_mask = pg->KelvinPrimitive.SetStencilFuncMask;
+        uint32_t stencil_func = pg->KelvinPrimitive.SetStencilFunc & 0x0F;
+        uint32_t stencil_ref = pg->KelvinPrimitive.SetStencilFuncRef & 0xFF;
+        uint32_t func_mask = pg->KelvinPrimitive.SetStencilFuncMask & 0xFF;
         //uint32_t control2 = pg->pgraph_regs[NV_PGRAPH_CONTROL_2/4];
-        uint32_t op_fail = pg->KelvinPrimitive.SetStencilOpFail &0x0F;
-        uint32_t op_zfail = pg->KelvinPrimitive.SetStencilOpZfail;
-        uint32_t op_zpass = pg->KelvinPrimitive.SetStencilOpZpass;
+        uint32_t op_fail = kelvin_map_stencil_op(pg->KelvinPrimitive.SetStencilOpFail & 0x0F);
+        uint32_t op_zfail = pg->KelvinPrimitive.SetStencilOpZfail & 0xF;
+        uint32_t op_zpass = kelvin_map_stencil_op(pg->KelvinPrimitive.SetStencilOpZpass & 0xF);
 
         assert(stencil_func < ARRAY_SIZE(pgraph_stencil_func_map));
         assert(op_fail < ARRAY_SIZE(pgraph_stencil_op_map));
@@ -1155,7 +1155,6 @@ int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)
 #define D3D_RECTANGLE_COPY_CLIP_RECTANGLE                      24
 
 static uint32_t subchannel_to_graphic_class[8] = { NV_KELVIN_PRIMITIVE,NV_MEMORY_TO_MEMORY_FORMAT,NV_IMAGE_BLIT,NV_CONTEXT_SURFACES_2D,0,NV_CONTEXT_PATTERN,0,0, };
-extern IDirect3DDevice9Ex *g_pD3DDevice;
 extern VertexShaderMode g_Xbox_VertexShaderMode;
 extern void CxbxUpdateHostVertexShader();
 //starting address of vertex shader user program
@@ -1271,7 +1270,7 @@ int pgraph_handle_method(
 		*/
         switch (arg0) {
         case D3D_KELVIN_PRIMITIVE:
-            subchannel_to_graphic_class[subchannel]= NV_KELVIN_PRIMITIVE;
+            subchannel_to_graphic_class[subchannel] = NV_KELVIN_PRIMITIVE;
             break;
         case D3D_MEMORY_TO_MEMORY_COPY:
             subchannel_to_graphic_class[subchannel] = NV_MEMORY_TO_MEMORY_FORMAT;//should be copy, supposed to dma copy an image rect and change the pixel format in the same time. need further study.
@@ -1293,11 +1292,11 @@ int pgraph_handle_method(
     }
 
     // is this right? needs double check.
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 + subchannel ];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH2/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE2 + subchannel ];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH3/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 + subchannel ];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH4/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 + subchannel ];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH5/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 + subchannel ];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH2/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE2 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH3/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH4/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH5/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 + subchannel];
 
     //if the graphics_class doesn't work, we have to switch to use subchannel instead.
 	uint32_t graphics_class = GET_MASK(pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4],
@@ -1642,46 +1641,36 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_CONTEXT_DMA_NOTIFIES://done
-                    //use pg->KelvinPrimitive.SetContextDmaNotifies
-                    //pg->dma_notifies = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaNotifies); // Was pg->dma_notifies = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_A://done
-                    //pg->KelvinPrimitive.SetContextDmaA
-                    //pg->dma_a = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaA); // Was pg->dma_a = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_B://done
-                    //pg->KelvinPrimitive.SetContextDmaB
-                    //pg->dma_b = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaB); // Was pg->dma_b = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_STATE://done
-                    //KelvinPrimitive.SetContextDmaState
-                    //pg->dma_state = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaState); // Was pg->dma_state = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_COLOR://done
                     /* try to get any straggling draws in before the surface's changed :/ */
-                    pgraph_update_surface(d, false, true, true);
-                    //KelvinPrimitive.SetContextDmaColor
-                    //pg->dma_color = arg0;
+                    pgraph_update_surface(d, false, true, true); // TODO : Move actions-before-writes to, well : before the (generic) write!
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaColor); // Was pg->dma_color = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_ZETA://done
-                    //KelvinPrimitive.SetContextDmaZeta
-                    //pg->dma_zeta = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaZeta); // Was pg->dma_zeta = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_VERTEX_A://done
-                    //KelvinPrimitive.SetContextDmaVertexA
-                    //pg->dma_vertex_a = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaVertexA); // Was pg->dma_vertex_a = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_VERTEX_B://done
-                    //KelvinPrimitive.SetContextDmaVertexB
-                    //pg->dma_vertex_b = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaVertexB); // Was pg->dma_vertex_b = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_SEMAPHORE://done
-                    //KelvinPrimitive.SetContextDmaSemaphore
-                    //pg->dma_semaphore = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaSemaphore); // Was pg->dma_semaphore = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_REPORT://done
-                    //KelvinPrimitive.SetContextDmaReport
-                    //pg->dma_report = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaReport); // Was pg->dma_report = arg0;
                     break;
 
                 case NV097_SET_SURFACE_CLIP_HORIZONTAL://done KelvinPrimitive.SetSurfaceClipHorizontal could use union with word ClipX, ClipWidth
@@ -1743,11 +1732,11 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW0://done
-                    //pg->pgraph_regs[NV_PGRAPH_COMBINESPECFOG0/4] = parameter;
+                    assert(arg0 == pg->KelvinPrimitive.SetCombinerSpecularFogCW0); // Was pg->pgraph_regs[NV_PGRAPH_COMBINESPECFOG0/4] = parameter;
                     break;
 
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW1://done
-                    //pg->pgraph_regs[NV_PGRAPH_COMBINESPECFOG1/4] = parameter;
+                    assert(arg0 == pg->KelvinPrimitive.SetCombinerSpecularFogCW1); // Was pg->pgraph_regs[NV_PGRAPH_COMBINESPECFOG1/4] = parameter;
                     break;
 
                 case NV097_SET_CONTROL0: {//done  //pg->KelvinPrimitive.SetControl0& NV097_SET_CONTROL0_COLOR_SPACE_CONVERT GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)
@@ -1812,7 +1801,7 @@ int pgraph_handle_method(
                     }
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_3 / 4], NV_PGRAPH_CONTROL_3_FOG_MODE,
                     //	mode);
-                    pg->KelvinPrimitive.SetFogMode = mode;
+                    pg->KelvinPrimitive.SetFogMode = mode; // TODO : Postpone conversion (of NV097_SET_FOG_MODE_V_* into NV_PGRAPH_CONTROL_3_FOG_MODE_*) towards readout
                     break;
                 }
                 case NV097_SET_FOG_GEN_MODE: {//done //pg->KelvinPrimitive.SetFogGenMode
@@ -1834,7 +1823,7 @@ int pgraph_handle_method(
                         break;
                     }
                     // SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_FOGGENMODE, mode);
-                    pg->KelvinPrimitive.SetFogGenMode = mode;
+                    pg->KelvinPrimitive.SetFogGenMode = mode; // TODO : Postpone conversion (of NV097_SET_FOG_GEN_MODE_V_* into FOG_MODE_*) towards readout
                     break;
                 }
                 case NV097_SET_FOG_ENABLE://done //pg->KelvinPrimitive.SetFogEnable
@@ -1845,104 +1834,107 @@ int pgraph_handle_method(
                     */
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_3 / 4], NV_PGRAPH_CONTROL_3_FOGENABLE,
                     //	arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetFogEnable);
                     break;
                 case NV097_SET_FOG_COLOR: {//done //pg->KelvinPrimitive.SetFogColor
-                    /* parameter channels are ABGR, PGRAPH channels are ARGB */
-                    uint8_t alpha = GET_MASK(arg0, NV097_SET_FOG_COLOR_ALPHA);
-                    uint8_t blue = GET_MASK(arg0, NV097_SET_FOG_COLOR_BLUE);
-                    uint8_t green = GET_MASK(arg0, NV097_SET_FOG_COLOR_GREEN);
-                    uint8_t red = GET_MASK(arg0, NV097_SET_FOG_COLOR_RED);
-					uint32_t fgcolor;
-					SET_MASK(fgcolor, NV_PGRAPH_FOGCOLOR_ALPHA, alpha);
-                    SET_MASK(fgcolor, NV_PGRAPH_FOGCOLOR_RED, red);
-                    SET_MASK(fgcolor, NV_PGRAPH_FOGCOLOR_GREEN, green);
-                    SET_MASK(fgcolor, NV_PGRAPH_FOGCOLOR_BLUE, blue);
-					pg->KelvinPrimitive.SetFogColor = fgcolor;
-					break;
+                    assert(arg0 == pg->KelvinPrimitive.SetFogColor);
+                    break;
                 }
 
                 case NV097_SET_WINDOW_CLIP_TYPE://done //pg->KelvinPrimitive.SetWindowClipType
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                         //NV_PGRAPH_SETUPRASTER_WINDOWCLIPTYPE, arg0);
-                    pg->KelvinPrimitive.SetWindowClipType &= 0x1;
+                    assert(arg0 == pg->KelvinPrimitive.SetWindowClipType);
                     break;
 
                 case NV097_SET_ALPHA_TEST_ENABLE://D3DRS_CULLMODE //pg->KelvinPrimitive.SetAlphaTestEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_ALPHATESTENABLE, arg0);
-					g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+                    assert(arg0 == pg->KelvinPrimitive.SetAlphaTestEnable);
 					break;
 
                 case NV097_SET_BLEND_ENABLE://D3DRS_ALPHABLENDENABLE //pg->KelvinPrimitive.SetBlendEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_EN, arg0);
-					g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+                    assert(arg0 == pg->KelvinPrimitive.SetBlendEnable);
 					break;
 
                 case NV097_SET_CULL_FACE_ENABLE://D3DRS_CULLMODE //pg->KelvinPrimitive.SetCullFaceEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_CULLENABLE,
                     //	arg0);
-					g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+                    assert(arg0 == pg->KelvinPrimitive.SetCullFaceEnable);
 					break;
                 case NV097_SET_DEPTH_TEST_ENABLE://done //pg->KelvinPrimitive.SetDepthTestEnable
                     // Test-case : Whiplash
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4], NV_PGRAPH_CONTROL_0_ZENABLE,
                     //	arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetDepthTestEnable);
                     break;
                 case NV097_SET_DITHER_ENABLE://done //pg->KelvinPrimitive.SetDitherEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_DITHERENABLE, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetDitherEnable);
                     break;
                 case NV097_SET_LIGHTING_ENABLE://done //pg->KelvinPrimitive.SetLightingEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_LIGHTING,
                     //	arg0);
-					g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
+                    assert(arg0 == pg->KelvinPrimitive.SetLightingEnable);
 					break;
                 case NV097_SET_POINT_PARAMS_ENABLE://done //pg->KelvinPrimitive.SetPointParamsEnable
                     //this state is not used yet.
+                    assert(arg0 == pg->KelvinPrimitive.SetPointParamsEnable);
                     break;
                 case NV097_SET_POINT_SMOOTH_ENABLE://done //pg->KelvinPrimitive.SetPointSmoothEnable
+                    assert(arg0 == pg->KelvinPrimitive.SetPointSmoothEnable);
                     //this state is not used yet.
                     break;
                 case NV097_SET_LINE_SMOOTH_ENABLE://done //pg->KelvinPrimitive.SetLineSmoothEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_LINESMOOTHENABLE, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetLineSmoothEnable);
                     break;
                 case NV097_SET_POLY_SMOOTH_ENABLE://done //pg->KelvinPrimitive.SetPolySmoothEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POLYSMOOTHENABLE, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetPolySmoothEnable);
                     break;
                 case NV097_SET_SKIN_MODE://done //pg->KelvinPrimitive.SetSkinMode
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_SKIN,
                     //	arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetSkinMode);
                     break;
                 case NV097_SET_STENCIL_TEST_ENABLE://done //pg->KelvinPrimitive.SetStencilTestEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                     //	NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilTestEnable);
                     break;
                 case NV097_SET_POLY_OFFSET_POINT_ENABLE://done //pg->KelvinPrimitive.SetPolyOffsetPointEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POFFSETPOINTENABLE, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetPolyOffsetPointEnable);
                     break;
                 case NV097_SET_POLY_OFFSET_LINE_ENABLE://done //pg->KelvinPrimitive.SetPolyOffsetLineEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POFFSETLINEENABLE, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetPolyOffsetLineEnable);
                     break;
                 case NV097_SET_POLY_OFFSET_FILL_ENABLE://done //pg->KelvinPrimitive.SetPolyOffsetFillEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POFFSETFILLENABLE, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetPolyOffsetFillEnable);
                     break;
                 case NV097_SET_ALPHA_FUNC://done //pg->KelvinPrimitive.SetAlphaFunc
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_ALPHAFUNC, arg0 & 0xF);
-                    pg->KelvinPrimitive.SetAlphaFunc &= 0xF;
+                    assert(arg0 == pg->KelvinPrimitive.SetAlphaFunc);
                     break;
                 case NV097_SET_ALPHA_REF://done //pg->KelvinPrimitive.SetAlphaRef
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_ALPHAREF, arg0);
-                    pg->KelvinPrimitive.SetAlphaRef &= 0xFF;
+                    assert(arg0 == pg->KelvinPrimitive.SetAlphaRef);
                     break;
                 case NV097_SET_BLEND_FUNC_SFACTOR: {//done //pg->KelvinPrimitive.SetBlendFuncSfactor
+                    assert(arg0 == pg->KelvinPrimitive.SetBlendFuncSfactor);
                     unsigned int factor=arg0;
                     if (factor > 15) {
                         fprintf(stderr, "Unknown blend source factor: 0x%x, reset to NV_PGRAPH_BLEND_SFACTOR_ZERO\n", arg0);
@@ -1995,12 +1987,13 @@ int pgraph_handle_method(
                         break;
                     }
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_DFACTOR, factor);
-                    pg->KelvinPrimitive.SetBlendFuncDfactor = factor;
+                    pg->KelvinPrimitive.SetBlendFuncDfactor = factor; // TODO : Postpone conversion (of NV097_SET_BLEND_FUNC_DFACTOR_V_* into NV_PGRAPH_BLEND_DFACTOR_*) towards readout
                     break;
                 }
 
                 case NV097_SET_BLEND_COLOR://done //pg->KelvinPrimitive.SetBlendColor
                     //pg->pgraph_regs[NV_PGRAPH_BLENDCOLOR/4] = parameter;
+                    assert(arg0 == pg->KelvinPrimitive.SetBlendColor);
                     break;
 
                 case NV097_SET_BLEND_EQUATION: {//done //pg->KelvinPrimitive.SetBlendEquation
@@ -2025,7 +2018,7 @@ int pgraph_handle_method(
                         equation = 0;
                         break;
                     }
-                    pg->KelvinPrimitive.SetBlendEquation = equation;
+                    pg->KelvinPrimitive.SetBlendEquation = equation; // TODO : Postpone conversion (of NV097_SET_BLEND_EQUATION_V_* into pgraph_blend_equation_map indices) towards readout
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_EQN, equation);
 
                     break;
@@ -2035,10 +2028,11 @@ int pgraph_handle_method(
                     // Test-case : Whiplash
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4], NV_PGRAPH_CONTROL_0_ZFUNC,
                     //	arg0 & 0xF);
-                    pg->KelvinPrimitive.SetDepthFunc &= 0x0F;
+                    assert(arg0 == pg->KelvinPrimitive.SetDepthFunc);
                     break;
 
                 case NV097_SET_COLOR_MASK: {//done //pg->KelvinPrimitive.SetColorMask
+                    assert(arg0 == pg->KelvinPrimitive.SetColorMask);
                     pg->surface_color.write_enabled_cache |= pgraph_get_color_write_enabled(pg);
 
                     bool alpha = arg0 & NV097_SET_COLOR_MASK_ALPHA_WRITE_ENABLE;
@@ -2056,6 +2050,7 @@ int pgraph_handle_method(
                     break;
                 }
                 case NV097_SET_DEPTH_MASK://done //pg->KelvinPrimitive.SetDepthMask
+                    assert(arg0 == pg->KelvinPrimitive.SetDepthMask);
                     pg->surface_zeta.write_enabled_cache |= pgraph_get_zeta_write_enabled(pg);
 
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
@@ -2064,64 +2059,74 @@ int pgraph_handle_method(
                 case NV097_SET_STENCIL_MASK://done //pg->KelvinPrimitive.SetStencilMask
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                     //	NV_PGRAPH_CONTROL_1_STENCIL_MASK_WRITE, arg0);
-                    pg->KelvinPrimitive.SetStencilMask &= 0xFF;
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilMask);
                     break;
                 case NV097_SET_STENCIL_FUNC://done //pg->KelvinPrimitive.SetStencilFunc
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                         //NV_PGRAPH_CONTROL_1_STENCIL_FUNC, arg0 & 0xF);
-                        pg->KelvinPrimitive.SetStencilFunc &= 0x0F;
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilFunc);
                     break;
                 case NV097_SET_STENCIL_FUNC_REF://done //pg->KelvinPrimitive.SetStencilFuncRef
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                     //	NV_PGRAPH_CONTROL_1_STENCIL_REF, arg0);
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilFuncRef);
                     break;
                 case NV097_SET_STENCIL_FUNC_MASK://done //pg->KelvinPrimitive.SetStencilFuncMask
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                         //NV_PGRAPH_CONTROL_1_STENCIL_MASK_READ, arg0);
-                    pg->KelvinPrimitive.SetStencilFuncMask & 0xFF;
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilFuncMask);
                     break;
                 case NV097_SET_STENCIL_OP_FAIL://done //pg->KelvinPrimitive.SetStencilOpFail
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_2 / 4],
                         //NV_PGRAPH_CONTROL_2_STENCIL_OP_FAIL,
-                        pg->KelvinPrimitive.SetStencilOpFail &= 0x0F;
-                        kelvin_map_stencil_op(pg->KelvinPrimitive.SetStencilOpFail);
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilOpFail);
                     break;
                 case NV097_SET_STENCIL_OP_ZFAIL://done //pg->KelvinPrimitive.SetStencilOpZfail
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_2 / 4],
                         //NV_PGRAPH_CONTROL_2_STENCIL_OP_ZFAIL,
-                        pg->KelvinPrimitive.SetStencilOpZfail &= 0xF;
-                        kelvin_map_stencil_op(pg->KelvinPrimitive.SetStencilOpZfail);
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilOpZfail);
                     break;
                 case NV097_SET_STENCIL_OP_ZPASS://done //pg->KelvinPrimitive.SetStencilOpZpass
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_2 / 4],
                         //NV_PGRAPH_CONTROL_2_STENCIL_OP_ZPASS,
-                        pg->KelvinPrimitive.SetStencilOpZpass&= 0xF;
-                        kelvin_map_stencil_op(pg->KelvinPrimitive.SetStencilOpZpass);
+                    assert(arg0 == pg->KelvinPrimitive.SetStencilOpZpass);
                     break;
 
-                case NV097_SET_SHADE_MODE:break;//done //pg->KelvinPrimitive.SetShadeMode
+                case NV097_SET_SHADE_MODE://done //pg->KelvinPrimitive.SetShadeMode
+                    assert(arg0 == pg->KelvinPrimitive.SetShadeMode);
+                    break;
 
-                case NV097_SET_LINE_WIDTH:break;//done //pg->KelvinPrimitive.SetLineWidth
+                case NV097_SET_LINE_WIDTH://done //pg->KelvinPrimitive.SetLineWidth
+                    assert(arg0 == pg->KelvinPrimitive.SetLineWidth);
+                    break;
 
-                case NV097_SET_POLYGON_OFFSET_SCALE_FACTOR:break;//done //pg->KelvinPrimitive.SetPolygonOffsetScaleFactor
+                case NV097_SET_POLYGON_OFFSET_SCALE_FACTOR://done //pg->KelvinPrimitive.SetPolygonOffsetScaleFactor
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
+                    break;
 
-                case NV097_SET_POLYGON_OFFSET_BIAS: break;//done //pg->KelvinPrimitive.SetPolygonOffsetBias
+                case NV097_SET_POLYGON_OFFSET_BIAS://done //pg->KelvinPrimitive.SetPolygonOffsetBias
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetPolygonOffsetBias);
+                    break;
 
                 case NV097_SET_FRONT_POLYGON_MODE://done //pg->KelvinPrimitive.SetFrontPolygonMode
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_FRONTFACEMODE,
                     //	kelvin_map_polygon_mode(arg0));
-                    pg->KelvinPrimitive.SetFrontPolygonMode = kelvin_map_polygon_mode(pg->KelvinPrimitive.SetFrontPolygonMode);
+                    assert(arg0 == pg->KelvinPrimitive.SetFrontPolygonMode);
                     break;
                 case NV097_SET_BACK_POLYGON_MODE://done //pg->KelvinPrimitive.SetBackPolygonMode
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_BACKFACEMODE,
                     //	kelvin_map_polygon_mode(arg0));
-                    pg->KelvinPrimitive.SetBackPolygonMode = kelvin_map_polygon_mode(pg->KelvinPrimitive.SetBackPolygonMode);
+                    assert(arg0 == pg->KelvinPrimitive.SetBackPolygonMode);
                     break;
-                case NV097_SET_CLIP_MIN:break;//done //pg->KelvinPrimitive.SetClipMin
+                case NV097_SET_CLIP_MIN://done //pg->KelvinPrimitive.SetClipMin
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetClipMin);
+                    break;
 
-                case NV097_SET_CLIP_MAX:break;//done //pg->KelvinPrimitive.SetClipMax
+                case NV097_SET_CLIP_MAX://done //pg->KelvinPrimitive.SetClipMax
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetClipMax);
+                    break;
 
                 case NV097_SET_CULL_FACE: {//done //pg->KelvinPrimitive.SetCullFace
                     unsigned int face=arg0;
@@ -2140,7 +2145,7 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_CULLCTRL,
                     //	face);
-                    pg->KelvinPrimitive.SetCullFace = face;
+                    pg->KelvinPrimitive.SetCullFace = face; // TODO : Postpone conversion (of NV097_SET_CULL_FACE_V_* into NV_PGRAPH_SETUPRASTER_CULLCTRL_* values) towards readout
                     break;
                 }
                 case NV097_SET_FRONT_FACE: {//done //pg->KelvinPrimitive.SetFrontFace
@@ -2159,20 +2164,24 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_FRONTFACE,
                     //	ccw ? 1 : 0);
-                    pg->KelvinPrimitive.SetFrontFace = ccw ? 1 : 0;
+                    pg->KelvinPrimitive.SetFrontFace = ccw ? 1 : 0; // TODO : Postpone conversion (of NV097_SET_FRONT_FACE_V_* into NV_PGRAPH_SETUPRASTER_FRONTFACE values) towards readout
                     break;
                 }
                 case NV097_SET_NORMALIZATION_ENABLE://done //pg->KelvinPrimitive.SetNormalizationEnable
+                    assert(arg0 == pg->KelvinPrimitive.SetNormalizationEnable);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4],
                     //	NV_PGRAPH_CSV0_C_NORMALIZATION_ENABLE,
                     //	arg0);
                     break;
 
                 case NV097_SET_MATERIAL_EMISSION : break;//done //pg->KelvinPrimitive.SetMaterialEmission[3]
-                case NV097_SET_MATERIAL_ALPHA : break;//done //pg->KelvinPrimitive.SetMaterialAlpha
+                case NV097_SET_MATERIAL_ALPHA://done //pg->KelvinPrimitive.SetMaterialAlpha
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetMaterialAlpha);
+                    break;
                 case NV097_SET_SPECULAR_ENABLE : break;//done //pg->KelvinPrimitive.SetSpecularEnable
 
                 case NV097_SET_LIGHT_ENABLE_MASK://done //pg->KelvinPrimitive.SetLightEnableMask
+                    assert(arg0 == pg->KelvinPrimitive.SetLightEnableMask);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_LIGHTS, arg0);
                     break;
 
@@ -2222,7 +2231,9 @@ int pgraph_handle_method(
                     //pg->texture_matrix_enable[slot] = arg0;
                     break;
 
-                case NV097_SET_POINT_SIZE: break;//done //pg->KelvinPrimitive.SetPointSize
+                case NV097_SET_POINT_SIZE://done //pg->KelvinPrimitive.SetPointSize
+                    assert(arg0 == pg->KelvinPrimitive.SetPointSize);
+                    break;
 
                 CASE_16(NV097_SET_PROJECTION_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetProjectionMatrix[16]
                     //KelvinPrimitive.SetProjectionMatrix[] is update already. we update the vertex shader contant as well.
@@ -2320,6 +2331,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_TEXGEN_VIEW_MODEL://done //pg->KelvinPrimitive.SetTexgenViewModel
+                    assert(arg0 == pg->KelvinPrimitive.SetTexgenViewModel);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_TEXGEN_REF,
                     //	arg0);
                     break;
@@ -2346,9 +2358,13 @@ int pgraph_handle_method(
                     }
                     break;
 
-                case NV097_SET_SWATH_WIDTH: break;//not implement //pg->KelvinPrimitive.SetSwathWidth
+                case NV097_SET_SWATH_WIDTH://not implement //pg->KelvinPrimitive.SetSwathWidth
+                    assert(arg0 == pg->KelvinPrimitive.SetSwathWidth);
+                    break;
 
                 case NV097_SET_FLAT_SHADE_OP: break;//not implement //pg->KelvinPrimitive.SetFlatShadeOp
+                    assert(arg0 == pg->KelvinPrimitive.SetFlatShadeOp);
+                    break;
 
                 CASE_3(NV097_SET_SCENE_AMBIENT_COLOR, 4) ://done //pg->KelvinPrimitive.SetSceneAmbientColor[3]
                     //KelvinPrimitive.SetSceneAmbientColor[3] is update already. we update the vertex shader contant as well.
@@ -4436,7 +4452,7 @@ static void pgraph_update_shader_constants(PGRAPHState *pg,
         }
     }
     if (binding->alpha_ref_loc != -1) {
-        float alpha_ref = pg->KelvinPrimitive.SetAlphaRef / 255.0f;
+        float alpha_ref = (pg->KelvinPrimitive.SetAlphaRef & 0xFF) / 255.0f;
         glUniform1f(binding->alpha_ref_loc, alpha_ref);
     }
 
@@ -4465,12 +4481,17 @@ static void pgraph_update_shader_constants(PGRAPHState *pg,
     }
 
     if (binding->fog_color_loc != -1) {
-        uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
+        /* NV097 Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
+        uint32_t kelvin_fog_color_ABGR = pg->KelvinPrimitive.SetFogColor;
+        uint8_t alpha = GET_MASK(kelvin_fog_color_ABGR, NV097_SET_FOG_COLOR_ALPHA);
+        uint8_t blue = GET_MASK(kelvin_fog_color_ABGR, NV097_SET_FOG_COLOR_BLUE);
+        uint8_t green = GET_MASK(kelvin_fog_color_ABGR, NV097_SET_FOG_COLOR_GREEN);
+        uint8_t red = GET_MASK(kelvin_fog_color_ABGR, NV097_SET_FOG_COLOR_RED);
         glUniform4f(binding->fog_color_loc,
-                    GET_MASK(fog_color, NV_PGRAPH_FOGCOLOR_RED) / 255.0f,
-                    GET_MASK(fog_color, NV_PGRAPH_FOGCOLOR_GREEN) / 255.0f,
-                    GET_MASK(fog_color, NV_PGRAPH_FOGCOLOR_BLUE) / 255.0f,
-                    GET_MASK(fog_color, NV_PGRAPH_FOGCOLOR_ALPHA) / 255.0f);
+                    red / 255.0f, // NV_PGRAPH_FOGCOLOR_RED
+                    green / 255.0f, // NV_PGRAPH_FOGCOLOR_GREEN
+                    blue / 255.0f, // NV_PGRAPH_FOGCOLOR_BLUE
+                    alpha / 255.0f); // NV_PGRAPH_FOGCOLOR_ALPHA
     }
     if (binding->fog_param_loc[0] != -1) {
         glUniform1f(binding->fog_param_loc[0],
@@ -4607,7 +4628,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 
     ShaderState state;
     /* register combiner stuff */
-    state.psh.window_clip_exclusive = pg->KelvinPrimitive.SetWindowClipType,
+	state.psh.window_clip_exclusive = pg->KelvinPrimitive.SetWindowClipType & 0x1;
     state.psh.combiner_control = pg->KelvinPrimitive.SetCombinerControl;
     state.psh.shader_stage_program = pg->KelvinPrimitive.SetShaderStageProgram;
     state.psh.other_stage_input = pg->KelvinPrimitive.SetShaderOtherStageInput;
@@ -4616,7 +4637,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
     //uint32_t control0 = pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4];
 
     state.psh.alpha_test = pg->KelvinPrimitive.SetAlphaTestEnable !=0;
-    state.psh.alpha_func = (enum PshAlphaFunc)pg->KelvinPrimitive.SetAlphaFunc;
+    state.psh.alpha_func = (enum PshAlphaFunc)(pg->KelvinPrimitive.SetAlphaFunc & 0xF);
 
     /* fixed function stuff */
     state.skinning = (enum VshSkinning)pg->KelvinPrimitive.SetSkinMode;
@@ -4631,8 +4652,8 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 
     /* geometry shader stuff */
     state.primitive_mode = (enum ShaderPrimitiveMode)pg->primitive_mode;
-    state.polygon_front_mode = (enum ShaderPolygonMode)pg->KelvinPrimitive.SetFrontPolygonMode;
-    state.polygon_back_mode = (enum ShaderPolygonMode)pg->KelvinPrimitive.SetBackPolygonMode;
+    state.polygon_front_mode = (enum ShaderPolygonMode)kelvin_map_polygon_mode(pg->KelvinPrimitive.SetFrontPolygonMode);
+    state.polygon_back_mode = (enum ShaderPolygonMode)kelvin_map_polygon_mode(pg->KelvinPrimitive.SetBackPolygonMode);
 
     state.program_length = 0;
     memset(state.vsh_program_copy, 0, sizeof(state.vsh_program_copy));
