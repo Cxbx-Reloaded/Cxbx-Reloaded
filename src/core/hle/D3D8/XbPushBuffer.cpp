@@ -506,7 +506,6 @@ extern void EmuExecutePushBufferRaw
     NV2AState *d = g_NV2A->GetDeviceState();
     d->pgraph.pgraph_regs[NV_PGRAPH_CTX_CONTROL/4] |= NV_PGRAPH_CTX_CONTROL_CHID; // avoid assert in pgraph_handle_method()
 
-
     // DMA Pusher state -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#pusher-state
 #if 0
     static xbox::addr_xt dma_pushbuffer; // the pushbuffer and IB DMA object
@@ -514,19 +513,19 @@ extern void EmuExecutePushBufferRaw
     uint32_t *dma_limit; // pushbuffer size limit
     uint32_t *dma_put; // pushbuffer current end address
     uint32_t *dma_get; //pushbuffer current read address
-	struct {
-		xbox::NV2AMETHOD mthd; // Current method
-		uint32_t subc; // :3 = Current subchannel
-		uint32_t mcnt; // :24 = Current method count
-		bool ni; // Current command's NI (non-increasing) flag
-		bool lenp;// Current command's long non-increasing method flag
-		uint32_t command_dword;//full command dword backup
-	}dma_state;
-
-    static uint32_t dcount_shadow = 0; // [NV5:] Number of already-processed methods in cmd]
+    struct {
+        xbox::NV2AMETHOD mthd; // Current method
+        uint32_t subc; // :3 = Current subchannel
+        uint32_t mcnt; // :24 = Current method count
+        // Note : dcount_shadow is listed here in envytools "Pusher state" overview, but isn't prefixed with dma_struct, so moved below
+        bool ni; // Current command's NI (non-increasing) flag
+    } dma_state;
+    static uint32_t dcount_shadow = 0; // [NV5:] Number of already-processed methods in cmd
+    // TODO : static uint32_t ref; // reference counter [shared with puller]
     static bool subr_active = false; // Subroutine active
-    static uint32_t *subr_return = nullptr; // Subroutine return address
-    // static bool big_endian = false; // Pushbuffer endian switch
+    static uint32_t *subr_return = nullptr; // subroutine return address
+    // TODO : static bool big_endian = false; // pushbuffer endian switch
+    // End of DMA pusher state
 
     // DMA troubleshooting values -- see https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#errors
     static uint32_t *dma_get_jmp_shadow = nullptr; // value of dma_get before the last jump
@@ -574,13 +573,6 @@ extern void EmuExecutePushBufferRaw
         uint32_t * word_ptr = dma_get;//shadow copy of dma_get before it gets advanced after the word was read.
         word = *dma_get++;
 
-        /* now, see if we're in the middle of a long command */
-        if (dma_state.lenp) {
-            dma_state.lenp = false;
-            dma_state.mcnt = word & 0xffffff;
-            continue;// while for next word
-        }
-
         if (dma_state.mcnt) {
             /* data word of methods command */
             data_shadow = word;
@@ -623,7 +615,7 @@ extern void EmuExecutePushBufferRaw
                         num_processed = pgraph_handle_method(
                             d,
                             dma_state.subc,
-                            dma_state.command_dword,//dma_state.mthd,
+                            rsvd_shadow, // Was dma_state.mthd, but nowadays we need the full 32 bit command word in there (to allow a generic non-increment check)
                             word,
                             word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
                             dma_state.mcnt,
@@ -639,8 +631,8 @@ extern void EmuExecutePushBufferRaw
                 dma_get=word_ptr+ dma_state.mcnt;//num_processed default to 1.
                 if (p_dma_get != nullptr)
                     *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
-				dcount_shadow += num_processed;
-				dma_state.mcnt= 0;
+                dcount_shadow += num_processed;
+                dma_state.mcnt= 0;
                 //if (dma_state.mcnt != 0) {
                     //assert(dma_state.mcnt == 0);
                 //    LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
@@ -657,7 +649,6 @@ extern void EmuExecutePushBufferRaw
 
         /* no command active - this is the first word of a new one */
         rsvd_shadow = word;
-		dma_state.command_dword = word;
         // Check and handle command type, then instruction, then flags
 		if (word == 0x00000000) {
 			//real NOP;
@@ -765,8 +756,7 @@ extern void EmuExecutePushBufferRaw
             subr_active = false;
             continue; // while
         case COMMAND_FLAGS_LONG_NON_INCREASING_METHODS:
-            dma_state.lenp = true;
-            LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS");
+            LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS not available on NV2A");
             break;
         default:
             if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
