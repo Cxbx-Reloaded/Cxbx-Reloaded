@@ -47,7 +47,11 @@
 #include <filesystem>
 
 // partition emulation directory handles
-HANDLE           g_hCurDir_hack = NULL; // HACK: We should not be depending on this variable. Instead, we should fix/implement Ob/Io objects such as IoCreateDevice.
+HANDLE g_hCurDir_hack = NULL; // HACK: We should not be depending on this variable. Instead, we should fix/implement Ob/Io objects such as IoCreateDevice.
+
+HANDLE g_DiskBasePathHandle;
+std::string g_DiskBasePath;
+std::string g_MuBasePath;
 
 // Default Xbox Partition Table
 #define PE_PARTFLAGS_IN_USE	0x80000000
@@ -157,23 +161,44 @@ void io_mu_metadata::flush(const wchar_t lett)
 	ofs.flush();
 }
 
+// NOTE: root_path input must already had called canonical function for optimization purpose.
+static bool CxbxrIsPathInsideRootPath(const std::filesystem::path& path, const std::filesystem::path& root_path)
+{
+	std::error_code rootError, finalError;
+	const std::filesystem::path rootPath = std::filesystem::canonical(root_path, rootError); // TODO: Replace rootPath to root_path when possible.
+	const std::filesystem::path finalPath = std::filesystem::canonical(path, finalError);
+	if (rootError || finalError) {
+		return false;
+	}
+	auto match = std::mismatch(rootPath.begin(), rootPath.end(), finalPath.begin(), finalPath.end());
+	return match.first == rootPath.end();
+}
+
+bool CxbxrIsPathInsideEmuDisk(const std::filesystem::path& path)
+{
+	return CxbxrIsPathInsideRootPath(path, g_DiskBasePath);
+}
+
+static bool CxbxrIsPathInsideEmuMu(const std::filesystem::path& path)
+{
+	return CxbxrIsPathInsideRootPath(path, g_MuBasePath);
+}
+
 DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile)
 {
-	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
+	const std::filesystem::path path = CxbxGetFinalPathNameByHandle(hFile);
 
-	size_t pos = path.rfind(L"\\EmuDisk\\Partition");
-	if (pos != std::string::npos) {
+	if (CxbxrIsPathInsideEmuDisk(path)) {
 		return DeviceType::Harddisk0;
 	}
 
-	pos = path.rfind(L"\\EmuMu");
-	if (pos != std::string::npos) {
+	if (CxbxrIsPathInsideEmuMu(path)) {
 		return DeviceType::MU;
 	}
 
 	EmuDirPath hybrid_path;
 	FindEmuDirPathByDevice(DeviceCdrom0, hybrid_path);
-	if (hybrid_path.HostDirPath != "") {
+	if (!hybrid_path.HostDirPath.empty() && CxbxrIsPathInsideRootPath(path, hybrid_path.HostDirPath)) {
 		return DeviceType::Cdrom0;
 	}
 
@@ -202,9 +227,9 @@ void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false
 XboxPartitionTable CxbxGetPartitionTable()
 {
 	XboxPartitionTable table;
-	FILE* fp = fopen((CxbxBasePath + "Partition0.bin").c_str(), "rb");
+	FILE* fp = fopen((g_DiskBasePath + "Partition0.bin").c_str(), "rb");
 	if (fp == nullptr) {
-		CxbxKrnlCleanup("CxbxGetPartitionTable Failed:\nUnable to open file: %s", (CxbxBasePath + "Partition0.bin").c_str());
+		CxbxKrnlCleanup("CxbxGetPartitionTable Failed:\nUnable to open file: %s", (g_DiskBasePath + "Partition0.bin").c_str());
 	}
 
 	fread(&table, sizeof(XboxPartitionTable), 1, fp);
@@ -215,8 +240,8 @@ XboxPartitionTable CxbxGetPartitionTable()
 	// Or invalid partition tables left behind from previous versions
 	// of Cxbx-Reloaded
 	if (memcmp(table.Magic, BackupPartTbl.Magic, 16) != 0) {
-		DeleteFile((CxbxBasePath + "Partition0.bin").c_str());
-		CxbxCreatePartitionHeaderFile(CxbxBasePath + "Partition0.bin", true);
+		DeleteFile((g_DiskBasePath + "Partition0.bin").c_str());
+		CxbxCreatePartitionHeaderFile(g_DiskBasePath + "Partition0.bin", true);
 		memcpy(&table, &BackupPartTbl, sizeof(XboxPartitionTable));
 	}
 
@@ -228,7 +253,7 @@ FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber)
 	FATX_SUPERBLOCK superblock;
 	std::stringstream ss;
 
-	ss << CxbxBasePath << "Partition" << partitionNumber << ".bin";
+	ss << g_DiskBasePath << "Partition" << partitionNumber << ".bin";
 	FILE* fp = fopen(ss.str().c_str(), "rb");
 	fread(&superblock, sizeof(FATX_SUPERBLOCK), 1, fp);
 	fclose(fp);
@@ -254,19 +279,6 @@ std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 	path.resize(size);
 
 	return path;
-}
-
-static bool CxbxIsPathInsideEmuDisk(const std::filesystem::path& path)
-{
-	std::error_code rootError, finalError;
-
-	const std::filesystem::path rootPath = std::filesystem::canonical(CxbxBasePath, rootError);
-	const std::filesystem::path finalPath = std::filesystem::canonical(path, finalError);
-	if (rootError || finalError) {
-		return false;
-	}
-	auto match = std::mismatch(rootPath.begin(), rootPath.end(), finalPath.begin(), finalPath.end());
-	return match.first == rootPath.end();
 }
 
 static int CxbxGetPartitionNumber(const std::wstring_view path)
@@ -314,7 +326,7 @@ void CxbxFormatPartitionByHandle(HANDLE hFile)
 	const std::filesystem::path partitionPath = CxbxGetPartitionDataPathFromHandle(hFile);
 
 	// Sanity check, make sure we are actually deleting something within the Cxbx-Reloaded folder
-	if (!CxbxIsPathInsideEmuDisk(partitionPath)) {
+	if (!CxbxrIsPathInsideEmuDisk(partitionPath)) {
 		EmuLog(LOG_LEVEL::WARNING, "Attempting to format a path that is not within a Cxbx-Reloaded data folder... Ignoring!\n");
 		return;
 	}
@@ -539,16 +551,16 @@ NTSTATUS CxbxConvertFilePath(
 	if (RelativePath.compare(0, DrivePrefix.length(), DrivePrefix.c_str()) == 0)
 		RelativePath.erase(0, 4);
 
-	// Check if we where called from a File-handling API :
+	// Check if we were called from a File-handling API :
 	if (!aFileAPIName.empty()) {
 		if (RelativePath.compare(DriveMbrom0) == 0) {
-			*RootDirectory = CxbxBasePathHandle;
-			HostPath = CxbxBasePath;
+			*RootDirectory = g_DiskBasePathHandle;
+			HostPath = g_DiskBasePath;
 			RelativePath = MediaBoardSegaBoot0;
 		}
 		else if (RelativePath.compare(DriveMbrom1) == 0) {
-			*RootDirectory = CxbxBasePathHandle;
-			HostPath = CxbxBasePath;
+			*RootDirectory = g_DiskBasePathHandle;
+			HostPath = g_DiskBasePath;
 			RelativePath = MediaBoardSegaBoot1;
 		}
 		else if (!partitionHeader) {
@@ -607,8 +619,8 @@ NTSTATUS CxbxConvertFilePath(
 				// Remove Harddisk0 prefix, in the hope that the remaining path might work :
 				RelativePath.erase(0, DeviceHarddisk0.length() + 1);
 				// And set Root to the folder containing the partition-folders :
-				*RootDirectory = CxbxBasePathHandle;
-				HostPath = CxbxBasePath;
+				*RootDirectory = g_DiskBasePathHandle;
+				HostPath = g_DiskBasePath;
 			}
 			// NOTE: RootDirectory cannot be ignored.
 			// Any special handling for it should be done below.
@@ -650,8 +662,8 @@ NTSTATUS CxbxConvertFilePath(
 				*RootDirectory = find_path.HostDirHandle;
 			}
 		} else {
-			*RootDirectory = CxbxBasePathHandle;
-			HostPath = CxbxBasePath;
+			*RootDirectory = g_DiskBasePathHandle;
+			HostPath = g_DiskBasePath;
 			RelativePath = RelativeXboxPath.substr(DeviceHarddisk0.length()) + ".bin";
 		}
 
@@ -669,8 +681,8 @@ NTSTATUS CxbxConvertFilePath(
 		if (g_bPrintfOn) {
 			EmuLog(LOG_LEVEL::DEBUG, "%s Corrected path...", aFileAPIName.c_str());
 			EmuLog(LOG_LEVEL::DEBUG, "  Org:\"%s\"", OriginalPath.c_str());
-			if (_strnicmp(HostPath.c_str(), CxbxBasePath.c_str(), CxbxBasePath.length()) == 0) {
-				EmuLog(LOG_LEVEL::DEBUG, "  New:\"$CxbxPath\\%s%s\"", (HostPath.substr(CxbxBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
+			if (_strnicmp(HostPath.c_str(), g_DiskBasePath.c_str(), g_DiskBasePath.length()) == 0) {
+				EmuLog(LOG_LEVEL::DEBUG, "  New:\"$CxbxPath\\%s%s\"", (HostPath.substr(g_DiskBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
 			}
 			else
 				EmuLog(LOG_LEVEL::DEBUG, "  New:\"$XbePath\\%s\"", RelativePath.c_str());
