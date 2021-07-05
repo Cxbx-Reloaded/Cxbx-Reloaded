@@ -564,7 +564,7 @@ extern void EmuExecutePushBufferRaw
             *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
 
         // Check if loop reaches end of pushbuffer
-		if(g_NV2A_pushbuffer_base_addr!=nullptr){
+		if (g_NV2A_pushbuffer_base_addr != nullptr){
 			if (dma_get >= dma_limit) {
 				LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
 				// reset dma_get to dma_put.
@@ -572,188 +572,188 @@ extern void EmuExecutePushBufferRaw
 				goto finish; // For now, don't even attempt to run through
 			}
 		}
+
         // Read a DWORD from the current push buffer pointer
         uint32_t * word_ptr = dma_get;//shadow copy of dma_get before it gets advanced after the word was read.
         word = *dma_get++;
 
-        if (dma_state.mcnt) {
-            /* data word of methods command */
-            data_shadow = word;
-#if 0
-            if (!PULLER_KNOWS_MTHD(dma_state.mthd)) {
-                throw DMA_PUSHER(INVALID_MTHD);
-                return; // For now, don't even attempt to run through
-            }
+        if (dma_state.mcnt == 0) {
+            /* no command active - this is the first word of a new one */
+            rsvd_shadow = word;
+            // Check and handle command type, then instruction, then flags
+            switch (command.type) {
 
-#endif
-            //words still available in the pushbuffer.
-            uint32_t max_words_available = (dma_get>dma_put)?((uint32_t)dma_limit - (uint32_t)word_ptr) / 4: ((uint32_t)dma_put - (uint32_t)word_ptr) / 4;
+                //***************************we need to check the jump address once we encounter these methods.
+                //because the jump address is obviously not in the VRAM range. perhaps a memory range transform must be applied first?
 
-            //pgraph_handle_method(
-            //	d,						//NV2AState
-            //	subc,					//Subchannel
-            //	mthd,					//command_word
-            //	word,					//first parameter
-            //	dma_get,				//parameters, pointer to 1st parameter, which is exact parameter in the args.
-            //	mcnt,					//method count
-            //	max_words_available);   //words still available in the pushbuffer
+            case COMMAND_TYPE_NONE:
+                if (command.instruction == COMMAND_INSTRUCTION_JUMP) {//old jump
+                    LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
+                    dma_get_jmp_shadow = dma_get;
+                    dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
+                    continue; // while
+                }
+                break;
+            case COMMAND_TYPE_JUMP_LONG:
+                LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
+                dma_get_jmp_shadow = dma_get;
+                dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
+                //the first long jump is the jump to pushbuffer base set in CDevice init.
+                if (g_NV2A_pushbuffer_base_addr == nullptr) {
+                    g_NV2A_pushbuffer_base_addr = dma_get;
+                }
+                continue; // while
+            case COMMAND_TYPE_CALL: // Note : NV2A call is used as jump, the sub_return is used as a flag to indicate where the jump was orginated.
+                if (subr_active) {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
+                    // TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
+                    goto finish; // For now, don't even attempt to run through
+                }
+                else {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
+                }
 
-            uint32_t num_processed = 1;
+                subr_return = dma_get;
+                subr_active = true;
+                dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
+                continue; // while
+            default:
+                LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
+                // TODO : throw DMA_PUSHER(INVALID_CMD);
+                goto finish; // For now, don't even attempt to run through
+            } // switch type
 
-            //this is not supposed to happen. if the pushbuffer is correct, and the method handler works right. method count always represents the dwords of
-            //the parameters required by the method. so at least there should be method count dwords left in the buffer for the method to use.
-            if (dma_state.mcnt > max_words_available) { 
-                LOG_TEST_CASE("Pushbuffer data not enough for method count!");
-                goto finish;//we shall not run through this situation.
-            }
-            
-            if (dma_state.subc < 8) {//subchannel must be less than 8
-                
-                    if (g_NV2A) {
-                        //return num_processed, the words processed here by the method handler. so the caller can advance the dma_get pointer of the pushbuffer
-                        //num_processed default to 1, which represent the first parameter passed in this call.
-                        //but that word is advanced by the caller already. it's the caller's duty to subtract that word from the num_processed;
-                        num_processed = pgraph_handle_method(
-                            d,
-                            dma_state.subc,
-                            rsvd_shadow, // Was dma_state.mthd, but nowadays we need the full 32 bit command word in there (to allow a generic non-increment check)
-                            word,
-                            word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
-                            dma_state.mcnt,
-                            max_words_available);
-                    } 
-            }
+            switch (command.instruction) {
+            case COMMAND_INSTRUCTION_INCREASING_METHODS:
+                dma_state.ni = false;
+                break;
+            //case COMMAND_INSTRUCTION_JUMP:  //move jump handler to the front, together with other jump/call handlers.
+            case COMMAND_INSTRUCTION_NON_INCREASING_METHODS:
+                dma_state.ni = true;
+                break;
+            default:
+                LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION unknown");
+                // TODO : throw DMA_PUSHER(INVALID_CMD);
+                goto finish; // For now, don't even attempt to run through
+            } // switch instruction
 
-            //if (!dma_state.ni) {
-            //	dma_state.mthd++;
-            //}
+            switch (command.flags) {
+            case COMMAND_FLAGS_NONE: // Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
+                dma_state.mthd = command.method;
+                dma_state.subc = command.subchannel;
+                dma_state.mcnt = command.method_count;
+                break;
+            case COMMAND_FLAGS_RETURN: // Note : NV2A return shouldn't be used because the NV2A call is used as jump and the subr_return is used as an flag of where the jump was from.
+                //considering move this case to the same code block with old jump, RETURN can be tested with word & 0xE0030003 == 0x00020000. 
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN, not supposed to be used!");
+                if (word != 0x00020000) {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
+                    goto finish; // For now, don't even attempt to run through
+                }
+                else {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
+                }
 
-            //if (num_processed > 1) {
-                dma_get = word_ptr + dma_state.mcnt;//num_processed default to 1.
-                dcount_shadow += num_processed;
-                dma_state.mcnt = 0;
-                //if (dma_state.mcnt != 0) {
-                    //assert(dma_state.mcnt == 0);
-                //    LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
-                //    dma_state.mcnt = 0;
-                // }
-                
-            //}
-            //else {
-                //dma_state.mcnt--;
-                //dcount_shadow++;
-            //}
+                if (!subr_active) {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
+                    // TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
+                    goto finish; // For now, don't even attempt to run through
+                }
+
+                dma_get = subr_return;
+                subr_active = false;
+                continue; // while
+            case COMMAND_FLAGS_LONG_NON_INCREASING_METHODS:
+                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS not available on NV2A");
+                break;
+            default:
+                if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
+                } else if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
+                    /// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
+                    /// dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
+                    /// dma_get += dma_state.mcnt; // To be safe, skip method data
+                    /// continue;
+                } else {
+                    LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
+                }
+
+                /// dma_get += command.method_count; // To be safe, skip method data
+                /// continue;
+                // TODO : throw DMA_PUSHER(INVALID_CMD);
+                goto finish; // For now, don't even attempt to run through
+            } // switch flags
+
+            dcount_shadow = 0;
             continue; // while for next word
         }
 
-        /* no command active - this is the first word of a new one */
-        rsvd_shadow = word;
-        // Check and handle command type, then instruction, then flags
-        switch (command.type) {
+        /* data word of methods command */
+        data_shadow = word;
+#if 0
+        if (!PULLER_KNOWS_MTHD(dma_state.mthd)) {
+            throw DMA_PUSHER(INVALID_MTHD);
+            return; // For now, don't even attempt to run through
+        }
 
-            //***************************we need to check the jump address once we encounter these methods.
-            //because the jump address is obviously not in the VRAM range. perhaps a memory range transform must be applied first?
+#endif
+        //words still available in the pushbuffer.
+        uint32_t max_words_available = (dma_get>dma_put)?((uint32_t)dma_limit - (uint32_t)word_ptr) / 4: ((uint32_t)dma_put - (uint32_t)word_ptr) / 4;
 
-        case COMMAND_TYPE_NONE:
-            if (command.instruction == COMMAND_INSTRUCTION_JUMP) {//old jump
-                LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
-                dma_get_jmp_shadow = dma_get;
-                dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
-                continue; // while
-            }
-            break;
-        case COMMAND_TYPE_JUMP_LONG:
-            LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
-            dma_get_jmp_shadow = dma_get;
-            dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
-			//the first long jump is the jump to pushbuffer base set in CDevice init.
-			if (g_NV2A_pushbuffer_base_addr == nullptr) {
-				g_NV2A_pushbuffer_base_addr = dma_get;
-			}
-            continue; // while
-        case COMMAND_TYPE_CALL: // Note : NV2A call is used as jump, the sub_return is used as a flag to indicate where the jump was orginated.
-            if (subr_active) {
-                LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
-                // TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
-                goto finish; // For now, don't even attempt to run through
-            }
-            else {
-                LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
-            }
+        //pgraph_handle_method(
+        //	d,						//NV2AState
+        //	subc,					//Subchannel
+        //	mthd,					//command_word
+        //	word,					//first parameter
+        //	dma_get,				//parameters, pointer to 1st parameter, which is exact parameter in the args.
+        //	mcnt,					//method count
+        //	max_words_available);   //words still available in the pushbuffer
 
-            subr_return = dma_get;
-            subr_active = true;
-            dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
-            continue; // while
-        default:
-            LOG_TEST_CASE("Pushbuffer COMMAND_TYPE unknown");
-            // TODO : throw DMA_PUSHER(INVALID_CMD);
-            goto finish; // For now, don't even attempt to run through
-        } // switch type
+        uint32_t num_processed = 1;
 
-        switch (command.instruction) {
-        case COMMAND_INSTRUCTION_INCREASING_METHODS:
-            dma_state.ni = false;
-            break;
-        //case COMMAND_INSTRUCTION_JUMP:  //move jump handler to the front, together with other jump/call handlers.
-        case COMMAND_INSTRUCTION_NON_INCREASING_METHODS:
-            dma_state.ni = true;
-            break;
-        default:
-            LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION unknown");
-            // TODO : throw DMA_PUSHER(INVALID_CMD);
-            goto finish; // For now, don't even attempt to run through
-        } // switch instruction
+        //this is not supposed to happen. if the pushbuffer is correct, and the method handler works right. method count always represents the dwords of
+        //the parameters required by the method. so at least there should be method count dwords left in the buffer for the method to use.
+        if (dma_state.mcnt > max_words_available) { 
+            LOG_TEST_CASE("Pushbuffer data not enough for method count!");
+            goto finish;//we shall not run through this situation.
+        }
+            
+        if (dma_state.subc < 8) {//subchannel must be less than 8
+            if (g_NV2A) {
+                //return num_processed, the words processed here by the method handler. so the caller can advance the dma_get pointer of the pushbuffer
+                //num_processed default to 1, which represent the first parameter passed in this call.
+                //but that word is advanced by the caller already. it's the caller's duty to subtract that word from the num_processed;
+                num_processed = pgraph_handle_method(
+                    d,
+                    dma_state.subc,
+                    rsvd_shadow, // Was dma_state.mthd, but nowadays we need the full 32 bit command word in there (to allow a generic non-increment check)
+                    word,
+                    word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
+                    dma_state.mcnt,
+                    max_words_available);
+            } 
+        }
 
-        switch (command.flags) {
-        case COMMAND_FLAGS_NONE: // Decode push buffer method & size (inverse of D3DPUSH_ENCODE)
-            dma_state.mthd = command.method;
-            dma_state.subc = command.subchannel;
-            dma_state.mcnt = command.method_count;
-            break;
-        case COMMAND_FLAGS_RETURN: // Note : NV2A return shouldn't be used because the NV2A call is used as jump and the subr_return is used as an flag of where the jump was from.
-			//considering move this case to the same code block with old jump, RETURN can be tested with word & 0xE0030003 == 0x00020000. 
-			LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN, not supposed to be used!");
-            if (word != 0x00020000) {
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
-                goto finish; // For now, don't even attempt to run through
-            }
-            else {
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
-            }
+        //if (!dma_state.ni) {
+        //	dma_state.mthd++;
+        //}
 
-            if (!subr_active) {
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN while another call was active!");
-                // TODO : throw DMA_PUSHER(RET_SUBR_INACTIVE);
-                goto finish; // For now, don't even attempt to run through
-            }
-
-            dma_get = subr_return;
-            subr_active = false;
-            continue; // while
-        case COMMAND_FLAGS_LONG_NON_INCREASING_METHODS:
-            LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS not available on NV2A");
-            break;
-        default:
-            if (command.flags == COMMAND_FLAGS_SLI_CONDITIONAL) {
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_SLI_CONDITIONAL (NV40+) not available on NV2A");
-            } else if (command.flags == COMMAND_FLAGS_LONG_NON_INCREASING_METHODS) {
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_LONG_NON_INCREASING_METHODS [IB-mode only] not available on NV2A");
-                /// No need to do: dma_state.mthd = command.method; dma_state.ni = true;
-                /// dma_state.mcnt = *dma_get++ & 0x00FFFFFF; // Long NI method command count is read from low 24 bits of next word
-                /// dma_get += dma_state.mcnt; // To be safe, skip method data
-                /// continue;
-            } else {
-                LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS unknown");
-            }
-
-            /// dma_get += command.method_count; // To be safe, skip method data
-            /// continue;
-            // TODO : throw DMA_PUSHER(INVALID_CMD);
-            goto finish; // For now, don't even attempt to run through
-        } // switch flags
-
-        dcount_shadow = 0;
+        //if (num_processed > 1) {
+            dma_get = word_ptr + dma_state.mcnt;//num_processed default to 1.
+            dcount_shadow += num_processed;
+            dma_state.mcnt = 0;
+            //if (dma_state.mcnt != 0) {
+                //assert(dma_state.mcnt == 0);
+            //    LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
+            //    dma_state.mcnt = 0;
+            // }
+                
+        //}
+        //else {
+            //dma_state.mcnt--;
+            //dcount_shadow++;
+        //}
     } // while (dma_get != dma_put)
 
 	if (dma_get != dma_put) {
