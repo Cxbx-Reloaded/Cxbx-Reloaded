@@ -690,60 +690,51 @@ extern void EmuExecutePushBufferRaw
 #endif
         //words still available in the pushbuffer.
         uint32_t max_words_available = (dma_get>dma_put)?((uint32_t)dma_limit - (uint32_t)word_ptr) / 4: ((uint32_t)dma_put - (uint32_t)word_ptr) / 4;
-
-        //pgraph_handle_method(
-        //	d,						//NV2AState
-        //	subc,					//Subchannel
-        //	mthd,					//command_word
-        //	word,					//first parameter
-        //	dma_get,				//parameters, pointer to 1st parameter, which is exact parameter in the args.
-        //	mcnt,					//method count
-        //	max_words_available);   //words still available in the pushbuffer
-
         uint32_t num_processed = 1;
 
-        //this is not supposed to happen. if the pushbuffer is correct, and the method handler works right. method count always represents the dwords of
-        //the parameters required by the method. so at least there should be method count dwords left in the buffer for the method to use.
         if (dma_state.mcnt > max_words_available) { 
+            //this is not supposed to happen. if the pushbuffer is correct, and the method handler works right. method count always represents the dwords of
+            //the parameters required by the method. so at least there should be method count dwords left in the buffer for the method to use.
             LOG_TEST_CASE("Pushbuffer data not enough for method count!");
             goto finish;//we shall not run through this situation.
         }
-            
-        if (dma_state.subc < 8) {//subchannel must be less than 8
-            if (g_NV2A) {
-                //return num_processed, the words processed here by the method handler. so the caller can advance the dma_get pointer of the pushbuffer
-                //num_processed default to 1, which represent the first parameter passed in this call.
-                //but that word is advanced by the caller already. it's the caller's duty to subtract that word from the num_processed;
-                num_processed = pgraph_handle_method(
-                    d,
-                    dma_state.subc,
-                    rsvd_shadow, // Was dma_state.mthd, but nowadays we need the full 32 bit command word in there (to allow a generic non-increment check)
-                    word,
-                    word_ptr, //it's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
-                    dma_state.mcnt,
-                    max_words_available);
-            } 
+
+        if (g_NV2A) {
+            //return num_processed, the words processed here by the method handler. so the caller can advance the dma_get pointer of the pushbuffer
+            //num_processed default to 1, which represent the first parameter passed in this call.
+            //but that word is advanced by the caller already. it's the caller's duty to subtract that word from the num_processed;
+            num_processed = pgraph_handle_method(
+                d,						//NV2AState
+                dma_state.subc,			//Subchannel
+                rsvd_shadow,			//command_word // Was dma_state.mthd, but nowadays we need the full 32 bit command word in there (to allow a generic non-increment check)
+                word,					//first parameter
+                word_ptr,				//parameters, pointer to 1st parameter, which is exact parameter in the args. // It's the address where we read the word. we can't use dma_get here because dma_get was advanced after word was read.
+                dma_state.mcnt,			//method count
+                max_words_available);	//words still available in the pushbuffer
         }
 
-        //if (!dma_state.ni) {
-        //	dma_state.mthd++;
-        //}
+#if 0 // Disabled, but why?
+        if (!dma_state.ni) {
+            dma_state.mthd++;
+        }
 
-        //if (num_processed > 1) {
+        if (num_processed > 1) {
+#endif
             dma_get = word_ptr + dma_state.mcnt;//num_processed default to 1.
             dcount_shadow += num_processed;
             dma_state.mcnt = 0;
-            //if (dma_state.mcnt != 0) {
-                //assert(dma_state.mcnt == 0);
-            //    LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
-            //    dma_state.mcnt = 0;
-            // }
-                
-        //}
-        //else {
-            //dma_state.mcnt--;
-            //dcount_shadow++;
-        //}
+#if 0 // Disabled, but why?
+            if (dma_state.mcnt != 0) {
+               assert(dma_state.mcnt == 0);
+               LOG_TEST_CASE("Pushbuffer method count not decreased to 0 after method processing");
+               dma_state.mcnt = 0;
+            }
+        }
+        else {
+            dma_state.mcnt--;
+            dcount_shadow++;
+        }
+#endif
     } // while (dma_get != dma_put)
 
 	if (dma_get != dma_put) {
