@@ -307,7 +307,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader,                       (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0,                     ()                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_End,                                      ()                                                                                                    );  \
-    XB_MACRO(xbox::dword_xt*,    WINAPI,     D3DDevice_EndPush,                                  (xbox::dword_xt*)                                                                                     );  \
+    XB_MACRO(xbox::dword_xt*,     WINAPI,     D3DDevice_EndPush,                                  (xbox::dword_xt*)                                                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                              );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                        );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                        );  \
@@ -7335,6 +7335,7 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 
 	VertexBufferConverter.Apply(&DrawContext);
 	//convert dwHostPrimitiveCount here. the quad to d3d9 triangle is considered already.
+	assert(DrawContext.XboxPrimitiveType != xbox::X_D3DPT_QUADSTRIP);
 	DrawContext.dwHostPrimitiveCount = EmuXB2PC_D3DPrimitiveCount(DrawContext.dwVertexCount,DrawContext.XboxPrimitiveType);
 	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField

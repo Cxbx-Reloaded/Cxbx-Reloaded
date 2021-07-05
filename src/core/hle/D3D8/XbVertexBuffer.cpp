@@ -709,8 +709,6 @@ void CxbxImpl_End()
 		return;
 	}
 
-	CxbxUpdateNativeD3DResources();
-
 	// Compose an Xbox vertex attribute format to pass through all registers
 	if (g_InlineVertexBuffer_Stride == 0) { // Do this just once, as the IVB attributes will always be the same, thus also the stride
 		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
@@ -726,6 +724,7 @@ void CxbxImpl_End()
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
+	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
 

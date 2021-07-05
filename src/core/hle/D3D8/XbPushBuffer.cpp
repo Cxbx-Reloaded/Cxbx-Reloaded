@@ -472,7 +472,7 @@ xbox::dword_xt * HLE_get_NV2A_vertex_program_slot_ptr(const DWORD slot_index)
 			pgraph_handle_method(d, subc, mthd, word, dma_get, mcnt,max_words_available); \
 		} \
 	}
-
+uint32_t * g_NV2A_pushbuffer_base_addr = nullptr;
 extern void EmuExecutePushBufferRaw
 (
     void *pPushData,
@@ -544,23 +544,32 @@ extern void EmuExecutePushBufferRaw
     dma_put = (uint32_t*)((xbox::addr_xt)pPushData + uSizeInBytes);
     dma_get = (uint32_t*)pPushData;
     dma_state = {};
-    if (dma_get >= dma_put) {
-        
-        //dma_get = dma_put;
-        //dma starving, shall we wait or sleep for a while?
-        return;
-    }
-
+	if (dma_get == dma_put) {
+		//dma starving, shall we wait or sleep for a while?
+		if (p_dma_get != nullptr)
+			*p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma); //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
+		return;
+	}
+	if (g_NV2A_pushbuffer_base_addr != nullptr) {
+		dma_limit = (uint32_t *)(((DWORD)g_NV2A_pushbuffer_base_addr) + 0x80000);//pushbuffer size 0x80000, xbox reserved area in the end 0x100 - 4
+	}
+	if (dma_get > dma_put) {
+		//we're in segment switch phase, proceed parsing and get ready for a jump command.
+		LOG_TEST_CASE("Pushbuffer segment switch to base");
+	}
 	// NV-4-style PFIFO DMA command stream pusher
     // See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-pusher-pseudocode-pre-gf100
-    while (dma_get < dma_put) {
+    while (dma_get != dma_put) {
         // Check if loop reaches end of pushbuffer
-        if (dma_get >= dma_limit) {
-            LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
-            // TODO : throw DMA_PUSHER(MEM_FAULT);
-            return; // For now, don't even attempt to run through
-        }
-
+		if(g_NV2A_pushbuffer_base_addr!=nullptr){
+			if (dma_get >= dma_limit) {
+				LOG_TEST_CASE("Last pushbuffer instruction exceeds END of Data");
+				// reset dma_get to dma_put.
+				assert(0);
+				*p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma); //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
+				return; // For now, don't even attempt to run through
+			}
+		}
         // Read a DWORD from the current push buffer pointer
         uint32_t * word_ptr = dma_get;//shadow copy of dma_get before it gets advanced after the word was read.
         word = *dma_get++;
@@ -583,7 +592,7 @@ extern void EmuExecutePushBufferRaw
             
 #endif
             //words still available in the pushbuffer.
-            uint32_t max_words_available = ((uint32_t)dma_limit - (uint32_t)word_ptr) / 4;
+            uint32_t max_words_available = (dma_get>dma_put)?((uint32_t)dma_limit - (uint32_t)word_ptr) / 4: ((uint32_t)dma_put - (uint32_t)word_ptr) / 4;
 
             //pgraph_handle_method(
             //	d,						//NV2AState
@@ -674,6 +683,10 @@ extern void EmuExecutePushBufferRaw
             LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
             dma_get_jmp_shadow = dma_get;
             dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
+			//the first long jump is the jump to pushbuffer base set in CDevice init.
+			if (g_NV2A_pushbuffer_base_addr == nullptr) {
+				g_NV2A_pushbuffer_base_addr = dma_get;
+			}
             if (p_dma_get != nullptr)
                 *p_dma_get = (uint32_t*)((uint32_t)dma_get - (uint32_t)dma);       //update the pfifo_dma_get if we're called via pfifo_run_pusher()
             continue; // while
@@ -778,6 +791,12 @@ extern void EmuExecutePushBufferRaw
 
         dcount_shadow = 0;
     } // while (dma_get != dma_put)
+	if (dma_get == dma_put) {
+		//dma starving, shall we wait or sleep for a while?
+		if (p_dma_get != nullptr)
+			*p_dma_get = (uint32_t*)((uint32_t)dma_put - (uint32_t)dma); //update the pfifo_dma_get to the end of pushbuffer if we're called via pfifo_run_pusher()
+		return;
+	}
 }
 
 const char *NV2AMethodToString(DWORD dwMethod)

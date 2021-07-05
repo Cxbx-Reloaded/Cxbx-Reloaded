@@ -389,8 +389,69 @@ static void pfifo_run_pusher(NV2AState *d)
 //		return;
 //	}
 	extern bool g_nv2a_fifo_is_busy; //tmp glue, declared in direct3d9.cpp before xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
+	if (dma_get > dma_put) {//we run to the end of whole pushbuffer. search the appended jump command before end of segment.
+		//in case the pushbffer switch segment to use a segment in lower memory space, a jump method was append in the last dma_get. but the new dma_put will be lower than dma_get. this situation must be solved.
+		//we have to test the dword at dma_get whether it's an jump or not.
+		unsigned char * jmp_addr_test = (unsigned char *)((uint32_t)dma_get + CONTIGUOUS_MEMORY_BASE);
+		unsigned char * pushbuffer_limit = (unsigned char *)((((uint32_t)jmp_addr_test) & 0xFFFFF000) + 0x1000);// -0x80);//xbox d3d reserved size in the end of each segment, min. 0x80 
+		static DWORD jump_to_base=0x3F55001;// = (DWORD)pushbuffer_limit - CONTIGUOUS_MEMORY_BASE - 0x80000 + 1;//0x80000 total pushbuffer size, +1 to set the jump command_type. jump command to jump back to pushbuffer base.
+		pushbuffer_limit -= 0x80;
+		DWORD jump_command = *(DWORD*)((uint32_t)dma_get + CONTIGUOUS_MEMORY_BASE);
+/*
+		//we could use jump_command == jump_to_base here. but this code is more general.
+		//this is the common case of xbox d3d behavior.
+		if ((jump_command & 0x03) == COMMAND_TYPE_JUMP_LONG) {
+			dma_get = (uint32_t *)((jump_command & COMMAND_WORD_MASK_JUMP_LONG));
+			*p_dma_get = dma_get;
+			//jump_to_base = jump_command;
+		}
+		//xbox d3d doesn't use this jump in pushbuffer segment switch.
+		else if (jump_command&0x03==0 && (jump_command>>29)&0x07== COMMAND_INSTRUCTION_JUMP) {
+			dma_get = (uint32_t *)((jump_command & COMMAND_WORD_MASK_JUMP));
+			*p_dma_get = dma_get;
+			//jump_to_base = jump_command;
+		}
+		//this isn't supposed to happen. xbox d3d is supposed to wait for NV2A to finish the parsing of the last segment.
+		//somehow the situation did happen, so we have to deal with it. 
+		else {
+			//if (jump_to_base == 0) {
+				//jump_to_base = (DWORD)pushbuffer_limit - CONTIGUOUS_MEMORY_BASE - 0x80000 + 1;
+			//}
+			do {
+				DWORD jump_command = *(DWORD*)jmp_addr_test;//was ((uint32_t)dma_get + CONTIGUOUS_MEMORY_BASE);
+				if (jump_command == jump_to_base) {//bingo, found the jump to pushbuffer base command.
+					uint32_t* dma_put_shadow = (uint32_t*)(jmp_addr_test - CONTIGUOUS_MEMORY_BASE);
+					//set *p_dam_put back to end of last segment, ready to pasre the last part of last segment.
+					*p_dma_put = dma_put_shadow;
+					//parse the last part of last segment. but not include the segment switch jump.
+					//when EmuExecutePushBufferRaw() parser a jump command, it keeps on parsing the pushbuffer after jumping to new address. which in not feasible in this case
+					EmuExecutePushBufferRaw
+					(
+						(void  *)((uint32_t)*p_dma_get + (uint32_t)dma),	//use dma starting adder as pushbuffer starting address
+						(uint32_t)*p_dma_put - (uint32_t)*p_dma_get,		//use dma length as pushbuffer size.
+						p_dma_get,										//pass in pointer to dma_get, be awared dma_get is offset value to the dma base (0x80000000).
+						p_dma_put,										//pass in pointer to dma_put, could be useless. be awared dma_put is offset value to the dma base (0x80000000).
+						dma												//pass in dma base address (0x80000000),
+					);
+					//now the dma_get should jump to the base, and we set the *dma_put to the new position in the new segment.
+					*p_dma_put = dma_put;
+					//update the dma_get since it jumped to the new segment.
+					dma_get = (uint32_t *)((jump_command & COMMAND_WORD_MASK_JUMP_LONG));
+					*p_dma_get= dma_get;
+					break;
+				}
+				jmp_addr_test += 4;
+			} while (jmp_addr_test < pushbuffer_limit);
+			//no feasible jump instruction found, assert!
+			if (jmp_addr_test >= pushbuffer_limit) {
+				assert(0);
+				return;
+			}
+		}
+*/
+	}
 
-	if (dma_get >= dma_put) {
+	if (dma_get == dma_put) {
 		//no data available pushbuffer yet, or xbox d3d hasn't kickoff pushbuffer yet. shall we add sleep() or wait() here?
 		NV2A_DPRINTF("PFIFO run_pusher dma_get==dma_put ! get 0x%08X, put 0x%08X\n", dma_get, dma_put);
 		//
@@ -410,6 +471,7 @@ static void pfifo_run_pusher(NV2AState *d)
 		//assert(false);
 		//SET_MASK(*p_dma_state, NV_PFIFO_CACHE1_DMA_STATE_ERROR,
 			//NV_PFIFO_CACHE1_DMA_STATE_ERROR_PROTECTION);
+		assert(0);
 		dma_get = dma_put;
 		return;
 	}
