@@ -1476,7 +1476,7 @@ extern void HLE_init_pgraph_plugins(); // implemented in XbPushBuffer.cpp
 void EmuD3DInit()
 {
 
-	HLE_init_pgraph_plugins(); // TODO : Hook more nv_dma_map() result uses in EmuNV2A_PGRAPH.cpp
+	D3D_init_pgraph_plugins(); // TODO : Hook more nv_dma_map() result uses in EmuNV2A_PGRAPH.cpp
 
 	// Initialise CreateDevice Proxy Data struct
 	{

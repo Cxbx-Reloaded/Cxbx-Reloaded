@@ -701,7 +701,7 @@ void OpenGL_draw_inline_elements(NV2AState *d)
     glDrawRangeElements(pg->shader_binding->gl_primitive_mode,
         min_element, max_element,
         pg->inline_elements_length,
-        GL_UNSIGNED_SHORT, // Cxbx-Reloaded TODO : Restore GL_UNSIGNED_INT once HLE_draw_inline_elements can draw using uint32_t
+        GL_UNSIGNED_SHORT, // Cxbx-Reloaded TODO : Restore GL_UNSIGNED_INT once D3D_draw_inline_elements can draw using uint32_t
         (void*)0);
 
     OpenGL_draw_end(d);

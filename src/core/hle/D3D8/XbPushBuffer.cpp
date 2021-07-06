@@ -136,13 +136,13 @@ extern int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg);
 extern xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride; // TMP glue
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat;
 
-void HLE_draw_arrays(NV2AState *d)
+void D3D_draw_arrays(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	LOG_TEST_CASE("HLE_draw_arrays");
+	LOG_TEST_CASE("D3D_draw_arrays");
 
-	LOG_INCOMPLETE(); // TODO : Implement HLE_draw_arrays
+	LOG_INCOMPLETE(); // TODO : Implement D3D_draw_arrays
 
 	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVertices, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexInput before calling BeginPush.
@@ -189,13 +189,13 @@ void HLE_draw_arrays(NV2AState *d)
 	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
-void HLE_draw_inline_buffer(NV2AState *d)
+void D3D_draw_inline_buffer(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	LOG_TEST_CASE("HLE_draw_inline_buffer");
+	LOG_TEST_CASE("D3D_draw_inline_buffer");
 
-	LOG_INCOMPLETE(); // TODO : Finish implementation of HLE_draw_inline_buffer
+	LOG_INCOMPLETE(); // TODO : Finish implementation of D3D_draw_inline_buffer
 
 	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
 	// so that our above composed declaration will be used for the next draw :
@@ -220,7 +220,7 @@ void HLE_draw_inline_buffer(NV2AState *d)
 }
 
 
-void HLE_draw_inline_array(NV2AState *d)
+void D3D_draw_inline_array(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
@@ -286,7 +286,7 @@ void HLE_draw_inline_array(NV2AState *d)
 	}
 }
 
-void HLE_draw_inline_elements(NV2AState *d)
+void D3D_draw_inline_elements(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
@@ -325,7 +325,7 @@ DWORD ABGR_to_ARGB(const uint32_t color)
 	return (color & 0xFF00FF00) | ((color & 0x00FF0000) >> 16) | ((color & 0x000000FF) << 16);
 }
 
-void HLE_draw_state_update(NV2AState *d)
+void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
@@ -393,7 +393,7 @@ void HLE_draw_state_update(NV2AState *d)
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
 }
 
-void HLE_draw_clear(NV2AState *d)
+void D3D_draw_clear(NV2AState *d)
 {
 	// PGRAPHState *pg = &d->pgraph;
 
@@ -410,15 +410,15 @@ extern void(*pgraph_draw_inline_elements)(NV2AState *d);
 extern void(*pgraph_draw_state_update)(NV2AState *d);
 extern void(*pgraph_draw_clear)(NV2AState *d);
 
-void HLE_init_pgraph_plugins()
+void D3D_init_pgraph_plugins()
 {
 	/* attach HLE Direct3D render plugins */
-	pgraph_draw_arrays = HLE_draw_arrays;
-	pgraph_draw_inline_buffer = HLE_draw_inline_buffer;
-	pgraph_draw_inline_array = HLE_draw_inline_array;
-	pgraph_draw_inline_elements = HLE_draw_inline_elements;
-	pgraph_draw_state_update = HLE_draw_state_update;
-	pgraph_draw_clear = HLE_draw_clear;
+	pgraph_draw_arrays = D3D_draw_arrays;
+	pgraph_draw_inline_buffer = D3D_draw_inline_buffer;
+	pgraph_draw_inline_array = D3D_draw_inline_array;
+	pgraph_draw_inline_elements = D3D_draw_inline_elements;
+	pgraph_draw_state_update = D3D_draw_state_update;
+	pgraph_draw_clear = D3D_draw_clear;
 }
 //int pgraph_handle_method(NV2AState *d, unsigned int subchannel,
 //unsigned int method, uint32_t parameter,
