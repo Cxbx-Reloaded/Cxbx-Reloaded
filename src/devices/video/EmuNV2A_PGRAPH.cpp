@@ -1165,49 +1165,6 @@ extern DWORD ABGR_to_ARGB(const uint32_t color);
 
 xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat = {};
 
-//get Host FVF with pVAF, not implement yet.
-/*
-const DWORD GetHostFVFfromXboxVertexAttributes(xbox::X_VERTEXATTRIBUTEFORMAT *pVAF)
-{
-	DWORD HostFVF = 0;
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
-		switch (slot) {
-		case xbox::X_D3DVSDE_POSITION:
-			if (pVAF->Slots[slot].Format == 0);
-			break;
-		case xbox::X_D3DVSDE_BLENDWEIGHT:
-			break;
-		case xbox::X_D3DVSDE_NORMAL:
-			break;
-		case xbox::X_D3DVSDE_DIFFUSE:
-			
-			;
-			break;
-		case xbox::X_D3DVSDE_SPECULAR:
-			
-			;
-			break;
-		case xbox::X_D3DVSDE_FOG:
-			break;
-		case xbox::X_D3DVSDE_POINTSIZE:
-			break;
-		case xbox::X_D3DVSDE_BACKDIFFUSE:
-			break;
-		case xbox::X_D3DVSDE_BACKSPECULAR:
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD0:
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD1:
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD2:
-			break;
-		case xbox::X_D3DVSDE_TEXCOORD3:
-			break;
-		}
-	}
-	return HostFVF;
-}
-*/
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
 int pgraph_handle_method(
@@ -2889,7 +2846,6 @@ int pgraph_handle_method(
 
                 CASE_16(NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 4):{ //done //pg->KelvinPrimitive.SetVertexDataArrayFormat[16]
 					//pg->KelvinPrimitive.SetVertexDataArrayFormat[i] = Attribute [i].Format (SizeAndType) &0xFF + if (draw up method?)Stride << 8 : 0
-					int uiStride = 0;
 					for (size_t argc = 0; argc < method_count; argc++,slot++) {
                         arg0 = argv[argc];
 						slot = (method - NV097_SET_VERTEX_DATA_ARRAY_FORMAT) / 4;
@@ -2966,63 +2922,6 @@ int pgraph_handle_method(
                                 vertex_attribute->converted_buffer = NULL;
                             }
                         }
-
-						//advance out vertex attribute offset
-						if (vertex_attribute->count > 0) {
-							uiStride += vertex_attribute->converted_size * vertex_attribute->count;
-							switch (argc) {
-							case xbox::X_D3DVSDE_POSITION:
-								pg->HostFVF |= D3DFVF_XYZ;
-								break;
-							case xbox::X_D3DVSDE_BLENDWEIGHT:
-								if (vertex_attribute->size = 1) {
-									switch (vertex_attribute->count) {
-									case 1:pg->HostFVF |= D3DFVF_XYZB1; break;
-									case 2:pg->HostFVF |= D3DFVF_XYZB2; break;
-									case 3:pg->HostFVF |= D3DFVF_XYZB3; break;
-									case 4:pg->HostFVF |= D3DFVF_XYZB4; break;
-									}
-								}
-								else {
-									pg->HostFVF |= D3DFVF_XYZRHW;
-								}
-								break;
-							case xbox::X_D3DVSDE_NORMAL:
-								pg->HostFVF |= D3DFVF_NORMAL;
-								break;
-							case xbox::X_D3DVSDE_DIFFUSE:
-								pg->HostFVF |= D3DFVF_DIFFUSE;
-								break;
-							case xbox::X_D3DVSDE_SPECULAR:
-								pg->HostFVF |= D3DFVF_SPECULAR;
-								break;
-							case xbox::X_D3DVSDE_FOG:
-								//pg->HostFVF |= D3DFVF_FOG; //no feasible ENUM
-								break;
-							case xbox::X_D3DVSDE_POINTSIZE:
-								pg->HostFVF |= D3DFVF_PSIZE;
-								break;
-							case xbox::X_D3DVSDE_BACKDIFFUSE:
-								//pg->HostFVF |= D3DFVF_NORMAL; //no feasible ENUM
-								break;
-							case xbox::X_D3DVSDE_BACKSPECULAR:
-								//pg->HostFVF |= D3DFVF_NORMAL; //no feasible ENUM
-								break;
-							case xbox::X_D3DVSDE_TEXCOORD0:
-								pg->HostFVF |= D3DFVF_TEX0;
-								break;
-							case xbox::X_D3DVSDE_TEXCOORD1:
-								pg->HostFVF |= D3DFVF_TEX1;
-								break;
-							case xbox::X_D3DVSDE_TEXCOORD2:
-								pg->HostFVF |= D3DFVF_TEX2;
-								break;
-							case xbox::X_D3DVSDE_TEXCOORD3:
-								pg->HostFVF |= D3DFVF_TEX3;
-								break;
-							}
-
-						}
                     }
                     break;
 				}
@@ -3136,9 +3035,9 @@ int pgraph_handle_method(
 
                         //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
                         //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
-                        //if (pgraph_draw_state_update != nullptr) {
-                        //    pgraph_draw_state_update(d);
-                        //}
+                        if (pgraph_draw_state_update != nullptr) {
+                            pgraph_draw_state_update(d);
+                        }
 
                         switch (pg->draw_mode) {
                         case  DrawMode::DrawArrays:  {
@@ -4079,9 +3978,8 @@ int pgraph_handle_method(
 					g_d3dDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0 ,2);
 					*/
 
-					//don't set host FVF here, dangerous. need a HLE vertex attribute setting interface.
+					//don't use (non-portable and incapable) host FVF here. need a HLE vertex attribute setting interface.
 					//or an routine to kickoff the g_InlineVertexBuffer_DeclarationOverride
-					//g_pD3DDevice->SetFVF(pg->HostFVF);
 
 					//this is a work around for pre-recorded user program, which will get into pass through mode
 					//shader is alreay update to host in NV097_SET_TRANSFORM_EXECUTION_MODE, so we skip the start here.

@@ -757,8 +757,6 @@ typedef struct PGRAPHState {
 			NV097KelvinPrimitive KelvinPrimitive;
 	};
 
-	//Host FVF format
-	DWORD HostFVF;
 	//handle for fix function vertex shader.
 	DWORD vsh_FVF_handle;
 

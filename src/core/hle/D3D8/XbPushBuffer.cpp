@@ -373,10 +373,19 @@ void HLE_draw_state_update(NV2AState *d)
 
 	// set out own vertex attribute format and offset here.
 	UINT uiStride = 0;
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
+#if 0 // For illustration purposes only : This is how we can read the current vertex declaration from Kelvin :
+		uint32_t arg0 = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot];
+		uint32_t format = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE); // The data type of the components of this vertex attribute
+		uint32_t count = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE); // The number of components in this vertex attribute
+		uint32_t stride = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE); // The byte increment to step from the start of one vertex attribute to the next
+		arg0 = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
+		uint32_t dma_select = arg0 & 0x80000000; // Whether to use DMA channal A, or B
+		uint32_t offset = arg0 & 0x7fffffff; // The offset to add to the selected DMA channel base address, resulting in the starting memory address of this vertex attribute 
+#endif
 		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
 		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); // = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-		//Attribute.Offset is the offset from start of vertex to start of attribute //pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE is the vertex stride of each stream
+
 		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride ;
 		uiStride+= pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
 	}
