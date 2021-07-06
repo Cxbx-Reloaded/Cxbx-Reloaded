@@ -3136,9 +3136,9 @@ int pgraph_handle_method(
 
                         //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
                         //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
-                        if (pgraph_draw_state_update != nullptr) {
-                            pgraph_draw_state_update(d);
-                        }
+                        //if (pgraph_draw_state_update != nullptr) {
+                        //    pgraph_draw_state_update(d);
+                        //}
 
                         switch (pg->draw_mode) {
                         case  DrawMode::DrawArrays:  {

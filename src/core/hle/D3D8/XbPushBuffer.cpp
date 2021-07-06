@@ -152,7 +152,7 @@ void HLE_draw_arrays(NV2AState *d)
 	// render vertices
 
 	// Compose an Xbox vertex attribute format to pass through all registers
-	static UINT uiStride = 0;
+	UINT uiStride = 0;
 	//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
 	//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
 	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
@@ -250,7 +250,7 @@ void HLE_draw_inline_array(NV2AState *d)
 
 		if (dwVertexStride > 0) {
 			// Compose an Xbox vertex attribute format to pass through all registers
-			static UINT uiStride = 0;
+			UINT uiStride = 0;
 			for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
 				g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot]&0xFF;
 				g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
@@ -271,10 +271,10 @@ void HLE_draw_inline_array(NV2AState *d)
 			assert((xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode != xbox::X_D3DPT_INVALID);
 			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 			//get vertex size in dword or float.
-			dwVertexStride /= sizeof(float);
+			DWORD dwVertexSizeDwords= dwVertexStride /sizeof(float);
 			//pg->inline_array_length was advanced every time we receive a dword/float from pushbuffer.
 			//here we convert it to the actual vertex count.
-			DrawContext.dwVertexCount = pg->inline_array_length/ dwVertexStride;
+			DrawContext.dwVertexCount = pg->inline_array_length/ dwVertexSizeDwords;
 			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
 
@@ -292,7 +292,7 @@ void HLE_draw_inline_elements(NV2AState *d)
 
 	//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
 	// Compose an Xbox vertex attribute format to pass through all registers
-	static UINT uiStride = 0;
+	UINT uiStride = 0;
 	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
 		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); //  = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
 		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
@@ -478,6 +478,10 @@ xbox::dword_xt * HLE_get_NV2A_vertex_program_slot_ptr(const DWORD slot_index)
 		} \
 	}
 uint32_t * g_NV2A_pushbuffer_base_addr = nullptr;
+inline uint32_t get_NV2A_pushbuffer_size(void)
+{
+	return 0x400000;//regular xbe uses 0x80000, Otogi uses 0x400000, we'll have to figure out a general way to retrive the correct info.
+}
 extern void EmuExecutePushBufferRaw
 (
     void *pPushData,
@@ -554,9 +558,12 @@ extern void EmuExecutePushBufferRaw
 	}
 
 	if (g_NV2A_pushbuffer_base_addr != nullptr) {
-		dma_limit = (uint32_t *)(((DWORD)g_NV2A_pushbuffer_base_addr) + 0x80000);//pushbuffer size 0x80000, xbox reserved area in the end 0x100 - 4
+		dma_limit = (uint32_t *)(((DWORD)g_NV2A_pushbuffer_base_addr) + get_NV2A_pushbuffer_size());//pushbuffer size 0x80000, xbox reserved area in the end 0x100 - 4
 	}
-
+	if (dma_limit < dma_put) {
+		//this happeded in Otogi. it seems Otogi uses total pushbuffer length larger than 0x80000.
+		dma_limit = dma_put;
+	}
 	if (dma_get > dma_put) {
 		//we're in segment switch phase, proceed parsing and get ready for a jump command.
 		LOG_TEST_CASE("Pushbuffer segment switch to base");
@@ -622,12 +629,13 @@ extern void EmuExecutePushBufferRaw
                 break;
             case COMMAND_TYPE_JUMP_LONG:
                 LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
-                dma_get_jmp_shadow = dma_get;
+				//only set g_NV2A_pushbuffer_base_addr when we're jumping from the starting address of VRAM, and g_NV2A_pushbuffer_base_addr is not set yet.
+				if (g_NV2A_pushbuffer_base_addr == nullptr && dma_get == (uint32_t*)0x80000004) {
+					g_NV2A_pushbuffer_base_addr = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
+				}
+				dma_get_jmp_shadow = dma_get;
                 dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
                 //the first long jump is the jump to pushbuffer base set in CDevice init.
-                if (g_NV2A_pushbuffer_base_addr == nullptr) {
-                    g_NV2A_pushbuffer_base_addr = dma_get;
-                }
                 continue; // while
             case COMMAND_TYPE_CALL: // Note : NV2A call is used as jump, the sub_return is used as a flag to indicate where the jump was orginated.
                 if (subr_active) {
