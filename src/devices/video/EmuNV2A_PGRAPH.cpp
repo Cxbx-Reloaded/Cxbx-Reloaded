@@ -1117,17 +1117,6 @@ void OpenGL_init_pgraph_plugins()
     pgraph_draw_inline_elements = OpenGL_draw_inline_elements;
 }
 
-//calsulate vertex stride by accumulating the size of each attribute.
-int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)
-{
-	int stride = 0;
-	for(int slot=0;slot< NV2A_VERTEXSHADER_ATTRIBUTES;slot++){
-		if(pg->vertex_attributes[slot].count>0)
-			stride+= pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
-	}
-	return stride;
-}
-
 //Contex Handle Define
 #define NV_DD_DMA_PUSHER_SYNC_NOTIFIER_CONTEXT_DMA_TO_MEMORY    2 
 #define NV_DD_DMA_CONTEXT_DMA_IN_VIDEO_MEMORY                   3 
@@ -1162,8 +1151,6 @@ extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
 //xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
 extern DWORD ABGR_to_ARGB(const uint32_t color);
-
-xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat = {};
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.

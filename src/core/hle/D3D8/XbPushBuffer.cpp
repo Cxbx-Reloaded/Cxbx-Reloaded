@@ -131,10 +131,10 @@ DWORD CxbxGetStrideFromVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDecla
 	return Stride;
 }
 
-extern int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg);
 //for inline_arrays
 extern xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride; // TMP glue
-extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat;
+xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat;
+int StreamZeroStride = 0;
 
 DWORD ABGR_to_ARGB(const uint32_t color)
 {
@@ -145,10 +145,63 @@ void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	CxbxUpdateNativeD3DResources();
-
 	HRESULT hRet;
 
+	// Sort all vertex attributes on memory offset
+	struct { int slot; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedSlots[X_VSH_MAX_ATTRIBUTES];
+
+	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
+		SortedSlots[slot].slot = slot;
+		SortedSlots[slot].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
+		SortedSlots[slot].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+		if (SortedSlots[slot].size_and_type == xbox::X_D3DVSDT_NONE)
+			SortedSlots[slot].offset = 0xFFFFFFFF; // Unused, will sort to the end
+		else {
+			SortedSlots[slot].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
+			assert(SortedSlots[slot].stride > 0);
+			assert(SortedSlots[slot].stride < 16*4*4); // TODO : replace with NV2A maximum stride
+		}
+	}
+
+	std::sort(/*First=*/&SortedSlots[0], /*Last=*/&SortedSlots[X_VSH_MAX_ATTRIBUTES-1], /*Pred=*/[](const auto& x, const auto& y)
+		{ return std::tie(x.offset, x.slot) < std::tie(y.offset, y.slot); });
+
+	assert(SortedSlots[0].offset > 0); // Expect at least one slot is in use
+
+	int StreamIndex = 0;
+	uint32_t end_offset = 0;
+	int parent = 0;
+	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
+		// Are we at the start of a new attribute group?
+		if (end_offset == 0) {
+			// (Re)calculate the span (from the parent up to the stride), where this group of attributes ends
+			end_offset = SortedSlots[parent].offset + SortedSlots[parent].stride;
+			// Is this the first stream?
+			if (StreamIndex == 0)
+				// Remember stream zero's stride
+				StreamZeroStride = SortedSlots[parent].stride;
+		}
+
+		// Is this attribute in-use?
+		if (SortedSlots[i].offset < 0xFFFFFFFF) {
+			// Does this attribute start outside the current group of attributes?
+			if (SortedSlots[i].offset >= end_offset) {
+				StreamIndex++; // Start on a new stream 
+				parent = i; // Mark this attribute as the start of a new group
+				end_offset = 0; // Make sure the next loop iteration starts a new group of attributes
+			}
+		}
+
+		assert(SortedSlots[i].stride == SortedSlots[parent].stride); // Verify all attributes in the same group share an identical stride
+
+		int slot = SortedSlots[i].slot;
+		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = StreamIndex;
+		g_NV2AVertexAttributeFormat.Slots[slot].Offset = SortedSlots[i].offset - SortedSlots[parent].offset; // Note : Ignore when size_and_type == X_D3DVSDT_NONE
+		g_NV2AVertexAttributeFormat.Slots[slot].Format = SortedSlots[i].size_and_type;
+		g_NV2AVertexAttributeFormat.Slots[slot].TessellationType = 0; // TODO or ignore?
+		g_NV2AVertexAttributeFormat.Slots[slot].TessellationSource = 0; // TODO or ignore?
+	}
+	
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
@@ -158,6 +211,15 @@ void D3D_draw_state_update(NV2AState *d)
 	// NV2A_SET_LINEAR_FOG_CONST?
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 	// Unused : D3DRS_FOGVERTEXMODE
+
+	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
+	// so that our above composed declaration will be used for the next draw :
+	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
+
+	// Note, that g_Xbox_VertexShaderMode should be left untouched,
+	// because except for the declaration override, the Xbox shader (either FVF
+	// or a program, or even passthrough shaders) should still be in effect!
+	CxbxUpdateNativeD3DResources();
 
 	uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 	/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
@@ -187,25 +249,6 @@ void D3D_draw_state_update(NV2AState *d)
 	g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
 	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
 
-	// set out own vertex attribute format and offset here.
-	UINT uiStride = 0;
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
-#if 0 // For illustration purposes only : This is how we can read the current vertex declaration from Kelvin :
-		uint32_t arg0 = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot];
-		uint32_t format = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE); // The data type of the components of this vertex attribute
-		uint32_t count = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE); // The number of components in this vertex attribute
-		uint32_t stride = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE); // The byte increment to step from the start of one vertex attribute to the next
-		arg0 = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
-		uint32_t dma_select = arg0 & 0x80000000; // Whether to use DMA channal A, or B
-		uint32_t offset = arg0 & 0x7fffffff; // The offset to add to the selected DMA channel base address, resulting in the starting memory address of this vertex attribute 
-#endif
-		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
-		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); // = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-
-		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride ;
-		uiStride+= pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
-	}
-
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
 }
 
@@ -233,24 +276,6 @@ void D3D_draw_arrays(NV2AState *d)
 	// retrieve vertex shader
 	// render vertices
 
-	// Compose an Xbox vertex attribute format to pass through all registers
-	UINT uiStride = 0;
-	//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
-	//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
-		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & 0xFF;
-		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
-		uiStride += pg->vertex_attributes[slot].count * pg->vertex_attributes[slot].size;
-	}
-
-	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
-	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
-	// Note, that g_Xbox_VertexShaderMode should be left untouched,
-	// because except for the declaration override, the Xbox shader (either FVF
-	// or a program, or even passthrough shaders) should still be in effect!
-	CxbxUpdateNativeD3DResources();
-
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 
@@ -258,7 +283,7 @@ void D3D_draw_arrays(NV2AState *d)
 	//could be wrong, need polished to use each pg->KelvinPrimitive.SetVertexDataArrayOffset[] for each attributes.
 	//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
 	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
-	DrawContext.uiXboxVertexStreamZeroStride = pgraph_get_NV2A_vertex_stride(pg);
+	DrawContext.uiXboxVertexStreamZeroStride = StreamZeroStride;
 
 	for (unsigned array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
 		DrawContext.pXboxIndexData = false;
@@ -279,15 +304,6 @@ void D3D_draw_inline_buffer(NV2AState *d)
 
 	LOG_INCOMPLETE(); // TODO : Finish implementation of D3D_draw_inline_buffer
 
-	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
-	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
-
-	// Note, that g_Xbox_VertexShaderMode should be left untouched,
-	// because except for the declaration override, the Xbox shader (either FVF
-	// or a program, or even passthrough shaders) should still be in effect!
-	CxbxUpdateNativeD3DResources();
-
 	CxbxDrawContext DrawContext = {};
 	DrawContext.pXboxIndexData = false;
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
@@ -306,14 +322,6 @@ void D3D_draw_inline_array(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
-	//for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-		//apply stride to attributes.
-		//pg->vertex_attributes[i].format += dwVertexStride << 8;
-	//}
-
-	//calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg) in HLE_pgraph_draw_inline_array(d)
-
 	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush.
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
@@ -324,70 +332,28 @@ void D3D_draw_inline_array(NV2AState *d)
 	}
 	// render vertices
 	else {
-		//DWORD dwVertexStride = CxbxGetStrideFromVertexDeclaration(CxbxGetVertexDeclaration());
-		//vertex stride can be set via NV097_SET_VERTEX_DATA_ARRAY_FORMAT, which is then stored in pg->vertex_attributes[slot].stride where slot is the vertex shader slot being used.
-		//don't know how to retrive the slot, set it as 0 here for now.
+		CxbxDrawContext DrawContext = {};
+		DrawContext.pXboxIndexData = false;
+		assert((xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode != xbox::X_D3DPT_INVALID);
+		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
+		//get vertex size in dword or float.
+		DWORD dwVertexSizeDwords = StreamZeroStride / sizeof(float);
+		//pg->inline_array_length was advanced every time we receive a dword/float from pushbuffer.
+		//here we convert it to the actual vertex count.
+		DrawContext.dwVertexCount = pg->inline_array_length / dwVertexSizeDwords;
+		DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
+		DrawContext.uiXboxVertexStreamZeroStride = StreamZeroStride;
 
-		DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+		CxbxDrawPrimitiveUP(DrawContext);
 
-		if (dwVertexStride > 0) {
-			// Compose an Xbox vertex attribute format to pass through all registers
-			UINT uiStride = 0;
-			for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
-				g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot]&0xFF;
-				g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
-				uiStride += pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
-			}
-
-
-			// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
-			// so that our above composed declaration will be used for the next draw :
-			g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
-			// Note, that g_Xbox_VertexShaderMode should be left untouched,
-			// because except for the declaration override, the Xbox shader (either FVF
-			// or a program, or even passthrough shaders) should still be in effect!
-			CxbxUpdateNativeD3DResources();
-
-			CxbxDrawContext DrawContext = {};
-			DrawContext.pXboxIndexData = false;
-			assert((xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode != xbox::X_D3DPT_INVALID);
-			DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-			//get vertex size in dword or float.
-			DWORD dwVertexSizeDwords= dwVertexStride /sizeof(float);
-			//pg->inline_array_length was advanced every time we receive a dword/float from pushbuffer.
-			//here we convert it to the actual vertex count.
-			DrawContext.dwVertexCount = pg->inline_array_length/ dwVertexSizeDwords;
-			DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
-			DrawContext.uiXboxVertexStreamZeroStride = dwVertexStride;
-
-			CxbxDrawPrimitiveUP(DrawContext);
-
-			// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-			g_InlineVertexBuffer_DeclarationOverride = nullptr;
-		}
+		// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
+		g_InlineVertexBuffer_DeclarationOverride = nullptr;
 	}
 }
 
 void D3D_draw_inline_elements(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
-
-	//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
-	// Compose an Xbox vertex attribute format to pass through all registers
-	UINT uiStride = 0;
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
-		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); //  = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
-		uiStride += pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
-	}
-
-	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
-	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
-	// Note, that g_Xbox_VertexShaderMode should be left untouched,
-	// because except for the declaration override, the Xbox shader (either FVF
-	// or a program, or even passthrough shaders) should still be in effect!
-	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
@@ -412,7 +378,7 @@ extern void(*pgraph_draw_inline_elements)(NV2AState *d);
 
 void D3D_init_pgraph_plugins()
 {
-	/* attach HLE Direct3D render plugins */
+	/* Attach Direct3D render plugins */
 	pgraph_draw_state_update = D3D_draw_state_update;
 	pgraph_draw_clear = D3D_draw_clear;
 	pgraph_draw_arrays = D3D_draw_arrays;
