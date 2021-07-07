@@ -1446,6 +1446,7 @@ int pgraph_handle_method(
         //test case:xdk pushbuffer sample.
  
         case NV_KELVIN_PRIMITIVE: {
+			// uint32_t previous_word = pg->regs[method / 4]; // TODO : Enable if the previous method register value is required
             //update struct KelvinPrimitive/array regs[] in first round, skip special cases. then we process those state variables if necessary in 2nd round.
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
@@ -1483,10 +1484,12 @@ int pgraph_handle_method(
             //2nd round, handle special cases, setup bit mask flags, setup pgraph internal state vars, 
             switch (method) {
                 case NV097_SET_OBJECT://done
+                    assert(arg0 == pg->KelvinPrimitive.SetObject);
                     kelvin->object_instance = arg0;
                     break;
 
                 case NV097_NO_OPERATION://done
+                    assert(arg0 == pg->KelvinPrimitive.NoOperation);
                     /* The bios uses nop as a software method call -
                      * it seems to expect a notify interrupt if the parameter isn't 0.
                      * According to a nouveau guy it should still be a nop regardless
@@ -1547,22 +1550,27 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_WAIT_FOR_IDLE://done  //this method is used to wait for NV2A state machine to sync to pushbuffer.
+                    assert(arg0 == pg->KelvinPrimitive.WaitForIdle);
                     pgraph_update_surface(d, false, true, true);
                     break;
 
                 case NV097_SET_FLIP_READ://done  //pg->KelvinPrimitive.SetFlipRead
+                    assert(arg0 == pg->KelvinPrimitive.SetFlipRead);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SURFACE / 4], NV_PGRAPH_SURFACE_READ_3D,
                     //    arg0);
                     break;
                 case NV097_SET_FLIP_WRITE://done  //pg->KelvinPrimitive.SetFlipWrite
+                    assert(arg0 == pg->KelvinPrimitive.SetFlipWrite);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SURFACE / 4], NV_PGRAPH_SURFACE_WRITE_3D,
                     //    arg0);
                     break; 
                 case NV097_SET_FLIP_MODULO://done  //pg->KelvinPrimitive.SetFlipModulo
+                    assert(arg0 == pg->KelvinPrimitive.SetFlipModulo);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SURFACE / 4], NV_PGRAPH_SURFACE_MODULO_3D,
                     //    arg0);
                     break;
                 case NV097_FLIP_INCREMENT_WRITE: {//done
+                    assert(arg0 == pg->KelvinPrimitive.FlipIncrementWrite);
                     NV2A_DPRINTF("flip increment write %d -> ",
 						pg->KelvinPrimitive.SetFlipWrite);
 					pg->KelvinPrimitive.SetFlipWrite=
@@ -1578,6 +1586,7 @@ int pgraph_handle_method(
 						break;
 					}
 				case NV097_FLIP_STALL://done
+                    assert(arg0 == pg->KelvinPrimitive.FlipStall);
                     pgraph_update_surface(d, false, true, true);
                     // TODO: Fix this (why does it hang?)
                     /* while (true) */ {
@@ -1631,6 +1640,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_SURFACE_CLIP_HORIZONTAL://done KelvinPrimitive.SetSurfaceClipHorizontal could use union with word ClipX, ClipWidth
+                    assert(arg0 == pg->KelvinPrimitive.SetSurfaceClipHorizontal);
                     pgraph_update_surface(d, false, true, true);
                     pg->surface_shape.clip_x =
                         GET_MASK(arg0, NV097_SET_SURFACE_CLIP_HORIZONTAL_X);
@@ -1638,6 +1648,7 @@ int pgraph_handle_method(
                         GET_MASK(arg0, NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH);
                     break;
                 case NV097_SET_SURFACE_CLIP_VERTICAL://done KelvinPrimitive.SetSurfaceClipVertical could use union with word ClipY, ClipHeight
+                    assert(arg0 == pg->KelvinPrimitive.SetSurfaceClipVertical);
                     pgraph_update_surface(d, false, true, true);
                     pg->surface_shape.clip_y =
                         GET_MASK(arg0, NV097_SET_SURFACE_CLIP_VERTICAL_Y);
@@ -1645,6 +1656,7 @@ int pgraph_handle_method(
                         GET_MASK(arg0, NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT);
                     break;
                 case NV097_SET_SURFACE_FORMAT://done
+                    assert(arg0 == pg->KelvinPrimitive.SetSurfaceFormat);
                     pgraph_update_surface(d, false, true, true);
 
                     pg->surface_shape.color_format =
@@ -1661,6 +1673,7 @@ int pgraph_handle_method(
                         GET_MASK(arg0, NV097_SET_SURFACE_FORMAT_HEIGHT);
                     break;
                 case NV097_SET_SURFACE_PITCH://done
+                    assert(arg0 == pg->KelvinPrimitive.SetSurfacePitch);
                     pgraph_update_surface(d, false, true, true);
 
                     pg->surface_color.pitch =
@@ -1671,12 +1684,14 @@ int pgraph_handle_method(
                     pg->surface_zeta.buffer_dirty = true;
                     break;
                 case NV097_SET_SURFACE_COLOR_OFFSET://done
+                    assert(arg0 == pg->KelvinPrimitive.SetSurfaceColorOffset);
                     pgraph_update_surface(d, false, true, true);
 
                     pg->surface_color.offset = arg0;
                     pg->surface_color.buffer_dirty = true;
                     break;
                 case NV097_SET_SURFACE_ZETA_OFFSET://done
+                    assert(arg0 == pg->KelvinPrimitive.SetSurfaceZetaOffset);
                     pgraph_update_surface(d, false, true, true);
 
                     pg->surface_zeta.offset = arg0;
@@ -1697,6 +1712,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_CONTROL0: {//done  //pg->KelvinPrimitive.SetControl0& NV097_SET_CONTROL0_COLOR_SPACE_CONVERT GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)
+                    assert(arg0 == pg->KelvinPrimitive.SetControl0);
                     pgraph_update_surface(d, false, true, true);
 
                     //bool stencil_write_enable =
@@ -1724,6 +1740,7 @@ int pgraph_handle_method(
                 }
 
                 case NV097_SET_COLOR_MATERIAL: {//done
+                    assert(arg0 == pg->KelvinPrimitive.SetColorMaterial);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_EMISSION,  //(pg->KelvinPrimitive.SetColorMaterial >> 0) & 3)
                     //	(arg0 >> 0) & 3);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_AMBIENT,  //(pg->KelvinPrimitive.SetColorMaterial >> 2) & 3)
@@ -1736,6 +1753,7 @@ int pgraph_handle_method(
                 }
 
                 case NV097_SET_FOG_MODE: {//done //pg->KelvinPrimitive.SetFogMode
+                    assert(arg0 == pg->KelvinPrimitive.SetFogMode);
                     /* FIXME: There is also NV_PGRAPH_CSV0_D_FOG_MODE */
                     unsigned int mode;
                     switch (arg0) {
@@ -1762,6 +1780,7 @@ int pgraph_handle_method(
                     break;
                 }
                 case NV097_SET_FOG_GEN_MODE: {//done //pg->KelvinPrimitive.SetFogGenMode
+                    assert(arg0 == pg->KelvinPrimitive.SetFogGenMode);
                     unsigned int mode; 
                     switch (arg0) {
                     case NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA:
@@ -1898,13 +1917,14 @@ int pgraph_handle_method(
                         //assert(false);
                         //set factor a default value, even this is not supposed to happen.
 						// pushbuffer sample using method 304 with arg0 0x302.
-						pg->KelvinPrimitive.SetBlendFuncSfactor= factor & 0x0F;
+						pg->KelvinPrimitive.SetBlendFuncSfactor = factor & 0x0F;
                     }
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_SFACTOR, factor);
                     break;
                 }
 
                 case NV097_SET_BLEND_FUNC_DFACTOR: {//done //pg->KelvinPrimitive.SetBlendFuncDfactor
+                    assert(arg0 == pg->KelvinPrimitive.SetBlendFuncDfactor);
                     unsigned int factor=arg0;
                     switch (arg0) {
                     case NV097_SET_BLEND_FUNC_DFACTOR_V_ZERO:
@@ -1954,6 +1974,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_BLEND_EQUATION: {//done //pg->KelvinPrimitive.SetBlendEquation
+                    assert(arg0 == pg->KelvinPrimitive.SetBlendEquation);
                     unsigned int equation;
                     switch (arg0) {
                     case NV097_SET_BLEND_EQUATION_V_FUNC_SUBTRACT:
@@ -2086,6 +2107,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_CULL_FACE: {//done //pg->KelvinPrimitive.SetCullFace
+                    assert(arg0 == pg->KelvinPrimitive.SetCullFace);
                     unsigned int face=arg0;
                     switch (arg0) {
                     case NV097_SET_CULL_FACE_V_FRONT:
@@ -2106,6 +2128,7 @@ int pgraph_handle_method(
                     break;
                 }
                 case NV097_SET_FRONT_FACE: {//done //pg->KelvinPrimitive.SetFrontFace
+                    assert(arg0 == pg->KelvinPrimitive.SetFrontFace);
                     bool ccw;
                     switch (arg0) {
                     case NV097_SET_FRONT_FACE_V_CW:
@@ -2131,60 +2154,68 @@ int pgraph_handle_method(
                     //	arg0);
                     break;
 
-                case NV097_SET_MATERIAL_EMISSION : break;//done //pg->KelvinPrimitive.SetMaterialEmission[3]
+                CASE_3(NV097_SET_MATERIAL_EMISSION, 4)://done //pg->KelvinPrimitive.SetMaterialEmission[3]
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetMaterialEmission[slot]);
+                    break;
                 case NV097_SET_MATERIAL_ALPHA://done //pg->KelvinPrimitive.SetMaterialAlpha
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetMaterialAlpha);
                     break;
                 case NV097_SET_SPECULAR_ENABLE : break;//done //pg->KelvinPrimitive.SetSpecularEnable
-
+                    assert(arg0 == pg->KelvinPrimitive.SetSpecularEnable);
+                    break;
                 case NV097_SET_LIGHT_ENABLE_MASK://done //pg->KelvinPrimitive.SetLightEnableMask
                     assert(arg0 == pg->KelvinPrimitive.SetLightEnableMask);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_LIGHTS, arg0);
                     break;
 
                 CASE_4(NV097_SET_TEXGEN_S, 16) : {//done //pg->KelvinPrimitive.SetTexgen[2].S  {S,T,R,Q}
-                        slot = (method - NV097_SET_TEXGEN_S) / 16; //slot is 0 or 1
-                        //unsigned int reg = (slot <2) ? NV_PGRAPH_CSV1_A / 4
-                        //	: NV_PGRAPH_CSV1_B / 4;
-                        //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_S
-                        //	: NV_PGRAPH_CSV1_A_T0_S;
-                        //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 0));
-                        pg->KelvinPrimitive.SetTexgen[slot].S = kelvin_map_texgen(arg0, 0);
-                        break;
-                    }
+                    slot = (method - NV097_SET_TEXGEN_S) / 16; //slot is 0 or 1
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetTexgen[slot].S);
+                    //unsigned int reg = (slot <2) ? NV_PGRAPH_CSV1_A / 4
+                    //	: NV_PGRAPH_CSV1_B / 4;
+                    //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_S
+                    //	: NV_PGRAPH_CSV1_A_T0_S;
+                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 0));
+                    pg->KelvinPrimitive.SetTexgen[slot].S = kelvin_map_texgen(arg0, 0);
+                    break;
+                }
                 CASE_4(NV097_SET_TEXGEN_T, 16) : {//done //pg->KelvinPrimitive.SetTexgen[2].T  {S,T,R,Q}
-                        slot = (method - NV097_SET_TEXGEN_T) / 16;
-                        //unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A / 4
-                        //	: NV_PGRAPH_CSV1_B / 4;
-                        //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_T
-                        //	: NV_PGRAPH_CSV1_A_T0_T;
-                        //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 1));
-                        pg->KelvinPrimitive.SetTexgen[slot].T = kelvin_map_texgen(arg0, 0);
-                        break;
-                    }
+                    slot = (method - NV097_SET_TEXGEN_T) / 16;
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetTexgen[slot].T);
+                    //unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A / 4
+                    //	: NV_PGRAPH_CSV1_B / 4;
+                    //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_T
+                    //	: NV_PGRAPH_CSV1_A_T0_T;
+                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 1));
+                    pg->KelvinPrimitive.SetTexgen[slot].T = kelvin_map_texgen(arg0, 0);
+                    break;
+                }
                 CASE_4(NV097_SET_TEXGEN_R, 16) : {//done //pg->KelvinPrimitive.SetTexgen[2].R  {S,T,R,Q}
-                        slot = (method - NV097_SET_TEXGEN_R) / 16;
-                        //unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A / 4
-                        //	: NV_PGRAPH_CSV1_B / 4;
-                        //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_R
-                        //	: NV_PGRAPH_CSV1_A_T0_R;
-                        //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 2));
-                        pg->KelvinPrimitive.SetTexgen[slot].R = kelvin_map_texgen(arg0, 0);
-                        break;
-                    }
+                    slot = (method - NV097_SET_TEXGEN_R) / 16;
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetTexgen[slot].R);
+                    //unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A / 4
+                    //	: NV_PGRAPH_CSV1_B / 4;
+                    //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_R
+                    //	: NV_PGRAPH_CSV1_A_T0_R;
+                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 2));
+                    pg->KelvinPrimitive.SetTexgen[slot].R = kelvin_map_texgen(arg0, 0);
+                    break;
+                }
                 CASE_4(NV097_SET_TEXGEN_Q, 16) : {//done //pg->KelvinPrimitive.SetTexgen[2].Q  {S,T,R,Q}
-                        slot = (method - NV097_SET_TEXGEN_Q) / 16;
-                        //original code uses condition slot < 2 , then NV_PGRAPH_CSV1_A will always be used.
-                        //unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A / 4
-                        //	: NV_PGRAPH_CSV1_B / 4;
-                        //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_Q
-                        //	: NV_PGRAPH_CSV1_A_T0_Q;
-                        //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 3));
-                        pg->KelvinPrimitive.SetTexgen[slot].Q = kelvin_map_texgen(arg0, 0);
-                        break;
-                    }
-                CASE_4(NV097_SET_TEXTURE_MATRIX_ENABLE, 4) ://done //pg->KelvinPrimitive.SetTextureMatrix0Enable[4]
-                    //slot = (method - NV097_SET_TEXTURE_MATRIX_ENABLE) / 4;
+                    slot = (method - NV097_SET_TEXGEN_Q) / 16;
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetTexgen[slot].Q);
+                    //original code uses condition slot < 2 , then NV_PGRAPH_CSV1_A will always be used.
+                    //unsigned int reg = (slot < 2) ? NV_PGRAPH_CSV1_A / 4
+                    //	: NV_PGRAPH_CSV1_B / 4;
+                    //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_Q
+                    //	: NV_PGRAPH_CSV1_A_T0_Q;
+                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 3));
+                    pg->KelvinPrimitive.SetTexgen[slot].Q = kelvin_map_texgen(arg0, 0);
+                    break;
+                }
+                CASE_4(NV097_SET_TEXTURE_MATRIX_ENABLE, 4) ://done //pg->KelvinPrimitive.SetTextureMatrixEnable[4]
+                    slot = (method - NV097_SET_TEXTURE_MATRIX_ENABLE) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetTextureMatrixEnable[slot]);
                     //pg->texture_matrix_enable[slot] = arg0;
                     break;
 
@@ -2195,6 +2226,7 @@ int pgraph_handle_method(
                 CASE_16(NV097_SET_PROJECTION_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetProjectionMatrix[16]
                     //KelvinPrimitive.SetProjectionMatrix[] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_PROJECTION_MATRIX) / 4;
+                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetProjectionMatrix[slot]);
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         // pg->projection_matrix[slot] = *(float*)&parameter;
@@ -2368,28 +2400,33 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetCombinerFactor0[8] is update already. we update the vertex shader contant as well.
                     //for (int argc = 0; argc < method_count; argc++,slot++) {
                     //	arg0 = argv[argc];
-                    //	slot = (method - NV097_SET_COMBINER_FACTOR0) / 4;
+                    slot = (method - NV097_SET_COMBINER_FACTOR0) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetCombinerFactor0[slot]);
                     //	pg->pgraph_regs[NV_PGRAPH_COMBINEFACTOR0/ 4 + slot * 4] = arg0;
                     //}
                     break;
 
                 CASE_8(NV097_SET_COMBINER_FACTOR1, 4) ://done //pg->KelvinPrimitive.SetCombinerFactor1[8]
-                    //	slot = (method - NV097_SET_COMBINER_FACTOR1) / 4;
+                    slot = (method - NV097_SET_COMBINER_FACTOR1) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetCombinerFactor1[slot]);
                     //pg->pgraph_regs[NV_PGRAPH_COMBINEFACTOR1/ 4 + slot * 4] = arg0;
                     break;
 
                 CASE_8(NV097_SET_COMBINER_ALPHA_OCW, 4) ://done //pg->KelvinPrimitive.SetCombinerAlphaOCW[8]
-                    //	slot = (method - NV097_SET_COMBINER_ALPHA_OCW) / 4;
+                    slot = (method - NV097_SET_COMBINER_ALPHA_OCW) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetCombinerAlphaOCW[slot]);
                     //pg->pgraph_regs[NV_PGRAPH_COMBINEALPHAO0/ 4 + slot * 4] = arg0;
                     break;
 
                 CASE_8(NV097_SET_COMBINER_COLOR_ICW, 4) ://done //pg->KelvinPrimitive.SetCombinerColorICW[8]
-                    //	slot = (method - NV097_SET_COMBINER_COLOR_ICW) / 4;
+                    slot = (method - NV097_SET_COMBINER_COLOR_ICW) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetCombinerColorICW[slot]);
                     //pg->pgraph_regs[NV_PGRAPH_COMBINECOLORI0/ 4 + slot * 4] = arg0;
                     break;
 
                 CASE_4(NV097_SET_COLOR_KEY_COLOR, 4) ://done //pg->KelvinPrimitive.SetColorKeyColor[4]
-                    //	slot = (method - NV097_SET_COMBINER_COLOR_ICW) / 4;
+                    slot = (method - NV097_SET_COMBINER_COLOR_ICW) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetColorKeyColor[slot]);
                     //pg->pgraph_regs[NV_PGRAPH_COMBINECOLORI0/ 4 + slot * 4] = arg0;
                 //this state is not implement yet.
                     break;
@@ -2541,6 +2578,7 @@ int pgraph_handle_method(
 					    //NV097_SET_TRANSFORM_PROGRAM will advanced after each execution of NV097_SET_TRANSFORM_PROGRAM.
 					    //for continuous batch NV097_SET_TRANSFORM_PROGRAM methods, it will not have NV097_SET_TRANSFORM_PROGRAM_LOAD in between.
 					slot = (method - NV097_SET_TRANSFORM_PROGRAM) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetTransformProgram[slot]);
                     pg->KelvinPrimitive.SetTransformProgramLoad+= slot/4;
                     for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
@@ -2690,11 +2728,14 @@ int pgraph_handle_method(
                     break;
                 }
             //this state is not implement yet. may not be used in xbox
-                case NV097_SET_STIPPLE_CONTROL:break;//not implement //pg->KelvinPrimitive.SetStippleControl
+                case NV097_SET_STIPPLE_CONTROL: //not implement //pg->KelvinPrimitive.SetStippleControl
+                    assert(arg0 == pg->KelvinPrimitive.SetStippleControl);
+                    break;
                     
             //this state is not implement yet. may not be used in xbox
-                CASE_32(NV097_SET_STIPPLE_PATTERN,4):
-
+                CASE_32(NV097_SET_STIPPLE_PATTERN, 4):
+                    slot = (method - NV097_SET_STIPPLE_PATTERN) / 4;
+                    assert(arg0 == pg->KelvinPrimitive.SetStipplePattern[slot]);
                     break;
 
                 CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 

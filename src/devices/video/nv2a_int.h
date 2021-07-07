@@ -237,8 +237,8 @@ typedef struct ImageBlitState {
 	unsigned int width, height;
 } ImageBlitState;
 
-typedef struct NV097KelvinPrimitive{
-	uint32_t Unknown_0000;				//0x00000000
+typedef struct NV097KelvinPrimitive {
+	uint32_t SetObject;					//0x00000000
 	uint32_t Rev_0004[0xfc / 4];		//Reserved for NV_PGRAPH_XXX registers
 	uint32_t NoOperation;				//0x00000100
 	uint32_t Notify;
@@ -650,7 +650,7 @@ typedef struct PGRAPHState {
 	GHashTable *shader_cache;
 #endif
 	ShaderBinding *shader_binding;
-	//KelvinPrimitive.SetTextureMatrix0Enable[4]
+	//KelvinPrimitive.SetTextureMatrixEnable[4]
 	//bool texture_matrix_enable[NV2A_MAX_TEXTURES];
 
 	/* FIXME: Move to NV_PGRAPH_BUMPMAT... */
