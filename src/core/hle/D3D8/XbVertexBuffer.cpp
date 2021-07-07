@@ -646,6 +646,8 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		ConvertStream(pDrawContext, pCxbxVertexDeclaration, i);
     }
 
+	pDrawContext->dwHostPrimitiveCount = EmuXB2PC_D3DPrimitiveCount(pDrawContext->dwVertexCount, pDrawContext->XboxPrimitiveType);
+	/*
 	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
 		// Quad strip is just like a triangle strip, but requires two vertices per primitive.
 		// A quadstrip starts with 4 vertices and adds 2 vertices per additional quad.
@@ -661,7 +663,7 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	} else {
 		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
 	}
-
+	*/
 	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_POLYGON) {
 		// Convex polygon is the same as a triangle fan.
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLEFAN;

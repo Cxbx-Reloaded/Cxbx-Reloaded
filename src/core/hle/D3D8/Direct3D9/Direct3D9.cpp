@@ -7336,7 +7336,8 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	VertexBufferConverter.Apply(&DrawContext);
 	//convert dwHostPrimitiveCount here. the quad to d3d9 triangle is considered already.
 	assert(DrawContext.XboxPrimitiveType != xbox::X_D3DPT_QUADSTRIP);
-	DrawContext.dwHostPrimitiveCount = EmuXB2PC_D3DPrimitiveCount(DrawContext.dwVertexCount,DrawContext.XboxPrimitiveType);
+	//DrawContext.dwHostPrimitiveCount is set by VertexBufferConverter.Apply()
+	//DrawContext.dwHostPrimitiveCount = EmuXB2PC_D3DPrimitiveCount(DrawContext.dwVertexCount,DrawContext.XboxPrimitiveType);
 	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
@@ -8052,8 +8053,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
 			// Convert quad vertex count to triangle vertex count :
 			UINT NumVertices = QuadToTriangleVertexCount(DrawContext.dwVertexCount);
-			// Convert quad primitive count to triangle primitive count :
-			UINT primCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+			// the dwHostPrimitiveCount is coverted to triangle list already :
+			UINT primCount = DrawContext.dwHostPrimitiveCount;
 			// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
 			// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
 			// Emulate drawing quads by drawing each quad with two indexed triangles :
