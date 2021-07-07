@@ -398,12 +398,12 @@ static const SurfaceColorFormatInfo kelvin_surface_color_format_map[16] = {
         {}
 };
 
+void (*pgraph_draw_state_update)(NV2AState *d);
+void (*pgraph_draw_clear)(NV2AState *d);
 void (*pgraph_draw_arrays)(NV2AState *d);
 void (*pgraph_draw_inline_buffer)(NV2AState *d);
 void (*pgraph_draw_inline_array)(NV2AState *d);
 void (*pgraph_draw_inline_elements)(NV2AState *d);
-void (*pgraph_draw_state_update)(NV2AState *d);
-void (*pgraph_draw_clear)(NV2AState *d);
 
 //static void pgraph_set_context_user(NV2AState *d, uint32_t value);
 //void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
@@ -1109,12 +1109,12 @@ void OpenGL_draw_clear(NV2AState *d)
 
 void OpenGL_init_pgraph_plugins()
 {
+    pgraph_draw_state_update = OpenGL_draw_state_update;
+    pgraph_draw_clear = OpenGL_draw_clear;
     pgraph_draw_arrays = OpenGL_draw_arrays;
     pgraph_draw_inline_buffer = OpenGL_draw_inline_buffer;
     pgraph_draw_inline_array = OpenGL_draw_inline_array;
     pgraph_draw_inline_elements = OpenGL_draw_inline_elements;
-    pgraph_draw_state_update = OpenGL_draw_state_update;
-    pgraph_draw_clear = OpenGL_draw_clear;
 }
 
 //calsulate vertex stride by accumulating the size of each attribute.

@@ -136,6 +136,88 @@ extern int pgraph_get_NV2A_vertex_stride(PGRAPHState *pg);
 extern xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride; // TMP glue
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat;
 
+DWORD ABGR_to_ARGB(const uint32_t color)
+{
+	return (color & 0xFF00FF00) | ((color & 0x00FF0000) >> 16) | ((color & 0x000000FF) << 16);
+}
+
+void D3D_draw_state_update(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+
+	CxbxUpdateNativeD3DResources();
+
+	HRESULT hRet;
+
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
+	// NV2A_FOG_PLANE?
+	// NV2A_SET_LINEAR_FOG_CONST?
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
+	// Unused : D3DRS_FOGVERTEXMODE
+
+	uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
+	/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
+	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+
+// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
+// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
+
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, xtBool); // NV2A_NORMALIZE_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
+	g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv); // NV2A_TX_WRAP(0), EmuXB2PC_* conversion needed
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv); // NV2A_TX_WRAP(1), EmuXB2PC_* conversion needed
+
+//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
+
+	g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+	g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
+
+	// set out own vertex attribute format and offset here.
+	UINT uiStride = 0;
+	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
+#if 0 // For illustration purposes only : This is how we can read the current vertex declaration from Kelvin :
+		uint32_t arg0 = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot];
+		uint32_t format = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE); // The data type of the components of this vertex attribute
+		uint32_t count = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE); // The number of components in this vertex attribute
+		uint32_t stride = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE); // The byte increment to step from the start of one vertex attribute to the next
+		arg0 = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
+		uint32_t dma_select = arg0 & 0x80000000; // Whether to use DMA channal A, or B
+		uint32_t offset = arg0 & 0x7fffffff; // The offset to add to the selected DMA channel base address, resulting in the starting memory address of this vertex attribute 
+#endif
+		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
+		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); // = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+
+		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride ;
+		uiStride+= pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
+	}
+
+	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
+}
+
+void D3D_draw_clear(NV2AState *d)
+{
+	// PGRAPHState *pg = &d->pgraph;
+
+	CxbxUpdateNativeD3DResources();
+
+	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D (call EMUPATCH(D3DDevice_Clear)?)
+}
+
 void D3D_draw_arrays(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -320,106 +402,25 @@ void D3D_draw_inline_elements(NV2AState *d)
 	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
-DWORD ABGR_to_ARGB(const uint32_t color)
-{
-	return (color & 0xFF00FF00) | ((color & 0x00FF0000) >> 16) | ((color & 0x000000FF) << 16);
-}
-
-void D3D_draw_state_update(NV2AState *d)
-{
-	PGRAPHState *pg = &d->pgraph;
-
-	CxbxUpdateNativeD3DResources();
-
-	HRESULT hRet;
-
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
-	// NV2A_FOG_PLANE?
-	// NV2A_SET_LINEAR_FOG_CONST?
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
-	// Unused : D3DRS_FOGVERTEXMODE
-
-	uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
-	/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-
-// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
-// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
-
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, xtBool); // NV2A_NORMALIZE_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
-	g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv); // NV2A_TX_WRAP(0), EmuXB2PC_* conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv); // NV2A_TX_WRAP(1), EmuXB2PC_* conversion needed
-
-//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
-
-	g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
-	g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
-	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
-
-	// set out own vertex attribute format and offset here.
-	UINT uiStride = 0;
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
-#if 0 // For illustration purposes only : This is how we can read the current vertex declaration from Kelvin :
-		uint32_t arg0 = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot];
-		uint32_t format = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE); // The data type of the components of this vertex attribute
-		uint32_t count = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE); // The number of components in this vertex attribute
-		uint32_t stride = GET_MASK(arg0, NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE); // The byte increment to step from the start of one vertex attribute to the next
-		arg0 = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
-		uint32_t dma_select = arg0 & 0x80000000; // Whether to use DMA channal A, or B
-		uint32_t offset = arg0 & 0x7fffffff; // The offset to add to the selected DMA channel base address, resulting in the starting memory address of this vertex attribute 
-#endif
-		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
-		g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (0x0F | 0xF0); // = (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-
-		g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride ;
-		uiStride+= pg->vertex_attributes[slot].count*pg->vertex_attributes[slot].size;
-	}
-
-	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
-}
-
-void D3D_draw_clear(NV2AState *d)
-{
-	// PGRAPHState *pg = &d->pgraph;
-
-	CxbxUpdateNativeD3DResources();
-
-	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D (call EMUPATCH(D3DDevice_Clear)?)
-}
-
 // Import pgraph_draw_* variables, declared in EmuNV2A_PGRAPH.cpp :
+extern void(*pgraph_draw_state_update)(NV2AState *d);
+extern void(*pgraph_draw_clear)(NV2AState *d);
 extern void(*pgraph_draw_arrays)(NV2AState *d);
 extern void(*pgraph_draw_inline_buffer)(NV2AState *d);
 extern void(*pgraph_draw_inline_array)(NV2AState *d);
 extern void(*pgraph_draw_inline_elements)(NV2AState *d);
-extern void(*pgraph_draw_state_update)(NV2AState *d);
-extern void(*pgraph_draw_clear)(NV2AState *d);
 
 void D3D_init_pgraph_plugins()
 {
 	/* attach HLE Direct3D render plugins */
+	pgraph_draw_state_update = D3D_draw_state_update;
+	pgraph_draw_clear = D3D_draw_clear;
 	pgraph_draw_arrays = D3D_draw_arrays;
 	pgraph_draw_inline_buffer = D3D_draw_inline_buffer;
 	pgraph_draw_inline_array = D3D_draw_inline_array;
 	pgraph_draw_inline_elements = D3D_draw_inline_elements;
-	pgraph_draw_state_update = D3D_draw_state_update;
-	pgraph_draw_clear = D3D_draw_clear;
 }
+
 //int pgraph_handle_method(NV2AState *d, unsigned int subchannel,
 //unsigned int method, uint32_t parameter,
 //uint32_t *parameters, size_t method count,
