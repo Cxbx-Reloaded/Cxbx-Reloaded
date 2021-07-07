@@ -1153,6 +1153,8 @@ extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
 extern DWORD ABGR_to_ARGB(const uint32_t color);
 extern void set_IVB_DECL_override(void);
 extern void reset_IVB_DECL_override(void);
+extern void set_IVB_DECL_override(void);
+extern void reset_IVB_DECL_override(void);
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.

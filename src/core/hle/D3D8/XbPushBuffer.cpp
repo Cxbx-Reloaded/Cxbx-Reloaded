@@ -141,6 +141,15 @@ DWORD ABGR_to_ARGB(const uint32_t color)
 	return (color & 0xFF00FF00) | ((color & 0x00FF0000) >> 16) | ((color & 0x000000FF) << 16);
 }
 
+void set_IVB_DECL_override(void)
+{
+	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
+}
+
+void reset_IVB_DECL_override(void)
+{
+    g_InlineVertexBuffer_DeclarationOverride = nullptr;
+}
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -211,10 +220,6 @@ void D3D_draw_state_update(NV2AState *d)
 	// NV2A_SET_LINEAR_FOG_CONST?
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 	// Unused : D3DRS_FOGVERTEXMODE
-
-	// Arrange for g_NV2AVertexAttributeFormat to be returned in CxbxGetVertexDeclaration,
-	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat;
 
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
@@ -292,8 +297,6 @@ void D3D_draw_arrays(NV2AState *d)
 		CxbxDrawPrimitiveUP(DrawContext);
 	}
 
-	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
 void D3D_draw_inline_buffer(NV2AState *d)
@@ -313,8 +316,6 @@ void D3D_draw_inline_buffer(NV2AState *d)
 
 	CxbxDrawPrimitiveUP(DrawContext);
 
-	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
 
@@ -346,8 +347,6 @@ void D3D_draw_inline_array(NV2AState *d)
 
 		CxbxDrawPrimitiveUP(DrawContext);
 
-		// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-		g_InlineVertexBuffer_DeclarationOverride = nullptr;
 	}
 }
 
@@ -364,8 +363,6 @@ void D3D_draw_inline_elements(NV2AState *d)
 
 	CxbxDrawIndexed(DrawContext);
 
-	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 }
 
 // Import pgraph_draw_* variables, declared in EmuNV2A_PGRAPH.cpp :
