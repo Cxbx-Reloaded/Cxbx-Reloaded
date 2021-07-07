@@ -1151,6 +1151,8 @@ extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
 //xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
 extern DWORD ABGR_to_ARGB(const uint32_t color);
+extern void set_IVB_DECL_override(void);
+extern void reset_IVB_DECL_override(void);
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
@@ -1437,7 +1439,7 @@ int pgraph_handle_method(
             //update struct KelvinPrimitive/array regs[] in first round, skip special cases. then we process those state variables if necessary in 2nd round.
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
-                case NV097_SET_OBJECT:
+                //case NV097_SET_OBJECT:
 				case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
                 case NV097_SET_TRANSFORM_CONSTANT://this sets the vertex constant register/slots using index from NV097_SET_TRANSFORM_CONSTANT_LOAD, not the transform constants in KelvinPrime.
@@ -1476,7 +1478,8 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_NO_OPERATION://done
-                    assert(arg0 == pg->KelvinPrimitive.NoOperation);
+					//disable the assert, for NV097_NO_OPERATION, it's used as short jump, it requires special handling. no memcpy in 1st round.
+					//assert(arg0 == pg->KelvinPrimitive.NoOperation);
                     /* The bios uses nop as a software method call -
                      * it seems to expect a notify interrupt if the parameter isn't 0.
                      * According to a nouveau guy it should still be a nop regardless
@@ -3061,7 +3064,10 @@ int pgraph_handle_method(
 
                     if (arg0 == NV097_SET_BEGIN_END_OP_END) { // the DrawXXX call completes the pushbuffer operation. we can process the rendering.
 
-                        //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
+						// set vertex declaration override, will be used for the next draw :
+						set_IVB_DECL_override();
+
+					    //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
                         //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
                         if (pgraph_draw_state_update != nullptr) {
                             pgraph_draw_state_update(d);
@@ -3124,7 +3130,8 @@ int pgraph_handle_method(
                             NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
                             assert(false);
                         } // switch
-
+						//reset the vertex declaration after we finish the draw call
+						reset_IVB_DECL_override();
                         pg->draw_mode = DrawMode::None;
 
                         // Only clear primitive_mode after we finish draw call
@@ -3192,7 +3199,8 @@ int pgraph_handle_method(
 
                 case NV097_ARRAY_ELEMENT32://xbox D3DDevice_DrawIndexedVertices() calls this
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-					if (pg->draw_mode == DrawMode::None)
+					//case NV097_ARRAY_ELEMENT32 is only used to handle the very last odd element (if ever has). so the this case was hit, the DrawMode must be DrawMode::InlineElements, unless there is only one element)
+					if (pg->draw_mode == DrawMode::None || pg->draw_mode == DrawMode::InlineElements)
 						pg->draw_mode = DrawMode::InlineElements;
 					else
 						assert(pg->draw_mode == DrawMode::InlineElements);
