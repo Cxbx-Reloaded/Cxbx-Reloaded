@@ -158,84 +158,87 @@ void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	// Derive vertex attribute layout, using an intermetiate array
-	struct { int slot; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedSlots[X_VSH_MAX_ATTRIBUTES];
+	// Derive vertex attribute layout, using an intermediate array
+	struct { int slot_index; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedAttributes[X_VSH_MAX_ATTRIBUTES];
 	uint32_t inline_offset = 0; // This applies only to IVB draw. TODO : instead of nullptr, start at the memory address of an IVB-dedicated host D3D VertexBuffer
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
-		SortedSlots[slot].slot = slot;
+	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // X_VSH_MAX_ATTRIBUTES == NV2A_VERTEXSHADER_ATTRIBUTES
+		SortedAttributes[i].slot_index = i; // Store index of each slot, used in ordering predicate, and to allow access to original slot after sorting
 		if (pg->draw_mode == DrawMode::InlineBuffer) {
 			// for draw_mode == DrawMode::InlineBuffer, we don't have KelvinPrimitive.SetVertexDataArrayFormat[] set, we have to compose the vertex format and offset ourselves
-			SortedSlots[slot].stride = D3D_inline_vertex_stride;
-			SortedSlots[slot].size_and_type = (pg->vertex_attributes[slot].inline_buffer != nullptr) ? xbox::X_D3DVSDT_FLOAT4 : xbox::X_D3DVSDT_NONE; // either 0x42 or 0x02
+			SortedAttributes[i].stride = D3D_inline_vertex_stride;
+			SortedAttributes[i].size_and_type = (pg->vertex_attributes[i].inline_buffer != nullptr) ? xbox::X_D3DVSDT_FLOAT4 : xbox::X_D3DVSDT_NONE; // either 0x42 or 0x02
 			// TODO : If we're going to allocate and use one single (16 attribute-wide) vertex buffer for IVB drawing, offsets need to take this into account
 		}
 		else {
 			// TODO ? Reword : update update vertex buffer/stream if draw_mode == DrawMode::DrawArrays or InlineElements. KelvinPrimitive.SetVertexDataArrayOffset[] is only set/update in these two draw modes
-			SortedSlots[slot].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
-			SortedSlots[slot].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+			SortedAttributes[i].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
+			SortedAttributes[i].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
 
-			assert(SortedSlots[slot].stride > 0);
-			assert(SortedSlots[slot].stride <= 16 * 4 * 4); // TODO : replace with NV2A maximum stride
+			assert(SortedAttributes[i].stride > 0);
+			assert(SortedAttributes[i].stride <= D3D_inline_vertex_stride); // TODO : replace with actual NV2A maximum stride, might be 2048?
 		}
 
-		if (SortedSlots[slot].size_and_type == xbox::X_D3DVSDT_NONE)
-			SortedSlots[slot].offset = 0xFFFFFFFF; // Unused, will sort to the end
+		// Detect disabled slots by their format (0x02 : size count zero, type float) :
+		if (SortedAttributes[i].size_and_type == xbox::X_D3DVSDT_NONE)
+			SortedAttributes[i].offset = 0xFFFFFFFF; // Make sure disabled slots get sorted to the end
 		else {
 			if (pg->draw_mode == DrawMode::InlineBuffer) {
-				SortedSlots[slot].offset = inline_offset;
+				SortedAttributes[i].offset = inline_offset; // TODO : IVB-draws might have to stay ajacent (not skip unused slots in their stride)
 				inline_offset += D3D_inline_attribute_size;
 			}
 			else
 				// TODO ? Reword : for draw_mode == DrawMode::InlineArray, only KelvinPrimitive.SetVertexDataArrayFormat[] was set/update. we have to compose the vertex offset ourselves?
-				SortedSlots[slot].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
+				SortedAttributes[i].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[i];
 		}
 	}
 
-	// Sort all vertex attributes on memory offset (and on slot, to guarantee deterministic ordering when offsets overlap) :
-	std::sort(/*First=*/&SortedSlots[0], /*Last=*/&SortedSlots[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
-		{ return std::tie(x.offset, x.slot) < std::tie(y.offset, y.slot); });
+	// Sort out intermediate attribute slot array on memory offset (and on slot, to guarantee deterministic ordering when offsets overlap) :
+	std::sort(/*First=*/&SortedAttributes[0], /*Last=*/&SortedAttributes[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
+		{ return std::tie(x.offset, x.slot_index) < std::tie(y.offset, y.slot_index); });
 
-	assert(SortedSlots[0].offset > 0); // Expect at least one slot (the first after sorting) is in use
+	assert(SortedAttributes[0].offset > 0); // After sorting, verify at least the first slot is in use (more is fine, none is bad)
+	// Note : perhaps also : assert(SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE);
 
 	// Store stream zero's stride for possible use later on :
-	D3D_StreamZeroStride = SortedSlots[0].stride;
+	D3D_StreamZeroStride = SortedAttributes[0].stride;
 
-	// Using the sorted slots, derive the g_NV2AVertexAttributeFormat slot values :
+	// Using our sorted attibutes, derive the g_NV2AVertexAttributeFormat slot values :
 	DWORD current_stream_index = 0;
-	int current_parent = 0;
+	int group_parent = 0; // The first attribute group starts at index zero (as our attribute list is ordered on memory address offset)
 	uint32_t current_end_offset = 0;
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
 		// Are we at the start of a new attribute group?
 		if (current_end_offset == 0) {
 			// (Re)calculate from which address this group of attributes ends :
-			current_end_offset = SortedSlots[current_parent].offset + SortedSlots[current_parent].stride;
+			current_end_offset = SortedAttributes[group_parent].offset + SortedAttributes[group_parent].stride;
 		}
 
 		// Is this attribute in-use?
-		if (SortedSlots[i].offset == 0xFFFFFFFF) {
+		if (SortedAttributes[i].offset == 0xFFFFFFFF) {
 			// Does this attribute start outside the current group of attributes?
-			if (SortedSlots[i].offset >= current_end_offset) {
+			if (SortedAttributes[i].offset >= current_end_offset) {
 				assert(pg->draw_mode != DrawMode::InlineBuffer); // IVB drawing should stay within one group
 
 				current_stream_index++; // Start on a new stream 
-				current_parent = i; // Mark this attribute as the start of a new group
+				group_parent = i; // Mark this attribute as the start of a new group
 				current_end_offset = 0; // Make sure the next loop iteration starts a new group of attributes
 			}
 			// else, this attribute starts inside the current vertex stride. it's using the same vertex buffer.
 
-			assert(SortedSlots[i].stride == SortedSlots[current_parent].stride); // Verify all attributes in the same group share an identical stride
+			assert(SortedAttributes[i].stride == SortedAttributes[group_parent].stride); // Verify all attributes in the same group share an identical stride
 		}
 
-		DWORD current_delta = SortedSlots[i].offset - SortedSlots[current_parent].offset; // Note : when size_and_type == X_D3DVSDT_NONE,
-		DWORD current_format = SortedSlots[i].size_and_type;
+		// Calculate the difference between this attribute, and its group's starting, memory offset:
+		DWORD current_delta = SortedAttributes[i].offset - SortedAttributes[group_parent].offset; // Note : when size_and_type == X_D3DVSDT_NONE, this value is ignored (doesn't make sense anyway)
+		DWORD current_format = SortedAttributes[i].size_and_type; // Put this in a variable, to make below code more consistent
 
 		// With above determined values, populate each slot in g_NV2AVertexAttributeFormat :
-		int slot = SortedSlots[i].slot;
-		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = current_stream_index;
-		g_NV2AVertexAttributeFormat.Slots[slot].Offset = current_delta;
-		g_NV2AVertexAttributeFormat.Slots[slot].Format = current_format;
-		g_NV2AVertexAttributeFormat.Slots[slot].TessellationType = 0; // TODO or ignore?
-		g_NV2AVertexAttributeFormat.Slots[slot].TessellationSource = 0; // TODO or ignore?
+		int index = SortedAttributes[i].slot_index;
+		g_NV2AVertexAttributeFormat.Slots[index].StreamIndex = current_stream_index; // only above zero for multi-buffer draws (so, always zero for IVB)
+		g_NV2AVertexAttributeFormat.Slots[index].Offset = current_delta; // offset from the starting attribute inside indicated stream buffer
+		g_NV2AVertexAttributeFormat.Slots[index].Format = current_format;
+		g_NV2AVertexAttributeFormat.Slots[index].TessellationType = 0; // TODO or ignore?
+		g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 	}
 
 	HRESULT hRet;
