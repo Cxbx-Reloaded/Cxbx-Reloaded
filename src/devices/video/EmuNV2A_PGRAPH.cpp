@@ -1154,7 +1154,7 @@ extern DWORD ABGR_to_ARGB(const uint32_t color);
 extern void set_IVB_DECL_override(void);
 extern void reset_IVB_DECL_override(void);
 extern void set_IVB_DECL_override(void);
-extern void reset_IVB_DECL_override(void);
+extern void set_IVB_DECL_override(void);
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
@@ -2731,16 +2731,23 @@ int pgraph_handle_method(
                     break;
 
                 CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
+					//no reference document for this method. we're  assuming this method is used to trigger the vertex finishing
+					assert(0);
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
 					slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 					int part = (method - NV097_SET_VERTEX3F) / 4;
+					//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
+					assert(part == 0);
+					assert(method_count == 3);
 					VertexAttribute *vertex_attribute =
 						&pg->vertex_attributes[slot];
 					//allocate attribute.inline_buffer if it's not allocated yet.
 					pgraph_allocate_inline_buffer_vertices(pg, slot);
 					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-                    inline_value[part] = pg->KelvinPrimitive.SetVertex3f[part];
+                    inline_value[0] = pg->KelvinPrimitive.SetVertex3f[0];
+					inline_value[1] = pg->KelvinPrimitive.SetVertex3f[1];
+					inline_value[2] = pg->KelvinPrimitive.SetVertex3f[2];
 					if (/*(slot == NV2A_VERTEX_ATTR_POSITION) && */(part == 2)) {
 						inline_value[3] = 1.0f;
 						pgraph_finish_inline_buffer_vertex(pg);
@@ -2749,16 +2756,24 @@ int pgraph_handle_method(
                 }
 
 				CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
+					//no reference document for this method. we're  assuming this method is used to trigger the vertex finishing
+					assert(0);
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
 					slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 					int part = (method - NV097_SET_VERTEX4F) / 4;
+					//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
+					assert(part == 0);
+					assert(method_count == 4);
 					VertexAttribute *vertex_attribute =
 						&pg->vertex_attributes[slot];
 					//allocate attribute.inline_buffer if it's not allocated yet.
 					pgraph_allocate_inline_buffer_vertices(pg, slot);
 					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-					inline_value[part] = pg->KelvinPrimitive.SetVertex4f[part];
+					inline_value[0] = pg->KelvinPrimitive.SetVertex3f[0];
+					inline_value[1] = pg->KelvinPrimitive.SetVertex3f[1];
+					inline_value[2] = pg->KelvinPrimitive.SetVertex3f[2];
+					inline_value[3] = pg->KelvinPrimitive.SetVertex3f[3];
 					if (/*(slot == NV2A_VERTEX_ATTR_POSITION) && */(part == 3)) {
 						//vertex completed, push all attributes to vertex buffer.
 						pgraph_finish_inline_buffer_vertex(pg);
