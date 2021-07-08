@@ -441,9 +441,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_FlushEx)
             xbox::KeQuerySystemTime(&getTime);
             pThis->Xb_rtFlushEx = getTime.QuadPart;
             pThis->EmuFlags |= DSE_FLAG_IS_FLUSHING;
-            // HACK: Need to find a way to remove Flush call without break Obscure.
-            // Otherwise, it will behave like on hardware.
-            DSStream_Packet_Flush(pThis);
         }
         else {
             pThis->Xb_rtFlushEx = rtTimeStamp;
@@ -558,7 +555,16 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSoundStream_GetStatus__r2)
         if (pThis->Host_BufferPacketArray.size() != pThis->X_MaxAttachedPackets) {
             dwStatusXbox |= X_DSSSTATUS_READY;
         }
-        if (!pThis->Host_BufferPacketArray.empty()) {
+        // HACK: Likely a hack but force mimic stream's status is playing while in background is ongoing in flush process.
+        // Testcase: Obscure; Crash Twinsanity
+        if ((pThis->EmuFlags & DSE_FLAG_IS_FLUSHING) != 0) {
+            // TODO: Find a way to implement deterred commands system if possible.
+            // Then this hack may could be remove or replace to determine internal status base on deterred commands?
+            // NOTE: It may not be likely behave like on hardware in paused/stopped state. See todo note above.
+            LOG_TEST_CASE("Internal stream is currently flushing, enforcing status to playing state");
+            dwStatusXbox |= X_DSSSTATUS_PLAYING;
+        }
+        else if (!pThis->Host_BufferPacketArray.empty()) {
             if ((pThis->EmuFlags & DSE_FLAG_PAUSE) != 0) {
                 dwStatusXbox |= X_DSSSTATUS_PAUSED;
             }
