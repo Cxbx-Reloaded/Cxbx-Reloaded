@@ -200,7 +200,7 @@ void D3D_draw_state_update(NV2AState *d)
 					parent = i; // Mark this attribute as the start of a new group
 					end_offset = 0; // Make sure the next loop iteration starts a new group of attributes
 				}
-				// this attribute starts indist the current vertex stride. it's using the same vertex buffer.
+				// this attribute starts inside the current vertex stride. it's using the same vertex buffer.
 				else {
 					assert(SortedSlots[i].stride == SortedSlots[parent].stride); // Verify all attributes in the same group share an identical stride
 
