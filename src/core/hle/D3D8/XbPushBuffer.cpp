@@ -225,6 +225,25 @@ void D3D_draw_state_update(NV2AState *d)
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 	// Unused : D3DRS_FOGVERTEXMODE
 
+	// for draw_mode == DrawMode::InlineArray, only KelvinPrimitive.SetVertexDataArrayFormat[] was set/update. we have to copose the vertex offset by ourselve.
+	if (pg->draw_mode == DrawMode::InlineArray) {
+		UINT uiStride = 0;
+		//shall we calculate the input vertes stride = pgraph_get_NV2A_vertex_stride(PGRAPHState *pg)?
+		//DWORD dwVertexStride = pgraph_get_NV2A_vertex_stride(pg);
+		for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+			g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
+			g_NV2AVertexAttributeFormat.Slots[slot].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & 0xFF;
+			g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
+			g_NV2AVertexAttributeFormat.Slots[slot].TessellationType = 0; // TODO or ignore?
+			g_NV2AVertexAttributeFormat.Slots[slot].TessellationSource = 0; // TODO or ignore?
+			uiStride += pg->vertex_attributes[slot].count * pg->vertex_attributes[slot].size;
+		}
+	}
+
+	// for draw_mode == DrawMode::InlineBuffer, we don't have KelvinPrimitive.SetVertexDataArrayFormat[] set, we have to copose the vertex format and offset by ourselve.
+	if (pg->draw_mode == DrawMode::InlineBuffer) {
+		;
+	}
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
