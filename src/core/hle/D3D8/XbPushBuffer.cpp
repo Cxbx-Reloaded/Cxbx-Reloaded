@@ -196,41 +196,37 @@ void D3D_draw_state_update(NV2AState *d)
 	std::sort(/*First=*/&SortedAttributes[0], /*Last=*/&SortedAttributes[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
 		{ return std::tie(x.offset, x.slot_index) < std::tie(y.offset, y.slot_index); });
 
-	assert(SortedAttributes[0].offset > 0); // After sorting, verify at least the first slot is in use (more is fine, none is bad)
-	// Note : perhaps also : assert(SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE);
+	assert(SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE); // After sorting, verify at least the first slot is in use (more is fine, none is bad)
 
 	// Store stream zero's stride for possible use later on :
 	D3D_StreamZeroStride = SortedAttributes[0].stride;
 
 	// Using our sorted attibutes, derive the g_NV2AVertexAttributeFormat slot values :
 	DWORD current_stream_index = 0;
-	int group_parent = 0; // The first attribute group starts at index zero (as our attribute list is ordered on memory address offset)
-	uint32_t current_end_offset = 0;
+	uint32_t group_offset = SortedAttributes[0].offset;
+	uint32_t group_stride = SortedAttributes[0].stride;
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
-		// Are we at the start of a new attribute group?
-		if (current_end_offset == 0) {
-			// (Re)calculate from which address this group of attributes ends :
-			current_end_offset = SortedAttributes[group_parent].offset + SortedAttributes[group_parent].stride;
-		}
-
+		DWORD current_delta = 0;
+		DWORD current_format = SortedAttributes[i].size_and_type; // Put this in a variable, to make the assignments to g_NV2AVertexAttributeFormat consistent
 		// Is this attribute in-use?
-		if (SortedAttributes[i].offset == 0xFFFFFFFF) {
+		if (current_format != xbox::X_D3DVSDT_NONE) {
 			// Does this attribute start outside the current group of attributes?
-			if (SortedAttributes[i].offset >= current_end_offset) {
+			if (SortedAttributes[i].offset >= group_offset + group_stride) {
 				assert(pg->draw_mode != DrawMode::InlineBuffer); // IVB drawing should stay within one group
 
-				current_stream_index++; // Start on a new stream 
-				group_parent = i; // Mark this attribute as the start of a new group
-				current_end_offset = 0; // Make sure the next loop iteration starts a new group of attributes
+				// Start a new stream, that contains the next group of attributes
+				current_stream_index++;
+				group_offset = SortedAttributes[i].offset;
+				group_stride = SortedAttributes[i].stride;
 			}
-			// else, this attribute starts inside the current vertex stride. it's using the same vertex buffer.
+			else { // this attribute starts inside the current vertex stride. it's using the same vertex buffer.
+				assert(group_offset <= SortedAttributes[i].offset); // Verify all attributes in the same group lie next to the group starting offset
+				assert(group_stride == SortedAttributes[i].stride); // Verify all attributes in the same group share an identical stride
+			}
 
-			assert(SortedAttributes[i].stride == SortedAttributes[group_parent].stride); // Verify all attributes in the same group share an identical stride
+			// Calculate the difference between this attribute, and its group's starting, memory offset:
+			current_delta = SortedAttributes[i].offset - group_offset;
 		}
-
-		// Calculate the difference between this attribute, and its group's starting, memory offset:
-		DWORD current_delta = SortedAttributes[i].offset - SortedAttributes[group_parent].offset; // Note : when size_and_type == X_D3DVSDT_NONE, this value is ignored (doesn't make sense anyway)
-		DWORD current_format = SortedAttributes[i].size_and_type; // Put this in a variable, to make below code more consistent
 
 		// With above determined values, populate each slot in g_NV2AVertexAttributeFormat :
 		int index = SortedAttributes[i].slot_index;
