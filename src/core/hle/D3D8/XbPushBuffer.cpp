@@ -317,6 +317,7 @@ void D3D_draw_inline_buffer(NV2AState *d)
 	DrawContext.pXboxIndexData = false;
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.dwVertexCount = pg->inline_buffer_length;
+	DrawContext.dwStartVertex = 0;
 //	DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
 //	DrawContext.uiXboxVertexStreamZeroStride = g_NV2AInlineArrayVertexBuffer_Stride;
 
@@ -348,6 +349,7 @@ void D3D_draw_inline_array(NV2AState *d)
 		//pg->inline_array_length was advanced every time we receive a dword/float from pushbuffer.
 		//here we convert it to the actual vertex count.
 		DrawContext.dwVertexCount = pg->inline_array_length / dwVertexSizeDwords;
+		DrawContext.dwStartVertex = 0;
 		DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 		DrawContext.uiXboxVertexStreamZeroStride = StreamZeroStride;
 
@@ -365,6 +367,7 @@ void D3D_draw_inline_elements(NV2AState *d)
 	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
 	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
 	DrawContext.dwVertexCount = pg->inline_elements_length;
+	DrawContext.dwStartVertex = 0;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 
 	CxbxDrawIndexed(DrawContext);
