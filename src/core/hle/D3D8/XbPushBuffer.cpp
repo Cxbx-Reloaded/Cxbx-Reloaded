@@ -242,7 +242,28 @@ void D3D_draw_state_update(NV2AState *d)
 
 	// for draw_mode == DrawMode::InlineBuffer, we don't have KelvinPrimitive.SetVertexDataArrayFormat[] set, we have to copose the vertex format and offset by ourselve.
 	if (pg->draw_mode == DrawMode::InlineBuffer) {
-		;
+		UINT uiStride = 0;
+		for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+			//attribute is set, we setup the vertex format
+			if (pg->vertex_attributes[slot].inline_buffer != nullptr) {
+				g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;// Each attribute has it's own vertex buffer, pg->vertex_attributes[slot].inline_buffer, need to figure out where to setup the vertex buffer for each stream.
+				                                                        // This would be slot if we choose to use different vertex buffer for each attribute.
+				g_NV2AVertexAttributeFormat.Slots[slot].Format = 0x42;//
+				g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;// This would be 0 if we choose to use different vertex buffer for each attribute.;//if we compose all attributes into one single vertex buffer, then this should be the uiStride. if we use different vertex buffer for each attribute, then this should be 0
+				g_NV2AVertexAttributeFormat.Slots[slot].TessellationType = 0; // TODO or ignore?
+				g_NV2AVertexAttributeFormat.Slots[slot].TessellationSource = 0; // TODO or ignore?
+				pg->vertex_attributes[slot].count = 4;
+				pg->vertex_attributes[slot].size = sizeof(float);
+				uiStride += pg->vertex_attributes[slot].count * pg->vertex_attributes[slot].size;
+			}
+			else {
+				g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = 0;
+				g_NV2AVertexAttributeFormat.Slots[slot].Format = 0x02;
+				g_NV2AVertexAttributeFormat.Slots[slot].Offset = uiStride;
+				g_NV2AVertexAttributeFormat.Slots[slot].TessellationType = 0; // TODO or ignore?
+				g_NV2AVertexAttributeFormat.Slots[slot].TessellationSource = 0; // TODO or ignore?
+			}
+		}
 	}
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
