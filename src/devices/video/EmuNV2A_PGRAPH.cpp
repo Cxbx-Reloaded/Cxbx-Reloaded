@@ -3366,23 +3366,27 @@ int pgraph_handle_method(
 				
                 CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-
-					//register is set one at a time per method, for loop should be redundant.
-                    slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
-                    unsigned int part = slot % 2;// 0:a or 1:b
-                    slot /= 2;//register
-                    //pgraph_allocate_inline_buffer_vertices(pg, slot);
-                    VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // Was vertex_attribute->inline_value;
-                    inline_value[part] = pg->KelvinPrimitive.SetVertexData2f[slot].M[part];
-                    //M[a,b] are sent in the same time. shall be processed together.
-                    //vertex_attribute->inline_value[part] = *(float*)&arg0;
-                    if ((slot == NV2A_VERTEX_ATTR_POSITION) && (part == 1)) {
-                        inline_value[2] = 0.0f;
-                        inline_value[3] = 1.0f;
-                        pgraph_finish_inline_buffer_vertex(pg);
-                    }
-                    break;
+					for (size_t argc = 0; argc < method_count; argc++) {
+						//register is set one at a time per method, for loop should be redundant.
+						slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
+						slot += argc;
+						unsigned int part = slot % 2;// 0:a or 1:b
+						slot /= 2;//register
+						//pgraph_allocate_inline_buffer_vertices(pg, slot);
+						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+						float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // Was vertex_attribute->inline_value;
+						inline_value[part] = pg->KelvinPrimitive.SetVertexData2f[slot].M[part];
+						if (part == 1) {
+							inline_value[2] = 0.0f;
+							inline_value[3] = 1.0f;
+							if ((slot == NV2A_VERTEX_ATTR_POSITION)) {
+								pgraph_finish_inline_buffer_vertex(pg);
+							}
+						}
+						//M[a,b] are sent in the same time. shall be processed together.
+						//vertex_attribute->inline_value[part] = *(float*)&arg0;
+					}
+					break;
                 }
 
                 /*
@@ -3399,7 +3403,6 @@ int pgraph_handle_method(
 
 				    //register is set one at a time per method, for loop should be redundant.
 					for (size_t argc = 0; argc < method_count; argc++) {
-                        arg0 = argv[argc];
 						slot = (method - NV097_SET_VERTEX_DATA4F_M) / 4;
 						slot += argc;
                         unsigned int part = slot % 4;//index in M[]
@@ -3413,6 +3416,7 @@ int pgraph_handle_method(
 						//this is redundant. we're going to copy the inline_value[] to inline_buffer[]
 						// Actually, it's not redundant; Each attribute must keep intact it's most recently assigned values,
 						// so that even a single write will keep on being read when all attribute values are collected to form another vertex
+											//update the vertex_attribute->inline_buffer[] for OpenGL
 						if ((slot == NV2A_VERTEX_ATTR_POSITION) && (part == 3)) { // D3DVSDE_POSITION   // slot ==0 only happended in NV097_SET_VERTEX_DATA4F
 							//shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
 							pgraph_finish_inline_buffer_vertex(pg);
@@ -3429,19 +3433,19 @@ int pgraph_handle_method(
             */
             CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
 				assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-
-				//register is set one at a time per method, for loop should be redundant.
-				slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
-                //assert(false); /* FIXME: Untested! */
-                VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-                pgraph_allocate_inline_buffer_vertices(pg, slot);
-				float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-				inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
-                inline_value[1] = (float)(int16_t)(arg0 >> 16);
-				if (slot == NV2A_VERTEX_ATTR_POSITION) {
-					inline_value[2] = 0.0f;
-					inline_value[3] = 1.0f;
-					pgraph_finish_inline_buffer_vertex(pg);
+				for (size_t argc = 0; argc < method_count; argc++) {
+					//register is set one at a time per method, for loop should be redundant.
+					slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
+					slot += argc;
+					//assert(false); /* FIXME: Untested! */
+					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+					pgraph_allocate_inline_buffer_vertices(pg, slot);
+					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+					inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
+					inline_value[1] = (float)(int16_t)(arg0 >> 16);
+					if (slot == NV2A_VERTEX_ATTR_POSITION) {
+						pgraph_finish_inline_buffer_vertex(pg);
+					}
 				}
 				break;
             }
@@ -3543,8 +3547,9 @@ int pgraph_handle_method(
                     Vertex attributes will remain set unless overwritten by the vertex buffer data stream.
                     */
                     //register is set one at a time per method, for loop should be redundant.
-					slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
+					
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {//we're out side of Begin/End block, should be setting fix function vertex shader
+						slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
 						//set fix fuction handle. where to set X_D3DFVF_XYZ for X_D3DVSDE_POSITION?
 						if (slot== xbox::X_D3DVSDE_DIFFUSE && arg0 == -1)pg->vsh_FVF_handle |= X_D3DFVF_DIFFUSE;
 						if (slot == xbox::X_D3DVSDE_SPECULAR && arg0 == 0)pg->vsh_FVF_handle |= X_D3DFVF_SPECULAR;
@@ -3560,19 +3565,25 @@ int pgraph_handle_method(
 						*/
 					}
 					else {//in Begin/End block. data transferred are vertices.
-						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-						pgraph_allocate_inline_buffer_vertices(pg, slot);
-						//do we need to swap the color ARGB/ABGR if the slor is D3DVSDE_DIFFUSE or D3DVSDE_SPECULAR ?
-						//don't swap now. let's make the decision of when to swap/whther to swap later.
-						//if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR||slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
-						//	arg0 = ABGR_to_ARGB(arg0);
-						//}
-						float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-						inline_value[0] = ((arg0 >> 16) & 0xFF) / 255.0f;//swap R and B
-						inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
-						inline_value[2] = (arg0 & 0xFF) / 255.0f;        //swap R and B
-						inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
-						vertex_attribute->set_by_inline_buffer = true;
+						for (size_t argc = 0; argc < method_count; argc++) {
+							slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
+							slot += argc;
+							VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+							pgraph_allocate_inline_buffer_vertices(pg, slot);
+							//do we need to swap the color ARGB/ABGR if the slor is D3DVSDE_DIFFUSE or D3DVSDE_SPECULAR ?
+							//don't swap now. let's make the decision of when to swap/whther to swap later.
+							//if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR||slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
+							//	arg0 = ABGR_to_ARGB(arg0);
+							//}
+							float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+							inline_value[0] = ((argv[argc] >> 16) & 0xFF) / 255.0f;//swap R and B
+							inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
+							inline_value[2] = (argv[argc] & 0xFF) / 255.0f;        //swap R and B
+							inline_value[3] = ((argv[argc] >> 24) & 0xFF) / 255.0f;
+							if (slot == NV2A_VERTEX_ATTR_POSITION) {
+								pgraph_finish_inline_buffer_vertex(pg);
+							}
+						}
 					}
 					   break;
 				}
@@ -3587,19 +3598,24 @@ int pgraph_handle_method(
 					*/
 				CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-
-					//register is set one at a time per method, for loop should be redundant.
-					slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
-					slot /= 2;//register
-					pgraph_allocate_inline_buffer_vertices(pg, slot);
-					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-					/* FIXME: Is mapping to [-1,+1] correct? */
-					inline_value[0] = ((int16_t)(arg0 & 0xFFFF)		* 2.0f + 1) / 65535.0f;
-					inline_value[1] = ((int16_t)(arg0 >> 16)		* 2.0f + 1) / 65535.0f;
-					inline_value[2] = ((int16_t)(argv[1] & 0xFFFF)	* 2.0f + 1) / 65535.0f;
-					inline_value[3] = ((int16_t)(argv[1] >> 16)		* 2.0f + 1) / 65535.0f;
-					vertex_attribute->set_by_inline_buffer = true;
+					for (size_t argc = 0; argc < method_count; argc++) {
+						//register is set one at a time per method, for loop should be redundant.
+						slot = (method - NV097_SET_VERTEX_DATA4S_M) / 4;
+						slot += argc;
+						unsigned int part = slot % 2;
+						slot /= 2;//register
+						pgraph_allocate_inline_buffer_vertices(pg, slot);
+						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
+						float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+						/* FIXME: Is mapping to [-1,+1] correct? */
+						inline_value[0 + part*2] = ((int16_t)(argv[argc+part] & 0xFFFF)		* 2.0f + 1) / 65535.0f;
+						inline_value[1 + part*2] = ((int16_t)(argv[argc+part] >> 16)		* 2.0f + 1) / 65535.0f;
+						if(part==1){
+							if (slot == NV2A_VERTEX_ATTR_POSITION) {
+								pgraph_finish_inline_buffer_vertex(pg);
+							}
+						}
+					}
 					break;
 				}
 
@@ -4200,12 +4216,15 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
 
 	/* Now upload the previous vertex_attribute value */
 	/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation. */
+	/* //this code doesn't make sense. if the vertex_attribute->inline_buffer was never allocated. then there is not previous attribute value to be uploaded. disable it for now.
+	   //and this is a routine for vertex_attribute->inline_buffer allocation, we souldn't do memcpy here.
 	float *inline_value = pg->KelvinPrimitive.SetVertexData4f[attr].M; // was vertex_attribute->inline_value;
 	for (i = 0; i < pg->inline_buffer_length; i++) {
 		memcpy(&vertex_attribute->inline_buffer[i * 4],
                inline_value,
                sizeof(float) * 4);
     }
+	*/
 }
 
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
