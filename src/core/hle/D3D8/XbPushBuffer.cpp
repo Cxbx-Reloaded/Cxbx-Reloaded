@@ -155,62 +155,66 @@ void D3D_draw_state_update(NV2AState *d)
 	PGRAPHState *pg = &d->pgraph;
 
 	HRESULT hRet;
+	//update update vertex buffer/stream if draw_mode == DrawMode::DrawArrays or InlineElements. KelvinPrimitive.SetVertexDataArrayOffset[] is only set/update in these two draw modes
+	if (pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements) {
+		// Sort all vertex attributes on memory offset
+		struct { int slot; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedSlots[X_VSH_MAX_ATTRIBUTES];
 
-	// Sort all vertex attributes on memory offset
-	struct { int slot; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedSlots[X_VSH_MAX_ATTRIBUTES];
-
-	for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
-		SortedSlots[slot].slot = slot;
-		SortedSlots[slot].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
-		SortedSlots[slot].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-		if (SortedSlots[slot].size_and_type == xbox::X_D3DVSDT_NONE)
-			SortedSlots[slot].offset = 0xFFFFFFFF; // Unused, will sort to the end
-		else {
-			SortedSlots[slot].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
-			assert(SortedSlots[slot].stride > 0);
-			assert(SortedSlots[slot].stride < 16*4*4); // TODO : replace with NV2A maximum stride
-		}
-	}
-
-	std::sort(/*First=*/&SortedSlots[0], /*Last=*/&SortedSlots[X_VSH_MAX_ATTRIBUTES-1], /*Pred=*/[](const auto& x, const auto& y)
-		{ return std::tie(x.offset, x.slot) < std::tie(y.offset, y.slot); });
-
-	assert(SortedSlots[0].offset > 0); // Expect at least one slot is in use
-
-	int StreamIndex = 0;
-	uint32_t end_offset = 0;
-	int parent = 0;
-	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
-		// Are we at the start of a new attribute group?
-		if (end_offset == 0) {
-			// (Re)calculate the span (from the parent up to the stride), where this group of attributes ends
-			end_offset = SortedSlots[parent].offset + SortedSlots[parent].stride;
-			// Is this the first stream?
-			if (StreamIndex == 0)
-				// Remember stream zero's stride
-				StreamZeroStride = SortedSlots[parent].stride;
-		}
-
-		// Is this attribute in-use?
-		if (SortedSlots[i].offset < 0xFFFFFFFF) {
-			// Does this attribute start outside the current group of attributes?
-			if (SortedSlots[i].offset >= end_offset) {
-				StreamIndex++; // Start on a new stream 
-				parent = i; // Mark this attribute as the start of a new group
-				end_offset = 0; // Make sure the next loop iteration starts a new group of attributes
+		for (int slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
+			SortedSlots[slot].slot = slot;
+			SortedSlots[slot].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
+			SortedSlots[slot].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[slot] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+			if (SortedSlots[slot].size_and_type == xbox::X_D3DVSDT_NONE)
+				SortedSlots[slot].offset = 0xFFFFFFFF; // Unused, will sort to the end
+			else {
+				SortedSlots[slot].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[slot];
+				assert(SortedSlots[slot].stride > 0);
+				assert(SortedSlots[slot].stride <= 16 * 4 * 4); // TODO : replace with NV2A maximum stride
 			}
 		}
 
-		assert(SortedSlots[i].stride == SortedSlots[parent].stride); // Verify all attributes in the same group share an identical stride
+		std::sort(/*First=*/&SortedSlots[0], /*Last=*/&SortedSlots[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
+		{ return std::tie(x.offset, x.slot) < std::tie(y.offset, y.slot); });
 
-		int slot = SortedSlots[i].slot;
-		g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = StreamIndex;
-		g_NV2AVertexAttributeFormat.Slots[slot].Offset = SortedSlots[i].offset - SortedSlots[parent].offset; // Note : Ignore when size_and_type == X_D3DVSDT_NONE
-		g_NV2AVertexAttributeFormat.Slots[slot].Format = SortedSlots[i].size_and_type;
-		g_NV2AVertexAttributeFormat.Slots[slot].TessellationType = 0; // TODO or ignore?
-		g_NV2AVertexAttributeFormat.Slots[slot].TessellationSource = 0; // TODO or ignore?
+		assert(SortedSlots[0].offset > 0); // Expect at least one slot is in use
+
+		int StreamIndex = 0;
+		uint32_t end_offset = 0;
+		int parent = 0;
+		for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
+			// Are we at the start of a new attribute group?
+			if (end_offset == 0) {
+				// (Re)calculate the span (from the parent up to the stride), where this group of attributes ends
+				end_offset = SortedSlots[parent].offset + SortedSlots[parent].stride;
+				// Is this the first stream?
+				if (StreamIndex == 0)
+					// Remember stream zero's stride
+					StreamZeroStride = SortedSlots[parent].stride;
+			}
+
+			// Is this attribute in-use?
+			if (SortedSlots[i].offset < 0xFFFFFFFF) {
+				// Does this attribute start outside the current group of attributes?
+				if (SortedSlots[i].offset >= end_offset) {
+					StreamIndex++; // Start on a new stream 
+					parent = i; // Mark this attribute as the start of a new group
+					end_offset = 0; // Make sure the next loop iteration starts a new group of attributes
+				}
+				// this attribute starts indist the current vertex stride. it's using the same vertex buffer.
+				else {
+					assert(SortedSlots[i].stride == SortedSlots[parent].stride); // Verify all attributes in the same group share an identical stride
+
+					int slot = SortedSlots[i].slot;
+					g_NV2AVertexAttributeFormat.Slots[slot].StreamIndex = StreamIndex;
+					g_NV2AVertexAttributeFormat.Slots[slot].Offset = SortedSlots[i].offset - SortedSlots[parent].offset; // Note : Ignore when size_and_type == X_D3DVSDT_NONE
+					g_NV2AVertexAttributeFormat.Slots[slot].Format = SortedSlots[i].size_and_type;
+					g_NV2AVertexAttributeFormat.Slots[slot].TessellationType = 0; // TODO or ignore?
+					g_NV2AVertexAttributeFormat.Slots[slot].TessellationSource = 0; // TODO or ignore?
+				}
+			}
+
+		}
 	}
-	
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
