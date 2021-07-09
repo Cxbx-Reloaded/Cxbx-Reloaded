@@ -4194,6 +4194,7 @@ static void pgraph_log_method(unsigned int subchannel,
 static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
                                                    unsigned int attr)
 {
+    unsigned int i;
     VertexAttribute *vertex_attribute = &pg->vertex_attributes[attr];
 
 	//set flag so when each vertex is completed, it can know which attribute is set and require to be pushed to vertex buffer.
@@ -4232,8 +4233,6 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
 	unsigned int i;
 
 	if (pg->draw_mode == DrawMode::None) {
-		if (pg->KelvinPrimitive.SetBeginEnd == 0)
-			assert(0);
 		pg->draw_mode = DrawMode::InlineBuffer;
 	}
 	else
@@ -4248,6 +4247,11 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
 			float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, i);
 			memcpy(&vertex_attribute->inline_buffer[
 				pg->inline_buffer_length * 4],
+				inline_value,
+					sizeof(float) * 4);
+			//currently we composed all input attributes into one vertex buffer. this is slow but it's working and verified with HLE already.
+			memcpy(&pg->inline_buffer[
+				pg->inline_buffer_attr_length * 4],
 				inline_value,
 					sizeof(float) * 4);
 			pg->inline_buffer_attr_length++;
