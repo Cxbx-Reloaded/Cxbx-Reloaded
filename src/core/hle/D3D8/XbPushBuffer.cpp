@@ -134,6 +134,7 @@ DWORD CxbxGetStrideFromVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDecla
 //for inline_arrays
 extern xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride; // TMP glue
 xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat;
+
 int D3D_StreamZeroStride = 0;
 
 DWORD ABGR_to_ARGB(const uint32_t color)
@@ -153,6 +154,8 @@ void reset_IVB_DECL_override(void)
 
 static const int D3D_inline_attribute_size = 4 * sizeof(float); // Each inline vertex attribute is four floats wide
 static const int D3D_inline_vertex_stride = X_VSH_MAX_ATTRIBUTES * D3D_inline_attribute_size; // The IVB reserves room for all 16 attributes per vertex
+xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store the vertex buffer/stride info used by each attributes after vertex buffer grouping
+unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
 
 void D3D_draw_state_update(NV2AState *d)
 {
@@ -163,80 +166,108 @@ void D3D_draw_state_update(NV2AState *d)
 	uint32_t inline_offset = 0; // This applies only to IVB draw. TODO : instead of nullptr, start at the memory address of an IVB-dedicated host D3D VertexBuffer
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // X_VSH_MAX_ATTRIBUTES == NV2A_VERTEXSHADER_ATTRIBUTES
 		SortedAttributes[i].slot_index = i; // Store index of each slot, used in ordering predicate, and to allow access to original slot after sorting
-		if (pg->draw_mode == DrawMode::InlineBuffer) {
+		if (pg->draw_mode == DrawMode::InlineArray) {
+			// for draw_mode == DrawMode::InlineArray, we don't have KelvinPrimitive.SetVertexDataArrayOffset[] set, we have to compose the vertex offset and stride ourselves
+			g_NV2AVertexAttributeFormat.Slots[i].StreamIndex = 0; // only above zero for multi-buffer draws (so, always zero for IVB)
+			g_NV2AVertexAttributeFormat.Slots[i].Offset = inline_offset; // offset from the starting attribute inside indicated stream buffer
+			g_NV2AVertexAttributeFormat.Slots[i].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+			g_NV2AVertexAttributeFormat.Slots[i].TessellationType = 0; // TODO or ignore?
+			g_NV2AVertexAttributeFormat.Slots[i].TessellationSource = 0; // TODO or ignore?
+
+			inline_offset += pg->vertex_attributes[i].count*pg->vertex_attributes[i].size;
+			D3D_StreamZeroStride = inline_offset;
+		}
+		else if (pg->draw_mode == DrawMode::InlineBuffer) {
 			// for draw_mode == DrawMode::InlineBuffer, we don't have KelvinPrimitive.SetVertexDataArrayFormat[] set, we have to compose the vertex format and offset ourselves
-			SortedAttributes[i].stride = D3D_inline_vertex_stride;
-			SortedAttributes[i].size_and_type = (pg->vertex_attributes[i].inline_buffer != nullptr) ? xbox::X_D3DVSDT_FLOAT4 : xbox::X_D3DVSDT_NONE; // either 0x42 or 0x02
+			g_NV2AVertexAttributeFormat.Slots[i].StreamIndex = 0; // only above zero for multi-buffer draws (so, always zero for IVB)
+			g_NV2AVertexAttributeFormat.Slots[i].Offset = inline_offset; // offset from the starting attribute inside indicated stream buffer
+			g_NV2AVertexAttributeFormat.Slots[i].TessellationType = 0; // TODO or ignore?
+			g_NV2AVertexAttributeFormat.Slots[i].TessellationSource = 0; // TODO or ignore?
+
+			if (pg->vertex_attributes[i].set_by_inline_buffer) {
+				g_NV2AVertexAttributeFormat.Slots[i].Format = xbox::X_D3DVSDT_FLOAT4 ; // either 0x42 or 0x02
+				inline_offset += D3D_inline_attribute_size;
+			}
+			else {
+				g_NV2AVertexAttributeFormat.Slots[i].Format = xbox::X_D3DVSDT_NONE; // either 0x42 or 0x02
+			}
+			D3D_StreamZeroStride = inline_offset;
 			// TODO : If we're going to allocate and use one single (16 attribute-wide) vertex buffer for IVB drawing, offsets need to take this into account
 		}
-		else {
+		else {//pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements
 			// TODO ? Reword : update update vertex buffer/stream if draw_mode == DrawMode::DrawArrays or InlineElements. KelvinPrimitive.SetVertexDataArrayOffset[] is only set/update in these two draw modes
 			SortedAttributes[i].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
 			SortedAttributes[i].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-
+			// Detect disabled slots by their format (0x02 : size count zero, type float) :
+			if (SortedAttributes[i].size_and_type == xbox::X_D3DVSDT_NONE){
+				SortedAttributes[i].offset = 0xFFFFFFFF; // Make sure disabled slots get sorted to the end
+			}
+			else {
+				// TODO ? Reword : for draw_mode == DrawMode::InlineArray, only KelvinPrimitive.SetVertexDataArrayFormat[] was set/update. we have to compose the vertex offset ourselves?
+				SortedAttributes[i].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[i];
+			}
 			assert(SortedAttributes[i].stride > 0);
 			assert(SortedAttributes[i].stride <= D3D_inline_vertex_stride); // TODO : replace with actual NV2A maximum stride, might be 2048?
 		}
+	}
+	// Only necessary for pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements, and the overhead must be reduced.
+	if (pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements) {
+		// Sort out intermediate attribute slot array on memory offset (and on slot, to guarantee deterministic ordering when offsets overlap) :
+		std::sort(/*First=*/&SortedAttributes[0], /*Last=*/&SortedAttributes[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
+			{ return std::tie(x.offset, x.slot_index) < std::tie(y.offset, y.slot_index); });
 
-		// Detect disabled slots by their format (0x02 : size count zero, type float) :
-		if (SortedAttributes[i].size_and_type == xbox::X_D3DVSDT_NONE)
-			SortedAttributes[i].offset = 0xFFFFFFFF; // Make sure disabled slots get sorted to the end
-		else {
-			if (pg->draw_mode == DrawMode::InlineBuffer) {
-				SortedAttributes[i].offset = inline_offset; // TODO : IVB-draws might have to stay ajacent (not skip unused slots in their stride)
-				inline_offset += D3D_inline_attribute_size;
+		assert(SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE); // After sorting, verify at least the first slot is in use (more is fine, none is bad)
+
+		// Store stream zero's stride for possible use later on, D3D_StreamZeroStride was already set in other two modes DrawMode::InlineArray and DrawMode::InlineBuffer
+		D3D_StreamZeroStride = SortedAttributes[0].stride;
+	
+		// Using our sorted attibutes, derive the g_NV2AVertexAttributeFormat slot values :
+		DWORD current_stream_index = 0;
+		D3D_Xbox_StreamCount = 0;
+		uint32_t group_offset = SortedAttributes[0].offset;
+		uint32_t group_stride = SortedAttributes[0].stride;
+		//store the vertex buffer address of stream[current_stream_index]
+		if (SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE) {
+			D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = (xbox::X_D3DVertexBuffer  *)group_offset;
+			D3D_Xbox_StreamSource[current_stream_index].Stride = group_stride;
+			D3D_Xbox_StreamCount++;
+		}
+		for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
+			DWORD current_delta = 0;
+			DWORD current_format = SortedAttributes[i].size_and_type; // Put this in a variable, to make the assignments to g_NV2AVertexAttributeFormat consistent
+			// Is this attribute in-use?
+			if (current_format != xbox::X_D3DVSDT_NONE) {
+				// Does this attribute start outside the current group of attributes?
+				if (SortedAttributes[i].offset >= group_offset + group_stride) {
+					assert(pg->draw_mode != DrawMode::InlineBuffer); // IVB drawing should stay within one group
+
+					// Start a new stream, that contains the next group of attributes
+					current_stream_index++;
+					group_offset = SortedAttributes[i].offset;
+					group_stride = SortedAttributes[i].stride;
+					//store the vertex buffer address of stream[current_stream_index]
+					D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = (xbox::X_D3DVertexBuffer  *)group_offset;
+					D3D_Xbox_StreamSource[current_stream_index].Stride = group_stride;
+					D3D_Xbox_StreamCount++;
+				}
+				else { // this attribute starts inside the current vertex stride. it's using the same vertex buffer.
+					assert(group_offset <= SortedAttributes[i].offset); // Verify all attributes in the same group lie next to the group starting offset
+					assert(group_stride == SortedAttributes[i].stride); // Verify all attributes in the same group share an identical stride
+				}
+
+				// Calculate the difference between this attribute, and its group's starting, memory offset:
+				current_delta = SortedAttributes[i].offset - group_offset;
 			}
-			else
-				// TODO ? Reword : for draw_mode == DrawMode::InlineArray, only KelvinPrimitive.SetVertexDataArrayFormat[] was set/update. we have to compose the vertex offset ourselves?
-				SortedAttributes[i].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[i];
+
+			// With above determined values, populate each slot in g_NV2AVertexAttributeFormat :
+			int index = SortedAttributes[i].slot_index;
+			g_NV2AVertexAttributeFormat.Slots[index].StreamIndex = current_stream_index; // only above zero for multi-buffer draws (so, always zero for IVB)
+			g_NV2AVertexAttributeFormat.Slots[index].Offset = current_delta; // offset from the starting attribute inside indicated stream buffer
+			g_NV2AVertexAttributeFormat.Slots[index].Format = current_format;
+			g_NV2AVertexAttributeFormat.Slots[index].TessellationType = 0; // TODO or ignore?
+			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
 	}
-
-	// Sort out intermediate attribute slot array on memory offset (and on slot, to guarantee deterministic ordering when offsets overlap) :
-	std::sort(/*First=*/&SortedAttributes[0], /*Last=*/&SortedAttributes[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
-		{ return std::tie(x.offset, x.slot_index) < std::tie(y.offset, y.slot_index); });
-
-	assert(SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE); // After sorting, verify at least the first slot is in use (more is fine, none is bad)
-
-	// Store stream zero's stride for possible use later on :
-	D3D_StreamZeroStride = SortedAttributes[0].stride;
-
-	// Using our sorted attibutes, derive the g_NV2AVertexAttributeFormat slot values :
-	DWORD current_stream_index = 0;
-	uint32_t group_offset = SortedAttributes[0].offset;
-	uint32_t group_stride = SortedAttributes[0].stride;
-	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
-		DWORD current_delta = 0;
-		DWORD current_format = SortedAttributes[i].size_and_type; // Put this in a variable, to make the assignments to g_NV2AVertexAttributeFormat consistent
-		// Is this attribute in-use?
-		if (current_format != xbox::X_D3DVSDT_NONE) {
-			// Does this attribute start outside the current group of attributes?
-			if (SortedAttributes[i].offset >= group_offset + group_stride) {
-				assert(pg->draw_mode != DrawMode::InlineBuffer); // IVB drawing should stay within one group
-
-				// Start a new stream, that contains the next group of attributes
-				current_stream_index++;
-				group_offset = SortedAttributes[i].offset;
-				group_stride = SortedAttributes[i].stride;
-			}
-			else { // this attribute starts inside the current vertex stride. it's using the same vertex buffer.
-				assert(group_offset <= SortedAttributes[i].offset); // Verify all attributes in the same group lie next to the group starting offset
-				assert(group_stride == SortedAttributes[i].stride); // Verify all attributes in the same group share an identical stride
-			}
-
-			// Calculate the difference between this attribute, and its group's starting, memory offset:
-			current_delta = SortedAttributes[i].offset - group_offset;
-		}
-
-		// With above determined values, populate each slot in g_NV2AVertexAttributeFormat :
-		int index = SortedAttributes[i].slot_index;
-		g_NV2AVertexAttributeFormat.Slots[index].StreamIndex = current_stream_index; // only above zero for multi-buffer draws (so, always zero for IVB)
-		g_NV2AVertexAttributeFormat.Slots[index].Offset = current_delta; // offset from the starting attribute inside indicated stream buffer
-		g_NV2AVertexAttributeFormat.Slots[index].Format = current_format;
-		g_NV2AVertexAttributeFormat.Slots[index].TessellationType = 0; // TODO or ignore?
-		g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
-	}
-
 	HRESULT hRet;
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
@@ -340,16 +371,32 @@ void D3D_draw_inline_buffer(NV2AState *d)
 
 	LOG_INCOMPLETE(); // TODO : Finish implementation of D3D_draw_inline_buffer
 
+	//currently we composed all attributes into one vertex buffer. this is slow but it's working and verified with HLE already.
+	for (unsigned vtx_cnt = 0; vtx_cnt < pg->inline_buffer_length; vtx_cnt++) {
+		unsigned uiStride = 0;
+		for (unsigned slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+			if (pg->vertex_attributes[slot].set_by_inline_buffer) {
+				pg->vertex_attributes[slot].offset = uiStride;
+				memcpy(pg->inline_buffer + (vtx_cnt * D3D_StreamZeroStride + pg->vertex_attributes[slot].offset) / 4,
+					pg->vertex_attributes[slot].inline_buffer + vtx_cnt * 4,
+					4 * sizeof(float));
+				uiStride += 4 * sizeof(float);
+			}
+		}
+	}
 	CxbxDrawContext DrawContext = {};
 	DrawContext.pXboxIndexData = false;
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.dwVertexCount = pg->inline_buffer_length;
 	DrawContext.dwStartVertex = 0;
-//	DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
-//	DrawContext.uiXboxVertexStreamZeroStride = g_NV2AInlineArrayVertexBuffer_Stride;
+	DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
+	DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
 
 	CxbxDrawPrimitiveUP(DrawContext);
-
+	//reset vertex attribute setting flags.
+	for (unsigned slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
+		pg->vertex_attributes[slot].set_by_inline_buffer = false;
+	}
 }
 
 
