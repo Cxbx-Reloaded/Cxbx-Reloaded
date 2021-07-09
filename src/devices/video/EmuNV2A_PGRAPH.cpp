@@ -409,6 +409,7 @@ void (*pgraph_draw_inline_elements)(NV2AState *d);
 //void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
 static void pgraph_log_method(unsigned int subchannel, unsigned int graphics_class, unsigned int method, uint32_t parameter);
 static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg, unsigned int attr);
+float *pgraph_get_vertex_attribute_inline_value(PGRAPHState *pg, int attribute_index);
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg);
 static void pgraph_update_shader_constants(PGRAPHState *pg, ShaderBinding *binding, bool binding_changed, bool vertex_program, bool fixed_function);
 static void pgraph_bind_shaders(PGRAPHState *pg);
@@ -652,7 +653,7 @@ void OpenGL_draw_inline_buffer(NV2AState *d)
         }
         else {
             glDisableVertexAttribArray(i);
-			float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+			float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, i);
             glVertexAttrib4fv(i, inline_value);
         }
     }
@@ -2739,7 +2740,7 @@ int pgraph_handle_method(
 								&pg->vertex_attributes[slot];
 							//allocate attribute.inline_buffer if it's not allocated yet.
 							pgraph_allocate_inline_buffer_vertices(pg, slot);
-							float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+							float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
 							inline_value[part] = pg->KelvinPrimitive.SetVertex3f[part];
 							if (part == 2) {
 								inline_value[3] = 1.0f;
@@ -2760,7 +2761,7 @@ int pgraph_handle_method(
 								&pg->vertex_attributes[slot];
 							//allocate attribute.inline_buffer if it's not allocated yet.
 							pgraph_allocate_inline_buffer_vertices(pg, slot);
-							float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+							float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
 							inline_value[part] = pg->KelvinPrimitive.SetVertex4f[part];
 							if (part == 3) {
 								//vertex completed, push all attributes to vertex buffer.
@@ -3365,7 +3366,7 @@ int pgraph_handle_method(
 						slot /= 2;//register
 						//pgraph_allocate_inline_buffer_vertices(pg, slot);
 						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-						float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // Was vertex_attribute->inline_value;
+						float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
 						inline_value[part] = pg->KelvinPrimitive.SetVertexData2f[slot].M[part];
 						if (part == 1) {
 							inline_value[2] = 0.0f;
@@ -3401,7 +3402,7 @@ int pgraph_handle_method(
                         VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 						//allocate attribute.inline_buffer if it's not allocated yet.
 						pgraph_allocate_inline_buffer_vertices(pg, slot);
-						// float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+						// float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
 						// inline_value[part] = *(float*)&arg0; // These values are already generically written to KelvinPrimitive.SetVertexData4f[][]
 
 						//this is redundant. we're going to copy the inline_value[] to inline_buffer[]
@@ -3431,7 +3432,7 @@ int pgraph_handle_method(
 					//assert(false); /* FIXME: Untested! */
 					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 					pgraph_allocate_inline_buffer_vertices(pg, slot);
-					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+					float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
 					inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
 					inline_value[1] = (float)(int16_t)(arg0 >> 16);
 					if (slot == NV2A_VERTEX_ATTR_POSITION) {
@@ -3561,7 +3562,7 @@ int pgraph_handle_method(
 							slot += argc;
 							VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 							pgraph_allocate_inline_buffer_vertices(pg, slot);
-							float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+							float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
 							// Swap R and B if slot is colot slot.
 							if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR || slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
 								inline_value[0] = ((argv[argc] >> 16) & 0xFF) / 255.0f;//swap R and B
@@ -3601,7 +3602,7 @@ int pgraph_handle_method(
 						slot /= 2;//register
 						pgraph_allocate_inline_buffer_vertices(pg, slot);
 						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-						float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+						float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
 						/* FIXME: Is mapping to [-1,+1] correct? */
 						inline_value[0 + part*2] = ((int16_t)(argv[argc+part] & 0xFFFF)		* 2.0f + 1) / 65535.0f;
 						inline_value[1 + part*2] = ((int16_t)(argv[argc+part] >> 16)		* 2.0f + 1) / 65535.0f;
@@ -4193,7 +4194,6 @@ static void pgraph_log_method(unsigned int subchannel,
 static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
                                                    unsigned int attr)
 {
-    unsigned int i;
     VertexAttribute *vertex_attribute = &pg->vertex_attributes[attr];
 
 	//set flag so when each vertex is completed, it can know which attribute is set and require to be pushed to vertex buffer.
@@ -4213,13 +4213,18 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
 	/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation. */
 	/* //this code doesn't make sense. if the vertex_attribute->inline_buffer was never allocated. then there is not previous attribute value to be uploaded. disable it for now.
 	   //and this is a routine for vertex_attribute->inline_buffer allocation, we souldn't do memcpy here.
-	float *inline_value = pg->KelvinPrimitive.SetVertexData4f[attr].M; // was vertex_attribute->inline_value;
-	for (i = 0; i < pg->inline_buffer_length; i++) {
+	float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, attr);
+	for (int i = 0; i < pg->inline_buffer_length; i++) {
 		memcpy(&vertex_attribute->inline_buffer[i * 4],
                inline_value,
                sizeof(float) * 4);
     }
 	*/
+}
+
+float *pgraph_get_vertex_attribute_inline_value(PGRAPHState *pg, int attribute_index)
+{
+	return pg->KelvinPrimitive.SetVertexData4f[attribute_index].M; // was vertex_attribute->inline_value;
 }
 
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
@@ -4240,7 +4245,7 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
 		VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
 		//process the attribute data if it's been set
 		if (vertex_attribute->set_by_inline_buffer) {
-			float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+			float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, i);
 			memcpy(&vertex_attribute->inline_buffer[
 				pg->inline_buffer_length * 4],
 				inline_value,
@@ -4600,8 +4605,8 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
     state.psh.combiner_control = pg->KelvinPrimitive.SetCombinerControl;
     state.psh.shader_stage_program = pg->KelvinPrimitive.SetShaderStageProgram;
     state.psh.other_stage_input = pg->KelvinPrimitive.SetShaderOtherStageInput;
-    state.psh.final_inputs_0 = pg->KelvinPrimitive.SetFogParams[0];
-    state.psh.final_inputs_1 = pg->KelvinPrimitive.SetFogParams[1];
+    state.psh.final_inputs_0 = pg->KelvinPrimitive.SetCombinerSpecularFogCW0;
+    state.psh.final_inputs_1 = pg->KelvinPrimitive.SetCombinerSpecularFogCW1;
     //uint32_t control0 = pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4];
 
     state.psh.alpha_test = pg->KelvinPrimitive.SetAlphaTestEnable !=0;
@@ -5582,7 +5587,7 @@ static void pgraph_bind_vertex_attributes(NV2AState *d,
         VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
         if (vertex_attribute->count == 0) {
             glDisableVertexAttribArray(i);
-			float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
+			float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, i);
             glVertexAttrib4fv(i, inline_value);
             continue;
         }

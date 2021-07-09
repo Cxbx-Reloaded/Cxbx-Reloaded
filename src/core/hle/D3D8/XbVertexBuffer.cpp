@@ -822,6 +822,7 @@ void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStrea
 }
 
 extern NV2ADevice* g_NV2A;// TMP glue
+extern float *pgraph_get_vertex_attribute_inline_value(PGRAPHState *pg, int attribute_index); // Implemented in EmuNV2A_PGRAPH.cpp
 
 float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
 {
@@ -830,6 +831,6 @@ float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
 
 	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
 	// VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-	return pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+	return pgraph_get_vertex_attribute_inline_value(pg, slot); // was vertex_attribute->inline_value;
 }
 
