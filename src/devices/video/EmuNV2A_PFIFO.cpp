@@ -389,6 +389,8 @@ static void pfifo_run_pusher(NV2AState *d)
 //		return;
 //	}
 	extern bool g_nv2a_fifo_is_busy; //tmp glue, declared in direct3d9.cpp before xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
+	// Set busy flag to true. telling everyone we're busy parsing the pushbuffer.
+	g_nv2a_fifo_is_busy = true;
 	if (dma_get > dma_put) {//we run to the end of whole pushbuffer. search the appended jump command before end of segment.
 		//in case the pushbffer switch segment to use a segment in lower memory space, a jump method was append in the last dma_get. but the new dma_put will be lower than dma_get. this situation must be solved.
 		//we have to test the dword at dma_get whether it's an jump or not.
@@ -484,6 +486,7 @@ static void pfifo_run_pusher(NV2AState *d)
         p_dma_put,										//pass in pointer to dma_put, could be useless. be awared dma_put is offset value to the dma base (0x80000000).
 		dma												//pass in dma base address (0x80000000),
 	);
+	// Set busy flag to false. telling everyone we're now finishing the pushbuffer parsing.
 	g_nv2a_fifo_is_busy = false;
     /* based on the convenient pseudocode in envytools */
     //don't need these logic below anymore, the same logic is inside ExecutePushbufferRaw(). we'll handle the same logic in one place. it's easier to focus there.

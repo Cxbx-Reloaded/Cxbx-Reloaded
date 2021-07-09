@@ -46,17 +46,27 @@ const char *NV2AMethodToString(DWORD dwMethod); // forward
 
 static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
 extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
-extern void XB_TRAMPOLINE_D3DDevice_KickOff(VOID);
-extern void EmuKickOff(void);
-
+extern void EmuKickOff(void);// in Direct3D9.cpp
+extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
 void EmuExecutePushBuffer
 (
 	xbox::X_D3DPushBuffer       *pPushBuffer,
 	xbox::X_D3DFixup            *pFixup
 )
 {
+	// Set pushbuffer parsing busy flag.
+	g_nv2a_fifo_is_busy = true;
 	// KickOff xbox d3d pushbuffer first. 
 	EmuKickOff();
+	// Wait till pushbuffer parsing complete.
+	while (g_nv2a_fifo_is_busy) {
+		//__asm {
+			//mov  ecx, Xbox_D3DDevice
+		//}
+		//XB_TRMP(D3DDevice_KickOff)();
+		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
+		EmuKickOff();
+	}
 	//Check whether Fixup exists or not. 
 	if (pFixup != xbox::zeroptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");

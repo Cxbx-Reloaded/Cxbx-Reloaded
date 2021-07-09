@@ -3410,6 +3410,7 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	//2nd we wait for pfifo_run_pusher() to complete the pushbuffer paring, then we return to guest code.
 	//with this wait, we can make sure the pfifo_run_pusher()running in another thread won't conflict with the following guest code we're going to run.
 	//this wait is not necessary once we remove all HLE patches.
+	// Set pushbuffer parsing busy flag. pfifo_run_pusher() will set this to false once it complete the pushbuffer parsing.
 	g_nv2a_fifo_is_busy = true;//set this flag only after we trampoline the D3DDevice_EndPush, make sure pfifo starts parsing pushbuffer before we set this flag to true.
 	
 	//	we can't use this while loop to wait for the global flag. because XB_TRMP(D3DDevice_EndPush)(pPush) is only update g_pDevice->pPush, not the hardware mPut.
@@ -3418,13 +3419,13 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	//__asm {
 	//	mov  ecx, Xbox_D3DDevice
 	//}
-	//XB_TRMP(D3DDevice_KickOff)();
+	// KickOff xbox d3d pushbuffer first. 
 	EmuKickOff();
 	while(g_nv2a_fifo_is_busy){
 		//__asm {
 			//mov  ecx, Xbox_D3DDevice
 		//}
-		//XB_TRMP(D3DDevice_KickOff)();
+		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
 		EmuKickOff();
 	}
 	return result;
