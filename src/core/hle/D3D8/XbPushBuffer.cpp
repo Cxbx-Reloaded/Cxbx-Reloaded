@@ -45,6 +45,9 @@ extern void CxbxUpdateHostTextures();
 const char *NV2AMethodToString(DWORD dwMethod); // forward
 
 static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
+extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
+extern void XB_TRAMPOLINE_D3DDevice_KickOff(VOID);
+extern void EmuKickOff(void);
 
 void EmuExecutePushBuffer
 (
@@ -52,6 +55,8 @@ void EmuExecutePushBuffer
 	xbox::X_D3DFixup            *pFixup
 )
 {
+	// KickOff xbox d3d pushbuffer first. 
+	EmuKickOff();
 	//Check whether Fixup exists or not. 
 	if (pFixup != xbox::zeroptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");

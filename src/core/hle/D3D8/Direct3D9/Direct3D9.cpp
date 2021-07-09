@@ -3375,6 +3375,23 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt Count
 }
 //global for pfifo_run_pusher() to indicate whether it has completed the pushbuffer pasing or not.
 bool g_nv2a_fifo_is_busy = false;
+extern void EmuKickOff(void);
+void EmuKickOff(void)
+{
+	DWORD * pXbox_D3DDevice;
+	DWORD  Xbox_D3DDevice;
+	// Set g_Xbox_D3DDevice to point to the Xbox D3D Device
+	auto it = g_SymbolAddresses.find("D3DDEVICE");
+	if (it != g_SymbolAddresses.end()) {
+		pXbox_D3DDevice = (DWORD*)it->second;
+		Xbox_D3DDevice =*pXbox_D3DDevice;
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  ecx, Xbox_D3DDevice
+		}
+		XB_TRMP(D3DDevice_KickOff)();
+	}
+}
 // ******************************************************************
 // * patch: D3DDevice_EndPush
 // ******************************************************************
@@ -3383,15 +3400,13 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	LOG_FUNC_ONE_ARG(pPush);
     //this is a tmp patch before we remove all HLE patches. only to prevent multi entrance confliction
 	//1st we trampoline back to guest code D3DDevice_EndPush()
-	DWORD xbox_gDevice;
 	xbox::dword_xt* result = XB_TRMP(D3DDevice_EndPush)(pPush);
 	//in D3DDevice_EndPush() before it returns, it has g_pDevice in ECX, which we need it to pass to XB_TRMP(D3DDevice_KickOff)() as this pointer.
+	//DWORD * Xbox_D3DDevice;
+	//__asm {
+	//	mov  Xbox_D3DDevice, ecx
+	//}
 	
-	__asm {
-		
-		mov  xbox_gDevice, ecx
-	}
-
 	//2nd we wait for pfifo_run_pusher() to complete the pushbuffer paring, then we return to guest code.
 	//with this wait, we can make sure the pfifo_run_pusher()running in another thread won't conflict with the following guest code we're going to run.
 	//this wait is not necessary once we remove all HLE patches.
@@ -3400,19 +3415,18 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	//	we can't use this while loop to wait for the global flag. because XB_TRMP(D3DDevice_EndPush)(pPush) is only update g_pDevice->pPush, not the hardware mPut.
 	//  hardware mPut will only be update by Kickoff(), which will be called inside MakeRequestedSpace(). Only when a segment of pushbuffer was switched, then the hardware mPut will be update.
 	//  we have to figure out a way to force a kickoff here.
-	__asm {
-
-		mov  ecx, xbox_gDevice
-	}
-	XB_TRMP(D3DDevice_KickOff)();
+	//__asm {
+	//	mov  ecx, Xbox_D3DDevice
+	//}
+	//XB_TRMP(D3DDevice_KickOff)();
+	EmuKickOff();
 	while(g_nv2a_fifo_is_busy){
-		__asm {
-
-			mov  ecx, xbox_gDevice
-		}
-		XB_TRMP(D3DDevice_KickOff)();
+		//__asm {
+			//mov  ecx, Xbox_D3DDevice
+		//}
+		//XB_TRMP(D3DDevice_KickOff)();
+		EmuKickOff();
 	}
-	
 	return result;
 }
 
