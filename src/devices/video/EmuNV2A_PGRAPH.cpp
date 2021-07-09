@@ -2728,55 +2728,46 @@ int pgraph_handle_method(
                     assert(arg0 == pg->KelvinPrimitive.SetStipplePattern[slot]);
                     break;
 
-                CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
-					//no reference document for this method. we're  assuming this method is used to trigger the vertex finishing
-					assert(0);
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-
-					slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
-					int part = (method - NV097_SET_VERTEX3F) / 4;
-					//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
-					assert(part == 0);
-					assert(method_count == 3);
-					VertexAttribute *vertex_attribute =
-						&pg->vertex_attributes[slot];
-					//allocate attribute.inline_buffer if it's not allocated yet.
-					pgraph_allocate_inline_buffer_vertices(pg, slot);
-					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-                    inline_value[0] = pg->KelvinPrimitive.SetVertex3f[0];
-					inline_value[1] = pg->KelvinPrimitive.SetVertex3f[1];
-					inline_value[2] = pg->KelvinPrimitive.SetVertex3f[2];
-					if (/*(slot == NV2A_VERTEX_ATTR_POSITION) && */(part == 2)) {
-						inline_value[3] = 1.0f;
-						pgraph_finish_inline_buffer_vertex(pg);
+					CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
+						assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+						for (unsigned argc = 0; argc < method_count; argc++) {
+							slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
+							int part = (method - NV097_SET_VERTEX3F + argc) % 4;
+							//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
+							assert(method_count == 3);
+							VertexAttribute *vertex_attribute =
+								&pg->vertex_attributes[slot];
+							//allocate attribute.inline_buffer if it's not allocated yet.
+							pgraph_allocate_inline_buffer_vertices(pg, slot);
+							float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+							inline_value[part] = pg->KelvinPrimitive.SetVertex3f[part];
+							if (part == 2) {
+								inline_value[3] = 1.0f;
+								pgraph_finish_inline_buffer_vertex(pg);
+							}
+						}
+						break;
 					}
-                    break;
-                }
 
-				CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
-					//no reference document for this method. we're  assuming this method is used to trigger the vertex finishing
-					assert(0);
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-
-					slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
-					int part = (method - NV097_SET_VERTEX4F) / 4;
-					//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
-					assert(part == 0);
-					assert(method_count == 4);
-					VertexAttribute *vertex_attribute =
-						&pg->vertex_attributes[slot];
-					//allocate attribute.inline_buffer if it's not allocated yet.
-					pgraph_allocate_inline_buffer_vertices(pg, slot);
-					float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-					inline_value[0] = pg->KelvinPrimitive.SetVertex3f[0];
-					inline_value[1] = pg->KelvinPrimitive.SetVertex3f[1];
-					inline_value[2] = pg->KelvinPrimitive.SetVertex3f[2];
-					inline_value[3] = pg->KelvinPrimitive.SetVertex3f[3];
-					if (/*(slot == NV2A_VERTEX_ATTR_POSITION) && */(part == 3)) {
-						//vertex completed, push all attributes to vertex buffer.
-						pgraph_finish_inline_buffer_vertex(pg);
-					}
-					break;
+					CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
+						assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+						for (unsigned argc = 0; argc < method_count; argc++) {
+							slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
+							int part = (method - NV097_SET_VERTEX4F + argc) % 4;
+							//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
+							assert(method_count == 4);
+							VertexAttribute *vertex_attribute =
+								&pg->vertex_attributes[slot];
+							//allocate attribute.inline_buffer if it's not allocated yet.
+							pgraph_allocate_inline_buffer_vertices(pg, slot);
+							float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
+							inline_value[part] = pg->KelvinPrimitive.SetVertex4f[part];
+							if (part == 3) {
+								//vertex completed, push all attributes to vertex buffer.
+								pgraph_finish_inline_buffer_vertex(pg);
+							}
+						}
+						break;
 				}
 #if(0)  //missing state implememtations, need verifications.
 
@@ -3147,7 +3138,9 @@ int pgraph_handle_method(
                         } // switch
 						//reset the vertex declaration after we finish the draw call
 						reset_IVB_DECL_override();
-                        pg->draw_mode = DrawMode::None;
+
+						// Reset draw_mode
+						pg->draw_mode = DrawMode::None;
 
                         // Only clear primitive_mode after we finish draw call
                         pg->primitive_mode = NV097_SET_BEGIN_END_OP_END;
@@ -3215,7 +3208,7 @@ int pgraph_handle_method(
                 case NV097_ARRAY_ELEMENT32://xbox D3DDevice_DrawIndexedVertices() calls this
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 					//case NV097_ARRAY_ELEMENT32 is only used to handle the very last odd element (if ever has). so the this case was hit, the DrawMode must be DrawMode::InlineElements, unless there is only one element)
-					if (pg->draw_mode == DrawMode::None || pg->draw_mode == DrawMode::InlineElements)
+					if (pg->draw_mode == DrawMode::None)
 						pg->draw_mode = DrawMode::InlineElements;
 					else
 						assert(pg->draw_mode == DrawMode::InlineElements);
@@ -3257,7 +3250,7 @@ int pgraph_handle_method(
 
 					*/
 
-					/* strange case xdk push buffer sample uses 
+					/* 
 					//set_vertex_data_array_foramt with stride 0, then begin(triangle_list)/NV097_INLINE_ARRAY with 3 vertex with stride 0x10/end,
 					//then set_vertex_data_array_offset, set_vertex_data_array_foramt with stride 0x10,begin(triangle_list)/NV097_DRAW_ARRAYS with arg0=0x02000000, method count=1, count=2, start offset =0/end.
 					//the actual proper result should be 2 exact triangles reandered side by side.
@@ -3568,22 +3561,26 @@ int pgraph_handle_method(
 							slot += argc;
 							VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 							pgraph_allocate_inline_buffer_vertices(pg, slot);
-							//do we need to swap the color ARGB/ABGR if the slor is D3DVSDE_DIFFUSE or D3DVSDE_SPECULAR ?
-							//don't swap now. let's make the decision of when to swap/whther to swap later.
-							//if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR||slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
-							//	arg0 = ABGR_to_ARGB(arg0);
-							//}
 							float *inline_value = pg->KelvinPrimitive.SetVertexData4f[slot].M; // was vertex_attribute->inline_value;
-							inline_value[0] = ((argv[argc] >> 16) & 0xFF) / 255.0f;//swap R and B
-							inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
-							inline_value[2] = (argv[argc] & 0xFF) / 255.0f;        //swap R and B
-							inline_value[3] = ((argv[argc] >> 24) & 0xFF) / 255.0f;
+							// Swap R and B if slot is colot slot.
+							if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR || slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
+								inline_value[0] = ((argv[argc] >> 16) & 0xFF) / 255.0f;//swap R and B
+								inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
+								inline_value[2] = (argv[argc] & 0xFF) / 255.0f;        //swap R and B
+								inline_value[3] = ((argv[argc] >> 24) & 0xFF) / 255.0f;
+							}
+							else {
+								inline_value[0] = (argv[argc] & 0xFF) / 255.0f;
+								inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
+								inline_value[2] = ((argv[argc] >> 16) & 0xFF) / 255.0f;
+								inline_value[3] = ((argv[argc] >> 24) & 0xFF) / 255.0f;
+							}
 							if (slot == NV2A_VERTEX_ATTR_POSITION) {
 								pgraph_finish_inline_buffer_vertex(pg);
 							}
 						}
 					}
-					   break;
+					break;
 				}
 					/*
 					HRESULT IDirect3DDevice8::SetVertexData4s(
@@ -4227,29 +4224,32 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
 
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
 {
-    unsigned int i;
+	unsigned int i;
 
-	if (pg->draw_mode == DrawMode::None)
+	if (pg->draw_mode == DrawMode::None) {
+		if (pg->KelvinPrimitive.SetBeginEnd == 0)
+			assert(0);
 		pg->draw_mode = DrawMode::InlineBuffer;
+	}
 	else
 		assert(pg->draw_mode == DrawMode::InlineBuffer);
 
 	assert(pg->inline_buffer_length < NV2A_MAX_BATCH_LENGTH);
 
-    for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-        VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
+	for (i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+		VertexAttribute *vertex_attribute = &pg->vertex_attributes[i];
 		//process the attribute data if it's been set
-		if (vertex_attribute->set_by_inline_buffer ) {
+		if (vertex_attribute->set_by_inline_buffer) {
 			float *inline_value = pg->KelvinPrimitive.SetVertexData4f[i].M; // was vertex_attribute->inline_value;
 			memcpy(&vertex_attribute->inline_buffer[
-                      pg->inline_buffer_attr_length * 4],
-                   inline_value,
-                   sizeof(float) * 4);
+				pg->inline_buffer_length * 4],
+				inline_value,
+					sizeof(float) * 4);
 			pg->inline_buffer_attr_length++;
-        }
-    }
+		}
+	}
 
-    pg->inline_buffer_length++;
+	pg->inline_buffer_length++;
 }
 
 void pgraph_init(NV2AState *d)

@@ -731,7 +731,7 @@ typedef struct PGRAPHState {
 	//init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
 	unsigned int inline_buffer_length;//this counts the total vertex count
 	unsigned int inline_buffer_attr_length;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
-	//float inline_buffer[NV2A_MAX_BATCH_LENGTH*16*4];
+	float inline_buffer[NV2A_MAX_BATCH_LENGTH*16*4];
 	//init in inline_elements_length for non indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
 	unsigned int draw_arrays_length;
 	unsigned int draw_arrays_max_count;
