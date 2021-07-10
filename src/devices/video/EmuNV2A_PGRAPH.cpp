@@ -3563,19 +3563,11 @@ int pgraph_handle_method(
 							VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 							pgraph_allocate_inline_buffer_vertices(pg, slot);
 							float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
-							// Swap R and B if slot is colot slot.
-							if (slot == xbox::X_D3DVSDE_DIFFUSE || slot == xbox::X_D3DVSDE_SPECULAR || slot == xbox::X_D3DVSDE_BACKDIFFUSE || slot == xbox::X_D3DVSDE_BACKSPECULAR) {
-								inline_value[0] = ((argv[argc] >> 16) & 0xFF) / 255.0f;//swap R and B
-								inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
-								inline_value[2] = (argv[argc] & 0xFF) / 255.0f;        //swap R and B
-								inline_value[3] = ((argv[argc] >> 24) & 0xFF) / 255.0f;
-							}
-							else {
-								inline_value[0] = (argv[argc] & 0xFF) / 255.0f;
-								inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
-								inline_value[2] = ((argv[argc] >> 16) & 0xFF) / 255.0f;
-								inline_value[3] = ((argv[argc] >> 24) & 0xFF) / 255.0f;
-							}
+                            // We set color in float4 in R/G/B/A. no need to swap R/B here.
+							inline_value[0] = (argv[argc] & 0xFF) / 255.0f;
+							inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
+							inline_value[2] = ((argv[argc] >> 16) & 0xFF) / 255.0f;
+							inline_value[3] = ((argv[argc] >> 24) & 0xFF) / 255.0f;
 							if (slot == NV2A_VERTEX_ATTR_POSITION) {
 								pgraph_finish_inline_buffer_vertex(pg);
 							}
