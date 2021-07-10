@@ -221,9 +221,9 @@ static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarg
 }
 
 
-/* Unused :
-static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
-*/
+
+static xbox::dword_xt                  *g_pXbox_D3DDevice; // TODO: This is a pointer to a D3DDevice structure, 
+
 
 // Static Function(s)
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
@@ -2817,11 +2817,11 @@ void Direct3D_CreateDevice_End
 	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-#if 0 // Unused :
-    // Set g_Xbox_D3DDevice to point to the Xbox D3D Device
-    auto it = g_SymbolAddresses.find("D3D_g_pDevice");
+#if 1 // restore the usage for EmuKickOff()
+    // Set g_pXbox_D3DDevice to point to the Xbox D3D Device
+    auto it = g_SymbolAddresses.find("D3DDEVICE");
     if (it != g_SymbolAddresses.end()) {
-        g_Xbox_D3DDevice = (DWORD*)it->second;
+        g_pXbox_D3DDevice = (xbox::dword_xt *)it->second;
     }
     else {
         EmuLog(LOG_LEVEL::ERROR2, "D3D_g_pDevice was not found!");
@@ -3375,7 +3375,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt Count
 }
 //global for pfifo_run_pusher() to indicate whether it has completed the pushbuffer pasing or not.
 bool g_nv2a_fifo_is_busy = false;
-extern void EmuKickOff(void);
+
 void EmuKickOff(void)
 {
 	DWORD * pXbox_D3DDevice;
