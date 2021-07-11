@@ -161,13 +161,13 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt * pPush);
 // ******************************************************************
 // * patch: D3DDevice_EndPush
 // ******************************************************************
-xbox::dword_xt* WINAPI EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush);
+xbox::dword_xt* WINAPI EMUPATCH(D3DDevice_EndPush)(dword_xt * pPush);
 
 // ******************************************************************
 // * patch: D3DDevice_EndPushBuffer
 // ******************************************************************
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_EndPushBuffer)(dword_xt *pPush);
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_EndPushBuffer)(void);
 
 // ******************************************************************
 // * patch: D3DDevice_BeginVisibilityTest
@@ -2008,11 +2008,6 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetModelView)
 // * patch: D3DDevice_FlushVertexCache
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_FlushVertexCache)();
-
-// ******************************************************************
-// * patch: D3DDevice_EndPushBuffer
-// ******************************************************************
-xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndPushBuffer)();
 
 // ******************************************************************
 // * patch: XMETAL_StartPush
