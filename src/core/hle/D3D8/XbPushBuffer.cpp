@@ -48,12 +48,18 @@ static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
 extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
 extern void EmuKickOff(void);// in Direct3D9.cpp
 extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
+extern bool is_pushbuffer_recording(void); // in Direct3D9.cpp, return true if pushbuffer is recording
+
 void EmuExecutePushBuffer
 (
 	xbox::X_D3DPushBuffer       *pPushBuffer,
 	xbox::X_D3DFixup            *pFixup
 )
 {
+	if (is_pushbuffer_recording()) {
+		// we don't support RunPushBuffer() in pushbuffer recording, yet!.
+		assert(0);
+	}
 	// Set pushbuffer parsing busy flag.
 	g_nv2a_fifo_is_busy = true;
 	// KickOff xbox d3d pushbuffer first. 
