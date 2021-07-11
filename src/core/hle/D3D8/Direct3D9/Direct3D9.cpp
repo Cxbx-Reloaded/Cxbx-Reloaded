@@ -306,8 +306,10 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_CreateVertexShader,                       (CONST xbox::dword_xt*, CONST xbox::dword_xt*, xbox::dword_xt*, xbox::dword_xt)                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader,                       (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0,                     ()                                                                                                    );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_BeginPushBuffer,                          (xbox::dword_xt*)                                                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_End,                                      ()                                                                                                    );  \
     XB_MACRO(xbox::dword_xt*,     WINAPI,     D3DDevice_EndPush,                                  (xbox::dword_xt*)                                                                                     );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_EndPushBuffer,                            ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                              );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                        );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                        );  \
@@ -3377,6 +3379,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt * pPu
 {
 	LOG_FUNC_ONE_ARG(pPush);
 
+	XB_TRMP(D3DDevice_BeginPushBuffer)(pPush);
 	if (g_pXbox_BeginPush_Buffer != nullptr)
 	{
 		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_BeginPush called without D3DDevice_EndPush in between?!");
@@ -3417,7 +3420,8 @@ void EmuKickOff(void)
 xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 {
 	LOG_FUNC_ONE_ARG(pPush);
-    //this is a tmp patch before we remove all HLE patches. only to prevent multi entrance confliction
+
+	//this is a tmp patch before we remove all HLE patches. only to prevent multi entrance confliction
 	//1st we trampoline back to guest code D3DDevice_EndPush()
 	xbox::dword_xt* result = XB_TRMP(D3DDevice_EndPush)(pPush);
 	//in D3DDevice_EndPush() before it returns, it has g_pDevice in ECX, which we need it to pass to XB_TRMP(D3DDevice_KickOff)() as this pointer.
@@ -3453,10 +3457,10 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 // ******************************************************************
 // * patch: D3DDevice_EndPushBuffer
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPushBuffer)(dword_xt *pPush)
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPushBuffer)(void)
 {
-	LOG_FUNC_ONE_ARG(pPush);
 
+	XB_TRMP(D3DDevice_EndPushBuffer)();
 	if (g_pXbox_BeginPush_Buffer == nullptr)
 		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
 	else
@@ -3468,7 +3472,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPushBuffer)(dword_xt *pPush)
 		//we should setup an PFIFO pusher interceptor to record the pushbuffer, and stop here then setup the size of recorded pushbuffer.
 		//this won't work in any near future if we keep patching any D3D functions which might be recorded in the pushbuffer.
 		//for now, the pPush-> shall be cleared, or atleat the pPush->size shall be zero out to prevent errors in executing pPush in later guest codes.
-		delete[] g_pXbox_BeginPush_Buffer;
+		//delete[] g_pXbox_BeginPush_Buffer;
 		g_pXbox_BeginPush_Buffer = nullptr;
 	}
 }
