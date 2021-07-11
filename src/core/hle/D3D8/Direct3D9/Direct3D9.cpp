@@ -3361,15 +3361,21 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_8)(dword_xt Count, dword
 	return result;
 }
 
+
+bool is_pushbuffer_recording(void)
+{
+	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_BeginPushBuffer
 // TODO: Find a test case and verify this
 // Starting from XDK 4531, this changed to 1 parameter only.
 // Is this definition incorrect, or did it change at some point?
 // ******************************************************************
-xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt Count)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt * pPush)
 {
-	LOG_FUNC_ONE_ARG(Count);
+	LOG_FUNC_ONE_ARG(pPush);
 
 	if (g_pXbox_BeginPush_Buffer != nullptr)
 	{
@@ -3377,10 +3383,10 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt Count
 		delete[] g_pXbox_BeginPush_Buffer; // prevent a memory leak
 	}
 
-	dword_xt *pRet = new dword_xt[Count];
+	//dword_xt *pRet = new dword_xt[Count];
 	//we should setup an PFIFO pusher interceptor to record the pushbuffer
 	//this won't work in any near future if we keep patching any D3D functions which might be recorded in the pushbuffer.
-	g_pXbox_BeginPush_Buffer = pRet;
+	g_pXbox_BeginPush_Buffer = pPush;
 
 	//return pRet;
 	xbox::hresult_xt result = 0;
