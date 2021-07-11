@@ -350,9 +350,13 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPalette_4,                             (xbox::X_D3DPalette*)                                                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader,                          (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader_0,                        ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetVertexShaderConstant_8,                (void *, xbox::dword_xt, xbox::int_xt, CONST xbox::PVOID)                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderConstant,                  (xbox::int_xt, CONST xbox::PVOID, xbox::dword_xt)                                                     );  \
     XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetVertexShaderConstant1,                 (xbox::int_xt, CONST xbox::PVOID)                                                                     );  \
+    XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetVertexShaderConstant1Fast,             (xbox::int_xt, CONST xbox::PVOID)                                                                     );  \
     XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetVertexShaderConstant4,                 (xbox::int_xt, CONST xbox::PVOID)                                                                     );  \
+    XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetVertexShaderConstantNotInline,         (xbox::int_xt, CONST xbox::PVOID, xbox::dword_xt)                                                     );  \
+    XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetVertexShaderConstantNotInlineFast,     (xbox::int_xt, CONST xbox::PVOID, xbox::dword_xt)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
@@ -4352,7 +4356,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 // Test-case: Murakumo
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
 (
-    void*,
+    void* tmp,
     dword_xt    ConstantCount,
     int_xt      Register,
     CONST PVOID pConstantData
@@ -4363,7 +4367,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8)
 		LOG_FUNC_ARG(pConstantData)
 		LOG_FUNC_ARG(ConstantCount)
 		LOG_FUNC_END;
-
+	XB_TRMP(D3DDevice_SetVertexShaderConstant_8)(tmp, ConstantCount, Register, pConstantData);
 	CxbxImpl_SetVertexShaderConstant(Register, pConstantData, ConstantCount);
 }
 
@@ -4386,6 +4390,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 	// TODO : Should we trampoline into Xbox code as well here,
 	// so that besides pushing NV2A commands, Xbox internal D3D
 	// state gets updated?
+	XB_TRMP(D3DDevice_SetVertexShaderConstant)(Register, pConstantData, ConstantCount);
 	// Or better yet, remove all D3DDevice_SetVertexShaderConstant patches
 	// once CxbxUpdateHostVertexShaderConstants is reliable (ie. : when we're
 	// able to flush the NV2A push buffer)
@@ -4403,10 +4408,12 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
+	XB_TRMP(D3DDevice_SetVertexShaderConstant1)(Register, pConstantData);
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
+    //EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
+	CxbxImpl_SetVertexShaderConstant(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -4419,11 +4426,12 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
-
+	XB_TRMP(D3DDevice_SetVertexShaderConstant1Fast)(Register, pConstantData);
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
+    //EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
+	CxbxImpl_SetVertexShaderConstant(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -4437,10 +4445,12 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0..191 range
+	XB_TRMP(D3DDevice_SetVertexShaderConstant4)(Register, pConstantData);
+	// The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 4);
+	//EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 4);
+	CxbxImpl_SetVertexShaderConstant(Register - X_D3DSCM_CORRECTION, pConstantData, 4);
 }
 
 // ******************************************************************
@@ -4454,11 +4464,12 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
-
+	XB_TRMP(D3DDevice_SetVertexShaderConstantNotInline)(Register, pConstantData, ConstantCount);
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
+	//EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
+	CxbxImpl_SetVertexShaderConstant(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
 // ******************************************************************
@@ -4472,11 +4483,12 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
-
+	XB_TRMP(D3DDevice_SetVertexShaderConstantNotInlineFast)(Register, pConstantData, ConstantCount);
     // The XDK uses a macro to automatically adjust to 0..191 range
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
-	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
+	//EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
+	CxbxImpl_SetVertexShaderConstant(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
 // Overload for logging
