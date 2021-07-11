@@ -307,9 +307,18 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader,                       (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0,                     ()                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_BeginPushBuffer,                          (xbox::dword_xt*)                                                                                     );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_CopyRects,                                (xbox::X_D3DSurface*,CONST RECT*, xbox::uint_xt, xbox::X_D3DSurface*,CONST POINT*)                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DrawIndexedVertices,                      (xbox::X_D3DPRIMITIVETYPE, xbox::uint_xt, CONST PWORD)                                                );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DrawIndexedVerticesUP,                    (xbox::X_D3DPRIMITIVETYPE, xbox::uint_xt, CONST PVOID, CONST PVOID, xbox::uint_xt)                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DrawVertices,                             (xbox::X_D3DPRIMITIVETYPE, xbox::uint_xt, xbox::uint_xt)                                              );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DrawVertices_4,                           (xbox::X_D3DPRIMITIVETYPE)                                                                            );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DrawVerticesUP,                           (xbox::X_D3DPRIMITIVETYPE, xbox::uint_xt, CONST PVOID, xbox::uint_xt)                                 );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DrawVerticesUP_12,                        (xbox::X_D3DPRIMITIVETYPE, xbox::uint_xt, xbox::uint_xt)                                              );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_End,                                      ()                                                                                                    );  \
     XB_MACRO(xbox::dword_xt*,     WINAPI,     D3DDevice_EndPush,                                  (xbox::dword_xt*)                                                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_EndPushBuffer,                            ()                                                                                                    );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_EndVisibilityTest,                        (xbox::dword_xt)                                                                                      );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_EndVisibilityTest_0,                      ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                              );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                        );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                        );  \
@@ -3506,6 +3515,40 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 	return D3D_OK;
 }
 
+xbox::hresult_xt WINAPI CxbxImpl_EndVisibilityTest
+(
+	xbox::dword_xt  Index
+)
+{
+	if (g_bEnableHostQueryVisibilityTest) {
+		// Check that the dedicated storage for the given Index isn't in use
+		if (g_HostVisibilityTestMap[Index] != nullptr) {
+			return E_OUTOFMEMORY;
+		}
+
+		if (g_HostQueryVisibilityTests.empty()) {
+			return 2088; // visibility test incomplete (a prior BeginVisibilityTest call is needed)
+		}
+
+		IDirect3DQuery* pHostQueryVisibilityTest = g_HostQueryVisibilityTests.top();
+		g_HostQueryVisibilityTests.pop();
+		assert(pHostQueryVisibilityTest != nullptr);
+
+		HRESULT hRet = pHostQueryVisibilityTest->Issue(D3DISSUE_END);
+		//DEBUG_D3DRESULT(hRet, "g_pHostQueryVisibilityTest->Issue(D3DISSUE_END)");
+		if (hRet == D3D_OK) {
+			// Associate the result of this call with the given Index
+			g_HostVisibilityTestMap[Index] = pHostQueryVisibilityTest;
+		}
+		else {
+			LOG_TEST_CASE("Failed to issue query");
+			pHostQueryVisibilityTest->Release();
+		}
+	}
+
+	return D3D_OK;
+
+}
 // LTCG specific D3DDevice_EndVisibilityTest function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Test Drive: Eve of Destruction
@@ -3520,7 +3563,9 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibility
         mov  Index, eax
     }
 
-    result = EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
+	XB_TRMP(D3DDevice_EndVisibilityTest_0)();
+
+	result = CxbxImpl_EndVisibilityTest(Index);//EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 
     __asm {
         mov  eax, result
@@ -3539,32 +3584,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 {
 	LOG_FUNC_ONE_ARG(Index);
 
-	if (g_bEnableHostQueryVisibilityTest) {
-		// Check that the dedicated storage for the given Index isn't in use
-		if (g_HostVisibilityTestMap[Index] != nullptr) {
-			return E_OUTOFMEMORY;
-		}
+	XB_TRMP(D3DDevice_EndVisibilityTest)(Index);
 
-		if (g_HostQueryVisibilityTests.empty()) {
-			return 2088; // visibility test incomplete (a prior BeginVisibilityTest call is needed)
-		}
-
-		IDirect3DQuery* pHostQueryVisibilityTest = g_HostQueryVisibilityTests.top();
-		g_HostQueryVisibilityTests.pop();
-		assert(pHostQueryVisibilityTest != nullptr);
-
-		HRESULT hRet = pHostQueryVisibilityTest->Issue(D3DISSUE_END);
-		DEBUG_D3DRESULT(hRet, "g_pHostQueryVisibilityTest->Issue(D3DISSUE_END)");
-		if (hRet == D3D_OK) {
-			// Associate the result of this call with the given Index
-			g_HostVisibilityTestMap[Index] = pHostQueryVisibilityTest;
-		} else {
-			LOG_TEST_CASE("Failed to issue query");
-			pHostQueryVisibilityTest->Release();
-		}
-	}
-
-    return D3D_OK;
+    return CxbxImpl_EndVisibilityTest(Index);
 }
 
 // ******************************************************************
@@ -5055,8 +5077,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
         LOG_FUNC_ARG(pDestinationSurface);
         LOG_FUNC_ARG(pDestPointsArray);
     LOG_FUNC_END;
-
-    // We skip the trampoline to prevent unnecessary work
+	// Call trampoline if pushbuffer is recording.
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_CopyRects)(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
+	}
+	// We skip the trampoline to prevent unnecessary work
     // As our surfaces remain on the GPU, calling the trampoline would just
     // result in a memcpy from an empty Xbox surface to another empty Xbox Surface
     D3DSURFACE_DESC hostSourceDesc, hostDestDesc;
@@ -7971,7 +7996,114 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 
 	CxbxImpl_SetPixelShader(Handle);
 }
+xbox::void_xt WINAPI CxbxrImpl_DrawVertices
+(
+	xbox::X_D3DPRIMITIVETYPE PrimitiveType,
+	xbox::uint_xt            StartVertex,
+	xbox::uint_xt            VertexCount
+)
+{
+	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
 
+	// TODO : Call unpatched CDevice_SetStateVB(0);
+
+	CxbxUpdateNativeD3DResources();
+
+	CxbxDrawContext DrawContext = {};
+
+	DrawContext.XboxPrimitiveType = PrimitiveType;
+	DrawContext.dwVertexCount = VertexCount;
+	DrawContext.dwStartVertex = StartVertex;
+
+	VertexBufferConverter.Apply(&DrawContext);
+	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
+		if (StartVertex == 0) {
+			//LOG_TEST_CASE("X_D3DPT_QUADLIST (StartVertex == 0)"); // disabled, hit too often
+			// test-case : ?X-Marbles
+			// test-case XDK Samples : AlphaFog, AntiAlias, BackBufferScale, BeginPush, Cartoon, TrueTypeFont (?maybe PlayField?)
+		}
+		else {
+			LOG_TEST_CASE("X_D3DPT_QUADLIST (StartVertex > 0)");
+			// https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1156
+			// test-case : All - Star Baseball '03
+			// test-case : Army Men Major Malfunction
+			// test-case : Big Mutha Truckers
+			// test-case : BLiNX: the time sweeper
+			// test-case : Blood Wake
+			// test-case : Call of Duty: Finest Hour
+			// test-case : Flight academy
+			// test-case : FIFA World Cup 2002
+			// test-case : GENMA ONIMUSHA 
+			// test-case : Halo - Combat Evolved
+			// test-case : Harry Potter and the Sorcerer's Stone
+			// test-case : Heroes of the Pacific
+			// test-case : Hummer Badlands
+			// test-case : Knights Of The Temple 2
+			// test-case : LakeMasters Bass fishing
+			// test-case : MetalDungeon
+			// test-case : NFL Fever 2003 Demo - main menu
+			// test-case : Night Caster 2
+			// test-case : Pinball Hall of Fame
+			// test-case : Robotech : Battlecry
+			// test-case : SpiderMan 2
+			// test-case : Splinter Cell Demo
+			// test-case : Stubbs the Zombie
+			// test-case : Tony Hawk's Pro Skater 2X (main menu entries)
+			// test-case : Worms 3D Special Edition
+			// test-case : XDK sample Lensflare (4, for 10 flare-out quads that use a linear texture; rendered incorrectly: https://youtu.be/idwlxHl9nAA?t=439)
+			DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing.
+		}
+
+		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
+		// Assure & activate that special index buffer :
+		CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
+		// Convert quad vertex count to triangle vertex count :
+		UINT NumVertices = QuadToTriangleVertexCount(DrawContext.dwVertexCount);
+		// the dwHostPrimitiveCount is coverted to triangle list already :
+		UINT primCount = DrawContext.dwHostPrimitiveCount;
+		// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
+		// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
+		// Emulate drawing quads by drawing each quad with two indexed triangles :
+		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
+			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
+			/*BaseVertexIndex=*/0, // Base vertex index has been accounted for in the stream conversion
+			/*MinVertexIndex=*/0,
+			NumVertices,
+			/*startIndex=*/0,
+			primCount
+		);
+		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
+
+		g_dwPrimPerFrame += primCount;
+	}
+	else {
+		// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
+		HRESULT hRet = g_pD3DDevice->DrawPrimitive(
+			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
+			/*StartVertex=*/0, // Start vertex has been accounted for in the stream conversion
+			DrawContext.dwHostPrimitiveCount
+		);
+		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitive");
+
+		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
+		if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_LINELOOP) {
+			// Close line-loops using a final single line, drawn from the end to the start vertex
+			LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Text-cases needed
+
+			assert(DrawContext.dwBaseVertexIndex == 0); // if this fails, it needs to be added to LowIndex and HighIndex :
+			INDEX16 LowIndex = 0;
+			INDEX16 HighIndex = (INDEX16)(DrawContext.dwHostPrimitiveCount);
+			// Draw the closing line using a helper function (which will SetIndices)
+			CxbxDrawIndexedClosingLine(LowIndex, HighIndex);
+			// NOTE : We don't restore the previously active index buffer
+		}
+	}
+
+	CxbxHandleXboxCallbacks();
+}
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices_4
 // LTCG specific D3DDevice_DrawVertices function...
@@ -7979,6 +8111,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 // Test Case: Conker
 // ******************************************************************
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)
+xbox::void_xt WINAPI CxbxrImpl_DrawVertices
 (
     X_D3DPRIMITIVETYPE PrimitiveType
 )
@@ -7991,7 +8124,12 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__
         mov  StartVertex, ecx
     }
 
-    EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)(PrimitiveType);
+	}
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+	// Move original implementation code to CxbxImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
+	CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
 
     __asm {
         LTCG_EPILOGUE
@@ -8015,7 +8153,13 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__
         mov  VertexCount, eax
     }
 
-    EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawVertices_8__LTCG_eax3)(PrimitiveType, StartVertex);
+	}
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+	// Move original implementation code to CxbxImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
+	CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+
 
     __asm {
         LTCG_EPILOGUE
@@ -8041,105 +8185,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 
-	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE("Invalid VertexCount");
-		return;
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
 	}
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+	// Move original implementation code to CxbxImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
+	CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
 
-	// TODO : Call unpatched CDevice_SetStateVB[_8](0);
-
-	CxbxUpdateNativeD3DResources();
-
-		CxbxDrawContext DrawContext = {};
-
-		DrawContext.XboxPrimitiveType = PrimitiveType;
-		DrawContext.dwVertexCount = VertexCount;
-		DrawContext.dwStartVertex = StartVertex;
-
-		VertexBufferConverter.Apply(&DrawContext);
-		if (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST) {
-			if (StartVertex == 0) {
-				//LOG_TEST_CASE("X_D3DPT_QUADLIST (StartVertex == 0)"); // disabled, hit too often
-				// test-case : ?X-Marbles
-				// test-case XDK Samples : AlphaFog, AntiAlias, BackBufferScale, BeginPush, Cartoon, TrueTypeFont (?maybe PlayField?)
-			} else {
-				LOG_TEST_CASE("X_D3DPT_QUADLIST (StartVertex > 0)");
-				// https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1156
-				// test-case : All - Star Baseball '03
-				// test-case : Army Men Major Malfunction
-				// test-case : Big Mutha Truckers
-				// test-case : BLiNX: the time sweeper
-				// test-case : Blood Wake
-				// test-case : Call of Duty: Finest Hour
-				// test-case : Flight academy
-				// test-case : FIFA World Cup 2002
-				// test-case : GENMA ONIMUSHA 
-				// test-case : Halo - Combat Evolved
-				// test-case : Harry Potter and the Sorcerer's Stone
-				// test-case : Heroes of the Pacific
-				// test-case : Hummer Badlands
-				// test-case : Knights Of The Temple 2
-				// test-case : LakeMasters Bass fishing
-				// test-case : MetalDungeon
-				// test-case : NFL Fever 2003 Demo - main menu
-				// test-case : Night Caster 2
-				// test-case : Pinball Hall of Fame
-				// test-case : Robotech : Battlecry
-				// test-case : SpiderMan 2
-				// test-case : Splinter Cell Demo
-				// test-case : Stubbs the Zombie
-				// test-case : Tony Hawk's Pro Skater 2X (main menu entries)
-				// test-case : Worms 3D Special Edition
-				// test-case : XDK sample Lensflare (4, for 10 flare-out quads that use a linear texture; rendered incorrectly: https://youtu.be/idwlxHl9nAA?t=439)
-				DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing.
-			}
-
-			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
-			// Assure & activate that special index buffer :
-			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
-			// Convert quad vertex count to triangle vertex count :
-			UINT NumVertices = QuadToTriangleVertexCount(DrawContext.dwVertexCount);
-			// the dwHostPrimitiveCount is coverted to triangle list already :
-			UINT primCount = DrawContext.dwHostPrimitiveCount;
-			// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
-			// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
-			// Emulate drawing quads by drawing each quad with two indexed triangles :
-			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
-				/*PrimitiveType=*/D3DPT_TRIANGLELIST,
-				/*BaseVertexIndex=*/0, // Base vertex index has been accounted for in the stream conversion
-				/*MinVertexIndex=*/0,
-				NumVertices,
-				/*startIndex=*/0,
-				primCount
-			);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
-
-			g_dwPrimPerFrame += primCount;
-		}
-		else {
-			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
-			HRESULT hRet = g_pD3DDevice->DrawPrimitive(
-				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
-				/*StartVertex=*/0, // Start vertex has been accounted for in the stream conversion
-				DrawContext.dwHostPrimitiveCount
-			);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitive");
-
-			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
-			if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
-				// Close line-loops using a final single line, drawn from the end to the start vertex
-				LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Text-cases needed
-
-				assert(DrawContext.dwBaseVertexIndex == 0); // if this fails, it needs to be added to LowIndex and HighIndex :
-				INDEX16 LowIndex = 0;
-				INDEX16 HighIndex = (INDEX16)(DrawContext.dwHostPrimitiveCount);
-				// Draw the closing line using a helper function (which will SetIndices)
-				CxbxDrawIndexedClosingLine(LowIndex, HighIndex);
-				// NOTE : We don't restore the previously active index buffer
-			}
-		}
-
-	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
@@ -8160,6 +8212,22 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+	}
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+	// Move original implementation code to CxbxImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
+	CxbxImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+
+}
+xbox::void_xt WINAPI CxbxrImpl_DrawVerticesUP
+(
+	xbox::X_D3DPRIMITIVETYPE  PrimitiveType,
+	xbox::uint_xt             VertexCount,
+	CONST PVOID         pVertexStreamZeroData,
+	xbox::uint_xt             VertexStreamZeroStride
+)
+{
 	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
@@ -8176,10 +8244,35 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 	DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
 	DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
 
-	CxbxDrawPrimitiveUP(DrawContext);
+	CxbxrDrawPrimitiveUP(DrawContext);
 
 	CxbxHandleXboxCallbacks();
 }
+// ******************************************************************
+// * patch: D3DDevice_DrawVerticesUP
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
+(
+	X_D3DPRIMITIVETYPE  PrimitiveType,
+	uint_xt             VertexCount,
+	CONST PVOID         pVertexStreamZeroData,
+	uint_xt             VertexStreamZeroStride
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(PrimitiveType)
+		LOG_FUNC_ARG(VertexCount)
+		LOG_FUNC_ARG(pVertexStreamZeroData)
+		LOG_FUNC_ARG(VertexStreamZeroStride)
+		LOG_FUNC_END;
+
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	}
+	CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+
+}
+
 
 // LTCG specific D3DDevice_DrawVerticesUP function...
 // This uses a custom calling convention where pVertexStreamZeroData is passed in EBX
@@ -8196,35 +8289,26 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_1
         LTCG_PROLOGUE
         mov  pVertexStreamZeroData, ebx
     }
-
-    EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)(PrimitiveType, VertexCount, VertexStreamZeroStride);
+	}
+	// We can't call emupatch() here because the target function calls trampoline which might not be available in guest code.
+	//EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
     __asm {
         LTCG_EPILOGUE
         ret  0Ch
     }
 }
-
-// ******************************************************************
-// * patch: D3DDevice_DrawIndexedVertices
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
+xbox::void_xt WINAPI CxbxrImpl_DrawIndexedVertices
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt             VertexCount,
-    CONST PWORD         pIndexData
+	xbox::X_D3DPRIMITIVETYPE  PrimitiveType,
+	xbox::uint_xt             VertexCount,
+	CONST PWORD         pIndexData
 )
 {
-	// Test-cases : XDK samples (Cartoon, Gamepad)
-	// Note : In gamepad.xbe, the gamepad is drawn by D3DDevice_DrawIndexedVertices
-	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(PrimitiveType)
-		LOG_FUNC_ARG(VertexCount)
-		LOG_FUNC_ARG(pIndexData)
-		LOG_FUNC_END;
-
 	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
@@ -8247,6 +8331,32 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 
 	CxbxHandleXboxCallbacks();
 }
+// ******************************************************************
+// * patch: D3DDevice_DrawIndexedVertices
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    uint_xt             VertexCount,
+    CONST PWORD         pIndexData
+)
+{
+	// Test-cases : XDK samples (Cartoon, Gamepad)
+	// Note : In gamepad.xbe, the gamepad is drawn by D3DDevice_DrawIndexedVertices
+	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(PrimitiveType)
+		LOG_FUNC_ARG(VertexCount)
+		LOG_FUNC_ARG(pIndexData)
+		LOG_FUNC_END;
+	// Call trampoline if pushbuffer is recording.
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawIndexedVertices)(PrimitiveType, VertexCount, pIndexData);
+	}
+	CxbxrImpl_DrawIndexedVertices(PrimitiveType, VertexCount, pIndexData);
+
+}
 
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVerticesUP
@@ -8267,7 +8377,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_ARG(pVertexStreamZeroData)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
-
+	// Call trampoline if pushbuffer is recording.
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_DrawIndexedVerticesUP)(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
+	}
 	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
