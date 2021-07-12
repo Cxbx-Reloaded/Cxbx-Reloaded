@@ -187,49 +187,57 @@ void D3D_draw_state_update(NV2AState *d)
 	uint32_t inline_offset = 0; // This applies only to IVB draw. TODO : instead of nullptr, start at the memory address of an IVB-dedicated host D3D VertexBuffer
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // X_VSH_MAX_ATTRIBUTES == NV2A_VERTEXSHADER_ATTRIBUTES
 		SortedAttributes[i].slot_index = i; // Store index of each slot, used in ordering predicate, and to allow access to original slot after sorting
-		if (pg->draw_mode == DrawMode::InlineArray) {
-			// for draw_mode == DrawMode::InlineArray, we don't have KelvinPrimitive.SetVertexDataArrayOffset[] set, we have to compose the vertex offset and stride ourselves
-			g_NV2AVertexAttributeFormat.Slots[i].StreamIndex = 0; // only above zero for multi-buffer draws (so, always zero for IVB)
-			g_NV2AVertexAttributeFormat.Slots[i].Offset = inline_offset; // offset from the starting attribute inside indicated stream buffer
-			g_NV2AVertexAttributeFormat.Slots[i].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-			g_NV2AVertexAttributeFormat.Slots[i].TessellationType = 0; // TODO or ignore?
-			g_NV2AVertexAttributeFormat.Slots[i].TessellationSource = 0; // TODO or ignore?
+		switch (pg->draw_mode)
+		{
+			case DrawMode::InlineArray: {
+				// for draw_mode == DrawMode::InlineArray, we don't have KelvinPrimitive.SetVertexDataArrayOffset[] set, we have to compose the vertex offset and stride ourselves
+				g_NV2AVertexAttributeFormat.Slots[i].StreamIndex = 0; // only above zero for multi-buffer draws (so, always zero for IVB)
+				g_NV2AVertexAttributeFormat.Slots[i].Offset = inline_offset; // offset from the starting attribute inside indicated stream buffer
+				g_NV2AVertexAttributeFormat.Slots[i].Format = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+				g_NV2AVertexAttributeFormat.Slots[i].TessellationType = 0; // TODO or ignore?
+				g_NV2AVertexAttributeFormat.Slots[i].TessellationSource = 0; // TODO or ignore?
 
-			inline_offset += pg->vertex_attributes[i].count*pg->vertex_attributes[i].size;
-			D3D_StreamZeroStride = inline_offset;
-		}
-		else if (pg->draw_mode == DrawMode::InlineBuffer) {
-			// for draw_mode == DrawMode::InlineBuffer, we don't have KelvinPrimitive.SetVertexDataArrayFormat[] set, we have to compose the vertex format and offset ourselves
-			g_NV2AVertexAttributeFormat.Slots[i].StreamIndex = 0; // only above zero for multi-buffer draws (so, always zero for IVB)
-			g_NV2AVertexAttributeFormat.Slots[i].Offset = inline_offset; // offset from the starting attribute inside indicated stream buffer
-			g_NV2AVertexAttributeFormat.Slots[i].TessellationType = 0; // TODO or ignore?
-			g_NV2AVertexAttributeFormat.Slots[i].TessellationSource = 0; // TODO or ignore?
+				inline_offset += pg->vertex_attributes[i].count*pg->vertex_attributes[i].size;
+				D3D_StreamZeroStride = inline_offset;
+				break;
+		    }
+			case DrawMode::InlineBuffer: {
+				// for draw_mode == DrawMode::InlineBuffer, we don't have KelvinPrimitive.SetVertexDataArrayFormat[] set, we have to compose the vertex format and offset ourselves
+				g_NV2AVertexAttributeFormat.Slots[i].StreamIndex = 0; // only above zero for multi-buffer draws (so, always zero for IVB)
+				g_NV2AVertexAttributeFormat.Slots[i].Offset = inline_offset; // offset from the starting attribute inside indicated stream buffer
+				g_NV2AVertexAttributeFormat.Slots[i].TessellationType = 0; // TODO or ignore?
+				g_NV2AVertexAttributeFormat.Slots[i].TessellationSource = 0; // TODO or ignore?
 
-			if (pg->vertex_attributes[i].set_by_inline_buffer) {
-				g_NV2AVertexAttributeFormat.Slots[i].Format = xbox::X_D3DVSDT_FLOAT4 ; // either 0x42 or 0x02
-				inline_offset += D3D_inline_attribute_size;
+				if (pg->vertex_attributes[i].set_by_inline_buffer) {
+					g_NV2AVertexAttributeFormat.Slots[i].Format = xbox::X_D3DVSDT_FLOAT4 ; // either 0x42 or 0x02
+					inline_offset += D3D_inline_attribute_size;
+				}
+				else {
+					g_NV2AVertexAttributeFormat.Slots[i].Format = xbox::X_D3DVSDT_NONE; // either 0x42 or 0x02
+				}
+				D3D_StreamZeroStride = inline_offset;
+				// TODO : If we're going to allocate and use one single (16 attribute-wide) vertex buffer for IVB drawing, offsets need to take this into account
+				break;
 			}
-			else {
-				g_NV2AVertexAttributeFormat.Slots[i].Format = xbox::X_D3DVSDT_NONE; // either 0x42 or 0x02
+			case DrawMode::DrawArrays:
+			case DrawMode::InlineElements:{
+				// TODO ? Reword : update update vertex buffer/stream if draw_mode == DrawMode::DrawArrays or InlineElements. KelvinPrimitive.SetVertexDataArrayOffset[] is only set/update in these two draw modes
+				SortedAttributes[i].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
+				SortedAttributes[i].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+				// Detect disabled slots by their format (0x02 : size count zero, type float) :
+				if (SortedAttributes[i].size_and_type == xbox::X_D3DVSDT_NONE){
+					SortedAttributes[i].offset = 0xFFFFFFFF; // Make sure disabled slots get sorted to the end
+				}
+				else {
+					// TODO ? Reword : for draw_mode == DrawMode::InlineArray, only KelvinPrimitive.SetVertexDataArrayFormat[] was set/update. we have to compose the vertex offset ourselves?
+					SortedAttributes[i].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[i];
+				}
+				assert(SortedAttributes[i].stride > 0);
+				assert(SortedAttributes[i].stride <= D3D_inline_vertex_stride); // TODO : replace with actual NV2A maximum stride, might be 2048?
+				break;
 			}
-			D3D_StreamZeroStride = inline_offset;
-			// TODO : If we're going to allocate and use one single (16 attribute-wide) vertex buffer for IVB drawing, offsets need to take this into account
 		}
-		else {//pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements
-			// TODO ? Reword : update update vertex buffer/stream if draw_mode == DrawMode::DrawArrays or InlineElements. KelvinPrimitive.SetVertexDataArrayOffset[] is only set/update in these two draw modes
-			SortedAttributes[i].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
-			SortedAttributes[i].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
-			// Detect disabled slots by their format (0x02 : size count zero, type float) :
-			if (SortedAttributes[i].size_and_type == xbox::X_D3DVSDT_NONE){
-				SortedAttributes[i].offset = 0xFFFFFFFF; // Make sure disabled slots get sorted to the end
-			}
-			else {
-				// TODO ? Reword : for draw_mode == DrawMode::InlineArray, only KelvinPrimitive.SetVertexDataArrayFormat[] was set/update. we have to compose the vertex offset ourselves?
-				SortedAttributes[i].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[i];
-			}
-			assert(SortedAttributes[i].stride > 0);
-			assert(SortedAttributes[i].stride <= D3D_inline_vertex_stride); // TODO : replace with actual NV2A maximum stride, might be 2048?
-		}
+
 	}
 	// Only necessary for pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements, and the overhead must be reduced.
 	if (pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements) {
@@ -461,7 +469,7 @@ void D3D_draw_inline_elements(NV2AState *d)
 
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
-	DrawContext.uiXboxVertexStreamZeroStride = pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
+	DrawContext.uiXboxVertexStreamZeroStride = (pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8); // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
 	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
 	DrawContext.dwVertexCount = pg->inline_elements_length;
 	DrawContext.dwStartVertex = 0;
