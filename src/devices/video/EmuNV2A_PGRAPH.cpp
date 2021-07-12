@@ -1445,14 +1445,14 @@ int pgraph_handle_method(
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
                 case NV097_SET_TRANSFORM_CONSTANT://this sets the vertex constant register/slots using index from NV097_SET_TRANSFORM_CONSTANT_LOAD, not the transform constants in KelvinPrime.
                 case NV097_SET_TRANSFORM_PROGRAM://this sets the vertex shader using index from NV097_SET_TRANSFORM_PROGRAM_LOAD, not the transform program in KelvinPrime.
+				// NV097_ARRAY_ELEMENT32 is PUSH_INSTR_IMM_INC, test case: Otogi. it's logical since NV097_ARRAY_ELEMENT32 is used to transfer the last odd index, if there were one.
+				case NV097_ARRAY_ELEMENT32: //PUSH_INSTR_IMM_INC
 					break;
                 case NV097_ARRAY_ELEMENT16: //PUSH_INSTR_IMM_NOINC
-                case NV097_ARRAY_ELEMENT32: //PUSH_INSTR_IMM_NOINC
                 case NV097_DRAW_ARRAYS:		//PUSH_INSTR_IMM_NOINC
                 case NV097_INLINE_ARRAY:	//PUSH_INSTR_IMM_NOINC
-					//disable for now, arg0 is argument after method. this test is for method dword.
                     assert(command_word >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All above commands should be non-increasing
-                    break;
+					break;
 
                 default:
                     assert(command_word >> 29 != COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All other commands should not be non-increasing
