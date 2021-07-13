@@ -49,7 +49,8 @@ extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
 extern void EmuKickOff(void);// in Direct3D9.cpp
 extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
 extern bool is_pushbuffer_recording(void); // in Direct3D9.cpp, return true if pushbuffer is recording
-
+void backup_xbox_texture_state(void);
+void restore_xbox_texture_state(void);
 void EmuExecutePushBuffer
 (
 	xbox::X_D3DPushBuffer       *pPushBuffer,
@@ -112,7 +113,6 @@ void EmuExecutePushBuffer
         }
 	}
 	//g_NV2AVertexAttributeFormat was set and updata every time NV097_SET_VERTEX_DATA_ARRAY_FORMAT was called.
-
 	//the pushbuffer size must be subtracted with 4, because xbox d3d append 1 dwords at the end of original pushbuffer when creating a new pushbuffer,
 	//the appended dword is 0xbaadf00d, and when execute the pushbuffer, it insert a jump command in that dword to jump back to main pushbuffer.
 	//pDevice-PUSH. but here we do doing HLE, we are not using real push buffer and real dma. so exclude the last dword.
@@ -178,8 +178,20 @@ static const int D3D_inline_vertex_stride = X_VSH_MAX_ATTRIBUTES * D3D_inline_at
 xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store the vertex buffer/stride info used by each attributes after vertex buffer grouping
 unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
 // textures to store the conversion info from NV2A KelvinPrimitive.SetTexture[4]
-xbox::X_D3DBaseTexture NV2A_texture_stage_texture[4];
+xbox::X_D3DBaseTexture NV2A_texture_stage_texture[xbox::X_D3DTS_STAGECOUNT];
+// Backup of g_pXbox_SetTexture[]
+xbox::X_D3DBaseTexture *pXbox_SetTexture_Backup[xbox::X_D3DTS_STAGECOUNT] = { 0,0,0,0 };
 // update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
+void backup_xbox_texture_state(void)
+{
+	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
+		pXbox_SetTexture_Backup[i] = g_pXbox_SetTexture[i];
+}
+void restore_xbox_texture_state(void)
+{
+	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
+		g_pXbox_SetTexture[i] = pXbox_SetTexture_Backup[i];
+}
 void D3D_texture_stage_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -332,7 +344,7 @@ void D3D_draw_state_update(NV2AState *d)
 		}
 	}
 	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
-	D3D_texture_stage_update(d);
+	//D3D_texture_stage_update(d);
 
 	HRESULT hRet;
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
