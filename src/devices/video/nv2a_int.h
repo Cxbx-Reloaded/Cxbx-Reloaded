@@ -146,7 +146,7 @@ typedef struct VertexAttribute {
 	* Need to pass the offset to converted attributes */
 	unsigned int inline_array_offset;
 
-	// float inline_value[4]; replaced by pg->KelvinPrimitive.SetVertexData4f[].M
+	float inline_value[4];
 
 	//flag to indicate whether the attribute is set during attribute upload process. 
 	bool set_by_inline_buffer = false; // Note : for now, this bool is identical to (inline_buffer != nullptr)
@@ -614,7 +614,7 @@ typedef enum class _DrawMode {
 	DrawArrays,
 	InlineArray,
 	InlineElements,
-	InlineBuffer,
+	InlineBuffer, // Values for this mode are set via SetVertex(Data){type}
 } DrawMode;
 
 typedef struct PGRAPHState {

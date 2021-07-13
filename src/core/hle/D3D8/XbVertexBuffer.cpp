@@ -829,8 +829,6 @@ float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
 	NV2AState* dev = g_NV2A->GetDeviceState();
 	PGRAPHState *pg = &(dev->pgraph);
 
-	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
-	// VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-	return pgraph_get_vertex_attribute_inline_value(pg, slot); // was vertex_attribute->inline_value;
+	return pgraph_get_vertex_attribute_inline_value(pg, slot);
 }
 

@@ -408,7 +408,7 @@ void (*pgraph_draw_inline_elements)(NV2AState *d);
 //static void pgraph_set_context_user(NV2AState *d, uint32_t value);
 //void pgraph_handle_method(NV2AState *d, unsigned int subchannel, unsigned int method, uint32_t parameter);
 static void pgraph_log_method(unsigned int subchannel, unsigned int graphics_class, unsigned int method, uint32_t parameter);
-static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg, unsigned int attr);
+static float *pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg, unsigned int attr);
 float *pgraph_get_vertex_attribute_inline_value(PGRAPHState *pg, int attribute_index);
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg);
 static void pgraph_update_shader_constants(PGRAPHState *pg, ShaderBinding *binding, bool binding_changed, bool vertex_program, bool fixed_function);
@@ -2731,18 +2731,14 @@ int pgraph_handle_method(
 
 					CASE_3(NV097_SET_VERTEX3F, 4) : { //pg->KelvinPrimitive.SetVertex3f[3]: 
 						assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+						//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
+						assert(method_count == 3);
+						slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 						for (unsigned argc = 0; argc < method_count; argc++) {
-							slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 							int part = (method - NV097_SET_VERTEX3F + argc) % 4;
-							//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
-							assert(method_count == 3);
-							VertexAttribute *vertex_attribute =
-								&pg->vertex_attributes[slot];
-							//allocate attribute.inline_buffer if it's not allocated yet.
-							pgraph_allocate_inline_buffer_vertices(pg, slot);
-							float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
+							float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
 							inline_value[part] = pg->KelvinPrimitive.SetVertex3f[part];
-							if (part == 2) {
+							if (part == 2) { // Note : no check needed on (slot == NV2A_VERTEX_ATTR_POSITION), as it can't differ here
 								inline_value[3] = 1.0f;
 								pgraph_finish_inline_buffer_vertex(pg);
 							}
@@ -2752,18 +2748,14 @@ int pgraph_handle_method(
 
 					CASE_4(NV097_SET_VERTEX4F, 4) :{ //pg->KelvinPrimitive.SetVertex4f[4]
 						assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+						//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
+						assert(method_count == 4);
+						slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 						for (unsigned argc = 0; argc < method_count; argc++) {
-							slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 							int part = (method - NV097_SET_VERTEX4F + argc) % 4;
-							//assuming the same usage pattern as SET_VERTEX_DATA4f, multiple argv[] in one method call, assert if not
-							assert(method_count == 4);
-							VertexAttribute *vertex_attribute =
-								&pg->vertex_attributes[slot];
-							//allocate attribute.inline_buffer if it's not allocated yet.
-							pgraph_allocate_inline_buffer_vertices(pg, slot);
-							float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
+							float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
 							inline_value[part] = pg->KelvinPrimitive.SetVertex4f[part];
-							if (part == 3) {
+							if (part == 3) { // Note : no check needed on (slot == NV2A_VERTEX_ATTR_POSITION), as it can't differ here
 								//vertex completed, push all attributes to vertex buffer.
 								pgraph_finish_inline_buffer_vertex(pg);
 							}
@@ -3364,19 +3356,15 @@ int pgraph_handle_method(
 						slot += argc;
 						unsigned int part = slot % 2;// 0:a or 1:b
 						slot /= 2;//register
-						//pgraph_allocate_inline_buffer_vertices(pg, slot);
-						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-						float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
+						float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
 						inline_value[part] = pg->KelvinPrimitive.SetVertexData2f[slot].M[part];
 						if (part == 1) {
 							inline_value[2] = 0.0f;
 							inline_value[3] = 1.0f;
-							if ((slot == NV2A_VERTEX_ATTR_POSITION)) {
+							if (slot == NV2A_VERTEX_ATTR_POSITION) {
 								pgraph_finish_inline_buffer_vertex(pg);
 							}
 						}
-						//M[a,b] are sent in the same time. shall be processed together.
-						//vertex_attribute->inline_value[part] = *(float*)&arg0;
 					}
 					break;
                 }
@@ -3399,17 +3387,9 @@ int pgraph_handle_method(
 						slot += argc;
                         unsigned int part = slot % 4;//index in M[]
                         slot /= 4;//register
-                        VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-						//allocate attribute.inline_buffer if it's not allocated yet.
-						pgraph_allocate_inline_buffer_vertices(pg, slot);
-						// float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
-						// inline_value[part] = *(float*)&arg0; // These values are already generically written to KelvinPrimitive.SetVertexData4f[][]
-
-						//this is redundant. we're going to copy the inline_value[] to inline_buffer[]
-						// Actually, it's not redundant; Each attribute must keep intact it's most recently assigned values,
-						// so that even a single write will keep on being read when all attribute values are collected to form another vertex
-											//update the vertex_attribute->inline_buffer[] for OpenGL
-						if ((slot == NV2A_VERTEX_ATTR_POSITION) && (part == 3)) { // D3DVSDE_POSITION   // slot ==0 only happended in NV097_SET_VERTEX_DATA4F
+						float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
+						inline_value[part] = pg->KelvinPrimitive.SetVertexData4f[slot].M[part]; // *(float*)&arg0;
+						if ((part == 3) && (slot == NV2A_VERTEX_ATTR_POSITION)) { // D3DVSDE_POSITION
 							//shall we consider the color state setting in NV097_SET_VERTEX_DATA4UB? we should, to be done.
 							pgraph_finish_inline_buffer_vertex(pg);
 						}
@@ -3430,9 +3410,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
 					slot += argc;
 					//assert(false); /* FIXME: Untested! */
-					VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-					pgraph_allocate_inline_buffer_vertices(pg, slot);
-					float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
+					float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
 					inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
 					inline_value[1] = (float)(int16_t)(arg0 >> 16);
 					if (slot == NV2A_VERTEX_ATTR_POSITION) {
@@ -3560,9 +3538,7 @@ int pgraph_handle_method(
 						for (size_t argc = 0; argc < method_count; argc++) {
 							slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
 							slot += argc;
-							VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-							pgraph_allocate_inline_buffer_vertices(pg, slot);
-							float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
+							float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
                             // We set color in float4 in R/G/B/A. no need to swap R/B here.
 							inline_value[0] = (argv[argc] & 0xFF) / 255.0f;
 							inline_value[1] = ((argv[argc] >> 8) & 0xFF) / 255.0f;
@@ -3592,13 +3568,11 @@ int pgraph_handle_method(
 						slot += argc;
 						unsigned int part = slot % 2;
 						slot /= 2;//register
-						pgraph_allocate_inline_buffer_vertices(pg, slot);
-						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-						float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, slot);
+						float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
 						/* FIXME: Is mapping to [-1,+1] correct? */
 						inline_value[0 + part*2] = ((int16_t)(argv[argc+part] & 0xFFFF)		* 2.0f + 1) / 65535.0f;
 						inline_value[1 + part*2] = ((int16_t)(argv[argc+part] >> 16)		* 2.0f + 1) / 65535.0f;
-						if(part==1){
+						if (part == 1) {
 							if (slot == NV2A_VERTEX_ATTR_POSITION) {
 								pgraph_finish_inline_buffer_vertex(pg);
 							}
@@ -4183,7 +4157,7 @@ static void pgraph_log_method(unsigned int subchannel,
     last = method;
 }
 
-static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
+static float *pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
                                                    unsigned int attr)
 {
     unsigned int i;
@@ -4192,31 +4166,33 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
 	//set flag so when each vertex is completed, it can know which attribute is set and require to be pushed to vertex buffer.
 	vertex_attribute->set_by_inline_buffer = true;
 
+	float *inline_value = vertex_attribute->inline_value;
 	//if (vertex_attribute->inline_buffer || pg->inline_buffer_length == 0) {
 	//return if the buffer is already allocated.
-	if (vertex_attribute->inline_buffer) {
-        return;
-    }
+	if (!vertex_attribute->inline_buffer) {
 
-	//allocate the inline buffer for vertex attribute,
-    vertex_attribute->inline_buffer = (float*)g_malloc(NV2A_MAX_BATCH_LENGTH
-                                                  * sizeof(float) * 4);
+		//allocate the inline buffer for vertex attribute,
+		vertex_attribute->inline_buffer = (float*)g_malloc(NV2A_MAX_BATCH_LENGTH
+			* sizeof(float) * 4);
 
-	/* Now upload the previous vertex_attribute value */
-	/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation. */
-    // this code is assuming that attribute could be set/inserted not in the very first vertex. so when the attribute is set, we must duplicate it's value from the beginning of vertex buffer to the current vertex.
-	float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, attr);
-	for (int i = 0; i < pg->inline_buffer_length; i++) {
-		memcpy(&vertex_attribute->inline_buffer[i * 4],
-               inline_value,
-               sizeof(float) * 4);
-    }
-	
+		/* Now upload the previous vertex_attribute value */
+		/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation. */
+		// this code is assuming that attribute could be set/inserted not in the very first vertex. so when the attribute is set, we must duplicate it's value from the beginning of vertex buffer to the current vertex.
+		for (int i = 0; i < pg->inline_buffer_length; i++) {
+			memcpy(&vertex_attribute->inline_buffer[i * 4],
+					inline_value,
+					sizeof(float) * 4);
+		}
+	}
+
+	return inline_value;
 }
 
 float *pgraph_get_vertex_attribute_inline_value(PGRAPHState *pg, int attribute_index)
 {
-	return pg->KelvinPrimitive.SetVertexData4f[attribute_index].M; // was vertex_attribute->inline_value;
+	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
+	VertexAttribute *vertex_attribute = &pg->vertex_attributes[attribute_index];
+	return vertex_attribute->inline_value;
 }
 
 static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
