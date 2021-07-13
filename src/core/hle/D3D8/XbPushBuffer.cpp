@@ -177,7 +177,41 @@ static const int D3D_inline_attribute_size = 4 * sizeof(float); // Each inline v
 static const int D3D_inline_vertex_stride = X_VSH_MAX_ATTRIBUTES * D3D_inline_attribute_size; // The IVB reserves room for all 16 attributes per vertex
 xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store the vertex buffer/stride info used by each attributes after vertex buffer grouping
 unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
-
+// textures to store the conversion info from NV2A KelvinPrimitive.SetTexture[4]
+xbox::X_D3DBaseTexture NV2A_texture_stage_texture[4];
+// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
+void D3D_texture_stage_update(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+	for (int stage = 0; stage < 4; stage++) {
+		// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
+		if (pg->KelvinPrimitive.SetTexture[stage].Control0 == 0 || pg->KelvinPrimitive.SetTexture[stage].Address==0 || pg->KelvinPrimitive.SetTexture[stage].Format==0) {
+			g_pXbox_SetTexture[stage] = nullptr;
+		}
+		// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
+		else {
+			g_pXbox_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
+			NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
+			NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
+			unsigned width = 0, height = 0, pitch = 0;
+			pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1&NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
+			width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
+			height= (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
+			// texture.Size could be 0
+			if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
+				NV2A_texture_stage_texture[stage].Size = 0;
+			}
+			//convert pitch/height/width to texture.Size
+			else {
+				width = (width - 1)&X_D3DSIZE_WIDTH_MASK;
+				height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT)&X_D3DSIZE_HEIGHT_MASK;
+				pitch = ((pitch/64) -1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
+				NV2A_texture_stage_texture[stage].Size = pitch | height | width;
+			}
+			NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource, 
+		}
+	}
+}
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -297,6 +331,9 @@ void D3D_draw_state_update(NV2AState *d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
 	}
+	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
+	D3D_texture_stage_update(d);
+
 	HRESULT hRet;
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
