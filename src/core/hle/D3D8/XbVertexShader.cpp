@@ -1388,9 +1388,23 @@ void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
 	auto tokens = (DWORD*)&pFunction[1];
 	CxbxSetVertexShaderSlots(tokens, Address, shaderHeader.NumInst);
 }
+//these two members of vertex shader are not in fixed offset, their offset varies with d3d8 versions.
+//static unsigned int ProgramAndConstantsDwords_Offset = 0;//
+//static unsigned int pProgramAndConstants_Offset = 0;//
 
 void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
 {
+	/*  //dynamic code to get ProgramAndConstantsDwords_Offset and pProgramAndConstants_Offset from vertex shader structure. not used because CxbxGetVertexShaderTokens() has the same function.
+	if (ProgramAndConstantsDwords_Offset == 0 || pProgramAndConstants_Offset == 0) {
+		xbox::dword_xt * pD3DDevice_CreateVertexShader = 0;
+		auto it = g_SymbolAddresses.find("D3DDevice_CreateVertexShader");
+		if (it != g_SymbolAddresses.end()) {
+			pD3DDevice_CreateVertexShader = (xbox::dword_xt *)it->second;
+			ProgramAndConstantsDwords_Offset = *(byte*)((DWORD)pD3DDevice_CreateVertexShader+0x123);
+			pProgramAndConstants_Offset = *(DWORD*)((DWORD)pD3DDevice_CreateVertexShader + 0x127);
+		}
+	}
+	*/
 	// Handle is always address of an X_D3DVertexShader struct, thus always or-ed with 1 (X_D3DFVF_RESERVED0)
     // Address is the slot (offset) from which the program must be written onwards (as whole DWORDS)
     // D3DDevice_LoadVertexShader pushes the program contained in the Xbox VertexShader struct to the NV2A
@@ -1408,7 +1422,7 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
     //since it's always starting with register 0. we simply skip setting/reading NV097_SET_TRANSFORM_PROGRAM
     static unsigned ConstantRegister = 0;
     //ProgramAndConstantsDwords is the total length of the pushbuffer snapshot.
-    DWORD* pEnd = &pProgramAndConstants[pXboxVertexShader->ProgramAndConstantsDwords];
+	DWORD* pEnd = &pProgramAndConstants[NrTokens];// was pXboxVertexShader->ProgramAndConstantsDwords];
     DWORD* argv = nullptr;
     while (pProgramAndConstants < pEnd) {
         DWORD dwMethod, dwSubChannel, nrDWORDS;
