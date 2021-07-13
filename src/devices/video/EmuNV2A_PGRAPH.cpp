@@ -4204,15 +4204,14 @@ static void pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
 
 	/* Now upload the previous vertex_attribute value */
 	/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation. */
-	/* //this code doesn't make sense. if the vertex_attribute->inline_buffer was never allocated. then there is not previous attribute value to be uploaded. disable it for now.
-	   //and this is a routine for vertex_attribute->inline_buffer allocation, we souldn't do memcpy here.
+    // this code is assuming that attribute could be set/inserted not in the very first vertex. so when the attribute is set, we must duplicate it's value from the beginning of vertex buffer to the current vertex.
 	float *inline_value = pgraph_get_vertex_attribute_inline_value(pg, attr);
 	for (int i = 0; i < pg->inline_buffer_length; i++) {
 		memcpy(&vertex_attribute->inline_buffer[i * 4],
                inline_value,
                sizeof(float) * 4);
     }
-	*/
+	
 }
 
 float *pgraph_get_vertex_attribute_inline_value(PGRAPHState *pg, int attribute_index)
@@ -4242,10 +4241,13 @@ static void pgraph_finish_inline_buffer_vertex(PGRAPHState *pg)
 				inline_value,
 					sizeof(float) * 4);
 			//currently we composed all input attributes into one vertex buffer. this is slow but it's working and verified with HLE already.
+			/* //disabled, attributes could possibly inserted anytime, not from the very beginning. so the vertex buffer can only be put together after all vertices are finished.
 			memcpy(&pg->inline_buffer[
 				pg->inline_buffer_attr_length * 4],
 				inline_value,
 					sizeof(float) * 4);
+			*/
+			// this var might not be useful since attributes are not set in every vertex.
 			pg->inline_buffer_attr_length++;
 		}
 	}

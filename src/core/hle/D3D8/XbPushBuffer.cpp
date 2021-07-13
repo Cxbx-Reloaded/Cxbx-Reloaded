@@ -450,7 +450,7 @@ void D3D_draw_inline_buffer(NV2AState *d)
 	LOG_INCOMPLETE(); // TODO : Finish implementation of D3D_draw_inline_buffer
 
 	//currently we composed all attributes into one vertex buffer. this is slow but it's working and verified with HLE already.
-	/*
+	
 	for (unsigned vtx_cnt = 0; vtx_cnt < pg->inline_buffer_length; vtx_cnt++) {
 		unsigned uiStride = 0;
 		for (unsigned slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
@@ -463,7 +463,7 @@ void D3D_draw_inline_buffer(NV2AState *d)
 			}
 		}
 	}
-	*/
+	
 	CxbxDrawContext DrawContext = {};
 	DrawContext.pXboxIndexData = false;
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
