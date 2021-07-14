@@ -1000,6 +1000,28 @@ void UpdateFixedFunctionPixelShaderState()
 	g_pD3DDevice->SetPixelShaderConstantF(0, (float*)&ffPsState, size);
 }
 
+static IDirect3DPixelShader* g_pActivePixelShader = nullptr; // TODO : Reset when device resets!
+
+void CxbxSetPixelShader(IDirect3DPixelShader* pPixelShader)
+{
+	// Here no call to (PS)GetPixelShader, but our own state tracking; See https://gamedev.stackexchange.com/a/88117
+	if (g_pActivePixelShader == pPixelShader)
+		return;
+
+	// Switch to the converted pixel shader (if it's any different from our currently active
+	// pixel shader, to avoid many unnecessary state changes on the local side).
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->PSSetShader(
+		pShader,
+		nullptr, // ppClassInstances
+		0 // NumClassInstances
+		);
+#else
+	g_pD3DDevice->SetPixelShader(pPixelShader);
+#endif
+	g_pActivePixelShader = pPixelShader;
+}
+
 bool g_UseFixedFunctionPixelShader = true;
 void DxbxUpdateActivePixelShader() // NOPATCH
 {
@@ -1023,15 +1045,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 		UpdateFixedFunctionPixelShaderState();
 	}
 
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->PSSetShader(
-		pShader,
-		nullptr, // ppClassInstances
-		0 // NumClassInstances
-		);
-#else
-    g_pD3DDevice->SetPixelShader(pShader);
-#endif
+	CxbxSetPixelShader(pShader);
     return;
   }
 
@@ -1060,21 +1074,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
     RecompiledPixelShader = &g_RecompiledPixelShaders.back();
   }
 
-  // Switch to the converted pixel shader (if it's any different from our currently active
-  // pixel shader, to avoid many unnecessary state changes on the local side).
-  Microsoft::WRL::ComPtr<IDirect3DPixelShader> CurrentPixelShader;
-  g_pD3DDevice->GetPixelShader(/*out*/CurrentPixelShader.GetAddressOf());
-  if (CurrentPixelShader.Get() != RecompiledPixelShader->ConvertedPixelShader) {
-#ifdef CXBX_USE_D3D11
-    g_pD3DDeviceContext->PSSetShader(
-      RecompiledPixelShader->ConvertedPixelShader,
-      nullptr, // ppClassInstances
-      0 // NumClassInstances
-      );
-#else
-    g_pD3DDevice->SetPixelShader(RecompiledPixelShader->ConvertedPixelShader);
-#endif
-  }
+  CxbxSetPixelShader(RecompiledPixelShader->ConvertedPixelShader);
 
   //PS_TEXTUREMODES psTextureModes[xbox::X_D3DTS_STAGECOUNT];
   //PSH_XBOX_SHADER::GetPSTextureModes(pPSDef, psTextureModes);
