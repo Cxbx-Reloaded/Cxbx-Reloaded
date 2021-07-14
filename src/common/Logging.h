@@ -121,8 +121,8 @@ extern std::atomic_int g_CurrentLogLevel;
 extern std::atomic_bool g_CurrentLogPopupTestCase;
 
 // print out a log message to the console or kernel debug log file if level is high enough
-void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
-void NTAPI EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...);
+void EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...);
+void EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...);
 
 #define EmuLog(level, fmt, ...) EmuLogEx(LOG_PREFIX, level, fmt, ##__VA_ARGS__)
 
