@@ -7,8 +7,10 @@
 /*! version string dependent on trace flag */
 #ifndef _DEBUG_TRACE
 const char* CxbxVersionStr = _GIT_VERSION " (" __DATE__  ")";
+const char *CxbxrHashBuild = _GIT_VERSION;
 #else
 const char* CxbxVersionStr = _GIT_VERSION "-Trace (" __DATE__  ")";
+const char *CxbxrHashBuild = _GIT_VERSION "-Trace";
 #endif
 
 static constexpr const char *GitVersionStr = _GIT_VERSION;

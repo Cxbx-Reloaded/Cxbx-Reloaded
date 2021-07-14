@@ -205,7 +205,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	// initialize members
 	{
 		m_classname = "WndMain";
-		m_wndname   = "Cxbx-Reloaded " + std::string(CxbxVersionStr);
+		m_wndname   = "Cxbx-Reloaded " + std::string(CxbxrHashBuild);
 	}
 
 	// load configuration from settings file
@@ -1868,16 +1868,9 @@ void WndMain::UpdateCaption()
 {
 	char AsciiTitle[MAX_PATH];
 
-	int i = sprintf(AsciiTitle, "Cxbx-Reloaded %s", CxbxVersionStr);
+	int i = sprintf(AsciiTitle, "Cxbx-Reloaded %s", CxbxrHashBuild);
 	if (m_Xbe != nullptr) {
-		if (m_bIsStarted) {
-			i += sprintf(AsciiTitle + i, " : Emulating ");
-		}
-		else {
-			i += sprintf(AsciiTitle + i, " : Loaded ");
-		}
-
-		i += sprintf(AsciiTitle + i, "%s v1.%02d (%s)", FormatTitleId(m_Xbe->m_Certificate.dwTitleId).c_str(), m_Xbe->m_Certificate.dwVersion, m_Xbe->m_szAsciiTitle);
+		i += sprintf(AsciiTitle + i, " : %s v1.%02d (%s)", FormatTitleId(m_Xbe->m_Certificate.dwTitleId).c_str(), m_Xbe->m_Certificate.dwVersion, m_Xbe->m_szAsciiTitle);
 
 		UpdateFpsStatus();
 		UpdateLogStatus();
