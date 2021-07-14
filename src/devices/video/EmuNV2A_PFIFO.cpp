@@ -631,7 +631,7 @@ static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
 
 RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
 {
-	uint32_t hash = ramht_hash(d, handle);
+	uint32_t hash = ramht_hash(d, handle);// this could be simplied as hash = handle;
 	assert(hash * 8 < ramht_size(d));
 
 	xbox::addr_xt ramht_address =
