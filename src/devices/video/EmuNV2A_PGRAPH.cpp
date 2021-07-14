@@ -45,7 +45,13 @@
 #define TARGET_PAGE_SIZE (1 << TARGET_PAGE_BITS)
 #define TARGET_PAGE_MASK ~(TARGET_PAGE_SIZE - 1)
 #define TARGET_PAGE_ALIGN(addr) (((addr) + TARGET_PAGE_SIZE - 1) & TARGET_PAGE_MASK)
-
+typedef struct RAMHTEntry {
+	uint32_t handle;
+	xbox::addr_xt instance;
+	enum FIFOEngine engine;
+	unsigned int channel_id : 5;
+	bool valid;
+} RAMHTEntry;
 static const GLenum pgraph_texture_min_filter_map[] = {
     0,
     GL_NEAREST,
@@ -1154,6 +1160,7 @@ extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
 extern DWORD ABGR_to_ARGB(const uint32_t color);
 extern void set_IVB_DECL_override(void);
 extern void reset_IVB_DECL_override(void);
+extern RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle);
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
@@ -1193,51 +1200,58 @@ int pgraph_handle_method(
     //set_object can be used to recognize the binding between graphic class and subchannel.
     //the arg0 is object handle,rather than an address here. need to use a function called ramht_look() to lookup the object entry.
     //quesiton is that the object was created and binded using xbx d3d routine which we didn't patch. need further study.
-    if (method == NV_SET_OBJECT) {
+	if (method == NV_SET_OBJECT) {
 		/*during init, arg0 = Handle of Miniport GraphicObject Handle,
 		we must setup links between subchannel used here with the handle and the graphic class associate with that handle.
 		the link could be changed dynamicaly using the NV_SET_OBJECT method.
 		*/
-		/*
-		assert(arg0 < d->pramin.ramin_size);
-        uint8_t *obj_ptr = d->pramin.ramin_ptr + arg0;
 
-        uint32_t ctx_1 = ldl_le_p((uint32_t*)obj_ptr);
-        uint32_t ctx_2 = ldl_le_p((uint32_t*)(obj_ptr+4));
-        uint32_t ctx_3 = ldl_le_p((uint32_t*)(obj_ptr+8));
-        uint32_t ctx_4 = ldl_le_p((uint32_t*)(obj_ptr+12));
-        uint32_t ctx_5 = arg0;
-        //these code below doesn't make sense, each NV_PGRAPH_CTX_CACHE only has 0x20 bytes, we have 8 subchannel, 0x20/8=4 bytes, that means 1 NV_PGRAPH_CTX_CACHE can only provide 1 DWORD to 1 subchannel.
-        //somehow the original code pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 + subchannel *4  ] = ctx_1; really works, but in this new code it no longer works. need further study.
-        pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 / 4 + subchannel ] = ctx_1;
-        pg->pgraph_regs[NV_PGRAPH_CTX_CACHE2 / 4 + subchannel ] = ctx_2;
-        pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 / 4 + subchannel ] = ctx_3;
-        pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 / 4 + subchannel ] = ctx_4;
-        pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 / 4 + subchannel ] = ctx_5;
-		*/
-        switch (arg0) {
-        case D3D_KELVIN_PRIMITIVE:
-            subchannel_to_graphic_class[subchannel] = NV_KELVIN_PRIMITIVE;
-            break;
-        case D3D_MEMORY_TO_MEMORY_COPY:
-            subchannel_to_graphic_class[subchannel] = NV_MEMORY_TO_MEMORY_FORMAT;//should be copy, supposed to dma copy an image rect and change the pixel format in the same time. need further study.
-            break;
-        case D3D_RECTANGLE_COPY:
-            subchannel_to_graphic_class[subchannel] = NV_IMAGE_BLIT;
-            break;
-        case D3D_RECTANGLE_COPY_SURFACES:
-            subchannel_to_graphic_class[subchannel] = NV_CONTEXT_SURFACES_2D;
-            break;
-        case D3D_RECTANGLE_COPY_PATTERN:
-            subchannel_to_graphic_class[subchannel] = NV_CONTEXT_PATTERN;
-            break;
-        default:
-            assert(0);
-            break;
-        }
+		// get object entry from object handle.
+		RAMHTEntry entry = ramht_lookup(d, arg0);
+		assert(entry.valid);
 
-    }
+		//xbox::addr_xt instance = entry.instance;
+		// = &entry.instance;
 
+		assert(entry.instance < d->pramin.ramin_size);
+		uint8_t *obj_ptr = d->pramin.ramin_ptr + entry.instance;
+
+		uint32_t ctx_1 = ldl_le_p((uint32_t*)obj_ptr);
+		uint32_t ctx_2 = ldl_le_p((uint32_t*)(obj_ptr + 4));
+		uint32_t ctx_3 = ldl_le_p((uint32_t*)(obj_ptr + 8));
+		uint32_t ctx_4 = ldl_le_p((uint32_t*)(obj_ptr + 12));
+		uint32_t ctx_5 = entry.instance;
+		//these code below doesn't make sense, each NV_PGRAPH_CTX_CACHE only has 0x20 bytes, we have 8 subchannel, 0x20/8=4 bytes, that means 1 NV_PGRAPH_CTX_CACHE can only provide 1 DWORD to 1 subchannel.
+		//somehow the original code pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 + subchannel *4  ] = ctx_1; really works, but in this new code it no longer works. need further study.
+		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 / 4 + subchannel] = ctx_1;
+		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE2 / 4 + subchannel] = ctx_2;
+		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 / 4 + subchannel] = ctx_3;
+		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 / 4 + subchannel] = ctx_4;
+		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 / 4 + subchannel] = ctx_5;
+
+		switch (arg0) {
+		case D3D_KELVIN_PRIMITIVE:
+			subchannel_to_graphic_class[subchannel] = NV_KELVIN_PRIMITIVE;
+			break;
+		case D3D_MEMORY_TO_MEMORY_COPY:
+			subchannel_to_graphic_class[subchannel] = NV_MEMORY_TO_MEMORY_FORMAT;//should be copy, supposed to dma copy an image rect and change the pixel format in the same time. need further study.
+			break;
+		case D3D_RECTANGLE_COPY:
+			subchannel_to_graphic_class[subchannel] = NV_IMAGE_BLIT;
+			break;
+		case D3D_RECTANGLE_COPY_SURFACES:
+			subchannel_to_graphic_class[subchannel] = NV_CONTEXT_SURFACES_2D;
+			break;
+		case D3D_RECTANGLE_COPY_PATTERN:
+			subchannel_to_graphic_class[subchannel] = NV_CONTEXT_PATTERN;
+			break;
+		default:
+			assert(0);
+			break;
+		}
+		argv[0] = entry.instance;
+		arg0 = entry.instance;
+	}
     // is this right? needs double check.
     pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 + subchannel];
     pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH2/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE2 + subchannel];
@@ -1436,6 +1450,27 @@ int pgraph_handle_method(
         //test case:xdk pushbuffer sample.
  
         case NV_KELVIN_PRIMITIVE: {
+
+			//	 code to retrive object entry/instance from object handle.
+			/* methods that take objects.
+			* TODO: Check this range is correct for the nv2a */
+
+			if (method >= 0x180 && method < 0x200) {
+				for (int argc = 0; argc < method_count; argc++) {
+					arg0 = argv[argc];
+					//qemu_mutex_lock_iothread();
+					RAMHTEntry entry = ramht_lookup(d, arg0);
+					assert(entry.valid);
+					// assert(entry.channel_id == state->channel_id);
+					// copied the looked up entry.instance to the argv[], so the first round update to KelvinPrimitive could use the correct value.
+					argv[argc] = entry.instance;
+
+					//qemu_mutex_unlock_iothread();
+				}
+				// update arg0 to avoid assert();
+				arg0 = argv[0];
+			}
+
 			// uint32_t previous_word = pg->regs[method / 4]; // TODO : Enable if the previous method register value is required
             //update struct KelvinPrimitive/array regs[] in first round, skip special cases. then we process those state variables if necessary in 2nd round.
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
@@ -1470,7 +1505,7 @@ int pgraph_handle_method(
                     // Note : Writing to pg->regs[] will also reflect in unioned pg->KelvinPrimitive fields!
                     break;
             }
-
+		 
             //2nd round, handle special cases, setup bit mask flags, setup pgraph internal state vars, 
             switch (method) {
                 case NV097_SET_OBJECT://done

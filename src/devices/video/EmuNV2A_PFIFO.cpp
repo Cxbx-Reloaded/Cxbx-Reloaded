@@ -33,15 +33,9 @@
 // *
 // ******************************************************************
 
-typedef struct RAMHTEntry {
-	uint32_t handle;
-	xbox::addr_xt instance;
-	enum FIFOEngine engine;
-	unsigned int channel_id : 5;
-	bool valid;
-} RAMHTEntry;
 
-static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle); // forward declaration
+
+RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle); // forward declaration
 
 /* PFIFO - MMIO and DMA FIFO submission to PGRAPH and VPE */
 DEVICE_READ32(PFIFO)
@@ -635,7 +629,7 @@ static uint32_t ramht_hash(NV2AState *d, uint32_t handle)
 	return hash;
 }
 
-static RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
+RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle)
 {
 	uint32_t hash = ramht_hash(d, handle);
 	assert(hash * 8 < ramht_size(d));
