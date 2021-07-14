@@ -1216,6 +1216,15 @@ int pgraph_handle_method(
 		assert(entry.instance < d->pramin.ramin_size);
 		uint8_t *obj_ptr = d->pramin.ramin_ptr + entry.instance;
 
+		/* the engine is bound to the subchannel */
+		assert(subchannel < 8);
+		uint32_t *pull1 = &d->pfifo.regs[NV_PFIFO_CACHE1_PULL1 / 4];
+		uint32_t *engine_reg = &d->pfifo.regs[NV_PFIFO_CACHE1_ENGINE / 4];
+
+		SET_MASK(*engine_reg, 3 << (4 * subchannel), entry.engine);
+		SET_MASK(*pull1, NV_PFIFO_CACHE1_PULL1_ENGINE, entry.engine);
+
+
 		uint32_t ctx_1 = ldl_le_p((uint32_t*)obj_ptr);
 		uint32_t ctx_2 = ldl_le_p((uint32_t*)(obj_ptr + 4));
 		uint32_t ctx_3 = ldl_le_p((uint32_t*)(obj_ptr + 8));
@@ -1253,46 +1262,17 @@ int pgraph_handle_method(
 		arg0 = entry.instance;
 	}
     // is this right? needs double check.
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 + subchannel];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH2/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE2 + subchannel];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH3/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 + subchannel];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH4/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 + subchannel];
-    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH5/4] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1 / 4 ] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE1 / 4 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH2 / 4 ] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE2 / 4 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH3 / 4 ] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 / 4 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH4 / 4 ] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 / 4 + subchannel];
+    pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH5 / 4 ] = pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 / 4 + subchannel];
 
     //if the graphics_class doesn't work, we have to switch to use subchannel instead.
 	uint32_t graphics_class = GET_MASK(pg->pgraph_regs[NV_PGRAPH_CTX_SWITCH1/4],
                                        NV_PGRAPH_CTX_SWITCH1_GRCLASS);
-	graphics_class = subchannel_to_graphic_class[subchannel];
-    //if graphic_class not set correctly, use subchannel instead.
-    //xbox d3d binds subchannel with specific graphic class, this binding could change, need more verificaiton. or we could implement the set_object
-    //the binding here are reverse engineered from xdk pushbuffer sample.
-	/*
-	if (graphics_class == 0) {
-        switch (subchannel) {
-            case 0:
-                graphics_class = NV_KELVIN_PRIMITIVE;
-                break;
-            case 1:
-                graphics_class = NV_MEMORY_TO_MEMORY_FORMAT;//should be copy, supposed to dma copy an image rect and change the pixel format in the same time. need further study.
-                break;
-            case 2:
-                graphics_class = NV_IMAGE_BLIT;
-                break;
-            case 3:
-                graphics_class = NV_CONTEXT_SURFACES_2D;
-                break;
-            case 4:
-                break;
-            case 5:
-                graphics_class = NV_CONTEXT_PATTERN;
-                break;
-            case 6:
-                break;
-            case 7:
-                break;
-        }
-    }
-	*/
+	// graphic_class now works, disable the lookup table for now.
+	// graphics_class = subchannel_to_graphic_class[subchannel];
     // Logging is slow.. disable for now..
     //pgraph_log_method(subchannel, graphics_class, method, parameter);
 
