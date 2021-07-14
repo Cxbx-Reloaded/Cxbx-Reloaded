@@ -1624,7 +1624,7 @@ int pgraph_handle_method(
                     assert(arg0 == pg->KelvinPrimitive.SetContextDmaVertexB); // Was pg->dma_vertex_b = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_SEMAPHORE://done
-                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaSemaphore); // Was pg->dma_semaphore = arg0;
+                    assert(arg0 == pg->KelvinPrimitive.SetContextDmaSemaphore);// Was pg->dma_semaphore = arg0;
                     break;
                 case NV097_SET_CONTEXT_DMA_REPORT://done
                     assert(arg0 == pg->KelvinPrimitive.SetContextDmaReport); // Was pg->dma_report = arg0;
@@ -3730,17 +3730,19 @@ int pgraph_handle_method(
 #if (0) //state not implement yet
 #   define NV097_PARK_ATTRIBUTE                               0x00001D64
 #   define NV097_UNPARK_ATTRIBUTE                             0x00001D68
-#   define NV097_SET_SEMAPHORE_OFFSET                         0x00001D6C
 #endif
-
+				case NV097_SET_SEMAPHORE_OFFSET: {
+					pg->regs[NV_PGRAPH_SEMAPHOREOFFSET/4] = arg0;
+					break;
+				}
 
                 case NV097_BACK_END_WRITE_SEMAPHORE_RELEASE: {
                     pgraph_update_surface(d, false, true, true);
 
                     //qemu_mutex_unlock(&pg->pgraph_lock);
                     //qemu_mutex_lock_iothread();
-					//we're not emulating SEMAPHORE, disable this code for now.
-					/*
+					// the semaphore relese is to update the CDevice.GpuTime, which will change the state of CDevice_IsBusy(). we have to implement this.
+					
                     uint32_t semaphore_offset = pg->pgraph_regs[NV_PGRAPH_SEMAPHOREOFFSET/4];
 
                     xbox::addr_xt semaphore_dma_len;
@@ -3750,7 +3752,7 @@ int pgraph_handle_method(
                     semaphore_data += semaphore_offset;
 
                     stl_le_p((uint32_t*)semaphore_data, arg0);
-					*/
+					
                     //qemu_mutex_lock(&pg->pgraph_lock);
                     //qemu_mutex_unlock_iothread();
 
