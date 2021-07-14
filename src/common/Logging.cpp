@@ -159,7 +159,7 @@ inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL leve
 }
 
 // print out a custom message to the console or kernel debug log file
-void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
+void EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	if (szWarningMessage == NULL) {
 		return;
@@ -180,7 +180,7 @@ void NTAPI EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWa
 	}
 }
 
-void NTAPI EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...)
+void EmuLogInit(LOG_LEVEL level, const char *szWarningMessage, ...)
 {
 	if (szWarningMessage == NULL) {
 		return;
