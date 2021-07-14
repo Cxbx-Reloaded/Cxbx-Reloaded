@@ -1237,7 +1237,7 @@ int pgraph_handle_method(
 		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE3 / 4 + subchannel] = ctx_3;
 		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE4 / 4 + subchannel] = ctx_4;
 		pg->pgraph_regs[NV_PGRAPH_CTX_CACHE5 / 4 + subchannel] = ctx_5;
-
+		/* //disable the lookup table setup code for now. the graphics_class setup is working.
 		switch (arg0) {
 		case D3D_KELVIN_PRIMITIVE:
 			subchannel_to_graphic_class[subchannel] = NV_KELVIN_PRIMITIVE;
@@ -1258,6 +1258,7 @@ int pgraph_handle_method(
 			assert(0);
 			break;
 		}
+		*/
 		argv[0] = entry.instance;
 		arg0 = entry.instance;
 	}
