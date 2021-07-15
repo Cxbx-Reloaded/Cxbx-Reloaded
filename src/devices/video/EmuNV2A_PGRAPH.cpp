@@ -5158,7 +5158,6 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
         memcpy(&pg->last_surface_shape, &pg->surface_shape,
             sizeof(SurfaceShape));
     }
-	/* //disable for now ,since it's using LLE dma object. we're wait for our HLE alternative.
     if ((color_write || (!upload && pg->surface_color.write_enabled_cache))
         && (upload || pg->surface_color.draw_dirty)) {
         pgraph_update_surface_part(d, upload, true);
@@ -5169,7 +5168,6 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
         && (upload || pg->surface_zeta.draw_dirty)) {
         pgraph_update_surface_part(d, upload, false);
     }
-	*/
 }
 
 static void pgraph_bind_textures(NV2AState *d)
