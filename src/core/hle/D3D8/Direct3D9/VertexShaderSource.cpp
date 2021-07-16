@@ -5,10 +5,10 @@
 #include "core/kernel/init/CxbxKrnl.h"
 #include "util/hasher.h"
 #include "core/kernel/support/Emu.h"
+#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice
 
 VertexShaderSource g_VertexShaderSource = VertexShaderSource();
 // FIXME : This should really be released and created in step with the D3D device lifecycle rather than being a thing on its own
-// (And the ResetD3DDevice method should be removed)
 
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {
 	ID3DBlob* pCompiledShader;
@@ -85,6 +85,45 @@ ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, 
 	return key;
 }
 
+IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, char *shader_category)
+{
+	IDirect3DVertexShader* pHostVertexShader = nullptr;
+
+	// If there's no D3DDevice set, return nullptr
+	if (g_pD3DDevice == nullptr) {
+		EmuLog(LOG_LEVEL::WARNING, "Can't create %s vertex shader - no D3D device is set!", shader_category);
+	}
+	else {
+		assert(pCompiledShader);
+
+		HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+		hRet = g_pD3DDevice->CreateVertexShader(
+			(const void*)pCompiledShader->GetBufferPointer(),
+			pCompiledShader->GetBufferSize(), // BytecodeLength
+			nullptr, // pClassLinkage
+			&pHostVertexShader
+		);
+#else
+		hRet = g_pD3DDevice->CreateVertexShader(
+			(DWORD *)pCompiledShader->GetBufferPointer(),
+			&pHostVertexShader
+		);
+#endif
+		if (FAILED(hRet)) CxbxrKrnlAbort("Failed to create %s vertex shader", shader_category);
+
+		// TODO DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader");
+		if (SUCCEEDED(hRet)) {
+			EmuLog(LOG_LEVEL::DEBUG, "Created new %s vertex shader instance", shader_category);
+		}
+		else {
+			EmuLog(LOG_LEVEL::ERROR2, "Failed creating new %s vertex shader instance", shader_category);
+		}
+	}
+
+	return pHostVertexShader;
+}
+
 // Get a shader using the given key
 IDirect3DVertexShader* VertexShaderSource::GetShader(ShaderKey key)
 {
@@ -100,12 +139,6 @@ IDirect3DVertexShader* VertexShaderSource::GetShader(ShaderKey key)
 		return pLazyShader->pHostVertexShader;
 	}
 
-	// If there's no D3DDevice set, return nullptr
-	if (pD3DDevice == nullptr) {
-		EmuLog(LOG_LEVEL::WARNING, "Can't create shader - no D3D device is set!");
-		return nullptr;
-	}
-
 	// We need to get the compiled HLSL and create a shader from it
 	ID3DBlob* pCompiledShader = nullptr;
 	try {
@@ -114,19 +147,9 @@ IDirect3DVertexShader* VertexShaderSource::GetShader(ShaderKey key)
 		pCompiledShader = pLazyShader->compileResult.get();
 
 		// Create the shader
-		auto hRet = pD3DDevice->CreateVertexShader
-		(
-			(DWORD*)pCompiledShader->GetBufferPointer(),
-			&pLazyShader->pHostVertexShader
-		);
+		// TODO : incorporate key into "regular" shader category string
+		pLazyShader->pHostVertexShader = CxbxCreateVertexShader(pCompiledShader, "regular");
 
-		// TODO DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader");
-		if (SUCCEEDED(hRet)) {
-			EmuLog(LOG_LEVEL::DEBUG, "Created new vertex shader instance for %llx", key);
-		}
-		else {
-			EmuLog(LOG_LEVEL::ERROR2, "Failed creating new vertex shader instance for %llx", key);
-		}
 	}
 	catch (const std::exception & e) {
 		EmuLog(LOG_LEVEL::ERROR2, "Failed compiling shader %llx: %s", e.what());
@@ -163,10 +186,4 @@ void VertexShaderSource::ReleaseShader(ShaderKey key)
 	else {
 		EmuLog(LOG_LEVEL::WARNING, "Release called on non-existent shader!");
 	}
-}
-
-void VertexShaderSource::ResetD3DDevice(IDirect3DDevice* newDevice)
-{
-	EmuLog(LOG_LEVEL::DEBUG, "Resetting D3D device");
-	this->pD3DDevice = newDevice;
 }

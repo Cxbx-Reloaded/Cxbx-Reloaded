@@ -1198,57 +1198,78 @@ IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pD
 	return pHostVertexDeclaration;
 }
 
-static IDirect3DVertexShader* passthroughshader;
+static IDirect3DVertexShader* g_pHostPassthroughVertexShader = nullptr;
+static IDirect3DVertexShader* g_pHostFixedFunctionVertexShader = nullptr;
+static IDirect3DVertexShader* g_pHostActiveVertexShader = nullptr; // Used for state tracking
+
+extern IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, char *shader_category); // Implemented in VertexShaderSource.cpp
+
 void CxbxUpdateHostVertexShader()
 {
 	extern bool g_bUsePassthroughHLSL; // TMP glue
 
-	// TODO Call this when state is dirty
-	// Rather than every time state changes
-
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
-		IDirect3DVertexShader* fixedFunctionShader = nullptr;
-		HRESULT hRet;
+	char *shader_category;
+	IDirect3DVertexShader *pHostVertexShader;
 
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+		shader_category = "fixed function";
 		if (g_UseFixedFunctionVertexShader) {
-			static IDirect3DVertexShader* ffHlsl = nullptr;
-			if (ffHlsl == nullptr) {
+			if (g_pHostPassthroughVertexShader == nullptr) {
 				ID3DBlob* pBlob = nullptr;
 				EmuCompileFixedFunction(&pBlob);
 				if (pBlob) {
-					hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &ffHlsl);
-					if (FAILED(hRet)) CxbxrAbort("Failed to create fixed-function shader");
+					g_pHostPassthroughVertexShader = CxbxCreateVertexShader(pBlob, shader_category);
+					pBlob->Release();
 				}
 			}
-			fixedFunctionShader = ffHlsl;
-		}
 
-		hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);
-		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
+			pHostVertexShader = g_pHostPassthroughVertexShader;
+		}
+		else
+			pHostVertexShader = nullptr; // TODO : Remove reliance on host fixed function
 	}
 	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
-		if (passthroughshader == nullptr) {
+		shader_category = "passthrough";
+		if (g_pHostFixedFunctionVertexShader == nullptr) {
 			ID3DBlob* pBlob = nullptr;
 			EmuCompileXboxPassthrough(&pBlob);
 			if (pBlob) {
-				g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &passthroughshader);
+				g_pHostFixedFunctionVertexShader = CxbxCreateVertexShader(pBlob, shader_category);
+				pBlob->Release();
 			}
 		}
 
-		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughshader);
+		pHostVertexShader = g_pHostFixedFunctionVertexShader;
 	}
 	else {
+		shader_category = "regular";
 		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
 		assert(pTokens);
 		// Create a vertex shader from the tokens
 		DWORD shaderSize;
 		auto VertexShaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
-		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderSource.GetShader(VertexShaderKey);
-		HRESULT hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+		pHostVertexShader = g_VertexShaderSource.GetShader(VertexShaderKey);
 	}
+
+	// Avoid setting already-active vertex shader again :
+	if (g_pHostActiveVertexShader == pHostVertexShader)
+		return;
+
+	g_pHostActiveVertexShader = pHostVertexShader;
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+	hRet = g_pD3DDevice->VSSetShader(
+		pHostVertexShader,
+		nullptr, // ppClassInstances
+		0 // NumClassInstances
+	);
+#else
+	hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
+#endif
+	DEBUG_D3DRESULT(hRet, "SetVertexShader");
+	if (FAILED(hRet)) CxbxrKrnlAbort("Failed to set %s vertex shader", shader_category);
 }
 
 void CxbxSetVertexShaderSlots(DWORD* pTokens, DWORD Address, DWORD NrInstructions)
