@@ -1161,6 +1161,9 @@ extern DWORD ABGR_to_ARGB(const uint32_t color);
 extern void set_IVB_DECL_override(void);
 extern void reset_IVB_DECL_override(void);
 extern RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle);
+void pgraph_SetModelViewMatrix(NV2AState *d);
+void pgraph_SetInverseModelViewMatrix(NV2AState *d);
+void pgraph_SetCompositeMatrix(NV2AState *d);
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
@@ -2256,6 +2259,7 @@ int pgraph_handle_method(
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
+					pgraph_SetModelViewMatrix(d);
                     break;
                 }
 				//Matrix not transposed before pushed, always matrix 0, method count 12

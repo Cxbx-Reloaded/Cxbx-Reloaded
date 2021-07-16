@@ -6430,6 +6430,17 @@ D3DXVECTOR4 toVector(D3DCOLOR color) {
 D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
 	return D3DXVECTOR4(val.r, val.g, val.b, val.a);
 }
+extern bool pgraph_is_DirectModelView(void);
+D3DMATRIX g_xbox_transform_ModelView;
+D3DMATRIX g_xbox_transform_InverseModelView;
+D3DMATRIX g_xbox_transform_Composite;
+D3DMATRIX g_xbox_DirectModelView_View;
+D3DMATRIX g_xbox_DirectModelView_World;
+D3DMATRIX g_xbox_DirectModelView_Projection;
+D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;
+
+
+static D3DMATRIX * g_xbox_transform_matrix = nullptr;
 
 void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient) {
 	if (d3dLightIndex == -1) {
@@ -6438,8 +6449,13 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	}
 
 	auto d3dLight = &d3d8LightState.Lights[d3dLightIndex];
-	auto viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
-
+	D3DXMATRIX viewTransform;
+	if (pgraph_is_DirectModelView()) {
+		viewTransform = g_xbox_DirectModelView_View;
+	}
+	else {
+		viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
+	}
 	// TODO remove D3DX usage
 	// Pre-transform light position to viewspace
 	D3DXVECTOR4 positionV;
@@ -6509,16 +6525,28 @@ void UpdateFixedFunctionVertexShaderState()
 
 	// Transforms
 	// Transpose row major to column major for HLSL
-	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
-	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
+	// check if we're in DirectModelView transform mode.
+	if (pgraph_is_DirectModelView()) {
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_xbox_DirectModelView_Projection);
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
+
+		for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)&g_xbox_transform_ModelView);
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed);
+		}
+	}
+	else {
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
+
+		for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
+		}
+	}
 
 	for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
-	}
-
-	for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
 	}
 
 	// Lighting
@@ -6789,10 +6817,6 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
 }
 
 
-static D3DMATRIX g_xbox_transform_ModelView;
-static D3DMATRIX g_xbox_transform_InverseModelView;
-static D3DMATRIX g_xbox_transform_Composite;
-static D3DMATRIX * g_xbox_transform_matrix=nullptr;
 
 void CxbxImpl_GetTransform
 (
@@ -9596,6 +9620,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 	// TODO: Implement
 	LOG_UNIMPLEMENTED();
 }
+
+extern void pgraph_use_Transform();
+
 xbox::void_xt WINAPI CxbxImpl_SetModelView
 (
 	CONST D3DMATRIX *pModelView,
@@ -9603,13 +9630,16 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	CONST D3DMATRIX *pComposite
 )
 {
-	// we can't proceed without pModelView
-	if (pModelView == nullptr) {
+	// we can't calculate matProjection without pModelView or pComposite
+	if ( ( pComposite == nullptr ) || (pModelView == nullptr )) {
+		// cancel DirectModelView transform mode. 
+		pgraph_use_Transform();
 		return;
 	}
+
 	g_xbox_transform_ModelView = *pModelView;
+	g_xbox_transform_Composite = *pComposite;
 	if(pInverseModelView!=nullptr)g_xbox_transform_InverseModelView = *pInverseModelView;
-	if (pComposite != nullptr)g_xbox_transform_Composite = *pComposite;
 	// matModelView=matWorld*matView, we have no idea of these two Matrix. so we use unit matrix for view matrix, and matModelView matrix for matWorld
 	D3DMATRIX matUnit;
 	memset(&matUnit._11, 0, sizeof(matUnit));
@@ -9618,20 +9648,17 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	matUnit._33 = 1.0;
 	matUnit._44 = 1.0;
 
-	CxbxImpl_SetTransform(xbox::X_D3DTS_WORLD, pModelView);
-	CxbxImpl_SetTransform(xbox::X_D3DTS_VIEW, &matUnit);
-
-	// we can't calculate matProjection without pComposite
-	if (pComposite == nullptr) {
-		return;
-	}
+	//CxbxImpl_SetTransform(xbox::X_D3DTS_WORLD, pModelView);
+	//CxbxImpl_SetTransform(xbox::X_D3DTS_VIEW, &matUnit);
+	g_xbox_DirectModelView_View= matUnit;
+	g_xbox_DirectModelView_World= *pModelView; 
 
 	// matComposite = matModelView * matProjectionViewportTransform
 	// matProjectionViewportTransform = matPjojection * matViewportTransform
 	// if we set matProjection to matUnit, then CDevice_GetProjectionViewportMatrix() will return matViewportTransform
 	D3DXMATRIX matViewportTransform;
 	// set projection to unit matrix, so we can get viewport transform matrix.
-	CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matUnit);
+	//CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matUnit);
 	// zeroout matViewportTransform
 	//memset(&matViewportTransform._11, 0, sizeof(matViewportTransform));
 	XB_TRMP(D3DDevice_GetProjectionViewportMatrix)(&matViewportTransform);
@@ -9644,11 +9671,13 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	// get matInverseModelViewNew, the input pInverseModelView might not present, so we always recalculate it.
 	D3DXMatrixInverse(&matInverseModelViewNew, NULL, (D3DXMATRIX*)pModelView);
 
-	D3DXMATRIX matProjection;
-	// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection
-	matProjection = matInverseModelViewNew * (*pComposite)* matInverseViewportTransform;
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, &matInverseModelViewNew);
 
-	CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matProjection);
+	//D3DXMATRIX matProjection;
+	// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection
+	g_xbox_DirectModelView_Projection = matInverseModelViewNew * (*pComposite)* matInverseViewportTransform;
+
+	//CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matProjection);
 
 }
 // ******************************************************************

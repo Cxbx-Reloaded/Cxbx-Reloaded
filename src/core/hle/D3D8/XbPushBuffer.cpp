@@ -35,6 +35,7 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
+#include <d3dx9math.h> // for D3DXMatrix, etc
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"
@@ -224,6 +225,75 @@ void D3D_texture_stage_update(NV2AState *d)
 		}
 	}
 }
+
+extern D3DMATRIX g_xbox_transform_ModelView;
+extern D3DMATRIX g_xbox_transform_InverseModelView;
+extern D3DMATRIX g_xbox_transform_Composite;
+extern D3DMATRIX g_xbox_DirectModelView_View;
+extern D3DMATRIX g_xbox_DirectModelView_World;
+extern D3DMATRIX g_xbox_DirectModelView_Projection;
+
+extern xbox::void_xt WINAPI CxbxImpl_SetModelView
+(
+	CONST D3DMATRIX *pModelView,
+	CONST D3DMATRIX *pInverseModelView,
+	CONST D3DMATRIX *pComposite
+);
+bool g_xbox_transform_use_DirectModelView = false;
+bool g_xbox_transform_ModelView_dirty = false;
+bool g_xbox_transform_InverseModelView_dirty = false;
+bool g_xbox_transform_Composite_dirty = false;
+
+// called when SetModelVeiw(0,0,0) was called.
+void pgraph_use_Transform()
+{
+	g_xbox_transform_ModelView_dirty = false;
+	g_xbox_transform_InverseModelView_dirty = false;
+	g_xbox_transform_Composite_dirty = false;
+	g_xbox_transform_use_DirectModelView = false;
+}
+
+bool pgraph_is_DirectModelView(void)
+{
+	//if ((g_xbox_transform_ModelView_dirty == true) || (g_xbox_transform_Composite_dirty = true)) {
+	if(g_xbox_transform_use_DirectModelView==true){
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+bool pgraph_is_ModelView_dirty(void)
+{
+	if ((g_xbox_transform_ModelView_dirty == true) || (g_xbox_transform_Composite_dirty = true)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+void pgraph_SetModelViewMatrix(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_ModelView, (D3DXMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix0);
+	g_xbox_transform_ModelView_dirty = true;
+	g_xbox_transform_use_DirectModelView = true;
+}
+void pgraph_SetInverseModelViewMatrix(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+	g_xbox_transform_InverseModelView = *(D3DMATRIX *)(&pg->KelvinPrimitive.SetInverseModelViewMatrix0);
+	g_xbox_transform_InverseModelView_dirty = true;
+	g_xbox_transform_use_DirectModelView = true;
+}
+void pgraph_SetCompositeMatrix(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_Composite, (D3DXMATRIX *)&pg->KelvinPrimitive.SetCompositeMatrix);
+	g_xbox_transform_Composite_dirty = true;
+	g_xbox_transform_use_DirectModelView = true;
+}
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -356,6 +426,29 @@ void D3D_draw_state_update(NV2AState *d)
 	// NV2A_SET_LINEAR_FOG_CONST?
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 	// Unused : D3DRS_FOGVERTEXMODE
+
+	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
+	if (pgraph_is_DirectModelView()) {
+		// this will update matrix world/view/projection using matrix ModelView and Composite
+		if (pgraph_is_ModelView_dirty()) {
+			CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
+			//clear ModelView dirty flags.
+			g_xbox_transform_ModelView_dirty = false;
+			g_xbox_transform_InverseModelView_dirty = false;
+			g_xbox_transform_Composite_dirty = false;
+		}
+		// set host d3d transform
+		HRESULT hRet = g_pD3DDevice->SetTransform(D3DTS_VIEW, &g_xbox_DirectModelView_View);
+		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(0), &g_xbox_DirectModelView_World);
+		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(1), &g_xbox_DirectModelView_World);
+		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(2), &g_xbox_DirectModelView_World);
+		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(3), &g_xbox_DirectModelView_World);
+		hRet = g_pD3DDevice->SetTransform(D3DTS_PROJECTION, &g_xbox_DirectModelView_Projection);
+
+		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");
+
+		//these matrix will be used in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState() later in CxbxUpdateNativeD3DResources();
+	}
 
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
