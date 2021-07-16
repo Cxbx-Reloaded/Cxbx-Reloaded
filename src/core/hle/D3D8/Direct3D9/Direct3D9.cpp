@@ -226,7 +226,7 @@ static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarg
 
 
 
-static xbox::dword_xt                  *g_pXbox_D3DDevice; // TODO: This is a pointer to a D3DDevice structure, 
+static xbox::dword_xt                  *g_pXbox_D3DDevice=nullptr; // TODO: This is a pointer to a D3DDevice structure, 
 
 
 // Static Function(s)
@@ -329,8 +329,10 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetDepthStencilSurface,                   (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetDepthStencilSurface2,                  (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetDisplayMode,                           (xbox::X_D3DDISPLAYMODE*)                                                                             );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetProjectionViewportMatrix,              (CONST D3DMATRIX*)                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetRenderTarget,                          (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetRenderTarget2,                         (xbox::void_xt)                                                                                       );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_KickOff,                                  ()                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_LightEnable,                              (xbox::dword_xt, xbox::bool_xt)                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader,                         (xbox::dword_xt, xbox::dword_xt)                                                                      );  \
@@ -357,6 +359,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPixelShader_0__LTCG_eax_handle,        ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetRenderState_Simple,                    (xbox::dword_xt, xbox::dword_xt)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*)                                                            );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTargetFast,                      (xbox::X_D3DSurface*, xbox::X_D3DSurface*, xbox::dword_xt)                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTarget_0,                        ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetShaderConstantMode,                    (xbox::X_VERTEXSHADERCONSTANTMODE)                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetShaderConstantMode_0,                  ()                                                                                                    );  \
@@ -3189,6 +3192,17 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
+
+#if 1
+	// restore the usage for EmuKickOff()/SetTransform()/GetTransform()
+	// Set g_pXbox_D3DDevice to point to the Xbox D3D Device
+	if(g_pXbox_D3DDevice==nullptr){
+		auto it = g_SymbolAddresses.find("D3DDEVICE");
+		if (it != g_SymbolAddresses.end()) {
+			g_pXbox_D3DDevice = (xbox::dword_xt *)it->second;
+		}
+	}
+#endif
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
@@ -6774,6 +6788,56 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
     XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
 }
 
+
+static D3DMATRIX g_xbox_transform_ModelView;
+static D3DMATRIX g_xbox_transform_InverseModelView;
+static D3DMATRIX g_xbox_transform_Composite;
+static D3DMATRIX * g_xbox_transform_matrix=nullptr;
+
+void CxbxImpl_GetTransform
+(
+	xbox::X_D3DTRANSFORMSTATETYPE State,
+	D3DMATRIX *pMatrix
+)
+{
+	// get the transform matrix
+	if (g_xbox_transform_matrix != nullptr) {
+		*pMatrix = *(g_xbox_transform_matrix + State);
+	}
+}
+// sets xbox d3d transform matrix directly without applying any d3d transforms.
+void CxbxImpl_SetTransformFast
+(
+	xbox::X_D3DTRANSFORMSTATETYPE State,
+	CONST D3DMATRIX *pMatrix
+)
+{
+	// get the transform matrix pointer in xbox d3d and store it in g_xbox_transform_matrix if it's not set yet
+	if (g_xbox_transform_matrix == nullptr) {
+		byte * pSetTransform = nullptr;
+		auto it = g_SymbolAddresses.find("D3DDevice_SetTransform");
+		if (it != g_SymbolAddresses.end()) {
+			pSetTransform = (byte *)it->second;
+			g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x19))+ *g_pXbox_D3DDevice);
+			
+		}
+		else {
+			it = g_SymbolAddresses.find("D3DDevice_SetTransform_0");
+			if (it != g_SymbolAddresses.end()) {
+				pSetTransform = (byte *)it->second;
+				// not sure the offset is 0x19 or not, need to verify.
+				g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x19)) + *g_pXbox_D3DDevice);
+			}
+		}
+	}
+	// set xbox d3d transform matrix
+	if (g_xbox_transform_matrix != nullptr) {
+		// store the transform matrix
+		*(g_xbox_transform_matrix + State) = *pMatrix;
+	}
+
+}
+
 void CxbxImpl_SetTransform
 (
     xbox::X_D3DTRANSFORMSTATETYPE State,
@@ -6781,6 +6845,8 @@ void CxbxImpl_SetTransform
 )
 {
     LOG_INIT
+	//update xbox d3d transform matrix array fast.
+	CxbxImpl_SetTransformFast(State, pMatrix);
 
 	d3d8TransformState.SetTransform(State, pMatrix);
 
@@ -9530,7 +9596,61 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 	// TODO: Implement
 	LOG_UNIMPLEMENTED();
 }
+xbox::void_xt WINAPI CxbxImpl_SetModelView
+(
+	CONST D3DMATRIX *pModelView,
+	CONST D3DMATRIX *pInverseModelView,
+	CONST D3DMATRIX *pComposite
+)
+{
+	// we can't proceed without pModelView
+	if (pModelView == nullptr) {
+		return;
+	}
+	g_xbox_transform_ModelView = *pModelView;
+	if(pInverseModelView!=nullptr)g_xbox_transform_InverseModelView = *pInverseModelView;
+	if (pComposite != nullptr)g_xbox_transform_Composite = *pComposite;
+	// matModelView=matWorld*matView, we have no idea of these two Matrix. so we use unit matrix for view matrix, and matModelView matrix for matWorld
+	D3DMATRIX matUnit;
+	memset(&matUnit._11, 0, sizeof(matUnit));
+	matUnit._11 = 1.0;
+	matUnit._22 = 1.0;
+	matUnit._33 = 1.0;
+	matUnit._44 = 1.0;
 
+	CxbxImpl_SetTransform(xbox::X_D3DTS_WORLD, pModelView);
+	CxbxImpl_SetTransform(xbox::X_D3DTS_VIEW, &matUnit);
+
+	// we can't calculate matProjection without pComposite
+	if (pComposite == nullptr) {
+		return;
+	}
+
+	// matComposite = matModelView * matProjectionViewportTransform
+	// matProjectionViewportTransform = matPjojection * matViewportTransform
+	// if we set matProjection to matUnit, then CDevice_GetProjectionViewportMatrix() will return matViewportTransform
+	D3DXMATRIX matViewportTransform;
+	// set projection to unit matrix, so we can get viewport transform matrix.
+	CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matUnit);
+	// zeroout matViewportTransform
+	//memset(&matViewportTransform._11, 0, sizeof(matViewportTransform));
+	XB_TRMP(D3DDevice_GetProjectionViewportMatrix)(&matViewportTransform);
+
+	D3DXMATRIX matInverseViewportTransform;
+	// get matInverseViewportTransform
+	D3DXMatrixInverse(&matInverseViewportTransform, NULL, &matViewportTransform);
+
+	D3DXMATRIX matInverseModelViewNew;
+	// get matInverseModelViewNew, the input pInverseModelView might not present, so we always recalculate it.
+	D3DXMatrixInverse(&matInverseModelViewNew, NULL, (D3DXMATRIX*)pModelView);
+
+	D3DXMATRIX matProjection;
+	// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection
+	matProjection = matInverseModelViewNew * (*pComposite)* matInverseViewportTransform;
+
+	CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matProjection);
+
+}
 // ******************************************************************
 // * patch: D3DDevice_SetModelView
 // ******************************************************************
@@ -9548,7 +9668,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 		LOG_FUNC_END;
 	// Trampoline to pushbuffer.
 	XB_TRMP(D3DDevice_SetModelView)(pModelView, pInverseModelView, pComposite);
-	// TODO: Implement
+	// only calls d3d implememtation when pushbuffer is not recording.
+	if (g_pXbox_BeginPush_Buffer == nullptr){
+	    CxbxImpl_SetModelView(pModelView, pInverseModelView, pComposite);
+	}
 	LOG_UNIMPLEMENTED();
 
 	// TODO handle other matrices
@@ -9708,7 +9831,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 
 	// Redirect to the standard version.
 	
-	EMUPATCH(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
+	//EMUPATCH(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
+	NestedPatchCounter call(setRenderTargetCount);
+
+	XB_TRMP(D3DDevice_SetRenderTargetFast)(pRenderTarget, pNewZStencil,Flags);
+
+	CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 }
 
 // ******************************************************************
