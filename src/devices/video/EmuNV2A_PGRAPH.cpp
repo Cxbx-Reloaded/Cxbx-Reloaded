@@ -912,8 +912,10 @@ void OpenGL_draw_state_update(NV2AState *d)
 	}
 
 	// Render ImGui
-	static std::function<void(ImGuiUI*, std::nullptr_t)> internal_render = &CxbxImGui_RenderOpenGL;
-	g_renderbase->Render(internal_render, nullptr);
+	if (g_renderbase) {
+		static std::function<void(ImGuiUI*, std::nullptr_t)> internal_render = &CxbxImGui_RenderOpenGL;
+		g_renderbase->Render(internal_render, nullptr);
+	}
 }
 
 void OpenGL_draw_end(NV2AState *d)

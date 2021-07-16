@@ -828,7 +828,7 @@ static void CxbxUpdateCursor(bool forceShow = false) {
 		return;
 	}
 
-	if (g_renderbase && g_renderbase->IsImGuiFocus() || forceShow) {
+	if ((g_renderbase && g_renderbase->IsImGuiFocus()) || forceShow) {
 		if (cursorInfo.flags == 0) {
 			ShowCursor(TRUE);
 		}
@@ -1840,7 +1840,9 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             }
             else if (wParam == VK_F1)
             {
-				g_renderbase->ToggleImGui();
+				if (g_renderbase)
+					g_renderbase->ToggleImGui();
+
                 CxbxUpdateCursor();
             }
 			else if (wParam == VK_F2)
@@ -5516,8 +5518,10 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		}
 
 		// Render ImGui
-		static std::function<void(ImGuiUI*, IDirect3DSurface*)> internal_render = &CxbxImGui_RenderD3D;
-		g_renderbase->Render(internal_render, pCurrentHostBackBuffer);
+		if (g_renderbase) {
+			static std::function<void(ImGuiUI*, IDirect3DSurface*)> internal_render = &CxbxImGui_RenderD3D;
+			g_renderbase->Render(internal_render, pCurrentHostBackBuffer);
+		}
 
 		pCurrentHostBackBuffer->Release();
 	}
