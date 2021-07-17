@@ -2606,6 +2606,8 @@ int pgraph_handle_method(
                             //need to verify the actual vertex shader data pushbuffer snapshot.
                         }
                     }
+					// safe guard to make sure vertex shader program token parser won't went over the end of final slot.
+					pg->vsh_program_slots[X_VSH_MAX_INSTRUCTION_COUNT][3] = 1;
                     break;
                 }
 
@@ -3897,7 +3899,11 @@ int pgraph_handle_method(
 
                 CASE_4(NV097_SET_TRANSFORM_DATA,4):break;//not implement //pg->KelvinPrimitive.SetTransformData[4]
 
-                case NV097_LAUNCH_TRANSFORM_PROGRAM:break;//not implement //pg->KelvinPrimitive.LaunchTransformProgram
+                case NV097_LAUNCH_TRANSFORM_PROGRAM://not implement //pg->KelvinPrimitive.LaunchTransformProgram
+					// D3DDevice_RunVertexStateShader() calls NV097_LAUNCH_TRANSFORM_PROGRAM to launch vertex state shader
+					// it loads vertex shader constants to constant slot 0 first.
+					assert(0);
+					break;
 
 				extern bool g_bUsePassthroughHLSL;//TMP glue
 
