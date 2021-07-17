@@ -4701,7 +4701,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 		LOG_FUNC_END;
 
     DWORD Stage = -1;
-
+	/*
 	switch (Method) { // Detect which of the 4 (X_D3DTS_STAGECOUNT) texture stages is given by the (NV2A) Method argument
 	// This code contains D3DPUSH_ENCODE(NV2A_TX_OFFSET(v), 2) = 2 DWORD's, shifted left PUSH_COUNT_SHIFT (18) left
 	case 0x00081b00: Stage = 0; break;
@@ -4712,8 +4712,11 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 		LOG_TEST_CASE("D3DDevice_SwitchTexture Unknown Method");
         EmuLog(LOG_LEVEL::WARNING, "Unknown Method (0x%.08X)", Method);
 	}
+	*/
 
-    if (Stage >= 0) {
+	Stage = ((Method & 0x01FFC) - 0x01b00) / 0x40;
+
+    if (Stage >= 0 && Stage <=3) {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
 		if (g_pXbox_SetTexture[Stage] == xbox::zeroptr) {
 			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
@@ -5277,6 +5280,19 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 {
 	LOG_FUNC_ONE_ARG(Flags);
 
+	// make sure pushbuffer pasring complete before we process swap.
+	EmuKickOff();
+	while (g_nv2a_fifo_is_busy) {
+		//__asm {
+			//mov  ecx, Xbox_D3DDevice
+		//}
+		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
+		EmuKickOff();
+	}
+
+	// TODO: Ensure this flag is always the same across library versions
+	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
+		LOG_TEST_CASE("D3DDevice_Swap: Flags != 0");
 	// Handle swap flags
 	// We don't maintain a swap chain, and draw everything to backbuffer 0
 	// so just hack around the swap flags for now...
@@ -9077,15 +9093,21 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 	// Xbox vertex shader constants range from -96 to 95
 	// The host does not support negative, so we adjust to 0..191
 	Register += X_D3DSCM_CORRECTION;
-
+	/*
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
     (
         Register,
         (float*)pConstantData, // TODO : Validate this work correctly under D3D9
         ConstantCount
     );
+	*/
+	// read Vertex Shader constants from nv2a
+	//extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
+	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(Register);
+	memcpy(pConstantData, constant_floats, ConstantCount * sizeof(float) * 4);
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetVertexShaderConstant");
+
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetVertexShaderConstant");
 }
 
 // ******************************************************************
