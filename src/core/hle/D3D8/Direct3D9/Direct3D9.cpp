@@ -7879,12 +7879,19 @@ extern void CxbxUpdateHostVertexShader(); // TMP glue
 
 void CxbxUpdateNativeD3DResources()
 {
+	extern bool g_VertexShader_dirty; // tmp glue
+
 	// Before we start, make sure our resource cache stays limited in size
 	PrunePaletizedTexturesCache(); // TODO : Could we move this to Swap instead?
 
 	CxbxUpdateHostVertexDeclaration();
-
-	CxbxUpdateHostVertexShader();
+	// setup vertex shader input if there are any changes
+	if (g_VertexShader_dirty == true) {
+		CxbxUpdateHostVertexShader();
+		// reset dirty flag
+		g_VertexShader_dirty = false;
+	}
+	
 
 	CxbxUpdateHostVertexShaderConstants();
 
@@ -9630,15 +9637,15 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	CONST D3DMATRIX *pComposite
 )
 {
-	// we can't calculate matProjection without pModelView or pComposite
-	if ( ( pComposite == nullptr ) || (pModelView == nullptr )) {
+	// we can't calculate matProjection without pModelView
+	if ((pModelView == nullptr )) {
 		// cancel DirectModelView transform mode. 
 		pgraph_use_Transform();
 		return;
 	}
 
 	g_xbox_transform_ModelView = *pModelView;
-	g_xbox_transform_Composite = *pComposite;
+	if (pComposite != nullptr)g_xbox_transform_Composite = *pComposite;
 	if(pInverseModelView!=nullptr)g_xbox_transform_InverseModelView = *pInverseModelView;
 	// matModelView=matWorld*matView, we have no idea of these two Matrix. so we use unit matrix for view matrix, and matModelView matrix for matWorld
 	D3DMATRIX matUnit;
@@ -9653,6 +9660,18 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	g_xbox_DirectModelView_View= matUnit;
 	g_xbox_DirectModelView_World= *pModelView; 
 
+	D3DXMATRIX matInverseModelViewNew;
+	// get matInverseModelViewNew, the input pInverseModelView might not present, so we always recalculate it.
+	D3DXMatrixInverse(&matInverseModelViewNew, NULL, (D3DXMATRIX*)pModelView);
+
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, &matInverseModelViewNew);
+
+	if ((pComposite == nullptr)) {
+		// use xbox d3d projection if we don't have pComposite
+		CxbxImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &g_xbox_DirectModelView_Projection);
+		return;
+	}
+
 	// matComposite = matModelView * matProjectionViewportTransform
 	// matProjectionViewportTransform = matPjojection * matViewportTransform
 	// if we set matProjection to matUnit, then CDevice_GetProjectionViewportMatrix() will return matViewportTransform
@@ -9661,17 +9680,21 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	//CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matUnit);
 	// zeroout matViewportTransform
 	//memset(&matViewportTransform._11, 0, sizeof(matViewportTransform));
-	XB_TRMP(D3DDevice_GetProjectionViewportMatrix)(&matViewportTransform);
+	if(XB_TRMP(D3DDevice_GetProjectionViewportMatrix)){
+	    XB_TRMP(D3DDevice_GetProjectionViewportMatrix)(&matViewportTransform);
+	}
+	else {
+		// can't calculate projection matrix, use xbox d3d projection matrix
+		CxbxImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &g_xbox_DirectModelView_Projection);
+		return;
+	}
 
 	D3DXMATRIX matInverseViewportTransform;
 	// get matInverseViewportTransform
 	D3DXMatrixInverse(&matInverseViewportTransform, NULL, &matViewportTransform);
 
-	D3DXMATRIX matInverseModelViewNew;
-	// get matInverseModelViewNew, the input pInverseModelView might not present, so we always recalculate it.
-	D3DXMatrixInverse(&matInverseModelViewNew, NULL, (D3DXMATRIX*)pModelView);
 
-	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, &matInverseModelViewNew);
+
 
 	//D3DXMATRIX matProjection;
 	// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection

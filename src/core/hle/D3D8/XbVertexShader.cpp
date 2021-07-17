@@ -61,6 +61,7 @@ extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
 
 VertexShaderMode g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction;
 bool g_UseFixedFunctionVertexShader = true;
+bool g_VertexShader_dirty = false;
 
                 xbox::dword_xt g_Xbox_VertexShader_Handle = 0;
 #ifdef CXBX_USE_GLOBAL_VERTEXSHADER_POINTER // TODO : Would this be more accurate / simpler?
@@ -1372,6 +1373,9 @@ void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 #endif
 		g_Xbox_VertexShader_Handle = Handle;
 	}
+	extern bool g_VertexShader_dirty; // tmp glue
+	// set vertex shader dirty flag
+	g_VertexShader_dirty = true;
 }
 
 void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
@@ -1387,6 +1391,9 @@ void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
 
 	auto tokens = (DWORD*)&pFunction[1];
 	CxbxSetVertexShaderSlots(tokens, Address, shaderHeader.NumInst);
+	extern bool g_VertexShader_dirty; // tmp glue
+	// set vertex shader dirty flag
+	g_VertexShader_dirty = true;
 }
 //these two members of vertex shader are not in fixed offset, their offset varies with d3d8 versions.
 //static unsigned int ProgramAndConstantsDwords_Offset = 0;//
@@ -1462,6 +1469,9 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
 
         pProgramAndConstants += nrDWORDS;
     }
+	extern bool g_VertexShader_dirty; // tmp glue
+	// set vertex shader dirty flag
+	g_VertexShader_dirty = true;
 }
 
 // Set default values for attributes missing from vertex declaration
@@ -1563,6 +1573,9 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 			g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction;
 		}
 	}
+	extern bool g_VertexShader_dirty; // tmp glue
+	// set vertex shader dirty flag
+	g_VertexShader_dirty = true;
 }
 
 void CxbxImpl_DeleteVertexShader(DWORD Handle)

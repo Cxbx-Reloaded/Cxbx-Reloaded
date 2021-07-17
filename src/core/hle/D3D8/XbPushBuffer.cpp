@@ -63,7 +63,7 @@ void EmuExecutePushBuffer
 		assert(0);
 	}
 	// Set pushbuffer parsing busy flag.
-	g_nv2a_fifo_is_busy = true;
+	//g_nv2a_fifo_is_busy = true;
 	// KickOff xbox d3d pushbuffer first. 
 	EmuKickOff();
 	// Wait till pushbuffer parsing complete.
@@ -232,6 +232,7 @@ extern D3DMATRIX g_xbox_transform_Composite;
 extern D3DMATRIX g_xbox_DirectModelView_View;
 extern D3DMATRIX g_xbox_DirectModelView_World;
 extern D3DMATRIX g_xbox_DirectModelView_Projection;
+extern bool g_VertexShader_dirty;
 
 extern xbox::void_xt WINAPI CxbxImpl_SetModelView
 (
@@ -265,7 +266,7 @@ bool pgraph_is_DirectModelView(void)
 }
 bool pgraph_is_ModelView_dirty(void)
 {
-	if ((g_xbox_transform_ModelView_dirty == true) || (g_xbox_transform_Composite_dirty = true)) {
+	if ((g_xbox_transform_ModelView_dirty == true)) {
 		return true;
 	}
 	else {
@@ -431,7 +432,13 @@ void D3D_draw_state_update(NV2AState *d)
 	if (pgraph_is_DirectModelView()) {
 		// this will update matrix world/view/projection using matrix ModelView and Composite
 		if (pgraph_is_ModelView_dirty()) {
-			CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
+			if((g_xbox_transform_ModelView_dirty == true) && (g_xbox_transform_Composite_dirty== true)  ){
+				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
+			}
+			else if ((g_xbox_transform_ModelView_dirty == true) && (g_xbox_transform_Composite_dirty != true)) {
+				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, nullptr);;
+			}
+
 			//clear ModelView dirty flags.
 			g_xbox_transform_ModelView_dirty = false;
 			g_xbox_transform_InverseModelView_dirty = false;
@@ -449,6 +456,7 @@ void D3D_draw_state_update(NV2AState *d)
 
 		//these matrix will be used in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState() later in CxbxUpdateNativeD3DResources();
 	}
+	
 
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF

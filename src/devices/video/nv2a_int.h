@@ -115,6 +115,8 @@ static int ffs(int valu)
 // Non-power-of-two CASE statements
 #define CASE_3(v, step) CASE_2(v, step) : CASE_1(v + (step) * 2, step)
 #define CASE_6(v, step) CASE_4(v, step) : CASE_2(v + (step) * 4, step)
+#define CASE_10(v, step) CASE_8(v, step) : CASE_2(v + (step) * 8, step)
+
 
 #define NV2A_DEVICE(obj) \
     OBJECT_CHECK(NV2AState, (obj), "nv2a")
@@ -346,14 +348,17 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t Rev_0430[0xc / 4];
 	uint32_t SetPointSize;				//0x0000043C
 	float SetProjectionMatrix[16];		//0x00000440
+	// xbox only uses SetModelViewMatrix0[16]; value set is transposed
 	float SetModelViewMatrix0[16];		//0x00000480
 	float SetModelViewMatrix1[16];		//0x000004C0
 	float SetModelViewMatrix2[16];		//0x00000500
 	float SetModelViewMatrix3[16];		//0x00000540
+	// xbox only uses SetInverseModelViewMatrix0[16];  value set is not transposed
 	float SetInverseModelViewMatrix0[16];	//0x00000580
 	float SetInverseModelViewMatrix1[16];	//0x000005C0
 	float SetInverseModelViewMatrix2[16];	//0x00000600
 	float SetInverseModelViewMatrix3[16];	//0x00000640
+	//  value set is transposed
 	float SetCompositeMatrix[16];		//0x00000680
 	float SetTextureMatrix0[16];		//0x000006C0
 	float SetTextureMatrix1[16];		//0x00000700
