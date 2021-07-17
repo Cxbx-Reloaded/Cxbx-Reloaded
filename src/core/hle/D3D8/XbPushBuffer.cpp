@@ -604,7 +604,7 @@ void D3D_draw_inline_array(NV2AState *d)
 		//pg->inline_array_length was advanced every time we receive a dword/float from pushbuffer.
 		//here we convert it to the actual vertex count.
 		DrawContext.dwVertexCount = pg->inline_array_length / dwVertexSizeDwords;
-		DrawContext.dwStartVertex = 0;
+		//DrawContext.dwStartVertex = 0;
 		DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 		DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
 
