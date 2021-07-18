@@ -7,8 +7,9 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 
 ## System Requirements
 ### Minimum
-  * OS: Windows 7+ x64, or x86-64 operating system with Wine. 32-bit is not supported.
-    * Wine is not officially supported by us.
+  * OS: Windows 7+ x64, or x86-64 Linux with Wine. 32-bit is not supported.
+    * MacOS with Wine is known not to work, and BSD-based systems are untested.
+    * Also note that Wine is relatively unstable, and it might break compatibility with Cxbx-Reloaded at any time without warning.
   * GPU: Direct3D 9.0c with Pixel Shader Model 2.x, and Vertex Shader Model 3.0.
 
 ## Prerequisites
@@ -17,7 +18,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * [Npcap *(used for network emulation)*](https://nmap.org/npcap/#download)
     * Make sure to enable winpcap compatibility mode!
 
-### OS with Wine (not officially supported by us)
+### Wine
 **NOTICE: Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 5.0.3 which is the last known working version.**
   * Winetricks
     * `vcrun2017` or `vcrun2019`
@@ -31,7 +32,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from our official website's download page, or the links below:
 
   * **[Release Builds](https://cxbx-reloaded.co.uk/download)**
-    * **Wine users will need to use `CxbxReloaded-Release-VS2017.zip` for it to run correctly.**
+    * **Wine users might need to use `CxbxReloaded-Release-VS2017.zip` for better compatibility.**
   * *[Full build history](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=workflow%3A%22GitHub+CI%22)*
 
 ## Compatibility
