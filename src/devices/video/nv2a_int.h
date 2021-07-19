@@ -277,8 +277,13 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t Rev_0218[0x48 / 4];
 	uint32_t SetCombinerAlphaICW[8];	//0x00000260
 	uint32_t Rev_0280[0x8 / 4];
-	uint32_t SetCombinerSpecularFogCW0; //0x00000288
-	uint32_t SetCombinerSpecularFogCW1; //0x0000028C
+	union {
+		uint32_t SetCombinerSpecularFogCW[2]; //0x00000288
+		struct {
+			uint32_t SetCombinerSpecularFogCW0; //0x00000288
+			uint32_t SetCombinerSpecularFogCW1; //0x0000028C
+		};
+	};
 	uint32_t SetControl0;
 	uint32_t SetLightControl;
 	uint32_t SetColorMaterial;
@@ -349,21 +354,36 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t SetPointSize;				//0x0000043C
 	float SetProjectionMatrix[16];		//0x00000440
 	// xbox only uses SetModelViewMatrix0[16]; value set is transposed
-	float SetModelViewMatrix0[16];		//0x00000480
-	float SetModelViewMatrix1[16];		//0x000004C0
-	float SetModelViewMatrix2[16];		//0x00000500
-	float SetModelViewMatrix3[16];		//0x00000540
+	union {
+		float SetModelViewMatrix[4][16];		//0x00000480
+		struct {
+			float SetModelViewMatrix0[16];		//0x00000480
+			float SetModelViewMatrix1[16];		//0x000004C0
+			float SetModelViewMatrix2[16];		//0x00000500
+			float SetModelViewMatrix3[16];		//0x00000540
+		};
+	};
 	// xbox only uses SetInverseModelViewMatrix0[16];  value set is not transposed
-	float SetInverseModelViewMatrix0[16];	//0x00000580
-	float SetInverseModelViewMatrix1[16];	//0x000005C0
-	float SetInverseModelViewMatrix2[16];	//0x00000600
-	float SetInverseModelViewMatrix3[16];	//0x00000640
+	union {
+		float SetInverseModelViewMatrix[4][16];	//0x00000580
+		struct {
+			float SetInverseModelViewMatrix0[16];	//0x00000580
+			float SetInverseModelViewMatrix1[16];	//0x000005C0
+			float SetInverseModelViewMatrix2[16];	//0x00000600
+			float SetInverseModelViewMatrix3[16];	//0x00000640
+		};
+	};
 	//  value set is transposed
 	float SetCompositeMatrix[16];		//0x00000680
-	float SetTextureMatrix0[16];		//0x000006C0
-	float SetTextureMatrix1[16];		//0x00000700
-	float SetTextureMatrix2[16];		//0x00000740
-	float SetTextureMatrix3[16];		//0x00000780
+	union {
+		float SetTextureMatrix[4][16];	//0x000006C0
+		struct {
+			float SetTextureMatrix0[16];		//0x000006C0
+			float SetTextureMatrix1[16];		//0x00000700
+			float SetTextureMatrix2[16];		//0x00000740
+			float SetTextureMatrix3[16];		//0x00000780
+		};
+	};
 	uint32_t Rev_07c0[0x80 / 4];
 	struct {
 		float S[4];
@@ -384,8 +404,13 @@ typedef struct NV097KelvinPrimitive {
 	float SetViewportOffset[4];			//0x00000A20
 	float SetPointParams[8];			//0x00000A30
 	float SetEyePosition[4];			//0x00000A50
-	uint32_t SetCombinerFactor0[8];		//0x00000A60
-	uint32_t SetCombinerFactor1[8];		//0x00000A80
+	union {
+		uint32_t SetCombinerFactor[2][8];	//0x00000A60
+		struct {
+			uint32_t SetCombinerFactor0[8];		//0x00000A60
+			uint32_t SetCombinerFactor1[8];		//0x00000A80
+		};
+	};
 	uint32_t SetCombinerAlphaOCW[8];	//0x00000AA0
 	uint32_t SetCombinerColorICW[8];	//0x00000AC0
 	uint32_t SetColorKeyColor[4];		//0x00000AE0
@@ -457,10 +482,13 @@ typedef struct NV097KelvinPrimitive {
 	float SetWeight3f[3];				//0x000016B0
 	uint32_t SetEdgeFlag;
 	float SetWeight4f[4];				//0x000016C0
-	float SetTransformFixedConst3[4];	//0x000016D0
-	float SetTransformFixedConst0[4];	//0x000016E0
-	float SetTransformFixedConst1[4];	//0x000016F0
-	float SetTransformFixedConst2[4];	//0x00001700
+	struct {
+		// Note SetTransformFixedConst# can't be put in a union, as their indexing order isn't incremental :
+		float SetTransformFixedConst3[4];	//0x000016D0
+		float SetTransformFixedConst0[4];	//0x000016E0
+		float SetTransformFixedConst1[4];	//0x000016F0
+		float SetTransformFixedConst2[4];	//0x00001700
+	};
 	uint32_t InvalidateVertexCacheFile;
 	uint32_t InvalidateVertexFile;
 	uint32_t TlNop;
@@ -538,10 +566,15 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t SetClearRectHorizontal;
 	uint32_t SetClearRectVertical;			//0x00001D9C
 	uint32_t Rev_1da0[0x40 / 4];
-	uint32_t SetBeginPatch0;				//0x00001DE0
-	uint32_t SetBeginPatch1;				//0x
-	uint32_t SetBeginPatch2;				//0x
-	uint32_t SetBeginPatch3;				//0x
+	union {
+		uint32_t SetBeginPatch[4];				//0x00001DE0
+		struct {
+			uint32_t SetBeginPatch0;				//0x00001DE0
+			uint32_t SetBeginPatch1;				//0x
+			uint32_t SetBeginPatch2;				//0x
+			uint32_t SetBeginPatch3;				//0x
+		};
+	};
 	uint32_t SetEndPatch;					//0x00001DF0
 	uint32_t SetBeginEndSwatch;
 	uint32_t SetBeginEndCurve;
