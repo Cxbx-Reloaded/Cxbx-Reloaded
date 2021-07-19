@@ -2242,6 +2242,7 @@ int pgraph_handle_method(
                         arg0 = argv[argc];
                         // pg->projection_matrix[slot] = *(float*)&parameter;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_PMAT0 + slot / 4;
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetProjectionMatrix[slot])));
                         pg->vsh_constants[row][slot % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
@@ -2257,6 +2258,7 @@ int pgraph_handle_method(
 						unsigned int matnum = slot / 16;
 						unsigned int entry = slot % 16;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_MMAT0 + matnum * 4 + entry / 4;
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetModelViewMatrix[matnum][entry])));
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
@@ -2272,6 +2274,7 @@ int pgraph_handle_method(
 						unsigned int matnum = slot / 16;
                         unsigned int entry = slot % 16;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_IMMAT0 + matnum * 4 + entry / 4;
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetInverseModelViewMatrix[matnum][entry])));
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
@@ -2284,20 +2287,22 @@ int pgraph_handle_method(
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         unsigned int row = NV_IGRAPH_XF_XFCTX_CMAT0 + slot / 4;
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetCompositeMatrix[slot])));
                         pg->vsh_constants[row][slot % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
                     break;
                 }
 
-                CASE_64(NV097_SET_TEXTURE_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetInverseModelViewMatrix0[16] SetInverseModelViewMatrix1[16] SetInverseModelViewMatrix2[16] SetInverseModelViewMatrix3[16]
-                    //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
+                CASE_64(NV097_SET_TEXTURE_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetTextureMatrix[4][16]
+                    //KelvinPrimitive.SetTextureMatrix[16] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_TEXTURE_MATRIX) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         unsigned int tex = slot / 16;
                         unsigned int entry = slot % 16;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_T0MAT + tex * 8 + entry / 4;
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetTextureMatrix[tex][entry % 4])));
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
@@ -2305,7 +2310,7 @@ int pgraph_handle_method(
                 }
                 /* Handles NV097_SET_TEXGEN_PLANE_S,T,R,Q */ //KelvinPrimitive.SetTexgenPlane[4]::{S[4],T[4],R[4],Q[4]}
                 CASE_64(NV097_SET_TEXGEN_PLANE_S, 4) : {//done //pg->KelvinPrimitive.SetTexgenPlane[i].S[j] .T[j] .R[j] .Q[j]  tex=i, entry=j
-                    //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
+                    //KelvinPrimitive.SetTexgenPlane[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_TEXGEN_PLANE_S) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
@@ -2319,12 +2324,11 @@ int pgraph_handle_method(
                 }
 
                 CASE_3(NV097_SET_FOG_PARAMS, 4) ://done //pg->KelvinPrimitive.SetFogParams[3]
-                    //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
+                    //KelvinPrimitive.SetFogParams[3] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_FOG_PARAMS) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        
-                        //pg->pgraph_regs[NV_PGRAPH_FOGPARAM0 / 4 + slot ] = arg0; //NV_PGRAPH_FOGPARAM0 remapped to NV097_SET_FOG_PARAMS
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetFogParams[slot])));
                         /* Cxbx note: slot = 2 is right after slot = 1 */
                         pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FOG_K][slot] = arg0;
                         pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FOG_K] = true;
@@ -2341,8 +2345,8 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetFogPlane[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_FOG_PLANE) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
-                        arg0 = argv[argc];
-                        
+                        arg0 = argv[argc];                        
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetFogPlane[slot])));
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_FOG][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_FOG] = true;
                     }
@@ -2353,6 +2357,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_SPECULAR_PARAMS) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetSpecularParams[slot])));
                     // this state is not implemented yet.
                         //pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         //pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
@@ -2372,6 +2377,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_SCENE_AMBIENT_COLOR) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetSceneAmbientColor[slot])));
                         pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
                     }
@@ -2382,6 +2388,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetViewportOffset[slot])));
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
                     }
@@ -2392,6 +2399,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetPointParams[slot])));
                     //this state is not implement yet.
                         //pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         //pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
@@ -2403,6 +2411,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_EYE_POSITION) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetEyePosition[slot])));
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_EYEP][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_EYEP] = true;
                     }
@@ -2448,6 +2457,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_SCALE) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetViewportScale[slot])));
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPSCL] = true;
                     }
@@ -2590,16 +2600,16 @@ int pgraph_handle_method(
 					    //NV097_SET_TRANSFORM_PROGRAM will advanced after each execution of NV097_SET_TRANSFORM_PROGRAM.
 					    //for continuous batch NV097_SET_TRANSFORM_PROGRAM methods, it will not have NV097_SET_TRANSFORM_PROGRAM_LOAD in between.
 					slot = (method - NV097_SET_TRANSFORM_PROGRAM) / 4;
-                    assert(arg0 == pg->KelvinPrimitive.SetTransformProgram[slot]);
-                    pg->KelvinPrimitive.SetTransformProgramLoad+= slot/4;
+                    // ONLY INCREMENT IN BELOW COPY LOOP : pg->KelvinPrimitive.SetTransformProgramLoad += slot/4;
                     for (int argc = 0; argc < method_count; argc++, slot++) {
-                        //arg0 = argv[argc];
+                        arg0 = argv[argc];
                         //target program register address is prestored in KelvinPrimitive.SetTransformProgramLoad
                         assert(pg->KelvinPrimitive.SetTransformProgramLoad < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
+                        assert(arg0 == pg->KelvinPrimitive.SetTransformProgram[slot]);
                         //pg->KelvinPrimitive.SetTransformProgram[32] is not enough for xbox d3d, pgraph uses vsh_program_slots[136][4] to store vertex shader program
-                        pg->vsh_program_slots[pg->KelvinPrimitive.SetTransformProgramLoad][argc % 4] = argv[argc]; // was arg0;
-                        if (argc % 4 == 3) {
-                            pg->KelvinPrimitive.SetTransformProgramLoad+= + 1;
+                        pg->vsh_program_slots[pg->KelvinPrimitive.SetTransformProgramLoad][slot % 4] = arg0;
+                        if (slot % 4 == 3) {
+                            pg->KelvinPrimitive.SetTransformProgramLoad++;
 							//KelvinPrimitive.SetTransformProgramLoad must be advanced
                             //for single time method program set, we may leave the SET_TRANSFORM_PROGRAM_LOAD along,
                             //but if the program is large and requires multiple times of method set, the SET_TRANSFORM_PROGRAM_LOAD might need to be update.
@@ -2607,7 +2617,7 @@ int pgraph_handle_method(
                         }
                     }
 					// safe guard to make sure vertex shader program token parser won't went over the end of final slot.
-					pg->vsh_program_slots[X_VSH_MAX_INSTRUCTION_COUNT][3] = 1;
+					pg->vsh_program_slots[X_VSH_MAX_INSTRUCTION_COUNT][3] = 1; // TODO : Move this to immediately prior to parsing
                     break;
                 }
 
@@ -2620,19 +2630,20 @@ int pgraph_handle_method(
                     //for continuous batch NV097_SET_TRANSFORM_CONSTANT_LOAD operation, NV097_SET_TRANSFORM_CONSTANT_LOAD only has to be set in the very first beginning.
                     slot = (method - NV097_SET_TRANSFORM_CONSTANT) / 4;
                     //slot is sopposed to be 0 here.
-                    pg->KelvinPrimitive.SetTransformConstantLoad+=slot/4;
+                    // ONLY INCREMENT IN BELOW COPY LOOP : pg->KelvinPrimitive.SetTransformConstantLoad += slot/4;
                     for (int argc = 0; argc < method_count; argc++) {
                         arg0 = argv[argc];
                         //the target constant register address is prestored in NV097_SET_TRANSFORM_CONSTANT_LOAD  KelvinPrimitive.SetTransformConstantLoad
                         assert(pg->KelvinPrimitive.SetTransformConstantLoad < NV2A_VERTEXSHADER_CONSTANTS);
+                        assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetTransformConstant[slot])));
                         // VertexShaderConstant *vsh_constant = &pg->vsh_constants[const_load];
-                        if ((arg0 != pg->vsh_constants[pg->KelvinPrimitive.SetTransformConstantLoad][argc % 4])) {
+                        if ((arg0 != pg->vsh_constants[pg->KelvinPrimitive.SetTransformConstantLoad][slot % 4])) {
                             pg->vsh_constants_dirty[pg->KelvinPrimitive.SetTransformConstantLoad] |= 1;
-                            pg->vsh_constants[pg->KelvinPrimitive.SetTransformConstantLoad][argc % 4] = arg0;
+                            pg->vsh_constants[pg->KelvinPrimitive.SetTransformConstantLoad][slot % 4] = arg0;
                         }
                         //pg->KelvinPrimitive.SetTransformConstant[32] is not enough for xbox d3d, pgraph uses vsh_constants[192][4] to store vertex shader program
-                        if (argc % 4 == 3) {
-                            pg->KelvinPrimitive.SetTransformConstantLoad+= 1; //pg->KelvinPrimitive.SetTransformConstantLoad must be advanced.
+                        if (slot % 4 == 3) {
+                            pg->KelvinPrimitive.SetTransformConstantLoad++; //pg->KelvinPrimitive.SetTransformConstantLoad must be advanced.
                         }
                     }
 					break;
@@ -2644,11 +2655,12 @@ int pgraph_handle_method(
 					for (size_t arg_c = 0; arg_c < method_count; arg_c++,slot++) {
                         arg0 = argv[arg_c];
                         unsigned int part =  slot % 16;
-                        unsigned int light_index = arg_count / 16; /* [Light index], we have 8 lights, each light holds 16 dwords */
+                        unsigned int light_index = slot / 16; /* [Light index], we have 8 lights, each light holds 16 dwords */
                         assert(light_index < 8);
                         switch(part) {//check the definition of pg->ltctxb, then correlate to KelvinPrimitive.SetBackLight.???
                             //CASE_3(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4):
                             CASE_3(0, 1) ://NV097_SET_BACK_LIGHT_AMBIENT_COLOR
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetBackLight[light_index].AmbientColor[part])));
                                 //part -= NV097_SET_BACK_LIGHT_AMBIENT_COLOR / 4;
                                 pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_BAMB + light_index *6][part] = arg0;
                                 pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_BAMB + light_index *6] = true;
@@ -2656,11 +2668,13 @@ int pgraph_handle_method(
                             //CASE_3(NV097_SET_BACK_LIGHT_DIFFUSE_COLOR, 4):
                             CASE_3(3, 1) ://NV097_SET_BACK_LIGHT_DIFFUSE_COLOR
                                 //part -= NV097_SET_BACK_LIGHT_DIFFUSE_COLOR / 4;
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetBackLight[light_index].DiffuseColor[part])));
                                 pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_BDIF + light_index *6][part] = arg0;
                                 pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_BDIF + light_index *6] = true;
                                 break;
                             //CASE_3(NV097_SET_BACK_LIGHT_SPECULAR_COLOR, 4):
                             CASE_3(6, 1):
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetBackLight[light_index].SpecularColor[part])));
                                 //part -= NV097_SET_BACK_LIGHT_SPECULAR_COLOR / 4;
                                 pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_BSPC + light_index *6][part] = arg0;
                                 pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_BSPC + light_index *6] = true;
@@ -2679,56 +2693,66 @@ int pgraph_handle_method(
                     for (size_t arg_count = 0; arg_count < method_count; arg_count++,slot++) {
                         arg0 = ldl_le_p(argv + arg_count);
 
-                        unsigned int part = arg_count % 32;
-                        unsigned int light_index = arg_count / 32; /* [Light index] */ //each light holds 32 dwords 
+                        unsigned int part = slot % 32;
+                        unsigned int light_index = slot / 32; /* [Light index] */ //each light holds 32 dwords 
                         assert(light_index < 8);
                         switch(part) {//check the definition of pg->ltctxb, then correlate to KelvinPrimitive.SetBackLight.???
                             CASE_3(0, 1)://NV097_SET_LIGHT_AMBIENT_COLOR
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].AmbientColor[part])));
                                 //part -= NV097_SET_LIGHT_AMBIENT_COLOR / 4;
                                 pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_AMB + light_index *6][part] = arg0;
                                 pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_AMB + light_index *6] = true;
                                 break;
                             CASE_3(3, 1)://NV097_SET_LIGHT_DIFFUSE_COLOR
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].DiffuseColor[part])));
                                 //part -= NV097_SET_LIGHT_DIFFUSE_COLOR / 4;
                                 pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_DIF + light_index *6][part] = arg0;
                                 pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_DIF + light_index *6] = true;
                                 break;
                             CASE_3(6, 1)://NV097_SET_LIGHT_SPECULAR_COLOR
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].SpecularColor[part])));
                                 //part -= NV097_SET_LIGHT_SPECULAR_COLOR / 4;
                                 pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_SPC + light_index *6][part] = arg0;
                                 pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_SPC + light_index *6] = true;
                                 break;
                             case 9://NV097_SET_LIGHT_LOCAL_RANGE:
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].LocalRange)));
                                 pg->ltc1[NV_IGRAPH_XF_LTC1_r0 + light_index][0] = arg0;
                                 pg->ltc1_dirty[NV_IGRAPH_XF_LTC1_r0 + light_index] = true;
                                 break;
                             CASE_3(10,1)://NV097_SET_LIGHT_INFINITE_HALF_VECTOR
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].InfiniteHalfVector[part])));
                                 //part -= NV097_SET_LIGHT_INFINITE_HALF_VECTOR / 4;
                                 //KelvinPrimitive.SetLight[8].InfiniteHalfVector[3]
                                 //pg->light_infinite_half_vector[light_index][part] = *(float*)&arg0;
                                 break;
                             CASE_3(13,1)://NV097_SET_LIGHT_INFINITE_DIRECTION
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].InfiniteDirection[part])));
                                 //part -= NV097_SET_LIGHT_INFINITE_DIRECTION / 4;
                                 //KelvinPrimitive.SetLight[8].InfiniteDirection[3]
                                 //pg->light_infinite_direction[light_index][part] = *(float*)&arg0;
                                 break;
                             CASE_3(16,1)://NV097_SET_LIGHT_SPOT_FALLOFF
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].SpotFalloff[part])));
                                 //part -= NV097_SET_LIGHT_SPOT_FALLOFF / 4;
                                 pg->ltctxa[NV_IGRAPH_XF_LTCTXA_L0_K + light_index *2][part] = arg0;
                                 pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_L0_K + light_index *2] = true;
                                 break;
                             CASE_4(19,1)://NV097_SET_LIGHT_SPOT_DIRECTION
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].SpotDirection[part])));
                                 //part -= NV097_SET_LIGHT_SPOT_DIRECTION / 4;
                                 //KelvinPrimitive.SetLight[8].SpotDirection[4]
                                 pg->ltctxa[NV_IGRAPH_XF_LTCTXA_L0_SPT + light_index *2][part] = arg0;
                                 pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_L0_SPT + light_index *2] = true;
                                 break;
                             CASE_3(23,1)://NV097_SET_LIGHT_LOCAL_POSITION
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].LocalPosition[part])));
                                 //part -= NV097_SET_LIGHT_LOCAL_POSITION / 4;
                                 //KelvinPrimitive.SetLight[8].LocalPosition[]
                                 //pg->light_local_position[light_index][part] = *(float*)&arg0;
                                 break;
                             CASE_3(26,1)://NV097_SET_LIGHT_LOCAL_ATTENUATION
+                                assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetLight[light_index].LocalAttenuation[part])));
                                 //part -= NV097_SET_LIGHT_LOCAL_ATTENUATION / 4;
                                 //pg->KelvinPrimitive.SetLight[8].LocalAttenuation[3]
                                 //pg->light_local_attenuation[light_index][part] = *(float*)&arg0;
@@ -2759,7 +2783,9 @@ int pgraph_handle_method(
 						assert(method_count == 3);
 						slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 						for (unsigned argc = 0; argc < method_count; argc++) {
+							arg0 = argv[argc];
 							int part = (method - NV097_SET_VERTEX3F + argc) % 4;
+							assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetVertex3f[part])));
 							float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
 							inline_value[part] = pg->KelvinPrimitive.SetVertex3f[part];
 							if (part == 2) { // Note : no check needed on (slot == NV2A_VERTEX_ATTR_POSITION), as it can't differ here
@@ -2777,6 +2803,7 @@ int pgraph_handle_method(
 						slot = NV2A_VERTEX_ATTR_POSITION; // Countrary to method NV097_SET_VERTEX_DATA*, NV097_SET_VERTEX[34]F always target the first slot (index zero : the vertex position attribute)
 						for (unsigned argc = 0; argc < method_count; argc++) {
 							int part = (method - NV097_SET_VERTEX4F + argc) % 4;
+							assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetVertex4f[part])));
 							float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
 							inline_value[part] = pg->KelvinPrimitive.SetVertex4f[part];
 							if (part == 3) { // Note : no check needed on (slot == NV2A_VERTEX_ATTR_POSITION), as it can't differ here
@@ -2886,6 +2913,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VERTEX_DATA_ARRAY_OFFSET) / 4;
                     for (size_t argc = 0; argc < method_count; argc++, slot ++) {
                             arg0 = argv[argc];
+                            assert(arg0 == pg->KelvinPrimitive.SetVertexDataArrayOffset[slot]);
 
                             pg->vertex_attributes[slot].dma_select =
                                 arg0 & 0x80000000;
@@ -2900,10 +2928,10 @@ int pgraph_handle_method(
 
                 CASE_16(NV097_SET_VERTEX_DATA_ARRAY_FORMAT, 4):{ //done //pg->KelvinPrimitive.SetVertexDataArrayFormat[16]
 					//pg->KelvinPrimitive.SetVertexDataArrayFormat[i] = Attribute [i].Format (SizeAndType) &0xFF + if (draw up method?)Stride << 8 : 0
+					slot = (method - NV097_SET_VERTEX_DATA_ARRAY_FORMAT) / 4;
 					for (size_t argc = 0; argc < method_count; argc++,slot++) {
                         arg0 = argv[argc];
-						slot = (method - NV097_SET_VERTEX_DATA_ARRAY_FORMAT) / 4;
-						slot += argc;
+                        assert(arg0 == pg->KelvinPrimitive.SetVertexDataArrayFormat[slot]);
 						VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
 
                         vertex_attribute->format =
