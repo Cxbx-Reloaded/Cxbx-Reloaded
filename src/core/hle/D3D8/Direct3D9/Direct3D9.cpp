@@ -6858,11 +6858,7 @@ void CxbxImpl_SetTransform
     LOG_INIT
 
 	d3d8TransformState.SetTransform(State, pMatrix);
-
-	auto d3d9State = EmuXB2PC_D3DTS(State);
-
-    HRESULT hRet = g_pD3DDevice->SetTransform(d3d9State, pMatrix);
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
+	// Note : SetTransform is handled in our fixed function shader  - see UpdateFixedFunctionVertexShaderState()
 }
 
 // MultiplyTransform should call SetTransform, we'd like to know if it didn't
@@ -7742,7 +7738,7 @@ void CxbxUpdateHostVertexShaderConstants()
 	// So we can skip updates
 	static bool isXboxConstants = false;
 
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Write host FF shader state
 		// TODO dirty tracking like for Xbox constants?
 		UpdateFixedFunctionVertexShaderState();
@@ -8546,12 +8542,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 	xbox::hresult_xt hRet = XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
 
 	d3d8LightState.EnableLight(Index, bEnable);
-#ifdef CXBX_USE_D3D11
-	// Under D3D11, LightEnable relies on our fixed function shader (see if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
-#else
-	HRESULT hRet_host = g_pD3DDevice->LightEnable(Index, bEnable);
-	DEBUG_D3DRESULT(hRet_host, "g_pD3DDevice->LightEnable");
-#endif
+	// Note : LightEnable is handled in our fixed function shader  - see UpdateFixedFunctionVertexShaderState()
 
     return hRet;
 }
