@@ -33,7 +33,7 @@
 #include "EmuShared.h"
 #include "core/hle/Intercept.hpp"
 #include "RenderStates.h"
-#include "core/hle/D3D8/XbVertexShader.h" // For g_UseFixedFunctionVertexShader, g_Xbox_VertexShaderMode and VertexShaderMode::FixedFunction
+#include "core/hle/D3D8/XbVertexShader.h" // For g_Xbox_VertexShaderMode and VertexShaderMode::FixedFunction
 #include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For g_pD3DDevice
 #include <optional>
 

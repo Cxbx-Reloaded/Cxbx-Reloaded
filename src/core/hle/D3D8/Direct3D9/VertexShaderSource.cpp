@@ -110,7 +110,7 @@ IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, char *s
 			&pHostVertexShader
 		);
 #endif
-		if (FAILED(hRet)) CxbxrKrnlAbort("Failed to create %s vertex shader", shader_category);
+		if (FAILED(hRet)) CxbxrAbort("Failed to create %s vertex shader", shader_category);
 
 		// TODO DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexShader");
 		if (SUCCEEDED(hRet)) {

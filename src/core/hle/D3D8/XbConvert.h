@@ -94,32 +94,6 @@ else
     CxbxrAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
 //*/
 
-// convert from xbox to pc texture transform state types
-inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(xbox::X_D3DTRANSFORMSTATETYPE State)
-{
-    // Handle Xbox -> D3D State mapping
-    switch (State) {
-	case xbox::X_D3DTS_VIEW: return D3DTS_VIEW;
-    case xbox::X_D3DTS_PROJECTION: return D3DTS_PROJECTION;
-    case xbox::X_D3DTS_TEXTURE0: return D3DTS_TEXTURE0;
-    case xbox::X_D3DTS_TEXTURE1: return D3DTS_TEXTURE1;
-    case xbox::X_D3DTS_TEXTURE2: return D3DTS_TEXTURE2;
-    case xbox::X_D3DTS_TEXTURE3: return D3DTS_TEXTURE3;
-    case xbox::X_D3DTS_WORLD: return D3DTS_WORLD;
-    case xbox::X_D3DTS_WORLD1: return D3DTS_WORLD1;
-    case xbox::X_D3DTS_WORLD2: return D3DTS_WORLD2;
-    case xbox::X_D3DTS_WORLD3: return D3DTS_WORLD3;
-    }
-
-    // Handle World Matrix offsets
-    if (State >= 256 && State <= 511) {
-		return D3DTS_WORLDMATRIX(State - 256);
-    }
-
-    CxbxrAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
-    return (D3DTRANSFORMSTATETYPE)0;
-}
-
 // convert from xbox to pc blend ops
 inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(xbox::X_D3DBLENDOP Value)
 {
