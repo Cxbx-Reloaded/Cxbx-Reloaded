@@ -277,21 +277,21 @@ bool pgraph_is_ModelView_dirty(void)
 void pgraph_SetModelViewMatrix(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
-	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_ModelView, (D3DXMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix0);
+	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_ModelView, (D3DXMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix0[0]);
 	g_xbox_transform_ModelView_dirty = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
 void pgraph_SetInverseModelViewMatrix(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
-	g_xbox_transform_InverseModelView = *(D3DMATRIX *)(&pg->KelvinPrimitive.SetInverseModelViewMatrix0);
+	g_xbox_transform_InverseModelView = *(D3DMATRIX *)(&pg->KelvinPrimitive.SetInverseModelViewMatrix0[0]);
 	g_xbox_transform_InverseModelView_dirty = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
 void pgraph_SetCompositeMatrix(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
-	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_Composite, (D3DXMATRIX *)&pg->KelvinPrimitive.SetCompositeMatrix);
+	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_Composite, (D3DXMATRIX *)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
 	g_xbox_transform_Composite_dirty = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
@@ -429,7 +429,7 @@ void D3D_draw_state_update(NV2AState *d)
 	// Unused : D3DRS_FOGVERTEXMODE
 
 	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
-	if (pgraph_is_DirectModelView()) {
+	if ((g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) && (pgraph_is_DirectModelView())) {
 		// this will update matrix world/view/projection using matrix ModelView and Composite
 		if (pgraph_is_ModelView_dirty()) {
 			if((g_xbox_transform_ModelView_dirty == true) && (g_xbox_transform_Composite_dirty== true)  ){
@@ -445,13 +445,14 @@ void D3D_draw_state_update(NV2AState *d)
 			g_xbox_transform_Composite_dirty = false;
 		}
 		// set host d3d transform
+		/*
 		HRESULT hRet = g_pD3DDevice->SetTransform(D3DTS_VIEW, &g_xbox_DirectModelView_View);
 		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(0), &g_xbox_DirectModelView_World);
 		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(1), &g_xbox_DirectModelView_World);
 		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(2), &g_xbox_DirectModelView_World);
 		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(3), &g_xbox_DirectModelView_World);
 		hRet = g_pD3DDevice->SetTransform(D3DTS_PROJECTION, &g_xbox_DirectModelView_Projection);
-
+		*/
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");
 
 		//these matrix will be used in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState() later in CxbxUpdateNativeD3DResources();
@@ -537,6 +538,7 @@ void D3D_draw_arrays(NV2AState *d)
 		//because CxbxDrawPrimitiveUP() can only handle dwStartVertex == 0, so we shift the pXboxVertexStreamZeroData to where dwStartVertex is, and reset dwStartVertex to 0.
 		DrawContext.pXboxVertexStreamZeroData = (PVOID)((DWORD)DrawContext.pXboxVertexStreamZeroData + DrawContext.uiXboxVertexStreamZeroStride*DrawContext.dwStartVertex);
 		DrawContext.dwStartVertex = 0;
+		// draw arrays 
 		CxbxDrawPrimitiveUP(DrawContext);
 	}
 
@@ -607,7 +609,7 @@ void D3D_draw_inline_array(NV2AState *d)
 		//DrawContext.dwStartVertex = 0;
 		DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 		DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
-
+		//inline array
 		CxbxDrawPrimitiveUP(DrawContext);
 
 	}

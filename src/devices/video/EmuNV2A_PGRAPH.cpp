@@ -2278,6 +2278,7 @@ int pgraph_handle_method(
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
+					pgraph_SetInverseModelViewMatrix(d);
                     break;
                 }
 				//Matrix transposed before pushed, always matrix 0, method count 16
@@ -2291,6 +2292,7 @@ int pgraph_handle_method(
                         pg->vsh_constants[row][slot % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
+					pgraph_SetCompositeMatrix(d);
                     break;
                 }
 
