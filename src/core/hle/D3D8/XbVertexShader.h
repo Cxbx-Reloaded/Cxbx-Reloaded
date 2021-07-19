@@ -100,7 +100,6 @@ enum class VertexShaderMode {
 };
 
 extern VertexShaderMode g_Xbox_VertexShaderMode;
-extern bool g_UseFixedFunctionVertexShader;
 
 // Intermediate vertex shader structures
 
