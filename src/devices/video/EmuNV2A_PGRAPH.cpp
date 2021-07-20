@@ -1183,6 +1183,321 @@ D3DMATRIX * pgraph_get_InverseModelViewMatrix(unsigned index)
 	return (D3DMATRIX *)&pg->KelvinPrimitive.SetInverseModelViewMatrix[index][0];
 }
 
+void kelvin_validate_struct_field_offsets_against_NV097_defines()
+{
+	static_assert(offsetof(NV097KelvinPrimitive, SetObject) == NV097_SET_OBJECT);
+	// uint32_t Rev_0004[0xfc / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, NoOperation) == NV097_NO_OPERATION); // 0x00000100
+	static_assert(offsetof(NV097KelvinPrimitive, Notify) == NV097_NOTIFY);
+	static_assert(offsetof(NV097KelvinPrimitive, SetWarningEnable) == NV097_SET_WARNING_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, GetState) == NV097_GET_STATE);
+	static_assert(offsetof(NV097KelvinPrimitive, WaitForIdle) == NV097_WAIT_FOR_IDLE);
+	// uint32_t Rev_0114[0xc / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetFlipRead) == NV097_SET_FLIP_READ);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFlipWrite) == NV097_SET_FLIP_WRITE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFlipModulo) == NV097_SET_FLIP_MODULO);
+	static_assert(offsetof(NV097KelvinPrimitive, FlipIncrementWrite) == NV097_FLIP_INCREMENT_WRITE);
+	static_assert(offsetof(NV097KelvinPrimitive, FlipStall) == NV097_FLIP_STALL);
+	// uint32_t Rev_0134[0xc / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, PmTrigger) == NV097_PM_TRIGGER);
+	// uint32_t Rev_0144[0x3c / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaNotifies) == NV097_SET_CONTEXT_DMA_NOTIFIES);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaA) == NV097_SET_CONTEXT_DMA_A);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaB) == NV097_SET_CONTEXT_DMA_B);
+	// uint32_t Rev_018c[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaState) == NV097_SET_CONTEXT_DMA_STATE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaColor) == NV097_SET_CONTEXT_DMA_COLOR);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaZeta) == NV097_SET_CONTEXT_DMA_ZETA);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaVertexA) == NV097_SET_CONTEXT_DMA_VERTEX_A);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaVertexB) == NV097_SET_CONTEXT_DMA_VERTEX_B);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaSemaphore) == NV097_SET_CONTEXT_DMA_SEMAPHORE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetContextDmaReport) == NV097_SET_CONTEXT_DMA_REPORT);
+	// uint32_t Rev_01ac[0x54 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetSurfaceClipHorizontal) == NV097_SET_SURFACE_CLIP_HORIZONTAL); // 0x00000200
+	static_assert(offsetof(NV097KelvinPrimitive, SetSurfaceClipVertical) == NV097_SET_SURFACE_CLIP_VERTICAL); // 0x00000204
+	static_assert(offsetof(NV097KelvinPrimitive, SetSurfaceFormat) == NV097_SET_SURFACE_FORMAT); // 0x00000204
+	static_assert(offsetof(NV097KelvinPrimitive, SetSurfacePitch) == NV097_SET_SURFACE_PITCH); // 0x00000204
+	static_assert(offsetof(NV097KelvinPrimitive, SetSurfaceColorOffset) == NV097_SET_SURFACE_COLOR_OFFSET); // 0x00000204
+	static_assert(offsetof(NV097KelvinPrimitive, SetSurfaceZetaOffset) == NV097_SET_SURFACE_ZETA_OFFSET); // 0x00000204
+	// uint32_t Rev_0218[0x48 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerAlphaICW[0]) == NV097_SET_COMBINER_ALPHA_ICW); // 0x00000260 [2]
+	// uint32_t Rev_0280[0x8 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerSpecularFogCW0) == NV097_SET_COMBINER_SPECULAR_FOG_CW0); // 0x00000288
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerSpecularFogCW1) == NV097_SET_COMBINER_SPECULAR_FOG_CW1); // 0x0000028C
+	static_assert(offsetof(NV097KelvinPrimitive, SetControl0) == NV097_SET_CONTROL0);
+	static_assert(offsetof(NV097KelvinPrimitive, SetLightControl) == NV097_SET_LIGHT_CONTROL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetColorMaterial) == NV097_SET_COLOR_MATERIAL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFogMode) == NV097_SET_FOG_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFogGenMode) == NV097_SET_FOG_GEN_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFogEnable) == NV097_SET_FOG_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFogColor) == NV097_SET_FOG_COLOR);
+	// uint32_t Rev_02ac[0x8 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetWindowClipType) == NV097_SET_WINDOW_CLIP_TYPE); // 0x000002B4
+	// uint32_t Rev_02b8[0x8 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetWindowClipHorizontal[0]) == NV097_SET_WINDOW_CLIP_HORIZONTAL); // 0x000002C0 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetWindowClipVertical[0]) == NV097_SET_WINDOW_CLIP_VERTICAL); // 0x000002E0 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetAlphaTestEnable) == NV097_SET_ALPHA_TEST_ENABLE); // 0x00000300
+	static_assert(offsetof(NV097KelvinPrimitive, SetBlendEnable) == NV097_SET_BLEND_ENABLE); // 0x00000304
+	static_assert(offsetof(NV097KelvinPrimitive, SetCullFaceEnable) == NV097_SET_CULL_FACE_ENABLE); // 0x00000308
+	static_assert(offsetof(NV097KelvinPrimitive, SetDepthTestEnable) == NV097_SET_DEPTH_TEST_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetDitherEnable) == NV097_SET_DITHER_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetLightingEnable) == NV097_SET_LIGHTING_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPointParamsEnable) == NV097_SET_POINT_PARAMS_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPointSmoothEnable) == NV097_SET_POINT_SMOOTH_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetLineSmoothEnable) == NV097_SET_LINE_SMOOTH_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPolySmoothEnable) == NV097_SET_POLY_SMOOTH_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetSkinMode) == NV097_SET_SKIN_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilTestEnable) == NV097_SET_STENCIL_TEST_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPolyOffsetPointEnable) == NV097_SET_POLY_OFFSET_POINT_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPolyOffsetLineEnable) == NV097_SET_POLY_OFFSET_LINE_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPolyOffsetFillEnable) == NV097_SET_POLY_OFFSET_FILL_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetAlphaFunc) == NV097_SET_ALPHA_FUNC);
+	static_assert(offsetof(NV097KelvinPrimitive, SetAlphaRef) == NV097_SET_ALPHA_REF);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBlendFuncSfactor) == NV097_SET_BLEND_FUNC_SFACTOR);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBlendFuncDfactor) == NV097_SET_BLEND_FUNC_DFACTOR);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBlendColor) == NV097_SET_BLEND_COLOR);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBlendEquation) == NV097_SET_BLEND_EQUATION);
+	static_assert(offsetof(NV097KelvinPrimitive, SetDepthFunc) == NV097_SET_DEPTH_FUNC);
+	static_assert(offsetof(NV097KelvinPrimitive, SetColorMask) == NV097_SET_COLOR_MASK);
+	static_assert(offsetof(NV097KelvinPrimitive, SetDepthMask) == NV097_SET_DEPTH_MASK);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilMask) == NV097_SET_STENCIL_MASK);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilFunc) == NV097_SET_STENCIL_FUNC);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilFuncRef) == NV097_SET_STENCIL_FUNC_REF);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilFuncMask) == NV097_SET_STENCIL_FUNC_MASK);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilOpFail) == NV097_SET_STENCIL_OP_FAIL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilOpZfail) == NV097_SET_STENCIL_OP_ZFAIL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStencilOpZpass) == NV097_SET_STENCIL_OP_ZPASS);
+	static_assert(offsetof(NV097KelvinPrimitive, SetShadeMode) == NV097_SET_SHADE_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetLineWidth) == NV097_SET_LINE_WIDTH);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPolygonOffsetScaleFactor) == NV097_SET_POLYGON_OFFSET_SCALE_FACTOR);
+	static_assert(offsetof(NV097KelvinPrimitive, SetPolygonOffsetBias) == NV097_SET_POLYGON_OFFSET_BIAS);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFrontPolygonMode) == NV097_SET_FRONT_POLYGON_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackPolygonMode) == NV097_SET_BACK_POLYGON_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetClipMin) == NV097_SET_CLIP_MIN);
+	static_assert(offsetof(NV097KelvinPrimitive, SetClipMax) == NV097_SET_CLIP_MAX);
+	static_assert(offsetof(NV097KelvinPrimitive, SetCullFace) == NV097_SET_CULL_FACE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFrontFace) == NV097_SET_FRONT_FACE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetNormalizationEnable) == NV097_SET_NORMALIZATION_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetMaterialEmission[0]) == NV097_SET_MATERIAL_EMISSION); // 0x000003A8 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetMaterialAlpha) == NV097_SET_MATERIAL_ALPHA);
+	static_assert(offsetof(NV097KelvinPrimitive, SetSpecularEnable) == NV097_SET_SPECULAR_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetLightEnableMask) == NV097_SET_LIGHT_ENABLE_MASK);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgen[0].S) == NV097_SET_TEXGEN_S); // 0x000003C0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgen[0].T) == NV097_SET_TEXGEN_T); // [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgen[0].R) == NV097_SET_TEXGEN_R); // [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgen[0].Q) == NV097_SET_TEXGEN_Q); // [4]
+	// uint32_t Rev_0400[0x20 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetTextureMatrixEnable) == NV097_SET_TEXTURE_MATRIX_ENABLE); // 0x00000420 [4]
+	// uint32_t Rev_0430[0xc / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetPointSize) == NV097_SET_POINT_SIZE); // 0x0000043C
+	static_assert(offsetof(NV097KelvinPrimitive, SetProjectionMatrix) == NV097_SET_PROJECTION_MATRIX); // 0x00000440 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetModelViewMatrix0) == NV097_SET_MODEL_VIEW_MATRIX); // 0x00000480 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetModelViewMatrix1) == NV097_SET_MODEL_VIEW_MATRIX1); // 0x000004C0 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetModelViewMatrix2) == NV097_SET_MODEL_VIEW_MATRIX2); // 0x00000500 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetModelViewMatrix3) == NV097_SET_MODEL_VIEW_MATRIX3); // 0x00000540 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetInverseModelViewMatrix0) == NV097_SET_INVERSE_MODEL_VIEW_MATRIX); // 0x00000580 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetInverseModelViewMatrix1) == NV097_SET_INVERSE_MODEL_VIEW_MATRIX1); // 0x000005C0 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetInverseModelViewMatrix2) == NV097_SET_INVERSE_MODEL_VIEW_MATRIX2); // 0x00000600 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetInverseModelViewMatrix3) == NV097_SET_INVERSE_MODEL_VIEW_MATRIX3); // 0x00000640 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTextureMatrix0) == NV097_SET_TEXTURE_MATRIX); // 0x000006C0 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTextureMatrix1) == NV097_SET_TEXTURE_MATRIX1); // 0x00000700 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTextureMatrix2) == NV097_SET_TEXTURE_MATRIX2); // 0x00000740 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTextureMatrix3) == NV097_SET_TEXTURE_MATRIX3); // 0x00000780 [16]
+	// uint32_t Rev_07c0[0x80 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgenPlane[0].S) == NV097_SET_TEXGEN_PLANE_S); // 0x00000840 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgenPlane[0].T) == NV097_SET_TEXGEN_PLANE_T); // [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgenPlane[0].R) == NV097_SET_TEXGEN_PLANE_R); // [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgenPlane[0].Q) == NV097_SET_TEXGEN_PLANE_Q); // [4]
+	// uint32_t Rev_0940[0x80 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetFogParams[0]) == NV097_SET_FOG_PARAMS); // 0x000009C0 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexgenViewModel) == NV097_SET_TEXGEN_VIEW_MODEL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFogPlane[0]) == NV097_SET_FOG_PLANE); // 0x000009D0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetSpecularParams[0]) == NV097_SET_SPECULAR_PARAMS); // 0x000009E0 [6]
+	static_assert(offsetof(NV097KelvinPrimitive, SetSwathWidth) == NV097_SET_SWATH_WIDTH);
+	static_assert(offsetof(NV097KelvinPrimitive, SetFlatShadeOp) == NV097_SET_FLAT_SHADE_OP);
+	// uint32_t Rev_0a00[0x10 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetSceneAmbientColor[0]) == NV097_SET_SCENE_AMBIENT_COLOR); // 0x00000A10 [3]
+	// uint32_t Rev_0a1c[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetViewportOffset[0]) == NV097_SET_VIEWPORT_OFFSET); // 0x00000A20 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetPointParams[0]) == NV097_SET_POINT_PARAMS); // 0x00000A30 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetEyePosition[0]) == NV097_SET_EYE_POSITION); // 0x00000A50 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerFactor0[0]) == NV097_SET_COMBINER_FACTOR0); // 0x00000A60 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerFactor1[0]) == NV097_SET_COMBINER_FACTOR1); // 0x00000A80 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerAlphaOCW[0]) == NV097_SET_COMBINER_ALPHA_OCW); // 0x00000AA0 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerColorICW[0]) == NV097_SET_COMBINER_COLOR_ICW); // 0x00000AC0 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetColorKeyColor[0]) == NV097_SET_COLOR_KEY_COLOR); // 0x00000AE0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetViewportScale[0]) == NV097_SET_VIEWPORT_SCALE); // 0x00000AF0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformProgram[0]) == NV097_SET_TRANSFORM_PROGRAM); // 0x00000B00 [32]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformConstant[0]) == NV097_SET_TRANSFORM_CONSTANT); // 0x00000B80 [32]
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackLight[0].AmbientColor[0]) == NV097_SET_BACK_LIGHT_AMBIENT_COLOR); // 0x00000C00 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackLight[0].DiffuseColor[0]) == NV097_SET_BACK_LIGHT_DIFFUSE_COLOR); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackLight[0].SpecularColor[0]) == NV097_SET_BACK_LIGHT_SPECULAR_COLOR); // [3]
+	// uint32_t Rev_0c24[0x1c / 4];//dd (7)
+	// uint32_t Rev_0e00[0x200 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].AmbientColor[0]) == NV097_SET_LIGHT_AMBIENT_COLOR); // 0x00001000 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].DiffuseColor[0]) == NV097_SET_LIGHT_DIFFUSE_COLOR); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].SpecularColor[0]) == NV097_SET_LIGHT_SPECULAR_COLOR); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].LocalRange) == NV097_SET_LIGHT_LOCAL_RANGE); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].InfiniteHalfVector[0]) == NV097_SET_LIGHT_INFINITE_HALF_VECTOR); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].InfiniteDirection[0]) == NV097_SET_LIGHT_INFINITE_DIRECTION); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].SpotFalloff[0]) == NV097_SET_LIGHT_SPOT_FALLOFF); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].SpotDirection[0]) == NV097_SET_LIGHT_SPOT_DIRECTION); // [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].LocalPosition[0]) == NV097_SET_LIGHT_LOCAL_POSITION); // [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLight[0].LocalAttenuation[0]) == NV097_SET_LIGHT_LOCAL_ATTENUATION); // [3]
+	// uint32_t Rev_1074[0xc / 4];
+	// uint32_t Rev_1400[0x7c / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetStippleControl) == NV097_SET_STIPPLE_CONTROL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetStipplePattern) == NV097_SET_STIPPLE_PATTERN); // 0x00001480 [32]
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertex3f) == NV097_SET_VERTEX3F); // 0x00001500 [3]
+	// uint32_t Rev_150c[0xc / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertex4f) == NV097_SET_VERTEX4F); // 0x00001518 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertex4s) == NV097_SET_VERTEX4S); // 0x00001528 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetNormal3f) == NV097_SET_NORMAL3F); // 0x00001530 [3]
+	// uint32_t Rev_153c[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetNormal3s) == NV097_SET_NORMAL3S); // 0x00001540 [2]
+	// uint32_t Rev_1548[0x8 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetDiffuseColor4f) == NV097_SET_DIFFUSE_COLOR4F); // 0x00001550 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetDiffuseColor3f) == NV097_SET_DIFFUSE_COLOR3F); // 0x00001560 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetDiffuseColor4ub) == NV097_SET_DIFFUSE_COLOR4UB);
+	static_assert(offsetof(NV097KelvinPrimitive, SetSpecularColor4f) == NV097_SET_SPECULAR_COLOR4F); // 0x00001570 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetSpecularColor3f) == NV097_SET_SPECULAR_COLOR3F); // 0x00001580 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetSpecularColor4ub) == NV097_SET_SPECULAR_COLOR4UB);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord0_2f) == NV097_SET_TEXCOORD0_2F); // 0x00001590 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord0_2s) == NV097_SET_TEXCOORD0_2S);
+	// uint32_t Rev_159c[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord0_4f) == NV097_SET_TEXCOORD0_4F); // 0x000015A0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord0_4s[0]) == NV097_SET_TEXCOORD0_4S); //0x000015B0 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord1_2f[0]) == NV097_SET_TEXCOORD1_2F); //0x000015B8 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord1_2s) == NV097_SET_TEXCOORD1_2S);
+	// uint32_t Rev_15c4[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord1_4f[0]) == NV097_SET_TEXCOORD1_4F); // 0x000015C8 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord1_4s[0]) == NV097_SET_TEXCOORD1_4S); // 0x000015D8 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord2_2f[0]) == NV097_SET_TEXCOORD2_2F); // 0x000015E0 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord2_2s) == NV097_SET_TEXCOORD2_2S);
+	// uint32_t Rev_15ec[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord2_4f[0]) == NV097_SET_TEXCOORD2_4F); // 0x000015F0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord2_4s[0]) == NV097_SET_TEXCOORD2_4S); // 0x00001600 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord3_2f[0]) == NV097_SET_TEXCOORD3_2F); // 0x00001608 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord3_2s) == NV097_SET_TEXCOORD3_2S);
+	// uint32_t Rev_1614[0xc / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord3_4f[0]) == NV097_SET_TEXCOORD3_4F); // 0x00001620 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexcoord3_4s[0]) == NV097_SET_TEXCOORD3_4S); // 0x00001630 [2]
+	// uint32_t Rev_1638[0x60 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetFog1f) == NV097_SET_FOG1F);
+	static_assert(offsetof(NV097KelvinPrimitive, SetWeight1f) == NV097_SET_WEIGHT1F);
+	static_assert(offsetof(NV097KelvinPrimitive, SetWeight2f[0]) == NV097_SET_WEIGHT2F); // 0x000016A0 [2]
+	// uint32_t Rev_16a8[0x8 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetWeight3f[0]) == NV097_SET_WEIGHT3F); // 0x000016B0 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetEdgeFlag) == NV097_SET_EDGE_FLAG);
+	static_assert(offsetof(NV097KelvinPrimitive, SetWeight4f[0]) == NV097_SET_WEIGHT4F); // 0x000016C0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformFixedConst3[0]) == NV097_SET_TRANSFORM_FIXED_CONST3); // 0x000016D0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformFixedConst0[0]) == NV097_SET_TRANSFORM_FIXED_CONST0); // 0x000016E0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformFixedConst1[0]) == NV097_SET_TRANSFORM_FIXED_CONST1); // 0x000016F0 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformFixedConst2[0]) == NV097_SET_TRANSFORM_FIXED_CONST2); // 0x00001700 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, InvalidateVertexCacheFile) == NV097_INVALIDATE_VERTEX_CACHE_FILE);
+	static_assert(offsetof(NV097KelvinPrimitive, InvalidateVertexFile) == NV097_INVALIDATE_VERTEX_FILE);
+	static_assert(offsetof(NV097KelvinPrimitive, TlNop) == NV097_TL_NOP);
+	static_assert(offsetof(NV097KelvinPrimitive, TlSync) == NV097_TL_SYNC);
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertexDataArrayOffset[0]) == NV097_SET_VERTEX_DATA_ARRAY_OFFSET); // 0x00001720 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertexDataArrayFormat[0]) == NV097_SET_VERTEX_DATA_ARRAY_FORMAT); // 0x00001760 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackSceneAmbientColor[0]) == NV097_SET_BACK_SCENE_AMBIENT_COLOR); // 0x000017A0 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackMaterialAlpha) == NV097_SET_BACK_MATERIAL_ALPHA);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackMaterialEmission[0]) == NV097_SET_BACK_MATERIAL_EMISSIONR); // 0x000017B0 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLogicOpEnable) == NV097_SET_LOGIC_OP_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetLogicOp) == NV097_SET_LOGIC_OP);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTwoSidedLightEn) == NV097_SET_TWO_SIDED_LIGHT_EN);
+	static_assert(offsetof(NV097KelvinPrimitive, ClearReportValue) == NV097_CLEAR_REPORT_VALUE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetZpassPixelCountEnable) == NV097_SET_ZPASS_PIXEL_COUNT_ENABLE);
+	static_assert(offsetof(NV097KelvinPrimitive, GetReport) == NV097_GET_REPORT);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTLConstZero[0]) == NV097_SET_TL_CONST_ZERO); // 0x000017D4 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetEyeDirection[0]) == NV097_SET_EYE_DIRECTION); // 0x000017E0 [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetLinearFogConst[0]) == NV097_SET_LINEAR_FOG_CONST); // 0x000017EC [3]
+	static_assert(offsetof(NV097KelvinPrimitive, SetShaderClipPlaneMode) == NV097_SET_SHADER_CLIP_PLANE_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginEnd) == NV097_SET_BEGIN_END);
+	static_assert(offsetof(NV097KelvinPrimitive, ArrayElement16) == NV097_ARRAY_ELEMENT16); // 0x00001800
+	// uint32_t Rev_1804[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, ArrayElement32) == NV097_ARRAY_ELEMENT32); // 0x00001808
+	// uint32_t Rev_180c[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, DrawArrays) == NV097_DRAW_ARRAYS); // 0x00001810
+	// uint32_t Rev_1814[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, InlineArray) == NV097_INLINE_ARRAY); // 0x00001818
+	static_assert(offsetof(NV097KelvinPrimitive, SetEyeVector[0]) == NV097_SET_EYE_VECTOR); // 0x0000181C [3]
+	static_assert(offsetof(NV097KelvinPrimitive, InlineVertexReuse) == NV097_INLINE_VERTEX_REUSE);
+	// uint32_t Rev_182c[0x54 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertexData2f[0].M[0]) == NV097_SET_VERTEX_DATA2F_M); // 0x00001880 [16][2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertexData2s[0]) == NV097_SET_VERTEX_DATA2S); // 0x00001900 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertexData4ub[0]) == NV097_SET_VERTEX_DATA4UB); // 0x00001940 [16]
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertexData4s[0].M[0]) == NV097_SET_VERTEX_DATA4S_M); // 0x00001980 [16][2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetVertexData4f[0].M[0]) == NV097_SET_VERTEX_DATA4F_M); // 0x00001A00 [16][4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].Offset) == NV097_SET_TEXTURE_OFFSET); // 0x00001B00
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].Format) == NV097_SET_TEXTURE_FORMAT); // 0x00001B04
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].Address) == NV097_SET_TEXTURE_ADDRESS); // 0x00001B08
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].Control0) == NV097_SET_TEXTURE_CONTROL0); // 0x00001B0C
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].Control1) == NV097_SET_TEXTURE_CONTROL1); // 0x00001B10
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].Filter) == NV097_SET_TEXTURE_FILTER); // 0x00001B14
+	// uint32_t Rev_1b18[0x4 / 4];			//	0x00001B18 +i*0x40 			
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].ImageRect) == NV097_SET_TEXTURE_IMAGE_RECT); // 0x00001B1C
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].Palette) == NV097_SET_TEXTURE_PALETTE); // 0x00001B20
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].BorderColor) == NV097_SET_TEXTURE_BORDER_COLOR); // 0x00001B24
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].SetBumpEnvMat00) == NV097_SET_TEXTURE_SET_BUMP_ENV_MAT); // 0x00001B28
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].SetBumpEnvMat01) == NV097_SET_TEXTURE_SET_BUMP_ENV_MAT01); // 0x00001B2C
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].SetBumpEnvMat11) == NV097_SET_TEXTURE_SET_BUMP_ENV_MAT11); // 0x00001B30
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].SetBumpEnvMat10) == NV097_SET_TEXTURE_SET_BUMP_ENV_MAT10); // 0x00001B34
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].SetBumpEnvScale) == NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE ); // 0x00001B38
+	static_assert(offsetof(NV097KelvinPrimitive, SetTexture[0].SetBumpEnvOffset) == NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET); // 0x00001B3C
+	// uint32_t Rev_1c00[0x164 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, ParkAttribute) == NV097_PARK_ATTRIBUTE); // 0x00001D64
+	static_assert(offsetof(NV097KelvinPrimitive, UnparkAttribute) == NV097_UNPARK_ATTRIBUTE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetSemaphoreOffset) == NV097_SET_SEMAPHORE_OFFSET);
+	static_assert(offsetof(NV097KelvinPrimitive, BackEndWriteSemaphoreRelease) == NV097_BACK_END_WRITE_SEMAPHORE_RELEASE);
+	static_assert(offsetof(NV097KelvinPrimitive, TextureReadSemaphoreRelease) == NV097_TEXTURE_READ_SEMAPHORE_RELEASE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetZMinMaxControl) == NV097_SET_ZMIN_MAX_CONTROL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetAntiAliasingControl) == NV097_SET_ANTI_ALIASING_CONTROL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetCompressZBufferEn) == NV097_SET_COMPRESS_ZBUFFER_EN);
+	static_assert(offsetof(NV097KelvinPrimitive, SetOccludeZStencilEn) == NV097_SET_OCCLUDE_ZSTENCIL_EN);
+	// uint32_t Rev_1d88[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetZStencilClearValue) == NV097_SET_ZSTENCIL_CLEAR_VALUE); // 0x00001D8C
+	static_assert(offsetof(NV097KelvinPrimitive, SetColorClearValue) == NV097_SET_COLOR_CLEAR_VALUE);
+	static_assert(offsetof(NV097KelvinPrimitive, ClearSurface) == NV097_CLEAR_SURFACE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetClearRectHorizontal) == NV097_SET_CLEAR_RECT_HORIZONTAL);
+	static_assert(offsetof(NV097KelvinPrimitive, SetClearRectVertical) == NV097_SET_CLEAR_RECT_VERTICAL); // 0x00001D9C
+	// uint32_t Rev_1da0[0x40 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginPatch0) == NV097_SET_BEGIN_PATCH0); // 0x00001DE0
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginPatch1) == NV097_SET_BEGIN_PATCH1);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginPatch2) == NV097_SET_BEGIN_PATCH2);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginPatch3) == NV097_SET_BEGIN_PATCH3);
+	static_assert(offsetof(NV097KelvinPrimitive, SetEndPatch) == NV097_SET_END_PATCH); // 0x00001DF0
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginEndSwatch) == NV097_SET_BEGIN_END_SWATCH);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginEndCurve) == NV097_SET_BEGIN_END_CURVE);
+	// uint32_t Rev_1dfc[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetCurveCoefficients[0]) == NV097_SET_CURVE_COEFFICIENTS); // 0x00001E00 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginTransition0) == NV097_SET_BEGIN_TRANSITION0);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginTransition1) == NV097_SET_BEGIN_TRANSITION1);
+	static_assert(offsetof(NV097KelvinPrimitive, SetBeginTransition2) == NV097_SET_BEGIN_TRANSITION2);
+	static_assert(offsetof(NV097KelvinPrimitive, SetEndTransition) == NV097_SET_END_TRANSITION);
+	static_assert(offsetof(NV097KelvinPrimitive, SetSpecularFogFactor[0]) == NV097_SET_SPECULAR_FOG_FACTOR); // 0x00001E20 [2]
+	static_assert(offsetof(NV097KelvinPrimitive, SetBackSpecularParams[0]) == NV097_SET_BACK_SPECULAR_PARAMS); // 0x00001E28 [6]
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerColorOCW[0]) == NV097_SET_COMBINER_COLOR_OCW); // 0x00001E28 [8]
+	static_assert(offsetof(NV097KelvinPrimitive, SetCombinerControl) == NV097_SET_COMBINER_CONTROL);
+	// uint32_t Rev_1e64[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetShadowZSlopeThreshold) == NV097_SET_SHADOW_ZSLOPE_THRESHOLD); // 0x00001E68
+	static_assert(offsetof(NV097KelvinPrimitive, SetShadowDepthFunc) == NV097_SET_SHADOW_DEPTH_FUNC);
+	static_assert(offsetof(NV097KelvinPrimitive, SetShaderStageProgram) == NV097_SET_SHADER_STAGE_PROGRAM);
+	static_assert(offsetof(NV097KelvinPrimitive, SetDotRGBMapping) == NV097_SET_DOT_RGBMAPPING);
+	static_assert(offsetof(NV097KelvinPrimitive, SetShaderOtherStageInput) == NV097_SET_SHADER_OTHER_STAGE_INPUT); // 0x00001E78
+	// uint32_t Rev_1e7c[0x4 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformData[0]) == NV097_SET_TRANSFORM_DATA); // 0x00001E80 [4]
+	static_assert(offsetof(NV097KelvinPrimitive, LaunchTransformProgram) == NV097_LAUNCH_TRANSFORM_PROGRAM);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformExecutionMode) == NV097_SET_TRANSFORM_EXECUTION_MODE);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformProgramCxtWriteEn) == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformProgramLoad) == NV097_SET_TRANSFORM_PROGRAM_LOAD);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformProgramStart) == NV097_SET_TRANSFORM_PROGRAM_START);
+	static_assert(offsetof(NV097KelvinPrimitive, SetTransformConstantLoad) == NV097_SET_TRANSFORM_CONSTANT_LOAD); // 0x00001EA4
+	// uint32_t Rev_1ea8[0x118 / 4];
+	static_assert(offsetof(NV097KelvinPrimitive, DebugInit[0]) == NV097_DEBUG_INIT); // 0x00001FC0 [10]
+	// uint32_t Rev_1fe8[0x18 / 4];
+}
+
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
 int pgraph_handle_method(
@@ -2267,7 +2582,7 @@ int pgraph_handle_method(
                 CASE_64(NV097_SET_MODEL_VIEW_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetModelViewMatrix0[16] SetModelViewMatrix1[16] SetModelViewMatrix2[16] SetModelViewMatrix3[16]
                      //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_MODEL_VIEW_MATRIX) / 4;
-					unsigned int matnum;
+					unsigned int matnum = slot / 16;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						matnum = slot / 16;

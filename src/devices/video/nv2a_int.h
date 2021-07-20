@@ -217,10 +217,6 @@ typedef struct TextureBinding {
 	unsigned int refcnt;
 } TextureBinding;
 
-typedef struct KelvinState {
-	xbox::addr_xt object_instance;
-} KelvinState;
-
 typedef struct ContextSurfaces2DState {
 	xbox::addr_xt object_instance;
 	xbox::addr_xt dma_image_source;
@@ -396,8 +392,8 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t SetTexgenViewModel;
 	float SetFogPlane[4];				//0x000009D0
 	float SetSpecularParams[6];			//0x000009E0
-	uint32_t SetSwathWidth;
-	uint32_t SetFlatShadeOp;
+	uint32_t SetSwathWidth; // TODO : use
+	uint32_t SetFlatShadeOp; // TODO : use
 	uint32_t Rev_0a00[0x10 / 4];		//reserved for NV_PGRAPH_CONTROL_0~3
 	float SetSceneAmbientColor[3];		//0x00000A10
 	uint32_t Rev_0a1c[0x4 / 4];
@@ -438,8 +434,8 @@ typedef struct NV097KelvinPrimitive {
 		uint32_t Rev_1074[0xc / 4];
 	} SetLight[8];						//0x00001000
 	uint32_t Rev_1400[0x7c / 4];
-	uint32_t SetStippleControl;
-	uint32_t SetStipplePattern[32];		//0x00001480
+	uint32_t SetStippleControl; // TODO : Use
+	uint32_t SetStipplePattern[32];		//0x00001480  // TODO : Use
 	float SetVertex3f[3];				//0x00001500
 	uint32_t Rev_150c[0xc / 4];
 	float SetVertex4f[4];				//0x00001518
@@ -666,7 +662,6 @@ typedef struct PGRAPHState {
 	/* subchannels state we're not sure the location of... */
 	ContextSurfaces2DState context_surfaces_2d;
 	ImageBlitState image_blit;
-	KelvinState kelvin;
 
 	QemuCond fifo_access_cond;
 	QemuCond flip_3d;
