@@ -435,16 +435,13 @@ void D3D_draw_state_update(NV2AState *d)
 		// this will update matrix world/view/projection using matrix ModelView and Composite
 		if (pgraph_is_ModelView_dirty()) {
 			if((g_xbox_transform_ModelView_dirty == true) && (g_xbox_transform_Composite_dirty== true)  ){
-				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
-			}
-			else if ((g_xbox_transform_ModelView_dirty == true) && (g_xbox_transform_Composite_dirty != true)) {
-				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, nullptr);;
+				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, nullptr);// &g_xbox_transform_Composite);
+			//clear ModelView dirty flags.
+				g_xbox_transform_ModelView_dirty = false;
+				g_xbox_transform_InverseModelView_dirty = false;
+				g_xbox_transform_Composite_dirty = false;
 			}
 
-			//clear ModelView dirty flags.
-			g_xbox_transform_ModelView_dirty = false;
-			g_xbox_transform_InverseModelView_dirty = false;
-			g_xbox_transform_Composite_dirty = false;
 		}
 		// set host d3d transform
 		/*
