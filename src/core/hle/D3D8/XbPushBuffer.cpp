@@ -75,6 +75,8 @@ void EmuExecutePushBuffer
 		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
 		EmuKickOff();
 	}
+
+	CxbxUpdateNativeD3DResources();
 	//Check whether Fixup exists or not. 
 	if (pFixup != xbox::zeroptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");

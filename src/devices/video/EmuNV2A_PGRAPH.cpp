@@ -3971,7 +3971,7 @@ int pgraph_handle_method(
 								// ** passthrough in SelectVertexShader() calls NV097_SET_TRANSFORM_PROGRAM_START first, then calls NV097_SET_TRANSFORM_EXECUTION_MODE
 
 								// if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
-								if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+						        if (g_VertexShader_dirty == false) {
 
 									g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
 									g_UseFixedFunctionVertexShader = false;
@@ -4027,7 +4027,7 @@ int pgraph_handle_method(
 
 					// xbox d3d is supposed to call NV097_SET_TRANSFORM_EXECUTION_MODE with method_cound = 2 to set this var, but we copy the code here in case guest code use two methods.
 					// if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
-					if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+					if (g_VertexShader_dirty == false) {
 
 						g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
 						g_UseFixedFunctionVertexShader = false;
@@ -4071,7 +4071,7 @@ int pgraph_handle_method(
 					// ** passthrough in SelectVertexShader() calls NV097_SET_TRANSFORM_PROGRAM_START first, then calls NV097_SET_TRANSFORM_EXECUTION_MODE
 
 					// if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
-					if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+					if (g_VertexShader_dirty == false) {
 						g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
 						g_UseFixedFunctionVertexShader = false;
 						// passthrough always starts from register 0
@@ -4086,9 +4086,9 @@ int pgraph_handle_method(
 					//pg->vsh_FVF_handle = 0;
 
 					//set starting program slot
-					if (g_Xbox_VertexShaderMode == VertexShaderMode::ShaderProgram) {
+					//if (g_Xbox_VertexShaderMode == VertexShaderMode::ShaderProgram) {
 						g_Xbox_VertexShader_FunctionSlots_StartAddress = arg0;
-					}
+					//}
 
 					break;
 				}
