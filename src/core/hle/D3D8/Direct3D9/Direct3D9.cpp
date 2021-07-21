@@ -6498,6 +6498,8 @@ D3DMATRIX g_xbox_DirectModelView_View;
 D3DMATRIX g_xbox_DirectModelView_World;
 D3DMATRIX g_xbox_DirectModelView_Projection;
 D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;
+D3DMATRIX g_xbox_transform_Projection;
+D3DMATRIX g_xbox_transform_ViewportTransform;
 
 
 static D3DMATRIX * g_xbox_transform_matrix = nullptr;
@@ -9726,6 +9728,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 }
 
 extern void pgraph_use_Transform();
+extern void pgraph_use_DirectModelView();
 
 xbox::void_xt WINAPI CxbxImpl_SetModelView
 (
@@ -9756,12 +9759,33 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	//CxbxImpl_SetTransform(xbox::X_D3DTS_VIEW, &matUnit);
 	g_xbox_DirectModelView_View= matUnit;
 	g_xbox_DirectModelView_World= *pModelView; 
+	// use g_xbox_transform_ViewportTransform
+	//D3DXMATRIX matViewportTransform;
+	// backup xbox d3d porjection matrix
+	CxbxImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &g_xbox_transform_Projection);
+	// set projection to unit matrix, using trampoline directly, so we can get viewport transform matrix.
+	CxbxImpl_SetTransformFast(xbox::X_D3DTS_PROJECTION, &matUnit);
+	// update ProjectionViewportTransform matrix
+	if (XB_TRMP(D3D_UpdateProjectionViewportTransform))
+	{
+		XB_TRMP(D3D_UpdateProjectionViewportTransform)();
+	}
+	else {
+		// D3D_UpdateProjectionViewportTransform should be found always 
+		assert(0);
+	}
+	// read back ProjectionViewportTransform matrix, it should be ViewportTrasform matrix only.
+	CxbxImpl_GetProjectionViewportMatrix(&g_xbox_transform_ViewportTransform);
 
-	D3DXMATRIX matInverseModelViewNew;
+	// restore xbox d3d porjection matrix
+	CxbxImpl_SetTransformFast(xbox::X_D3DTS_PROJECTION, &g_xbox_transform_Projection);
+	// use g_xbox_transform_InverseModelView
+	//D3DXMATRIX matInverseModelViewNew;
 	// get matInverseModelViewNew, the input pInverseModelView might not present, so we always recalculate it.
-	D3DXMatrixInverse(&matInverseModelViewNew, NULL, (D3DXMATRIX*)pModelView);
-
-	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, &matInverseModelViewNew);
+	D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)pModelView);
+	
+	// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FF mode vertex shader constant update routine
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_xbox_transform_InverseModelView);
 
 	if ((pComposite == nullptr)) {
 		// use xbox d3d projection if we don't have pComposite
@@ -9778,7 +9802,7 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	// zeroout matViewportTransform
 	//memset(&matViewportTransform._11, 0, sizeof(matViewportTransform));
 	if(XB_TRMP(D3DDevice_GetProjectionViewportMatrix)){
-	    XB_TRMP(D3DDevice_GetProjectionViewportMatrix)(&matViewportTransform);
+	    XB_TRMP(D3DDevice_GetProjectionViewportMatrix)(&g_xbox_transform_ViewportTransform);
 	}
 	else {
 		// can't calculate projection matrix, use xbox d3d projection matrix
@@ -9788,16 +9812,14 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 
 	D3DXMATRIX matInverseViewportTransform;
 	// get matInverseViewportTransform
-	D3DXMatrixInverse(&matInverseViewportTransform, NULL, &matViewportTransform);
-
-
-
+	D3DXMatrixInverse(&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
 
 	//D3DXMATRIX matProjection;
 	// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection
-	g_xbox_DirectModelView_Projection = matInverseModelViewNew * (*pComposite)* matInverseViewportTransform;
-
-	//CxbxImpl_SetTransform(xbox::X_D3DTS_PROJECTION, &matProjection);
+	//g_xbox_DirectModelView_Projection = (D3DXMATRIX)g_xbox_transform_InverseModelView * (*pComposite)* matInverseViewportTransform;
+	D3DXMATRIX matTmp;
+	D3DXMatrixMultiply(&matTmp, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)pComposite);
+	D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, &matTmp, &matInverseViewportTransform);
 
 }
 // ******************************************************************
