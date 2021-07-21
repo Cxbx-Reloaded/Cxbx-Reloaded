@@ -1463,8 +1463,6 @@ int pgraph_handle_method(
                 //case NV097_SET_OBJECT:
 				case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
-                case NV097_SET_TRANSFORM_CONSTANT://this sets the vertex constant register/slots using index from NV097_SET_TRANSFORM_CONSTANT_LOAD, not the transform constants in KelvinPrime.
-                case NV097_SET_TRANSFORM_PROGRAM://this sets the vertex shader using index from NV097_SET_TRANSFORM_PROGRAM_LOAD, not the transform program in KelvinPrime.
 				// NV097_ARRAY_ELEMENT32 is PUSH_INSTR_IMM_INC, test case: Otogi. it's logical since NV097_ARRAY_ELEMENT32 is used to transfer the last odd index, if there were one.
 				case NV097_ARRAY_ELEMENT32: //PUSH_INSTR_IMM_INC
 					break;
@@ -2448,7 +2446,7 @@ int pgraph_handle_method(
                     break;
 
                 CASE_4(NV097_SET_COLOR_KEY_COLOR, 4) ://done //pg->KelvinPrimitive.SetColorKeyColor[4]
-                    slot = (method - NV097_SET_COMBINER_COLOR_ICW) / 4;
+                    slot = (method - NV097_SET_COLOR_KEY_COLOR) / 4;
                     assert(arg0 == pg->KelvinPrimitive.SetColorKeyColor[slot]);
                     //pg->pgraph_regs[NV_PGRAPH_COMBINECOLORI0/ 4 + slot * 4] = arg0;
                 //this state is not implement yet.
@@ -2633,7 +2631,7 @@ int pgraph_handle_method(
                     slot = (method - NV097_SET_TRANSFORM_CONSTANT) / 4;
                     //slot is sopposed to be 0 here.
                     // ONLY INCREMENT IN BELOW COPY LOOP : pg->KelvinPrimitive.SetTransformConstantLoad += slot/4;
-                    for (int argc = 0; argc < method_count; argc++) {
+                    for (int argc = 0; argc < method_count; argc++,slot++) {
                         arg0 = argv[argc];
                         //the target constant register address is prestored in NV097_SET_TRANSFORM_CONSTANT_LOAD  KelvinPrimitive.SetTransformConstantLoad
                         assert(pg->KelvinPrimitive.SetTransformConstantLoad < NV2A_VERTEXSHADER_CONSTANTS);
