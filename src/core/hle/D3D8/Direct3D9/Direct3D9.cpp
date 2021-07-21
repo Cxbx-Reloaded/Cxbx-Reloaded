@@ -9855,12 +9855,20 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 	XB_TRMP(D3DDevice_SetModelView)(pModelView, pInverseModelView, pComposite);
 	// only calls d3d implememtation when pushbuffer is not recording.
 	if (g_pXbox_BeginPush_Buffer == nullptr){
+	
 	    CxbxImpl_SetModelView(pModelView, pInverseModelView, pComposite);
+	    // set DirectModelView/Transform flag.
+		if(pModelView!=nullptr){
+			pgraph_use_DirectModelView();
+		}else{
+			pgraph_use_Transform();
+		}
 	}
-	LOG_UNIMPLEMENTED();
+	//LOG_UNIMPLEMENTED();
+	//LOG_UNIMPLEMENTED();
 
 	// TODO handle other matrices
-	d3d8TransformState.SetWorldView(0, pModelView);
+	//d3d8TransformState.SetWorldView(0, pModelView);
 	LOG_TEST_CASE("SetModelView");
 }
 
@@ -9881,8 +9889,14 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pMode
 {
 	LOG_FUNC_ONE_ARG(pModelView);
 
-	*pModelView = *d3d8TransformState.GetWorldView(0);
+	D3DXMATRIX mtxWorld, mtxView;
 
+	// I hope this is right
+	g_pD3DDevice->GetTransform( D3DTS_WORLD, &mtxWorld );
+	g_pD3DDevice->GetTransform( D3DTS_VIEW, &mtxView );
+
+	*pModelView = mtxWorld * mtxView;
+	//*pModelView = *d3d8TransformState.GetWorldView(0);
 	return D3D_OK;
 }
 
