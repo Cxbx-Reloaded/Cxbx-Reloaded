@@ -1549,6 +1549,14 @@ xbox::void_xt WINAPI EMUPATCH(D3D_CommonSetRenderTarget)
 );
 
 // ******************************************************************
+// * patch: D3D_UpdateProjectionViewportTransform
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(D3D_UpdateProjectionViewportTransform)
+(
+	xbox::void_xt
+);
+
+// ******************************************************************
 // * patch: D3DDevice_SetPalette
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette)
