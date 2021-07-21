@@ -6458,6 +6458,7 @@ D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;
 
 
 static D3DMATRIX * g_xbox_transform_matrix = nullptr;
+static D3DMATRIX * g_xbox_ProjectionViewportTransform = nullptr;
 
 void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient) {
 	if (d3dLightIndex == -1) {
@@ -6833,7 +6834,30 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
     XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
 }
 
+void CxbxImpl_GetProjectionViewportMatrix(D3DMATRIX *pProjectionViewportTransform)
+{
+	// get the transform matrix pointer in xbox d3d and store it in g_xbox_transform_matrix if it's not set yet
+	if (g_xbox_ProjectionViewportTransform == nullptr) {
+		byte * pProjectionViewportTransform = nullptr;
+		auto it = g_SymbolAddresses.find("D3D_UpdateProjectionViewportTransform");
+		if (it != g_SymbolAddresses.end()) {
+			pProjectionViewportTransform = (byte *)it->second;
+			if ((*(byte*)(pProjectionViewportTransform + 0x126)) == 0x8D) {
+				g_xbox_ProjectionViewportTransform = (D3DMATRIX *)((*(DWORD*)(pProjectionViewportTransform + 0x128)) + *g_pXbox_D3DDevice);
+			}
+			else {
+				g_xbox_ProjectionViewportTransform = (D3DMATRIX *)((*(DWORD*)(pProjectionViewportTransform + 0x127)) + *g_pXbox_D3DDevice);
+			}
+		}
+	}
+	// 
+	if (g_xbox_ProjectionViewportTransform != nullptr) {
+		// store the ProjectionViewportTransform matrix
+		*pProjectionViewportTransform = *g_xbox_ProjectionViewportTransform;
+	}
 
+
+}
 
 void CxbxImpl_GetTransform
 (
