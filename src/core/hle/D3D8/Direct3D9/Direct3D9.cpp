@@ -9821,13 +9821,19 @@ xbox::void_xt WINAPI CxbxImpl_SetModelView
 	D3DXMATRIX matInverseViewportTransform;
 	// get matInverseViewportTransform
 	D3DXMatrixInverse(&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
-
-	//D3DXMATRIX matProjection;
-	// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection
-	//g_xbox_DirectModelView_Projection = (D3DXMATRIX)g_xbox_transform_InverseModelView * (*pComposite)* matInverseViewportTransform;
-	D3DXMATRIX matTmp;
-	D3DXMatrixMultiply(&matTmp, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)pComposite);
-	D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, &matTmp, &matInverseViewportTransform);
+	// if we're not in skinning mode, composite matrix includes modelview matrix
+	if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_VERTEXBLEND) == 0){
+		//D3DXMATRIX matProjection;
+		// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection
+		//g_xbox_DirectModelView_Projection = (D3DXMATRIX)g_xbox_transform_InverseModelView * (*pComposite)* matInverseViewportTransform;
+		D3DXMATRIX matTmp;
+		D3DXMatrixMultiply(&matTmp, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)pComposite);
+		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, &matTmp, &matInverseViewportTransform);
+	}
+	// in skinning mode, composite matrix is only projectionviewport transform. 
+	else {
+		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, (D3DXMATRIX*)pComposite, &matInverseViewportTransform);
+	}
 
 }
 // ******************************************************************
