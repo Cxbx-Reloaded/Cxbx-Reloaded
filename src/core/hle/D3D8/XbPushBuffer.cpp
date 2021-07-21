@@ -263,13 +263,16 @@ void pgraph_use_DirectModelView(void)
 
 bool pgraph_is_DirectModelView(void)
 {
+	return g_xbox_transform_use_DirectModelView;
 	//if ((g_xbox_transform_ModelView_dirty == true) || (g_xbox_transform_Composite_dirty = true)) {
+	/*
 	if(g_xbox_transform_use_DirectModelView==true){
 		return true;
 	}
 	else {
 		return false;
 	}
+	*/
 }
 bool pgraph_is_ModelView_dirty(void)
 {
