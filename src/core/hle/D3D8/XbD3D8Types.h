@@ -80,6 +80,7 @@
 #define CXBXFORMAT                      _9_11(D3DFORMAT,                   DXGI_FORMAT)
 #define D3DVERTEXELEMENT                _9_11(D3DVERTEXELEMENT9,           D3D11_INPUT_ELEMENT_DESC)
 #define D3DVIEWPORT                     _9_11(D3DVIEWPORT9,                D3D11_VIEWPORT)
+#define D3DSurfaceDesc                  _9_11(D3DSURFACE_DESC,             D3D11_TEXTURE2D_DESC)
 
 #define IDirect3DDevice                 _9_11(IDirect3DDevice9Ex,          ID3D11Device)
 #define IDirect3DVertexDeclaration      _9_11(IDirect3DVertexDeclaration9, ID3D11InputLayout)
@@ -92,7 +93,7 @@
 #define IDirect3DCubeTexture            _9_11(IDirect3DCubeTexture9,       ID3D11Texture2D) // array of six 2D textures (one for each face)
 #define IDirect3DVertexBuffer           _9_11(IDirect3DVertexBuffer9,      ID3D11Buffer)
 #define IDirect3DIndexBuffer            _9_11(IDirect3DIndexBuffer9,       ID3D11Buffer) // or ID3D11ShaderResourceView ?
-#define IDirect3DSurface                IDirect3DSurface9
+#define IDirect3DSurface                _9_11(IDirect3DSurface9,           ID3D11Texture2D)
 #define IDirect3DVolume                 IDirect3DVolume9
 #define IDirect3DQuery                  _9_11(IDirect3DQuery9,             ID3D11Query)
 

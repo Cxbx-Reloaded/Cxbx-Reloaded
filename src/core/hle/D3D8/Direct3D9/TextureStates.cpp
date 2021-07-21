@@ -372,7 +372,7 @@ void XboxTextureStateConverter::Apply()
 
         // set the point sprites texture
         g_pD3DDevice->GetTexture(3, &pTexture);
-        g_pD3DDevice->SetTexture(0, pTexture);
+        g_pD3DDevice->SetTexture(0, pTexture); // ID3D11Device::CreateShaderResourceView(), ::PSSetShaderResources()
 
         // Avoid a dangling reference that would lead to a memory leak
         if (pTexture != nullptr)
