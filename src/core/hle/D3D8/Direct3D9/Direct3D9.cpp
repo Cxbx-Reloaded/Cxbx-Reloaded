@@ -6883,15 +6883,22 @@ void CxbxImpl_SetTransformFast
 		auto it = g_SymbolAddresses.find("D3DDevice_SetTransform");
 		if (it != g_SymbolAddresses.end()) {
 			pSetTransform = (byte *)it->second;
-			g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x19))+ *g_pXbox_D3DDevice);
-			
+			if ((*(byte*)(pSetTransform + 0x11)) == 0x8D) {
+				g_xbox_transform_matrix = (D3DMATRIX *)(((*(byte*)(pSetTransform + 0x13)) * 0x10) + *g_pXbox_D3DDevice);
+			}
+			else {
+				g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x19)) + *g_pXbox_D3DDevice);
+			}
 		}
 		else {
 			it = g_SymbolAddresses.find("D3DDevice_SetTransform_0");
 			if (it != g_SymbolAddresses.end()) {
 				pSetTransform = (byte *)it->second;
-				// not sure the offset is 0x19 or not, need to verify.
-				g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x19)) + *g_pXbox_D3DDevice);
+				// currently only fit for LTCG 5849
+				if ((*(byte*)(pSetTransform + 0x10)) == 0x19) {
+					// not sure the offset is 0x19 or not, need to verify.
+					g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x11)) + *g_pXbox_D3DDevice);
+				}
 			}
 		}
 	}
