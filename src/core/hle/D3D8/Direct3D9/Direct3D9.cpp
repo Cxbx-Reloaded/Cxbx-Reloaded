@@ -6558,8 +6558,9 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	pShaderLight->CosHalfPhi = cosHalfPhi;
 	pShaderLight->SpotIntensityDivisor = cos(d3dLight->Theta / 2) - cos(d3dLight->Phi / 2);
 }
-
-void UpdateFixedFunctionVertexShaderState()
+extern D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index);
+extern D3DMATRIX * pgraph_get_InverseModelViewMatrix(unsigned index);
+void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 {
 	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
 	using namespace xbox;
@@ -6594,8 +6595,15 @@ void UpdateFixedFunctionVertexShaderState()
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
 
 		for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)&g_xbox_transform_ModelView);
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed);
+			// FIXME! stick with g_xbox_transform_ModelView[0] and g_xbox_DirectModelView_InverseWorldViewTransposed[0] when we're not in skinning mode. 
+            // when RenderState[X_D3DRS_VERTEXBLEND]==0, we're not in skinning mode, use modelview matrix 0 only. else use corresponded matrix
+			unsigned int count = (XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND) == 0) ? 0 : i;
+			// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)&g_xbox_transform_ModelView);
+			// transposed xbox modelview transform == kelvin modelview transform
+			ffShaderState.Transforms.WorldView[i] = *pgraph_get_ModelViewMatrix(count);
+			// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed);
+			// xbox InverseWorldView transform == Kelvin InverseModelView transform
+			ffShaderState.Transforms.WorldViewInverseTranspose[i]=*pgraph_get_InverseModelViewMatrix(count);
 		}
 	}
 	else {

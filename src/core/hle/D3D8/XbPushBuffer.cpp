@@ -246,7 +246,6 @@ bool g_xbox_transform_use_DirectModelView = false;
 bool g_xbox_transform_ModelView_dirty[4] = { false,false,false,false, };
 bool g_xbox_transform_InverseModelView_dirty[4] = { false,false,false,false, };
 bool g_xbox_transform_Composite_dirty = false;
-
 // called when SetModelVeiw(0,0,0) was called.
 void pgraph_use_Transform(void)
 {

@@ -1165,6 +1165,23 @@ extern RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle);
 void pgraph_SetModelViewMatrix(unsigned int index);
 void pgraph_SetInverseModelViewMatrix(unsigned int index);
 void pgraph_SetCompositeMatrix(void);
+extern NV2ADevice* g_NV2A; //TMP GLUE
+D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index)
+{
+	// Retrieve NV2AState via the (LLE) NV2A device :
+	NV2AState *d = g_NV2A->GetDeviceState();
+	PGRAPHState *pg = &d->pgraph;
+
+	return (D3DMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix[index][0];
+}
+D3DMATRIX * pgraph_get_InverseModelViewMatrix(unsigned index)
+{
+	// Retrieve NV2AState via the (LLE) NV2A device :
+	NV2AState *d = g_NV2A->GetDeviceState();
+	PGRAPHState *pg = &d->pgraph;
+
+	return (D3DMATRIX *)&pg->KelvinPrimitive.SetInverseModelViewMatrix[index][0];
+}
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
