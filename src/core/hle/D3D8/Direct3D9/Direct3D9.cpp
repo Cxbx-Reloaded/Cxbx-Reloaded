@@ -5325,6 +5325,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	LOG_FUNC_ONE_ARG(Flags);
 
 	// make sure pushbuffer pasring complete before we process swap.
+	/* // disabled, we're doing multi buffering, shouldn't stop here waiting.
 	EmuKickOff();
 	while (g_nv2a_fifo_is_busy) {
 		//__asm {
@@ -5333,7 +5334,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
 		EmuKickOff();
 	}
-
+	*/
 	// TODO: Ensure this flag is always the same across library versions
 	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
 		LOG_TEST_CASE("D3DDevice_Swap: Flags != 0");
@@ -6937,7 +6938,7 @@ void CxbxImpl_SetTransformFast
 		if (it != g_SymbolAddresses.end()) {
 			pSetTransform = (byte *)it->second;
 			if ((*(byte*)(pSetTransform + 0x11)) == 0x8D) {
-				g_xbox_transform_matrix = (D3DMATRIX *)(((*(byte*)(pSetTransform + 0x13)) * 0x10) + *g_pXbox_D3DDevice);
+				g_xbox_transform_matrix = (D3DMATRIX *)(((*(byte*)(pSetTransform + 0x13)) * 0x40) + *g_pXbox_D3DDevice);
 			}
 			else {
 				g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x19)) + *g_pXbox_D3DDevice);
