@@ -1471,7 +1471,7 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
     }
 	extern bool g_VertexShader_dirty; // tmp glue
 	// set vertex shader dirty flag
-	g_VertexShader_dirty = true;
+	// g_VertexShader_dirty = true;
 }
 
 // Set default values for attributes missing from vertex declaration
