@@ -2261,7 +2261,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             // Check then close existing debugger monitor.
             DebuggerMonitorClose();
 
-            if (!CxbxExec(true, &m_hDebuggerProc, true)) {
+            if (CxbxExec(true, &m_hDebuggerProc, true)) {
                 PopupError(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.");
 
                 printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
@@ -2274,8 +2274,8 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         }
         else {
 
-            if (!CxbxExec(false, nullptr, false)) {
-                PopupError(m_hwnd, "Emulation failed.\n\n If this message repeats, the Xbe is not supported.");
+            if (const auto &err = CxbxExec(false, nullptr, false)) {
+                PopupError(m_hwnd, err->c_str());
 
                 printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
             }

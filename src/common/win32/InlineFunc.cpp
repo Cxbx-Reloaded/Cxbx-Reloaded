@@ -47,13 +47,13 @@ bool CxbxIsElevated() {
 	return fRet;
 }
 
-bool CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess) {
+std::optional<std::string> CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess) {
 
 	STARTUPINFO startupInfo = { 0 };
 	PROCESS_INFORMATION processInfo = { 0 };
 	std::string szProcArgsBuffer;
 	if (!cli_config::GenCMD(szProcArgsBuffer)) {
-		return false;
+		return std::make_optional<std::string>("Failed to retrieve the command line arguments to launch the new emulation process");
 	}
 
 	// TODO: Set a configuration variable for this. For now it will be within the same folder as Cxbx.exe
@@ -69,7 +69,7 @@ bool CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess) {
 		cpu load cycles to get the task done.
 	*/
 	if (CreateProcess(nullptr, const_cast<LPSTR>(szProcArgsBuffer.c_str()), nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
-		return 0;
+		return std::make_optional<std::string>("Failed to create the new emulation process (another instance of cxbxr is already running?)");
 	}
 	CloseHandle(processInfo.hThread);
 
@@ -80,7 +80,7 @@ bool CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess) {
 		CloseHandle(processInfo.hProcess);
 	}
 
-	return 1;
+	return std::nullopt;
 }
 
 #endif
