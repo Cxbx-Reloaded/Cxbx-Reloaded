@@ -1330,9 +1330,9 @@ void CxbxLaunchNewXbe(const std::string& XbePath) {
 	}
 	else
 	{
-		if (!CxbxExec(false, nullptr, false))
+		if (const auto &err = CxbxExec(false, nullptr, false))
 		{
-			CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+			CxbxKrnlCleanup("Could not launch %s\n\nThe reason was: %s", XbePath.c_str(), err->c_str());
 		}
 	}
 

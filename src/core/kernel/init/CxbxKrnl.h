@@ -30,6 +30,7 @@
 #include "common/ReserveAddressRanges.h"
 #include "common\xbe\Xbe.h"
 #include "Logging.h"
+#include <optional>
 
 #include <windows.h>
 #include <multimon.h>
@@ -188,8 +189,6 @@ void CxbxInitFilePaths();
 bool CxbxLockFilePath();
 void CxbxUnlockFilePath();
 
-bool CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess);
-
 bool CxbxIsElevated();
 
 /*! kernel thunk table */
@@ -228,6 +227,8 @@ extern char szFilePath_Xbe[xbox::max_path*2];
 #ifdef __cplusplus
 }
 #endif
+
+std::optional<std::string> CxbxExec(bool useDebugger, HANDLE *hProcess, bool requestHandleProcess);
 
 // Returns the last Win32 error, in string format. Returns an empty string if there is no error.
 extern std::string CxbxGetLastErrorString(char * lpszFunction);
