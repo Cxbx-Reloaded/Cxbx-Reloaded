@@ -4386,6 +4386,49 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 	g_Xbox_Viewport.Width = std::min(g_Xbox_Viewport.Width, (DWORD)rendertargetBaseWidth - g_Xbox_Viewport.X);
 	g_Xbox_Viewport.Height = std::min(g_Xbox_Viewport.Height, (DWORD)rendertargetBaseHeight - g_Xbox_Viewport.Y);
 }
+const DWORD FixedFunctionPipelineConstants[] =
+{
+
+	0x00000000,   // 0.0
+	0x3f000000,   // 0.5
+	0x3f800000,   // 1.0
+	0x40000000,   // 2.0
+
+	0xbf800000,   // -1.0
+	0x00000000,   //  0.0
+	0x3f800000,   //  1.0
+	0x40000000,   //  2.0
+
+	0x00000000,   //  0.0
+	0x00000000,   //  0.0
+	0xbf800000,   // -1.0
+	0x00000000,   //  0.0
+};
+
+xbox::void_xt WINAPI CxbxImpl_SetShaderConstantMode
+(
+	xbox::X_VERTEXSHADERCONSTANTMODE Mode
+)
+{
+	g_Xbox_VertexShaderConstantMode = Mode;
+	// if using 96 constants mode, copy fixed pipe line constatnts back to vertex shader constants.
+	if (Mode == X_D3DSCM_96CONSTANTS) { // X_D3DSCM_96CONSTANTS = 0
+		// set xbox vertex shader constant NV_IGRAPH_XF_XFCTX_CONS0 = 0x3C, 
+		//xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant)(NV_IGRAPH_XF_XFCTX_CONS0,(xbox::PVOID)&FixedFunctionPipelineConstants[0],3);
+		// reset lights
+
+		// reset Texture Transform
+
+		// reset Transform
+
+		// reset fixed function T&L constants
+		CxbxImpl_SetVertexShaderConstant(NV_IGRAPH_XF_XFCTX_CONS0, (xbox::PVOID)&FixedFunctionPipelineConstants[0], 3);
+		// reset 4 Texgen Planes
+
+		// reset Fog Plane
+
+	}
+}
 
 // LTCG specific D3DDevice_SetShaderConstantMode function...
 // This uses a custom calling convention where parameter is passed in EAX
@@ -4401,7 +4444,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstan
     }
 
     //EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
-	g_Xbox_VertexShaderConstantMode = Mode;
+	CxbxImpl_SetShaderConstantMode(Mode);
     __asm {
         LTCG_EPILOGUE
         ret
@@ -4418,7 +4461,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 {
 	LOG_FUNC_ONE_ARG(Mode);
 	XB_TRMP(D3DDevice_SetShaderConstantMode)(Mode);
-    g_Xbox_VertexShaderConstantMode = Mode;
+	CxbxImpl_SetShaderConstantMode(Mode);
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
