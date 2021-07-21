@@ -243,16 +243,16 @@ extern xbox::void_xt WINAPI CxbxImpl_SetModelView
 	CONST D3DMATRIX *pComposite
 );
 bool g_xbox_transform_use_DirectModelView = false;
-bool g_xbox_transform_ModelView_dirty = false;
-bool g_xbox_transform_InverseModelView_dirty = false;
+bool g_xbox_transform_ModelView_dirty[4] = { false,false,false,false, };
+bool g_xbox_transform_InverseModelView_dirty[4] = { false,false,false,false, };
 bool g_xbox_transform_Composite_dirty = false;
 
 // called when SetModelVeiw(0,0,0) was called.
 void pgraph_use_Transform(void)
 {
-	g_xbox_transform_ModelView_dirty = false;
-	g_xbox_transform_InverseModelView_dirty = false;
-	g_xbox_transform_Composite_dirty = false;
+	//g_xbox_transform_ModelView_dirty[0] = false;
+	//g_xbox_transform_InverseModelView_dirty[0] =false;
+	//g_xbox_transform_Composite_dirty = false;
 	g_xbox_transform_use_DirectModelView = false;
 }
 
@@ -276,7 +276,7 @@ bool pgraph_is_DirectModelView(void)
 }
 bool pgraph_is_ModelView_dirty(void)
 {
-	if ((g_xbox_transform_ModelView_dirty == true)) {
+	if ((g_xbox_transform_ModelView_dirty[0] == true)) {
 		return true;
 	}
 	else {
@@ -284,24 +284,24 @@ bool pgraph_is_ModelView_dirty(void)
 	}
 }
 
-void pgraph_SetModelViewMatrix(NV2AState *d)
+void pgraph_SetModelViewMatrix(unsigned int index)
 {
-	PGRAPHState *pg = &d->pgraph;
-	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_ModelView, (D3DXMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix0[0]);
-	g_xbox_transform_ModelView_dirty = true;
+	//PGRAPHState *pg = &d->pgraph;
+	//D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_ModelView, (D3DXMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix0[0]);
+	g_xbox_transform_ModelView_dirty[index] = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
-void pgraph_SetInverseModelViewMatrix(NV2AState *d)
+void pgraph_SetInverseModelViewMatrix(unsigned int index)
 {
-	PGRAPHState *pg = &d->pgraph;
-	g_xbox_transform_InverseModelView = *(D3DMATRIX *)(&pg->KelvinPrimitive.SetInverseModelViewMatrix0[0]);
-	g_xbox_transform_InverseModelView_dirty = true;
+	//PGRAPHState *pg = &d->pgraph;
+	//g_xbox_transform_InverseModelView = *(D3DMATRIX *)(&pg->KelvinPrimitive.SetInverseModelViewMatrix0[0]);
+	g_xbox_transform_InverseModelView_dirty[index] = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
-void pgraph_SetCompositeMatrix(NV2AState *d)
+void pgraph_SetCompositeMatrix(void)
 {
-	PGRAPHState *pg = &d->pgraph;
-	D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_Composite, (D3DXMATRIX *)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
+	//PGRAPHState *pg = &d->pgraph;
+	//D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_Composite, (D3DXMATRIX *)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
 	g_xbox_transform_Composite_dirty = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
@@ -441,28 +441,37 @@ void D3D_draw_state_update(NV2AState *d)
 	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
 	if ((g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) && (pgraph_is_DirectModelView())) {
 		// this will update matrix world/view/projection using matrix ModelView and Composite
-		if (pgraph_is_ModelView_dirty()) {
-			if((g_xbox_transform_ModelView_dirty == true) && (g_xbox_transform_Composite_dirty== true)  ){
-				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, nullptr);// &g_xbox_transform_Composite);
+		//if (pgraph_is_ModelView_dirty()) {
+			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
+			if((g_xbox_transform_ModelView_dirty[0] == true) && (g_xbox_transform_Composite_dirty== true)  ){
+				// transpose KelvinPrimitive transform back to xbox d3d transform
+				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
+				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
+				// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
+				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
 			//clear ModelView dirty flags.
-				g_xbox_transform_ModelView_dirty = false;
-				g_xbox_transform_InverseModelView_dirty = false;
-				g_xbox_transform_Composite_dirty = false;
+				//g_xbox_transform_ModelView_dirty[0] = false;
+				//g_xbox_transform_InverseModelView_dirty[0] = false;
 			}
 
-		}
-		// set host d3d transform
-		/*
-		HRESULT hRet = g_pD3DDevice->SetTransform(D3DTS_VIEW, &g_xbox_DirectModelView_View);
-		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(0), &g_xbox_DirectModelView_World);
-		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(1), &g_xbox_DirectModelView_World);
-		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(2), &g_xbox_DirectModelView_World);
-		hRet = g_pD3DDevice->SetTransform(D3DTS_WORLDMATRIX(3), &g_xbox_DirectModelView_World);
-		hRet = g_pD3DDevice->SetTransform(D3DTS_PROJECTION, &g_xbox_DirectModelView_Projection);
-		*/
-		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");
+			for (int i = 0; i < 4; i++) {
+				// update InverseModelView matrix if only ModelView matrix is updated
+				if ((g_xbox_transform_ModelView_dirty[i] == true) && (g_xbox_transform_InverseModelView_dirty[i] == false)) {
+					D3DXMATRIX matModelViewTransposed;
+					// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
+					// transpose ModelView back to xbox d3d matrix
+					D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+					// update the InverModelView matrix
+					D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+				}
+				// clear dirty flags
+				g_xbox_transform_ModelView_dirty[i] = false;
+				g_xbox_transform_InverseModelView_dirty[i] = false;
+			}
+			g_xbox_transform_Composite_dirty = false;
+		//}
 
-		//these matrix will be used in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState() later in CxbxUpdateNativeD3DResources();
+		//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
 	}
 	
 

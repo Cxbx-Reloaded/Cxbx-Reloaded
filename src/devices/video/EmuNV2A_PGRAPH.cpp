@@ -1162,9 +1162,9 @@ extern DWORD ABGR_to_ARGB(const uint32_t color);
 extern void set_IVB_DECL_override(void);
 extern void reset_IVB_DECL_override(void);
 extern RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle);
-void pgraph_SetModelViewMatrix(NV2AState *d);
-void pgraph_SetInverseModelViewMatrix(NV2AState *d);
-void pgraph_SetCompositeMatrix(NV2AState *d);
+void pgraph_SetModelViewMatrix(unsigned int index);
+void pgraph_SetInverseModelViewMatrix(unsigned int index);
+void pgraph_SetCompositeMatrix(void);
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
@@ -2250,33 +2250,45 @@ int pgraph_handle_method(
                 CASE_64(NV097_SET_MODEL_VIEW_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetModelViewMatrix0[16] SetModelViewMatrix1[16] SetModelViewMatrix2[16] SetModelViewMatrix3[16]
                      //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_MODEL_VIEW_MATRIX) / 4;
+					unsigned int matnum;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        //matnum = argc / 16;
-						unsigned int matnum = slot / 16;
+						matnum = slot / 16;
 						unsigned int entry = slot % 16;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_MMAT0 + matnum * 4 + entry / 4;
                         assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetModelViewMatrix[matnum][entry])));
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
-					pgraph_SetModelViewMatrix(d);
-                    break;
+					// reinit matnum to first matrix index
+					matnum = (method - NV097_SET_MODEL_VIEW_MATRIX) / 64;
+					// set dirty flags for each matrix
+					for (unsigned int matcnt = 0; matcnt < (method_count + 15) / 16; matcnt++, matnum++) {
+						pgraph_SetModelViewMatrix(matnum);
+					}
+
+					break;
                 }
 				//Matrix not transposed before pushed, always matrix 0, method count 12
                 CASE_64(NV097_SET_INVERSE_MODEL_VIEW_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetInverseModelViewMatrix0[16] SetInverseModelViewMatrix1[16] SetInverseModelViewMatrix2[16] SetInverseModelViewMatrix3[16]
                     //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 4;
+					unsigned int matnum;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-						unsigned int matnum = slot / 16;
+						matnum = slot / 16;
                         unsigned int entry = slot % 16;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_IMMAT0 + matnum * 4 + entry / 4;
                         assert(arg0 == *((uint32_t*)&(pg->KelvinPrimitive.SetInverseModelViewMatrix[matnum][entry])));
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
-					pgraph_SetInverseModelViewMatrix(d);
+					// reinit matnum to first matrix index
+					matnum = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 64;
+					// set dirty flags for each matrix
+					for (unsigned int matcnt=0; matcnt < (method_count+15) / 16; matcnt++,matnum++) {
+						pgraph_SetInverseModelViewMatrix(matnum);
+					}
                     break;
                 }
 				//Matrix transposed before pushed, always matrix 0, method count 16
@@ -2290,7 +2302,7 @@ int pgraph_handle_method(
                         pg->vsh_constants[row][slot % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
-					pgraph_SetCompositeMatrix(d);
+					pgraph_SetCompositeMatrix();
                     break;
                 }
 
