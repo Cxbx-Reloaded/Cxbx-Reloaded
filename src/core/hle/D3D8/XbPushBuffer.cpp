@@ -351,7 +351,125 @@ void pgraph_SetCompositeMatrix(void)
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
+	/*  //sequences of state update, reversed from xbox d3d routine 5849. these update routines are called prior to vertex format/buffer setup in xbox d3d implementation.
 
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS)
+		SetPointParams();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS)
+		SetCombiners();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM)
+		SetShaderStageProgram();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE)
+		SetTextureState();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER)
+		SetSpecFogCombiner();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM)
+		SetTextureTransform();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS)
+		SetLights();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM)
+		SetTransform();
+
+	// Clear the dirty flags
+
+	NV2A_DirtyFlags = NV2A_DirtyFlags & ~X_SET_STATE_FLAGS;
+
+	*/
+	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
+	//D3D_texture_stage_update(d);
+
+	HRESULT hRet;
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
+	// NV2A_FOG_PLANE?
+	// NV2A_SET_LINEAR_FOG_CONST?
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
+	// Unused : D3DRS_FOGVERTEXMODE
+	uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
+	/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
+	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+
+// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
+// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
+
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, xtBool); // NV2A_NORMALIZE_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
+//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
+	g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv); // NV2A_TX_WRAP(0), EmuXB2PC_* conversion needed
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv); // NV2A_TX_WRAP(1), EmuXB2PC_* conversion needed
+
+	//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
+
+	g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+	g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
+
+	// update pixel shader if pixel related content is dirty
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
+
+	}
+
+	// update transfoms
+	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
+	if ((g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) && (pgraph_is_DirectModelView())) {
+		// this will update matrix world/view/projection using matrix ModelView and Composite
+		//if (pgraph_is_ModelView_dirty()) {
+			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
+			if((g_xbox_transform_ModelView_dirty[0] == true) && (g_xbox_transform_Composite_dirty== true)  ){
+				// transpose KelvinPrimitive transform back to xbox d3d transform
+				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
+				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
+				// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
+				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
+			//clear ModelView dirty flags.
+				//g_xbox_transform_ModelView_dirty[0] = false;
+				//g_xbox_transform_InverseModelView_dirty[0] = false;
+			}
+
+			for (int i = 0; i < 4; i++) {
+				// update InverseModelView matrix if only ModelView matrix is updated
+				if ((g_xbox_transform_ModelView_dirty[i] == true) && (g_xbox_transform_InverseModelView_dirty[i] == false)) {
+					D3DXMATRIX matModelViewTransposed;
+					// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
+					// transpose ModelView back to xbox d3d matrix
+					D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+					// update the InverModelView matrix
+					D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+				}
+				// clear dirty flags
+				g_xbox_transform_ModelView_dirty[i] = false;
+				g_xbox_transform_InverseModelView_dirty[i] = false;
+			}
+			g_xbox_transform_Composite_dirty = false;
+		//}
+
+		//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
+	}
+	// Note, that g_Xbox_VertexShaderMode should be left untouched,
+	// because except for the declaration override, the Xbox shader (either FVF
+	// or a program, or even passthrough shaders) should still be in effect!
+
+
+	// setup vertes format, and vertex buffer from here.
 	// Derive vertex attribute layout, using an intermediate array
 	struct { int slot_index; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedAttributes[X_VSH_MAX_ATTRIBUTES];
 	uint32_t inline_offset = 0; // This applies only to IVB draw. TODO : instead of nullptr, start at the memory address of an IVB-dedicated host D3D VertexBuffer
@@ -467,118 +585,8 @@ void D3D_draw_state_update(NV2AState *d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
 	}
-	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
-	//D3D_texture_stage_update(d);
 
-	HRESULT hRet;
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
-	// NV2A_FOG_PLANE?
-	// NV2A_SET_LINEAR_FOG_CONST?
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
-	// Unused : D3DRS_FOGVERTEXMODE
-
-	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
-	if ((g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) && (pgraph_is_DirectModelView())) {
-		// this will update matrix world/view/projection using matrix ModelView and Composite
-		//if (pgraph_is_ModelView_dirty()) {
-			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
-			if((g_xbox_transform_ModelView_dirty[0] == true) && (g_xbox_transform_Composite_dirty== true)  ){
-				// transpose KelvinPrimitive transform back to xbox d3d transform
-				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
-				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
-				// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
-				CxbxImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
-			//clear ModelView dirty flags.
-				//g_xbox_transform_ModelView_dirty[0] = false;
-				//g_xbox_transform_InverseModelView_dirty[0] = false;
-			}
-
-			for (int i = 0; i < 4; i++) {
-				// update InverseModelView matrix if only ModelView matrix is updated
-				if ((g_xbox_transform_ModelView_dirty[i] == true) && (g_xbox_transform_InverseModelView_dirty[i] == false)) {
-					D3DXMATRIX matModelViewTransposed;
-					// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
-					// transpose ModelView back to xbox d3d matrix
-					D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
-					// update the InverModelView matrix
-					D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
-				}
-				// clear dirty flags
-				g_xbox_transform_ModelView_dirty[i] = false;
-				g_xbox_transform_InverseModelView_dirty[i] = false;
-			}
-			g_xbox_transform_Composite_dirty = false;
-		//}
-
-		//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
-	}
-	/*  //sequences of state update, reversed from xbox d3d routine 5849. these update routines are called prior to vertex format/buffer setup in xbox d3d implementation.
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS)
-		SetPointParams();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS)
-		SetCombiners();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM)
-		SetShaderStageProgram();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE)
-		SetTextureState();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER)
-		SetSpecFogCombiner();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM)
-		SetTextureTransform();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS)
-		SetLights();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM)
-		SetTransform();
-
-	// Clear the dirty flags
-
-	NV2A_DirtyFlags = NV2A_DirtyFlags & ~X_SET_STATE_FLAGS;
-
-	*/
-	// Note, that g_Xbox_VertexShaderMode should be left untouched,
-	// because except for the declaration override, the Xbox shader (either FVF
-	// or a program, or even passthrough shaders) should still be in effect!
 	CxbxUpdateNativeD3DResources();
-
-	uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
-	/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-
-// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
-// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
-
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, xtBool); // NV2A_NORMALIZE_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
-	g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv); // NV2A_TX_WRAP(0), EmuXB2PC_* conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv); // NV2A_TX_WRAP(1), EmuXB2PC_* conversion needed
-
-//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
-
-	g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
-	g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
-	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
 
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
 }
