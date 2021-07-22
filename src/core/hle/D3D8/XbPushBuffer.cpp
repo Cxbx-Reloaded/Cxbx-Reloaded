@@ -30,7 +30,7 @@
 #include <assert.h> // For assert()
 
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
+#include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT, X_D3DDIRTYFLAG
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbPushBuffer.h"
@@ -39,6 +39,29 @@
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"
+// global dirty flags for NV2A/KelvinPrimitive, using same bit mask as xbox d3d, defined in XbD3D8Types.h. when content of Kelvin changed, set reresponded flag. then update corresponded state in D3D_draw_state_update()
+DWORD NV2A_DirtyFlags = 0;
+/*
+// values used by xbox d3d to bit mask d3d dirty flag
+#define X_D3DDIRTYFLAG_TEXTURE_STATE                      0x0000000F
+#define X_D3DDIRTYFLAG_VERTEXFORMAT_VB                    0x00000010
+#define X_D3DDIRTYFLAG_VERTEXFORMAT_UP                    0x00000020
+#define X_VERTEXFORMAT_OFFSETS                            0x00000040
+#define X_D3DDIRTYFLAG_POINTPARAMS                        0x00000100
+#define X_D3DDIRTYFLAG_TRANSFORM                          0x00000200
+#define X_D3DDIRTYFLAG_TEXTURE_TRANSFORM                  0x00000400
+#define X_D3DDIRTYFLAG_COMBINERS                          0x00000800
+#define X_D3DDIRTYFLAG_SPECFOG_COMBINER                   0x00002000
+#define X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM               0x00004000
+#define X_D3DDIRTYFLAG_LIGHTS                             0x00FF1000
+#define X_SET_STATE_FLAGS                                 0x3FFFFF8F
+// valuse for direct mode, when set, overwrite original api priority
+// but from reversed code, even X_D3DDIRTYFLAG_DIRECT_INPUT is set,
+// when SetTransform() was called, the ModelView/Composite matrix will still be update using the new transform.
+// this makes sense, NV2A uses ModelView/Composite internally. so xbox always has to convert its transform to ModelView/Composite.
+#define X_D3DDIRTYFLAG_DIRECT_INPUT                       0x40000000
+#define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000
+*/
 
 // TODO: Find somewhere to put this that doesn't conflict with xbox::
 extern void CxbxUpdateHostTextures();
@@ -246,6 +269,27 @@ bool g_xbox_transform_use_DirectModelView = false;
 bool g_xbox_transform_ModelView_dirty[4] = { false,false,false,false, };
 bool g_xbox_transform_InverseModelView_dirty[4] = { false,false,false,false, };
 bool g_xbox_transform_Composite_dirty = false;
+// virtual pixle shader, convert content from KelvinPrimitive to the pixel shader below and call CxbxImpl_SetPixelShader(pNV2A_PixelShader). 
+xbox::X_PixelShader* pNV2A_PixelShader;
+xbox::X_PixelShader NV2A_PixelShader;
+xbox::X_D3DPIXELSHADERDEF NV2A_PSDef;
+
+void pgraph_use_UserPixelShader(void)
+{
+	// set pixel shader pointers
+	pNV2A_PixelShader = &NV2A_PixelShader;
+	NV2A_PixelShader.pPSDef = &NV2A_PSDef;
+	// set dirty flag
+	NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+}
+
+void pgraph_use_FixedPixelShader(void)
+{
+	// set pixel shader pointer to null for fixed function pixel shader
+	pNV2A_PixelShader = nullptr;
+	// set dirty flag
+	NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+}
 // called when SetModelVeiw(0,0,0) was called.
 void pgraph_use_Transform(void)
 {
@@ -472,8 +516,37 @@ void D3D_draw_state_update(NV2AState *d)
 
 		//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
 	}
-	
+	/*  //sequences of state update, reversed from xbox d3d routine 5849. these update routines are called prior to vertex format/buffer setup in xbox d3d implementation.
 
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS)
+		SetPointParams();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS)
+		SetCombiners();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM)
+		SetShaderStageProgram();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE)
+		SetTextureState();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER)
+		SetSpecFogCombiner();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM)
+		SetTextureTransform();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS)
+		SetLights();
+
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM)
+		SetTransform();
+
+	// Clear the dirty flags
+
+	NV2A_DirtyFlags = NV2A_DirtyFlags & ~X_SET_STATE_FLAGS;
+
+	*/
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
