@@ -1339,6 +1339,25 @@ enum X_D3DTRANSFORMSTATETYPE {
 
 typedef DWORD NV2AMETHOD;
 
+// values used by xbox d3d to bit mask d3d dirty flag
+#define X_D3DDIRTYFLAG_TEXTURE_STATE                      0x0000000F
+#define X_D3DDIRTYFLAG_VERTEXFORMAT_VB                    0x00000010
+#define X_D3DDIRTYFLAG_VERTEXFORMAT_UP                    0x00000020
+#define X_VERTEXFORMAT_OFFSETS                            0x00000040
+#define X_D3DDIRTYFLAG_POINTPARAMS                        0x00000100
+#define X_D3DDIRTYFLAG_TRANSFORM                          0x00000200
+#define X_D3DDIRTYFLAG_TEXTURE_TRANSFORM                  0x00000400
+#define X_D3DDIRTYFLAG_COMBINERS                          0x00000800
+#define X_D3DDIRTYFLAG_SPECFOG_COMBINER                   0x00002000
+#define X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM               0x00004000
+#define X_D3DDIRTYFLAG_LIGHTS                             0x00FF1000
+#define X_SET_STATE_FLAGS                                 0x3FFFFF8F
+// valuse for direct mode, when set, overwrite original api priority
+// but from reversed code, even X_D3DDIRTYFLAG_DIRECT_INPUT is set,
+// when SetTransform() was called, the ModelView/Composite matrix will still be update using the new transform.
+// this makes sense, NV2A uses ModelView/Composite internally. so xbox always has to convert its transform to ModelView/Composite.
+#define X_D3DDIRTYFLAG_DIRECT_INPUT                       0x40000000
+#define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000
 //
 // Below declarations are used by Cxbx, not by the Xbox!!!
 //

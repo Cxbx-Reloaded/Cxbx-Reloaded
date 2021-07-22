@@ -1162,9 +1162,12 @@ extern DWORD ABGR_to_ARGB(const uint32_t color);
 extern void set_IVB_DECL_override(void);
 extern void reset_IVB_DECL_override(void);
 extern RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle);
-void pgraph_SetModelViewMatrix(unsigned int index);
-void pgraph_SetInverseModelViewMatrix(unsigned int index);
-void pgraph_SetCompositeMatrix(void);
+extern DWORD NV2A_DirtyFlags;
+extern void pgraph_SetModelViewMatrix(unsigned int index);
+extern void pgraph_SetInverseModelViewMatrix(unsigned int index);
+extern void pgraph_SetCompositeMatrix(void);
+extern void pgraph_use_UserPixelShader(void);
+extern void pgraph_use_FixedPixelShader(void);
 extern NV2ADevice* g_NV2A; //TMP GLUE
 D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index)
 {
