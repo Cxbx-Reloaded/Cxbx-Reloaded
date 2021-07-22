@@ -1168,6 +1168,7 @@ extern void pgraph_SetInverseModelViewMatrix(unsigned int index);
 extern void pgraph_SetCompositeMatrix(void);
 extern void pgraph_use_UserPixelShader(void);
 extern void pgraph_use_FixedPixelShader(void);
+extern bool NV2A_ShaderOtherStageInputDirty;
 extern NV2ADevice* g_NV2A; //TMP GLUE
 D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index)
 {
@@ -3926,7 +3927,9 @@ int pgraph_handle_method(
 				if(Handle==0)//restore to fix function
 				    
 				    (NV097_SET_COMBINER_??,?? ,method count 1 )
-				    (NV097_SET_SHADER_STAGE_PROGRAM,??,  method count 1 )
+                    D3D__DirtyFlags |= D3DD3DDIRTYFLAG_COMBINERS | D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+					if(shader uses specfog)
+					   D3D__DirtyFlags |= D3DD3DDIRTYFLAG_SPECFOB_COMBINER
 					update bump env for each texture stage [1]~[3]
 					(NV097_SET_SHADER_OTHER_STAGE_INPUT,
 					(NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE1_INSTAGE_0 | NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE2_INSTAGE_1 | NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE3_INSTAGE_2, method count 1); //arg0 0x210000
@@ -3956,11 +3959,16 @@ int pgraph_handle_method(
 					
 					   
 				*/
-				case NV097_SET_SHADER_STAGE_PROGRAM:
-					if (pg->KelvinPrimitive.SetShaderStageProgram == 0) {
-						arg0 = 0;
+				case NV097_SET_SHADER_STAGE_PROGRAM://pg->KelvinPrimitive.SetShaderStageProgram
+					// if NV097_SET_SHADER_OTHER_STAGE_INPUT was called and set with 0x00210000, then we're in fixed mode pixel shader
+					if(NV2A_ShaderOtherStageInputDirty == true & pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000){
+						pgraph_use_FixedPixelShader();
+					// else we're in user mode pixel program
+					}else{
+						pgraph_use_UserPixelShader();
 					}
-
+					// reset NV2A_ShaderOtherStageInputDirty dirty flag
+					NV2A_ShaderOtherStageInputDirty = false;
 					break;//done //pg->KelvinPrimitive.SetShaderStageProgram
 
 
@@ -3970,6 +3978,9 @@ int pgraph_handle_method(
 
                 case NV097_SET_SHADER_OTHER_STAGE_INPUT://done  //pg->KelvinPrimitive.SetShaderOtherStageInput
                     //pg->pgraph_regs[NV_PGRAPH_SHADERCTL/4] = arg0;
+					// set NV2A_ShaderOtherStageInputDirty, so later in NV097_SET_SHADER_STAGE_PROGRAM we could tell this is fixed mode pixel shader.
+					NV2A_ShaderOtherStageInputDirty = true;
+					//pgraph_use_FixedPixelShader();
                     break;
 
                 CASE_4(NV097_SET_TRANSFORM_DATA,4):break;//not implement //pg->KelvinPrimitive.SetTransformData[4]

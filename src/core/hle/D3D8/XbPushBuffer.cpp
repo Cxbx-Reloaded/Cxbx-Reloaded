@@ -35,6 +35,8 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
+#include "core\hle\D3D8\Direct3D9\TextureStates.h"
+#include "core\hle\D3D8\Direct3D9\RenderStates.h" 
 #include <d3dx9math.h> // for D3DXMatrix, etc
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
@@ -75,6 +77,7 @@ extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
 extern bool is_pushbuffer_recording(void); // in Direct3D9.cpp, return true if pushbuffer is recording
 void backup_xbox_texture_state(void);
 void restore_xbox_texture_state(void);
+bool g_nv2a_is_pushpuffer_replay = false;
 void EmuExecutePushBuffer
 (
 	xbox::X_D3DPushBuffer       *pPushBuffer,
@@ -142,8 +145,12 @@ void EmuExecutePushBuffer
 	//the pushbuffer size must be subtracted with 4, because xbox d3d append 1 dwords at the end of original pushbuffer when creating a new pushbuffer,
 	//the appended dword is 0xbaadf00d, and when execute the pushbuffer, it insert a jump command in that dword to jump back to main pushbuffer.
 	//pDevice-PUSH. but here we do doing HLE, we are not using real push buffer and real dma. so exclude the last dword.
-    EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
-
+	// set g_nv2a_is_pushpuffer_replay flag, for other code to know we're in replay state
+	g_nv2a_is_pushpuffer_replay = true;
+	// replay pushbuffer.
+	EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
+	// reset g_nv2a_is_pushpuffer_replay flag
+	g_nv2a_is_pushpuffer_replay = false;
     return;
 }
 
@@ -250,7 +257,7 @@ void D3D_texture_stage_update(NV2AState *d)
 		}
 	}
 }
-
+extern NV2ADevice* g_NV2A; //TMP GLUE
 extern D3DMATRIX g_xbox_transform_ModelView;
 extern D3DMATRIX g_xbox_transform_InverseModelView;
 extern D3DMATRIX g_xbox_transform_Composite;
@@ -273,7 +280,32 @@ bool g_xbox_transform_Composite_dirty = false;
 xbox::X_PixelShader* pNV2A_PixelShader;
 xbox::X_PixelShader NV2A_PixelShader;
 xbox::X_D3DPIXELSHADERDEF NV2A_PSDef;
-
+bool NV2A_ShaderOtherStageInputDirty=false;
+bool g_nv2a_use_nv2a_bumpenv = false;
+float * pgraph_get_NV2A_bumpenv_stage_address(unsigned int stage) {
+	// Retrieve NV2AState via the (LLE) NV2A device :
+	NV2AState *d = g_NV2A->GetDeviceState();
+	PGRAPHState *pg = &d->pgraph;
+	return &pg->KelvinPrimitive.SetTexture[stage].SetBumpEnvMat00;
+}
+void pgraph_use_NV2A_bumpenv(void)
+{
+	g_nv2a_use_nv2a_bumpenv = true;
+}
+void pgraph_notuse_NV2A_bumpenv(void)
+{
+	g_nv2a_use_nv2a_bumpenv = false;
+}
+bool pgraph_is_NV2A_bumpenv(void)
+{
+	// if wr're not in replplay mode, don't use NV2A bumpenv. this is temp solution to solve HLE/NV2A confliction.
+	if (g_nv2a_is_pushpuffer_replay!=true) {
+		return false;
+	}
+	else {
+		return g_nv2a_use_nv2a_bumpenv;
+	}
+}
 void pgraph_use_UserPixelShader(void)
 {
 	// set pixel shader pointers
@@ -348,6 +380,22 @@ void pgraph_SetCompositeMatrix(void)
 	g_xbox_transform_Composite_dirty = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
+
+extern XboxTextureStateConverter XboxTextureStates;
+extern XboxRenderStateConverter XboxRenderStates;
+extern xbox::void_xt CxbxImpl_SetPixelShader(xbox::dword_xt Handle);
+
+void d3d_bumpenv_update(NV2AState *d, bool isUserMode)
+{
+	// for bmpenv, NV2A always uses stage 1~3. in user mode, d3d uses stage 1~3, in fixed mode, d3d uses stage 0~2.
+	unsigned int d3d_stage = (isUserMode) ? 1 : 0;
+	unsigned int nv2a_stage;
+	for (nv2a_stage = 1; nv2a_stage <= 3; nv2a_stage++, d3d_stage) {
+		//XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT00);
+		;
+
+	}
+}
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -382,6 +430,54 @@ void D3D_draw_state_update(NV2AState *d)
 	NV2A_DirtyFlags = NV2A_DirtyFlags & ~X_SET_STATE_FLAGS;
 
 	*/
+
+	// update point params
+	if ((NV2A_DirtyFlags | X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
+		;
+		// clear dirty flag
+		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_POINTPARAMS;
+	}
+	// update combiners
+	if ((NV2A_DirtyFlags | X_D3DDIRTYFLAG_COMBINERS) != 0) {
+		;
+		// clear dirty flag
+		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_COMBINERS;
+	}
+	// update pixel shader
+	if ((NV2A_DirtyFlags | X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
+		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
+		if ((g_nv2a_is_pushpuffer_replay == true) ){
+
+			// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
+			pgraph_use_NV2A_bumpenv();
+				// fixed mode
+				if (pNV2A_PixelShader == nullptr) {
+					// set pixel shader
+					pNV2A_PixelShader = nullptr;
+						CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
+				}
+			// user mode
+				else {
+					// copy content from KelvinPrimitive to PSDef
+					memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSConstant0[0], &pg->KelvinPrimitive.SetCombinerFactor0[0], 32 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSCompareMode, &pg->KelvinPrimitive.SetShaderClipPlaneMode, 1 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSFinalCombinerConstant0, &pg->KelvinPrimitive.SetSpecularFogFactor[0], 2 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], 9 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSDotMapping, &pg->KelvinPrimitive.SetDotRGBMapping, 2 * sizeof(DWORD));
+					//if (pDevice->SetShaderUsesSpecFog != 0) // let DxbxUpdateActivePixelShader()worry about it.
+					memcpy(&NV2A_PSDef.PSFinalCombinerInputsABCD, &pg->KelvinPrimitive.SetCombinerSpecularFogCW0, 2 * sizeof(DWORD));
+					NV2A_PSDef.PSTextureModes = (DWORD)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES));
+					// set pixel shader
+					pNV2A_PixelShader = &NV2A_PixelShader;
+					CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
+				}
+		}
+		// clear dirty flag xbox::dword_xt
+		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+	}
+
+
 	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
 	//D3D_texture_stage_update(d);
 
