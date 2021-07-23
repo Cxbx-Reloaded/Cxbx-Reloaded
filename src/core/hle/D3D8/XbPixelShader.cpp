@@ -62,6 +62,10 @@
 
 extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
 extern XboxTextureStateConverter XboxTextureStates; // Declared in Direct3D9.cpp
+extern bool pgraph_is_NV2A_bumpenv(void);
+extern void pgraph_notuse_NV2A_bumpenv(void);
+extern float * pgraph_get_NV2A_bumpenv_stage_address(unsigned int stage);
+extern NV2ADevice* g_NV2A; //TMP GLUE
 
 
 #define DbgPshPrintf \
@@ -1076,11 +1080,8 @@ float AsFloat(uint32_t value) {
 	auto v = value;
 	return *(float*)&v;
 }
-extern bool pgraph_is_NV2A_bumpenv(void);
-extern void pgraph_notuse_NV2A_bumpenv(void);
+
 bool g_UseFixedFunctionPixelShader = true;
-extern float * pgraph_get_NV2A_bumpenv_stage_address(unsigned int stage);
-extern NV2ADevice* g_NV2A; //TMP GLUE
 // Set constant state for the fixed function pixel shader
 void UpdateFixedFunctionPixelShaderState()
 {
