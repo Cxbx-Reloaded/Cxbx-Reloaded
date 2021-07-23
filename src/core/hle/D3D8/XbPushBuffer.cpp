@@ -41,6 +41,10 @@
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"
+
+// global state flags for NV2A/KelvinPrimitive, using same bit mask as xbox d3d, defined in XbD3D8Types.h. when content of Kelvin changed, set reresponded flag. then update corresponded state in D3D_draw_state_update()
+DWORD NV2A_stateFlags = 0;
+
 // global dirty flags for NV2A/KelvinPrimitive, using same bit mask as xbox d3d, defined in XbD3D8Types.h. when content of Kelvin changed, set reresponded flag. then update corresponded state in D3D_draw_state_update()
 DWORD NV2A_DirtyFlags = 0;
 /*
@@ -285,6 +289,19 @@ xbox::X_PixelShader NV2A_PixelShader;
 xbox::X_D3DPIXELSHADERDEF NV2A_PSDef;
 bool NV2A_ShaderOtherStageInputDirty=false;
 bool g_nv2a_use_nv2a_bumpenv = false;
+
+void pgraph_SetNV2AStateFlag(DWORD flag)
+{
+	NV2A_stateFlags |= flag;
+}
+void pgraph_ClearNV2AStateFlag(DWORD flag)
+{
+	NV2A_stateFlags &= ~flag;
+}
+bool pgraph_GetNV2AStateFlag(DWORD flag)
+{
+	return (NV2A_stateFlags & flag)!=0;//X_STATE_COMBINERNEEDSSPECULAR)!=0;
+}
 float * pgraph_get_NV2A_bumpenv_stage_address(unsigned int stage) {
 	// Retrieve NV2AState via the (LLE) NV2A device :
 	NV2AState *d = g_NV2A->GetDeviceState();
@@ -383,7 +400,12 @@ void pgraph_SetCompositeMatrix(void)
 	g_xbox_transform_Composite_dirty = true;
 	g_xbox_transform_use_DirectModelView = true;
 }
-
+// this function purges NV2A internal dirty flags and state flags. this shall be called before replaying a pushbuffer in order to clear any intermediate state left over by the HLE part running prior to the replay pushbuffer
+void pgraph_purge_dirty_and_state_flag(void)
+{
+	NV2A_DirtyFlags = 0;
+	NV2A_stateFlags = 0;
+}
 extern XboxTextureStateConverter XboxTextureStates;
 extern XboxRenderStateConverter XboxRenderStates;
 extern xbox::void_xt CxbxImpl_SetPixelShader(xbox::dword_xt Handle);
@@ -471,8 +493,17 @@ void D3D_draw_state_update(NV2AState *d)
 					memcpy(&NV2A_PSDef.PSFinalCombinerConstant0, &pg->KelvinPrimitive.SetSpecularFogFactor[0], 2 * sizeof(DWORD));
 					memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], 9 * sizeof(DWORD));
 					memcpy(&NV2A_PSDef.PSDotMapping, &pg->KelvinPrimitive.SetDotRGBMapping, 2 * sizeof(DWORD));
-					//if (pDevice->SetShaderUsesSpecFog != 0) // let DxbxUpdateActivePixelShader()worry about it.
-					memcpy(&NV2A_PSDef.PSFinalCombinerInputsABCD, &pg->KelvinPrimitive.SetCombinerSpecularFogCW0, 2 * sizeof(DWORD));
+					// only set NV2A_PSDef.PSFinalCombinerInputsABCD and NV2A_PSDef.PSFinalCombinerInputsEFG when KelvinPrimitive.SetCombinerSpecularFogCW0 or KelvinPrimitive.SetCombinerSpecularFogCW1 is dirty
+					if ((NV2A_stateFlags & X_STATE_COMBINERNEEDSSPECULAR) != 0) { // DxbxUpdateActivePixelShader() doesn't consider about the precondition, we have to treat the dirty flag here.
+						memcpy(&NV2A_PSDef.PSFinalCombinerInputsABCD, &pg->KelvinPrimitive.SetCombinerSpecularFogCW0, 2 * sizeof(DWORD));
+						// FIXME!!! shall we reset the flag here?
+						NV2A_stateFlags &= ~X_STATE_COMBINERNEEDSSPECULAR;
+					}
+					// set both members as 0;
+					else {
+						NV2A_PSDef.PSFinalCombinerInputsABCD = 0;
+						NV2A_PSDef.PSFinalCombinerInputsEFG = 0;
+					}
 					NV2A_PSDef.PSTextureModes = (DWORD)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES));
 					// set pixel shader
 					pNV2A_PixelShader = &NV2A_PixelShader;
