@@ -435,22 +435,22 @@ void D3D_draw_state_update(NV2AState *d)
 	*/
 
 	// update point params
-	if ((NV2A_DirtyFlags | X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
 		;
 		// clear dirty flag
-		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_POINTPARAMS;
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_POINTPARAMS;
 	}
 	// update combiners
-	if ((NV2A_DirtyFlags | X_D3DDIRTYFLAG_COMBINERS) != 0) {
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
 		;
 		// clear dirty flag
-		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_COMBINERS;
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 	}
 	// update texture stage state, texture stage state must be update prior to pixel shader because pixel shader compilation depends on texture state input
 	D3D_texture_stage_update(d);
 
 	// update pixel shader
-	if ((NV2A_DirtyFlags | X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
 		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
 		if ((g_nv2a_is_pushpuffer_replay == true) ){
 
@@ -480,7 +480,7 @@ void D3D_draw_state_update(NV2AState *d)
 				}
 		}
 		// clear dirty flag xbox::dword_xt
-		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
 
 
