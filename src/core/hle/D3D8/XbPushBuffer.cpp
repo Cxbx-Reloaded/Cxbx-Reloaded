@@ -212,6 +212,9 @@ xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store t
 unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
 // textures to store the conversion info from NV2A KelvinPrimitive.SetTexture[4]
 xbox::X_D3DBaseTexture NV2A_texture_stage_texture[xbox::X_D3DTS_STAGECOUNT];
+// pointers to textures which store the converted texture from NV2A KelvinPrimitive.SetTexture[4]
+xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT]= { 0,0,0,0 };
+
 // Backup of g_pXbox_SetTexture[]
 xbox::X_D3DBaseTexture *pXbox_SetTexture_Backup[xbox::X_D3DTS_STAGECOUNT] = { 0,0,0,0 };
 // update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
@@ -231,11 +234,11 @@ void D3D_texture_stage_update(NV2AState *d)
 	for (int stage = 0; stage < 4; stage++) {
 		// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
 		if (pg->KelvinPrimitive.SetTexture[stage].Control0 == 0 || pg->KelvinPrimitive.SetTexture[stage].Address==0 || pg->KelvinPrimitive.SetTexture[stage].Format==0) {
-			g_pXbox_SetTexture[stage] = nullptr;
+			g_pNV2A_SetTexture[stage] = nullptr;
 		}
 		// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
 		else {
-			g_pXbox_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
+			g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
 			NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
 			NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
 			unsigned width = 0, height = 0, pitch = 0;
@@ -443,45 +446,43 @@ void D3D_draw_state_update(NV2AState *d)
 		// clear dirty flag
 		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_COMBINERS;
 	}
+	// update texture stage state, texture stage state must be update prior to pixel shader because pixel shader compilation depends on texture state input
+	D3D_texture_stage_update(d);
+
 	// update pixel shader
 	if ((NV2A_DirtyFlags | X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
 		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
-		if (g_nv2a_is_pushpuffer_replay == true) {
+		if ((g_nv2a_is_pushpuffer_replay == true) ){
 
 			// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
 			pgraph_use_NV2A_bumpenv();
-
-			if (pNV2A_PixelShader == nullptr) {
 				// fixed mode
-			}
-			else { // user mode
-				// copy content from KelvinPrimitive to PSDef
-				memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
-				NV2A_PSDef.PSFinalCombinerInputsABCD = pg->KelvinPrimitive.SetCombinerSpecularFogCW0;
-				NV2A_PSDef.PSFinalCombinerInputsEFG = pg->KelvinPrimitive.SetCombinerSpecularFogCW1;
-				memcpy(&NV2A_PSDef.PSConstant0[0], &pg->KelvinPrimitive.SetCombinerFactor0[0], 8 * sizeof(DWORD));
-				memcpy(&NV2A_PSDef.PSConstant1[0], &pg->KelvinPrimitive.SetCombinerFactor1[0], 8 * sizeof(DWORD));
-				memcpy(&NV2A_PSDef.PSAlphaOutputs[0], &pg->KelvinPrimitive.SetCombinerAlphaOCW[0], 8 * sizeof(DWORD));
-				memcpy(&NV2A_PSDef.PSRGBInputs[0], &pg->KelvinPrimitive.SetCombinerColorICW[0], 8 * sizeof(DWORD));
-				NV2A_PSDef.PSCompareMode = pg->KelvinPrimitive.SetShaderClipPlaneMode;
-				NV2A_PSDef.PSFinalCombinerConstant0 = pg->KelvinPrimitive.SetSpecularFogFactor[0];
-				NV2A_PSDef.PSFinalCombinerConstant1 = pg->KelvinPrimitive.SetSpecularFogFactor[1];
-				memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], 8 * sizeof(DWORD));
-				NV2A_PSDef.PSCombinerCount = pg->KelvinPrimitive.SetCombinerControl;
-				NV2A_PSDef.PSTextureModes = pg->KelvinPrimitive.SetShaderStageProgram; // Was : XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
-				NV2A_PSDef.PSDotMapping = pg->KelvinPrimitive.SetDotRGBMapping;
-				NV2A_PSDef.PSInputTexture = pg->KelvinPrimitive.SetShaderOtherStageInput;
-				//if (pDevice->SetShaderUsesSpecFog != 0) // let DxbxUpdateActivePixelShader()worry about it.
-				// set pixel shader
-				pgraph_use_UserPixelShader();
-			}
-
-			CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
+				if (pNV2A_PixelShader == nullptr) {
+					// set pixel shader
+					pNV2A_PixelShader = nullptr;
+						CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
+				}
+			// user mode
+				else {
+					// copy content from KelvinPrimitive to PSDef
+					memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSConstant0[0], &pg->KelvinPrimitive.SetCombinerFactor0[0], 32 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSCompareMode, &pg->KelvinPrimitive.SetShaderClipPlaneMode, 1 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSFinalCombinerConstant0, &pg->KelvinPrimitive.SetSpecularFogFactor[0], 2 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], 9 * sizeof(DWORD));
+					memcpy(&NV2A_PSDef.PSDotMapping, &pg->KelvinPrimitive.SetDotRGBMapping, 2 * sizeof(DWORD));
+					//if (pDevice->SetShaderUsesSpecFog != 0) // let DxbxUpdateActivePixelShader()worry about it.
+					memcpy(&NV2A_PSDef.PSFinalCombinerInputsABCD, &pg->KelvinPrimitive.SetCombinerSpecularFogCW0, 2 * sizeof(DWORD));
+					NV2A_PSDef.PSTextureModes = (DWORD)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES));
+					// set pixel shader
+					pNV2A_PixelShader = &NV2A_PixelShader;
+					CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
+				}
 		}
-
 		// clear dirty flag xbox::dword_xt
 		NV2A_DirtyFlags |= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
+
 
 	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
 	//D3D_texture_stage_update(d);
