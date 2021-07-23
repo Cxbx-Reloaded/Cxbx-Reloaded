@@ -1169,6 +1169,9 @@ extern void pgraph_SetCompositeMatrix(void);
 extern void pgraph_use_UserPixelShader(void);
 extern void pgraph_use_FixedPixelShader(void);
 extern bool NV2A_ShaderOtherStageInputDirty;
+extern void pgraph_SetNV2AStateFlag(DWORD flag);
+extern bool pgraph_GetNV2AStateFlag(DWORD flag);
+extern void pgraph_ClearNV2AStateFlag(DWORD flag);
 extern NV2ADevice* g_NV2A; //TMP GLUE
 D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index)
 {
@@ -2015,13 +2018,15 @@ int pgraph_handle_method(
                 CASE_8(NV097_SET_COMBINER_ALPHA_ICW, 4) ://done
                     //slot = (method - NV097_SET_COMBINER_ALPHA_ICW) / 4;
                     //pg->pgraph_regs[NV_PGRAPH_COMBINEALPHAI0/4 + slot * 4] = arg0;
-                    break;
+					// clear combiner need specular flag once we got hit here. this is the very first method to update pixel shader
+					pgraph_ClearNV2AStateFlag(X_STATE_COMBINERNEEDSSPECULAR);
+					break;
 
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW0://done
-                    break;
-
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW1://done
-                    break;
+					// set combiner specular fog dirty flag, so in pixel shader generation stage we could know whether NV097_SET_COMBINER_SPECULAR_FOG_CW0 and NV097_SET_COMBINER_SPECULAR_FOG_CW1 should be put in PSDef or not
+					pgraph_SetNV2AStateFlag(X_STATE_COMBINERNEEDSSPECULAR);
+					break;
 
                 case NV097_SET_CONTROL0: {//done  //pg->KelvinPrimitive.SetControl0& NV097_SET_CONTROL0_COLOR_SPACE_CONVERT GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)
                     pgraph_update_surface(d, false, true, true);
