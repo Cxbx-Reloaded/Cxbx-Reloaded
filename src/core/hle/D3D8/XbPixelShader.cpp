@@ -456,35 +456,64 @@ typedef struct s_CxbxPSDef {
 
 		return true;
 	}
-
+	
 	void SnapshotRuntimeVariables()
 	{
+		// Retrieve NV2AState via the (LLE) NV2A device :
+		NV2AState *d = g_NV2A->GetDeviceState();
+		PGRAPHState *pg = &d->pgraph;
 		// These values are checked in IsEquivalent to see if a cached pixel shader matches this declaration
-
-		// Fetch currently active texture types, which impact AdjustTextureModes
-		for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-			extern xbox::X_D3DRESOURCETYPE GetXboxD3DResourceType(const xbox::X_D3DResource *pXboxResource);
-
-			if (g_pXbox_SetTexture[i])
-				ActiveTextureTypes[i] = GetXboxD3DResourceType(g_pXbox_SetTexture[i]);
-			else
-				ActiveTextureTypes[i] = xbox::X_D3DRTYPE_NONE;
+		extern xbox::X_D3DRESOURCETYPE GetXboxD3DResourceType(const xbox::X_D3DResource *pXboxResource);
+		extern xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT];
+		// use texture stage info if we're in pushbuffer replay mode
+		if (pgraph_is_NV2A_bumpenv()) {
+			// Fetch currently active texture types, which impact AdjustTextureModes
+			for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+				if (g_pNV2A_SetTexture[i])
+					ActiveTextureTypes[i] = GetXboxD3DResourceType(g_pNV2A_SetTexture[i]);
+				else
+					ActiveTextureTypes[i] = xbox::X_D3DRTYPE_NONE;
+			}
 		}
+		else {
+			// Fetch currently active texture types, which impact AdjustTextureModes
+			for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+				
 
+				if (g_pXbox_SetTexture[i])
+					ActiveTextureTypes[i] = GetXboxD3DResourceType(g_pXbox_SetTexture[i]);
+				else
+					ActiveTextureTypes[i] = xbox::X_D3DRTYPE_NONE;
+			}
+		}
 		// Pre-decode TexModeAdjust, which impacts AdjustTextureModes
 		DecodedTexModeAdjust = ((PSDef.PSFinalCombinerConstants >> PS_GLOBALFLAGS_SHIFT) & PS_GLOBALFLAGS_TEXMODE_ADJUST) > 0;
 
 		// Pre-decode hasFinalCombiner, which impacts AdjustFinalCombiner
 		DecodedHasFinalCombiner = (PSDef.PSFinalCombinerInputsABCD > 0) || (PSDef.PSFinalCombinerInputsEFG > 0);
+		// use texture stage info if we're in pushbuffer replay mode
+		if (pgraph_is_NV2A_bumpenv()) {
+			// Fetch all render states that impact AdjustFinalCombiner
+			RenderStateFogEnable = pg->KelvinPrimitive.SetFogEnable!=0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE) > 0;
+			RenderStateSpecularEnable = pg->KelvinPrimitive.SetSpecularEnable!=0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) > 0;
 
-		// Fetch all render states that impact AdjustFinalCombiner
-		RenderStateFogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE) > 0;
-		RenderStateSpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) > 0;
+			for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+				// Test-cases : XDK sample nosortalphablend, Xbmc-fork (https://github.com/superpea/xbmc-fork/blob/bba40d57db52d11dea7bbf9509c298f7c2b05f4b/xbmc/cores/VideoRenderers/XBoxRenderer.cpp#L134)
+				// Star Wars: Jedi Academy (https://github.com/RetailGameSourceCode/StarWars_JediAcademy/blob/5b8f0040b3177d8855f7d575ef49b23ed52ff42a/codemp/win32/win_lighteffects.cpp#L299)
+				// FIXME!!! no directly equivalent in Kelvin, using xbox d3d value for now. 
+				AlphaKill[i] = XboxTextureStates.Get(/*stage=*/i, xbox::X_D3DTSS_ALPHAKILL) & 4; // D3DTALPHAKILL_ENABLE
+			}
+		}
+		else {
+			// Fetch all render states that impact AdjustFinalCombiner
+			RenderStateFogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE) > 0;
+			RenderStateSpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) > 0;
 
-		for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-			// Test-cases : XDK sample nosortalphablend, Xbmc-fork (https://github.com/superpea/xbmc-fork/blob/bba40d57db52d11dea7bbf9509c298f7c2b05f4b/xbmc/cores/VideoRenderers/XBoxRenderer.cpp#L134)
-			// Star Wars: Jedi Academy (https://github.com/RetailGameSourceCode/StarWars_JediAcademy/blob/5b8f0040b3177d8855f7d575ef49b23ed52ff42a/codemp/win32/win_lighteffects.cpp#L299)
-			AlphaKill[i] = XboxTextureStates.Get(/*stage=*/i, xbox::X_D3DTSS_ALPHAKILL) & 4; // D3DTALPHAKILL_ENABLE
+			for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+				// Test-cases : XDK sample nosortalphablend, Xbmc-fork (https://github.com/superpea/xbmc-fork/blob/bba40d57db52d11dea7bbf9509c298f7c2b05f4b/xbmc/cores/VideoRenderers/XBoxRenderer.cpp#L134)
+				// Star Wars: Jedi Academy (https://github.com/RetailGameSourceCode/StarWars_JediAcademy/blob/5b8f0040b3177d8855f7d575ef49b23ed52ff42a/codemp/win32/win_lighteffects.cpp#L299)
+				AlphaKill[i] = XboxTextureStates.Get(/*stage=*/i, xbox::X_D3DTSS_ALPHAKILL) & 4; // D3DTALPHAKILL_ENABLE
+			}
 		}
 	}
 
@@ -785,6 +814,10 @@ std::string GetD3DTASumString(int d3dta, bool allowModifier = true) {
 // Deduplicate this resource management
 IDirect3DPixelShader9* GetFixedFunctionShader()
 {
+	// Retrieve NV2AState via the (LLE) NV2A device :
+	NV2AState *d = g_NV2A->GetDeviceState();
+	PGRAPHState *pg = &d->pgraph;
+
 	using namespace FixedFunctionPixelShader;
 
 	// TODO move this cache elsewhere - and flush it when the device is released!
@@ -793,73 +826,154 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	// Create a key from state that will be baked in to the shader
 	PsTextureHardcodedState states[4] = {};
 	int sampleType[4] = { SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE };
-	bool pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+	if (pgraph_is_NV2A_bumpenv()) {
 
-	bool previousStageDisabled = false;
-	for (int i = 0; i < 4; i++) {
-		// Determine COLOROP
-		// This controls both the texture operation for the colour of the stage
-		// and when to stop processing
-		// Under certain circumstances we force it to be DISABLE
-		auto colorOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
+		extern xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
-		// Usually we execute stages up to the first disabled stage
-		// However, if point sprites are enabled, we just execute stage 3
-		bool forceDisable =
-			(!pointSpriteEnable && previousStageDisabled) ||
-			(pointSpriteEnable && i < 3);
+		bool pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
 
-		// When a texture stage has D3DTSS_COLORARG1 equal to D3DTA_TEXTURE
-		// and the texture pointer for the stage is NULL, this stage
-		// and all stages after it are not processed.
-		// Test cases: Red Dead Revolver, JSRF
-		// https://docs.microsoft.com/en-us/windows/win32/direct3d9/texture-blending
-		// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
-		// Test case: Crash Nitro Kart (engine speed UI)
-		if (!g_pXbox_SetTexture[i]
-			&& (XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE
-			&& colorOp != xbox::X_D3DTOP_SELECTARG2)
-		{
-			forceDisable = true;
+		bool previousStageDisabled = false;
+		for (int i = 0; i < 4; i++) {
+			// Determine COLOROP
+			// This controls both the texture operation for the colour of the stage
+			// and when to stop processing
+			// we don't have direct equivalent XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP) in Kelvin. keep using xbox d3d stuff here.
+			// FIXME!!!  shall convert to use pg->KelvinPrimitive.SetCombinerColorICW[i]) ColorOCW[i], AlphaICW[i], AlphaOCW[i] to determine the colorOp
+			auto colorOp =  XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
+
+			// Usually we execute stages up to the first disabled stage
+			// However, if point sprites are enabled, we just execute stage 3
+			bool forceDisable;
+			// pg->KelvinPrimitive.SetCombinerControl & 0xF == used stage count.
+			if (i >= (pg->KelvinPrimitive.SetCombinerControl & 0xF)) {
+				forceDisable = true;
+			}
+			else {
+
+				forceDisable =
+					(!pointSpriteEnable && previousStageDisabled) ||
+					(pointSpriteEnable && i < 3);
+
+				// When a texture stage has D3DTSS_COLORARG1 equal to D3DTA_TEXTURE
+				// and the texture pointer for the stage is NULL, this stage
+				// and all stages after it are not processed.
+				// Test cases: Red Dead Revolver, JSRF
+				// https://docs.microsoft.com/en-us/windows/win32/direct3d9/texture-blending
+				// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
+				// Test case: Crash Nitro Kart (engine speed UI)
+				// FIXME!!! we don't have XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1)in Kelvin
+				if (!g_pXbox_SetTexture[i]
+					&& (XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE// FIXME!!!
+					&& colorOp != xbox::X_D3DTOP_SELECTARG2)// FIXME!!!
+				{
+					forceDisable = true;
+				}
+			}
+			// Set the final COLOROP value
+			states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : colorOp;
+
+			// If the stage is disabled we don't want its configuration to affect the key
+			// Move on to the next stage
+			if (colorOp == X_D3DTOP_DISABLE) {
+				previousStageDisabled = true;
+				continue;
+			}
+
+			// Get sample type
+			// TODO move XD3D8 resource query functions out of Direct3D9.cpp so we can use them here
+			if (g_pNV2A_SetTexture[i]) {
+				auto format = g_pNV2A_SetTexture[i]->Format;//g_pXbox_SetTexture[i]->Format;
+				if (format & X_D3DFORMAT_CUBEMAP)
+					sampleType[i] = SAMPLE_CUBE;
+				else if (((format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT) > 2)
+					sampleType[i] = SAMPLE_3D;
+				else
+					sampleType[i] = SAMPLE_2D;
+			}
+			// FIXME!!!  colorOp/colorArg/alphaOp/alphaArg all have not direct equivalent in KelvinPrimitive. see reversed SetCombiners() code.
+			states[i].COLORARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);// FIXME!!!
+			states[i].COLORARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);// FIXME!!!
+			states[i].COLORARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);// FIXME!!!
+
+			auto alphaOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);// FIXME!!!
+			if (alphaOp == X_D3DTOP_DISABLE) LOG_TEST_CASE("Alpha stage disabled when colour stage is enabled");
+
+			states[i].ALPHAOP =   (float)alphaOp;// FIXME!!!
+			states[i].ALPHAARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);// FIXME!!!
+			states[i].ALPHAARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);// FIXME!!!
+			states[i].ALPHAARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);// FIXME!!!
+
+			states[i].RESULTARG = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);// FIXME!!!
 		}
-
-		// Set the final COLOROP value
-		states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : colorOp;
-
-		// If the stage is disabled we don't want its configuration to affect the key
-		// Move on to the next stage
-		if (colorOp == X_D3DTOP_DISABLE) {
-			previousStageDisabled = true;
-			continue;
-		}
-
-		// Get sample type
-		// TODO move XD3D8 resource query functions out of Direct3D9.cpp so we can use them here
-		if (g_pXbox_SetTexture[i]) {
-			auto format = g_pXbox_SetTexture[i]->Format;
-			if (format & X_D3DFORMAT_CUBEMAP)
-				sampleType[i] = SAMPLE_CUBE;
-			else if (((format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT) > 2)
-				sampleType[i] = SAMPLE_3D;
-			else
-				sampleType[i] = SAMPLE_2D;
-		}
-
-		states[i].COLORARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);
-		states[i].COLORARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);
-		states[i].COLORARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);
-
-		auto alphaOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);
-		if (alphaOp == X_D3DTOP_DISABLE) LOG_TEST_CASE("Alpha stage disabled when colour stage is enabled");
-
-		states[i].ALPHAOP = (float)alphaOp;
-		states[i].ALPHAARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);
-		states[i].ALPHAARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);
-		states[i].ALPHAARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);
-
-		states[i].RESULTARG = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);
 	}
+	else {
+		bool pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
 
+		bool previousStageDisabled = false;
+		for (int i = 0; i < 4; i++) {
+			// Determine COLOROP
+			// This controls both the texture operation for the colour of the stage
+			// and when to stop processing
+			// Under certain circumstances we force it to be DISABLE
+			auto colorOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
+
+			// Usually we execute stages up to the first disabled stage
+			// However, if point sprites are enabled, we just execute stage 3
+			bool forceDisable =
+				(!pointSpriteEnable && previousStageDisabled) ||
+				(pointSpriteEnable && i < 3);
+
+			// When a texture stage has D3DTSS_COLORARG1 equal to D3DTA_TEXTURE
+			// and the texture pointer for the stage is NULL, this stage
+			// and all stages after it are not processed.
+			// Test cases: Red Dead Revolver, JSRF
+			// https://docs.microsoft.com/en-us/windows/win32/direct3d9/texture-blending
+			// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
+			// Test case: Crash Nitro Kart (engine speed UI)
+			if (!g_pXbox_SetTexture[i]
+				&& (XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE
+				&& colorOp != xbox::X_D3DTOP_SELECTARG2)
+			{
+				forceDisable = true;
+			}
+
+			// Set the final COLOROP value
+			states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : colorOp;
+
+			// If the stage is disabled we don't want its configuration to affect the key
+			// Move on to the next stage
+			if (colorOp == X_D3DTOP_DISABLE) {
+				previousStageDisabled = true;
+				continue;
+			}
+
+			// Get sample type
+			// TODO move XD3D8 resource query functions out of Direct3D9.cpp so we can use them here
+			if (g_pXbox_SetTexture[i]) {
+				auto format = g_pXbox_SetTexture[i]->Format;
+				if (format & X_D3DFORMAT_CUBEMAP)
+					sampleType[i] = SAMPLE_CUBE;
+				else if (((format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT) > 2)
+					sampleType[i] = SAMPLE_3D;
+				else
+					sampleType[i] = SAMPLE_2D;
+			}
+
+			states[i].COLORARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);
+			states[i].COLORARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);
+			states[i].COLORARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);
+
+			auto alphaOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);
+			if (alphaOp == X_D3DTOP_DISABLE) LOG_TEST_CASE("Alpha stage disabled when colour stage is enabled");
+
+			states[i].ALPHAOP = (float)alphaOp;
+			states[i].ALPHAARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);
+			states[i].ALPHAARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);
+			states[i].ALPHAARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);
+
+			states[i].RESULTARG = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);
+		}
+	}
 	// Create a key from the shader state
 	// Note currently this is padded since it's what we send to the GPU
 	auto key = 3 * ComputeHash(states, sizeof(states))
@@ -977,11 +1091,20 @@ void UpdateFixedFunctionPixelShaderState()
 	using namespace FixedFunctionPixelShader;
 
 	FixedFunctionPixelShaderState ffPsState;
-	ffPsState.TextureFactor = (D3DXVECTOR4)((D3DXCOLOR)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
-	ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
-	ffPsState.FogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
-	ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
-
+	// use NV2A/KelvinPrimitive content if we're in pushbuffer replay mode
+	if (pgraph_is_NV2A_bumpenv()) {
+		// in fixed mode, KelvinPrimitive.SetCombinerFactor0[0..7] and SetCombinerFactor1[0..7] are all the same as XboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR), the are set with D3DDevice_SetRenderState_TextureFactor()
+		ffPsState.TextureFactor = (D3DXVECTOR4)(D3DXCOLOR)(pg->KelvinPrimitive.SetCombinerFactor0[0]);// (D3DXVECTOR4)((D3DXCOLOR)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
+		ffPsState.SpecularEnable = pg->KelvinPrimitive.SetSpecularEnable != 0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
+		ffPsState.FogEnable = pg->KelvinPrimitive.SetFogEnable != 0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
+		ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)pg->KelvinPrimitive.SetFogColor);// (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
+	}
+	else {
+		ffPsState.TextureFactor = (D3DXVECTOR4)((D3DXCOLOR)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
+		ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
+		ffPsState.FogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
+		ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
+	}
 	// Texture state
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 
@@ -1048,9 +1171,16 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // Create a copy of the pixel shader definition, as it is residing in render state register slots :
   CxbxPSDef CompletePSDef;
   CompletePSDef.PSDef = *pPSDef;
-  // Copy-in the PSTextureModes value which is stored outside the range of Xbox pixel shader render state slots :
-  CompletePSDef.PSDef.PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+  if (pgraph_is_NV2A_bumpenv()) {
+	  // read TextureModes directly from PSDef since it's copied from NV2A KelvinPrivinPrimitive
+	  CompletePSDef.PSDef.PSTextureModes = pPSDef->PSTextureModes;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+  }
+  else {
+	  // Copy-in the PSTextureModes value which is stored outside the range of Xbox pixel shader render state slots :
+	  CompletePSDef.PSDef.PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+  }
   // Fetch all other values that are used in the IsEquivalent check :
+  // CompletePSDef.SnapshotRuntimeVariables() also require code change to see whether we sould pickup values from Kelvin or not.
   CompletePSDef.SnapshotRuntimeVariables();
 
   // Now, see if we already have a shader compiled for this definition :
@@ -1095,15 +1225,16 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // as these could have been updated via SetRenderState or otherwise :
   D3DXCOLOR fColor[PSH_XBOX_CONSTANT_MAX];
 
-  // from the vertex shader (oFog) - however, D3D8 does not forward this...
-  fColor[PSH_XBOX_CONSTANT_FOG] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
+  
   // update bumpenv
   // use NV2A bumpenv
   if(pgraph_is_NV2A_bumpenv()){
 	  // we're using pixel shader generated by the content from KelvinPrimitive. the pPSDef has the content copied from KelvinPrimitive already. simply pick up from pPSDef
-	  uint32_t * psconstant = (uint32_t *)&pPSDef->PSConstant0[0];
-	  for (unsigned constant_nr = 0; constant_nr < 16; constant_nr++) {
-		  fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = psconstant[constant_nr];// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
+	  // from the vertex shader (oFog) - however, D3D8 does not forward this...
+	  fColor[PSH_XBOX_CONSTANT_FOG] = pg->KelvinPrimitive.SetFogColor;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
+	  for (unsigned constant_nr = 0; constant_nr < 8; constant_nr++) {
+		  fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = pPSDef->PSConstant0[constant_nr];// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
+		  fColor[PSH_XBOX_CONSTANT_C0 + 8 + constant_nr] = pPSDef->PSConstant1[constant_nr];// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
 	  }
 
 	  fColor[PSH_XBOX_CONSTANT_FC0] = pPSDef->PSFinalCombinerConstant0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
@@ -1154,6 +1285,9 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  pgraph_notuse_NV2A_bumpenv();
   }
   else {
+
+	  // from the vertex shader (oFog) - however, D3D8 does not forward this...
+	  fColor[PSH_XBOX_CONSTANT_FOG] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
 	  // PSH_XBOX_CONSTANT_C0..C15 are stored as-is in (and should thus be read from) the Xbox render state pixel shader constant slots
 	  for (unsigned constant_nr = 0; constant_nr < 16; constant_nr++) {
 		  fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
