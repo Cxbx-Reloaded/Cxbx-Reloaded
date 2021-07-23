@@ -1234,12 +1234,12 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  // from the vertex shader (oFog) - however, D3D8 does not forward this...
 	  fColor[PSH_XBOX_CONSTANT_FOG] = pg->KelvinPrimitive.SetFogColor;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
 	  for (unsigned constant_nr = 0; constant_nr < 8; constant_nr++) {
-		  fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = pPSDef->PSConstant0[constant_nr];// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
-		  fColor[PSH_XBOX_CONSTANT_C0 + 8 + constant_nr] = pPSDef->PSConstant1[constant_nr];// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
+		  fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = pPSDef->PSConstant0[constant_nr]; // TODO : pg->KelvinPrimitive.SetCombinerFactor0[constant_nr]; // Note : 0xAARRGGBB format
+		  fColor[PSH_XBOX_CONSTANT_C0 + 8 + constant_nr] = pPSDef->PSConstant1[constant_nr]; // TODO : pg->KelvinPrimitive.SetCombinerFactor1[constant_nr]; // Note : 0xAARRGGBB format
 	  }
 
-	  fColor[PSH_XBOX_CONSTANT_FC0] = pPSDef->PSFinalCombinerConstant0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
-	  fColor[PSH_XBOX_CONSTANT_FC1] = pPSDef->PSFinalCombinerConstant1;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT1);
+	  fColor[PSH_XBOX_CONSTANT_FC0] = pPSDef->PSFinalCombinerConstant0; // TODO : pg->KelvinPrimitive.SetSpecularFogFactor[0];
+	  fColor[PSH_XBOX_CONSTANT_FC1] = pPSDef->PSFinalCombinerConstant1; // TODO : pg->KelvinPrimitive.SetSpecularFogFactor[1];
 
 	  // Fog requires a constant (as host PS1.4 doesn't support the FOG register)
 	  // Note : FOG.RGB is correct like this, but FOG.a should be coming

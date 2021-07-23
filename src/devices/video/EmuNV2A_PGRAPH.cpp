@@ -4498,8 +4498,8 @@ static void pgraph_update_shader_constants(PGRAPHState *pg,
             constant[0] = pg->KelvinPrimitive.SetSpecularFogFactor[0];
             constant[1] = pg->KelvinPrimitive.SetSpecularFogFactor[1];
         } else {
-            constant[0] = pg->KelvinPrimitive.SetSpecularFogFactor[0];//+ i?
-            constant[1] = pg->KelvinPrimitive.SetSpecularFogFactor[1];//+ i?
+            constant[0] = pg->KelvinPrimitive.SetCombinerFactor0[i];
+            constant[1] = pg->KelvinPrimitive.SetCombinerFactor1[i];
         }
 
         for (j = 0; j < 2; j++) {

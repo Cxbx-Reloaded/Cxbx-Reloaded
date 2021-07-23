@@ -474,46 +474,48 @@ void D3D_draw_state_update(NV2AState *d)
 	// update pixel shader
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
 		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
-		if ((g_nv2a_is_pushpuffer_replay == true) ){
+		if (g_nv2a_is_pushpuffer_replay) {
 
 			// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
 			pgraph_use_NV2A_bumpenv();
+
+			if (pNV2A_PixelShader == nullptr) {
 				// fixed mode
-				if (pNV2A_PixelShader == nullptr) {
-					// set pixel shader
-					pNV2A_PixelShader = nullptr;
-						CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
-				}
-			// user mode
-				else {
-					// copy content from KelvinPrimitive to PSDef
-					memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
-					memcpy(&NV2A_PSDef.PSConstant0[0], &pg->KelvinPrimitive.SetCombinerFactor0[0], 32 * sizeof(DWORD));
-					memcpy(&NV2A_PSDef.PSCompareMode, &pg->KelvinPrimitive.SetShaderClipPlaneMode, 1 * sizeof(DWORD));
-					memcpy(&NV2A_PSDef.PSFinalCombinerConstant0, &pg->KelvinPrimitive.SetSpecularFogFactor[0], 2 * sizeof(DWORD));
-					memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], 9 * sizeof(DWORD));
-					memcpy(&NV2A_PSDef.PSDotMapping, &pg->KelvinPrimitive.SetDotRGBMapping, 2 * sizeof(DWORD));
-					// only set NV2A_PSDef.PSFinalCombinerInputsABCD and NV2A_PSDef.PSFinalCombinerInputsEFG when KelvinPrimitive.SetCombinerSpecularFogCW0 or KelvinPrimitive.SetCombinerSpecularFogCW1 is dirty
-					if ((NV2A_stateFlags & X_STATE_COMBINERNEEDSSPECULAR) != 0) { // DxbxUpdateActivePixelShader() doesn't consider about the precondition, we have to treat the dirty flag here.
-						memcpy(&NV2A_PSDef.PSFinalCombinerInputsABCD, &pg->KelvinPrimitive.SetCombinerSpecularFogCW0, 2 * sizeof(DWORD));
-						// FIXME!!! shall we reset the flag here?
-						NV2A_stateFlags &= ~X_STATE_COMBINERNEEDSSPECULAR;
-					}
-					// set both members as 0;
-					else {
-						NV2A_PSDef.PSFinalCombinerInputsABCD = 0;
-						NV2A_PSDef.PSFinalCombinerInputsEFG = 0;
-					}
-					NV2A_PSDef.PSTextureModes = (DWORD)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES));
-					// set pixel shader
-					pNV2A_PixelShader = &NV2A_PixelShader;
-					CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
-				}
+			}
+			else { // user mode
+				// Populate all required PSDef fields by copying over from KelvinPrimitive fields;
+				// TODO : Refactor DxbxUpdateActivePixelShader to directly read from KelvinPrimitive (once we can otherwise drop PSDef entirely)
+				memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
+				// only set NV2A_PSDef.PSFinalCombinerInputsABCD and NV2A_PSDef.PSFinalCombinerInputsEFG when KelvinPrimitive.SetCombinerSpecularFogCW0 or KelvinPrimitive.SetCombinerSpecularFogCW1 is dirty
+				bool bHasFinalCombiner = NV2A_stateFlags & X_STATE_COMBINERNEEDSSPECULAR;
+				// DxbxUpdateActivePixelShader() doesn't consider about the precondition, we have to treat the dirty flag here.
+				NV2A_PSDef.PSFinalCombinerInputsABCD = bHasFinalCombiner ? pg->KelvinPrimitive.SetCombinerSpecularFogCW0 : 0;
+				NV2A_PSDef.PSFinalCombinerInputsEFG = bHasFinalCombiner ? pg->KelvinPrimitive.SetCombinerSpecularFogCW1 : 0;
+				NV2A_stateFlags &= ~X_STATE_COMBINERNEEDSSPECULAR; // FIXME!!! shall we reset the flag here?
+				memcpy(&NV2A_PSDef.PSConstant0[0], &pg->KelvinPrimitive.SetCombinerFactor0[0], (8 + 8 + 8 + 8) * sizeof(DWORD));
+				/* Since the following fields are adjacent in Kelvin AND PSDef, above memcpy is extended to copy the entire range :
+				memcpy(&NV2A_PSDef.PSConstant1[0], &pg->KelvinPrimitive.SetCombinerFactor1[0], 8 * sizeof(DWORD));
+				memcpy(&NV2A_PSDef.PSAlphaOutputs[0], &pg->KelvinPrimitive.SetCombinerAlphaOCW[0], 8 * sizeof(DWORD));
+				memcpy(&NV2A_PSDef.PSRGBInputs[0], &pg->KelvinPrimitive.SetCombinerColorICW[0], 8 * sizeof(DWORD)); */
+				NV2A_PSDef.PSCompareMode = pg->KelvinPrimitive.SetShaderClipPlaneMode;
+				NV2A_PSDef.PSFinalCombinerConstant0 = pg->KelvinPrimitive.SetSpecularFogFactor[0];
+				NV2A_PSDef.PSFinalCombinerConstant1 = pg->KelvinPrimitive.SetSpecularFogFactor[1];
+				memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], (8 + 1) * sizeof(DWORD));
+				/* Since the following field is adjacent in Kelvin AND PSDef, above memcpy is extended to copy the entire range :
+				NV2A_PSDef.PSCombinerCount = pg->KelvinPrimitive.SetCombinerControl; */
+				NV2A_PSDef.PSTextureModes = pg->KelvinPrimitive.SetShaderStageProgram; // Was : XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+				NV2A_PSDef.PSDotMapping = pg->KelvinPrimitive.SetDotRGBMapping; // Note : Adjacent to above and below fields, but 3 assignments are cheaper than memcpy call overhead
+				NV2A_PSDef.PSInputTexture = pg->KelvinPrimitive.SetShaderOtherStageInput;
+				// set pixel shader
+				pgraph_use_UserPixelShader();
+			}
+
+			CxbxImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
 		}
+
 		// clear dirty flag xbox::dword_xt
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
-
 
 	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
 	//D3D_texture_stage_update(d);
