@@ -1358,6 +1358,25 @@ typedef DWORD NV2AMETHOD;
 // this makes sense, NV2A uses ModelView/Composite internally. so xbox always has to convert its transform to ModelView/Composite.
 #define X_D3DDIRTYFLAG_DIRECT_INPUT                       0x40000000
 #define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000
+
+// xbox d3d stateFlags, also used by NV2A_stateFlags
+
+#define X_STATE_DXTNOISEENABLE 0x1 // Must be one
+#define X_STATE_FOGSOURCEZ 0x2
+#define X_STATE_RECORDPUSHBUFFER 0x4
+#define X_STATE_PUREDEVICE 0x10 // Same as D3DCREATE_PUREDEVICE
+#define X_STATE_RECORDBLOCK 0x20
+#define X_STATE_COMBINERNEEDSSPECULAR 0x40
+#define X_STATE_RECORDPUSHBUFFERPADDED 0x80
+#define X_STATE_FLIPSTALLPENDING 0x100
+#define X_STATE_NORESERVEDCONSTANTS 0x200
+#define X_STATE_RUNPUSHBUFFERWASCALLED 0x400
+#define X_STATE_BEGINENDBRACKET 0x800
+#define X_STATE_SEGMENTFENCEPENDING 0x1000
+#define X_STATE_NULLHARDWARE 0x2000
+#define X_STATE_COPYSWAP 0x4000
+#define X_STATE_MULTISAMPLING 0x8000
+
 //
 // Below declarations are used by Cxbx, not by the Xbox!!!
 //
