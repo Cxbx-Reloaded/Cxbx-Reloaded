@@ -718,7 +718,7 @@ void D3D_draw_state_update(NV2AState *d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
 	}
-
+	//assert(D3D_StreamZeroStride > 0);
 	CxbxUpdateNativeD3DResources();
 
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
@@ -754,7 +754,7 @@ void D3D_draw_arrays(NV2AState *d)
 	//this is assuming that all attributes are using the same vertex buffer and ordered with the same offset as in the slot.
 	//could be wrong, need polished to use each pg->KelvinPrimitive.SetVertexDataArrayOffset[] for each attributes.
 	
-	
+	//assert(D3D_StreamZeroStride > 0);
 	DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
 
 	for (unsigned array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
@@ -802,6 +802,7 @@ void D3D_draw_inline_buffer(NV2AState *d)
 	DrawContext.dwVertexCount = pg->inline_buffer_length;
 	DrawContext.dwStartVertex = 0;
 	DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
+	//assert(D3D_StreamZeroStride > 0);
 	DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
 
 	CxbxDrawPrimitiveUP(DrawContext);
@@ -831,6 +832,9 @@ void D3D_draw_inline_array(NV2AState *d)
 		assert((xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode != xbox::X_D3DPT_INVALID);
 		DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 		//get vertex size in dword or float.
+		//assert(D3D_StreamZeroStride > 0);
+		if (D3D_StreamZeroStride == 0)
+			return;// test case: GUN, call inline arrays without setting up vertex data array format.
 		DWORD dwVertexSizeDwords = D3D_StreamZeroStride / sizeof(float);
 		//pg->inline_array_length was advanced every time we receive a dword/float from pushbuffer.
 		//here we convert it to the actual vertex count.
