@@ -1104,9 +1104,9 @@ void UpdateFixedFunctionPixelShaderState()
 			auto stage = &ffPsState.stages[i];
 
 			stage->COLORKEYOP = pg->KelvinPrimitive.SetTexture[i].Control0&0x3;// colorkeyop in Contrlo0 bit 1:0 //XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
-			stage->COLORSIGN = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
+			stage->COLORSIGN = pg->KelvinPrimitive.SetTexture[i].Filter& 0xF0000000;// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
 			stage->ALPHAKILL = pg->KelvinPrimitive.SetTexture[i].Control0 & 0x4;//  alphakill in Contrlo0 bit 2//XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
-			stage->COLORKEYCOLOR = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
+			stage->COLORKEYCOLOR = pg->KelvinPrimitive.SetColorKeyColor[i];// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
 			// fixedFunction only uses bumpenv stage 0~2, which maps to NV2A bumpenv stage 1~3
 			if (i < 3) {
 					stage->BUMPENVMAT00 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat00;
