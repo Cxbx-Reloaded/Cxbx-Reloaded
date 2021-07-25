@@ -3167,7 +3167,9 @@ int pgraph_handle_method(
                     bool stencil_test = pg->KelvinPrimitive.SetStencilTestEnable!=0;
 
                     if (arg0 == NV097_SET_BEGIN_END_OP_END) { // the DrawXXX call completes the pushbuffer operation. we can process the rendering.
-
+						// some titles might use inline arrays with zero method counts, which is empty draw call and won't set the draw_mode, we shall skip the draw call processing directly.
+						if (pg->draw_mode == DrawMode::None)
+							break;
 						// set vertex declaration override, will be used for the next draw :
 						set_IVB_DECL_override();
 
@@ -3212,7 +3214,7 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
 
-                            if (pgraph_draw_inline_array != nullptr) {
+                            if (pgraph_draw_inline_array != nullptr && pg->inline_array_length > 0) {
                                 pgraph_draw_inline_array(d);
                             }
                             break;
