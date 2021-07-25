@@ -393,7 +393,7 @@ typedef struct NV097KelvinPrimitive {
 		struct {
 			float SetFogParamsBias;	    //0x000009C0 // fogTableMode == D3DFOG_NONE or D3DFOG_LINEAR 1.0, fogTableMode == D3DFOG_EXP or D3DFOG_EXP2 1.5
 			float SetFogParamsSacle;    //0x000009C4 // fogTableMode == D3DFOG_NONE or D3DFOG_LINEAR  NV097_SET_FOG_MODE_V_LINEAR, fogTableMode == D3DFOG_EXP -fogTableDensity * (1.0f / (2.0f * 5.5452f)), fogTableMode == D3DFOG_EXP2 -fogTableDensity * (1 / (2 * sqrt(5.5452))
-			float SetFogParamsConst;    //0x000009C7 // always 0.0
+			float SetFogParamsConst;    //0x000009C8 // always 0.0
 		};
 	};
 	uint32_t SetTexgenViewModel;
