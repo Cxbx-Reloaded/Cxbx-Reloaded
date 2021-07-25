@@ -135,8 +135,10 @@ static std::map<int, IDirect3DQuery*> g_HostVisibilityTestMap;
 
 // cached Direct3D state variable(s)
 static size_t                       g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
-static INDEX16                     *g_pQuadToTriangleIndexData = nullptr;
-static size_t                       g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
+static INDEX16                     *g_pQuadListToTriangleIndexData = nullptr;
+static size_t                       g_QuadListToTriangleIndexData_Size = 0; // = NrOfQuadIndices
+static INDEX16                     *g_pQuadStripToTriangleIndexData = nullptr;
+static size_t                       g_QuadStripToTriangleIndexData_Size = 0; // = NrOfQuadIndices
 
 struct {
 	xbox::X_D3DSurface Surface;
@@ -2464,6 +2466,67 @@ constexpr void CxbxConvertQuadListToTriangleListIndices(
 			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
 			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 1; // B
 			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
+			i += VERTICES_PER_TRIANGLE;
+		}
+
+		// Next quad, please :
+		j += VERTICES_PER_QUAD;
+	}
+}
+// caller must make sure it allocates space enough for even numbers of quads.
+constexpr void CxbxConvertQuadStripToTriangleListIndices(
+	INDEX16* pXboxQuadIndexData,
+	unsigned uNrOfTriangleIndices,
+	INDEX16* pTriangleIndexData)
+{
+	assert(uNrOfTriangleIndices > 0);
+	assert(pTriangleIndexData);
+
+	unsigned i = 0;
+	unsigned j = 0;
+	while (i + (VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) <= uNrOfTriangleIndices) {
+		if (bUseClockWiseWindingOrder) {
+			// ABCD becomes ABC+CDA, so this is triangle 1 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 1; // B
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			i += VERTICES_PER_TRIANGLE;
+			// And this is triangle 2 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 3] : j + 3; // D
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
+			i += VERTICES_PER_TRIANGLE;
+			// CDEF becomes CED+CFE, so this is triangle 3 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 4; // E
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 3; // D
+			i += VERTICES_PER_TRIANGLE;
+			// And this is triangle 4 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 3] : j + 5; // F
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 4; // E
+			i += VERTICES_PER_TRIANGLE;
+		}
+		else {
+			// ABCD becomes ADC+CBA, so this is triangle 1 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 3] : j + 3; // D
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			i += VERTICES_PER_TRIANGLE;
+			// And this is triangle 2 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 1; // B
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
+			i += VERTICES_PER_TRIANGLE;
+			// CDEF becomes CDE+CEF, so this is triangle 3 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 3; // D
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 4; // E
+			i += VERTICES_PER_TRIANGLE;
+			// And this is triangle 4 :
+			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 2] : j + 2; // C
+			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 3] : j + 4; // E
+			pTriangleIndexData[i + 2] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 5; // F
 			i += VERTICES_PER_TRIANGLE;
 		}
 
@@ -7382,7 +7445,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_
 
 // TODO : Move to own file
 constexpr unsigned int IndicesPerPage = PAGE_SIZE / sizeof(INDEX16);
-constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
+constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;// was ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
 
 // TODO : Move to own file
 // Called by CxbxDrawPrimitiveUP (indirectly by D3DDevice_DrawVerticesUP,
@@ -7394,19 +7457,48 @@ constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD)
 // and only needs to grow when  current length doesn't suffices for a larger draw.
 INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices)
 {
-	if (g_QuadToTriangleIndexData_Size < NrOfQuadIndices)
+	NrOfQuadIndices = (NrOfQuadIndices - 2) * 3;//we're passing in the xbox vertex count, which minus 2 becomes quad count, multiply 3 becomes triangle list index count
+	if (g_QuadListToTriangleIndexData_Size < NrOfQuadIndices)
 	{
-		g_QuadToTriangleIndexData_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
-		UINT NrOfTriangleIndices = QuadToTriangleVertexCount(g_QuadToTriangleIndexData_Size);
-		if (g_pQuadToTriangleIndexData != nullptr) {
-			free(g_pQuadToTriangleIndexData);
+		g_QuadListToTriangleIndexData_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
+		UINT NrOfTriangleIndices = NrOfQuadIndices;// was QuadToTriangleVertexCount(g_QuadListToTriangleIndexData_Size);
+		if (g_pQuadListToTriangleIndexData != nullptr) {
+			free(g_pQuadListToTriangleIndexData);
 		}
 
-		g_pQuadToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleIndices * sizeof(INDEX16));
-		CxbxConvertQuadListToTriangleListIndices(nullptr, NrOfTriangleIndices, g_pQuadToTriangleIndexData);
+		g_pQuadListToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleIndices * sizeof(INDEX16));
+		CxbxConvertQuadListToTriangleListIndices(nullptr, NrOfTriangleIndices, g_pQuadListToTriangleIndexData);
 	}
 
-	return g_pQuadToTriangleIndexData;
+	return g_pQuadListToTriangleIndexData;
+}
+// TODO : Move to own file
+// Called by CxbxDrawPrimitiveUP (indirectly by D3DDevice_DrawVerticesUP,
+// EmuExecutePushBufferRaw and CxbxImpl_End) when PrimitiveType == X_D3DPT_QUADLIST.
+// Emulated by calling g_pD3DDevice->DrawIndexedPrimitiveUP with index data that maps
+// quads to triangles. This function creates the index buffer that is needed for this;
+// For every quad that must be drawn, we generate indices for two triangles.
+// Note, that the resulting index data can be re-used for later comparable draw calls
+// and only needs to grow when  current length doesn't suffices for a larger draw.
+
+INDEX16 *CxbxAssureQuadStripIndexData(UINT NrOfQuadIndices)
+{
+	//we're passing in the xbox vertex count, which minus 2 becomes quad count, multiply 3 becomes triangle list index count, add 6 more index space for CxbxConvertQuadStripToTriangleListIndices()
+	NrOfQuadIndices = (NrOfQuadIndices - 2) * 3 + 6;
+	if (g_QuadStripToTriangleIndexData_Size < NrOfQuadIndices)
+	{
+
+		g_QuadListToTriangleIndexData_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
+		UINT NrOfTriangleIndices = NrOfQuadIndices;// was QuadToTriangleVertexCount(g_QuadListToTriangleIndexData_Size);
+		if (g_pQuadStripToTriangleIndexData != nullptr) {
+			free(g_pQuadStripToTriangleIndexData);
+		}
+
+		g_pQuadStripToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleIndices * sizeof(INDEX16));
+		CxbxConvertQuadStripToTriangleListIndices(nullptr, NrOfTriangleIndices, g_pQuadStripToTriangleIndexData);
+	}
+
+	return g_pQuadStripToTriangleIndexData;
 }
 
 // TODO : Move to own file
@@ -7627,7 +7719,7 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 
 	VertexBufferConverter.Apply(&DrawContext);
 	//convert dwHostPrimitiveCount here. the quad to d3d9 triangle is considered already.
-	assert(DrawContext.XboxPrimitiveType != xbox::X_D3DPT_QUADSTRIP);
+	assert(DrawContext.XboxPrimitiveType != xbox::X_D3DPT_POLYGON);
 	//DrawContext.dwHostPrimitiveCount is set by VertexBufferConverter.Apply()
 	//DrawContext.dwHostPrimitiveCount = EmuXB2PC_D3DPrimitiveCount(DrawContext.dwVertexCount,DrawContext.XboxPrimitiveType);
 	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
@@ -7651,6 +7743,29 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
+	}
+	else if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
+		// LOG_TEST_CASE("X_D3DPT_QUADSTRIP"); // test-case : GUN
+		// Draw quadstrips using a single 'quadstrip-to-triangle mapping' index buffer :
+		INDEX16 *pIndexData = CxbxAssureQuadStripIndexData(DrawContext.dwVertexCount);
+		// Convert quad vertex-count to triangle vertex count :
+		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+
+		// Draw indexed triangles instead of quads
+		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
+			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
+			/*MinVertexIndex=*/0, // Always 0 for converted quadlist data
+			/*NumVertices=*/DrawContext.dwVertexCount,
+			DrawContext.dwHostPrimitiveCount,
+			pIndexData,
+			/*IndexDataFormat=*/D3DFMT_INDEX16,
+			DrawContext.pHostVertexStreamZeroData,
+			DrawContext.uiHostVertexStreamZeroStride
+		);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
+
+		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
+
 	}
 	else {
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawPrimitiveUP call :
