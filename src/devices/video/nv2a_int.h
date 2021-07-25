@@ -298,8 +298,8 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t SetDepthTestEnable;
 	uint32_t SetDitherEnable;
 	uint32_t SetLightingEnable;
-	uint32_t SetPointParamsEnable;
-	uint32_t SetPointSmoothEnable;
+	uint32_t SetPointParamsEnable;      // D3D__RenderState[D3DRS_POINTSCALEENABLE]
+	uint32_t SetPointSmoothEnable;      // D3D__RenderState[D3DRS_POINTSPRITEENABLE]
 	uint32_t SetLineSmoothEnable;
 	uint32_t SetPolySmoothEnable;
 	uint32_t SetSkinMode;
@@ -347,7 +347,7 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t Rev_0400[0x20 / 4];
 	uint32_t SetTextureMatrixEnable[4];	//0x00000420
 	uint32_t Rev_0430[0xc / 4];
-	uint32_t SetPointSize;				//0x0000043C
+	uint32_t SetPointSize;				//0x0000043C  // D3D__RenderState[D3DRS_POINTSIZE]
 	float SetProjectionMatrix[16];		//0x00000440
 	// xbox only uses SetModelViewMatrix0[16]; value set is transposed
 	union {
@@ -388,7 +388,14 @@ typedef struct NV097KelvinPrimitive {
 		float Q[4];
 	} SetTexgenPlane[4];				//0x00000840
 	uint32_t Rev_0940[0x80 / 4];
-	float SetFogParams[3];				//0x000009C0
+	union {
+		float SetFogParams[3];			//0x000009C0
+		struct {
+			float SetFogParamsBias;	    //0x000009C0 // fogTableMode == D3DFOG_NONE or D3DFOG_LINEAR 1.0, fogTableMode == D3DFOG_EXP or D3DFOG_EXP2 1.5
+			float SetFogParamsSacle;    //0x000009C4 // fogTableMode == D3DFOG_NONE or D3DFOG_LINEAR  NV097_SET_FOG_MODE_V_LINEAR, fogTableMode == D3DFOG_EXP -fogTableDensity * (1.0f / (2.0f * 5.5452f)), fogTableMode == D3DFOG_EXP2 -fogTableDensity * (1 / (2 * sqrt(5.5452))
+			float SetFogParamsConst;    //0x000009C7 // always 0.0
+		};
+	};
 	uint32_t SetTexgenViewModel;
 	float SetFogPlane[4];				//0x000009D0
 	float SetSpecularParams[6];			//0x000009E0
@@ -398,7 +405,20 @@ typedef struct NV097KelvinPrimitive {
 	float SetSceneAmbientColor[3];		//0x00000A10
 	uint32_t Rev_0a1c[0x4 / 4];
 	float SetViewportOffset[4];			//0x00000A20
-	float SetPointParams[8];			//0x00000A30
+	union {
+		float SetPointParams[8];	    //0x00000A30
+		struct {  // only effetive whe SetPointParamsEnable == true      // D3D__RenderState[D3DRS_POINTSCALEENABLE]
+			// Factor = Delta / (Size(D3D__RenderState[D3DRS_POINTSIZE]) * Viewport.Height)
+			float SetPointParamsFactorMulA;  	        //0x00000A30  // Factor * A(D3D__RenderState[D3DRS_POINTSCALE_A])
+			float SetPointParamsFactorMulB;           //0x00000A34  // Factor * B(D3D__RenderState[D3DRS_POINTSCALE_B])
+			float SetPointParamsFactorMulC;           //0x00000A38  // Factor * C(D3D__RenderState[D3DRS_POINTSCALE_C])
+			float SetPointParamsDeltaA;		        //0x00000A3C
+			float SetPointParamsDeltaB;		        //0x00000A40  //DeltaA == DeltaB == DeltaC == Delta
+			float SetPointParamsDeltaC;		        //0x00000A44
+			float SetPointParamsNegateMinDivDelta;    //0x00000A48  // -Min(D3D__RenderState[D3DRS_POINTSIZE_MIN]) / Delta;  Delta = max(D3D__RenderState[D3DRS_POINTSIZE_MAX]) - min(D3D__RenderState[D3DRS_POINTSIZE_MIN])
+			float SetPointParamsMin;		            //0x00000A4C
+		};
+	};
 	float SetEyePosition[4];			//0x00000A50
 	union {
 		uint32_t SetCombinerFactor[2][8];	//0x00000A60
@@ -530,7 +550,7 @@ typedef struct NV097KelvinPrimitive {
 		uint32_t Offset;					//	0x00001B00 +i*0x40
 		uint32_t Format;					//	0x00001B04 +i*0x40
 		uint32_t Address;					//	0x00001B08 +i*0x40
-		uint32_t Control0;					//	0x00001B0C +i*0x40
+		uint32_t Control0;					//	0x00001B0C +i*0x40  // XboxTextureStates[D3DTSS_ALPHAKILL] in bit 2, XboxTextureStates[D3DTSS_COLORKEYOP] in bit 1:0
 		uint32_t Control1;					//	0x00001B10 +i*0x40
 		uint32_t Filter;					//	0x00001B14 +i*0x40
 		uint32_t Rev_1b18[0x4 / 4];			//	0x00001B18 +i*0x40 			
