@@ -504,8 +504,7 @@ typedef struct s_CxbxPSDef {
 			for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 				// Test-cases : XDK sample nosortalphablend, Xbmc-fork (https://github.com/superpea/xbmc-fork/blob/bba40d57db52d11dea7bbf9509c298f7c2b05f4b/xbmc/cores/VideoRenderers/XBoxRenderer.cpp#L134)
 				// Star Wars: Jedi Academy (https://github.com/RetailGameSourceCode/StarWars_JediAcademy/blob/5b8f0040b3177d8855f7d575ef49b23ed52ff42a/codemp/win32/win_lighteffects.cpp#L299)
-				// FIXME!!! no directly equivalent in Kelvin, using xbox d3d value for now. 
-				AlphaKill[i] = XboxTextureStates.Get(/*stage=*/i, xbox::X_D3DTSS_ALPHAKILL) & 4; // D3DTALPHAKILL_ENABLE
+				AlphaKill[i] = pg->KelvinPrimitive.SetTexture[i].Control0 &  4; // D3DTALPHAKILL_ENABLE is bit 2, 1 for true
 			}
 		}
 		else {
@@ -1099,40 +1098,48 @@ void UpdateFixedFunctionPixelShaderState()
 		ffPsState.SpecularEnable = pg->KelvinPrimitive.SetSpecularEnable != 0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
 		ffPsState.FogEnable = pg->KelvinPrimitive.SetFogEnable != 0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
 		ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)pg->KelvinPrimitive.SetFogColor);// (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
+	// Texture state
+		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+
+			auto stage = &ffPsState.stages[i];
+
+			stage->COLORKEYOP = pg->KelvinPrimitive.SetTexture[i].Control0&0x3;// colorkeyop in Contrlo0 bit 1:0 //XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
+			stage->COLORSIGN = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
+			stage->ALPHAKILL = pg->KelvinPrimitive.SetTexture[i].Control0 & 0x4;//  alphakill in Contrlo0 bit 2//XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
+			stage->COLORKEYCOLOR = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
+			// fixedFunction only uses bumpenv stage 0~2, which maps to NV2A bumpenv stage 1~3
+			if (i < 3) {
+					stage->BUMPENVMAT00 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat00;
+					stage->BUMPENVMAT01 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat01;
+					stage->BUMPENVMAT10 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat10;
+					stage->BUMPENVMAT11 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat11;
+					stage->BUMPENVLSCALE = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvScale;
+					stage->BUMPENVLOFFSET = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvOffset;
+			}
+		}
 	}
 	else {
 		ffPsState.TextureFactor = (D3DXVECTOR4)((D3DXCOLOR)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
 		ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
 		ffPsState.FogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
 		ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
-	}
-	// Texture state
-	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+		// Texture state
+		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 
-		auto stage = &ffPsState.stages[i];
+			auto stage = &ffPsState.stages[i];
 
-		stage->COLORKEYOP = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
-		stage->COLORSIGN = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
-		stage->ALPHAKILL = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
-		stage->COLORKEYCOLOR = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
-		// fixedFunction only uses bumpenv stage 0~2, which maps to NV2A bumpenv stage 1~3
-		if (i < 3) {
-            // if we should use bumpenv from NV2A, read from KelvinPrimitive			
-			if (pgraph_is_NV2A_bumpenv()) {
-				stage->BUMPENVMAT00 = pg->KelvinPrimitive.SetTexture[i+1].SetBumpEnvMat00;
-				stage->BUMPENVMAT01 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat01;
-				stage->BUMPENVMAT10 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat10;
-				stage->BUMPENVMAT11 = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvMat11;
-				stage->BUMPENVLSCALE = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvScale;
-				stage->BUMPENVLOFFSET = pg->KelvinPrimitive.SetTexture[i + 1].SetBumpEnvOffset;
-			}
-			else {
-				stage->BUMPENVMAT00 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT00));
-				stage->BUMPENVMAT01 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT01));
-				stage->BUMPENVMAT10 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT10));
-				stage->BUMPENVMAT11 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT11));
-				stage->BUMPENVLSCALE = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLSCALE));
-				stage->BUMPENVLOFFSET = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLOFFSET));
+			stage->COLORKEYOP = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
+			stage->COLORSIGN = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
+			stage->ALPHAKILL = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
+			stage->COLORKEYCOLOR = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
+			// fixedFunction only uses bumpenv stage 0~2, which maps to NV2A bumpenv stage 1~3
+			if (i < 3) {
+					stage->BUMPENVMAT00 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT00));
+					stage->BUMPENVMAT01 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT01));
+					stage->BUMPENVMAT10 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT10));
+					stage->BUMPENVMAT11 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT11));
+					stage->BUMPENVLSCALE = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLSCALE));
+					stage->BUMPENVLOFFSET = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLOFFSET));
 			}
 		}
 	}
