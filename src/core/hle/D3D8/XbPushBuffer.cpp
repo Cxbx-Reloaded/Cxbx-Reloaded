@@ -456,7 +456,7 @@ void D3D_draw_state_update(NV2AState *d)
 
 	*/
 
-	// update point params
+	// update point params, Xbox takes everything from texture stage 3
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
 		;
 		// clear dirty flag
@@ -468,7 +468,7 @@ void D3D_draw_state_update(NV2AState *d)
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 	}
-	// update texture stage state, texture stage state must be update prior to pixel shader because pixel shader compilation depends on texture state input
+	// update texture stage texture states, texture stage texture states must be update prior to pixel shader because pixel shader compilation depends on texture state input
 	D3D_texture_stage_update(d);
 
 	// update pixel shader
@@ -557,11 +557,6 @@ void D3D_draw_state_update(NV2AState *d)
 	g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
 	g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
 	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
-
-	// update pixel shader if pixel related content is dirty
-	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
-
-	}
 
 	// update transfoms
 	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
