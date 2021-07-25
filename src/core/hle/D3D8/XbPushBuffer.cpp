@@ -81,7 +81,7 @@ extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
 extern bool is_pushbuffer_recording(void); // in Direct3D9.cpp, return true if pushbuffer is recording
 void backup_xbox_texture_state(void);
 void restore_xbox_texture_state(void);
-bool g_nv2a_is_pushpuffer_replay = false;
+
 void EmuExecutePushBuffer
 (
 	xbox::X_D3DPushBuffer       *pPushBuffer,
@@ -150,11 +150,13 @@ void EmuExecutePushBuffer
 	//the appended dword is 0xbaadf00d, and when execute the pushbuffer, it insert a jump command in that dword to jump back to main pushbuffer.
 	//pDevice-PUSH. but here we do doing HLE, we are not using real push buffer and real dma. so exclude the last dword.
 	// set g_nv2a_is_pushpuffer_replay flag, for other code to know we're in replay state
-	g_nv2a_is_pushpuffer_replay = true;
+
+	NV2A_stateFlags |= X_STATE_RUNPUSHBUFFERWASCALLED;
 	// replay pushbuffer.
 	EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
 	// reset g_nv2a_is_pushpuffer_replay flag
-	g_nv2a_is_pushpuffer_replay = false;
+
+	NV2A_stateFlags |= ~X_STATE_RUNPUSHBUFFERWASCALLED;
     return;
 }
 
@@ -319,7 +321,7 @@ void pgraph_notuse_NV2A_bumpenv(void)
 bool pgraph_is_NV2A_bumpenv(void)
 {
 	// if wr're not in replplay mode, don't use NV2A bumpenv. this is temp solution to solve HLE/NV2A confliction.
-	if (g_nv2a_is_pushpuffer_replay!=true) {
+	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
 		return false;
 	}
 	else {
@@ -474,7 +476,7 @@ void D3D_draw_state_update(NV2AState *d)
 	// update pixel shader
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
 		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
-		if (g_nv2a_is_pushpuffer_replay) {
+		if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) !=0) {
 
 			// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
 			pgraph_use_NV2A_bumpenv();
