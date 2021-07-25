@@ -305,7 +305,7 @@ inline DWORD EmuXB2PC_D3DPrimitiveCount(DWORD vertex_count,xbox::X_D3DPRIMITIVET
 			hostprimitivecount = vertex_count/2;//xbox is vertex_count/4, D3D9 converte to triangle list, so multiply by 2.
 			break;
 		case xbox::X_D3DPT_QUADSTRIP:
-			hostprimitivecount = vertex_count-2;//xbox is vertex_count/2-1, D3D9 converte to triangle strip, so multiply by 2.
+			hostprimitivecount = vertex_count-2;//xbox is vertex_count/2-1, D3D9 converte to triangle list, so multiply by 2.
 			break;
 		case xbox::X_D3DPT_POLYGON:
 			hostprimitivecount = vertex_count-2;//D3D9 converte to triangle fan
