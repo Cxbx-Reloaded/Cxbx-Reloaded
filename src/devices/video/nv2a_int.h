@@ -549,14 +549,14 @@ typedef struct NV097KelvinPrimitive {
 	struct {
 		uint32_t Offset;					//	0x00001B00 +i*0x40
 		uint32_t Format;					//	0x00001B04 +i*0x40
-		uint32_t Address;					//	0x00001B08 +i*0x40
-		uint32_t Control0;					//	0x00001B0C +i*0x40  // XboxTextureStates[D3DTSS_ALPHAKILL] in bit 2, XboxTextureStates[D3DTSS_COLORKEYOP] in bit 1:0
-		uint32_t Control1;					//	0x00001B10 +i*0x40
-		uint32_t Filter;					//	0x00001B14 +i*0x40
+		uint32_t Address;					//	0x00001B08 +i*0x40  // FIXME!! definition of Q is strange, the pattern seems should be " CylWrapQ bit 31:29, AddressQ bit 28:24", CylWrapQ bit 31:24, CylWrapP bit 23:20, AddressP bit 19:16, CylWrapV bit 15:12, AddressV bit 11:8, CylWrapU bit 7:4, AddressU bit 3:0
+		uint32_t Control0;					//	0x00001B0C +i*0x40  // Control0Enable bit30, MiniLodClamp bit29:18, LogMAxAniso bit 5:4, ImageFieldEnable bit3, AlphaKillEnable XboxTextureStates[D3DTSS_ALPHAKILL] bit:2, ColorKeyOperation XboxTextureStates[D3DTSS_COLORKEYOP] in bit 1:0
+		uint32_t Control1;					//	0x00001B10 +i*0x40  // ImagePitch bit 31:16
+		uint32_t Filter;					//	0x00001B14 +i*0x40  // MipMapLoadBias bit12:0, ConvolutionKernel bit 15:13, Min bit 23:16, Mag Bit 27:24, COLORSIGN A bit28, R bit29, G bit30, B bit 31.
 		uint32_t Rev_1b18[0x4 / 4];			//	0x00001B18 +i*0x40 			
 		uint32_t ImageRect;					//	0x00001B1C +i*0x40
-		uint32_t Palette;					//	0x00001B20 +i*0x40
-		uint32_t BorderColor;				//	0x00001B24 +i*0x40
+		uint32_t Palette;					//	0x00001B20 +i*0x40  // PaletteOFfset bit 31:6, PaletteLength bit 5:2, ContextDMA bit 1:0
+		uint32_t BorderColor;				//	0x00001B24 +i*0x40  // ColorV
 		//shall we make these 4 bump vars union bump_env_matrix[4]?
 		float SetBumpEnvMat00;				//	0x00001B28 +i*0x40
 		float SetBumpEnvMat01;				//	0x00001B2C +i*0x40
