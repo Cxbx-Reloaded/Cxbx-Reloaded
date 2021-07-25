@@ -494,6 +494,7 @@ typedef struct s_CxbxPSDef {
 		DecodedTexModeAdjust = ((PSDef.PSFinalCombinerConstants >> PS_GLOBALFLAGS_SHIFT) & PS_GLOBALFLAGS_TEXMODE_ADJUST) > 0;
 
 		// Pre-decode hasFinalCombiner, which impacts AdjustFinalCombiner
+		// FIXMED!!! this is only considering the pixel shader code itself. but xbox d3d might set PSDef.PSFinalCombinerInputsABCD/PSDef.PSFinalCombinerInputsEFG when Fog state changed. shall we consider that situation?
 		DecodedHasFinalCombiner = (PSDef.PSFinalCombinerInputsABCD > 0) || (PSDef.PSFinalCombinerInputsEFG > 0);
 		// use texture stage info if we're in pushbuffer replay mode
 		if (pgraph_is_NV2A_bumpenv()) {
@@ -833,7 +834,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 		extern xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
-		bool pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+		bool pointSpriteEnable = pg->KelvinPrimitive.SetPointSmoothEnable!=0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
 
 		bool previousStageDisabled = false;
 		for (int i = 0; i < 4; i++) {
@@ -842,7 +843,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			// and when to stop processing
 			// we don't have direct equivalent XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP) in Kelvin. keep using xbox d3d stuff here.
 			// FIXME!!!  shall convert to use pg->KelvinPrimitive.SetCombinerColorICW[i]) ColorOCW[i], AlphaICW[i], AlphaOCW[i] to determine the colorOp
-			auto colorOp =  XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);
+			auto colorOp =  XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);// FIXME!!!
 
 			// Usually we execute stages up to the first disabled stage
 			// However, if point sprites are enabled, we just execute stage 3
