@@ -238,32 +238,38 @@ void D3D_texture_stage_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	for (int stage = 0; stage < 4; stage++) {
-		// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
-		if (pg->KelvinPrimitive.SetTexture[stage].Control0 == 0 || pg->KelvinPrimitive.SetTexture[stage].Address==0 || pg->KelvinPrimitive.SetTexture[stage].Format==0) {
-			g_pNV2A_SetTexture[stage] = nullptr;
-		}
-		// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
-		else {
-			g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
-			NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
-			NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
-			unsigned width = 0, height = 0, pitch = 0;
-			pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1&NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
-			width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
-			height= (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
-			// texture.Size could be 0
-			if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
-				NV2A_texture_stage_texture[stage].Size = 0;
+		// process texture stage texture info if it's dirty
+		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0<< stage) )!=0) {
+			// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
+			// FIXME!! check (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 should be enough, but there are (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) != 0 and the texture is empty. could be HLE/NV2A confliction
+			if ((pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 || pg->KelvinPrimitive.SetTexture[stage].Format == 0 || pg->KelvinPrimitive.SetTexture[stage].Offset == 0) {
+				g_pNV2A_SetTexture[stage] = nullptr;
 			}
-			//convert pitch/height/width to texture.Size
+			// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
 			else {
-				width = (width - 1)&X_D3DSIZE_WIDTH_MASK;
-				height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT)&X_D3DSIZE_HEIGHT_MASK;
-				pitch = ((pitch/64) -1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
-				NV2A_texture_stage_texture[stage].Size = pitch | height | width;
+				g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
+				NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
+				NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
+				unsigned width = 0, height = 0, pitch = 0;
+				pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1&NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
+				width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
+				height = (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
+				// texture.Size could be 0
+				if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
+					NV2A_texture_stage_texture[stage].Size = 0;
+				}
+				//convert pitch/height/width to texture.Size
+				else {
+					width = (width - 1)&X_D3DSIZE_WIDTH_MASK;
+					height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT)&X_D3DSIZE_HEIGHT_MASK;
+					pitch = ((pitch / 64) - 1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
+					NV2A_texture_stage_texture[stage].Size = pitch | height | width;
+				}
+				NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource, 
 			}
-			NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource, 
 		}
+		//reset texture stage dirty flag
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
 	}
 }
 extern NV2ADevice* g_NV2A; //TMP GLUE
@@ -405,8 +411,15 @@ void pgraph_SetCompositeMatrix(void)
 // this function purges NV2A internal dirty flags and state flags. this shall be called before replaying a pushbuffer in order to clear any intermediate state left over by the HLE part running prior to the replay pushbuffer
 void pgraph_purge_dirty_and_state_flag(void)
 {
+	NV2AState *d = g_NV2A->GetDeviceState();
+	PGRAPHState *pg = &d->pgraph;
+	// reset NV2A dirty flags
 	NV2A_DirtyFlags = 0;
+	// reset NV2A stage flags
 	NV2A_stateFlags = 0;
+	//reset texture stage dirty flags
+	for(int i=0;i<4;i++)
+		pg->bumpenv_dirty[i] = false;
 }
 extern XboxTextureStateConverter XboxTextureStates;
 extern XboxRenderStateConverter XboxRenderStates;
@@ -471,8 +484,12 @@ void D3D_draw_state_update(NV2AState *d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 	}
 	// update texture stage texture states, texture stage texture states must be update prior to pixel shader because pixel shader compilation depends on texture state input
-	D3D_texture_stage_update(d);
-
+	
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
+		D3D_texture_stage_update(d);
+		// clear dirty flag
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
+	}
 	// update pixel shader
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
 		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
