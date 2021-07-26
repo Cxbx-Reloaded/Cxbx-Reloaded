@@ -3707,15 +3707,31 @@ int pgraph_handle_method(
 
 				/* begin of SetTexture**************************************************** */
 
-				CASE_4(NV097_SET_TEXTURE_OFFSET, 64) ://KelvinPrimitive.SetTexture[4].Offset , sizeof(SetTexture[])==64
+				CASE_4(NV097_SET_TEXTURE_OFFSET, 64) :{//KelvinPrimitive.SetTexture[4].Offset , sizeof(SetTexture[])==64
 					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
 					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-					pg->texture_dirty[slot] = true;
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0<<slot;
+					bool bPreviousTexture = (pg->KelvinPrimitive.SetTexture[slot].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) != 0;
+
+                    // FIXME!!!We can't reset all members right now, because in SwitchTexture() api, it only change Offset and Format, and use other members with persist values.
+					// ***but SwitchTexture only valid for nonlinear texture, and Control1 and ImageRect will only be update if the texture is linear. so we can always reset Contro1 and ImageRect when Offset got set
+					// reset other texture members in the same stage, because not all members will be set.
+					// Format normally be set together with Offset in the same method call. so skip the reset call.
+					// Control1 and ImageRect are set conditionaly, so must be reset.
+					pg->KelvinPrimitive.SetTexture[slot].Control1 = 0;
+					pg->KelvinPrimitive.SetTexture[slot].ImageRect = 0;
+					// regenerate shader stage program since texture stage texure changed
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+					// reset combiners since texture stage changed
+					if(bPreviousTexture==false)
+						NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
 					break;
+				}
 				CASE_4(NV097_SET_TEXTURE_FORMAT, 64) : {//KelvinPrimitive.SetTexture[4].Format , sizeof(SetTexture[])==64
 					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_FORMAT) / 64;
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
 					bool dma_select =
 					GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA) == 2;
                     bool cubemap =
@@ -3746,51 +3762,75 @@ int pgraph_handle_method(
                     SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_V, log_height);
                     SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_P, log_depth);
                     //each texture contents 16 dowrds
-                    pg->texture_dirty[slot] = true;
-                    //double check required.
                     break;
 				}
 
 				CASE_4(NV097_SET_TEXTURE_ADDRESS, 64) :////KelvinPrimitive.SetTexture[4].Address , sizeof(SetTexture[])==64
                     //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
 					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-					pg->texture_dirty[slot] = true;
+					// populate to next method handler if method count >1. this happened in xbox d3d lazy update.
+					if (method_count > 1) {
+						method_count -= 1;
+						argv += 1;
+						arg0 = argv[0];
+						method += (NV097_SET_TEXTURE_CONTROL0 - NV097_SET_TEXTURE_ADDRESS);
+						goto SETTEXTURECONTROL0;
+					}
 					break;
 
                 CASE_4(NV097_SET_TEXTURE_CONTROL0, 64) :////KelvinPrimitive.SetTexture[4].Control0 , sizeof(SetTexture[])==64
-                    //get texture[] index
+					SETTEXTURECONTROL0:
+					//get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
 					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-					pg->texture_dirty[slot] = true;
+					// regenerate shader stage program and recalculate final combiners when texture set to NULL, also reset other texture members.
+					if (pg->KelvinPrimitive.SetTexture[slot].Control0 == 0) {
+						pg->KelvinPrimitive.SetTexture[slot].Offset = 0;
+						pg->KelvinPrimitive.SetTexture[slot].Format = 0;
+						pg->KelvinPrimitive.SetTexture[slot].Address = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].Control0 = 0;
+						pg->KelvinPrimitive.SetTexture[slot].Control1 = 0;
+						pg->KelvinPrimitive.SetTexture[slot].Filter = 0;
+						pg->KelvinPrimitive.SetTexture[slot].ImageRect = 0;
+						pg->KelvinPrimitive.SetTexture[slot].Palette = 0;
+						pg->KelvinPrimitive.SetTexture[slot].BorderColor = 0;
+
+						// regenerate shader stage program since texture stage texure changed
+						NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+						// reset combiners since texture stage changed
+						NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+					}
 					break;
 
                 CASE_4(NV097_SET_TEXTURE_CONTROL1, 64) :////KelvinPrimitive.SetTexture[4].Control1 , sizeof(SetTexture[])==64
                     //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
 					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-					pg->texture_dirty[slot] = true;
 					break;
 
                 CASE_4(NV097_SET_TEXTURE_FILTER, 64) :////KelvinPrimitive.SetTexture[4].Filter , sizeof(SetTexture[])==64
                     //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
 					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-					pg->texture_dirty[slot] = true;
 					break;
 
                 CASE_4(NV097_SET_TEXTURE_IMAGE_RECT, 64) :////KelvinPrimitive.SetTexture[4].ImageRect , sizeof(SetTexture[])==64
                     //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
                     //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                    pg->texture_dirty[slot] = true;
 					break;
 
 
 				CASE_4(NV097_SET_TEXTURE_PALETTE, 64) :{ //KelvinPrimitive.SetTexture[4].Palette , sizeof(SetTexture[])==64
 					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_PALETTE) / 64;
-
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
 					/*
 					bool dma_select =
 						GET_MASK(arg0, NV097_SET_TEXTURE_PALETTE_CONTEXT_DMA) == 1;
@@ -3804,7 +3844,6 @@ int pgraph_handle_method(
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_LENGTH, length);
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_OFFSET, offset);
 					*/
-					pg->texture_dirty[slot] = true;
 					//double check required.
 					break;
 				}
@@ -3817,7 +3856,12 @@ int pgraph_handle_method(
                         //xbox d3d update 6 bump state vars in the same time, including SetBumpEnvScale SetBumpEnvOffset
                         //pg->bump_env_matrix[4][4] was remapped to KevlinPrimitive.SetTexture[4].SetBumpEnvMat00~11
                 {
-                    //find which SetTexture[] element we're setting.
+					//get texture[] index
+					slot = (method - NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE) / 64;
+					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
+					pg->bumpenv_dirty[slot] = true;
+
+					//find which SetTexture[] element we're setting.
                     //int tex_index = (method - NV097_SET_TEXTURE_SET_BUMP_ENV_MAT) / 64;
 
                     //bump_env_matrix[tex_index][], there are 4 elements
@@ -3836,16 +3880,16 @@ int pgraph_handle_method(
                 //xbox d3d won't update NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE independently, but we leave the case here.
                 CASE_4( NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE,64) :
                     //get texture[] index
-                    slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
+                    slot = (method - NV097_SET_TEXTURE_SET_BUMP_ENV_SCALE) / 64;
                     //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                    pg->texture_dirty[slot] = true;
+                    pg->bumpenv_dirty[slot] = true;
                     break;
                 //xbox d3d won't update NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET independently, but we leave the case here.
                 CASE_4( NV097_SET_TEXTURE_SET_BUMP_ENV_OFFSET,64):
                     //get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
                     //pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
-                    pg->texture_dirty[slot] = true;
+                    pg->bumpenv_dirty[slot] = true;
                     break;
 
         /* end of SetTexture**************************************************** */
@@ -5365,7 +5409,7 @@ static void pgraph_bind_textures(NV2AState *d)
             continue;
         }
 
-        if (!pg->texture_dirty[i] && pg->texture_binding[i]) {
+        if (!pg->bumpenv_dirty[i] && pg->texture_binding[i]) {
             glBindTexture(pg->texture_binding[i]->gl_target,
                           pg->texture_binding[i]->gl_texture);
             continue;
@@ -5597,7 +5641,7 @@ static void pgraph_bind_textures(NV2AState *d)
             texture_binding_destroy(pg->texture_binding[i]);
         }
         pg->texture_binding[i] = binding;
-        pg->texture_dirty[i] = false;
+        pg->bumpenv_dirty[i] = false;
     }
     NV2A_GL_DGROUP_END();
 }
