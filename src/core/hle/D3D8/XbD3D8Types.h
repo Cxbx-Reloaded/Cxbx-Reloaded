@@ -1341,9 +1341,14 @@ typedef DWORD NV2AMETHOD;
 
 // values used by xbox d3d to bit mask d3d dirty flag
 #define X_D3DDIRTYFLAG_TEXTURE_STATE                      0x0000000F
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_0                    0x00000001
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_1                    0x00000002
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_2                    0x00000004
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_3                    0x00000008
 #define X_D3DDIRTYFLAG_VERTEXFORMAT_VB                    0x00000010
 #define X_D3DDIRTYFLAG_VERTEXFORMAT_UP                    0x00000020
 #define X_VERTEXFORMAT_OFFSETS                            0x00000040
+#define X_VERTEXFORMAT                                    0x00000070
 #define X_D3DDIRTYFLAG_POINTPARAMS                        0x00000100
 #define X_D3DDIRTYFLAG_TRANSFORM                          0x00000200
 #define X_D3DDIRTYFLAG_TEXTURE_TRANSFORM                  0x00000400
