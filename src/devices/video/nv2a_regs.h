@@ -1606,6 +1606,36 @@
 #       define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V               0x0F000000
 #       define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P               0xF0000000
 #   define NV097_SET_TEXTURE_ADDRESS                          0x00001B08 // [4.2]
+#		define NV097_SET_TEXTURE_ADDRESS_U                                         0x0000000F
+#		define NV097_SET_TEXTURE_ADDRESS_U_WRAP                                    0x00000001
+#		define NV097_SET_TEXTURE_ADDRESS_U_MIRROR                                  0x00000002
+#		define NV097_SET_TEXTURE_ADDRESS_U_CLAMP_TO_EDGE                           0x00000003
+#		define NV097_SET_TEXTURE_ADDRESS_U_BORDER                                  0x00000004
+#		define NV097_SET_TEXTURE_ADDRESS_U_CLAMP_OGL                               0x00000005
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U                                 0x000000F0
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U_FALSE                           0x00000000
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U_TRUE                            0x00000001<<4
+#		define NV097_SET_TEXTURE_ADDRESS_V                                         0x00000F00
+#		define NV097_SET_TEXTURE_ADDRESS_V_WRAP                                    0x00000001<<8
+#		define NV097_SET_TEXTURE_ADDRESS_V_MIRROR                                  0x00000002<<8
+#		define NV097_SET_TEXTURE_ADDRESS_V_CLAMP_TO_EDGE                           0x00000003<<8
+#		define NV097_SET_TEXTURE_ADDRESS_V_BORDER                                  0x00000004<<8
+#		define NV097_SET_TEXTURE_ADDRESS_V_CLAMP_OGL                               0x00000005<<8
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V                                 0x0000F000
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V_FALSE                           0x00000000
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V_TRUE                            0x00000001<<12
+#		define NV097_SET_TEXTURE_ADDRESS_P                                         0x000F0000
+#		define NV097_SET_TEXTURE_ADDRESS_P_WRAP                                    0x00000001<<16
+#		define NV097_SET_TEXTURE_ADDRESS_P_MIRROR                                  0x00000002<<16
+#		define NV097_SET_TEXTURE_ADDRESS_P_CLAMP_TO_EDGE                           0x00000003<<16
+#		define NV097_SET_TEXTURE_ADDRESS_P_BORDER                                  0x00000004<<16
+#		define NV097_SET_TEXTURE_ADDRESS_P_CLAMP_OGL                               0x00000005<<16
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P                                 0x00F00000
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P_FALSE                           0x00000000
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P_TRUE                            0x00000001<<20
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_Q                                 0xFF000000  // FIXME should be D3D__RenderState[D3DRS_WRAP0 + TexCoordIndex]
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_Q_FALSE                           0x00000000
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_Q_TRUE                            0x00000001<<24
 #   define NV097_SET_TEXTURE_CONTROL0                         0x00001B0C // [4.3]
 #       define NV097_SET_TEXTURE_CONTROL0_ENABLE                 (1 << 30)
 #       define NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP           0x3FFC0000
