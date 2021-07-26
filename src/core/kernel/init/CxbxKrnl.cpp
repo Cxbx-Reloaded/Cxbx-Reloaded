@@ -995,15 +995,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 				n += semicolon_str.size();
 			}
 		}
-		// Remove extra slashes.
-		std::string slash_search[] = { "\\\\", "//" };
-		std::string slash_str = "/";
-		for (n = 0, i = 0; i < slash_search->size(); i++, n = 0) {
-			while ((n = xbePath.find(slash_search[i], n)) != std::string::npos) {
-				xbePath.replace(n, slash_search[i].size(), slash_str);
-				n += slash_str.size();
-			}
-		}
 
 		// Once clean up process is done, proceed set to global variable string.
 		strncpy(szFilePath_Xbe, xbePath.c_str(), xbox::max_path - 1);
