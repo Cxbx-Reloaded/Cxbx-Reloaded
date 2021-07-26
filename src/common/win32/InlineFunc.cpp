@@ -29,6 +29,7 @@
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "common/util/cliConfig.hpp"
+#include "Util.h"
 
 // Source: https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
 bool CxbxIsElevated() {
@@ -69,7 +70,7 @@ std::optional<std::string> CxbxExec(bool useDebugger, HANDLE* hProcess, bool req
 		cpu load cycles to get the task done.
 	*/
 	if (CreateProcess(nullptr, const_cast<LPSTR>(szProcArgsBuffer.c_str()), nullptr, nullptr, false, 0, nullptr, nullptr, &startupInfo, &processInfo) == 0) {
-		return std::make_optional<std::string>("Failed to create the new emulation process (another instance of cxbxr is already running?)");
+		return std::make_optional<std::string>("Failed to create the new emulation process. CreateProcess failed because: " + WinError2Str());
 	}
 	CloseHandle(processInfo.hThread);
 
