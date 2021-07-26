@@ -696,7 +696,7 @@ typedef struct PGRAPHState {
 #ifdef USE_TEXTURE_CACHE
 	GLruCache *texture_cache;
 #endif
-	bool texture_dirty[NV2A_MAX_TEXTURES];
+	bool bumpenv_dirty[NV2A_MAX_TEXTURES];
 	TextureBinding *texture_binding[NV2A_MAX_TEXTURES];
 
 #ifdef USE_SHADER_CACHE
