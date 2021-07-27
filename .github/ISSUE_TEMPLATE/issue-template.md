@@ -4,14 +4,16 @@ about: Issue template.
 title: ''
 labels: ''
 assignees: ''
+
 ---
+
 <!--
 ISSUES NOT UTILIZING THE TEMPLATE BELOW WILL BE CLOSED!
 -->
 <!--
 Please read https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/blob/master/README.md and https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/wiki/Frequently-Asked-Questions-(FAQ) before opening an issue.
-Remember, the GitHub Issue Tracker is not the place to ask for support or to submit game compatibility https://github.com/Cxbx-Reloaded/game-compatibility/blob/master/README.md reports.
-You must use our forum on Discord https://discord.gg/26Xjx23 for that.
+Remember, the GitHub Issue Tracker is not the place to ask for support, you must use our forum on Discord https://discord.gg/26Xjx23 for that.
+Compatibility Reports should be submitted at the website: https://cxbx-reloaded.co.uk
 Otherwise, for any other emulation/general issues like crashes when a controller is connected, or regressions across several titles, feel free to report your issue here.
 -->
 
