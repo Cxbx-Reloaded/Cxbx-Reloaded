@@ -990,10 +990,84 @@ void D3D_draw_state_update(NV2AState *d)
 	}
 	// update texture stage texture states, texture stage texture states must be update prior to pixel shader because pixel shader compilation depends on texture state input
 	
-	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
+	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0&&(NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
 		D3D_texture_stage_update(d);
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
+	}
+
+	// update spec fog combiner state
+
+	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER) != 0) {
+		if (pg->KelvinPrimitive.SetFogEnable != 0) {
+			float fogTableStart, fogTableEnd, fogTableDensity;
+			DWORD fogTableMode, fogGenMode;
+			float bias, scale, fogMode;
+			fogGenMode = pg->KelvinPrimitive.SetFogGenMode;
+			fogMode = pg->KelvinPrimitive.SetFogMode;
+			bias = pg->KelvinPrimitive.SetFogParamsBias;
+			scale = pg->KelvinPrimitive.SetFogParamsScale;
+			// D3D__RenderState[D3DRS_RANGEFOGENABLE] == true fogGenMode =NV097_SET_FOG_GEN_MODE_V_RADIAL, else fogGenMode =NV097_SET_FOG_GEN_MODE_V_PLANAR
+			// notice that when fogTableMode == D3DFOG_NONE, fogGenMode will be reset to NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA, in  that case, we won't be able to know what D3D__RenderState[D3DRS_RANGEFOGENABLE] should be
+			bool bD3DRS_RangeFogEnable = fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL ? true : false;
+
+			if (fogMode == NV097_SET_FOG_MODE_V_EXP2) {
+				fogTableMode = D3DFOG_EXP2;
+				// scale =  -fogTableDensity * (1 / (2 * sqrt(5.5452)))
+				// scale = -fogTableDensity * (1.0f / (2.0f * 2.354824834249885f));
+				fogTableDensity = -scale * (2.0f * 2.354824834249885f);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+			}
+			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
+				fogTableMode = D3DFOG_EXP;
+				// scale = -fogTableDensity * (1.0f / (2.0f * 5.5452f));
+				fogTableDensity = -scale * (2.0f * 5.5452f);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+			}
+			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
+				fogTableMode = D3DFOG_LINEAR;
+				FLOAT fogTableLinearScale;
+				fogTableLinearScale= -scale;
+				fogTableEnd = (bias - 1.0f) / fogTableLinearScale;
+				// MAX_FOG_SCALE == 8192.0f
+				if (fogTableLinearScale != 8192.0f) {
+					//(fogTableEnd -fogTableStart)=1.0f/fogTableLinearScale
+					// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
+					fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
+				}
+				else {
+					//fogTableStart== fogTableEnd
+					fogTableStart == fogTableEnd;
+				}
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+			}
+			else if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
+				fogTableMode = D3DFOG_NONE;
+				// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
+			}
+			// reflect fogGenMode to host
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+
+		}
+		else {
+			// D3D__RenderState[D3DRS_SPECULARENABLE] == true
+			if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 &0x0F) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_SPECLIT) {
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, true);
+			}
+			else {
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, false);
+			}
+		}
+		// clear dirty flag
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SPECFOG_COMBINER;
 	}
 	// update pixel shader
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
@@ -1004,7 +1078,7 @@ void D3D_draw_state_update(NV2AState *d)
 			pgraph_use_NV2A_bumpenv();
 
 			if (pNV2A_PixelShader == nullptr) {
-				// fixed mode
+				//NV2A_stateFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;// fixed mode
 			}
 			else { // user mode
 				// Populate all required PSDef fields by copying over from KelvinPrimitive fields;
