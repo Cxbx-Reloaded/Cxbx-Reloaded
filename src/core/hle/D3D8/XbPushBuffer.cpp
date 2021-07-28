@@ -1016,14 +1016,14 @@ void D3D_draw_state_update(NV2AState *d)
 				// scale =  -fogTableDensity * (1 / (2 * sqrt(5.5452)))
 				// scale = -fogTableDensity * (1.0f / (2.0f * 2.354824834249885f));
 				fogTableDensity = -scale * (2.0f * 2.354824834249885f);
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				
 				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
 			}
 			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
 				fogTableMode = D3DFOG_EXP;
 				// scale = -fogTableDensity * (1.0f / (2.0f * 5.5452f));
 				fogTableDensity = -scale * (2.0f * 5.5452f);
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				
 				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
 			}
 			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
@@ -1041,21 +1041,19 @@ void D3D_draw_state_update(NV2AState *d)
 					//fogTableStart== fogTableEnd
 					fogTableStart == fogTableEnd;
 				}
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				
 				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
 				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
 			}
 			else if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
 				fogTableMode = D3DFOG_NONE;
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
 				// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
+				// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
+				bD3DRS_RangeFogEnable=false;
 			}
-			// reflect fogGenMode to host
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
 			hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
-
 		}
 		else {
 			// D3D__RenderState[D3DRS_SPECULARENABLE] == true
