@@ -2024,6 +2024,7 @@ int pgraph_handle_method(
 
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW0://done
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW1://done
+					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
 					// set combiner specular fog dirty flag, so in pixel shader generation stage we could know whether NV097_SET_COMBINER_SPECULAR_FOG_CW0 and NV097_SET_COMBINER_SPECULAR_FOG_CW1 should be put in PSDef or not
 					// double check both either control dword is non-zero before setting the state flag
 					if(pg->KelvinPrimitive.SetCombinerSpecularFogCW0 != 0 || pg->KelvinPrimitive.SetCombinerSpecularFogCW1 != 0)
@@ -2071,6 +2072,7 @@ int pgraph_handle_method(
 
                 case NV097_SET_FOG_MODE: {//done //pg->KelvinPrimitive.SetFogMode
                     /* FIXME: There is also NV_PGRAPH_CSV0_D_FOG_MODE */
+					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
                     unsigned int mode;
                     switch (arg0) {
                     case NV097_SET_FOG_MODE_V_LINEAR:
@@ -2096,6 +2098,7 @@ int pgraph_handle_method(
                     break;
                 }
                 case NV097_SET_FOG_GEN_MODE: {//done //pg->KelvinPrimitive.SetFogGenMode
+					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
                     unsigned int mode; 
                     switch (arg0) {
                     case NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA:
@@ -2125,7 +2128,8 @@ int pgraph_handle_method(
                     */
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_3 / 4], NV_PGRAPH_CONTROL_3_FOGENABLE,
                     //	arg0);
-                    break;
+					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
+					break;
                 case NV097_SET_FOG_COLOR: {//done //pg->KelvinPrimitive.SetFogColor
                     break;
                 }
@@ -2600,9 +2604,10 @@ int pgraph_handle_method(
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         /* Cxbx note: slot = 2 is right after slot = 1 */
-                        pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FOG_K][slot] = arg0;
-                        pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FOG_K] = true;
+                        //pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FOG_K][slot] = arg0;
+                        //pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FOG_K] = true;
                     }
+					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
                     break;
 
                 case NV097_SET_TEXGEN_VIEW_MODEL://done //pg->KelvinPrimitive.SetTexgenViewModel
