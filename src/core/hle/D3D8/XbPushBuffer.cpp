@@ -886,6 +886,8 @@ void D3D_combiner_state_update(NV2AState *d)
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
+	HRESULT hRet;
+
 	/*  //sequences of state update, reversed from xbox d3d routine 5849. these update routines are called prior to vertex format/buffer setup in xbox d3d implementation.
 
 	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS)
@@ -919,28 +921,67 @@ void D3D_draw_state_update(NV2AState *d)
 	*/
 
 	// update point params, Xbox takes everything from texture stage 3
-	/*
-	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
-		DWORD FixedSize = pg->KelvinPrimitive.SetPointSize;
-		FixedSize /= 8;
-		// FIXME!! clamp the min. point size to 1
-		if (FixedSize < 1)FixedSize = 1;
-		DWORD max, min;
-		float delta, factor,height;
-		delta= pg->KelvinPrimitive.SetPointParamsDeltaA;
-		height = pg->KelvinPrimitive.SetViewportOffset[1];
+	
+	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
+		//D3D__RenderState[D3DRS_POINTSPRITEENABLE]==true, set host point sprite enable and point sprite parameters.
+		if (pg->KelvinPrimitive.SetPointSmoothEnable != 0) {
+			// enable host point sprite
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, false);
 
-		// D3D__RenderState[D3DRS_POINTSCALEENABLE]
-		if (pg->KelvinPrimitive.SetPointParamsEnable == 0) {
-			// FixedSize /= SuperSampleScale;
+			DWORD FixedSize = pg->KelvinPrimitive.SetPointSize;
+			
+			float hostMinSize, hostMaxSize;
+			hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
+			hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
+			// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
+			if (pg->KelvinPrimitive.SetPointParamsEnable == 0) {
+				// disable host point scale
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, false);
+				// FIXME!!! we should consider the super sample scale in xbox d3d and host, but how? FixedSize should be divided by xbox supersample scale here.
+			}
+			// D3D__RenderState[D3DRS_POINTSCALEENABLE]== true, set host D3D__RenderState[D3DRS_POINTSCALEENABLE] and point scale 
+			else {
+				DWORD max, min;
+				float delta, factor, height;
+				delta = pg->KelvinPrimitive.SetPointParamsDeltaA;
+				//FIXEDME!!! we need viewport height, not sure including SuperSampleScaleY is correct or not.
+				//pg->KelvinPrimitive.SetViewportScale[1] = -0.5f * Viewport.Height * SuperSampleScaleY
+				height = 2*fabs(*(float*)&pg->KelvinPrimitive.SetViewportScale[1]);
+				factor = delta / (FixedSize*height);
+				factor *= factor;
+				float hostscaleA = pg->KelvinPrimitive.SetPointParamsFactorMulA / factor;
+				float hostscaleB = pg->KelvinPrimitive.SetPointParamsFactorMulB / factor;
+				float hostscaleC = pg->KelvinPrimitive.SetPointParamsFactorMulC / factor;
+				// assume host d3d uses the same min/max point size as xbox d3d
+				hostMinSize = pg->KelvinPrimitive.SetPointParamsMin;
+				hostMaxSize = min + delta;
+				// enable host point scale
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, true);
+				// set host min/max point size
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, hostMinSize);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, hostMaxSize);
+				/// set host point scale A/B/C
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, hostscaleA);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, hostscaleB);
+				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_C, hostscaleC);
+			}
+			// reversed to xbox d3d fixed point size
+			FixedSize = (FixedSize - 0.5) / 8.0;
+			// clamp FixedSize to min/max HostPointSize range
+			if (FixedSize < hostMinSize)FixedSize = hostMinSize;
+			if (FixedSize > hostMaxSize)FixedSize = hostMaxSize;
+			// set host fixed point size
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE, FixedSize);
 		}
+		// disable host point sprite
 		else {
-			// factor = delta / (FixedSize*;
+			// disable host point sprite
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE,false);
 		}
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_POINTPARAMS;
 	}
-	*/
+	
 	// update combiners
 	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
 		D3D_combiner_state_update(d);
@@ -1010,7 +1051,6 @@ void D3D_draw_state_update(NV2AState *d)
 	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
 	//D3D_texture_stage_update(d);
 
-	HRESULT hRet;
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
