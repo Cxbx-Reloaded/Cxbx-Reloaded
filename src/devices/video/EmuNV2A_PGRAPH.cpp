@@ -2025,7 +2025,9 @@ int pgraph_handle_method(
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW0://done
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW1://done
 					// set combiner specular fog dirty flag, so in pixel shader generation stage we could know whether NV097_SET_COMBINER_SPECULAR_FOG_CW0 and NV097_SET_COMBINER_SPECULAR_FOG_CW1 should be put in PSDef or not
-					pgraph_SetNV2AStateFlag(X_STATE_COMBINERNEEDSSPECULAR);
+					// double check both either control dword is non-zero before setting the state flag
+					if(pg->KelvinPrimitive.SetCombinerSpecularFogCW0 != 0 || pg->KelvinPrimitive.SetCombinerSpecularFogCW1 != 0)
+					    pgraph_SetNV2AStateFlag(X_STATE_COMBINERNEEDSSPECULAR);
 					break;
 
                 case NV097_SET_CONTROL0: {//done  //pg->KelvinPrimitive.SetControl0& NV097_SET_CONTROL0_COLOR_SPACE_CONVERT GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)
