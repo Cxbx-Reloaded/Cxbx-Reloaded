@@ -2652,7 +2652,8 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
+						// vertex shader constant register -37
+						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
                     }
                     break;
@@ -2713,7 +2714,8 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_VIEWPORT_SCALE) / 4;
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-                        pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = arg0;
+						// vertex shader constant register -38
+						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPSCL] = true;
                     }
                     break;
