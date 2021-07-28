@@ -813,6 +813,16 @@ std::string GetD3DTASumString(int d3dta, bool allowModifier = true) {
 
 	return str;
 }
+// NV2A combiner OP/Args reversed from Kelvin Content.
+extern DWORD NV2A_colorOP[8];
+extern DWORD NV2A_colorArg0[8];
+extern DWORD NV2A_colorArg1[8];
+extern DWORD NV2A_colorArg2[8];
+extern DWORD NV2A_alphaOP[8];
+extern DWORD NV2A_alphaArg0[8];
+extern DWORD NV2A_alphaArg1[8];
+extern DWORD NV2A_alphaArg2[8];
+extern DWORD NV2A_resultArg[8];
 
 // TODO we have to create and cache shaders over and over and over and over
 // Deduplicate this resource management
@@ -845,51 +855,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			// FIXME!!!  shall convert to use pg->KelvinPrimitive.SetCombinerColorICW[i]) ColorOCW[i], AlphaICW[i], AlphaOCW[i] to determine the colorOp
 			// colorOP is only used to dertermine whether this stage is X_D3DTOP_DISABLE or not. so we add the logic for checking X_D3DTOP_DISABLE from KelvinPrimitive
 
-			auto colorOp = pg->KelvinPrimitive.SetCombinerColorICW[i];// = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);// FIXME!!!
-
-			auto colorICW = pg->KelvinPrimitive.SetCombinerColorICW[i];
-			auto colorOCW = pg->KelvinPrimitive.SetCombinerColorOCW[i];
-
-			auto alphaOp = pg->KelvinPrimitive.SetCombinerAlphaICW[i];
-
-			auto alphaICW = pg->KelvinPrimitive.SetCombinerAlphaICW[i];
-			auto alphaOCW = pg->KelvinPrimitive.SetCombinerAlphaOCW[i];
-
-			auto resultarg = pg->KelvinPrimitive.SetCombinerAlphaOCW[i];
-			unsigned int startStage = 0;
-			if (pg->KelvinPrimitive.SetPointSmoothEnable != 0)
-				startStage = 3;
-			if (i == startStage) {
-				// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
-				// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3.
-				if (colorICW == 0x4200000 && alphaICW == 0x14200000 && (alphaOCW == colorOCW)){//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-						colorOp = xbox::X_D3DTOP_DISABLE;
-						alphaOp = xbox::X_D3DTOP_DISABLE;
-						resultarg = alphaOCW;
-				}
-				else if (alphaICW == 0 && alphaOCW == 0) {
-					// we don't know what the colorOp really is, set it to anything other than X_D3DTOP_DISABLE
-					colorOp = xbox::X_D3DTOP_LAST+1;
-					alphaOp= xbox::X_D3DTOP_DISABLE;
-				}
-			}
-			// for other stages, it's much easier to tell whether colorOp is disabled or not.
-			else {
-				if (colorICW == 0 && colorOCW == 0) {
-					colorOp = xbox::X_D3DTOP_DISABLE;
-				}
-				else {
-					// we don't know what the colorOp really is, set it to anything other than X_D3DTOP_DISABLE
-					colorOp = xbox::X_D3DTOP_LAST + 1;
-				}
-				if (alphaICW == 0 && alphaOCW == 0) {
-
-					alphaOp = xbox::X_D3DTOP_DISABLE;
-				}
-				else {
-					alphaOp = xbox::X_D3DTOP_LAST + 1;
-				}
-			}
+			auto colorOp = NV2A_colorOP[i];
 			// Usually we execute stages up to the first disabled stage
 			// However, if point sprites are enabled, we just execute stage 3
 			bool forceDisable;
@@ -949,18 +915,19 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			}
 			// FIXME!!!  colorOp/colorArg/alphaOp/alphaArg all have not direct equivalent in KelvinPrimitive. see reversed SetCombiners() code.
 			// why don't we set states[i].COLOROP?
-			states[i].COLORARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);// FIXME!!!
-			states[i].COLORARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);// FIXME!!!
-			states[i].COLORARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);// FIXME!!!
+			states[i].COLORARG0 = NV2A_colorArg0[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);// FIXME!!!
+			states[i].COLORARG1 = NV2A_colorArg1[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);// FIXME!!!
+			states[i].COLORARG2 = NV2A_colorArg2[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);// FIXME!!!
 			// keet this alphaOp get path from xbox d3d for now. since we don't have real implementation for it now.
+			auto alphaOp= NV2A_alphaOP[i];
 			alphaOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);// FIXME!!!
 			if (alphaOp == X_D3DTOP_DISABLE) LOG_TEST_CASE("Alpha stage disabled when colour stage is enabled");
 
 			states[i].ALPHAOP =   (float)alphaOp;// FIXME!!!
-			states[i].ALPHAARG0 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);// FIXME!!!
-			states[i].ALPHAARG1 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);// FIXME!!!
-			states[i].ALPHAARG2 = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);// FIXME!!!
-			states[i].RESULTARG = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);// FIXME!!!
+			states[i].ALPHAARG0 = NV2A_alphaArg0[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);// FIXME!!!
+			states[i].ALPHAARG1 = NV2A_alphaArg1[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);// FIXME!!!
+			states[i].ALPHAARG2 = NV2A_alphaArg2[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);// FIXME!!!
+			states[i].RESULTARG = NV2A_resultArg[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);// FIXME!!!
 		}
 	}
 	else {
