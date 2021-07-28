@@ -2161,10 +2161,12 @@ int pgraph_handle_method(
                     //	arg0);
 					break;
                 case NV097_SET_POINT_PARAMS_ENABLE://done //pg->KelvinPrimitive.SetPointParamsEnable
-                    //this state is not used yet.
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_POINTPARAMS;
+					//this state is not used yet.
                     break;
                 case NV097_SET_POINT_SMOOTH_ENABLE://done //pg->KelvinPrimitive.SetPointSmoothEnable
-                    //this state is not used yet.
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_POINTPARAMS;
+					//this state is not used yet.
                     break;
                 case NV097_SET_LINE_SMOOTH_ENABLE://done //pg->KelvinPrimitive.SetLineSmoothEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
@@ -2487,7 +2489,8 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_POINT_SIZE://done //pg->KelvinPrimitive.SetPointSize
-                    break;
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_POINTPARAMS;
+					break;
 
                 CASE_16(NV097_SET_PROJECTION_MATRIX, 4) : {//done
                     //KelvinPrimitive.SetProjectionMatrix[16] is update already. we update the vertex shader contant as well.
@@ -2654,13 +2657,13 @@ int pgraph_handle_method(
 
                 CASE_8(NV097_SET_POINT_PARAMS, 4) ://done //pg->KelvinPrimitive.SetPointParams[8]
                     //KelvinPrimitive.SetPointParams[8] is update already. we update the vertex shader contant as well.
-					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
-                        arg0 = argv[argc];
-                    //this state is not implement yet.
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_POINTPARAMS;
+					slot = (method - NV097_SET_POINT_PARAMS) / 4;
+					//for (int argc = 0; argc < method_count; argc++, slot++) {
+                        //arg0 = argv[argc];
                         //pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         //pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
-                    }
+                    //}
                 break;
 
                 CASE_4(NV097_SET_EYE_POSITION, 4) ://done //pg->KelvinPrimitive.SetEyePosition[4]
@@ -3419,42 +3422,6 @@ int pgraph_handle_method(
 
                 case NV097_INLINE_VERTEX_REUSE:break;//not implement //pg->KelvinPrimitive.InlineVertexReuse
 
-				/*
-
-                D3DVSDE_POSITION
-                Register 0. This is used to kick off vertex to NV2A GPU. This register should only be used inside NV097_SET_BEGIN_END block.
-                D3DVSDE_BLENDWEIGHT
-                Register 1.
-                D3DVSDE_NORMAL
-                Register 2.
-                D3DVSDE_DIFFUSE
-                Register 3. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f.
-                D3DVSDE_SPECULAR
-                Register 4. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f.
-                D3DVSDE_FOG
-                Register 5. Xbox extension.
-                D3DVSDE_BACKDIFFUSE
-                Register 7. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f. Xbox extension.
-                D3DVSDE_BACKSPECULAR
-                Register 8. Color is specified as (red, green, blue, alpha), where red, green, blue, and alpha are between 0.0f and 1.0f. Xbox extension.
-                D3DVSDE_TEXCOORD0
-                Register 9.
-                D3DVSDE_TEXCOORD1
-                Register 10.
-                D3DVSDE_TEXCOORD2
-                Register 11.
-                D3DVSDE_TEXCOORD3
-                Register 12.
-                    */
-
-                    /*
-                HRESULT IDirect3DDevice8::SetVertexData2f(
-                   INT  	Register,
-                   FLOAT 	a,
-                   FLOAT 	b
-                   );
-                    */
-				
                 CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 					for (size_t argc = 0; argc < method_count; argc++) {
@@ -3476,15 +3443,6 @@ int pgraph_handle_method(
 					break;
                 }
 
-                /*
-                HRESULT IDirect3DDevice8::SetVertexData4f(
-                   INT Register,
-                   FLOAT a,
-                   FLOAT b,
-                   FLOAT c,
-                   FLOAT d
-                   );
-                */
                 CASE_64(NV097_SET_VERTEX_DATA4F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData4f[16].M[4]
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 
@@ -3503,137 +3461,30 @@ int pgraph_handle_method(
                     }
 					break;
                 }
-            /*
-            HRESULT IDirect3DDevice8::SetVertexData2s(
-               INT Register,
-               SHORT a,
-               SHORT b
-               );
-            */
-            CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
-				assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-				for (size_t argc = 0; argc < method_count; argc++) {
-					//register is set one at a time per method, for loop should be redundant.
-					slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
-					slot += argc;
-					//assert(false); /* FIXME: Untested! */
-					float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
-					inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
-					inline_value[1] = (float)(int16_t)(arg0 >> 16);
-					if (slot == NV2A_VERTEX_ATTR_POSITION) {
-						pgraph_finish_inline_buffer_vertex(pg);
+				CASE_16(NV097_SET_VERTEX_DATA2S, 4): {//done //pg->KelvinPrimitive.SetVertexData2s[16]
+					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+					for (size_t argc = 0; argc < method_count; argc++) {
+						//register is set one at a time per method, for loop should be redundant.
+						slot = (method - NV097_SET_VERTEX_DATA2S) / 4;
+						slot += argc;
+						//assert(false); /* FIXME: Untested! */
+						float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
+						inline_value[0] = (float)(int16_t)(arg0 & 0xFFFF);
+						inline_value[1] = (float)(int16_t)(arg0 >> 16);
+						if (slot == NV2A_VERTEX_ATTR_POSITION) {
+							pgraph_finish_inline_buffer_vertex(pg);
+						}
 					}
+					break;
 				}
-				break;
-            }
-                /*
-                HRESULT IDirect3DDevice8::SetVertexData4ub(
-                   INT Register,
-                   BYTE a,
-                   BYTE b,
-                   BYTE c,
-                   BYTE d
-                   );
-                */
-
-				//if pg->KelvinPrimitive.SetBeginEnd !=0, we're in the Begin/End block, data passed in shall be vertex data.
-			    //else we're outside of Begin/End block, set in here indicate fix function vertexfunciton selection.
-				/*
-				D3DDevice_SetVertexShader(Handle)
-				{
-					if Program Shader
-						D3DDevice_LoadVertexShader(Handle, 0);
-						D3DDevice_SelectVertexShader(Handle, 0);
-					else //FVF fixed function
-					    // fixed fuction uses persist attirbute value. when the vertex shader has no such attribute, xbox d3d will use NV097_SET_VERTEX_DATA4UB
-						// to set the attribute to disabled value.
-					    if !D3DFVF_DIFFUSE //Flags & VERTEXSHADER_HASDIFFUSE 0x400
-							(NV097_SET_VERTEX_DATA4UB(SLOT_DIFFUSE), -1, method count 1)
-						if !D3DFVF_SPECULAR  //Flags & VERTEXSHADER_HASSPECULAR 0x800
-							(NV097_SET_VERTEX_DATA4UB(SLOT_SPECULAR), 0, method count 1)
-						if !D3DFVF_BACKDIFFUSE  //Flags & VERTEXSHADER_HASBACKDIFFUSE 0x1000
-							(NV097_SET_VERTEX_DATA4UB(SLOT_BACK_DIFFUSE), -1, method count 1)
-						if !D3DFVF_BACKSPECULAR  //Flags & VERTEXSHADER_HASBACKSPECULAR 0x2000
-							(NV097_SET_VERTEX_DATA4UB(SLOT_BACK_SPECULAR), 0, method count 1)
-						if D3DFVF_PASSTHROUGH  //Flags & VERTEXSHADER_PASSTHROUGH 0x2
-							(NV097_SET_TRANSFORM_PROGRAM_START, 0, method count 1)
-							(NV097_SET_TRANSFORM_EXECUTION_MODE,
-							 NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_PROGRAM|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV,
-							 NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY,
-							 method count 2)
-							 SetupPasstrhouProgram()
-								(NV097_SET_TRANSFORM_CONSTANT_LOAD, 0,method count 1)
-								(NV097_SET_TRANSFORM_CONSTANT(0),method count  8)
-									if (D3DRenderState.SetFogTableMode == D3DFOG_NONE)
-									{
-										prog_size_dwords = sizeof(FVFPassthruProgramSpecularFog) / sizeof(DWORD) //48 dwords
-										pProgram = &FVFPassthruProgramSpecularFog;
-									}
-									else if (pDevice->m_StateFlags & STATE_FOGSOURCEZ)
-									{
-										prog_size_dwords = sizeof(FVFPassthruProgramZFog) / sizeof(DWORD); //44 dwords
-										pProgram = &FVFPassthruProgramZFog;
-									}
-									else
-									{
-										prog_size_dwords = sizeof(FVFPassthruProgramWFog) / sizeof(DWORD); //48 dwords
-										pProgram = &FVFPassthruProgramWFog;
-									}
-									Scale=?(D3DRenderState.SetZEnable == D3DZB_USEW )pDevice->SetInverseWFar * pDevice->SetZScale  : 1.0f
-									argv[0]=pDevice->SetSuperSampleScaleX
-									argv[1]=pDevice->SetSuperSampleScaleY
-									argv[2]=pDevice->SetZScale
-									argv[3]=Scale
-									m_off=?(D3DRenderState.SetMultiSampleAntiAlias))0.5f:0.0f
-									argv[5]=pDevice->SetScreenSpaceOffsetX - m_off
-									argv[6]=pDevice->SetScreenSpaceOffsetY - m_off
-									argv[7]=0.0f;
-									argv[8]=0.0f;
-									(NV097_SET_TRANSFORM_PROGRAM_LOAD, 0, method count 1)
-									prog_ind=0
-									do
-										batch=MIN(32,prog_size_dwords)
-										(NV097_SET_TRANSFORM_PROGRAM(0), method count batch)
-											arg[0...batch-1]=pProgram[prog_ind+0...prog_ind+batch-1]
-										prog_size_dwords - =batch
-										prog_ind + =batch
-
-									while (prog_size_dwords  !=0)
-
-
-						else //not pass through
-							setviewport()
-								if(! FVF)
-									(NV097_SET_VIEWPORT_OFFSET(0), A,   B,   C,   0.0f, method count 4)
-									(NV097_SET_VIEWPORT_SCALE(0), X,Y,Z,0.0f, method count 4)
-								else //FVF
-									(NV097_SET_VIEWPORT_OFFSET(0),X,Y,0.0f,0.0f,method count 4)
-								(NV097_SET_CLIP_MIN, ClipMin, ClipMax, method count 2)
-							(NV097_SET_TRANSFORM_EXECUTION_MODE,
-							 NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED|NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV,
-							 method count 1)
-				}
-				*/
 				CASE_16(NV097_SET_VERTEX_DATA4UB, 4) : {//pg->KelvinPrimitive.SetVertexData4ub[16]
-                    // pg->KelvinPrimitive.SetVertexData4ub[16] holds persist color attributes for fixed function vertex shader
-
-                    /*
-                    IDirect3DDevice8::SetVertexDataColor
-                        Sets the initial values of a given vertex attribute. This function sets persistent vertex attributes that may be used in vertex shaders and Begin/End blocks.
-                    the following two lines are equivalent:
-
-                    pDevice->SetVertexData4ub( register, r, g, b, a ); //notice that R and B are swapped before sent to NV2A.
-                    pDevice->SetVertexDataColor( register, D3DCOLOR_ARGB( a, r, g, b ) );
-                    Vertex attributes will remain set unless overwritten by the vertex buffer data stream.
-                    */
-                    //register is set one at a time per method, for loop should be redundant.
 					
 					if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
 						//we're out side of Begin/End block, should be setting fix function vertex shader color persist attribute value
 
 						slot = (method - NV097_SET_VERTEX_DATA4UB) / 4;
 
-						// perserve persist color value in R/G/B/A float4 format in KelvinPrimitive.SetVertexData4f[slot]
+						// preserve persist color value in R/G/B/A float4 format in KelvinPrimitive.SetVertexData4f[slot]
 						// D3DCOLOR format persiste in KelvinPrimitive.SetVertexData4ub[slot]
 						float *inline_value = &pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
 						// We set color in float4 in R/G/B/A. no need to swap R/B here.
@@ -3643,20 +3494,6 @@ int pgraph_handle_method(
 						inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
 						inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
 
-						//set fix fuction handle. where to set X_D3DFVF_XYZ for X_D3DVSDE_POSITION?
-						//if (slot== xbox::X_D3DVSDE_DIFFUSE && arg0 == -1)pg->vsh_FVF_handle |= X_D3DFVF_DIFFUSE;
-						//if (slot == xbox::X_D3DVSDE_SPECULAR && arg0 == 0)pg->vsh_FVF_handle |= X_D3DFVF_SPECULAR;
-						//not implement in SetVertexShader
-						//if (slot == xbox::X_D3DVSDE_DIFFUSE && arg0 == -1)pg->vsh_FVF_handle |= 0;//can't find corresponded ENUM
-						//not implement in SetVertexShader
-						//if (slot == xbox::X_D3DVSDE_SPECULAR && arg0 == 0)pg->vsh_FVF_handle |= 0;//can't find corresponded ENUM
-
-						/*
-							(NV097_SET_TRANSFORM_EXECUTION_MODE,
-							NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED | NV097_SET_TRANSFORM_EXECUTION_MODE_RANGE_MODE_PRIV, 	method count 1)
-							will be called once these setting are completed.
-							we shall create/setup fix function shader there.
-						*/
 					}
 					else {//in Begin/End block. data transferred are vertices.
 						for (size_t argc = 0; argc < method_count; argc++) {
@@ -3675,15 +3512,6 @@ int pgraph_handle_method(
 					}
 					break;
 				}
-					/*
-					HRESULT IDirect3DDevice8::SetVertexData4s(
-					   INT Register,
-					   SHORT a,
-					   SHORT b,
-					   SHORT c,
-					   SHORT d
-					   );
-					*/
 				CASE_32(NV097_SET_VERTEX_DATA4S_M, 4) : {//done //pg->KelvinPrimitive.SetVertexData4s[16].M[2]
 					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
 					for (size_t argc = 0; argc < method_count; argc++) {
@@ -3705,7 +3533,7 @@ int pgraph_handle_method(
 					break;
 				}
 
-				/* begin of SetTexture**************************************************** */
+		/* begin of SetTexture**************************************************** */
 
 				CASE_4(NV097_SET_TEXTURE_OFFSET, 64) :{//KelvinPrimitive.SetTexture[4].Offset , sizeof(SetTexture[])==64
 					//get texture[] index
@@ -3726,9 +3554,18 @@ int pgraph_handle_method(
 					// reset combiners since texture stage changed
 					if(bPreviousTexture==false)
 						NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+					// populate to next method handler if method count >1. this happened in xbox d3d SetTexture()/SwitchTexture()
+					if (method_count > 1) {
+						method_count -= 1;
+						argv += 1;
+						arg0 = argv[0];
+						method += (NV097_SET_TEXTURE_FORMAT - NV097_SET_TEXTURE_OFFSET);
+						goto SETTEXTUREFORMAT;
+					}
 					break;
 				}
 				CASE_4(NV097_SET_TEXTURE_FORMAT, 64) : {//KelvinPrimitive.SetTexture[4].Format , sizeof(SetTexture[])==64
+					SETTEXTUREFORMAT:
 					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_FORMAT) / 64;
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
@@ -3847,7 +3684,7 @@ int pgraph_handle_method(
 					//double check required.
 					break;
 				}
-                
+        // Bumpenv is seperate from texture stage texture, use seperate dirty flags.
                 //these NV097_SET_TEXTURE_SET_BUMP_ENV_MAT are no longer needed. leave these code here for short term reference only. shall be cleared later.
                 CASE_4(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT + 0x0, 64) ://KevlinPrimitive.SetTexture[4].SetBumpEnvMat00 SetBumpEnvMat01 SetBumpEnvMat10 SetBumpEnvMat11 SetBumpEnvScale SetBumpEnvOffset
                     CASE_4(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT + 0x4, 64) :
@@ -3909,7 +3746,7 @@ int pgraph_handle_method(
 
                     //qemu_mutex_unlock(&pg->pgraph_lock);
                     //qemu_mutex_lock_iothread();
-					// the semaphore relese is to update the CDevice.GpuTime, which will change the state of CDevice_IsBusy(). we have to implement this.
+					// ***the semaphore relese is to update the CDevice.GpuTime, which will change the state of CDevice_IsBusy(). we have to implement this.
 					
                     uint32_t semaphore_offset = pg->pgraph_regs[NV_PGRAPH_SEMAPHOREOFFSET/4];
 
@@ -3973,43 +3810,6 @@ int pgraph_handle_method(
 
                 case NV097_SET_SHADOW_DEPTH_FUNC:break;//not implement //pg->KelvinPrimitive.SetShadowDepthFunc
 
-				/*
-				D3DDevice_SetPixelShader(Handle)
-				if(Handle==0)//restore to fix function
-				    
-				    (NV097_SET_COMBINER_??,?? ,method count 1 )
-                    D3D__DirtyFlags |= D3DD3DDIRTYFLAG_COMBINERS | D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
-					if(shader uses specfog)
-					   D3D__DirtyFlags |= D3DD3DDIRTYFLAG_SPECFOB_COMBINER
-					update bump env for each texture stage [1]~[3]
-					(NV097_SET_SHADER_OTHER_STAGE_INPUT,
-					(NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE1_INSTAGE_0 | NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE2_INSTAGE_1 | NV097_SET_SHADER_OTHER_STAGE_INPUT_STAGE3_INSTAGE_2, method count 1); //arg0 0x210000
-				else //set user pixel shader
-				    pDevice->SetShaderUsesSpecFog = Handle.pPSDef->PSFinalCombinerInputsABCD | Handle.pPSDef->PSFinalCombinerInputsEFG; //pPSDef[32]|pPSDef[36]
-					pDevice->m_ShaderAdjustsTexMode=pPSDef->PSC0Mapping&0x100;
-
-				    pDevice->SetPSShaderStageProgram = Handle.PSDef->PSTextureModes;
-					D3D__DirtyFlags |= D3DDIRTYFLAG_SHADER_STAGE_PROGRAM; //this shall trigger (NV097_SET_SHADER_STAGE_PROGRAM,pDevice->SetPSShaderStageProgram,method count 1)
-
-					if(previous pixel shader handle == null) //switch from fix function to user program
-					    update bump env for each texture stage [0]~[2]
-					(NV097_SET_COMBINER_ALPHA_ICW(0), , method count  8)
-					    memcpy((argv, &( Handle.PSDef->PSAlphaInputs[0]), 8 * sizeof(DWORD))  //&pPSDef[0]
-					(NV097_SET_COMBINER_FACTOR0(0), , method count   32)
-					    memcpy((argv, &( Handle.PSDef->PSConstant0), 32 * sizeof(DWORD))      ////&pPSDef[10]
-					(NV097_SET_SHADER_CLIP_PLANE_MODE, Handle.pPSDef->PSCompareMode)
-					(NV097_SET_SPECULAR_FOG_FACTOR(0),  method count 2)
-					    memcpy((argv, &( Handle.PSDef->PSFinalCombinerConstant0), 2 * sizeof(DWORD))//&pPSDef[43]
-					(NV097_SET_COMBINER_COLOR_OCW(0), , method count   9)
-					    memcpy((argv, &( Handle.PSDef->PSRGBOutputs[0]), 9 * sizeof(DWORD))//&pPSDef[45]
-					(NV097_SET_DOT_RGBMAPPING,  method count 2)
-						memcpy((argv, &( Handle.PSDef->PSDotMapping), 2 * sizeof(DWORD))//&pPSDef[55]
-					if(pDevice->SetShaderUsesSpecFog != 0)
-					    (NV097_SET_COMBINER_SPECULAR_FOG_CW0,  method count 2)
-						memcpy((argv, &( Handle.PSDef->PSFinalCombinerInputsABCD), 2 * sizeof(DWORD))//&pPSDef[8]
-					
-					   
-				*/
 				case NV097_SET_SHADER_STAGE_PROGRAM://pg->KelvinPrimitive.SetShaderStageProgram
 					// if NV097_SET_SHADER_OTHER_STAGE_INPUT was called and set with 0x00210000, then we're in fixed mode pixel shader
 					if(NV2A_ShaderOtherStageInputDirty == true & pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000){
