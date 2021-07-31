@@ -1742,7 +1742,11 @@
 #       define NV097_CLEAR_SURFACE_B                                (1 << 6)
 #       define NV097_CLEAR_SURFACE_A                                (1 << 7)
 #   define NV097_SET_CLEAR_RECT_HORIZONTAL                    0x00001D98
+#        define NV097_SET_CLEAR_RECT_HORIZONTAL_XMIN          0x0000FFFF
+#        define NV097_SET_CLEAR_RECT_HORIZONTAL_XMAX          0xFFFF0000
 #   define NV097_SET_CLEAR_RECT_VERTICAL                      0x00001D9C
+#        define NV097_SET_CLEAR_RECT_VERTICAL_YMIN            0x0000FFFF
+#        define NV097_SET_CLEAR_RECT_VERTICAL_YMAX            0xFFFF0000
 #   define NV097_SET_BEGIN_PATCH0                             0x00001DE0
 #   define NV097_SET_BEGIN_PATCH1                             0x00001DE4
 #   define NV097_SET_BEGIN_PATCH2                             0x00001DE8
