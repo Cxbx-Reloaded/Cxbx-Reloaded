@@ -78,7 +78,11 @@ static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
 extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
 extern void EmuKickOff(void);// in Direct3D9.cpp
 extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
-extern bool is_pushbuffer_recording(void); // in Direct3D9.cpp, return true if pushbuffer is recording
+bool is_pushbuffer_recording(void)
+{
+	return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
+}
+
 void backup_xbox_texture_state(void);
 void restore_xbox_texture_state(void);
 
@@ -156,7 +160,7 @@ void EmuExecutePushBuffer
 	EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
 	// reset g_nv2a_is_pushpuffer_replay flag
 
-	NV2A_stateFlags |= ~X_STATE_RUNPUSHBUFFERWASCALLED;
+	NV2A_stateFlags &= ~X_STATE_RUNPUSHBUFFERWASCALLED;
     return;
 }
 
@@ -883,42 +887,20 @@ void D3D_combiner_state_update(NV2AState *d)
 	}
 
 }
+DWORD EmuXB2PC_FillMode(DWORD xbfillmode)
+{
+	DWORD result = D3DFILL_SOLID;
+	switch (xbfillmode) {
+	case NV097_SET_FRONT_POLYGON_MODE_V_POINT:result = D3DFILL_POINT; break;
+	case NV097_SET_FRONT_POLYGON_MODE_V_LINE: result = D3DFILL_WIREFRAME; break;
+	case NV097_SET_FRONT_POLYGON_MODE_V_FILL: result = D3DFILL_SOLID; break;
+	}
+	return result;
+}
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	HRESULT hRet;
-
-	/*  //sequences of state update, reversed from xbox d3d routine 5849. these update routines are called prior to vertex format/buffer setup in xbox d3d implementation.
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS)
-		SetPointParams();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS)
-		SetCombiners();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM)
-		SetShaderStageProgram();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE)
-		SetTextureState();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER)
-		SetSpecFogCombiner();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM)
-		SetTextureTransform();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS)
-		SetLights();
-
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM)
-		SetTransform();
-
-	// Clear the dirty flags
-
-	NV2A_DirtyFlags = NV2A_DirtyFlags & ~X_SET_STATE_FLAGS;
-
-	*/
 
 	// update point params, Xbox takes everything from texture stage 3
 	
@@ -1041,9 +1023,9 @@ void D3D_draw_state_update(NV2AState *d)
 					//fogTableStart== fogTableEnd
 					fogTableStart == fogTableEnd;
 				}
-				
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+
+                hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
+                hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
 			}
 			else if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
 				fogTableMode = D3DFOG_NONE;
@@ -1054,6 +1036,10 @@ void D3D_draw_state_update(NV2AState *d)
 			}
 			hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
 			hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
+			uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
+			/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+
 		}
 		else {
 			// D3D__RenderState[D3DRS_SPECULARENABLE] == true
@@ -1325,11 +1311,71 @@ void D3D_draw_state_update(NV2AState *d)
 
 void D3D_draw_clear(NV2AState *d)
 {
-	// PGRAPHState *pg = &d->pgraph;
+	PGRAPHState *pg = &d->pgraph;
+	xbox::dword_xt Count;
+	D3DRECT  *pRects,Rect;
+	xbox::dword_xt Flags;
+	D3DCOLOR Color;
+	float Z;
+	xbox::dword_xt Stencil;
 
-	CxbxUpdateNativeD3DResources();
+	Flags = pg->KelvinPrimitive.ClearSurface;
+	Color = pg->KelvinPrimitive.SetColorClearValue;
+	Z = pg->KelvinPrimitive.SetZStencilClearValue;
+	Stencil = Z;
+	
+	DWORD x1, x2, y1, y2;
+	// FIXME, x1,x2, y2, y2 are premultiplied with supersamplescale already. shall we reverse the scale back before calling EMUPATCH(D3DDevice_Clear)?
+	x1 = (pg->KelvinPrimitive.SetClearRectHorizontal & 0xFFFF);
+	x2 = ((pg->KelvinPrimitive.SetClearRectHorizontal>>16) & 0xFFFF)+1;
+	y1 = (pg->KelvinPrimitive.SetClearRectVertical & 0xFFFF);
+	y2 = ((pg->KelvinPrimitive.SetClearRectVertical >> 16) & 0xFFFF) + 1;
+	Rect.x1 = x1;
+	Rect.x2 = x2;
+	Rect.y1 = y1;
+	Rect.y2 = y2;
+	pRects = &Rect;
+	Count = 1;
+	DWORD HostFlags = 0;
+	// Clear requires the Xbox viewport to be applied
+	// CxbxUpdateNativeD3DResources();
 
-	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D (call EMUPATCH(D3DDevice_Clear)?)
+	// make adjustments to parameters to make sense with windows d3d
+	{
+		if (Flags & xbox::X_D3DCLEAR_TARGET) {
+			// TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
+			if ((Flags & xbox::X_D3DCLEAR_TARGET) != xbox::X_D3DCLEAR_TARGET)
+				EmuLog(LOG_LEVEL::WARNING, "Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & xbox::X_D3DCLEAR_TARGET);
+
+			HostFlags |= D3DCLEAR_TARGET;
+		}
+
+		// Do not needlessly clear Z Buffer
+		if (Flags & xbox::X_D3DCLEAR_ZBUFFER) {
+			if (pg->KelvinPrimitive.SetDepthTestEnable!=0)//was (g_bHasDepth)
+				HostFlags |= D3DCLEAR_ZBUFFER;
+			else
+				EmuLog(LOG_LEVEL::WARNING, "Unsupported : D3DCLEAR_ZBUFFER flag for D3DDevice_Clear without ZBuffer");
+		}
+
+		// Only clear depth buffer and stencil if present
+		//
+		// Avoids following DirectX Debug Runtime error report
+		//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
+		if (Flags & xbox::X_D3DCLEAR_STENCIL) {
+			if (pg->KelvinPrimitive.SetStencilTestEnable!=0)// was (g_bHasStencil)
+				HostFlags |= D3DCLEAR_STENCIL;
+			else
+				EmuLog(LOG_LEVEL::WARNING, "Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
+		}
+
+		if (Flags & ~(xbox::X_D3DCLEAR_TARGET | xbox::X_D3DCLEAR_ZBUFFER | xbox::X_D3DCLEAR_STENCIL))
+			EmuLog(LOG_LEVEL::WARNING, "Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(xbox::X_D3DCLEAR_TARGET | xbox::X_D3DCLEAR_ZBUFFER | xbox::X_D3DCLEAR_STENCIL));
+	}
+
+	HRESULT hRet;
+
+	hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
 }
 
 void D3D_draw_arrays(NV2AState *d)
