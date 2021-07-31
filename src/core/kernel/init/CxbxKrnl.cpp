@@ -1232,6 +1232,18 @@ static void CxbxrLogDumpXbeInfo(Xbe::LibraryVersion* libVersionInfo)
 	}
 }
 
+// Process Hacks
+static void CxbxrKrnlInitHacks()
+{
+	int HackEnabled = 0;
+	g_EmuShared->GetDisablePixelShaders(&HackEnabled);
+	g_DisablePixelShaders = !!HackEnabled;
+	g_EmuShared->GetUseAllCores(&HackEnabled);
+	g_UseAllCores = !!HackEnabled;
+	g_EmuShared->GetSkipRdtscPatching(&HackEnabled);
+	g_SkipRdtscPatching = !!HackEnabled;
+}
+
 static __declspec(noreturn) void CxbxrKrnlInit
 (
 	void                   *pTLSData,
@@ -1308,16 +1320,7 @@ static __declspec(noreturn) void CxbxrKrnlInit
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
 	}
 
-	// Process Hacks
-	{
-		int HackEnabled = 0;
-		g_EmuShared->GetDisablePixelShaders(&HackEnabled);
-		g_DisablePixelShaders = !!HackEnabled;
-		g_EmuShared->GetUseAllCores(&HackEnabled);
-		g_UseAllCores = !!HackEnabled;
-		g_EmuShared->GetSkipRdtscPatching(&HackEnabled);
-		g_SkipRdtscPatching = !!HackEnabled;
-	}
+	CxbxrKrnlInitHacks();
 
 #ifdef _DEBUG_PRINT_CURRENT_CONF
 	PrintCurrentConfigurationLog();
