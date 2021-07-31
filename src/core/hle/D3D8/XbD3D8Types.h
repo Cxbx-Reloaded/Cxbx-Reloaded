@@ -979,15 +979,15 @@ constexpr DWORD X_D3DTOP_LAST = X_D3DTOP_BUMPENVMAPLUMINANCE;
 
 // D3DTA taken from D3D9 - we don't have Xbox definitions
 // for these so I guess they're the same?
-const DWORD X_D3DTA_DIFFUSE = 0x00000000;  // select diffuse color (read only)
-const DWORD X_D3DTA_CURRENT = 0x00000001;  // select stage destination register (read/write)
-const DWORD X_D3DTA_TEXTURE = 0x00000002;  // select texture color (read only)
-const DWORD X_D3DTA_TFACTOR = 0x00000003;  // select D3DRS_TEXTUREFACTOR (read only)
-const DWORD X_D3DTA_SPECULAR = 0x00000004;  // select specular color (read only)
-const DWORD X_D3DTA_TEMP = 0x00000005;  // select temporary register color (read/write)
-const DWORD X_D3DTA_CONSTANT = 0x00000006;  // select texture stage constant
-const DWORD X_D3DTA_COMPLEMENT = 0x00000010;  // take 1.0 - x (read modifier)
-const DWORD X_D3DTA_ALPHAREPLICATE = 0x00000020;  // replicate alpha to color components (read modifier)
+constexpr DWORD X_D3DTA_DIFFUSE = 0x00000000;  // select diffuse color (read only)
+constexpr DWORD X_D3DTA_CURRENT = 0x00000001;  // select stage destination register (read/write)
+constexpr DWORD X_D3DTA_TEXTURE = 0x00000002;  // select texture color (read only)
+constexpr DWORD X_D3DTA_TFACTOR = 0x00000003;  // select D3DRS_TEXTUREFACTOR (read only)
+constexpr DWORD X_D3DTA_SPECULAR = 0x00000004;  // select specular color (read only)
+constexpr DWORD X_D3DTA_TEMP = 0x00000005;  // select temporary register color (read/write)
+constexpr DWORD X_D3DTA_CONSTANT = 0x00000006;  // select texture stage constant
+constexpr DWORD X_D3DTA_COMPLEMENT = 0x00000010;  // take 1.0 - x (read modifier)
+constexpr DWORD X_D3DTA_ALPHAREPLICATE = 0x00000020;  // replicate alpha to color components (read modifier)
 
 // X_D3DTEXTUREADDRESS values :
 constexpr DWORD X_D3DTADDRESS_WRAP = 1;
