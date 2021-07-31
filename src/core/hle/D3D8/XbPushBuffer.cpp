@@ -78,13 +78,14 @@ static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
 extern std::map<std::string, xbox::addr_xt> g_SymbolAddresses;
 extern void EmuKickOff(void);// in Direct3D9.cpp
 extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
-bool is_pushbuffer_recording(void)
+extern bool is_pushbuffer_recording(void);
+/*
 {
 	//return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
 	extern xbox::dword_xt                  *g_pXbox_BeginPush_Buffer;
 	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
 }
-
+*/
 void backup_xbox_texture_state(void);
 void restore_xbox_texture_state(void);
 
@@ -1108,45 +1109,6 @@ void D3D_draw_state_update(NV2AState *d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
 
-	// update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
-	//D3D_texture_stage_update(d);
-
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
-	// NV2A_FOG_PLANE?
-	// NV2A_SET_LINEAR_FOG_CONST?
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
-	// Unused : D3DRS_FOGVERTEXMODE
-	uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
-	/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-
-// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
-// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
-
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, xtBool); // NV2A_NORMALIZE_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
-	g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv); // NV2A_TX_WRAP(0), EmuXB2PC_* conversion needed
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv); // NV2A_TX_WRAP(1), EmuXB2PC_* conversion needed
-
-	//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
-
-	g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
-	g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
-	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
 
 	// update transfoms
 	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
@@ -1304,6 +1266,50 @@ void D3D_draw_state_update(NV2AState *d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationType = 0; // TODO or ignore?
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
+	}
+
+	// update other D3D states
+	// FIXME!! CxbxUpdateNativeD3DResources() calls XboxRenderStates.Apply() and XboxTextureStates.Apply() to apply Xbox D3D states to Host.
+	// so what we set to host here might be over write later. safer way is to update XboxTextureStates/XboxTextureStates and let CxbxUpdateNativeD3DResources() update them to host.
+	// only update state to host when we're in pushbuffer replay mode. other wise HLE shall handle the host update task.
+	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
+			// NV2A_FOG_PLANE?
+			// NV2A_SET_LINEAR_FOG_CONST?
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
+			// Unused : D3DRS_FOGVERTEXMODE
+		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
+		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
+		hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+
+	// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
+	// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
+
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, xtBool); // NV2A_NORMALIZE_ENABLE
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
+	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
+		g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv); // NV2A_TX_WRAP(0), EmuXB2PC_* conversion needed
+		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv); // NV2A_TX_WRAP(1), EmuXB2PC_* conversion needed
+
+		//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
+
+		g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+		g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+		g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
+
 	}
 	//assert(D3D_StreamZeroStride > 0);
 	CxbxUpdateNativeD3DResources();

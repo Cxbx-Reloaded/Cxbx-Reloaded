@@ -3457,7 +3457,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_8)(dword_xt Count, dword
 	return result;
 }
 
-
+extern DWORD NV2A_stateFlags;
 
 // ******************************************************************
 // * patch: D3DDevice_BeginPushBuffer
