@@ -80,7 +80,9 @@ extern void EmuKickOff(void);// in Direct3D9.cpp
 extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
 bool is_pushbuffer_recording(void)
 {
-	return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
+	//return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
+	extern xbox::dword_xt                  *g_pXbox_BeginPush_Buffer;
+	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
 }
 
 void backup_xbox_texture_state(void);

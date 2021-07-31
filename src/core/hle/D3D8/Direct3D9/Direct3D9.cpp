@@ -181,8 +181,11 @@ static xbox::X_D3DSurface           *g_pXbox_DepthStencil = xbox::zeroptr;
        xbox::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
 static xbox::dword_xt                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
 static xbox::dword_xt                  *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
-extern bool is_pushbuffer_recording(void);
-
+bool is_pushbuffer_recording(void)
+{
+	//return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
+	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
+}
        xbox::X_PixelShader*			g_pXbox_PixelShader = xbox::zeroptr;
 static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
 static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
@@ -5147,6 +5150,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 		LOG_FUNC_ARG(Z)
 		LOG_FUNC_ARG(Stencil)
 		LOG_FUNC_END;
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_Clear)(Count, pRects, Flags, Color, Z, Stencil);
+	}
 
 	DWORD HostFlags = 0;
 
