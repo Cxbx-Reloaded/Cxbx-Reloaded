@@ -2024,7 +2024,7 @@ int pgraph_handle_method(
 
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW0://done
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW1://done
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
+					NV2A_DirtyFlags|=X_D3DDIRTYFLAG_SPECFOG_COMBINER;
 					// set combiner specular fog dirty flag, so in pixel shader generation stage we could know whether NV097_SET_COMBINER_SPECULAR_FOG_CW0 and NV097_SET_COMBINER_SPECULAR_FOG_CW1 should be put in PSDef or not
 					// double check both either control dword is non-zero before setting the state flag
 					if(pg->KelvinPrimitive.SetCombinerSpecularFogCW0 != 0 || pg->KelvinPrimitive.SetCombinerSpecularFogCW1 != 0)
@@ -2058,7 +2058,7 @@ int pgraph_handle_method(
                     break;
                 }
 				case NV097_SET_LIGHT_CONTROL:
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_COLOR_MATERIAL: {//done
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_EMISSION,  //(pg->KelvinPrimitive.SetColorMaterial >> 0) & 3)
@@ -2069,13 +2069,13 @@ int pgraph_handle_method(
                     //	(arg0 >> 4) & 3);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_SPECULAR,  //(pg->KelvinPrimitive.SetColorMaterial >> 6) & 3
                     //	(arg0 >> 6) & 3);
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 }
 
                 case NV097_SET_FOG_MODE: {//done //pg->KelvinPrimitive.SetFogMode
                     /* FIXME: There is also NV_PGRAPH_CSV0_D_FOG_MODE */
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;
                     unsigned int mode;
                     switch (arg0) {
                     case NV097_SET_FOG_MODE_V_LINEAR:
@@ -2101,7 +2101,7 @@ int pgraph_handle_method(
                     break;
                 }
                 case NV097_SET_FOG_GEN_MODE: {//done //pg->KelvinPrimitive.SetFogGenMode
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;
                     unsigned int mode; 
                     switch (arg0) {
                     case NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA:
@@ -2131,7 +2131,7 @@ int pgraph_handle_method(
                     */
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_3 / 4], NV_PGRAPH_CONTROL_3_FOGENABLE,
                     //	arg0);
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;
 					break;
                 case NV097_SET_FOG_COLOR: {//done //pg->KelvinPrimitive.SetFogColor
                     break;
@@ -2168,7 +2168,7 @@ int pgraph_handle_method(
                 case NV097_SET_LIGHTING_ENABLE://done //pg->KelvinPrimitive.SetLightingEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_LIGHTING,
                     //	arg0);
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_POINT_PARAMS_ENABLE://done //pg->KelvinPrimitive.SetPointParamsEnable
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_POINTPARAMS;
@@ -2408,10 +2408,10 @@ int pgraph_handle_method(
                         face = NV097_SET_CULL_FACE_V_FRONT;
                         break;
                     }
-                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
-                    //	NV_PGRAPH_SETUPRASTER_CULLCTRL,
-                    //	face);
-                    pg->KelvinPrimitive.SetCullFace = face; // TODO : Postpone conversion (of NV097_SET_CULL_FACE_V_* into NV_PGRAPH_SETUPRASTER_CULLCTRL_* values) towards readout
+                    SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
+                    	NV_PGRAPH_SETUPRASTER_CULLCTRL,
+                    	face);
+                    //pg->KelvinPrimitive.SetCullFace = face; 
                     break;
                 }
                 case NV097_SET_FRONT_FACE: {//done //pg->KelvinPrimitive.SetFrontFace
@@ -2441,18 +2441,18 @@ int pgraph_handle_method(
 
                 CASE_3(NV097_SET_MATERIAL_EMISSION, 4)://done //pg->KelvinPrimitive.SetMaterialEmission[3]
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetMaterialEmission[slot]);
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_MATERIAL_ALPHA://done //pg->KelvinPrimitive.SetMaterialAlpha
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetMaterialAlpha);
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_SPECULAR_ENABLE : break;//done //pg->KelvinPrimitive.SetSpecularEnable
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_LIGHT_ENABLE_MASK://done //pg->KelvinPrimitive.SetLightEnableMask
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_LIGHTS, arg0);
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
 
                 CASE_4(NV097_SET_TEXGEN_S, 16) : {//done //pg->KelvinPrimitive.SetTexgen[2].S  {S,T,R,Q}
@@ -2499,7 +2499,7 @@ int pgraph_handle_method(
                 CASE_4(NV097_SET_TEXTURE_MATRIX_ENABLE, 4) ://done //pg->KelvinPrimitive.SetTextureMatrixEnable[4]
                     slot = (method - NV097_SET_TEXTURE_MATRIX_ENABLE) / 4;
                     //pg->texture_matrix_enable[slot] = arg0;
-				    pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_TEXTURE_TRANSFORM);
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
 				    break;
 
                 case NV097_SET_POINT_SIZE://done //pg->KelvinPrimitive.SetPointSize
@@ -2593,7 +2593,7 @@ int pgraph_handle_method(
                         //pg->vsh_constants_dirty[row] = true;
                     }
 					*/
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_TEXTURE_TRANSFORM);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
 					break;
                 }
                 /* Handles NV097_SET_TEXGEN_PLANE_S,T,R,Q */ //KelvinPrimitive.SetTexgenPlane[4]::{S[4],T[4],R[4],Q[4]}
@@ -2622,7 +2622,7 @@ int pgraph_handle_method(
                         //pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FOG_K][slot] = arg0;
                         //pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FOG_K] = true;
                     }
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_SPECFOG_COMBINER); 
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;
                     break;
 
                 case NV097_SET_TEXGEN_VIEW_MODEL://done //pg->KelvinPrimitive.SetTexgenViewModel
@@ -2649,7 +2649,7 @@ int pgraph_handle_method(
                         //pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         //pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
                     }
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
                     break;
 
                 case NV097_SET_SWATH_WIDTH://not implement //pg->KelvinPrimitive.SetSwathWidth
@@ -2666,7 +2666,7 @@ int pgraph_handle_method(
                         pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
                     }
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
 
                 CASE_4(NV097_SET_VIEWPORT_OFFSET, 4) ://done //pg->KelvinPrimitive.SetViewportOffset[4]
@@ -2838,7 +2838,7 @@ int pgraph_handle_method(
                         }
                     }
 					//not implement //pg->KelvinPrimitive.SetBackSceneAmbientColor[3]
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 }
                 /* Handles all the light source props except for NV097_SET_BACK_LIGHT_* */
@@ -2909,7 +2909,7 @@ int pgraph_handle_method(
                         }
 
                     }
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 }
             //this state is not implement yet. may not be used in xbox
@@ -3093,13 +3093,13 @@ int pgraph_handle_method(
                     break;
 				}
                 CASE_3(NV097_SET_BACK_SCENE_AMBIENT_COLOR,4)://not implement //pg->KelvinPrimitive.SetBackSceneAmbientColor[3]
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_BACK_MATERIAL_ALPHA://not implement //pg->KelvinPrimitive.SetBackMaterialAlpha
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;          
                 CASE_3(NV097_SET_BACK_MATERIAL_EMISSIONR,4)://not implement //pg->KelvinPrimitive.SetBackMaterialEmission[3]
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break; 
 
                 case NV097_SET_LOGIC_OP_ENABLE://done, not used //pg->KelvinPrimitive.SetLogicOpEnable
@@ -3113,7 +3113,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_TWO_SIDED_LIGHT_EN://not implement, D3D9 not support //pg->KelvinPrimitive.SetTwoSidedLightEn
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;  
 
                 case NV097_CLEAR_REPORT_VALUE://done //pg->KelvinPrimitive.ClearReportValue
@@ -3809,19 +3809,51 @@ int pgraph_handle_method(
 #   define NV097_SET_ZSTENCIL_CLEAR_VALUE                     0x00001D8C
 
 #endif
-                case NV097_SET_COLOR_CLEAR_VALUE:break;//done //pg->KelvinPrimitive.SetColorClearValue
+				// xbox d3d D3DDevice_Clear() calls NV097_SET_ZSTENCIL_CLEAR_VALUE with method count == 3, sets NV097_SET_ZSTENCIL_CLEAR_VALUE,NV097_SET_COLOR_CLEAR_VALUE, then trigger clear(). 
+				case NV097_SET_ZSTENCIL_CLEAR_VALUE://done //pg->KelvinPrimitive.SetZStencilClearValue
+					//popular method handler to NV097_SET_COLOR_CLEAR_VALUE if method count>1
+					if (method_count > 1) {
+						method_count -= 1;
+						argv += 1;
+						arg0 = argv[0];
+						method += (NV097_SET_COLOR_CLEAR_VALUE - NV097_SET_ZSTENCIL_CLEAR_VALUE);
+						goto SETCOLORCLEARVALUE;
+					}
+					break;
+				case NV097_SET_COLOR_CLEAR_VALUE://done //pg->KelvinPrimitive.SetColorClearValue
+					SETCOLORCLEARVALUE:
+					//populate method handler to NV097_CLEAR_SURFACE if method count>1
+					if (method_count > 1) {
+						method_count -= 1;
+						argv += 1;
+						arg0 = argv[0];
+						method += (NV097_CLEAR_SURFACE - NV097_SET_COLOR_CLEAR_VALUE);
+						goto CLEARSURFACE;
+					}
+					break;
 
                 case NV097_CLEAR_SURFACE: {//done //pg->KelvinPrimitive.ClearSurface
-                    //
-                    //pg->KelvinPrimitive.ClearSurface = arg0;
-                    if (pgraph_draw_clear != nullptr) {
-                        pgraph_draw_clear(d);
-                    }
+					CLEARSURFACE:
+					//NV097_CLEAR_SURFACE triggers NV2A to start clear right away.
+					// clear target Rect if we're in pushbuffer replay
+					if (pgraph_GetNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED)) {
+						// call pgraph_draw_state_update() to update all necessary d3d resources
+						if (pgraph_draw_state_update != nullptr) {
+							pgraph_draw_state_update(d);
+						}
+						// clear target Rect
+						if (pgraph_draw_clear != nullptr) {
+							pgraph_draw_clear(d);
+						}
+					}
                     break;
                 }
-
-                case NV097_SET_CLEAR_RECT_HORIZONTAL:break;//done //pg->KelvinPrimitive.SetClearRectHorizontal
-                case NV097_SET_CLEAR_RECT_VERTICAL:break;//done //pg->KelvinPrimitive.SetClearRectVertical
+                // xbox d3d clear() calls NV097_SET_CLEAR_RECT_HORIZONTAL with method count 2, set NV097_SET_CLEAR_RECT_HORIZONTAL and NV097_SET_CLEAR_RECT_VERTICAL.
+				// then calls NV097_SET_ZSTENCIL_CLEAR_VALUE with method count 3, sets NV097_SET_ZSTENCIL_CLEAR_VALUE,NV097_SET_COLOR_CLEAR_VALUE, then trigger clear(). 
+                case NV097_SET_CLEAR_RECT_HORIZONTAL://done //pg->KelvinPrimitive.SetClearRectHorizontal
+					break;
+                case NV097_SET_CLEAR_RECT_VERTICAL://done //pg->KelvinPrimitive.SetClearRectVertical
+					break;
 #if(0)
 #   define NV097_SET_BEGIN_PATCH0                             0x00001DE0
 #   define NV097_SET_BEGIN_PATCH1                             0x00001DE4
@@ -3839,7 +3871,7 @@ int pgraph_handle_method(
 				CASE_2(NV097_SET_SPECULAR_FOG_FACTOR,4):// [2]
 					break;
 				CASE_6(NV097_SET_BACK_SPECULAR_PARAMS,4)://[6]
-					pgraph_SetNV2AStateFlag(X_D3DDIRTYFLAG_LIGHTS);
+					NV2A_DirtyFlags|=X_D3DDIRTYFLAG_LIGHTS;
 					break;
 				CASE_8( NV097_SET_COMBINER_COLOR_OCW , 4):// [8]
 					break;
