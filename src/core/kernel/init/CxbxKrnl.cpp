@@ -1203,6 +1203,35 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 }
 #pragma optimize("", on)
 
+// Dump Xbe information
+// TODO: May need to relocate elsewhere, like in a log file than here.
+static void CxbxrLogDumpXbeInfo(Xbe::LibraryVersion* libVersionInfo)
+{
+	if (CxbxKrnl_Xbe != nullptr) {
+		EmuLogInit(LOG_LEVEL::INFO, "Title : %s", CxbxKrnl_Xbe->m_szAsciiTitle);
+	}
+
+	// Dump Xbe certificate
+	if (g_pCertificate != NULL) {
+		std::stringstream titleIdHex;
+		titleIdHex << std::hex << g_pCertificate->dwTitleId;
+
+		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID : %s", FormatTitleId(g_pCertificate->dwTitleId).c_str());
+		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID (Hex) : 0x%s", titleIdHex.str().c_str());
+		EmuLogInit(LOG_LEVEL::INFO, "XBE Version : 1.%02d", g_pCertificate->dwVersion);
+		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleName : %.40ls", g_pCertificate->wsTitleName);
+		EmuLogInit(LOG_LEVEL::INFO, "XBE Region : %s", CxbxKrnl_Xbe->GameRegionToString());
+	}
+
+	// Dump Xbe library build numbers
+	if (libVersionInfo != NULL) {
+		for (uint32_t v = 0; v < CxbxKrnl_XbeHeader->dwLibraryVersions; v++) {
+			EmuLogInit(LOG_LEVEL::INFO, "XBE Library %u : %.8s (version %d)", v, libVersionInfo->szName, libVersionInfo->wBuildVersion);
+			libVersionInfo++;
+		}
+	}
+}
+
 static __declspec(noreturn) void CxbxrKrnlInit
 (
 	void                   *pTLSData,
@@ -1367,33 +1396,7 @@ static __declspec(noreturn) void CxbxrKrnlInit
 		EmuLogInit(LOG_LEVEL::INFO, "XeImageFileName = %s", xbox::XeImageFileName.Buffer);
 	}
 
-	// Dump Xbe information
-	{
-		if (CxbxKrnl_Xbe != nullptr) {
-			EmuLogInit(LOG_LEVEL::INFO, "Title : %s", CxbxKrnl_Xbe->m_szAsciiTitle);
-		}
-
-		// Dump Xbe certificate
-		if (g_pCertificate != NULL) {
-			std::stringstream titleIdHex;
-			titleIdHex << std::hex << g_pCertificate->dwTitleId;
-
-			EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID : %s", FormatTitleId(g_pCertificate->dwTitleId).c_str());
-			EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID (Hex) : 0x%s", titleIdHex.str().c_str());
-			EmuLogInit(LOG_LEVEL::INFO, "XBE Version : 1.%02d", g_pCertificate->dwVersion);
-			EmuLogInit(LOG_LEVEL::INFO, "XBE TitleName : %.40ls", g_pCertificate->wsTitleName);
-			EmuLogInit(LOG_LEVEL::INFO, "XBE Region : %s", CxbxKrnl_Xbe->GameRegionToString());
-		}
-
-		// Dump Xbe library build numbers
-		Xbe::LibraryVersion* libVersionInfo = pLibraryVersion;// (LibraryVersion *)(CxbxKrnl_XbeHeader->dwLibraryVersionsAddr);
-		if (libVersionInfo != NULL) {
-			for (uint32_t v = 0; v < CxbxKrnl_XbeHeader->dwLibraryVersions; v++) {
-				EmuLogInit(LOG_LEVEL::INFO, "XBE Library %u : %.8s (version %d)", v, libVersionInfo->szName, libVersionInfo->wBuildVersion);
-				libVersionInfo++;
-			}
-		}
-	}
+	CxbxrLogDumpXbeInfo(pLibraryVersion);
 
 	CxbxKrnlRegisterThread(GetCurrentThread());
 
