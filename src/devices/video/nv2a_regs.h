@@ -1193,6 +1193,16 @@
 #       define NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE            (1 << 16)
 #       define NV097_SET_CONTROL0_COLOR_SPACE_CONVERT             (0xF << 28)
 #   define NV097_SET_LIGHT_CONTROL                            0x00000294
+#        define NV097_SET_LIGHT_CONTROL_LOCALEYE                                    0x00010000
+#        define NV097_SET_LIGHT_CONTROL_LOCALEYE_FALSE                              0x00000000
+#        define NV097_SET_LIGHT_CONTROL_LOCALEYE_TRUE                               0x00000001<<16
+#        define NV097_SET_LIGHT_CONTROL_SOUT                                        0xFFFE0000    
+#        define NV097_SET_LIGHT_CONTROL_SOUT_ZERO_OUT                               0x00000000
+#        define NV097_SET_LIGHT_CONTROL_SOUT_PASSTHROUGH                            0x00000001<<17
+#        define NV097_SET_LIGHT_CONTROL_SEPARATE_SPECULAR_EN                        0x00000001
+#        define NV097_SET_LIGHT_CONTROL_SEPARATE_SPECULAR_EN_FALSE                  0x00000000
+#        define NV097_SET_LIGHT_CONTROL_SEPARATE_SPECULAR_EN_TRUE                   0x00000001
+
 #   define NV097_SET_COLOR_MATERIAL                           0x00000298
 #   define NV097_SET_FOG_MODE                                 0x0000029C
 #       define NV097_SET_FOG_MODE_V_LINEAR                        0x2601
