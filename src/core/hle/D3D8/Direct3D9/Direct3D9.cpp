@@ -181,10 +181,7 @@ static xbox::X_D3DSurface           *g_pXbox_DepthStencil = xbox::zeroptr;
        xbox::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
 static xbox::dword_xt                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
 static xbox::dword_xt                  *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
-bool is_pushbuffer_recording(void)
-{
-	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
-}
+extern bool is_pushbuffer_recording(void);
 
        xbox::X_PixelShader*			g_pXbox_PixelShader = xbox::zeroptr;
 static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
