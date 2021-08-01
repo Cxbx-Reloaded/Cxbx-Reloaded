@@ -148,7 +148,7 @@ extern void ExecuteDpcQueue();
 void KiUnexpectedInterrupt()
 {
 	xbox::KeBugCheck(TRAP_CAUSE_UNKNOWN); // see
-	CxbxKrnlCleanup("Unexpected Software Interrupt!");
+	CxbxrKrnlAbort("Unexpected Software Interrupt!");
 }
 
 void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql)

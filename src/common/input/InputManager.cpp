@@ -96,7 +96,7 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 	lck.unlock();
 
 	if (Sdl::InitStatus < 0 || XInput::InitStatus < 0 || RawInput::InitStatus < 0) {
-		CxbxKrnlCleanup("Failed to initialize input subsystem! Consult debug log for more information");
+		CxbxrKrnlAbort("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
 	UpdateOpt(is_gui);

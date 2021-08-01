@@ -581,7 +581,7 @@ static void CxbxrKrnlSetupMemorySystem(int BootFlags, unsigned emulate_system, u
 	blocks_reserved_t blocks_reserved_gui = { 0 };
 	// Reserve console system's memory ranges before start initialize.
 	if (!ReserveAddressRanges(emulate_system, blocks_reserved_gui)) {
-		CxbxKrnlCleanup("Failed to reserve required memory ranges!", GetLastError());
+		CxbxrKrnlAbort("Failed to reserve required memory ranges!", GetLastError());
 	}
 	// Initialize the memory manager
 	g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved_gui);
@@ -649,20 +649,20 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 
 		std::string chihiroMediaBoardRom = g_DataFilePath + "/EmuDisk/" + MediaBoardRomFile;
 		if (!std::filesystem::exists(chihiroMediaBoardRom)) {
-			CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
+			CxbxrKrnlAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
 		}
 
 		// Open a handle to the mediaboard rom
 		FILE* fpRom = fopen(chihiroMediaBoardRom.c_str(), "rb");
 		if (fpRom == nullptr) {
-			CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not opened for read");
+			CxbxrKrnlAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not opened for read");
 		}
 
 		// Verify the size of media board rom
 		fseek(fpRom, 0, SEEK_END);
 		auto length = ftell(fpRom);
 		if (length != 2 * ONE_MB) {
-			CxbxKrnlCleanup("Chihiro Media Board ROM (fpr21042_m29w160et.bin) has an invalid size");
+			CxbxrKrnlAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) has an invalid size");
 
 		}
 		fseek(fpRom, 0, SEEK_SET);
@@ -675,14 +675,14 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 			FILE* fpSegaBootOld = fopen(chihiroSegaBootOld.c_str(), "wb");
 			FILE* fpSegaBootNew = fopen(chihiroSegaBootNew.c_str(), "wb");
 			if (fpSegaBootNew == nullptr || fpSegaBootOld == nullptr) {
-				CxbxKrnlCleanup("Could not open SEGABOOT for writing");
+				CxbxrKrnlAbort("Could not open SEGABOOT for writing");
 
 			}
 
 			// Extract SEGABOOT (Old)
 			void* buffer = malloc(ONE_MB);
 			if (buffer == nullptr) {
-				CxbxKrnlCleanup("Could not allocate buffer for SEGABOOT");
+				CxbxrKrnlAbort("Could not allocate buffer for SEGABOOT");
 
 			}
 
@@ -714,7 +714,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 	CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 	if (CxbxKrnl_Xbe->HasFatalError()) {
-		CxbxKrnlCleanup(CxbxKrnl_Xbe->GetError().c_str());
+		CxbxrKrnlAbort(CxbxKrnl_Xbe->GetError().c_str());
 		return false;
 	}
 
@@ -770,7 +770,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 	}
 	// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
 	else {
-		CxbxKrnlCleanup("Unable to emulate system type due to host is not able to reserve required memory ranges.");
+		CxbxrKrnlAbort("Unable to emulate system type due to host is not able to reserve required memory ranges.");
 		return false;
 	}
 	// Clear emulation system from reserved systems to be free.
@@ -795,7 +795,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 	}
 #else
 	if (g_bIsChihiro) {
-		CxbxKrnlCleanup("Emulating Chihiro mode does not work yet. Please use different title to emulate.");
+		CxbxrKrnlAbort("Emulating Chihiro mode does not work yet. Please use different title to emulate.");
 	}
 #endif
 
@@ -835,7 +835,7 @@ static size_t CxbxrKrnlGetRelativePath(std::filesystem::path& get_relative_path)
 	// Then we must obey the current directory it asked for.
 	if (lastFind != std::string::npos) {
 		if (relative_path.find(';', lastFind + 1) != std::string::npos) {
-			CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Cannot contain multiple of ; symbol.");
+			CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Cannot contain multiple of ; symbol.");
 		}
 		relative_path = relative_path.substr(0, lastFind);
 	}
@@ -1491,7 +1491,7 @@ static __declspec(noreturn) void CxbxrKrnlInit
 	InitXboxThread();
 	g_AffinityPolicy->SetAffinityXbox();
 	if (!xbox::ObInitSystem()) {
-		// TODO: Replace EmuLogEx to CxbxKrnlCleanupEx when ObInitSystem's calls are properly implement.
+		// TODO: Replace EmuLogEx to CxbxrKrnlAbortEx when ObInitSystem's calls are properly implement.
 		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::WARNING, "Unable to intialize xbox::ObInitSystem.");
 	}
 	xbox::KiInitSystem();
@@ -1537,7 +1537,7 @@ static __declspec(noreturn) void CxbxrKrnlInit
 	}
 };*/
 
-__declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
+__declspec(noreturn) void CxbxrKrnlAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
 {
     g_bEmuException = true;
 
@@ -1705,13 +1705,13 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 		xbox::ExSaveNonVolatileSetting(xbox::XC_MAX_ALL, Type, &Eeprom, sizeof(Eeprom));
 	}
 	else {
-		CxbxKrnlCleanup("Could not display the fatal error screen");
+		CxbxrKrnlAbort("Could not display the fatal error screen");
 	}
 
 	if (g_bIsChihiro)
 	{
 		// The Chihiro doesn't display the UEM
-		CxbxKrnlCleanup("The running Chihiro xbe has encountered a fatal error and needs to close");
+		CxbxrKrnlAbort("The running Chihiro xbe has encountered a fatal error and needs to close");
 	}
 
 	g_CxbxFatalErrorCode = ErrorCode;
@@ -1766,5 +1766,5 @@ __declspec(noreturn) void CxbxKrnlTerminateThread()
 
 void CxbxKrnlPanic()
 {
-    CxbxKrnlCleanup("Kernel Panic!");
+    CxbxrKrnlAbort("Kernel Panic!");
 }

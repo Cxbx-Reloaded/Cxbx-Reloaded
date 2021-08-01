@@ -31,7 +31,7 @@ static inline void CxbxResolveHostToFullPath(std::filesystem::path& file_path, s
 	std::error_code error;
 	std::filesystem::path sanityPath = std::filesystem::canonical(file_path, error);
 	if (error.value() != 0) {
-		CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s", finish_error_sentence.data(), file_path.string().c_str());
+		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s", finish_error_sentence.data(), file_path.string().c_str());
 	}
 	file_path = sanityPath;
 }
@@ -57,14 +57,14 @@ void CxbxrInitFilePaths()
 	// Make sure our data folder exists :
 	bool result = std::filesystem::exists(g_DataFilePath);
 	if (!result && !std::filesystem::create_directory(g_DataFilePath)) {
-		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded's data folder!", __func__);
+		CxbxrKrnlAbort("%s : Couldn't create Cxbx-Reloaded's data folder!", __func__);
 	}
 
 	// Make sure the EmuDisk folder exists
 	g_DiskBasePath = g_DataFilePath + "\\EmuDisk";
 	result = std::filesystem::exists(g_DiskBasePath);
 	if (!result && !std::filesystem::create_directory(g_DiskBasePath)) {
-		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
+		CxbxrKrnlAbort("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
 	}
 	CxbxResolveHostToFullPath(g_DiskBasePath, "Cxbx-Reloaded's EmuDisk directory");
 	g_DiskBasePath = std::filesystem::path(g_DiskBasePath).append("").string();
@@ -73,7 +73,7 @@ void CxbxrInitFilePaths()
 	g_MuBasePath = g_DataFilePath + "\\EmuMu";
 	result = std::filesystem::exists(g_MuBasePath);
 	if (!result && !std::filesystem::create_directory(g_MuBasePath)) {
-		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuMu folder!", __func__);
+		CxbxrKrnlAbort("%s : Couldn't create Cxbx-Reloaded EmuMu folder!", __func__);
 	}
 	CxbxResolveHostToFullPath(g_MuBasePath, "Cxbx-Reloaded's EmuMu directory");
 	g_MuBasePath = std::filesystem::path(g_MuBasePath).append("").string();
@@ -125,7 +125,7 @@ static bool CxbxLockFilePath()
 	std::stringstream filePathHash("Local\\");
 	uint64_t hashValue = XXH3_64bits(g_DataFilePath.c_str(), g_DataFilePath.length() + 1);
 	if (!hashValue) {
-		CxbxKrnlCleanup("%s : Couldn't generate Cxbx-Reloaded's data folder hash!", __func__);
+		CxbxrKrnlAbort("%s : Couldn't generate Cxbx-Reloaded's data folder hash!", __func__);
 	}
 
 	filePathHash << std::hex << hashValue;

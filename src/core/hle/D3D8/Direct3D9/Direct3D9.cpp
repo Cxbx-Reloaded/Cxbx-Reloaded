@@ -862,7 +862,7 @@ inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 		// assert(false); // Fixup's are not allowed to be registered
 		break;
 	default:
-		CxbxKrnlCleanup("Unhandled resource type");
+		CxbxrKrnlAbort("Unhandled resource type");
 	}
 
 	return false;
@@ -1695,7 +1695,7 @@ void EmuD3DInit()
     {
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         if(FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &g_pDirect3D)))
-            CxbxKrnlCleanup("Could not initialize Direct3D8!");
+            CxbxrKrnlAbort("Could not initialize Direct3D8!");
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
 
@@ -1799,14 +1799,14 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
         {
             if(bRet == -1)
             {
-                CxbxKrnlCleanup("GetMessage failed!");
+                CxbxrKrnlAbort("GetMessage failed!");
             }
 
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
 
-        CxbxKrnlCleanup(nullptr);
+        CxbxrKrnlAbort(nullptr);
     }
 
     return 0;
@@ -2048,7 +2048,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 case SIZE_MINIMIZED:
                 {
                     if(g_XBVideo.bFullScreen)
-                        CxbxKrnlCleanup(nullptr);
+                        CxbxrKrnlAbort(nullptr);
 
                     if(!g_bEmuSuspended)
                     {
@@ -2477,7 +2477,7 @@ static void CreateDefaultD3D9Device
     DEBUG_D3DRESULT(hr, "IDirect3D::CreateDeviceEx");
 
     if(FAILED(hr))
-        CxbxKrnlCleanup("IDirect3D::CreateDeviceEx failed");
+        CxbxrKrnlAbort("IDirect3D::CreateDeviceEx failed");
 
     // Which texture formats does this device support?
     DetermineSupportedD3DFormats();
@@ -2794,7 +2794,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	if (CacheEntry.pHostIndexBuffer == nullptr) {
 		CacheEntry.pHostIndexBuffer = CxbxCreateIndexBuffer(RequiredIndexCount);
 		if (!CacheEntry.pHostIndexBuffer)
-			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
+			CxbxrKrnlAbort("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
 	}
 
 	// TODO : Speeds this up, perhaps by hashing less often, and/or by
@@ -2813,7 +2813,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 		HRESULT hRet = CacheEntry.pHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
 		DEBUG_D3DRESULT(hRet, "CacheEntry.pHostIndexBuffer->Lock");
 		if (pHostIndexBufferData == nullptr) {
-			CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
+			CxbxrKrnlAbort("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
 
 		// Determine highest and lowest index in use :
@@ -2837,7 +2837,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
-		CxbxKrnlCleanup("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
+		CxbxrKrnlAbort("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 
 	return CacheEntry;
 }
@@ -2850,13 +2850,13 @@ void UpdateHostBackBufferDesc()
         0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 
     if (hRet != D3D_OK) {
-        CxbxKrnlCleanup("Unable to get host backbuffer surface");
+        CxbxrKrnlAbort("Unable to get host backbuffer surface");
     }
 
     hRet = pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
     if (hRet != D3D_OK) {
         pCurrentHostBackBuffer->Release();
-        CxbxKrnlCleanup("Unable to determine host backbuffer dimensions");
+        CxbxrKrnlAbort("Unable to determine host backbuffer dimensions");
     }
 
     pCurrentHostBackBuffer->Release();
@@ -3024,11 +3024,11 @@ void Direct3D_CreateDevice_Start
     CxbxVertexShaderSetFlags();
 
     if (!XboxRenderStates.Init()) {
-        CxbxKrnlCleanup("Failed to init XboxRenderStates");
+        CxbxrKrnlAbort("Failed to init XboxRenderStates");
     }
 
     if (!XboxTextureStates.Init(&XboxRenderStates)) {
-        CxbxKrnlCleanup("Failed to init XboxTextureStates");
+        CxbxrKrnlAbort("Failed to init XboxTextureStates");
     }
 
 	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
@@ -3082,7 +3082,7 @@ void Direct3D_CreateDevice_End
         // At this point, g_pXbox_BackBufferSurface should now point to a valid render target
         // if it still doesn't, we cannot continue without crashing at draw time
         if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
-            CxbxKrnlCleanup("Unable to determine default Xbox backbuffer");
+            CxbxrKrnlAbort("Unable to determine default Xbox backbuffer");
         }
 
         // Set the backbuffer as the initial rendertarget
@@ -4045,7 +4045,7 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet))
-		CxbxKrnlCleanup("Unable to retrieve back buffer");
+		CxbxrKrnlAbort("Unable to retrieve back buffer");
 
 	SetHostSurface(pXboxBackBuffer, pCurrentHostBackBuffer); // No iTextureStage!
 
@@ -4068,7 +4068,7 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 
 	// Now pXboxBackbuffer points to the requested Xbox backbuffer
 	if (pXboxBackBuffer == nullptr) {
-		CxbxKrnlCleanup("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
+		CxbxrKrnlAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
 	}
 
 
@@ -5744,7 +5744,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					PCFormat = D3DFMT_A8R8G8B8;
 				} else {
 					// Otherwise, use a best matching format
-					/*CxbxKrnlCleanup*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
+					/*CxbxrKrnlAbort*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
 					PCFormat = EmuXB2PC_D3DFormat(X_Format);
 				}
 			}
@@ -5872,7 +5872,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// If the fallback failed, show an error and exit execution.
 			if (hRet != D3D_OK) {
 				// We cannot safely continue in this state.
-				CxbxKrnlCleanup("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
+				CxbxrKrnlAbort("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
@@ -5940,7 +5940,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 
 			if (hRet != D3D_OK) {
-				CxbxKrnlCleanup("CreateTexture Failed!\n\n"
+				CxbxrKrnlAbort("CreateTexture Failed!\n\n"
 					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, hostWidth, hostHeight);
 			}
 
@@ -5966,7 +5966,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
             }
 
 			if (hRet != D3D_OK) {
-				CxbxKrnlCleanup("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
+				CxbxrKrnlAbort("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
@@ -5995,7 +5995,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
             }
 
 			if (hRet != D3D_OK) {
-				CxbxKrnlCleanup("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
+				CxbxrKrnlAbort("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
@@ -6125,7 +6125,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 							pDst, dwDstRowPitch, dwDstSlicePitch,
 							pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
 							iTextureStage)) {
-							CxbxKrnlCleanup("Unhandled conversion!");
+							CxbxrKrnlAbort("Unhandled conversion!");
 						}
 					}
 				}
@@ -6553,7 +6553,7 @@ void UpdateFixedFunctionVertexShaderState()
 	auto hRet = g_pD3DDevice->SetVertexShaderConstantF(0, (float*)&ffShaderState, fixedFunctionStateSize);
 
 	if (FAILED(hRet)) {
-		CxbxKrnlCleanup("Failed to write fixed-function HLSL state");
+		CxbxrKrnlAbort("Failed to write fixed-function HLSL state");
 	}
 }
 
@@ -7163,14 +7163,14 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 		// Create a new native index buffer of the above determined size :
 		g_pQuadToTriangleHostIndexBuffer = CxbxCreateIndexBuffer(NrOfTriangleIndices);
 		if (g_pQuadToTriangleHostIndexBuffer == nullptr)
-			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
+			CxbxrKrnlAbort("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
 
 		// Put quadlist-to-triangle-list index mappings into this buffer :
 		INDEX16* pHostIndexBufferData = nullptr;
 		hRet = g_pQuadToTriangleHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
 		DEBUG_D3DRESULT(hRet, "g_pQuadToTriangleHostIndexBuffer->Lock");
 		if (pHostIndexBufferData == nullptr)
-			CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
+			CxbxrKrnlAbort("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
 
 		memcpy(pHostIndexBufferData, CxbxAssureQuadListIndexData(NrOfQuadIndices), NrOfTriangleIndices * sizeof(INDEX16));
 
@@ -7182,7 +7182,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
-		CxbxKrnlCleanup("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
+		CxbxrKrnlAbort("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
 }
 
 // TODO : Move to own file
@@ -7196,7 +7196,7 @@ void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex)
 	if (g_pClosingLineLoopHostIndexBuffer == nullptr) {
 		g_pClosingLineLoopHostIndexBuffer = CxbxCreateIndexBuffer(VERTICES_PER_LINE);
 		if (g_pClosingLineLoopHostIndexBuffer == nullptr)
-			CxbxKrnlCleanup("Unable to create g_pClosingLineLoopHostIndexBuffer for D3DPT_LINELOOP emulation");
+			CxbxrKrnlAbort("Unable to create g_pClosingLineLoopHostIndexBuffer for D3DPT_LINELOOP emulation");
 	}
 
 	INDEX16 *pCxbxClosingLineLoopIndexBufferData = nullptr;

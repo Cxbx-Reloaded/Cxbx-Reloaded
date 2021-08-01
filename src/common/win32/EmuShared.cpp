@@ -84,7 +84,7 @@ bool EmuShared::Init(long long sessionID)
         );
 
         if(hMapObject == NULL)
-            return false; // CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
+            return false; // CxbxrKrnlAbortEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
             bRequireConstruction = false;
@@ -105,7 +105,7 @@ bool EmuShared::Init(long long sessionID)
 
         if (g_EmuShared == nullptr) {
             CloseHandle(hMapObject);
-            return false; // CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
+            return false; // CxbxrKrnlAbortEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
         }
     }
 

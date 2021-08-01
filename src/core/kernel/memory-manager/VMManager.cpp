@@ -104,7 +104,7 @@ void VMManager::Initialize(unsigned int SystemType, int BootFlags, blocks_reserv
 	for (int i = 0; i < 64; i++) {
 		LPVOID ret = VirtualAlloc((LPVOID)(PAGE_TABLES_BASE + i * m_AllocationGranularity), m_AllocationGranularity, MEM_COMMIT, PAGE_READWRITE);
 		if (ret != (LPVOID)(PAGE_TABLES_BASE + i * KiB(64))) {
-			CxbxKrnlCleanup("VirtualAlloc failed to commit the memory for the page tables. The error was 0x%08X", GetLastError());
+			CxbxrKrnlAbort("VirtualAlloc failed to commit the memory for the page tables. The error was 0x%08X", GetLastError());
 		}
 	}
 
@@ -293,14 +293,14 @@ void VMManager::InitializeSystemAllocations()
 void VMManager::GetPersistentMemory()
 {
 	if (m_PersistentMemoryHandle != nullptr) {
-		CxbxKrnlCleanup("Persistent memory is already opened!");
+		CxbxrKrnlAbort("Persistent memory is already opened!");
 		return;
 	}
 
 	std::string persisted_mem_sid = str_persistent_memory_s + std::to_string(cli_config::GetSessionID());
 	m_PersistentMemoryHandle = OpenFileMapping(FILE_MAP_READ, FALSE, persisted_mem_sid.c_str());
 	if (m_PersistentMemoryHandle == nullptr) {
-		CxbxKrnlCleanup("Couldn't open persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
+		CxbxrKrnlAbort("Couldn't open persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
 		return;
 	}
 }
@@ -308,13 +308,13 @@ void VMManager::GetPersistentMemory()
 void VMManager::RestorePersistentMemory()
 {
 	if (m_PersistentMemoryHandle == nullptr) {
-		CxbxKrnlCleanup("Persistent memory is not open!");
+		CxbxrKrnlAbort("Persistent memory is not open!");
 		return;
 	}
 
 	PersistedMemory* persisted_mem = (PersistedMemory*)MapViewOfFile(m_PersistentMemoryHandle, FILE_MAP_READ, 0, 0, 0);
 	if (persisted_mem == nullptr) {
-		CxbxKrnlCleanup("Couldn't restore persistent memory! MapViewOfFile failed with error 0x%08X", GetLastError());
+		CxbxrKrnlAbort("Couldn't restore persistent memory! MapViewOfFile failed with error 0x%08X", GetLastError());
 		return;
 	}
 
@@ -457,12 +457,12 @@ void VMManager::SavePersistentMemory()
 	std::string persistent_mem_sid = str_persistent_memory_s + std::to_string(cli_config::GetSessionID());
 	m_PersistentMemoryHandle = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, num_persisted_ptes * PAGE_SIZE + num_persisted_ptes * 4 * 2 + sizeof(PersistedMemory), persistent_mem_sid.c_str());
 	if (m_PersistentMemoryHandle == NULL) {
-		CxbxKrnlCleanup("Couldn't persist memory! CreateFileMapping failed with error 0x%08X", GetLastError());
+		CxbxrKrnlAbort("Couldn't persist memory! CreateFileMapping failed with error 0x%08X", GetLastError());
 		return;
 	}
 	addr = MapViewOfFile(m_PersistentMemoryHandle, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
 	if (addr == nullptr) {
-		CxbxKrnlCleanup("Couldn't persist memory! MapViewOfFile failed with error 0x%08X", GetLastError());
+		CxbxrKrnlAbort("Couldn't persist memory! MapViewOfFile failed with error 0x%08X", GetLastError());
 		return;
 	}
 

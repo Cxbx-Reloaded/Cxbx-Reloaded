@@ -486,7 +486,7 @@ void USBDevice::USB_PacketCopy(USBPacket* p, void* ptr, size_t bytes)
 			IoVecFromBuffer(iov->IoVecStruct, iov->IoVecNumber, p->ActualLength, ptr, bytes);
 			break;
 		default:
-			CxbxKrnlCleanup("%s has an invalid pid: %x\n", __func__, p->Pid);
+			CxbxrKrnlAbort("%s has an invalid pid: %x\n", __func__, p->Pid);
 	}
 	p->ActualLength += bytes;
 }

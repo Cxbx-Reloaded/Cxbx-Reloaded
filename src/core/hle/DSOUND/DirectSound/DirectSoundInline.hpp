@@ -274,7 +274,7 @@ static inline void GeneratePCMFormat(
         }
 
         if (DSBufferDesc.lpwfxFormat == nullptr) {
-            CxbxKrnlCleanup("Unable to allocate DSBufferDesc.Xb_lpwfxFormat");
+            CxbxrKrnlAbort("Unable to allocate DSBufferDesc.Xb_lpwfxFormat");
         }
 
         if (Xb_lpwfxFormat != xbox::zeroptr) {
@@ -358,7 +358,7 @@ static inline void DSoundGenericUnlock(
         HRESULT hRet = pDSBuffer->Unlock(Host_lock.pLockPtr1, Host_lock.dwLockBytes1, Host_lock.pLockPtr2, Host_lock.dwLockBytes2);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("DirectSoundBuffer Unlock Failed!");
+            CxbxrKrnlAbort("DirectSoundBuffer Unlock Failed!");
         }
 
         Host_lock.pLockPtr1 = nullptr;
@@ -485,7 +485,7 @@ static inline void DSoundBufferRelease(
     if (pDS3DBuffer != nullptr) {
         refCount = pDS3DBuffer->Release();
         if (refCount > 0) {
-            CxbxKrnlCleanup("Nope, wasn't fully cleaned up.");
+            CxbxrKrnlAbort("Nope, wasn't fully cleaned up.");
         }
     }
 
@@ -554,7 +554,7 @@ static inline void DSoundBufferResizeUpdate(
     hRet = pThis->EmuDirectSoundBuffer8->Lock(0, 0, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
                                               nullptr, nullptr, DSBLOCK_ENTIREBUFFER);
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to lock region buffer!");
+        CxbxrKrnlAbort("Unable to lock region buffer!");
     }
     DSoundGenericUnlock(pThis->EmuFlags,
                         pThis->EmuDirectSoundBuffer8,
@@ -630,7 +630,7 @@ static inline void DSoundBufferRegenWithNewFormat(
     HRESULT hRet = pDSBuffer->GetStatus(&dwStatus);
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current status for replace DS buffer!");
+        CxbxrKrnlAbort("Unable to retrieve current status for replace DS buffer!");
     }
 
     pDSBuffer->Stop();
@@ -638,7 +638,7 @@ static inline void DSoundBufferRegenWithNewFormat(
     hRet = pDSBuffer->GetCurrentPosition(&dwPlayCursor, nullptr);
 
     if (hRet != DS_OK) {
-        CxbxKrnlCleanup("Unable to retrieve current position for replace DS buffer!");
+        CxbxrKrnlAbort("Unable to retrieve current position for replace DS buffer!");
     }
 
     // TODO: Untested if transfer buffer to new audio buffer is necessary.
@@ -922,7 +922,7 @@ static inline HRESULT HybridDirectSoundBuffer_Play(
 {
 
     if (dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART | X_DSBPLAY_SYNCHPLAYBACK)) {
-        CxbxKrnlCleanup("Unsupported Playing Flags");
+        CxbxrKrnlAbort("Unsupported Playing Flags");
     }
     // rewind buffer
     if ((dwFlags & X_DSBPLAY_FROMSTART)) {

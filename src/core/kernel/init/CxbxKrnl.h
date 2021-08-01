@@ -147,9 +147,9 @@ bool HandleFirstLaunch();
 void CxbxKrnlEmulate(unsigned int system, blocks_reserved_t blocks_reserved);
 
 /*! cleanup emulation */
-__declspec(noreturn) void CxbxKrnlCleanupEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
+__declspec(noreturn) void CxbxrKrnlAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
 
-#define CxbxKrnlCleanup(fmt, ...) CxbxKrnlCleanupEx(LOG_PREFIX, fmt, ##__VA_ARGS__)
+#define CxbxrKrnlAbort(fmt, ...) CxbxrKrnlAbortEx(LOG_PREFIX, fmt, ##__VA_ARGS__)
 
 /*! register a thread handle */
 void CxbxKrnlRegisterThread(HANDLE hThread);
