@@ -370,7 +370,7 @@ void SetupXboxDeviceTypes()
 
 			// Sanity check: Where all these device offsets within Xbox memory
 			if ((deviceTableStartOffset >= g_SystemMaxMemory) || (deviceTableEndOffset >= g_SystemMaxMemory)) {
-				CxbxKrnlCleanup("DeviceTable Location is outside of Xbox Memory range");
+				CxbxrKrnlAbort("DeviceTable Location is outside of Xbox Memory range");
 			}
 
 			// Iterate through the table until we find gamepad
@@ -903,7 +903,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
     {
 		// I honestly don't expect this to happen, but if it does...
         if(g_iThreadNotificationCount >= 16)
-			CxbxKrnlCleanup("Too many thread notification routines installed\n");
+			CxbxrKrnlAbort("Too many thread notification routines installed\n");
 
 		// Find an empty spot in the thread notification array
 		for(int i = 0; i < 16; i++)
@@ -1141,7 +1141,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XLaunchNewImageA)
 				// Other options include LDT_NONE, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
 			}
 			else
-				CxbxKrnlCleanup("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
+				CxbxrKrnlAbort("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
 		}
 
 		strncpy(&(xbox::LaunchDataPage->Header.szLaunchPath[0]), lpTitlePath, 520);

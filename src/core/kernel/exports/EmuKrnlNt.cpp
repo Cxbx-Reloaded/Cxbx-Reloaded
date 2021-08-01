@@ -39,7 +39,7 @@ namespace NtDll
 #include "core\kernel\support\EmuNtDll.h"
 };
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
@@ -1099,7 +1099,7 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 	NTSTATUS ret;
 
 	if (FileInformationClass != FileDirectoryInformation)   // Due to unicode->string conversion
-		CxbxKrnlCleanup("Unsupported FileInformationClass");
+		CxbxrKrnlAbort("Unsupported FileInformationClass");
 
 	NtDll::UNICODE_STRING NtFileMask;
 

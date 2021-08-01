@@ -20,7 +20,7 @@ bool ImGuiUI::Initialize()
 	IMGUI_CHECKVERSION();
 	m_imgui_context = ImGui::CreateContext();
 	if (!m_imgui_context) {
-		CxbxKrnlCleanup("Unable to create ImGui context!");
+		CxbxrKrnlAbort("Unable to create ImGui context!");
 		return false;
 	}
 
@@ -61,7 +61,7 @@ void ImGuiUI::Shutdown()
 	size_t ini_size = IMGUI_INI_SIZE_MAX;
 	const char* temp_ini_settings = ImGui::SaveIniSettingsToMemory(&ini_size);
 	if (ini_size > IMGUI_INI_SIZE_MAX) {
-		CxbxKrnlCleanup("ImGui ini settings is too large: %d > %d (IMGUI_INI_SIZE_MAX)", ini_size, IMGUI_INI_SIZE_MAX);
+		CxbxrKrnlAbort("ImGui ini settings is too large: %d > %d (IMGUI_INI_SIZE_MAX)", ini_size, IMGUI_INI_SIZE_MAX);
 	}
 	g_EmuShared->SetImGuiIniSettings(temp_ini_settings);
 	g_EmuShared->SetOverlaySettings(&m_settings);

@@ -1139,7 +1139,7 @@ void CxbxReserveNV2AMemory(NV2AState *d)
 	for (int i = 0; i < 16; i++) {
 		LPVOID ret = VirtualAlloc((LPVOID)(NV2A_ADDR + NV_PRAMIN_ADDR + i * 64 * ONE_KB), 64 * ONE_KB, MEM_COMMIT, PAGE_READWRITE);
 		if (ret != (LPVOID)(NV2A_ADDR + NV_PRAMIN_ADDR + i * 64 * ONE_KB)) {
-			CxbxKrnlCleanup("VirtualAlloc failed to commit the memory for the nv2a pramin. The error was 0x%08X", GetLastError());
+			CxbxrKrnlAbort("VirtualAlloc failed to commit the memory for the nv2a pramin. The error was 0x%08X", GetLastError());
 		}
 	}
 

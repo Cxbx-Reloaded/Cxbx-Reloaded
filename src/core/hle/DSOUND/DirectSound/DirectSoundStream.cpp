@@ -222,7 +222,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreateStream)
 
         hRet = xbox::EMUPATCH(DirectSoundCreate)(nullptr, &g_pDSound8, nullptr);
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Unable to initialize DirectSound!");
+            CxbxrKrnlAbort("Unable to initialize DirectSound!");
         }
     }
 
@@ -299,7 +299,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreateStream)
             EmuLog(LOG_LEVEL::WARNING, output.str().c_str());
             output.str("");
             output << static_cast<DS_RESULT>(hRet);
-            CxbxKrnlCleanup("DSS: DSoundBufferCreate error: %s", output.str().c_str());
+            CxbxrKrnlAbort("DSS: DSoundBufferCreate error: %s", output.str().c_str());
         }
         else {
             if (DSBufferDesc.dwFlags & DSBCAPS_CTRL3D) {

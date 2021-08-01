@@ -574,7 +574,7 @@ namespace XboxVertexShaderDecoder
 		}
 
 		if (pShader->Instructions.size() >= VSH_MAX_INTERMEDIATE_COUNT) {
-			CxbxKrnlCleanup("Shader exceeds conversion buffer!");
+			CxbxrKrnlAbort("Shader exceeds conversion buffer!");
 		}
 
 		VSH_INTERMEDIATE_FORMAT intermediate;
@@ -1161,14 +1161,14 @@ void CxbxUpdateHostVertexShader()
 				EmuCompileFixedFunction(&pBlob);
 				if (pBlob) {
 					hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &ffHlsl);
-					if (FAILED(hRet)) CxbxKrnlCleanup("Failed to create fixed-function shader");
+					if (FAILED(hRet)) CxbxrKrnlAbort("Failed to create fixed-function shader");
 				}
 			}
 			fixedFunctionShader = ffHlsl;
 		}
 
 		hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);
-		if (FAILED(hRet)) CxbxKrnlCleanup("Failed to set fixed-function shader");
+		if (FAILED(hRet)) CxbxrKrnlAbort("Failed to set fixed-function shader");
 	}
 	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
 		if (passthroughshader == nullptr) {
