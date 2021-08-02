@@ -2020,7 +2020,9 @@ int pgraph_handle_method(
                     //pg->pgraph_regs[NV_PGRAPH_COMBINEALPHAI0/4 + slot * 4] = arg0;
 					// clear combiner need specular flag once we got hit here. this is the very first method to update pixel shader
 					pgraph_ClearNV2AStateFlag(X_STATE_COMBINERNEEDSSPECULAR);
-					break;
+				    // set combiner dirty flag
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+				    break;
 
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW0://done
                 case NV097_SET_COMBINER_SPECULAR_FOG_CW1://done
@@ -2718,12 +2720,14 @@ int pgraph_handle_method(
                 CASE_8(NV097_SET_COMBINER_ALPHA_OCW, 4) ://done //pg->KelvinPrimitive.SetCombinerAlphaOCW[8]
                     slot = (method - NV097_SET_COMBINER_ALPHA_OCW) / 4;
                     //pg->pgraph_regs[NV_PGRAPH_COMBINEALPHAO0/ 4 + slot * 4] = arg0;
-                    break;
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+					break;
 
                 CASE_8(NV097_SET_COMBINER_COLOR_ICW, 4) ://done //pg->KelvinPrimitive.SetCombinerColorICW[8]
                     slot = (method - NV097_SET_COMBINER_COLOR_ICW) / 4;
                     //pg->pgraph_regs[NV_PGRAPH_COMBINECOLORI0/ 4 + slot * 4] = arg0;
-                    break;
+				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+				    break;
 
                 CASE_4(NV097_SET_COLOR_KEY_COLOR, 4) ://done //pg->KelvinPrimitive.SetColorKeyColor[4]
                     slot = (method - NV097_SET_COLOR_KEY_COLOR) / 4;
@@ -3874,7 +3878,8 @@ int pgraph_handle_method(
 					NV2A_DirtyFlags|=X_D3DDIRTYFLAG_LIGHTS;
 					break;
 				CASE_8( NV097_SET_COMBINER_COLOR_OCW , 4):// [8]
-					break;
+					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+				    break;
 				case NV097_SET_COMBINER_CONTROL:
 					break;
 				case NV097_SET_SHADOW_ZSLOPE_THRESHOLD://done //pg->KelvinPrimitive.SetShadowZSlopeThreshold

@@ -88,7 +88,8 @@ extern bool is_pushbuffer_recording(void);
 */
 void backup_xbox_texture_state(void);
 void restore_xbox_texture_state(void);
-
+void pgraph_purge_dirty_and_state_flag(void);
+void D3D_draw_state_update(NV2AState *d);
 void EmuExecutePushBuffer
 (
 	xbox::X_D3DPushBuffer       *pPushBuffer,
@@ -156,13 +157,19 @@ void EmuExecutePushBuffer
 	//the pushbuffer size must be subtracted with 4, because xbox d3d append 1 dwords at the end of original pushbuffer when creating a new pushbuffer,
 	//the appended dword is 0xbaadf00d, and when execute the pushbuffer, it insert a jump command in that dword to jump back to main pushbuffer.
 	//pDevice-PUSH. but here we do doing HLE, we are not using real push buffer and real dma. so exclude the last dword.
+	// reset unnecessary NV2A dirty flags to prevent conflicts with HLE.
+	pgraph_purge_dirty_and_state_flag();
 	// set g_nv2a_is_pushpuffer_replay flag, for other code to know we're in replay state
-
 	NV2A_stateFlags |= X_STATE_RUNPUSHBUFFERWASCALLED;
 	// replay pushbuffer.
 	EmuExecutePushBufferRaw((void*)pPushBuffer->Data, pPushBuffer->Size-4, (uint32_t **)nullptr, (uint32_t **)nullptr, (uint8_t *)nullptr);
+	// update NV2A state before finish pushbuffer replay. some title use pushbuffer replay to perform Clear()/pixel shader setup, not including draw calls. test case: SVS
+	// Retrieve NV2AState via the (LLE) NV2A device :
+	extern NV2ADevice* g_NV2A;
+	NV2AState *d = g_NV2A->GetDeviceState();
+	// this shall update all NV2A texture/transform/vertex shader/pixel shader
+	D3D_draw_state_update(d);
 	// reset g_nv2a_is_pushpuffer_replay flag
-
 	NV2A_stateFlags &= ~X_STATE_RUNPUSHBUFFERWASCALLED;
     return;
 }
@@ -227,7 +234,8 @@ unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attribu
 xbox::X_D3DBaseTexture NV2A_texture_stage_texture[xbox::X_D3DTS_STAGECOUNT];
 // pointers to textures which store the converted texture from NV2A KelvinPrimitive.SetTexture[4]
 xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT]= { 0,0,0,0 };
-
+// unused, replaced by NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage;
+// bool NV2A_SetTexture_dirty[xbox::X_D3DTS_STAGECOUNT]= { false,false,false,false };
 // Backup of g_pXbox_SetTexture[]
 xbox::X_D3DBaseTexture *pXbox_SetTexture_Backup[xbox::X_D3DTS_STAGECOUNT] = { 0,0,0,0 };
 // update texture of texture stages using NV2A KelvinPrimitive.SetTexture[4]
@@ -272,7 +280,8 @@ void D3D_texture_stage_update(NV2AState *d)
 					pitch = ((pitch / 64) - 1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
 					NV2A_texture_stage_texture[stage].Size = pitch | height | width;
 				}
-				NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource, 
+				NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource,
+				NV2A_texture_stage_texture[stage].Lock = 0;
 			}
 		}
 		//reset texture stage dirty flag
@@ -433,9 +442,15 @@ void pgraph_purge_dirty_and_state_flag(void)
 	NV2A_DirtyFlags = 0;
 	// reset NV2A stage flags
 	NV2A_stateFlags = 0;
+	// reset shader other stage input dirty flag, prevent pixel shader misinterpretation.
+	NV2A_ShaderOtherStageInputDirty = false;
 	//reset texture stage dirty flags
-	for(int i=0;i<4;i++)
+	for(int i=0;i<4;i++){
+		// reset SetTexture dirty flags, unused, replaced by NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage;
+		// NV2A_SetTexture_dirty[i] = false;
+		// reset bumpenv dirty flags
 		pg->bumpenv_dirty[i] = false;
+	}
 }
 extern XboxTextureStateConverter XboxTextureStates;
 extern XboxRenderStateConverter XboxRenderStates;
@@ -476,7 +491,10 @@ DWORD convert_NV2A_combiner_reg_to_xbox_reg(DWORD nvreg) {
 void D3D_combiner_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
-	for (int i = 0; i < 4; i++) {
+	// FIXME!! in user program, the actual stage used could exceed 4, Otogi uses stage 0~5. xbox d3d colorOP/args setting with stage might not comply with the compiled result of user program.
+	// there is not feasible way to reverse user program back to xbox d3d color OP.
+	// fortunately we only need these reversed info for fixed function pixel shader.
+	for (int i = 0; i < 8; i++) {
 		auto colorOp = pg->KelvinPrimitive.SetCombinerColorICW[i];// = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);// FIXME!!!
 
 		auto colorICW = pg->KelvinPrimitive.SetCombinerColorICW[i];
@@ -487,7 +505,7 @@ void D3D_combiner_state_update(NV2AState *d)
 		auto alphaICW = pg->KelvinPrimitive.SetCombinerAlphaICW[i];
 		auto alphaOCW = pg->KelvinPrimitive.SetCombinerAlphaOCW[i];
 
-		auto resultarg = pg->KelvinPrimitive.SetCombinerAlphaOCW[i];
+		auto resultarg = pg->KelvinPrimitive.SetCombinerColorOCW[i];
 		NV2A_colorOP[i] = i == 0 ? xbox::X_D3DTOP_MODULATE : xbox::X_D3DTOP_DISABLE;
 		// set default arg registers
 		NV2A_colorArg0[i] = xbox::X_D3DTA_CURRENT;
@@ -499,7 +517,13 @@ void D3D_combiner_state_update(NV2AState *d)
 		NV2A_alphaArg1[i] = g_pNV2A_SetTexture[i] == nullptr ? xbox::X_D3DTA_DIFFUSE : xbox::X_D3DTA_TEXTURE;//convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) ;// FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
 		NV2A_alphaArg2[i] = xbox::X_D3DTA_CURRENT;//convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF) ;// FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
 		// set result arg register
-		NV2A_resultArg[i] = (resultarg >> 8) & 0xF == 0xC ? xbox::X_D3DTA_CURRENT : xbox::X_D3DTA_TEMP;// FIXME!!!, xbox d3d copy the resultarg from RenderState[] to combiners_alpha_OCW/color_OCW directly. default if reg c, could be set to reg d (temp).
+		// normally the result register is either C: current or D: temp, and located in bit 8~11 as sum of A*B+C*D, or in bit 5~7 as A*B.
+		if (((resultarg >> 8) & 0xF) > 0) {
+			NV2A_resultArg[i] = (resultarg >> 8) & 0xF == 0xC ? xbox::X_D3DTA_CURRENT : xbox::X_D3DTA_TEMP;
+		}
+		else {
+			NV2A_resultArg[i] = (resultarg >> 4) & 0xF == 0xC ? xbox::X_D3DTA_CURRENT : xbox::X_D3DTA_TEMP;
+		}
 		unsigned int startStage = 0;
 		// FIXME!!! if we start with stage 3, what will happen with stage 0~2? 
 		if (pg->KelvinPrimitive.SetPointSmoothEnable != 0)
@@ -507,10 +531,10 @@ void D3D_combiner_state_update(NV2AState *d)
 		if (i == startStage) {
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
-			if (colorICW == 0x4200000 && alphaICW == 0x14200000 && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
+			if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& alphaICW == 0x14200000 && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
-				NV2A_resultArg[i] = alphaOCW;
+				//NV2A_resultArg[i] = alphaOCW;
 			}
 			else if (alphaICW == 0 && alphaOCW == 0) {
 				// set color OP with invalid value as flag to process later
@@ -557,7 +581,7 @@ void D3D_combiner_state_update(NV2AState *d)
 		// process color OP if it's not X_D3DTOP_LAST
 		if (NV2A_colorOP[i] > xbox::X_D3DTOP_LAST) {
 			// colorOP SelectARG1 , A == Arg1, B == 1, C == 0, D == 0
-			if ((colorICW & 0x00FFFFFF == 0x00200000) && (colorOCW & 0xFFFF00FF == 0)) {
+			if ((colorICW & 0xF0FFFFFF == 0x00200000) && (colorOCW & 0xFFFF00FF == 0)) {
 				NV2A_colorOP[i] = xbox::X_D3DTOP_SELECTARG1;
 				// arg1 always source A
 				NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF); // FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
@@ -587,7 +611,7 @@ void D3D_combiner_state_update(NV2AState *d)
 			// OP ADD, source A + D, A == Arg1, B == 1, C == 1, D == Arg2
 			else if (colorICW & 0xF0FFFFF0 == 0x00202000) {
 				NV2A_colorOP[i] = xbox::X_D3DTOP_ADD;
-				if (colorOCW & 0x8000 != 0)
+				if (colorOCW & 0x18000 == 0x8000)
 					NV2A_colorOP[i] = xbox::X_D3DTOP_ADDSIGNED;
 				if (colorOCW & 0x18000 == 0x18000)
 					NV2A_colorOP[i] = xbox::X_D3DTOP_ADDSIGNED2X;
@@ -596,7 +620,7 @@ void D3D_combiner_state_update(NV2AState *d)
 				// arg2 in source D
 				NV2A_colorArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW) & 0xF);
 			}
-			// D3DTOP_SUBTRACT,  source A - D, A == Arg1, B == 1, C == 1, D == Arg2
+			// D3DTOP_SUBTRACT,  source A - D, A == Arg1, B == 1, C == -1, D == Arg2
 			else if (colorICW & 0xF0FFFFF0 == 0x00204000) {
 				NV2A_colorOP[i] = xbox::X_D3DTOP_SUBTRACT;
 				// arg1 in source A
@@ -616,7 +640,7 @@ void D3D_combiner_state_update(NV2AState *d)
 			// D3DTOP_BLENDDIFFUSEALPHA/D3DTOP_BLENDCURRENTALPHA/D3DTOP_BLENDTEXTUREALPHA/D3DTOP_BLENDFACTORALPHA, A+C*D, A=Arg1, B=alphaOP-12 and CFLAG_ALPHAREPLICATE set , C=1-Arg1, D=Arg2
 			// A+C*D, A=Arg1, B=alpha(alphaOP-12) and CFLAG_ALPHAREPLICATE set , C=alpht(1-Arg1) CFLAG_COMPLEMENT|CFLAG_ALPHAREPLICATE set , D=Arg2
 			// verify flags of A/B/C/D, B=reg0, reg(A)==reg(C)
-			else if ((colorICW & 0xF0FFF0F0 == 0x00103000) && (convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 8) & 0xF))) {
+			else if ((colorICW & 0xF0F0F0F0 == 0x00103000) && (convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 8) & 0xF))) {
 				NV2A_colorOP[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 16) & 0xF) + xbox::X_D3DTOP_BLENDDIFFUSEALPHA;
 				// arg1 in source A
 				NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF);
@@ -655,7 +679,7 @@ void D3D_combiner_state_update(NV2AState *d)
 				// arg2 in source D
 				NV2A_colorArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 16) & 0xF);
 			}
-			// D3DTOP_MODULATEINVALPHA_ADDCOLOR, A=Arg1, B=1,  C =alpha(Arg1) CFLAG_ALPHAREPLICATE CFLAG_COMPLEMENT set,  D =Arg2
+			// D3DTOP_MODULATEINVALPHA_ADDCOLOR, A=Arg1, B=1,  C =1- alpha(Arg1) CFLAG_ALPHAREPLICATE CFLAG_COMPLEMENT set,  D =Arg2
 			else if ((colorICW & 0xF0FFF0F0 == 0x00203000) && (convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 8) & 0xF))) {
 				NV2A_colorOP[i] = xbox::X_D3DTOP_MODULATEINVALPHA_ADDCOLOR;
 				// arg1 in source A
@@ -682,6 +706,8 @@ void D3D_combiner_state_update(NV2AState *d)
 				NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF);
 				// arg2 in source B
 				NV2A_colorArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 16) & 0xF);
+				// result arg in OCW AB dst
+				NV2A_resultArg[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorOCW >> 4) & 0xF);
 			}
 			// D3DTOP_LERP, A=Arg0,B=Arg1, C=(1-Arg1) CFLAG_COMPLEMENT set, D=Arg2
 			else if ((colorICW & 0xF0F0F0F0 == 0x00002000) && ((colorICW >> 16) & 0xF) == ((colorICW >> 8) & 0xF)) {
@@ -722,19 +748,19 @@ void D3D_combiner_state_update(NV2AState *d)
 		// now we process alphaOP
 		if (NV2A_alphaOP[i] > xbox::X_D3DTOP_LAST) {
 			// alphaOP SelectARG1 
-			if ((alphaICW & 0x00FFFFFF == 0x00200000) && (alphaOCW & 0xFFFF00FF == 0)) {
+			if ((alphaICW & 0xF0FFFFFF == 0x10301010) && (alphaOCW & 0xFFFF00FF == 0)) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_SELECTARG1;
 				// arg1 always source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);// FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
 			}
 			// alphaOP SelectARG2
-			else if ((alphaICW & 0xFFFFFF00 == 0x00002000) && (alphaOCW & 0xFFFF00FF == 0)) {
+			else if ((alphaICW & 0xFFFFFFF0 == 0x10103010) && (alphaOCW & 0xFFFF00FF == 0)) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_SELECTARG2;
 				// arg2 always source D
 				NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);// FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
 			}
 			// OP modulate, A*B, C==0, D==0, A=Arg1, B=Arg2, 
-			else if (alphaICW & 0xF0F0FFFF == 0x0) {
+			else if (alphaICW & 0xF0F0FFFF == 0x10101010) {
 				// arg1 in source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 				// arg2 in source B
@@ -750,9 +776,9 @@ void D3D_combiner_state_update(NV2AState *d)
 				}
 			}
 			// OP ADD, source A + D, A == Arg1, B == 1, C == 1, D == Arg2
-			else if (alphaICW & 0xF0FFFFF0 == 0x00202000) {
+			else if (alphaICW & 0xF0FFFFF0 == 0x10303010) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_ADD;
-				if (alphaOCW & 0x8000 != 0)
+				if (alphaOCW &0x18000 == 0x8000)
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_ADDSIGNED;
 				if (alphaOCW & 0x18000 == 0x18000)
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_ADDSIGNED2X;
@@ -761,8 +787,8 @@ void D3D_combiner_state_update(NV2AState *d)
 				// arg2 in source D
 				NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
 			}
-			// D3DTOP_SUBTRACT,  source A - D, A == Arg1, B == 1, C == 1, D == Arg2
-			else if (alphaICW & 0xF0FFFFF0 == 0x00204000) {
+			// D3DTOP_SUBTRACT,  source A - D, A == Arg1, B == 1, C == -1, D == Arg2
+			else if (alphaICW & 0xF0FFFFF0 == 0x10305010) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_SUBTRACT;
 				// arg1 in source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
@@ -771,7 +797,7 @@ void D3D_combiner_state_update(NV2AState *d)
 			}
 			// D3DTOP_ADDSMOOTH, A+C*D, A=Arg1, B=1, C=1-Arg1, D=Arg2
 			// verify flags of A/B/C/D, B=reg0, reg(A)==reg(C)
-			else if ((alphaICW & 0xF0FFF0F0 == 0x00200000)&&(convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF)== convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF)) && (alphaICW&NV097_SET_COMBINER_COLOR_ICW_C_MAP_UNSIGNED_INVERT) != 0) {
+			else if ((alphaICW & 0xF0FFF0F0 == 0x10301010)&&(convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF)== convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF)) && (alphaICW&NV097_SET_COMBINER_COLOR_ICW_C_MAP_UNSIGNED_INVERT) != 0) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_ADDSMOOTH;
 				// arg1 in source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
@@ -782,7 +808,7 @@ void D3D_combiner_state_update(NV2AState *d)
 			// D3DTOP_BLENDDIFFUSEALPHA/D3DTOP_BLENDCURRENTALPHA/D3DTOP_BLENDTEXTUREALPHA/D3DTOP_BLENDFACTORALPHA,
 			// A+C*D, A=Arg1, B=alpha(alphaOP-12) and CFLAG_ALPHAREPLICATE set , C=alpht(1-Arg1) CFLAG_COMPLEMENT|CFLAG_ALPHAREPLICATE set , D=Arg2
 			// verify flags of A/B/C/D, B=reg0, reg(A)==reg(C)
-			else if ( (alphaICW & 0xF0FFF0F0 == 0x00103000) && ( convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF) ) ) {
+			else if ( (alphaICW & 0xF0F0F0F0 == 0x10103010) && ( convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF) ) ) {
 				NV2A_alphaOP[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF) + xbox::X_D3DTOP_BLENDDIFFUSEALPHA;
 				// arg1 in source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
@@ -790,7 +816,7 @@ void D3D_combiner_state_update(NV2AState *d)
 				NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
 			}
 			// D3DTOP_BLENDTEXTUREALPHAPM, A+C*D, A=Arg1, B=1, C=alpha(1-D3DTA_TEXTURE) CFLAG_COMPLEMENT | CFLAG_ALPHAREPLICATE, D=Arg2, 
-			else if ((alphaICW & 0xF0FFF0F0 == 0x00203000)  && convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF) == 2) {
+			else if ((alphaICW & 0xF0FFF0F0 == 0x10303010)  && convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF) == 2) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_BLENDTEXTUREALPHAPM;
 				// arg1 in source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
@@ -798,13 +824,14 @@ void D3D_combiner_state_update(NV2AState *d)
 				NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
 			}
 			// D3DTOP_PREMODULATE, A=Arg1, if stage 0, B==D3DTA_TEXTURE, if stage1 or stage2 B=1, C and D default to 0
-			else if ((i > 0 && i << 3 && (alphaICW & 0xF0FFFFFF == 0x00200000)) || (i == 0 && (alphaICW & 0xF0F0FFFF == 0x00000000) && convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF) == xbox::X_D3DTA_TEXTURE)) {
+			else if ((i > 0 && i << 3 && (alphaICW & 0xF0FFFFFF == 0x10301010)) || (i == 0 && (alphaICW & 0xF0F0FFFF == 0x10101010) && convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF) == xbox::X_D3DTA_TEXTURE)) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_PREMODULATE;
 				// arg1 in source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 
 			}
 			// D3DTOP_MODULATEALPHA_ADDCOLOR, A=Arg1, B=1,  C =alpha(Arg1) CFLAG_ALPHAREPLICATE set,  D =Arg2
+			/* // only for color OP
 			else if ((alphaICW & 0xF0FFF0F0 == 0x00201000) && (convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF))) {
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_MODULATEALPHA_ADDCOLOR;
 				// arg1 in source A
@@ -838,10 +865,10 @@ void D3D_combiner_state_update(NV2AState *d)
 				// arg2 in source D
 				NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF);
 			}
-
+			*/
 			// D3DTOP_DOTPRODUCT3, A=Arg1 CFLAG_EXPANDNORMAL set, B=Arg2 CFLAG_EXPANDNORMAL set,  C and D default 0
 			// OCW |= NV097_SET_COMBINER_alpha_OCW_AB_DOT_ENABLE_TRUE| NV097_SET_COMBINER_alpha_OCW_CD_DOT_ENABLE_FALSE | NV097_SET_COMBINER_alpha_OCW_BLUETOALPHA_AB_AB_DST_ENABLE | NV097_SET_COMBINER_alpha_OCW_BLUETOALPHA_CD_DISABLE
-			/* // not alpha OP
+			/* // only for color OP
 			else if ((alphaICW & 0xF0F00000 == 0x40400000) && (alphaOCW & 0x00082000 == 0x82000)) {
 
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DOTPRODUCT3;
@@ -849,10 +876,12 @@ void D3D_combiner_state_update(NV2AState *d)
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 				// arg2 in source D
 				NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF);
+				// result arg in OCW AB dst
+				NV2A_resultArg[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorOCW >> 4) & 0xF);
 			}
 			*/
 			// D3DTOP_LERP, A=Arg0,B=Arg1, C=(1-Arg1) CFLAG_COMPLEMENT set, D=Arg2
-			else if ((alphaICW & 0xF0F0F0F0 == 0x00002000) && ((alphaICW >> 16) & 0xF) == ((alphaICW >> 8) & 0xF)) {
+			else if ((alphaICW & 0xF0F0F0F0 == 0x10103010) && ((alphaICW >> 16) & 0xF) == ((alphaICW >> 8) & 0xF)) {
 
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_LERP;
 				// arg0 in source A
@@ -863,15 +892,17 @@ void D3D_combiner_state_update(NV2AState *d)
 				NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
 			}
 			// D3DTOP_BUMPENVMAP/D3DTOP_BUMPENVMAPLUMINANCE, A=D3DTA_CURRENT,B=1, C and D default 0
+			/* // only for color OP
 			else if ((alphaICW & 0xF0FFFFFF == 0x00200000) && convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == xbox::X_D3DTA_CURRENT) {
 				// FIXME!!! we can't tell D3DTOP_BUMPENVMAP/D3DTOP_BUMPENVMAPLUMINANCE here!. need a way to tell the difference.
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_BUMPENVMAP;
 				// arg1 in source A
 				NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 			}
+			*/
 			// D3DTOP_MULTIPLYADD, A=Arg0,B=1, C=Arg1, D=Arg2
 			// FIXME!!! condition too simple. so this case is arranged here almost in very last.
-			else if ((alphaICW & 0xF0FFF0F0 == 0x00200000) ) {
+			else if ((alphaICW & 0xF0FFF0F0 == 0x10301010) ) {
 
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_MULTIPLYADD;
 				// arg0 in source A
@@ -969,7 +1000,9 @@ void D3D_draw_state_update(NV2AState *d)
 	
 	// update combiners
 	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
-		D3D_combiner_state_update(d);
+		// only update the combiner state when we're in fixed function pixel shader
+		if(pNV2A_PixelShader == nullptr)
+			D3D_combiner_state_update(d);
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 	}
