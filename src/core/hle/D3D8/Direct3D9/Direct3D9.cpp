@@ -9444,7 +9444,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(pFunction)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
-
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_LoadVertexShaderProgram)(pFunction, Address);
+	}
 	CxbxImpl_LoadVertexShaderProgram((DWORD *)pFunction, Address);
 }
 
