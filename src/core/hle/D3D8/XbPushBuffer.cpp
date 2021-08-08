@@ -923,16 +923,6 @@ void D3D_combiner_state_update(NV2AState *d)
 	}
 
 }
-DWORD EmuXB2PC_FillMode(DWORD xbfillmode)
-{
-	DWORD result = D3DFILL_SOLID;
-	switch (xbfillmode) {
-	case NV097_SET_FRONT_POLYGON_MODE_V_POINT:result = D3DFILL_POINT; break;
-	case NV097_SET_FRONT_POLYGON_MODE_V_LINE: result = D3DFILL_WIREFRAME; break;
-	case NV097_SET_FRONT_POLYGON_MODE_V_FILL: result = D3DFILL_SOLID; break;
-	}
-	return result;
-}
 
 extern float g_Xbox_ScreenSpaceOffset_x; //tmp glue
 extern float g_Xbox_ScreenSpaceOffset_y; //tmp glue
@@ -1481,8 +1471,8 @@ void D3D_draw_state_update(NV2AState *d)
 			// Unused : D3DRS_FOGVERTEXMODE
 		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-		hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
 	// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
 	// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
 
@@ -1490,15 +1480,18 @@ void D3D_draw_state_update(NV2AState *d)
 	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
 	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
 	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
-		DWORD dwFillMode = EmuXB2PC_FillMode(pg->KelvinPrimitive.SetFrontPolygonMode);
-		hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
+		//DWORD dwFillMode = EmuXB2PC_FillMode(pg->KelvinPrimitive.SetFrontPolygonMode);
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FILLMODE, pg->KelvinPrimitive.SetFrontPolygonMode);
 	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
-		g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+		//g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
-		hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0); // NV2A_DEPTH_TEST_ENABLE
-		hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0); // NV2A_STENCIL_ENABLE
-
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0); // NV2A_DEPTH_TEST_ENABLE
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0);
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0); // NV2A_STENCIL_ENABLE
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0);
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
@@ -1507,10 +1500,12 @@ void D3D_draw_state_update(NV2AState *d)
 
 		//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
 
-		g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
-		g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
-		g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
-
+		//g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+		//g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+		//g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
 	}
 	//assert(D3D_StreamZeroStride > 0);
 	CxbxUpdateNativeD3DResources();
