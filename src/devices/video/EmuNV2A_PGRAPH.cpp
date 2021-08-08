@@ -1172,7 +1172,9 @@ extern bool NV2A_ShaderOtherStageInputDirty;
 extern void pgraph_SetNV2AStateFlag(DWORD flag);
 extern bool pgraph_GetNV2AStateFlag(DWORD flag);
 extern void pgraph_ClearNV2AStateFlag(DWORD flag);
+extern void pgraph_SetViewport(NV2AState *d);
 extern NV2ADevice* g_NV2A; //TMP GLUE
+extern bool NV2A_viewport_dirty;
 D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index)
 {
 	// Retrieve NV2AState via the (LLE) NV2A device :
@@ -2388,13 +2390,27 @@ int pgraph_handle_method(
                     //	NV_PGRAPH_SETUPRASTER_BACKFACEMODE,
                     //	kelvin_map_polygon_mode(arg0));
                     break;
-                case NV097_SET_CLIP_MIN://done //pg->KelvinPrimitive.SetClipMin
+				// xbox d3d SetViewport() calls NV097_SET_VIEWPORT_OFFSET/    NV097_SET_VIEWPORT_SCALE(optional), then calls NV097_SET_CLIP_MIN with method count =2
+				case NV097_SET_CLIP_MIN://done //pg->KelvinPrimitive.SetClipMin
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetClipMin);
-                    break;
+					// populate to next method handler if method count >1. this happened in xbox d3d SetViewport()
+					if (method_count > 1) {
+						method_count -= 1;
+						argv += 1;
+						arg0 = argv[0];
+						method += (NV097_SET_CLIP_MAX - NV097_SET_CLIP_MIN);
+						goto SETCLIPMAX;
+					}
+					NV2A_viewport_dirty = true;
+					break;
 
                 case NV097_SET_CLIP_MAX://done //pg->KelvinPrimitive.SetClipMax
-                    // TODO : float assert(arg0 == pg->KelvinPrimitive.SetClipMax);
-                    break;
+					SETCLIPMAX:
+					// TODO : float assert(arg0 == pg->KelvinPrimitive.SetClipMax);
+					// call pgraph_SetViewport(d) in D3D_draw_state_update();
+					// pgraph_SetViewport(d);
+					NV2A_viewport_dirty = true;
+					break;
 
                 case NV097_SET_CULL_FACE: {//done //pg->KelvinPrimitive.SetCullFace
                     unsigned int face=arg0;
@@ -2680,7 +2696,8 @@ int pgraph_handle_method(
 						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
                     }
-                    break;
+					NV2A_viewport_dirty = true;
+					break;
 
                 CASE_8(NV097_SET_POINT_PARAMS, 4) ://done //pg->KelvinPrimitive.SetPointParams[8]
                     //KelvinPrimitive.SetPointParams[8] is update already. we update the vertex shader contant as well.
@@ -2744,7 +2761,8 @@ int pgraph_handle_method(
 						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPSCL] = true;
                     }
-                    break;
+					NV2A_viewport_dirty = true;
+					break;
 
 				CASE_32(NV097_SET_TRANSFORM_PROGRAM, 4) : {//done // pg->KelvinPrimitive.SetTransformProgram[32]
                         //KelvinPrimitive.SetTransformProgram[32] is update already. we update the extra vertex shader program as well.
@@ -4057,8 +4075,10 @@ int pgraph_handle_method(
 					// ** passthrough in SelectVertexShader() calls NV097_SET_TRANSFORM_PROGRAM_START first, then calls NV097_SET_TRANSFORM_EXECUTION_MODE
 
 					// if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
+
 					if (g_VertexShader_dirty == false) {
-						g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+						// disable passthrough mode setting for now, let vertexh shader be either user program or fixed function, treat passthrough as user program
+						// g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
 						g_UseFixedFunctionVertexShader = false;
 						// passthrough always starts from register 0
 						g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
@@ -4283,7 +4303,7 @@ void pgraph_init(NV2AState *d)
     qemu_cond_init(&pg->interrupt_cond);
     qemu_cond_init(&pg->fifo_access_cond);
     qemu_cond_init(&pg->flip_3d);
-	pg->opengl_enabled = true;
+	pg->opengl_enabled = false;
     if (!(pg->opengl_enabled))
         return;
 

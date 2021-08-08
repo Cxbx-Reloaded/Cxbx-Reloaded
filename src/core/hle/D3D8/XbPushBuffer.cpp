@@ -455,6 +455,8 @@ void pgraph_purge_dirty_and_state_flag(void)
 extern XboxTextureStateConverter XboxTextureStates;
 extern XboxRenderStateConverter XboxRenderStates;
 extern xbox::void_xt CxbxImpl_SetPixelShader(xbox::dword_xt Handle);
+extern void GetMultiSampleScaleRaw(float& xScale, float& yScale);// tmp glue
+
 
 void d3d_bumpenv_update(NV2AState *d, bool isUserMode)
 {
@@ -931,6 +933,149 @@ DWORD EmuXB2PC_FillMode(DWORD xbfillmode)
 	}
 	return result;
 }
+
+extern float g_Xbox_ScreenSpaceOffset_x; //tmp glue
+extern float g_Xbox_ScreenSpaceOffset_y; //tmp glue
+extern void CxbxImpl_GetTransform(	xbox::X_D3DTRANSFORMSTATETYPE State,	D3DMATRIX *pMatrix);
+extern void GetRenderTargetBaseDimensions(float& x, float& y); //tmp glue
+extern float g_Xbox_BackbufferScaleX;
+extern float g_Xbox_BackbufferScaleY;
+extern xbox::X_D3DSurface           *g_pXbox_RenderTarget;
+extern xbox::X_D3DSurface           *g_pXbox_BackBufferSurface;
+
+bool NV2A_viewport_dirty = false;
+void pgraph_SetViewport(NV2AState *d)
+{
+	PGRAPHState *pg = &d->pgraph;
+	HRESULT hRet;
+	xbox::X_D3DVIEWPORT8* pViewport,Viewport;
+
+	float fm11, fm22, fm33, fm43, clipNear, clipFar;
+	float SuperSampleScale, ScaleX, ScaleY, ScaleZ;
+	//float aaOffsetX, aaOffsetY;
+	GetMultiSampleScaleRaw(ScaleX, ScaleY);
+	//SuperSampleScale = MIN(ScaleX, ScaleY);
+	//ScaleX *= g_Xbox_BackbufferScaleX;
+	//ScaleY *= g_Xbox_BackbufferScaleY;
+	// FIXME!! xbox d3d set supersamplescaleX/Y to 1.0 when SetRenderTarget() was called and render target isn't backbuffer.
+	// currently in our HLE, xbox d3d keeps wrong backbuffer info, so it always judges the render target is different than the backbuffer and thus both scale factors are set as 1.0
+	//if (g_pXbox_RenderTarget != g_pXbox_BackBufferSurface) {
+		ScaleX = 1.0;
+		ScaleY = 1.0;
+	//}
+	if (ScaleX < 1.0)ScaleX = 1.0;
+	if (ScaleY < 1.0)ScaleY = 1.0;
+	//if (SuperSampleScale <= 1.0)SuperSampleScale = 1.0;
+	//GetMultiSampleOffset(aaOffsetX, aaOffsetY);
+	float  xViewport, yViewport;
+	clipNear = pg->KelvinPrimitive.SetClipMin;
+	clipFar = pg->KelvinPrimitive.SetClipMax;
+
+	extern float g_ZScale;// TMP glue
+
+	ScaleZ=g_ZScale;
+	// FIXME!! xbox d3d SetViewport always  SetScissors(0,0,NULL) with the Viewport as sciccor RECT.
+	// shall we get Viewport.X/Y/Width/Height via pg->KelvinPrimitive.SetWindowClipHorizontal/SetWindowClipVertical, the conversion should be more straight forward.
+	// question will be, how to tell that the scrssor Rect is set by viewport or by other SetScissor() call?
+	if (ScaleZ < 1.0)ScaleZ = 1.0;
+	// NV2A viewport content depends on vertex shader mode
+	// FIXME!! when swith from fixed mode to pass through, the shader mode was changed before viewport info was update. so we can rely on shader mode.
+	// here we detect whether KelvinPrimitive.SetViewportOffset[2]==0.0 and KelvinPrimitive.SetViewportOffset[3]==0.0 instead
+	float rendertargetBaseWidth;
+	float rendertargetBaseHeight;
+	GetRenderTargetBaseDimensions(rendertargetBaseWidth, rendertargetBaseHeight);
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+	//if ((float)pg->KelvinPrimitive.SetViewportOffset[2] == 0.0 && (float)pg->KelvinPrimitive.SetViewportOffset[3] == 0.0) {
+		xViewport=pg->KelvinPrimitive.SetViewportOffset[0];
+		yViewport = pg->KelvinPrimitive.SetViewportOffset[1];
+		if (pg->KelvinPrimitive.SetDepthTestEnable == D3DZB_USEW) {
+			ScaleZ = clipFar;
+			// FIXME !! need WNear *InverseWFar input
+			D3DMATRIX ProjMatrix;
+			// get projection matrix to calculate WNear and WFar
+			CxbxImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &ProjMatrix);
+			float WNear, WFar, InverseWFar;
+			if ((ProjMatrix._33 == ProjMatrix._34) || (ProjMatrix._33 == 0.0f))
+			{
+				WNear = 0.0f;
+				WFar = 1.0f;
+			}
+			else
+			{
+				WNear = ProjMatrix._44 - ProjMatrix._43
+					/ ProjMatrix._33 * ProjMatrix._34;
+
+				WFar = (ProjMatrix._44 - ProjMatrix._43)
+					/ (ProjMatrix._33 - ProjMatrix._34)*ProjMatrix._34 + ProjMatrix._44;
+			}
+			Viewport.MinZ = ScaleZ * WFar / WNear; //was ScaleZ/(WNear *InverseWFar);
+			
+		}
+		else {
+			Viewport.MinZ = clipNear / ScaleZ;
+			Viewport.MaxZ = clipFar / ScaleZ;
+		}
+		//FIXME!! Viewport.Width/Height are not set in Fixed Mode. xbox d3d set it to 0x7FFFFFFF,
+		// CxbxImpl_SetViewport() will cap the Width/Height to render target width/height. anyway, we cap them to render target value here.
+		
+		Viewport.Width=rendertargetBaseWidth;
+		Viewport.Height = rendertargetBaseHeight;
+	}
+	else {
+		ScaleZ = clipFar;
+		fm11 = pg->KelvinPrimitive.SetViewportScale[0];
+		fm22 = pg->KelvinPrimitive.SetViewportScale[1];
+		fm33 = pg->KelvinPrimitive.SetViewportScale[2];
+		//fm41 = fm11;
+		//fm42 = -fm22;
+		fm43 = pg->KelvinPrimitive.SetViewportOffset[2];
+		xViewport = pg->KelvinPrimitive.SetViewportOffset[0] - fm11;
+		yViewport = pg->KelvinPrimitive.SetViewportOffset[1] + fm22;
+		Viewport.MinZ = fm43 / ScaleZ;
+		Viewport.MaxZ = (fm33 / ScaleZ) + Viewport.MinZ;
+		Viewport.Height = fm22 / (-0.5*ScaleY);
+		Viewport.Width = fm11 / (0.5*ScaleX);
+		if (pg->KelvinPrimitive.SetDepthTestEnable == D3DZB_USEW) {
+			ScaleZ = clipFar;
+			// FIXME !! need WNear *InverseWFar input
+			D3DMATRIX ProjMatrix;
+			// get projection matrix to calculate WNear and WFar
+			CxbxImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &ProjMatrix);
+			float WNear, WFar, InverseWFar;
+			if ((ProjMatrix._33 == ProjMatrix._34) || (ProjMatrix._33 == 0.0f))
+			{
+				WNear = 0.0f;
+				WFar = 1.0f;
+			}
+			else
+			{
+				WNear = ProjMatrix._44 - ProjMatrix._43
+					/ ProjMatrix._33 * ProjMatrix._34;
+
+				WFar = (ProjMatrix._44 - ProjMatrix._43)
+					/ (ProjMatrix._33 - ProjMatrix._34)*ProjMatrix._34 + ProjMatrix._44;
+			}
+			Viewport.MinZ = ScaleZ * WFar / WNear; //was ScaleZ/(WNear *InverseWFar);
+
+		}
+		else {
+			Viewport.MinZ = clipNear / ScaleZ;
+			Viewport.MaxZ = clipFar / ScaleZ;
+		}
+
+	}
+	// (pg->KelvinPrimitive.SetSurfaceFormat&(NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2| NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4))!=0 means we're in STATE_MULTISAMPLING
+	if ((GET_MASK(pg->KelvinPrimitive.SetSurfaceFormat, NV097_SET_SURFACE_FORMAT_ANTI_ALIASING)&(NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2| NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4))!=0)
+		//&&(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS)!=0))
+	{
+		xViewport += 0.5f;
+		yViewport += 0.5f;
+	}
+	Viewport.X = (xViewport - g_Xbox_ScreenSpaceOffset_x) / ScaleX;
+	Viewport.Y = (yViewport - g_Xbox_ScreenSpaceOffset_y) / ScaleY;
+	CxbxImpl_SetViewport(&Viewport);
+	
+}
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -953,7 +1098,19 @@ void D3D_draw_state_update(NV2AState *d)
 			if (pg->KelvinPrimitive.SetPointParamsEnable == 0) {
 				// disable host point scale
 				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, false);
-				// FIXME!!! we should consider the super sample scale in xbox d3d and host, but how? FixedSize should be divided by xbox supersample scale here.
+				// FIXME!!! what we need are supersamplescalefactors, not multisamplescalefactors.
+				float SuperSampleScale,aaScaleX, aaScaleY;
+				//float aaOffsetX, aaOffsetY;
+				GetMultiSampleScaleRaw(aaScaleX, aaScaleY);
+				// FIXME!! xbox d3d set supersamplescaleX/Y to 1.0 when SetRenderTarget() was called and render target isn't backbuffer.
+                // currently in our HLE, xbox d3d keeps wrong backbuffer info, so it always judges the render target is different than the backbuffer and thus both scale factors are set as 1.0
+                //if (g_pXbox_RenderTarget != g_pXbox_BackBufferSurface) {
+				aaScaleX = 1.0;
+				aaScaleY = 1.0;
+				//GetMultiSampleOffset(aaOffsetX, aaOffsetY);
+				SuperSampleScale=MIN(aaScaleX, aaScaleY);
+				if (SuperSampleScale <= 1.0)SuperSampleScale = 1.0;
+				FixedSize /= SuperSampleScale;
 			}
 			// D3D__RenderState[D3DRS_POINTSCALEENABLE]== true, set host D3D__RenderState[D3DRS_POINTSCALEENABLE] and point scale 
 			else {
@@ -1300,7 +1457,14 @@ void D3D_draw_state_update(NV2AState *d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
 	}
-
+	// update viewport state when we're in pushbuffer replay mode.
+	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
+		// CxbxUpdateNativeD3DResources() calls CxbxUpdateHostViewport() to update host viewpot, we call pgraph_SetViewport(d) to convert NV2A viewport content to xbox vieport and then call CxbxImpl_SetViewport() there.
+		// only update viewport if viewport got dirty.
+		if(NV2A_viewport_dirty==true)
+			pgraph_SetViewport(d);
+		NV2A_viewport_dirty = false;
+	}
 	// update other D3D states
 	// FIXME!! CxbxUpdateNativeD3DResources() calls XboxRenderStates.Apply() and XboxTextureStates.Apply() to apply Xbox D3D states to Host.
 	// so what we set to host here might be over write later. safer way is to update XboxTextureStates/XboxTextureStates and let CxbxUpdateNativeD3DResources() update them to host.
