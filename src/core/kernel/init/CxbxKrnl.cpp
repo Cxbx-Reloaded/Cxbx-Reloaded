@@ -1005,7 +1005,7 @@ static bool CxbxrKrnlPrepareXbeMap()
 }
 
 /*! initialize emulation */
-static __declspec(noreturn) void CxbxrKrnlInit(
+[[noreturn]] static void CxbxrKrnlInit(
 	void* pTLSData,
 	Xbe::TLS* pTLS,
 	Xbe::LibraryVersion* LibraryVersion,
@@ -1244,7 +1244,7 @@ static void CxbxrKrnlInitHacks()
 	g_SkipRdtscPatching = !!HackEnabled;
 }
 
-static __declspec(noreturn) void CxbxrKrnlInit
+[[noreturn]] static void CxbxrKrnlInit
 (
 	void                   *pTLSData,
 	Xbe::TLS               *pTLS,
@@ -1537,7 +1537,7 @@ static __declspec(noreturn) void CxbxrKrnlInit
 	}
 };*/
 
-__declspec(noreturn) void CxbxrKrnlAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
+[[noreturn]] void CxbxrKrnlAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
 {
     g_bEmuException = true;
 
@@ -1759,7 +1759,7 @@ void CxbxPrintUEMInfo(ULONG ErrorCode)
 	}
 }
 
-__declspec(noreturn) void CxbxKrnlTerminateThread()
+[[noreturn]] void CxbxKrnlTerminateThread()
 {
     TerminateThread(GetCurrentThread(), 0);
 }

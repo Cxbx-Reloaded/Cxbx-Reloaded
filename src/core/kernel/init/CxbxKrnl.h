@@ -147,7 +147,7 @@ bool HandleFirstLaunch();
 void CxbxKrnlEmulate(unsigned int system, blocks_reserved_t blocks_reserved);
 
 /*! cleanup emulation */
-__declspec(noreturn) void CxbxrKrnlAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
+[[noreturn]] void CxbxrKrnlAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...);
 
 #define CxbxrKrnlAbort(fmt, ...) CxbxrKrnlAbortEx(LOG_PREFIX, fmt, ##__VA_ARGS__)
 
@@ -170,7 +170,7 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode);
 void CxbxPrintUEMInfo(ULONG ErrorCode);
 
 /*! terminate the calling thread */
-__declspec(noreturn) void CxbxKrnlTerminateThread();
+[[noreturn]] void CxbxKrnlTerminateThread();
 
 /*! kernel panic (trap for unimplemented kernel functions) */
 void CxbxKrnlPanic();
