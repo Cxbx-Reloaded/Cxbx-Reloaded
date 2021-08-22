@@ -1,5 +1,5 @@
 # Cxbx-Reloaded - Original Xbox Emulator
-[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://img.shields.io/badge/License-GPL%20v2-blue.svg)
+[![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/blob/master/COPYING)
 [![GitHub Actions](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/workflows/GitHub%20CI/badge.svg?event=push)](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=event%3Apush+workflow%3A%22GitHub+CI%22)
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?logo=discord)](https://discord.gg/26Xjx23)
 
