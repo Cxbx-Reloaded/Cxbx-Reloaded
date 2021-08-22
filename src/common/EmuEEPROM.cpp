@@ -143,7 +143,7 @@ xbox::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	unsigned int FileSize = len_li.u.LowPart;
 	if (FileSize != 256)
 	{
-		CxbxKrnlCleanup("%s : EEPROM.bin file is not 256 bytes large!\n", __func__);
+		CxbxrKrnlAbort("%s : EEPROM.bin file is not 256 bytes large!\n", __func__);
 		return nullptr;
 	}
 

@@ -196,7 +196,7 @@ class Win7Policy final : public AffinityPolicy
 public:
 	bool Initialize() {
 		if (!GetProcessAffinityMask(g_CurrentProcessHandle, &CPUXbox, &CPUOthers))
-			CxbxKrnlCleanupEx(CXBXR_MODULE::INIT, "GetProcessAffinityMask failed.");
+			CxbxrKrnlAbortEx(CXBXR_MODULE::INIT, "GetProcessAffinityMask failed.");
 
 		// For the other threads, remove one bit from the processor mask:
 		CPUOthers = ((CPUXbox - 1) & CPUXbox);

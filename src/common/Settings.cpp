@@ -809,7 +809,7 @@ void Settings::SyncToEmulator()
 	g_EmuShared->SetHackSettings(&m_hacks);
 
 	// register data location setting
-	g_EmuShared->SetStorageLocation(GetDataLocation().c_str());
+	g_EmuShared->SetDataLocation(GetDataLocation().c_str());
 
 	// reset title mount path
 	g_EmuShared->SetTitleMountPath("");

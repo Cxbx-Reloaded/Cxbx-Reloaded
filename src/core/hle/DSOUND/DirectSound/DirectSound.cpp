@@ -174,13 +174,13 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreate)
         }
 
         if (dsErrorMsg != nullptr) {
-            CxbxKrnlCleanup(dsErrorMsg, hRet);
+            CxbxrKrnlAbort(dsErrorMsg, hRet);
         }
 
         hRet = g_pDSound8->SetCooperativeLevel(GET_FRONT_WINDOW_HANDLE, DSSCL_PRIORITY);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("g_pDSound8->SetCooperativeLevel Failed!");
+            CxbxrKrnlAbort("g_pDSound8->SetCooperativeLevel Failed!");
         }
 
         // clear sound buffer cache
@@ -208,7 +208,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreate)
         hRet = g_pDSound8->CreateSoundBuffer(&bufferDesc, &g_pDSoundPrimaryBuffer, nullptr);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Creating primary buffer for DirectSound Failed!");
+            CxbxrKrnlAbort("Creating primary buffer for DirectSound Failed!");
         }
 
         /* Quote from MDSN "For the primary buffer, you must use the
@@ -221,7 +221,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreate)
         hRet = g_pDSoundPrimaryBuffer->QueryInterface(IID_IDirectSound3DListener8, (LPVOID*)&g_pDSoundPrimary3DListener8);
 
         if (hRet != DS_OK) {
-            CxbxKrnlCleanup("Creating primary 3D Listener for DirectSound Failed!");
+            CxbxrKrnlAbort("Creating primary 3D Listener for DirectSound Failed!");
         }
 
         initialized = true;

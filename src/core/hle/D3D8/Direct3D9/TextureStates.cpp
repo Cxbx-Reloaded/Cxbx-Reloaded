@@ -361,9 +361,9 @@ DWORD NormalizeValue(DWORD xboxState, DWORD value) {
 
 uint32_t XboxTextureStateConverter::Get(int textureStage, DWORD xboxState) {
     if (textureStage < 0 || textureStage > 3)
-        CxbxKrnlCleanup("Requested texture stage was out of range: %d", textureStage);
+        CxbxrKrnlAbort("Requested texture stage was out of range: %d", textureStage);
     if (xboxState < xbox::X_D3DTSS_FIRST || xboxState > xbox::X_D3DTSS_LAST)
-        CxbxKrnlCleanup("Requested texture state was out of range: %d", xboxState);
+        CxbxrKrnlAbort("Requested texture state was out of range: %d", xboxState);
 
     // Read the value of the current stage/state from the Xbox data structure
     DWORD rawValue = D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[xboxState]];

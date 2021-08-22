@@ -98,7 +98,7 @@ io_mu_metadata::io_mu_metadata(const std::wstring_view root_path) : m_root_path(
 		std::wstring path = m_root_path + static_cast<wchar_t>(L'F' + i) + L".bin";
 		std::fstream fs(path, std::ios_base::in | std::ios_base::out | std::ios_base::binary);
 		if (!fs.is_open()) {
-			CxbxKrnlCleanup("%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
+			CxbxrKrnlAbort("%s: could not open MU bin file at \"%ls\"!", __func__, path.c_str());
 		}
 		fs.seekg(0);
 		fs.read(m_buff[i], sizeof(FATX_SUPERBLOCK));
@@ -209,7 +209,7 @@ void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false
 {
 	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 	if (!hf) {
-		CxbxKrnlCleanup("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename.c_str());
+		CxbxrKrnlAbort("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename.c_str());
 		return;
 	}
 
@@ -229,7 +229,7 @@ XboxPartitionTable CxbxGetPartitionTable()
 	XboxPartitionTable table;
 	FILE* fp = fopen((g_DiskBasePath + "Partition0.bin").c_str(), "rb");
 	if (fp == nullptr) {
-		CxbxKrnlCleanup("CxbxGetPartitionTable Failed:\nUnable to open file: %s", (g_DiskBasePath + "Partition0.bin").c_str());
+		CxbxrKrnlAbort("CxbxGetPartitionTable Failed:\nUnable to open file: %s", (g_DiskBasePath + "Partition0.bin").c_str());
 	}
 
 	fread(&table, sizeof(XboxPartitionTable), 1, fp);
@@ -267,7 +267,7 @@ std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 
 	DWORD size = GetFinalPathNameByHandleW(hFile, path.data(), INITIAL_BUF_SIZE, VOLUME_NAME_DOS);
 	if (size == 0) {
-		CxbxKrnlCleanup("CxbxGetPartitionNumberFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
+		CxbxrKrnlAbort("CxbxGetPartitionNumberFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
 	}
 
 	// If the function fails because lpszFilePath is too small to hold the string plus the terminating null character,
@@ -581,7 +581,7 @@ NTSTATUS CxbxConvertFilePath(
 					RelativePath.erase(0, 5); // Remove '$HOME'
 				}
 				else
-					CxbxKrnlCleanup(("Unsupported path macro : " + OriginalPath).c_str());
+					CxbxrKrnlAbort(("Unsupported path macro : " + OriginalPath).c_str());
 			}
 			// Check if the path starts with a relative path indicator :
 			else if (RelativePath[0] == '.') {// "4x4 Evo 2" needs this
@@ -938,7 +938,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 				if (RootDirectoryHandle == INVALID_HANDLE_VALUE)
 				{
 					result = STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
-					CxbxKrnlCleanup((std::string("Could not map ") + HostSymbolicLinkPath).c_str());
+					CxbxrKrnlAbort((std::string("Could not map ") + HostSymbolicLinkPath).c_str());
 				}
 				else
 				{
@@ -1321,7 +1321,7 @@ void CxbxLaunchNewXbe(const std::string& XbePath) {
 		std::string cliCommands;
 		if (!cli_config::GenCMD(cliCommands))
 		{
-			CxbxKrnlCleanup("Could not launch %s", XbePath.c_str());
+			CxbxrKrnlAbort("Could not launch %s", XbePath.c_str());
 		}
 
 		CxbxDebugger::ReportNewTarget(cliCommands.c_str());
@@ -1332,7 +1332,7 @@ void CxbxLaunchNewXbe(const std::string& XbePath) {
 	{
 		if (const auto &err = CxbxExec(false, nullptr, false))
 		{
-			CxbxKrnlCleanup("Could not launch %s\n\nThe reason was: %s", XbePath.c_str(), err->c_str());
+			CxbxrKrnlAbort("Could not launch %s\n\nThe reason was: %s", XbePath.c_str(), err->c_str());
 		}
 	}
 

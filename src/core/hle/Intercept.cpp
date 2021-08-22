@@ -191,7 +191,7 @@ void CDECL EmuOutputMessage(xb_output_message mFlag,
             break;
         }
         case XB_OUTPUT_MESSAGE_ERROR: {
-            CxbxKrnlCleanup("%s", message);
+            CxbxrKrnlAbort("%s", message);
             break;
         }
         case XB_OUTPUT_MESSAGE_DEBUG:
@@ -381,9 +381,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	    << std::endl;
 
 	// Make sure the Symbol Cache directory exists
-	std::string cachePath = std::string(szFolder_CxbxReloadedData) + "\\SymbolCache\\";
+	std::string cachePath = g_DataFilePath + "\\SymbolCache\\";
 	if (!std::filesystem::exists(cachePath) && !std::filesystem::create_directory(cachePath)) {
-		CxbxKrnlCleanup("Couldn't create Cxbx-Reloaded SymbolCache folder!");
+		CxbxrKrnlAbort("Couldn't create Cxbx-Reloaded SymbolCache folder!");
 	}
 
 	// Hash the loaded XBE's header, use it as a filename

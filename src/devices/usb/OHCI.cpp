@@ -335,7 +335,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 		if (!m_Registers.HcDoneHead) {
 			// From the OHCI standard: "This is set to zero whenever HC writes the content of this
 			// register to HCCA. It also sets the WritebackDoneHead of HcInterruptStatus."
-			CxbxKrnlCleanup("HcDoneHead is zero but WritebackDoneHead interrupt is not set!\n");
+			CxbxrKrnlAbort("HcDoneHead is zero but WritebackDoneHead interrupt is not set!\n");
 		}
 
 		if (m_Registers.HcInterrupt & m_Registers.HcInterruptStatus) {
@@ -372,7 +372,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 void OHCI::OHCI_FatalError()
 {
 	// According to the standard, an OHCI will stop operating, and set itself into error state
-	// (which can be queried by MMIO). Instead of calling directly CxbxKrnlCleanup, we let the
+	// (which can be queried by MMIO). Instead of calling directly CxbxrKrnlAbort, we let the
 	// HCD know the problem so that it can try to solve it
 
 	OHCI_SetInterrupt(OHCI_INTR_UE);

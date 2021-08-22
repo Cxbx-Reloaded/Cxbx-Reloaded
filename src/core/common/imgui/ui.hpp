@@ -28,6 +28,7 @@ public:
 
 	void ToggleImGui();
 	bool IsImGuiFocus();
+	void UpdateFPSCounter();
 
 	void DrawMenu();
 	void DrawWidgets();
@@ -48,6 +49,8 @@ protected:
 		callback(this, arg);
 	}
 
+	void UpdateCurrentMSpFAndFPS();
+
 	std::mutex m_imgui_mutex;
 	ImGuiContext* m_imgui_context;
 	char m_file_path[FILENAME_MAX+1];
@@ -57,6 +60,7 @@ protected:
 	ImGuiVideo m_video;
 	overlay_settings m_settings;
 	unsigned int m_lle_flags;
+	float fps_counter;
 	// Make them as settings storage.
 	/*bool m_show_fps;
 	bool m_show_LLE_stats;

@@ -39,7 +39,7 @@
 #include <core\kernel\exports\xboxkrnl.h> // For ObDirectoryObjectType, etc.
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include <cassert>
