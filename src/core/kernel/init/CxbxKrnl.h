@@ -183,11 +183,7 @@ void CxbxKrnlNoFunc();
 
 void CxbxInitPerformanceCounters(); // Implemented in EmuKrnlKe.cpp
 
-void CxbxInitFilePaths();
-
-// For emulation usage only
-bool CxbxLockFilePath();
-void CxbxUnlockFilePath();
+void CxbxrInitFilePaths();
 
 bool CxbxIsElevated();
 

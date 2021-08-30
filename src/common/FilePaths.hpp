@@ -24,7 +24,26 @@
 // ******************************************************************
 #pragma once
 
-static void CxbxInitFilePaths()
+//TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
+// Let filesystem library clean it up for us, including resolve host's symbolic link path.
+// Since internal kernel do translate to full path than preserved host symoblic link path.
+static inline void CxbxResolveHostToFullPath(std::filesystem::path& file_path, std::string_view finish_error_sentence) {
+	std::error_code error;
+	std::filesystem::path sanityPath = std::filesystem::canonical(file_path, error);
+	if (error.value() != 0) {
+		CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s", finish_error_sentence.data(), file_path.string().c_str());
+	}
+	file_path = sanityPath;
+}
+// TODO: Eventually, we should remove this function to start using std::filesystem::path method for all host paths.
+static inline void CxbxResolveHostToFullPath(std::string& file_path, std::string_view finish_error_sentence) {
+	std::filesystem::path sanityPath(file_path);
+	CxbxResolveHostToFullPath(sanityPath, finish_error_sentence);
+	file_path = sanityPath.string();
+}
+
+// NOTE: Do NOT modify g_<custom>BasePath variables after this call!
+void CxbxrInitFilePaths()
 {
 	if (g_Settings) {
 		std::string dataLoc = g_Settings->GetDataLocation();
@@ -41,18 +60,22 @@ static void CxbxInitFilePaths()
 	}
 
 	// Make sure the EmuDisk folder exists
-	std::string emuDisk = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
-	result = std::filesystem::exists(emuDisk);
-	if (!result && !std::filesystem::create_directory(emuDisk)) {
+	g_DiskBasePath = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuDisk");
+	result = std::filesystem::exists(g_DiskBasePath);
+	if (!result && !std::filesystem::create_directory(g_DiskBasePath)) {
 		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuDisk folder!", __func__);
 	}
+	CxbxResolveHostToFullPath(g_DiskBasePath, "Cxbx-Reloaded's EmuDisk directory");
+	g_DiskBasePath = std::filesystem::path(g_DiskBasePath).append("").string();
 
 	// Make sure the EmuDMu folder exists
-	std::string emuMu = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuMu");
-	result = std::filesystem::exists(emuMu);
-	if (!result && !std::filesystem::create_directory(emuMu)) {
+	g_MuBasePath = std::string(szFolder_CxbxReloadedData) + std::string("\\EmuMu");
+	result = std::filesystem::exists(g_MuBasePath);
+	if (!result && !std::filesystem::create_directory(g_MuBasePath)) {
 		CxbxKrnlCleanup("%s : Couldn't create Cxbx-Reloaded EmuMu folder!", __func__);
 	}
+	CxbxResolveHostToFullPath(g_MuBasePath, "Cxbx-Reloaded's EmuMu directory");
+	g_MuBasePath = std::filesystem::path(g_MuBasePath).append("").string();
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", szFolder_CxbxReloadedData);
 

@@ -560,8 +560,8 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	/* Initialize popup message management from kernel side. */
 	log_init_popup_msg();
 
-	/* Initialize Cxbx File Paths */
-	CxbxInitFilePaths();
+	/* Initialize Cxbx-Reloaded File Paths */
+	CxbxrInitFilePaths();
 
 	// Skip '/load' switch
 	// Get XBE Name :
@@ -658,7 +658,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		CxbxKrnlShutDown();
 	}
 
-	/* Must be called after CxbxInitFilePaths and previous kernel process shutdown. */
+	/* Must be called after CxbxrInitFilePaths and previous kernel process shutdown. */
 	if (!CxbxLockFilePath()) {
 		return;
 	}
@@ -1125,24 +1125,6 @@ void LoadXboxKeys(std::string path)
 	EmuLog(LOG_LEVEL::WARNING, "Failed to load Keys.bin. Cxbx-Reloaded will be unable to read Save Data from a real Xbox");
 }
 
-//TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
-// Let filesystem library clean it up for us, including resolve host's symbolic link path.
-// Since internal kernel do translate to full path than preserved host symoblic link path.
-static inline void CxbxResolveHostToFullPath(std::filesystem::path& file_path, std::string_view finish_error_sentence) {
-	std::error_code error;
-	std::filesystem::path sanityPath = std::filesystem::canonical(file_path, error);
-	if (error.value() != 0) {
-		CxbxKrnlCleanupEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s", finish_error_sentence.data(), file_path.string().c_str());
-	}
-	file_path = sanityPath;
-}
-// TODO: Eventually, we should remove this function to start using std::filesystem::path method for all host paths.
-static inline void CxbxResolveHostToFullPath(std::string& file_path, std::string_view finish_error_sentence) {
-	std::filesystem::path sanityPath(file_path);
-	CxbxResolveHostToFullPath(sanityPath, finish_error_sentence);
-	file_path = sanityPath.string();
-}
-
 __declspec(noreturn) void CxbxKrnlInit
 (
 	void                   *pTLSData,
@@ -1251,22 +1233,6 @@ __declspec(noreturn) void CxbxKrnlInit
 #ifdef _DEBUG_PRINT_CURRENT_CONF
 	PrintCurrentConfigurationLog();
 #endif
-	
-	// Initialize devices :
-	{
-		char cxbxr_data_path[sizeof(szFilePath_Xbe)];
-		g_EmuShared->GetDataLocation(cxbxr_data_path);
-
-		g_DiskBasePath = std::string(cxbxr_data_path) + "\\EmuDisk";
-		g_MuBasePath = std::string(cxbxr_data_path) + "\\EmuMu";
-		CxbxResolveHostToFullPath(g_DiskBasePath, "Cxbx-Reloaded's EmuDisk directory");
-		CxbxResolveHostToFullPath(g_MuBasePath, "Cxbx-Reloaded's EmuMu directory");
-		// Since canonical always remove the extra slash, we need to manually add it back.
-		// TODO: Once g_DiskBasePath is filesystem::path, replace g_DiskBasePath's + operators to / for include path separator internally.
-		g_DiskBasePath = std::filesystem::path(g_DiskBasePath).append("").string();
-		g_MuBasePath = std::filesystem::path(g_MuBasePath).append("").string();
-		// NOTE: Do NOT modify global variables above after this point!
-	}
 
 	// Determine xbe path
 	std::filesystem::path xbePath;

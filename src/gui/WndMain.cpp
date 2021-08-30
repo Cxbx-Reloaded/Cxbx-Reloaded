@@ -214,7 +214,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 
 		g_Settings->Verify();
 
-		// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxInitFilePaths function.
+		// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxrInitFilePaths function.
 		g_EmuShared->SetDataLocation(g_Settings->GetDataLocation().c_str());
 
 		unsigned int i = 0;
