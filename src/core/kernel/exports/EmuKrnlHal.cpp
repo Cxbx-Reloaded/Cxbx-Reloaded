@@ -33,7 +33,7 @@
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlLogging.h"
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlCleanup, and CxbxExec
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort, and CxbxExec
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h"
 #include "devices\x86\EmuX86.h" // HalReadWritePciSpace needs this
@@ -489,7 +489,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 	switch (Routine) {
 	case ReturnFirmwareHalt:
-		CxbxKrnlCleanup("Emulated Xbox is halted");
+		CxbxrKrnlAbort("Emulated Xbox is halted");
 		break;
 
 	case ReturnFirmwareReboot:

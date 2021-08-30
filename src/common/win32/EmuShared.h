@@ -246,10 +246,10 @@ class EmuShared : public Mutex
 		void SetLogPopupTestCase(const bool value) { Lock(); m_core.bLogPopupTestCase = value; Unlock(); }
 
 		// ******************************************************************
-		// * File storage location
+		// * Data location path
 		// ******************************************************************
-		void GetStorageLocation(char *path) { Lock(); strncpy(path, m_core.szStorageLocation, xbox::max_path); Unlock(); }
-		void SetStorageLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, xbox::max_path); Unlock(); }
+		void GetDataLocation(char *path) { Lock(); strncpy(path, m_core.szStorageLocation, xbox::max_path); Unlock(); }
+		void SetDataLocation(const char *path) { Lock(); strncpy(m_core.szStorageLocation, path, xbox::max_path); Unlock(); }
 
 		// ******************************************************************
 		// * ClipCursor flag Accessors

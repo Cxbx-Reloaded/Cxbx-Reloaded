@@ -122,6 +122,7 @@ file (GLOB CXBXR_HEADER_EMU_IMPORT
 )
 file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/common/AddressRanges.h"
+ "${CXBXR_ROOT_DIR}/src/common/FilePaths.hpp"
  "${CXBXR_ROOT_DIR}/src/common/audio/converter.hpp"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/glextensions.h"
  "${CXBXR_ROOT_DIR}/src/common/util/gloffscreen/gloffscreen.h"
@@ -176,6 +177,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlKi.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlLogging.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/init/CxbxKrnl.h"
+ "${CXBXR_ROOT_DIR}/src/core/kernel/init/KrnlPatches.hpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/memory-manager/PhysicalMemory.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/memory-manager/PoolManager.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/memory-manager/VMManager.h"
@@ -183,6 +185,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuFile.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuFS.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuNtDll.h"
+ "${CXBXR_ROOT_DIR}/src/core/kernel/support/PatchRdtsc.hpp"
  "${CXBXR_ROOT_DIR}/src/devices/ADM1032Device.h"
  "${CXBXR_ROOT_DIR}/src/devices/EEPROMDevice.h"
  "${CXBXR_ROOT_DIR}/src/devices/network/NVNetDevice.h"
@@ -360,6 +363,7 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuFile.cpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuFS.cpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/support/EmuNtDll.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/kernel/support/PatchRdtsc.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/ADM1032Device.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/EEPROMDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/devices/network/NVNetDevice.cpp"

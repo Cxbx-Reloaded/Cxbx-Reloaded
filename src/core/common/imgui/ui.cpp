@@ -20,14 +20,14 @@ bool ImGuiUI::Initialize()
 	IMGUI_CHECKVERSION();
 	m_imgui_context = ImGui::CreateContext();
 	if (!m_imgui_context) {
-		CxbxKrnlCleanup("Unable to create ImGui context!");
+		CxbxrKrnlAbort("Unable to create ImGui context!");
 		return false;
 	}
 
 	ImGuiIO& io = ImGui::GetIO();
 #if 0 // TODO: Currently most voted for memory, so this block of code is disabled. And may will add an option between file vs memory.
 	// May be best ideal to do manual update call than ImGui's internal auto update.
-	g_EmuShared->GetStorageLocation(m_file_path);
+	g_EmuShared->GetDataLocation(m_file_path);
 	if (m_file_path[0] == '\0') {
 		return false;
 	}
@@ -45,6 +45,11 @@ bool ImGuiUI::Initialize()
 
 	g_EmuShared->GetOverlaySettings(&m_settings);
 	g_EmuShared->GetFlagsLLE(&m_lle_flags);
+
+	// Internal initialize (when necessary, move into its own function.)
+	fps_counter = 30.0f;
+
+	// Miscs
 	m_audio.Initialize();
 	m_video.Initialize();
 
@@ -56,7 +61,7 @@ void ImGuiUI::Shutdown()
 	size_t ini_size = IMGUI_INI_SIZE_MAX;
 	const char* temp_ini_settings = ImGui::SaveIniSettingsToMemory(&ini_size);
 	if (ini_size > IMGUI_INI_SIZE_MAX) {
-		CxbxKrnlCleanup("ImGui ini settings is too large: %d > %d (IMGUI_INI_SIZE_MAX)", ini_size, IMGUI_INI_SIZE_MAX);
+		CxbxrKrnlAbort("ImGui ini settings is too large: %d > %d (IMGUI_INI_SIZE_MAX)", ini_size, IMGUI_INI_SIZE_MAX);
 	}
 	g_EmuShared->SetImGuiIniSettings(temp_ini_settings);
 	g_EmuShared->SetOverlaySettings(&m_settings);
@@ -74,6 +79,36 @@ void ImGuiUI::ToggleImGui()
 {
 	m_is_focus = !m_is_focus;
 	g_EmuShared->SetImGuiFocusFlag(m_is_focus);
+}
+
+static clock_t      g_DeltaTime = 0; // Used for benchmarking/fps count
+static unsigned int g_Frames = 0;
+
+// ******************************************************************
+// * update the current milliseconds per frame
+// ******************************************************************
+void ImGuiUI::UpdateCurrentMSpFAndFPS() {
+	if (g_EmuShared) {
+
+		fps_counter = (float)(g_Frames * 0.5 + fps_counter * 0.5);
+		g_EmuShared->SetCurrentFPS(&fps_counter);
+	}
+}
+
+void ImGuiUI::UpdateFPSCounter()
+{
+	static clock_t lastDrawFunctionCallTime = 0;
+	clock_t currentDrawFunctionCallTime = clock();
+
+	g_DeltaTime += currentDrawFunctionCallTime - lastDrawFunctionCallTime;
+	lastDrawFunctionCallTime = currentDrawFunctionCallTime;
+	g_Frames++;
+
+	if (g_DeltaTime >= CLOCKS_PER_SEC) {
+		UpdateCurrentMSpFAndFPS();
+		g_Frames = 0;
+		g_DeltaTime -= CLOCKS_PER_SEC;
+	}
 }
 
 void ImGuiUI::DrawMenu()
@@ -116,9 +151,6 @@ void ImGuiUI::DrawWidgets()
 			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing)) {
 
 			if (m_settings.fps) {
-
-				float fps_counter;
-				g_EmuShared->GetCurrentFPS(&fps_counter);
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS: %.2f  MS / F : %.2f", fps_counter, (float)(1000.0 / fps_counter));
 			}
 

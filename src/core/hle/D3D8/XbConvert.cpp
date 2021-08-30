@@ -1047,7 +1047,7 @@ D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 	case ((xbox::X_D3DFORMAT)0xffffffff):
 		return D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
-		CxbxKrnlCleanup("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
+		CxbxrKrnlAbort("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
 	}
 
 	return D3DFMT_UNKNOWN;
@@ -1129,7 +1129,7 @@ xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 		result = xbox::X_D3DFMT_VERTEXDATA;
 		break;
 	default:
-		CxbxKrnlCleanup("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
+		CxbxrKrnlAbort("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
     }
 
     return result;

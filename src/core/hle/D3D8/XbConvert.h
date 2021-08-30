@@ -90,7 +90,7 @@ else if((uint32)State < 20)
 else if((uint32)State > 255)
     State = (D3DTRANSFORMSTATETYPE)(State - 250);
 else
-    CxbxKrnlCleanupEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
+    CxbxrKrnlAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
 //*/
 
 // convert from xbox to pc texture transform state types
@@ -115,7 +115,7 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(xbox::X_D3DTRANSFORMSTATETYPE State)
 		return D3DTS_WORLDMATRIX(State - 256);
     }
 
-    CxbxKrnlCleanupEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
+    CxbxrKrnlAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
     return (D3DTRANSFORMSTATETYPE)0;
 }
 
