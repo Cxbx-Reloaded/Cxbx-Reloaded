@@ -74,6 +74,9 @@
 
 #include "common/FilePaths.hpp"
 
+// Intended only for CxbxrKrnl.cpp usage.
+#include "KrnlPatches.hpp"
+
 /*! thread local storage */
 Xbe::TLS *CxbxKrnl_TLS = NULL;
 /*! thread local storage data */
@@ -1293,22 +1296,8 @@ static __declspec(noreturn) void CxbxrKrnlInit
 #ifdef _DEBUG_TRACE
 	// VerifyHLEDataBase();
 #endif
-	// TODO : The following seems to cause a crash when booting the game "Forza Motorsport",
-	// according to https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/101#issuecomment-277230140
-	{
-		// Create a fake kernel header for XapiRestrictCodeSelectorLimit
-		// Thanks advancingdragon / DirtBox
-		PDUMMY_KERNEL DummyKernel = (PDUMMY_KERNEL)XBOX_KERNEL_BASE;
-		memset(DummyKernel, 0, sizeof(DUMMY_KERNEL));
 
-		// XapiRestrictCodeSelectorLimit only checks these fields.
-		DummyKernel->DosHeader.e_lfanew = sizeof(IMAGE_DOS_HEADER); // RVA of NtHeaders
-		DummyKernel->FileHeader.SizeOfOptionalHeader = 0;
-		DummyKernel->FileHeader.NumberOfSections = 1;
-		// as long as this doesn't start with "INIT"
-		strncpy_s((PSTR)DummyKernel->SectionHeader.Name, 8, "DONGS", 8);
-		EmuLogInit(LOG_LEVEL::INFO, "Initialized dummy kernel image header.");
-	}
+	CxbxrKrnlSetupDummyHeader();
 
 	// Read which components need to be LLE'ed per user request
 	{
