@@ -30,6 +30,9 @@
 #include "common\IPCHybrid.hpp"
 
 
+// Sanity check: ensure that NUM_INTEGERS_LOG is large enough to hold all our logging modules
+static_assert(to_underlying(CXBXR_MODULE::MAX) <= sizeof(unsigned int) * CHAR_BIT * NUM_INTEGERS_LOG);
+
 static bool g_bHasChanges = false;
 static HWND g_ChildWnd = NULL;
 INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -128,8 +131,9 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			// Set window icon
 			SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
-			LoggedModules[0] = g_Settings->m_core.LoggedModules[0];
-			LoggedModules[1] = g_Settings->m_core.LoggedModules[1];
+			for (unsigned i = 0; i < NUM_INTEGERS_LOG; ++i) {
+				LoggedModules[i] = g_Settings->m_core.LoggedModules[i];
+			}
 			LogLevel = g_Settings->m_core.LogLevel;
 			LogPopupTestCase = g_Settings->m_core.bLogPopupTestCase;
 
@@ -246,8 +250,9 @@ INT_PTR CALLBACK DlgLogConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM
 							LogPopupTestCase = true;
 						}
 
-						g_Settings->m_core.LoggedModules[0] = LoggedModules[0];
-						g_Settings->m_core.LoggedModules[1] = LoggedModules[1];
+						for (unsigned i = 0; i < NUM_INTEGERS_LOG; ++i) {
+							g_Settings->m_core.LoggedModules[i] = LoggedModules[i];
+						}
 						g_Settings->m_core.LogLevel = LogLevel;
 						g_Settings->m_core.bLogPopupTestCase = LogPopupTestCase;
 
