@@ -58,7 +58,7 @@ typedef enum _CXBX_DATA {
 // ******************************************************************
 // * Define number of integers required to store logging settings
 // ******************************************************************
-#define NUM_INTEGERS_LOG 2
+#define NUM_INTEGERS_LOG 3
 
 enum {
 	LLE_NONE = 0,
@@ -109,7 +109,7 @@ public:
 		bool Reserved4 = 0;
 		int  Reserved99[10] = { 0 };
 	} m_core;
-	static_assert(sizeof(s_core) == 0x24C, assert_check_shared_memory(s_core));
+	static_assert(sizeof(s_core) == 0x250, assert_check_shared_memory(s_core));
 
 	// Video settings
 	struct s_video {
