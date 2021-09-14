@@ -183,6 +183,8 @@ static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGE
 xbox::X_D3DVIEWPORT8 g_Xbox_Viewport = { 0 };
 float g_Xbox_BackbufferScaleX = 1;
 float g_Xbox_BackbufferScaleY = 1;
+xbox::X_D3DSWAP g_LastD3DSwap = (xbox::X_D3DSWAP) -1;
+
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
 
@@ -2960,6 +2962,12 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 		return;
 	}
 
+	if (g_LastD3DSwap == xbox::X_D3DSWAP_COPY) {
+		// HACK: Pretend we are drawing to the frontbuffer
+		// by disabling scale factors.
+		return;
+	}
+
 	// Example:
 	// NFS HP2 renders in-game at 640*480
 	// The title uses MSAA, which increases the rendertarget size, but leaves the screen scale unaffected
@@ -5203,13 +5211,14 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
 		LOG_TEST_CASE("D3DDevice_Swap: Flags != 0");
 
-	// TODO handle swap flags
-	if (Flags & X_D3DSWAP_COPY) {
-		// This flag resets the backbuffer scale?
+	g_LastD3DSwap = (xbox::X_D3DSWAP) Flags;
+
+	// TODO handle swap flags correctly
+	if (Flags == X_D3DSWAP_COPY) {
 		// Test case: Antialias sample, Backbufferscale use this flag
-		// Test case: Need for Speed: Hot Pursuit 2 does not, but uses backbufferscale
-		g_Xbox_BackbufferScaleX = 1;
-		g_Xbox_BackbufferScaleY = 1;
+		// This is supposed to allow rendering to the frontbuffer, but we don't maintain one right now
+		// Return so we don't Present
+		return g_Xbox_SwapData.Swap;
 	}
 
 	// Fetch the host backbuffer
