@@ -5207,19 +5207,31 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 {
 	LOG_FUNC_ONE_ARG(Flags);
 
-	// TODO: Ensure this flag is always the same across library versions
-	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
-		LOG_TEST_CASE("D3DDevice_Swap: Flags != 0");
-
-	g_LastD3DSwap = (xbox::X_D3DSWAP) Flags;
-
-	// TODO handle swap flags correctly
-	if (Flags == X_D3DSWAP_COPY) {
-		// Test case: Antialias sample, Backbufferscale use this flag
-		// This is supposed to allow rendering to the frontbuffer, but we don't maintain one right now
-		// Return so we don't Present
-		return g_Xbox_SwapData.Swap;
+	// Handle swap flags
+	// We don't maintain a swap chain, and draw everything to backbuffer 0
+	// so just hack around the swap flags for now...
+	static float prevBackBufferScaleX;
+	if (Flags == X_D3DSWAP_BYPASSCOPY) {
+		// Test case: MotoGp2
+		// Title handles copying to the frontbuffer itself, but we don't keep track of one
+		// MotoGp2 seems to copy a black rectangle over the backbuffer
+		// HACK: Effectively disable drawing - so the title can't copy anything around via draws
+		// and we just have to hope the title leaves the backbuffer untouched...
+		prevBackBufferScaleX = g_Xbox_BackbufferScaleX;
+		g_Xbox_BackbufferScaleX = 0;
 	}
+	else if (g_LastD3DSwap == X_D3DSWAP_BYPASSCOPY) {
+		g_Xbox_BackbufferScaleX = prevBackBufferScaleX;
+	}
+
+	g_LastD3DSwap = (xbox::X_D3DSWAP)Flags;
+
+	// Early exit if we're not ready to present
+	// Test Case: Antialias sample, BackBufferScale sample
+	// Which use D3DSWAP_COPY to render UI directly to the frontbuffer
+	// If we present before the UI is drawn, it will flicker
+	if(Flags != X_D3DSWAP_DEFAULT && !(Flags & X_D3DSWAP_FINISH))
+		return g_Xbox_SwapData.Swap;
 
 	// Fetch the host backbuffer
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
