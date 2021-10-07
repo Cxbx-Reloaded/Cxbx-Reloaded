@@ -5230,8 +5230,11 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	// Test Case: Antialias sample, BackBufferScale sample
 	// Which use D3DSWAP_COPY to render UI directly to the frontbuffer
 	// If we present before the UI is drawn, it will flicker
-	if(Flags != X_D3DSWAP_DEFAULT && !(Flags & X_D3DSWAP_FINISH))
+	if (Flags != X_D3DSWAP_DEFAULT && !(Flags & X_D3DSWAP_FINISH)) {
+		if (Flags == X_D3DSWAP_COPY) { LOG_TEST_CASE("X_D3DSWAP_COPY"); }
+		if (Flags == X_D3DSWAP_BYPASSCOPY) { LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY"); }
 		return g_Xbox_SwapData.Swap;
+	}
 
 	// Fetch the host backbuffer
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
