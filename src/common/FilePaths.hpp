@@ -30,8 +30,17 @@
 static inline void CxbxResolveHostToFullPath(std::filesystem::path& file_path, std::string_view finish_error_sentence) {
 	std::error_code error;
 	std::filesystem::path sanityPath = std::filesystem::canonical(file_path, error);
-	if (error.value() != 0) {
-		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s", finish_error_sentence.data(), file_path.string().c_str());
+	if (error) {
+
+		// The MS implementation of std::filesystem::canonical internally calls GetFinalPathNameByHandleW, which fails with ERROR_FILE_NOT_FOUND when called
+		// on a file inside a mounted xiso under Windows with the xbox-iso-vfs tool because of this known dokany bug https://github.com/dokan-dev/dokany/issues/343
+		EmuLogInit(LOG_LEVEL::WARNING, "Could not resolve to %s: %s, dokany in use? The error was: %s",
+			finish_error_sentence.data(), file_path.string().c_str(), error.message().c_str());
+
+		sanityPath = std::filesystem::absolute(std::filesystem::weakly_canonical(file_path, error), error);
+		if (error) {
+			CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s. The error was: %s", finish_error_sentence.data(), file_path.string().c_str(), error.message().c_str());
+		}
 	}
 	file_path = sanityPath;
 }
