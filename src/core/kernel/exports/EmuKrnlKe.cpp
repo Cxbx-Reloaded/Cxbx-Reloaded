@@ -327,26 +327,15 @@ void InitDpcThread()
 
 static constexpr uint32_t XBOX_TSC_FREQUENCY = 733333333; // Xbox Time Stamp Counter Frequency = 733333333 (CPU Clock)
 static constexpr uint32_t XBOX_ACPI_FREQUENCY = 3375000;  // Xbox ACPI frequency (3.375 mhz)
-static ScaledPerformanceCounter TscCounter, AcpiCounter;
 
 ULONGLONG CxbxGetPerformanceCounter(bool acpi)
 {
-	if (acpi == false) {
-		return TscCounter.Tick();
-	} else if (acpi == true) {
-		return AcpiCounter.Tick();
-	}
-
-	LARGE_INTEGER tsc;
-	QueryPerformanceCounter(&tsc);
-	return static_cast<ULONGLONG>(tsc.QuadPart);
+	const int64_t period = acpi ? XBOX_ACPI_FREQUENCY : XBOX_TSC_FREQUENCY;
+	return Timer_GetScaledPerformanceCounter(period);
 }
 
 void CxbxInitPerformanceCounters()
 {
-	TscCounter.Reset(XBOX_TSC_FREQUENCY);
-	AcpiCounter.Reset(XBOX_ACPI_FREQUENCY);
-
 	// Let's initialize the Dpc handling thread too,
 	// here for now (should be called by our caller)
 	InitDpcThread();

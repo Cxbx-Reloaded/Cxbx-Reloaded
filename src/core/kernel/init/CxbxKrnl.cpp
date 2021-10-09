@@ -391,8 +391,8 @@ static void CxbxKrnlClockThread(void* pVoid)
 	LastTicks = CurrentTicks.QuadPart;
 
 	Error += (Delta * SCALE_S_IN_US);
-	Microseconds = Error / HostClockFrequency;
-	Error -= (Microseconds * HostClockFrequency);
+	Microseconds = Error / HostQPCFrequency;
+	Error -= (Microseconds * HostQPCFrequency);
 
 	UnaccountedMicroseconds += Microseconds;
 	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts

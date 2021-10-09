@@ -76,8 +76,8 @@ void SleepPrecise(std::chrono::steady_clock::time_point targetTime)
 
 // Vector storing all the timers created
 static std::vector<TimerObject*> TimerList;
-// The frequency of the high resolution clock of the host
-uint64_t HostClockFrequency;
+// The frequency of the high resolution clock of the host, and the start time
+int64_t HostQPCFrequency, HostQPCStartTime;
 // Lock to acquire when accessing TimerList
 std::mutex TimerMtx;
 
@@ -86,9 +86,7 @@ std::mutex TimerMtx;
 uint64_t GetTime_NS(TimerObject* Timer)
 {
 #ifdef _WIN32
-	LARGE_INTEGER li;
-	QueryPerformanceCounter(&li);
-	uint64_t Ret = Muldiv64(li.QuadPart, SCALE_S_IN_NS, (uint32_t)HostClockFrequency);
+	uint64_t Ret = Timer_GetScaledPerformanceCounter(SCALE_S_IN_NS);
 #elif __linux__
 	static struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
@@ -194,9 +192,8 @@ void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
 void Timer_Init()
 {
 #ifdef _WIN32
-	LARGE_INTEGER freq;
-	QueryPerformanceFrequency(&freq);
-	HostClockFrequency = freq.QuadPart;
+	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&HostQPCFrequency));
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&HostQPCStartTime));
 #elif __linux__
 	ClockFrequency = 0;
 #else
@@ -204,36 +201,17 @@ void Timer_Init()
 #endif
 }
 
-// ******************************************************************
-
-void ScaledPerformanceCounter::Reset(uint32_t frequency)
+int64_t Timer_GetScaledPerformanceCounter(int64_t Period)
 {
-	std::lock_guard<std::mutex> lock(m_mutex);
+	LARGE_INTEGER currentQPC;
+	QueryPerformanceCounter(&currentQPC);
 
-	m_frequencyFactor = Muldiv64(HostClockFrequency, SCALE_S_IN_NS, frequency);
+	// Scale frequency with overflow avoidance, like in std::chrono
+	// https://github.com/microsoft/STL/blob/6d2f8b0ed88ea6cba26cc2151f47f678442c1663/stl/inc/chrono#L703
+	const int64_t currentTime = currentQPC.QuadPart - HostQPCStartTime;
+	const int64_t whole = (currentTime / HostQPCFrequency) * Period;
+	const int64_t part  = (currentTime % HostQPCFrequency) * Period / HostQPCFrequency;
 
-	LARGE_INTEGER tsc;
-	QueryPerformanceCounter(&tsc);
-	m_lastQPC = tsc.QuadPart;
-
-	m_currentCount = 0;
-	m_currentRemainder = 0;
+	return whole + part;
 }
 
-uint64_t ScaledPerformanceCounter::Tick()
-{
-	std::lock_guard<std::mutex> lock(m_mutex);
-
-	LARGE_INTEGER qpc;
-	QueryPerformanceCounter(&qpc);
-
-	int64_t lastQpc = std::exchange(m_lastQPC, qpc.QuadPart);
-	qpc.QuadPart -= lastQpc;
-	qpc.QuadPart *= SCALE_S_IN_NS;
-	qpc.QuadPart += m_currentRemainder;
-	uint64_t quotient = qpc.QuadPart / m_frequencyFactor;
-	uint64_t remainder =  qpc.QuadPart % m_frequencyFactor;
-
-	m_currentRemainder = remainder;
-	return m_currentCount += quotient;
-}
