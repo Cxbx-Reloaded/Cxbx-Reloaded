@@ -53,4 +53,4 @@ private:
 	HWND m_tooltip_hwnd;
 };
 
-template void EmuDevice::BindDefault(const std::array<const char *, XBOX_CTRL_NUM_BUTTONS> &arr);
+extern template void EmuDevice::BindDefault(const std::array<const char *, XBOX_CTRL_NUM_BUTTONS> &arr);

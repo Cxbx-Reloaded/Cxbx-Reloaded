@@ -120,3 +120,5 @@ void EmuDevice::CreateTooltipWindow()
 	SendMessage(m_tooltip_hwnd, TTM_SETMAXTIPWIDTH, 0, 500);
 	SendMessage(m_tooltip_hwnd, TTM_SETDELAYTIME, TTDT_AUTOPOP, 15000);
 }
+
+template void EmuDevice::BindDefault(const std::array<const char*, XBOX_CTRL_NUM_BUTTONS>& arr);
