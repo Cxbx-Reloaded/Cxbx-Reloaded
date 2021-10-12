@@ -496,7 +496,7 @@ bool Settings::LoadConfig()
 			continue;
 		}
 
-		auto &lambda = [&control_names, &device](int num_buttons, const char *const ctrl_names[]) {
+		const auto &lambda = [&control_names, &device](int num_buttons, const char *const ctrl_names[]) {
 			for (int i = 0; i < num_buttons; i++) {
 				char control_name[XBOX_BUTTON_NAME_LENGTH];
 				std::sprintf(control_name, sect_input_profiles.control, ctrl_names[i]);
@@ -668,7 +668,7 @@ bool Settings::Save(std::string file_path)
 			continue;
 		}
 
-		auto &lambda = [&control_names, &device](int num_buttons, const char *const ctrl_names[]) {
+		const auto &lambda = [&control_names, &device](int num_buttons, const char *const ctrl_names[]) {
 			for (int i = 0; i < num_buttons; i++) {
 				char control_name[XBOX_BUTTON_NAME_LENGTH];
 				std::sprintf(control_name, sect_input_profiles.control, ctrl_names[i]);
