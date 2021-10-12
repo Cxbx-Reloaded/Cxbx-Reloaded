@@ -28,6 +28,7 @@
 
 #include "common\Error.h"
 #include "common/xbox/Types.hpp"
+#include "core/kernel/common/types.h"
 
 #include <cstdio>
 
