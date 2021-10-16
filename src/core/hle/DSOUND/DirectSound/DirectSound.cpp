@@ -53,16 +53,10 @@
 // TODO: Move these to LLE APUDevice once we have one!
 
 static constexpr uint32_t APU_TIMER_FREQUENCY = 48000;
-static ScaledPerformanceCounter ApuCounter;
-
-void ResetApuTimer()
-{
-    ApuCounter.Reset(APU_TIMER_FREQUENCY);
-}
 
 uint32_t GetAPUTime()
 {
-    return static_cast<uint32_t>(ApuCounter.Tick());
+    return static_cast<int32_t>(Timer_GetScaledPerformanceCounter(APU_TIMER_FREQUENCY));
 }
 
 
@@ -134,8 +128,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreate)
     if (!initialized) {
         dsound_thread = std::thread(dsound_thread_worker, nullptr);
     }
-
-	ResetApuTimer();
 
     // Set this flag when this function is called
     g_bDSoundCreateCalled = TRUE;

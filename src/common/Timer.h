@@ -54,7 +54,7 @@ typedef struct _TimerObject
 }
 TimerObject;
 
-extern uint64_t HostClockFrequency;
+extern int64_t HostQPCFrequency;
 
 /* Timer exported functions */
 TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, bool IsXboxTimer);
@@ -64,25 +64,8 @@ void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);
 uint64_t GetTime_NS(TimerObject* Timer);
 void Timer_Init();
 
+int64_t Timer_GetScaledPerformanceCounter(int64_t Period);
+
 void SleepPrecise(std::chrono::steady_clock::time_point targetTime);
-
-// A stateful replacement for QueryPerformanceCounter, ticking at an arbitrary frequency
-// Thread-safe and designed to avoid overflows at all cost
-class ScaledPerformanceCounter
-{
-public:
-	ScaledPerformanceCounter() = default;
-	void Reset(uint32_t frequency);
-	uint64_t Tick();
-
-private:
-	std::mutex m_mutex;
-
-	uint64_t m_frequencyFactor;
-	int64_t m_lastQPC;
-
-	uint64_t m_currentCount;
-	uint64_t m_currentRemainder;
-};
 
 #endif
