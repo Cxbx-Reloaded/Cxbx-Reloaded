@@ -109,7 +109,7 @@ std::string PortUserFormat(std::string_view port)
 void PortStr2Int(std::string_view port, int *port_num, int *slot)
 {
 	*slot = PORT_INVALID;
-	auto &ret = std::from_chars(port.data(), port.data() + port.size(), *port_num);
+	auto ret = std::from_chars(port.data(), port.data() + port.size(), *port_num);
 	assert(ret.ec != std::errc::invalid_argument);
 	if (ret.ptr != port.data() + port.size()) {
 		++ret.ptr;

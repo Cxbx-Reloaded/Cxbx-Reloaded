@@ -328,11 +328,11 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
 	va_list argp;
 	va_start(argp, message);
 	// allocate predicted buffer size then write to buffer afterward.
-	std::vector<char> Buffer(1+std::vsnprintf(nullptr, 0, message, argp));
+	std::string Buffer(1+std::vsnprintf(nullptr, 0, message, argp), '\0');
 	vsnprintf(Buffer.data(), Buffer.size(), message, argp);
 	va_end(argp);
 
-	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer);
+	EmuLogOutputEx(cxbxr_module, level, "Popup : %s", Buffer.c_str());
 
 	// If user is using exclusive fullscreen, we need to refrain all popups.
 	if (g_disablePopupMessages) {
