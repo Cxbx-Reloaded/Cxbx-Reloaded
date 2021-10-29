@@ -41,6 +41,8 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/imgui")
 
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libusb")
+
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
 # Then move only specific project files into their
@@ -423,7 +425,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 set(cxbxr_INSTALL_files "COPYING" "README.md")
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch SDL2 subhook libXbSymbolDatabase libtommath libtomcrypt imgui
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch SDL2 subhook libXbSymbolDatabase libtommath libtomcrypt imgui libusb
  PROPERTIES FOLDER Cxbx-Reloaded
 )
 

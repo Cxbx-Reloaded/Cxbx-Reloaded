@@ -18,6 +18,7 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/simpleini"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
  "${CXBXR_ROOT_DIR}/import/xxHash"
+ "${CXBXR_ROOT_DIR}/import/libusb/libusb"
 )
 
 link_directories(
@@ -193,6 +194,7 @@ target_link_libraries(cxbx
  libtomcrypt
  SDL2
  imgui
+ libusb
 
  ${WINS_LIB}
 )

@@ -35,3 +35,7 @@
 	path = import/SDL2
 	url = https://github.com/libsdl-org/SDL
 	shallow = true
+[submodule "import/libusb"]
+	path = import/libusb
+	url = https://github.com/libusb/libusb
+	shallow = true
