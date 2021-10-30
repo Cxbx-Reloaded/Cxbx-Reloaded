@@ -41,6 +41,8 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/imgui")
 
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libusb")
+
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
 # Then move only specific project files into their
@@ -64,6 +66,9 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/input/InputDevice.h"
  "${CXBXR_ROOT_DIR}/src/common/input/InputManager.h"
  "${CXBXR_ROOT_DIR}/src/common/input/SdlJoystick.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/SteelBattalionController.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/LibusbXboxController.h"
+ "${CXBXR_ROOT_DIR}/src/common/input/LibusbDevice.h"
  "${CXBXR_ROOT_DIR}/src/common/input/XInputPad.h"
  "${CXBXR_ROOT_DIR}/src/common/input/RawDevice.h"
  "${CXBXR_ROOT_DIR}/src/common/IPCHybrid.hpp"
@@ -235,6 +240,9 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/input/InputDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/InputManager.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/SdlJoystick.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/SteelBattalionController.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/LibusbXboxController.cpp"
+ "${CXBXR_ROOT_DIR}/src/common/input/LibusbDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/XInputPad.cpp"
  "${CXBXR_ROOT_DIR}/src/common/input/RawDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/common/Logging.cpp"
@@ -423,7 +431,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/cxbxr-emu")
 set(cxbxr_INSTALL_files "COPYING" "README.md")
 
 # Cxbx-Reloaded project with third-party libraries
-set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch SDL2 subhook libXbSymbolDatabase libtommath libtomcrypt imgui
+set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch SDL2 subhook libXbSymbolDatabase libtommath libtomcrypt imgui libusb
  PROPERTIES FOLDER Cxbx-Reloaded
 )
 

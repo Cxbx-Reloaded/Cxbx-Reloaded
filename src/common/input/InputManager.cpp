@@ -40,6 +40,8 @@
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "RawDevice.h"
+#include "SteelBattalionController.h"
+#include "LibusbXboxController.h"
 #include "DInputKeyboardMouse.h"
 #include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
@@ -392,59 +394,87 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port);
 	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE)]));
 
-	if (Direction == DIRECTION_IN) {
-		if (!Device->UpdateInput()) {
-			return false;
-		}
-
-		//XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
-		XpadInput *in_buf = static_cast<XpadInput *>(Buffer);
-		for (int i = 0; i < 8; i++) {
-			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
-			if (state) {
-				in_buf->wButtons |= (1 << i);
+	auto libusb = std::dynamic_pointer_cast<libusbXbox::LibusbXboxController>(Device);
+	if (libusb != nullptr)
+	{
+		if (Direction == DIRECTION_IN)
+		{
+			if (!Device->UpdateInput()) {
+				return false;
 			}
-			else {
-				in_buf->wButtons &= ~(1 << i);
-			}
+
+			memcpy(Buffer, libusb->GetRawControlData(), sizeof(XpadInput));
 		}
-
-		for (int i = 8, j = 0; i < 16; i++, j++) {
-			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
-			in_buf->bAnalogButtons[j] = static_cast<uint8_t>(state * 0xFF);
-		}
-
-		for (int i = 16; i < 24; i += 2) {
-			ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
-			ControlState state_minus = (bindings[i + 1] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i + 1])->GetState() : 0.0;
-			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? -state_minus * 0x8000 : 0.0;
-			switch (i)
-			{
-			case 16:
-				in_buf->sThumbLX = static_cast<int16_t>(state);
-				break;
-
-			case 18:
-				in_buf->sThumbLY = static_cast<int16_t>(state);
-				break;
-
-			case 20:
-				in_buf->sThumbRX = static_cast<int16_t>(state);
-				break;
-
-			case 22:
-				in_buf->sThumbRY = static_cast<int16_t>(state);
-				break;
-
-			}
+		else
+		{
+			// XpadOutput isn't in the right format for the controller. It'll need to be formatted
+			const XpadOutput* output = static_cast<XpadOutput*>(Buffer);
+			uint8_t buffer[6];
+			memset(buffer, 0, 6);
+			buffer[1] = 6;
+			buffer[3] = output->left_actuator_strength / 256;
+			buffer[5] = output->right_actuator_strength / 256;
+			libusb->SetRumble(buffer, 6);
 		}
 	}
-	else {
-		if (bindings[24] != nullptr) {
-			//XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
-			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(Buffer);
-			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
-				out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
+	else
+	{
+		if (Direction == DIRECTION_IN) {
+			if (!Device->UpdateInput()) {
+				return false;
+			}
+
+			//XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
+			XpadInput* in_buf = static_cast<XpadInput*>(Buffer);
+			for (int i = 0; i < 8; i++) {
+				ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+				if (state) {
+					in_buf->wButtons |= (1 << i);
+				}
+				else {
+					in_buf->wButtons &= ~(1 << i);
+				}
+			}
+
+			for (int i = 8, j = 0; i < 16; i++, j++) {
+				ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+				in_buf->bAnalogButtons[j] = static_cast<uint8_t>(state * 0xFF);
+			}
+
+			for (int i = 16; i < 24; i += 2) {
+				ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+				ControlState state_minus = (bindings[i + 1] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i + 1])->GetState() : 0.0;
+				ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? -state_minus * 0x8000 : 0.0;
+				switch (i)
+				{
+				case 16:
+					in_buf->sThumbLX = static_cast<int16_t>(state);
+					break;
+
+				case 18:
+					in_buf->sThumbLY = static_cast<int16_t>(state);
+					break;
+
+				case 20:
+					in_buf->sThumbRX = static_cast<int16_t>(state);
+					break;
+
+				case 22:
+					in_buf->sThumbRY = static_cast<int16_t>(state);
+					break;
+
+				}
+			}
+		}
+		else
+		{
+			if (bindings[24] != nullptr)
+			{
+				//XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
+				XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(Buffer);
+				dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
+					out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
+			}
 		}
 	}
 
@@ -456,154 +486,209 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port);
 	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER)]));
 
-	// NOTE: the output state is not supported
-	if (Direction == DIRECTION_IN) {
-		if (!Device->UpdateInput()) {
-			return false;
+	auto sbc = std::dynamic_pointer_cast<SBC::SteelBattalionController>(Device);
+	if (sbc != nullptr)
+	{
+		if (Direction == DIRECTION_IN)
+		{
+			auto rawControlData = sbc->GetRawControlData();
+			// Copy the raw data data into the buffer (skipping the first two bytes, because they're not used)
+			memcpy(Buffer, rawControlData, sizeof(SBCInput));
 		}
-
-		// We change the toggle buttons only when a press -> release input transaction is completed
-		// 0  -> CockpitHatch
-		// 1  -> Ignition
-		// 2  -> ToggleFilterControl
-		// 3  -> ToggleOxygenSupply
-		// 4  -> ToggleFuelFlowRate
-		// 5  -> ToggleBuffreMaterial
-		// 6  -> ToggleVTLocation
-		// 7  -> TunerDial Up
-		// 8  -> TunerDial Down
-		// 9  -> GearLever Up
-		// 10 -> GearLever Down
-		static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
-		SBCInput *in_buf = static_cast<SBCInput *>(Buffer);
-		for (int i = 0; i < 4; i++) {
-			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
-			if (state) {
-				in_buf->wButtons[0] |= (1 << i);
-			}
-			else {
-				in_buf->wButtons[0] &= ~(1 << i);
-			}
+		else
+		{
+			sbc->SetLEDBuffer((const uint8_t*)Buffer, sizeof(SBCOutput));
 		}
-
-		// CockpitHatch and Ignition are toggle buttons
-		for (int i = 4, j = 0; i < 6; i++, j++) {
-			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
-			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
-				in_buf->wButtons[0] ^= (1 << i);
+	}
+	else
+	{
+		// NOTE: the output state is not supported
+		if (Direction == DIRECTION_IN) {
+			if (!Device->UpdateInput()) {
+				return false;
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
-		}
 
-		for (int i = 6; i < 34; i++) {
-			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
-			if (state) {
-				in_buf->wButtons[i / 16] |= (1 << (i % 16));
+			static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
+			SBCInput* in_buf = static_cast<SBCInput*>(Buffer);
+
+			for (int i = 0; i < 39; i++) {
+				ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+				if (state) {
+					in_buf->wButtons[i / 16] |= (1 << (i % 16));
+				}
+				else {
+					in_buf->wButtons[i / 16] &= ~(1 << (i % 16));
+				}
 			}
-			else {
-				in_buf->wButtons[i / 16] &= ~(1 << (i % 16));
-			}
-		}
 
-		// The last five digital buttons are toggle buttons
-		for (int i = 34, j = 2; i < 39; i++, j++) {
-			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
-			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
-				in_buf->wButtons[2] ^= (1 << (i % 16));
-			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
-		}
-
-		for (int i = 39; i < 49; i += 2) {
-			ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
-			ControlState state_minus = (bindings[i + 1] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i + 1])->GetState() : 0.0;
-			switch (i)
-			{
-			case 39:
-				// NOTE: the center of the stick is 0x7F, not zero
-				in_buf->sAimingX = static_cast<uint8_t>(state_plus ? (0x80 * state_plus) + 0x7F : state_minus ? (1.0 - state_minus) * 0x7F : 0x7F);
-				break;
-
-			case 41:
-				// NOTE: the center of the stick is 0x7F, not zero
-				in_buf->sAimingY = static_cast<uint8_t>(state_plus ? (1.0 - state_plus) * 0x7F : state_minus ? (0x80 * state_minus) + 0x7F : 0x7F);
-				break;
-
-			case 43:
-				// left: negative, right: positive
-				in_buf->sRotationLever = static_cast<int8_t>(static_cast<int8_t>(state_plus ? -state_plus * 0x80 : state_minus ? state_minus * 0x7F : 0.0));
-				break;
-
-			case 45:
-				// left: positive, right: negative
-				in_buf->sSightChangeX = static_cast<int8_t>(state_plus ? state_plus * 0x7F : state_minus ? -state_minus * 0x80 : 0.0);
-				break;
-
-			case 47:
-				// up: negative, down: positive
-				in_buf->sSightChangeY = static_cast<int8_t>(state_plus ? -state_plus * 0x80 : state_minus ? state_minus * 0x7F : 0.0);
-				break;
-
-			}
-		}
-
-		for (int i = 49; i < 52; i++) {
-			ControlState state = (bindings[i] != nullptr) ? (dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() * 0xFF) : 0.0;
-			switch (i)
-			{
-			case 49:
-				in_buf->wLeftPedal = static_cast<uint8_t>(state);
-				break;
-
-			case 50:
-				in_buf->wMiddlePedal = static_cast<uint8_t>(state);
-				break;
-
-			case 51:
-				in_buf->wRightPedal = static_cast<uint8_t>(state);
-				break;
-
-			}
-		}
-
-		// TunerDial and GearLever work like toggles
-		for (int i = 52, j = 7; i < 56; i++, j++) {
-			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
-			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+			for (int i = 39; i < 49; i += 2) {
+				ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+				ControlState state_minus = (bindings[i + 1] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i + 1])->GetState() : 0.0;
 				switch (i)
 				{
-				case 52:
-					if (in_buf->ucTunerDial != 12) {
-						in_buf->ucTunerDial += 1;
-					}
+				case 39:
+					// NOTE: the center of the stick is 0x7F, not zero
+					in_buf->sAimingX = static_cast<uint8_t>(state_plus ? (0x80 * state_plus) + 0x7F : state_minus ? (1.0 - state_minus) * 0x7F : 0x7F);
 					break;
 
-				case 53:
-					if (in_buf->ucTunerDial != 0) {
-						in_buf->ucTunerDial -= 1;
-					}
+				case 41:
+					// NOTE: the center of the stick is 0x7F, not zero
+					in_buf->sAimingY = static_cast<uint8_t>(state_plus ? (1.0 - state_plus) * 0x7F : state_minus ? (0x80 * state_minus) + 0x7F : 0x7F);
 					break;
 
-				case 54:
-					if (in_buf->ucGearLever != 13) {
-						in_buf->ucGearLever += 1;
-					}
+				case 43:
+					// left: negative, right: positive
+					in_buf->sRotationLever = static_cast<int8_t>(static_cast<int8_t>(state_plus ? -state_plus * 0x80 : state_minus ? state_minus * 0x7F : 0.0));
 					break;
 
-				case 55:
-					if (in_buf->ucGearLever != 7) {
-						in_buf->ucGearLever -= 1;
+				case 45:
+					// left: positive, right: negative
+					in_buf->sSightChangeX = static_cast<int8_t>(state_plus ? state_plus * 0x7F : state_minus ? -state_minus * 0x80 : 0.0);
+					break;
+
+				case 47:
+					// up: negative, down: positive
+					in_buf->sSightChangeY = static_cast<int8_t>(state_plus ? -state_plus * 0x80 : state_minus ? state_minus * 0x7F : 0.0);
+					break;
+
+				}
+			}
+
+			for (int i = 49; i < 52; i++) {
+				ControlState state = (bindings[i] != nullptr) ? (dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() * 0xFF) : 0.0;
+				switch (i)
+				{
+				case 49:
+					in_buf->wLeftPedal = static_cast<uint8_t>(state);
+					break;
+
+				case 50:
+					in_buf->wMiddlePedal = static_cast<uint8_t>(state);
+					break;
+
+				case 51:
+					in_buf->wRightPedal = static_cast<uint8_t>(state);
+					break;
+
+				}
+			}
+
+			// TunerDial and GearLever work like toggles
+			for (int i = 52, j = 7; i < 56; i++, j++) {
+				ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+				uint16_t curr_in_state = static_cast<uint16_t>(!!state);
+				if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+					switch (i)
+					{
+					case 52:
+						if (in_buf->ucTunerDial != 12) {
+							in_buf->ucTunerDial += 1;
+						}
+						break;
+
+					case 53:
+						if (in_buf->ucTunerDial != 0) {
+							in_buf->ucTunerDial -= 1;
+						}
+						break;
+
+					case 54:
+						if (in_buf->ucGearLever != 13) {
+							in_buf->ucGearLever += 1;
+						}
+						break;
+
+					case 55:
+						if (in_buf->ucGearLever != 7) {
+							in_buf->ucGearLever -= 1;
+						}
+						break;
 					}
+				}
+				(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
+			}
+
+			for (int i = 56; i < 79; i++)
+			{
+				ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
+				switch (i)
+				{
+					/* Shifter States */
+				case 56:
+					if (state) in_buf->ucGearLever = 7;
+					break;
+				case 57:
+					if (state) in_buf->ucGearLever = 8;
+					break;
+				case 58:
+					if (state) in_buf->ucGearLever = 9;
+					break;
+				case 59:
+					if (state) in_buf->ucGearLever = 10;
+					break;
+				case 60:
+					if (state) in_buf->ucGearLever = 11;
+					break;
+				case 61:
+					if (state) in_buf->ucGearLever = 12;
+					break;
+				case 62:
+					if (state) in_buf->ucGearLever = 13;
+					break;
+
+					/* TunerDial States */
+				case 63:
+					if (state) in_buf->ucTunerDial = 0;
+					break;
+				case 64:
+					if (state) in_buf->ucTunerDial = 1;
+					break;
+				case 65:
+					if (state) in_buf->ucTunerDial = 2;
+					break;
+				case 66:
+					if (state) in_buf->ucTunerDial = 3;
+					break;
+				case 67:
+					if (state) in_buf->ucTunerDial = 4;
+					break;
+				case 68:
+					if (state) in_buf->ucTunerDial = 5;
+					break;
+				case 69:
+					if (state) in_buf->ucTunerDial = 6;
+					break;
+				case 70:
+					if (state) in_buf->ucTunerDial = 7;
+					break;
+				case 71:
+					if (state) in_buf->ucTunerDial = 8;
+					break;
+				case 72:
+					if (state) in_buf->ucTunerDial = 9;
+					break;
+				case 73:
+					if (state) in_buf->ucTunerDial = 10;
+					break;
+				case 74:
+					if (state) in_buf->ucTunerDial = 11;
+					break;
+				case 75:
+					if (state) in_buf->ucTunerDial = 12;
+					break;
+				case 76:
+					if (state) in_buf->ucTunerDial = 13;
+					break;
+				case 77:
+					if (state) in_buf->ucTunerDial = 14;
+					break;
+				case 78:
+					if (state) in_buf->ucTunerDial = 15;
 					break;
 				}
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
 		}
 	}
-
 	return true;
 }
 
@@ -616,6 +701,8 @@ void InputDeviceManager::RefreshDevices()
 	XInput::PopulateDevices();
 	DInput::PopulateDevices();
 	Sdl::PopulateDevices();
+	SBC::SteelBattalionController::PopulateDevices();
+	libusbXbox::LibusbXboxController::PopulateDevices();
 	lck.lock();
 	m_Cv.wait(lck, []() {
 		return Sdl::PopulateOK;

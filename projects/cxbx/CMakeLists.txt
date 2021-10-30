@@ -18,6 +18,7 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/simpleini"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
  "${CXBXR_ROOT_DIR}/import/xxHash"
+ "${CXBXR_ROOT_DIR}/import/libusb/libusb"
 )
 
 link_directories(
@@ -25,6 +26,7 @@ link_directories(
  "${CXBXR_ROOT_DIR}/import/glew-2.0.0/lib/Release/Win32"
  "${CXBXR_ROOT_DIR}/import/DirectX9/lib"
  "${CXBXR_ROOT_DIR}/import/winpcap/Lib"
+ "${CXBXR_ROOT_DIR}/import/libusb/Win32/Release/lib"
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -193,6 +195,7 @@ target_link_libraries(cxbx
  libtomcrypt
  SDL2
  imgui
+ libusb
 
  ${WINS_LIB}
 )
@@ -205,7 +208,7 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
   add_dependencies(cxbx cxbxr-debugger)
 endif()
 
-add_dependencies(cxbx cxbxr-ldr cxbxr-emu misc-batch)
+add_dependencies(cxbx cxbxr-ldr cxbxr-emu misc-batch libusb)
 
 # Try to stop cmake from building hlsl files
 # Which are all currently loaded at runtime only
