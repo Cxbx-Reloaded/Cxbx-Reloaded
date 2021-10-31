@@ -41,6 +41,7 @@
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "DInputKeyboardMouse.h"
+#include "LibusbDevice.h"
 #include "InputManager.h"
 
 // These values are those used by Dolphin!
@@ -156,6 +157,7 @@ namespace Sdl
 				else {
 					XInput::GetDeviceChanges();
 					DInput::GetDeviceChanges();
+					Libusb::GetDeviceChanges();
 					std::string port = std::to_string(*static_cast<int *>(Event.user.data1));
 					int port_num, slot;
 					PortStr2Int(port, &port_num, &slot);

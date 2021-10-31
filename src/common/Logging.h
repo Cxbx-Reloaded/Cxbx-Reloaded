@@ -90,6 +90,7 @@ typedef enum class _CXBXR_MODULE: unsigned int {
 	XMO,
 	RINP,
 	JVS,
+	LIBUSB,
 	// kernel
 	KRNL,
 	LOG,

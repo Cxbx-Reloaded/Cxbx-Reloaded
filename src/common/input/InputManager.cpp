@@ -41,6 +41,7 @@
 #include "XInputPad.h"
 #include "RawDevice.h"
 #include "DInputKeyboardMouse.h"
+#include "LibusbDevice.h"
 #include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
@@ -91,11 +92,12 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 	m_Cv.wait(lck, []() {
 		return (Sdl::InitStatus != Sdl::NOT_INIT) &&
 			(XInput::InitStatus != XInput::NOT_INIT) &&
-			(RawInput::InitStatus != RawInput::NOT_INIT);
+			(RawInput::InitStatus != RawInput::NOT_INIT) &&
+			(Libusb::InitStatus != Libusb::NOT_INIT);
 		});
 	lck.unlock();
 
-	if (Sdl::InitStatus < 0 || XInput::InitStatus < 0 || RawInput::InitStatus < 0) {
+	if (Sdl::InitStatus < 0 || XInput::InitStatus < 0 || RawInput::InitStatus < 0 || Libusb::InitStatus < 0) {
 		CxbxrKrnlAbort("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
@@ -616,6 +618,7 @@ void InputDeviceManager::RefreshDevices()
 	XInput::PopulateDevices();
 	DInput::PopulateDevices();
 	Sdl::PopulateDevices();
+	Libusb::PopulateDevices();
 	lck.lock();
 	m_Cv.wait(lck, []() {
 		return Sdl::PopulateOK;
@@ -719,7 +722,7 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 		std::unique_lock<std::mutex> lck(m_Mtx);
 
 		auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [](const auto &Device) {
-			if (StrStartsWith(Device->GetAPI(), "XInput")) {
+			if (Device->IsLibusb() || StrStartsWith(Device->GetAPI(), "XInput")) {
 				return true;
 			}
 			return false;
@@ -730,6 +733,9 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 
 		lck.unlock();
 		XInput::PopulateDevices();
+		// Unfortunately, as documented in this issue https://github.com/libusb/libusb/issues/86, when this was written libusb did not yet support
+		// device hotplug on Windows, so we add the below call here. This will only work if rawinput detects the libusb device.
+		Libusb::PopulateDevices();
 	}
 
 	for (int port = PORT_1; port <= PORT_4; ++port) {

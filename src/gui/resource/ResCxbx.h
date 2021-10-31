@@ -94,6 +94,7 @@
 #define IDC_LOG_VSHCACHE                962
 #define IDC_LOG_RINP                    963
 #define IDC_LOG_JVS                     964
+#define IDC_LOG_LIBUSB                  965
 #define IDC_DEVICE_LIST_TOP_SLOT        995
 #define IDC_DEVICE_LIST_BOTTOM_SLOT     996
 #define IDC_DEVICE_TOP_SLOT             997
