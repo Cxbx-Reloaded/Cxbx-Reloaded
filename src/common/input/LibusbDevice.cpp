@@ -30,6 +30,7 @@
 #include "LibusbDevice.h"
 #include "InputManager.h"
 #include "core\kernel\support\Emu.h"
+#include "core\hle\XAPI\Xapi.h"
 
 // Sanitiy check: ensure out libusb version is high enough for libusb_get_device_descriptor to succeed
 static_assert(LIBUSB_API_VERSION >= 0x01000102);
@@ -155,12 +156,6 @@ namespace Libusb
 		PopulateDevices();
 	}
 
-	bool LibusbDevice::UpdateInput()
-	{
-		// not sure of this yet
-		return true;
-	}
-
 	LibusbDevice::LibusbDevice(libusb_device_descriptor *Desc, libusb_device *Dev)
 	{
 		m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
@@ -168,14 +163,22 @@ namespace Libusb
 		// The SBC's VID and PID are taken from https://xboxdevwiki.net/Xbox_Input_Devices#Steel_Battalion_Controller 
 		if ((Desc->idVendor == 0x0a7b) && (Desc->idProduct == 0xd000)) {
 			m_Type = XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER;
+			m_UcType = XINPUT_DEVTYPE_STEELBATTALION;
+			m_UcSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
 			m_Name = "Steel battalion controller";
+			m_BufferInSize = sizeof(XidSBCInput);
+			m_BufferOutSize = sizeof(XidSBCOutput);
 			assert(Desc->bcdUSB == 0x110); // must be a usb 1.1 device
 		}
 		else {
 			for (size_t i = 0; i < ARRAY_SIZE(SupportedDevices_VidPid); ++i) {
 				if ((Desc->idVendor = SupportedDevices_VidPid[i][0]) && (Desc->idProduct == SupportedDevices_VidPid[i][1])) {
 					m_Type = XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER;
+					m_UcType = XINPUT_DEVTYPE_GAMEPAD;
+					m_UcSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 					m_Name = SupportedDevices_Name[i];
+					m_BufferInSize = sizeof(XidGamepadInput);
+					m_BufferOutSize = sizeof(XidGamepadOutput);
 					assert(Desc->bcdUSB == 0x110); // must be a usb 1.1 device
 					break;
 				}
@@ -187,12 +190,13 @@ namespace Libusb
 		// Duke, S and SBC have 1 configuration, 1 interface and 2 endpoints (input and output) and use the default alternate setting zero.
 		// The code below assumes that third-party controllers follow suit.
 		if (libusb_open(Dev, &m_hDev) == 0) {
-			libusb_config_descriptor *Desc;
-			if (libusb_get_active_config_descriptor(Dev, &Desc) == 0) {
-				if (Desc->bNumInterfaces == 1) {
-					auto Iface = Desc->interface[0];
+			libusb_config_descriptor *ConfDesc;
+			if (libusb_get_active_config_descriptor(Dev, &ConfDesc) == 0) {
+				if (ConfDesc->bNumInterfaces == 1) {
+					auto Iface = ConfDesc->interface[0];
 					if (Iface.num_altsetting == 1) {
 						auto Setting = Iface.altsetting[0];
+						m_IfaceNum = Setting.bInterfaceNumber;
 						if (Setting.bNumEndpoints == 2) {
 							for (uint8_t i = 0; i < 2; ++i) {
 								auto Endpoint = Setting.endpoint[i];
@@ -207,24 +211,94 @@ namespace Libusb
 									}
 								}
 							}
+							if (int err = libusb_claim_interface(m_hDev, m_IfaceNum) != 0) {
+								EmuLog(LOG_LEVEL::INFO, "Rejected device %s because libusb could not claim its interface. The error was: %s",
+									m_Name.c_str(), libusb_strerror(err));
+								m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
+							}
+
+							// Grab the xid descriptor so that we can report real type/subtype values back to the title when it calls XInputGetCapabilities
+							XidDesc XidDesc;
+							if (libusb_control_transfer(m_hDev, 0xC1, 6, 0x4200, m_IfaceNum, reinterpret_cast<uint8_t *>(&XidDesc), sizeof(XidDesc), m_IntervalIn)
+								== sizeof(XidDesc)) { // submit a GET_DESCRIPTOR request
+
+								// Dump the xid descriptor to the log
+								EmuLog(LOG_LEVEL::INFO, "Xid descriptor dump:\nbLength: %#010X\nbDescriptorType: %#010X\nbcdXid: %#010X\nbType: %#010X\n"
+									"bSubType: %#010X\nbMaxInputReportSize: %#010X\nbMaxOutputReportSize: %#010X\nwAlternateProductIds[0]: %#010X\n"
+									"wAlternateProductIds[1]: %#010X\nwAlternateProductIds[2]: %#010X\nwAlternateProductIds[3]: %#010X\n",
+									XidDesc.bLength, XidDesc.bDescriptorType, XidDesc.bcdXid, XidDesc.bType, XidDesc.bSubType, XidDesc.bMaxInputReportSize, XidDesc.bMaxOutputReportSize,
+									XidDesc.wAlternateProductIds[0], XidDesc.wAlternateProductIds[1], XidDesc.wAlternateProductIds[2], XidDesc.wAlternateProductIds[3]);
+
+								if (XidDesc.bDescriptorType == 0x42) {
+									m_UcType = XidDesc.bType;
+									m_UcSubType = XidDesc.bSubType;
+								}
+								else {
+									EmuLog(LOG_LEVEL::INFO, "The xid descriptor for device %s reported an unexpected descriptor type, assuming a default subtype", m_Name);
+								}
+							}
+							else {
+								EmuLog(LOG_LEVEL::INFO, "Could not retrieve the xid descriptor for device %s, assuming a default subtype", m_Name);
+							}
 						}
 						else {
-							EmuLog(LOG_LEVEL::INFO, "Rejected device because of unexpected number of endpoints, bNumEndpoints: %d", Setting.bNumEndpoints);
+							EmuLog(LOG_LEVEL::INFO, "Rejected device %s because of unexpected number of endpoints, bNumEndpoints: %d",
+								m_Name.c_str(), Setting.bNumEndpoints);
 							m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 						}
 					}
 					else {
-						EmuLog(LOG_LEVEL::INFO, "Rejected device because of unexpected number of alternative settings, num_altsetting: %d", Iface.num_altsetting);
+						EmuLog(LOG_LEVEL::INFO, "Rejected device %s because of unexpected number of alternative settings, num_altsetting: %d",
+							m_Name.c_str(), Iface.num_altsetting);
 						m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 					}
 				}
 				else {
-					EmuLog(LOG_LEVEL::INFO, "Rejected device because of unexpected number of interfaces, bNumInterfaces: %d", Desc->bNumInterfaces);
+					EmuLog(LOG_LEVEL::INFO, "Rejected device %s because of unexpected number of interfaces, bNumInterfaces: %d",
+						m_Name.c_str(), ConfDesc->bNumInterfaces);
 					m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 				}
-				libusb_free_config_descriptor(Desc);
+				libusb_free_config_descriptor(ConfDesc);
 			}
 		}
+
+		if (m_Type == XBOX_INPUT_DEVICE::DEVICE_INVALID) { libusb_close(m_hDev); }
+	}
+
+	LibusbDevice::~LibusbDevice()
+	{
+		if (m_Type != XBOX_INPUT_DEVICE::DEVICE_INVALID) {
+			libusb_release_interface(m_hDev, m_IfaceNum);
+			libusb_close(m_hDev);
+		}
+	}
+
+	bool LibusbDevice::UpdateInput()
+	{
+		// Dummy, it should never be called. It's only here to override the pure function UpdateInput in InputDevice
+		assert(0);
+		return false;
+	}
+
+	bool LibusbDevice::ExecuteIo(void *Buffer, int Direction)
+	{
+		*static_cast<uint8_t *>(Buffer) = 0; // write bReportId
+		if (Direction == DIRECTION_IN) {
+			*(static_cast<uint8_t *>(Buffer) + 1) = m_BufferInSize; // write bLength
+			// submit a GET_REPORT request
+			if (libusb_control_transfer(m_hDev, 0xA1, 1, 0x0100, m_IfaceNum, static_cast<uint8_t *>(Buffer), m_BufferInSize, m_IntervalIn) == m_BufferInSize) {
+				return false;
+			}
+		}
+		else {
+			*(static_cast<uint8_t *>(Buffer) + 1) = m_BufferOutSize; // write bLength
+			// submit a SET_REPORT request
+			if (libusb_control_transfer(m_hDev, 0x21, 9, 0x0200, m_IfaceNum, static_cast<uint8_t *>(Buffer), m_BufferOutSize, m_IntervalOut) == m_BufferOutSize) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	std::string LibusbDevice::GetDeviceName() const

@@ -31,6 +31,7 @@
 
 #include <core\kernel\exports\xboxkrnl.h>
 #include "common\input\SdlJoystick.h"
+#include "common\input\LibusbDevice.h"
 #include "common\input\InputManager.h"
 #include <Shlwapi.h>
 #include "core\kernel\init\CxbxKrnl.h"
@@ -113,14 +114,16 @@ bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 	{
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S:
-	case XBOX_INPUT_DEVICE::ARCADE_STICK: {
+	case XBOX_INPUT_DEVICE::ARCADE_STICK:
+	case XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER: {
 		if (XppType == g_DeviceType_Gamepad) {
 			return true;
 		}
 	}
 	break;
 
-	case XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER: {
+	case XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER:
+	case XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER: {
 		if (XppType == g_DeviceType_SBC) {
 			return true;
 		}
@@ -152,10 +155,12 @@ void UpdateXppState(DeviceState *dev, XBOX_INPUT_DEVICE type, std::string_view p
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S:
 	case XBOX_INPUT_DEVICE::ARCADE_STICK:
+	case XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER:
 		xpp = g_DeviceType_Gamepad;
 		break;
 
 	case XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER:
+	case XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER:
 		xpp = g_DeviceType_SBC;
 		break;
 
@@ -208,6 +213,7 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		g_bIsDevicesEmulating = false;
 		return;
 	}
+
 	// Set up common device state
 	int port_num, slot;
 	PortStr2Int(port, &port_num, &slot);
@@ -223,12 +229,20 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 	switch (type)
 	{
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE):
+	case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
 		dev->type = XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE;
 		dev->info.bAutoPollDefault = true;
 		dev->info.ucType = XINPUT_DEVTYPE_GAMEPAD;
 		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 		dev->info.ucInputStateSize = sizeof(XpadInput);
 		dev->info.ucFeedbackSize = sizeof(XpadOutput);
+		if (type == to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER)) {
+			dev->type = XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER;
+			if (auto Device = g_InputDeviceManager.FindDevice(port)) {
+				dev->info.ucType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcType();
+				dev->info.ucSubType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcSubType();
+			}
+		}
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
@@ -241,15 +255,23 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
+	case to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER):
 		dev->type = XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER;
-		dev->info.buff.sbc.ucGearLever = 8;
-		dev->info.buff.sbc.sAimingX = static_cast<uint8_t>(0x7F);
-		dev->info.buff.sbc.sAimingY = static_cast<uint8_t>(0x7F);
+		dev->info.buff.sbc.InBuffer.ucGearLever = 8;
+		dev->info.buff.sbc.InBuffer.sAimingX = static_cast<uint8_t>(0x7F);
+		dev->info.buff.sbc.InBuffer.sAimingY = static_cast<uint8_t>(0x7F);
 		dev->info.bAutoPollDefault = true;
 		dev->info.ucType = XINPUT_DEVTYPE_STEELBATTALION;
 		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
 		dev->info.ucInputStateSize = sizeof(SBCInput);
 		dev->info.ucFeedbackSize = sizeof(SBCOutput);
+		if (type == to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER)) {
+			dev->type = XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER;
+			if (auto Device = g_InputDeviceManager.FindDevice(port)) {
+				dev->info.ucType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcType();
+				dev->info.ucSubType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcSubType();
+			}
+		}
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
@@ -305,7 +327,7 @@ void DestructHleInputDevice(DeviceState *dev)
 		dev->info.ucInputStateSize = 0;
 		dev->info.ucFeedbackSize = 0;
 		dev->info.dwPacketNumber = 0;
-		std::memset(&dev->info.buff.ctrl, 0, sizeof(XpadInput));
+		std::memset(&dev->info.buff.ctrl.InBuffer, 0, sizeof(XpadInput));
 		break;
 
 	case XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER:
@@ -315,7 +337,7 @@ void DestructHleInputDevice(DeviceState *dev)
 		dev->info.ucInputStateSize = 0;
 		dev->info.ucFeedbackSize = 0;
 		dev->info.dwPacketNumber = 0;
-		std::memset(&dev->info.buff.sbc, 0, sizeof(SBCInput));
+		std::memset(&dev->info.buff.sbc.InBuffer, 0, sizeof(SBCInput));
 		break;
 
 	case XBOX_INPUT_DEVICE::ARCADE_STICK:
@@ -325,7 +347,7 @@ void DestructHleInputDevice(DeviceState *dev)
 		dev->info.ucInputStateSize = 0;
 		dev->info.ucFeedbackSize = 0;
 		dev->info.dwPacketNumber = 0;
-		std::memset(&dev->info.buff.ctrl, 0, sizeof(XpadInput));
+		std::memset(&dev->info.buff.ctrl.InBuffer, 0, sizeof(XpadInput));
 		break;
 
 	case XBOX_INPUT_DEVICE::MEMORY_UNIT: {

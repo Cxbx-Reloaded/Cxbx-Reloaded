@@ -59,22 +59,31 @@ namespace Libusb
 	class LibusbDevice : public InputDevice
 	{
 	public:
+		~LibusbDevice();
 		bool UpdateInput() override;
+		bool ExecuteIo(void *Buffer, int Direction);
 
 		LibusbDevice(libusb_device_descriptor *Desc, libusb_device *Dev);
 
 		std::string GetDeviceName() const override;
 		std::string GetAPI() const override;
 		bool IsLibusb() const override { return m_Type != XBOX_INPUT_DEVICE::DEVICE_INVALID; }
+		uint8_t GetUcType() { return m_UcType; }
+		uint8_t GetUcSubType() { return m_UcSubType; }
 
 
 	private:
 		XBOX_INPUT_DEVICE m_Type;
+		uint8_t m_UcType;
+		uint8_t m_UcSubType;
 		std::string m_Name;
 		libusb_device_handle *m_hDev;
 		unsigned char m_EndpointIn;
 		unsigned char m_EndpointOut;
 		uint8_t m_IntervalIn;
 		uint8_t m_IntervalOut;
+		uint8_t m_BufferInSize;
+		uint8_t m_BufferOutSize;
+		uint8_t m_IfaceNum;
 	};
 }

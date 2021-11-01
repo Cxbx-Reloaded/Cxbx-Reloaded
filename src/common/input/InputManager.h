@@ -71,7 +71,19 @@ inline XBOX_INPUT_DEVICE slot_support_list[] = {
 
 #pragma pack(1)
 
-// xpad in/out buffers stripped of the first two bytes
+// Class-specific xid descriptor, used by libusb
+struct XidDesc {
+	uint8_t bLength;
+	uint8_t bDescriptorType;
+	uint16_t bcdXid;
+	uint8_t bType;
+	uint8_t bSubType;
+	uint8_t bMaxInputReportSize;
+	uint8_t bMaxOutputReportSize;
+	uint16_t wAlternateProductIds[4];
+};
+
+// xpad in/out buffers stripped of the first two bytes as used by xinput
 struct XpadInput {
 	uint16_t wButtons;
 	uint8_t bAnalogButtons[8];
@@ -86,6 +98,20 @@ struct XpadOutput {
 	uint16_t right_actuator_strength;
 };
 
+// xpad in/out buffers as used by xid
+struct XidGamepadInput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	XpadInput InBuffer;
+};
+
+struct XidGamepadOutput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	XpadOutput OutBuffer;
+};
+
+// same as above, but for the SBC
 struct SBCInput {
 	uint16_t wButtons[3];
 	uint8_t  bPad1;
@@ -112,11 +138,23 @@ struct SBCOutput {
 	uint8_t  LedState[20];
 };
 
+struct XidSBCInput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	SBCInput InBuffer;
+};
+
+struct XidSBCOutput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	SBCOutput OutBuffer;
+};
+
 #pragma pack()
 
 union InputBuff {
-	XpadInput ctrl;
-	SBCInput sbc;
+	XidGamepadInput ctrl;
+	XidSBCInput sbc;
 };
 
 struct DeviceInfo {
@@ -179,6 +217,8 @@ private:
 	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port);
 	// update input for a Steel Battalion controller
 	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port);
+	// update input for a passthrough xbox device
+	bool UpdateInputHw(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction);
 	// bind a host device to an emulated device
 	void BindHostDevice(int type, std::string_view port);
 	// connect a device to the emulated machine

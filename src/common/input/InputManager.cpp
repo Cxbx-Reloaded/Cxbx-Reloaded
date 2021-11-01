@@ -345,8 +345,6 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int direction, int type)
 {
 	assert(direction == DIRECTION_IN || direction == DIRECTION_OUT);
-	assert(type > to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
-		type < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX));
 	bool has_changed = false;
 
 	// First check if ImGui is focus, then ignore any input update occur.
@@ -372,6 +370,12 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 				case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
 					assert(0);
 					break;
+
+				case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
+				case to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER):
+					has_changed = UpdateInputHw(dev, buffer, direction);
+					m_Mtx.unlock();
+					return has_changed;
 
 				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
@@ -399,8 +403,7 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 			return false;
 		}
 
-		//XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
-		XpadInput *in_buf = static_cast<XpadInput *>(Buffer);
+		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2);
 		for (int i = 0; i < 8; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
 			if (state) {
@@ -443,8 +446,7 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	}
 	else {
 		if (bindings[24] != nullptr) {
-			//XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
-			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(Buffer);
+			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2);
 			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
 				out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
 		}
@@ -477,7 +479,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		// 9  -> GearLever Up
 		// 10 -> GearLever Down
 		static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
-		SBCInput *in_buf = static_cast<SBCInput *>(Buffer);
+		SBCInput *in_buf = reinterpret_cast<SBCInput *>(static_cast<uint8_t *>(Buffer) + 2);
 		for (int i = 0; i < 4; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			if (state) {
@@ -607,6 +609,11 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 	}
 
 	return true;
+}
+
+bool InputDeviceManager::UpdateInputHw(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction)
+{
+	return dynamic_cast<Libusb::LibusbDevice *>(Device.get())->ExecuteIo(Buffer, Direction);
 }
 
 void InputDeviceManager::RefreshDevices()
