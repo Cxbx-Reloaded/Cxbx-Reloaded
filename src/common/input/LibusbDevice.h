@@ -68,6 +68,7 @@ namespace Libusb
 		std::string GetDeviceName() const override;
 		std::string GetAPI() const override;
 		bool IsLibusb() const override { return m_Type != XBOX_INPUT_DEVICE::DEVICE_INVALID; }
+		XBOX_INPUT_DEVICE GetLibusbType() const { return m_Type; }
 		uint8_t GetUcType() { return m_UcType; }
 		uint8_t GetUcSubType() { return m_UcSubType; }
 

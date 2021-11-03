@@ -60,6 +60,8 @@ inline XBOX_INPUT_DEVICE input_support_list[] = {
 	XBOX_INPUT_DEVICE::MS_CONTROLLER_S,
 	XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER,
 	XBOX_INPUT_DEVICE::ARCADE_STICK,
+	XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER,
+	XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER,
 };
 
 inline XBOX_INPUT_DEVICE slot_support_list[] = {
@@ -197,7 +199,7 @@ public:
 	// update device list
 	void RefreshDevices();
 	// get the name of the devices currently detected
-	std::vector<std::string> GetDeviceList() const;
+	std::vector<std::string> GetDeviceList(std::function<bool(const InputDevice *)> Callback) const;
 	// find device from its gui name
 	std::shared_ptr<InputDevice> FindDevice(const std::string& QualifiedName) const;
 	// find device from its sdl id

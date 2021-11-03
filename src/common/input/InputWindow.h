@@ -55,7 +55,7 @@ class InputWindow
 public:
 	virtual void Initialize(HWND hwnd, int port_num, int dev_type) = 0;
 	~InputWindow();
-	void UpdateDeviceList();
+	virtual void UpdateDeviceList();
 	void BindButton(int ControlID);
 	virtual void ClearBindings() = 0;
 	virtual void UpdateProfile(const std::string& name, int command);
@@ -84,6 +84,8 @@ protected:
 	HWND m_hwnd_device_list;
 	// handle of the profile list combobox
 	HWND m_hwnd_profile_list;
+	// number of devices displayed in the device list combobox
+	int m_num_devices;
 	// type of the device
 	int m_dev_type;
 	// num of buttons of device under configuration
@@ -136,4 +138,22 @@ public:
 
 private:
 	int EnableDefaultButton() override;
+};
+
+class LibusbInputWindow : public InputWindow
+{
+public:
+	~LibusbInputWindow();
+	void Initialize(HWND hwnd, int port_num, int dev_type) override;
+	void ClearBindings() override;
+	void SaveSlotConfig() override;
+	void UpdateDeviceList() override;
+	void TestInput();
+
+
+private:
+	int EnableDefaultButton() override;
+
+	// handle of the test button
+	HWND m_hwnd_device_test;
 };

@@ -86,6 +86,7 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 
 		XInput::Init(m_Mtx);
 		RawInput::Init(m_Mtx, is_gui, m_hwnd);
+		Libusb::Init(m_Mtx);
 		Sdl::Init(m_Mtx, m_Cv, is_gui);
 		});
 
@@ -133,6 +134,8 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 
 				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
+				case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
+				case to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER):
 					ConstructHleInputDevice(&g_devs[CTRL_OFFSET + i], nullptr, type, port);
 					BindHostDevice(type, port);
 					break;
@@ -164,6 +167,7 @@ void InputDeviceManager::Shutdown()
 
 	XInput::DeInit();
 	RawInput::DeInit();
+	Libusb::DeInit();
 	Sdl::DeInit(m_PollingThread);
 }
 
@@ -313,6 +317,19 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 {
 	if (type == to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT)) {
 		// MUs don't have any host devices bound, so we just return
+		return;
+	}
+	else if ((type == to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER)) ||
+		(type == to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER))) {
+		// libusb devices don't have any profiles, but we still need to attach them to the xbox port
+		char dev_name[50];
+		int port_num, slot;
+		PortStr2Int(port, &port_num, &slot);
+		g_EmuShared->GetInputDevNameSettings(dev_name, port_num);
+		auto dev = FindDevice(std::string(dev_name));
+		if (dev != nullptr) {
+			dev->SetPort(port, true);
+		}
 		return;
 	}
 
@@ -638,13 +655,15 @@ void InputDeviceManager::RefreshDevices()
 	}
 }
 
-std::vector<std::string> InputDeviceManager::GetDeviceList() const
+std::vector<std::string> InputDeviceManager::GetDeviceList(std::function<bool(const InputDevice *)> Callback) const
 {
 	std::vector<std::string> dev_list;
 	std::lock_guard<std::mutex> lck(m_Mtx);
 
-	std::for_each(m_Devices.begin(), m_Devices.end(), [&dev_list](const auto& Device) {
-		dev_list.push_back(Device->GetQualifiedName());
+	std::for_each(m_Devices.begin(), m_Devices.end(), [&dev_list, &Callback](const auto& Device) {
+		if (Callback(Device.get())) {
+			dev_list.push_back(Device->GetQualifiedName());
+		}
 		});
 
 	return dev_list;

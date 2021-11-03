@@ -28,6 +28,7 @@
 #include "windows.h"
 #include "controllers/DlgDukeControllerConfig.h"
 #include "controllers/DlgSBControllerConfig.h"
+#include "controllers/DlgLibusbControllerConfig.h"
 #include "resource/ResCxbx.h"
 #include "input\InputManager.h"
 #include "Logging.h"
@@ -43,6 +44,7 @@ LRESULT CALLBACK WindowsCtrlSubProcNumericFilter(HWND hWnd, UINT uMsg, WPARAM wP
 HWND g_ChildWnd = NULL;
 static bool g_bHasOptChanges = false;
 static bool g_bHasInputChanges[4] = { false, false, false, false };
+static int g_ConfiguredDeviceType[4];
 
 
 void SyncInputSettings(int port_num, int dev_type, bool is_opt)
@@ -59,19 +61,23 @@ void SyncInputSettings(int port_num, int dev_type, bool is_opt)
 				std::string profile_name = g_Settings->m_input_port[port_num].ProfileName;
 
 				g_EmuShared->SetInputDevNameSettings(dev_name.c_str(), port_num);
-				auto it = std::find_if(g_Settings->m_input_profiles[dev_type].begin(),
-					g_Settings->m_input_profiles[dev_type].end(), [&profile_name](const auto &profile) {
-						if (profile.ProfileName == profile_name) {
-							return true;
+				// passthrough devices don't have profiles so skip those
+				if ((dev_type != to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER)) &&
+					(dev_type != to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER))) {
+					auto it = std::find_if(g_Settings->m_input_profiles[dev_type].begin(),
+						g_Settings->m_input_profiles[dev_type].end(), [&profile_name](const auto &profile) {
+							if (profile.ProfileName == profile_name) {
+								return true;
+							}
+							return false;
+						});
+					if (it != g_Settings->m_input_profiles[dev_type].end()) {
+						char controls_name[HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
+						for (int index = 0; index < dev_num_buttons[dev_type]; index++) {
+							strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
 						}
-						return false;
-					});
-				if (it != g_Settings->m_input_profiles[dev_type].end()) {
-					char controls_name[HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
-					for (int index = 0; index < dev_num_buttons[dev_type]; index++) {
-						strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
+						g_EmuShared->SetInputBindingsSettings(controls_name, dev_num_buttons[dev_type], port_num);
 					}
-					g_EmuShared->SetInputBindingsSettings(controls_name, dev_num_buttons[dev_type], port_num);
 				}
 			}
 		}
@@ -139,12 +145,12 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 		}
 		SendMessage(GetDlgItem(hWndDlg, IDC_IGNORE_KBMO_UNFOCUS), BM_SETCHECK, static_cast<WPARAM>(g_Settings->m_input_general.IgnoreKbMoUnfocus), 0);
 
-		// Reset option/input changes flag
+		// Reset option/input changes flag and configured dev type
 		g_bHasOptChanges = false;
-		g_bHasInputChanges[0] = false;
-		g_bHasInputChanges[1] = false;
-		g_bHasInputChanges[2] = false;
-		g_bHasInputChanges[3] = false;
+		for (int i = 0; i < 4; ++i) {
+			g_bHasInputChanges[i] = false;
+			g_ConfiguredDeviceType[i] = g_Settings->m_input_port[i].Type;
+		}
 	}
 	break;
 
@@ -160,14 +166,12 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 			if (g_bHasInputChanges[port]) {
 				HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + port);
 				int DeviceType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
-				g_Settings->m_input_port[port].Type = DeviceType;
-				if (DeviceType != to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE) &&
-					DeviceType != to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S)) {
-					// Forcefully set the child devices to none. This will happen if the user sets MUs in the controller dialog but
-					// then they set the parent device to a device that cannot support them in the input dialog
-					g_Settings->m_input_port[port].SlotType[SLOT_TOP] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
-					g_Settings->m_input_port[port].SlotType[SLOT_BOTTOM] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+				// Handle the case where the user has configured the inputs for a device type, but then they changed it to a different one later
+				if ((DeviceType != g_ConfiguredDeviceType[port]) && (DeviceType != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID))) {
+					DeviceType = g_ConfiguredDeviceType[port];
+					EmuLogEx(CXBXR_MODULE::GUI, LOG_LEVEL::WARNING, "Mismatch between configured and current device, reverting to the original configured one.");
 				}
+				g_Settings->m_input_port[port].Type = DeviceType;
 				SyncInputSettings(port, DeviceType, false);
 			}
 		}
@@ -196,8 +200,6 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				assert(port != -1);
 				HWND hHandle = GetDlgItem(hWndDlg, IDC_DEVICE_PORT1 + port);
 				int DeviceType = SendMessage(hHandle, CB_GETITEMDATA, SendMessage(hHandle, CB_GETCURSEL, 0, 0), 0);
-				assert(DeviceType > to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
-					DeviceType < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX));
 
 				switch (DeviceType)
 				{
@@ -215,10 +217,18 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				}
 				break;
 
+				case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
+				case to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER): {
+					DialogBoxParam(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_LIBUSB_CFG), hWndDlg, DlgLibUsbControllerConfigProc,
+						(DeviceType << 8) | port);
+				}
+				break;
+
 				default:
 					break;
 				}
 
+				g_ConfiguredDeviceType[port] = DeviceType;
 				g_bHasInputChanges[port] = true;
 			}
 		}

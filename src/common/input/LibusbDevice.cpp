@@ -39,7 +39,6 @@ static_assert(LIBUSB_API_VERSION >= 0x01000102);
 namespace Libusb
 {
 	int InitStatus = NOT_INIT;
-	static libusb_device **List = nullptr;
 
 	// These come from here https://github.com/xboxdrv/xboxdrv/blob/ac6ebb1228962220482ea03743cadbe18754246c/src/xpad_device.cpp#L29
 	static constexpr uint16_t SupportedDevices_VidPid[][2] = { // vid, pid
@@ -127,6 +126,7 @@ namespace Libusb
 	void PopulateDevices()
 	{
 		// NOTE: the libusb docs say that the list is always appended with a NULL element at the end
+		libusb_device **List;
 		ssize_t DevicesConnected = libusb_get_device_list(nullptr, &List) - 1;
 		if (DevicesConnected < 0) {
 			EmuLog(LOG_LEVEL::ERROR2, "Failed to enumerate devices. The error was: %s", libusb_strerror(DevicesConnected));
@@ -144,14 +144,12 @@ namespace Libusb
 		}
 
 		libusb_free_device_list(List, 1);
-		List = nullptr;
 	}
 
 	void GetDeviceChanges()
 	{
 		g_InputDeviceManager.RemoveDevice([](const auto &Device) {
-			const LibusbDevice *dev = dynamic_cast<const LibusbDevice *>(Device);
-			return dev->IsLibusb();
+			return Device->IsLibusb();
 			});
 		PopulateDevices();
 	}
@@ -200,7 +198,7 @@ namespace Libusb
 						if (Setting.bNumEndpoints == 2) {
 							for (uint8_t i = 0; i < 2; ++i) {
 								auto Endpoint = Setting.endpoint[i];
-								if (Endpoint.bmAttributes & LIBUSB_ENDPOINT_TRANSFER_TYPE_INTERRUPT) {
+								if (Endpoint.bmAttributes & LIBUSB_ENDPOINT_TRANSFER_TYPE_CONTROL) {
 									if (Endpoint.bEndpointAddress & 0x80) {
 										m_EndpointIn = Endpoint.bEndpointAddress;
 										m_IntervalIn = Endpoint.bInterval;
@@ -216,29 +214,30 @@ namespace Libusb
 									m_Name.c_str(), libusb_strerror(err));
 								m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 							}
+							else {
+								// Grab the xid descriptor so that we can report real type/subtype values back to the title when it calls XInputGetCapabilities
+								XidDesc XidDesc;
+								if (libusb_control_transfer(m_hDev, 0xC1, 6, 0x4200, m_IfaceNum, reinterpret_cast<uint8_t *>(&XidDesc), sizeof(XidDesc), m_IntervalIn)
+									== sizeof(XidDesc)) { // submit a GET_DESCRIPTOR request
 
-							// Grab the xid descriptor so that we can report real type/subtype values back to the title when it calls XInputGetCapabilities
-							XidDesc XidDesc;
-							if (libusb_control_transfer(m_hDev, 0xC1, 6, 0x4200, m_IfaceNum, reinterpret_cast<uint8_t *>(&XidDesc), sizeof(XidDesc), m_IntervalIn)
-								== sizeof(XidDesc)) { // submit a GET_DESCRIPTOR request
+									// Dump the xid descriptor to the log
+									EmuLog(LOG_LEVEL::INFO, "Xid descriptor dump:\nbLength: %#010X\nbDescriptorType: %#010X\nbcdXid: %#010X\nbType: %#010X\n"
+										"bSubType: %#010X\nbMaxInputReportSize: %#010X\nbMaxOutputReportSize: %#010X\nwAlternateProductIds[0]: %#010X\n"
+										"wAlternateProductIds[1]: %#010X\nwAlternateProductIds[2]: %#010X\nwAlternateProductIds[3]: %#010X\n",
+										XidDesc.bLength, XidDesc.bDescriptorType, XidDesc.bcdXid, XidDesc.bType, XidDesc.bSubType, XidDesc.bMaxInputReportSize, XidDesc.bMaxOutputReportSize,
+										XidDesc.wAlternateProductIds[0], XidDesc.wAlternateProductIds[1], XidDesc.wAlternateProductIds[2], XidDesc.wAlternateProductIds[3]);
 
-								// Dump the xid descriptor to the log
-								EmuLog(LOG_LEVEL::INFO, "Xid descriptor dump:\nbLength: %#010X\nbDescriptorType: %#010X\nbcdXid: %#010X\nbType: %#010X\n"
-									"bSubType: %#010X\nbMaxInputReportSize: %#010X\nbMaxOutputReportSize: %#010X\nwAlternateProductIds[0]: %#010X\n"
-									"wAlternateProductIds[1]: %#010X\nwAlternateProductIds[2]: %#010X\nwAlternateProductIds[3]: %#010X\n",
-									XidDesc.bLength, XidDesc.bDescriptorType, XidDesc.bcdXid, XidDesc.bType, XidDesc.bSubType, XidDesc.bMaxInputReportSize, XidDesc.bMaxOutputReportSize,
-									XidDesc.wAlternateProductIds[0], XidDesc.wAlternateProductIds[1], XidDesc.wAlternateProductIds[2], XidDesc.wAlternateProductIds[3]);
-
-								if (XidDesc.bDescriptorType == 0x42) {
-									m_UcType = XidDesc.bType;
-									m_UcSubType = XidDesc.bSubType;
+									if (XidDesc.bDescriptorType == 0x42) {
+										m_UcType = XidDesc.bType;
+										m_UcSubType = XidDesc.bSubType;
+									}
+									else {
+										EmuLog(LOG_LEVEL::INFO, "The xid descriptor for device %s reported an unexpected descriptor type, assuming a default subtype", m_Name);
+									}
 								}
 								else {
-									EmuLog(LOG_LEVEL::INFO, "The xid descriptor for device %s reported an unexpected descriptor type, assuming a default subtype", m_Name);
+									EmuLog(LOG_LEVEL::INFO, "Could not retrieve the xid descriptor for device %s, assuming a default subtype", m_Name);
 								}
-							}
-							else {
-								EmuLog(LOG_LEVEL::INFO, "Could not retrieve the xid descriptor for device %s, assuming a default subtype", m_Name);
 							}
 						}
 						else {

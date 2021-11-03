@@ -785,19 +785,21 @@ void Settings::SyncToEmulator()
 		g_EmuShared->SetInputSlotTypeSettings(&m_input_port[i].SlotType[SLOT_BOTTOM], i, SLOT_BOTTOM);
 		if (m_input_port[i].Type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 			g_EmuShared->SetInputDevNameSettings(m_input_port[i].DeviceName.c_str(), i);
-			auto it = std::find_if(m_input_profiles[m_input_port[i].Type].begin(),
-				m_input_profiles[m_input_port[i].Type].end(), [this, i](const auto& profile) {
-					if (profile.ProfileName == m_input_port[i].ProfileName) {
-						return true;
+			if (m_input_port[i].Type < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)) {
+				auto it = std::find_if(m_input_profiles[m_input_port[i].Type].begin(),
+					m_input_profiles[m_input_port[i].Type].end(), [this, i](const auto &profile) {
+						if (profile.ProfileName == m_input_port[i].ProfileName) {
+							return true;
+						}
+						return false;
+					});
+				if (it != m_input_profiles[m_input_port[i].Type].end()) {
+					char controls_name[HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
+					for (int index = 0; index < dev_num_buttons[m_input_port[i].Type]; index++) {
+						strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
 					}
-					return false;
-				});
-			if (it != m_input_profiles[m_input_port[i].Type].end()) {
-				char controls_name[HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
-				for (int index = 0; index < dev_num_buttons[m_input_port[i].Type]; index++) {
-					strncpy(controls_name[index], it->ControlList[index].c_str(), 30);
+					g_EmuShared->SetInputBindingsSettings(controls_name, dev_num_buttons[m_input_port[i].Type], i);
 				}
-				g_EmuShared->SetInputBindingsSettings(controls_name, dev_num_buttons[m_input_port[i].Type], i);
 			}
 		}
 	}

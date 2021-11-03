@@ -31,9 +31,9 @@
 
 #include <core\kernel\exports\xboxkrnl.h>
 #include "common\input\SdlJoystick.h"
-#include "common\input\LibusbDevice.h"
 #include "common\input\InputManager.h"
 #include <Shlwapi.h>
+#include "common\input\LibusbDevice.h" // include this after Shlwapi.h or else it causes an error
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 #include "core\kernel\support\Emu.h"
@@ -238,7 +238,9 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucFeedbackSize = sizeof(XpadOutput);
 		if (type == to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER)) {
 			dev->type = XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER;
-			if (auto Device = g_InputDeviceManager.FindDevice(port)) {
+			char dev_name[50];
+			g_EmuShared->GetInputDevNameSettings(dev_name, port_num);
+			if (auto Device = g_InputDeviceManager.FindDevice(std::string(dev_name))) {
 				dev->info.ucType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcType();
 				dev->info.ucSubType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcSubType();
 			}
@@ -267,7 +269,9 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucFeedbackSize = sizeof(SBCOutput);
 		if (type == to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER)) {
 			dev->type = XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER;
-			if (auto Device = g_InputDeviceManager.FindDevice(port)) {
+			char dev_name[50];
+			g_EmuShared->GetInputDevNameSettings(dev_name, port_num);
+			if (auto Device = g_InputDeviceManager.FindDevice(std::string(dev_name))) {
 				dev->info.ucType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcType();
 				dev->info.ucSubType = dynamic_cast<Libusb::LibusbDevice *>(Device.get())->GetUcSubType();
 			}
@@ -476,7 +480,7 @@ xbox::dword_xt CxbxImpl_XInputHandler(xbox::HANDLE hDevice, xbox::PXINPUT_STATE 
 		}
 
 		if constexpr (!IsXInputPoll) {
-			std::memcpy((void *)&pState->Gamepad, &g_devs[port].info.buff, g_devs[port].info.ucInputStateSize);
+			std::memcpy((void *)&pState->Gamepad, reinterpret_cast<uint8_t *>(&g_devs[port].info.buff) + 2, g_devs[port].info.ucInputStateSize);
 			pState->dwPacketNumber = g_devs[port].info.dwPacketNumber;
 		}
 

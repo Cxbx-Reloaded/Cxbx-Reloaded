@@ -21,6 +21,7 @@
 #define IDD_XID_DUKE_CFG                134
 #define IDD_RUMBLE_CFG                  135
 #define IDD_NETWORK_CFG                 136
+#define IDD_LIBUSB_CFG                  137
 #define IDC_LOG_CANCEL                  892
 #define IDC_LOG_ACCEPT                  893
 #define IDC_LOG_ENABLE_GENERAL          894
@@ -272,6 +273,8 @@
 #define IDC_SIGHT_CHANGE_NEGX           1320
 #define IDC_SIGHT_CHANGE_NEGY           1321
 #define IDC_SIGHT_CHANGE_POSX           1322
+#define IDC_LIBUSB_LIST                 1323
+#define IDC_LIBUSB_TEST                 1324
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
