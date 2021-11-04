@@ -420,7 +420,7 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 			return false;
 		}
 
-		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2);
+		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + XID_PACKET_HEADER);
 		for (int i = 0; i < 8; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
 			if (state) {
@@ -463,7 +463,7 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	}
 	else {
 		if (bindings[24] != nullptr) {
-			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2);
+			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + XID_PACKET_HEADER);
 			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
 				out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
 		}
@@ -496,7 +496,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		// 9  -> GearLever Up
 		// 10 -> GearLever Down
 		static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
-		SBCInput *in_buf = reinterpret_cast<SBCInput *>(static_cast<uint8_t *>(Buffer) + 2);
+		SBCInput *in_buf = reinterpret_cast<SBCInput *>(static_cast<uint8_t *>(Buffer) + XID_PACKET_HEADER);
 		for (int i = 0; i < 4; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			if (state) {

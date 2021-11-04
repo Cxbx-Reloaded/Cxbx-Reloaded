@@ -32,8 +32,8 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\XAPI\Xapi.h"
 
-// Sanitiy check: ensure out libusb version is high enough for libusb_get_device_descriptor to succeed
-static_assert(LIBUSB_API_VERSION >= 0x01000102);
+// Sanitiy check: ensure out libusb version is high enough for libusb_get_device_descriptor to succeed and to pass nullptr to libusb_interrupt_transfer
+static_assert(LIBUSB_API_VERSION >= 0x01000105);
 
 
 namespace Libusb
@@ -162,7 +162,7 @@ namespace Libusb
 		if ((Desc->idVendor == 0x0a7b) && (Desc->idProduct == 0xd000)) {
 			m_Type = XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER;
 			m_UcType = XINPUT_DEVTYPE_STEELBATTALION;
-			m_UcSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
+			m_UcSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 			m_Name = "Steel battalion controller";
 			m_BufferInSize = sizeof(XidSBCInput);
 			m_BufferOutSize = sizeof(XidSBCOutput);
@@ -283,30 +283,22 @@ namespace Libusb
 
 	bool LibusbDevice::ExecuteIo(void *Buffer, int Direction)
 	{
+		// NOTE: a SET_REPORT control transfer to the SBC doesn't seem to work, the parameters might not be appropriate for it... So, we use
+		// the interrupt pipes for everything instead
 		*static_cast<uint8_t *>(Buffer) = 0; // write bReportId
 		if (Direction == DIRECTION_IN) {
 			*(static_cast<uint8_t *>(Buffer) + 1) = m_BufferInSize; // write bLength
-			// submit a GET_REPORT request
-			if (libusb_control_transfer(m_hDev, 0xA1, 1, 0x0100, m_IfaceNum, static_cast<uint8_t *>(Buffer), m_BufferInSize, m_IntervalIn) == m_BufferInSize) {
+			if (libusb_interrupt_transfer(m_hDev, m_EndpointIn, static_cast<uint8_t *>(Buffer), m_BufferInSize, nullptr, m_IntervalIn) != 0) {
 				return false;
 			}
 		}
 		else {
 			if (m_HasEndpointOut) {
 				*(static_cast<uint8_t *>(Buffer) + 1) = m_BufferOutSize; // write bLength
-				// https://github.com/libusb/libusb/blob/f33c9562a1dd7a0cb333fcd9a670ba14fbbfbc0e/examples/xusb.c#L300
-				// For some reason libusb seems to require to constraint the actuator strenght to 0-255
-				if (m_Type == XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER) {
-					XidGamepadOutput *OutBuffer = static_cast<XidGamepadOutput *>(Buffer);
-					OutBuffer->OutBuffer.left_actuator_strength = (OutBuffer->OutBuffer.left_actuator_strength >> 8);
-					OutBuffer->OutBuffer.right_actuator_strength = (OutBuffer->OutBuffer.right_actuator_strength >> 8);
-				}
-				// submit a SET_REPORT request
-				if (libusb_control_transfer(m_hDev, 0x21, 9, 0x0200, m_IfaceNum, static_cast<uint8_t *>(Buffer), m_BufferOutSize, m_IntervalOut) == m_BufferOutSize) {
+				if (libusb_interrupt_transfer(m_hDev, m_EndpointOut, static_cast<uint8_t *>(Buffer), m_BufferOutSize, nullptr, m_IntervalOut) != 0) {
 					return false;
 				}
 			}
-
 		}
 
 		return true;

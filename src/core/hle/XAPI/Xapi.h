@@ -214,7 +214,6 @@ XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
 // ******************************************************************
 //general GAMEPAD uses subtype 0x01.
 #define XINPUT_DEVSUBTYPE_GC_GAMEPAD              0x01
-//SteelBatallion controller uses subtype 0x02
 #define XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT          0x02
 #define XINPUT_DEVSUBTYPE_GC_WHEEL                0x10
 #define XINPUT_DEVSUBTYPE_GC_ARCADE_STICK         0x20
@@ -243,16 +242,18 @@ XINPUT_STATE, *PXINPUT_STATE;
 // ******************************************************************
 // * XINPUT_FEEDBACK_HEADER
 // ******************************************************************
-#include "AlignPrefix1.h"
+#pragma pack(1)
 typedef struct _XINPUT_FEEDBACK_HEADER
 {
-    xbox::dword_xt             dwStatus;
+    xbox::dword_xt    dwStatus;
     HANDLE OPTIONAL   hEvent;
-    xbox::byte_xt              Unknown1[4];
+    xbox::byte_xt     Unknown1[4];
     PVOID             IoCompletedEvent; // PKEVENT really
-    xbox::byte_xt              Unknown2[50];
+    xbox::byte_xt     Unknown2[48];
+    xbox::byte_xt     bReportId;
+    xbox::byte_xt     bLength;
 }
-#include "AlignPosfix1.h"
+
 XINPUT_FEEDBACK_HEADER, *PXINPUT_FEEDBACK_HEADER;
 
 // ******************************************************************
@@ -268,7 +269,7 @@ typedef struct _XINPUT_FEEDBACK
     };
 }
 XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
-
+#pragma pack()
 // ******************************************************************
 // * RTL_HEAP_PARAMETERS
 // ******************************************************************

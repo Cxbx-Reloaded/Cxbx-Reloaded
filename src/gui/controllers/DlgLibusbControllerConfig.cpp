@@ -137,9 +137,9 @@ void LibusbInputWindow::TestInput()
 			bool detect = false;
 			while (now <= timeout) {
 				LibusbDev->ExecuteIo(buffer, DIRECTION_IN);
-				if (std::memcmp(reinterpret_cast<uint8_t *>(buffer) + 2,
-					reinterpret_cast<uint8_t *>(&buffer[1]) + 2,
-					sizeof(InputBuff) - 2)) {
+				if (std::memcmp(reinterpret_cast<uint8_t *>(buffer) + XID_PACKET_HEADER,
+					reinterpret_cast<uint8_t *>(&buffer[1]) + XID_PACKET_HEADER,
+					sizeof(InputBuff) - XID_PACKET_HEADER)) {
 					detect = true;
 					break;
 				}

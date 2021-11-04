@@ -264,7 +264,7 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.buff.sbc.InBuffer.sAimingY = static_cast<uint8_t>(0x7F);
 		dev->info.bAutoPollDefault = true;
 		dev->info.ucType = XINPUT_DEVTYPE_STEELBATTALION;
-		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD_ALT;
+		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 		dev->info.ucInputStateSize = sizeof(SBCInput);
 		dev->info.ucFeedbackSize = sizeof(SBCOutput);
 		if (type == to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER)) {
@@ -773,7 +773,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetState)
 	int port = dev->port_idx;
     if (g_devs[port].info.hHandle == hDevice && !g_devs[port].bPendingRemoval) {
         pFeedback->Header.dwStatus = ERROR_IO_PENDING;
-        g_InputDeviceManager.UpdateXboxPortInput(port, (void*)&pFeedback->Rumble, DIRECTION_OUT, to_underlying(g_devs[port].type));
+        g_InputDeviceManager.UpdateXboxPortInput(port, (void*)&pFeedback->Header.bReportId, DIRECTION_OUT, to_underlying(g_devs[port].type));
         pFeedback->Header.dwStatus = ERROR_SUCCESS;
         if (pFeedback->Header.hEvent != NULL &&
             ObReferenceObjectByHandle(pFeedback->Header.hEvent, &xbox::ExEventObjectType, (PVOID*)&pFeedback->Header.IoCompletedEvent) == ERROR_SUCCESS) {

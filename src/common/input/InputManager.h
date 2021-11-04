@@ -52,6 +52,8 @@
 #define MU_OFFSET   4
 #define MAX_DEVS    (XBOX_NUM_PORTS + XBOX_CTRL_NUM_SLOTS * XBOX_NUM_PORTS)
 
+#define XID_PACKET_HEADER 2
+
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
 inline XBOX_INPUT_DEVICE input_support_list[] = {
