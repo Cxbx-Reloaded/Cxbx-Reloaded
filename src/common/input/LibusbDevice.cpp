@@ -195,20 +195,22 @@ namespace Libusb
 					if (Iface.num_altsetting == 1) {
 						auto Setting = Iface.altsetting[0];
 						m_IfaceNum = Setting.bInterfaceNumber;
-						if (Setting.bNumEndpoints == 2) {
-							for (uint8_t i = 0; i < 2; ++i) {
+						if (Setting.bNumEndpoints >= 1) {
+							m_HasEndpointOut = false;
+							for (uint8_t i = 0; i < Setting.bNumEndpoints; ++i) {
 								auto Endpoint = Setting.endpoint[i];
-								if (Endpoint.bmAttributes & LIBUSB_ENDPOINT_TRANSFER_TYPE_CONTROL) {
-									if (Endpoint.bEndpointAddress & 0x80) {
-										m_EndpointIn = Endpoint.bEndpointAddress;
-										m_IntervalIn = Endpoint.bInterval;
-									}
-									else {
-										m_EndpointOut = Endpoint.bEndpointAddress;
-										m_IntervalOut = Endpoint.bInterval;
-									}
+								if (Endpoint.bEndpointAddress & 0x80) {
+									m_EndpointIn = Endpoint.bEndpointAddress;
+									m_IntervalIn = Endpoint.bInterval;
+								}
+								else {
+									// third-party controllers that don't support rumble probably won't have an out endpoint
+									m_EndpointOut = Endpoint.bEndpointAddress;
+									m_IntervalOut = Endpoint.bInterval;
+									m_HasEndpointOut = true;
 								}
 							}
+							EmuLog(LOG_LEVEL::INFO, "Out endpoint %s", m_HasEndpointOut ? "present" : "not present");
 							if (int err = libusb_claim_interface(m_hDev, m_IfaceNum) != 0) {
 								EmuLog(LOG_LEVEL::INFO, "Rejected device %s because libusb could not claim its interface. The error was: %s",
 									m_Name.c_str(), libusb_strerror(err));
@@ -290,11 +292,21 @@ namespace Libusb
 			}
 		}
 		else {
-			*(static_cast<uint8_t *>(Buffer) + 1) = m_BufferOutSize; // write bLength
-			// submit a SET_REPORT request
-			if (libusb_control_transfer(m_hDev, 0x21, 9, 0x0200, m_IfaceNum, static_cast<uint8_t *>(Buffer), m_BufferOutSize, m_IntervalOut) == m_BufferOutSize) {
-				return false;
+			if (m_HasEndpointOut) {
+				*(static_cast<uint8_t *>(Buffer) + 1) = m_BufferOutSize; // write bLength
+				// https://github.com/libusb/libusb/blob/f33c9562a1dd7a0cb333fcd9a670ba14fbbfbc0e/examples/xusb.c#L300
+				// For some reason libusb seems to require to constraint the actuator strenght to 0-255
+				if (m_Type == XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER) {
+					XidGamepadOutput *OutBuffer = static_cast<XidGamepadOutput *>(Buffer);
+					OutBuffer->OutBuffer.left_actuator_strength = (OutBuffer->OutBuffer.left_actuator_strength >> 8);
+					OutBuffer->OutBuffer.right_actuator_strength = (OutBuffer->OutBuffer.right_actuator_strength >> 8);
+				}
+				// submit a SET_REPORT request
+				if (libusb_control_transfer(m_hDev, 0x21, 9, 0x0200, m_IfaceNum, static_cast<uint8_t *>(Buffer), m_BufferOutSize, m_IntervalOut) == m_BufferOutSize) {
+					return false;
+				}
 			}
+
 		}
 
 		return true;

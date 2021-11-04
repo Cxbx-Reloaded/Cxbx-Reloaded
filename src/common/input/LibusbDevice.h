@@ -86,5 +86,6 @@ namespace Libusb
 		uint8_t m_BufferInSize;
 		uint8_t m_BufferOutSize;
 		uint8_t m_IfaceNum;
+		bool m_HasEndpointOut;
 	};
 }
