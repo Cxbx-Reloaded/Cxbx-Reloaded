@@ -759,8 +759,8 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 
 		lck.unlock();
 		XInput::PopulateDevices();
-		// Unfortunately, as documented in this issue https://github.com/libusb/libusb/issues/86, when this was written libusb did not yet support
-		// device hotplug on Windows, so we add the below call here. This will only work if rawinput detects the libusb device.
+		// When this was written, libusb did not yet support device hotplug on Windows, as documented in this issue https://github.com/libusb/libusb/issues/86.
+		// So we add the below call here. This will only work if rawinput detects the libusb device.
 		Libusb::PopulateDevices();
 	}
 

@@ -32,7 +32,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\XAPI\Xapi.h"
 
-// Sanitiy check: ensure out libusb version is high enough for libusb_get_device_descriptor to succeed and to pass nullptr to libusb_interrupt_transfer
+// Sanity check: ensure that our libusb version is high enough for libusb_get_device_descriptor to succeed and to pass nullptr to libusb_interrupt_transfer
 static_assert(LIBUSB_API_VERSION >= 0x01000105);
 
 

@@ -14,13 +14,13 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/libusb/libusb")
 
 file (GLOB HEADERS
- "${CXBXR_ROOT_DIR}/import/libusb/libusb/msvc/config.h"
- "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/events_windows.h"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/libusb.h"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/libusbi.h"
- "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/threads_windows.h"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/version.h"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/version_nano.h"
+ "${CXBXR_ROOT_DIR}/import/libusb/libusb/msvc/config.h"
+ "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/events_windows.h"
+ "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/threads_windows.h"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/windows_common.h"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/windows_usbdk.h"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/windows_winusb.h"
@@ -29,11 +29,11 @@ file (GLOB HEADERS
 file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/core.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/descriptor.c"
- "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/events_windows.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/hotplug.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/io.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/strerror.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/sync.c"
+ "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/events_windows.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/threads_windows.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/windows_common.c"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb/os/windows_usbdk.c"
