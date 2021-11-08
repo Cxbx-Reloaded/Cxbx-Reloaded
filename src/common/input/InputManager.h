@@ -52,6 +52,8 @@
 #define MU_OFFSET   4
 #define MAX_DEVS    (XBOX_NUM_PORTS + XBOX_CTRL_NUM_SLOTS * XBOX_NUM_PORTS)
 
+#define XID_PACKET_HEADER 2
+
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
 inline XBOX_INPUT_DEVICE input_support_list[] = {
@@ -60,6 +62,8 @@ inline XBOX_INPUT_DEVICE input_support_list[] = {
 	XBOX_INPUT_DEVICE::MS_CONTROLLER_S,
 	XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER,
 	XBOX_INPUT_DEVICE::ARCADE_STICK,
+	XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER,
+	XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER,
 };
 
 inline XBOX_INPUT_DEVICE slot_support_list[] = {
@@ -71,7 +75,19 @@ inline XBOX_INPUT_DEVICE slot_support_list[] = {
 
 #pragma pack(1)
 
-// xpad in/out buffers stripped of the first two bytes
+// Class-specific xid descriptor, used by libusb
+struct XidDesc {
+	uint8_t bLength;
+	uint8_t bDescriptorType;
+	uint16_t bcdXid;
+	uint8_t bType;
+	uint8_t bSubType;
+	uint8_t bMaxInputReportSize;
+	uint8_t bMaxOutputReportSize;
+	uint16_t wAlternateProductIds[4];
+};
+
+// xpad in/out buffers stripped of the first two bytes as used by xinput
 struct XpadInput {
 	uint16_t wButtons;
 	uint8_t bAnalogButtons[8];
@@ -86,6 +102,20 @@ struct XpadOutput {
 	uint16_t right_actuator_strength;
 };
 
+// xpad in/out buffers as used by xid
+struct XidGamepadInput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	XpadInput InBuffer;
+};
+
+struct XidGamepadOutput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	XpadOutput OutBuffer;
+};
+
+// same as above, but for the SBC
 struct SBCInput {
 	uint16_t wButtons[3];
 	uint8_t  bPad1;
@@ -112,11 +142,23 @@ struct SBCOutput {
 	uint8_t  LedState[20];
 };
 
+struct XidSBCInput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	SBCInput InBuffer;
+};
+
+struct XidSBCOutput {
+	uint8_t bReportId;
+	uint8_t bLength;
+	SBCOutput OutBuffer;
+};
+
 #pragma pack()
 
 union InputBuff {
-	XpadInput ctrl;
-	SBCInput sbc;
+	XidGamepadInput ctrl;
+	XidSBCInput sbc;
 };
 
 struct DeviceInfo {
@@ -159,7 +201,7 @@ public:
 	// update device list
 	void RefreshDevices();
 	// get the name of the devices currently detected
-	std::vector<std::string> GetDeviceList() const;
+	std::vector<std::string> GetDeviceList(std::function<bool(const InputDevice *)> Callback) const;
 	// find device from its gui name
 	std::shared_ptr<InputDevice> FindDevice(const std::string& QualifiedName) const;
 	// find device from its sdl id
@@ -179,6 +221,8 @@ private:
 	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port);
 	// update input for a Steel Battalion controller
 	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port);
+	// update input for a passthrough xbox device
+	bool UpdateInputHw(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction);
 	// bind a host device to an emulated device
 	void BindHostDevice(int type, std::string_view port);
 	// connect a device to the emulated machine

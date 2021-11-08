@@ -12,9 +12,10 @@ include_directories(
  "${CXBXR_ROOT_DIR}/src/common"
  "${CXBXR_ROOT_DIR}/src/common/Win32"
  "${CXBXR_ROOT_DIR}/import/OpenXDK/include"
+ "${CXBXR_ROOT_DIR}/import/DirectX9/include"
  "${CXBXR_ROOT_DIR}/import/distorm/include"
  "${CXBXR_ROOT_DIR}/import/glew-2.0.0/include"
- "${CXBXR_ROOT_DIR}/import/DirectX9/include"
+ "${CXBXR_ROOT_DIR}/import/libusb/libusb"
  "${CXBXR_ROOT_DIR}/import/simpleini"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
  "${CXBXR_ROOT_DIR}/import/xxHash"
@@ -193,6 +194,7 @@ target_link_libraries(cxbx
  libtomcrypt
  SDL2
  imgui
+ libusb
 
  ${WINS_LIB}
 )

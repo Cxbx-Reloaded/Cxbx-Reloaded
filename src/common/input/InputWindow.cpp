@@ -78,16 +78,22 @@ void InputWindow::UpdateDeviceList()
 	g_InputDeviceManager.RefreshDevices();
 
 	// Populate device list
-	LRESULT num_devices = SendMessage(m_hwnd_device_list, CB_GETCOUNT, 0, 0);
-	for (int i = 0; i < num_devices; i++) {
+	for (int i = 0; i < m_num_devices; i++) {
 		SendMessage(m_hwnd_device_list, CB_DELETESTRING, 0, 0);
 	}
 
-	std::vector<std::string> dev_list = g_InputDeviceManager.GetDeviceList();
+	// Add everything but libusb devices
+	std::vector<std::string> dev_list = g_InputDeviceManager.GetDeviceList([](const auto &Device) {
+		if (Device->IsLibusb()) {
+			return false;
+			}
+		return true;
+		});
 	for (const auto& str : dev_list) {
 		SendMessage(m_hwnd_device_list, CB_ADDSTRING, 0, reinterpret_cast<LPARAM>(str.c_str()));
+		++m_num_devices;
 	}
-	if (!dev_list.empty()) {
+	if (m_num_devices) {
 		SendMessage(m_hwnd_device_list, CB_SETCURSEL, 0, 0);
 	}
 
@@ -310,9 +316,15 @@ void InputWindow::LoadDefaultProfile()
 
 void InputWindow::UpdateCurrentDevice()
 {
-	char device_name[50];
-	SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
-	m_host_dev = device_name;
+	if (m_num_devices) {
+		char device_name[50];
+		SendMessage(m_hwnd_device_list, WM_GETTEXT, sizeof(device_name), reinterpret_cast<LPARAM>(device_name));
+		m_host_dev = device_name;
+	}
+	else {
+		m_host_dev = "";
+	}
+
 	EnableDefaultButton();
 }
 

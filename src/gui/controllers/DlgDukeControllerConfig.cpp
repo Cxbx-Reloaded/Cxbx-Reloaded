@@ -56,6 +56,7 @@ void DukeInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	m_port_num = port_num;
 	m_bHasChanges = false;
 	m_bIsBinding = false;
+	m_num_devices = 0;
 
 	// Set window icon
 	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));

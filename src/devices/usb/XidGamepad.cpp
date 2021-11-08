@@ -78,18 +78,6 @@ XidGamepad* g_XidControllerObjArray[4];
 
 #pragma pack(1)
 
-/* Class-specific xid descriptor */
-struct XIDDesc {
-	uint8_t bLength;
-	uint8_t bDescriptorType;
-	uint16_t bcdXid;
-	uint8_t bType;
-	uint8_t bSubType;
-	uint8_t bMaxInputReportSize;
-	uint8_t bMaxOutputReportSize;
-	uint16_t wAlternateProductIds[4];
-};
-
 /* Struct used by the Get_Report request -> button's state */
 struct XIDGamepadReport {
 	uint8_t bReportId;
@@ -116,7 +104,7 @@ struct USBXIDState {
 	XboxDeviceState dev;                // gamepad device status
 	USBEndpoint* intr;                  // interrupt endpoint of the gamepad
 
-	const XIDDesc* xid_desc;            // xid-specific descriptor
+	const XidDesc* xid_desc;            // xid-specific descriptor
 
 	XIDGamepadReport in_state;                      // Get_Report struct
 	XIDGamepadReport in_state_capabilities;         // Get_Capabilities struct (in)
@@ -192,7 +180,7 @@ static const USBDesc desc_xbox_gamepad = {
 	&desc_device_xbox_gamepad
 };
 
-static const XIDDesc desc_xid_xbox_gamepad = {
+static const XidDesc desc_xid_xbox_gamepad = {
 	0x10,        // bLength
 	USB_DT_XID,  // bDescriptorType
 	0x100,       // bcdXid

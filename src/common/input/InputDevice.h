@@ -56,6 +56,9 @@ typedef enum class _XBOX_INPUT_DEVICE : int {
 	STEEL_BATTALION_CONTROLLER,
 	ARCADE_STICK,
 	DEVICE_MAX,
+	// Devices with the HW_ prefix (= hardware) indicate a real xbox device. Always add these after DEVICE_MAX
+	HW_STEEL_BATTALION_CONTROLLER,
+	HW_XBOX_CONTROLLER,
 }
 XBOX_INPUT_DEVICE;
 
@@ -120,6 +123,8 @@ public:
 	bool GetPort(std::string_view Port) const;
 	// sets the port this device is attached to
 	void SetPort(std::string_view Port, bool Connect);
+	// retuns true if it is a libusb device, false otherwise
+	virtual bool IsLibusb() const { return false; };
 
 
 protected:

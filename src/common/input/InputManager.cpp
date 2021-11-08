@@ -41,6 +41,7 @@
 #include "XInputPad.h"
 #include "RawDevice.h"
 #include "DInputKeyboardMouse.h"
+#include "LibusbDevice.h"
 #include "InputManager.h"
 #include "..\devices\usb\XidGamepad.h"
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
@@ -85,17 +86,19 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 
 		XInput::Init(m_Mtx);
 		RawInput::Init(m_Mtx, is_gui, m_hwnd);
+		Libusb::Init(m_Mtx);
 		Sdl::Init(m_Mtx, m_Cv, is_gui);
 		});
 
 	m_Cv.wait(lck, []() {
 		return (Sdl::InitStatus != Sdl::NOT_INIT) &&
 			(XInput::InitStatus != XInput::NOT_INIT) &&
-			(RawInput::InitStatus != RawInput::NOT_INIT);
+			(RawInput::InitStatus != RawInput::NOT_INIT) &&
+			(Libusb::InitStatus != Libusb::NOT_INIT);
 		});
 	lck.unlock();
 
-	if (Sdl::InitStatus < 0 || XInput::InitStatus < 0 || RawInput::InitStatus < 0) {
+	if (Sdl::InitStatus < 0 || XInput::InitStatus < 0 || RawInput::InitStatus < 0 || Libusb::InitStatus < 0) {
 		CxbxrKrnlAbort("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
@@ -131,6 +134,8 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 
 				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
+				case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
+				case to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER):
 					ConstructHleInputDevice(&g_devs[CTRL_OFFSET + i], nullptr, type, port);
 					BindHostDevice(type, port);
 					break;
@@ -162,6 +167,7 @@ void InputDeviceManager::Shutdown()
 
 	XInput::DeInit();
 	RawInput::DeInit();
+	Libusb::DeInit();
 	Sdl::DeInit(m_PollingThread);
 }
 
@@ -313,6 +319,19 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 		// MUs don't have any host devices bound, so we just return
 		return;
 	}
+	else if ((type == to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER)) ||
+		(type == to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER))) {
+		// libusb devices don't have any profiles, but we still need to attach them to the xbox port
+		char dev_name[50];
+		int port_num, slot;
+		PortStr2Int(port, &port_num, &slot);
+		g_EmuShared->GetInputDevNameSettings(dev_name, port_num);
+		auto dev = FindDevice(std::string(dev_name));
+		if (dev != nullptr) {
+			dev->SetPort(port, true);
+		}
+		return;
+	}
 
 	char dev_name[50];
 	char dev_control_names[HIGHEST_NUM_BUTTONS][HOST_BUTTON_NAME_LENGTH];
@@ -343,8 +362,6 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int direction, int type)
 {
 	assert(direction == DIRECTION_IN || direction == DIRECTION_OUT);
-	assert(type > to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID) &&
-		type < to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX));
 	bool has_changed = false;
 
 	// First check if ImGui is focus, then ignore any input update occur.
@@ -370,6 +387,12 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 				case to_underlying(XBOX_INPUT_DEVICE::MEMORY_UNIT):
 					assert(0);
 					break;
+
+				case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
+				case to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER):
+					has_changed = UpdateInputHw(dev, buffer, direction);
+					m_Mtx.unlock();
+					return has_changed;
 
 				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
@@ -397,8 +420,7 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 			return false;
 		}
 
-		//XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
-		XpadInput *in_buf = static_cast<XpadInput *>(Buffer);
+		XpadInput* in_buf = reinterpret_cast<XpadInput*>(static_cast<uint8_t*>(Buffer) + XID_PACKET_HEADER);
 		for (int i = 0; i < 8; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input*>(bindings[i])->GetState() : 0.0;
 			if (state) {
@@ -441,8 +463,7 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	}
 	else {
 		if (bindings[24] != nullptr) {
-			//XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + 2); lle usb
-			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(Buffer);
+			XpadOutput* out_buf = reinterpret_cast<XpadOutput*>(static_cast<uint8_t*>(Buffer) + XID_PACKET_HEADER);
 			dynamic_cast<InputDevice::Output*>(bindings[24])->SetState(out_buf->left_actuator_strength / static_cast<ControlState>(0xFFFF),
 				out_buf->right_actuator_strength / static_cast<ControlState>(0xFFFF));
 		}
@@ -475,7 +496,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		// 9  -> GearLever Up
 		// 10 -> GearLever Down
 		static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
-		SBCInput *in_buf = static_cast<SBCInput *>(Buffer);
+		SBCInput *in_buf = reinterpret_cast<SBCInput *>(static_cast<uint8_t *>(Buffer) + XID_PACKET_HEADER);
 		for (int i = 0; i < 4; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			if (state) {
@@ -607,6 +628,11 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 	return true;
 }
 
+bool InputDeviceManager::UpdateInputHw(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction)
+{
+	return dynamic_cast<Libusb::LibusbDevice *>(Device.get())->ExecuteIo(Buffer, Direction);
+}
+
 void InputDeviceManager::RefreshDevices()
 {
 	std::unique_lock<std::mutex> lck(m_Mtx);
@@ -616,6 +642,7 @@ void InputDeviceManager::RefreshDevices()
 	XInput::PopulateDevices();
 	DInput::PopulateDevices();
 	Sdl::PopulateDevices();
+	Libusb::PopulateDevices();
 	lck.lock();
 	m_Cv.wait(lck, []() {
 		return Sdl::PopulateOK;
@@ -628,13 +655,15 @@ void InputDeviceManager::RefreshDevices()
 	}
 }
 
-std::vector<std::string> InputDeviceManager::GetDeviceList() const
+std::vector<std::string> InputDeviceManager::GetDeviceList(std::function<bool(const InputDevice *)> Callback) const
 {
 	std::vector<std::string> dev_list;
 	std::lock_guard<std::mutex> lck(m_Mtx);
 
-	std::for_each(m_Devices.begin(), m_Devices.end(), [&dev_list](const auto& Device) {
-		dev_list.push_back(Device->GetQualifiedName());
+	std::for_each(m_Devices.begin(), m_Devices.end(), [&dev_list, &Callback](const auto& Device) {
+		if (Callback(Device.get())) {
+			dev_list.push_back(Device->GetQualifiedName());
+		}
 		});
 
 	return dev_list;
@@ -719,7 +748,7 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 		std::unique_lock<std::mutex> lck(m_Mtx);
 
 		auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [](const auto &Device) {
-			if (StrStartsWith(Device->GetAPI(), "XInput")) {
+			if (Device->IsLibusb() || StrStartsWith(Device->GetAPI(), "XInput")) {
 				return true;
 			}
 			return false;
@@ -730,6 +759,9 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 
 		lck.unlock();
 		XInput::PopulateDevices();
+		// When this was written, libusb did not yet support device hotplug on Windows, as documented in this issue https://github.com/libusb/libusb/issues/86.
+		// So we add the below call here. This will only work if rawinput detects the libusb device.
+		Libusb::PopulateDevices();
 	}
 
 	for (int port = PORT_1; port <= PORT_4; ++port) {
