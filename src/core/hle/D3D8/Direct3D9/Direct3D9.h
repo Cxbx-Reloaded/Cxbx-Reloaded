@@ -1912,14 +1912,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetTexture)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
+// * patch: CDevice_SetStateVB (D3D::CDevice::SetStateVB)
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStateVB)( xbox::ulong_xt Unknown1 );
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateVB)( xbox::ulong_xt Unknown1 );
 
 // ******************************************************************
-// * patch: D3DDevice_SetStateUP (D3D::CDevice::SetStateUP)
+// * patch: CDevice_SetStateUP (D3D::CDevice::SetStateUP)
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStateUP)();
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateUP)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetStipple

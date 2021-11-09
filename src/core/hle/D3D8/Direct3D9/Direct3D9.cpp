@@ -7989,7 +7989,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 		return;
 	}
 
-	// TODO : Call unpatched D3DDevice_SetStateVB(0);
+	// TODO : Call unpatched CDevice_SetStateVB(0);
 
 	CxbxUpdateNativeD3DResources();
 
@@ -8108,7 +8108,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 		return;
 	}
 
-	// TODO : Call unpatched D3DDevice_SetStateUP();
+	// TODO : Call unpatched CDevice_SetStateUP();
 
 	CxbxUpdateNativeD3DResources();
 
@@ -8173,7 +8173,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		return;
 	}
 
-	// TODO : Call unpatched D3DDevice_SetStateVB(g_Xbox_BaseVertexIndex);
+	// TODO : Call unpatched CDevice_SetStateVB(g_Xbox_BaseVertexIndex);
 
 	CxbxUpdateNativeD3DResources();
 
@@ -8216,7 +8216,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		return;
 	}
 
-	// TODO : Call unpatched D3DDevice_SetStateUP();
+	// TODO : Call unpatched CDevice_SetStateUP();
 
 	CxbxUpdateNativeD3DResources();
 
@@ -9145,9 +9145,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 #pragma warning(default:4244)
 
 // ******************************************************************
-// * patch: D3DDevice_SetStateVB (D3D::CDevice::SetStateVB)
+// * patch: CDevice_SetStateVB (D3D::CDevice::SetStateVB)
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStateVB)(ulong_xt Unknown1 )
+xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateVB)(ulong_xt Unknown1 )
 {
 	LOG_FUNC_ONE_ARG(Unknown1);
 
@@ -9158,9 +9158,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStateVB)(ulong_xt Unknown1 )
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetStateUP (D3D::CDevice::SetStateUP)
+// * patch: CDevice_SetStateUP (D3D::CDevice::SetStateUP)
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStateUP)()
+xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP)()
 {
 	LOG_FUNC();
 
