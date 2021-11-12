@@ -118,6 +118,26 @@ inline int button_sbc_id[SBC_NUM_BUTTONS] = {
 	IDC_GEAR_UP,
 	IDC_GEAR_DOWN,
 };
+
+// Must have the same button order as defined in button_lightgun_names
+inline int button_lightgun_id[LIGHTGUN_NUM_BUTTONS] = {
+	IDC_LG_STICK_UP,
+	IDC_LG_STICK_DOWN,
+	IDC_LG_STICK_LEFT,
+	IDC_LG_STICK_RIGHT,
+	IDC_LG_START,
+	IDC_LG_SEBA,
+	IDC_LG_TRIGGER,
+	IDC_LG_GRIP,
+	IDC_LG_A,
+	IDC_LG_B,
+	IDC_LG_AIM_POSX,
+	IDC_LG_AIM_NEGX,
+	IDC_LG_AIM_POSY,
+	IDC_LG_AIM_NEGY,
+	IDC_TURBO_LEFT,
+	IDC_TURBO_RIGHT,
+};
 #endif
 
 inline constexpr const char* button_xbox_ctrl_names[XBOX_CTRL_NUM_BUTTONS] = {
@@ -205,6 +225,25 @@ inline constexpr const char *button_sbc_names[SBC_NUM_BUTTONS] = {
 	"TunerDial Down",
 	"GearLever Up",
 	"GearLever Down",
+};
+
+inline constexpr const char *button_lightgun_names[LIGHTGUN_NUM_BUTTONS] = {
+	"Stick Up",
+	"Stick Down",
+	"Stick Left",
+	"Stick Right",
+	"START",
+	"SE/BA",
+	"Trigger",
+	"Grip",
+	"A",
+	"B",
+	"Aim X+",
+	"Aim X-",
+	"Aim Y+",
+	"Aim Y-",
+	"Turbo Left",
+	"Turbo Right",
 };
 
 constexpr bool check_button_name_size(unsigned max_num_buttons)

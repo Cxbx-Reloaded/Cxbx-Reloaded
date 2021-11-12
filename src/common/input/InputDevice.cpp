@@ -53,8 +53,8 @@ std::string GetInputDeviceName(int dev_type)
 		str = "MS Gamepad S";
 		break;
 
-	case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
-		str = "Light gun";
+	case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
+		str = "EMS TopGun II";
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):

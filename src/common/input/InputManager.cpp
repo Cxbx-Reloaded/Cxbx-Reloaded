@@ -57,7 +57,7 @@
 int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_DUKE
 	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_S
-	0,
+	LIGHTGUN_NUM_BUTTONS, // LIGHTGUN
 	0,
 	0,
 	0,
@@ -394,7 +394,7 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 					m_Mtx.unlock();
 					return has_changed;
 
-				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
+				case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
 				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
 					EmuLog(LOG_LEVEL::ERROR2, "An unsupported device is attached at port %d! The device was %s",

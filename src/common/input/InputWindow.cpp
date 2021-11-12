@@ -150,6 +150,22 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 	return nullptr; // no input
 }
 
+int InputWindow::EnableDefaultButton()
+{
+	if (std::strncmp(m_host_dev.c_str(), "XInput", std::strlen("XInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return XINPUT_DEFAULT;
+	}
+	else if (std::strncmp(m_host_dev.c_str(), "DInput", std::strlen("DInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return DINPUT_DEFAULT;
+	}
+	else {
+		EnableWindow(m_hwnd_default, FALSE);
+		return -1;
+	}
+}
+
 void InputWindow::BindButton(int ControlID)
 {
 	// Check if binding thread is still active

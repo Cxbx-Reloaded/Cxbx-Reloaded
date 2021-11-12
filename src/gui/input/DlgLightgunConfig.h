@@ -19,7 +19,7 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2019 ergo720
+// *  (c) 2021 ergo720
 // *
 // *  All rights reserved
 // *
@@ -27,31 +27,4 @@
 
 #pragma once
 
-#include "Button.h"
-#include "common\util\CxbxUtil.h"
-#include <array>
-
-
-/* Represents the guest device currently being configured in the gui */
-class EmuDevice
-{
-public:
-	EmuDevice(int type, HWND hwnd, void *wnd);
-	~EmuDevice();
-	Button* FindButtonById(int id);
-	Button* FindButtonByIndex(int index);
-	template<size_t size>
-	void BindDefault(const std::array<const char *, size> &arr);
-	void ClearButtons();
-
-
-private:
-	void CreateTooltipWindow();
-
-	std::vector<Button*> m_buttons;
-	HWND m_hwnd;
-	HWND m_tooltip_hwnd;
-};
-
-extern template void EmuDevice::BindDefault(const std::array<const char *, XBOX_CTRL_NUM_BUTTONS> &arr);
-extern template void EmuDevice::BindDefault(const std::array<const char *, LIGHTGUN_NUM_BUTTONS> &arr);
+INT_PTR CALLBACK DlgLightgunConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

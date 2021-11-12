@@ -31,6 +31,7 @@
 #include <Commctrl.h>
 #include <string>
 
+#define LIGHTGUN_NUM_BUTTONS 16
 #define XBOX_CTRL_NUM_BUTTONS 25
 #define SBC_NUM_BUTTONS 56
 #define HIGHEST_NUM_BUTTONS SBC_NUM_BUTTONS
@@ -62,3 +63,4 @@ private:
 
 LRESULT CALLBACK ButtonDukeSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+LRESULT CALLBACK ButtonLightgunSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);

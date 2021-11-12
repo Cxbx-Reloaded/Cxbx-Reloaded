@@ -99,7 +99,7 @@ LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
-		// Remove the window subclass when this window is destroyed
+	// Remove the window subclass when this window is destroyed
 	case WM_NCDESTROY: {
 		RemoveWindowSubclass(hWnd, ButtonSbcSubclassProc, uIdSubclass);
 	}
@@ -115,6 +115,28 @@ LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 			button->ClearText();
 			static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
 		}
+	}
+	break;
+
+	}
+
+	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK ButtonLightgunSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	switch (uMsg)
+	{
+	// Remove the window subclass when this window is destroyed
+	case WM_NCDESTROY: {
+		RemoveWindowSubclass(hWnd, ButtonSbcSubclassProc, uIdSubclass);
+	}
+	break;
+
+	case WM_RBUTTONDOWN: {
+		Button *button = reinterpret_cast<Button *>(dwRefData);
+		button->ClearText();
+		static_cast<LightgunInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
 	}
 	break;
 

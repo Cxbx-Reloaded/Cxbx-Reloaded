@@ -26,22 +26,36 @@
 // ******************************************************************
 
 #define LOG_PREFIX CXBXR_MODULE::GUI
+#define AUTORELOAD_DELAY 5000
 
 #include "Windows.h"
-#include "gui/resource/ResCxbx.h"
+#include "gui\resource\ResCxbx.h"
 #include "input\InputWindow.h"
 #include "gui\DlgInputConfig.h"
-#include "common/Logging.h"
+#include "common\Logging.h"
 
 
-static SbcInputWindow *g_InputWindow = nullptr;
+static constexpr std::array<std::array<const char *, LIGHTGUN_NUM_BUTTONS>, 2> button_lightgun_default = { {
+	{ "Pad N", "Pad S", "Pad W", "Pad E", "Start", "Back", "Button A", "Button B", "Button X", "Button Y", "Left X+", "Left X-",
+	"Left Y+", "Left Y-", "Shoulder L", "Shoulder R" },
+	{ "UP", "DOWN", "LEFT", "RIGHT", "RETURN", "SPACE", "Click 0", "Click 1", "W", "E", "Cursor X+", "Cursor X-", "Cursor Y+", "Cursor Y-", "S", "D" }
+} };
 
-void SbcInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
+static LightgunInputWindow *g_InputWindow = nullptr;
+
+LightgunInputWindow::~LightgunInputWindow()
+{
+	g_Settings->m_input_port[m_port_num].SlotType[SLOT_TOP] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+	g_Settings->m_input_port[m_port_num].SlotType[SLOT_BOTTOM] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+}
+
+void LightgunInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 {
 	// Save window/device specific variables
 	m_hwnd_window = hwnd;
 	m_hwnd_device_list = GetDlgItem(m_hwnd_window, IDC_DEVICE_LIST);
 	m_hwnd_profile_list = GetDlgItem(m_hwnd_window, IDC_PROFILE_NAME);
+	m_hwnd_default = GetDlgItem(m_hwnd_window, IDC_DEFAULT);
 	m_dev_type = dev_type;
 	m_max_num_buttons = dev_num_buttons[dev_type];
 	m_port_num = port_num;
@@ -53,7 +67,7 @@ void SbcInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	SetClassLong(m_hwnd_window, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
 
 	// Set window title
-	std::string title("Steel Battalion Controller at port ");
+	std::string title = (GetInputDeviceName(m_dev_type) + " at port ");
 	SendMessage(m_hwnd_window, WM_SETTEXT, 0,
 		reinterpret_cast<LPARAM>((title + PortUserFormat(std::to_string(m_port_num))).c_str()));
 
@@ -76,26 +90,28 @@ void SbcInputWindow::Initialize(HWND hwnd, int port_num, int dev_type)
 	SetWindowSubclass(GetWindow(m_hwnd_profile_list, GW_CHILD), ProfileNameSubclassProc, 0, 0);
 }
 
-void SbcInputWindow::ClearBindings()
+void LightgunInputWindow::ClearBindings()
 {
 	m_DeviceConfig->ClearButtons();
 	m_bHasChanges = true;
 }
 
-int SbcInputWindow::EnableDefaultButton()
+void LightgunInputWindow::BindDefault()
 {
-	// The SBC window does not have a default button, so we return a dummy value here
-	return -1;
-}
-
-void SbcInputWindow::SaveSlotConfig()
-{
-	for (unsigned slot = 0; slot < XBOX_CTRL_NUM_SLOTS; ++slot) {
-		g_Settings->m_input_port[m_port_num].SlotType[slot] = to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID);
+	int api = EnableDefaultButton();
+	if (api != -1) {
+		m_DeviceConfig->BindDefault<LIGHTGUN_NUM_BUTTONS>(button_lightgun_default[api]);
+		m_bHasChanges = true;
 	}
 }
 
-INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+void LightgunInputWindow::BindButton(int ControlID)
+{
+	InputWindow::BindButton(ControlID);
+	SwapMoCursorAxis(m_DeviceConfig->FindButtonById(ControlID));
+}
+
+INT_PTR CALLBACK DlgLightgunConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -108,9 +124,9 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		assert(port_num >= PORT_1 && port_num <= PORT_4);
 
 		// Ensure that the controller type is valid
-		assert(dev_type == to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER));
+		assert(dev_type == to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN));
 
-		g_InputWindow = new SbcInputWindow;
+		g_InputWindow = new LightgunInputWindow;
 		g_InputWindow->Initialize(hWndDlg, port_num, dev_type);
 	}
 	break;
@@ -118,7 +134,6 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 	case WM_CLOSE:
 	{
 		if (g_InputWindow->IsProfileSaved()) {
-			g_InputWindow->SaveSlotConfig();
 			delete g_InputWindow;
 			g_InputWindow = nullptr;
 			EndDialog(hWndDlg, wParam);
@@ -161,6 +176,13 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		}
 		break;
 
+		case IDC_DEFAULT: {
+			if (HIWORD(wParam) == BN_CLICKED) {
+				g_InputWindow->BindDefault();
+			}
+		}
+		break;
+
 		case IDC_CLEAR: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				if (PopupQuestionEx(hWndDlg, LOG_LEVEL::WARNING, PopupButtons::YesNo, PopupReturn::No, "Are you sure you want to remove all button bindings?") == PopupReturn::Yes) {
@@ -177,71 +199,31 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		}
 		break;
 
-		case IDC_BTN_MAIN_WEAPON:
-		case IDC_BTN_SUB_WEAPON:
-		case IDC_BTN_LOCK_ON:
-		case IDC_BTN_EJECT:
-		case IDC_BTN_COCKPIT_HATCH:
-		case IDC_BTN_IGNITION:
-		case IDC_BTN_START:
-		case IDC_BTN_OPEN_CLOSE:
-		case IDC_BTN_MAP_ZOOM_IN_OUT:
-		case IDC_BTN_MODE_SELECT:
-		case IDC_BTN_SUB_MONITOR_MODE_SELECT:
-		case IDC_BTN_ZOOM_IN:
-		case IDC_BTN_ZOOM_OUT:
-		case IDC_BTN_FSS:
-		case IDC_BTN_MANIPULATOR:
-		case IDC_BTN_LINE_COLOR_CHANGE:
-		case IDC_BTN_WASHING:
-		case IDC_BTN_EXTINGUISHER:
-		case IDC_BTN_CHAFF:
-		case IDC_BTN_TANK_DETACH:
-		case IDC_BTN_OVERRIDE:
-		case IDC_BTN_NIGHT_SCOPE:
-		case IDC_BTN_FUNC1:
-		case IDC_BTN_FUNC2:
-		case IDC_BTN_FUNC3:
-		case IDC_BTN_MAIN_WEAPON_CONTROL:
-		case IDC_BTN_SUB_WEAPON_CONTROL:
-		case IDC_BTN_MAGAZINE_CHANGE:
-		case IDC_BTN_COM1:
-		case IDC_BTN_COM2:
-		case IDC_BTN_COM3:
-		case IDC_BTN_COM4:
-		case IDC_BTN_COM5:
-		case IDC_BTN_SIGHT_CHANGE:
-		case IDC_FILT_CONTROL_SYSTEM:
-		case IDC_OXYGEN_SUPPLY_SYSTEM:
-		case IDC_FUEL_FLOW_RATE:
-		case IDC_BUFFER_MATERIAL:
-		case IDC_VT_LOCATION_MEASUREMENT:
-		case IDC_AIMING_POSX:
-		case IDC_AIMING_NEGX:
-		case IDC_AIMING_POSY:
-		case IDC_AIMING_NEGY:
-		case IDC_LEVER_LEFT:
-		case IDC_LEVER_RIGHT:
-		case IDC_SIGHT_CHANGE_POSX:
-		case IDC_SIGHT_CHANGE_NEGX:
-		case IDC_SIGHT_CHANGE_POSY:
-		case IDC_SIGHT_CHANGE_NEGY:
-		case IDC_BTN_LEFT_PEDAL:
-		case IDC_BTN_MIDDLE_PEDAL:
-		case IDC_BTN_RIGHT_PEDAL:
-		case IDC_RADIO_TD_UP:
-		case IDC_RADIO_TD_DOWN:
-		case IDC_GEAR_UP:
-		case IDC_GEAR_DOWN: {
+		case IDC_LG_STICK_UP:
+		case IDC_LG_STICK_DOWN:
+		case IDC_LG_STICK_LEFT:
+		case IDC_LG_STICK_RIGHT:
+		case IDC_LG_START:
+		case IDC_LG_SEBA:
+		case IDC_LG_TRIGGER:
+		case IDC_LG_GRIP:
+		case IDC_LG_A:
+		case IDC_LG_B:
+		case IDC_LG_AIM_POSX:
+		case IDC_LG_AIM_NEGX:
+		case IDC_LG_AIM_POSY:
+		case IDC_LG_AIM_NEGY:
+		case IDC_TURBO_LEFT:
+		case IDC_TURBO_RIGHT: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				g_InputWindow->BindButton(LOWORD(wParam));
 			}
 		}
 		break;
-
 		}
 	}
 	break;
 	}
+
 	return FALSE;
 }
