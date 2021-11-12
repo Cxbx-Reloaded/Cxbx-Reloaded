@@ -346,6 +346,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("XInputGetState", xbox::EMUPATCH(XInputGetState), PATCH_HLE_OHCI),
 	PATCH_ENTRY("XInputOpen", xbox::EMUPATCH(XInputOpen), PATCH_HLE_OHCI),
 	PATCH_ENTRY("XInputPoll", xbox::EMUPATCH(XInputPoll), PATCH_HLE_OHCI),
+	PATCH_ENTRY("XInputSetLightgunCalibration", xbox::EMUPATCH(XInputSetLightgunCalibration), PATCH_HLE_OHCI),
 	PATCH_ENTRY("XInputSetState", xbox::EMUPATCH(XInputSetState), PATCH_HLE_OHCI),
 
 	// XAPI

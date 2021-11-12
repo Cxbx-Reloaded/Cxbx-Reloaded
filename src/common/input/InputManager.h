@@ -157,6 +157,15 @@ struct XidSBCOutput {
 
 #pragma pack()
 
+struct LightGunOffsets {
+	xbox::short_xt x;
+	xbox::short_xt y;
+};
+
+union ExtraData {
+	LightGunOffsets offsets;
+};
+
 union InputBuff {
 	XidGamepadInput ctrl;
 	XidSBCInput sbc;
@@ -170,8 +179,9 @@ struct DeviceInfo {
 	uint8_t ucSubType;         // xapi subtype
 	uint8_t ucInputStateSize;  // input state size in bytes, does not include dwPacketNumber
 	uint8_t ucFeedbackSize;    // feedback size in bytes, does not include FeedbackHeader
-	uint32_t dwPacketNumber;
-	InputBuff buff;
+	uint32_t dwPacketNumber;   // increases by one when the input state changes
+	InputBuff buff;            // input buffer
+	ExtraData data;            // device-specific additional data
 };
 
 struct DeviceState {
