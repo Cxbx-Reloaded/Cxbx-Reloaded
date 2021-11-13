@@ -264,6 +264,9 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_LIGHTGUN;
 		dev->info.ucInputStateSize = sizeof(XpadInput);
 		dev->info.ucFeedbackSize = sizeof(XpadOutput);
+		dev->info.ligthgun.offset_x = dev->info.ligthgun.offset_x = 0;
+		dev->info.ligthgun.last_turbo_state = dev->info.ligthgun.turbo = 0;
+		dev->info.ligthgun.turbo_delay = 0;
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
@@ -277,6 +280,7 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 		dev->info.ucInputStateSize = sizeof(SBCInput);
 		dev->info.ucFeedbackSize = sizeof(SBCOutput);
+		dev->info.sbc.last_in_state = 0;
 		if (type == to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER)) {
 			dev->type = XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER;
 			char dev_name[50];
@@ -864,8 +868,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetLightgunCalibration)
 	int port = static_cast<DeviceState *>(hDevice)->port_idx;
 	if (g_devs[port].info.hHandle == hDevice && !g_devs[port].bPendingRemoval) {
 		if (g_devs[port].type == XBOX_INPUT_DEVICE::LIGHTGUN) {
-			g_devs[port].info.data.offsets.x = pCalibrationOffsets->wCenterX;
-			g_devs[port].info.data.offsets.y = pCalibrationOffsets->wCenterY;
+			g_devs[port].info.ligthgun.offset_x = pCalibrationOffsets->wCenterX;
+			g_devs[port].info.ligthgun.offset_y = pCalibrationOffsets->wCenterY;
 			ret = ERROR_SUCCESS;
 		}
 		else {

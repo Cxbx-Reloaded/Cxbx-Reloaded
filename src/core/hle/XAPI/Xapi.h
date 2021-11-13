@@ -295,6 +295,11 @@ typedef struct _XINPUT_LIGHTGUN_CALIBRATION_OFFSETS
 XINPUT_LIGHTGUN_CALIBRATION_OFFSETS, *PXINPUT_LIGHTGUN_CALIBRATION_OFFSETS;
 
 // ******************************************************************
+// * Lightgun-specific flags
+// ******************************************************************
+#define XINPUT_LIGHTGUN_ONSCREEN 0x2000
+
+// ******************************************************************
 // * RTL_HEAP_PARAMETERS
 // ******************************************************************
 typedef struct _RTL_HEAP_PARAMETERS

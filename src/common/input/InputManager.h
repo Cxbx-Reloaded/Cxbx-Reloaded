@@ -54,6 +54,8 @@
 
 #define XID_PACKET_HEADER 2
 
+#define LIGHTGUN_GRIP_DELAY 30
+
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
 inline XBOX_INPUT_DEVICE input_support_list[] = {
@@ -157,13 +159,16 @@ struct XidSBCOutput {
 
 #pragma pack()
 
-struct LightGunOffsets {
-	xbox::short_xt x;
-	xbox::short_xt y;
+struct LightGunData {
+	xbox::short_xt offset_x;
+	xbox::short_xt offset_y;
+	uint8_t last_turbo_state;
+	uint8_t turbo_delay;
+	uint8_t turbo;
 };
 
-union ExtraData {
-	LightGunOffsets offsets;
+struct SbcData {
+	uint16_t last_in_state;
 };
 
 union InputBuff {
@@ -181,7 +186,11 @@ struct DeviceInfo {
 	uint8_t ucFeedbackSize;    // feedback size in bytes, does not include FeedbackHeader
 	uint32_t dwPacketNumber;   // increases by one when the input state changes
 	InputBuff buff;            // input buffer
-	ExtraData data;            // device-specific additional data
+	// device-specific additional data
+	union {
+		LightGunData ligthgun;
+		SbcData sbc;
+	};
 };
 
 struct DeviceState {
@@ -230,6 +239,8 @@ public:
 private:
 	// update input for an xbox controller
 	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port);
+	// update input for a lightgun
+	bool UpdateInputLightgun(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction, int Port_num, const std::string &Port);
 	// update input for a Steel Battalion controller
 	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port);
 	// update input for a passthrough xbox device

@@ -132,6 +132,7 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 				}
 				break;
 
+				case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
 				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
 				case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
@@ -379,6 +380,11 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 					m_Mtx.unlock();
 					return has_changed;
 
+				case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
+					has_changed = UpdateInputLightgun(dev, buffer, direction, port, port_str);
+					m_Mtx.unlock();
+					return has_changed;
+
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
 					has_changed = UpdateInputSBC(dev, buffer, direction, port, port_str);
 					m_Mtx.unlock();
@@ -394,7 +400,6 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 					m_Mtx.unlock();
 					return has_changed;
 
-				case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
 				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
 					EmuLog(LOG_LEVEL::ERROR2, "An unsupported device is attached at port %d! The device was %s",
@@ -472,6 +477,117 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	return true;
 }
 
+bool InputDeviceManager::UpdateInputLightgun(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction, int Port_num, const std::string &Port)
+{
+	std::map<int, InputDevice::IoControl *> bindings = Device->GetBindings(Port);
+	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN)]));
+
+	// NOTE: the output state is not supported
+	if (Direction == DIRECTION_IN) {
+		if (!Device->UpdateInput()) {
+			return false;
+		}
+
+		// We change the toggle buttons only when a press -> release input transaction is completed
+		// 0  -> Turbo left
+		// 1  -> Turbo right
+		XpadInput *in_buf = reinterpret_cast<XpadInput *>(static_cast<uint8_t *>(Buffer) + XID_PACKET_HEADER);
+		uint8_t last_turbo = g_devs[Port_num].info.ligthgun.turbo;
+		for (int i = 14, j = 0; i < 16; i++, j++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+			uint8_t curr_state = static_cast<uint8_t>(!!state);
+			if ((~curr_state) & ((g_devs[Port_num].info.ligthgun.last_turbo_state >> j) & 1)) {
+				if (j == 0) {
+					if (g_devs[Port_num].info.ligthgun.turbo != 2) {
+						g_devs[Port_num].info.ligthgun.turbo += 1;
+					}
+				}
+				else {
+					if (g_devs[Port_num].info.ligthgun.turbo != 0) {
+						g_devs[Port_num].info.ligthgun.turbo -= 1;
+					}
+				}
+			}
+			(g_devs[Port_num].info.ligthgun.last_turbo_state &= ~(1 << j)) |= (curr_state << j);
+		}
+
+		in_buf->wButtons = XINPUT_LIGHTGUN_ONSCREEN;
+		for (int i = 0; i < 6; i++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+			if (state) {
+				in_buf->wButtons |= (1 << i);
+			}
+			else {
+				in_buf->wButtons &= ~(1 << i);
+			}
+		}
+
+		if (g_devs[Port_num].info.ligthgun.turbo) {
+			ControlState trigger_state = (bindings[6] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[6])->GetState() : 0.0;
+			if (trigger_state) {
+				// Turbo mode 1
+				in_buf->bAnalogButtons[0] ^= 0xFF;
+				int start_idx = 7;
+				if (g_devs[Port_num].info.ligthgun.turbo == 2) {
+					// Turbo mode 2
+					start_idx = 8;
+					++g_devs[Port_num].info.ligthgun.turbo_delay;
+					if (last_turbo != g_devs[Port_num].info.ligthgun.turbo) {
+						g_devs[Port_num].info.ligthgun.turbo_delay = 0;
+					}
+					if (g_devs[Port_num].info.ligthgun.turbo_delay == LIGHTGUN_GRIP_DELAY) {
+						in_buf->bAnalogButtons[1] ^= 0xFF;
+						g_devs[Port_num].info.ligthgun.turbo_delay = 0;
+					}
+				}
+				for (int i = start_idx, j = start_idx - 6; i < 10; i++, j++) {
+					ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+					in_buf->bAnalogButtons[j] = state ? 0xFF : 0;
+				}
+			}
+			else {
+				// Turbo active but trigger not pressed
+				in_buf->bAnalogButtons[0] = 0;
+				for (int i = 7, j = 1; i < 10; i++, j++) {
+					ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+					in_buf->bAnalogButtons[j] = state ? 0xFF : 0;
+				}
+			}
+		}
+		else {
+			// Turbo mode 0 (no turbo)
+			for (int i = 6, j = 0; i < 10; i++, j++) {
+				ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+				in_buf->bAnalogButtons[j] = state ? 0xFF : 0;
+			}
+		}
+		in_buf->bAnalogButtons[4] = 0;
+		in_buf->bAnalogButtons[5] = 0;
+		in_buf->bAnalogButtons[6] = 0;
+		in_buf->bAnalogButtons[7] = 0;
+
+		for (int i = 10; i < 14; i += 2) {
+			ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+			ControlState state_minus = (bindings[i + 1] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i + 1])->GetState() : 0.0;
+			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? -state_minus * 0x8000 : 0.0;
+			switch (i)
+			{
+			case 10:
+				in_buf->sThumbLX = static_cast<int16_t>(state) + g_devs[Port_num].info.ligthgun.offset_x;
+				break;
+
+			case 12:
+				in_buf->sThumbLY = static_cast<int16_t>(state) + g_devs[Port_num].info.ligthgun.offset_y;
+				break;
+
+			}
+		}
+		in_buf->sThumbRX = in_buf->sThumbRY = 0;
+	}
+
+	return true;
+}
+
 bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port)
 {
 	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port);
@@ -495,7 +611,6 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		// 8  -> TunerDial Down
 		// 9  -> GearLever Up
 		// 10 -> GearLever Down
-		static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
 		SBCInput *in_buf = reinterpret_cast<SBCInput *>(static_cast<uint8_t *>(Buffer) + XID_PACKET_HEADER);
 		for (int i = 0; i < 4; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
@@ -511,10 +626,10 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 4, j = 0; i < 6; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+			if ((~curr_in_state) & ((g_devs[Port_num].info.sbc.last_in_state >> j) & 1)) {
 				in_buf->wButtons[0] ^= (1 << i);
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
+			(g_devs[Port_num].info.sbc.last_in_state &= ~(1 << j)) |= (curr_in_state << j);
 		}
 
 		for (int i = 6; i < 34; i++) {
@@ -531,10 +646,10 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 34, j = 2; i < 39; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+			if ((~curr_in_state) & ((g_devs[Port_num].info.sbc.last_in_state >> j) & 1)) {
 				in_buf->wButtons[2] ^= (1 << (i % 16));
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
+			(g_devs[Port_num].info.sbc.last_in_state &= ~(1 << j)) |= (curr_in_state << j);
 		}
 
 		for (int i = 39; i < 49; i += 2) {
@@ -593,7 +708,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 52, j = 7; i < 56; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+			if ((~curr_in_state) & ((g_devs[Port_num].info.sbc.last_in_state >> j) & 1)) {
 				switch (i)
 				{
 				case 52:
@@ -621,7 +736,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 					break;
 				}
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
+			(g_devs[Port_num].info.sbc.last_in_state &= ~(1 << j)) |= (curr_in_state << j);
 		}
 	}
 
