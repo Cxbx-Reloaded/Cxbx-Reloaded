@@ -31,7 +31,7 @@
 #include <Commctrl.h>
 #include <string>
 
-#define LIGHTGUN_NUM_BUTTONS 16
+#define LIGHTGUN_NUM_BUTTONS 17
 #define XBOX_CTRL_NUM_BUTTONS 25
 #define SBC_NUM_BUTTONS 56
 #define HIGHEST_NUM_BUTTONS SBC_NUM_BUTTONS

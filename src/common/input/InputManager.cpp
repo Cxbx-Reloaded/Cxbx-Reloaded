@@ -37,6 +37,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
+#include "D3dx9math.h" // For the matrix math functions
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "RawDevice.h"
@@ -273,7 +274,7 @@ void InputDeviceManager::UpdateDevices(std::string_view port, bool ack)
 	else {
 		auto host_dev = g_InputDeviceManager.FindDevice(port);
 		if (host_dev != nullptr) {
-			host_dev->SetPort(port, false);
+			host_dev->SetPort2(port, false);
 		}
 		if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 			if (type != to_underlying(dev->type)) {
@@ -310,7 +311,7 @@ void InputDeviceManager::DisconnectDevice(DeviceState *dev, std::string_view por
 	}
 	auto host_dev = g_InputDeviceManager.FindDevice(port);
 	if (host_dev != nullptr) {
-		host_dev->SetPort(port, false);
+		host_dev->SetPort2(port, false);
 	}
 }
 
@@ -329,7 +330,7 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 		g_EmuShared->GetInputDevNameSettings(dev_name, port_num);
 		auto dev = FindDevice(std::string(dev_name));
 		if (dev != nullptr) {
-			dev->SetPort(port, true);
+			dev->SetPort2(port, true);
 		}
 		return;
 	}
@@ -356,7 +357,7 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 				});
 			dev->SetBindings(index, (it != controls.end()) ? *it : nullptr, port_str);
 		}
-		dev->SetPort(port, true);
+		dev->SetPort2(port, true);
 	}
 }
 
@@ -491,24 +492,36 @@ bool InputDeviceManager::UpdateInputLightgun(std::shared_ptr<InputDevice> &Devic
 		// We change the toggle buttons only when a press -> release input transaction is completed
 		// 0  -> Turbo left
 		// 1  -> Turbo right
+		// 2  -> Laser
 		XpadInput *in_buf = reinterpret_cast<XpadInput *>(static_cast<uint8_t *>(Buffer) + XID_PACKET_HEADER);
-		uint8_t last_turbo = g_devs[Port_num].info.ligthgun.turbo;
-		for (int i = 14, j = 0; i < 16; i++, j++) {
+		g_devs[Port_num].info.ligthgun.last_turbo = g_devs[Port_num].info.ligthgun.turbo;
+		for (int i = 14, j = 0; i < 17; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint8_t curr_state = static_cast<uint8_t>(!!state);
-			if ((~curr_state) & ((g_devs[Port_num].info.ligthgun.last_turbo_state >> j) & 1)) {
-				if (j == 0) {
+			if ((~curr_state) & ((g_devs[Port_num].info.ligthgun.last_in_state >> j) & 1)) {
+				switch (j)
+				{
+				case 0:
 					if (g_devs[Port_num].info.ligthgun.turbo != 2) {
 						g_devs[Port_num].info.ligthgun.turbo += 1;
 					}
-				}
-				else {
+					break;
+
+				case 1:
 					if (g_devs[Port_num].info.ligthgun.turbo != 0) {
 						g_devs[Port_num].info.ligthgun.turbo -= 1;
 					}
+					break;
+
+				case 2:
+					g_devs[Port_num].info.ligthgun.laser ^= 1;
+					if (g_devs[Port_num].info.ligthgun.laser) {
+
+					}
+					break;
 				}
 			}
-			(g_devs[Port_num].info.ligthgun.last_turbo_state &= ~(1 << j)) |= (curr_state << j);
+			(g_devs[Port_num].info.ligthgun.last_in_state &= ~(1 << j)) |= (curr_state << j);
 		}
 
 		in_buf->wButtons = XINPUT_LIGHTGUN_ONSCREEN;
@@ -532,7 +545,7 @@ bool InputDeviceManager::UpdateInputLightgun(std::shared_ptr<InputDevice> &Devic
 					// Turbo mode 2
 					start_idx = 8;
 					++g_devs[Port_num].info.ligthgun.turbo_delay;
-					if (last_turbo != g_devs[Port_num].info.ligthgun.turbo) {
+					if (g_devs[Port_num].info.ligthgun.last_turbo != g_devs[Port_num].info.ligthgun.turbo) {
 						g_devs[Port_num].info.ligthgun.turbo_delay = 0;
 					}
 					if (g_devs[Port_num].info.ligthgun.turbo_delay == LIGHTGUN_GRIP_DELAY) {
@@ -886,4 +899,52 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 			BindHostDevice(type, std::to_string(port));
 		}
 	}
+}
+
+ImVec2 InputDeviceManager::CalcLaserPos(int port)
+{
+	static ImVec2 laser_coord[XBOX_NUM_PORTS] = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
+
+	// If somebody else is currently holding the lock, we won't wait and instead we report the last known laser position
+	if (m_Mtx.try_lock()) {
+		static D3DXVECTOR4 coeff_vec;
+
+		// If the rendering window was not resized, we can skip calculating the conversion matrix
+		if (g_bRenderWindowResized) {
+			g_bRenderWindowResized = false;
+
+			// We convert the laser input coordinates given by xinput (in the sThumbLXY members of XpadInput) with the procedure described in the link below
+			// https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/samples/jj635757(v=vs.85)?redirectedfrom=MSDN
+			// NOTE: the d3d math functions work even when d3d was not intialized, which happens when running with LLE GPU turned on
+			/*
+			xinput -> screen
+			v = M^-1 * u
+            width     0      0     1 0     a
+            height =  0      0     0 1  *  b
+            0        -32768  32767 1 0     c
+            0        -32767 -32768 0 1     d
+			*/
+			RECT rect;
+			GetClientRect(m_hwnd, &rect);
+			const auto width = std::max(rect.right - rect.left, 1l);
+			const auto height = std::max(rect.bottom - rect.top, 1l);
+			D3DXMATRIX inverted_mtx, transposed_mtx;
+			D3DXMATRIX src_mtx(0, 0, 1, 0, 0, 0, 0, 1, -32768, 32767, 1, 0, -32767, -32768, 0, 1);
+			D3DXVECTOR4 screen_vec(width, height, 0, 0);
+			D3DXMatrixInverse(&inverted_mtx, nullptr, &src_mtx);
+			D3DXMatrixTranspose(&transposed_mtx, &inverted_mtx);
+			D3DXVec4Transform(&coeff_vec, &screen_vec, &transposed_mtx);
+		}
+
+		// x' = ax + by + c
+		// y' = bx - ay + d
+		int16_t laser_x = g_devs[port].info.buff.ctrl.InBuffer.sThumbLX;
+		int16_t laser_y = g_devs[port].info.buff.ctrl.InBuffer.sThumbLY;
+		laser_coord[port].x = coeff_vec.x * laser_x + coeff_vec.y * laser_y + coeff_vec.z;
+		laser_coord[port].y = coeff_vec.y * laser_x - coeff_vec.x * laser_y + coeff_vec.w;
+
+		m_Mtx.unlock();
+	}
+
+	return laser_coord[port];
 }

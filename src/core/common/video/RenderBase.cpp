@@ -16,9 +16,9 @@
 
 std::unique_ptr<RenderBase> g_renderbase;
 
-bool RenderBase::Initialize()
+bool RenderBase::Initialize(int backbuffer_scale)
 {
-	if (!ImGuiUI::Initialize()) {
+	if (!ImGuiUI::Initialize(backbuffer_scale)) {
 		return false;
 	}
 

@@ -37,8 +37,8 @@
 
 static constexpr std::array<std::array<const char *, LIGHTGUN_NUM_BUTTONS>, 2> button_lightgun_default = { {
 	{ "Pad N", "Pad S", "Pad W", "Pad E", "Start", "Back", "Button A", "Button B", "Button X", "Button Y", "Left X+", "Left X-",
-	"Left Y+", "Left Y-", "Shoulder L", "Shoulder R" },
-	{ "UP", "DOWN", "LEFT", "RIGHT", "RETURN", "SPACE", "Click 0", "Click 1", "W", "E", "Cursor X+", "Cursor X-", "Cursor Y+", "Cursor Y-", "S", "D" }
+	"Left Y+", "Left Y-", "Shoulder L", "Shoulder R", "Thumb R" },
+	{ "UP", "DOWN", "LEFT", "RIGHT", "RETURN", "SPACE", "Click 0", "Click 1", "W", "E", "Cursor X+", "Cursor X-", "Cursor Y+", "Cursor Y-", "S", "D", "C"}
 } };
 
 static LightgunInputWindow *g_InputWindow = nullptr;
@@ -214,7 +214,8 @@ INT_PTR CALLBACK DlgLightgunConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, L
 		case IDC_LG_AIM_POSY:
 		case IDC_LG_AIM_NEGY:
 		case IDC_TURBO_LEFT:
-		case IDC_TURBO_RIGHT: {
+		case IDC_TURBO_RIGHT:
+		case IDC_LASER: {
 			if (HIWORD(wParam) == BN_CLICKED) {
 				g_InputWindow->BindButton(LOWORD(wParam));
 			}

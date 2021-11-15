@@ -16,7 +16,7 @@ public:
 	RenderBase() = default;
 	virtual ~RenderBase() = default;
 
-	virtual bool Initialize();
+	virtual bool Initialize(int backbuffer_scale);
 	virtual void Shutdown();
 
 	template<class C, class T>

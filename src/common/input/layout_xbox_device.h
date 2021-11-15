@@ -137,6 +137,7 @@ inline int button_lightgun_id[LIGHTGUN_NUM_BUTTONS] = {
 	IDC_LG_AIM_NEGY,
 	IDC_TURBO_LEFT,
 	IDC_TURBO_RIGHT,
+	IDC_LASER,
 };
 #endif
 
@@ -244,6 +245,7 @@ inline constexpr const char *button_lightgun_names[LIGHTGUN_NUM_BUTTONS] = {
 	"Aim Y-",
 	"Turbo Left",
 	"Turbo Right",
+	"Laser",
 };
 
 constexpr bool check_button_name_size(unsigned max_num_buttons)

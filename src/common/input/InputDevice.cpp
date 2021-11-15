@@ -178,7 +178,7 @@ const auto InputDevice::FindPort(std::string_view Port) const
 		});
 }
 
-void InputDevice::SetPort(std::string_view Port, bool Connect)
+void InputDevice::SetPort2(std::string_view Port, bool Connect)
 {
 	if (Connect) {
 		m_XboxPort.emplace_back(Port);

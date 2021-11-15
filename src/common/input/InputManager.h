@@ -31,11 +31,7 @@
 #include <thread>
 #include "InputDevice.h"
 #include "EmuDevice.h"
-
-// Prevent a collision with the SetPort provided by Windows
-#ifdef WIN32
-#undef SetPort
-#endif
+#include <imgui.h>
 
 #define PORT_INVALID     -1
 #define PORT_1            0
@@ -162,9 +158,11 @@ struct XidSBCOutput {
 struct LightGunData {
 	xbox::short_xt offset_x;
 	xbox::short_xt offset_y;
-	uint8_t last_turbo_state;
+	uint8_t last_in_state;
+	uint8_t last_turbo;
 	uint8_t turbo_delay;
 	uint8_t turbo;
+	uint8_t laser;
 };
 
 struct SbcData {
@@ -234,6 +232,8 @@ public:
 	void UpdateOpt(bool is_gui);
 	// device hotplug event handler
 	void HotplugHandler(bool is_sdl);
+	// converts xinput -> screen coordinates to display the lightgun laser on the rendering window
+	ImVec2 CalcLaserPos(int port);
 
 
 private:

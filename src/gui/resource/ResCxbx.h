@@ -293,6 +293,8 @@
 #define IDC_TURBO_LEFT                  1339
 #define IDC_TURBO_RIGHT                 1340
 #define IDC_TURBO                       1341
+#define IDC_POWER_SWITCH                1342
+#define IDC_LASER                       1343
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009

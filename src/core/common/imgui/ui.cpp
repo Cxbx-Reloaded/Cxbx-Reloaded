@@ -15,7 +15,14 @@
 
 #include "core/kernel/init/CxbxKrnl.h"
 
-bool ImGuiUI::Initialize()
+const ImColor ImGuiUI::m_laser_col[4] = {
+		ImColor(ImVec4(1.0f, 0.0f, 0.0f, 1.0f)), // ply1: red
+		ImColor(ImVec4(0.0f, 1.0f, 0.0f, 1.0f)), // ply2: green
+		ImColor(ImVec4(0.0f, 0.0f, 1.0f, 1.0f)), // ply3: blue
+		ImColor(ImVec4(1.0f, 1.0f, 0.0f, 1.0f))  // ply4: yellow
+};
+
+bool ImGuiUI::Initialize(int backbuffer_scale)
 {
 	IMGUI_CHECKVERSION();
 	m_imgui_context = ImGui::CreateContext();
@@ -48,6 +55,7 @@ bool ImGuiUI::Initialize()
 
 	// Internal initialize (when necessary, move into its own function.)
 	fps_counter = 30.0f;
+	m_backbuffer_scale = backbuffer_scale;
 
 	// Miscs
 	m_audio.Initialize();
@@ -189,4 +197,13 @@ void ImGuiUI::DrawWidgets()
 	m_video.DrawWidgets(m_is_focus, input_handler);
 
 	m_audio.DrawWidgets(m_is_focus, input_handler);
+}
+
+void ImGuiUI::DrawLightgunLaser(int port)
+{
+	ImGui::Begin("Laser", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDecoration);
+
+	ImGui::GetForegroundDrawList()->AddCircleFilled(g_InputDeviceManager.CalcLaserPos(port), 10 * m_backbuffer_scale, m_laser_col[port], 32);
+
+	ImGui::End();
 }

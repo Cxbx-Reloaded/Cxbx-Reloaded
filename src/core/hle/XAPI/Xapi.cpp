@@ -265,8 +265,9 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucInputStateSize = sizeof(XpadInput);
 		dev->info.ucFeedbackSize = sizeof(XpadOutput);
 		dev->info.ligthgun.offset_x = dev->info.ligthgun.offset_x = 0;
-		dev->info.ligthgun.last_turbo_state = dev->info.ligthgun.turbo = 0;
-		dev->info.ligthgun.turbo_delay = 0;
+		dev->info.ligthgun.last_in_state = dev->info.ligthgun.turbo_delay = 0;
+		dev->info.ligthgun.turbo = dev->info.ligthgun.last_turbo = 0;
+		dev->info.ligthgun.laser = 1; // laser on by default
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
