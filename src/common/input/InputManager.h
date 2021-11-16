@@ -158,6 +158,8 @@ struct XidSBCOutput {
 struct LightGunData {
 	xbox::short_xt offset_x;
 	xbox::short_xt offset_y;
+	xbox::short_xt offset_upp_x;
+	xbox::short_xt offset_upp_y;
 	uint8_t last_in_state;
 	uint8_t last_turbo;
 	uint8_t turbo_delay;

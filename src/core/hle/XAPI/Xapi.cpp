@@ -59,7 +59,7 @@ std::atomic<bool> g_bIsDevicesEmulating = false;
 std::atomic<bool> g_bXppGuard = false;
 
 // Allocate enough memory for the max number of devices we can support simultaneously
-// 4 duke / S / sbc / arcade joystick (mutually exclusive) + 8 memory units
+// 4 duke / S / sbc / arcade joystick / lightgun (mutually exclusive) + 8 memory units
 DeviceState g_devs[MAX_DEVS];
 
 xbox::ulong_xt g_Mounted_MUs = 0;
@@ -264,10 +264,11 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_LIGHTGUN;
 		dev->info.ucInputStateSize = sizeof(XpadInput);
 		dev->info.ucFeedbackSize = sizeof(XpadOutput);
-		dev->info.ligthgun.offset_x = dev->info.ligthgun.offset_x = 0;
+		dev->info.ligthgun.offset_x = dev->info.ligthgun.offset_y = 0;
+		dev->info.ligthgun.offset_upp_x = dev->info.ligthgun.offset_upp_x = 0;
 		dev->info.ligthgun.last_in_state = dev->info.ligthgun.turbo_delay = 0;
 		dev->info.ligthgun.turbo = dev->info.ligthgun.last_turbo = 0;
-		dev->info.ligthgun.laser = 1; // laser on by default
+		g_EmuShared->GetLightgunLaser(&dev->info.ligthgun.laser);
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
@@ -871,6 +872,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetLightgunCalibration)
 		if (g_devs[port].type == XBOX_INPUT_DEVICE::LIGHTGUN) {
 			g_devs[port].info.ligthgun.offset_x = pCalibrationOffsets->wCenterX;
 			g_devs[port].info.ligthgun.offset_y = pCalibrationOffsets->wCenterY;
+			g_devs[port].info.ligthgun.offset_upp_x = pCalibrationOffsets->wUpperLeftX;
+			g_devs[port].info.ligthgun.offset_upp_y = pCalibrationOffsets->wUpperLeftY;
 			ret = ERROR_SUCCESS;
 		}
 		else {

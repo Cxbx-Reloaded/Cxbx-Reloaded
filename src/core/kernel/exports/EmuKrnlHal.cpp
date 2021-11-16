@@ -535,6 +535,8 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 				#endif
 			}
 
+			// Save lightgun laser status
+			g_EmuShared->SetLightgunLaser(&g_devs->info.ligthgun.laser);
 
 			std::string TitlePath = xbox::LaunchDataPage->Header.szLaunchPath;
 

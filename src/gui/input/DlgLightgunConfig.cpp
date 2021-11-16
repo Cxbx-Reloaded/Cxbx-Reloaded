@@ -26,7 +26,6 @@
 // ******************************************************************
 
 #define LOG_PREFIX CXBXR_MODULE::GUI
-#define AUTORELOAD_DELAY 5000
 
 #include "Windows.h"
 #include "gui\resource\ResCxbx.h"
@@ -103,12 +102,6 @@ void LightgunInputWindow::BindDefault()
 		m_DeviceConfig->BindDefault<LIGHTGUN_NUM_BUTTONS>(button_lightgun_default[api]);
 		m_bHasChanges = true;
 	}
-}
-
-void LightgunInputWindow::BindButton(int ControlID)
-{
-	InputWindow::BindButton(ControlID);
-	SwapMoCursorAxis(m_DeviceConfig->FindButtonById(ControlID));
 }
 
 INT_PTR CALLBACK DlgLightgunConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -217,7 +210,7 @@ INT_PTR CALLBACK DlgLightgunConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, L
 		case IDC_TURBO_RIGHT:
 		case IDC_LASER: {
 			if (HIWORD(wParam) == BN_CLICKED) {
-				g_InputWindow->BindButton(LOWORD(wParam));
+				g_InputWindow->BindButton(LOWORD(wParam), true);
 			}
 		}
 		break;

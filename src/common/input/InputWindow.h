@@ -39,7 +39,6 @@
 #define RUMBLE_TEST    6
 #define RUMBLE_CLEAR   7
 #define BUTTON_CLEAR   8
-#define BUTTON_SWAP    9
 
 #define XINPUT_DEFAULT 0
 #define DINPUT_DEFAULT 1
@@ -56,7 +55,7 @@ public:
 	virtual void Initialize(HWND hwnd, int port_num, int dev_type) = 0;
 	~InputWindow();
 	virtual void UpdateDeviceList();
-	virtual void BindButton(int ControlID);
+	void BindButton(int ControlID, bool auto_swap = false);
 	virtual void ClearBindings() = 0;
 	virtual void UpdateProfile(const std::string& name, int command);
 	void UpdateCurrentDevice();
@@ -162,6 +161,5 @@ public:
 	void Initialize(HWND hwnd, int port_num, int dev_type) override;
 	~LightgunInputWindow();
 	void BindDefault();
-	void BindButton(int ControlID) override;
 	void ClearBindings() override;
 };

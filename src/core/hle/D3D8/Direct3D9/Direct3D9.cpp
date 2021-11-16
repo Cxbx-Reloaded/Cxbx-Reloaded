@@ -87,7 +87,6 @@ using namespace std::literals::chrono_literals;
 
 // Global(s)
 HWND                                g_hEmuWindow   = NULL; // rendering window
-bool                                g_bRenderWindowResized = true; // indicates that the rendering window has had its size changed
 bool                                g_bClipCursor  = false; // indicates that the mouse cursor should be confined inside the rendering window
 IDirect3DDevice9Ex                 *g_pD3DDevice   = nullptr; // Direct3D Device
 
@@ -669,7 +668,7 @@ void CxbxInitWindow(bool bFullInit)
 
 	SetFocus(g_hEmuWindow);
 	g_renderbase = std::unique_ptr<RenderBase>(new RenderBase());
-	g_renderbase->Initialize(g_RenderUpscaleFactor);
+	g_renderbase->Initialize();
 
 	ImGui_ImplWin32_Init(g_hEmuWindow);
 	g_renderbase->SetWindowRelease([] {
@@ -2038,7 +2037,6 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_SIZE:
         {
-            g_bRenderWindowResized = true;
             switch(wParam)
             {
                 case SIZE_RESTORED:

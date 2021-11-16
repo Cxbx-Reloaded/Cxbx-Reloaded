@@ -37,7 +37,6 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
-#include "D3dx9math.h" // For the matrix math functions
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "RawDevice.h"
@@ -515,9 +514,6 @@ bool InputDeviceManager::UpdateInputLightgun(std::shared_ptr<InputDevice> &Devic
 
 				case 2:
 					g_devs[Port_num].info.ligthgun.laser ^= 1;
-					if (g_devs[Port_num].info.ligthgun.laser) {
-
-					}
 					break;
 				}
 			}
@@ -585,13 +581,17 @@ bool InputDeviceManager::UpdateInputLightgun(std::shared_ptr<InputDevice> &Devic
 			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? -state_minus * 0x8000 : 0.0;
 			switch (i)
 			{
-			case 10:
-				in_buf->sThumbLX = static_cast<int16_t>(state) + g_devs[Port_num].info.ligthgun.offset_x;
-				break;
+			case 10: {
+				xbox::short_xt offset = std::abs(state) > 16383.0 ? g_devs[Port_num].info.ligthgun.offset_upp_x : g_devs[Port_num].info.ligthgun.offset_x;
+				in_buf->sThumbLX = static_cast<int16_t>(state) + offset;
+			}
+			break;
 
-			case 12:
-				in_buf->sThumbLY = static_cast<int16_t>(state) + g_devs[Port_num].info.ligthgun.offset_y;
-				break;
+			case 12: {
+				xbox::short_xt offset = std::abs(state) > 16383.0 ? g_devs[Port_num].info.ligthgun.offset_upp_y : g_devs[Port_num].info.ligthgun.offset_y;
+				in_buf->sThumbLY = static_cast<int16_t>(state) + offset;
+			}
+			break;
 
 			}
 		}
@@ -907,41 +907,25 @@ ImVec2 InputDeviceManager::CalcLaserPos(int port)
 
 	// If somebody else is currently holding the lock, we won't wait and instead we report the last known laser position
 	if (m_Mtx.try_lock()) {
-		static D3DXVECTOR4 coeff_vec;
 
-		// If the rendering window was not resized, we can skip calculating the conversion matrix
-		if (g_bRenderWindowResized) {
-			g_bRenderWindowResized = false;
+		// NOTE: even when switching to faux fullscreen, imgui will still use the original window size. Because of this, we only need to do this once.
+		// If in the future the above is fixed, then this code will have to recalculate the new window size after a resizing has occured.
+		static long width, height = -1;
+		if (height == -1) {
 
-			// We convert the laser input coordinates given by xinput (in the sThumbLXY members of XpadInput) with the procedure described in the link below
-			// https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/samples/jj635757(v=vs.85)?redirectedfrom=MSDN
-			// NOTE: the d3d math functions work even when d3d was not intialized, which happens when running with LLE GPU turned on
-			/*
-			xinput -> screen
-			v = M^-1 * u
-            width     0      0     1 0     a
-            height =  0      0     0 1  *  b
-            0        -32768  32767 1 0     c
-            0        -32767 -32768 0 1     d
-			*/
 			RECT rect;
 			GetClientRect(m_hwnd, &rect);
-			const auto width = std::max(rect.right - rect.left, 1l);
-			const auto height = std::max(rect.bottom - rect.top, 1l);
-			D3DXMATRIX inverted_mtx, transposed_mtx;
-			D3DXMATRIX src_mtx(0, 0, 1, 0, 0, 0, 0, 1, -32768, 32767, 1, 0, -32767, -32768, 0, 1);
-			D3DXVECTOR4 screen_vec(width, height, 0, 0);
-			D3DXMatrixInverse(&inverted_mtx, nullptr, &src_mtx);
-			D3DXMatrixTranspose(&transposed_mtx, &inverted_mtx);
-			D3DXVec4Transform(&coeff_vec, &screen_vec, &transposed_mtx);
+			width = std::max(rect.right - rect.left, 1l);
+			height = std::max(rect.bottom - rect.top, 1l);
 		}
 
-		// x' = ax + by + c
-		// y' = bx - ay + d
+		// We convert the laser input coordinates given by xinput (in the sThumbLXY members of XpadInput) with linear interpolation y = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+		// For laser_x x0 = -32768; x1 = 32767; y0 = 0; y1 = width
+		// For laser_y x0 = -32768; x1 = 32767; y0 = height; y1 = 0
 		int16_t laser_x = g_devs[port].info.buff.ctrl.InBuffer.sThumbLX;
 		int16_t laser_y = g_devs[port].info.buff.ctrl.InBuffer.sThumbLY;
-		laser_coord[port].x = coeff_vec.x * laser_x + coeff_vec.y * laser_y + coeff_vec.z;
-		laser_coord[port].y = coeff_vec.y * laser_x - coeff_vec.x * laser_y + coeff_vec.w;
+		laser_coord[port].x = ((laser_x + 32768) * width) / 65535.0f;
+		laser_coord[port].y = height - ((laser_y + 32768) * height) / 65535.0f;
 
 		m_Mtx.unlock();
 	}

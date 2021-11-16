@@ -36,7 +36,7 @@ public:
 
 protected:
 
-	bool Initialize(int backbuffer_scale);
+	bool Initialize();
 	void Shutdown();
 
 	template<class C, class T>
@@ -62,7 +62,6 @@ protected:
 	overlay_settings m_settings;
 	unsigned int m_lle_flags;
 	float fps_counter;
-	int m_backbuffer_scale;
 	static const ImColor m_laser_col[4];
 	// Make them as settings storage.
 	/*bool m_show_fps;

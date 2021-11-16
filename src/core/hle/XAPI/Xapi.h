@@ -276,9 +276,9 @@ XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
 // ******************************************************************
 typedef struct _XINPUT_DEVICE_DESCRIPTION
 {
-    WORD wVendorID;
-    WORD wProductID;
-    WORD wVersion;
+    xbox::ushort_xt wVendorID;
+    xbox::ushort_xt wProductID;
+    xbox::ushort_xt wVersion;
 }
 XINPUT_DEVICE_DESCRIPTION, *PXINPUT_DEVICE_DESCRIPTION;
 
@@ -287,10 +287,10 @@ XINPUT_DEVICE_DESCRIPTION, *PXINPUT_DEVICE_DESCRIPTION;
 // ******************************************************************
 typedef struct _XINPUT_LIGHTGUN_CALIBRATION_OFFSETS
 {
-    WORD wCenterX;
-    WORD wCenterY;
-    WORD wUpperLeftX;
-    WORD wUpperLeftY;
+    xbox::short_xt wCenterX;
+    xbox::short_xt wCenterY;
+    xbox::short_xt wUpperLeftX;
+    xbox::short_xt wUpperLeftY;
 }
 XINPUT_LIGHTGUN_CALIBRATION_OFFSETS, *PXINPUT_LIGHTGUN_CALIBRATION_OFFSETS;
 
