@@ -70,7 +70,7 @@
 #define SMC_COMMAND_LED_SEQUENCE 0x08	// LED flashing sequence
 //0x0C	tray eject(0 = eject; 1 = load)
 //0x0E	another scratch register ? seems like an error code.
-//0x19	reset on eject(0 = enable; 1 = disable)
+#define SMC_COMMAND_RESET_ON_EJECT 0x19	// Reset on eject (0 = disable, 1 = enable)
 //0x1A	interrupt enable(write 0x01 to enable; can't disable once enabled)
 #define SMC_COMMAND_SCRATCH 0x1B	//0x1B	scratch register for the original kernel
 //0x20	response to PIC challenge(written first)

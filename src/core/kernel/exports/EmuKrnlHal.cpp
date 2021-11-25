@@ -805,6 +805,9 @@ XBSYSAPI EXPORTNUM(360) xbox::ntstatus_xt NTAPI xbox::HalInitiateShutdown
 	RETURN(S_OK);
 }
 
+// Something else in the kernel sets this flag. Not sure what.
+static xbox::boolean_xt g_SecureTrayEjectAllowed = false;
+
 // ******************************************************************
 // * 0x016D - HalEnableSecureTrayEject()
 // ******************************************************************
@@ -819,7 +822,16 @@ XBSYSAPI EXPORTNUM(365) xbox::void_xt NTAPI xbox::HalEnableSecureTrayEject
 {
 	LOG_FUNC();
 
-	LOG_UNIMPLEMENTED();
+	if (g_SecureTrayEjectAllowed) {
+		g_SecureTrayEjectAllowed = false;
+		xbox::boolean_xt write_word = false;
+		xbox::ulong_xt disable_reset_on_eject = 0;
+		NTSTATUS retcode;
+		do {
+            // TODO: Implement SMC_COMMAND_RESET_ON_EJECT in the SMC.
+			retcode = HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_RESET_ON_EJECT, write_word, disable_reset_on_eject);
+		} while (retcode != xbox::status_success);
+	}
 }
 
 // ******************************************************************
