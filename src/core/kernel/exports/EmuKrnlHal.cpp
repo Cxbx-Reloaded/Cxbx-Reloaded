@@ -828,6 +828,7 @@ XBSYSAPI EXPORTNUM(365) xbox::void_xt NTAPI xbox::HalEnableSecureTrayEject
 		xbox::ulong_xt disable_reset_on_eject = 0;
 		NTSTATUS retcode;
 		do {
+            // TODO: Implement SMC_COMMAND_RESET_ON_EJECT in the SMC.
 			retcode = HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_RESET_ON_EJECT, write_word, disable_reset_on_eject);
 		} while (retcode != xbox::status_success);
 	}
