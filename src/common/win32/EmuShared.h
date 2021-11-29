@@ -260,8 +260,8 @@ class EmuShared : public Mutex
 		// ******************************************************************
 		// * LightgunLaser flag Accessors
 		// ******************************************************************
-		void GetLightgunLaser(uint8_t *value) { Lock(); *value = m_LightgunLaser; Unlock(); }
-		void SetLightgunLaser(const uint8_t *value) { Lock(); m_LightgunLaser = *value; Unlock(); }
+		void GetLightgunLaser(uint8_t *value, int port) { Lock(); *value = (m_LightgunLaser >> port) & 1; Unlock(); }
+		void SetLightgunLaser(const uint8_t *value, int port) { Lock(); (m_LightgunLaser &= ~(1 << port)) |= ((*value) << port); Unlock(); }
 
 		// ******************************************************************
 		// * ImGui Accessors

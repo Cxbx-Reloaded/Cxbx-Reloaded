@@ -14,6 +14,13 @@
 #include "core/kernel/init/CxbxKrnl.h"
 #include "core/hle/D3D8/XbVertexBuffer.h"
 
+const ImColor ImGuiVideo::m_laser_col[4] = {
+		ImColor(ImVec4(1.0f, 0.0f, 0.0f, 1.0f)), // player1: red
+		ImColor(ImVec4(0.0f, 1.0f, 0.0f, 1.0f)), // player2: green
+		ImColor(ImVec4(0.0f, 0.0f, 1.0f, 1.0f)), // player3: blue
+		ImColor(ImVec4(1.0f, 1.0f, 0.0f, 1.0f))  // player4: yellow
+};
+
 bool ImGuiVideo::Initialize()
 {
 	g_EmuShared->GetImGuiVideoWindows(&m_windows);
@@ -43,6 +50,15 @@ void ImGuiVideo::DrawWidgets(bool is_focus, ImGuiWindowFlags input_handler)
 			if (ImGui::CollapsingHeader("Vertex Buffer Cache", ImGuiTreeNodeFlags_DefaultOpen)) {
 				VertexBufferConverter.DrawCacheStats();
 			}
+			ImGui::End();
+		}
+	}
+
+	// Render the lightgun laser
+	for (int port = PORT_1; port < XBOX_NUM_PORTS; ++port) {
+		if (g_devs[port].type == XBOX_INPUT_DEVICE::LIGHTGUN && g_devs[port].info.ligthgun.laser) {
+			ImGui::Begin("Laser", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDecoration);
+			ImGui::GetForegroundDrawList()->AddCircleFilled(g_InputDeviceManager.CalcLaserPos(port), 5, m_laser_col[port], 0);
 			ImGui::End();
 		}
 	}

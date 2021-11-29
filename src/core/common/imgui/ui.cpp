@@ -15,13 +15,6 @@
 
 #include "core/kernel/init/CxbxKrnl.h"
 
-const ImColor ImGuiUI::m_laser_col[4] = {
-		ImColor(ImVec4(1.0f, 0.0f, 0.0f, 1.0f)), // ply1: red
-		ImColor(ImVec4(0.0f, 1.0f, 0.0f, 1.0f)), // ply2: green
-		ImColor(ImVec4(0.0f, 0.0f, 1.0f, 1.0f)), // ply3: blue
-		ImColor(ImVec4(1.0f, 1.0f, 0.0f, 1.0f))  // ply4: yellow
-};
-
 bool ImGuiUI::Initialize()
 {
 	IMGUI_CHECKVERSION();
@@ -196,13 +189,4 @@ void ImGuiUI::DrawWidgets()
 	m_video.DrawWidgets(m_is_focus, input_handler);
 
 	m_audio.DrawWidgets(m_is_focus, input_handler);
-}
-
-void ImGuiUI::DrawLightgunLaser(int port)
-{
-	ImGui::Begin("Laser", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDecoration);
-
-	ImGui::GetForegroundDrawList()->AddCircleFilled(g_InputDeviceManager.CalcLaserPos(port), 5, m_laser_col[port], 0);
-
-	ImGui::End();
 }

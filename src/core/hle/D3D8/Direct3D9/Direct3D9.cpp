@@ -194,11 +194,6 @@ static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarg
 
 	m_imgui->DrawMenu();
 	m_imgui->DrawWidgets();
-	for (int port = PORT_1; port < XBOX_NUM_PORTS; ++port) {
-		if (g_devs[port].type == XBOX_INPUT_DEVICE::LIGHTGUN && g_devs[port].info.ligthgun.laser) {
-			m_imgui->DrawLightgunLaser(port);
-		}
-	}
 
 	ImGui::EndFrame();
 

@@ -268,7 +268,7 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ligthgun.offset_upp_x = dev->info.ligthgun.offset_upp_x = 0;
 		dev->info.ligthgun.last_in_state = dev->info.ligthgun.turbo_delay = 0;
 		dev->info.ligthgun.turbo = dev->info.ligthgun.last_turbo = 0;
-		g_EmuShared->GetLightgunLaser(&dev->info.ligthgun.laser);
+		g_EmuShared->GetLightgunLaser(&dev->info.ligthgun.laser, port_num);
 		break;
 
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):

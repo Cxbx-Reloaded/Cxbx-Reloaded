@@ -20,4 +20,5 @@ public:
 
 protected:
 	imgui_video_windows m_windows;
+	static const ImColor m_laser_col[4];
 };

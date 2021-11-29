@@ -33,8 +33,6 @@
 // *
 // ******************************************************************
 
-#include "common\input\InputManager.h"
-
 // FIXME
 #define qemu_mutex_lock_iothread()
 #define qemu_mutex_unlock_iothread()
@@ -715,11 +713,6 @@ static void CxbxImGui_RenderOpenGL(ImGuiUI* m_imgui, std::nullptr_t unused)
 
 	m_imgui->DrawMenu();
 	m_imgui->DrawWidgets();
-	for (int port = PORT_1; port < XBOX_NUM_PORTS; ++port) {
-		if (g_devs[port].type == XBOX_INPUT_DEVICE::LIGHTGUN && g_devs[port].info.ligthgun.laser) {
-			m_imgui->DrawLightgunLaser(port);
-		}
-	}
 
 	ImGui::Render();
 
