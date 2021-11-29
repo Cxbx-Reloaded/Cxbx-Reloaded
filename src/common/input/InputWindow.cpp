@@ -150,7 +150,23 @@ InputDevice::Input* InputWindow::DetectInput(InputDevice* const Device, int ms)
 	return nullptr; // no input
 }
 
-void InputWindow::BindButton(int ControlID)
+int InputWindow::EnableDefaultButton()
+{
+	if (std::strncmp(m_host_dev.c_str(), "XInput", std::strlen("XInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return XINPUT_DEFAULT;
+	}
+	else if (std::strncmp(m_host_dev.c_str(), "DInput", std::strlen("DInput")) == 0) {
+		EnableWindow(m_hwnd_default, TRUE);
+		return DINPUT_DEFAULT;
+	}
+	else {
+		EnableWindow(m_hwnd_default, FALSE);
+		return -1;
+	}
+}
+
+void InputWindow::BindButton(int ControlID, bool auto_swap)
 {
 	// Check if binding thread is still active
 	// testcase: spacebar and enter keys; without this fix will cause repeat binding result.
@@ -163,7 +179,7 @@ void InputWindow::BindButton(int ControlID)
 		m_bIsBinding = true;
 
 		// Don't block the message processing loop
-		std::thread([this, dev, ControlID]() {
+		std::thread([this, dev, ControlID, auto_swap]() {
 			EnableWindow(m_hwnd_window, FALSE);
 			char current_text[HOST_BUTTON_NAME_LENGTH];
 			Button* xbox_button = m_DeviceConfig->FindButtonById(ControlID);
@@ -173,6 +189,9 @@ void InputWindow::BindButton(int ControlID)
 			InputDevice::Input* dev_button = fut.get();
 			if (dev_button) {
 				xbox_button->UpdateText(dev_button->GetName().c_str());
+				if (auto_swap) {
+					SwapMoCursorAxis(xbox_button);
+				}
 				m_bHasChanges = true;
 			}
 			else {
@@ -201,7 +220,6 @@ void InputWindow::UpdateProfile(const std::string &name, int command)
 		break;
 
 	case BUTTON_CLEAR:
-	case BUTTON_SWAP:
 		m_bHasChanges = true;
 		break;
 	}
@@ -348,6 +366,7 @@ void InputWindow::SwapMoCursorAxis(Button *button)
 				else {
 					button->UpdateText("Cursor X-");
 				}
+				m_bHasChanges = true;
 				break;
 
 			case 'Y':
@@ -357,6 +376,7 @@ void InputWindow::SwapMoCursorAxis(Button *button)
 				else {
 					button->UpdateText("Cursor Y+");
 				}
+				m_bHasChanges = true;
 				break;
 
 			}
@@ -374,6 +394,7 @@ void InputWindow::SwapMoCursorAxis(Button *button)
 				else {
 					button->UpdateText("Axis X-");
 				}
+				m_bHasChanges = true;
 				break;
 
 			case 'Y':
@@ -383,6 +404,7 @@ void InputWindow::SwapMoCursorAxis(Button *button)
 				else {
 					button->UpdateText("Axis Y+");
 				}
+				m_bHasChanges = true;
 				break;
 
 			}

@@ -26,9 +26,11 @@
 // ******************************************************************
 
 #include "windows.h"
-#include "controllers/DlgDukeControllerConfig.h"
-#include "controllers/DlgSBControllerConfig.h"
-#include "controllers/DlgLibusbControllerConfig.h"
+#include "input/DlgDukeControllerConfig.h"
+#include "input/DlgSBControllerConfig.h"
+#include "input/DlgLibusbControllerConfig.h"
+#include "input/DlgLightgunConfig.h"
+#include "DlgInputConfig.h"
 #include "resource/ResCxbx.h"
 #include "input\InputManager.h"
 #include "Logging.h"
@@ -207,6 +209,12 @@ INT_PTR CALLBACK DlgInputConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
 				case to_underlying(XBOX_INPUT_DEVICE::MS_CONTROLLER_S):
 				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK): {
 					DialogBoxParam(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_XID_DUKE_CFG), hWndDlg, DlgXidControllerConfigProc,
+						(DeviceType << 8) | port);
+				}
+				break;
+
+				case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN): {
+					DialogBoxParam(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDD_LIGHTGUN_CFG), hWndDlg, DlgLightgunConfigProc,
 						(DeviceType << 8) | port);
 				}
 				break;

@@ -59,7 +59,7 @@ std::atomic<bool> g_bIsDevicesEmulating = false;
 std::atomic<bool> g_bXppGuard = false;
 
 // Allocate enough memory for the max number of devices we can support simultaneously
-// 4 duke / S / sbc / arcade joystick (mutually exclusive) + 8 memory units
+// 4 duke / S / sbc / arcade joystick / lightgun (mutually exclusive) + 8 memory units
 DeviceState g_devs[MAX_DEVS];
 
 xbox::ulong_xt g_Mounted_MUs = 0;
@@ -114,6 +114,7 @@ bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 	{
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S:
+	case XBOX_INPUT_DEVICE::LIGHTGUN:
 	case XBOX_INPUT_DEVICE::ARCADE_STICK:
 	case XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER: {
 		if (XppType == g_DeviceType_Gamepad) {
@@ -137,7 +138,6 @@ bool operator==(xbox::PXPP_DEVICE_TYPE XppType, XBOX_INPUT_DEVICE XidType)
 	}
 	break;
 
-	case XBOX_INPUT_DEVICE::LIGHT_GUN:
 	case XBOX_INPUT_DEVICE::STEERING_WHEEL:
 	case XBOX_INPUT_DEVICE::IR_DONGLE:
 	default:
@@ -154,6 +154,7 @@ void UpdateXppState(DeviceState *dev, XBOX_INPUT_DEVICE type, std::string_view p
 	{
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S:
+	case XBOX_INPUT_DEVICE::LIGHTGUN:
 	case XBOX_INPUT_DEVICE::ARCADE_STICK:
 	case XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER:
 		xpp = g_DeviceType_Gamepad;
@@ -256,6 +257,20 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucFeedbackSize = sizeof(XpadOutput);
 		break;
 
+	case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
+		dev->type = XBOX_INPUT_DEVICE::LIGHTGUN;
+		dev->info.bAutoPollDefault = true;
+		dev->info.ucType = XINPUT_DEVTYPE_GAMEPAD;
+		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_LIGHTGUN;
+		dev->info.ucInputStateSize = sizeof(XpadInput);
+		dev->info.ucFeedbackSize = sizeof(XpadOutput);
+		dev->info.ligthgun.offset_x = dev->info.ligthgun.offset_y = 0;
+		dev->info.ligthgun.offset_upp_x = dev->info.ligthgun.offset_upp_x = 0;
+		dev->info.ligthgun.last_in_state = dev->info.ligthgun.turbo_delay = 0;
+		dev->info.ligthgun.turbo = dev->info.ligthgun.last_turbo = 0;
+		g_EmuShared->GetLightgunLaser(&dev->info.ligthgun.laser, port_num);
+		break;
+
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
 	case to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER):
 		dev->type = XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER;
@@ -267,6 +282,7 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 		dev->info.ucSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
 		dev->info.ucInputStateSize = sizeof(SBCInput);
 		dev->info.ucFeedbackSize = sizeof(SBCOutput);
+		dev->info.sbc.last_in_state = 0;
 		if (type == to_underlying(XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER)) {
 			dev->type = XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER;
 			char dev_name[50];
@@ -325,6 +341,7 @@ void DestructHleInputDevice(DeviceState *dev)
 	{
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE:
 	case XBOX_INPUT_DEVICE::MS_CONTROLLER_S:
+	case XBOX_INPUT_DEVICE::LIGHTGUN:
 		dev->info.bAutoPollDefault = false;
 		dev->info.ucType = 0;
 		dev->info.ucSubType = 0;
@@ -480,7 +497,7 @@ xbox::dword_xt CxbxImpl_XInputHandler(xbox::HANDLE hDevice, xbox::PXINPUT_STATE 
 		}
 
 		if constexpr (!IsXInputPoll) {
-			std::memcpy((void *)&pState->Gamepad, reinterpret_cast<uint8_t *>(&g_devs[port].info.buff) + 2, g_devs[port].info.ucInputStateSize);
+			std::memcpy((void *)&pState->Gamepad, reinterpret_cast<uint8_t *>(&g_devs[port].info.buff) + XID_PACKET_HEADER, g_devs[port].info.ucInputStateSize);
 			pState->dwPacketNumber = g_devs[port].info.dwPacketNumber;
 		}
 
@@ -787,6 +804,88 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetState)
 	RETURN(pFeedback->Header.dwStatus);
 }
 
+// ******************************************************************
+// * patch: XGetDeviceEnumerationStatus
+// ******************************************************************
+xbox::dword_xt WINAPI xbox::EMUPATCH(XGetDeviceEnumerationStatus)()
+{
+	LOG_FUNC();
+
+	dword_xt ret = (g_bIsDevicesInitializing || g_bIsDevicesEmulating) ? XDEVICE_ENUMERATION_BUSY : XDEVICE_ENUMERATION_IDLE;
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * patch: XInputGetDeviceDescription
+// ******************************************************************
+xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetDeviceDescription)
+(
+	HANDLE                      hDevice,
+	PXINPUT_DEVICE_DESCRIPTION	pDescription
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hDevice)
+		LOG_FUNC_ARG(pDescription)
+		LOG_FUNC_END;
+
+	dword_xt ret;
+	int port = static_cast<DeviceState *>(hDevice)->port_idx;
+	if (g_devs[port].info.hHandle == hDevice && !g_devs[port].bPendingRemoval) {
+		if (g_devs[port].type == XBOX_INPUT_DEVICE::LIGHTGUN) {
+			// These values are those reported in the device descriptor for the EMS TopGun II documented in the xboxdevwiki
+			pDescription->wVendorID = 0x0b9a;
+			pDescription->wProductID = 0x016b;
+			pDescription->wVersion = 0x457;
+			ret = ERROR_SUCCESS;
+		}
+		else {
+			// NOTE: Phantasy star online also calls this on the keyboard device
+			ret = ERROR_NOT_SUPPORTED;
+		}
+	}
+	else {
+		ret = ERROR_DEVICE_NOT_CONNECTED;
+	}
+
+	RETURN(ret);
+}
+
+// ******************************************************************
+// * patch: XInputSetLightgunCalibration
+// ******************************************************************
+xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetLightgunCalibration)
+(
+	HANDLE hDevice,
+	PXINPUT_LIGHTGUN_CALIBRATION_OFFSETS pCalibrationOffsets
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hDevice)
+		LOG_FUNC_ARG(pCalibrationOffsets)
+		LOG_FUNC_END;
+
+	dword_xt ret;
+	int port = static_cast<DeviceState *>(hDevice)->port_idx;
+	if (g_devs[port].info.hHandle == hDevice && !g_devs[port].bPendingRemoval) {
+		if (g_devs[port].type == XBOX_INPUT_DEVICE::LIGHTGUN) {
+			g_devs[port].info.ligthgun.offset_x = pCalibrationOffsets->wCenterX;
+			g_devs[port].info.ligthgun.offset_y = pCalibrationOffsets->wCenterY;
+			g_devs[port].info.ligthgun.offset_upp_x = pCalibrationOffsets->wUpperLeftX;
+			g_devs[port].info.ligthgun.offset_upp_y = pCalibrationOffsets->wUpperLeftY;
+			ret = ERROR_SUCCESS;
+		}
+		else {
+			ret = ERROR_NOT_SUPPORTED;
+		}
+	}
+	else {
+		ret = ERROR_DEVICE_NOT_CONNECTED;
+	}
+
+	RETURN(ret);
+}
 
 // ******************************************************************
 // * patch: SetThreadPriorityBoost
@@ -1392,42 +1491,6 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 	}
 
 	RETURN(ERROR_SUCCESS);
-}
-
-// ******************************************************************
-// * patch: XGetDeviceEnumerationStatus
-// ******************************************************************
-xbox::dword_xt WINAPI xbox::EMUPATCH(XGetDeviceEnumerationStatus)()
-{
-
-
-	LOG_FUNC();
-
-	dword_xt ret = (g_bIsDevicesInitializing || g_bIsDevicesEmulating) ? XDEVICE_ENUMERATION_BUSY : XDEVICE_ENUMERATION_IDLE;
-
-	RETURN(ret);
-}
-
-// ******************************************************************
-// * patch: XInputGetDeviceDescription
-// ******************************************************************
-xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetDeviceDescription)
-(
-    HANDLE	hDevice,
-    PVOID	pDescription
-)
-{
-
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(hDevice)
-		LOG_FUNC_ARG(pDescription)
-		LOG_FUNC_END;
-
-	// TODO: Lightgun support?
-	LOG_UNIMPLEMENTED();
-
-	RETURN(ERROR_NOT_SUPPORTED); // ERROR_DEVICE_NOT_CONNECTED;
 }
 
 // ******************************************************************

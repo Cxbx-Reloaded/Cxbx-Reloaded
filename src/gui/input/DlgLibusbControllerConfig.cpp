@@ -72,11 +72,6 @@ void LibusbInputWindow::ClearBindings()
 	// There are no profiles for libusb devices, so this is a nop
 }
 
-void LibusbInputWindow::SaveSlotConfig()
-{
-	// There are no slots for libusb devices, so this is a nop
-}
-
 int LibusbInputWindow::EnableDefaultButton()
 {
 	// The libusb window does not have a default button, so we return a dummy value here

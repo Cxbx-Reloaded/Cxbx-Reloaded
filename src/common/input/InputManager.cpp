@@ -57,7 +57,7 @@
 int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_DUKE
 	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_S
-	0,
+	LIGHTGUN_NUM_BUTTONS, // LIGHTGUN
 	0,
 	0,
 	0,
@@ -132,6 +132,7 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 				}
 				break;
 
+				case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
 				case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK):
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
 				case to_underlying(XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER):
@@ -272,7 +273,7 @@ void InputDeviceManager::UpdateDevices(std::string_view port, bool ack)
 	else {
 		auto host_dev = g_InputDeviceManager.FindDevice(port);
 		if (host_dev != nullptr) {
-			host_dev->SetPort(port, false);
+			host_dev->SetPort2(port, false);
 		}
 		if (type != to_underlying(XBOX_INPUT_DEVICE::DEVICE_INVALID)) {
 			if (type != to_underlying(dev->type)) {
@@ -309,7 +310,7 @@ void InputDeviceManager::DisconnectDevice(DeviceState *dev, std::string_view por
 	}
 	auto host_dev = g_InputDeviceManager.FindDevice(port);
 	if (host_dev != nullptr) {
-		host_dev->SetPort(port, false);
+		host_dev->SetPort2(port, false);
 	}
 }
 
@@ -328,7 +329,7 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 		g_EmuShared->GetInputDevNameSettings(dev_name, port_num);
 		auto dev = FindDevice(std::string(dev_name));
 		if (dev != nullptr) {
-			dev->SetPort(port, true);
+			dev->SetPort2(port, true);
 		}
 		return;
 	}
@@ -355,7 +356,7 @@ void InputDeviceManager::BindHostDevice(int type, std::string_view port)
 				});
 			dev->SetBindings(index, (it != controls.end()) ? *it : nullptr, port_str);
 		}
-		dev->SetPort(port, true);
+		dev->SetPort2(port, true);
 	}
 }
 
@@ -379,6 +380,11 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 					m_Mtx.unlock();
 					return has_changed;
 
+				case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
+					has_changed = UpdateInputLightgun(dev, buffer, direction, port, port_str);
+					m_Mtx.unlock();
+					return has_changed;
+
 				case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER):
 					has_changed = UpdateInputSBC(dev, buffer, direction, port, port_str);
 					m_Mtx.unlock();
@@ -394,7 +400,6 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 					m_Mtx.unlock();
 					return has_changed;
 
-				case to_underlying(XBOX_INPUT_DEVICE::LIGHT_GUN):
 				case to_underlying(XBOX_INPUT_DEVICE::STEERING_WHEEL):
 				case to_underlying(XBOX_INPUT_DEVICE::IR_DONGLE):
 					EmuLog(LOG_LEVEL::ERROR2, "An unsupported device is attached at port %d! The device was %s",
@@ -472,6 +477,130 @@ bool InputDeviceManager::UpdateInputXpad(std::shared_ptr<InputDevice>& Device, v
 	return true;
 }
 
+bool InputDeviceManager::UpdateInputLightgun(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction, int Port_num, const std::string &Port)
+{
+	std::map<int, InputDevice::IoControl *> bindings = Device->GetBindings(Port);
+	assert(bindings.size() == static_cast<size_t>(dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN)]));
+
+	// NOTE: the output state is not supported
+	if (Direction == DIRECTION_IN) {
+		if (!Device->UpdateInput()) {
+			return false;
+		}
+
+		// We change the toggle buttons only when a press -> release input transaction is completed
+		// 0  -> Turbo left
+		// 1  -> Turbo right
+		// 2  -> Laser
+		XpadInput *in_buf = reinterpret_cast<XpadInput *>(static_cast<uint8_t *>(Buffer) + XID_PACKET_HEADER);
+		g_devs[Port_num].info.ligthgun.last_turbo = g_devs[Port_num].info.ligthgun.turbo;
+		for (int i = 14, j = 0; i < 17; i++, j++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+			uint8_t curr_state = static_cast<uint8_t>(!!state);
+			if ((~curr_state) & ((g_devs[Port_num].info.ligthgun.last_in_state >> j) & 1)) {
+				switch (j)
+				{
+				case 0:
+					if (g_devs[Port_num].info.ligthgun.turbo != 2) {
+						g_devs[Port_num].info.ligthgun.turbo += 1;
+					}
+					break;
+
+				case 1:
+					if (g_devs[Port_num].info.ligthgun.turbo != 0) {
+						g_devs[Port_num].info.ligthgun.turbo -= 1;
+					}
+					break;
+
+				case 2:
+					g_devs[Port_num].info.ligthgun.laser ^= 1;
+					break;
+				}
+			}
+			(g_devs[Port_num].info.ligthgun.last_in_state &= ~(1 << j)) |= (curr_state << j);
+		}
+
+		in_buf->wButtons = XINPUT_LIGHTGUN_ONSCREEN;
+		for (int i = 0; i < 6; i++) {
+			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+			if (state) {
+				in_buf->wButtons |= (1 << i);
+			}
+			else {
+				in_buf->wButtons &= ~(1 << i);
+			}
+		}
+
+		if (g_devs[Port_num].info.ligthgun.turbo) {
+			ControlState trigger_state = (bindings[6] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[6])->GetState() : 0.0;
+			if (trigger_state) {
+				// Turbo mode 1
+				in_buf->bAnalogButtons[0] ^= 0xFF;
+				int start_idx = 7;
+				if (g_devs[Port_num].info.ligthgun.turbo == 2) {
+					// Turbo mode 2
+					start_idx = 8;
+					++g_devs[Port_num].info.ligthgun.turbo_delay;
+					if (g_devs[Port_num].info.ligthgun.last_turbo != g_devs[Port_num].info.ligthgun.turbo) {
+						g_devs[Port_num].info.ligthgun.turbo_delay = 0;
+					}
+					if (g_devs[Port_num].info.ligthgun.turbo_delay == LIGHTGUN_GRIP_DELAY) {
+						in_buf->bAnalogButtons[1] ^= 0xFF;
+						g_devs[Port_num].info.ligthgun.turbo_delay = 0;
+					}
+				}
+				for (int i = start_idx, j = start_idx - 6; i < 10; i++, j++) {
+					ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+					in_buf->bAnalogButtons[j] = state ? 0xFF : 0;
+				}
+			}
+			else {
+				// Turbo active but trigger not pressed
+				in_buf->bAnalogButtons[0] = 0;
+				for (int i = 7, j = 1; i < 10; i++, j++) {
+					ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+					in_buf->bAnalogButtons[j] = state ? 0xFF : 0;
+				}
+			}
+		}
+		else {
+			// Turbo mode 0 (no turbo)
+			for (int i = 6, j = 0; i < 10; i++, j++) {
+				ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+				in_buf->bAnalogButtons[j] = state ? 0xFF : 0;
+			}
+		}
+		in_buf->bAnalogButtons[4] = 0;
+		in_buf->bAnalogButtons[5] = 0;
+		in_buf->bAnalogButtons[6] = 0;
+		in_buf->bAnalogButtons[7] = 0;
+
+		for (int i = 10; i < 14; i += 2) {
+			ControlState state_plus = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
+			ControlState state_minus = (bindings[i + 1] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i + 1])->GetState() : 0.0;
+			ControlState state = state_plus ? state_plus * 0x7FFF : state_minus ? -state_minus * 0x8000 : 0.0;
+			switch (i)
+			{
+			case 10: {
+				xbox::short_xt offset = std::abs(state) > 16383.0 ? g_devs[Port_num].info.ligthgun.offset_upp_x : g_devs[Port_num].info.ligthgun.offset_x;
+				in_buf->sThumbLX = static_cast<int16_t>(state) + offset;
+			}
+			break;
+
+			case 12: {
+				xbox::short_xt offset = std::abs(state) > 16383.0 ? g_devs[Port_num].info.ligthgun.offset_upp_y : g_devs[Port_num].info.ligthgun.offset_y;
+				in_buf->sThumbLY = static_cast<int16_t>(state) + offset;
+			}
+			break;
+
+			}
+		}
+		in_buf->sThumbRX = in_buf->sThumbRY = 0;
+	}
+
+	return true;
+}
+
 bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port)
 {
 	std::map<int, InputDevice::IoControl*> bindings = Device->GetBindings(Port);
@@ -495,7 +624,6 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		// 8  -> TunerDial Down
 		// 9  -> GearLever Up
 		// 10 -> GearLever Down
-		static uint16_t last_in_state[XBOX_NUM_PORTS] = { 0, 0, 0, 0 };
 		SBCInput *in_buf = reinterpret_cast<SBCInput *>(static_cast<uint8_t *>(Buffer) + XID_PACKET_HEADER);
 		for (int i = 0; i < 4; i++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
@@ -511,10 +639,10 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 4, j = 0; i < 6; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+			if ((~curr_in_state) & ((g_devs[Port_num].info.sbc.last_in_state >> j) & 1)) {
 				in_buf->wButtons[0] ^= (1 << i);
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
+			(g_devs[Port_num].info.sbc.last_in_state &= ~(1 << j)) |= (curr_in_state << j);
 		}
 
 		for (int i = 6; i < 34; i++) {
@@ -531,10 +659,10 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 34, j = 2; i < 39; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+			if ((~curr_in_state) & ((g_devs[Port_num].info.sbc.last_in_state >> j) & 1)) {
 				in_buf->wButtons[2] ^= (1 << (i % 16));
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
+			(g_devs[Port_num].info.sbc.last_in_state &= ~(1 << j)) |= (curr_in_state << j);
 		}
 
 		for (int i = 39; i < 49; i += 2) {
@@ -593,7 +721,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 		for (int i = 52, j = 7; i < 56; i++, j++) {
 			ControlState state = (bindings[i] != nullptr) ? dynamic_cast<InputDevice::Input *>(bindings[i])->GetState() : 0.0;
 			uint16_t curr_in_state = static_cast<uint16_t>(!!state);
-			if ((~curr_in_state) & ((last_in_state[Port_num] >> j) & 1)) {
+			if ((~curr_in_state) & ((g_devs[Port_num].info.sbc.last_in_state >> j) & 1)) {
 				switch (i)
 				{
 				case 52:
@@ -621,7 +749,7 @@ bool InputDeviceManager::UpdateInputSBC(std::shared_ptr<InputDevice>& Device, vo
 					break;
 				}
 			}
-			(last_in_state[Port_num] &= ~(1 << j)) |= (curr_in_state << j);
+			(g_devs[Port_num].info.sbc.last_in_state &= ~(1 << j)) |= (curr_in_state << j);
 		}
 	}
 
@@ -771,4 +899,36 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 			BindHostDevice(type, std::to_string(port));
 		}
 	}
+}
+
+ImVec2 InputDeviceManager::CalcLaserPos(int port)
+{
+	static ImVec2 laser_coord[XBOX_NUM_PORTS] = { {0, 0}, {0, 0}, {0, 0}, {0, 0} };
+
+	// If somebody else is currently holding the lock, we won't wait and instead we report the last known laser position
+	if (m_Mtx.try_lock()) {
+
+		// NOTE: even when switching to faux fullscreen, imgui will still use the original window size. Because of this, we only need to do this once.
+		// If in the future the above is fixed, then this code will have to recalculate the new window size after a resizing has occured.
+		static long width, height = -1;
+		if (height == -1) {
+
+			RECT rect;
+			GetClientRect(m_hwnd, &rect);
+			width = std::max(rect.right - rect.left, 1l);
+			height = std::max(rect.bottom - rect.top, 1l);
+		}
+
+		// We convert the laser input coordinates given by xinput (in the sThumbLXY members of XpadInput) with linear interpolation y = y0 + (x - x0) * (y1 - y0) / (x1 - x0)
+		// For laser_x x0 = -32768; x1 = 32767; y0 = 0; y1 = width
+		// For laser_y x0 = -32768; x1 = 32767; y0 = height; y1 = 0
+		int16_t laser_x = g_devs[port].info.buff.ctrl.InBuffer.sThumbLX;
+		int16_t laser_y = g_devs[port].info.buff.ctrl.InBuffer.sThumbLY;
+		laser_coord[port].x = ((laser_x + 32768) * width) / 65535.0f;
+		laser_coord[port].y = height - ((laser_y + 32768) * height) / 65535.0f;
+
+		m_Mtx.unlock();
+	}
+
+	return laser_coord[port];
 }

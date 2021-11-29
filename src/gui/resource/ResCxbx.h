@@ -22,6 +22,7 @@
 #define IDD_RUMBLE_CFG                  135
 #define IDD_NETWORK_CFG                 136
 #define IDD_LIBUSB_CFG                  137
+#define IDD_LIGHTGUN_CFG                138
 #define IDC_LOG_CANCEL                  892
 #define IDC_LOG_ACCEPT                  893
 #define IDC_LOG_ENABLE_GENERAL          894
@@ -275,6 +276,25 @@
 #define IDC_SIGHT_CHANGE_POSX           1322
 #define IDC_LIBUSB_LIST                 1323
 #define IDC_LIBUSB_TEST                 1324
+#define IDC_LG_A                        1325
+#define IDC_LG_B                        1326
+#define IDC_LG_TRIGGER                  1327
+#define IDC_LG_GRIP                     1328
+#define IDC_LG_SEBA                     1329
+#define IDC_LG_START                    1330
+#define IDC_LG_AIM_POSY                 1331
+#define IDC_LG_AIM_NEGY                 1332
+#define IDC_LG_AIM_NEGX                 1333
+#define IDC_LG_AIM_POSX                 1334
+#define IDC_LG_STICK_UP                 1335
+#define IDC_LG_STICK_DOWN               1336
+#define IDC_LG_STICK_LEFT               1337
+#define IDC_LG_STICK_RIGHT              1338
+#define IDC_TURBO_LEFT                  1339
+#define IDC_TURBO_RIGHT                 1340
+#define IDC_TURBO                       1341
+#define IDC_POWER_SWITCH                1342
+#define IDC_LASER                       1343
 #define ID_FILE_EXIT                    40005
 #define ID_HELP_ABOUT                   40008
 #define ID_EMULATION_START              40009
@@ -340,7 +360,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        137
+#define _APS_NEXT_RESOURCE_VALUE        139
 #define _APS_NEXT_COMMAND_VALUE         40117
 #define _APS_NEXT_CONTROL_VALUE         1308
 #define _APS_NEXT_SYMED_VALUE           109

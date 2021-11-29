@@ -31,11 +31,7 @@
 #include <thread>
 #include "InputDevice.h"
 #include "EmuDevice.h"
-
-// Prevent a collision with the SetPort provided by Windows
-#ifdef WIN32
-#undef SetPort
-#endif
+#include <imgui.h>
 
 #define PORT_INVALID     -1
 #define PORT_1            0
@@ -54,12 +50,15 @@
 
 #define XID_PACKET_HEADER 2
 
+#define LIGHTGUN_GRIP_DELAY 30
+
 extern int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)];
 
 inline XBOX_INPUT_DEVICE input_support_list[] = {
 	XBOX_INPUT_DEVICE::DEVICE_INVALID,
 	XBOX_INPUT_DEVICE::MS_CONTROLLER_DUKE,
 	XBOX_INPUT_DEVICE::MS_CONTROLLER_S,
+	XBOX_INPUT_DEVICE::LIGHTGUN,
 	XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER,
 	XBOX_INPUT_DEVICE::ARCADE_STICK,
 	XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER,
@@ -156,6 +155,22 @@ struct XidSBCOutput {
 
 #pragma pack()
 
+struct LightGunData {
+	xbox::short_xt offset_x;
+	xbox::short_xt offset_y;
+	xbox::short_xt offset_upp_x;
+	xbox::short_xt offset_upp_y;
+	uint8_t last_in_state;
+	uint8_t last_turbo;
+	uint8_t turbo_delay;
+	uint8_t turbo;
+	uint8_t laser;
+};
+
+struct SbcData {
+	uint16_t last_in_state;
+};
+
 union InputBuff {
 	XidGamepadInput ctrl;
 	XidSBCInput sbc;
@@ -169,8 +184,13 @@ struct DeviceInfo {
 	uint8_t ucSubType;         // xapi subtype
 	uint8_t ucInputStateSize;  // input state size in bytes, does not include dwPacketNumber
 	uint8_t ucFeedbackSize;    // feedback size in bytes, does not include FeedbackHeader
-	uint32_t dwPacketNumber;
-	InputBuff buff;
+	uint32_t dwPacketNumber;   // increases by one when the input state changes
+	InputBuff buff;            // input buffer
+	// device-specific additional data
+	union {
+		LightGunData ligthgun;
+		SbcData sbc;
+	};
 };
 
 struct DeviceState {
@@ -214,11 +234,15 @@ public:
 	void UpdateOpt(bool is_gui);
 	// device hotplug event handler
 	void HotplugHandler(bool is_sdl);
+	// converts xinput -> screen coordinates to display the lightgun laser on the rendering window
+	ImVec2 CalcLaserPos(int port);
 
 
 private:
 	// update input for an xbox controller
 	bool UpdateInputXpad(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, const std::string &Port);
+	// update input for a lightgun
+	bool UpdateInputLightgun(std::shared_ptr<InputDevice> &Device, void *Buffer, int Direction, int Port_num, const std::string &Port);
 	// update input for a Steel Battalion controller
 	bool UpdateInputSBC(std::shared_ptr<InputDevice>& Device, void* Buffer, int Direction, int Port_num, const std::string &Port);
 	// update input for a passthrough xbox device

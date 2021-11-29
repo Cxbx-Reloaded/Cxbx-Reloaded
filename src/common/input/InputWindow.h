@@ -39,7 +39,6 @@
 #define RUMBLE_TEST    6
 #define RUMBLE_CLEAR   7
 #define BUTTON_CLEAR   8
-#define BUTTON_SWAP    9
 
 #define XINPUT_DEFAULT 0
 #define DINPUT_DEFAULT 1
@@ -56,7 +55,7 @@ public:
 	virtual void Initialize(HWND hwnd, int port_num, int dev_type) = 0;
 	~InputWindow();
 	virtual void UpdateDeviceList();
-	void BindButton(int ControlID);
+	void BindButton(int ControlID, bool auto_swap = false);
 	virtual void ClearBindings() = 0;
 	virtual void UpdateProfile(const std::string& name, int command);
 	void UpdateCurrentDevice();
@@ -73,8 +72,8 @@ protected:
 	void DeleteProfile(const std::string& name);
 	void OverwriteProfile(const std::string& name);
 	void LoadDefaultProfile();
-	virtual int EnableDefaultButton() = 0;
-	virtual void SaveSlotConfig() = 0;
+	virtual int EnableDefaultButton();
+
 
 	// xbox device under configuration
 	EmuDevice* m_DeviceConfig;
@@ -84,6 +83,8 @@ protected:
 	HWND m_hwnd_device_list;
 	// handle of the profile list combobox
 	HWND m_hwnd_profile_list;
+	// handle of the default bindings button
+	HWND m_hwnd_default;
 	// number of devices displayed in the device list combobox
 	int m_num_devices;
 	// type of the device
@@ -109,15 +110,12 @@ public:
 	void BindDefault();
 	void ClearBindings() override;
 	void UpdateProfile(const std::string &name, int command) override;
-	void SaveSlotConfig() override;
+	void SaveSlotConfig();
 
 
 private:
-	int EnableDefaultButton() override;
 	void DetectOutput(int ms);
 
-	// handle of the default bindings button
-	HWND m_hwnd_default;
 	// handle of the rumble window
 	HWND m_hwnd_rumble;
 	// handle of the rumble combobox
@@ -132,8 +130,8 @@ class SbcInputWindow : public InputWindow
 {
 public:
 	void Initialize(HWND hwnd, int port_num, int dev_type) override;
+	~SbcInputWindow();
 	void ClearBindings() override;
-	void SaveSlotConfig() override;
 
 
 private:
@@ -143,10 +141,9 @@ private:
 class LibusbInputWindow : public InputWindow
 {
 public:
-	~LibusbInputWindow();
 	void Initialize(HWND hwnd, int port_num, int dev_type) override;
+	~LibusbInputWindow();
 	void ClearBindings() override;
-	void SaveSlotConfig() override;
 	void UpdateDeviceList() override;
 	void TestInput();
 
@@ -156,4 +153,13 @@ private:
 
 	// handle of the test button
 	HWND m_hwnd_device_test;
+};
+
+class LightgunInputWindow : public InputWindow
+{
+public:
+	void Initialize(HWND hwnd, int port_num, int dev_type) override;
+	~LightgunInputWindow();
+	void BindDefault();
+	void ClearBindings() override;
 };

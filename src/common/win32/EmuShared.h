@@ -258,6 +258,12 @@ class EmuShared : public Mutex
 		void SetClipCursorFlag(const bool value) { Lock(); m_bClipCursor = value; Unlock(); }
 
 		// ******************************************************************
+		// * LightgunLaser flag Accessors
+		// ******************************************************************
+		void GetLightgunLaser(uint8_t *value, int port) { Lock(); *value = (m_LightgunLaser >> port) & 1; Unlock(); }
+		void SetLightgunLaser(const uint8_t *value, int port) { Lock(); (m_LightgunLaser &= ~(1 << port)) |= ((*value) << port); Unlock(); }
+
+		// ******************************************************************
 		// * ImGui Accessors
 		// ******************************************************************
 		void GetImGuiFocusFlag(bool *value) { Lock(); *value = m_imgui_general.is_focus; Unlock(); }
@@ -364,6 +370,7 @@ class EmuShared : public Mutex
 #else
 		unsigned int m_Reserved;
 #endif
+		uint8_t      m_LightgunLaser;
 		bool         m_bFirstLaunch;
 		bool         m_bClipCursor;
 		unsigned int m_dwKrnlProcID; // Only used for kernel mode level.

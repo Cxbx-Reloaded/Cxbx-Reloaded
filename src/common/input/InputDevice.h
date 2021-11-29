@@ -49,7 +49,7 @@ typedef enum class _XBOX_INPUT_DEVICE : int {
 	DEVICE_INVALID = -1,
 	MS_CONTROLLER_DUKE,
 	MS_CONTROLLER_S,
-	LIGHT_GUN,
+	LIGHTGUN,
 	STEERING_WHEEL,
 	MEMORY_UNIT,
 	IR_DONGLE,
@@ -122,7 +122,8 @@ public:
 	// retrieves the port this device is attached to
 	bool GetPort(std::string_view Port) const;
 	// sets the port this device is attached to
-	void SetPort(std::string_view Port, bool Connect);
+	// NOTE: using SetPort2 to avoid a collision with the SetPort macro provided by Windows headers
+	void SetPort2(std::string_view Port, bool Connect);
 	// retuns true if it is a libusb device, false otherwise
 	virtual bool IsLibusb() const { return false; };
 

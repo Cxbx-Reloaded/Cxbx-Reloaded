@@ -78,7 +78,6 @@ LRESULT CALLBACK ButtonDukeSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 		Button *button = reinterpret_cast<Button *>(dwRefData);
 		if (wParam & MK_SHIFT) {
 			static_cast<DukeInputWindow *>(button->GetWnd())->SwapMoCursorAxis(button);
-			static_cast<DukeInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_SWAP);
 		}
 		else if (!(wParam & ~MK_RBUTTON)) {
 			button->ClearText();
@@ -99,7 +98,7 @@ LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 {
 	switch (uMsg)
 	{
-		// Remove the window subclass when this window is destroyed
+	// Remove the window subclass when this window is destroyed
 	case WM_NCDESTROY: {
 		RemoveWindowSubclass(hWnd, ButtonSbcSubclassProc, uIdSubclass);
 	}
@@ -109,12 +108,33 @@ LRESULT CALLBACK ButtonSbcSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 		Button *button = reinterpret_cast<Button *>(dwRefData);
 		if (wParam & MK_SHIFT) {
 			static_cast<SbcInputWindow *>(button->GetWnd())->SwapMoCursorAxis(button);
-			static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_SWAP);
 		}
 		else if (!(wParam & ~MK_RBUTTON)) {
 			button->ClearText();
 			static_cast<SbcInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
 		}
+	}
+	break;
+
+	}
+
+	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK ButtonLightgunSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+{
+	switch (uMsg)
+	{
+	// Remove the window subclass when this window is destroyed
+	case WM_NCDESTROY: {
+		RemoveWindowSubclass(hWnd, ButtonSbcSubclassProc, uIdSubclass);
+	}
+	break;
+
+	case WM_RBUTTONDOWN: {
+		Button *button = reinterpret_cast<Button *>(dwRefData);
+		button->ClearText();
+		static_cast<LightgunInputWindow *>(button->GetWnd())->UpdateProfile(std::string(), BUTTON_CLEAR);
 	}
 	break;
 

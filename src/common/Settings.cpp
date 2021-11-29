@@ -516,6 +516,10 @@ bool Settings::LoadConfig()
 			lambda(dev_num_buttons[device], button_sbc_names);
 			break;
 
+		case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
+			lambda(dev_num_buttons[device], button_lightgun_names);
+			break;
+
 		}
 	}
 
@@ -688,6 +692,9 @@ bool Settings::Save(std::string file_path)
 			lambda(dev_num_buttons[device], button_sbc_names);
 			break;
 
+		case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN):
+			lambda(dev_num_buttons[device], button_lightgun_names);
+			break;
 		}
 	}
 

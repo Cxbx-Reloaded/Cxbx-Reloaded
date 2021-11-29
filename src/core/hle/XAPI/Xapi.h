@@ -270,6 +270,35 @@ typedef struct _XINPUT_FEEDBACK
 }
 XINPUT_FEEDBACK, *PXINPUT_FEEDBACK;
 #pragma pack()
+
+// ******************************************************************
+// * XINPUT_DEVICE_DESCRIPTION
+// ******************************************************************
+typedef struct _XINPUT_DEVICE_DESCRIPTION
+{
+    xbox::ushort_xt wVendorID;
+    xbox::ushort_xt wProductID;
+    xbox::ushort_xt wVersion;
+}
+XINPUT_DEVICE_DESCRIPTION, *PXINPUT_DEVICE_DESCRIPTION;
+
+// ******************************************************************
+// * XINPUT_LIGHTGUN_CALIBRATION_OFFSETS
+// ******************************************************************
+typedef struct _XINPUT_LIGHTGUN_CALIBRATION_OFFSETS
+{
+    xbox::short_xt wCenterX;
+    xbox::short_xt wCenterY;
+    xbox::short_xt wUpperLeftX;
+    xbox::short_xt wUpperLeftY;
+}
+XINPUT_LIGHTGUN_CALIBRATION_OFFSETS, *PXINPUT_LIGHTGUN_CALIBRATION_OFFSETS;
+
+// ******************************************************************
+// * Lightgun-specific flags
+// ******************************************************************
+#define XINPUT_LIGHTGUN_ONSCREEN 0x2000
+
 // ******************************************************************
 // * RTL_HEAP_PARAMETERS
 // ******************************************************************
@@ -439,6 +468,28 @@ xbox::dword_xt WINAPI EMUPATCH(XInputSetState)
     IN OUT PXINPUT_FEEDBACK pFeedback
 );
 
+// ******************************************************************
+// * patch: XGetDeviceEnumerationStatus
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(XGetDeviceEnumerationStatus)();
+
+// ******************************************************************
+// * patch: XInputGetDeviceDescription
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(XInputGetDeviceDescription)
+(
+    HANDLE	hDevice,
+    PXINPUT_DEVICE_DESCRIPTION	pDescription
+);
+
+// ******************************************************************
+// * patch: XInputSetLightgunCalibration
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(XInputSetLightgunCalibration)
+(
+    HANDLE hDevice,
+    PXINPUT_LIGHTGUN_CALIBRATION_OFFSETS pCalibrationOffsets
+);
 
 // ******************************************************************
 // * patch: CreateMutex
@@ -733,23 +784,9 @@ xbox::bool_xt WINAPI EMUPATCH(MoveFileA)
 );
 
 // ******************************************************************
-// * patch: XGetDeviceEnumerationStatus
-// ******************************************************************
-xbox::dword_xt WINAPI EMUPATCH(XGetDeviceEnumerationStatus)();
-
-// ******************************************************************
 // * patch: SwitchToThread
 // ******************************************************************
 xbox::bool_xt WINAPI EMUPATCH(SwitchToThread)();
-
-// ******************************************************************
-// * patch: XInputGetDeviceDescription
-// ******************************************************************
-xbox::dword_xt WINAPI EMUPATCH(XInputGetDeviceDescription)
-(
-    HANDLE	hDevice,
-    PVOID	pDescription
-);
 
 // ******************************************************************
 // * patch: ReadFileEx

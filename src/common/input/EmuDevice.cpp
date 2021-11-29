@@ -31,7 +31,8 @@
 #include "gui/resource/ResCxbx.h"
 
 
-static char *tooltip_text = "Left-click: start input detection\nRight-click: clear binding\nShift + right-click: toggle mouse input mode";
+static char *tooltip_text_toggle = "Left-click: start input detection\nRight-click: clear binding\nShift + right-click: toggle mouse input mode";
+static char *tooltip_text_no_toggle = "Left-click: start input detection\nRight-click: clear binding";
 
 EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 {
@@ -45,7 +46,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 	case to_underlying(XBOX_INPUT_DEVICE::ARCADE_STICK): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_xbox_ctrl_id); i++) {
 			m_buttons.push_back(new Button(button_xbox_ctrl_id[i], i, hwnd, wnd));
-			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text);
+			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text_toggle);
 
 			// Install the subclass for the button control
 			SetWindowSubclass(GetDlgItem(hwnd, button_xbox_ctrl_id[i]), ButtonDukeSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
@@ -56,10 +57,21 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_sbc_id); i++) {
 			m_buttons.push_back(new Button(button_sbc_id[i], i, hwnd, wnd));
-			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text);
+			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text_toggle);
 
 			// Install the subclass for the button control
 			SetWindowSubclass(GetDlgItem(hwnd, button_sbc_id[i]), ButtonSbcSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
+		}
+	}
+	break;
+
+	case to_underlying(XBOX_INPUT_DEVICE::LIGHTGUN): {
+		for (size_t i = 0; i < ARRAY_SIZE(button_lightgun_id); i++) {
+			m_buttons.push_back(new Button(button_lightgun_id[i], i, hwnd, wnd));
+			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text_no_toggle);
+
+			// Install the subclass for the button control
+			SetWindowSubclass(GetDlgItem(hwnd, button_lightgun_id[i]), ButtonLightgunSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
 		}
 	}
 	break;
@@ -122,3 +134,4 @@ void EmuDevice::CreateTooltipWindow()
 }
 
 template void EmuDevice::BindDefault(const std::array<const char*, XBOX_CTRL_NUM_BUTTONS>& arr);
+template void EmuDevice::BindDefault(const std::array<const char *, LIGHTGUN_NUM_BUTTONS> &arr);

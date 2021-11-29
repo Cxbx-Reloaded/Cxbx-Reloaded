@@ -152,6 +152,7 @@ EmuShared::EmuShared()
 	m_bEmulating_status = false;
 	m_bFirstLaunch = false;
 	m_bClipCursor = false;
+	m_LightgunLaser = 0xF; // laser on by default on all ports
 
 	std::memset(m_DeviceControlNames, '\0', sizeof(m_DeviceControlNames));
 	std::memset(m_DeviceName, '\0', sizeof(m_DeviceName));
