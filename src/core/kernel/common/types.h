@@ -66,41 +66,43 @@ namespace xbox
 // ******************************************************************
 typedef void* LPSECURITY_ATTRIBUTES;
 
-inline bool nt_success(ntstatus_xt status) { return status >= 0; }
-inline constexpr dword_xt status_success = 0x00000000L;
-inline constexpr dword_xt status_abandoned = 0x00000080L;
-inline constexpr dword_xt status_mutant_limit_exceeded = 0xC0000191L;
-inline constexpr dword_xt status_pending = 0x00000103L;
-inline constexpr dword_xt status_timer_resume_ignored = 0x40000025L;
-inline constexpr dword_xt status_buffer_overflow = 0x80000005L;
-inline constexpr dword_xt status_unsuccessful = 0xC0000001;
-inline constexpr dword_xt status_invalid_handle = 0xC0000008;
-inline constexpr dword_xt status_unrecognized_media = 0xC0000014;
-inline constexpr dword_xt status_no_memory = 0xC0000017L;
-inline constexpr dword_xt status_buffer_too_small = 0xC0000023L;
-inline constexpr dword_xt status_invalid_parameter_2 = 0xC00000F0L;
-inline constexpr dword_xt status_alerted = 0x00000101;
-inline constexpr dword_xt status_user_apc = 0x000000C0L;
-// The SCSI input buffer was too large (not necessarily an error!)
-inline constexpr dword_xt status_data_overrun = 0xC000003CL;
-inline constexpr dword_xt status_semaphore_limit_exceeded = 0xC0000047L;
-inline constexpr dword_xt status_invalid_image_format = 0xC000007BL;
-inline constexpr dword_xt status_insufficient_resources = 0xC000009AL;
-inline constexpr dword_xt status_too_many_secrets = 0xC0000156L;
-inline constexpr dword_xt status_xbe_region_mismatch = 0xC0050001L;
-inline constexpr dword_xt status_xbe_media_mismatch = 0xC0050002L;
-inline constexpr dword_xt status_object_name_invalid = 0xC0000033L;
-inline constexpr dword_xt status_object_name_not_found = 0xC0000034L;
-inline constexpr dword_xt status_object_name_collision = 0xC0000035L;
-inline constexpr dword_xt status_file_is_a_directory = 0xC00000BAL;
-inline constexpr dword_xt status_end_of_file = 0xC0000011L;
-inline constexpr dword_xt status_invalid_page_protection = 0xC0000045L;
-inline constexpr dword_xt status_conflicting_addresses = 0xC0000018L;
-inline constexpr dword_xt status_unable_to_free_vm = 0xC000001AL;
-inline constexpr dword_xt status_free_vm_not_at_base = 0xC000009FL;
-inline constexpr dword_xt status_memory_not_allocated = 0xC00000A0L;
-inline constexpr dword_xt status_not_committed = 0xC000002DL;
-inline constexpr dword_xt status_unrecognized_volume = 0xC000014FL;
+// ******************************************************************
+// * NTSTATUS codes
+// ******************************************************************
+#define X_NT_SUCCESS(Status) (((xbox::ntstatus_xt)(Status)) >= 0)
+#define X_STATUS_SUCCESS 0x00000000L
+#define X_STATUS_ABANDONED 0x00000080L
+#define X_STATUS_MUTANT_LIMIT_EXCEEDED 0xC0000191L
+#define X_STATUS_PENDING 0x00000103L
+#define X_STATUS_TIMER_RESUME_IGNORED 0x40000025L
+#define X_STATUS_BUFFER_OVERFLOW 0x80000005L
+#define X_STATUS_UNSUCCESSFUL 0xC0000001L
+#define X_STATUS_INVALID_HANDLE 0xC0000008L
+#define X_STATUS_UNRECOGNIZED_MEDIA 0xC0000014L
+#define X_STATUS_NO_MEMORY 0xC0000017L
+#define X_STATUS_BUFFER_TOO_SMALL 0xC0000023L
+#define X_STATUS_INVALID_PARAMETER_2 0xC00000F0L
+#define X_STATUS_ALERTED 0x00000101L
+#define X_STATUS_USER_APC 0x000000C0L
+#define X_STATUS_DATA_OVERRUN 0xC000003CL // The SCSI input buffer was too large (not necessarily an error!)
+#define X_STATUS_SEMAPHORE_LIMIT_EXCEEDED 0xC0000047L
+#define X_STATUS_INVALID_IMAGE_FORMAT 0xC000007BL
+#define X_STATUS_INSUFFICIENT_RESOURCES 0xC000009AL
+#define X_STATUS_TOO_MANY_SECRETS 0xC0000156L
+#define X_STATUS_XBE_REGION_MISMATCH 0xC0050001L
+#define X_STATUS_XBE_MEDIA_MISMATCH 0xC0050002L
+#define X_STATUS_OBJECT_NAME_INVALID 0xC0000033L
+#define X_STATUS_OBJECT_NAME_NOT_FOUND 0xC0000034L
+#define X_STATUS_OBJECT_NAME_COLLISION 0xC0000035L
+#define X_STATUS_FILE_IS_A_DIRECTORY 0xC00000BAL
+#define X_STATUS_END_OF_FILE 0xC0000011L
+#define X_STATUS_INVALID_PAGE_PROTECTION 0xC0000045L
+#define X_STATUS_CONFLICTING_ADDRESSES 0xC0000018L
+#define X_STATUS_UNABLE_TO_FREE_VM 0xC000001AL
+#define X_STATUS_FREE_VM_NOT_AT_BASE 0xC000009FL
+#define X_STATUS_MEMORY_NOT_ALLOCATED 0xC00000A0L
+#define X_STATUS_NOT_COMMITTED 0xC000002DL
+#define X_STATUS_UNRECOGNIZED_VOLUME 0xC000014FL
 
 // ******************************************************************
 // * Registry value types

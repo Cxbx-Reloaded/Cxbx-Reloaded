@@ -204,16 +204,16 @@ void EmuKeFreePcr()
 			Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - 12;
 			Size = xbox::zero;
 			Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free tls
-			assert(Status == xbox::status_success);
+			assert(Status == X_STATUS_SUCCESS);
 		}
 		Dummy = Pcr->Prcb->CurrentThread;
 		Size = xbox::zero;
 		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free ethread
-		assert(Status == xbox::status_success);
+		assert(Status == X_STATUS_SUCCESS);
 		Dummy = Pcr;
 		Size = xbox::zero;
 		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free pcr
-		assert(Status == xbox::status_success);
+		assert(Status == X_STATUS_SUCCESS);
 		__writefsdword(TIB_ArbitraryDataSlot, NULL);
 	}
 	else {

@@ -1235,7 +1235,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XLaunchNewImageA)
 			PVOID LaunchDataVAddr = xbox::MmAllocateContiguousMemory(sizeof(xbox::LAUNCH_DATA_PAGE));
 			if (!LaunchDataVAddr)
 			{
-				RETURN(xbox::status_no_memory);
+				RETURN(X_STATUS_NO_MEMORY);
 			}
 			xbox::LaunchDataPage = (xbox::LAUNCH_DATA_PAGE*)LaunchDataVAddr;
 		}
@@ -1481,7 +1481,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 	ntstatus_xt status = XB_TRMP(XapiMapLetterToDirectory)(&mu_path, &mu_dev, title_id_buff, 1,
 		reinterpret_cast<const char16_t *>(CxbxKrnl_Xbe->m_Certificate.wsTitleName), 0);
 
-	if (!nt_success(status)) {
+	if (!X_NT_SUCCESS(status)) {
 		RETURN(RtlNtStatusToDosError(status));
 	}
 
@@ -1526,7 +1526,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMURootA)
 	RtlInitAnsiString(&mu_dev, mu_dev_str.data());
 	ntstatus_xt status = IoCreateSymbolicLink(&mu_path, &mu_dev);
 
-	if (!nt_success(status)) {
+	if (!X_NT_SUCCESS(status)) {
 		if (pchDrive != zeroptr) {
 			*pchDrive = 0;
 		}
@@ -1571,7 +1571,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XUnmountMU)
 	RtlInitAnsiString(&mu_path, mu_path_str.data());
 	ntstatus_xt status = IoDeleteSymbolicLink(&mu_path);
 
-	if (!nt_success(status)) {
+	if (!X_NT_SUCCESS(status)) {
 		RETURN(RtlNtStatusToDosError(status));
 	}
 
@@ -1632,7 +1632,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XReadMUMetaData)
 		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		FILE_SYNCHRONOUS_IO_ALERT);
 
-	if (nt_success(status)) {
+	if (X_NT_SUCCESS(status)) {
 		fatx_volume_metadata volume;
 		volume.offset = dwByteOffset;
 		volume.length = dwNumberOfBytesToRead;
@@ -1649,19 +1649,19 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XReadMUMetaData)
 			zeroptr,
 			0);
 
-		if (nt_success(status)) {
+		if (X_NT_SUCCESS(status)) {
 			std::memcpy(lpBuffer, volume.buffer, dwNumberOfBytesToRead);
-			status = status_success;
+			status = X_STATUS_SUCCESS;
 		}
 		else {
-			status = status_unrecognized_volume;
+			status = X_STATUS_UNRECOGNIZED_VOLUME;
 		}
 
 		delete[] volume.buffer;
 		NtClose(handle);
 	}
 	else {
-		status = status_unrecognized_volume;
+		status = X_STATUS_UNRECOGNIZED_VOLUME;
 	}
 
 	if (unmount) {

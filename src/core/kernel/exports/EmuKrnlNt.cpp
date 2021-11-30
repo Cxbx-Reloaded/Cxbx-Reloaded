@@ -140,7 +140,7 @@ XBSYSAPI EXPORTNUM(187) xbox::ntstatus_xt NTAPI xbox::NtClose
 {
 	LOG_FUNC_ONE_ARG(Handle);
 
-	NTSTATUS ret = xbox::status_success;
+	NTSTATUS ret = X_STATUS_SUCCESS;
 
 	if (EmuHandle::IsEmuHandle(Handle))
 	{
@@ -196,7 +196,7 @@ XBSYSAPI EXPORTNUM(188) xbox::ntstatus_xt NTAPI xbox::NtCreateDirectoryObject
 		nativeObjectAttributes,
 		"NtCreateDirectoryObject");
 
-	if (ret == xbox::status_success)
+	if (ret == X_STATUS_SUCCESS)
 	{
 		// TODO : Is this the correct ACCESS_MASK? :
 		const ACCESS_MASK DesiredAccess = DIRECTORY_CREATE_OBJECT;
@@ -242,7 +242,7 @@ XBSYSAPI EXPORTNUM(189) xbox::ntstatus_xt NTAPI xbox::NtCreateEvent
 		PKEVENT Event;
 
 		result = ObCreateObject(&ExEventObjectType, ObjectAttributes, sizeof(KEVENT), (PVOID *)&Event);
-		if (nt_success(result)) {
+		if (X_NT_SUCCESS(result)) {
 			KeInitializeEvent(Event, EventType, InitialState);
 			result = ObInsertObject(Event, ObjectAttributes, 0, EventHandle);
 		}
@@ -376,7 +376,7 @@ XBSYSAPI EXPORTNUM(192) xbox::ntstatus_xt NTAPI xbox::NtCreateMutant
 		PKMUTANT Mutant;
 
 		Status = ObCreateObject(&ExMutantObjectType, ObjectAttributes, sizeof(KMUTANT), (PVOID *)&Mutant);
-		if (nt_success(Status)) {
+		if (X_NT_SUCCESS(Status)) {
 			KeInitializeMutant(Mutant, InitialOwner);
 			Status = ObInsertObject(Mutant, ObjectAttributes, 0, /*OUT* /MutantHandle);
 		}
@@ -450,7 +450,7 @@ XBSYSAPI EXPORTNUM(193) xbox::ntstatus_xt NTAPI xbox::NtCreateSemaphore
 		PKSEMAPHORE Semaphore;
 
 		Status = ObCreateObject(&ExSemaphoreObjectType, ObjectAttributes, sizeof(KSEMAPHORE), (PVOID *)&Semaphore);
-		if (nt_success(Status)) {
+		if (X_NT_SUCCESS(Status)) {
 			KeInitializeSemaphore(Semaphore, InitialCount, /*Limit=* /MaximumCount);
 			Status = ObInsertObject(Semaphore, ObjectAttributes, 0, /*OUT* /SemaphoreHandle);
 		}
@@ -523,7 +523,7 @@ XBSYSAPI EXPORTNUM(194) xbox::ntstatus_xt NTAPI xbox::NtCreateTimer
 		PKTIMER Timer;
 
 		Status = ObCreateObject(&ExTimerType, ObjectAttributes, sizeof(KTIMER), (PVOID *)&Timer);
-		if (nt_success(Status)) {
+		if (X_NT_SUCCESS(Status)) {
 			KeInitializeTimerEx(Timer, TimerType);
 			Status = ObInsertObject(Timer, ObjectAttributes, 0, /*OUT* /TimerHandle);
 		}
@@ -573,7 +573,7 @@ XBSYSAPI EXPORTNUM(195) xbox::ntstatus_xt NTAPI xbox::NtDeleteFile
 		nativeObjectAttributes,
 		"NtDeleteFile");
 
-	if (ret == xbox::status_success)
+	if (ret == X_STATUS_SUCCESS)
 	{
 		ret = NtDll::NtDeleteFile(
 			nativeObjectAttributes.NtObjAttrPtr);
@@ -615,7 +615,7 @@ XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = xbox::status_success;
+	NTSTATUS ret = X_STATUS_SUCCESS;
 
 	switch (IoControlCode)
 	{
@@ -650,7 +650,7 @@ XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 		}
 		else {
 			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_DRIVE_GEOMETRY.", __func__, FileHandle);
-			ret = status_invalid_handle;
+			ret = X_STATUS_INVALID_HANDLE;
 		}
 	}
 	break;
@@ -679,7 +679,7 @@ XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 		}
 		else {
 			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_PARTITION_INFO.", __func__, FileHandle);
-			ret = status_invalid_handle;
+			ret = X_STATUS_INVALID_HANDLE;
 		}
 	}
 	break;
@@ -707,13 +707,13 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	NTSTATUS result = xbox::status_success;
+	NTSTATUS result = X_STATUS_SUCCESS;
 
 #ifdef CXBX_KERNEL_REWORK_ENABLED
 	PVOID Object;
 
 	result = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=*/nullptr, &Object);
-	if (nt_success(result)) {
+	if (X_NT_SUCCESS(result)) {
 		if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
 			NtClose(SourceHandle);
 
@@ -746,7 +746,7 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 			Options);
 	}
 
-	if (result != xbox::status_success)
+	if (result != X_STATUS_SUCCESS)
 		EmuLog(LOG_LEVEL::WARNING, "Object was not duplicated!");
 #endif
 
@@ -766,7 +766,7 @@ XBSYSAPI EXPORTNUM(198) xbox::ntstatus_xt NTAPI xbox::NtFlushBuffersFile
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
-	NTSTATUS ret = xbox::status_success;
+	NTSTATUS ret = X_STATUS_SUCCESS;
 	
 	if (EmuHandle::IsEmuHandle(FileHandle))
 		LOG_UNIMPLEMENTED();
@@ -839,7 +839,7 @@ XBSYSAPI EXPORTNUM(200) xbox::ntstatus_xt NTAPI xbox::NtFsControlFile
 		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
 		if (partitionNumber > 0) {
 			CxbxFormatPartitionByHandle(FileHandle);
-			ret = xbox::status_success;
+			ret = X_STATUS_SUCCESS;
 		}
 	}
 	break;
@@ -852,10 +852,10 @@ XBSYSAPI EXPORTNUM(200) xbox::ntstatus_xt NTAPI xbox::NtFsControlFile
 			pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
 			assert(InputBufferLength == sizeof(fatx_volume_metadata));
 			g_io_mu_metadata->read(path[pos + 7], volume->offset, static_cast<char *>(volume->buffer), volume->length);
-			ret = xbox::status_success;
+			ret = X_STATUS_SUCCESS;
 		}
 		else {
-			ret = status_invalid_handle;
+			ret = X_STATUS_INVALID_HANDLE;
 		}
 	}
 	break;
@@ -868,10 +868,10 @@ XBSYSAPI EXPORTNUM(200) xbox::ntstatus_xt NTAPI xbox::NtFsControlFile
 			pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
 			assert(InputBufferLength == sizeof(fatx_volume_metadata));
 			g_io_mu_metadata->write(path[pos + 7], volume->offset, static_cast<const char *>(volume->buffer), volume->length);
-			ret = xbox::status_success;
+			ret = X_STATUS_SUCCESS;
 		}
 		else {
-			ret = status_invalid_handle;
+			ret = X_STATUS_INVALID_HANDLE;
 		}
 	}
 	break;
@@ -1190,7 +1190,7 @@ XBSYSAPI EXPORTNUM(208) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryObject
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(xbox::status_success);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1214,7 +1214,7 @@ XBSYSAPI EXPORTNUM(209) xbox::ntstatus_xt NTAPI xbox::NtQueryEvent
 		sizeof(EVENT_BASIC_INFORMATION),
 		/*ReturnLength=*/nullptr);
 
-	if (ret != xbox::status_success)
+	if (ret != X_STATUS_SUCCESS)
 		EmuLog(LOG_LEVEL::WARNING, "NtQueryEvent failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
@@ -1243,7 +1243,7 @@ XBSYSAPI EXPORTNUM(210) xbox::ntstatus_xt NTAPI xbox::NtQueryFullAttributesFile
 		/*var*/nativeObjectAttributes,
 		"NtQueryFullAttributesFile");
 
-	if (ret == xbox::status_success)
+	if (ret == X_STATUS_SUCCESS)
 		ret = NtDll::NtQueryFullAttributesFile(
 			nativeObjectAttributes.NtObjAttrPtr,
 			&nativeNetOpenInfo);
@@ -1296,7 +1296,7 @@ XBSYSAPI EXPORTNUM(211) xbox::ntstatus_xt NTAPI xbox::NtQueryInformationFile
 			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass);
 
 		// Buffer is too small; make a larger one
-		if (ret == xbox::status_buffer_overflow)
+		if (ret == X_STATUS_BUFFER_OVERFLOW)
 		{
 			free(ntFileInfo);
 
@@ -1305,7 +1305,7 @@ XBSYSAPI EXPORTNUM(211) xbox::ntstatus_xt NTAPI xbox::NtQueryInformationFile
 			if (bufferSize > 65536)
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
 		}
-	} while (ret == xbox::status_buffer_overflow);
+	} while (ret == X_STATUS_BUFFER_OVERFLOW);
 	
 	// Convert and copy NT data to the given Xbox struct
 	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
@@ -1318,7 +1318,7 @@ XBSYSAPI EXPORTNUM(211) xbox::ntstatus_xt NTAPI xbox::NtQueryInformationFile
 
 	// Prioritize the buffer overflow over real return code,
 	// in case the Xbox program decides to follow the same procedure above
-	if (convRet == xbox::status_buffer_overflow)
+	if (convRet == X_STATUS_BUFFER_OVERFLOW)
 		return convRet;
 
 	RETURN(ret);
@@ -1340,7 +1340,7 @@ XBSYSAPI EXPORTNUM(212) xbox::ntstatus_xt NTAPI xbox::NtQueryIoCompletion
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(xbox::status_success);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1364,7 +1364,7 @@ XBSYSAPI EXPORTNUM(213) xbox::ntstatus_xt NTAPI xbox::NtQueryMutant
 		sizeof(MUTANT_BASIC_INFORMATION),
 		/*ReturnLength=*/nullptr);
 
-	if (ret != xbox::status_success)
+	if (ret != X_STATUS_SUCCESS)
 		EmuLog(LOG_LEVEL::WARNING, "NtQueryMutant failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
@@ -1391,7 +1391,7 @@ XBSYSAPI EXPORTNUM(214) xbox::ntstatus_xt NTAPI xbox::NtQuerySemaphore
 		sizeof(SEMAPHORE_BASIC_INFORMATION),
 		/*ReturnLength=*/nullptr);
 
-	if (ret != xbox::status_success)
+	if (ret != X_STATUS_SUCCESS)
 		EmuLog(LOG_LEVEL::WARNING, "NtQuerySemaphore failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
@@ -1424,7 +1424,7 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 
 	auto iEmuHandle = (EmuHandle*)LinkHandle;
 	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
-	ret = xbox::status_success;
+	ret = X_STATUS_SUCCESS;
 	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;
 
 	if (symbolicLinkObject->IsHostBasedPath) {
@@ -1437,7 +1437,7 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 				copy_string_to_PSTRING_to(symbolicLinkObject->XboxSymbolicLinkPath, LinkTarget);
 			}
 			else {
-				ret = xbox::status_buffer_too_small;
+				ret = X_STATUS_BUFFER_TOO_SMALL;
 			}
 		}
 
@@ -1446,7 +1446,7 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 			*ReturnedLength = symbolicLinkObject->XboxSymbolicLinkPath.length(); // Return full length (even if buffer was too small)
 		}
 	}
-	if (ret != xbox::status_success)
+	if (ret != X_STATUS_SUCCESS)
 		EmuLog(LOG_LEVEL::WARNING, "NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(ret));
 
 	RETURN(ret);
@@ -1502,7 +1502,7 @@ XBSYSAPI EXPORTNUM(217) xbox::ntstatus_xt NTAPI xbox::NtQueryVirtualMemory
 
 	NTSTATUS ret = g_VMManager.XbVirtualMemoryStatistics((VAddr)BaseAddress, Buffer);
 
-	if (ret == xbox::status_success)
+	if (ret == X_STATUS_SUCCESS)
 	{
 		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->AllocationBase    = 0x%.08X", Buffer->AllocationBase);
 		EmuLog(LOG_LEVEL::DEBUG, "   Buffer->AllocationProtect = 0x%.08X", Buffer->AllocationProtect);
@@ -1532,7 +1532,7 @@ XBSYSAPI EXPORTNUM(217) xbox::ntstatus_xt NTAPI xbox::NtQueryVirtualMemory
 			Buffer->Protect = PAGE_READONLY;            // One of the flags listed for the AllocationProtect member is specified
 			Buffer->Type = 262144;                      // Specifies the type of pages in the region. (MEM_IMAGE, MEM_MAPPED or MEM_PRIVATE)
 
-			result = xbox::status_success;
+			result = X_STATUS_SUCCESS;
 
 			EmuLog(LOG_LEVEL::DEBUG, "NtQueryVirtualMemory: Applied fix for Forza Motorsport!");
 		}
@@ -1589,7 +1589,7 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 			XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
 			XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
 
-			status = status_success;
+			status = X_STATUS_SUCCESS;
 		}
 		else if (type == DeviceType::MU) {
 
@@ -1598,7 +1598,7 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 			XboxSizeInfo->TotalAllocationUnits.QuadPart = 512; // 8MB -> ((1024)^2 * 8) / (BytesPerSector * SectorsPerAllocationUnit)
 			XboxSizeInfo->AvailableAllocationUnits.QuadPart = 512; // constant, so there's always free space available to write stuff
 
-			status = status_success;
+			status = X_STATUS_SUCCESS;
 		}
 		else if (type == DeviceType::Cdrom0) {
 
@@ -1606,11 +1606,11 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 			XboxSizeInfo->SectorsPerAllocationUnit = 1;
 			XboxSizeInfo->TotalAllocationUnits.QuadPart = 3820880; // assuming DVD-9 (dual layer), redump reports a total size in bytes of 7825162240
 
-			status = status_success;
+			status = X_STATUS_SUCCESS;
 		}
 		else {
 			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with class FileFsSizeInformation.", __func__, FileHandle);
-			status = status_invalid_handle;
+			status = X_STATUS_INVALID_HANDLE;
 		}
 
 		RETURN(status);
@@ -1651,7 +1651,7 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 		(NtDll::FS_INFORMATION_CLASS)FileInformationClass);
 
 	// Convert Xbox NativeFileInformation to FileInformation
-	if (ret == xbox::status_success) {
+	if (ret == X_STATUS_SUCCESS) {
 		switch ((DWORD)FileInformationClass) {
 				case FileFsVolumeInformation: {
 					PFILE_FS_VOLUME_INFORMATION XboxVolumeInfo = (PFILE_FS_VOLUME_INFORMATION)FileInformation;
@@ -1776,7 +1776,7 @@ XBSYSAPI EXPORTNUM(220) xbox::ntstatus_xt NTAPI xbox::NtReadFileScatter
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(xbox::status_success);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1799,7 +1799,7 @@ XBSYSAPI EXPORTNUM(221) xbox::ntstatus_xt NTAPI xbox::NtReleaseMutant
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtReleaseMutant Failed!");
 
-	RETURN(xbox::status_success); // TODO : RETURN(result);
+	RETURN(X_STATUS_SUCCESS); // TODO : RETURN(result);
 }
 
 // ******************************************************************
@@ -1851,7 +1851,7 @@ XBSYSAPI EXPORTNUM(223) xbox::ntstatus_xt NTAPI xbox::NtRemoveIoCompletion
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(xbox::status_success);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1957,7 +1957,7 @@ XBSYSAPI EXPORTNUM(227) xbox::ntstatus_xt NTAPI xbox::NtSetIoCompletion
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(xbox::status_success);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1974,7 +1974,7 @@ XBSYSAPI EXPORTNUM(228) xbox::ntstatus_xt NTAPI xbox::NtSetSystemTime
 		LOG_FUNC_ARG_OUT(PreviousTime)
 	LOG_FUNC_END;
 
-	NTSTATUS ret = xbox::status_success;
+	NTSTATUS ret = X_STATUS_SUCCESS;
 	LARGE_INTEGER NewSystemTime, OldSystemTime;
 	// LARGE_INTEGER LocalTime;
 	// TIME_FIELDS TimeFields;
@@ -2074,7 +2074,7 @@ XBSYSAPI EXPORTNUM(230) xbox::ntstatus_xt NTAPI xbox::NtSignalAndWaitForSingleOb
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(xbox::status_success);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -2119,7 +2119,7 @@ XBSYSAPI EXPORTNUM(232) xbox::void_xt NTAPI xbox::NtUserIoApcDispatcher
 	ULONG dwErrorCode = 0;
 	ULONG dwTransferred = 0;
 
-	if (nt_success(IoStatusBlock->Status)) {
+	if (X_NT_SUCCESS(IoStatusBlock->Status)) {
 		dwTransferred = (ULONG)IoStatusBlock->Information;
 	} else {
 		dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
@@ -2302,7 +2302,7 @@ XBSYSAPI EXPORTNUM(237) xbox::ntstatus_xt NTAPI xbox::NtWriteFileGather
 
 	LOG_UNIMPLEMENTED();
 
-	RETURN(xbox::status_success);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************

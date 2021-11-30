@@ -92,7 +92,7 @@ XBSYSAPI EXPORTNUM(9) xbox::ntstatus_xt NTAPI xbox::HalReadSMCTrayState
 	DWORD orig_TrayCount = g_TrayCount;
 	KfLowerIrql(orig_irql);
 
-	NTSTATUS ret = xbox::status_success;
+	NTSTATUS ret = X_STATUS_SUCCESS;
 	if (TrayState == INIT_TRAY_STATE) {
 		ret = HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_TRAY_STATE, 0, (PULONG)&TrayState);
 		// If bit 31 = 1, then there is an error so do not execute this code.
@@ -276,7 +276,7 @@ XBSYSAPI EXPORTNUM(45) xbox::ntstatus_xt NTAPI xbox::HalReadSMBusValue
 
 	// TODO : Prevent interrupts
 
-	NTSTATUS Status = xbox::status_success;
+	NTSTATUS Status = X_STATUS_SUCCESS;
 
 	// ergo720: the or 1 on the address is necessary because I have seen that UnleashX and RDX dashboard pass 0x20 instead of the
 	// expected 0x21 to this function when reading cpu and m/b temperatures
@@ -291,7 +291,7 @@ XBSYSAPI EXPORTNUM(45) xbox::ntstatus_xt NTAPI xbox::HalReadSMBusValue
 
 	// Check if the command was executed successfully
 	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) & GS_PRERR_STS) {
-		Status = xbox::status_unsuccessful;
+		Status = X_STATUS_UNSUCCESSFUL;
 	}
 	else {
 		*DataValue = g_SMBus->IORead(1, SMB_HOST_DATA);
@@ -628,7 +628,7 @@ XBSYSAPI EXPORTNUM(50) xbox::ntstatus_xt NTAPI xbox::HalWriteSMBusValue
 
 	// TODO : Prevent interrupts
 
-	NTSTATUS Status = xbox::status_success;
+	NTSTATUS Status = X_STATUS_SUCCESS;
 
 	g_SMBus->IOWrite(1, SMB_HOST_ADDRESS, Address);
 	g_SMBus->IOWrite(1, SMB_HOST_COMMAND, Command);
@@ -643,7 +643,7 @@ XBSYSAPI EXPORTNUM(50) xbox::ntstatus_xt NTAPI xbox::HalWriteSMBusValue
 
 	// Check if the command was executed successfully
 	if (g_SMBus->IORead(1, SMB_GLOBAL_STATUS) & GS_PRERR_STS) {
-		Status = xbox::status_unsuccessful;
+		Status = X_STATUS_UNSUCCESSFUL;
 	}
 
 	// TODO : Reenable interrupts
@@ -836,7 +836,7 @@ XBSYSAPI EXPORTNUM(365) xbox::void_xt NTAPI xbox::HalEnableSecureTrayEject
 		do {
             // TODO: Implement SMC_COMMAND_RESET_ON_EJECT in the SMC.
 			retcode = HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_RESET_ON_EJECT, write_word, disable_reset_on_eject);
-		} while (retcode != xbox::status_success);
+		} while (retcode != X_STATUS_SUCCESS);
 	}
 }
 
