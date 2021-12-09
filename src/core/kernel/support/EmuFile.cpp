@@ -463,7 +463,7 @@ bool EmuHandle::IsEmuHandle(HANDLE Handle)
 NTSTATUS EmuHandle::NtDuplicateObject(PHANDLE TargetHandle, DWORD Options)
 {
 	*TargetHandle = NtObject->NtDuplicateObject(Options)->NewHandle();
-	return xbox::status_success;
+	return X_STATUS_SUCCESS;
 }
 
 EmuNtObject::EmuNtObject()
@@ -483,7 +483,7 @@ NTSTATUS EmuNtObject::NtClose()
 		delete this;
 	}
 
-	return xbox::status_success;
+	return X_STATUS_SUCCESS;
 }
 
 EmuNtObject* EmuNtObject::NtDuplicateObject(DWORD Options)
@@ -698,7 +698,7 @@ NTSTATUS CxbxConvertFilePath(
 	// Convert the relative path to unicode
 	RelativeHostPath = string_to_wstring(RelativePath);
 
-	return xbox::status_success;
+	return X_STATUS_SUCCESS;
 }
 
 NTSTATUS CxbxObjectAttributesToNT(
@@ -711,7 +711,7 @@ NTSTATUS CxbxObjectAttributesToNT(
 	{
 		// When the pointer is nil, make sure we pass nil to Windows too :
 		nativeObjectAttributes.NtObjAttrPtr = nullptr;
-		return xbox::status_success;
+		return X_STATUS_SUCCESS;
 	}
 
 	// Pick up the ObjectName, and let's see what to make of it :
@@ -743,7 +743,7 @@ NTSTATUS CxbxObjectAttributesToNT(
 	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
 	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
 
-	return xbox::status_success;
+	return X_STATUS_SUCCESS;
 }
 
 int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath)
@@ -853,14 +853,14 @@ xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::stri
 	
 	// If symbolic link exist, return object name collsion. Do NOT delete existing symlink object!
 	if (SymbolicLinkObject != NULL) {
-		return xbox::status_object_name_collision;
+		return X_STATUS_OBJECT_NAME_COLLISION;
 	}
 
 	// Now (re)create a symbolic link object, and initialize it with the new definition :
 	SymbolicLinkObject = new EmuNtSymbolicLinkObject();
 	result = SymbolicLinkObject->Init(SymbolicLinkName, FullPath);
 
-	if (result != xbox::status_success) {
+	if (result != X_STATUS_SUCCESS) {
 		SymbolicLinkObject->NtClose();
 	}
 	// TODO: Remove whole else if statement below, see g_hCurDir_hack's comment for remark.
@@ -888,7 +888,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 	DriveLetter = SymbolicLinkToDriveLetter(aSymbolicLinkName);
 	if (DriveLetter >= 'A' && DriveLetter <= 'Z')
 	{
-		result = xbox::status_object_name_collision;
+		result = X_STATUS_OBJECT_NAME_COLLISION;
 		if (FindNtSymbolicLinkObjectByDriveLetter(DriveLetter) == NULL)
 		{
 			// Look up the partition in the list of pre-registered devices :
@@ -913,7 +913,7 @@ NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::strin
 
 			if (DeviceIndex >= 0)
 			{
-				result = xbox::status_success;
+				result = X_STATUS_SUCCESS;
 				SymbolicLinkName = aSymbolicLinkName;
 				if (IsHostBasedPath) {
 					// Handle the case where a sub folder of the partition is mounted (instead of it's root) :
@@ -1100,8 +1100,8 @@ NTSTATUS _ConvertXboxNameInfo(NtDll::FILE_NAME_INFORMATION *ntNameInfo, xbox::FI
 
 	// Return the appropriate result depending on whether the string was fully copied
 	return convertedChars == ntNameInfo->FileNameLength / sizeof(NtDll::WCHAR)
-		? xbox::status_success
-		: xbox::status_buffer_overflow;
+		? X_STATUS_SUCCESS
+		: X_STATUS_BUFFER_OVERFLOW;
 }
 
 // ----------------------------------------------------------------------------
@@ -1116,7 +1116,7 @@ NTSTATUS _NTToXboxNetOpenInfo(NtDll::FILE_NETWORK_OPEN_INFORMATION *ntNetOpenInf
 	// Fix up attributes
 	xboxNetOpenInfo->FileAttributes &= FILE_ATTRIBUTE_VALID_FLAGS;
 
-	return xbox::status_success;
+	return X_STATUS_SUCCESS;
 }
 
 NTSTATUS _NTToXboxBasicInfo(NtDll::FILE_BASIC_INFORMATION *ntBasicInfo, xbox::FILE_BASIC_INFORMATION *xboxBasicInfo, ULONG Length)
@@ -1126,7 +1126,7 @@ NTSTATUS _NTToXboxBasicInfo(NtDll::FILE_BASIC_INFORMATION *ntBasicInfo, xbox::FI
 
 	_ConvertXboxBasicInfo(xboxBasicInfo);
 
-	return xbox::status_success;
+	return X_STATUS_SUCCESS;
 }
 
 NTSTATUS _NTToXboxNameInfo(NtDll::FILE_NAME_INFORMATION *ntNameInfo, xbox::FILE_NAME_INFORMATION *xboxNameInfo, ULONG Length)
@@ -1218,7 +1218,7 @@ NTSTATUS NTToXboxFileInformation
 	//   FileStandardInformation
 	//   FileReparsePointInformation
 
-	NTSTATUS result = xbox::status_success;
+	NTSTATUS result = X_STATUS_SUCCESS;
 
 	switch (FileInformationClass)
 	{
@@ -1302,7 +1302,7 @@ NTSTATUS NTToXboxFileInformation
 		{
 			// No differences between structs; a simple copy should suffice
 			memcpy_s(xboxFileInformation, Length, nativeFileInformation, Length);
-			result = xbox::status_success;
+			result = X_STATUS_SUCCESS;
 			break;
 		}
 	}
@@ -1546,7 +1546,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_ADDRESS_CLOSED);
 		_CASE(STATUS_ADDRESS_NOT_ASSOCIATED);
 		_CASE(STATUS_AGENTS_EXHAUSTED);
-		_CASE(xbox::status_alerted);
+		_CASE(X_STATUS_ALERTED);
 		_CASE(STATUS_ALIAS_EXISTS);
 		_CASE(STATUS_ALLOCATE_BUCKET);
 		_CASE(STATUS_ALLOTTED_SPACE_EXCEEDED);
@@ -1582,8 +1582,8 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_BIOS_FAILED_TO_CONNECT_INTERRUPT);
 		_CASE(STATUS_BREAKPOINT);
 		_CASE(STATUS_BUFFER_ALL_ZEROS);
-		_CASE(xbox::status_buffer_overflow);
-		_CASE(xbox::status_buffer_too_small);
+		_CASE(X_STATUS_BUFFER_OVERFLOW);
+		_CASE(X_STATUS_BUFFER_TOO_SMALL);
 		_CASE(STATUS_BUS_RESET);
 		_CASE(STATUS_CACHE_PAGE_LOCKED);
 		_CASE(STATUS_CANCELLED);
@@ -1602,7 +1602,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_CLIENT_SERVER_PARAMETERS_INVALID);
 		_CASE(STATUS_COMMITMENT_LIMIT);
 		_CASE(STATUS_COMMITMENT_MINIMUM);
-		_CASE(xbox::status_conflicting_addresses);
+		_CASE(X_STATUS_CONFLICTING_ADDRESSES);
 		_CASE(STATUS_CONNECTION_ABORTED);
 		_CASE(STATUS_CONNECTION_ACTIVE);
 		_CASE(STATUS_CONNECTION_COUNT_LIMIT);
@@ -1788,7 +1788,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_FLOPPY_VOLUME);
 		_CASE(STATUS_FLOPPY_WRONG_CYLINDER);
 		_CASE(STATUS_FOUND_OUT_OF_SCOPE);
-		_CASE(xbox::status_free_vm_not_at_base);
+		_CASE(X_STATUS_FREE_VM_NOT_AT_BASE);
 		_CASE(STATUS_FS_DRIVER_REQUIRED);
 		_CASE(STATUS_FT_MISSING_MEMBER);
 		_CASE(STATUS_FT_ORPHANING);
@@ -1824,7 +1824,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_INSTRUCTION_MISALIGNMENT);
 		_CASE(STATUS_INSUFFICIENT_LOGON_INFO);
 		_CASE(STATUS_INSUFFICIENT_POWER);
-		_CASE(xbox::status_insufficient_resources);
+		_CASE(X_STATUS_INSUFFICIENT_RESOURCES);
 		_CASE(STATUS_INSUFF_SERVER_RESOURCES);
 		_CASE(STATUS_INTEGER_DIVIDE_BY_ZERO);
 		_CASE(STATUS_INTEGER_OVERFLOW);
@@ -1853,7 +1853,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_INVALID_HANDLE);
 		_CASE(STATUS_INVALID_HW_PROFILE);
 		_CASE(STATUS_INVALID_ID_AUTHORITY);
-		_CASE(xbox::status_invalid_image_format);
+		_CASE(X_STATUS_INVALID_IMAGE_FORMAT);
 		_CASE(STATUS_INVALID_IMAGE_LE_FORMAT);
 		_CASE(STATUS_INVALID_IMAGE_NE_FORMAT);
 		_CASE(STATUS_INVALID_IMAGE_NOT_MZ);
@@ -1871,13 +1871,13 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_INVALID_NETWORK_RESPONSE);
 		_CASE(STATUS_INVALID_OPLOCK_PROTOCOL);
 		_CASE(STATUS_INVALID_OWNER);
-		_CASE(xbox::status_invalid_page_protection);
+		_CASE(X_STATUS_INVALID_PAGE_PROTECTION);
 		_CASE(STATUS_INVALID_PARAMETER);
 		_CASE(STATUS_INVALID_PARAMETER_1);
 		_CASE(STATUS_INVALID_PARAMETER_10);
 		_CASE(STATUS_INVALID_PARAMETER_11);
 		_CASE(STATUS_INVALID_PARAMETER_12);
-		_CASE(xbox::status_invalid_parameter_2);
+		_CASE(X_STATUS_INVALID_PARAMETER_2);
 		_CASE(STATUS_INVALID_PARAMETER_3);
 		_CASE(STATUS_INVALID_PARAMETER_4);
 		_CASE(STATUS_INVALID_PARAMETER_5);
@@ -1955,14 +1955,14 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_MEMBER_IN_GROUP);
 		_CASE(STATUS_MEMBER_NOT_IN_ALIAS);
 		_CASE(STATUS_MEMBER_NOT_IN_GROUP);
-		_CASE(xbox::status_memory_not_allocated);
+		_CASE(X_STATUS_MEMORY_NOT_ALLOCATED);
 		_CASE(STATUS_MESSAGE_NOT_FOUND);
 		_CASE(STATUS_MISSING_SYSTEMFILE);
 		_CASE(STATUS_MORE_ENTRIES);
 		_CASE(STATUS_MORE_PROCESSING_REQUIRED);
 		_CASE(STATUS_MP_PROCESSOR_MISMATCH);
 		_CASE(STATUS_MULTIPLE_FAULT_VIOLATION);
-		_CASE(xbox::status_mutant_limit_exceeded);
+		_CASE(X_STATUS_MUTANT_LIMIT_EXCEEDED);
 		_CASE(STATUS_MUTANT_NOT_OWNED);
 		_CASE(STATUS_MUTUAL_AUTHENTICATION_FAILED);
 		_CASE(STATUS_NAME_TOO_LONG);
@@ -1987,7 +1987,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_NOT_A_DIRECTORY);
 		_CASE(STATUS_NOT_A_REPARSE_POINT);
 		_CASE(STATUS_NOT_CLIENT_SESSION);
-		_CASE(xbox::status_not_committed);
+		_CASE(X_STATUS_NOT_COMMITTED);
 		_CASE(STATUS_NOT_EXPORT_FORMAT);
 		_CASE(STATUS_NOT_FOUND);
 		_CASE(STATUS_NOT_IMPLEMENTED);
@@ -2016,7 +2016,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_NO_MATCH);
 		_CASE(STATUS_NO_MEDIA);
 		_CASE(STATUS_NO_MEDIA_IN_DEVICE);
-		_CASE(xbox::status_no_memory);
+		_CASE(X_STATUS_NO_MEMORY);
 		_CASE(STATUS_NO_MORE_EAS);
 		_CASE(STATUS_NO_MORE_ENTRIES);
 		_CASE(STATUS_NO_MORE_FILES);
@@ -2046,10 +2046,10 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_NT_CROSS_ENCRYPTION_REQUIRED);
 		_CASE(STATUS_NULL_LM_PASSWORD);
 		_CASE(STATUS_OBJECTID_EXISTS);
-		_CASE(xbox::status_object_name_collision);
+		_CASE(X_STATUS_OBJECT_NAME_COLLISION);
 		_CASE(STATUS_OBJECT_NAME_EXISTS);
 		_CASE(STATUS_OBJECT_NAME_INVALID);
-		_CASE(xbox::status_object_name_not_found);
+		_CASE(X_STATUS_OBJECT_NAME_NOT_FOUND);
 		_CASE(STATUS_OBJECT_PATH_INVALID);
 		_CASE(STATUS_OBJECT_PATH_NOT_FOUND);
 		_CASE(STATUS_OBJECT_PATH_SYNTAX_BAD);
@@ -2074,7 +2074,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_PASSWORD_MUST_CHANGE);
 		_CASE(STATUS_PASSWORD_RESTRICTION);
 		_CASE(STATUS_PATH_NOT_COVERED);
-		_CASE(xbox::status_pending);
+		_CASE(X_STATUS_PENDING);
 		_CASE(STATUS_PIPE_BROKEN);
 		_CASE(STATUS_PIPE_BUSY);
 		_CASE(STATUS_PIPE_CLOSING);
@@ -2169,7 +2169,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_SECTION_PROTECTION);
 		_CASE(STATUS_SECTION_TOO_BIG);
 		_CASE(STATUS_SEGMENT_NOTIFICATION);
-		_CASE(xbox::status_semaphore_limit_exceeded);
+		_CASE(X_STATUS_SEMAPHORE_LIMIT_EXCEEDED);
 		_CASE(STATUS_SERIAL_COUNTER_TIMEOUT);
 		_CASE(STATUS_SERIAL_MORE_WRITES);
 		_CASE(STATUS_SERIAL_NO_DEVICE_INITED);
@@ -2191,7 +2191,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_SPECIAL_USER);
 		_CASE(STATUS_STACK_OVERFLOW);
 		_CASE(STATUS_STACK_OVERFLOW_READ);
-		_CASE(xbox::status_success);
+		_CASE(X_STATUS_SUCCESS);
 		_CASE(STATUS_SUSPEND_COUNT_EXCEEDED);
 		_CASE(STATUS_SYNCHRONIZATION_REQUIRED);
 		_CASE(STATUS_SYSTEM_IMAGE_BAD_SIGNATURE);
@@ -2202,7 +2202,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_TIMEOUT);
 		_CASE(STATUS_TIMER_NOT_CANCELED);
 		_CASE(STATUS_TIMER_RESOLUTION_NOT_SET);
-		_CASE(xbox::status_timer_resume_ignored);
+		_CASE(X_STATUS_TIMER_RESUME_IGNORED);
 		_CASE(STATUS_TIME_DIFFERENCE_AT_DC);
 		_CASE(STATUS_TOKEN_ALREADY_IN_USE);
 		_CASE(STATUS_TOO_LATE);
@@ -2216,7 +2216,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_TOO_MANY_NODES);
 		_CASE(STATUS_TOO_MANY_OPENED_FILES);
 		_CASE(STATUS_TOO_MANY_PAGING_FILES);
-		_CASE(xbox::status_too_many_secrets);
+		_CASE(X_STATUS_TOO_MANY_SECRETS);
 		_CASE(STATUS_TOO_MANY_SESSIONS);
 		_CASE(STATUS_TOO_MANY_SIDS);
 		_CASE(STATUS_TOO_MANY_THREADS);
@@ -2234,7 +2234,7 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_TRUST_FAILURE);
 		_CASE(STATUS_UNABLE_TO_DECOMMIT_VM);
 		_CASE(STATUS_UNABLE_TO_DELETE_SECTION);
-		_CASE(xbox::status_unable_to_free_vm);
+		_CASE(X_STATUS_UNABLE_TO_FREE_VM);
 		_CASE(STATUS_UNABLE_TO_LOCK_MEDIA);
 		_CASE(STATUS_UNABLE_TO_UNLOAD_MEDIA);
 		_CASE(STATUS_UNDEFINED_CHARACTER);
@@ -2246,12 +2246,12 @@ CHAR* NtStatusToString(IN NTSTATUS Status)
 		_CASE(STATUS_UNHANDLED_EXCEPTION);
 		_CASE(STATUS_UNKNOWN_REVISION);
 		_CASE(STATUS_UNMAPPABLE_CHARACTER);
-		_CASE(xbox::status_unrecognized_media);
+		_CASE(X_STATUS_UNRECOGNIZED_MEDIA);
 		_CASE(STATUS_UNRECOGNIZED_VOLUME);
-		_CASE(xbox::status_unsuccessful);
+		_CASE(X_STATUS_UNSUCCESSFUL);
 		_CASE(STATUS_UNSUPPORTED_COMPRESSION);
 		_CASE(STATUS_UNWIND);
-		_CASE(xbox::status_user_apc);
+		_CASE(X_STATUS_USER_APC);
 		_CASE(STATUS_USER_EXISTS);
 		_CASE(STATUS_USER_MAPPED_FILE);
 		_CASE(STATUS_USER_SESSION_DELETED);

@@ -4033,8 +4033,6 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 	static X_D3DSurface *pXboxBackBuffer = EmuNewD3DSurface();
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
 
-	 xbox::status_success;
-
 	 if (BackBuffer == -1) {
 		 BackBuffer = 0;
 	 }

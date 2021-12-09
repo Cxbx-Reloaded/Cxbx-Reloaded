@@ -121,7 +121,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
         if (dwFlags & 1) { // load from xbe section. Test case: Halo 2
             PXBEIMAGE_SECTION pSection = CxbxKrnl_Xbe->FindSection<true>(pszImageName);
             if (pSection != nullptr) {
-                if (XeLoadSection(pSection) == xbox::status_success) {
+                if (XeLoadSection(pSection) == X_STATUS_SUCCESS) {
                     result = xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)(zeroptr, pSection->VirtualAddress, pSection->VirtualSize, pImageLoc, ppImageDesc);
                     XeUnloadSection(pSection);
                 }
@@ -151,10 +151,10 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
             if (NtStatusCreateFile < 0) {
                 //ULONG DOSERRORNtCreateFile=RtlNtStatusToDosError(NtStatusCreateFile);
                 EmuLog(LOG_LEVEL::WARNING, "%s: Image file NtCreateFile() error", __func__);
-                if (NtStatusCreateFile == status_object_name_collision) {
+                if (NtStatusCreateFile == X_STATUS_OBJECT_NAME_COLLISION) {
                     EmuLog(LOG_LEVEL::WARNING, "%s: Image file name collision", __func__);
                 }
-                else if (NtStatusCreateFile == status_file_is_a_directory) {
+                else if (NtStatusCreateFile == X_STATUS_FILE_IS_A_DIRECTORY) {
                     EmuLog(LOG_LEVEL::WARNING, "%s: Image file name is a directory or invalid", __func__);
                 }
                 hFile= INVALID_HANDLE_VALUE;
@@ -193,11 +193,11 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
                         zeroptr); // ByteOffset OPTIONAL
 
                     DWORD dwBytesRead = 0;
-                    if (NtStatusReadFile == status_pending) {
+                    if (NtStatusReadFile == X_STATUS_PENDING) {
                         NtStatusReadFile = NtWaitForSingleObject(hFile, 0, 0);
                         if (NtStatusReadFile < 0){ //something wrong
                             EmuLog(LOG_LEVEL::WARNING, "%s: Image file NtReadFile error", __func__);
-                            if (NtStatusReadFile != status_end_of_file) {
+                            if (NtStatusReadFile != X_STATUS_END_OF_FILE) {
                                 if ((NtStatusReadFile & 0xC0000000) == 0x80000000) { //Error happened during file reading
                                     dwBytesRead = io_status_block.Information;
                                     EmuLog(LOG_LEVEL::WARNING, "%s: NtReadFile read file end", __func__);
