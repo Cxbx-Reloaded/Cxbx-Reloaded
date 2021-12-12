@@ -551,7 +551,15 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XGetDevices)
 
 	g_bXppGuard = true;
 
-	if (g_bIsDevicesInitializing || g_bIsDevicesEmulating) {
+	// When simulating the initialization lag of XInitDevices, always report no devices to simulate the USB enumeration process
+	// Test case: Star Wars Jedi Knight: Jedi Academy
+	if (g_bIsDevicesInitializing) {
+		g_bXppGuard = false;
+		RETURN(0);
+	}
+
+	// Happens during device hotplug, report the last known connectivity status
+	if (g_bIsDevicesEmulating) {
 		g_bXppGuard = false;
 		RETURN(DeviceType->CurrentConnected);
 	}
