@@ -338,7 +338,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform_0,                           ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform_0__LTCG_eax1_edx2,           ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                       );  \
@@ -4360,7 +4360,7 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 
 // LTCG specific D3DDevice_SetShaderConstantMode function...
 // This uses a custom calling convention where parameter is passed in EAX
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0__LTCG_eax1)
 (
 )
 {
@@ -6738,7 +6738,7 @@ static thread_local uint32_t setTransformCount = 0;
 
 // Naked functions must not contain objects that would require unwinding
 // so we cheat a bit by stashing the function body in a separate function
-static void D3DDevice_SetTransform_0
+static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 (
 	xbox::X_D3DTRANSFORMSTATETYPE State,
     CONST D3DMATRIX *pMatrix
@@ -6755,13 +6755,13 @@ static void D3DDevice_SetTransform_0
         // Trampoline to guest code to remove the need for a GetTransform patch
         mov  eax, State
         mov  edx, pMatrix
-        call XB_TRMP(D3DDevice_SetTransform_0)
+        call XB_TRMP(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
     }
 
 	CxbxImpl_SetTransform(State, pMatrix);
 }
 
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
 (
 )
 {
@@ -6774,7 +6774,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0)
     }
 
 	// Log + implementation
-    D3DDevice_SetTransform_0(State, pMatrix);
+	D3DDevice_SetTransform_0__LTCG_eax1_edx2(State, pMatrix);
 
     __asm {
         LTCG_EPILOGUE
