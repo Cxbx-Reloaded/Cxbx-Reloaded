@@ -300,6 +300,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0,                     ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                              );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                        );  \
+    XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                        );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetDepthStencilSurface,                   (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetDepthStencilSurface2,                  (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetDisplayMode,                           (xbox::X_D3DDISPLAYMODE*)                                                                             );  \
@@ -3983,18 +3984,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
 	free(pGammaRamp);
 }
 
-// ******************************************************************
-// * patch: D3DDevice_GetBackBuffer2
-// ******************************************************************
+
 #define COPY_BACKBUFFER_TO_XBOX_SURFACE // Uncomment to enable writing Host Backbuffers back to Xbox surfaces
-xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
+xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 (
-    int_xt                 BackBuffer
+    xbox::int_xt BackBuffer
 )
 {
-	LOG_FUNC_ONE_ARG(BackBuffer);
-
-	X_D3DSurface* pXboxBackBuffer = nullptr;
+	xbox::X_D3DSurface* pXboxBackBuffer = nullptr;
 
 
 #ifndef COPY_BACKBUFFER_TO_XBOX_SURFACE
@@ -4068,8 +4065,15 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 	if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
 		XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
 	}
-	else {
+	else if (XB_TRMP(D3DDevice_GetBackBuffer2) != nullptr) {
 		pXboxBackBuffer = XB_TRMP(D3DDevice_GetBackBuffer2)(BackBuffer);
+	}
+	else {
+		__asm {
+			mov  eax, BackBuffer
+			call XB_TRMP(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
+			mov pXboxBackBuffer, eax
+		}
 	}
 
 	// Now pXboxBackbuffer points to the requested Xbox backbuffer
@@ -4119,6 +4123,50 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 }
 
 // ******************************************************************
+// * patch: D3DDevice_GetBackBuffer2
+// ******************************************************************
+xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
+(
+	int_xt                 BackBuffer
+	)
+{
+	LOG_FUNC_ONE_ARG(BackBuffer);
+
+	return CxbxrImpl_GetBackBuffer2(BackBuffer);
+}
+
+static void D3DDevice_GetBackBuffer2_0__LTCG_eax1(xbox::int_xt BackBuffer)
+{
+	LOG_FUNC_ONE_ARG(BackBuffer);
+}
+
+// LTCG specific GetBackBuffer2 function...
+// This uses a custom calling convention where parameter is passed in EAX
+__declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
+(
+)
+{
+
+	int_xt BackBuffer;
+	xbox::X_D3DSurface* pBackBuffer;
+	__asm {
+		LTCG_PROLOGUE
+		mov  BackBuffer, eax
+	}
+
+	// Log
+	D3DDevice_GetBackBuffer2_0__LTCG_eax1(BackBuffer);
+
+	pBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
+
+	__asm {
+		mov  eax, pBackBuffer
+		LTCG_EPILOGUE
+		ret
+	}
+}
+
+// ******************************************************************
 // * patch: D3DDevice_GetBackBuffer
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
@@ -4130,7 +4178,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
 {
 	LOG_FORWARD("D3DDevice_GetBackBuffer2");
 
-    *ppBackBuffer = EMUPATCH(D3DDevice_GetBackBuffer2)(BackBuffer);
+    *ppBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
 }
 
 bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr)

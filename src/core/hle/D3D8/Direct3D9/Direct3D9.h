@@ -321,6 +321,8 @@ X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetBackBuffer2)
     int_xt                 BackBuffer
 );
 
+X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1)();
+
 // ******************************************************************
 // * patch: D3DDevice_GetBackBuffer
 // ******************************************************************
