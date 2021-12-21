@@ -22,10 +22,6 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/XbSymbolDatabase")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/SDL2" EXCLUDE_FROM_ALL)
 
-if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
- add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/cs_x86")
-endif()
-
 # Cxbx-Reloaded projects
 set(CXBXR_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 

@@ -13,6 +13,12 @@ add_compile_options(
  /langversion:6
 )
 
+# First, we must define .NET Framework version before include cs_x86's projects.
+# Which then will pass down version we want unified.
+set(DOTNET_TARGET_FRAMEWORK_VERSION "v4.8")
+
+add_subdirectory("${CXBXR_ROOT_DIR}/import/cs_x86" "${CMAKE_BINARY_DIR}/import/cs_x86")
+
 set(CXBXR_DEBUGGER_SRC_DIR "${CXBXR_ROOT_DIR}/src/CxbxDebugger")
 
 file (GLOB SOURCES
@@ -128,16 +134,15 @@ source_group(TREE ${CXBXR_ROOT_DIR} FILES ${SOURCES})
 add_executable(cxbxr-debugger WIN32 ${SOURCES} ${PROPERTIES} #Test WIN32 like cxbx does if doesn't need compile option set
 )
 
-set_target_properties(cxbxr-debugger PROPERTIES 
+set_target_properties(cxbxr-debugger PROPERTIES
  VS_DOTNET_REFERENCES
  "Microsoft.CSharp;System;System.Core;System.Data;System.Data.DataSetExtensions;System.Deployment;System.Drawing;System.Windows;System.Windows.Forms;System.Xml;System.Xml.Linq;System.Net.Http"
  VS_GLOBAL_ApplicationIcon "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx-R.ico"
- 
- VS_GLOBAL_ROOTNAMESPACE "CxbxDebugger"
- 
-)
 
-set_property(TARGET cxbxr-debugger PROPERTY DOTNET_TARGET_FRAMEWORK_VERSION "v4.5")
+ VS_GLOBAL_ROOTNAMESPACE "CxbxDebugger"
+
+ DOTNET_TARGET_FRAMEWORK_VERSION ${DOTNET_TARGET_FRAMEWORK_VERSION}
+)
 
 target_link_libraries(cxbxr-debugger cs_x86)
 
