@@ -183,6 +183,8 @@ static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGE
 xbox::X_D3DVIEWPORT8 g_Xbox_Viewport = { 0 };
 float g_Xbox_BackbufferScaleX = 1;
 float g_Xbox_BackbufferScaleY = 1;
+xbox::X_D3DSWAP g_LastD3DSwap = (xbox::X_D3DSWAP) -1;
+
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
 
@@ -2960,6 +2962,12 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 		return;
 	}
 
+	if (g_LastD3DSwap == xbox::X_D3DSWAP_COPY) {
+		// HACK: Pretend we are drawing to the frontbuffer
+		// by disabling scale factors.
+		return;
+	}
+
 	// Example:
 	// NFS HP2 renders in-game at 640*480
 	// The title uses MSAA, which increases the rendertarget size, but leaves the screen scale unaffected
@@ -5197,17 +5205,33 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 {
 	LOG_FUNC_ONE_ARG(Flags);
 
-	// TODO: Ensure this flag is always the same across library versions
-	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
-		LOG_TEST_CASE("D3DDevice_Swap: Flags != 0");
+	// Handle swap flags
+	// We don't maintain a swap chain, and draw everything to backbuffer 0
+	// so just hack around the swap flags for now...
+	static float prevBackBufferScaleX;
+	if (Flags == X_D3DSWAP_BYPASSCOPY) {
+		// Test case: MotoGp2
+		// Title handles copying to the frontbuffer itself, but we don't keep track of one
+		// MotoGp2 seems to copy a black rectangle over the backbuffer
+		// HACK: Effectively disable drawing - so the title can't copy anything around via draws
+		// and we just have to hope the title leaves the backbuffer untouched...
+		prevBackBufferScaleX = g_Xbox_BackbufferScaleX;
+		g_Xbox_BackbufferScaleX = 0;
+	}
+	else if (g_LastD3DSwap == X_D3DSWAP_BYPASSCOPY) {
+		g_Xbox_BackbufferScaleX = prevBackBufferScaleX;
+	}
 
-	// TODO handle swap flags
-	if (Flags & X_D3DSWAP_COPY) {
-		// This flag resets the backbuffer scale?
-		// Test case: Antialias sample, Backbufferscale use this flag
-		// Test case: Need for Speed: Hot Pursuit 2 does not, but uses backbufferscale
-		g_Xbox_BackbufferScaleX = 1;
-		g_Xbox_BackbufferScaleY = 1;
+	g_LastD3DSwap = (xbox::X_D3DSWAP)Flags;
+
+	// Early exit if we're not ready to present
+	// Test Case: Antialias sample, BackBufferScale sample
+	// Which use D3DSWAP_COPY to render UI directly to the frontbuffer
+	// If we present before the UI is drawn, it will flicker
+	if (Flags != X_D3DSWAP_DEFAULT && !(Flags & X_D3DSWAP_FINISH)) {
+		if (Flags == X_D3DSWAP_COPY) { LOG_TEST_CASE("X_D3DSWAP_COPY"); }
+		if (Flags == X_D3DSWAP_BYPASSCOPY) { LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY"); }
+		return g_Xbox_SwapData.Swap;
 	}
 
 	// Fetch the host backbuffer
