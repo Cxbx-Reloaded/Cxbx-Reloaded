@@ -698,7 +698,7 @@ NTSTATUS CxbxConvertFilePath(
 	// Convert the relative path to unicode
 	RelativeHostPath = string_to_wstring(RelativePath);
 
-	return X_STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 NTSTATUS CxbxObjectAttributesToNT(
@@ -711,7 +711,7 @@ NTSTATUS CxbxObjectAttributesToNT(
 	{
 		// When the pointer is nil, make sure we pass nil to Windows too :
 		nativeObjectAttributes.NtObjAttrPtr = nullptr;
-		return X_STATUS_SUCCESS;
+		return STATUS_SUCCESS;
 	}
 
 	// Pick up the ObjectName, and let's see what to make of it :
@@ -743,7 +743,7 @@ NTSTATUS CxbxObjectAttributesToNT(
 	// ObjectAttributes are given, so make sure the pointer we're going to pass to Windows is assigned :
 	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
 
-	return X_STATUS_SUCCESS;
+	return STATUS_SUCCESS;
 }
 
 int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath)

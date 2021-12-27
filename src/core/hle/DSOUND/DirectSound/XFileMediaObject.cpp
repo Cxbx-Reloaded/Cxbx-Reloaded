@@ -133,7 +133,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XAudioDownloadEffectsImage)
             ANSI_STRING file_name;
             IO_STATUS_BLOCK io_status_block;
             RtlInitAnsiString(&file_name, pszImageName);
-            XB_InitializeObjectAttributes(&obj, &file_name, obj_case_insensitive, ObDosDevicesDirectory());
+            X_InitializeObjectAttributes(&obj, &file_name, OBJ_CASE_INSENSITIVE, ObDosDevicesDirectory());
 
             HANDLE hFile;
             ntstatus_xt NtStatusCreateFile = NtCreateFile(

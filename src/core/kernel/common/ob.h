@@ -35,8 +35,6 @@ typedef struct _OBJECT_HEADER_NAME_INFO {
 	OBJECT_STRING Name;
 } OBJECT_HEADER_NAME_INFO, *POBJECT_HEADER_NAME_INFO;
 
-inline constexpr dword_xt obj_case_insensitive = 0x40;
-
 #define ObDosDevicesDirectory()         ((HANDLE)-3)
 #define ObWin32NamedObjectsDirectory()  ((HANDLE)-4)
 
@@ -53,6 +51,15 @@ inline constexpr dword_xt obj_case_insensitive = 0x40;
 #define OB_FLAG_NAMED_OBJECT            0x01
 #define OB_FLAG_PERMANENT_OBJECT        0x02
 #define OB_FLAG_ATTACHED_OBJECT         0x04
+
+#define OBJ_INHERIT             0x00000002L
+#define OBJ_PERMANENT           0x00000010L
+#define OBJ_EXCLUSIVE           0x00000020L
+#define OBJ_CASE_INSENSITIVE    0x00000040L
+#define OBJ_OPENIF              0x00000080L
+#define OBJ_OPENLINK            0x00000100L
+#define OBJ_KERNEL_HANDLE       0x00000200L
+#define OBJ_VALID_ATTRIBUTES    0x000003F2L
 
 #define OBJECT_TO_OBJECT_HEADER(Object) CONTAINING_RECORD(Object, OBJECT_HEADER, Body)
 #define OBJECT_TO_OBJECT_HEADER_NAME_INFO(Object) ((POBJECT_HEADER_NAME_INFO)OBJECT_TO_OBJECT_HEADER(Object) - 1)
@@ -75,7 +82,8 @@ ntstatus_xt ObpReferenceObjectByName(
 	OUT PVOID *ReturnedObject
 );
 
-#define XB_InitializeObjectAttributes(p, n, a, r){\
+// Avoid a conflict with the InitializeObjectAttributes macro imported by the windows headers
+#define X_InitializeObjectAttributes(p, n, a, r){\
 	(p)->RootDirectory = r;   \
 	(p)->Attributes = a;      \
 	(p)->ObjectName = n;      \
@@ -86,7 +94,10 @@ boolean_xt ObpExtendObjectHandleTable();
 void_xt ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName);
 PVOID ObpGetObjectHandleContents(HANDLE Handle);
 PVOID ObpGetObjectHandleReference(HANDLE Handle);
-ulong_xt FASTCALL ObpComputeHashIndex(IN POBJECT_STRING ElementName);
+ulong_xt FASTCALL ObpComputeHashIndex(POBJECT_STRING ElementName);
+PVOID ObpDestroyObjectHandle(HANDLE Handle);
+void_xt ObpDetachNamedObject(PVOID Object, KIRQL OldIrql);
+ntstatus_xt ObpClose(HANDLE Handle);
 
 boolean_xt ObpLookupElementNameInDirectory(
 	IN POBJECT_DIRECTORY Directory,
