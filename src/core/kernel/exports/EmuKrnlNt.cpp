@@ -917,9 +917,7 @@ XBSYSAPI EXPORTNUM(201) xbox::ntstatus_xt NTAPI xbox::NtOpenDirectoryObject
 {
 	LOG_FORWARD("ObOpenObjectByName");
 
-	xbox::ntstatus_xt status = ObOpenObjectByName(ObjectAttributes, &ObDirectoryObjectType, NULL, DirectoryHandle);
-	RegisterXboxHandle(*DirectoryHandle, NULL); // we don't need to create a native handle for a directory object
-	return status;
+	return ObOpenObjectByName(ObjectAttributes, &ObDirectoryObjectType, NULL, DirectoryHandle);
 }
 
 // ******************************************************************

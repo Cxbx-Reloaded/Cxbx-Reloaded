@@ -929,12 +929,15 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 
 	ntstatus_xt result = X_STATUS_OBJECT_PATH_NOT_FOUND;
 
-	if (const auto &nativeHandle = GetNativeHandle(Handle)) {
-		// This was a handle created by Ob
+	if (ObjectType == &ObDirectoryObjectType) {
+		// Directory objects are currently handled by Ob
 		PVOID Object;
 		result = ObpReferenceObjectByName(ObjectAttributes->RootDirectory, ObjectAttributes->ObjectName,
 			ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
 		*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
+		if (X_NT_SUCCESS(result)) {
+			RegisterXboxHandle(*Handle, NULL); // we don't need to create a native handle for a directory object
+		}
 	}
 	else if (ObjectType == &ObSymbolicLinkObjectType) {
 		// Use this place for any interface implementation since
