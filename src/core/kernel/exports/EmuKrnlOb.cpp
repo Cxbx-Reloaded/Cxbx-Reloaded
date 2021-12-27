@@ -75,6 +75,20 @@ xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
 // This mutex is necessary to guard access to the global ob variables above
 std::recursive_mutex g_ObMtx;
 
+static xbox::KIRQL ObLock()
+{
+	xbox::KIRQL OldIrql = xbox::KeRaiseIrqlToDpcLevel();
+	// Raising the irql to dpc level doesn't prevent thread switching, so acquire a lock
+	g_ObMtx.lock();
+	return OldIrql;
+}
+
+static void ObUnlock(xbox::KIRQL OldIrql)
+{
+	xbox::KfLowerIrql(OldIrql);
+	g_ObMtx.unlock();
+}
+
 xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 	IN POBJECT_STRING DirectoryName OPTIONAL,
 	OUT POBJECT_DIRECTORY *DirectoryObject
@@ -118,9 +132,7 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 	NTSTATUS result;
 	*ReturnedObject = NULL;
 	
-	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
-	// Raising the irql to dpc level doesn't prevent thread switching, so acquire a lock
-	std::unique_lock<std::recursive_mutex> lck(g_ObMtx);
+	KIRQL OldIrql = ObLock();
 	
 	OBJECT_STRING RemainingName;
 	if (ObjectName != NULL) {
@@ -219,7 +231,7 @@ OpenRootDirectory:
 
 InvokeParseProcedure:
 			ObjectHeader->PointerCount++;
-			KfLowerIrql(OldIrql);
+			ObUnlock(OldIrql);
 
 			if (ObjectHeader->Type != &IoFileObjectType && (RemainingName.Buffer > ObjectName->Buffer)) {
 				RemainingName.Buffer--;
@@ -245,7 +257,7 @@ InvokeParseProcedure:
 		}
 	}
 CleanupAndExit:
-	KfLowerIrql(OldIrql);
+	ObUnlock(OldIrql);
 	return result;
 }
 
@@ -404,13 +416,11 @@ static inline xbox::HANDLE ObpGetHandleByObjectThenDereferenceInline(const xbox:
 	xbox::HANDLE newHandle = NULL;
 
 	if (X_NT_SUCCESS(result)) {
-		xbox::KIRQL oldIrql = xbox::KeRaiseIrqlToDpcLevel();
-		// Raising the irql to dpc level doesn't prevent thread switching, so acquire a lock
-		std::unique_lock<std::recursive_mutex> lck(g_ObMtx);
+		xbox::KIRQL oldIrql = ObLock();
 
 		newHandle = xbox::ObpCreateObjectHandle(Object);
 
-		xbox::KfLowerIrql(oldIrql);
+		ObUnlock(oldIrql);
 
 		if (newHandle == NULL) {
 			xbox::ObfDereferenceObject(Object);
@@ -564,9 +574,7 @@ xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 {
 	PVOID *HandleContents;
 	Handle = ObpMaskOffApplicationBits(Handle);
-	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
-	// Raising the irql to dpc level doesn't prevent thread switching, so acquire a lock
-	std::unique_lock<std::recursive_mutex> lck(g_ObMtx);
+	KIRQL OldIrql = ObLock();
 
 	if (HandleToUlong(Handle) < HandleToUlong(ObpObjectHandleTable.NextHandleNeedingPool)) {
 		HandleContents = ObpGetHandleContentsPointer(Handle);
@@ -574,12 +582,12 @@ xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 
 		if (Object != NULL && !ObpIsFreeHandleLink(Object)) {
 			OBJECT_TO_OBJECT_HEADER(Object)->PointerCount++;
-			KfLowerIrql(OldIrql);
+			ObUnlock(OldIrql);
 			return Object;
 		}
 	}
 
-	KfLowerIrql(OldIrql);
+	ObUnlock(OldIrql);
 	return NULL;
 }
 
@@ -690,8 +698,7 @@ xbox::void_xt xbox::ObpDetachNamedObject(
 	ObjectHeaderNameInfo->ChainLink = NULL;
 	ObjectHeaderNameInfo->Directory = NULL;
 
-	KfLowerIrql(OldIrql);
-	g_ObMtx.unlock();
+	ObUnlock(OldIrql);
 
 	ObfDereferenceObject(Directory);
 	ObfDereferenceObject(Object);
@@ -701,9 +708,7 @@ xbox::ntstatus_xt xbox::ObpClose(
 	IN HANDLE Handle
 )
 {
-	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
-	// Raising the irql to dpc level doesn't prevent thread switching, so acquire a lock
-	std::unique_lock<std::recursive_mutex> lck(g_ObMtx);
+	KIRQL OldIrql = ObLock();
 
 	PVOID Object = ObpDestroyObjectHandle(Handle);
 	if (Object != NULL) {
@@ -712,11 +717,9 @@ xbox::ntstatus_xt xbox::ObpClose(
 		ObjectHeader->HandleCount--;
 
 		if (ObjectHeader->Type->CloseProcedure != NULL) {
-			KfLowerIrql(OldIrql);
-			lck.unlock();
+			ObUnlock(OldIrql);
 			ObjectHeader->Type->CloseProcedure(Object, HandleCount);
-			OldIrql = KeRaiseIrqlToDpcLevel();
-			lck.lock();
+			OldIrql = ObLock();
 		}
 
 		if ((ObjectHeader->HandleCount == 0) &&
@@ -725,15 +728,14 @@ xbox::ntstatus_xt xbox::ObpClose(
 			ObpDetachNamedObject(Object, OldIrql);
 		}
 		else {
-			KfLowerIrql(OldIrql);
-			lck.unlock();
+			ObUnlock(OldIrql);
 		}
 
 		ObfDereferenceObject(Object);
 		return X_STATUS_SUCCESS;
 	}
 	else {
-		KfLowerIrql(OldIrql);
+		ObUnlock(OldIrql);
 		return X_STATUS_INVALID_HANDLE;
 	}
 }
@@ -759,9 +761,7 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 	NTSTATUS result;
 	POBJECT_DIRECTORY Directory;
 
-	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
-	// Raising the irql to dpc level doesn't prevent thread switching, so acquire a lock
-	std::unique_lock<std::recursive_mutex> lck(g_ObMtx);
+	KIRQL OldIrql = ObLock();
 
 	HANDLE Handle = NULL;
 	PVOID InsertObject = Object;
@@ -888,7 +888,7 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 	result = (Object == InsertObject) ? X_STATUS_SUCCESS : STATUS_OBJECT_NAME_EXISTS;
 
 CleanupAndExit:
-	KfLowerIrql(OldIrql);
+	ObUnlock(OldIrql);
 	ObfDereferenceObject(Object);
 	*ReturnedHandle = Handle;
 
