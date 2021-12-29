@@ -31,7 +31,6 @@
 // TODO: What needs proper implement from Ob functions' side: (use CXBX_KERNEL_REWORK_ENABLED defined to evaluate what needs fixing)
 // ObpDeleteSymbolicLink - internal function which would need a call to ObDereferenceObject with LinkTargetObject pass down.
 //   Plus it require proper IoCreateSymbolicLink implement as well, not emulated implement method.
-// ObpDefaultObject - Find out how to initialize this. Then connect the dots from TODO message.
 // OBJECT_DIRECTORY interface (root, dos, device, and named object, you can find global varables about 30 lines below)
 // etc (add more above this line)
 
@@ -42,6 +41,7 @@
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
 #include "EmuKrnl.h" // For OBJECT_TO_OBJECT_HEADER()
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
+#include "core\kernel\support\NativeHandle.h"
 #include <cassert>
 
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -64,12 +64,30 @@ xbox::POBJECT_DIRECTORY ObpDosDevicesDirectoryObject;
 xbox::POBJECT_DIRECTORY ObpWin32NamedObjectsDirectoryObject;
 xbox::POBJECT_DIRECTORY ObpRootDirectoryObject;
 xbox::POBJECT_DIRECTORY ObpIoDevicesDirectoryObject;
+xbox::KEVENT ObpDefaultObject;
 
 XBSYSAPI EXPORTNUM(245) xbox::OBJECT_HANDLE_TABLE xbox::ObpObjectHandleTable = {
 
 };
 
 xbox::PVOID ObpDosDevicesDriveLetterMap['Z' - 'A' + 1];
+
+// This mutex is necessary to guard access to the global ob variables above
+std::recursive_mutex g_ObMtx;
+
+static xbox::KIRQL ObLock()
+{
+	xbox::KIRQL OldIrql = xbox::KeRaiseIrqlToDpcLevel();
+	// Raising the irql to dpc level doesn't prevent thread switching, so acquire a lock
+	g_ObMtx.lock();
+	return OldIrql;
+}
+
+static void ObUnlock(xbox::KIRQL OldIrql)
+{
+	xbox::KfLowerIrql(OldIrql);
+	g_ObMtx.unlock();
+}
 
 xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 	IN POBJECT_STRING DirectoryName OPTIONAL,
@@ -82,23 +100,23 @@ xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 		LOG_FUNC_END;
 
 	OBJECT_ATTRIBUTES ObjectAttributes;
-	XB_InitializeObjectAttributes(&ObjectAttributes, DirectoryName, OBJ_PERMANENT, NULL);
+	X_InitializeObjectAttributes(&ObjectAttributes, DirectoryName, OBJ_PERMANENT, NULL);
 
 	HANDLE Handle;
-	NTSTATUS status = NtCreateDirectoryObject(&Handle, &ObjectAttributes);
+	NTSTATUS result = NtCreateDirectoryObject(&Handle, &ObjectAttributes);
 
-	if (!X_NT_SUCCESS(status)) {
+	if (!X_NT_SUCCESS(result)) {
 		RETURN(FALSE);
 	}
 	
-	status = ObReferenceObjectByHandle(Handle, &ObDirectoryObjectType, (PVOID *)DirectoryObject);
+	result = ObReferenceObjectByHandle(Handle, &ObDirectoryObjectType, (PVOID *)DirectoryObject);
 	
-	if (!X_NT_SUCCESS(status)) {
+	if (!X_NT_SUCCESS(result)) {
 		RETURN(FALSE);
 	}
 
 	NtClose(Handle);
-	
+
 	RETURN(TRUE);
 }
 
@@ -111,10 +129,10 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 	OUT PVOID *ReturnedObject
 )
 {
-	NTSTATUS status;
+	NTSTATUS result;
 	*ReturnedObject = NULL;
 	
-	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+	KIRQL OldIrql = ObLock();
 	
 	OBJECT_STRING RemainingName;
 	if (ObjectName != NULL) {
@@ -135,14 +153,14 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 			FoundObject = (POBJECT_DIRECTORY)ObpGetObjectHandleContents(RootDirectoryHandle);
 
 			if (FoundObject == NULL) {
-				status = X_STATUS_INVALID_HANDLE;
+				result = X_STATUS_INVALID_HANDLE;
 				goto CleanupAndExit;
 			}
 		}
 
 		if ((RemainingName.Length != 0) &&
 			(RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR)) {
-			status = X_STATUS_OBJECT_NAME_INVALID;
+			result = X_STATUS_OBJECT_NAME_INVALID;
 			goto CleanupAndExit;
 		}
 
@@ -153,7 +171,7 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 
 	if ((RemainingName.Length == 0) ||
 		(RemainingName.Buffer[0] != OBJ_NAME_PATH_SEPARATOR)) {
-		status = X_STATUS_OBJECT_NAME_INVALID;
+		result = X_STATUS_OBJECT_NAME_INVALID;
 		goto CleanupAndExit;
 	}
 
@@ -171,7 +189,7 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 
 		if (RemainingName.Length != 0) {
 			if (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) {
-				status = X_STATUS_OBJECT_NAME_INVALID;
+				result = X_STATUS_OBJECT_NAME_INVALID;
 				goto CleanupAndExit;
 			}
 		} else {
@@ -182,7 +200,7 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 
 		if (!ObpLookupElementNameInDirectory(Directory, &ElementName,
 			ResolveSymbolicLink, &FoundObject)) {
-			status = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : X_STATUS_OBJECT_NAME_NOT_FOUND;
+			result = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : X_STATUS_OBJECT_NAME_NOT_FOUND;
 			goto CleanupAndExit;
 		}
 
@@ -195,25 +213,25 @@ OpenRootDirectory:
 			}
 
 			if ((ObjectType != NULL) && (ObjectType != ObjectHeader->Type)) {
-				status = STATUS_OBJECT_TYPE_MISMATCH;
+				result = STATUS_OBJECT_TYPE_MISMATCH;
 				goto CleanupAndExit;
 			}
 
 			ObjectHeader->PointerCount++;
 			*ReturnedObject = FoundObject;
-			status = X_STATUS_SUCCESS;
+			result = X_STATUS_SUCCESS;
 			goto CleanupAndExit;
 		}
 
 		if (ObjectHeader->Type != &ObDirectoryObjectType) {
 			if (ObjectHeader->Type->ParseProcedure == NULL) {
-				status = STATUS_OBJECT_PATH_NOT_FOUND;
+				result = STATUS_OBJECT_PATH_NOT_FOUND;
 				goto CleanupAndExit;
 			}
 
 InvokeParseProcedure:
 			ObjectHeader->PointerCount++;
-			KfLowerIrql(OldIrql);
+			ObUnlock(OldIrql);
 
 			if (ObjectHeader->Type != &IoFileObjectType && (RemainingName.Buffer > ObjectName->Buffer)) {
 				RemainingName.Buffer--;
@@ -222,25 +240,25 @@ InvokeParseProcedure:
 			}
 
 			PVOID ParsedObject = NULL;
-			status = ObjectHeader->Type->ParseProcedure(FoundObject, ObjectType, Attributes, ObjectName, &RemainingName, ParseContext, &ParsedObject);
+			result = ObjectHeader->Type->ParseProcedure(FoundObject, ObjectType, Attributes, ObjectName, &RemainingName, ParseContext, &ParsedObject);
 			ObfDereferenceObject(FoundObject);
 
-			if (X_NT_SUCCESS(status)) {
+			if (X_NT_SUCCESS(result)) {
 				if ((ObjectType == NULL) || (ObjectType == OBJECT_TO_OBJECT_HEADER(ParsedObject)->Type)) {
 					*ReturnedObject = ParsedObject;
-					status = X_STATUS_SUCCESS;
+					result = X_STATUS_SUCCESS;
 				} else {
 					ObfDereferenceObject(ParsedObject);
-					status = STATUS_OBJECT_TYPE_MISMATCH;
+					result = STATUS_OBJECT_TYPE_MISMATCH;
 				}
 			}
 
-			return status;
+			return result;
 		}
 	}
 CleanupAndExit:
-	KfLowerIrql(OldIrql);
-	return status;
+	ObUnlock(OldIrql);
+	return result;
 }
 
 xbox::boolean_xt xbox::ObInitSystem()
@@ -250,7 +268,11 @@ xbox::boolean_xt xbox::ObInitSystem()
 	ObpObjectHandleTable.NextHandleNeedingPool = 0;
 	ObpObjectHandleTable.RootTable = NULL;
 
-	RtlZeroMemory(ObpDosDevicesDriveLetterMap, sizeof(ObpDosDevicesDriveLetterMap));
+	std::memset(ObpDosDevicesDriveLetterMap, 0, sizeof(ObpDosDevicesDriveLetterMap));
+
+	ObpDefaultObject.Header.Absolute = FALSE;
+	ObpDefaultObject.Header.Inserted = FALSE;
+	KeInitializeEvent(&ObpDefaultObject, SynchronizationEvent, TRUE);
 
 	if (!ObpCreatePermanentDirectoryObject(NULL, &ObpRootDirectoryObject)) {
 		return FALSE;
@@ -389,17 +411,18 @@ xbox::void_xt xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, 
 	return;
 }
 
-static inline xbox::HANDLE ObpGetHandleByObjectThenDereferenceInline(const xbox::PVOID Object, xbox::ntstatus_xt& result) {
-	xbox::HANDLE newHandle = nullptr;
+static inline xbox::HANDLE ObpGetHandleByObjectThenDereferenceInline(const xbox::PVOID Object, xbox::ntstatus_xt& result)
+{
+	xbox::HANDLE newHandle = NULL;
 
 	if (X_NT_SUCCESS(result)) {
-		xbox::KIRQL oldIrql = xbox::KeRaiseIrqlToDpcLevel();
+		xbox::KIRQL oldIrql = ObLock();
 
 		newHandle = xbox::ObpCreateObjectHandle(Object);
 
-		xbox::KfLowerIrql(oldIrql);
+		ObUnlock(oldIrql);
 
-		if (newHandle == nullptr) {
+		if (newHandle == NULL) {
 			xbox::ObfDereferenceObject(Object);
 			result = X_STATUS_INSUFFICIENT_RESOURCES;
 		}
@@ -498,7 +521,7 @@ XBSYSAPI EXPORTNUM(240) xbox::OBJECT_TYPE xbox::ObDirectoryObjectType =
 	NULL,
 	NULL,
 	NULL,
-	NULL, // TODO : &xbox::ObpDefaultObject,
+	&ObpDefaultObject,
 	'eriD' // = first four characters of "Directory" in reverse
 };
 
@@ -551,7 +574,7 @@ xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 {
 	PVOID *HandleContents;
 	Handle = ObpMaskOffApplicationBits(Handle);
-	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+	KIRQL OldIrql = ObLock();
 
 	if (HandleToUlong(Handle) < HandleToUlong(ObpObjectHandleTable.NextHandleNeedingPool)) {
 		HandleContents = ObpGetHandleContentsPointer(Handle);
@@ -559,12 +582,12 @@ xbox::PVOID xbox::ObpGetObjectHandleReference(HANDLE Handle)
 
 		if (Object != NULL && !ObpIsFreeHandleLink(Object)) {
 			OBJECT_TO_OBJECT_HEADER(Object)->PointerCount++;
-			KfLowerIrql(OldIrql);
+			ObUnlock(OldIrql);
 			return Object;
 		}
 	}
 
-	KfLowerIrql(OldIrql);
+	ObUnlock(OldIrql);
 	return NULL;
 }
 
@@ -613,6 +636,110 @@ xbox::boolean_xt xbox::ObpLookupElementNameInDirectory(
 	return FALSE;
 }
 
+xbox::PVOID xbox::ObpDestroyObjectHandle(
+	IN HANDLE Handle
+)
+{
+	Handle = ObpMaskOffApplicationBits(Handle);
+
+	if (HandleToUlong(Handle) < HandleToUlong(ObpObjectHandleTable.NextHandleNeedingPool)) {
+		PVOID *HandleContents = ObpGetHandleContentsPointer(Handle);
+		PVOID Object = *HandleContents;
+
+		if (Object != NULL && !ObpIsFreeHandleLink(Object)) {
+			*HandleContents = (PVOID)ObpObjectHandleTable.FirstFreeTableEntry;
+			ObpObjectHandleTable.FirstFreeTableEntry = ObpEncodeFreeHandleLink(Handle);
+			ObpObjectHandleTable.HandleCount--;
+
+			return Object;
+		}
+	}
+
+	return NULL;
+}
+
+xbox::void_xt xbox::ObpDetachNamedObject(
+	IN PVOID Object,
+	IN KIRQL OldIrql
+)
+{
+	POBJECT_HEADER_NAME_INFO ObjectHeaderNameInfo = OBJECT_TO_OBJECT_HEADER_NAME_INFO(Object);
+	POBJECT_DIRECTORY Directory = ObjectHeaderNameInfo->Directory;
+
+	if ((Directory == ObpDosDevicesDirectoryObject) &&
+		(ObjectHeaderNameInfo->Name.Length == sizeof(char_xt) * 2) &&
+		(ObjectHeaderNameInfo->Name.Buffer[1] == (char_xt)':')) {
+
+		char_xt DriveLetter = ObjectHeaderNameInfo->Name.Buffer[0];
+		if (DriveLetter >= 'a' && DriveLetter <= 'z') {
+			ObpDosDevicesDriveLetterMap[DriveLetter - 'a'] = NULL;
+		}
+		else if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
+			ObpDosDevicesDriveLetterMap[DriveLetter - 'A'] = NULL;
+		}
+	}
+
+	ulong_xt HashIndex = ObpComputeHashIndex(&ObjectHeaderNameInfo->Name);
+	POBJECT_HEADER_NAME_INFO LastObjectHeaderNameInfo = NULL;
+	POBJECT_HEADER_NAME_INFO CurrentObjectHeaderNameInfo = Directory->HashBuckets[HashIndex];
+
+	while (CurrentObjectHeaderNameInfo != ObjectHeaderNameInfo) {
+		LastObjectHeaderNameInfo = CurrentObjectHeaderNameInfo;
+		CurrentObjectHeaderNameInfo = CurrentObjectHeaderNameInfo->ChainLink;
+	}
+
+	if (LastObjectHeaderNameInfo == NULL) {
+		Directory->HashBuckets[HashIndex] = CurrentObjectHeaderNameInfo->ChainLink;
+	}
+	else {
+		LastObjectHeaderNameInfo->ChainLink = CurrentObjectHeaderNameInfo->ChainLink;
+	}
+
+	ObjectHeaderNameInfo->ChainLink = NULL;
+	ObjectHeaderNameInfo->Directory = NULL;
+
+	ObUnlock(OldIrql);
+
+	ObfDereferenceObject(Directory);
+	ObfDereferenceObject(Object);
+}
+
+xbox::ntstatus_xt xbox::ObpClose(
+	IN HANDLE Handle
+)
+{
+	KIRQL OldIrql = ObLock();
+
+	PVOID Object = ObpDestroyObjectHandle(Handle);
+	if (Object != NULL) {
+		POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+		ulong_xt HandleCount = ObjectHeader->HandleCount;
+		ObjectHeader->HandleCount--;
+
+		if (ObjectHeader->Type->CloseProcedure != NULL) {
+			ObUnlock(OldIrql);
+			ObjectHeader->Type->CloseProcedure(Object, HandleCount);
+			OldIrql = ObLock();
+		}
+
+		if ((ObjectHeader->HandleCount == 0) &&
+			ObpIsFlagSet(ObjectHeader->Flags, OB_FLAG_ATTACHED_OBJECT) &&
+			ObpIsFlagClear(ObjectHeader->Flags, OB_FLAG_PERMANENT_OBJECT)) {
+			ObpDetachNamedObject(Object, OldIrql);
+		}
+		else {
+			ObUnlock(OldIrql);
+		}
+
+		ObfDereferenceObject(Object);
+		return X_STATUS_SUCCESS;
+	}
+	else {
+		ObUnlock(OldIrql);
+		return X_STATUS_INVALID_HANDLE;
+	}
+}
+
 // ******************************************************************
 // * 0x00F1 - ObInsertObject()
 // ******************************************************************
@@ -631,10 +758,10 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 		LOG_FUNC_ARG_OUT(ReturnedHandle)
 		LOG_FUNC_END;
 
-	NTSTATUS status;
+	NTSTATUS result;
 	POBJECT_DIRECTORY Directory;
 
-	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+	KIRQL OldIrql = ObLock();
 
 	HANDLE Handle = NULL;
 	PVOID InsertObject = Object;
@@ -644,7 +771,7 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 
 		if (RootDirectoryHandle != NULL) {
 			if (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) {
-				status = STATUS_OBJECT_NAME_INVALID;
+				result = STATUS_OBJECT_NAME_INVALID;
 				goto CleanupAndExit;
 			}
 
@@ -656,18 +783,18 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 				Directory = (POBJECT_DIRECTORY)ObpGetObjectHandleContents(RootDirectoryHandle);
 
 				if (Directory == NULL) {
-					status = STATUS_INVALID_HANDLE;
+					result = STATUS_INVALID_HANDLE;
 					goto CleanupAndExit;
 				}
 
 				if (OBJECT_TO_OBJECT_HEADER(Directory)->Type != &ObDirectoryObjectType) {
-					status = STATUS_OBJECT_TYPE_MISMATCH;
+					result = STATUS_OBJECT_TYPE_MISMATCH;
 					goto CleanupAndExit;
 				}
 			}
 		} else {
 			if (RemainingName.Buffer[0] != OBJ_NAME_PATH_SEPARATOR) {
-				status = STATUS_OBJECT_NAME_INVALID;
+				result = STATUS_OBJECT_NAME_INVALID;
 				goto CleanupAndExit;
 			}
 
@@ -686,25 +813,25 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 							Directory = NULL;
 							break;
 						} else {
-							status = STATUS_OBJECT_TYPE_MISMATCH;
+							result = STATUS_OBJECT_TYPE_MISMATCH;
 							goto CleanupAndExit;
 						}
 					} else {
-						status = X_STATUS_OBJECT_NAME_COLLISION;
+						result = X_STATUS_OBJECT_NAME_COLLISION;
 						goto CleanupAndExit;
 					}
 				}
 
 				if (OBJECT_TO_OBJECT_HEADER(FoundObject)->Type !=
 					&ObDirectoryObjectType) {
-					status = STATUS_OBJECT_PATH_NOT_FOUND;
+					result = STATUS_OBJECT_PATH_NOT_FOUND;
 					goto CleanupAndExit;
 				}
 
 				Directory = (POBJECT_DIRECTORY)FoundObject;
 			} else {
 				if (RemainingName.Length != 0) {
-					status = STATUS_OBJECT_PATH_NOT_FOUND;
+					result = STATUS_OBJECT_PATH_NOT_FOUND;
 					goto CleanupAndExit;
 				}
 
@@ -718,7 +845,7 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 	Handle = ObpCreateObjectHandle(InsertObject);
 
 	if (Handle == NULL) {
-		status = X_STATUS_INSUFFICIENT_RESOURCES;
+		result = X_STATUS_INSUFFICIENT_RESOURCES;
 		goto CleanupAndExit;
 	}
 
@@ -758,14 +885,14 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 		ObjectHeader->Flags |= OB_FLAG_PERMANENT_OBJECT;
 	}
 
-	status = (Object == InsertObject) ? X_STATUS_SUCCESS : STATUS_OBJECT_NAME_EXISTS;
+	result = (Object == InsertObject) ? X_STATUS_SUCCESS : STATUS_OBJECT_NAME_EXISTS;
 
 CleanupAndExit:
-	KfLowerIrql(OldIrql);
+	ObUnlock(OldIrql);
 	ObfDereferenceObject(Object);
 	*ReturnedHandle = Handle;
 
-	RETURN(status);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -800,21 +927,23 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-#ifdef CXBX_KERNEL_REWORK_ENABLED
-	PVOID Object;
-	ntstatus_xt result = ObpReferenceObjectByName(ObjectAttributes->RootDirectory, ObjectAttributes->ObjectName,
-		ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
+	ntstatus_xt result = X_STATUS_OBJECT_PATH_NOT_FOUND;
 
-	*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
-#else
-
-	ntstatus_xt result = STATUS_OBJECT_PATH_NOT_FOUND;
-
-	// Use this place for any interface implementation since
-	// it is origin of creating new handle. In other case, "ObpCreateObjectHandle" handle it directly.
-	// But global variables with POBJECT_DIRECTORY are not initialized properly.
-	// Along with IoCreateSymbolicLink for ObSymbolicLinkObjectType linkage in order to work.
-	if (ObjectType == &ObSymbolicLinkObjectType) {
+	if (ObjectType == &ObDirectoryObjectType) {
+		// Directory objects are currently handled by Ob
+		PVOID Object;
+		result = ObpReferenceObjectByName(ObjectAttributes->RootDirectory, ObjectAttributes->ObjectName,
+			ObjectAttributes->Attributes, ObjectType, ParseContext, &Object);
+		*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
+		if (X_NT_SUCCESS(result)) {
+			RegisterXboxHandle(*Handle, NULL); // we don't need to create a native handle for a directory object
+		}
+	}
+	else if (ObjectType == &ObSymbolicLinkObjectType) {
+		// Use this place for any interface implementation since
+		// it is origin of creating new handle. In other case, "ObpCreateObjectHandle" handle it directly.
+		// But global variables with POBJECT_DIRECTORY are not initialized properly.
+		// Along with IoCreateSymbolicLink for ObSymbolicLinkObjectType linkage in order to work.
 		EmuNtSymbolicLinkObject* symbolicLinkObject =
 			FindNtSymbolicLinkObjectByName(PSTRING_to_string(ObjectAttributes->ObjectName));
 
@@ -837,7 +966,6 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 		assert(false);
 		result = X_STATUS_SUCCESS;
 	}
-#endif
 
 	RETURN(result);
 }
@@ -858,17 +986,9 @@ XBSYSAPI EXPORTNUM(244) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByPointer
 		LOG_FUNC_ARG_OUT(Handle)
 		LOG_FUNC_END;
 
-#ifdef CXBX_KERNEL_REWORK_ENABLED
 	ntstatus_xt result = ObReferenceObjectByPointer(Object, ObjectType);
-
 	*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
 	RETURN(result);
-#else
-	LOG_UNIMPLEMENTED();
-	assert(false);
-
-	RETURN(X_STATUS_SUCCESS);
-#endif
 }
 
 // ******************************************************************
@@ -893,7 +1013,7 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 		LOG_FUNC_ARG_OUT(ReturnedObject)
 		LOG_FUNC_END;
 
-	NTSTATUS status;
+	NTSTATUS result;
 	PVOID Object;
 	POBJECT_HEADER ObjectHeader;
 
@@ -905,7 +1025,7 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 			*ReturnedObject = Object;
 			return X_STATUS_SUCCESS;
 		} else {
-			status = STATUS_OBJECT_TYPE_MISMATCH;
+			result = STATUS_OBJECT_TYPE_MISMATCH;
 		}
 	} else {
 		Object = ObpGetObjectHandleReference(Handle);
@@ -918,7 +1038,7 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 				return X_STATUS_SUCCESS;
 			} else {
 				ObfDereferenceObject(Object);
-				status = STATUS_OBJECT_TYPE_MISMATCH;
+				result = STATUS_OBJECT_TYPE_MISMATCH;
 			}
 		} else {
 			// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
@@ -931,13 +1051,13 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 				return X_STATUS_SUCCESS;
 			}
 
-			status = STATUS_INVALID_HANDLE;
+			result = STATUS_INVALID_HANDLE;
 		}
 	}
 
 	*ReturnedObject = NULL;
 
-	RETURN(status);
+	RETURN(result);
 }
 
 // ******************************************************************

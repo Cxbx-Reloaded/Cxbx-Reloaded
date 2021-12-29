@@ -1629,7 +1629,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XReadMUMetaData)
 	std::string mu_path_str(DrivePrefix + lett + ":");
 	ANSI_STRING mu_path;
 	RtlInitAnsiString(&mu_path, mu_path_str.data());
-	XB_InitializeObjectAttributes(&obj, &mu_path, obj_case_insensitive, ObDosDevicesDirectory());
+	X_InitializeObjectAttributes(&obj, &mu_path, OBJ_CASE_INSENSITIVE, ObDosDevicesDirectory());
 
 	HANDLE handle;
 	IO_STATUS_BLOCK io_status_block;

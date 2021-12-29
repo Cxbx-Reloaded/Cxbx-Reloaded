@@ -1491,8 +1491,7 @@ static void CxbxrKrnlInitHacks()
 	InitXboxThread();
 	g_AffinityPolicy->SetAffinityXbox();
 	if (!xbox::ObInitSystem()) {
-		// TODO: Replace EmuLogEx to CxbxrKrnlAbortEx when ObInitSystem's calls are properly implement.
-		EmuLogEx(LOG_PREFIX_INIT, LOG_LEVEL::WARNING, "Unable to intialize xbox::ObInitSystem.");
+		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
 	}
 	xbox::KiInitSystem();
 

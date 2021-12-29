@@ -44,6 +44,7 @@ namespace NtDll
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "core\kernel\memory-manager\VMManager.h" // For g_VMManager
+#include "core\kernel\support\NativeHandle.h"
 #include "CxbxDebugger.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -142,32 +143,43 @@ XBSYSAPI EXPORTNUM(187) xbox::ntstatus_xt NTAPI xbox::NtClose
 
 	NTSTATUS ret = X_STATUS_SUCCESS;
 
-	if (EmuHandle::IsEmuHandle(Handle))
-	{
+	if (EmuHandle::IsEmuHandle(Handle)) {
+		// EmuHandles are only created for symbolic links with NtOpenSymbolicLinkObject, and ob handles are currently not created
+		// for those, so we can skip the call to ObpClose for now
 		// delete 'special' handles
 		auto iEmuHandle = (EmuHandle*)Handle;
 		ret = iEmuHandle->NtClose();
-
-		LOG_UNIMPLEMENTED(); // TODO : Base this on the Ob* functions
 	}
-    else
-    {
+    else {
+		// Handle everything else
         if (CxbxDebugger::CanReport())
         {
             CxbxDebugger::ReportFileClosed(Handle);
         }
 
+		if (const auto &nativeHandle = GetNativeHandle(Handle)) {
+			// This was a handle created by Ob
+			if (ntstatus_xt status = ObpClose(Handle) != X_STATUS_SUCCESS) {
+				RETURN(status);
+			}
+
+			RemoveXboxHandle(Handle);
+			Handle = *nativeHandle;
+		}
+
+		// Now also close the native handle
 		// Prevent exceptions when using invalid NTHandle
 		DWORD flags = 0;
 		if (GetHandleInformation(Handle, &flags) != 0) {
+			// This was a native handle, call NtDll::NtClose
 			ret = NtDll::NtClose(Handle);
 
 			// Delete duplicate threads created by our implementation of NtQueueApcThread()
-			if( GetHandleInformation( g_DuplicateHandles[Handle], &flags ) != 0 )
+			if (GetHandleInformation(g_DuplicateHandles[Handle], &flags) != 0)
 			{
-				EmuLog(LOG_LEVEL::DEBUG, "Closing duplicate handle..." );
+				EmuLog(LOG_LEVEL::DEBUG, "Closing duplicate handle...");
 
-				CloseHandle( g_DuplicateHandles[Handle] );
+				CloseHandle(g_DuplicateHandles[Handle]);
 				g_DuplicateHandles.erase(Handle);
 			}
 		}
@@ -190,29 +202,19 @@ XBSYSAPI EXPORTNUM(188) xbox::ntstatus_xt NTAPI xbox::NtCreateDirectoryObject
 		LOG_FUNC_ARG(ObjectAttributes)
 		LOG_FUNC_END;
 
-	NativeObjectAttributes nativeObjectAttributes;
-	NTSTATUS ret = CxbxObjectAttributesToNT(
-		ObjectAttributes, 
-		nativeObjectAttributes,
-		"NtCreateDirectoryObject");
+	POBJECT_DIRECTORY directoryObject;
+	ntstatus_xt status = ObCreateObject(&ObDirectoryObjectType, ObjectAttributes, sizeof(OBJECT_DIRECTORY), reinterpret_cast<PVOID *>(&directoryObject));
 
-	if (ret == X_STATUS_SUCCESS)
-	{
-		// TODO : Is this the correct ACCESS_MASK? :
-		const ACCESS_MASK DesiredAccess = DIRECTORY_CREATE_OBJECT;
+	if (X_NT_SUCCESS(status)) {
+		std::memset(directoryObject, 0, sizeof(OBJECT_DIRECTORY));
+		status = ObInsertObject(directoryObject, ObjectAttributes, 0, DirectoryHandle);
 
-		ret = NtDll::NtCreateDirectoryObject(
-			/*OUT*/DirectoryHandle,
-			DesiredAccess,
-			nativeObjectAttributes.NtObjAttrPtr);
+		if (X_NT_SUCCESS(status)) {
+			RegisterXboxHandle(*DirectoryHandle, NULL); // we don't need to create a native handle for a directory object
+		}
 	}
 
-	if (FAILED(ret))
-		EmuLog(LOG_LEVEL::WARNING, "NtCreateDirectoryObject Failed!");
-	else
-		EmuLog(LOG_LEVEL::DEBUG, "NtCreateDirectoryObject DirectoryHandle = 0x%.8X", *DirectoryHandle);
-
-	RETURN(ret);
+	RETURN(status);
 }
 
 // ******************************************************************
@@ -707,50 +709,71 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	NTSTATUS result = X_STATUS_SUCCESS;
-
-#ifdef CXBX_KERNEL_REWORK_ENABLED
-	PVOID Object;
-
-	result = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=*/nullptr, &Object);
-	if (X_NT_SUCCESS(result)) {
-		if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE))
-			NtClose(SourceHandle);
-
-		result = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT*/TargetHandle);
-		ObfDereferenceObject(Object);
-	}
-	else
-		*TargetHandle = NULL;
-#else
+	ntstatus_xt status;
 
 	if (EmuHandle::IsEmuHandle(SourceHandle)) {
 		auto iEmuHandle = (EmuHandle*)SourceHandle;
-		result = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
+		status = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
 	}
-	else
-	{
+	else {
 		// On the xbox, the duplicated handle always has the same access rigths of the source handle
 		const ACCESS_MASK DesiredAccess = 0;
 		const ULONG Attributes = 0;
-		Options |= (DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
+		dword_xt nativeOptions = (Options | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
 
-		// redirect to Win2k/XP
-		result = NtDll::NtDuplicateObject(
-			/*SourceProcessHandle=*/g_CurrentProcessHandle,
-			SourceHandle,
-			/*TargetProcessHandle=*/g_CurrentProcessHandle,
-			TargetHandle,
-			DesiredAccess,
-			Attributes,
-			Options);
+		if (const auto &nativeHandle = GetNativeHandle(SourceHandle)) {
+			// This was a handle created by Ob
+			PVOID Object;
+			status = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=*/nullptr, &Object);
+			if (X_NT_SUCCESS(status)) {
+				if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE)) {
+					NtClose(SourceHandle);
+				}
+
+				status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT*/TargetHandle);
+				if (!X_NT_SUCCESS(status)) {
+					*TargetHandle = NULL;
+					RETURN(status);
+				}
+
+				ObfDereferenceObject(Object);
+
+				// If nativeHandle is NULL, then skip NtDll::NtDuplicateObject. This happens when SourceHandle is an xbox handle with a corresponding
+				// NULL native handle (e.g. directory objects hit this case)
+				if (*nativeHandle != NULL) {
+					::HANDLE dupHandle;
+					status = NtDll::NtDuplicateObject(
+						/*SourceProcessHandle=*/g_CurrentProcessHandle,
+						*nativeHandle,
+						/*TargetProcessHandle=*/g_CurrentProcessHandle,
+						&dupHandle,
+						DesiredAccess,
+						Attributes,
+						nativeOptions);
+					RegisterXboxHandle(*TargetHandle, dupHandle);
+				}
+				else {
+					RegisterXboxHandle(*TargetHandle, NULL);
+				}
+			}
+		}
+		else {
+			status = NtDll::NtDuplicateObject(
+				/*SourceProcessHandle=*/g_CurrentProcessHandle,
+				SourceHandle,
+				/*TargetProcessHandle=*/g_CurrentProcessHandle,
+				TargetHandle,
+				DesiredAccess,
+				Attributes,
+				nativeOptions);
+		}
+
+		if (!X_NT_SUCCESS(status)) {
+			CxbxrKrnlAbort("NtDll::NtDuplicateObject failed to duplicate the handle 0x%.8X!", SourceHandle);
+		}
 	}
 
-	if (result != X_STATUS_SUCCESS)
-		EmuLog(LOG_LEVEL::WARNING, "Object was not duplicated!");
-#endif
-
-	RETURN(result);
+	RETURN(status);
 }
 
 // ******************************************************************

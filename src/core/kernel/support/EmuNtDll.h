@@ -294,18 +294,6 @@ typedef struct _RTL_CRITICAL_SECTION
 RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
 
 // ******************************************************************
-// * Valid values for the Attributes field
-// ******************************************************************
-#define OBJ_INHERIT             0x00000002L
-#define OBJ_PERMANENT           0x00000010L
-#define OBJ_EXCLUSIVE           0x00000020L
-#define OBJ_CASE_INSENSITIVE    0x00000040L
-#define OBJ_OPENIF              0x00000080L
-#define OBJ_OPENLINK            0x00000100L
-#define OBJ_KERNEL_HANDLE       0x00000200L
-#define OBJ_VALID_ATTRIBUTES    0x000003F2L
-
-// ******************************************************************
 // * UNICODE_STRING
 // ******************************************************************
 typedef struct _UNICODE_STRING
