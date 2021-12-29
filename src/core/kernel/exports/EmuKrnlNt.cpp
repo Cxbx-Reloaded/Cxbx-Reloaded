@@ -1891,15 +1891,15 @@ XBSYSAPI EXPORTNUM(224) xbox::ntstatus_xt NTAPI xbox::NtResumeThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtResumeThread(
-		ThreadHandle, 
-		(::PULONG)PreviousSuspendCount);
+	if (const auto &nativeHandle = GetNativeHandle(ThreadHandle)) {
+		// Thread handles are created by ob
+		RETURN(NtDll::NtResumeThread(*nativeHandle, (::PULONG)PreviousSuspendCount));
+	}
+	else {
+		RETURN(X_STATUS_INVALID_HANDLE);
+	}
 
 	// TODO : Once we do our own thread-switching, implement NtResumeThread using KetResumeThread
-
-	//Sleep(10);
-
-	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2114,13 +2114,15 @@ XBSYSAPI EXPORTNUM(231) xbox::ntstatus_xt NTAPI xbox::NtSuspendThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtSuspendThread(
-		ThreadHandle, 
-		(::PULONG)PreviousSuspendCount);
+	if (const auto &nativeHandle = GetNativeHandle(ThreadHandle)) {
+		// Thread handles are created by ob
+		RETURN(NtDll::NtSuspendThread(*nativeHandle, (::PULONG)PreviousSuspendCount));
+	}
+	else {
+		RETURN(X_STATUS_INVALID_HANDLE);
+	}
 
 	// TODO : Once we do our own thread-switching, implement NtSuspendThread using KeSuspendThread
-
-	RETURN(ret);
 }
 
 // ******************************************************************
@@ -2222,6 +2224,16 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		LOG_FUNC_ARG(Alertable)
 		LOG_FUNC_ARG(Timeout)
 		LOG_FUNC_END;
+
+	// This function can wait on thread handles, which are currently created by ob,
+	// so we need to check their presence in the handle array
+
+	for (ulong_xt i = 0; i < Count; ++i) {
+		if (const auto &nativeHandle = GetNativeHandle(Handles[i])) {
+			// This a ob handle, so replace it with its native counterpart
+			Handles[i] = *nativeHandle;
+		}
+	}
 
 	return NtDll::NtWaitForMultipleObjects(
 		Count,
