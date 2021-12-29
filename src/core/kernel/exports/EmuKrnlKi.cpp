@@ -88,6 +88,7 @@ the said software).
 
 #define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired > 0)
 
+xbox::KPROCESS KiUniqueProcess;
 const xbox::ulong_xt CLOCK_TIME_INCREMENT = 0x2710;
 xbox::KDPC KiTimerExpireDpc;
 xbox::KI_TIMER_LOCK KiTimerMtx;
@@ -97,13 +98,13 @@ xbox::LIST_ENTRY KiWaitInListHead;
 
 xbox::void_xt xbox::KiInitSystem()
 {
-	unsigned int i;
+	KiUniqueProcess.StackCount = 0;
 
 	InitializeListHead(&KiWaitInListHead);
 
 	KiTimerMtx.Acquired = 0;
 	KeInitializeDpc(&KiTimerExpireDpc, KiTimerExpiration, NULL);
-	for (i = 0; i < TIMER_TABLE_SIZE; i++) {
+	for (unsigned i = 0; i < TIMER_TABLE_SIZE; i++) {
 		InitializeListHead(&KiTimerTableListHead[i].Entry);
 		KiTimerTableListHead[i].Time.u.HighPart = 0xFFFFFFFF;
 		KiTimerTableListHead[i].Time.u.LowPart = 0;

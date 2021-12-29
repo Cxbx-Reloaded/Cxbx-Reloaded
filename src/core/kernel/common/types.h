@@ -81,6 +81,7 @@ typedef void* LPSECURITY_ATTRIBUTES;
 #define X_STATUS_UNRECOGNIZED_MEDIA 0xC0000014L
 #define X_STATUS_NO_MEMORY 0xC0000017L
 #define X_STATUS_BUFFER_TOO_SMALL 0xC0000023L
+#define X_STATUS_INVALID_PARAMETER 0xC000000DL
 #define X_STATUS_INVALID_PARAMETER_2 0xC00000F0L
 #define X_STATUS_ALERTED 0x00000101L
 #define X_STATUS_USER_APC 0x000000C0L
@@ -1916,7 +1917,7 @@ typedef struct _ETHREAD
 {
     struct _KTHREAD Tcb;
     uchar_xt           UnknownA[0x1C]; // 0x110
-    dword_xt           UniqueThread;   // 0x12C
+    HANDLE             UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
 

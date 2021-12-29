@@ -31,6 +31,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
+#include "core\kernel\exports\EmuKrnlKi.h"
 #include <process.h> // For __beginthreadex(), etc.
 #include <float.h> // For _controlfp constants
 
@@ -39,6 +40,7 @@
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_TLS
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
+#include "core\kernel\support\NativeHandle.h"
 
 // prevent name collisions
 namespace NtDll
@@ -51,9 +53,10 @@ namespace NtDll
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
 {
-	IN PVOID  StartRoutine;
-	IN PVOID  StartContext;
-	IN PVOID  SystemRoutine;
+	IN xbox::PVOID  StartRoutine;
+	IN xbox::PVOID  StartContext;
+	IN xbox::PVOID  SystemRoutine;
+	IN xbox::PVOID  Ethread;
 }
 PCSTProxyParam;
 
@@ -64,23 +67,25 @@ extern int g_iThreadNotificationCount = 0;
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
 void LOG_PCSTProxy
 (
-	PVOID StartRoutine,
-	PVOID StartContext,
-	PVOID SystemRoutine
+	xbox::PVOID StartRoutine,
+	xbox::PVOID StartContext,
+	xbox::PVOID SystemRoutine,
+	xbox::PVOID Ethread
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(StartRoutine)
 		LOG_FUNC_ARG(StartContext)
 		LOG_FUNC_ARG(SystemRoutine)
+		LOG_FUNC_ARG(Ethread)
 		LOG_FUNC_END;
 }
 
 // Overload which doesn't change affinity
-void InitXboxThread()
+void InitXboxThread(xbox::PVOID Ethread)
 {
 	// initialize FS segment selector
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData, Ethread);
 
 	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
 	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
@@ -104,11 +109,12 @@ static unsigned int WINAPI PCSTProxy
 	LOG_PCSTProxy(
 		params.StartRoutine,
 		params.StartContext,
-		params.SystemRoutine);
+		params.SystemRoutine,
+		params.Ethread);
 
 
 	// Do minimal thread initialization
-	InitXboxThread();
+	InitXboxThread(params.Ethread);
 
 	auto routine = (xbox::PKSYSTEM_ROUTINE)params.SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
@@ -137,13 +143,19 @@ void PspSystemThreadStartup
 	xbox::PsTerminateSystemThread(X_STATUS_SUCCESS);
 }
 
+xbox::PETHREAD xbox::PspGetCurrentThread()
+{
+	// This works because we assign ethread to Prcb->CurrentThread
+	return reinterpret_cast<PETHREAD>(KeGetCurrentThread());
+}
+
 // ******************************************************************
 // * 0x00FE - PsCreateSystemThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(254) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,
-	OUT PDWORD          ThreadId OPTIONAL,
+	OUT PHANDLE          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         DebuggerThread
@@ -187,7 +199,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	IN  ulong_xt           ThreadExtensionSize,
 	IN  ulong_xt           KernelStackSize,
 	IN  ulong_xt           TlsDataSize,
-	OUT PDWORD          ThreadId OPTIONAL,
+	OUT PHANDLE          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         CreateSuspended,
@@ -222,7 +234,31 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 
     // create thread, using our special proxy technique
     {
-        DWORD dwThreadId = 0;
+		PETHREAD eThread;
+		ntstatus_xt result = ObCreateObject(&PsThreadObjectType, zeroptr, sizeof(ETHREAD) + ThreadExtensionSize, reinterpret_cast<PVOID *>(&eThread));
+		if (!X_NT_SUCCESS(result)) {
+			RETURN(result);
+		}
+
+		std::memset(eThread, 0, sizeof(ETHREAD) + ThreadExtensionSize);
+
+		// The ob handle of the ethread obj is the thread id we return to the title
+		result = ObInsertObject(eThread, zeroptr, 0, &eThread->UniqueThread);
+		if (!X_NT_SUCCESS(result)) {
+			ObfDereferenceObject(eThread);
+			RETURN(result);
+		}
+
+		// Create another handle to pass back to the title in the ThreadHandle argument
+		result = ObOpenObjectByPointer(eThread, &PsThreadObjectType, ThreadHandle);
+		if (!X_NT_SUCCESS(result)) {
+			ObfDereferenceObject(eThread);
+			RETURN(result);
+		}
+
+		if (ThreadId != zeroptr) {
+			*ThreadId = eThread->UniqueThread;
+		}
 
         // PCSTProxy is responsible for cleaning up this pointer
 		PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
@@ -230,6 +266,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
         iPCSTProxyParam->StartRoutine = (PVOID)StartRoutine;
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = (PVOID)SystemRoutine; // NULL, XapiThreadStartup or unknown?
+		iPCSTProxyParam->Ethread = eThread;
 
 		/*
 		// call thread notification routine(s)
@@ -253,27 +290,27 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			}
 		}*/
 
-        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, reinterpret_cast<unsigned int*>(&dwThreadId)));
+        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, nullptr));
 		if (handle == NULL) {
 			delete iPCSTProxyParam;
+			ObpClose(eThread->UniqueThread);
+			ObfDereferenceObject(eThread);
 			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 		}
-		*ThreadHandle = handle;
-        if (ThreadId != NULL)
-            *ThreadId = dwThreadId;
+
+		KiUniqueProcess.StackCount++;
+		RegisterXboxHandle(ThreadHandle, handle);
+		RegisterXboxHandle(eThread->UniqueThread, handle);
 
 		g_AffinityPolicy->SetAffinityXbox(handle);
-		CxbxKrnlRegisterThread(handle);
 
 		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
 		if (!CreateSuspended) {
 			ResumeThread(handle);
 		}
 
-		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
-
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", handle, dwThreadId);
+		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", *ThreadHandle, eThread->UniqueThread);
 	}
 
 	RETURN(X_STATUS_SUCCESS);
@@ -289,14 +326,13 @@ XBSYSAPI EXPORTNUM(256) xbox::ntstatus_xt NTAPI xbox::PsQueryStatistics
 {
 	LOG_FUNC_ONE_ARG_OUT(ProcessStatistics);
 
-	NTSTATUS ret = X_STATUS_SUCCESS;
+	ntstatus_xt ret = X_STATUS_SUCCESS;
 
 	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
-		LOG_INCOMPLETE(); // TODO : Return number of threads and handles that currently exist
-		ProcessStatistics->ThreadCount = 1;
-		ProcessStatistics->HandleCount = 1;
+		ProcessStatistics->ThreadCount = KiUniqueProcess.StackCount;
+		ProcessStatistics->HandleCount = ObpObjectHandleTable.HandleCount; // This currently doesn't count native handles that we use as xbox handles
 	} else {
-		ret = STATUS_INVALID_PARAMETER;
+		ret = X_STATUS_INVALID_PARAMETER;
 	}
 
 	RETURN(ret);
@@ -368,7 +404,9 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 		}
 	}*/
 
-	EmuKeFreePcr();
+	EmuKeFreeThread();
+	KiUniqueProcess.StackCount--;
+
 	_endthreadex(ExitStatus);
 	// ExitThread(ExitStatus);
 	// CxbxKrnlTerminateThread();
@@ -377,7 +415,7 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 // ******************************************************************
 // * 0x0103 - PsThreadObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(259) xbox::OBJECT_TYPE VOLATILE xbox::PsThreadObjectType =
+XBSYSAPI EXPORTNUM(259) xbox::OBJECT_TYPE xbox::PsThreadObjectType =
 {
 	xbox::ExAllocatePoolWithTag,
 	xbox::ExFreePool,

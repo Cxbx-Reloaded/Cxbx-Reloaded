@@ -36,6 +36,7 @@
 #include "CxbxVersion.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
 #include "EmuShared.h"
 #include "..\FixedFunctionState.h"
 #include "core\hle\D3D8\ResourceTracker.h"
@@ -632,9 +633,6 @@ void CxbxInitWindow(bool bFullInit)
         // We set the priority of this thread a bit higher, to assure reliable timing :
         SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
         g_AffinityPolicy->SetAffinityOther(hThread);
-
-        CxbxKrnlRegisterThread(hThread);
-        CloseHandle(hThread); // CxbxKrnlRegisterThread duplicates the handle so we can close this one
     }
 
 /* TODO : Port this Dxbx code :
@@ -2173,6 +2171,7 @@ static DWORD WINAPI EmuUpdateTickCount(LPVOID)
 
 	// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
 	if (bLLE_GPU) {
+		EmuKeFreeThread();
 		return 0;
 	}
 

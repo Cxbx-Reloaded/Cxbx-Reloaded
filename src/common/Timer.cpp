@@ -34,6 +34,7 @@
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
 #include "core\kernel\init\CxbxKrnl.h"
+#include "core\kernel\support\EmuFS.h"
 #ifdef __linux__
 #include <time.h>
 #endif
@@ -142,6 +143,7 @@ void ClockThread(TimerObject* Timer)
 		if (GetTime_NS(Timer) > NewExpireTime) {
 			if (Timer->Exit.load()) {
 				Timer_Destroy(Timer);
+				EmuKeFreeThread();
 				return;
 			}
 			Timer->Callback(Timer->Opaque);

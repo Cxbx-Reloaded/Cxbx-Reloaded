@@ -33,8 +33,10 @@
 extern void EmuInitFS();
 
 // generate fs segment selector
-extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData);
+extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread);
 // free resources allocated for the thread
+void EmuKeFreeThread();
+// free kpcr allocated for the thread
 void EmuKeFreePcr();
 
 typedef struct

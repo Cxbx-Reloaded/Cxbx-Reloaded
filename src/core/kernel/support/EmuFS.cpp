@@ -190,35 +190,39 @@ void EmuKeSetPcr(xbox::KPCR *Pcr)
 
 void EmuKeFreePcr()
 {
-	// NOTE: don't call KeGetPcr because that one creates a new pcr for the thread when __readfsdword returns nullptr, which we don't want
-	xbox::PKPCR Pcr = reinterpret_cast<xbox::PKPCR>(__readfsdword(TIB_ArbitraryDataSlot));
+	xbox::PKPCR Pcr = KeGetPcr();
+	
+	xbox::PVOID Dummy;
+	xbox::ulong_xt Size;
+	xbox::ntstatus_xt Status;
+	// tls can be nullptr
+	if (Pcr->NtTib.StackBase) {
+		// NOTE: the tls pointer was increased by 12 bytes to enforce the 16 bytes alignment, so adjust it to reach the correct pointer
+		// that was allocated by xbox::NtAllocateVirtualMemory
+		Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - 12;
+		Size = xbox::zero;
+		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free tls
+		assert(Status == X_STATUS_SUCCESS);
+	}
+	Dummy = Pcr;
+	Size = xbox::zero;
+	Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free pcr
+	assert(Status == X_STATUS_SUCCESS);
+	__writefsdword(TIB_ArbitraryDataSlot, NULL);
+}
 
-	if (Pcr) {
-		// tls can be nullptr
-		xbox::PVOID Dummy;
-		xbox::ulong_xt Size;
-		xbox::ntstatus_xt Status;
-		if (Pcr->NtTib.StackBase) {
-			// NOTE: the tls pointer was increased by 12 bytes to enforce the 16 bytes alignment, so adjust it to reach the correct pointer
-			// that was allocated by xbox::NtAllocateVirtualMemory
-			Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - 12;
-			Size = xbox::zero;
-			Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free tls
-			assert(Status == X_STATUS_SUCCESS);
-		}
-		Dummy = Pcr->Prcb->CurrentThread;
-		Size = xbox::zero;
-		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free ethread
-		assert(Status == X_STATUS_SUCCESS);
-		Dummy = Pcr;
-		Size = xbox::zero;
-		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free pcr
-		assert(Status == X_STATUS_SUCCESS);
-		__writefsdword(TIB_ArbitraryDataSlot, NULL);
+void EmuKeFreeThread()
+{
+	// This functions is to be used for cxbxr threads that execute xbox code. We can't just call PsTerminateSystemThread because some additional
+	// xbox state is not created for this kind of threads
+
+	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
+	if (eThread->UniqueThread != NULL) {
+		xbox::NtClose(eThread->UniqueThread);
+		eThread->UniqueThread = NULL;
 	}
-	else {
-		EmuLog(LOG_LEVEL::WARNING, "__readfsdword in EmuKeFreePcr returned nullptr: was this called from a non-xbox thread?");
-	}
+
+	EmuKeFreePcr();
 }
 
 __declspec(naked) void EmuFS_RefreshKPCR()
@@ -652,7 +656,7 @@ void EmuInitFS()
 }
 
 // generate fs segment selector
-void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
+void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 {
 	void *pNewTLS = nullptr;
 	xbox::PVOID base;
@@ -781,14 +785,25 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 	// Initialize a fake PrcbData.CurrentThread 
 	{
-		base = xbox::zeroptr;
-		size = sizeof(xbox::ETHREAD);
-		xbox::NtAllocateVirtualMemory(&base, 0, &size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
-		xbox::ETHREAD *EThread = (xbox::ETHREAD*)base; // Clear, to prevent side-effects on random contents
-		xbox::RtlZeroMemory(EThread, sizeof(xbox::ETHREAD));
+		xbox::PETHREAD EThread = static_cast<xbox::PETHREAD>(Ethread);
+		if (EThread == xbox::zeroptr) {
+			// If it is nullptr, it means we are creating this thread from cxbxr, otherwise we were created from PsCreateSystemThreadEx
+			xbox::PETHREAD eThread;
+			xbox::ntstatus_xt result = xbox::ObCreateObject(&xbox::PsThreadObjectType, xbox::zeroptr, sizeof(xbox::ETHREAD), reinterpret_cast<PVOID *>(&eThread));
+			if (!X_NT_SUCCESS(result)) {
+				// We can't recover from here, abort execution
+				CxbxrKrnlAbort("ObCreateObject: failed to create new xbox thread!");
+			}
+			std::memset(eThread, 0, sizeof(xbox::ETHREAD));
+			EThread = eThread;
+			result = xbox::ObInsertObject(eThread, xbox::zeroptr, 0, &eThread->UniqueThread);
+			if (!X_NT_SUCCESS(result)) {
+				// We can't recover from here, abort execution
+				CxbxrKrnlAbort("ObInsertObject: failed to create new xbox thread!");
+			}
+		}
 
 		EThread->Tcb.TlsData = pNewTLS;
-		EThread->UniqueThread = GetCurrentThreadId();
 		// Set PrcbData.CurrentThread
 		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
 		// Initialize the thread header and its wait list

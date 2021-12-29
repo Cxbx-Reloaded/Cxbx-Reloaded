@@ -136,6 +136,7 @@ namespace xbox
 	);
 };
 
+extern xbox::KPROCESS KiUniqueProcess;
 extern const xbox::ulong_xt CLOCK_TIME_INCREMENT;
 extern xbox::LIST_ENTRY KiWaitInListHead;
 extern xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
