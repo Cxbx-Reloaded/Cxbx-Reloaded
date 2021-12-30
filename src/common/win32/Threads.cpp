@@ -151,12 +151,16 @@ public:
 			cpuSets.erase(cpuSets.begin());
 		}
 		// Otherwise: Multiple physical cores
-		// Assign the first logical and physical core to Xbox, leave the rest of that
-		// physical core unassigned (if hyperthreading is active), the remaining
-		// physical cores to other threads
+		// Assign the first highest performance logical and physical core to Xbox,
+		// leave the rest of that physical core unassigned (if hyperthreading is active),
+		// give the remaining physical cores to other threads
 		else {
-			const BYTE physicalCore = cpuSets[0]->CoreIndex;
-			m_xboxCPUSet = cpuSets[0]->Id;
+			auto highPerfCore = std::max_element(cpuSets.begin(), cpuSets.end(), [](const auto* left, const auto* right)
+				{
+					return left->EfficiencyClass < right->EfficiencyClass;
+				});
+			const BYTE physicalCore = (*highPerfCore)->CoreIndex;
+			m_xboxCPUSet = (*highPerfCore)->Id;
 			for (auto it = cpuSets.begin(); it != cpuSets.end(); ) {
 				if ((*it)->CoreIndex == physicalCore) {
 					it = cpuSets.erase(it);
