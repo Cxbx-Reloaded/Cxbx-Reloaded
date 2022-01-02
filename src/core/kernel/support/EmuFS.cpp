@@ -116,9 +116,6 @@ NT_TIB *GetNtTib()
 	return (NT_TIB *)__readfsdword(TIB_LinearSelfAddress);
 }
 
-
-xbox::KPCR* WINAPI KeGetPcr();
-
 uint32_t fs_lock = 0;
 
 __declspec(naked) void LockFS()
@@ -160,7 +157,7 @@ __declspec(naked) void UnlockFS()
 
 void EmuKeSetPcr(xbox::KPCR *Pcr)
 {
-	// Store the Xbox KPCR pointer in FS (See KeGetPcr())
+	// Store the Xbox KPCR pointer in FS (See EmuKeGetPcr())
 	// 
 	// Note : Cxbx currently doesn't do preemptive thread switching,
 	// which implies that thread-state management is done by Windows.
@@ -190,7 +187,7 @@ void EmuKeSetPcr(xbox::KPCR *Pcr)
 
 void EmuKeFreePcr()
 {
-	xbox::PKPCR Pcr = KeGetPcr();
+	xbox::PKPCR Pcr = EmuKeGetPcr();
 	
 	xbox::PVOID Dummy;
 	xbox::ulong_xt Size;
@@ -227,8 +224,8 @@ void EmuKeFreeThread()
 
 __declspec(naked) void EmuFS_RefreshKPCR()
 {
-	// Backup all registers, call KeGetPcr and then restore all registers
-	// KeGetPcr makes sure a valid KPCR exists for the current thread
+	// Backup all registers, call EmuKeGetPcr and then restore all registers
+	// EmuKeGetPcr makes sure a valid KPCR exists for the current thread
 	// and creates it if missing, we backup and restore all registers
 	// to keep it safe to call in our patches
 	// This function can be later expanded to do nice things 
@@ -236,7 +233,7 @@ __declspec(naked) void EmuFS_RefreshKPCR()
 	__asm {
 		pushfd
 		pushad
-		call KeGetPcr
+		call EmuKeGetPcr
 		popad
 		popfd
 		ret
@@ -806,6 +803,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 		EThread->Tcb.TlsData = pNewTLS;
 		// Set PrcbData.CurrentThread
 		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
+		Prcb->CurrentThread->KernelApcDisable = 0;
+		Prcb->CurrentThread->ApcState.ApcQueueable = TRUE;
 		// Initialize the thread header and its wait list
 		Prcb->CurrentThread->Header.Type = xbox::ThreadObject;
 		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::long_xt);
@@ -821,7 +820,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 		WaitBlock->WaitListEntry.Blink = &Prcb->CurrentThread->Timer.Header.WaitListHead;
 	}
 
-	// Make the KPCR struct available to KeGetPcr()
+	// Make the KPCR struct available to EmuKeGetPcr()
 	EmuKeSetPcr(NewPcr);
 
 	EmuLog(LOG_LEVEL::DEBUG, "Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)", pTLS);

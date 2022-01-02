@@ -30,6 +30,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For NtAllocateVirtualMemory, etc.
+#include "EmuKrnl.h"
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 
@@ -41,6 +42,7 @@ namespace NtDll
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
 #include "core\kernel\exports\EmuKrnlKe.h"
+#include "EmuKrnlKi.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "core\kernel\memory-manager\VMManager.h" // For g_VMManager
@@ -54,12 +56,16 @@ namespace NtDll
 
 #include <unordered_map>
 #include <mutex>
+#include <future>
 
-// Used to keep track of duplicate handles created by NtQueueApcThread()
-std::unordered_map<HANDLE, HANDLE>	g_DuplicateHandles;
 // Prevent setting the system time from multiple threads at the same time
 std::mutex NtSystemTimeMtx;
 
+// This helper function is used to signal NtDll::NtWaitForMultipleObjects that the wait has been satisfied by an xbox user APC
+static void WINAPI EndWait(ULONG_PTR Parameter)
+{
+	// Do nothing
+}
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -173,15 +179,6 @@ XBSYSAPI EXPORTNUM(187) xbox::ntstatus_xt NTAPI xbox::NtClose
 		if (GetHandleInformation(Handle, &flags) != 0) {
 			// This was a native handle, call NtDll::NtClose
 			ret = NtDll::NtClose(Handle);
-
-			// Delete duplicate threads created by our implementation of NtQueueApcThread()
-			if (GetHandleInformation(g_DuplicateHandles[Handle], &flags) != 0)
-			{
-				EmuLog(LOG_LEVEL::DEBUG, "Closing duplicate handle...");
-
-				CloseHandle(g_DuplicateHandles[Handle]);
-				g_DuplicateHandles.erase(Handle);
-			}
 		}
     }
 
@@ -1028,7 +1025,7 @@ XBSYSAPI EXPORTNUM(206) xbox::ntstatus_xt NTAPI xbox::NtQueueApcThread
 	IN PIO_APC_ROUTINE      ApcRoutine,
 	IN PVOID                ApcRoutineContext OPTIONAL,
 	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
-	IN ulong_xt                ApcReserved OPTIONAL
+	IN PVOID                ApcReserved OPTIONAL
 )
 {
 	LOG_FUNC_BEGIN
@@ -1039,54 +1036,27 @@ XBSYSAPI EXPORTNUM(206) xbox::ntstatus_xt NTAPI xbox::NtQueueApcThread
 		LOG_FUNC_ARG(ApcReserved)
 		LOG_FUNC_END;
 
-	// In order for NtQueueApcThread or QueueUserAPC to work, you must... I repeat...
-	// YOU MUST duplicate the handle with the appropriate permissions first!  So far,
-	// the only game that I know of using this is Metal Slug 3, and it won't launch
-	// without it.  Other SNK games might use it also, beware.
+	PETHREAD Thread;
+	ntstatus_xt result = ObReferenceObjectByHandle(ThreadHandle, &PsThreadObjectType, reinterpret_cast<PVOID *>(&Thread));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
+	}
 
-	// TODO: Use our implementation of NtDuplicateObject instead? 
-
-	HANDLE hApcThread = NULL;
-
-	// Just to be safe, let's see if the appropriate permissions are even set for the
-	// target thread first...
-
-	NTSTATUS ret = NtDll::NtQueueApcThread(
-		(NtDll::HANDLE)ThreadHandle,
-		(NtDll::PIO_APC_ROUTINE)ApcRoutine,
-		ApcRoutineContext,
-		(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
-		ApcReserved);
-
-	if( FAILED( ret ) )
-	{
-		EmuLog(LOG_LEVEL::WARNING,  "Duplicating handle with THREAD_SET_CONTEXT..." );
-
-		// If we get here, then attempt to duplicate the thread.
-		if(!DuplicateHandle(g_CurrentProcessHandle, ThreadHandle, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT,FALSE,0))
-			EmuLog(LOG_LEVEL::WARNING, "DuplicateHandle failed!");
-		else
-		{
-			g_DuplicateHandles[ThreadHandle] = hApcThread;	// Save this thread because we'll need to de-reference it later
-			EmuLog(LOG_LEVEL::DEBUG, "DuplicateHandle returned 0x%X (ThreadId 0x%.4X)", hApcThread, GetThreadId( hApcThread ) );
+	PKAPC Apc = static_cast<PKAPC>(ExAllocatePoolWithTag(sizeof(KAPC), 'pasP'));
+	if (Apc != zeroptr) {
+		KeInitializeApc(Apc, &Thread->Tcb, zeroptr, zeroptr, reinterpret_cast<PKNORMAL_ROUTINE>(ApcRoutine), UserMode, ApcRoutineContext);
+		if (!KeInsertQueueApc(Apc, ApcStatusBlock, ApcReserved, 0)) {
+			ExFreePool(Apc);
+			result = X_STATUS_UNSUCCESSFUL;
 		}
-
-
-		ret = NtDll::NtQueueApcThread(
-			(NtDll::HANDLE)hApcThread,
-			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
-			ApcRoutineContext,
-			(NtDll::PIO_STATUS_BLOCK)ApcStatusBlock,
-			ApcReserved);
 	}
-	if (FAILED(ret))
-	{
-		EmuLog(LOG_LEVEL::WARNING, "NtQueueApcThread failed!");
-		CloseHandle( g_DuplicateHandles[ThreadHandle] );
-		g_DuplicateHandles.erase( ThreadHandle );
+	else {
+		result = X_STATUS_NO_MEMORY;
 	}
 
-	RETURN(ret);
+	ObfDereferenceObject(Thread);
+
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -1159,8 +1129,8 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 		ret = NtDll::NtQueryDirectoryFile(
 			FileHandle, 
 			Event, 
-			(NtDll::PIO_APC_ROUTINE)ApcRoutine, 
-			ApcContext, 
+			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
+			ApcContext,
 			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock, 
 			/*FileInformation=*/NtFileDirInfo,
 			NtFileDirectoryInformationSize + NtPathBufferSize,
@@ -2227,20 +2197,53 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 
 	// This function can wait on thread handles, which are currently created by ob,
 	// so we need to check their presence in the handle array
-
 	for (ulong_xt i = 0; i < Count; ++i) {
 		if (const auto &nativeHandle = GetNativeHandle(Handles[i])) {
-			// This a ob handle, so replace it with its native counterpart
+			// This is a ob handle, so replace it with its native counterpart
 			Handles[i] = *nativeHandle;
 		}
 	}
 
-	return NtDll::NtWaitForMultipleObjects(
-		Count,
-		Handles,
-		(NtDll::OBJECT_WAIT_TYPE)WaitType,
-		Alertable,
-		(NtDll::PLARGE_INTEGER)Timeout);
+	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
+	if (Alertable && (WaitMode == UserMode)) {
+		bool Exit = false;
+		PETHREAD eThread = PspGetCurrentThread();
+		auto &fut = std::async(std::launch::async, [eThread, &Exit]() {
+			while (true) {
+				xbox::g_ApcListMtx.lock();
+				bool Empty = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[UserMode]);
+				xbox::g_ApcListMtx.unlock();
+				if (Empty == false) {
+					KiExecuteUserApc();
+					// Queue a native APC to the calling thread to forcefully terminate the wait in NtDll::NtWaitForMultipleObjects,
+					// in the case it didn't terminate already
+					QueueUserAPC(EndWait, *GetNativeHandle(eThread->UniqueThread), 0);
+					return true;
+				}
+				Sleep(0);
+				if (Exit) { return false; }
+			}
+			});
+
+		NTSTATUS ret = NtDll::NtWaitForMultipleObjects(
+			Count,
+			Handles,
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
+
+		Exit = true;
+		bool result = fut.get();
+		return result ? X_STATUS_USER_APC : ret;
+	}
+	else {
+		return NtDll::NtWaitForMultipleObjects(
+			Count,
+			Handles,
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			(NtDll::PLARGE_INTEGER)Timeout);
+	}
 }
 
 // ******************************************************************

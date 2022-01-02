@@ -35,6 +35,7 @@
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort, and CxbxExec
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "core\kernel\support\EmuFS.h"
 #include "EmuKrnl.h"
 #include "devices\x86\EmuX86.h" // HalReadWritePciSpace needs this
 #include "EmuShared.h"
@@ -58,13 +59,6 @@ uint32_t ResetOrShutdownDataValue = 0;
 
 // global list of routines executed during a reboot
 xbox::LIST_ENTRY ShutdownRoutineList = { &ShutdownRoutineList , &ShutdownRoutineList }; // see InitializeListHead()
-
-
-// ******************************************************************
-// * Declaring this in a header causes errors with xboxkrnl
-// * namespace, so we must declare it within any file that uses it
-// ******************************************************************
-xbox::KPCR* WINAPI KeGetPcr();
 
 #define TRAY_CLOSED_MEDIA_PRESENT 0x60
 #define TRAY_CLOSED_NO_MEDIA 0x40
@@ -458,10 +452,10 @@ XBSYSAPI EXPORTNUM(48) xbox::void_xt FASTCALL xbox::HalRequestSoftwareInterrupt
 	HalInterruptRequestRegister |= InterruptMask;
 
 	// Get current IRQL
-	PKPCR Pcr = KeGetPcr();
+	PKPCR Pcr = EmuKeGetPcr();
 	KIRQL CurrentIrql = (KIRQL)Pcr->Irql;
 
-	// Get pending Software Interrupts (by masking of the HW interrupt bits)
+	// Get pending Software Interrupts (by masking off the HW interrupt bits)
 	uint8_t SoftwareInterrupt = HalInterruptRequestRegister & 3;
 
 	// Get the highest pending software interrupt level

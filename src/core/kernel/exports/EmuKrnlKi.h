@@ -47,14 +47,16 @@ namespace xbox
 		int Acquired;
 	} KI_TIMER_LOCK;
 
+	// NOTE: since the apc list is per-thread, we could also create a different mutex for each kthread
+	std::mutex g_ApcListMtx;
 
-	xbox::void_xt KiInitSystem();
+	void_xt KiInitSystem();
 
-	xbox::void_xt KiTimerLock();
+	void_xt KiTimerLock();
 
-	xbox::void_xt KiTimerUnlock();
+	void_xt KiTimerUnlock();
 
-	xbox::void_xt KiClockIsr
+	void_xt KiClockIsr
 	(
 		IN unsigned int ScalingFactor
 	);
@@ -64,25 +66,25 @@ namespace xbox
 		IN ULARGE_INTEGER CurrentTime
 	);
 
-	xbox::void_xt KxInsertTimer
+	void_xt KxInsertTimer
 	(
 		IN PKTIMER Timer,
 		IN ulong_xt Hand
 	);
 
-	xbox::void_xt FASTCALL KiCompleteTimer
+	void_xt FASTCALL KiCompleteTimer
 	(
 		IN PKTIMER Timer,
 		IN ulong_xt Hand
 	);
 
-	xbox::void_xt KiRemoveEntryTimer
+	void_xt KiRemoveEntryTimer
 	(
 		IN PKTIMER Timer,
 		IN ulong_xt Hand
 	);
 
-	xbox::void_xt KxRemoveTreeTimer
+	void_xt KxRemoveTreeTimer
 	(
 		IN PKTIMER Timer
 	);
@@ -99,7 +101,7 @@ namespace xbox
 		IN LARGE_INTEGER Interval
 	);
 
-	xbox::ulong_xt KiComputeTimerTableIndex
+	ulong_xt KiComputeTimerTableIndex
 	(
 		IN ulonglong_xt Interval
 	);
@@ -116,7 +118,7 @@ namespace xbox
 		IN PKTIMER Timer
 	);
 
-	xbox::void_xt NTAPI KiTimerExpiration
+	void_xt NTAPI KiTimerExpiration
 	(
 		IN PKDPC Dpc,
 		IN PVOID DeferredContext,
@@ -124,16 +126,19 @@ namespace xbox
 		IN PVOID SystemArgument2
 	);
 
-	xbox::void_xt FASTCALL KiTimerListExpire
+	void_xt FASTCALL KiTimerListExpire
 	(
 		IN PLIST_ENTRY ExpiredListHead,
 		IN KIRQL OldIrql
 	);
 
-	xbox::void_xt FASTCALL KiWaitSatisfyAll
+	void_xt FASTCALL KiWaitSatisfyAll
 	(
 		IN PKWAIT_BLOCK WaitBlock
 	);
+
+	void_xt KiExecuteKernelApc();
+	void_xt KiExecuteUserApc();
 };
 
 extern xbox::KPROCESS KiUniqueProcess;

@@ -80,6 +80,7 @@ the said software).
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For KeBugCheck, etc.
+#include "core\kernel\support\EmuFS.h"
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // for the list support functions
 #include "EmuKrnlKi.h"
@@ -876,4 +877,54 @@ xbox::void_xt FASTCALL xbox::KiWaitSatisfyAll
 	} while (WaitBlock1 != WaitBlock);
 
 	return;
+}
+
+template<bool KernelApc>
+static xbox::void_xt KiExecuteApc()
+{
+	xbox::PKTHREAD kThread = xbox::KeGetCurrentThread();
+
+	int ApcMode;
+	if constexpr (KernelApc) {
+		kThread->ApcState.KernelApcPending = FALSE;
+		ApcMode = xbox::KernelMode;
+	}
+	else {
+		kThread->ApcState.UserApcPending = FALSE;
+		ApcMode = xbox::UserMode;
+	}
+
+	// Even though the apc list is per-thread, it's still possible that another thread will access it while we are processing it below
+	xbox::g_ApcListMtx.lock();
+	while (!IsListEmpty(&kThread->ApcState.ApcListHead[ApcMode])) {
+		if (KernelApc && (kThread->KernelApcDisable != 0)) {
+			xbox::g_ApcListMtx.unlock();
+			return;
+		}
+		xbox::PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[ApcMode].Flink;
+		xbox::PKAPC Apc = CONTAINING_RECORD(Entry, xbox::KAPC, ApcListEntry);
+		RemoveEntryList(Entry);
+		xbox::g_ApcListMtx.unlock();
+		Apc->Inserted = FALSE;
+
+		// NOTE: we never use KernelRoutine
+		if (Apc->NormalRoutine != xbox::zeroptr) {
+			(Apc->NormalRoutine)(Apc->NormalContext, Apc->SystemArgument1, Apc->SystemArgument2);
+		}
+
+		xbox::ExFreePool(Apc);
+		xbox::g_ApcListMtx.lock();
+	}
+
+	xbox::g_ApcListMtx.unlock();
+}
+
+xbox::void_xt xbox::KiExecuteKernelApc()
+{
+	KiExecuteApc<true>();
+}
+
+xbox::void_xt xbox::KiExecuteUserApc()
+{
+	KiExecuteApc<false>();
 }

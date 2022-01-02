@@ -38,6 +38,7 @@
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_TLS
+#include "EmuKrnl.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
 #include "core\kernel\support\NativeHandle.h"
@@ -404,12 +405,24 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 		}
 	}*/
 
+	PKTHREAD kThread = KeGetCurrentThread();
+	kThread->ApcState.ApcQueueable = FALSE;
+
+	g_ApcListMtx.lock();
+	for (int Mode = KernelMode; Mode < MaximumMode; ++Mode) {
+		while (!IsListEmpty(&kThread->ApcState.ApcListHead[Mode])) {
+			PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[Mode].Flink;
+			PKAPC Apc = CONTAINING_RECORD(Entry, KAPC, ApcListEntry);
+			RemoveEntryList(Entry);
+			ExFreePool(Apc);
+		}
+	}
+	g_ApcListMtx.unlock();
+
 	EmuKeFreeThread();
 	KiUniqueProcess.StackCount--;
 
 	_endthreadex(ExitStatus);
-	// ExitThread(ExitStatus);
-	// CxbxKrnlTerminateThread();
 }
 
 // ******************************************************************

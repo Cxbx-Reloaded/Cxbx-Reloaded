@@ -261,7 +261,7 @@ XBSYSAPI EXPORTNUM(206) ntstatus_xt NTAPI NtQueueApcThread
 	IN PIO_APC_ROUTINE      ApcRoutine,
 	IN PVOID                ApcRoutineContext OPTIONAL,
 	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
-	IN ulong_xt                ApcReserved OPTIONAL 
+	IN PVOID                ApcReserved OPTIONAL
 );
 
 // ******************************************************************

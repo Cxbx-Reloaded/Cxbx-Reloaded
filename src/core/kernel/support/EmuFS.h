@@ -39,6 +39,9 @@ void EmuKeFreeThread();
 // free kpcr allocated for the thread
 void EmuKeFreePcr();
 
+void EmuKeSetPcr(xbox::KPCR *Pcr);
+xbox::KPCR *_stdcall EmuKeGetPcr();
+
 typedef struct
 {
 	std::vector<uint8_t> data;
