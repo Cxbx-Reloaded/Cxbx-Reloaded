@@ -48,7 +48,7 @@ namespace xbox
 	} KI_TIMER_LOCK;
 
 	// NOTE: since the apc list is per-thread, we could also create a different mutex for each kthread
-	std::mutex g_ApcListMtx;
+	extern std::mutex KiApcListMtx;
 
 	void_xt KiInitSystem();
 

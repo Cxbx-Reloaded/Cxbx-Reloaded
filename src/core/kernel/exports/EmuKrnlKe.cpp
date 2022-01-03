@@ -263,6 +263,26 @@ xbox::void_xt NTAPI xbox::KeInitializeTimer
 	KeInitializeTimerEx(Timer, NotificationTimer);
 }
 
+// ******************************************************************
+// * KeEmptyQueueApc()
+// ******************************************************************
+xbox::void_xt xbox::KeEmptyQueueApc()
+{
+	PKTHREAD kThread = KeGetCurrentThread();
+	kThread->ApcState.ApcQueueable = FALSE;
+
+	KiApcListMtx.lock();
+	for (int Mode = KernelMode; Mode < MaximumMode; ++Mode) {
+		while (!IsListEmpty(&kThread->ApcState.ApcListHead[Mode])) {
+			PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[Mode].Flink;
+			PKAPC Apc = CONTAINING_RECORD(Entry, KAPC, ApcListEntry);
+			RemoveEntryList(Entry);
+			ExFreePool(Apc);
+		}
+	}
+	KiApcListMtx.unlock();
+}
+
 // Forward KeLowerIrql() to KfLowerIrql()
 #define KeLowerIrql(NewIrql) \
 	KfLowerIrql(NewIrql)
@@ -1027,9 +1047,9 @@ XBSYSAPI EXPORTNUM(118) xbox::boolean_xt NTAPI xbox::KeInsertQueueApc
 			RETURN(FALSE);
 		}
 		else {
-			g_ApcListMtx.lock();
+			KiApcListMtx.lock();
 			InsertTailList(&kThread->ApcState.ApcListHead[Apc->ApcMode], &Apc->ApcListEntry);
-			g_ApcListMtx.unlock();
+			KiApcListMtx.unlock();
 			Apc->Inserted = TRUE;
 
 			// We can only attempt to execute the queued apc right away if it is been inserted in the current thread, because otherwise the KTHREAD

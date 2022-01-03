@@ -16,9 +16,6 @@
 
 namespace xbox
 {
-
-#define PsGetCurrentThread() (CONTAINING_RECORD((KeGetCurrentThread()),ETHREAD,Tcb))
-
 // ******************************************************************
 // * PsCreateSystemThread
 // ******************************************************************

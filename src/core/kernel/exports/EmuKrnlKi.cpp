@@ -95,6 +95,7 @@ xbox::KDPC KiTimerExpireDpc;
 xbox::KI_TIMER_LOCK KiTimerMtx;
 xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 xbox::LIST_ENTRY KiWaitInListHead;
+std::mutex xbox::KiApcListMtx;
 
 
 xbox::void_xt xbox::KiInitSystem()
@@ -895,16 +896,16 @@ static xbox::void_xt KiExecuteApc()
 	}
 
 	// Even though the apc list is per-thread, it's still possible that another thread will access it while we are processing it below
-	xbox::g_ApcListMtx.lock();
+	xbox::KiApcListMtx.lock();
 	while (!IsListEmpty(&kThread->ApcState.ApcListHead[ApcMode])) {
 		if (KernelApc && (kThread->KernelApcDisable != 0)) {
-			xbox::g_ApcListMtx.unlock();
+			xbox::KiApcListMtx.unlock();
 			return;
 		}
 		xbox::PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[ApcMode].Flink;
 		xbox::PKAPC Apc = CONTAINING_RECORD(Entry, xbox::KAPC, ApcListEntry);
 		RemoveEntryList(Entry);
-		xbox::g_ApcListMtx.unlock();
+		xbox::KiApcListMtx.unlock();
 		Apc->Inserted = FALSE;
 
 		// NOTE: we never use KernelRoutine
@@ -913,10 +914,10 @@ static xbox::void_xt KiExecuteApc()
 		}
 
 		xbox::ExFreePool(Apc);
-		xbox::g_ApcListMtx.lock();
+		xbox::KiApcListMtx.lock();
 	}
 
-	xbox::g_ApcListMtx.unlock();
+	xbox::KiApcListMtx.unlock();
 }
 
 xbox::void_xt xbox::KiExecuteKernelApc()

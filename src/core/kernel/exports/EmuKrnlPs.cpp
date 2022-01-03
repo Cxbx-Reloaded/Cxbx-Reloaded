@@ -32,6 +32,7 @@
 
 #include <core\kernel\exports\xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
 #include "core\kernel\exports\EmuKrnlKi.h"
+#include "core\kernel\exports\EmuKrnlKe.h"
 #include <process.h> // For __beginthreadex(), etc.
 #include <float.h> // For _controlfp constants
 
@@ -291,7 +292,8 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			}
 		}*/
 
-        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, nullptr));
+		unsigned int ThreadId;
+        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, &ThreadId));
 		if (handle == NULL) {
 			delete iPCSTProxyParam;
 			ObpClose(eThread->UniqueThread);
@@ -300,7 +302,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		}
 
 		KiUniqueProcess.StackCount++;
-		RegisterXboxHandle(ThreadHandle, handle);
+		RegisterXboxHandle(*ThreadHandle, handle);
 		RegisterXboxHandle(eThread->UniqueThread, handle);
 
 		g_AffinityPolicy->SetAffinityXbox(handle);
@@ -311,7 +313,8 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		}
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", *ThreadHandle, eThread->UniqueThread);
+		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X], Native ThreadId : [0x%.4X]",
+			*ThreadHandle, eThread->UniqueThread, ThreadId);
 	}
 
 	RETURN(X_STATUS_SUCCESS);
@@ -404,20 +407,6 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 			pfnNotificationRoutine(FALSE);
 		}
 	}*/
-
-	PKTHREAD kThread = KeGetCurrentThread();
-	kThread->ApcState.ApcQueueable = FALSE;
-
-	g_ApcListMtx.lock();
-	for (int Mode = KernelMode; Mode < MaximumMode; ++Mode) {
-		while (!IsListEmpty(&kThread->ApcState.ApcListHead[Mode])) {
-			PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[Mode].Flink;
-			PKAPC Apc = CONTAINING_RECORD(Entry, KAPC, ApcListEntry);
-			RemoveEntryList(Entry);
-			ExFreePool(Apc);
-		}
-	}
-	g_ApcListMtx.unlock();
 
 	EmuKeFreeThread();
 	KiUniqueProcess.StackCount--;

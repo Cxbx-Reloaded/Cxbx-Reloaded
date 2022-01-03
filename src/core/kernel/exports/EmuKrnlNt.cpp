@@ -716,18 +716,28 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		// On the xbox, the duplicated handle always has the same access rigths of the source handle
 		const ACCESS_MASK DesiredAccess = 0;
 		const ULONG Attributes = 0;
-		dword_xt nativeOptions = (Options | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
+		const ULONG nativeOptions = (Options | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
 
-		if (const auto &nativeHandle = GetNativeHandle(SourceHandle)) {
+		// If SourceHandle is -2 = NtCurrentThread, then we need to duplicate the handle of this thread
+		// Test case: Metal Slug 3
+		std::optional<HANDLE> nativeHandle;
+		if (SourceHandle == NtCurrentThread()) {
+			nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
+		}
+		else {
+			nativeHandle = GetNativeHandle(SourceHandle);
+		}
+
+		if (nativeHandle) {
 			// This was a handle created by Ob
 			PVOID Object;
-			status = ObReferenceObjectByHandle(SourceHandle, /*ObjectType=*/nullptr, &Object);
+			status = ObReferenceObjectByHandle(SourceHandle, zeroptr, &Object);
 			if (X_NT_SUCCESS(status)) {
 				if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE)) {
 					NtClose(SourceHandle);
 				}
 
-				status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, /*OUT*/TargetHandle);
+				status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, TargetHandle);
 				if (!X_NT_SUCCESS(status)) {
 					*TargetHandle = NULL;
 					RETURN(status);
@@ -2208,16 +2218,17 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 	if (Alertable && (WaitMode == UserMode)) {
 		bool Exit = false;
 		PETHREAD eThread = PspGetCurrentThread();
+
 		auto &fut = std::async(std::launch::async, [eThread, &Exit]() {
 			while (true) {
-				xbox::g_ApcListMtx.lock();
+				xbox::KiApcListMtx.lock();
 				bool Empty = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[UserMode]);
-				xbox::g_ApcListMtx.unlock();
+				xbox::KiApcListMtx.unlock();
 				if (Empty == false) {
 					KiExecuteUserApc();
 					// Queue a native APC to the calling thread to forcefully terminate the wait in NtDll::NtWaitForMultipleObjects,
 					// in the case it didn't terminate already
-					QueueUserAPC(EndWait, *GetNativeHandle(eThread->UniqueThread), 0);
+					BOOL t = QueueUserAPC(EndWait, *GetNativeHandle(eThread->UniqueThread), 0);
 					return true;
 				}
 				Sleep(0);

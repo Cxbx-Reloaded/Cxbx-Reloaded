@@ -213,6 +213,8 @@ void EmuKeFreeThread()
 	// This functions is to be used for cxbxr threads that execute xbox code. We can't just call PsTerminateSystemThread because some additional
 	// xbox state is not created for this kind of threads
 
+	xbox::KeEmptyQueueApc();
+
 	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
 	if (eThread->UniqueThread != NULL) {
 		xbox::NtClose(eThread->UniqueThread);
@@ -782,27 +784,24 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 
 	// Initialize a fake PrcbData.CurrentThread 
 	{
+		// If it is nullptr, it means we are creating this thread from cxbxr, otherwise we were created from PsCreateSystemThreadEx
 		xbox::PETHREAD EThread = static_cast<xbox::PETHREAD>(Ethread);
 		if (EThread == xbox::zeroptr) {
-			// If it is nullptr, it means we are creating this thread from cxbxr, otherwise we were created from PsCreateSystemThreadEx
-			xbox::PETHREAD eThread;
-			xbox::ntstatus_xt result = xbox::ObCreateObject(&xbox::PsThreadObjectType, xbox::zeroptr, sizeof(xbox::ETHREAD), reinterpret_cast<PVOID *>(&eThread));
-			if (!X_NT_SUCCESS(result)) {
-				// We can't recover from here, abort execution
-				CxbxrKrnlAbort("ObCreateObject: failed to create new xbox thread!");
-			}
-			std::memset(eThread, 0, sizeof(xbox::ETHREAD));
-			EThread = eThread;
-			result = xbox::ObInsertObject(eThread, xbox::zeroptr, 0, &eThread->UniqueThread);
-			if (!X_NT_SUCCESS(result)) {
-				// We can't recover from here, abort execution
-				CxbxrKrnlAbort("ObInsertObject: failed to create new xbox thread!");
-			}
+			// Since this a host thread that we use to execute xbox code, we do not need to create ob handles for this thread
+			base = xbox::zeroptr;
+			size = sizeof(xbox::ETHREAD);
+			xbox::NtAllocateVirtualMemory(&base, 0, &size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
+			EThread = (xbox::ETHREAD *)base; // Clear, to prevent side-effects on random contents
+			xbox::RtlZeroMemory(EThread, sizeof(xbox::ETHREAD));
+			EThread->UniqueThread = reinterpret_cast<HANDLE>(GetCurrentThreadId());
 		}
 
 		EThread->Tcb.TlsData = pNewTLS;
 		// Set PrcbData.CurrentThread
 		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
+		// Initialize APC stuff
+		InitializeListHead(&Prcb->CurrentThread->ApcState.ApcListHead[xbox::KernelMode]);
+		InitializeListHead(&Prcb->CurrentThread->ApcState.ApcListHead[xbox::UserMode]);
 		Prcb->CurrentThread->KernelApcDisable = 0;
 		Prcb->CurrentThread->ApcState.ApcQueueable = TRUE;
 		// Initialize the thread header and its wait list

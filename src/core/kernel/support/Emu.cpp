@@ -45,7 +45,6 @@ CRITICAL_SECTION dbgCritical;
 // Global Variable(s)
 volatile thread_local  bool    g_bEmuException = false;
 static thread_local bool bOverrideEmuException;
-volatile bool    g_bEmuSuspended = false;
 volatile bool    g_bPrintfOn = true;
 bool g_DisablePixelShaders = false;
 bool g_UseAllCores = false;
