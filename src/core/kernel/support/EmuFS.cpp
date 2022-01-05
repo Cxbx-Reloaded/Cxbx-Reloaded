@@ -32,6 +32,7 @@
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include "core\kernel\support\EmuFS.h" // For fs_instruction_t
+#include "core\kernel\support\NativeHandle.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 
@@ -185,7 +186,7 @@ void EmuKeSetPcr(xbox::KPCR *Pcr)
 	__writefsdword(TIB_ArbitraryDataSlot, (DWORD)Pcr);
 }
 
-void EmuKeFreePcr()
+void EmuKeFreePcr(xbox::HANDLE UniqueThread)
 {
 	xbox::PKPCR Pcr = EmuKeGetPcr();
 	
@@ -199,6 +200,12 @@ void EmuKeFreePcr()
 		Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - 12;
 		Size = xbox::zero;
 		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free tls
+		assert(Status == X_STATUS_SUCCESS);
+	}
+	if (UniqueThread == reinterpret_cast<xbox::HANDLE>(GetCurrentThreadId())) {
+		Dummy = Pcr->Prcb->CurrentThread;
+		Size = xbox::zero;
+		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free ethread
 		assert(Status == X_STATUS_SUCCESS);
 	}
 	Dummy = Pcr;
@@ -216,12 +223,12 @@ void EmuKeFreeThread()
 	xbox::KeEmptyQueueApc();
 
 	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
-	if (eThread->UniqueThread != NULL) {
+	xbox::HANDLE UniqueThread = eThread->UniqueThread;
+	if (GetNativeHandle(eThread->UniqueThread)) {
 		xbox::NtClose(eThread->UniqueThread);
-		eThread->UniqueThread = NULL;
 	}
 
-	EmuKeFreePcr();
+	EmuKeFreePcr(UniqueThread);
 }
 
 __declspec(naked) void EmuFS_RefreshKPCR()
@@ -793,7 +800,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 			xbox::NtAllocateVirtualMemory(&base, 0, &size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
 			EThread = (xbox::ETHREAD *)base; // Clear, to prevent side-effects on random contents
 			xbox::RtlZeroMemory(EThread, sizeof(xbox::ETHREAD));
-			EThread->UniqueThread = reinterpret_cast<HANDLE>(GetCurrentThreadId());
+			EThread->UniqueThread = reinterpret_cast<xbox::HANDLE>(GetCurrentThreadId());
 		}
 
 		EThread->Tcb.TlsData = pNewTLS;

@@ -37,7 +37,7 @@ extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread);
 // free resources allocated for the thread
 void EmuKeFreeThread();
 // free kpcr allocated for the thread
-void EmuKeFreePcr();
+void EmuKeFreePcr(xbox::HANDLE UniqueThread);
 
 void EmuKeSetPcr(xbox::KPCR *Pcr);
 xbox::KPCR *_stdcall EmuKeGetPcr();

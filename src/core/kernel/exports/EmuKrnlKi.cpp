@@ -905,8 +905,8 @@ static xbox::void_xt KiExecuteApc()
 		xbox::PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[ApcMode].Flink;
 		xbox::PKAPC Apc = CONTAINING_RECORD(Entry, xbox::KAPC, ApcListEntry);
 		RemoveEntryList(Entry);
-		xbox::KiApcListMtx.unlock();
 		Apc->Inserted = FALSE;
+		xbox::KiApcListMtx.unlock();
 
 		// NOTE: we never use KernelRoutine
 		if (Apc->NormalRoutine != xbox::zeroptr) {

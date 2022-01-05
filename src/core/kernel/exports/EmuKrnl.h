@@ -27,6 +27,7 @@
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
+#include <future>
 
 // CONTAINING_RECORD macro
 // Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)
@@ -103,5 +104,6 @@ extern HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 bool DisableInterrupts();
 void RestoreInterruptMode(bool value);
 void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql);
+std::future<bool> WaitUserApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bool *Exit);
 
 #endif

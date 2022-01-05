@@ -56,16 +56,9 @@ namespace NtDll
 
 #include <unordered_map>
 #include <mutex>
-#include <future>
 
 // Prevent setting the system time from multiple threads at the same time
 std::mutex NtSystemTimeMtx;
-
-// This helper function is used to signal NtDll::NtWaitForMultipleObjects that the wait has been satisfied by an xbox user APC
-static void WINAPI EndWait(ULONG_PTR Parameter)
-{
-	// Do nothing
-}
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -718,17 +711,7 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		const ULONG Attributes = 0;
 		const ULONG nativeOptions = (Options | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
 
-		// If SourceHandle is -2 = NtCurrentThread, then we need to duplicate the handle of this thread
-		// Test case: Metal Slug 3
-		std::optional<HANDLE> nativeHandle;
-		if (SourceHandle == NtCurrentThread()) {
-			nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
-		}
-		else {
-			nativeHandle = GetNativeHandle(SourceHandle);
-		}
-
-		if (nativeHandle) {
+		if (const auto &nativeHandle = GetNativeHandle(SourceHandle)) {
 			// This was a handle created by Ob
 			PVOID Object;
 			status = ObReferenceObjectByHandle(SourceHandle, zeroptr, &Object);
@@ -2215,46 +2198,19 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 	}
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
-	if (Alertable && (WaitMode == UserMode)) {
-		bool Exit = false;
-		PETHREAD eThread = PspGetCurrentThread();
+	bool Exit = false;
+	auto &fut = WaitUserApc(Alertable, WaitMode, &Exit);
 
-		auto &fut = std::async(std::launch::async, [eThread, &Exit]() {
-			while (true) {
-				xbox::KiApcListMtx.lock();
-				bool Empty = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[UserMode]);
-				xbox::KiApcListMtx.unlock();
-				if (Empty == false) {
-					KiExecuteUserApc();
-					// Queue a native APC to the calling thread to forcefully terminate the wait in NtDll::NtWaitForMultipleObjects,
-					// in the case it didn't terminate already
-					BOOL t = QueueUserAPC(EndWait, *GetNativeHandle(eThread->UniqueThread), 0);
-					return true;
-				}
-				Sleep(0);
-				if (Exit) { return false; }
-			}
-			});
+	NTSTATUS ret = NtDll::NtWaitForMultipleObjects(
+		Count,
+		Handles,
+		(NtDll::OBJECT_WAIT_TYPE)WaitType,
+		Alertable,
+		(NtDll::PLARGE_INTEGER)Timeout);
 
-		NTSTATUS ret = NtDll::NtWaitForMultipleObjects(
-			Count,
-			Handles,
-			(NtDll::OBJECT_WAIT_TYPE)WaitType,
-			Alertable,
-			(NtDll::PLARGE_INTEGER)Timeout);
-
-		Exit = true;
-		bool result = fut.get();
-		return result ? X_STATUS_USER_APC : ret;
-	}
-	else {
-		return NtDll::NtWaitForMultipleObjects(
-			Count,
-			Handles,
-			(NtDll::OBJECT_WAIT_TYPE)WaitType,
-			Alertable,
-			(NtDll::PLARGE_INTEGER)Timeout);
-	}
+	Exit = true;
+	bool result = fut.get();
+	return result ? X_STATUS_USER_APC : ret;
 }
 
 // ******************************************************************

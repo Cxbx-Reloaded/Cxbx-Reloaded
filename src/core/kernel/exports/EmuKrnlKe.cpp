@@ -81,6 +81,7 @@ namespace NtDll
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "EmuKrnlKe.h"
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
+#include "core\kernel\support\NativeHandle.h"
 #include "Timer.h"
 
 #include <chrono>
@@ -565,9 +566,17 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 		LOG_FUNC_ARG(Interval)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);
+	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
+	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
+	// Test case: Metal Slug 3
+	bool Exit = false;
+	auto &fut = WaitUserApc(Alertable, WaitMode, &Exit);
 
-	RETURN(ret);
+	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER *)Interval);
+
+	Exit = true;
+	bool result = fut.get();
+	return result ? X_STATUS_USER_APC : ret;
 }
 
 // ******************************************************************
@@ -1049,8 +1058,8 @@ XBSYSAPI EXPORTNUM(118) xbox::boolean_xt NTAPI xbox::KeInsertQueueApc
 		else {
 			KiApcListMtx.lock();
 			InsertTailList(&kThread->ApcState.ApcListHead[Apc->ApcMode], &Apc->ApcListEntry);
-			KiApcListMtx.unlock();
 			Apc->Inserted = TRUE;
+			KiApcListMtx.unlock();
 
 			// We can only attempt to execute the queued apc right away if it is been inserted in the current thread, because otherwise the KTHREAD
 			// in the fs selector will not be correct
@@ -1631,12 +1640,14 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	LONG ret = GetThreadPriority((HANDLE)Thread);
+	// It cannot fail because all thread handles are created by ob
+	const auto &nativeHandle = GetNativeHandle(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
+	LONG ret = GetThreadPriority(*nativeHandle);
 
 	// This would work normally, but it will slow down the emulation, 
 	// don't do that if the priority is higher then normal (so our own)!
 	if((Priority <= THREAD_PRIORITY_NORMAL) && ((HANDLE)Thread != GetCurrentThread())) {
-		SetThreadPriority((HANDLE)Thread, Priority);
+		SetThreadPriority(*nativeHandle, Priority);
 	}
 
 	RETURN(ret);

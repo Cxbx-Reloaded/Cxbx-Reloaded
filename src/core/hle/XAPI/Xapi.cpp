@@ -39,6 +39,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h" // For DefaultLaunchDataPage
 #include "core\kernel\support\EmuFile.h"
+#include "core\kernel\support\NativeHandle.h"
 #include "EmuShared.h"
 #include "core\hle\Intercept.hpp"
 #include "Windef.h"
@@ -911,12 +912,16 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
 		LOG_FUNC_ARG(DisablePriorityBoost)
 		LOG_FUNC_END;
 
-    BOOL bRet = SetThreadPriorityBoost(hThread, DisablePriorityBoost);
-
-    if(bRet == FALSE)
-        EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost Failed!");
-
-	RETURN(bRet);
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		BOOL bRet = SetThreadPriorityBoost(*nativeHandle, DisablePriorityBoost);
+		if (bRet == FALSE) {
+			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost Failed!");
+		}
+		RETURN(bRet);
+	}
+	else {
+		RETURN(0);
+	}
 }
 
 // ******************************************************************
@@ -935,12 +940,16 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriority)
 		LOG_FUNC_ARG(nPriority)
 		LOG_FUNC_END;
 
-    BOOL bRet = SetThreadPriority(hThread, nPriority);
-
-    if(bRet == FALSE)
-        EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority Failed!");
-
-	RETURN(bRet);
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		BOOL bRet = SetThreadPriority(*nativeHandle, nPriority);
+		if (bRet == FALSE) {
+			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority Failed!");
+		}
+		RETURN(bRet);
+	}
+	else {
+		RETURN(0);
+	}
 }
 
 
@@ -956,12 +965,16 @@ int WINAPI xbox::EMUPATCH(GetThreadPriority)
 
 	LOG_FUNC_ONE_ARG(hThread);
 
-    int iRet = GetThreadPriority(hThread);
-
-    if(iRet == THREAD_PRIORITY_ERROR_RETURN)
-        EmuLog(LOG_LEVEL::WARNING, "GetThreadPriority Failed!");
-
-	RETURN(iRet);
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		int iRet = GetThreadPriority(*nativeHandle);
+		if (iRet == THREAD_PRIORITY_ERROR_RETURN) {
+			EmuLog(LOG_LEVEL::WARNING, "GetThreadPriority Failed!");
+		}
+		RETURN(iRet);
+	}
+	else {
+		RETURN(THREAD_PRIORITY_ERROR_RETURN);
+	}
 }
 
 // ******************************************************************
@@ -980,9 +993,12 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(GetExitCodeThread)
 		LOG_FUNC_ARG(lpExitCode)
 		LOG_FUNC_END;
 
-    BOOL bRet = GetExitCodeThread(hThread, (::LPDWORD)lpExitCode);
-
-	RETURN(bRet);
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		RETURN(GetExitCodeThread(*nativeHandle, (::LPDWORD)lpExitCode));
+	}
+	else {
+		RETURN(0);
+	}
 }
 
 // ******************************************************************
@@ -1149,6 +1165,7 @@ xbox::LPVOID WINAPI xbox::EMUPATCH(ConvertThreadToFiber)
 	RETURN(pRet);
 }
 
+#if 0 // Handled by NtQueueApcThread
 // ******************************************************************
 // * patch: QueueUserAPC
 // ******************************************************************
@@ -1180,6 +1197,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(QueueUserAPC)
 
 	RETURN(dwRet);
 }
+#endif
 
 #if 0 // Handled by WaitForSingleObject
 // ******************************************************************

@@ -53,6 +53,12 @@ void RemoveXboxHandle(xbox::HANDLE xhandle)
 
 std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle)
 {
+	// If SourceHandle is -2 = NtCurrentThread, then we are searching the handle of this thread
+	// Test case: Metal Slug 3
+	if (xhandle == NtCurrentThread()) {
+		xhandle = xbox::PspGetCurrentThread()->UniqueThread;
+	}
+
 	std::shared_lock<std::shared_mutex> lck(g_MapMtx);
 	auto &it = g_RegisteredHandles.find(xhandle);
 	if (it == g_RegisteredHandles.end()) {

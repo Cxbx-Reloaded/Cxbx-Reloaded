@@ -29,7 +29,9 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h>
+#include <core\kernel\exports\EmuKrnlKi.h>
 #include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\NativeHandle.h"
 #include <cstdio>
 #include <cctype>
 #include <clocale>
@@ -207,6 +209,55 @@ const DWORD IrqlMasks[] = {
 	0x00000000, // IRQL 30
 	0x00000000, // IRQL 31 (HIGH_LEVEL)
 };
+
+// This helper function is used to signal NtDll waiting functions that the wait has been satisfied by an xbox user APC
+static void WINAPI EndWait(ULONG_PTR Parameter)
+{
+	// Do nothing
+}
+
+std::future<bool> WaitUserApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bool *Exit)
+{
+	// NOTE: kThread->Alerted is currently never set. When the alerted mechanism is implemented, the alerts should
+	// also interrupt the wait
+	xbox::PKPCR Kpcr = EmuKeGetPcr();
+	DWORD Id = GetCurrentThreadId();
+
+	// This new thread must execute APCs in the context of the calling thread
+	return std::async(std::launch::async, [Kpcr, Alertable, WaitMode, Id, Exit]() {
+		EmuKeSetPcr(Kpcr);
+		xbox::PETHREAD eThread = reinterpret_cast<xbox::PETHREAD>(Kpcr->Prcb->CurrentThread);
+
+		while (true) {
+			xbox::KiApcListMtx.lock();
+			bool EmptyKernel = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::KernelMode]);
+			bool EmptyUser = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::UserMode]);
+			xbox::KiApcListMtx.unlock();
+			if (EmptyKernel == false) {
+				xbox::KiExecuteKernelApc();
+			}
+			if ((EmptyUser == false) &&
+				(Alertable == TRUE) &&
+				(WaitMode == xbox::UserMode)) {
+				xbox::KiExecuteUserApc();
+				// Queue a native APC to the calling thread to forcefully terminate the wait of the NtDll functions,
+				// in the case it didn't terminate already
+				HANDLE nativeHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, Id);
+				assert(nativeHandle);
+				[[maybe_unused]] BOOL ret = QueueUserAPC(EndWait, nativeHandle, 0);
+				assert(ret);
+				CloseHandle(nativeHandle);
+				EmuKeSetPcr(nullptr);
+				return true;
+			}
+			Sleep(0);
+			if (*Exit) {
+				EmuKeSetPcr(nullptr);
+				return false;
+			}
+		}
+		});
+}
 
 // ******************************************************************
 // * 0x0033 - InterlockedCompareExchange()
