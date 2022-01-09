@@ -489,62 +489,73 @@ typedef struct s_CxbxPSDef {
 	void AdjustTextureModes(DecodedRegisterCombiner &RC)
 	{
 		// if this flag is set, the texture mode for each texture stage is adjusted as follows:
-		if (!RC.TexModeAdjust) return;
+		if (RC.TexModeAdjust) {
+			for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+				// First, disable not-assigned textures
+				if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_NONE) {
+					RC.PSTextureModes[i] = PS_TEXTUREMODES_NONE;
+					continue;
+				}
 
-		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-			// First, disable not-assigned textures
-			if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_NONE) {
-				RC.PSTextureModes[i] = PS_TEXTUREMODES_NONE;
-				continue;
-			}
-
-			// Then adjust some texture mode according to the currently active textures, so that the shader will use the appropriate sampling method
-			switch (RC.PSTextureModes[i]) {
-			case PS_TEXTUREMODES_PROJECT2D:
-			case PS_TEXTUREMODES_PROJECT3D:
-			case PS_TEXTUREMODES_CUBEMAP:
-				if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE)
-					RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP;
-				else
-					if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_VOLUMETEXTURE)
-					// TODO : Also do this for DepthBuffers (but not EmuXBFormatIsLinear!) :
-					// || EmuXBFormatIsDepthBuffer(GetXboxPixelContainerFormat(g_pXbox_SetTexture[i])) in { X_D3DFMT_D24S8, X_D3DFMT_F24S8, X_D3DFMT_D16, X_D3DFMT_F16}
-						RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT3D;
+				// Then adjust some texture mode according to the currently active textures, so that the shader will use the appropriate sampling method
+				switch (RC.PSTextureModes[i]) {
+				case PS_TEXTUREMODES_PROJECT2D:
+				case PS_TEXTUREMODES_PROJECT3D:
+				case PS_TEXTUREMODES_CUBEMAP:
+					if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE)
+						RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP;
 					else
-						RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT2D;
-				break;
-			case PS_TEXTUREMODES_DOT_STR_3D:
-			case PS_TEXTUREMODES_DOT_STR_CUBE:
-				if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE)
-					RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_CUBE;
-				else
-					RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_3D;
-				break;
+						if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_VOLUMETEXTURE)
+							// TODO : Also do this for DepthBuffers (but not EmuXBFormatIsLinear!) :
+							// || EmuXBFormatIsDepthBuffer(GetXboxPixelContainerFormat(g_pXbox_SetTexture[i])) in { X_D3DFMT_D24S8, X_D3DFMT_F24S8, X_D3DFMT_D16, X_D3DFMT_F16}
+							RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT3D;
+						else
+							RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT2D;
+					break;
+				case PS_TEXTUREMODES_DOT_STR_3D:
+				case PS_TEXTUREMODES_DOT_STR_CUBE:
+					if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE)
+						RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_CUBE;
+					else
+						RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_3D;
+					break;
+				}
+				/* Was :
+							switch (ActiveTextureTypes[i]) {
+							case xbox::X_D3DRTYPE_CUBETEXTURE:
+								switch (RC.PSTextureModes[i]) {
+								case PS_TEXTUREMODES_PROJECT2D: RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP; break;
+								case PS_TEXTUREMODES_PROJECT3D: RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP; break;
+								case PS_TEXTUREMODES_DOT_STR_3D: RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_CUBE; break;
+								} break;
+							case xbox::X_D3DRTYPE_VOLUMETEXTURE:
+								switch (RC.PSTextureModes[i]) {
+								case PS_TEXTUREMODES_PROJECT2D: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT3D; break;
+								case PS_TEXTUREMODES_CUBEMAP: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT3D; break;
+								case PS_TEXTUREMODES_DOT_STR_CUBE: RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_3D; break;
+								} break;
+							case xbox::X_D3DRTYPE_TEXTURE:
+								switch (RC.PSTextureModes[i]) {
+								case PS_TEXTUREMODES_PROJECT3D: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT2D; break;
+								case PS_TEXTUREMODES_CUBEMAP: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT2D; break;
+								} break;
+							case xbox::X_D3DRTYPE_NONE:
+								RC.PSTextureModes[i] = PS_TEXTUREMODES_NONE;
+								break;
+							}
+				*/
 			}
-/* Was :
-			switch (ActiveTextureTypes[i]) {
-			case xbox::X_D3DRTYPE_CUBETEXTURE:
-				switch (RC.PSTextureModes[i]) {
-				case PS_TEXTUREMODES_PROJECT2D: RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP; break;
-				case PS_TEXTUREMODES_PROJECT3D: RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP; break;
-				case PS_TEXTUREMODES_DOT_STR_3D: RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_CUBE; break;
-				} break;
-			case xbox::X_D3DRTYPE_VOLUMETEXTURE:
-				switch (RC.PSTextureModes[i]) {
-				case PS_TEXTUREMODES_PROJECT2D: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT3D; break;
-				case PS_TEXTUREMODES_CUBEMAP: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT3D; break;
-				case PS_TEXTUREMODES_DOT_STR_CUBE: RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_3D; break;
-				} break;
-			case xbox::X_D3DRTYPE_TEXTURE:
-				switch (RC.PSTextureModes[i]) {
-				case PS_TEXTUREMODES_PROJECT3D: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT2D; break;
-				case PS_TEXTUREMODES_CUBEMAP: RC.PSTextureModes[i] = PS_TEXTUREMODES_PROJECT2D; break;
-				} break;
-			case xbox::X_D3DRTYPE_NONE:
-				RC.PSTextureModes[i] = PS_TEXTUREMODES_NONE;
-				break;
+		}
+		else {
+			// Texture modes were specified manually - but fix them up if necessary
+			for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+				// Fixup sampling cube textures with PROJECT2D
+				// Test case: Splinter Cell Chaos Theory (lighting)
+				if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE && RC.PSTextureModes[i] == PS_TEXTUREMODES_PROJECT2D) {
+					EmuLog(LOG_LEVEL::WARNING, "PROJECT2D sampling is used with a cubemap texture - using CUBEMAP sampling instead");
+					RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP;
+				}
 			}
-*/
 		}
 	}
 
