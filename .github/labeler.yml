@@ -1,74 +1,74 @@
-#labels are sorted by alphabet order.
+# Labels are in alphabetical order.
 
 cmake:
-  - CMake*
+  - 'CMake*'
   - '**/CMakeLists.txt'
   - '**/*.cmake'
 
 cpu-emulation:
-  - src/devices/x86/**
+  - 'src/devices/x86/**'
 
 deployment:
   - '*.yml'
-  - .github/workflows/CI.yml
+  - '.github/workflows/CI.yml'
 
 file-system:
-  - src/core/kernel/support/EmuFile*
+  - 'src/core/kernel/support/EmuFile*'
 
 graphics:
-  - src/core/hle/D3D8/**
-  - src/core/hle/XGRAPHIC/**
-  - src/devices/video/**
-  - src/gui/*Video*
+  - 'src/core/hle/D3D8/**'
+  - 'src/core/hle/XGRAPHIC/**'
+  - 'src/devices/video/**'
+  - 'src/gui/*Video*'
 
 HLE:
-  - src/core/hle/**
-  - src/core/kernel/**
+  - 'src/core/hle/**'
+  - 'src/core/kernel/**'
 
 informational:
   - '**/*Logging*'
   - '**/*Logging*/**'
 
 input:
-  - src/common/input/**
-  - src/core/hle/XAPI/input/**
-  - src/devices/usb/**
-  - src/gui/controllers/**
-  - src/gui/*Input*
+  - 'src/common/input/**'
+  - 'src/core/hle/XAPI/input/**'
+  - 'src/devices/usb/**'
+  - 'src/gui/controllers/**'
+  - 'src/gui/*Input*'
 
 kernel:
-  - src/core/kernel/**
+  - 'src/core/kernel/**'
 
 LLE:
-  - src/devices/**
+  - 'src/devices/**'
 
 memory:
-  - src/core/kernel/memory-manager/**
+  - 'src/core/kernel/memory-manager/**'
 
 networking:
-  - src/core/hle/XONLINE/**
-  - src/devices/network/**
-  - src/gui/*Network*
+  - 'src/core/hle/XONLINE/**'
+  - 'src/devices/network/**'
+  - 'src/gui/*Network*'
 
 sound:
-  - src/common/audio/**
-  - src/core/hle/DSOUND/**
-  - src/core/hle/XACTENG/**
-  - src/devices/audio/**
-  - src/gui/*Audio*
+  - 'src/common/audio/**'
+  - 'src/core/hle/DSOUND/**'
+  - 'src/core/hle/XACTENG/**'
+  - 'src/devices/audio/**'
+  - 'src/gui/*Audio*'
 
 modules:
-  - import/**
+  - 'import/**'
 
 threading:
-  - src/core/kernel/support/EmuFS*
+  - 'src/core/kernel/support/EmuFS*'
 
 timing:
-  - src/common/Timer*
+  - 'src/common/Timer*'
 
 user interface:
-  - src/gui/**
-# - TODO: Dear Imgui location, maybe in src/core/gui path.
+  - 'src/gui/**'
+# - TODO: Dear Imgui location, maybe in src/core/gui.
 
 xbdm:
-  - src/common/xbdm/**
+  - 'src/common/xbdm/**'
