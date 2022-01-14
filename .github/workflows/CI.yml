@@ -3,34 +3,40 @@ name: GitHub CI
 on:
   push:
     paths-ignore:
+      - '.gitattributes'
       - '.github/*'
       - '.github/*_TEMPLATE/**'
+      - '.gitignore'
       - '*.bat'
       - '*.yml'
       - 'doc/**'
   pull_request:
     paths-ignore:
+      - '.gitattributes'
       - '.github/*'
       - '.github/*_TEMPLATE/**'
+      - '.gitignore'
       - '*.bat'
       - '*.yml'
       - 'doc/**'
 
 jobs:
   build-windows:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runs-on }}
     env:
       POWERSHELL_TELEMETRY_OPTOUT: 1
     strategy:
       fail-fast: false
       matrix:
         configuration: [Release, Debug]
-        vsver: [VS2019, VS2017]
+        vsver: [VS2019, VS2017] # VS2022
         include:
+        #  - vsver: VS2022
+        #    runs-on: windows-2022
           - vsver: VS2019
-            os: windows-latest
+            runs-on: windows-2019
           - vsver: VS2017
-            os: windows-2016 # https://github.com/actions/virtual-environments/issues/68#issuecomment-602652021
+            runs-on: windows-2016 # https://github.com/actions/virtual-environments/issues/68#issuecomment-602652021
     steps:
       - uses: actions/checkout@v2
         with:
@@ -38,12 +44,10 @@ jobs:
       - name: Generate CMake files
         run: cmake -B build -A Win32
       - name: Build
-        working-directory: build
-        run: cmake --build . --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
+        run: cmake --build build --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
       - name: Prepare artifacts
         if: matrix.configuration == 'Release'
-        working-directory: build
-        run: cmake --install . --config ${{ matrix.configuration }} --prefix ../artifacts
+        run: cmake --install build --config ${{ matrix.configuration }} --prefix artifacts
       - uses: actions/upload-artifact@v2
         if: matrix.configuration == 'Release'
         with:
@@ -69,7 +73,7 @@ jobs:
         run: |
           for artifact in artifacts/*; do
             7z a $artifact.zip "./$artifact/*"
-            if [[ $(stat -c %s $artifact.zip) -le 1000 ]]; then
+            if [ $(stat -c %s $artifact.zip) -le 1000 ]; then
               echo "Error: Archive $artifact.zip too small!"
               exit 1
             fi
