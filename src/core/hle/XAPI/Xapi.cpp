@@ -896,6 +896,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputSetLightgunCalibration)
 	RETURN(ret);
 }
 
+#if 0
 // ******************************************************************
 // * patch: SetThreadPriorityBoost
 // ******************************************************************
@@ -923,7 +924,9 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
 		RETURN(0);
 	}
 }
+#endif
 
+#if 0
 // ******************************************************************
 // * patch: SetThreadPriority
 // ******************************************************************
@@ -951,8 +954,10 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriority)
 		RETURN(0);
 	}
 }
+#endif
 
 
+#if 0
 // ******************************************************************
 // * patch: GetThreadPriority
 // ******************************************************************
@@ -976,6 +981,7 @@ int WINAPI xbox::EMUPATCH(GetThreadPriority)
 		RETURN(THREAD_PRIORITY_ERROR_RETURN);
 	}
 }
+#endif
 
 // ******************************************************************
 // * patch: GetExitCodeThread

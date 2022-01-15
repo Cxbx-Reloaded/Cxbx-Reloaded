@@ -83,6 +83,7 @@ namespace NtDll
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 #include "core\kernel\support\NativeHandle.h"
 #include "Timer.h"
+#include "Util.h"
 
 #include <chrono>
 #include <thread>
@@ -1220,9 +1221,16 @@ XBSYSAPI EXPORTNUM(124) xbox::long_xt NTAPI xbox::KeQueryBasePriorityThread
 {
 	LOG_FUNC_ONE_ARG(Thread);
 
-	LOG_UNIMPLEMENTED();
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
 
-	RETURN(0);
+	// It cannot fail because all thread handles are created by ob
+	const auto& nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
+	long_xt ret = GetThreadPriority(*nativeHandle);
+
+	KiUnlockDispatcherDatabase(OldIrql);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1640,23 +1648,40 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
 	// It cannot fail because all thread handles are created by ob
-	const auto &nativeHandle = GetNativeHandle(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
+	const auto &nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
 	LONG ret = GetThreadPriority(*nativeHandle);
 
 	// This would work normally, but it will slow down the emulation, 
 	// don't do that if the priority is higher then normal (so our own)!
-	if((Priority <= THREAD_PRIORITY_NORMAL) && ((HANDLE)Thread != GetCurrentThread())) {
-		SetThreadPriority(*nativeHandle, Priority);
+	if(Priority <= THREAD_PRIORITY_NORMAL) {
+		HANDLE nhandle;
+		// Verify if the thread is the same as current thread.
+		// Then use special handle to correct the problem for Windows' call usage.
+		if (Thread == KeGetCurrentPrcb()->CurrentThread) {
+			nhandle = NtCurrentThread();
+		}
+		else {
+			nhandle = *nativeHandle;
+		}
+		BOOL result = SetThreadPriority(nhandle, Priority);
+		if (!result) {
+			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
+		}
 	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
 
 	RETURN(ret);
 }
 
-XBSYSAPI EXPORTNUM(144) xbox::ulong_xt NTAPI xbox::KeSetDisableBoostThread
+XBSYSAPI EXPORTNUM(144) xbox::boolean_xt NTAPI xbox::KeSetDisableBoostThread
 (
 	IN PKTHREAD Thread,
-	IN ulong_xt Disable
+	IN boolean_xt Disable
 )
 {
 	LOG_FUNC_BEGIN
@@ -1667,8 +1692,16 @@ XBSYSAPI EXPORTNUM(144) xbox::ulong_xt NTAPI xbox::KeSetDisableBoostThread
 	KIRQL oldIRQL;
 	KiLockDispatcherDatabase(&oldIRQL);
 
-	ULONG prevDisableBoost = Thread->DisableBoost;
+	// It cannot fail because all thread handles are created by ob
+	const auto &nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
+
+	boolean_xt prevDisableBoost = Thread->DisableBoost;
 	Thread->DisableBoost = (CHAR)Disable;
+
+	BOOL bRet = SetThreadPriorityBoost(*nativeHandle, Disable);
+	if (!bRet) {
+		EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost failed: %s", WinError2Str().c_str());
+	}
 
 	KiUnlockDispatcherDatabase(oldIRQL);
 
