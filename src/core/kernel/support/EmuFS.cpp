@@ -215,7 +215,7 @@ void EmuKeFreePcr(xbox::HANDLE UniqueThread)
 	__writefsdword(TIB_ArbitraryDataSlot, NULL);
 }
 
-void EmuKeFreeThread()
+void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus)
 {
 	// This functions is to be used for cxbxr threads that execute xbox code. We can't just call PsTerminateSystemThread because some additional
 	// xbox state is not created for this kind of threads
@@ -223,6 +223,14 @@ void EmuKeFreeThread()
 	xbox::KeEmptyQueueApc();
 
 	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
+
+	eThread->Tcb.HasTerminated = 1;
+
+	// Emulate our exit strategy for GetExitCodeThread
+	eThread->ExitStatus = ExitStatus;
+	eThread->Tcb.Header.SignalState = 1;
+
+
 	xbox::HANDLE UniqueThread = eThread->UniqueThread;
 	if (GetNativeHandle(eThread->UniqueThread)) {
 		xbox::NtClose(eThread->UniqueThread);

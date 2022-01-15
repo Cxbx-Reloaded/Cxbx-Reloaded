@@ -35,7 +35,7 @@ extern void EmuInitFS();
 // generate fs segment selector
 extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread);
 // free resources allocated for the thread
-void EmuKeFreeThread();
+void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus = X_STATUS_ABANDONED);
 // free kpcr allocated for the thread
 void EmuKeFreePcr(xbox::HANDLE UniqueThread);
 

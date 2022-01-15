@@ -408,7 +408,7 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 		}
 	}*/
 
-	EmuKeFreeThread();
+	EmuKeFreeThread(ExitStatus);
 	KiUniqueProcess.StackCount--;
 
 	_endthreadex(ExitStatus);

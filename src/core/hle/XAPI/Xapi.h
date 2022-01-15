@@ -541,6 +541,7 @@ xbox::bool_xt WINAPI EMUPATCH(SetThreadPriorityBoost)
 );
 #endif
 
+#if 0
 // ******************************************************************
 // * patch: GetExitCodeThread
 // ******************************************************************
@@ -549,6 +550,7 @@ xbox::bool_xt WINAPI EMUPATCH(GetExitCodeThread)
     HANDLE  hThread,
     LPDWORD lpExitCode
 );
+#endif
 
 // ******************************************************************
 // * patch: XapiThreadStartup

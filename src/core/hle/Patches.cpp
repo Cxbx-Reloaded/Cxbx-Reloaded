@@ -354,7 +354,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("ConvertThreadToFiber", xbox::EMUPATCH(ConvertThreadToFiber), PATCH_IS_FIBER),
 	PATCH_ENTRY("CreateFiber", xbox::EMUPATCH(CreateFiber), PATCH_IS_FIBER),
 	PATCH_ENTRY("DeleteFiber", xbox::EMUPATCH(DeleteFiber), PATCH_IS_FIBER),
-	PATCH_ENTRY("GetExitCodeThread", xbox::EMUPATCH(GetExitCodeThread), PATCH_ALWAYS),
+	//PATCH_ENTRY("GetExitCodeThread", xbox::EMUPATCH(GetExitCodeThread), PATCH_ALWAYS),
 	//PATCH_ENTRY("GetThreadPriority", xbox::EMUPATCH(GetThreadPriority), PATCH_ALWAYS),
 	PATCH_ENTRY("OutputDebugStringA", xbox::EMUPATCH(OutputDebugStringA), PATCH_ALWAYS),
 	//PATCH_ENTRY("RaiseException", xbox::EMUPATCH(RaiseException), PATCH_ALWAYS),

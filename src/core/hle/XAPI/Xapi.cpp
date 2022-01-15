@@ -983,6 +983,7 @@ int WINAPI xbox::EMUPATCH(GetThreadPriority)
 }
 #endif
 
+#if 0
 // ******************************************************************
 // * patch: GetExitCodeThread
 // ******************************************************************
@@ -1006,6 +1007,7 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(GetExitCodeThread)
 		RETURN(0);
 	}
 }
+#endif
 
 // ******************************************************************
 // * patch: XapiThreadStartup

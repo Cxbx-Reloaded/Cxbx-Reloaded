@@ -1916,10 +1916,13 @@ KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 typedef struct _ETHREAD
 {
     struct _KTHREAD Tcb;
-    uchar_xt           UnknownA[0x1C]; // 0x110
+    uchar_xt           UnknownA[0x10]; // 0x110
+    ntstatus_xt        ExitStatus;     // 0x120
+    uchar_xt           UnknownB[0x8];  // 0x124
     HANDLE             UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
+static_assert(sizeof(ETHREAD) == 0x130);
 
 // ******************************************************************
 // * PCREATE_THREAD_NOTIFY_ROUTINE
