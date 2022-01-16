@@ -321,6 +321,8 @@ X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetBackBuffer2)
     int_xt                 BackBuffer
 );
 
+X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1)();
+
 // ******************************************************************
 // * patch: D3DDevice_GetBackBuffer
 // ******************************************************************
@@ -366,7 +368,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode)
     X_VERTEXSHADERCONSTANTMODE Mode
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode_0__LTCG_eax1)();
 
 // ******************************************************************
 // * patch: D3DDevice_Reset
@@ -1310,7 +1312,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform)
     CONST D3DMATRIX      *pMatrix
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)();
 
 // ******************************************************************
 // * patch: D3DDevice_MultiplyTransform
