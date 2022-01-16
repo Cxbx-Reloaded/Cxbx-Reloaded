@@ -51,12 +51,27 @@ void RemoveXboxHandle(xbox::HANDLE xhandle)
 	assert(ret == 1);
 }
 
+template<bool NoConversion>
 std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle)
 {
 	// If SourceHandle is -2 = NtCurrentThread, then we are searching the handle of this thread
 	// Test case: Metal Slug 3
 	if (xhandle == NtCurrentThread()) {
-		xhandle = xbox::PspGetCurrentThread()->UniqueThread;
+		// Only used for threads as Windows doesn't allow non-special handle for same thread.
+		if (NoConversion) {
+			return xhandle;
+		}
+		else {
+			xhandle = xbox::PspGetCurrentThread()->UniqueThread;
+		}
+	}
+	// If xhandle is not special handle, check if it's the same as current thread.
+	// Only used for threads as Windows doesn't allow non-special handle for same thread.
+	// This will only triggered within kernel functions i.e. KeSetDisableBoostThread and KeSetBasePriorityThread.
+	else if (NoConversion) {
+		if (xhandle == xbox::PspGetCurrentThread()->UniqueThread) {
+			return NtCurrentThread();
+		}
 	}
 
 	std::shared_lock<std::shared_mutex> lck(g_MapMtx);
@@ -68,3 +83,5 @@ std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle)
 		return it->second;
 	}
 }
+template std::optional<HANDLE> GetNativeHandle<true>(xbox::HANDLE xhandle);
+template std::optional<HANDLE> GetNativeHandle<false>(xbox::HANDLE xhandle);

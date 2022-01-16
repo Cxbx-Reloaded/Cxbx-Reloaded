@@ -1225,7 +1225,7 @@ XBSYSAPI EXPORTNUM(124) xbox::long_xt NTAPI xbox::KeQueryBasePriorityThread
 	KiLockDispatcherDatabase(&OldIrql);
 
 	// It cannot fail because all thread handles are created by ob
-	const auto& nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
+	const auto& nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
 	long_xt ret = GetThreadPriority(*nativeHandle);
 
 	KiUnlockDispatcherDatabase(OldIrql);
@@ -1652,7 +1652,7 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 	KiLockDispatcherDatabase(&oldIRQL);
 
 	// It cannot fail because all thread handles are created by ob
-	const auto &nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
+	const auto &nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
 	LONG ret = GetThreadPriority(*nativeHandle);
 
 	// This would work normally, but it will slow down the emulation, 
@@ -1693,7 +1693,7 @@ XBSYSAPI EXPORTNUM(144) xbox::boolean_xt NTAPI xbox::KeSetDisableBoostThread
 	KiLockDispatcherDatabase(&oldIRQL);
 
 	// It cannot fail because all thread handles are created by ob
-	const auto &nativeHandle = GetNativeHandle(PspGetCurrentThread()->UniqueThread);
+	const auto &nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
 
 	boolean_xt prevDisableBoost = Thread->DisableBoost;
 	Thread->DisableBoost = (CHAR)Disable;
