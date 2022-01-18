@@ -188,6 +188,7 @@ class WndMain : public Wnd
         // ******************************************************************
         bool        m_bXbeChanged;
         bool        m_bIsStarted;
+        size_t      m_iIsEmulating;
 
         // ******************************************************************
         // * cached filenames
