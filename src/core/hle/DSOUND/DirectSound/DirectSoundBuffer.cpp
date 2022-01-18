@@ -1594,52 +1594,54 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
             hRet = pThis->EmuDirectSoundBuffer8->Stop();
             pThis->Xb_rtStopEx = 0LL;
         }
-        else {
-            bool isLooping;
-            if ((pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) > 0) {
-                isLooping = true;
-            }
-            else {
-                isLooping = false;
-            }
+        else if(dwFlags & X_DSBSTOPEX_ENVELOPE) {
+            bool isLooping = pThis->EmuPlayFlags & X_DSBPLAY_LOOPING;
 
-            if ((dwFlags & X_DSBSTOPEX_ENVELOPE) > 0) {
-                if (rtTimeStamp == 0LL) {
-                    xbox::LARGE_INTEGER getTime;
-                    xbox::KeQuerySystemTime(&getTime);
-                    pThis->Xb_rtStopEx = getTime.QuadPart;
-                }
-                else {
-                    pThis->Xb_rtStopEx = rtTimeStamp;
-                }
-                pThis->Xb_rtStopEx += (pThis->Xb_EnvolopeDesc.dwRelease * 512) / 48000;
+            double releaseSamples = pThis->Xb_EnvolopeDesc.dwRelease * 512.0;
+
+            if (rtTimeStamp == 0LL) {
+                xbox::LARGE_INTEGER getTime;
+                xbox::KeQuerySystemTime(&getTime);
+                pThis->Xb_rtStopEx = getTime.QuadPart;
             }
             else {
                 pThis->Xb_rtStopEx = rtTimeStamp;
             }
+            const double samplesToTicks = 10000000 / 48000.0;
+            xbox::REFERENCE_TIME releaseTicks = static_cast<xbox::REFERENCE_TIME>(releaseSamples * samplesToTicks);
+            pThis->Xb_rtStopEx += releaseTicks;
 
-            if ((dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) > 0) {
-                // Release from loop region.
-                pThis->EmuPlayFlags &= ~X_DSBPLAY_LOOPING;
-            }
-
-            DWORD dwValue, dwStatus;
+            DWORD currentPos, dwStatus;
             pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
 
             if (pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
 
-                pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &dwValue);
+                pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &currentPos);
                 hRet = pThis->EmuDirectSoundBuffer8->Stop();
 
-                DSoundBufferResizeUpdate(pHybridThis, pThis->EmuPlayFlags, hRet, 0, pThis->X_BufferCacheSize);
+                // Determine the range of bytes we need to play
+                // Test case: Outrun 2006 - converting large buffers tanks the FPS
+                // Is set within DSoundBufferRegionCurrentLocation function
+                DWORD bufferRangeStart;
+                DWORD bufferRangeSize;
+                DSoundBufferRegionCurrentLocation(pHybridThis, pThis->EmuPlayFlags, bufferRangeStart, bufferRangeSize);
 
-                dwValue += pThis->EmuRegionPlayStartOffset;
-                if (isLooping) {
-                    dwValue += pThis->EmuRegionLoopStartOffset;
+                if (pThis->EmuBufferToggle == X_DSB_TOGGLE_LOOP) {
+                    // if we are to release from loop region, then we need change the size to end of actual buffer cache.
+                    if (dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) {
+                        bufferRangeSize = pThis->X_BufferCacheSize - bufferRangeStart;
+                    }
                 }
 
+                DSoundBufferResizeUpdate(pHybridThis, pThis->EmuPlayFlags, hRet, bufferRangeStart, bufferRangeSize);
+
                 pThis->EmuBufferToggle = X_DSB_TOGGLE_DEFAULT;
-                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwValue);
+                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(currentPos);
+            }
+
+            if (dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) {
+                // Release from loop region.
+                pThis->EmuPlayFlags &= ~X_DSBPLAY_LOOPING;
             }
 
             if (dwStatus & DSBSTATUS_PLAYING && rtTimeStamp != 0LL) {
@@ -1649,6 +1651,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
                 pThis->EmuDirectSoundBuffer8->Stop();
                 pThis->Xb_rtStopEx = 0LL;
             }
+        }
+        else {
+            LOG_TEST_CASE("Expected X_DSBSTOPEX_ENVELOPE");
         }
     }
 
