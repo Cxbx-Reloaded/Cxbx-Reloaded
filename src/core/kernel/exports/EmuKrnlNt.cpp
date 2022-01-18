@@ -2199,7 +2199,7 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 	bool Exit = false;
-	auto &fut = WaitUserApc(Alertable, WaitMode, &Exit);
+	auto fut = WaitApc(Alertable, WaitMode, &Exit);
 
 	NTSTATUS ret = NtDll::NtWaitForMultipleObjects(
 		Count,

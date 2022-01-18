@@ -31,6 +31,7 @@
 #include <core\kernel\exports\xboxkrnl.h>
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "core\kernel\exports\EmuKrnlKe.h"
+#include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\support\EmuFS.h" // For fs_instruction_t
 #include "core\kernel\support\NativeHandle.h"
 #include "core\kernel\init\CxbxKrnl.h"
@@ -819,6 +820,8 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 		InitializeListHead(&Prcb->CurrentThread->ApcState.ApcListHead[xbox::UserMode]);
 		Prcb->CurrentThread->KernelApcDisable = 0;
 		Prcb->CurrentThread->ApcState.ApcQueueable = TRUE;
+		Prcb->CurrentThread->ApcState.Process = &KiUniqueProcess;
+		Prcb->CurrentThread->ApcState.Process->ThreadQuantum = KiUniqueProcess.ThreadQuantum;
 		// Initialize the thread header and its wait list
 		Prcb->CurrentThread->Header.Type = xbox::ThreadObject;
 		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::long_xt);

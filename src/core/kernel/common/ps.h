@@ -14,6 +14,8 @@
 
 #include "types.h"
 
+#define X_THREAD_QUANTUM 60
+
 namespace xbox
 {
 // ******************************************************************

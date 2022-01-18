@@ -104,6 +104,6 @@ extern HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 bool DisableInterrupts();
 void RestoreInterruptMode(bool value);
 void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql);
-std::future<bool> WaitUserApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bool *Exit);
+std::future<bool> WaitApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bool *Exit);
 
 #endif

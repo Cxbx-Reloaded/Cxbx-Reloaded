@@ -140,12 +140,10 @@ xbox::KPCR* WINAPI EmuKeGetPcr()
 
 	// See EmuKeSetPcr()
 	Pcr = (xbox::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
-	
-	if (Pcr == nullptr) {
-		// If we reach here, it's a bug: it means we are executing xbox code from a host thread, and we have forgotten to initialize
-		// the xbox thread first
-		CxbxrKrnlAbort("KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
-	}
+
+	// If this fails, it's a bug: it means we are executing xbox code from a host thread, and we have forgotten to initialize
+	// the xbox thread first
+	assert(Pcr);
 
 	return Pcr;
 }
@@ -571,7 +569,7 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
 	// Test case: Metal Slug 3
 	bool Exit = false;
-	auto &fut = WaitUserApc(Alertable, WaitMode, &Exit);
+	auto fut = WaitApc(Alertable, WaitMode, &Exit);
 
 	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER *)Interval);
 
@@ -1657,17 +1655,8 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 
 	// This would work normally, but it will slow down the emulation, 
 	// don't do that if the priority is higher then normal (so our own)!
-	if(Priority <= THREAD_PRIORITY_NORMAL) {
-		HANDLE nhandle;
-		// Verify if the thread is the same as current thread.
-		// Then use special handle to correct the problem for Windows' call usage.
-		if (Thread == KeGetCurrentPrcb()->CurrentThread) {
-			nhandle = NtCurrentThread();
-		}
-		else {
-			nhandle = *nativeHandle;
-		}
-		BOOL result = SetThreadPriority(nhandle, Priority);
+	if (Priority <= THREAD_PRIORITY_NORMAL) {
+		BOOL result = SetThreadPriority(*nativeHandle, Priority);
 		if (!result) {
 			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
 		}
@@ -2221,7 +2210,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 			//WaitStatus = (NTSTATUS)KiSwapThread();
 
 			//if (WaitStatus == X_STATUS_USER_APC) {
-				// TODO: KiDeliverUserApc();
+				// KiExecuteUserApc();
 			//}
 
 			// If the thread was not awakened for an APC, return the Wait Status
@@ -2252,7 +2241,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 	// So unlock the dispatcher database, lower the IRQ and return the status
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 	if (WaitStatus == X_STATUS_USER_APC) {
-		//TODO: KiDeliverUserApc();
+		KiExecuteUserApc();
 	}
 
 	RETURN(WaitStatus);
@@ -2426,7 +2415,7 @@ XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 			WaitStatus = (NTSTATUS)KiSwapThread();
 
 			if (WaitStatus == X_STATUS_USER_APC) {
-				// TODO: KiDeliverUserApc();
+				KiExecuteUserApc();
 			}
 
 			// If the thread was not awakened for an APC, return the Wait Status
@@ -2478,7 +2467,7 @@ NoWait:
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 
 	if (WaitStatus == X_STATUS_USER_APC) {
-		// TODO: KiDeliverUserApc();
+		KiExecuteUserApc();
 	}
 
 	RETURN(WaitStatus);

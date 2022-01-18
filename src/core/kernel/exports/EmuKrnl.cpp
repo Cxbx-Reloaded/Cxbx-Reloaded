@@ -210,13 +210,13 @@ const DWORD IrqlMasks[] = {
 	0x00000000, // IRQL 31 (HIGH_LEVEL)
 };
 
-// This helper function is used to signal NtDll waiting functions that the wait has been satisfied by an xbox user APC
+// This helper function is used to signal WinApi waiting functions that the wait has been satisfied by an xbox user APC
 static void WINAPI EndWait(ULONG_PTR Parameter)
 {
 	// Do nothing
 }
 
-std::future<bool> WaitUserApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bool *Exit)
+std::future<bool> WaitApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bool *Exit)
 {
 	// NOTE: kThread->Alerted is currently never set. When the alerted mechanism is implemented, the alerts should
 	// also interrupt the wait
@@ -240,7 +240,7 @@ std::future<bool> WaitUserApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode
 				(Alertable == TRUE) &&
 				(WaitMode == xbox::UserMode)) {
 				xbox::KiExecuteUserApc();
-				// Queue a native APC to the calling thread to forcefully terminate the wait of the NtDll functions,
+				// Queue a native APC to the calling thread to forcefully terminate the wait of the WinApi functions,
 				// in the case it didn't terminate already
 				HANDLE nativeHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, Id);
 				assert(nativeHandle);

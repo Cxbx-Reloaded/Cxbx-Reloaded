@@ -364,7 +364,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("SwitchToFiber", xbox::EMUPATCH(SwitchToFiber), PATCH_IS_FIBER),
 	PATCH_ENTRY("XMountMUA", xbox::EMUPATCH(XMountMUA), PATCH_ALWAYS),
 	PATCH_ENTRY("XMountMURootA", xbox::EMUPATCH(XMountMURootA), PATCH_ALWAYS),
-	PATCH_ENTRY("XSetProcessQuantumLength", xbox::EMUPATCH(XSetProcessQuantumLength), PATCH_ALWAYS),
+	//PATCH_ENTRY("XSetProcessQuantumLength", xbox::EMUPATCH(XSetProcessQuantumLength), PATCH_ALWAYS),
 	PATCH_ENTRY("timeKillEvent", xbox::EMUPATCH(timeKillEvent), PATCH_ALWAYS),
 	PATCH_ENTRY("timeSetEvent", xbox::EMUPATCH(timeSetEvent), PATCH_ALWAYS),
 	PATCH_ENTRY("XReadMUMetaData", xbox::EMUPATCH(XReadMUMetaData), PATCH_ALWAYS),

@@ -83,5 +83,6 @@ std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle)
 		return it->second;
 	}
 }
+
 template std::optional<HANDLE> GetNativeHandle<true>(xbox::HANDLE xhandle);
 template std::optional<HANDLE> GetNativeHandle<false>(xbox::HANDLE xhandle);
