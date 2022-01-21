@@ -1658,7 +1658,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
             }
         }
 		else {
-			LOG_TEST_CASE("Expected DSBSTOPEX_ENVELOPE");
+			LOG_TEST_CASE("Expected X_DSBSTOPEX_ENVELOPE");
 		}
     }
 
