@@ -221,6 +221,37 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 	return hRet;
 }
 
+static void CxbxD3DClear(
+	DWORD          Count,
+	CONST D3DRECT* pRects,
+	DWORD          Flags,
+	D3DCOLOR       Color,
+	float          Z,
+	DWORD          Stencil
+)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+	// Assume Xbox D3D and Windows D3D9 target active rendertarget and/or depthstencil (each only when non-null)
+	// UNFINISHED!
+	// TODO : Perhaps convert pRects to DX11 format, handle Flags, Z and Stencil arguments
+	// Example code : https://github.com/Joshua-Ashton/dxvk-native/blob/a2dc99c407340432d4ba5bfa29efa685c27942ea/src/d3d9/d3d9_device.cpp#L1389-L1551
+	// https://docs.microsoft.com/en-us/windows/win32/api/d3d11_1/nf-d3d11_1-id3d11devicecontext1-clearview
+	hRet = g_pD3DDeviceContext->ClearView(
+		/*[in] ID3D11View* pView=*/null, // TODO : Get render target view & separate call for depth stencil?
+		/*[in] const FLOAT[4] Color=*/Color,
+		/*[in, optional] const D3D11_RECT *pRect=*/pRects,
+		/*UINT NumRects=*/Count
+	);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDeviceContext->ClearView");
+#else
+	hRet = g_pD3DDevice->Clear(Count, pRects, Flags, Color, Z, Stencil);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
+#endif
+}
+
 static void CxbxSetViewport(D3DVIEWPORT *pHostViewport)
 {
 #ifdef CXBX_USE_D3D11
@@ -2211,16 +2242,25 @@ static void DrawInitialBlackScreen
     // Avoids following DirectX Debug Runtime error report
     //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
     //
-    HRESULT hRet = g_pD3DDevice->Clear(
-        /*Count=*/0, 
-        /*pRects=*/nullptr, 
-        D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
-        /*Color=*/0xFF000000, // TODO : Use constant for this
-        /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
-        /*Stencil=*/0);
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 
-    hRet = g_pD3DDevice->BeginScene();
+	CxbxD3DClear(
+		/*Count=*/0,
+		/*pRects=*/nullptr,
+		D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
+		/*Color=*/0xFF000000, // TODO : Use constant for this
+		/*Z=*/g_bHasDepth ? 1.0f : 0.0f,
+		/*Stencil=*/0);
+
+	HRESULT hRet;
+
+#ifdef CXBX_USE_D3D11
+	// Direct3D 11 doesn't have a BeginScene / EndScene counterpart
+
+	hRet = g_pSwapChain->Present(0, 0);
+	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
+#else
+
+	hRet = g_pD3DDevice->BeginScene();
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene");
 
     hRet = g_pD3DDevice->EndScene();
@@ -2229,9 +2269,9 @@ static void DrawInitialBlackScreen
     hRet = g_pD3DDevice->Present(0, 0, 0, 0);
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
 
-    // begin scene
     hRet = g_pD3DDevice->BeginScene();
     DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene(2nd)");
+#endif
 }
 
 static void CreateDefaultD3D9Device
@@ -2245,7 +2285,11 @@ static void CreateDefaultD3D9Device
     if (g_pD3DDevice != nullptr) {
         EmuLog(LOG_LEVEL::DEBUG, "CreateDefaultD3D9Device releasing old Device.");
 
-        g_pD3DDevice->EndScene();
+#ifdef CXBX_USE_D3D11
+		// Direct3D 11 doesn't have a BeginScene / EndScene counterpart
+#else
+		g_pD3DDevice->EndScene();
+#endif
 
         ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
         ClearResourceCache(g_Cxbx_Cached_Direct3DResources);
@@ -4281,7 +4325,7 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     if (HostRenderTarget_Width != XboxRenderTarget_Width_Scaled || HostRenderTarget_Height != XboxRenderTarget_Height_Scaled) {
         LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
-        FreeHostResource(GetHostResourceKey(g_pXbox_RenderTarget)); g_pD3DDevice->SetRenderTarget(0, GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET));
+        FreeHostResource(GetHostResourceKey(g_pXbox_RenderTarget)); CxbxSetRenderTarget(GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET));
         FreeHostResource(GetHostResourceKey(g_pXbox_DepthStencil)); g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL));
     }
 }
@@ -5108,9 +5152,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
             EmuLog(LOG_LEVEL::WARNING, "Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
     }
 
-    HRESULT hRet;
-
-    if (pRects != nullptr) {
+    if (Count > 0 && pRects != nullptr) {
         // Scale the fill based on our scale factor and MSAA scale
 		float aaX, aaY;
 		GetMultiSampleScaleRaw(aaX, aaY);
@@ -5124,12 +5166,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
             rects[i].y1 = static_cast<LONG>(pRects[i].y1 * Yscale);
             rects[i].y2 = static_cast<LONG>(pRects[i].y2 * Yscale);
 		}
-        hRet = g_pD3DDevice->Clear(Count, rects.data(), HostFlags, Color, Z, Stencil);
+        CxbxD3DClear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
-		hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
+		CxbxD3DClear(Count, pRects, HostFlags, Color, Z, Stencil);
     }
-
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 }
 
 
@@ -5360,7 +5400,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
         hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
         if (hRet == D3D_OK) {
             (void)CxbxSetRenderTarget(pCurrentHostBackBuffer);
-            g_pD3DDevice->Clear(
+            CxbxD3DClear(
                 /*Count=*/0,
                 /*pRects=*/nullptr,
                 D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
