@@ -67,8 +67,8 @@ timing:
   - 'src/common/Timer*'
 
 user interface:
+  - 'src/core/common/imgui/*'
   - 'src/gui/**'
-# - TODO: Dear Imgui location, maybe in src/core/gui.
 
 xbdm:
   - 'src/common/xbdm/**'
