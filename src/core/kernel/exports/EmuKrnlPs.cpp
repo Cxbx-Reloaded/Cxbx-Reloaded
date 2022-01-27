@@ -50,7 +50,7 @@ namespace NtDll
 #include "core\kernel\support\EmuNtDll.h"
 };
 
-#define PSP_MAX_CREATE_THREAD_NOTIFY 16 /* TODO : Should be 8 */
+#define PSP_MAX_CREATE_THREAD_NOTIFY 8
 
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
@@ -62,9 +62,8 @@ typedef struct _PCSTProxyParam
 }
 PCSTProxyParam;
 
-// Global Variable(s)
-extern PVOID g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { NULL };
-extern int g_iThreadNotificationCount = 0;
+xbox::PCREATE_THREAD_NOTIFY_ROUTINE g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { xbox::zeroptr };
+int g_iThreadNotificationCount = 0;
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
 void LOG_PCSTProxy
@@ -251,6 +250,16 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			RETURN(result);
 		}
 
+		// Call thread notification routine(s)
+		if (g_iThreadNotificationCount) {
+			for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
+				if (g_pfnThreadNotification[i]) {
+					EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
+					(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, TRUE);
+				}
+			}
+		}
+
 		// Create another handle to pass back to the title in the ThreadHandle argument
 		result = ObOpenObjectByPointer(eThread, &PsThreadObjectType, ThreadHandle);
 		if (!X_NT_SUCCESS(result)) {
@@ -269,28 +278,6 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = (PVOID)SystemRoutine; // NULL, XapiThreadStartup or unknown?
 		iPCSTProxyParam->Ethread = eThread;
-
-		/*
-		// call thread notification routine(s)
-		if (g_iThreadNotificationCount != 0)
-		{
-			for (int i = 0; i < 16; i++)
-			{
-				// TODO: This is *very* wrong, ps notification routines are NOT the same as XApi notification routines
-				// TODO: XAPI notification routines are already handeld by XapiThreadStartup and don't need to be called by us
-				// TODO: This type of notification routine is PCREATE_THREAD_NOTIFY_ROUTINE, which takes an ETHREAD pointer as well as Thread ID as input
-				// TODO: This is impossible to support currently, as we do not create or register Xbox ETHREAD objects, so we're better to skip it entirely!
-				xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
-
-				// If the routine doesn't exist, don't execute it!
-				if (pfnNotificationRoutine == NULL)
-					continue;
-
-				EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", g_iThreadNotificationCount, pfnNotificationRoutine);
-
-				pfnNotificationRoutine(TRUE);
-			}
-		}*/
 
 		unsigned int ThreadId;
         HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, &ThreadId));
@@ -352,29 +339,15 @@ XBSYSAPI EXPORTNUM(257) xbox::ntstatus_xt NTAPI xbox::PsSetCreateThreadNotifyRou
 {
 	LOG_FUNC_ONE_ARG(NotifyRoutine);
 
-	NTSTATUS ret = X_STATUS_INSUFFICIENT_RESOURCES;
-
-	// Taken from xbox::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
-
-	// I honestly don't expect this to happen, but if it does...
-	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
-		CxbxrKrnlAbort("Too many thread notification routines installed\n");
-
-	// Find an empty spot in the thread notification array
-	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
-	{
-		// If we find one, then add it to the array, and break the loop so
-		// that we don't accidently register the same routine twice!
-		if (g_pfnThreadNotification[i] == NULL)
-		{
-			g_pfnThreadNotification[i] = (PVOID)NotifyRoutine;
+	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
+		if (g_pfnThreadNotification[i] == zeroptr) {
+			g_pfnThreadNotification[i] = NotifyRoutine;
 			g_iThreadNotificationCount++;
-			ret = X_STATUS_SUCCESS;
-			break;
+			RETURN(X_STATUS_SUCCESS);
 		}
 	}
 
-	RETURN(ret);
+	RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 }
 
 // ******************************************************************
@@ -390,23 +363,16 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 {
 	LOG_FUNC_ONE_ARG(ExitStatus);
 
-	/*
-	// call thread notification routine(s)
-	if (g_iThreadNotificationCount != 0)
-	{
-		for (int i = 0; i < 16; i++)
-		{
-			xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
-
-			// If the routine doesn't exist, don't execute it!
-			if (pfnNotificationRoutine == NULL)
-				continue;
-
-			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", g_iThreadNotificationCount, pfnNotificationRoutine);
-
-			pfnNotificationRoutine(FALSE);
+	// Call thread notification routine(s)
+	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
+	if (eThread->UniqueThread && g_iThreadNotificationCount) {
+		for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
+			if (g_pfnThreadNotification[i]) {
+				EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
+				(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, FALSE);
+			}
 		}
-	}*/
+	}
 
 	EmuKeFreeThread(ExitStatus);
 	KiUniqueProcess.StackCount--;

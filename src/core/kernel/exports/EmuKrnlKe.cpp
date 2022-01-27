@@ -136,10 +136,8 @@ xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 // ******************************************************************
 xbox::KPCR* WINAPI EmuKeGetPcr()
 {
-	xbox::PKPCR Pcr;
-
 	// See EmuKeSetPcr()
-	Pcr = (xbox::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
+	xbox::PKPCR Pcr = (xbox::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
 
 	// If this fails, it's a bug: it means we are executing xbox code from a host thread, and we have forgotten to initialize
 	// the xbox thread first
