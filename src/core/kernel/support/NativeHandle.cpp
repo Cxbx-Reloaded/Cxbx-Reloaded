@@ -31,6 +31,7 @@
 #include "Windows.h"
 #include "assert.h"
 #include "NativeHandle.h"
+#include "core\kernel\init\CxbxKrnl.h"
 
 
 std::unordered_map<xbox::HANDLE, HANDLE> g_RegisteredHandles;
@@ -39,9 +40,26 @@ std::shared_mutex g_MapMtx;
 void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle)
 {
 	std::unique_lock<std::shared_mutex> lck(g_MapMtx);
-	[[maybe_unused]] const auto &ret = g_RegisteredHandles.emplace(xhandle, nhandle);
-	// Even when duplicating xbox handles with NtDuplicateObject, the duplicate will still be different then the source handle
-	assert(ret.second == true);
+	const auto &ret = g_RegisteredHandles.try_emplace(xhandle, nhandle);
+	if (ret.second == false) {
+		// This can happen when an ob handle has been destroyed, but then a thread switch happens before the first thread
+		// got a chance to remove the old handle from g_RegisteredHandles with RemoveXboxHandle
+		auto now = std::chrono::system_clock::now();
+		auto timeout = now + std::chrono::milliseconds(2000);
+		while (now <= timeout) {
+			lck.unlock();
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			lck.lock();
+			g_RegisteredHandles.try_emplace(xhandle, nhandle);
+			if (ret.second) {
+				return;
+			}
+		}
+
+		// If we reach here, it means that we could not insert the handle after more than two seconds of trying. This probably means
+		// that we have forgotten to call RemoveXboxHandle on the old handle, or the other thread is waiting/deadlocked, so this is a bug
+		CxbxrKrnlAbortEx(CXBXR_MODULE::CXBXR, "Failed to register new xbox handle after more than two seconds!");
+	}
 }
 
 void RemoveXboxHandle(xbox::HANDLE xhandle)
