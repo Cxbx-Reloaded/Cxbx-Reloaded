@@ -288,6 +288,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 		}
 
+		KeQuerySystemTime(&eThread->CreateTime);
 		KiUniqueProcess.StackCount++;
 		RegisterXboxHandle(*ThreadHandle, handle);
 		RegisterXboxHandle(eThread->UniqueThread, handle);

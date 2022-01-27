@@ -225,16 +225,17 @@ void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus)
 
 	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
 
+	xbox::KeQuerySystemTime(&eThread->ExitTime);
 	eThread->Tcb.HasTerminated = 1;
 
 	// Emulate our exit strategy for GetExitCodeThread
 	eThread->ExitStatus = ExitStatus;
 	eThread->Tcb.Header.SignalState = 1;
 
-
 	xbox::HANDLE UniqueThread = eThread->UniqueThread;
 	if (GetNativeHandle(eThread->UniqueThread)) {
 		xbox::NtClose(eThread->UniqueThread);
+		eThread->UniqueThread = NULL;
 	}
 
 	EmuKeFreePcr(UniqueThread);
