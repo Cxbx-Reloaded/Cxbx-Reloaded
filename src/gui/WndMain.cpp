@@ -196,6 +196,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 	, m_Xbe(nullptr)
 	, m_bXbeChanged(false)
 	, m_bIsStarted(false)
+	, m_iIsEmulating(0)
 	, m_hwndChild(nullptr)
 	, m_hDebuggerProc(nullptr)
 	, m_hDebuggerMonitorThread()
@@ -331,14 +332,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case WM_CREATE:
 				{
 					if (m_hwndChild == NULL) {
-						m_FPS_status = 0.0f;
-						m_MSpF_status = 0.0f;
-						m_LedSeq_status_block = (XBOX_LED_COLOUR_GREEN << 24) |
-						                        (XBOX_LED_COLOUR_GREEN << 16) |
-						                        (XBOX_LED_COLOUR_GREEN << 8) |
-						                        (XBOX_LED_COLOUR_GREEN);
-						SetTimer(hwnd, TIMERID_ACTIVE_EMULATION, 1000, (TIMERPROC)nullptr);
-						SetTimer(hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)nullptr);
 						m_hwndChild = GetWindow(hwnd, GW_CHILD);
 						UpdateCaption();
 						RefreshMenus();
@@ -352,12 +345,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				case WM_DESTROY:
 				{
 					// (HWND)HIWORD(wParam) seems to be NULL, so we can't compare to m_hwndChild
-					if (m_hwndChild != NULL) { // Let's hope this signal originated from the only child window
-						KillTimer(hwnd, TIMERID_ACTIVE_EMULATION);
-						KillTimer(hwnd, TIMERID_LED);
+					// We can't check m_hwndChild for nonzero as we may accidentally think reboot did not occur.
+					if (!m_iIsEmulating) {
 						m_hwndChild = NULL;
 						StopEmulation();
-						DrawLedBitmap(hwnd, true);
 					}
 				}
 				break;
@@ -1599,7 +1590,7 @@ void WndMain::LoadGameLogo()
 void WndMain::RefreshMenus()
 {
 	bool XbeLoaded = (m_Xbe != nullptr);
-	bool Running = (m_hwndChild != NULL); // TODO : Use m_bIsStarted?
+	bool Running = m_iIsEmulating;
 	UINT MF_WhenXbeLoaded = XbeLoaded ? MF_ENABLED : MF_GRAYED;
 	UINT MF_WhenXbeLoadedNotRunning = (XbeLoaded && !Running) ? MF_ENABLED : MF_GRAYED;
 	UINT MF_WhenXbeLoadedAndRunning = (XbeLoaded && Running) ? MF_ENABLED : MF_GRAYED;
@@ -2229,6 +2220,14 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 	// 'Higher Resolution' rendering is handled as a scale factor.
 	ResizeWindow(m_hwnd, /*bForGUI*/false);
 
+	m_LedSeq_status_block = (XBOX_LED_COLOUR_GREEN << 24) |
+		(XBOX_LED_COLOUR_GREEN << 16) |
+		(XBOX_LED_COLOUR_GREEN << 8) |
+		(XBOX_LED_COLOUR_GREEN);
+
+	SetTimer(m_hwnd, TIMERID_ACTIVE_EMULATION, 1000, (TIMERPROC)nullptr);
+	SetTimer(m_hwnd, TIMERID_LED, XBOX_LED_FLASH_PERIOD, (TIMERPROC)nullptr);
+
 	// shell exe
     {
 
@@ -2290,6 +2289,9 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 // stop emulation
 void WndMain::StopEmulation()
 {
+	KillTimer(m_hwnd, TIMERID_ACTIVE_EMULATION);
+	KillTimer(m_hwnd, TIMERID_LED);
+
 	m_bIsStarted = false;
 	if (m_hwndChild != NULL) {
 		if (IsWindow(m_hwndChild)) {
@@ -2299,6 +2301,9 @@ void WndMain::StopEmulation()
 		m_hwndChild = NULL;
 	}
 
+	// Force set to not emulating state in order for menu to refresh.
+	m_iIsEmulating = 0;
+
 	UpdateCaption();
 	RefreshMenus();
 
@@ -2306,6 +2311,8 @@ void WndMain::StopEmulation()
 	ResizeWindow(m_hwnd, /*bForGUI=*/true);
 
 	g_EmuShared->SetIsEmulating(false);
+
+	DrawLedBitmap(m_hwnd, true);
 }
 
 // wrapper function to call CrashMonitor
@@ -2314,7 +2321,13 @@ DWORD WndMain::CrashMonitorWrapper(LPVOID lpParam)
 	CxbxSetThreadName("Cxbx Crash Monitor");
 
 	Crash_Manager_Data* pCMD = (Crash_Manager_Data*)lpParam;
+	static_cast<WndMain*>(pCMD->pWndMain)->m_iIsEmulating++; // Multi-xbe boots usage check
 	static_cast<WndMain*>(pCMD->pWndMain)->CrashMonitor(pCMD->dwChildProcID);
+	// Check if is not zero and avoid accidental decrement.
+	if (static_cast<WndMain*>(pCMD->pWndMain)->m_iIsEmulating) {
+		static_cast<WndMain*>(pCMD->pWndMain)->m_iIsEmulating--; // Multi-xbe boots usage check
+	}
+
 	free(lpParam);
 
 	return 0;
@@ -2329,7 +2342,7 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 	// If we do receive valid process ID, let's do the next step.
 	if (dwChildProcID != 0) {
 
-	HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwChildProcID);
+		HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwChildProcID);
 
 	 	// If we do receive valid handle, let's do the next step.
 	 	if (hProcess != NULL) {
@@ -2358,14 +2371,7 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 
 	// Crash clean up.
 
-	KillTimer(m_hwnd, TIMERID_ACTIVE_EMULATION);
-	KillTimer(m_hwnd, TIMERID_LED);
-	m_hwndChild = NULL;
-	m_bIsStarted = false;
-	g_EmuShared->SetIsEmulating(false);
-	UpdateCaption();
-	RefreshMenus();
-	DrawLedBitmap(m_hwnd, true);
+	StopEmulation();
 }
 
 // monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)

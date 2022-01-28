@@ -1716,6 +1716,10 @@ void CxbxKrnlPrintUEM(ULONG ErrorCode)
 	g_CxbxFatalErrorCode = ErrorCode;
 	g_CxbxPrintUEM = true; // print the UEM
 
+	// Force repaint screen in order for UEM to be visible every time.
+	InvalidateRect(g_hEmuWindow, nullptr, TRUE);
+	UpdateWindow(g_hEmuWindow);
+
 	CxbxPrintUEMInfo(ErrorCode);
 
 	// Sleep forever to prevent continuing the initialization
