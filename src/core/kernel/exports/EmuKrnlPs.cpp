@@ -296,7 +296,8 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		KeQuerySystemTime(&eThread->CreateTime);
 		KiUniqueProcess.StackCount++;
 		RegisterXboxHandle(*ThreadHandle, handle);
-		RegisterXboxHandle(eThread->UniqueThread, handle);
+		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);
+		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
 
 		g_AffinityPolicy->SetAffinityXbox(handle);
 
