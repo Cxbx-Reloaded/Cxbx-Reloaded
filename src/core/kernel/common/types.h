@@ -1916,10 +1916,10 @@ KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 typedef struct _ETHREAD
 {
     struct _KTHREAD    Tcb;
-    LARGE_INTEGER      CreateTime;
-    LARGE_INTEGER      ExitTime;
+    LARGE_INTEGER      CreateTime;     // 0x110
+    LARGE_INTEGER      ExitTime;       // 0x118
     ntstatus_xt        ExitStatus;     // 0x120
-    uchar_xt           UnknownB[0x8];  // 0x124
+    uchar_xt           Unknown[0x8];   // 0x124
     HANDLE             UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;

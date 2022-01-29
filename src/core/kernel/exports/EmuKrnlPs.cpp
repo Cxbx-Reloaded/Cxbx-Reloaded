@@ -288,6 +288,11 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 		}
 
+		// Increment the ref count of the thread once more. This is to guard against the case the title closes the thread handle
+		// before this thread terminates with PsTerminateSystemThread
+		// Test case: Amped
+		ObfReferenceObject(eThread);
+
 		KeQuerySystemTime(&eThread->CreateTime);
 		KiUniqueProcess.StackCount++;
 		RegisterXboxHandle(*ThreadHandle, handle);
@@ -376,6 +381,8 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 	}
 
 	EmuKeFreeThread(ExitStatus);
+	// Don't do this in EmuKeFreeThread because we only increment the thread ref count in PsCreateSystemThreadEx
+	ObfDereferenceObject(eThread);
 	KiUniqueProcess.StackCount--;
 
 	_endthreadex(ExitStatus);
