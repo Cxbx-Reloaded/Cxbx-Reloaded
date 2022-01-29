@@ -294,6 +294,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		ObfReferenceObject(eThread);
 
 		KeQuerySystemTime(&eThread->CreateTime);
+		InsertTailList(&KiUniqueProcess.ThreadListHead, &eThread->Tcb.ThreadListEntry);
 		KiUniqueProcess.StackCount++;
 		RegisterXboxHandle(*ThreadHandle, handle);
 		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);

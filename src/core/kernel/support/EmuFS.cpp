@@ -228,6 +228,8 @@ void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus)
 	xbox::KeQuerySystemTime(&eThread->ExitTime);
 	eThread->Tcb.HasTerminated = 1;
 
+	RemoveEntryList(&eThread->Tcb.ThreadListEntry);
+
 	// Emulate our exit strategy for GetExitCodeThread
 	eThread->ExitStatus = ExitStatus;
 	eThread->Tcb.Header.SignalState = 1;

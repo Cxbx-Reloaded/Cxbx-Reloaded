@@ -72,6 +72,8 @@
 #include "common\crypto\EmuSha.h" // For the SHA1 functions
 #include "Timer.h" // For Timer_Init
 #include "common\input\InputManager.h" // For the InputDeviceManager
+#include "core/kernel/support/NativeHandle.h"
+#include "common/win32/Util.h" // for WinError2Str
 
 #include "common/FilePaths.hpp"
 
@@ -1573,6 +1575,51 @@ static void CxbxrKrnlInitHacks()
 	CxbxKrnlShutDown();
 }
 
+void CxbxrKrnlSuspendThreads()
+{
+	xbox::PLIST_ENTRY ThreadListEntry = KiUniqueProcess.ThreadListHead.Flink;
+	std::vector<NtDll::HANDLE> threads;
+	threads.reserve(KiUniqueProcess.StackCount);
+
+	xbox::KPCR* Pcr = EmuKeGetPcr();
+
+	// If there's nothing in list entry, skip this step.
+	if (!ThreadListEntry) {
+		return;
+	}
+
+	while (ThreadListEntry != &KiUniqueProcess.ThreadListHead) {
+		xbox::HANDLE UniqueThread = CONTAINING_RECORD(ThreadListEntry, xbox::ETHREAD, Tcb.ThreadListEntry)->UniqueThread;
+		if (UniqueThread) {
+			// Current thread is an xbox thread
+			if (Pcr) {
+				const auto& nHandle = GetNativeHandle<true>(UniqueThread);
+				if (nHandle) {
+					// We do not want to suspend current thread, so we let it skip this one.
+					if (*nHandle != NtCurrentThread()) {
+						threads.push_back(*nHandle);
+					}
+				}
+			}
+			// Otherwise, convert all UniqueThread to host thead handles.
+			else {
+				const auto& nHandle = GetNativeHandle<false>(UniqueThread);
+				if (nHandle) {
+					threads.push_back(*nHandle);
+				}
+			}
+		}
+		ThreadListEntry = ThreadListEntry->Flink;
+	}
+
+	for (const auto& thread : threads) {
+		DWORD PrevCount = SuspendThread(thread);
+		if (PrevCount == -1) {
+			EmuLog(LOG_LEVEL::ERROR2, "Unable to suspend thread 0x%X for: %s", thread, WinError2Str().c_str());
+		}
+	}
+}
+
 void CxbxKrnlShutDown(bool is_reboot)
 {
 	if (!is_reboot) {
@@ -1580,6 +1627,9 @@ void CxbxKrnlShutDown(bool is_reboot)
 		int BootFlags = 0;
 		g_EmuShared->SetBootFlags(&BootFlags);
 	}
+
+	// This is very important process to prevent false positive report and allow IDEs to continue debug multiple reboots.
+	CxbxrKrnlSuspendThreads();
 
 	// NOTE: This causes a hang when exiting while NV2A is processing
 	// This is okay for now: It won't leak memory or resources since TerminateProcess will free everything

@@ -32,6 +32,7 @@
 #include "assert.h"
 #include "NativeHandle.h"
 #include "core\kernel\init\CxbxKrnl.h"
+#include "core/kernel/support/EmuFS.h"
 
 
 std::unordered_map<xbox::HANDLE, HANDLE> g_RegisteredHandles;

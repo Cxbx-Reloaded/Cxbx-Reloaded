@@ -102,6 +102,7 @@ xbox::void_xt xbox::KiInitSystem()
 {
 	KiUniqueProcess.StackCount = 0;
 	KiUniqueProcess.ThreadQuantum = X_THREAD_QUANTUM;
+	InitializeListHead(&KiUniqueProcess.ThreadListHead);
 
 	InitializeListHead(&KiWaitInListHead);
 
