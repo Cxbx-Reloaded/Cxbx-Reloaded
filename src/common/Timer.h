@@ -63,6 +63,7 @@ void Timer_Exit(TimerObject* Timer);
 void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);
 uint64_t GetTime_NS(TimerObject* Timer);
 void Timer_Init();
+void Timer_Shutdown();
 
 int64_t Timer_GetScaledPerformanceCounter(int64_t Period);
 

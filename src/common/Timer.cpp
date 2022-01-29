@@ -122,6 +122,32 @@ void Timer_Destroy(TimerObject* Timer)
 	TimerList.erase(TimerList.begin() + index);
 }
 
+void Timer_Shutdown()
+{
+	unsigned int index, i;
+	TimerMtx.lock();
+
+	index = TimerList.size();
+	for (i = 0; i < index; i++) {
+		TimerObject* Timer = TimerList[i];
+		Timer_Exit(Timer);
+	}
+
+	int counter = 0;
+	while (TimerList.size()) {
+		if (counter >= 8) {
+			break;
+		}
+		TimerMtx.unlock();
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		TimerMtx.lock();
+		counter++;
+
+	}
+	TimerList.clear();
+	TimerMtx.unlock();
+}
+
 // Thread that runs the timer
 void ClockThread(TimerObject* Timer)
 {

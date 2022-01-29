@@ -1628,9 +1628,6 @@ void CxbxKrnlShutDown(bool is_reboot)
 		g_EmuShared->SetBootFlags(&BootFlags);
 	}
 
-	// This is very important process to prevent false positive report and allow IDEs to continue debug multiple reboots.
-	CxbxrKrnlSuspendThreads();
-
 	// NOTE: This causes a hang when exiting while NV2A is processing
 	// This is okay for now: It won't leak memory or resources since TerminateProcess will free everything
 	// delete g_NV2A; // TODO : g_pXbox
@@ -1643,14 +1640,22 @@ void CxbxKrnlShutDown(bool is_reboot)
 		g_io_mu_metadata = nullptr;
 	}
 
-	// Shutdown the memory manager
-	g_VMManager.Shutdown();
-
 	// Shutdown the render manager
 	if (g_renderbase != nullptr) {
 		g_renderbase->Shutdown();
 		g_renderbase = nullptr;
 	}
+
+	// This is very important process to prevent false positive report and allow IDEs to continue debug multiple reboots.
+	CxbxrKrnlSuspendThreads();
+
+	// NOTE: Require to be after g_renderbase's shutdown process.
+	// Next thing we need to do is shutdown our timer threads.
+	Timer_Shutdown();
+
+	// NOTE: Must be last step of shutdown process and before CxbxUnlockFilePath call!
+	// Shutdown the memory manager
+	g_VMManager.Shutdown();
 
 	CxbxUnlockFilePath();
 
