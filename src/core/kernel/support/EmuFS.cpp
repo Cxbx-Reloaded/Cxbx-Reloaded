@@ -45,6 +45,8 @@
 #undef RtlZeroMemory
 #endif
 
+#define TLS_ALIGNMENT_OFFSET 12
+
 // NT_TIB (Thread Information Block) offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
 #define TIB_ExceptionList         offsetof(NT_TIB, ExceptionList)         // = 0x00/0
 #define TIB_StackBase             offsetof(NT_TIB, StackBase)             // = 0x04/4
@@ -112,6 +114,11 @@
 // = 0xF0/240 */ KSEMAPHORE SuspendSemaphore;
 // = 0x104/260 */ LIST_ENTRY ThreadListEntry;
 // = 0x10C/268 */ UCHAR _padding[4];
+
+template void EmuGenerateFS<true>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
+template void EmuGenerateFS<false>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
+template void EmuKeFreePcr<true>();
+template void EmuKeFreePcr<false>();
 
 NT_TIB *GetNtTib()
 {
@@ -187,10 +194,10 @@ void EmuKeSetPcr(xbox::KPCR *Pcr)
 	__writefsdword(TIB_ArbitraryDataSlot, (DWORD)Pcr);
 }
 
-void EmuKeFreePcr(xbox::HANDLE UniqueThread)
+template<bool IsHostThread>
+void EmuKeFreePcr()
 {
 	xbox::PKPCR Pcr = EmuKeGetPcr();
-	
 	xbox::PVOID Dummy;
 	xbox::ulong_xt Size;
 	xbox::ntstatus_xt Status;
@@ -198,12 +205,13 @@ void EmuKeFreePcr(xbox::HANDLE UniqueThread)
 	if (Pcr->NtTib.StackBase) {
 		// NOTE: the tls pointer was increased by 12 bytes to enforce the 16 bytes alignment, so adjust it to reach the correct pointer
 		// that was allocated by xbox::NtAllocateVirtualMemory
-		Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - 12;
+		Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - TLS_ALIGNMENT_OFFSET;
 		Size = xbox::zero;
 		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free tls
 		assert(Status == X_STATUS_SUCCESS);
 	}
-	if (UniqueThread == reinterpret_cast<xbox::HANDLE>(GetCurrentThreadId())) {
+	if constexpr (IsHostThread) {
+		// This only happens for the kernel initialization thread of cxbxr
 		Dummy = Pcr->Prcb->CurrentThread;
 		Size = xbox::zero;
 		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free ethread
@@ -218,8 +226,7 @@ void EmuKeFreePcr(xbox::HANDLE UniqueThread)
 
 void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus)
 {
-	// This functions is to be used for cxbxr threads that execute xbox code. We can't just call PsTerminateSystemThread because some additional
-	// xbox state is not created for this kind of threads
+	// Free all kernel resources that were allocated fo this thread
 
 	xbox::KeEmptyQueueApc();
 
@@ -234,13 +241,12 @@ void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus)
 	eThread->ExitStatus = ExitStatus;
 	eThread->Tcb.Header.SignalState = 1;
 
-	xbox::HANDLE UniqueThread = eThread->UniqueThread;
 	if (GetNativeHandle(eThread->UniqueThread)) {
 		xbox::NtClose(eThread->UniqueThread);
-		eThread->UniqueThread = NULL;
+		eThread->UniqueThread = xbox::zero;
 	}
 
-	EmuKeFreePcr(UniqueThread);
+	EmuKeFreePcr();
 }
 
 __declspec(naked) void EmuFS_RefreshKPCR()
@@ -674,7 +680,8 @@ void EmuInitFS()
 }
 
 // generate fs segment selector
-void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
+template<bool IsHostThread>
+void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread)
 {
 	void *pNewTLS = nullptr;
 	xbox::PVOID base;
@@ -704,7 +711,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 			pNewTLS = (void*)base;
 			xbox::RtlZeroMemory(pNewTLS, dwCopySize + dwZeroSize + 0x100 + 0xC);
 			/* Skip the first 12 bytes so that TLSData will be 16 byte aligned (addr returned by NtAllocateVirtualMemory is 4K aligned) */
-			pNewTLS = (uint8_t*)pNewTLS + 12;
+			pNewTLS = (uint8_t*)pNewTLS + TLS_ALIGNMENT_OFFSET;
 
 			if (dwCopySize > 0) {
 				memcpy((uint8_t*)pNewTLS + 4, pTLSData, dwCopySize);
@@ -801,23 +808,22 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 		NewPcr->Irql = PASSIVE_LEVEL; // See KeLowerIrql;
 	}
 
+	if constexpr (IsHostThread) {
+		// This only happens for the kernel initialization thread of cxbxr
+		assert(Ethread == xbox::zeroptr);
+
+		base = xbox::zeroptr;
+		size = sizeof(xbox::ETHREAD);
+		xbox::NtAllocateVirtualMemory(&base, 0, &size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
+		Ethread = (xbox::PETHREAD)base;
+		xbox::RtlZeroMemory(Ethread, sizeof(xbox::ETHREAD)); // Clear, to prevent side-effects on random contents
+	}
+
 	// Initialize a fake PrcbData.CurrentThread 
 	{
-		// If it is nullptr, it means we are creating this thread from cxbxr, otherwise we were created from PsCreateSystemThreadEx
-		xbox::PETHREAD EThread = static_cast<xbox::PETHREAD>(Ethread);
-		if (EThread == xbox::zeroptr) {
-			// Since this a host thread that we use to execute xbox code, we do not need to create ob handles for this thread
-			base = xbox::zeroptr;
-			size = sizeof(xbox::ETHREAD);
-			xbox::NtAllocateVirtualMemory(&base, 0, &size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
-			EThread = (xbox::ETHREAD *)base; // Clear, to prevent side-effects on random contents
-			xbox::RtlZeroMemory(EThread, sizeof(xbox::ETHREAD));
-			EThread->UniqueThread = reinterpret_cast<xbox::HANDLE>(GetCurrentThreadId());
-		}
-
-		EThread->Tcb.TlsData = pNewTLS;
 		// Set PrcbData.CurrentThread
-		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
+		Prcb->CurrentThread = (xbox::PKTHREAD)Ethread;
+		Prcb->CurrentThread->TlsData = pNewTLS;
 		// Initialize APC stuff
 		InitializeListHead(&Prcb->CurrentThread->ApcState.ApcListHead[xbox::KernelMode]);
 		InitializeListHead(&Prcb->CurrentThread->ApcState.ApcListHead[xbox::UserMode]);
@@ -844,4 +850,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread)
 	EmuKeSetPcr(NewPcr);
 
 	EmuLog(LOG_LEVEL::DEBUG, "Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)", pTLS);
+
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 }

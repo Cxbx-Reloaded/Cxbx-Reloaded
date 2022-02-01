@@ -25,6 +25,8 @@
 // *
 // ******************************************************************
 
+#include <core\kernel\exports\xboxkrnl.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -142,34 +144,28 @@ void Timer_Shutdown()
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		TimerMtx.lock();
 		counter++;
-
 	}
 	TimerList.clear();
 	TimerMtx.unlock();
 }
 
 // Thread that runs the timer
-void ClockThread(TimerObject* Timer)
+void NTAPI ClockThread(void *TimerArg)
 {
-	uint64_t NewExpireTime;
-
+	TimerObject *Timer = static_cast<TimerObject *>(TimerArg);
 	if (!Timer->Name.empty()) {
 		CxbxSetThreadName(Timer->Name.c_str());
 	}
-	if (Timer->IsXboxTimer) {
-		InitXboxThread();
-		g_AffinityPolicy->SetAffinityXbox();
-	} else {
+	if (!Timer->IsXboxTimer) {
 		g_AffinityPolicy->SetAffinityOther();
 	}
 
-	NewExpireTime = GetNextExpireTime(Timer);
+	uint64_t NewExpireTime = GetNextExpireTime(Timer);
 
 	while (true) {
 		if (GetTime_NS(Timer) > NewExpireTime) {
 			if (Timer->Exit.load()) {
 				Timer_Destroy(Timer);
-				EmuKeFreeThread();
 				return;
 			}
 			Timer->Callback(Timer->Opaque);
@@ -213,7 +209,13 @@ TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, bool Is
 void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
 {
 	Timer->ExpireTime_MS.store(Expire_MS);
-	std::thread(ClockThread, Timer).detach();
+	if (Timer->IsXboxTimer) {
+		xbox::HANDLE hThread;
+		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, ClockThread, Timer, FALSE);
+	}
+	else {
+		std::thread(ClockThread, Timer).detach();
+	}
 }
 
 // Retrives the frequency of the high resolution clock of the host

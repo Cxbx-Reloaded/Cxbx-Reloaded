@@ -33,11 +33,13 @@
 extern void EmuInitFS();
 
 // generate fs segment selector
-extern void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PVOID Ethread);
+template<bool IsHostThread = false>
+void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
 // free resources allocated for the thread
 void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus = X_STATUS_ABANDONED);
 // free kpcr allocated for the thread
-void EmuKeFreePcr(xbox::HANDLE UniqueThread);
+template<bool IsHostThread = false>
+void EmuKeFreePcr();
 
 void EmuKeSetPcr(xbox::KPCR *Pcr);
 xbox::KPCR *_stdcall EmuKeGetPcr();
@@ -47,5 +49,10 @@ typedef struct
 	std::vector<uint8_t> data;
 	void* functionPtr;
 }fs_instruction_t;
+
+extern template void EmuGenerateFS<true>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
+extern template void EmuGenerateFS<false>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
+extern template void EmuKeFreePcr<true>();
+extern template void EmuKeFreePcr<false>();
 
 #endif

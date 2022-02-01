@@ -882,25 +882,22 @@ xbox::void_xt FASTCALL xbox::KiWaitSatisfyAll
 	return;
 }
 
-template<bool KernelApc>
+template<xbox::MODE ApcMode>
 static xbox::void_xt KiExecuteApc()
 {
 	xbox::PKTHREAD kThread = xbox::KeGetCurrentThread();
 
-	int ApcMode;
-	if constexpr (KernelApc) {
+	if constexpr (ApcMode == xbox::KernelMode) {
 		kThread->ApcState.KernelApcPending = FALSE;
-		ApcMode = xbox::KernelMode;
 	}
 	else {
 		kThread->ApcState.UserApcPending = FALSE;
-		ApcMode = xbox::UserMode;
 	}
 
 	// Even though the apc list is per-thread, it's still possible that another thread will access it while we are processing it below
 	xbox::KiApcListMtx.lock();
 	while (!IsListEmpty(&kThread->ApcState.ApcListHead[ApcMode])) {
-		if (KernelApc && (kThread->KernelApcDisable != 0)) {
+		if ((ApcMode == xbox::KernelMode) && (kThread->KernelApcDisable != 0)) {
 			xbox::KiApcListMtx.unlock();
 			return;
 		}
@@ -910,7 +907,7 @@ static xbox::void_xt KiExecuteApc()
 		Apc->Inserted = FALSE;
 		xbox::KiApcListMtx.unlock();
 
-		// NOTE: we never use KernelRoutine
+		// NOTE: we never use KernelRoutine because that is only used for kernel APCs, which we currently don't use
 		if (Apc->NormalRoutine != xbox::zeroptr) {
 			(Apc->NormalRoutine)(Apc->NormalContext, Apc->SystemArgument1, Apc->SystemArgument2);
 		}
@@ -924,10 +921,10 @@ static xbox::void_xt KiExecuteApc()
 
 xbox::void_xt xbox::KiExecuteKernelApc()
 {
-	KiExecuteApc<true>();
+	KiExecuteApc<KernelMode>();
 }
 
 xbox::void_xt xbox::KiExecuteUserApc()
 {
-	KiExecuteApc<false>();
+	KiExecuteApc<UserMode>();
 }

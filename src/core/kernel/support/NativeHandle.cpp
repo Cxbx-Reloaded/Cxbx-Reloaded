@@ -45,6 +45,7 @@ void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle)
 	if (ret.second == false) {
 		// This can happen when an ob handle has been destroyed, but then a thread switch happens before the first thread
 		// got a chance to remove the old handle from g_RegisteredHandles with RemoveXboxHandle
+		// Test case: dashboard
 		auto now = std::chrono::system_clock::now();
 		auto timeout = now + std::chrono::milliseconds(2000);
 		while (now <= timeout) {

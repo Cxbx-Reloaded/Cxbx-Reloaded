@@ -1029,6 +1029,8 @@ XBSYSAPI EXPORTNUM(206) xbox::ntstatus_xt NTAPI xbox::NtQueueApcThread
 		LOG_FUNC_ARG(ApcReserved)
 		LOG_FUNC_END;
 
+	// Test case: Metal Slug 3, possibly other SNK games too
+
 	PETHREAD Thread;
 	ntstatus_xt result = ObReferenceObjectByHandle(ThreadHandle, &PsThreadObjectType, reinterpret_cast<PVOID *>(&Thread));
 	if (!X_NT_SUCCESS(result)) {
@@ -2199,7 +2201,7 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 	bool Exit = false;
-	auto fut = WaitApc(Alertable, WaitMode, &Exit);
+	auto async_bool = WaitApc(Alertable, WaitMode, &Exit);
 
 	NTSTATUS ret = NtDll::NtWaitForMultipleObjects(
 		Count,
@@ -2209,8 +2211,8 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		(NtDll::PLARGE_INTEGER)Timeout);
 
 	Exit = true;
-	bool result = fut.get();
-	return result ? X_STATUS_USER_APC : ret;
+	bool result = async_bool.get();
+	RETURN(result ? X_STATUS_USER_APC : ret);
 }
 
 // ******************************************************************

@@ -64,6 +64,7 @@ PCSTProxyParam;
 
 xbox::PCREATE_THREAD_NOTIFY_ROUTINE g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { xbox::zeroptr };
 int g_iThreadNotificationCount = 0;
+static std::mutex PspThreadNotificationMtx;
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
 void LOG_PCSTProxy
@@ -80,16 +81,6 @@ void LOG_PCSTProxy
 		LOG_FUNC_ARG(SystemRoutine)
 		LOG_FUNC_ARG(Ethread)
 		LOG_FUNC_END;
-}
-
-// Overload which doesn't change affinity
-void InitXboxThread(xbox::PVOID Ethread)
-{
-	// initialize FS segment selector
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData, Ethread);
-
-	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 }
 
 // PsCreateSystemThread proxy procedure
@@ -113,9 +104,8 @@ static unsigned int WINAPI PCSTProxy
 		params.SystemRoutine,
 		params.Ethread);
 
-
 	// Do minimal thread initialization
-	InitXboxThread(params.Ethread);
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData, static_cast<xbox::PETHREAD>(params.Ethread));
 
 	auto routine = (xbox::PKSYSTEM_ROUTINE)params.SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
@@ -148,6 +138,17 @@ xbox::PETHREAD xbox::PspGetCurrentThread()
 {
 	// This works because we assign ethread to Prcb->CurrentThread
 	return reinterpret_cast<PETHREAD>(KeGetCurrentThread());
+}
+
+static xbox::void_xt PspCallThreadNotificationRoutines(xbox::PETHREAD eThread, xbox::boolean_xt Create)
+{
+	std::unique_lock lck(PspThreadNotificationMtx);
+	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
+		if (g_pfnThreadNotification[i]) {
+			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
+			(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, Create);
+		}
+	}
 }
 
 // ******************************************************************
@@ -250,14 +251,9 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			RETURN(result);
 		}
 
-		// Call thread notification routine(s)
+		// Call the thread notification routine(s)
 		if (g_iThreadNotificationCount) {
-			for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
-				if (g_pfnThreadNotification[i]) {
-					EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
-					(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, TRUE);
-				}
-			}
+			PspCallThreadNotificationRoutines(eThread, TRUE);
 		}
 
 		// Create another handle to pass back to the title in the ThreadHandle argument
@@ -298,6 +294,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		KiUniqueProcess.StackCount++;
 		RegisterXboxHandle(*ThreadHandle, handle);
 		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);
+		assert(dupHandle);
 		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
 
 		g_AffinityPolicy->SetAffinityXbox(handle);
@@ -371,15 +368,10 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 {
 	LOG_FUNC_ONE_ARG(ExitStatus);
 
-	// Call thread notification routine(s)
+	// Call the thread notification routine(s)
 	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
 	if (eThread->UniqueThread && g_iThreadNotificationCount) {
-		for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
-			if (g_pfnThreadNotification[i]) {
-				EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
-				(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, FALSE);
-			}
-		}
+		PspCallThreadNotificationRoutines(eThread, FALSE);
 	}
 
 	EmuKeFreeThread(ExitStatus);

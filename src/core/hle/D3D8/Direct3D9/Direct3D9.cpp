@@ -37,6 +37,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\NativeHandle.h"
 #include "EmuShared.h"
 #include "..\FixedFunctionState.h"
 #include "core\hle\D3D8\ResourceTracker.h"
@@ -221,7 +222,7 @@ static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should b
 // Static Function(s)
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static DWORD WINAPI                 EmuUpdateTickCount(LPVOID);
+static xbox::void_xt NTAPI          EmuUpdateTickCount(xbox::PVOID Arg);
 static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 static void							CxbxImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_D3DSurface *pNewZStencil);
@@ -627,12 +628,15 @@ void CxbxInitWindow(bool bFullInit)
         CxbxKrnl_hEmuParent = NULL;
 
     // create timing thread
-	if (bFullInit)
+	if (bFullInit && !bLLE_GPU)
     {
-        HANDLE hThread = CreateThread(nullptr, 0, EmuUpdateTickCount, nullptr, 0, nullptr);
+		xbox::HANDLE hThread;
+		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, EmuUpdateTickCount, xbox::zeroptr, FALSE);
         // We set the priority of this thread a bit higher, to assure reliable timing :
-        SetThreadPriority(hThread, THREAD_PRIORITY_ABOVE_NORMAL);
-        g_AffinityPolicy->SetAffinityOther(hThread);
+		auto nativeHandle = GetNativeHandle(hThread);
+		assert(nativeHandle);
+        SetThreadPriority(*nativeHandle, THREAD_PRIORITY_ABOVE_NORMAL);
+        g_AffinityPolicy->SetAffinityOther(*nativeHandle);
     }
 
 /* TODO : Port this Dxbx code :
@@ -2141,20 +2145,11 @@ std::chrono::steady_clock::time_point GetNextVBlankTime()
 }
 
 // timing thread procedure
-static DWORD WINAPI EmuUpdateTickCount(LPVOID)
+static xbox::void_xt NTAPI EmuUpdateTickCount(xbox::PVOID Arg)
 {
 	CxbxSetThreadName("Cxbx Timing Thread");
 
-    // since callbacks come from here
-	InitXboxThread();
-
     EmuLog(LOG_LEVEL::DEBUG, "Timing thread is running.");
-
-	// We check for LLE flag as NV2A handles it's own VBLANK if LLE is enabled!
-	if (bLLE_GPU) {
-		EmuKeFreeThread();
-		return 0;
-	}
 
 	auto nextVBlankTime = GetNextVBlankTime();
 

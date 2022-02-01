@@ -141,9 +141,10 @@ void SetupPerTitleKeys()
 
 }
 
-void CxbxLaunchXbe(void(*Entry)())
+xbox::void_xt NTAPI CxbxLaunchXbe(xbox::PVOID Entry)
 {
-	Entry();
+	EmuLogInit(LOG_LEVEL::DEBUG, "Calling XBE entry point...");
+	static_cast<void(*)()>(Entry)();
 }
 
 // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
@@ -345,13 +346,9 @@ void TriggerPendingConnectedInterrupts()
 	}
 }
 
-static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
+static xbox::void_xt NTAPI CxbxKrnlInterruptThread(xbox::PVOID param)
 {
 	CxbxSetThreadName("CxbxKrnl Interrupts");
-
-	// Make sure Xbox1 code runs on one core :
-	InitXboxThread();
-	g_AffinityPolicy->SetAffinityXbox();
 
 #if 0
 	InitSoftwareInterrupts();
@@ -364,9 +361,7 @@ static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
 		Sleep(1);
 	}
 
-	EmuKeFreeThread();
-
-	return 0;
+	assert(0);
 }
 
 static void CxbxKrnlClockThread(void* pVoid)
@@ -1412,6 +1407,14 @@ static void CxbxrKrnlInitHacks()
 	EmuLogInit(LOG_LEVEL::DEBUG, "Determining CPU affinity.");
 	g_AffinityPolicy = AffinityPolicy::InitPolicy();
 
+	// Create a kpcr for this thread. This is necessary because ObInitSystem needs to access the irql. This must also be done before
+	// CxbxInitWindow because that function creates the xbox EmuUpdateTickCount thread
+	EmuGenerateFS<true>(nullptr, nullptr, xbox::zeroptr);
+	if (!xbox::ObInitSystem()) {
+		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
+	}
+	xbox::KiInitSystem();
+	
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
 	CxbxInitWindow(true);
@@ -1492,13 +1495,6 @@ static void CxbxrKrnlInitHacks()
 
 	EmuInitFS();
 
-	InitXboxThread();
-	g_AffinityPolicy->SetAffinityXbox();
-	if (!xbox::ObInitSystem()) {
-		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
-	}
-	xbox::KiInitSystem();
-
 #ifdef CHIHIRO_WORK
 	// If this title is Chihiro, Setup JVS
 	if (g_bIsChihiro) {
@@ -1508,16 +1504,15 @@ static void CxbxrKrnlInitHacks()
 
 	EmuX86_Init();
 	// Create the interrupt processing thread
-	DWORD dwThreadId;
-	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (unsigned int*)&dwThreadId);
+	xbox::HANDLE hThread;
+	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxKrnlInterruptThread, xbox::zeroptr, FALSE);
 	// Start the kernel clock thread
 	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", true);
 	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
 
-	EmuLogInit(LOG_LEVEL::DEBUG, "Calling XBE entry point...");
-	CxbxLaunchXbe(Entry);
+	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxLaunchXbe, Entry, FALSE);
 
-	EmuKeFreeThread();
+	EmuKeFreePcr<true>();
 
 	// FIXME: Wait for Cxbx to exit or error fatally
 	Sleep(INFINITE);
@@ -1578,11 +1573,12 @@ static void CxbxrKrnlInitHacks()
 void CxbxrKrnlSuspendThreads()
 {
 	xbox::PLIST_ENTRY ThreadListEntry = KiUniqueProcess.ThreadListHead.Flink;
-	std::vector<NtDll::HANDLE> threads;
+	std::vector<HANDLE> threads;
 	threads.reserve(KiUniqueProcess.StackCount);
 
-	xbox::KPCR* Pcr = EmuKeGetPcr();
-
+	// Don't use EmuKeGetPcr because that asserts kpcr
+	xbox::KPCR* Pcr = reinterpret_cast<xbox::PKPCR>(__readfsdword(TIB_ArbitraryDataSlot));
+	
 	// If there's nothing in list entry, skip this step.
 	if (!ThreadListEntry) {
 		return;

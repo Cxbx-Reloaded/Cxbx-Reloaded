@@ -567,13 +567,13 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
 	// Test case: Metal Slug 3
 	bool Exit = false;
-	auto fut = WaitApc(Alertable, WaitMode, &Exit);
+	auto async_bool = WaitApc(Alertable, WaitMode, &Exit);
 
 	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER *)Interval);
 
 	Exit = true;
-	bool result = fut.get();
-	return result ? X_STATUS_USER_APC : ret;
+	bool result = async_bool.get();
+	RETURN(result ? X_STATUS_USER_APC : ret);
 }
 
 // ******************************************************************

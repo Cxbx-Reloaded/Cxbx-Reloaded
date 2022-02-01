@@ -154,7 +154,7 @@ void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql)
 	case PASSIVE_LEVEL:
 		KiUnexpectedInterrupt();
 		break;
-	case APC_LEVEL: // = 1
+	case APC_LEVEL: // = 1 HalpApcInterrupt
 		xbox::KiExecuteKernelApc();
 		break;
 	case DISPATCH_LEVEL: // = 2
@@ -221,10 +221,9 @@ std::future<bool> WaitApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bo
 	// NOTE: kThread->Alerted is currently never set. When the alerted mechanism is implemented, the alerts should
 	// also interrupt the wait
 	xbox::PKPCR Kpcr = EmuKeGetPcr();
-	DWORD Id = GetCurrentThreadId();
 
 	// This new thread must execute APCs in the context of the calling thread
-	return std::async(std::launch::async, [Kpcr, Alertable, WaitMode, Id, Exit]() {
+	return std::async(std::launch::async, [Kpcr, Alertable, WaitMode, Exit]() {
 		EmuKeSetPcr(Kpcr);
 		xbox::PETHREAD eThread = reinterpret_cast<xbox::PETHREAD>(Kpcr->Prcb->CurrentThread);
 
@@ -242,15 +241,12 @@ std::future<bool> WaitApc(xbox::boolean_xt Alertable, xbox::char_xt WaitMode, bo
 				xbox::KiExecuteUserApc();
 				// Queue a native APC to the calling thread to forcefully terminate the wait of the WinApi functions,
 				// in the case it didn't terminate already
-				HANDLE nativeHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, Id);
-				assert(nativeHandle);
-				[[maybe_unused]] BOOL ret = QueueUserAPC(EndWait, nativeHandle, 0);
+				[[maybe_unused]] BOOL ret = QueueUserAPC(EndWait, *GetNativeHandle(eThread->UniqueThread), 0);
 				assert(ret);
-				CloseHandle(nativeHandle);
 				EmuKeSetPcr(nullptr);
 				return true;
 			}
-			Sleep(0);
+			SwitchToThread();
 			if (*Exit) {
 				EmuKeSetPcr(nullptr);
 				return false;
@@ -502,7 +498,7 @@ XBSYSAPI EXPORTNUM(163) xbox::void_xt FASTCALL xbox::KiUnlockDispatcherDatabase
 	}
 
 	if (OldIrql < DISPATCH_LEVEL) {
-		// This is wrong: this should perform a thread switch and check the kthread of the new selected thread for pending APCs.
+		// FIXME: this is wrong, it should perform a thread switch and check the kthread of the new selected thread for pending APCs.
 		// We can't perform our own threads switching now, so we will just check the current thread
 
 		if (KeGetCurrentThread()->ApcState.KernelApcPending) {

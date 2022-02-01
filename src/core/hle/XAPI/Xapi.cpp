@@ -999,15 +999,14 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 	bool Exit = false;
-	auto fut = WaitApc(bAlertable, UserMode, &Exit);
+	auto async_bool = WaitApc(bAlertable, UserMode, &Exit);
 
 	dword_xt dwRet = SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
 
 	Exit = true;
-	bool result = fut.get();
-	return result ? X_STATUS_USER_APC : dwRet;
+	bool result = async_bool.get();
 
-	RETURN(dwRet);
+	RETURN(result ? X_STATUS_USER_APC : dwRet);
 }
 
 // ******************************************************************
