@@ -759,7 +759,7 @@ static void CxbxUpdateCursor(bool forceShow = false) {
 		return;
 	}
 
-	if (g_renderbase->IsImGuiFocus() || forceShow) {
+	if (g_renderbase && g_renderbase->IsImGuiFocus() || forceShow) {
 		if (cursorInfo.flags == 0) {
 			ShowCursor(TRUE);
 		}
