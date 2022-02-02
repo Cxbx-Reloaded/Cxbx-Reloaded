@@ -126,17 +126,25 @@ void Timer_Destroy(TimerObject* Timer)
 
 void Timer_Shutdown()
 {
-	unsigned int index, i;
+	unsigned i, iXboxThreads = 0;
 	TimerMtx.lock();
 
-	index = TimerList.size();
-	for (i = 0; i < index; i++) {
+	for (i = 0; i < TimerList.size(); i++) {
 		TimerObject* Timer = TimerList[i];
-		Timer_Exit(Timer);
+		// We only need to terminate host threads.
+		if (!Timer->IsXboxTimer) {
+			Timer_Exit(Timer);
+		}
+		// If the thread is xbox, we need to increment for while statement check
+		else {
+			iXboxThreads++;
+		}
 	}
 
+	// Only perform wait for host threads, otherwise xbox threads are
+	// already handled within xbox kernel for shutdown process. See CxbxrKrnlSuspendThreads function.
 	int counter = 0;
-	while (TimerList.size()) {
+	while (iXboxThreads != TimerList.size()) {
 		if (counter >= 8) {
 			break;
 		}
