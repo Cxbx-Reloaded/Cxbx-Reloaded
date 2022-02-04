@@ -656,7 +656,7 @@ XBSYSAPI EXPORTNUM(50) xbox::ntstatus_xt NTAPI xbox::HalWriteSMBusValue
 // ******************************************************************
 XBSYSAPI EXPORTNUM(329) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_UCHAR
 (
-	IN PUCHAR Port,
+	IN word_xt Port,
 	IN PUCHAR Buffer,
 	IN ulong_xt  Count
 )
@@ -676,7 +676,7 @@ XBSYSAPI EXPORTNUM(329) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_UCHAR
 // ******************************************************************
 XBSYSAPI EXPORTNUM(330) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_USHORT
 (
-	IN PUSHORT Port,
+	IN word_xt Port,
 	IN PUSHORT Buffer,
 	IN ulong_xt   Count
 )
@@ -696,7 +696,7 @@ XBSYSAPI EXPORTNUM(330) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_USHORT
 // ******************************************************************
 XBSYSAPI EXPORTNUM(331) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_ULONG
 (
-	IN PULONG Port,
+	IN word_xt Port,
 	IN PULONG Buffer,
 	IN ulong_xt  Count
 )
@@ -716,7 +716,7 @@ XBSYSAPI EXPORTNUM(331) xbox::void_xt NTAPI xbox::READ_PORT_BUFFER_ULONG
 // ******************************************************************
 XBSYSAPI EXPORTNUM(332) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
 (
-	IN PUCHAR Port,
+	IN word_xt Port,
 	IN PUCHAR Buffer,
 	IN ulong_xt  Count
 )
@@ -736,7 +736,7 @@ XBSYSAPI EXPORTNUM(332) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_UCHAR
 // ******************************************************************
 XBSYSAPI EXPORTNUM(333) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_USHORT
 (
-	IN PUSHORT Port,
+	IN word_xt Port,
 	IN PUSHORT Buffer,
 	IN ulong_xt   Count
 )
@@ -756,7 +756,7 @@ XBSYSAPI EXPORTNUM(333) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_USHORT
 // ******************************************************************
 XBSYSAPI EXPORTNUM(334) xbox::void_xt NTAPI xbox::WRITE_PORT_BUFFER_ULONG
 (
-	IN PULONG Port,
+	IN word_xt Port,
 	IN PULONG Buffer,
 	IN ulong_xt  Count
 )
