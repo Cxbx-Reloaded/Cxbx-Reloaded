@@ -389,6 +389,12 @@ ExceptionManager *g_ExceptionManager = nullptr;
 ExceptionManager::ExceptionManager()
 {
 	accept_request = true;
+	// Last call plus show exception error than terminate early.
+#ifdef _MSC_VER // Windows' C++ exception is using SEH, we cannot use VEH for error reporter system.
+	(void)SetUnhandledExceptionFilter(EmuException);
+#else // Untested for other platforms, may will behave as expected.
+	AddVEH(0, EmuException, true);
+#endif
 }
 
 ExceptionManager::~ExceptionManager()
@@ -407,12 +413,6 @@ void ExceptionManager::EmuX86_Init()
 {
 	accept_request = false; // Do not allow add VEH during emulation.
 	AddVEH(1, lleException, true); // Front line call
-	// Last call plus show exception error than terminate early.
-#ifdef _MSC_VER // Windows' C++ exception is using SEH, we cannot use VEH for error reporter system.
-	(void)SetUnhandledExceptionFilter(EmuException);
-#else // Untested for other platforms, may will behave as expected.
-	AddVEH(0, EmuException, true);
-#endif
 }
 
 bool ExceptionManager::AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER veh_handler)
