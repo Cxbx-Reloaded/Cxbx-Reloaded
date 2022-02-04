@@ -650,8 +650,13 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 		// Write the Xbox stack base to the Host, allows ConvertThreadToFiber to work correctly
 		// Test case: DOA3
-		__writefsdword(TIB_StackBase, (DWORD)NewPcr->NtTib.StackBase);
-		__writefsdword(TIB_StackLimit, (DWORD)NewPcr->NtTib.StackLimit);
+		// NOTE: This is disabled due to cause of corruption to host's TIB and
+		//       silent crash for xbox threads creation.
+		// Test case:
+		// * Direct3DCreate9Ex call from inside xbox thread
+		// * PCSTProxy (used from PsCreateSystemThreadEx export function)
+		//__writefsdword(TIB_StackBase, (DWORD)NewPcr->NtTib.StackBase);
+		//__writefsdword(TIB_StackLimit, (DWORD)NewPcr->NtTib.StackLimit);
 	}
 
 	// Set flat address of this PCR
