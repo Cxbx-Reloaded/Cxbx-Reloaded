@@ -133,7 +133,7 @@ XBSYSAPI EXPORTNUM(50) ntstatus_xt NTAPI HalWriteSMBusValue
 // ******************************************************************
 XBSYSAPI EXPORTNUM(329) void_xt NTAPI READ_PORT_BUFFER_UCHAR
 (
-    IN word_xt Port,
+    IN dword_xt Port,
     IN PUCHAR Buffer,
     IN ulong_xt  Count
 );
@@ -143,7 +143,7 @@ XBSYSAPI EXPORTNUM(329) void_xt NTAPI READ_PORT_BUFFER_UCHAR
 // ******************************************************************
 XBSYSAPI EXPORTNUM(330) void_xt NTAPI READ_PORT_BUFFER_USHORT
 (
-    IN word_xt Port,
+    IN dword_xt Port,
     IN PUSHORT Buffer,
     IN ulong_xt   Count
 );
@@ -153,7 +153,7 @@ XBSYSAPI EXPORTNUM(330) void_xt NTAPI READ_PORT_BUFFER_USHORT
 // ******************************************************************
 XBSYSAPI EXPORTNUM(331) void_xt NTAPI READ_PORT_BUFFER_ULONG
 (
-    IN word_xt Port,
+    IN dword_xt Port,
     IN PULONG Buffer,
     IN ulong_xt  Count
 );
@@ -163,7 +163,7 @@ XBSYSAPI EXPORTNUM(331) void_xt NTAPI READ_PORT_BUFFER_ULONG
 // ******************************************************************
 XBSYSAPI EXPORTNUM(332) void_xt NTAPI WRITE_PORT_BUFFER_UCHAR
 (
-    IN word_xt Port,
+    IN dword_xt Port,
     IN PUCHAR Buffer,
     IN ulong_xt  Count
 );
@@ -173,7 +173,7 @@ XBSYSAPI EXPORTNUM(332) void_xt NTAPI WRITE_PORT_BUFFER_UCHAR
 // ******************************************************************
 XBSYSAPI EXPORTNUM(333) void_xt NTAPI WRITE_PORT_BUFFER_USHORT
 (
-    IN word_xt Port,
+    IN dword_xt Port,
     IN PUSHORT Buffer,
     IN ulong_xt   Count
 );
@@ -183,7 +183,7 @@ XBSYSAPI EXPORTNUM(333) void_xt NTAPI WRITE_PORT_BUFFER_USHORT
 // ******************************************************************
 XBSYSAPI EXPORTNUM(334) void_xt NTAPI WRITE_PORT_BUFFER_ULONG
 (
-    IN word_xt Port,
+    IN dword_xt Port,
     IN PULONG Buffer,
     IN ulong_xt  Count
 );
