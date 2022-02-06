@@ -1017,6 +1017,10 @@ static bool CxbxrKrnlPrepareXbeMap()
 
 void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
 {
+	// This is beginning of emulation process start, therefore require to have exception manager initialized
+	// and capture any crash from this point and beyond. Useful for capture live crash and generate crash report.
+	g_ExceptionManager = new ExceptionManager();
+
 	// First of all, check if the EmuShared version matches the emu version and abort otherwise
 	char GitVersionEmuShared[GitVersionMaxLength];
 	g_EmuShared->GetGitVersion(GitVersionEmuShared);
@@ -1174,8 +1178,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	RestoreExeImageHeader();
 
 	CxbxrKrnlXbePatchXBEHSig();
-
-	g_ExceptionManager = new ExceptionManager(); // If in need to add VEHs, move this line earlier. (just in case)
 
 	// Launch the XBE :
 	{

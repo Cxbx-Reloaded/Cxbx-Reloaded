@@ -264,6 +264,17 @@ __declspec(naked) void EmuFS_MovEaxFs00()
 	}
 }
 
+__declspec(naked) void EmuFS_MovEaxFs04()
+{
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		mov eax, [eax + 04h]
+		ret
+	}
+}
+
 __declspec(naked) void EmuFS_MovEaxFs20()
 {
 	__asm
@@ -304,6 +315,17 @@ __declspec(naked) void EmuFS_MovEbxFs00()
 		call EmuFS_RefreshKPCR
 		mov ebx, fs : [TIB_ArbitraryDataSlot]
 		mov ebx, [ebx]
+		ret
+	}
+}
+
+__declspec(naked) void EmuFS_MovEbxFs04()
+{
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		mov ebx, fs : [TIB_ArbitraryDataSlot]
+		mov ebx, [ebx + 04h]
 		ret
 	}
 }
@@ -352,6 +374,28 @@ __declspec(naked) void EmuFS_MovEdiFs04()
 	}
 }
 
+__declspec(naked) void EmuFS_MovEdxFs00()
+{
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		mov edx, fs : [TIB_ArbitraryDataSlot]
+		mov edx, [edx]
+		ret
+	}
+}
+
+__declspec(naked) void EmuFS_MovEdxFs04()
+{
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		mov edx, fs : [TIB_ArbitraryDataSlot]
+		mov edx, [edx + 04h]
+		ret
+	}
+}
+
 __declspec(naked) void EmuFS_MovEsiFs00()
 {
 	__asm
@@ -359,6 +403,17 @@ __declspec(naked) void EmuFS_MovEsiFs00()
 		call EmuFS_RefreshKPCR
 		mov esi, fs : [TIB_ArbitraryDataSlot]
 		mov esi, [esi]
+		ret
+	}
+}
+
+__declspec(naked) void EmuFS_MovEsiFs04()
+{
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		mov esi, fs : [TIB_ArbitraryDataSlot]
+		mov esi, [esi + 04h]
 		ret
 	}
 }
@@ -412,6 +467,48 @@ __declspec(naked) void EmuFS_MovFs00Ecx()
 		push eax
 		mov eax, fs : [TIB_ArbitraryDataSlot]
 		mov [eax], ecx
+		pop eax
+		ret
+	}
+}
+
+__declspec(naked) void EmuFS_MovFs00Edi()
+{
+	// Note : eax must be preserved here, hence the push/pop
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		push eax
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		mov [eax], edi
+		pop eax
+		ret
+	}
+}
+
+__declspec(naked) void EmuFS_MovFs00Edx()
+{
+	// Note : eax must be preserved here, hence the push/pop
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		push eax
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		mov [eax], edx
+		pop eax
+		ret
+	}
+}
+
+__declspec(naked) void EmuFS_MovFs00Esi()
+{
+	// Note : eax must be preserved here, hence the push/pop
+	__asm
+	{
+		call EmuFS_RefreshKPCR
+		push eax
+		mov eax, fs : [TIB_ArbitraryDataSlot]
+		mov [eax], esi
 		pop eax
 		ret
 	}
@@ -485,17 +582,25 @@ void EmuInitFS()
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x0F, 0xB6, 0x05, 0x24, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovzxEaxBytePtrFs24 });// movzx eax, large byte ptr fs:24
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x3B, 0x35, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_CmpEsiFs00 });				// cmp esi, large fs:0
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x1D, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEbxFs00 });				// mov ebx, large fs:0
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x1D, 0x04, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEbxFs04 });				// mov ebx, large fs:4
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x0D, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEcxFs00 });				// mov ecx, large fs:0
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x0D, 0x04, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEcxFs04 });				// mov ecx, large fs:4
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x3D, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEdiFs00 });				// mov edi, large fs:0
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x3D, 0x04, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEdiFs04 });				// mov edi, large fs:4
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x15, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEdxFs00 });				// mov edx, large fs:0
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x15, 0x04, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEdxFs04 });				// mov edx, large fs:4
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x35, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEsiFs00 });				// mov esi, large fs:0
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8B, 0x35, 0x04, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEsiFs04 });				// mov esi, large fs:4
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x89, 0x1D, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Ebx });				// mov large fs:0, ebx
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x89, 0x0D, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Ecx });				// mov large fs:0, ecx
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x89, 0x3D, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Edi });				// mov large fs:0, edi
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x89, 0x15, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Edx });				// mov large fs:0, edx
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x89, 0x35, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Esi });				// mov large fs:0, esi
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x89, 0x25, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Esp });				// mov large fs:0, esp
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0x8F, 0x05, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_PopDwordPtrFs00 });		    // pop large dword ptr fs:0
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xFF, 0x35, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_PushDwordPtrFs00 });		// push large dword ptr fs:0
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs00 });					// mov eax, large fs:0
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x04, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs04 });					// mov eax, large fs:4
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x20, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs20 });					// mov eax, large fs:20
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x28, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs28 });					// mov eax, large fs:28
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs58 });					// mov eax, large fs:58
@@ -650,8 +755,13 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 
 		// Write the Xbox stack base to the Host, allows ConvertThreadToFiber to work correctly
 		// Test case: DOA3
-		__writefsdword(TIB_StackBase, (DWORD)NewPcr->NtTib.StackBase);
-		__writefsdword(TIB_StackLimit, (DWORD)NewPcr->NtTib.StackLimit);
+		// NOTE: This is disabled due to cause of corruption to host's TIB and
+		//       silent crash for xbox threads creation.
+		// Test case:
+		// * Direct3DCreate9Ex call from inside xbox thread
+		// * PCSTProxy (used from PsCreateSystemThreadEx export function)
+		//__writefsdword(TIB_StackBase, (DWORD)NewPcr->NtTib.StackBase);
+		//__writefsdword(TIB_StackLimit, (DWORD)NewPcr->NtTib.StackLimit);
 	}
 
 	// Set flat address of this PCR
