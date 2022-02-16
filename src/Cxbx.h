@@ -61,13 +61,14 @@ enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 /*! debugger enable state */
 enum DebuggerState { debuggerOff, debuggerOn };
 
-/*! indicates emulation of an Chihiro (arcade, instead of Xbox console) executable */
+/*! indicates emulation of a Chihiro system */
 extern bool g_bIsChihiro;
 
-/*! indicates emulation of a Debug xbe executable */
-extern bool g_bIsDebug;
+/*! indicates emulation of a DevKit system */
+/* Note: Our DevKit emulation lacks the kernel debugging interface and virtual dvd-rom emulator card, so this is actually a Debug Kit */
+extern bool g_bIsDevKit;
 
-/*! indicates emulation of a Retail xbe executable*/
+/*! indicates emulation of a Retail system */
 extern bool g_bIsRetail;
 
 /*! indicates ability to save on exit (needed for settings reset) */

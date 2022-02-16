@@ -641,7 +641,7 @@ XBSYSAPI EXPORTNUM(29) xbox::ntstatus_xt NTAPI xbox::ExSaveNonVolatileSetting
 		RETURN(X_STATUS_OBJECT_NAME_NOT_FOUND);
 
 	// handle eeprom write
-	if (g_bIsDebug || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
+	if (g_bIsDevKit || ValueIndex <= XC_MAX_OS || ValueIndex > XC_MAX_FACTORY)
 	{
 		const EEPROMInfo* info = EmuFindEEPROMInfo((XC_VALUE_INDEX)ValueIndex);
 		if (info != nullptr) {
