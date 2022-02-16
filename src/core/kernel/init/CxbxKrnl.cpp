@@ -103,7 +103,7 @@ char szFilePath_Xbe[xbox::max_path*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szL
 
 Xbe* CxbxKrnl_Xbe = NULL;
 bool g_bIsChihiro = false;
-bool g_bIsDebug = false;
+bool g_bIsDevKit = false;
 bool g_bIsRetail = false;
 
 // Indicates to disable/enable all interrupts when cli and sti instructions are executed
@@ -615,7 +615,7 @@ static void CxbxrKrnlSetupMemorySystem(int BootFlags, unsigned emulate_system, u
 
 static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems, blocks_reserved_t blocks_reserved)
 {
-	XbeType xbeType = XbeType::xtRetail;
+	unsigned int emulate_system = 0;
 	// Get title path :
 	std::string xbePath;
 	cli_config::GetValue(cli_config::load, &xbePath);
@@ -739,41 +739,43 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 	// If CLI has given console type, then enforce it.
 	if (cli_config::hasKey(cli_config::system_chihiro)) {
 		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
-		xbeType = XbeType::xtChihiro;
+		emulate_system = SYSTEM_CHIHIRO;
 	}
 	else if (cli_config::hasKey(cli_config::system_devkit)) {
 		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
-		xbeType = XbeType::xtDebug;
+		emulate_system = SYSTEM_DEVKIT;
 	}
 	else if (cli_config::hasKey(cli_config::system_retail)) {
 		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
-		xbeType = XbeType::xtRetail;
+		emulate_system = SYSTEM_XBOX;
 	}
 	// Otherwise, use auto detect method.
 	else {
 		// Detect XBE type :
-		xbeType = CxbxKrnl_Xbe->GetXbeType();
+		XbeType xbeType = CxbxKrnl_Xbe->GetXbeType();
 		EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
+		// Convert XBE type into corresponding system to emulate.
+		switch (xbeType) {
+			case XbeType::xtChihiro:
+				emulate_system = SYSTEM_CHIHIRO;
+				break;
+			case XbeType::xtDebug:
+				emulate_system = SYSTEM_DEVKIT;
+				break;
+			case XbeType::xtRetail:
+				emulate_system = SYSTEM_XBOX;
+				break;
+			DEFAULT_UNREACHABLE;
+		}
 	}
 
 	EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
-	unsigned int emulate_system = 0;
-	// Set reserved_systems which system we will about to emulate.
-	if (isSystemFlagSupport(reserved_systems, SYSTEM_CHIHIRO) && xbeType == XbeType::xtChihiro) {
-		emulate_system = SYSTEM_CHIHIRO;
-	}
-	else if (isSystemFlagSupport(reserved_systems, SYSTEM_DEVKIT) && xbeType == XbeType::xtDebug) {
-		emulate_system = SYSTEM_DEVKIT;
-	}
-	else if (isSystemFlagSupport(reserved_systems, SYSTEM_XBOX) && xbeType == XbeType::xtRetail) {
-		emulate_system = SYSTEM_XBOX;
-	}
-	// If none of system type requested to emulate isn't supported on host's end. Then enforce failure.
-	else {
+	// If the system to emulate isn't supported on host, enforce failure.
+	if (!isSystemFlagSupport(reserved_systems, emulate_system)) {
 		CxbxrKrnlAbort("Unable to emulate system type due to host is not able to reserve required memory ranges.");
 		return false;
 	}
-	// Clear emulation system from reserved systems to be free.
+	// Clear emulation system from reserved systems so all unneeded memory ranges can be freed.
 	reserved_systems &= ~emulate_system;
 
 	// Once we have determine which system type to run as, enforce it in future reboots.
@@ -782,10 +784,10 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 		cli_config::SetSystemType(system_str);
 	}
 
-	// Register if we're running an Chihiro executable or a debug xbe, otherwise it's an Xbox retail executable
-	g_bIsChihiro = (xbeType == XbeType::xtChihiro);
-	g_bIsDebug = (xbeType == XbeType::xtDebug);
-	g_bIsRetail = (xbeType == XbeType::xtRetail);
+	// Register if we're running a Chihiro arcade or Xbox Devkit (otherwise it's a retail Xbox console) system
+	g_bIsChihiro = (emulate_system == SYSTEM_CHIHIRO);
+	g_bIsDevKit = (emulate_system == SYSTEM_DEVKIT);
+	g_bIsRetail = (emulate_system == SYSTEM_XBOX);
 
 #ifdef CHIHIRO_WORK
 	// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
