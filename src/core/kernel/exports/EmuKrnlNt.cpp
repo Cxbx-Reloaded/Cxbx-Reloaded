@@ -2200,19 +2200,32 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 	}
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
-	bool Exit = false;
-	auto async_bool = WaitApc(Alertable, WaitMode, &Exit);
+	LARGE_INTEGER NewTime;
+	if (Timeout) {
+		LARGE_INTEGER ExpireTime, DueTime;
+		ExpireTime.QuadPart = DueTime.QuadPart = Timeout->QuadPart;
+		KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
+	}
+	else {
+		NewTime.QuadPart = ~0ull;
+	}
 
-	NTSTATUS ret = NtDll::NtWaitForMultipleObjects(
-		Count,
-		Handles,
-		(NtDll::OBJECT_WAIT_TYPE)WaitType,
-		Alertable,
-		(NtDll::PLARGE_INTEGER)Timeout);
+	xbox::ntstatus_xt ret = WaitApc([Count, Handles, WaitType, Alertable]() -> std::optional<ntstatus_xt> {
+		NtDll::LARGE_INTEGER ExpireTime;
+		ExpireTime.QuadPart = 0;
+		NTSTATUS Status = NtDll::NtWaitForMultipleObjects(
+			Count,
+			Handles,
+			(NtDll::OBJECT_WAIT_TYPE)WaitType,
+			Alertable,
+			&ExpireTime);
+		if (Status == STATUS_TIMEOUT) {
+			return std::nullopt;
+		}
+		return std::make_optional<ntstatus_xt>(Status);
+		}, &NewTime, Alertable, WaitMode);
 
-	Exit = true;
-	bool result = async_bool.get();
-	RETURN(result ? X_STATUS_USER_APC : ret);
+	RETURN(ret);
 }
 
 // ******************************************************************

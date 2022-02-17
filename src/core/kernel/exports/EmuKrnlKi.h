@@ -139,6 +139,13 @@ namespace xbox
 
 	void_xt KiExecuteKernelApc();
 	void_xt KiExecuteUserApc();
+
+	PLARGE_INTEGER FASTCALL KiComputeWaitInterval
+	(
+		IN PLARGE_INTEGER OriginalTime,
+		IN PLARGE_INTEGER DueTime,
+		IN OUT PLARGE_INTEGER NewTime
+	);
 };
 
 extern xbox::KPROCESS KiUniqueProcess;

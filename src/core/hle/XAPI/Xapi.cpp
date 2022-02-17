@@ -38,6 +38,7 @@
 #include "Logging.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h" // For DefaultLaunchDataPage
+#include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\support\EmuFile.h"
 #include "core\kernel\support\NativeHandle.h"
 #include "EmuShared.h"
@@ -997,16 +998,19 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 		LOG_FUNC_ARG(bAlertable)
 		LOG_FUNC_END;
 
-	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
-	bool Exit = false;
-	auto async_bool = WaitApc(bAlertable, UserMode, &Exit);
+	LARGE_INTEGER ExpireTime, DueTime, NewTime;
+	ExpireTime.QuadPart = DueTime.QuadPart = (dwMilliseconds == INFINITE) ? ~0ull : -dwMilliseconds;
+	KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
 
-	dword_xt dwRet = SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, dwMilliseconds, bAlertable);
+	xbox::dword_xt ret = WaitApc([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
+		DWORD dwRet = SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, 0, bAlertable);
+		if (dwRet == WAIT_TIMEOUT) {
+			return std::nullopt;
+		}
+		return std::make_optional<DWORD>(dwRet);
+		}, &NewTime, bAlertable, UserMode);
 
-	Exit = true;
-	bool result = async_bool.get();
-
-	RETURN(result ? X_STATUS_USER_APC : dwRet);
+	RETURN((ret == X_STATUS_USER_APC) ? WAIT_IO_COMPLETION : (ret == X_STATUS_TIMEOUT) ? WAIT_TIMEOUT : ret);
 }
 
 // ******************************************************************

@@ -105,6 +105,7 @@ typedef void* LPSECURITY_ATTRIBUTES;
 #define X_STATUS_NOT_COMMITTED 0xC000002DL
 #define X_STATUS_UNRECOGNIZED_VOLUME 0xC000014FL
 #define X_STATUS_OBJECT_PATH_NOT_FOUND 0xC000003AL
+#define X_STATUS_TIMEOUT 0x00000102L
 
 // ******************************************************************
 // * Registry value types

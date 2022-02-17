@@ -566,14 +566,27 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
 	// Test case: Metal Slug 3
-	bool Exit = false;
-	auto async_bool = WaitApc(Alertable, WaitMode, &Exit);
+	LARGE_INTEGER NewTime;
+	if (Interval) {
+		LARGE_INTEGER ExpireTime, DueTime;
+		ExpireTime.QuadPart = DueTime.QuadPart = Interval->QuadPart;
+		KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
+	}
+	else {
+		NewTime.QuadPart = ~0ull;
+	}
 
-	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER *)Interval);
+	xbox::ntstatus_xt ret = WaitApc([Alertable]() -> std::optional<ntstatus_xt> {
+		NtDll::LARGE_INTEGER ExpireTime;
+		ExpireTime.QuadPart = 0;
+		NTSTATUS Status = NtDll::NtDelayExecution(Alertable, &ExpireTime);
+		if (Status == 0) { // STATUS_SUCCESS
+			return std::nullopt;
+		}
+		return std::make_optional<ntstatus_xt>(Status);
+		}, &NewTime, Alertable, WaitMode);
 
-	Exit = true;
-	bool result = async_bool.get();
-	RETURN(result ? X_STATUS_USER_APC : ret);
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1999,24 +2012,6 @@ XBSYSAPI EXPORTNUM(156) xbox::dword_xt VOLATILE xbox::KeTickCount = 0;
 // * 0x009D - KeTimeIncrement
 // ******************************************************************
 XBSYSAPI EXPORTNUM(157) xbox::ulong_xt xbox::KeTimeIncrement = CLOCK_TIME_INCREMENT;
-
-
-xbox::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
-	IN xbox::PLARGE_INTEGER OriginalTime,
-	IN xbox::PLARGE_INTEGER DueTime,
-	IN OUT xbox::PLARGE_INTEGER NewTime
-)
-{
-	if (OriginalTime->QuadPart >= 0) {
-		return OriginalTime;
-
-	}
-	else {
-		NewTime->QuadPart = xbox::KeQueryInterruptTime();
-		NewTime->QuadPart -= DueTime->QuadPart;
-		return NewTime;
-	}
-}
 
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()

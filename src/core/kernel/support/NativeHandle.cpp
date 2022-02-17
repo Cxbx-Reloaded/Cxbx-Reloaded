@@ -56,6 +56,7 @@ void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle)
 			if (ret.second) {
 				return;
 			}
+			now += std::chrono::milliseconds(5);
 		}
 
 		// If we reach here, it means that we could not insert the handle after more than two seconds of trying. This probably means
