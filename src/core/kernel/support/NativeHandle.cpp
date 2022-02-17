@@ -41,7 +41,7 @@ std::shared_mutex g_MapMtx;
 void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle)
 {
 	std::unique_lock<std::shared_mutex> lck(g_MapMtx);
-	const auto &ret = g_RegisteredHandles.try_emplace(xhandle, nhandle);
+	auto ret = g_RegisteredHandles.try_emplace(xhandle, nhandle);
 	if (ret.second == false) {
 		// This can happen when an ob handle has been destroyed, but then a thread switch happens before the first thread
 		// got a chance to remove the old handle from g_RegisteredHandles with RemoveXboxHandle
@@ -52,7 +52,7 @@ void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle)
 			lck.unlock();
 			std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			lck.lock();
-			g_RegisteredHandles.try_emplace(xhandle, nhandle);
+			ret = g_RegisteredHandles.try_emplace(xhandle, nhandle);
 			if (ret.second) {
 				return;
 			}

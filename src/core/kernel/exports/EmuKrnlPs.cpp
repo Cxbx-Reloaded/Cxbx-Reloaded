@@ -62,9 +62,9 @@ typedef struct _PCSTProxyParam
 }
 PCSTProxyParam;
 
-xbox::PCREATE_THREAD_NOTIFY_ROUTINE g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { xbox::zeroptr };
-int g_iThreadNotificationCount = 0;
-static std::mutex PspThreadNotificationMtx;
+static xbox::PCREATE_THREAD_NOTIFY_ROUTINE g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { xbox::zeroptr };
+static std::atomic_int g_iThreadNotificationCount = 0;
+static std::mutex g_ThreadNotificationMtx;
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
 void LOG_PCSTProxy
@@ -142,7 +142,7 @@ xbox::PETHREAD xbox::PspGetCurrentThread()
 
 static xbox::void_xt PspCallThreadNotificationRoutines(xbox::PETHREAD eThread, xbox::boolean_xt Create)
 {
-	std::unique_lock lck(PspThreadNotificationMtx);
+	std::unique_lock lck(g_ThreadNotificationMtx);
 	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
 		if (g_pfnThreadNotification[i]) {
 			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
@@ -251,7 +251,6 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			RETURN(result);
 		}
 
-		// Call the thread notification routine(s)
 		if (g_iThreadNotificationCount) {
 			PspCallThreadNotificationRoutines(eThread, TRUE);
 		}
@@ -269,7 +268,6 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 
         // PCSTProxy is responsible for cleaning up this pointer
 		PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
-
         iPCSTProxyParam->StartRoutine = (PVOID)StartRoutine;
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = (PVOID)SystemRoutine; // NULL, XapiThreadStartup or unknown?
@@ -344,6 +342,7 @@ XBSYSAPI EXPORTNUM(257) xbox::ntstatus_xt NTAPI xbox::PsSetCreateThreadNotifyRou
 {
 	LOG_FUNC_ONE_ARG(NotifyRoutine);
 
+	std::unique_lock lck(g_ThreadNotificationMtx);
 	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
 		if (g_pfnThreadNotification[i] == zeroptr) {
 			g_pfnThreadNotification[i] = NotifyRoutine;
@@ -368,7 +367,6 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 {
 	LOG_FUNC_ONE_ARG(ExitStatus);
 
-	// Call the thread notification routine(s)
 	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
 	if (eThread->UniqueThread && g_iThreadNotificationCount) {
 		PspCallThreadNotificationRoutines(eThread, FALSE);

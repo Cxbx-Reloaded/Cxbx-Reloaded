@@ -115,6 +115,11 @@ xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER AbsoluteExpireTime, x
 	xbox::ulonglong_xt now = xbox::KeQueryInterruptTime();
 	xbox::PETHREAD eThread = reinterpret_cast<xbox::PETHREAD>(EmuKeGetPcr()->Prcb->CurrentThread);
 
+	if (AbsoluteExpireTime->QuadPart == 0) {
+		// This will only happen when the title specifies a zero timeout
+		AbsoluteExpireTime->QuadPart = now;
+	}
+
 	while (now <= static_cast<xbox::ulonglong_xt>(AbsoluteExpireTime->QuadPart)) {
 		if (const auto ret = Lambda()) {
 			return *ret;

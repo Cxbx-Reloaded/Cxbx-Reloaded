@@ -998,9 +998,18 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 		LOG_FUNC_ARG(bAlertable)
 		LOG_FUNC_END;
 
-	LARGE_INTEGER ExpireTime, DueTime, NewTime;
-	ExpireTime.QuadPart = DueTime.QuadPart = (dwMilliseconds == INFINITE) ? ~0ull : -dwMilliseconds;
-	KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
+	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
+	LARGE_INTEGER NewTime;
+	PLARGE_INTEGER pNewTime;
+	if (dwMilliseconds == INFINITE) {
+		NewTime.QuadPart = ~0ull;
+		pNewTime = &NewTime;
+	}
+	else {
+		LARGE_INTEGER ExpireTime, DueTime;
+		ExpireTime.QuadPart = DueTime.QuadPart = -dwMilliseconds;
+		pNewTime = KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
+	}
 
 	xbox::dword_xt ret = WaitApc([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
 		DWORD dwRet = SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, 0, bAlertable);
@@ -1008,7 +1017,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 			return std::nullopt;
 		}
 		return std::make_optional<DWORD>(dwRet);
-		}, &NewTime, bAlertable, UserMode);
+		}, pNewTime, bAlertable, UserMode);
 
 	RETURN((ret == X_STATUS_USER_APC) ? WAIT_IO_COMPLETION : (ret == X_STATUS_TIMEOUT) ? WAIT_TIMEOUT : ret);
 }

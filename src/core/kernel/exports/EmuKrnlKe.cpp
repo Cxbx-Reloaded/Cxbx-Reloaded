@@ -567,13 +567,15 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
 	// Test case: Metal Slug 3
 	LARGE_INTEGER NewTime;
+	PLARGE_INTEGER pNewTime;
 	if (Interval) {
 		LARGE_INTEGER ExpireTime, DueTime;
 		ExpireTime.QuadPart = DueTime.QuadPart = Interval->QuadPart;
-		KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
+		pNewTime = KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
 	}
 	else {
 		NewTime.QuadPart = ~0ull;
+		pNewTime = &NewTime;
 	}
 
 	xbox::ntstatus_xt ret = WaitApc([Alertable]() -> std::optional<ntstatus_xt> {
@@ -584,7 +586,7 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 			return std::nullopt;
 		}
 		return std::make_optional<ntstatus_xt>(Status);
-		}, &NewTime, Alertable, WaitMode);
+		}, pNewTime, Alertable, WaitMode);
 
 	RETURN(ret);
 }
