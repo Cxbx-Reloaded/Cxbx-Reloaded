@@ -150,8 +150,6 @@ static void update_irq(NV2AState *d)
 	else {
 		HalSystemInterrupts[3].Assert(false);
 	}
-
-	SwitchToThread();
 }
 
 
@@ -1117,7 +1115,7 @@ static void nv2a_vblank_thread(NV2AState *d)
 			//NV2ADevice::UpdateHostDisplay(d);
 		}
 
-        Sleep(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
 

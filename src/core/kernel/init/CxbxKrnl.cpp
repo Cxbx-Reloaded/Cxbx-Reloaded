@@ -336,17 +336,6 @@ void InitSoftwareInterrupts()
 }
 #endif
 
-void TriggerPendingConnectedInterrupts()
-{
-	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-		// If the interrupt is pending and connected, process it
-		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
-			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-		}
-		SwitchToThread();
-	}
-}
-
 static xbox::void_xt NTAPI CxbxKrnlInterruptThread(xbox::PVOID param)
 {
 	CxbxSetThreadName("CxbxKrnl Interrupts");
@@ -355,11 +344,17 @@ static xbox::void_xt NTAPI CxbxKrnlInterruptThread(xbox::PVOID param)
 	InitSoftwareInterrupts();
 #endif
 
+	std::mutex m;
+	std::unique_lock<std::mutex> lock(m);
 	while (true) {
-		if (g_bEnableAllInterrupts) {
-			TriggerPendingConnectedInterrupts();
+		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+			// If the interrupt is pending and connected, process it
+			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
+				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
+			}
 		}
-		Sleep(1);
+		g_InterruptSignal.wait(lock, []() { return g_AnyInterruptAsserted.load() && g_bEnableAllInterrupts.load(); });
+		g_AnyInterruptAsserted = false;
 	}
 
 	assert(0);
