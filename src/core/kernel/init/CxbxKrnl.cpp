@@ -145,6 +145,7 @@ xbox::void_xt NTAPI CxbxLaunchXbe(xbox::PVOID Entry)
 {
 	EmuLogInit(LOG_LEVEL::DEBUG, "Calling XBE entry point...");
 	static_cast<void(*)()>(Entry)();
+	EmuLogInit(LOG_LEVEL::DEBUG, "XBE entry point returned");
 }
 
 // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
@@ -703,7 +704,6 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 		// Launch Segaboot
 		CxbxLaunchNewXbe(chihiroSegaBootNew);
 		CxbxKrnlShutDown(true);
-		TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
 
 	}
 #endif // Chihiro wip block
@@ -1514,16 +1514,11 @@ static void CxbxrKrnlInitHacks()
 
 	EmuKeFreePcr<true>();
 
-	// FIXME: Wait for Cxbx to exit or error fatally
-	Sleep(INFINITE);
-
-	EmuLogInit(LOG_LEVEL::DEBUG, "XBE entry point returned");
-	fflush(stdout);
-
-	CxbxUnlockFilePath();
-
-	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
-    CxbxKrnlTerminateThread();
+	// This will wait forever
+	std::condition_variable cv;
+	std::mutex m;
+	std::unique_lock<std::mutex> lock(m);
+	cv.wait(lock, [] { return false; });
 }
 
 // REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
@@ -1752,11 +1747,6 @@ void CxbxPrintUEMInfo(ULONG ErrorCode)
 	{
 		PopupFatal(nullptr, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it.");
 	}
-}
-
-[[noreturn]] void CxbxKrnlTerminateThread()
-{
-    TerminateThread(GetCurrentThread(), 0);
 }
 
 void CxbxKrnlPanic()

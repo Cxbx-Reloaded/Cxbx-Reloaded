@@ -599,7 +599,6 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 	}
 
 	CxbxKrnlShutDown(is_reboot);
-	TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
 }
 
 // ******************************************************************
