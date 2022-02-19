@@ -2079,7 +2079,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 						if ((ObjectMutant->Header.SignalState > 0) || (Thread == ObjectMutant->OwnerThread)) {
 							if (ObjectMutant->Header.SignalState != MINLONG) {
 								KiWaitSatisfyMutant(ObjectMutant, Thread);
-								WaitStatus = (NTSTATUS)(Thread->WaitStatus);
+								WaitStatus = (NTSTATUS)(Index | Thread->WaitStatus);
 								goto NoWait;
 							}
 							else {
@@ -2091,7 +2091,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 					else if (ObjectMutant->Header.SignalState) {
 						// Otherwise, if the signal state is > 0, we can still just satisfy the wait
 						KiWaitSatisfyOther(ObjectMutant);
-						WaitStatus = X_STATUS_SUCCESS;
+						WaitStatus = Index;
 						goto NoWait;
 					}
 				} else {

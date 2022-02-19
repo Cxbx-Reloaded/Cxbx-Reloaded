@@ -1000,15 +1000,12 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 	LARGE_INTEGER NewTime;
-	PLARGE_INTEGER pNewTime;
 	if (dwMilliseconds == INFINITE) {
 		NewTime.QuadPart = ~0ull;
-		pNewTime = &NewTime;
 	}
 	else {
-		LARGE_INTEGER ExpireTime, DueTime;
-		ExpireTime.QuadPart = DueTime.QuadPart = -dwMilliseconds;
-		pNewTime = KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
+		NewTime.QuadPart = xbox::KeQueryInterruptTime();
+		NewTime.QuadPart += (static_cast<xbox::ulonglong_xt>(dwMilliseconds) * CLOCK_TIME_INCREMENT);
 	}
 
 	xbox::dword_xt ret = WaitApc([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
@@ -1017,53 +1014,9 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 			return std::nullopt;
 		}
 		return std::make_optional<DWORD>(dwRet);
-		}, pNewTime, bAlertable, UserMode);
+		}, &NewTime, bAlertable, UserMode);
 
 	RETURN((ret == X_STATUS_USER_APC) ? WAIT_IO_COMPLETION : (ret == X_STATUS_TIMEOUT) ? WAIT_TIMEOUT : ret);
-}
-
-// ******************************************************************
-// * patch: timeSetEvent
-// ******************************************************************
-MMRESULT WINAPI xbox::EMUPATCH(timeSetEvent)
-(
-	uint_xt			uDelay,
-	uint_xt			uResolution,
-	LPTIMECALLBACK	fptc,
-	dword_xt			dwUser,
-	uint_xt			fuEvent
-)
-{
-
-
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(uDelay)
-		LOG_FUNC_ARG(uResolution)
-		LOG_FUNC_ARG_TYPE(PVOID, fptc)
-		LOG_FUNC_ARG(dwUser)
-		LOG_FUNC_ARG(fuEvent)
-		LOG_FUNC_END;
-
-	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
-
-	RETURN(Ret);
-}
-
-// ******************************************************************
-// * patch: timeKillEvent
-// ******************************************************************
-MMRESULT WINAPI xbox::EMUPATCH(timeKillEvent)
-(
-	uint_xt uTimerID  
-)
-{
-
-
-	LOG_FUNC_ONE_ARG(uTimerID);
-
-	MMRESULT Ret = timeKillEvent( uTimerID );
-
-	RETURN(Ret);
 }
 
 // ******************************************************************

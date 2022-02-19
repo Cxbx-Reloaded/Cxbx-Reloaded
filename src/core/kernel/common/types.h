@@ -1498,8 +1498,10 @@ KFLOATING_SAVE, *PKFLOATING_SAVE;
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	EventNotificationObject = 0,
 	EventSynchronizationObject = 1,
 	MutantObject = 2,
+	ProcessObject = 3,
 	QueueObject = 4,
 	SemaphoreObject = 5,
 	ThreadObject = 6,
@@ -1508,6 +1510,9 @@ typedef enum _KOBJECTS
 	ApcObject = 0x12,
 	DpcObject = 0x13,
 	DeviceQueueObject = 0x14,
+	EventPairObject = 0x15,
+	InterruptObject = 0x16,
+	ProfileObject = 0x17,
 }
 KOBJECTS, *PKOBJECTS;
 

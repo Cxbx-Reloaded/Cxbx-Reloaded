@@ -353,3 +353,41 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XSetProcessQuantumLength)
 	// TODO: Implement?
 	LOG_IGNORED();
 }
+
+MMRESULT WINAPI xbox::EMUPATCH(timeSetEvent)
+(
+	uint_xt			uDelay,
+	uint_xt			uResolution,
+	LPTIMECALLBACK	fptc,
+	dword_xt			dwUser,
+	uint_xt			fuEvent
+)
+{
+
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(uDelay)
+		LOG_FUNC_ARG(uResolution)
+		LOG_FUNC_ARG_TYPE(PVOID, fptc)
+		LOG_FUNC_ARG(dwUser)
+		LOG_FUNC_ARG(fuEvent)
+		LOG_FUNC_END;
+
+	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
+
+	RETURN(Ret);
+}
+
+MMRESULT WINAPI xbox::EMUPATCH(timeKillEvent)
+(
+	uint_xt uTimerID
+)
+{
+
+
+	LOG_FUNC_ONE_ARG(uTimerID);
+
+	MMRESULT Ret = timeKillEvent( uTimerID );
+
+	RETURN(Ret);
+}
