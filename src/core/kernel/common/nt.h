@@ -19,6 +19,8 @@ namespace xbox
 
 #define NtCurrentThread() ((HANDLE)-2)
 
+#define X_MAXIMUM_WAIT_OBJECTS 64
+
 // ******************************************************************
 // * NtAllocateVirtualMemory
 // ******************************************************************

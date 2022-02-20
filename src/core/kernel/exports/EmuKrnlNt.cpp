@@ -2190,12 +2190,20 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		LOG_FUNC_ARG(Timeout)
 		LOG_FUNC_END;
 
+	if (!Count || (Count > X_MAXIMUM_WAIT_OBJECTS)) {
+		RETURN(X_STATUS_INVALID_PARAMETER);
+	}
+
 	// This function can wait on thread handles, which are currently created by ob,
 	// so we need to check their presence in the handle array
+	::HANDLE nativeHandles[X_MAXIMUM_WAIT_OBJECTS];
 	for (ulong_xt i = 0; i < Count; ++i) {
 		if (const auto &nativeHandle = GetNativeHandle(Handles[i])) {
 			// This is a ob handle, so replace it with its native counterpart
-			Handles[i] = *nativeHandle;
+			nativeHandles[i] = *nativeHandle;
+		}
+		else {
+			nativeHandles[i] = Handles[i];
 		}
 	}
 
@@ -2212,12 +2220,12 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		pNewTime = &NewTime;
 	}
 
-	xbox::ntstatus_xt ret = WaitApc([Count, Handles, WaitType, Alertable]() -> std::optional<ntstatus_xt> {
+	xbox::ntstatus_xt ret = WaitApc([Count, &nativeHandles, WaitType, Alertable]() -> std::optional<ntstatus_xt> {
 		NtDll::LARGE_INTEGER ExpireTime;
 		ExpireTime.QuadPart = 0;
 		NTSTATUS Status = NtDll::NtWaitForMultipleObjects(
 			Count,
-			Handles,
+			nativeHandles,
 			(NtDll::OBJECT_WAIT_TYPE)WaitType,
 			Alertable,
 			&ExpireTime);
