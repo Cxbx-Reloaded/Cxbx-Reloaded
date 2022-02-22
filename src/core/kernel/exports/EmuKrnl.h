@@ -27,6 +27,8 @@
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
+#include "core\kernel\support\EmuFS.h"
+#include <future>
 
 // CONTAINING_RECORD macro
 // Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)
@@ -49,6 +51,8 @@ xbox::PLIST_ENTRY RemoveTailList(xbox::PLIST_ENTRY pListHead);
 
 extern xbox::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
 extern xbox::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
+inline std::condition_variable g_InterruptSignal;
+inline std::atomic_bool g_AnyInterruptAsserted = false;
 
 class HalSystemInterrupt {
 public:
@@ -59,6 +63,8 @@ public:
 		}
 
 		m_Asserted = state;
+		g_AnyInterruptAsserted = true;
+		g_InterruptSignal.notify_one();
 	};
 
 	void Enable() {
@@ -103,5 +109,45 @@ extern HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 bool DisableInterrupts();
 void RestoreInterruptMode(bool value);
 void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql);
+
+template<typename T>
+xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER AbsoluteExpireTime, xbox::boolean_xt Alertable, xbox::char_xt WaitMode)
+{
+	// NOTE: kThread->Alerted is currently never set. When the alerted mechanism is implemented, the alerts should
+	// also interrupt the wait
+
+	xbox::ulonglong_xt now = xbox::KeQueryInterruptTime();
+	xbox::PETHREAD eThread = reinterpret_cast<xbox::PETHREAD>(EmuKeGetPcr()->Prcb->CurrentThread);
+
+	if (AbsoluteExpireTime->QuadPart == 0) {
+		// This will only happen when the title specifies a zero timeout
+		AbsoluteExpireTime->QuadPart = now;
+	}
+
+	while (now <= static_cast<xbox::ulonglong_xt>(AbsoluteExpireTime->QuadPart)) {
+		if (const auto ret = Lambda()) {
+			return *ret;
+		}
+
+		xbox::KiApcListMtx.lock();
+		bool EmptyKernel = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::KernelMode]);
+		bool EmptyUser = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::UserMode]);
+		xbox::KiApcListMtx.unlock();
+		if (EmptyKernel == false) {
+			xbox::KiExecuteKernelApc();
+		}
+		if ((EmptyUser == false) &&
+			(Alertable == TRUE) &&
+			(WaitMode == xbox::UserMode)) {
+			xbox::KiExecuteUserApc();
+			return X_STATUS_USER_APC;
+		}
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		now = xbox::KeQueryInterruptTime();
+	}
+
+	return X_STATUS_TIMEOUT;
+}
 
 #endif

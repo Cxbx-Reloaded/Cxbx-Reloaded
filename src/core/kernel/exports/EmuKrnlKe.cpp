@@ -81,7 +81,9 @@ namespace NtDll
 #include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "EmuKrnlKe.h"
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
+#include "core\kernel\support\NativeHandle.h"
 #include "Timer.h"
+#include "Util.h"
 
 #include <chrono>
 #include <thread>
@@ -128,24 +130,18 @@ xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 
 
 // ******************************************************************
-// * KeGetPcr()
+// * EmuKeGetPcr()
 // * NOTE: This is a macro on the Xbox, however we implement it 
 // * as a function so it can suit our emulated KPCR structure
 // ******************************************************************
-xbox::KPCR* WINAPI KeGetPcr()
+xbox::KPCR* WINAPI EmuKeGetPcr()
 {
-	xbox::PKPCR Pcr;
-
 	// See EmuKeSetPcr()
-	Pcr = (xbox::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
-	
-	if (Pcr == nullptr) {
-		EmuLog(LOG_LEVEL::WARNING, "KeGetPCR returned nullptr: Was this called from a non-xbox thread?");
-		// Attempt to salvage the situation by calling InitXboxThread to setup KPCR in place
-		InitXboxThread();
-		g_AffinityPolicy->SetAffinityXbox();
-		Pcr = (xbox::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
-	}
+	xbox::PKPCR Pcr = (xbox::PKPCR)__readfsdword(TIB_ArbitraryDataSlot);
+
+	// If this fails, it's a bug: it means we are executing xbox code from a host thread, and we have forgotten to initialize
+	// the xbox thread first
+	assert(Pcr);
 
 	return Pcr;
 }
@@ -155,7 +151,7 @@ xbox::KPCR* WINAPI KeGetPcr()
 // ******************************************************************
 xbox::KPRCB *KeGetCurrentPrcb()
 {
-	return &(KeGetPcr()->PrcbData);
+	return &(EmuKeGetPcr()->PrcbData);
 }
 
 // ******************************************************************
@@ -263,6 +259,26 @@ xbox::void_xt NTAPI xbox::KeInitializeTimer
 	LOG_FORWARD("KeInitializeTimerEx");
 
 	KeInitializeTimerEx(Timer, NotificationTimer);
+}
+
+// ******************************************************************
+// * KeEmptyQueueApc()
+// ******************************************************************
+xbox::void_xt xbox::KeEmptyQueueApc()
+{
+	PKTHREAD kThread = KeGetCurrentThread();
+	kThread->ApcState.ApcQueueable = FALSE;
+
+	KiApcListMtx.lock();
+	for (int Mode = KernelMode; Mode < MaximumMode; ++Mode) {
+		while (!IsListEmpty(&kThread->ApcState.ApcListHead[Mode])) {
+			PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[Mode].Flink;
+			PKAPC Apc = CONTAINING_RECORD(Entry, KAPC, ApcListEntry);
+			RemoveEntryList(Entry);
+			ExFreePool(Apc);
+		}
+	}
+	KiApcListMtx.unlock();
 }
 
 // Forward KeLowerIrql() to KfLowerIrql()
@@ -547,7 +563,30 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 		LOG_FUNC_ARG(Interval)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = NtDll::NtDelayExecution(Alertable, (NtDll::LARGE_INTEGER*)Interval);
+	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
+	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
+	// Test case: Metal Slug 3
+	LARGE_INTEGER NewTime;
+	PLARGE_INTEGER pNewTime;
+	if (Interval) {
+		LARGE_INTEGER ExpireTime, DueTime;
+		ExpireTime.QuadPart = DueTime.QuadPart = Interval->QuadPart;
+		pNewTime = KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime);
+	}
+	else {
+		NewTime.QuadPart = ~0ull;
+		pNewTime = &NewTime;
+	}
+
+	xbox::ntstatus_xt ret = WaitApc([Alertable]() -> std::optional<ntstatus_xt> {
+		NtDll::LARGE_INTEGER ExpireTime;
+		ExpireTime.QuadPart = 0;
+		NTSTATUS Status = NtDll::NtDelayExecution(Alertable, &ExpireTime);
+		if (Status == 0) { // STATUS_SUCCESS
+			return std::nullopt;
+		}
+		return std::make_optional<ntstatus_xt>(Status);
+		}, pNewTime, Alertable, WaitMode);
 
 	RETURN(ret);
 }
@@ -597,7 +636,7 @@ XBSYSAPI EXPORTNUM(103) xbox::KIRQL NTAPI xbox::KeGetCurrentIrql(void)
 {
 	LOG_FUNC(); // TODO : Remove nested logging on this somehow, so we can call this (instead of inlining)
 
-	KPCR* Pcr = KeGetPcr();
+	KPCR* Pcr = EmuKeGetPcr();
 	KIRQL Irql = (KIRQL)Pcr->Irql;
 
 	RETURN_TYPE(KIRQL_TYPE, Irql);
@@ -995,6 +1034,9 @@ XBSYSAPI EXPORTNUM(117) xbox::long_xt NTAPI xbox::KeInsertQueue
 	RETURN(0);
 }
 
+// ******************************************************************
+// * 0x0076 - KeInsertQueueApc()
+// ******************************************************************
 XBSYSAPI EXPORTNUM(118) xbox::boolean_xt NTAPI xbox::KeInsertQueueApc
 (
 	IN PRKAPC Apc,
@@ -1010,9 +1052,47 @@ XBSYSAPI EXPORTNUM(118) xbox::boolean_xt NTAPI xbox::KeInsertQueueApc
 		LOG_FUNC_ARG(Increment)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
 
-	RETURN(TRUE);
+	PKTHREAD kThread = Apc->Thread;
+	if (kThread->ApcState.ApcQueueable == FALSE) {
+		KfLowerIrql(OldIrql);
+		RETURN(FALSE);
+	}
+	else {
+		Apc->SystemArgument1 = SystemArgument1;
+		Apc->SystemArgument2 = SystemArgument2;
+
+		if (Apc->Inserted) {
+			KfLowerIrql(OldIrql);
+			RETURN(FALSE);
+		}
+		else {
+			KiApcListMtx.lock();
+			InsertTailList(&kThread->ApcState.ApcListHead[Apc->ApcMode], &Apc->ApcListEntry);
+			Apc->Inserted = TRUE;
+			KiApcListMtx.unlock();
+
+			// We can only attempt to execute the queued apc right away if it is been inserted in the current thread, because otherwise the KTHREAD
+			// in the fs selector will not be correct
+			if (kThread == KeGetCurrentThread()) {
+				if (Apc->ApcMode == KernelMode) { // kernel apc
+					// NOTE: this is wrong, we should check the thread state instead of just signaling the kernel apc, but we currently
+					// don't set the appropriate state in kthread
+					kThread->ApcState.KernelApcPending = TRUE;
+					KiExecuteKernelApc();
+				}
+				else if ((kThread->WaitMode == UserMode) && (kThread->Alertable)) { // user apc
+					// NOTE: this should also check the thread state
+					kThread->ApcState.UserApcPending = TRUE;
+					KiExecuteUserApc();
+				}
+			}
+
+			KfLowerIrql(OldIrql);
+			RETURN(TRUE);
+		}
+	}
 }
 
 // ******************************************************************
@@ -1089,10 +1169,10 @@ XBSYSAPI EXPORTNUM(122) xbox::void_xt NTAPI xbox::KeLeaveCriticalRegion
     PKTHREAD thread = KeGetCurrentThread();
     thread->KernelApcDisable++;
     if(thread->KernelApcDisable == 0) {
-		LIST_ENTRY *apcListHead = &thread->ApcState.ApcListHead[0/*=KernelMode*/];
+		LIST_ENTRY *apcListHead = &thread->ApcState.ApcListHead[KernelMode];
         if(apcListHead->Flink != apcListHead) {
-            thread->ApcState.KernelApcPending = 1; // TRUE
-            HalRequestSoftwareInterrupt(1); // APC_LEVEL
+            thread->ApcState.KernelApcPending = TRUE;
+            HalRequestSoftwareInterrupt(APC_LEVEL);
         }
     }
 }
@@ -1152,9 +1232,16 @@ XBSYSAPI EXPORTNUM(124) xbox::long_xt NTAPI xbox::KeQueryBasePriorityThread
 {
 	LOG_FUNC_ONE_ARG(Thread);
 
-	LOG_UNIMPLEMENTED();
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
 
-	RETURN(0);
+	// It cannot fail because all thread handles are created by ob
+	const auto& nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
+	long_xt ret = GetThreadPriority(*nativeHandle);
+
+	KiUnlockDispatcherDatabase(OldIrql);
+
+	RETURN(ret);
 }
 
 // ******************************************************************
@@ -1572,21 +1659,31 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 		LOG_FUNC_ARG_OUT(Priority)
 		LOG_FUNC_END;
 
-	LONG ret = GetThreadPriority((HANDLE)Thread);
+	KIRQL oldIRQL;
+	KiLockDispatcherDatabase(&oldIRQL);
+
+	// It cannot fail because all thread handles are created by ob
+	const auto &nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
+	LONG ret = GetThreadPriority(*nativeHandle);
 
 	// This would work normally, but it will slow down the emulation, 
 	// don't do that if the priority is higher then normal (so our own)!
-	if((Priority <= THREAD_PRIORITY_NORMAL) && ((HANDLE)Thread != GetCurrentThread())) {
-		SetThreadPriority((HANDLE)Thread, Priority);
+	if (Priority <= THREAD_PRIORITY_NORMAL) {
+		BOOL result = SetThreadPriority(*nativeHandle, Priority);
+		if (!result) {
+			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
+		}
 	}
+
+	KiUnlockDispatcherDatabase(oldIRQL);
 
 	RETURN(ret);
 }
 
-XBSYSAPI EXPORTNUM(144) xbox::ulong_xt NTAPI xbox::KeSetDisableBoostThread
+XBSYSAPI EXPORTNUM(144) xbox::boolean_xt NTAPI xbox::KeSetDisableBoostThread
 (
 	IN PKTHREAD Thread,
-	IN ulong_xt Disable
+	IN boolean_xt Disable
 )
 {
 	LOG_FUNC_BEGIN
@@ -1597,8 +1694,16 @@ XBSYSAPI EXPORTNUM(144) xbox::ulong_xt NTAPI xbox::KeSetDisableBoostThread
 	KIRQL oldIRQL;
 	KiLockDispatcherDatabase(&oldIRQL);
 
-	ULONG prevDisableBoost = Thread->DisableBoost;
+	// It cannot fail because all thread handles are created by ob
+	const auto &nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
+
+	boolean_xt prevDisableBoost = Thread->DisableBoost;
 	Thread->DisableBoost = (CHAR)Disable;
+
+	BOOL bRet = SetThreadPriorityBoost(*nativeHandle, Disable);
+	if (!bRet) {
+		EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost failed: %s", WinError2Str().c_str());
+	}
 
 	KiUnlockDispatcherDatabase(oldIRQL);
 
@@ -1910,24 +2015,6 @@ XBSYSAPI EXPORTNUM(156) xbox::dword_xt VOLATILE xbox::KeTickCount = 0;
 // ******************************************************************
 XBSYSAPI EXPORTNUM(157) xbox::ulong_xt xbox::KeTimeIncrement = CLOCK_TIME_INCREMENT;
 
-
-xbox::PLARGE_INTEGER FASTCALL KiComputeWaitInterval(
-	IN xbox::PLARGE_INTEGER OriginalTime,
-	IN xbox::PLARGE_INTEGER DueTime,
-	IN OUT xbox::PLARGE_INTEGER NewTime
-)
-{
-	if (OriginalTime->QuadPart >= 0) {
-		return OriginalTime;
-
-	}
-	else {
-		NewTime->QuadPart = xbox::KeQueryInterruptTime();
-		NewTime->QuadPart -= DueTime->QuadPart;
-		return NewTime;
-	}
-}
-
 // ******************************************************************
 // * 0x009E - KeWaitForMultipleObjects()
 // ******************************************************************
@@ -1992,7 +2079,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 						if ((ObjectMutant->Header.SignalState > 0) || (Thread == ObjectMutant->OwnerThread)) {
 							if (ObjectMutant->Header.SignalState != MINLONG) {
 								KiWaitSatisfyMutant(ObjectMutant, Thread);
-								WaitStatus = (NTSTATUS)(Thread->WaitStatus);
+								WaitStatus = (NTSTATUS)(Index | Thread->WaitStatus);
 								goto NoWait;
 							}
 							else {
@@ -2004,7 +2091,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 					else if (ObjectMutant->Header.SignalState) {
 						// Otherwise, if the signal state is > 0, we can still just satisfy the wait
 						KiWaitSatisfyOther(ObjectMutant);
-						WaitStatus = X_STATUS_SUCCESS;
+						WaitStatus = Index;
 						goto NoWait;
 					}
 				} else {
@@ -2118,7 +2205,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 			//WaitStatus = (NTSTATUS)KiSwapThread();
 
 			//if (WaitStatus == X_STATUS_USER_APC) {
-				// TODO: KiDeliverUserApc();
+				// KiExecuteUserApc();
 			//}
 
 			// If the thread was not awakened for an APC, return the Wait Status
@@ -2149,7 +2236,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 	// So unlock the dispatcher database, lower the IRQ and return the status
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 	if (WaitStatus == X_STATUS_USER_APC) {
-		//TODO: KiDeliverUserApc();
+		KiExecuteUserApc();
 	}
 
 	RETURN(WaitStatus);
@@ -2170,7 +2257,7 @@ NoWait:
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 
 	if (WaitStatus == X_STATUS_USER_APC) {
-		// TODO: KiDeliverUserApc();
+		KiExecuteUserApc();
 	}
 
 	RETURN(WaitStatus);
@@ -2323,7 +2410,7 @@ XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 			WaitStatus = (NTSTATUS)KiSwapThread();
 
 			if (WaitStatus == X_STATUS_USER_APC) {
-				// TODO: KiDeliverUserApc();
+				KiExecuteUserApc();
 			}
 
 			// If the thread was not awakened for an APC, return the Wait Status
@@ -2354,7 +2441,7 @@ XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 	// So unlock the dispatcher database, lower the IRQ and return the status
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 	if (WaitStatus == X_STATUS_USER_APC) {
-		//TODO: KiDeliverUserApc();
+		KiExecuteUserApc();
 	}
 
 	RETURN(WaitStatus);
@@ -2375,7 +2462,7 @@ NoWait:
 	KiUnlockDispatcherDatabase(Thread->WaitIrql);
 
 	if (WaitStatus == X_STATUS_USER_APC) {
-		// TODO: KiDeliverUserApc();
+		KiExecuteUserApc();
 	}
 
 	RETURN(WaitStatus);

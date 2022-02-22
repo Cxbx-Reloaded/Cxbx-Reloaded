@@ -81,6 +81,7 @@ typedef void* LPSECURITY_ATTRIBUTES;
 #define X_STATUS_UNRECOGNIZED_MEDIA 0xC0000014L
 #define X_STATUS_NO_MEMORY 0xC0000017L
 #define X_STATUS_BUFFER_TOO_SMALL 0xC0000023L
+#define X_STATUS_INVALID_PARAMETER 0xC000000DL
 #define X_STATUS_INVALID_PARAMETER_2 0xC00000F0L
 #define X_STATUS_ALERTED 0x00000101L
 #define X_STATUS_USER_APC 0x000000C0L
@@ -104,6 +105,7 @@ typedef void* LPSECURITY_ATTRIBUTES;
 #define X_STATUS_NOT_COMMITTED 0xC000002DL
 #define X_STATUS_UNRECOGNIZED_VOLUME 0xC000014FL
 #define X_STATUS_OBJECT_PATH_NOT_FOUND 0xC000003AL
+#define X_STATUS_TIMEOUT 0x00000102L
 
 // ******************************************************************
 // * Registry value types
@@ -1496,8 +1498,10 @@ KFLOATING_SAVE, *PKFLOATING_SAVE;
 // ******************************************************************
 typedef enum _KOBJECTS
 {
+	EventNotificationObject = 0,
 	EventSynchronizationObject = 1,
 	MutantObject = 2,
+	ProcessObject = 3,
 	QueueObject = 4,
 	SemaphoreObject = 5,
 	ThreadObject = 6,
@@ -1506,13 +1510,16 @@ typedef enum _KOBJECTS
 	ApcObject = 0x12,
 	DpcObject = 0x13,
 	DeviceQueueObject = 0x14,
+	EventPairObject = 0x15,
+	InterruptObject = 0x16,
+	ProfileObject = 0x17,
 }
 KOBJECTS, *PKOBJECTS;
 
 // ******************************************************************
 // * PKNORMAL_ROUTINE
 // ******************************************************************
-typedef void_xt (*PKNORMAL_ROUTINE)
+typedef void_xt (NTAPI *PKNORMAL_ROUTINE)
 (
 	IN PVOID NormalContext,
 	IN PVOID SystemArgument1,
@@ -1914,11 +1921,15 @@ KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
 // ******************************************************************
 typedef struct _ETHREAD
 {
-    struct _KTHREAD Tcb;
-    uchar_xt           UnknownA[0x1C]; // 0x110
-    dword_xt           UniqueThread;   // 0x12C
+    struct _KTHREAD    Tcb;
+    LARGE_INTEGER      CreateTime;     // 0x110
+    LARGE_INTEGER      ExitTime;       // 0x118
+    ntstatus_xt        ExitStatus;     // 0x120
+    uchar_xt           Unknown[0x8];   // 0x124
+    HANDLE             UniqueThread;   // 0x12C
 }
 ETHREAD, *PETHREAD;
+static_assert(sizeof(ETHREAD) == 0x130);
 
 // ******************************************************************
 // * PCREATE_THREAD_NOTIFY_ROUTINE

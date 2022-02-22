@@ -29,6 +29,9 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h>
+#include <core\kernel\exports\EmuKrnlKi.h>
+#include "core\kernel\support\EmuFS.h"
+#include "core\kernel\support\NativeHandle.h"
 #include <cstdio>
 #include <cctype>
 #include <clocale>
@@ -119,12 +122,6 @@ xbox::PLIST_ENTRY RemoveTailList(xbox::PLIST_ENTRY pListHead)
 	return Result;
 }
 
-// ******************************************************************
-// * Declaring this in a header causes errors with xboxkrnl
-// * namespace, so we must declare it within any file that uses it
-// ******************************************************************
-xbox::KPCR* WINAPI KeGetPcr();
-
 // Interrupts
 
 extern volatile DWORD HalInterruptRequestRegister;
@@ -157,8 +154,8 @@ void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql)
 	case PASSIVE_LEVEL:
 		KiUnexpectedInterrupt();
 		break;
-	case APC_LEVEL: // = 1 // HalpApcInterrupt        
-		EmuLog(LOG_LEVEL::WARNING, "Unimplemented Software Interrupt (APC)"); // TODO : ExecuteApcQueue();
+	case APC_LEVEL: // = 1 HalpApcInterrupt
+		xbox::KiExecuteKernelApc();
 		break;
 	case DISPATCH_LEVEL: // = 2
 		ExecuteDpcQueue();
@@ -212,6 +209,7 @@ const DWORD IrqlMasks[] = {
 	0x00000000, // IRQL 30
 	0x00000000, // IRQL 31 (HIGH_LEVEL)
 };
+
 
 // ******************************************************************
 // * 0x0033 - InterlockedCompareExchange()
@@ -374,7 +372,7 @@ XBSYSAPI EXPORTNUM(160) xbox::KIRQL FASTCALL xbox::KfRaiseIrql
 	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, NewIrql);
 
 	// Inlined KeGetCurrentIrql() :
-	PKPCR Pcr = KeGetPcr();
+	PKPCR Pcr = EmuKeGetPcr();
 	KIRQL OldIrql = (KIRQL)Pcr->Irql;
 
 	// Set new before check
@@ -402,7 +400,7 @@ XBSYSAPI EXPORTNUM(161) xbox::void_xt FASTCALL xbox::KfLowerIrql
 {
 	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, NewIrql);
 
-	KPCR* Pcr = KeGetPcr();
+	KPCR* Pcr = EmuKeGetPcr();
 
 	if (g_bIsDebugKernel && NewIrql > Pcr->Irql) {
 		KIRQL OldIrql = Pcr->Irql;
@@ -450,12 +448,23 @@ XBSYSAPI EXPORTNUM(163) xbox::void_xt FASTCALL xbox::KiUnlockDispatcherDatabase
 {
 	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, OldIrql);
 
-	if (!(KeGetCurrentPrcb()->DpcRoutineActive)) // Avoid KeIsExecutingDpc(), as that logs
+	// Wrong, this should only happen when OldIrql >= DISPATCH_LEVEL
+	if (!(KeGetCurrentPrcb()->DpcRoutineActive)) { // Avoid KeIsExecutingDpc(), as that logs
 		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+	}
 
-	LOG_INCOMPLETE(); // TODO : Thread-switch?
+	if (OldIrql < DISPATCH_LEVEL) {
+		// FIXME: this is wrong, it should perform a thread switch and check the kthread of the new selected thread for pending APCs.
+		// We can't perform our own threads switching now, so we will just check the current thread
+
+		if (KeGetCurrentThread()->ApcState.KernelApcPending) {
+			KiExecuteKernelApc();
+		}
+	}
 
 	KfLowerIrql(OldIrql);
+
+	LOG_INCOMPLETE(); // TODO : Thread-switch?
 }
 
 // ******************************************************************

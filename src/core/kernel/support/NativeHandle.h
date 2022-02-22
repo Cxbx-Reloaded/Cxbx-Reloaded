@@ -31,4 +31,4 @@
 
 void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle);
 void RemoveXboxHandle(xbox::HANDLE xhandle);
-std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle);
+template<bool NoConversion = false> std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle);

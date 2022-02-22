@@ -509,6 +509,7 @@ xbox::bool_xt WINAPI EMUPATCH(CloseHandle)
     HANDLE hObject
 );
 
+#if 0 // Handled by KeSetBasePriorityThread
 // ******************************************************************
 // * patch: SetThreadPriority
 // ******************************************************************
@@ -517,7 +518,9 @@ xbox::bool_xt WINAPI EMUPATCH(SetThreadPriority)
     HANDLE  hThread,
     int     nPriority
 );
+#endif
 
+#if 0 // Handled by KeQueryBasePriorityThread
 // ******************************************************************
 // * patch: GetThreadPriority
 // ******************************************************************
@@ -525,7 +528,9 @@ int WINAPI EMUPATCH(GetThreadPriority)
 (
     HANDLE  hThread
 );
+#endif
 
+#if 0 // Handled by KeSetDisableBoostThread
 // ******************************************************************
 // * patch: SetThreadPriorityBoost
 // ******************************************************************
@@ -534,7 +539,9 @@ xbox::bool_xt WINAPI EMUPATCH(SetThreadPriorityBoost)
     HANDLE  hThread,
     bool_xt    DisablePriorityBoost
 );
+#endif
 
+#if 0
 // ******************************************************************
 // * patch: GetExitCodeThread
 // ******************************************************************
@@ -543,6 +550,7 @@ xbox::bool_xt WINAPI EMUPATCH(GetExitCodeThread)
     HANDLE  hThread,
     LPDWORD lpExitCode
 );
+#endif
 
 // ******************************************************************
 // * patch: XapiThreadStartup

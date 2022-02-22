@@ -42,6 +42,7 @@
 #include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\kernel\exports\EmuKrnlKi.h"
+#include "core\kernel\exports\EmuKrnlKe.h"
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow, EmuD3DInit
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp" // For CxbxInitAudio
@@ -71,6 +72,8 @@
 #include "common\crypto\EmuSha.h" // For the SHA1 functions
 #include "Timer.h" // For Timer_Init
 #include "common\input\InputManager.h" // For the InputDeviceManager
+#include "core/kernel/support/NativeHandle.h"
+#include "common/win32/Util.h" // for WinError2Str
 
 #include "common/FilePaths.hpp"
 
@@ -92,9 +95,6 @@ HWND CxbxKrnl_hEmuParent = NULL;
 DebugMode CxbxrKrnl_DebugMode = DebugMode::DM_NONE;
 std::string CxbxrKrnl_DebugFileName = "";
 Xbe::Certificate *g_pCertificate = NULL;
-
-/*! thread handles */
-static std::vector<HANDLE> g_hThreads;
 
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 std::string g_DataFilePath;
@@ -141,9 +141,11 @@ void SetupPerTitleKeys()
 
 }
 
-void CxbxLaunchXbe(void(*Entry)())
+xbox::void_xt NTAPI CxbxLaunchXbe(xbox::PVOID Entry)
 {
-	Entry();
+	EmuLogInit(LOG_LEVEL::DEBUG, "Calling XBE entry point...");
+	static_cast<void(*)()>(Entry)();
+	EmuLogInit(LOG_LEVEL::DEBUG, "XBE entry point returned");
 }
 
 // Entry point address XOR keys per Xbe type (Retail, Debug or Chihiro) :
@@ -334,37 +336,28 @@ void InitSoftwareInterrupts()
 }
 #endif
 
-void TriggerPendingConnectedInterrupts()
-{
-	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-		// If the interrupt is pending and connected, process it
-		if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
-			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-		}
-		SwitchToThread();
-	}
-}
-
-static unsigned int WINAPI CxbxKrnlInterruptThread(PVOID param)
+static xbox::void_xt NTAPI CxbxKrnlInterruptThread(xbox::PVOID param)
 {
 	CxbxSetThreadName("CxbxKrnl Interrupts");
-
-	// Make sure Xbox1 code runs on one core :
-	InitXboxThread();
-	g_AffinityPolicy->SetAffinityXbox();
 
 #if 0
 	InitSoftwareInterrupts();
 #endif
 
+	std::mutex m;
+	std::unique_lock<std::mutex> lock(m);
 	while (true) {
-		if (g_bEnableAllInterrupts) {
-			TriggerPendingConnectedInterrupts();
+		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+			// If the interrupt is pending and connected, process it
+			if (HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
+				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
+			}
 		}
-		Sleep(1);
+		g_InterruptSignal.wait(lock, []() { return g_AnyInterruptAsserted.load() && g_bEnableAllInterrupts.load(); });
+		g_AnyInterruptAsserted = false;
 	}
 
-	return 0;
+	assert(0);
 }
 
 static void CxbxKrnlClockThread(void* pVoid)
@@ -706,7 +699,6 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 		// Launch Segaboot
 		CxbxLaunchNewXbe(chihiroSegaBootNew);
 		CxbxKrnlShutDown(true);
-		TerminateProcess(GetCurrentProcess(), EXIT_SUCCESS);
 
 	}
 #endif // Chihiro wip block
@@ -1405,13 +1397,19 @@ static void CxbxrKrnlInitHacks()
 
 	CxbxrLogDumpXbeInfo(pLibraryVersion);
 
-	CxbxKrnlRegisterThread(GetCurrentThread());
-
 	// Make sure the Xbox1 code runs on one core (as the box itself has only 1 CPU,
 	// this will better aproximate the environment with regard to multi-threading) :
 	EmuLogInit(LOG_LEVEL::DEBUG, "Determining CPU affinity.");
 	g_AffinityPolicy = AffinityPolicy::InitPolicy();
 
+	// Create a kpcr for this thread. This is necessary because ObInitSystem needs to access the irql. This must also be done before
+	// CxbxInitWindow because that function creates the xbox EmuUpdateTickCount thread
+	EmuGenerateFS<true>(nullptr, nullptr, xbox::zeroptr);
+	if (!xbox::ObInitSystem()) {
+		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
+	}
+	xbox::KiInitSystem();
+	
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
 	CxbxInitWindow(true);
@@ -1492,13 +1490,6 @@ static void CxbxrKrnlInitHacks()
 
 	EmuInitFS();
 
-	InitXboxThread();
-	g_AffinityPolicy->SetAffinityXbox();
-	if (!xbox::ObInitSystem()) {
-		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
-	}
-	xbox::KiInitSystem();
-
 #ifdef CHIHIRO_WORK
 	// If this title is Chihiro, Setup JVS
 	if (g_bIsChihiro) {
@@ -1508,25 +1499,21 @@ static void CxbxrKrnlInitHacks()
 
 	EmuX86_Init();
 	// Create the interrupt processing thread
-	DWORD dwThreadId;
-	HANDLE hThread = (HANDLE)_beginthreadex(NULL, NULL, CxbxKrnlInterruptThread, NULL, NULL, (unsigned int*)&dwThreadId);
+	xbox::HANDLE hThread;
+	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxKrnlInterruptThread, xbox::zeroptr, FALSE);
 	// Start the kernel clock thread
-	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", false);
+	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", true);
 	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
 
-	EmuLogInit(LOG_LEVEL::DEBUG, "Calling XBE entry point...");
-	CxbxLaunchXbe(Entry);
+	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxLaunchXbe, Entry, FALSE);
 
-	// FIXME: Wait for Cxbx to exit or error fatally
-	Sleep(INFINITE);
+	EmuKeFreePcr<true>();
 
-	EmuLogInit(LOG_LEVEL::DEBUG, "XBE entry point returned");
-	fflush(stdout);
-
-	CxbxUnlockFilePath();
-
-	//	EmuShared::Cleanup();   FIXME: commenting this line is a bad workaround for issue #617 (https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/617)
-    CxbxKrnlTerminateThread();
+	// This will wait forever
+	std::condition_variable cv;
+	std::mutex m;
+	std::unique_lock<std::mutex> lock(m);
+	cv.wait(lock, [] { return false; });
 }
 
 // REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
@@ -1543,8 +1530,6 @@ static void CxbxrKrnlInitHacks()
 [[noreturn]] void CxbxrKrnlAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
 {
     g_bEmuException = true;
-
-    CxbxKrnlResume();
 
     // print out error message (if exists)
     if(szErrorMessage != NULL)
@@ -1575,65 +1560,50 @@ static void CxbxrKrnlInitHacks()
 	CxbxKrnlShutDown();
 }
 
-void CxbxKrnlRegisterThread(HANDLE hThread)
+void CxbxrKrnlSuspendThreads()
 {
-	// we must duplicate this handle in order to retain Suspend/Resume thread rights from a remote thread
-	{
-		HANDLE hDupHandle = NULL;
+	xbox::PLIST_ENTRY ThreadListEntry = KiUniqueProcess.ThreadListHead.Flink;
+	std::vector<HANDLE> threads;
+	threads.reserve(KiUniqueProcess.StackCount);
 
-		if (DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hDupHandle, 0, FALSE, DUPLICATE_SAME_ACCESS)) {
-			hThread = hDupHandle; // Thread handle was duplicated, continue registration with the duplicate
-		}
-		else {
-			auto message = CxbxGetLastErrorString("DuplicateHandle");
-			EmuLog(LOG_LEVEL::WARNING, message.c_str());
-		}
+	// Don't use EmuKeGetPcr because that asserts kpcr
+	xbox::KPCR* Pcr = reinterpret_cast<xbox::PKPCR>(__readfsdword(TIB_ArbitraryDataSlot));
+	
+	// If there's nothing in list entry, skip this step.
+	if (!ThreadListEntry) {
+		return;
 	}
 
-	g_hThreads.push_back(hThread);
-}
-
-void CxbxKrnlSuspend()
-{
-    if(g_bEmuSuspended || g_bEmuException)
-        return;
-
-    for (auto it = g_hThreads.begin(); it != g_hThreads.end(); ++it)
-    {
-        DWORD dwExitCode;
-
-        if(GetExitCodeThread(*it, &dwExitCode) && dwExitCode == STILL_ACTIVE) {
-            // suspend thread if it is active
-            SuspendThread(*it);
-        } else {
-            // remove thread from thread list if it is dead
-			g_hThreads.erase(it);
-        }
-    }
-
-    g_bEmuSuspended = true;
-}
-
-void CxbxKrnlResume()
-{
-    if(!g_bEmuSuspended)
-        return;
-
-	for (auto it = g_hThreads.begin(); it != g_hThreads.end(); ++it)
-	{
-		DWORD dwExitCode;
-
-		if (GetExitCodeThread(*it, &dwExitCode) && dwExitCode == STILL_ACTIVE) {
-			// resume thread if it is active
-			ResumeThread(*it);
+	while (ThreadListEntry != &KiUniqueProcess.ThreadListHead) {
+		xbox::HANDLE UniqueThread = CONTAINING_RECORD(ThreadListEntry, xbox::ETHREAD, Tcb.ThreadListEntry)->UniqueThread;
+		if (UniqueThread) {
+			// Current thread is an xbox thread
+			if (Pcr) {
+				const auto& nHandle = GetNativeHandle<true>(UniqueThread);
+				if (nHandle) {
+					// We do not want to suspend current thread, so we let it skip this one.
+					if (*nHandle != NtCurrentThread()) {
+						threads.push_back(*nHandle);
+					}
+				}
+			}
+			// Otherwise, convert all UniqueThread to host thead handles.
+			else {
+				const auto& nHandle = GetNativeHandle<false>(UniqueThread);
+				if (nHandle) {
+					threads.push_back(*nHandle);
+				}
+			}
 		}
-		else {
-			// remove thread from thread list if it is dead
-			g_hThreads.erase(it);
-		}
+		ThreadListEntry = ThreadListEntry->Flink;
 	}
 
-    g_bEmuSuspended = false;
+	for (const auto& thread : threads) {
+		DWORD PrevCount = SuspendThread(thread);
+		if (PrevCount == -1) {
+			EmuLog(LOG_LEVEL::ERROR2, "Unable to suspend thread 0x%X for: %s", thread, WinError2Str().c_str());
+		}
+	}
 }
 
 void CxbxKrnlShutDown(bool is_reboot)
@@ -1656,14 +1626,22 @@ void CxbxKrnlShutDown(bool is_reboot)
 		g_io_mu_metadata = nullptr;
 	}
 
-	// Shutdown the memory manager
-	g_VMManager.Shutdown();
-
 	// Shutdown the render manager
 	if (g_renderbase != nullptr) {
 		g_renderbase->Shutdown();
 		g_renderbase = nullptr;
 	}
+
+	// This is very important process to prevent false positive report and allow IDEs to continue debug multiple reboots.
+	CxbxrKrnlSuspendThreads();
+
+	// NOTE: Require to be after g_renderbase's shutdown process.
+	// Next thing we need to do is shutdown our timer threads.
+	Timer_Shutdown();
+
+	// NOTE: Must be last step of shutdown process and before CxbxUnlockFilePath call!
+	// Shutdown the memory manager
+	g_VMManager.Shutdown();
 
 	CxbxUnlockFilePath();
 
@@ -1764,11 +1742,6 @@ void CxbxPrintUEMInfo(ULONG ErrorCode)
 	{
 		PopupFatal(nullptr, "Unknown fatal error. This error screen will persist indefinitely. Stop the emulation to close it.");
 	}
-}
-
-[[noreturn]] void CxbxKrnlTerminateThread()
-{
-    TerminateThread(GetCurrentThread(), 0);
 }
 
 void CxbxKrnlPanic()

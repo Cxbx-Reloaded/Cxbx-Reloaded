@@ -31,7 +31,9 @@
 #include <core\kernel\exports\xboxkrnl.h>
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "core\kernel\exports\EmuKrnlKe.h"
+#include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\support\EmuFS.h" // For fs_instruction_t
+#include "core\kernel\support\NativeHandle.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 
@@ -42,6 +44,8 @@
 #ifdef RtlZeroMemory
 #undef RtlZeroMemory
 #endif
+
+#define TLS_ALIGNMENT_OFFSET 12
 
 // NT_TIB (Thread Information Block) offsets - see https://www.microsoft.com/msj/archive/S2CE.aspx
 #define TIB_ExceptionList         offsetof(NT_TIB, ExceptionList)         // = 0x00/0
@@ -111,13 +115,15 @@
 // = 0x104/260 */ LIST_ENTRY ThreadListEntry;
 // = 0x10C/268 */ UCHAR _padding[4];
 
+template void EmuGenerateFS<true>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
+template void EmuGenerateFS<false>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
+template void EmuKeFreePcr<true>();
+template void EmuKeFreePcr<false>();
+
 NT_TIB *GetNtTib()
 {
 	return (NT_TIB *)__readfsdword(TIB_LinearSelfAddress);
 }
-
-
-xbox::KPCR* WINAPI KeGetPcr();
 
 uint32_t fs_lock = 0;
 
@@ -160,7 +166,7 @@ __declspec(naked) void UnlockFS()
 
 void EmuKeSetPcr(xbox::KPCR *Pcr)
 {
-	// Store the Xbox KPCR pointer in FS (See KeGetPcr())
+	// Store the Xbox KPCR pointer in FS (See EmuKeGetPcr())
 	// 
 	// Note : Cxbx currently doesn't do preemptive thread switching,
 	// which implies that thread-state management is done by Windows.
@@ -188,43 +194,65 @@ void EmuKeSetPcr(xbox::KPCR *Pcr)
 	__writefsdword(TIB_ArbitraryDataSlot, (DWORD)Pcr);
 }
 
+template<bool IsHostThread>
 void EmuKeFreePcr()
 {
-	// NOTE: don't call KeGetPcr because that one creates a new pcr for the thread when __readfsdword returns nullptr, which we don't want
-	xbox::PKPCR Pcr = reinterpret_cast<xbox::PKPCR>(__readfsdword(TIB_ArbitraryDataSlot));
-
-	if (Pcr) {
-		// tls can be nullptr
-		xbox::PVOID Dummy;
-		xbox::ulong_xt Size;
-		xbox::ntstatus_xt Status;
-		if (Pcr->NtTib.StackBase) {
-			// NOTE: the tls pointer was increased by 12 bytes to enforce the 16 bytes alignment, so adjust it to reach the correct pointer
-			// that was allocated by xbox::NtAllocateVirtualMemory
-			Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - 12;
-			Size = xbox::zero;
-			Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free tls
-			assert(Status == X_STATUS_SUCCESS);
-		}
+	xbox::PKPCR Pcr = EmuKeGetPcr();
+	xbox::PVOID Dummy;
+	xbox::ulong_xt Size;
+	xbox::ntstatus_xt Status;
+	// tls can be nullptr
+	if (Pcr->NtTib.StackBase) {
+		// NOTE: the tls pointer was increased by 12 bytes to enforce the 16 bytes alignment, so adjust it to reach the correct pointer
+		// that was allocated by xbox::NtAllocateVirtualMemory
+		Dummy = static_cast<xbox::PBYTE>(Pcr->NtTib.StackBase) - TLS_ALIGNMENT_OFFSET;
+		Size = xbox::zero;
+		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free tls
+		assert(Status == X_STATUS_SUCCESS);
+	}
+	if constexpr (IsHostThread) {
+		// This only happens for the kernel initialization thread of cxbxr
 		Dummy = Pcr->Prcb->CurrentThread;
 		Size = xbox::zero;
 		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free ethread
 		assert(Status == X_STATUS_SUCCESS);
-		Dummy = Pcr;
-		Size = xbox::zero;
-		Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free pcr
-		assert(Status == X_STATUS_SUCCESS);
-		__writefsdword(TIB_ArbitraryDataSlot, NULL);
 	}
-	else {
-		EmuLog(LOG_LEVEL::WARNING, "__readfsdword in EmuKeFreePcr returned nullptr: was this called from a non-xbox thread?");
+	Dummy = Pcr;
+	Size = xbox::zero;
+	Status = xbox::NtFreeVirtualMemory(&Dummy, &Size, XBOX_MEM_RELEASE); // free pcr
+	assert(Status == X_STATUS_SUCCESS);
+	__writefsdword(TIB_ArbitraryDataSlot, NULL);
+}
+
+void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus)
+{
+	// Free all kernel resources that were allocated fo this thread
+
+	xbox::KeEmptyQueueApc();
+
+	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
+
+	xbox::KeQuerySystemTime(&eThread->ExitTime);
+	eThread->Tcb.HasTerminated = 1;
+
+	RemoveEntryList(&eThread->Tcb.ThreadListEntry);
+
+	// Emulate our exit strategy for GetExitCodeThread
+	eThread->ExitStatus = ExitStatus;
+	eThread->Tcb.Header.SignalState = 1;
+
+	if (GetNativeHandle(eThread->UniqueThread)) {
+		xbox::NtClose(eThread->UniqueThread);
+		eThread->UniqueThread = xbox::zero;
 	}
+
+	EmuKeFreePcr();
 }
 
 __declspec(naked) void EmuFS_RefreshKPCR()
 {
-	// Backup all registers, call KeGetPcr and then restore all registers
-	// KeGetPcr makes sure a valid KPCR exists for the current thread
+	// Backup all registers, call EmuKeGetPcr and then restore all registers
+	// EmuKeGetPcr makes sure a valid KPCR exists for the current thread
 	// and creates it if missing, we backup and restore all registers
 	// to keep it safe to call in our patches
 	// This function can be later expanded to do nice things 
@@ -232,7 +260,7 @@ __declspec(naked) void EmuFS_RefreshKPCR()
 	__asm {
 		pushfd
 		pushad
-		call KeGetPcr
+		call EmuKeGetPcr
 		popad
 		popfd
 		ret
@@ -652,7 +680,8 @@ void EmuInitFS()
 }
 
 // generate fs segment selector
-void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
+template<bool IsHostThread>
+void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread)
 {
 	void *pNewTLS = nullptr;
 	xbox::PVOID base;
@@ -682,7 +711,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 			pNewTLS = (void*)base;
 			xbox::RtlZeroMemory(pNewTLS, dwCopySize + dwZeroSize + 0x100 + 0xC);
 			/* Skip the first 12 bytes so that TLSData will be 16 byte aligned (addr returned by NtAllocateVirtualMemory is 4K aligned) */
-			pNewTLS = (uint8_t*)pNewTLS + 12;
+			pNewTLS = (uint8_t*)pNewTLS + TLS_ALIGNMENT_OFFSET;
 
 			if (dwCopySize > 0) {
 				memcpy((uint8_t*)pNewTLS + 4, pTLSData, dwCopySize);
@@ -779,18 +808,29 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		NewPcr->Irql = PASSIVE_LEVEL; // See KeLowerIrql;
 	}
 
-	// Initialize a fake PrcbData.CurrentThread 
-	{
+	if constexpr (IsHostThread) {
+		// This only happens for the kernel initialization thread of cxbxr
+		assert(Ethread == xbox::zeroptr);
+
 		base = xbox::zeroptr;
 		size = sizeof(xbox::ETHREAD);
 		xbox::NtAllocateVirtualMemory(&base, 0, &size, XBOX_MEM_RESERVE | XBOX_MEM_COMMIT, XBOX_PAGE_READWRITE);
-		xbox::ETHREAD *EThread = (xbox::ETHREAD*)base; // Clear, to prevent side-effects on random contents
-		xbox::RtlZeroMemory(EThread, sizeof(xbox::ETHREAD));
+		Ethread = (xbox::PETHREAD)base;
+		xbox::RtlZeroMemory(Ethread, sizeof(xbox::ETHREAD)); // Clear, to prevent side-effects on random contents
+	}
 
-		EThread->Tcb.TlsData = pNewTLS;
-		EThread->UniqueThread = GetCurrentThreadId();
+	// Initialize a fake PrcbData.CurrentThread 
+	{
 		// Set PrcbData.CurrentThread
-		Prcb->CurrentThread = (xbox::KTHREAD*)EThread;
+		Prcb->CurrentThread = (xbox::PKTHREAD)Ethread;
+		Prcb->CurrentThread->TlsData = pNewTLS;
+		// Initialize APC stuff
+		InitializeListHead(&Prcb->CurrentThread->ApcState.ApcListHead[xbox::KernelMode]);
+		InitializeListHead(&Prcb->CurrentThread->ApcState.ApcListHead[xbox::UserMode]);
+		Prcb->CurrentThread->KernelApcDisable = 0;
+		Prcb->CurrentThread->ApcState.ApcQueueable = TRUE;
+		Prcb->CurrentThread->ApcState.Process = &KiUniqueProcess;
+		Prcb->CurrentThread->ApcState.Process->ThreadQuantum = KiUniqueProcess.ThreadQuantum;
 		// Initialize the thread header and its wait list
 		Prcb->CurrentThread->Header.Type = xbox::ThreadObject;
 		Prcb->CurrentThread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::long_xt);
@@ -806,8 +846,11 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData)
 		WaitBlock->WaitListEntry.Blink = &Prcb->CurrentThread->Timer.Header.WaitListHead;
 	}
 
-	// Make the KPCR struct available to KeGetPcr()
+	// Make the KPCR struct available to EmuKeGetPcr()
 	EmuKeSetPcr(NewPcr);
 
 	EmuLog(LOG_LEVEL::DEBUG, "Installed KPCR in TIB_ArbitraryDataSlot (with pTLS = 0x%.8X)", pTLS);
+
+	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
+	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 }

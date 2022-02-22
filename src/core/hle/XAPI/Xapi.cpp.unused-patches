@@ -1,0 +1,393 @@
+xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriorityBoost)
+(
+    HANDLE  hThread,
+    bool_xt    DisablePriorityBoost
+)
+{
+
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hThread)
+		LOG_FUNC_ARG(DisablePriorityBoost)
+		LOG_FUNC_END;
+
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		BOOL bRet = SetThreadPriorityBoost(*nativeHandle, DisablePriorityBoost);
+		if (bRet == FALSE) {
+			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost Failed!");
+		}
+		RETURN(bRet);
+	}
+	else {
+		RETURN(0);
+	}
+}
+
+xbox::bool_xt WINAPI xbox::EMUPATCH(SetThreadPriority)
+(
+    HANDLE  hThread,
+    int     nPriority
+)
+{
+
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hThread)
+		LOG_FUNC_ARG(nPriority)
+		LOG_FUNC_END;
+
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		BOOL bRet = SetThreadPriority(*nativeHandle, nPriority);
+		if (bRet == FALSE) {
+			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority Failed!");
+		}
+		RETURN(bRet);
+	}
+	else {
+		RETURN(0);
+	}
+}
+
+int WINAPI xbox::EMUPATCH(GetThreadPriority)
+(
+    HANDLE  hThread
+)
+{
+
+
+	LOG_FUNC_ONE_ARG(hThread);
+
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		int iRet = GetThreadPriority(*nativeHandle);
+		if (iRet == THREAD_PRIORITY_ERROR_RETURN) {
+			EmuLog(LOG_LEVEL::WARNING, "GetThreadPriority Failed!");
+		}
+		RETURN(iRet);
+	}
+	else {
+		RETURN(THREAD_PRIORITY_ERROR_RETURN);
+	}
+}
+
+xbox::bool_xt WINAPI xbox::EMUPATCH(GetExitCodeThread)
+(
+    HANDLE  hThread,
+    LPDWORD lpExitCode
+)
+{
+
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hThread)
+		LOG_FUNC_ARG(lpExitCode)
+		LOG_FUNC_END;
+
+	if (const auto &nativeHandle = GetNativeHandle(hThread)) {
+		RETURN(GetExitCodeThread(*nativeHandle, (::LPDWORD)lpExitCode));
+	}
+	else {
+		RETURN(0);
+	}
+}
+
+xbox::void_xt WINAPI xbox::EMUPATCH(XapiThreadStartup)
+(
+    dword_xt dwDummy1,
+    dword_xt dwDummy2
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(dwDummy1)
+		LOG_FUNC_ARG(dwDummy2)
+		LOG_FUNC_END;
+
+	typedef int (__stdcall *pfDummyFunc)(dword_xt dwDummy);
+
+    pfDummyFunc func = (pfDummyFunc)dwDummy1;
+
+    func(dwDummy2);
+
+    // TODO: Call thread notify routines ?
+
+    /*
+    __asm
+    {
+        push dwDummy2
+        call dwDummy1
+    }
+    */
+
+    //_asm int 3;
+}
+
+xbox::void_xt WINAPI xbox::EMUPATCH(XRegisterThreadNotifyRoutine)
+(
+    PXTHREAD_NOTIFICATION   pThreadNotification,
+    bool_xt                    fRegister
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pThreadNotification)
+		LOG_FUNC_ARG(fRegister)
+		LOG_FUNC_END;
+
+    if(fRegister)
+    {
+		// I honestly don't expect this to happen, but if it does...
+        if(g_iThreadNotificationCount >= 16)
+			CxbxrKrnlAbort("Too many thread notification routines installed\n");
+
+		// Find an empty spot in the thread notification array
+		for(int i = 0; i < 16; i++)
+		{
+			// If we find one, then add it to the array, and break the loop so
+			// that we don't accidently register the same routine twice!
+			if(g_pfnThreadNotification[i] == NULL)
+			{
+				g_pfnThreadNotification[i] = (PVOID)pThreadNotification->pfnNotifyRoutine;				
+				g_iThreadNotificationCount++;
+				break;
+			}
+		}
+    }
+    else
+    {
+		// Go through each routine and nullify the routine passed in.
+        for(int i = 0; i < 16; i++)
+		{
+			if(pThreadNotification->pfnNotifyRoutine == g_pfnThreadNotification[i])
+			{
+				g_pfnThreadNotification[i] = NULL;
+				g_iThreadNotificationCount--;
+				break;
+			}
+		}
+    }
+}
+
+xbox::dword_xt WINAPI xbox::EMUPATCH(QueueUserAPC)
+(
+	PAPCFUNC	pfnAPC,
+	HANDLE		hThread,
+	dword_xt		dwData
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG_TYPE(PVOID, pfnAPC)
+		LOG_FUNC_ARG(hThread)
+		LOG_FUNC_ARG(dwData)
+		LOG_FUNC_END;
+
+	dword_xt dwRet = 0;
+
+	// If necessary, we can just continue to emulate NtQueueApcThread (0xCE).
+	// I added this because NtQueueApcThread fails in Metal Slug 3.
+
+	HANDLE hApcThread = NULL;
+	if(!DuplicateHandle(g_CurrentProcessHandle, hThread, g_CurrentProcessHandle, &hApcThread, THREAD_SET_CONTEXT,FALSE,0))
+		EmuLog(LOG_LEVEL::WARNING, "DuplicateHandle failed!");
+
+	dwRet = QueueUserAPC(pfnAPC, hApcThread, dwData);
+	if(!dwRet)
+		EmuLog(LOG_LEVEL::WARNING, "QueueUserAPC failed!");
+
+	RETURN(dwRet);
+}
+
+xbox::bool_xt WINAPI xbox::EMUPATCH(GetOverlappedResult)
+(
+	HANDLE			hFile,
+	LPOVERLAPPED	lpOverlapped,
+	LPDWORD			lpNumberOfBytesTransferred,
+	bool_xt			bWait
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(hFile)
+		LOG_FUNC_ARG(lpOverlapped)
+		LOG_FUNC_ARG(lpNumberOfBytesTransferred)
+		LOG_FUNC_ARG(bWait)
+		LOG_FUNC_END;
+
+	BOOL bRet = GetOverlappedResult( hFile, lpOverlapped, lpNumberOfBytesTransferred, bWait );
+
+//	if(bWait)
+//		bRet = TRUE; // Sucker...
+
+	RETURN(bRet);
+}
+
+xbox::dword_xt WINAPI xbox::EMUPATCH(XLaunchNewImageA)
+(
+	LPCSTR			lpTitlePath,
+	PLAUNCH_DATA	pLaunchData
+)
+{
+	// Note : This can be tested using "Innocent tears",
+	// which relaunches different xbes between scenes;
+	// One for menus, one for fmvs, etc.
+	//
+	// Other titles do this too (like "DOA2 Ultimate",
+	// and probably "Panzer Dragoon Orta"), but these
+	// titles don't come this far as-of yet.
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(lpTitlePath)
+		LOG_FUNC_ARG(pLaunchData)
+		LOG_FUNC_END;
+
+	// TODO : This patch can be removed once NtOpenSymbolicLinkObject()
+	// and NtQuerySymbolicLinkObject() work together correctly.
+	// Also, XLaunchNewImageA() depends on XeImageHeader() and uses
+	// XWriteTitleInfoAndReboot() and indirectly XWriteTitleInfoNoReboot()
+
+	// Update the kernel's LaunchDataPage :
+	{
+		if (xbox::LaunchDataPage == xbox::zeroptr)
+		{
+			PVOID LaunchDataVAddr = xbox::MmAllocateContiguousMemory(sizeof(xbox::LAUNCH_DATA_PAGE));
+			if (!LaunchDataVAddr)
+			{
+				RETURN(X_STATUS_NO_MEMORY);
+			}
+			xbox::LaunchDataPage = (xbox::LAUNCH_DATA_PAGE*)LaunchDataVAddr;
+		}
+
+		xbox::LaunchDataPage->Header.dwTitleId = g_pCertificate->dwTitleId;
+		xbox::LaunchDataPage->Header.dwFlags = 0; // TODO : What to put in here?
+		xbox::LaunchDataPage->Header.dwLaunchDataType = LDT_TITLE;
+
+		xbox::MmPersistContiguousMemory((PVOID)xbox::LaunchDataPage, PAGE_SIZE, TRUE);
+
+		if (pLaunchData != xbox::zeroptr)
+			// Save the launch data
+			memcpy(&(xbox::LaunchDataPage->LaunchData[0]), pLaunchData, sizeof(LAUNCH_DATA));
+
+		if (lpTitlePath == xbox::zeroptr)
+		{
+			// If no path is specified, then the xbe is rebooting to dashboard
+			char szDashboardPath[xbox::max_path] = { 0 };
+			XboxDevice* rootDevice = CxbxDeviceByDevicePath(DeviceHarddisk0Partition2);
+			if (rootDevice != nullptr)
+				sprintf(szDashboardPath, "%s\\xboxdash.xbe", rootDevice->HostDevicePath.c_str());
+
+			if (PathFileExists(szDashboardPath))
+			{
+				PopupInfo(nullptr, "The title is rebooting to dashboard");
+				lpTitlePath = "C:\\xboxdash.xbe";
+				xbox::LaunchDataPage->Header.dwLaunchDataType = LDT_FROM_DASHBOARD;
+				// Other options include LDT_NONE, LDT_FROM_DEBUGGER_CMDLINE and LDT_FROM_UPDATE
+			}
+			else
+				CxbxrKrnlAbort("The xbe rebooted to Dashboard and xboxdash.xbe could not be found");
+		}
+
+		strncpy(&(xbox::LaunchDataPage->Header.szLaunchPath[0]), lpTitlePath, 520);
+	}
+
+	// Note : While this patch exists, HalReturnToFirmware() calls
+	// MmPersistContiguousMemory on LaunchDataPage. When this
+	// patch on XLaunchNewImageA is removed, remove the call to
+	// MmPersistContiguousMemory from HalReturnToFirmware() too!!
+
+	xbox::HalReturnToFirmware(xbox::ReturnFirmwareQuickReboot);
+
+	// If this function succeeds, it doesn't get a chance to return anything.
+	RETURN(ERROR_GEN_FAILURE);
+}
+
+xbox::dword_xt WINAPI xbox::EMUPATCH(XGetLaunchInfo)
+(
+	PDWORD			pdwLaunchDataType,
+	PLAUNCH_DATA	pLaunchData
+)
+{
+
+
+	// TODO : This patch can be removed once we're sure all XAPI library
+	// functions indirectly reference our xbox::LaunchDataPage variable.
+	// For this, we need a test-case that hits this function, and run that
+	// with and without this patch enabled. Behavior should be identical.
+	// When this is verified, this patch can be removed.
+	LOG_TEST_CASE("Unpatching test needed");
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pdwLaunchDataType)
+		LOG_FUNC_ARG(pLaunchData)
+		LOG_FUNC_END;
+
+	dword_xt ret = ERROR_NOT_FOUND;
+
+	if (xbox::LaunchDataPage != NULL)
+	{
+		// Note : Here, CxbxRestoreLaunchDataPage() was already called,
+		// which has loaded LaunchDataPage from a binary file (if present).
+
+		// A title can pass data only to itself, not another title (unless started from the dashboard, of course) :
+		if (   (xbox::LaunchDataPage->Header.dwTitleId == g_pCertificate->dwTitleId)
+			|| (xbox::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DASHBOARD)
+			|| (xbox::LaunchDataPage->Header.dwLaunchDataType == LDT_FROM_DEBUGGER_CMDLINE))
+		{
+			*pdwLaunchDataType = xbox::LaunchDataPage->Header.dwLaunchDataType;
+			memcpy(pLaunchData, &(xbox::LaunchDataPage->LaunchData[0]), sizeof(LAUNCH_DATA));
+
+			// Now that LaunchDataPage is retrieved by the emulated software, free it :
+			MmFreeContiguousMemory(xbox::LaunchDataPage);
+			xbox::LaunchDataPage = NULL;
+
+			ret = ERROR_SUCCESS;
+		}
+	}
+
+	RETURN(ret);
+}
+
+xbox::void_xt WINAPI xbox::EMUPATCH(XSetProcessQuantumLength)
+(
+    dword_xt dwMilliseconds
+)
+{
+
+	LOG_FUNC_ONE_ARG(dwMilliseconds);
+
+	// TODO: Implement?
+	LOG_IGNORED();
+}
+
+MMRESULT WINAPI xbox::EMUPATCH(timeSetEvent)
+(
+	uint_xt			uDelay,
+	uint_xt			uResolution,
+	LPTIMECALLBACK	fptc,
+	dword_xt			dwUser,
+	uint_xt			fuEvent
+)
+{
+
+
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(uDelay)
+		LOG_FUNC_ARG(uResolution)
+		LOG_FUNC_ARG_TYPE(PVOID, fptc)
+		LOG_FUNC_ARG(dwUser)
+		LOG_FUNC_ARG(fuEvent)
+		LOG_FUNC_END;
+
+	MMRESULT Ret = timeSetEvent( uDelay, uResolution, fptc, (DWORD_PTR) dwUser, fuEvent );
+
+	RETURN(Ret);
+}
+
+MMRESULT WINAPI xbox::EMUPATCH(timeKillEvent)
+(
+	uint_xt uTimerID
+)
+{
+
+
+	LOG_FUNC_ONE_ARG(uTimerID);
+
+	MMRESULT Ret = timeKillEvent( uTimerID );
+
+	RETURN(Ret);
+}

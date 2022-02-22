@@ -25,6 +25,8 @@
 // *
 // ******************************************************************
 
+#include <core\kernel\exports\xboxkrnl.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -34,6 +36,7 @@
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
 #include "core\kernel\init\CxbxKrnl.h"
+#include "core\kernel\support\EmuFS.h"
 #ifdef __linux__
 #include <time.h>
 #endif
@@ -121,22 +124,51 @@ void Timer_Destroy(TimerObject* Timer)
 	TimerList.erase(TimerList.begin() + index);
 }
 
-// Thread that runs the timer
-void ClockThread(TimerObject* Timer)
+void Timer_Shutdown()
 {
-	uint64_t NewExpireTime;
+	unsigned i, iXboxThreads = 0;
+	TimerMtx.lock();
 
+	for (i = 0; i < TimerList.size(); i++) {
+		TimerObject* Timer = TimerList[i];
+		// We only need to terminate host threads.
+		if (!Timer->IsXboxTimer) {
+			Timer_Exit(Timer);
+		}
+		// If the thread is xbox, we need to increment for while statement check
+		else {
+			iXboxThreads++;
+		}
+	}
+
+	// Only perform wait for host threads, otherwise xbox threads are
+	// already handled within xbox kernel for shutdown process. See CxbxrKrnlSuspendThreads function.
+	int counter = 0;
+	while (iXboxThreads != TimerList.size()) {
+		if (counter >= 8) {
+			break;
+		}
+		TimerMtx.unlock();
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		TimerMtx.lock();
+		counter++;
+	}
+	TimerList.clear();
+	TimerMtx.unlock();
+}
+
+// Thread that runs the timer
+void NTAPI ClockThread(void *TimerArg)
+{
+	TimerObject *Timer = static_cast<TimerObject *>(TimerArg);
 	if (!Timer->Name.empty()) {
 		CxbxSetThreadName(Timer->Name.c_str());
 	}
-	if (Timer->IsXboxTimer) {
-		InitXboxThread();
-		g_AffinityPolicy->SetAffinityXbox();
-	} else {
+	if (!Timer->IsXboxTimer) {
 		g_AffinityPolicy->SetAffinityOther();
 	}
 
-	NewExpireTime = GetNextExpireTime(Timer);
+	uint64_t NewExpireTime = GetNextExpireTime(Timer);
 
 	while (true) {
 		if (GetTime_NS(Timer) > NewExpireTime) {
@@ -185,7 +217,13 @@ TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, bool Is
 void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
 {
 	Timer->ExpireTime_MS.store(Expire_MS);
-	std::thread(ClockThread, Timer).detach();
+	if (Timer->IsXboxTimer) {
+		xbox::HANDLE hThread;
+		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, ClockThread, Timer, FALSE);
+	}
+	else {
+		std::thread(ClockThread, Timer).detach();
+	}
 }
 
 // Retrives the frequency of the high resolution clock of the host

@@ -408,10 +408,10 @@ XBSYSAPI EXPORTNUM(143) long_xt NTAPI KeSetBasePriorityThread
     IN long_xt	Priority
 );
 
-XBSYSAPI EXPORTNUM(144) ulong_xt NTAPI KeSetDisableBoostThread
+XBSYSAPI EXPORTNUM(144) boolean_xt NTAPI KeSetDisableBoostThread
 (
 	IN PKTHREAD Thread,
-	IN ulong_xt Disable
+	IN boolean_xt Disable
 );
 
 // ******************************************************************

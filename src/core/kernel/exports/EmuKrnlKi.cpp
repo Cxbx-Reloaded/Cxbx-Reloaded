@@ -80,6 +80,7 @@ the said software).
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For KeBugCheck, etc.
+#include "core\kernel\support\EmuFS.h"
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // for the list support functions
 #include "EmuKrnlKi.h"
@@ -88,22 +89,26 @@ the said software).
 
 #define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired > 0)
 
+xbox::KPROCESS KiUniqueProcess;
 const xbox::ulong_xt CLOCK_TIME_INCREMENT = 0x2710;
 xbox::KDPC KiTimerExpireDpc;
 xbox::KI_TIMER_LOCK KiTimerMtx;
 xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 xbox::LIST_ENTRY KiWaitInListHead;
+std::mutex xbox::KiApcListMtx;
 
 
 xbox::void_xt xbox::KiInitSystem()
 {
-	unsigned int i;
+	KiUniqueProcess.StackCount = 0;
+	KiUniqueProcess.ThreadQuantum = X_THREAD_QUANTUM;
+	InitializeListHead(&KiUniqueProcess.ThreadListHead);
 
 	InitializeListHead(&KiWaitInListHead);
 
 	KiTimerMtx.Acquired = 0;
 	KeInitializeDpc(&KiTimerExpireDpc, KiTimerExpiration, NULL);
-	for (i = 0; i < TIMER_TABLE_SIZE; i++) {
+	for (unsigned i = 0; i < TIMER_TABLE_SIZE; i++) {
 		InitializeListHead(&KiTimerTableListHead[i].Entry);
 		KiTimerTableListHead[i].Time.u.HighPart = 0xFFFFFFFF;
 		KiTimerTableListHead[i].Time.u.LowPart = 0;
@@ -875,4 +880,68 @@ xbox::void_xt FASTCALL xbox::KiWaitSatisfyAll
 	} while (WaitBlock1 != WaitBlock);
 
 	return;
+}
+
+template<xbox::MODE ApcMode>
+static xbox::void_xt KiExecuteApc()
+{
+	xbox::PKTHREAD kThread = xbox::KeGetCurrentThread();
+
+	if constexpr (ApcMode == xbox::KernelMode) {
+		kThread->ApcState.KernelApcPending = FALSE;
+	}
+	else {
+		kThread->ApcState.UserApcPending = FALSE;
+	}
+
+	// Even though the apc list is per-thread, it's still possible that another thread will access it while we are processing it below
+	xbox::KiApcListMtx.lock();
+	while (!IsListEmpty(&kThread->ApcState.ApcListHead[ApcMode])) {
+		if ((ApcMode == xbox::KernelMode) && (kThread->KernelApcDisable != 0)) {
+			xbox::KiApcListMtx.unlock();
+			return;
+		}
+		xbox::PLIST_ENTRY Entry = kThread->ApcState.ApcListHead[ApcMode].Flink;
+		xbox::PKAPC Apc = CONTAINING_RECORD(Entry, xbox::KAPC, ApcListEntry);
+		RemoveEntryList(Entry);
+		Apc->Inserted = FALSE;
+		xbox::KiApcListMtx.unlock();
+
+		// NOTE: we never use KernelRoutine because that is only used for kernel APCs, which we currently don't use
+		if (Apc->NormalRoutine != xbox::zeroptr) {
+			(Apc->NormalRoutine)(Apc->NormalContext, Apc->SystemArgument1, Apc->SystemArgument2);
+		}
+
+		xbox::ExFreePool(Apc);
+		xbox::KiApcListMtx.lock();
+	}
+
+	xbox::KiApcListMtx.unlock();
+}
+
+xbox::void_xt xbox::KiExecuteKernelApc()
+{
+	KiExecuteApc<KernelMode>();
+}
+
+xbox::void_xt xbox::KiExecuteUserApc()
+{
+	KiExecuteApc<UserMode>();
+}
+
+xbox::PLARGE_INTEGER FASTCALL xbox::KiComputeWaitInterval
+(
+	IN xbox::PLARGE_INTEGER OriginalTime,
+	IN xbox::PLARGE_INTEGER DueTime,
+	IN OUT xbox::PLARGE_INTEGER NewTime
+)
+{
+	if (OriginalTime->QuadPart >= 0) {
+		return OriginalTime;
+	}
+	else {
+		NewTime->QuadPart = xbox::KeQueryInterruptTime();
+		NewTime->QuadPart -= DueTime->QuadPart;
+		return NewTime;
+	}
 }

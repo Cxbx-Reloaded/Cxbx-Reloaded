@@ -1019,7 +1019,7 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 
 	if (Handle == NtCurrentThread()) {
 		if ((ObjectType == &PsThreadObjectType) || (ObjectType == NULL)) {
-			Object = PsGetCurrentThread();
+			Object = PspGetCurrentThread();
 			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 			InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 			*ReturnedObject = Object;

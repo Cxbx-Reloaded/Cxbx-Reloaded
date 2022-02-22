@@ -31,14 +31,18 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
+#include "core\kernel\exports\EmuKrnlKi.h"
+#include "core\kernel\exports\EmuKrnlKe.h"
 #include <process.h> // For __beginthreadex(), etc.
 #include <float.h> // For _controlfp constants
 
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnl_TLS
+#include "EmuKrnl.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
+#include "core\kernel\support\NativeHandle.h"
 
 // prevent name collisions
 namespace NtDll
@@ -46,44 +50,37 @@ namespace NtDll
 #include "core\kernel\support\EmuNtDll.h"
 };
 
-#define PSP_MAX_CREATE_THREAD_NOTIFY 16 /* TODO : Should be 8 */
+#define PSP_MAX_CREATE_THREAD_NOTIFY 8
 
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
 {
-	IN PVOID  StartRoutine;
-	IN PVOID  StartContext;
-	IN PVOID  SystemRoutine;
+	IN xbox::PVOID  StartRoutine;
+	IN xbox::PVOID  StartContext;
+	IN xbox::PVOID  SystemRoutine;
+	IN xbox::PVOID  Ethread;
 }
 PCSTProxyParam;
 
-// Global Variable(s)
-extern PVOID g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { NULL };
-extern int g_iThreadNotificationCount = 0;
+static xbox::PCREATE_THREAD_NOTIFY_ROUTINE g_pfnThreadNotification[PSP_MAX_CREATE_THREAD_NOTIFY] = { xbox::zeroptr };
+static std::atomic_int g_iThreadNotificationCount = 0;
+static std::mutex g_ThreadNotificationMtx;
 
 // Separate function for logging, otherwise in PCSTProxy __try wont work (Compiler Error C2712)
 void LOG_PCSTProxy
 (
-	PVOID StartRoutine,
-	PVOID StartContext,
-	PVOID SystemRoutine
+	xbox::PVOID StartRoutine,
+	xbox::PVOID StartContext,
+	xbox::PVOID SystemRoutine,
+	xbox::PVOID Ethread
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(StartRoutine)
 		LOG_FUNC_ARG(StartContext)
 		LOG_FUNC_ARG(SystemRoutine)
+		LOG_FUNC_ARG(Ethread)
 		LOG_FUNC_END;
-}
-
-// Overload which doesn't change affinity
-void InitXboxThread()
-{
-	// initialize FS segment selector
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData);
-
-	_controlfp(_PC_53, _MCW_PC); // Set Precision control to 53 bits (verified setting)
-	_controlfp(_RC_NEAR, _MCW_RC); // Set Rounding control to near (unsure about this)
 }
 
 // PsCreateSystemThread proxy procedure
@@ -104,11 +101,11 @@ static unsigned int WINAPI PCSTProxy
 	LOG_PCSTProxy(
 		params.StartRoutine,
 		params.StartContext,
-		params.SystemRoutine);
-
+		params.SystemRoutine,
+		params.Ethread);
 
 	// Do minimal thread initialization
-	InitXboxThread();
+	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData, static_cast<xbox::PETHREAD>(params.Ethread));
 
 	auto routine = (xbox::PKSYSTEM_ROUTINE)params.SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
@@ -137,13 +134,30 @@ void PspSystemThreadStartup
 	xbox::PsTerminateSystemThread(X_STATUS_SUCCESS);
 }
 
+xbox::PETHREAD xbox::PspGetCurrentThread()
+{
+	// This works because we assign ethread to Prcb->CurrentThread
+	return reinterpret_cast<PETHREAD>(KeGetCurrentThread());
+}
+
+static xbox::void_xt PspCallThreadNotificationRoutines(xbox::PETHREAD eThread, xbox::boolean_xt Create)
+{
+	std::unique_lock lck(g_ThreadNotificationMtx);
+	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
+		if (g_pfnThreadNotification[i]) {
+			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
+			(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, Create);
+		}
+	}
+}
+
 // ******************************************************************
 // * 0x00FE - PsCreateSystemThread()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(254) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThread
 (
 	OUT PHANDLE         ThreadHandle,
-	OUT PDWORD          ThreadId OPTIONAL,
+	OUT PHANDLE          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         DebuggerThread
@@ -187,7 +201,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	IN  ulong_xt           ThreadExtensionSize,
 	IN  ulong_xt           KernelStackSize,
 	IN  ulong_xt           TlsDataSize,
-	OUT PDWORD          ThreadId OPTIONAL,
+	OUT PHANDLE          ThreadId OPTIONAL,
 	IN  PKSTART_ROUTINE StartRoutine,
 	IN  PVOID           StartContext,
 	IN  boolean_xt         CreateSuspended,
@@ -222,58 +236,75 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 
     // create thread, using our special proxy technique
     {
-        DWORD dwThreadId = 0;
+		PETHREAD eThread;
+		ntstatus_xt result = ObCreateObject(&PsThreadObjectType, zeroptr, sizeof(ETHREAD) + ThreadExtensionSize, reinterpret_cast<PVOID *>(&eThread));
+		if (!X_NT_SUCCESS(result)) {
+			RETURN(result);
+		}
+
+		std::memset(eThread, 0, sizeof(ETHREAD) + ThreadExtensionSize);
+
+		// The ob handle of the ethread obj is the thread id we return to the title
+		result = ObInsertObject(eThread, zeroptr, 0, &eThread->UniqueThread);
+		if (!X_NT_SUCCESS(result)) {
+			ObfDereferenceObject(eThread);
+			RETURN(result);
+		}
+
+		if (g_iThreadNotificationCount) {
+			PspCallThreadNotificationRoutines(eThread, TRUE);
+		}
+
+		// Create another handle to pass back to the title in the ThreadHandle argument
+		result = ObOpenObjectByPointer(eThread, &PsThreadObjectType, ThreadHandle);
+		if (!X_NT_SUCCESS(result)) {
+			ObfDereferenceObject(eThread);
+			RETURN(result);
+		}
+
+		if (ThreadId != zeroptr) {
+			*ThreadId = eThread->UniqueThread;
+		}
 
         // PCSTProxy is responsible for cleaning up this pointer
 		PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
-
         iPCSTProxyParam->StartRoutine = (PVOID)StartRoutine;
         iPCSTProxyParam->StartContext = StartContext;
         iPCSTProxyParam->SystemRoutine = (PVOID)SystemRoutine; // NULL, XapiThreadStartup or unknown?
+		iPCSTProxyParam->Ethread = eThread;
 
-		/*
-		// call thread notification routine(s)
-		if (g_iThreadNotificationCount != 0)
-		{
-			for (int i = 0; i < 16; i++)
-			{
-				// TODO: This is *very* wrong, ps notification routines are NOT the same as XApi notification routines
-				// TODO: XAPI notification routines are already handeld by XapiThreadStartup and don't need to be called by us
-				// TODO: This type of notification routine is PCREATE_THREAD_NOTIFY_ROUTINE, which takes an ETHREAD pointer as well as Thread ID as input
-				// TODO: This is impossible to support currently, as we do not create or register Xbox ETHREAD objects, so we're better to skip it entirely!
-				xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
-
-				// If the routine doesn't exist, don't execute it!
-				if (pfnNotificationRoutine == NULL)
-					continue;
-
-				EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", g_iThreadNotificationCount, pfnNotificationRoutine);
-
-				pfnNotificationRoutine(TRUE);
-			}
-		}*/
-
-        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, reinterpret_cast<unsigned int*>(&dwThreadId)));
+		unsigned int ThreadId;
+        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, &ThreadId));
 		if (handle == NULL) {
 			delete iPCSTProxyParam;
+			ObpClose(eThread->UniqueThread);
+			ObfDereferenceObject(eThread);
 			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 		}
-		*ThreadHandle = handle;
-        if (ThreadId != NULL)
-            *ThreadId = dwThreadId;
+
+		// Increment the ref count of the thread once more. This is to guard against the case the title closes the thread handle
+		// before this thread terminates with PsTerminateSystemThread
+		// Test case: Amped
+		ObfReferenceObject(eThread);
+
+		KeQuerySystemTime(&eThread->CreateTime);
+		InsertTailList(&KiUniqueProcess.ThreadListHead, &eThread->Tcb.ThreadListEntry);
+		KiUniqueProcess.StackCount++;
+		RegisterXboxHandle(*ThreadHandle, handle);
+		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);
+		assert(dupHandle);
+		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
 
 		g_AffinityPolicy->SetAffinityXbox(handle);
-		CxbxKrnlRegisterThread(handle);
 
 		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
 		if (!CreateSuspended) {
 			ResumeThread(handle);
 		}
 
-		// Note : DO NOT use iPCSTProxyParam anymore, since ownership is transferred to the proxy (which frees it too)
-
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
-		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X]", handle, dwThreadId);
+		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X], Native Handle : 0x%X, Native ThreadId : [0x%.4X]",
+			*ThreadHandle, eThread->UniqueThread, handle, ThreadId);
 	}
 
 	RETURN(X_STATUS_SUCCESS);
@@ -289,14 +320,13 @@ XBSYSAPI EXPORTNUM(256) xbox::ntstatus_xt NTAPI xbox::PsQueryStatistics
 {
 	LOG_FUNC_ONE_ARG_OUT(ProcessStatistics);
 
-	NTSTATUS ret = X_STATUS_SUCCESS;
+	ntstatus_xt ret = X_STATUS_SUCCESS;
 
 	if (ProcessStatistics->Length == sizeof(PS_STATISTICS)) {
-		LOG_INCOMPLETE(); // TODO : Return number of threads and handles that currently exist
-		ProcessStatistics->ThreadCount = 1;
-		ProcessStatistics->HandleCount = 1;
+		ProcessStatistics->ThreadCount = KiUniqueProcess.StackCount;
+		ProcessStatistics->HandleCount = ObpObjectHandleTable.HandleCount; // This currently doesn't count native handles that we use as xbox handles
 	} else {
-		ret = STATUS_INVALID_PARAMETER;
+		ret = X_STATUS_INVALID_PARAMETER;
 	}
 
 	RETURN(ret);
@@ -312,29 +342,16 @@ XBSYSAPI EXPORTNUM(257) xbox::ntstatus_xt NTAPI xbox::PsSetCreateThreadNotifyRou
 {
 	LOG_FUNC_ONE_ARG(NotifyRoutine);
 
-	NTSTATUS ret = X_STATUS_INSUFFICIENT_RESOURCES;
-
-	// Taken from xbox::EmuXRegisterThreadNotifyRoutine (perhaps that can be removed now) :
-
-	// I honestly don't expect this to happen, but if it does...
-	if (g_iThreadNotificationCount >= PSP_MAX_CREATE_THREAD_NOTIFY)
-		CxbxrKrnlAbort("Too many thread notification routines installed\n");
-
-	// Find an empty spot in the thread notification array
-	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++)
-	{
-		// If we find one, then add it to the array, and break the loop so
-		// that we don't accidently register the same routine twice!
-		if (g_pfnThreadNotification[i] == NULL)
-		{
-			g_pfnThreadNotification[i] = (PVOID)NotifyRoutine;
+	std::unique_lock lck(g_ThreadNotificationMtx);
+	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
+		if (g_pfnThreadNotification[i] == zeroptr) {
+			g_pfnThreadNotification[i] = NotifyRoutine;
 			g_iThreadNotificationCount++;
-			ret = X_STATUS_SUCCESS;
-			break;
+			RETURN(X_STATUS_SUCCESS);
 		}
 	}
 
-	RETURN(ret);
+	RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 }
 
 // ******************************************************************
@@ -350,34 +367,23 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 {
 	LOG_FUNC_ONE_ARG(ExitStatus);
 
-	/*
-	// call thread notification routine(s)
-	if (g_iThreadNotificationCount != 0)
-	{
-		for (int i = 0; i < 16; i++)
-		{
-			xbox::XTHREAD_NOTIFY_PROC pfnNotificationRoutine = (xbox::XTHREAD_NOTIFY_PROC)g_pfnThreadNotification[i];
+	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
+	if (eThread->UniqueThread && g_iThreadNotificationCount) {
+		PspCallThreadNotificationRoutines(eThread, FALSE);
+	}
 
-			// If the routine doesn't exist, don't execute it!
-			if (pfnNotificationRoutine == NULL)
-				continue;
+	EmuKeFreeThread(ExitStatus);
+	// Don't do this in EmuKeFreeThread because we only increment the thread ref count in PsCreateSystemThreadEx
+	ObfDereferenceObject(eThread);
+	KiUniqueProcess.StackCount--;
 
-			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", g_iThreadNotificationCount, pfnNotificationRoutine);
-
-			pfnNotificationRoutine(FALSE);
-		}
-	}*/
-
-	EmuKeFreePcr();
 	_endthreadex(ExitStatus);
-	// ExitThread(ExitStatus);
-	// CxbxKrnlTerminateThread();
 }
 
 // ******************************************************************
 // * 0x0103 - PsThreadObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(259) xbox::OBJECT_TYPE VOLATILE xbox::PsThreadObjectType =
+XBSYSAPI EXPORTNUM(259) xbox::OBJECT_TYPE xbox::PsThreadObjectType =
 {
 	xbox::ExAllocatePoolWithTag,
 	xbox::ExFreePool,

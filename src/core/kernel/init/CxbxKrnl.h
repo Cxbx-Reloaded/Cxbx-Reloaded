@@ -151,26 +151,14 @@ void CxbxKrnlEmulate(unsigned int system, blocks_reserved_t blocks_reserved);
 
 #define CxbxrKrnlAbort(fmt, ...) CxbxrKrnlAbortEx(LOG_PREFIX, fmt, ##__VA_ARGS__)
 
-/*! register a thread handle */
-void CxbxKrnlRegisterThread(HANDLE hThread);
-
-/*! suspend emulation */
-void CxbxKrnlSuspend();
-
-/*! resume emulation */
-void CxbxKrnlResume();
-
 /*! terminate gracefully the emulation */
-void CxbxKrnlShutDown(bool is_reboot = false);
+[[noreturn]] void CxbxKrnlShutDown(bool is_reboot = false);
 
 /*! display the fatal error message*/
 void CxbxKrnlPrintUEM(ULONG ErrorCode);
 
 /*! display the cause of the fatal error message*/
 void CxbxPrintUEMInfo(ULONG ErrorCode);
-
-/*! terminate the calling thread */
-[[noreturn]] void CxbxKrnlTerminateThread();
 
 /*! kernel panic (trap for unimplemented kernel functions) */
 void CxbxKrnlPanic();
@@ -192,8 +180,6 @@ extern bool g_CxbxPrintUEM;
 extern ULONG g_CxbxFatalErrorCode;
 
 extern size_t g_SystemMaxMemory;
-
-void InitXboxThread();
 
 /*! thread local storage structure */
 extern Xbe::TLS *CxbxKrnl_TLS;
