@@ -32,6 +32,10 @@
 #include <core\kernel\exports\xboxkrnl.h>
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp"
+#include "DirectSoundInline.hpp"
+
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui_internal.h"
 
 Settings::s_audio            g_XBAudio = { 0 };
 std::recursive_mutex         g_DSoundMutex;
@@ -55,6 +59,104 @@ DWORD                               g_dwFree2DBuffers = 0;
 DWORD                               g_dwFree3DBuffers = 0;
 
 DsBufferStreaming g_dsBufferStreaming;
+
+void DrawAudioProgress(xbox::XbHybridDSBuffer* pHybrid, float scaleWidth, ImDrawList* drawList) {
+	const auto& pBuffer = pHybrid->emuDSBuffer;
+
+	auto cursor = ImGui::GetCursorScreenPos();
+	auto width = ImGui::GetContentRegionAvail().x;
+
+	DWORD rawCursor;
+	HybridDirectSoundBuffer_GetCurrentPosition(pBuffer->EmuDirectSoundBuffer8, &rawCursor, nullptr, pBuffer->EmuFlags);
+	float scale = (width / pBuffer->X_BufferCacheSize) / scaleWidth;
+	float playCursor = rawCursor * scale;
+
+	bool isLooping = pBuffer->EmuPlayFlags & X_DSBPLAY_LOOPING;
+
+	auto colSpan = ImColor(0.8f, 0.1f, 0.1f, 0.3f);
+	auto colRegion = ImColor(0.1f, 0.8f, 0.1, 0.3f);
+	auto colRegionLoop = ImColor(0.1f, 0.2f, 0.8, 0.3f);
+	auto colPlay = ImColor(0.8f, 0.8f, 0.1f, 0.6);
+	float height = 8;
+
+	float sBuf = height * 0.4;
+	float sReg = height * 1;
+	float sPlay = height * 0.4;
+
+	// Buffer
+	auto start = cursor + ImVec2(0, (height - sBuf) / 2);
+	drawList->AddRectFilled(start, start + ImVec2(pBuffer->X_BufferCacheSize * scale, sBuf), colSpan, 0);
+
+	DWORD bufferRangeStart;
+	DWORD bufferRangeSize;
+	DSoundBufferRegionCurrentLocation(pHybrid, pBuffer->EmuPlayFlags, bufferRangeStart, bufferRangeSize);
+
+	bufferRangeStart *= scale;
+	bufferRangeSize *= scale;
+
+	// Region
+	start = cursor + ImVec2(bufferRangeStart, (height - sReg) / 2);
+	drawList->AddRectFilled(start, start + ImVec2(bufferRangeSize, sReg), isLooping ? colRegionLoop : colRegion);
+
+	// Play area
+	start = cursor + ImVec2(bufferRangeStart, (height - sPlay) / 2);
+	drawList->AddRectFilled(start, start + ImVec2(playCursor, sPlay), colPlay);
+	// Play cursor
+	start = cursor + ImVec2(bufferRangeStart + playCursor, 0);
+	drawList->AddLine(start, start + ImVec2(0, height), colPlay);
+
+	ImGui::Dummy(ImVec2(pBuffer->X_BufferCacheSize * scale, height));
+}
+
+void DSound_DrawBufferVisualization(bool is_focus, bool* p_show, ImGuiWindowFlags input_handler) {
+	if (!*p_show) return;
+
+	DSoundMutexGuardLock;
+
+	ImGui::SetNextWindowPos(ImVec2(IMGUI_MIN_DIST_SIDE, IMGUI_MIN_DIST_TOP), ImGuiCond_FirstUseEver, ImVec2(0.0f, 0.0f));
+	ImGui::SetNextWindowSize(ImVec2(200, 275), ImGuiCond_FirstUseEver);
+	if (ImGui::Begin("DSBuffer Visualization", p_show, input_handler)) {
+
+		static bool showPlayingOnly = true;
+		ImGui::Checkbox("Show playing only", &showPlayingOnly);
+
+		static float bufferScale = 1;
+		ImGui::PushItemWidth(100);
+		ImGui::DragFloat("Audio Scale", &bufferScale, 1 / 1000.f, 1 / 24000.f, 1.f, "%.7f", ImGuiSliderFlags_Logarithmic);
+
+		if (ImGui::CollapsingHeader("Buffering Controls")) {
+			ImGui::SliderInt("Stream interval (ms)", (int*)&g_dsBufferStreaming.streamInterval, 0, 50);
+			ImGui::SliderInt("Stream ahead (ms)", (int*)&g_dsBufferStreaming.streamAhead, 0, 1000);
+			ImGui::SliderFloat("Tweak copy offset", &g_dsBufferStreaming.tweakCopyOffset, -1, 1);
+		}
+
+		if (ImGui::BeginChild("DSBuffer Graph", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar)) {
+
+			auto drawList = ImGui::GetWindowDrawList();
+
+			int index = 0;
+			for (const auto& i : g_pDSoundBufferCache) {
+				if (showPlayingOnly) {
+					DWORD dwStatus;
+					auto hRet = i->emuDSBuffer->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
+					if (hRet != DS_OK || !(dwStatus & DSBSTATUS_PLAYING)) {
+						continue;
+					}
+				}
+
+				// Required to add controls inside the loop
+				ImGui::PushID(index++);
+
+				DrawAudioProgress(i, bufferScale, drawList);
+
+				ImGui::PopID();
+			}
+			ImGui::EndChild();
+		}
+
+		ImGui::End();
+	}
+}
 
 void DSound_PrintStats(bool is_focus, ImGuiWindowFlags input_handler, bool m_show_audio_stats)
 {
