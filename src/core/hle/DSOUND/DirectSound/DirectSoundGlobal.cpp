@@ -54,6 +54,8 @@ DWORD                               g_dwXbMemAllocated = 0;
 DWORD                               g_dwFree2DBuffers = 0;
 DWORD                               g_dwFree3DBuffers = 0;
 
+DsBufferStreaming g_dsBufferStreaming;
+
 void DSound_PrintStats(bool is_focus, ImGuiWindowFlags input_handler, bool m_show_audio_stats)
 {
     DSoundMutexGuardLock;
