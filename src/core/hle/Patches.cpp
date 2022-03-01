@@ -438,8 +438,14 @@ inline void EmuInstallPatch(const std::string FunctionName, const xbox::addr_xt 
         return;
     }
 
-	g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), (void*)patch.patchFunc);
-	printf("HLE: %s Patched\n", FunctionName.c_str());
+	auto result = g_FunctionHooks[FunctionName].Install((void*)(FunctionAddr), (void*)patch.patchFunc);
+	if (!result) {
+		printf("HLE: %s Patch Failed\n", FunctionName.c_str());
+	}
+	else {
+		printf("HLE: %s Patched\n", FunctionName.c_str());
+	}
+	
 }
 
 void EmuInstallPatches()
