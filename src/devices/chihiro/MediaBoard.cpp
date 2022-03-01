@@ -89,6 +89,9 @@ void MediaBoard::ComRead(uint32_t offset, void* buffer, uint32_t length)
 
 void MediaBoard::ComWrite(uint32_t offset, void* buffer, uint32_t length)
 {
+    // Instant replies cause race conditions, software seems to expect at least a little delay
+    Sleep(100);
+
     if (offset == 0x900000) { // Some kind of reset?
         memcpy(readBuffer, buffer, 0x20);
         return;
@@ -114,7 +117,7 @@ void MediaBoard::ComWrite(uint32_t offset, void* buffer, uint32_t length)
         // Read the given Command and handle it
         uint32_t command = inputBuffer16[1];
         switch (command) {
-        case MB_CMD_DIMM_SIZE:
+            case MB_CMD_DIMM_SIZE:
                 outputBuffer32[1] = 1024 * ONE_MB;
                 break;
             case MB_CMD_STATUS:
