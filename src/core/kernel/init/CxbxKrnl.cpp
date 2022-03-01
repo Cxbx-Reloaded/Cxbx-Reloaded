@@ -627,6 +627,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 		// Detect XBE type :
 		XbeType xbeType = CxbxKrnl_Xbe->GetXbeType();
 		EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
+
 		// Convert XBE type into corresponding system to emulate.
 		switch (xbeType) {
 			case XbeType::xtChihiro:
@@ -639,6 +640,10 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 				emulate_system = SYSTEM_XBOX;
 				break;
 			DEFAULT_UNREACHABLE;
+		}
+
+		if (std::filesystem::exists(xbeDirectory / "boot.id")) {
+			emulate_system = SYSTEM_CHIHIRO;
 		}
 	}
 
