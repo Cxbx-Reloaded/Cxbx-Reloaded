@@ -437,55 +437,26 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Lock)
 		LOG_FUNC_END;
 
     EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
-    HRESULT hRet = D3D_OK;
-    DWORD pcmSize = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwBytes);
-    DWORD pcmOffset = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwOffset);
 
-    DSoundGenericUnlock(pThis->EmuFlags,
-                        pThis->EmuDirectSoundBuffer8,
-                        pThis->EmuBufferDesc,
-                        pThis->Host_lock,
-                        pThis->X_BufferCache,
-                        pThis->X_lock.dwLockOffset,
-                        pThis->X_lock.dwLockBytes1,
-                        pThis->X_lock.dwLockBytes2);
+	// Xbox directsound doesn't require locking buffers
+	// This Xbox api only exists to match PC
 
-    if (ppvAudioPtr2 == xbox::zeroptr) {
-        hRet = pThis->EmuDirectSoundBuffer8->Lock(pcmOffset, pcmSize, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
-                                                  nullptr, 0, dwFlags);
-        pThis->Host_lock.pLockPtr2 = nullptr;
-    } else {
-        hRet = pThis->EmuDirectSoundBuffer8->Lock(pcmOffset, pcmSize, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
-                                                  &pThis->Host_lock.pLockPtr2, &pThis->Host_lock.dwLockBytes2, dwFlags);
-    }
-
-    if (hRet != DS_OK) {
-        CxbxrKrnlAbort("IDirectSoundBuffer_Lock Failed!");
-    }
-
-    // Host lock position
-    pThis->Host_lock.dwLockOffset = pcmOffset;
-    pThis->Host_lock.dwLockFlags = dwFlags;
-    pThis->X_lock.dwLockFlags = dwFlags;
-
-    // Emulate to xbox's lock position
-    pThis->X_lock.dwLockOffset = dwOffset;
-    *ppvAudioPtr1 = pThis->X_lock.pLockPtr1 = ((LPBYTE)pThis->X_BufferCache + dwOffset);
-    *pdwAudioBytes1 = pThis->X_lock.dwLockBytes1 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes1);
-    if (pThis->Host_lock.pLockPtr2 != nullptr) {
-        *ppvAudioPtr2 = pThis->X_lock.pLockPtr2 = pThis->X_BufferCache;
-        *pdwAudioBytes2 = pThis->X_lock.dwLockBytes2 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes2);
-    } else {
-        // If secondary pointers are not used, then set them as zero.
-        // There are applications bug didn't check for audio pointer that is null pointer which should not use invalid audio bytes.
-        // Since internal functions do set them zero. We'll set them here as well.
-        if (ppvAudioPtr2 != xbox::zeroptr) {
-            *ppvAudioPtr2 = xbox::zeroptr;
-        }
-        if (pdwAudioBytes2 != xbox::zeroptr) {
-            *pdwAudioBytes2 = 0;
-        }
-    }
+	if (dwOffset + dwBytes <= pThis->X_BufferCacheSize) {
+		*pdwAudioBytes1 = dwBytes;
+		*ppvAudioPtr1 = (PBYTE)pThis->X_BufferCache + dwOffset;
+		if (ppvAudioPtr2 != nullptr) {
+			*ppvAudioPtr2 = nullptr;
+			*pdwAudioBytes2 = 0;
+		}
+	}
+	else {
+		*pdwAudioBytes1 = pThis->X_BufferCacheSize - dwOffset;
+		*ppvAudioPtr1 = (PBYTE)pThis->X_BufferCache + dwOffset;
+		if (ppvAudioPtr2 != nullptr) {
+			*pdwAudioBytes2 = dwBytes - *pdwAudioBytes1;
+			*ppvAudioPtr2 = (PBYTE)pThis->X_BufferCache;
+		}
+	}
 
     LOG_FUNC_BEGIN_ARG_RESULT
         LOG_FUNC_ARG_RESULT(ppvAudioPtr1)
@@ -494,7 +465,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Lock)
         LOG_FUNC_ARG_RESULT(pdwAudioBytes2)
     LOG_FUNC_END_ARG_RESULT;
 
-    RETURN_RESULT_CHECK(hRet);
+	RETURN(DS_OK);
 }
 
 // ******************************************************************
@@ -509,38 +480,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Unlock)
     dword_xt                   pdwAudioBytes2
     )
 {
-    DSoundMutexGuardLock;
-
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pHybridThis)
-        LOG_FUNC_ARG(ppvAudioPtr1)
-        LOG_FUNC_ARG(pdwAudioBytes1)
-        LOG_FUNC_ARG(ppvAudioPtr2)
-        LOG_FUNC_ARG(pdwAudioBytes2)
-        LOG_FUNC_END;
-
-    EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
-    // TODO: Find out why pThis->EmuLockPtr1 is nullptr... (workaround atm is to check if it is not a nullptr.)
-    if (pThis->X_BufferCache != xbox::zeroptr && pThis->Host_lock.pLockPtr1 != nullptr) {
-
-        memcpy_s((PBYTE)pThis->X_BufferCache + pThis->X_lock.dwLockOffset,
-                 pThis->X_BufferCacheSize - pThis->X_lock.dwLockOffset,
-                 pThis->X_lock.pLockPtr1,
-                 pThis->X_lock.dwLockBytes1);
-
-        if (pThis->Host_lock.pLockPtr2 != nullptr) {
-            memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pThis->X_lock.pLockPtr2, pThis->X_lock.dwLockBytes2);
-        }
-    }
-
-    DSoundGenericUnlock(pThis->EmuFlags,
-                        pThis->EmuDirectSoundBuffer8,
-                        pThis->EmuBufferDesc,
-                        pThis->Host_lock,
-                        pThis->X_BufferCache,
-                        pThis->X_lock.dwLockOffset,
-                        pThis->X_lock.dwLockBytes1,
-                        pThis->X_lock.dwLockBytes2);
+	// Xbox directsound doesn't require locking buffers
+	// This Xbox api only exists to match PC
 
     return DS_OK;
 }
