@@ -22,21 +22,15 @@ on:
 
 jobs:
   build-windows:
-    runs-on: ${{ matrix.runs-on }}
+    name: Build (Windows, ${{ matrix.configuration }}, VS${{ matrix.vsver }}) # runner.os doesn't work here
+    runs-on: windows-${{ matrix.vsver }}
     env:
       POWERSHELL_TELEMETRY_OPTOUT: 1
     strategy:
       fail-fast: false
       matrix:
         configuration: [Release, Debug]
-        vsver: [VS2019, VS2017] # VS2022
-        include:
-        #  - vsver: VS2022
-        #    runs-on: windows-2022
-          - vsver: VS2019
-            runs-on: windows-2019
-          - vsver: VS2017
-            runs-on: windows-2016 # https://github.com/actions/virtual-environments/issues/68#issuecomment-602652021
+        vsver: [2022, 2019]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -51,7 +45,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: matrix.configuration == 'Release'
         with:
-          name: CxbxReloaded-${{ matrix.configuration }}-${{ matrix.vsver }}
+          name: CxbxReloaded-${{ matrix.configuration }}-VS${{ matrix.vsver }}
           path: artifacts/bin
           if-no-files-found: error
 
@@ -64,22 +58,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Download Artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v2
         with:
           path: artifacts
-      - name: Re-zip Artifacts
-        id: git
+      - name: Re-zip artifacts
+        id: zip
         run: |
           for artifact in artifacts/*; do
-            7z a $artifact.zip "./$artifact/*"
-            if [ $(stat -c %s $artifact.zip) -le 1000 ]; then
-              echo "Error: Archive $artifact.zip too small!"
+            7z a ${artifact}.zip "./${artifact}/*"
+            if [ $(stat -c %s ${artifact}.zip) -le 100000 ]; then
+              echo "Error: Archive ${artifact}.zip too small!"
               exit 1
             fi
           done
-          echo "::set-output name=tag_name::CI-$(git rev-parse --short HEAD)"
+          echo "::set-output name=tag_name::CI-${GITHUB_SHA::7}"
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create ${{ steps.git.outputs.tag_name }} artifacts/*.zip -p --target $GITHUB_SHA --title '${{ steps.git.outputs.tag_name }}'
+        run: gh release create ${{ steps.zip.outputs.tag_name }} artifacts/*.zip -p --target $GITHUB_SHA --title '${{ steps.zip.outputs.tag_name }}'
