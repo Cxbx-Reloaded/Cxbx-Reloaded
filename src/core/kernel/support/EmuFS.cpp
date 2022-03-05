@@ -167,14 +167,14 @@ __declspec(naked) void UnlockFS()
 void EmuKeSetPcr(xbox::KPCR *Pcr)
 {
 	// Store the Xbox KPCR pointer in FS (See EmuKeGetPcr())
-	// 
+	//
 	// Note : Cxbx currently doesn't do preemptive thread switching,
 	// which implies that thread-state management is done by Windows.
 	//
 	// Xbox executable code expects thread-specific state data to
 	// be available via the FS segment register. To emulate this,
 	// Cxbx uses the user data-slot feature of Windows threads.
-	// 
+	//
 	// Cxbx puts a pointer to a thread-specific copy of an entire
 	// Kernel Processor Control Region (KPCR) into this data-slot.
 	//
@@ -185,7 +185,7 @@ void EmuKeSetPcr(xbox::KPCR *Pcr)
 	// must have a thread-specific copy of the KPCR, to contain all
 	// thread-specific data that can be reached via this structure
 	// (like the NT_TIB structure and ETHREAD CurrentThread pointer).
-	// 
+	//
 	// For this to work, Cxbx patches all executable code accessing
 	// the FS segment register, so that the KPCR is accessed via
 	// the user data-slot of each Windows thread Cxbx uses for an
@@ -255,7 +255,7 @@ __declspec(naked) void EmuFS_RefreshKPCR()
 	// EmuKeGetPcr makes sure a valid KPCR exists for the current thread
 	// and creates it if missing, we backup and restore all registers
 	// to keep it safe to call in our patches
-	// This function can be later expanded to do nice things 
+	// This function can be later expanded to do nice things
 	// like setup the per-thread KPCR values for us too!
 	__asm {
 		pushfd
@@ -632,7 +632,7 @@ void EmuInitFS()
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x20, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs20 });					// mov eax, large fs:20
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x28, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs28 });					// mov eax, large fs:28
 	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA1, 0x58, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovEaxFs58 });					// mov eax, large fs:58
-	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Eax });					// mov large fs:0, eax 
+	fsInstructions.push_back(fs_instruction_t { { 0x64, 0xA3, 0x00, 0x00, 0x00, 0x00 }, (void*)&EmuFS_MovFs00Eax });					// mov large fs:0, eax
 	EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Patching FS Register Accesses\n");
 	DWORD sizeOfImage = CxbxKrnl_XbeHeader->dwSizeofImage;
 	long numberOfInstructions = fsInstructions.size();
@@ -675,7 +675,7 @@ void EmuInitFS()
 			}
 		}
 	}
-	
+
 	EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Done patching FS Register Accesses\n");
 }
 
@@ -769,7 +769,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread)
 	//
 	// Once we simulate thread switching ourselves, we can update PrcbData.CurrentThread
 	// and simplify this initialization, by using only one KPCR for the single Xbox processor.
-	// 
+	//
 	// One way to do our own (preemprive) thread-switching would be to use this technique :
 	// http://www.eran.io/implementing-a-preemptive-kernel-within-a-single-windows-thread/
 	// See https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/146 for more info.
@@ -819,7 +819,7 @@ void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread)
 		xbox::RtlZeroMemory(Ethread, sizeof(xbox::ETHREAD)); // Clear, to prevent side-effects on random contents
 	}
 
-	// Initialize a fake PrcbData.CurrentThread 
+	// Initialize a fake PrcbData.CurrentThread
 	{
 		// Set PrcbData.CurrentThread
 		Prcb->CurrentThread = (xbox::PKTHREAD)Ethread;

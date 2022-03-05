@@ -8,7 +8,7 @@ namespace CxbxDebugger
     public class DebuggerSymbolServer
     {
         List<DebuggerSymbolProviderBase> Providers = new List<DebuggerSymbolProviderBase>();
-        
+
         public DebuggerSymbol FindSymbol(uint Address)
         {
             if (Providers.Count == 0)

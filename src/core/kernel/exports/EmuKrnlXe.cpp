@@ -100,7 +100,7 @@ XBSYSAPI EXPORTNUM(327) xbox::ntstatus_xt NTAPI xbox::XeLoadSection
 	else {
 		ret = X_STATUS_INVALID_HANDLE;
 	}
-	
+
 	RETURN(ret);
 }
 

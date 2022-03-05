@@ -144,7 +144,7 @@ inline D3DBLENDOP EmuXB2PC_D3DBLENDOP(xbox::X_D3DBLENDOP Value)
     return (D3DBLENDOP)D3DBLENDOP_ADD;
 }
 
-// convert from xbox to pc blend types 
+// convert from xbox to pc blend types
 inline D3DBLEND EmuXB2PC_D3DBLEND(xbox::X_D3DBLEND Value)
 {
 	switch (Value) {

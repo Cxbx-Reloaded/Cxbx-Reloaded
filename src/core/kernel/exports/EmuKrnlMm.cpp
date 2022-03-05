@@ -239,7 +239,7 @@ XBSYSAPI EXPORTNUM(173) xbox::physical_address_xt NTAPI xbox::MmGetPhysicalAddre
 )
 {
 	LOG_FUNC_ONE_ARG_OUT(BaseAddress);
-	
+
 	// this will crash if the memory pages weren't unlocked with
 	// MmLockUnlockBufferPages, emulate this???
 
@@ -364,7 +364,7 @@ XBSYSAPI EXPORTNUM(179) xbox::ulong_xt NTAPI xbox::MmQueryAddressProtect
 	LOG_FUNC_ONE_ARG(VirtualAddress);
 
 	ULONG Result = g_VMManager.QueryProtection((VAddr)VirtualAddress);
-	
+
 	RETURN(Result);
 }
 

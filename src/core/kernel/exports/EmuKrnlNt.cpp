@@ -387,7 +387,7 @@ XBSYSAPI EXPORTNUM(192) xbox::ntstatus_xt NTAPI xbox::NtCreateMutant
 
 	// redirect to Windows Nt
 	NTSTATUS ret = NtDll::NtCreateMutant(
-		/*OUT*/MutantHandle, 
+		/*OUT*/MutantHandle,
 		DesiredAccess,
 		nativeObjectAttributes.NtObjAttrPtr,
 		InitialOwner);
@@ -398,7 +398,7 @@ XBSYSAPI EXPORTNUM(192) xbox::ntstatus_xt NTAPI xbox::NtCreateMutant
 
 		// If it fails, try again but without the object attributes stucture
 		ret = NtDll::NtCreateMutant(
-			/*OUT*/MutantHandle, 
+			/*OUT*/MutantHandle,
 			DesiredAccess,
 			/*nativeObjectAttributes.NtObjAttrPtr*/ NULL,
 			InitialOwner);
@@ -573,7 +573,7 @@ XBSYSAPI EXPORTNUM(195) xbox::ntstatus_xt NTAPI xbox::NtDeleteFile
 
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtDeleteFile Failed!");
-	
+
 	RETURN(ret);
 }
 
@@ -780,7 +780,7 @@ XBSYSAPI EXPORTNUM(198) xbox::ntstatus_xt NTAPI xbox::NtFlushBuffersFile
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
 	NTSTATUS ret = X_STATUS_SUCCESS;
-	
+
 	if (EmuHandle::IsEmuHandle(FileHandle))
 		LOG_UNIMPLEMENTED();
 	else
@@ -1000,7 +1000,7 @@ XBSYSAPI EXPORTNUM(205) xbox::ntstatus_xt NTAPI xbox::NtPulseEvent
 	// redirect to Windows NT
 	// TODO : Untested
 	NTSTATUS ret = NtDll::NtPulseEvent(
-		EventHandle, 
+		EventHandle,
 		/*OUT*/(::PLONG)(PreviousState));
 
 	if (FAILED(ret))
@@ -1109,7 +1109,7 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 		NtDll::RtlInitUnicodeString(&NtFileMask, wszObjectName);
 	}
 
-	NtDll::FILE_DIRECTORY_INFORMATION *NtFileDirInfo = 
+	NtDll::FILE_DIRECTORY_INFORMATION *NtFileDirInfo =
 		(NtDll::FILE_DIRECTORY_INFORMATION *) malloc(NtFileDirectoryInformationSize + NtPathBufferSize);
 
 	// Short-hand pointer to Nt filename :
@@ -1122,14 +1122,14 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 		ZeroMemory(wcstr, MAX_PATH * sizeof(wchar_t));
 
 		ret = NtDll::NtQueryDirectoryFile(
-			FileHandle, 
-			Event, 
+			FileHandle,
+			Event,
 			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
 			ApcContext,
-			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock, 
+			(NtDll::IO_STATUS_BLOCK*)IoStatusBlock,
 			/*FileInformation=*/NtFileDirInfo,
 			NtFileDirectoryInformationSize + NtPathBufferSize,
-			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass, 
+			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass,
 			/*ReturnSingleEntry=*/TRUE,
 			&NtFileMask,
 			RestartScan
@@ -1294,7 +1294,7 @@ XBSYSAPI EXPORTNUM(211) xbox::ntstatus_xt NTAPI xbox::NtQueryInformationFile
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
 		}
 	} while (ret == X_STATUS_BUFFER_OVERFLOW);
-	
+
 	// Convert and copy NT data to the given Xbox struct
 	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
 
@@ -1416,7 +1416,7 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;
 
 	if (symbolicLinkObject->IsHostBasedPath) {
-		// TODO : What should we do with symbolic links 
+		// TODO : What should we do with symbolic links
 		ret = STATUS_UNRECOGNIZED_VOLUME;
 	} else {
 		if (LinkTarget != NULL)
@@ -1609,7 +1609,7 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 	ULONG HostBufferSize = 0;
 	switch ((DWORD)FileInformationClass) {
 		case FileFsVolumeInformation:
-			// Reserve a large enough buffer for the file information 
+			// Reserve a large enough buffer for the file information
 			// including the variable length path field
 			HostBufferSize = sizeof(NtDll::FILE_FS_VOLUME_INFORMATION) + MAX_PATH;
 			break;
@@ -1651,7 +1651,7 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 					XboxVolumeInfo->VolumeLabelLength = HostVolumeInfo->VolumeLabelLength;
 					XboxVolumeInfo->SupportsObjects = HostVolumeInfo->SupportsObjects;
 
-					// Convert strings to the Xbox format 
+					// Convert strings to the Xbox format
 					wcstombs(XboxVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabel, HostVolumeInfo->VolumeLabelLength);
 				}
 				break;
@@ -1807,8 +1807,8 @@ XBSYSAPI EXPORTNUM(222) xbox::ntstatus_xt NTAPI xbox::NtReleaseSemaphore
 		LOG_FUNC_END;
 
 	NTSTATUS ret = NtDll::NtReleaseSemaphore(
-		SemaphoreHandle, 
-		ReleaseCount, 
+		SemaphoreHandle,
+		ReleaseCount,
 		(::PULONG)PreviousCount);
 
 	if (FAILED(ret))
@@ -1882,7 +1882,7 @@ XBSYSAPI EXPORTNUM(225) xbox::ntstatus_xt NTAPI xbox::NtSetEvent
 		LOG_FUNC_END;
 
 	NTSTATUS ret = NtDll::NtSetEvent(
-		EventHandle, 
+		EventHandle,
 		(::PLONG)(PreviousState));
 
 	if (FAILED(ret))
@@ -1910,7 +1910,7 @@ XBSYSAPI EXPORTNUM(226) xbox::ntstatus_xt NTAPI xbox::NtSetInformationFile
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
-	
+
 	XboxToNTFileInformation(convertedFileInfo, FileInformation, FileInformationClass, (::PULONG)&Length);
 
 	NTSTATUS ret = NtDll::NtSetInformationFile(
@@ -2276,7 +2276,7 @@ XBSYSAPI EXPORTNUM(236) xbox::ntstatus_xt NTAPI xbox::NtWriteFile
 		uint64_t Offset = ~0;
 		if (ByteOffset)
 			Offset = ByteOffset->QuadPart;
-		
+
 		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
 	}
 
@@ -2345,4 +2345,3 @@ XBSYSAPI EXPORTNUM(238) xbox::void_xt NTAPI xbox::NtYieldExecution()
 
 	NtDll::NtYieldExecution();
 }
-

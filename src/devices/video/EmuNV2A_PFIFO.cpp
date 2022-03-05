@@ -141,7 +141,7 @@ static void pfifo_run_puller(NV2AState *d)
             // unset high mark
             *status &= ~NV_PFIFO_CACHE1_STATUS_HIGH_MARK;
             // signal pusher
-            qemu_cond_signal(&d->pfifo.pusher_cond);            
+            qemu_cond_signal(&d->pfifo.pusher_cond);
         }
 
 
@@ -472,7 +472,7 @@ int pfifo_pusher_thread(NV2AState *d)
 
 unsigned int ramht_size(NV2AState *d)
 {
-	return 
+	return
 		1 << (GET_MASK(d->pfifo.regs[NV_PFIFO_RAMHT], NV_PFIFO_RAMHT_SIZE_MASK) + 12);
 }
 

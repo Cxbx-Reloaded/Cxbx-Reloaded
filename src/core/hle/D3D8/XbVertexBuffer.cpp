@@ -79,7 +79,7 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamN
 	else {
 		HRESULT hRet = g_pD3DDevice->SetStreamSource(
 			HostStreamNumber,
-			pCachedHostVertexBuffer, 
+			pCachedHostVertexBuffer,
 			0, // OffsetInBytes
 			uiCachedHostVertexStride);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
@@ -133,8 +133,8 @@ UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext) con
 	CxbxVertexDeclaration *pDecl = CxbxGetVertexDeclaration();
 	if (pDecl) {
 		return pDecl->NumberOfVertexStreams;
-    } 
-	
+    }
+
 	// TODO: This code and CountActiveD3DStreams must be removed once we can rely on CxbxGetVertexDeclaration always being set
 	if (g_Xbox_VertexShader_Handle) {
 		return CountActiveD3DStreams();
@@ -191,7 +191,7 @@ CxbxPatchedStream& CxbxVertexBufferConverter::GetPatchedStream(uint64_t dataKey,
             m_PatchedStreamUsageList.pop_back();
         }
     }
-    
+
     return stream;
 }
 
@@ -257,7 +257,7 @@ void CxbxVertexBufferConverter::ConvertStream
 		if (pXboxVertexData == xbox::zeroptr) {
 			HRESULT hRet = g_pD3DDevice->SetStreamSource(
 				HostStreamNumber,
-				nullptr, 
+				nullptr,
 				0, // OffsetInBytes
 				0);
 //			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
@@ -297,7 +297,7 @@ void CxbxVertexBufferConverter::ConvertStream
 
     // Now we have enough information to hash the existing resource and find it in our cache!
     // To avoid hashing and converting unused vertices, identify the "interesting" region
-    // basing on the index/starting vertex data 
+    // basing on the index/starting vertex data
     if (pDrawContext->pXboxIndexData != nullptr) {
         pXboxVertexData += (pDrawContext->dwBaseVertexIndex + pDrawContext->LowIndex) * uiXboxVertexStride;
     } else {
@@ -373,7 +373,7 @@ void CxbxVertexBufferConverter::ConvertStream
             CxbxrKrnlAbort("Couldn't lock vertex buffer");
         }
     }
-	
+
 	if (bNeedVertexPatching) {
 	    // assert(bNeedStreamCopy || "bNeedVertexPatching implies bNeedStreamCopy (but copies via conversions");
 		for (uint32_t uiVertex = 0; uiVertex < uiVertexCount; uiVertex++) {
@@ -402,7 +402,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					break;
 				}
 				case xbox::X_D3DVSDT_NORMSHORT2: { // 0x21:
-					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
+					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT2N
 						// TODO : goto default; // ??
@@ -560,7 +560,7 @@ void CxbxVertexBufferConverter::ConvertStream
 				}
 				case xbox::X_D3DVSDT_NONE: { // 0x02:
 					// Test-case : WWE RAW2
-					// Test-case : PetitCopter 
+					// Test-case : PetitCopter
 					LOG_TEST_CASE("X_D3DVSDT_NONE");
 					// No host element data (but Xbox size can be above zero, when used for X_D3DVSD_MASK_SKIP*
 					break;

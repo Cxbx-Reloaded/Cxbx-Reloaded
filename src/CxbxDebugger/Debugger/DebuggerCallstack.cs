@@ -11,7 +11,7 @@ namespace CxbxDebugger
         public IntPtr PC { get; }
         public IntPtr Base { get; }
         public IntPtr Stack { get; }
-        
+
         // TOOD Resolve symbol for this frame
 
         public DebuggerStackFrame(IntPtr EIP, IntPtr EBP, IntPtr ESP)
@@ -52,7 +52,7 @@ namespace CxbxDebugger
                 StackFrames.Add(StackFrame);
             }
         }
-        
+
         public bool CanCollect
         {
             get

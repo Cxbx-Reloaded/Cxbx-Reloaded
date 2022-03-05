@@ -46,7 +46,7 @@ struct X_XACTSoundCue;
 // ******************************************************************
 // * X_XACT_RUNTIME_PARAMETERS
 // ******************************************************************
-struct X_XACT_RUNTIME_PARAMETERS 
+struct X_XACT_RUNTIME_PARAMETERS
 {
     DWORD	dwMax2DHwVoices;
     DWORD   dwMax3DHwVoices;
@@ -58,7 +58,7 @@ struct X_XACT_RUNTIME_PARAMETERS
 // ******************************************************************
 // * X_XACT_WAVEBANK_STREAMING_PARAMETERS
 // ******************************************************************
-struct X_XACT_WAVEBANK_STREAMING_PARAMETERS 
+struct X_XACT_WAVEBANK_STREAMING_PARAMETERS
 {
     HANDLE                      hFile;                          // file handle associated with wavebank data
     DWORD                       dwOffset;                       // offset within file of wavebank header
@@ -227,7 +227,7 @@ xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_SetListenerPosition)
 (
 	X_XACTEngine*	pThis,
 	float			x,
-	float			y, 
+	float			y,
 	float			z,
 	dword_xt			dwApply
 );
@@ -239,7 +239,7 @@ xbox::hresult_xt WINAPI EMUPATCH(IXACTEngine_SetListenerVelocity)
 (
 	X_XACTEngine*	pThis,
 	float			x,
-	float			y, 
+	float			y,
 	float			z,
 	dword_xt			dwApply
 );

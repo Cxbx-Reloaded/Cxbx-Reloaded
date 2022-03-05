@@ -95,11 +95,11 @@ namespace xbdm {
 
 	// 0x001E (30)
 	HRESULT DmRegisterCommandProcessor(LPCSTR sz, void *pfn) // PDM_CMDPROC  pfn
-	{ 
+	{
 		LOG_FUNC_BEGIN
 			LOG_FUNC_ARG(sz)
 			LOG_FUNC_ARG(pfn)
-			LOG_FUNC_END; 
+			LOG_FUNC_END;
 
 		LOG_UNIMPLEMENTED(); // TODO : Connect the command processor callback to Cxbx'x debug console
 
@@ -118,7 +118,7 @@ namespace xbdm {
 
 	// 0x0024 (36)
 	void DmSendNotificationString(LPCSTR sz)
-	{ 
+	{
 		// Just send this string to Cxbx's debug output :
 		EmuLog(LOG_LEVEL::DEBUG, "%s", sz);
 	}

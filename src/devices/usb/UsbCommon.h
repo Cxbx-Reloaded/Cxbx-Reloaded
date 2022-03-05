@@ -261,7 +261,7 @@ struct USBDescID {
     uint16_t                  bcdDevice;     // device release number in binary-coded decimal
     uint8_t                   iManufacturer; // index of string descriptor describing manufacturer
     uint8_t                   iProduct;      // index of string descriptor describing product
-    uint8_t                   iSerialNumber; // index of string descriptor describing the device’s serial number
+    uint8_t                   iSerialNumber; // index of string descriptor describing the deviceï¿½s serial number
 };
 
 /* Global USB Descriptor struct */
@@ -401,7 +401,7 @@ struct XboxDeviceState {
 	USBPort* Port;                         // usb port struct of this device
 	int PortPath;                          // port index to which this device is attached to
 	USBDeviceClass* klass;                 // usb class struct of this device
-										   
+
 	int Speed;                             // actual speed of the connected device
 	int SpeedMask;                         // supported speeds, not in info because it may be variable (hostdevs)
 	uint8_t Addr;                          // device function address
@@ -434,7 +434,7 @@ struct XboxDeviceState {
 /* Structure used to hold information about an active USB packet */
 struct USBPacket {
 	int Pid;                             // Packet ID (used to identify the type of packet that is being processed)
-	uint32_t Id;                         // Paddr of the TD for this packet 
+	uint32_t Id;                         // Paddr of the TD for this packet
 	USBEndpoint* Endpoint;               // endpoint this packet is transferred to
 	IOVector IoVec;                      // used to perform vectored I/O
 	bool ShortNotOK;                     // the bufferRounding mode of the TD for this packet

@@ -39,7 +39,7 @@ void PCIBus::ConnectDevice(uint32_t deviceId, PCIDevice *pDevice)
 	pDevice->Init();
 }
 
-void PCIBus::IOWriteConfigAddress(uint32_t pData) 
+void PCIBus::IOWriteConfigAddress(uint32_t pData)
 {
 	memcpy(&m_configAddressRegister, &pData, sizeof(PCIConfigAddressRegister));
 }
@@ -66,8 +66,8 @@ void PCIBus::IOWriteConfigData(uint32_t pData) {
 		return;
 	}
 
-	printf("PCIBus::IOWriteConfigData: Invalid Device Write (Bus: %d\t Slot: %d\t Function: %d)\n", m_configAddressRegister.busNumber, 
-		PCI_SLOT(m_configAddressRegister.deviceNumber), 
+	printf("PCIBus::IOWriteConfigData: Invalid Device Write (Bus: %d\t Slot: %d\t Function: %d)\n", m_configAddressRegister.busNumber,
+		PCI_SLOT(m_configAddressRegister.deviceNumber),
 		PCI_FUNC(m_configAddressRegister.deviceNumber));
 }
 

@@ -45,7 +45,7 @@
 #include "nv2a_regs.h" // For NV2A_MAX_TEXTURES, etc
 
 
-typedef xbox::addr_xt hwaddr; // Compatibility; Cxbx uses xbox::addr_xt, xqemu and OpenXbox use hwaddr 
+typedef xbox::addr_xt hwaddr; // Compatibility; Cxbx uses xbox::addr_xt, xqemu and OpenXbox use hwaddr
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
 
 #define NV_PMC_SIZE                 0x001000
@@ -459,7 +459,7 @@ typedef struct {
 	DWORD Ignored[0x10];
 	PPUSH Put; // On Xbox1, this field is only written to by the CPU (the GPU uses this as a trigger to start executing from the given address)
 	PPUSH Get; // On Xbox1, this field is only read from by the CPU (the GPU reflects in here where it is/stopped executing)
-	PPUSH Reference; // TODO : xbox::addr_xt / void* / DWORD ? 
+	PPUSH Reference; // TODO : xbox::addr_xt / void* / DWORD ?
 	DWORD Ignored2[0x7ED];
 } Nv2AControlDma;
 #endif

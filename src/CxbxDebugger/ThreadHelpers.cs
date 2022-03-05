@@ -48,16 +48,16 @@ namespace CxbxDebugger
     public enum Extendedx86ContextFlags : uint
     {
         /// <summary>
-        /// Carry Flag. Set if the last arithmetic operation carried 
-        /// (addition) or borrowed (subtraction) a bit beyond the 
-        /// size of the register. This is then checked when the 
-        /// operation is followed with an add-with-carry or 
-        /// subtract-with-borrow to deal with values too large 
+        /// Carry Flag. Set if the last arithmetic operation carried
+        /// (addition) or borrowed (subtraction) a bit beyond the
+        /// size of the register. This is then checked when the
+        /// operation is followed with an add-with-carry or
+        /// subtract-with-borrow to deal with values too large
         /// for just one register to contain.
         /// </summary>
         Carry = 0,
         /// <summary>
-        /// Parity Flag. Set if the number of set bits in the 
+        /// Parity Flag. Set if the number of set bits in the
         /// least significant byte is a multiple of 2.
         /// </summary>
         Parity = 2,
@@ -82,13 +82,13 @@ namespace CxbxDebugger
         /// </summary>
         Interruption = 1u << 9,
         /// <summary>
-        ///  Direction Flag. Stream direction. If set, string operations 
-        ///  will decrement their pointer rather than incrementing it, 
+        ///  Direction Flag. Stream direction. If set, string operations
+        ///  will decrement their pointer rather than incrementing it,
         ///  reading memory backwards.
         /// </summary>
         Direction = 1u << 10,
         /// <summary>
-        /// Overflow Flag. Set if signed arithmetic operations result 
+        /// Overflow Flag. Set if signed arithmetic operations result
         /// in a value too large for the register to contain.
         /// </summary>
         Overflow = 1u << 11,
@@ -101,7 +101,7 @@ namespace CxbxDebugger
         /// </summary>
         IOPL_lastBit = 1u << 13,
         /// <summary>
-        /// Nested Task flag. Controls chaining of interrupts. 
+        /// Nested Task flag. Controls chaining of interrupts.
         /// Set if the current process is linked to the next process.
         /// </summary>
         NestedTask = 1u << 14,
@@ -343,15 +343,15 @@ namespace CxbxDebugger
         /// </summary>
         InvalidDisposition = 0xC0000026,
         /// <summary>
-        /// 
+        ///
         /// </summary>
         StatusHandleNotClosable = 0xC0000235,
         /// <summary>
-        /// 
+        ///
         /// </summary>
         GuardPageViolation = 0x80000001,
         /// <summary>
-        /// 
+        ///
         /// </summary>
         InvalidHandle = 0xC0000008,
         /// <summary>

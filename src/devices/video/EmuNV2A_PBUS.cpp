@@ -46,11 +46,11 @@ DEVICE_READ32(PBUS)
         // TODO : result = pci_get_long(d->dev.config + PCI_COMMAND);
 		break;
 	case NV_PBUS_PCI_NV_2:
-		result = (0x02 << 24) | 161; // PCI_CLASS_DISPLAY_3D (0x02) Rev 161 (0xA1) 
+		result = (0x02 << 24) | 161; // PCI_CLASS_DISPLAY_3D (0x02) Rev 161 (0xA1)
         // TODO : result = pci_get_long(d->dev.config + PCI_CLASS_REVISION);
 		break;
 
-	default: 
+	default:
 		DEBUG_READ32_UNHANDLED(PBUS); // TODO : DEVICE_READ32_REG(pbus);
 		break;
 	}
@@ -65,7 +65,7 @@ DEVICE_WRITE32(PBUS)
 		// TODO : Handle write on NV_PBUS_PCI_NV_1 with  1 (NV_PBUS_PCI_NV_1_IO_SPACE_ENABLED) + 4 (NV_PBUS_PCI_NV_1_BUS_MASTER_ENABLED)
         // pci_set_long(d->dev.config + PCI_COMMAND, val);
 		break;
-	default: 
+	default:
 		DEBUG_WRITE32_UNHANDLED(PBUS); // TODO : DEVICE_WRITE32_REG(pbus);
 		break;
 	}

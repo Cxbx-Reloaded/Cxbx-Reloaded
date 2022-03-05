@@ -541,7 +541,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XInitDevices)
 // * patch: XGetDevices
 // * Note: This could be unpatched however,
 // * XInitDevices is required to be unpatched first.
-// * This in turn requires USB LLE to be implemented, or USBD_Init 
+// * This in turn requires USB LLE to be implemented, or USBD_Init
 // * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
 xbox::dword_xt WINAPI xbox::EMUPATCH(XGetDevices)
@@ -596,7 +596,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XGetDevices)
 // * patch: XGetDeviceChanges
 // * Note: This could be unpatched however,
 // * XInitDevices is required to be unpatched first.
-// * This in turn requires USB LLE to be implemented, or USBD_Init 
+// * This in turn requires USB LLE to be implemented, or USBD_Init
 // * patched with a stub, so this patch is still enabled for now
 // ******************************************************************
 xbox::bool_xt WINAPI xbox::EMUPATCH(XGetDeviceChanges)
@@ -696,7 +696,7 @@ xbox::HANDLE WINAPI xbox::EMUPATCH(XInputOpen)
 			RETURN(g_devs[dwPort].info.hHandle);
         }
     }
-    
+
 	RETURN(NULL);
 }
 
@@ -755,7 +755,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetCapabilities)
         std::memset(pCap, 0xFF, g_devs[port].info.ucInputStateSize + g_devs[port].info.ucFeedbackSize);
 		ret = ERROR_SUCCESS;
     }
-    
+
 	RETURN(ret);
 }
 
@@ -776,7 +776,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetState)
 		LOG_FUNC_END;
 
 	dword_xt ret = CxbxImpl_XInputHandler<false>(hDevice, pState);
-    
+
 	RETURN(ret);
 }
 
@@ -932,7 +932,7 @@ xbox::LPVOID WINAPI xbox::EMUPATCH(CreateFiber)
 	fiber_context_t* context = (fiber_context_t*)malloc(sizeof(fiber_context_t));
 	context->lpStartRoutine = lpStartRoutine;
 	context->lpParameter = lpParameter;
-		
+
 	RETURN(CreateFiber(dwStackSize, (LPFIBER_START_ROUTINE)EmuFiberStartup, context));
 }
 
@@ -955,7 +955,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(DeleteFiber)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(SwitchToFiber)
 (
-	LPVOID lpFiber 
+	LPVOID lpFiber
 )
 {
 
@@ -974,12 +974,12 @@ xbox::LPVOID WINAPI xbox::EMUPATCH(ConvertThreadToFiber)
 {
 
 	LOG_FUNC_ONE_ARG(lpParameter);
-		
+
 	LPVOID pRet = ConvertThreadToFiber(lpParameter);
-	
+
 	RETURN(pRet);
 }
-	
+
 // ******************************************************************
 // * patch: SignalObjectAndWait
 // ******************************************************************
@@ -1050,9 +1050,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(RaiseException)
 // ******************************************************************
 xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 (
-	dword_xt dwPort,                  
-	dword_xt dwSlot,                  
-	PCHAR pchDrive               
+	dword_xt dwPort,
+	dword_xt dwSlot,
+	PCHAR pchDrive
 )
 {
 	LOG_FUNC_BEGIN
@@ -1100,9 +1100,9 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 // ******************************************************************
 xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMURootA)
 (
-	dword_xt dwPort,                  
-	dword_xt dwSlot,                  
-	PCHAR pchDrive               
+	dword_xt dwPort,
+	dword_xt dwSlot,
+	PCHAR pchDrive
 )
 {
 	LOG_FUNC_BEGIN

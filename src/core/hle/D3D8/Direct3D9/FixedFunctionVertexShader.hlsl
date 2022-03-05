@@ -36,7 +36,7 @@ struct VS_INPUT
 // TODO : Rename these into SLOT_POSITION, SLOT_WEIGHT, SLOT_TEXTURE0, SLOT_TEXTURE3, etc :
 static const uint position = 0;     // See X_D3DFVF_XYZ      / X_D3DVSDE_POSITION    was float4 pos : POSITION;
 static const uint weight = 1;       // See X_D3DFVF_XYZB1-4  / X_D3DVSDE_BLENDWEIGHT was float4 bw : BLENDWEIGHT;
-static const uint normal = 2;       // See X_D3DFVF_NORMAL   / X_D3DVSDE_NORMAL      was float4 normal : NORMAL; // Note : Only normal.xyz is used. 
+static const uint normal = 2;       // See X_D3DFVF_NORMAL   / X_D3DVSDE_NORMAL      was float4 normal : NORMAL; // Note : Only normal.xyz is used.
 static const uint diffuse = 3;      // See X_D3DFVF_DIFFUSE  / X_D3DVSDE_DIFFUSE     was float4 color[2] : COLOR;
 static const uint specular = 4;     // See X_D3DFVF_SPECULAR / X_D3DVSDE_SPECULAR
 static const uint fogCoord = 5;     // Has no X_D3DFVF_* ! See X_D3DVSDE_FOG         Note : Only fog.x is used.
@@ -125,7 +125,7 @@ LightingOutput DoLight(const Light l, const float2 powers)
 	float3 toLightN;
 	float attenuation = 1;
 	float spotIntensity = 1;
-	
+
 	if (l.Type == LIGHT_TYPE_DIRECTIONAL) {
 		toLight = toLightN = -l.DirectionVN;
 	}
@@ -168,7 +168,7 @@ LightingOutput DoLight(const Light l, const float2 powers)
 	float3 toViewerN = state.Modes.LocalViewer
 		? normalize(-View.Position.xyz) // Strip sample
 		: float3(0, 0, -1); // DoA 3 character select
-	
+
 	// Note : if X_D3DRS_SPECULARENABLE is false then all light specular colours should have been zeroed out
 	// Blinn-Phong
 	// https://learnopengl.com/Advanced-Lighting/Advanced-Lighting

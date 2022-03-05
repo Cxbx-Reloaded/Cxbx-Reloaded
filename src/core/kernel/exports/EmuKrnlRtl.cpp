@@ -927,7 +927,7 @@ XBSYSAPI EXPORTNUM(283) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedMagicDivide
 	ULONGLONG ah_bl;
 	ULONGLONG al_bh;
 	BOOLEAN positive;
-	
+
 	if (Dividend.QuadPart < 0) {
 	   dividend_high = UPPER_32((ULONGLONG) -Dividend.QuadPart);
 	   dividend_low =  LOWER_32((ULONGLONG) -Dividend.QuadPart);
@@ -1153,7 +1153,7 @@ XBSYSAPI EXPORTNUM(292) xbox::ntstatus_xt NTAPI xbox::RtlIntegerToChar
 	CHAR buffer[33];
 	PCHAR pos = &buffer[32];
 
-	*pos = '\0';   
+	*pos = '\0';
 	do {
 		pos--;
 		CHAR digit = (CHAR)(Value % Base);
@@ -1167,7 +1167,7 @@ XBSYSAPI EXPORTNUM(292) xbox::ntstatus_xt NTAPI xbox::RtlIntegerToChar
 		}
 	} while (Value != 0L);
 
-	SIZE_T len = &buffer[32] - pos;   
+	SIZE_T len = &buffer[32] - pos;
 	if (len > (SIZE_T)OutputLength) {
 		return X_STATUS_BUFFER_OVERFLOW;
 	}
@@ -1262,7 +1262,7 @@ XBSYSAPI EXPORTNUM(296) xbox::char_xt NTAPI xbox::RtlLowerChar
 )
 {
 	LOG_FUNC_ONE_ARG(Character);
-	
+
 	byte_xt CharCode = (byte_xt)Character;
 
 	if (CharCode >= 'A' && CharCode <= 'Z')
@@ -1757,12 +1757,12 @@ XBSYSAPI EXPORTNUM(309) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToInteger
 	LPWSTR lpwstr = (LPWSTR)String->Buffer;
 	USHORT CharsRemaining = String->Length / sizeof(WCHAR);
 	char bMinus = 0;
- 
+
 	while (CharsRemaining >= 1 && *lpwstr <= ' ') {
 		lpwstr++;
 		CharsRemaining--;
 	}
- 
+
 	if (CharsRemaining >= 1) {
 		if (*lpwstr == '+') {
 			lpwstr++;
@@ -1774,10 +1774,10 @@ XBSYSAPI EXPORTNUM(309) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToInteger
 			CharsRemaining--;
 		}
 	}
- 
+
 	if (Base == 0) {
 		Base = 10;
- 
+
 		if (CharsRemaining >= 2 && lpwstr[0] == '0') {
 			if (lpwstr[1] == 'b') {
 				lpwstr += 2;
@@ -1799,17 +1799,17 @@ XBSYSAPI EXPORTNUM(309) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToInteger
 	else if (Base != 2 && Base != 8 && Base != 10 && Base != 16) {
 		return STATUS_INVALID_PARAMETER;
 	}
- 
+
 	if (Value == NULL) {
 		return STATUS_ACCESS_VIOLATION;
 	}
- 
+
 	ULONG RunningTotal = 0;
 
 	while (CharsRemaining >= 1) {
 		WCHAR wchCurrent = *lpwstr;
 		int digit;
- 
+
 		if (wchCurrent >= '0' && wchCurrent <= '9') {
 			digit = wchCurrent - '0';
 		}
@@ -1822,16 +1822,16 @@ XBSYSAPI EXPORTNUM(309) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToInteger
 		else {
 			digit = -1;
 		}
- 
+
 		if (digit < 0 || (ULONG)digit >= Base) {
 			break;
 		}
- 
+
 		RunningTotal = RunningTotal * Base + digit;
 		lpwstr++;
 		CharsRemaining--;
 	}
- 
+
 	*Value = bMinus ? (0 - RunningTotal) : RunningTotal;
 
 	RETURN(X_STATUS_SUCCESS);
@@ -2025,12 +2025,12 @@ XBSYSAPI EXPORTNUM(316) xbox::char_xt NTAPI xbox::RtlUpperChar
 	LOG_FUNC_ONE_ARG(Character);
 
 	byte_xt CharCode = (byte_xt)Character;
-	
+
 	if (CharCode >= 'a' && CharCode <= 'z')
 	{
 		CharCode ^= 0x20;
 	}
-	
+
 	// Latin alphabet (ISO 8859-1)
 	else if (CharCode >= 0xe0 && CharCode <= 0xfe && CharCode != 0xf7)
 	{
@@ -2041,7 +2041,7 @@ XBSYSAPI EXPORTNUM(316) xbox::char_xt NTAPI xbox::RtlUpperChar
 	{
 		CharCode = '?';
 	}
-	
+
 	RETURN((char_xt)CharCode);
 }
 

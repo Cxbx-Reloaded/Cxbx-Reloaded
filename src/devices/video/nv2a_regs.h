@@ -69,7 +69,7 @@
 #   define NV_PMC_ENABLE_PVIDEO                               (1 << 28)
 
 
-#define NV_PBUS_FBIO_RAM                                 0x00000218  
+#define NV_PBUS_FBIO_RAM                                 0x00000218
 #  define NV_PBUS_FBIO_RAM_TYPE                              0x00000100
 #    define NV_PBUS_FBIO_RAM_TYPE_DDR                          (0 << 8)
 #    define NV_PBUS_FBIO_RAM_TYPE_SDR                          (1 << 8)
@@ -770,7 +770,7 @@
 #define NV_PFB_CFG1                                      0x00000204
 #define NV_PFB_CSTATUS                                   0x0000020C
 #define NV_PFB_REFCTRL                                   0x00000210
-#define NV_PFB_NVM                                       0x00000214 // 	NV_PFB_NVM_MODE_DISABLE 
+#define NV_PFB_NVM                                       0x00000214 // 	NV_PFB_NVM_MODE_DISABLE
 #define NV_PFB_PIN                                       0x00000218
 #define NV_PFB_PAD                                       0x0000021C
 #define NV_PFB_TIMING0                                   0x00000220

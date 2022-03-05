@@ -217,14 +217,14 @@ extern HRESULT EmuCompileVertexShader
 	std::string hlsl_str = hlsl_stream.str();
 
 	HRESULT hRet = EmuCompileShader(hlsl_str, g_vs_model, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
-	
+
 	if (FAILED(hRet) && (g_vs_model != vs_model_3_0)) {
 		// If the shader failed in the default vertex shader model, retry in vs_model_3_0
 		// This allows shaders too large for 2_a to be compiled (Test Case: Shenmue 2)
 		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Retrying with shader model 3.0");
 		hRet = EmuCompileShader(hlsl_str, vs_model_3_0, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
 	}
-		
+
 	return hRet;
 }
 
@@ -356,25 +356,25 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Fogging
 	// TODO deduplicate
-	const float fogDepth      =   abs(oFog.x); 
+	const float fogDepth      =   abs(oFog.x);
 	const float fogTableMode  =   CxbxFogInfo.x;
 	const float fogDensity    =   CxbxFogInfo.y;
 	const float fogStart      =   CxbxFogInfo.z;
-	const float fogEnd        =   CxbxFogInfo.w;  
+	const float fogEnd        =   CxbxFogInfo.w;
 
 	const float FOG_TABLE_NONE    = 0;
 	const float FOG_TABLE_EXP     = 1;
 	const float FOG_TABLE_EXP2    = 2;
 	const float FOG_TABLE_LINEAR  = 3;
- 
+
     float fogFactor;
-    if(fogTableMode == FOG_TABLE_NONE) 
+    if(fogTableMode == FOG_TABLE_NONE)
        fogFactor = fogDepth;
-    if(fogTableMode == FOG_TABLE_EXP) 
+    if(fogTableMode == FOG_TABLE_EXP)
        fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
-    if(fogTableMode == FOG_TABLE_EXP2) 
+    if(fogTableMode == FOG_TABLE_EXP2)
        fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
-    if(fogTableMode == FOG_TABLE_LINEAR) 
+    if(fogTableMode == FOG_TABLE_LINEAR)
        fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
 
 	xOut.oPos = reverseScreenspaceTransform(oPos);

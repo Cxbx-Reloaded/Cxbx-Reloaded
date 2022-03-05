@@ -39,8 +39,8 @@ namespace LED {
 	// Pre-defined LED Phase sequences
 
 	constexpr Sequence OFF                 = Phase0::Off    | Phase1::Off    | Phase2::Off    | Phase3::Off;
-							        
-	// Solid single color: constant on 	        
+
+	// Solid single color: constant on
 	constexpr Sequence RED                 = Phase0::Red    | Phase1::Red    | Phase2::Red    | Phase3::Red;
 	constexpr Sequence GREEN               = Phase0::Green  | Phase1::Green  | Phase2::Green  | Phase3::Green;
 	constexpr Sequence ORANGE              = Phase0::Orange | Phase1::Orange | Phase2::Orange | Phase3::Orange;
@@ -67,8 +67,8 @@ namespace LED {
 
 	// Blip, two colors: first, off, second, off
 	constexpr Sequence BLIP_RED_GREEN      = Phase0::Red    | Phase1::Off    | Phase2::Green  | Phase3::Off;
-	constexpr Sequence BLIP_RED_ORANGE     = Phase0::Red    | Phase1::Off    | Phase2::Orange | Phase3::Off;																			   
-	constexpr Sequence BLIP_GREEN_ORANGE   = Phase0::Green  | Phase1::Off    | Phase2::Orange | Phase3::Off;																			   
+	constexpr Sequence BLIP_RED_ORANGE     = Phase0::Red    | Phase1::Off    | Phase2::Orange | Phase3::Off;
+	constexpr Sequence BLIP_GREEN_ORANGE   = Phase0::Green  | Phase1::Off    | Phase2::Orange | Phase3::Off;
 
 	// Solid, two colors: alternating
 	constexpr Sequence RED_GREEN           = Phase0::Red    | Phase1::Red    | Phase2::Green  | Phase3::Green;

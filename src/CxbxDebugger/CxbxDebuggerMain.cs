@@ -81,7 +81,7 @@ namespace CxbxDebugger
             childForm.TextChanged += (sender, e) => { OnSessionWindowRenamed(sender as Form); };
             childForm.Activated += (sender, e) => { OnSessionWindowActivated(sender as IDebugWindow); };
             childForm.Show();
-            
+
             return childForm;
         }
 
@@ -153,4 +153,3 @@ namespace CxbxDebugger
         }
     }
 }
-

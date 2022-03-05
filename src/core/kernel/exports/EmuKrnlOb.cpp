@@ -108,9 +108,9 @@ xbox::boolean_xt xbox::ObpCreatePermanentDirectoryObject(
 	if (!X_NT_SUCCESS(result)) {
 		RETURN(FALSE);
 	}
-	
+
 	result = ObReferenceObjectByHandle(Handle, &ObDirectoryObjectType, (PVOID *)DirectoryObject);
-	
+
 	if (!X_NT_SUCCESS(result)) {
 		RETURN(FALSE);
 	}
@@ -131,9 +131,9 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 {
 	NTSTATUS result;
 	*ReturnedObject = NULL;
-	
+
 	KIRQL OldIrql = ObLock();
-	
+
 	OBJECT_STRING RemainingName;
 	if (ObjectName != NULL) {
 		RemainingName = *ObjectName;
@@ -374,7 +374,7 @@ xbox::HANDLE xbox::ObpCreateObjectHandle(xbox::PVOID Object)
 xbox::void_xt xbox::ObDissectName(OBJECT_STRING Path, POBJECT_STRING FirstName, POBJECT_STRING RemainingName)
 {
 	ULONG i = 0;
-	
+
 	FirstName->Length = 0;
 	FirstName->MaximumLength = 0;
 	FirstName->Buffer = NULL;
@@ -462,7 +462,7 @@ XBSYSAPI EXPORTNUM(239) xbox::ntstatus_xt NTAPI xbox::ObCreateObject
 		ObjectHeader->Flags = 0;
 
 		*Object = &ObjectHeader->Body;
-		
+
 		RETURN(X_STATUS_SUCCESS);
 	}
 
@@ -530,7 +530,7 @@ xbox::PVOID xbox::ObpGetObjectHandleContents(HANDLE Handle)
 	PVOID *HandleContents;
 	PVOID Object;
 	Handle = ObpMaskOffApplicationBits(Handle);
-	
+
 	if (HandleToUlong(Handle) < HandleToUlong(ObpObjectHandleTable.NextHandleNeedingPool)) {
 		HandleContents = ObpGetHandleContentsPointer(Handle);
 		Object = *HandleContents;
@@ -551,7 +551,7 @@ xbox::ulong_xt FASTCALL xbox::ObpComputeHashIndex(
 	ULONG HashIndex = 0;
 	PUCHAR Buffer = (PUCHAR)ElementName->Buffer;
 	PUCHAR BufferEnd = Buffer + ElementName->Length;
-	
+
 	// Calculate hash of string data
 	UCHAR Char;
 	while (Buffer < BufferEnd) {
@@ -614,10 +614,10 @@ xbox::boolean_xt xbox::ObpLookupElementNameInDirectory(
 			return TRUE;
 		}
 	}
-	
+
 	ULONG HashIndex = ObpComputeHashIndex(ElementName);
 	POBJECT_HEADER_NAME_INFO ObjectHeaderNameInfo = Directory->HashBuckets[HashIndex];
-	
+
 	while (ObjectHeaderNameInfo != NULL) {
 		if (RtlEqualString(&ObjectHeaderNameInfo->Name, ElementName, TRUE)) {
 			Object = OBJECT_HEADER_NAME_INFO_TO_OBJECT(ObjectHeaderNameInfo);
@@ -1103,8 +1103,8 @@ XBSYSAPI EXPORTNUM(248) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByPointer
 	if (ObjectType == ObjectHeader->Type) {
 		InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 		RETURN(X_STATUS_SUCCESS);
-	} 
-	
+	}
+
 	RETURN(STATUS_OBJECT_TYPE_MISMATCH);
 }
 
@@ -1141,7 +1141,7 @@ XBSYSAPI EXPORTNUM(250) xbox::void_xt FASTCALL xbox::ObfDereferenceObject
 	}
 
 	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-	
+
 	if (InterlockedDecrement((::PLONG)(&ObjectHeader->PointerCount)) == 0) {
 		if (ObjectHeader->Type->DeleteProcedure != NULL) {
 			ObjectHeader->Type->DeleteProcedure(Object);

@@ -44,7 +44,7 @@ class ADM1032Device : public SMDevice
 		uint8_t ReadByte(uint8_t command);
 		uint16_t ReadWord(uint8_t command) { return 0; };
 		int ReadBlock(uint8_t command, uint8_t *data) { return 0; };
-	
+
 		void SendByte(uint8_t data) {};
 		void WriteByte(uint8_t command, uint8_t value) {};
 		void WriteWord(uint8_t command, uint16_t value) {};

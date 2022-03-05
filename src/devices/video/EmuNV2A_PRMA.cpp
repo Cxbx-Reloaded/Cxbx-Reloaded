@@ -55,7 +55,7 @@ DEVICE_READ32(PRMA)
 DEVICE_WRITE32(PRMA)
 {
 	switch(addr) {
-	default: 
+	default:
 		DEBUG_WRITE32_UNHANDLED(PRMA); // TODO : DEVICE_WRITE32_REG(prma);
 		break;
 	}

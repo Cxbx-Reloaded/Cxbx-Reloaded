@@ -179,7 +179,7 @@ static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf) // TODO :
 	}
 
 	if (xboxFvf & X_D3DFVF_SPECULAR) {
-		g_Xbox_VertexShader_ForFVF.Flags |= X_VERTEXSHADER_FLAG_HASSPECULAR; 
+		g_Xbox_VertexShader_ForFVF.Flags |= X_VERTEXSHADER_FLAG_HASSPECULAR;
 		pSlot = &declaration.Slots[X_D3DVSDE_SPECULAR];
 		pSlot->Format = X_D3DVSDT_D3DCOLOR;
 		pSlot->Offset = offset;
@@ -226,7 +226,7 @@ static xbox::X_D3DVertexShader* XboxVertexShaderFromFVF(DWORD xboxFvf) // TODO :
 		}
 	}
 
-	// Return the global g_Xbox_VertexShader_ForFVF variable 
+	// Return the global g_Xbox_VertexShader_ForFVF variable
 	return &g_Xbox_VertexShader_ForFVF;
 }
 
@@ -473,47 +473,47 @@ namespace XboxVertexShaderDecoder
 			uint8_t          BitLength;
 		} FieldMapping[/*VSH_FIELD_NAME*/] = {
 			// SubToken BitPos  BitSize
-			{  1,   25,     3 }, // FLD_ILU,              
-			{  1,   21,     4 }, // FLD_MAC,              
-			{  1,   13,     8 }, // FLD_CONST,            
-			{  1,    9,     4 }, // FLD_V,                
+			{  1,   25,     3 }, // FLD_ILU,
+			{  1,   21,     4 }, // FLD_MAC,
+			{  1,   13,     8 }, // FLD_CONST,
+			{  1,    9,     4 }, // FLD_V,
 			// Input A
-			{  1,    8,     1 }, // FLD_A_NEG,            
-			{  1,    6,     2 }, // FLD_A_SWZ_X,          
-			{  1,    4,     2 }, // FLD_A_SWZ_Y,          
-			{  1,    2,     2 }, // FLD_A_SWZ_Z,          
-			{  1,    0,     2 }, // FLD_A_SWZ_W,          
-			{  2,   28,     4 }, // FLD_A_R,              
-			{  2,   26,     2 }, // FLD_A_MUX,            
+			{  1,    8,     1 }, // FLD_A_NEG,
+			{  1,    6,     2 }, // FLD_A_SWZ_X,
+			{  1,    4,     2 }, // FLD_A_SWZ_Y,
+			{  1,    2,     2 }, // FLD_A_SWZ_Z,
+			{  1,    0,     2 }, // FLD_A_SWZ_W,
+			{  2,   28,     4 }, // FLD_A_R,
+			{  2,   26,     2 }, // FLD_A_MUX,
 			// Input B
-			{  2,   25,     1 }, // FLD_B_NEG,            
-			{  2,   23,     2 }, // FLD_B_SWZ_X,          
-			{  2,   21,     2 }, // FLD_B_SWZ_Y,          
-			{  2,   19,     2 }, // FLD_B_SWZ_Z,          
-			{  2,   17,     2 }, // FLD_B_SWZ_W,          
-			{  2,   13,     4 }, // FLD_B_R,              
-			{  2,   11,     2 }, // FLD_B_MUX,            
+			{  2,   25,     1 }, // FLD_B_NEG,
+			{  2,   23,     2 }, // FLD_B_SWZ_X,
+			{  2,   21,     2 }, // FLD_B_SWZ_Y,
+			{  2,   19,     2 }, // FLD_B_SWZ_Z,
+			{  2,   17,     2 }, // FLD_B_SWZ_W,
+			{  2,   13,     4 }, // FLD_B_R,
+			{  2,   11,     2 }, // FLD_B_MUX,
 			// Input C
-			{  2,   10,     1 }, // FLD_C_NEG,            
-			{  2,    8,     2 }, // FLD_C_SWZ_X,          
-			{  2,    6,     2 }, // FLD_C_SWZ_Y,          
-			{  2,    4,     2 }, // FLD_C_SWZ_Z,          
-			{  2,    2,     2 }, // FLD_C_SWZ_W,          
-			{  2,    0,     2 }, // FLD_C_R_HIGH,         
-			{  3,   30,     2 }, // FLD_C_R_LOW,          
-			{  3,   28,     2 }, // FLD_C_MUX,            
+			{  2,   10,     1 }, // FLD_C_NEG,
+			{  2,    8,     2 }, // FLD_C_SWZ_X,
+			{  2,    6,     2 }, // FLD_C_SWZ_Y,
+			{  2,    4,     2 }, // FLD_C_SWZ_Z,
+			{  2,    2,     2 }, // FLD_C_SWZ_W,
+			{  2,    0,     2 }, // FLD_C_R_HIGH,
+			{  3,   30,     2 }, // FLD_C_R_LOW,
+			{  3,   28,     2 }, // FLD_C_MUX,
 			// Output
-			{  3,   24,     4 }, // FLD_OUT_MAC_MASK,   
-			{  3,   20,     4 }, // FLD_OUT_R,            
+			{  3,   24,     4 }, // FLD_OUT_MAC_MASK,
+			{  3,   20,     4 }, // FLD_OUT_R,
 			{  3,   16,     4 }, // FLD_OUT_ILU_MASK,
 			{  3,   12,     4 }, // FLD_OUT_O_MASK,
-			{  3,   11,     1 }, // FLD_OUT_ORB,          
-			{  3,    3,     8 }, // FLD_OUT_ADDRESS,      
-			{  3,    2,     1 }, // FLD_OUT_MUX,          
+			{  3,   11,     1 }, // FLD_OUT_ORB,
+			{  3,    3,     8 }, // FLD_OUT_ADDRESS,
+			{  3,    2,     1 }, // FLD_OUT_MUX,
 			// Relative addressing
-			{  3,    1,     1 }, // FLD_A0X,              
+			{  3,    1,     1 }, // FLD_A0X,
 			// Final instruction
-			{  3,    0,     1 }  // FLD_FINAL,            
+			{  3,    0,     1 }  // FLD_FINAL,
 		};
 
 		return (uint8_t)(VshGetFromToken(pShaderToken,
@@ -1534,7 +1534,7 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 #endif
 	} else {
 		// A shader without a program won't call LoadVertexShader nor SelectVertexShader
-		// 
+		//
 #ifdef CXBX_USE_GLOBAL_VERTEXSHADER_POINTER
 		g_Xbox_VertexShader_Ptr = pXboxVertexShader;
 #endif

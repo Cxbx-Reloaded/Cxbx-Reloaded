@@ -121,7 +121,7 @@ void ARGB4444ToARGBRow_C(const uint8_t* src_argb4444,
 	}
 }
 
-// Cxbx color component conversion functions 
+// Cxbx color component conversion functions
 void X1R5G5B5ToARGBRow_C(const uint8_t* src_x1r5g5b5, uint8_t* dst_argb,
 	int width) {
 	int x;
@@ -882,7 +882,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x04 X_D3DFMT_A4R4G4B4     */ { 16, Swzzld, A4R4G4B4, D3DFMT_A4R4G4B4  },
 	/* 0x05 X_D3DFMT_R5G6B5       */ { 16, Swzzld, __R5G6B5, D3DFMT_R5G6B5    , RenderTarget },
 	/* 0x06 X_D3DFMT_A8R8G8B8     */ { 32, Swzzld, A8R8G8B8, D3DFMT_A8R8G8B8  , RenderTarget },
-	/* 0x07 X_D3DFMT_X8R8G8B8     */ { 32, Swzzld, X8R8G8B8, D3DFMT_X8R8G8B8  , RenderTarget }, // Alias : X_D3DFMT_X8L8V8U8 
+	/* 0x07 X_D3DFMT_X8R8G8B8     */ { 32, Swzzld, X8R8G8B8, D3DFMT_X8R8G8B8  , RenderTarget }, // Alias : X_D3DFMT_X8L8V8U8
 	/* 0x08 undefined             */ {},
 	/* 0x09 undefined             */ {},
 	/* 0x0A undefined             */ {},
@@ -1111,7 +1111,7 @@ xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 		break;
 	case D3DFMT_D16_LOCKABLE:
 		result = xbox::X_D3DFMT_D16_LOCKABLE;
-		break; 
+		break;
 	case D3DFMT_UNKNOWN:
 		result = ((xbox::X_D3DFORMAT)0xffffffff); // TODO : return xbox::X_D3DFMT_UNKNOWN ?
 		break;
@@ -1164,19 +1164,19 @@ D3DMULTISAMPLE_TYPE EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
 	case xbox::X_D3DMULTISAMPLE_NONE:
 		result = D3DMULTISAMPLE_NONE;
 		break;
-	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR: 
-	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX: 
-	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR: 
+	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR:
+	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX:
+	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR:
 	case xbox::X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR:
 		result = D3DMULTISAMPLE_2_SAMPLES;
 		break;
-	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR: 
-	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN: 
-	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR: 
+	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR:
+	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN:
+	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR:
 	case xbox::X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN:
 		result = D3DMULTISAMPLE_4_SAMPLES;
 		break;
-	case xbox::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN: 
+	case xbox::X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN:
 	case xbox::X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN:
 		result = D3DMULTISAMPLE_9_SAMPLES;
 		break;

@@ -60,7 +60,7 @@ void glo_context_destroy(GloContext *context);
 void glo_readpixels(GLenum gl_format, GLenum gl_type,
                     unsigned int bytes_per_pixel, unsigned int stride,
                     unsigned int width, unsigned int height, void *data);
- 
+
 void glo_swap(GloContext *context);
 
 #endif /* GLOFFSCREEN_H_ */

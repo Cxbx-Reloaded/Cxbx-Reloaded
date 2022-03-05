@@ -57,7 +57,7 @@ XBSYSAPI EXPORTNUM(5) xbox::void_xt NTAPI xbox::DbgBreakPoint()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(6) xbox::void_xt NTAPI xbox::DbgBreakPointWithStatus
 (
-	IN ulong_xt Status 
+	IN ulong_xt Status
 )
 {
 	LOG_FUNC_ONE_ARG(Status);

@@ -27,7 +27,7 @@
 // ******************************************************************
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#include <Windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE 
+#include <Windows.h> // For DWORD, CALLBACK, VirtualAlloc, LPVOID, SIZE_T, HMODULE
 
 // NOTE: Cannot be use in loader project due to force exclude std libraries.
 //#define DEBUG // Uncomment whenever need to verify memory leaks or bad configure.

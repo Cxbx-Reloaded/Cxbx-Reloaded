@@ -2,7 +2,7 @@
  *  Offscreen OpenGL abstraction layer - WGL (windows) specific
  *
  *  Copyright (c) 2010 Intel
- *  Written by: 
+ *  Written by:
  *    Gordon Williams <gordon.williams@collabora.co.uk>
  *    Ian Molton <ian.molton@collabora.co.uk>
  *  Copyright (c) 2013 Wayo
@@ -110,7 +110,7 @@ static void glo_init(void) {
         fprintf(stderr, "Glew init failed.\n");
         abort();
     }
-	
+
     if (!WGLEW_ARB_create_context
         || !WGLEW_ARB_pixel_format
         || !WGLEW_ARB_pbuffer) {

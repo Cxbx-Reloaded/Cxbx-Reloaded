@@ -303,8 +303,8 @@ constexpr const char* remove_emupatch_prefix(const char* str) {
 	return remove_prefix(remove_prefix(str, xbox_prefix), emupatch_prefix);
 }
 
-#define LOG_ARG_START "\n   " << std::setfill(' ') << std::setw(20) << std::left 
-#define LOG_ARG_OUT_START "\n OUT " << std::setfill(' ') << std::setw(18) << std::left 
+#define LOG_ARG_START "\n   " << std::setfill(' ') << std::setw(20) << std::left
+#define LOG_ARG_OUT_START "\n OUT " << std::setfill(' ') << std::setw(18) << std::left
 
 #ifndef LOG_PREFIX
 #define LOG_PREFIX __FILENAME__
@@ -497,13 +497,13 @@ extern thread_local std::string _logThreadPrefix;
 #define LOG_FUNC() LOG_FUNC_BEGIN LOG_FUNC_END
 
 // Log function with one argument
-#define LOG_FUNC_ONE_ARG(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG(arg) LOG_FUNC_END 
+#define LOG_FUNC_ONE_ARG(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG(arg) LOG_FUNC_END
 
 // Log function with one typed argument
-#define LOG_FUNC_ONE_ARG_TYPE(type, arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_TYPE(type, arg) LOG_FUNC_END 
+#define LOG_FUNC_ONE_ARG_TYPE(type, arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_TYPE(type, arg) LOG_FUNC_END
 
 // Log function with one out argument
-#define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END 
+#define LOG_FUNC_ONE_ARG_OUT(arg) LOG_FUNC_BEGIN LOG_FUNC_ARG_OUT(arg) LOG_FUNC_END
 
 // RETURN logs the given result and then returns it (so this should appear last in functions)
 #define RETURN(r) do { if (g_bPrintfOn) LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) { LOG_FUNC_RESULT(r) } return r; } while (0)

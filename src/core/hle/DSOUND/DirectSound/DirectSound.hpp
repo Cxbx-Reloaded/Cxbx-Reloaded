@@ -163,12 +163,12 @@ typedef struct _DSEFFECTIMAGEDESC {
 } DSEFFECTIMAGEDESC, *LPDSEFFECTIMAGEDESC;
 
 /*Members
-dwEffectCount 
-Value that contains the number of effects in the image. 
-dwTotalScratchSize 
-Value that contains the total amount of space required by effects that use scratch space for delay lines. 
-aEffectMaps 
-Variable-length array that contains the effect descriptions. 
+dwEffectCount
+Value that contains the number of effects in the image.
+dwTotalScratchSize
+Value that contains the total amount of space required by effects that use scratch space for delay lines.
+aEffectMaps
+Variable-length array that contains the effect descriptions.
 */
 
 //Custom flags (4 bytes support up to 31 shifts,starting from 0)
@@ -254,7 +254,7 @@ class X_CDirectSoundStream
         {
             ulong_xt (WINAPI *AddRef)(X_CDirectSoundStream *pThis);            // 0x00
             ulong_xt (WINAPI *Release)(X_CDirectSoundStream *pThis);           // 0x04
-            
+
             hresult_xt (WINAPI *GetInfo)                                       // 0x08
             (
                 X_CDirectSoundStream*   pThis,
@@ -352,22 +352,22 @@ class X_XFileMediaObject
                 X_XFileMediaObject*     pThis,
                 XMEDIAINFO*             pInfo
             );
-                                                                                                              
+
             hresult_xt (WINAPI *GetStatus)                                     // 0x0C
             (
                 X_XFileMediaObject*     pThis,
                 LPDWORD                 pdwStatus
             );
- 
+
             hresult_xt (WINAPI *Process)                                       // 0x10
             (
                 X_XFileMediaObject*     pThis,
                 PXMEDIAPACKET           pInputBuffer,
                 PXMEDIAPACKET           pOutputBuffer
             );
-           
+
             hresult_xt (WINAPI *Discontinuity)(X_XFileMediaObject *pThis);        // 0x14
-                                                                           
+
             DWORD Unknown7;
 /*
             HRESULT (WINAPI *Flush)(X_XFileMediaObject *pThis);                // 0x18
@@ -375,8 +375,8 @@ class X_XFileMediaObject
             hresult_xt (WINAPI *Seek)                                            // 0x1C
             (
                 X_XFileMediaObject*     pThis,
-                long_xt                    lOffset, 
-                dword_xt                   dwOrigin, 
+                long_xt                    lOffset,
+                dword_xt                   dwOrigin,
                 LPDWORD                 pdwAbsolute
             );
 /*
@@ -850,7 +850,7 @@ xbox::ulong_xt WINAPI EMUPATCH(CDirectSoundStream_Release)(X_CDirectSoundStream 
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_GetInfo)
 (
-    X_CDirectSoundStream*    pThis, 
+    X_CDirectSoundStream*    pThis,
     LPXMEDIAINFO            pInfo
 );
 
@@ -1313,7 +1313,7 @@ xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetMode)
     dword_xt                   dwMode,
     dword_xt                   dwApply
 );
-    
+
 // ******************************************************************
 // * patch: XAudioDownloadEffectsImage
 // ******************************************************************
@@ -1356,7 +1356,7 @@ xbox::hresult_xt WINAPI EMUPATCH(IDirectSound_GetCaps)
 // * patch: CDirectSoundStream_SetPitch
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(CDirectSoundStream_SetPitch)
-(    
+(
     X_CDirectSoundStream*   pThis,
     long_xt                    lPitch
 );
@@ -1565,7 +1565,7 @@ xbox::hresult_xt WINAPI EMUPATCH(XFileMediaObject_GetInfo)
 xbox::hresult_xt WINAPI EMUPATCH(XFileMediaObject_Process)
 (
     X_XFileMediaObject       *pThis,
-    LPXMEDIAPACKET            pInputBuffer, 
+    LPXMEDIAPACKET            pInputBuffer,
     LPXMEDIAPACKET            pOutputBuffer
 );
 

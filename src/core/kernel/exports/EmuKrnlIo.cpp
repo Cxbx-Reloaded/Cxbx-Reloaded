@@ -265,7 +265,7 @@ XBSYSAPI EXPORTNUM(66) xbox::ntstatus_xt NTAPI xbox::IoCreateFile
 		DesiredAccess |= SYNCHRONIZE;
 	}
 
-	// Force ShareAccess to all 
+	// Force ShareAccess to all
 	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
     if (SUCCEEDED(ret))
@@ -283,7 +283,7 @@ XBSYSAPI EXPORTNUM(66) xbox::ntstatus_xt NTAPI xbox::IoCreateFile
             CreateOptions,
             NULL,
             0);
-        
+
         if (CxbxDebugger::CanReport())
         {
             CxbxDebugger::ReportFileOpened(*FileHandle, nativeObjectAttributes.NtUnicodeString.Buffer, SUCCEEDED(ret));
@@ -568,7 +568,7 @@ XBSYSAPI EXPORTNUM(80) xbox::cchar_xt NTAPI xbox::IoSetShareAccess
 	xbox::cchar_xt ret = 0; // ShareAccess->OpenCount;
 
 	LOG_UNIMPLEMENTED();
-	
+
 	RETURN(ret);
 }
 

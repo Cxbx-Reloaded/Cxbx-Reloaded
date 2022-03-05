@@ -38,7 +38,7 @@ struct _GloContext {
   CGLContextObj     cglContext;
 };
 
-/* Create an OpenGL context for a certain pixel format. formatflags are from 
+/* Create an OpenGL context for a certain pixel format. formatflags are from
  * the GLO_ constants */
 GloContext *glo_context_create(void)
 {

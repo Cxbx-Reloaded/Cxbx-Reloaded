@@ -36,7 +36,7 @@ namespace CxbxDebugger
             // The MainProcess is also treated as a module
             if( (uint)MainProcess.ImageBase == AddressLookup[Result] )
                 return MainProcess;
-        
+
             return MainProcess.Modules.Find(Module => (uint)Module.ImageBase == AddressLookup[Result]);
         }
 

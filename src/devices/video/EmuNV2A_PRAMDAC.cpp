@@ -54,14 +54,14 @@ DEVICE_READ32(PRAMDAC)
 			| NV_PRAMDAC_PLL_TEST_COUNTER_VPLL_LOCK;
 		break;
 
-	default: 
+	default:
 		//DEVICE_READ32_REG(pramdac); // Was : DEBUG_READ32_UNHANDLED(PRAMDAC);
 		break;
 	}
 
     /* Surprisingly, QEMU doesn't handle unaligned access for you properly */
     // result >>= 32 - 8 * size - 8 * (addr & 3);
-	
+
 	DEVICE_READ32_END(PRAMDAC);
 }
 
@@ -92,7 +92,7 @@ DEVICE_WRITE32(PRAMDAC)
 		d->pramdac.video_clock_coeff = value;
 		break;
 
-	default: 
+	default:
 		DEVICE_WRITE32_REG(pramdac); // Was : DEBUG_WRITE32_UNHANDLED(PRAMDAC);
 		break;
 	}

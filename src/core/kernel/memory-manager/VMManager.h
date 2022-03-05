@@ -147,7 +147,7 @@ class VMManager : public PhysicalMemory
 		// saves all persisted memory just before a quick reboot
 		void SavePersistentMemory();
 
-	
+
 	private:
 		// an array of structs used to track the free/allocated vma's in the various memory regions
 		MemoryRegion m_MemoryRegionArray[COUNTRegion];

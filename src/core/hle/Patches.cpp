@@ -445,7 +445,7 @@ inline void EmuInstallPatch(const std::string FunctionName, const xbox::addr_xt 
 	else {
 		printf("HLE: %s Patch Failed\n", FunctionName.c_str());
 	}
-	
+
 }
 
 void EmuInstallPatches()

@@ -178,7 +178,7 @@ public:
     }
 };
 
-void CDECL EmuOutputMessage(xb_output_message mFlag, 
+void CDECL EmuOutputMessage(xb_output_message mFlag,
                             const char* message)
 {
     switch (mFlag) {

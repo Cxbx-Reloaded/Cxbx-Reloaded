@@ -141,7 +141,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 # Windows libraries
-set(WINS_LIB 
+set(WINS_LIB
  legacy_stdio_definitions
  d3d9
  d3dcompiler

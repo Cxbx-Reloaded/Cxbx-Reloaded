@@ -39,7 +39,7 @@ void AC97Device::Init()
 	m_DeviceId = 0x01B1;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 }
-	
+
 void AC97Device::Reset()
 {
 

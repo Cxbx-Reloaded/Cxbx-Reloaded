@@ -141,7 +141,7 @@ IMPORT(RtlTimeToTimeFields);
 IMPORT(RtlTryEnterCriticalSection);
 IMPORT(RtlUlongByteSwap);
 IMPORT(RtlUnicodeStringToAnsiString);
-IMPORT(RtlUnicodeStringToInteger); 
+IMPORT(RtlUnicodeStringToInteger);
 IMPORT(RtlUnicodeToMultiByteN);
 IMPORT(RtlUnicodeToMultiByteSize);
 IMPORT(RtlUpcaseUnicodeChar);

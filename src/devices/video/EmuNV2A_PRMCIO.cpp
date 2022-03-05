@@ -44,7 +44,7 @@ DEVICE_READ32(PRMCIO)
 	case VGA_CRT_DM:
 	case VGA_CRT_DC:
 		result = d->prmcio.cr[d->prmcio.cr_index];
-	
+
 		printf("vga: read CR%x = 0x%02x\n", d->prmcio.cr_index, result);
 		break;
 	default:

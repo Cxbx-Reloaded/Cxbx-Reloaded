@@ -244,7 +244,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 		Lock();
 
 		PoolDesc->RunningDeAllocs += 1;
-		
+
 		BigPages = g_VMManager.DeallocateSystemMemory(PoolType, addr, 0);
 
 		PoolDesc->TotalBigPages -= BigPages;
@@ -302,7 +302,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 			Entry = NextEntry;
 		}
 	}
-	
+
 	if (CHECK_ALIGNMENT(reinterpret_cast<VAddr>(Entry), PAGE_SIZE) &&
 		(PAGE_END(reinterpret_cast<PPOOL_BLOCK>(Entry) + Entry->BlockSize) != false)) {
 

@@ -43,7 +43,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   LTC_NO_MISC
   LTC_NO_PROTOTYPES
  )
- 
+
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
  add_compile_options(
   # Catch synchronous (C++) exceptions only
@@ -65,7 +65,7 @@ XXH_INLINE_ALL
 )
 
 file (GLOB RESOURCES
- 
+
  "${CXBXR_ROOT_DIR}/CONTRIBUTORS"
  "${CXBXR_ROOT_DIR}/COPYING"
  "${CXBXR_ROOT_DIR}/README.md"
@@ -92,7 +92,7 @@ source_group(TREE ${CXBXR_ROOT_DIR}/import PREFIX import FILES
  ${CXBXR_SOURCE_EMU_IMPORT}
 )
 
-source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES 
+source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES
  ${CXBXR_SOURCE_GUIv1}
  ${CXBXR_SOURCE_COMMON}
  ${CXBXR_SOURCE_EMU}
@@ -157,7 +157,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   /Qpar \
   "
  )
- 
+
  # disable optimization for CxbxKrnl.cpp file
  set_source_files_properties(
   ${CXBXR_KRNL_CPP} PROPERTIES COMPILE_FLAGS "/Od /GL-"
@@ -165,7 +165,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 # Windows libraries
-set(WINS_LIB 
+set(WINS_LIB
  legacy_stdio_definitions
  d3d9
  d3dcompiler

@@ -309,7 +309,7 @@ typedef enum _X_D3DSET_DEPTH_CLIP_PLANES_FLAGS
     X_D3DSDCP_SET_FIXEDFUNCTION_PLANES         = 2,
     X_D3DSDCP_USE_DEFAULT_VERTEXPROGRAM_PLANES = 3,
     X_D3DSDCP_USE_DEFAULT_FIXEDFUNCTION_PLANES = 4,
-} 
+}
 X_D3DSET_DEPTH_CLIP_PLANES_FLAGS;
 
 #define X_D3DPRESENTFLAG_LOCKABLE_BACKBUFFER      0x00000001
@@ -652,14 +652,14 @@ typedef struct _D3DVBLANKDATA
 }
 X_D3DVBLANKDATA;
 
-typedef struct _D3DSWAPDATA 
+typedef struct _D3DSWAPDATA
 {
     DWORD           Swap;
     DWORD           SwapVBlank;
     DWORD           MissedVBlanks;
     DWORD           TimeUntilSwapVBlank;
     DWORD           TimeBetweenSwapVBlanks;
-} 
+}
 X_D3DSWAPDATA;
 
 typedef enum _X_D3DSWAP
@@ -1134,7 +1134,7 @@ typedef struct _X_STREAMINPUT
 
 struct X_D3DVertexShader3948
 {
-#if 0 
+#if 0
 	DWORD Signature; // Note : Debug XBE's have a 'Vshd' DWORD signature prefix
 #endif
 	DWORD RefCount; // Based on the observation this member is set to 1 in D3DDevice_CreateVertexShader and decreased in D3DDevice_DeleteVertexShader
@@ -1151,7 +1151,7 @@ struct X_D3DVertexShader3948
 
 struct X_D3DVertexShader
 {
-#if 0 
+#if 0
 	DWORD Signature; // Note : Debug XBE's have a 'Vshd' DWORD signature prefix
 #endif
 	DWORD RefCount; // Based on the observation this member is set to 1 in D3DDevice_CreateVertexShader and decreased in D3DDevice_DeleteVertexShader
@@ -1164,7 +1164,7 @@ struct X_D3DVertexShader
 };
 
 // X_D3DVertexShader.Flags values :
-#define X_VERTEXSHADER_FLAG_WRITE           (1 <<  0) // = 0x0001 // Set for Xbox ShaderType != X_VST_NORMAL 
+#define X_VERTEXSHADER_FLAG_WRITE           (1 <<  0) // = 0x0001 // Set for Xbox ShaderType != X_VST_NORMAL
 #define X_VERTEXSHADER_FLAG_PASSTHROUGH     (1 <<  1) // = 0x0002
 #define X_VERTEXSHADER_FLAG_STATE           (1 <<  3) // = 0x0008 // Set for Xbox ShaderType == X_VST_STATE
 #define X_VERTEXSHADER_FLAG_PROGRAM         (1 <<  4) // = 0x0010 // Set when X_D3DVertexShader was created with assigned function data; introduced after XDK 3948; don't use directly, use g_X_VERTEXSHADER_FLAG_PROGRAM instead

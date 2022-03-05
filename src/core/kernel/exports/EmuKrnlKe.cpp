@@ -90,7 +90,7 @@ namespace NtDll
 #include <windows.h>
 #include <map>
 
-// Copied over from Dxbx. 
+// Copied over from Dxbx.
 // TODO : Move towards thread-simulation based Dpc emulation
 typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
@@ -131,7 +131,7 @@ xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 
 // ******************************************************************
 // * EmuKeGetPcr()
-// * NOTE: This is a macro on the Xbox, however we implement it 
+// * NOTE: This is a macro on the Xbox, however we implement it
 // * as a function so it can suit our emulated KPCR structure
 // ******************************************************************
 xbox::KPCR* WINAPI EmuKeGetPcr()
@@ -297,7 +297,7 @@ void ExecuteDpcQueue()
 	EnterCriticalSection(&(g_DpcData.Lock));
 
 //    if (g_DpcData._fShutdown)
-//        break; // while 
+//        break; // while
 
 //    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
 //    Assert(g_DpcData._dwDpcThreadId == 0);
@@ -449,7 +449,7 @@ XBSYSAPI EXPORTNUM(96) xbox::ntstatus_xt NTAPI xbox::KeBugCheckEx
 		LOG_FUNC_ARG(BugCheckParameter3)
 		LOG_FUNC_ARG(BugCheckParameter4)
 		LOG_FUNC_END;
-	
+
 	static bool KeBugCheckIgnored = false;
 
 	if (KeBugCheckIgnored) {
@@ -474,7 +474,7 @@ XBSYSAPI EXPORTNUM(96) xbox::ntstatus_xt NTAPI xbox::KeBugCheckEx
 	}
 
 	KeBugCheckIgnored = true;
-	
+
 	RETURN(S_OK);
 }
 
@@ -597,7 +597,7 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 XBSYSAPI EXPORTNUM(100) xbox::void_xt NTAPI xbox::KeDisconnectInterrupt
 (
 	IN PKINTERRUPT  InterruptObject
-) 
+)
 {
 	LOG_FUNC_ONE_ARG(InterruptObject);
 
@@ -652,7 +652,7 @@ XBSYSAPI EXPORTNUM(104) xbox::PKTHREAD NTAPI xbox::KeGetCurrentThread(void)
 	// Probably correct, but untested and currently faked in EmuGenerateFS
 	// (to make this correct, we need to improve our thread emulation)
 	KTHREAD *ret = KeGetCurrentPrcb()->CurrentThread;
-	
+
 	RETURN(ret);
 }
 
@@ -763,7 +763,7 @@ XBSYSAPI EXPORTNUM(108) xbox::void_xt NTAPI xbox::KeInitializeEvent
 	Event->Header.Type = Type;
 	Event->Header.Size = sizeof(KEVENT) / sizeof(LONG);
 	Event->Header.SignalState = SignalState;
-	InitializeListHead(&(Event->Header.WaitListHead)); 
+	InitializeListHead(&(Event->Header.WaitListHead));
 }
 
 // ******************************************************************
@@ -787,7 +787,7 @@ XBSYSAPI EXPORTNUM(109) xbox::void_xt NTAPI xbox::KeInitializeInterrupt
 		LOG_FUNC_ARG(Vector)
 		LOG_FUNC_ARG_TYPE(KIRQL_TYPE, Irql)
 		LOG_FUNC_ARG(InterruptMode)
-		LOG_FUNC_ARG(ShareVector) 
+		LOG_FUNC_ARG(ShareVector)
 		LOG_FUNC_END;
 
 	Interrupt->ServiceRoutine = ServiceRoutine;
@@ -801,7 +801,7 @@ XBSYSAPI EXPORTNUM(109) xbox::void_xt NTAPI xbox::KeInitializeInterrupt
 
 	// Interrupt->DispatchCode = []?; //TODO : Populate this interrupt dispatch
 	// code block, patch it up so it works with the address of this Interrupt
-	// struct and calls the right dispatch routine (depending on InterruptMode). 
+	// struct and calls the right dispatch routine (depending on InterruptMode).
 	LOG_INCOMPLETE();
 }
 
@@ -986,7 +986,7 @@ XBSYSAPI EXPORTNUM(115) xbox::boolean_xt NTAPI xbox::KeInsertDeviceQueue
 	BOOLEAN Res = FALSE;
 
 	// We should lock the device queue here
-	
+
 	if (DeviceQueue->Busy == TRUE) {
 		InsertTailList(&DeviceQueue->DeviceListHead, &DeviceQueueEntry->DeviceListEntry);
 		Res = TRUE;
@@ -1252,7 +1252,7 @@ XBSYSAPI EXPORTNUM(125) xbox::ulonglong_xt NTAPI xbox::KeQueryInterruptTime(void
 	// TODO : Some software might call KeQueryInterruptTime often and fill the log quickly,
 	// in which case we should not LOG_FUNC nor RETURN (use normal return instead).
 	LOG_FUNC();
-	
+
 	ULONGLONG ret;
 
 	LARGE_INTEGER InterruptTime;
@@ -1359,7 +1359,7 @@ XBSYSAPI EXPORTNUM(131) xbox::long_xt NTAPI xbox::KeReleaseMutant
 		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
-	
+
 	RETURN(0);
 }
 
@@ -1579,7 +1579,7 @@ XBSYSAPI EXPORTNUM(138) xbox::long_xt NTAPI xbox::KeResetEvent
 	Event->Header.SignalState = 0;
 
 	KiUnlockDispatcherDatabase(OldIrql);
-	return OldState;	
+	return OldState;
 }
 
 // ******************************************************************
@@ -1666,7 +1666,7 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 	const auto &nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
 	LONG ret = GetThreadPriority(*nativeHandle);
 
-	// This would work normally, but it will slow down the emulation, 
+	// This would work normally, but it will slow down the emulation,
 	// don't do that if the priority is higher then normal (so our own)!
 	if (Priority <= THREAD_PRIORITY_NORMAL) {
 		BOOL result = SetThreadPriority(*nativeHandle, Priority);
@@ -1717,7 +1717,7 @@ XBSYSAPI EXPORTNUM(145) xbox::long_xt NTAPI xbox::KeSetEvent
 (
 	IN PRKEVENT		Event,
 	IN KPRIORITY	Increment,
-	IN boolean_xt		Wait	
+	IN boolean_xt		Wait
 )
 {
 	LOG_FUNC_BEGIN
@@ -1899,7 +1899,7 @@ XBSYSAPI EXPORTNUM(150) xbox::boolean_xt NTAPI xbox::KeSetTimerEx
 		// Do some unlinking if already inserted in the linked list
 		KxRemoveTreeTimer(Timer);
 	}
-	
+
 	/* Set Default Timer Data */
 	Timer->Dpc = Dpc;
 	Timer->Period = Period;
@@ -1937,7 +1937,7 @@ XBSYSAPI EXPORTNUM(151) xbox::void_xt NTAPI xbox::KeStallExecutionProcessor
 {
 	LOG_FUNC_ONE_ARG(MicroSeconds);
 
-	// WinAPI Sleep usually sleeps for a minimum of 15ms, we want us. 
+	// WinAPI Sleep usually sleeps for a minimum of 15ms, we want us.
 	// Thanks to C++11, we can do this in a nice way without resorting to
 	// QueryPerformanceCounter
 	std::this_thread::sleep_for(std::chrono::microseconds(MicroSeconds));
@@ -2051,7 +2051,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 	}
 
 	// Wait Loop
-	// This loop ends 
+	// This loop ends
 	PLARGE_INTEGER OriginalTime = Timeout;
 	LARGE_INTEGER DueTime, NewTime;
 	KWAIT_BLOCK StackWaitBlock;
@@ -2123,7 +2123,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 				KiWaitSatisfyAll(WaitBlock);
 				WaitStatus = (NTSTATUS)Thread->WaitStatus;
 				goto NoWait;
-			}	
+			}
 
 			TestForAlertPending(Alertable);
 
@@ -2293,7 +2293,7 @@ XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 	}
 
 	// Wait Loop
-	// This loop ends 
+	// This loop ends
 	PLARGE_INTEGER OriginalTime = Timeout;
 	LARGE_INTEGER DueTime, NewTime;
 	KWAIT_BLOCK StackWaitBlock;

@@ -52,7 +52,7 @@ void EmuExecutePushBuffer
 	xbox::X_D3DFixup            *pFixup
 )
 {
-	//Check whether Fixup exists or not. 
+	//Check whether Fixup exists or not.
 	if (pFixup != xbox::zeroptr) {
 		LOG_TEST_CASE("PushBuffer has fixups");
 		//Interpret address of PushBuffer Data and Fixup Data
@@ -100,7 +100,7 @@ DWORD CxbxGetStrideFromVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDecla
 		// Test-case : Crash 'n' Burn [45530014]
 		// Test-case : CrimsonSea [4B4F0002]
 		// Test-case : Freedom Fighters
-		// Test-case : Hot Wheels Stunt Track Challenge [54510089] 
+		// Test-case : Hot Wheels Stunt Track Challenge [54510089]
 		// Test-case : Inside Pitch 2003 [4D530034]
 		// Test-case : Need for Speed Most Wanted [4541007B]
 		// Test-case : Prince of Persia: The Sands of Time [5553001d]
@@ -145,7 +145,7 @@ void HLE_draw_inline_array(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	//DWORD vertex data array, 
+	//DWORD vertex data array,
 	// To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush.
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
 	// (position followed by weight, normal, diffuse, and so on).
@@ -348,7 +348,7 @@ typedef union {
 				#define COMMAND_FLAGS_NONE                         0
 				#define COMMAND_FLAGS_SLI_CONDITIONAL              1 // (NV40+)
 				#define COMMAND_FLAGS_RETURN                       2
-				#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS  3 // [IB-mode only] 
+				#define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS  3 // [IB-mode only]
 		uint32_t        method_count : 11;       /* 18 .. 28 */
 		uint32_t        instruction  : 3;        /* 29 .. 31 */
 				#define COMMAND_INSTRUCTION_INCREASING_METHODS     0
@@ -444,7 +444,7 @@ extern void EmuExecutePushBufferRaw
 			data_shadow = word;
 #if 0
 			if (!PULLER_KNOWS_MTHD(dma_state.mthd)) {
-				throw DMA_PUSHER(INVALID_MTHD);				
+				throw DMA_PUSHER(INVALID_MTHD);
 				return; // For now, don't even attempt to run through
 			}
 
@@ -575,7 +575,7 @@ const char *NV2AMethodToString(DWORD dwMethod)
 
 #define ENUM_RANGED_ToString_4(Name, Method, Pitch) \
 	ENUM_RANGED_ToString_3(Name, Method, Pitch) \
-	ENUM_RANGED_ToString_N(Name, Method, Pitch, 3) 
+	ENUM_RANGED_ToString_N(Name, Method, Pitch, 3)
 
 #define ENUM_RANGED_ToString_6(Name, Method, Pitch) \
 	ENUM_RANGED_ToString_4(Name, Method, Pitch) \

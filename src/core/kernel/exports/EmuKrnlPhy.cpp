@@ -241,11 +241,11 @@ XBSYSAPI EXPORTNUM(253) xbox::ntstatus_xt NTAPI xbox::PhyInitialize
 	DWORD miiControl, miiStatus;
 	INT timeout;
 	NTSTATUS status = NETERR_HARDWARE;
-	
+
 	if (PhyLock() != 0) {
 		return NETERR(ERROR_BUSY);
 	}
-	
+
 	if (forceReset) {
 		PhyInitFlag = 0;
 		PhyLinkState = 0;

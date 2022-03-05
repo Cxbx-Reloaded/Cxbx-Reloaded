@@ -105,21 +105,21 @@ xbox::int_xt WINAPI EMUPATCH(recv)
 
 xbox::int_xt WINAPI EMUPATCH(bind)
 (
-    SOCKET s, 
-    const struct sockaddr FAR *name, 
+    SOCKET s,
+    const struct sockaddr FAR *name,
     int_xt namelen
 );
 
 xbox::int_xt WINAPI EMUPATCH(listen)
 (
-    SOCKET s, 
+    SOCKET s,
     int_xt backlog
 );
 
 xbox::int_xt WINAPI EMUPATCH(ioctlsocket)
 (
-    SOCKET s, 
-    long cmd, 
+    SOCKET s,
+    long cmd,
     u_long FAR *argp
 );
 

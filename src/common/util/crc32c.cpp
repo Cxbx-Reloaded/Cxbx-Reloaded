@@ -276,9 +276,9 @@ extern "C" CRC32C_API int crc32c_hw_available()
 
 }
 
-void calculate_table() 
+void calculate_table()
 {
-	for(int i = 0; i < 256; i++) 
+	for(int i = 0; i < 256; i++)
 	{
 		uint32_t res = (uint32_t)i;
 		for(int t = 0; t < 16; t++) {
@@ -292,7 +292,7 @@ void calculate_table()
 
 void calculate_table_hw()
 {
-	for(int i = 0; i < 256; i++) 
+	for(int i = 0; i < 256; i++)
 	{
 		uint32_t res = (uint32_t)i;
 		for (int k = 0; k < 8 * (SHORT_SHIFT - 4); k++) res = (res & 1) == 1 ? POLY ^ (res >> 1) : (res >> 1);

@@ -301,7 +301,7 @@ int CxbxGetPartitionNumberFromPath(const std::wstring_view path)
 
 int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
 {
-	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+	// Get which partition number is being accessed, by parsing the filename and extracting the last portion
 	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
 
 	return CxbxGetPartitionNumber(path);
@@ -309,7 +309,7 @@ int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
 
 std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
 {
-	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
+	// Get which partition number is being accessed, by parsing the filename and extracting the last portion
 	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
 
 	std::wstring partitionPath;
@@ -702,8 +702,8 @@ NTSTATUS CxbxConvertFilePath(
 }
 
 NTSTATUS CxbxObjectAttributesToNT(
-	xbox::POBJECT_ATTRIBUTES ObjectAttributes, 
-	OUT NativeObjectAttributes& nativeObjectAttributes, 
+	xbox::POBJECT_ATTRIBUTES ObjectAttributes,
+	OUT NativeObjectAttributes& nativeObjectAttributes,
 	const std::string aFileAPIName,
 	bool partitionHeader)
 {
@@ -850,7 +850,7 @@ xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::stri
 {
 	xbox::ntstatus_xt result = 0;
 	EmuNtSymbolicLinkObject* SymbolicLinkObject = FindNtSymbolicLinkObjectByName(SymbolicLinkName);
-	
+
 	// If symbolic link exist, return object name collsion. Do NOT delete existing symlink object!
 	if (SymbolicLinkObject != NULL) {
 		return X_STATUS_OBJECT_NAME_COLLISION;
@@ -978,7 +978,7 @@ char SymbolicLinkToDriveLetter(std::string SymbolicLinkName)
 			return result + 'A' - 'a';
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -986,7 +986,7 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveL
 {
 	if (DriveLetter >= 'A' && DriveLetter <= 'Z')
 		return NtSymbolicLinkObjects[DriveLetter - 'A'];
-		
+
 	if (DriveLetter >= 'a' && DriveLetter <= 'z')
 		return NtSymbolicLinkObjects[DriveLetter - 'a'];
 
@@ -1022,7 +1022,7 @@ EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handl
 		if ((result != NULL) && (Handle == result->RootDirectoryHandle))
 			return result;
 	}
-	
+
 	return NULL;
 }
 
@@ -1054,7 +1054,7 @@ NtDll::FILE_LINK_INFORMATION * _XboxToNTLinkInfo(xbox::FILE_LINK_INFORMATION *xb
 	ntLinkInfo->RootDirectory = RootDirectory;
 	ntLinkInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);
 	wmemcpy_s(ntLinkInfo->FileName, convertedFileName.size(), convertedFileName.c_str(), convertedFileName.size());
-	
+
 	return ntLinkInfo;
 }
 

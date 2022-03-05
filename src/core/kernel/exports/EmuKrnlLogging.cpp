@@ -367,7 +367,7 @@ LOGRENDER(FILETIME)
 
 LOGRENDER(LARGE_INTEGER)
 {
-	return os 
+	return os
 		LOGRENDER_MEMBER(QuadPart);
 }
 

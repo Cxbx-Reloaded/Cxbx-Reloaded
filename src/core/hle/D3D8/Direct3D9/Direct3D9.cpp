@@ -1097,7 +1097,7 @@ size_t GetXboxResourceSize(xbox::X_D3DResource* pXboxResource)
 		// Fallback to querying the allocation size, if no other calculation was present
 		return xbox::MmQueryAllocationSize(GetDataFromXboxResource(pXboxResource));
 	}
-	
+
 }
 
 bool HostResourceRequiresUpdate(resource_key_t key, xbox::X_D3DResource* pXboxResource, DWORD dwSize)
@@ -1148,7 +1148,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, xbox::X_D3DResource* pXboxRe
 				it->second.hashLifeTime += 10ms;
 			}
 		}
-		
+
 		it->second.forceRehash = false;
 	}
 
@@ -1588,7 +1588,7 @@ bool ConvertD3DTextureToARGBBuffer(
 		unswizleBuffer = (uint8_t*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
 		// First we need to unswizzle the texture data
 		EmuUnswizzleBox(
-			pSrc, SrcWidth, SrcHeight, uiDepth, 
+			pSrc, SrcWidth, SrcHeight, uiDepth,
 			EmuXBFormatBytesPerPixel(X_Format),
 			// Note : use src pitch on dest, because this is an intermediate step :
 			unswizleBuffer, SrcRowPitch, SrcSlicePitch
@@ -1772,7 +1772,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
         g_hEmuWindow = CreateWindow
         (
             "CxbxRender", "Cxbx-Reloaded",
-            dwStyle, 
+            dwStyle,
 			windowRect.left,
 			windowRect.top,
 			windowRect.right - windowRect.left,
@@ -2135,7 +2135,7 @@ std::chrono::steady_clock::time_point GetNextVBlankTime()
 {
 	using namespace std::chrono;
 	// TODO: Read display frequency from Xbox Display Adapter
-	// This is accessed by calling CMiniport::GetRefreshRate(); 
+	// This is accessed by calling CMiniport::GetRefreshRate();
 	// This reads from the structure located at CMinpPort::m_CurrentAvInfo
 	// This will require at least Direct3D_CreateDevice being unpatched
 	// otherwise, m_CurrentAvInfo will never be initialised!
@@ -2348,11 +2348,11 @@ static void DrawInitialBlackScreen
     // Only clear depth buffer and stencil if present
     //
     // Avoids following DirectX Debug Runtime error report
-    //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
+    //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed.
     //
     HRESULT hRet = g_pD3DDevice->Clear(
-        /*Count=*/0, 
-        /*pRects=*/nullptr, 
+        /*Count=*/0,
+        /*pRects=*/nullptr,
         D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
         /*Color=*/0xFF000000, // TODO : Use constant for this
         /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
@@ -2856,7 +2856,7 @@ void SetAspectRatioScale(const xbox::X_D3DPRESENT_PARAMETERS* pPresentationParam
         g_AspectRatioScaleWidth = 1280;
         g_AspectRatioScaleHeight = 720;
     }
-    
+
     const auto imageAspect = (float)g_AspectRatioScaleWidth / (float)g_AspectRatioScaleHeight;
     const auto screenAspect = (float)g_HostBackBufferDesc.Width / (float)g_HostBackBufferDesc.Height;
     g_AspectRatioScale = screenAspect > imageAspect ? (float)g_HostBackBufferDesc.Height / (float)g_AspectRatioScaleHeight : (float)g_HostBackBufferDesc.Width / (float)g_AspectRatioScaleWidth;
@@ -3408,7 +3408,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset)
     // and we'll get a black screen.
 	FreeHostResource(GetHostResourceKey(g_pXbox_BackBufferSurface));
 	FreeHostResource(GetHostResourceKey(g_pXbox_DefaultDepthStencilSurface));
-	
+
 	// Call the Xbox Reset function to do the rest of the work for us
 	hresult_xt hRet = XB_TRMP(D3DDevice_Reset)(pPresentationParameters);
 
@@ -3432,7 +3432,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_
 
 	// Read AV Flags to determine if Progressive or Interlaced
 	// The xbox does this by reading from pDevice->m_Miniport.m_CurrentAvInfo
-	// but we don't have an OOVPA for that. Instead, we call the Xbox implementation of 
+	// but we don't have an OOVPA for that. Instead, we call the Xbox implementation of
 	// D3DDevice_GetDisplayMode and read the result
 
 	X_D3DDISPLAYMODE displayMode;
@@ -3445,7 +3445,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_
 		// We don't show a warning because doing so pollutes the kernel debug log as this function gets called every frame
 		displayMode.Flags = X_D3DPRESENTFLAG_INTERLACED;
 	}
-	
+
 	// Set the VBlank count
 	pFieldStatus->VBlankCount = g_Xbox_VBlankData.VBlank;
 
@@ -3517,7 +3517,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	else
 	{
         // Note: We don't use the count from BeginPush because that specifies the *maximum* count
-        // rather than the count actually in the pushbuffer. 
+        // rather than the count actually in the pushbuffer.
 		EmuExecutePushBufferRaw(g_pXbox_BeginPush_Buffer, (uintptr_t)pPush - (uintptr_t)g_pXbox_BeginPush_Buffer);
 
 		delete[] g_pXbox_BeginPush_Buffer;
@@ -4236,7 +4236,7 @@ float GetZScaleForPixelContainer(xbox::X_D3DPixelContainer* pSurface)
         case xbox::X_D3DFMT_LIN_F24S8:
             // 24bit floating point is close to precision maximum, so a lower value is used
             // We can't use a double here since the vertex shader is only at float precision
-            return 1.0e30f; 
+            return 1.0e30f;
     }
 
     // Default to 1 if unknown depth format
@@ -4970,7 +4970,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 		LOG_FUNC_ARG(pFixup)
 		LOG_FUNC_END;
 
-	EmuExecutePushBuffer(pPushBuffer, pFixup);    
+	EmuExecutePushBuffer(pPushBuffer, pFixup);
 }
 
 // ******************************************************************
@@ -5006,7 +5006,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 			// TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
 			if ((Flags & X_D3DCLEAR_TARGET) != X_D3DCLEAR_TARGET)
 				EmuLog(LOG_LEVEL::WARNING, "Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & X_D3DCLEAR_TARGET);
-		
+
 			HostFlags |= D3DCLEAR_TARGET;
 		}
 
@@ -5021,7 +5021,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 		// Only clear depth buffer and stencil if present
 		//
 		// Avoids following DirectX Debug Runtime error report
-		//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
+		//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed.
 		if (Flags & X_D3DCLEAR_STENCIL) {
 			if (g_bHasStencil)
 				HostFlags |= D3DCLEAR_STENCIL;
@@ -5283,7 +5283,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
             pExistingRenderTarget->Release();
         }
-        
+
         // TODO: Implement a hot-key to change the filter?
         // Note: LoadSurfaceFilter Must be D3DTEXF_NONE, D3DTEXF_POINT or D3DTEXF_LINEAR
         // Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
@@ -5313,7 +5313,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 /* pDestRect = */ &dest,
                 /* Filter = */ LoadSurfaceFilter
             );
-		
+
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
 			}
@@ -5549,11 +5549,11 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	{
 		g_Xbox_SwapData.Swap++;
 
-		if(g_pXbox_SwapCallback != xbox::zeroptr) 
+		if(g_pXbox_SwapCallback != xbox::zeroptr)
 		{
-				
+
 			g_pXbox_SwapCallback(&g_Xbox_SwapData);
-				
+
 		}
 	}
 
@@ -5722,7 +5722,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		// fall through
 	}
 	case xbox::X_D3DRTYPE_VOLUME: {
-		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design) 
+		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design)
 		xbox::X_D3DVolume *pXboxVolume = (XboxResourceType == xbox::X_D3DRTYPE_VOLUME) ? (xbox::X_D3DVolume *)pResource : xbox::zeroptr;
 		xbox::X_D3DVolumeTexture *pParentXboxVolumeTexture = (pXboxVolume) ? (xbox::X_D3DVolumeTexture *)pXboxVolume->Parent : xbox::zeroptr;
 		if (pParentXboxVolumeTexture) {
@@ -6178,7 +6178,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// Unswizzle the texture data into the host texture
 					EmuUnswizzleBox(
 						pSrc, pxMipWidth, pxMipHeight, pxMipDepth,
-						dwBPP, 
+						dwBPP,
 						pDst, dwDstRowPitch, dwDstSlicePitch
 					);
 				}
@@ -6611,7 +6611,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay)
 )
 {
 	LOG_FUNC_ONE_ARG(Enable);
-	
+
 	// The Xbox D3DDevice_EnableOverlay call merely resets the active
 	// NV2A overlay state, it doesn't actually enable or disable anything.
 	// Thus, we should just reset our overlay state here too. A title will
@@ -6667,7 +6667,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_UpdateOverlay)
 // ******************************************************************
 xbox::bool_xt WINAPI xbox::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
 {
-	LOG_FUNC();    
+	LOG_FUNC();
 
 	LOG_UNIMPLEMENTED();
 
@@ -6696,7 +6696,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 {
 	LOG_FUNC_ONE_ARG(pCallback);
 
-    g_pXbox_VerticalBlankCallback = pCallback;    
+    g_pXbox_VerticalBlankCallback = pCallback;
 }
 
 
@@ -6749,7 +6749,7 @@ void CxbxImpl_SetTransform
 	auto d3d9State = EmuXB2PC_D3DTS(State);
 
     HRESULT hRet = g_pD3DDevice->SetTransform(d3d9State, pMatrix);
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");    
+    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTransform");
 }
 
 // MultiplyTransform should call SetTransform, we'd like to know if it didn't
@@ -6793,7 +6793,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__
     __asm {
         LTCG_PROLOGUE
         mov  State, eax
-        mov  pMatrix, edx   
+        mov  pMatrix, edx
     }
 
 	// Log + implementation
@@ -7869,7 +7869,7 @@ void CxbxHandleXboxCallbacks()
 // when the GPU processes these commands.
 // The type X_D3DCALLBACK_WRITE callbacks are prefixed with an
 // wait-for-idle command, but otherwise they're identical.
-// (Software handlers are triggered on NV2A via NV097_NO_OPERATION) 
+// (Software handlers are triggered on NV2A via NV097_NO_OPERATION)
 void CxbxImpl_InsertCallback
 (
 	xbox::X_D3DCALLBACKTYPE	Type,
@@ -8061,7 +8061,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 				// test-case : Call of Duty: Finest Hour
 				// test-case : Flight academy
 				// test-case : FIFA World Cup 2002
-				// test-case : GENMA ONIMUSHA 
+				// test-case : GENMA ONIMUSHA
 				// test-case : Halo - Combat Evolved
 				// test-case : Harry Potter and the Sorcerer's Stone
 				// test-case : Heroes of the Pacific
@@ -8357,7 +8357,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 	d3d8LightState.Lights[Index] = *pLight;
 
     HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");
 
     return hRet;
 }
@@ -8401,7 +8401,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 	d3d8LightState.EnableLight(Index, bEnable);
 
     HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");
 
     return hRet;
 }
@@ -8783,7 +8783,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetShaderConstantMode)
 )
 {
 	LOG_FUNC_ONE_ARG(pMode);
-        
+
     if(pMode)
     {
         *pMode = g_Xbox_VertexShaderConstantMode;
@@ -8899,7 +8899,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 	// If pData is assigned, pData[0..3] is pushed towards nv2a transform data registers
 	// then sends the nv2a a command to launch the vertex shader function located at Address
 
-    LOG_UNIMPLEMENTED(); 
+    LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -8951,7 +8951,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 
         case X_D3DSDCP_SET_FIXEDFUNCTION_PLANES:
         {
-            // Sets the depth-clipping planes used whenever the fixed-function pipeline is in use. 
+            // Sets the depth-clipping planes used whenever the fixed-function pipeline is in use.
             // TODO
 
             // pDevice->fNear = Near
@@ -8961,15 +8961,15 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 
         case X_D3DSDCP_USE_DEFAULT_VERTEXPROGRAM_PLANES:
         {
-            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_VERTEXPROGRAM_PLANE. 
-            // Direct3D will resume using its own internally calculated clip planes when vertex shader programs are active. 
+            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_VERTEXPROGRAM_PLANE.
+            // Direct3D will resume using its own internally calculated clip planes when vertex shader programs are active.
             // TODO
         }
         break;
 
         case X_D3DSDCP_USE_DEFAULT_FIXEDFUNCTION_PLANES:
         {
-            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_FIXEDFUNCTION_PLANES. 
+            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_FIXEDFUNCTION_PLANES.
             // Direct3D will resume using its own internally calculated clip planes when the fixed-function pipeline is active.
             // TODO
         }
@@ -8981,7 +8981,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 
     // TODO
 
-    
+
 
     return hRet;
 }
@@ -9143,7 +9143,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 	LOG_FUNC_ONE_ARG(pProjectionViewport);
 
 	// blueshogun96 1/25/10
-	// It's been almost 3 years, but I think this is a better 
+	// It's been almost 3 years, but I think this is a better
 	// implementation.  Still probably not right, but better
 	// then before.
 
@@ -9199,7 +9199,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateVB)(ulong_xt Unknown1 )
 	// TODO: Anything?
 //	__asm int 3;
 
-	LOG_UNIMPLEMENTED();	
+	LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -9213,7 +9213,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP)()
 
 	// TODO: Anything?
 //	__asm int 3;
-	
+
 }
 
 // ******************************************************************
@@ -9290,8 +9290,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 (
-	CONST D3DMATRIX *pModelView, 
-	CONST D3DMATRIX *pInverseModelView, 
+	CONST D3DMATRIX *pModelView,
+	CONST D3DMATRIX *pInverseModelView,
 	CONST D3DMATRIX *pComposite
 )
 {
@@ -9344,7 +9344,7 @@ void WINAPI xbox::EMUPATCH(D3D_SetCommonDebugRegisters)()
 	LOG_FUNC();
 
 	// NOTE: I added this because I was too lazy to deal with emulating certain render
-	// states that use it.  
+	// states that use it.
 
 	LOG_UNIMPLEMENTED();
 
@@ -9462,7 +9462,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 	LOG_FORWARD("D3DDevice_SetRenderTarget");
 
 	// Redirect to the standard version.
-	
+
 	EMUPATCH(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
 }
 

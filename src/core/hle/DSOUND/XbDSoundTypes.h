@@ -66,7 +66,7 @@ typedef const WAVEFORMATEX *LPCWAVEFORMATEX;
 #define XDSMIXBIN_BACK_LEFT         4
 #define XDSMIXBIN_BACK_RIGHT        5
 #define XDSMIXBIN_SPEAKERS_MAX      6 // Max count for speakers
-// Other flags are used 
+// Other flags are used
 
 // ******************************************************************
 // * X_DSMIXBINVOLUMEPAIR
@@ -315,7 +315,7 @@ struct X_DSOUTPUTLEVELS
 // * X_DSCAPS
 // ******************************************************************
 struct X_DSCAPS
-{                                                       
+{
     dword_xt dwFree2DBuffers;
     dword_xt dwFree3DBuffers;
     dword_xt dwFreeBufferSGEs;

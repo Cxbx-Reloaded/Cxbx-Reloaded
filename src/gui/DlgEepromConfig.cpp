@@ -237,7 +237,7 @@ static void RefreshEepromDialog(HWND hWndDlg)
 
 	// Set window icon
 	SetClassLong(hWndDlg, GCL_HICON, (LONG)LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_CXBX)));
-	
+
 	// Initialize hide sensitive inputs
 	if (g_sensitive_char == 0) {
 		g_sensitive_char = (int)SendMessageW(GetDlgItem(hWndDlg, IDC_EE_PRTL_PASS), EM_GETPASSWORDCHAR, 0, 0 );
@@ -514,7 +514,7 @@ INT_PTR CALLBACK DlgEepromConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPA
 							SendMessage(hEditControl, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(Text.c_str()));
 							delete[] pBuffer; pBuffer = nullptr;
 						}
-						
+
 						// Hide inactive sensitive input
 						for (auto i : g_sensitive_inputs) {
 							if (i == LOWORD(wParam)) {

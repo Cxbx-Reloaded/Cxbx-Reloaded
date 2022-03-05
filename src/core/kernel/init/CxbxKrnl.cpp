@@ -298,7 +298,7 @@ void PrintCurrentConfigurationLog()
 	}
 
 	EmuLogInit(LOG_LEVEL::INFO, "------------------------- END OF CONFIG LOG ------------------------");
-	
+
 }
 
 #if 0
@@ -1154,7 +1154,7 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	if (EEPROM == nullptr)
 	{
 		PopupFatal(nullptr, "Couldn't init EEPROM!");
-		return; // TODO : Halt(0); 
+		return; // TODO : Halt(0);
 	}
 
 	// TODO : Instead of loading an Xbe here, initialize the kernel so that it will launch the Xbe on itself.
@@ -1183,8 +1183,8 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		EntryPoint ^= XOR_EP_KEY[to_underlying(CxbxKrnl_Xbe->GetXbeType())];
 		// Launch XBE
 		CxbxrKrnlInit(
-			XbeTlsData, 
-			XbeTls, 
+			XbeTlsData,
+			XbeTls,
 			CxbxKrnl_Xbe->m_LibraryVersion,
 			(Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr,
 			CxbxKrnl_Xbe->m_Header.dwSizeofHeaders,
@@ -1409,7 +1409,7 @@ static void CxbxrKrnlInitHacks()
 		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
 	}
 	xbox::KiInitSystem();
-	
+
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
 	CxbxInitWindow(true);
@@ -1463,7 +1463,7 @@ static void CxbxrKrnlInitHacks()
 		EmuLogInit(LOG_LEVEL::DEBUG, "Initializing Direct3D.");
 		EmuD3DInit();
 	}
-	
+
 	if (CxbxDebugger::CanReport())
 	{
 		CxbxDebugger::ReportDebuggerInit(CxbxKrnl_Xbe->m_szAsciiTitle);
@@ -1481,7 +1481,7 @@ static void CxbxrKrnlInitHacks()
 	}
 
 	if(!g_SkipRdtscPatching)
-	{ 
+	{
 		PatchRdtscInstructions();
 	}
 
@@ -1568,7 +1568,7 @@ void CxbxrKrnlSuspendThreads()
 
 	// Don't use EmuKeGetPcr because that asserts kpcr
 	xbox::KPCR* Pcr = reinterpret_cast<xbox::PKPCR>(__readfsdword(TIB_ArbitraryDataSlot));
-	
+
 	// If there's nothing in list entry, skip this step.
 	if (!ThreadListEntry) {
 		return;

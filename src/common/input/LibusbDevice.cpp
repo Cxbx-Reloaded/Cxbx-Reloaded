@@ -158,7 +158,7 @@ namespace Libusb
 	{
 		m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
 
-		// The SBC's VID and PID are taken from https://xboxdevwiki.net/Xbox_Input_Devices#Steel_Battalion_Controller 
+		// The SBC's VID and PID are taken from https://xboxdevwiki.net/Xbox_Input_Devices#Steel_Battalion_Controller
 		if ((Desc->idVendor == 0x0a7b) && (Desc->idProduct == 0xd000)) {
 			m_Type = XBOX_INPUT_DEVICE::HW_STEEL_BATTALION_CONTROLLER;
 			m_UcType = XINPUT_DEVTYPE_STEELBATTALION;

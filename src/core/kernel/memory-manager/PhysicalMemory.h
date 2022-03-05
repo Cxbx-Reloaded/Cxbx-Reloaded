@@ -219,7 +219,7 @@ class PhysicalMemory
 		bool m_MmLayoutDebug = false;
 		bool m_MmLayoutRetail = false;
 
-	
+
 		// protected constructor so PhysicalMemory can only be inherited from
 		PhysicalMemory() {};
 		// destructor

@@ -71,12 +71,10 @@ DEVICE_WRITE32(PMC)
 		update_irq(d);
 		break;
 
-	default: 
+	default:
 		//DEVICE_WRITE32_REG(pmc); // Was : DEBUG_WRITE32_UNHANDLED(PMC);
 		break;
 	}
 
 	DEVICE_WRITE32_END(PMC);
 }
-
-

@@ -125,11 +125,11 @@ typedef struct _XID_TYPE_INFORMATION
 // ******************************************************************
 // * XDEVICE_PREALLOC_TYPE
 // ******************************************************************
-typedef struct _XDEVICE_PREALLOC_TYPE 
+typedef struct _XDEVICE_PREALLOC_TYPE
 {
     PXPP_DEVICE_TYPE DeviceType;
     xbox::dword_xt            dwPreallocCount;
-} 
+}
 XDEVICE_PREALLOC_TYPE, *PXDEVICE_PREALLOC_TYPE;
 
 #pragma pack(1)
@@ -202,7 +202,7 @@ typedef struct _XINPUT_CAPABILITIES
 XINPUT_CAPABILITIES, *PXINPUT_CAPABILITIES;
 
 // ******************************************************************
-// * Device XBOX Input Device Types 
+// * Device XBOX Input Device Types
 // ******************************************************************
 // all game controller use 0x01 GAMEPAD device type. then specify the subtype in returned Capabilities when XInputGetCapabilities called.
 #define XINPUT_DEVTYPE_GAMEPAD              0x01
@@ -342,7 +342,7 @@ XCALCSIG_SIGNATURE, *PXCALCSIG_SIGNATURE;
 // ******************************************************************
 #define MAX_LAUNCH_DATA_SIZE	1024 * 3
 
-typedef struct _LAUNCH_DATA 
+typedef struct _LAUNCH_DATA
 {
 	xbox::byte_xt	Data[MAX_LAUNCH_DATA_SIZE];
 }
@@ -600,7 +600,7 @@ xbox::void_xt WINAPI EMUPATCH(DeleteFiber)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(SwitchToFiber)
 (
-	LPVOID lpFiber 
+	LPVOID lpFiber
 );
 
 // ******************************************************************
@@ -703,7 +703,7 @@ MMRESULT WINAPI EMUPATCH(timeSetEvent)
 // ******************************************************************
 MMRESULT WINAPI EMUPATCH(timeKillEvent)
 (
-	uint_xt uTimerID  
+	uint_xt uTimerID
 );
 
 // ******************************************************************

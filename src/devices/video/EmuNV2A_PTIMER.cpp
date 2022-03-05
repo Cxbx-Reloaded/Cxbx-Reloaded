@@ -71,7 +71,7 @@ DEVICE_READ32(PTIMER)
 	case NV_PTIMER_TIME_1:
 		result = (ptimer_get_clock(d) >> 27) & 0x1fffffff;
 		break;
-	default: 
+	default:
 		result = 0;
 		//DEVICE_READ32_REG(ptimer); // Was : DEBUG_READ32_UNHANDLED(PTIMER);
 		break;
@@ -102,7 +102,7 @@ DEVICE_WRITE32(PTIMER)
 	case NV_PTIMER_ALARM_0:
 		d->ptimer.alarm_time = value;
 		break;
-	default: 
+	default:
 		//DEVICE_WRITE32_REG(ptimer); // Was : DEBUG_WRITE32_UNHANDLED(PTIMER);
 		break;
 	}

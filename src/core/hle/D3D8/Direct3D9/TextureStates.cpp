@@ -224,7 +224,7 @@ void XboxTextureStateConverter::Apply()
                             PcValue = D3DTEXF_ANISOTROPIC;
                             break;
                         case xbox::X_D3DTEXF_GAUSSIANCUBIC: // = 5 // Xbox extension, different cubic kernel
-                            // Direct3D 9 alternatives : 
+                            // Direct3D 9 alternatives :
                             // D3DTEXF_PYRAMIDALQUAD = 6,    // 4-sample tent
                             // D3DTEXF_GAUSSIANQUAD = 7,    // 4-sample gaussian
                             // D3DTEXF_CONVOLUTIONMONO = 8,    // Convolution filter for monochrome textures

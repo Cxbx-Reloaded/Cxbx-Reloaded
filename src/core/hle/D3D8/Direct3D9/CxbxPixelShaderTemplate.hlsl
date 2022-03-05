@@ -34,7 +34,7 @@ struct PS_OUTPUT
 #define s_neg(x)                (-x)        // PS_INPUTMAPPING_SIGNED_NEGATE=     0xe0L, // invalid for final combiner // Negate
 
 // Destination register modifier macro's, based on enum PS_COMBINEROUTPUT :
-#define d_ident(x) x              // PS_COMBINEROUTPUT_IDENTITY=            0x00L, // 
+#define d_ident(x) x              // PS_COMBINEROUTPUT_IDENTITY=            0x00L, //
 #define d_bias(x) (x - 0.5)       // PS_COMBINEROUTPUT_BIAS=                0x08L, // Subtracts 0.5 from outputs
 #define d_x2(x)  ( x        * 2)  // PS_COMBINEROUTPUT_SHIFTLEFT_1=         0x10L, // Scales outputs by 2
 #define d_bx2(x) ((x - 0.5) * 2)  // PS_COMBINEROUTPUT_SHIFTLEFT_1_BIAS=    0x18L, // Subtracts 0.5 from outputs and scales by 2
@@ -148,7 +148,7 @@ R"DELIMITER(
 #define xmmc(d0, d1, d2,  s0, s1, s2, s3, m, tmp) tmp = d0 = m(s0 * s1); d1 = m(s2 * s3); d2 = FCS_MUX ? d1 : tmp // PS_COMBINEROUTPUT_AB_CD_MUX=           0x04L, // 3rd output is MUX(AB,CD) based on R0.a
 
 #define xdm(d0, d1,  s0, s1, s2, s3, m) d0 = m(dot(s0 , s1)); d1 = m(    s2 * s3 )                                // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x00L,
-#define xdd(d0, d1,  s0, s1, s2, s3, m) d0 = m(dot(s0 , s1)); d1 = m(dot(s2 , s3))                                // PS_COMBINEROUTPUT_CD_DOT_PRODUCT=      0x01L, // RGB only // PS_COMBINEROUTPUT_AB_MULTIPLY=         0x00L, 
+#define xdd(d0, d1,  s0, s1, s2, s3, m) d0 = m(dot(s0 , s1)); d1 = m(dot(s2 , s3))                                // PS_COMBINEROUTPUT_CD_DOT_PRODUCT=      0x01L, // RGB only // PS_COMBINEROUTPUT_AB_MULTIPLY=         0x00L,
 #define xmd(d0, d1,  s0, s1, s2, s3, m) d0 = m(    s0 * s1 ); d1 = m(dot(s2 , s3))                                // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x01L,
 
 // After the register combiner stages, there's one (optional) final combiner step, consisting of 4 parts;
@@ -167,7 +167,7 @@ R"DELIMITER(
 
 // GLSL : https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/mix.xhtml
 //  mix(x,  y,  a )  x*(1-a ) +  y*a
-// 
+//
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
@@ -317,7 +317,7 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 /*-123 texreg2ar    */ #define PS_TEXTUREMODES_DPNDNT_AR(ts)                                          s = src(ts).arg;     v = Sample2D(ts, s); t[ts] = v // TODO : Test [1]
 /*-123 texreg2bg    */ #define PS_TEXTUREMODES_DPNDNT_GB(ts)                                          s = src(ts).gba;     v = Sample2D(ts, s); t[ts] = v // TODO : Test [1]
 // TODO replace dm with dot_[ts]? Confirm BumpDemo 'Cubemap only' modes
-/*-12- texm3x2pad   */ #define PS_TEXTUREMODES_DOTPRODUCT(ts)           CalcDot(ts);                                       v = float4(dm, 0);   t[ts] = v // TODO : Test all dot mapping (setting texture register, in case it gets read - test-case : BumpDemo) 
+/*-12- texm3x2pad   */ #define PS_TEXTUREMODES_DOTPRODUCT(ts)           CalcDot(ts);                                       v = float4(dm, 0);   t[ts] = v // TODO : Test all dot mapping (setting texture register, in case it gets read - test-case : BumpDemo)
 /*---3 texm3x3spec  */ #define PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST(ts) CalcDot(ts); n = Normal3(ts); s = Reflect(n, C0);  v = Sample6F(ts, s); t[ts] = v // TODO : Test
 // [1] Note : 3rd component set to s.z is just an (ignored) placeholder to produce a float3 (made unique, to avoid the potential complexity of repeated components)
 

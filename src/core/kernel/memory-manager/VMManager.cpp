@@ -2306,7 +2306,7 @@ VMAIter VMManager::MergeAdjacentVMA(VMAIter vma_handle, MemoryRegionType Type)
 
 void VMManager::UpdateMemoryPermissions(VAddr addr, size_t Size, DWORD Perms)
 {
-	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag 
+	// PAGE_WRITECOMBINE/PAGE_NOCACHE are not allowed for shared memory, unless SEC_WRITECOMBINE/SEC_NOCACHE flag
 	// was specified when calling the CreateFileMapping function. Considering that Cxbx doesn't emulate the caches,
 	// it's probably safe to ignore these flags
 

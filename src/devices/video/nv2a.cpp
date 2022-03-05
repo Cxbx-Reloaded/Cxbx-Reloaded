@@ -20,7 +20,7 @@
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
-// * 
+// *
 // *  This file is heavily based on code from XQEMU
 // *  https://github.com/xqemu/xqemu/blob/master/hw/xbox/nv2a/nv2a.c
 // *  Copyright (c) 2012 espes
@@ -163,7 +163,7 @@ static void update_irq(NV2AState *d)
 #define DEBUG_WRITE32_UNHANDLED(DEV) { EmuLog(LOG_LEVEL::DEBUG, "Wr32 NV2A " #DEV "(0x%08X, 0x%08X) [Unhandled %s]", addr, value, DebugNV_##DEV(addr)); return; }
 
 #define DEVICE_READ32(DEV) uint32_t EmuNV2A_##DEV##_Read32(NV2AState *d, xbox::addr_xt addr)
-#define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr) 
+#define DEVICE_READ32_SWITCH() uint32_t result = 0; switch (addr)
 #define DEVICE_READ32_REG(dev) result = d->dev.regs[addr]
 #define DEVICE_READ32_END(DEV) DEBUG_READ32(DEV); return result
 
@@ -326,7 +326,7 @@ void _check_gl_reset()
 {
 	while (true) {
 		GLenum err = glGetError();
-		if (err == GL_NO_ERROR) 
+		if (err == GL_NO_ERROR)
 			return;
 		if (err == 0)
 			return;
@@ -983,7 +983,7 @@ void cxbx_gl_render_overlays(NV2AState *d)
 		glUseProgram(Get_YUV_to_RGB_shader_program());
 		GL_CHECK();
 
-		// Attach texture #0 to the shader sampler location 
+		// Attach texture #0 to the shader sampler location
 		glUniform1i(m_overlay_gl_uniform_location_texture, SAMP_TEXCOORD);
 		GL_CHECK();
 
@@ -1067,7 +1067,7 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 	GL_CHECK();
 
 	// Is either overlay fullscreen ?
-	if (d->pvideo.overlays[0].covers_framebuffer 
+	if (d->pvideo.overlays[0].covers_framebuffer
 	 || d->pvideo.overlays[1].covers_framebuffer) {
 		// Then the framebuffer won't be visible anyway, so doesn't have to be rendered
 	} else {
@@ -1176,7 +1176,7 @@ void NV2ADevice::Init()
 	// Register physical memory on bar 1
 	r.Memory.address = 0xF0000000 >> 4;
 	RegisterBAR(1, g_SystemMaxMemory, r.value);
-	
+
 	m_DeviceId = 0x02A5;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 
@@ -1251,11 +1251,11 @@ uint32_t NV2ADevice::BlockRead(const NV2ABlockInfo* block, uint32_t addr, unsign
 	case sizeof(uint8_t) :
 		return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFF;
 	case sizeof(uint16_t) :
-		assert((addr & 1) == 0); // TODO : What if this fails?	
+		assert((addr & 1) == 0); // TODO : What if this fails?
 
 		return block->ops.read(m_nv2a_state, addr - block->offset) & 0xFFFF;
 	case sizeof(uint32_t) :
-		assert((addr & 3) == 0); // TODO : What if this fails?	
+		assert((addr & 3) == 0); // TODO : What if this fails?
 
 		return block->ops.read(m_nv2a_state, addr - block->offset);
 	default:
@@ -1266,7 +1266,7 @@ uint32_t NV2ADevice::BlockRead(const NV2ABlockInfo* block, uint32_t addr, unsign
 }
 
 uint32_t NV2ADevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
-{ 
+{
 	switch (barIndex) {
 	case 0: {
 		// Access NV2A regardless weither HLE is disabled or not (ignoring bLLE_GPU)
@@ -1322,7 +1322,7 @@ void NV2ADevice::BlockWrite(const NV2ABlockInfo* block, uint32_t addr, uint32_t 
 		return;
 	}
 	case sizeof(uint32_t) :
-		assert((addr & 3) == 0); // TODO : What if this fails?	
+		assert((addr & 3) == 0); // TODO : What if this fails?
 
 		block->ops.write(m_nv2a_state, addr - block->offset, value);
 		return;

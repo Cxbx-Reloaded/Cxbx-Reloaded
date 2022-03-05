@@ -49,8 +49,8 @@ GloContext *glo_context_create(void)
 
     static bool initialized = false;
 
-    if (!initialized) {    
-        x_display = XOpenDisplay(0);     
+    if (!initialized) {
+        x_display = XOpenDisplay(0);
         printf("gloffscreen: GLX_VERSION = %s\n", glXGetClientString(x_display, GLX_VERSION));
         printf("gloffscreen: GLX_VENDOR = %s\n", glXGetClientString(x_display, GLX_VENDOR));
     } else {
@@ -150,4 +150,3 @@ void glo_context_destroy(GloContext *context)
     glo_set_current(NULL);
     glXDestroyContext(x_display, context->glx_context);
 }
-

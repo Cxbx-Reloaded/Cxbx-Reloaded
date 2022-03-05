@@ -25,7 +25,7 @@ namespace CxbxDebugger
         // Cached process information
         WinProcesses.PROCESS_INFORMATION stProcessInfo = new WinProcesses.PROCESS_INFORMATION();
         WinProcesses.STARTUPINFO stStartInfo = new WinProcesses.STARTUPINFO();
-        
+
         // Wrapped so these can be closed automatically
         WinProcesses.SafeProcessHandle hProcess = new WinProcesses.SafeProcessHandle();
         WinProcesses.SafeThreadHandle hThread = new WinProcesses.SafeThreadHandle();
@@ -41,7 +41,7 @@ namespace CxbxDebugger
         RunState State = RunState.NotLaunched;
 
         DebuggerMessages.DebuggerInit InitParams = new DebuggerMessages.DebuggerInit();
-        
+
         DebuggerInstance DebugInstance;
 
         List<IDebuggerSessionEvents> SessionEvents = new List<IDebuggerSessionEvents>();
@@ -68,7 +68,7 @@ namespace CxbxDebugger
 
             KernelSymbolProvider = new KernelProvider();
             SymbolSrv.RegisterProvider(KernelSymbolProvider);
-            
+
             RegisterEventInterfaces(this);
         }
 
@@ -122,7 +122,7 @@ namespace CxbxDebugger
             {
                 WinProcesses.NativeMethods.TerminateProcess(hProcess, 0);
             }
-            
+
             // Close handles
             hProcess.Close();
             hThread.Close();
@@ -163,7 +163,7 @@ namespace CxbxDebugger
 
             return false;
         }
-        
+
         private void SetupHLECacheProvider(string Filename)
         {
             var Provider = new HLECacheProvider();
@@ -252,7 +252,7 @@ namespace CxbxDebugger
                 return resultStr;
 
             byte[] buffer = new byte[Length];
-            
+
             uint numRead = 0;
             WinProcesses.NativeMethods.ReadProcessMemory
             (
@@ -287,7 +287,7 @@ namespace CxbxDebugger
             // TODO: Template this for different sizes
 
             byte[] buffer = new byte[4];
-            
+
             uint numRead = 0;
             WinProcesses.NativeMethods.ReadProcessMemory
             (
@@ -309,7 +309,7 @@ namespace CxbxDebugger
             {
                 throw new Exception("Handling event for unknown process");
             }
-            
+
             var Process = DebugInstance.FindProcess((uint)DebugEvent.dwProcessId);
 
             if (Process == null)
@@ -324,7 +324,7 @@ namespace CxbxDebugger
 
             Parallel.ForEach(ThreadEvents, Event => Event.OnThreadCreate(Thread));
         }
-        
+
         private void HandleExitThread(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.ExitThread;
@@ -344,7 +344,7 @@ namespace CxbxDebugger
         }
 
         const int VM_PLACEHOLDER_SIZE = 0x3FEF000;
-        
+
         private void HandleCreateProcess(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.CreateProcessInfo;
@@ -357,7 +357,7 @@ namespace CxbxDebugger
             Process.Path = ResolveProcessPath(DebugInfo.hFile);
 
             // Skip over allocated Xbox memory
-            Process.ImageBase = DebugInfo.lpBaseOfImage + VM_PLACEHOLDER_SIZE; 
+            Process.ImageBase = DebugInfo.lpBaseOfImage + VM_PLACEHOLDER_SIZE;
 
             var MainThread = new DebuggerThread(Process);
 
@@ -375,9 +375,9 @@ namespace CxbxDebugger
             Parallel.ForEach(ProcessEvents, Event => Event.OnProcessCreate(Process));
 
             Parallel.ForEach(ThreadEvents, Event => Event.OnThreadCreate(MainThread));
-                        
+
             var XboxModule = new DebuggerModule();
-            
+
             XboxModule.Path = Target;
             XboxModule.ImageBase = DebugInfo.lpBaseOfImage;
             XboxModule.Core = true;
@@ -413,7 +413,7 @@ namespace CxbxDebugger
             }
 
             var Module = new DebuggerModule();
-            
+
             Module.Path = ResolveProcessPath(DebugInfo.hFile);
             Module.ImageBase = DebugInfo.lpBaseOfDll;
 
@@ -449,7 +449,7 @@ namespace CxbxDebugger
         private void HandleException(WinDebug.DEBUG_EVENT DebugEvent)
         {
             var DebugInfo = DebugEvent.Exception;
-            
+
             switch ((ExceptionCode)DebugInfo.ExceptionRecord.ExceptionCode)
             {
                 case ExceptionCode.AccessViolation:
@@ -486,7 +486,7 @@ namespace CxbxDebugger
                         if (Thread != null)
                         {
                             var Query = DebuggerMessages.GetExceptionHandledQuery(Thread, new DebuggerMessages.DataProcessor(DebugInfo.ExceptionRecord.ExceptionInformation));
-                            
+
                             bool Handled = false;
                             foreach (IDebuggerExceptionEvents Event in ExceptionEvents)
                             {
@@ -652,7 +652,7 @@ namespace CxbxDebugger
                     break;
             }
         }
-        
+
         public void BreakpointContinue()
         {
             bpStall.Set();
@@ -684,7 +684,7 @@ namespace CxbxDebugger
                     case WinDebug.DEBUG_EVENT_CODE.CREATE_PROCESS_DEBUG_EVENT:
                         HandleCreateProcess(DbgEvt);
                         break;
-                        
+
                     case WinDebug.DEBUG_EVENT_CODE.EXIT_THREAD_DEBUG_EVENT:
                         HandleExitThread(DbgEvt);
                         break;
@@ -717,7 +717,7 @@ namespace CxbxDebugger
                 WinDebug.NativeMethods.ContinueDebugEvent(DbgEvt.dwProcessId, DbgEvt.dwThreadId, ContinueStatus);
                 ContinueStatus = WinDebug.CONTINUE_STATUS.DBG_CONTINUE;
             }
-            
+
             State = RunState.Ended;
 
             Parallel.ForEach(SessionEvents, Event => Event.OnDebugEnd());

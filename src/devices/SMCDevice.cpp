@@ -165,7 +165,7 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		// Notes from https://github.com/ergo720/Cxbx-Reloaded/blob/LED/src/CxbxKrnl/EmuKrnlHal.cpp#L572
 		//
 		// HalWriteSMBusValue(0x20, 0x08, false, x) and then HalWriteSMBusValue(0x20, 0x07, false, y > 1)
-		// will cause the led to be solid green, while the next pair of 
+		// will cause the led to be solid green, while the next pair of
 		// HalWriteSMBusValue with arbitrary y will cause the led to assume the color of the sequence x
 		// and afterwards this will repeat with whatever y; ntstatus is always 0
 		//
@@ -207,7 +207,7 @@ void SMCDevice::WriteWord(uint8_t command, uint16_t value)
 	// Notes from https://github.com/ergo720/Cxbx-Reloaded/blob/LED/src/CxbxKrnl/EmuKrnlHal.cpp#L554 :
 	//
 	// [..] WriteWord [..] still sets the LED correctly but it errors
-	// with ntstatus STATUS_IO_DEVICE_ERROR and afterwards the LED cannot be set 
+	// with ntstatus STATUS_IO_DEVICE_ERROR and afterwards the LED cannot be set
 	// any longer until restarting the console
 	//
 	// TODO : Implement the above, SMB_GLOBAL_STATUS should probably a flag (like GS_ABRT_STS or GS_PRERR_STS). But how?
@@ -217,4 +217,3 @@ void SMCDevice::WriteBlock(uint8_t command, uint8_t* data, int length)
 {
 	// TODO
 }
-

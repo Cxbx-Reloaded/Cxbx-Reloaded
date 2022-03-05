@@ -717,7 +717,7 @@ static QString* psh_convert(struct PixelShader *ps)
             assert(false);
             break;
         }
-        
+
         if (sampler_type != NULL) {
             qstring_append_fmt(preflight, "uniform %s texSamp%d;\n", sampler_type, i);
 

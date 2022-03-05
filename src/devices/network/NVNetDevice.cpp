@@ -22,7 +22,7 @@
 // *  Copyright (c) 2013 espes
 // *  Copyright (c) 2015 Matt Borgerson
 // *  (c) 2017 Luke Usher <luke.usher@outlook.com>
-// * 
+// *
 // * This file is based on code from the XQEMU Project
 // * https://github.com/xqemu/xqemu/blob/xbox/hw/xbox/nvnet.c
 // *
@@ -34,7 +34,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
-#include <WinSock2.h> 
+#include <WinSock2.h>
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h"
@@ -262,7 +262,7 @@ int EmuNVNet_MiiReadWrite(uint64_t val)
 {
 	uint32_t mii_ctl;
 	int write, retval, phy_addr, reg;
-	
+
 	retval = 0;
 	mii_ctl = EmuNVNet_GetRegister(NvRegMIIControl, 4);
 
@@ -383,7 +383,7 @@ bool EmuNVNet_DMAPacketToGuest(void* packet, size_t size)
 		s->rx_ring_index %= s->rx_ring_size;
 		xbox::addr_xt rx_ring_addr = EmuNVNet_GetRegister(NvRegRxRingPhysAddr, 4);
 		rx_ring_addr += s->rx_ring_index * sizeof(desc);
-		
+
 		memcpy(&desc, (void*)(rx_ring_addr | CONTIGUOUS_MEMORY_BASE), sizeof(desc));
 
         EmuLog(LOG_LEVEL::DEBUG, "Looking at ring descriptor %d (0x%llx): "
@@ -484,7 +484,7 @@ static void NVNetRecvThreadProc(NvNetState_t *s)
 		int size = g_NVNet->PCAPReceive(packet, 65536);
 		if (size > 0) {
 			EmuNVNet_DMAPacketToGuest(packet, size);
-		}	
+		}
 	}
 }
 
@@ -652,7 +652,7 @@ void PrintRawPayload(void* buffer, size_t length)
 	printf("----Payload----\n");
 	for (uint8_t* addr = startAddr; addr < (startAddr + length); addr += 16) {
 		printf("%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\t|\t%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n",
-			addr[0x0], addr[0x1], addr[0x2], addr[0x3], addr[0x4], addr[0x5], addr[0x6], addr[0x7], 
+			addr[0x0], addr[0x1], addr[0x2], addr[0x3], addr[0x4], addr[0x5], addr[0x6], addr[0x7],
 			addr[0x8], addr[0x9], addr[0xA], addr[0xB], addr[0xC], addr[0xD3], addr[0xE], addr[0xF],
 			addr[0x0], addr[0x1], addr[0x2], addr[0x3], addr[0x4], addr[0x5], addr[0x6], addr[0x7],
 			addr[0x8], addr[0x9], addr[0xA], addr[0xB], addr[0xC], addr[0xD3], addr[0xE], addr[0xF]
@@ -677,7 +677,7 @@ void PrintPacket(void* buffer, size_t length)
 	//	default:
 			PrintRawPayload(payloadPtr, payloadLength);
 	}
-}	
+}
 
 bool NVNetDevice::PCAPSend(void* packet, size_t length)
 {

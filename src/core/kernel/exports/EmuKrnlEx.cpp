@@ -362,7 +362,7 @@ XBSYSAPI EXPORTNUM(21) xbox::longlong_xt FASTCALL xbox::ExInterlockedCompareExch
 // ******************************************************************
 // * 0x0016 - ExMutantObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(22) xbox::OBJECT_TYPE xbox::ExMutantObjectType = 
+XBSYSAPI EXPORTNUM(22) xbox::OBJECT_TYPE xbox::ExMutantObjectType =
 {
 	xbox::ExAllocatePoolWithTag,
 	xbox::ExFreePool,
@@ -689,7 +689,7 @@ XBSYSAPI EXPORTNUM(29) xbox::ntstatus_xt NTAPI xbox::ExSaveNonVolatileSetting
 // ******************************************************************
 // * 0x001E - ExSemaphoreObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(30) xbox::OBJECT_TYPE xbox::ExSemaphoreObjectType = 
+XBSYSAPI EXPORTNUM(30) xbox::OBJECT_TYPE xbox::ExSemaphoreObjectType =
 {
 	xbox::ExAllocatePoolWithTag,
 	xbox::ExFreePool,
@@ -703,7 +703,7 @@ XBSYSAPI EXPORTNUM(30) xbox::OBJECT_TYPE xbox::ExSemaphoreObjectType =
 // ******************************************************************
 // * 0x001F - ExTimerObjectType
 // ******************************************************************
-XBSYSAPI EXPORTNUM(31) xbox::OBJECT_TYPE xbox::ExTimerObjectType = 
+XBSYSAPI EXPORTNUM(31) xbox::OBJECT_TYPE xbox::ExTimerObjectType =
 {
 	xbox::ExAllocatePoolWithTag,
 	xbox::ExFreePool,
@@ -754,7 +754,7 @@ XBSYSAPI EXPORTNUM(32) xbox::PLIST_ENTRY FASTCALL xbox::ExfInterlockedInsertHead
 // Source:ReactOS
 XBSYSAPI EXPORTNUM(33) xbox::PLIST_ENTRY FASTCALL xbox::ExfInterlockedInsertTailList
 (
-	IN PLIST_ENTRY ListHead,	
+	IN PLIST_ENTRY ListHead,
 	IN PLIST_ENTRY ListEntry
 )
 {
@@ -777,7 +777,7 @@ XBSYSAPI EXPORTNUM(33) xbox::PLIST_ENTRY FASTCALL xbox::ExfInterlockedInsertTail
 	// _ExiReleaseSpinLockAndRestoreInterupts(Lock, Enable);
 
 	/* Return the old last entry or NULL for empty list */
-	if (LastEntry == ListHead) 
+	if (LastEntry == ListHead)
 		LastEntry = NULL;
 
 	RETURN(LastEntry);

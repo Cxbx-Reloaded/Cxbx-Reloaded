@@ -98,7 +98,7 @@ TVEncoder TVEncoderFromHardwareModel(HardwareModel hardwareModel)
 		// LukeUsher : My debug kit and at least most of them (maybe all?)
 		// are equivalent to v1.0 and have Conexant encoders.
 		return TVEncoder::Conexant;
-	default: 
+	default:
 		// UNREACHABLE(hardwareModel);
 		return TVEncoder::Focus;
 	}
@@ -117,7 +117,7 @@ void InitXboxHardware(HardwareModel hardwareModel)
 
 	// Create devices
 	g_MCPX = new MCPXDevice(mcpx_revision);
-															
+
 	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
 															   // SMC uses different AV_PACK values than the Kernel
 															   // See https://xboxdevwiki.net/PIC#The_AV_Pack

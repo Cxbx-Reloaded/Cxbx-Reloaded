@@ -111,7 +111,7 @@ void Timer_Destroy(TimerObject* Timer)
 {
 	unsigned int index, i;
 	std::lock_guard<std::mutex>lock(TimerMtx);
-	
+
 	index = TimerList.size();
 	for (i = 0; i < index; i++) {
 		if (Timer == TimerList[i]) {
@@ -252,4 +252,3 @@ int64_t Timer_GetScaledPerformanceCounter(int64_t Period)
 
 	return whole + part;
 }
-

@@ -360,9 +360,9 @@ XBSYSAPI EXPORTNUM(214) ntstatus_xt NTAPI NtQuerySemaphore
 // * 0x00D7 - NtQuerySymbolicLinkObject()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(215) ntstatus_xt NTAPI NtQuerySymbolicLinkObject
-( 
-    HANDLE LinkHandle, 
-    OUT PSTRING LinkTarget, 
+(
+    HANDLE LinkHandle,
+    OUT PSTRING LinkTarget,
     OUT PULONG ReturnedLength OPTIONAL
 );
 
@@ -513,7 +513,7 @@ XBSYSAPI EXPORTNUM(227) ntstatus_xt NTAPI NtSetIoCompletion
 XBSYSAPI EXPORTNUM(228) ntstatus_xt NTAPI NtSetSystemTime
 (
 	IN  PLARGE_INTEGER			SystemTime,
-	OUT PLARGE_INTEGER			PreviousTime OPTIONAL 
+	OUT PLARGE_INTEGER			PreviousTime OPTIONAL
 );
 
 // ******************************************************************
@@ -644,5 +644,3 @@ XBSYSAPI EXPORTNUM(238) void_xt NTAPI NtYieldExecution(void);
 }
 
 #endif
-
-

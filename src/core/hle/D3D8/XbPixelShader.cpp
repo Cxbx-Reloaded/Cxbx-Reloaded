@@ -265,7 +265,7 @@ void DecodedRegisterCombiner::GetPSTextureModes(xbox::X_D3DPIXELSHADERDEF* pPSDe
 
 		// Validate correctness (see NOTE below)
 		if (psTextureModes[i] == PS_TEXTUREMODES_BUMPENVMAP) if (i < 1) LOG_TEST_CASE("PS_TEXTUREMODES_BUMPENVMAP only allowed in stage 1, 2 or 3");
-		if (psTextureModes[i] == PS_TEXTUREMODES_BUMPENVMAP_LUM) if (i < 1) LOG_TEST_CASE("PS_TEXTUREMODES_BUMPENVMAP_LUM only allowed in stage 1, 2 or 3"); 
+		if (psTextureModes[i] == PS_TEXTUREMODES_BUMPENVMAP_LUM) if (i < 1) LOG_TEST_CASE("PS_TEXTUREMODES_BUMPENVMAP_LUM only allowed in stage 1, 2 or 3");
 		if (psTextureModes[i] == PS_TEXTUREMODES_BRDF) if (i < 2) LOG_TEST_CASE("PS_TEXTUREMODES_BRDF only allowed in stage 2 or 3");
 		if (psTextureModes[i] == PS_TEXTUREMODES_DOT_ST) {
 			if (i < 2) LOG_TEST_CASE("PS_TEXTUREMODES_DOT_ST only allowed in stage 2 or 3");
@@ -574,7 +574,7 @@ typedef struct s_CxbxPSDef {
 		// Otherwise, if not X_D3DRS_FOGENABLE, configure final combiner to perform this operation :
 		//   if (X_D3DRS_SPECULARENABLE) r0.rgb = r0.rgb + v1.rgb;
 		//                          else r0.rgb = r0.rgb;
-		// Remember : 
+		// Remember :
 		//   xfc.rgb = lerp(C, B, A) + D
 		//   xfc.a = G.b
 		// Whereby A, B, C and G can use the two xfc-special purpose registers :

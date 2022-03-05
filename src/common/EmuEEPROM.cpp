@@ -57,7 +57,7 @@ static void EepromCRC(unsigned char *crc, unsigned char *data, long dataLen) {
     unsigned char* CRC_Data = (unsigned char *)malloc(dataLen+4);
     int pos=0;
     memset(crc,0x00,4);
-                                 
+
     memset(CRC_Data,0x00, dataLen+4);
     //Circle shift input data one byte right
     memcpy(CRC_Data + 0x01 , data, dataLen-1);

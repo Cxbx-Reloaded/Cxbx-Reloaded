@@ -219,7 +219,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_CopyRects)
 		GetHostSurface(pDestinationSurface),
         pDestPointsArray
     );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CopyRects");    
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CopyRects");
 }
 
 // ******************************************************************
@@ -256,11 +256,11 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
 			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, D3DFMT_A8R8G8B8, &pNewHostSurface);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface(ARGB)");
 		}
-	
+
 	if(FAILED(hRet))
 		/*EmuWarning*/CxbxKrnlCleanup("CreateImageSurface failed!\nFormat = 0x%8.8X", Format);
 	else
-		SetHostSurface(*ppSurface, pNewHostSurface);  
+		SetHostSurface(*ppSurface, pNewHostSurface);
 
     return hRet;
 }
@@ -497,7 +497,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
 			SetHostTexture(pTexture, pNewHostTexture);
 
             /**
-             * Note: If CreateTexture() called with D3DPOOL_DEFAULT then unable to Lock. 
+             * Note: If CreateTexture() called with D3DPOOL_DEFAULT then unable to Lock.
              * It will cause an Error with the DirectX Debug runtime.
              *
              * This is most commonly seen with
@@ -666,7 +666,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
         EmuWarning("D3DFMT_D24S8 is an unsupported texture format!");
         PCFormat = D3DFMT_X8R8G8B8; // TODO : Use D3DFMT_A8R8G8B8?
     }
-    
+
     *ppCubeTexture = EmuNewD3DCubeTexture();
 	XTL::IDirect3DCubeTexture8 *pNewHostCubeTexture = nullptr;
 
@@ -682,7 +682,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
 	{
 		SetHostCubeTexture(*ppCubeTexture, pNewHostCubeTexture);
 		DbgPrintf("EmuD3D8: Created Cube Texture : 0x%.08X (0x%.08X)\n", *ppCubeTexture, pNewHostCubeTexture);
-	}    
+	}
 
     return hRet;
 }
@@ -861,7 +861,7 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
 		rType = GetHostResource(pThis)->GetType(); break;
 	}
 
-    
+
 
     return (X_D3DRESOURCETYPE)rType;
 }
@@ -907,7 +907,7 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 	XTL::IDirect3DCubeTexture8 *pHostCubeTexture = GetHostCubeTexture(pPixelContainer);
 
 	HRESULT hRet;
-	
+
 	hRet = pHostCubeTexture->UnlockRect(FaceType, Level); // remove old lock
 	DEBUG_D3DRESULT(hRet, "pHostCubeTexture->UnlockRect");
 
@@ -1207,10 +1207,10 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 			result->Parent = pThis;
 			pThis->Common++; // AddRef Parent too
 		}
-		
+
 		result->Common++; // Don't EMUPATCH(D3DResource_AddRef)(result) - that would AddRef Parent one too many
 	}
-	
+
     RETURN(result);
 }
 
@@ -1353,7 +1353,7 @@ VOID WINAPI XTL::EMUPATCH(D3DCubeTexture_LockRect)
     IDirect3DCubeTexture8 *pHostCubeTexture = GetHostCubeTexture(pThis);
 
 	pHostCubeTexture->UnlockRect(FaceType, Level); // remove old lock
-	HRESULT hRet = pHostCubeTexture->LockRect(FaceType, Level, pLockedBox, pRect, Flags);    
+	HRESULT hRet = pHostCubeTexture->LockRect(FaceType, Level, pLockedBox, pRect, Flags);
 }
 
 // ******************************************************************
@@ -1424,7 +1424,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
 
     X_D3DVertexBuffer *pD3DVertexBuffer = EmuNewD3DVertexBuffer();
 	XTL::IDirect3DVertexBuffer8  *pNewHostVertexBuffer = nullptr;
-	
+
     HRESULT hRet = g_pD3DDevice8->CreateVertexBuffer
     (
         Length,
@@ -1452,7 +1452,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer2)
 VOID WINAPI XTL::EMUPATCH(D3DDevice_KickOff)()
 {
 	//FUNC_EXPORTS
-		
+
 	LOG_FUNC();
 
 	// TODO: Anything (kick off and NOT wait for idle)?
@@ -1490,7 +1490,7 @@ DWORD WINAPI XTL::EMUPATCH(D3D_CMiniport_GetDisplayCapabilities)()
 	LOG_FUNC();
 
 	// This function was only found in Run Like Hell (5233) @ 0x11FCD0.
-	// So far, this function hasn't been found in any other XDKs.  
+	// So far, this function hasn't been found in any other XDKs.
 
 	DWORD AvInfo;
 
@@ -1599,7 +1599,7 @@ void WINAPI XTL::EMUPATCH(D3DDevice_MakeSpace)()
 	// NOTE: Like the above function, this should not be emulated.  The intended
 	// usage is the same as above.
 	LOG_UNIMPLEMENTED();
-		
+
 }
 #endif
 
@@ -1652,7 +1652,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 	DEBUG_D3DRESULT(hRet, "pHostCubeTexture->GetCubeMapSurface");
 
 	if (SUCCEEDED(hRet))
-		SetHostSurface(*ppCubeMapSurface, pNewHostSurface);		
+		SetHostSurface(*ppCubeMapSurface, pNewHostSurface);
 
 	return hRet;
 }
@@ -1761,7 +1761,7 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 			uRet = pHostResource->AddRef();
 	}
 
-	
+
     return uRet;
 }
 
@@ -1823,7 +1823,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DTexture_GetLevelDesc)
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Level)
 		LOG_FUNC_ARG(pDesc)
-		LOG_FUNC_END;    
+		LOG_FUNC_END;
 
     return D3D_OK;
 }
@@ -1897,7 +1897,7 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
         PCMultiSampleType
     );
 
-    
+
 
     return hRet;
 }
@@ -1926,7 +1926,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_GetDeviceCaps)
 	DEBUG_D3DRESULT(hRet, "g_pD3D8->GetDeviceCaps");
 
 	if(FAILED(hRet))
-		CxbxKrnlCleanup("IDirect3D8::GetDeviceCaps failed!");    
+		CxbxKrnlCleanup("IDirect3D8::GetDeviceCaps failed!");
 
     return hRet;
 }
@@ -1953,7 +1953,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
 
     // This is a Xbox extension, meaning there is no pc counterpart.
 
-    
+
 
     return hRet;
 }
@@ -2008,7 +2008,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_GetAdapterIdentifier)
 	// save you much hassle (at least it did for Max Payne).
 
 	HRESULT hRet = g_pD3D8->GetAdapterIdentifier( Adapter, Flags, pIdentifier );
-	DEBUG_D3DRESULT(hRet, "g_pD3D8->GetAdapterIdentifier");		
+	DEBUG_D3DRESULT(hRet, "g_pD3D8->GetAdapterIdentifier");
 
 	return hRet;
 }
@@ -2058,7 +2058,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
 	*pStride = 0;
 
 	if (StreamNumber <= 15)
-	{ 
+	{
 		pVertexBuffer = g_D3DStreams[StreamNumber];
 		if (pVertexBuffer)
 		{
@@ -2072,7 +2072,7 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
 
 
 // Cache pixel shaders, the main reason for this is so that
-// CreatePixelShader can return a good Xbox handle rather than 
+// CreatePixelShader can return a good Xbox handle rather than
 // a host handle
 std::map<DWORD, DWORD> g_HostPixelShaderCache;
 
@@ -2202,7 +2202,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 		pRecompiledBuffer->Release();
 	}
 
-	// This additional layer of Cxbx internal indirection seems problematic, as 
+	// This additional layer of Cxbx internal indirection seems problematic, as
 	// CreatePixelShader() is expected to return a pHandle directly to a shader interface.
 
 	/*
@@ -2252,7 +2252,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreatePixelShader)
 	// has the host handle
 	if (noXboxCreate) {
 		*pHandle = hostShaderHandle;
-	} 
+	}
 
 	g_HostPixelShaderCache[*pHandle] = hostShaderHandle;
 
@@ -2647,7 +2647,7 @@ XTL::X_D3DBaseTexture* WINAPI XTL::EMUPATCH(D3DDevice_GetTexture2)(DWORD Stage)
 	FUNC_EXPORTS
 
 	LOG_FUNC_ONE_ARG(Stage);
-	
+
 	// Get the active texture from this stage
 	X_D3DBaseTexture* pRet = EmuD3DActiveTexture[Stage];
 
@@ -2738,7 +2738,7 @@ XTL::X_D3DSurface * WINAPI XTL::EMUPATCH(D3DDevice_GetDepthStencilSurface2)()
 
 	if (result)
 		result->Common++; // EMUPATCH(D3DResource_AddRef)(result);
-		
+
 	RETURN(result);
 }
 
@@ -3594,7 +3594,7 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Deferred)
 
 	// TODO: HACK: Technically, this function doesn't need to be emulated.
 	// The location of EmuD3DDeferredRenderState for 3911 isn't correct and at
-	// the time of writing, I don't understand how to fix it.  Until then, 
+	// the time of writing, I don't understand how to fix it.  Until then,
 	// I'm going to implement this in a reckless manner.  When the offset for
 	// EmuD3DDeferredRenderState is fixed for 3911, this function should be
 	// obsolete!
@@ -3606,43 +3606,43 @@ VOID __fastcall XTL::EMUPATCH(D3DDevice_SetRenderState_Deferred)
 
 	/*
 	XDK 3911 Deferred RenderState values
-	D3DRS_FOGENABLE                 = 82,   // TRUE to enable fog blending 
-    D3DRS_FOGTABLEMODE              = 83,   // D3DFOGMODE 
-    D3DRS_FOGSTART                  = 84,   // float fog start (for both vertex and pixel fog) 
-    D3DRS_FOGEND                    = 85,   // float fog end      
-    D3DRS_FOGDENSITY                = 86,   // float fog density  
-    D3DRS_RANGEFOGENABLE            = 87,   // TRUE to enable range-based fog 
+	D3DRS_FOGENABLE                 = 82,   // TRUE to enable fog blending
+    D3DRS_FOGTABLEMODE              = 83,   // D3DFOGMODE
+    D3DRS_FOGSTART                  = 84,   // float fog start (for both vertex and pixel fog)
+    D3DRS_FOGEND                    = 85,   // float fog end
+    D3DRS_FOGDENSITY                = 86,   // float fog density
+    D3DRS_RANGEFOGENABLE            = 87,   // TRUE to enable range-based fog
     D3DRS_WRAP0                     = 88,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 1st texture coord.
-    D3DRS_WRAP1                     = 89,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 2nd texture coord. 
-    D3DRS_WRAP2                     = 90,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 3rd texture coord. 
-    D3DRS_WRAP3                     = 91,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 4th texture coord. 
+    D3DRS_WRAP1                     = 89,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 2nd texture coord.
+    D3DRS_WRAP2                     = 90,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 3rd texture coord.
+    D3DRS_WRAP3                     = 91,   // D3DWRAP* flags (D3DWRAP_U, D3DWRAPCOORD_0, etc.) for 4th texture coord.
     D3DRS_LIGHTING                  = 92,   // TRUE to enable lighting
-    D3DRS_SPECULARENABLE            = 93,   // TRUE to enable specular 
+    D3DRS_SPECULARENABLE            = 93,   // TRUE to enable specular
     D3DRS_LOCALVIEWER               = 94,   // TRUE to enable camera-relative specular highlights
     D3DRS_COLORVERTEX               = 95,   // TRUE to enable per-vertex color
     D3DRS_BACKSPECULARMATERIALSOURCE= 96,   // D3DMATERIALCOLORSOURCE (Xbox extension)
     D3DRS_BACKDIFFUSEMATERIALSOURCE = 97,   // D3DMATERIALCOLORSOURCE (Xbox extension)
     D3DRS_BACKAMBIENTMATERIALSOURCE = 98,   // D3DMATERIALCOLORSOURCE (Xbox extension)
     D3DRS_BACKEMISSIVEMATERIALSOURCE= 99,   // D3DMATERIALCOLORSOURCE (Xbox extension)
-    D3DRS_SPECULARMATERIALSOURCE    = 100,  // D3DMATERIALCOLORSOURCE 
-    D3DRS_DIFFUSEMATERIALSOURCE     = 101,  // D3DMATERIALCOLORSOURCE 
-    D3DRS_AMBIENTMATERIALSOURCE     = 102,  // D3DMATERIALCOLORSOURCE 
-    D3DRS_EMISSIVEMATERIALSOURCE    = 103,  // D3DMATERIALCOLORSOURCE 
+    D3DRS_SPECULARMATERIALSOURCE    = 100,  // D3DMATERIALCOLORSOURCE
+    D3DRS_DIFFUSEMATERIALSOURCE     = 101,  // D3DMATERIALCOLORSOURCE
+    D3DRS_AMBIENTMATERIALSOURCE     = 102,  // D3DMATERIALCOLORSOURCE
+    D3DRS_EMISSIVEMATERIALSOURCE    = 103,  // D3DMATERIALCOLORSOURCE
     D3DRS_BACKAMBIENT               = 104,  // D3DCOLOR (Xbox extension)
-    D3DRS_AMBIENT                   = 105,  // D3DCOLOR 
-    D3DRS_POINTSIZE                 = 106,  // float point size 
-    D3DRS_POINTSIZE_MIN             = 107,  // float point size min threshold 
+    D3DRS_AMBIENT                   = 105,  // D3DCOLOR
+    D3DRS_POINTSIZE                 = 106,  // float point size
+    D3DRS_POINTSIZE_MIN             = 107,  // float point size min threshold
     D3DRS_POINTSPRITEENABLE         = 108,  // TRUE to enable point sprites
     D3DRS_POINTSCALEENABLE          = 109,  // TRUE to enable point size scaling
-    D3DRS_POINTSCALE_A              = 110,  // float point attenuation A value 
-    D3DRS_POINTSCALE_B              = 111,  // float point attenuation B value 
-    D3DRS_POINTSCALE_C              = 112,  // float point attenuation C value 
-    D3DRS_POINTSIZE_MAX             = 113,  // float point size max threshold 
+    D3DRS_POINTSCALE_A              = 110,  // float point attenuation A value
+    D3DRS_POINTSCALE_B              = 111,  // float point attenuation B value
+    D3DRS_POINTSCALE_C              = 112,  // float point attenuation C value
+    D3DRS_POINTSIZE_MAX             = 113,  // float point size max threshold
     D3DRS_PATCHEDGESTYLE            = 114,  // D3DPATCHEDGESTYLE
     D3DRS_PATCHSEGMENTS             = 115,  // DWORD number of segments per edge when drawing patches
 	*/
 
-		
+
 }
 
 
@@ -3710,7 +3710,7 @@ void WINAPI XTL::EMUPATCH(D3D_BlockOnResource)( X_D3DResource* pResource )
 	// TODO: Implement
 	// NOTE: Azurik appears to call this directly from numerous points
 	LOG_UNIMPLEMENTED();
-		
+
 }
 
 
@@ -3759,8 +3759,8 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScissors)
 // ******************************************************************
 VOID WINAPI XTL::EMUPATCH(D3DDevice_GetScissors)
 (
-	DWORD	*pCount, 
-	BOOL	*pExclusive, 
+	DWORD	*pCount,
+	BOOL	*pExclusive,
 	D3DRECT *pRects
 )
 {
@@ -3922,126 +3922,126 @@ D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 	RETURN(pData);
 }
 
-// ******************************************************************	
-// * patch: D3DDevice_GetVertexShaderSize	
-// ******************************************************************	
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)	
-(	
-    DWORD Handle,	
-    UINT* pSize	
-)	
-{	
-	LOG_FUNC_BEGIN	
-		LOG_FUNC_ARG(Handle)	
-		LOG_FUNC_ARG(pSize)	
-		LOG_FUNC_END;	
+// ******************************************************************
+// * patch: D3DDevice_GetVertexShaderSize
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderSize)
+(
+    DWORD Handle,
+    UINT* pSize
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pSize)
+		LOG_FUNC_END;
 
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)	
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
 
-    if (pSize) {	
-        CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);	
-        *pSize = pVertexShader ? pVertexShader->XboxNrAddressSlots : 0;	
-    }	
+    if (pSize) {
+        CxbxVertexShader *pVertexShader = GetCxbxVertexShader(Handle);
+        *pSize = pVertexShader ? pVertexShader->XboxNrAddressSlots : 0;
+    }
 }
 
-// ******************************************************************	
-// * patch: D3DDevice_GetVertexShaderType	
-// ******************************************************************	
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)	
-(	
-    DWORD  Handle,	
-    DWORD *pType	
-)	
-{	
-	LOG_FUNC_BEGIN	
-		LOG_FUNC_ARG(Handle)	
-		LOG_FUNC_ARG(pType)	
-		LOG_FUNC_END;	
+// ******************************************************************
+// * patch: D3DDevice_GetVertexShaderType
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderType)
+(
+    DWORD  Handle,
+    DWORD *pType
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pType)
+		LOG_FUNC_END;
 
-	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)	
-	// *pType is set according to flags in the VertexShader struct	
+	// Handle is always address of an Xbox VertexShader struct, or-ed with 1 (X_D3DFVF_RESERVED0)
+	// *pType is set according to flags in the VertexShader struct
 
-	if (pType) {	
-		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);	
-		if (pCxbxVertexShader) {	
-			*pType = pCxbxVertexShader->XboxVertexShaderType;	
-		}	
-    }	
+	if (pType) {
+		CxbxVertexShader *pCxbxVertexShader = GetCxbxVertexShader(Handle);
+		if (pCxbxVertexShader) {
+			*pType = pCxbxVertexShader->XboxVertexShaderType;
+		}
+    }
 }
 
-// LTCG specific D3DDevice_GetViewportOffsetAndScale function...	
-// This function is still not working so should be investigated...	
-// This uses a custom calling convention where parameter is passed in EDX, ECX	
-// Test-case: RalliSport Challenge 2	
-VOID __stdcall XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)	
-(	
-)	
-{	
-    D3DXVECTOR4 *pOffset;	
-    D3DXVECTOR4 *pScale;	
+// LTCG specific D3DDevice_GetViewportOffsetAndScale function...
+// This function is still not working so should be investigated...
+// This uses a custom calling convention where parameter is passed in EDX, ECX
+// Test-case: RalliSport Challenge 2
+VOID __stdcall XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale_0)
+(
+)
+{
+    D3DXVECTOR4 *pOffset;
+    D3DXVECTOR4 *pScale;
 
-	__asm {	
-		mov pScale, ecx	
-		mov pOffset, edx	
-	}	
+	__asm {
+		mov pScale, ecx
+		mov pOffset, edx
+	}
 
-	return EMUPATCH(D3DDevice_GetViewportOffsetAndScale)(pOffset, pScale);	
-}	
+	return EMUPATCH(D3DDevice_GetViewportOffsetAndScale)(pOffset, pScale);
+}
 
-// ******************************************************************	
-// * patch: D3DDevice_GetViewportOffsetAndScale	
-// ******************************************************************	
-VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)	
-(	
-    X_D3DXVECTOR4 *pOffset,	
-	X_D3DXVECTOR4 *pScale	
-)	
-{	
-	LOG_FUNC_BEGIN	
-		LOG_FUNC_ARG(pOffset)	
-		LOG_FUNC_ARG(pScale)	
-		LOG_FUNC_END;	
+// ******************************************************************
+// * patch: D3DDevice_GetViewportOffsetAndScale
+// ******************************************************************
+VOID WINAPI XTL::EMUPATCH(D3DDevice_GetViewportOffsetAndScale)
+(
+    X_D3DXVECTOR4 *pOffset,
+	X_D3DXVECTOR4 *pScale
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pOffset)
+		LOG_FUNC_ARG(pScale)
+		LOG_FUNC_END;
 
-	// LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases	
-	// Test case : 007: From Russia with Love	
-	// Test case : Army Men?: Sarge's War	
-	// Test case : BeatDown - Fists of Vengeance	
-	// Test case : Big Mutha Truckers	
-	// Test case : Big Mutha Truckers 2	
-	// Test case : Classified : The Sentinel Crisis	
-	// Test case : Cold Fear	
-	// Test case : Commandos SF	
-	// Test case : Darkwatch	
-	// Test case : Dr.Muto	
-	// Test case : GTA : Vice City	
-	// Test case : Jacked	
-	// Test case : Madagascar	
-	// Test case : Max Payne 2	
-	// Test case : NBA LIVE 2005	
-	// Test case : NFS : Underground	
-	// Test case : NFS : Underground 2	
-	// Test case : PoP : The Sands of Time	
-	// Test case : Prince of Persia : T2T - see #1109 (comment)	
-	// Test case : RPM Tuning	
-	// Test case : Street Racing Syndicate	
-	// Test case : Spongebob - Battle for Bikini Bottom	
-	// Test case : The Incredibles : Rise of the Underminer	
-	// Test case : The SpongeBob SquarePants Movie	
-	// Test case : TMNT(R)2	
-	// Test case : TMNT(R)3	
+	// LOG_TEST_CASE("D3DDevice_GetViewportOffsetAndScale"); // Get us some test-cases
+	// Test case : 007: From Russia with Love
+	// Test case : Army Men?: Sarge's War
+	// Test case : BeatDown - Fists of Vengeance
+	// Test case : Big Mutha Truckers
+	// Test case : Big Mutha Truckers 2
+	// Test case : Classified : The Sentinel Crisis
+	// Test case : Cold Fear
+	// Test case : Commandos SF
+	// Test case : Darkwatch
+	// Test case : Dr.Muto
+	// Test case : GTA : Vice City
+	// Test case : Jacked
+	// Test case : Madagascar
+	// Test case : Max Payne 2
+	// Test case : NBA LIVE 2005
+	// Test case : NFS : Underground
+	// Test case : NFS : Underground 2
+	// Test case : PoP : The Sands of Time
+	// Test case : Prince of Persia : T2T - see #1109 (comment)
+	// Test case : RPM Tuning
+	// Test case : Street Racing Syndicate
+	// Test case : Spongebob - Battle for Bikini Bottom
+	// Test case : The Incredibles : Rise of the Underminer
+	// Test case : The SpongeBob SquarePants Movie
+	// Test case : TMNT(R)2
+	// Test case : TMNT(R)3
 
-    float vOffset[4], vScale[4];	
-    GetViewPortOffsetAndScale(vOffset, vScale);	
+    float vOffset[4], vScale[4];
+    GetViewPortOffsetAndScale(vOffset, vScale);
 
-    pOffset->x = vOffset[0];	
-    pOffset->y = vOffset[1];	
-    pOffset->z = vOffset[2];	
-    pOffset->w = vOffset[3];	
+    pOffset->x = vOffset[0];
+    pOffset->y = vOffset[1];
+    pOffset->z = vOffset[2];
+    pOffset->w = vOffset[3];
 
-    pScale->x = vScale[0];	
-    pScale->y = vScale[1];	
-    pScale->z = vScale[2];	
-    pScale->w = vScale[3];	
+    pScale->x = vScale[0];
+    pScale->y = vScale[1];
+    pScale->z = vScale[2];
+    pScale->w = vScale[3];
 }
 
 // ******************************************************************
@@ -4087,7 +4087,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderDeclaration)
 			}
 		}
     }
-    
+
     return hRet;
 }
 
@@ -4132,7 +4132,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderFunction)
 			}
 		}
     }
-    
+
     return hRet;
 }
 
@@ -4153,7 +4153,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetTransform)
     State = EmuXB2PC_D3DTS(State);
 
     HRESULT hRet = g_pD3DDevice->GetTransform(State, pMatrix);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetTransform");    
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetTransform");
 }
 
 // LTCG specific D3DDevice_SetPixelShaderConstant function...
@@ -4233,7 +4233,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetVertexShaderInputDirect)
 	// D3DDevice_SetVertexShaderInput is called with Handle set to that address, or-ed with 1 (X_D3DFVF_RESERVED0)
 	// Otherwise, D3DDevice_SetVertexShaderInput is called with Handle 0.
 
-    LOG_UNIMPLEMENTED(); 
+    LOG_UNIMPLEMENTED();
 }
 
 // ******************************************************************
@@ -4252,7 +4252,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderInput)
 		LOG_FUNC_ARG(pStreamInputs)
 		LOG_FUNC_END;
 
-    LOG_UNIMPLEMENTED(); 
+    LOG_UNIMPLEMENTED();
 
     return 0;
 }

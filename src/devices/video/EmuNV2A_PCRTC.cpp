@@ -72,7 +72,7 @@ DEVICE_READ32(PCRTC)
 			stage = 0;
 		}
 	} break;
-	default: 
+	default:
 		result = 0;
 		//DEVICE_READ32_REG(pcrtc); // Was : DEBUG_READ32_UNHANDLED(PCRTC);
 		break;
@@ -103,7 +103,7 @@ DEVICE_WRITE32(PCRTC)
                 d->vram_ptr[value+64+2], d->vram_ptr[value+64+3]);
 		break;
 
-	default: 
+	default:
 		DEVICE_WRITE32_REG(pcrtc); // Was : DEBUG_WRITE32_UNHANDLED(PCRTC);
 		break;
 	}

@@ -45,8 +45,8 @@ class Hub
 		int Init(int port);
 		// start hub destruction
 		void HubDestroy();
-		
-		
+
+
 	private:
 		// hub state
 		USBHubState* m_HubState = nullptr;

@@ -180,7 +180,7 @@ bool verify_hash(const unsigned char* hash, const unsigned char* decryptBuffer, 
 
 	}
 
-	// Padding checking , xbox does exactly the same 
+	// Padding checking , xbox does exactly the same
 
 	if (decryptBuffer[zero_position] != 0x00) return false;
 

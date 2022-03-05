@@ -361,7 +361,7 @@ typedef struct SurfaceColorFormatInfo {
 
 // Note : Avoid designated initializers to facilitate C++ builds
 static const SurfaceColorFormatInfo kelvin_surface_color_format_map[16] = {
-	//0x00 [?] = 
+	//0x00 [?] =
 		{},
     //0x01 [NV097_SET_SURFACE_FORMAT_COLOR_LE_X1R5G5B5_Z1R5G5B5] =
         {2, GL_RGB5_A1, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV},
@@ -383,15 +383,15 @@ static const SurfaceColorFormatInfo kelvin_surface_color_format_map[16] = {
 		{}, // TODO : {1, GL_R8, GL_RED, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
 	//0x0A [NV097_SET_SURFACE_FORMAT_COLOR_LE_G8B8] =
 		{}, // TODO : {2, GL_RG8, GL_RG, GL_UNSIGNED_BYTE}, // PatrickvL guesstimate
-	//0x0B [?] = 
+	//0x0B [?] =
 		{},
-	//0x0C [?] = 
+	//0x0C [?] =
 		{},
-	//0x0D [?] = 
+	//0x0D [?] =
 		{},
-	//0x0E [?] = 
+	//0x0E [?] =
 		{},
-	//0x0F [?] = 
+	//0x0F [?] =
 		{}
 };
 
@@ -586,7 +586,7 @@ DEVICE_WRITE32(PGRAPH)
 
 		break;
     }
-	default: 
+	default:
 		DEVICE_WRITE32_REG(pgraph); // Was : DEBUG_WRITE32_UNHANDLED(PGRAPH);
 		break;
 	}
@@ -1202,7 +1202,7 @@ void pgraph_handle_method(NV2AState *d,
 			pg->regs[NV_PGRAPH_PATT_COLOR0] = parameter;
 			break;
 		}
-		
+
 		break;
 	}
 
@@ -1233,10 +1233,10 @@ void pgraph_handle_method(NV2AState *d,
 		default:
 			EmuLog(LOG_LEVEL::WARNING, "Unknown NV_CONTEXT_SURFACES_2D Method: 0x%08X", method);
 		}
-	
-		break; 
+
+		break;
 	}
-	
+
 	case NV_IMAGE_BLIT: {
 		switch (method) {
 		case NV09F_SET_OBJECT:
@@ -1472,7 +1472,7 @@ void pgraph_handle_method(NV2AState *d,
 			break;
 		case NV097_SET_SURFACE_CLIP_VERTICAL:
 			pgraph_update_surface(d, false, true, true);
-			
+
 			pg->surface_shape.clip_y =
 				GET_MASK(parameter, NV097_SET_SURFACE_CLIP_VERTICAL_Y);
 			pg->surface_shape.clip_height =
@@ -2609,9 +2609,9 @@ void pgraph_handle_method(NV2AState *d,
 			break;
 
 		case NV097_ARRAY_ELEMENT16:
-			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");	
-			// Test-case : Turok (in main menu)	
-			// Test-case : Hunter Redeemer	
+			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U16");
+			// Test-case : Turok (in main menu)
+			// Test-case : Hunter Redeemer
 			// Test-case : Otogi (see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/pull/1113#issuecomment-385593814)
 			assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
 			pg->inline_elements[
@@ -2620,7 +2620,7 @@ void pgraph_handle_method(NV2AState *d,
 				pg->inline_elements_length++] = parameter >> 16;
 			break;
 		case NV097_ARRAY_ELEMENT32:
-			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");	
+			//LOG_TEST_CASE("NV2A_VB_ELEMENT_U32");
 			// Test-case : Turok (in main menu)
 			assert(pg->inline_elements_length < NV2A_MAX_BATCH_LENGTH);
 			pg->inline_elements[
@@ -2842,7 +2842,7 @@ void pgraph_handle_method(NV2AState *d,
 			NV2A_DPRINTF("load to %d\n", parameter);
 			break;
 
-		case NV097_SET_FLAT_SHADE_OP: 
+		case NV097_SET_FLAT_SHADE_OP:
 			assert(parameter <= 1);
 			// TODO : value & 1 = first/last? vertex selection for glShaderMode(GL_FLAT)
 			break;
@@ -4521,7 +4521,7 @@ static uint8_t* convert_texture_data(const unsigned int color_format,
 			// but for an unknown reason, the actual encoding is YUY2
 		}
 		return converted_data;
-	}	
+	}
 	case NV097_SET_TEXTURE_FORMAT_COLOR_LC_IMAGE_YB8CR8YA8CB8: {
 		assert(depth == 1); /* FIXME */
 		uint8_t* converted_data = (uint8_t*)g_malloc(width * height * 4);

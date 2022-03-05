@@ -107,8 +107,8 @@ class PoolManager
 		POOL_LOOKASIDE_LIST m_ExpSmallNPagedPoolLookasideLists[POOL_SMALL_LISTS];
 		// critical section lock to synchronize accesses
 		CRITICAL_SECTION m_CriticalSection;
-	
-	
+
+
 		// acquires the critical section
 		void Lock();
 		// releases the critical section

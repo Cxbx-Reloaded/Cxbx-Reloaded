@@ -638,7 +638,7 @@ bool Settings::Save(std::string file_path)
 	// ==== Network Begin =======
 
 	m_si.SetValue(section_network, sect_network_keys.adapter_name, m_network.adapter_name, nullptr, true);
-	
+
 	// ==== Network End =========
 
 	// ==== Input General Begin =======

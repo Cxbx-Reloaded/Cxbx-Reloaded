@@ -1266,7 +1266,7 @@ typedef struct _KDEVICE_QUEUE
 }
 KDEVICE_QUEUE, *PKDEVICE_QUEUE, *RESTRICTED_POINTER PRKDEVICE_QUEUE;
 
-typedef struct _KDEVICE_QUEUE_ENTRY 
+typedef struct _KDEVICE_QUEUE_ENTRY
 {
 	LIST_ENTRY DeviceListEntry;
 	ulong_xt SortKey;
@@ -1669,7 +1669,7 @@ NT_TIB, *PNT_TIB;
 // 		ulong_xt HighWord;
 // 	}
 //  KGDTENTRY, *PKGDTENTRY;
-// 
+//
 // 	typedef struct _KIDTENTRY
 // 	{
 // 		word_xt Offset;
@@ -1678,7 +1678,7 @@ NT_TIB, *PNT_TIB;
 // 		word_xt ExtendedOffset;
 // 	}
 //  KIDTENTRY, *PKIDTENTRY;
-// 
+//
 // 	typedef struct _KEXECUTE_OPTIONS
 // 	{
 // 		ulong_xt ExecuteDisable: 1;
@@ -1944,7 +1944,7 @@ typedef void_xt(*PCREATE_THREAD_NOTIFY_ROUTINE)
 // ******************************************************************
 // * KPRCB (Kernel PRocesor Control Block)
 // ******************************************************************
-// * 
+// *
 // * NOTE: INCOMPLETE!!
 // *
 // ******************************************************************
@@ -1960,7 +1960,7 @@ typedef struct _KPRCB
 	ulong_xt            DpcRoutineActive;                              // 0x30, KPCR : 0x58
 
     // This completes the total size of the structure (presumably)
-    uchar_xt            Unknown[0x224];                            
+    uchar_xt            Unknown[0x224];
 }
 KPRCB, *PKPRCB;
 
@@ -2598,5 +2598,3 @@ typedef struct _IDE_CHANNEL_OBJECT
 }
 
 #endif
-
-

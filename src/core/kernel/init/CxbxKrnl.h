@@ -98,7 +98,7 @@ extern "C" {
 
 #define MAX_BUS_INTERRUPT_LEVEL 27
 #define MAX_NUM_INTERRUPTS 256
-#define IRQ_BASE 0x30 
+#define IRQ_BASE 0x30
 
 #define PRIMARY_VECTOR_BASE IRQ_BASE
 

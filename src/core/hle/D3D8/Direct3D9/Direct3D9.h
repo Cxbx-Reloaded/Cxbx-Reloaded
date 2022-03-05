@@ -1991,8 +1991,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteStateBlock)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetModelView)
 (
-	CONST D3DMATRIX *pModelView, 
-	CONST D3DMATRIX *pInverseModelView, 
+	CONST D3DMATRIX *pModelView,
+	CONST D3DMATRIX *pInverseModelView,
 	CONST D3DMATRIX *pComposite
 );
 
@@ -2143,8 +2143,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTargetFast)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetScissors)
 (
-	dword_xt	*pCount, 
-	bool_xt	*pExclusive, 
+	dword_xt	*pCount,
+	bool_xt	*pExclusive,
 	D3DRECT *pRects
 );
 // ******************************************************************

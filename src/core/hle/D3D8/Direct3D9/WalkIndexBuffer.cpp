@@ -13,7 +13,7 @@
 // Default implementation
 void WalkIndexBuffer_NoSIMD(INDEX16 & LowIndex, INDEX16 & HighIndex, INDEX16 * pIndexData, DWORD dwIndexCount)
 {
-	// Determine highest and lowest index in use 
+	// Determine highest and lowest index in use
 	LowIndex = pIndexData[0];
 	HighIndex = LowIndex;
 	for (unsigned int i = 1; i < dwIndexCount; i++) {

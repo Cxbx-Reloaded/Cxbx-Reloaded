@@ -94,10 +94,10 @@ static const char* OHCI_RegNames[] = {
 #ifdef DEBUG_OHCI_REG
 #define DUMP_REG_R(reg_val) EmuLog(LOG_LEVEL::DEBUG, "%s, R, reg_val: 0x%X", OHCI_RegNames[Addr >> 2], reg_val)
 #define DUMP_REG_W(reg_val, val) EmuLog(LOG_LEVEL::DEBUG, "%s, W, reg_val: 0x%X, val: 0x%X", OHCI_RegNames[Addr >> 2], reg_val, val)
-#define DUMP_REG_RO(reg_val, val) EmuLog(LOG_LEVEL::DEBUG, "%s, RO, reg_val: 0x%X, val: 0x%X", OHCI_RegNames[Addr >> 2], reg_val, val) 
+#define DUMP_REG_RO(reg_val, val) EmuLog(LOG_LEVEL::DEBUG, "%s, RO, reg_val: 0x%X, val: 0x%X", OHCI_RegNames[Addr >> 2], reg_val, val)
 #else
 #define DUMP_REG_R(reg_val)
-#define DUMP_REG_W(reg_val, val) 
+#define DUMP_REG_W(reg_val, val)
 #define DUMP_REG_RO(reg_val, val)
 #endif
 
@@ -443,7 +443,7 @@ bool OHCI::OHCI_CopyTDBuffer(OHCI_TD* Td, uint8_t* Buffer, int Length, bool bIsW
 		return false; // no bytes left to copy
 	}
 
-	// From the OHCI standard: "If during the data transfer the buffer address contained in the HCÅfs working copy of
+	// From the OHCI standard: "If during the data transfer the buffer address contained in the HCÔøΩfs working copy of
 	// CurrentBufferPointer crosses a 4K boundary, the upper 20 bits of BufferEnd are copied to the
 	// working value of CurrentBufferPointer causing the next buffer address to be the 0th byte in the
 	// same 4K page that contains the last byte of the buffer."
@@ -790,7 +790,7 @@ int OHCI::OHCI_ServiceTD(OHCI_ED* Ed)
 	i = OHCI_BM(td.Flags, TD_DI);
 	if (i < m_DoneCount) {
 		m_DoneCount = i;
-	}	
+	}
 	if (OHCI_BM(td.Flags, TD_CC) != OHCI_CC_NOERROR) {
 		m_DoneCount = 0;
 	}
@@ -1324,7 +1324,7 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 
 		for (i = 0; i < 4; i++) {
 			OHCI_PortPower(i, 0);
-		}	
+		}
 		EmuLog(LOG_LEVEL::DEBUG, "powered down all ports");
 	}
 
@@ -1333,7 +1333,7 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 
 		for (i = 0; i < 4; i++) {
 			OHCI_PortPower(i, 1);
-		}	
+		}
 		EmuLog(LOG_LEVEL::DEBUG, "powered up all ports");
 	}
 
@@ -1347,7 +1347,7 @@ void OHCI::OHCI_SetHubStatus(uint32_t Value)
 
 	if (old_state != m_Registers.HcRhStatus) {
 		OHCI_SetInterrupt(OHCI_INTR_RHSC);
-	}	
+	}
 }
 
 void OHCI::OHCI_PortPower(int i, int p)
@@ -1401,7 +1401,7 @@ void OHCI::OHCI_PortSetStatus(int PortNum, uint32_t Value)
 
 	if (Value & OHCI_PORT_PPS) {
 		OHCI_PortPower(PortNum, 1);
-	}	
+	}
 
 	if (old_state != port->HcRhPortStatus) {
 		OHCI_SetInterrupt(OHCI_INTR_RHSC);
@@ -1428,7 +1428,7 @@ int OHCI::OHCI_PortSetIfConnected(int i, uint32_t Value)
 
 	if (m_Registers.RhPort[i].HcRhPortStatus & Value) {
 		ret = 0;
-	}	
+	}
 
 	// set the bit
 	m_Registers.RhPort[i].HcRhPortStatus |= Value;
@@ -1637,7 +1637,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 
 	// From the OHCI standard: "If the relative frame number is between 0 and FrameCount, then the Host Controller issues
-	// a token to the endpoint and attempts a data transfer using the buffer described by the Isochronous TD."	
+	// a token to the endpoint and attempts a data transfer using the buffer described by the Isochronous TD."
 
 	dir = OHCI_BM(ed->Flags, ED_D);
 	switch (dir) {
@@ -1694,7 +1694,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 
 	// From the OHCI standard: "Bit 12 of offset R then selects the upper 20 bits of the physical address
 	// as either BufferPage0 when bit 12 = 0 or the upper 20 bits of BufferEnd when bit 12 = 1."
-		
+
 	if ((start_offset & 0x1000) == 0) {
 		start_addr = (iso_td.BufferPage0 & OHCI_PAGE_MASK) |
 			(start_offset & OHCI_OFFSET_MASK);
@@ -1706,7 +1706,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 
 	// From the OHCI standard: "If the data packet is not the last in an Isochronous TD (R not equal to FrameCount),
 	// then the ending address of the buffer is found by using Offset[R + 1] - 1. This value is then used to create a
-	// physical address in the same manner as the Offset[R] was used to create the starting physical address."	
+	// physical address in the same manner as the Offset[R] was used to create the starting physical address."
 
 	if (relative_frame_number < frame_count) {
 		end_offset = next_offset - 1;
@@ -1721,7 +1721,7 @@ int OHCI::OHCI_ServiceIsoTD(OHCI_ED* ed, int completion)
 	}
 	else {
 		// From the OHCI standard: "If, however, the data packet is the last in an Isochronous TD(R = FrameCount),
-		// then the value of BufferEnd is the address of the last byte in the buffer."	
+		// then the value of BufferEnd is the address of the last byte in the buffer."
 		end_addr = iso_td.BufferEnd;
 	}
 

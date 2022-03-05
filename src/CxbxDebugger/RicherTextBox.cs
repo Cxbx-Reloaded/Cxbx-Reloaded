@@ -50,7 +50,7 @@ namespace CxbxDebugger
         private const int SCF_SELECTION = 0x0001;
         private const int SCF_WORD = 0x0002;
         private const int SCF_ALL = 0x0004;
-        
+
         private IntPtr OldEventMask;
 
         #region CHARFORMAT2 Flags
@@ -83,7 +83,7 @@ namespace CxbxDebugger
         private const int CFM_STYLE = 0x00080000;       /* (*)	*/
         private const int CFM_ANIMATION = 0x00040000;       /* (*)	*/
         private const int CFM_REVAUTHOR = 0x00008000;
-        
+
         private const uint CFM_BOLD = 0x00000001;
         private const uint CFM_ITALIC = 0x00000002;
         private const uint CFM_UNDERLINE = 0x00000004;
@@ -122,7 +122,7 @@ namespace CxbxDebugger
             DetectUrls = false;
             LinkClicked += HandleRichTextBoxLinks;
         }
-        
+
         private void HandleRichTextBoxLinks(object sender, LinkClickedEventArgs e)
         {
             if (InlineLinkClicked != null)
@@ -134,7 +134,7 @@ namespace CxbxDebugger
                 InlineLinkClicked(this, new InlineLinkClickedEventArgs(Label, Link));
             }
         }
-        
+
         [DefaultValue(false)]
         public new bool DetectUrls
         {
@@ -164,7 +164,7 @@ namespace CxbxDebugger
             // Label using the link address
             InsertLink(hyperlink, hyperlink, SelectionStart);
         }
-        
+
         public void InsertLink(string text, string hyperlink)
         {
             InsertLink(text, hyperlink, SelectionStart);
@@ -186,7 +186,7 @@ namespace CxbxDebugger
         {
             SetSelectionStyle(CFM_LINK, link ? CFE_LINK : 0);
         }
- 
+
         private void SetSelectionStyle(uint mask, uint effect)
         {
             CHARFORMAT2_STRUCT cf = new CHARFORMAT2_STRUCT();
@@ -244,7 +244,7 @@ namespace CxbxDebugger
             SendMessage(Handle, EM_SETEVENTMASK, IntPtr.Zero, OldEventMask);
         }
     }
-    
+
     public class InlineLinkClickedEventArgs : EventArgs
     {
         public InlineLinkClickedEventArgs(string label, string link)

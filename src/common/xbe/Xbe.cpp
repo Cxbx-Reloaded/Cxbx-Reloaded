@@ -66,7 +66,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
 		// NOTE: the check for the existence of the child window is necessary because the user could have previously loaded the dashboard,
 		// removed/changed the path and attempt to load it again from the recent list, which will crash CxbxInitWindow below
-		// Note that GetHwnd(), CxbxKrnl_hEmuParent and HalReturnToFirmware are all not suitable here for various reasons 
+		// Note that GetHwnd(), CxbxKrnl_hEmuParent and HalReturnToFirmware are all not suitable here for various reasons
 		if (XbeName.compare(std::string("xboxdash.xbe")) == 0 && !bFromGUI)
 		{
 			// The dashboard could not be found on partition2. This is a fatal error on the Xbox so we display the UEM. The

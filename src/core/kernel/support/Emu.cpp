@@ -61,7 +61,7 @@ static int ExitException(LPEXCEPTION_POINTERS e);
 std::string FormatTitleId(uint32_t title_id)
 {
 	std::stringstream ss;
-	
+
 	// If the Title ID prefix is a printable character, parse it
 	// This shows the correct game serial number for retail titles!
 	// EG: MS-001 for 1st tile published by MS, EA-002 for 2nd title by EA, etc
@@ -76,7 +76,7 @@ std::string FormatTitleId(uint32_t title_id)
 		// Prefix was non-printable, so we need to print a hex reprentation of the entire title_id
 		ss << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << title_id;
 		return ss.str();
-	}	
+	}
 
 	ss << pTitleId1 << pTitleId2;
 	ss << "-";
@@ -88,7 +88,7 @@ std::string FormatTitleId(uint32_t title_id)
 std::string EIPToString(xbox::addr_xt EIP)
 {
 	char buffer[256];
-	
+
 	if (EIP < g_SystemMaxMemory) {
 		int symbolOffset = 0;
 		std::string symbolName = GetDetectedSymbolName(EIP, &symbolOffset);
@@ -96,7 +96,7 @@ std::string EIPToString(xbox::addr_xt EIP)
 	} else {
 		sprintf(buffer, "0x%.08X", EIP);
 	}
-	
+
 	std::string result = buffer;
 
 	return result;
@@ -251,7 +251,7 @@ bool lleTryHandleException(EXCEPTION_POINTERS *e)
 	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
 		switch (e->ExceptionRecord->ExceptionCode) {
 		case STATUS_PRIVILEGED_INSTRUCTION:
-			// Check if this exception came from rdtsc 
+			// Check if this exception came from rdtsc
 			if (IsRdtscInstruction(e->ContextRecord->Eip)) {
 				// If so, use a return value that updates with Xbox frequency;
 				EmuX86_Opcode_RDTSC(e);

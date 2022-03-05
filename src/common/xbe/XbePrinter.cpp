@@ -380,7 +380,7 @@ std::string XbePrinter::GenAlternateSignatureKeys()
 std::string XbePrinter::GenExtraInfo()
 {
     std::stringstream text;
-    
+
     if (Xbe_certificate->dwSize >= 0x1EC)
     {
         SSTREAM_SET_HEX(text);
@@ -480,9 +480,9 @@ std::string XbePrinter::GenLibraryVersions()
             libname[8] = '\0';
 
             text << "Library Name                     : " << libname << "\n";
-            text << "Version                          : " 
-                 << Xbe_to_print->m_LibraryVersion[v].wMajorVersion << "." 
-                 << Xbe_to_print->m_LibraryVersion[v].wMinorVersion << "." 
+            text << "Version                          : "
+                 << Xbe_to_print->m_LibraryVersion[v].wMajorVersion << "."
+                 << Xbe_to_print->m_LibraryVersion[v].wMinorVersion << "."
                  << Xbe_to_print->m_LibraryVersion[v].wBuildVersion << "\n";
             text << GenLibraryFlags(Xbe_to_print->m_LibraryVersion[v]);
             text << "\n";

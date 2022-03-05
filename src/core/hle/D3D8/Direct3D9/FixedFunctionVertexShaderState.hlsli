@@ -50,7 +50,7 @@ struct Transforms {
     arr(Texture, float4x4, 4); // 2, 3, 4, 5
 	// World matrices are 6, 7, 8, 9
 	// But we use combined WorldView matrices in the shader
-    arr(WorldView, float4x4, 4); 
+    arr(WorldView, float4x4, 4);
 	arr(WorldViewInverseTranspose, float4x4, 4);
 };
 

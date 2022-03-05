@@ -416,7 +416,7 @@ XBSYSAPI EXPORTNUM(161) xbox::void_xt FASTCALL xbox::KfLowerIrql
 
 	// Are there any interrupts pending?
 	if (MaskedInterrupts > 0) {
-		// Determine the highest IRQ level 
+		// Determine the highest IRQ level
 		KIRQL HighestIrql = (KIRQL)bsr(MaskedInterrupts);
 
 		// Above dispatch level, clear the highest interrupt request bit
@@ -643,7 +643,7 @@ XBSYSAPI EXPORTNUM(370) xbox::ntstatus_xt NTAPI xbox::XProfpControl // PROFILING
 // ******************************************************************
 // * 0x0173 - XProfpGetData()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(371) xbox::ntstatus_xt NTAPI xbox::XProfpGetData // PROFILING 
+XBSYSAPI EXPORTNUM(371) xbox::ntstatus_xt NTAPI xbox::XProfpGetData // PROFILING
 (
 	// NO ARGUMENTS
 )

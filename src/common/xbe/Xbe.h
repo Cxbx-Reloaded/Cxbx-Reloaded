@@ -51,7 +51,7 @@ class Xbe : public Error
     public:
         // construct via Xbe file
         Xbe(const char *x_szFilename, bool bFromGUI);
-		
+
         // deconstructor
        ~Xbe();
 
@@ -100,7 +100,7 @@ class Xbe : public Error
             uint32_t dwSections;                      // 0x011C - number of sections
             uint32_t dwSectionHeadersAddr;            // 0x0120 - section headers address
 
-			typedef struct                         
+			typedef struct
             {
                 uint32_t bMountUtilityDrive   : 1;    // mount utility drive flag
                 uint32_t bFormatUtilityDrive  : 1;    // format utility drive flag
@@ -175,7 +175,7 @@ class Xbe : public Error
         #include "AlignPrefix1.h"
         struct SectionHeader
         {
-            typedef struct 
+            typedef struct
             {
                 uint32_t bWritable        : 1;    // writable flag
                 uint32_t bPreload         : 1;    // preload flag
@@ -217,7 +217,7 @@ class Xbe : public Error
             uint16_t wMinorVersion;               // minor version
             uint16_t wBuildVersion;               // build version
 
-            typedef struct 
+            typedef struct
             {
                 uint16_t QFEVersion       : 13;   // QFE Version
                 uint16_t Approved         : 2;    // Approved? (0:no, 1:possibly, 2:yes)

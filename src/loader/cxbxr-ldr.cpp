@@ -63,7 +63,7 @@ unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE] = { 0 }; // = { OP
 // Also, the linker options for this loader are specified such, that the
 // executable will be loaded by Windows at the pre-defined address, and
 // won't contain any other code not under our control.
-// 
+//
 // When executed, this loader starts by validating the correct run environment,
 // then reserves all memory ranges that Xbox emulation requires, and only then
 // loads in the actual emulation code by dynamically loading in our library

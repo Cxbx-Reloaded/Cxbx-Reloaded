@@ -97,7 +97,7 @@ namespace CxbxDebugger
             bool Result = NativeMethods.GetThreadContext(Handle, ref ContextCache);
             if (!Result)
                 return;
-            
+
             uint ebp = ContextCache.ebp;
 
             CallstackCache = new DebuggerCallstack();

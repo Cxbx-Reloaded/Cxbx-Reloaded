@@ -216,7 +216,7 @@ xbox::dword_xt	XDVDFS_GetFileInfo(
 	// Skip leading backslash if present
 	if (*Filename == DIRECTORY_SEPARATOR)
 		Filename++;
-	
+
 	while(*Filename)
 	{
 		// Skip backslashes

@@ -1965,7 +1965,7 @@ void WndMain::OpenXbe(const char *x_filename)
     }
 
 	std::string errorMsg;
-	
+
 	if (!g_Settings->m_gui.bIgnoreInvalidXbeSig && !m_Xbe->CheckSignature()) {
 		errorMsg += "- XBE signature check failed!\n";
 	}

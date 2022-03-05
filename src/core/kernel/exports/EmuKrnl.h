@@ -88,7 +88,7 @@ public:
 	}
 
 	void Trigger(xbox::PKINTERRUPT Interrupt) {
-		// If interrupt was level sensitive, we clear the pending flag, preventing the interrupt from being triggered 
+		// If interrupt was level sensitive, we clear the pending flag, preventing the interrupt from being triggered
 		// until it is deasserted then asserted again. Latched interrupts are triggered until the line is Deasserted!
 		if (m_InterruptMode == xbox::KINTERRUPT_MODE::LevelSensitive) {
 			m_Pending = false;

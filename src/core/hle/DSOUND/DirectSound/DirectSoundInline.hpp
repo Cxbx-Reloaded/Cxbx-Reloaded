@@ -473,7 +473,7 @@ static inline void DSoundBufferReCreate(
         EmuLog(LOG_LEVEL::WARNING, "DSoundBufferReCreate Failed!");
     }
 
-    
+
 }
 
 static inline void DSoundBufferRelease(

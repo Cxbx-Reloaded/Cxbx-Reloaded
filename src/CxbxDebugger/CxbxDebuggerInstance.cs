@@ -503,7 +503,7 @@ namespace CxbxDebugger
             }
 
             public void OnDebugTargetChanged(string CommandLine)
-            { 
+            {
                 frm.DebugLog($"New debug session started - {CommandLine}");
 
                 frm.Invoke(new MethodInvoker(delegate ()
@@ -919,7 +919,7 @@ namespace CxbxDebugger
             int Index = cbThreads.SelectedIndex;
             if (Index == -1)
                 return;
-            
+
             CallstackDump.Clear();
             cbFrames.Items.Clear();
 

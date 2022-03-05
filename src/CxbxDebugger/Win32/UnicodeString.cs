@@ -21,7 +21,7 @@ namespace VsChromium.Core.Win32 {
     public IntPtr Buffer { get { return buffer; } }
   }
 
-  [StructLayout(LayoutKind.Sequential, Pack = 1)] 
+  [StructLayout(LayoutKind.Sequential, Pack = 1)]
   public struct UnicodeStringWow64 {
     // The length in bytes of the string pointed to by buffer, not including the null-terminator.
     private ushort length;

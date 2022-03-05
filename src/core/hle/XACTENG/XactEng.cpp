@@ -42,7 +42,7 @@
 
 
 // NOTES: For Xbox, the XACT library is a wrapper for DirectSound.
-//		  It is not be necesarry to emulate the entire API because of 
+//		  It is not be necesarry to emulate the entire API because of
 //		  this, but atm only the functions containing low level code are being
 //		  emulated.
 //		  Only timing require a patch which is done in LLE.
@@ -53,7 +53,7 @@
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(XACTEngineCreate)
 (
-	X_XACT_RUNTIME_PARAMETERS* pParams, 
+	X_XACT_RUNTIME_PARAMETERS* pParams,
 	X_XACTEngine** ppEngine
 )
 {
@@ -66,8 +66,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XACTEngineCreate)
 
 	*ppEngine = (X_XACTEngine*)ExAllocatePool(sizeof( X_XACTEngine ));
 
-		
-	
+
+
 	RETURN(S_OK);
 }
 
@@ -85,7 +85,7 @@ void WINAPI xbox::EMUPATCH(XACTEngineDoWork)()
 	//EmuDirectSoundDoWork();
 	//
 
-		
+
 }
 
 // ******************************************************************
@@ -260,7 +260,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IXACTEngine_SetListenerPosition)
 (
 	X_XACTEngine*	pThis,
 	float			x,
-	float			y, 
+	float			y,
 	float			z,
 	dword_xt			dwApply
 )
@@ -283,7 +283,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IXACTEngine_SetListenerVelocity)
 (
 	X_XACTEngine*	pThis,
 	float			x,
-	float			y, 
+	float			y,
 	float			z,
 	dword_xt			dwApply
 )

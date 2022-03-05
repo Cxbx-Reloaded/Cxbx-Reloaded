@@ -61,7 +61,7 @@ void APUDevice::Init()
 	m_DeviceId = 0x01B0;
 	m_VendorId = PCI_VENDOR_ID_NVIDIA;
 }
-	
+
 void APUDevice::Reset()
 {
 
@@ -93,7 +93,7 @@ uint32_t APUDevice::MMIORead(int barIndex, uint32_t addr, unsigned size)
 	}
 
 	switch (addr) {
-		case 0x200C: return GetAPUTime();	
+		case 0x200C: return GetAPUTime();
 	}
 
 	printf("APUDevice: Unimplemented MMIORead %X\n", addr);

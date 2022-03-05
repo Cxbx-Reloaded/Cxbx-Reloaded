@@ -206,7 +206,7 @@ void RefreshAudioAdapter()
         GUID oldGUID = g_XBAudio.adapterGUID;
 
         DWORD dwAudioAdapter = (DWORD)SendMessage(g_hAudioAdapter, CB_GETCURSEL, 0, 0);
-        
+
         LPGUID pGUID = (LPGUID)SendMessage(g_hAudioAdapter, CB_GETITEMDATA, dwAudioAdapter, 0);
 
         GUID binGUID;

@@ -92,7 +92,7 @@ typedef struct {
 			uint32_t type : 1;
 			uint32_t reserved : 1;
 			uint32_t address : 30;
-		}IO;	
+		}IO;
 
 		struct {
 			uint32_t type : 1;
@@ -101,7 +101,7 @@ typedef struct {
 
 		uint32_t value;
 	};
-	
+
 } PCIBarRegister;
 
 typedef struct {

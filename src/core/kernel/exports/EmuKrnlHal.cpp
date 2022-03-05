@@ -147,7 +147,7 @@ XBSYSAPI EXPORTNUM(39) xbox::void_xt NTAPI xbox::HalDisableSystemInterrupt
 // ******************************************************************
 // This specifies the number of Cache partitions available for game data caching
 // On real hardware, there are three, generally known as X, Y and Z in homebrew
-XBSYSAPI EXPORTNUM(40) xbox::ulong_xt xbox::HalDiskCachePartitionCount = 3; 
+XBSYSAPI EXPORTNUM(40) xbox::ulong_xt xbox::HalDiskCachePartitionCount = 3;
 
 // ******************************************************************
 // * 0x0029 - HalDiskModelNumber
@@ -159,7 +159,7 @@ XBSYSAPI EXPORTNUM(41) xbox::PANSI_STRING xbox::HalDiskModelNumber = 0;
 // * 0x002A - HalDiskSerialNumber
 // ******************************************************************
 // Source:OpenXDK  TODO : Fill this with something sensible
-XBSYSAPI EXPORTNUM(42) xbox::PANSI_STRING xbox::HalDiskSerialNumber = 0;	
+XBSYSAPI EXPORTNUM(42) xbox::PANSI_STRING xbox::HalDiskSerialNumber = 0;
 
 // ******************************************************************
 // * 0x002B - HalEnableSystemInterrupt()
@@ -242,7 +242,7 @@ XBSYSAPI EXPORTNUM(44) xbox::ulong_xt NTAPI xbox::HalGetInterruptVector
 			*Irql = (KIRQL)VECTOR2IRQL(dwVector);
 
 #ifdef _DEBUG_TRACE
-		EmuLog(LOG_LEVEL::DEBUG, "HalGetInterruptVector(): Interrupt vector requested for %d (%s)", 
+		EmuLog(LOG_LEVEL::DEBUG, "HalGetInterruptVector(): Interrupt vector requested for %d (%s)",
 			BusInterruptLevel, IRQNames[BusInterruptLevel]);
 #endif
 	}
@@ -322,7 +322,7 @@ XBSYSAPI EXPORTNUM(46) xbox::void_xt NTAPI xbox::HalReadWritePCISpace
 		LOG_FUNC_END;
 
 	// TODO: Disable Interrupt Processing
-	
+
 	PCI_SLOT_NUMBER PCISlotNumber;
 	PCI_TYPE1_CFG_BITS CfgBits;
 
@@ -366,7 +366,7 @@ XBSYSAPI EXPORTNUM(46) xbox::void_xt NTAPI xbox::HalReadWritePCISpace
 				break;
 			}
 		}
-		
+
 		RegisterNumber += Size;
 		Buffer = (PUCHAR)Buffer + Size;
 		Length -= Size;
@@ -460,7 +460,7 @@ XBSYSAPI EXPORTNUM(48) xbox::void_xt FASTCALL xbox::HalRequestSoftwareInterrupt
 
 	// Get the highest pending software interrupt level
 	KIRQL SoftwareIrql = SoftwareInterruptLookupTable[SoftwareInterrupt];
-	
+
 	if (SoftwareIrql > CurrentIrql) {
 		// TODO: This is not completely correct, but it fixes an issue where DPCQueue's weren't running
 		CallSoftwareInterrupt(Request);
@@ -796,7 +796,7 @@ XBSYSAPI EXPORTNUM(360) xbox::ntstatus_xt NTAPI xbox::HalInitiateShutdown
 )
 {
 	LOG_FUNC();
-	
+
 	ResetOrShutdownCommandCode = SMC_COMMAND_RESET;
 	ResetOrShutdownDataValue = SMC_RESET_ASSERT_SHUTDOWN;
 	xbox::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, ResetOrShutdownCommandCode, 0, ResetOrShutdownDataValue);

@@ -523,11 +523,11 @@ typedef struct _FILE_FS_OBJECTID_INFORMATION {
 	UCHAR ExtendedInfo[48];
 } FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
 
-typedef struct _FILE_FS_DEVICE_INFORMATION {                    
-	DWORD DeviceType;                                     
-	ULONG Characteristics;                                      
-} FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;     
-															
+typedef struct _FILE_FS_DEVICE_INFORMATION {
+	DWORD DeviceType;
+	ULONG Characteristics;
+} FILE_FS_DEVICE_INFORMATION, *PFILE_FS_DEVICE_INFORMATION;
+
 typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
 	ULONG FileSystemAttributes;
 	LONG MaximumComponentNameLength;
@@ -1249,7 +1249,7 @@ typedef VOID (NTAPI *FPTR_RtlFillMemoryUlong)
 	OUT PVOID  Destination,
 	IN  SIZE_T Length,
 	IN	ULONG  Pattern
-); 
+);
 
 // ******************************************************************
 // * RtlIntegerToChar
@@ -1799,7 +1799,7 @@ typedef NTSTATUS (NTAPI *FPTR_NtQueueApcThread)
 	IN PIO_APC_ROUTINE      ApcRoutine,
 	IN PVOID                ApcRoutineContext OPTIONAL,
 	IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
-	IN ULONG                ApcReserved OPTIONAL 
+	IN ULONG                ApcReserved OPTIONAL
 );
 
 // ******************************************************************

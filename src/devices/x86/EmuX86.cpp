@@ -22,7 +22,7 @@
 // *  (c) 2002-2003 Aaron Robinson <caustik@caustik.com>
 // *  (c) 2016-2018 Luke Usher <luke.usher@outlook.com>
 // *  (c) 2016-2018 Patrick van Logchem <pvanlogchem@gmail.com>
-// *  All rights reserved 
+// *  All rights reserved
 // *
 // ******************************************************************
 
@@ -154,7 +154,7 @@ uint32_t EmuFlash_Read32(xbox::addr_xt addr) // TODO : Move to EmuFlash.cpp
     // So we specifiy the specific values that games rely on.
 
 	switch (addr) {
-    case 0x08: // ? Test Case - Shenmue II attempts to read this address but never uses the resulting value? 
+    case 0x08: // ? Test Case - Shenmue II attempts to read this address but never uses the resulting value?
         r = 0x2B16D065;
         break;
 	case 0x78: // ROM_VERSION
@@ -358,7 +358,7 @@ inline void * EmuX86_GetRegisterPointer(const LPEXCEPTION_POINTERS e, const uint
 		return &it->second;
 	}
 
-	assert(false); 
+	assert(false);
 	return nullptr;
 }
 
@@ -934,7 +934,7 @@ void EmuX86_Opcode_CPUID(LPEXCEPTION_POINTERS e, _DInst& info)
 		e->ContextRecord->Eax = 0x68a;
 		e->ContextRecord->Ebx = 0;
 		e->ContextRecord->Ecx = 0;
-		// Feature Flags 
+		// Feature Flags
 		e->ContextRecord->Edx = 0x383F9FF; // FPU, VME, DE, PSE, TSC, MSR, PAE, MCE, CX8, SEP, MTRR, PGE, MCA, CMOV, PAT, PSE36, MMX, FXSR, SSE
 		return;
 	}
@@ -1033,7 +1033,7 @@ bool EmuX86_Opcode_INC(LPEXCEPTION_POINTERS e, _DInst& info)
 
 	// Write result back
 	EmuX86_Addr_Write(opAddr, static_cast<uint32_t>(result));
-	
+
 	return true;
 }
 
@@ -1174,7 +1174,7 @@ bool EmuX86_Opcode_NOT(LPEXCEPTION_POINTERS e, _DInst& info)
 	OperandAddress opAddr;
 	if (!EmuX86_Operand_Addr_ForReadWrite(e, info, 0, OUT opAddr))
 		return false;
-	
+
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
@@ -1321,7 +1321,7 @@ bool EmuX86_Opcode_SAR(LPEXCEPTION_POINTERS e, _DInst& info)
 		push eflags			// push context eflags on the stack
 		popfd				// pop context eflags into host eflags
 		mov eax, dest
-		mov cl, byteSrc		
+		mov cl, byteSrc
 		sar eax, cl			// perform the operation, this updates eflags for us!
 		mov result, eax
 		pushfd				// push the updated host flags onto the stack
@@ -1438,7 +1438,7 @@ bool EmuX86_Opcode_SHR(LPEXCEPTION_POINTERS e, _DInst& info)
 
 
 	uint32_t dest = EmuX86_Addr_Read(opAddr);
-	
+
 	uint32_t result = 0;
 	uint32_t eflags = e->ContextRecord->EFlags;
 	uint8_t byteSrc = src;
@@ -2923,7 +2923,7 @@ int EmuX86_OpcodeSize(uint8_t *Eip)
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 {
 	// Decoded instruction information.
-	// Opcode handler note : 
+	// Opcode handler note :
 	// If an opcode or one of it's operand can't be decoded, that's a clear failure.
 	// However, if for any reason, an opcode operand cannot be read from or written to,
 	// that case may be logged, but it shouldn't fail the opcode handler.
@@ -3139,7 +3139,7 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 			case I_NEG:
 				if (EmuX86_Opcode_NEG(e, info)) break;
 				goto opcode_error;
-			case I_NOP: 
+			case I_NOP:
 				break;
 			case I_NOT:
 				if (EmuX86_Opcode_NOT(e, info)) break;

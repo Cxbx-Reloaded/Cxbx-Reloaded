@@ -41,8 +41,8 @@ namespace VsChromium.Core.Win32.Processes {
     /// and does not run until the ResumeThread function is called.
     CREATE_SUSPENDED = 0x00000004,
     /// <summary>
-    /// The new process has a new console, instead of inheriting its parent's console (the default). 
-    /// 
+    /// The new process has a new console, instead of inheriting its parent's console (the default).
+    ///
     /// This flag cannot be used with DETACHED_PROCESS.
     /// </summary>
     CREATE_NEW_CONSOLE = 0x00000010
