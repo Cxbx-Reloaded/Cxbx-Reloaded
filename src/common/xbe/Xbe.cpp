@@ -45,7 +45,6 @@
 namespace fs = std::filesystem;
 
 
-
 // construct via Xbe file
 Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 {

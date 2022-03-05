@@ -862,7 +862,6 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
 	}
 
 
-
     return (X_D3DRESOURCETYPE)rType;
 }
 #endif
@@ -1766,7 +1765,6 @@ ULONG WINAPI XTL::EMUPATCH(D3DResource_AddRef)
 }
 
 
-
 #if 0 // DISABLED (Just calls MmAllocateContiguousMemory)
 // ******************************************************************
 // * patch: D3D_AllocContiguousMemory
@@ -1898,7 +1896,6 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
     );
 
 
-
     return hRet;
 }
 #endif
@@ -1952,7 +1949,6 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
     HRESULT hRet = D3D_OK;
 
     // This is a Xbox extension, meaning there is no pc counterpart.
-
 
 
     return hRet;
@@ -2068,7 +2064,6 @@ XTL::X_D3DVertexBuffer* WINAPI XTL::EMUPATCH(D3DDevice_GetStreamSource2)
 	}
 
     return pVertexBuffer;
-
 
 
 // Cache pixel shaders, the main reason for this is so that
@@ -2574,7 +2569,6 @@ XTL::X_D3DPalette * WINAPI XTL::EMUPATCH(D3DDevice_CreatePalette2)
 												 // EmuD3DDevice_SetPalette for 8-bit textures to work properly.
 
 	DbgPrintf("pPalette: = 0x%.08X\n", pPalette);
-
 
 
 	return pPalette;
@@ -3804,7 +3798,6 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetBackMaterial)
 
 	LOG_NOT_SUPPORTED();
 }
-
 
 
 // ******************************************************************

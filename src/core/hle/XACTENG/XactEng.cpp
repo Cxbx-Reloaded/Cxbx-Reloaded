@@ -67,7 +67,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(XACTEngineCreate)
 	*ppEngine = (X_XACTEngine*)ExAllocatePool(sizeof( X_XACTEngine ));
 
 
-
 	RETURN(S_OK);
 }
 

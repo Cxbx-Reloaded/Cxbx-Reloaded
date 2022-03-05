@@ -48,7 +48,3 @@ XBSYSAPI EXPORTNUM(11) void_xt NTAPI DbgUnLoadImageSymbols
 }
 
 #endif
-
-
-
-

@@ -38,7 +38,6 @@
 #include "..\XbDSoundLogging.hpp"
 
 
-
 // TODO: Tasks need to do for DirectSound HLE
 // * Missing IDirectSoundBuffer patch
 //   * IDirectSoundBuffer_Set3DVoiceData (new, undocument)

@@ -428,8 +428,6 @@ namespace CxbxDebugger
             CxbxDebuggerInstance frm;
 
 
-
-
             public DebuggerFormEvents(CxbxDebuggerInstance main)
             {
                 frm = main;

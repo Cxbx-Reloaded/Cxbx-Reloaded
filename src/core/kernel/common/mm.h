@@ -239,6 +239,3 @@ XBSYSAPI EXPORTNUM(378) PVOID NTAPI MmDbgWriteCheck
 }
 
 #endif
-
-
-

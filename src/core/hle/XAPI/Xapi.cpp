@@ -28,7 +28,6 @@
 #define LOG_PREFIX CXBXR_MODULE::XAPI
 
 
-
 #include <core\kernel\exports\xboxkrnl.h>
 #include "common\input\SdlJoystick.h"
 #include "common\input\InputManager.h"

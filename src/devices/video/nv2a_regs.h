@@ -976,7 +976,6 @@
 #define NV_USER_REF                                      0x48
 
 
-
 /* DMA objects */
 #define NV_DMA_FROM_MEMORY_CLASS                         0x02
 #define NV_DMA_TO_MEMORY_CLASS                           0x03
@@ -1005,7 +1004,6 @@
 #   define NV_RAMHT_ENGINE_DVD                                    0x00020000
 #define NV_RAMHT_CHID                                         0x1F000000
 #define NV_RAMHT_STATUS                                       0x80000000
-
 
 
 /* graphic classes and methods */

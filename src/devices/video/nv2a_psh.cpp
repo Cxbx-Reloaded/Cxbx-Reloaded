@@ -161,7 +161,6 @@ enum PS_FINALCOMBINERSETTING
 };
 
 
-
 // Structures to describe the PS definition
 
 struct InputInfo {
@@ -525,7 +524,6 @@ static void add_final_stage_code(struct PixelShader *ps, struct FCInputInfo fina
 }
 
 
-
 static QString* psh_convert(struct PixelShader *ps)
 {
     int i;
@@ -879,7 +877,6 @@ QString *psh_translate(const PshState state)
         //ps.final_input.c0_value = final_constant_0;
         //ps.final_input.c1_value = final_constant_1;
     }
-
 
 
     return psh_convert(&ps);

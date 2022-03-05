@@ -258,7 +258,6 @@ static const char* out_reg_name[] = {
 };
 
 
-
 // Retrieves a number of bits in the instruction token
 static int vsh_get_from_token(const uint32_t *shader_token,
                               uint8_t subtoken,
@@ -285,7 +284,6 @@ static int16_t convert_c_register(const int16_t c_reg)
     r += VSH_D3DSCM_CORRECTION; /* to map -96..95 to 0..191 */
     return r; //FIXME: = c_reg?!
 }
-
 
 
 static QString* decode_swizzle(const uint32_t *shader_token,

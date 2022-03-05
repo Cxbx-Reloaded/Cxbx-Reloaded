@@ -65,13 +65,11 @@
                     }
 
 
-
 typedef struct {
     int8_t  Index;
     int16_t StepSize;
     int16_t Predictor;
 } TAdpcmState;
-
 
 
 const static int16_t StepTable[89] = {
@@ -85,7 +83,6 @@ const static int16_t StepTable[89] = {
     5894, 6484, 7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899,
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
 };
-
 
 
 const static int8_t IndexTable[16] = {
