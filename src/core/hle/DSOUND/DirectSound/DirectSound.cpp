@@ -486,11 +486,15 @@ static void dsound_thread_worker(LPVOID nullPtr)
 			// Stream sound buffer audio
 			// because the title may change the content of sound buffers at any time
 			for (auto& pBuffer : g_pDSoundBufferCache) {
-				DWORD status;
-				HRESULT hRet = pBuffer->emuDSBuffer->EmuDirectSoundBuffer8->GetStatus(&status);
-				if (hRet == 0 && status & DSBSTATUS_PLAYING) {
-					auto streamMs = g_dsBufferStreaming.streamInterval + g_dsBufferStreaming.streamAhead;
-					StreamBufferAudio(pBuffer, streamMs);
+				// Avoid expensive calls to DirectSound on buffers unless they've been played at least once
+				// Since some titles create a large amount of buffers, but only use a few
+				if (pBuffer->emuDSBuffer->EmuStreamingInfo.playRequested) {
+					DWORD status;
+					HRESULT hRet = pBuffer->emuDSBuffer->EmuDirectSoundBuffer8->GetStatus(&status);
+					if (hRet == 0 && status & DSBSTATUS_PLAYING) {
+						auto streamMs = g_dsBufferStreaming.streamInterval + g_dsBufferStreaming.streamAhead;
+						StreamBufferAudio(pBuffer, streamMs);
+					}
 				}
 			}
         }
@@ -1057,6 +1061,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSound_SynchPlayback)
             DSoundBufferSynchPlaybackFlagRemove(pDSBuffer->EmuFlags);
             EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSBuffer: %08X; EmuPlayFlags: %08X", *ppDSBuffer, pDSBuffer->EmuPlayFlags);
             pDSBuffer->EmuDirectSoundBuffer8->Play(0, 0, pDSBuffer->EmuPlayFlags);
+			pDSBuffer->EmuStreamingInfo.playRequested = true;
         }
     }
 

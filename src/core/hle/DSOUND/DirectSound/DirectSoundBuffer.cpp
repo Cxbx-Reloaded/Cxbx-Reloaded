@@ -80,6 +80,7 @@ void DirectSoundDoWork_Buffer(xbox::LARGE_INTEGER &time)
             pThis->Xb_rtPauseEx = 0LL;
             pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
             pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+			pThis->EmuStreamingInfo.playRequested = true;
         }
 
         if (pThis->Xb_rtStopEx != 0LL && pThis->Xb_rtStopEx <= time.QuadPart) {
@@ -601,6 +602,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Play)
         }
         if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
             hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+			pThis->EmuStreamingInfo.playRequested = true;
         }
     }
 
