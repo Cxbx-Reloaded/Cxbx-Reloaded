@@ -32,7 +32,7 @@ jobs:
         configuration: [Release, Debug]
         vsver: [2022, 2019]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Generate CMake files
@@ -42,7 +42,7 @@ jobs:
       - name: Prepare artifacts
         if: matrix.configuration == 'Release'
         run: cmake --install build --config ${{ matrix.configuration }} --prefix artifacts
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: matrix.configuration == 'Release'
         with:
           name: CxbxReloaded-${{ matrix.configuration }}-VS${{ matrix.vsver }}
@@ -57,9 +57,9 @@ jobs:
     needs: build-windows
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
       - name: Re-zip artifacts
