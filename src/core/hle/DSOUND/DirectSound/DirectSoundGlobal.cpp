@@ -150,11 +150,10 @@ void DSound_DrawBufferVisualization(bool is_focus, bool* p_show, ImGuiWindowFlag
 
 				ImGui::PopID();
 			}
-			ImGui::EndChild();
 		}
-
-		ImGui::End();
+        ImGui::EndChild();
 	}
+    ImGui::End();
 }
 
 void DSound_PrintStats(bool is_focus, ImGuiWindowFlags input_handler, bool m_show_audio_stats)
@@ -252,7 +251,7 @@ void DSound_PrintStats(bool is_focus, ImGuiWindowFlags input_handler, bool m_sho
                     ImGui::Text("Total active DSStream = %u", isActive);
                 }
             }
-            ImGui::End();
         }
+        ImGui::End();
     }
 }
