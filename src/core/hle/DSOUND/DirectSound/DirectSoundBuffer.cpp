@@ -481,6 +481,16 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Unlock)
     dword_xt                   pdwAudioBytes2
     )
 {
+    // DSoundMutexGuardLock;
+
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pHybridThis)
+        LOG_FUNC_ARG(ppvAudioPtr1)
+        LOG_FUNC_ARG(pdwAudioBytes1)
+        LOG_FUNC_ARG(ppvAudioPtr2)
+        LOG_FUNC_ARG(pdwAudioBytes2)
+        LOG_FUNC_END;
+
 	// Xbox directsound doesn't require locking buffers
 	// This Xbox api only exists to match PC
 
