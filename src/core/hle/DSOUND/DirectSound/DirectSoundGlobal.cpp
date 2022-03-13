@@ -27,14 +27,13 @@
 #define LOG_PREFIX CXBXR_MODULE::DSOUND
 
 #include <imgui.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui_internal.h" // For ImVec
 #include "core/common/imgui/ui.hpp"
 
 #include <dsound.h>
 #include "DirectSoundGlobal.hpp"
 #include "DirectSoundInline.hpp" // For GetCurrentPosition, RegionCurrentLocation
-
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui_internal.h" // For ImVec
 
 Settings::s_audio            g_XBAudio = { 0 };
 std::recursive_mutex         g_DSoundMutex;
