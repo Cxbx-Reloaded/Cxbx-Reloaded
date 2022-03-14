@@ -474,7 +474,7 @@ static void dsound_thread_worker(LPVOID nullPtr)
         {
             DSoundMutexGuardLock;
 
-			if (waitCounter > g_dsBufferStreaming.streamInterval) {
+			if (waitCounter > dsStreamInterval) {
 				waitCounter = 0;
 
 				// For Async process purpose only
