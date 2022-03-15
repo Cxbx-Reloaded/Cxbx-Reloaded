@@ -145,6 +145,7 @@ inline constexpr uint32_t FLASH_DEVICE4_END  =     (FLASH_DEVICE4_BASE - 1 + FLA
 #define PAGE_SHIFT                          12 // 2^12 = 4 KiB
 #define PAGE_SIZE                           (1 << PAGE_SHIFT) // = 0x00001000 = KiB(4)
 #define PAGE_MASK                           (PAGE_SIZE - 1)
+#define PAGE_ALIGN(address)                 (PVOID) ((ulong_ptr_xt)(address) & ~PAGE_MASK))
 
 #define LARGE_PAGE_SHIFT                    22 // 2^22 = 4 MiB
 #define LARGE_PAGE_SIZE                     (1 << LARGE_PAGE_SHIFT) // = 0x00400000 = 4 MiB

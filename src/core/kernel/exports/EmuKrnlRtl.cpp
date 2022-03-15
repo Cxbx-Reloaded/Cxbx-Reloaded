@@ -58,6 +58,37 @@ xbox::dword_xt WINAPI RtlAnsiStringToUnicodeSize(const xbox::STRING *str)
 	return (str->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR);
 }
 
+// Source: ReactOS (excluded DPC stack check)
+xbox::boolean_xt RtlpCaptureStackLimits(
+	IN xbox::ulong_ptr_xt Ebp,
+	OUT xbox::ulong_ptr_xt* StackBegin,
+	OUT xbox::ulong_ptr_xt* StackEnd)
+{
+	using namespace xbox;
+	PKTHREAD Thread = KeGetCurrentThread();
+
+	/* Don't even try at ISR level or later */
+	//if (KeGetCurrentIrql() > DISPATCH_LEVEL) return FALSE;
+
+	/* Start with defaults */
+	*StackBegin = reinterpret_cast<ulong_ptr_xt>(Thread->StackLimit);
+	*StackEnd = reinterpret_cast<ulong_ptr_xt>(Thread->StackBase);
+
+	/* Check if EBP is inside the stack */
+	if ((*StackBegin <= Ebp) && (Ebp <= *StackEnd)) {
+		/* Then make the stack start at EBP */
+		*StackBegin = Ebp;
+	}
+	else {
+		/* We're somewhere else entirely... use EBP for safety */
+		*StackBegin = Ebp;
+		*StackEnd = reinterpret_cast<ulong_ptr_xt>(PAGE_ALIGN((*StackBegin));
+	}
+
+	/* Return success */
+	return TRUE;
+}
+
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
@@ -2071,6 +2102,8 @@ XBSYSAPI EXPORTNUM(318) xbox::ushort_xt FASTCALL xbox::RtlUshortByteSwap
 // ******************************************************************
 // * 0x013F - RtlWalkFrameChain()
 // ******************************************************************
+// Source: ReactOS (modified to fit in xbox compatibility layer)
+// NOTE: From xbox kernel, Flags input is not used.
 XBSYSAPI EXPORTNUM(319) xbox::ulong_xt NTAPI xbox::RtlWalkFrameChain
 (
 	OUT PVOID *Callers,
@@ -2078,15 +2111,97 @@ XBSYSAPI EXPORTNUM(319) xbox::ulong_xt NTAPI xbox::RtlWalkFrameChain
 	IN ulong_xt Flags
 )
 {
+	ulong_ptr_xt Stack;
+	/* Get current EBP */
+#if defined __GNUC__
+	__asm__("mov %%ebp, %0" : "=r" (Stack) : );
+#elif defined(_MSC_VER)
+	__asm mov Stack, ebp
+#endif
+
+#if 0 // NOTE: Disabled due to __try/__except doesn't like this for some reason.
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(Callers)
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_ARG(Flags)
 	LOG_FUNC_END;
+#endif
 
-	LOG_UNIMPLEMENTED();
+	/* Get the actual safe limits */
+	ulong_ptr_xt StackBegin, StackEnd;
+	RtlpCaptureStackLimits(Stack, &StackBegin, &StackEnd);
 
-	RETURN(NULL);
+	ulong_xt i = 0;
+
+	/* Use a SEH block for maximum protection */
+	__try {
+		/* Loop the frames */
+		boolean_xt StopSearch = FALSE;
+		for (i = 0; i < Count; i++) {
+			/*
+			 * Leave if we're past the stack,
+			 * if we're before the stack,
+			 * or if we've reached ourselves.
+			 */
+			if ((Stack >= StackEnd) ||
+				(!i ? (Stack < StackBegin) : (Stack <= StackBegin)) ||
+				((StackEnd - Stack) < (2 * sizeof(ulong_ptr_xt))))
+			{
+				/* We're done or hit a bad address */
+				break;
+			}
+
+			/* Get new stack and EIP */
+			ulong_ptr_xt NewStack = *(ulong_ptr_xt*)Stack;
+			ulong_xt Eip = *(ulong_ptr_xt*)(Stack + sizeof(ulong_ptr_xt));
+
+			/* Check if the new pointer is above the old one and past the end */
+			if (!((Stack < NewStack) && (NewStack < StackEnd))) {
+				/* Stop searching after this entry */
+				StopSearch = TRUE;
+			}
+
+			/* Also make sure that the EIP isn't a stack address */
+			if ((StackBegin < Eip) && (Eip < StackEnd)) {
+				break;
+			}
+
+			/* Save this frame */
+			Callers[i] = reinterpret_cast<PVOID>(Eip);
+
+			/* Check if we should continue */
+			if (StopSearch)
+			{
+				/* Return the next index */
+				i++;
+				break;
+			}
+
+			/* Move to the next stack */
+			Stack = NewStack;
+		}
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+		/* No index */
+		i = 0;
+	}
+
+#ifndef ENABLE_KTHREAD_SWITCHING
+	// HACK: This is necessary to exclude our own PCSTProxy startup function.
+	if (i) {
+		ulong_xt Eip = reinterpret_cast<ulong_xt>(Callers[i - 1]);
+		// Check if the first call is outside of xbe's system memory.
+		// If so, force exclude it to conform with xbox kernel test suite's result.
+		// NOTE: This will always occur every time. As the thread's startup function address reside behind KSWITCHFRAME structure.
+		//       Except we are currently using our host's local variable as xbox's stack storage.
+		if (Eip > g_SystemMaxMemory) {
+			i--;
+			Callers[i] = zeroptr;
+		}
+	}
+#endif
+
+	return i;// RETURN(i);
 }
 
 // ******************************************************************
