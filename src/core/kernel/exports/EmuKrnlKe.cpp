@@ -78,7 +78,6 @@ namespace NtDll
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
-#include "EmuKrnlKi.h" // For KiRemoveTreeTimer(), KiInsertTreeTimer()
 #include "EmuKrnlKe.h"
 #include "core\kernel\support\EmuFile.h" // For IsEmuHandle(), NtStatusToString()
 #include "core\kernel\support\NativeHandle.h"

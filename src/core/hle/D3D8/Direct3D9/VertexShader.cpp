@@ -79,7 +79,7 @@ void OutputHlsl(std::stringstream& hlsl, VSH_IMD_OUTPUT& dest)
 
 void ParameterHlsl(std::stringstream& hlsl, VSH_IMD_PARAMETER& param, bool IndexesWithA0_X)
 {
-	static char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
+	static const char* RegisterName[/*VSH_PARAMETER_TYPE*/] = {
 		"?", // PARAM_UNKNOWN = 0,
 		"r", // PARAM_R,          // Temporary (scRatch) registers
 		"v", // PARAM_V,          // Vertex registers

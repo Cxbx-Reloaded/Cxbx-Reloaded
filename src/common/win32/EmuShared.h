@@ -272,7 +272,7 @@ class EmuShared : public Mutex
 		void GetImGuiIniSettings(char value[IMGUI_INI_SIZE_MAX]) {
 			Lock();
 			if (m_imgui_general.ini_size < IMGUI_INI_SIZE_MAX) {
-				value = '\0';
+				value[0] = '\0';
 				return;
 			}
 			strcpy_s(value, IMGUI_INI_SIZE_MAX, m_imgui_general.ini_settings);

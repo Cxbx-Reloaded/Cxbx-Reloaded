@@ -39,7 +39,7 @@ private:
 	std::mutex cacheMutex;
 	std::map<ShaderKey, LazyVertexShader> cache;
 
-	bool VertexShaderSource::_FindShader(ShaderKey key, LazyVertexShader** ppLazyShader);
+	bool _FindShader(ShaderKey key, LazyVertexShader** ppLazyShader);
 };
 
 extern VertexShaderSource g_VertexShaderSource;

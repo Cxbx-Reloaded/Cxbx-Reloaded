@@ -783,7 +783,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 						{
 							FILE *logo = fopen(ofn.lpstrFile, "rb");
 
-							char *bmp_err = 0;
+							const char *bmp_err = 0;
 
 							// read bitmap header
 							if (!bmp_err)
@@ -1387,7 +1387,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 }
 
 // suggest a file name
-void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4])
+void WndMain::SuggestFilename(const char *x_orig_filename, char *x_filename, const char x_extension[4])
 {
     if(strrchr(x_orig_filename, '\\') != nullptr)
     {

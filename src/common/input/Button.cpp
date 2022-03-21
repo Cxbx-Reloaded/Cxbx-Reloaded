@@ -51,16 +51,17 @@ void Button::GetText(char* const text, size_t size) const
 	SendMessage(m_button_hwnd, WM_GETTEXT, size, reinterpret_cast<LPARAM>(text));
 }
 
-void Button::AddTooltip(HWND hwnd, HWND tooltip_hwnd, char *text) const
+void Button::AddTooltip(HWND hwnd, HWND tooltip_hwnd, std::string_view text) const
 {
 	assert((hwnd != NULL) && (tooltip_hwnd != NULL));
 
+	std::string tooltip_text(text);
 	TOOLINFO tool = { 0 };
 	tool.cbSize = sizeof(tool);
 	tool.hwnd = hwnd;
 	tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
 	tool.uId = reinterpret_cast<UINT_PTR>(m_button_hwnd);
-	tool.lpszText = text;
+	tool.lpszText = tooltip_text.data();
 	SendMessage(tooltip_hwnd, TTM_ADDTOOL, 0, reinterpret_cast<LPARAM>(&tool));
 }
 

@@ -396,8 +396,13 @@ inline void output_wchar(std::ostream& os, wchar_t c)
 		default: os << "\\x" << std::setfill('0') << std::setw(4) << std::right << std::hex << std::uppercase << (wint_t)c;
 		}
 	}
-	else
-		os << c;
+	else {
+		const wchar_t *wc = reinterpret_cast<const wchar_t *>(&c);
+		std::string dst(2, '\0');
+		std::mbstate_t ps{};
+		std::wcsrtombs(dst.data(), &wc, 1, &ps);
+		os << dst;
+	}
 }
 
 LOG_SANITIZE_HEADER(hex1, uint8_t)

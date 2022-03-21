@@ -82,7 +82,7 @@ class WndMain : public Wnd
         // ******************************************************************
         // * suggest appropriate filename based on input
         // ******************************************************************
-        static void SuggestFilename(const char *x_orig_filename, char *x_filename, char x_extension[4]);
+        static void SuggestFilename(const char *x_orig_filename, char *x_filename, const char x_extension[4]);
 
     private:
 		// ******************************************************************

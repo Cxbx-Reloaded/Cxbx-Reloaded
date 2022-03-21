@@ -31,8 +31,8 @@
 #include "gui/resource/ResCxbx.h"
 
 
-static char *tooltip_text_toggle = "Left-click: start input detection\nRight-click: clear binding\nShift + right-click: toggle mouse input mode";
-static char *tooltip_text_no_toggle = "Left-click: start input detection\nRight-click: clear binding";
+static const char *tooltip_text_toggle = "Left-click: start input detection\nRight-click: clear binding\nShift + right-click: toggle mouse input mode";
+static const char *tooltip_text_no_toggle = "Left-click: start input detection\nRight-click: clear binding";
 
 EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 {

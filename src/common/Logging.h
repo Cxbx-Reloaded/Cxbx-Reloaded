@@ -225,9 +225,30 @@ extern inline void output_wchar(std::ostream& os, wchar_t c);
 // By default, sanitization functions simply return the given argument
 // (type and value) which results in calls to standard output writers.
 template<class T>
-inline T _log_sanitize(T value, int ignored_length = 0)
+inline auto _log_sanitize(T value, int ignored_length = 0)
 {
-	return value;
+	// This is necessary because C++20 has deleted the overloaded operator<< of ostream for wchar_t, char8_t, char16_t and char32_t.
+	// The proper solution is to use wide strings in all our logging macros/functions, see https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/743
+	if constexpr (std::is_same_v<xbox::wchar_xt, std::remove_cvref_t<std::remove_pointer_t<T>>>) {
+		if constexpr (std::is_pointer_v<T>) {
+			const wchar_t *wstr = reinterpret_cast<const wchar_t *>(value);
+			std::size_t len = std::wcslen(wstr);
+			std::string dst(len + 1, '\0');
+			std::mbstate_t ps{};
+			std::wcsrtombs(dst.data(), &wstr, len, &ps);
+			return dst;
+		}
+		else {
+			const wchar_t *wstr = reinterpret_cast<const wchar_t *>(&value);
+			std::string dst(2, '\0');
+			std::mbstate_t ps{};
+			std::wcsrtombs(dst.data(), &wstr, 1, &ps);
+			return dst;
+		}
+	}
+	else {
+		return value;
+	}
 }
 
 #if 0 // TODO FIXME : Disabled for now, as this is incorrectly called for INT types too

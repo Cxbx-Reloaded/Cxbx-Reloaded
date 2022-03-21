@@ -861,7 +861,7 @@ typedef struct _FormatInfo {
 	_ComponentEncoding components;
 	D3DFORMAT pc;
 	_FormatUsage usage;
-	char *warning;
+	const char *warning;
 } FormatInfo;
 
 static const FormatInfo FormatInfos[] = {

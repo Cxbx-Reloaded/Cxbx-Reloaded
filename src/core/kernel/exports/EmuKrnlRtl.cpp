@@ -1699,8 +1699,9 @@ XBSYSAPI EXPORTNUM(308) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToAnsiStri
 		LOG_FUNC_ARG(AllocateDestinationString)
 		LOG_FUNC_END;
 
-	ntstatus_xt ret = X_STATUS_SUCCESS;
+	ntstatus_xt result, ret = X_STATUS_SUCCESS;
 	dword_xt AnsiMaxLength = RtlUnicodeStringToAnsiSize(SourceString);
+	xbox::ulong_xt index = 0;
 
 	DestinationString->Length = (ushort_xt)(AnsiMaxLength - 1);
 	if (AllocateDestinationString) {
@@ -1720,8 +1721,7 @@ XBSYSAPI EXPORTNUM(308) xbox::ntstatus_xt NTAPI xbox::RtlUnicodeStringToAnsiStri
 		DestinationString->Length = DestinationString->MaximumLength - 1;
 	}
 
-	xbox::ulong_xt index = 0;
-	ntstatus_xt result = RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, &index, (PWSTR)SourceString->Buffer, SourceString->Length);
+	result = RtlUnicodeToMultiByteN(DestinationString->Buffer, DestinationString->Length, &index, (PWSTR)SourceString->Buffer, SourceString->Length);
 
 	if (X_NT_SUCCESS(result)) {
 		DestinationString->Buffer[index] = 0;

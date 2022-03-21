@@ -255,7 +255,7 @@ typedef struct _fatx_volume_metadata {
 	xbox::PVOID buffer;
 } fatx_volume_metadata, *pfatx_volume_metadata;
 
-CHAR* NtStatusToString(IN NTSTATUS Status);
+const CHAR* NtStatusToString(IN NTSTATUS Status);
 
 class io_mu_metadata
 {

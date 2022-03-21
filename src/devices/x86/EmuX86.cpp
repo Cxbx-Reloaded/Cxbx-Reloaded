@@ -431,7 +431,7 @@ uint32_t EmuX86_Distorm_read_disp(const _DInst& info)
 	return (uint32_t)info.disp;
 }
 
-typedef struct {
+typedef struct _OperandAddress {
 	xbox::addr_xt addr = 0;
 	bool is_internal_addr = false; // If set, addr points to a CPU context (or Distorm immedate value) member (instead of Xbox memory)
 	int size = 0; // Expressed in bytes, not bits!
@@ -1640,7 +1640,7 @@ const char *Distorm_RegStrings[/*_RegisterType*/] = {
 	"DR0", "DR1", "DR2", "DR3", "UNUSED4", "UNUSED5", "DR6", "DR7",
 };
 
-char *Distorm_OpcodeString(const int opcode)
+const char *Distorm_OpcodeString(const int opcode)
 {
 	// Note : Distorm's GET_MNEMONIC_NAME() doesn't link somehow...
 	switch (opcode) {

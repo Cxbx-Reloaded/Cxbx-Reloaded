@@ -83,7 +83,7 @@ Please contact us before you start working on something, so we can make sure you
 Don't open `CMakeLists.txt` from Visual Studio, as it won't generate files in the `build` directory.
 
 ##### Prerequisites
-1. [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2017 or later
+1. [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2019 or later
     * C++ and C# desktop development
     * Windows Universal CRT SDK
     * C++ CMake tools for Windows
@@ -100,7 +100,6 @@ Don't open `CMakeLists.txt` from Visual Studio, as it won't generate files in th
           * `Visual Studio 17 2022`
           * `Visual Studio 16 2019`
             * VS2019 16.1 or later is required and has CMake 3.14 bundled.
-          * `Visual Studio 15 2017`
 4. Open `Cxbx-Reloaded.sln` from the `build` directory.
 5. Select the Release configuration, then click Build.
     * Debug builds are **significantly slower, and only for developers**.
