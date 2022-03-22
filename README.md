@@ -12,14 +12,15 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 
 ## Prerequisites
 ### Windows
-  * [32-bit (x86) Visual C++ 2019 Redistributable](https://aka.ms/vs/16/release/vc_redist.x86.exe)
+  * [32-bit (x86) Visual C++ 2022 Redistributable](https://aka.ms/vs/17/release/vc_redist.x86.exe)
   * [Npcap *(used for network emulation)*](https://nmap.org/npcap/#download)
     * Make sure to enable winpcap compatibility mode.
   * WinUSB compliant driver
     * *Optional, only needed for USB pass-through of original Xbox and Steel Battalion controllers.*
 
 ### Wine
-**Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 5.0.3 which is the last known working version.**
+**Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 7.0 which is the last known working version.**
+**There also exists this known [issue](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/2314) which currently prevents savings in some games with the most recent Wine 6.8 and later versions.**
   * Winetricks
     * `vcrun2019`
       * Requires the latest winetricks script.
@@ -83,7 +84,7 @@ Please contact us before you start working on something, so we can make sure you
 Don't open `CMakeLists.txt` from Visual Studio, as it won't generate files in the `build` directory.
 
 ##### Prerequisites
-1. [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2019 or later
+1. [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2022
     * C++ and C# desktop development
     * Windows Universal CRT SDK
     * C++ CMake tools for Windows
@@ -95,11 +96,8 @@ Don't open `CMakeLists.txt` from Visual Studio, as it won't generate files in th
 2. `cd` to the Cxbx-Reloaded directory.
 3. Run these commands.
     1. `mkdir build & cd build`
-    2. `cmake .. -G "generator" -A Win32`
-        * Generators:
-          * `Visual Studio 17 2022`
-          * `Visual Studio 16 2019`
-            * VS2019 16.1 or later is required and has CMake 3.14 bundled.
+    2. `cmake .. -G "Visual Studio 17 2022" -A Win32`
+        * VS2022 17.0 or later is required.
 4. Open `Cxbx-Reloaded.sln` from the `build` directory.
 5. Select the Release configuration, then click Build.
     * Debug builds are **significantly slower, and only for developers**.
