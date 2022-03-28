@@ -38,7 +38,7 @@
 #include <optional>
 
 typedef struct {
-    char* S;                // String representation.
+    const char* S;          // String representation.
     bool IsSamplerState;    // True if the state maps to a Sampler State instead of Texture Stage
     DWORD PC;               // PC Index
 } TextureStateInfo;

@@ -67,8 +67,6 @@ bool Memory_RW(void* Addr, void* Buf, size_t Num, bool bIsWrite);
 void unix2dos(std::string& string);
 std::string StripSpaces(const std::string& str);
 std::string StripQuotes(const std::string& str);
-bool StrEndsWith(const std::string &full_str, const std::string &substr);
-bool StrStartsWith(const std::string &full_str, const std::string &substr);
 
 // Retrieves the underlying integer value of a scoped enumerator. It allows to avoid using static_cast every time
 template <typename E>
@@ -90,6 +88,19 @@ static uint32_t RoundUp(uint32_t dwValue, uint32_t dwMult)
 		return dwValue;
 
 	return dwValue + dwMult - remainder;
+}
+
+constexpr std::size_t longest_str(const std::vector<std::string_view> &vec)
+{
+	if (!vec.empty()) {
+		return std::max_element(vec.begin(), vec.end(),
+			[](const auto &a, const auto &b) {
+				return a.length() < b.length();
+			})->length();
+	}
+	else {
+		throw std::logic_error("No strings to compare!");
+	}
 }
 
 #endif

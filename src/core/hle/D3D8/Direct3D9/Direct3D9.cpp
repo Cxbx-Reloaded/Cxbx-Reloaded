@@ -921,7 +921,7 @@ void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource)
 	return (uint8_t*)pData;
 }
 
-typedef struct {
+typedef struct _resource_info_t {
 	IDirect3DResource* pHostResource = nullptr;
 	DWORD dwXboxResourceType = 0;
 	void* pXboxData = xbox::zeroptr;

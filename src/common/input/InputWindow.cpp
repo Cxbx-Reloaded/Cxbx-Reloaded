@@ -352,11 +352,11 @@ void InputWindow::SwapMoCursorAxis(Button *button)
 	// Axis X- <-> Cursor X-
 	// Axis Y+ <-> Cursor Y-
 	// Axis Y- <-> Cursor Y+
-	if (StrEndsWith(m_host_dev, "KeyboardMouse")) {
+	if (m_host_dev.ends_with("KeyboardMouse")) {
 		assert(button != nullptr);
 		char control_name[HOST_BUTTON_NAME_LENGTH];
 		button->GetText(control_name, sizeof(control_name));
-		if (StrStartsWith(control_name, "Axis")) {
+		if (std::string_view(control_name).starts_with("Axis")) {
 			switch (control_name[5])
 			{
 			case 'X':
@@ -384,7 +384,7 @@ void InputWindow::SwapMoCursorAxis(Button *button)
 			return;
 		}
 
-		if (StrStartsWith(control_name, "Cursor")) {
+		if (std::string_view(control_name).starts_with("Cursor")) {
 			switch (control_name[7])
 			{
 			case 'X':

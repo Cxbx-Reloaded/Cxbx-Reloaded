@@ -337,7 +337,7 @@ void _check_gl_error(const char *file, int line)
 {
 	while (true) {
 		GLenum err = glGetError();
-		char *error;
+		const char *error;
 		switch (err) {
 		case GL_NO_ERROR: return;
 		case GL_INVALID_ENUM: error = "GL_INVALID_ENUM"; break;

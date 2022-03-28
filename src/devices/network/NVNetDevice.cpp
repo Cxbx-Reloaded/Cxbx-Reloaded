@@ -157,7 +157,7 @@ struct RingDesc {
 	uint16_t flags;
 };
 
-char* EmuNVNet_GetRegisterName(xbox::addr_xt addr)
+const char* EmuNVNet_GetRegisterName(xbox::addr_xt addr)
 {
 	switch (addr) {
 	case NvRegIrqStatus:             return "NvRegIrqStatus";
@@ -205,7 +205,7 @@ char* EmuNVNet_GetRegisterName(xbox::addr_xt addr)
 	}
 }
 
-char* EmuNVNet_GetMiiRegisterName(uint8_t reg)
+const char* EmuNVNet_GetMiiRegisterName(uint8_t reg)
 {
 	switch (reg) {
 	case MII_PHYSID1:   return "MII_PHYSID1";

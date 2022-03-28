@@ -55,7 +55,7 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
     switch(uMsg)
     {
         case WM_INITDIALOG:
-        {
+		{
 			// Set the dialog icon
 			HICON hIcon = (HICON)LoadImageW(
 				GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_CXBX), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR | LR_DEFAULTSIZE
@@ -64,15 +64,18 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SendMessageW(hWndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 
 			// Build the Tab Control
+			constexpr size_t text_len = longest_str({ "About", "Contributors", "License" }) + 1;
+			char text[text_len];
 			TCITEM tabInfo;
 			memset(&tabInfo, 0, sizeof(tabInfo));
 			tabInfo.mask = TCIF_TEXT;
-			tabInfo.cchTextMax = 20;
-			tabInfo.pszText = "About";
+			tabInfo.cchTextMax = text_len;
+			tabInfo.pszText = text;
+			std::strcpy(text, "About");
 			SendMessage(GetDlgItem(hWndDlg, IDC_TAB1), TCM_INSERTITEM, 0, (LPARAM)&tabInfo);
-			tabInfo.pszText = "Contributors";
+			std::strcpy(text, "Contributors");
 			SendMessage(GetDlgItem(hWndDlg, IDC_TAB1), TCM_INSERTITEM, 1, (LPARAM)&tabInfo);
-			tabInfo.pszText = "License";
+			std::strcpy(text, "License");
 			SendMessage(GetDlgItem(hWndDlg, IDC_TAB1), TCM_INSERTITEM, 2, (LPARAM)&tabInfo);
 
 			// Get tab pane dimensions

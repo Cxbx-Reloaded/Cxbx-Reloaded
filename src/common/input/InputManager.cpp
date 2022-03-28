@@ -776,7 +776,7 @@ void InputDeviceManager::RefreshDevices()
 		return Sdl::PopulateOK;
 		});
 	for (auto &dev : m_Devices) {
-		if (StrStartsWith(dev->GetDeviceName(), "KeyboardMouse")) {
+		if (dev->GetDeviceName().starts_with("KeyboardMouse")) {
 			static_cast<DInput::KeyboardMouse *>(dev.get())->SetHwnd(m_hwnd);
 			break;
 		}
@@ -876,7 +876,7 @@ void InputDeviceManager::HotplugHandler(bool is_sdl)
 		std::unique_lock<std::mutex> lck(m_Mtx);
 
 		auto it = std::remove_if(m_Devices.begin(), m_Devices.end(), [](const auto &Device) {
-			if (Device->IsLibusb() || StrStartsWith(Device->GetAPI(), "XInput")) {
+			if (Device->IsLibusb() || Device->GetAPI().starts_with("XInput")) {
 				return true;
 			}
 			return false;

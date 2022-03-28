@@ -243,7 +243,7 @@ void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus)
 
 	if (GetNativeHandle(eThread->UniqueThread)) {
 		xbox::NtClose(eThread->UniqueThread);
-		eThread->UniqueThread = xbox::zero;
+		eThread->UniqueThread = xbox::zeroptr;
 	}
 
 	EmuKeFreePcr();

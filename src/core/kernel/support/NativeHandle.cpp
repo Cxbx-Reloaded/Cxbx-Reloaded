@@ -96,7 +96,7 @@ std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle)
 	}
 
 	std::shared_lock<std::shared_mutex> lck(g_MapMtx);
-	auto &it = g_RegisteredHandles.find(xhandle);
+	const auto &it = g_RegisteredHandles.find(xhandle);
 	if (it == g_RegisteredHandles.end()) {
 		return std::nullopt;
 	}

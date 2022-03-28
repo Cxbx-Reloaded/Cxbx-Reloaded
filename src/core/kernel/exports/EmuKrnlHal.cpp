@@ -181,7 +181,7 @@ XBSYSAPI EXPORTNUM(43) xbox::void_xt NTAPI xbox::HalEnableSystemInterrupt
 
 #ifdef _DEBUG_TRACE
 // Source : Xbox Linux
-char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
+const char *IRQNames[MAX_BUS_INTERRUPT_LEVEL + 1] =
 {
 	"<unknown>",
 	"USB0", // IRQ 1 USB Controller: nVidia Corporation nForce USB Controller (rev d4) (prog-if 10 [OHCI])
@@ -554,7 +554,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 				}
 			}
 
-			std::string& XbePath = CxbxConvertXboxToHostPath(TitlePath);
+			const std::string& XbePath = CxbxConvertXboxToHostPath(TitlePath);
 
 			// Relaunch Cxbx, to load another Xbe
 			{

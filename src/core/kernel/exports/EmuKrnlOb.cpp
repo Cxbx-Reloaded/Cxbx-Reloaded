@@ -184,24 +184,27 @@ xbox::ntstatus_xt xbox::ObpReferenceObjectByName(
 
 	OBJECT_STRING ElementName;
 	for (;;) {
-		POBJECT_DIRECTORY Directory = (POBJECT_DIRECTORY)FoundObject;
-		ObDissectName(RemainingName, &ElementName, &RemainingName);
+		{
+			POBJECT_DIRECTORY Directory = (POBJECT_DIRECTORY)FoundObject;
+			ObDissectName(RemainingName, &ElementName, &RemainingName);
 
-		if (RemainingName.Length != 0) {
-			if (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) {
-				result = X_STATUS_OBJECT_NAME_INVALID;
+			if (RemainingName.Length != 0) {
+				if (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR) {
+					result = X_STATUS_OBJECT_NAME_INVALID;
+					goto CleanupAndExit;
+				}
+			}
+			else {
+				if (ObjectType == &ObSymbolicLinkObjectType) {
+					ResolveSymbolicLink = FALSE;
+				}
+			}
+
+			if (!ObpLookupElementNameInDirectory(Directory, &ElementName,
+				ResolveSymbolicLink, &FoundObject)) {
+				result = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : X_STATUS_OBJECT_NAME_NOT_FOUND;
 				goto CleanupAndExit;
 			}
-		} else {
-			if (ObjectType == &ObSymbolicLinkObjectType) {
-				ResolveSymbolicLink = FALSE;
-			}
-		}
-
-		if (!ObpLookupElementNameInDirectory(Directory, &ElementName,
-			ResolveSymbolicLink, &FoundObject)) {
-			result = (RemainingName.Length != 0) ? STATUS_OBJECT_PATH_NOT_FOUND : X_STATUS_OBJECT_NAME_NOT_FOUND;
-			goto CleanupAndExit;
 		}
 
 OpenRootDirectory:
@@ -849,40 +852,43 @@ XBSYSAPI EXPORTNUM(241) xbox::ntstatus_xt NTAPI xbox::ObInsertObject
 		goto CleanupAndExit;
 	}
 
-	POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(InsertObject);
-	ObjectHeader->PointerCount += ObjectPointerBias + 1;
+	{
+		POBJECT_HEADER ObjectHeader = OBJECT_TO_OBJECT_HEADER(InsertObject);
+		ObjectHeader->PointerCount += ObjectPointerBias + 1;
 
-	if (Directory != NULL) {
-		POBJECT_HEADER_NAME_INFO ObjectHeaderNameInfo = OBJECT_TO_OBJECT_HEADER_NAME_INFO(Object);
-		ULONG HashIndex = ObpComputeHashIndex(&ObjectHeaderNameInfo->Name);
-		ObjectHeader->Flags |= OB_FLAG_ATTACHED_OBJECT;
-		ObjectHeaderNameInfo->Directory = Directory;
-		ObjectHeaderNameInfo->ChainLink = Directory->HashBuckets[HashIndex];
-		Directory->HashBuckets[HashIndex] = ObjectHeaderNameInfo;
+		if (Directory != NULL) {
+			POBJECT_HEADER_NAME_INFO ObjectHeaderNameInfo = OBJECT_TO_OBJECT_HEADER_NAME_INFO(Object);
+			ULONG HashIndex = ObpComputeHashIndex(&ObjectHeaderNameInfo->Name);
+			ObjectHeader->Flags |= OB_FLAG_ATTACHED_OBJECT;
+			ObjectHeaderNameInfo->Directory = Directory;
+			ObjectHeaderNameInfo->ChainLink = Directory->HashBuckets[HashIndex];
+			Directory->HashBuckets[HashIndex] = ObjectHeaderNameInfo;
 
-		if ((Directory == ObpDosDevicesDirectoryObject) && (ObjectHeaderNameInfo->Name.Length == sizeof(CHAR) * 2) && (ObjectHeaderNameInfo->Name.Buffer[1] == (CHAR)':')) {
-			PVOID DosDevicesObject = Object;
+			if ((Directory == ObpDosDevicesDirectoryObject) && (ObjectHeaderNameInfo->Name.Length == sizeof(CHAR) * 2) && (ObjectHeaderNameInfo->Name.Buffer[1] == (CHAR)':')) {
+				PVOID DosDevicesObject = Object;
 
-			if (OBJECT_TO_OBJECT_HEADER(DosDevicesObject)->Type ==
-				&ObSymbolicLinkObjectType) {
-				DosDevicesObject = ((POBJECT_SYMBOLIC_LINK)DosDevicesObject)->LinkTargetObject;
+				if (OBJECT_TO_OBJECT_HEADER(DosDevicesObject)->Type ==
+					&ObSymbolicLinkObjectType) {
+					DosDevicesObject = ((POBJECT_SYMBOLIC_LINK)DosDevicesObject)->LinkTargetObject;
+				}
+
+				CHAR DriveLetter = ObjectHeaderNameInfo->Name.Buffer[0];
+				if (DriveLetter >= 'a' && DriveLetter <= 'z') {
+					ObpDosDevicesDriveLetterMap[DriveLetter - 'a'] = DosDevicesObject;
+				}
+				else if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
+					ObpDosDevicesDriveLetterMap[DriveLetter - 'A'] = DosDevicesObject;
+				}
 			}
 
-			CHAR DriveLetter = ObjectHeaderNameInfo->Name.Buffer[0];
-			if (DriveLetter >= 'a' && DriveLetter <= 'z') {
-				ObpDosDevicesDriveLetterMap[DriveLetter - 'a'] = DosDevicesObject;
-			} else if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
-				ObpDosDevicesDriveLetterMap[DriveLetter - 'A'] = DosDevicesObject;
-			}
+			OBJECT_TO_OBJECT_HEADER(Directory)->PointerCount++;
+			ObjectHeader->PointerCount++;
 		}
 
-		OBJECT_TO_OBJECT_HEADER(Directory)->PointerCount++;
-		ObjectHeader->PointerCount++;
-	}
-
-	if ((ObjectAttributes != NULL) &&
-		ObpIsFlagSet(ObjectAttributes->Attributes, OBJ_PERMANENT)) {
-		ObjectHeader->Flags |= OB_FLAG_PERMANENT_OBJECT;
+		if ((ObjectAttributes != NULL) &&
+			ObpIsFlagSet(ObjectAttributes->Attributes, OBJ_PERMANENT)) {
+			ObjectHeader->Flags |= OB_FLAG_PERMANENT_OBJECT;
+		}
 	}
 
 	result = (Object == InsertObject) ? X_STATUS_SUCCESS : STATUS_OBJECT_NAME_EXISTS;

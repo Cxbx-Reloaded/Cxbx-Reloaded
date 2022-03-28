@@ -1099,7 +1099,7 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 			// Xbox expects directories to be listed when *.* is passed
 			if (strncmp(FileMask->Buffer, "*.*", FileMask->Length) == 0) {
 				FileMask->Length = 1;
-				FileMask->Buffer = "*";
+				std::strcpy(FileMask->Buffer, "*");
 			}
 
 			mbstowcs(/*Dest=*/wszObjectName, /*Source=*/FileMask->Buffer, /*MaxCount=*/MAX_PATH);
