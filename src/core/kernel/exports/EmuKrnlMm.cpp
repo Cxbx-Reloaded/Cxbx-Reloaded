@@ -49,7 +49,7 @@ namespace NtDll
 // ******************************************************************
 // * 0x0066 - MmGlobalData
 // ******************************************************************
-XBSYSAPI EXPORTNUM(102) xbox::PVOID xbox::MmGlobalData[8] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+XBSYSAPI EXPORTNUM(102) xbox::MMGLOBALDATA xbox::MmGlobalData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
 // ******************************************************************
 // * 0x00A4 - LaunchDataPage

@@ -95,7 +95,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 		Lock();
 
 		PoolDesc->RunningAllocs += 1;
-		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(PoolType, XBOX_PAGE_READWRITE, Size, false));
+		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(xbox::PoolType, XBOX_PAGE_READWRITE, Size, false));
 
 		if (Entry != nullptr) {
 			NumberOfPages = ROUND_UP_4K(Size) >> PAGE_SHIFT;
@@ -202,7 +202,7 @@ VAddr PoolManager::AllocatePool(size_t Size, uint32_t Tag)
 
 		// The current pool descriptor is exhausted, so we ask the VMManager to allocate a page to create a new one
 
-		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(PoolType, XBOX_PAGE_READWRITE, PAGE_SIZE, false));
+		Entry = reinterpret_cast<PPOOL_HEADER>(g_VMManager.AllocateSystemMemory(xbox::PoolType, XBOX_PAGE_READWRITE, PAGE_SIZE, false));
 
 		if (Entry == nullptr) {
 			EmuLog(LOG_LEVEL::WARNING, "AllocatePool returns nullptr");
@@ -245,7 +245,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 
 		PoolDesc->RunningDeAllocs += 1;
 		
-		BigPages = g_VMManager.DeallocateSystemMemory(PoolType, addr, 0);
+		BigPages = g_VMManager.DeallocateSystemMemory(xbox::PoolType, addr, 0);
 
 		PoolDesc->TotalBigPages -= BigPages;
 
@@ -306,7 +306,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 	if (CHECK_ALIGNMENT(reinterpret_cast<VAddr>(Entry), PAGE_SIZE) &&
 		(PAGE_END(reinterpret_cast<PPOOL_BLOCK>(Entry) + Entry->BlockSize) != false)) {
 
-		g_VMManager.DeallocateSystemMemory(PoolType, reinterpret_cast<VAddr>(Entry), 0);
+		g_VMManager.DeallocateSystemMemory(xbox::PoolType, reinterpret_cast<VAddr>(Entry), 0);
 
 		PoolDesc->TotalPages -= 1;
 	}

@@ -17,7 +17,102 @@
 namespace xbox
 {
 
-XBSYSAPI EXPORTNUM(102) PVOID MmGlobalData[8];
+typedef ulong_xt PFN;
+typedef ulong_xt PFN_COUNT;
+typedef ulong_xt PFN_NUMBER, *PPFN_NUMBER;
+
+ typedef struct _MMPFNFREE
+ {
+     ushort_xt PackedPfnFlink;
+     ushort_xt PackedPfnBlink;
+ } MMPFNFREE, *PMMPFNFREE;
+
+ typedef struct _MMPFNREGION
+ {
+     MMPFNFREE FreePagesByColor[32];
+     PFN_COUNT AvailablePages;
+ } MMPFNREGION, *PMMPFNREGION;
+
+ /* enum describing the usage type of the memory pages */
+ typedef enum _PageType
+ {
+     UnknownType,                   // Used by the PFN database
+     StackType,                     // Used by MmCreateKernelStack
+     VirtualPageTableType,          // Used by the pages holding the PTs that map the user memory (lower 2 GiB)
+     SystemPageTableType,           // Used by the pages holding the PTs that map the system memory
+     PoolType,                      // Used by ExAllocatePoolWithTag
+     VirtualMemoryType,             // Used by NtAllocateVirtualMemory
+     SystemMemoryType,              // Used by MmAllocateSystemMemory
+     ImageType,                     // Used to mark executable memory
+     CacheType,                     // Used by the file cache related functions
+     ContiguousType,                // Used by MmAllocateContiguousMemoryEx and others
+     DebuggerType,                  // xbdm-related
+     COUNTtype                      // The size of the array containing the page usage per type
+ } PageType;
+
+ /* The Xbox PTE, modelled around the Intel 386 PTE specification */
+ typedef struct _XBOX_PTE
+ {
+     ulong_xt Valid : 1;
+     ulong_xt Write : 1;
+     ulong_xt Owner : 1;
+     ulong_xt WriteThrough : 1;
+     ulong_xt CacheDisable : 1;
+     ulong_xt Accessed : 1;
+     ulong_xt Dirty : 1;
+     ulong_xt LargePage : 1;
+     ulong_xt Global : 1;
+     ulong_xt GuardOrEnd : 1; // software field used for our own purposes
+     ulong_xt Persist : 1;    // software field used for our own purposes
+     ulong_xt Unused : 1;     // software field used for our own purposes
+     ulong_xt PFN : 20;
+ } XBOX_PTE, *PXBOX_PTE;
+
+
+ /* PTE as used by the memory manager */
+ typedef union _MMPTE
+ {
+     ulong_xt Default;
+     XBOX_PTE Hardware;
+ } MMPTE, *PMMPTE;
+
+ typedef PFN_NUMBER (FASTCALL *PMMREMOVE_PAGE_ROUTINE) (
+     IN PageType BusyType,
+     IN PMMPTE TargetPte
+     );
+
+ typedef struct _MMPTERANGE
+ {
+     MMPTE HeadPte;
+     PMMPTE FirstCommittedPte;
+     PMMPTE LastCommittedPte;
+     PMMPTE LastReservedPte;
+     PFN_COUNT *AvailablePages;
+     PMMREMOVE_PAGE_ROUTINE RemovePageRoutine;
+ } MMPTERANGE, *PMMPTERANGE;
+
+ typedef struct _MMADDRESS_NODE
+ {
+     ulong_ptr_xt StartingVpn;
+     ulong_ptr_xt EndingVpn;
+     struct _MMADDRESS_NODE *Parent;
+     struct _MMADDRESS_NODE *LeftChild;
+     struct _MMADDRESS_NODE *RightChild;
+ } MMADDRESS_NODE, *PMMADDRESS_NODE;
+
+typedef struct _MMGLOBALDATA
+{
+    PMMPFNREGION RetailPfnRegion;
+    PMMPTERANGE SystemPteRange;
+    PULONG AvailablePages;
+    PFN_COUNT *AllocatedPagesByUsage;
+    PRTL_CRITICAL_SECTION AddressSpaceLock;
+    PMMADDRESS_NODE *VadRoot;
+    PMMADDRESS_NODE *VadHint;
+    PMMADDRESS_NODE *VadFreeHint;
+} MMGLOBALDATA, *PMMGLOBALDATA;
+
+XBSYSAPI EXPORTNUM(102) MMGLOBALDATA MmGlobalData;
 
 // ******************************************************************
 // * MmAllocateContiguousMemory
