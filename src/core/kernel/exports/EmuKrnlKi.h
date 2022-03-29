@@ -146,6 +146,32 @@ namespace xbox
 		IN PLARGE_INTEGER DueTime,
 		IN OUT PLARGE_INTEGER NewTime
 	);
+
+	// Source: ReactOS
+	void_xt NTAPI KiSuspendNop(
+		IN PKAPC Apc,
+		IN PKNORMAL_ROUTINE* NormalRoutine,
+		IN PVOID* NormalContext,
+		IN PVOID* SystemArgument1,
+		IN PVOID* SystemArgument2
+	);
+
+	// Source: ReactOS
+	void_xt NTAPI KiSuspendThread(
+		IN PVOID NormalContext,
+		IN PVOID SystemArgument1,
+		IN PVOID SystemArgument2
+	);
+
+	void_xt NTAPI KiThreadStartup(void_xt);
+
+	xbox::void_xt KiInitializeContextThread(
+		IN PKTHREAD Thread,
+		IN ulong_xt TlsDataSize,
+		IN PKSYSTEM_ROUTINE SystemRoutine,
+		IN PKSTART_ROUTINE StartRoutine,
+		IN PVOID StartContext
+	);
 };
 
 extern xbox::KPROCESS KiUniqueProcess;

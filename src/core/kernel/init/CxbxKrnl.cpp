@@ -43,6 +43,7 @@
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\exports\EmuKrnlKe.h"
+#include "core\kernel\exports\EmuKrnlPs.hpp"
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow, EmuD3DInit
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp" // For CxbxInitAudio
@@ -1250,6 +1251,10 @@ static void CxbxrKrnlInitHacks()
 	void(*Entry)(),
 	int BootFlags)
 {
+	unsigned Host2XbStackBaseReserved = 0;
+	__asm mov Host2XbStackBaseReserved, esp;
+	unsigned Host2XbStackSizeReserved = EmuGenerateStackSize(Host2XbStackBaseReserved, 0);
+	__asm sub esp, Host2XbStackSizeReserved;
     // Set windows timer period to 1ms
     // Windows will automatically restore this value back to original on program exit
     // But with this, we can replace some busy loops with sleeps.
@@ -1404,10 +1409,11 @@ static void CxbxrKrnlInitHacks()
 
 	// Create a kpcr for this thread. This is necessary because ObInitSystem needs to access the irql. This must also be done before
 	// CxbxInitWindow because that function creates the xbox EmuUpdateTickCount thread
-	EmuGenerateFS<true>(nullptr, nullptr, xbox::zeroptr);
+	EmuGenerateFS<true>(xbox::zeroptr, Host2XbStackBaseReserved, Host2XbStackSizeReserved);
 	if (!xbox::ObInitSystem()) {
 		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
 	}
+	xbox::PsInitSystem();
 	xbox::KiInitSystem();
 	
 	// initialize graphics
@@ -1507,7 +1513,8 @@ static void CxbxrKrnlInitHacks()
 
 	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxLaunchXbe, Entry, FALSE);
 
-	EmuKeFreePcr<true>();
+	EmuKeFreePcr();
+	__asm add esp, Host2XbStackSizeReserved;
 
 	// This will wait forever
 	std::condition_variable cv;

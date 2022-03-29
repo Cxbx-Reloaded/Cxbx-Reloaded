@@ -17,38 +17,12 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2019 ergo720
-// *
 // *  All rights reserved
 // *
 // ******************************************************************
-
 #pragma once
 
 namespace xbox
 {
-	void_xt NTAPI KeSetSystemTime
-	(
-		IN  PLARGE_INTEGER NewTime,
-		OUT PLARGE_INTEGER OldTime
-	);
-
-	void_xt NTAPI KeInitializeTimer
-	(
-		IN PKTIMER Timer
-	);
-
-	template<bool IsHostThread = false>
-	void_xt KeInitializeThread(
-		IN OUT PKTHREAD Thread,
-		IN PVOID KernelStack,
-		IN ulong_xt KernelStackSize,
-		IN ulong_xt TlsDataSize,
-		IN PKSYSTEM_ROUTINE SystemRoutine,
-		IN PKSTART_ROUTINE StartRoutine,
-		IN PVOID StartContext,
-		IN PKPROCESS Process
-	);
-
-	void_xt KeEmptyQueueApc();
-}
+	void_xt PsInitSystem();
+};

@@ -29,16 +29,20 @@
 #include "common\xbe\Xbe.h"
 #include <windows.h>
 
+// Get Xbox's TIB StackBase address from thread's StackBase.
+xbox::PVOID EmuGetTIBStackBase(xbox::PVOID ThreadStackBase);
+
+// generate stack size reserved for xbox threads to write on.
+// espBaseAddress will return aligned DOWN address, do not rely on return's size for offset usage.
+xbox::dword_xt EmuGenerateStackSize(xbox::addr_xt& espBaseAddress, IN xbox::ulong_xt TlsDataSize);
+
 // initialize fs segment selector emulation
 extern void EmuInitFS();
 
 // generate fs segment selector
 template<bool IsHostThread = false>
-void EmuGenerateFS(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
-// free resources allocated for the thread
-void EmuKeFreeThread(xbox::ntstatus_xt ExitStatus = X_STATUS_ABANDONED);
+void EmuGenerateFS(xbox::PETHREAD Ethread, unsigned XboxThreadStackBaseReserved = 0, unsigned XboxThreadStackSizeReserved = 0);
 // free kpcr allocated for the thread
-template<bool IsHostThread = false>
 void EmuKeFreePcr();
 
 void EmuKeSetPcr(xbox::KPCR *Pcr);
@@ -49,10 +53,5 @@ typedef struct
 	std::vector<uint8_t> data;
 	void* functionPtr;
 }fs_instruction_t;
-
-extern template void EmuGenerateFS<true>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
-extern template void EmuGenerateFS<false>(Xbe::TLS *pTLS, void *pTLSData, xbox::PETHREAD Ethread);
-extern template void EmuKeFreePcr<true>();
-extern template void EmuKeFreePcr<false>();
 
 #endif
