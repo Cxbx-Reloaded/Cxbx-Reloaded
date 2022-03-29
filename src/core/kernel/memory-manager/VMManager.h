@@ -103,13 +103,13 @@ class VMManager : public PhysicalMemory
 		// retrieves memory statistics
 		void MemoryStatistics(xbox::PMM_STATISTICS memory_statistics);
 		// allocates memory in the system region
-		VAddr AllocateSystemMemory(PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage);
+		VAddr AllocateSystemMemory(xbox::PageType BusyType, DWORD Perms, size_t Size, bool bAddGuardPage);
 		// allocates memory in the contiguous region
 		VAddr AllocateContiguousMemory(size_t Size, PAddr LowestAddress, PAddr HighestAddress, ULONG Alignment, DWORD Perms);
 		// maps device memory in the system region
 		VAddr MapDeviceMemory(PAddr Paddr, size_t Size, DWORD Perms);
 		// deallocates memory in the system region
-		PFN_COUNT DeallocateSystemMemory(PageType BusyType, VAddr addr, size_t Size);
+		xbox::PFN_COUNT DeallocateSystemMemory(xbox::PageType BusyType, VAddr addr, size_t Size);
 		// deallocates memory in the contiguous region
 		void DeallocateContiguousMemory(VAddr addr);
 		// unmaps device memory in the system region
@@ -131,9 +131,9 @@ class VMManager : public PhysicalMemory
 		// make contiguous memory persist across a quick reboot
 		void PersistMemory(VAddr addr, size_t Size, bool bPersist);
 		// debug function to reset a pte or check if it is writable
-		VAddr DbgTestPte(VAddr addr, PMMPTE Pte, bool bWriteCheck);
+		VAddr DbgTestPte(VAddr addr, xbox::PMMPTE Pte, bool bWriteCheck);
 		// retrieves the number of free debugger pages
-		PFN_COUNT QueryNumberOfFreeDebuggerPages();
+		xbox::PFN_COUNT QueryNumberOfFreeDebuggerPages();
 		// xbox implementation of NtAllocateVirtualMemory
 		xbox::ntstatus_xt XbAllocateVirtualMemory(VAddr* addr, ULONG ZeroBits, size_t* Size, DWORD AllocationType, DWORD Protect);
 		// xbox implementation of NtFreeVirtualMemory
@@ -161,7 +161,7 @@ class VMManager : public PhysicalMemory
 		void* m_PersistentMemoryHandle = nullptr;
 
 		// same as AllocateContiguousMemory, but it allows to allocate beyond m_MaxContiguousPfn
-		VAddr AllocateContiguousMemoryInternal(PFN_COUNT NumberOfPages, PFN LowestPfn, PFN HighestPfn, PFN PfnAlignment, DWORD Perms, PageType BusyType = ContiguousType);
+		VAddr AllocateContiguousMemoryInternal(xbox::PFN_COUNT NumberOfPages, xbox::PFN LowestPfn, xbox::PFN HighestPfn, xbox::PFN PfnAlignment, DWORD Perms, xbox::PageType BusyType = xbox::ContiguousType);
 		// set up the system allocations
 		void InitializeSystemAllocations();
 		// initializes a memory region struct
@@ -169,7 +169,7 @@ class VMManager : public PhysicalMemory
 		// clears all memory region structs
 		void DestroyMemoryRegions();
 		// map a memory block with the supplied allocation routine
-		VAddr MapMemoryBlock(MemoryRegionType Type, PFN_COUNT PteNumber, DWORD Permissions, bool b64Blocks, VAddr HighestAddress = 0);
+		VAddr MapMemoryBlock(MemoryRegionType Type, xbox::PFN_COUNT PteNumber, DWORD Permissions, bool b64Blocks, VAddr HighestAddress = 0);
 		// helper function which allocates user memory with VirtualAlloc
 		VAddr MapHostMemory(VAddr StartingAddr, size_t Size, size_t VmaEnd, DWORD Permissions);
 		// constructs a vma

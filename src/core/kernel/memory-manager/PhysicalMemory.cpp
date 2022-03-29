@@ -45,9 +45,9 @@ inline FreeBlock* ListEntryToFreeBlock(xbox::PLIST_ENTRY pListEntry)
 
 void PhysicalMemory::InitializePageDirectory()
 {
-	PMMPTE pPde;
-	PMMPTE pPde_end;
-	MMPTE TempPte;
+	xbox::PMMPTE pPde;
+	xbox::PMMPTE pPde_end;
+	xbox::MMPTE TempPte;
 
 
 	// Write the pde's of the WC (tiled) memory - no page tables
@@ -76,7 +76,7 @@ void PhysicalMemory::InitializePageDirectory()
 	// TODO: map memory for the file system cache?
 }
 
-void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType BusyType, bool bZero)
+void PhysicalMemory::WritePfn(xbox::PFN pfn_start, xbox::PFN pfn_end, xbox::PMMPTE pPte, xbox::PageType BusyType, bool bZero)
 {
 	XBOX_PFN TempPF;
 
@@ -101,7 +101,7 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 			TempPF.Default = 0;
 			TempPF.Busy.Busy = 1;
 			TempPF.Busy.BusyType = BusyType;
-			if (BusyType != VirtualPageTableType && BusyType != SystemPageTableType) {
+			if (BusyType != xbox::VirtualPageTableType && BusyType != xbox::SystemPageTableType) {
 				TempPF.Busy.PteIndex = GetPteOffset(GetVAddrMappedByPte(pPte));
 			}
 			else { TempPF.PTPageFrame.PtesUsed = 0; } // we are writing a pfn of a PT
@@ -118,13 +118,13 @@ void PhysicalMemory::WritePfn(PFN pfn_start, PFN pfn_end, PMMPTE pPte, PageType 
 	}
 }
 
-void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN pfn, bool bZero)
+void PhysicalMemory::WritePte(xbox::PMMPTE pPteStart, xbox::PMMPTE pPteEnd, xbox::MMPTE Pte, xbox::PFN pfn, bool bZero)
 {
 	// This function is intended to write pte's, not pde's. To write those, use (De)AllocatePT which will perform
 	// all the necessary housekeeping. Also, the pde's mapping these pte's should have already being commited or else
 	// GetPfnOfPT will assert
 
-	PMMPTE PointerPte = pPteStart;
+	xbox::PMMPTE PointerPte = pPteStart;
 	PXBOX_PFN PTpfn;
 
 	if (bZero)
@@ -163,16 +163,16 @@ void PhysicalMemory::WritePte(PMMPTE pPteStart, PMMPTE pPteEnd, MMPTE Pte, PFN p
 	}
 }
 
-bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT PfnAlignment, PFN start, PFN end)
+bool PhysicalMemory::RemoveFree(xbox::PFN_COUNT NumberOfPages, xbox::PFN* result, xbox::PFN_COUNT PfnAlignment, xbox::PFN start, xbox::PFN end)
 {
 	xbox::PLIST_ENTRY ListEntry;
-	PFN PfnStart;
-	PFN PfnEnd;
-	PFN IntersectionStart;
-	PFN IntersectionEnd;
-	PFN_COUNT PfnCount;
-	PFN_COUNT PfnAlignmentMask;
-	PFN_COUNT PfnAlignmentSubtraction;
+	xbox::PFN PfnStart;
+	xbox::PFN PfnEnd;
+	xbox::PFN IntersectionStart;
+	xbox::PFN IntersectionEnd;
+	xbox::PFN_COUNT PfnCount;
+	xbox::PFN_COUNT PfnAlignmentMask;
+	xbox::PFN_COUNT PfnAlignmentSubtraction;
 
 	// The caller should already guarantee that there are enough free pages available
 	if (NumberOfPages == 0) { result = nullptr; return false; }
@@ -307,10 +307,10 @@ bool PhysicalMemory::RemoveFree(PFN_COUNT NumberOfPages, PFN* result, PFN_COUNT 
 	return false;
 }
 
-void PhysicalMemory::InsertFree(PFN start, PFN end)
+void PhysicalMemory::InsertFree(xbox::PFN start, xbox::PFN end)
 {
 	xbox::PLIST_ENTRY ListEntry;
-	PFN_COUNT size = end - start + 1;
+	xbox::PFN_COUNT size = end - start + 1;
 
 	ListEntry = FreeList.Blink; // search from the top
 
@@ -374,7 +374,7 @@ void PhysicalMemory::InsertFree(PFN start, PFN end)
 	}
 }
 
-bool PhysicalMemory::ConvertXboxToSystemPtePermissions(DWORD perms, PMMPTE pPte)
+bool PhysicalMemory::ConvertXboxToSystemPtePermissions(DWORD perms, xbox::PMMPTE pPte)
 {
 	ULONG Mask = 0;
 
@@ -431,7 +431,7 @@ bool PhysicalMemory::ConvertXboxToSystemPtePermissions(DWORD perms, PMMPTE pPte)
 	return false;
 }
 
-bool PhysicalMemory::ConvertXboxToPtePermissions(DWORD perms, PMMPTE pPte)
+bool PhysicalMemory::ConvertXboxToPtePermissions(DWORD perms, xbox::PMMPTE pPte)
 {
 	ULONG Mask = 0;
 	ULONG LowNibble;
@@ -644,12 +644,12 @@ DWORD PhysicalMemory::ConvertXboxToWinPermissions(DWORD Perms)
 
 bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 {
-	PFN pfn;
-	PMMPTE pPde;
-	MMPTE TempPte;
-	PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
-	PFN_COUNT PTtoCommit = 0;
-	PageType BusyType = SystemPageTableType;
+	xbox::PFN pfn;
+	xbox::PMMPTE pPde;
+	xbox::MMPTE TempPte;
+	xbox::PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
+	xbox::PFN_COUNT PTtoCommit = 0;
+	xbox::PageType BusyType = xbox::SystemPageTableType;
 	VAddr StartingAddr = addr;
 
 	assert(Size);
@@ -677,7 +677,7 @@ bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 
 		return false;
 	}
-	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = VirtualPageTableType; }
+	if (addr <= HIGHEST_USER_ADDRESS) { BusyType = xbox::VirtualPageTableType; }
 	StartingAddr = addr;
 
 	// Now actually commit the PT's. Note that we won't construct the vma's for the PTs since they are outside of all
@@ -705,9 +705,9 @@ bool PhysicalMemory::AllocatePT(size_t Size, VAddr addr)
 
 void PhysicalMemory::DeallocatePT(size_t Size, VAddr addr)
 {
-	PMMPTE pPde;
+	xbox::PMMPTE pPde;
 	PXBOX_PFN PTpfn;
-	PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
+	xbox::PFN_COUNT PdeNumber = PAGES_SPANNED_LARGE(addr, Size);
 	VAddr StartingAddr = addr;
 
 	assert(Size);
@@ -721,14 +721,14 @@ void PhysicalMemory::DeallocatePT(size_t Size, VAddr addr)
 		if (PTpfn->PTPageFrame.PtesUsed == 0)
 		{
 			InsertFree(pPde->Hardware.PFN, pPde->Hardware.PFN);
-			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (PageType)PTpfn->PTPageFrame.BusyType, true);
+			WritePfn(pPde->Hardware.PFN, pPde->Hardware.PFN, pPde, (xbox::PageType)PTpfn->PTPageFrame.BusyType, true);
 			WRITE_ZERO_PTE(pPde);
 		}
 		StartingAddr += LARGE_PAGE_SIZE;
 	}
 }
 
-bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion)
+bool PhysicalMemory::IsMappable(xbox::PFN_COUNT PagesRequested, bool bRetailRegion, bool bDebugRegion)
 {
 	bool ret = false;
 	if (bRetailRegion && m_PhysicalPagesAvailable >= PagesRequested) { ret = true; }
@@ -738,12 +738,12 @@ bool PhysicalMemory::IsMappable(PFN_COUNT PagesRequested, bool bRetailRegion, bo
 	return ret;
 }
 
-PXBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
+PXBOX_PFN PhysicalMemory::GetPfnOfPT(xbox::PMMPTE pPte)
 {
 	PXBOX_PFN PTpfn;
 
 	// GetPteAddress on a pte address will yield the corresponding pde which maps the supplied pte
-	PMMPTE PointerPde = GetPteAddress(pPte);
+	xbox::PMMPTE PointerPde = GetPteAddress(pPte);
 	// PointerPde should have already been written to by AllocatePT
 	assert(PointerPde->Hardware.Valid != 0);
 	if (m_MmLayoutRetail || m_MmLayoutDebug) {
@@ -751,8 +751,8 @@ PXBOX_PFN PhysicalMemory::GetPfnOfPT(PMMPTE pPte)
 	}
 	else { PTpfn = CHIHIRO_PFN_ELEMENT(PointerPde->Hardware.PFN); }
 	assert(PTpfn->PTPageFrame.Busy == 1);
-	assert(PTpfn->PTPageFrame.BusyType == SystemPageTableType ||
-		PTpfn->PTPageFrame.BusyType == VirtualPageTableType);
+	assert(PTpfn->PTPageFrame.BusyType == xbox::SystemPageTableType ||
+		PTpfn->PTPageFrame.BusyType == xbox::VirtualPageTableType);
 
 	return PTpfn;
 }
