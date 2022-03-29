@@ -80,6 +80,7 @@ void DirectSoundDoWork_Buffer(xbox::LARGE_INTEGER &time)
             pThis->Xb_rtPauseEx = 0LL;
             pThis->EmuFlags &= ~DSE_FLAG_PAUSE;
             pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+			pThis->EmuStreamingInfo.playRequested = true;
         }
 
         if (pThis->Xb_rtStopEx != 0LL && pThis->Xb_rtStopEx <= time.QuadPart) {
@@ -437,55 +438,26 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Lock)
 		LOG_FUNC_END;
 
     EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
-    HRESULT hRet = D3D_OK;
-    DWORD pcmSize = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwBytes);
-    DWORD pcmOffset = DSoundBufferGetPCMBufferSize(pThis->EmuFlags, dwOffset);
 
-    DSoundGenericUnlock(pThis->EmuFlags,
-                        pThis->EmuDirectSoundBuffer8,
-                        pThis->EmuBufferDesc,
-                        pThis->Host_lock,
-                        pThis->X_BufferCache,
-                        pThis->X_lock.dwLockOffset,
-                        pThis->X_lock.dwLockBytes1,
-                        pThis->X_lock.dwLockBytes2);
+	// Xbox directsound doesn't require locking buffers
+	// This Xbox api only exists to match PC
 
-    if (ppvAudioPtr2 == xbox::zeroptr) {
-        hRet = pThis->EmuDirectSoundBuffer8->Lock(pcmOffset, pcmSize, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
-                                                  nullptr, 0, dwFlags);
-        pThis->Host_lock.pLockPtr2 = nullptr;
-    } else {
-        hRet = pThis->EmuDirectSoundBuffer8->Lock(pcmOffset, pcmSize, &pThis->Host_lock.pLockPtr1, &pThis->Host_lock.dwLockBytes1,
-                                                  &pThis->Host_lock.pLockPtr2, &pThis->Host_lock.dwLockBytes2, dwFlags);
-    }
-
-    if (hRet != DS_OK) {
-        CxbxrKrnlAbort("IDirectSoundBuffer_Lock Failed!");
-    }
-
-    // Host lock position
-    pThis->Host_lock.dwLockOffset = pcmOffset;
-    pThis->Host_lock.dwLockFlags = dwFlags;
-    pThis->X_lock.dwLockFlags = dwFlags;
-
-    // Emulate to xbox's lock position
-    pThis->X_lock.dwLockOffset = dwOffset;
-    *ppvAudioPtr1 = pThis->X_lock.pLockPtr1 = ((LPBYTE)pThis->X_BufferCache + dwOffset);
-    *pdwAudioBytes1 = pThis->X_lock.dwLockBytes1 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes1);
-    if (pThis->Host_lock.pLockPtr2 != nullptr) {
-        *ppvAudioPtr2 = pThis->X_lock.pLockPtr2 = pThis->X_BufferCache;
-        *pdwAudioBytes2 = pThis->X_lock.dwLockBytes2 = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, pThis->Host_lock.dwLockBytes2);
-    } else {
-        // If secondary pointers are not used, then set them as zero.
-        // There are applications bug didn't check for audio pointer that is null pointer which should not use invalid audio bytes.
-        // Since internal functions do set them zero. We'll set them here as well.
-        if (ppvAudioPtr2 != xbox::zeroptr) {
-            *ppvAudioPtr2 = xbox::zeroptr;
-        }
-        if (pdwAudioBytes2 != xbox::zeroptr) {
-            *pdwAudioBytes2 = 0;
-        }
-    }
+	if (dwOffset + dwBytes <= pThis->X_BufferCacheSize) {
+		*pdwAudioBytes1 = dwBytes;
+		*ppvAudioPtr1 = (PBYTE)pThis->X_BufferCache + dwOffset;
+		if (ppvAudioPtr2 != nullptr) {
+			*ppvAudioPtr2 = nullptr;
+			*pdwAudioBytes2 = 0;
+		}
+	}
+	else {
+		*pdwAudioBytes1 = pThis->X_BufferCacheSize - dwOffset;
+		*ppvAudioPtr1 = (PBYTE)pThis->X_BufferCache + dwOffset;
+		if (ppvAudioPtr2 != nullptr) {
+			*pdwAudioBytes2 = dwBytes - *pdwAudioBytes1;
+			*ppvAudioPtr2 = (PBYTE)pThis->X_BufferCache;
+		}
+	}
 
     LOG_FUNC_BEGIN_ARG_RESULT
         LOG_FUNC_ARG_RESULT(ppvAudioPtr1)
@@ -494,7 +466,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Lock)
         LOG_FUNC_ARG_RESULT(pdwAudioBytes2)
     LOG_FUNC_END_ARG_RESULT;
 
-    RETURN_RESULT_CHECK(hRet);
+	RETURN(DS_OK);
 }
 
 // ******************************************************************
@@ -509,7 +481,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Unlock)
     dword_xt                   pdwAudioBytes2
     )
 {
-    DSoundMutexGuardLock;
+    // DSoundMutexGuardLock;
 
     LOG_FUNC_BEGIN
         LOG_FUNC_ARG(pHybridThis)
@@ -519,28 +491,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Unlock)
         LOG_FUNC_ARG(pdwAudioBytes2)
         LOG_FUNC_END;
 
-    EmuDirectSoundBuffer* pThis = pHybridThis->emuDSBuffer;
-    // TODO: Find out why pThis->EmuLockPtr1 is nullptr... (workaround atm is to check if it is not a nullptr.)
-    if (pThis->X_BufferCache != xbox::zeroptr && pThis->Host_lock.pLockPtr1 != nullptr) {
-
-        memcpy_s((PBYTE)pThis->X_BufferCache + pThis->X_lock.dwLockOffset,
-                 pThis->X_BufferCacheSize - pThis->X_lock.dwLockOffset,
-                 pThis->X_lock.pLockPtr1,
-                 pThis->X_lock.dwLockBytes1);
-
-        if (pThis->Host_lock.pLockPtr2 != nullptr) {
-            memcpy_s(pThis->X_BufferCache, pThis->X_BufferCacheSize, pThis->X_lock.pLockPtr2, pThis->X_lock.dwLockBytes2);
-        }
-    }
-
-    DSoundGenericUnlock(pThis->EmuFlags,
-                        pThis->EmuDirectSoundBuffer8,
-                        pThis->EmuBufferDesc,
-                        pThis->Host_lock,
-                        pThis->X_BufferCache,
-                        pThis->X_lock.dwLockOffset,
-                        pThis->X_lock.dwLockBytes1,
-                        pThis->X_lock.dwLockBytes2);
+	// Xbox directsound doesn't require locking buffers
+	// This Xbox api only exists to match PC
 
     return DS_OK;
 }
@@ -660,6 +612,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Play)
         }
         if ((pThis->EmuFlags & DSE_FLAG_SYNCHPLAYBACK_CONTROL) == 0) {
             hRet = pThis->EmuDirectSoundBuffer8->Play(0, 0, pThis->EmuPlayFlags);
+			pThis->EmuStreamingInfo.playRequested = true;
         }
     }
 
@@ -1594,52 +1547,54 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
             hRet = pThis->EmuDirectSoundBuffer8->Stop();
             pThis->Xb_rtStopEx = 0LL;
         }
-        else {
-            bool isLooping;
-            if ((pThis->EmuPlayFlags & X_DSBPLAY_LOOPING) > 0) {
-                isLooping = true;
-            }
-            else {
-                isLooping = false;
-            }
+        else if(dwFlags & X_DSBSTOPEX_ENVELOPE) {
+            bool isLooping = pThis->EmuPlayFlags & X_DSBPLAY_LOOPING;
 
-            if ((dwFlags & X_DSBSTOPEX_ENVELOPE) > 0) {
-                if (rtTimeStamp == 0LL) {
-                    xbox::LARGE_INTEGER getTime;
-                    xbox::KeQuerySystemTime(&getTime);
-                    pThis->Xb_rtStopEx = getTime.QuadPart;
-                }
-                else {
-                    pThis->Xb_rtStopEx = rtTimeStamp;
-                }
-                pThis->Xb_rtStopEx += (pThis->Xb_EnvolopeDesc.dwRelease * 512) / 48000;
+            double releaseSamples = pThis->Xb_EnvolopeDesc.dwRelease * 512.0;
+
+            if (rtTimeStamp == 0LL) {
+                xbox::LARGE_INTEGER getTime;
+                xbox::KeQuerySystemTime(&getTime);
+                pThis->Xb_rtStopEx = getTime.QuadPart;
             }
             else {
                 pThis->Xb_rtStopEx = rtTimeStamp;
             }
+            const double samplesToTicks = 10000000 / 48000.0;
+            xbox::REFERENCE_TIME releaseTicks = static_cast<xbox::REFERENCE_TIME>(releaseSamples * samplesToTicks);
+            pThis->Xb_rtStopEx += releaseTicks;
 
-            if ((dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) > 0) {
-                // Release from loop region.
-                pThis->EmuPlayFlags &= ~X_DSBPLAY_LOOPING;
-            }
-
-            DWORD dwValue, dwStatus;
+            DWORD currentPos, dwStatus;
             pThis->EmuDirectSoundBuffer8->GetStatus(&dwStatus);
 
             if (pThis->EmuBufferToggle != X_DSB_TOGGLE_DEFAULT) {
 
-                pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &dwValue);
+                pThis->EmuDirectSoundBuffer8->GetCurrentPosition(nullptr, &currentPos);
                 hRet = pThis->EmuDirectSoundBuffer8->Stop();
 
-                DSoundBufferResizeUpdate(pHybridThis, pThis->EmuPlayFlags, hRet, 0, pThis->X_BufferCacheSize);
+                // Determine the range of bytes we need to play
+                // Test case: Outrun 2006 - converting large buffers tanks the FPS
+                // Is set within DSoundBufferRegionCurrentLocation function
+                DWORD bufferRangeStart;
+                DWORD bufferRangeSize;
+                DSoundBufferRegionCurrentLocation(pHybridThis, pThis->EmuPlayFlags, bufferRangeStart, bufferRangeSize);
 
-                dwValue += pThis->EmuRegionPlayStartOffset;
-                if (isLooping) {
-                    dwValue += pThis->EmuRegionLoopStartOffset;
+                if (pThis->EmuBufferToggle == X_DSB_TOGGLE_LOOP) {
+                    // if we are to release from loop region, then we need change the size to end of actual buffer cache.
+                    if (dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) {
+                        bufferRangeSize = pThis->X_BufferCacheSize - bufferRangeStart;
+                    }
                 }
 
+                DSoundBufferResizeUpdate(pHybridThis, pThis->EmuPlayFlags, hRet, bufferRangeStart, bufferRangeSize);
+
                 pThis->EmuBufferToggle = X_DSB_TOGGLE_DEFAULT;
-                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(dwValue);
+                pThis->EmuDirectSoundBuffer8->SetCurrentPosition(currentPos);
+            }
+
+            if (dwFlags & X_DSBSTOPEX_RELEASEWAVEFORM) {
+                // Release from loop region.
+                pThis->EmuPlayFlags &= ~X_DSBPLAY_LOOPING;
             }
 
             if (dwStatus & DSBSTATUS_PLAYING && rtTimeStamp != 0LL) {
@@ -1649,6 +1604,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_StopEx)
                 pThis->EmuDirectSoundBuffer8->Stop();
                 pThis->Xb_rtStopEx = 0LL;
             }
+        }
+        else {
+            LOG_TEST_CASE("Expected X_DSBSTOPEX_ENVELOPE");
         }
     }
 

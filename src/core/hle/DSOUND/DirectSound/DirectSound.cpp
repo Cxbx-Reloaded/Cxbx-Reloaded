@@ -365,22 +365,138 @@ xbox::void_xt WINAPI xbox::EMUPATCH(DirectSoundDoWork)()
 
     return;
 }
-// For Async process purpose only
+
+void StreamBufferAudio(xbox::XbHybridDSBuffer* pHybridBuffer, float msToCopy) {
+	auto pThis = pHybridBuffer->emuDSBuffer;
+	auto dsb = pThis->EmuDirectSoundBuffer8;
+	bool isAdpcm = pThis->EmuFlags & DSE_FLAG_XADPCM;
+
+	DWORD xBufferRangeStart;
+	DWORD xBufferRangeSize;
+	DSoundBufferRegionCurrentLocation(pHybridBuffer, pThis->EmuPlayFlags, xBufferRangeStart, xBufferRangeSize);
+
+	DWORD hostBufferSize = pThis->EmuBufferDesc.dwBufferBytes;
+
+	DWORD playCursor;
+	DWORD writeCursor;
+	dsb->GetCurrentPosition(&playCursor, &writeCursor);
+
+	DWORD cursorGap = writeCursor >= playCursor
+		? (writeCursor - playCursor)
+		: hostBufferSize - playCursor + writeCursor;
+
+	// Determine where to copy data from.
+	// Note: The DirectSound write cursor can sit quite far ahead of the play cursor,
+	// but copying closer to the play cursor can introduce weird looping or
+	// latency issues
+	// Test case: NBA Live 2005 (writes to a very small buffer expecting low latency, can crackle at > 1ms stream interval)
+	// Test case: Halo (intro video delay when writing from play cursor)
+	DWORD writeOffset = writeCursor + cursorGap * g_dsBufferStreaming.tweakCopyOffset;
+	DWORD writeSize = std::min(
+		(DWORD)(pThis->EmuBufferDesc.lpwfxFormat->nAvgBytesPerSec * msToCopy / 1000),
+		hostBufferSize
+	);
+
+	DWORD blockSize = isAdpcm
+		? XBOX_ADPCM_DSTSIZE * pThis->EmuBufferDesc.lpwfxFormat->nChannels
+		: pThis->EmuBufferDesc.lpwfxFormat->nBlockAlign;
+
+	// ADPCM block alignment
+	writeOffset = ((writeOffset + blockSize / 2) / blockSize) * blockSize;
+	writeSize = ((writeSize + blockSize / 2) / blockSize) * blockSize;
+	writeOffset %= hostBufferSize;
+
+	DWORD xWriteOffset = DSoundBufferGetXboxBufferSize(pThis->EmuFlags, writeOffset);
+
+	assert(xBufferRangeStart + xBufferRangeSize > xWriteOffset);
+	if (isAdpcm) {
+		assert(writeOffset % XBOX_ADPCM_DSTSIZE == 0);
+		assert(xWriteOffset % XBOX_ADPCM_SRCSIZE == 0);
+	}
+
+	LPVOID lplpvAudioPtr1, lplpvAudioPtr2;
+	DWORD lplpvAudioBytes1, lplpvAudioBytes2;
+	HRESULT hRet = pThis->EmuDirectSoundBuffer8->Lock(writeOffset, writeSize,
+		&lplpvAudioPtr1, &lplpvAudioBytes1,
+		&lplpvAudioPtr2, &lplpvAudioBytes2,
+		0);
+
+	if (hRet != 0) {
+		CxbxrKrnlAbort("DirectSoundBuffer Lock Failed!");
+	}
+
+	if (lplpvAudioPtr1 && pThis->X_BufferCache != nullptr) {
+		DSoundBufferOutputXBtoHost(
+			pThis->EmuFlags,
+			pThis->EmuBufferDesc,
+			((PBYTE)pThis->X_BufferCache + xBufferRangeStart + xWriteOffset),
+			DSoundBufferGetXboxBufferSize(pThis->EmuFlags, lplpvAudioBytes1),
+			lplpvAudioPtr1,
+			lplpvAudioBytes1
+		);
+
+		if (lplpvAudioPtr2) {
+			DSoundBufferOutputXBtoHost(
+				pThis->EmuFlags,
+				pThis->EmuBufferDesc,
+				((PBYTE)pThis->X_BufferCache + xBufferRangeStart + 0),
+				DSoundBufferGetXboxBufferSize(pThis->EmuFlags, lplpvAudioBytes2),
+				lplpvAudioPtr2,
+				lplpvAudioBytes2
+			);
+		}
+
+		HRESULT hRet = dsb->Unlock(lplpvAudioPtr1, lplpvAudioBytes1, lplpvAudioPtr2, lplpvAudioBytes2);
+
+		if (hRet != DS_OK) {
+			CxbxrKrnlAbort("DirectSoundBuffer Unlock Failed!");
+		}
+	}
+}
+
 static void dsound_thread_worker(LPVOID nullPtr)
 {
     g_AffinityPolicy->SetAffinityOther();
 
+	const int dsStreamInterval = 300;
+	int waitCounter = 0;
+
     while (true) {
+		// FIXME time this loop more accurately
+		// and account for variation in the length of Sleep calls
+
         // Testcase: Gauntlet Dark Legacy, if Sleep(1) then intro videos start to starved often
         // unless console is open with logging enabled. This is the cause of stopping intro videos often.
-        Sleep(300);
+        Sleep(g_dsBufferStreaming.streamInterval);
+		waitCounter += g_dsBufferStreaming.streamInterval;
+
         // Enforce mutex guard lock only occur inside below bracket for proper compile build.
         {
             DSoundMutexGuardLock;
 
-            xbox::LARGE_INTEGER getTime;
-            xbox::KeQuerySystemTime(&getTime);
-            DirectSoundDoWork_Stream(getTime);
+			if (waitCounter > dsStreamInterval) {
+				waitCounter = 0;
+
+				// For Async process purpose only
+				xbox::LARGE_INTEGER getTime;
+				xbox::KeQuerySystemTime(&getTime);
+				DirectSoundDoWork_Stream(getTime);
+			}
+
+			// Stream sound buffer audio
+			// because the title may change the content of sound buffers at any time
+			for (auto& pBuffer : g_pDSoundBufferCache) {
+				// Avoid expensive calls to DirectSound on buffers unless they've been played at least once
+				// Since some titles create a large amount of buffers, but only use a few
+				if (pBuffer->emuDSBuffer->EmuStreamingInfo.playRequested) {
+					DWORD status;
+					HRESULT hRet = pBuffer->emuDSBuffer->EmuDirectSoundBuffer8->GetStatus(&status);
+					if (hRet == 0 && status & DSBSTATUS_PLAYING) {
+						auto streamMs = g_dsBufferStreaming.streamInterval + g_dsBufferStreaming.streamAhead;
+						StreamBufferAudio(pBuffer, streamMs);
+					}
+				}
+			}
         }
     }
 }
@@ -945,6 +1061,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSound_SynchPlayback)
             DSoundBufferSynchPlaybackFlagRemove(pDSBuffer->EmuFlags);
             EmuLog(LOG_LEVEL::DEBUG, "SynchPlayback - pDSBuffer: %08X; EmuPlayFlags: %08X", *ppDSBuffer, pDSBuffer->EmuPlayFlags);
             pDSBuffer->EmuDirectSoundBuffer8->Play(0, 0, pDSBuffer->EmuPlayFlags);
+			pDSBuffer->EmuStreamingInfo.playRequested = true;
         }
     }
 

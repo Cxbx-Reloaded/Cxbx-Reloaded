@@ -61,6 +61,13 @@ extern DWORD                               g_dwXbMemAllocated;
 extern DWORD                               g_dwFree2DBuffers;
 extern DWORD                               g_dwFree3DBuffers;
 
+struct DsBufferStreaming {
+	DWORD streamInterval = 1;
+	DWORD streamAhead = 50;
+	float tweakCopyOffset = 0;
+};
+extern DsBufferStreaming g_dsBufferStreaming;
+
 // size of DirectSound cache max size
 #define X_DIRECTSOUND_CACHE_MAX 0x800
 

@@ -569,7 +569,6 @@ static inline void DSoundBufferResizeUpdate(
 static inline void DSoundBufferRegionCurrentLocation(
     xbox::XbHybridDSBuffer*      pHybridThis,
     DWORD                       dwPlayFlags,
-    HRESULT                    &hRet,
     DWORD                      &Xb_dwStartOffset,
     DWORD                      &Xb_dwByteLength)
 {
@@ -608,7 +607,7 @@ static inline void DSoundBufferUpdate(
     DWORD Xb_dwByteLength;
     DWORD Xb_dwStartOffset;
 
-    DSoundBufferRegionCurrentLocation(pHybridThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
+    DSoundBufferRegionCurrentLocation(pHybridThis, dwPlayFlags, Xb_dwStartOffset, Xb_dwByteLength);
 
     DSoundBufferResizeUpdate(pHybridThis, dwPlayFlags, hRet, Xb_dwStartOffset, Xb_dwByteLength);
 }

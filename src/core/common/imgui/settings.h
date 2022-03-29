@@ -44,6 +44,7 @@ typedef struct {
 
 typedef struct {
 	bool cache_stats_general;
+	bool cache_visualization;
 	bool Reserved[3];
 } imgui_audio_windows;
 

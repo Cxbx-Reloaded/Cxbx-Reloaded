@@ -110,6 +110,10 @@ struct EmuDirectSoundBuffer
     X_DSENVOLOPEDESC        Xb_EnvolopeDesc;
     X_DSVOICEPROPS          Xb_VoiceProperties;
     DWORD                   Xb_Flags;
+	struct {
+		// True if the buffer has been played, and should be considered for streaming
+		bool playRequested = false;
+	} EmuStreamingInfo;
 };
 
 struct XbHybridDSBuffer : DSBUFFER_S::DSBUFFER_I {
