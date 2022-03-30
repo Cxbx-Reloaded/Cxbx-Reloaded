@@ -113,7 +113,7 @@ std::atomic_bool g_bEnableAllInterrupts = true;
 // Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
 size_t g_SystemMaxMemory = 0;
 
-HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
+HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlEmulate
 
 bool g_CxbxPrintUEM = false;
 ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
@@ -1016,6 +1016,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	// and capture any crash from this point and beyond. Useful for capture live crash and generate crash report.
 	g_ExceptionManager = new ExceptionManager();
 
+	// Set current process handle in order for CxbxKrnlShutDown to work properly.
+	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
+
 	// First of all, check if the EmuShared version matches the emu version and abort otherwise
 	char GitVersionEmuShared[GitVersionMaxLength];
 	g_EmuShared->GetGitVersion(GitVersionEmuShared);
@@ -1068,8 +1071,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 
 	int BootFlags;
 	g_EmuShared->GetBootFlags(&BootFlags);
-
-	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
 	// Set up the logging variables for the kernel process during initialization.
 	log_sync_config();
