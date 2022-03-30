@@ -1106,7 +1106,31 @@ XBSYSAPI EXPORTNUM(288) xbox::void_xt NTAPI xbox::RtlGetCallersAddress
 		LOG_FUNC_ARG_OUT(CallersCaller)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	/* Get the tow back trace address */
+	PVOID BackTrace[2];
+	ushort_xt FrameCount = RtlCaptureStackBackTrace(2, 2, &BackTrace[0], zeroptr);
+
+	/* Only if user want it */
+	if (CallersAddress != NULL) {
+		/* only when first frames exist */
+		if (FrameCount >= 1) {
+			*CallersAddress = BackTrace[0];
+		}
+		else {
+			*CallersAddress = zeroptr;
+		}
+	}
+
+	/* Only if user want it */
+	if (CallersCaller != NULL) {
+		/* only when second frames exist */
+		if (FrameCount >= 2) {
+			*CallersCaller = BackTrace[1];
+		}
+		else {
+			*CallersCaller = zeroptr;
+		}
+	}
 }
 
 // ******************************************************************
