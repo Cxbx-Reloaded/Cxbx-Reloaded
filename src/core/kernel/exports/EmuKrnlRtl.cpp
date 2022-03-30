@@ -294,6 +294,7 @@ XBSYSAPI EXPORTNUM(265) xbox::void_xt NTAPI xbox::RtlCaptureContext
 // ******************************************************************
 // * 0x010A - RtlCaptureStackBackTrace()
 // ******************************************************************
+// Source: ReactOS
 XBSYSAPI EXPORTNUM(266) xbox::ushort_xt NTAPI xbox::RtlCaptureStackBackTrace
 (
 	IN ulong_xt FramesToSkip,
@@ -309,9 +310,48 @@ XBSYSAPI EXPORTNUM(266) xbox::ushort_xt NTAPI xbox::RtlCaptureStackBackTrace
 		LOG_FUNC_ARG_OUT(BackTraceHash)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	PVOID Frames[2 * 64];
+	ulong_xt FrameCount;
+	ulong_xt Hash = 0;
+	ushort_xt i;
 
-	RETURN(NULL);
+	/* Skip a frame for the caller */
+	FramesToSkip++;
+
+	/* Don't go past the limit */
+	if ((FramesToCapture + FramesToSkip) >= 128) {
+		return 0;
+	}
+
+	/* Do the back trace */
+	FrameCount = RtlWalkFrameChain(Frames, FramesToCapture + FramesToSkip, 0);
+
+	/* Make sure we're not skipping all of them */
+	if (FrameCount <= FramesToSkip) {
+		return 0;
+	}
+
+	/* Loop all the frames */
+	for (i = 0; i < FramesToCapture; i++) {
+		/* Don't go past the limit */
+		if ((FramesToSkip + i) >= FrameCount) {
+			break;
+		}
+
+		/* Save this entry and hash it */
+		BackTrace[i] = Frames[FramesToSkip + i];
+		Hash += reinterpret_cast<ulong_xt>(BackTrace[i]);
+	}
+
+	/* Write the hash */
+	if (BackTraceHash) {
+		*BackTraceHash = Hash;
+	}
+
+	/* Clear the other entries and return count */
+	RtlFillMemoryUlong(Frames, 128, 0);
+
+	RETURN(i);
 }
 
 // ******************************************************************
