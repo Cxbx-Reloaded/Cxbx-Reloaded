@@ -268,7 +268,7 @@ XBSYSAPI EXPORTNUM(265) xbox::void_xt NTAPI xbox::RtlCaptureContext
 		mov ebx, [esp + 8]           // ebx = ContextRecord;
 
 		mov [ebx + CONTEXT.Eax], eax // ContextRecord->Eax = eax;
-		mov eax, [esp]				 // eax = original value of ebx
+		mov eax, [esp]               // eax = original value of ebx
 		mov [ebx + CONTEXT.Ebx], eax // ContextRecord->Ebx = original value of ebx
 		mov [ebx + CONTEXT.Ecx], ecx // ContextRecord->Ecx = ecx;
 		mov [ebx + CONTEXT.Edx], edx // ContextRecord->Edx = edx;
