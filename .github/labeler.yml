@@ -28,6 +28,7 @@ HLE:
 informational:
   - '**/*Logging*'
   - '**/*Logging*/**'
+  - '**/README.md'
 
 input:
   - 'src/common/input/**'

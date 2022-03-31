@@ -8,6 +8,8 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 ## System Requirements
 ### Minimum
   * OS: Windows 7+ x64, or x86-64 Linux with Wine. 32-bit is not supported.
+    * MacOS with Wine is known not to work, and BSD-based systems are untested.
+    * Also note that Wine is relatively unstable, and it might break compatibility with Cxbx-Reloaded at any time without warning.
   * GPU: Direct3D 9.0c with Pixel Shader Model 2.x, and Vertex Shader Model 3.0.
 
 ## Prerequisites
@@ -19,7 +21,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
     * *Optional, only needed for USB pass-through of original Xbox and Steel Battalion controllers.*
 
 ### Wine
-**Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 7.0 which is the last known working version.**
+**Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 7.0 which is the last known working version.**<br/>
 **There also exists this known [issue](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/2314) which currently prevents savings in some games with the most recent Wine 6.8 and later versions.**
   * Winetricks
     * `vcrun2019`
@@ -29,9 +31,9 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * Winpcap is built-in, no installation is required.
 
 ## Automated Builds
-Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from the Releases tab, or the links below:
+Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from our official website's download page, or the links below:
 
-  * **[Release Builds](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/releases)**
+  * **[Release Builds](https://cxbx-reloaded.co.uk/download)**
   * *[Full build history](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=workflow%3A%22GitHub+CI%22)*
 
 ## Compatibility
@@ -112,3 +114,5 @@ You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Re
 * All contributors to the original Cxbx and [Dxbx](https://github.com/PatrickvL/Dxbx) projects. Without them Cxbx-Reloaded would not exist at all.
 * [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE and NVNet implementation are primarily the work of the XQEMU developers.
 * [XboxDev](https://github.com/xboxdev) - Providing Xbox hardware research & useful tooling.
+* [XbSymbolDatabase](https://github.com/Cxbx-Reloaded/XbSymbolDatabase) - Providing support to detect symbols across XDK builds from reverse engineered retail titles.
+* [Xbox Kernel Test Suite](https://github.com/Cxbx-Reloaded/xbox_kernel_test_suite) - Making accurate tests on hardware to compare against cxbxr's kernel implementation.
