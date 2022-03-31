@@ -21,7 +21,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
     * *Optional, only needed for USB pass-through of original Xbox and Steel Battalion controllers.*
 
 ### Wine
-**Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 7.0 which is the last known working version.**
+**Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 7.0 which is the last known working version.**<br/>
 **There also exists this known [issue](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/2314) which currently prevents savings in some games with the most recent Wine 6.8 and later versions.**
   * Winetricks
     * `vcrun2019`
