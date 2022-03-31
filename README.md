@@ -30,9 +30,9 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * Winpcap is built-in, no installation is required.
 
 ## Automated Builds
-Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from the Releases tab, or the links below:
+Cxbx-Reloaded doesn't currently have stable builds, but you can obtain pre-release builds from our official website's download page, or the links below:
 
-  * **[Release Builds](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/releases)**
+  * **[Release Builds](https://cxbx-reloaded.co.uk/download)**
   * *[Full build history](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/actions?query=workflow%3A%22GitHub+CI%22)*
 
 ## Compatibility
