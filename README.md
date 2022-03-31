@@ -7,8 +7,9 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
 
 ## System Requirements
 ### Minimum
-  * OS: Windows 7+ x64, or x86-64 operating system with Wine. 32-bit is not supported.
-    * Wine is not officially supported by us.
+  * OS: Windows 7+ x64, or x86-64 Linux with Wine. 32-bit is not supported.
+    * MacOS with Wine is known not to work, and BSD-based systems are untested.
+    * Also note that Wine is relatively unstable, and it might break compatibility with Cxbx-Reloaded at any time without warning.
   * GPU: Direct3D 9.0c with Pixel Shader Model 2.x, and Vertex Shader Model 3.0.
 
 ## Prerequisites
@@ -19,7 +20,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * WinUSB compliant driver
     * *Optional, only needed for USB pass-through of original Xbox and Steel Battalion controllers.*
 
-### Wine (not officially supported by us)
+### Wine
 **Please use the latest stable release version of Wine. If it does not work for you, then roll back to Wine 7.0 which is the last known working version.**
 **There also exists this known [issue](https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/2314) which currently prevents savings in some games with the most recent Wine 6.8 and later versions.**
   * Winetricks
