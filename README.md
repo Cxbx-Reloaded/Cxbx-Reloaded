@@ -114,3 +114,5 @@ You can support [Luke Usher](https://github.com/LukeUsher), initiator of Cxbx-Re
 * All contributors to the original Cxbx and [Dxbx](https://github.com/PatrickvL/Dxbx) projects. Without them Cxbx-Reloaded would not exist at all.
 * [XQEMU](https://github.com/xqemu/xqemu) - While the majority of Cxbx-R is our own work (Kernel, HLE, etc), the NV2A LLE and NVNet implementation are primarily the work of the XQEMU developers.
 * [XboxDev](https://github.com/xboxdev) - Providing Xbox hardware research & useful tooling.
+* [XbSymbolDatabase](https://github.com/Cxbx-Reloaded/XbSymbolDatabase) - Providing support to detect symbols across XDK builds from reverse engineered retail titles.
+* [Xbox Kernel Test Suite](https://github.com/Cxbx-Reloaded/xbox_kernel_test_suite) - Making accurate tests on hardware to compare against cxbxr's kernel implementation.
