@@ -754,7 +754,7 @@ void EmuGenerateFS(xbox::PETHREAD Ethread, unsigned Host2XbStackBaseReserved, un
 		xbox::addr_xt xTlsData = reinterpret_cast<xbox::addr_xt>(Ethread->Tcb.TlsData);
 		xbox::addr_xt xKernelStack = reinterpret_cast<xbox::addr_xt>(Ethread->Tcb.KernelStack);
 		xbox::dword_xt xKernelStackSize = xStackBase - xKernelStack;
-		assert(xStackBase - xKernelStack <= Host2XbStackSizeReserved);
+		assert(xKernelStackSize <= Host2XbStackSizeReserved);
 		PVOID hKernelStack = reinterpret_cast<PVOID>(Host2XbStackBaseReserved - xKernelStackSize);
 		std::memcpy(hKernelStack, Ethread->Tcb.KernelStack, xKernelStackSize);
 		// Update TlsData address if used
