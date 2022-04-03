@@ -43,6 +43,7 @@
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\exports\EmuKrnlKe.h"
+#include "core\kernel\exports\EmuKrnlPs.hpp"
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow, EmuD3DInit
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp" // For CxbxInitAudio
@@ -112,7 +113,7 @@ std::atomic_bool g_bEnableAllInterrupts = true;
 // Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
 size_t g_SystemMaxMemory = 0;
 
-HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlMain
+HANDLE g_CurrentProcessHandle = 0; // Set in CxbxKrnlEmulate
 
 bool g_CxbxPrintUEM = false;
 ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
@@ -1015,6 +1016,9 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	// and capture any crash from this point and beyond. Useful for capture live crash and generate crash report.
 	g_ExceptionManager = new ExceptionManager();
 
+	// Set current process handle in order for CxbxKrnlShutDown to work properly.
+	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
+
 	// First of all, check if the EmuShared version matches the emu version and abort otherwise
 	char GitVersionEmuShared[GitVersionMaxLength];
 	g_EmuShared->GetGitVersion(GitVersionEmuShared);
@@ -1067,8 +1071,6 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 
 	int BootFlags;
 	g_EmuShared->GetBootFlags(&BootFlags);
-
-	g_CurrentProcessHandle = GetCurrentProcess(); // OpenProcess(PROCESS_ALL_ACCESS, FALSE, GetCurrentProcessId());
 
 	// Set up the logging variables for the kernel process during initialization.
 	log_sync_config();
@@ -1250,6 +1252,10 @@ static void CxbxrKrnlInitHacks()
 	void(*Entry)(),
 	int BootFlags)
 {
+	unsigned Host2XbStackBaseReserved = 0;
+	__asm mov Host2XbStackBaseReserved, esp;
+	unsigned Host2XbStackSizeReserved = EmuGenerateStackSize(Host2XbStackBaseReserved, 0);
+	__asm sub esp, Host2XbStackSizeReserved;
     // Set windows timer period to 1ms
     // Windows will automatically restore this value back to original on program exit
     // But with this, we can replace some busy loops with sleeps.
@@ -1404,10 +1410,11 @@ static void CxbxrKrnlInitHacks()
 
 	// Create a kpcr for this thread. This is necessary because ObInitSystem needs to access the irql. This must also be done before
 	// CxbxInitWindow because that function creates the xbox EmuUpdateTickCount thread
-	EmuGenerateFS<true>(nullptr, nullptr, xbox::zeroptr);
+	EmuGenerateFS<true>(xbox::zeroptr, Host2XbStackBaseReserved, Host2XbStackSizeReserved);
 	if (!xbox::ObInitSystem()) {
 		CxbxrKrnlAbortEx(LOG_PREFIX_INIT, "Unable to intialize ObInitSystem.");
 	}
+	xbox::PsInitSystem();
 	xbox::KiInitSystem();
 	
 	// initialize graphics
@@ -1507,7 +1514,8 @@ static void CxbxrKrnlInitHacks()
 
 	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxLaunchXbe, Entry, FALSE);
 
-	EmuKeFreePcr<true>();
+	EmuKeFreePcr();
+	__asm add esp, Host2XbStackSizeReserved;
 
 	// This will wait forever
 	std::condition_variable cv;

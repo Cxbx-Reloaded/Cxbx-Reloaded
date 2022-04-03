@@ -177,6 +177,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlKe.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlKi.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlLogging.h"
+ "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlPs.hpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/init/CxbxKrnl.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/init/KrnlPatches.hpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/memory-manager/PhysicalMemory.h"

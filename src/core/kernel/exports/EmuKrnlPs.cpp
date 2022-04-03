@@ -31,6 +31,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For PsCreateSystemThreadEx, etc.
+#include "EmuKrnlPs.hpp"
 #include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include <process.h> // For __beginthreadex(), etc.
@@ -55,10 +56,8 @@ namespace NtDll
 // PsCreateSystemThread proxy parameters
 typedef struct _PCSTProxyParam
 {
-	IN xbox::PVOID  StartRoutine;
-	IN xbox::PVOID  StartContext;
-	IN xbox::PVOID  SystemRoutine;
 	IN xbox::PVOID  Ethread;
+	IN xbox::ulong_xt TlsDataSize;
 }
 PCSTProxyParam;
 
@@ -72,7 +71,8 @@ void LOG_PCSTProxy
 	xbox::PVOID StartRoutine,
 	xbox::PVOID StartContext,
 	xbox::PVOID SystemRoutine,
-	xbox::PVOID Ethread
+	xbox::PVOID Ethread,
+	xbox::ulong_xt TlsDataSize
 )
 {
 	LOG_FUNC_BEGIN
@@ -80,6 +80,7 @@ void LOG_PCSTProxy
 		LOG_FUNC_ARG(StartContext)
 		LOG_FUNC_ARG(SystemRoutine)
 		LOG_FUNC_ARG(Ethread)
+		LOG_FUNC_ARG(TlsDataSize)
 		LOG_FUNC_END;
 }
 
@@ -97,32 +98,49 @@ static unsigned int WINAPI PCSTProxy
 	// Copy params to the stack so they can be freed
 	PCSTProxyParam params = *iPCSTProxyParam;
 	delete iPCSTProxyParam;
-
-	LOG_PCSTProxy(
-		params.StartRoutine,
-		params.StartContext,
-		params.SystemRoutine,
-		params.Ethread);
+#ifndef ENABLE_KTHREAD_SWITCHING
+	unsigned Host2XbStackBaseReserved = 0;
+	__asm mov Host2XbStackBaseReserved, esp;
+	unsigned Host2XbStackSizeReserved = EmuGenerateStackSize(Host2XbStackBaseReserved, params.TlsDataSize);
+	__asm sub esp, Host2XbStackSizeReserved;
+#endif
 
 	// Do minimal thread initialization
-	EmuGenerateFS(CxbxKrnl_TLS, CxbxKrnl_TLSData, static_cast<xbox::PETHREAD>(params.Ethread));
+	xbox::PETHREAD eThread = static_cast<xbox::PETHREAD>(params.Ethread);
+#ifndef ENABLE_KTHREAD_SWITCHING
+	EmuGenerateFS(eThread, Host2XbStackBaseReserved, Host2XbStackSizeReserved);
+#else
+	EmuGenerateFS(eThread);
+#endif
+	xbox::PKSTART_FRAME StartFrame = reinterpret_cast<xbox::PKSTART_FRAME>(reinterpret_cast<xbox::addr_xt>(eThread->Tcb.KernelStack) + sizeof(xbox::KSWITCHFRAME));
 
-	auto routine = (xbox::PKSYSTEM_ROUTINE)params.SystemRoutine;
+	LOG_PCSTProxy(
+		StartFrame->StartRoutine,
+		StartFrame->StartContext,
+		StartFrame->SystemRoutine,
+		params.Ethread,
+		params.TlsDataSize);
+
+	auto routine = (xbox::PKSYSTEM_ROUTINE)StartFrame->SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
 	// message like: "Exception thrown at 0x00026190 in cxbx.exe: 0xC0000005: Access
 	// violation reading location 0xFD001804.", then this is AS-DESIGNED behaviour!
 	// (To avoid repetitions, uncheck "Break when this exception type is thrown").
-	routine(xbox::PKSTART_ROUTINE(params.StartRoutine), params.StartContext);
+	routine(StartFrame->StartRoutine, StartFrame->StartContext);
 
 	// This will also handle thread notification :
 	LOG_TEST_CASE("Thread returned from SystemRoutine");
 	xbox::PsTerminateSystemThread(X_STATUS_SUCCESS);
 
+#ifndef ENABLE_KTHREAD_SWITCHING
+	__asm add esp, Host2XbStackSizeReserved;
+#endif
+
 	return 0; // will never be reached
 }
 
 // Placeholder system function, instead of XapiThreadStartup
-void PspSystemThreadStartup
+xbox::void_xt NTAPI PspSystemThreadStartup
 (
 	IN xbox::PKSTART_ROUTINE StartRoutine,
 	IN PVOID StartContext
@@ -149,6 +167,64 @@ static xbox::void_xt PspCallThreadNotificationRoutines(xbox::PETHREAD eThread, x
 			(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, Create);
 		}
 	}
+}
+
+// Source: ReactOS
+xbox::LIST_ENTRY PspReaperListHead;
+xbox::void_xt NTAPI PspReaperRoutine(
+	IN xbox::PKDPC Dpc,
+	IN xbox::PVOID DeferredContext,
+	IN xbox::PVOID SystemArgument1,
+	IN xbox::PVOID SystemArgument2
+)
+{
+	using namespace xbox;
+	xbox::PLIST_ENTRY NextEntry;
+	PETHREAD Thread;
+	//PSTRACE(PS_KILL_DEBUG, "Context: %p\n", Context);
+
+	/* Write magic value and return the next entry to process */
+	NextEntry = PspReaperListHead.Flink;
+
+	/* Start loop */
+	while (NextEntry != &PspReaperListHead) {
+		/* Get the first Thread Entry */
+		Thread = CONTAINING_RECORD(NextEntry, ETHREAD, ReaperLink);
+
+		RemoveEntryList(NextEntry);
+
+		// Currently, only kernel's stack portion reside on the host's stack.
+		// Once we have our own kernel thread switching implement or in virtual environment.
+		// Then enable ENABLE_KTHREAD_SWITCHING macro for any further implement needed.
+#ifdef ENABLE_KTHREAD_SWITCHING
+		/* Delete this entry's kernel stack */
+		MmDeleteKernelStack(Thread->Tcb.StackBase, Thread->Tcb.StackLimit);
+#else
+		// Backup plan in case if certain titles did not let new thread start.
+		// And therefore still have the xbox's kernel stack allocated.
+		if (MmIsAddressValid(Thread->Tcb.StackBase)) {
+			MmDeleteKernelStack(Thread->Tcb.StackBase, Thread->Tcb.StackLimit);
+		}
+#endif
+		Thread->Tcb.StackBase = zeroptr;
+
+		/* Move to the next entry */
+		NextEntry = NextEntry->Flink;
+
+		/* Dereference this thread */
+		ObfDereferenceObject(Thread);
+	}
+}
+
+static xbox::KDPC PsReaperDpc;
+xbox::void_xt xbox::PsInitSystem()
+{
+#ifdef ENABLE_KTHREAD_SWITCHING
+	assert(0); // NOTE: Verify all defined ENABLE_KTHREAD_SWITCHING check are implemented
+#endif
+	/* Setup the reaper */
+	InitializeListHead(&PspReaperListHead);
+	KeInitializeDpc(&PsReaperDpc, PspReaperRoutine, zeroptr);
 }
 
 // ******************************************************************
@@ -222,20 +298,19 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		LOG_FUNC_ARG(SystemRoutine)
 		LOG_FUNC_END;
 
-	// TODO : Arguments to use : TlsDataSize, DebuggerThread
-
 	// use default kernel stack size if lesser specified
 	if (KernelStackSize < KERNEL_STACK_SIZE)
 		KernelStackSize = KERNEL_STACK_SIZE;
 
 	// Double the stack size, this is to account for the overhead HLE patching adds to the stack
-	KernelStackSize *= 2;
+	uint32_t hKernelStackSize = KernelStackSize * 2;
 
 	// round up to the next page boundary if un-aligned
 	KernelStackSize = RoundUp(KernelStackSize, PAGE_SIZE);
+	hKernelStackSize = RoundUp(hKernelStackSize, PAGE_SIZE);
 
-    // create thread, using our special proxy technique
-    {
+	// create thread, using our special proxy technique
+	{
 		PETHREAD eThread;
 		ntstatus_xt result = ObCreateObject(&PsThreadObjectType, zeroptr, sizeof(ETHREAD) + ThreadExtensionSize, reinterpret_cast<PVOID *>(&eThread));
 		if (!X_NT_SUCCESS(result)) {
@@ -243,6 +318,17 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		}
 
 		std::memset(eThread, 0, sizeof(ETHREAD) + ThreadExtensionSize);
+
+		// Create kernel stack for xbox title to able write on stack instead of host.
+		PVOID KernelStack = MmCreateKernelStack(KernelStackSize, DebuggerThread);
+
+		if (!KernelStack) {
+			ObfDereferenceObject(eThread);
+			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
+		}
+
+		// Start thread initialization process here before insert and create thread
+		KeInitializeThread(&eThread->Tcb, KernelStack, KernelStackSize, TlsDataSize, SystemRoutine, StartRoutine, StartContext, &KiUniqueProcess);
 
 		// The ob handle of the ethread obj is the thread id we return to the title
 		result = ObInsertObject(eThread, zeroptr, 0, &eThread->UniqueThread);
@@ -266,16 +352,14 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 			*ThreadId = eThread->UniqueThread;
 		}
 
-        // PCSTProxy is responsible for cleaning up this pointer
+		// PCSTProxy is responsible for cleaning up this pointer
 		PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
-        iPCSTProxyParam->StartRoutine = (PVOID)StartRoutine;
-        iPCSTProxyParam->StartContext = StartContext;
-        iPCSTProxyParam->SystemRoutine = (PVOID)SystemRoutine; // NULL, XapiThreadStartup or unknown?
 		iPCSTProxyParam->Ethread = eThread;
+		iPCSTProxyParam->TlsDataSize = TlsDataSize;
 
 		unsigned int ThreadId;
-        HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, KernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, &ThreadId));
-		if (handle == NULL) {
+		HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, hKernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, &ThreadId));
+		if (handle == zeroptr) {
 			delete iPCSTProxyParam;
 			ObpClose(eThread->UniqueThread);
 			ObfDereferenceObject(eThread);
@@ -288,8 +372,6 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		ObfReferenceObject(eThread);
 
 		KeQuerySystemTime(&eThread->CreateTime);
-		InsertTailList(&KiUniqueProcess.ThreadListHead, &eThread->Tcb.ThreadListEntry);
-		KiUniqueProcess.StackCount++;
 		RegisterXboxHandle(*ThreadHandle, handle);
 		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);
 		assert(dupHandle);
@@ -368,14 +450,42 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 	LOG_FUNC_ONE_ARG(ExitStatus);
 
 	xbox::PETHREAD eThread = xbox::PspGetCurrentThread();
+	eThread->Tcb.HasTerminated = 1;
+
+	KfLowerIrql(PASSIVE_LEVEL);
+
 	if (eThread->UniqueThread && g_iThreadNotificationCount) {
 		PspCallThreadNotificationRoutines(eThread, FALSE);
 	}
 
-	EmuKeFreeThread(ExitStatus);
-	// Don't do this in EmuKeFreeThread because we only increment the thread ref count in PsCreateSystemThreadEx
-	ObfDereferenceObject(eThread);
+	KeEmptyQueueApc();
+
+	// Emulate our exit strategy for GetExitCodeThread
+	KeQuerySystemTime(&eThread->ExitTime);
+	eThread->ExitStatus = ExitStatus;
+	eThread->Tcb.Header.SignalState = 1;
+	if (!IsListEmpty(&eThread->Tcb.Header.WaitListHead)) {
+		// TODO: Implement KiWaitTest's relative objects usage
+		//KiWaitTest()
+		assert(0);
+	}
+
+	if (GetNativeHandle(eThread->UniqueThread)) {
+		NtClose(eThread->UniqueThread);
+		eThread->UniqueThread = xbox::zeroptr;
+	}
+
+	// Remove thread from the process
+	RemoveEntryList(&eThread->Tcb.ThreadListEntry);
+	eThread->Tcb.State = Terminated;
 	KiUniqueProcess.StackCount--;
+
+	// PspReaperRoutine technically free'd the memory allocation from MmCreateKernelStack function.
+	// Therefore is run from another thread.
+	InsertTailList(&PspReaperListHead, &((PETHREAD)eThread)->ReaperLink);
+	KeInsertQueueDpc(&PsReaperDpc, NULL, NULL);
+
+	EmuKeFreePcr();
 
 	_endthreadex(ExitStatus);
 }

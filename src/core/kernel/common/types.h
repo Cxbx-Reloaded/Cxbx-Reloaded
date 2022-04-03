@@ -1401,7 +1401,7 @@ typedef struct _KTIMER
     ULARGE_INTEGER      DueTime;          // 0x10
     LIST_ENTRY          TimerListEntry;   // 0x18
     struct _KDPC       *Dpc;              // 0x20
-    long_xt                Period;           // 0x24
+    long_xt             Period;           // 0x24
 }
 KTIMER, *PKTIMER;
 
@@ -1424,7 +1424,7 @@ typedef void_xt (NTAPI *PKSTART_ROUTINE)
 // *       opposed to 1.
 // *
 // ******************************************************************
-typedef void_xt (*PKSYSTEM_ROUTINE)
+typedef void_xt (NTAPI *PKSYSTEM_ROUTINE)
 (
 	IN PKSTART_ROUTINE StartRoutine OPTIONAL,
 	IN PVOID StartContext OPTIONAL
@@ -1435,7 +1435,7 @@ struct _KDPC;
 // ******************************************************************
 // * PKDEFERRED_ROUTINE
 // ******************************************************************
-typedef void_xt (__stdcall *PKDEFERRED_ROUTINE)
+typedef void_xt (NTAPI *PKDEFERRED_ROUTINE)
 (
     IN struct _KDPC *Dpc,
     IN PVOID         DeferredContext,
@@ -1474,6 +1474,14 @@ typedef struct _DPC_QUEUE_ENTRY
 }
 DPC_QUEUE_ENTRY, *PDPC_QUEUE_ENTRY;
 
+
+// ******************************************************************
+// * NPX_STATE flags
+// ******************************************************************
+// Source: ReactOS
+#define NPX_STATE_NOT_LOADED 0xA
+#define NPX_STATE_LOADED     0x0
+
 // ******************************************************************
 // * KFLOATING_SAVE
 // ******************************************************************
@@ -1491,6 +1499,21 @@ typedef struct _KFLOATING_SAVE
 	ulong_xt   Spare1; // NtDll calls this Spare0
 }
 KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+// ******************************************************************
+// * KTHREAD_STATE
+// ******************************************************************
+// Source: ReactOS
+typedef enum _KTHREAD_STATE
+{
+	Initialized,
+	Ready,
+	Running,
+	Standby,
+	Terminated,
+	Waiting,
+	Transition
+} KTHREAD_STATE, * PKTHREAD_STATE;
 
 #define DISPATCHER_OBJECT_TYPE_MASK 0x7
 // ******************************************************************
@@ -1529,7 +1552,7 @@ typedef void_xt (NTAPI *PKNORMAL_ROUTINE)
 // ******************************************************************
 // * PKKERNEL_ROUTINE
 // ******************************************************************
-typedef void_xt (*PKKERNEL_ROUTINE)
+typedef void_xt (NTAPI *PKKERNEL_ROUTINE)
 (
 	IN struct _KAPC *Apc,
 	IN OUT PKNORMAL_ROUTINE *NormalRoutine,
@@ -1541,7 +1564,7 @@ typedef void_xt (*PKKERNEL_ROUTINE)
 // ******************************************************************
 // * PKRUNDOWN_ROUTINE
 // ******************************************************************
-typedef void_xt (*PKRUNDOWN_ROUTINE)
+typedef void_xt (NTAPI *PKRUNDOWN_ROUTINE)
 (
 	IN struct _KAPC *Apc
 );
@@ -1549,7 +1572,7 @@ typedef void_xt (*PKRUNDOWN_ROUTINE)
 // ******************************************************************
 // * PKSYNCHRONIZE_ROUTINE
 // ******************************************************************
-typedef boolean_xt (*PKSYNCHRONIZE_ROUTINE)
+typedef boolean_xt (NTAPI *PKSYNCHRONIZE_ROUTINE)
 (
 	IN PVOID SynchronizeContext
 );
@@ -1557,7 +1580,7 @@ typedef boolean_xt (*PKSYNCHRONIZE_ROUTINE)
 // ******************************************************************
 // * PKSERVICE_ROUTINE
 // ******************************************************************
-typedef boolean_xt (*PKSERVICE_ROUTINE)
+typedef boolean_xt (NTAPI *PKSERVICE_ROUTINE)
 (
 	IN struct _KINTERRUPT *Interrupt,
 	IN PVOID ServiceContext
@@ -1636,8 +1659,8 @@ PS_STATISTICS, *PPS_STATISTICS;
 typedef struct _RTL_CRITICAL_SECTION
 {
 	DISPATCHER_HEADER   Event;                                          // 0x00
-    long_xt                LockCount;                                      // 0x10
-    long_xt                RecursionCount;                                 // 0x14
+    long_xt             LockCount;                                      // 0x10
+    long_xt             RecursionCount;                                 // 0x14
     HANDLE              OwningThread;                                   // 0x18
 }
 RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
@@ -1654,7 +1677,7 @@ typedef struct _NT_TIB
     union
     {
         PVOID FiberData;                                            // 0x10 for TIB
-        ulong_xt Version;                                              // 0x10 for TEB (?)
+        ulong_xt Version;                                           // 0x10 for TEB (?)
     }
     u_a;
     PVOID                                   ArbitraryUserPointer;   // 0x14
@@ -1752,6 +1775,40 @@ typedef struct _KQUEUE
 	LIST_ENTRY ThreadListHead;
 }
 KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
+
+// ******************************************************************
+// * KSTART_FRAME
+// ******************************************************************
+typedef struct _KSTART_FRAME
+{
+	PKSYSTEM_ROUTINE SystemRoutine;
+	PKSTART_ROUTINE StartRoutine;
+	PVOID StartContext;
+} KSTART_FRAME, *PKSTART_FRAME;
+
+// ******************************************************************
+// * KSWITCHFRAME
+// ******************************************************************
+typedef struct _KSWITCHFRAME
+{
+	PVOID ExceptionList;
+	dword_xt Unknown;
+	PVOID RetAddr;
+} KSWITCHFRAME, *PKSWITCHFRAME;
+
+// Exception record flags
+// Source: ReactOS
+// NOTE: Do not exclude X_  prefix, they will conflict with the macros provided by Windows
+#define X_EXCEPTION_NONCONTINUABLE  0x01
+#define X_EXCEPTION_UNWINDING       0x02
+#define X_EXCEPTION_EXIT_UNWIND     0x04
+#define X_EXCEPTION_STACK_INVALID   0x08
+#define X_EXCEPTION_NESTED_CALL     0x10
+#define X_EXCEPTION_TARGET_UNWIND   0x20
+#define X_EXCEPTION_COLLIDED_UNWIND 0x40
+#define X_EXCEPTION_UNWIND (X_EXCEPTION_UNWINDING | X_EXCEPTION_EXIT_UNWIND | X_EXCEPTION_TARGET_UNWIND | X_EXCEPTION_COLLIDED_UNWIND)
+
+#define X_EXCEPTION_CHAIN_END       0xFFFFFFFF
 
 // ******************************************************************
 // * EXCEPTION_DISPOSITION
@@ -1925,11 +1982,14 @@ typedef struct _ETHREAD
     LARGE_INTEGER      CreateTime;     // 0x110
     LARGE_INTEGER      ExitTime;       // 0x118
     ntstatus_xt        ExitStatus;     // 0x120
-    uchar_xt           Unknown[0x8];   // 0x124
+    LIST_ENTRY         ReaperLink;     // 0x124
     HANDLE             UniqueThread;   // 0x12C
+    PVOID              StartAddress;   // 0x130
+    LIST_ENTRY         IrpList;        // 0x134
+    PVOID              DebugData;      // 0x13C
 }
 ETHREAD, *PETHREAD;
-static_assert(sizeof(ETHREAD) == 0x130);
+static_assert(sizeof(ETHREAD) == 0x140);
 
 // ******************************************************************
 // * PCREATE_THREAD_NOTIFY_ROUTINE
@@ -1954,13 +2014,13 @@ typedef struct _KPRCB
     struct _KTHREAD* NextThread;                                    // 0x04, KPCR : 0x2C
     struct _KTHREAD* IdleThread;                                    // 0x08, KPCR : 0x30
 
-	ulong_xt            Unknown1[7];                                   // 0x0C, KPCR : 0x34
+	ulong_xt         Unknown1[7];                                   // 0x0C, KPCR : 0x34
 
 	LIST_ENTRY       DpcListHead;                                   // 0x28, KPCR : 0x50
-	ulong_xt            DpcRoutineActive;                              // 0x30, KPCR : 0x58
+	ulong_xt         DpcRoutineActive;                              // 0x30, KPCR : 0x58
 
     // This completes the total size of the structure (presumably)
-    uchar_xt            Unknown[0x224];                            
+    uchar_xt         Unknown[0x224];
 }
 KPRCB, *PKPRCB;
 
@@ -1977,7 +2037,7 @@ typedef struct _KPCR
     struct _NT_TIB  NtTib;                                          // 0x00
     struct _KPCR   *SelfPcr;                                        // 0x1C
     struct _KPRCB  *Prcb;                                           // 0x20
-    uchar_xt           Irql;                                           // 0x24
+    uchar_xt        Irql;                                           // 0x24
     struct _KPRCB   PrcbData;                                       // 0x28
 }
 KPCR, *PKPCR;
@@ -2532,6 +2592,13 @@ typedef struct _FLOATING_SAVE_AREA
     dword_xt Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
 #pragma pack(pop)
+static_assert(sizeof(_FLOATING_SAVE_AREA) == 0x204);
+
+typedef struct _FX_SAVE_AREA {
+	FLOATING_SAVE_AREA FloatSave;
+	ulong_xt Unknown[3];
+} FX_SAVE_AREA, *PFX_SAVE_AREA;
+static_assert(sizeof(_FX_SAVE_AREA) == 0x210);
 
 typedef struct _CONTEXT
 {

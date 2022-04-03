@@ -266,7 +266,9 @@ xbox::void_xt NTAPI xbox::KeInitializeTimer
 xbox::void_xt xbox::KeEmptyQueueApc()
 {
 	PKTHREAD kThread = KeGetCurrentThread();
+	KeEnterCriticalRegion();
 	kThread->ApcState.ApcQueueable = FALSE;
+	KeLeaveCriticalRegion();
 
 	KiApcListMtx.lock();
 	for (int Mode = KernelMode; Mode < MaximumMode; ++Mode) {
@@ -279,6 +281,150 @@ xbox::void_xt xbox::KeEmptyQueueApc()
 	}
 	KiApcListMtx.unlock();
 }
+
+// Source: ReactOS (modified to fit in xbox compatibility layer)
+template<bool IsHostThread>
+xbox::void_xt xbox::KeInitializeThread(
+	IN OUT PKTHREAD Thread,
+	IN PVOID KernelStack,
+	IN ulong_xt KernelStackSize,
+	IN ulong_xt TlsDataSize,
+	IN PKSYSTEM_ROUTINE SystemRoutine,
+	IN PKSTART_ROUTINE StartRoutine,
+	IN PVOID StartContext,
+	IN PKPROCESS Process
+)
+{
+	/* ReactOS's KeInitThread inline code begin */
+
+	/* Initialize the Dispatcher Header */
+	Thread->Header.Type = xbox::ThreadObject;
+	Thread->Header.Size = sizeof(xbox::KTHREAD) / sizeof(xbox::long_xt);
+	// ThreadControlFlags
+	// DebugActive
+	Thread->Header.SignalState = 0;
+	InitializeListHead(&Thread->Header.WaitListHead);
+
+	/* Initialize the Mutant List */
+	InitializeListHead(&Thread->MutantListHead);
+
+#if 0 // Not used or not yet reverse engineered
+	/* Set swap settings */
+	Thread->EnableStackSwap = TRUE;
+	Thread->IdealProcessor = 1;
+	Thread->SwapBusy = FALSE;
+	Thread->KernelStackResident = TRUE;
+	Thread->AdjustReason = AdjustNone;
+#endif
+
+#if 0 // Not used or not yet reverse engineered
+	/* Initialize the lock */
+	KeInitializeSpinLock(&Thread->ThreadLock);
+#endif
+
+#if 0 // Not used or not yet reverse engineered
+	/* Setup the Service Descriptor Table for Native Calls */
+	Thread->ServiceTable = KeServiceDescriptorTable;
+#endif
+
+	/* Setup APC Fields */
+	InitializeListHead(&Thread->ApcState.ApcListHead[xbox::KernelMode]);
+	InitializeListHead(&Thread->ApcState.ApcListHead[xbox::UserMode]);
+	Thread->KernelApcDisable = 0;
+	Thread->ApcState.Process = &KiUniqueProcess;
+	Thread->ApcState.ApcQueueable = TRUE;
+	Thread->ApcState.Process->ThreadQuantum = KiUniqueProcess.ThreadQuantum;
+
+	/* Initialize the Suspend APC */
+	KeInitializeApc(
+		&Thread->SuspendApc,
+		Thread,
+		KiSuspendNop,
+		zeroptr,
+		KiSuspendThread,
+		KernelMode,
+		zeroptr);
+
+	/* Initialize the Suspend Semaphore */
+	KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 2);
+
+	/* Setup the timer */
+	xbox::KeInitializeTimer(&Thread->Timer);
+	xbox::PKWAIT_BLOCK TimerWaitBlock = &Thread->TimerWaitBlock;
+	TimerWaitBlock->Object = &Thread->Timer;
+	TimerWaitBlock->WaitKey = (xbox::cshort_xt)X_STATUS_TIMEOUT;
+	TimerWaitBlock->WaitType = xbox::WaitAny;
+	TimerWaitBlock->Thread = Thread;
+	TimerWaitBlock->NextWaitBlock = zeroptr;
+
+	/* Link the two wait lists together */
+	TimerWaitBlock->WaitListEntry.Flink = &Thread->Timer.Header.WaitListHead;
+	TimerWaitBlock->WaitListEntry.Blink = &Thread->Timer.Header.WaitListHead;
+
+#if 0 // Not used or not yet reverse engineered
+	/* Set the TEB and process */
+	Thread->Teb = Teb;
+	Thread->Process = Process;
+#endif
+
+	/* Set the Thread Stacks */
+	Thread->StackBase = KernelStack;
+	Thread->StackLimit = reinterpret_cast<PVOID>(reinterpret_cast<ulong_ptr_xt>(KernelStack) - KernelStackSize);
+
+	/* Initialize the Thread Context */
+	KiInitializeContextThread(Thread, TlsDataSize, SystemRoutine, StartRoutine, StartContext);
+
+	/* Set the Thread to initialized */
+	Thread->State = Initialized;
+
+	/* ReactOS's KeInitThread inline code end */
+
+	/* ReactOS's KeStartThread inline code begin */
+	// NOTE: The cxbxr's kernel initialization will not be insert into ThreadListHead of Process.
+	if constexpr (!IsHostThread) {
+		/* Setup static fields from parent */
+		Thread->DisableBoost = Process->DisableBoost;
+		Thread->Quantum = Process->ThreadQuantum;
+
+		/* Setup volatile data */
+		Thread->Priority = Process->BasePriority;
+		Thread->BasePriority = Process->BasePriority;
+
+		/* Lock the Dispatcher Database */
+		UCHAR orig_irql = KeRaiseIrqlToDpcLevel();
+
+		/* Insert the thread into the process list */
+		InsertTailList(&Process->ThreadListHead, &Thread->ThreadListEntry);
+		/* Increase the stack count */
+		Process->StackCount++;
+
+		/* Release lock and return */
+		KfLowerIrql(orig_irql);
+	}
+	/* ReactOS's KeStartThread inline code end */
+}
+template
+xbox::void_xt xbox::KeInitializeThread<true>(
+	IN OUT PKTHREAD Thread,
+	IN PVOID KernelStack,
+	IN ulong_xt KernelStackSize,
+	IN ulong_xt TlsDataSize,
+	IN PKSYSTEM_ROUTINE SystemRoutine,
+	IN PKSTART_ROUTINE StartRoutine,
+	IN PVOID StartContext,
+	IN PKPROCESS Process
+	);
+template
+xbox::void_xt xbox::KeInitializeThread<false>(
+	IN OUT PKTHREAD Thread,
+	IN PVOID KernelStack,
+	IN ulong_xt KernelStackSize,
+	IN ulong_xt TlsDataSize,
+	IN PKSYSTEM_ROUTINE SystemRoutine,
+	IN PKSTART_ROUTINE StartRoutine,
+	IN PVOID StartContext,
+	IN PKPROCESS Process
+	);
 
 // Forward KeLowerIrql() to KfLowerIrql()
 #define KeLowerIrql(NewIrql) \

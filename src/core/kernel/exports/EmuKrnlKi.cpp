@@ -945,3 +945,115 @@ xbox::PLARGE_INTEGER FASTCALL xbox::KiComputeWaitInterval
 		return NewTime;
 	}
 }
+
+// Source: ReactOS
+xbox::void_xt NTAPI xbox::KiSuspendNop(
+	IN PKAPC Apc,
+	IN PKNORMAL_ROUTINE* NormalRoutine,
+	IN PVOID* NormalContext,
+	IN PVOID* SystemArgument1,
+	IN PVOID* SystemArgument2
+)
+{
+	/* Does nothing */
+	UNREFERENCED_PARAMETER(Apc);
+	UNREFERENCED_PARAMETER(NormalRoutine);
+	UNREFERENCED_PARAMETER(NormalContext);
+	UNREFERENCED_PARAMETER(SystemArgument1);
+	UNREFERENCED_PARAMETER(SystemArgument2);
+}
+
+// Source: ReactOS
+xbox::void_xt NTAPI xbox::KiSuspendThread(
+	IN PVOID NormalContext,
+	IN PVOID SystemArgument1,
+	IN PVOID SystemArgument2
+)
+{
+	/* Non-alertable kernel-mode suspended wait */
+	KeWaitForSingleObject(
+		&KeGetCurrentThread()->SuspendSemaphore,
+		Suspended,
+		KernelMode,
+		FALSE,
+		zeroptr);
+}
+
+xbox::void_xt NTAPI xbox::KiThreadStartup(void_xt)
+{
+	PKSTART_FRAME StartFrame;
+	PKSWITCHFRAME SwitchFrame;
+
+	/* Get the start and trap frames */
+	SwitchFrame = reinterpret_cast<PKSWITCHFRAME>(KeGetCurrentThread()->KernelStack);
+	StartFrame = reinterpret_cast<PKSTART_FRAME>(SwitchFrame + 1);
+
+	/* Lower to Passive level */
+	KfLowerIrql(PASSIVE_LEVEL);
+
+	// NOTE: if assert is triggered, then thread-switching may have been processed.
+	// If it does, then verify xbox thread's StackBase is from MmCreateKernelStack instead of host's stack and was not deleted by MmDeleteKernelStack.
+	// Otherwise, feel free to clear this reminder message.
+	assert(0);
+
+	/* Call the system routine */
+	StartFrame->SystemRoutine(StartFrame->StartRoutine, StartFrame->StartContext);
+
+	/* We do not return as it is a top function */
+	PsTerminateSystemThread(X_STATUS_NO_MEMORY);
+}
+
+// Source: ReactOS (modified to fit in xbox compatibility layer)
+xbox::void_xt xbox::KiInitializeContextThread(
+	IN PKTHREAD Thread,
+	IN ulong_xt TlsDataSize,
+	IN PKSYSTEM_ROUTINE SystemRoutine,
+	IN PKSTART_ROUTINE StartRoutine,
+	IN PVOID StartContext
+)
+{
+	addr_xt StackAddress = reinterpret_cast<addr_xt>(Thread->StackBase);
+
+	/* Setup the Fx Area */
+	StackAddress -= sizeof(FX_SAVE_AREA);
+	PFX_SAVE_AREA FxSaveArea = reinterpret_cast<PFX_SAVE_AREA>(StackAddress);
+	std::memset(FxSaveArea, 0, sizeof(FX_SAVE_AREA));
+
+	/* Set the stub FX area */
+	FxSaveArea->FloatSave.ControlWord = 0x27F;
+	FxSaveArea->FloatSave.MXCsr = 0x1F80;
+
+	/* No NPX State */
+	Thread->NpxState = NPX_STATE_NOT_LOADED;
+
+	/* Setup the Stack for TlsData dynamic sized array */
+	TlsDataSize = ALIGN_UP(TlsDataSize, ulong_xt);
+	StackAddress -= TlsDataSize; // TlsData section (optional)
+	if (TlsDataSize) {
+		Thread->TlsData = reinterpret_cast<PVOID>(StackAddress);
+		// Title will process which section of TlsData will be fill with data and zero'd.
+		// So, we leave this untouched.
+	}
+	else {
+		Thread->TlsData = zeroptr;
+	}
+
+	/* Setup the Stack for KiThreadStartup and Context Switching */
+	StackAddress -= sizeof(KSTART_FRAME);
+	PKSTART_FRAME StartFrame = reinterpret_cast<PKSTART_FRAME>(StackAddress);
+	StackAddress -= sizeof(KSWITCHFRAME);
+	PKSWITCHFRAME CtxSwitchFrame = reinterpret_cast<PKSWITCHFRAME>(StackAddress);
+
+	/* Now setup the remaining data for KiThreadStartup */
+	StartFrame->StartContext = StartContext;
+	StartFrame->StartRoutine = StartRoutine;
+	StartFrame->SystemRoutine = SystemRoutine;
+
+	/* And set up the Context Switch Frame */
+	CtxSwitchFrame->RetAddr = KiThreadStartup;
+	CtxSwitchFrame->Unknown = 0x200; // TODO: Find out what this field is.
+	CtxSwitchFrame->ExceptionList = reinterpret_cast<PVOID>(X_EXCEPTION_CHAIN_END);
+
+	/* Save back the new value of the kernel stack. */
+	Thread->KernelStack = reinterpret_cast<PVOID>(CtxSwitchFrame);
+}
