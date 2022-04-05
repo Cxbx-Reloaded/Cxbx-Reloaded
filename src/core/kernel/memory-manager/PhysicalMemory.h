@@ -126,11 +126,6 @@ typedef enum _MmLayout
 
 
 /* Common page calculations */
-#define ROUND_UP_4K(size) (((size) + PAGE_MASK) & (~PAGE_MASK))
-#define ROUND_UP(size, alignment) (((size) + (alignment - 1)) & (~(alignment - 1)))
-#define ROUND_DOWN_4K(size) ((size) & (~PAGE_MASK))
-#define ROUND_DOWN(size, alignment) ((size) & (~(alignment - 1)))
-#define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
 #define PAGES_SPANNED(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
 #define PAGES_SPANNED_LARGE(Va, Size) ((ULONG)((((VAddr)(Va) & (LARGE_PAGE_SIZE - 1)) + (Size) + (LARGE_PAGE_SIZE - 1)) >> LARGE_PAGE_SHIFT))
 #define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))

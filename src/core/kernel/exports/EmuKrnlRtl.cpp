@@ -82,7 +82,7 @@ xbox::boolean_xt RtlpCaptureStackLimits(
 	else {
 		/* We're somewhere else entirely... use EBP for safety */
 		*StackBegin = Ebp;
-		*StackEnd = reinterpret_cast<ulong_ptr_xt>(PAGE_ALIGN((*StackBegin));
+		*StackEnd = PAGE_ALIGN(*StackBegin);
 	}
 
 	/* Return success */
