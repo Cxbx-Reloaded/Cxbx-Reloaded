@@ -37,8 +37,8 @@
 
 
 /* Global typedefs */
-typedef uintptr_t VAddr;
-typedef uintptr_t PAddr;
+typedef xbox::ulong_ptr_xt VAddr;
+typedef xbox::ulong_ptr_xt PAddr;
 typedef uint32_t u32;
 
 
@@ -123,14 +123,6 @@ typedef enum _MmLayout
 #define CONVERT_CONTIGUOUS_PHYSICAL_TO_PFN(Va) (((Va) & (BYTES_IN_PHYSICAL_MAP - 1)) >> PAGE_SHIFT)
 #define XBOX_PFN_ELEMENT(pfn) (&((PXBOX_PFN)XBOX_PFN_ADDRESS)[pfn])
 #define CHIHIRO_PFN_ELEMENT(pfn) (&((PXBOX_PFN)CHIHIRO_PFN_ADDRESS)[pfn])
-
-
-/* Common page calculations */
-#define PAGES_SPANNED(Va, Size) ((ULONG)((((VAddr)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
-#define PAGES_SPANNED_LARGE(Va, Size) ((ULONG)((((VAddr)(Va) & (LARGE_PAGE_SIZE - 1)) + (Size) + (LARGE_PAGE_SIZE - 1)) >> LARGE_PAGE_SHIFT))
-#define BYTE_OFFSET(Va) ((ULONG)((VAddr)(Va) & (PAGE_SIZE - 1)))
-#define BYTE_OFFSET_LARGE(Va) ((ULONG)((VAddr)(Va) & (LARGE_PAGE_SIZE - 1)))
-#define PAGE_END(Va) (((ULONG_PTR)(Va) & (PAGE_SIZE - 1)) == 0)
 
 
 /* These macros check if the supplied address is inside a known range */

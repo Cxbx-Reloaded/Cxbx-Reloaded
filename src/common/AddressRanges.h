@@ -146,15 +146,6 @@ inline constexpr uint32_t FLASH_DEVICE4_END  =     (FLASH_DEVICE4_BASE - 1 + FLA
 #define PAGE_SIZE                           (1 << PAGE_SHIFT) // = 0x00001000 = KiB(4)
 #define PAGE_MASK                           (PAGE_SIZE - 1)
 
-// Common page calculations
-#define ROUND_UP_4K(size) (((size) + PAGE_MASK) & (~PAGE_MASK))
-#define ROUND_UP(size, alignment) (((size) + (alignment - 1)) & (~(alignment - 1)))
-#define ROUND_DOWN_4K(size) ((size) & (~PAGE_MASK))
-#define ROUND_DOWN(size, alignment) ((size) & (~(alignment - 1)))
-#define CHECK_ALIGNMENT(size, alignment) (((size) % (alignment)) == 0)
-
-#define PAGE_ALIGN(address)                 ROUND_DOWN_4K(address)
-
 #define LARGE_PAGE_SHIFT                    22 // 2^22 = 4 MiB
 #define LARGE_PAGE_SIZE                     (1 << LARGE_PAGE_SHIFT) // = 0x00400000 = 4 MiB
 #define LARGE_PAGE_MASK                     (LARGE_PAGE_SIZE - 1)
@@ -171,6 +162,19 @@ inline constexpr uint32_t FLASH_DEVICE4_END  =     (FLASH_DEVICE4_BASE - 1 + FLA
 // Memory size per system
 #define XBOX_MEMORY_SIZE                    (MiB(64))
 #define CHIHIRO_MEMORY_SIZE                 (MiB(128))
+
+// Common page calculations
+#define ROUND_UP_4K(size)                   (((size) + PAGE_MASK) & (~PAGE_MASK))
+#define ROUND_UP(size, alignment)           (((size) + (alignment - 1)) & (~(alignment - 1)))
+#define ROUND_DOWN_4K(size)                 ((size) & (~PAGE_MASK))
+#define ROUND_DOWN(size, alignment)         ((size) & (~(alignment - 1)))
+#define CHECK_ALIGNMENT(size, alignment)    (((size) % (alignment)) == 0)
+#define BYTE_OFFSET(Va)                     ((xbox::ulong_xt)((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)))
+#define BYTE_OFFSET_LARGE(Va)               ((xbox::ulong_xt)((xbox::ulong_ptr_xt)(Va) & (LARGE_PAGE_SIZE - 1)))
+#define PAGE_ALIGN(address)                 ROUND_DOWN_4K(address)
+#define PAGE_END(Va)                        (((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)) == 0)
+#define PAGES_SPANNED(Va, Size)             ((xbox::ulong_xt)((((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
+#define PAGES_SPANNED_LARGE(Va, Size)       ((xbox::ulong_xt)((((xbox::ulong_ptr_xt)(Va) & (LARGE_PAGE_SIZE - 1)) + (Size) + (LARGE_PAGE_SIZE - 1)) >> LARGE_PAGE_SHIFT))
 
 // Windows' address space allocation granularity;
 // See https://blogs.msdn.microsoft.com/oldnewthing/20031008-00/?p=42223
