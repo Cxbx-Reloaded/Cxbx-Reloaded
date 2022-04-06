@@ -163,6 +163,14 @@ inline constexpr uint32_t FLASH_DEVICE4_END  =     (FLASH_DEVICE4_BASE - 1 + FLA
 #define XBOX_MEMORY_SIZE                    (MiB(64))
 #define CHIHIRO_MEMORY_SIZE                 (MiB(128))
 
+// Common page calculations
+#define ROUND_UP_4K(size)                   (((size) + PAGE_MASK) & (~PAGE_MASK))
+#define ROUND_UP(size, alignment)           (((size) + (alignment - 1)) & (~(alignment - 1)))
+#define ROUND_DOWN_4K(size)                 ((size) & (~PAGE_MASK))
+#define ROUND_DOWN(size, alignment)         ((size) & (~(alignment - 1)))
+#define CHECK_ALIGNMENT(size, alignment)    (((size) % (alignment)) == 0)
+#define PAGE_ALIGN(address)                 ROUND_DOWN_4K(address)
+
 // Windows' address space allocation granularity;
 // See https://blogs.msdn.microsoft.com/oldnewthing/20031008-00/?p=42223
 const int BLOCK_SIZE = KiB(64);

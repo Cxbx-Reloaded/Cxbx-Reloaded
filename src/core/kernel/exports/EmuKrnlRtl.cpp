@@ -58,6 +58,37 @@ xbox::dword_xt WINAPI RtlAnsiStringToUnicodeSize(const xbox::STRING *str)
 	return (str->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR);
 }
 
+// Source: ReactOS (excluded DPC stack check)
+xbox::boolean_xt RtlpCaptureStackLimits(
+	IN xbox::ulong_ptr_xt Ebp,
+	OUT xbox::ulong_ptr_xt* StackBegin,
+	OUT xbox::ulong_ptr_xt* StackEnd)
+{
+	using namespace xbox;
+	PKTHREAD Thread = KeGetCurrentThread();
+
+	/* Don't even try at ISR level or later */
+	//if (KeGetCurrentIrql() > DISPATCH_LEVEL) return FALSE;
+
+	/* Start with defaults */
+	*StackBegin = reinterpret_cast<ulong_ptr_xt>(Thread->StackLimit);
+	*StackEnd = reinterpret_cast<ulong_ptr_xt>(Thread->StackBase);
+
+	/* Check if EBP is inside the stack */
+	if ((*StackBegin <= Ebp) && (Ebp <= *StackEnd)) {
+		/* Then make the stack start at EBP */
+		*StackBegin = Ebp;
+	}
+	else {
+		/* We're somewhere else entirely... use EBP for safety */
+		*StackBegin = Ebp;
+		*StackEnd = PAGE_ALIGN(*StackBegin);
+	}
+
+	/* Return success */
+	return TRUE;
+}
+
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************
@@ -237,7 +268,7 @@ XBSYSAPI EXPORTNUM(265) xbox::void_xt NTAPI xbox::RtlCaptureContext
 		mov ebx, [esp + 8]           // ebx = ContextRecord;
 
 		mov [ebx + CONTEXT.Eax], eax // ContextRecord->Eax = eax;
-		mov eax, [esp]				 // eax = original value of ebx
+		mov eax, [esp]               // eax = original value of ebx
 		mov [ebx + CONTEXT.Ebx], eax // ContextRecord->Ebx = original value of ebx
 		mov [ebx + CONTEXT.Ecx], ecx // ContextRecord->Ecx = ecx;
 		mov [ebx + CONTEXT.Edx], edx // ContextRecord->Edx = edx;
@@ -263,6 +294,7 @@ XBSYSAPI EXPORTNUM(265) xbox::void_xt NTAPI xbox::RtlCaptureContext
 // ******************************************************************
 // * 0x010A - RtlCaptureStackBackTrace()
 // ******************************************************************
+// Source: ReactOS
 XBSYSAPI EXPORTNUM(266) xbox::ushort_xt NTAPI xbox::RtlCaptureStackBackTrace
 (
 	IN ulong_xt FramesToSkip,
@@ -278,9 +310,48 @@ XBSYSAPI EXPORTNUM(266) xbox::ushort_xt NTAPI xbox::RtlCaptureStackBackTrace
 		LOG_FUNC_ARG_OUT(BackTraceHash)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	PVOID Frames[2 * 64];
+	ulong_xt FrameCount;
+	ulong_xt Hash = 0;
+	ushort_xt i;
 
-	RETURN(NULL);
+	/* Skip a frame for the caller */
+	FramesToSkip++;
+
+	/* Don't go past the limit */
+	if ((FramesToCapture + FramesToSkip) >= 128) {
+		return 0;
+	}
+
+	/* Do the back trace */
+	FrameCount = RtlWalkFrameChain(Frames, FramesToCapture + FramesToSkip, 0);
+
+	/* Make sure we're not skipping all of them */
+	if (FrameCount <= FramesToSkip) {
+		return 0;
+	}
+
+	/* Loop all the frames */
+	for (i = 0; i < FramesToCapture; i++) {
+		/* Don't go past the limit */
+		if ((FramesToSkip + i) >= FrameCount) {
+			break;
+		}
+
+		/* Save this entry and hash it */
+		BackTrace[i] = Frames[FramesToSkip + i];
+		Hash += reinterpret_cast<ulong_xt>(BackTrace[i]);
+	}
+
+	/* Write the hash */
+	if (BackTraceHash) {
+		*BackTraceHash = Hash;
+	}
+
+	/* Clear the other entries and return count */
+	RtlFillMemoryUlong(Frames, 128, 0);
+
+	RETURN(i);
 }
 
 // ******************************************************************
@@ -1035,7 +1106,31 @@ XBSYSAPI EXPORTNUM(288) xbox::void_xt NTAPI xbox::RtlGetCallersAddress
 		LOG_FUNC_ARG_OUT(CallersCaller)
 	LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	/* Get the tow back trace address */
+	PVOID BackTrace[2];
+	ushort_xt FrameCount = RtlCaptureStackBackTrace(2, 2, &BackTrace[0], zeroptr);
+
+	/* Only if user want it */
+	if (CallersAddress != NULL) {
+		/* only when first frames exist */
+		if (FrameCount >= 1) {
+			*CallersAddress = BackTrace[0];
+		}
+		else {
+			*CallersAddress = zeroptr;
+		}
+	}
+
+	/* Only if user want it */
+	if (CallersCaller != NULL) {
+		/* only when second frames exist */
+		if (FrameCount >= 2) {
+			*CallersCaller = BackTrace[1];
+		}
+		else {
+			*CallersCaller = zeroptr;
+		}
+	}
 }
 
 // ******************************************************************
@@ -2071,6 +2166,8 @@ XBSYSAPI EXPORTNUM(318) xbox::ushort_xt FASTCALL xbox::RtlUshortByteSwap
 // ******************************************************************
 // * 0x013F - RtlWalkFrameChain()
 // ******************************************************************
+// Source: ReactOS (modified to fit in xbox compatibility layer)
+// NOTE: From xbox kernel, Flags input is not used.
 XBSYSAPI EXPORTNUM(319) xbox::ulong_xt NTAPI xbox::RtlWalkFrameChain
 (
 	OUT PVOID *Callers,
@@ -2078,15 +2175,97 @@ XBSYSAPI EXPORTNUM(319) xbox::ulong_xt NTAPI xbox::RtlWalkFrameChain
 	IN ulong_xt Flags
 )
 {
+	ulong_ptr_xt Stack;
+	/* Get current EBP */
+#if defined __GNUC__
+	__asm__("mov %%ebp, %0" : "=r" (Stack) : );
+#elif defined(_MSC_VER)
+	__asm mov Stack, ebp
+#endif
+
+#if 0 // NOTE: Disabled due to __try/__except doesn't like this for some reason.
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG_OUT(Callers)
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_ARG(Flags)
 	LOG_FUNC_END;
+#endif
 
-	LOG_UNIMPLEMENTED();
+	/* Get the actual safe limits */
+	ulong_ptr_xt StackBegin, StackEnd;
+	RtlpCaptureStackLimits(Stack, &StackBegin, &StackEnd);
 
-	RETURN(NULL);
+	ulong_xt i = 0;
+
+	/* Use a SEH block for maximum protection */
+	__try {
+		/* Loop the frames */
+		boolean_xt StopSearch = FALSE;
+		for (i = 0; i < Count; i++) {
+			/*
+			 * Leave if we're past the stack,
+			 * if we're before the stack,
+			 * or if we've reached ourselves.
+			 */
+			if ((Stack >= StackEnd) ||
+				(!i ? (Stack < StackBegin) : (Stack <= StackBegin)) ||
+				((StackEnd - Stack) < (2 * sizeof(ulong_ptr_xt))))
+			{
+				/* We're done or hit a bad address */
+				break;
+			}
+
+			/* Get new stack and EIP */
+			ulong_ptr_xt NewStack = *(ulong_ptr_xt*)Stack;
+			ulong_xt Eip = *(ulong_ptr_xt*)(Stack + sizeof(ulong_ptr_xt));
+
+			/* Check if the new pointer is above the old one and past the end */
+			if (!((Stack < NewStack) && (NewStack < StackEnd))) {
+				/* Stop searching after this entry */
+				StopSearch = TRUE;
+			}
+
+			/* Also make sure that the EIP isn't a stack address */
+			if ((StackBegin < Eip) && (Eip < StackEnd)) {
+				break;
+			}
+
+			/* Save this frame */
+			Callers[i] = reinterpret_cast<PVOID>(Eip);
+
+			/* Check if we should continue */
+			if (StopSearch)
+			{
+				/* Return the next index */
+				i++;
+				break;
+			}
+
+			/* Move to the next stack */
+			Stack = NewStack;
+		}
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {
+		/* No index */
+		i = 0;
+	}
+
+#ifndef ENABLE_KTHREAD_SWITCHING
+	// HACK: This is necessary to exclude our own PCSTProxy startup function.
+	if (i) {
+		ulong_xt Eip = reinterpret_cast<ulong_xt>(Callers[i - 1]);
+		// Check if the first call is outside of xbe's system memory.
+		// If so, force exclude it to conform with xbox kernel test suite's result.
+		// NOTE: This will always occur every time. As the thread's startup function address reside behind KSWITCHFRAME structure.
+		//       Except we are currently using our host's local variable as xbox's stack storage.
+		if (Eip > g_SystemMaxMemory) {
+			i--;
+			Callers[i] = zeroptr;
+		}
+	}
+#endif
+
+	return i;// RETURN(i);
 }
 
 // ******************************************************************
