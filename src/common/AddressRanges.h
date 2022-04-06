@@ -169,12 +169,7 @@ inline constexpr uint32_t FLASH_DEVICE4_END  =     (FLASH_DEVICE4_BASE - 1 + FLA
 #define ROUND_DOWN_4K(size)                 ((size) & (~PAGE_MASK))
 #define ROUND_DOWN(size, alignment)         ((size) & (~(alignment - 1)))
 #define CHECK_ALIGNMENT(size, alignment)    (((size) % (alignment)) == 0)
-#define BYTE_OFFSET(Va)                     ((xbox::ulong_xt)((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)))
-#define BYTE_OFFSET_LARGE(Va)               ((xbox::ulong_xt)((xbox::ulong_ptr_xt)(Va) & (LARGE_PAGE_SIZE - 1)))
 #define PAGE_ALIGN(address)                 ROUND_DOWN_4K(address)
-#define PAGE_END(Va)                        (((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)) == 0)
-#define PAGES_SPANNED(Va, Size)             ((xbox::ulong_xt)((((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
-#define PAGES_SPANNED_LARGE(Va, Size)       ((xbox::ulong_xt)((((xbox::ulong_ptr_xt)(Va) & (LARGE_PAGE_SIZE - 1)) + (Size) + (LARGE_PAGE_SIZE - 1)) >> LARGE_PAGE_SHIFT))
 
 // Windows' address space allocation granularity;
 // See https://blogs.msdn.microsoft.com/oldnewthing/20031008-00/?p=42223

@@ -125,6 +125,14 @@ typedef enum _MmLayout
 #define CHIHIRO_PFN_ELEMENT(pfn) (&((PXBOX_PFN)CHIHIRO_PFN_ADDRESS)[pfn])
 
 
+// Common page calculations
+#define BYTE_OFFSET(Va)                     ((xbox::ulong_xt)((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)))
+#define BYTE_OFFSET_LARGE(Va)               ((xbox::ulong_xt)((xbox::ulong_ptr_xt)(Va) & (LARGE_PAGE_SIZE - 1)))
+#define PAGE_END(Va)                        (((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)) == 0)
+#define PAGES_SPANNED(Va, Size)             ((xbox::ulong_xt)((((xbox::ulong_ptr_xt)(Va) & (PAGE_SIZE - 1)) + (Size) + (PAGE_SIZE - 1)) >> PAGE_SHIFT))
+#define PAGES_SPANNED_LARGE(Va, Size)       ((xbox::ulong_xt)((((xbox::ulong_ptr_xt)(Va) & (LARGE_PAGE_SIZE - 1)) + (Size) + (LARGE_PAGE_SIZE - 1)) >> LARGE_PAGE_SHIFT))
+
+
 /* These macros check if the supplied address is inside a known range */
 #define IS_PHYSICAL_ADDRESS(Va) (((VAddr)(Va) - PHYSICAL_MAP_BASE) <= (PHYSICAL_MAP_END - PHYSICAL_MAP_BASE))
 #define IS_SYSTEM_ADDRESS(Va) (((VAddr)(Va) - SYSTEM_MEMORY_BASE) <= (SYSTEM_MEMORY_END - SYSTEM_MEMORY_BASE))
