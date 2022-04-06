@@ -613,7 +613,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 	// Get title path :
 	std::string xbePath;
 	cli_config::GetValue(cli_config::load, &xbePath);
-	xbePath = std::filesystem::absolute(std::filesystem::path(xbePath)).string();
+	xbePath = std::filesystem::absolute(xbePath).string();
 
 	// NOTE: This is a safety to clean the file path for any malicious file path attempt.
 	// Might want to move this into a utility function.
@@ -630,7 +630,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 
 	// Once clean up process is done, proceed set to global variable string.
 	strncpy(szFilePath_Xbe, xbePath.c_str(), xbox::max_path - 1);
-	std::replace(xbePath.begin(), xbePath.end(), ';', '/');
+	std::replace(xbePath.begin(), xbePath.end(), ';', '\\');
 	// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
 	std::filesystem::path xbeDirectory = std::filesystem::path(xbePath).parent_path();
 
