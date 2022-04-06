@@ -265,6 +265,11 @@ XBSYSAPI EXPORTNUM(66) xbox::ntstatus_xt NTAPI xbox::IoCreateFile
 		DesiredAccess |= SYNCHRONIZE;
 	}
 
+	// Titles can make assumptions about where files are located, but cxbxr can't for end users
+	// Prevent issues with files stored on Windows Storage Spaces (and possibly other "exotic" places)
+	// Test case: JSRF
+	CreateOptions &= (~FILE_NO_INTERMEDIATE_BUFFERING);
+
 	// Force ShareAccess to all 
 	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
