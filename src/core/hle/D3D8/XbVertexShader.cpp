@@ -905,7 +905,7 @@ private:
 			return false;
 		}
 
-		assert(HostVertexElementDataType > 0);
+		assert(HostVertexElementDataType < D3DDECLTYPE_UNUSED);
 		assert(HostVertexElementByteSize > 0);
 
 		// Select new stream, if needed
