@@ -100,7 +100,11 @@ Xbe::Certificate *g_pCertificate = NULL;
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 std::string g_DataFilePath;
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
-char szFilePath_Xbe[xbox::max_path*2] = { 0 }; // NOTE: LAUNCH_DATA_HEADER's szLaunchPath is xbox::max_path*2 = 520
+// Hybrid host/xbox path to the xbe.
+// A semicolon in the path indicates the Xbox mount point.
+// Replacing the ';' with '\' gives a regular host path.
+// NOTE: LAUNCH_DATA_HEADER's szLaunchPath is xbox::max_path*2 = 520
+char szFilePath_Xbe[xbox::max_path*2] = { 0 };
 
 Xbe* CxbxKrnl_Xbe = NULL;
 bool g_bIsChihiro = false;
@@ -630,6 +634,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 
 	// Once clean up process is done, proceed set to global variable string.
 	strncpy(szFilePath_Xbe, xbePath.c_str(), xbox::max_path - 1);
+	// Convert to host path by replacing special mount point character if present
 	std::replace(xbePath.begin(), xbePath.end(), ';', '\\');
 	// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
 	std::filesystem::path xbeDirectory = std::filesystem::path(xbePath).parent_path();
