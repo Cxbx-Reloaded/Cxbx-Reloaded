@@ -2278,9 +2278,6 @@ static void CreateDefaultD3D9Device
 
     DrawInitialBlackScreen();
 
-    // Set up cache
-    g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
-
     // Set up ImGui's render backend
     ImGui_ImplDX9_Init(g_pD3DDevice);
     g_renderbase->SetDeviceRelease([] {
