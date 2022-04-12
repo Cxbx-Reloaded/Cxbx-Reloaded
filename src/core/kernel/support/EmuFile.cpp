@@ -799,11 +799,6 @@ std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
 		char directoryPathBuffer[MAX_PATH];
 		GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
 		XbePath = directoryPathBuffer + std::string("\\") + XbePath;
-
-		// Trim \\?\ from the output string, as we want the raw DOS path, not NT path
-		// We can do this always because GetFinalPathNameByHandle ALWAYS returns this format
-		// Without exception
-		XbePath.erase(0, 4);
 	}
 
 	return XbePath;
