@@ -27,8 +27,8 @@
 #define LOG_PREFIX CXBXR_MODULE::EEPR
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
-
 #include <core\kernel\exports\xboxkrnl.h> // For XC_VALUE_INDEX and XBOX_EEPROM
+#include "cxbxr.hpp" // For CxbxrAbort
 #include <stdio.h> // For printf
 #include <shlobj.h> // For HANDLE, CreateFile, CreateFileMapping, MapViewOfFile
 #include <random>
@@ -36,7 +36,6 @@
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
 #include "core\kernel\support\Emu.h" // For EmuWarning
 #include "..\..\src\devices\LED.h" // For SetLEDSequence
-#include "..\core\kernel\init\CxbxKrnl.h"
 
 xbox::XBOX_EEPROM *EEPROM = nullptr; // Set using CxbxRestoreEEPROM()
 
@@ -90,6 +89,7 @@ void gen_section_CRCs(xbox::XBOX_EEPROM* eeprom) {
     );
 }
 
+#ifdef CXBXR_EMU
 xbox::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 {
 	xbox::XBOX_EEPROM *pEEPROM;
@@ -141,10 +141,8 @@ xbox::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 	LARGE_INTEGER  len_li;
 	GetFileSizeEx(hFileEEPROM, &len_li);
 	unsigned int FileSize = len_li.u.LowPart;
-	if (FileSize != 256)
-	{
-		CxbxrKrnlAbort("%s : EEPROM.bin file is not 256 bytes large!\n", __func__);
-		return nullptr;
+	if (FileSize != 256) {
+		CxbxrAbort("%s : EEPROM.bin file is not 256 bytes large!\n", __func__);
 	}
 
 	// Map EEPROM.bin contents into memory :
@@ -194,6 +192,7 @@ xbox::XBOX_EEPROM *CxbxRestoreEEPROM(char *szFilePath_EEPROM_bin)
 
 	return pEEPROM;
 }
+#endif
 
 void EmuEEPROMReset(xbox::XBOX_EEPROM* eeprom)
 {

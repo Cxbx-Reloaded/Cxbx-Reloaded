@@ -27,12 +27,13 @@
 
 #if defined(_WIN32) || defined(WIN32)
 
-#include "core\kernel\init\CxbxKrnl.h"
+#include <windows.h>
+#include <optional>
 #include "common/util/cliConfig.hpp"
 #include "Util.h"
 
 // Source: https://stackoverflow.com/questions/8046097/how-to-check-if-a-process-has-the-administrative-rights
-bool CxbxIsElevated() {
+bool CxbxrIsElevated() {
 	bool fRet = false;
 	HANDLE hToken = NULL;
 	if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
@@ -48,7 +49,7 @@ bool CxbxIsElevated() {
 	return fRet;
 }
 
-std::optional<std::string> CxbxExec(bool useDebugger, HANDLE* hProcess, bool requestHandleProcess) {
+std::optional<std::string> CxbxrExec(bool useDebugger, void** hProcess, bool requestHandleProcess) {
 
 	STARTUPINFO startupInfo = { 0 };
 	PROCESS_INFORMATION processInfo = { 0 };

@@ -40,7 +40,7 @@ namespace NtDll
 	#include "core\kernel\support\EmuNtDll.h"
 };
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort()
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort()
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include <assert.h>
 
@@ -752,7 +752,7 @@ XBSYSAPI EXPORTNUM(277) xbox::void_xt NTAPI xbox::RtlEnterCriticalSection
 				);
 				if (!X_NT_SUCCESS(result))
 				{
-					CxbxrKrnlAbort("Waiting for event of a critical section returned %lx.", result);
+					CxbxrAbort("Waiting for event of a critical section returned %lx.", result);
 				};
 			}
             CriticalSection->OwningThread = thread;

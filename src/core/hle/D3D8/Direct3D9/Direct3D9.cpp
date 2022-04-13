@@ -785,20 +785,6 @@ inline DWORD GetXboxCommonResourceType(const xbox::X_D3DResource* pXboxResource)
 	return GetXboxCommonResourceType(pXboxResource->Common);
 }
 
-xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::dword_xt XboxPixelContainer_Format)
-{
-	xbox::X_D3DFORMAT d3d_format = (xbox::X_D3DFORMAT)((XboxPixelContainer_Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
-	return d3d_format;
-}
-
-xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::X_D3DPixelContainer *pXboxPixelContainer)
-{
-	// Don't pass in unassigned Xbox pixel container
-	assert(pXboxPixelContainer != xbox::zeroptr);
-
-	return GetXboxPixelContainerFormat(pXboxPixelContainer->Format);
-}
-
 inline int GetXboxPixelContainerDimensionCount(const xbox::X_D3DPixelContainer *pXboxPixelContainer)
 {
 	// Don't pass in unassigned Xbox pixel container
@@ -867,7 +853,7 @@ inline bool IsResourceTypeGPUReadable(const DWORD ResourceType)
 		// assert(false); // Fixup's are not allowed to be registered
 		break;
 	default:
-		CxbxrKrnlAbort("Unhandled resource type");
+		CxbxrAbort("Unhandled resource type");
 	}
 
 	return false;
@@ -1337,50 +1323,6 @@ xbox::X_D3DSurface *EmuNewD3DSurface()
 }
 */
 
-void CxbxSetPixelContainerHeader
-(
-	xbox::X_D3DPixelContainer* pPixelContainer,
-	DWORD				Common,
-	UINT				Width,
-	UINT				Height,
-	UINT				Levels,
-	xbox::X_D3DFORMAT	Format,
-	UINT				Dimensions,
-	UINT				Pitch
-)
-{
-	// Set X_D3DResource field(s) :
-	pPixelContainer->Common = Common;
-	// DON'T SET pPixelContainer->Data
-	// DON'T SET pPixelContainer->Lock
-
-	// Are Width and Height both a power of two?
-	DWORD l2w; _BitScanReverse(&l2w, Width); // MSVC intrinsic; GCC has __builtin_clz
-	DWORD l2h; _BitScanReverse(&l2h, Height);
-	DWORD l2d = 0; // TODO : Set this via input argument
-	if (((1 << l2w) == Width) && ((1 << l2h) == Height)) {
-		Width = Height = Pitch = 1; // When setting Format, clear Size field
-	}
-	else {
-		l2w = l2h = l2d = 0; // When setting Size, clear D3DFORMAT_USIZE, VSIZE and PSIZE
-	}
-
-	// Set X_D3DPixelContainer field(s) :
-	pPixelContainer->Format = 0
-		| ((Dimensions << X_D3DFORMAT_DIMENSION_SHIFT) & X_D3DFORMAT_DIMENSION_MASK)
-		| (((DWORD)Format << X_D3DFORMAT_FORMAT_SHIFT) & X_D3DFORMAT_FORMAT_MASK)
-		| ((Levels << X_D3DFORMAT_MIPMAP_SHIFT) & X_D3DFORMAT_MIPMAP_MASK)
-		| ((l2w << X_D3DFORMAT_USIZE_SHIFT) & X_D3DFORMAT_USIZE_MASK)
-		| ((l2h << X_D3DFORMAT_VSIZE_SHIFT) & X_D3DFORMAT_VSIZE_MASK)
-		| ((l2d << X_D3DFORMAT_PSIZE_SHIFT) & X_D3DFORMAT_PSIZE_MASK)
-		;
-	pPixelContainer->Size = 0
-		| (((Width - 1) /*X_D3DSIZE_WIDTH_SHIFT*/) & X_D3DSIZE_WIDTH_MASK)
-		| (((Height - 1) << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK)
-		| (((Pitch - 1) << X_D3DSIZE_PITCH_SHIFT) & X_D3DSIZE_PITCH_MASK)
-		;
-}
-
 unsigned int CxbxGetPixelContainerDepth
 (
 	xbox::X_D3DPixelContainer *pPixelContainer
@@ -1438,48 +1380,6 @@ uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer *pPixelContainer)
 	}
 
 	return Result;
-}
-
-void CxbxGetPixelContainerMeasures
-(
-	xbox::X_D3DPixelContainer *pPixelContainer,
-	// TODO : Add X_D3DCUBEMAP_FACES argument
-	DWORD dwMipMapLevel, // unused - TODO : Use
-	UINT *pWidth,
-	UINT *pHeight,
-	UINT *pDepth,
-	UINT *pRowPitch,
-	UINT *pSlicePitch
-)
-{
-	DWORD Size = pPixelContainer->Size;
-	xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
-
-	if (Size != 0)
-	{
-		*pDepth = 1;
-		*pWidth = ((Size & X_D3DSIZE_WIDTH_MASK) /* >> X_D3DSIZE_WIDTH_SHIFT*/) + 1;
-		*pHeight = ((Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
-		*pRowPitch = (((Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
-	}
-	else
-	{
-		DWORD l2w = (pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT;
-		DWORD l2h = (pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT;
-		DWORD l2d = (pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT;
-		DWORD dwBPP = EmuXBFormatBitsPerPixel(X_Format);
-
-		*pDepth = 1 << l2d;
-		*pHeight = 1 << l2h;
-		*pWidth = 1 << l2w;
-		*pRowPitch = (*pWidth) * dwBPP / 8;
-	}
-
-	*pSlicePitch = (*pRowPitch) * (*pHeight);
-
-	if (EmuXBFormatIsCompressed(X_Format)) {
-		*pRowPitch *= 4;
-	}
 }
 
 void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D3DBaseTexture* pTexture, UINT& Level, D3DCUBEMAP_FACES& Face)
@@ -1570,119 +1470,6 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
     GetSurfaceFaceAndLevelWithinTexture(pSurface, pBaseTexture, Level, face);
 }
 
-bool ConvertD3DTextureToARGBBuffer(
-	xbox::X_D3DFORMAT X_Format,
-	uint8_t *pSrc,
-	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
-	uint8_t *pDst, int DstRowPitch, int DstSlicePitch,
-	unsigned int uiDepth = 1,
-	int iTextureStage = 0
-)
-{
-	const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
-	if (ConvertRowToARGB == nullptr)
-		return false; // Unhandled conversion
-
-	uint8_t *unswizleBuffer = nullptr;
-	if (EmuXBFormatIsSwizzled(X_Format)) {
-		unswizleBuffer = (uint8_t*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
-		// First we need to unswizzle the texture data
-		EmuUnswizzleBox(
-			pSrc, SrcWidth, SrcHeight, uiDepth, 
-			EmuXBFormatBytesPerPixel(X_Format),
-			// Note : use src pitch on dest, because this is an intermediate step :
-			unswizleBuffer, SrcRowPitch, SrcSlicePitch
-		);
-		// Convert colors from the unswizzled buffer
-		pSrc = unswizleBuffer;
-	}
-
-	int AdditionalArgument;
-	if (X_Format == xbox::X_D3DFMT_P8)
-		AdditionalArgument = (int)g_pXbox_Palette_Data[iTextureStage];
-	else
-		AdditionalArgument = DstRowPitch;
-
-	if (EmuXBFormatIsCompressed(X_Format)) {
-		if (SrcWidth < 4 || SrcHeight < 4) {
-			// HACK: The compressed DXT conversion code currently writes more pixels than it should, which can cause a crash.
-			// This code will get hit when converting compressed texture mipmaps on hardware that somehow doesn't support DXT natively
-			// (or lied when Cxbx asked it if it does!)
-			EmuLog(LOG_LEVEL::WARNING, "Converting DXT textures smaller than a block is not currently implemented. Ignoring conversion!");
-			return true;
-		}
-
-		// All compressed formats (DXT1, DXT3 and DXT5) encode blocks of 4 pixels on 4 lines
-		SrcHeight = (SrcHeight + 3) / 4;
-		DstRowPitch *= 4;
-	}
-
-	uint8_t *pSrcSlice = pSrc;
-	uint8_t *pDstSlice = pDst;
-	for (unsigned int z = 0; z < uiDepth; z++) {
-		uint8_t *pSrcRow = pSrcSlice;
-		uint8_t *pDstRow = pDstSlice;
-		for (int y = 0; y < SrcHeight; y++) {
-			*(int*)pDstRow = AdditionalArgument; // Dirty hack, to avoid an extra parameter to all conversion callbacks
-			ConvertRowToARGB(pSrcRow, pDstRow, SrcWidth);
-			pSrcRow += SrcRowPitch;
-			pDstRow += DstRowPitch;
-		}
-
-		pSrcSlice += SrcSlicePitch;
-		pDstSlice += DstSlicePitch;
-	}
-
-	if (unswizleBuffer)
-		free(unswizleBuffer);
-
-	return true;
-}
-
-// Called by WndMain::LoadGameLogo() to load game logo bitmap
-uint8_t *ConvertD3DTextureToARGB(
-	xbox::X_D3DPixelContainer *pXboxPixelContainer,
-    uint8_t *pSrc,
-	int *pWidth, int *pHeight,
-	int TextureStage // default = 0
-)
-{
-	// Avoid allocating pDest when ConvertD3DTextureToARGBBuffer will fail anyway
-	xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxPixelContainer);
-	const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
-	if (ConvertRowToARGB == nullptr)
-		return nullptr; // Unhandled conversion
-
-	unsigned int SrcDepth, SrcRowPitch, SrcSlicePitch;
-	CxbxGetPixelContainerMeasures(
-		pXboxPixelContainer,
-		0, // dwMipMapLevel
-		(UINT*)pWidth,
-		(UINT*)pHeight,
-		&SrcDepth,
-		&SrcRowPitch,
-		&SrcSlicePitch
-	);
-
-	// Now we know ConvertD3DTextureToARGBBuffer will do it's thing, allocate the resulting buffer
-	int DstDepth = 1; // for now TODO : Use SrcDepth when supporting volume textures
-	int DstRowPitch = (*pWidth) * sizeof(DWORD); // = sizeof ARGB pixel. TODO : Is this correct?
-	int DstSlicePitch = DstRowPitch * (*pHeight); // TODO : Is this correct?
-	int DstSize = DstSlicePitch * DstDepth;
-	uint8_t *pDst = (uint8_t *)malloc(DstSize);
-
-	// And convert the source towards that buffer
-	/*ignore result*/ConvertD3DTextureToARGBBuffer(
-		X_Format,
-		pSrc, *pWidth, *pHeight, SrcRowPitch, SrcSlicePitch,
-		pDst, DstRowPitch, DstSlicePitch,
-		DstDepth,
-		TextureStage);
-
-	// NOTE : Caller must take ownership!
-	return pDst;
-}
-
 extern void HLE_init_pgraph_plugins(); // implemented in XbPushBuffer.cpp
 
 // Direct3D initialization (called before emulation begins)
@@ -1700,7 +1487,7 @@ void EmuD3DInit()
     {
         // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
         if(FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &g_pDirect3D)))
-            CxbxrKrnlAbort("Could not initialize Direct3D8!");
+            CxbxrAbort("Could not initialize Direct3D8!");
 
         g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
 
@@ -1804,14 +1591,14 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
         {
             if(bRet == -1)
             {
-                CxbxrKrnlAbort("GetMessage failed!");
+                CxbxrAbort("GetMessage failed!");
             }
 
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
 
-        CxbxrKrnlAbort(nullptr);
+        CxbxrAbort(nullptr);
     }
 
     return 0;
@@ -2040,7 +1827,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
                 case SIZE_MINIMIZED:
                 {
                     if(g_XBVideo.bFullScreen)
-                        CxbxrKrnlAbort(nullptr);
+                        CxbxrAbort(nullptr);
                 }
                 break;
             }
@@ -2094,7 +1881,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         case WM_CLOSE:
             CxbxReleaseCursor();
             DestroyWindow(hWnd);
-            CxbxKrnlShutDown();
+            CxbxrShutDown();
             break;
 
         case WM_SETFOCUS:
@@ -2455,7 +2242,7 @@ static void CreateDefaultD3D9Device
     DEBUG_D3DRESULT(hr, "IDirect3D::CreateDeviceEx");
 
     if(FAILED(hr))
-        CxbxrKrnlAbort("IDirect3D::CreateDeviceEx failed");
+        CxbxrAbort("IDirect3D::CreateDeviceEx failed");
 
     // Which texture formats does this device support?
     DetermineSupportedD3DFormats();
@@ -2772,7 +2559,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	if (CacheEntry.pHostIndexBuffer == nullptr) {
 		CacheEntry.pHostIndexBuffer = CxbxCreateIndexBuffer(RequiredIndexCount);
 		if (!CacheEntry.pHostIndexBuffer)
-			CxbxrKrnlAbort("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
+			CxbxrAbort("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
 	}
 
 	// TODO : Speeds this up, perhaps by hashing less often, and/or by
@@ -2791,7 +2578,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 		HRESULT hRet = CacheEntry.pHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
 		DEBUG_D3DRESULT(hRet, "CacheEntry.pHostIndexBuffer->Lock");
 		if (pHostIndexBufferData == nullptr) {
-			CxbxrKrnlAbort("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
+			CxbxrAbort("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
 
 		// Determine highest and lowest index in use :
@@ -2815,7 +2602,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
-		CxbxrKrnlAbort("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
+		CxbxrAbort("CxbxUpdateActiveIndexBuffer: SetIndices Failed!");
 
 	return CacheEntry;
 }
@@ -2828,13 +2615,13 @@ void UpdateHostBackBufferDesc()
         0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 
     if (hRet != D3D_OK) {
-        CxbxrKrnlAbort("Unable to get host backbuffer surface");
+        CxbxrAbort("Unable to get host backbuffer surface");
     }
 
     hRet = pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
     if (hRet != D3D_OK) {
         pCurrentHostBackBuffer->Release();
-        CxbxrKrnlAbort("Unable to determine host backbuffer dimensions");
+        CxbxrAbort("Unable to determine host backbuffer dimensions");
     }
 
     pCurrentHostBackBuffer->Release();
@@ -3008,11 +2795,11 @@ void Direct3D_CreateDevice_Start
     CxbxVertexShaderSetFlags();
 
     if (!XboxRenderStates.Init()) {
-        CxbxrKrnlAbort("Failed to init XboxRenderStates");
+        CxbxrAbort("Failed to init XboxRenderStates");
     }
 
     if (!XboxTextureStates.Init(&XboxRenderStates)) {
-        CxbxrKrnlAbort("Failed to init XboxTextureStates");
+        CxbxrAbort("Failed to init XboxTextureStates");
     }
 
 	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
@@ -3066,7 +2853,7 @@ void Direct3D_CreateDevice_End
         // At this point, g_pXbox_BackBufferSurface should now point to a valid render target
         // if it still doesn't, we cannot continue without crashing at draw time
         if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
-            CxbxrKrnlAbort("Unable to determine default Xbox backbuffer");
+            CxbxrAbort("Unable to determine default Xbox backbuffer");
         }
 
         // Set the backbuffer as the initial rendertarget
@@ -4023,7 +3810,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer");
 
 	if (FAILED(hRet))
-		CxbxrKrnlAbort("Unable to retrieve back buffer");
+		CxbxrAbort("Unable to retrieve back buffer");
 
 	SetHostSurface(pXboxBackBuffer, pCurrentHostBackBuffer); // No iTextureStage!
 
@@ -4053,7 +3840,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 
 	// Now pXboxBackbuffer points to the requested Xbox backbuffer
 	if (pXboxBackBuffer == nullptr) {
-		CxbxrKrnlAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
+		CxbxrAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
 	}
 
 
@@ -5789,7 +5576,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					PCFormat = D3DFMT_A8R8G8B8;
 				} else {
 					// Otherwise, use a best matching format
-					/*CxbxrKrnlAbort*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
+					/*CxbxrAbort*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
 					PCFormat = EmuXB2PC_D3DFormat(X_Format);
 				}
 			}
@@ -5917,7 +5704,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// If the fallback failed, show an error and exit execution.
 			if (hRet != D3D_OK) {
 				// We cannot safely continue in this state.
-				CxbxrKrnlAbort("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
+				CxbxrAbort("CreateImageSurface Failed!\n\nError: %s\nDesc: %s",
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
@@ -5985,7 +5772,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 
 			if (hRet != D3D_OK) {
-				CxbxrKrnlAbort("CreateTexture Failed!\n\n"
+				CxbxrAbort("CreateTexture Failed!\n\n"
 					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, hostWidth, hostHeight);
 			}
 
@@ -6011,7 +5798,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
             }
 
 			if (hRet != D3D_OK) {
-				CxbxrKrnlAbort("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
+				CxbxrAbort("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
@@ -6040,7 +5827,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
             }
 
 			if (hRet != D3D_OK) {
-				CxbxrKrnlAbort("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
+				CxbxrAbort("CreateCubeTexture Failed!\n\nError: \nDesc: "/*,
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
@@ -6170,7 +5957,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 							pDst, dwDstRowPitch, dwDstSlicePitch,
 							pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
 							iTextureStage)) {
-							CxbxrKrnlAbort("Unhandled conversion!");
+							CxbxrAbort("Unhandled conversion!");
 						}
 					}
 				}
@@ -6598,7 +6385,7 @@ void UpdateFixedFunctionVertexShaderState()
 	auto hRet = g_pD3DDevice->SetVertexShaderConstantF(0, (float*)&ffShaderState, fixedFunctionStateSize);
 
 	if (FAILED(hRet)) {
-		CxbxrKrnlAbort("Failed to write fixed-function HLSL state");
+		CxbxrAbort("Failed to write fixed-function HLSL state");
 	}
 }
 
@@ -7208,14 +6995,14 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 		// Create a new native index buffer of the above determined size :
 		g_pQuadToTriangleHostIndexBuffer = CxbxCreateIndexBuffer(NrOfTriangleIndices);
 		if (g_pQuadToTriangleHostIndexBuffer == nullptr)
-			CxbxrKrnlAbort("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
+			CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
 
 		// Put quadlist-to-triangle-list index mappings into this buffer :
 		INDEX16* pHostIndexBufferData = nullptr;
 		hRet = g_pQuadToTriangleHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
 		DEBUG_D3DRESULT(hRet, "g_pQuadToTriangleHostIndexBuffer->Lock");
 		if (pHostIndexBufferData == nullptr)
-			CxbxrKrnlAbort("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
+			CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
 
 		memcpy(pHostIndexBufferData, CxbxAssureQuadListIndexData(NrOfQuadIndices), NrOfTriangleIndices * sizeof(INDEX16));
 
@@ -7227,7 +7014,7 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
 	if (FAILED(hRet))
-		CxbxrKrnlAbort("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
+		CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
 }
 
 // TODO : Move to own file
@@ -7241,7 +7028,7 @@ void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex)
 	if (g_pClosingLineLoopHostIndexBuffer == nullptr) {
 		g_pClosingLineLoopHostIndexBuffer = CxbxCreateIndexBuffer(VERTICES_PER_LINE);
 		if (g_pClosingLineLoopHostIndexBuffer == nullptr)
-			CxbxrKrnlAbort("Unable to create g_pClosingLineLoopHostIndexBuffer for D3DPT_LINELOOP emulation");
+			CxbxrAbort("Unable to create g_pClosingLineLoopHostIndexBuffer for D3DPT_LINELOOP emulation");
 	}
 
 	INDEX16 *pCxbxClosingLineLoopIndexBufferData = nullptr;

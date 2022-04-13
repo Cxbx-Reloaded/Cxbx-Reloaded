@@ -27,14 +27,14 @@
 
 #define LOG_PREFIX CXBXR_MODULE::XAPI
 
-
-
 #include <core\kernel\exports\xboxkrnl.h>
+#include "core\hle\XAPI\Xapi.h"
+#include "common/cxbxr.hpp"
+
 #include "common\input\SdlJoystick.h"
 #include "common\input\InputManager.h"
 #include <Shlwapi.h>
 #include "common\input\LibusbDevice.h" // include this after Shlwapi.h or else it causes an error
-#include "core\kernel\init\CxbxKrnl.h"
 #include "Logging.h"
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\exports\EmuKrnl.h" // For DefaultLaunchDataPage
@@ -45,7 +45,6 @@
 #include "core\hle\Intercept.hpp"
 #include "Windef.h"
 #include <vector>
-#include "core\hle\XAPI\Xapi.h"
 #include <charconv>
 
 
@@ -60,15 +59,13 @@ std::atomic<bool> g_bIsDevicesEmulating = false;
 // Protects access to xpp types
 std::atomic<bool> g_bXppGuard = false;
 
-// Allocate enough memory for the max number of devices we can support simultaneously
-// 4 duke / S / sbc / arcade joystick / lightgun (mutually exclusive) + 8 memory units
-DeviceState g_devs[MAX_DEVS];
-
 xbox::ulong_xt g_Mounted_MUs = 0;
 xbox::char_xt g_AltLett_MU = 0;
 xbox::ulong_xt *g_XapiMountedMUs = &g_Mounted_MUs;
 xbox::char_xt *g_XapiAltLett_MU = &g_AltLett_MU;
 std::recursive_mutex g_MuLock;
+
+#ifdef CXBXR_EMU
 
 // Declare trampolines
 #define XB_TRAMPOLINES(XB_MACRO)                                                                                                                                     \
@@ -84,6 +81,7 @@ void LookupTrampolinesXAPI()
 
 #undef XB_TRAMPOLINES
 
+#endif
 
 static inline xbox::char_xt MuPort2Lett(xbox::dword_xt port, xbox::dword_xt slot)
 {
@@ -211,11 +209,13 @@ void ConstructHleInputDevice(DeviceState *dev, DeviceState *upstream, int type, 
 {
 	g_bIsDevicesEmulating = true;
 
+#ifdef CXBXR_EMU
 	if (g_bIsChihiro) {
 		// Don't emulate XID devices during Chihiro Emulation
 		g_bIsDevicesEmulating = false;
 		return;
 	}
+#endif
 
 	// Set up common device state
 	int port_num, slot;
@@ -394,6 +394,9 @@ void DestructHleInputDevice(DeviceState *dev)
 	EmuLogEx(CXBXR_MODULE::INPSYS, LOG_LEVEL::INFO, "Detached device %s from port %s", GetInputDeviceName(to_underlying(type)).c_str(), PortUserFormat(port).c_str());
 }
 
+// Patches/Functions below are mainly for emulation, we don't need them for GUI purpose.
+#ifdef CXBXR_EMU
+
 void SetupXboxDeviceTypes()
 {
 	// If we don't yet have the offset to gDeviceType_Gamepad, work it out!
@@ -415,7 +418,7 @@ void SetupXboxDeviceTypes()
 
 			// Sanity check: Where all these device offsets within Xbox memory
 			if ((deviceTableStartOffset >= g_SystemMaxMemory) || (deviceTableEndOffset >= g_SystemMaxMemory)) {
-				CxbxrKrnlAbort("DeviceTable Location is outside of Xbox Memory range");
+				CxbxrAbort("DeviceTable Location is outside of Xbox Memory range");
 			}
 
 			// Iterate through the table until we find gamepad
@@ -1285,3 +1288,5 @@ xbox::void_xt WINAPI xbox::EMUPATCH(OutputDebugStringA)
 	LOG_FUNC_ONE_ARG(lpOutputString);
 	printf("OutputDebugStringA: %s\n", lpOutputString);
 }
+
+#endif

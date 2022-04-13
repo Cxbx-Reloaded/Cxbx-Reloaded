@@ -25,6 +25,7 @@
 #ifndef XBCONVERT_H
 #define XBCONVERT_H
 
+#include "common/cxbxr.hpp"
 #include "core\kernel\init\CxbxKrnl.h"
 
 #include "core\hle\D3D8\XbD3D8Types.h"
@@ -90,7 +91,7 @@ else if((uint32)State < 20)
 else if((uint32)State > 255)
     State = (D3DTRANSFORMSTATETYPE)(State - 250);
 else
-    CxbxrKrnlAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
+    CxbxrAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
 //*/
 
 // convert from xbox to pc texture transform state types
@@ -115,7 +116,7 @@ inline D3DTRANSFORMSTATETYPE EmuXB2PC_D3DTS(xbox::X_D3DTRANSFORMSTATETYPE State)
 		return D3DTS_WORLDMATRIX(State - 256);
     }
 
-    CxbxrKrnlAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
+    CxbxrAbortEx(LOG_PREFIX_D3DCVT, "Unknown Transform State Type (%d)", State);
     return (D3DTRANSFORMSTATETYPE)0;
 }
 
@@ -1819,5 +1820,36 @@ RenderStateInfo;
 
 extern const RenderStateInfo& GetDxbxRenderStateInfo(int State);
 
+extern xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::dword_xt XboxPixelContainer_Format);
+
+extern xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::X_D3DPixelContainer* pXboxPixelContainer);
+
+extern bool ConvertD3DTextureToARGBBuffer(
+	xbox::X_D3DFORMAT X_Format,
+	uint8_t* pSrc,
+	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
+	uint8_t* pDst, int DstRowPitch, int DstSlicePitch,
+	unsigned int uiDepth = 1,
+	int iTextureStage = 0
+);
+
+extern void CxbxSetPixelContainerHeader
+(
+	xbox::X_D3DPixelContainer* pPixelContainer,
+	DWORD                      Common,
+	UINT                       Width,
+	UINT                       Height,
+	UINT                       Levels,
+	xbox::X_D3DFORMAT          Format,
+	UINT                       Dimensions,
+	UINT                       Pitch
+);
+
+extern uint8_t* ConvertD3DTextureToARGB(
+	xbox::X_D3DPixelContainer* pXboxPixelContainer,
+	uint8_t* pSrc,
+	int* pWidth, int* pHeight,
+	int TextureStage = 0
+);
 
 #endif

@@ -61,7 +61,7 @@ void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle)
 
 		// If we reach here, it means that we could not insert the handle after more than two seconds of trying. This probably means
 		// that we have forgotten to call RemoveXboxHandle on the old handle, or the other thread is waiting/deadlocked, so this is a bug
-		CxbxrKrnlAbortEx(CXBXR_MODULE::CXBXR, "Failed to register new xbox handle after more than two seconds!");
+		CxbxrAbortEx(CXBXR_MODULE::CXBXR, "Failed to register new xbox handle after more than two seconds!");
 	}
 }
 

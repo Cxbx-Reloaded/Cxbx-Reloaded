@@ -29,8 +29,8 @@
 
 #include "WndMain.h"
 
+#include "common/cxbxr.hpp"
 #include "AddressRanges.h" // For VerifyWow64()
-#include "VerifyAddressRanges.h" // For VerifyBaseAddr()
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
@@ -38,6 +38,7 @@
 #include <commctrl.h>
 #include "common/util/cliConverter.hpp"
 #include "common/util/cliConfig.hpp"
+#include "common/FilePaths.hpp"
 
 
 // Enable Visual Styles
@@ -58,14 +59,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-#ifndef CXBXR_EMU
-	/*! verify Cxbx.exe is loaded to base address 0x00010000 */
-	if (!VerifyBaseAddr()) {
-		PopupError(nullptr, "Cxbx.exe is not loaded to base address 0x00010000, which is a requirement for Xbox emulation.");
-		return EXIT_FAILURE;
-	}
-#endif
-
 	if (!cli_config::GenConfig(__argv, __argc)) {
 		PopupError(nullptr, "Couldn't convert parsed command line!");
 		return EXIT_FAILURE;
@@ -83,15 +76,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	if (cli_config::hasKey("load")) {
-#ifndef CXBXR_EMU
-		CxbxKrnlEmulate(0, nullptr);
-		EmuShared::Cleanup();
-		return EXIT_SUCCESS;
-#else
 		PopupError(nullptr, "Emulation must be launched from cxbxr-ldr.exe!");
 		EmuShared::Cleanup();
 		return EXIT_FAILURE;
-#endif
 	}
 
 	// If 2nd GUI executable is launched, load settings file for GUI for editable support.

@@ -42,25 +42,6 @@ void LookupTrampolinesD3D();
 // initialize render window
 extern void CxbxInitWindow(bool bFullInit);
 
-extern void CxbxSetPixelContainerHeader
-(
-	xbox::X_D3DPixelContainer* pPixelContainer,
-	DWORD           	Common,
-	UINT				Width,
-	UINT				Height,
-	UINT				Levels,
-	xbox::X_D3DFORMAT	Format,
-	UINT				Dimensions,
-	UINT				Pitch
-);
-
-extern uint8_t *ConvertD3DTextureToARGB(
-	xbox::X_D3DPixelContainer *pXboxPixelContainer,
-	uint8_t *pSrc,
-	int *pWidth, int *pHeight,
-	int TextureStage = 0
-);
-
 void CxbxUpdateNativeD3DResources();
 
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);

@@ -45,7 +45,6 @@ CRITICAL_SECTION dbgCritical;
 // Global Variable(s)
 volatile thread_local  bool    g_bEmuException = false;
 static thread_local bool bOverrideEmuException;
-volatile bool    g_bPrintfOn = true;
 bool g_DisablePixelShaders = false;
 bool g_UseAllCores = false;
 bool g_SkipRdtscPatching = false;
@@ -57,33 +56,6 @@ std::atomic_int64_t HostSystemTimeDelta(0);
 
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
-
-std::string FormatTitleId(uint32_t title_id)
-{
-	std::stringstream ss;
-	
-	// If the Title ID prefix is a printable character, parse it
-	// This shows the correct game serial number for retail titles!
-	// EG: MS-001 for 1st tile published by MS, EA-002 for 2nd title by EA, etc
-	// Some special Xbes (Dashboard, XDK Samples) use non-alphanumeric serials
-	// We fall back to Hex for those
-	// ergo720: we cannot use isalnum() here because it will treat chars in the range -1 - 255 as valid ascii chars which can
-	// lead to unicode characters being printed in the title (e.g.: dashboard uses 0xFE and 0xFF)
-	uint8_t pTitleId1 = (title_id >> 24) & 0xFF;
-	uint8_t pTitleId2 = (title_id >> 16) & 0xFF;
-
-	if ((pTitleId1 < 65 || pTitleId1 > 90) || (pTitleId2 < 65 || pTitleId2 > 90)) {
-		// Prefix was non-printable, so we need to print a hex reprentation of the entire title_id
-		ss << std::setfill('0') << std::setw(8) << std::hex << std::uppercase << title_id;
-		return ss.str();
-	}	
-
-	ss << pTitleId1 << pTitleId2;
-	ss << "-";
-	ss << std::setfill('0') << std::setw(3) << std::dec << (title_id & 0x0000FFFF);
-
-	return ss.str();
-}
 
 std::string EIPToString(xbox::addr_xt EIP)
 {

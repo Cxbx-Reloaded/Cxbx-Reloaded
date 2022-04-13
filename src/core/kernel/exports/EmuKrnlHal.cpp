@@ -33,7 +33,7 @@
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlLogging.h"
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort, and CxbxExec
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort, and CxbxExec
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFS.h"
 #include "EmuKrnl.h"
@@ -483,7 +483,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 	switch (Routine) {
 	case ReturnFirmwareHalt:
-		CxbxrKrnlAbort("Emulated Xbox is halted");
+		CxbxrAbort("Emulated Xbox is halted");
 		break;
 
 	case ReturnFirmwareReboot:
@@ -598,7 +598,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 		LOG_UNIMPLEMENTED();
 	}
 
-	CxbxKrnlShutDown(is_reboot);
+	CxbxrShutDown(is_reboot);
 }
 
 // ******************************************************************

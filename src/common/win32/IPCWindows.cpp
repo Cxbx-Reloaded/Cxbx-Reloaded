@@ -30,7 +30,6 @@
 #include <windows.h>
 
 #include "Cxbx.h"
-#include "core\kernel\init\CxbxKrnl.h"
 #include "gui/resource/ResCxbx.h"
 
 #include "common\IPCHybrid.hpp"
@@ -38,6 +37,9 @@
 #include "common\Settings.hpp"
 #include "Logging.h"
 
+#ifdef CXBXR_EMU
+/*! parent window handle */
+extern "C" HWND CxbxKrnl_hEmuParent = NULL;
 
 void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 {
@@ -79,6 +81,7 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value)
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, MAKEWPARAM(WM_COMMAND, cmdParam), value);
 	}
 }
+#endif
 
 void ipc_send_kernel_update(IPC_UPDATE_KERNEL command, const int value, const unsigned int hwnd)
 {

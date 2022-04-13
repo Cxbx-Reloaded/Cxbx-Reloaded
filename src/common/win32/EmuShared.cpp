@@ -25,7 +25,8 @@
 // *
 // ******************************************************************
 
-#include "core\kernel\init\CxbxKrnl.h"
+#include "cxbxr.hpp"
+
 #include "core\kernel\support\Emu.h"
 #include "EmuShared.h"
 
@@ -83,8 +84,9 @@ bool EmuShared::Init(long long sessionID)
             emuSharedStr.c_str()    // name of map object
         );
 
-        if(hMapObject == NULL)
-            return false; // CxbxrKrnlAbortEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
+        if (hMapObject == NULL) {
+            CxbxrAbortEx(CXBXR_MODULE::INIT, "Could not map shared memory!");
+        }
 
         if(GetLastError() == ERROR_ALREADY_EXISTS)
             bRequireConstruction = false;
@@ -105,7 +107,7 @@ bool EmuShared::Init(long long sessionID)
 
         if (g_EmuShared == nullptr) {
             CloseHandle(hMapObject);
-            return false; // CxbxrKrnlAbortEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
+            CxbxrAbortEx(CXBXR_MODULE::INIT, "Could not map view of shared memory!");
         }
     }
 

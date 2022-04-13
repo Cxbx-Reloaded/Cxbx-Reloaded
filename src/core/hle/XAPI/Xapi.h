@@ -27,7 +27,8 @@
 
 void LookupTrampolinesXAPI();
 
-#include "xbox_types.h"
+#include <Windows.h>
+#include "core/kernel/common/xbox.h"
 
 namespace xbox {
 
