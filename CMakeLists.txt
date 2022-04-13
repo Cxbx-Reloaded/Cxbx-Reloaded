@@ -89,6 +89,7 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xbe/XbePrinter.h"
  "${CXBXR_ROOT_DIR}/src/common/xbox/Logging.hpp"
  "${CXBXR_ROOT_DIR}/src/common/xbox/Types.hpp"
+ "${CXBXR_ROOT_DIR}/src/common/xbox_types.h"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.h"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbConvert.h"

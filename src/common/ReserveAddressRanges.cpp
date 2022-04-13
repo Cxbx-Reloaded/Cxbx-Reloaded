@@ -319,12 +319,6 @@ bool isSystemFlagSupport(unsigned int reserved_systems, unsigned int assign_syst
 	if (reserved_systems & assign_system) {
 		return true;
 	}
-// TODO: Once host's standalone emulation is remove from GUI, remove below as well.
-#ifndef CXBXR_EMU
-	if (reserved_systems == 0) {
-		return true;
-	}
-#endif
 
 	return false;
 }

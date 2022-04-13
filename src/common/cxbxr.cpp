@@ -24,6 +24,14 @@
 // ******************************************************************
 #define LOG_PREFIX CXBXR_MODULE::FILE
 
+#ifdef CXBXR_EMU
+#include "core/kernel/support/EmuFile.h" // For g_io_mu_metadata
+#include "common/Timer.h" // For Timer_Shutdown
+#include "core/common/video/RenderBase.hpp" // For g_renderbase
+#include "core/kernel/memory-manager/VMManager.h"
+extern void CxbxrKrnlSuspendThreads();
+#endif
+
 #include "cxbxr.hpp"
 
 #include "EmuShared.h"
@@ -81,7 +89,6 @@ bool HandleFirstLaunch()
 	return true;
 }
 
-#ifndef CXBXR_EMU
 [[noreturn]] void CxbxrShutDown(bool is_reboot)
 {
 	if (!is_reboot) {
@@ -96,6 +103,36 @@ bool HandleFirstLaunch()
 
 	// Shutdown the input device manager
 	g_InputDeviceManager.Shutdown();
+
+#ifdef CXBXR_EMU
+	// This is very important process to prevent false positive report and allow IDEs to continue debug multiple reboots.
+	CxbxrKrnlSuspendThreads();
+
+	if (g_io_mu_metadata) {
+		delete g_io_mu_metadata;
+		g_io_mu_metadata = nullptr;
+	}
+
+	// Shutdown the render manager
+	if (g_renderbase != nullptr) {
+		g_renderbase->Shutdown();
+		g_renderbase = nullptr;
+	}
+
+	// NOTE: Require to be after g_renderbase's shutdown process.
+	// Next thing we need to do is shutdown our timer threads.
+	Timer_Shutdown();
+
+	// NOTE: Must be last step of shutdown process and before CxbxUnlockFilePath call!
+	// Shutdown the memory manager
+	g_VMManager.Shutdown();
+
+	CxbxrUnlockFilePath();
+
+	if (CxbxKrnl_hEmuParent != NULL && !is_reboot) {
+		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
+	}
+#endif
 
 	EmuShared::Cleanup();
 
@@ -132,4 +169,3 @@ bool HandleFirstLaunch()
 
 	CxbxrShutDown();
 }
-#endif

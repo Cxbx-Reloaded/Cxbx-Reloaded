@@ -30,16 +30,12 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h>
-#include "gui/resource/ResCxbx.h"
-#include "core\kernel\init\CxbxKrnl.h"
 #include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
-#include "CxbxVersion.h"
-#include "core\kernel\support\Emu.h"
 #include "core/kernel/support/PatchRdtsc.hpp"
-#include "devices\x86\EmuX86.h"
+#include "devices\x86\EmuX86.h" // For EmuX86_Init
 #include "core\kernel\support\EmuFile.h"
 #include "core\kernel\support\EmuFS.h" // EmuInitFS
-#include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM, XboxFactoryGameRegion
+#include "EmuEEPROM.h" // For CxbxRestoreEEPROM, EEPROM
 #include "core\kernel\exports\EmuKrnl.h"
 #include "core\kernel\exports\EmuKrnlKi.h"
 #include "core\kernel\exports\EmuKrnlKe.h"
@@ -58,19 +54,16 @@
 #include "common/ReserveAddressRanges.h"
 #include "common/xbox/Types.hpp"
 #include "common/win32/WineEnv.h"
-#include "core/common/video/RenderBase.hpp"
 
 #include <clocale>
 #include <process.h>
-#include <time.h> // For time()
 #include <sstream> // For std::ostringstream
 
 #include "devices\EEPROMDevice.h" // For g_EEPROM
 #include "devices\Xbox.h" // For InitXboxHardware()
 #include "devices\LED.h" // For LED::Sequence
-#include "devices\SMCDevice.h" // For SMC Access
 #include "common\crypto\EmuSha.h" // For the SHA1 functions
-#include "Timer.h" // For Timer_Init
+#include "common/Timer.h" // For Timer_Init
 #include "common\input\InputManager.h" // For the InputDeviceManager
 #include "core/kernel/support/NativeHandle.h"
 #include "common/win32/Util.h" // for WinError2Str
@@ -523,21 +516,10 @@ static void CxbxrKrnlSyncGUI()
 
 static void CxbxrKrnlSetupMemorySystem(int BootFlags, unsigned emulate_system, unsigned reserved_systems, blocks_reserved_t blocks_reserved)
 {
-#ifndef CXBXR_EMU
-	// Only for GUI executable with emulation code.
-	blocks_reserved_t blocks_reserved_gui = { 0 };
-	// Reserve console system's memory ranges before start initialize.
-	if (!ReserveAddressRanges(emulate_system, blocks_reserved_gui)) {
-		CxbxrAbort("Failed to reserve required memory ranges!", GetLastError());
-	}
-	// Initialize the memory manager
-	g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved_gui);
-#else
 	// Release unnecessary memory ranges to allow console/host to use those memory ranges.
 	FreeAddressRanges(emulate_system, reserved_systems, blocks_reserved);
 	// Initialize the memory manager
 	g_VMManager.Initialize(emulate_system, BootFlags, blocks_reserved);
-#endif
 
 	// Commit the memory used by the xbe header
 	size_t HeaderSize = CxbxKrnl_Xbe->m_Header.dwSizeofHeaders;
@@ -1478,39 +1460,6 @@ static void CxbxrKrnlInitHacks()
 	}
 };*/
 
-[[noreturn]] void CxbxrAbortEx(CXBXR_MODULE cxbxr_module, const char *szErrorMessage, ...)
-{
-    g_bEmuException = true;
-
-    // print out error message (if exists)
-    if(szErrorMessage != NULL)
-    {
-        char szBuffer2[1024];
-        va_list argp;
-
-        va_start(argp, szErrorMessage);
-        vsprintf(szBuffer2, szErrorMessage, argp);
-        va_end(argp);
-
-		(void)PopupCustomEx(nullptr, cxbxr_module, LOG_LEVEL::FATAL, PopupIcon::Error, PopupButtons::Ok, PopupReturn::Ok, "Received Fatal Message:\n\n* %s\n", szBuffer2); // Will also EmuLogEx
-    }
-
-	EmuLogInit(LOG_LEVEL::INFO, "MAIN: Terminating Process");
-    fflush(stdout);
-
-    // cleanup debug output
-    {
-        FreeConsole();
-
-        char buffer[16];
-
-        if(GetConsoleTitle(buffer, 16) != NULL)
-            freopen("nul", "w", stdout);
-    }
-
-	CxbxrShutDown();
-}
-
 void CxbxrKrnlSuspendThreads()
 {
 	xbox::PLIST_ENTRY ThreadListEntry = KiUniqueProcess.ThreadListHead.Flink;
@@ -1555,59 +1504,6 @@ void CxbxrKrnlSuspendThreads()
 			EmuLog(LOG_LEVEL::ERROR2, "Unable to suspend thread 0x%X for: %s", thread, WinError2Str().c_str());
 		}
 	}
-}
-
-void CxbxrShutDown(bool is_reboot)
-{
-	if (!is_reboot) {
-		// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
-		int BootFlags = 0;
-		g_EmuShared->SetBootFlags(&BootFlags);
-	}
-
-	// NOTE: This causes a hang when exiting while NV2A is processing
-	// This is okay for now: It won't leak memory or resources since TerminateProcess will free everything
-	// delete g_NV2A; // TODO : g_pXbox
-
-	// Shutdown the input device manager
-	g_InputDeviceManager.Shutdown();
-
-	if (g_io_mu_metadata) {
-		delete g_io_mu_metadata;
-		g_io_mu_metadata = nullptr;
-	}
-
-	// Shutdown the render manager
-	if (g_renderbase != nullptr) {
-		g_renderbase->Shutdown();
-		g_renderbase = nullptr;
-	}
-
-	// This is very important process to prevent false positive report and allow IDEs to continue debug multiple reboots.
-	CxbxrKrnlSuspendThreads();
-
-	// NOTE: Require to be after g_renderbase's shutdown process.
-	// Next thing we need to do is shutdown our timer threads.
-	Timer_Shutdown();
-
-	// NOTE: Must be last step of shutdown process and before CxbxUnlockFilePath call!
-	// Shutdown the memory manager
-	g_VMManager.Shutdown();
-
-	CxbxrUnlockFilePath();
-
-	if (CxbxKrnl_hEmuParent != NULL && !is_reboot) {
-		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
-	}
-
-	EmuShared::Cleanup();
-
-	if (g_ExceptionManager) {
-		delete g_ExceptionManager;
-		g_ExceptionManager = nullptr;
-	}
-
-	TerminateProcess(g_CurrentProcessHandle, 0);
 }
 
 void CxbxKrnlPrintUEM(ULONG ErrorCode)

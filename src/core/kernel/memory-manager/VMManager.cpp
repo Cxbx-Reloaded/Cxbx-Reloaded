@@ -42,10 +42,6 @@
 #include "core\kernel\exports\EmuKrnl.h" // For InitializeListHead(), etc.
 #include "common/util/cliConfig.hpp" // For GetSessionID
 #include <assert.h>
-// Temporary usage for need ReserveAddressRanges func with cxbx.exe's emulation.
-#ifndef CXBXR_EMU
-#include "common/ReserveAddressRanges.h"
-#endif
 
 
 constexpr char str_persistent_memory_s[] = "PersistentMemory-s";
