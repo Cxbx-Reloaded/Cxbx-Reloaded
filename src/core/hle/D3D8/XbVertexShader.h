@@ -27,7 +27,6 @@
 
 #include <d3dcompiler.h>
 #include <vector>
-#include <future>
 
 #include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 

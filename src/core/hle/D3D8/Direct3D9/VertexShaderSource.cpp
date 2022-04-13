@@ -4,6 +4,7 @@
 
 #include "core/kernel/init/CxbxKrnl.h"
 #include "util/hasher.h"
+#include <CxbxVersion.h>
 
 VertexShaderSource g_VertexShaderSource = VertexShaderSource();
 
@@ -33,7 +34,9 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
 		return false;
 	}
 
-	*ppLazyShader = &it->second;
+	if (ppLazyShader) {
+		*ppLazyShader = &it->second;
+	}
 	return true;
 }
 
@@ -128,8 +131,6 @@ IDirect3DVertexShader* VertexShaderSource::GetShader(IDirect3DDevice9& pD3DDevic
 
 	if (pCompiledShader) {
 		pCompiledShader->Release();
-
-		// TODO compile the shader at a higher optimization level in a background thread?
 	}
 
 	// The shader is ready
@@ -157,4 +158,128 @@ void VertexShaderSource::ReleaseShader(ShaderKey key)
 	else {
 		EmuLog(LOG_LEVEL::WARNING, "Release called on non-existent shader!");
 	}
+}
+
+
+// Serialized shader cache
+// A header followed by several entries
+// Each entry field is followed by \n
+
+struct Header {
+	std::string fileType;
+	std::string version;
+};
+
+struct EntryHeader {
+	int64_t key;
+	int32_t size;
+	// D3D shader blob ('size' bytes)
+};
+
+Header CreateHeader() {
+	Header h;
+	h.fileType = "vscache-cxbx";
+	h.version = GetGitVersionStr();
+	return h;
+}
+
+void VertexShaderSource::Serialize(std::ostream& out) {
+	Header h = CreateHeader();
+
+	EmuLog(LOG_LEVEL::INFO, "Serializing VSH cache...");
+	try {
+		out << h.fileType << "\n";
+		out << h.version << "\n";
+
+		std::vector<char> shaderBuffer;
+		for (auto& kv : cache) {
+			if (!kv.second.isReady || kv.second.pHostVertexShader == nullptr) {
+				continue; // skip incomplete or broken shaders
+			}
+
+			auto& s = kv.second.pHostVertexShader;
+
+			EntryHeader c;
+			// key
+			c.key = kv.first;
+			// size
+			s->GetFunction(nullptr, (UINT*)&c.size);
+			// shader
+			shaderBuffer.clear();
+			shaderBuffer.resize(c.size);
+			s->GetFunction(shaderBuffer.data(), (UINT*)&c.size);
+
+			EmuLog(LOG_LEVEL::INFO, "Serializing shader %x...", c.key);
+
+			out << c.key << "\n";
+			out << c.size << "\n";
+			out.write(shaderBuffer.data(), c.size);
+			out << "\n";
+		}
+	}
+	catch (...) {
+		EmuLog(LOG_LEVEL::INFO, "An error occurred serializing the VSH cache");
+	}
+}
+
+void VertexShaderSource::DeserializeAndLoad(IDirect3DDevice9* pD3DDevice, std::istream& in) {
+	EmuLog(LOG_LEVEL::INFO, "Loading VSH cache...");
+
+	Header hExpected = CreateHeader();
+	Header hActual;
+	std::string line;
+	std::vector<char> shaderBuffer;
+
+	try {
+		std::getline(in, hActual.fileType);
+		std::getline(in, hActual.version);
+
+		if (hActual.fileType != hExpected.fileType) {
+			EmuLog(LOG_LEVEL::ERROR2, "VSH cache did not have the expected header.");
+			return;
+		}
+		if (hActual.version != hExpected.version) {
+			EmuLog(LOG_LEVEL::INFO, "VSH cache version mismatch. The cache will not be loaded.");
+		}
+
+		while (in.peek() != EOF) {
+			EntryHeader c;
+
+			std::getline(in, line);
+			c.key = std::stoll(line);
+
+			std::getline(in, line);
+			c.size = std::stoi(line);
+
+			if (_FindShader(c.key, nullptr)) {
+				EmuLog(LOG_LEVEL::INFO, "Skipping deserializing shader %x as it was already loaded.", c.key);
+				in.ignore(c.size);
+				in.ignore(1);
+				continue;
+			}
+
+			EmuLog(LOG_LEVEL::INFO, "Loading shader %x from VSH cache...", c.key);
+
+			// Read the shader
+			ID3DBlob* pCompiledShader;
+			D3DCreateBlob(c.size, &pCompiledShader);
+			in.read((char*)pCompiledShader->GetBufferPointer(), c.size);
+			in.ignore(1);
+
+			// Wrap the shader in a future...
+			auto wrapped = std::promise<ID3DBlob*>();
+			wrapped.set_value(pCompiledShader);
+
+			// Save cache entry
+			auto newShader = LazyVertexShader();
+			newShader.compileResult = wrapped.get_future();
+			cache[c.key] = std::move(newShader);
+		}
+
+		EmuLog(LOG_LEVEL::INFO, "VSH cache loaded successfully.");
+	}
+	catch (...) {
+		EmuLog(LOG_LEVEL::ERROR2, "An error occurred deserializing the VSH cache!");
+	}
+
 }

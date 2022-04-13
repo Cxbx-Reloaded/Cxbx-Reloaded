@@ -4,6 +4,9 @@
 
 #include "VertexShader.h"
 #include <map>
+#include <future>
+#include <istream>
+#include <ostream>
 
 typedef uint64_t ShaderKey;
 
@@ -15,9 +18,8 @@ public:
 	IDirect3DVertexShader* GetShader(IDirect3DDevice9& pD3DDevice, ShaderKey key);
 	void ReleaseShader(ShaderKey key);
 
-	// TODO
-	// WriteCacheToDisk
-	// LoadCacheFromDisk
+	void Serialize(std::ostream& output);
+	void DeserializeAndLoad(IDirect3DDevice9* pD3DDevice, std::istream& in);
 
 private:
 	struct LazyVertexShader {
@@ -27,10 +29,6 @@ private:
 
 		// TODO when is it a good idea to release shaders?
 		int referenceCount = 0;
-
-		// TODO persist shaders to disk
-		// ShaderVersion?
-		// OptimizationLevel?
 	};
 
 	std::unordered_map<ShaderKey, LazyVertexShader> cache;
@@ -38,6 +36,7 @@ private:
 	bool _FindShader(ShaderKey key, LazyVertexShader** ppLazyShader);
 };
 
+// FIXME move this to a D3D9 global state file?
 extern VertexShaderSource g_VertexShaderSource;
 
 #endif

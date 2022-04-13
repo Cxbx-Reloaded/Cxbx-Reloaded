@@ -76,6 +76,7 @@
 #include <functional>
 #include <unordered_map>
 #include <thread>
+#include <fstream>
 
 XboxRenderStateConverter XboxRenderStates;
 XboxTextureStateConverter XboxTextureStates;
@@ -1472,6 +1473,47 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
 
 extern void HLE_init_pgraph_plugins(); // implemented in XbPushBuffer.cpp
 
+// FIXME move cache functions elsewhere
+std::filesystem::path GetVshCachePath() {
+	namespace fs = std::filesystem;
+
+	// Get unique title string
+	// Hash the loaded XBE's header, use it as a filename
+	uint64_t uiHash = ComputeHash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
+	std::stringstream sstream;
+	std::wstring wTitleName = CxbxKrnl_Xbe->m_Certificate.wsTitleName;
+	std::string titleName = std::string(wTitleName.begin(), wTitleName.end());
+	CxbxKrnl_Xbe->PurgeBadChar(titleName);
+
+	std::stringstream fileName;
+	fileName << titleName << "-" << std::hex << uiHash << ".vscache";
+
+	return fs::path(g_DataFilePath) / "Shaders" / fileName.str();
+}
+
+void LoadShaderCache() {
+	namespace fs = std::filesystem;
+	auto cachePath = GetVshCachePath();
+	std::ifstream f;
+	f.open(cachePath, std::fstream::in | std::fstream::binary);
+	if (f.is_open()) {
+		g_VertexShaderSource.DeserializeAndLoad(g_pD3DDevice, f);
+	}
+}
+
+void SaveShaderCache() {
+	namespace fs = std::filesystem;
+
+	auto cachePath = GetVshCachePath();
+	fs::create_directory(cachePath.parent_path());
+	std::ofstream f;
+	f.open(cachePath, std::fstream::out | std::fstream::binary | std::fstream::trunc);
+	if (f.is_open()) {
+		g_VertexShaderSource.Serialize(f);
+	}
+	f.flush();
+}
+
 // Direct3D initialization (called before emulation begins)
 void EmuD3DInit()
 {
@@ -1496,6 +1538,8 @@ void EmuD3DInit()
 		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
 		std::cout << "----------------------------------------\n";
 	}
+
+	LoadShaderCache();
 }
 
 // cleanup Direct3D
@@ -1879,6 +1923,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         break;
 
         case WM_CLOSE:
+			SaveShaderCache();
             CxbxReleaseCursor();
             DestroyWindow(hWnd);
             CxbxrShutDown();
