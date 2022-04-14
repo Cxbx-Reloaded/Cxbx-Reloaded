@@ -1538,8 +1538,6 @@ void EmuD3DInit()
 		std::cout << "Host D3DCaps : " << g_D3DCaps << "\n";
 		std::cout << "----------------------------------------\n";
 	}
-
-	LoadShaderCache();
 }
 
 // cleanup Direct3D
@@ -2214,6 +2212,7 @@ static void CreateDefaultD3D9Device
 
     // only one device should be created at once
     if (g_pD3DDevice != nullptr) {
+		SaveShaderCache();
         EmuLog(LOG_LEVEL::DEBUG, "CreateDefaultD3D9Device releasing old Device.");
 
         g_pD3DDevice->EndScene();
@@ -2321,6 +2320,7 @@ static void CreateDefaultD3D9Device
         LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_OCCLUSION) on host!");
     }
 
+	LoadShaderCache();
     DrawInitialBlackScreen();
 
     // Set up ImGui's render backend

@@ -1155,16 +1155,18 @@ void CxbxUpdateHostVertexShader()
 		HRESULT hRet;
 
 		if (g_UseFixedFunctionVertexShader) {
-			static IDirect3DVertexShader* ffHlsl = nullptr;
-			if (ffHlsl == nullptr) {
+			const ShaderKey ffKey = 0xFF;
+			static IDirect3DVertexShader* cachedShader = g_VertexShaderSource.GetShader(*g_pD3DDevice, ffKey);
+			if (!cachedShader) {
 				ID3DBlob* pBlob = nullptr;
 				EmuCompileFixedFunction(&pBlob);
 				if (pBlob) {
-					hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &ffHlsl);
+					hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &cachedShader);
 					if (FAILED(hRet)) CxbxrAbort("Failed to create fixed-function shader");
 				}
+				g_VertexShaderSource.RegisterShader(ffKey, cachedShader);
 			}
-			fixedFunctionShader = ffHlsl;
+			fixedFunctionShader = cachedShader;
 		}
 
 		hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);

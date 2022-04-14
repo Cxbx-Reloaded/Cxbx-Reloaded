@@ -8,6 +8,8 @@
 
 VertexShaderSource g_VertexShaderSource = VertexShaderSource();
 
+// FIXME tidy up responsibility between this and VertexShader.cpp
+
 // TODO The call pattern has changed.
 // CreateShader is no longer be called potentially long before we need the shader.
 // So there's no benefit in compiling shaders async?
@@ -29,8 +31,6 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
  bool VertexShaderSource::_FindShader(ShaderKey key, LazyVertexShader** ppLazyShader) {
 	auto it = cache.find(key);
 	if (it == cache.end()) {
-		// We didn't find anything! Was CreateShader called?
-		EmuLog(LOG_LEVEL::WARNING, "No vertex shader found for key %llx", key);
 		return false;
 	}
 
@@ -88,6 +88,20 @@ ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, 
 	return key;
 }
 
+void VertexShaderSource::RegisterShader(ShaderKey key, IDirect3DVertexShader9* pHostVertexShader) {
+	LazyVertexShader s;
+	s.isReady = true;
+	s.pHostVertexShader = pHostVertexShader;
+
+	LazyVertexShader* existing;
+	if (_FindShader(key, &existing)) {
+		EmuLog(LOG_LEVEL::WARNING, "Overwriting vertex shader %x", key);
+		if (pHostVertexShader)
+		existing->pHostVertexShader->Release();
+	}
+	cache[key] = std::move(s);
+}
+
 // Get a shader using the given key
 IDirect3DVertexShader* VertexShaderSource::GetShader(IDirect3DDevice9& pD3DDevice, ShaderKey key)
 {
@@ -95,6 +109,8 @@ IDirect3DVertexShader* VertexShaderSource::GetShader(IDirect3DDevice9& pD3DDevic
 
 	// Look for the shader in the cache
 	if (!_FindShader(key, &pLazyShader)) {
+		// We didn't find anything! Was CreateShader called?
+		EmuLog(LOG_LEVEL::DEBUG, "No vertex shader found for key %llx", key);
 		return nullptr; // we didn't find anything
 	}
 
@@ -266,14 +282,14 @@ void VertexShaderSource::DeserializeAndLoad(IDirect3DDevice9* pD3DDevice, std::i
 			in.read((char*)pCompiledShader->GetBufferPointer(), c.size);
 			in.ignore(1);
 
-			// Wrap the shader in a future...
-			auto wrapped = std::promise<ID3DBlob*>();
-			wrapped.set_value(pCompiledShader);
-
 			// Save cache entry
-			auto newShader = LazyVertexShader();
-			newShader.compileResult = wrapped.get_future();
-			cache[c.key] = std::move(newShader);
+			IDirect3DVertexShader9* pHostVertexShader;
+			if (SUCCEEDED(pD3DDevice->CreateVertexShader((DWORD*)pCompiledShader->GetBufferPointer(), &pHostVertexShader))) {
+				RegisterShader(c.key, pHostVertexShader);
+			}
+			else {
+				EmuLog(LOG_LEVEL::ERROR2, "Failed to load shader %x!", c.key);
+			}
 		}
 
 		EmuLog(LOG_LEVEL::INFO, "VSH cache loaded successfully.");

@@ -14,7 +14,10 @@ typedef uint64_t ShaderKey;
 class VertexShaderSource {
 
 public:
+	// Create from a shader program
 	ShaderKey CreateShader(const xbox::dword_xt* pXboxFunction, DWORD* pXboxFunctionSize);
+	// Register a shader directly. Used for the fixed function vertex shader
+	void RegisterShader(ShaderKey key, IDirect3DVertexShader9* pHostVertexShader);
 	IDirect3DVertexShader* GetShader(IDirect3DDevice9& pD3DDevice, ShaderKey key);
 	void ReleaseShader(ShaderKey key);
 
