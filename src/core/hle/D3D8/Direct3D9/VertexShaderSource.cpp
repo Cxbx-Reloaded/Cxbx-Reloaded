@@ -96,8 +96,9 @@ void VertexShaderSource::RegisterShader(ShaderKey key, IDirect3DVertexShader9* p
 	LazyVertexShader* existing;
 	if (_FindShader(key, &existing)) {
 		EmuLog(LOG_LEVEL::WARNING, "Overwriting vertex shader %x", key);
-		if (pHostVertexShader)
-		existing->pHostVertexShader->Release();
+		if (pHostVertexShader) {
+			existing->pHostVertexShader->Release();
+		}
 	}
 	cache[key] = std::move(s);
 }
@@ -234,14 +235,14 @@ void VertexShaderSource::Serialize(std::ostream& out) {
 		}
 	}
 	catch (...) {
-		EmuLog(LOG_LEVEL::INFO, "An error occurred serializing the VSH cache");
+		EmuLog(LOG_LEVEL::ERROR2, "An error occurred serializing the VSH cache");
 	}
 }
 
 void VertexShaderSource::DeserializeAndLoad(IDirect3DDevice9* pD3DDevice, std::istream& in) {
 	EmuLog(LOG_LEVEL::INFO, "Loading VSH cache...");
 
-	Header hExpected = CreateHeader();
+	const Header hExpected = CreateHeader();
 	Header hActual;
 	std::string line;
 	std::vector<char> shaderBuffer;
@@ -297,5 +298,4 @@ void VertexShaderSource::DeserializeAndLoad(IDirect3DDevice9* pD3DDevice, std::i
 	catch (...) {
 		EmuLog(LOG_LEVEL::ERROR2, "An error occurred deserializing the VSH cache!");
 	}
-
 }

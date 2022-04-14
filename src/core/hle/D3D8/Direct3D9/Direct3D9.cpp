@@ -1475,8 +1475,6 @@ extern void HLE_init_pgraph_plugins(); // implemented in XbPushBuffer.cpp
 
 // FIXME move cache functions elsewhere
 std::filesystem::path GetVshCachePath() {
-	namespace fs = std::filesystem;
-
 	// Get unique title string
 	// Hash the loaded XBE's header, use it as a filename
 	uint64_t uiHash = ComputeHash((void*)&CxbxKrnl_Xbe->m_Header, sizeof(Xbe::Header));
@@ -1488,11 +1486,10 @@ std::filesystem::path GetVshCachePath() {
 	std::stringstream fileName;
 	fileName << titleName << "-" << std::hex << uiHash << ".vscache";
 
-	return fs::path(g_DataFilePath) / "Shaders" / fileName.str();
+	return std::filesystem::path(g_DataFilePath) / "Shaders" / fileName.str();
 }
 
 void LoadShaderCache() {
-	namespace fs = std::filesystem;
 	auto cachePath = GetVshCachePath();
 	std::ifstream f;
 	f.open(cachePath, std::fstream::in | std::fstream::binary);
@@ -1505,10 +1502,8 @@ void LoadShaderCache() {
 }
 
 void SaveShaderCache() {
-	namespace fs = std::filesystem;
-
 	auto cachePath = GetVshCachePath();
-	fs::create_directory(cachePath.parent_path());
+	std::filesystem::create_directory(cachePath.parent_path());
 	std::ofstream f;
 	f.open(cachePath, std::fstream::out | std::fstream::binary | std::fstream::trunc);
 	if (f.is_open()) {
