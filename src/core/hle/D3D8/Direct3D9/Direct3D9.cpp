@@ -1499,6 +1499,9 @@ void LoadShaderCache() {
 	if (f.is_open()) {
 		g_VertexShaderSource.DeserializeAndLoad(g_pD3DDevice, f);
 	}
+	else {
+		EmuLog(LOG_LEVEL::INFO, "Could not open vertex shader cache path: %s", cachePath.string());
+	}
 }
 
 void SaveShaderCache() {
@@ -1510,6 +1513,9 @@ void SaveShaderCache() {
 	f.open(cachePath, std::fstream::out | std::fstream::binary | std::fstream::trunc);
 	if (f.is_open()) {
 		g_VertexShaderSource.Serialize(f);
+	}
+	else {
+		EmuLog(LOG_LEVEL::ERROR2, "Could not save to vertex shader cache path: %s", cachePath.string());
 	}
 	f.flush();
 }
