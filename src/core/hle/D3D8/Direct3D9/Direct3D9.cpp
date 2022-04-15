@@ -1486,7 +1486,7 @@ std::filesystem::path GetVshCachePath() {
 	std::stringstream fileName;
 	fileName << titleName << "-" << std::hex << uiHash << ".vscache";
 
-	return std::filesystem::path(g_DataFilePath) / "Shaders" / fileName.str();
+	return std::filesystem::path(g_DataFilePath) / "ShaderCache" / fileName.str();
 }
 
 void LoadShaderCache() {
