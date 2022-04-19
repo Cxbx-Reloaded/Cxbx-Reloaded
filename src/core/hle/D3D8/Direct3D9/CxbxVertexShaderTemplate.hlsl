@@ -369,8 +369,8 @@ R"DELIMITER(
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(clean(oD0));
 	xOut.oD1 = saturate(clean(oD1));
-	xOut.oFog = clean(fogFactor); // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
-	xOut.oPts = clean(oPts.x);
+	xOut.oFog = clean(fogFactor).x; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
+	xOut.oPts = clean(oPts.x).x;
 	xOut.oB0 = saturate(clean(oB0));
 	xOut.oB1 = saturate(clean(oB1));
 	// Scale textures
