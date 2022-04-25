@@ -174,7 +174,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreateBuffer)
 
         hRet = xbox::EMUPATCH(DirectSoundCreate)(nullptr, &g_pDSound8, nullptr);
         if (hRet != DS_OK) {
-            CxbxrKrnlAbort("Unable to initialize DirectSound!");
+            CxbxrAbort("Unable to initialize DirectSound!");
         }
     }
 
@@ -239,7 +239,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreateBuffer)
             EmuLog(LOG_LEVEL::WARNING, output.str().c_str());
             output.str("");
             output << static_cast<DS_RESULT>(hRet);
-            CxbxrKrnlAbort("DSB: DSoundBufferCreate error: %s", output.str().c_str());
+            CxbxrAbort("DSB: DSoundBufferCreate error: %s", output.str().c_str());
         }
         else {
             if (pdsbd->dwFlags & DSBCAPS_CTRL3D) {
@@ -584,7 +584,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(IDirectSoundBuffer_Play)
                         pThis->X_lock.dwLockBytes2);
 
     if (dwFlags & ~(X_DSBPLAY_LOOPING | X_DSBPLAY_FROMSTART | X_DSBPLAY_SYNCHPLAYBACK)) {
-        CxbxrKrnlAbort("Unsupported Playing Flags");
+        CxbxrAbort("Unsupported Playing Flags");
     }
     pThis->EmuPlayFlags = dwFlags;
 

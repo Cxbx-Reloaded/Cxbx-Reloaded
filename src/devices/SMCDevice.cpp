@@ -153,7 +153,7 @@ void SMCDevice::WriteByte(uint8_t command, uint8_t value)
 		switch (value) {
 		case SMC_RESET_ASSERT_RESET: return; // TODO
 		case SMC_RESET_ASSERT_POWERCYCLE: return; // TODO
-		case SMC_RESET_ASSERT_SHUTDOWN: CxbxKrnlShutDown(); return; // Power off, terminating the emulation
+		case SMC_RESET_ASSERT_SHUTDOWN: CxbxrShutDown(); return; // Power off, terminating the emulation
 		}
 	//case SMC_COMMAND_POWER_FAN_MODE: // 0x05 // power fan mode(0 = automatic; 1 = custom speed from reg 0x06)
 	//case SMC_COMMAND_POWER_FAN_REGISTER: // 0x06 // Set custom power fan speed (0-50)

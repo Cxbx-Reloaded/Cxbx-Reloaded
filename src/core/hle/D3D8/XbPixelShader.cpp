@@ -43,9 +43,10 @@
 #include "core\hle\D3D8\Direct3D9\PixelShader.h" // EmuCompilePixelShader
 #include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort()
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort()
 #include "util\hasher.h"
 #include "core\hle\D3D8\Direct3D9\FixedFunctionPixelShader.hlsli"
+#include "common/FilePaths.hpp" // For szFilePath_CxbxReloaded_Exe
 
 #include <assert.h> // assert()
 #include <process.h>
@@ -941,7 +942,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	IDirect3DPixelShader9* pShader = nullptr;
 	auto hRet = g_pD3DDevice->CreatePixelShader((DWORD*)pShaderBlob->GetBufferPointer(), &pShader);
 	if (hRet != S_OK)
-		CxbxrKrnlAbort("Failed to compile fixed function pixel shader");
+		CxbxrAbort("Failed to compile fixed function pixel shader");
 	pShaderBlob->Release();
 
 	// Insert the shader into the cache

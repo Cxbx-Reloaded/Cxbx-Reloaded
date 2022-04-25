@@ -259,7 +259,7 @@ void PoolManager::DeallocatePool(VAddr addr)
 	assert((Entry->PoolType & POOL_TYPE_MASK) != 0);
 
 	if (!IS_POOL_HEADER_MARKED_ALLOCATED(Entry)) {
-		CxbxrKrnlAbort("Pool at address 0x%X is already free!", addr);
+		CxbxrAbort("Pool at address 0x%X is already free!", addr);
 	}
 
 	MARK_POOL_HEADER_FREED(Entry);

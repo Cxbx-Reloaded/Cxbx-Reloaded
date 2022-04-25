@@ -52,7 +52,6 @@
 
 #include <cstring> // For memcpy
 #include "common\util\CxbxUtil.h"
-#include "core\kernel\init\CxbxKrnl.h"
 
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))

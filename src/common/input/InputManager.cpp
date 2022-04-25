@@ -35,8 +35,9 @@
 #define _XBOXKRNL_DEFEXTRN_
 #define LOG_PREFIX CXBXR_MODULE::INPSYS
 
-
 #include <core\kernel\exports\xboxkrnl.h> // For PKINTERRUPT, etc.
+#include "common/cxbxr.hpp"
+
 #include "SdlJoystick.h"
 #include "XInputPad.h"
 #include "RawDevice.h"
@@ -47,12 +48,17 @@
 #include "core\kernel\exports\EmuKrnl.h" // For EmuLog
 #include "EmuShared.h"
 #include "devices\usb\OHCI.h"
+#ifdef CXBXR_EMU
 #include "core/common/video/RenderBase.hpp"
+#endif
 #include <charconv>
 
 // hle input specific
 #include "core\hle\XAPI\Xapi.h"
 
+// Allocate enough memory for the max number of devices we can support simultaneously
+// 4 duke / S / sbc / arcade joystick / lightgun (mutually exclusive) + 8 memory units
+DeviceState g_devs[MAX_DEVS];
 
 int dev_num_buttons[to_underlying(XBOX_INPUT_DEVICE::DEVICE_MAX)] = {
 	XBOX_CTRL_NUM_BUTTONS, // MS_CONTROLLER_DUKE
@@ -78,11 +84,13 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 	m_hwnd = hwnd;
 
 	m_PollingThread = std::thread([this, is_gui]() {
+#ifdef CXBXR_EMU
 		// This code can run in both cxbx.exe and cxbxr-ldr.exe, but will not have
 		// the affinity policy when running in the former.
 		if (g_AffinityPolicy) {
 			g_AffinityPolicy->SetAffinityOther();
 		}
+#endif
 
 		XInput::Init(m_Mtx);
 		RawInput::Init(m_Mtx, is_gui, m_hwnd);
@@ -99,7 +107,7 @@ void InputDeviceManager::Initialize(bool is_gui, HWND hwnd)
 	lck.unlock();
 
 	if (Sdl::InitStatus < 0 || XInput::InitStatus < 0 || RawInput::InitStatus < 0 || Libusb::InitStatus < 0) {
-		CxbxrKrnlAbort("Failed to initialize input subsystem! Consult debug log for more information");
+		CxbxrAbort("Failed to initialize input subsystem! Consult debug log for more information");
 	}
 
 	UpdateOpt(is_gui);
@@ -367,7 +375,11 @@ bool InputDeviceManager::UpdateXboxPortInput(int port, void* buffer, int directi
 
 	// First check if ImGui is focus, then ignore any input update occur.
 	// If somebody else is currently holding the lock, we won't wait and instead report no input changes
-	if (!g_renderbase->IsImGuiFocus() && m_Mtx.try_lock()) {
+	if (
+#ifdef CXBXR_EMU
+		!g_renderbase->IsImGuiFocus() &&
+#endif
+		m_Mtx.try_lock()) {
 		for (auto &dev : m_Devices) {
 			std::string port_str = std::to_string(port);
 			if (dev->GetPort(port_str)) {

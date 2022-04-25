@@ -84,7 +84,7 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamN
 			uiCachedHostVertexStride);
 		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
-			CxbxrKrnlAbort("Failed to set the type patched buffer as the new stream source!\n");
+			CxbxrAbort("Failed to set the type patched buffer as the new stream source!\n");
 			// TODO : test-case : XDK Cartoon hits the above case when the vertex cache size is 0.
 		}
 	}
@@ -244,7 +244,7 @@ void CxbxVertexBufferConverter::ConvertStream
     if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {
 		// There should only be one stream (stream zero) in this case
 		if (XboxStreamNumber != 0) {
-			CxbxrKrnlAbort("Trying to patch a Draw..UP with more than stream zero!");
+			CxbxrAbort("Trying to patch a Draw..UP with more than stream zero!");
 		}
 
 		pXboxVertexData = (uint8_t *)pDrawContext->pXboxVertexStreamZeroData;
@@ -350,7 +350,7 @@ void CxbxVertexBufferConverter::ConvertStream
         pHostVertexData = (uint8_t*)malloc(dwHostVertexDataSize);
 
         if (pHostVertexData == nullptr) {
-            CxbxrKrnlAbort("Couldn't allocate the new stream zero buffer");
+            CxbxrAbort("Couldn't allocate the new stream zero buffer");
         }
     } else {
         HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
@@ -363,14 +363,14 @@ void CxbxVertexBufferConverter::ConvertStream
         );
 
         if (FAILED(hRet)) {
-            CxbxrKrnlAbort("Failed to create vertex buffer");
+            CxbxrAbort("Failed to create vertex buffer");
         }
     }
 
     // If we need to lock a host vertex buffer, do so now
     if (pHostVertexData == nullptr && pNewHostVertexBuffer != nullptr) {
         if (FAILED(pNewHostVertexBuffer->Lock(0, 0, (D3DLockData **)&pHostVertexData, D3DLOCK_DISCARD))) {
-            CxbxrKrnlAbort("Couldn't lock vertex buffer");
+            CxbxrAbort("Couldn't lock vertex buffer");
         }
     }
 	
@@ -609,7 +609,7 @@ void CxbxVertexBufferConverter::ConvertStream
 void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 {
 	if ((pDrawContext->XboxPrimitiveType < xbox::X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > xbox::X_D3DPT_POLYGON))
-		CxbxrKrnlAbort("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
+		CxbxrAbort("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
 

@@ -40,7 +40,7 @@ namespace NtDll
 #include "core\kernel\support\EmuNtDll.h"
 };
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort
 #include "core\kernel\exports\EmuKrnlKe.h"
 #include "EmuKrnlKi.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
@@ -759,7 +759,7 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		}
 
 		if (!X_NT_SUCCESS(status)) {
-			CxbxrKrnlAbort("NtDll::NtDuplicateObject failed to duplicate the handle 0x%.8X!", SourceHandle);
+			CxbxrAbort("NtDll::NtDuplicateObject failed to duplicate the handle 0x%.8X!", SourceHandle);
 		}
 	}
 
@@ -1087,7 +1087,7 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 	NTSTATUS ret;
 
 	if (FileInformationClass != FileDirectoryInformation)   // Due to unicode->string conversion
-		CxbxrKrnlAbort("Unsupported FileInformationClass");
+		CxbxrAbort("Unsupported FileInformationClass");
 
 	NtDll::UNICODE_STRING NtFileMask;
 

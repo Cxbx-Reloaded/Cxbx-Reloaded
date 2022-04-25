@@ -29,6 +29,8 @@
 
 #define LOG_PREFIX CXBXR_MODULE::GUI
 
+#include "common/cxbxr.hpp" // for CxbxrExec
+
 #include "Logging.h"
 #include "WndMain.h"
 #include "DlgAbout.h"
@@ -45,8 +47,8 @@
 #include "common\Settings.hpp"
 #include "common/util/cliConfig.hpp"
 #include "common/win32/WineEnv.h"
+#include "common/xbe/XbePrinter.h" // for FormatTitleId
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxExec
 #include "resource/ResCxbx.h"
 #include "CxbxVersion.h"
 #include "Shlwapi.h"
@@ -1225,12 +1227,6 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 #endif
-			case ID_USELOADEREXEC:
-			{
-				g_Settings->m_core.bUseLoaderExec = !g_Settings->m_core.bUseLoaderExec;
-				RefreshMenus();
-			}
-			break;
 
             case ID_EMULATION_START:
                 if (m_Xbe != nullptr)
@@ -1693,9 +1689,6 @@ void WndMain::RefreshMenus()
 			//chk_flag = (g_Settings->m_core.FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED; // Reenable this when LLE USB actually works
 			//CheckMenuItem(settings_menu, ID_EMULATION_LLE_USB, chk_flag);
 
-			chk_flag = g_Settings->m_core.bUseLoaderExec ? MF_CHECKED : MF_UNCHECKED;
-			CheckMenuItem(settings_menu, ID_USELOADEREXEC, chk_flag);
-
 			chk_flag = (g_Settings->m_hacks.DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);
 
@@ -1852,8 +1845,6 @@ void WndMain::UpdateRecentFiles()
         }
     }
 }
-
-extern std::string FormatTitleId(uint32_t title_id);
 
 void WndMain::UpdateCaption()
 {
@@ -2233,10 +2224,8 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
 
 		char szExeFileName[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(nullptr), szExeFileName, MAX_PATH);
-		if (g_Settings->m_core.bUseLoaderExec) {
-			PathRemoveFileSpec(szExeFileName);
-			PathAppend(szExeFileName, "\\cxbxr-ldr.exe");
-		}
+		PathRemoveFileSpec(szExeFileName);
+		PathAppend(szExeFileName, "\\cxbxr-ldr.exe");
 
 		bool AttachLocalDebugger = (LocalDebuggerState == debuggerOn);
 		g_EmuShared->SetDebuggingFlag(AttachLocalDebugger);
@@ -2260,7 +2249,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
             // Check then close existing debugger monitor.
             DebuggerMonitorClose();
 
-            if (CxbxExec(true, &m_hDebuggerProc, true)) {
+            if (CxbxrExec(true, &m_hDebuggerProc, true)) {
                 PopupError(m_hwnd, "Failed to start emulation with the debugger.\n\nYou will need to build CxbxDebugger manually.");
 
                 printf("WndMain: %s debugger shell failed.\n", m_Xbe->m_szAsciiTitle);
@@ -2273,7 +2262,7 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         }
         else {
 
-            if (const auto &err = CxbxExec(false, nullptr, false)) {
+            if (const auto &err = CxbxrExec(false, nullptr, false)) {
                 PopupError(m_hwnd, err->c_str());
 
                 printf("WndMain: %s shell failed.\n", m_Xbe->m_szAsciiTitle);
@@ -2318,8 +2307,6 @@ void WndMain::StopEmulation()
 // wrapper function to call CrashMonitor
 DWORD WndMain::CrashMonitorWrapper(LPVOID lpParam)
 {
-	CxbxSetThreadName("Cxbx Crash Monitor");
-
 	Crash_Manager_Data* pCMD = (Crash_Manager_Data*)lpParam;
 	static_cast<WndMain*>(pCMD->pWndMain)->m_iIsEmulating++; // Multi-xbe boots usage check
 	static_cast<WndMain*>(pCMD->pWndMain)->CrashMonitor(pCMD->dwChildProcID);
@@ -2377,7 +2364,6 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 // monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)
 DWORD WndMain::DebuggerMonitor(LPVOID lpVoid)
 {
-	CxbxSetThreadName("Cxbx Debugger Monitor");
 	WndMain* pThis = static_cast<WndMain*>(lpVoid);
 
 	if (pThis->m_hDebuggerProc != nullptr) {

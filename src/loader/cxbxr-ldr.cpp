@@ -47,6 +47,8 @@
 // and the executable doesn't contain any data that we refer too once we entered the emulation DLL,
 // this will be all right. The only bit of data I transfer over, is on the stack, but the stack
 // (of the initial thread) resides far outside of the reserved range, so that's all right too.
+// Note : Old setup is removed in this commit, see git blame to look at src/common/ReservedMemory.h file.
+// Which was used in cxbx.exe project.
 unsigned char virtual_memory_placeholder[VM_PLACEHOLDER_SIZE] = { 0 }; // = { OPCODE_NOP_90 };
 
 // Note : This executable is meant to be as tiny as humanly possible.

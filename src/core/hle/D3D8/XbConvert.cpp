@@ -1047,7 +1047,7 @@ D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 	case ((xbox::X_D3DFORMAT)0xffffffff):
 		return D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
-		CxbxrKrnlAbort("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
+		CxbxrAbort("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
 	}
 
 	return D3DFMT_UNKNOWN;
@@ -1056,8 +1056,8 @@ D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 {
 	xbox::X_D3DFORMAT result;
-    switch(Format)
-    {
+	switch(Format)
+	{
 	case D3DFMT_YUY2:
 		result = xbox::X_D3DFMT_YUY2;
 		break;
@@ -1129,10 +1129,10 @@ xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
 		result = xbox::X_D3DFMT_VERTEXDATA;
 		break;
 	default:
-		CxbxrKrnlAbort("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
-    }
+		CxbxrAbort("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
+	}
 
-    return result;
+	return result;
 }
 
 DWORD EmuXB2PC_D3DLock(DWORD Flags)
@@ -1590,6 +1590,221 @@ Direct3D9 states unused :
 	D3DRS_DESTBLENDALPHA = 208,  // DST blend factor for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
 	D3DRS_BLENDOPALPHA = 209   // Blending operation for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
 */
+
+static xbox::PVOID g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
+
+xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::dword_xt XboxPixelContainer_Format)
+{
+	xbox::X_D3DFORMAT d3d_format = (xbox::X_D3DFORMAT)((XboxPixelContainer_Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
+	return d3d_format;
+}
+
+xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::X_D3DPixelContainer* pXboxPixelContainer)
+{
+	// Don't pass in unassigned Xbox pixel container
+	assert(pXboxPixelContainer != xbox::zeroptr);
+
+	return GetXboxPixelContainerFormat(pXboxPixelContainer->Format);
+}
+
+void CxbxGetPixelContainerMeasures
+(
+	xbox::X_D3DPixelContainer* pPixelContainer,
+	// TODO : Add X_D3DCUBEMAP_FACES argument
+	DWORD dwMipMapLevel, // unused - TODO : Use
+	UINT* pWidth,
+	UINT* pHeight,
+	UINT* pDepth,
+	UINT* pRowPitch,
+	UINT* pSlicePitch
+)
+{
+	DWORD Size = pPixelContainer->Size;
+	xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
+
+	if (Size != 0)
+	{
+		*pDepth = 1;
+		*pWidth = ((Size & X_D3DSIZE_WIDTH_MASK) /* >> X_D3DSIZE_WIDTH_SHIFT*/) + 1;
+		*pHeight = ((Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+		*pRowPitch = (((Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
+	}
+	else
+	{
+		DWORD l2w = (pPixelContainer->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT;
+		DWORD l2h = (pPixelContainer->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT;
+		DWORD l2d = (pPixelContainer->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT;
+		DWORD dwBPP = EmuXBFormatBitsPerPixel(X_Format);
+
+		*pDepth = 1 << l2d;
+		*pHeight = 1 << l2h;
+		*pWidth = 1 << l2w;
+		*pRowPitch = (*pWidth) * dwBPP / 8;
+	}
+
+	*pSlicePitch = (*pRowPitch) * (*pHeight);
+
+	if (EmuXBFormatIsCompressed(X_Format)) {
+		*pRowPitch *= 4;
+	}
+}
+
+bool ConvertD3DTextureToARGBBuffer(
+	xbox::X_D3DFORMAT X_Format,
+	uint8_t* pSrc,
+	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
+	uint8_t* pDst, int DstRowPitch, int DstSlicePitch,
+	unsigned int uiDepth ,
+	int iTextureStage
+)
+{
+	const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+	if (ConvertRowToARGB == nullptr)
+		return false; // Unhandled conversion
+
+	uint8_t* unswizleBuffer = nullptr;
+	if (EmuXBFormatIsSwizzled(X_Format)) {
+		unswizleBuffer = (uint8_t*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
+		// First we need to unswizzle the texture data
+		EmuUnswizzleBox(
+			pSrc, SrcWidth, SrcHeight, uiDepth,
+			EmuXBFormatBytesPerPixel(X_Format),
+			// Note : use src pitch on dest, because this is an intermediate step :
+			unswizleBuffer, SrcRowPitch, SrcSlicePitch
+		);
+		// Convert colors from the unswizzled buffer
+		pSrc = unswizleBuffer;
+	}
+
+	int AdditionalArgument;
+	if (X_Format == xbox::X_D3DFMT_P8)
+		AdditionalArgument = (int)g_pXbox_Palette_Data[iTextureStage];
+	else
+		AdditionalArgument = DstRowPitch;
+
+	if (EmuXBFormatIsCompressed(X_Format)) {
+		if (SrcWidth < 4 || SrcHeight < 4) {
+			// HACK: The compressed DXT conversion code currently writes more pixels than it should, which can cause a crash.
+			// This code will get hit when converting compressed texture mipmaps on hardware that somehow doesn't support DXT natively
+			// (or lied when Cxbx asked it if it does!)
+			EmuLog(LOG_LEVEL::WARNING, "Converting DXT textures smaller than a block is not currently implemented. Ignoring conversion!");
+			return true;
+		}
+
+		// All compressed formats (DXT1, DXT3 and DXT5) encode blocks of 4 pixels on 4 lines
+		SrcHeight = (SrcHeight + 3) / 4;
+		DstRowPitch *= 4;
+	}
+
+	uint8_t* pSrcSlice = pSrc;
+	uint8_t* pDstSlice = pDst;
+	for (unsigned int z = 0; z < uiDepth; z++) {
+		uint8_t* pSrcRow = pSrcSlice;
+		uint8_t* pDstRow = pDstSlice;
+		for (int y = 0; y < SrcHeight; y++) {
+			*(int*)pDstRow = AdditionalArgument; // Dirty hack, to avoid an extra parameter to all conversion callbacks
+			ConvertRowToARGB(pSrcRow, pDstRow, SrcWidth);
+			pSrcRow += SrcRowPitch;
+			pDstRow += DstRowPitch;
+		}
+
+		pSrcSlice += SrcSlicePitch;
+		pDstSlice += DstSlicePitch;
+	}
+
+	if (unswizleBuffer)
+		free(unswizleBuffer);
+
+	return true;
+}
+
+// Called by WndMain::LoadGameLogo() to load game logo bitmap
+uint8_t* ConvertD3DTextureToARGB(
+	xbox::X_D3DPixelContainer* pXboxPixelContainer,
+	uint8_t* pSrc,
+	int* pWidth, int* pHeight,
+	int TextureStage // default = 0
+)
+{
+	// Avoid allocating pDest when ConvertD3DTextureToARGBBuffer will fail anyway
+	xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxPixelContainer);
+	const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
+	if (ConvertRowToARGB == nullptr)
+		return nullptr; // Unhandled conversion
+
+	unsigned int SrcDepth, SrcRowPitch, SrcSlicePitch;
+	CxbxGetPixelContainerMeasures(
+		pXboxPixelContainer,
+		0, // dwMipMapLevel
+		(UINT*)pWidth,
+		(UINT*)pHeight,
+		&SrcDepth,
+		&SrcRowPitch,
+		&SrcSlicePitch
+	);
+
+	// Now we know ConvertD3DTextureToARGBBuffer will do it's thing, allocate the resulting buffer
+	int DstDepth = 1; // for now TODO : Use SrcDepth when supporting volume textures
+	int DstRowPitch = (*pWidth) * sizeof(DWORD); // = sizeof ARGB pixel. TODO : Is this correct?
+	int DstSlicePitch = DstRowPitch * (*pHeight); // TODO : Is this correct?
+	int DstSize = DstSlicePitch * DstDepth;
+	uint8_t* pDst = (uint8_t*)malloc(DstSize);
+
+	// And convert the source towards that buffer
+	/*ignore result*/ConvertD3DTextureToARGBBuffer(
+		X_Format,
+		pSrc, *pWidth, *pHeight, SrcRowPitch, SrcSlicePitch,
+		pDst, DstRowPitch, DstSlicePitch,
+		DstDepth,
+		TextureStage);
+
+	// NOTE : Caller must take ownership!
+	return pDst;
+}
+
+void CxbxSetPixelContainerHeader
+(
+	xbox::X_D3DPixelContainer* pPixelContainer,
+	DWORD				Common,
+	UINT				Width,
+	UINT				Height,
+	UINT				Levels,
+	xbox::X_D3DFORMAT	Format,
+	UINT				Dimensions,
+	UINT				Pitch
+)
+{
+	// Set X_D3DResource field(s) :
+	pPixelContainer->Common = Common;
+	// DON'T SET pPixelContainer->Data
+	// DON'T SET pPixelContainer->Lock
+
+	// Are Width and Height both a power of two?
+	DWORD l2w; _BitScanReverse(&l2w, Width); // MSVC intrinsic; GCC has __builtin_clz
+	DWORD l2h; _BitScanReverse(&l2h, Height);
+	DWORD l2d = 0; // TODO : Set this via input argument
+	if (((1 << l2w) == Width) && ((1 << l2h) == Height)) {
+		Width = Height = Pitch = 1; // When setting Format, clear Size field
+	}
+	else {
+		l2w = l2h = l2d = 0; // When setting Size, clear D3DFORMAT_USIZE, VSIZE and PSIZE
+	}
+
+	// Set X_D3DPixelContainer field(s) :
+	pPixelContainer->Format = 0
+		| ((Dimensions << X_D3DFORMAT_DIMENSION_SHIFT) & X_D3DFORMAT_DIMENSION_MASK)
+		| (((DWORD)Format << X_D3DFORMAT_FORMAT_SHIFT) & X_D3DFORMAT_FORMAT_MASK)
+		| ((Levels << X_D3DFORMAT_MIPMAP_SHIFT) & X_D3DFORMAT_MIPMAP_MASK)
+		| ((l2w << X_D3DFORMAT_USIZE_SHIFT) & X_D3DFORMAT_USIZE_MASK)
+		| ((l2h << X_D3DFORMAT_VSIZE_SHIFT) & X_D3DFORMAT_VSIZE_MASK)
+		| ((l2d << X_D3DFORMAT_PSIZE_SHIFT) & X_D3DFORMAT_PSIZE_MASK)
+		;
+	pPixelContainer->Size = 0
+		| (((Width - 1) /*X_D3DSIZE_WIDTH_SHIFT*/) & X_D3DSIZE_WIDTH_MASK)
+		| (((Height - 1) << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK)
+		| (((Pitch - 1) << X_D3DSIZE_PITCH_SHIFT) & X_D3DSIZE_PITCH_MASK)
+		;
+}
 
 #if 0
 /* Generic swizzle function, usable for both x and y dimensions.

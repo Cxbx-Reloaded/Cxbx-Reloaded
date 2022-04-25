@@ -75,7 +75,7 @@ namespace NtDll
 	#include "core\kernel\support\EmuNtDll.h" // For NtDelayExecution(), etc.
 };
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InitializeListHead(), etc.
 #include "EmuKrnlKe.h"
@@ -615,7 +615,7 @@ XBSYSAPI EXPORTNUM(96) xbox::ntstatus_xt NTAPI xbox::KeBugCheckEx
 	int result = MessageBoxA(g_hEmuWindow, buffer, "KeBugCheck", MB_YESNO | MB_ICONWARNING);
 
 	if (result == IDNO)	{
-		CxbxrKrnlAbort(NULL);
+		CxbxrAbort(NULL);
 	}
 
 	KeBugCheckIgnored = true;

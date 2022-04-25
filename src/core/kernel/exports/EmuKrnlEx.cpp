@@ -41,7 +41,7 @@ namespace NtDll
 	#include "core\kernel\support\EmuNtDll.h" // For NtDelayExecution(), etc.
 };
 
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "EmuKrnl.h" // For InsertHeadList, InsertTailList, RemoveHeadList
 

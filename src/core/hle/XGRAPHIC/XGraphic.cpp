@@ -31,7 +31,7 @@
 
 #include "core\kernel\support\Emu.h"
 #include "common\Logging.h"
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxrKrnlAbort()
+#include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort()
 #include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 #include "core\hle\D3D8\XbD3D8Logging.h" // for log rendering of X_D3DFORMAT, etc.
 #include "core\hle\XGRAPHIC\XGraphic.h"
@@ -84,7 +84,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XGSwizzleRect)
     else
     {
         if(pPoint != NULL && (pPoint->x != 0 || pPoint->y != 0))
-            CxbxrKrnlAbort("Temporarily unsupported swizzle (very easy fix)");
+            CxbxrAbort("Temporarily unsupported swizzle (very easy fix)");
 
         DWORD dwMaxY = Height;
         DWORD dwChunkSize = Width;
@@ -150,7 +150,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XGSwizzleBox)
 		else
 		{
 			if(pPoint != NULL && (pPoint->u != 0 || pPoint->v != 0 || pPoint->w != 0))
-				CxbxrKrnlAbort("Temporarily unsupported swizzle (very easy fix)");
+				CxbxrAbort("Temporarily unsupported swizzle (very easy fix)");
 
 			DWORD dwMaxY = Height;
 			DWORD dwMaxZ = Depth;
@@ -232,10 +232,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XGSetTextureHeader)
 		LOG_FUNC_END;
 
 	/*if( Data != 0 )
-		CxbxrKrnlAbort("Data != 0 (XGSetTextureHeader)" );
+		CxbxrAbort("Data != 0 (XGSetTextureHeader)" );
 
 	if( Pitch != 0 )
-		CxbxrKrnlAbort("Pitch != 0 (XGSetTextureHeader)" );*/
+		CxbxrAbort("Pitch != 0 (XGSetTextureHeader)" );*/
 
 	pTexture->Common = X_D3DCOMMON_TYPE_TEXTURE + 1; // Set refcount to 1
 	pTexture->Data = Data;

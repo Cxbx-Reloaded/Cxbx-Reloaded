@@ -78,14 +78,9 @@ file (GLOB RESOURCES
  "${CXBXR_ROOT_DIR}/src/.editorconfig"
 )
 
-source_group(TREE ${CXBXR_ROOT_DIR}/import PREFIX import FILES
- ${CXBXR_HEADER_EMU_IMPORT}
-)
-
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES
  ${CXBXR_HEADER_GUIv1}
  ${CXBXR_HEADER_COMMON}
- ${CXBXR_HEADER_EMU}
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR}/import PREFIX import FILES
@@ -95,7 +90,6 @@ source_group(TREE ${CXBXR_ROOT_DIR}/import PREFIX import FILES
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES 
  ${CXBXR_SOURCE_GUIv1}
  ${CXBXR_SOURCE_COMMON}
- ${CXBXR_SOURCE_EMU}
 )
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
@@ -103,12 +97,8 @@ source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
 add_executable(cxbx WIN32 ${RESOURCES}
  ${CXBXR_HEADER_GUIv1}
  ${CXBXR_HEADER_COMMON}
- ${CXBXR_HEADER_EMU_IMPORT}
- ${CXBXR_HEADER_EMU}
  ${CXBXR_SOURCE_GUIv1}
  ${CXBXR_SOURCE_COMMON}
- ${CXBXR_SOURCE_EMU_IMPORT}
- ${CXBXR_SOURCE_EMU}
  ${CXBXR_GIT_VERSION_H}
 )
 
@@ -118,15 +108,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
  set_target_properties(cxbx PROPERTIES
   LINK_FLAGS "
-  /INCREMENTAL:NO \
-  /LARGEADDRESSAWARE \
-  /FIXED \
-  /SAFESEH:NO \
-  /DYNAMICBASE:NO \
-  /BASE:0x10000 \
-  /STACK:65536,65536 \
   /NODEFAULTLIB:libcmt \
-  /DELAYLOAD:wpcap.dll \
   "
   LINK_FLAGS_RELEASE "
   /LTCG \
@@ -185,7 +167,6 @@ set(WINS_LIB
  comctl32
  XINPUT9_1_0
  Iphlpapi
- wpcap
 )
 
 target_link_libraries(cxbx

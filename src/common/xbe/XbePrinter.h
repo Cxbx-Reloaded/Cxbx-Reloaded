@@ -30,6 +30,8 @@
 
 #include <cstdio>
 
+extern std::string FormatTitleId(uint32_t title_id);
+
 extern std::string DumpInformation(Xbe* Xbe_object);
 
 class XbePrinter

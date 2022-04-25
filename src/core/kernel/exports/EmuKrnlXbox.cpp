@@ -26,11 +26,7 @@
 // *
 // ******************************************************************
 
-#define LOG_PREFIX CXBXR_MODULE::XBOX
-
-
-#include <core\kernel\exports\xboxkrnl.h> // For XboxEEPROMKey, etc.
-#include "Logging.h"
+#include <core\kernel\common\xbox.h> // For XboxEEPROMKey, etc.
 
 // Certificate Key
 // Not exported but used to generate per-title keys

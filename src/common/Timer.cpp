@@ -35,7 +35,6 @@
 #include <mutex>
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
-#include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\EmuFS.h"
 #ifdef __linux__
 #include <time.h>

@@ -34,7 +34,6 @@
 #include <locale> // For ctime
 #include <array>
 #include "devices\LED.h" // For LED::Sequence
-#include "core\kernel\init\CxbxKrnl.h" // For CxbxKrnlPrintUEM
 #include "common\crypto\EmuSha.h" // For the SHA functions
 #include "common\crypto\EmuRsa.h" // For the RSA functions
 #include "core\hle\XAPI\Xapi.h" // For LDT_FROM_DASHBOARD
@@ -44,7 +43,9 @@
 
 namespace fs = std::filesystem;
 
-
+#ifdef CXBXR_EMU
+extern "C" void CxbxKrnlPrintUEM(ULONG);
+#endif
 
 // construct via Xbe file
 Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
@@ -63,12 +64,13 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 		using namespace fs; // limit its scope inside here
 
 		std::string XbeName = path(x_szFilename).filename().string(); // recover the xbe name
-
 		// NOTE: the check for the existence of the child window is necessary because the user could have previously loaded the dashboard,
 		// removed/changed the path and attempt to load it again from the recent list, which will crash CxbxInitWindow below
 		// Note that GetHwnd(), CxbxKrnl_hEmuParent and HalReturnToFirmware are all not suitable here for various reasons 
-		if (XbeName.compare(std::string("xboxdash.xbe")) == 0 && !bFromGUI)
-		{
+		if (XbeName.compare(std::string("xboxdash.xbe")) == 0
+#ifdef CXBXR_EMU
+			&& !bFromGUI
+			) {
 			// The dashboard could not be found on partition2. This is a fatal error on the Xbox so we display the UEM. The
 			// error code is different if we have a launch data page
 
@@ -86,8 +88,10 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
 			// TODO: FATAL_ERROR_XBE_DASH_X2_PASS (requires DVD drive authentication emulation...)
 		}
-		else
-		{
+		else {
+#else
+			) {
+#endif
 			// Report which xbe could not be found
 			SetFatalError(std::string("Could not open the Xbe file ") + XbeName);
 			return;

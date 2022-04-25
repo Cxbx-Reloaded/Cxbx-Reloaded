@@ -44,6 +44,7 @@
 #include "Intercept.hpp"
 #include "Patches.hpp"
 #include "common\util\hasher.h"
+#include "common/FilePaths.hpp"
 
 #include <Shlwapi.h>
 #include <shlobj.h>
@@ -191,7 +192,7 @@ void CDECL EmuOutputMessage(xb_output_message mFlag,
             break;
         }
         case XB_OUTPUT_MESSAGE_ERROR: {
-            CxbxrKrnlAbort("%s", message);
+            CxbxrAbort("%s", message);
             break;
         }
         case XB_OUTPUT_MESSAGE_DEBUG:
@@ -383,7 +384,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	// Make sure the Symbol Cache directory exists
 	std::string cachePath = g_DataFilePath + "\\SymbolCache\\";
 	if (!std::filesystem::exists(cachePath) && !std::filesystem::create_directory(cachePath)) {
-		CxbxrKrnlAbort("Couldn't create Cxbx-Reloaded SymbolCache folder!");
+		CxbxrAbort("Couldn't create Cxbx-Reloaded SymbolCache folder!");
 	}
 
 	// Hash the loaded XBE's header, use it as a filename

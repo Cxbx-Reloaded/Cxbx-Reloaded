@@ -103,7 +103,7 @@ public:
 		char szStorageLocation[xbox::max_path] = "";
         unsigned int LoggedModules[NUM_INTEGERS_LOG];
 		int LogLevel = 1;
-		bool bUseLoaderExec;
+		bool bUnused_WasUseLoaderExec;
 		bool allowAdminPrivilege;
 		bool bLogPopupTestCase;
 		bool Reserved4 = 0;

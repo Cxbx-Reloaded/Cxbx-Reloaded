@@ -30,9 +30,10 @@
 #include <fstream>
 #include <cstring> // For memcpy
 #include "EmuEEPROM.h" // For EEPROMInfo, EEPROMInfos
-#include "core\kernel\init\CxbxKrnl.h"
+#include "core/kernel/support/EmuFile.h"
 #include "DlgEepromConfig.h"
 #include "resource/ResCxbx.h"
+#include "common/FilePaths.hpp"
 #include "common/Logging.h"
 #include <Commctrl.h>
 
