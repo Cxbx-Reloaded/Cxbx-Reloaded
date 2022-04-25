@@ -52,7 +52,12 @@ static_assert(false, "Please implement support for cross-platform's user profile
 uint16_t g_LibVersion_D3D8 = 0;
 uint16_t g_LibVersion_DSOUND = 0;
 
-// NOTE: Update settings_version when add/edit/delete setting's structure.
+// NOTE: Update settings_version when conversion to setting's structure is required.
+// UPDATE: When settings are removed, use "if (use false && settings_version < {next_version}) {" statement
+//         until existing settings require replacement or conversion. next_version input is a hardcode number.
+//         Settings version 10 and later should consider as not backward compatible.
+// TODO: Add read-only state when using an older build and add a notification for will not be able save to file.
+//       The sooner we do this, the better before version upgrade.
 ///////////////////////////
 // * History:
 // * 2: (RadWolfie), initial version
@@ -96,7 +101,6 @@ static struct {
 	const char* AllowAdminPrivilege = "AllowAdminPrivilege";
 	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
-	const char* LoaderExecutable = "LoaderExecutable";
 	const char* LogPopupTestCase = "LogPopupTestCase";
 } sect_core_keys;
 
@@ -1022,5 +1026,10 @@ void Settings::RemoveLegacyConfigs(unsigned int CurrentRevision)
 
 	if(CurrentRevision < 9) {
 		m_si.Delete(section_video, "HardwareYUV", true);
+	}
+
+	// see settings_version for details.
+	if(false && CurrentRevision < 10) {
+		m_si.Delete(section_core, "LoaderExecutable", true);
 	}
 }
