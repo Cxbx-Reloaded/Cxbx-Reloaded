@@ -257,6 +257,7 @@ void VertexShaderSource::DeserializeAndLoad(IDirect3DDevice9* pD3DDevice, std::i
 		}
 		if (hActual.version != hExpected.version) {
 			EmuLog(LOG_LEVEL::INFO, "VSH cache version mismatch. The cache will not be loaded.");
+			return;
 		}
 
 		while (in.peek() != EOF) {

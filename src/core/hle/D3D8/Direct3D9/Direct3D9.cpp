@@ -1508,11 +1508,11 @@ void SaveShaderCache() {
 	f.open(cachePath, std::fstream::out | std::fstream::binary | std::fstream::trunc);
 	if (f.is_open()) {
 		g_VertexShaderSource.Serialize(f);
+		f.flush();
 	}
 	else {
 		EmuLog(LOG_LEVEL::ERROR2, "Could not save to vertex shader cache path: %s", cachePath.string());
 	}
-	f.flush();
 }
 
 // Direct3D initialization (called before emulation begins)
