@@ -23,8 +23,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef CXBXUTIL_H
-#define CXBXUTIL_H
+#pragma once
 
 #include "xbox_types.h"
 #include "Cxbx.h"
@@ -33,6 +32,8 @@
 #include <string>
 #include <type_traits>
 #include "std_extend.hpp" // for ARRAY_SIZE
+
+#include <thread> // for yield
 
 /* This is a linux struct for vectored I/O. See readv() and writev() */
 struct IoVec
@@ -103,4 +104,33 @@ constexpr std::size_t longest_str(const std::vector<std::string_view> &vec)
 	}
 }
 
-#endif
+namespace util {
+
+	// Due to C++20 Semaphore doesn't work within our supported OS range,
+	// we have to replace it with our alternative binary semaphore.
+	// Test case: Windows 7
+	template<int _unused = 0>
+	class counting_semaphore {};
+	template<>
+	class counting_semaphore<1> {
+	private:
+		std::atomic_bool signal;
+	public:
+		constexpr explicit counting_semaphore(const bool _Desired) : signal(_Desired)
+		{
+		}
+		counting_semaphore(const counting_semaphore&) = delete;
+		counting_semaphore& operator=(const counting_semaphore&) = delete;
+		void release()
+		{
+			signal.store(1);
+		}
+		void acquire()
+		{
+			while (!signal.exchange(0)) {
+				std::this_thread::yield();
+			}
+		}
+	};
+	using binary_semaphore = counting_semaphore<1>;
+}

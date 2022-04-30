@@ -45,8 +45,6 @@
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
 #include "core\kernel\support\NativeHandle.h"
 
-#include <semaphore>
-
 // prevent name collisions
 namespace NtDll
 {
@@ -60,7 +58,7 @@ typedef struct _PCSTProxyParam
 {
 	IN xbox::PVOID  Ethread;
 	IN xbox::ulong_xt TlsDataSize;
-	IN OUT std::binary_semaphore* signal;
+	IN OUT util::binary_semaphore* signal;
 }
 PCSTProxyParam;
 
@@ -373,7 +371,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	KeInitializeThread(&eThread->Tcb, KernelStack, KernelStackSize, TlsDataSize, SystemRoutine, StartRoutine, StartContext, &KiUniqueProcess);
 
 	// Create binary_semaphore to allow new thread setup non-kthread switching.
-	std::binary_semaphore signal{0};
+	util::binary_semaphore signal{0};
 
 	// PCSTProxy is responsible for cleaning up this pointer
 	PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
