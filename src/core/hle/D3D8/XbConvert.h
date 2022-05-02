@@ -1830,7 +1830,7 @@ extern bool ConvertD3DTextureToARGBBuffer(
 	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
 	uint8_t* pDst, int DstRowPitch, int DstSlicePitch,
 	unsigned int uiDepth = 1,
-	int iTextureStage = 0
+	xbox::PVOID pPalleteData = xbox::zeroptr
 );
 
 extern void CxbxSetPixelContainerHeader
@@ -1849,7 +1849,7 @@ extern uint8_t* ConvertD3DTextureToARGB(
 	xbox::X_D3DPixelContainer* pXboxPixelContainer,
 	uint8_t* pSrc,
 	int* pWidth, int* pHeight,
-	int TextureStage = 0
+	xbox::PVOID pPalleteData = xbox::zeroptr
 );
 
 #endif

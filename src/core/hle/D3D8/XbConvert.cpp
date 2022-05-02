@@ -1591,8 +1591,6 @@ Direct3D9 states unused :
 	D3DRS_BLENDOPALPHA = 209   // Blending operation for the alpha channel when D3DRS_SEPARATEDESTALPHAENABLE is TRUE
 */
 
-static xbox::PVOID g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
-
 xbox::X_D3DFORMAT GetXboxPixelContainerFormat(const xbox::dword_xt XboxPixelContainer_Format)
 {
 	xbox::X_D3DFORMAT d3d_format = (xbox::X_D3DFORMAT)((XboxPixelContainer_Format & X_D3DFORMAT_FORMAT_MASK) >> X_D3DFORMAT_FORMAT_SHIFT);
@@ -1655,7 +1653,7 @@ bool ConvertD3DTextureToARGBBuffer(
 	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
 	uint8_t* pDst, int DstRowPitch, int DstSlicePitch,
 	unsigned int uiDepth ,
-	int iTextureStage
+	xbox::PVOID pPalleteData
 )
 {
 	const FormatToARGBRow ConvertRowToARGB = EmuXBFormatComponentConverter(X_Format);
@@ -1678,7 +1676,7 @@ bool ConvertD3DTextureToARGBBuffer(
 
 	int AdditionalArgument;
 	if (X_Format == xbox::X_D3DFMT_P8)
-		AdditionalArgument = (int)g_pXbox_Palette_Data[iTextureStage];
+		AdditionalArgument = (int)pPalleteData;
 	else
 		AdditionalArgument = DstRowPitch;
 
@@ -1723,7 +1721,7 @@ uint8_t* ConvertD3DTextureToARGB(
 	xbox::X_D3DPixelContainer* pXboxPixelContainer,
 	uint8_t* pSrc,
 	int* pWidth, int* pHeight,
-	int TextureStage // default = 0
+	xbox::PVOID pPalleteData // default = zeroptr
 )
 {
 	// Avoid allocating pDest when ConvertD3DTextureToARGBBuffer will fail anyway
@@ -1756,7 +1754,7 @@ uint8_t* ConvertD3DTextureToARGB(
 		pSrc, *pWidth, *pHeight, SrcRowPitch, SrcSlicePitch,
 		pDst, DstRowPitch, DstSlicePitch,
 		DstDepth,
-		TextureStage);
+		pPalleteData);
 
 	// NOTE : Caller must take ownership!
 	return pDst;
