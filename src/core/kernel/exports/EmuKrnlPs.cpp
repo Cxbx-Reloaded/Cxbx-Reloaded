@@ -154,7 +154,7 @@ static unsigned int WINAPI PCSTProxy
 	return 0; // will never be reached
 }
 
-// Placeholder system function, instead of XapiThreadStartup
+// Placeholder system function
 xbox::void_xt NTAPI PspSystemThreadStartup
 (
 	IN xbox::PKSTART_ROUTINE StartRoutine,
@@ -229,6 +229,35 @@ xbox::void_xt NTAPI PspReaperRoutine(
 		/* Dereference this thread */
 		ObfDereferenceObject(Thread);
 	}
+}
+
+xbox::ntstatus_xt NTAPI CxbxrCreateThread
+(
+	OUT xbox::PHANDLE         ThreadHandle,
+	OUT xbox::PHANDLE         ThreadId OPTIONAL,
+	IN  xbox::PKSTART_ROUTINE StartRoutine,
+	IN  xbox::PVOID           StartContext,
+	IN  xbox::boolean_xt      DebuggerThread
+)
+{
+	Xbe::TLS* XbeTls = (Xbe::TLS*)CxbxKrnl_Xbe->m_Header.dwTLSAddr;
+	xbox::ulong_xt TlsDataSize = (XbeTls->dwDataEndAddr - XbeTls->dwDataStartAddr);
+	TlsDataSize += XbeTls->dwSizeofZeroFill + 15;
+	TlsDataSize = (TlsDataSize & ~15) + 4;
+	// Verify EmuGenerateFS's TlsData's setup is carry over to XapiThreadStartup function.
+	// Instead of using PspSystemThreadStartup which is entirely different function.
+	return xbox::PsCreateSystemThreadEx(
+		/*OUT*/ThreadHandle,
+		/*ThreadExtensionSize=*/0,
+		/*KernelStackSize=*/KERNEL_STACK_SIZE,
+		TlsDataSize,
+		/*OUT*/ThreadId,
+		/*StartRoutine=*/StartRoutine,
+		StartContext,
+		/*CreateSuspended=*/FALSE,
+		/*DebuggerThread=*/DebuggerThread,
+		/*SystemRoutine=*/PspSystemThreadStartup // should use XapiThreadStartup
+	);
 }
 
 static xbox::KDPC PsReaperDpc;

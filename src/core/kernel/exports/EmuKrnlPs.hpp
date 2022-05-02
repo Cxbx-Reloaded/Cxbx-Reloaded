@@ -26,3 +26,12 @@ namespace xbox
 {
 	void_xt PsInitSystem();
 };
+
+xbox::ntstatus_xt NTAPI CxbxrCreateThread
+(
+	OUT xbox::PHANDLE         ThreadHandle,
+	OUT xbox::PHANDLE         ThreadId OPTIONAL,
+	IN  xbox::PKSTART_ROUTINE StartRoutine,
+	IN  xbox::PVOID           StartContext,
+	IN  xbox::boolean_xt      DebuggerThread
+);
