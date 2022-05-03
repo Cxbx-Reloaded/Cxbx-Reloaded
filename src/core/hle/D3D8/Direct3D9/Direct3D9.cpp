@@ -62,6 +62,7 @@
 #include "common\input\DInputKeyboardMouse.h"
 #include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
+#include "common\FilePaths.hpp"
 #include "VertexShaderSource.h"
 #include "Timer.h"
 

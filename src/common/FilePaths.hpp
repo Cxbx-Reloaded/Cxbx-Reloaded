@@ -24,6 +24,7 @@
 // ******************************************************************
 #pragma once
 
+// FIXME include MAX_PATH
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
 extern char szFilePath_EEPROM_bin[MAX_PATH];
 
