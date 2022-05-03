@@ -165,6 +165,11 @@ class EmuShared : public Mutex
 		void SetInputGeneralSettings(const Settings::s_input_general *input_general) { Lock(); m_input_general = *input_general; Unlock(); }
 
 		// ******************************************************************
+		// * Shader disk cache Accessors
+		// ******************************************************************
+		bool GetUseShaderDiskCache() { Lock(); bool s = m_core.UseShaderDiskCache; Unlock(); return s; }
+
+		// ******************************************************************
 		// * LLE Flags Accessors
 		// ******************************************************************
 		void GetFlagsLLE(unsigned int *flags) { Lock(); *flags = m_core.FlagsLLE; Unlock(); }

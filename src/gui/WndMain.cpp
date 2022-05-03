@@ -1070,6 +1070,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
+			case ID_SETTINGS_SHADER_DISK_CACHE:
+			{
+				g_Settings->m_core.UseShaderDiskCache = !g_Settings->m_core.UseShaderDiskCache;
+				RefreshMenus();
+			}
+			break;
+
 			case ID_SETTINGS_INITIALIZE:
 			{
 				PopupReturn ret = PopupWarningEx(m_hwnd, PopupButtons::YesNo, PopupReturn::No,
@@ -1688,6 +1695,9 @@ void WndMain::RefreshMenus()
 
 			//chk_flag = (g_Settings->m_core.FlagsLLE & LLE_USB) ? MF_CHECKED : MF_UNCHECKED; // Reenable this when LLE USB actually works
 			//CheckMenuItem(settings_menu, ID_EMULATION_LLE_USB, chk_flag);
+
+			chk_flag = (g_Settings->m_core.UseShaderDiskCache) ? MF_CHECKED : MF_UNCHECKED;
+			CheckMenuItem(settings_menu, ID_SETTINGS_SHADER_DISK_CACHE, chk_flag);
 
 			chk_flag = (g_Settings->m_hacks.DisablePixelShaders) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_DISABLEPIXELSHADERS, chk_flag);

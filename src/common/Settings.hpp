@@ -107,7 +107,8 @@ public:
 		bool allowAdminPrivilege;
 		bool bLogPopupTestCase;
 		bool Reserved4 = 0;
-		int  Reserved99[10] = { 0 };
+		bool UseShaderDiskCache = 1;
+		int  Reserved99[9] = { 0 };
 	} m_core;
 	static_assert(sizeof(s_core) == 0x250, assert_check_shared_memory(s_core));
 

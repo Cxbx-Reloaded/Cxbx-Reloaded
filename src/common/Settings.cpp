@@ -102,6 +102,7 @@ static struct {
 	const char* LoggedModules = "LoggedModules";
 	const char* LogLevel = "LogLevel";
 	const char* LogPopupTestCase = "LogPopupTestCase";
+	const char* UseShaderDiskCache = "UseShaderDiskCache";
 } sect_core_keys;
 
 static const char* section_video = "video";
@@ -381,6 +382,7 @@ bool Settings::LoadConfig()
 		index++;
 	}
 	m_core.bLogPopupTestCase = m_si.GetBoolValue(section_core, sect_core_keys.LogPopupTestCase, /*Default=*/true);
+	m_core.UseShaderDiskCache = m_si.GetBoolValue(section_core, sect_core_keys.UseShaderDiskCache, /*Default=*/true);
 
 	// ==== Core End ============
 
@@ -602,6 +604,7 @@ bool Settings::Save(std::string file_path)
 		m_si.SetValue(section_core, sect_core_keys.LoggedModules, stream.str().c_str(), nullptr, false);
 	}
 	m_si.SetBoolValue(section_core, sect_core_keys.LogPopupTestCase, m_core.bLogPopupTestCase, nullptr, true);
+	m_si.SetBoolValue(section_core, sect_core_keys.UseShaderDiskCache, m_core.UseShaderDiskCache, nullptr, true);
 
 	// ==== Core End ============
 

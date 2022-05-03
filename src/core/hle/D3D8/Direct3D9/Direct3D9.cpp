@@ -1490,6 +1490,8 @@ std::filesystem::path GetVshCachePath() {
 }
 
 void LoadShaderCache() {
+	if (!g_EmuShared->GetUseShaderDiskCache()) return;
+
 	auto cachePath = GetVshCachePath();
 	std::ifstream f;
 	f.open(cachePath, std::fstream::in | std::fstream::binary);
@@ -1502,6 +1504,8 @@ void LoadShaderCache() {
 }
 
 void SaveShaderCache() {
+	if (!g_EmuShared->GetUseShaderDiskCache()) return;
+
 	auto cachePath = GetVshCachePath();
 	std::filesystem::create_directory(cachePath.parent_path());
 	std::ofstream f;
