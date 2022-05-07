@@ -5956,7 +5956,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
 							pDst, dwDstRowPitch, dwDstSlicePitch,
 							pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
-							iTextureStage)) {
+							g_pXbox_Palette_Data[iTextureStage])) {
 							CxbxrAbort("Unhandled conversion!");
 						}
 					}
