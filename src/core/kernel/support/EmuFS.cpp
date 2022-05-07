@@ -770,6 +770,25 @@ void EmuGenerateFS(xbox::PETHREAD Ethread, unsigned Host2XbStackBaseReserved, un
 	}
 #endif
 
+	// Initialize TlsData in order to avoid xbox's APIs attempt to try access null pointer from CxbxrCreateThread.
+	// As far as I have seen, Xapi's CreateThread's startup function is the only one that does the tls' initialization.
+	// It will repeat same process yet will not cause performance impact.
+	// NOTE: PsCreateSystemThread's startup function does not do tls' initialization.
+	if (Ethread->Tcb.TlsData) {
+		Xbe::TLS* XbeTls = (Xbe::TLS*)CxbxKrnl_Xbe->m_Header.dwTLSAddr;
+		uint32_t RawTlsDataSize = XbeTls->dwDataEndAddr - XbeTls->dwDataStartAddr;
+		// First index is a pointer to the array of tls datas.
+		xbox::addr_xt* TlsData = reinterpret_cast<xbox::addr_xt*>(Ethread->Tcb.TlsData);
+		*TlsData = reinterpret_cast<xbox::addr_xt>(Ethread->Tcb.TlsData) + sizeof(xbox::addr_xt);
+		// Set the actual tls data from xbe.
+		TlsData += 1;
+		std::memcpy(TlsData, reinterpret_cast<xbox::PVOID>(XbeTls->dwDataStartAddr), RawTlsDataSize);
+
+		if (XbeTls->dwSizeofZeroFill) {
+			std::memset(reinterpret_cast<xbox::PBYTE>(TlsData) + RawTlsDataSize, 0, XbeTls->dwSizeofZeroFill);
+		}
+	}
+
 	// Initialize a fake PrcbData.CurrentThread 
 	{
 		// TODO: Do we need NtTib's overwrite in ENABLE_KTHREAD_SWITCHING usage?

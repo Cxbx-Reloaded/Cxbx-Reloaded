@@ -25,8 +25,6 @@
 // *
 // ******************************************************************
 
-#include <core\kernel\exports\xboxkrnl.h>
-
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -36,6 +34,7 @@
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
 #include "core\kernel\support\EmuFS.h"
+#include "core/kernel/exports/EmuKrnlPs.hpp"
 #ifdef __linux__
 #include <time.h>
 #endif
@@ -218,7 +217,7 @@ void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
 	Timer->ExpireTime_MS.store(Expire_MS);
 	if (Timer->IsXboxTimer) {
 		xbox::HANDLE hThread;
-		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, ClockThread, Timer, FALSE);
+		CxbxrCreateThread(&hThread, xbox::zeroptr, ClockThread, Timer, FALSE);
 	}
 	else {
 		std::thread(ClockThread, Timer).detach();

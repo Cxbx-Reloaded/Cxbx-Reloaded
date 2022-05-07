@@ -1432,7 +1432,7 @@ static void CxbxrKrnlInitHacks()
 	EmuX86_Init();
 	// Create the interrupt processing thread
 	xbox::HANDLE hThread;
-	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxKrnlInterruptThread, xbox::zeroptr, FALSE);
+	CxbxrCreateThread(&hThread, xbox::zeroptr, CxbxKrnlInterruptThread, xbox::zeroptr, FALSE);
 	// Start the kernel clock thread
 	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", true);
 	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
