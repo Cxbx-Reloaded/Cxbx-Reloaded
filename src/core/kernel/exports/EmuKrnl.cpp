@@ -175,6 +175,7 @@ void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql)
 	HalInterruptRequestRegister ^= (1 << SoftwareIrql);
 }
 
+// This masks have been verified to be correct against a kernel dump
 const DWORD IrqlMasks[] = {
 	0xFFFFFFFE, // IRQL 0
 	0xFFFFFFFC, // IRQL 1 (APC_LEVEL)
@@ -183,18 +184,18 @@ const DWORD IrqlMasks[] = {
 	0x03FFFFF0, // IRQL 4
 	0x01FFFFF0, // IRQL 5
 	0x00FFFFF0, // IRQL 6
-	0x00EFFFF0, // IRQL 7
-	0x007FFFF0, // IRQL 8
-	0x003FFFF0, // IRQL 9
-	0x001FFFF0, // IRQL 10
-	0x000EFFF0, // IRQL 11
-	0x0007FFF0, // IRQL 12
-	0x0003FFF0, // IRQL 13
-	0x0001FFF0, // IRQL 14
+	0x007FFFF0, // IRQL 7
+	0x003FFFF0, // IRQL 8
+	0x001FFFF0, // IRQL 9
+	0x000FFFF0, // IRQL 10
+	0x0007FFF0, // IRQL 11
+	0x0003FFF0, // IRQL 12
+	0x0001FFF0, // IRQL 13 (same as IRQL 14)
+	0x0001FFF0, // IRQL 14 (same as IRQL 13)
 	0x00017FF0, // IRQL 15
 	0x00013FF0, // IRQL 16
-	0x00011FF0, // IRQL 17
-	0x00011FF0, // IRQL 18
+	0x00011FF0, // IRQL 17 (same as IRQL 18)
+	0x00011FF0, // IRQL 18 (same as IRQL 17)
 	0x000117F0, // IRQL 19
 	0x000113F0, // IRQL 20
 	0x000111F0, // IRQL 21
