@@ -57,7 +57,7 @@ EmuDevice::EmuDevice(int type, HWND hwnd, void *wnd)
 	case to_underlying(XBOX_INPUT_DEVICE::STEEL_BATTALION_CONTROLLER): {
 		for (size_t i = 0; i < ARRAY_SIZE(button_sbc_id); i++) {
 			m_buttons.push_back(new Button(button_sbc_id[i], i, hwnd, wnd));
-			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text_toggle);
+			m_buttons.back()->AddTooltip(m_hwnd, m_tooltip_hwnd, tooltip_text_no_toggle);
 
 			// Install the subclass for the button control
 			SetWindowSubclass(GetDlgItem(hwnd, button_sbc_id[i]), ButtonSbcSubclassProc, 0, reinterpret_cast<DWORD_PTR>(m_buttons[i]));
