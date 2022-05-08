@@ -232,7 +232,7 @@ INT_PTR CALLBACK DlgSBControllerConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wPara
 		case IDC_GEAR_UP:
 		case IDC_GEAR_DOWN: {
 			if (HIWORD(wParam) == BN_CLICKED) {
-				g_InputWindow->BindButton(LOWORD(wParam));
+				g_InputWindow->BindButton(LOWORD(wParam), true);
 			}
 		}
 		break;
