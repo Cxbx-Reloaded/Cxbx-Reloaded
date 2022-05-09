@@ -27,8 +27,11 @@
 // Intended to store as permanent settings
 
 typedef struct {
+	bool build_hash;
 	bool fps;
 	bool hle_lle_stats;
+	bool title_name;
+	bool file_name;
 } overlay_settings;
 
 // Intended for EmuShared only below

@@ -41,8 +41,6 @@
 #include "common/AddressRanges.h"
 #include "common/xbox/Types.hpp"
 
-namespace fs = std::filesystem;
-
 #ifdef CXBXR_EMU
 extern "C" void CxbxKrnlPrintUEM(ULONG);
 #endif
@@ -58,12 +56,11 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
     FILE *XbeFile = fopen(x_szFilename, "rb");
 
-    // verify Xbe file was opened successfully
-    if(XbeFile == 0)
-    {
-		using namespace fs; // limit its scope inside here
+	std::string XbeName = std::filesystem::path(x_szFilename).filename().string(); // recover the xbe name
 
-		std::string XbeName = path(x_szFilename).filename().string(); // recover the xbe name
+	// verify Xbe file was opened successfully
+	if(XbeFile == 0) {
+
 		// NOTE: the check for the existence of the child window is necessary because the user could have previously loaded the dashboard,
 		// removed/changed the path and attempt to load it again from the recent list, which will crash CxbxInitWindow below
 		// Note that GetHwnd(), CxbxKrnl_hEmuParent and HalReturnToFirmware are all not suitable here for various reasons 
@@ -96,7 +93,7 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 			SetFatalError(std::string("Could not open the Xbe file ") + XbeName);
 			return;
 		}
-    }
+	}
 
     printf("OK\n");
 
@@ -110,6 +107,14 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 		if (c != nullptr)
 			*(++c) = '\0';
     }
+
+	printf("OK\n");
+
+	// remember the Xbe file name
+	{
+		printf("Xbe::Xbe: Storing Xbe File Name...");
+		strncpy(m_szFileName, XbeName.c_str(), ARRAY_SIZE(m_szFileName) * sizeof(char));
+	}
 
     printf("OK\n");
 

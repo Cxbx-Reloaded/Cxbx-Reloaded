@@ -117,8 +117,11 @@ static struct {
 
 static const char* section_overlay = "overlay";
 static struct {
+	const char* build_hash = "Build Hash";
 	const char* FPS = "FPS";
 	const char* hle_lle_stats = "HLE/LLE Stats";
+	const char* title_name = "Title Name";
+	const char* file_name = "File Name";
 } sect_overlay_keys;
 
 static const char* section_audio = "audio";
@@ -547,8 +550,11 @@ bool Settings::LoadConfig()
 
 	// ==== Overlay Begin =========
 
+	m_overlay.build_hash = m_si.GetBoolValue(section_overlay, sect_overlay_keys.build_hash, false);
 	m_overlay.fps = m_si.GetBoolValue(section_overlay, sect_overlay_keys.FPS, false);
 	m_overlay.hle_lle_stats = m_si.GetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, false);
+	m_overlay.title_name = m_si.GetBoolValue(section_overlay, sect_overlay_keys.title_name, false);
+	m_overlay.file_name = m_si.GetBoolValue(section_overlay, sect_overlay_keys.file_name, false);
 
 	// ==== Overlay End ===========
 
@@ -735,8 +741,11 @@ bool Settings::Save(std::string file_path)
 
 	// ==== Overlay Begin =======
 
+	m_si.SetBoolValue(section_overlay, sect_overlay_keys.build_hash, m_overlay.build_hash, nullptr, true);
 	m_si.SetBoolValue(section_overlay, sect_overlay_keys.FPS, m_overlay.fps, nullptr, true);
 	m_si.SetBoolValue(section_overlay, sect_overlay_keys.hle_lle_stats, m_overlay.hle_lle_stats, nullptr, true);
+	m_si.SetBoolValue(section_overlay, sect_overlay_keys.title_name, m_overlay.title_name, nullptr, true);
+	m_si.SetBoolValue(section_overlay, sect_overlay_keys.file_name, m_overlay.file_name, nullptr, true);
 
 	// ==== Overlay End =========
 

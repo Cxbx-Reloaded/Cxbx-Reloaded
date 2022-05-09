@@ -258,6 +258,9 @@ class Xbe : public Error
         // Xbe original path
         char m_szPath[MAX_PATH];
 
+        // Xbe original file name
+        char m_szFileName[MAX_PATH];
+
         // Xbe ascii title, translated from certificate title
         char m_szAsciiTitle[41];
 

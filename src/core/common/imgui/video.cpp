@@ -50,8 +50,8 @@ void ImGuiVideo::DrawWidgets(bool is_focus, ImGuiWindowFlags input_handler)
 			if (ImGui::CollapsingHeader("Vertex Buffer Cache", ImGuiTreeNodeFlags_DefaultOpen)) {
 				VertexBufferConverter.DrawCacheStats();
 			}
-			ImGui::End();
 		}
+		ImGui::End();
 	}
 
 	// Render the lightgun laser

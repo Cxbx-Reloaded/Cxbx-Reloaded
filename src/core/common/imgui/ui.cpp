@@ -120,8 +120,11 @@ void ImGuiUI::DrawMenu()
 		if (ImGui::BeginMenu("Settings")) {
 			if (ImGui::BeginMenu("Overlay")) {
 				bool bChanged = false;
+				bChanged |= ImGui::MenuItem("Show Build Hash", NULL, &m_settings.build_hash);
 				bChanged |= ImGui::MenuItem("Show FPS", NULL, &m_settings.fps);
 				bChanged |= ImGui::MenuItem("Show HLE/LLE Stats", NULL, &m_settings.hle_lle_stats);
+				bChanged |= ImGui::MenuItem("Show Title Name", NULL, &m_settings.title_name);
+				bChanged |= ImGui::MenuItem("Show File Name", NULL, &m_settings.file_name);
 				if (bChanged) {
 					g_EmuShared->SetOverlaySettings(&m_settings);
 					ipc_send_gui_update(IPC_UPDATE_GUI::OVERLAY, 1);
@@ -139,14 +142,18 @@ void ImGuiUI::DrawMenu()
 
 void ImGuiUI::DrawWidgets()
 {
-	if (m_settings.fps || m_settings.hle_lle_stats) {
+
+	if (m_settings.fps
+	    || m_settings.hle_lle_stats
+		||m_settings.title_name
+	    || m_settings.file_name) {
 
 		ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - (IMGUI_MIN_DIST_SIDE/* * m_backbuffer_scale*/),
 			IMGUI_MIN_DIST_TOP/* * m_backbuffer_scale*/), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
 
 		ImGui::SetNextWindowSize(ImVec2(200.0f/* * m_backbuffer_scale*/, 0.0f));
 		ImGui::SetNextWindowBgAlpha(0.5f);
-		if (ImGui::Begin("overlay_stats", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav |
+		if (ImGui::Begin("overlay_stats_topright", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav |
 			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar |
 			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing)) {
 
@@ -180,8 +187,36 @@ void ImGuiUI::DrawWidgets()
 					- ImGui::GetScrollX() - 2 * ImGui::GetStyle().ItemSpacing.x);
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), flagString.c_str());
 			}
-			ImGui::End();
+
+			if (m_settings.title_name) {
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Title: %.41s", CxbxKrnl_Xbe->m_szAsciiTitle);
+			}
+
+			if (m_settings.file_name) {
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "File: %.260s", CxbxKrnl_Xbe->m_szFileName);
+			}
+
 		}
+		ImGui::End();
+	}
+
+	if (m_settings.build_hash) {
+
+		ImGui::SetNextWindowPos(ImVec2(IMGUI_MIN_DIST_SIDE, ImGui::GetIO().DisplaySize.y - IMGUI_MIN_DIST_SIDE/* * m_backbuffer_scale*/),
+			ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+
+		//ImGui::SetNextWindowSize(ImVec2(200.0f/* * m_backbuffer_scale*/, 0.0f));
+		ImGui::SetNextWindowBgAlpha(0.5f);
+		if (ImGui::Begin("overlay_stats_bottom", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav |
+			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar |
+			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing)) {
+
+			if (m_settings.build_hash) {
+				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Build: %s", GetGitVersionStr());
+			}
+
+		}
+		ImGui::End();
 	}
 
 	ImGuiWindowFlags input_handler = m_is_focus ? ImGuiWindowFlags_None : ImGuiWindowFlags_NoInputs;
