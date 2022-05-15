@@ -129,7 +129,7 @@ XBSYSAPI EXPORTNUM(67) ntstatus_xt NTAPI IoCreateSymbolicLink
 // ******************************************************************
 XBSYSAPI EXPORTNUM(68) void_xt NTAPI IoDeleteDevice
 (
-	IN PDEVICE_OBJECT irql
+	IN PDEVICE_OBJECT DeviceObject
 );
 
 // ******************************************************************

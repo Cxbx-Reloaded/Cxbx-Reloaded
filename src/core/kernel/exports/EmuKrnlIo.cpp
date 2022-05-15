@@ -51,6 +51,25 @@ static void IopClearStackLocation(IN xbox::PIO_STACK_LOCATION IoStackLocation)
 	IoStackLocation->Parameters.SetFile.FileObject = NULL;
 }
 
+static xbox::void_xt IopDeleteDevice
+(
+	IN xbox::PDEVICE_OBJECT DeviceObject,
+	IN xbox::KIRQL OldIrql
+)
+{
+	using namespace xbox;
+	if (DeviceObject->DeletePending) {
+		KfLowerIrql(OldIrql);
+		PDRIVER_DELETEDEVICE DriverDeleteDevice = DeviceObject->DriverObject->DriverDeleteDevice;
+		if (DriverDeleteDevice) {
+			DriverDeleteDevice(DeviceObject);
+		}
+		else {
+			ObfDereferenceObject(DeviceObject);
+		}
+	}
+}
+
 // ******************************************************************
 // * 0x003B - IoAllocateIrp()
 // ******************************************************************
@@ -557,12 +576,28 @@ XBSYSAPI EXPORTNUM(67) xbox::ntstatus_xt NTAPI xbox::IoCreateSymbolicLink
 // ******************************************************************
 XBSYSAPI EXPORTNUM(68) xbox::void_xt NTAPI xbox::IoDeleteDevice
 (
-	IN PDEVICE_OBJECT Irql
+	IN PDEVICE_OBJECT DeviceObject
 )
 {
-	LOG_FUNC_ONE_ARG(Irql);
+	LOG_FUNC_ONE_ARG(DeviceObject);
 
-	LOG_UNIMPLEMENTED();
+	/* Check if the device has a name */
+	if (DeviceObject->Flags & X_DO_DEVICE_HAS_NAME) {
+		/* It does, make it temporary so we can remove it */
+		ObMakeTemporaryObject(DeviceObject);
+	}
+
+	KIRQL OldIrql = KeRaiseIrqlToDpcLevel();
+
+	/* Set the pending delete flag */
+	DeviceObject->DeletePending = true;
+
+	if (DeviceObject->ReferenceCount) {
+		KfLowerIrql(OldIrql);
+	}
+	else {
+		IopDeleteDevice(DeviceObject, OldIrql);
+	}
 }
 
 // ******************************************************************
