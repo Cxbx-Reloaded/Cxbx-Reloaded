@@ -185,6 +185,7 @@ XBSYSAPI EXPORTNUM(62) xbox::PVOID NTAPI xbox::IoBuildSynchronousFsdRequest
 // ******************************************************************
 // * 0x003F - IoCheckShareAccess()
 // ******************************************************************
+// Source: ReactOS, excluded file object extension check.
 XBSYSAPI EXPORTNUM(63) xbox::ntstatus_xt NTAPI xbox::IoCheckShareAccess
 (
 	IN access_mask_xt DesiredAccess,
@@ -202,9 +203,59 @@ XBSYSAPI EXPORTNUM(63) xbox::ntstatus_xt NTAPI xbox::IoCheckShareAccess
 		LOG_FUNC_ARG(Update)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	//PAGED_CODE();
 
-	RETURN(S_OK);
+	/* Get access masks */
+	boolean_xt ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
+	boolean_xt WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
+	boolean_xt DeleteAccess = (DesiredAccess & DELETE) != 0;
+
+	/* Set them in the file object */
+	FileObject->ReadAccess = ReadAccess;
+	FileObject->WriteAccess = WriteAccess;
+	FileObject->DeleteAccess = DeleteAccess;
+
+	/* Check if we have any access */
+	if ((ReadAccess) || (WriteAccess) || (DeleteAccess)) {
+		/* Get shared access masks */
+		boolean_xt SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
+		boolean_xt SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
+		boolean_xt SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
+
+		/* Check if the shared access is violated */
+		if ((ReadAccess && (ShareAccess->SharedRead < ShareAccess->OpenCount)) ||
+			(WriteAccess && (ShareAccess->SharedWrite < ShareAccess->OpenCount)) ||
+			(DeleteAccess && (ShareAccess->SharedDelete < ShareAccess->OpenCount)) ||
+			((ShareAccess->Readers != 0) && !SharedRead) ||
+			((ShareAccess->Writers != 0) && !SharedWrite) ||
+			((ShareAccess->Deleters != 0) && !SharedDelete)) {
+
+			/* Sharing violation, fail */
+			RETURN(X_STATUS_SHARING_VIOLATION);
+		}
+
+		/* Set them */
+		FileObject->SharedRead = SharedRead;
+		FileObject->SharedWrite = SharedWrite;
+		FileObject->SharedDelete = SharedDelete;
+
+		/* It's not, check if caller wants us to update it */
+		if (Update) {
+			/* Increase open count */
+			ShareAccess->OpenCount++;
+
+			/* Update shared access */
+			ShareAccess->Readers += ReadAccess;
+			ShareAccess->Writers += WriteAccess;
+			ShareAccess->Deleters += DeleteAccess;
+			ShareAccess->SharedRead += SharedRead;
+			ShareAccess->SharedWrite += SharedWrite;
+			ShareAccess->SharedDelete += SharedDelete;
+		}
+	}
+
+	/* Validation successful */
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1269,6 +1320,7 @@ XBSYSAPI EXPORTNUM(77) xbox::void_xt NTAPI xbox::IoQueueThreadIrp
 // ******************************************************************
 // * 0x004E - IoRemoveShareAccess()
 // ******************************************************************
+// Source: ReactOS, excluded file object extension check.
 XBSYSAPI EXPORTNUM(78) xbox::void_xt NTAPI xbox::IoRemoveShareAccess
 (
 	IN PFILE_OBJECT FileObject,
@@ -1280,7 +1332,24 @@ XBSYSAPI EXPORTNUM(78) xbox::void_xt NTAPI xbox::IoRemoveShareAccess
 		LOG_FUNC_ARG(ShareAccess)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	//PAGED_CODE();
+
+	/* Otherwise, check if there's any access present */
+	if ((FileObject->ReadAccess) ||
+		(FileObject->WriteAccess) ||
+		(FileObject->DeleteAccess))
+	{
+		/* Decrement the open count */
+		ShareAccess->OpenCount--;
+
+		/* Remove share access */
+		ShareAccess->Readers -= FileObject->ReadAccess;
+		ShareAccess->Writers -= FileObject->WriteAccess;
+		ShareAccess->Deleters -= FileObject->DeleteAccess;
+		ShareAccess->SharedRead -= FileObject->SharedRead;
+		ShareAccess->SharedWrite -= FileObject->SharedWrite;
+		ShareAccess->SharedDelete -= FileObject->SharedDelete;
+	}
 }
 
 // ******************************************************************
@@ -1311,11 +1380,12 @@ XBSYSAPI EXPORTNUM(79) xbox::ntstatus_xt NTAPI xbox::IoSetIoCompletion
 // ******************************************************************
 // * 0x0050 - IoSetShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(80) xbox::cchar_xt NTAPI xbox::IoSetShareAccess
+// Source: ReactOS, excluded file object extension check.
+XBSYSAPI EXPORTNUM(80) xbox::void_xt NTAPI xbox::IoSetShareAccess
 (
-	IN ulong_xt DesiredAccess,
-	IN ulong_xt DesiredShareAccess,
-	IN PFILE_OBJECT FileObject,
+	IN access_mask_xt DesiredAccess,
+	IN ulong_xt       DesiredShareAccess,
+	IN PFILE_OBJECT   FileObject,
 	OUT PSHARE_ACCESS ShareAccess
 )
 {
@@ -1326,11 +1396,54 @@ XBSYSAPI EXPORTNUM(80) xbox::cchar_xt NTAPI xbox::IoSetShareAccess
 		LOG_FUNC_ARG_OUT(ShareAccess)
 		LOG_FUNC_END;
 
-	xbox::cchar_xt ret = 0; // ShareAccess->OpenCount;
+	boolean_xt ReadAccess;
+	boolean_xt WriteAccess;
+	boolean_xt DeleteAccess;
+	boolean_xt SharedRead;
+	boolean_xt SharedWrite;
+	boolean_xt SharedDelete;
+	//PAGED_CODE();
 
-	LOG_UNIMPLEMENTED();
-	
-	RETURN(ret);
+	ReadAccess = (DesiredAccess & (FILE_READ_DATA | FILE_EXECUTE)) != 0;
+	WriteAccess = (DesiredAccess & (FILE_WRITE_DATA | FILE_APPEND_DATA)) != 0;
+	DeleteAccess = (DesiredAccess & DELETE) != 0;
+
+	/* Update basic access */
+	FileObject->ReadAccess = ReadAccess;
+	FileObject->WriteAccess = WriteAccess;
+	FileObject->DeleteAccess = DeleteAccess;
+
+	/* Check if we have no access as all */
+	if (!(ReadAccess) && !(WriteAccess) && !(DeleteAccess)) {
+		/* Otherwise, clear data */
+		ShareAccess->OpenCount = 0;
+		ShareAccess->Readers = 0;
+		ShareAccess->Writers = 0;
+		ShareAccess->Deleters = 0;
+		ShareAccess->SharedRead = 0;
+		ShareAccess->SharedWrite = 0;
+		ShareAccess->SharedDelete = 0;
+	}
+	else {
+		/* Calculate shared access */
+		SharedRead = (DesiredShareAccess & FILE_SHARE_READ) != 0;
+		SharedWrite = (DesiredShareAccess & FILE_SHARE_WRITE) != 0;
+		SharedDelete = (DesiredShareAccess & FILE_SHARE_DELETE) != 0;
+
+		/* Set it in the FO */
+		FileObject->SharedRead = SharedRead;
+		FileObject->SharedWrite = SharedWrite;
+		FileObject->SharedDelete = SharedDelete;
+
+		/* Otherwise, set data */
+		ShareAccess->OpenCount = 1;
+		ShareAccess->Readers = ReadAccess;
+		ShareAccess->Writers = WriteAccess;
+		ShareAccess->Deleters = DeleteAccess;
+		ShareAccess->SharedRead = SharedRead;
+		ShareAccess->SharedWrite = SharedWrite;
+		ShareAccess->SharedDelete = SharedDelete;
+	}
 }
 
 // ******************************************************************
