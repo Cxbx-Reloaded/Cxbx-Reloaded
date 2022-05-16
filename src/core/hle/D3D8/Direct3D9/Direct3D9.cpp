@@ -1607,7 +1607,7 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
 // simple helper function
 void ToggleFauxFullscreen(HWND hWnd)
 {
-    if( g_XBVideo.bFullScreen) {
+    if(g_XBVideo.bFullScreen) {
         return;
     }
 
@@ -1617,7 +1617,6 @@ void ToggleFauxFullscreen(HWND hWnd)
 
     // Require to toggle before start process due to WM_SETFOCUS will get trigger earlier.
     g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
-
     if (g_bIsFauxFullscreen) {
         GetWindowRect(hWnd, &lRect);
         gwl_style = GetWindowLong(hWnd, GWL_STYLE);
@@ -1635,7 +1634,7 @@ void ToggleFauxFullscreen(HWND hWnd)
     else {
         SetWindowLong(hWnd, GWL_STYLE, gwl_style);
         if(CxbxKrnl_hEmuParent) {
-            // NOTE: SetWindowPos is used to make correction for other than main monitor to appear than remain invisible.
+            // NOTE: This call makes sure that emulation rendering will reappear back into the main window after leaving "faux fullscreen" on non-primary displays.
             SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_HIDEWINDOW);
 
             // NOTE: Window style must be set before call SetParent.
