@@ -142,21 +142,19 @@ void ImGuiUI::DrawMenu()
 
 void ImGuiUI::DrawWidgets()
 {
-
-	if (m_settings.fps
+	constexpr auto overlay_window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav |
+	    ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar |
+	    ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing;
+	bool overlay_show_topright = m_settings.fps
 	    || m_settings.hle_lle_stats
-		||m_settings.title_name
-	    || m_settings.file_name) {
-
+	    || m_settings.title_name
+	    || m_settings.file_name;
+	if (overlay_show_topright) {
 		ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - (IMGUI_MIN_DIST_SIDE/* * m_backbuffer_scale*/),
 			IMGUI_MIN_DIST_TOP/* * m_backbuffer_scale*/), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
-
 		ImGui::SetNextWindowSize(ImVec2(200.0f/* * m_backbuffer_scale*/, 0.0f));
 		ImGui::SetNextWindowBgAlpha(0.5f);
-		if (ImGui::Begin("overlay_stats_topright", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav |
-			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar |
-			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing)) {
-
+		if (ImGui::Begin("overlay_stats_topright", nullptr, overlay_window_flags)) {
 			if (m_settings.fps) {
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "FPS: %.2f  MS / F : %.2f", fps_counter, (float)(1000.0 / fps_counter));
 			}
@@ -195,26 +193,18 @@ void ImGuiUI::DrawWidgets()
 			if (m_settings.file_name) {
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "File: %.260s", CxbxKrnl_Xbe->m_szFileName);
 			}
-
 		}
 		ImGui::End();
 	}
 
 	if (m_settings.build_hash) {
-
 		ImGui::SetNextWindowPos(ImVec2(IMGUI_MIN_DIST_SIDE, ImGui::GetIO().DisplaySize.y - IMGUI_MIN_DIST_SIDE/* * m_backbuffer_scale*/),
 			ImGuiCond_Always, ImVec2(0.0f, 1.0f));
-
-		//ImGui::SetNextWindowSize(ImVec2(200.0f/* * m_backbuffer_scale*/, 0.0f));
 		ImGui::SetNextWindowBgAlpha(0.5f);
-		if (ImGui::Begin("overlay_stats_bottom", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav |
-			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar |
-			ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing)) {
-
+		if (ImGui::Begin("overlay_stats_bottom", nullptr, overlay_window_flags)) {
 			if (m_settings.build_hash) {
 				ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Build: %s", GetGitVersionStr());
 			}
-
 		}
 		ImGui::End();
 	}
