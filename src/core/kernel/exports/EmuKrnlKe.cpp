@@ -84,6 +84,9 @@ namespace NtDll
 #include "Timer.h"
 #include "Util.h"
 
+#pragma warning(disable:4005) // Ignore redefined status values
+#include <ntstatus.h>
+
 #include <chrono>
 #include <thread>
 #include <windows.h>
@@ -727,7 +730,8 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 		NtDll::LARGE_INTEGER ExpireTime;
 		ExpireTime.QuadPart = 0;
 		NTSTATUS Status = NtDll::NtDelayExecution(Alertable, &ExpireTime);
-		if (Status == 0) { // STATUS_SUCCESS
+		// Any success codes that are not related to alerting should be masked out
+		if (Status >= 0 && Status != STATUS_ALERTED && Status != STATUS_USER_APC) {
 			return std::nullopt;
 		}
 		return std::make_optional<ntstatus_xt>(Status);
