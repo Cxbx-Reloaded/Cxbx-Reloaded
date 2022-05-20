@@ -1052,7 +1052,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 	char title_id_buff[9];
 	std::sprintf(title_id_buff, "%08lx", CxbxKrnl_Xbe->m_Certificate.dwTitleId);
 	std::string mu_path_str(DrivePrefix + lett + ":");
-	std::string mu_dev_str(DeviceMU + std::to_string(MuPort2Idx(dwPort, dwSlot)));
+	std::string mu_dev_str(DeviceMUPrefix + std::to_string(MuPort2Idx(dwPort, dwSlot)));
 	ANSI_STRING mu_dev, mu_path;
 	RtlInitAnsiString(&mu_path, mu_path_str.data());
 	RtlInitAnsiString(&mu_dev, mu_dev_str.data());
@@ -1100,7 +1100,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMURootA)
 	}
 
 	std::string mu_path_str(DrivePrefix + lett + ":");
-	std::string mu_dev_str(DeviceMU + std::to_string(MuPort2Idx(dwPort, dwSlot)));
+	std::string mu_dev_str(DeviceMUPrefix + std::to_string(MuPort2Idx(dwPort, dwSlot)));
 	ANSI_STRING mu_dev, mu_path;
 	RtlInitAnsiString(&mu_path, mu_path_str.data());
 	RtlInitAnsiString(&mu_dev, mu_dev_str.data());

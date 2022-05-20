@@ -297,7 +297,7 @@ static std::string DeviceObject2Str(xbox::PVOID xobject)
 		break;
 	case xbox::FILE_DEVICE_MEMORY_UNIT: {
 		xbox::PMU_EXTENSION MuExtension = reinterpret_cast<xbox::PMU_EXTENSION>(DeviceObject->DeviceExtension);
-		path = DeviceMU + std::to_string(MuExtension->PartitionNumber);
+		path = DeviceMUPrefix + std::to_string(MuExtension->PartitionNumber);
 		break;
 	}
 	default:

@@ -75,7 +75,8 @@ extern const std::string DriveZ;
 extern const std::string DevicePrefix;
 extern const std::string DeviceCdrom0;
 extern const std::string DeviceHarddisk0;
-extern const std::string DeviceMU;
+extern const std::string MUPrefix;
+extern const std::string DeviceMUPrefix;
 extern const std::string PartitionPrefix;
 extern const std::string DeviceHarddisk0PartitionPrefix;
 extern const std::string DeviceHarddisk0Partition0;
@@ -186,8 +187,8 @@ class io_mu_metadata
 public:
 	io_mu_metadata(const std::wstring_view root_path);
 	~io_mu_metadata();
-	void read(const wchar_t lett, std::size_t offset, char *buff, std::size_t size);
-	void write(const wchar_t lett, std::size_t offset, const char *buff, std::size_t size);
+	void read(const xbox::dword_xt PartitionNumber, std::size_t offset, char *buff, std::size_t size);
+	void write(const xbox::dword_xt PartitionNumber, std::size_t offset, const char *buff, std::size_t size);
 	void flush(const wchar_t lett);
 
 private:
@@ -202,6 +203,7 @@ void CxbxCreatePartitionHeaderFile(const std::filesystem::path& filename, bool p
 
 std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath);
 bool CxbxrIsPathInsideEmuDisk(const std::filesystem::path& path);
+bool CxbxrIsPathInsideEmuMu(const std::filesystem::path& path);
 
 std::wstring string_to_wstring(std::string const & src);
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src);

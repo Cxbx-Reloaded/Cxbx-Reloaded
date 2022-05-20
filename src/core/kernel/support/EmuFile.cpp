@@ -47,6 +47,7 @@
 #include "common/cxbxr.hpp"
 #include "EmuDisk.hpp"
 #include "EmuCdRom.hpp"
+#include "EmuMu.hpp"
 
 #include <filesystem>
 
@@ -132,16 +133,16 @@ io_mu_metadata::~io_mu_metadata()
 	}
 }
 
-void io_mu_metadata::read(const wchar_t lett, std::size_t offset, char *buff, std::size_t size)
+void io_mu_metadata::read(const xbox::dword_xt PartitionNumber, std::size_t offset, char *buff, std::size_t size)
 {
 	std::shared_lock<std::shared_mutex> lck(m_rw_lock); // allows for concurrent reads
-	std::memcpy(buff, m_buff[lett - L'F'] + offset, size);
+	std::memcpy(buff, m_buff[PartitionNumber] + offset, size);
 }
 
-void io_mu_metadata::write(const wchar_t lett, std::size_t offset, const char *buff, std::size_t size)
+void io_mu_metadata::write(const xbox::dword_xt PartitionNumber, std::size_t offset, const char *buff, std::size_t size)
 {
 	std::unique_lock<std::shared_mutex> lck(m_rw_lock); // blocks when there is rw in progress
-	std::memcpy(m_buff[lett - L'F'] + offset, buff, size);
+	std::memcpy(m_buff[PartitionNumber] + offset, buff, size);
 }
 
 void io_mu_metadata::flush(const wchar_t lett)
@@ -176,7 +177,7 @@ bool CxbxrIsPathInsideEmuDisk(const std::filesystem::path& path)
 	return CxbxrIsPathInsideRootPath(path, g_DiskBasePath);
 }
 
-static bool CxbxrIsPathInsideEmuMu(const std::filesystem::path& path)
+bool CxbxrIsPathInsideEmuMu(const std::filesystem::path& path)
 {
 	return CxbxrIsPathInsideRootPath(path, g_MuBasePath);
 }
@@ -298,7 +299,8 @@ const std::string DriveZ = DrivePrefix + "Z:"; // Z: is Title utility data regio
 const std::string DevicePrefix = "\\Device";
 const std::string DeviceCdrom0 = DevicePrefix + "\\CdRom0";
 const std::string DeviceHarddisk0 = DevicePrefix + "\\Harddisk0";
-const std::string DeviceMU = DevicePrefix + "\\MU_";
+const std::string MUPrefix = "\\MU_";
+const std::string DeviceMUPrefix = DevicePrefix + MUPrefix;
 const std::string PartitionPrefix = "Partition";
 const std::string DeviceHarddisk0PartitionPrefix = DevicePrefix + "\\Harddisk0\\" + PartitionPrefix;
 const std::string DeviceHarddisk0Partition0 = DeviceHarddisk0PartitionPrefix + "0"; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
@@ -322,14 +324,14 @@ const std::string DeviceHarddisk0Partition17 = DeviceHarddisk0PartitionPrefix + 
 const std::string DeviceHarddisk0Partition18 = DeviceHarddisk0PartitionPrefix + "18";
 const std::string DeviceHarddisk0Partition19 = DeviceHarddisk0PartitionPrefix + "19";
 const std::string DeviceHarddisk0Partition20 = DeviceHarddisk0PartitionPrefix + "20"; // 20 = Largest possible partition number
-const std::string DeviceMU0 = DeviceMU + "0";
-const std::string DeviceMU1 = DeviceMU + "1";
-const std::string DeviceMU2 = DeviceMU + "2";
-const std::string DeviceMU3 = DeviceMU + "3";
-const std::string DeviceMU4 = DeviceMU + "4";
-const std::string DeviceMU5 = DeviceMU + "5";
-const std::string DeviceMU6 = DeviceMU + "6";
-const std::string DeviceMU7 = DeviceMU + "7"; // 7 = Largest possible mu number
+const std::string DeviceMU0 = DeviceMUPrefix + "0";
+const std::string DeviceMU1 = DeviceMUPrefix + "1";
+const std::string DeviceMU2 = DeviceMUPrefix + "2";
+const std::string DeviceMU3 = DeviceMUPrefix + "3";
+const std::string DeviceMU4 = DeviceMUPrefix + "4";
+const std::string DeviceMU5 = DeviceMUPrefix + "5";
+const std::string DeviceMU6 = DeviceMUPrefix + "6";
+const std::string DeviceMU7 = DeviceMUPrefix + "7"; // 7 = Largest possible mu number
 
 void CxbxrSetupDrives(std::filesystem::path& CdRomPath, int BootFlags)
 {
@@ -345,23 +347,13 @@ void CxbxrSetupDrives(std::filesystem::path& CdRomPath, int BootFlags)
 	// Other type of consoles has CD-ROM and Memory Unit
 	else {
 		EmuCdRomSetup(CdRomPath, BootFlags);
+		EmuMuSetup();
 	}
 
 #if 0 // Disabled as we are going to use newer method see above functions.
 	// From CxbxrKrnlRegisterDevicePaths function which has been remove.
 
 	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", g_DiskBasePath + "Chihiro");
-
-	// TODO: Create EmuMu source file and move below into there.
-	// Create the MU directories and the bin files
-	CxbxRegisterDeviceHostPath(DeviceMU0, g_MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU1, g_MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU2, g_MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU3, g_MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU4, g_MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU5, g_MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU6, g_MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
-	CxbxRegisterDeviceHostPath(DeviceMU7, g_MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
 #endif
 }
 
@@ -468,7 +460,10 @@ std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
 	else if (_strnicmp(DeviceCdrom0.c_str(), XboxDevicePath.data(), DeviceCdrom0.size()) == 0) {
 		HostPath = g_TitleMountPath + XboxDevicePath.substr(DeviceCdrom0.size()).data();
 	}
-	// TODO: Should we check for Memory Unit? I think we don't need to.
+	else if (_strnicmp(DeviceMUPrefix.c_str(), XboxDevicePath.data(), DeviceMUPrefix.size()) == 0) {
+		char drive_letter = 'F' + XboxDevicePath[DeviceMUPrefix.size()] - '0';
+		HostPath = g_MuBasePath + drive_letter + XboxDevicePath.substr(DeviceMUPrefix.size() + 1).data();
+	}
 	return HostPath;
 }
 

@@ -781,38 +781,32 @@ namespace xbox {
 			break;
 
 			case fsctl_read_fatx_metadata: {
-#if 0 // TODO: Enable this block and port memory unit support base on EmuDisk.
-				const std::wstring path = CxbxGetFinalPathNameByHandle(FileHandle);
-				size_t pos = path.rfind(L"\\EmuMu");
-				if (pos != std::string::npos && path[pos + 6] == '\\') {
+				if (DeviceObject->DeviceType == FILE_DEVICE_MEMORY_UNIT) {
 					// Ensure that InputBuffer is indeed what we think it is
 					pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
 					assert(InputBufferLength == sizeof(fatx_volume_metadata));
-					g_io_mu_metadata->read(path[pos + 7], volume->offset, static_cast<char*>(volume->buffer), volume->length);
+					xbox::PMU_EXTENSION DeviceExtension = reinterpret_cast<xbox::PMU_EXTENSION>(DeviceObject->DeviceExtension);
+					g_io_mu_metadata->read(DeviceExtension->PartitionNumber, volume->offset, static_cast<char*>(volume->buffer), volume->length);
 					result = X_STATUS_SUCCESS;
 				}
 				else {
-#endif
 					result = X_STATUS_INVALID_HANDLE;
-				//}
+				}
 			}
 			break;
 
 			case fsctl_write_fatx_metadata: {
-#if 0 // TODO: Enable this block and port memory unit support base on EmuDisk.
-				const std::wstring path = CxbxGetFinalPathNameByHandle(FileHandle);
-				size_t pos = path.rfind(L"\\EmuMu");
-				if (pos != std::string::npos && path[pos + 6] == '\\') {
+				if (DeviceObject->DeviceType == FILE_DEVICE_MEMORY_UNIT) {
 					// Ensure that InputBuffer is indeed what we think it is
 					pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
 					assert(InputBufferLength == sizeof(fatx_volume_metadata));
-					g_io_mu_metadata->write(path[pos + 7], volume->offset, static_cast<const char*>(volume->buffer), volume->length);
+					xbox::PMU_EXTENSION DeviceExtension = reinterpret_cast<xbox::PMU_EXTENSION>(DeviceObject->DeviceExtension);
+					g_io_mu_metadata->write(DeviceExtension->PartitionNumber, volume->offset, static_cast<const char*>(volume->buffer), volume->length);
 					result = X_STATUS_SUCCESS;
 				}
 				else {
-#endif
 					result = X_STATUS_INVALID_HANDLE;
-				//}
+				}
 			}
 			break;
 
