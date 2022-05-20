@@ -1007,7 +1007,7 @@ xbox::ntstatus_xt NTAPI xbox::IopParseDevice(
 		RETURN(X_STATUS_OBJECT_NAME_NOT_FOUND);
 	}
 
-	ObfReferenceObject(FileObject); // TODO: Find out what may be the cause for this reference not able to "delete" file and/or keep holding on.
+	//ObfReferenceObject(FileObject); // TODO: Find out what may be the cause for this reference not able to "delete" file and/or keep holding on.
 	*Object = FileObject;
 	OpenPacket->ParseCheck = true;
 	OpenPacket->FinalStatus = result;
