@@ -28,6 +28,7 @@ public:
 	D3D8TransformState();
 	void SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const D3DMATRIX* pMatrix);
 	D3DMATRIX* GetWorldView(unsigned i);
+	void SetWorldView(unsigned i, const D3DMATRIX* pMatrix);
 	D3DMATRIX* GetWorldViewInverseTranspose(unsigned i);
 
 	// The transforms set by the Xbox title
