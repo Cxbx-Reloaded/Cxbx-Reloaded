@@ -105,7 +105,7 @@ static bool                         g_bSupportsFormatTextureDepthStencil[xbox::X
 static bool                         g_bSupportsFormatVolumeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
 static bool                         g_bSupportsFormatCubeTexture[xbox::X_D3DFMT_LIN_R8G8B8A8 + 1]; // Does device support surface format?
 static HBRUSH                       g_hBgBrush = NULL; // Background Brush
-static BOOL                         g_bIsFauxFullscreen = FALSE;
+static bool                         g_bIsFauxFullscreen = false;
 static DWORD						g_OverlaySwap = 0; // Set in D3DDevice_UpdateOverlay
 static int                          g_iWireframe = 0; // wireframe toggle
 static bool                         g_bHack_UnlockFramerate = false; // ignore the xbox presentation interval
@@ -1599,50 +1599,47 @@ static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
 // simple helper function
 void ToggleFauxFullscreen(HWND hWnd)
 {
-    if(g_XBVideo.bFullScreen)
+    if(g_XBVideo.bFullScreen) {
         return;
+    }
 
-    static LONG lRestore = 0, lRestoreEx = 0;
-    static RECT lRect = {0};
+    // Remember last known position and style before go into faux full screen mode.
+    static RECT lRect = {};
+    static LONG gwl_style = {};
 
-    if(!g_bIsFauxFullscreen)
-    {
-        if(CxbxKrnl_hEmuParent != NULL)
-        {
+    // Require to toggle before start process due to WM_SETFOCUS will get trigger earlier.
+    g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
+    if (g_bIsFauxFullscreen) {
+        GetWindowRect(hWnd, &lRect);
+        gwl_style = GetWindowLong(hWnd, GWL_STYLE);
+        SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
+        // NOTE: Window style must be set before call SetParent.
+        if (CxbxKrnl_hEmuParent) {
+            LONG parent_style = gwl_style & ~WS_CHILD;
+            parent_style |= WS_POPUP;
+            SetWindowLong(hWnd, GWL_STYLE, gwl_style);
             SetParent(hWnd, NULL);
         }
-        else
-        {
-            lRestore = GetWindowLong(hWnd, GWL_STYLE);
-            lRestoreEx = GetWindowLong(hWnd, GWL_EXSTYLE);
-
-            GetWindowRect(hWnd, &lRect);
-        }
-
-        SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
+        SetWindowPos(hWnd, HWND_TOPMOST, lRect.left, lRect.top, 0, 0, SWP_NOSIZE);
         ShowWindow(hWnd, SW_MAXIMIZE);
-        SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     }
-    else
-    {
-        if(CxbxKrnl_hEmuParent != NULL)
-        {
+    else {
+        SetWindowLong(hWnd, GWL_STYLE, gwl_style);
+        if(CxbxKrnl_hEmuParent) {
+            // NOTE: This call makes sure that emulation rendering will reappear back into the main window after leaving "faux fullscreen" on non-primary displays.
+            SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_HIDEWINDOW);
+
+            // NOTE: Window style must be set before call SetParent.
             SetParent(hWnd, CxbxKrnl_hEmuParent);
-            SetWindowLong(hWnd, GWL_STYLE, WS_CHILD);
             ShowWindow(hWnd, SW_MAXIMIZE);
             SetFocus(CxbxKrnl_hEmuParent);
         }
-        else
-        {
-            SetWindowLong(hWnd, GWL_STYLE, lRestore);
-            SetWindowLong(hWnd, GWL_EXSTYLE, lRestoreEx);
+        else {
             ShowWindow(hWnd, SW_RESTORE);
             SetWindowPos(hWnd, HWND_NOTOPMOST, lRect.left, lRect.top, lRect.right - lRect.left, lRect.bottom - lRect.top, 0);
             SetFocus(hWnd);
         }
     }
-
-    g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -1878,7 +1875,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 
         case WM_SETFOCUS:
         {
-            if(CxbxKrnl_hEmuParent != NULL)
+            if(CxbxKrnl_hEmuParent && !g_XBVideo.bFullScreen && !g_bIsFauxFullscreen)
             {
                 SetFocus(CxbxKrnl_hEmuParent);
             }
