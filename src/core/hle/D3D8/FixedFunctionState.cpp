@@ -144,6 +144,22 @@ D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
 	return &WorldView[i];
 }
 
+void D3D8TransformState::SetWorldView(unsigned i, const D3DMATRIX* pMatrix)
+{
+    assert(i < 4);
+
+    if (!pMatrix) {
+        // null indicates the title is done with setting
+        // the worldview matrix explicitly
+        bWorldViewDirty[i] = true;
+        return;
+    }
+    else {
+        bWorldViewDirty[i] = false;
+        WorldView[i] = *pMatrix;
+    }
+}
+
 D3DMATRIX* D3D8TransformState::GetWorldViewInverseTranspose(unsigned i)
 {
 	assert(i < 4);

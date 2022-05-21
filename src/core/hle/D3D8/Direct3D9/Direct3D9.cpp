@@ -9076,8 +9076,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 		LOG_FUNC_ARG(pComposite)
 		LOG_FUNC_END;
 
-	// TODO: Implement
-	LOG_UNIMPLEMENTED();
+	// TODO handle other matrices
+	d3d8TransformState.SetWorldView(0, pModelView);
+	LOG_TEST_CASE("SetModelView");
 }
 
 // ******************************************************************
@@ -9097,13 +9098,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pMode
 {
 	LOG_FUNC_ONE_ARG(pModelView);
 
-	D3DXMATRIX mtxWorld, mtxView;
-
-	// I hope this is right
-	g_pD3DDevice->GetTransform( D3DTS_WORLD, &mtxWorld );
-	g_pD3DDevice->GetTransform( D3DTS_VIEW, &mtxView );
-
-	*pModelView = mtxWorld * mtxView;
+	*pModelView = *d3d8TransformState.GetWorldView(0);
 
 	return D3D_OK;
 }
