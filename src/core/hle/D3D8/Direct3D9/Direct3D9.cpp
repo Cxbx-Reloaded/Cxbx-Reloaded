@@ -5985,11 +5985,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			LOG_TEST_CASE("CreateHostResource : Depth != 1");
 		}
 
-		// One of these will be created : each also has an intermediate copy to allow UpdateTexture to work
-        // This means we don't need to lock the GPU resource anymore, so we can use D3DPOOL_DEFAULT to allow Stretch/CopyRects to work!
 #ifdef CXBX_USE_D3D11
 		ComPtr<ID3D11Resource> pNewHostResource;
 #else
+		// One of these will be created : each also has an intermediate copy to allow UpdateTexture to work
+        // This means we don't need to lock the GPU resource anymore, so we can use D3DPOOL_DEFAULT to allow Stretch/CopyRects to work!
 		ComPtr<IDirect3DSurface> pNewHostSurface; // for X_D3DRTYPE_SURFACE
 		ComPtr<IDirect3DVolume> pNewHostVolume; // for X_D3DRTYPE_VOLUME
 		ComPtr<IDirect3DTexture> pNewHostTexture; // for X_D3DRTYPE_TEXTURE
@@ -6019,7 +6019,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = 0;
 
-			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, &pNewHostResource);
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
@@ -6088,7 +6088,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// hRet = pNewHostVolumeTexture->GetVolumeLevel(level, pNewHostVolume.GetAddressOf());
 			// So, we need to do this differently - we need to step up to the containing VolumeTexture,
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
+#ifdef CXBX_USE_D3D11
+			// TODO : Port
+#else
 			pNewHostVolume = nullptr;
+#endif
 			// SetHostVolume(pResource, _9_11(pNewHostVolume, pNewHostResource), iTextureStage);
 			// EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 			//	ResourceTypeName, pResource, pNewHostVolume);
@@ -6244,14 +6248,14 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
-			SetHostCubeTexture(pResource, _9_11(pNewHostCubeTexture, pNewHostResource).Get(), iTextureStage);
+			SetHostCubeTexture(pResource, _9_11(pNewHostCubeTexture.Get(), pNewHostResource.Get()), iTextureStage);
 			// TODO : Cube face surfaces can be used as a render-target,
 			// so we need to associate host surfaces to each surface of this cube texture
             // However, we can't do it here: On Xbox, a new Surface is created on every call to
             // GetCubeMapSurface, so it needs to be done at surface conversion time by looking up
             // the parent CubeTexture
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, pNewHostCubeTexture.Get());
+				ResourceTypeName, pResource, _9_11(pNewHostCubeTexture.Get(), pNewHostResource.Get()));
 			break;
 		}
 		} // switch XboxResourceType
