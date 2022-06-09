@@ -85,7 +85,7 @@ ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, 
 	return key;
 }
 
-IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, char *shader_category)
+IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, const char *shader_category)
 {
 	IDirect3DVertexShader* pHostVertexShader = nullptr;
 

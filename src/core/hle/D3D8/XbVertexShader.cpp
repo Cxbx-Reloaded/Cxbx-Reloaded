@@ -1201,7 +1201,7 @@ static IDirect3DVertexShader* g_pHostPassthroughVertexShader = nullptr;
 static IDirect3DVertexShader* g_pHostFixedFunctionVertexShader = nullptr;
 static IDirect3DVertexShader* g_pHostActiveVertexShader = nullptr; // Used for state tracking
 
-extern IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, char *shader_category); // Implemented in VertexShaderSource.cpp
+extern IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, const char *shader_category); // Implemented in VertexShaderSource.cpp
 
 void CxbxUpdateHostVertexShader()
 {
@@ -1209,7 +1209,7 @@ void CxbxUpdateHostVertexShader()
 
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
-	char *shader_category;
+	const char *shader_category;
 	IDirect3DVertexShader *pHostVertexShader;
 
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
