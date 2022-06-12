@@ -933,6 +933,25 @@ xbox::PLARGE_INTEGER FASTCALL xbox::KiComputeWaitInterval
 (
 	IN xbox::PLARGE_INTEGER OriginalTime,
 	IN xbox::PLARGE_INTEGER DueTime,
+	IN OUT xbox::PLARGE_INTEGER NewTime,
+	OUT ulonglong_xt *Now
+)
+{
+	*Now = xbox::KeQueryInterruptTime();
+	if (OriginalTime->QuadPart >= 0) {
+		return OriginalTime;
+	}
+	else {
+		NewTime->QuadPart = *Now;
+		NewTime->QuadPart -= DueTime->QuadPart;
+		return NewTime;
+	}
+}
+
+xbox::PLARGE_INTEGER FASTCALL xbox::KiComputeWaitInterval
+(
+	IN xbox::PLARGE_INTEGER OriginalTime,
+	IN xbox::PLARGE_INTEGER DueTime,
 	IN OUT xbox::PLARGE_INTEGER NewTime
 )
 {
