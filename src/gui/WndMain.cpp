@@ -30,7 +30,7 @@
 #define LOG_PREFIX CXBXR_MODULE::GUI
 
 #include "common/cxbxr.hpp" // for CxbxrExec
-
+#include "core\hle\D3D8\XbConvert.h"
 #include "Logging.h"
 #include "WndMain.h"
 #include "DlgAbout.h"
