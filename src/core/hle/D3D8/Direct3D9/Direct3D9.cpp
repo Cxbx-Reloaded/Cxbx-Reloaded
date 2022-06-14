@@ -2271,7 +2271,10 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
             // would be overwritten by the surface created in SetRenderTarget
             // However, if a non-rendertarget surface is used here, we'll need to recreate it as a render target!
             auto hostResource = it->second.pHostResource;
-            assert(xboxResourceType == GetXboxD3DResourceType(pResource));
+			auto xboxSurface = (xbox::X_D3DSurface*)pResource;
+			auto xboxTexture = (xbox::X_D3DTexture*)pResource;
+			auto xboxResourceType = GetXboxD3DResourceType(pResource);
+            
 
             // Only continue checking if we were able to get the surface desc, if it failed, we fall-through
             // to previous resource management behavior
