@@ -105,8 +105,9 @@ bool HandleFirstLaunch()
 	g_InputDeviceManager.Shutdown();
 
 #ifdef CXBXR_EMU
+	// NOTE: this code causes freezes/crashes at shutdown, so avoid for now
 	// This is very important process to prevent false positive report and allow IDEs to continue debug multiple reboots.
-	CxbxrKrnlSuspendThreads();
+	//CxbxrKrnlSuspendThreads();
 
 	if (g_io_mu_metadata) {
 		delete g_io_mu_metadata;
