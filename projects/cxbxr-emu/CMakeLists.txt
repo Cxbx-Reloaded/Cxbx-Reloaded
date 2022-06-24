@@ -171,6 +171,7 @@ target_link_libraries(cxbxr-emu
  SDL2
  imgui
  libusb
+ nv2a_vsh_emulator
 
  ${WINS_LIB}
 )
