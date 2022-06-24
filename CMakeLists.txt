@@ -39,6 +39,9 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/imgui")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libusb")
 
+set(nv2a_vsh_cpu_UNIT_TEST OFF)
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/nv2a_vsh_cpu" EXCLUDE_FROM_ALL)
+
 # Split the files into group for which project is likely
 # going to be used for both header and source files.
 # Then move only specific project files into their
@@ -435,6 +438,10 @@ set(cxbxr_INSTALL_files "COPYING" "README.md")
 # Cxbx-Reloaded project with third-party libraries
 set_target_properties(cxbx cxbxr-ldr cxbxr-emu misc-batch SDL2 subhook libXbSymbolDatabase libtommath libtomcrypt imgui libusb
  PROPERTIES FOLDER Cxbx-Reloaded
+)
+
+set_target_properties(nv2a_vsh_emulator nv2a_vsh_disassembler nv2a_vsh_cpu
+ PROPERTIES FOLDER Cxbx-Reloaded/nv2a_vsh
 )
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
