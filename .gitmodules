@@ -39,3 +39,6 @@
 	path = import/libusb
 	url = https://github.com/libusb/libusb
 	shallow = true
+[submodule "import/nv2a_vsh_cpu"]
+	path = import/nv2a_vsh_cpu
+	url = https://github.com/abaire/nv2a_vsh_cpu.git
