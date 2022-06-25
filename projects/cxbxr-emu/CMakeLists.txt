@@ -22,7 +22,6 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/simpleini"
  "${CXBXR_ROOT_DIR}/import/winpcap/Include"
  "${CXBXR_ROOT_DIR}/import/xxHash"
-  "${CXBXR_ROOT_DIR}/import/nv2a_vsh_cpu/src"
 )
 
 link_directories(
