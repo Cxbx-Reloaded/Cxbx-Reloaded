@@ -5848,6 +5848,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			blockSize = X_Format == xbox::X_D3DFMT_DXT1 ? 8 : 16;
 		}
 
+		DWORD actualSlicePitch = dwSlicePitch;
 		for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
 			// As we iterate through mipmap levels, we'll adjust the source resource offset
 			DWORD dwMipOffset = 0;
@@ -5923,6 +5924,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
+
+				// If this is the final mip of the first cube face, set the cube face size
+				if (face == D3DCUBEMAP_FACE_POSITIVE_X && mipmap_level >= dwMipMapLevels - 1) {
+					actualSlicePitch = ROUND_UP(((UINT)pSrc + mipSlicePitch) - (UINT)VirtualAddr, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
+				}
 
 				// Copy texture data to the host resource
 				if (bConvertToARGB) {
@@ -6023,7 +6029,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 			} // for mipmap levels
 
-			dwCubeFaceOffset += dwSlicePitch;
+			dwCubeFaceOffset += actualSlicePitch;
 		} // for cube faces
 
 
