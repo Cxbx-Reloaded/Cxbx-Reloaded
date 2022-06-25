@@ -78,6 +78,9 @@
 #include <thread>
 
 #include <wrl/client.h>
+
+#include "nv2a_vsh_emulator.h"
+
 using namespace Microsoft::WRL;
 
 XboxRenderStateConverter XboxRenderStates;
@@ -5848,6 +5851,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			blockSize = X_Format == xbox::X_D3DFMT_DXT1 ? 8 : 16;
 		}
 
+		DWORD actualSlicePitch = dwSlicePitch;
 		for (int face = D3DCUBEMAP_FACE_POSITIVE_X; face <= last_face; face++) {
 			// As we iterate through mipmap levels, we'll adjust the source resource offset
 			DWORD dwMipOffset = 0;
@@ -5923,6 +5927,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
+
+				// If this is the final mip of the first cube face, set the cube face size
+				if (face == D3DCUBEMAP_FACE_POSITIVE_X && mipmap_level >= dwMipMapLevels - 1) {
+					actualSlicePitch = ROUND_UP(((UINT)pSrc + mipSlicePitch) - (UINT)VirtualAddr, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
+				}
 
 				// Copy texture data to the host resource
 				if (bConvertToARGB) {
@@ -6023,7 +6032,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 			} // for mipmap levels
 
-			dwCubeFaceOffset += dwSlicePitch;
+			dwCubeFaceOffset += actualSlicePitch;
 		} // for cube faces
 
 
@@ -8654,6 +8663,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 		XB_TRMP(D3DDevice_SetVertexShaderInput)(Handle, StreamCount, pStreamInputs);
 }
 
+extern xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress); // tmp glue
+
 // ******************************************************************
 // * patch: D3DDevice_RunVertexStateShader
 // ******************************************************************
@@ -8670,8 +8681,38 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 
 	// If pData is assigned, pData[0..3] is pushed towards nv2a transform data registers
 	// then sends the nv2a a command to launch the vertex shader function located at Address
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
 
-    LOG_UNIMPLEMENTED(); 
+	float vertex_state_shader_v0[4];
+	if (pData != nullptr)
+		//if pData != nullptr, then it contents v0.xyzw, we shall copy the binary content directly.
+		memcpy(vertex_state_shader_v0,pData, sizeof(vertex_state_shader_v0));
+	else
+		//for pData == nullptr, this data is not supposed to be used. but we assign v0.xyzw 0.0f in each component just in case.
+		for (int slot = 0; slot < 4; slot++)
+	    {
+			vertex_state_shader_v0[slot] = 0.0f;
+    	}
+
+	int shader_slot = Address;
+	Nv2aVshProgram program;
+
+	Nv2aVshParseResult result = nv2a_vsh_parse_program(
+		&program,
+		//pg->program_data[shader_slot],
+		GetCxbxVertexShaderSlotPtr(shader_slot),
+		NV2A_MAX_TRANSFORM_PROGRAM_LENGTH - shader_slot);
+	assert(result == NV2AVPR_SUCCESS);
+
+	Nv2aVshCPUXVSSExecutionState state_linkage;
+	Nv2aVshExecutionState state = nv2a_vsh_emu_initialize_xss_execution_state(
+		&state_linkage, (float*)pg->vsh_constants);
+	memcpy(state_linkage.input_regs, vertex_state_shader_v0, sizeof(vertex_state_shader_v0));
+
+	nv2a_vsh_emu_execute_track_context_writes(&state, &program, pg->vsh_constants_dirty);
+
+	nv2a_vsh_program_destroy(&program);	
 }
 
 // ******************************************************************

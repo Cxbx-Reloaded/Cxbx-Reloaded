@@ -1614,6 +1614,7 @@ void CxbxGetPixelContainerMeasures
 	UINT* pHeight,
 	UINT* pDepth,
 	UINT* pRowPitch,
+	// Slice pitch (does not include mipmaps!)
 	UINT* pSlicePitch
 )
 {
