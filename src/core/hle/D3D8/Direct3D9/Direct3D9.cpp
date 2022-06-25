@@ -8709,13 +8709,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 		&state_linkage, (float*)pg->vsh_constants);
 	memcpy(state_linkage.input_regs, vertex_state_shader_v0, sizeof(vertex_state_shader_v0));
 
-	nv2a_vsh_emu_execute(&state, &program);
+	nv2a_vsh_emu_execute_track_context_writes(&state, &program, pg->vsh_constants_dirty);
 
-	nv2a_vsh_program_destroy(&program);
-	//mark all vertex shader constants dirty so later they will be updated by vertex shader processor code.
-	for(int vshcnt=0;vshcnt< NV2A_VERTEXSHADER_CONSTANTS;vshcnt++)
-	    pg->vsh_constants_dirty[vshcnt] = TRUE;
-	
+	nv2a_vsh_program_destroy(&program);	
 }
 
 // ******************************************************************
