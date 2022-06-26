@@ -362,6 +362,8 @@ R"DELIMITER(
     float fogFactor;
     if(fogTableMode == FOG_TABLE_NONE) 
        fogFactor = fogDepth;
+	   if(fogDepth < 0)
+	    fogFactor = (1 - fogDepth);
     if(fogTableMode == FOG_TABLE_EXP) 
        fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
     if(fogTableMode == FOG_TABLE_EXP2) 
