@@ -8687,13 +8687,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 	float vertex_state_shader_v0[4];
 	if (pData != nullptr)
 		//if pData != nullptr, then it contents v0.xyzw, we shall copy the binary content directly.
-		memcpy(vertex_state_shader_v0,pData, sizeof(vertex_state_shader_v0));
+		memcpy(vertex_state_shader_v0, pData, sizeof(vertex_state_shader_v0));
 	else
 		//for pData == nullptr, this data is not supposed to be used. but we assign v0.xyzw 0.0f in each component just in case.
-		for (int slot = 0; slot < 4; slot++)
-	    {
-			vertex_state_shader_v0[slot] = 0.0f;
-    	}
+		std::memset(vertex_state_shader_v0, 0, sizeof(vertex_state_shader_v0));
 
 	int shader_slot = Address;
 	Nv2aVshProgram program;
