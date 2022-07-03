@@ -45,8 +45,6 @@
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
 #include "core\kernel\support\NativeHandle.h"
 
-#include <semaphore>
-
 // prevent name collisions
 namespace NtDll
 {
@@ -60,7 +58,7 @@ typedef struct _PCSTProxyParam
 {
 	IN xbox::PVOID  Ethread;
 	IN xbox::ulong_xt TlsDataSize;
-	IN OUT std::binary_semaphore* signal;
+	IN OUT std::atomic_flag *signal;
 }
 PCSTProxyParam;
 
@@ -120,7 +118,8 @@ static unsigned int WINAPI PCSTProxy
 	//       PsCreateSystemThreadEx function. For now, it is an experimental to see if xbox thread setup do work
 	//       without reside in host stack.
 	// Initializing ethread is done, we can allow PsCreateSystemThreadEx process to continue.
-	params.signal->release();
+	params.signal->test_and_set();
+	params.signal->notify_one();
 	params.signal = nullptr;
 	SuspendThread(GetCurrentThread());
 	if (xbox::KeGetCurrentThread()->HasTerminated) {
@@ -372,8 +371,8 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	// Start thread initialization process here before insert and create thread
 	KeInitializeThread(&eThread->Tcb, KernelStack, KernelStackSize, TlsDataSize, SystemRoutine, StartRoutine, StartContext, &KiUniqueProcess);
 
-	// Create binary_semaphore to allow new thread setup non-kthread switching.
-	std::binary_semaphore signal{0};
+	// Create atomic_flag to allow new thread setup non-kthread switching.
+	std::atomic_flag signal;
 
 	// PCSTProxy is responsible for cleaning up this pointer
 	PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
@@ -391,7 +390,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	}
 
 	// We are waiting on new thread's non-kthread switching process is done before we can continue on.
-	signal.acquire();
+	signal.wait(false);
 
 	// Increment the ref count of the thread once more. This is to guard against the case the title closes the thread handle
 	// before this thread terminates with PsTerminateSystemThread
