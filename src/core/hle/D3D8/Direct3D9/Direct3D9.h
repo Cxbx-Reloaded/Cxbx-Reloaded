@@ -267,7 +267,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_CaptureStateBlock)(dword_xt Token);
 // ******************************************************************
 // * patch: D3DDevice_ApplyStateBlock
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_ApplyStateBlock)(dword_xt Token);
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_ApplyStateBlock)(dword_xt Token);
 
 // ******************************************************************
 // * patch: D3DDevice_EndStateBlock
