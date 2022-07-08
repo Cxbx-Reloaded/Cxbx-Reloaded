@@ -138,6 +138,8 @@ void EmuExecutePushBuffer
 				//disable fixup for now. currently fixup doesn't work correctly for realtime recorded pushbuffer.
 				//that's because we patch HLE calls and for those calls without trampoline, pushbuffer command wasn't sent.
 				//but fixup keep the reference and tried to fixup the pushbuffer command. for example, SetVertexConstants().
+				//the 1st dword of fixup data is always a method, it should be exactly the same as the data in pushbuffer. if they are not the same, then there must be something wrong in pushbuffer.
+				assert(*(DWORD*)(pPushBufferData + OffsetInBytes )== *(DWORD*)pFixupData);
 				memcpy(pPushBufferData + OffsetInBytes, pFixupData, SizeInBytes);
 			}
 			pFixupData += SizeInBytes;
