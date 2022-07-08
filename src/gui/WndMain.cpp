@@ -1934,7 +1934,7 @@ void WndMain::OpenXbe(const char *x_filename)
 
     strcpy(m_XbeFilename, x_filename);
 
-    m_Xbe = new Xbe(m_XbeFilename, true);
+    m_Xbe = new Xbe(m_XbeFilename);
 
     if(m_Xbe->HasError())
     {
