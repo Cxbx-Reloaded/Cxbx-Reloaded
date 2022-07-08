@@ -3561,7 +3561,7 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	//	mov  ecx, Xbox_D3DDevice
 	//}
 	// KickOff xbox d3d pushbuffer first. 
-
+	// this EmuKickOffWait() must be called in order to keep pushbuffer/HLE from race condition.
 	EmuKickOffWait();
 
 	return result;
@@ -5145,12 +5145,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
 	//with this wait, we can make sure the pfifo_run_pusher()running in another thread won't conflict with the following guest code we're going to run.
 	//this wait is not necessary once we remove all HLE patches.
 	/*
-	g_nv2a_fifo_is_parsing = true;//set this flag only after we trampoline the D3DDevice_EndPush, make sure pfifo starts parsing pushbuffer before we set this flag to true.
-	while (true) {
-		if (!g_nv2a_fifo_is_parsing) {
-			break;
-		}
-	}
+	// if we unpatch D3DDevice_Begin/End, then this EmuKickOffWait() must be called in order to keep pushbuffer/HLE from race condition.
+	EmuKickOffWait();
 	*/
 	return result;
 	
@@ -8390,7 +8386,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 
 	CxbxImpl_SetPixelShader(Handle);
 }
-xbox::void_xt WINAPI CxbxrImpl_DrawVertices
+
+extern void D3D_draw_state_update(NV2AState* d);
+
+xbox::void_xt WINAPI CxbxImpl_DrawVertices
 (
 	xbox::X_D3DPRIMITIVETYPE PrimitiveType,
 	xbox::uint_xt            StartVertex,
@@ -8403,6 +8402,12 @@ xbox::void_xt WINAPI CxbxrImpl_DrawVertices
 	}
 
 	// TODO : Call unpatched CDevice_SetStateVB(0);
+	// Flush pushbuffer
+	// EmuKickOffWait();
+	// map pgraph status to D3D
+	NV2AState* d = g_NV2A->GetDeviceState();
+	// this shall update all NV2A texture/transform/vertex shader/pixel shader
+	// D3D_draw_state_update(d);
 
 	CxbxUpdateNativeD3DResources();
 
@@ -8505,7 +8510,6 @@ xbox::void_xt WINAPI CxbxrImpl_DrawVertices
 // Test Case: Conker
 // ******************************************************************
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)
-xbox::void_xt WINAPI CxbxrImpl_DrawVertices
 (
     X_D3DPRIMITIVETYPE PrimitiveType
 )
@@ -8726,7 +8730,97 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 	CxbxrImpl_DrawIndexedVertices(PrimitiveType, VertexCount, pIndexData);
 
 }
+xbox::void_xt WINAPI CxbxrImpl_DrawIndexedVerticesUP
+(
+	X_D3DPRIMITIVETYPE  PrimitiveType,
+	uint_xt                VertexCount,
+	CONST PVOID         pIndexData,
+	CONST PVOID         pVertexStreamZeroData,
+	uint_xt                VertexStreamZeroStride
+)
+{
+	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
+		LOG_TEST_CASE("Invalid VertexCount");
+		return;
+	}
 
+	// TODO : Call unpatched CDevice_SetStateUP();
+
+	CxbxUpdateNativeD3DResources();
+
+	CxbxDrawContext DrawContext = {};
+	INDEX16* pXboxIndexData = (INDEX16*)pIndexData;
+
+	DrawContext.XboxPrimitiveType = PrimitiveType;
+	DrawContext.dwVertexCount = VertexCount;
+	DrawContext.pXboxIndexData = pXboxIndexData; // Used to derive VerticesInBuffer
+	// Note : D3DDevice_DrawIndexedVerticesUP does NOT use g_Xbox_BaseVertexIndex, so keep DrawContext.dwBaseVertexIndex at 0!
+	DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
+	DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
+
+	// Determine LowIndex and HighIndex *before* VerticesInBuffer gets derived
+	WalkIndexBuffer(DrawContext.LowIndex, DrawContext.HighIndex, pXboxIndexData, VertexCount);
+
+	VertexBufferConverter.Apply(&DrawContext);
+
+	INDEX16* pHostIndexData;
+	UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount;
+
+	bool bConvertQuadListToTriangleList = (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST);
+	if (bConvertQuadListToTriangleList) {
+		LOG_TEST_CASE("X_D3DPT_QUADLIST");
+		// Test-case : Buffy: The Vampire Slayer
+		// Test-case : XDK samples : FastLoad, BackBufferScale, DisplacementMap, Donuts3D, VolumeLight, PersistDisplay, PolynomialTextureMaps, SwapCallback, Tiling, VolumeFog, DebugKeyboard, Gamepad
+		// Convert draw arguments from quads to triangles :
+		pHostIndexData = CxbxCreateQuadListToTriangleListIndexData(pXboxIndexData, VertexCount);
+
+		// Note, that LowIndex and HighIndex won't change due to this quad-to-triangle conversion,
+		// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
+	}
+	else {
+		// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
+		pHostIndexData = pXboxIndexData;
+	}
+
+	HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
+		/*PrimitiveType=*/EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
+		/*MinVertexIndex=*/DrawContext.LowIndex,
+		/*NumVertexIndices=*/(DrawContext.HighIndex - DrawContext.LowIndex) + 1,
+		PrimitiveCount,
+		pHostIndexData,
+		/*IndexDataFormat=*/D3DFMT_INDEX16,
+		DrawContext.pHostVertexStreamZeroData,
+		DrawContext.uiHostVertexStreamZeroStride
+	);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitiveUP");
+
+	if (bConvertQuadListToTriangleList) {
+		CxbxReleaseQuadListToTriangleListIndexData(pHostIndexData);
+	}
+
+	g_dwPrimPerFrame += PrimitiveCount;
+	if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
+		// Close line-loops using a final single line, drawn from the end to the start vertex
+		LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this test-case?
+		// Read the end and start index from the supplied index data
+		INDEX16 LowIndex = pXboxIndexData[0];
+		INDEX16 HighIndex = pXboxIndexData[DrawContext.dwHostPrimitiveCount];
+		// If needed, swap so highest index is higher than lowest (duh)
+		if (HighIndex < LowIndex) {
+			std::swap(HighIndex, LowIndex);
+		}
+
+		// Close line-loops using a final single line, drawn from the end to the start vertex :
+		CxbxDrawIndexedClosingLineUP(
+			LowIndex,
+			HighIndex,
+			DrawContext.pHostVertexStreamZeroData,
+			DrawContext.uiHostVertexStreamZeroStride
+		);
+	}
+
+	CxbxHandleXboxCallbacks();
+}
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVerticesUP
 // ******************************************************************
@@ -8750,86 +8844,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_DrawIndexedVerticesUP)(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
-	if (!IsValidXboxVertexCount(PrimitiveType, VertexCount)) {
-		LOG_TEST_CASE("Invalid VertexCount");
-		return;
-	}
 
-	// TODO : Call unpatched CDevice_SetStateUP();
+	CxbxrImpl_DrawIndexedVerticesUP(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
 
-	CxbxUpdateNativeD3DResources();
-
-		CxbxDrawContext DrawContext = {};
-		INDEX16* pXboxIndexData = (INDEX16*)pIndexData;
-
-		DrawContext.XboxPrimitiveType = PrimitiveType;
-		DrawContext.dwVertexCount = VertexCount;
-		DrawContext.pXboxIndexData = pXboxIndexData; // Used to derive VerticesInBuffer
-		// Note : D3DDevice_DrawIndexedVerticesUP does NOT use g_Xbox_BaseVertexIndex, so keep DrawContext.dwBaseVertexIndex at 0!
-		DrawContext.pXboxVertexStreamZeroData = pVertexStreamZeroData;
-		DrawContext.uiXboxVertexStreamZeroStride = VertexStreamZeroStride;
-
-		// Determine LowIndex and HighIndex *before* VerticesInBuffer gets derived
-		WalkIndexBuffer(DrawContext.LowIndex, DrawContext.HighIndex, pXboxIndexData, VertexCount);
-
-		VertexBufferConverter.Apply(&DrawContext);
-
-		INDEX16* pHostIndexData;
-		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount;
-
-		bool bConvertQuadListToTriangleList = (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST);
-		if (bConvertQuadListToTriangleList) {
-			LOG_TEST_CASE("X_D3DPT_QUADLIST");
-			// Test-case : Buffy: The Vampire Slayer
-			// Test-case : XDK samples : FastLoad, BackBufferScale, DisplacementMap, Donuts3D, VolumeLight, PersistDisplay, PolynomialTextureMaps, SwapCallback, Tiling, VolumeFog, DebugKeyboard, Gamepad
-			// Convert draw arguments from quads to triangles :
-			pHostIndexData = CxbxCreateQuadListToTriangleListIndexData(pXboxIndexData, VertexCount);
-			
-			// Note, that LowIndex and HighIndex won't change due to this quad-to-triangle conversion,
-			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
-		} else {
-			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
-			pHostIndexData = pXboxIndexData;
-		}
-
-		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
-			/*PrimitiveType=*/EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
-			/*MinVertexIndex=*/DrawContext.LowIndex,
-			/*NumVertexIndices=*/(DrawContext.HighIndex - DrawContext.LowIndex) + 1,
-			PrimitiveCount,
-			pHostIndexData,
-			/*IndexDataFormat=*/D3DFMT_INDEX16,
-			DrawContext.pHostVertexStreamZeroData,
-			DrawContext.uiHostVertexStreamZeroStride
-		);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitiveUP");
-
-		if (bConvertQuadListToTriangleList) {
-			CxbxReleaseQuadListToTriangleListIndexData(pHostIndexData);
-		}
-
-		g_dwPrimPerFrame += PrimitiveCount;
-		if (DrawContext.XboxPrimitiveType == X_D3DPT_LINELOOP) {
-			// Close line-loops using a final single line, drawn from the end to the start vertex
-			LOG_TEST_CASE("X_D3DPT_LINELOOP"); // TODO : Which titles reach this test-case?
-			// Read the end and start index from the supplied index data
-			INDEX16 LowIndex = pXboxIndexData[0];
-			INDEX16 HighIndex = pXboxIndexData[DrawContext.dwHostPrimitiveCount];
-			// If needed, swap so highest index is higher than lowest (duh)
-			if (HighIndex < LowIndex) {
-				std::swap(HighIndex, LowIndex);
-			}
-
-			// Close line-loops using a final single line, drawn from the end to the start vertex :
-			CxbxDrawIndexedClosingLineUP(
-				LowIndex,
-				HighIndex,
-				DrawContext.pHostVertexStreamZeroData,
-				DrawContext.uiHostVertexStreamZeroStride
-			);
-		}
-
-	CxbxHandleXboxCallbacks();
 }
 
 // ******************************************************************
