@@ -169,12 +169,9 @@ bool EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 		"  Press \"Ignore\" to attempt to continue emulation.",
 		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
 
-	if (result == PopupReturn::Abort)
-	{
+	if (result == PopupReturn::Abort) {
 		EmuExceptionExitProcess();
-	}
-	else if (result == PopupReturn::Ignore)
-	{
+	} else if (result == PopupReturn::Ignore) {
 		e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip 1 instruction
 		return true;
 	}
@@ -195,7 +192,8 @@ bool IsXboxCodeAddress(xbox::addr_xt addr)
 #include "distorm.h"
 bool EmuX86_DecodeOpcode(const uint8_t* Eip, _DInst& info);
 void EmuX86_DistormLogInstruction(const uint8_t* Eip, _DInst& info, LOG_LEVEL log_level);
-bool genericException(EXCEPTION_POINTERS *e) {
+bool genericException(EXCEPTION_POINTERS *e)
+{
 	_DInst info;
 	if (EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
 		EmuX86_DistormLogInstruction((uint8_t*)e->ContextRecord->Eip, info, LOG_LEVEL::FATAL);
