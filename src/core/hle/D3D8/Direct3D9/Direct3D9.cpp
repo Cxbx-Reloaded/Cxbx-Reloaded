@@ -2978,6 +2978,17 @@ void Direct3D_CreateDevice_End
             CxbxImpl_SetRenderTarget(xbox::zeroptr, g_pXbox_DefaultDepthStencilSurface);
         }
     }
+
+#if 1
+	// restore the usage for EmuKickOff()/SetTransform()/GetTransform()
+	// Set g_pXbox_D3DDevice to point to the Xbox D3D Device
+	if (g_pXbox_D3DDevice == nullptr) {
+		auto it = g_SymbolAddresses.find("D3DDEVICE");
+		if (it != g_SymbolAddresses.end()) {
+			g_pXbox_D3DDevice = (xbox::dword_xt*)it->second;
+		}
+	}
+#endif
 }
 
 // Overload for logging
@@ -3256,17 +3267,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
-
-#if 1
-	// restore the usage for EmuKickOff()/SetTransform()/GetTransform()
-	// Set g_pXbox_D3DDevice to point to the Xbox D3D Device
-	if(g_pXbox_D3DDevice==nullptr){
-		auto it = g_SymbolAddresses.find("D3DDEVICE");
-		if (it != g_SymbolAddresses.end()) {
-			g_pXbox_D3DDevice = (xbox::dword_xt *)it->second;
-		}
-	}
-#endif
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
@@ -3562,15 +3562,7 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	//	mov  ecx, Xbox_D3DDevice
 	//}
 	// KickOff xbox d3d pushbuffer first. 
-	EmuKickOff();
-	while(g_nv2a_fifo_is_busy){
-		//__asm {
-			//mov  ecx, Xbox_D3DDevice
-		//}
-		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
-		EmuKickOff();
-	}
-	return result;
+	EmuKickOffWait();
 }
 
 // ******************************************************************
@@ -5442,14 +5434,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 	// make sure pushbuffer pasring complete before we process swap.
 	/* // disabled, we're doing multi buffering, shouldn't stop here waiting.
-	EmuKickOff();
-	while (g_nv2a_fifo_is_busy) {
-		//__asm {
-			//mov  ecx, Xbox_D3DDevice
-		//}
-		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
-		EmuKickOff();
-	}
+	EmuKickOffWait();
 	*/
 	// TODO: Ensure this flag is always the same across library versions
 	if (Flags != 0 && Flags != CXBX_SWAP_PRESENT_FORWARD)
