@@ -144,6 +144,14 @@ namespace xbox
 	(
 		IN PLARGE_INTEGER OriginalTime,
 		IN PLARGE_INTEGER DueTime,
+		IN OUT PLARGE_INTEGER NewTime,
+		OUT ulonglong_xt *Now
+	);
+
+	PLARGE_INTEGER FASTCALL KiComputeWaitInterval
+	(
+		IN PLARGE_INTEGER OriginalTime,
+		IN PLARGE_INTEGER DueTime,
 		IN OUT PLARGE_INTEGER NewTime
 	);
 

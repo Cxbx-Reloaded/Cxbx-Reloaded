@@ -112,43 +112,75 @@ void RestoreInterruptMode(bool value);
 void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql);
 
 template<typename T>
-xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER AbsoluteExpireTime, xbox::boolean_xt Alertable, xbox::char_xt WaitMode)
+std::optional<xbox::ntstatus_xt> SatisfyWait(T &&Lambda, xbox::PETHREAD eThread, xbox::boolean_xt Alertable, xbox::char_xt WaitMode)
+{
+	if (const auto ret = Lambda()) {
+		return ret;
+	}
+
+	xbox::KiApcListMtx.lock();
+	bool EmptyKernel = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::KernelMode]);
+	bool EmptyUser = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::UserMode]);
+	xbox::KiApcListMtx.unlock();
+
+	if (EmptyKernel == false) {
+		xbox::KiExecuteKernelApc();
+	}
+
+	if ((EmptyUser == false) &&
+		(Alertable == TRUE) &&
+		(WaitMode == xbox::UserMode)) {
+		xbox::KiExecuteUserApc();
+		return X_STATUS_USER_APC;
+	}
+
+	return std::nullopt;
+}
+
+template<typename T>
+xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER Timeout, xbox::boolean_xt Alertable, xbox::char_xt WaitMode)
 {
 	// NOTE: kThread->Alerted is currently never set. When the alerted mechanism is implemented, the alerts should
 	// also interrupt the wait
 
-	xbox::ulonglong_xt now = xbox::KeQueryInterruptTime();
 	xbox::PETHREAD eThread = reinterpret_cast<xbox::PETHREAD>(EmuKeGetPcr()->Prcb->CurrentThread);
 
-	if (AbsoluteExpireTime->QuadPart == 0) {
-		// This will only happen when the title specifies a zero timeout
-		AbsoluteExpireTime->QuadPart = now;
-	}
+	if (Timeout == nullptr) {
+		// No timout specified, so this is an infinite wait until an alert, a user apc or the object(s) become(s) signalled
+		while (true) {
+			if (const auto ret = SatisfyWait(Lambda, eThread, Alertable, WaitMode)) {
+				return *ret;
+			}
 
-	while (now <= static_cast<xbox::ulonglong_xt>(AbsoluteExpireTime->QuadPart)) {
-		if (const auto ret = Lambda()) {
+			std::this_thread::yield();
+		}
+	}
+	else if (Timeout->QuadPart == 0) {
+		// A zero timeout means that we only have to check the conditions once and then return immediately if they are not satisfied
+		if (const auto ret = SatisfyWait(Lambda, eThread, Alertable, WaitMode)) {
 			return *ret;
 		}
-
-		xbox::KiApcListMtx.lock();
-		bool EmptyKernel = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::KernelMode]);
-		bool EmptyUser = IsListEmpty(&eThread->Tcb.ApcState.ApcListHead[xbox::UserMode]);
-		xbox::KiApcListMtx.unlock();
-		if (EmptyKernel == false) {
-			xbox::KiExecuteKernelApc();
+		else {
+			return X_STATUS_TIMEOUT;
 		}
-		if ((EmptyUser == false) &&
-			(Alertable == TRUE) &&
-			(WaitMode == xbox::UserMode)) {
-			xbox::KiExecuteUserApc();
-			return X_STATUS_USER_APC;
-		}
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
-		now = xbox::KeQueryInterruptTime();
 	}
+	else {
+		// A non-zero timeout means we have to check the conditions until we reach the requested time
+		xbox::LARGE_INTEGER ExpireTime, DueTime, NewTime;
+		xbox::ulonglong_xt Now;
+		ExpireTime.QuadPart = DueTime.QuadPart = Timeout->QuadPart; // either positive, negative, but not NULL
+		xbox::PLARGE_INTEGER AbsoluteExpireTime = xbox::KiComputeWaitInterval(&ExpireTime, &DueTime, &NewTime, &Now);
+		while (Now <= static_cast<xbox::ulonglong_xt>(AbsoluteExpireTime->QuadPart)) {
+			if (const auto ret = SatisfyWait(Lambda, eThread, Alertable, WaitMode)) {
+				return *ret;
+			}
 
-	return X_STATUS_TIMEOUT;
+			std::this_thread::yield();
+			Now = xbox::KeQueryInterruptTime();
+		}
+
+		return X_STATUS_TIMEOUT;
+	}
 }
 
 #endif

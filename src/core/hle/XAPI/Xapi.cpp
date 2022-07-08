@@ -1003,10 +1003,16 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 	LARGE_INTEGER NewTime;
+	PLARGE_INTEGER Timeout;
 	if (dwMilliseconds == INFINITE) {
-		NewTime.QuadPart = ~0ull;
+		Timeout = nullptr;
+	}
+	else if (dwMilliseconds == 0) {
+		Timeout = &NewTime;
+		NewTime.QuadPart = 0;
 	}
 	else {
+		Timeout = &NewTime;
 		NewTime.QuadPart = xbox::KeQueryInterruptTime();
 		NewTime.QuadPart += (static_cast<xbox::ulonglong_xt>(dwMilliseconds) * CLOCK_TIME_INCREMENT);
 	}
@@ -1017,7 +1023,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 			return std::nullopt;
 		}
 		return std::make_optional<DWORD>(dwRet);
-		}, &NewTime, bAlertable, UserMode);
+		}, Timeout, bAlertable, UserMode);
 
 	RETURN((ret == X_STATUS_USER_APC) ? WAIT_IO_COMPLETION : (ret == X_STATUS_TIMEOUT) ? WAIT_TIMEOUT : ret);
 }
