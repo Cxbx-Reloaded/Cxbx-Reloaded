@@ -7721,7 +7721,7 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 
 		// Convert draw arguments from quads to triangles :
 		// Note : BaseVertexIndex must NOT be mapped through QuadToTriangleVertexCount(BaseVertexIndex)!
-		primCount *= TRIANGLES_PER_QUAD;
+		// primCount *= TRIANGLES_PER_QUAD;
 	}
 
 	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
@@ -8797,7 +8797,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			// Test-case : XDK samples : FastLoad, BackBufferScale, DisplacementMap, Donuts3D, VolumeLight, PersistDisplay, PolynomialTextureMaps, SwapCallback, Tiling, VolumeFog, DebugKeyboard, Gamepad
 			// Convert draw arguments from quads to triangles :
 			pHostIndexData = CxbxCreateQuadListToTriangleListIndexData(pXboxIndexData, VertexCount);
-			PrimitiveCount *= TRIANGLES_PER_QUAD;
+			
 			// Note, that LowIndex and HighIndex won't change due to this quad-to-triangle conversion,
 			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
 		} else {
