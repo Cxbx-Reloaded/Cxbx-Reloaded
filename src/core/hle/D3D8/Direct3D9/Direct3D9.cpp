@@ -5589,8 +5589,12 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 			// as either YUV or RGB format (note that either one must be a 3 bytes per pixel format)
 			D3DFORMAT PCFormat;
 			// TODO : Before reading from pgraph, flush all pending push-buffer commands
+			NV2AState* d = g_NV2A->GetDeviceState();
+			PGRAPHState* pg = &d->pgraph;
+
 			//switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV_PGRAPH_CONTROL_0), NV_PGRAPH_CONTROL_0_CSCONVERT)) {
-			switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV097_SET_CONTROL0), NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)) {
+			//switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV097_SET_CONTROL0/4), NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)) {
+			switch (GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)) {
 			case 0:  // = pass-through
 				PCFormat = D3DFMT_YUY2;
 				break;
@@ -9472,6 +9476,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 		LOG_TEST_CASE("Address out of bounds");
 		return;
 	}
+	// make sure pushbuffer is processed.
+	EmuKickOffWait();
 
 	NV2AState* dev = g_NV2A->GetDeviceState();
 	PGRAPHState* pg = &(dev->pgraph);

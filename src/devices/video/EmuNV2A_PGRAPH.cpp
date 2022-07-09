@@ -2036,29 +2036,31 @@ int pgraph_handle_method(
 					break;
 
                 case NV097_SET_CONTROL0: {//done  //pg->KelvinPrimitive.SetControl0& NV097_SET_CONTROL0_COLOR_SPACE_CONVERT GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT)
+                    //stencil_write_enable used in pgraph_get_zeta_write_enabled()
+                    bool stencil_write_enable =
+                    	arg0 & NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
+                    SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
+                    	NV_PGRAPH_CONTROL_0_STENCIL_WRITE_ENABLE,
+                    	stencil_write_enable);
+                    // used in pgraph_update_surface()
+                    uint32_t z_format = GET_MASK(arg0, NV097_SET_CONTROL0_Z_FORMAT);//GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_Z_FORMAT)
+                    SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
+                    	NV_PGRAPH_SETUPRASTER_Z_FORMAT, z_format);
+
+                    // z_perspective is used in 
+                    bool z_perspective =
+                    	arg0 & NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE;
+                    SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
+                    	NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE,
+                    	z_perspective);
+
+                    // color_space_convert is used for overlay control in d3d_swap()
+                    int color_space_convert =
+                    	GET_MASK(arg0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT);
+                    SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
+                    	NV_PGRAPH_CONTROL_0_CSCONVERT,
+                    	color_space_convert);
                     pgraph_update_surface(d, false, true, true);
-
-                    //bool stencil_write_enable =
-                    //	arg0 & NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE;
-                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
-                    //	NV_PGRAPH_CONTROL_0_STENCIL_WRITE_ENABLE,
-                    //	stencil_write_enable);
-
-                    //uint32_t z_format = GET_MASK(arg0, NV097_SET_CONTROL0_Z_FORMAT);//GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_Z_FORMAT)
-                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
-                    //	NV_PGRAPH_SETUPRASTER_Z_FORMAT, z_format);
-
-                    //bool z_perspective =
-                    //	arg0 & NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE;
-                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
-                    //	NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE,
-                    //	z_perspective);
-
-                    //int color_space_convert =
-                    //	GET_MASK(arg0, NV097_SET_CONTROL0_COLOR_SPACE_CONVERT);
-                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
-                    //	NV_PGRAPH_CONTROL_0_CSCONVERT,
-                    //	color_space_convert);
                     break;
                 }
 				case NV097_SET_LIGHT_CONTROL:
@@ -2333,8 +2335,9 @@ int pgraph_handle_method(
                 case NV097_SET_DEPTH_MASK://done //pg->KelvinPrimitive.SetDepthMask
                     pg->surface_zeta.write_enabled_cache |= pgraph_get_zeta_write_enabled(pg);
 
-                    //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
-                    //	NV_PGRAPH_CONTROL_0_ZWRITEENABLE, arg0);
+                    // used in pgraph_get_zeta_write_enabled()
+                    SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
+                    	NV_PGRAPH_CONTROL_0_ZWRITEENABLE, arg0);
                     break;
                 case NV097_SET_STENCIL_MASK://done //pg->KelvinPrimitive.SetStencilMask
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
@@ -4657,7 +4660,8 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 
     /* vertex program stuff */
     state.vertex_program = vertex_program;
-    state.z_perspective = pg->KelvinPrimitive.SetControl0 & NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE;
+    state.z_perspective = GET_MASK(pg->KelvinPrimitive.SetControl0 , NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE);
+    //state.z_perspective = GET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4], NV_PGRAPH_CONTROL_0_Z_PERSPECTIVE_ENABLE);
 
     /* geometry shader stuff */
     state.primitive_mode = (enum ShaderPrimitiveMode)pg->primitive_mode;
@@ -4884,7 +4888,8 @@ static bool pgraph_get_zeta_write_enabled(PGRAPHState *pg)
 {
 	//return pg->pgraph_regs[NV_PGRAPH_CONTROL_0] & (		NV_PGRAPH_CONTROL_0_ZWRITEENABLE	|  NV_PGRAPH_CONTROL_0_STENCIL_WRITE_ENABLE);
 
-	return ((pg->KelvinPrimitive.SetDepthMask&0x1!=0)|| (pg->KelvinPrimitive.SetControl0 & NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE)!=0);
+	//return ((GET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4], NV_PGRAPH_CONTROL_0_ZWRITEENABLE) !=0)|| GET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0/4],NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE)!=0);
+    return ((GET_MASK(pg->KelvinPrimitive.SetControl0, NV_PGRAPH_CONTROL_0_ZWRITEENABLE) != 0) || GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_STENCIL_WRITE_ENABLE) != 0);
 }
 
 static void pgraph_set_surface_dirty(PGRAPHState *pg, bool color, bool zeta)
@@ -5162,7 +5167,7 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
         return;
     }
 
-    pg->surface_shape.z_format = GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_Z_FORMAT);
+    pg->surface_shape.z_format = GET_MASK(pg->KelvinPrimitive.SetControl0, NV097_SET_CONTROL0_Z_FORMAT); //GET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4], NV_PGRAPH_SETUPRASTER_Z_FORMAT);
 
     /* FIXME: Does this apply to CLEARs too? */
     color_write = color_write && pgraph_get_color_write_enabled(pg);
