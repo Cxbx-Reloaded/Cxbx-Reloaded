@@ -702,6 +702,7 @@ void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
 	g_InlineVertexBuffer_PrimitiveType = PrimitiveType;
 	g_InlineVertexBuffer_TableOffset = 0;
 }
+extern void EmuKickOffWait(void);// tmp glue
 
 void CxbxImpl_End()
 {
@@ -726,6 +727,8 @@ void CxbxImpl_End()
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
+	// must call kickoff and wait here for FastVSConstant sample to render in fast constant mode.
+	EmuKickOffWait();
 	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
