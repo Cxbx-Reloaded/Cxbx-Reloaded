@@ -328,6 +328,15 @@ extern void EmuExecutePushBufferRaw
 	uint8_t *dma
 );
 extern bool g_nv2a_fifo_is_busy; //tmp glue, declared in direct3d9.cpp before xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
+// determine pushbuffer/pfifo status with dma_get/dma_put directly.
+bool is_nv2a_pfifo_busy(NV2AState* d)
+{
+    uint32_t** p_dma_get = (uint32_t**)&d->pfifo.regs[NV_PFIFO_CACHE1_DMA_GET / 4];
+    uint32_t** p_dma_put = (uint32_t**)&d->pfifo.regs[NV_PFIFO_CACHE1_DMA_PUT / 4];
+    uint32_t* dma_get = *p_dma_get;
+    uint32_t* dma_put = *p_dma_put;
+    return(dma_get == dma_put) ? false:true;
+}
 static void pfifo_run_pusher(NV2AState *d)
 {
     //for dma access to pull pushbuffer data.
