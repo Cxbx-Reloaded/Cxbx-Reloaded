@@ -797,9 +797,10 @@ std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
 	// If the rootDirectoryHandle is not null, we have a relative path
 	// We need to prepend the path of the root directory to get a full DOS path
 	if (rootDirectoryHandle != nullptr) {
-		char directoryPathBuffer[MAX_PATH];
-		GetFinalPathNameByHandle(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
-		XbePath = directoryPathBuffer + std::string("\\") + XbePath;
+		WCHAR directoryPathBuffer[MAX_PATH];
+		GetFinalPathNameByHandleW(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
+		std::string directoryPath = utf16_to_ascii(directoryPathBuffer);
+		XbePath = directoryPath + std::string("\\") + XbePath;
 	}
 
 	return XbePath;
