@@ -537,12 +537,14 @@ void NVNetDevice::Reset()
 bool NVNetDevice::GetMacAddress(std::string adapterName, void* pMAC)
 {
 	// AdapterInfo is too large to be allocated on the stack, and will cause a crash in debug builds when _chkstk detects it
-	PIP_ADAPTER_INFO pAdapterInfo = new IP_ADAPTER_INFO[128];
+	auto adapterInfo = new IP_ADAPTER_INFO[128];
+	PIP_ADAPTER_INFO pAdapterInfo = (PIP_ADAPTER_INFO)adapterInfo;
+
 	ULONG dwBufferLength = sizeof(IP_ADAPTER_INFO) * 128;
 
 	DWORD dwStatus = GetAdaptersInfo(pAdapterInfo, &dwBufferLength);
 	if (dwStatus != ERROR_SUCCESS) {
-		delete[] pAdapterInfo;
+		delete[] adapterInfo;
 		return false;
 	}
 
@@ -550,7 +552,7 @@ bool NVNetDevice::GetMacAddress(std::string adapterName, void* pMAC)
 	do {
 		if (strcmp(pAdapterInfo->AdapterName, adapterName.c_str()) == 0) {
 			memcpy(pMAC, pAdapterInfo->Address, 6);
-			delete[] pAdapterInfo;
+			delete[] adapterInfo;
 			return true;
 		}
 
@@ -558,7 +560,7 @@ bool NVNetDevice::GetMacAddress(std::string adapterName, void* pMAC)
 
 	} while (pAdapterInfo);
 
-	delete[] pAdapterInfo;
+	delete[] adapterInfo;
 	return false;
 }
 
