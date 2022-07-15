@@ -323,9 +323,6 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	init_v( 8); init_v( 9); init_v(10); init_v(11);
 	init_v(12); init_v(13); init_v(14); init_v(15);
 
-	// Temp variable for paired VS instruction
-	float4 temp;
-
 	// Xbox shader program)DELIMITER", /* This terminates the header raw string" // */
 
 R"DELIMITER(
