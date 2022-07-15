@@ -310,7 +310,7 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 /*--23 texbrdf      */ #define PS_TEXTUREMODES_BRDF(ts)                                               s = Brdf(ts);        v = Sample3D(ts, s); t[ts] = v // TODO : Test (t[ts-2] is 16 bit eyePhi,eyeSigma; t[ts-1] is lightPhi,lightSigma)
 /*--23 texm3x2tex   */ #define PS_TEXTUREMODES_DOT_ST(ts)               CalcDot(ts); n = Normal2(ts); s = n;               v = Sample2D(ts, s); t[ts] = v // TODO : Test
 /*--23 texm3x2depth */ #define PS_TEXTUREMODES_DOT_ZW(ts)               CalcDot(ts); n = Normal2(ts); if (n.y==0) v=1;else v = n.x / n.y;       t[ts] = v // TODO : Make depth-check use result of division, but how?
-/*--2- texm3x3diff  */ #define PS_TEXTUREMODES_DOT_RFLCT_DIFF(ts)       CalcDot(0);CalcDot(1);CalcDot(3); n = Normal3(3); s = n;               v = Sample6F(ts, s); t[ts] = v // TODO : Test
+/*--2- texm3x3diff  */ #define PS_TEXTUREMODES_DOT_RFLCT_DIFF(ts)       CalcDot(ts); n = Normal3(ts); s = n;               v = Sample6F(ts, s); t[ts] = v // TODO : Test
 /*---3 texm3x3vspec */ #define PS_TEXTUREMODES_DOT_RFLCT_SPEC(ts)       CalcDot(ts); n = Normal3(ts); s = Reflect(n, Eye); v = Sample6F(ts, s); t[ts] = v // TODO : Test
 /*---3 texm3x3tex   */ #define PS_TEXTUREMODES_DOT_STR_3D(ts)           CalcDot(ts); n = Normal3(ts); s = n;               v = Sample3D(ts, s); t[ts] = v // TODO : Test
 /*---3 texm3x3tex   */ #define PS_TEXTUREMODES_DOT_STR_CUBE(ts)         CalcDot(ts); n = Normal3(ts); s = n;               v = Sample6F(ts, s); t[ts] = v // TODO : Test
