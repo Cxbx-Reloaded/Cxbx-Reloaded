@@ -289,19 +289,6 @@ float4 reverseScreenspaceTransform(float4 oPos)
 	return oPos;
 }
 
-// Clean up values before they go to the PS
-// FIXME On hw it appears NaN becomes 1 or 0 depending
-// on the sign bit, which might require bitwise ops in SM4+
-float4 clean(float4 x)
-{
-	// Convert NaN into 1
-	// Note IsNaN() just gets optimized away...
-	// https://shader-playground.timjones.io/0bbe04704caddadb52cd4134daab8ac3
-	// Test case: Otogi does math ops on -NaN
-	// which seems to become +NaN -> +1 in the PS
-    return (x < 0.f || x > 0.f || x == 0.f) ? x : 1;
-}
-
 VS_OUTPUT main(const VS_INPUT xIn)
 {
 	// Output variables
@@ -370,17 +357,17 @@ R"DELIMITER(
        fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
        
 	xOut.oPos = reverseScreenspaceTransform(oPos);
-	xOut.oD0 = saturate(clean(oD0));
-	xOut.oD1 = saturate(clean(oD1));
-	xOut.oFog = clean(fogFactor).x; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
-	xOut.oPts = clean(oPts.x).x;
-	xOut.oB0 = saturate(clean(oB0));
-	xOut.oB1 = saturate(clean(oB1));
-	// Scale textures
-	xOut.oT0 = clean(oT0 / xboxTextureScale[0]);
-	xOut.oT1 = clean(oT1 / xboxTextureScale[1]);
-	xOut.oT2 = clean(oT2 / xboxTextureScale[2]);
-	xOut.oT3 = clean(oT3 / xboxTextureScale[3]);
+	xOut.oD0 = saturate(oD0);
+	xOut.oD1 = saturate(oD1);
+	xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
+	xOut.oPts = oPts.x;
+	xOut.oB0 = saturate(oB0);
+	xOut.oB1 = saturate(oB1);
+	// Scale textures (TODO : or should we apply this to the input register values?)
+	xOut.oT0 = oT0 / xboxTextureScale[0];
+	xOut.oT1 = oT1 / xboxTextureScale[1];
+	xOut.oT2 = oT2 / xboxTextureScale[2];
+	xOut.oT3 = oT3 / xboxTextureScale[3];
 
 	return xOut;
 }
