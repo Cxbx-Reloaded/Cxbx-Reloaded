@@ -640,7 +640,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 	}
 #endif // Chihiro wip block
 
-	CxbxKrnl_Xbe = new Xbe(xbePath.c_str(), false); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
+	CxbxKrnl_Xbe = new Xbe(xbePath.c_str()); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
 
 	if (CxbxKrnl_Xbe->HasFatalError()) {
 		CxbxrAbort(CxbxKrnl_Xbe->GetError().c_str());

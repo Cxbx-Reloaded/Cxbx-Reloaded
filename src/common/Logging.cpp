@@ -313,7 +313,7 @@ PopupReturn PopupCustomEx(const void* hwnd, const CXBXR_MODULE cxbxr_module, con
             uType |= MB_OKCANCEL;
             break;
         case PopupButtons::AbortRetryIgnore:
-            uType |= MB_RETRYCANCEL;
+            uType |= MB_ABORTRETRYIGNORE;
             break;
         case PopupButtons::YesNoCancel:
             uType |= MB_YESNOCANCEL;

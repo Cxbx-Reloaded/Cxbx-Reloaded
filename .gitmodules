@@ -37,5 +37,9 @@
 	shallow = true
 [submodule "import/libusb"]
 	path = import/libusb
-	url = https://github.com/libusb/libusb
+	url = https://github.com/Cxbx-Reloaded/libusb
+	branch = deadlock_fix
 	shallow = true
+[submodule "import/nv2a_vsh_cpu"]
+	path = import/nv2a_vsh_cpu
+	url = https://github.com/abaire/nv2a_vsh_cpu.git

@@ -45,8 +45,6 @@
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
 #include "core\kernel\support\NativeHandle.h"
 
-#include <semaphore>
-
 // prevent name collisions
 namespace NtDll
 {
@@ -60,7 +58,6 @@ typedef struct _PCSTProxyParam
 {
 	IN xbox::PVOID  Ethread;
 	IN xbox::ulong_xt TlsDataSize;
-	IN OUT std::binary_semaphore* signal;
 }
 PCSTProxyParam;
 
@@ -115,18 +112,6 @@ static unsigned int WINAPI PCSTProxy
 #else
 	EmuGenerateFS(eThread);
 #endif
-
-	// NOTE: Native KTHREAD-SWITCHING will not need notification as it should be already done within
-	//       PsCreateSystemThreadEx function. For now, it is an experimental to see if xbox thread setup do work
-	//       without reside in host stack.
-	// Initializing ethread is done, we can allow PsCreateSystemThreadEx process to continue.
-	params.signal->release();
-	params.signal = nullptr;
-	SuspendThread(GetCurrentThread());
-	if (xbox::KeGetCurrentThread()->HasTerminated) {
-		xbox::PsTerminateSystemThread(0);
-	}
-
 	xbox::PKSTART_FRAME StartFrame = reinterpret_cast<xbox::PKSTART_FRAME>(reinterpret_cast<xbox::addr_xt>(eThread->Tcb.KernelStack) + sizeof(xbox::KSWITCHFRAME));
 
 	LOG_PCSTProxy(
@@ -353,57 +338,33 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	KernelStackSize = RoundUp(KernelStackSize, PAGE_SIZE);
 	hKernelStackSize = RoundUp(hKernelStackSize, PAGE_SIZE);
 
-	PETHREAD eThread;
-	ntstatus_xt result = ObCreateObject(&PsThreadObjectType, zeroptr, sizeof(ETHREAD) + ThreadExtensionSize, reinterpret_cast<PVOID*>(&eThread));
-	if (!X_NT_SUCCESS(result)) {
-		RETURN(result);
-	}
+	// create thread, using our special proxy technique
+	{
+		PETHREAD eThread;
+		ntstatus_xt result = ObCreateObject(&PsThreadObjectType, zeroptr, sizeof(ETHREAD) + ThreadExtensionSize, reinterpret_cast<PVOID *>(&eThread));
+		if (!X_NT_SUCCESS(result)) {
+			RETURN(result);
+		}
 
-	std::memset(eThread, 0, sizeof(ETHREAD) + ThreadExtensionSize);
+		std::memset(eThread, 0, sizeof(ETHREAD) + ThreadExtensionSize);
 
-	// Create kernel stack for xbox title to able write on stack instead of host.
-	PVOID KernelStack = MmCreateKernelStack(KernelStackSize, DebuggerThread);
+		// Create kernel stack for xbox title to able write on stack instead of host.
+		PVOID KernelStack = MmCreateKernelStack(KernelStackSize, DebuggerThread);
 
-	if (!KernelStack) {
-		ObfDereferenceObject(eThread);
-		RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
-	}
+		if (!KernelStack) {
+			ObfDereferenceObject(eThread);
+			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
+		}
 
-	// Start thread initialization process here before insert and create thread
-	KeInitializeThread(&eThread->Tcb, KernelStack, KernelStackSize, TlsDataSize, SystemRoutine, StartRoutine, StartContext, &KiUniqueProcess);
+		// Start thread initialization process here before insert and create thread
+		KeInitializeThread(&eThread->Tcb, KernelStack, KernelStackSize, TlsDataSize, SystemRoutine, StartRoutine, StartContext, &KiUniqueProcess);
 
-	// Create binary_semaphore to allow new thread setup non-kthread switching.
-	std::binary_semaphore signal{0};
-
-	// PCSTProxy is responsible for cleaning up this pointer
-	PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
-	iPCSTProxyParam->Ethread = eThread;
-	iPCSTProxyParam->TlsDataSize = TlsDataSize;
-	iPCSTProxyParam->signal = &signal;
-
-	unsigned int hThreadId;
-	HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(nullptr, hKernelStackSize, PCSTProxy, iPCSTProxyParam, NULL, &hThreadId));
-	if (handle == zeroptr) {
-		delete iPCSTProxyParam;
-		MmDeleteKernelStack(eThread->Tcb.StackBase, eThread->Tcb.StackLimit);
-		ObfDereferenceObject(eThread);
-		RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
-	}
-
-	// We are waiting on new thread's non-kthread switching process is done before we can continue on.
-	signal.acquire();
-
-	// Increment the ref count of the thread once more. This is to guard against the case the title closes the thread handle
-	// before this thread terminates with PsTerminateSystemThread
-	// Test case: Amped
-	ObfReferenceObject(eThread);
-
-	// The ob handle of the ethread obj is the thread id we return to the title
-	result = ObInsertObject(eThread, zeroptr, 0, &eThread->UniqueThread);
-	if (X_NT_SUCCESS(result)) {
-		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, hThreadId);
-		assert(dupHandle);
-		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
+		// The ob handle of the ethread obj is the thread id we return to the title
+		result = ObInsertObject(eThread, zeroptr, 0, &eThread->UniqueThread);
+		if (!X_NT_SUCCESS(result)) {
+			ObfDereferenceObject(eThread);
+			RETURN(result);
+		}
 
 		if (g_iThreadNotificationCount) {
 			PspCallThreadNotificationRoutines(eThread, TRUE);
@@ -411,37 +372,53 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 
 		// Create another handle to pass back to the title in the ThreadHandle argument
 		result = ObOpenObjectByPointer(eThread, &PsThreadObjectType, ThreadHandle);
-	}
-
-	KeQuerySystemTime(&eThread->CreateTime);
-
-	if (X_NT_SUCCESS(result)) {
-		RegisterXboxHandle(*ThreadHandle, handle);
-
-		g_AffinityPolicy->SetAffinityXbox(handle);
+		if (!X_NT_SUCCESS(result)) {
+			ObfDereferenceObject(eThread);
+			RETURN(result);
+		}
 
 		if (ThreadId != zeroptr) {
 			*ThreadId = eThread->UniqueThread;
+		}
+
+		// PCSTProxy is responsible for cleaning up this pointer
+		PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
+		iPCSTProxyParam->Ethread = eThread;
+		iPCSTProxyParam->TlsDataSize = TlsDataSize;
+
+		unsigned int ThreadId;
+		HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, hKernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, &ThreadId));
+		if (handle == zeroptr) {
+			delete iPCSTProxyParam;
+			ObpClose(eThread->UniqueThread);
+			ObfDereferenceObject(eThread);
+			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
+		}
+
+		// Increment the ref count of the thread once more. This is to guard against the case the title closes the thread handle
+		// before this thread terminates with PsTerminateSystemThread
+		// Test case: Amped
+		ObfReferenceObject(eThread);
+
+		KeQuerySystemTime(&eThread->CreateTime);
+		RegisterXboxHandle(*ThreadHandle, handle);
+		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);
+		assert(dupHandle);
+		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
+
+		g_AffinityPolicy->SetAffinityXbox(handle);
+
+		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
+		if (!CreateSuspended) {
+			ResumeThread(handle);
 		}
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
 		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X], Native Handle : 0x%X, Native ThreadId : [0x%.4X]",
 			*ThreadHandle, eThread->UniqueThread, handle, ThreadId);
 	}
-	else {
-		eThread->Tcb.HasTerminated = true;
-	}
 
-	// If thread is set to be terminated, allow thread to run and perform termination process from its own thread.
-	if (eThread->Tcb.HasTerminated) {
-		ResumeThread(handle);
-	}
-	// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
-	else if (!CreateSuspended) {
-		ResumeThread(handle);
-	}
-
-	RETURN(result);
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************

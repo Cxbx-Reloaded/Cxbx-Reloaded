@@ -124,7 +124,7 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 	// We can skip Xbox as long as they are logged so we know about them
 	// There's no need to prevent emulation, we can just pretend we have a debugger attached and continue
 	// This is because some games (such as Crash Bandicoot) spam exceptions;
-	e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip 1 size bytes
+	e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip 1 instruction
 	return true;
 
 #if 1
@@ -157,19 +157,26 @@ bool EmuExceptionBreakpointAsk(LPEXCEPTION_POINTERS e)
 #endif
 }
 
-void EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
+bool EmuExceptionNonBreakpointUnhandledShow(LPEXCEPTION_POINTERS e)
 {
 	EmuExceptionPrintDebugInformation(e, /*IsBreakpointException=*/false);
 
-	if (PopupFatalEx(nullptr, PopupButtons::OkCancel, PopupReturn::Ok,
+	auto result = PopupFatalEx(nullptr, PopupButtons::AbortRetryIgnore, PopupReturn::Abort,
 		"  The running xbe has encountered an unhandled exception (Code := 0x%.8X) at address 0x%.08X.\n"
 		"\n"
-		"  Press \"OK\" to terminate emulation.\n"
-		"  Press \"Cancel\" to debug.",
-		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip) == PopupReturn::Ok)
-	{
+		"  Press \"Abort\" to terminate emulation.\n"
+		"  Press \"Retry\" to debug.\n"
+		"  Press \"Ignore\" to attempt to continue emulation.",
+		e->ExceptionRecord->ExceptionCode, e->ContextRecord->Eip);
+
+	if (result == PopupReturn::Abort) {
 		EmuExceptionExitProcess();
+	} else if (result == PopupReturn::Ignore) {
+		e->ContextRecord->Eip += EmuX86_OpcodeSize((uint8_t*)e->ContextRecord->Eip); // Skip 1 instruction
+		return true;
 	}
+
+	return false;
 }
 
 // Returns weither the given address is part of an Xbox managed memory region
@@ -185,7 +192,8 @@ bool IsXboxCodeAddress(xbox::addr_xt addr)
 #include "distorm.h"
 bool EmuX86_DecodeOpcode(const uint8_t* Eip, _DInst& info);
 void EmuX86_DistormLogInstruction(const uint8_t* Eip, _DInst& info, LOG_LEVEL log_level);
-void genericException(EXCEPTION_POINTERS *e) {
+bool genericException(EXCEPTION_POINTERS *e)
+{
 	_DInst info;
 	if (EmuX86_DecodeOpcode((uint8_t*)e->ContextRecord->Eip, info)) {
 		EmuX86_DistormLogInstruction((uint8_t*)e->ContextRecord->Eip, info, LOG_LEVEL::FATAL);
@@ -200,11 +208,14 @@ void genericException(EXCEPTION_POINTERS *e) {
 		}
 
 		// Bypass exception
+		return false;
 	}
 	else {
 		// notify user
-		EmuExceptionNonBreakpointUnhandledShow(e);
+		return EmuExceptionNonBreakpointUnhandledShow(e);
 	}
+
+	return false;
 }
 
 bool IsRdtscInstruction(xbox::addr_xt addr); // Implemented in CxbxKrnl.cpp
@@ -270,8 +281,7 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 
 	// Check if lle exception is already called first before emu exception.
 	if (bOverrideEmuException) {
-		genericException(e);
-		return false;
+		return genericException(e);
 	}
 
 	if (e->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
@@ -309,10 +319,7 @@ bool EmuTryHandleException(EXCEPTION_POINTERS *e)
 		}
 	}
 
-	genericException(e);
-
-	// Unhandled exception :
-	return false;
+	return genericException(e);
 }
 
 long WINAPI EmuException(struct _EXCEPTION_POINTERS* e)

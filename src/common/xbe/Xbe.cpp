@@ -46,7 +46,7 @@ extern "C" void CxbxKrnlPrintUEM(ULONG);
 #endif
 
 // construct via Xbe file
-Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
+Xbe::Xbe(const char *x_szFilename)
 {
     char szBuffer[MAX_PATH];
 
@@ -63,14 +63,15 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 
 		// NOTE: the check for the existence of the child window is necessary because the user could have previously loaded the dashboard,
 		// removed/changed the path and attempt to load it again from the recent list, which will crash CxbxInitWindow below
-		// Note that GetHwnd(), CxbxKrnl_hEmuParent and HalReturnToFirmware are all not suitable here for various reasons 
-		if (XbeName.compare(std::string("xboxdash.xbe")) == 0
+		// Note that GetHwnd(), CxbxKrnl_hEmuParent and HalReturnToFirmware are all not suitable here for various reasons
 #ifdef CXBXR_EMU
-			&& !bFromGUI
-			) {
+		if (XbeName.compare(std::string("xboxdash.xbe")) == 0) {
 			// The dashboard could not be found on partition2. This is a fatal error on the Xbox so we display the UEM. The
 			// error code is different if we have a launch data page
 
+			// This is necessary because CxbxInitWindow internally calls g_AffinityPolicy->SetAffinityOther. If we are launched directly from the command line and the dashboard
+			// cannot be opened, we will crash below because g_AffinityPolicy will be empty
+			g_AffinityPolicy = AffinityPolicy::InitPolicy();
 			CxbxInitWindow(false);
 
 			ULONG FatalErrorCode = FATAL_ERROR_XBE_DASH_GENERIC;
@@ -86,13 +87,13 @@ Xbe::Xbe(const char *x_szFilename, bool bFromGUI)
 			// TODO: FATAL_ERROR_XBE_DASH_X2_PASS (requires DVD drive authentication emulation...)
 		}
 		else {
-#else
-			) {
 #endif
 			// Report which xbe could not be found
 			SetFatalError(std::string("Could not open the Xbe file ") + XbeName);
 			return;
+#ifdef CXBXR_EMU
 		}
+#endif
 	}
 
     printf("OK\n");

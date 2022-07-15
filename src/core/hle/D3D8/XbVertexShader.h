@@ -147,18 +147,18 @@ enum VSH_MAC { // Dxbx note : MAC stands for 'Multiply And Accumulate' opcodes
 	// ??? 15 - 2 values of the 4 bits are undefined
 };
 
-enum VSH_IMD_OUTPUT_TYPE {
-	IMD_OUTPUT_C,
-	IMD_OUTPUT_R,
-	IMD_OUTPUT_O,
-	IMD_OUTPUT_A0X
+enum VSH_IMD_DEST_TYPE {
+	IMD_DEST_C,
+	IMD_DEST_R,
+	IMD_DEST_O,
+	IMD_DEST_A0X
 };
 
-typedef struct _VSH_IMD_OUTPUT {
-	VSH_IMD_OUTPUT_TYPE Type;
-	int16_t             Address;
-	int8_t              Mask;
-} VSH_IMD_OUTPUT;
+typedef struct {
+	VSH_IMD_DEST_TYPE Type;
+	int16_t           Address;
+	int8_t            Mask; // If 0 skip writing to this output
+} VSH_IMD_DEST;
 
 enum VSH_SWIZZLE {
 	SWIZZLE_X = 0,
@@ -167,7 +167,7 @@ enum VSH_SWIZZLE {
 	SWIZZLE_W
 };
 
-enum VSH_PARAMETER_TYPE {
+enum VSH_IMD_PARAMETER_TYPE {
 	PARAM_UNKNOWN = 0,
 	PARAM_R,          // Temporary (scRatch) registers
 	PARAM_V,          // Vertex registers
@@ -175,28 +175,49 @@ enum VSH_PARAMETER_TYPE {
 	PARAM_O // = 0??
 };
 
-typedef struct _VSH_IMD_PARAMETER {
-	VSH_PARAMETER_TYPE  ParameterType;   // Parameter type, R, V or C
+typedef struct {
+	VSH_IMD_PARAMETER_TYPE  Type;   // Parameter type, R, V or C
 	bool                Neg;             // true if negated, false if not
 	VSH_SWIZZLE         Swizzle[4];      // The four swizzles
 	int16_t             Address;         // Register address
 } VSH_IMD_PARAMETER;
 
-typedef struct _VSH_INTERMEDIATE_FORMAT {
-	VSH_MAC                  MAC;
-	VSH_ILU                  ILU;
-	VSH_IMD_OUTPUT           Output;
-	unsigned                 ParamCount;
-	VSH_IMD_PARAMETER        Parameters[3];
-	// There is only a single address register in Microsoft DirectX 8.0.
-	// The address register, designated as a0.x, may be used as signed
-	// integer offset in relative addressing into the constant register file.
-	//     c[a0.x + n]
-	bool                     IndexesWithA0_X;
-} VSH_INTERMEDIATE_FORMAT;
+typedef struct {
+	VSH_ILU Opcode;
+	VSH_IMD_DEST Dest;
+	VSH_IMD_PARAMETER Parameter;
+} VSH_IMD_ILU_OP;
 
-typedef struct _IntermediateVertexShader {
-	std::vector<VSH_INTERMEDIATE_FORMAT> Instructions;
+typedef struct {
+	VSH_MAC Opcode;
+	VSH_IMD_DEST Dest;
+	uint8_t ParamCount;
+	VSH_IMD_PARAMETER Parameters[3];
+} VSH_IMD_MAC_OP;
+
+enum VSH_IMD_OREG_SOURCE {
+	SRC_MAC,
+	SRC_ILU,
+};
+
+// Intermediate decoded VSH instruction
+// Up to two operations (MAC and ILU)
+// Writes to up to 3 destination registers
+// One dest per op + one output register
+typedef struct {
+	VSH_IMD_MAC_OP MAC;
+	VSH_IMD_ILU_OP ILU;
+
+	VSH_IMD_OREG_SOURCE ORegSource;
+	VSH_IMD_DEST ORegDest;
+
+	// True if the constant input C should use the index register a0
+	// c[a0.x + n]
+	bool IndexesWithA0_X;
+} VSH_IMD_INSTR;
+
+typedef struct {
+	std::vector<VSH_IMD_INSTR> Instructions;
 } IntermediateVertexShader;
 
 // parse xbox vertex shader function into an intermediate format
