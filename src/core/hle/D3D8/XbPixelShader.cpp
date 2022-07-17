@@ -489,7 +489,7 @@ typedef struct s_CxbxPSDef {
 
 	void AdjustTextureModes(DecodedRegisterCombiner &RC)
 	{
-		if (RC.PSTextureModes[3] = PS_TEXTUREMODES_DOT_STR_CUBE) {
+		if (RC.PSTextureModes[3] == PS_TEXTUREMODES_DOT_STR_3D) {
 			RC.TexModeAdjust = true;
 		}
 
