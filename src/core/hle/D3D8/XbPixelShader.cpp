@@ -489,6 +489,10 @@ typedef struct s_CxbxPSDef {
 
 	void AdjustTextureModes(DecodedRegisterCombiner &RC)
 	{
+		if (RC.PSTextureModes[3] = PS_TEXTUREMODES_DOT_STR_CUBE) {
+			RC.TexModeAdjust = true;
+		}
+
 		// if this flag is set, the texture mode for each texture stage is adjusted as follows:
 		if (RC.TexModeAdjust) {
 			for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
