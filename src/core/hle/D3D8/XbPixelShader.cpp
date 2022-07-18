@@ -1004,12 +1004,37 @@ D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 
 #endif
 	// Host D3DFMT's with one or more signed components : D3DFMT_V8U8, D3DFMT_Q8W8V8U8, D3DFMT_V16U16, D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8
-	D3DFORMAT HostTextureFormat = g_HostTextureFormats[stage_nr];
-	bool HostTextureFormatIsSignedForA = (HostTextureFormat == D3DFMT_Q8W8V8U8); // No need to check for unused formats : D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8, D3DFMT_A2W10V10U10
-	bool HostTextureFormatIsSignedForR = (HostTextureFormat == D3DFMT_V8U8) || (HostTextureFormat == D3DFMT_V16U16) || (HostTextureFormat == D3DFMT_X8L8V8U8) || HostTextureFormatIsSignedForA;
-	bool HostTextureFormatIsSignedForG = HostTextureFormatIsSignedForR || (HostTextureFormat == D3DFMT_L6V5U5);
-	bool HostTextureFormatIsSignedForB = HostTextureFormatIsSignedForA || (HostTextureFormat == D3DFMT_L6V5U5);
-
+	D3DFORMAT H/*ostTextureFormat*/ = g_HostTextureFormats[stage_nr];
+	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/bump-map-pixel-formats
+	// No need to check for unused formats : D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8, D3DFMT_A2W10V10U10
+#if 0 // Original signed-ness checking code gave effectively this :
+	// Host format     | Signed components
+	// ----------------+------------------
+	// D3DFMT_Q8W8V8U8 | A,R,G,B
+	// D3DFMT_L6V5U5   |     G,B
+	// D3DFMT_V8U8     |   R,G
+	// D3DFMT_V16U16   |   R,G
+	// D3DFMT_X8L8V8U8 |   R,G
+	bool HostTextureFormatIsSignedForA = (H == D3DFMT_Q8W8V8U8);
+	bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8)                         || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
+	bool HostTextureFormatIsSignedForG = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
+	bool HostTextureFormatIsSignedForB = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5);
+#else // New, as experimentally discovered by medievil :
+	// Host format     | Signed components
+	// ----------------+------------------
+	// D3DFMT_Q8W8V8U8 | A,R,G,B
+	// D3DFMT_L6V5U5   | A,R
+	// D3DFMT_V8U8     |   R,G
+	// D3DFMT_V16U16   |   R,G
+	// D3DFMT_X8L8V8U8 |   R,G
+	// TODO : Verify D3DFMT_L6V5U5 indeed maps to A,R (instead of G,B).
+	// If not, research why this (then incorret) change *does* improve both BumpEarth samples
+	// (while keeping BumpLens and JSFR boost dash effect working). Perhaps duplicate signed range conversion in the shader?
+	bool HostTextureFormatIsSignedForA = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5);
+	bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
+	bool HostTextureFormatIsSignedForG = (H == D3DFMT_Q8W8V8U8)                         || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
+	bool HostTextureFormatIsSignedForB = (H == D3DFMT_Q8W8V8U8);
+#endif
 	D3DXCOLOR CxbxColorSign;
 	CxbxColorSign.r = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_RSIGNED, HostTextureFormatIsSignedForR); // Maps to COLORSIGN.r
 	CxbxColorSign.g = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_GSIGNED, HostTextureFormatIsSignedForG); // Maps to COLORSIGN.g
