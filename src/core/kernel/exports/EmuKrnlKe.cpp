@@ -2080,10 +2080,22 @@ XBSYSAPI EXPORTNUM(151) xbox::void_xt NTAPI xbox::KeStallExecutionProcessor
 {
 	LOG_FUNC_ONE_ARG(MicroSeconds);
 
-	// WinAPI Sleep usually sleeps for a minimum of 15ms, we want us. 
-	// Thanks to C++11, we can do this in a nice way without resorting to
-	// QueryPerformanceCounter
-	std::this_thread::sleep_for(std::chrono::microseconds(MicroSeconds));
+	// Don't use std::this_thread::sleep_for because it's too inaccurate. Instead, we do this as Microsoft says it should be done
+	// https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-kestallexecutionprocessor, with a busy loop
+
+	::LARGE_INTEGER freq;
+	freq.QuadPart = HostQPCFrequency;
+	::LARGE_INTEGER CurrentTime, EndingTime;
+	QueryPerformanceCounter(&CurrentTime);
+	CurrentTime.QuadPart *= 1000000000;
+	CurrentTime.QuadPart /= freq.QuadPart;
+	EndingTime.QuadPart = CurrentTime.QuadPart + MicroSeconds * 1000;
+
+	while (CurrentTime.QuadPart < EndingTime.QuadPart) {
+		QueryPerformanceCounter(&CurrentTime);
+		CurrentTime.QuadPart *= 1000000000;
+		CurrentTime.QuadPart /= freq.QuadPart;
+	}
 }
 
 // ******************************************************************
