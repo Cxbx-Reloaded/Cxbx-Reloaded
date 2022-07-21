@@ -42,6 +42,15 @@
 CRITICAL_SECTION dbgCritical;
 #endif
 
+namespace NtDll
+{
+#include "EmuNtDll.h"
+};
+
+// Including ntstatus.h will cause many macro redefinition warnings because of the previous definitions from winnt.h, so we define them here ourselves instead
+#define STATUS_SUCCESS              ((NTSTATUS) 0x00000000L)
+#define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS) 0xC0000004L)
+
 // Global Variable(s)
 volatile thread_local  bool    g_bEmuException = false;
 static thread_local bool bOverrideEmuException;
@@ -491,3 +500,78 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
     // LeaveCriticalSection(&dbgCritical);
 }
 #endif
+
+static std::unique_ptr<char[]> Capture()
+{
+	NtDll::ULONG BufferSize = PAGE_SIZE;
+	NtDll::ULONG SizeNeeded = 0;
+	// We can't know how many processes are currently running on the user's system, so this iterates until our buffer is large enough to hold all of them
+	while (true) {
+		std::unique_ptr<char[]> Buffer(new char[BufferSize]);
+
+		NtDll::NTSTATUS Status = NtDll::NtQuerySystemInformation(NtDll::SystemProcessInformation, Buffer.get(), BufferSize, &SizeNeeded);
+		if (Status == STATUS_INFO_LENGTH_MISMATCH) {
+			// More processes could have started in the meantime, so increase the buffer size
+			BufferSize = SizeNeeded + PAGE_SIZE;
+			continue;
+		}
+		else if (Status == STATUS_SUCCESS) {
+			return Buffer;
+		}
+		else {
+			CxbxrAbort("NtDll::NtQuerySystemInformation failed! The returned NTSTATUS was 0x%X", Status);
+		}
+	}
+}
+
+static NtDll::SYSTEM_PROCESS *FindProcessByPid(PVOID ProcessesBuffer, NtDll::DWORD Pid)
+{
+	NtDll::SYSTEM_PROCESS *Proc = (NtDll::SYSTEM_PROCESS *)ProcessesBuffer;
+	while (true) {
+		if ((DWORD)(DWORD_PTR)Proc->UniqueProcessId == Pid) {
+			return Proc;
+		}
+
+		if (!Proc->NextEntryOffset) {
+			return nullptr;
+		}
+
+		Proc = (NtDll::SYSTEM_PROCESS *)((NtDll::BYTE *)Proc + Proc->NextEntryOffset);
+	}
+}
+
+static NtDll::SYSTEM_THREAD *FindThreadByTid(NtDll::SYSTEM_PROCESS *Proc, NtDll::DWORD Tid)
+{
+	NtDll::SYSTEM_THREAD *Thread = (NtDll::SYSTEM_THREAD *)((BYTE *)Proc + sizeof(NtDll::SYSTEM_PROCESS));
+	for (NtDll::ULONG i = 0; i < Proc->ThreadCount; ++i) {
+		if (Thread->ClientID.UniqueThread == (NtDll::HANDLE)(NtDll::DWORD_PTR)Tid) {
+			return Thread;
+		}
+
+		++Thread;
+	}
+
+	return nullptr;
+}
+
+bool IsThreadSuspended(DWORD Tid, DWORD Pid)
+{
+	// NOTE: we could find the suspend state of a thread much more quickly by passing the class ThreadSuspendCount to NtDll::NtQueryInformationThread,
+	// but unfortunately that class has only been added since Windows 8.1
+
+	std::unique_ptr<char[]> Buffer = Capture();
+
+	NtDll::SYSTEM_PROCESS *Proc = FindProcessByPid(Buffer.get(), Pid);
+	if (!Proc) {
+		EmuLog(LOG_LEVEL::ERROR2, "The process does not exist");
+		return false;
+	}
+
+	NtDll::SYSTEM_THREAD *Thread = FindThreadByTid(Proc, Tid);
+	if (!Thread) {
+		EmuLog(LOG_LEVEL::ERROR2, "The thread does not exist");
+		return false;
+	}
+
+	return ((Thread->ThreadState == NtDll::Waiting) && (Thread->WaitReason == NtDll::Suspended));
+}

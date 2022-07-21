@@ -1177,6 +1177,11 @@ static void CxbxrKrnlInitHacks()
 	void(*Entry)(),
 	int BootFlags)
 {
+	// check if we can find NtQuerySystemInformation
+	if (!NtDll::NtQuerySystemInformation) {
+		CxbxrAbort("Could not find NtQuerySystemInformation in ntdll library!");
+	}
+
 	unsigned Host2XbStackBaseReserved = 0;
 	__asm mov Host2XbStackBaseReserved, esp;
 	unsigned Host2XbStackSizeReserved = EmuGenerateStackSize(Host2XbStackBaseReserved, 0);

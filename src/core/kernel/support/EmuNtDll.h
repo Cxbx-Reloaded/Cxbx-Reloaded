@@ -67,6 +67,7 @@ typedef unsigned long       SIZE_T, *PSIZE_T;
 typedef unsigned long       ACCESS_MASK;
 typedef unsigned long       PHYSICAL_ADDRESS;
 typedef long                INT_PTR;
+typedef unsigned long       DWORD_PTR;
 typedef int                 BOOL;
 
 
@@ -600,6 +601,129 @@ typedef enum _FS_INFORMATION_CLASS
     FileFsMaximumInformation
 }
 FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
+
+// ******************************************************************
+// * SYSTEM_INFORMATION_CLASS
+// ******************************************************************
+typedef enum _SYSTEM_INFORMATION_CLASS {
+	SystemBasicInformation,
+	SystemProcessorInformation,
+	SystemPerformanceInformation,
+	SystemTimeOfDayInformation,
+	SystemPathInformation,
+	SystemProcessInformation,
+	SystemCallCountInformation,
+	SystemDeviceInformation,
+	SystemProcessorPerformanceInformation,
+	SystemFlagsInformation,
+	SystemCallTimeInformation,
+	SystemModuleInformation,
+	SystemLocksInformation,
+	SystemStackTraceInformation,
+	SystemPagedPoolInformation,
+	SystemNonPagedPoolInformation,
+	SystemHandleInformation,
+	SystemObjectInformation,
+	SystemPageFileInformation,
+	SystemVdmInstemulInformation,
+	SystemVdmBopInformation,
+	SystemFileCacheInformation,
+	SystemPoolTagInformation,
+	SystemInterruptInformation,
+	SystemDpcBehaviorInformation,
+	SystemFullMemoryInformation,
+	SystemLoadGdiDriverInformation,
+	SystemUnloadGdiDriverInformation,
+	SystemTimeAdjustmentInformation,
+	SystemSummaryMemoryInformation,
+	SystemNextEventIdInformation,
+	SystemEventIdsInformation,
+	SystemCrashDumpInformation,
+	SystemExceptionInformation,
+	SystemCrashDumpStateInformation,
+	SystemKernelDebuggerInformation,
+	SystemContextSwitchInformation,
+	SystemRegistryQuotaInformation,
+	SystemExtendServiceTableInformation,
+	SystemPrioritySeperation,
+	SystemPlugPlayBusInformation,
+	SystemDockInformation,
+	SystemPowerInformation,
+	SystemProcessorSpeedInformation,
+	SystemCurrentTimeZoneInformation,
+	SystemLookasideInformation
+} SYSTEM_INFORMATION_CLASS, *PSYSTEM_INFORMATION_CLASS;
+
+enum THREAD_STATE {
+	Running = 2,
+	Waiting = 5,
+};
+
+#pragma pack(push,8)
+
+struct CLIENT_ID
+{
+	HANDLE UniqueProcess; // Process ID
+	HANDLE UniqueThread;  // Thread ID
+};
+
+// http://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/thread.htm
+// Size = 0x40 for Win32
+// Size = 0x50 for Win64
+struct SYSTEM_THREAD {
+	LARGE_INTEGER KernelTime;
+	LARGE_INTEGER UserTime;
+	LARGE_INTEGER CreateTime;
+	ULONG         WaitTime;
+	PVOID         StartAddress;
+	CLIENT_ID     ClientID;
+	LONG          Priority;
+	LONG          BasePriority;
+	ULONG         ContextSwitches;
+	THREAD_STATE  ThreadState;
+	KWAIT_REASON  WaitReason;
+};
+
+struct VM_COUNTERS {
+	ULONG_PTR PeakVirtualSize;
+	ULONG_PTR VirtualSize;
+	ULONG     PageFaultCount;
+	ULONG_PTR PeakWorkingSetSize;
+	ULONG_PTR WorkingSetSize;
+	ULONG_PTR QuotaPeakPagedPoolUsage;
+	ULONG_PTR QuotaPagedPoolUsage;
+	ULONG_PTR QuotaPeakNonPagedPoolUsage;
+	ULONG_PTR QuotaNonPagedPoolUsage;
+	ULONG_PTR PagefileUsage;
+	ULONG_PTR PeakPagefileUsage;
+};
+
+// http://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/process.htm
+// Size = 0x00B8 for Win32
+// Size = 0x0100 for Win64
+struct SYSTEM_PROCESS {
+	ULONG          NextEntryOffset;
+	ULONG          ThreadCount;
+	LARGE_INTEGER  WorkingSetPrivateSize;
+	ULONG          HardFaultCount;
+	ULONG          NumberOfThreadsHighWatermark;
+	ULONGLONG      CycleTime;
+	LARGE_INTEGER  CreateTime;
+	LARGE_INTEGER  UserTime;
+	LARGE_INTEGER  KernelTime;
+	UNICODE_STRING ImageName;
+	LONG           BasePriority;
+	PVOID          UniqueProcessId;
+	PVOID          InheritedFromUniqueProcessId;
+	ULONG          HandleCount;
+	ULONG          SessionId;
+	ULONG_PTR      UniqueProcessKey;
+	VM_COUNTERS    VmCounters;
+	ULONG_PTR      PrivatePageCount;
+	IO_COUNTERS    IoCounters;
+};
+
+#pragma pack(pop)
 
 // ******************************************************************
 // * FILE_DIRECTORY_INFORMATION
@@ -1521,6 +1645,17 @@ typedef NTSTATUS(NTAPI *FPTR_NtQuerySemaphore)
 );
 
 // ******************************************************************
+// * NtQuerySystemInformation
+// ******************************************************************
+typedef NTSTATUS(NTAPI *FPTR_NtQuerySystemInformation)
+(
+	IN           SYSTEM_INFORMATION_CLASS SystemInformationClass,
+	IN OUT       PVOID                    SystemInformation,
+	IN           ULONG                    SystemInformationLength,
+	OUT OPTIONAL PULONG                   ReturnLength
+);
+
+// ******************************************************************
 // * NtReleaseSemaphore
 // ******************************************************************
 typedef NTSTATUS (NTAPI *FPTR_NtReleaseSemaphore)
@@ -1929,6 +2064,7 @@ EXTERN(NtQueryFullAttributesFile);
 EXTERN(NtQueryInformationFile);
 EXTERN(NtQueryMutant);
 EXTERN(NtQuerySemaphore);
+EXTERN(NtQuerySystemInformation);
 EXTERN(NtQueryTimer);
 EXTERN(NtQueryVirtualMemory);
 EXTERN(NtQueryVolumeInformationFile);

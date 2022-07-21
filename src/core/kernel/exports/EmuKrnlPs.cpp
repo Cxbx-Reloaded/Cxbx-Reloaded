@@ -58,6 +58,11 @@ typedef struct _PCSTProxyParam
 {
 	IN xbox::PVOID  Ethread;
 	IN xbox::ulong_xt TlsDataSize;
+	IN xbox::boolean_xt Suspend;
+	OUT xbox::ntstatus_xt *Status;
+	OUT xbox::PHANDLE xThisThread;
+	IN ::PHANDLE ThisThread;
+	IN OUT std::atomic_flag *Ready;
 }
 PCSTProxyParam;
 
@@ -84,6 +89,17 @@ void LOG_PCSTProxy
 		LOG_FUNC_END;
 }
 
+static xbox::void_xt PspCallThreadNotificationRoutines(xbox::PETHREAD eThread, xbox::boolean_xt Create)
+{
+	std::unique_lock lck(g_ThreadNotificationMtx);
+	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
+		if (g_pfnThreadNotification[i]) {
+			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
+			(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, Create);
+		}
+	}
+}
+
 // PsCreateSystemThread proxy procedure
 // Dxbx Note : The signature of PCSTProxy should conform to System.TThreadFunc !
 static unsigned int WINAPI PCSTProxy
@@ -93,11 +109,8 @@ static unsigned int WINAPI PCSTProxy
 {
 	CxbxSetThreadName("PsCreateSystemThread Proxy");
 
-	PCSTProxyParam *iPCSTProxyParam = static_cast<PCSTProxyParam*>(Parameter);
+	PCSTProxyParam params = *static_cast<PCSTProxyParam *>(Parameter);
 
-	// Copy params to the stack so they can be freed
-	PCSTProxyParam params = *iPCSTProxyParam;
-	delete iPCSTProxyParam;
 #ifndef ENABLE_KTHREAD_SWITCHING
 	unsigned Host2XbStackBaseReserved = 0;
 	__asm mov Host2XbStackBaseReserved, esp;
@@ -112,6 +125,59 @@ static unsigned int WINAPI PCSTProxy
 #else
 	EmuGenerateFS(eThread);
 #endif
+
+	// The ob handle of the ethread obj is the thread id we return to the title
+	*params.Status = ObInsertObject(eThread, xbox::zeroptr, 0, &eThread->UniqueThread);
+	if (!X_NT_SUCCESS(*params.Status)) {
+#ifndef ENABLE_KTHREAD_SWITCHING
+		__asm add esp, Host2XbStackSizeReserved;
+#endif
+		RemoveEntryList(&eThread->Tcb.ThreadListEntry);
+		KiUniqueProcess.StackCount--;
+		EmuKeFreePcr();
+		params.Ready->test_and_set();
+		params.Ready->notify_one();
+		return 0;
+	}
+
+	// Create another handle to pass back to the title in the ThreadHandle argument
+	*params.Status = ObOpenObjectByPointer(eThread, &xbox::PsThreadObjectType, params.xThisThread);
+	if (!X_NT_SUCCESS(*params.Status)) {
+#ifndef ENABLE_KTHREAD_SWITCHING
+		__asm add esp, Host2XbStackSizeReserved;
+#endif
+		RemoveEntryList(&eThread->Tcb.ThreadListEntry);
+		KiUniqueProcess.StackCount--;
+		xbox::ObpClose(eThread->UniqueThread);
+		EmuKeFreePcr();
+		params.Ready->test_and_set();
+		params.Ready->notify_one();
+		return 0;
+	}
+
+	*params.Status = X_STATUS_SUCCESS;
+
+	if (g_iThreadNotificationCount) {
+		PspCallThreadNotificationRoutines(eThread, TRUE);
+	}
+
+	// Increment the ref count of the thread once more. This is to guard against the case the title closes the thread handle
+	// before this thread terminates with PsTerminateSystemThread
+	// Test case: Amped
+	ObfReferenceObject(eThread);
+
+	KeQuerySystemTime(&eThread->CreateTime);
+
+	while (*params.ThisThread == NULL) {
+		std::this_thread::yield();
+	}
+
+	RegisterXboxHandle(*params.xThisThread, *params.ThisThread);
+	HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, GetCurrentThreadId());
+	assert(dupHandle);
+	RegisterXboxHandle(eThread->UniqueThread, dupHandle);
+	g_AffinityPolicy->SetAffinityXbox(*params.ThisThread);
+
 	xbox::PKSTART_FRAME StartFrame = reinterpret_cast<xbox::PKSTART_FRAME>(reinterpret_cast<xbox::addr_xt>(eThread->Tcb.KernelStack) + sizeof(xbox::KSWITCHFRAME));
 
 	LOG_PCSTProxy(
@@ -120,6 +186,14 @@ static unsigned int WINAPI PCSTProxy
 		StartFrame->SystemRoutine,
 		params.Ethread,
 		params.TlsDataSize);
+
+	HANDLE hThread = *params.ThisThread;
+	params.Ready->test_and_set();
+	params.Ready->notify_one();
+
+	if (params.Suspend) {
+		SuspendThread(hThread);
+	}
 
 	auto routine = (xbox::PKSYSTEM_ROUTINE)StartFrame->SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
@@ -156,17 +230,6 @@ xbox::PETHREAD xbox::PspGetCurrentThread()
 {
 	// This works because we assign ethread to Prcb->CurrentThread
 	return reinterpret_cast<PETHREAD>(KeGetCurrentThread());
-}
-
-static xbox::void_xt PspCallThreadNotificationRoutines(xbox::PETHREAD eThread, xbox::boolean_xt Create)
-{
-	std::unique_lock lck(g_ThreadNotificationMtx);
-	for (int i = 0; i < PSP_MAX_CREATE_THREAD_NOTIFY; i++) {
-		if (g_pfnThreadNotification[i]) {
-			EmuLog(LOG_LEVEL::DEBUG, "Calling pfnNotificationRoutine[%d] (0x%.8X)", i, g_pfnThreadNotification[i]);
-			(*g_pfnThreadNotification[i])(eThread, eThread->UniqueThread, Create);
-		}
-	}
 }
 
 // Source: ReactOS
@@ -338,6 +401,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 	KernelStackSize = RoundUp(KernelStackSize, PAGE_SIZE);
 	hKernelStackSize = RoundUp(hKernelStackSize, PAGE_SIZE);
 
+	ntstatus_xt status;
 	// create thread, using our special proxy technique
 	{
 		PETHREAD eThread;
@@ -359,66 +423,50 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		// Start thread initialization process here before insert and create thread
 		KeInitializeThread(&eThread->Tcb, KernelStack, KernelStackSize, TlsDataSize, SystemRoutine, StartRoutine, StartContext, &KiUniqueProcess);
 
-		// The ob handle of the ethread obj is the thread id we return to the title
-		result = ObInsertObject(eThread, zeroptr, 0, &eThread->UniqueThread);
-		if (!X_NT_SUCCESS(result)) {
+		std::atomic_flag signal;
+		HANDLE handle = NULL;
+
+		PCSTProxyParam iPCSTProxyParam;
+		iPCSTProxyParam.Ethread = eThread;
+		iPCSTProxyParam.TlsDataSize = TlsDataSize;
+		iPCSTProxyParam.Suspend = CreateSuspended;
+		iPCSTProxyParam.Status = &status;
+		iPCSTProxyParam.xThisThread = ThreadHandle;
+		iPCSTProxyParam.ThisThread = &handle;
+		iPCSTProxyParam.Ready = &signal;
+
+		unsigned int Id;
+		handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, hKernelStackSize, PCSTProxy, &iPCSTProxyParam, 0, &Id));
+		if (handle == NULL) {
 			ObfDereferenceObject(eThread);
-			RETURN(result);
+			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 		}
 
-		if (g_iThreadNotificationCount) {
-			PspCallThreadNotificationRoutines(eThread, TRUE);
-		}
+		// Wait until the new thread has finished initializing
+		signal.wait(false);
 
-		// Create another handle to pass back to the title in the ThreadHandle argument
-		result = ObOpenObjectByPointer(eThread, &PsThreadObjectType, ThreadHandle);
-		if (!X_NT_SUCCESS(result)) {
+		if (!X_NT_SUCCESS(status)) {
 			ObfDereferenceObject(eThread);
-			RETURN(result);
+			RETURN(status);
 		}
 
 		if (ThreadId != zeroptr) {
 			*ThreadId = eThread->UniqueThread;
 		}
 
-		// PCSTProxy is responsible for cleaning up this pointer
-		PCSTProxyParam *iPCSTProxyParam = new PCSTProxyParam;
-		iPCSTProxyParam->Ethread = eThread;
-		iPCSTProxyParam->TlsDataSize = TlsDataSize;
-
-		unsigned int ThreadId;
-		HANDLE handle = reinterpret_cast<HANDLE>(_beginthreadex(NULL, hKernelStackSize, PCSTProxy, iPCSTProxyParam, CREATE_SUSPENDED, &ThreadId));
-		if (handle == zeroptr) {
-			delete iPCSTProxyParam;
-			ObpClose(eThread->UniqueThread);
-			ObfDereferenceObject(eThread);
-			RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
-		}
-
-		// Increment the ref count of the thread once more. This is to guard against the case the title closes the thread handle
-		// before this thread terminates with PsTerminateSystemThread
-		// Test case: Amped
-		ObfReferenceObject(eThread);
-
-		KeQuerySystemTime(&eThread->CreateTime);
-		RegisterXboxHandle(*ThreadHandle, handle);
-		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);
-		assert(dupHandle);
-		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
-
-		g_AffinityPolicy->SetAffinityXbox(handle);
-
-		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
-		if (!CreateSuspended) {
-			ResumeThread(handle);
+		if (CreateSuspended) {
+			// Make sure it's actually suspended
+			while (!IsThreadSuspended(Id)) {
+				std::this_thread::yield();
+			}
 		}
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
 		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X], Native Handle : 0x%X, Native ThreadId : [0x%.4X]",
-			*ThreadHandle, eThread->UniqueThread, handle, ThreadId);
+			*ThreadHandle, eThread->UniqueThread, handle, Id);
 	}
 
-	RETURN(X_STATUS_SUCCESS);
+	RETURN(status);
 }
 
 // ******************************************************************

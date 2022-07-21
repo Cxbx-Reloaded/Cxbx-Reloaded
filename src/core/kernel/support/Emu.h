@@ -32,6 +32,7 @@
 #include <multimon.h>
 
 std::string FormatTitleId(uint32_t title_id);
+bool IsThreadSuspended(DWORD Tid, DWORD Pid = GetCurrentProcessId());
 
 // exception handler
 class ExceptionManager {
