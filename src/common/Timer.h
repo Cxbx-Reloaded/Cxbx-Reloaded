@@ -68,5 +68,6 @@ void Timer_Shutdown();
 int64_t Timer_GetScaledPerformanceCounter(int64_t Period);
 
 void SleepPrecise(std::chrono::steady_clock::time_point targetTime);
+void MicrosecondDelay(uint32_t MicroSeconds);
 
 #endif

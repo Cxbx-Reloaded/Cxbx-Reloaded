@@ -69,6 +69,24 @@ void SleepPrecise(std::chrono::steady_clock::time_point targetTime)
 	}
 }
 
+// This is to be used for sub-milliseconds waits, for which Sleep is not suitable because it will wait for at least 1 ms
+void MicrosecondDelay(uint32_t MicroSeconds)
+{
+	LARGE_INTEGER freq;
+	freq.QuadPart = HostQPCFrequency;
+	LARGE_INTEGER CurrentTime, EndingTime;
+	QueryPerformanceCounter(&CurrentTime);
+	CurrentTime.QuadPart *= 1000000000;
+	CurrentTime.QuadPart /= freq.QuadPart;
+	EndingTime.QuadPart = CurrentTime.QuadPart + MicroSeconds * 1000;
+
+	while (CurrentTime.QuadPart < EndingTime.QuadPart) {
+		QueryPerformanceCounter(&CurrentTime);
+		CurrentTime.QuadPart *= 1000000000;
+		CurrentTime.QuadPart /= freq.QuadPart;
+	}
+}
+
 // Virtual clocks will probably become useful once LLE CPU is implemented, but for now we don't need them.
 // See the QEMUClockType QEMU_CLOCK_VIRTUAL of XQEMU for more info.
 #define CLOCK_REALTIME 0
