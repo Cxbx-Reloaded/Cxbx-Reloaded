@@ -556,6 +556,12 @@ typedef struct s_CxbxPSDef {
 					EmuLog(LOG_LEVEL::WARNING, "PROJECT2D sampling is used with a cubemap texture - using CUBEMAP sampling instead");
 					RC.PSTextureModes[i] = PS_TEXTUREMODES_CUBEMAP;
 				}
+
+				// Test-case: MS-033 Crimson Skies (Plane texturing in-game and selection menu)
+				if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE && RC.PSTextureModes[i] == PS_TEXTUREMODES_DOT_STR_3D) {
+					EmuLog(LOG_LEVEL::WARNING, "DOT_STR_3D sampling is used with a cubemap texture - using DOT_STR_CUBE sampling instead");
+					RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_CUBE;
+				}
 			}
 		}
 	}
