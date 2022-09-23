@@ -973,7 +973,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				bInfo.pidlRoot = nullptr;
 				bInfo.pszDisplayName = szDir;
 				bInfo.lpszTitle = "Please, select a folder";
-				bInfo.ulFlags = BIF_NEWDIALOGSTYLE, BIF_EDITBOX, BIF_VALIDATE;
+				bInfo.ulFlags = BIF_NEWDIALOGSTYLE | BIF_EDITBOX | BIF_VALIDATE;
 				bInfo.lpfn = nullptr;
 				bInfo.lParam = 0;
 				bInfo.iImage = -1;
@@ -1956,7 +1956,7 @@ void WndMain::OpenXbe(const char *x_filename)
     }
 
 	std::string errorMsg;
-	
+
 	if (!g_Settings->m_gui.bIgnoreInvalidXbeSig && !m_Xbe->CheckSignature()) {
 		errorMsg += "- XBE signature check failed!\n";
 	}
