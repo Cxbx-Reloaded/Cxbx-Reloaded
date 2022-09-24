@@ -205,20 +205,39 @@ float m21(const float input)
 	return (float)tmp / 127; // -128 scales to -1.007874016, 0 scales to 0.0, 127 scales to 1.0
 }
 
+float hls(float input) // 0..65535 range
+{
+	float tmp = (float)(input); 
+	tmp = (input < 32768) ? tmp / 32767 : (tmp - 65536) / 32767; // -1..1
+	return (float)tmp;
+}
+
+float hlu(float input) // 0..65535 range
+{
+	return (float)input / 65535; // 0..1
+}
+
+float p2(float input) // power of 2
+{
+return input * input;
+}
+
 // Note : each component seems already in range [0..1], but two must be combined into one
-#define TwoIntoOne(a,b) (((a * 255) * 256) + (b * 255)) / 255               // TODO : Verify whether this works at all !
+             
+#define TwoIntoOne(a,b) (((a * 256) + b) * 255) 
 #define CalcHiLo(in) H = TwoIntoOne(in.x, in.y); L = TwoIntoOne(in.z, in.w) // TODO : Verify whether this works at all !
+
 
 // Dot mappings over the output value of a (4 component 8 bit unsigned) texture stage register into a (3 component float) vector value, for use in a dot product calculation:
 #define PS_DOTMAPPING_ZERO_TO_ONE(in)         dm = in.rgb                                          // :r8g8b8a8->(r,g,b):                                                   0x00=>0,                       0xff=>1 thus : output =                     (input / 0xff  )
 #define PS_DOTMAPPING_MINUS1_TO_1_D3D(in)     dm = float3(m21d(in.x), m21d(in.y), m21d(in.z))      // :r8g8b8a8->(r,g,b):               0x00=>-128/127,         0x01=>-1,   0x80=>0,                       0xff=>1 thus : output =                                        ((input - 0x100  ) / 0x7f  )
 #define PS_DOTMAPPING_MINUS1_TO_1_GL(in)      dm = float3(m21g(in.x), m21g(in.y), m21g(in.z))      // :r8g8b8a8->(r,g,b):                                       0x80=>-1,   0x00=>0,                       0x7f=>1 thus : output =  (input < 0x80  ) ? (input / 0x7f  ) : ((input - 0x100  ) / 0x80  ) (see https://en.wikipedia.org/wiki/Two's_complement)
-#define PS_DOTMAPPING_MINUS1_TO_1(in)         dm = float3(m21(in.x),  m21(in.y),  m21(in.z))       // :r8g8b8a8->(r,g,b):               0x80=>-128/127,        ?0x81=>-1,   0x00=>0,                       0x7f=>1 thus : output =  (input < 0x80  ) ? (input / 0x7f  ) : ((input - 0x100  ) / 0x7f  ) (see https://en.wikipedia.org/wiki/Two's_complement)
+#define PS_DOTMAPPING_MINUS1_TO_1(in)         dm = float3(m21( in.x), m21( in.y), m21( in.z))      // :r8g8b8a8->(r,g,b):               0x80=>-128/127,        ?0x81=>-1,   0x00=>0,                       0x7f=>1 thus : output =  (input < 0x80  ) ? (input / 0x7f  ) : ((input - 0x100  ) / 0x7f  ) (see https://en.wikipedia.org/wiki/Two's_complement)
 
-#define PS_DOTMAPPING_HILO_1(in)              CalcHiLo(in); dm = float3(H, L, 1)                   // :H16L16  ->(H,L,1):                                                 0x0000=>0,                     0xffff=>1 thus : output =                     (input / 0xffff)
-#define PS_DOTMAPPING_HILO_HEMISPHERE_D3D(in) CalcHiLo(in); dm = float3(H, L, sqrt(1-(H*H)-(L*L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0, 0x7fff=32767/32768            thus : output =                                        ((input - 0x10000) / 0x7fff)
-#define PS_DOTMAPPING_HILO_HEMISPHERE_GL(in)  CalcHiLo(in); dm = float3(H, L, sqrt(1-(H*H)-(L*L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x8000)
-#define PS_DOTMAPPING_HILO_HEMISPHERE(in)     CalcHiLo(in); dm = float3(H, L, sqrt(1-(H*H)-(L*L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)): 0x8000=>-32768/32767, 0x8001=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x7fff)
+#define PS_DOTMAPPING_HILO_1(in)              CalcHiLo(in); dm = float3(hlu(H), hlu(L), 1)                   // :H16L16  ->(H,L,1):                                                 0x0000=>0,                     0xffff=>1 thus : output =                     (input / 0xffff)
+#define PS_DOTMAPPING_HILO_HEMISPHERE_D3D(in) CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0, 0x7fff=32767/32768            thus : output =                                        ((input - 0x10000) / 0x7fff)
+#define PS_DOTMAPPING_HILO_HEMISPHERE_GL(in)  CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x8000)
+#define PS_DOTMAPPING_HILO_HEMISPHERE(in)     CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)): 0x8000=>-32768/32767, 0x8001=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x7fff)
 
 // Declare one sampler per each {Sampler Type, Texture Stage} combination
 // TODO : Generate sampler status?
