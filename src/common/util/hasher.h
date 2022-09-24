@@ -27,8 +27,7 @@
 #ifndef _HASHER_H
 #define _HASHER_H
 
-#include <stdint.h>
-
-uint64_t ComputeHash(const void* data, size_t len);
+#include "xxhash.h"
+#define  ComputeHash XXH3_64bits
 
 #endif
