@@ -170,7 +170,7 @@ namespace Libusb
 		}
 		else {
 			for (size_t i = 0; i < ARRAY_SIZE(SupportedDevices_VidPid); ++i) {
-				if ((Desc->idVendor = SupportedDevices_VidPid[i][0]) && (Desc->idProduct == SupportedDevices_VidPid[i][1])) {
+				if ((Desc->idVendor == SupportedDevices_VidPid[i][0]) && (Desc->idProduct == SupportedDevices_VidPid[i][1])) {
 					m_Type = XBOX_INPUT_DEVICE::HW_XBOX_CONTROLLER;
 					m_UcType = XINPUT_DEVTYPE_GAMEPAD;
 					m_UcSubType = XINPUT_DEVSUBTYPE_GC_GAMEPAD;
