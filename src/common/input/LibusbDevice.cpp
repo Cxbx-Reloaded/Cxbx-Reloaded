@@ -185,9 +185,18 @@ namespace Libusb
 
 		if (m_Type == XBOX_INPUT_DEVICE::DEVICE_INVALID) { return; }
 
-		// Duke, S and SBC have 1 configuration, 1 interface and 2 endpoints (input and output) and use the default alternate setting zero.
-		// The code below assumes that third-party controllers follow suit.
-		if (libusb_open(Dev, &m_hDev) == 0) {
+		// check if we are able to open device through libusb
+		if (int err = libusb_open(Dev, &m_hDev)) {
+			// Couldn't open device, create an error log report then don't use it.
+			EmuLog(LOG_LEVEL::ERROR2, "Unable to open original xbox device \"%s\" (%hX:%hX), libusb's error was: %s",
+				m_Name.c_str(), Desc->idVendor, Desc->idProduct, libusb_strerror(err));
+			m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
+			return;
+		}
+		// If we are able to open device, continue with query process.
+		else {
+			// Duke, S and SBC have 1 configuration, 1 interface and 2 endpoints (input and output) and use the default alternate setting zero.
+			// The code below assumes that third-party controllers follow suit.
 			libusb_config_descriptor *ConfDesc;
 			if (libusb_get_active_config_descriptor(Dev, &ConfDesc) == 0) {
 				if (ConfDesc->bNumInterfaces == 1) {
