@@ -220,7 +220,7 @@ namespace Libusb
 								}
 							}
 							EmuLog(LOG_LEVEL::INFO, "Out endpoint %s", m_HasEndpointOut ? "present" : "not present");
-							if (int err = libusb_claim_interface(m_hDev, m_IfaceNum) != 0) {
+							if (int err = libusb_claim_interface(m_hDev, m_IfaceNum)) {
 								EmuLog(LOG_LEVEL::INFO, "Rejected device %s because libusb could not claim its interface. The error was: %s",
 									m_Name.c_str(), libusb_strerror(err));
 								m_Type = XBOX_INPUT_DEVICE::DEVICE_INVALID;
