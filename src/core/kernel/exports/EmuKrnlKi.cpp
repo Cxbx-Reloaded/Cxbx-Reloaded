@@ -503,7 +503,7 @@ xbox::boolean_xt FASTCALL xbox::KiSignalTimer
 	if (Period)
 	{
 		/* Calculate the interval and insert the timer */
-		Interval.QuadPart = Int32x32To64(Period, -10000);
+		Interval.QuadPart = Period * -10000LL;
 		while (!KiInsertTreeTimer(Timer, Interval));
 	}
 
@@ -618,7 +618,7 @@ xbox::void_xt NTAPI xbox::KiTimerExpiration
 				if (Period)
 				{
 					/* Calculate the interval and insert the timer */
-					Interval.QuadPart = Int32x32To64(Period, -10000);
+					Interval.QuadPart = Period * -10000LL;
 					while (!KiInsertTreeTimer(Timer, Interval));
 				}
 
@@ -810,7 +810,7 @@ xbox::void_xt FASTCALL xbox::KiTimerListExpire
 		if (Period)
 		{
 			/* Calculate the interval and insert the timer */
-			Interval.QuadPart = Int32x32To64(Period, -10000);
+			Interval.QuadPart = Period * -10000LL;
 			while (!KiInsertTreeTimer(Timer, Interval));
 		}
 
