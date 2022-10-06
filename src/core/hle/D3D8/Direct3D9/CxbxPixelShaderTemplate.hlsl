@@ -118,7 +118,7 @@ uniform const float  FRONTFACE_FACTOR : register(c31); // Note : PSH_XBOX_CONSTA
 #ifdef PS_COMBINERCOUNT_MUX_MSB
 	#define FCS_MUX (r0.a >= 0.5) // Check r0.a MSB; Having range upto 1 this should be equal to : (((r0.a * 255) /*mod 256*/) >= 128)
 #else // PS_COMBINERCOUNT_MUX_LSB
-	#define FCS_MUX (((r0.a * 255) mod 2) >= 1) // Check r0.b LSB; Get LSB by converting 1 into 255 (highest 8-bit value) and using modulo 2. TODO : Verify correctness
+	#define FCS_MUX (((r0.a * 255) % 2) >= 1) // Check r0.b LSB; Get LSB by converting 1 into 255 (highest 8-bit value) and using modulo 2. TODO : Verify correctness
 #endif
 
 // PS_FINALCOMBINERSETTING_COMPLEMENT_V1, when defined, applies a modifier to the v1 input when calculating the sum register
@@ -146,6 +146,7 @@ uniform const float  FRONTFACE_FACTOR : register(c31); // Note : PSH_XBOX_CONSTA
 // See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
 // Second raw string :
 R"DELIMITER(
+#define xdot(s0, s1) dot((s0).rgb, (s1).rgb)
 
 // Xbox supports only one 'pixel shader' opcode, but bit flags tunes it's function;
 // Here, effective all 5 Xbox opcodes, extended with a variable macro {xop_m(m,...)} for destination modifier :
@@ -153,9 +154,9 @@ R"DELIMITER(
 #define xmma(d0, d1, d2,  s0, s1, s2, s3, m, tmp) tmp = d0 = m(s0 * s1); d1 = m(s2 * s3); d2 =           d1 + tmp // PS_COMBINEROUTPUT_AB_CD_SUM=           0x00L, // 3rd output is AB+CD
 #define xmmc(d0, d1, d2,  s0, s1, s2, s3, m, tmp) tmp = d0 = m(s0 * s1); d1 = m(s2 * s3); d2 = FCS_MUX ? d1 : tmp // PS_COMBINEROUTPUT_AB_CD_MUX=           0x04L, // 3rd output is MUX(AB,CD) based on R0.a
 
-#define xdm(d0, d1,  s0, s1, s2, s3, m) d0 = m(dot(s0 , s1)); d1 = m(    s2 * s3 )                                // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x00L,
-#define xdd(d0, d1,  s0, s1, s2, s3, m) d0 = m(dot(s0 , s1)); d1 = m(dot(s2 , s3))                                // PS_COMBINEROUTPUT_CD_DOT_PRODUCT=      0x01L, // RGB only // PS_COMBINEROUTPUT_AB_MULTIPLY=         0x00L, 
-#define xmd(d0, d1,  s0, s1, s2, s3, m) d0 = m(    s0 * s1 ); d1 = m(dot(s2 , s3))                                // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x01L,
+#define xdm(d0, d1,  s0, s1, s2, s3, m) d0 = m(xdot(s0 , s1)); d1 = m(     s2 * s3 )                              // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x00L,
+#define xdd(d0, d1,  s0, s1, s2, s3, m) d0 = m(xdot(s0 , s1)); d1 = m(xdot(s2 , s3))                              // PS_COMBINEROUTPUT_CD_DOT_PRODUCT=      0x01L, // RGB only // PS_COMBINEROUTPUT_AB_MULTIPLY=         0x00L, 
+#define xmd(d0, d1,  s0, s1, s2, s3, m) d0 = m(     s0 * s1 ); d1 = m(xdot(s2 , s3))                              // PS_COMBINEROUTPUT_AB_DOT_PRODUCT=      0x02L, // RGB only // PS_COMBINEROUTPUT_CD_MULTIPLY=         0x01L,
 
 // After the register combiner stages, there's one (optional) final combiner step, consisting of 4 parts;
 // All the 7 final combiner inputs operate on rgb only and clamp negative input to zero:
@@ -296,8 +297,8 @@ void PerformAlphaKill(const float AlphaKill, float4 t)
 float4 PostProcessTexel(const int ts, float4 t)
 {
 	// TODO : Figure out in which order the following operations should be performed :
-	t = PerformColorSign(COLORSIGN[ts], t);
-	// TODO : Enable once the data is available : t = PerformColorKeyOp(COLORKEYOP[ts], COLORKEYCOLOR[ts], t);
+	//t = PerformColorSign(COLORSIGN[ts], t);
+	 //t = PerformColorKeyOp(COLORKEYOP[ts], COLORKEYCOLOR[ts], t);
 	PerformAlphaKill(alphakill[ts], t);
 
 	return t;
@@ -326,8 +327,8 @@ float4 Sample6F(int ts, float3 s)
 // Test-case JSRF (boost-dash effect).
 float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 BumpMap)
 {
-	const float u = TexCoord.x + (BumpEnvMat.x * BumpMap.r) + (BumpEnvMat.z * BumpMap.g); // Or : TexCoord.x + dot(BumpEnvMat.xz, BumpMap.rg)
-	const float v = TexCoord.y + (BumpEnvMat.y * BumpMap.r) + (BumpEnvMat.w * BumpMap.g); // Or : TexCoord.y + dot(BumpEnvMat.yw, BumpMap.rg)
+	const float u = TexCoord.x + (BumpEnvMat.x * BumpMap.r) + (BumpEnvMat.y * BumpMap.g); // Or : TexCoord.x + dot(BumpEnvMat.xz, BumpMap.rg)
+	const float v = TexCoord.y + (BumpEnvMat.y * BumpMap.r) + (BumpEnvMat.x * BumpMap.g); // Or : TexCoord.y + dot(BumpEnvMat.yw, BumpMap.rg)
 
 	return float3(u, v, 0);
 }
@@ -339,8 +340,8 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 Bu
 #define t3 t[3]
 
 // Resolve a stage number via 'input texture (index) mapping' to it's corresponding output texture register (rgba?)
-#define src(ts) t[PS_INPUTTEXTURE_[ts]]
-
+#define src1(ts) t[PS_INPUTTEXTURE_[ts]]
+#define src(ts) PerformColorSign(COLORSIGN[ts],src1(ts))
 // Calculate the dot result for a given texture stage. Since any given stage is input-mapped to always be less than or equal the stage it appears in, this won't cause read-ahead issues
 // Test case: BumpDemo demo
 #define CalcDot(ts) PS_DOTMAPPING_ ## ts(src(ts)); dot_[ts] = dot(iT[ts].xyz, dm)
@@ -352,12 +353,13 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 Bu
 // Test case: Metal Arms (menu skybox clouds, alpha is specifically set in the VS)
 #define Passthru(ts)  float4(saturate(iT[ts]))
 #define Brdf(ts)      float3(t[ts-2].y,  t[ts-1].y,  t[ts-2].x - t[ts-1].x) // TODO : Complete 16 bit phi/sigma retrieval from float4 texture register. Perhaps use CalcHiLo?
+#define Normal(ts)    float dot_[ts]
 #define Normal2(ts)   float3(dot_[ts-1], dot_[ts],   0)                     // Preceding and current stage dot result. Will be input for Sample2D.
 #define Normal3(ts)   float3(dot_[ts-2], dot_[ts-1], dot_[ts])              // Two preceding and current stage dot result.
 #define Eye           float3(iT[1].w,    iT[2].w,    iT[3].w)               // 4th (q) component of input texture coordinates 1, 2 and 3. Only used by texm3x3vspec/PS_TEXTUREMODES_DOT_RFLCT_SPEC, always at stage 3. TODO : Map iT[1/2/3] through PS_INPUTTEXTURE_[]?
 #define Reflect(n, e) 2 * (dot(n, e) / dot(n, n)) * n - e                   // https://documentation.help/directx8_c/texm3x3vspec.htm
-#define BumpEnv(ts)   DoBumpEnv(iT[ts], BEM[ts], src(ts))                   // Will be input for Sample2D.
-#define LSO(ts)       (LUM[ts].x * src(ts).b) + LUM[ts].y                   // Uses PSH_XBOX_CONSTANT_LUM.x = D3DTSS_BUMPENVLSCALE, and .y = D3DTSS_BUMPENVLOFFSET
+#define BumpEnv(ts)   DoBumpEnv(iT[ts], (BEM[ts]),(src(ts)))                   // Will be input for Sample2D.
+#define LSO(ts)       (LUM[ts].x * (src(ts)).b) + LUM[ts].y                   // Uses PSH_XBOX_CONSTANT_LUM.x = D3DTSS_BUMPENVLSCALE, and .y = D3DTSS_BUMPENVLOFFSET
 
 // Implementations for all possible texture modes, with stage as argument (prefixed with valid stages and corresponding pixel shader 1.3 assembly texture addressing instructions)
 // For ease of understanding, all follow this plan : Optional specifics, or dot calculation (some with normal selection) and sampling vector determination. All end by deriving a value and assigning this to the stage's texture register.
@@ -372,10 +374,10 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 Bu
 /*--23 texbrdf      */ #define PS_TEXTUREMODES_BRDF(ts)                                               s = Brdf(ts);        v = Sample3D(ts, s); t[ts] = v // TODO : Test (t[ts-2] is 16 bit eyePhi,eyeSigma; t[ts-1] is lightPhi,lightSigma)
 /*--23 texm3x2tex   */ #define PS_TEXTUREMODES_DOT_ST(ts)               CalcDot(ts); n = Normal2(ts); s = n;               v = Sample2D(ts, s); t[ts] = v // TODO : Test
 /*--23 texm3x2depth */ #define PS_TEXTUREMODES_DOT_ZW(ts)               CalcDot(ts); n = Normal2(ts); if (n.y==0) v=1;else v = n.x / n.y;       t[ts] = v // TODO : Make depth-check use result of division, but how?
-/*--2- texm3x3diff  */ #define PS_TEXTUREMODES_DOT_RFLCT_DIFF(ts)       CalcDot(ts); n = Normal3(ts); s = n;               v = Sample6F(ts, s); t[ts] = v // TODO : Test
+/*--2- texm3x3diff  */ #define PS_TEXTUREMODES_DOT_RFLCT_DIFF(ts)       CalcDot(ts); n = Normal(ts);  s = n;               v = Sample6F(ts, s); t[ts] = v // TODO : Test
 /*---3 texm3x3vspec */ #define PS_TEXTUREMODES_DOT_RFLCT_SPEC(ts)       CalcDot(ts); n = Normal3(ts); s = Reflect(n, Eye); v = Sample6F(ts, s); t[ts] = v // TODO : Test
 /*---3 texm3x3tex   */ #define PS_TEXTUREMODES_DOT_STR_3D(ts)           CalcDot(ts); n = Normal3(ts); s = n;               v = Sample3D(ts, s); t[ts] = v // TODO : Test
-/*---3 texm3x3tex   */ #define PS_TEXTUREMODES_DOT_STR_CUBE(ts)         CalcDot(ts); n = Normal3(ts); s = n;               v = Sample6F(ts, s); t[ts] = v // TODO : Test
+/*---3 texm3x3vspec */ #define PS_TEXTUREMODES_DOT_STR_CUBE(ts)         CalcDot(ts); n = Normal3(ts); s = Reflect(n, Eye); v = Sample6F(ts, s); t[ts] = v // TODO : Test
 /*-123 texreg2ar    */ #define PS_TEXTUREMODES_DPNDNT_AR(ts)                                          s = src(ts).arg;     v = Sample2D(ts, s); t[ts] = v // TODO : Test [1]
 /*-123 texreg2bg    */ #define PS_TEXTUREMODES_DPNDNT_GB(ts)                                          s = src(ts).gba;     v = Sample2D(ts, s); t[ts] = v // TODO : Test [1]
 // TODO replace dm with dot_[ts]? Confirm BumpDemo 'Cubemap only' modes

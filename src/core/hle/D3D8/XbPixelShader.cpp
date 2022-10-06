@@ -558,10 +558,10 @@ typedef struct s_CxbxPSDef {
 				}
 
 				// Test-case: MS-033 Crimson Skies (Plane texturing in-game and selection menu)
-				if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE && RC.PSTextureModes[i] == PS_TEXTUREMODES_DOT_STR_3D) {
-					EmuLog(LOG_LEVEL::WARNING, "DOT_STR_3D sampling is used with a cubemap texture - using DOT_STR_CUBE sampling instead");
-					RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_CUBE;
-				}
+				//if (ActiveTextureTypes[i] == xbox::X_D3DRTYPE_CUBETEXTURE && RC.PSTextureModes[i] == PS_TEXTUREMODES_DOT_STR_3D) {
+					//EmuLog(LOG_LEVEL::WARNING, "DOT_STR_3D sampling is used with a cubemap texture - using DOT_STR_CUBE sampling instead");
+					//RC.PSTextureModes[i] = PS_TEXTUREMODES_DOT_STR_CUBE;
+				//}
 			}
 		}
 	}
@@ -966,44 +966,77 @@ float AsFloat(uint32_t value)
 }
 
 // Determines the Cxbx ColorSign requirement, as handled in the HLSL shaders by PerformColorSign()
-float CxbxComponentColorSignFromXboxAndHost(bool XboxMarksComponentSigned, bool HostComponentIsSigned)
+float CxbxComponentColorSignFromXboxAndHost(bool XboxMarksComponentSigned, bool HostComponentIsSigned, bool Bump, int stage_nr)
 {
-	// Equal "signedness" between Xbox and host implies we must not convert the component scale :
-	if (XboxMarksComponentSigned == HostComponentIsSigned)
-		return 0.0f;
+	 DWORD XboxColorSign = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORSIGN);
+	/*if (Bump == false) {
+		// Equal "signedness" between Xbox and host implies we must not convert the component scale :
+		if (XboxMarksComponentSigned == HostComponentIsSigned)
+			return 0.0f;
 
-	// Xbox wants the components to be signed (even though host has them unsigned)
-	if (XboxMarksComponentSigned)
-		return 1.0f; // Mark the component for scaling from unsigned_to_signed
+		// Xbox wants the components to be signed (even though host has them unsigned)
+		if (XboxMarksComponentSigned)
+			return 1.0f; // Mark the component for scaling from unsigned_to_signed
 
-	// Xbox doesn't want signed values, but host has them signed :
-	return -1.0f; // Mark the component for scaling from signed_to_unsigned
-}
+		// Xbox doesn't want signed values, but host has them signed :
+		return -1.0f; // Mark the component for scaling from signed_to_unsigned
+	}
+	else {*/
+		if ((Bump == true) && (XboxMarksComponentSigned == true) && (HostComponentIsSigned == true))
+			return 0;
+		if ((Bump == true) && (XboxMarksComponentSigned == false) && (HostComponentIsSigned == false))
+			return true;
+		if ((Bump == true) && (XboxMarksComponentSigned == false) && (HostComponentIsSigned == true))
+			return 0;
+		if ((Bump == true) && (XboxMarksComponentSigned == true) && (HostComponentIsSigned == false))
+			return true;
+		if ((Bump == false) && (XboxMarksComponentSigned == true) && (HostComponentIsSigned == true))
+			return 0;
+		if ((Bump == false) && (XboxMarksComponentSigned == false) && (HostComponentIsSigned == false))
+			return 0;
+		if ((Bump == false) && (XboxMarksComponentSigned == false) && (HostComponentIsSigned == true))
+			return 0;
+		if ((Bump == false) && (XboxMarksComponentSigned == true) && (HostComponentIsSigned == false))
+			return true;
+
+	//}
+}	
 
 D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 {
 	// Initially use what the running executable put in COLORSIGN :
 	DWORD XboxColorSign = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORSIGN);
-
-	{ // This mimicks behaviour of XDK LazySetShaderStageProgram, which we bypass due to our drawing patches without trampolines.
+	 { // This mimicks behaviour of XDK LazySetShaderStageProgram, which we bypass due to our drawing patches without trampolines.
 		// When bump environment mapping is enabled
-		if (XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLOROP) >= xbox::X_D3DTOP_BUMPENVMAP)
+		//if (XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLOROP) >= xbox::X_D3DTOP_BUMPENVMAP)
 			// Always mark the blue (alias for U) and green (alias for  V) color channels as signed :
-			XboxColorSign |= xbox::X_D3DTSIGN_GSIGNED | xbox::X_D3DTSIGN_BSIGNED;
-	}
-
-#if 0 // When this block is enabled, XDK samples BumpEarth and BumpLens turn red-ish, so keep this off for now...
+			//XboxColorSign |= xbox::X_D3DTSIGN_GSIGNED | xbox::X_D3DTSIGN_RSIGNED;
+	 }
+    // When this block is enabled, XDK samples BumpEarth and BumpLens turn red-ish, so keep this off for now...
 	// Check if the pixel shader specifies bump mapping for this stage (TODO : How to handle this with the fixed function shader?)
-	DWORD PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
-	PS_TEXTUREMODES StageTextureMode = (PS_TEXTUREMODES)((PSTextureModes >> (stage_nr * 5)) & PS_TEXTUREMODES_MASK);
-	if (StageTextureMode == PS_TEXTUREMODES_BUMPENVMAP || StageTextureMode == PS_TEXTUREMODES_BUMPENVMAP_LUM)
-		XboxColorSign |= xbox::X_D3DTSIGN_GSIGNED | xbox::X_D3DTSIGN_BSIGNED;
+	  bool Bump = false;
+	 DWORD PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+	 PS_TEXTUREMODES StageTextureMode = (PS_TEXTUREMODES)((PSTextureModes >> (stage_nr * 5)) & PS_TEXTUREMODES_MASK);
+	 auto Format = g_HostTextureFormats[stage_nr];
+	 if ((StageTextureMode == PS_TEXTUREMODES_BUMPENVMAP ) && (XboxColorSign == 0))
+	 {
+		 Bump = true;
+		 //if ((Format == D3DFMT_Q8W8V8U8 || Format == D3DFMT_L6V5U5 || Format == D3DFMT_X8L8V8U8) && (XboxColorSign == 0))  || Format == D3DFMT_X8R8G8B8{
+		 //XboxColorSign |= xbox::X_D3DTSIGN_GSIGNED | xbox::X_D3DTSIGN_RSIGNED;|| StageTextureMode == PS_TEXTUREMODES_BUMPENVMAP_LUM
+		 // }
+		  //if (Format == D3DFMT_V8U8 || Format == D3DFMT_V16U16) {
+			 // XboxColorSign |= xbox::X_D3DTSIGN_GSIGNED | xbox::X_D3DTSIGN_RSIGNED;
+		  //}
+	 }
+	 /*if (!(Format == D3DFMT_Q8W8V8U8 || Format == D3DFMT_L6V5U5 || Format == D3DFMT_V8U8 || Format == D3DFMT_V16U16 || Format == D3DFMT_X8L8V8U8)) {
+		 XboxColorSign = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORSIGN); // |= xbox::X_D3DTSIGN_GSIGNED | xbox::X_D3DTSIGN_RSIGNED;
+	 }*/
 
-#endif
-	// Host D3DFMT's with one or more signed components : D3DFMT_V8U8, D3DFMT_Q8W8V8U8, D3DFMT_V16U16, D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8
-	D3DFORMAT H/*ostTextureFormat*/ = g_HostTextureFormats[stage_nr];
-	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/bump-map-pixel-formats
-	// No need to check for unused formats : D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8, D3DFMT_A2W10V10U10
+
+	 if (stage_nr == -1) stage_nr = 3;
+	 D3DFORMAT H/*ostTextureFormat*/ = g_HostTextureFormats[stage_nr-1];
+	 // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/bump-map-pixel-formats
+	 // No need to check for unused formats : D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8, D3DFMT_A2W10V10U10
 #if 0 // Original signed-ness checking code gave effectively this :
 	// Host format     | Signed components
 	// ----------------+------------------
@@ -1012,10 +1045,10 @@ D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 	// D3DFMT_V8U8     |   R,G
 	// D3DFMT_V16U16   |   R,G
 	// D3DFMT_X8L8V8U8 |   R,G
-	bool HostTextureFormatIsSignedForA = (H == D3DFMT_Q8W8V8U8);
-	bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8)                         || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
-	bool HostTextureFormatIsSignedForG = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
-	bool HostTextureFormatIsSignedForB = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5);
+	 bool HostTextureFormatIsSignedForA = (H == D3DFMT_Q8W8V8U8);
+	 bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
+	 bool HostTextureFormatIsSignedForG = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
+	 bool HostTextureFormatIsSignedForB = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5);
 #else // New, as experimentally discovered by medievil :
 	// Host format     | Signed components
 	// ----------------+------------------
@@ -1027,17 +1060,21 @@ D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 	// TODO : Verify D3DFMT_L6V5U5 indeed maps to A,R (instead of G,B).
 	// If not, research why this (then incorret) change *does* improve both BumpEarth samples
 	// (while keeping BumpLens and JSFR boost dash effect working). Perhaps duplicate signed range conversion in the shader?
-	bool HostTextureFormatIsSignedForA = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5);
-	bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
-	bool HostTextureFormatIsSignedForG = (H == D3DFMT_Q8W8V8U8)                         || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
-	bool HostTextureFormatIsSignedForB = (H == D3DFMT_Q8W8V8U8);
-##endif
-	D3DXCOLOR CxbxColorSign;
-	CxbxColorSign.r = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_RSIGNED, HostTextureFormatIsSignedForR); // Maps to COLORSIGN.r
-	CxbxColorSign.g = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_GSIGNED, HostTextureFormatIsSignedForG); // Maps to COLORSIGN.g
-	CxbxColorSign.b = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_BSIGNED, HostTextureFormatIsSignedForB); // Maps to COLORSIGN.b
-	CxbxColorSign.a = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_ASIGNED, HostTextureFormatIsSignedForA); // Maps to COLORSIGN.a
-	return CxbxColorSign;
+	 bool HostTextureFormatIsSignedForA = (H == D3DFMT_Q8W8V8U8) ;
+	 bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);;
+	 bool HostTextureFormatIsSignedForG = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
+	 bool HostTextureFormatIsSignedForB = (H == D3DFMT_Q8W8V8U8) ;
+#endif
+		 D3DXCOLOR CxbxColorSign[4];
+		 //if (stage_nr == -1) stage_nr = 3;
+		
+	 CxbxColorSign[stage_nr].r = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_RSIGNED, HostTextureFormatIsSignedForR, Bump, stage_nr); // Maps to COLORSIGN.r
+	 CxbxColorSign[stage_nr].g = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_GSIGNED, HostTextureFormatIsSignedForG, Bump, stage_nr); // Maps to COLORSIGN.g
+	 CxbxColorSign[stage_nr].b = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_BSIGNED, HostTextureFormatIsSignedForB, Bump, stage_nr); // Maps to COLORSIGN.b
+	 CxbxColorSign[stage_nr].a = CxbxComponentColorSignFromXboxAndHost(XboxColorSign & xbox::X_D3DTSIGN_ASIGNED, HostTextureFormatIsSignedForA, Bump, stage_nr); // Maps to COLORSIGN.a
+
+	
+	 return CxbxColorSign[stage_nr];
 }
 
 // Set constant state for the fixed function pixel shader
