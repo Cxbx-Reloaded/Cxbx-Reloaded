@@ -74,9 +74,11 @@ enum _ComponentEncoding {
 // Bitfield extraction macros, reading a field from right-to-left specified bit widths.
 // Invoker is responsible for passing in assigned and big enough data pointers.
 // Input and return values are unsigned bytes.
+// The *_top pairs replace a single AND (in extract) and two shifts (in expand) by just two shifts (one in extract and one in expand)
 // Note : Below expressions must be embraced, otherwise macro-expansion would cause incorrect expressions!
 
 // 3 components, 5:5:6
+#define  extract1from556_top(src)  (src[0] << 2)
 #define  extract1from556(src)  (src[0] & 0x3f)
 #ifdef BIG_ENDIAN
 #define  extract2from556(src) ((src[0] >> 6) | ((src[1] & 0x07) << 2))
@@ -86,6 +88,7 @@ enum _ComponentEncoding {
 #define  extract3from556(src)  (src[1] >> 3)
 
 // 3 components, 5:6:5
+#define  extract1from565_top(src)  (src[0] << 3)
 #define  extract1from565(src)  (src[0] & 0x1f)
 #ifdef BIG_ENDIAN
 #define  extract2from565(src) ((src[0] >> 5) | ((src[1] & 0x07) << 3))
@@ -95,6 +98,7 @@ enum _ComponentEncoding {
 #define  extract3from565(src)  (src[1] >> 3)
 
 // 3 components, 6:5:5
+#define  extract1from655_top(src)  (src[0] << 3)
 #define  extract1from655(src)  (src[0] & 0x1f)
 #ifdef BIG_ENDIAN
 #define  extract2from655(src) ((src[0] >> 5) | ((src[1] & 0x03) << 3))
@@ -104,6 +108,7 @@ enum _ComponentEncoding {
 #define  extract3from655(src)  (src[1] >> 2)
 
 // 4 components, 1:5:5:5
+#define extract1from1555_top(src)  (src[0] << 3)
 #define extract1from1555(src)  (src[0] & 0x1f)
 #ifdef BIG_ENDIAN
 #define extract2from1555(src) ((src[0] >> 5) | ((src[1] & 0x03) << 3))
@@ -125,12 +130,15 @@ enum _ComponentEncoding {
 #define extract4from5551(src)  (src[1] >> 3)
 
 // 4 components, 4:4:4:4
+#define extract1from4444_top(src)  (src[0] << 4)
 #define extract1from4444(src)  (src[0] & 0x0f)
 #define extract2from4444(src)  (src[0] >> 4)
+#define extract3from4444_top(src)  (src[1] << 4)
 #define extract3from4444(src)  (src[1] & 0x0f)
 #define extract4from4444(src)  (src[1] >> 4)
 
 // Range expansion for less-than-8 bit unsigned values, towards 8-bit unsigned values
+// by repeating the topmost bits, resulting in a linear range in the full 8-bits output.
 // Note : Input values *must not* exceed the number of significant input bits.
 // Guarding against that is caller's responsibility.
 
@@ -141,14 +149,29 @@ inline uint8_t u_expand7(const uint8_t value)
 }
 #endif
 
+inline uint8_t u_expand6_top(const uint8_t value)
+{
+	return value | (value >> 6);
+}
+
 inline uint8_t u_expand6(const uint8_t value)
 {
 	return (value << 2) | (value >> 4);
 }
 
+inline uint8_t u_expand5_top(const uint8_t value)
+{
+	return value | (value >> 5);
+}
+
 inline uint8_t u_expand5(const uint8_t value)
 {
 	return (value << 3) | (value >> 2);
+}
+
+inline uint8_t u_expand4_top(const uint8_t value)
+{
+	return value | (value >> 4);
 }
 
 inline uint8_t u_expand4(const uint8_t value)
@@ -206,10 +229,10 @@ void RGB565ToARGBRow_C(const uint8_t* src_rgb565, uint8_t* dst_argb, int width)
 {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8_t b5 = extract1from565(src_rgb565);
+		uint8_t b5 = extract1from565_top(src_rgb565);
 		uint8_t g6 = extract2from565(src_rgb565);
 		uint8_t r5 = extract3from565(src_rgb565);
-		dst_argb[0] = u_expand5(b5);
+		dst_argb[0] = u_expand5_top(b5);
 		dst_argb[1] = u_expand6(g6);
 		dst_argb[2] = u_expand5(r5);
 		dst_argb[3] = 255u;
@@ -224,11 +247,11 @@ void ARGB1555ToARGBRow_C(const uint8_t* src_argb1555,
 {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8_t b5 = extract1from1555(src_argb1555);
+		uint8_t b5 = extract1from1555_top(src_argb1555);
 		uint8_t g5 = extract2from1555(src_argb1555);
 		uint8_t r5 = extract3from1555(src_argb1555);
 		uint8_t a1 = extract4from1555(src_argb1555);
-		dst_argb[0] = u_expand5(b5);
+		dst_argb[0] = u_expand5_top(b5);
 		dst_argb[1] = u_expand5(g5);
 		dst_argb[2] = u_expand5(r5);
 		dst_argb[3] = u_expand1(a1);
@@ -243,13 +266,13 @@ void ARGB4444ToARGBRow_C(const uint8_t* src_argb4444,
 {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8_t b4 = extract1from4444(src_argb4444);
+		uint8_t b4 = extract1from4444_top(src_argb4444);
 		uint8_t g4 = extract2from4444(src_argb4444);
-		uint8_t r4 = extract3from4444(src_argb4444);
+		uint8_t r4 = extract3from4444_top(src_argb4444);
 		uint8_t a4 = extract4from4444(src_argb4444);
-		dst_argb[0] = u_expand4(b4);
+		dst_argb[0] = u_expand4_top(b4);
 		dst_argb[1] = u_expand4(g4);
-		dst_argb[2] = u_expand4(r4);
+		dst_argb[2] = u_expand4_top(r4);
 		dst_argb[3] = u_expand4(a4);
 		dst_argb += 4;
 		src_argb4444 += 2;
@@ -262,11 +285,11 @@ void X1R5G5B5ToARGBRow_C(const uint8_t* src_x1r5g5b5, uint8_t* dst_argb,
 {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8_t b5 = extract1from1555(src_x1r5g5b5);
+		uint8_t b5 = extract1from1555_top(src_x1r5g5b5);
 		uint8_t g5 = extract2from1555(src_x1r5g5b5);
 		uint8_t r5 = extract3from1555(src_x1r5g5b5);
 		// Note : X1 is ignored, so no extract4from1555
-		dst_argb[0] = u_expand5(b5);
+		dst_argb[0] = u_expand5_top(b5);
 		dst_argb[1] = u_expand5(g5);
 		dst_argb[2] = u_expand5(r5);
 		dst_argb[3] = 255u;
@@ -344,10 +367,10 @@ void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width
 {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8_t b5 = extract1from655(src_r6g5b5);
+		uint8_t b5 = extract1from655_top(src_r6g5b5);
 		uint8_t g5 = extract2from655(src_r6g5b5);
 		uint8_t r6 = extract3from655(src_r6g5b5);
-		dst_argb[0] = u_expand5(b5);
+		dst_argb[0] = u_expand5_top(b5);
 		dst_argb[1] = u_expand5(g5);
 		dst_argb[2] = u_expand6(r6);
 		dst_argb[3] = 255u;
@@ -417,14 +440,14 @@ void R4G4B4A4ToARGBRow_C(const uint8_t* src_r4g4b4a4, uint8_t* dst_argb, int wid
 {
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8_t a4 = extract1from4444(src_r4g4b4a4);
+		uint8_t a4 = extract1from4444_top(src_r4g4b4a4);
 		uint8_t b4 = extract2from4444(src_r4g4b4a4);
-		uint8_t g4 = extract3from4444(src_r4g4b4a4);
+		uint8_t g4 = extract3from4444_top(src_r4g4b4a4);
 		uint8_t r4 = extract4from4444(src_r4g4b4a4);
 		dst_argb[0] = u_expand4(b4);
-		dst_argb[1] = u_expand4(g4);
+		dst_argb[1] = u_expand4_top(g4);
 		dst_argb[2] = u_expand4(r4);
-		dst_argb[3] = u_expand4(a4);
+		dst_argb[3] = u_expand4_top(a4);
 		dst_argb += 4;
 		src_r4g4b4a4 += 2;
 	}
