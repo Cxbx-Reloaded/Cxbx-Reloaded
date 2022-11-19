@@ -58,6 +58,7 @@ std::string DumpInformation(Xbe* Xbe_object)
 }
 
 #define SSTREAM_SET_HEX(stream_name) stream_name << std::setfill('0') << std::uppercase << std::hex;
+#define SSTREAM_SET_DEC(stream_name) stream_name << std::setfill('0') << std::uppercase << std::dec;
 
 std::string FormatTitleId(uint32_t title_id)
 {
@@ -359,8 +360,12 @@ std::string XbePrinter::GenMediaInfo()
     text << "Allowed Media                    : 0x" << std::setw(8) << Xbe_certificate->dwAllowedMedia << " (" << AllowedMediaToString() << ")\n";
     text << "Game Region                      : 0x" << std::setw(8) << Xbe_certificate->dwGameRegion << " (" << Xbe_to_print->GameRegionToString() << ")\n";
     text << "Game Ratings                     : 0x" << std::setw(8) << Xbe_certificate->dwGameRatings << " (" << GameRatingToString() << ")\n";
-    text << "Disk Number                      : 0x" << std::setw(8) << Xbe_certificate->dwDiskNumber << "\n";
-    text << "Version                          : 1." << std::dec << std::setw(2) << Xbe_certificate->dwVersion << "\n";
+    text << "Disc Number                      : 0x" << std::setw(8) << Xbe_certificate->dwDiscNumber << "\n";
+    text << "Version                          : 0x" << std::setw(8) << Xbe_certificate->dwVersion << "\n";
+    SSTREAM_SET_DEC(text);
+    text << "Disc Version                     : " << std::setw(0) << Xbe_to_print->GetDiscVersion() << "\n";
+    text << "Patch Version                    : " << std::setw(0) << Xbe_to_print->GetPatchVersion() << "\n";
+
     return text.str();
 }
 

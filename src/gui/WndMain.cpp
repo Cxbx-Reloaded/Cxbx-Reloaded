@@ -1852,7 +1852,7 @@ void WndMain::UpdateCaption()
 
 	int i = sprintf(AsciiTitle, "Cxbx-Reloaded %s", CxbxrHashBuild);
 	if (m_Xbe != nullptr) {
-		i += sprintf(AsciiTitle + i, " : %s v1.%02d (%s)", FormatTitleId(m_Xbe->m_Certificate.dwTitleId).c_str(), m_Xbe->m_Certificate.dwVersion, m_Xbe->m_szAsciiTitle);
+		i += sprintf(AsciiTitle + i, " : %s v%d.%d (%s)", FormatTitleId(m_Xbe->m_Certificate.dwTitleId).c_str(), m_Xbe->GetDiscVersion(), m_Xbe->GetPatchVersion(), m_Xbe->m_szAsciiTitle);
 
 		UpdateFpsStatus();
 		UpdateLogStatus();

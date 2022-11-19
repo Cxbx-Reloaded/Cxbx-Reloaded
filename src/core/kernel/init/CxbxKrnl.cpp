@@ -1141,7 +1141,10 @@ static void CxbxrLogDumpXbeInfo(Xbe::LibraryVersion* libVersionInfo)
 
 		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID : %s", FormatTitleId(g_pCertificate->dwTitleId).c_str());
 		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID (Hex) : 0x%s", titleIdHex.str().c_str());
-		EmuLogInit(LOG_LEVEL::INFO, "XBE Version : 1.%02d", g_pCertificate->dwVersion);
+		if (CxbxKrnl_Xbe != nullptr) {
+			EmuLogInit(LOG_LEVEL::INFO, "XBE Version : %d.%d", CxbxKrnl_Xbe->GetDiscVersion(), CxbxKrnl_Xbe->GetPatchVersion());
+		}
+		EmuLogInit(LOG_LEVEL::INFO, "XBE Version (Hex): %08X", g_pCertificate->dwVersion);
 		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleName : %.40ls", g_pCertificate->wsTitleName);
 		EmuLogInit(LOG_LEVEL::INFO, "XBE Region : %s", CxbxKrnl_Xbe->GameRegionToString());
 	}
