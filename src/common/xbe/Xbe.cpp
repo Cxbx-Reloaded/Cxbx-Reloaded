@@ -825,5 +825,15 @@ XbeType Xbe::GetXbeType()
 	return XbeType::xtRetail;
 }
 
+uint32_t Xbe::GetDiscVersion()
+{
+    return m_Certificate.dwVersion & 0xFF;
+}
+
+uint32_t Xbe::GetPatchVersion()
+{
+    return (m_Certificate.dwVersion & 0xFFFFFF00) >> 8;
+}
+
 template auto Xbe::FindSection<true>(const char *zsSectionName);
 template auto Xbe::FindSection<false>(const char *zsSectionName);

@@ -85,6 +85,9 @@ class Xbe : public Error
 
         XbeType GetXbeType();
 
+        uint32_t GetDiscVersion();
+        uint32_t GetPatchVersion();
+
         // Xbe header
         #include "AlignPrefix1.h"
         struct Header
@@ -157,7 +160,7 @@ class Xbe : public Error
             uint32_t  dwAllowedMedia;                       // 0x009C - allowed media types
             uint32_t  dwGameRegion;                         // 0x00A0 - game region
             uint32_t  dwGameRatings;                        // 0x00A4 - game ratings
-            uint32_t  dwDiskNumber;                         // 0x00A8 - disk number
+            uint32_t  dwDiscNumber;                         // 0x00A8 - disc number
             uint32_t  dwVersion;                            // 0x00AC - version
             uint8_t  bzLanKey[16];                          // 0x00B0 - lan key
             uint8_t  bzSignatureKey[16];                    // 0x00C0 - signature key
