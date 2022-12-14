@@ -963,7 +963,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DVolumeTexture_LockBox)
 (
     X_D3DVolumeTexture *pThis,
     uint_xt                Level,
-    D3DLOCKED_BOX      *pLockedVolume,
+    X_D3DLOCKED_BOX      *pLockedVolume,
     CONST D3DBOX       *pBox,
     dword_xt               Flags
 );
