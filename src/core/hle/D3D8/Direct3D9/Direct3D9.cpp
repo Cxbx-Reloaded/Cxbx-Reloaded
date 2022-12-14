@@ -5266,10 +5266,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 
         std::vector<D3DRECT> rects(Count);
         for (DWORD i = 0; i < Count; i++) {
-            rects[i].x1 = static_cast<LONG>(pRects[i].x1 * Xscale);
-            rects[i].x2 = static_cast<LONG>(pRects[i].x2 * Xscale);
-            rects[i].y1 = static_cast<LONG>(pRects[i].y1 * Yscale);
-            rects[i].y2 = static_cast<LONG>(pRects[i].y2 * Yscale);
+            rects[i]._9_11(x1, left) = static_cast<LONG>(pRects[i]._9_11(x1, left) * Xscale);
+            rects[i]._9_11(x2, right) = static_cast<LONG>(pRects[i]._9_11(x2, right) * Xscale);
+            rects[i]._9_11(y1, top) = static_cast<LONG>(pRects[i]._9_11(y1, top) * Yscale);
+            rects[i]._9_11(y2, bottom) = static_cast<LONG>(pRects[i]._9_11(y2, bottom) * Yscale);
 		}
         CxbxD3DClear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
@@ -7294,7 +7294,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	X_D3DPixelContainer *pPixelContainer,
 	X_D3DCUBEMAP_FACES   FaceType,
 	uint_xt              Level,
-	D3DLOCKED_RECT      *pLockedRect,
+	X_D3DLOCKED_RECT    *pLockedRect,
 	X_RECT              *pRect,
 	dword_xt             Flags
 )
