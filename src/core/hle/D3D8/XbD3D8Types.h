@@ -196,6 +196,12 @@ typedef struct _X_D3DLOCKED_RECT {
 typedef D3DLOCKED_RECT X_D3DLOCKED_RECT;
 #endif
 
+#ifdef CXBX_USE_D3D11
+typedef XMMATRIX X_D3DMATRIX; // TODO : Or CXMMATRIX ?
+#else
+typedef D3DXMATRIX X_D3DMATRIX; // TODO : Or D3DMATRIX?
+#endif
+
 typedef struct _X_D3DCOLORVALUE {
 	float r;
 	float g;
