@@ -119,7 +119,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(XGSwizzleBox)
     LPCVOID          pSource,
     DWORD            RowPitch,
     DWORD            SlicePitch,
-    CONST D3DBOX    *pBox,
+    CONST X_D3DBOX  *pBox,
     LPVOID           pDest,
     DWORD            Width,
     DWORD            Height,
