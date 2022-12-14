@@ -459,7 +459,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface, (xbox::uint_xt, xbox::X_D3DDEVTYPE, xbox::X_HWND, xbox::X_D3DPRESENT_PARAMETERS*)                 );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4,                            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                                              );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::X_D3DCUBEMAP_FACES, xbox::uint_xt, xbox::X_D3DLOCKED_RECT*, xbox::X_RECT*, xbox::dword_xt) );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                                          );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, xbox::X_D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                                  );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                                             );  \
 
 XB_TRAMPOLINES(XB_trampoline_declare);
@@ -7089,7 +7089,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 (
 	X_D3DPixelContainer *pPixelContainer,
 	uint_xt				Level,
-	D3DLOCKED_BOX		*pLockedVolume,
+	X_D3DLOCKED_BOX		*pLockedVolume,
 	D3DBOX				*pBox,
 	dword_xt				Flags
 	)
