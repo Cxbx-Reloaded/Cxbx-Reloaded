@@ -165,6 +165,19 @@ typedef D3DVECTOR X_D3DVECTOR;
 #endif
 
 #ifdef CXBX_USE_D3D11
+typedef struct _X_D3DBOX {
+	UINT Left;
+	UINT Top;
+	UINT Right;
+	UINT Bottom;
+	UINT Front;
+	UINT Back;
+} X_D3DBOX;
+#else
+typedef D3DBOX X_D3DBOX;
+#endif
+
+#ifdef CXBX_USE_D3D11
 typedef struct _X_D3DLOCKED_BOX {
 	int  RowPitch;
 	int  SlicePitch;
