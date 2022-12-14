@@ -202,6 +202,17 @@ typedef XMMATRIX X_D3DMATRIX; // TODO : Or CXMMATRIX ?
 typedef D3DXMATRIX X_D3DMATRIX; // TODO : Or D3DMATRIX?
 #endif
 
+#ifdef CXBX_USE_D3D11
+typedef struct _X_D3DRECT {
+	LONG x1;
+	LONG y1;
+	LONG x2;
+	LONG y2;
+} X_D3DRECT;
+#else
+typedef D3DRECT X_D3DRECT;
+#endif
+
 typedef struct _X_D3DCOLORVALUE {
 	float r;
 	float g;

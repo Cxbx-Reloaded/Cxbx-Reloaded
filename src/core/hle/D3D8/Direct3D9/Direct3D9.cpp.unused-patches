@@ -3739,7 +3739,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetScissors)
 (
     DWORD          Count,
     BOOL           Exclusive,
-    CONST D3DRECT  *pRects
+    CONST X_D3DRECT  *pRects
 )
 {
 	FUNC_EXPORTS
@@ -3761,7 +3761,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetScissors)
 (
 	DWORD	*pCount, 
 	BOOL	*pExclusive, 
-	D3DRECT *pRects
+	X_D3DRECT *pRects
 )
 {
 	FUNC_EXPORTS

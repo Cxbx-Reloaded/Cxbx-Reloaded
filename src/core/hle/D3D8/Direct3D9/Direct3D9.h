@@ -744,7 +744,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer)
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_Clear)
 (
     dword_xt                  Count,
-    CONST D3DRECT         *pRects,
+    CONST X_D3DRECT          *pRects,
     dword_xt                  Flags,
     D3DCOLOR               Color,
     float                  Z,
@@ -1811,6 +1811,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DVertexBuffer_GetDesc)
 );
 #endif
 
+#if 0 // patch DISABLED
 // ******************************************************************
 // * patch: D3DDevice_SetScissors
 // ******************************************************************
@@ -1818,8 +1819,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetScissors)
 (
     dword_xt          Count,
     bool_xt           Exclusive,
-    CONST D3DRECT  *pRects
+    CONST X_D3DRECT  *pRects
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_SetScreenSpaceOffset
@@ -2146,8 +2148,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTargetFast)
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetScissors)
 (
 	dword_xt	*pCount, 
-	bool_xt	*pExclusive, 
-	D3DRECT *pRects
+	bool_xt	  *pExclusive, 
+	X_D3DRECT *pRects
 );
 // ******************************************************************
 // * patch: D3DDevice_GetBackMaterial

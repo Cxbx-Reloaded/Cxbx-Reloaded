@@ -5098,7 +5098,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 (
     dword_xt           Count,
-    CONST D3DRECT  *pRects,
+    CONST X_D3DRECT   *pRects,
     dword_xt           Flags,
     D3DCOLOR        Color,
     float           Z,
@@ -5161,10 +5161,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 
         std::vector<D3DRECT> rects(Count);
         for (DWORD i = 0; i < Count; i++) {
-            rects[i]._9_11(x1, left) = static_cast<LONG>(pRects[i]._9_11(x1, left) * Xscale);
-            rects[i]._9_11(x2, right) = static_cast<LONG>(pRects[i]._9_11(x2, right) * Xscale);
-            rects[i]._9_11(y1, top) = static_cast<LONG>(pRects[i]._9_11(y1, top) * Yscale);
-            rects[i]._9_11(y2, bottom) = static_cast<LONG>(pRects[i]._9_11(y2, bottom) * Yscale);
+            rects[i]._9_11(x1, left) = static_cast<LONG>(pRects[i].x1 * Xscale);
+            rects[i]._9_11(x2, right) = static_cast<LONG>(pRects[i].x2 * Xscale);
+            rects[i]._9_11(y1, top) = static_cast<LONG>(pRects[i].y1 * Yscale);
+            rects[i]._9_11(y2, bottom) = static_cast<LONG>(pRects[i].y2 * Yscale);
 		}
         CxbxD3DClear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
