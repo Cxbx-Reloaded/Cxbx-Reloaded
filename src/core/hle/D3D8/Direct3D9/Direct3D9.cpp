@@ -7388,8 +7388,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	X_D3DPixelContainer *pPixelContainer,
 	uint_xt				Level,
 	X_D3DLOCKED_BOX		*pLockedVolume,
-	D3DBOX				*pBox,
-	dword_xt				Flags
+	X_D3DBOX			*pBox,
+	dword_xt			Flags
 	)
 {
 	LOG_FUNC_BEGIN
