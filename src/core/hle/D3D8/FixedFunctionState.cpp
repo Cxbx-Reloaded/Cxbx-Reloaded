@@ -97,7 +97,7 @@ D3D8TransformState::D3D8TransformState() {
 	bWorldViewDirty.fill(true);
 }
 
-void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const D3DMATRIX* pMatrix)
+void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const xbox::X_D3DMATRIX* pMatrix)
 {
 	using namespace xbox;
 
@@ -132,7 +132,7 @@ void D3D8TransformState::RecalculateDependentMatrices(unsigned i)
 	this->WorldViewInverseTranspose[i] = worldViewInverseTranspose;
 }
 
-D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
+xbox::X_D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
 {
 	assert(i < 4);
 
@@ -144,7 +144,7 @@ D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
 	return &WorldView[i];
 }
 
-void D3D8TransformState::SetWorldView(unsigned i, const D3DMATRIX* pMatrix)
+void D3D8TransformState::SetWorldView(unsigned i, const xbox::X_D3DMATRIX* pMatrix)
 {
     assert(i < 4);
 
@@ -160,7 +160,7 @@ void D3D8TransformState::SetWorldView(unsigned i, const D3DMATRIX* pMatrix)
     }
 }
 
-D3DMATRIX* D3D8TransformState::GetWorldViewInverseTranspose(unsigned i)
+xbox::X_D3DMATRIX* D3D8TransformState::GetWorldViewInverseTranspose(unsigned i)
 {
 	assert(i < 4);
 
