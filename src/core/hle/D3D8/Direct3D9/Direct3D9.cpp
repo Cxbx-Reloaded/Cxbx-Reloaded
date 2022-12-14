@@ -449,9 +449,9 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader_0,                        ()                                                                                                                            );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                                         );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                                                 );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                                             );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST xbox::X_D3DMATRIX*)                                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform_0__LTCG_eax1_edx2,           ()                                                                                                                            );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                                             );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST xbox::X_D3DMATRIX*)                                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                                        );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                                               );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice,                              (xbox::uint_xt, xbox::X_D3DDEVTYPE, xbox::X_HWND, xbox::dword_xt, xbox::X_D3DPRESENT_PARAMETERS*, xbox::X_D3DDevice**)        );  \
@@ -3368,7 +3368,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices)
 (
-	X_D3DIndexBuffer   *pIndexData,
+	X_D3DIndexBuffer      *pIndexData,
 	uint_xt                BaseVertexIndex
 )
 {
@@ -3393,7 +3393,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 	X_HWND                      hFocusWindow,
     dword_xt                    BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
-    xbox::X_D3DDevice         **ppReturnedDeviceInterface
+    X_D3DDevice               **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -4026,7 +4026,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
 (
     dword_xt                   dwFlags,
-    CONST X_D3DGAMMARAMP   *pRamp
+    CONST X_D3DGAMMARAMP      *pRamp
 )
 {
 	LOG_FUNC_BEGIN
@@ -4222,7 +4222,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 (
 	int_xt                 BackBuffer
-	)
+)
 {
 	LOG_FUNC_ONE_ARG(BackBuffer);
 
@@ -6941,7 +6941,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
 void CxbxImpl_SetTransform
 (
     xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST D3DMATRIX *pMatrix
+    CONST xbox::X_D3DMATRIX *pMatrix
 )
 {
     LOG_INIT
@@ -6962,7 +6962,7 @@ static thread_local uint32_t setTransformCount = 0;
 static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 (
 	xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST D3DMATRIX *pMatrix
+    CONST xbox::X_D3DMATRIX *pMatrix
 )
 {
     LOG_FUNC_BEGIN
@@ -6986,8 +6986,8 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__
 (
 )
 {
-	xbox::X_D3DTRANSFORMSTATETYPE State;
-    CONST D3DMATRIX *pMatrix;
+	X_D3DTRANSFORMSTATETYPE State;
+    CONST X_D3DMATRIX *pMatrix;
     __asm {
         LTCG_PROLOGUE
         mov  State, eax
@@ -7008,8 +7008,8 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 (
-	xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST D3DMATRIX      *pMatrix
+	X_D3DTRANSFORMSTATETYPE State,
+    CONST X_D3DMATRIX      *pMatrix
 )
 {
     LOG_FUNC_BEGIN
@@ -7029,8 +7029,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 (
-    xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST D3DMATRIX      *pMatrix
+    X_D3DTRANSFORMSTATETYPE State,
+    CONST X_D3DMATRIX      *pMatrix
 )
 {
     LOG_FUNC_BEGIN
@@ -9401,7 +9401,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 (
-	D3DXMATRIX *pProjectionViewport
+	X_D3DMATRIX *pProjectionViewport
 )
 {
 	LOG_FUNC_ONE_ARG(pProjectionViewport);
@@ -9412,7 +9412,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 	// then before.
 
 	HRESULT hRet;
-	D3DXMATRIX Out, mtxProjection, mtxViewport;
+	_9_11(D3DXMATRIX, XMMATRIX) Out, mtxProjection, mtxViewport;
 	D3DVIEWPORT Viewport;
 
 	// Get current viewport
@@ -9424,7 +9424,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetTransform - Unable to get projection matrix!");
 
 	// Clear the destination matrix
-	::ZeroMemory(&Out, sizeof(D3DMATRIX));
+	::ZeroMemory(&Out, sizeof(Out));
 
 	// Create the Viewport matrix manually
 	// Direct3D8 doesn't give me everything I need in a viewport structure
@@ -9610,9 +9610,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 (
-	CONST D3DMATRIX *pModelView, 
-	CONST D3DMATRIX *pInverseModelView, 
-	CONST D3DMATRIX *pComposite
+	CONST X_D3DMATRIX *pModelView,
+	CONST X_D3DMATRIX *pInverseModelView,
+	CONST X_D3DMATRIX *pComposite
 )
 {
 	LOG_FUNC_BEGIN
@@ -9639,7 +9639,10 @@ void WINAPI xbox::EMUPATCH(D3DDevice_FlushVertexCache)()
 // ******************************************************************
 // * patch: D3DDevice_GetModelView
 // ******************************************************************
-xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetModelView)(D3DXMATRIX* pModelView)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetModelView)
+(
+	X_D3DMATRIX* pModelView
+)
 {
 	LOG_FUNC_ONE_ARG(pModelView);
 

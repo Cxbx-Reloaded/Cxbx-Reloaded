@@ -26,22 +26,22 @@ public:
 class D3D8TransformState {
 public:
 	D3D8TransformState();
-	void SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const D3DMATRIX* pMatrix);
-	D3DMATRIX* GetWorldView(unsigned i);
-	void SetWorldView(unsigned i, const D3DMATRIX* pMatrix);
-	D3DMATRIX* GetWorldViewInverseTranspose(unsigned i);
+	void SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const xbox::X_D3DMATRIX* pMatrix);
+	xbox::X_D3DMATRIX* GetWorldView(unsigned i);
+	void SetWorldView(unsigned i, const xbox::X_D3DMATRIX* pMatrix);
+	xbox::X_D3DMATRIX* GetWorldViewInverseTranspose(unsigned i);
 
 	// The transforms set by the Xbox title
-	std::array<D3DMATRIX, xbox::X_D3DTS_MAX> Transforms;
+	std::array<xbox::X_D3DMATRIX, xbox::X_D3DTS_MAX> Transforms;
 
 private:
 	void RecalculateDependentMatrices(unsigned i);
 
 	std::array<bool, 4> bWorldViewDirty;
 	// Combines world/view matrices
-	std::array<D3DMATRIX, 4> WorldView;
+	std::array<xbox::X_D3DMATRIX, 4> WorldView;
 	// World/view inverse transpose for lighting calculations
-	std::array<D3DMATRIX, 4> WorldViewInverseTranspose;
+	std::array<xbox::X_D3DMATRIX, 4> WorldViewInverseTranspose;
 };
 
 #endif
