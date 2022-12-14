@@ -34,6 +34,9 @@
 // include direct3d 11 headers
 #include <d3d11.h>
 #include <DirectXMath.h> // XMVECTORF32
+using namespace DirectX;
+typedef FXMVECTOR D3DCOLOR;
+typedef D3D11_RECT D3DRECT;
 #else
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
@@ -159,6 +162,15 @@ typedef struct _X_D3DVECTOR {
 } X_D3DVECTOR;
 #else
 typedef D3DVECTOR X_D3DVECTOR;
+#endif
+
+#ifdef CXBX_USE_D3D11
+typedef struct _X_D3DLOCKED_RECT {
+	INT   Pitch;
+	void* pBits;
+} X_D3DLOCKED_RECT;
+#else
+typedef D3DLOCKED_RECT X_D3DLOCKED_RECT;
 #endif
 
 typedef struct _X_D3DCOLORVALUE {

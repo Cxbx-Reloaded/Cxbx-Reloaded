@@ -823,7 +823,7 @@ xbox::void_xt WINAPI EMUPATCH(Lock2DSurface)
     X_D3DPixelContainer *pPixelContainer,
     X_D3DCUBEMAP_FACES   FaceType,
     uint_xt              Level,
-    D3DLOCKED_RECT      *pLockedRect,
+    X_D3DLOCKED_RECT    *pLockedRect,
 	X_RECT              *pRect,
     dword_xt             Flags
 );
@@ -865,10 +865,10 @@ xbox::void_xt WINAPI EMUPATCH(D3DSurface_GetDesc)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DSurface_LockRect)
 (
-    X_D3DResource  *pThis,
-    D3DLOCKED_RECT *pLockedRect,
-    CONST X_RECT   *pRect,
-    dword_xt        Flags
+    X_D3DResource    *pThis,
+    X_D3DLOCKED_RECT *pLockedRect,
+    CONST X_RECT     *pRect,
+    dword_xt          Flags
 );
 
 // ******************************************************************
@@ -893,11 +893,11 @@ X_D3DSurface * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DTexture_LockRect)
 (
-    X_D3DTexture   *pThis,
-    uint_xt         Level,
-    D3DLOCKED_RECT *pLockedRect,
-    CONST X_RECT   *pRect,
-    dword_xt        Flags
+    X_D3DTexture     *pThis,
+    uint_xt           Level,
+    X_D3DLOCKED_RECT *pLockedRect,
+    CONST X_RECT     *pRect,
+    dword_xt          Flags
 );
 
 // ******************************************************************
@@ -930,7 +930,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DCubeTexture_LockRect)
     X_D3DCubeTexture   *pThis,
     X_D3DCUBEMAP_FACES  FaceType,
     uint_xt             Level,
-    D3DLOCKED_RECT     *pLockedBox,
+    X_D3DLOCKED_RECT   *pLockedBox,
     CONST X_RECT       *pRect,
     dword_xt            Flags
 );

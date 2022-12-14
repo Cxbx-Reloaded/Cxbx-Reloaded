@@ -4,6 +4,7 @@
 
 #ifdef CXBX_USE_D3D11
 #include <DirectXMath.h> // for XMFLOAT2, XMFLOAT3, XMFLOAT4, XMMATRIX
+using namespace DirectX;
 #define float2 XMFLOAT2
 #define float3 XMFLOAT3
 #define float4 XMFLOAT4
