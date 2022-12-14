@@ -873,7 +873,7 @@ XTL::X_D3DRESOURCETYPE WINAPI XTL::EMUPATCH(D3DResource_GetType)
 VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 (
     X_D3DPixelContainer *pPixelContainer,
-    D3DCUBEMAP_FACES     FaceType,
+    X_D3DCUBEMAP_FACES   FaceType,
     UINT                 Level,
     X_D3DLOCKED_RECT    *pLockedRect,
     X_RECT              *pRect,
@@ -895,7 +895,7 @@ VOID WINAPI XTL::EMUPATCH(Lock2DSurface)
 	// If this is a YUV surface, just use the Xbox implementation of this function
 	// as we don't store a host counterpart.
 	if (IsYuvSurfaceOrTexture(pPixelContainer)) {
-		typedef VOID(__stdcall *XB_Lock2DSurface_t)(X_D3DPixelContainer*, D3DCUBEMAP_FACES, UINT, X_D3DLOCKED_RECT*, X_RECT*, DWORD);
+		typedef VOID(__stdcall *XB_Lock2DSurface_t)(X_D3DPixelContainer*, X_D3DCUBEMAP_FACES, UINT, X_D3DLOCKED_RECT*, X_RECT*, DWORD);
 		static XB_Lock2DSurface_t XB_Lock2DSurface = (XB_Lock2DSurface_t)GetXboxFunctionPointer("Lock2DSurface");
 
 		// No need to check for success here, as we are calling Lock2DSurface from Lock2DSurface, if this address wasn't found
@@ -1332,7 +1332,7 @@ VOID WINAPI XTL::EMUPATCH(D3DVolumeTexture_LockBox)
 VOID WINAPI XTL::EMUPATCH(D3DCubeTexture_LockRect)
 (
     X_D3DCubeTexture   *pThis,
-    D3DCUBEMAP_FACES    FaceType,
+    X_D3DCUBEMAP_FACES  FaceType,
     UINT                Level,
     X_D3DLOCKED_RECT   *pLockedBox,
     CONST X_RECT       *pRect,
@@ -1627,7 +1627,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetPushBufferOffset)
 HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 (
 	X_D3DCubeTexture*	pThis,
-	D3DCUBEMAP_FACES	FaceType,
+	X_D3DCUBEMAP_FACES	FaceType,
 	UINT				Level,
 	X_D3DSurface**		ppCubeMapSurface
 )
@@ -1663,7 +1663,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface)
 XTL::X_D3DSurface* WINAPI XTL::EMUPATCH(D3DCubeTexture_GetCubeMapSurface2)
 (
 	X_D3DCubeTexture*	pThis,
-	D3DCUBEMAP_FACES	FaceType,
+	X_D3DCUBEMAP_FACES	FaceType,
 	UINT				Level
 )
 {
