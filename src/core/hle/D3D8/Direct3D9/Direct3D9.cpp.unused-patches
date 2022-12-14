@@ -379,7 +379,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
     UINT            Levels,
     DWORD           Usage,
     X_D3DFORMAT     Format,
-    D3DPOOL         Pool,
+    X_D3DPOOL       Pool,
     X_D3DTexture  **ppTexture
 )
 {
@@ -535,7 +535,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     UINT                 Levels,
     DWORD                Usage,
     X_D3DFORMAT          Format,
-    D3DPOOL              Pool,
+    X_D3DPOOL            Pool,
     X_D3DVolumeTexture **ppVolumeTexture
 )
 {
@@ -627,7 +627,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
     UINT                 Levels,
     DWORD                Usage,
     X_D3DFORMAT          Format,
-    D3DPOOL              Pool,
+    X_D3DPOOL            Pool,
     X_D3DCubeTexture  **ppCubeTexture
 )
 {
@@ -696,7 +696,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
     UINT                 Length,
     DWORD                Usage,
     X_D3DFORMAT          Format,
-    D3DPOOL              Pool,
+    X_D3DPOOL            Pool,
     X_D3DIndexBuffer   **ppIndexBuffer
 )
 {
@@ -1395,7 +1395,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVertexBuffer)
     UINT                Length,
     DWORD               Usage,
     DWORD               FVF,
-    D3DPOOL             Pool,
+    X_D3DPOOL           Pool,
     X_D3DVertexBuffer **ppVertexBuffer
 )
 {
