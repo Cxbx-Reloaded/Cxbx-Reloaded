@@ -9354,7 +9354,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
 (
 	uint_xt					Handle,
 	CONST float_xt				*pNumSegs,
-	CONST D3DRECTPATCH_INFO *pRectPatchInfo
+	CONST X_D3DRECTPATCH_INFO *pRectPatchInfo
 )
 {
 	LOG_FUNC_BEGIN
