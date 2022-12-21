@@ -1840,14 +1840,16 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShaderProgram)
 	X_D3DPIXELSHADERDEF *pPSDef
 );
 
+#if 0 // patch DISABLED
 // ******************************************************************
 // * patch: D3DDevice_CreateStateBlock
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_CreateStateBlock)
 (
-	D3DSTATEBLOCKTYPE Type,
+	X_D3DSTATEBLOCKTYPE Type,
 	dword_xt			  *pToken
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_InsertCallback

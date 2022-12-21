@@ -260,6 +260,13 @@ typedef struct _X_D3DVIEWPORT8 {
 	float       MaxZ;
 } X_D3DVIEWPORT8;
 
+typedef enum _X_D3DSTATEBLOCKTYPE { // Based on Direct3D 9 TODO : verify on Xbox
+	D3DSBT_ALL = 1,
+	D3DSBT_PIXELSTATE = 2,
+	D3DSBT_VERTEXSTATE = 3,
+	D3DSBT_FORCE_DWORD = 0x7fffffff
+} X_D3DSTATEBLOCKTYPE;
+
 /* SwapEffects */
 typedef enum _X_D3DSWAPEFFECT
 {
