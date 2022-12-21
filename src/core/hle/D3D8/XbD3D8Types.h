@@ -121,6 +121,13 @@ typedef enum _X_D3DBACKBUFFER_TYPE
 	X_D3DBACKBUFFER_TYPE_FORCE_DWORD = 0x7fffffff
 } X_D3DBACKBUFFER_TYPE;
 
+typedef enum _X_D3DBASISTYPE { // Based on Direct3D 9 TODO : verify on Xbox
+	D3DBASIS_BEZIER = 0,
+	D3DBASIS_BSPLINE = 1,
+	D3DBASIS_CATMULL_ROM = 2,
+	D3DBASIS_FORCE_DWORD = 0x7fffffff
+} X_D3DBASISTYPE, *LPX_D3DBASISTYPE;
+
 /* CubeMap Face identifiers */
 typedef enum _X_D3DCUBEMAP_FACES
 {
@@ -133,6 +140,14 @@ typedef enum _X_D3DCUBEMAP_FACES
 
 	X_D3DCUBEMAP_FACE_FORCE_DWORD = 0x7fffffff
 } X_D3DCUBEMAP_FACES;
+
+typedef enum _X_D3DDEGREETYPE { // Based on Direct3D 9 TODO : verify on Xbox
+	D3DDEGREE_LINEAR = 1,
+	D3DDEGREE_QUADRATIC = 2,
+	D3DDEGREE_CUBIC = 3,
+	D3DDEGREE_QUINTIC = 5,
+	D3DCULL_FORCE_DWORD = 0x7fffffff
+} X_D3DDEGREETYPE, *LPX_D3DDEGREETYPE;
 
 typedef enum _X_D3DDEVTYPE
 {
@@ -220,11 +235,22 @@ typedef struct _X_D3DRECTPATCH_INFO { // Based on Direct3D 9 TODO : verify on Xb
 	UINT          Width;
 	UINT          Height;
 	UINT          Stride;
-	D3DBASISTYPE  Basis;
-	D3DDEGREETYPE Degree;
+	X_D3DBASISTYPE  Basis;
+	X_D3DDEGREETYPE Degree;
 } X_D3DRECTPATCH_INFO, *LPX_D3DRECTPATCH_INFO;
 #else
 typedef D3DRECTPATCH_INFO X_D3DRECTPATCH_INFO;
+#endif
+
+#ifdef CXBX_USE_D3D11
+typedef struct _X_D3DTRIPATCH_INFO { // Based on Direct3D 9 TODO : verify on Xbox
+	UINT          StartVertexOffset;
+	UINT          NumVertices;
+	X_D3DBASISTYPE  Basis;
+	X_D3DDEGREETYPE Degree;
+} X_D3DTRIPATCH_INFO, *LPX_D3DTRIPATCH_INFO;
+#else
+typedef D3DTRIPATCH_INFO X_D3DTRIPATCH_INFO;
 #endif
 
 typedef struct _X_D3DCOLORVALUE {

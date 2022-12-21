@@ -9378,7 +9378,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
 (
 	uint_xt					Handle,
 	CONST float_xt				*pNumSegs,
-	CONST D3DTRIPATCH_INFO* pTriPatchInfo
+	CONST X_D3DTRIPATCH_INFO* pTriPatchInfo
 )
 {
 	LOG_FUNC_BEGIN
