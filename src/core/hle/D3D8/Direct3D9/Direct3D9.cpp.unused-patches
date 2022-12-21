@@ -2362,7 +2362,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_SetPixelShaderProgram)
 // ******************************************************************
 HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateStateBlock)
 (
-	D3DSTATEBLOCKTYPE Type,
+	X_D3DSTATEBLOCKTYPE Type,
 	DWORD			  *pToken
 )
 {
