@@ -128,6 +128,12 @@ typedef enum _X_D3DBASISTYPE { // Based on Direct3D 9 TODO : verify on Xbox
 	D3DBASIS_FORCE_DWORD = 0x7fffffff
 } X_D3DBASISTYPE, *LPX_D3DBASISTYPE;
 
+#ifdef CXBX_USE_D3D11
+typedef DWORD X_D3DCOLOR;
+#else
+typedef D3DCOLOR X_D3DCOLOR;
+#endif
+
 /* CubeMap Face identifiers */
 typedef enum _X_D3DCUBEMAP_FACES
 {

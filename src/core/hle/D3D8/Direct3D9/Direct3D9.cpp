@@ -5052,7 +5052,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 (
     int_xt      Register,
-    D3DCOLOR    Color
+    X_D3DCOLOR  Color
 )
 {
 	LOG_FUNC_BEGIN
@@ -5100,8 +5100,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
     dword_xt           Count,
     CONST X_D3DRECT   *pRects,
     dword_xt           Flags,
-    D3DCOLOR        Color,
-    float           Z,
+	X_D3DCOLOR         Color,
+    float              Z,
     dword_xt           Stencil
 )
 {
@@ -6855,7 +6855,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_UpdateOverlay)
 	CONST X_RECT *SrcRect,
 	CONST X_RECT *DstRect,
 	bool_xt       EnableColorKey,
-	D3DCOLOR      ColorKey
+	X_D3DCOLOR    ColorKey
 )
 {
 	LOG_FUNC_BEGIN

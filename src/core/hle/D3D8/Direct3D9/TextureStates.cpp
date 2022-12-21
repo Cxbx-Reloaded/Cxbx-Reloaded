@@ -306,16 +306,16 @@ void XboxTextureStateConverter::Apply()
 				static D3D11_SAMPLER_DESC g_GlobalSamplerDesc = {}; // TODO : Move to globals section
 
 				switch (State) {
-				case xbox::X_D3DTSS_ADDRESSU: g_GlobalSamplerDesc.AddressU = pcValue; break;
-				case xbox::X_D3DTSS_ADDRESSV: g_GlobalSamplerDesc.AddressV = pcValue; break;
-				case xbox::X_D3DTSS_ADDRESSW: g_GlobalSamplerDesc.AddressW = pcValue; break;
-				case xbox::X_D3DTSS_MAGFILTER: g_GlobalSamplerDesc.Filter = pcValue; break; // TODO : Which Filter??
-				case xbox::X_D3DTSS_MINFILTER: g_GlobalSamplerDesc.Filter = pcValue; break;	// TODO : Which Filter??
-				case xbox::X_D3DTSS_MIPFILTER: g_GlobalSamplerDesc.Filter = pcValue; break;	// TODO : Which Filter??
-				case xbox::X_D3DTSS_MIPMAPLODBIAS: g_GlobalSamplerDesc.MipLODBias = pcValue; break;
-				case xbox::X_D3DTSS_MAXMIPLEVEL: g_GlobalSamplerDesc.MaxLOD = pcValue; break; // TODO : What about MinLOD?
-				case xbox::X_D3DTSS_MAXANISOTROPY: g_GlobalSamplerDesc.MaxAnisotropy = pcValue; break;
-				case xbox::X_D3DTSS_BORDERCOLOR: g_GlobalSamplerDesc.BorderColor = D3DCOLOR(pcValue); break;
+				case xbox::X_D3DTSS_ADDRESSU: g_GlobalSamplerDesc.AddressU = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(pcValue); break;
+				case xbox::X_D3DTSS_ADDRESSV: g_GlobalSamplerDesc.AddressV = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(pcValue); break;
+				case xbox::X_D3DTSS_ADDRESSW: g_GlobalSamplerDesc.AddressW = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(pcValue); break;
+				case xbox::X_D3DTSS_MAGFILTER: g_GlobalSamplerDesc.Filter = static_cast<D3D11_FILTER>(pcValue); break; // TODO : There's only 1, not 3 Filter members?
+				case xbox::X_D3DTSS_MINFILTER: g_GlobalSamplerDesc.Filter = static_cast<D3D11_FILTER>(pcValue); break; // TODO : There's only 1, not 3 Filter members?
+				case xbox::X_D3DTSS_MIPFILTER: g_GlobalSamplerDesc.Filter = static_cast<D3D11_FILTER>(pcValue); break; // TODO : There's only 1, not 3 Filter members?
+				case xbox::X_D3DTSS_MIPMAPLODBIAS: g_GlobalSamplerDesc.MipLODBias = /*TODO:FLOAT*/(pcValue); break;
+				case xbox::X_D3DTSS_MAXMIPLEVEL: g_GlobalSamplerDesc.MaxLOD = /*TODO:FLOAT*/(pcValue); break; // TODO : What about MinLOD?
+				case xbox::X_D3DTSS_MAXANISOTROPY: g_GlobalSamplerDesc.MaxAnisotropy = pcValue; break; // Note : MaxAnisotropy type is UINT
+				case xbox::X_D3DTSS_BORDERCOLOR: g_GlobalSamplerDesc.BorderColor = D3DXCOLOR(pcValue); break; // Note : BorderColor type is float[4]
 				}
 
 				ID3D11SamplerState *pSamplerState = nullptr;
