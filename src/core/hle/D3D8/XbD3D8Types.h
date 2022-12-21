@@ -213,6 +213,20 @@ typedef struct _X_D3DRECT {
 typedef D3DRECT X_D3DRECT;
 #endif
 
+#ifdef CXBX_USE_D3D11
+typedef struct _X_D3DRECTPATCH_INFO { // Based on Direct3D 9 TODO : verify on Xbox
+	UINT          StartVertexOffsetWidth;
+	UINT          StartVertexOffsetHeight;
+	UINT          Width;
+	UINT          Height;
+	UINT          Stride;
+	D3DBASISTYPE  Basis;
+	D3DDEGREETYPE Degree;
+} X_D3DRECTPATCH_INFO, *LPX_D3DRECTPATCH_INFO;
+#else
+typedef D3DRECTPATCH_INFO X_D3DRECTPATCH_INFO;
+#endif
+
 typedef struct _X_D3DCOLORVALUE {
 	float r;
 	float g;
