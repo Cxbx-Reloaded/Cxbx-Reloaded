@@ -3874,7 +3874,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetLight)
 VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
 (
 	X_D3DPalette   *pThis,
-	D3DCOLOR      **ppColors,
+	X_D3DCOLOR    **ppColors,
 	DWORD           Flags
 )
 {
@@ -3884,7 +3884,7 @@ VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
 		LOG_FUNC_ARG(Flags)
 		LOG_FUNC_END;
 
-	XB_trampoline(VOID, WINAPI, D3DPalette_Lock, (X_D3DPalette*, D3DCOLOR**, DWORD));
+	XB_trampoline(VOID, WINAPI, D3DPalette_Lock, (X_D3DPalette*, X_D3DCOLOR**, DWORD));
 	XB_D3DPalette_Lock(pThis, ppColors, Flags);
 
 	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
@@ -3898,7 +3898,7 @@ VOID WINAPI XTL::EMUPATCH(D3DPalette_Lock)
 // ******************************************************************
 // * patch: IDirect3DPalette8_Lock2
 // ******************************************************************
-D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
+xbox::X_D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 (
 	X_D3DPalette   *pThis,
 	DWORD           Flags
@@ -3910,7 +3910,7 @@ D3DCOLOR * WINAPI XTL::EMUPATCH(D3DPalette_Lock2)
 		LOG_FUNC_END;
 
 	XB_trampoline(D3DCOLOR*, WINAPI, D3DPalette_Lock2, (X_D3DPalette*, DWORD));
-	D3DCOLOR* pData = XB_D3DPalette_Lock2(pThis, Flags);
+	X_D3DCOLOR* pData = XB_D3DPalette_Lock2(pThis, Flags);
 
 	// Check if this palette is in use by a texture stage, and force it to be re-converted if yes
 	for (int i = 0; i < XTL::X_D3DTS_STAGECOUNT; i++) {
