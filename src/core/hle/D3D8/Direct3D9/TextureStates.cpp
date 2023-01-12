@@ -79,11 +79,12 @@ TextureStateInfo CxbxTextureStateInfo[] = {
 
 bool XboxTextureStateConverter::Init(XboxRenderStateConverter* pState)
 {
-    // Deferred states start at 0, this means that D3DDeferredTextureState IS D3D__TextureState
+    // Deferred states start at 0, this means that D3D_g_DeferredTextureState IS D3D__TextureState
     // No further works is required to derive the offset
-    if (g_SymbolAddresses.find("D3DDeferredTextureState") != g_SymbolAddresses.end()) {
-        D3D__TextureState = (uint32_t*)g_SymbolAddresses["D3DDeferredTextureState"];
+    if (g_SymbolAddresses.find("D3D_g_DeferredTextureState") != g_SymbolAddresses.end()) {
+        D3D__TextureState = (uint32_t*)g_SymbolAddresses["D3D_g_DeferredTextureState"];
     } else {
+        EmuLog(LOG_LEVEL::ERROR2, "D3D_g_DeferredTextureState was not found!");
         return false;
     }
 

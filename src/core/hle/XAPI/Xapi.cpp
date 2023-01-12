@@ -399,91 +399,34 @@ void DestructHleInputDevice(DeviceState *dev)
 
 void SetupXboxDeviceTypes()
 {
-	// If we don't yet have the offset to gDeviceType_Gamepad, work it out!
-	if (g_DeviceType_Gamepad == nullptr) {
-		// First, attempt to find GetTypeInformation
-		auto typeInformation = g_SymbolAddresses.find("GetTypeInformation");
-		if (typeInformation != g_SymbolAddresses.end() && typeInformation->second != xbox::zero) {
-			EmuLog(LOG_LEVEL::INFO, "Deriving XDEVICE_TYPE_GAMEPAD from DeviceTable (via GetTypeInformation)");
-			// Read the offset values of the device table structure from GetTypeInformation
-			xbox::addr_xt deviceTableStartOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x01);
-			xbox::addr_xt deviceTableEndOffset = *(uint32_t*)((uint32_t)typeInformation->second + 0x09);
-
-			// Calculate the number of device entires in the table
-			size_t deviceTableEntryCount = (deviceTableEndOffset - deviceTableStartOffset) / sizeof(uint32_t);
-
-			EmuLog(LOG_LEVEL::INFO, "DeviceTableStart: 0x%08X", deviceTableStartOffset);
-			EmuLog(LOG_LEVEL::INFO, "DeviceTableEnd: 0x%08X", deviceTableEndOffset);
-			EmuLog(LOG_LEVEL::INFO, "DeviceTable Entires: %u", deviceTableEntryCount);
-
-			// Sanity check: Where all these device offsets within Xbox memory
-			if ((deviceTableStartOffset >= g_SystemMaxMemory) || (deviceTableEndOffset >= g_SystemMaxMemory)) {
-				CxbxrAbort("DeviceTable Location is outside of Xbox Memory range");
-			}
-
-			// Iterate through the table until we find gamepad
-			xbox::PXID_TYPE_INFORMATION* deviceTable = (xbox::PXID_TYPE_INFORMATION*)(deviceTableStartOffset);
-			for (unsigned int i = 0; i < deviceTableEntryCount; i++) {
-				// Skip empty table entries
-				if (deviceTable[i] == nullptr) {
-					continue;
-				}
-
-				EmuLog(LOG_LEVEL::INFO, "----------------------------------------");
-				EmuLog(LOG_LEVEL::INFO, "DeviceTable[%u]->ucType = %d", i, deviceTable[i]->ucType);
-
-				switch (deviceTable[i]->ucType) {
-				case XINPUT_DEVTYPE_GAMEPAD:
-					g_DeviceType_Gamepad = deviceTable[i]->XppType;
-					EmuLog(LOG_LEVEL::INFO, "DeviceTable[%u]->XppType = 0x%08X (XDEVICE_TYPE_GAMEPAD)", i, (uintptr_t)g_DeviceType_Gamepad);
-					break;
-
-				case XINPUT_DEVTYPE_STEELBATTALION:
-					g_DeviceType_SBC = deviceTable[i]->XppType;
-					EmuLog(LOG_LEVEL::INFO, "DeviceTable[%u]->XppType = 0x%08X (XDEVICE_TYPE_STEELBATTALION)", i, (uintptr_t)g_DeviceType_SBC);
-					break;
-
-				default:
-					EmuLog(LOG_LEVEL::WARNING, "DeviceTable[%u]->XppType = 0x%08X (Unknown device type)", i, (uintptr_t)deviceTable[i]->XppType);
-					continue;
-				}
-			}
-		} else {
-			// XDKs without GetTypeInformation have the GamePad address hardcoded in XInputOpen
-			// Only the earliest XDKs use this code path, and the offset never changed between them
-			// so this works well for us.
-			void* XInputOpenAddr = (void*)g_SymbolAddresses["XInputOpen"];
-			if (XInputOpenAddr != nullptr) {
-				EmuLog(LOG_LEVEL::INFO, "Deriving XDEVICE_TYPE_GAMEPAD from XInputOpen (0x%08X)", (uintptr_t)XInputOpenAddr);
-				g_DeviceType_Gamepad = *(xbox::PXPP_DEVICE_TYPE*)((uint32_t)XInputOpenAddr + 0x0B);
-			}
-		}
-
-		if (g_DeviceType_Gamepad == nullptr) {
-			EmuLog(LOG_LEVEL::WARNING, "XDEVICE_TYPE_GAMEPAD was not found");
-			return;
-		}
-
-		EmuLog(LOG_LEVEL::INFO, "XDEVICE_TYPE_GAMEPAD found at 0x%08X", (uintptr_t)g_DeviceType_Gamepad);
+	// Get address to xpp type's devices
+	if (xbox::addr_xt gamepad_xpp_type = g_SymbolAddresses["g_DeviceType_Gamepad"]) {
+		g_DeviceType_Gamepad = reinterpret_cast<xbox::PXPP_DEVICE_TYPE>(gamepad_xpp_type);
 	}
-
+#if 0 // Not implemented
+	if (xbox::addr_xt ir_dongle_xpp_type = g_SymbolAddresses["g_DeviceType_IRDongle"]) {
+		g_DeviceType_IRDongle = reinterpret_cast<xbox::PXPP_DEVICE_TYPE>(ir_dongle_xpp_type);
+	}
+	if (xbox::addr_xt keyboard_xpp_type = g_SymbolAddresses["g_DeviceType_Keyboard"]) {
+		g_DeviceType_Keyboard = reinterpret_cast<xbox::PXPP_DEVICE_TYPE>(keyboard_xpp_type);
+	}
+	if (xbox::addr_xt mouse_xpp_type = g_SymbolAddresses["g_DeviceType_Mouse"]) {
+		g_DeviceType_Mouse = reinterpret_cast<xbox::PXPP_DEVICE_TYPE>(mouse_xpp_type);
+	}
+#endif
+	if (xbox::addr_xt sbc_xpp_type = g_SymbolAddresses["g_DeviceType_SBC"]) {
+		g_DeviceType_SBC = reinterpret_cast<xbox::PXPP_DEVICE_TYPE>(sbc_xpp_type);
+	}
 	if (xbox::addr_xt mu_xpp_type = g_SymbolAddresses["g_DeviceType_MU"]) {
 		g_DeviceType_MU = reinterpret_cast<xbox::PXPP_DEVICE_TYPE>(mu_xpp_type);
-		EmuLog(LOG_LEVEL::INFO, "XDEVICE_TYPE_MEMORY_UNIT found at 0x%08X", reinterpret_cast<uintptr_t>(g_DeviceType_MU));
-	}
-	else {
-		EmuLog(LOG_LEVEL::INFO, "XDEVICE_TYPE_MEMORY_UNIT was not found by XbSymbolDatabase");
 	}
 
+	// Get additional variables relative to Memory Unit
 	if (xbox::addr_xt xapi_mounted_mu = g_SymbolAddresses["g_XapiMountedMUs"]) {
-		g_XapiMountedMUs = reinterpret_cast<xbox::ulong_xt *>(xapi_mounted_mu);
-		EmuLog(LOG_LEVEL::INFO, "XapiMountedMUs found at 0x%08X", reinterpret_cast<uintptr_t>(g_XapiMountedMUs));
-
-		g_XapiAltLett_MU = reinterpret_cast<xbox::char_xt *>(g_XapiMountedMUs - 1);
-		EmuLog(LOG_LEVEL::INFO, "XapiAltLett_MU found at 0x%08X", reinterpret_cast<uintptr_t>(g_XapiAltLett_MU));
+		g_XapiMountedMUs = reinterpret_cast<xbox::ulong_xt*>(xapi_mounted_mu);
 	}
-	else {
-		EmuLog(LOG_LEVEL::INFO, "XapiMountedMUs was not found by XbSymbolDatabase");
+	if (xbox::addr_xt xapi_alt_lett_mu = g_SymbolAddresses["g_XapiAltLett_MU"]) {
+		g_XapiAltLett_MU = reinterpret_cast<xbox::char_xt *>(xapi_alt_lett_mu);
 	}
 }
 

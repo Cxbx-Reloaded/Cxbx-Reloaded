@@ -213,8 +213,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
     dword_xt                       Address
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_0)();
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_4__LTCG_eax1)
 (
     dword_xt                       Address
 );
@@ -358,6 +358,10 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_Reset)
 (
     X_D3DPRESENT_PARAMETERS *pPresentationParameters
 );
+
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)();
+
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)();
 
 // ******************************************************************
 // * patch: D3DDevice_GetRenderTarget
@@ -505,7 +509,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShader)
     dword_xt           Handle
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_eax_handle)();
 
 // ******************************************************************
 // * patch: D3DDevice_CreateTexture2
@@ -611,7 +615,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
 	dword_xt           Stage
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_Stage)
 (
 	X_D3DBaseTexture  *pTexture
 );
@@ -1897,7 +1901,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetTexture)
 // ******************************************************************
 // * patch: CDevice_SetStateVB (D3D::CDevice::SetStateVB)
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateVB)( xbox::ulong_xt Unknown1 );
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateVB)(xbox::ulong_xt Unknown1);
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateVB_8)(xbox::addr_xt _this, xbox::ulong_xt Unknown1);
 
 // ******************************************************************
 // * patch: CDevice_SetStateUP (D3D::CDevice::SetStateUP)
