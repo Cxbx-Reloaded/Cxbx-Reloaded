@@ -1409,6 +1409,29 @@ static void CxbxrKrnlInitHacks()
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
 
+	// Verify that the emulator region matches the game region, if not, show a warning
+	// that it may not work.
+	if (!(g_pCertificate->dwGameRegion & EEPROM->EncryptedSettings.GameRegion))
+	{
+		auto expected = CxbxKrnl_Xbe->GameRegionToString();
+		auto actual = CxbxKrnl_Xbe->GameRegionToString(EEPROM->EncryptedSettings.GameRegion);
+
+		std::stringstream ss;
+		ss << "The loaded title is designed for region: " << expected << "\n";
+		ss << "However Cxbx-Reloaded is configured as: " << actual << "\n\n";
+		ss << "This means that you may encounter emulation issues\n\n";
+		ss << "You can fix this by changing your emulated Xbox region in EEPROM Settings\n\n";
+		ss << "Please do not submit bug reports that result from incorrect region flags\n\n";
+		ss << "Would you like to attempt emulation anyway?";
+
+		PopupReturn ret = PopupWarningEx(nullptr, PopupButtons::YesNo, PopupReturn::No, ss.str().c_str());
+		if (ret != PopupReturn::Yes)
+		{
+			CxbxrShutDown();
+		}
+	}
+	
+
 	// Chihiro games require more patches
 	// The chihiro BIOS does this to bypass XAPI cache init
 	if (g_bIsChihiro) {
