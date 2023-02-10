@@ -2331,29 +2331,25 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 
 		HANDLE hProcess = OpenProcess(SYNCHRONIZE | PROCESS_QUERY_INFORMATION, FALSE, dwChildProcID);
 
-	 	// If we do receive valid handle, let's do the next step.
-	 	if (hProcess != NULL) {
+		// If we do receive valid handle, let's do the next step.
+		if (hProcess != NULL) {
 
-	 		WaitForSingleObject(hProcess, INFINITE);
+			WaitForSingleObject(hProcess, INFINITE);
 
-	 		GetExitCodeProcess(hProcess, &dwExitCode);
-	 		CloseHandle(hProcess);
+			GetExitCodeProcess(hProcess, &dwExitCode);
+			CloseHandle(hProcess);
 
-	 		g_EmuShared->GetBootFlags(&iBootFlags);
+			g_EmuShared->GetBootFlags(&iBootFlags);
 
-	 		if (!iBootFlags) {
-	 			if (dwExitCode == EXIT_SUCCESS) {// StopEmulation
-	 				return;
-	 			}
-				// Or else, it's a crash
-	 		}
-	 		else {
-
-	 			// multi-xbe
-	 			// destroy this thread and start a new one
-	 			return;
-	 		}
-	 	}
+			// Check if reboot did occur.
+			if (iBootFlags) {
+				// Destroy this thread and start a new one
+				// since emulation is still running.
+				return;
+			}
+			// Otherwise emulation did stopped or crashed
+			// But need to tell GUI that emulation did end.
+		}
 	}
 
 	// Crash clean up.
