@@ -1379,7 +1379,7 @@ XBSYSAPI EXPORTNUM(124) xbox::long_xt NTAPI xbox::KeQueryBasePriorityThread
 	KiLockDispatcherDatabase(&OldIrql);
 
 	// It cannot fail because all thread handles are created by ob
-	const auto& nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
+	const auto& nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
 	long_xt ret = GetThreadPriority(*nativeHandle);
 
 	KiUnlockDispatcherDatabase(OldIrql);
@@ -1806,7 +1806,7 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 	KiLockDispatcherDatabase(&oldIRQL);
 
 	// It cannot fail because all thread handles are created by ob
-	const auto &nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
+	const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
 	LONG ret = GetThreadPriority(*nativeHandle);
 
 	// This would work normally, but it will slow down the emulation, 
