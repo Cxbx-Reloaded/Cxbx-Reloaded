@@ -205,6 +205,7 @@ void CDECL EmuOutputMessage(xb_output_message mFlag,
 
 void CDECL EmuRegisterSymbol(const char* library_str,
                              uint32_t library_flag,
+                             uint32_t xref_index,
                              const char* symbol_str,
                              uint32_t func_addr,
                              uint32_t revision)
@@ -437,22 +438,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 					output << "SymbolCache: 0x" << std::setfill('0') << std::setw(8) << std::hex << location
 					    << " -> " << functionName << "\n";
 					std::printf(output.str().c_str());
-				}
-
-				// Fix up Render state and Texture States
-				if (g_SymbolAddresses.find("D3DDeferredRenderState") == g_SymbolAddresses.end()
-				    || g_SymbolAddresses["D3DDeferredRenderState"] == 0) {
-					EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState was not found!");
-				}
-
-				if (g_SymbolAddresses.find("D3DDeferredTextureState") == g_SymbolAddresses.end()
-				    || g_SymbolAddresses["D3DDeferredTextureState"] == 0) {
-					EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredTextureState was not found!");
-				}
-
-				if (g_SymbolAddresses.find("D3DDEVICE") == g_SymbolAddresses.end()
-				    || g_SymbolAddresses["D3DDEVICE"] == 0) {
-					EmuLog(LOG_LEVEL::WARNING, "D3DDEVICE was not found!");
 				}
 			}
 		}
