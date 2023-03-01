@@ -1838,7 +1838,7 @@ XBSYSAPI EXPORTNUM(144) xbox::boolean_xt NTAPI xbox::KeSetDisableBoostThread
 	KiLockDispatcherDatabase(&oldIRQL);
 
 	// It cannot fail because all thread handles are created by ob
-	const auto &nativeHandle = GetNativeHandle<true>(PspGetCurrentThread()->UniqueThread);
+	const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
 
 	boolean_xt prevDisableBoost = Thread->DisableBoost;
 	Thread->DisableBoost = (CHAR)Disable;
