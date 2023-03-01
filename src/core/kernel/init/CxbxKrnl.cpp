@@ -1205,8 +1205,8 @@ static void CxbxrKrnlInitHacks()
 	Timer_Init();
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
-	// Initialize time-related variables for the kernel and the timers
-	CxbxInitPerformanceCounters();
+	// Initialize DPC global
+	InitDpcData();
 #ifdef _DEBUG
 //	PopupCustom(LOG_LEVEL::INFO, "Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool

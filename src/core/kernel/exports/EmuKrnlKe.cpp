@@ -96,11 +96,10 @@ namespace NtDll
 // TODO : Move towards thread-simulation based Dpc emulation
 typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
-	HANDLE DpcEvent;
 	xbox::LIST_ENTRY DpcQueue; // TODO : Use KeGetCurrentPrcb()->DpcListHead instead
 } DpcData;
 
-DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcThread()
+DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcData()
 
 xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 {
@@ -479,14 +478,12 @@ void ExecuteDpcQueue()
 	LeaveCriticalSection(&(g_DpcData.Lock));
 }
 
-void InitDpcThread()
+void InitDpcData()
 {
-	DWORD dwThreadId = 0;
-
+	// Let's initialize the Dpc handling thread too,
+	// here for now (should be called by our caller)
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
-	EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Creating DPC event\n");
-	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
 }
 
 static constexpr uint32_t XBOX_TSC_FREQUENCY = 733333333; // Xbox Time Stamp Counter Frequency = 733333333 (CPU Clock)
@@ -496,13 +493,6 @@ ULONGLONG CxbxGetPerformanceCounter(bool acpi)
 {
 	const int64_t period = acpi ? XBOX_ACPI_FREQUENCY : XBOX_TSC_FREQUENCY;
 	return Timer_GetScaledPerformanceCounter(period);
-}
-
-void CxbxInitPerformanceCounters()
-{
-	// Let's initialize the Dpc handling thread too,
-	// here for now (should be called by our caller)
-	InitDpcThread();
 }
 
 // ******************************************************************
