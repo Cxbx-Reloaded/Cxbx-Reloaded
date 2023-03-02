@@ -1268,7 +1268,7 @@ XBSYSAPI EXPORTNUM(119) xbox::boolean_xt NTAPI xbox::KeInsertQueueDpc
 		InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
 		// TODO : Instead of DpcQueue, add the DPC to KeGetCurrentPrcb()->DpcListHead
 		// Signal the Dpc handling code there's work to do
-		if (g_DpcData.IsDpcActive.test() == false) {
+		if (!IsDpcActive()) {
 			HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 		}
 		// OpenXbox has this instead:
@@ -1291,11 +1291,12 @@ XBSYSAPI EXPORTNUM(121) xbox::boolean_xt NTAPI xbox::KeIsExecutingDpc
 {
 	LOG_FUNC();
 
-	// This is the correct implementation, but it doesn't work because our Prcb is per-thread instead of being per-processor
 #if 0
+	// This is the correct implementation, but it doesn't work because our Prcb is per-thread instead of being per-processor
 	BOOLEAN ret = (BOOLEAN)KeGetCurrentPrcb()->DpcRoutineActive;
-#endif
+#else
 	BOOLEAN ret = (BOOLEAN)IsDpcActive();
+#endif
 
 	RETURN(ret);
 }
