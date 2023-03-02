@@ -96,11 +96,11 @@ namespace NtDll
 // TODO : Move towards thread-simulation based Dpc emulation
 typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
-	HANDLE DpcEvent;
+	std::atomic_flag IsDpcActive;
 	xbox::LIST_ENTRY DpcQueue; // TODO : Use KeGetCurrentPrcb()->DpcListHead instead
 } DpcData;
 
-DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcThread()
+DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcData()
 
 xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 {
@@ -460,8 +460,10 @@ void ExecuteDpcQueue()
 		// Mark it as no longer linked into the DpcQueue
 		pkdpc->Inserted = FALSE;
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
+		g_DpcData.IsDpcActive.test_and_set();
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
-		EmuLog(LOG_LEVEL::DEBUG, "Global DpcQueue, calling DPC at 0x%.8X", pkdpc->DeferredRoutine);
+		LeaveCriticalSection(&(g_DpcData.Lock));
+		EmuLog(LOG_LEVEL::DEBUG, "Global DpcQueue, calling DPC object 0x%.8X at 0x%.8X", pkdpc, pkdpc->DeferredRoutine);
 
 		// Call the Deferred Procedure  :
 		pkdpc->DeferredRoutine(
@@ -470,7 +472,9 @@ void ExecuteDpcQueue()
 			pkdpc->SystemArgument1,
 			pkdpc->SystemArgument2);
 
+		EnterCriticalSection(&(g_DpcData.Lock));
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
+		g_DpcData.IsDpcActive.clear();
 	}
 
 //    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
@@ -479,14 +483,17 @@ void ExecuteDpcQueue()
 	LeaveCriticalSection(&(g_DpcData.Lock));
 }
 
-void InitDpcThread()
+void InitDpcData()
 {
-	DWORD dwThreadId = 0;
-
+	// Let's initialize the Dpc handling thread too,
+	// here for now (should be called by our caller)
 	InitializeCriticalSection(&(g_DpcData.Lock));
 	InitializeListHead(&(g_DpcData.DpcQueue));
-	EmuLogEx(CXBXR_MODULE::INIT, LOG_LEVEL::DEBUG, "Creating DPC event\n");
-	g_DpcData.DpcEvent = CreateEvent(/*lpEventAttributes=*/nullptr, /*bManualReset=*/FALSE, /*bInitialState=*/FALSE, /*lpName=*/nullptr);
+}
+
+bool IsDpcActive()
+{
+	return g_DpcData.IsDpcActive.test();
 }
 
 static constexpr uint32_t XBOX_TSC_FREQUENCY = 733333333; // Xbox Time Stamp Counter Frequency = 733333333 (CPU Clock)
@@ -496,13 +503,6 @@ ULONGLONG CxbxGetPerformanceCounter(bool acpi)
 {
 	const int64_t period = acpi ? XBOX_ACPI_FREQUENCY : XBOX_TSC_FREQUENCY;
 	return Timer_GetScaledPerformanceCounter(period);
-}
-
-void CxbxInitPerformanceCounters()
-{
-	// Let's initialize the Dpc handling thread too,
-	// here for now (should be called by our caller)
-	InitDpcThread();
 }
 
 // ******************************************************************
@@ -1268,7 +1268,9 @@ XBSYSAPI EXPORTNUM(119) xbox::boolean_xt NTAPI xbox::KeInsertQueueDpc
 		InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
 		// TODO : Instead of DpcQueue, add the DPC to KeGetCurrentPrcb()->DpcListHead
 		// Signal the Dpc handling code there's work to do
-		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+		if (!IsDpcActive()) {
+			HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+		}
 		// OpenXbox has this instead:
 		// if (!pKPRCB->DpcRoutineActive && !pKPRCB->DpcInterruptRequested) {
 		//	pKPRCB->DpcInterruptRequested = TRUE;
@@ -1289,7 +1291,12 @@ XBSYSAPI EXPORTNUM(121) xbox::boolean_xt NTAPI xbox::KeIsExecutingDpc
 {
 	LOG_FUNC();
 
+#if 0
+	// This is the correct implementation, but it doesn't work because our Prcb is per-thread instead of being per-processor
 	BOOLEAN ret = (BOOLEAN)KeGetCurrentPrcb()->DpcRoutineActive;
+#else
+	BOOLEAN ret = (BOOLEAN)IsDpcActive();
+#endif
 
 	RETURN(ret);
 }
