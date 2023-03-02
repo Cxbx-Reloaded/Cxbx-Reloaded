@@ -357,6 +357,7 @@ typedef struct OverlayState {
 } OverlayState;
 
 typedef struct NV2AState {
+	HANDLE vblank_thread;
     // PCIDevice dev;
     // qemu_irq irq;
     bool exiting;

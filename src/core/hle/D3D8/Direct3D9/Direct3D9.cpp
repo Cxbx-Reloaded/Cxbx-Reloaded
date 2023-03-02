@@ -229,7 +229,6 @@ static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should b
 // Static Function(s)
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static xbox::void_xt NTAPI          EmuUpdateTickCount(xbox::PVOID Arg);
 static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 static void							CxbxImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_D3DSurface *pNewZStencil);
@@ -629,24 +628,12 @@ const char *D3DErrorString(HRESULT hResult)
 	return buffer;
 }
 
-void CxbxInitWindow(bool bFullInit)
+void CxbxInitWindow()
 {
     g_EmuShared->GetVideoSettings(&g_XBVideo);
 
     if(g_XBVideo.bFullScreen)
         CxbxKrnl_hEmuParent = NULL;
-
-    // create timing thread
-	if (bFullInit && !bLLE_GPU)
-    {
-		xbox::HANDLE hThread;
-		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, EmuUpdateTickCount, xbox::zeroptr, FALSE);
-        // We set the priority of this thread a bit higher, to assure reliable timing :
-		auto nativeHandle = GetNativeHandle(hThread);
-		assert(nativeHandle);
-        SetThreadPriority(*nativeHandle, THREAD_PRIORITY_ABOVE_NORMAL);
-        g_AffinityPolicy->SetAffinityOther(*nativeHandle);
-    }
 
 /* TODO : Port this Dxbx code :
   // create vblank handling thread
@@ -1930,47 +1917,33 @@ std::chrono::steady_clock::time_point GetNextVBlankTime()
 	return steady_clock::now() + duration_cast<steady_clock::duration>(ms);
 }
 
-// timing thread procedure
-static xbox::void_xt NTAPI EmuUpdateTickCount(xbox::PVOID Arg)
+void hle_vblank()
 {
-	CxbxSetThreadName("Cxbx Timing Thread");
+	// Note: This whole code block can be removed once NV2A interrupts are implemented
+	// And Both Swap and Present can be ran unpatched
+	// Once that is in place, MiniPort + Direct3D will handle this on it's own!
+	// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
+	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+	g_Xbox_VBlankData.VBlank++;
+	g_VBConditionVariable.notify_all();
 
-    EmuLog(LOG_LEVEL::DEBUG, "Timing thread is running.");
+	// TODO: Fixme.  This may not be right...
+	g_Xbox_SwapData.SwapVBlank = 1;
 
-	auto nextVBlankTime = GetNextVBlankTime();
-
-    while(true)
-    {
-		// Wait for VBlank
-        // Note: This whole code block can be removed once NV2A interrupts are implemented
-		// And Both Swap and Present can be ran unpatched
-		// Once that is in place, MiniPort + Direct3D will handle this on it's own!
-		SleepPrecise(nextVBlankTime);
-		nextVBlankTime = GetNextVBlankTime();
-
-		// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
-		std::unique_lock<std::mutex> lk(g_VBConditionMutex);
-		g_Xbox_VBlankData.VBlank++;
-		g_VBConditionVariable.notify_all();
-
-		// TODO: Fixme.  This may not be right...
-		g_Xbox_SwapData.SwapVBlank = 1;
-
-		if(g_pXbox_VerticalBlankCallback != xbox::zeroptr)
-		{
-			g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
-		}
-
-		g_Xbox_VBlankData.Swap = 0;
-
-		// TODO: This can't be accurate...
-		g_Xbox_SwapData.TimeUntilSwapVBlank = 0;
-
-		// TODO: Recalculate this for PAL version if necessary.
-		// Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
-	//	g_Xbox_SwapData.TimeBetweenSwapVBlanks = 1/60;
-		g_Xbox_SwapData.TimeBetweenSwapVBlanks = 0;
+	if (g_pXbox_VerticalBlankCallback != xbox::zeroptr)
+	{
+		g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
 	}
+
+	g_Xbox_VBlankData.Swap = 0;
+
+	// TODO: This can't be accurate...
+	g_Xbox_SwapData.TimeUntilSwapVBlank = 0;
+
+	// TODO: Recalculate this for PAL version if necessary.
+	// Also, we should check the D3DPRESENT_INTERVAL value for accurracy.
+	// g_Xbox_SwapData.TimeBetweenSwapVBlanks = 1/60;
+	g_Xbox_SwapData.TimeBetweenSwapVBlanks = 0;
 }
 
 void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)

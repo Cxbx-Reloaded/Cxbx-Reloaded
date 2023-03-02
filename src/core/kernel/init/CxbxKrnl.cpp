@@ -1362,7 +1362,7 @@ static void CxbxrKrnlInitHacks()
 	
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
-	CxbxInitWindow(true);
+	CxbxInitWindow();
 
 	// Now process the boot flags to see if there are any special conditions to handle
 	if (BootFlags & BOOT_EJECT_PENDING) {} // TODO

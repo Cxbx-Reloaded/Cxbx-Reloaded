@@ -51,6 +51,7 @@
 
 #include "core\kernel\init\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
 #include "core\kernel\support\Emu.h"
+#include "core\kernel\support\NativeHandle.h"
 #include "core\kernel\exports\EmuKrnl.h"
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -58,6 +59,7 @@
 #include "core\hle\Intercept.hpp"
 #include "common/win32/Threads.h"
 #include "Logging.h"
+#include "Timer.h"
 
 #include "vga.h"
 #include "nv2a.h" // For NV2AState
@@ -319,8 +321,8 @@ const NV2ABlockInfo* EmuNV2A_Block(xbox::addr_xt addr)
 
 // HACK: Until we implement VGA/proper interrupt generation
 // we simulate VBLANK by calling the interrupt at 60Hz
-std::thread vblank_thread;
 extern std::chrono::steady_clock::time_point GetNextVBlankTime();
+extern void hle_vblank();
 
 void _check_gl_reset()
 {
@@ -1097,25 +1099,37 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 }
 
 // TODO: Fix this properly
-static void nv2a_vblank_thread(NV2AState *d)
+template<bool should_update_hle>
+static xbox::void_xt NTAPI nv2a_vblank_thread(xbox::PVOID arg)
 {
-	g_AffinityPolicy->SetAffinityOther();
-	CxbxSetThreadName("Cxbx NV2A VBLANK");
+	NV2AState *d = static_cast<NV2AState *>(arg);
+
+	if constexpr (should_update_hle) {
+		CxbxSetThreadName("Cxbxr NV2A and HLE VBLANK");
+	}
+	else {
+		g_AffinityPolicy->SetAffinityOther();
+		CxbxSetThreadName("Cxbxr NV2A VBLANK");
+	}
+
 	auto nextVBlankTime = GetNextVBlankTime();
 
-	while (!d->exiting) {
-		// Handle VBlank
-		if (std::chrono::steady_clock::now() > nextVBlankTime) {
-			d->pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
-			update_irq(d);
-			nextVBlankTime = GetNextVBlankTime();
+	while (!d->exiting) [[unlikely]] {
 
-			// TODO: We should swap here for the purposes of supporting overlays + direct framebuffer access
-			// But it causes crashes on AMD hardware for reasons currently unknown...
-			//NV2ADevice::UpdateHostDisplay(d);
+		// Wait for VBlank
+		SleepPrecise(nextVBlankTime);
+		nextVBlankTime = GetNextVBlankTime();
+
+		d->pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
+		update_irq(d);
+
+		// TODO: We should swap here for the purposes of supporting overlays + direct framebuffer access
+		// But it causes crashes on AMD hardware for reasons currently unknown...
+		//NV2ADevice::UpdateHostDisplay(d);
+
+		if constexpr (should_update_hle) {
+			hle_vblank();
 		}
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
 	}
 }
 
@@ -1202,7 +1216,20 @@ void NV2ADevice::Init()
 		pvideo_init(d);
 	}
 
-    vblank_thread = std::thread(nv2a_vblank_thread, d);
+	
+	if (bLLE_GPU) {
+		xbox::HANDLE hThread;
+		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, nv2a_vblank_thread<false>, d, FALSE);
+		d->vblank_thread = *GetNativeHandle(hThread);
+	}
+	else {
+		xbox::HANDLE hThread;
+		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, nv2a_vblank_thread<true>, d, FALSE);
+		// We set the priority of this thread a bit higher, to assure reliable timing
+		d->vblank_thread = *GetNativeHandle(hThread);
+		SetThreadPriority(d->vblank_thread, THREAD_PRIORITY_ABOVE_NORMAL);
+		g_AffinityPolicy->SetAffinityOther(d->vblank_thread);
+	}
 
     qemu_mutex_init(&d->pfifo.pfifo_lock);
     qemu_cond_init(&d->pfifo.puller_cond);
@@ -1227,9 +1254,9 @@ void NV2ADevice::Reset()
 	qemu_cond_broadcast(&d->pfifo.pusher_cond);
 	d->pfifo.puller_thread.join();
 	d->pfifo.pusher_thread.join();
-	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cbxbx addition
+	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cxbxr addition
 	if (d->pgraph.opengl_enabled) {
-		vblank_thread.join();
+		WaitForSingleObject(d->vblank_thread, INFINITE);
 		pvideo_destroy(d);
 	}
 
