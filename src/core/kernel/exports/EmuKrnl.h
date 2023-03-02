@@ -52,8 +52,6 @@ xbox::PLIST_ENTRY RemoveTailList(xbox::PLIST_ENTRY pListHead);
 
 extern xbox::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
 extern xbox::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
-inline std::condition_variable g_InterruptSignal;
-inline std::atomic_bool g_AnyInterruptAsserted = false;
 
 class HalSystemInterrupt {
 public:
@@ -64,8 +62,6 @@ public:
 		}
 
 		m_Asserted = state;
-		g_AnyInterruptAsserted = true;
-		g_InterruptSignal.notify_one();
 	};
 
 	void Enable() {
