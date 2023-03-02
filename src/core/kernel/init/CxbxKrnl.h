@@ -156,6 +156,7 @@ void CxbxKrnlPanic();
 void CxbxKrnlNoFunc();
 
 void InitDpcData(); // Implemented in EmuKrnlKe.cpp
+bool IsDpcActive();
 
 /*! kernel thunk table */
 extern uint32_t CxbxKrnl_KernelThunkTable[379];

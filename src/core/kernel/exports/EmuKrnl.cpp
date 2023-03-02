@@ -158,7 +158,10 @@ void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql)
 		xbox::KiExecuteKernelApc();
 		break;
 	case DISPATCH_LEVEL: // = 2
-		ExecuteDpcQueue();
+		// This can be recursively called by KiUnlockDispatcherDatabase and KfLowerIrql, so avoid calling DPCs again if the current one has queued yet another one
+		if (!IsDpcActive()) { // Avoid KeIsExecutingDpc(), as that logs
+			ExecuteDpcQueue();
+		}
 		break;
 	case APC_LEVEL | DISPATCH_LEVEL: // = 3
 		KiUnexpectedInterrupt();
@@ -450,7 +453,8 @@ XBSYSAPI EXPORTNUM(163) xbox::void_xt FASTCALL xbox::KiUnlockDispatcherDatabase
 	LOG_FUNC_ONE_ARG_TYPE(KIRQL_TYPE, OldIrql);
 
 	// Wrong, this should only happen when OldIrql >= DISPATCH_LEVEL
-	if (!(KeGetCurrentPrcb()->DpcRoutineActive)) { // Avoid KeIsExecutingDpc(), as that logs
+	// Checking DpcRoutineActive doesn't work because our Prcb is per-thread instead of being per-processor
+	if (!IsDpcActive()) { // Avoid KeIsExecutingDpc(), as that logs
 		HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 	}
 
