@@ -72,7 +72,7 @@ Xbe::Xbe(const char *x_szFilename)
 			// This is necessary because CxbxInitWindow internally calls g_AffinityPolicy->SetAffinityOther. If we are launched directly from the command line and the dashboard
 			// cannot be opened, we will crash below because g_AffinityPolicy will be empty
 			g_AffinityPolicy = AffinityPolicy::InitPolicy();
-			CxbxInitWindow(false);
+			CxbxInitWindow();
 
 			ULONG FatalErrorCode = FATAL_ERROR_XBE_DASH_GENERIC;
 

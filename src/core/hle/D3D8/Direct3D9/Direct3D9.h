@@ -40,7 +40,7 @@
 void LookupTrampolinesD3D();
 
 // initialize render window
-extern void CxbxInitWindow(bool bFullInit);
+extern void CxbxInitWindow();
 
 void CxbxUpdateNativeD3DResources();
 
