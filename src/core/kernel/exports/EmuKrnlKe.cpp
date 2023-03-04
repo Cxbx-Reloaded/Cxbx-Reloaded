@@ -1805,8 +1805,8 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(Thread)
-		LOG_FUNC_ARG_OUT(Priority)
+		LOG_FUNC_ARG(Thread)
+		LOG_FUNC_ARG(Priority)
 		LOG_FUNC_END;
 
 	KIRQL oldIRQL;
@@ -1814,20 +1814,22 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 
 	// It cannot fail because all thread handles are created by ob
 	const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
-	LONG ret = GetThreadPriority(*nativeHandle);
 
-	// This would work normally, but it will slow down the emulation, 
-	// don't do that if the priority is higher then normal (so our own)!
-	if (Priority <= THREAD_PRIORITY_NORMAL) {
-		BOOL result = SetThreadPriority(*nativeHandle, Priority);
-		if (!result) {
-			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
-		}
+	if (Priority == 16) {
+		Priority = THREAD_PRIORITY_TIME_CRITICAL;
+	}
+	else if (Priority == -16) {
+		Priority = THREAD_PRIORITY_IDLE;
+	}
+
+	BOOL result = SetThreadPriority(*nativeHandle, Priority);
+	if (!result) {
+		EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
 	}
 
 	KiUnlockDispatcherDatabase(oldIRQL);
 
-	RETURN(ret);
+	RETURN(result);
 }
 
 XBSYSAPI EXPORTNUM(144) xbox::boolean_xt NTAPI xbox::KeSetDisableBoostThread
@@ -1989,8 +1991,8 @@ XBSYSAPI EXPORTNUM(148) xbox::boolean_xt NTAPI xbox::KeSetPriorityThread
 )
 {
 	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG_OUT(Thread)
-		LOG_FUNC_ARG_OUT(Priority)
+		LOG_FUNC_ARG(Thread)
+		LOG_FUNC_ARG(Priority)
 		LOG_FUNC_END;
 
 	LOG_UNIMPLEMENTED();
