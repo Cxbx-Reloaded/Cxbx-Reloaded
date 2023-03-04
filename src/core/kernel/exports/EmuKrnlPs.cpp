@@ -121,6 +121,8 @@ static unsigned int WINAPI PCSTProxy
 		params.Ethread,
 		params.TlsDataSize);
 
+	xbox::KiExecuteKernelApc();
+
 	auto routine = (xbox::PKSYSTEM_ROUTINE)StartFrame->SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
 	// message like: "Exception thrown at 0x00026190 in cxbx.exe: 0xC0000005: Access
@@ -409,9 +411,11 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		g_AffinityPolicy->SetAffinityXbox(handle);
 
 		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
-		if (!CreateSuspended) {
-			ResumeThread(handle);
+		if (CreateSuspended) {
+			KeSuspendThread(&eThread->Tcb);
 		}
+
+		ResumeThread(handle);
 
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
 		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X], Native Handle : 0x%X, Native ThreadId : [0x%.4X]",

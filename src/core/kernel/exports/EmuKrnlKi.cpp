@@ -907,12 +907,13 @@ static xbox::void_xt KiExecuteApc()
 		Apc->Inserted = FALSE;
 		xbox::KiApcListMtx.unlock();
 
-		// NOTE: we never use KernelRoutine because that is only used for kernel APCs, which we currently don't use
+		// This is either KiFreeUserApc, which frees the memory of the apc, or KiSuspendNop, which does nothing
+		(Apc->KernelRoutine)(Apc, &Apc->NormalRoutine, &Apc->NormalContext, &Apc->SystemArgument1, &Apc->SystemArgument2);
+
 		if (Apc->NormalRoutine != xbox::zeroptr) {
 			(Apc->NormalRoutine)(Apc->NormalContext, Apc->SystemArgument1, Apc->SystemArgument2);
 		}
 
-		xbox::ExFreePool(Apc);
 		xbox::KiApcListMtx.lock();
 	}
 
@@ -966,7 +967,8 @@ xbox::PLARGE_INTEGER FASTCALL xbox::KiComputeWaitInterval
 }
 
 // Source: ReactOS
-xbox::void_xt NTAPI xbox::KiSuspendNop(
+xbox::void_xt NTAPI xbox::KiSuspendNop
+(
 	IN PKAPC Apc,
 	IN PKNORMAL_ROUTINE* NormalRoutine,
 	IN PVOID* NormalContext,
@@ -974,7 +976,7 @@ xbox::void_xt NTAPI xbox::KiSuspendNop(
 	IN PVOID* SystemArgument2
 )
 {
-	/* Does nothing */
+	/* Does nothing because the memory of the suspend apc is part of kthread */
 	UNREFERENCED_PARAMETER(Apc);
 	UNREFERENCED_PARAMETER(NormalRoutine);
 	UNREFERENCED_PARAMETER(NormalContext);
@@ -982,8 +984,21 @@ xbox::void_xt NTAPI xbox::KiSuspendNop(
 	UNREFERENCED_PARAMETER(SystemArgument2);
 }
 
+xbox::void_xt NTAPI xbox::KiFreeUserApc
+(
+	IN PKAPC Apc,
+	IN PKNORMAL_ROUTINE *NormalRoutine,
+	IN PVOID *NormalContext,
+	IN PVOID *SystemArgument1,
+	IN PVOID *SystemArgument2
+)
+{
+	ExFreePool(Apc);
+}
+
 // Source: ReactOS
-xbox::void_xt NTAPI xbox::KiSuspendThread(
+xbox::void_xt NTAPI xbox::KiSuspendThread
+(
 	IN PVOID NormalContext,
 	IN PVOID SystemArgument1,
 	IN PVOID SystemArgument2
@@ -1075,4 +1090,41 @@ xbox::void_xt xbox::KiInitializeContextThread(
 
 	/* Save back the new value of the kernel stack. */
 	Thread->KernelStack = reinterpret_cast<PVOID>(CtxSwitchFrame);
+}
+
+xbox::boolean_xt xbox::KiInsertQueueApc
+(
+	IN PRKAPC Apc,
+	IN KPRIORITY Increment
+)
+{
+	PKTHREAD kThread = Apc->Thread;
+	KiApcListMtx.lock();
+	if (Apc->Inserted) {
+		KiApcListMtx.unlock();
+		return FALSE;
+	}
+	InsertTailList(&kThread->ApcState.ApcListHead[Apc->ApcMode], &Apc->ApcListEntry);
+	Apc->Inserted = TRUE;
+	KiApcListMtx.unlock();
+
+	// We can only attempt to execute the queued apc right away if it is been inserted in the current thread, because otherwise the KTHREAD
+	// in the fs selector will not be correct
+	if (Apc->ApcMode == KernelMode) { // kernel apc
+		kThread->ApcState.KernelApcPending = TRUE;
+		// NOTE: this is wrong, we should check the thread state instead of just signaling the kernel apc, but we currently
+		// don't set the appropriate state in kthread
+		if (kThread == KeGetCurrentThread()) {
+			KiExecuteKernelApc();
+		}
+	}
+	else if ((kThread->WaitMode == UserMode) && (kThread->Alertable)) { // user apc
+		kThread->ApcState.UserApcPending = TRUE;
+		// NOTE: this should also check the thread state
+		if (kThread == KeGetCurrentThread()) {
+			KiExecuteUserApc();
+		}
+	}
+
+	return TRUE;
 }

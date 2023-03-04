@@ -156,12 +156,22 @@ namespace xbox
 	);
 
 	// Source: ReactOS
-	void_xt NTAPI KiSuspendNop(
+	void_xt NTAPI KiSuspendNop
+	(
 		IN PKAPC Apc,
 		IN PKNORMAL_ROUTINE* NormalRoutine,
 		IN PVOID* NormalContext,
 		IN PVOID* SystemArgument1,
 		IN PVOID* SystemArgument2
+	);
+
+	void_xt NTAPI KiFreeUserApc
+	(
+		IN PKAPC Apc,
+		IN PKNORMAL_ROUTINE *NormalRoutine,
+		IN PVOID *NormalContext,
+		IN PVOID *SystemArgument1,
+		IN PVOID *SystemArgument2
 	);
 
 	// Source: ReactOS
@@ -179,6 +189,12 @@ namespace xbox
 		IN PKSYSTEM_ROUTINE SystemRoutine,
 		IN PKSTART_ROUTINE StartRoutine,
 		IN PVOID StartContext
+	);
+
+	boolean_xt KiInsertQueueApc
+	(
+		IN PRKAPC Apc,
+		IN KPRIORITY Increment
 	);
 };
 
