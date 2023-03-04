@@ -40,33 +40,12 @@
 #define SCALE_MS_IN_US 1000
 #define SCALE_US_IN_US 1
 
-/* typedef of the timer object and the callback function */
-typedef void(*TimerCB)(void*);
-typedef struct _TimerObject
-{
-	int Type;                            // timer type
-	std::atomic_uint64_t ExpireTime_MS;  // when the timer expires (ms)
-	std::atomic_bool Exit;               // indicates that the timer should be destroyed
-	TimerCB Callback;                    // function to call when the timer expires
-	void* Opaque;                        // opaque argument to pass to the callback
-	std::string Name;                    // the name of the timer thread (if any)
-	bool IsXboxTimer;                    // indicates that the timer should run on the Xbox CPU
-}
-TimerObject;
 
 extern int64_t HostQPCFrequency;
 
-/* Timer exported functions */
-TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, bool IsXboxTimer);
-void Timer_Start(TimerObject* Timer, uint64_t Expire_MS);
-void Timer_Exit(TimerObject* Timer);
-void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms);
-uint64_t GetTime_NS(TimerObject* Timer);
-void Timer_Init();
-void Timer_Shutdown();
-
+void timer_init();
+uint64_t get_now();
 int64_t Timer_GetScaledPerformanceCounter(int64_t Period);
-
 void SleepPrecise(std::chrono::steady_clock::time_point targetTime);
 
 #endif

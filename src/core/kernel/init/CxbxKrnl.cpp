@@ -99,9 +99,6 @@ bool g_bIsChihiro = false;
 bool g_bIsDevKit = false;
 bool g_bIsRetail = false;
 
-// Indicates to disable/enable all interrupts when cli and sti instructions are executed
-std::atomic_bool g_bEnableAllInterrupts = true;
-
 // Set by the VMManager during initialization. Exported because it's needed in other parts of the emu
 size_t g_SystemMaxMemory = 0;
 
@@ -112,6 +109,8 @@ ULONG g_CxbxFatalErrorCode = FATAL_ERROR_NONE;
 
 // Define function located in EmuXApi so we can call it from here
 void SetupXboxDeviceTypes();
+
+extern xbox::void_xt NTAPI system_events(xbox::PVOID arg);
 
 void SetupPerTitleKeys()
 {
@@ -328,61 +327,6 @@ void InitSoftwareInterrupts()
 	xbox::KeConnectInterrupt(&SoftwareInterrupt_2);
 }
 #endif
-
-static xbox::void_xt NTAPI CxbxKrnlInterruptThread(xbox::PVOID param)
-{
-	CxbxSetThreadName("CxbxKrnl Interrupts");
-
-#if 0
-	InitSoftwareInterrupts();
-#endif
-
-	while (true) {
-		for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-			// If the interrupt is pending and connected, process it
-			if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
-				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-			}
-		}
-		_mm_pause();
-	}
-
-	assert(0);
-}
-
-static void CxbxKrnlClockThread(void* pVoid)
-{
-	LARGE_INTEGER CurrentTicks;
-	uint64_t Delta;
-	uint64_t Microseconds;
-	unsigned int IncrementScaling;
-	static uint64_t LastTicks = 0;
-	static uint64_t Error = 0;
-	static uint64_t UnaccountedMicroseconds = 0;
-
-	// This keeps track of how many us have elapsed between two cycles, so that the xbox clocks are updated
-	// with the proper increment (instead of blindly adding a single increment at every step)
-
-	if (LastTicks == 0) {
-		QueryPerformanceCounter(&CurrentTicks);
-		LastTicks = CurrentTicks.QuadPart;
-		CurrentTicks.QuadPart = 0;
-	}
-
-	QueryPerformanceCounter(&CurrentTicks);
-	Delta = CurrentTicks.QuadPart - LastTicks;
-	LastTicks = CurrentTicks.QuadPart;
-
-	Error += (Delta * SCALE_S_IN_US);
-	Microseconds = Error / HostQPCFrequency;
-	Error -= (Microseconds * HostQPCFrequency);
-
-	UnaccountedMicroseconds += Microseconds;
-	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts
-	UnaccountedMicroseconds -= (IncrementScaling * 1000);
-
-	xbox::KiClockIsr(IncrementScaling);
-}
 
 void MapThunkTable(uint32_t* kt, uint32_t* pThunkTable)
 {
@@ -1217,7 +1161,7 @@ static void CxbxrKrnlInitHacks()
 	g_pCertificate = &CxbxKrnl_Xbe->m_Certificate;
 
 	// Initialize timer subsystem
-	Timer_Init();
+	timer_init();
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
 	// Initialize DPC global
@@ -1471,13 +1415,10 @@ static void CxbxrKrnlInitHacks()
 #endif
 
 	EmuX86_Init();
-	// Create the interrupt processing thread
+	// Start the event thread
 	xbox::HANDLE hThread;
-	CxbxrCreateThread(&hThread, xbox::zeroptr, CxbxKrnlInterruptThread, xbox::zeroptr, FALSE);
-	// Start the kernel clock thread
-	TimerObject* KernelClockThr = Timer_Create(CxbxKrnlClockThread, nullptr, "Kernel clock thread", true);
-	Timer_Start(KernelClockThr, SCALE_MS_IN_NS);
-
+	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, system_events, xbox::zeroptr, FALSE);
+	// Launch the xbe
 	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxLaunchXbe, Entry, FALSE);
 
 	EmuKeFreePcr();

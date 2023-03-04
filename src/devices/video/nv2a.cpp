@@ -1100,28 +1100,18 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 
 // TODO: Fix this properly
 template<bool should_update_hle>
-static xbox::void_xt NTAPI nv2a_vblank_thread(xbox::PVOID arg)
+void nv2a_vblank_interrupt(void *opaque)
 {
-	NV2AState *d = static_cast<NV2AState *>(arg);
+	NV2AState *d = static_cast<NV2AState *>(opaque);
 
-	if constexpr (should_update_hle) {
-		CxbxSetThreadName("Cxbxr NV2A and HLE VBLANK");
-	}
-	else {
-		g_AffinityPolicy->SetAffinityOther();
-		CxbxSetThreadName("Cxbxr NV2A VBLANK");
-	}
-
-	auto nextVBlankTime = GetNextVBlankTime();
-
-	while (!d->exiting) [[unlikely]] {
-
-		// Wait for VBlank
-		SleepPrecise(nextVBlankTime);
-		nextVBlankTime = GetNextVBlankTime();
-
+	if (!d->exiting) [[likely]] {
 		d->pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
 		update_irq(d);
+
+		// trigger the gpu interrupt if it was asserted in update_irq
+		if (g_bEnableAllInterrupts && HalSystemInterrupts[3].IsPending() && EmuInterruptList[3] && EmuInterruptList[3]->Connected) {
+			HalSystemInterrupts[3].Trigger(EmuInterruptList[3]);
+		}
 
 		// TODO: We should swap here for the purposes of supporting overlays + direct framebuffer access
 		// But it causes crashes on AMD hardware for reasons currently unknown...
@@ -1216,19 +1206,12 @@ void NV2ADevice::Init()
 		pvideo_init(d);
 	}
 
-	
+	d->vblank_last = get_now();
 	if (bLLE_GPU) {
-		xbox::HANDLE hThread;
-		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, nv2a_vblank_thread<false>, d, FALSE);
-		d->vblank_thread = *GetNativeHandle(hThread);
+		d->vblank_cb = nv2a_vblank_interrupt<false>;
 	}
 	else {
-		xbox::HANDLE hThread;
-		xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, nv2a_vblank_thread<true>, d, FALSE);
-		// We set the priority of this thread a bit higher, to assure reliable timing
-		d->vblank_thread = *GetNativeHandle(hThread);
-		SetThreadPriority(d->vblank_thread, THREAD_PRIORITY_ABOVE_NORMAL);
-		g_AffinityPolicy->SetAffinityOther(d->vblank_thread);
+		d->vblank_cb = nv2a_vblank_interrupt<true>;
 	}
 
     qemu_mutex_init(&d->pfifo.pfifo_lock);
@@ -1256,7 +1239,6 @@ void NV2ADevice::Reset()
 	d->pfifo.pusher_thread.join();
 	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cxbxr addition
 	if (d->pgraph.opengl_enabled) {
-		WaitForSingleObject(d->vblank_thread, INFINITE);
 		pvideo_destroy(d);
 	}
 
@@ -1403,4 +1385,19 @@ int NV2ADevice::GetFrameWidth(NV2AState* d)
 	width /= frame_pixel_bytes;
 
 	return width;
+}
+
+uint64_t NV2ADevice::vblank_next(uint64_t now)
+{
+	// TODO: this should use a vblank period of 20ms when we are in 50Hz PAL mode
+	constexpr uint64_t vblank_period = 16.6666666667 * 1000;
+	uint64_t next = m_nv2a_state->vblank_last + vblank_period;
+
+	if (now >= next) {
+		m_nv2a_state->vblank_cb(m_nv2a_state);
+		m_nv2a_state->vblank_last = get_now();
+		return vblank_period;
+	}
+
+	return m_nv2a_state->vblank_last + vblank_period - now; // time remaining until next vblank
 }

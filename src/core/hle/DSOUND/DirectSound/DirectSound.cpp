@@ -53,6 +53,7 @@
 // TODO: Move these to LLE APUDevice once we have one!
 
 static constexpr uint32_t APU_TIMER_FREQUENCY = 48000;
+static uint64_t dsound_last;
 
 uint32_t GetAPUTime()
 {
@@ -85,10 +86,6 @@ uint32_t GetAPUTime()
     there is chance of failure which contain value greater than 0.
  */
 
-// Managed memory xbox audio variables
-static std::thread dsound_thread;
-static void dsound_thread_worker(LPVOID);
-
 #include "DirectSoundInline.hpp"
 
 #ifdef __cplusplus
@@ -98,6 +95,7 @@ extern "C" {
 void CxbxInitAudio()
 {
     g_EmuShared->GetAudioSettings(&g_XBAudio);
+    dsound_last = get_now();
 }
 
 #ifdef __cplusplus
@@ -124,10 +122,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreate)
     static bool initialized = false;
 
     HRESULT hRet = DS_OK;
-
-    if (!initialized) {
-        dsound_thread = std::thread(dsound_thread_worker, nullptr);
-    }
 
     // Set this flag when this function is called
     g_bDSoundCreateCalled = TRUE;
@@ -454,51 +448,51 @@ void StreamBufferAudio(xbox::XbHybridDSBuffer* pHybridBuffer, float msToCopy) {
 	}
 }
 
-static void dsound_thread_worker(LPVOID nullPtr)
+void dsound_async_worker()
 {
-    g_AffinityPolicy->SetAffinityOther();
+    DSoundMutexGuardLock;
 
-	const int dsStreamInterval = 300;
-	int waitCounter = 0;
+    xbox::LARGE_INTEGER getTime;
+    xbox::KeQuerySystemTime(&getTime);
+    DirectSoundDoWork_Stream(getTime);
+}
 
-    while (true) {
-		// FIXME time this loop more accurately
-		// and account for variation in the length of Sleep calls
+void dsound_worker()
+{
+    // Testcase: Gauntlet Dark Legacy, if Sleep(1) then intro videos start to starved often
+    // unless console is open with logging enabled. This is the cause of stopping intro videos often.
 
-        // Testcase: Gauntlet Dark Legacy, if Sleep(1) then intro videos start to starved often
-        // unless console is open with logging enabled. This is the cause of stopping intro videos often.
-        Sleep(g_dsBufferStreaming.streamInterval);
-		waitCounter += g_dsBufferStreaming.streamInterval;
+    // Enforce mutex guard lock only occur inside below bracket for proper compile build.
+    DSoundMutexGuardLock;
 
-        // Enforce mutex guard lock only occur inside below bracket for proper compile build.
-        {
-            DSoundMutexGuardLock;
-
-			if (waitCounter > dsStreamInterval) {
-				waitCounter = 0;
-
-				// For Async process purpose only
-				xbox::LARGE_INTEGER getTime;
-				xbox::KeQuerySystemTime(&getTime);
-				DirectSoundDoWork_Stream(getTime);
+	// Stream sound buffer audio
+	// because the title may change the content of sound buffers at any time
+	for (auto& pBuffer : g_pDSoundBufferCache) {
+		// Avoid expensive calls to DirectSound on buffers unless they've been played at least once
+		// Since some titles create a large amount of buffers, but only use a few
+		if (pBuffer->emuDSBuffer->EmuStreamingInfo.playRequested) {
+			DWORD status;
+			HRESULT hRet = pBuffer->emuDSBuffer->EmuDirectSoundBuffer8->GetStatus(&status);
+			if (hRet == 0 && status & DSBSTATUS_PLAYING) {
+				auto streamMs = g_dsBufferStreaming.streamInterval + g_dsBufferStreaming.streamAhead;
+				StreamBufferAudio(pBuffer, streamMs);
 			}
+		}
+	}
+}
 
-			// Stream sound buffer audio
-			// because the title may change the content of sound buffers at any time
-			for (auto& pBuffer : g_pDSoundBufferCache) {
-				// Avoid expensive calls to DirectSound on buffers unless they've been played at least once
-				// Since some titles create a large amount of buffers, but only use a few
-				if (pBuffer->emuDSBuffer->EmuStreamingInfo.playRequested) {
-					DWORD status;
-					HRESULT hRet = pBuffer->emuDSBuffer->EmuDirectSoundBuffer8->GetStatus(&status);
-					if (hRet == 0 && status & DSBSTATUS_PLAYING) {
-						auto streamMs = g_dsBufferStreaming.streamInterval + g_dsBufferStreaming.streamAhead;
-						StreamBufferAudio(pBuffer, streamMs);
-					}
-				}
-			}
-        }
+uint64_t dsound_next(uint64_t now)
+{
+    constexpr uint64_t dsound_period = 300 * 1000;
+    uint64_t next = dsound_last + dsound_period;
+
+    if (now >= next) {
+        dsound_async_worker();
+        dsound_last = get_now();
+        return dsound_period;
     }
+
+    return dsound_last + dsound_period - now; // time remaining until next dsound async event
 }
 
 // Kismet given name for RadWolfie's experiment major issue in the mutt.
