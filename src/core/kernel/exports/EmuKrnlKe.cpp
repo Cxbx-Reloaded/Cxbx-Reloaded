@@ -1206,35 +1206,9 @@ XBSYSAPI EXPORTNUM(118) xbox::boolean_xt NTAPI xbox::KeInsertQueueApc
 		Apc->SystemArgument1 = SystemArgument1;
 		Apc->SystemArgument2 = SystemArgument2;
 
-		if (Apc->Inserted) {
-			KfLowerIrql(OldIrql);
-			RETURN(FALSE);
-		}
-		else {
-			KiApcListMtx.lock();
-			InsertTailList(&kThread->ApcState.ApcListHead[Apc->ApcMode], &Apc->ApcListEntry);
-			Apc->Inserted = TRUE;
-			KiApcListMtx.unlock();
-
-			// We can only attempt to execute the queued apc right away if it is been inserted in the current thread, because otherwise the KTHREAD
-			// in the fs selector will not be correct
-			if (kThread == KeGetCurrentThread()) {
-				if (Apc->ApcMode == KernelMode) { // kernel apc
-					// NOTE: this is wrong, we should check the thread state instead of just signaling the kernel apc, but we currently
-					// don't set the appropriate state in kthread
-					kThread->ApcState.KernelApcPending = TRUE;
-					KiExecuteKernelApc();
-				}
-				else if ((kThread->WaitMode == UserMode) && (kThread->Alertable)) { // user apc
-					// NOTE: this should also check the thread state
-					kThread->ApcState.UserApcPending = TRUE;
-					KiExecuteUserApc();
-				}
-			}
-
-			KfLowerIrql(OldIrql);
-			RETURN(TRUE);
-		}
+		boolean_xt result = KiInsertQueueApc(Apc, Increment);
+		KfLowerIrql(OldIrql);
+		RETURN(result);
 	}
 }
 
@@ -1759,11 +1733,20 @@ XBSYSAPI EXPORTNUM(140) xbox::ulong_xt NTAPI xbox::KeResumeThread
 {
 	LOG_FUNC_ONE_ARG(Thread);
 
-	NTSTATUS ret = X_STATUS_SUCCESS;
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
 
-	LOG_UNIMPLEMENTED();
+	char_xt OldCount = Thread->SuspendCount;
+	if (OldCount != 0) {
+		--Thread->SuspendCount;
+		if (Thread->SuspendCount == 0) {
+			++Thread->SuspendSemaphore.Header.SignalState;
+		}
+	}
 
-	RETURN(ret);
+	KiUnlockDispatcherDatabase(OldIrql);
+
+	RETURN(OldCount);
 }
 
 XBSYSAPI EXPORTNUM(141) xbox::PLIST_ENTRY NTAPI xbox::KeRundownQueue
@@ -2105,11 +2088,27 @@ XBSYSAPI EXPORTNUM(152) xbox::ulong_xt NTAPI xbox::KeSuspendThread
 {
 	LOG_FUNC_ONE_ARG(Thread);
 
-	NTSTATUS ret = X_STATUS_SUCCESS;
+	KIRQL OldIrql;
+	KiLockDispatcherDatabase(&OldIrql);
 
-	LOG_UNIMPLEMENTED();
+	char_xt OldCount = Thread->SuspendCount;
+	if (OldCount == X_MAXIMUM_SUSPEND_COUNT) {
+		KiUnlockDispatcherDatabase(OldIrql);
+		RETURN(X_STATUS_SUSPEND_COUNT_EXCEEDED);
+	}
 
-	RETURN(ret);
+	if (Thread->ApcState.ApcQueueable == TRUE) {
+		++Thread->SuspendCount;
+		if (OldCount == 0) {
+			if (KiInsertQueueApc(&Thread->SuspendApc, 0) == FALSE) {
+				--Thread->SuspendSemaphore.Header.SignalState;
+			}
+		}
+	}
+
+	KiUnlockDispatcherDatabase(OldIrql);
+
+	RETURN(OldCount);
 }
 
 // ******************************************************************

@@ -1039,7 +1039,7 @@ XBSYSAPI EXPORTNUM(206) xbox::ntstatus_xt NTAPI xbox::NtQueueApcThread
 
 	PKAPC Apc = static_cast<PKAPC>(ExAllocatePoolWithTag(sizeof(KAPC), 'pasP'));
 	if (Apc != zeroptr) {
-		KeInitializeApc(Apc, &Thread->Tcb, zeroptr, zeroptr, reinterpret_cast<PKNORMAL_ROUTINE>(ApcRoutine), UserMode, ApcRoutineContext);
+		KeInitializeApc(Apc, &Thread->Tcb, KiFreeUserApc, zeroptr, reinterpret_cast<PKNORMAL_ROUTINE>(ApcRoutine), UserMode, ApcRoutineContext);
 		if (!KeInsertQueueApc(Apc, ApcStatusBlock, ApcReserved, 0)) {
 			ExFreePool(Apc);
 			result = X_STATUS_UNSUCCESSFUL;
@@ -1856,15 +1856,20 @@ XBSYSAPI EXPORTNUM(224) xbox::ntstatus_xt NTAPI xbox::NtResumeThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	if (const auto &nativeHandle = GetNativeHandle(ThreadHandle)) {
-		// Thread handles are created by ob
-		RETURN(NtDll::NtResumeThread(*nativeHandle, (::PULONG)PreviousSuspendCount));
-	}
-	else {
-		RETURN(X_STATUS_INVALID_HANDLE);
+	PETHREAD Thread;
+	ntstatus_xt result = ObReferenceObjectByHandle(ThreadHandle, &PsThreadObjectType, reinterpret_cast<PVOID *>(&Thread));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
 	}
 
-	// TODO : Once we do our own thread-switching, implement NtResumeThread using KetResumeThread
+	ulong_xt PrevSuspendCount = KeResumeThread(&Thread->Tcb);
+	ObfDereferenceObject(Thread);
+
+	if (PreviousSuspendCount) {
+		*PreviousSuspendCount = PrevSuspendCount;
+	}
+
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -2079,15 +2084,32 @@ XBSYSAPI EXPORTNUM(231) xbox::ntstatus_xt NTAPI xbox::NtSuspendThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	if (const auto &nativeHandle = GetNativeHandle(ThreadHandle)) {
-		// Thread handles are created by ob
-		RETURN(NtDll::NtSuspendThread(*nativeHandle, (::PULONG)PreviousSuspendCount));
-	}
-	else {
-		RETURN(X_STATUS_INVALID_HANDLE);
+	PETHREAD Thread;
+	ntstatus_xt result = ObReferenceObjectByHandle(ThreadHandle, &PsThreadObjectType, reinterpret_cast<PVOID *>(&Thread));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
 	}
 
-	// TODO : Once we do our own thread-switching, implement NtSuspendThread using KeSuspendThread
+	if (Thread != PspGetCurrentThread()) {
+		if (Thread->Tcb.HasTerminated) {
+			ObfDereferenceObject(Thread);
+			RETURN(X_STATUS_THREAD_IS_TERMINATING);
+		}
+	}
+
+	ulong_xt PrevSuspendCount = KeSuspendThread(&Thread->Tcb);
+	if (PrevSuspendCount == X_STATUS_SUSPEND_COUNT_EXCEEDED) {
+		ObfDereferenceObject(Thread);
+		RETURN(X_STATUS_SUSPEND_COUNT_EXCEEDED);
+	}
+
+	ObfDereferenceObject(Thread);
+
+	if (PreviousSuspendCount) {
+		*PreviousSuspendCount = PrevSuspendCount;
+	}
+
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
