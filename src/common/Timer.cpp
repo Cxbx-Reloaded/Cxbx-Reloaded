@@ -25,19 +25,36 @@
 // *
 // ******************************************************************
 
+#include <core\kernel\exports\xboxkrnl.h>
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <array>
 #include "Timer.h"
 #include "common\util\CxbxUtil.h"
 #include "core\kernel\support\EmuFS.h"
-#include "core/kernel/exports/EmuKrnlPs.hpp"
+#include "core\kernel\exports\EmuKrnlPs.hpp"
+#include "core\kernel\exports\EmuKrnl.h"
+#include "devices\Xbox.h"
+#include "devices\usb\OHCI.h"
+#include "core\hle\DSOUND\DirectSound\DirectSoundGlobal.hpp"
 #ifdef __linux__
 #include <time.h>
 #endif
+
+
+static uint64_t last_qpc; // last time when QPC was called
+static uint64_t last_time; // starting time point until the next periodic event is due
+static uint64_t exec_time; // total execution time in us since the emulation started
+static uint64_t pit_last; // last time when the pit time was updated
+static uint64_t pit_last_qpc; // last QPC time of the pit
+// The frequency of the high resolution clock of the host, and the start time
+int64_t HostQPCFrequency, HostQPCStartTime;
+
 
 // More precise sleep, but with increased CPU usage
 void SleepPrecise(std::chrono::steady_clock::time_point targetTime)
@@ -69,167 +86,116 @@ void SleepPrecise(std::chrono::steady_clock::time_point targetTime)
 	}
 }
 
-// Virtual clocks will probably become useful once LLE CPU is implemented, but for now we don't need them.
-// See the QEMUClockType QEMU_CLOCK_VIRTUAL of XQEMU for more info.
-#define CLOCK_REALTIME 0
-//#define CLOCK_VIRTUALTIME  1
-
-
-// Vector storing all the timers created
-static std::vector<TimerObject*> TimerList;
-// The frequency of the high resolution clock of the host, and the start time
-int64_t HostQPCFrequency, HostQPCStartTime;
-// Lock to acquire when accessing TimerList
-std::mutex TimerMtx;
-
-
-// Returns the current time of the timer
-uint64_t GetTime_NS(TimerObject* Timer)
+// NOTE: the pit device is not implemented right now, so we put these here
+static void pit_interrupt()
 {
-#ifdef _WIN32
-	uint64_t Ret = Timer_GetScaledPerformanceCounter(SCALE_S_IN_NS);
-#elif __linux__
-	static struct timespec ts;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
-	uint64_t Ret = Muldiv64(ts.tv_sec, SCALE_S_IN_NS, 1) + ts.tv_nsec;
-#else
-#error "Unsupported OS"
-#endif
-	return Ret;
+	LARGE_INTEGER CurrentTicks;
+	uint64_t Delta;
+	uint64_t Microseconds;
+	unsigned int IncrementScaling;
+	static uint64_t Error = 0;
+	static uint64_t UnaccountedMicroseconds = 0;
+
+	// This keeps track of how many us have elapsed between two cycles, so that the xbox clocks are updated
+	// with the proper increment (instead of blindly adding a single increment at every step)
+
+	QueryPerformanceCounter(&CurrentTicks);
+	Delta = CurrentTicks.QuadPart - pit_last_qpc;
+	pit_last_qpc = CurrentTicks.QuadPart;
+
+	Error += (Delta * SCALE_S_IN_US);
+	Microseconds = Error / HostQPCFrequency;
+	Error -= (Microseconds * HostQPCFrequency);
+
+	UnaccountedMicroseconds += Microseconds;
+	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts
+	UnaccountedMicroseconds -= (IncrementScaling * 1000);
+
+	xbox::KiClockIsr(IncrementScaling);
 }
 
-// Calculates the next expire time of the timer
-static inline uint64_t GetNextExpireTime(TimerObject* Timer)
+static uint64_t pit_next(uint64_t now)
 {
-	return GetTime_NS(Timer) + Timer->ExpireTime_MS.load();
+	constexpr uint64_t pit_period = 1000;
+	uint64_t next = pit_last + pit_period;
+
+	if (now >= next) {
+		pit_interrupt();
+		pit_last = get_now();
+		return pit_period;
+	}
+
+	return pit_last + pit_period - now; // time remaining until next clock interrupt
 }
 
-// Deallocates the memory of the timer
-void Timer_Destroy(TimerObject* Timer)
+static void update_non_periodic_events()
 {
-	unsigned int index, i;
-	std::lock_guard<std::mutex>lock(TimerMtx);
-	
-	index = TimerList.size();
-	for (i = 0; i < index; i++) {
-		if (Timer == TimerList[i]) {
-			index = i;
+	// update dsound
+	dsound_worker();
+
+	// check nvnet
+	NVNetRecv();
+
+	// check for hw interrupts
+	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+		// If the interrupt is pending and connected, process it
+		if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
+			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 		}
 	}
-
-	assert(index != TimerList.size());
-	delete Timer;
-	TimerList.erase(TimerList.begin() + index);
 }
 
-void Timer_Shutdown()
+uint64_t get_now()
 {
-	unsigned i, iXboxThreads = 0;
-	TimerMtx.lock();
-
-	for (i = 0; i < TimerList.size(); i++) {
-		TimerObject* Timer = TimerList[i];
-		// We only need to terminate host threads.
-		if (!Timer->IsXboxTimer) {
-			Timer_Exit(Timer);
-		}
-		// If the thread is xbox, we need to increment for while statement check
-		else {
-			iXboxThreads++;
-		}
-	}
-
-	// Only perform wait for host threads, otherwise xbox threads are
-	// already handled within xbox kernel for shutdown process. See CxbxrKrnlSuspendThreads function.
-	int counter = 0;
-	while (iXboxThreads != TimerList.size()) {
-		if (counter >= 8) {
-			break;
-		}
-		TimerMtx.unlock();
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		TimerMtx.lock();
-		counter++;
-	}
-	TimerList.clear();
-	TimerMtx.unlock();
+	LARGE_INTEGER now;
+	QueryPerformanceCounter(&now);
+	uint64_t elapsed_us = now.QuadPart - last_qpc;
+	last_qpc = now.QuadPart;
+	elapsed_us *= 1000000;
+	elapsed_us /= HostQPCFrequency;
+	exec_time += elapsed_us;
+	return exec_time;
 }
 
-// Thread that runs the timer
-void NTAPI ClockThread(void *TimerArg)
+static uint64_t get_next(uint64_t now)
 {
-	TimerObject *Timer = static_cast<TimerObject *>(TimerArg);
-	if (!Timer->Name.empty()) {
-		CxbxSetThreadName(Timer->Name.c_str());
-	}
-	if (!Timer->IsXboxTimer) {
-		g_AffinityPolicy->SetAffinityOther();
-	}
+	std::array<uint64_t, 4> next;
+	next[0] = g_NV2A->vblank_next(now);
+	next[1] = pit_next(now);
+	next[2] = g_USB0->m_HostController->OHCI_next(now);
+	next[3] = dsound_next(now);
+	return *std::min_element(next.begin(), next.end());
+}
 
-	uint64_t NewExpireTime = GetNextExpireTime(Timer);
-
+xbox::void_xt NTAPI system_events(xbox::PVOID arg)
+{
 	while (true) {
-		if (GetTime_NS(Timer) > NewExpireTime) {
-			if (Timer->Exit.load()) {
-				Timer_Destroy(Timer);
-				return;
+		const uint64_t nearest_next = get_next(get_now());
+		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&last_time));
+
+		while (true) {
+			update_non_periodic_events();
+			LARGE_INTEGER now;
+			QueryPerformanceCounter(&now);
+			uint64_t elapsed_us = static_cast<uint64_t>(now.QuadPart) - last_time;
+			elapsed_us *= 1000000;
+			elapsed_us /= HostQPCFrequency;
+			if (elapsed_us >= nearest_next) {
+				break;
 			}
-			Timer->Callback(Timer->Opaque);
-			NewExpireTime = GetNextExpireTime(Timer);
+			_mm_pause();
 		}
-		Sleep(1); // prevent burning the cpu
-	}
-}
-
-// Changes the expire time of a timer
-void Timer_ChangeExpireTime(TimerObject* Timer, uint64_t Expire_ms)
-{
-	Timer->ExpireTime_MS.store(Expire_ms);
-}
-
-// Destroys the timer
-void Timer_Exit(TimerObject* Timer)
-{
-	Timer->Exit.store(true);
-}
-
-// Allocates the memory for the timer object
-TimerObject* Timer_Create(TimerCB Callback, void* Arg, std::string Name, bool IsXboxTimer)
-{
-	std::lock_guard<std::mutex>lock(TimerMtx);
-	TimerObject* pTimer = new TimerObject;
-	pTimer->Type = CLOCK_REALTIME;
-	pTimer->Callback = Callback;
-	pTimer->ExpireTime_MS.store(0);
-	pTimer->Exit.store(false);
-	pTimer->Opaque = Arg;
-	pTimer->Name = Name.empty() ? "Unnamed thread" : std::move(Name);
-	pTimer->IsXboxTimer = IsXboxTimer;
-	TimerList.emplace_back(pTimer);
-
-	return pTimer;
-}
-
-// Starts the timer
-// Expire_MS must be expressed in NS
-void Timer_Start(TimerObject* Timer, uint64_t Expire_MS)
-{
-	Timer->ExpireTime_MS.store(Expire_MS);
-	if (Timer->IsXboxTimer) {
-		xbox::HANDLE hThread;
-		CxbxrCreateThread(&hThread, xbox::zeroptr, ClockThread, Timer, FALSE);
-	}
-	else {
-		std::thread(ClockThread, Timer).detach();
 	}
 }
 
 // Retrives the frequency of the high resolution clock of the host
-void Timer_Init()
+void timer_init()
 {
 #ifdef _WIN32
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&HostQPCFrequency));
-	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&HostQPCStartTime));
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&last_qpc));
+	pit_last_qpc = last_qpc;
+	pit_last = get_now();
 #elif __linux__
 	ClockFrequency = 0;
 #else

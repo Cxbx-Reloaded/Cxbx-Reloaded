@@ -475,16 +475,12 @@ void EmuNVNet_Write(xbox::addr_xt addr, uint32_t value, int size)
 	EmuLog(LOG_LEVEL::DEBUG, "Write%d: %s (0x%.8X) = 0x%.8X", size * 8, EmuNVNet_GetRegisterName(addr), addr, value);
 }
 
-std::thread NVNetRecvThread;
-static void NVNetRecvThreadProc(NvNetState_t *s)
+void NVNetRecv()
 {
-	g_AffinityPolicy->SetAffinityOther();
-	uint8_t packet[65536];
-	while (true) {
-		int size = g_NVNet->PCAPReceive(packet, 65536);
-		if (size > 0) {
-			EmuNVNet_DMAPacketToGuest(packet, size);
-		}	
+	static std::unique_ptr<uint8_t[]> packet(new uint8_t[65536]);
+	int size = g_NVNet->PCAPReceive(packet.get(), 65536);
+	if (size > 0) {
+		EmuNVNet_DMAPacketToGuest(packet.get(), size);
 	}
 }
 
@@ -527,7 +523,6 @@ void NVNetDevice::Init()
 	};
 
 	PCAPInit();
-	NVNetRecvThread = std::thread(NVNetRecvThreadProc, &NvNetState);
 }
 
 void NVNetDevice::Reset()

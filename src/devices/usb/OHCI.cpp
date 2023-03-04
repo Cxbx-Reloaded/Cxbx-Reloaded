@@ -279,11 +279,6 @@ OHCI::OHCI(USBDevice* UsbObj)
 	OHCI_StateReset();
 }
 
-void OHCI::OHCI_FrameBoundaryWrapper(void* pVoid)
-{
-	static_cast<OHCI*>(pVoid)->OHCI_FrameBoundaryWorker();
-}
-
 void OHCI::OHCI_FrameBoundaryWorker()
 {
 	OHCI_HCCA hcca;
@@ -358,7 +353,7 @@ void OHCI::OHCI_FrameBoundaryWorker()
 	}
 
 	// Do SOF stuff here
-	OHCI_SOF(false);
+	OHCI_SOF();
 
 	// Writeback HCCA
 	if (OHCI_WriteHCCA(m_Registers.HcHCCA, &hcca)) {
@@ -877,32 +872,23 @@ void OHCI::OHCI_StateReset()
 void OHCI::OHCI_BusStart()
 {
 	// Create the EOF timer.
-	m_pEOFtimer = Timer_Create(OHCI_FrameBoundaryWrapper, this, "", false);
+	m_pEOFtimer = true;
 
 	EmuLog(LOG_LEVEL::DEBUG, "Operational event");
 
 	// SOF event
-	OHCI_SOF(true);
+	OHCI_SOF();
 }
 
 void OHCI::OHCI_BusStop()
 {
-	if (m_pEOFtimer) {
-		// Delete existing EOF timer
-		Timer_Exit(m_pEOFtimer);
-	}
-	m_pEOFtimer = nullptr;
+	m_pEOFtimer = false;
 }
 
-void OHCI::OHCI_SOF(bool bCreate)
+void OHCI::OHCI_SOF()
 {
 	// set current SOF time
-	m_SOFtime = GetTime_NS(m_pEOFtimer);
-
-	// make timer expire at SOF + 1 ms from now
-	if (bCreate) {
-		Timer_Start(m_pEOFtimer, m_UsbFrameTime);
-	}
+	m_SOFtime = get_now();
 
 	OHCI_SetInterrupt(OHCI_INTR_SF);
 }
@@ -1254,6 +1240,23 @@ void OHCI::OHCI_WriteRegister(xbox::addr_xt Addr, uint32_t Value)
 	}
 }
 
+uint64_t OHCI::OHCI_next(uint64_t now)
+{
+	if (m_pEOFtimer) {
+		constexpr uint64_t ohci_period = 1000;
+		uint64_t next = m_SOFtime + ohci_period;
+
+		if (now >= next) {
+			OHCI_FrameBoundaryWorker();
+			return ohci_period;
+		}
+
+		return m_SOFtime + ohci_period - now; // time remaining until EOF
+	}
+
+	return -1;
+}
+
 void OHCI::OHCI_UpdateInterrupt()
 {
 	if ((m_Registers.HcInterrupt & OHCI_INTR_MIE) && (m_Registers.HcInterruptStatus & m_Registers.HcInterrupt)) {
@@ -1278,7 +1281,7 @@ uint32_t OHCI::OHCI_GetFrameRemaining()
 	}
 
 	// Being in USB operational state guarantees that m_pEOFtimer and m_SOFtime were set already
-	ticks = GetTime_NS(m_pEOFtimer) - m_SOFtime;
+	ticks = get_now() - m_SOFtime;
 
 	// Avoid Muldiv64 if possible
 	if (ticks >= m_UsbFrameTime) {

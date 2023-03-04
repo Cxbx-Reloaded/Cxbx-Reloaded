@@ -52,6 +52,8 @@ xbox::PLIST_ENTRY RemoveTailList(xbox::PLIST_ENTRY pListHead);
 
 extern xbox::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
 extern xbox::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
+// Indicates to disable/enable all interrupts when cli and sti instructions are executed
+inline std::atomic_bool g_bEnableAllInterrupts = true;
 
 class HalSystemInterrupt {
 public:

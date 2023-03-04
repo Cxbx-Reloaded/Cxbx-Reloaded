@@ -145,6 +145,10 @@ class OHCI
 		uint32_t OHCI_ReadRegister(xbox::addr_xt Addr);
 		// write a register
 		void OHCI_WriteRegister(xbox::addr_xt Addr, uint32_t Value);
+		// calculates when the next EOF is due
+		uint64_t OHCI_next(uint64_t now);
+		// EOF callback function
+		void OHCI_FrameBoundaryWorker();
 
 
 	private:
@@ -153,7 +157,7 @@ class OHCI
 		// all the registers available in the OHCI standard
 		OHCI_Registers m_Registers;
 		// end-of-frame timer
-		TimerObject* m_pEOFtimer = nullptr;
+		bool m_pEOFtimer = false;
 		// time at which a SOF was sent
 		uint64_t m_SOFtime;
 		// the duration of a usb frame
@@ -173,10 +177,6 @@ class OHCI
 		// indicates if there is a pending asynchronous packet to process
 		int m_AsyncComplete = 0;
 
-		// EOF callback wrapper
-		static void OHCI_FrameBoundaryWrapper(void* pVoid);
-		// EOF callback function
-		void OHCI_FrameBoundaryWorker();
 		// inform the HCD that we got a problem here...
 		void OHCI_FatalError();
 		// initialize packet struct
@@ -189,8 +189,8 @@ class OHCI
 		void OHCI_BusStart();
 		// stop sending SOF tokens across the usb bus
 		void OHCI_BusStop();
-		// generate a SOF event, and start a timer for EOF
-		void OHCI_SOF(bool bCreate);
+		// generate a SOF event
+		void OHCI_SOF();
 		// change interrupt status
 		void OHCI_UpdateInterrupt();
 		// fire an interrupt
