@@ -3317,12 +3317,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetDisplayFieldStatus)(X_D3DFIELD_
 }
 
 // ******************************************************************
-// * patch: D3DDevice_BeginPush
+// * patch: D3DDevice_BeginPush_4
 // TODO: Find a test case and verify this
 // Starting from XDK 4531, this changed to 1 parameter only.
 // Is this definition incorrect, or did it change at some point?
 // ******************************************************************
-xbox::PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush)(dword_xt Count)
+xbox::PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_4)(dword_xt Count)
 {
 	LOG_FUNC_ONE_ARG(Count);
 
@@ -3340,11 +3340,11 @@ xbox::PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush)(dword_xt Count)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_BeginPush2
+// * patch: D3DDevice_BeginPush_8
 // TODO: Find a test case and verify this: RalliSport Challenge XDK 4134
 // For XDK before 4531
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPush2)(dword_xt Count, dword_xt** ppPush)
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_8)(dword_xt Count, dword_xt** ppPush)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Count)
@@ -7851,7 +7851,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 // This uses a custom calling convention where parameter is passed in ECX, EAX and Stack
 // Test Case: Conker
 // ******************************************************************
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)
 (
     X_D3DPRIMITIVETYPE PrimitiveType
 )
@@ -7862,6 +7862,30 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4)
         LTCG_PROLOGUE
         mov  VertexCount, eax
         mov  StartVertex, ecx
+    }
+
+    EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret  4
+    }
+}
+
+// ******************************************************************
+// * patch: D3DDevice_DrawVertices_8__LTCG_eax3
+// LTCG specific D3DDevice_DrawVertices function...
+// ******************************************************************
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__LTCG_eax3)
+(
+    X_D3DPRIMITIVETYPE PrimitiveType,
+    uint_xt            StartVertex
+)
+{
+    uint_xt VertexCount;
+    __asm {
+        LTCG_PROLOGUE
+        mov  VertexCount, eax
     }
 
     EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
@@ -8033,7 +8057,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 // LTCG specific D3DDevice_DrawVerticesUP function...
 // This uses a custom calling convention where pVertexStreamZeroData is passed in EBX
 // Test-case: NASCAR Heat 20002
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     uint_xt             VertexCount,
@@ -9120,15 +9144,52 @@ xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateVB_8)(addr_xt _this, ulong_x
 // ******************************************************************
 // * patch: CDevice_SetStateUP (D3D::CDevice::SetStateUP)
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP)()
+xbox::void_xt CxbxrImpl_CDevice_SetStateUP(xbox::addr_xt _this)
 {
-	LOG_FUNC();
-
 	LOG_UNIMPLEMENTED();
 
 	// TODO: Anything?
-//	__asm int 3;
-	
+	//__asm int 3;
+}
+
+xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP)()
+{
+	addr_xt _this;
+	__asm mov _this, ecx;
+
+	LOG_FUNC_ONE_ARG(_this);
+
+	CxbxrImpl_CDevice_SetStateUP(_this);
+}
+
+xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP_4)(xbox::addr_xt _this)
+{
+	LOG_FUNC_ONE_ARG(_this);
+
+	CxbxrImpl_CDevice_SetStateUP(_this);
+}
+static void CDevice_SetStateUP_0__LTCG_esi1(xbox::addr_xt _this)
+{
+	LOG_FUNC_ONE_ARG(_this);
+}
+
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP_0__LTCG_esi1)()
+{
+	addr_xt _this;
+	__asm {
+		LTCG_PROLOGUE
+		mov  _this, esi
+	}
+
+	// Log
+	CDevice_SetStateUP_0__LTCG_esi1(_this);
+
+	CxbxrImpl_CDevice_SetStateUP(_this);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret
+	}
 }
 
 // ******************************************************************
