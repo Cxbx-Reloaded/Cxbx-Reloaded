@@ -56,10 +56,7 @@ namespace xbox
 
 	void_xt KiTimerUnlock();
 
-	void_xt KiClockIsr
-	(
-		IN unsigned int ScalingFactor
-	);
+	void_xt KiClockIsr();
 
 	xbox::void_xt NTAPI KiCheckTimerTable
 	(
