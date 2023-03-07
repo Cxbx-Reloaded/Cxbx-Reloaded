@@ -86,41 +86,14 @@ void SleepPrecise(std::chrono::steady_clock::time_point targetTime)
 	}
 }
 
-// NOTE: the pit device is not implemented right now, so we put these here
-static void pit_interrupt()
-{
-	LARGE_INTEGER CurrentTicks;
-	uint64_t Delta;
-	uint64_t Microseconds;
-	unsigned int IncrementScaling;
-	static uint64_t Error = 0;
-	static uint64_t UnaccountedMicroseconds = 0;
-
-	// This keeps track of how many us have elapsed between two cycles, so that the xbox clocks are updated
-	// with the proper increment (instead of blindly adding a single increment at every step)
-
-	QueryPerformanceCounter(&CurrentTicks);
-	Delta = CurrentTicks.QuadPart - pit_last_qpc;
-	pit_last_qpc = CurrentTicks.QuadPart;
-
-	Error += (Delta * SCALE_S_IN_US);
-	Microseconds = Error / HostQPCFrequency;
-	Error -= (Microseconds * HostQPCFrequency);
-
-	UnaccountedMicroseconds += Microseconds;
-	IncrementScaling = (unsigned int)(UnaccountedMicroseconds / 1000); // -> 1 ms = 1000us -> time between two xbox clock interrupts
-	UnaccountedMicroseconds -= (IncrementScaling * 1000);
-
-	xbox::KiClockIsr(IncrementScaling);
-}
-
+// NOTE: the pit device is not implemented right now, so we put this here
 static uint64_t pit_next(uint64_t now)
 {
 	constexpr uint64_t pit_period = 1000;
 	uint64_t next = pit_last + pit_period;
 
 	if (now >= next) {
-		pit_interrupt();
+		xbox::KiClockIsr();
 		pit_last = get_now();
 		return pit_period;
 	}
@@ -183,6 +156,7 @@ xbox::void_xt NTAPI system_events(xbox::PVOID arg)
 			if (elapsed_us >= nearest_next) {
 				break;
 			}
+			std::this_thread::yield();
 			_mm_pause();
 		}
 	}
