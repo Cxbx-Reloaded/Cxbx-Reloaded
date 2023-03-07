@@ -2098,12 +2098,10 @@ XBSYSAPI EXPORTNUM(231) xbox::ntstatus_xt NTAPI xbox::NtSuspendThread
 	}
 
 	ulong_xt PrevSuspendCount = KeSuspendThread(&Thread->Tcb);
+	ObfDereferenceObject(Thread);
 	if (PrevSuspendCount == X_STATUS_SUSPEND_COUNT_EXCEEDED) {
-		ObfDereferenceObject(Thread);
 		RETURN(X_STATUS_SUSPEND_COUNT_EXCEEDED);
 	}
-
-	ObfDereferenceObject(Thread);
 
 	if (PreviousSuspendCount) {
 		*PreviousSuspendCount = PrevSuspendCount;
