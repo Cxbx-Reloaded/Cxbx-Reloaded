@@ -160,8 +160,6 @@ static IDirect3DQuery              *g_pHostQueryWaitForIdle = nullptr;
 static IDirect3DQuery              *g_pHostQueryCallbackEvent = nullptr;
 static int                          g_RenderUpscaleFactor = 1;
 
-static std::condition_variable		g_VBConditionVariable;	// Used in BlockUntilVerticalBlank
-static std::mutex					g_VBConditionMutex;		// Used in BlockUntilVerticalBlank
 static DWORD                        g_VBLastSwap = 0;
 
 static xbox::dword_xt                   g_Xbox_PresentationInterval_Default = D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -169,7 +167,6 @@ static xbox::dword_xt                   g_Xbox_PresentationInterval_Default = D3
 static xbox::X_D3DSWAPDATA			g_Xbox_SwapData = {0}; // current swap information
 static xbox::X_D3DSWAPCALLBACK		g_pXbox_SwapCallback = xbox::zeroptr;	// Swap/Present callback routine
 static xbox::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0}; // current vertical blank information
-static xbox::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbox::zeroptr; // Vertical-Blank callback routine
 
        xbox::X_D3DSurface           *g_pXbox_BackBufferSurface = xbox::zeroptr;
 static xbox::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbox::zeroptr;
@@ -1922,18 +1919,10 @@ void hle_vblank()
 	// Note: This whole code block can be removed once NV2A interrupts are implemented
 	// And Both Swap and Present can be ran unpatched
 	// Once that is in place, MiniPort + Direct3D will handle this on it's own!
-	// Increment the VBlank Counter and Wake all threads there were waiting for the VBlank to occur
-	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
 	g_Xbox_VBlankData.VBlank++;
-	g_VBConditionVariable.notify_all();
 
 	// TODO: Fixme.  This may not be right...
 	g_Xbox_SwapData.SwapVBlank = 1;
-
-	if (g_pXbox_VerticalBlankCallback != xbox::zeroptr)
-	{
-		g_pXbox_VerticalBlankCallback(&g_Xbox_VBlankData);
-	}
 
 	g_Xbox_VBlankData.Swap = 0;
 
@@ -6513,31 +6502,6 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
     // TODO: Actually check for update status
     return TRUE;
 }
-
-// ******************************************************************
-// * patch: D3DDevice_BlockUntilVerticalBlank
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
-{
-	LOG_FUNC();
-
-	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
-	g_VBConditionVariable.wait(lk);
-}
-
-// ******************************************************************
-// * patch: D3DDevice_SetVerticalBlankCallback
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
-(
-    X_D3DVBLANKCALLBACK pCallback
-)
-{
-	LOG_FUNC_ONE_ARG(pCallback);
-
-    g_pXbox_VerticalBlankCallback = pCallback;    
-}
-
 
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_Simple
