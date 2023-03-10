@@ -462,7 +462,7 @@ void ExecuteDpcQueue()
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		g_DpcData.IsDpcActive.test_and_set();
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
-		LeaveCriticalSection(&(g_DpcData.Lock));
+
 		EmuLog(LOG_LEVEL::DEBUG, "Global DpcQueue, calling DPC object 0x%.8X at 0x%.8X", pkdpc, pkdpc->DeferredRoutine);
 
 		// Call the Deferred Procedure  :
@@ -472,7 +472,6 @@ void ExecuteDpcQueue()
 			pkdpc->SystemArgument1,
 			pkdpc->SystemArgument2);
 
-		EnterCriticalSection(&(g_DpcData.Lock));
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 		g_DpcData.IsDpcActive.clear();
 	}
