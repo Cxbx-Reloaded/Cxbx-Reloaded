@@ -59,6 +59,8 @@
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */
 
+// Also from ReactOS: KiWaitTest, KiWaitSatisfyAll, KiUnwaitThread, KiUnlinkThread
+
 // COPYING file:
 /*
 GNU GENERAL PUBLIC LICENSE
@@ -88,11 +90,13 @@ the said software).
 #define MAX_TIMER_DPCS   16
 
 #define ASSERT_TIMER_LOCKED assert(KiTimerMtx.Acquired > 0)
+#define ASSERT_WAIT_LIST_LOCKED assert(KiWaitListMtx.Acquired > 0)
 
 xbox::KPROCESS KiUniqueProcess;
 const xbox::ulong_xt CLOCK_TIME_INCREMENT = 0x2710;
 xbox::KDPC KiTimerExpireDpc;
 xbox::KI_TIMER_LOCK KiTimerMtx;
+xbox::KI_WAIT_LIST_LOCK KiWaitListMtx;
 xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
 xbox::LIST_ENTRY KiWaitInListHead;
 std::mutex xbox::KiApcListMtx;
@@ -127,6 +131,18 @@ xbox::void_xt xbox::KiTimerUnlock()
 {
 	KiTimerMtx.Acquired--;
 	KiTimerMtx.Mtx.unlock();
+}
+
+xbox::void_xt xbox::KiWaitListLock()
+{
+	KiWaitListMtx.Mtx.lock();
+	KiWaitListMtx.Acquired++;
+}
+
+xbox::void_xt xbox::KiWaitListUnlock()
+{
+	KiWaitListMtx.Acquired--;
+	KiWaitListMtx.Mtx.unlock();
 }
 
 xbox::void_xt xbox::KiClockIsr()
@@ -483,17 +499,7 @@ xbox::boolean_xt FASTCALL xbox::KiSignalTimer
 	/* Check if the timer has waiters */
 	if (!IsListEmpty(&Timer->Header.WaitListHead))
 	{
-		/* Check the type of event */
-		if (Timer->Header.Type == TimerNotificationObject)
-		{
-			/* Unwait the thread */
-			// KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
-		}
-		else
-		{
-			/* Otherwise unwait the thread and signal the timer */
-			// KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
-		}
+		KiWaitTestNoYield(Timer, 0);
 	}
 
 	/* Check if we have a period */
@@ -598,17 +604,7 @@ xbox::void_xt NTAPI xbox::KiTimerExpiration
 				/* Check if there are any waiters */
 				if (!IsListEmpty(&Timer->Header.WaitListHead))
 				{
-					/* Check the type of event */
-					if (Timer->Header.Type == TimerNotificationObject)
-					{
-						/* Unwait the thread */
-						// KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
-					}
-					else
-					{
-						/* Otherwise unwait the thread and signal the timer */
-						// KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
-					}
+					KiWaitTestNoYield(Timer, 0);
 				}
 
 				/* Check if we have a period */
@@ -790,17 +786,7 @@ xbox::void_xt FASTCALL xbox::KiTimerListExpire
 		/* Check if there's any waiters */
 		if (!IsListEmpty(&Timer->Header.WaitListHead))
 		{
-			/* Check the type of event */
-			if (Timer->Header.Type == TimerNotificationObject)
-			{
-				/* Unwait the thread */
-				// KxUnwaitThread(&Timer->Header, IO_NO_INCREMENT);
-			}
-			else
-			{
-				/* Otherwise unwait the thread and signal the timer */
-				// KxUnwaitThreadForEvent((PKEVENT)Timer, IO_NO_INCREMENT);
-			}
+			KiWaitTestNoYield(Timer, 0);
 		}
 
 		/* Check if we have a period */
@@ -854,29 +840,9 @@ xbox::void_xt FASTCALL xbox::KiTimerListExpire
 		KiUnlockDispatcherDatabase(OldIrql);
 		KiTimerUnlock();
 	}
-}
 
-xbox::void_xt FASTCALL xbox::KiWaitSatisfyAll
-(
-	IN xbox::PKWAIT_BLOCK WaitBlock
-)
-{
-	PKMUTANT Object;
-	PRKTHREAD Thread;
-	PKWAIT_BLOCK WaitBlock1;
-
-	WaitBlock1 = WaitBlock;
-	Thread = WaitBlock1->Thread;
-	do {
-		if (WaitBlock1->WaitKey != (cshort_xt)STATUS_TIMEOUT) {
-			Object = (PKMUTANT)WaitBlock1->Object;
-			KiWaitSatisfyAny(Object, Thread);
-		}
-
-		WaitBlock1 = WaitBlock1->NextWaitBlock;
-	} while (WaitBlock1 != WaitBlock);
-
-	return;
+	// We have unwaited the threads with the expired timers and called their DPCs, so we can yield now
+	std::this_thread::yield();
 }
 
 template<xbox::MODE ApcMode>
@@ -1124,4 +1090,176 @@ xbox::boolean_xt xbox::KiInsertQueueApc
 	}
 
 	return TRUE;
+}
+
+xbox::void_xt xbox::KiWaitTestNoYield
+(
+	IN PVOID Object,
+	IN KPRIORITY Increment
+)
+{
+	PLIST_ENTRY WaitEntry, WaitList;
+	PKWAIT_BLOCK WaitBlock, NextBlock;
+	PKTHREAD WaitThread;
+	PKMUTANT FirstObject = (PKMUTANT)Object;
+
+	/* Loop the Wait Entries */
+	KiWaitListLock();
+	WaitList = &FirstObject->Header.WaitListHead;
+	WaitEntry = WaitList->Flink;
+	while ((FirstObject->Header.SignalState > 0) && (WaitEntry != WaitList)) {
+		/* Get the current wait block */
+		WaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
+		WaitThread = WaitBlock->Thread;
+
+		/* Check the current Wait Mode */
+		if (WaitBlock->WaitType == WaitAny) {
+			/* Easy case, satisfy only this wait */
+			KiWaitSatisfyAny(FirstObject, WaitThread);
+		}
+		else {
+			/* WaitAll, check that all the objects are signalled */
+			NextBlock = WaitBlock->NextWaitBlock;
+			while (NextBlock != WaitBlock) {
+				if (NextBlock->WaitKey != X_STATUS_TIMEOUT) {
+					PKMUTANT Mutant = (PKMUTANT)NextBlock->Object;
+					// NOTE: we ignore mutants because we forward them to ntdll
+					if (Mutant->Header.SignalState <= 0) {
+						// We found at least one object not in the signalled state, so we cannot satisfy the wait
+						goto NextWaitEntry;
+					}
+				}
+
+				NextBlock = NextBlock->NextWaitBlock;
+			}
+
+			KiWaitSatisfyAll(WaitBlock);
+		}
+
+		/* Now do the rest of the unwait */
+		KiUnwaitThread(WaitThread, WaitBlock->WaitKey, Increment);
+NextWaitEntry:
+		WaitEntry = WaitList->Flink;
+	}
+	KiWaitListUnlock();
+}
+
+xbox::void_xt xbox::KiWaitTest
+(
+	IN PVOID Object,
+	IN KPRIORITY Increment
+)
+{
+	KiWaitTestNoYield(Object, Increment);
+
+	// Now that we have unwaited all the threads we could, yield
+	std::this_thread::yield();
+}
+
+xbox::void_xt xbox::KiWaitSatisfyAll
+(
+	IN PKWAIT_BLOCK FirstBlock
+)
+{
+	PKWAIT_BLOCK WaitBlock = FirstBlock;
+	PKTHREAD WaitThread = WaitBlock->Thread;
+
+	ASSERT_WAIT_LIST_LOCKED;
+
+	/* Loop through all the Wait Blocks, and wake each Object */
+	do {
+		/* Make sure it hasn't timed out */
+		if (WaitBlock->WaitKey != X_STATUS_TIMEOUT) {
+			/* Wake the Object */
+			KiWaitSatisfyAny((PKMUTANT)WaitBlock->Object, WaitThread);
+		}
+
+		/* Move to the next block */
+		WaitBlock = WaitBlock->NextWaitBlock;
+	} while (WaitBlock != FirstBlock);
+}
+
+xbox::void_xt xbox::KiWaitSatisfyAllAndLock
+(
+	IN PKWAIT_BLOCK FirstBlock
+)
+{
+	KiWaitListLock();
+	KiWaitSatisfyAll(FirstBlock);
+	KiWaitListUnlock();
+}
+
+xbox::void_xt xbox::KiUnwaitThread
+(
+	IN PKTHREAD Thread,
+	IN long_ptr_xt WaitStatus,
+	IN KPRIORITY Increment
+)
+{
+	ASSERT_WAIT_LIST_LOCKED;
+
+	/* Unlink the thread */
+	KiUnlinkThread(Thread, WaitStatus);
+
+	// We cannot schedule the thread, so we'll just set its state to Ready
+	Thread->State = Ready;
+}
+
+xbox::void_xt xbox::KiUnwaitThreadAndLock
+(
+	IN PKTHREAD Thread,
+	IN long_ptr_xt WaitStatus,
+	IN KPRIORITY Increment
+)
+{
+	KiWaitListLock();
+	KiUnwaitThread(Thread, WaitStatus, Increment);
+	KiWaitListUnlock();
+}
+
+xbox::void_xt xbox::KiUnlinkThread
+(
+	IN PKTHREAD Thread,
+	IN long_ptr_xt WaitStatus
+)
+{
+	PKWAIT_BLOCK WaitBlock;
+	PKTIMER Timer;
+
+	ASSERT_WAIT_LIST_LOCKED;
+
+	/* Update wait status */
+	Thread->WaitStatus |= WaitStatus;
+
+	/* Remove the Wait Blocks from the list */
+	WaitBlock = Thread->WaitBlockList;
+	do {
+		/* Remove it */
+		RemoveEntryList(&WaitBlock->WaitListEntry);
+
+		/* Go to the next one */
+		WaitBlock = WaitBlock->NextWaitBlock;
+	} while (WaitBlock != Thread->WaitBlockList);
+
+#if 0
+	// Disabled, as we currently don't put threads in the ready list
+	/* Remove the thread from the wait list! */
+	if (Thread->WaitListEntry.Flink) {
+		RemoveEntryList(&Thread->WaitListEntry);
+	}
+#endif
+
+	/* Check if there's a Thread Timer */
+	Timer = &Thread->Timer;
+	if (Timer->Header.Inserted) {
+		KiTimerLock();
+		KxRemoveTreeTimer(Timer);
+		KiTimerUnlock();
+	}
+
+#if 0
+	// Disabled, because we don't support queues
+	/* Increment the Queue's active threads */
+	if (Thread->Queue) Thread->Queue->CurrentCount++;
+#endif
 }
