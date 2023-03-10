@@ -121,6 +121,7 @@ static unsigned int WINAPI PCSTProxy
 		params.Ethread,
 		params.TlsDataSize);
 
+	eThread->Tcb.State = xbox::Running;
 	xbox::KiExecuteKernelApc();
 
 	auto routine = (xbox::PKSYSTEM_ROUTINE)StartFrame->SystemRoutine;
@@ -498,9 +499,7 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 	eThread->ExitStatus = ExitStatus;
 	eThread->Tcb.Header.SignalState = 1;
 	if (!IsListEmpty(&eThread->Tcb.Header.WaitListHead)) {
-		// TODO: Implement KiWaitTest's relative objects usage
-		//KiWaitTest()
-		assert(0);
+		KiWaitTest((PVOID)&eThread->Tcb, 0);
 	}
 
 	if (GetNativeHandle(eThread->UniqueThread)) {

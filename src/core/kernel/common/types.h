@@ -1947,7 +1947,7 @@ typedef struct _KTHREAD
 	/* 0x56/86 */ char_xt WaitNext;
 	/* 0x57/87 */ char_xt WaitReason;
 	/* 0x58/88 */ PKWAIT_BLOCK WaitBlockList;
-	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
+	/* 0x5C/92 */ LIST_ENTRY WaitListEntry; // Used to place the thread in the ready list of the scheduler
 	/* 0x64/100 */ ulong_xt WaitTime;
 	/* 0x68/104 */ ulong_xt KernelApcDisable;
 	/* 0x6C/108 */ ulong_xt Quantum;

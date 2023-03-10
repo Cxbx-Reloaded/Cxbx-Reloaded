@@ -47,6 +47,12 @@ namespace xbox
 		int Acquired;
 	} KI_TIMER_LOCK;
 
+	typedef struct _KI_WAIT_LIST_LOCK
+	{
+		std::recursive_mutex Mtx;
+		int Acquired;
+	} KI_WAIT_LIST_LOCK;
+
 	// NOTE: since the apc list is per-thread, we could also create a different mutex for each kthread
 	extern std::mutex KiApcListMtx;
 
@@ -55,6 +61,10 @@ namespace xbox
 	void_xt KiTimerLock();
 
 	void_xt KiTimerUnlock();
+
+	void_xt KiWaitListLock();
+
+	void_xt KiWaitListUnlock();
 
 	void_xt KiClockIsr();
 
@@ -129,7 +139,7 @@ namespace xbox
 		IN KIRQL OldIrql
 	);
 
-	void_xt FASTCALL KiWaitSatisfyAll
+	void_xt KiWaitSatisfyAll
 	(
 		IN PKWAIT_BLOCK WaitBlock
 	);
@@ -192,6 +202,48 @@ namespace xbox
 	(
 		IN PRKAPC Apc,
 		IN KPRIORITY Increment
+	);
+
+	void_xt KiWaitTestNoYield
+	(
+		IN PVOID Object,
+		IN KPRIORITY Increment
+	);
+
+	void_xt KiWaitTest
+	(
+		IN PVOID Object,
+		IN KPRIORITY Increment
+	);
+
+	void_xt KiWaitSatisfyAll
+	(
+		IN PKWAIT_BLOCK FirstBlock
+	);
+
+	void_xt KiWaitSatisfyAllAndLock
+	(
+		IN PKWAIT_BLOCK FirstBlock
+	);
+
+	void_xt KiUnwaitThread
+	(
+		IN PKTHREAD Thread,
+		IN long_ptr_xt WaitStatus,
+		IN KPRIORITY Increment
+	);
+
+	void_xt KiUnwaitThreadAndLock
+	(
+		IN PKTHREAD Thread,
+		IN long_ptr_xt WaitStatus,
+		IN KPRIORITY Increment
+	);
+
+	void_xt KiUnlinkThread
+	(
+		IN PKTHREAD Thread,
+		IN long_ptr_xt WaitStatus
 	);
 };
 
