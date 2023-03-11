@@ -121,8 +121,8 @@ static unsigned int WINAPI PCSTProxy
 		params.Ethread,
 		params.TlsDataSize);
 
-	eThread->Tcb.State = xbox::Running;
 	xbox::KiExecuteKernelApc();
+	eThread->Tcb.State = xbox::Running;
 
 	auto routine = (xbox::PKSYSTEM_ROUTINE)StartFrame->SystemRoutine;
 	// Debugging notice : When the below line shows up with an Exception dialog and a
@@ -411,16 +411,20 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 
 		g_AffinityPolicy->SetAffinityXbox(handle);
 
-		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED)
+		// Now that ThreadId is populated and affinity is changed, resume the thread (unless the guest passed CREATE_SUSPENDED), then wait until the new thread has
+		// finished initialization
 		if (CreateSuspended) {
 			KeSuspendThread(&eThread->Tcb);
 		}
 
-		ResumeThread(handle);
-
 		// Log ThreadID identical to how GetCurrentThreadID() is rendered :
 		EmuLog(LOG_LEVEL::DEBUG, "Created Xbox proxy thread. Handle : 0x%X, ThreadId : [0x%.4X], Native Handle : 0x%X, Native ThreadId : [0x%.4X]",
 			*ThreadHandle, eThread->UniqueThread, handle, ThreadId);
+
+		ResumeThread(handle);
+		while (eThread->Tcb.State == Initialized) {
+			std::this_thread::yield();
+		}
 	}
 
 	RETURN(X_STATUS_SUCCESS);
