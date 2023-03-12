@@ -116,16 +116,12 @@ static void update_non_periodic_events()
 	dsound_worker();
 
 	// check for hw interrupts, but skip the gpu interrupt since that is serviced in vblank_next
-	for (int i = 0; i < 3; i++) {
-		// If the interrupt is pending and connected, process it
-		if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
-			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-		}
-	}
-	for (int i = 4; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-		// If the interrupt is pending and connected, process it
-		if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
-			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
+	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
+		if (i != 3) {
+			// If the interrupt is pending and connected, process it
+			if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
+				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
+			}
 		}
 	}
 }
