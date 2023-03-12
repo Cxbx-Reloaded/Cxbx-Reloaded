@@ -475,12 +475,19 @@ void EmuNVNet_Write(xbox::addr_xt addr, uint32_t value, int size)
 	EmuLog(LOG_LEVEL::DEBUG, "Write%d: %s (0x%.8X) = 0x%.8X", size * 8, EmuNVNet_GetRegisterName(addr), addr, value);
 }
 
-void NVNetRecv()
+std::thread NVNetRecvThread;
+void NVNetRecvThreadProc()
 {
+	// NOTE: profiling shows that the winpcap function can take up to 1/6th of the total cpu time of the loader process, so avoid placing
+	// this function in system_events
+	g_AffinityPolicy->SetAffinityOther();
 	static std::unique_ptr<uint8_t[]> packet(new uint8_t[65536]);
-	int size = g_NVNet->PCAPReceive(packet.get(), 65536);
-	if (size > 0) {
-		EmuNVNet_DMAPacketToGuest(packet.get(), size);
+	while (true) {
+		int size = g_NVNet->PCAPReceive(packet.get(), 65536);
+		if (size > 0) {
+			EmuNVNet_DMAPacketToGuest(packet.get(), size);
+		}
+		_mm_pause();
 	}
 }
 
@@ -523,6 +530,7 @@ void NVNetDevice::Init()
 	};
 
 	PCAPInit();
+	NVNetRecvThread = std::thread(NVNetRecvThreadProc);
 }
 
 void NVNetDevice::Reset()

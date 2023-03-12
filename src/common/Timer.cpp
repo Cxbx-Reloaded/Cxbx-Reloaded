@@ -115,9 +115,6 @@ static void update_non_periodic_events()
 	// update dsound
 	dsound_worker();
 
-	// check nvnet
-	NVNetRecv();
-
 	// check for hw interrupts, but skip the gpu interrupt since that is serviced in vblank_next
 	for (int i = 0; i < 3; i++) {
 		// If the interrupt is pending and connected, process it
