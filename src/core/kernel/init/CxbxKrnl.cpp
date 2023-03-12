@@ -1285,6 +1285,7 @@ static void CxbxrKrnlInitHacks()
 	}
 	xbox::PsInitSystem();
 	xbox::KiInitSystem();
+	xbox::RtlInitSystem();
 	
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");

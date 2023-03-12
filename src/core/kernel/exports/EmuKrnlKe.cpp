@@ -166,7 +166,7 @@ xbox::void_xt NTAPI xbox::KeSetSystemTime
 )
 {
 	KIRQL OldIrql, OldIrql2;
-	LARGE_INTEGER DeltaTime, HostTime;
+	LARGE_INTEGER DeltaTime;
 	PLIST_ENTRY ListHead, NextEntry;
 	PKTIMER Timer;
 	LIST_ENTRY TempList, TempList2;
@@ -183,10 +183,6 @@ xbox::void_xt NTAPI xbox::KeSetSystemTime
 
 	/* Query the system time now */
 	KeQuerySystemTime(OldTime);
-
-	/* Surely, we won't set the system time here, but we CAN remember a delta to the host system time */
-	HostTime.QuadPart = OldTime->QuadPart - HostSystemTimeDelta.load();
-	HostSystemTimeDelta = NewTime->QuadPart - HostTime.QuadPart;
 
 	/* Calculate the difference between the new and the old time */
 	DeltaTime.QuadPart = NewTime->QuadPart - OldTime->QuadPart;

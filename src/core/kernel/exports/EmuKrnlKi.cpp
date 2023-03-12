@@ -148,8 +148,7 @@ xbox::void_xt xbox::KiWaitListUnlock()
 xbox::void_xt xbox::KiClockIsr()
 {
 	KIRQL OldIrql;
-	LARGE_INTEGER InterruptTime;
-	LARGE_INTEGER HostSystemTime;
+	LARGE_INTEGER InterruptTime, SystemTime;
 	ULONG Hand;
 	DWORD OldKeTickCount;
 
@@ -164,13 +163,12 @@ xbox::void_xt xbox::KiClockIsr()
 	KeInterruptTime.High1Time = InterruptTime.u.HighPart;
 
 	// Update the system time
-	// NOTE: I'm not sure if we should round down the host system time to the nearest multiple
-	// of the Xbox clock increment...
-	GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime);
-	HostSystemTime.QuadPart += HostSystemTimeDelta.load();
-	KeSystemTime.High2Time = HostSystemTime.u.HighPart;
-	KeSystemTime.LowPart = HostSystemTime.u.LowPart;
-	KeSystemTime.High1Time = HostSystemTime.u.HighPart;
+	SystemTime.u.LowPart = KeSystemTime.LowPart;
+	SystemTime.u.HighPart = KeSystemTime.High1Time;
+	SystemTime.QuadPart += CLOCK_TIME_INCREMENT;
+	KeSystemTime.High2Time = SystemTime.u.HighPart;
+	KeSystemTime.LowPart = SystemTime.u.LowPart;
+	KeSystemTime.High1Time = SystemTime.u.HighPart;
 
 	// Update the tick counter
 	OldKeTickCount = KeTickCount;

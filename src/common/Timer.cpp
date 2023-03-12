@@ -27,9 +27,7 @@
 
 #include <core\kernel\exports\xboxkrnl.h>
 
-#ifdef _WIN32
 #include <windows.h>
-#endif
 #include <thread>
 #include <vector>
 #include <mutex>
@@ -42,9 +40,6 @@
 #include "devices\Xbox.h"
 #include "devices\usb\OHCI.h"
 #include "core\hle\DSOUND\DirectSound\DirectSoundGlobal.hpp"
-#ifdef __linux__
-#include <time.h>
-#endif
 
 
 static uint64_t last_qpc; // last time when QPC was called
@@ -55,6 +50,21 @@ static uint64_t pit_last_qpc; // last QPC time of the pit
 // The frequency of the high resolution clock of the host, and the start time
 int64_t HostQPCFrequency, HostQPCStartTime;
 
+
+void timer_init()
+{
+	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER *>(&HostQPCFrequency));
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&last_qpc));
+	pit_last_qpc = last_qpc;
+	pit_last = get_now();
+
+	// Synchronize xbox system time with host time
+	LARGE_INTEGER HostSystemTime;
+	GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime);
+	xbox::KeSystemTime.High2Time = HostSystemTime.u.HighPart;
+	xbox::KeSystemTime.LowPart = HostSystemTime.u.LowPart;
+	xbox::KeSystemTime.High1Time = HostSystemTime.u.HighPart;
+}
 
 // More precise sleep, but with increased CPU usage
 void SleepPrecise(std::chrono::steady_clock::time_point targetTime)
@@ -166,21 +176,6 @@ xbox::void_xt NTAPI system_events(xbox::PVOID arg)
 			_mm_pause();
 		}
 	}
-}
-
-// Retrives the frequency of the high resolution clock of the host
-void timer_init()
-{
-#ifdef _WIN32
-	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&HostQPCFrequency));
-	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&last_qpc));
-	pit_last_qpc = last_qpc;
-	pit_last = get_now();
-#elif __linux__
-	ClockFrequency = 0;
-#else
-#error "Unsupported OS"
-#endif
 }
 
 int64_t Timer_GetScaledPerformanceCounter(int64_t Period)
