@@ -158,6 +158,10 @@ static uint64_t get_next(uint64_t now)
 
 xbox::void_xt NTAPI system_events(xbox::PVOID arg)
 {
+	// Testing shows that, if this thread has the same priority of the other xbox threads, it can take tens, even hundreds of ms to complete a single loop.
+	// So we increase its priority to above normal, so that it completes a loop roughly every 3.1ms
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+
 	while (true) {
 		const uint64_t nearest_next = get_next(get_now());
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&last_time));
