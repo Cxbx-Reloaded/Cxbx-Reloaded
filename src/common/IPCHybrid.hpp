@@ -49,8 +49,9 @@ void ipc_send_gui_update(IPC_UPDATE_GUI command, const unsigned int value);
 // ******************************************************************
 
 typedef enum class _IPC_UPDATE_KERNEL {
-	  CONFIG_LOGGING_SYNC = 0
-	, CONFIG_INPUT_SYNC
+	CONFIG_LOGGING_SYNC = 0,
+	CONFIG_INPUT_SYNC,
+	CONFIG_CHANGE_TIME
 } IPC_UPDATE_KERNEL;
 
 void ipc_send_kernel_update(IPC_UPDATE_KERNEL command, const int value, const unsigned int hwnd);

@@ -101,6 +101,7 @@ typedef struct _DpcData {
 } DpcData;
 
 DpcData g_DpcData = { 0 }; // Note : g_DpcData is initialized in InitDpcData()
+std::atomic_flag xbox::KeSystemTimeChanged;
 
 xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
 {

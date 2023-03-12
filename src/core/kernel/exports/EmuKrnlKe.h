@@ -27,6 +27,8 @@
 
 namespace xbox
 {
+	extern std::atomic_flag KeSystemTimeChanged;
+
 	void_xt NTAPI KeSetSystemTime
 	(
 		IN  PLARGE_INTEGER NewTime,
