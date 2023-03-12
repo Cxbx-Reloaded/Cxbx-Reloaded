@@ -43,7 +43,6 @@
 
 
 static uint64_t last_qpc; // last time when QPC was called
-static uint64_t last_time; // starting time point until the next periodic event is due
 static uint64_t exec_time; // total execution time in us since the emulation started
 static uint64_t pit_last; // last time when the pit time was updated
 static uint64_t pit_last_qpc; // last QPC time of the pit
@@ -163,21 +162,16 @@ xbox::void_xt NTAPI system_events(xbox::PVOID arg)
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 
 	while (true) {
-		const uint64_t nearest_next = get_next(get_now());
-		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&last_time));
+		const uint64_t last_time = get_now();
+		const uint64_t nearest_next = get_next(last_time);
 
 		while (true) {
 			update_non_periodic_events();
-			LARGE_INTEGER now;
-			QueryPerformanceCounter(&now);
-			uint64_t elapsed_us = static_cast<uint64_t>(now.QuadPart) - last_time;
-			elapsed_us *= 1000000;
-			elapsed_us /= HostQPCFrequency;
+			uint64_t elapsed_us = get_now() - last_time;
 			if (elapsed_us >= nearest_next) {
 				break;
 			}
 			std::this_thread::yield();
-			_mm_pause();
 		}
 	}
 }
