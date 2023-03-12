@@ -58,7 +58,7 @@ namespace NtDll
 #include <mutex>
 
 // Prevent setting the system time from multiple threads at the same time
-std::mutex NtSystemTimeMtx;
+xbox::RTL_CRITICAL_SECTION xbox::NtSystemTimeCritSec;
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -1976,7 +1976,7 @@ XBSYSAPI EXPORTNUM(228) xbox::ntstatus_xt NTAPI xbox::NtSetSystemTime
 		ret = STATUS_ACCESS_VIOLATION;
 	}
 	else {
-		NtSystemTimeMtx.lock();
+		RtlEnterCriticalSectionAndRegion(&NtSystemTimeCritSec);
 		NewSystemTime = *SystemTime;
 		if (NewSystemTime.u.HighPart > 0 && NewSystemTime.u.HighPart <= 0x20000000) {
 			/* Convert the time and set it in HAL */
@@ -1996,7 +1996,7 @@ XBSYSAPI EXPORTNUM(228) xbox::ntstatus_xt NTAPI xbox::NtSetSystemTime
 		else {
 			ret = STATUS_INVALID_PARAMETER;
 		}
-		NtSystemTimeMtx.unlock();
+		RtlLeaveCriticalSectionAndRegion(&NtSystemTimeCritSec);
 	}
 
 	RETURN(ret);
