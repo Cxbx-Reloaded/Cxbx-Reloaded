@@ -86,6 +86,7 @@ the said software).
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnl.h" // for the list support functions
 #include "EmuKrnlKi.h"
+#include "EmuKrnlKe.h"
 
 #define MAX_TIMER_DPCS   16
 
@@ -163,12 +164,25 @@ xbox::void_xt xbox::KiClockIsr(ulonglong_xt ExtraMs)
 	KeInterruptTime.High1Time = InterruptTime.u.HighPart;
 
 	// Update the system time
-	SystemTime.u.LowPart = KeSystemTime.LowPart;
-	SystemTime.u.HighPart = KeSystemTime.High1Time;
-	SystemTime.QuadPart += (CLOCK_TIME_INCREMENT * (1 + ExtraMs));
-	KeSystemTime.High2Time = SystemTime.u.HighPart;
-	KeSystemTime.LowPart = SystemTime.u.LowPart;
-	KeSystemTime.High1Time = SystemTime.u.HighPart;
+	if (KeSystemTimeChanged.test()) [[unlikely]] {
+		KeSystemTimeChanged.clear();
+		LARGE_INTEGER HostSystemTime, OldSystemTime;
+		GetSystemTimeAsFileTime((LPFILETIME)&HostSystemTime);
+		xbox::KeSystemTime.High2Time = HostSystemTime.u.HighPart;
+		xbox::KeSystemTime.LowPart = HostSystemTime.u.LowPart;
+		xbox::KeSystemTime.High1Time = HostSystemTime.u.HighPart;
+		KfLowerIrql(OldIrql);
+		KeSetSystemTime(&HostSystemTime, &OldSystemTime);
+		OldIrql = KfRaiseIrql(CLOCK_LEVEL);
+	}
+	else {
+		SystemTime.u.LowPart = KeSystemTime.LowPart;
+		SystemTime.u.HighPart = KeSystemTime.High1Time;
+		SystemTime.QuadPart += (CLOCK_TIME_INCREMENT * (1 + ExtraMs));
+		KeSystemTime.High2Time = SystemTime.u.HighPart;
+		KeSystemTime.LowPart = SystemTime.u.LowPart;
+		KeSystemTime.High1Time = SystemTime.u.HighPart;
+	}
 
 	// Update the tick counter
 	OldKeTickCount = KeTickCount;

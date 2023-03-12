@@ -38,6 +38,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\kernel\support\EmuFS.h"
 #include "core\kernel\support\NativeHandle.h"
+#include "core\kernel\exports\EmuKrnlKe.h"
 #include "EmuShared.h"
 #include "..\FixedFunctionState.h"
 #include "core\hle\D3D8\ResourceTracker.h"
@@ -1685,6 +1686,13 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 				}
 				break;
 
+				case ID_SYNC_TIME_CHANGE:
+				{
+					// Sent by the GUI when it detects WM_TIMECHANGE
+					xbox::KeSystemTimeChanged.test_and_set();
+				}
+				break;
+
 				default:
 					break;
 			}
@@ -1698,6 +1706,14 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
 			if (wParam == GIDC_ARRIVAL) {
 				g_InputDeviceManager.HotplugHandler(false);
 			}
+			return DefWindowProc(hWnd, msg, wParam, lParam);
+		}
+		break;
+
+		case WM_TIMECHANGE:
+		{
+			// NOTE: this is only received if the loader was launched from the command line without the GUI
+			xbox::KeSystemTimeChanged.test_and_set();
 			return DefWindowProc(hWnd, msg, wParam, lParam);
 		}
 		break;
