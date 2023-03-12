@@ -103,7 +103,7 @@ static uint64_t pit_next(uint64_t now)
 	uint64_t next = pit_last + pit_period;
 
 	if (now >= next) {
-		xbox::KiClockIsr();
+		xbox::KiClockIsr((now - pit_last - pit_period) / 1000);
 		pit_last = get_now();
 		return pit_period;
 	}

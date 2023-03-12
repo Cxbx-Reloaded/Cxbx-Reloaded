@@ -66,7 +66,7 @@ namespace xbox
 
 	void_xt KiWaitListUnlock();
 
-	void_xt KiClockIsr();
+	void_xt KiClockIsr(ulonglong_xt ExtraMs);
 
 	xbox::void_xt NTAPI KiCheckTimerTable
 	(

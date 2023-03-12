@@ -145,7 +145,7 @@ xbox::void_xt xbox::KiWaitListUnlock()
 	KiWaitListMtx.Mtx.unlock();
 }
 
-xbox::void_xt xbox::KiClockIsr()
+xbox::void_xt xbox::KiClockIsr(ulonglong_xt ExtraMs)
 {
 	KIRQL OldIrql;
 	LARGE_INTEGER InterruptTime, SystemTime;
@@ -157,7 +157,7 @@ xbox::void_xt xbox::KiClockIsr()
 	// Update the interrupt time
 	InterruptTime.u.LowPart = KeInterruptTime.LowPart;
 	InterruptTime.u.HighPart = KeInterruptTime.High1Time;
-	InterruptTime.QuadPart += CLOCK_TIME_INCREMENT;
+	InterruptTime.QuadPart += (CLOCK_TIME_INCREMENT * (1 + ExtraMs));
 	KeInterruptTime.High2Time = InterruptTime.u.HighPart;
 	KeInterruptTime.LowPart = InterruptTime.u.LowPart;
 	KeInterruptTime.High1Time = InterruptTime.u.HighPart;
@@ -165,14 +165,14 @@ xbox::void_xt xbox::KiClockIsr()
 	// Update the system time
 	SystemTime.u.LowPart = KeSystemTime.LowPart;
 	SystemTime.u.HighPart = KeSystemTime.High1Time;
-	SystemTime.QuadPart += CLOCK_TIME_INCREMENT;
+	SystemTime.QuadPart += (CLOCK_TIME_INCREMENT * (1 + ExtraMs));
 	KeSystemTime.High2Time = SystemTime.u.HighPart;
 	KeSystemTime.LowPart = SystemTime.u.LowPart;
 	KeSystemTime.High1Time = SystemTime.u.HighPart;
 
 	// Update the tick counter
 	OldKeTickCount = KeTickCount;
-	++KeTickCount;
+	KeTickCount += (1 + static_cast<dword_xt>(ExtraMs));
 
 	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
 	// holding the lock, we won't wait and instead skip the check of the timers for this cycle
