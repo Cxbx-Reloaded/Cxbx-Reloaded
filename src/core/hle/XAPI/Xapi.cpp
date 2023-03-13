@@ -960,7 +960,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 		NewTime.QuadPart += (static_cast<xbox::ulonglong_xt>(dwMilliseconds) * CLOCK_TIME_INCREMENT);
 	}
 
-	xbox::dword_xt ret = WaitApc([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
+	xbox::dword_xt ret = WaitApc<true>([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
 		DWORD dwRet = SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, 0, bAlertable);
 		if (dwRet == WAIT_TIMEOUT) {
 			return std::nullopt;

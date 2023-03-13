@@ -711,7 +711,7 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
 	// Test case: Metal Slug 3
 
-	xbox::ntstatus_xt ret = WaitApc([Alertable]() -> std::optional<ntstatus_xt> {
+	xbox::ntstatus_xt ret = WaitApc<true>([Alertable]() -> std::optional<ntstatus_xt> {
 		NtDll::LARGE_INTEGER ExpireTime;
 		ExpireTime.QuadPart = 0;
 		NTSTATUS Status = NtDll::NtDelayExecution(Alertable, &ExpireTime);
@@ -2334,7 +2334,7 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 			//}
 
 			// TODO: Remove this after we have our own scheduler and the above is implemented
-			WaitStatus = WaitApc([Thread]() -> std::optional<ntstatus_xt> {
+			WaitStatus = WaitApc<false>([Thread]() -> std::optional<ntstatus_xt> {
 				if (Thread->State == Ready) {
 					// We have been readied to resume execution, so exit the wait
 					return std::make_optional<ntstatus_xt>(Thread->WaitStatus);
@@ -2522,7 +2522,7 @@ XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 			KiWaitListUnlock();
 
 			// TODO: Remove this after we have our own scheduler and the above is implemented
-			WaitStatus = WaitApc([Thread]() -> std::optional<ntstatus_xt> {
+			WaitStatus = WaitApc<false>([Thread]() -> std::optional<ntstatus_xt> {
 				if (Thread->State == Ready) {
 					// We have been readied to resume execution, so exit the wait
 					return std::make_optional<ntstatus_xt>(Thread->WaitStatus);
