@@ -1801,7 +1801,7 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 	// too to wait on the vblank kevent. When the vblank does occur, this other thread will satisfy the wait first, and set the kevent back to non-signalled. Thus, the other
 	// thread will miss the signal because typically, Windows won't re-schedule it after many more vblank have already occured. The proper solution is to boost the priority of
 	// the thread when the kevent is signalled, with the increment argument specified in KeSetEvent. Such boosts should also be appiled whenever a thread satisfies a wait.
-	if (Priority >= THREAD_PRIORITY_NORMAL) {
+	if (Priority <= THREAD_PRIORITY_NORMAL) {
 		BOOL result = SetThreadPriority(*nativeHandle, Priority);
 		if (!result) {
 			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
