@@ -132,6 +132,28 @@ xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
     }
 
 
+xbox::void_xt xbox::KeResumeThreadEx
+(
+	IN PKTHREAD Thread
+)
+{
+	// This is only to be used to synchronize new thread creation with the thread that spawned it
+
+	Thread->SuspendSemaphore.Header.SignalState = 1;
+	KiWaitTest(&Thread->SuspendSemaphore, 0);
+}
+
+xbox::void_xt xbox::KeSuspendThreadEx
+(
+	IN PKTHREAD Thread
+)
+{
+	// This is only to be used to synchronize new thread creation with the thread that spawned it
+
+	Thread->SuspendSemaphore.Header.SignalState = 0;
+	KiInsertQueueApc(&Thread->SuspendApc, 0);
+}
+
 // ******************************************************************
 // * EmuKeGetPcr()
 // * NOTE: This is a macro on the Xbox, however we implement it 
@@ -1729,8 +1751,13 @@ XBSYSAPI EXPORTNUM(140) xbox::ulong_xt NTAPI xbox::KeResumeThread
 	if (OldCount != 0) {
 		--Thread->SuspendCount;
 		if (Thread->SuspendCount == 0) {
+#if 0
 			++Thread->SuspendSemaphore.Header.SignalState;
 			KiWaitTest(&Thread->SuspendSemaphore, 0);
+#else
+			const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
+			ResumeThread(*nativeHandle);
+#endif
 		}
 	}
 
@@ -2089,10 +2116,20 @@ XBSYSAPI EXPORTNUM(152) xbox::ulong_xt NTAPI xbox::KeSuspendThread
 	if (Thread->ApcState.ApcQueueable == TRUE) {
 		++Thread->SuspendCount;
 		if (OldCount == 0) {
+#if 0
 			if (KiInsertQueueApc(&Thread->SuspendApc, 0) == FALSE) {
 				--Thread->SuspendSemaphore.Header.SignalState;
 			}
+#else
+			// JSRF creates a thread at 0x0013BC30 and then it attempts to continuously suspend/resume it. Unfortunately, this thread performs a never ending loop (and
+			// terminates if it ever exit the loop), and never calls any kernel functions in the middle. This means that our suspend APC will never be executed and so
+			// we cannot suspend such thread. Thus, we will always have to rely on the host to do the suspension, as long as we do direct execution. Note that this is
+			// a general issue for all kernel APCs too.
+			const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
+			SuspendThread(*nativeHandle);
+#endif
 		}
+
 	}
 
 	KiUnlockDispatcherDatabase(OldIrql);
