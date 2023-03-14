@@ -52,5 +52,15 @@ namespace xbox
 		IN PKPROCESS Process
 	);
 
+	xbox::void_xt KeResumeThreadEx
+	(
+		IN PKTHREAD Thread
+	);
+
+	xbox::void_xt KeSuspendThreadEx
+	(
+		IN PKTHREAD Thread
+	);
+
 	void_xt KeEmptyQueueApc();
 }
