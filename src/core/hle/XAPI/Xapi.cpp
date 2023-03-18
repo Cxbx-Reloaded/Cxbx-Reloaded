@@ -969,7 +969,6 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 		WaitBlock->NextWaitBlock = WaitBlock;
 		Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
 		Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
-		InsertTailList(&Timer->Header.WaitListHead, &WaitBlock->WaitListEntry);
 	}
 
 	xbox::ntstatus_xt status = WaitApc<true>([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
