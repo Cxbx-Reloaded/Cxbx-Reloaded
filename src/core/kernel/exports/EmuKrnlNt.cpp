@@ -2229,6 +2229,18 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 
+	if (!Timeout || (Timeout->QuadPart == 0)) {
+		// Use the built-in ktimer as a dummy wait object, so that KiUnwaitThreadAndLock can still work
+		PKTHREAD kThread = KeGetCurrentThread();
+		xbox::PKWAIT_BLOCK WaitBlock = &kThread->TimerWaitBlock;
+		kThread->WaitBlockList = WaitBlock;
+		xbox::PKTIMER Timer = &kThread->Timer;
+		WaitBlock->NextWaitBlock = WaitBlock;
+		Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
+		Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
+		InsertTailList(&Timer->Header.WaitListHead, &WaitBlock->WaitListEntry);
+	}
+
 	xbox::ntstatus_xt ret = WaitApc<true>([Count, &nativeHandles, WaitType, Alertable]() -> std::optional<ntstatus_xt> {
 		NtDll::LARGE_INTEGER ExpireTime;
 		ExpireTime.QuadPart = 0;
@@ -2241,6 +2253,9 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		if (Status == STATUS_TIMEOUT) {
 			return std::nullopt;
 		}
+		// If the wait was satisfied with the host, then also unwait the thread on the guest side, to be sure to remove WaitBlocks that might have been added
+		// to the thread. Test case: Steel Battalion
+		xbox::KiUnwaitThreadAndLock(xbox::KeGetCurrentThread(), Status, 0);
 		return std::make_optional<ntstatus_xt>(Status);
 		}, Timeout, Alertable, WaitMode);
 

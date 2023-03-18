@@ -960,15 +960,47 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 		NewTime.QuadPart += (static_cast<xbox::ulonglong_xt>(dwMilliseconds) * CLOCK_TIME_INCREMENT);
 	}
 
-	xbox::dword_xt ret = WaitApc<true>([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
+	if (!Timeout || (Timeout->QuadPart == 0)) {
+		// Use the built-in ktimer as a dummy wait object, so that KiUnwaitThreadAndLock can still work
+		PKTHREAD kThread = KeGetCurrentThread();
+		xbox::PKWAIT_BLOCK WaitBlock = &kThread->TimerWaitBlock;
+		kThread->WaitBlockList = WaitBlock;
+		xbox::PKTIMER Timer = &kThread->Timer;
+		WaitBlock->NextWaitBlock = WaitBlock;
+		Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
+		Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
+		InsertTailList(&Timer->Header.WaitListHead, &WaitBlock->WaitListEntry);
+	}
+
+	xbox::ntstatus_xt status = WaitApc<true>([hObjectToSignal, hObjectToWaitOn, bAlertable]() -> std::optional<DWORD> {
 		DWORD dwRet = SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, 0, bAlertable);
 		if (dwRet == WAIT_TIMEOUT) {
 			return std::nullopt;
 		}
-		return std::make_optional<DWORD>(dwRet);
+		// If the wait was satisfied with the host, then also unwait the thread on the guest side, to be sure to remove WaitBlocks that might have been added
+		// to the thread
+		xbox::ntstatus_xt Status;
+		switch (dwRet)
+		{
+		case WAIT_ABANDONED: Status = X_STATUS_ABANDONED; break;
+		case WAIT_IO_COMPLETION: Status = X_STATUS_USER_APC; break;
+		case WAIT_OBJECT_0: Status = X_STATUS_SUCCESS; break;
+		default: Status = X_STATUS_INVALID_HANDLE;
+		}
+		xbox::KiUnwaitThreadAndLock(xbox::KeGetCurrentThread(), Status, 0);
+		return std::make_optional<ntstatus_xt>(Status);
 		}, Timeout, bAlertable, UserMode);
 
-	RETURN((ret == X_STATUS_USER_APC) ? WAIT_IO_COMPLETION : (ret == X_STATUS_TIMEOUT) ? WAIT_TIMEOUT : ret);
+	xbox::dword_xt ret;
+	switch (status)
+	{
+	case X_STATUS_ABANDONED: ret = WAIT_ABANDONED; break;
+	case X_STATUS_USER_APC: ret = WAIT_IO_COMPLETION; break;
+	case X_STATUS_SUCCESS: ret = WAIT_OBJECT_0; break;
+	case X_STATUS_TIMEOUT: ret = WAIT_TIMEOUT; break;
+	default: ret = WAIT_FAILED;
+	}
+	RETURN(ret);
 }
 
 // ******************************************************************

@@ -141,15 +141,16 @@ xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER Timeout, xbox::boolea
 	// NOTE: kThread->Alerted is currently never set. When the alerted mechanism is implemented, the alerts should
 	// also interrupt the wait
 
-	xbox::PKTHREAD kThread = EmuKeGetPcr()->Prcb->CurrentThread;
+	xbox::ntstatus_xt status;
+	xbox::PKTHREAD kThread = xbox::KeGetCurrentThread();
 
 	if (Timeout == nullptr) {
 		// No timout specified, so this is an infinite wait until an alert, a user apc or the object(s) become(s) signalled
 		kThread->State = xbox::Waiting;
 		while (true) {
 			if (const auto ret = SatisfyWait(Lambda, kThread, Alertable, WaitMode)) {
-				kThread->State = xbox::Running;
-				return *ret;
+				status = *ret;
+				break;
 			}
 
 			std::this_thread::yield();
@@ -158,10 +159,10 @@ xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER Timeout, xbox::boolea
 	else if (Timeout->QuadPart == 0) {
 		// A zero timeout means that we only have to check the conditions once and then return immediately if they are not satisfied
 		if (const auto ret = SatisfyWait(Lambda, kThread, Alertable, WaitMode)) {
-			return *ret;
+			status = *ret;
 		}
 		else {
-			return X_STATUS_TIMEOUT;
+			status = X_STATUS_TIMEOUT;
 		}
 	}
 	else {
@@ -186,18 +187,21 @@ xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER Timeout, xbox::boolea
 		kThread->State = xbox::Waiting;
 		while (true) {
 			if (const auto ret = SatisfyWait(Lambda, kThread, Alertable, WaitMode)) {
-				kThread->State = xbox::Running;
-				return *ret;
+				status = *ret;
+				break;
 			}
 
 			if (setup_ktimer && (kThread->State == xbox::Ready)) {
-				kThread->State = xbox::Running;
-				return kThread->WaitStatus;
+				status = kThread->WaitStatus;
+				break;
 			}
 
 			std::this_thread::yield();
 		}
 	}
+
+	kThread->State = xbox::Running;
+	return status;
 }
 
 #endif

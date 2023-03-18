@@ -1151,7 +1151,7 @@ xbox::void_xt xbox::KiWaitTestNoYield
 		/* Now do the rest of the unwait */
 		KiUnwaitThread(WaitThread, WaitBlock->WaitKey, Increment);
 NextWaitEntry:
-		WaitEntry = WaitList->Flink;
+		WaitEntry = WaitEntry->Flink;
 	}
 	KiWaitListUnlock();
 }
