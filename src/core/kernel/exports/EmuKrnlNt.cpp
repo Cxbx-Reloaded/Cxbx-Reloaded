@@ -2238,7 +2238,6 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		WaitBlock->NextWaitBlock = WaitBlock;
 		Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
 		Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
-		InsertTailList(&Timer->Header.WaitListHead, &WaitBlock->WaitListEntry);
 	}
 
 	xbox::ntstatus_xt ret = WaitApc<true>([Count, &nativeHandles, WaitType, Alertable]() -> std::optional<ntstatus_xt> {
