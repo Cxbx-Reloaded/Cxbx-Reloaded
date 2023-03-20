@@ -2221,9 +2221,11 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		if (const auto &nativeHandle = GetNativeHandle(Handles[i])) {
 			// This is a ob handle, so replace it with its native counterpart
 			nativeHandles[i] = *nativeHandle;
+			EmuLog(LOG_LEVEL::DEBUG, "xbox handle: %p", nativeHandles[i]);
 		}
 		else {
 			nativeHandles[i] = Handles[i];
+			EmuLog(LOG_LEVEL::DEBUG, "native handle: %p", nativeHandles[i]);
 		}
 	}
 
