@@ -102,7 +102,7 @@ static uint64_t pit_next(uint64_t now)
 	uint64_t next = pit_last + pit_period;
 
 	if (now >= next) {
-		xbox::KiClockIsr((now - pit_last - pit_period) / 1000);
+		xbox::KiClockIsr(now - pit_last);
 		pit_last = get_now();
 		return pit_period;
 	}
@@ -151,7 +151,7 @@ static uint64_t get_next(uint64_t now)
 xbox::void_xt NTAPI system_events(xbox::PVOID arg)
 {
 	// Testing shows that, if this thread has the same priority of the other xbox threads, it can take tens, even hundreds of ms to complete a single loop.
-	// So we increase its priority to above normal, so that it completes a loop roughly every 3.1ms
+	// So we increase its priority to above normal, so that it scheduled more often
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 
 	while (true) {
