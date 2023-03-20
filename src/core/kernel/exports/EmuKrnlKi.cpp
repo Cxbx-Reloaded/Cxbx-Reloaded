@@ -359,8 +359,8 @@ xbox::boolean_xt FASTCALL xbox::KiInsertTimerTable
 	IN xbox::ulong_xt Hand
 )
 {
-	LARGE_INTEGER InterruptTime;
-	LONGLONG DueTime = Timer->DueTime.QuadPart;
+	ULARGE_INTEGER InterruptTime;
+	ULONGLONG DueTime = Timer->DueTime.QuadPart;
 	BOOLEAN Expired = FALSE;
 	PLIST_ENTRY ListHead, NextEntry;
 	PKTIMER CurrentTimer;
@@ -383,7 +383,7 @@ xbox::boolean_xt FASTCALL xbox::KiInsertTimerTable
 		CurrentTimer = CONTAINING_RECORD(NextEntry, KTIMER, TimerListEntry);
 
 		/* Now check if we can fit it before */
-		if ((ULONGLONG)DueTime >= CurrentTimer->DueTime.QuadPart) break;
+		if (DueTime >= CurrentTimer->DueTime.QuadPart) break;
 
 		/* Keep looping */
 		NextEntry = NextEntry->Blink;
@@ -399,6 +399,10 @@ xbox::boolean_xt FASTCALL xbox::KiInsertTimerTable
 		KiTimerTableListHead[Hand].Time.QuadPart = DueTime;
 
 		/* Make sure it hasn't expired already */
+		// NOTE: DueTime must be unsigned so that we can perform un unsigned comparison with the interrupt time. Otherwise, if DueTime is very large, it will be
+		// interpreted as a very small negative number, which will cause the function to think the timer has already expired, when it didn't. Test case: Metal Slug 3.
+		// It uses KeDelayExecutionThread with a relative timeout of 0x8000000000000000, which is then interpreted here as a negative number that immediately satisfies
+		// the wait. The title crashes shortly after, since the wait was supposed to end with a user APC queued by NtQueueApcThread instead
 		InterruptTime.QuadPart = KeQueryInterruptTime();
 		if (DueTime <= InterruptTime.QuadPart) {
 			EmuLog(LOG_LEVEL::DEBUG, "Timer %p already expired", Timer);
