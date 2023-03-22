@@ -408,6 +408,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		assert(dupHandle);
 		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
 
+		eThread->Tcb.Priority = GetThreadPriority(handle);
 		g_AffinityPolicy->SetAffinityXbox(handle);
 
 		// Wait for the initialization of the remaining thread state

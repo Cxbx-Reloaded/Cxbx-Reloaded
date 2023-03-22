@@ -1387,9 +1387,13 @@ XBSYSAPI EXPORTNUM(124) xbox::long_xt NTAPI xbox::KeQueryBasePriorityThread
 	KIRQL OldIrql;
 	KiLockDispatcherDatabase(&OldIrql);
 
-	// It cannot fail because all thread handles are created by ob
-	const auto& nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
-	long_xt ret = GetThreadPriority(*nativeHandle);
+	long_xt ret;
+	if (const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread)) {
+		ret = GetThreadPriority(*nativeHandle);
+	}
+	else {
+		ret = Thread->Priority;
+	}
 
 	KiUnlockDispatcherDatabase(OldIrql);
 
@@ -1769,8 +1773,9 @@ XBSYSAPI EXPORTNUM(140) xbox::ulong_xt NTAPI xbox::KeResumeThread
 			++Thread->SuspendSemaphore.Header.SignalState;
 			KiWaitTest(&Thread->SuspendSemaphore, 0);
 #else
-			const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
-			ResumeThread(*nativeHandle);
+			if (const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread)) {
+				ResumeThread(*nativeHandle);
+			}
 #endif
 		}
 	}
@@ -1826,27 +1831,31 @@ XBSYSAPI EXPORTNUM(143) xbox::long_xt NTAPI xbox::KeSetBasePriorityThread
 	KIRQL oldIRQL;
 	KiLockDispatcherDatabase(&oldIRQL);
 
-	// It cannot fail because all thread handles are created by ob
-	const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
-	LONG ret = GetThreadPriority(*nativeHandle);
+	long_xt ret;
+	if (const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread)) {
+		ret = GetThreadPriority(*nativeHandle);
 
-	if (Priority == 16) {
-		Priority = THREAD_PRIORITY_TIME_CRITICAL;
-	}
-	else if (Priority == -16) {
-		Priority = THREAD_PRIORITY_IDLE;
-	}
-
-	// HACK: only change the priority if set above normal. Test case: Black. It calls this to set the priority of a thread to THREAD_PRIORITY_LOWEST, and that same
-	// thread calls D3DDevice_BlockUntilVerticalBlank. The problem arises because there is also another thread that runs at higher priority and calls D3DDevice_BlockUntilVerticalBlank
-	// too to wait on the vblank kevent. When the vblank does occur, this other thread will satisfy the wait first, and set the kevent back to non-signalled. Thus, the other
-	// thread will miss the signal because typically, Windows won't re-schedule it after many more vblank have already occured. The proper solution is to boost the priority of
-	// the thread when the kevent is signalled, with the increment argument specified in KeSetEvent. Such boosts should also be appiled whenever a thread satisfies a wait.
-	if (Priority <= THREAD_PRIORITY_NORMAL) {
-		BOOL result = SetThreadPriority(*nativeHandle, Priority);
-		if (!result) {
-			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
+		if (Priority == 16) {
+			Priority = THREAD_PRIORITY_TIME_CRITICAL;
 		}
+		else if (Priority == -16) {
+			Priority = THREAD_PRIORITY_IDLE;
+		}
+
+		// HACK: only change the priority if set above normal. Test case: Black. It calls this to set the priority of a thread to THREAD_PRIORITY_LOWEST, and that same
+		// thread calls D3DDevice_BlockUntilVerticalBlank. The problem arises because there is also another thread that runs at higher priority and calls D3DDevice_BlockUntilVerticalBlank
+		// too to wait on the vblank kevent. When the vblank does occur, this other thread will satisfy the wait first, and set the kevent back to non-signalled. Thus, the other
+		// thread will miss the signal because typically, Windows won't re-schedule it after many more vblank have already occured. The proper solution is to boost the priority of
+		// the thread when the kevent is signalled, with the increment argument specified in KeSetEvent. Such boosts should also be appiled whenever a thread satisfies a wait.
+		if (Priority <= THREAD_PRIORITY_NORMAL) {
+			BOOL result = SetThreadPriority(*nativeHandle, Priority);
+			if (!result) {
+				EmuLog(LOG_LEVEL::WARNING, "SetThreadPriority failed: %s", WinError2Str().c_str());
+			}
+		}
+	}
+	else {
+		ret = Thread->Priority;
 	}
 
 	KiUnlockDispatcherDatabase(oldIRQL);
@@ -1868,16 +1877,15 @@ XBSYSAPI EXPORTNUM(144) xbox::boolean_xt NTAPI xbox::KeSetDisableBoostThread
 	KIRQL oldIRQL;
 	KiLockDispatcherDatabase(&oldIRQL);
 
-	// It cannot fail because all thread handles are created by ob
-	const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
+	if (const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread)) {
+		BOOL bRet = SetThreadPriorityBoost(*nativeHandle, Disable);
+		if (!bRet) {
+			EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost failed: %s", WinError2Str().c_str());
+		}
+	}
 
 	boolean_xt prevDisableBoost = Thread->DisableBoost;
 	Thread->DisableBoost = (CHAR)Disable;
-
-	BOOL bRet = SetThreadPriorityBoost(*nativeHandle, Disable);
-	if (!bRet) {
-		EmuLog(LOG_LEVEL::WARNING, "SetThreadPriorityBoost failed: %s", WinError2Str().c_str());
-	}
 
 	KiUnlockDispatcherDatabase(oldIRQL);
 
@@ -2139,8 +2147,9 @@ XBSYSAPI EXPORTNUM(152) xbox::ulong_xt NTAPI xbox::KeSuspendThread
 			// terminates if it ever exit the loop), and never calls any kernel functions in the middle. This means that our suspend APC will never be executed and so
 			// we cannot suspend such thread. Thus, we will always have to rely on the host to do the suspension, as long as we do direct execution. Note that this is
 			// a general issue for all kernel APCs too.
-			const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread);
-			SuspendThread(*nativeHandle);
+			if (const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread)) {
+				SuspendThread(*nativeHandle);
+			}
 #endif
 		}
 
