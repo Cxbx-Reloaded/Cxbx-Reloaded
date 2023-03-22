@@ -733,9 +733,10 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
 	// Test case: Metal Slug 3
 
+	PKTHREAD kThread = KeGetCurrentThread();
+	kThread->WaitStatus = X_STATUS_SUCCESS;
 	if (!Interval || (Interval->QuadPart == 0)) {
 		// Use the built-in ktimer as a dummy wait object, so that KiUnwaitThreadAndLock can still work
-		PKTHREAD kThread = KeGetCurrentThread();
 		xbox::PKWAIT_BLOCK WaitBlock = &kThread->TimerWaitBlock;
 		kThread->WaitBlockList = WaitBlock;
 		xbox::PKTIMER Timer = &kThread->Timer;
@@ -744,7 +745,7 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 		Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
 	}
 
-	xbox::ntstatus_xt ret = WaitApc<true>([Alertable]() -> std::optional<ntstatus_xt> {
+	xbox::ntstatus_xt ret = WaitApc<true>([Alertable, kThread]() -> std::optional<ntstatus_xt> {
 		NtDll::LARGE_INTEGER ExpireTime;
 		ExpireTime.QuadPart = 0;
 		NTSTATUS Status = NtDll::NtDelayExecution(Alertable, &ExpireTime);
@@ -752,9 +753,10 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 		if (Status >= 0 && Status != STATUS_ALERTED && Status != STATUS_USER_APC) {
 			return std::nullopt;
 		}
+		EmuLog(LOG_LEVEL::DEBUG, "KeDelayExecutionThread -> Staus: %X", Status);
 		// If the wait was satisfied with the host, then also unwait the thread on the guest side, to be sure to remove WaitBlocks that might have been added
 		// to the thread. Test case: Steel Battalion
-		xbox::KiUnwaitThreadAndLock(xbox::KeGetCurrentThread(), Status, 0);
+		xbox::KiUnwaitThreadAndLock(kThread, Status, 0);
 		return std::make_optional<ntstatus_xt>(Status);
 		}, Interval, Alertable, WaitMode);
 
