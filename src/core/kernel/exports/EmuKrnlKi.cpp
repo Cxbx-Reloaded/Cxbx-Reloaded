@@ -95,7 +95,6 @@ the said software).
 
 xbox::KPROCESS KiUniqueProcess;
 const xbox::ulong_xt CLOCK_TIME_INCREMENT = 0x2710;
-xbox::KDPC KiTimerExpireDpc;
 xbox::KI_TIMER_LOCK KiTimerMtx;
 xbox::KI_WAIT_LIST_LOCK KiWaitListMtx;
 xbox::KTIMER_TABLE_ENTRY KiTimerTableListHead[TIMER_TABLE_SIZE];
@@ -112,7 +111,6 @@ xbox::void_xt xbox::KiInitSystem()
 	InitializeListHead(&KiWaitInListHead);
 
 	KiTimerMtx.Acquired = 0;
-	KeInitializeDpc(&KiTimerExpireDpc, KiTimerExpiration, NULL);
 	for (unsigned i = 0; i < TIMER_TABLE_SIZE; i++) {
 		InitializeListHead(&KiTimerTableListHead[i].Entry);
 		KiTimerTableListHead[i].Time.u.HighPart = 0xFFFFFFFF;
@@ -192,17 +190,24 @@ xbox::void_xt xbox::KiClockIsr(ulonglong_xt TotalUs)
 
 	// Update the tick counter
 	OldKeTickCount = KeTickCount;
-	KeTickCount += (1 + static_cast<dword_xt>(TotalMs));
+	KeTickCount += static_cast<dword_xt>(TotalMs);
 
 	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
 	// holding the lock, we won't wait and instead skip the check of the timers for this cycle
 	if (KiTimerMtx.Mtx.try_lock()) {
 		KiTimerMtx.Acquired++;
 		// Check if a timer has expired
-		Hand = OldKeTickCount & (TIMER_TABLE_SIZE - 1);
-		if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
-			(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
-			KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)Hand, 0);
+		// On real hw, this is called every ms, so it only needs to check a single timer index. However, testing on the emulator shows that this can have a delay
+		// larger than a ms. If we only check the index corresponding to OldKeTickCount, then we will miss timers that might have expired already, causing an unpredictable
+		// delay on threads that are waiting with those timeouts
+		dword_xt EndKeTickCount = (KeTickCount - OldKeTickCount) >= TIMER_TABLE_SIZE ? OldKeTickCount + TIMER_TABLE_SIZE : KeTickCount;
+		for (dword_xt i = OldKeTickCount; i < EndKeTickCount; ++i) {
+			Hand = i & (TIMER_TABLE_SIZE - 1);
+			if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
+				(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
+				// NOTE: instead of using a DPC, we call KiTimerExpiration directly to speed things up, and avoid the DPC lock
+				KiTimerExpiration(zeroptr, zeroptr, (PVOID)Hand, 0);
+			}
 		}
 		KiTimerMtx.Acquired--;
 		KiTimerMtx.Mtx.unlock();
@@ -588,9 +593,10 @@ xbox::void_xt NTAPI xbox::KiTimerExpiration
 	Timers = 24;
 	ActiveTimers = 4;
 
-	/* Lock the Database and Raise IRQL */
-	KiTimerLock();
-	KiLockDispatcherDatabase(&OldIrql);
+	/* Lock the Database */
+	// NOTE: this function is only called from KiClockIsr, with the irql at CLOCK_LEVEL
+	ASSERT_TIMER_LOCKED;
+	OldIrql = KeGetCurrentIrql();
 
 	/* Start expiration loop */
 	do
@@ -674,7 +680,7 @@ xbox::void_xt NTAPI xbox::KiTimerExpiration
 					ActiveTimers = 4;
 
 					/* Lock the dispatcher database */
-					KiLockDispatcherDatabaseAtDpcLevel();
+					KfRaiseIrql(OldIrql);
 				}
 			}
 			else
@@ -717,7 +723,7 @@ xbox::void_xt NTAPI xbox::KiTimerExpiration
 					ActiveTimers = 4;
 
 					/* Lock the dispatcher database */
-					KiLockDispatcherDatabaseAtDpcLevel();
+					KfRaiseIrql(OldIrql);
 				}
 
 				/* Done looping */
@@ -752,17 +758,7 @@ xbox::void_xt NTAPI xbox::KiTimerExpiration
 			);
 		}
 
-		/* Lower IRQL if we need to */
-		if (OldIrql != DISPATCH_LEVEL) {
-			KfLowerIrql(OldIrql);
-		}
-		KiTimerUnlock();
-	}
-	else
-	{
-		/* Unlock the dispatcher */
-		KiUnlockDispatcherDatabase(OldIrql);
-		KiTimerUnlock();
+		KfRaiseIrql(OldIrql);
 	}
 }
 
