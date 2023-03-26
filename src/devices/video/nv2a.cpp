@@ -1193,8 +1193,8 @@ void NV2ADevice::Init()
 	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
 	d->vram_size = g_SystemMaxMemory;
 
-	d->pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
-	d->pramdac.core_clock_freq = 189000000;
+	d->pramdac.core_clock_coeff = 0x00011C01; /* 233MHz...? */
+	d->pramdac.core_clock_freq = 233333324;
 	d->pramdac.memory_clock_coeff = 0;
 	d->pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 
