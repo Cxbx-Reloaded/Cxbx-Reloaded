@@ -42,8 +42,8 @@
 #include "core\hle\DSOUND\DirectSound\DirectSoundGlobal.hpp"
 
 
-static uint64_t last_qpc; // last time when QPC was called
-static uint64_t exec_time; // total execution time in us since the emulation started
+static std::atomic_uint64_t last_qpc; // last time when QPC was called
+static std::atomic_uint64_t exec_time; // total execution time in us since the emulation started
 static uint64_t pit_last; // last time when the pit time was updated
 static uint64_t pit_last_qpc; // last QPC time of the pit
 // The frequency of the high resolution clock of the host, and the start time
@@ -53,8 +53,8 @@ int64_t HostQPCFrequency, HostQPCStartTime;
 void timer_init()
 {
 	QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER *>(&HostQPCFrequency));
-	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&last_qpc));
-	pit_last_qpc = last_qpc;
+	QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&HostQPCStartTime));
+	pit_last_qpc = last_qpc = HostQPCStartTime;
 	pit_last = get_now();
 
 	// Synchronize xbox system time with host time
@@ -140,11 +140,12 @@ uint64_t get_now()
 
 static uint64_t get_next(uint64_t now)
 {
-	std::array<uint64_t, 4> next;
+	std::array<uint64_t, 5> next;
 	next[0] = g_NV2A->vblank_next(now);
-	next[1] = pit_next(now);
-	next[2] = g_USB0->m_HostController->OHCI_next(now);
-	next[3] = dsound_next(now);
+	next[1] = g_NV2A->ptimer_next(now);
+	next[2] = pit_next(now);
+	next[3] = g_USB0->m_HostController->OHCI_next(now);
+	next[4] = dsound_next(now);
 	return *std::min_element(next.begin(), next.end());
 }
 

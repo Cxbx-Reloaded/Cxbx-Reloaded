@@ -130,6 +130,14 @@ static void update_irq(NV2AState *d)
 		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PVIDEO;
 	}
 
+	/* PTIMER */
+	if (d->ptimer.pending_interrupts & d->ptimer.enabled_interrupts) {
+		d->pmc.pending_interrupts |= NV_PMC_INTR_0_PTIMER;
+	}
+	else {
+		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PTIMER;
+	}
+
 	/* TODO : PBUS * /
 	if (d->pbus.pending_interrupts & d->pbus.enabled_interrupts) {
 		d->pmc.pending_interrupts |= NV_PMC_INTR_0_PBUS;
@@ -1400,4 +1408,31 @@ uint64_t NV2ADevice::vblank_next(uint64_t now)
 	}
 
 	return m_nv2a_state->vblank_last + vblank_period - now; // time remaining until next vblank
+}
+
+uint64_t NV2ADevice::ptimer_next(uint64_t now)
+{
+	// Test case: Dead or Alive Ultimate uses this when in PAL50 mode only
+	if (m_nv2a_state->ptimer_active) {
+		const uint64_t ptimer_period = m_nv2a_state->ptimer_period;
+		uint64_t next = m_nv2a_state->ptimer_last + ptimer_period;
+
+		if (now >= next) {
+			if (!m_nv2a_state->exiting) [[likely]] {
+				m_nv2a_state->ptimer.pending_interrupts |= NV_PTIMER_INTR_0_ALARM;
+				update_irq(m_nv2a_state);
+
+				// trigger the gpu interrupt if it was asserted in update_irq
+				if (g_bEnableAllInterrupts && HalSystemInterrupts[3].IsPending() && EmuInterruptList[3] && EmuInterruptList[3]->Connected) {
+					HalSystemInterrupts[3].Trigger(EmuInterruptList[3]);
+				}
+			}
+			m_nv2a_state->ptimer_last = get_now();
+			return ptimer_period;
+		}
+
+		return m_nv2a_state->ptimer_last + ptimer_period - now; // time remaining until next ptimer interrupt
+	}
+
+	return -1;
 }

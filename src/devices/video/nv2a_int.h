@@ -363,6 +363,9 @@ typedef struct NV2AState {
     // qemu_irq irq;
     bool exiting;
 	bool enable_overlay = false;
+	bool ptimer_active = false;
+	uint64_t ptimer_last;
+	uint64_t ptimer_period;
 
     // VGACommonState vga;
     // GraphicHwOps hw_ops;
