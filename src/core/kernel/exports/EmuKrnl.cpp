@@ -180,6 +180,33 @@ void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql)
 	HalInterruptRequestRegister ^= (1 << SoftwareIrql);
 }
 
+bool AddWaitObject(xbox::PKTHREAD kThread, xbox::PLARGE_INTEGER Timeout)
+{
+	// Use the built-in ktimer as a dummy wait object, so that KiUnwaitThreadAndLock can still work
+	xbox::KiTimerLock();
+	xbox::PKWAIT_BLOCK WaitBlock = &kThread->TimerWaitBlock;
+	kThread->WaitBlockList = WaitBlock;
+	xbox::PKTIMER Timer = &kThread->Timer;
+	WaitBlock->NextWaitBlock = WaitBlock;
+	Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
+	Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
+	if (Timeout && Timeout->QuadPart) {
+		// Setup a timer so that KiTimerExpiration can discover the timeout and yield to us.
+		// Otherwise, we will only be able to discover the timeout when Windows decides to schedule us again, and testing shows that
+		// tends to happen much later than the due time
+		if (xbox::KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
+			// Sanity check: set WaitBlockList to nullptr so that we can catch the case where a waiter starts a new wait but forgets to setup a new wait block. This
+			// way, we will crash instead of silently using the pointer to the old block
+			kThread->WaitBlockList = xbox::zeroptr;
+			xbox::KiTimerUnlock();
+			return false;
+		}
+	}
+	kThread->State = xbox::Waiting;
+	xbox::KiTimerUnlock();
+	return true;
+}
+
 // This masks have been verified to be correct against a kernel dump
 const DWORD IrqlMasks[] = {
 	0xFFFFFFFE, // IRQL 0

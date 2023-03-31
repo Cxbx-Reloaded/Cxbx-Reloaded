@@ -506,8 +506,13 @@ XBSYSAPI EXPORTNUM(258) xbox::void_xt NTAPI xbox::PsTerminateSystemThread
 	KeQuerySystemTime(&eThread->ExitTime);
 	eThread->ExitStatus = ExitStatus;
 	eThread->Tcb.Header.SignalState = 1;
+	KiWaitListLock();
 	if (!IsListEmpty(&eThread->Tcb.Header.WaitListHead)) {
 		KiWaitTest((PVOID)&eThread->Tcb, 0);
+		std::this_thread::yield();
+	}
+	else {
+		KiWaitListUnlock();
 	}
 
 	if (GetNativeHandle(eThread->UniqueThread)) {

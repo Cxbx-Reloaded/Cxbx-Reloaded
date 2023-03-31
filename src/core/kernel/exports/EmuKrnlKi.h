@@ -204,12 +204,6 @@ namespace xbox
 		IN KPRIORITY Increment
 	);
 
-	void_xt KiWaitTestNoYield
-	(
-		IN PVOID Object,
-		IN KPRIORITY Increment
-	);
-
 	void_xt KiWaitTest
 	(
 		IN PVOID Object,

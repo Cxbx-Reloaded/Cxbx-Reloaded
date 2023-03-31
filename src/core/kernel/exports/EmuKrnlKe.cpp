@@ -140,6 +140,7 @@ xbox::void_xt xbox::KeResumeThreadEx
 	// This is only to be used to synchronize new thread creation with the thread that spawned it
 
 	Thread->SuspendSemaphore.Header.SignalState = 1;
+	KiWaitListLock();
 	KiWaitTest(&Thread->SuspendSemaphore, 0);
 }
 
@@ -735,17 +736,11 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 
 	PKTHREAD kThread = KeGetCurrentThread();
 	kThread->WaitStatus = X_STATUS_SUCCESS;
-	if (!Interval || (Interval->QuadPart == 0)) {
-		// Use the built-in ktimer as a dummy wait object, so that KiUnwaitThreadAndLock can still work
-		xbox::PKWAIT_BLOCK WaitBlock = &kThread->TimerWaitBlock;
-		kThread->WaitBlockList = WaitBlock;
-		xbox::PKTIMER Timer = &kThread->Timer;
-		WaitBlock->NextWaitBlock = WaitBlock;
-		Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
-		Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
+	if (!AddWaitObject(kThread, Interval)) {
+		RETURN(X_STATUS_TIMEOUT);
 	}
 
-	xbox::ntstatus_xt ret = WaitApc<true>([Alertable, kThread]() -> std::optional<ntstatus_xt> {
+	xbox::ntstatus_xt ret = WaitApc<true>([Alertable](xbox::PKTHREAD kThread) -> std::optional<ntstatus_xt> {
 		NtDll::LARGE_INTEGER ExpireTime;
 		ExpireTime.QuadPart = 0;
 		NTSTATUS Status = NtDll::NtDelayExecution(Alertable, &ExpireTime);
@@ -753,12 +748,11 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 		if (Status >= 0 && Status != STATUS_ALERTED && Status != STATUS_USER_APC) {
 			return std::nullopt;
 		}
-		EmuLog(LOG_LEVEL::DEBUG, "KeDelayExecutionThread -> Staus: %X", Status);
 		// If the wait was satisfied with the host, then also unwait the thread on the guest side, to be sure to remove WaitBlocks that might have been added
 		// to the thread. Test case: Steel Battalion
 		xbox::KiUnwaitThreadAndLock(kThread, Status, 0);
-		return std::make_optional<ntstatus_xt>(Status);
-		}, Interval, Alertable, WaitMode);
+		return std::make_optional<ntstatus_xt>(kThread->WaitStatus);
+		}, Interval, Alertable, WaitMode, kThread);
 
 	if (ret == X_STATUS_TIMEOUT) {
 		// NOTE: this function considers a timeout a success
@@ -1361,9 +1355,14 @@ XBSYSAPI EXPORTNUM(123) xbox::long_xt NTAPI xbox::KePulseEvent
 	}
 
 	LONG OldState = Event->Header.SignalState;
+	KiWaitListLock();
 	if ((OldState == 0) && (IsListEmpty(&Event->Header.WaitListHead) == FALSE)) {
 		Event->Header.SignalState = 1;
 		KiWaitTest(Event, Increment);
+		std::this_thread::yield();
+	}
+	else {
+		KiWaitListUnlock();
 	}
 
 	Event->Header.SignalState = 0;
@@ -1548,8 +1547,13 @@ XBSYSAPI EXPORTNUM(132) xbox::long_xt NTAPI xbox::KeReleaseSemaphore
 	}
 	Semaphore->Header.SignalState = adjusted_signalstate;
 
+	KiWaitListLock();
 	if ((initial_state == 0) && (IsListEmpty(&Semaphore->Header.WaitListHead) == FALSE)) {
 		KiWaitTest(&Semaphore->Header, Increment);
+		std::this_thread::yield();
+	}
+	else {
+		KiWaitListUnlock();
 	}
 
 	if (Wait) {
@@ -1773,7 +1777,9 @@ XBSYSAPI EXPORTNUM(140) xbox::ulong_xt NTAPI xbox::KeResumeThread
 		if (Thread->SuspendCount == 0) {
 #if 0
 			++Thread->SuspendSemaphore.Header.SignalState;
+			KiWaitListLock();
 			KiWaitTest(&Thread->SuspendSemaphore, 0);
+			std::this_thread::yield();
 #else
 			if (const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread)) {
 				ResumeThread(*nativeHandle);
@@ -1923,7 +1929,9 @@ XBSYSAPI EXPORTNUM(145) xbox::long_xt NTAPI xbox::KeSetEvent
 	}
 
 	LONG OldState = Event->Header.SignalState;
+	KiWaitListLock();
 	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
+		KiWaitListUnlock();
 		Event->Header.SignalState = 1;
 	} else {
 		PKWAIT_BLOCK WaitBlock = CONTAINING_RECORD(Event->Header.WaitListHead.Flink, KWAIT_BLOCK, WaitListEntry);
@@ -1933,8 +1941,12 @@ XBSYSAPI EXPORTNUM(145) xbox::long_xt NTAPI xbox::KeSetEvent
 				Event->Header.SignalState = 1;
 				KiWaitTest(Event, Increment);
 			}
+			else {
+				KiWaitListUnlock();
+			}
 		} else {
-			KiUnwaitThreadAndLock(WaitBlock->Thread, (NTSTATUS)WaitBlock->WaitKey, Increment);
+			KiUnwaitThread(WaitBlock->Thread, (NTSTATUS)WaitBlock->WaitKey, Increment);
+			KiWaitListUnlock();
 		}
 	}
 
@@ -1971,6 +1983,7 @@ XBSYSAPI EXPORTNUM(146) xbox::void_xt NTAPI xbox::KeSetEventBoostPriority
 		return;
 	}
 
+	KiWaitListLock();
 	if (IsListEmpty(&Event->Header.WaitListHead) != FALSE) {
 		Event->Header.SignalState = 1;
 	} else {
@@ -1981,8 +1994,9 @@ XBSYSAPI EXPORTNUM(146) xbox::void_xt NTAPI xbox::KeSetEventBoostPriority
 		}
 
 		WaitThread->Quantum = WaitThread->ApcState.Process->ThreadQuantum;
-		KiUnwaitThreadAndLock(WaitThread, X_STATUS_SUCCESS, 1);
+		KiUnwaitThread(WaitThread, X_STATUS_SUCCESS, 1);
 	}
+	KiWaitListUnlock();
 
 	KiUnlockDispatcherDatabase(OldIrql);
 }
@@ -2396,13 +2410,13 @@ XBSYSAPI EXPORTNUM(158) xbox::ntstatus_xt NTAPI xbox::KeWaitForMultipleObjects
 			//}
 
 			// TODO: Remove this after we have our own scheduler and the above is implemented
-			WaitStatus = WaitApc<false>([Thread]() -> std::optional<ntstatus_xt> {
+			WaitStatus = WaitApc<false>([](PKTHREAD Thread) -> std::optional<ntstatus_xt> {
 				if (Thread->State == Ready) {
 					// We have been readied to resume execution, so exit the wait
 					return std::make_optional<ntstatus_xt>(Thread->WaitStatus);
 				}
 				return std::nullopt;
-				}, Timeout, Alertable, WaitMode);
+				}, Timeout, Alertable, WaitMode, Thread);
 
 			break;
 		}
@@ -2584,13 +2598,13 @@ XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 			KiWaitListUnlock();
 
 			// TODO: Remove this after we have our own scheduler and the above is implemented
-			WaitStatus = WaitApc<false>([Thread]() -> std::optional<ntstatus_xt> {
+			WaitStatus = WaitApc<false>([](PKTHREAD Thread) -> std::optional<ntstatus_xt> {
 				if (Thread->State == Ready) {
 					// We have been readied to resume execution, so exit the wait
 					return std::make_optional<ntstatus_xt>(Thread->WaitStatus);
 				}
 				return std::nullopt;
-				}, Timeout, Alertable, WaitMode);
+				}, Timeout, Alertable, WaitMode, Thread);
 
 			break;
 		}

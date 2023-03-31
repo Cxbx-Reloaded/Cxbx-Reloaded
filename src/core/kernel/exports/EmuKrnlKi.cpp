@@ -524,9 +524,13 @@ xbox::boolean_xt FASTCALL xbox::KiSignalTimer
 	Timer->Header.SignalState = TRUE;
 
 	/* Check if the timer has waiters */
+	KiWaitListLock();
 	if (!IsListEmpty(&Timer->Header.WaitListHead))
 	{
-		KiWaitTestNoYield(Timer, 0);
+		KiWaitTest(Timer, 0);
+	}
+	else {
+		KiWaitListUnlock();
 	}
 
 	/* Check if we have a period */
@@ -630,9 +634,13 @@ xbox::void_xt NTAPI xbox::KiTimerExpiration
 				Period = Timer->Period;
 
 				/* Check if there are any waiters */
+				KiWaitListLock();
 				if (!IsListEmpty(&Timer->Header.WaitListHead))
 				{
-					KiWaitTestNoYield(Timer, 0);
+					KiWaitTest(Timer, 0);
+				}
+				else {
+					KiWaitListUnlock();
 				}
 
 				/* Check if we have a period */
@@ -802,9 +810,13 @@ xbox::void_xt FASTCALL xbox::KiTimerListExpire
 		Period = Timer->Period;
 
 		/* Check if there's any waiters */
+		KiWaitListLock();
 		if (!IsListEmpty(&Timer->Header.WaitListHead))
 		{
-			KiWaitTestNoYield(Timer, 0);
+			KiWaitTest(Timer, 0);
+		}
+		else {
+			KiWaitListUnlock();
 		}
 
 		/* Check if we have a period */
@@ -1110,7 +1122,7 @@ xbox::boolean_xt xbox::KiInsertQueueApc
 	return TRUE;
 }
 
-xbox::void_xt xbox::KiWaitTestNoYield
+xbox::void_xt xbox::KiWaitTest
 (
 	IN PVOID Object,
 	IN KPRIORITY Increment
@@ -1121,8 +1133,9 @@ xbox::void_xt xbox::KiWaitTestNoYield
 	PKTHREAD WaitThread;
 	PKMUTANT FirstObject = (PKMUTANT)Object;
 
+	ASSERT_WAIT_LIST_LOCKED;
+
 	/* Loop the Wait Entries */
-	KiWaitListLock();
 	WaitList = &FirstObject->Header.WaitListHead;
 	WaitEntry = WaitList->Flink;
 	while ((FirstObject->Header.SignalState > 0) && (WaitEntry != WaitList)) {
@@ -1160,18 +1173,6 @@ NextWaitEntry:
 		WaitEntry = WaitEntry->Flink;
 	}
 	KiWaitListUnlock();
-}
-
-xbox::void_xt xbox::KiWaitTest
-(
-	IN PVOID Object,
-	IN KPRIORITY Increment
-)
-{
-	KiWaitTestNoYield(Object, Increment);
-
-	// Now that we have unwaited all the threads we could, yield
-	std::this_thread::yield();
 }
 
 xbox::void_xt xbox::KiWaitSatisfyAll
@@ -1215,6 +1216,11 @@ xbox::void_xt xbox::KiUnwaitThread
 )
 {
 	ASSERT_WAIT_LIST_LOCKED;
+
+	if (Thread->State != Waiting) {
+		// Don't do anything if it was already unwaited
+		return;
+	}
 
 	/* Unlink the thread */
 	KiUnlinkThread(Thread, WaitStatus);
@@ -1280,4 +1286,8 @@ xbox::void_xt xbox::KiUnlinkThread
 	/* Increment the Queue's active threads */
 	if (Thread->Queue) Thread->Queue->CurrentCount++;
 #endif
+
+	// Sanity check: set WaitBlockList to nullptr so that we can catch the case where a waiter starts a new wait but forgets to setup a new wait block. This
+	// way, we will crash instead of silently using the pointer to the old block
+	Thread->WaitBlockList = zeroptr;
 }
