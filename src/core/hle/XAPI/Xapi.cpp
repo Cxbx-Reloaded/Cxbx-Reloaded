@@ -962,17 +962,11 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 
 	PKTHREAD kThread = KeGetCurrentThread();
 	kThread->WaitStatus = X_STATUS_SUCCESS;
-	if (!Timeout || (Timeout->QuadPart == 0)) {
-		// Use the built-in ktimer as a dummy wait object, so that KiUnwaitThreadAndLock can still work
-		xbox::PKWAIT_BLOCK WaitBlock = &kThread->TimerWaitBlock;
-		kThread->WaitBlockList = WaitBlock;
-		xbox::PKTIMER Timer = &kThread->Timer;
-		WaitBlock->NextWaitBlock = WaitBlock;
-		Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
-		Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
+	if (!AddWaitObject(kThread, Timeout)) {
+		RETURN(WAIT_TIMEOUT);
 	}
 
-	xbox::ntstatus_xt status = WaitApc<true>([hObjectToSignal, hObjectToWaitOn, bAlertable, kThread]() -> std::optional<DWORD> {
+	xbox::ntstatus_xt status = WaitApc<true>([hObjectToSignal, hObjectToWaitOn, bAlertable](xbox::PKTHREAD kThread) -> std::optional<DWORD> {
 		DWORD dwRet = SignalObjectAndWait(hObjectToSignal, hObjectToWaitOn, 0, bAlertable);
 		if (dwRet == WAIT_TIMEOUT) {
 			return std::nullopt;
@@ -988,8 +982,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(SignalObjectAndWait)
 		default: Status = X_STATUS_INVALID_HANDLE;
 		}
 		xbox::KiUnwaitThreadAndLock(kThread, Status, 0);
-		return std::make_optional<ntstatus_xt>(Status);
-		}, Timeout, bAlertable, UserMode);
+		return std::make_optional<ntstatus_xt>(kThread->WaitStatus);
+		}, Timeout, bAlertable, UserMode, kThread);
 
 	xbox::dword_xt ret;
 	switch (status)

@@ -108,11 +108,12 @@ extern HalSystemInterrupt HalSystemInterrupts[MAX_BUS_INTERRUPT_LEVEL + 1];
 bool DisableInterrupts();
 void RestoreInterruptMode(bool value);
 void CallSoftwareInterrupt(const xbox::KIRQL SoftwareIrql);
+bool AddWaitObject(xbox::PKTHREAD kThread, xbox::PLARGE_INTEGER Timeout);
 
 template<typename T>
 std::optional<xbox::ntstatus_xt> SatisfyWait(T &&Lambda, xbox::PKTHREAD kThread, xbox::boolean_xt Alertable, xbox::char_xt WaitMode)
 {
-	if (const auto ret = Lambda()) {
+	if (const auto ret = Lambda(kThread)) {
 		return ret;
 	}
 
@@ -129,30 +130,22 @@ std::optional<xbox::ntstatus_xt> SatisfyWait(T &&Lambda, xbox::PKTHREAD kThread,
 		(Alertable == TRUE) &&
 		(WaitMode == xbox::UserMode)) {
 		xbox::KiExecuteUserApc();
-		return X_STATUS_USER_APC;
+		xbox::KiUnwaitThreadAndLock(kThread, X_STATUS_USER_APC, 0);
+		return kThread->WaitStatus;
 	}
 
 	return std::nullopt;
 }
 
 template<bool host_wait, typename T>
-xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER Timeout, xbox::boolean_xt Alertable, xbox::char_xt WaitMode)
+xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER Timeout, xbox::boolean_xt Alertable, xbox::char_xt WaitMode, xbox::PKTHREAD kThread)
 {
 	// NOTE1: kThread->Alerted is currently never set. When the alerted mechanism is implemented, the alerts should
 	// also interrupt the wait.
-	// NOTE2: kThread->State should only be set when this function performs a host wait. Otherwise, a race condition exists where the guest satisfies the wait
-	// and calls KiUnwaitThread (which sets the state to Ready), before we set the Waiting state here. This will then cause a deadlock, since the wait here expects
-	// a Ready state instead, which was previosuly overwritten by Waiting. Test case: PsCreateSystemThreadEx when it suspends/resumes the child thread with
-	// KeSuspend/ResumeThreadEx.
 
 	xbox::ntstatus_xt status;
-	xbox::PKTHREAD kThread = xbox::KeGetCurrentThread();
-
 	if (Timeout == nullptr) {
 		// No timout specified, so this is an infinite wait until an alert, a user apc or the object(s) become(s) signalled
-		if constexpr (host_wait) {
-			kThread->State = xbox::Waiting;
-		}
 		while (true) {
 			if (const auto ret = SatisfyWait(Lambda, kThread, Alertable, WaitMode)) {
 				status = *ret;
@@ -163,34 +156,20 @@ xbox::ntstatus_xt WaitApc(T &&Lambda, xbox::PLARGE_INTEGER Timeout, xbox::boolea
 		}
 	}
 	else if (Timeout->QuadPart == 0) {
+		assert(host_wait);
 		// A zero timeout means that we only have to check the conditions once and then return immediately if they are not satisfied
 		if (const auto ret = SatisfyWait(Lambda, kThread, Alertable, WaitMode)) {
 			status = *ret;
 		}
 		else {
-			status = X_STATUS_TIMEOUT;
+			// If the wait failed, then always remove the wait block. Note that this can only happen with host waits, since guest waits never call us at all
+			// when Timeout->QuadPart == 0. Test case: Halo 2 (sporadically when playing the intro video)
+			xbox::KiUnwaitThreadAndLock(kThread, X_STATUS_TIMEOUT, 0);
+			status = kThread->WaitStatus;
 		}
 	}
 	else {
 		// A non-zero timeout means we have to check the conditions until we reach the requested time
-		if constexpr (host_wait) {
-			// Setup a timer if it wasn't already by our caller. This is necessary because in this way, KiTimerExpiration can discover the timeout
-			// and yield to us. Otherwise, we will only be able to discover the timeout when Windows decides to schedule us again, and testing shows that
-			// tends to happen much later than the due time
-			xbox::KiTimerLock();
-			xbox::PKWAIT_BLOCK WaitBlock = &kThread->TimerWaitBlock;
-			kThread->WaitBlockList = WaitBlock;
-			xbox::PKTIMER Timer = &kThread->Timer;
-			WaitBlock->NextWaitBlock = WaitBlock;
-			Timer->Header.WaitListHead.Flink = &WaitBlock->WaitListEntry;
-			Timer->Header.WaitListHead.Blink = &WaitBlock->WaitListEntry;
-			if (xbox::KiInsertTreeTimer(Timer, *Timeout) == FALSE) {
-				xbox::KiTimerUnlock();
-				return X_STATUS_TIMEOUT;
-			}
-			kThread->State = xbox::Waiting;
-			xbox::KiTimerUnlock();
-		}
 		while (true) {
 			if (const auto ret = SatisfyWait(Lambda, kThread, Alertable, WaitMode)) {
 				status = *ret;
