@@ -97,6 +97,7 @@ namespace NtDll
 typedef struct _DpcData {
 	CRITICAL_SECTION Lock;
 	std::atomic_flag IsDpcActive;
+	std::atomic_flag IsDpcPending;
 	xbox::LIST_ENTRY DpcQueue; // TODO : Use KeGetCurrentPrcb()->DpcListHead instead
 } DpcData;
 
@@ -131,7 +132,6 @@ xbox::ulonglong_xt LARGE_INTEGER2ULONGLONG(xbox::LARGE_INTEGER value)
         break; \
     }
 
-
 xbox::void_xt xbox::KeResumeThreadEx
 (
 	IN PKTHREAD Thread
@@ -153,6 +153,11 @@ xbox::void_xt xbox::KeSuspendThreadEx
 
 	Thread->SuspendSemaphore.Header.SignalState = 0;
 	KiInsertQueueApc(&Thread->SuspendApc, 0);
+}
+
+xbox::void_xt xbox::KeWaitForDpc()
+{
+	g_DpcData.IsDpcPending.wait(false);
 }
 
 // ******************************************************************
@@ -482,6 +487,7 @@ void ExecuteDpcQueue()
 		// Set DpcRoutineActive to support KeIsExecutingDpc:
 		g_DpcData.IsDpcActive.test_and_set();
 		KeGetCurrentPrcb()->DpcRoutineActive = TRUE; // Experimental
+		LeaveCriticalSection(&(g_DpcData.Lock));
 
 		EmuLog(LOG_LEVEL::DEBUG, "Global DpcQueue, calling DPC object 0x%.8X at 0x%.8X", pkdpc, pkdpc->DeferredRoutine);
 
@@ -492,9 +498,12 @@ void ExecuteDpcQueue()
 			pkdpc->SystemArgument1,
 			pkdpc->SystemArgument2);
 
+		EnterCriticalSection(&(g_DpcData.Lock));
 		KeGetCurrentPrcb()->DpcRoutineActive = FALSE; // Experimental
 		g_DpcData.IsDpcActive.clear();
 	}
+
+	g_DpcData.IsDpcPending.clear();
 
 //    Assert(g_DpcData._dwThreadId == GetCurrentThreadId());
 //    Assert(g_DpcData._dwDpcThreadId == g_DpcData._dwThreadId);
@@ -1268,18 +1277,25 @@ XBSYSAPI EXPORTNUM(119) xbox::boolean_xt NTAPI xbox::KeInsertQueueDpc
 		Dpc->SystemArgument1 = SystemArgument1;
 		Dpc->SystemArgument2 = SystemArgument2;
 		InsertTailList(&(g_DpcData.DpcQueue), &(Dpc->DpcListEntry));
+		LeaveCriticalSection(&(g_DpcData.Lock));
+		g_DpcData.IsDpcPending.test_and_set();
+		g_DpcData.IsDpcPending.notify_one();
+
 		// TODO : Instead of DpcQueue, add the DPC to KeGetCurrentPrcb()->DpcListHead
 		// Signal the Dpc handling code there's work to do
 		if (!IsDpcActive()) {
 			HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
 		}
+
 		// OpenXbox has this instead:
 		// if (!pKPRCB->DpcRoutineActive && !pKPRCB->DpcInterruptRequested) {
 		//	pKPRCB->DpcInterruptRequested = TRUE;
 	}
+	else {
+		LeaveCriticalSection(&(g_DpcData.Lock));
+	}
 
 	// Thread-safety is no longer required anymore
-	LeaveCriticalSection(&(g_DpcData.Lock));
 	// TODO : Instead, enable interrupts - use KeLowerIrql(OldIrql) ?
 
 	RETURN(NeedsInsertion);

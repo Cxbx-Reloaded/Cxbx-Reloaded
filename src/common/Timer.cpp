@@ -115,13 +115,11 @@ static void update_non_periodic_events()
 	// update dsound
 	dsound_worker();
 
-	// check for hw interrupts, but skip the gpu interrupt since that is serviced in vblank_next
+	// check for hw interrupts
 	for (int i = 0; i < MAX_BUS_INTERRUPT_LEVEL; i++) {
-		if (i != 3) {
-			// If the interrupt is pending and connected, process it
-			if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
-				HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
-			}
+		// If the interrupt is pending and connected, process it
+		if (g_bEnableAllInterrupts && HalSystemInterrupts[i].IsPending() && EmuInterruptList[i] && EmuInterruptList[i]->Connected) {
+			HalSystemInterrupts[i].Trigger(EmuInterruptList[i]);
 		}
 	}
 }
@@ -140,12 +138,13 @@ uint64_t get_now()
 
 static uint64_t get_next(uint64_t now)
 {
-	std::array<uint64_t, 5> next;
-	next[0] = g_NV2A->vblank_next(now);
-	next[1] = g_NV2A->ptimer_next(now);
-	next[2] = pit_next(now);
-	next[3] = g_USB0->m_HostController->OHCI_next(now);
-	next[4] = dsound_next(now);
+	std::array<uint64_t, 5> next = {
+		pit_next(now),
+		g_NV2A->vblank_next(now),
+		g_NV2A->ptimer_next(now),
+		g_USB0->m_HostController->OHCI_next(now),
+		dsound_next(now)
+	};
 	return *std::min_element(next.begin(), next.end());
 }
 
@@ -154,6 +153,9 @@ xbox::void_xt NTAPI system_events(xbox::PVOID arg)
 	// Testing shows that, if this thread has the same priority of the other xbox threads, it can take tens, even hundreds of ms to complete a single loop.
 	// So we increase its priority to above normal, so that it scheduled more often
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+
+	// Always run this thread at dpc level to prevent it from ever executing APCs/DPCs
+	xbox::KeRaiseIrqlToDpcLevel();
 
 	while (true) {
 		const uint64_t last_time = get_now();

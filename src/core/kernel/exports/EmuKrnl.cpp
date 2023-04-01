@@ -142,8 +142,6 @@ void RestoreInterruptMode(bool value)
 	g_bInterruptsEnabled = value;
 }
 
-extern void ExecuteDpcQueue();
-
 void KiUnexpectedInterrupt()
 {
 	xbox::KeBugCheck(TRAP_CAUSE_UNKNOWN); // see
