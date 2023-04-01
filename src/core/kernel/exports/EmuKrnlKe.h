@@ -63,4 +63,5 @@ namespace xbox
 	);
 
 	void_xt KeEmptyQueueApc();
+	void_xt KeWaitForDpc();
 }

@@ -1422,14 +1422,11 @@ static void CxbxrKrnlInitHacks()
 	// Launch the xbe
 	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxLaunchXbe, Entry, FALSE);
 
-	EmuKeFreePcr();
-	__asm add esp, Host2XbStackSizeReserved;
-
-	// This will wait forever
-	std::condition_variable cv;
-	std::mutex m;
-	std::unique_lock<std::mutex> lock(m);
-	cv.wait(lock, [] { return false; });
+	xbox::KeRaiseIrqlToDpcLevel();
+	while (true) {
+		xbox::KeWaitForDpc();
+		ExecuteDpcQueue();
+	}
 }
 
 // REMARK: the following is useless, but PatrickvL has asked to keep it for documentation purposes
