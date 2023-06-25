@@ -331,15 +331,18 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 		auto hlslTemplate = GetCustomPixelShaderTemplate();
 		static const std::string defines_key = "// DEFINES INSERTION MARKER";
 		static const std::string program_key = "// XBOX SHADER PROGRAM MARKER";
+		static const std::string exit_key    = "// EXIT";
 		std::size_t defines_pos = hlslTemplate.find(defines_key);
 		std::size_t program_pos = hlslTemplate.find(program_key);
+		std::size_t exit_pos    = hlslTemplate.find(exit_key);
 		if (defines_pos == std::string::npos) return; // TODO : Log error
 		if (program_pos == std::string::npos) return; // TODO : Log error
 		defines_pos += defines_key.length();
-		program_pos += program_key.length();
+		program_pos += program_key.length();   
+		exit_pos    += exit_key.length();
 		// Cut up the template in 3 parts (header, code and footer) :
 		hlsl_template[0] = hlslTemplate.substr(0, defines_pos);
-		hlsl_template[1] = hlslTemplate.substr(defines_pos + 1, program_pos);
+		hlsl_template[1] = hlslTemplate.substr(exit_pos , program_pos - defines_pos);
 		hlsl_template[2] = hlslTemplate.substr(program_pos + 1);
 	}
 
