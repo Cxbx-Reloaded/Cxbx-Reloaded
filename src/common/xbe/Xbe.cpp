@@ -732,25 +732,29 @@ void Xbe::PurgeBadChar(std::string& s, const std::string& illegalChars)
 	}
 }
 
-const char *Xbe::GameRegionToString()
+const char *Xbe::GameRegionToString(uint32_t dwRegionFlags)
 {
+    if (!dwRegionFlags) {
+        dwRegionFlags = m_Certificate.dwGameRegion;
+    }
+
     const char *Region_text[] = {
-        "Unknown", "NTSC", "JAP", "NTSC+JAP",
-        "PAL", "PAL+NTSC", "PAL+JAP", "Region Free",
-        "DEBUG", "NTSC (DEBUG)", "JAP (DEBUG)", "NTSC+JAP (DEBUG)",
-        "PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAP (DEBUG)", "Region Free (DEBUG)"
+        "Unknown", "NTSC", "JAPAN", "NTSC+JAPAN",
+        "PAL", "PAL+NTSC", "PAL+JAPAN", "Region Free",
+        "DEBUG", "NTSC (DEBUG)", "JAPAN (DEBUG)", "NTSC+JAPAN (DEBUG)",
+        "PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAPAN (DEBUG)", "Region Free (DEBUG)"
     };
     const uint32_t all_regions = XBEIMAGE_GAME_REGION_NA |
                                XBEIMAGE_GAME_REGION_JAPAN |
                                XBEIMAGE_GAME_REGION_RESTOFWORLD |
                                XBEIMAGE_GAME_REGION_MANUFACTURING;
 
-    if(m_Certificate.dwGameRegion & ~all_regions) {
+    if(dwRegionFlags & ~all_regions) {
         return "REGION ERROR";
     }
 
-    uint8_t index = (m_Certificate.dwGameRegion & XBEIMAGE_GAME_REGION_MANUFACTURING) ? 0x8 : 0;
-    index |= (m_Certificate.dwGameRegion & 0x7);
+    uint8_t index = (dwRegionFlags & XBEIMAGE_GAME_REGION_MANUFACTURING) ? 0x8 : 0;
+    index |= (dwRegionFlags & 0x7);
     return Region_text[index];
 }
 
@@ -823,6 +827,16 @@ XbeType Xbe::GetXbeType()
 
 	// Otherwise, the XBE is a Retail build :
 	return XbeType::xtRetail;
+}
+
+uint32_t Xbe::GetDiscVersion()
+{
+    return m_Certificate.dwVersion & 0xFF;
+}
+
+uint32_t Xbe::GetPatchVersion()
+{
+    return (m_Certificate.dwVersion & 0xFFFFFF00) >> 8;
 }
 
 template auto Xbe::FindSection<true>(const char *zsSectionName);

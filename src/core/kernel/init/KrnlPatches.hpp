@@ -57,15 +57,8 @@ static void ApplyMediaPatches()
 		| XBEIMAGE_MEDIA_TYPE_DVD_5_RO
 		| XBEIMAGE_MEDIA_TYPE_DVD_9_RO
 		| XBEIMAGE_MEDIA_TYPE_DVD_5_RW
-		| XBEIMAGE_MEDIA_TYPE_DVD_9_RW
-		;
-	// Patch the XBE Header to allow running on all regions
-	g_pCertificate->dwGameRegion = 0
-		| XBEIMAGE_GAME_REGION_MANUFACTURING
-		| XBEIMAGE_GAME_REGION_NA
-		| XBEIMAGE_GAME_REGION_JAPAN
-		| XBEIMAGE_GAME_REGION_RESTOFWORLD
-		;
+		| XBEIMAGE_MEDIA_TYPE_DVD_9_RW;
+
 	// Patch the XBE Security Flag
 	// This field is only present if the Xbe Size is >= than our Certificate Structure
 	// This works as our structure is large enough to fit the newer certificate size,

@@ -40,7 +40,6 @@
 #include <ntstatus.h>
 #pragma warning(default:4005)
 #include "Logging.h"
-#include "common/util/strConverter.hpp" // utf16_to_ascii
 #include "common/util/cliConfig.hpp"
 #include "common/CxbxDebugger.h"
 #include "EmuShared.h"
@@ -790,20 +789,21 @@ std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
 	std::wstring wXbePath;
 	// We pretend to come from NtCreateFile to force symbolic link resolution
 	CxbxConvertFilePath(XboxDevicePath.data(), wXbePath, &rootDirectoryHandle, "NtCreateFile");
-
-	// Convert Wide String as returned by above to a string, for XbePath
-	std::string XbePath = utf16_to_ascii(wXbePath.c_str());
+	std::filesystem::path XbePath;
 
 	// If the rootDirectoryHandle is not null, we have a relative path
 	// We need to prepend the path of the root directory to get a full DOS path
 	if (rootDirectoryHandle != nullptr) {
 		WCHAR directoryPathBuffer[MAX_PATH];
 		GetFinalPathNameByHandleW(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
-		std::string directoryPath = utf16_to_ascii(directoryPathBuffer);
-		XbePath = directoryPath + std::string("\\") + XbePath;
+		XbePath = directoryPathBuffer;
+		XbePath /= wXbePath;
+	}
+	else {
+		XbePath = wXbePath;
 	}
 
-	return XbePath;
+	return XbePath.string();
 }
 
 int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::string HostDevicePath, bool IsFile, std::size_t size)

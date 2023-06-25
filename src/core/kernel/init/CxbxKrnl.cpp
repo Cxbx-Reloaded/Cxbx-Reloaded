@@ -1141,7 +1141,10 @@ static void CxbxrLogDumpXbeInfo(Xbe::LibraryVersion* libVersionInfo)
 
 		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID : %s", FormatTitleId(g_pCertificate->dwTitleId).c_str());
 		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleID (Hex) : 0x%s", titleIdHex.str().c_str());
-		EmuLogInit(LOG_LEVEL::INFO, "XBE Version : 1.%02d", g_pCertificate->dwVersion);
+		if (CxbxKrnl_Xbe != nullptr) {
+			EmuLogInit(LOG_LEVEL::INFO, "XBE Version : %d.%d", CxbxKrnl_Xbe->GetDiscVersion(), CxbxKrnl_Xbe->GetPatchVersion());
+		}
+		EmuLogInit(LOG_LEVEL::INFO, "XBE Version (Hex): %08X", g_pCertificate->dwVersion);
 		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleName : %.40ls", g_pCertificate->wsTitleName);
 		EmuLogInit(LOG_LEVEL::INFO, "XBE Region : %s", CxbxKrnl_Xbe->GameRegionToString());
 	}
@@ -1202,8 +1205,8 @@ static void CxbxrKrnlInitHacks()
 	Timer_Init();
 	// for unicode conversions
 	setlocale(LC_ALL, "English");
-	// Initialize time-related variables for the kernel and the timers
-	CxbxInitPerformanceCounters();
+	// Initialize DPC global
+	InitDpcData();
 #ifdef _DEBUG
 //	PopupCustom(LOG_LEVEL::INFO, "Attach a Debugger");
 //  Debug child processes using https://marketplace.visualstudio.com/items?itemName=GreggMiskelly.MicrosoftChildProcessDebuggingPowerTool
@@ -1405,6 +1408,29 @@ static void CxbxrKrnlInitHacks()
 	// Required until we perfect emulation of X2 DVD Authentication
 	// See: https://multimedia.cx/eggs/xbox-sphinx-protocol/
 	ApplyMediaPatches();
+
+	// Verify that the emulator region matches the game region, if not, show a warning
+	// that it may not work.
+	if (!(g_pCertificate->dwGameRegion & EEPROM->EncryptedSettings.GameRegion))
+	{
+		auto expected = CxbxKrnl_Xbe->GameRegionToString();
+		auto actual = CxbxKrnl_Xbe->GameRegionToString(EEPROM->EncryptedSettings.GameRegion);
+
+		std::stringstream ss;
+		ss << "The loaded title is designed for region: " << expected << "\n";
+		ss << "However Cxbx-Reloaded is configured as: " << actual << "\n\n";
+		ss << "This means that you may encounter emulation issues\n\n";
+		ss << "You can fix this by changing your emulated Xbox region in EEPROM Settings\n\n";
+		ss << "Please do not submit bug reports that result from incorrect region flags\n\n";
+		ss << "Would you like to attempt emulation anyway?";
+
+		PopupReturn ret = PopupWarningEx(nullptr, PopupButtons::YesNo, PopupReturn::No, ss.str().c_str());
+		if (ret != PopupReturn::Yes)
+		{
+			CxbxrShutDown();
+		}
+	}
+	
 
 	// Chihiro games require more patches
 	// The chihiro BIOS does this to bypass XAPI cache init

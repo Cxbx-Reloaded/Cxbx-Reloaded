@@ -146,14 +146,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetDisplayFieldStatus)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_BeginPush
+// * patch: D3DDevice_BeginPush_4
 // ******************************************************************
-xbox::PDWORD WINAPI EMUPATCH(D3DDevice_BeginPush)(dword_xt Count);
+xbox::PDWORD WINAPI EMUPATCH(D3DDevice_BeginPush_4)(dword_xt Count);
 
 // ******************************************************************
-// * patch: D3DDevice_BeginPush2  //two arg version for xdk before 4531
+// * patch: D3DDevice_BeginPush_8
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_BeginPush2)(dword_xt Count, dword_xt **ppPush);
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_BeginPush_8)(dword_xt Count, dword_xt **ppPush);
 
 // ******************************************************************
 // * patch: D3DDevice_EndPush
@@ -215,8 +215,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader)
     dword_xt                       Address
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_0)();
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SelectVertexShader_4__LTCG_eax1)
 (
     dword_xt                       Address
 );
@@ -360,6 +360,10 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_Reset)
 (
     X_D3DPRESENT_PARAMETERS *pPresentationParameters
 );
+
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)();
+
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)();
 
 // ******************************************************************
 // * patch: D3DDevice_GetRenderTarget
@@ -507,7 +511,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShader)
     dword_xt           Handle
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShader_0)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_eax_handle)();
 
 // ******************************************************************
 // * patch: D3DDevice_CreateTexture2
@@ -613,7 +617,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
 	dword_xt           Stage
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_Stage)
 (
 	X_D3DBaseTexture  *pTexture
 );
@@ -1392,16 +1396,25 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader_0)();
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVertices)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                StartVertex,
-    uint_xt                VertexCount
+    uint_xt             StartVertex,
+    uint_xt             VertexCount
 );
 
 // ******************************************************************
-// * patch: D3DDevice_DrawVertices_4
+// * patch: D3DDevice_DrawVertices_4__LTCG_ecx2_eax3
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVertices_4)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType
+);
+
+// ******************************************************************
+// * patch: D3DDevice_DrawVertices_8__LTCG_eax3
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVertices_8__LTCG_eax3)
+(
+    X_D3DPRIMITIVETYPE  PrimitiveType,
+    uint_xt             StartVertex
 );
 
 // ******************************************************************
@@ -1415,11 +1428,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP)
     uint_xt                VertexStreamZeroStride
 );
 
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP_12)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
-    uint_xt                VertexStreamZeroStride
+    uint_xt             VertexCount,
+    uint_xt             VertexStreamZeroStride
 );
 
 
@@ -1899,12 +1912,15 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetTexture)
 // ******************************************************************
 // * patch: CDevice_SetStateVB (D3D::CDevice::SetStateVB)
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateVB)( xbox::ulong_xt Unknown1 );
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateVB)(xbox::ulong_xt Unknown1);
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateVB_8)(xbox::addr_xt _this, xbox::ulong_xt Unknown1);
 
 // ******************************************************************
 // * patch: CDevice_SetStateUP (D3D::CDevice::SetStateUP)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateUP)();
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateUP_4)(xbox::addr_xt _this);
+xbox::void_xt WINAPI EMUPATCH(CDevice_SetStateUP_0__LTCG_esi1)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetStipple

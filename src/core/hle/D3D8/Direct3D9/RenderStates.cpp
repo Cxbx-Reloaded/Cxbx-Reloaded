@@ -36,19 +36,13 @@ void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE value);
 
 bool XboxRenderStateConverter::Init()
 {
-    if (g_SymbolAddresses.find("D3DDeferredRenderState") != g_SymbolAddresses.end()) {
-        D3D__RenderState = (uint32_t*)g_SymbolAddresses["D3DDeferredRenderState"];
+    // Get render state
+    if (g_SymbolAddresses.find("D3D_g_RenderState") != g_SymbolAddresses.end()) {
+        D3D__RenderState = (uint32_t*)g_SymbolAddresses["D3D_g_RenderState"];
     } else {
+        EmuLog(LOG_LEVEL::ERROR2, "D3D_g_RenderState was not found!");
         return false;
     }
-
-    // At this point, D3D__RenderState points to the first Deferred render state
-    // Do a little magic to verify that it's correct, then count back to determine the
-    // start offset of the entire structure
-    VerifyAndFixDeferredRenderStateOffset();
-
-    // Now use the verified Deferred offset to derive the D3D__RenderState offset
-    DeriveRenderStateOffsetFromDeferredRenderStateOffset();
 
     // Build a mapping of Cxbx Render State indexes to indexes within the current XDK
     BuildRenderStateMappingTable();
@@ -68,54 +62,6 @@ bool IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo& aRenderStateInf
 		bIsRenderStateAvailable &= (g_LibVersion_D3D8 < aRenderStateInfo.R);
 	}
 	return bIsRenderStateAvailable;
-}
-
-void XboxRenderStateConverter::VerifyAndFixDeferredRenderStateOffset()
-{
-    DWORD CullModeOffset = g_SymbolAddresses["D3DRS_CULLMODE"];
-    // If we found a valid CullMode offset, verify the symbol location
-    if (CullModeOffset == 0) {
-        EmuLog(LOG_LEVEL::WARNING, "D3DRS_CULLMODE could not be found. Please update the XbSymbolDatabase submodule");
-        return;
-    }
-
-    // Calculate index of D3DRS_CULLMODE for this XDK. We start counting from the first deferred state (D3DRS_FOGENABLE)
-    DWORD CullModeIndex = 0;
-    for (int i = xbox::X_D3DRS_DEFERRED_FIRST; i < xbox::X_D3DRS_CULLMODE; i++) {
-        auto RenderStateInfo = GetDxbxRenderStateInfo(i);
-        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
-            CullModeIndex++;
-        }
-    }
-
-    // If the offset was incorrect, calculate the correct offset, log it, and fix it
-    if ((DWORD)(&D3D__RenderState[CullModeIndex]) != CullModeOffset) {
-        DWORD CorrectOffset = CullModeOffset - (CullModeIndex * sizeof(DWORD));
-        EmuLog(LOG_LEVEL::WARNING, "EmuD3DDeferredRenderState returned by XboxSymbolDatabase (0x%08X) was incorrect. Correcting to be 0x%08X.\nPlease file an issue with the XbSymbolDatabase project", D3D__RenderState, CorrectOffset);
-        D3D__RenderState = (uint32_t*)CorrectOffset;
-    }
-}
-
-void XboxRenderStateConverter::DeriveRenderStateOffsetFromDeferredRenderStateOffset()
-{
-    // When this function is called. D3D__RenderState actually points to the first deferred render state
-    // (this is X_D3DRS_FOGENABLE). We can count back from this using our RenderStateInfo table to find
-    // the start of D3D__RenderStates.
-
-    // Count the number of render states (for this XDK) between 0 and the first deferred render state (D3DRS_FOGENABLE)
-    int FirstDeferredRenderStateOffset = 0;
-    for (unsigned int RenderState = xbox::X_D3DRS_FIRST; RenderState < xbox::X_D3DRS_DEFERRED_FIRST; RenderState++) {
-        // if the current renderstate exists in this XDK version, count it
-        auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
-        if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
-            FirstDeferredRenderStateOffset++;
-        }
-    }
-
-    // At this point, FirstDeferredRenderStateOffset should point to the index of D3DRS_FOGENABLE for the given XDK
-    // This will be correct as long as our table DxbxRenderStateInfo is correct
-    // We can get the correct 0 offset by using a negative index
-    D3D__RenderState = &D3D__RenderState[-FirstDeferredRenderStateOffset];
 }
 
 void XboxRenderStateConverter::BuildRenderStateMappingTable()

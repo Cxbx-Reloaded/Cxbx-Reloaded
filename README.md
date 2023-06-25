@@ -17,7 +17,7 @@ Cxbx-Reloaded is an emulator for running Microsoft Xbox (and eventually, Chihiro
   * [32-bit (x86) Visual C++ 2022 Redistributable](https://aka.ms/vs/17/release/vc_redist.x86.exe)
   * [Npcap *(used for network emulation)*](https://nmap.org/npcap/#download)
     * Make sure to enable winpcap compatibility mode.
-  * WinUSB compliant driver
+  * [WinUSB compliant driver](https://github.com/libusb/libusb/wiki/Windows#Driver_Installation)
     * *Optional, only needed for USB pass-through of original Xbox and Steel Battalion controllers.*
 
 ### Wine

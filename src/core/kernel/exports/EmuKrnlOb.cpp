@@ -1023,41 +1023,52 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 	PVOID Object;
 	POBJECT_HEADER ObjectHeader;
 
+	// Check if Handle contain special handle for current thread.
 	if (Handle == NtCurrentThread()) {
-		if ((ObjectType == &PsThreadObjectType) || (ObjectType == NULL)) {
+		// We only accept either thread or null object type.
+		if ((ObjectType == &PsThreadObjectType) || (!ObjectType)) {
 			Object = PspGetCurrentThread();
 			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 			InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 			*ReturnedObject = Object;
 			return X_STATUS_SUCCESS;
-		} else {
+		}
+		else {
 			result = STATUS_OBJECT_TYPE_MISMATCH;
 		}
 	} else {
 		Object = ObpGetObjectHandleReference(Handle);
 
-		if (Object != NULL) {
-			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
-
-			if ((ObjectType == ObjectHeader->Type) || (ObjectType == NULL)) {
-				*ReturnedObject = Object;
-				return X_STATUS_SUCCESS;
-			} else {
-				ObfDereferenceObject(Object);
-				result = STATUS_OBJECT_TYPE_MISMATCH;
+		// Check if object is null pointer
+		if (!Object) {
+			DWORD flags = 0;
+			if (Handle == (xbox::HANDLE)-1) {
+				// bypass hack below check if special handle is NtCurrentProcess.
 			}
-		} else {
 			// HACK: Since we forward to NtDll::NtCreateEvent, this *might* be a Windows handle instead of our own
 			// In this case, we must return the input handle
 			// Test Case: Xbox Live Dashboard, Network Test (or any other Xbox Live connection)
-			DWORD flags = 0;
-			if (GetHandleInformation(Handle, &flags)) {
+			else if (GetHandleInformation(Handle, &flags)) {
 				// This was a Windows Handle, so return it.
 				*ReturnedObject = Handle;
 				return X_STATUS_SUCCESS;
 			}
-
+			// TODO: Remove above, inside if statement, to leave only result value set here.
 			result = STATUS_INVALID_HANDLE;
+		}
+		// If object is valid, then return object.
+		else {
+			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
+
+			// Verify if object type do match with found object or any if null object type.
+			if ((ObjectType == ObjectHeader->Type) || (!ObjectType)) {
+				*ReturnedObject = Object;
+				return X_STATUS_SUCCESS;
+			}
+			else {
+				ObfDereferenceObject(Object);
+				result = STATUS_OBJECT_TYPE_MISMATCH;
+			}
 		}
 	}
 

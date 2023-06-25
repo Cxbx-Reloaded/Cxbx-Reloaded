@@ -43,7 +43,6 @@
 #include "common\EmuEEPROM.h" // For EEPROM
 #include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
-#include "common/util/strConverter.hpp" // for utf16_to_ascii
 #include "core\kernel\memory-manager\VMManager.h"
 
 #include <algorithm> // for std::replace
@@ -583,6 +582,7 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 	case ReturnFirmwareFatal:
 	{
 		xbox::HalWriteSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_SCRATCH, 0, SMC_SCRATCH_DISPLAY_FATAL_ERROR);
+		is_reboot = true;
 
 		g_VMManager.SavePersistentMemory();
 
