@@ -287,7 +287,7 @@ inline DWORD EmuXB2PC_D3DPrimitiveCount(DWORD vertex_count,xbox::X_D3DPRIMITIVET
 			hostprimitivecount = vertex_count/2;//D3D9 converte to line list
 			break;
 		case xbox::X_D3DPT_LINELOOP:
-			hostprimitivecount = vertex_count;//D3D9 converte to line strip
+			hostprimitivecount = vertex_count-1;//D3D9 converte to line strip, the very last line strip is handled seperately.
 			break;
 		case xbox::X_D3DPT_LINESTRIP:
 			hostprimitivecount = vertex_count-1;//D3D9 converte to line strip
