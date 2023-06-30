@@ -57,6 +57,7 @@ enum _ComponentEncoding {
 	R5G5B5A1,
 	R4G4B4A4,
 	A8B8G8R8,
+	Q8W8V8U8,
 	B8G8R8A8,
 	R8G8B8A8,
 	______L8, // NOTE : A=255, R=G=B= L
@@ -427,6 +428,23 @@ void R4G4B4A4ToARGBRow_C(const uint8_t* src_r4g4b4a4, uint8_t* dst_argb, int wid
 		dst_argb[3] = u_expand4(a4);
 		dst_argb += 4;
 		src_r4g4b4a4 += 2;
+	}
+}
+
+void Q8W8V8U8ToARGBRow_C(const uint8_t* src_a8b8g8r8, uint8_t* dst_argb, int width)
+{
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t u8 = src_a8b8g8r8[0];
+		uint8_t v8 = src_a8b8g8r8[1];
+		uint8_t w8 = src_a8b8g8r8[2];
+		uint8_t q8 = src_a8b8g8r8[3];
+		dst_argb[0] = (u8);
+		dst_argb[1] = (v8);
+		dst_argb[2] = (w8);
+		dst_argb[3] = (q8);
+		dst_argb += 4;
+		src_a8b8g8r8 += 4;
 	}
 }
 
@@ -1028,6 +1046,7 @@ static const FormatToARGBRow ComponentConverters[] = {
 	__L6V5U5ToARGBRow_C, // __L6V5U5,
 	R5G5B5A1ToARGBRow_C, // R5G5B5A1,
 	R4G4B4A4ToARGBRow_C, // R4G4B4A4,
+	Q8W8V8U8ToARGBRow_C, // A8B8G8R8,
 	A8B8G8R8ToARGBRow_C, // A8B8G8R8,
 	B8G8R8A8ToARGBRow_C, // B8G8R8A8,
 	R8G8B8A8ToARGBRow_C, // R8G8B8A8,
@@ -1134,7 +1153,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __L6V5U5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_LIN_R6G5B5
 	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
 	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
-	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, A8B8G8R8, D3DFMT_Q8W8V8U8  }, // Alias : X_D3DFMT_A8B8G8R8 // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
+	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, Q8W8V8U8, D3DFMT_A8B8G8R8  , Texture, "X_D3DFMT_Q8W8V8U8 -> D3DFMT_A8B8G8R8" }, // Alias : X_D3DFMT_A8B8G8R8 // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
 	/* 0x3B X_D3DFMT_B8G8R8A8     */ { 32, Swzzld, B8G8R8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
 	/* 0x3C X_D3DFMT_R8G8B8A8     */ { 32, Swzzld, R8G8B8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
 	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { 16, Linear, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_LIN_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
@@ -1875,7 +1894,7 @@ uint8_t* ConvertD3DTextureToARGB(
 
 	// Now we know ConvertD3DTextureToARGBBuffer will do it's thing, allocate the resulting buffer
 	int DstDepth = 1; // for now TODO : Use SrcDepth when supporting volume textures
-	int DstRowPitch = (*pWidth) * sizeof(DWORD); // = sizeof ARGB pixel. TODO : Is this correct?
+	int DstRowPitch = (*pWidth) * 4;// sizeof(*pWidth); // = sizeof ARGB pixel. TODO : Is this correct?
 	int DstSlicePitch = DstRowPitch * (*pHeight); // TODO : Is this correct?
 	int DstSize = DstSlicePitch * DstDepth;
 	uint8_t* pDst = (uint8_t*)malloc(DstSize);
