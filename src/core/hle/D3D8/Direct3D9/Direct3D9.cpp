@@ -1170,7 +1170,7 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 		D3DSURFACE_DESC surfaceDesc;
 		D3DVOLUME_DESC volumeDesc;
 		UINT Level = 0; // TODO : When should Level every be something other than zero, and if so : what other value?
-		switch (pHostResource->GetType()) {// TODO : Better check pHostResource class type
+		switch (pHostResource->GetType()) {// TODO : Better check pHostResource class type... done!
 		case D3DRTYPE_SURFACE:
 			hRet = ((IDirect3DSurface*)pHostResource)->GetDesc(&surfaceDesc);
 			break;
