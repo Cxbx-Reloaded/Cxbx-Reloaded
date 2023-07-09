@@ -44,8 +44,8 @@ extern void CxbxInitWindow(bool bFullInit);
 
 void CxbxUpdateNativeD3DResources();
 
-void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
-void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
+void CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
+void CxbxrImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 
 // initialize direct3d
 extern void EmuD3DInit();

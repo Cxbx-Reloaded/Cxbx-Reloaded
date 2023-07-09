@@ -35,7 +35,7 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\Direct3D9\RenderStates.h" // For XboxRenderStateConverter
 #include "core\hle\D3D8\Direct3D9\VertexShaderSource.h" // For g_VertexShaderSource
-#include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
+#include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxrImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
 #include "devices\xbox.h"
@@ -350,7 +350,7 @@ extern xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride; 
 
 xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat()
 {
-	// Special case for CxbxImpl_End() based drawing
+	// Special case for CxbxrImpl_End() based drawing
 	if (g_InlineVertexBuffer_DeclarationOverride != nullptr) {
 		return g_InlineVertexBuffer_DeclarationOverride; // either &g_InlineVertexBuffer_AttributeFormat or &g_NV2AVertexAttributeFormat
 	}
@@ -1254,8 +1254,8 @@ static void CxbxSetVertexShaderPassthroughProgram()
 	// Test-case : XDK Ripple sample
 
 	// TODO : Apparently, offset and scale are swapped in some XDK versions, but which?
-	CxbxImpl_SetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, scale, 1);
-	CxbxImpl_SetVertexShaderConstant(1 - X_D3DSCM_CORRECTION, offset, 1);
+	CxbxrImpl_SetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, scale, 1);
+	CxbxrImpl_SetVertexShaderConstant(1 - X_D3DSCM_CORRECTION, offset, 1);
 }
 
 CxbxVertexDeclaration* CxbxGetVertexDeclaration()
@@ -1303,7 +1303,7 @@ void CxbxUpdateHostVertexDeclaration()
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
 }
 
-void CxbxImpl_SetScreenSpaceOffset(float x, float y)
+void CxbxrImpl_SetScreenSpaceOffset(float x, float y)
 {
 	// See https://microsoft.github.io/DirectX-Specs/d3d/archive/D3D11_3_FunctionalSpec.htm#3.3.1%20Pixel%20Coordinate%20System
 	static float PixelOffset = 0.53125f; // 0.5 for pixel center + 1/16?
@@ -1312,9 +1312,9 @@ void CxbxImpl_SetScreenSpaceOffset(float x, float y)
 	g_Xbox_ScreenSpaceOffset_y = y + PixelOffset;
 }
 
-// Note : SetVertexShaderInputDirect needs no EMUPATCH CxbxImpl_..., since it just calls SetVertexShaderInput
+// Note : SetVertexShaderInputDirect needs no EMUPATCH CxbxrImpl_..., since it just calls SetVertexShaderInput
 
-void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs)
+void CxbxrImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs)
 {
 	using namespace xbox;
 
@@ -1348,9 +1348,9 @@ void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREA
 	}
 }
 
-// Note : SelectVertexShaderDirect needs no EMUPATCH CxbxImpl_..., since it just calls SelectVertexShader
+// Note : SelectVertexShaderDirect needs no EMUPATCH CxbxrImpl_..., since it just calls SelectVertexShader
 
-void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
+void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
@@ -1378,7 +1378,7 @@ void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 	g_VertexShader_dirty = true;
 }
 
-void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
+void CxbxrImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
 {
 	// pFunction is a X_VSH_SHADER_HEADER pointer
 	// D3DDevice_LoadVertexShaderProgram splits the given function buffer into batch-wise pushes to the NV2A
@@ -1399,7 +1399,7 @@ void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address)
 //static unsigned int ProgramAndConstantsDwords_Offset = 0;//
 //static unsigned int pProgramAndConstants_Offset = 0;//
 
-void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
+void CxbxrImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
 {
 	/*  //dynamic code to get ProgramAndConstantsDwords_Offset and pProgramAndConstants_Offset from vertex shader structure. not used because CxbxGetVertexShaderTokens() has the same function.
 	if (ProgramAndConstantsDwords_Offset == 0 || pProgramAndConstants_Offset == 0) {
@@ -1454,8 +1454,8 @@ void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister)
             if ((nrDWORDS & 3) != 0) LOG_TEST_CASE("NV2A_VP_UPLOAD_CONST arguments should be a multiple of 4!");
             unsigned nrConstants = nrDWORDS / X_VSH_INSTRUCTION_SIZE;
             // TODO : FIXME : Implement and call SetVertexShaderConstants(pNV2ATokens, ConstantAddress, nrConstants);
-            //CxbxImpl_SetVertexShaderConstant() uses Register -96~96. vertex shader pushbuffer snapshot uses 0~192.
-            CxbxImpl_SetVertexShaderConstant(ConstantRegister- X_D3DSCM_CORRECTION, argv, nrConstants);
+            //CxbxrImpl_SetVertexShaderConstant() uses Register -96~96. vertex shader pushbuffer snapshot uses 0~192.
+            CxbxrImpl_SetVertexShaderConstant(ConstantRegister- X_D3DSCM_CORRECTION, argv, nrConstants);
             ConstantRegister += nrConstants;
             
             break;
@@ -1499,13 +1499,13 @@ void SetFixedFunctionDefaultVertexAttributes(DWORD vshFlags) {
 			value = black;
 		}
 
-		// Note : We avoid calling CxbxImpl_SetVertexData4f here, as that would
+		// Note : We avoid calling CxbxrImpl_SetVertexData4f here, as that would
 		// start populating g_InlineVertexBuffer_Table, which is not our intent here.
 		CxbxSetVertexAttribute(i, value[0], value[1], value[2], value[3]);
 	}
 }
 
-void CxbxImpl_SetVertexShader(DWORD Handle)
+void CxbxrImpl_SetVertexShader(DWORD Handle)
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
@@ -1528,8 +1528,8 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 
 	if (pXboxVertexShader->Flags & g_X_VERTEXSHADER_FLAG_PROGRAM) { // Global variable set from CxbxVertexShaderSetFlags
 #if 0 // Since the D3DDevice_SetVertexShader patch already called it's trampoline, these calls have already been executed :
-		CxbxImpl_LoadVertexShader(Handle, 0);
-		CxbxImpl_SelectVertexShader(Handle, 0);
+		CxbxrImpl_LoadVertexShader(Handle, 0);
+		CxbxrImpl_SelectVertexShader(Handle, 0);
 #else // So let's check if that indeed happened :
 		bool bHackCallSelectAgain = false;
 		if (g_Xbox_VertexShader_Handle != Handle) {
@@ -1549,7 +1549,7 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 			// If any of the above test-cases was hit, perhaps our patch on
 			// _SelectVertexShader isn't applied;
 			// 'solve' that by calling it here instead.
-			CxbxImpl_SelectVertexShader(Handle, 0);
+			CxbxrImpl_SelectVertexShader(Handle, 0);
 		}
 #endif
 	} else {
@@ -1578,7 +1578,7 @@ void CxbxImpl_SetVertexShader(DWORD Handle)
 	g_VertexShader_dirty = true;
 }
 
-void CxbxImpl_DeleteVertexShader(DWORD Handle)
+void CxbxrImpl_DeleteVertexShader(DWORD Handle)
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
@@ -1604,7 +1604,7 @@ void CxbxImpl_DeleteVertexShader(DWORD Handle)
 
 // TODO : Remove SetVertexShaderConstant implementation and the patch once
 // CxbxUpdateHostVertexShaderConstants is reliable (ie. : when we're able to flush the NV2A push buffer)
-void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)
+void CxbxrImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 

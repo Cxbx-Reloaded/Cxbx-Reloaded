@@ -697,14 +697,14 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
 }
 
-void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
+void CxbxrImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
 {
 	g_InlineVertexBuffer_PrimitiveType = PrimitiveType;
 	g_InlineVertexBuffer_TableOffset = 0;
 }
 extern void EmuKickOffWait(void);// tmp glue
 
-void CxbxImpl_End()
+void CxbxrImpl_End()
 {
 	using namespace xbox;
 
@@ -748,7 +748,7 @@ void CxbxImpl_End()
 	//	ExFreePool(g_InlineVertexBuffer_Table);
 }
 
-void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
+void CxbxrImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 {
 	using namespace xbox;
 
@@ -812,10 +812,10 @@ void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	}
 }
 
-void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride)
+void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride)
 {
 	if (pStreamData != xbox::zeroptr && Stride == 0) {
-		LOG_TEST_CASE("CxbxImpl_SetStreamSource : Stream assigned, and stride set to 0 (might be okay)");
+		LOG_TEST_CASE("CxbxrImpl_SetStreamSource : Stream assigned, and stride set to 0 (might be okay)");
 	}
 
 	assert(StreamNumber < X_VSH_MAX_STREAMS);

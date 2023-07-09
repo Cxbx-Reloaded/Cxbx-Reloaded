@@ -244,13 +244,13 @@ extern bool g_Xbox_VertexShader_IsFixedFunction;
 extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();
 extern xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber);
 
-extern void CxbxImpl_SetScreenSpaceOffset(float x, float y);
-extern void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
-extern void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD Address);
-extern void CxbxImpl_SetVertexShader(DWORD Handle);
-extern void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address);
-extern void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
-extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
-extern void CxbxImpl_DeleteVertexShader(DWORD Handle);
+extern void CxbxrImpl_SetScreenSpaceOffset(float x, float y);
+extern void CxbxrImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
+extern void CxbxrImpl_LoadVertexShader(DWORD Handle, DWORD Address);
+extern void CxbxrImpl_SetVertexShader(DWORD Handle);
+extern void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address);
+extern void CxbxrImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
+extern void CxbxrImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
+extern void CxbxrImpl_DeleteVertexShader(DWORD Handle);
 extern void CxbxVertexShaderSetFlags();
 #endif
