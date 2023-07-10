@@ -2939,7 +2939,7 @@ void Direct3D_CreateDevice_End
 {
 #if 1 // restore the usage for EmuKickOff()
     // Set g_pXbox_D3DDevice to point to the Xbox D3D Device
-    auto it = g_SymbolAddresses.find("D3DDEVICE");
+    auto it = g_SymbolAddresses.find("D3D_g_pDevice");
     if (it != g_SymbolAddresses.end()) {
         g_pXbox_D3DDevice = (xbox::dword_xt *)it->second;
     }
