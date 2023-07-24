@@ -228,7 +228,9 @@ static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarg
 
 
 
-static xbox::dword_xt                  *g_pXbox_D3DDevice=nullptr; // TODO: This is a pointer to a D3DDevice structure, 
+static xbox::dword_xt                  *g_pXbox_D3DDevice=nullptr; // TODO: This is a pointer to a D3DDevice structure,
+static xbox::dword_xt                 **g_pXbox_pPush = nullptr; // TODO: This is a pointer to current pushbuffer,
+static xbox::dword_xt                 **g_pXbox_pPushLimit = nullptr; // TODO: This is a pointer to the end of current pushbuffer,
 
 
 // Static Function(s)
@@ -348,6 +350,8 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader_4,                       (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI, D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle,()                                                                                                  );  \
     XB_MACRO(xbox::void_xt,       WINAPI, D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle,()                                                                                                  );  \
+    XB_MACRO(xbox::dword_xt*,     WINAPI,     CDevice_MakeSpace,                                  ()                                                                                                    );  \
+    XB_MACRO(xbox::dword_xt*,     WINAPI,     D3DDevice_MakeSpace,                                ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_PersistDisplay,                           (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_Reset,                                    (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
@@ -2893,6 +2897,38 @@ void GetBackBufferPixelDimensions(float& x, float& y) {
 		x /= aaX;
 		y /= aaY;
 	}
+}
+
+
+xbox::dword_xt* CxbxrImpl_MakeSpace(void)
+{
+	DWORD d3ddevice = *g_pXbox_D3DDevice;
+	xbox::dword_xt* result;
+	if (XB_TRMP(D3DDevice_MakeSpace)){
+		__asm {
+			push edx
+			push ecx
+			mov ecx, d3ddevice
+			call XB_TRMP(D3DDevice_MakeSpace)
+			mov result, eax
+			pop ecx
+			pop edx
+		}
+	}
+	else if (XB_TRMP(CDevice_MakeSpace)) {
+		__asm {
+			push edx
+			push ecx
+			mov ecx, d3ddevice
+			call XB_TRMP(CDevice_MakeSpace)
+			mov result, eax
+			pop ecx
+			pop edx
+		}
+	}else{
+		CxbxrAbort("MakeSpace not available!");
+    }
+	return result;
 }
 
 void Direct3D_CreateDevice_Start
