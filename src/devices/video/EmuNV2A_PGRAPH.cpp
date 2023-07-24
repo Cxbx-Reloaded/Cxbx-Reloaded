@@ -35,6 +35,7 @@
 
 #include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
 #include "core\hle\D3D8\XbVertexShader.h"
+#include "core\hle\D3D8\Direct3D9\HleInNv2a.h"
 
 // FIXME
 #define qemu_mutex_lock_iothread()
@@ -1801,6 +1802,7 @@ int pgraph_handle_method(
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
                 //case NV097_SET_OBJECT:
+                case NV097_HLE_API:
 				case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
 				// NV097_ARRAY_ELEMENT32 is PUSH_INSTR_IMM_INC, test case: Otogi. it's logical since NV097_ARRAY_ELEMENT32 is used to transfer the last odd index, if there were one.
@@ -1833,7 +1835,142 @@ int pgraph_handle_method(
             switch (method) {
                 case NV097_SET_OBJECT://done
                     break;
-
+                case NV097_HLE_API:
+                {
+                    X_D3DAPI_ENUM HLEApi;
+                    HLEApi = (X_D3DAPI_ENUM)argv[0];
+                    switch (HLEApi)
+                    {
+                    case X_D3DDevice_GetTexture:  break;
+                    case X_D3DDevice_GetTextureStageState:  break;
+                    case X_D3DDevice_GetTile:  break;
+                    case X_D3DDevice_GetTileCompressionTags:  break;
+                    case X_D3DDevice_GetTransform:  break;
+                    case X_D3DDevice_GetVertexBlendModelView:  break;
+                    case X_D3DDevice_GetVertexShader:  break;
+                    case X_D3DDevice_GetVertexShaderConstant:  break;
+                    case X_D3DDevice_GetVertexShaderDeclaration:  break;
+                    case X_D3DDevice_GetVertexShaderFunction:  break;
+                    case X_D3DDevice_GetVertexShaderInput:  break;
+                    case X_D3DDevice_GetVertexShaderSize:  break;
+                    case X_D3DDevice_GetVertexShaderType:  break;
+                    case X_D3DDevice_GetViewport:  break;
+                    case X_D3DDevice_GetViewportOffsetAndScale:  break;
+                    case X_D3DDevice_GetVisibilityTestResult:  break;
+                    case X_D3DDevice_InsertCallback:  break;
+                    case X_D3DDevice_InsertFence:  break;
+                    case X_D3DDevice_IsBusy:  break;
+                    case X_D3DDevice_IsFencePending:  break;
+                    case X_D3DDevice_KickPushBuffer:  break;
+                    case X_D3DDevice_LightEnable:  break;
+                    case X_D3DDevice_LoadVertexShader:  break;
+                    case X_D3DDevice_LoadVertexShader_4:  break;
+                    case X_D3DDevice_LoadVertexShaderProgram:  break;
+                    case X_D3DDevice_MultiplyTransform:  break;
+                    case X_D3DDevice_Nop:  break;
+                    case X_D3DDevice_PersistDisplay:  break;
+                    case X_D3DDevice_Present:  break;
+                    case X_D3DDevice_PrimeVertexCache:  break;
+                    case X_D3DDevice_Reset:  break;
+                    case X_D3DDevice_Reset_0__LTCG_edi1:  break;
+                    case X_D3DDevice_Reset_0__LTCG_ebx1:  break;
+                    case X_D3DDevice_RunPushBuffer:  break;
+                    case X_D3DDevice_RunVertexStateShader:  break;
+                    case X_D3DDevice_SelectVertexShader:  break;
+                    case X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2:  break;
+                    case X_D3DDevice_SelectVertexShader_4__LTCG_eax1:  break;
+                    case X_D3DDevice_SelectVertexShaderDirect:  break;
+                    case X_D3DDevice_SetBackBufferScale:  break;
+                    case X_D3DDevice_SetBackMaterial:  break;
+                    case X_D3DDevice_SetCopyRectsState:  break;
+                    case X_D3DDevice_SetDebugMarker:  break;
+                    case X_D3DDevice_SetDepthClipPlanes:  break;
+                    case X_D3DDevice_SetFlickerFilter:  break;
+                    case X_D3DDevice_SetFlickerFilter_0:  break;
+                    case X_D3DDevice_SetGammaRamp:  break;
+                    case X_D3DDevice_SetIndices:  break;
+                    case X_D3DDevice_SetIndices_4:  break;
+                    case X_D3DDevice_SetLight:  break;
+                    case X_D3DDevice_SetMaterial:  break;
+                    case X_D3DDevice_SetModelView:  break;
+                    case X_D3DDevice_SetOverscanColor:  break;
+                    case X_D3DDevice_SetPalette:  break;
+                    case X_D3DDevice_SetPalette_4:  break;
+                    case X_D3DDevice_SetPixelShader:  break;
+                    case X_D3DDevice_SetPixelShader_0__LTCG_eax_handle:  break;
+                    case X_D3DDevice_SetPixelShaderConstant:  break;
+                    case X_D3DDevice_SetPixelShaderConstant_4:  break;
+                    case X_D3DDevice_SetPixelShaderProgram:  break;
+                    case X_D3DDevice_SetRenderState:  break;
+                    case X_D3DDevice_SetRenderState_Simple:  break;
+                    case X_D3DDevice_SetRenderStateNotInline:  break;
+                    case X_D3DDevice_SetRenderTarget:  break;
+                    case X_D3DDevice_SetRenderTarget_0:  break;
+                    case X_D3DDevice_SetRenderTargetFast:  break;
+                    case X_D3DDevice_SetScissors:  break;
+                    case X_D3DDevice_SetScreenSpaceOffset:  break;
+                    case X_D3DDevice_SetShaderConstantMode:  break;
+                    case X_D3DDevice_SetShaderConstantMode_0__LTCG_eax1:  break;
+                    case X_D3DDevice_SetSoftDisplayFilter:  break;
+                    case X_D3DDevice_SetStipple:  break;
+                    case X_D3DDevice_SetStreamSource:  break;
+                    case X_D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride:  break;
+                    case X_D3DDevice_SetStreamSource_4:  break;
+                    case X_D3DDevice_SetStreamSource_8:  break;
+                    case X_D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber:  break;
+                    case X_D3DDevice_SetSwapCallback:  break;
+                    case X_D3DDevice_SetTexture:  break;
+                    case X_D3DDevice_SetTexture_4__LTCG_eax_pTexture:  break;
+                    case X_D3DDevice_SetTexture_4__LTCG_eax_Stage:  break;
+                    case X_D3DDevice_SetTextureStageState:  break;
+                    case X_D3DDevice_SetTextureStageStateNotInline:  break;
+                    case X_D3DDevice_SetTile:  break;
+                    case X_D3DDevice_SetTimerCallback:  break;
+                    case X_D3DDevice_SetTransform:  break;
+                    case X_D3DDevice_SetTransform_0__LTCG_eax1_edx2:  break;
+                    case X_D3DDevice_SetVertexBlendModelView:  break;
+                    case X_D3DDevice_SetVertexData2f:  break;
+                    case X_D3DDevice_SetVertexData2s:  break;
+                    case X_D3DDevice_SetVertexData4f:  break;
+                    case X_D3DDevice_SetVertexData4f_16:  break;
+                    case X_D3DDevice_SetVertexData4s:  break;
+                    case X_D3DDevice_SetVertexData4ub:  break;
+                    case X_D3DDevice_SetVertexDataColor:  break;
+                    case X_D3DDevice_SetVertexShader:   CxbxrImpl_SetVertexShader((DWORD)argv[1]); break;
+                    case X_D3DDevice_SetVertexShader_0: CxbxrImpl_SetVertexShader((DWORD)argv[1]); break;
+                    case X_D3DDevice_SetVertexShaderConstant:  break;
+                    case X_D3DDevice_SetVertexShaderConstant_8:  break;
+                    case X_D3DDevice_SetVertexShaderConstant1:  break;
+                    case X_D3DDevice_SetVertexShaderConstant4:  break;
+                    case X_D3DDevice_SetVertexShaderConstantFast:  break;
+                    case X_D3DDevice_SetVertexShaderConstant1Fast:  break;
+                    case X_D3DDevice_SetVertexShaderConstantNotInline:  break;
+                    case X_D3DDevice_SetVertexShaderConstantNotInlineFast:  break;
+                    case X_D3DDevice_SetVertexShaderInput:  break;
+                    case X_D3DDevice_SetVertexShaderInputDirect:  break;
+                    case X_D3DDevice_SetVerticalBlankCallback:  break;
+                    case X_D3DDevice_SetViewport:  break;
+                    case X_D3DDevice_SetWaitCallback:  break;
+                    case X_D3DDevice_Swap:  break;	case X_D3DDevice_Swap_0:  break;
+                    case X_D3DDevice_SwitchTexture:  break;
+                    case X_D3DDevice_UpdateOverlay:  break;
+                    case X_D3DResource_BlockUntilNotBusy:  break;
+                    case X_D3D_BlockOnTime:  break;	case X_D3D_BlockOnTime_4:  break;
+                    case X_D3D_CommonSetRenderTarget:  break;
+                    case X_D3D_DestroyResource:  break;
+                    case X_D3D_DestroyResource__LTCG:  break;
+                    case X_D3D_LazySetPointParams:  break;
+                    case X_D3D_SetCommonDebugRegisters:  break;
+                    case X_Direct3D_CreateDevice:  break;
+                    case X_Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface:  break;
+                    case X_Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface:  break;
+                    case X_Direct3D_CreateDevice_4:  break;
+                    case X_Lock2DSurface:  break;
+                    case X_Lock3DSurface:  break;
+                    default:break;
+                    }
+                }
+                    break;
                 case NV097_NO_OPERATION://done
                     /* The bios uses nop as a software method call -
                      * it seems to expect a notify interrupt if the parameter isn't 0.
@@ -4000,7 +4137,7 @@ int pgraph_handle_method(
 						*/
 					}else if (slot== NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED){//fix function mode
 
-						//Call CxbxImpl_SetVertexShaderInput(pg->vsh_FVF_handle) here? or set the global xbox vertex attribute []
+						//Call CxbxrImpl_SetVertexShaderInput(pg->vsh_FVF_handle) here? or set the global xbox vertex attribute []
 						//or g_Xbox_SetVertexShaderInput_Attributes = *CxbxGetVertexShaderAttributes(pXboxVertexShader); ??
 						//to set vertex format info, but wihthout stream info.
 
