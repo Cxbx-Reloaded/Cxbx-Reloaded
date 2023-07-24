@@ -7527,6 +7527,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	// Please raise the alarm if this is ever not the case
 	XB_TRMP(D3DDevice_SetVertexShader)(Handle);
 
+	//init g_pXbox_pPush and g_pXbox_pPushLimit since SetVertexSahder is always called inside CreateDevice().
+	if (g_pXbox_pPush == nullptr) {
+		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
+		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
+	}
+
 	CxbxrImpl_SetVertexShader(Handle);
 }
 
@@ -7557,6 +7563,11 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_
 	__asm {
 		mov  ebx, Handle
 		call XB_TRMP(D3DDevice_SetVertexShader_0)
+	}
+	//init g_pXbox_pPush and g_pXbox_pPushLimit since SetVertexSahder is always called inside CreateDevice().
+	if (g_pXbox_pPush == nullptr) {
+		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
+		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 	}
 
 	CxbxrImpl_SetVertexShader(Handle);
