@@ -3546,6 +3546,10 @@ extern bool is_nv2a_pfifo_busy(NV2AState* d);//tmp glue
 
 void EmuKickOff(void)
 {
+#if !PGRAPHUSE_EmuKickOff
+	return;
+#endif
+
 	DWORD * pXbox_D3DDevice;
 	DWORD  Xbox_D3DDevice;
 	// Set g_Xbox_D3DDevice to point to the Xbox D3D Device
@@ -3577,6 +3581,9 @@ void EmuKickOff(void)
 
 void EmuKickOffWait(void)
 {
+#if !PGRAPHUSE_EmuKickOffWait
+	return;
+#endif
 	NV2AState* d = g_NV2A->GetDeviceState();
 	EmuKickOff();
 	//while (g_nv2a_fifo_is_busy) {
@@ -4981,9 +4988,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 )
 {
 	LOG_FUNC_ONE_ARG(PrimitiveType);
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_Begin)(PrimitiveType);
 	}
+	*/
 	assert((xbox::X_D3DPRIMITIVETYPE)PrimitiveType != xbox::X_D3DPT_INVALID);
 	//CxbxrImpl_Begin(PrimitiveType);
 
@@ -5018,9 +5027,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 		LOG_FUNC_ARG(a)
 		LOG_FUNC_ARG(b)
 		LOG_FUNC_END;
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData2f)(Register, a, b);
 	}
+	*/
 	//CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 
 	// init pushbuffer related pointers
@@ -5033,8 +5044,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)a;
-	pPush_local[4] = (DWORD)b;
+	pPush_local[3] = FtoDW(a);
+	pPush_local[4] = FtoDW(b);
 	pPush_local[5] = FtoDW(0.0f);
 	pPush_local[6] = FtoDW(1.0f);
 
@@ -5061,9 +5072,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 		LOG_FUNC_ARG(a)
 		LOG_FUNC_ARG(b)
 		LOG_FUNC_END;
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData2s)(Register, a, b);
 	}
+	*/
 	// Test case: Halo
 	// Note : XQEMU verified that the int16_t arguments
 	// must be mapped to floats in the range [-32768.0, 32767.0]
@@ -5084,8 +5097,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)fa;
-	pPush_local[4] = (DWORD)fb;
+	pPush_local[3] = FtoDW(fa);
+	pPush_local[4] = FtoDW(fb);
 	pPush_local[5] = FtoDW(0.0f);
 	pPush_local[6] = FtoDW(1.0f);
 
@@ -5154,9 +5167,11 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_
 		LTCG_PROLOGUE
 		mov  Register, edi
 	}
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4f_16)(a, b, c, d);
 	}
+	*/
 	// Log
 	D3DDevice_SetVertexData4f_16(Register, a, b, c, d);
 
@@ -5187,9 +5202,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4f)(Register, a, b, c, d);
 	}
+	*/
 	//CxbxrImpl_SetVertexData4f(Register, a, b, c, d);
 
 	// init pushbuffer related pointers
@@ -5231,9 +5248,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4ub)(Register, a, b, c, d);
 	}
+	*/
 	const float fa = a / 255.0f;
 	const float fb = b / 255.0f;
 	const float fc = c / 255.0f;
@@ -5280,9 +5299,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4s)(Register, a, b, c, d);
 	}
+	*/
 	// Test case: Halo
 	// Note : XQEMU verified that the int16_t arguments
 	// must be mapped to floats in the range [-32768.0, 32767.0]
@@ -5327,9 +5348,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 		LOG_FUNC_ARG(Register)
 		LOG_FUNC_ARG(Color)
 		LOG_FUNC_END;
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexDataColor)(Register, Color);
 	}
+	*/
     const D3DXCOLOR XColor = Color;
 
     //CxbxrImpl_SetVertexData4f(Register, XColor.r, XColor.g, XColor.b, XColor.a);
@@ -5360,12 +5383,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
 {
 	LOG_FUNC();
+	/*
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_End)();
 	}
-
+	*/
 	// if we unpatch D3DDevice_Begin/End, then this EmuKickOffWait() must be called in order to keep pushbuffer/HLE from race condition.
-	//EmuKickOffWait();
+	EmuKickOffWait();
 
 	// in CxbxrImpl_End() EmuKickOffWait() is called.
 	//CxbxrImpl_End(); //we unpatched D3DDevice_End, but found that there are memory corruptions introduced by multi entrance. so we have to come out a workaround.
@@ -7695,9 +7719,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
 		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 	}
+#if !USEPGRAPH_SetVertexShader
 
-	//CxbxrImpl_SetVertexShader(Handle);
-	
+	CxbxrImpl_SetVertexShader(Handle);
+#else	
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
@@ -7712,6 +7737,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	//set pushbuffer pointer to the new beginning
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
+#endif
 }
 
 // Overload for logging
@@ -7721,7 +7747,7 @@ static void D3DDevice_SetVertexShader_0
 )
 {
 	LOG_FUNC_ONE_ARG(Handle);
-
+#if USEPGRAPH_SetVertexShader
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
@@ -7736,7 +7762,7 @@ static void D3DDevice_SetVertexShader_0
 	//set pushbuffer pointer to the new beginning
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
-
+#endif
 }
 
 // This uses a custom calling convention where Handle is passed in EBX
@@ -7763,9 +7789,9 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_
 		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
 		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 	}
-
-	//CxbxrImpl_SetVertexShader(Handle);
-
+#if !USEPGRAPH_SetVertexShader
+	CxbxrImpl_SetVertexShader(Handle);
+#endif
 
 	__asm {
 		LTCG_EPILOGUE
