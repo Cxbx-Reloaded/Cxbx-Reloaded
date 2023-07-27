@@ -1200,10 +1200,134 @@ void CxbxSetVertexShaderSlots(DWORD* pTokens, DWORD Address, DWORD NrInstruction
 	//g_Xbox_VertexShader_FunctionSlots[(X_VSH_MAX_INSTRUCTION_COUNT * X_VSH_INSTRUCTION_SIZE) + 3] = 1;
 	HLE_get_NV2A_vertex_program_slot_ptr(X_VSH_MAX_INSTRUCTION_COUNT)[3] = 1;
 }
+//------------------------------------------------------------------------------
+// g_PassthruProgramSpecularFog 
+//
+// Xbox Shader Assembler 1.00.3624.1
+//
+//    ; szPassthruProgramSpecFog
+//    ; from nvKelvinState.cpp
+//    xvs.1.1
+//    
+//    #pragma screenspace
+//    
+//        mov r0,v0
+//        rcp r0.w,r0.w
+//        mul r0,r0,c[-96]
+//        add oPos,r0,c[-95]
+//        mov oD0,v3
+//        mov oD1,v4
+//        mov oFog,v4.w
+//        mov oPts,v1.x
+//        mov oB0,v7
+//        mov oB1,v8
+//        mov oT0,v9
+//        mov oT1,v10
+//        mov oT2,v11
+//        mov oT3,v12
 
+CONST DWORD g_PassthruProgramSpecularFog[] =
+{
+		0x00000000, 0x0020001b, 0x0836106c, 0x2f100ff8,
+		0x00000000, 0x0420061b, 0x083613fc, 0x5011f818,
+		0x00000000, 0x002008ff, 0x0836106c, 0x2070f828,
+		0x00000000, 0x0240081b, 0x1436186c, 0x2f20f824,
+		0x00000000, 0x0060201b, 0x2436106c, 0x3070f800,
+		0x00000000, 0x00200200, 0x0836106c, 0x2070f830,
+		0x00000000, 0x00200e1b, 0x0836106c, 0x2070f838,
+		0x00000000, 0x0020101b, 0x0836106c, 0x2070f840,
+		0x00000000, 0x0020121b, 0x0836106c, 0x2070f848,
+		0x00000000, 0x0020141b, 0x0836106c, 0x2070f850,
+		0x00000000, 0x0020161b, 0x0836106c, 0x2070f858,
+		0x00000000, 0x0020181b, 0x0836106c, 0x2070f861
+};
+// these 3 shaders are reversed from SetVertexShaders()
+//------------------------------------------------------------------------------
+// g_PassthruProgramZFog
+//
+// Xbox Shader Assembler 1.00.3624.1
+//
+//    ; szPassthruProgramZFog
+//    ; from nvKelvinState.cpp
+//    xvs.1.1
+//    
+//    #pragma screenspace
+//    
+//        mov r0,v0
+//        rcp r0.w,r0.w
+//        mul r0,r0,c[-96]
+//        add oPos,r0,c[-95]
+//        mov oD0,v3
+//        mov oD1,v4
+//        mov oFog,v0.z
+//        mov oPts,v1.x
+//        mov oB0,v7
+//        mov oB1,v8
+//        mov oT0,v9
+//        mov oT1,v10
+//        mov oT2,v11
+//        mov oT3,v12
+
+CONST DWORD g_PassthruProgramZFog[] =
+{
+		0x00000000, 0x022000aa, 0x0836086c, 0x201ff828,
+		0x00000000, 0x0020081b, 0x0836106c, 0x2070f820,
+		0x00000000, 0x0420061b, 0x083613fc, 0x5011f818,
+		0x00000000, 0x00200e1b, 0x0836106c, 0x2070f838,
+		0x00000000, 0x0240021b, 0x14361800, 0x2f20f834,
+		0x00000000, 0x0060201b, 0x2436106c, 0x3070f800,
+		0x00000000, 0x0020101b, 0x0836106c, 0x2070f840,
+		0x00000000, 0x0020121b, 0x0836106c, 0x2070f848,
+		0x00000000, 0x0020141b, 0x0836106c, 0x2070f850,
+		0x00000000, 0x0020161b, 0x0836106c, 0x2070f858,
+		0x00000000, 0x0020181b, 0x0836106c, 0x2070f861
+};
+
+//------------------------------------------------------------------------------
+// g_PassthruProgramWFog
+//
+// Xbox Shader Assembler 1.00.3624.1
+//
+//    ; szPassthruProgramWFog
+//    ; from nvKelvinState.cpp
+//    xvs.1.1
+//    
+//    #pragma screenspace
+//    
+//        mov r0,v0
+//        rcp r0.w,r0.w
+//        mul r0,r0,c[-96]
+//        add oPos,r0,c[-95]
+//        mov oD0,v3
+//        mov oD1,v4
+//        rcp oFog,v0.w
+//        mov oPts,v1.x
+//        mov oB0,v7
+//        mov oB1,v8
+//        mov oT0,v9
+//        mov oT1,v10
+//        mov oT2,v11
+//        mov oT3,v12
+
+CONST DWORD g_PassthruProgramWFog[] =
+{
+		0x00000000, 0x0020001b, 0x0836106c, 0x2f100ff8,
+		0x00000000, 0x0420061b, 0x083613fc, 0x5011f818,
+		0x00000000, 0x0400001b, 0x083613fc, 0x2070f82c,
+		0x00000000, 0x0240081b, 0x1436186c, 0x2f20f824,
+		0x00000000, 0x0060201b, 0x2436106c, 0x3070f800,
+		0x00000000, 0x00200200, 0x0836106c, 0x2070f830,
+		0x00000000, 0x00200e1b, 0x0836106c, 0x2070f838,
+		0x00000000, 0x0020101b, 0x0836106c, 0x2070f840,
+		0x00000000, 0x0020121b, 0x0836106c, 0x2070f848,
+		0x00000000, 0x0020141b, 0x0836106c, 0x2070f850,
+		0x00000000, 0x0020161b, 0x0836106c, 0x2070f858,
+		0x00000000, 0x0020181b, 0x0836106c, 0x2070f861
+};
 static void CxbxSetVertexShaderPassthroughProgram()
 {
-	static DWORD XboxShaderBinaryPassthrough[] = {
+	DWORD* XboxShaderBinaryPassthrough;
+	/* [] = {
 		0, 0x0020001B, 0x0836106C, 0x2F100FF8,
 		0, 0x0420061B, 0x083613FC, 0x5011F818,
 		0, 0x002008FF, 0x0836106C, 0x2070F828,
@@ -1217,7 +1341,28 @@ static void CxbxSetVertexShaderPassthroughProgram()
 		0, 0x0020161B, 0x0836106C, 0x2070F858,
 		0, 0x0020181B, 0x0836106C, 0x2070F861 // FLD_FINAL is set here!
 	};
-
+	*/
+	DWORD programDwords=0;
+	//get xbox side projection transform matrix to determin the whether for source is Z or W.
+	extern void CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, D3DMATRIX * pMatrix); // temp glue
+	extern D3DMATRIX g_xbox_transform_Projection;
+	CxbxrImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &g_xbox_transform_Projection);
+	if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE) == D3DFOG_NONE)
+	{
+		programDwords = sizeof(g_PassthruProgramSpecularFog) / sizeof(DWORD);
+		XboxShaderBinaryPassthrough =(DWORD *) g_PassthruProgramSpecularFog;
+	}
+	// this condition is reversed from SetTansform() api and SetVertexShader() api.
+	else if (g_xbox_transform_Projection._14==0.0f&& g_xbox_transform_Projection._24 == 0.0f && g_xbox_transform_Projection._34 == 0.0f && g_xbox_transform_Projection._44 == 1.0f)
+	{
+		programDwords = sizeof(g_PassthruProgramZFog) / sizeof(DWORD);
+		XboxShaderBinaryPassthrough = (DWORD*)g_PassthruProgramZFog;
+	}
+	else
+	{
+		programDwords = sizeof(g_PassthruProgramWFog) / sizeof(DWORD);
+		XboxShaderBinaryPassthrough = (DWORD*)g_PassthruProgramWFog;
+	}
 	// LOG_TEST_CASE("Setting Xbox passthrough shader");
 	// Test cases : Many XDK samples & games
 
@@ -1226,7 +1371,7 @@ static void CxbxSetVertexShaderPassthroughProgram()
 	// one for FOGSOURCEZ
 	// one for WFOG
 
-	CxbxSetVertexShaderSlots(&XboxShaderBinaryPassthrough[0], 0, sizeof(XboxShaderBinaryPassthrough) / X_VSH_INSTRUCTION_SIZE_BYTES);
+	CxbxSetVertexShaderSlots(&XboxShaderBinaryPassthrough[0], 0, (programDwords*4) / X_VSH_INSTRUCTION_SIZE_BYTES);
 
 	// Passthrough programs require scale and offset to be set in constants zero and one (both minus 96)
 	// (Note, these are different from GetMultiSampleOffsetAndScale / GetViewPortOffsetAndScale)

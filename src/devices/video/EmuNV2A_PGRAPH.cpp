@@ -1886,13 +1886,19 @@ int pgraph_handle_method(
                     case X_D3DDevice_DrawPrimitiveUP:  break;
                     case X_D3DDevice_DrawRectPatch:  break;
                     case X_D3DDevice_DrawTriPatch:  break;
-                    case X_D3DDevice_DrawVertices:  break;
-                    case X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3:  break;
-                    case X_D3DDevice_DrawVertices_8__LTCG_eax3:  break;
-                    case X_D3DDevice_DrawVerticesUP:  break;
-                    case X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3:  break;
+                    case X_D3DDevice_DrawVertices:  //break;
+                    case X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3:  //break;
+                    case X_D3DDevice_DrawVertices_8__LTCG_eax3:
+                        //CxbxrImpl_DrawVertices((xbox::X_D3DPRIMITIVETYPE)argv[1], (xbox::uint_xt)argv[2], (xbox::uint_xt)argv[3]);
+                        break;
+                    case X_D3DDevice_DrawVerticesUP:  //break;
+                    case X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3:
+                        //CxbxrImpl_DrawVerticesUP((xbox::X_D3DPRIMITIVETYPE)argv[1],(xbox::uint_xt) argv[2], (xbox::PVOID) argv[3], (xbox::uint_xt)argv[4]);
+                        break;
                     case X_D3DDevice_EnableOverlay:  break;
-                    case X_D3DDevice_End: CxbxrImpl_End(); break;
+                    case X_D3DDevice_End:
+                        CxbxrImpl_End();
+                        break;
                     case X_D3DDevice_EndPush:  break;
                     case X_D3DDevice_EndPushBuffer:  break;
                     case X_D3DDevice_EndScene:  break;
@@ -1963,9 +1969,13 @@ int pgraph_handle_method(
                     case X_D3DDevice_IsFencePending:  break;
                     case X_D3DDevice_KickPushBuffer:  break;
                     case X_D3DDevice_LightEnable:  break;
-                    case X_D3DDevice_LoadVertexShader:  break;
-                    case X_D3DDevice_LoadVertexShader_4:  break;
-                    case X_D3DDevice_LoadVertexShaderProgram:  break;
+                    case X_D3DDevice_LoadVertexShader:       // break;
+                    case X_D3DDevice_LoadVertexShader_4:
+                        CxbxrImpl_LoadVertexShader(argv[1], argv[2]);
+                        break;
+                    case X_D3DDevice_LoadVertexShaderProgram:
+                        CxbxrImpl_LoadVertexShaderProgram((DWORD * )argv[1], argv[2]);
+                        break;
                     case X_D3DDevice_MultiplyTransform:  break;
                     case X_D3DDevice_Nop:  break;
                     case X_D3DDevice_PersistDisplay:  break;
@@ -1976,9 +1986,11 @@ int pgraph_handle_method(
                     case X_D3DDevice_Reset_0__LTCG_ebx1:  break;
                     case X_D3DDevice_RunPushBuffer:  break;
                     case X_D3DDevice_RunVertexStateShader:  break;
-                    case X_D3DDevice_SelectVertexShader:  break;
-                    case X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2:  break;
-                    case X_D3DDevice_SelectVertexShader_4__LTCG_eax1:  break;
+                    case X_D3DDevice_SelectVertexShader:                  // break;
+                    case X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2: // break;
+                    case X_D3DDevice_SelectVertexShader_4__LTCG_eax1:
+                        CxbxrImpl_SelectVertexShader(argv[1], argv[2]);
+                        break;
                     case X_D3DDevice_SelectVertexShaderDirect:  break;
                     case X_D3DDevice_SetBackBufferScale:  break;
                     case X_D3DDevice_SetBackMaterial:  break;
@@ -2031,13 +2043,17 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVertexBlendModelView:  break;
                     case X_D3DDevice_SetVertexData2f:  break;
                     case X_D3DDevice_SetVertexData2s:  break;
-                    case X_D3DDevice_SetVertexData4f: CxbxrImpl_SetVertexData4f(argv[1],DWtoF(argv[2]), DWtoF(argv[3]), DWtoF(argv[4]), DWtoF(argv[5])); break;
+                    case X_D3DDevice_SetVertexData4f:
+                        CxbxrImpl_SetVertexData4f(argv[1],DWtoF(argv[2]), DWtoF(argv[3]), DWtoF(argv[4]), DWtoF(argv[5]));
+                        break;
                     case X_D3DDevice_SetVertexData4f_16:  break;
                     case X_D3DDevice_SetVertexData4s:  break;
                     case X_D3DDevice_SetVertexData4ub:  break;
                     case X_D3DDevice_SetVertexDataColor:  break;
-                    case X_D3DDevice_SetVertexShader:   CxbxrImpl_SetVertexShader((DWORD)argv[1]); break;
-                    case X_D3DDevice_SetVertexShader_0: CxbxrImpl_SetVertexShader((DWORD)argv[1]); break;
+                    case X_D3DDevice_SetVertexShader:   // break;
+                    case X_D3DDevice_SetVertexShader_0:
+                        CxbxrImpl_SetVertexShader((DWORD)argv[1]);
+                        break;
                     case X_D3DDevice_SetVertexShaderConstant:  break;
                     case X_D3DDevice_SetVertexShaderConstant_8:  break;
                     case X_D3DDevice_SetVertexShaderConstant1:  break;
@@ -3013,6 +3029,7 @@ int pgraph_handle_method(
 					    //for continuous batch NV097_SET_TRANSFORM_PROGRAM methods, it will not have NV097_SET_TRANSFORM_PROGRAM_LOAD in between.
 					slot = (method - NV097_SET_TRANSFORM_PROGRAM) / 4;
                     // ONLY INCREMENT IN BELOW COPY LOOP : pg->KelvinPrimitive.SetTransformProgramLoad += slot/4;
+                    /*
                     for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         //target program register address is prestored in KelvinPrimitive.SetTransformProgramLoad
@@ -3036,6 +3053,14 @@ int pgraph_handle_method(
                     }
 					// safe guard to make sure vertex shader program token parser won't went over the end of final slot.
 					pg->vsh_program_slots[X_VSH_MAX_INSTRUCTION_COUNT][3] = 1; // TODO : Move this to immediately prior to parsing
+                    */
+                    // use CxbxSetVertexShaderSlots() directly, these codes come from CxbxrImpl_LoadVertexShaderProgram(). update pg->KelvinPrimitive.SetTransformProgramLoad accrodingly.
+                    extern void CxbxSetVertexShaderSlots(DWORD * pTokens, DWORD Address, DWORD NrInstructions);
+                    CxbxSetVertexShaderSlots((DWORD*) & argv[0], pg->KelvinPrimitive.SetTransformProgramLoad, (method_count / 4));
+                    extern bool g_VertexShader_dirty; // tmp glue
+                    // set vertex shader dirty flag
+                    g_VertexShader_dirty = true;
+                    pg->KelvinPrimitive.SetTransformProgramLoad += (method_count / 4);
                     break;
                 }
 
@@ -3049,6 +3074,7 @@ int pgraph_handle_method(
                     slot = (method - NV097_SET_TRANSFORM_CONSTANT) / 4;
                     //slot is sopposed to be 0 here.
                     // ONLY INCREMENT IN BELOW COPY LOOP : pg->KelvinPrimitive.SetTransformConstantLoad += slot/4;
+                    /*
                     for (int argc = 0; argc < method_count; argc++,slot++) {
                         arg0 = argv[argc];
                         //the target constant register address is prestored in NV097_SET_TRANSFORM_CONSTANT_LOAD  KelvinPrimitive.SetTransformConstantLoad
@@ -3065,7 +3091,11 @@ int pgraph_handle_method(
                             // TODO : Figure out if the actual NV2A increments NV097_SET_TRANSFORM_CONSTANT_LOAD / SetTransformConstantLoad per fully written slot, or only when the final slot is written to?
                         }
                     }
-					break;
+                    */
+                    // use CxbxrImpl_SetVertexShaderConstant() directly and update KelvinPrimitive.SetTransformConstantLoad accrodingly.
+                    CxbxrImpl_SetVertexShaderConstant(pg->KelvinPrimitive.SetTransformConstantLoad- X_D3DSCM_CORRECTION,&argv[0],method_count/4);
+                    pg->KelvinPrimitive.SetTransformConstantLoad += (method_count / 4);
+                    break;
                 }
 
                 /* Handles NV097_SET_BACK_LIGHT* */
@@ -4206,8 +4236,10 @@ int pgraph_handle_method(
 								 // NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN:
 								      VertexShader.Flags & VERTEXSHADER_WRITE, method count 2)
 						*/
-						//if (method_count==2){
-							//if (argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY) {
+						if (method_count==2){
+                            // dirty hack. for program shader, there will be a NV097_SET_TRANSFORM_PROGRAM_START right after NV097_SET_TRANSFORM_EXECUTION_MODE in SelectVertexShader().
+                            // but for passthrough shader, it won't call SelectVertexShader(), but only use NV097_SET_TRANSFORM_PROGRAM_START right before NV097_SET_TRANSFORM_EXECUTION_MODE
+                            if (argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY&& (argv[2]&0xFFFF)!= NV097_SET_TRANSFORM_PROGRAM_START) {
 								// for passthrough, argv[1] is always 0:NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY
 								// for program, argv[1] is vertexshader.flags & VERTEXSHADER_WRITE:1
 								// ** the only way to tell whether a vertexh shader is a program or a pass through,
@@ -4215,21 +4247,31 @@ int pgraph_handle_method(
 								// ** program uses D3DDevice_SelectVertexShader() which calls NV097_SET_TRANSFORM_EXECUTION_MODE first then calls NV097_SET_TRANSFORM_PROGRAM_START
 								// ** passthrough in SelectVertexShader() calls NV097_SET_TRANSFORM_PROGRAM_START first, then calls NV097_SET_TRANSFORM_EXECUTION_MODE
 
-								// if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
-						        if (g_VertexShader_dirty == false) {
+                                g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+                                //g_UseFixedFunctionVertexShader = false;
 
-									g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
-									g_UseFixedFunctionVertexShader = false;
+                                // for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
+                                //g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 
-									// for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
-									g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+                                // set vertex shader dirty flag
+                                g_VertexShader_dirty = true;
+                            }
+                            else {
+                                // if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
+                                //if (g_VertexShader_dirty == false) {
 
-									// set vertex shader dirty flag
-									g_VertexShader_dirty = true;
+                                    g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
+                                    //g_UseFixedFunctionVertexShader = false;
 
-								}
-							//}
-						//}
+                                    // for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
+                                    //g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+
+                                    // set vertex shader dirty flag
+                                    g_VertexShader_dirty = true;
+
+                                //}
+                            }
+						}
 						/*
 						fix function setup finished using 
 						push (NV097_SET_TRANSFORM_EXECUTION_MODE,
