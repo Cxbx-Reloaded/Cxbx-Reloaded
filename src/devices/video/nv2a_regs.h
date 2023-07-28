@@ -248,6 +248,7 @@
 #   define NV_PGRAPH_DEBUG_3_HW_CONTEXT_SWITCH                (1 << 2)
 #define NV_PGRAPH_DEBUG_4                                0x00000090
 #define NV_PGRAPH_DEBUG_5                                0x00000094
+#   define NV_PGRAPH_DEBUG_5_ZCULL_RETURN_COMP_ENABLED      (1<<3)
 #define NV_PGRAPH_DEBUG_8                                0x00000098
 #define NV_PGRAPH_DEBUG_9                                0x0000009C
 #define NV_PGRAPH_INTR                                   0x00000100
@@ -357,6 +358,8 @@
 #define NV_PGRAPH_FBCFG1                                 0x000009A8
 #define NV_PGRAPH_PATT_COLOR0                            0x00000B10 //NOT USED only set, 
 #define NV_PGRAPH_DEBUG_6                                0x00000B80
+#   define NV_PGRAPH_DEBUG_6_ROP_ZCMP_ALWAYS_READ_ENABLED   (1<<20)
+#   define NV_PGRAPH_DEBUG_6_ROP_ZREAD_FORCE_ZREAD          (1<<27)
 #define NV_PGRAPH_DEBUG_7                                0x00000B84
 #define NV_PGRAPH_DEBUG_10                               0x00000B88
 #define NV_PGRAPH_CSV0_D                                 0x00000FB4
@@ -1053,6 +1056,15 @@
 #define NV_KELVIN_PRIMITIVE                              0x0097
 #   define NV097_SET_OBJECT                                   0x00000000
 #   define NV097_NO_OPERATION                                 0x00000100
+#       define NVX_FLIP_IMMEDIATE                             0x00000001
+#       define NVX_FLIP_SYNCHRONIZED                          0x00000002
+#       define NVX_PUSH_BUFFER_RUN                            0x00000003
+#       define NVX_PUSH_BUFFER_FIXUP                          0x00000004
+#       define NVX_FENCE                                      0x00000005
+#       define NVX_READ_CALLBACK                              0x00000006
+#       define NVX_WRITE_CALLBACK                             0x00000007
+#       define NVX_DXT1_NOISE_ENABLE                          0x00000008
+#       define NVX_WRITE_REGISTER_VALUE                       0x00000009
 #   define NV097_NOTIFY                                       0x00000104
 #   define NV097_SET_WARNING_ENABLE                           0x00000108
 #   define NV097_GET_STATE                                    0x0000010C
@@ -1192,6 +1204,7 @@
 #       define NV097_SET_CONTROL0_Z_FORMAT                        (1 << 12)
 #       define NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE            (1 << 16)
 #       define NV097_SET_CONTROL0_COLOR_SPACE_CONVERT             (0xF << 28)
+#       define NV097_SET_CONTROL0_COLOR_SPACE_CONVERT_CRYCB_TO_RGB   (1<<28)
 #   define NV097_SET_LIGHT_CONTROL                            0x00000294
 #        define NV097_SET_LIGHT_CONTROL_LOCALEYE                                    0x00010000
 #        define NV097_SET_LIGHT_CONTROL_LOCALEYE_FALSE                              0x00000000
@@ -1728,9 +1741,34 @@
 #   define NV097_BACK_END_WRITE_SEMAPHORE_RELEASE             0x00001D70
 #   define NV097_TEXTURE_READ_SEMAPHORE_RELEASE               0x00001D74
 #   define NV097_SET_ZMIN_MAX_CONTROL                         0x00001D78
+#   define NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN               3:0
+#   define NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN_FALSE  0x00000000
+#   define NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN_TRUE   0x00000001
+#   define NV097_SET_ZMIN_MAX_CONTROL_ZCLAMP_EN                      7:4
+#   define NV097_SET_ZMIN_MAX_CONTROL_ZCLAMP_EN_CULL          0x00000000
+#   define NV097_SET_ZMIN_MAX_CONTROL_ZCLAMP_EN_CLAMP         0x00000001
+#   define NV097_SET_ZMIN_MAX_CONTROL_CULL_IGNORE_W                 11:8
+#   define NV097_SET_ZMIN_MAX_CONTROL_CULL_IGNORE_W_FALSE     0x00000000
+#   define NV097_SET_ZMIN_MAX_CONTROL_CULL_IGNORE_W_TRUE      0x00000001
 #   define NV097_SET_ANTI_ALIASING_CONTROL                    0x00001D7C
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ENABLE                                    0x0F
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_FALSE                        0x00000000
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE                         0x00000001
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ALPHA_TO_COVERAGE                     (0x0F<<4)
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ALPHA_TO_COVERAGE_DISABLE           0x00000000
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ALPHA_TO_COVERAGE_ENABLE            (1<<4)
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ALPHA_TO_ONE                         (0x0F<<8)
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ALPHA_TO_ONE_DISABLE                0x00000000
+#       define NV097_SET_ANTI_ALIASING_CONTROL_ALPHA_TO_ONE_ENABLE                 (1<<8)
+#       define NV097_SET_ANTI_ALIASING_CONTROL_SAMPLE_MASK                        (0xFFFF<<16)
 #   define NV097_SET_COMPRESS_ZBUFFER_EN                      0x00001D80
 #   define NV097_SET_OCCLUDE_ZSTENCIL_EN                      0x00001D84
+#       define NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_ZEN                                  0:0
+#       define NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_ZEN_DISABLE                   0x00000000
+#       define NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_ZEN_ENABLE                    0x00000001
+#       define NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_STENCIL_EN                    (1<<1)
+#       define NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_STENCIL_EN_DISABLE            (0<<1)
+#       define NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_STENCIL_EN_ENABLE             (1<<1)
 #   define NV097_SET_ZSTENCIL_CLEAR_VALUE                     0x00001D8C
 #   define NV097_SET_COLOR_CLEAR_VALUE                        0x00001D90
 #   define NV097_CLEAR_SURFACE                                0x00001D94

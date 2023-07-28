@@ -1747,6 +1747,24 @@ void CxbxrImpl_DeleteVertexShader(DWORD Handle)
 #endif
 }
 
+// 
+void CxbxrImpl_GetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	// Xbox vertex shader constants range from -96 to 95
+	// The host does not support negative, so we adjust to 0..191
+	Register += X_D3DSCM_CORRECTION;
+
+	if (Register < 0) LOG_TEST_CASE("Register < 0");
+	if (Register + ConstantCount > X_D3DVS_CONSTREG_COUNT) LOG_TEST_CASE("Register + ConstantCount > X_D3DVS_CONSTREG_COUNT");
+
+	// Write Vertex Shader constants in nv2a
+	extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
+	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(Register);
+	memcpy( pConstantData, constant_floats, ConstantCount * sizeof(float) * 4);
+	
+}
 // TODO : Remove SetVertexShaderConstant implementation and the patch once
 // CxbxUpdateHostVertexShaderConstants is reliable (ie. : when we're able to flush the NV2A push buffer)
 void CxbxrImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount)

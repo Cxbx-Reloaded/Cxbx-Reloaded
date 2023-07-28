@@ -1368,6 +1368,8 @@ typedef DWORD NV2AMETHOD;
 #define X_D3DDIRTYFLAG_SPECFOG_COMBINER                   0x00002000
 #define X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM               0x00004000
 #define X_D3DDIRTYFLAG_LIGHTS                             0x00FF1000
+#define X_D3DDIRTYFLAG_DIRECT_INPUT                       0x40000000  // set when SetVertexShaderInput/SetVertexShaderInputDirect was called. means all vertex formats/offsets set.
+#define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000  // 
 #define X_SET_STATE_FLAGS                                 0x3FFFFF8F
 // valuse for direct mode, when set, overwrite original api priority
 // but from reversed code, even X_D3DDIRTYFLAG_DIRECT_INPUT is set,

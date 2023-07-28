@@ -972,7 +972,7 @@ void pgraph_SetViewport(NV2AState *d)
 	//if ((float)pg->KelvinPrimitive.SetViewportOffset[2] == 0.0 && (float)pg->KelvinPrimitive.SetViewportOffset[3] == 0.0) {
 		xViewport=pg->KelvinPrimitive.SetViewportOffset[0];
 		yViewport = pg->KelvinPrimitive.SetViewportOffset[1];
-		if (pg->KelvinPrimitive.SetDepthTestEnable == D3DZB_USEW) {
+		if (pg->KelvinPrimitive.SetDepthTestEnable != D3DZB_FALSE && pg->KelvinPrimitive.SetZMinMaxControl== D3DZB_USEW) {
 			ScaleZ = clipFar;
 			// FIXME !! need WNear *InverseWFar input
 			D3DMATRIX ProjMatrix;
@@ -1019,7 +1019,7 @@ void pgraph_SetViewport(NV2AState *d)
 		Viewport.MaxZ = (fm33 / ScaleZ) + Viewport.MinZ;
 		Viewport.Height = fm22 / (-0.5*ScaleY);
 		Viewport.Width = fm11 / (0.5*ScaleX);
-		if (pg->KelvinPrimitive.SetDepthTestEnable == D3DZB_USEW) {
+		if (pg->KelvinPrimitive.SetDepthTestEnable != D3DZB_FALSE && pg->KelvinPrimitive.SetZMinMaxControl == D3DZB_USEW) {
 			ScaleZ = clipFar;
 			// FIXME !! need WNear *InverseWFar input
 			D3DMATRIX ProjMatrix;
@@ -1060,19 +1060,25 @@ void pgraph_SetViewport(NV2AState *d)
 	CxbxrImpl_SetViewport(&Viewport);
 	
 }
+
+extern float CxbxrGetSuperSampleScale(void);
+static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
+static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
+
 void D3D_draw_state_update(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	HRESULT hRet;
 
 	// update point params, Xbox takes everything from texture stage 3
-	
+	// hack since we're using all pgraph processing now.
+	NV2A_stateFlags | X_STATE_RUNPUSHBUFFERWASCALLED;
 	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
 		//D3D__RenderState[D3DRS_POINTSPRITEENABLE]==true, set host point sprite enable and point sprite parameters.
 		if (pg->KelvinPrimitive.SetPointSmoothEnable != 0) {
 			// enable host point sprite
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, false);
-
+			// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, false);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
 			DWORD FixedSize = pg->KelvinPrimitive.SetPointSize;
 			
 			float hostMinSize, hostMaxSize;
@@ -1081,9 +1087,11 @@ void D3D_draw_state_update(NV2AState *d)
 			// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
 			if (pg->KelvinPrimitive.SetPointParamsEnable == 0) {
 				// disable host point scale
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, false);
+				// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, false);
+				 XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, false);
 				// FIXME!!! what we need are supersamplescalefactors, not multisamplescalefactors.
 				float SuperSampleScale,aaScaleX, aaScaleY;
+				/*
 				//float aaOffsetX, aaOffsetY;
 				GetMultiSampleScaleRaw(aaScaleX, aaScaleY);
 				// FIXME!! xbox d3d set supersamplescaleX/Y to 1.0 when SetRenderTarget() was called and render target isn't backbuffer.
@@ -1093,6 +1101,8 @@ void D3D_draw_state_update(NV2AState *d)
 				aaScaleY = 1.0;
 				//GetMultiSampleOffset(aaOffsetX, aaOffsetY);
 				SuperSampleScale=MIN(aaScaleX, aaScaleY);
+				*/
+				SuperSampleScale = CxbxrGetSuperSampleScale();
 				if (SuperSampleScale <= 1.0)SuperSampleScale = 1.0;
 				FixedSize /= SuperSampleScale;
 			}
@@ -1113,14 +1123,20 @@ void D3D_draw_state_update(NV2AState *d)
 				hostMinSize = pg->KelvinPrimitive.SetPointParamsMin;
 				hostMaxSize = min + delta;
 				// enable host point scale
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, true);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, true);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, true);
 				// set host min/max point size
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, hostMinSize);
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, hostMaxSize);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, hostMinSize);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, hostMaxSize);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, FtoDW(hostMaxSize));
 				/// set host point scale A/B/C
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, hostscaleA);
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, hostscaleB);
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_C, hostscaleC);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, hostscaleA);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, hostscaleB);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_C, hostscaleC);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(hostscaleA));
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(hostscaleB));
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(hostscaleC));
 			}
 			// reversed to xbox d3d fixed point size
 			FixedSize = (FixedSize - 0.5) / 8.0;
@@ -1128,12 +1144,14 @@ void D3D_draw_state_update(NV2AState *d)
 			if (FixedSize < hostMinSize)FixedSize = hostMinSize;
 			if (FixedSize > hostMaxSize)FixedSize = hostMaxSize;
 			// set host fixed point size
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE, FixedSize);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE, FixedSize);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE, FtoDW(FixedSize));
 		}
 		// disable host point sprite
 		else {
 			// disable host point sprite
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE,false);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE,false);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
 		}
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_POINTPARAMS;
@@ -1147,8 +1165,8 @@ void D3D_draw_state_update(NV2AState *d)
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 	}
+
 	// update texture stage texture states, texture stage texture states must be update prior to pixel shader because pixel shader compilation depends on texture state input
-	
 	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0&&(NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
 		D3D_texture_stage_update(d);
 		// clear dirty flag
@@ -1176,14 +1194,16 @@ void D3D_draw_state_update(NV2AState *d)
 				// scale = -fogTableDensity * (1.0f / (2.0f * 2.354824834249885f));
 				fogTableDensity = -scale * (2.0f * 2.354824834249885f);
 				
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 			}
 			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
 				fogTableMode = D3DFOG_EXP;
 				// scale = -fogTableDensity * (1.0f / (2.0f * 5.5452f));
 				fogTableDensity = -scale * (2.0f * 5.5452f);
 				
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 			}
 			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
 				fogTableMode = D3DFOG_LINEAR;
@@ -1201,22 +1221,28 @@ void D3D_draw_state_update(NV2AState *d)
 					fogTableStart == fogTableEnd;
 				}
 
-                hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
-                hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+                //hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
+                //hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
 			}
 			else if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
 				fogTableMode = D3DFOG_NONE;
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
 				// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
 				// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
 				bD3DRS_RangeFogEnable=false;
 			}
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
+
 			uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 			/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-
+			// hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+			// XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
 		}
 		else {
 			// D3D__RenderState[D3DRS_SPECULARENABLE] == true
@@ -1233,7 +1259,7 @@ void D3D_draw_state_update(NV2AState *d)
 	// update pixel shader
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
 		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
-		if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) !=0) {
+		//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) !=0) {
 
 			// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
 			pgraph_use_NV2A_bumpenv();
@@ -1277,7 +1303,7 @@ void D3D_draw_state_update(NV2AState *d)
 			pg->bumpenv_dirty[2] = false;
 			pg->bumpenv_dirty[3] = false;
 			CxbxrImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
-		}
+		//}
 
 		// clear dirty flag xbox::dword_xt
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
@@ -1290,7 +1316,8 @@ void D3D_draw_state_update(NV2AState *d)
 		// this will update matrix world/view/projection using matrix ModelView and Composite
 		//if (pgraph_is_ModelView_dirty()) {
 			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
-			if((g_xbox_transform_ModelView_dirty[0] == true) && (g_xbox_transform_Composite_dirty== true)  ){
+		    // update the modelview and composite matrix whenever either one matrix was dirty.
+		    if((g_xbox_transform_ModelView_dirty[0] == true) || (g_xbox_transform_Composite_dirty== true)  ){
 				// transpose KelvinPrimitive transform back to xbox d3d transform
 				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
 				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
@@ -1303,7 +1330,8 @@ void D3D_draw_state_update(NV2AState *d)
 
 			for (int i = 0; i < 4; i++) {
 				// update InverseModelView matrix if only ModelView matrix is updated
-				if ((g_xbox_transform_ModelView_dirty[i] == true) && (g_xbox_transform_InverseModelView_dirty[i] == false)) {
+
+				if ((g_xbox_transform_ModelView_dirty[i] == true) || (g_xbox_transform_InverseModelView_dirty[i] == false)) {
 					D3DXMATRIX matModelViewTransposed;
 					// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
 					// transpose ModelView back to xbox d3d matrix
@@ -1463,10 +1491,10 @@ void D3D_draw_state_update(NV2AState *d)
 			// NV2A_SET_LINEAR_FOG_CONST?
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 			// Unused : D3DRS_FOGVERTEXMODE
-		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
+		//uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
 		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
+		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
 	// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
 	// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
 
@@ -1476,16 +1504,16 @@ void D3D_draw_state_update(NV2AState *d)
 	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
 		//DWORD dwFillMode = EmuXB2PC_FillMode(pg->KelvinPrimitive.SetFrontPolygonMode);
 		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FILLMODE, pg->KelvinPrimitive.SetFrontPolygonMode);
+		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FILLMODE, pg->KelvinPrimitive.SetFrontPolygonMode);
 	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
 		//g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
+		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
 		//hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0); // NV2A_DEPTH_TEST_ENABLE
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0);
+		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0);
 		//hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0); // NV2A_STENCIL_ENABLE
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0);
+		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0);
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
 		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
@@ -1495,9 +1523,9 @@ void D3D_draw_state_update(NV2AState *d)
 		//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
 
 		//g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
+		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
 		//g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
+		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
 		//g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
 		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
 	}

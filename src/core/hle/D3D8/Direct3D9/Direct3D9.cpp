@@ -116,6 +116,8 @@ static int                          g_iWireframe = 0; // wireframe toggle
 static bool                         g_bHack_UnlockFramerate = false; // ignore the xbox presentation interval
 static bool                         g_bHasDepth = false;    // Does device have a Depth Buffer?
        float                        g_ZScale = 1.0;
+	   float                        g_SuperSampleScaleX = 1.0;
+	   float                        g_SuperSampleScaleY = 1.0;
 static bool                         g_bHasStencil = false;  // Does device have a Stencil Buffer?
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
        bool                         g_bUsePassthroughHLSL = true;
@@ -189,6 +191,7 @@ bool is_pushbuffer_recording(void)
 	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
 }
        xbox::X_PixelShader*			g_pXbox_PixelShader = xbox::zeroptr;
+	   xbox::X_PixelShader          g_Xbox_PixelShader = {0};
 static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
 static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
@@ -1099,6 +1102,22 @@ IDirect3DResource *GetHostResource(xbox::X_D3DResource *pXboxResource, DWORD D3D
 	}
 
 	return it->second.pHostResource.Get();
+}
+
+void CxbxrSetSuperSampleScaleXY(float x, float y)
+{
+	g_SuperSampleScaleX = x;
+	g_SuperSampleScaleY = y;
+}
+
+float CxbxrGetSuperSampleScale(void)
+{
+	float ssScale=MIN(g_SuperSampleScaleX,g_SuperSampleScaleY);
+	if (ssScale<1.0)
+	{
+		ssScale = 1.0;
+	}
+	return ssScale;
 }
 
 // Forward declaration of CxbxGetPixelContainerMeasures to prevent
