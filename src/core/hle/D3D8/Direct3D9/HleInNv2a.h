@@ -309,6 +309,7 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void);
 
 /*
 notes for my trials and errors.
+D3DDevice_RunPushBuffer() must be unpatched to prevent reentrance of pgraph_handle_method()
 DrawVertices/DrawVerticesUP/DrawIndexedXXX calls can't be HLEed inside pgraph because xbox pushes all vertex data directly into pushbuffer.
 SetVertexShader/LoadVertexShader/SelectVertexShader/LoadVertexShaderProgram can't be HLEed, because xbox pushes all shader programs/vertex formats into pushbuffer.
 SetVertexConstantsXXX variants are unpatched and handled inside pgraph because of the timing sync with acutal shader/draw calls.
@@ -369,13 +370,74 @@ g_pXbox_PixelShader=&g_Xbox_PixelShader which is a xbox pixel shader made up fro
     LazySetLights()  NV097_SET_LIGHTING_ENABLE NV097_SET_SPECULAR_ENABLE NV097_SET_LIGHT_CONTROL NV097_SET_TWO_SIDE_LIGHT_EN D3DRS_LIGHTING NV097_SET_COLOR_MATERIAL NV097_SET_LIGHT_LOCAL_RANGE NV097_SET_LIGHT_LOCAL_POSITION NV097_SET_LIGHT_ENABLE_MASK D3DRS_SPECULARENABLE D3DRS_TWOSIDEDLIGHTING D3DRS_LOCALVIEWER 
 
     double check:
-    1. pixel shader set/update
+    1. pixel shader set/update: done
     2. vertex shader set/update
+    3. vertex format/vertex buffer/stream srouce
     CxbxrImpl_SetVertexShaderInput() affects these globals/routines.
-        GetXboxVertexAttributeFormat(), GetXboxVertexStreamInput() uses g_Xbox_SetVertexShaderInput_Count
-        GetXboxVertexStreamInput() g_Xbox_SetVertexShaderInput_Data
-            CountActiveD3DStreams()/CxbxVertexBufferConverter::ConvertStream/GetXboxVertexStreamInput()/
-        GetXboxVertexAttributeFormat() g_Xbox_SetVertexShaderInput_Attributes
+        GetXboxVertexAttributeFormat(),  uses g_Xbox_SetVertexShaderInput_Count g_Xbox_SetVertexShaderInput_Attributes : using set_IVB_DECL_override(), g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat; use pgraph vertex data array format setup g_NV2AVertexAttributeFormat
             UpdateFixedFunctionVertexShaderState()/CxbxGetVertexDeclaration()
+        GetXboxVertexStreamInput() g_Xbox_SetVertexShaderInput_Data g_Xbox_SetVertexShaderInput_Count : pDrawContext->pXboxVertexStreamZeroData set to pgraph vertex data array offset or inline array vertex buffer can avoid using GetXboxVertexStreamInput()
+            CountActiveD3DStreams()/CxbxVertexBufferConverter::ConvertStream
+        
+    4. xbox draw call internals and pgraph instructions.
+
+        DrawVerticesUP
+            SetStateUP() // compose g_NV2AVertexAttributeFormat with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), calculate vertex stride, set DrawContext->pXboxVertexStreamZeroData to inline array vertex buffer.
+            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
+            PushCount(pPush++, PUSHER_NOINC(NV097_INLINE_ARRAY), count);
+            Push1(pPush, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
+
+        DrawIndexedVerticesUP
+            SetStateUP(); // compose g_NV2AVertexAttributeFormat with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), calculate vertex stride, set DrawContext->pXboxVertexStreamZeroData to inline array vertex buffer.
+            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
+            PushCount(pPush++, PUSHER_NOINC(NV097_INLINE_ARRAY), count);
+            Push1(pPush, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
+
+        DrawVertices
+            SetStateVB(0); // compose g_NV2AVertexAttributeFormat and vertex stride with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), set DrawContext->pXboxVertexStreamZeroData to NV097_SET_VERTEX_DATA_ARRAY_OFFSET(i)
+            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
+            PushCount(pPush + 2, PUSHER_NOINC(NV097_DRAW_ARRAYS), drawArraysCount);
+            while (VertexCount > DRAW_COUNT_BATCH)
+            {
+                *(pPush + 3) = DRF_NUMFAST(097, _DRAW_ARRAYS, _COUNT, DRAW_COUNT_BATCH - 1)
+                             | DRF_NUMFAST(097, _DRAW_ARRAYS, _START_INDEX, StartVertex);
+
+                pPush++;
+                StartVertex += DRAW_COUNT_BATCH;
+                VertexCount -= DRAW_COUNT_BATCH;
+            }
+            *(pPush + 3) = DRF_NUMFAST(097, _DRAW_ARRAYS, _COUNT, VertexCount - 1)
+                 | DRF_NUMFAST(097, _DRAW_ARRAYS, _START_INDEX, StartVertex);
+
+            Push1(pPush + 4, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
+
+        DrawIndexedVertices  // compose g_NV2AVertexAttributeFormat and vertex stride with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), set DrawContext->pXboxVertexStreamZeroData to NV097_SET_VERTEX_DATA_ARRAY_OFFSET(i)
+                             // compose index buffer from NV097_ARRAY_ELEMENT16/NV097_ARRAY_ELEMENT32
+            SetStateVB(IndexBase);
+            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
+                PushCount(pPush, PUSHER_NOINC(NV097_ARRAY_ELEMENT16), arrayCount);//put two indexes in one dword, send in via multiple method_count.
+                Push1(pPush, NV097_ARRAY_ELEMENT32, (DWORD) *pIndexData); //optional if there were odd vertex index, handle the very last index.
+            Push1(pPush, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
+
+        SetStateUP()  // set vertex format with  sizeAndType but without vertex stride. NV097_SET_VERTEX_DATA_ARRAY_OFFSET(0) is not set because all vertex attributes shall be pushed to pushbuffer with NV097_INLINE_ARRAY
+            PushCount(pPush++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT(0), 16);
+                sizeAndType = pVertexShader->Slot[slot].SizeAndType;
+                *pPush++ = sizeAndType;
+
+        SetStateVB(pIndexBase) // set vertex format with sizeAndType and vertex stride<<8. NV097_SET_VERTEX_DATA_ARRAY_OFFSET(0) is set to each stream's vertex buffer source offset.
+            PushCount(pPush++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT(0), 16);
+                *pPush++ = pVertexShader->Slot[slot].SizeAndType
+                    + (g_Stream[pVertexShader->Slot[slot].StreamIndex].Stride << 8);
+            
+                offset = GetGPUDataFromResource(pStream->pVertexBuffer)
+                                     + pVertexShader->Slot[slot].Offset
+                                     + pStream->Offset;
+           if (IndexBase != 0)
+               offset += IndexBase * pStream->Stride;
+           Push1(pPush,
+                 NV097_SET_VERTEX_DATA_ARRAY_OFFSET(i),
+                 offset);
+   
+            
     */
 
