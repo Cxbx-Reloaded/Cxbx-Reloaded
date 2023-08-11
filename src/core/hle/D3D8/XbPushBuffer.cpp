@@ -406,26 +406,26 @@ bool pgraph_is_ModelView_dirty(void)
 	}
 }
 
-void pgraph_SetModelViewMatrix(unsigned int index)
+void pgraph_SetModelViewMatrixDirty(unsigned int index)
 {
 	//PGRAPHState *pg = &d->pgraph;
 	//D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_ModelView, (D3DXMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix0[0]);
 	g_xbox_transform_ModelView_dirty[index] = true;
-	g_xbox_transform_use_DirectModelView = true;
+	//g_xbox_transform_use_DirectModelView = true;
 }
-void pgraph_SetInverseModelViewMatrix(unsigned int index)
+void pgraph_SetInverseModelViewMatrixDirty(unsigned int index)
 {
 	//PGRAPHState *pg = &d->pgraph;
 	//g_xbox_transform_InverseModelView = *(D3DMATRIX *)(&pg->KelvinPrimitive.SetInverseModelViewMatrix0[0]);
 	g_xbox_transform_InverseModelView_dirty[index] = true;
-	g_xbox_transform_use_DirectModelView = true;
+	//g_xbox_transform_use_DirectModelView = true;
 }
-void pgraph_SetCompositeMatrix(void)
+void pgraph_SetCompositeMatrixDirty(void)
 {
 	//PGRAPHState *pg = &d->pgraph;
 	//D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_Composite, (D3DXMATRIX *)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
 	g_xbox_transform_Composite_dirty = true;
-	g_xbox_transform_use_DirectModelView = true;
+	//g_xbox_transform_use_DirectModelView = true;
 }
 // this function purges NV2A internal dirty flags and state flags. this shall be called before replaying a pushbuffer in order to clear any intermediate state left over by the HLE part running prior to the replay pushbuffer
 void pgraph_purge_dirty_and_state_flag(void)
@@ -926,31 +926,33 @@ extern float g_Xbox_BackbufferScaleX;
 extern float g_Xbox_BackbufferScaleY;
 extern xbox::X_D3DSurface           *g_pXbox_RenderTarget;
 extern xbox::X_D3DSurface           *g_pXbox_BackBufferSurface;
+extern void CxbxrGetSuperSampleScaleXY(float& x, float& y);
+extern void CxbxrGetScreenSpaceOffsetXY(float& x, float& y);
+extern void CxbxrSetViewport(xbox::X_D3DVIEWPORT8& Viewport);
+extern void CxbxrGetViewport(xbox::X_D3DVIEWPORT8& Viewport);
+extern void CxbxrSetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar);
+extern void CxbxrGetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar);
+extern float CxbxrGetZScale(void);
+
 
 bool NV2A_viewport_dirty = false;
 void pgraph_SetViewport(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	HRESULT hRet;
-	xbox::X_D3DVIEWPORT8* pViewport,Viewport;
+	xbox::X_D3DVIEWPORT8 Viewport;
 
-	float fm11, fm22, fm33, fm43, clipNear, clipFar;
-	float SuperSampleScale, ScaleX, ScaleY, ScaleZ;
+	float fm11, fm22, fm33, fm41, fm42, fm43, clipNear, clipFar;
+	float SuperSampleScale, ScaleX, ScaleY, ScaleZ, ScreenSpaceOffsetX, ScreenSpaceOffsetY;
 	//float aaOffsetX, aaOffsetY;
-	GetMultiSampleScaleRaw(ScaleX, ScaleY);
-	//SuperSampleScale = MIN(ScaleX, ScaleY);
-	//ScaleX *= g_Xbox_BackbufferScaleX;
-	//ScaleY *= g_Xbox_BackbufferScaleY;
-	// FIXME!! xbox d3d set supersamplescaleX/Y to 1.0 when SetRenderTarget() was called and render target isn't backbuffer.
-	// currently in our HLE, xbox d3d keeps wrong backbuffer info, so it always judges the render target is different than the backbuffer and thus both scale factors are set as 1.0
-	//if (g_pXbox_RenderTarget != g_pXbox_BackBufferSurface) {
-		ScaleX = 1.0;
-		ScaleY = 1.0;
-	//}
+	
+	CxbxrGetSuperSampleScaleXY(ScaleX, ScaleY);
 	if (ScaleX < 1.0)ScaleX = 1.0;
 	if (ScaleY < 1.0)ScaleY = 1.0;
-	//if (SuperSampleScale <= 1.0)SuperSampleScale = 1.0;
-	//GetMultiSampleOffset(aaOffsetX, aaOffsetY);
+	SuperSampleScale = MIN(ScaleX, ScaleY);
+
+	CxbxrGetScreenSpaceOffsetXY(ScreenSpaceOffsetX, ScreenSpaceOffsetY);
+
 	float  xViewport, yViewport;
 	clipNear = pg->KelvinPrimitive.SetClipMin;
 	clipFar = pg->KelvinPrimitive.SetClipMax;
@@ -967,32 +969,30 @@ void pgraph_SetViewport(NV2AState *d)
 	// here we detect whether KelvinPrimitive.SetViewportOffset[2]==0.0 and KelvinPrimitive.SetViewportOffset[3]==0.0 instead
 	float rendertargetBaseWidth;
 	float rendertargetBaseHeight;
+
+	float WNear=0.0, WFar=1.0, InverseWFar=1.0;
+    // set default W parameters.
+	CxbxrSetWNearFarInverseWFar(WNear, WFar, InverseWFar);
+
 	GetRenderTargetBaseDimensions(rendertargetBaseWidth, rendertargetBaseHeight);
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 	//if ((float)pg->KelvinPrimitive.SetViewportOffset[2] == 0.0 && (float)pg->KelvinPrimitive.SetViewportOffset[3] == 0.0) {
-		xViewport=pg->KelvinPrimitive.SetViewportOffset[0];
+		xViewport = pg->KelvinPrimitive.SetViewportOffset[0];
 		yViewport = pg->KelvinPrimitive.SetViewportOffset[1];
-		if (pg->KelvinPrimitive.SetDepthTestEnable != D3DZB_FALSE && pg->KelvinPrimitive.SetZMinMaxControl== D3DZB_USEW) {
+		// if use_w
+		if ((pg->KelvinPrimitive.SetDepthTestEnable != D3DZB_FALSE) && (pg->KelvinPrimitive.SetZMinMaxControl== D3DZB_USEW)) {
 			ScaleZ = clipFar;
+			g_ZScale = ScaleZ;
 			// FIXME !! need WNear *InverseWFar input
-			D3DMATRIX ProjMatrix;
-			// get projection matrix to calculate WNear and WFar
-			CxbxrImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &ProjMatrix);
+			// clipNear = pDevice->m_ZScale * pDevice->m_WNear * pDevice->m_InverseWFar;  pDevice->m_WNear * pDevice->m_InverseWFar=clipNear/pDevice->m_ZScale;
+			
 			float WNear, WFar, InverseWFar;
-			if ((ProjMatrix._33 == ProjMatrix._34) || (ProjMatrix._33 == 0.0f))
-			{
-				WNear = 0.0f;
-				WFar = 1.0f;
+			// WNear=0.0, WFar=1.0,WInverseWFar=0.0
+			if (clipNear != 0.0f) {
+				;// TODO:no feasible way to compose WNear and WFar, we need these two vars to calculate Projection Matrix.
 			}
-			else
-			{
-				WNear = ProjMatrix._44 - ProjMatrix._43
-					/ ProjMatrix._33 * ProjMatrix._34;
 
-				WFar = (ProjMatrix._44 - ProjMatrix._43)
-					/ (ProjMatrix._33 - ProjMatrix._34)*ProjMatrix._34 + ProjMatrix._44;
-			}
-			Viewport.MinZ = ScaleZ * WFar / WNear; //was ScaleZ/(WNear *InverseWFar);
+			//Viewport.MinZ = ScaleZ /(clipNear / ScaleZ); //was ScaleZ/(WNear *InverseWFar);
 			
 		}
 		else {
@@ -1004,66 +1004,357 @@ void pgraph_SetViewport(NV2AState *d)
 		
 		Viewport.Width=rendertargetBaseWidth;
 		Viewport.Height = rendertargetBaseHeight;
+
+
 	}
 	else {
 		ScaleZ = clipFar;
+		g_ZScale = ScaleZ;
+
+		/*
+		Push4f(pPush, 
+                   NV097_SET_VIEWPORT_OFFSET(0), 
+                   fm41 + xViewport, 
+                   fm42 + yViewport, 
+                   fm43, 
+                   0.0f);
+        
+        Push4f(pPush + 5,
+                   NV097_SET_VIEWPORT_SCALE(0), 
+                   fm11, 
+                   fm22, 
+                   fm33, 
+                   0.0f);
+	    */
 		fm11 = pg->KelvinPrimitive.SetViewportScale[0];
 		fm22 = pg->KelvinPrimitive.SetViewportScale[1];
 		fm33 = pg->KelvinPrimitive.SetViewportScale[2];
-		//fm41 = fm11;
-		//fm42 = -fm22;
+		fm41 = fm11;
+		fm42 = -fm22;
 		fm43 = pg->KelvinPrimitive.SetViewportOffset[2];
-		xViewport = pg->KelvinPrimitive.SetViewportOffset[0] - fm11;
-		yViewport = pg->KelvinPrimitive.SetViewportOffset[1] + fm22;
+
+		xViewport = pg->KelvinPrimitive.SetViewportOffset[0] - fm41;
+		yViewport = pg->KelvinPrimitive.SetViewportOffset[1] - fm42;
+
+		/*
+		    FLOAT fm11 = 0.5f * pDevice->m_Viewport.Width 
+                              * pDevice->m_SuperSampleScaleX;
+            FLOAT fm41 = fm11;
+        
+            FLOAT fm22 = -0.5f * pDevice->m_Viewport.Height 
+                               * pDevice->m_SuperSampleScaleY;
+            FLOAT fm42 = -fm22;
+        
+            FLOAT fm33 = pDevice->m_ZScale * (pDevice->m_Viewport.MaxZ - 
+                                              pDevice->m_Viewport.MinZ);
+            FLOAT fm43 = pDevice->m_ZScale * (pDevice->m_Viewport.MinZ);
+		*/
+
+
 		Viewport.MinZ = fm43 / ScaleZ;
 		Viewport.MaxZ = (fm33 / ScaleZ) + Viewport.MinZ;
 		Viewport.Height = fm22 / (-0.5*ScaleY);
 		Viewport.Width = fm11 / (0.5*ScaleX);
-		if (pg->KelvinPrimitive.SetDepthTestEnable != D3DZB_FALSE && pg->KelvinPrimitive.SetZMinMaxControl == D3DZB_USEW) {
-			ScaleZ = clipFar;
-			// FIXME !! need WNear *InverseWFar input
-			D3DMATRIX ProjMatrix;
-			// get projection matrix to calculate WNear and WFar
-			CxbxrImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &ProjMatrix);
-			float WNear, WFar, InverseWFar;
-			if ((ProjMatrix._33 == ProjMatrix._34) || (ProjMatrix._33 == 0.0f))
-			{
-				WNear = 0.0f;
-				WFar = 1.0f;
-			}
-			else
-			{
-				WNear = ProjMatrix._44 - ProjMatrix._43
-					/ ProjMatrix._33 * ProjMatrix._34;
 
-				WFar = (ProjMatrix._44 - ProjMatrix._43)
-					/ (ProjMatrix._33 - ProjMatrix._34)*ProjMatrix._34 + ProjMatrix._44;
-			}
-			Viewport.MinZ = ScaleZ * WFar / WNear; //was ScaleZ/(WNear *InverseWFar);
-
-		}
-		else {
-			Viewport.MinZ = clipNear / ScaleZ;
-			Viewport.MaxZ = clipFar / ScaleZ;
-		}
 
 	}
+	// if ((pDevice->m_StateFlags & STATE_MULTISAMPLING) &&	(D3D__RenderState[D3DRS_MULTISAMPLEANTIALIAS]))
 	// (pg->KelvinPrimitive.SetSurfaceFormat&(NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2| NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4))!=0 means we're in STATE_MULTISAMPLING
-	if ((GET_MASK(pg->KelvinPrimitive.SetSurfaceFormat, NV097_SET_SURFACE_FORMAT_ANTI_ALIASING)&(NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2| NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4))!=0)
+	//if ((GET_MASK(pg->KelvinPrimitive.SetSurfaceFormat, NV097_SET_SURFACE_FORMAT_ANTI_ALIASING)&(NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2| NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4))!=0)
 		//&&(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS)!=0))
+	if((pg->KelvinPrimitive.SetAntiAliasingControl & NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE) !=0)
 	{
 		xViewport += 0.5f;
 		yViewport += 0.5f;
 	}
-	Viewport.X = (xViewport - g_Xbox_ScreenSpaceOffset_x) / ScaleX;
-	Viewport.Y = (yViewport - g_Xbox_ScreenSpaceOffset_y) / ScaleY;
-	CxbxrImpl_SetViewport(&Viewport);
-	
+	/*
+	FLOAT xViewport = pDevice->m_Viewport.X * pDevice->m_SuperSampleScaleX
+                    + pDevice->m_ScreenSpaceOffsetX;
+    FLOAT yViewport = pDevice->m_Viewport.Y * pDevice->m_SuperSampleScaleY
+                    + pDevice->m_ScreenSpaceOffsetY;
+	*/
+	Viewport.X = (xViewport - ScreenSpaceOffsetX) / ScaleX;
+	Viewport.Y = (yViewport - ScreenSpaceOffsetX) / ScaleY;
+	CxbxrSetViewport(Viewport);
+	//CxbxrImpl_SetViewport(&Viewport);
 }
 
 extern float CxbxrGetSuperSampleScale(void);
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
 static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
+void CxbxrImpl_LazySetPointParameters(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	HRESULT hRet;
+
+	//D3D__RenderState[D3DRS_POINTSPRITEENABLE]==true, set host point sprite enable and point sprite parameters.
+	if (pg->KelvinPrimitive.SetPointSmoothEnable != 0) {
+		// enable host point sprite
+		// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, false);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
+		DWORD FixedSize = pg->KelvinPrimitive.SetPointSize;
+
+		float hostMinSize, hostMaxSize;
+		hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
+		hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
+		// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
+		if (pg->KelvinPrimitive.SetPointParamsEnable == 0) {
+			// disable host point scale
+			// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, false);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, false);
+			// FIXME!!! what we need are supersamplescalefactors, not multisamplescalefactors.
+			float SuperSampleScale, aaScaleX, aaScaleY;
+			/*
+			//float aaOffsetX, aaOffsetY;
+			GetMultiSampleScaleRaw(aaScaleX, aaScaleY);
+			// FIXME!! xbox d3d set supersamplescaleX/Y to 1.0 when SetRenderTarget() was called and render target isn't backbuffer.
+			// currently in our HLE, xbox d3d keeps wrong backbuffer info, so it always judges the render target is different than the backbuffer and thus both scale factors are set as 1.0
+			//if (g_pXbox_RenderTarget != g_pXbox_BackBufferSurface) {
+			aaScaleX = 1.0;
+			aaScaleY = 1.0;
+			//GetMultiSampleOffset(aaOffsetX, aaOffsetY);
+			SuperSampleScale=MIN(aaScaleX, aaScaleY);
+			*/
+			SuperSampleScale = CxbxrGetSuperSampleScale();
+			if (SuperSampleScale <= 1.0)SuperSampleScale = 1.0;
+			FixedSize /= SuperSampleScale;
+		}
+		// D3D__RenderState[D3DRS_POINTSCALEENABLE]== true, set host D3D__RenderState[D3DRS_POINTSCALEENABLE] and point scale 
+		else {
+			DWORD max, min;
+			float delta, factor, height;
+			delta = pg->KelvinPrimitive.SetPointParamsDeltaA;
+			//FIXEDME!!! we need viewport height, not sure including SuperSampleScaleY is correct or not.
+			//pg->KelvinPrimitive.SetViewportScale[1] = -0.5f * Viewport.Height * SuperSampleScaleY
+			height = 2 * fabs(*(float*)&pg->KelvinPrimitive.SetViewportScale[1]);
+			factor = delta / (FixedSize * height);
+			factor *= factor;
+			float hostscaleA = pg->KelvinPrimitive.SetPointParamsFactorMulA / factor;
+			float hostscaleB = pg->KelvinPrimitive.SetPointParamsFactorMulB / factor;
+			float hostscaleC = pg->KelvinPrimitive.SetPointParamsFactorMulC / factor;
+			// assume host d3d uses the same min/max point size as xbox d3d
+			hostMinSize = pg->KelvinPrimitive.SetPointParamsMin;
+			hostMaxSize = min + delta;
+			// enable host point scale
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, true);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, true);
+			// set host min/max point size
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, hostMinSize);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, hostMaxSize);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, FtoDW(hostMaxSize));
+			/// set host point scale A/B/C
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, hostscaleA);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, hostscaleB);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_C, hostscaleC);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(hostscaleA));
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(hostscaleB));
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(hostscaleC));
+		}
+		// reversed to xbox d3d fixed point size
+		FixedSize = (FixedSize - 0.5) / 8.0;
+		// clamp FixedSize to min/max HostPointSize range
+		if (FixedSize < hostMinSize)FixedSize = hostMinSize;
+		if (FixedSize > hostMaxSize)FixedSize = hostMaxSize;
+		// set host fixed point size
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE, FixedSize);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE, FtoDW(FixedSize));
+	}
+	// disable host point sprite
+	else {
+		// disable host point sprite
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE,false);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
+	}
+}
+
+void CxbxrImpl_GetViewportTransform(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	HRESULT hRet;
+	// compose viewport parameters via pgraph contents if needed
+	// update Viewport info if needed. though this should already been updated before we got here.
+	if (NV2A_viewport_dirty == true) {
+		// this only compose viewport from pgraph content 
+		pgraph_SetViewport(d);
+		// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
+		//xbox::X_D3DVIEWPORT8 Viewport;
+		//CxbxrGetViewport(Viewport);
+		//CxbxrImpl_SetViewport(&Viewport);
+	}
+	NV2A_viewport_dirty = false;
+
+	xbox::X_D3DVIEWPORT8 Viewport;
+	CxbxrGetViewport(Viewport);
+
+	D3DMATRIX viewportTransform;
+	float fm11, fm22, fm33, fm41, fm42, fm43, fm44;
+	float SuperSampleScaleX, SuperSampleScaleY,ZScale, ScreenSpaceOffsetX, ScreenSpaceOffsetY;
+	
+	CxbxrGetSuperSampleScaleXY(SuperSampleScaleX, SuperSampleScaleY);
+	if (SuperSampleScaleX < 1.0)SuperSampleScaleX = 1.0;
+	if (SuperSampleScaleY < 1.0)SuperSampleScaleY = 1.0;
+	ZScale=CxbxrGetZScale();
+	if (ZScale < 1.0)ZScale = 1.0;
+	
+	CxbxrGetScreenSpaceOffsetXY(ScreenSpaceOffsetX, ScreenSpaceOffsetY);
+
+	// This is based on clipX = -1.0, clipY = 1.0
+
+	fm11 = 0.5f * SuperSampleScaleX * Viewport.Width;
+	fm41 = fm11;
+
+	fm22 = -0.5f * SuperSampleScaleY * Viewport.Height;
+	fm42 = -fm22;
+
+	fm33 = ZScale * (Viewport.MaxZ - Viewport.MinZ);
+	fm43 = ZScale * Viewport.MinZ;
+
+	float WNear=0.0, WFar=1.0, InverseWFar=1.0;
+	CxbxrGetWNearFarInverseWFar( WNear,  WFar, InverseWFar);
+
+	//if (D3D__RenderState[D3DRS_ZENABLE] == D3DZB_USEW)
+	if ((pg->KelvinPrimitive.SetDepthTestEnable != D3DZB_FALSE) && (pg->KelvinPrimitive.SetZMinMaxControl & NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN_TRUE) == 0)
+	{
+		// We are doing w-buffering - scale w to optimize use of buffer:
+		//     ZScale * InverseWFar=clipNear/WNear; we need WNear. if WNear==0.0, then this is not feasible.
+		InverseWFar = 1.0; // TODO: we can't compose WNear, so use default 1.0 for InverseWFar here, this is a hack.
+		fm44 = ZScale * InverseWFar;
+
+		// Scale x, y, and z similarly to negate the effect of dividing
+		// through by a scaled w:
+
+		fm11 *= fm44;  fm22 *= fm44;  fm33 *= fm44;
+		fm41 *= fm44;  fm42 *= fm44;  fm43 *= fm44;
+	}
+	else
+	{
+		fm44 = 1.0f;
+	}
+
+	ZeroMemory(&viewportTransform, sizeof(viewportTransform));
+
+	viewportTransform._11 = fm11;
+	viewportTransform._22 = fm22;
+	viewportTransform._33 = fm33;
+	viewportTransform._41 = fm41;
+	viewportTransform._42 = fm42;
+	viewportTransform._43 = fm43;
+	viewportTransform._44 = fm44;
+
+	// update cached ViewportTransform Matrix.
+	extern D3DMATRIX g_xbox_transform_ViewportTransform;// tmp glue
+	g_xbox_transform_ViewportTransform = viewportTransform;
+}
+
+void CxbxrImpl_LazySetTransform(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	HRESULT hRet;
+
+
+	// SetModelView() call only be calaled when pg->KelvinPrimitive.SetSkinMode==0.
+	//
+	// SetModelview() sets:
+	// PushMatrixTransposed(pPush, NV097_SET_MODEL_VIEW_MATRIX0(0), pModelView);
+	// PushMatrixTransposed(pPush + 17, NV097_SET_COMPOSITE_MATRIX(0), pComposite);
+	// inverse modelview matrix is optional: PushInverseModelViewMatrix(pPush,NV097_SET_INVERSE_MODEL_VIEW_MATRIX0(0),pInverseModelView);
+	// 
+	// when pg->KelvinPrimitive.SetSkinMode==0, it's still possible that SetTransform() was called.
+	// in this situation, LazySetsTransform() sets:
+	// PushMatrixTransposed(pPush,NV097_SET_MODEL_VIEW_MATRIX0(0),	& modelView);
+	// when TexGenInverseNeeded) ||	(D3D__RenderState[D3DRS_LIGHTING])
+	// optional PushInverseModelViewMatrix(pPush,NV097_SET_INVERSE_MODEL_VIEW_MATRIX0(0),& inverseModelView);
+
+	// this will update matrix world/view/projection using matrix ModelView and Composite
+		//if (pgraph_is_ModelView_dirty()) {
+			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
+			// update the modelview and composite matrix whenever either one matrix was dirty.
+	// handle DirectModelView()
+	extern D3DMATRIX g_xbox_transform_ViewportTransform;// tmp glue
+	extern D3DMATRIX g_xbox_transform_ProjectionViewportTransform;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_View;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_World;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_Projection;// tmp glue
+	
+
+	D3DMATRIX matUnit;
+	memset(&matUnit._11, 0, sizeof(matUnit));
+	matUnit._11 = 1.0;
+	matUnit._22 = 1.0;
+	matUnit._33 = 1.0;
+	matUnit._44 = 1.0;
+    // TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
+	g_xbox_DirectModelView_View = matUnit;
+
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
+	D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
+
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_DIRECT_MODELVIEW) != 0 ) {
+		// transpose KelvinPrimitive transform back to xbox d3d transform
+		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
+		// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
+		//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		//clear ModelView dirty flags.
+			//g_xbox_transform_ModelView_dirty[0] = false;
+			//g_xbox_transform_InverseModelView_dirty[0] = false;
+	}
+	// handle LazySetTransform();
+	else {
+		// not in skinning mode
+		if (pg->KelvinPrimitive.SetSkinMode == 0) {
+			D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
+			// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
+			//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		}
+		// skinning mode, the commposite matrix doesn't include the ModelView matrix, only ViewPortTransform.
+		// SetModelViewMatrix[1] was set.
+		else {
+			//D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
+			//D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
+			g_xbox_transform_ProjectionViewportTransform = g_xbox_transform_Composite;
+			D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform);
+			CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		}
+	}
+
+	// compose xbox side matrix for use in d3d vertex shader update.
+	// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FVF mode vertex shader constant update routine
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_xbox_transform_InverseModelView);
+	// update g_xbox_DirectModelView_Projection from g_xbox_transform_PrjectionViewportTransform
+	// try to get g_xbox_transform_ViewportTransform first
+	CxbxrImpl_GetViewportTransform(d); //g_xbox_transform_ViewportTransform will be set
+
+	
+	D3DXMATRIX matInverseViewportTransform,matViewportTransform;
+	
+	D3DXMatrixInverse((D3DXMATRIX*)&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
+
+	D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&matInverseViewportTransform);
+
+	// clear pgraph transform matrix dirty flags.
+	for (int i = 0; i < 4; i++) {
+		// update InverseModelView matrix if only ModelView matrix is updated
+
+		if ((g_xbox_transform_ModelView_dirty[i] == true) || (g_xbox_transform_InverseModelView_dirty[i] == false)) {
+			D3DXMATRIX matModelViewTransposed;
+			// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
+			// transpose ModelView back to xbox d3d matrix
+			D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+			// update the InverModelView matrix
+			D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+		}
+		// clear dirty flags
+		g_xbox_transform_ModelView_dirty[i] = false;
+		g_xbox_transform_InverseModelView_dirty[i] = false;
+	}
+	g_xbox_transform_Composite_dirty = false;
+	//}
+
+	//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
+}
 
 void D3D_draw_state_update(NV2AState *d)
 {
@@ -1074,85 +1365,7 @@ void D3D_draw_state_update(NV2AState *d)
 	// hack since we're using all pgraph processing now.
 	NV2A_stateFlags | X_STATE_RUNPUSHBUFFERWASCALLED;
 	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
-		//D3D__RenderState[D3DRS_POINTSPRITEENABLE]==true, set host point sprite enable and point sprite parameters.
-		if (pg->KelvinPrimitive.SetPointSmoothEnable != 0) {
-			// enable host point sprite
-			// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, false);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
-			DWORD FixedSize = pg->KelvinPrimitive.SetPointSize;
-			
-			float hostMinSize, hostMaxSize;
-			hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
-			hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
-			// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
-			if (pg->KelvinPrimitive.SetPointParamsEnable == 0) {
-				// disable host point scale
-				// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, false);
-				 XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, false);
-				// FIXME!!! what we need are supersamplescalefactors, not multisamplescalefactors.
-				float SuperSampleScale,aaScaleX, aaScaleY;
-				/*
-				//float aaOffsetX, aaOffsetY;
-				GetMultiSampleScaleRaw(aaScaleX, aaScaleY);
-				// FIXME!! xbox d3d set supersamplescaleX/Y to 1.0 when SetRenderTarget() was called and render target isn't backbuffer.
-                // currently in our HLE, xbox d3d keeps wrong backbuffer info, so it always judges the render target is different than the backbuffer and thus both scale factors are set as 1.0
-                //if (g_pXbox_RenderTarget != g_pXbox_BackBufferSurface) {
-				aaScaleX = 1.0;
-				aaScaleY = 1.0;
-				//GetMultiSampleOffset(aaOffsetX, aaOffsetY);
-				SuperSampleScale=MIN(aaScaleX, aaScaleY);
-				*/
-				SuperSampleScale = CxbxrGetSuperSampleScale();
-				if (SuperSampleScale <= 1.0)SuperSampleScale = 1.0;
-				FixedSize /= SuperSampleScale;
-			}
-			// D3D__RenderState[D3DRS_POINTSCALEENABLE]== true, set host D3D__RenderState[D3DRS_POINTSCALEENABLE] and point scale 
-			else {
-				DWORD max, min;
-				float delta, factor, height;
-				delta = pg->KelvinPrimitive.SetPointParamsDeltaA;
-				//FIXEDME!!! we need viewport height, not sure including SuperSampleScaleY is correct or not.
-				//pg->KelvinPrimitive.SetViewportScale[1] = -0.5f * Viewport.Height * SuperSampleScaleY
-				height = 2*fabs(*(float*)&pg->KelvinPrimitive.SetViewportScale[1]);
-				factor = delta / (FixedSize*height);
-				factor *= factor;
-				float hostscaleA = pg->KelvinPrimitive.SetPointParamsFactorMulA / factor;
-				float hostscaleB = pg->KelvinPrimitive.SetPointParamsFactorMulB / factor;
-				float hostscaleC = pg->KelvinPrimitive.SetPointParamsFactorMulC / factor;
-				// assume host d3d uses the same min/max point size as xbox d3d
-				hostMinSize = pg->KelvinPrimitive.SetPointParamsMin;
-				hostMaxSize = min + delta;
-				// enable host point scale
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, true);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, true);
-				// set host min/max point size
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, hostMinSize);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, hostMaxSize);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, FtoDW(hostMaxSize));
-				/// set host point scale A/B/C
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, hostscaleA);
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, hostscaleB);
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_C, hostscaleC);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(hostscaleA));
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(hostscaleB));
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(hostscaleC));
-			}
-			// reversed to xbox d3d fixed point size
-			FixedSize = (FixedSize - 0.5) / 8.0;
-			// clamp FixedSize to min/max HostPointSize range
-			if (FixedSize < hostMinSize)FixedSize = hostMinSize;
-			if (FixedSize > hostMaxSize)FixedSize = hostMaxSize;
-			// set host fixed point size
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE, FixedSize);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE, FtoDW(FixedSize));
-		}
-		// disable host point sprite
-		else {
-			// disable host point sprite
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE,false);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
-		}
+		//CxbxrImpl_LazySetPointParameters(d);
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_POINTPARAMS;
 	}
@@ -1309,44 +1522,26 @@ void D3D_draw_state_update(NV2AState *d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
 
+	// update viewport state when we're in pushbuffer replay mode.
+	// if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
+		// CxbxUpdateNativeD3DResources() calls CxbxUpdateHostViewport() to update host viewpot, we call pgraph_SetViewport(d) to convert NV2A viewport content to xbox vieport and then call CxbxrImpl_SetViewport() there.
+		// only update viewport if viewport got dirty.
+		if (NV2A_viewport_dirty == true) {
+			// this only compose viewport from pgraph content 
+			pgraph_SetViewport(d);
+			// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
+			//xbox::X_D3DVIEWPORT8 Viewport;
+			//CxbxrGetViewport(Viewport);
+			//CxbxrImpl_SetViewport(&Viewport);
+		}
+		NV2A_viewport_dirty = false;
+	//}
 
 	// update transfoms
 	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
-	if ((g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) && (pgraph_is_DirectModelView())) {
-		// this will update matrix world/view/projection using matrix ModelView and Composite
-		//if (pgraph_is_ModelView_dirty()) {
-			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
-		    // update the modelview and composite matrix whenever either one matrix was dirty.
-		    if((g_xbox_transform_ModelView_dirty[0] == true) || (g_xbox_transform_Composite_dirty== true)  ){
-				// transpose KelvinPrimitive transform back to xbox d3d transform
-				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
-				D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
-				// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
-				CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, nullptr, &g_xbox_transform_Composite);
-			//clear ModelView dirty flags.
-				//g_xbox_transform_ModelView_dirty[0] = false;
-				//g_xbox_transform_InverseModelView_dirty[0] = false;
-			}
-
-			for (int i = 0; i < 4; i++) {
-				// update InverseModelView matrix if only ModelView matrix is updated
-
-				if ((g_xbox_transform_ModelView_dirty[i] == true) || (g_xbox_transform_InverseModelView_dirty[i] == false)) {
-					D3DXMATRIX matModelViewTransposed;
-					// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
-					// transpose ModelView back to xbox d3d matrix
-					D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
-					// update the InverModelView matrix
-					D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
-				}
-				// clear dirty flags
-				g_xbox_transform_ModelView_dirty[i] = false;
-				g_xbox_transform_InverseModelView_dirty[i] = false;
-			}
-			g_xbox_transform_Composite_dirty = false;
-		//}
-
-		//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
+	if(NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM){
+		CxbxrImpl_LazySetTransform(d);
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TRANSFORM;
 	}
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
@@ -1469,69 +1664,15 @@ void D3D_draw_state_update(NV2AState *d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
 	}
-	// update viewport state when we're in pushbuffer replay mode.
-	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-		// CxbxUpdateNativeD3DResources() calls CxbxUpdateHostViewport() to update host viewpot, we call pgraph_SetViewport(d) to convert NV2A viewport content to xbox vieport and then call CxbxrImpl_SetViewport() there.
-		// only update viewport if viewport got dirty.
-		if(NV2A_viewport_dirty==true)
-			pgraph_SetViewport(d);
-		NV2A_viewport_dirty = false;
-	}
 	// update other D3D states
 	// FIXME!! CxbxUpdateNativeD3DResources() calls XboxRenderStates.Apply() and XboxTextureStates.Apply() to apply Xbox D3D states to Host.
 	// so what we set to host here might be over write later. safer way is to update XboxTextureStates/XboxTextureStates and let CxbxUpdateNativeD3DResources() update them to host.
 	// only update state to host when we're in pushbuffer replay mode. other wise HLE shall handle the host update task.
 	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
-			// NV2A_FOG_PLANE?
-			// NV2A_SET_LINEAR_FOG_CONST?
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
-			// Unused : D3DRS_FOGVERTEXMODE
-		//uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
-		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
-	// Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
-	// Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
-
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_NORMALIZENORMALS, xtBool); // NV2A_NORMALIZE_ENABLE
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_TEXTUREFACTOR, xtD3DCOLOR); // NV2A_RC_CONSTANT_COLOR0(0) NV_PGRAPH_COMBINEFACTOR0
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_DEPTHBIAS, xtFloat); // NV2A_POLYGON_OFFSET_FACTOR, NV2A_POLYGON_OFFSET_UNITS, NV2A_POLYGON_OFFSET_POINT_ENABLE, NV2A_POLYGON_OFFSET_LINE_ENABLE, NV2A_POLYGON_OFFSET_FILL_ENABLE, XB2PC conversion needed
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ANTIALIASEDLINEENABLE, xtBool); // Was D3DRS_EDGEANTIALIAS, corresponds to NV2A_LINE_SMOOTH_ENABLE and NV2A_POLYGON_SMOOTH_ENABLE
-		//DWORD dwFillMode = EmuXB2PC_FillMode(pg->KelvinPrimitive.SetFrontPolygonMode);
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FILLMODE, dwFillMode); // NV2A_POLYGON_MODE_FRONT, EmuXB2PC_* conversion needed
-		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FILLMODE, pg->KelvinPrimitive.SetFrontPolygonMode);
-	//	hRet = g_pD3DDevice->SetRenderState(D3DRS_VERTEXBLEND, Value); // NV2A_SKIN_MODE
-		//g_pD3DDevice->SetRenderState(D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
-		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable != 0);
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILFAIL, Value); // NV2A_STENCIL_OP_FAIL
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, Value); // NV2A_DEPTH_TEST_ENABLE
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0); // NV2A_DEPTH_TEST_ENABLE
-		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable != 0);
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0); // NV2A_STENCIL_ENABLE
-		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable != 0);
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_STENCILENABLE, Value); // NV2A_STENCIL_ENABLE
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, Value); // NV2A_MULTISAMPLE_CONTROL
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_MULTISAMPLEMASK, Value); // NV2A_MULTISAMPLE_CONTROL
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP0, dwConv); // NV2A_TX_WRAP(0), EmuXB2PC_* conversion needed
-		//	hRet = g_pD3DDevice->SetRenderState(D3DRS_WRAP1, dwConv); // NV2A_TX_WRAP(1), EmuXB2PC_* conversion needed
-
-		//  g_pD3DDevice->SetRenderState(D3DRS_LINEPATTERN, Value); // NV2A_POLYGON_STIPPLE_PATTERN? Seems unused in Xbox
-
-		//g_pD3DDevice->SetRenderState(D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
-		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable != 0);
-		//g_pD3DDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
-		//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable != 0);
-		//g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable != 0);
 	}
-	//assert(D3D_StreamZeroStride > 0);
+	g_xbox_transform_use_DirectModelView = true;
 	CxbxUpdateNativeD3DResources();
-
+	g_xbox_transform_use_DirectModelView = false;
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
 }
 
@@ -1610,7 +1751,7 @@ void D3D_draw_arrays(NV2AState *d)
 
 	LOG_TEST_CASE("D3D_draw_arrays");
 
-	LOG_INCOMPLETE(); // TODO : Implement D3D_draw_arrays
+	//LOG_INCOMPLETE(); // TODO : Implement D3D_draw_arrays
 
 	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVertices, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexInput before calling BeginPush.
@@ -1686,18 +1827,18 @@ void D3D_draw_inline_buffer(NV2AState *d)
 
 void D3D_draw_inline_array(NV2AState *d)
 {
-	PGRAPHState *pg = &d->pgraph;
+   	PGRAPHState *pg = &d->pgraph;
 
 	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVerticesUP, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexShader before calling BeginPush.
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
 	// (position followed by weight, normal, diffuse, and so on).
 	// retrieve vertex shader
-	if (g_Xbox_VertexShader_Handle == 0) {
-		LOG_TEST_CASE("FVF Vertex Shader is null");
-	}
+	//if (g_Xbox_VertexShader_Handle == 0) {
+	//	LOG_TEST_CASE("FVF Vertex Shader is null");
+	//}
 	// render vertices
-	else {
+	//else {
 		CxbxDrawContext DrawContext = {};
 		DrawContext.pXboxIndexData = nullptr;
 		assert((xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode != xbox::X_D3DPT_INVALID);
@@ -1716,7 +1857,7 @@ void D3D_draw_inline_array(NV2AState *d)
 		//inline array
 		CxbxDrawPrimitiveUP(DrawContext);
 
-	}
+	//}
 }
 
 void D3D_draw_inline_elements(NV2AState *d)

@@ -1165,9 +1165,9 @@ extern void set_IVB_DECL_override(void);
 extern void reset_IVB_DECL_override(void);
 extern RAMHTEntry ramht_lookup(NV2AState *d, uint32_t handle);
 extern DWORD NV2A_DirtyFlags;
-extern void pgraph_SetModelViewMatrix(unsigned int index);
-extern void pgraph_SetInverseModelViewMatrix(unsigned int index);
-extern void pgraph_SetCompositeMatrix(void);
+extern void pgraph_SetModelViewMatrixDirty(unsigned int index);
+extern void pgraph_SetInverseModelViewMatrixDirty(unsigned int index);
+extern void pgraph_SetCompositeMatrixDirty(void);
 extern void pgraph_use_UserPixelShader(void);
 extern void pgraph_use_FixedPixelShader(void);
 extern bool NV2A_ShaderOtherStageInputDirty;
@@ -1989,7 +1989,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_Reset_0__LTCG_edi1:  break;
                     case X_D3DDevice_Reset_0__LTCG_ebx1:  break;
                     case X_D3DDevice_RunPushBuffer:  break;
-                    case X_D3DDevice_RunVertexStateShader:  break;
+                    case X_D3DDevice_RunVertexStateShader:
+                        CxbxrImpl_RunVertexStateShader(argv[1], (xbox::float_xt*)argv[2]);
+                        break;
                     case X_D3DDevice_SelectVertexShader:                  // break;
                     case X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2: // break;
                     case X_D3DDevice_SelectVertexShader_4__LTCG_eax1:
@@ -2890,7 +2892,8 @@ int pgraph_handle_method(
 					// xbox d3d doesn't use NV097_SET_PROJECTION_MATRIX at all. set assert here to see if there is any code use it.
 					assert(0);
 					slot = (method - NV097_SET_PROJECTION_MATRIX) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    /*
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         // pg->projection_matrix[slot] = *(float*)&parameter;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_PMAT0 + slot / 4;
@@ -2898,14 +2901,17 @@ int pgraph_handle_method(
                         pg->vsh_constants[row][slot % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
+                    */
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TRANSFORM;
                     break;
                 }
-				//Matrix transposed before pushed, always matrix 0, method count 16
+				//Matrix transposed before pushed, not always matrix 0, method count 16. in fixed vertex shader, there are setting with NV097_SET_MODEL_VIEW_MATRIX1/NV097_SET_MODEL_VIEW_MATRIX2/NV097_SET_MODEL_VIEW_MATRIX3 When skinning.
                 CASE_64(NV097_SET_MODEL_VIEW_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetModelViewMatrix0[16] SetModelViewMatrix1[16] SetModelViewMatrix2[16] SetModelViewMatrix3[16]
                      //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_MODEL_VIEW_MATRIX) / 4;
-					unsigned int matnum = slot / 16;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    unsigned int matnum = slot / 16;
+                    /*
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						matnum = slot / 16;
 						unsigned int entry = slot % 16;
@@ -2914,20 +2920,33 @@ int pgraph_handle_method(
                         pg->vsh_constants_dirty[row] = true;
                     }
 					// reinit matnum to first matrix index
-					matnum = (method - NV097_SET_MODEL_VIEW_MATRIX) / 64;
+                    */
+                    matnum = (method - NV097_SET_MODEL_VIEW_MATRIX) / 64;
+                    // if NV097_SET_MODEL_VIEW_MATRIX[0] was set, and the next method is to set NV097_SET_COMPOSITE_MATRIX[0], then we're in direct modelview mode.
+                    if ((pg->KelvinPrimitive.SetSkinMode == 0)){
+                        if ((method == NV097_SET_MODEL_VIEW_MATRIX) ) 
+                            NV2A_DirtyFlags |= X_D3DDIRTYFLAG_DIRECT_MODELVIEW;
+                        // if NV097_SET_MODEL_VIEW_MATRIX[1] was set, then we're in SetTransform(). Todo: this is a dirty hack, the LazySetTransform behaves the same as SetModelView when not in skinning mode.
+                        else
+                            NV2A_DirtyFlags &= !X_D3DDIRTYFLAG_DIRECT_MODELVIEW;
+                    // if we're in skinning mode, then we're in SetTransform()
+                    }else {
+                            NV2A_DirtyFlags &= !X_D3DDIRTYFLAG_DIRECT_MODELVIEW;
+                    }
 					// set dirty flags for each matrix
 					for (unsigned int matcnt = 0; matcnt < (method_count + 15) / 16; matcnt++, matnum++) {
-						pgraph_SetModelViewMatrix(matnum);
+						pgraph_SetModelViewMatrixDirty(matnum);
 					}
-
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TRANSFORM;
 					break;
                 }
-				//Matrix not transposed before pushed, always matrix 0, method count 12
+				//Matrix not transposed before pushed, always matrix 0, method count 12, only first 12 floats are set in each matrix. NV097_SET_INVERSE_MODEL_VIEW_MATRIX1/NV097_SET_INVERSE_MODEL_VIEW_MATRIX2/NV097_SET_INVERSE_MODEL_VIEW_MATRIX wil be set when skinning and if lighting or texgen need it.
                 CASE_64(NV097_SET_INVERSE_MODEL_VIEW_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetInverseModelViewMatrix0[16] SetInverseModelViewMatrix1[16] SetInverseModelViewMatrix2[16] SetInverseModelViewMatrix3[16]
                     //KelvinPrimitive.SetModelViewMatrix?[] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 4;
-					unsigned int matnum;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    unsigned int matnum;
+                    /*
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						matnum = slot / 16;
                         unsigned int entry = slot % 16;
@@ -2936,24 +2955,30 @@ int pgraph_handle_method(
                         pg->vsh_constants_dirty[row] = true;
                     }
 					// reinit matnum to first matrix index
-					matnum = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 64;
+                    */
+                    matnum = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 64;
+                    
 					// set dirty flags for each matrix
 					for (unsigned int matcnt=0; matcnt < (method_count+15) / 16; matcnt++,matnum++) {
-						pgraph_SetInverseModelViewMatrix(matnum);
+						pgraph_SetInverseModelViewMatrixDirty(matnum);
 					}
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TRANSFORM;
                     break;
                 }
 				//Matrix transposed before pushed, always matrix 0, method count 16
                 CASE_16(NV097_SET_COMPOSITE_MATRIX, 4) : {//done //pg->KelvinPrimitive.SetCompositeMatrix[16]
                         //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_COMPOSITE_MATRIX) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    /*
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         unsigned int row = NV_IGRAPH_XF_XFCTX_CMAT0 + slot / 4;
                         pg->vsh_constants[row][slot % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
-					pgraph_SetCompositeMatrix();
+                    */
+					pgraph_SetCompositeMatrixDirty();
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TRANSFORM;
                     break;
                 }
 				// KelvinPrimitive.SetTextureMatrix[4][16] includes texgen plane transform as used by xbox d3d.
@@ -2981,7 +3006,8 @@ int pgraph_handle_method(
 				CASE_64(NV097_SET_TEXGEN_PLANE_S, 4) : {//done //pg->KelvinPrimitive.SetTexgenPlane[i].S[j] .T[j] .R[j] .Q[j]  tex=i, entry=j
                     //KelvinPrimitive.SetTexgenPlane[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_TEXGEN_PLANE_S) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    /*
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         unsigned int tex = slot / 16;
                         unsigned int entry = slot % 16;
@@ -2989,6 +3015,7 @@ int pgraph_handle_method(
                         pg->vsh_constants[row][entry % 4] = arg0;
                         pg->vsh_constants_dirty[row] = true;
                     }
+                    */
                     break;
                 }
 
@@ -3012,11 +3039,13 @@ int pgraph_handle_method(
                 CASE_4(NV097_SET_FOG_PLANE, 4) ://done //pg->KelvinPrimitive.SetFogPlane[4]
                     //KelvinPrimitive.SetFogPlane[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_FOG_PLANE) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    /*
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];                        
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_FOG][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_FOG] = true;
                     }
+                    */
                     break;
 
                 CASE_6(NV097_SET_SPECULAR_PARAMS, 4) ://done //pg->KelvinPrimitive.SetSpecularParams[6]
@@ -3041,23 +3070,27 @@ int pgraph_handle_method(
                 CASE_3(NV097_SET_SCENE_AMBIENT_COLOR, 4) ://done //pg->KelvinPrimitive.SetSceneAmbientColor[3]
                     //KelvinPrimitive.SetSceneAmbientColor[3] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_SCENE_AMBIENT_COLOR) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    /*
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
                     }
+                    */
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
 
                 CASE_4(NV097_SET_VIEWPORT_OFFSET, 4) ://done //pg->KelvinPrimitive.SetViewportOffset[4]
                     //KelvinPrimitive.SetViewportOffset[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
+                    // reserved vertex shader constant -37
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						// vertex shader constant register -37
 						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
                     }
+                    
 					NV2A_viewport_dirty = true;
 					break;
 
@@ -3075,11 +3108,13 @@ int pgraph_handle_method(
                 CASE_4(NV097_SET_EYE_POSITION, 4) ://done //pg->KelvinPrimitive.SetEyePosition[4]
                     //KelvinPrimitive.SetEyePosition[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_EYE_POSITION) / 4;
+                    /* //reg -40
 					for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_EYEP][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_EYEP] = true;
                     }
+                    */
                     break;
 
                 CASE_8(NV097_SET_COMBINER_FACTOR0, 4) ://done D3DRS_TEXTUREFACTOR //pg->KelvinPrimitive.SetCombinerFactor0[8]
@@ -3128,12 +3163,14 @@ int pgraph_handle_method(
                 CASE_4(NV097_SET_VIEWPORT_SCALE, 4) ://done //pg->KelvinPrimitive.SetViewportScale[4]
                     //KelvinPrimitive.SetViewportScale[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_VIEWPORT_SCALE) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+                    
+                    for (int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
-						// vertex shader constant register -38
+						// vertex shader constant register -38 D3DVS_XBOX_RESERVEDCONSTANT1, -37 D3DVS_XBOX_RESERVEDCONSTANT2
 						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPSCL] = true;
                     }
+                    
 					NV2A_viewport_dirty = true;
 					break;
 
@@ -3210,9 +3247,30 @@ int pgraph_handle_method(
                     */
                     // use CxbxrImpl_SetVertexShaderConstant() directly and update KelvinPrimitive.SetTransformConstantLoad accrodingly.
                     CxbxrImpl_SetVertexShaderConstant(pg->KelvinPrimitive.SetTransformConstantLoad- X_D3DSCM_CORRECTION,&argv[0],method_count/4);
+                    
+                    
+                    //pick up SuperSampleScaleX/SuperSampleScaleY/ZScale/wScale after calling CommonSetPassthroughProgram().
+                    if (g_VertexShader_dirty == true && g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && pg->KelvinPrimitive.SetTransformConstantLoad==0) {
+                        //float tempConstant[4];
+                        // read constant register 0, CommonSetPassThroughProgram() sets register 0 constant with SuperSampleScaleX/Y
+                        //CxbxrImpl_GetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, tempConstant, 1);
+                        extern void CxbxrSetSuperSampleScaleXY(float x, float y);
+                        extern void CxbxrSetScreenSpaceOffsetXY(float x, float y);
+                        extern void CxbxrSetZScale(float z);
+                        extern void CxbxrSetWScale(float w);
+                        CxbxrSetSuperSampleScaleXY(DWtoF(argv[0]), DWtoF(argv[1]));
+                        CxbxrSetZScale(DWtoF(argv[2]));
+                        CxbxrSetWScale(DWtoF(argv[3]));
+                        float multiSampleOffset = ((pg->KelvinPrimitive.SetAntiAliasingControl & NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE) != 0)? 0.5f:0.0f;
+
+                        CxbxrSetScreenSpaceOffsetXY(DWtoF(argv[4])- multiSampleOffset, DWtoF(argv[5])- multiSampleOffset);
+
+                    }
+
                     pg->KelvinPrimitive.SetTransformConstantLoad += (method_count / 4);
-                    break;
                 }
+                    break;
+                
 
                 /* Handles NV097_SET_BACK_LIGHT* */
                 CASE_128(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4): { //done  //pg->KelvinPrimitive.SetBackLight[8]. {AmbientColor[3],DiffuseColor[3],SpecularColor[3],Rev_0c24[7]}
@@ -3628,15 +3686,7 @@ int pgraph_handle_method(
 						// some titles might use inline arrays with zero method counts, which is empty draw call and won't set the draw_mode, we shall skip the draw call processing directly.
 						if (pg->draw_mode == DrawMode::None)
 							break;
-						// set vertex declaration override, will be used for the next draw :
-						set_IVB_DECL_override();
-
-					    //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
-                        //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
-                        if (pgraph_draw_state_update != nullptr) {
-                            pgraph_draw_state_update(d);
-                        }
-
+						
                         switch (pg->draw_mode) {
                         case  DrawMode::DrawArrays:  {
                             NV2A_GL_DPRINTF(false, "Draw Arrays");
@@ -3646,9 +3696,22 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
 
+                            // set vertex declaration override, will be used for the next draw :
+                            set_IVB_DECL_override();
+
+                            //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
+                            //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
+                            if (pgraph_draw_state_update != nullptr) {
+                                pgraph_draw_state_update(d);
+                            }
+
                             if (pgraph_draw_arrays != nullptr) {
                                 pgraph_draw_arrays(d);
                             }
+
+                            //reset the vertex declaration after we finish the draw call
+                            reset_IVB_DECL_override();
+
                             break;
                         }
                         case DrawMode::InlineBuffer: { // for draw calls using SET_BEGIN_ENG(primitive)/SET_VERTEX_DATAXXX ... /SET_BEGIN_ENG(0)
@@ -3659,9 +3722,22 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length > 0);
                             assert(pg->inline_elements_length == 0);
 
+                            // set vertex declaration override, will be used for the next draw :
+                            set_IVB_DECL_override();
+
+                            //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
+                            //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
+                            if (pgraph_draw_state_update != nullptr) {
+                                pgraph_draw_state_update(d);
+                            }
+
                             if (pgraph_draw_inline_buffer != nullptr) {
                                 pgraph_draw_inline_buffer(d);
                             }
+
+                            //reset the vertex declaration after we finish the draw call
+                            reset_IVB_DECL_override();
+
                             break;
                         }
                         case DrawMode::InlineArray: {
@@ -3672,9 +3748,22 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
 
+                            // set vertex declaration override, will be used for the next draw :
+                            set_IVB_DECL_override();
+
+                            //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
+                            //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
+                            if (pgraph_draw_state_update != nullptr) {
+                                pgraph_draw_state_update(d);
+                            }
+
                             if (pgraph_draw_inline_array != nullptr && pg->inline_array_length > 0) {
                                 pgraph_draw_inline_array(d);
                             }
+
+                            //reset the vertex declaration after we finish the draw call
+                            reset_IVB_DECL_override();
+
                             break;
                         }
                         case DrawMode::InlineElements: {
@@ -3685,18 +3774,29 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length > 0);
 
+                            // set vertex declaration override, will be used for the next draw :
+                            set_IVB_DECL_override();
+
+                            //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
+                            //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
+                            if (pgraph_draw_state_update != nullptr) {
+                                pgraph_draw_state_update(d);
+                            }
+
                             if (pgraph_draw_inline_elements != nullptr) {
                                 pgraph_draw_inline_elements(d);
                             }
+
+                            //reset the vertex declaration after we finish the draw call
+                            reset_IVB_DECL_override();
+
                             break;
                         }
                         default:
                             NV2A_GL_DPRINTF(true, "EMPTY NV097_SET_BEGIN_END");
                             assert(false);
                         } // switch
-						//reset the vertex declaration after we finish the draw call
-						reset_IVB_DECL_override();
-
+						
 						// Reset draw_mode
 						pg->draw_mode = DrawMode::None;
 
@@ -3731,7 +3831,7 @@ int pgraph_handle_method(
 
                     }
 
-                    pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
+                    //pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
 					break;
                 }
 
@@ -4275,7 +4375,7 @@ int pgraph_handle_method(
 					if (pgraph_GetNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED)) {
 						// call pgraph_draw_state_update() to update all necessary d3d resources
 						if (pgraph_draw_state_update != nullptr) {
-							pgraph_draw_state_update(d);
+							//pgraph_draw_state_update(d);
 						}
 						// clear target Rect
 						if (pgraph_draw_clear != nullptr) {
@@ -4386,7 +4486,7 @@ int pgraph_handle_method(
 						if (method_count==2){
                             // dirty hack. for program shader, there will be a NV097_SET_TRANSFORM_PROGRAM_START right after NV097_SET_TRANSFORM_EXECUTION_MODE in SelectVertexShader().
                             // but for passthrough shader, it won't call SelectVertexShader(), but only use NV097_SET_TRANSFORM_PROGRAM_START right before NV097_SET_TRANSFORM_EXECUTION_MODE
-                            if (argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY&& (argv[2]&0xFFFF)!= NV097_SET_TRANSFORM_PROGRAM_START) {
+                            if ((argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY)&& ((argv[2]& COMMAND_WORD_MASK_METHOD)== NV097_SET_TRANSFORM_PROGRAM_START)) {
 								// for passthrough, argv[1] is always 0:NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY
 								// for program, argv[1] is vertexshader.flags & VERTEXSHADER_WRITE:1
 								// ** the only way to tell whether a vertexh shader is a program or a pass through,
@@ -4394,7 +4494,8 @@ int pgraph_handle_method(
 								// ** program uses D3DDevice_SelectVertexShader() which calls NV097_SET_TRANSFORM_EXECUTION_MODE first then calls NV097_SET_TRANSFORM_PROGRAM_START
 								// ** passthrough in SelectVertexShader() calls NV097_SET_TRANSFORM_PROGRAM_START first, then calls NV097_SET_TRANSFORM_EXECUTION_MODE
 
-                                g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+
+                                g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
                                 //g_UseFixedFunctionVertexShader = false;
 
                                 // for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
@@ -4402,26 +4503,25 @@ int pgraph_handle_method(
 
                                 // set vertex shader dirty flag
                                 g_VertexShader_dirty = true;
-                                float tempConstant[4];
-                                // read constant register 0, CommonSetPassThroughProgram() sets register 0 constant with SuperSampleScaleX/Y
-                                CxbxrImpl_GetVertexShaderConstant(0- X_D3DSCM_CORRECTION, tempConstant,1);
-                                extern void CxbxrSetSuperSampleScaleXY(float x, float y);
-                                CxbxrSetSuperSampleScaleXY(tempConstant[0], tempConstant[1]);
 
                             }
                             else {
                                 // if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
                                 //if (g_VertexShader_dirty == false) {
 
-                                    g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
+                                    g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
                                     //g_UseFixedFunctionVertexShader = false;
 
                                     // for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
-                                    //g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+                                    g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 
                                     // set vertex shader dirty flag
                                     g_VertexShader_dirty = true;
-
+                                    //float tempConstant[4];
+                                    // read constant register 0, CommonSetPassThroughProgram() sets register 0 constant with SuperSampleScaleX/Y
+                                    //CxbxrImpl_GetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, tempConstant, 1);
+                                    //extern void CxbxrSetSuperSampleScaleXY(float x, float y);
+                                    //CxbxrSetSuperSampleScaleXY(tempConstant[0], tempConstant[1]);
                                 //}
                             }
 						}
@@ -4442,6 +4542,8 @@ int pgraph_handle_method(
 
 						// enable g_UseFixedFunctionVertexShader
 						g_UseFixedFunctionVertexShader = true;
+
+                        g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 
 						// set vertex shader dirty flag
 						g_VertexShader_dirty = true;
@@ -4466,19 +4568,6 @@ int pgraph_handle_method(
 					// ** passthrough in SelectVertexShader() calls NV097_SET_TRANSFORM_PROGRAM_START first, then calls NV097_SET_TRANSFORM_EXECUTION_MODE
 
 					// xbox d3d is supposed to call NV097_SET_TRANSFORM_EXECUTION_MODE with method_cound = 2 to set this var, but we copy the code here in case guest code use two methods.
-					// if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
-					if (g_VertexShader_dirty == false) {
-
-						g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
-						g_UseFixedFunctionVertexShader = false;
-
-						// for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
-						g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
-
-						// set vertex shader dirty flag
-						g_VertexShader_dirty = true;
-
-					}
 					//}
 
 					break;
@@ -4512,25 +4601,17 @@ int pgraph_handle_method(
 
 					// if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
 
-					if (g_VertexShader_dirty == false) {
-						// disable passthrough mode setting for now, let vertexh shader be either user program or fixed function, treat passthrough as user program
-						// g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
-						g_UseFixedFunctionVertexShader = false;
-						// passthrough always starts from register 0
-						g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
-						// not sure whether we should set this bool here or not.
-						g_bUsePassthroughHLSL = true;
-						// set vertex shader dirty flag
-						g_VertexShader_dirty = true;
-					}
 
 					//reset fix fuction handle.
 					//pg->vsh_FVF_handle = 0;
 
 					//set starting program slot
 					//if (g_Xbox_VertexShaderMode == VertexShaderMode::ShaderProgram) {
-						g_Xbox_VertexShader_FunctionSlots_StartAddress = arg0;
-					//}
+					g_Xbox_VertexShader_FunctionSlots_StartAddress = arg0;
+
+                    //}
+                    // set vertex shader dirty flag
+                    g_VertexShader_dirty = true;
 
 					break;
 				}

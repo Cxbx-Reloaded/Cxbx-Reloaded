@@ -116,8 +116,15 @@ static int                          g_iWireframe = 0; // wireframe toggle
 static bool                         g_bHack_UnlockFramerate = false; // ignore the xbox presentation interval
 static bool                         g_bHasDepth = false;    // Does device have a Depth Buffer?
        float                        g_ZScale = 1.0;
+	   float                        g_WScale = 1.0;
 	   float                        g_SuperSampleScaleX = 1.0;
+       float                        g_WNear = 1.0;
+	   float                        g_WFar = 1.0;
+	   float                        g_WInverseWFar = 1.0;
 	   float                        g_SuperSampleScaleY = 1.0;
+	   float                        g_ScreenSpaceOffsetX = 1.0;
+	   float                        g_ScreenSpaceOffsetY = 1.0;
+	   xbox::X_D3DVIEWPORT8         g_Viewport;
 static bool                         g_bHasStencil = false;  // Does device have a Stencil Buffer?
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
        bool                         g_bUsePassthroughHLSL = true;
@@ -1109,6 +1116,42 @@ void CxbxrSetSuperSampleScaleXY(float x, float y)
 	g_SuperSampleScaleX = x;
 	g_SuperSampleScaleY = y;
 }
+void CxbxrSetScreenSpaceOffsetXY(float x, float y)
+{
+	g_ScreenSpaceOffsetX = x;
+	g_ScreenSpaceOffsetY = y;
+}
+
+void CxbxrSetZScale(float z)
+{
+	g_ZScale=z;
+}
+void CxbxrSetWScale(float w)
+{
+	g_ZScale = w;
+}
+void CxbxrSetViewport(xbox::X_D3DVIEWPORT8& Viewport)
+{
+	g_Viewport=Viewport;
+}
+float CxbxrGetZScale(void)
+{
+	float ssScale = g_ZScale;
+	if (ssScale < 1.0)
+	{
+		ssScale = 1.0;
+	}
+	return ssScale;
+}
+float CxbxrGetWScale(void)
+{
+	float ssScale = g_WScale;
+	if (ssScale < 1.0)
+	{
+		ssScale = 1.0;
+	}
+	return ssScale;
+}
 
 float CxbxrGetSuperSampleScale(void)
 {
@@ -1119,7 +1162,32 @@ float CxbxrGetSuperSampleScale(void)
 	}
 	return ssScale;
 }
-
+void CxbxrGetSuperSampleScaleXY(float& x, float& y)
+{
+	x = g_SuperSampleScaleX;
+	y = g_SuperSampleScaleY;
+}
+void CxbxrSetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar)
+{
+	g_WNear = WNear;
+	g_WFar = WFar;
+	g_WInverseWFar = WInverseWFar;
+}
+void CxbxrGetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar)
+{
+	WNear = g_WNear ;
+	WFar = g_WFar  ;
+	WInverseWFar = g_WInverseWFar;
+}
+void CxbxrGetScreenSpaceOffsetXY(float &x, float &y)
+{
+	x = g_ScreenSpaceOffsetX;
+	y = g_ScreenSpaceOffsetY;
+}
+void CxbxrGetViewport(xbox::X_D3DVIEWPORT8& Viewport)
+{
+	Viewport=g_Viewport;
+}
 // Forward declaration of CxbxGetPixelContainerMeasures to prevent
 // polluting the diff too much by reshuffling functions around
 void CxbxGetPixelContainerMeasures
@@ -4656,7 +4724,8 @@ xbox::void_xt WINAPI CxbxrImpl_SetShaderConstantMode
 	g_Xbox_VertexShaderConstantMode = Mode;
 	// if using 96 constants mode, copy fixed pipe line constatnts back to vertex shader constants.
 	if (Mode == X_D3DSCM_96CONSTANTS) { // X_D3DSCM_96CONSTANTS = 0
-		// set xbox vertex shader constant NV_IGRAPH_XF_XFCTX_CONS0 = 0x3C, 
+		// set xbox vertex shader constant NV_IGRAPH_XF_XFCTX_CONS0 = 0x3C,
+		// Slot 0x3c, 60(-36) is 'cSMAP', followed by 'cSKIN' and 'cREFL':
 		//xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant)(NV_IGRAPH_XF_XFCTX_CONS0,(xbox::PVOID)&FixedFunctionPipelineConstants[0],3);
 		// reset lights
 
@@ -4666,10 +4735,11 @@ xbox::void_xt WINAPI CxbxrImpl_SetShaderConstantMode
 
 		// reset fixed function T&L constants
 		CxbxrImpl_SetVertexShaderConstant(NV_IGRAPH_XF_XFCTX_CONS0, (xbox::PVOID)&FixedFunctionPipelineConstants[0], 3);
-		// reset 4 Texgen Planes
+		// reset 4 Texgen Planes with Identity Matrix
 
-		// reset Fog Plane
+		// reset Fog Plane with (0.0f, 0.0f, 0.0f, 1.0f)
 
+		// reset Eye Position with (0.0f, 0.0f, 0.0f, 1.0f)
 	}
 }
 
@@ -5082,7 +5152,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 	}
 	*/
 	assert((xbox::X_D3DPRIMITIVETYPE)PrimitiveType != xbox::X_D3DPT_INVALID);
-	//CxbxrImpl_Begin(PrimitiveType);
+	CxbxrImpl_Begin(PrimitiveType);
 
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
@@ -5556,7 +5626,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 	DWORD HostFlags = 0;
 	EmuKickOffWait();
 	// Clear requires the Xbox viewport to be applied
-	CxbxUpdateNativeD3DResources();
+	// CxbxUpdateNativeD3DResources();
 
     // make adjustments to parameters to make sense with windows d3d
     {
@@ -6963,6 +7033,7 @@ D3DMATRIX g_xbox_DirectModelView_Projection;
 D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;
 D3DMATRIX g_xbox_transform_Projection;
 D3DMATRIX g_xbox_transform_ViewportTransform;
+D3DMATRIX g_xbox_transform_ProjectionViewportTransform;
 
 
 static D3DMATRIX * g_xbox_transform_matrix = nullptr;
@@ -7834,7 +7905,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	}
 #if !USEPGRAPH_SetVertexShader
 
-	CxbxrImpl_SetVertexShader(Handle);
+	//CxbxrImpl_SetVertexShader(Handle);
 #else	
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
@@ -7903,7 +7974,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_
 		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 	}
 #if !USEPGRAPH_SetVertexShader
-	CxbxrImpl_SetVertexShader(Handle);
+	//CxbxrImpl_SetVertexShader(Handle);
 #endif
 
 	__asm {
@@ -9900,29 +9971,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 
 extern xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress); // tmp glue
 
-// ******************************************************************
-// * patch: D3DDevice_RunVertexStateShader
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
-(
-    dword_xt Address,
-    CONST float_xt *pData
-)
+void WINAPI CxbxrImpl_RunVertexStateShader(
+	xbox::dword_xt Address,
+	CONST xbox::float_xt* pData)
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Address)
-		LOG_FUNC_ARG(pData)
-		LOG_FUNC_END;
-
-	// If pData is assigned, pData[0..3] is pushed towards nv2a transform data registers
-	// then sends the nv2a a command to launch the vertex shader function located at Address
-	if (Address >= NV2A_MAX_TRANSFORM_PROGRAM_LENGTH) {
-		LOG_TEST_CASE("Address out of bounds");
-		return;
-	}
-	// make sure pushbuffer is processed.
-	EmuKickOffWait();
-
 	NV2AState* dev = g_NV2A->GetDeviceState();
 	PGRAPHState* pg = &(dev->pgraph);
 
@@ -9953,6 +10005,49 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 	// therefor, nothing else needs to be done here, other than to cleanup
 
 	nv2a_vsh_program_destroy(&program); // Note: program.steps will be free'ed
+
+}
+
+// ******************************************************************
+// * patch: D3DDevice_RunVertexStateShader
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
+(
+    dword_xt Address,
+    CONST float_xt *pData
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Address)
+		LOG_FUNC_ARG(pData)
+		LOG_FUNC_END;
+
+	// If pData is assigned, pData[0..3] is pushed towards nv2a transform data registers
+	// then sends the nv2a a command to launch the vertex shader function located at Address
+	if (Address >= NV2A_MAX_TRANSFORM_PROGRAM_LENGTH) {
+		LOG_TEST_CASE("Address out of bounds");
+		return;
+	}
+	// make sure pushbuffer is processed.
+	EmuKickOffWait();
+	//CxbxrImpl_RunVertexStateShader(Address,pData);
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_RunVertexStateShader;//enum of this patched API
+	pPush_local[2] = (DWORD)Address; //total 14 DWORD space for arguments.
+    //copy the vertex shader constant to pushbuffer as well, and revise the pData 
+	pPush_local[3] = (DWORD)&pPush_local[4];
+	memcpy(&pPush_local[4], pData, sizeof(float) * 4);
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
 }
 
 // ******************************************************************

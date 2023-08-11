@@ -309,15 +309,22 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void);
 
 /*
 notes for my trials and errors.
+Original idea was to use a virtual pushbuffer method to represent each patched HLE api and push the virtual pushbuffer method to pushbuffer then let pgraph method handler handle the patched HLE api later.
+this should solve the sync issue between pushbuffer and HLE api.
+So I introudced a new virtual method 0x00000080, with method count 15, NOINC, sub channel 0. each HLE api has a unique token represented with a enum X_D3DAPI_ENUM, which will be the first argument.
+this left me 14 dword arguments and I put each arguments for the api call to the method arguments one by one.
+but some apis needs more data to be pushed to pushbuffer when the api was called, for example, DrawVerticesUp(), which pushes all vertixes data to pushbuffer. In such case, we can't use this approach, unless we copied all necessary data to a seperate buffer for later use which is way too complicate.
+so for such apis, I decide to unpatch them directly and create praph method handler instead.
+
 D3DDevice_RunPushBuffer() must be unpatched to prevent reentrance of pgraph_handle_method()
 DrawVertices/DrawVerticesUP/DrawIndexedXXX calls can't be HLEed inside pgraph because xbox pushes all vertex data directly into pushbuffer.
 SetVertexShader/LoadVertexShader/SelectVertexShader/LoadVertexShaderProgram can't be HLEed, because xbox pushes all shader programs/vertex formats into pushbuffer.
 SetVertexConstantsXXX variants are unpatched and handled inside pgraph because of the timing sync with acutal shader/draw calls.
-extra EmuKickOff()/EmuKickOffWait() shall be removed to avoid PFIFO reentrance issue.
-MakeSpace() shall make sure there is a "this" pointer available before trampoline was called.
+extra EmuKickOff()/EmuKickOffWait() shall be removed to avoid PFIFO reentrance issue.// TODO: this might not be true, the real root cause should be the patched D3DDevice_RunPushBuffer()
+MakeSpace() shall make sure there is a "this" pointer available before trampoline was called. // TODO: we shall check similar trampoline calls
 g_pXbox_PixelShader=&g_Xbox_PixelShader which is a xbox pixel shader made up from contents of KelvinPrimitive.
 
-
+Render States related pgraph methods/xbox calls
     NV097_SET_DOT_RGBMAPPING),               D3DRS_PSDOTMAPPING,       //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_PSDOTMAPPING, pg->KelvinPrimitive.SetDotRGBMapping);
     NV097_SET_SHADER_OTHER_STAGE_INPUT),     D3DRS_PSINPUTTEXTURE,
 
@@ -368,6 +375,7 @@ g_pXbox_PixelShader=&g_Xbox_PixelShader which is a xbox pixel shader made up fro
     NV097_SET_FRONT_POLYGON_MODE NV097_SET_BACK_POLYGON_MODE D3DRS_FILLMODE D3DRS_BACKFILLMODE D3DRS_TWOSIDEDLIGHTING //
     NV097_SET_SKIN_MODE D3DRS_VERTEXBLEND // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_VERTEXBLEND, pg->KelvinPrimitive.SetSkinMode);
     LazySetLights()  NV097_SET_LIGHTING_ENABLE NV097_SET_SPECULAR_ENABLE NV097_SET_LIGHT_CONTROL NV097_SET_TWO_SIDE_LIGHT_EN D3DRS_LIGHTING NV097_SET_COLOR_MATERIAL NV097_SET_LIGHT_LOCAL_RANGE NV097_SET_LIGHT_LOCAL_POSITION NV097_SET_LIGHT_ENABLE_MASK D3DRS_SPECULARENABLE D3DRS_TWOSIDEDLIGHTING D3DRS_LOCALVIEWER 
+    LazySetTransform()
 
     double check:
     1. pixel shader set/update: done

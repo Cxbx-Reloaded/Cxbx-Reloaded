@@ -1369,14 +1369,12 @@ typedef DWORD NV2AMETHOD;
 #define X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM               0x00004000
 #define X_D3DDIRTYFLAG_LIGHTS                             0x00FF1000
 #define X_D3DDIRTYFLAG_DIRECT_INPUT                       0x40000000  // set when SetVertexShaderInput/SetVertexShaderInputDirect was called. means all vertex formats/offsets set.
-#define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000  // 
+// when SetTransform() was called, the ModelView/Composite matrix will still be update using the new transform.
+// this makes sense, NV2A uses ModelView/Composite internally. so xbox always has to convert its transform to ModelView/Composite.
+#define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000  // set when direct modelview mode was set.
 #define X_SET_STATE_FLAGS                                 0x3FFFFF8F
 // valuse for direct mode, when set, overwrite original api priority
 // but from reversed code, even X_D3DDIRTYFLAG_DIRECT_INPUT is set,
-// when SetTransform() was called, the ModelView/Composite matrix will still be update using the new transform.
-// this makes sense, NV2A uses ModelView/Composite internally. so xbox always has to convert its transform to ModelView/Composite.
-#define X_D3DDIRTYFLAG_DIRECT_INPUT                       0x40000000
-#define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000
 
 // xbox d3d stateFlags, also used by NV2A_stateFlags
 
