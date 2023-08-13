@@ -1099,86 +1099,64 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
-
-	//D3D__RenderState[D3DRS_POINTSPRITEENABLE]==true, set host point sprite enable and point sprite parameters.
-	if (pg->KelvinPrimitive.SetPointSmoothEnable != 0) {
-		// enable host point sprite
-		// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, false);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, true);
-		DWORD FixedSize = pg->KelvinPrimitive.SetPointSize;
+	    // xbox os seems to make a mistake here, the LazySetPointParameters() converts the point size into DWORD and set it to pg->KelvinPrimitive.SetPointSize
+		float FixedSize = pg->KelvinPrimitive.SetPointSize;
+		// reversed to xbox d3d fixed point size
+		float size = FixedSize/8.0;
+		float max, min;
+		float delta, factor, height;
+		min = pg->KelvinPrimitive.SetPointParamsMin;
+		if (min < 0.0f)min = 0.0f;
+		delta = pg->KelvinPrimitive.SetPointParamsDeltaA;
+		max = min + delta;
+		if (max > 64.0f)max = 64.0f;
 
 		float hostMinSize, hostMaxSize;
 		hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
 		hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
 		// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
-		if (pg->KelvinPrimitive.SetPointParamsEnable == 0) {
-			// disable host point scale
-			// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, false);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, false);
-			// FIXME!!! what we need are supersamplescalefactors, not multisamplescalefactors.
-			float SuperSampleScale, aaScaleX, aaScaleY;
-			/*
-			//float aaOffsetX, aaOffsetY;
-			GetMultiSampleScaleRaw(aaScaleX, aaScaleY);
-			// FIXME!! xbox d3d set supersamplescaleX/Y to 1.0 when SetRenderTarget() was called and render target isn't backbuffer.
-			// currently in our HLE, xbox d3d keeps wrong backbuffer info, so it always judges the render target is different than the backbuffer and thus both scale factors are set as 1.0
-			//if (g_pXbox_RenderTarget != g_pXbox_BackBufferSurface) {
-			aaScaleX = 1.0;
-			aaScaleY = 1.0;
-			//GetMultiSampleOffset(aaOffsetX, aaOffsetY);
-			SuperSampleScale=MIN(aaScaleX, aaScaleY);
-			*/
-			SuperSampleScale = CxbxrGetSuperSampleScale();
-			if (SuperSampleScale <= 1.0)SuperSampleScale = 1.0;
-			FixedSize /= SuperSampleScale;
-		}
-		// D3D__RenderState[D3DRS_POINTSCALEENABLE]== true, set host D3D__RenderState[D3DRS_POINTSCALEENABLE] and point scale 
-		else {
-			DWORD max, min;
-			float delta, factor, height;
-			delta = pg->KelvinPrimitive.SetPointParamsDeltaA;
+		if (pg->KelvinPrimitive.SetPointParamsEnable != 0) {
 			//FIXEDME!!! we need viewport height, not sure including SuperSampleScaleY is correct or not.
-			//pg->KelvinPrimitive.SetViewportScale[1] = -0.5f * Viewport.Height * SuperSampleScaleY
-			height = 2 * fabs(*(float*)&pg->KelvinPrimitive.SetViewportScale[1]);
-			factor = delta / (FixedSize * height);
+			xbox::X_D3DVIEWPORT8 Viewport;
+			if (NV2A_viewport_dirty == true) {
+				// this only compose viewport from pgraph content 
+				pgraph_ComposeViewport(d);
+				// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
+				// D3DDevice_SetViewport() was patched and HLEed, here we only implement it when we're in RunPushbuffer().
+				if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
+					
+					CxbxrGetViewport(Viewport);
+					CxbxrImpl_SetViewport(&Viewport);
+				}
+				NV2A_viewport_dirty = false;
+			}
+			CxbxrGetViewport(Viewport);
+			height = Viewport.Height;
+			factor = delta / (size * height);
 			factor *= factor;
-			float hostscaleA = pg->KelvinPrimitive.SetPointParamsFactorMulA / factor;
-			float hostscaleB = pg->KelvinPrimitive.SetPointParamsFactorMulB / factor;
-			float hostscaleC = pg->KelvinPrimitive.SetPointParamsFactorMulC / factor;
+			float xboxScaleA = pg->KelvinPrimitive.SetPointParamsFactorMulA / factor;
+			float xboxScaleB = pg->KelvinPrimitive.SetPointParamsFactorMulB / factor;
+			float xboxScaleC = pg->KelvinPrimitive.SetPointParamsFactorMulC / factor;
 			// assume host d3d uses the same min/max point size as xbox d3d
-			hostMinSize = pg->KelvinPrimitive.SetPointParamsMin;
-			hostMaxSize = min + delta;
-			// enable host point scale
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALEENABLE, true);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, true);
-			// set host min/max point size
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, hostMinSize);
 			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, hostMaxSize);
 			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MAX, FtoDW(hostMaxSize));
 			/// set host point scale A/B/C
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, hostscaleA);
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, hostscaleB);
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_C, hostscaleC);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(hostscaleA));
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(hostscaleB));
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(hostscaleC));
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(xboxScaleA));
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(xboxScaleB));
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(xboxScaleC));
 		}
-		// reversed to xbox d3d fixed point size
-		FixedSize = (FixedSize - 0.5) / 8.0;
-		// clamp FixedSize to min/max HostPointSize range
-		if (FixedSize < hostMinSize)FixedSize = hostMinSize;
-		if (FixedSize > hostMaxSize)FixedSize = hostMaxSize;
+		else {
+			float ssScale = CxbxrGetSuperSampleScale();
+			size /= ssScale;
+		}
+		// clamp size to min/max HostPointSize range
+		if (size < min)size=min;
+		// if (size > 64.0f)size = 64.0f; 
+		if (size > max)size = max;// max already clamped to 64.0
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, pg->KelvinPrimitive.SetPointParamsEnable != 0);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, pg->KelvinPrimitive.SetPointSmoothEnable != 0);
 		// set host fixed point size
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE, FixedSize);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE, FtoDW(FixedSize));
-	}
-	// disable host point sprite
-	else {
-		// disable host point sprite
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE,false);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
-	}
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE, FtoDW(size));
 }
 
 void CxbxrImpl_GetViewportTransform(NV2AState* d)
@@ -1602,8 +1580,8 @@ void D3D_draw_state_update(NV2AState *d)
 				CxbxrGetViewport(Viewport);
 				CxbxrImpl_SetViewport(&Viewport);
 			}
+			NV2A_viewport_dirty = false;
 		}
-		NV2A_viewport_dirty = false;
 	//}
 
 	// update transfoms
