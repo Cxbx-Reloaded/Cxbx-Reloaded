@@ -243,7 +243,7 @@ void restore_xbox_texture_state(void)
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
 		g_pXbox_SetTexture[i] = pXbox_SetTexture_Backup[i];
 }
-void D3D_texture_stage_update(NV2AState *d)
+void CxbxrImpl_LazySetTextureState(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	for (int stage = 0; stage < 4; stage++) {
@@ -306,6 +306,7 @@ xbox::X_PixelShader* pNV2A_PixelShader;
 xbox::X_PixelShader NV2A_PixelShader;
 xbox::X_D3DPIXELSHADERDEF NV2A_PSDef;
 bool NV2A_ShaderOtherStageInputDirty=false;
+bool NV2A_TextureFactorAllTheSame = false;
 bool g_nv2a_use_nv2a_bumpenv = false;
 DWORD NV2A_colorOP[8];
 DWORD NV2A_colorArg0[8];
@@ -345,6 +346,8 @@ void pgraph_notuse_NV2A_bumpenv(void)
 }
 bool pgraph_is_NV2A_bumpenv(void)
 {
+	return g_nv2a_use_nv2a_bumpenv;
+	/*
 	// if wr're not in replplay mode, don't use NV2A bumpenv. this is temp solution to solve HLE/NV2A confliction.
 	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
 		return false;
@@ -352,6 +355,7 @@ bool pgraph_is_NV2A_bumpenv(void)
 	else {
 		return g_nv2a_use_nv2a_bumpenv;
 	}
+	*/
 }
 void pgraph_use_UserPixelShader(void)
 {
@@ -484,13 +488,22 @@ DWORD convert_NV2A_combiner_reg_to_xbox_reg(DWORD nvreg) {
 	}
 	return xboxreg;
 }
-void D3D_combiner_state_update(NV2AState *d)
+//update only needed in fixed mode pixel shader
+void CxbxrImpl_LazySetCombiners(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	// FIXME!! in user program, the actual stage used could exceed 4, Otogi uses stage 0~5. xbox d3d colorOP/args setting with stage might not comply with the compiled result of user program.
 	// there is not feasible way to reverse user program back to xbox d3d color OP.
 	// fortunately we only need these reversed info for fixed function pixel shader.
-	for (int i = 0; i < 8; i++) {
+	// in fixed mode, we only use stage 0~3, and when point sprite is enabled, only stage 3 will be used.
+	int startStage = 0;
+	// FIXME!!! if we start with stage 3, what will happen with stage 0~2? 
+    // when point sprite is enabled, only stage 3 will be used. set colorOp in stage 0~2 disabled.
+	if (pg->KelvinPrimitive.SetPointSmoothEnable != 0)
+		startStage = 3;
+
+	for (int i = 0; i < 4; i++) {
+
 		auto colorOp = pg->KelvinPrimitive.SetCombinerColorICW[i];// = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);// FIXME!!!
 
 		auto colorICW = pg->KelvinPrimitive.SetCombinerColorICW[i];
@@ -521,13 +534,13 @@ void D3D_combiner_state_update(NV2AState *d)
 			NV2A_resultArg[i] = (resultarg >> 4) & 0xF == 0xC ? xbox::X_D3DTA_CURRENT : xbox::X_D3DTA_TEMP;
 		}
 		unsigned int startStage = 0;
-		// FIXME!!! if we start with stage 3, what will happen with stage 0~2? 
-		if (pg->KelvinPrimitive.SetPointSmoothEnable != 0)
-			startStage = 3;
-		if (i == startStage) {
+		// FIXME!!! we set colorOp as X_D3DTOP_DISABLE for stage 0~2 when point sprite was enabled.
+		if (i < startStage) {
+			NV2A_colorOP[i]= xbox::X_D3DTOP_DISABLE;
+		}else if (i == startStage) {
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
-			if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& alphaICW == 0x14200000 && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
+			if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& (alphaICW == (0x14200000)) && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 				//NV2A_resultArg[i] = alphaOCW;
@@ -936,7 +949,7 @@ extern float CxbxrGetZScale(void);
 
 
 bool NV2A_viewport_dirty = false;
-void pgraph_SetViewport(NV2AState *d)
+void pgraph_ComposeViewport(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	HRESULT hRet;
@@ -1091,7 +1104,7 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 	if (pg->KelvinPrimitive.SetPointSmoothEnable != 0) {
 		// enable host point sprite
 		// hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSPRITEENABLE, false);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, false);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, true);
 		DWORD FixedSize = pg->KelvinPrimitive.SetPointSize;
 
 		float hostMinSize, hostMaxSize;
@@ -1142,7 +1155,7 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MIN, hostMinSize);
 			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSIZE_MAX, hostMaxSize);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, FtoDW(hostMaxSize));
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MAX, FtoDW(hostMaxSize));
 			/// set host point scale A/B/C
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_A, hostscaleA);
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_POINTSCALE_B, hostscaleB);
@@ -1176,7 +1189,7 @@ void CxbxrImpl_GetViewportTransform(NV2AState* d)
 	// update Viewport info if needed. though this should already been updated before we got here.
 	if (NV2A_viewport_dirty == true) {
 		// this only compose viewport from pgraph content 
-		pgraph_SetViewport(d);
+		pgraph_ComposeViewport(d);
 		// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
 		//xbox::X_D3DVIEWPORT8 Viewport;
 		//CxbxrGetViewport(Viewport);
@@ -1271,89 +1284,243 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
 			// update the modelview and composite matrix whenever either one matrix was dirty.
 	// handle DirectModelView()
-	extern D3DMATRIX g_xbox_transform_ViewportTransform;// tmp glue
-	extern D3DMATRIX g_xbox_transform_ProjectionViewportTransform;// tmp glue
-	extern D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;// tmp glue
-	extern D3DMATRIX g_xbox_DirectModelView_View;// tmp glue
-	extern D3DMATRIX g_xbox_DirectModelView_World;// tmp glue
-	extern D3DMATRIX g_xbox_DirectModelView_Projection;// tmp glue
-	
+extern D3DMATRIX g_xbox_transform_ViewportTransform;// tmp glue
+extern D3DMATRIX g_xbox_transform_ProjectionViewportTransform;// tmp glue
+extern D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;// tmp glue
+extern D3DMATRIX g_xbox_DirectModelView_View;// tmp glue
+extern D3DMATRIX g_xbox_DirectModelView_World;// tmp glue
+extern D3DMATRIX g_xbox_DirectModelView_Projection;// tmp glue
 
-	D3DMATRIX matUnit;
-	memset(&matUnit._11, 0, sizeof(matUnit));
-	matUnit._11 = 1.0;
-	matUnit._22 = 1.0;
-	matUnit._33 = 1.0;
-	matUnit._44 = 1.0;
-    // TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
-	g_xbox_DirectModelView_View = matUnit;
 
-	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
-	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
-	D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
+D3DMATRIX matUnit;
+memset(&matUnit._11, 0, sizeof(matUnit));
+matUnit._11 = 1.0;
+matUnit._22 = 1.0;
+matUnit._33 = 1.0;
+matUnit._44 = 1.0;
+// TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
+g_xbox_DirectModelView_View = matUnit;
 
-	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_DIRECT_MODELVIEW) != 0 ) {
-		// transpose KelvinPrimitive transform back to xbox d3d transform
+D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
+D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
+D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
+
+if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_DIRECT_MODELVIEW) != 0) {
+	// transpose KelvinPrimitive transform back to xbox d3d transform
+	D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
+	// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
+	//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+	//clear ModelView dirty flags.
+		//g_xbox_transform_ModelView_dirty[0] = false;
+		//g_xbox_transform_InverseModelView_dirty[0] = false;
+}
+// handle LazySetTransform();
+else {
+	// not in skinning mode
+	if (pg->KelvinPrimitive.SetSkinMode == 0) {
 		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
 		// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
 		//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
-		//clear ModelView dirty flags.
-			//g_xbox_transform_ModelView_dirty[0] = false;
-			//g_xbox_transform_InverseModelView_dirty[0] = false;
 	}
-	// handle LazySetTransform();
+	// skinning mode, the commposite matrix doesn't include the ModelView matrix, only ViewPortTransform.
+	// SetModelViewMatrix[1] was set.
 	else {
-		// not in skinning mode
-		if (pg->KelvinPrimitive.SetSkinMode == 0) {
-			D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
-			// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
-			//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		//D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
+		//D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
+		g_xbox_transform_ProjectionViewportTransform = g_xbox_transform_Composite;
+		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform);
+		CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+	}
+}
+
+// compose xbox side matrix for use in d3d vertex shader update.
+// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FVF mode vertex shader constant update routine
+D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_xbox_transform_InverseModelView);
+// update g_xbox_DirectModelView_Projection from g_xbox_transform_PrjectionViewportTransform
+// try to get g_xbox_transform_ViewportTransform first
+CxbxrImpl_GetViewportTransform(d); //g_xbox_transform_ViewportTransform will be set
+
+
+D3DXMATRIX matInverseViewportTransform, matViewportTransform;
+
+D3DXMatrixInverse((D3DXMATRIX*)&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
+
+D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&matInverseViewportTransform);
+
+// clear pgraph transform matrix dirty flags.
+for (int i = 0; i < 4; i++) {
+	// update InverseModelView matrix if only ModelView matrix is updated
+
+	if ((g_xbox_transform_ModelView_dirty[i] == true) || (g_xbox_transform_InverseModelView_dirty[i] == false)) {
+		D3DXMATRIX matModelViewTransposed;
+		// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
+		// transpose ModelView back to xbox d3d matrix
+		D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+		// update the InverModelView matrix
+		D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+	}
+	// clear dirty flags
+	g_xbox_transform_ModelView_dirty[i] = false;
+	g_xbox_transform_InverseModelView_dirty[i] = false;
+}
+g_xbox_transform_Composite_dirty = false;
+//}
+
+//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
+}
+
+void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	HRESULT hRet;
+	// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
+	pgraph_use_NV2A_bumpenv();
+
+	if (pNV2A_PixelShader == nullptr) {
+		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
+		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
+			CxbxrImpl_LazySetCombiners(d);
+			// clear dirty flag
+			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 		}
-		// skinning mode, the commposite matrix doesn't include the ModelView matrix, only ViewPortTransform.
-		// SetModelViewMatrix[1] was set.
+	}
+	else { // user mode
+		// Populate all required PSDef fields by copying over from KelvinPrimitive fields;
+		// TODO : Refactor DxbxUpdateActivePixelShader to directly read from KelvinPrimitive (once we can otherwise drop PSDef entirely)
+		memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
+		// only set NV2A_PSDef.PSFinalCombinerInputsABCD and NV2A_PSDef.PSFinalCombinerInputsEFG when KelvinPrimitive.SetCombinerSpecularFogCW0 or KelvinPrimitive.SetCombinerSpecularFogCW1 is dirty
+		// FIXMED!!! this is only considering the pixel shader code itself.
+		// but xbox d3d might set PSDef.PSFinalCombinerInputsABCD/PSDef.PSFinalCombinerInputsEFG when Fog state changed. in that condition, final combiner changed, shall we consider that situation and regegerate pixel shader?
+		// in pushbuffer sample it sets the pixel shader without final combiner. but xbox d3d sets final combiner later because of fog state chaged. if we regenerate the pixel shader with changed final combiner, the rendering output would be wrong. 
+		bool bHasFinalCombiner = NV2A_stateFlags & X_STATE_COMBINERNEEDSSPECULAR!=0?true:false;
+		// DxbxUpdateActivePixelShader() doesn't consider about the precondition, we have to treat the dirty flag here.
+		NV2A_PSDef.PSFinalCombinerInputsABCD = bHasFinalCombiner ? pg->KelvinPrimitive.SetCombinerSpecularFogCW0 : 0;
+		NV2A_PSDef.PSFinalCombinerInputsEFG = bHasFinalCombiner ? pg->KelvinPrimitive.SetCombinerSpecularFogCW1 : 0;
+		//NV2A_stateFlags &= ~X_STATE_COMBINERNEEDSSPECULAR; // FIXME!!! shall we reset the flag here?
+		memcpy(&NV2A_PSDef.PSConstant0[0], &pg->KelvinPrimitive.SetCombinerFactor0[0], (8 + 8 + 8 + 8) * sizeof(DWORD));
+		/* Since the following fields are adjacent in Kelvin AND PSDef, above memcpy is extended to copy the entire range :
+		memcpy(&NV2A_PSDef.PSConstant1[0], &pg->KelvinPrimitive.SetCombinerFactor1[0], 8 * sizeof(DWORD));
+		memcpy(&NV2A_PSDef.PSAlphaOutputs[0], &pg->KelvinPrimitive.SetCombinerAlphaOCW[0], 8 * sizeof(DWORD));
+		memcpy(&NV2A_PSDef.PSRGBInputs[0], &pg->KelvinPrimitive.SetCombinerColorICW[0], 8 * sizeof(DWORD)); */
+		NV2A_PSDef.PSCompareMode = pg->KelvinPrimitive.SetShaderClipPlaneMode;
+		NV2A_PSDef.PSFinalCombinerConstant0 = pg->KelvinPrimitive.SetSpecularFogFactor[0];
+		NV2A_PSDef.PSFinalCombinerConstant1 = pg->KelvinPrimitive.SetSpecularFogFactor[1];
+		memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], (8 + 1) * sizeof(DWORD));
+		/* Since the following field is adjacent in Kelvin AND PSDef, above memcpy is extended to copy the entire range :
+		NV2A_PSDef.PSCombinerCount = pg->KelvinPrimitive.SetCombinerControl; */
+		NV2A_PSDef.PSTextureModes = pg->KelvinPrimitive.SetShaderStageProgram; // Was : XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+		NV2A_PSDef.PSDotMapping = pg->KelvinPrimitive.SetDotRGBMapping; // Note : Adjacent to above and below fields, but 3 assignments are cheaper than memcpy call overhead
+		NV2A_PSDef.PSInputTexture = pg->KelvinPrimitive.SetShaderOtherStageInput;
+		// set pixel shader
+		pgraph_use_UserPixelShader();
+	}
+	// reset bumpenv_dirty[] flags, currently we're not referencing these flags. pixel shader generator will update bumpenv anyway.
+	pg->bumpenv_dirty[0] = false;
+	pg->bumpenv_dirty[1] = false;
+	pg->bumpenv_dirty[2] = false;
+	pg->bumpenv_dirty[3] = false;
+	CxbxrImpl_SetPixelShader((xbox::dword_xt)pNV2A_PixelShader);
+}
+
+void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	HRESULT hRet;
+	if (pg->KelvinPrimitive.SetFogEnable != 0) {
+		float fogTableStart, fogTableEnd, fogTableDensity;
+		DWORD fogTableMode, fogGenMode;
+		float bias, scale, fogMode;
+		fogGenMode = pg->KelvinPrimitive.SetFogGenMode;
+		fogMode = pg->KelvinPrimitive.SetFogMode;
+		bias = pg->KelvinPrimitive.SetFogParamsBias;
+		scale = pg->KelvinPrimitive.SetFogParamsScale;
+		// D3D__RenderState[D3DRS_RANGEFOGENABLE] == true fogGenMode =NV097_SET_FOG_GEN_MODE_V_RADIAL, else fogGenMode =NV097_SET_FOG_GEN_MODE_V_PLANAR
+		// notice that when fogTableMode == D3DFOG_NONE, fogGenMode will be reset to NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA, in  that case, we won't be able to know what D3D__RenderState[D3DRS_RANGEFOGENABLE] should be
+		bool bD3DRS_RangeFogEnable = fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL ? true : false;
+
+		if (fogMode == NV097_SET_FOG_MODE_V_EXP2) {
+			fogTableMode = D3DFOG_EXP2;
+			// scale =  -fogTableDensity * (1 / (2 * sqrt(5.5452)))
+			// scale = -fogTableDensity * (1.0f / (2.0f * 2.354824834249885f));
+			fogTableDensity = -scale * (2.0f * 2.354824834249885f);
+
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
+		}
+		else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
+			fogTableMode = D3DFOG_EXP;
+			// scale = -fogTableDensity * (1.0f / (2.0f * 5.5452f));
+			fogTableDensity = -scale * (2.0f * 5.5452f);
+
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
+		}
+		else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
+			fogTableMode = D3DFOG_LINEAR;
+			FLOAT fogTableLinearScale;
+			fogTableLinearScale = -scale;
+			fogTableEnd = (bias - 1.0f) / fogTableLinearScale;
+			// MAX_FOG_SCALE == 8192.0f
+			if (fogTableLinearScale != 8192.0f) {
+				//(fogTableEnd -fogTableStart)=1.0f/fogTableLinearScale
+				// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
+				fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
+			}
+			else {
+				//fogTableStart== fogTableEnd
+				fogTableStart == fogTableEnd;
+			}
+
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
+		}
+		else if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
+			fogTableMode = D3DFOG_NONE;
+			//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+			// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
+			// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
+			bD3DRS_RangeFogEnable = false;
+		}
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
+
+		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
+		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
+		// hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+		// XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
+	}
+	else {
+		// D3D__RenderState[D3DRS_SPECULARENABLE] == true
+		if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 & 0x0F) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_SPECLIT) {
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, true);
+		}
 		else {
-			//D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
-			//D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
-			g_xbox_transform_ProjectionViewportTransform = g_xbox_transform_Composite;
-			D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform);
-			CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+			hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, false);
 		}
 	}
+}
 
-	// compose xbox side matrix for use in d3d vertex shader update.
-	// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FVF mode vertex shader constant update routine
-	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_xbox_transform_InverseModelView);
-	// update g_xbox_DirectModelView_Projection from g_xbox_transform_PrjectionViewportTransform
-	// try to get g_xbox_transform_ViewportTransform first
-	CxbxrImpl_GetViewportTransform(d); //g_xbox_transform_ViewportTransform will be set
+void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	HRESULT hRet;
 
-	
-	D3DXMATRIX matInverseViewportTransform,matViewportTransform;
-	
-	D3DXMatrixInverse((D3DXMATRIX*)&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
+	return;
 
-	D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&matInverseViewportTransform);
+}
 
-	// clear pgraph transform matrix dirty flags.
-	for (int i = 0; i < 4; i++) {
-		// update InverseModelView matrix if only ModelView matrix is updated
+void CxbxrImpl_LazySetLights(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	HRESULT hRet;
+	XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
+	return;
 
-		if ((g_xbox_transform_ModelView_dirty[i] == true) || (g_xbox_transform_InverseModelView_dirty[i] == false)) {
-			D3DXMATRIX matModelViewTransposed;
-			// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
-			// transpose ModelView back to xbox d3d matrix
-			D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
-			// update the InverModelView matrix
-			D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
-		}
-		// clear dirty flags
-		g_xbox_transform_ModelView_dirty[i] = false;
-		g_xbox_transform_InverseModelView_dirty[i] = false;
-	}
-	g_xbox_transform_Composite_dirty = false;
-	//}
-
-	//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
 }
 
 void D3D_draw_state_update(NV2AState *d)
@@ -1363,163 +1530,62 @@ void D3D_draw_state_update(NV2AState *d)
 
 	// update point params, Xbox takes everything from texture stage 3
 	// hack since we're using all pgraph processing now.
-	NV2A_stateFlags | X_STATE_RUNPUSHBUFFERWASCALLED;
-	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
-		//CxbxrImpl_LazySetPointParameters(d);
+	
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
+		CxbxrImpl_LazySetPointParameters(d);
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_POINTPARAMS;
 	}
-	
-	// update combiners
-	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
-		// only update the combiner state when we're in fixed function pixel shader
-		if(pNV2A_PixelShader == nullptr)
-			D3D_combiner_state_update(d);
-		// clear dirty flag
-		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
+
+	// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
+	// only update combiners when in fixed pixel shader.
+	if (pNV2A_PixelShader == nullptr) {
+		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
+			// only update the combiner state when we're in fixed function pixel shader
+			if (pNV2A_PixelShader == nullptr)
+				CxbxrImpl_LazySetCombiners(d);
+			// clear dirty flag
+			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
+		}
 	}
 
 	// update texture stage texture states, texture stage texture states must be update prior to pixel shader because pixel shader compilation depends on texture state input
-	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0&&(NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
-		D3D_texture_stage_update(d);
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
+		CxbxrImpl_LazySetTextureState(d);
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
 	}
 
 	// update spec fog combiner state
 
-	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0 && (NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER) != 0) {
-		if (pg->KelvinPrimitive.SetFogEnable != 0) {
-			float fogTableStart, fogTableEnd, fogTableDensity;
-			DWORD fogTableMode, fogGenMode;
-			float bias, scale, fogMode;
-			fogGenMode = pg->KelvinPrimitive.SetFogGenMode;
-			fogMode = pg->KelvinPrimitive.SetFogMode;
-			bias = pg->KelvinPrimitive.SetFogParamsBias;
-			scale = pg->KelvinPrimitive.SetFogParamsScale;
-			// D3D__RenderState[D3DRS_RANGEFOGENABLE] == true fogGenMode =NV097_SET_FOG_GEN_MODE_V_RADIAL, else fogGenMode =NV097_SET_FOG_GEN_MODE_V_PLANAR
-			// notice that when fogTableMode == D3DFOG_NONE, fogGenMode will be reset to NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA, in  that case, we won't be able to know what D3D__RenderState[D3DRS_RANGEFOGENABLE] should be
-			bool bD3DRS_RangeFogEnable = fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL ? true : false;
-
-			if (fogMode == NV097_SET_FOG_MODE_V_EXP2) {
-				fogTableMode = D3DFOG_EXP2;
-				// scale =  -fogTableDensity * (1 / (2 * sqrt(5.5452)))
-				// scale = -fogTableDensity * (1.0f / (2.0f * 2.354824834249885f));
-				fogTableDensity = -scale * (2.0f * 2.354824834249885f);
-				
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
-			}
-			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
-				fogTableMode = D3DFOG_EXP;
-				// scale = -fogTableDensity * (1.0f / (2.0f * 5.5452f));
-				fogTableDensity = -scale * (2.0f * 5.5452f);
-				
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
-			}
-			else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
-				fogTableMode = D3DFOG_LINEAR;
-				FLOAT fogTableLinearScale;
-				fogTableLinearScale= -scale;
-				fogTableEnd = (bias - 1.0f) / fogTableLinearScale;
-				// MAX_FOG_SCALE == 8192.0f
-				if (fogTableLinearScale != 8192.0f) {
-					//(fogTableEnd -fogTableStart)=1.0f/fogTableLinearScale
-					// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
-					fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
-				}
-				else {
-					//fogTableStart== fogTableEnd
-					fogTableStart == fogTableEnd;
-				}
-
-                //hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
-                //hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
-			}
-			else if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
-				fogTableMode = D3DFOG_NONE;
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-				// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
-				// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
-				bD3DRS_RangeFogEnable=false;
-			}
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
-
-			uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
-			/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-			// hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-			// XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
-		}
-		else {
-			// D3D__RenderState[D3DRS_SPECULARENABLE] == true
-			if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 &0x0F) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_SPECLIT) {
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, true);
-			}
-			else {
-				hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, false);
-			}
-		}
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER) != 0) {
+		CxbxrImpl_LazySetSpecFogCombiner(d);
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SPECFOG_COMBINER;
 	}
+
 	// update pixel shader
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
 		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
 		//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) !=0) {
 
-			// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
-			pgraph_use_NV2A_bumpenv();
-
-			if (pNV2A_PixelShader == nullptr) {
-				//NV2A_stateFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;// fixed mode
-			}
-			else { // user mode
-				// Populate all required PSDef fields by copying over from KelvinPrimitive fields;
-				// TODO : Refactor DxbxUpdateActivePixelShader to directly read from KelvinPrimitive (once we can otherwise drop PSDef entirely)
-				memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
-				// only set NV2A_PSDef.PSFinalCombinerInputsABCD and NV2A_PSDef.PSFinalCombinerInputsEFG when KelvinPrimitive.SetCombinerSpecularFogCW0 or KelvinPrimitive.SetCombinerSpecularFogCW1 is dirty
-				// FIXMED!!! this is only considering the pixel shader code itself.
-				// but xbox d3d might set PSDef.PSFinalCombinerInputsABCD/PSDef.PSFinalCombinerInputsEFG when Fog state changed. in that condition, final combiner changed, shall we consider that situation and regegerate pixel shader?
-				// in pushbuffer sample it sets the pixel shader without final combiner. but xbox d3d sets final combiner later because of fog state chaged. if we regenerate the pixel shader with changed final combiner, the rendering output would be wrong. 
-				bool bHasFinalCombiner = NV2A_stateFlags & X_STATE_COMBINERNEEDSSPECULAR;
-				// DxbxUpdateActivePixelShader() doesn't consider about the precondition, we have to treat the dirty flag here.
-				NV2A_PSDef.PSFinalCombinerInputsABCD = bHasFinalCombiner ? pg->KelvinPrimitive.SetCombinerSpecularFogCW0 : 0;
-				NV2A_PSDef.PSFinalCombinerInputsEFG = bHasFinalCombiner ? pg->KelvinPrimitive.SetCombinerSpecularFogCW1 : 0;
-				NV2A_stateFlags &= ~X_STATE_COMBINERNEEDSSPECULAR; // FIXME!!! shall we reset the flag here?
-				memcpy(&NV2A_PSDef.PSConstant0[0], &pg->KelvinPrimitive.SetCombinerFactor0[0], (8 + 8 + 8 + 8) * sizeof(DWORD));
-				/* Since the following fields are adjacent in Kelvin AND PSDef, above memcpy is extended to copy the entire range :
-				memcpy(&NV2A_PSDef.PSConstant1[0], &pg->KelvinPrimitive.SetCombinerFactor1[0], 8 * sizeof(DWORD));
-				memcpy(&NV2A_PSDef.PSAlphaOutputs[0], &pg->KelvinPrimitive.SetCombinerAlphaOCW[0], 8 * sizeof(DWORD));
-				memcpy(&NV2A_PSDef.PSRGBInputs[0], &pg->KelvinPrimitive.SetCombinerColorICW[0], 8 * sizeof(DWORD)); */
-				NV2A_PSDef.PSCompareMode = pg->KelvinPrimitive.SetShaderClipPlaneMode;
-				NV2A_PSDef.PSFinalCombinerConstant0 = pg->KelvinPrimitive.SetSpecularFogFactor[0];
-				NV2A_PSDef.PSFinalCombinerConstant1 = pg->KelvinPrimitive.SetSpecularFogFactor[1];
-				memcpy(&NV2A_PSDef.PSRGBOutputs[0], &pg->KelvinPrimitive.SetCombinerColorOCW[0], (8 + 1) * sizeof(DWORD));
-				/* Since the following field is adjacent in Kelvin AND PSDef, above memcpy is extended to copy the entire range :
-				NV2A_PSDef.PSCombinerCount = pg->KelvinPrimitive.SetCombinerControl; */
-				NV2A_PSDef.PSTextureModes = pg->KelvinPrimitive.SetShaderStageProgram; // Was : XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
-				NV2A_PSDef.PSDotMapping = pg->KelvinPrimitive.SetDotRGBMapping; // Note : Adjacent to above and below fields, but 3 assignments are cheaper than memcpy call overhead
-				NV2A_PSDef.PSInputTexture = pg->KelvinPrimitive.SetShaderOtherStageInput;
-				// set pixel shader
-				pgraph_use_UserPixelShader();
-			}
-			// reset bumpenv_dirty[] flags, currently we're not referencing these flags. pixel shader generator will update bumpenv anyway.
-			pg->bumpenv_dirty[0] = false;
-			pg->bumpenv_dirty[1] = false;
-			pg->bumpenv_dirty[2] = false;
-			pg->bumpenv_dirty[3] = false;
-			CxbxrImpl_SetPixelShader((xbox::dword_xt) pNV2A_PixelShader);
+		CxbxrImpl_LazySetShaderStageProgram(d);
 		//}
 
 		// clear dirty flag xbox::dword_xt
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+	}
+
+	// update texture transfoms
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM) {
+		CxbxrImpl_LazySetTextureTransform(d);
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
+	}
+	
+	// update texture transfoms
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS) {
+		CxbxrImpl_LazySetLights(d);
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_LIGHTS;
 	}
 
 	// update viewport state when we're in pushbuffer replay mode.
@@ -1528,11 +1594,14 @@ void D3D_draw_state_update(NV2AState *d)
 		// only update viewport if viewport got dirty.
 		if (NV2A_viewport_dirty == true) {
 			// this only compose viewport from pgraph content 
-			pgraph_SetViewport(d);
+			pgraph_ComposeViewport(d);
 			// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
-			//xbox::X_D3DVIEWPORT8 Viewport;
-			//CxbxrGetViewport(Viewport);
-			//CxbxrImpl_SetViewport(&Viewport);
+			// D3DDevice_SetViewport() was patched and HLEed, here we only implement it when we're in RunPushbuffer().
+			if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
+				xbox::X_D3DVIEWPORT8 Viewport;
+				CxbxrGetViewport(Viewport);
+				CxbxrImpl_SetViewport(&Viewport);
+			}
 		}
 		NV2A_viewport_dirty = false;
 	//}
@@ -1609,6 +1678,10 @@ void D3D_draw_state_update(NV2AState *d)
 	// Only necessary for pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements, and the overhead must be reduced.
 	if (pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements) {
 		// Sort out intermediate attribute slot array on memory offset (and on slot, to guarantee deterministic ordering when offsets overlap) :
+		if (pg->draw_mode == DrawMode::InlineElements) {
+			SortedAttributes[0].size_and_type = SortedAttributes[0].size_and_type;
+		}
+
 		std::sort(/*First=*/&SortedAttributes[0], /*Last=*/&SortedAttributes[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
 			{ return std::tie(x.offset, x.slot_index) < std::tie(y.offset, y.slot_index); });
 
@@ -1668,8 +1741,8 @@ void D3D_draw_state_update(NV2AState *d)
 	// FIXME!! CxbxUpdateNativeD3DResources() calls XboxRenderStates.Apply() and XboxTextureStates.Apply() to apply Xbox D3D states to Host.
 	// so what we set to host here might be over write later. safer way is to update XboxTextureStates/XboxTextureStates and let CxbxUpdateNativeD3DResources() update them to host.
 	// only update state to host when we're in pushbuffer replay mode. other wise HLE shall handle the host update task.
-	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-	}
+	//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
+	//}
 	g_xbox_transform_use_DirectModelView = true;
 	CxbxUpdateNativeD3DResources();
 	g_xbox_transform_use_DirectModelView = false;

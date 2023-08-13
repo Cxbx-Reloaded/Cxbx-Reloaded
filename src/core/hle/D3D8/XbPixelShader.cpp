@@ -844,9 +844,10 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 		extern xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
-		bool pointSpriteEnable = pg->KelvinPrimitive.SetPointSmoothEnable!=0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+		bool pointSpriteEnable = pg->KelvinPrimitive.SetPointSmoothEnable;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
 
 		bool previousStageDisabled = false;
+		//int startStage = 0;
 		for (int i = 0; i < 4; i++) {
 			// Determine COLOROP
 			// This controls both the texture operation for the colour of the stage
@@ -862,16 +863,16 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			// pg->KelvinPrimitive.SetCombinerControl & 0xF == used stage count.
 			// If the stage is beyong used stage, then it's certainly disabled we don't want its configuration to affect the key
 			// Move on to the next stage
-			// FIXME!! move used stage to the for loop condition? 
-			if (i >= (pg->KelvinPrimitive.SetCombinerControl & 0xF)) {
+			// FIXME!! move used stage to the for loop condition?
+			// the used stage is actually how many stages are used in the 8 combiner stages, but it's not starting from 0, when point sprite is enabled, it starts from 3. so there is no meaning of using this parameter in this way to disable stages.
+			/* if (i >= (pg->KelvinPrimitive.SetCombinerControl & 0xF)) {
 				//forceDisable = true;
 				previousStageDisabled = true;
 				forceDisable=true;
 				// states[i].COLOROP must be set as disable before we continue to next stage.
 				states[i].COLOROP = X_D3DTOP_DISABLE;
 				continue; 
-			}
-			else {
+			}else {*/
 
 				forceDisable =
 					(!pointSpriteEnable && previousStageDisabled) ||
@@ -885,15 +886,15 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 				// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
 				// Test case: Crash Nitro Kart (engine speed UI)
 				// FIXME!!! we don't have XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1)in Kelvin
-				if (!g_pXbox_SetTexture[i]
-					&& (XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE// FIXME!!!
+				if (!g_pNV2A_SetTexture[i]
+					&& (NV2A_colorArg1[i] & 0x7) == X_D3DTA_TEXTURE//(XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE// FIXME!!!
 					&& colorOp != xbox::X_D3DTOP_SELECTARG2)// FIXME!!!
 				{
 					forceDisable = true;
 				}
-			}
+			//}
 			// Set the final COLOROP value, use xbox d3d value if it's not disabled. 
-			states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);// FIXME!!!
+			states[i].COLOROP = forceDisable ? X_D3DTOP_DISABLE : colorOp;//XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);// FIXME!!!
 
 			// If the stage is disabled we don't want its configuration to affect the key
 			// Move on to the next stage
@@ -915,19 +916,19 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			}
 			// FIXME!!!  colorOp/colorArg/alphaOp/alphaArg all have not direct equivalent in KelvinPrimitive. see reversed SetCombiners() code.
 			// why don't we set states[i].COLOROP?
-			states[i].COLORARG0 = NV2A_colorArg0[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);// FIXME!!!
-			states[i].COLORARG1 = NV2A_colorArg1[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);// FIXME!!!
-			states[i].COLORARG2 = NV2A_colorArg2[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);// FIXME!!!
+			states[i].COLORARG0 = (float)NV2A_colorArg0[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);// FIXME!!!
+			states[i].COLORARG1 = (float)NV2A_colorArg1[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1);// FIXME!!!
+			states[i].COLORARG2 = (float)NV2A_colorArg2[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG2);// FIXME!!!
 			// keet this alphaOp get path from xbox d3d for now. since we don't have real implementation for it now.
 			auto alphaOp= NV2A_alphaOP[i];
-			alphaOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);// FIXME!!!
+			//alphaOp = XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAOP);// FIXME!!!
 			if (alphaOp == X_D3DTOP_DISABLE) LOG_TEST_CASE("Alpha stage disabled when colour stage is enabled");
 
 			states[i].ALPHAOP =   (float)alphaOp;// FIXME!!!
-			states[i].ALPHAARG0 = NV2A_alphaArg0[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);// FIXME!!!
-			states[i].ALPHAARG1 = NV2A_alphaArg1[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);// FIXME!!!
-			states[i].ALPHAARG2 = NV2A_alphaArg2[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);// FIXME!!!
-			states[i].RESULTARG = NV2A_resultArg[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);// FIXME!!!
+			states[i].ALPHAARG0 = (float)NV2A_alphaArg0[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG0);// FIXME!!!
+			states[i].ALPHAARG1 = (float)NV2A_alphaArg1[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG1);// FIXME!!!
+			states[i].ALPHAARG2 = (float)NV2A_alphaArg2[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAARG2);// FIXME!!!
+			states[i].RESULTARG = (float)NV2A_resultArg[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);// FIXME!!!
 		}
 	}
 	else {
@@ -1310,7 +1311,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  // Set all host constant values using a single call:
 
 	  // reset flag.
-	  pgraph_notuse_NV2A_bumpenv();
+	  // pgraph_notuse_NV2A_bumpenv();
   }
   else {
 

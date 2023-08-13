@@ -5592,10 +5592,48 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 		LOG_FUNC_ARG(pPushBuffer)
 		LOG_FUNC_ARG(pFixup)
 		LOG_FUNC_END;
-	if (is_pushbuffer_recording()) {
-		XB_TRMP(D3DDevice_RunPushBuffer)(pPushBuffer, pFixup);
-	}
-	EmuExecutePushBuffer(pPushBuffer, pFixup);    
+	// this patch is only to notify the pgraph handler we're starting to run a recorded pushbuffer.
+	// pPush_local[2]!=0 for start running, pPush_local[2]==0 for end running.
+
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer;//enum of this patched API
+	pPush_local[2] = (DWORD)pPushBuffer; //total 14 DWORD space for arguments.
+	pPush_local[3] = (DWORD)pFixup;
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
+
+	//if (is_pushbuffer_recording()) {
+	XB_TRMP(D3DDevice_RunPushBuffer)(pPushBuffer, pFixup);
+	//}
+	//EmuExecutePushBuffer(pPushBuffer, pFixup);
+
+	// notify pgraph handler we've done running pushbuffer.
+	// init pushbuffer related pointers
+	pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer;//enum of this patched API
+	pPush_local[2] = 0; //total 14 DWORD space for arguments.
+	pPush_local[3] = 0;
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
+
+
 }
 
 // ******************************************************************
@@ -8567,6 +8605,7 @@ void CxbxUpdateHostVertexShaderConstants()
 		// Test case:
 		// Xbox dashboard (during initial fade from black)
 		// Need for Speed: Hot Pursuit 2 (car select)
+		// 
 		CxbxUpdateHostViewPortOffsetAndScaleConstants();
 	}
 
@@ -8795,6 +8834,10 @@ void CxbxrImpl_InsertCallback
 		return;
 	}
 
+	//now this is called by pgraph method handler, we can call the callback routine directly.
+	pCallback(Context);
+
+	/*
 	// Should we mimick old behaviour?
 	if (g_bHack_DisableHostGPUQueries) {
 		// Mimick old behaviour, in which only the final callback event
@@ -8814,6 +8857,8 @@ void CxbxrImpl_InsertCallback
 		// which will be handled by CxbxHandleXboxCallback
 		g_pHostQueryCallbackEvent->Issue(D3DISSUE_END);
 	}
+	*/
+
 }
 
 xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle)

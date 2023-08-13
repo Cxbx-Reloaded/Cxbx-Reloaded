@@ -1171,10 +1171,11 @@ extern void pgraph_SetCompositeMatrixDirty(void);
 extern void pgraph_use_UserPixelShader(void);
 extern void pgraph_use_FixedPixelShader(void);
 extern bool NV2A_ShaderOtherStageInputDirty;
+extern bool NV2A_TextureFactorAllTheSame;
 extern void pgraph_SetNV2AStateFlag(DWORD flag);
 extern bool pgraph_GetNV2AStateFlag(DWORD flag);
 extern void pgraph_ClearNV2AStateFlag(DWORD flag);
-extern void pgraph_SetViewport(NV2AState *d);
+extern void pgraph_ComposeViewport(NV2AState *d);
 extern NV2ADevice* g_NV2A; //TMP GLUE
 extern bool NV2A_viewport_dirty;
 D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index)
@@ -1988,7 +1989,17 @@ int pgraph_handle_method(
                     case X_D3DDevice_Reset:  break;
                     case X_D3DDevice_Reset_0__LTCG_edi1:  break;
                     case X_D3DDevice_Reset_0__LTCG_ebx1:  break;
-                    case X_D3DDevice_RunPushBuffer:  break;
+                    case X_D3DDevice_RunPushBuffer:
+                        //todo: RunPushbuffer() could be nested, here we assume it only runs in one level. 
+                        if (argv[1] != 0) {
+                            //NV2A_stateFlags |= X_STATE_RUNPUSHBUFFERWASCALLED;
+                            pgraph_SetNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
+                        }
+                        else {
+                            //NV2A_stateFlags &= !X_STATE_RUNPUSHBUFFERWASCALLED;
+                            pgraph_ClearNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
+                        }
+                        break;
                     case X_D3DDevice_RunVertexStateShader:
                         CxbxrImpl_RunVertexStateShader(argv[1], (xbox::float_xt*)argv[2]);
                         break;
@@ -2127,8 +2138,12 @@ int pgraph_handle_method(
                     case NVX_PUSH_BUFFER_RUN: break;
                     case NVX_PUSH_BUFFER_FIXUP: break;
                     case NVX_FENCE: break;
-                    case NVX_READ_CALLBACK: break;
-                    case NVX_WRITE_CALLBACK: break;
+                    case NVX_READ_CALLBACK:
+                        CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_READ,(xbox::X_D3DCALLBACK) pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                        break;
+                    case NVX_WRITE_CALLBACK:
+                        CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_WRITE, (xbox::X_D3DCALLBACK)pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                        break;
                     case NVX_DXT1_NOISE_ENABLE://value stores in NV097_SET_ZSTENCIL_CLEAR_VALUE  D3DRS_DXT1NOISEENABLE //KelvinPrimitive.
                         XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DXT1NOISEENABLE, pg->KelvinPrimitive.SetZStencilClearValue);
                         break;
@@ -2491,9 +2506,10 @@ int pgraph_handle_method(
                     //	NV_PGRAPH_CONTROL_0_DITHERENABLE, arg0);
                     XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DITHERENABLE, pg->KelvinPrimitive.SetDitherEnable);
                     break;
-                case NV097_SET_LIGHTING_ENABLE://done //pg->KelvinPrimitive.SetLightingEnable
+                case NV097_SET_LIGHTING_ENABLE://done X_D3DRS_LIGHTING //pg->KelvinPrimitive.SetLightingEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_LIGHTING,
                     //	arg0);
+                    //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_POINT_PARAMS_ENABLE://done //pg->KelvinPrimitive.SetPointParamsEnable
@@ -3131,8 +3147,13 @@ int pgraph_handle_method(
                                 break;
                             }
                         }
-                        if(allTheSame)
+                        if (allTheSame) {
                             XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR, argv[0]);
+                            NV2A_TextureFactorAllTheSame = true;
+                        }
+                        else {
+                            NV2A_TextureFactorAllTheSame = false;
+                        }
                     }
                 }
                     break;
@@ -4424,16 +4445,21 @@ int pgraph_handle_method(
                     break;
 
 				case NV097_SET_SHADER_STAGE_PROGRAM://pg->KelvinPrimitive.SetShaderStageProgram
-					// this is a dirty hack, if NV097_SET_SHADER_OTHER_STAGE_INPUT was called and set with 0x00210000, then we're in fixed mode pixel shader
+					// this is a dirty hack, if NV097_SET_SHADER_OTHER_STAGE_INPUT was called and set with 0x00210000, and all 16 texture factors are the same, then we're in fixed mode pixel shader
                     // there is no simple way to tell whether we're in fixed mode or program mode pixel shader.
-					if((NV2A_ShaderOtherStageInputDirty == true) && (pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000)){
+					if((NV2A_ShaderOtherStageInputDirty == true) && (pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000)&&(NV2A_TextureFactorAllTheSame==true)){
 						pgraph_use_FixedPixelShader();
-					// else we're in user mode pixel program
+                        // reset NV2A_ShaderOtherStageInputDirty dirty flag
+                        NV2A_ShaderOtherStageInputDirty = false;
+                        NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+                        
+                    // else we're in user mode pixel program
 					}else{
 						pgraph_use_UserPixelShader();
 					}
-					// reset NV2A_ShaderOtherStageInputDirty dirty flag
-					NV2A_ShaderOtherStageInputDirty = false;
+                    if(pgraph_GetNV2AStateFlag(X_STATE_COMBINERNEEDSSPECULAR))
+                        NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 					break;//done //pg->KelvinPrimitive.SetShaderStageProgram
 
 
