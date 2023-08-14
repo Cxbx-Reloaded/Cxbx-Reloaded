@@ -257,11 +257,28 @@ const float g_LODBias2x[] =
 	1.322f, // 2.5
 		1.585f, // 3.0
 };
+
+// Converts a floating point value to a long.
+_declspec(naked) long FloatToLong(float f)
+{
+	_asm
+	{
+		// Note that this does a truncate, not a floor:
+
+		cvttss2si eax, [esp + 4]
+		ret 4
+	}
+}
+
 FORCEINLINE DWORD Round(
 	FLOAT f)
 {
 	return (DWORD)FloatToLong(f + 0.5f);
 }
+extern float CxbxrGetSuperSampleScale(void);
+static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
+static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
+
 void CxbxrImpl_LazySetTextureState(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
@@ -338,10 +355,11 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				pDevice->m_SuperSampleScale = minScale;
 				pDevice->m_SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
 				*/
+				extern float CxbxrGetSuperSampleScale(void);
 				float minScale = CxbxrGetSuperSampleScale();
 				float SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
 				LOD -= SuperSampleLODBias;
-				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPMAPLODBIAS, DWtoF(lodBias));
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPMAPLODBIAS, FtoDW(LOD));
 				convolutionKernel = filter;
 				DWORD colorKeyOp = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x3;// colorkeyop in Contrlo0 bit 1:0 //XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
 				DWORD ALPHAKILL = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x4;//  alphakill in Contrlo0 bit 2//XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
@@ -1190,9 +1208,6 @@ void pgraph_ComposeViewport(NV2AState *d)
 	//CxbxrImpl_SetViewport(&Viewport);
 }
 
-extern float CxbxrGetSuperSampleScale(void);
-static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
-static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
@@ -1770,17 +1785,7 @@ const float g_Mar[32] =
 };
 const float LOG_64F = 4.15888308336f;
 const float INV_LOG_2F = 1.44269504089f;
-// Converts a floating point value to a long.
-_declspec(naked) long FloatToLong(float f)
-{
-	_asm
-	{
-		// Note that this does a truncate, not a floor:
 
-		cvttss2si eax, [esp + 4]
-		ret 4
-	}
-}
 // Exponent
 float Exp(float e)
 {

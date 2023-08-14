@@ -34,6 +34,27 @@
 
 void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE value);
 
+bool XboxRenderStateConverter::Init()
+{
+    // Get render state
+    if (g_SymbolAddresses.find("D3D_g_RenderState") != g_SymbolAddresses.end()) {
+        D3D__RenderState = (uint32_t*)g_SymbolAddresses["D3D_g_RenderState"];
+    }
+    else {
+        EmuLog(LOG_LEVEL::ERROR2, "D3D_g_RenderState was not found!");
+        return false;
+    }
+
+    // Build a mapping of Cxbx Render State indexes to indexes within the current XDK
+    BuildRenderStateMappingTable();
+
+    // Set Initial Values
+    StoreInitialValues();
+
+    return true;
+}
+
+
 bool XboxRenderStateConverter::InitWithNV2A()
 {
     // allocate 
@@ -138,7 +159,7 @@ float XboxRenderStateConverter::GetXboxRenderStateAsFloat(uint32_t State)
 // copy whole internal buffer to buffer via argument
 void XboxRenderStateConverter::CopyTo(uint32_t* ptarget) {
     // Read the value of the current stage/state from the Xbox data structure
-    memcpy(ptarget, D3D__TextureState, sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
+    memcpy(ptarget, D3D__RenderState, sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
 
     return;
 }
@@ -146,7 +167,7 @@ void XboxRenderStateConverter::CopyTo(uint32_t* ptarget) {
 uint32_t* XboxRenderStateConverter::Buffer(void) {
 
     // Read the value of the current stage/state from the Xbox data structure
-    return D3D__TextureState;
+    return D3D__RenderState;
 }
 
 void XboxRenderStateConverter::StoreInitialValues()
