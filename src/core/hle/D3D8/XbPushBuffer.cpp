@@ -475,11 +475,11 @@ float * pgraph_get_NV2A_bumpenv_stage_address(unsigned int stage) {
 	PGRAPHState *pg = &d->pgraph;
 	return &pg->KelvinPrimitive.SetTexture[stage].SetBumpEnvMat00;
 }
-inline void pgraph_use_NV2A_bumpenv(void)
+void pgraph_use_NV2A_bumpenv(void)
 {
 	g_nv2a_use_nv2a_bumpenv = true;
 }
-inline void pgraph_notuse_NV2A_bumpenv(void)
+void pgraph_notuse_NV2A_bumpenv(void)
 {
 	g_nv2a_use_nv2a_bumpenv = false;
 }
