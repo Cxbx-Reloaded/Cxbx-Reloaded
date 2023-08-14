@@ -1511,7 +1511,7 @@ void kelvin_validate_struct_field_offsets_against_NV097_defines()
 }
 
 extern XboxRenderStateConverter XboxRenderStates; // temp glue
-
+extern XboxRenderStateConverter NV2ARenderStates; // temp glue
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
@@ -2145,26 +2145,26 @@ int pgraph_handle_method(
                         CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_WRITE, (xbox::X_D3DCALLBACK)pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
                         break;
                     case NVX_DXT1_NOISE_ENABLE://value stores in NV097_SET_ZSTENCIL_CLEAR_VALUE  D3DRS_DXT1NOISEENABLE //KelvinPrimitive.
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DXT1NOISEENABLE, pg->KelvinPrimitive.SetZStencilClearValue);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DXT1NOISEENABLE, pg->KelvinPrimitive.SetZStencilClearValue);
                         break;
                     case NVX_WRITE_REGISTER_VALUE:
                         switch ((pg->KelvinPrimitive.SetZStencilClearValue&0xffff)) {
                         case NV_PGRAPH_DEBUG_5://D3DRS_DONOTCULLUNCOMPRESSED
                             if((pg->KelvinPrimitive.SetColorClearValue& NV_PGRAPH_DEBUG_5_ZCULL_RETURN_COMP_ENABLED)!=0)
-                                XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 1);
+                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 1);
                             else
-                                XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 0);
+                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 0);
                             break;
                         case NV_PGRAPH_DEBUG_6://D3DRS_ROPZCMPALWAYSREAD D3DRS_ROPZREAD
                             if ((pg->KelvinPrimitive.SetColorClearValue & NV_PGRAPH_DEBUG_6_ROP_ZCMP_ALWAYS_READ_ENABLED) != 0)
-                                XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 1);
+                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 1);
                             else
-                                XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 0);
+                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 0);
 
                             if ((pg->KelvinPrimitive.SetColorClearValue & NV_PGRAPH_DEBUG_6_ROP_ZREAD_FORCE_ZREAD) != 0)
-                                XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 1);
+                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 1);
                             else
-                                XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 0);
+                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 0);
                             
                             break;
 
@@ -2373,10 +2373,10 @@ int pgraph_handle_method(
                     //CommonSetControl0(), D3DRS_ZENABLE and D3DRS_YUVENABLE related
                     if (method_count == 1) {
                         if ((pg->KelvinPrimitive.SetControl0 & NV097_SET_CONTROL0_COLOR_SPACE_CONVERT_CRYCB_TO_RGB) != 0) {
-                            XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_YUVENABLE, 1);
+                            NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_YUVENABLE, 1);
                         }
                         if ((pg->KelvinPrimitive.SetControl0 & NV097_SET_CONTROL0_Z_PERSPECTIVE_ENABLE) != 0) {
-                            XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_USEW);
+                            NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_USEW);
                         }
                     }
                     break;
@@ -2470,7 +2470,7 @@ int pgraph_handle_method(
                     uint32_t xbox_fog_color = alpha << 24 | red << 16 | green << 8 | blue;
                     */
                     
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(pg->KelvinPrimitive.SetFogColor));
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(pg->KelvinPrimitive.SetFogColor));
                     break;
                 }
 
@@ -2482,35 +2482,35 @@ int pgraph_handle_method(
                 case NV097_SET_ALPHA_TEST_ENABLE://D3DRS_ALPHATESTENABLE //pg->KelvinPrimitive.SetAlphaTestEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_ALPHATESTENABLE, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable);
 					break;
 
                 case NV097_SET_BLEND_ENABLE://D3DRS_ALPHABLENDENABLE //pg->KelvinPrimitive.SetBlendEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_EN, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable);
                     break;
 
                 case NV097_SET_CULL_FACE_ENABLE://D3DRS_CULLMODE //pg->KelvinPrimitive.SetCullFaceEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_CULLENABLE,
                     //	arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable);
                     break;
                 case NV097_SET_DEPTH_TEST_ENABLE://done //pg->KelvinPrimitive.SetDepthTestEnable
                     // Test-case : Whiplash
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4], NV_PGRAPH_CONTROL_0_ZENABLE,
                     //	arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable);
                     break;
                 case NV097_SET_DITHER_ENABLE://done //pg->KelvinPrimitive.SetDitherEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_DITHERENABLE, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DITHERENABLE, pg->KelvinPrimitive.SetDitherEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DITHERENABLE, pg->KelvinPrimitive.SetDitherEnable);
                     break;
                 case NV097_SET_LIGHTING_ENABLE://done X_D3DRS_LIGHTING //pg->KelvinPrimitive.SetLightingEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_LIGHTING,
                     //	arg0);
-                    //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
+                    //NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_POINT_PARAMS_ENABLE://done //pg->KelvinPrimitive.SetPointParamsEnable
@@ -2529,44 +2529,44 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POLYSMOOTHENABLE, arg0);
                     if(pg->KelvinPrimitive.SetLineSmoothEnable== pg->KelvinPrimitive.SetPolySmoothEnable)
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_EDGEANTIALIAS, pg->KelvinPrimitive.SetPolySmoothEnable);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_EDGEANTIALIAS, pg->KelvinPrimitive.SetPolySmoothEnable);
                     else
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_EDGEANTIALIAS, true); // todo: to clearify the default setting true or false.
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_EDGEANTIALIAS, true); // todo: to clearify the default setting true or false.
                     break;
                 case NV097_SET_SKIN_MODE://done D3DRS_VERTEXBLEND //pg->KelvinPrimitive.SetSkinMode
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_SKIN,
                     //	arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_VERTEXBLEND, pg->KelvinPrimitive.SetSkinMode);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_VERTEXBLEND, pg->KelvinPrimitive.SetSkinMode);
                     break;
                 case NV097_SET_STENCIL_TEST_ENABLE://done //pg->KelvinPrimitive.SetStencilTestEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                     //	NV_PGRAPH_CONTROL_1_STENCIL_TEST_ENABLE, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable);
                     break;
                 case NV097_SET_POLY_OFFSET_POINT_ENABLE://done //pg->KelvinPrimitive.SetPolyOffsetPointEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POFFSETPOINTENABLE, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
                     break;
                 case NV097_SET_POLY_OFFSET_LINE_ENABLE://done //pg->KelvinPrimitive.SetPolyOffsetLineEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POFFSETLINEENABLE, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_WIREFRAMEOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WIREFRAMEOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
                     break;
                 case NV097_SET_POLY_OFFSET_FILL_ENABLE://done //pg->KelvinPrimitive.SetPolyOffsetFillEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_POFFSETFILLENABLE, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SOLIDOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SOLIDOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
                     break;
                 case NV097_SET_ALPHA_FUNC://done //pg->KelvinPrimitive.SetAlphaFunc
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_ALPHAFUNC, arg0 & 0xF);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHAFUNC, pg->KelvinPrimitive.SetAlphaFunc);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHAFUNC, pg->KelvinPrimitive.SetAlphaFunc);
                     break;
                 case NV097_SET_ALPHA_REF://done //pg->KelvinPrimitive.SetAlphaRef
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_ALPHAREF, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHAREF, pg->KelvinPrimitive.SetAlphaRef);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHAREF, pg->KelvinPrimitive.SetAlphaRef);
                     break;
                 case NV097_SET_BLEND_FUNC_SFACTOR: {//done //pg->KelvinPrimitive.SetBlendFuncSfactor
                     unsigned int factor=arg0;
@@ -2578,7 +2578,7 @@ int pgraph_handle_method(
 						// pg->KelvinPrimitive.SetBlendFuncSfactor = factor & 0x0F;
                     }
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_SFACTOR, factor);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SRCBLEND, pg->KelvinPrimitive.SetBlendFuncSfactor);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SRCBLEND, pg->KelvinPrimitive.SetBlendFuncSfactor);
                     break;
                 }
 
@@ -2623,13 +2623,13 @@ int pgraph_handle_method(
                     }
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_DFACTOR, factor);
                     //pg->KelvinPrimitive.SetBlendFuncDfactor = factor; // TODO : Postpone conversion (of NV097_SET_BLEND_FUNC_DFACTOR_V_* into NV_PGRAPH_BLEND_DFACTOR_*) towards readout
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DESTBLEND, pg->KelvinPrimitive.SetBlendFuncDfactor);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DESTBLEND, pg->KelvinPrimitive.SetBlendFuncDfactor);
                     break;
                 }
 
                 case NV097_SET_BLEND_COLOR://done //pg->KelvinPrimitive.SetBlendColor
                     //pg->pgraph_regs[NV_PGRAPH_BLENDCOLOR/4] = parameter;
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BLENDCOLOR, pg->KelvinPrimitive.SetBlendColor);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BLENDCOLOR, pg->KelvinPrimitive.SetBlendColor);
                     break;
 
                 case NV097_SET_BLEND_EQUATION: {//done //pg->KelvinPrimitive.SetBlendEquation
@@ -2656,7 +2656,7 @@ int pgraph_handle_method(
                     }
                     //pg->KelvinPrimitive.SetBlendEquation = equation; // TODO : Postpone conversion (of NV097_SET_BLEND_EQUATION_V_* into pgraph_blend_equation_map indices) towards readout
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4], NV_PGRAPH_BLEND_EQN, equation);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BLENDOP, pg->KelvinPrimitive.SetBlendEquation);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BLENDOP, pg->KelvinPrimitive.SetBlendEquation);
                     break;
                 }
 
@@ -2664,7 +2664,7 @@ int pgraph_handle_method(
                     // Test-case : Whiplash
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4], NV_PGRAPH_CONTROL_0_ZFUNC,
                     //	arg0 & 0xF);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZFUNC, pg->KelvinPrimitive.SetDepthFunc);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZFUNC, pg->KelvinPrimitive.SetDepthFunc);
                     break;
 
                 case NV097_SET_COLOR_MASK: {//done //pg->KelvinPrimitive.SetColorMask
@@ -2682,7 +2682,7 @@ int pgraph_handle_method(
                     //	NV_PGRAPH_CONTROL_0_GREEN_WRITE_ENABLE, green);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     //	NV_PGRAPH_CONTROL_0_BLUE_WRITE_ENABLE, blue);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORWRITEENABLE, pg->KelvinPrimitive.SetColorMask);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORWRITEENABLE, pg->KelvinPrimitive.SetColorMask);
                     break;
                 }
                 case NV097_SET_DEPTH_MASK://done //pg->KelvinPrimitive.SetDepthMask
@@ -2692,62 +2692,62 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_0 / 4],
                     	//NV_PGRAPH_CONTROL_0_ZWRITEENABLE, arg0);
 
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZWRITEENABLE, pg->KelvinPrimitive.SetDepthMask);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZWRITEENABLE, pg->KelvinPrimitive.SetDepthMask);
                     break;
                 case NV097_SET_STENCIL_MASK://done //pg->KelvinPrimitive.SetStencilMask
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                     //	NV_PGRAPH_CONTROL_1_STENCIL_MASK_WRITE, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILWRITEMASK, pg->KelvinPrimitive.SetStencilMask);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILWRITEMASK, pg->KelvinPrimitive.SetStencilMask);
                     break;
                 case NV097_SET_STENCIL_FUNC://done //pg->KelvinPrimitive.SetStencilFunc
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                         //NV_PGRAPH_CONTROL_1_STENCIL_FUNC, arg0 & 0xF);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILFUNC, pg->KelvinPrimitive.SetStencilFunc);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILFUNC, pg->KelvinPrimitive.SetStencilFunc);
                     break;
                 case NV097_SET_STENCIL_FUNC_REF://done //pg->KelvinPrimitive.SetStencilFuncRef
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                     //	NV_PGRAPH_CONTROL_1_STENCIL_REF, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILREF, pg->KelvinPrimitive.SetStencilFuncRef);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILREF, pg->KelvinPrimitive.SetStencilFuncRef);
                     break;
                 case NV097_SET_STENCIL_FUNC_MASK://done //pg->KelvinPrimitive.SetStencilFuncMask
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_1 / 4],
                         //NV_PGRAPH_CONTROL_1_STENCIL_MASK_READ, arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILMASK, pg->KelvinPrimitive.SetStencilFuncMask);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILMASK, pg->KelvinPrimitive.SetStencilFuncMask);
                     break;
                 case NV097_SET_STENCIL_OP_FAIL://done //pg->KelvinPrimitive.SetStencilOpFail
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_2 / 4],
                         //NV_PGRAPH_CONTROL_2_STENCIL_OP_FAIL,
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILFAIL, pg->KelvinPrimitive.SetStencilOpFail);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILFAIL, pg->KelvinPrimitive.SetStencilOpFail);
                     break;
                 case NV097_SET_STENCIL_OP_ZFAIL://done //pg->KelvinPrimitive.SetStencilOpZfail
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_2 / 4],
                         //NV_PGRAPH_CONTROL_2_STENCIL_OP_ZFAIL,
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILZFAIL, pg->KelvinPrimitive.SetStencilOpZfail);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILZFAIL, pg->KelvinPrimitive.SetStencilOpZfail);
                     break;
                 case NV097_SET_STENCIL_OP_ZPASS://done //pg->KelvinPrimitive.SetStencilOpZpass
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_2 / 4],
                         //NV_PGRAPH_CONTROL_2_STENCIL_OP_ZPASS,
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILPASS, pg->KelvinPrimitive.SetStencilOpZpass);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILPASS, pg->KelvinPrimitive.SetStencilOpZpass);
                     break;
 
                 case NV097_SET_SHADE_MODE://done //pg->KelvinPrimitive.SetShadeMode
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SHADEMODE, pg->KelvinPrimitive.SetShadeMode);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SHADEMODE, pg->KelvinPrimitive.SetShadeMode);
                     break;
 
                 case NV097_SET_LINE_WIDTH://done D3DRS_LINEWIDTH //pg->KelvinPrimitive.SetLineWidth=width = Round(Floatify(Value) * 8.0f * pDevice->m_SuperSampleScale)
                     //assert(arg0 == pg->KelvinPrimitive.SetLineWidth);
                     extern float CxbxrGetSuperSampleScale();
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LINEWIDTH, FtoDW(DWtoF(pg->KelvinPrimitive.SetLineWidth) / (8.0f*CxbxrGetSuperSampleScale())));//  / SuperSampleScale); //use 1.0 for SuperSampleScale as a hack.
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LINEWIDTH, FtoDW(DWtoF(pg->KelvinPrimitive.SetLineWidth) / (8.0f*CxbxrGetSuperSampleScale())));//  / SuperSampleScale); //use 1.0 for SuperSampleScale as a hack.
                     break;
 
                 case NV097_SET_POLYGON_OFFSET_SCALE_FACTOR://done //pg->KelvinPrimitive.SetPolygonOffsetScaleFactor
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZSLOPESCALE, pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZSLOPESCALE, pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
                     break;
 
                 case NV097_SET_POLYGON_OFFSET_BIAS://done //pg->KelvinPrimitive.SetPolygonOffsetBias
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetPolygonOffsetBias);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZOFFSET, pg->KelvinPrimitive.SetPolygonOffsetBias);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZOFFSET, pg->KelvinPrimitive.SetPolygonOffsetBias);
                     break;
 
                 case NV097_SET_FRONT_POLYGON_MODE://D3DRS_FILLMODE D3DRS_TWOSIDEDLIGHTING//pg->KelvinPrimitive.SetFrontPolygonMode , xbox sets KelvinPrimitive.SetBackPolygonMode together with KelvinPrimitive.SetFrontPolygonMode in the same time
@@ -2760,13 +2760,13 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_BACKFACEMODE,
                     //	kelvin_map_polygon_mode(arg0));
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FILLMODE, pg->KelvinPrimitive.SetFrontPolygonMode);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKFILLMODE, pg->KelvinPrimitive.SetBackPolygonMode);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FILLMODE, pg->KelvinPrimitive.SetFrontPolygonMode);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKFILLMODE, pg->KelvinPrimitive.SetBackPolygonMode);
                     // update D3DRS_TWOSIDEDLIGHTING
                     //if(pg->KelvinPrimitive.SetFrontPolygonMode!= pg->KelvinPrimitive.SetBackPolygonMode)
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING,( pg->KelvinPrimitive.SetFrontPolygonMode != pg->KelvinPrimitive.SetBackPolygonMode)?true:false);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING,( pg->KelvinPrimitive.SetFrontPolygonMode != pg->KelvinPrimitive.SetBackPolygonMode)?true:false);
                     //else
-                      //  XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, false);
+                      //  NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, false);
                     break;
 				// xbox d3d SetViewport() calls NV097_SET_VIEWPORT_OFFSET/    NV097_SET_VIEWPORT_SCALE(optional), then calls NV097_SET_CLIP_MIN with method count =2
 				case NV097_SET_CLIP_MIN://done //pg->KelvinPrimitive.SetClipMin
@@ -2808,7 +2808,7 @@ int pgraph_handle_method(
                     	NV_PGRAPH_SETUPRASTER_CULLCTRL,
                     	face);
                     //pg->KelvinPrimitive.SetCullFace = face; 
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FRONTFACE, pg->KelvinPrimitive.SetCullFace);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FRONTFACE, pg->KelvinPrimitive.SetCullFace);
                     break;
                 }
                 case NV097_SET_FRONT_FACE: {//done //pg->KelvinPrimitive.SetFrontFace
@@ -2834,7 +2834,7 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4],
                     //	NV_PGRAPH_CSV0_C_NORMALIZATION_ENABLE,
                     //	arg0);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_NORMALIZENORMALS, pg->KelvinPrimitive.SetNormalizationEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_NORMALIZENORMALS, pg->KelvinPrimitive.SetNormalizationEnable);
                     break;
 
                 CASE_3(NV097_SET_MATERIAL_EMISSION, 4)://done //pg->KelvinPrimitive.SetMaterialEmission[3]
@@ -3079,7 +3079,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_SWATH_WIDTH://not implement //pg->KelvinPrimitive.SetSwathWidth
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SWATHWIDTH, pg->KelvinPrimitive.SetSwathWidth);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SWATHWIDTH, pg->KelvinPrimitive.SetSwathWidth);
                     break;
 
                 case NV097_SET_FLAT_SHADE_OP: break;//not implement //pg->KelvinPrimitive.SetFlatShadeOp
@@ -3150,7 +3150,7 @@ int pgraph_handle_method(
                             }
                         }
                         if (allTheSame) {
-                            XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR, argv[0]);
+                            NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR, argv[0]);
                             NV2A_TextureFactorAllTheSame = true;
                         }
                         else {
@@ -3600,18 +3600,18 @@ int pgraph_handle_method(
                     //		 NV_PGRAPH_BLEND_LOGICOP_ENABLE, arg0);
                     /*
                     if (pg->KelvinPrimitive.SetLogicOp == 0)
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, 0);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, 0);
                     else if (method_count == 2)//xbox sets NV097_SET_LOGIC_OP together with NV097_SET_LOGIC_OP_ENABLE in one method with 2 method counts.
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, argv[1]);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, argv[1]);
                     break;
                     */
                 case NV097_SET_LOGIC_OP://done, D3DRS_LOGICOP //pg->KelvinPrimitive.SetLogicOp
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4],
                     //		 NV_PGRAPH_BLEND_LOGICOP, arg0 & 0xF);
                     if (pg->KelvinPrimitive.SetLogicOp !=0)//D3DLOGICOP_NONE)
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, pg->KelvinPrimitive.SetLogicOp);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, pg->KelvinPrimitive.SetLogicOp);
                     else
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, 0);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, 0);
                     break;
 
                 case NV097_SET_TWO_SIDED_LIGHT_EN://not implement, D3D9 not support //pg->KelvinPrimitive.SetTwoSidedLightEn
@@ -4349,27 +4349,27 @@ int pgraph_handle_method(
 
                 case NV097_SET_ZMIN_MAX_CONTROL://pg->KelvinPrimitive.SetZMinMaxControl
                     if((pg->KelvinPrimitive.SetDepthTestEnable!= D3DZB_FALSE) && (pg->KelvinPrimitive.SetZMinMaxControl& NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN_TRUE)==0)
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_USEW);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_USEW);
                     else
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_TRUE);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_TRUE);
                     break;
 
                 case NV097_SET_ANTI_ALIASING_CONTROL://D3DRS_MULTISAMPLEANTIALIAS D3DRS_MULTISAMPLEMASK//pg->KelvinPrimitive.SetAntiAliasingControl
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS, pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE);
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEMASK, (pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE)>>16);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS, pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEMASK, (pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE)>>16);
                     break;
 
                 case NV097_SET_COMPRESS_ZBUFFER_EN:                      break;
 
                 case NV097_SET_OCCLUDE_ZSTENCIL_EN://D3DRS_OCCLUSIONCULLENABLE D3DRS_STENCILCULLENABLE    // pg->KelvinPrimitive.SetOccludeZStencilEn
                    
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILCULLENABLE, (pg->KelvinPrimitive.SetOccludeZStencilEn & NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_STENCIL_EN_ENABLE));
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILCULLENABLE, (pg->KelvinPrimitive.SetOccludeZStencilEn & NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_STENCIL_EN_ENABLE));
                     if ((pg->KelvinPrimitive.SetOccludeZStencilEn & NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_ZEN_ENABLE) != 0)
-                        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_OCCLUSIONCULLENABLE, 1);
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_OCCLUSIONCULLENABLE, 1);
                     else
                         // if ((!D3D__RenderState[D3DRS_STENCILENABLE]) || (D3D__RenderState[D3DRS_STENCILFAIL] == D3DSTENCILOP_KEEP))
                         if((pg->KelvinPrimitive.SetStencilTestEnable==0) || (pg->KelvinPrimitive.SetStencilOpFail == 0x1e00))
-                            XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_OCCLUSIONCULLENABLE, 0);
+                            NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_OCCLUSIONCULLENABLE, 0);
                     break;
 				// xbox d3d D3DDevice_Clear() calls NV097_SET_ZSTENCIL_CLEAR_VALUE with method count == 3, sets NV097_SET_ZSTENCIL_CLEAR_VALUE,NV097_SET_COLOR_CLEAR_VALUE, then trigger clear(). 
 				case NV097_SET_ZSTENCIL_CLEAR_VALUE://done //pg->KelvinPrimitive.SetZStencilClearValue
@@ -4446,7 +4446,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_SHADOW_DEPTH_FUNC://not implement //pg->KelvinPrimitive.SetShadowDepthFunc
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SHADOWFUNC, pg->KelvinPrimitive.SetShadowDepthFunc + 0x200); // xbox substracts 0x200 before push the value to pushbuffer
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SHADOWFUNC, pg->KelvinPrimitive.SetShadowDepthFunc + 0x200); // xbox substracts 0x200 before push the value to pushbuffer
                     break;
 
 				case NV097_SET_SHADER_STAGE_PROGRAM://pg->KelvinPrimitive.SetShaderStageProgram
@@ -4469,7 +4469,7 @@ int pgraph_handle_method(
 
 
                 case NV097_SET_DOT_RGBMAPPING:{//not implement  //pg->KelvinPrimitive.SetDotRGBMapping
-                    XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_PSDOTMAPPING, pg->KelvinPrimitive.SetDotRGBMapping);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSDOTMAPPING, pg->KelvinPrimitive.SetDotRGBMapping);
                     break;
                 }
 

@@ -38,8 +38,12 @@ class XboxTextureStateConverter
 {
 public:
     bool Init(XboxRenderStateConverter* state);
+    bool InitWithNV2A(XboxRenderStateConverter* state);
     void Apply();
     uint32_t Get(int textureStage, DWORD xboxState);
+    void Set(int textureStage, DWORD xboxState, DWORD Value);
+    void CopyTo(uint32_t* ptarget);
+    uint32_t* Buffer(void);
 
 private:
     void BuildTextureStateMappingTable();

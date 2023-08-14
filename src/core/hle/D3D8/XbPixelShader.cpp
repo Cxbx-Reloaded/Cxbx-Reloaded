@@ -1110,6 +1110,8 @@ void UpdateFixedFunctionPixelShaderState()
 	PGRAPHState *pg = &d->pgraph;
 
 	using namespace FixedFunctionPixelShader;
+	extern DWORD ABGR_to_ARGB(const uint32_t color);
+	extern D3DXVECTOR4 toVector(D3DCOLOR color);
 
 	FixedFunctionPixelShaderState ffPsState;
 	// use NV2A/KelvinPrimitive content if we're in pushbuffer replay mode
@@ -1118,7 +1120,10 @@ void UpdateFixedFunctionPixelShaderState()
 		ffPsState.TextureFactor = (D3DXVECTOR4)(D3DXCOLOR)(pg->KelvinPrimitive.SetCombinerFactor0[0]);// (D3DXVECTOR4)((D3DXCOLOR)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
 		ffPsState.SpecularEnable = pg->KelvinPrimitive.SetSpecularEnable != 0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
 		ffPsState.FogEnable = pg->KelvinPrimitive.SetFogEnable != 0;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
-		ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)pg->KelvinPrimitive.SetFogColor);// (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
+		D3DXVECTOR4 fc=toVector(ABGR_to_ARGB(pg->KelvinPrimitive.SetFogColor));// (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
+		ffPsState.FogColor.x = fc.x;
+		ffPsState.FogColor.y = fc.y;
+		ffPsState.FogColor.z = fc.z;
 	// Texture state
 		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 

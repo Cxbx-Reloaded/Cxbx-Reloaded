@@ -3043,6 +3043,15 @@ void Direct3D_CreateDevice_Start
     if (!XboxTextureStates.Init(&XboxRenderStates)) {
         CxbxrAbort("Failed to init XboxTextureStates");
     }
+	extern XboxRenderStateConverter NV2ARenderStates; // this var directly access Xbox internal renderstate variables.
+	extern XboxTextureStateConverter NV2ATextureStates; // this var directly access Xbox intern TextureState variables.
+	if (!NV2ARenderStates.InitWithNV2A()) {
+		CxbxrAbort("Failed to init XboxRenderStates");
+	}
+
+	if (!NV2ATextureStates.InitWithNV2A(&NV2ARenderStates)) {
+		CxbxrAbort("Failed to init XboxTextureStates");
+	}
 
 	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
 

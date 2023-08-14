@@ -71,7 +71,8 @@ DWORD NV2A_DirtyFlags = 0;
 
 // TODO: Find somewhere to put this that doesn't conflict with xbox::
 extern void CxbxUpdateHostTextures();
-
+XboxRenderStateConverter NV2ARenderStates; // this var directly access Xbox internal renderstate variables.
+XboxTextureStateConverter NV2ATextureStates; // this var directly access Xbox intern TextureState variables.
 const char *NV2AMethodToString(DWORD dwMethod); // forward
 
 static void DbgDumpMesh(WORD *pIndexData, DWORD dwCount);
@@ -243,12 +244,30 @@ void restore_xbox_texture_state(void)
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
 		g_pXbox_SetTexture[i] = pXbox_SetTexture_Backup[i];
 }
-void CxbxrImpl_LazySetTextureState(NV2AState *d)
+//------------------------------------------------------------------------------
+// g_LODBias
+//
+// A simple log2 table...
+
+const float g_LODBias2x[] =
 {
-	PGRAPHState *pg = &d->pgraph;
+	0.000f, // 1.0
+	0.585f, // 1.5
+	1.000f, // 2.0
+	1.322f, // 2.5
+		1.585f, // 3.0
+};
+FORCEINLINE DWORD Round(
+	FLOAT f)
+{
+	return (DWORD)FloatToLong(f + 0.5f);
+}
+void CxbxrImpl_LazySetTextureState(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
 	for (int stage = 0; stage < 4; stage++) {
 		// process texture stage texture info if it's dirty
-		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0<< stage) )!=0) {
+		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage)) != 0) {
 			// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
 			// FIXME!! check (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 should be enough, but there are (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) != 0 and the texture is empty. could be HLE/NV2A confliction
 			if ((pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 || pg->KelvinPrimitive.SetTexture[stage].Format == 0 || pg->KelvinPrimitive.SetTexture[stage].Offset == 0) {
@@ -260,22 +279,111 @@ void CxbxrImpl_LazySetTextureState(NV2AState *d)
 				NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
 				NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
 				unsigned width = 0, height = 0, pitch = 0;
-				pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1&NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
-				width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
-				height = (pg->KelvinPrimitive.SetTexture[stage].ImageRect&NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
+				pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1 & NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
+				width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
+				height = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
 				// texture.Size could be 0
 				if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
 					NV2A_texture_stage_texture[stage].Size = 0;
 				}
 				//convert pitch/height/width to texture.Size
 				else {
-					width = (width - 1)&X_D3DSIZE_WIDTH_MASK;
-					height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT)&X_D3DSIZE_HEIGHT_MASK;
+					width = (width - 1) & X_D3DSIZE_WIDTH_MASK;
+					height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK;
 					pitch = ((pitch / 64) - 1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
 					NV2A_texture_stage_texture[stage].Size = pitch | height | width;
 				}
 				NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource,
 				NV2A_texture_stage_texture[stage].Lock = 0;
+				//update texture stage states
+				DWORD filter, address, control0, magFilter, minFilter, colorSign, convolutionKernel;
+				INT lodBias;
+				filter = pg->KelvinPrimitive.SetTexture[stage].Filter;//NV097_SET_TEXTURE_FILTER(stage)
+				/*
+				DWORD filter
+				= DRF_NUM(097, _SET_TEXTURE_FILTER, _MIPMAP_LOD_BIAS, lodBias)
+
+				| convolutionKernel
+
+				| MinFilter(minFilter, pTextureStates[D3DTSS_MIPFILTER])
+
+				| DRF_NUMFAST(097, _SET_TEXTURE_FILTER, _MAG, magFilter)
+
+				| colorSign;
+				*/
+#define D3DTSIGN_ASIGNED           0x10000000
+#define D3DTSIGN_AUNSIGNED         0
+#define D3DTSIGN_RSIGNED           0x20000000
+#define D3DTSIGN_RUNSIGNED         0
+#define D3DTSIGN_GSIGNED           0x40000000
+#define D3DTSIGN_GUNSIGNED         0
+#define D3DTSIGN_BSIGNED           0x80000000
+#define D3DTSIGN_BUNSIGNED         0
+
+				colorSign = pg->KelvinPrimitive.SetTexture[stage].Filter & 0xF0000000;// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORSIGN, colorSign);
+				// bumpenv always force setting color sign to D3DTSIGN_GSIGNED | D3DTSIGN_BSIGNED
+				if (colorSign == (NV097_SET_TEXTURE_FILTER_GSIGNED | NV097_SET_TEXTURE_FILTER_BSIGNED)) {
+					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
+				}
+				magFilter = (filter & NV097_SET_TEXTURE_FILTER_MAG) >> 24;
+				minFilter = (filter & NV097_SET_TEXTURE_FILTER_MIN) >> 16;
+				lodBias = (filter & NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS);
+				float LOD = (float)lodBias / 256.0;
+				// Fixedme!!!
+				/*
+				 INT lodBias = Round(256.0f * (Floatify(pTextureStates[D3DTSS_MIPMAPLODBIAS])
+										  + pDevice->m_SuperSampleLODBias));
+				// from Present()
+				pDevice->m_SuperSampleScale = minScale;
+				pDevice->m_SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
+				*/
+				float minScale = CxbxrGetSuperSampleScale();
+				float SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
+				LOD -= SuperSampleLODBias;
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPMAPLODBIAS, DWtoF(lodBias));
+				convolutionKernel = filter;
+				DWORD colorKeyOp = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x3;// colorkeyop in Contrlo0 bit 1:0 //XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
+				DWORD ALPHAKILL = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x4;//  alphakill in Contrlo0 bit 2//XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
+				//control0 |= DRF_NUMFAST(097, _SET_TEXTURE_CONTROL0, _LOG_MAX_ANISO,maxAnisotropy);
+				DWORD maxAnisotropy = (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_LOG_MAX_ANISO) >> 4;
+				if ((minFilter == xbox::X_D3DTEXF_POINT) && (magFilter == xbox::X_D3DTEXF_POINT) && (maxAnisotropy == 0)) {//D3DTEXF_POINT=1
+					//(minFilter < D3DTEXF_ANISOTROPIC) && (magFilter < D3DTEXF_ANISOTROPIC) // D3DTEXF_ANISOTROPIC=3
+					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, maxAnisotropy);
+				}
+				else if ((minFilter == xbox::X_D3DTEXF_LINEAR) && (magFilter == xbox::X_D3DTEXF_LINEAR)) {//D3DTEXF_LINEAR=2
+					//(minFilter < D3DTEXF_ANISOTROPIC) && (magFilter < D3DTEXF_ANISOTROPIC)
+					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, maxAnisotropy + 1);
+				}
+				else if ((minFilter == xbox::X_D3DTEXF_LINEAR) && (magFilter == 0x04)) {//NV097_SET_TEXTURE_FILTER_MAG_CONVOLUTION_2D_LOD0=0x4, D3DTEXF_LINEAR=2
+					//(minFilter > D3DTEXF_ANISOTROPIC) ||	(magFilter > D3DTEXF_ANISOTROPIC)
+					magFilter = xbox::X_D3DTEXF_QUINCUNX;
+					if (((convolutionKernel& 0x0004000)!=0)){//NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3=0x02<<13
+						magFilter = xbox::X_D3DTEXF_GAUSSIANCUBIC;;//(minFilter == D3DTEXF_GAUSSIANCUBIC) ||	(magFilter == D3DTEXF_GAUSSIANCUBIC) //xbox::X_D3DTEXF_GAUSSIANCUBIC=5
+					}
+					;
+				}else{
+					;
+				}
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MINFILTER, minFilter);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAGFILTER, magFilter);
+
+
+				DWORD COLORKEYCOLOR = pg->KelvinPrimitive.SetColorKeyColor[stage];// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
+				DWORD maxMipMapLevel = (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP)>>(18+8); //D3DTSS_MAXMIPLEVEL
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORKEYOP, colorKeyOp);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAKILL, ALPHAKILL);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORKEYCOLOR, COLORKEYCOLOR);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXMIPLEVEL, maxMipMapLevel);
+
+				address = pg->KelvinPrimitive.SetTexture[stage].Address;
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSU, address& NV097_SET_TEXTURE_ADDRESS_U);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSV, address & NV097_SET_TEXTURE_ADDRESS_V>>8);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSW, address & NV097_SET_TEXTURE_ADDRESS_P>>16);
+				//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, stage);
+
+
 			}
 		}
 		//reset texture stage dirty flag
@@ -1128,12 +1236,12 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 			float xboxScaleB = pg->KelvinPrimitive.SetPointParamsFactorMulB / factor;
 			float xboxScaleC = pg->KelvinPrimitive.SetPointParamsFactorMulC / factor;
 			// assume host d3d uses the same min/max point size as xbox d3d
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MAX, FtoDW(hostMaxSize));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MAX, FtoDW(hostMaxSize));
 			/// set host point scale A/B/C
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(xboxScaleA));
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(xboxScaleB));
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(xboxScaleC));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(xboxScaleA));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(xboxScaleB));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(xboxScaleC));
 		}
 		else {
 			float ssScale = CxbxrGetSuperSampleScale();
@@ -1143,10 +1251,10 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 		if (size < min)size=min;
 		// if (size > 64.0f)size = 64.0f; 
 		if (size > max)size = max;// max already clamped to 64.0
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, pg->KelvinPrimitive.SetPointParamsEnable != 0);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, pg->KelvinPrimitive.SetPointSmoothEnable != 0);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALEENABLE, pg->KelvinPrimitive.SetPointParamsEnable != 0);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE, pg->KelvinPrimitive.SetPointSmoothEnable != 0);
 		// set host fixed point size
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE, FtoDW(size));
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE, FtoDW(size));
 }
 
 void CxbxrImpl_GetViewportTransform(NV2AState* d)
@@ -1413,7 +1521,7 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 			fogTableDensity = -scale * (2.0f * 2.354824834249885f);
 
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 		}
 		else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
 			fogTableMode = D3DFOG_EXP;
@@ -1421,7 +1529,7 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 			fogTableDensity = -scale * (2.0f * 5.5452f);
 
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 		}
 		else if (fogMode == NV097_SET_FOG_MODE_V_LINEAR) {
 			if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
@@ -1447,36 +1555,36 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 
 				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
 				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
+				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
+				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
 			}
 
 		}
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, true);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, true);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
 
 		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
 		// fog color was handled by pgraph handler in NV097_SET_FOG_COLOR directly.
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
 		// D3D__RenderState[D3DRS_SPECULARENABLE] == true
 		if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 & NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE_REG_SPECLIT) {//NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE_REG_SPECLIT
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, true);
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, true);
 		}
 		else {
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, false);
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, false);
 		}
 
 	}
 	else {
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, false);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, false);
 		// D3D__RenderState[D3DRS_SPECULARENABLE] == true
 		if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 & NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_SPECLIT) {
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, true);
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, true);
 		}
 		else {
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, false);
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, false);
 		}
 	}
 }
@@ -1760,8 +1868,8 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
-	XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
-	XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, pg->KelvinPrimitive.SetTwoSidedLightEn);
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, pg->KelvinPrimitive.SetTwoSidedLightEn);
 	//pg->KelvinPrimitive.SetLight[8].{AmbientColor[3],DiffuseColor[3],SpecularColor[3],LocalRange,InfiniteHalfVector[3],InfiniteDirection[3],SpotFalloff[3],SpotDirection[4],LocalPosition[3],LocalAttenuation[3],Rev_1074[3]
 	DWORD control = 0;
 	DWORD colorMaterial = 0;
@@ -1769,14 +1877,14 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 	if (pg->KelvinPrimitive.SetLightingEnable != false) {
 		control = pg->KelvinPrimitive.SetLightControl;
 		if (pg->KelvinPrimitive.SetSpecularEnable != false) {
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOCALVIEWER, (control& NV097_SET_LIGHT_CONTROL_LOCALEYE_TRUE)!=0? true:false);
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOCALVIEWER, (control& NV097_SET_LIGHT_CONTROL_LOCALEYE_TRUE)!=0? true:false);
 		}
 		colorMaterial = pg->KelvinPrimitive.SetColorMaterial;//NV097_SET_COLOR_MATERIAL, colorMaterial  // 0x298
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORVERTEX, colorMaterial!=0?true:false);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORVERTEX, colorMaterial!=0?true:false);
 		if(colorMaterial!=0){
 			// retrive material source render state.
 			for (int i = 0; i < 8; i++) {
-				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE+i, (colorMaterial>>(2*(7-i)))&0x03);
+				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE+i, (colorMaterial>>(2*(7-i)))&0x03);
 			}
 		}
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
@@ -1891,10 +1999,10 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 		extern D3DCOLOR FromVector(D3DCOLORVALUE v);
 		NV2A_SceneAmbient[0] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetSceneAmbientColor);//NV097_SET_SCENE_AMBIENT_COLOR
 		NV2A_SceneAmbient[0].a = 1.0;
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
 		NV2A_SceneAmbient[1] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackSceneAmbientColor);//NV097_SET_BACK_SCENE_AMBIENT_COLOR
 		NV2A_SceneAmbient[1].a = 1.0;
-		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
 		// Set scene mateiral emission and alpha
 		NV2A_SceneMateirals[0].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_MATERIAL_EMISSION
 		NV2A_SceneMateirals[0].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_MATERIAL_ALPHA

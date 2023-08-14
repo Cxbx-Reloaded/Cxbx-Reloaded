@@ -98,6 +98,24 @@ bool XboxTextureStateConverter::Init(XboxRenderStateConverter* pState)
     return true;
 }
 
+bool XboxTextureStateConverter::InitWithNV2A(XboxRenderStateConverter* pState)
+{
+    // Deferred states start at 0, this means that D3D_g_DeferredTextureState IS D3D__TextureState
+    // No further works is required to derive the offset
+    
+    D3D__TextureState = (uint32_t*)malloc(sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
+    
+    // Build a mapping of Cxbx Texture State indexes to indexes within the current XDK
+    BuildTextureStateMappingTable();
+
+    // Store a handle to the Xbox Render State manager
+    // This is used to check for Point Sprites
+    pXboxRenderStates = pState;
+
+    return true;
+}
+
+
 void XboxTextureStateConverter::BuildTextureStateMappingTable()
 {
     EmuLog(LOG_LEVEL::INFO, "Building Cxbx to XDK Texture State Mapping Table");
@@ -370,4 +388,29 @@ uint32_t XboxTextureStateConverter::Get(int textureStage, DWORD xboxState) {
     DWORD rawValue = D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[xboxState]];
 
     return NormalizeValue(xboxState, rawValue);
+}
+
+void XboxTextureStateConverter::Set(int textureStage, DWORD xboxState, DWORD Value) {
+    if (textureStage < 0 || textureStage > 3)
+        CxbxrAbort("Written texture stage was out of range: %d", textureStage);
+    if (xboxState < xbox::X_D3DTSS_FIRST || xboxState > xbox::X_D3DTSS_LAST)
+        CxbxrAbort("Written texture state was out of range: %d", xboxState);
+
+    // Read the value of the current stage/state from the Xbox data structure
+    D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[xboxState]] = Value;
+
+    return;
+}
+// copy whole internal buffer to buffer via argument
+void XboxTextureStateConverter::CopyTo(uint32_t* ptarget) {
+    // Read the value of the current stage/state from the Xbox data structure
+    memcpy(ptarget,D3D__TextureState, sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
+
+    return;
+}
+// return internal buffer pointer
+uint32_t* XboxTextureStateConverter::Buffer(void) {
+
+    // Read the value of the current stage/state from the Xbox data structure
+    return D3D__TextureState;
 }

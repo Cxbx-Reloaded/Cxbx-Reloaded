@@ -316,6 +316,19 @@ this left me 14 dword arguments and I put each arguments for the api call to the
 but some apis needs more data to be pushed to pushbuffer when the api was called, for example, DrawVerticesUp(), which pushes all vertixes data to pushbuffer. In such case, we can't use this approach, unless we copied all necessary data to a seperate buffer for later use which is way too complicate.
 so for such apis, I decide to unpatch them directly and create praph method handler instead.
 
+these global variables are essential for converting xbox side status to vertex shader/pixel shader/host D3D status.
+
+XboxRenderStateConverter XboxRenderStates; // this var directly access Xbox internal renderstate variables.
+XboxTextureStateConverter XboxTextureStates; // this var directly access Xbox intern TextureState variables.
+
+NV2ARenderStates and NV2ATextureStates are counter parts which we store states composed from NV2A/KelvinPrimitive.
+
+
+D3D8LightState d3d8LightState = D3D8LightState();
+D3D8TransformState d3d8TransformState = D3D8TransformState();
+FixedFunctionVertexShaderState ffShaderState = {0}; // this var converts xbox states to vertex shader/pixel shader settings/constants.
+
+
 D3DDevice_RunPushBuffer() must be unpatched to prevent reentrance of pgraph_handle_method()
 DrawVertices/DrawVerticesUP/DrawIndexedXXX calls can't be HLEed inside pgraph because xbox pushes all vertex data directly into pushbuffer.
 SetVertexShader/LoadVertexShader/SelectVertexShader/LoadVertexShaderProgram can't be HLEed, because xbox pushes all shader programs/vertex formats into pushbuffer.
