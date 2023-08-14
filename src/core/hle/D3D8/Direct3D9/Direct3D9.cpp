@@ -8608,7 +8608,11 @@ void CxbxUpdateHostTextureScaling()
 			// Get TEXCOORDINDEX for the current texture stage's state
 			// Stores both the texture stage index and information for generating coordinates
 			// See D3DTSS_TEXCOORDINDEX
-			auto texCoordIndexState = XboxTextureStates.Get(stage, xbox::X_D3DTSS_TEXCOORDINDEX);
+			DWORD texCoordIndexState;
+			if(pgraph_is_NV2A_bumpenv())
+				texCoordIndexState = NV2ATextureStates.Get(stage, xbox::X_D3DTSS_TEXCOORDINDEX);
+			else
+				texCoordIndexState = XboxTextureStates.Get(stage, xbox::X_D3DTSS_TEXCOORDINDEX);
 			// If coordinates are generated, we don't have to worry about the coordinates coming from the title
 			bool isGenerated = texCoordIndexState >= X_D3DTSS_TCI_CAMERASPACENORMAL;
 			if (isGenerated) {
