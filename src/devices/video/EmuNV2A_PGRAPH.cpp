@@ -2469,6 +2469,7 @@ int pgraph_handle_method(
                     uint8_t red = GET_MASK(kelvin_fog_color_ABGR, NV097_SET_FOG_COLOR_RED);
                     uint32_t xbox_fog_color = alpha << 24 | red << 16 | green << 8 | blue;
                     */
+                    
                     XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(pg->KelvinPrimitive.SetFogColor));
                     break;
                 }

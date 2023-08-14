@@ -1423,52 +1423,60 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
 			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 		}
-		else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
-			fogTableMode = D3DFOG_LINEAR;
-			FLOAT fogTableLinearScale;
-			fogTableLinearScale = -scale;
-			fogTableEnd = (bias - 1.0f) / fogTableLinearScale;
-			// MAX_FOG_SCALE == 8192.0f
-			if (fogTableLinearScale != 8192.0f) {
-				//(fogTableEnd -fogTableStart)=1.0f/fogTableLinearScale
-				// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
-				fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
-			}
-			else {
-				//fogTableStart== fogTableEnd
-				fogTableStart == fogTableEnd;
+		else if (fogMode == NV097_SET_FOG_MODE_V_LINEAR) {
+			if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
+				fogTableMode = D3DFOG_NONE;
+				// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
+				// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
+				bD3DRS_RangeFogEnable = false;
+			}else{
+				fogTableMode = D3DFOG_LINEAR;
+				FLOAT fogTableLinearScale;
+				fogTableLinearScale = -scale;
+				fogTableEnd = (bias - 1.0f) / fogTableLinearScale;
+				// MAX_FOG_SCALE == 8192.0f
+				if (fogTableLinearScale != 8192.0f) {
+					// fogTableLinearScale = 1.0f / (fogTableEnd - fogTableStart);
+					// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
+					fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
+				}
+				else {
+					//fogTableStart== fogTableEnd
+					fogTableStart == fogTableEnd;
+				}
+
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
+				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
 			}
 
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
 		}
-		else if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
-			fogTableMode = D3DFOG_NONE;
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-			// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
-			// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
-			bD3DRS_RangeFogEnable = false;
-		}
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, true);
 		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
-		//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, fogTableMode);
 		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
 
 		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
-		// hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
-		// XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
-	}
-	else {
+		// fog color was handled by pgraph handler in NV097_SET_FOG_COLOR directly.
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
 		// D3D__RenderState[D3DRS_SPECULARENABLE] == true
-		if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 & 0x0F) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_SPECLIT) {
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, true);
+		if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 & NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE_REG_SPECLIT) {//NV097_SET_COMBINER_SPECULAR_FOG_CW0_B_SOURCE_REG_SPECLIT
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, true);
 		}
 		else {
-			hRet = g_pD3DDevice->SetRenderState(D3DRS_SPECULARENABLE, false);
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, false);
+		}
+
+	}
+	else {
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, false);
+		// D3D__RenderState[D3DRS_SPECULARENABLE] == true
+		if ((pg->KelvinPrimitive.SetCombinerSpecularFogCW0 & NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE) == NV097_SET_COMBINER_SPECULAR_FOG_CW0_D_SOURCE_REG_SPECLIT) {
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, true);
+		}
+		else {
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, false);
 		}
 	}
 }
@@ -1879,11 +1887,14 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");
 			hRet = g_pD3DDevice->LightEnable(lightNum, bEnable);
 		}
-		// Set scene ambient color, 
+		// Set scene ambient color,
+		extern D3DCOLOR FromVector(D3DCOLORVALUE v);
 		NV2A_SceneAmbient[0] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetSceneAmbientColor);//NV097_SET_SCENE_AMBIENT_COLOR
 		NV2A_SceneAmbient[0].a = 1.0;
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
 		NV2A_SceneAmbient[1] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackSceneAmbientColor);//NV097_SET_BACK_SCENE_AMBIENT_COLOR
 		NV2A_SceneAmbient[1].a = 1.0;
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
 		// Set scene mateiral emission and alpha
 		NV2A_SceneMateirals[0].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_MATERIAL_EMISSION
 		NV2A_SceneMateirals[0].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_MATERIAL_ALPHA

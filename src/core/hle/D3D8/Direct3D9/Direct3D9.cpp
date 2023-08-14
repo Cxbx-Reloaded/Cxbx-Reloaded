@@ -7058,9 +7058,30 @@ D3DXVECTOR4 toVector(D3DCOLOR color) {
 	return v;
 }
 
+D3DCOLOR FromVector(D3DXVECTOR4 v) {
+	D3DCOLOR color;
+	// XYZW to ARGB 
+	color=((DWORD)(v.w* 255.f)&0xFF)<< 24 ;
+	color |= ((DWORD)(v.x * 255.f) & 0xFF) << 16;
+	color |= ((DWORD)(v.y * 255.f) & 0xFF) << 8;
+	color |= ((DWORD)(v.z * 255.f) & 0xFF) ;
+	return color;
+}
+D3DCOLOR FromVector(D3DCOLORVALUE v) {
+	D3DCOLOR color;
+	// XYZW to ARGB 
+	color = ((DWORD)(v.a * 255.f) & 0xFF) << 24;
+	color |= ((DWORD)(v.r * 255.f) & 0xFF) << 16;
+	color |= ((DWORD)(v.g * 255.f) & 0xFF) << 8;
+	color |= ((DWORD)(v.b * 255.f) & 0xFF);
+	return color;
+}
+
+
 D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
 	return D3DXVECTOR4(val.r, val.g, val.b, val.a);
 }
+
 extern bool pgraph_is_DirectModelView(void);
 extern bool pgraph_is_NV2A_bumpenv();// tmp glue
 extern xbox::X_D3DLIGHT8* CxbxrGetLight8Ptr(int lightNum);
@@ -7324,6 +7345,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 				UpdateFixedFunctionShaderLight(-1, &ffShaderState.Lights[i], &LightAmbient);
 			}
 		}
+        // X_D3DRS_AMBIENT and X_D3DRS_BACKAMBIENT renderstates are updated by pgraph in CxbxrLazySetLights() already. but here we directly use the D3DCOLORVAL NV2A_SceneAmbient[] preventing conversion loss.
 		Ambient = *(D3DXVECTOR4*)&NV2A_SceneAmbient[0];
 		BackAmbient = *(D3DXVECTOR4*)&NV2A_SceneAmbient[1];
 
@@ -7337,8 +7359,6 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 
 	}
 
-	Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
-	BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
 
 	ffShaderState.TotalLightsAmbient.Front = (D3DXVECTOR3)(LightAmbient + Ambient);
 	ffShaderState.TotalLightsAmbient.Back = (D3DXVECTOR3)(LightAmbient + BackAmbient);
