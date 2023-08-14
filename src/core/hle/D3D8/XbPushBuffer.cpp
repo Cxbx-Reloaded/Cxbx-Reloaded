@@ -317,7 +317,20 @@ DWORD NV2A_alphaArg0[8];
 DWORD NV2A_alphaArg1[8];
 DWORD NV2A_alphaArg2[8];
 DWORD NV2A_resultArg[8];
+xbox::X_D3DLIGHT8 NV2A_Light8[8] = {};
+D3DCOLORVALUE   NV2A_SceneAmbient[2];
+xbox::X_D3DMATERIAL8  NV2A_SceneMateirals[2];
 
+xbox::X_D3DLIGHT8* CxbxrGetLight8Ptr(int lightNum)
+{
+	return  &NV2A_Light8[lightNum];
+}
+DWORD CxbxrNV2ALight8EnableMask(int lightNum)
+{
+	NV2AState* d = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &d->pgraph;
+	return (pg->KelvinPrimitive.SetLightEnableMask >> (lightNum << 1) & 0x03);
+}
 void pgraph_SetNV2AStateFlag(DWORD flag)
 {
 	NV2A_stateFlags |= flag;
@@ -336,26 +349,17 @@ float * pgraph_get_NV2A_bumpenv_stage_address(unsigned int stage) {
 	PGRAPHState *pg = &d->pgraph;
 	return &pg->KelvinPrimitive.SetTexture[stage].SetBumpEnvMat00;
 }
-void pgraph_use_NV2A_bumpenv(void)
+inline void pgraph_use_NV2A_bumpenv(void)
 {
 	g_nv2a_use_nv2a_bumpenv = true;
 }
-void pgraph_notuse_NV2A_bumpenv(void)
+inline void pgraph_notuse_NV2A_bumpenv(void)
 {
 	g_nv2a_use_nv2a_bumpenv = false;
 }
 bool pgraph_is_NV2A_bumpenv(void)
 {
 	return g_nv2a_use_nv2a_bumpenv;
-	/*
-	// if wr're not in replplay mode, don't use NV2A bumpenv. this is temp solution to solve HLE/NV2A confliction.
-	if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-		return false;
-	}
-	else {
-		return g_nv2a_use_nv2a_bumpenv;
-	}
-	*/
 }
 void pgraph_use_UserPixelShader(void)
 {
@@ -390,24 +394,10 @@ void pgraph_use_DirectModelView(void)
 bool pgraph_is_DirectModelView(void)
 {
 	return g_xbox_transform_use_DirectModelView;
-	//if ((g_xbox_transform_ModelView_dirty == true) || (g_xbox_transform_Composite_dirty = true)) {
-	/*
-	if(g_xbox_transform_use_DirectModelView==true){
-		return true;
-	}
-	else {
-		return false;
-	}
-	*/
 }
 bool pgraph_is_ModelView_dirty(void)
 {
-	if ((g_xbox_transform_ModelView_dirty[0] == true)) {
-		return true;
-	}
-	else {
-		return false;
-	}
+	return g_xbox_transform_ModelView_dirty[0];
 }
 
 void pgraph_SetModelViewMatrixDirty(unsigned int index)
@@ -1099,7 +1089,7 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
-	    // xbox os seems to make a mistake here, the LazySetPointParameters() converts the point size into DWORD and set it to pg->KelvinPrimitive.SetPointSize
+	    // the LazySetPointParameters() converts the point size from float into DWORD and set it to pg->KelvinPrimitive.SetPointSize
 		float FixedSize = pg->KelvinPrimitive.SetPointSize;
 		// reversed to xbox d3d fixed point size
 		float size = FixedSize/8.0;
@@ -1262,89 +1252,89 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
 			// update the modelview and composite matrix whenever either one matrix was dirty.
 	// handle DirectModelView()
-extern D3DMATRIX g_xbox_transform_ViewportTransform;// tmp glue
-extern D3DMATRIX g_xbox_transform_ProjectionViewportTransform;// tmp glue
-extern D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;// tmp glue
-extern D3DMATRIX g_xbox_DirectModelView_View;// tmp glue
-extern D3DMATRIX g_xbox_DirectModelView_World;// tmp glue
-extern D3DMATRIX g_xbox_DirectModelView_Projection;// tmp glue
+	extern D3DMATRIX g_xbox_transform_ViewportTransform;// tmp glue
+	extern D3DMATRIX g_xbox_transform_ProjectionViewportTransform;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_View;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_World;// tmp glue
+	extern D3DMATRIX g_xbox_DirectModelView_Projection;// tmp glue
 
 
-D3DMATRIX matUnit;
-memset(&matUnit._11, 0, sizeof(matUnit));
-matUnit._11 = 1.0;
-matUnit._22 = 1.0;
-matUnit._33 = 1.0;
-matUnit._44 = 1.0;
-// TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
-g_xbox_DirectModelView_View = matUnit;
+	D3DMATRIX matUnit;
+	memset(&matUnit._11, 0, sizeof(matUnit));
+	matUnit._11 = 1.0;
+	matUnit._22 = 1.0;
+	matUnit._33 = 1.0;
+	matUnit._44 = 1.0;
+	// TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
+	g_xbox_DirectModelView_View = matUnit;
 
-D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
-D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
-D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
+	D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
 
-if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_DIRECT_MODELVIEW) != 0) {
-	// transpose KelvinPrimitive transform back to xbox d3d transform
-	D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
-	// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
-	//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
-	//clear ModelView dirty flags.
-		//g_xbox_transform_ModelView_dirty[0] = false;
-		//g_xbox_transform_InverseModelView_dirty[0] = false;
-}
-// handle LazySetTransform();
-else {
-	// not in skinning mode
-	if (pg->KelvinPrimitive.SetSkinMode == 0) {
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_DIRECT_MODELVIEW) != 0) {
+		// transpose KelvinPrimitive transform back to xbox d3d transform
 		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
 		// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
 		//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		//clear ModelView dirty flags.
+			//g_xbox_transform_ModelView_dirty[0] = false;
+			//g_xbox_transform_InverseModelView_dirty[0] = false;
 	}
-	// skinning mode, the commposite matrix doesn't include the ModelView matrix, only ViewPortTransform.
-	// SetModelViewMatrix[1] was set.
+	// handle LazySetTransform();
 	else {
-		//D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
-		//D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
-		g_xbox_transform_ProjectionViewportTransform = g_xbox_transform_Composite;
-		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform);
-		CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		// not in skinning mode
+		if (pg->KelvinPrimitive.SetSkinMode == 0) {
+			D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
+			// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
+			//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		}
+		// skinning mode, the commposite matrix doesn't include the ModelView matrix, only ViewPortTransform.
+		// SetModelViewMatrix[1] was set.
+		else {
+			//D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_xbox_transform_ModelView);
+			//D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
+			g_xbox_transform_ProjectionViewportTransform = g_xbox_transform_Composite;
+			D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_Composite, (D3DXMATRIX*)&g_xbox_transform_ModelView, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform);
+			CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		}
 	}
-}
 
-// compose xbox side matrix for use in d3d vertex shader update.
-// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FVF mode vertex shader constant update routine
-D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_xbox_transform_InverseModelView);
-// update g_xbox_DirectModelView_Projection from g_xbox_transform_PrjectionViewportTransform
-// try to get g_xbox_transform_ViewportTransform first
-CxbxrImpl_GetViewportTransform(d); //g_xbox_transform_ViewportTransform will be set
+	// compose xbox side matrix for use in d3d vertex shader update.
+	// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FVF mode vertex shader constant update routine
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_xbox_transform_InverseModelView);
+	// update g_xbox_DirectModelView_Projection from g_xbox_transform_PrjectionViewportTransform
+	// try to get g_xbox_transform_ViewportTransform first
+	CxbxrImpl_GetViewportTransform(d); //g_xbox_transform_ViewportTransform will be set
 
 
-D3DXMATRIX matInverseViewportTransform, matViewportTransform;
+	D3DXMATRIX matInverseViewportTransform, matViewportTransform;
 
-D3DXMatrixInverse((D3DXMATRIX*)&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
+	D3DXMatrixInverse((D3DXMATRIX*)&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
 
-D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&matInverseViewportTransform);
+	D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_DirectModelView_Projection, (D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&matInverseViewportTransform);
 
-// clear pgraph transform matrix dirty flags.
-for (int i = 0; i < 4; i++) {
-	// update InverseModelView matrix if only ModelView matrix is updated
+	// clear pgraph transform matrix dirty flags.
+	for (int i = 0; i < 4; i++) {
+		// update InverseModelView matrix if only ModelView matrix is updated
 
-	if ((g_xbox_transform_ModelView_dirty[i] == true) || (g_xbox_transform_InverseModelView_dirty[i] == false)) {
-		D3DXMATRIX matModelViewTransposed;
-		// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
-		// transpose ModelView back to xbox d3d matrix
-		D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
-		// update the InverModelView matrix
-		D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+		if ((g_xbox_transform_ModelView_dirty[i] == true) || (g_xbox_transform_InverseModelView_dirty[i] == false)) {
+			D3DXMATRIX matModelViewTransposed;
+			// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
+			// transpose ModelView back to xbox d3d matrix
+			D3DXMatrixTranspose(&matModelViewTransposed, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+			// update the InverModelView matrix
+			D3DXMatrixInverse((D3DXMATRIX*)&pg->KelvinPrimitive.SetInverseModelViewMatrix[i][0], NULL, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[i][0]);
+		}
+		// clear dirty flags
+		g_xbox_transform_ModelView_dirty[i] = false;
+		g_xbox_transform_InverseModelView_dirty[i] = false;
 	}
-	// clear dirty flags
-	g_xbox_transform_ModelView_dirty[i] = false;
-	g_xbox_transform_InverseModelView_dirty[i] = false;
-}
-g_xbox_transform_Composite_dirty = false;
-//}
+	g_xbox_transform_Composite_dirty = false;
+	//}
 
-//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
+	//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
 }
 
 void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
@@ -1491,12 +1481,419 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 	return;
 
 }
+// scale a 3-component vector
 
+void ScaleVector3(D3DVECTOR* out, CONST D3DVECTOR* v1, FLOAT scale)
+{
+	out->x = scale * v1->x;
+	out->y = scale * v1->y;
+	out->z = scale * v1->z;
+}
+
+//---------------------------------------------------------------------------
+
+// add two 3-component vectors
+
+void AddVectors3(D3DVECTOR* out, CONST D3DVECTOR* v1, CONST D3DVECTOR* v2)
+{
+	out->x = v1->x + v2->x;
+	out->y = v1->y + v2->y;
+	out->z = v1->z + v2->z;
+}
+
+// substract two 3-component vectors
+
+void SubVectors3(D3DVECTOR* out, CONST D3DVECTOR* v1, CONST D3DVECTOR* v2)
+{
+	out->x = v1->x - v2->x;
+	out->y = v1->y - v2->y;
+	out->z = v1->z - v2->z;
+}
+//---------------------------------------------------------------------------
+
+// return the square of the magnitude of a 3-component vectors
+
+FLOAT SquareMagnitude3(CONST D3DVECTOR* v)
+{
+	return (v->x * v->x + v->y * v->y + v->z * v->z);
+}
+//---------------------------------------------------------------------------
+
+// returns  1 / sqrt(x)
+
+static float _0_47 = 0.47f;
+static float _1_47 = 1.47f;
+
+float JBInvSqrt(const float x)
+{
+	DWORD y;
+	float r;
+
+	_asm
+	{
+		mov     eax, 07F000000h + 03F800000h  // (ONE_AS_INTEGER<<1) + ONE_AS_INTEGER
+		sub     eax, x
+		sar     eax, 1
+
+		mov     y, eax                      // y
+		fld     _0_47                       // 0.47
+		fmul    DWORD PTR x                 // x*0.47
+
+		fld     DWORD PTR y
+		fld     st(0)                       // y y x*0.47
+		fmul    st(0), st(1)                // y*y y x*0.47
+
+		fld     _1_47                       // 1.47 y*y y x*0.47
+		fxch    st(3)                       // x*0.47 y*y y 1.47
+		fmulp   st(1), st(0)                // x*0.47*y*y y 1.47
+		fsubp   st(2), st(0)                // y 1.47-x*0.47*y*y
+		fmulp   st(1), st(0)                // result
+		fstp    y
+	}
+
+	y &= 0x7FFFFFFF;  // make it positive
+	r = DWtoF(y);
+
+	// optional
+	r = (3.0f - x * (r * r)) * r * 0.5f;    // remove for low accuracy
+
+	return (r);
+}
+//---------------------------------------------------------------------------
+
+//  1/x = 1 / sqrt(x*x) plus sign bit
+
+float nvInv(float x)
+{
+	DWORD dwSign = *(DWORD*)&x & 0x80000000;
+	float invSqRt = JBInvSqrt(x * x);
+	DWORD dwInv = dwSign | *(DWORD*)&invSqRt;
+	return (*(float*)(&dwInv));
+}
+//---------------------------------------------------------------------------
+// normalize a 3-component vector
+
+void NormalizeVector3(D3DVECTOR* v)
+{
+	FLOAT invmag = JBInvSqrt(SquareMagnitude3(v));
+	assert(invmag > 0);
+	v->x *= invmag;
+	v->y *= invmag;
+	v->z *= invmag;
+}
+const float g_Lar[32] =
+{
+	 0.000000f,  // error=0.687808
+	-0.023353f,  // error=0.070106
+	-0.095120f,  // error=0.010402
+	-0.170208f,  // error=0.016597
+	-0.251038f,  // error=0.021605
+	-0.336208f,  // error=0.025186
+	-0.421539f,  // error=0.027635
+	-0.503634f,  // error=0.029262
+	-0.579592f,  // error=0.030311
+	-0.647660f,  // error=0.030994
+	-0.708580f,  // error=0.031427
+	-0.760208f,  // error=0.031702
+	-0.803673f,  // error=0.031889
+	-0.840165f,  // error=0.031995
+	-0.871344f,  // error=0.032067
+	-0.896105f,  // error=0.032105
+	-0.916457f,  // error=0.032139
+	-0.933262f,  // error=0.032165
+	-0.946507f,  // error=0.032173
+	-0.957755f,  // error=0.032285
+	-0.966165f,  // error=0.032230
+	-0.972848f,  // error=0.032189
+	-0.978413f,  // error=0.032191
+	-0.983217f,  // error=0.032718
+	-0.986471f,  // error=0.032289
+	-0.988778f,  // error=0.033091
+	-0.991837f,  // error=0.035067
+	-0.993452f,  // error=0.034156
+	-0.994839f,  // error=0.034863
+	-0.995434f,  // error=0.034785
+	-0.996690f,  // error=0.033426
+	-1.000000f
+};
+
+const float g_Mar[32] =
+{
+	-0.494592f,  // error=0.687808
+	-0.494592f,  // error=0.070106
+	-0.570775f,  // error=0.010402
+	-0.855843f,  // error=0.016597
+	-1.152452f,  // error=0.021605
+	-1.436778f,  // error=0.025186
+	-1.705918f,  // error=0.027635
+	-1.948316f,  // error=0.029262
+	-2.167573f,  // error=0.030311
+	-2.361987f,  // error=0.030994
+	-2.512236f,  // error=0.031427
+	-2.652873f,  // error=0.031702
+	-2.781295f,  // error=0.031889
+	-2.890906f,  // error=0.031995
+	-2.938739f,  // error=0.032067
+	-3.017491f,  // error=0.032105
+	-3.077762f,  // error=0.032139
+	-3.099087f,  // error=0.032165
+	-3.144977f,  // error=0.032173
+	-3.100986f,  // error=0.032285
+	-3.151608f,  // error=0.032230
+	-3.212636f,  // error=0.032189
+	-3.219419f,  // error=0.032191
+	-3.079402f,  // error=0.032718
+	-3.174922f,  // error=0.032289
+	-3.469706f,  // error=0.033091
+	-2.895668f,  // error=0.035067
+	-2.959919f,  // error=0.034156
+	-2.917150f,  // error=0.034863
+	-3.600301f,  // error=0.034785
+	-3.024990f,  // error=0.033426
+	-3.300000f
+};
+const float LOG_64F = 4.15888308336f;
+const float INV_LOG_2F = 1.44269504089f;
+// Converts a floating point value to a long.
+_declspec(naked) long FloatToLong(float f)
+{
+	_asm
+	{
+		// Note that this does a truncate, not a floor:
+
+		cvttss2si eax, [esp + 4]
+		ret 4
+	}
+}
+// Exponent
+float Exp(float e)
+{
+	WORD istat;
+	WORD fstat;
+
+	_asm
+	{
+		fld[e]
+
+		xor ch, ch; result is always positive
+		fldl2e
+		fmul; convert log base e to log base 2
+
+		fld	st(0); copy TOS
+		frndint; near round to integer
+		ftst
+		fstsw[istat]; save integer part status
+		fwait
+		fxch; NOS gets integer part
+		fsub	st, st(1); TOS gets fraction
+		ftst
+		fstsw[fstat]; save fraction part status
+		fabs
+		f2xm1
+
+		fld1
+		fadd
+		test[fstat + 1], 1; if fraction > 0 (TOS > 0)
+		jz	ExpNoInvert;	 bypass 2 ^ x invert
+
+		fld1
+		fdivrp	st(1), st(0)
+
+		ExpNoInvert:
+		test[istat + 1], 040h; if integer part was zero
+			jnz	ExpScaled;	 bypass scaling to avoid bug
+			fscale; now TOS = 2 ^ x
+
+			ExpScaled :
+		or ch, ch; check for negate flag
+			jz	expret
+			fchs; negate result(negreal ^ odd integer)
+
+			expret:
+		fxch
+			fstp st(0)
+	}
+}
+// Log
+_declspec(naked) float Log(float e)
+{
+
+	_asm
+	{
+		fldln2
+		fld[esp + 4]
+		fyl2x
+		ret 4
+	}
+}
+
+void Explut(float n, float* l, float* m)
+{
+	float idx, f, a;
+	long  i;
+
+	if (n < 1.f) {
+		a = (n == 0.f) ? 0.f : (float)Exp(-LOG_64F / n);
+		*l = -a;
+		*m = 1.f - (1.f - a) * n;
+	}
+	else {
+		idx = 3.f * (float)Log(n) * INV_LOG_2F;
+		i = FloatToLong(idx);
+		f = idx - i;
+
+		*l = g_Lar[i] * (1.f - f) + g_Lar[i + 1] * f;
+		*m = g_Mar[i] * (1.f - f) + g_Mar[i + 1] * f;
+	}
+}
+
+// Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
 void CxbxrImpl_LazySetLights(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
 	XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
+	XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, pg->KelvinPrimitive.SetTwoSidedLightEn);
+	//pg->KelvinPrimitive.SetLight[8].{AmbientColor[3],DiffuseColor[3],SpecularColor[3],LocalRange,InfiniteHalfVector[3],InfiniteDirection[3],SpotFalloff[3],SpotDirection[4],LocalPosition[3],LocalAttenuation[3],Rev_1074[3]
+	DWORD control = 0;
+	DWORD colorMaterial = 0;
+	DWORD lightEnableMask = 0;
+	if (pg->KelvinPrimitive.SetLightingEnable != false) {
+		control = pg->KelvinPrimitive.SetLightControl;
+		if (pg->KelvinPrimitive.SetSpecularEnable != false) {
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOCALVIEWER, (control& NV097_SET_LIGHT_CONTROL_LOCALEYE_TRUE)!=0? true:false);
+		}
+		colorMaterial = pg->KelvinPrimitive.SetColorMaterial;//NV097_SET_COLOR_MATERIAL, colorMaterial  // 0x298
+		XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORVERTEX, colorMaterial!=0?true:false);
+		if(colorMaterial!=0){
+			// retrive material source render state.
+			for (int i = 0; i < 8; i++) {
+				XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE+i, (colorMaterial>>(2*(7-i)))&0x03);
+			}
+		}
+		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
+		//set lights
+
+		int lightNum;
+
+		D3DVECTOR pos;
+		D3DVECTOR dir;
+		D3DVECTOR hv, EyeDirection;
+		EyeDirection = { 0.0,0.0,-1.0 };
+
+		FLOAT ambientR, ambientG, ambientB;
+		FLOAT emissiveR, emissiveG, emissiveB;
+
+		for (lightNum = 0; lightNum < 8; lightNum++) {
+			bool bEnable;
+			DWORD lightType = (lightEnableMask >> (lightNum << 1)) & 0x03;
+			//default:
+			NV2A_Light8[lightNum].Type = (D3DLIGHTTYPE)0;
+			bEnable = false;
+
+			switch (lightType) {
+			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_INFINITE://D3DLIGHT_DIRECTIONAL
+				NV2A_Light8[lightNum].Type= D3DLIGHT_DIRECTIONAL;
+				//NV097_SET_LIGHT_INFINITE_DIRECTION
+				//Push1f(pPush,NV097_SET_LIGHT_LOCAL_RANGE(lightNum),	1e30f);
+				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
+				dir.x = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
+				dir.y = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
+				dir.z = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[2];
+				NV2A_Light8[lightNum].Direction = dir;
+				bEnable = true;
+				break;
+			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_LOCAL: //D3DLIGHT_POINT
+				NV2A_Light8[lightNum].Type = D3DLIGHT_POINT;
+				//Push1f(pPush,NV097_SET_LIGHT_LOCAL_RANGE(lightNum),	pLight->Light8.Range);
+				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
+				NV2A_Light8[lightNum].Position.x = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[0];
+				NV2A_Light8[lightNum].Position.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
+				NV2A_Light8[lightNum].Position.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
+				NV2A_Light8[lightNum].Attenuation0 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[0];
+				NV2A_Light8[lightNum].Attenuation1 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[1];
+				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
+				bEnable = true;
+				break;
+			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_SPOT: //D3DLIGHT_SPOT
+				NV2A_Light8[lightNum].Type = D3DLIGHT_SPOT;
+				//Push1f(pPush,NV097_SET_LIGHT_LOCAL_RANGE(lightNum),	pLight->Light8.Range);
+				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
+				NV2A_Light8[lightNum].Position.x = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[0];
+				NV2A_Light8[lightNum].Position.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
+				NV2A_Light8[lightNum].Position.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
+				NV2A_Light8[lightNum].Attenuation0 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[0];
+				NV2A_Light8[lightNum].Attenuation1 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[1];
+				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
+				/*
+				Explut(pLight->Light8.Falloff, &pLight->Falloff_L, &pLight->Falloff_M);
+    
+            pLight->Falloff_N = 1.0f + pLight->Falloff_L - pLight->Falloff_M;
+                
+            // Attenuate the spot direction to get falloff to work:
+    
+            FLOAT theta2 = Cos(0.5f * pLight->Light8.Theta);
+            FLOAT phi2 = Cos(0.5f * pLight->Light8.Phi);
+    
+            // Handle case in which theta gets close to or overtakes phi, since 
+            // hardware can't:
+    
+            if (phi2 >= theta2)     // Outer angle <= inner angle, oops
+            {        
+                // Make outer angle cosine slightly smaller:
+    
+                phi2 = 0.999f * theta2;  
+            }
+    
+            pLight->Scale = nvInv(theta2 - phi2);
+            pLight->W = -phi2 * pLight->Scale;
+*/
+				float Falloff_L = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[0]; //todo: Falloff_L/Falloff_M/Falloff_N there should be 3 components but not found in Light8/Light9
+				float Falloff_M = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[1];
+				float Falloff_N = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[2];
+				dir.x = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[0];
+				dir.y = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[1];
+				dir.z = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[2];
+				float W = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[3]; // there is no W member of Light8
+				// Fixme!!! there is no eazy way to reverse Falloff from Falloff_L/Falloff_M, so I put the default value 1.0f here.
+				NV2A_Light8[lightNum].Falloff = 1.0f;
+				D3DVECTOR dirNormal = dir;
+				NormalizeVector3(&dirNormal);
+				float Scale = dir.x / dirNormal.x; // there is no Scale member of Light8
+				float phi2 = -1.0*W / Scale;
+				float theta2 = phi2 + 1.0 / Scale;
+				NV2A_Light8[lightNum].Theta = 2.0f*acos(theta2);
+				NV2A_Light8[lightNum].Phi = 2.0f*acos(phi2);
+				bEnable = true;
+
+				break;
+				
+			}
+			// Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
+			// hack, we use colors in kelvin directly since these colors are composed with D3DRS_AMBIENT/SetMaterial/SetBackMaterial/ and the color of each light.
+			NV2A_Light8[lightNum].Ambient =*(D3DCOLORVALUE*)&( pg->KelvinPrimitive.SetLight[lightNum].AmbientColor);
+			NV2A_Light8[lightNum].Specular = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetLight[lightNum].SpecularColor);
+			NV2A_Light8[lightNum].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetLight[lightNum].DiffuseColor);
+			// here we calls Host D3D for SetLight() and LightEnable(). because originaly there two are called directly from HLE patch.
+			HRESULT hRet = g_pD3DDevice->SetLight(lightNum, &NV2A_Light8[lightNum]);
+			//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");
+			hRet = g_pD3DDevice->LightEnable(lightNum, bEnable);
+		}
+		// Set scene ambient color, 
+		NV2A_SceneAmbient[0] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetSceneAmbientColor);//NV097_SET_SCENE_AMBIENT_COLOR
+		NV2A_SceneAmbient[0].a = 1.0;
+		NV2A_SceneAmbient[1] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackSceneAmbientColor);//NV097_SET_BACK_SCENE_AMBIENT_COLOR
+		NV2A_SceneAmbient[1].a = 1.0;
+		// Set scene mateiral emission and alpha
+		NV2A_SceneMateirals[0].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_MATERIAL_EMISSION
+		NV2A_SceneMateirals[0].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_MATERIAL_ALPHA
+		// Fixme!!! here we set the specular power to default 1.0
+		NV2A_SceneMateirals[0].Power = 1.0;
+		NV2A_SceneMateirals[1].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_BACK_MATERIAL_EMISSION
+		NV2A_SceneMateirals[1].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_BACK_MATERIAL_EMISSION
+		// Fixme!!! here we set the specular power to default 1.0
+		NV2A_SceneMateirals[1].Power = 1.0;
+	}
 	return;
 
 }

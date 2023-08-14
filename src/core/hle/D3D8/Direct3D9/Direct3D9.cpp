@@ -7062,6 +7062,8 @@ D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
 	return D3DXVECTOR4(val.r, val.g, val.b, val.a);
 }
 extern bool pgraph_is_DirectModelView(void);
+extern bool pgraph_is_NV2A_bumpenv();// tmp glue
+extern xbox::X_D3DLIGHT8* CxbxrGetLight8Ptr(int lightNum);
 D3DMATRIX g_xbox_transform_ModelView;
 D3DMATRIX g_xbox_transform_InverseModelView;
 D3DMATRIX g_xbox_transform_Composite;
@@ -7085,10 +7087,11 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 
 	auto d3dLight = &d3d8LightState.Lights[d3dLightIndex];
 	D3DXMATRIX viewTransform;
-	if (pgraph_is_DirectModelView()) {
+	// use lights composed from kelvin.
+	if (pgraph_is_NV2A_bumpenv()) {
+		d3dLight=CxbxrGetLight8Ptr(d3dLightIndex);
 		viewTransform = g_xbox_DirectModelView_View;
-	}
-	else {
+	}else {
 		viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 	}
 	// TODO remove D3DX usage
@@ -7192,7 +7195,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
 	}
 
-	// Lighting
+	// Lighting, pgraph CxbxrLazySetLights()
 	// Point sprites aren't lit - 'each point is always rendered with constant colors.'
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/point-sprites
 	bool PointSpriteEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
@@ -7201,7 +7204,8 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
 	ffShaderState.Modes.LocalViewer = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
 
-	// Material sources
+	extern xbox::X_D3DMATERIAL8 NV2A_SceneMateirals[2];
+	// Material sources, pgraph update these renderstates in CxbxrLazySetLights()
 	bool ColorVertex = XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
 	ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
 	ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
@@ -7211,8 +7215,13 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	ffShaderState.Modes.BackDiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
 	ffShaderState.Modes.BackSpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
 	ffShaderState.Modes.BackEmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+	// Scene materials, HLE uses SetMaterial()/SetBackMaterial(), pgraph update materials in CxbxrLazySetLights()
+	if (pgraph_is_NV2A_bumpenv()) {
+		memcpy(&ffShaderState.Materials[0],&NV2A_SceneMateirals[0],sizeof(NV2A_SceneMateirals[0]));
+		memcpy(&ffShaderState.Materials[1], &NV2A_SceneMateirals[1], sizeof(NV2A_SceneMateirals[1]));
+	}
 
-	// Point sprites; Fetch required variables
+	// Point sprites; Fetch required variables. pgraph CxbxrLazySetPointParams()
 	float pointSize = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE);
 	float pointSize_Min = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MIN);
 	float pointSize_Max = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MAX);
@@ -7300,14 +7309,36 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		ffShaderState.TexCoordComponentCount[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
 	}
 
-	// Update lights
+	// Update lights, pgraph CxbxrLazySetLights()
 	auto LightAmbient = D3DXVECTOR4(0.f, 0.f, 0.f, 0.f);
-	for (size_t i = 0; i < ffShaderState.Lights.size(); i++) {
-		UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient);
+	// we use lights composed from kelvin SetLight[] directly when we're handling pushbuffer.
+	extern DWORD CxbxrNV2ALight8EnableMask(int lightNum);
+	extern D3DCOLORVALUE NV2A_SceneAmbient[2];
+	D3DXVECTOR4 Ambient, BackAmbient;
+	if (pgraph_is_NV2A_bumpenv()) {
+		for (size_t i = 0; i < 8; i++) {
+			if (CxbxrNV2ALight8EnableMask(i) != 0) {
+				UpdateFixedFunctionShaderLight(i, &ffShaderState.Lights[i], &LightAmbient);
+			}
+			else {
+				UpdateFixedFunctionShaderLight(-1, &ffShaderState.Lights[i], &LightAmbient);
+			}
+		}
+		Ambient = *(D3DXVECTOR4*)&NV2A_SceneAmbient[0];
+		BackAmbient = *(D3DXVECTOR4*)&NV2A_SceneAmbient[1];
+
+	}
+	else {
+		for (size_t i = 0; i < ffShaderState.Lights.size(); i++) {
+			UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient);
+		}
+		Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
+		BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
+
 	}
 
-	D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
-	D3DXVECTOR4 BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
+	Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
+	BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
 
 	ffShaderState.TotalLightsAmbient.Front = (D3DXVECTOR3)(LightAmbient + Ambient);
 	ffShaderState.TotalLightsAmbient.Back = (D3DXVECTOR3)(LightAmbient + BackAmbient);

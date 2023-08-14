@@ -347,7 +347,7 @@ typedef struct NV097KelvinPrimitive {
 	uint32_t Rev_0400[0x20 / 4];
 	uint32_t SetTextureMatrixEnable[4];	//0x00000420
 	uint32_t Rev_0430[0xc / 4];
-	uint32_t SetPointSize;				//0x0000043C  // D3D__RenderState[D3DRS_POINTSIZE]
+	uint32_t SetPointSize;				//0x0000043C  // D3D__RenderState[D3DRS_POINTSIZE], the xbox render state for point size is float, but in kelvin state it's in unsigned int. be aware when picking up this value.
 	float SetProjectionMatrix[16];		//0x00000440
 	// xbox only uses SetModelViewMatrix0[16]; value set is transposed
 	union {

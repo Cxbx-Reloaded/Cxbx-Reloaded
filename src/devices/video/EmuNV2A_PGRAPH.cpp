@@ -2844,8 +2844,9 @@ int pgraph_handle_method(
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetMaterialAlpha);
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
-                case NV097_SET_SPECULAR_ENABLE : break;//done //pg->KelvinPrimitive.SetSpecularEnable
+                case NV097_SET_SPECULAR_ENABLE : //done D3DRS_SPECULARENABLE//pg->KelvinPrimitive.SetSpecularEnable, LazyUpdateCombiners()/LazySetLights() will set this var.
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
+                    pgraph_SetNV2AStateFlag(X_STATE_COMBINERNEEDSSPECULAR);
 					break;
                 case NV097_SET_LIGHT_ENABLE_MASK://done //pg->KelvinPrimitive.SetLightEnableMask
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_LIGHTS, arg0);
@@ -3296,10 +3297,11 @@ int pgraph_handle_method(
                 /* Handles NV097_SET_BACK_LIGHT* */
                 CASE_128(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4): { //done  //pg->KelvinPrimitive.SetBackLight[8]. {AmbientColor[3],DiffuseColor[3],SpecularColor[3],Rev_0c24[7]}
 					slot = (method - NV097_SET_BACK_LIGHT_AMBIENT_COLOR) / 4;
-					for (size_t arg_c = 0; arg_c < method_count; arg_c++,slot++) {
+                    /* disable LLE code
+                    for (size_t arg_c = 0; arg_c < method_count; arg_c++,slot++) {
                         arg0 = argv[arg_c];
                         unsigned int part =  slot % 16;
-                        unsigned int light_index = slot / 16; /* [Light index], we have 8 lights, each light holds 16 dwords */
+                        unsigned int light_index = slot / 16; // [Light index], we have 8 lights, each light holds 16 dwords 
                         assert(light_index < 8);
                         switch(part) {//check the definition of pg->ltctxb, then correlate to KelvinPrimitive.SetBackLight.???
                             //CASE_3(NV097_SET_BACK_LIGHT_AMBIENT_COLOR, 4):
@@ -3325,6 +3327,7 @@ int pgraph_handle_method(
                                 break;
                         }
                     }
+                    */
 					//not implement //pg->KelvinPrimitive.SetBackSceneAmbientColor[3]
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
@@ -3339,6 +3342,7 @@ int pgraph_handle_method(
                         unsigned int part = slot % 32;
                         unsigned int light_index = slot / 32; /* [Light index] */ //each light holds 32 dwords 
                         assert(light_index < 8);
+                        /*  //disable LLE OpenGL code
                         switch(part) {//check the definition of pg->ltctxb, then correlate to KelvinPrimitive.SetBackLight.???
                             CASE_3(0, 1)://NV097_SET_LIGHT_AMBIENT_COLOR
                                 //part -= NV097_SET_LIGHT_AMBIENT_COLOR / 4;
@@ -3395,7 +3399,7 @@ int pgraph_handle_method(
 								//Rev_1074[3]
 								break;
                         }
-
+                        */
                     }
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
