@@ -1474,6 +1474,24 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 			// clear dirty flag
 			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 		}
+		DWORD stageProgram = pg->KelvinPrimitive.SetShaderStageProgram;
+		for (int stage = 0; stage < 4; stage++) {
+		    if(stage>0){
+				if ((stageProgram & 0x1f) == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP ){
+					NV2ATextureStates.Set(stage-1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
+				}
+				else if ((stageProgram & 0x1f) == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE){
+					NV2ATextureStates.Set(stage-1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAPLUMINANCE);
+				}
+			}
+			if ((stageProgram & 0x1f) == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_CUBE_MAP) {
+				;// texture format cubmap. pTexture->Format &	DRF_DEF(097, _SET_TEXTURE_FORMAT, _CUBEMAP_ENABLE, _TRUE))
+			}
+			else if ((stageProgram & 0x1f) == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_3D_PROJECTIVE) {
+				;// pTexture->Format & DRF_NUM(097, _SET_TEXTURE_FORMAT, _DIMENSIONALITY, ~0)) ==	DRF_DEF(097, _SET_TEXTURE_FORMAT, _DIMENSIONALITY, _THREE))
+			}
+			stageProgram >>= 5;
+		}
 	}
 	else { // user mode
 		// Populate all required PSDef fields by copying over from KelvinPrimitive fields;
