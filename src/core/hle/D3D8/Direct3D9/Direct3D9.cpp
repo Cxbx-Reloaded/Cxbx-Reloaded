@@ -9031,12 +9031,24 @@ xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle)
 	// However, any updates that occur mid-way can overwrite what we store here, and still cause problems!
 	// The only viable solution for that would be to draw entirely based on push-buffer handling (which might require removing possibly all D3D patches!)
     if (g_pXbox_PixelShader != nullptr) {
-        // TODO : If D3DDevice_SetPixelShader() in XDKs don't overwrite the X_D3DRS_PS_RESERVED slot with PSDef.PSTextureModes,
-        // store it here and restore after memcpy, or alternatively, perform two separate memcpy's (the halves before, and after the reserved slot).
-        memcpy(XboxRenderStates.GetPixelShaderRenderStatePointer(), g_pXbox_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
-        // Copy the PSDef.PSTextureModes field to it's dedicated slot, which lies outside the range of PixelShader render state slots
-        // Note : This seems to be what XDK's do as well. Needs verification.
-        XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, g_pXbox_PixelShader->pPSDef->PSTextureModes);
+		if (pgraph_is_NV2A_bumpenv()) {
+			// TODO : If D3DDevice_SetPixelShader() in XDKs don't overwrite the X_D3DRS_PS_RESERVED slot with PSDef.PSTextureModes,
+			// store it here and restore after memcpy, or alternatively, perform two separate memcpy's (the halves before, and after the reserved slot).
+			memcpy(NV2ARenderStates.GetPixelShaderRenderStatePointer(), g_pXbox_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+			// Copy the PSDef.PSTextureModes field to it's dedicated slot, which lies outside the range of PixelShader render state slots
+			// Note : This seems to be what XDK's do as well. Needs verification.
+
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, g_pXbox_PixelShader->pPSDef->PSTextureModes);
+		}
+		else {
+			// TODO : If D3DDevice_SetPixelShader() in XDKs don't overwrite the X_D3DRS_PS_RESERVED slot with PSDef.PSTextureModes,
+			// store it here and restore after memcpy, or alternatively, perform two separate memcpy's (the halves before, and after the reserved slot).
+			memcpy(XboxRenderStates.GetPixelShaderRenderStatePointer(), g_pXbox_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+			// Copy the PSDef.PSTextureModes field to it's dedicated slot, which lies outside the range of PixelShader render state slots
+			// Note : This seems to be what XDK's do as well. Needs verification.
+
+			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, g_pXbox_PixelShader->pPSDef->PSTextureModes);
+		}
     }
 }
 
@@ -10798,7 +10810,7 @@ void WINAPI CxbxrImpl_SetModelView
 	// get matInverseViewportTransform
 	D3DXMatrixInverse(&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_xbox_transform_ViewportTransform);
 	// if we're not in skinning mode, composite matrix includes modelview matrix
-	if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_VERTEXBLEND) == 0){
+	if (NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_VERTEXBLEND) == 0){
 		//D3DXMATRIX matProjection;
 		// matPjojection = inverseModelView*matModelView*matProjection*matViewportTransform * matInverseViewportTransform = matProjection*matViewportTransform * matInverseViewportTransform = matProjection
 		//g_xbox_DirectModelView_Projection = (D3DXMATRIX)g_xbox_transform_InverseModelView * (*pComposite)* matInverseViewportTransform;
