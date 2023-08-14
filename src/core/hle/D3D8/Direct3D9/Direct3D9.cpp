@@ -8860,8 +8860,15 @@ void CxbxUpdateNativeD3DResources()
     // And some Pixel Shaders depend on Texture State values (BumpEnvMat, etc)
 	CxbxUpdateHostTextures();
 	CxbxUpdateHostTextureScaling();
-    XboxRenderStates.Apply();
-    XboxTextureStates.Apply();
+	if (pgraph_is_NV2A_bumpenv()) {
+		NV2ARenderStates.Apply();
+		NV2ATextureStates.Apply();
+
+	}
+	else {
+		XboxRenderStates.Apply();
+		XboxTextureStates.Apply();
+	}
 
     // If Pixel Shaders are not disabled, process them
     if (!g_DisablePixelShaders) {
