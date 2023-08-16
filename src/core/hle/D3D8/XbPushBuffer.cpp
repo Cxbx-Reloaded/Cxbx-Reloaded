@@ -572,15 +572,20 @@ extern xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle);
 extern void GetMultiSampleScaleRaw(float& xScale, float& yScale);// tmp glue
 
 
-void d3d_bumpenv_update(NV2AState *d, bool isUserMode)
+void CxbxrImpl_CommonSetTextureBumpEnv(NV2AState *d)
 {
+	PGRAPHState* pg = &d->pgraph;
 	// for bmpenv, NV2A always uses stage 1~3. in user mode, d3d uses stage 1~3, in fixed mode, d3d uses stage 0~2.
+	bool isUserMode = pNV2A_PixelShader==nullptr?false:true;
 	unsigned int d3d_stage = (isUserMode) ? 1 : 0;
 	unsigned int nv2a_stage;
-	for (nv2a_stage = 1; nv2a_stage <= 3; nv2a_stage++, d3d_stage) {
-		//XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT00);
-		;
-
+	for (nv2a_stage = 1; nv2a_stage <= 3; nv2a_stage++, d3d_stage++) {
+		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT00, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat00);
+		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT01, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat01);
+		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT11, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat11);
+		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT10, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat10);
+		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLSCALE, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvScale);
+		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLOFFSET, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvOffset);
 	}
 }
 DWORD convert_NV2A_combiner_reg_to_xbox_reg(DWORD nvreg) {
@@ -1523,6 +1528,8 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 		// set pixel shader
 		pgraph_use_UserPixelShader();
 	}
+	//always update bumpEnv when ShaderStageProgram changed.
+	CxbxrImpl_CommonSetTextureBumpEnv(d);
 	// reset bumpenv_dirty[] flags, currently we're not referencing these flags. pixel shader generator will update bumpenv anyway.
 	pg->bumpenv_dirty[0] = false;
 	pg->bumpenv_dirty[1] = false;
@@ -1626,7 +1633,271 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
+	DWORD stage;
 
+	for (stage = 0; stage < 4; stage++)
+	{
+		DWORD transformFlags;// = D3D__TextureState[stage]	[D3DTSS_TEXTURETRANSFORMFLAGS];
+		//Push1(pPush, NV097_SET_TEXTURE_MATRIX_ENABLE(stage), FALSE);
+		bool bTextureTransformEnable = pg->KelvinPrimitive.SetTextureMatrixEnable;
+		
+		if (!bTextureTransformEnable) {
+			transformFlags == D3DTTFF_DISABLE;
+		}
+		else {
+			// Enable the transform:
+
+			DWORD texCoord;// = D3D__TextureState[stage][D3DTSS_TEXCOORDINDEX];
+			DWORD texgen = texCoord & 0xffff0000;
+			DWORD inCount,outCount;
+			bool m2_0000 = false, m3_0001 = false, isProjected = false;
+
+			// SetTextureMatrix[stage].m[2]=={ 0.0f, 0.0f, 0.0f, 0.0f}?
+			if (pg->KelvinPrimitive.SetTextureMatrix[stage][8] == 0.0 && pg->KelvinPrimitive.SetTextureMatrix[stage][9] == 0.0
+				&& pg->KelvinPrimitive.SetTextureMatrix[stage][10] == 0.0 && pg->KelvinPrimitive.SetTextureMatrix[stage][11] == 0.0)
+				m2_0000 = true;
+
+			// SetTextureMatrix[stage].m[3]=={ 0.0f, 0.0f, 0.0f, 1.0f}?
+			if (pg->KelvinPrimitive.SetTextureMatrix[stage][12] == 0.0 && pg->KelvinPrimitive.SetTextureMatrix[stage][13] == 0.0
+				&& pg->KelvinPrimitive.SetTextureMatrix[stage][14] == 0.0 && pg->KelvinPrimitive.SetTextureMatrix[stage][15] == 1.0)
+				m3_0001 = true;
+
+			if (m2_0000) {// SetTextureMatrix[stage].m[2]=={ 0.0f, 0.0f, 0.0f, 0.0f}?
+
+				if (m3_0001) {// SetTextureMatrix[stage].m[3]=={ 0.0f, 0.0f, 0.0f, 1.0f}?
+					// 220/320,outCount=2, D3DTTFF_PROJECTED=0
+					outCount = 2;
+					isProjected = false;
+				}
+				else {
+					// 231/331, outCount=3,D3DTTFF_PROJECTED=1
+					outCount = 3;
+					isProjected = true;
+				}
+			}
+			else if (m3_0001) {// SetTextureMatrix[stage].m[3]=={ 0.0f, 0.0f, 0.0f, 1.0f}?
+				// 230/330, outCount=3, D3DTTFF_PROJECTED=0
+				outCount = 3;
+				isProjected = false;
+			}
+			else {
+				// 241/341,  outCount=4, D3DTTFF_PROJECTED=1
+				outCount = 4;
+				isProjected = true;
+			}
+
+			transformFlags = outCount;
+			if (isProjected)
+				transformFlags |= D3DTTFF_PROJECTED;// D3DTTFF_PROJECTED=0x100
+
+			inCount = (pg->KelvinPrimitive.SetVertexDataArrayFormat[stage + 9] & NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE) >> 4;//SLOT_TEXTURE0=9, Slot[i + SLOT_TEXTURE0].SizeAndType
+			if (inCount == 0)
+				inCount = 2;
+			// todo: shall we compose the FVF pVertexShader->Dimensionality here with the inCount?
+			// inCount = (pVertexShader->Dimensionality 	>> (8 * index)) & 0xff;
+			// pVertexShader->Dimensionality|= incount<<  (8 * index);// index==stage here. the actual index shall be the render state WARP0~3 indexed with texture render state D3DTSS_TEXCOORDINDEX. but we can't reverse both variables with the inCount value directly.
+			// so we arrume for each texture stage D3DTSS_TEXCOORDINDEX==stage, and each stage indexes WARP(stage). this is xbox default setting.
+			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS, transformFlags);
+
+
+		}
+#if 0
+			/*
+			if (texgen)
+			{
+				inCount = 3;
+			}
+			else
+			{
+				DWORD index = texCoord & 0xffff;
+
+				// If the index is invalid, just use (0, 0):
+
+				inCount = (pDevice->m_pVertexShader->Dimensionality
+					>> (8 * index)) & 0xff;
+
+				if (inCount == 0)
+					inCount = 2;// inCount is either 2 or 3, always. (s,t), or (s,t,r)
+				/* inCount is the vertex attribute for the texture coordinates (s,t,r).. of texture used in this stage, which also presented in
+				vertex_attribute.Slot[i + SLOT_TEXTURE0].SizeAndType
+				= DRF_NUMFAST(097, _SET_VERTEX_DATA_ARRAY_FORMAT, _SIZE, count)
+					| DRF_DEF(097, _SET_VERTEX_DATA_ARRAY_FORMAT, _TYPE, _F);
+				So we check NV097_SET_VERTEX_DATA_ARRAY_FORMAT for vertex_attribute->count, vertex attribute SLOT_TEXTURE0~3 correspondes to texture number 0~3, it's also texture stage number because xbox API requires texture stage 0 to use texture 0, stage 1 to use texture 1, etc.
+				and we can compose the vertex shader's Dimensionality.
+
+				outCount is the actual texture coordinate counts of the texture used in this stage, (s,t,r,q)...
+				if (transformFlags & D3DTTFF_PROJECTED) != 0), then the outCount includes one projected coordinate "q". if the texture coordinate uses S,T, the outCount shall be 2, but is D3DTTFF_PROJECTED(0x100) was ORed in the transformFlags, then the outCount shall add 1 and become 3.
+				when D3DTTFF_PROJECTED was set, the outPut coordinate should be devided by the projected value "q". so the output would become (s/q, t/q, r/q).
+		    */
+			/*
+				DWORD outCount = transformFlags & 0xff;
+				
+
+				DWORD matrixType = (inCount << 8) |
+					(outCount << 4) |
+					((transformFlags & D3DTTFF_PROJECTED) != 0);
+
+				D3DMATRIX* pMatrix
+					= &pDevice->m_Transform[D3DTS_TEXTURE0 + stage];
+
+				Push1(pPush, NV097_SET_TEXTURE_MATRIX_ENABLE(stage), TRUE);
+
+				PushCount(pPush + 2,
+					NV097_SET_TEXTURE_MATRIX0(0) + stage * 0x40,
+					16);
+
+				D3DMATRIX* pDst = (D3DMATRIX*)(pPush + 3);
+
+				pPush += 19;
+
+				// The way we emit the matrix varies widely because of D3D.
+				//
+				// A. When there are two incoming coordinates, we must move 
+				//    the 3rd matrix row to the fourth, because D3D expects 
+				//    the appended q to sit in the third slot, whereas in 
+				//    the hardware, it sits in the 4th.
+				// B. When the matrix is projective and there are only 3 
+				//    outgoing coordinates (including q) we must shift the 
+				//    value in the third outgoing slot (where D3D puts q) to 
+				//    the 4th slot (where the hardware wants it) by moving the 
+				//    3rd column to the 4th
+				// C. When the matrix is non-projective, it becomes our job to 
+				//    override the relevant row of the matrix, forcing the 
+				//    outgoing q to 1.0
+				//
+				// Finally, when all is said and done, the matrix must be 
+				// "transposed" to change it from D3D style to hardware style.
+				// input vector will always be added a q coordinate as 1.0f, so if input cout==2, there will be a 3rd cooridnate q set with 1.0.
+				// output will always has a q coordinate, when there is no projected output, the output q will alwaays be 1.0.
+				// input vector(s,t,r,q), output vector(s,t,r,q). hardware matrix is transposed.
+				// from the actual NV097_SET_TEXTURE_MATRIX(stage), we could compose the outCount and whether D3DTTFF_PROJECTED was set or not.
+				//
+
+				switch (matrixType)
+				{
+				case 0x220:
+					// (s,t,1.0) in, (s,t,1.0) out
+					SetTextureTransformMatrixType220(pDst, pMatrix);
+
+					
+					e
+					FORCEINLINE VOID SetTextureTransformMatrixType220(
+						D3DMATRIX * pDst,
+						CONST D3DMATRIX * pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
+						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
+						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
+					}
+					break;
+				case 0x230:
+					// (s,t,1.0) in, (s,t,r,1.0) out
+					SetTextureTransformMatrixType230(pDst, pMatrix);
+
+					FORCEINLINE VOID SetTextureTransformMatrixType230(
+						D3DMATRIX* pDst,
+						CONST D3DMATRIX* pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
+						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, 0.0f, pMatrix->_33);
+						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
+					}
+					break;
+				case 0x231:
+					// (s,t,1.0) in, (s,t,q) out
+					SetTextureTransformMatrixType231(pDst, pMatrix);
+
+					FORCEINLINE VOID SetTextureTransformMatrixType231(
+						D3DMATRIX* pDst,
+						CONST D3DMATRIX* pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
+						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
+						Set4f(&pDst->m[3][0], pMatrix->_13, pMatrix->_23, 0.0f, pMatrix->_33);
+					}
+					break;
+				case 0x241:
+					// (s,t,1.0) in, (s,t,r,q) out
+					SetTextureTransformMatrixType241(pDst, pMatrix);
+
+					FORCEINLINE VOID SetTextureTransformMatrixType241(
+						D3DMATRIX* pDst,
+						CONST D3DMATRIX* pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
+						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, 0.0f, pMatrix->_33);
+						Set4f(&pDst->m[3][0], pMatrix->_14, pMatrix->_24, 0.0f, pMatrix->_34);
+					}
+					break;
+				case 0x320:
+					// (s,t,r,1.0) in, (s,t,1.0) out
+					SetTextureTransformMatrixType320(pDst, pMatrix);
+
+					FORCEINLINE VOID SetTextureTransformMatrixType320(
+						D3DMATRIX* pDst,
+						CONST D3DMATRIX* pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
+						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
+						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
+					}
+					break;
+				case 0x330:
+					// (s,t,r,1.0) in, (s,t,r,1.0) out
+					SetTextureTransformMatrixType330(pDst, pMatrix);
+
+					FORCEINLINE VOID SetTextureTransformMatrixType330(
+						D3DMATRIX* pDst,
+						CONST D3DMATRIX* pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
+						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, pMatrix->_33, pMatrix->_43);
+						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
+					}
+					break;
+				case 0x331:
+					// (s,t,r,1.0) in, (s,t,q) out
+					SetTextureTransformMatrixType331(pDst, pMatrix);
+
+					FORCEINLINE VOID SetTextureTransformMatrixType331(
+						D3DMATRIX* pDst,
+						CONST D3DMATRIX* pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
+						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
+						Set4f(&pDst->m[3][0], pMatrix->_13, pMatrix->_23, pMatrix->_33, pMatrix->_43);
+					}
+					break;
+				case 0x341:
+					// (s,t,r,1.0) in, (s,t,r,q) out
+					SetTextureTransformMatrixType341(pDst, pMatrix);
+
+					FORCEINLINE VOID SetTextureTransformMatrixType341(
+						D3DMATRIX* pDst,
+						CONST D3DMATRIX* pMatrix)
+					{
+						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
+						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
+						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, pMatrix->_33, pMatrix->_43);
+						Set4f(&pDst->m[3][0], pMatrix->_14, pMatrix->_24, pMatrix->_34, pMatrix->_44);
+					}
+					break;
+				default:
+					;//("Unhandled texture transform type\n");
+				}
+				*/
+#endif
+		
+		
+		
+	}
 	return;
 
 }
