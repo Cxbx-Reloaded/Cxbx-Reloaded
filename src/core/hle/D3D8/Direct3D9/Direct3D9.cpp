@@ -7096,8 +7096,8 @@ D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
 	return D3DXVECTOR4(val.r, val.g, val.b, val.a);
 }
 
-extern bool pgraph_is_DirectModelView(void);
-extern bool pgraph_is_NV2A_bumpenv();// tmp glue
+extern bool is_pgraph_DirectModelView(void);
+extern bool is_pgraph_using_NV2A_Kelvin();// tmp glue
 extern xbox::X_D3DLIGHT8* CxbxrGetLight8Ptr(int lightNum);
 D3DMATRIX g_xbox_transform_ModelView;
 D3DMATRIX g_xbox_transform_InverseModelView;
@@ -7110,7 +7110,7 @@ D3DMATRIX g_xbox_transform_Projection;
 D3DMATRIX g_xbox_transform_ViewportTransform;
 D3DMATRIX g_xbox_transform_ProjectionViewportTransform;
 
-extern inline bool pgraph_is_NV2A_bumpenv(void);
+extern inline bool is_pgraph_using_NV2A_Kelvin(void);
 static D3DMATRIX * g_xbox_transform_matrix = nullptr;
 static D3DMATRIX * g_xbox_ProjectionViewportTransform = nullptr;
 
@@ -7123,7 +7123,7 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	auto d3dLight = &d3d8LightState.Lights[d3dLightIndex];
 	D3DXMATRIX viewTransform;
 	// use lights composed from kelvin.
-	if (pgraph_is_NV2A_bumpenv()) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		d3dLight=CxbxrGetLight8Ptr(d3dLightIndex);
 		viewTransform = g_xbox_DirectModelView_View;
 	}else {
@@ -7149,7 +7149,7 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	D3DXVec3Normalize((D3DXVECTOR3*)&pShaderLight->DirectionVN, (D3DXVECTOR3*)&directionV);
 
 	bool SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
-	if (pgraph_is_NV2A_bumpenv()) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		SpecularEnable = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
 	}
 	// Map D3D light to state struct
@@ -7180,7 +7180,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	// Vertex blending
 	// Prepare vertex blending mode variables used in transforms, below
 	auto VertexBlend = XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
-	if (pgraph_is_NV2A_bumpenv())
+	if (is_pgraph_using_NV2A_Kelvin())
 		VertexBlend = NV2ARenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
 	// Xbox and host D3DVERTEXBLENDFLAGS :
 	//     D3DVBF_DISABLE           = 0 : 1 matrix,   0 weights => final weight 1
@@ -7204,7 +7204,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	// Transforms
 	// Transpose row major to column major for HLSL
 	// check if we're in DirectModelView transform mode.
-	if (pgraph_is_DirectModelView()) {
+	if (is_pgraph_DirectModelView()) {
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_xbox_DirectModelView_Projection);
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
 
@@ -7243,7 +7243,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 
 	extern xbox::X_D3DMATERIAL8 NV2A_SceneMateirals[2];
 	// use NV2ARenderStates when we're in pgraph handling
-	if (pgraph_is_NV2A_bumpenv()) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		PointSpriteEnable = NV2ARenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
 		LightingEnable = NV2ARenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
 		ffShaderState.Modes.Lighting = LightingEnable && !PointSpriteEnable;
@@ -7382,7 +7382,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 
 	// Texture state
 	// use NV2ATextureStates when we're in pgraph handling
-	if (pgraph_is_NV2A_bumpenv()) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 			auto transformFlags = NV2ATextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
 			ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
@@ -7423,7 +7423,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	extern DWORD CxbxrNV2ALight8EnableMask(int lightNum);
 	extern D3DCOLORVALUE NV2A_SceneAmbient[2];
 	D3DXVECTOR4 Ambient, BackAmbient;
-	if (pgraph_is_NV2A_bumpenv()) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		for (size_t i = 0; i < 8; i++) {
 			if (CxbxrNV2ALight8EnableMask(i) != 0) {
 				UpdateFixedFunctionShaderLight(i, &ffShaderState.Lights[i], &LightAmbient);
@@ -8609,7 +8609,7 @@ void CxbxUpdateHostTextureScaling()
 			// Stores both the texture stage index and information for generating coordinates
 			// See D3DTSS_TEXCOORDINDEX
 			DWORD texCoordIndexState;
-			if(pgraph_is_NV2A_bumpenv())
+			if(is_pgraph_using_NV2A_Kelvin())
 				texCoordIndexState = NV2ATextureStates.Get(stage, xbox::X_D3DTSS_TEXCOORDINDEX);
 			else
 				texCoordIndexState = XboxTextureStates.Get(stage, xbox::X_D3DTSS_TEXCOORDINDEX);
@@ -8756,7 +8756,7 @@ void CxbxUpdateHostVertexShaderConstants()
 	// Placed this here until we find a better place
 	uint32_t fogTableMode;
 	float fogDensity, fogStart, fogEnd;
-	if (pgraph_is_NV2A_bumpenv()) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
 		fogDensity = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 		fogStart = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
@@ -8864,7 +8864,7 @@ void CxbxUpdateNativeD3DResources()
     // And some Pixel Shaders depend on Texture State values (BumpEnvMat, etc)
 	CxbxUpdateHostTextures();
 	CxbxUpdateHostTextureScaling();
-	if (pgraph_is_NV2A_bumpenv()) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		NV2ARenderStates.Apply();
 		NV2ATextureStates.Apply();
 
@@ -9035,7 +9035,7 @@ xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle)
 	// However, any updates that occur mid-way can overwrite what we store here, and still cause problems!
 	// The only viable solution for that would be to draw entirely based on push-buffer handling (which might require removing possibly all D3D patches!)
     if (g_pXbox_PixelShader != nullptr) {
-		if (pgraph_is_NV2A_bumpenv()) {
+		if (is_pgraph_using_NV2A_Kelvin()) {
 			// TODO : If D3DDevice_SetPixelShader() in XDKs don't overwrite the X_D3DRS_PS_RESERVED slot with PSDef.PSTextureModes,
 			// store it here and restore after memcpy, or alternatively, perform two separate memcpy's (the halves before, and after the reserved slot).
 			memcpy(NV2ARenderStates.GetPixelShaderRenderStatePointer(), g_pXbox_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));

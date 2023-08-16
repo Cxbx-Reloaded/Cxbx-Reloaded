@@ -41,6 +41,7 @@
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
 #include "Logging.h"
+#include "core\hle\D3D8\Direct3D9\FixedFunctionVertexShaderState.hlsli"
 
 // global state flags for NV2A/KelvinPrimitive, using same bit mask as xbox d3d, defined in XbD3D8Types.h. when content of Kelvin changed, set reresponded flag. then update corresponded state in D3D_draw_state_update()
 DWORD NV2A_stateFlags = 0;
@@ -433,7 +434,7 @@ xbox::X_PixelShader NV2A_PixelShader;
 xbox::X_D3DPIXELSHADERDEF NV2A_PSDef;
 bool NV2A_ShaderOtherStageInputDirty=false;
 bool NV2A_TextureFactorAllTheSame = false;
-bool g_nv2a_use_nv2a_bumpenv = false;
+bool g_nv2a_use_Kelvin = false;
 DWORD NV2A_colorOP[8];
 DWORD NV2A_colorArg0[8];
 DWORD NV2A_colorArg1[8];
@@ -475,17 +476,17 @@ float * pgraph_get_NV2A_bumpenv_stage_address(unsigned int stage) {
 	PGRAPHState *pg = &d->pgraph;
 	return &pg->KelvinPrimitive.SetTexture[stage].SetBumpEnvMat00;
 }
-void pgraph_use_NV2A_bumpenv(void)
+void pgraph_use_NV2A_Kelvin(void)
 {
-	g_nv2a_use_nv2a_bumpenv = true;
+	g_nv2a_use_Kelvin = true;
 }
-void pgraph_notuse_NV2A_bumpenv(void)
+void pgraph_notuse_NV2A_Kelvin(void)
 {
-	g_nv2a_use_nv2a_bumpenv = false;
+	g_nv2a_use_Kelvin = false;
 }
-bool pgraph_is_NV2A_bumpenv(void)
+bool is_pgraph_using_NV2A_Kelvin(void)
 {
-	return g_nv2a_use_nv2a_bumpenv;
+	return g_nv2a_use_Kelvin;
 }
 void pgraph_use_UserPixelShader(void)
 {
@@ -517,7 +518,7 @@ void pgraph_use_DirectModelView(void)
 	g_xbox_transform_use_DirectModelView = true;
 }
 
-bool pgraph_is_DirectModelView(void)
+bool is_pgraph_DirectModelView(void)
 {
 	return g_xbox_transform_use_DirectModelView;
 }
@@ -1470,7 +1471,7 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
 	// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
-	pgraph_use_NV2A_bumpenv();
+	pgraph_use_NV2A_Kelvin();
 
 	if (pNV2A_PixelShader == nullptr) {
 		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
@@ -1651,7 +1652,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			DWORD texgen = texCoord & 0xffff0000;
 			DWORD inCount,outCount;
 			bool m2_0000 = false, m3_0001 = false, isProjected = false;
-
+			// texture transform matrix in Kelvin are transposed. both input/output vectors are in order with (s,t,r,q). input/output q default to 1.0 unless projected output q was specified.
 			// SetTextureMatrix[stage].m[2]=={ 0.0f, 0.0f, 0.0f, 0.0f}?
 			if (pg->KelvinPrimitive.SetTextureMatrix[stage][8] == 0.0 && pg->KelvinPrimitive.SetTextureMatrix[stage][9] == 0.0
 				&& pg->KelvinPrimitive.SetTextureMatrix[stage][10] == 0.0 && pg->KelvinPrimitive.SetTextureMatrix[stage][11] == 0.0)
@@ -1690,7 +1691,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			if (isProjected)
 				transformFlags |= D3DTTFF_PROJECTED;// D3DTTFF_PROJECTED=0x100
 
-			inCount = (pg->KelvinPrimitive.SetVertexDataArrayFormat[stage + 9] & NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE) >> 4;//SLOT_TEXTURE0=9, Slot[i + SLOT_TEXTURE0].SizeAndType
+			inCount = (pg->KelvinPrimitive.SetVertexDataArrayFormat[stage + xbox::X_D3DVSDE_TEXCOORD0] & NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE) >> 4;//SLOT_TEXTURE0=9, Slot[i + SLOT_TEXTURE0].SizeAndType
 			if (inCount == 0)
 				inCount = 2;
 			// todo: shall we compose the FVF pVertexShader->Dimensionality here with the inCount?
@@ -1698,9 +1699,11 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			// pVertexShader->Dimensionality|= incount<<  (8 * index);// index==stage here. the actual index shall be the render state WARP0~3 indexed with texture render state D3DTSS_TEXCOORDINDEX. but we can't reverse both variables with the inCount value directly.
 			// so we arrume for each texture stage D3DTSS_TEXCOORDINDEX==stage, and each stage indexes WARP(stage). this is xbox default setting.
 			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS, transformFlags);
-
+			extern FixedFunctionVertexShaderState ffShaderState;
+			memcpy(&ffShaderState.Transforms.Texture[stage], &pg->KelvinPrimitive.SetTextureMatrix[0], sizeof(float) * 16);
 
 		}
+		//reversed codes for reference.
 #if 0
 			/*
 			if (texgen)
