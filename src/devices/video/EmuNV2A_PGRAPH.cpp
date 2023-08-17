@@ -37,6 +37,7 @@
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\Direct3D9\HleInNv2a.h"
 #include "core\hle\D3D8\Direct3D9\RenderStates.h"
+#include "core\hle\D3D8\Direct3D9\TextureStates.h"
 
 // FIXME
 #define qemu_mutex_lock_iothread()
@@ -1520,6 +1521,7 @@ void kelvin_validate_struct_field_offsets_against_NV097_defines()
 
 extern XboxRenderStateConverter XboxRenderStates; // temp glue
 extern XboxRenderStateConverter NV2ARenderStates; // temp glue
+extern XboxTextureStateConverter NV2ATextureStates;
 
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
@@ -3185,10 +3187,12 @@ int pgraph_handle_method(
 				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
 				    break;
 
-                CASE_4(NV097_SET_COLOR_KEY_COLOR, 4) ://done //pg->KelvinPrimitive.SetColorKeyColor[4]
+                CASE_4(NV097_SET_COLOR_KEY_COLOR, 4) ://done D3DTSS_COLORKEYCOLOR//pg->KelvinPrimitive.SetColorKeyColor[4]
                     slot = (method - NV097_SET_COLOR_KEY_COLOR) / 4;
                     //pg->pgraph_regs[NV_PGRAPH_COMBINECOLORI0/ 4 + slot * 4] = arg0;
                 //this state is not implement yet.
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
+                    NV2ATextureStates.Set(slot, xbox::X_D3DTSS_COLORKEYCOLOR, pg->KelvinPrimitive.SetColorKeyColor[slot]);
                     break;
 
                 CASE_4(NV097_SET_VIEWPORT_SCALE, 4) ://done //pg->KelvinPrimitive.SetViewportScale[4]
@@ -4273,6 +4277,11 @@ int pgraph_handle_method(
 					//double check required.
 					break;
 				}
+                CASE_4(NV097_SET_TEXTURE_BORDER_COLOR, 64) :// D3DTSS_BORDERCOLOR, KelvinPrimitive.SetTexture[slot].SetTextureBorderColor
+                    slot = (method - NV097_SET_TEXTURE_BORDER_COLOR) / 64;
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
+                    NV2ATextureStates.Set(slot, xbox::X_D3DTSS_BORDERCOLOR, pg->KelvinPrimitive.SetTexture[slot].BorderColor);
+                    break;
         // Bumpenv is seperate from texture stage texture, use seperate dirty flags.
                 //these NV097_SET_TEXTURE_SET_BUMP_ENV_MAT are no longer needed. leave these code here for short term reference only. shall be cleared later.
                 CASE_4(NV097_SET_TEXTURE_SET_BUMP_ENV_MAT + 0x0, 64) ://KevlinPrimitive.SetTexture[4].SetBumpEnvMat00 SetBumpEnvMat01 SetBumpEnvMat10 SetBumpEnvMat11 SetBumpEnvScale SetBumpEnvOffset

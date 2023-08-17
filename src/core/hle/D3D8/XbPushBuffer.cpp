@@ -274,7 +274,7 @@ _declspec(naked) long FloatToLong(float f)
 FORCEINLINE DWORD Round(
 	FLOAT f)
 {
-	return (DWORD)FloatToLong(f + 0.5f);
+	return (DWORD)(f + 0.5f);//FloatToLong(f + 0.5f);
 }
 extern float CxbxrGetSuperSampleScale(void);
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
@@ -401,8 +401,6 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSW, address & NV097_SET_TEXTURE_ADDRESS_P>>16);
 				//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, stage);
-
-
 			}
 		}
 		//reset texture stage dirty flag
@@ -1545,8 +1543,8 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 	HRESULT hRet;
 	if (pg->KelvinPrimitive.SetFogEnable != 0) {
 		float fogTableStart, fogTableEnd, fogTableDensity;
-		DWORD fogTableMode, fogGenMode;
-		float bias, scale, fogMode;
+		DWORD fogTableMode, fogGenMode, fogMode;
+		float bias, scale;
 		fogGenMode = pg->KelvinPrimitive.SetFogGenMode;
 		fogMode = pg->KelvinPrimitive.SetFogMode;
 		bias = pg->KelvinPrimitive.SetFogParamsBias;
@@ -1554,7 +1552,7 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		// D3D__RenderState[D3DRS_RANGEFOGENABLE] == true fogGenMode =NV097_SET_FOG_GEN_MODE_V_RADIAL, else fogGenMode =NV097_SET_FOG_GEN_MODE_V_PLANAR
 		// notice that when fogTableMode == D3DFOG_NONE, fogGenMode will be reset to NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA, in  that case, we won't be able to know what D3D__RenderState[D3DRS_RANGEFOGENABLE] should be
 		bool bD3DRS_RangeFogEnable = fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL ? true : false;
-
+		fogTableMode = D3DFOG_NONE;
 		if (fogMode == NV097_SET_FOG_MODE_V_EXP2) {
 			fogTableMode = D3DFOG_EXP2;
 			// scale =  -fogTableDensity * (1 / (2 * sqrt(5.5452)))
@@ -1651,7 +1649,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			// Enable the transform:
 
 			DWORD texCoord;// = D3D__TextureState[stage][D3DTSS_TEXCOORDINDEX];
-			DWORD texgen = texCoord & 0xffff0000;
+			//DWORD texgen;// = texCoord & 0xffff0000;
 			DWORD inCount,outCount;
 			bool m2_0000 = false, m3_0001 = false, isProjected = false;
 			// texture transform matrix in Kelvin are transposed. both input/output vectors are in order with (s,t,r,q). input/output q default to 1.0 unless projected output q was specified.
@@ -1707,7 +1705,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 
 			// Now specifically handle texgens:
 
-			DWORD texGen = D3DTSS_TCI_PASSTHRU;
+			DWORD texgen = D3DTSS_TCI_PASSTHRU;
             //  whether texture coordinate with (0, 0, 0, 1) to get a '1' into 'W' because we leave Q disabled.
 			// and SetTexgen[stage].s==t==r. reversed from D3DDevice_SetTextureState_TexCoordIndex()
 			if (pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].T && pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].R &&
