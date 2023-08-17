@@ -1641,7 +1641,9 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 		DWORD transformFlags;// = D3D__TextureState[stage]	[D3DTSS_TEXTURETRANSFORMFLAGS];
 		//Push1(pPush, NV097_SET_TEXTURE_MATRIX_ENABLE(stage), FALSE);
 		bool bTextureTransformEnable = pg->KelvinPrimitive.SetTextureMatrixEnable;
-		
+        //default texCoordIndex
+		DWORD texCoordIndex = stage;
+
 		if (!bTextureTransformEnable) {
 			transformFlags == D3DTTFF_DISABLE;
 		}
@@ -1694,16 +1696,74 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			inCount = (pg->KelvinPrimitive.SetVertexDataArrayFormat[stage + xbox::X_D3DVSDE_TEXCOORD0] & NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE) >> 4;//SLOT_TEXTURE0=9, Slot[i + SLOT_TEXTURE0].SizeAndType
 			if (inCount == 0)
 				inCount = 2;
+
+			// compose texgen 
+
+			// Initialize assuming D3DTSS_TCI_PASSTHRU:
+			DWORD needsInverseModelViewState = false;
+			DWORD mapToStage = stage;
+			DWORD texgenMode = NV097_SET_TEXGEN_S_DISABLE;
+
+
+			// Now specifically handle texgens:
+
+			DWORD texGen = D3DTSS_TCI_PASSTHRU;
+            //  whether texture coordinate with (0, 0, 0, 1) to get a '1' into 'W' because we leave Q disabled.
+			// and SetTexgen[stage].s==t==r. reversed from D3DDevice_SetTextureState_TexCoordIndex()
+			if (pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].T && pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].R &&
+				pg->KelvinPrimitive.SetVertexData4ub[xbox::X_D3DVSDE_TEXCOORD0 + stage] == 0xFF000000)
+			{
+				// Since texgen is enabled, we obviously don't need to read texture 
+				// coordinates from the vertex buffer for this stage.  Rather than 
+				// add special logic in the vertex buffer setup code, we simply make
+				// sure we map to this stage, and work under the assumption that
+				// the caller won't specify a texture coordinate for this stage in
+				// their FVF.
+
+				if (texgenMode == NV097_SET_TEXGEN_S_OBJECT_LINEAR || texgenMode == NV097_SET_TEXGEN_S_SPHERE_MAP)     //0x2401 0x2402           
+				{
+					texgen = D3DTSS_TCI_SPHEREMAP;//NV097_SET_TEXGEN_S_OBJECT_LINEAR and NV097_SET_TEXGEN_S_SPHERE_MAP are actually not supported in xbox. the D3DTSS_TCI_SPHEREMAP doesn't exist in xbox d3d api.
+				}
+				else if (texgenMode == NV097_SET_TEXGEN_S_REFLECTION_MAP)  //0x8511
+				{
+					texgen = D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR;
+					needsInverseModelViewState = true;
+				}
+				else if (texgenMode == NV097_SET_TEXGEN_S_NORMAL_MAP)//0x8512
+				{
+					texgen = D3DTSS_TCI_CAMERASPACENORMAL;
+					needsInverseModelViewState = true;
+				}
+				else if (texgenMode == NV097_SET_TEXGEN_S_EYE_LINEAR)   // 0x2400
+				{
+					texgen = D3DTSS_TCI_CAMERASPACEPOSITION;// = 0x20000
+				}
+			}
+			// Handle the re-mapping of a stage: xbox converts remapping before it sets Kelvin's vertex attribute and stream. so no need to remap if we compose vertex attr from kelvin. check StateUp()/StateVb()
+			// NV097_SET_VERTEX_DATA_ARRAY_FORMAT and NV097_SET_VERTEX_DATA_ARRAY_OFFSET are update with slot mapping included. so we don't worry about it here.
+
+			// compose texCoordIndex with stage mapping index and texgen, set it to defaul when we compose vertex attr from kelvin.
+			texCoordIndex = texgen&0xFFFF0000|stage;
+			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texCoordIndex);
+
 			// todo: shall we compose the FVF pVertexShader->Dimensionality here with the inCount?
 			// inCount = (pVertexShader->Dimensionality 	>> (8 * index)) & 0xff;
 			// pVertexShader->Dimensionality|= incount<<  (8 * index);// index==stage here. the actual index shall be the render state WARP0~3 indexed with texture render state D3DTSS_TEXCOORDINDEX. but we can't reverse both variables with the inCount value directly.
 			// so we arrume for each texture stage D3DTSS_TEXCOORDINDEX==stage, and each stage indexes WARP(stage). this is xbox default setting.
 			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS, transformFlags);
-			extern FixedFunctionVertexShaderState ffShaderState;
-			memcpy(&ffShaderState.Transforms.Texture[stage], &pg->KelvinPrimitive.SetTextureMatrix[0], sizeof(float) * 16);
+			//extern FixedFunctionVertexShaderState ffShaderState;
+			//ffShaderState.Transforms.Texture[] are updated in UpdateFixedFunctionVertexShaderState() with the same code below.
+			//memcpy(&ffShaderState.Transforms.Texture[stage], &pg->KelvinPrimitive.SetTextureMatrix[0], sizeof(float) * 16);
 
+
+			// todo:set transform dirty if needed
+			//if (!(TexGenInverseNeeded) && (needsInverseModelViewState))
+			//    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TRANSFORM;
+
+			//TexGenInverseNeeded &= ~(1 << Stage);
+			//TexGenInverseNeeded |= (needsInverseModelViewState << stage);
 		}
-		//reversed codes for reference.
+		//reversed codes for reference. check Otogi for LazySetTextureTransform()
 #if 0
 			/*
 			if (texgen)
@@ -1898,9 +1958,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 				*/
 #endif
 		
-		
-		
-	}
+	}// stage for loop
 	return;
 
 }
@@ -2314,14 +2372,14 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 
 }
 
-void D3D_draw_state_update(NV2AState *d)
+void D3D_draw_state_update(NV2AState* d)
 {
-	PGRAPHState *pg = &d->pgraph;
+	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
 
 	// update point params, Xbox takes everything from texture stage 3
 	// hack since we're using all pgraph processing now.
-	
+
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_POINTPARAMS) != 0) {
 		CxbxrImpl_LazySetPointParameters(d);
 		// clear dirty flag
@@ -2367,12 +2425,14 @@ void D3D_draw_state_update(NV2AState *d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
 
-	// update texture transfoms
-	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM) {
-		CxbxrImpl_LazySetTextureTransform(d);
-		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
-	}
-	
+	// xbox only update texture transfoms if we're in fixed mode vertex shader
+	// but we also need to update the texgen in texCoordIndex for program shader, so we always update the variables.
+	//if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction){
+		if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM) {
+			CxbxrImpl_LazySetTextureTransform(d);
+			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
+		}
+    //}
 	// update texture transfoms
 	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS) {
 		CxbxrImpl_LazySetLights(d);

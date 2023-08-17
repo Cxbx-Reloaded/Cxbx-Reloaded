@@ -7172,6 +7172,7 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 }
 extern D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index);
 extern D3DMATRIX * pgraph_get_InverseModelViewMatrix(unsigned index);
+extern D3DMATRIX* pgraph_get_TextureTransformMatrix(unsigned index);
 void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 {
 	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
@@ -7219,6 +7220,13 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			// xbox InverseWorldView transform == Kelvin InverseModelView transform
 			ffShaderState.Transforms.WorldViewInverseTranspose[i] = *pgraph_get_InverseModelViewMatrix(count);
 		}
+
+		for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
+			//texture transform matrix in Kelvin was transposed already.
+			//todo: the texture transform matrix in Kelvin was altered per different in/out counts and whether there are projected output or not. here we simply copy the hardware content to ffShaderState.Transforms.Texture
+			// later we should check the fixed function vertex shader codes to see how it uses these matrix.
+			memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
+		}
 	}
 	else {
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
@@ -7228,11 +7236,12 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
 			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
 		}
+
+		for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
+		}
 	}
 
-	for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
-	}
 
 	// Lighting, pgraph CxbxrLazySetLights()
 	// Point sprites aren't lit - 'each point is always rendered with constant colors.'

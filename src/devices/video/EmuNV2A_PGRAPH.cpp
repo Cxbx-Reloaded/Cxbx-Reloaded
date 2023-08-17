@@ -1194,6 +1194,14 @@ D3DMATRIX * pgraph_get_InverseModelViewMatrix(unsigned index)
 
 	return (D3DMATRIX *)&pg->KelvinPrimitive.SetInverseModelViewMatrix[index][0];
 }
+D3DMATRIX* pgraph_get_TextureTransformMatrix(unsigned index)
+{
+    // Retrieve NV2AState via the (LLE) NV2A device :
+    NV2AState* d = g_NV2A->GetDeviceState();
+    PGRAPHState* pg = &d->pgraph;
+
+    return (D3DMATRIX*)&pg->KelvinPrimitive.SetTextureMatrix[index][index];
+}
 
 void kelvin_validate_struct_field_offsets_against_NV097_defines()
 {
