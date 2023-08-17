@@ -390,7 +390,9 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
     // Test case: ProjectedTexture sample, which uses 3 coordinates
     // We'll need to implement the divide when D3D stops handling it for us?
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtexturetransformflags
-    if (projected)
+
+    // NV2A edit: when projected is enabled, the output countFlag includes the projected output and all coordinates shall be devided by the projected output w (ie, q of s,t,r,q)
+    if (!projected)
     {
         if (countFlag == 1)
             texCoord.yzw = texCoord.x;
@@ -398,6 +400,23 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
             texCoord.zw = texCoord.y;
         if (countFlag == 3)
             texCoord.w = texCoord.z;
+    }else{
+        if (countFlag == 2){
+            texCoord.x = texCoord.x / texCoord.w;
+            texCoord.y = texCoord.x;
+            texCoord.z = texCoord.x;
+        }
+        if (countFlag == 3){
+            texCoord.x=texCoord.x/texCoord.w;
+            texCoord.y=texCoord.y/texCoord.w;
+            texCoord.z = texCoord.y;
+        }
+        if (countFlag == 4){
+            texCoord.x=texCoord.x/texCoord.w;
+            texCoord.y=texCoord.y/texCoord.w;
+            texCoord.z=texCoord.z/texCoord.w;
+        }
+        texCoord.w = 1;
     }
 
     return texCoord;
