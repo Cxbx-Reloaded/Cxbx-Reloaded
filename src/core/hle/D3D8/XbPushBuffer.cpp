@@ -1547,8 +1547,8 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		float bias, scale;
 		fogGenMode = pg->KelvinPrimitive.SetFogGenMode;
 		fogMode = pg->KelvinPrimitive.SetFogMode;
-		bias = pg->KelvinPrimitive.SetFogParamsBias;
-		scale = pg->KelvinPrimitive.SetFogParamsScale;
+		bias = DWtoF(pg->KelvinPrimitive.SetFogParamsBias);
+		scale = DWtoF(pg->KelvinPrimitive.SetFogParamsScale);
 		// D3D__RenderState[D3DRS_RANGEFOGENABLE] == true fogGenMode =NV097_SET_FOG_GEN_MODE_V_RADIAL, else fogGenMode =NV097_SET_FOG_GEN_MODE_V_PLANAR
 		// notice that when fogTableMode == D3DFOG_NONE, fogGenMode will be reset to NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA, in  that case, we won't be able to know what D3D__RenderState[D3DRS_RANGEFOGENABLE] should be
 		bool bD3DRS_RangeFogEnable = fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL ? true : false;
@@ -1557,7 +1557,8 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 			fogTableMode = D3DFOG_EXP2;
 			// scale =  -fogTableDensity * (1 / (2 * sqrt(5.5452)))
 			// scale = -fogTableDensity * (1.0f / (2.0f * 2.354824834249885f));
-			fogTableDensity = -scale * (2.0f * 2.354824834249885f);
+			
+			fogTableDensity = -scale / 0.21233003f;
 
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
@@ -1565,7 +1566,7 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
 			fogTableMode = D3DFOG_EXP;
 			// scale = -fogTableDensity * (1.0f / (2.0f * 5.5452f));
-			fogTableDensity = -scale * (2.0f * 5.5452f);
+			fogTableDensity = -scale/ 0.090168074;
 
 			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
@@ -1575,34 +1576,39 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 				fogTableMode = D3DFOG_NONE;
 				// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
 				// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
-				bD3DRS_RangeFogEnable = false;
+				//bD3DRS_RangeFogEnable = false;
 			}else{
 				fogTableMode = D3DFOG_LINEAR;
 				FLOAT fogTableLinearScale;
 				fogTableLinearScale = -scale;
 				fogTableEnd = (bias - 1.0f) / fogTableLinearScale;
 				// MAX_FOG_SCALE == 8192.0f
-				if (fogTableLinearScale != 8192.0f) {
-					// fogTableLinearScale = 1.0f / (fogTableEnd - fogTableStart);
-					// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
-					fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
-				}
-				else {
+				if (fogTableLinearScale == 8192.0f) {
 					//fogTableStart== fogTableEnd
 					fogTableStart == fogTableEnd;
 				}
-
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, fogTableStart);
-				//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, fogTableEnd);
+				else {
+					// fogTableLinearScale = 1.0f / (fogTableEnd - fogTableStart);
+					// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
+					fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
+					
+				}
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
 			}
 
 		}
+		
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, true);
+		/*
+		fogGenMode = D3D__RenderState[D3DRS_RANGEFOGENABLE]
+						 ? NV097_SET_FOG_GEN_MODE_V_RADIAL
+						 : NV097_SET_FOG_GEN_MODE_V_PLANAR;
+		*/
+		bD3DRS_RangeFogEnable = (fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL)? true:false;
+		
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
-
 		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
 		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
 		// fog color was handled by pgraph handler in NV097_SET_FOG_COLOR directly.

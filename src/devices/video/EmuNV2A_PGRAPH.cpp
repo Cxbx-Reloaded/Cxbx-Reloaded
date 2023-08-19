@@ -2214,7 +2214,7 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_WAIT_FOR_IDLE://done  //this method is used to wait for NV2A state machine to sync to pushbuffer.
-                    pgraph_update_surface(d, false, true, true);
+                    //pgraph_update_surface(d, false, true, true);
                     break;
 
                 case NV097_SET_FLIP_READ://done  //pg->KelvinPrimitive.SetFlipRead
@@ -2431,7 +2431,7 @@ int pgraph_handle_method(
                     }
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CONTROL_3 / 4], NV_PGRAPH_CONTROL_3_FOG_MODE,
                     //	mode);
-                    pg->KelvinPrimitive.SetFogMode = mode; // TODO : Postpone conversion (of NV097_SET_FOG_MODE_V_* into NV_PGRAPH_CONTROL_3_FOG_MODE_*) towards readout
+                    //  pg->KelvinPrimitive.SetFogMode = mode; // TODO : Postpone conversion (of NV097_SET_FOG_MODE_V_* into NV_PGRAPH_CONTROL_3_FOG_MODE_*) towards readout
                     break;
                 }
                 case NV097_SET_FOG_GEN_MODE: {//done //pg->KelvinPrimitive.SetFogGenMode
@@ -2454,7 +2454,7 @@ int pgraph_handle_method(
                         break;
                     }
                     // SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_D / 4], NV_PGRAPH_CSV0_D_FOGGENMODE, mode);
-                    pg->KelvinPrimitive.SetFogGenMode = mode; // TODO : Postpone conversion (of NV097_SET_FOG_GEN_MODE_V_* into FOG_MODE_*) towards readout
+                    //pg->KelvinPrimitive.SetFogGenMode = mode; // TODO : Postpone conversion (of NV097_SET_FOG_GEN_MODE_V_* into FOG_MODE_*) towards readout
                     break;
                 }
                 case NV097_SET_FOG_ENABLE://done //pg->KelvinPrimitive.SetFogEnable
