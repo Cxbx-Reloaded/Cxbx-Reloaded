@@ -1673,6 +1673,16 @@
 #       define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U               0x00F00000
 #       define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V               0x0F000000
 #       define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P               0xF0000000
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_1                              0x0<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_2                              0x1<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_4                              0x2<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_8                              0x3<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16                             0x4<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_32                             0x5<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_64                             0x6<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_128                            0x7<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_256                            0x8<<28
+#          define NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_512                            0x9<<28
 #   define NV097_SET_TEXTURE_ADDRESS                          0x00001B08 // [4.2]
 #		define NV097_SET_TEXTURE_ADDRESS_U                                         0x0000000F
 #		define NV097_SET_TEXTURE_ADDRESS_U_WRAP                                    0x00000001
