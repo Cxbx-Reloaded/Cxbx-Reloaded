@@ -396,11 +396,15 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXMIPLEVEL, maxMipMapLevel);
 
 				address = pg->KelvinPrimitive.SetTexture[stage].Address;
+				DWORD warp=address & 0xFF000000; 
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSU, address& NV097_SET_TEXTURE_ADDRESS_U);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSV, address & NV097_SET_TEXTURE_ADDRESS_V>>8);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSW, address & NV097_SET_TEXTURE_ADDRESS_P>>16);
+
 				//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
+				//since the kelvin contents all info which already includes wrap and texcoordindex, here we set them to default and update the warp0~3 accroding to what we have here.
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, stage);
+				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 			}
 		}
 		//reset texture stage dirty flag
