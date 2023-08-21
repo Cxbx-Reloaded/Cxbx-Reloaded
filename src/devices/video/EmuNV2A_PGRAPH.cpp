@@ -1870,7 +1870,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_BlockUntilIdle:  break;
                     case X_D3DDevice_BlockUntilVerticalBlank:  break;
                     case X_D3DDevice_CaptureStateBlock:  break;
-                    case X_D3DDevice_Clear:  break;
+                    case X_D3DDevice_Clear:
+                        CxbxrImpl_Clear((xbox::dword_xt) argv[1], (D3DRECT *)argv[2], (xbox::dword_xt) argv[3], (D3DCOLOR) argv[4], DWtoF(argv[5]), (xbox::dword_xt) argv[6]);
+                        break;
                     case X_D3DDevice_CopyRects:  break;
                     case X_D3DDevice_CreateCubeTexture:  break;
                     case X_D3DDevice_CreateDepthStencilSurface:  break;
@@ -4213,14 +4215,16 @@ int pgraph_handle_method(
 				    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
 					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
 					// populate to next method handler if method count >1. this happened in xbox d3d lazy update.
-					if (method_count > 1) {
+                    /*
+                    if (method_count > 1) {
 						method_count -= 1;
 						argv += 1;
 						arg0 = argv[0];
 						method += (NV097_SET_TEXTURE_CONTROL0 - NV097_SET_TEXTURE_ADDRESS);
 						goto SETTEXTURECONTROL0;
 					}
-					break;
+                    */
+                    break;
 
                 CASE_4(NV097_SET_TEXTURE_CONTROL0, 64) :////KelvinPrimitive.SetTexture[4].Control0 , sizeof(SetTexture[])==64
 					SETTEXTURECONTROL0:

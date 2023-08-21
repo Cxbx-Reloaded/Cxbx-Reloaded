@@ -5649,49 +5649,35 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 
 
 }
-
-// ******************************************************************
-// * patch: D3DDevice_Clear
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
+void CxbxrImpl_Clear
 (
-    dword_xt           Count,
-    CONST D3DRECT  *pRects,
-    dword_xt           Flags,
-    D3DCOLOR        Color,
-    float           Z,
-    dword_xt           Stencil
-)
+	xbox::dword_xt           Count,
+	CONST D3DRECT* pRects,
+	xbox::dword_xt           Flags,
+	D3DCOLOR        Color,
+	float           Z,
+	xbox::dword_xt           Stencil
+	)
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Count)
-		LOG_FUNC_ARG(pRects)
-		LOG_FUNC_ARG(Flags)
-		LOG_FUNC_ARG(Color)
-		LOG_FUNC_ARG(Z)
-		LOG_FUNC_ARG(Stencil)
-		LOG_FUNC_END;
-	if (is_pushbuffer_recording()) {
-		XB_TRMP(D3DDevice_Clear)(Count, pRects, Flags, Color, Z, Stencil);
-	}
+
 
 	DWORD HostFlags = 0;
-	EmuKickOffWait();
+	
 	// Clear requires the Xbox viewport to be applied
 	// CxbxUpdateNativeD3DResources();
 
     // make adjustments to parameters to make sense with windows d3d
     {
-		if (Flags & X_D3DCLEAR_TARGET) {
+		if (Flags & xbox::X_D3DCLEAR_TARGET) {
 			// TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
-			if ((Flags & X_D3DCLEAR_TARGET) != X_D3DCLEAR_TARGET)
-				EmuLog(LOG_LEVEL::WARNING, "Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & X_D3DCLEAR_TARGET);
+			if ((Flags & xbox::X_D3DCLEAR_TARGET) != xbox::X_D3DCLEAR_TARGET)
+				EmuLog(LOG_LEVEL::WARNING, "Unsupported : Partial D3DCLEAR_TARGET flag(s) for D3DDevice_Clear : 0x%.08X", Flags & xbox::X_D3DCLEAR_TARGET);
 		
 			HostFlags |= D3DCLEAR_TARGET;
 		}
 
         // Do not needlessly clear Z Buffer
-		if (Flags & X_D3DCLEAR_ZBUFFER) {
+		if (Flags & xbox::X_D3DCLEAR_ZBUFFER) {
 			if (g_bHasDepth)
 				HostFlags |= D3DCLEAR_ZBUFFER;
 			else
@@ -5702,15 +5688,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 		//
 		// Avoids following DirectX Debug Runtime error report
 		//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
-		if (Flags & X_D3DCLEAR_STENCIL) {
+		if (Flags & xbox::X_D3DCLEAR_STENCIL) {
 			if (g_bHasStencil)
 				HostFlags |= D3DCLEAR_STENCIL;
 			else
 				EmuLog(LOG_LEVEL::WARNING, "Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
 		}
 
-        if(Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL))
-            EmuLog(LOG_LEVEL::WARNING, "Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
+        if(Flags & ~(xbox::X_D3DCLEAR_TARGET | xbox::X_D3DCLEAR_ZBUFFER | xbox::X_D3DCLEAR_STENCIL))
+            EmuLog(LOG_LEVEL::WARNING, "Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(xbox::X_D3DCLEAR_TARGET | xbox::X_D3DCLEAR_ZBUFFER | xbox::X_D3DCLEAR_STENCIL));
     }
 
     HRESULT hRet;
@@ -5734,10 +5720,60 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 		hRet = g_pD3DDevice->Clear(Count, pRects, HostFlags, Color, Z, Stencil);
     }
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
 }
 
+// ******************************************************************
+// * patch: D3DDevice_Clear
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
+(
+	dword_xt           Count,
+	CONST D3DRECT* pRects,
+	dword_xt           Flags,
+	D3DCOLOR        Color,
+	float           Z,
+	dword_xt           Stencil
+	)
+{
 
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Count)
+		LOG_FUNC_ARG(pRects)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_ARG(Color)
+		LOG_FUNC_ARG(Z)
+		LOG_FUNC_ARG(Stencil)
+		LOG_FUNC_END;
+
+#if !USEPGRAPH_Clear
+	if (is_pushbuffer_recording()) {
+		XB_TRMP(D3DDevice_Clear)(Count, pRects, Flags, Color, Z, Stencil);
+	}
+	CxbxrImpl_Clear(  Count, pRects, Flags, Color, Z, Stencil);
+#else
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Clear;//enum of this patched API
+	pPush_local[2] = (DWORD)Count; //total 14 DWORD space for arguments.
+	pPush_local[3] = (DWORD)pRects;
+	pPush_local[4] = (DWORD)Flags;
+	pPush_local[5] = (DWORD)Color;
+	pPush_local[6] = FtoDW(Z);
+	pPush_local[7] = (DWORD)Stencil;
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
+
+#endif
+}
 // ******************************************************************
 // * patch: D3DDevice_CopyRects
 // ******************************************************************
@@ -5855,7 +5891,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 
 #define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
 
-xbox::void_xt WINAPI CxbxrImpl_D3DDevice_Present
+xbox::void_xt WINAPI CxbxrImpl_Present
 (
 	xbox::dword_xt Flags
 	)
@@ -5928,10 +5964,7 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
     }
 }
 
-// ******************************************************************
-// * patch: D3DDevice_Swap
-// ******************************************************************
-xbox::dword_xt WINAPI CxbxrImpl_Swap
+DWORD CxbxrImpl_Swap
 (
 	xbox::dword_xt Flags
 )
@@ -6287,6 +6320,9 @@ xbox::dword_xt WINAPI CxbxrImpl_Swap
 
     return result;
 }
+// ******************************************************************
+// * patch: D3DDevice_Swap
+// ******************************************************************
 xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 (
 	dword_xt Flags

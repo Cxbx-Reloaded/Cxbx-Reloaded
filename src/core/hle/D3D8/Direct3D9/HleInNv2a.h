@@ -251,8 +251,8 @@ static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 // prototypes for xbox D3DDevice API HLE handlers in NV2A pgraph, implemented in Direct3D9.cpp, called in EmuNV2A_PGRAPH.cpp
 // we create defines for each patched api in general format USEPGRAPH_ + apu post names without D3DDevice_. define it as 1 to enable the patch and prgaph handler, as 0 to keep original Cxbxr behavior. this is to speed up the test which api is not feasible for this POC.
 void CxbxrImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType);
-//void CxbxrImpl_Clear(xbox::dword_xt Count, CONST D3DRECT* pRects, xbox::dword_xt Flags, D3DCOLOR Color, float Z, xbox::dword_xt Stencil);
-#define USEPGRAPH_Clear 0
+void CxbxrImpl_Clear(xbox::dword_xt Count, CONST D3DRECT* pRects, xbox::dword_xt Flags, D3DCOLOR Color, float Z, xbox::dword_xt Stencil);
+#define USEPGRAPH_Clear 1
 //void CxbxrImpl_CopyRects(xbox::X_D3DSurface* pSourceSurface, CONST RECT* pSourceRectsArray, xbox::uint_xt cRects, xbox::X_D3DSurface* pDestinationSurface, CONST POINT* pDestPointsArray);
 #define USEPGRAPH_CopyRects 0 /*CopyRects() is not permitted in pushbuffer recording.*/
 void WINAPI CxbxrImpl_DrawIndexedVertices(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PWORD pIndexData);
@@ -301,7 +301,7 @@ void CxbxrImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 // Present() also calls Swap(), patched LTCG version of Swap also calls Swap(). so we only handle Swap().
 xbox::void_xt WINAPI CxbxrImpl_Present(xbox::dword_xt Flags);
 #define USEPGRAPH_Present 1
-xbox::dword_xt WINAPI CxbxrImpl_Swap(xbox::dword_xt Flags);
+DWORD CxbxrImpl_Swap(xbox::dword_xt Flags);
 #define USEPGRAPH_Swap 1 /*Present() calles Swap() implementation. Present() is not permitted in pushbuffer recording*/
 void WINAPI CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
 #define PGRAPHUSE_EmuKickOff 0
