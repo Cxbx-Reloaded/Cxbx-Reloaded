@@ -294,18 +294,48 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 			// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
 			else {
 				g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
-				NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
+				NV2A_texture_stage_texture[stage].Data   = pg->KelvinPrimitive.SetTexture[stage].Offset;
 				NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
-				unsigned width = 0, height = 0, pitch = 0;
-				pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1 & NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
-				width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
-				height = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
+				unsigned width = 0, height = 0, pitch = 0, depth = 0;
+
+				DWORD format = pg->KelvinPrimitive.SetTexture[stage].Format;
+				bool dma_select =
+					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA) == 2;
+				bool cubemap =
+					format & NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;
+				unsigned int border_source =
+					format & NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE;
+				unsigned int dimensionality =
+					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY);
+				unsigned int color_format =
+					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_COLOR);
+				unsigned int levels =
+					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS);
+				unsigned int log_width =
+					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U);
+				unsigned int log_height =
+					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V);
+				unsigned int log_depth =
+					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P);
+
 				// texture.Size could be 0
+				// when size ==0, Control1 and ImageRect won't be updated. So we use a hack to always reset these two vars whenever NV097_SET_TEXTURE_OFFSET was hit.
 				if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
+				// when log_width/height/depth !=0, which means the size was represent by these log values, so size would be zero.
+				//if( (log_width!=0) || (log_height!=0)||(log_depth!=0)){
 					NV2A_texture_stage_texture[stage].Size = 0;
+					/* not used, D3D will take the log dimentions when size==0
+					width = 1 << log_width;
+					height = 1 << log_height;
+					depth = 1 << log_depth;
+					*/
 				}
-				//convert pitch/height/width to texture.Size
+				//size!=0, using Control1 and ImageRect to convert pitch/height/width to texture.Size
 				else {
+					pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1 & NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
+					width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
+					height = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
+
 					width = (width - 1) & X_D3DSIZE_WIDTH_MASK;
 					height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK;
 					pitch = ((pitch / 64) - 1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK

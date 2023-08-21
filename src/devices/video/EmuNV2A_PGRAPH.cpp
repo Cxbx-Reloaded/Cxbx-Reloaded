@@ -4156,13 +4156,15 @@ int pgraph_handle_method(
 					if(bPreviousTexture==false)
 						NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
 					// populate to next method handler if method count >1. this happened in xbox d3d SetTexture()/SwitchTexture()
-					if (method_count > 1) {
+                    /*
+                    if (method_count > 1) {
 						method_count -= 1;
 						argv += 1;
 						arg0 = argv[0];
 						method += (NV097_SET_TEXTURE_FORMAT - NV097_SET_TEXTURE_OFFSET);
 						goto SETTEXTUREFORMAT;
 					}
+                    */
 					break;
 				}
 				CASE_4(NV097_SET_TEXTURE_FORMAT, 64) : {//KelvinPrimitive.SetTexture[4].Format , sizeof(SetTexture[])==64
@@ -4170,7 +4172,8 @@ int pgraph_handle_method(
 					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_FORMAT) / 64;
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
-					bool dma_select =
+                    /*
+                    bool dma_select =
 					GET_MASK(arg0, NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA) == 2;
                     bool cubemap =
                         arg0 & NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;
@@ -4199,6 +4202,7 @@ int pgraph_handle_method(
                     SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_U, log_width);
                     SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_V, log_height);
                     SET_MASK(*reg, NV_PGRAPH_TEXFMT0_BASE_SIZE_P, log_depth);
+                    */
                     //each texture contents 16 dowrds
                     break;
 				}
@@ -4226,15 +4230,15 @@ int pgraph_handle_method(
 					//pg->pgraph_regs[NV_PGRAPH_TEXOFFSET0 / 4 + slot * 4] = arg0;
 					// regenerate shader stage program and recalculate final combiners when texture set to NULL, also reset other texture members.
 					if (pg->KelvinPrimitive.SetTexture[slot].Control0 == 0) {
-						pg->KelvinPrimitive.SetTexture[slot].Offset = 0;
-						pg->KelvinPrimitive.SetTexture[slot].Format = 0;
-						pg->KelvinPrimitive.SetTexture[slot].Address = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].Offset = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].Format = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].Address = 0;
 						//pg->KelvinPrimitive.SetTexture[slot].Control0 = 0;
-						pg->KelvinPrimitive.SetTexture[slot].Control1 = 0;
-						pg->KelvinPrimitive.SetTexture[slot].Filter = 0;
-						pg->KelvinPrimitive.SetTexture[slot].ImageRect = 0;
-						pg->KelvinPrimitive.SetTexture[slot].Palette = 0;
-						pg->KelvinPrimitive.SetTexture[slot].BorderColor = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].Control1 = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].Filter = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].ImageRect = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].Palette = 0;
+						//pg->KelvinPrimitive.SetTexture[slot].BorderColor = 0;
 
 						// regenerate shader stage program since texture stage texure changed
 						NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;

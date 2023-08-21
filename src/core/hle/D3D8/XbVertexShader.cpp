@@ -654,7 +654,8 @@ namespace XboxVertexShaderDecoder
 	}
 };
 
-// Get the function size excluding the final field
+// Get the function size excluding the final field? this function is supposed to return the vertex shader program length in bytes, which include the FLT_FINAL slot.
+// input arg pXboxFunction is the starting address 
 size_t GetVshFunctionSize(const xbox::dword_xt* pXboxFunction) {
 	auto curToken = (uint32_t*)pXboxFunction;
 
@@ -662,7 +663,7 @@ size_t GetVshFunctionSize(const xbox::dword_xt* pXboxFunction) {
 		curToken += X_VSH_INSTRUCTION_SIZE; // TODO use a struct to represent these instructions
 	}
 
-	curToken += X_VSH_INSTRUCTION_SIZE; // For the final instruction
+	curToken += X_VSH_INSTRUCTION_SIZE; // For the final instruction ? FLT_FINAL?
 
 	return (curToken - pXboxFunction) * sizeof(xbox::dword_xt);
 }
@@ -1176,6 +1177,7 @@ void CxbxUpdateHostVertexShader()
 		assert(pTokens);
 		// Create a vertex shader from the tokens
 		DWORD shaderSize;
+        // there is already a cache existing in CreateShader.
 		auto VertexShaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
 		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderSource.GetShader(VertexShaderKey);
 		HRESULT hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
