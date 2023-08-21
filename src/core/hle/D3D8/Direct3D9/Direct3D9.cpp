@@ -5853,7 +5853,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
     }
 }
 
-#define CXBX_SWAP_PRESENT_FORWARD (256 + X_D3DSWAP_FINISH + X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+#define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+
+xbox::void_xt WINAPI CxbxrImpl_D3DDevice_Present
+(
+	xbox::dword_xt Flags
+	)
+{
+	CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
+}
 
 // ******************************************************************
 // * patch: D3DDevice_Present
@@ -5873,8 +5881,27 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 		LOG_FUNC_ARG(pDummy1)
 		LOG_FUNC_ARG(pDummy2)
 		LOG_FUNC_END;
+#if USEPGRAPH_Present
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Present;//enum of this patched API
+	pPush_local[2] = (DWORD)pSourceRect; //total 14 DWORD space for arguments.
+	pPush_local[3] = (DWORD)pDestRect;
+	pPush_local[4] = (DWORD)pDummy1;
+	pPush_local[5] = (DWORD)pDummy2;
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
+#else
+	CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);  // Xbox present ignores
+#endif
 }
 
 std::chrono::steady_clock::time_point frameStartTime;
@@ -5904,12 +5931,12 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************
-xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
+xbox::dword_xt WINAPI CxbxrImpl_Swap
 (
-	dword_xt Flags
+	xbox::dword_xt Flags
 )
 {
-	LOG_FUNC_ONE_ARG(Flags);
+	//LOG_FUNC_ONE_ARG(Flags);
 
 	// make sure pushbuffer pasring complete before we process swap.
 	/* // disabled, we're doing multi buffering, shouldn't stop here waiting.
@@ -5922,7 +5949,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	// We don't maintain a swap chain, and draw everything to backbuffer 0
 	// so just hack around the swap flags for now...
 	static float prevBackBufferScaleX;
-	if (Flags == X_D3DSWAP_BYPASSCOPY) {
+	if (Flags == xbox::X_D3DSWAP_BYPASSCOPY) {
 		// Test case: MotoGp2
 		// Title handles copying to the frontbuffer itself, but we don't keep track of one
 		// MotoGp2 seems to copy a black rectangle over the backbuffer
@@ -5931,7 +5958,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		prevBackBufferScaleX = g_Xbox_BackbufferScaleX;
 		g_Xbox_BackbufferScaleX = 0;
 	}
-	else if (g_LastD3DSwap == X_D3DSWAP_BYPASSCOPY) {
+	else if (g_LastD3DSwap == xbox::X_D3DSWAP_BYPASSCOPY) {
 		g_Xbox_BackbufferScaleX = prevBackBufferScaleX;
 	}
 
@@ -5941,9 +5968,9 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	// Test Case: Antialias sample, BackBufferScale sample
 	// Which use D3DSWAP_COPY to render UI directly to the frontbuffer
 	// If we present before the UI is drawn, it will flicker
-	if (Flags != X_D3DSWAP_DEFAULT && !(Flags & X_D3DSWAP_FINISH)) {
-		if (Flags == X_D3DSWAP_COPY) { LOG_TEST_CASE("X_D3DSWAP_COPY"); }
-		if (Flags == X_D3DSWAP_BYPASSCOPY) { LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY"); }
+	if (Flags != xbox::X_D3DSWAP_DEFAULT && !(Flags & xbox::X_D3DSWAP_FINISH)) {
+		if (Flags == xbox::X_D3DSWAP_COPY) { LOG_TEST_CASE("X_D3DSWAP_COPY"); }
+		if (Flags == xbox::X_D3DSWAP_BYPASSCOPY) { LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY"); }
 		return g_Xbox_SwapData.Swap;
 	}
 
@@ -5953,7 +5980,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		0, // iSwapChain
 		0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
 	if (hRet == D3D_OK) {
 		assert(pCurrentHostBackBuffer != nullptr);
 
@@ -6011,8 +6038,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 		// Is there an overlay to be presented too?
 		if (g_OverlayProxy.Surface.Common) {
-			X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
-			if (X_Format != X_D3DFMT_YUY2) {
+			xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
+			if (X_Format != xbox::X_D3DFMT_YUY2) {
 				LOG_TEST_CASE("Xbox overlay surface isn't using X_D3DFMT_YUY2");
 			}
 
@@ -6145,7 +6172,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                     /* Filter = */ LoadOverlayFilter,
                     /* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
 
-                DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
+                //DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
                 if (hRet != D3D_OK) {
                     EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host surface : %X", hRet);
                 } else {
@@ -6176,7 +6203,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	g_pD3DDevice->EndScene();
 
 	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
 
 	hRet = g_pD3DDevice->BeginScene();
 
@@ -6260,7 +6287,32 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
     return result;
 }
+xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
+(
+	dword_xt Flags
+	)
+{
+	LOG_FUNC_ONE_ARG(Flags);
+#if USEPGRAPH_Swap
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Swap;//enum of this patched API
+	pPush_local[2] = (DWORD)Flags; //total 14 DWORD space for arguments.
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
+	return S_OK;
+#else
+	return CxbxrImpl_Swap(Flags);
+#endif
+}
 bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage) {
 	// TODO : Nuance the following, because the Direct3D 8 docs states
 	// CheckDeviceFormat is needed when D3DUSAGE_RENDERTARGET or

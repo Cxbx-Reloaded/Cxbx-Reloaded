@@ -1994,7 +1994,11 @@ int pgraph_handle_method(
                     case X_D3DDevice_MultiplyTransform:  break;
                     case X_D3DDevice_Nop:  break;
                     case X_D3DDevice_PersistDisplay:  break;
-                    case X_D3DDevice_Present:  break;
+                    case X_D3DDevice_Present:
+#define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+
+                        CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
+                        break;
                     case X_D3DDevice_PrimeVertexCache:  break;
                     case X_D3DDevice_Reset:  break;
                     case X_D3DDevice_Reset_0__LTCG_edi1:  break;
@@ -2094,8 +2098,12 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVerticalBlankCallback:  break;
                     case X_D3DDevice_SetViewport:  break;
                     case X_D3DDevice_SetWaitCallback:  break;
-                    case X_D3DDevice_Swap:  break;
-                    case X_D3DDevice_Swap_0:  break;
+                    case X_D3DDevice_Swap:
+                        CxbxrImpl_Swap(argv[1]);
+                        break;
+                    case X_D3DDevice_Swap_0:
+                        CxbxrImpl_Swap(argv[1]);
+                        break;
                     case X_D3DDevice_SwitchTexture:  break;
                     case X_D3DDevice_UpdateOverlay:  break;
                     case X_D3DResource_BlockUntilNotBusy:  break;

@@ -299,8 +299,10 @@ void WINAPI CxbxrImpl_SetVertexShaderInputDirect(xbox::X_VERTEXATTRIBUTEFORMAT* 
 void CxbxrImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 #define USEPGRAPH_SetViewport 1
 // Present() also calls Swap(), patched LTCG version of Swap also calls Swap(). so we only handle Swap().
-// xbox::dword_xt WINAPI CxbxrImpl_Swap(xbox::dword_xt Flags);
-#define USEPGRAPH_Swap 0 /*Present() calles Swap() implementation. Present() is not permitted in pushbuffer recording*/
+xbox::void_xt WINAPI CxbxrImpl_Present(xbox::dword_xt Flags);
+#define USEPGRAPH_Present 1
+xbox::dword_xt WINAPI CxbxrImpl_Swap(xbox::dword_xt Flags);
+#define USEPGRAPH_Swap 1 /*Present() calles Swap() implementation. Present() is not permitted in pushbuffer recording*/
 void WINAPI CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
 #define PGRAPHUSE_EmuKickOff 0
 #define PGRAPHUSE_EmuKickOffWait 0
