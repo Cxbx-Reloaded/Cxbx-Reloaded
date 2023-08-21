@@ -839,16 +839,22 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 	// Create a key from state that will be baked in to the shader
 	PsTextureHardcodedState states[4] = {};
+	bool pointSpriteEnable;
 	int sampleType[4] = { SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE };
+	
 	if (is_pgraph_using_NV2A_Kelvin()) {
 
 		extern xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
-		bool pointSpriteEnable = pg->KelvinPrimitive.SetPointSmoothEnable;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+		pointSpriteEnable = pg->KelvinPrimitive.SetPointSmoothEnable;// XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
 
 		bool previousStageDisabled = false;
-		//int startStage = 0;
-		for (int i = 0; i < 4; i++) {
+		int startStage = 0;
+		int stage = 0;
+		if (pointSpriteEnable)
+			startStage = 3;
+		// stage is for D3D texture stage, i is for kelvin hardware stage. when pointSpriteEnable is true, the stage starts with 3 instead of 0, but hardware stage always starts with 0.
+		for (int i = 0,stage=startStage; stage < 4; i++,stage++) {
 			// Determine COLOROP
 			// This controls both the texture operation for the colour of the stage
 			// and when to stop processing
@@ -874,9 +880,9 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 				continue; 
 			}else {*/
 
-				forceDisable =
-					(!pointSpriteEnable && previousStageDisabled) ||
-					(pointSpriteEnable && i < 3);
+			forceDisable =
+				(!pointSpriteEnable && previousStageDisabled);// ||
+					//;
 
 				// When a texture stage has D3DTSS_COLORARG1 equal to D3DTA_TEXTURE
 				// and the texture pointer for the stage is NULL, this stage
@@ -886,7 +892,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 				// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
 				// Test case: Crash Nitro Kart (engine speed UI)
 				// FIXME!!! we don't have XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1)in Kelvin
-				if (!g_pNV2A_SetTexture[i]
+				if (!g_pNV2A_SetTexture[stage]
 					&& (NV2A_colorArg1[i] & 0x7) == X_D3DTA_TEXTURE//(XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE// FIXME!!!
 					&& colorOp != xbox::X_D3DTOP_SELECTARG2)// FIXME!!!
 				{
@@ -905,8 +911,8 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 			// Get sample type
 			// TODO move XD3D8 resource query functions out of Direct3D9.cpp so we can use them here
-			if (g_pNV2A_SetTexture[i]) {
-				auto format = g_pNV2A_SetTexture[i]->Format;//g_pXbox_SetTexture[i]->Format;
+			if (g_pNV2A_SetTexture[stage]) {
+				auto format = g_pNV2A_SetTexture[stage]->Format;//g_pXbox_SetTexture[i]->Format;
 				if (format & X_D3DFORMAT_CUBEMAP)
 					sampleType[i] = SAMPLE_CUBE;
 				else if (((format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT) > 2)
@@ -932,10 +938,15 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		}
 	}
 	else {
-		bool pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+		pointSpriteEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
 
-		bool previousStageDisabled = false;
-		for (int i = 0; i < 4; i++) {
+		bool previousStageDisabled=false;
+		int startStage = 0;
+		int stage = 0;
+		if (pointSpriteEnable)
+			startStage = 3;
+		// stage is for D3D texture stage, i is for kelvin hardware stage. when pointSpriteEnable is true, the stage starts with 3 instead of 0, but hardware stage always starts with 0.
+		for (int i = 0, stage = startStage; stage < 4; i++, stage++) {
 			// Determine COLOROP
 			// This controls both the texture operation for the colour of the stage
 			// and when to stop processing
@@ -945,8 +956,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			// Usually we execute stages up to the first disabled stage
 			// However, if point sprites are enabled, we just execute stage 3
 			bool forceDisable =
-				(!pointSpriteEnable && previousStageDisabled) ||
-				(pointSpriteEnable && i < 3);
+				(!pointSpriteEnable && previousStageDisabled);
 
 			// When a texture stage has D3DTSS_COLORARG1 equal to D3DTA_TEXTURE
 			// and the texture pointer for the stage is NULL, this stage
@@ -955,7 +965,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			// https://docs.microsoft.com/en-us/windows/win32/direct3d9/texture-blending
 			// Don't follow the D3D9 docs if SELECTARG2 is in use (PC D3D9 behaviour, nvidia quirk?)
 			// Test case: Crash Nitro Kart (engine speed UI)
-			if (!g_pXbox_SetTexture[i]
+			if (!g_pXbox_SetTexture[stage]
 				&& (XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG1) & 0x7) == X_D3DTA_TEXTURE
 				&& colorOp != xbox::X_D3DTOP_SELECTARG2)
 			{
@@ -974,8 +984,8 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 			// Get sample type
 			// TODO move XD3D8 resource query functions out of Direct3D9.cpp so we can use them here
-			if (g_pXbox_SetTexture[i]) {
-				auto format = g_pXbox_SetTexture[i]->Format;
+			if (g_pXbox_SetTexture[stage]) {
+				auto format = g_pXbox_SetTexture[stage]->Format;
 				if (format & X_D3DFORMAT_CUBEMAP)
 					sampleType[i] = SAMPLE_CUBE;
 				else if (((format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT) > 2)
@@ -1039,8 +1049,13 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 	std::stringstream stageSetup;
 	stageSetup << '\n';
-
-	for (int i = 0; i < 4; i++) {
+	
+	int startStage = 0;
+	int stage = 0;
+	if (pointSpriteEnable)
+		startStage = 3;
+	// stage is for D3D texture stage, i is for kelvin hardware stage. when pointSpriteEnable is true, the stage starts with 3 instead of 0, but hardware stage always starts with 0.
+	for (int i = 0, stage = startStage; stage < 4; i++, stage++) {
 #ifdef ENABLE_FF_ALPHAKILL
 		// Even when a stage is disabled, we still have to fully initialize it's values, to prevent
 		// "error X4000: variable 'stages' used without having been completely initialized"

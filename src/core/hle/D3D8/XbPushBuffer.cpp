@@ -288,7 +288,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage)) != 0) {
 			// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
 			// FIXME!! check (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 should be enough, but there are (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) != 0 and the texture is empty. could be HLE/NV2A confliction
-			if ((pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 || pg->KelvinPrimitive.SetTexture[stage].Format == 0 || pg->KelvinPrimitive.SetTexture[stage].Offset == 0) {
+			if ((pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0){// || pg->KelvinPrimitive.SetTexture[stage].Format == 0 || pg->KelvinPrimitive.SetTexture[stage].Offset == 0) {
 				g_pNV2A_SetTexture[stage] = nullptr;
 			}
 			// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
@@ -462,9 +462,9 @@ FORCEINLINE DWORD MinFilter(
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 			}
 		}
-		//reset texture stage dirty flag
-		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
 	}
+	//reset texture stage dirty flag
+	//NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
 }
 extern NV2ADevice* g_NV2A; //TMP GLUE
 extern D3DMATRIX g_xbox_transform_ModelView;
@@ -964,6 +964,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 				}
 			}
 		}
+		
 		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, NV2A_colorOP[i]);
 		// FIXME!!! can we really continue the loop when colorOP == X_D3DTOP_DISABLE?
 		/*
@@ -1385,9 +1386,9 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 		max = min + delta;
 		if (max > 64.0f)max = 64.0f;
 
-		float hostMinSize, hostMaxSize;
-		hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
-		hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
+		//float hostMinSize, hostMaxSize;
+		//hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
+		//hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
 		// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
 		if (pg->KelvinPrimitive.SetPointParamsEnable != 0) {
 			//FIXEDME!!! we need viewport height, not sure including SuperSampleScaleY is correct or not.
@@ -1412,8 +1413,8 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 			float xboxScaleB = pg->KelvinPrimitive.SetPointParamsFactorMulB / factor;
 			float xboxScaleC = pg->KelvinPrimitive.SetPointParamsFactorMulC / factor;
 			// assume host d3d uses the same min/max point size as xbox d3d
-			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(hostMinSize));
-			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MAX, FtoDW(hostMaxSize));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MIN, FtoDW(min));
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSIZE_MAX, FtoDW(max));
 			/// set host point scale A/B/C
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_A, FtoDW(xboxScaleA));
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_B, FtoDW(xboxScaleB));
