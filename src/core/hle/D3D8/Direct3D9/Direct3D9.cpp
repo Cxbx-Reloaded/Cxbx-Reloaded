@@ -8640,7 +8640,9 @@ void CxbxUpdateHostTextures()
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
 		// use texture stage textures from NV2A if we're in pushbuffer replay mode
-		if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
+		// if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
+		// using textures composed from Kelvin
+		if (is_pgraph_using_NV2A_Kelvin())
 			pXboxBaseTexture = g_pNV2A_SetTexture[stage];
 		IDirect3DBaseTexture* pHostBaseTexture = nullptr;
 		bool bNeedRelease = false;
@@ -8692,7 +8694,8 @@ void CxbxUpdateHostTextureScaling()
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
 		// use texture stage textures from NV2A if we're in pushbuffer replay mode
-		if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
+		//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
+		if (is_pgraph_using_NV2A_Kelvin())
 			pXboxBaseTexture = g_pNV2A_SetTexture[stage];
 		// No texture, no scaling to do
 		if (pXboxBaseTexture == xbox::zeroptr) {
@@ -8719,8 +8722,9 @@ void CxbxUpdateHostTextureScaling()
 			// Determine the texture coordinate addressing this texture stage
 			texCoordIndex = (texCoordIndexState & 0x3); // 0 - 3
 			// NV2A doesn't preserve X_D3DTSS_TEXCOORDINDEX, so we keep it as stage value.
-			if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
-				texCoordIndex = stage; // 0 - 3
+			// this code is redundant because in pgraph we already set NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX)as stage
+			//if (is_pgraph_using_NV2A_Kelvin())
+			//	texCoordIndex = stage; // 0 - 3
 		}
 
 		auto texCoordScale = &texcoordScales[texCoordIndex];
@@ -8733,7 +8737,9 @@ void CxbxUpdateHostTextureScaling()
 			// all texture-coordinates in CxbxVertexShaderTemplate.hlsl
 			// Note : Linear textures are two-dimensional at most (right?)
 			float width, height;
-			if ((xbox::X_D3DSurface*)pXboxBaseTexture == g_pXbox_BackBufferSurface) {
+			// revised the compare condition because when using textures composed from Kelvin, only texture.data & texture.format will be the same
+			if (((xbox::X_D3DSurface*)pXboxBaseTexture)->Data == g_pXbox_BackBufferSurface->Data
+				&& ((xbox::X_D3DSurface*)pXboxBaseTexture)->Format == g_pXbox_BackBufferSurface->Format) {
 				// Account for MSAA
 				// Test case: Max Payne 2 (bullet time)
 				GetBackBufferPixelDimensions(width, height);
@@ -8954,6 +8960,7 @@ void CxbxUpdateNativeD3DResources()
 
 	CxbxUpdateHostVertexShaderConstants();
 
+	//todo: use viewport composed from Kelvin.
 	CxbxUpdateHostViewport();
 
 	// NOTE: Order is important here

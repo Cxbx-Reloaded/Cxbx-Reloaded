@@ -2647,6 +2647,13 @@ void D3D_draw_state_update(NV2AState* d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_POINTPARAMS;
 	}
 
+	// update texture stage texture states, texture stage texture states must be update prior to pixel shader because pixel shader compilation depends on texture state input
+	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
+		CxbxrImpl_LazySetTextureState(d);
+		// clear dirty flag
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
+	}
+
 	// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
 	// only update combiners when in fixed pixel shader.
 	if (pNV2A_PixelShader == nullptr) {
@@ -2657,13 +2664,6 @@ void D3D_draw_state_update(NV2AState* d)
 			// clear dirty flag
 			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 		}
-	}
-
-	// update texture stage texture states, texture stage texture states must be update prior to pixel shader because pixel shader compilation depends on texture state input
-	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE) != 0) {
-		CxbxrImpl_LazySetTextureState(d);
-		// clear dirty flag
-		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
 	}
 
 	// update spec fog combiner state
