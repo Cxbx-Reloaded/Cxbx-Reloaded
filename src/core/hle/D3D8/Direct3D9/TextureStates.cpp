@@ -102,8 +102,8 @@ bool XboxTextureStateConverter::InitWithNV2A(XboxRenderStateConverter* pState)
 {
     // Deferred states start at 0, this means that D3D_g_DeferredTextureState IS D3D__TextureState
     // No further works is required to derive the offset
-    
-    D3D__TextureState = (uint32_t*)malloc(sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
+    // we have 4 texture stages, so we have to allocate memory for all 4 stages.
+    D3D__TextureState = (uint32_t*)malloc(4*sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
     
     // Build a mapping of Cxbx Texture State indexes to indexes within the current XDK
     BuildTextureStateMappingTable();
