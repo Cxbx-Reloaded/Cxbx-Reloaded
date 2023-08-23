@@ -2514,7 +2514,14 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_CULLENABLE,
                     //	arg0);
-                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable);
+                    if (pg->KelvinPrimitive.SetCullFaceEnable == false) {
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, xbox::X_D3DCULL_NONE);
+                    }
+                    else if(pg->KelvinPrimitive.SetCullFace >=NV097_SET_CULL_FACE_V_FRONT){
+                        //pg->KelvinPrimitive.SetCullFace = either 404 or 405.;
+                        DWORD backface = (pg->KelvinPrimitive.SetFrontFace == NV097_SET_FRONT_FACE_V_CW) ? NV097_SET_FRONT_FACE_V_CCW : NV097_SET_FRONT_FACE_V_CW;
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, (pg->KelvinPrimitive.SetCullFace == NV097_SET_CULL_FACE_V_FRONT) ? (pg->KelvinPrimitive.SetFrontFace) : backface);
+                    }
                     break;
                 case NV097_SET_DEPTH_TEST_ENABLE://done //pg->KelvinPrimitive.SetDepthTestEnable
                     // Test-case : Whiplash
@@ -2530,7 +2537,7 @@ int pgraph_handle_method(
                 case NV097_SET_LIGHTING_ENABLE://done X_D3DRS_LIGHTING //pg->KelvinPrimitive.SetLightingEnable
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_LIGHTING,
                     //	arg0);
-                    //NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_POINT_PARAMS_ENABLE://done //pg->KelvinPrimitive.SetPointParamsEnable
@@ -2827,8 +2834,9 @@ int pgraph_handle_method(
                     SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     	NV_PGRAPH_SETUPRASTER_CULLCTRL,
                     	face);
-                    //pg->KelvinPrimitive.SetCullFace = face; 
-                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FRONTFACE, pg->KelvinPrimitive.SetCullFace);
+                    //pg->KelvinPrimitive.SetCullFace = either 404 or 405.;
+                    DWORD backface = (pg->KelvinPrimitive.SetFrontFace == NV097_SET_FRONT_FACE_V_CW) ? NV097_SET_FRONT_FACE_V_CCW : NV097_SET_FRONT_FACE_V_CW;
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE,  (pg->KelvinPrimitive.SetCullFace== NV097_SET_CULL_FACE_V_FRONT) ? (pg->KelvinPrimitive.SetFrontFace):backface);
                     break;
                 }
                 case NV097_SET_FRONT_FACE: {//done //pg->KelvinPrimitive.SetFrontFace
@@ -2847,7 +2855,9 @@ int pgraph_handle_method(
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_SETUPRASTER / 4],
                     //	NV_PGRAPH_SETUPRASTER_FRONTFACE,
                     //	ccw ? 1 : 0);
-                    pg->KelvinPrimitive.SetFrontFace = ccw ? 1 : 0; // TODO : Postpone conversion (of NV097_SET_FRONT_FACE_V_* into NV_PGRAPH_SETUPRASTER_FRONTFACE values) towards readout
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FRONTFACE, pg->KelvinPrimitive.SetFrontFace);
+                    //pg->KelvinPrimitive.SetFrontFace = ccw ? 1 : 0; // TODO : Postpone conversion (of NV097_SET_FRONT_FACE_V_* into NV_PGRAPH_SETUPRASTER_FRONTFACE values) towards readout
+                    //NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FRONTFACE, pg->KelvinPrimitive.SetFrontFace);
                     break;
                 }
                 case NV097_SET_NORMALIZATION_ENABLE://done //pg->KelvinPrimitive.SetNormalizationEnable
@@ -4089,14 +4099,22 @@ int pgraph_handle_method(
 
 						// preserve persist color value in R/G/B/A float4 format in KelvinPrimitive.SetVertexData4f[slot]
 						// D3DCOLOR format persiste in KelvinPrimitive.SetVertexData4ub[slot]
-						float *inline_value = &pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
+						float *fm_inline_value = &pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
 						// We set color in float4 in R/G/B/A. no need to swap R/B here.
+                        // these value are never used after this. should be disabled.
+                        fm_inline_value[0] = ( arg0 & 0xFF) / 255.0f;
+                        fm_inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
+                        fm_inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
+                        fm_inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
 
-						inline_value[0] = ( arg0 & 0xFF) / 255.0f;
-						inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
-						inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
-						inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
-
+                        // we set the color value to each vertex attribute becaue xbox uses this method to set default vertex colors.
+                        float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
+                        // We set color in float4 in R/G/B/A. no need to swap R/B here.
+                        inline_value[0] = (arg0 & 0xFF) / 255.0f;
+                        inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
+                        inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
+                        inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
+                        
 					}
 					else {//in Begin/End block. data transferred are vertices.
 						for (size_t argc = 0; argc < method_count; argc++) {
@@ -4485,7 +4503,8 @@ int pgraph_handle_method(
 				case NV097_SET_SHADER_STAGE_PROGRAM://pg->KelvinPrimitive.SetShaderStageProgram
 					// this is a dirty hack, if NV097_SET_SHADER_OTHER_STAGE_INPUT was called and set with 0x00210000, and all 16 texture factors are the same, then we're in fixed mode pixel shader
                     // there is no simple way to tell whether we're in fixed mode or program mode pixel shader.
-					if((NV2A_ShaderOtherStageInputDirty == true) && (pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000)&&(NV2A_TextureFactorAllTheSame==true)){
+                    // hack remove this condition(NV2A_ShaderOtherStageInputDirty == true) && 
+					if((pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000)&&(NV2A_TextureFactorAllTheSame==true)){
 						pgraph_use_FixedPixelShader();
                         // reset NV2A_ShaderOtherStageInputDirty dirty flag
                         NV2A_ShaderOtherStageInputDirty = false;

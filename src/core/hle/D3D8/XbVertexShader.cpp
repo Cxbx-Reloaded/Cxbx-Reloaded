@@ -1159,7 +1159,7 @@ void CxbxUpdateHostVertexShader()
 		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
 	}
 	// disable passthrough special case since passthrough also uses program shader only difference is that passthrough program always starts at 0.
-	/*	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
+	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
 		if (passthroughshader == nullptr) {
 			ID3DBlob* pBlob = nullptr;
 			EmuCompileXboxPassthrough(&pBlob);
@@ -1171,7 +1171,7 @@ void CxbxUpdateHostVertexShader()
 		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughshader);
 	}
 
-    */
+    
 	else {
 		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
 		assert(pTokens);
@@ -1422,6 +1422,7 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 		// Convert Xbox vertex attributes towards host Direct3D 9 vertex element
 		D3DVERTEXELEMENT* pRecompiledVertexElements = EmuRecompileVshDeclaration(
 			pXboxVertexAttributeFormat,
+			//g_Xbox_VertexShaderMode != VertexShaderMode::ShaderProgram,
 			g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction,
 			pCxbxVertexDeclaration);
 
