@@ -1179,6 +1179,9 @@ extern void pgraph_ClearNV2AStateFlag(DWORD flag);
 extern void pgraph_ComposeViewport(NV2AState *d);
 extern NV2ADevice* g_NV2A; //TMP GLUE
 extern bool NV2A_viewport_dirty;
+extern void pgraph_use_NV2A_Kelvin(void);
+extern void pgraph_notuse_NV2A_Kelvin(void);
+
 D3DMATRIX * pgraph_get_ModelViewMatrix(unsigned index)
 {
 	// Retrieve NV2AState via the (LLE) NV2A device :
@@ -3754,6 +3757,7 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
 
+                            pgraph_use_NV2A_Kelvin();
                             // set vertex declaration override, will be used for the next draw :
                             set_IVB_DECL_override();
 
@@ -3769,7 +3773,7 @@ int pgraph_handle_method(
 
                             //reset the vertex declaration after we finish the draw call
                             reset_IVB_DECL_override();
-
+                            pgraph_notuse_NV2A_Kelvin();
                             break;
                         }
                         case DrawMode::InlineBuffer: { // for draw calls using SET_BEGIN_ENG(primitive)/SET_VERTEX_DATAXXX ... /SET_BEGIN_ENG(0)
@@ -3779,6 +3783,9 @@ int pgraph_handle_method(
                             assert(pg->inline_array_length == 0);
                             assert(pg->inline_buffer_length > 0);
                             assert(pg->inline_elements_length == 0);
+
+
+                            pgraph_use_NV2A_Kelvin();
 
                             // set vertex declaration override, will be used for the next draw :
                             set_IVB_DECL_override();
@@ -3796,6 +3803,7 @@ int pgraph_handle_method(
                             //reset the vertex declaration after we finish the draw call
                             reset_IVB_DECL_override();
 
+                            pgraph_notuse_NV2A_Kelvin();
                             break;
                         }
                         case DrawMode::InlineArray: {
@@ -3806,6 +3814,7 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length == 0);
 
+                            pgraph_use_NV2A_Kelvin();
                             // set vertex declaration override, will be used for the next draw :
                             set_IVB_DECL_override();
 
@@ -3821,7 +3830,7 @@ int pgraph_handle_method(
 
                             //reset the vertex declaration after we finish the draw call
                             reset_IVB_DECL_override();
-
+                            pgraph_notuse_NV2A_Kelvin();
                             break;
                         }
                         case DrawMode::InlineElements: {
@@ -3832,6 +3841,7 @@ int pgraph_handle_method(
                             assert(pg->inline_buffer_length == 0);
                             assert(pg->inline_elements_length > 0);
 
+                            pgraph_use_NV2A_Kelvin();
                             // set vertex declaration override, will be used for the next draw :
                             set_IVB_DECL_override();
 
@@ -3847,7 +3857,7 @@ int pgraph_handle_method(
 
                             //reset the vertex declaration after we finish the draw call
                             reset_IVB_DECL_override();
-
+                            pgraph_notuse_NV2A_Kelvin();
                             break;
                         }
                         default:
@@ -4114,6 +4124,10 @@ int pgraph_handle_method(
                         inline_value[1] = ((arg0 >> 8) & 0xFF) / 255.0f;
                         inline_value[2] = ((arg0 >> 16) & 0xFF) / 255.0f;
                         inline_value[3] = ((arg0 >> 24) & 0xFF) / 255.0f;
+
+                        extern void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
+                        // sets default register value to host d3d constant.
+                        CxbxSetVertexAttribute(slot, inline_value[0], inline_value[1], inline_value[2], inline_value[3]);
                         
 					}
 					else {//in Begin/End block. data transferred are vertices.
@@ -4399,15 +4413,16 @@ int pgraph_handle_method(
                 case NV097_TEXTURE_READ_SEMAPHORE_RELEASE:               break;
 
                 case NV097_SET_ZMIN_MAX_CONTROL://pg->KelvinPrimitive.SetZMinMaxControl
-                    if((pg->KelvinPrimitive.SetDepthTestEnable!= D3DZB_FALSE) && (pg->KelvinPrimitive.SetZMinMaxControl& NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN_TRUE)==0)
-                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_USEW);
-                    else
-                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_TRUE);
+                    if(pg->KelvinPrimitive.SetDepthTestEnable!= D3DZB_FALSE)
+                        if((pg->KelvinPrimitive.SetZMinMaxControl& NV097_SET_ZMIN_MAX_CONTROL_CULL_NEAR_FAR_EN_TRUE)==0)
+                            NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_USEW);
+                        else
+                            NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, D3DZB_TRUE);
                     break;
 
                 case NV097_SET_ANTI_ALIASING_CONTROL://D3DRS_MULTISAMPLEANTIALIAS D3DRS_MULTISAMPLEMASK//pg->KelvinPrimitive.SetAntiAliasingControl
                     NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS, pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE);
-                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEMASK, (pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE)>>16);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEMASK, (pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_SAMPLE_MASK)>>16);
                     break;
 
                 case NV097_SET_COMPRESS_ZBUFFER_EN:                      break;
@@ -4600,6 +4615,9 @@ int pgraph_handle_method(
 
                                     // set vertex shader dirty flag
                                     g_VertexShader_dirty = true;
+
+                                    // funtion key F7 flips this variable
+                                    g_bUsePassthroughHLSL = true;
                                     //float tempConstant[4];
                                     // read constant register 0, CommonSetPassThroughProgram() sets register 0 constant with SuperSampleScaleX/Y
                                     //CxbxrImpl_GetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, tempConstant, 1);

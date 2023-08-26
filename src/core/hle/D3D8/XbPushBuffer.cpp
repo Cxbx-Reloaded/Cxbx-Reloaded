@@ -47,7 +47,7 @@
 DWORD NV2A_stateFlags = 0;
 
 // global dirty flags for NV2A/KelvinPrimitive, using same bit mask as xbox d3d, defined in XbD3D8Types.h. when content of Kelvin changed, set reresponded flag. then update corresponded state in D3D_draw_state_update()
-DWORD NV2A_DirtyFlags = 0;
+DWORD NV2A_DirtyFlags = 0xFFFFFFFF;
 /*
 // values used by xbox d3d to bit mask d3d dirty flag
 #define X_D3DDIRTYFLAG_TEXTURE_STATE                      0x0000000F
@@ -767,6 +767,9 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 		// set alpha OP as X_D3DTOP_DISABLE
 		NV2A_alphaOP[i] = (alphaICW == 0 && alphaOCW == 0) ? xbox::X_D3DTOP_DISABLE : xbox::X_D3DTOP_LAST + 1;
 
+		NV2A_colorArg0[i] = 1;
+		NV2A_alphaArg0[i] = 1;
+
 		// if start stage both colorOP and alphaOP are D3DTOP_DISABLE, then all stage after it shall be D3DTOP_DISABLE.
 		if (stage == startStage) {
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
@@ -1234,7 +1237,11 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 				}
 			}
 		}
-		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAOP, NV2A_alphaOP[i]);;
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAOP, NV2A_alphaOP[i]);
+
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg0[i]);
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_RESULTARG, NV2A_resultArg[i]);
 	}
 
 }
@@ -1678,8 +1685,6 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
-	// set use NV2A bumpenv flag, DxbxUpdateActivePixelShader()will pick up bumpenv from Kelvin
-	pgraph_use_NV2A_Kelvin();
 
 	if (pNV2A_PixelShader == nullptr) {
 		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
@@ -1901,12 +1906,13 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 	{
 		DWORD transformFlags;// = D3D__TextureState[stage]	[D3DTSS_TEXTURETRANSFORMFLAGS];
 		//Push1(pPush, NV097_SET_TEXTURE_MATRIX_ENABLE(stage), FALSE);
-		bool bTextureTransformEnable = pg->KelvinPrimitive.SetTextureMatrixEnable;
+		bool bTextureTransformEnable = pg->KelvinPrimitive.SetTextureMatrixEnable[stage];
         //default texCoordIndex
 		DWORD texCoordIndex = stage;
 
 		if (!bTextureTransformEnable) {
-			transformFlags == D3DTTFF_DISABLE;
+			transformFlags = D3DTTFF_DISABLE;
+			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS, transformFlags);
 		}
 		else {
 			// Enable the transform:
@@ -2653,6 +2659,14 @@ void D3D_draw_state_update(NV2AState* d)
 		// clear dirty flag
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
 	}
+	// xbox only update texture transfoms if we're in fixed mode vertex shader
+	// but we also need to update the texgen in texCoordIndex for program shader, so we always update the variables.
+	//if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction){
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM) {
+		CxbxrImpl_LazySetTextureTransform(d);
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
+	}
+	//}
 
 	// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
 	// only update combiners when in fixed pixel shader.
@@ -2686,14 +2700,6 @@ void D3D_draw_state_update(NV2AState* d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
 
-	// xbox only update texture transfoms if we're in fixed mode vertex shader
-	// but we also need to update the texgen in texCoordIndex for program shader, so we always update the variables.
-	//if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction){
-		if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_TRANSFORM) {
-			CxbxrImpl_LazySetTextureTransform(d);
-			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
-		}
-    //}
 	// update texture transfoms
 	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS) {
 		CxbxrImpl_LazySetLights(d);

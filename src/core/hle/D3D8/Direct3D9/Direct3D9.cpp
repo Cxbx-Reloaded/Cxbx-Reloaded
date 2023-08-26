@@ -9287,6 +9287,7 @@ void WINAPI CxbxrImpl_DrawVertices
 		// Assure & activate that special index buffer :
 		CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
 		// Convert quad vertex count to triangle vertex count :
+		// todo: this could be wrong, the NumVertices is for actual vertex span in the stream, not the triangle list index counts. we should use DrawContext.dwVertexCount directly instead.
 		UINT NumVertices = QuadToTriangleVertexCount(DrawContext.dwVertexCount);
 		// the dwHostPrimitiveCount is coverted to triangle list already :
 		UINT primCount = DrawContext.dwHostPrimitiveCount;
@@ -9360,6 +9361,8 @@ void D3DDevice_DrawVertices
 	//set pushbuffer pointer to the new beginning
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
+#else
+	CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
 #endif
 }
 
@@ -9440,11 +9443,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 {
 	
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
-/*
+#if !USEPGRAPH_DrawVertices
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
 	}
-*/
+#endif
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 	// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
 	// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);

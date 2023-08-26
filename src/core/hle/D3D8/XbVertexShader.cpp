@@ -1158,7 +1158,7 @@ void CxbxUpdateHostVertexShader()
 		hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);
 		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
 	}
-	// disable passthrough special case since passthrough also uses program shader only difference is that passthrough program always starts at 0.
+	// // funtion key F7 flips g_bUsePassthroughHLSL
 	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
 		if (passthroughshader == nullptr) {
 			ID3DBlob* pBlob = nullptr;
@@ -1171,7 +1171,7 @@ void CxbxUpdateHostVertexShader()
 		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughshader);
 	}
 
-    
+
 	else {
 		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
 		assert(pTokens);
@@ -1447,6 +1447,7 @@ void CxbxUpdateHostVertexDeclaration()
 	// Titles can specify default values for registers via calls like SetVertexData4f
 	// HLSL shaders need to know whether to use vertex data or default vertex shader values
 	// Any register not in the vertex declaration should be set to the default value
+	// uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
 	float vertexDefaultFlags[X_VSH_MAX_ATTRIBUTES];
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
 		vertexDefaultFlags[i] = pCxbxVertexDeclaration->vRegisterInDeclaration[i] ? 0.0f : 1.0f;
