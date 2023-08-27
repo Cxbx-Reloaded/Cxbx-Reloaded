@@ -2794,7 +2794,7 @@ int pgraph_handle_method(
                     NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKFILLMODE, pg->KelvinPrimitive.SetBackPolygonMode);
                     // update D3DRS_TWOSIDEDLIGHTING
                     //if(pg->KelvinPrimitive.SetFrontPolygonMode!= pg->KelvinPrimitive.SetBackPolygonMode)
-                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING,( pg->KelvinPrimitive.SetFrontPolygonMode != pg->KelvinPrimitive.SetBackPolygonMode)?true:false);
+                        //NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING,( pg->KelvinPrimitive.SetFrontPolygonMode != pg->KelvinPrimitive.SetBackPolygonMode)?true:false);
                     //else
                       //  NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, false);
                     break;
@@ -3650,7 +3650,9 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_TWO_SIDED_LIGHT_EN://not implement, D3D9 not support //pg->KelvinPrimitive.SetTwoSidedLightEn
-					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, pg->KelvinPrimitive.SetTwoSidedLightEn);
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
+
 					break;  
 
                 case NV097_CLEAR_REPORT_VALUE://done //pg->KelvinPrimitive.ClearReportValue

@@ -2484,7 +2484,170 @@ void Explut(float n, float* l, float* m)
 		*m = g_Mar[i] * (1.f - f) + g_Mar[i + 1] * f;
 	}
 }
+void SetSceneAmbientAndMaterialEmission(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	FLOAT ambientR, ambientG, ambientB;
+	FLOAT emissiveR, emissiveG, emissiveB,alpha;
 
+	xbox::X_D3DMATERIAL8 Material;
+	DWORD ambient;
+
+	//Material.Diffuse.a=alpha;
+
+	DWORD colorMaterial = pg->KelvinPrimitive.SetColorMaterial;//NV097_SET_COLOR_MATERIAL, colorMaterial  // 0x298
+	// Set scene ambient color,
+	extern D3DCOLOR FromVector(D3DCOLORVALUE v);
+	D3DCOLORVALUE fullColor = { 1.0,1.0,1.0,1.0 };
+	
+
+	//set material's ambient/diffuse/specular color to full color since the xbox material color was multiplied in each light color except the emissive color of each material.
+	NV2A_SceneMateirals[0].Ambient = fullColor;
+	NV2A_SceneMateirals[0].Diffuse = fullColor;
+	NV2A_SceneMateirals[0].Specular = fullColor;
+	
+	NV2A_SceneMateirals[1].Ambient = fullColor;
+	NV2A_SceneMateirals[1].Diffuse = fullColor;
+	NV2A_SceneMateirals[1].Specular = fullColor;
+
+
+	// Set scene mateiral emission and alpha
+	NV2A_SceneMateirals[0].Emissive = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetMaterialEmission);//NV097_SET_MATERIAL_EMISSION
+	NV2A_SceneMateirals[0].Diffuse.a = pg->KelvinPrimitive.SetMaterialAlpha;//NV097_SET_MATERIAL_ALPHA
+	// Fixme!!! here we set the specular power to default 1.0
+	NV2A_SceneMateirals[0].Power = 1.0;
+
+	NV2A_SceneMateirals[1].Emissive = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_BACK_MATERIAL_EMISSION
+	NV2A_SceneMateirals[1].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_BACK_MATERIAL_EMISSION
+	// Fixme!!! here we set the specular power to default 1.0
+	NV2A_SceneMateirals[1].Power = 1.0;
+
+	/*
+	NV2A_SceneAmbient[0] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetSceneAmbientColor);//NV097_SET_SCENE_AMBIENT_COLOR
+	NV2A_SceneAmbient[0].a = 1.0;
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
+
+	NV2A_SceneAmbient[1] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackSceneAmbientColor);//NV097_SET_BACK_SCENE_AMBIENT_COLOR
+	NV2A_SceneAmbient[1].a = 1.0;
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
+    */
+
+/*
+*
+DWORD i = D3D__RenderState[D3DRS_TWOSIDEDLIGHTING];
+DWORD ambient = D3D__RenderState[D3DRS_AMBIENT];
+D3DMATERIAL8* pMaterial = &pDevice->m_Material;
+
+PushCount(pPush, NV097_SET_SCENE_AMBIENT_COLOR(0), 3);
+PushCount(pPush + 4, NV097_SET_MATERIAL_EMISSION(0), 3);
+PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
+*/
+	emissiveR = pg->KelvinPrimitive.SetMaterialEmission[0];
+	emissiveG = pg->KelvinPrimitive.SetMaterialEmission[1];
+	emissiveB = pg->KelvinPrimitive.SetMaterialEmission[2];
+
+	ambientR = pg->KelvinPrimitive.SetSceneAmbientColor[0];
+	ambientG = pg->KelvinPrimitive.SetSceneAmbientColor[1];
+	ambientB = pg->KelvinPrimitive.SetSceneAmbientColor[2];
+
+	alpha = pg->KelvinPrimitive.SetMaterialAlpha;
+
+	if ((colorMaterial & 0xC) !=0)//		NV097_SET_COLOR_MATERIAL_AMBIENT_MATERIAL bit 3:2
+	{
+		// Ambient is being pulled from the vertex:
+
+		NV2A_SceneMateirals[0].Emissive.r= ambientR;
+		NV2A_SceneMateirals[0].Emissive.g= ambientG;
+		NV2A_SceneMateirals[0].Emissive.b= ambientB ;
+
+		ambientR = emissiveR;
+		ambientG = emissiveG;
+		ambientB = emissiveB;
+
+	}
+	else if ((colorMaterial &0x3)!=0) //NV097_SET_COLOR_MATERIAL_EMISSIVE_MATERIAL bit 1:0
+	{
+		// Emissive is being pulled from the vertex, and ambient is not:
+
+		ambientR = ambientR / NV2A_SceneMateirals[0].Ambient.r;
+		ambientG = ambientG / NV2A_SceneMateirals[0].Ambient.g;
+		ambientB = ambientB / NV2A_SceneMateirals[0].Ambient.b;
+
+		NV2A_SceneMateirals[0].Emissive.r = 1.0f;
+		NV2A_SceneMateirals[0].Emissive.g = 1.0f;
+		NV2A_SceneMateirals[0].Emissive.b = 1.0f;
+	}
+	else
+	{
+		// Neither ambient nor emissive is being pulled from the vertex:
+		NV2A_SceneMateirals[0].Emissive.r = 0.0f;
+		NV2A_SceneMateirals[0].Emissive.g = 0.0f;
+		NV2A_SceneMateirals[0].Emissive.b = 0.0f;
+		
+		ambientR = (ambientR - NV2A_SceneMateirals[0].Emissive.r) / NV2A_SceneMateirals[0].Ambient.r;
+		ambientG = (ambientG - NV2A_SceneMateirals[0].Emissive.g) / NV2A_SceneMateirals[0].Ambient.g;
+		ambientB = (ambientB - NV2A_SceneMateirals[0].Emissive.b) / NV2A_SceneMateirals[0].Ambient.b;
+	}
+	NV2A_SceneAmbient[0].r = ambientR;//NV097_SET_SCENE_AMBIENT_COLOR
+	NV2A_SceneAmbient[0].g = ambientG;
+	NV2A_SceneAmbient[0].b = ambientB;
+	NV2A_SceneAmbient[0].a = 1.0;
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
+
+	// set back side ambient and materials
+	emissiveR = pg->KelvinPrimitive.SetBackMaterialEmission[0];
+	emissiveG = pg->KelvinPrimitive.SetBackMaterialEmission[1];
+	emissiveB = pg->KelvinPrimitive.SetBackMaterialEmission[2];
+
+	ambientR = pg->KelvinPrimitive.SetBackSceneAmbientColor[0];
+	ambientG = pg->KelvinPrimitive.SetBackSceneAmbientColor[1];
+	ambientB = pg->KelvinPrimitive.SetBackSceneAmbientColor[2];
+
+	alpha = pg->KelvinPrimitive.SetMaterialAlpha;
+
+	if ((colorMaterial & 0xC) != 0)//		NV097_SET_COLOR_MATERIAL_AMBIENT_MATERIAL bit 3:2
+	{
+		// Ambient is being pulled from the vertex:
+
+		NV2A_SceneMateirals[1].Emissive.r = ambientR;
+		NV2A_SceneMateirals[1].Emissive.g = ambientG;
+		NV2A_SceneMateirals[1].Emissive.b = ambientB;
+
+		ambientR = emissiveR;
+		ambientG = emissiveG;
+		ambientB = emissiveB;
+
+	}
+	else if ((colorMaterial & 0x3) != 0) //NV097_SET_COLOR_MATERIAL_EMISSIVE_MATERIAL bit 1:0
+	{
+		// Emissive is being pulled from the vertex, and ambient is not:
+
+		ambientR = ambientR / NV2A_SceneMateirals[1].Ambient.r;
+		ambientG = ambientG / NV2A_SceneMateirals[1].Ambient.g;
+		ambientB = ambientB / NV2A_SceneMateirals[1].Ambient.b;
+
+		NV2A_SceneMateirals[1].Emissive.r = 1.0f;
+		NV2A_SceneMateirals[1].Emissive.g = 1.0f;
+		NV2A_SceneMateirals[1].Emissive.b = 1.0f;
+	}
+	else
+	{
+		// Neither ambient nor emissive is being pulled from the vertex:
+		NV2A_SceneMateirals[1].Emissive.r = 0.0f;
+		NV2A_SceneMateirals[1].Emissive.g = 0.0f;
+		NV2A_SceneMateirals[1].Emissive.b = 0.0f;
+
+		ambientR = (ambientR - NV2A_SceneMateirals[0].Emissive.r) / NV2A_SceneMateirals[0].Ambient.r;
+		ambientG = (ambientG - NV2A_SceneMateirals[0].Emissive.g) / NV2A_SceneMateirals[0].Ambient.g;
+		ambientB = (ambientB - NV2A_SceneMateirals[0].Emissive.b) / NV2A_SceneMateirals[0].Ambient.b;
+	}
+	NV2A_SceneAmbient[1].r = ambientR;//NV097_SET_SCENE_AMBIENT_COLOR
+	NV2A_SceneAmbient[1].g = ambientG;
+	NV2A_SceneAmbient[1].b = ambientB;
+	NV2A_SceneAmbient[1].a = 1.0;
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
+
+}
 // Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
 void CxbxrImpl_LazySetLights(NV2AState* d)
 {
@@ -2509,6 +2672,10 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE+i, (colorMaterial>>(2*(7-i)))&0x03);
 			}
 		}
+
+		SetSceneAmbientAndMaterialEmission(d);
+
+
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
 		//set lights
 
@@ -2519,9 +2686,6 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 		D3DVECTOR hv, EyeDirection;
 		EyeDirection = { 0.0,0.0,-1.0 };
 
-		FLOAT ambientR, ambientG, ambientB;
-		FLOAT emissiveR, emissiveG, emissiveB;
-
 		for (lightNum = 0; lightNum < 8; lightNum++) {
 			bool bEnable;
 			DWORD lightType = (lightEnableMask >> (lightNum << 1)) & 0x03;
@@ -2530,15 +2694,20 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			bEnable = false;
 
 			switch (lightType) {
+
+			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_OFF: //light disable
+				hRet = g_pD3DDevice->LightEnable(lightNum, false);
+				continue;
+				break;
+				
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_INFINITE://D3DLIGHT_DIRECTIONAL
 				NV2A_Light8[lightNum].Type= D3DLIGHT_DIRECTIONAL;
 				//NV097_SET_LIGHT_INFINITE_DIRECTION
 				//Push1f(pPush,NV097_SET_LIGHT_LOCAL_RANGE(lightNum),	1e30f);
 				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
-				dir.x = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
-				dir.y = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
-				dir.z = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[2];
-				NV2A_Light8[lightNum].Direction = dir;
+				NV2A_Light8[lightNum].Direction.x =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
+				NV2A_Light8[lightNum].Direction.y =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
+				NV2A_Light8[lightNum].Direction.z =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[2];
 				bEnable = true;
 				break;
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_LOCAL: //D3DLIGHT_POINT
@@ -2589,15 +2758,15 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				float Falloff_L = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[0]; //todo: Falloff_L/Falloff_M/Falloff_N there should be 3 components but not found in Light8/Light9
 				float Falloff_M = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[1];
 				float Falloff_N = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[2];
-				dir.x = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[0];
-				dir.y = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[1];
-				dir.z = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[2];
+				NV2A_Light8[lightNum].Direction.x = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[0];
+				NV2A_Light8[lightNum].Direction.y = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[1];
+				NV2A_Light8[lightNum].Direction.z = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[2];
 				float W = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[3]; // there is no W member of Light8
 				// Fixme!!! there is no eazy way to reverse Falloff from Falloff_L/Falloff_M, so I put the default value 1.0f here.
 				NV2A_Light8[lightNum].Falloff = 1.0f;
-				D3DVECTOR dirNormal = dir;
+				D3DVECTOR dirNormal = NV2A_Light8[lightNum].Direction;
 				NormalizeVector3(&dirNormal);
-				float Scale = dir.x / dirNormal.x; // there is no Scale member of Light8
+				float Scale = NV2A_Light8[lightNum].Direction.x / dirNormal.x; // there is no Scale member of Light8
 				float phi2 = -1.0*W / Scale;
 				float theta2 = phi2 + 1.0 / Scale;
 				NV2A_Light8[lightNum].Theta = 2.0f*acos(theta2);
@@ -2605,35 +2774,30 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				bEnable = true;
 
 				break;
-				
+
 			}
 			// Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
 			// hack, we use colors in kelvin directly since these colors are composed with D3DRS_AMBIENT/SetMaterial/SetBackMaterial/ and the color of each light.
-			NV2A_Light8[lightNum].Ambient =*(D3DCOLORVALUE*)&( pg->KelvinPrimitive.SetLight[lightNum].AmbientColor);
-			NV2A_Light8[lightNum].Specular = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetLight[lightNum].SpecularColor);
-			NV2A_Light8[lightNum].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetLight[lightNum].DiffuseColor);
+			NV2A_Light8[lightNum].Ambient.r =pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[0];
+			NV2A_Light8[lightNum].Ambient.g = pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[1];
+			NV2A_Light8[lightNum].Ambient.b = pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[2];
+			NV2A_Light8[lightNum].Ambient.a = 1.0f;
+			NV2A_Light8[lightNum].Specular.r = pg->KelvinPrimitive.SetLight[lightNum].SpecularColor[0];
+			NV2A_Light8[lightNum].Specular.g = pg->KelvinPrimitive.SetLight[lightNum].SpecularColor[1];
+			NV2A_Light8[lightNum].Specular.b = pg->KelvinPrimitive.SetLight[lightNum].SpecularColor[2];
+			NV2A_Light8[lightNum].Specular.a= 1.0f;
+			NV2A_Light8[lightNum].Diffuse.r = pg->KelvinPrimitive.SetLight[lightNum].DiffuseColor[0];
+			NV2A_Light8[lightNum].Diffuse.g = pg->KelvinPrimitive.SetLight[lightNum].DiffuseColor[1];
+			NV2A_Light8[lightNum].Diffuse.b = pg->KelvinPrimitive.SetLight[lightNum].DiffuseColor[2];
+			NV2A_Light8[lightNum].Diffuse.a = 1.0f;
 			// here we calls Host D3D for SetLight() and LightEnable(). because originaly there two are called directly from HLE patch.
 			HRESULT hRet = g_pD3DDevice->SetLight(lightNum, &NV2A_Light8[lightNum]);
 			//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");
 			hRet = g_pD3DDevice->LightEnable(lightNum, bEnable);
 		}
-		// Set scene ambient color,
-		extern D3DCOLOR FromVector(D3DCOLORVALUE v);
-		NV2A_SceneAmbient[0] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetSceneAmbientColor);//NV097_SET_SCENE_AMBIENT_COLOR
-		NV2A_SceneAmbient[0].a = 1.0;
-		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
-		NV2A_SceneAmbient[1] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackSceneAmbientColor);//NV097_SET_BACK_SCENE_AMBIENT_COLOR
-		NV2A_SceneAmbient[1].a = 1.0;
-		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
-		// Set scene mateiral emission and alpha
-		NV2A_SceneMateirals[0].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_MATERIAL_EMISSION
-		NV2A_SceneMateirals[0].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_MATERIAL_ALPHA
-		// Fixme!!! here we set the specular power to default 1.0
-		NV2A_SceneMateirals[0].Power = 1.0;
-		NV2A_SceneMateirals[1].Diffuse = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_BACK_MATERIAL_EMISSION
-		NV2A_SceneMateirals[1].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_BACK_MATERIAL_EMISSION
-		// Fixme!!! here we set the specular power to default 1.0
-		NV2A_SceneMateirals[1].Power = 1.0;
+	}
+    else {
+		;
 	}
 	return;
 

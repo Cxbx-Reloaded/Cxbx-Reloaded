@@ -382,6 +382,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetIndices_4,                             (xbox::uint_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_SetLight,                                 (xbox::dword_xt, CONST xbox::X_D3DLIGHT8*)                                                            );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetModelView,                             (CONST D3DMATRIX*, CONST D3DMATRIX*, CONST D3DMATRIX*)                                                );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_SetMaterial,                              (CONST xbox::X_D3DMATERIAL8* pMaterial)                                                               );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPalette,                               (xbox::dword_xt, xbox::X_D3DPalette*)                                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPalette_4,                             (xbox::X_D3DPalette*)                                                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetPixelShader,                           (xbox::dword_xt)                                                                                      );  \
@@ -7530,8 +7531,8 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			}
 		}
         // X_D3DRS_AMBIENT and X_D3DRS_BACKAMBIENT renderstates are updated by pgraph in CxbxrLazySetLights() already. but here we directly use the D3DCOLORVAL NV2A_SceneAmbient[] preventing conversion loss.
-		Ambient = *(D3DXVECTOR4*)&NV2A_SceneAmbient[0];
-		BackAmbient = *(D3DXVECTOR4*)&NV2A_SceneAmbient[1];
+		Ambient = toVector(NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
+		BackAmbient = toVector(NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
 		// Misc flags
 		ffShaderState.Modes.NormalizeNormals = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
 
@@ -9744,6 +9745,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
 }
 
+xbox::hresult_xt WINAPI CxbxrImpl_SetLight
+(
+	xbox::dword_xt            Index,
+	CONST xbox::X_D3DLIGHT8* pLight
+	)
+{
+	d3d8LightState.Lights[Index] = *pLight;
+
+	HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
+	return hRet;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetLight
 // ******************************************************************
@@ -9760,14 +9773,26 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 
 	XB_TRMP(D3DDevice_SetLight)(Index, pLight);
 
-	d3d8LightState.Lights[Index] = *pLight;
+	HRESULT hRet = CxbxrImpl_SetLight(Index, pLight);
 
-    HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
 
     return hRet;
 }
+xbox::hresult_xt WINAPI CxbxrImpl_SetMaterial
+(
+	CONST xbox::X_D3DMATERIAL8* pMaterial
+)
+{
+	ffShaderState.Materials[0].Ambient = toVector(pMaterial->Ambient);
+	ffShaderState.Materials[0].Diffuse = toVector(pMaterial->Diffuse);
+	ffShaderState.Materials[0].Specular = toVector(pMaterial->Specular);
+	ffShaderState.Materials[0].Emissive = toVector(pMaterial->Emissive);
+	ffShaderState.Materials[0].Power = pMaterial->Power;
 
+	HRESULT hRet = g_pD3DDevice->SetMaterial(pMaterial);
+	return hRet;
+}
 // ******************************************************************
 // * patch: D3DDevice_SetMaterial
 // ******************************************************************
@@ -9777,17 +9802,24 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 )
 {
 	LOG_FUNC_ONE_ARG(pMaterial);
-
-	ffShaderState.Materials[0].Ambient = toVector(pMaterial->Ambient);
-	ffShaderState.Materials[0].Diffuse = toVector(pMaterial->Diffuse);
-	ffShaderState.Materials[0].Specular = toVector(pMaterial->Specular);
-	ffShaderState.Materials[0].Emissive = toVector(pMaterial->Emissive);
-	ffShaderState.Materials[0].Power = pMaterial->Power;
-
-    HRESULT hRet = g_pD3DDevice->SetMaterial(pMaterial);
+	XB_TRMP(D3DDevice_SetMaterial)(pMaterial);
+	HRESULT hRet = CxbxrImpl_SetMaterial(pMaterial);
+	
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
 }
+xbox::hresult_xt WINAPI CxbxrImpl_LightEnable
+(
+	xbox::dword_xt            Index,
+	xbox::bool_xt             bEnable
+	)
+{
 
+	d3d8LightState.EnableLight(Index, bEnable);
+
+	HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
+
+	return hRet;
+}
 // ******************************************************************
 // * patch: D3DDevice_LightEnable
 // ******************************************************************
@@ -9804,9 +9836,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 
 	XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
 
-	d3d8LightState.EnableLight(Index, bEnable);
 
-    HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
+	HRESULT hRet = CxbxrImpl_LightEnable(Index, bEnable);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
 
     return hRet;
