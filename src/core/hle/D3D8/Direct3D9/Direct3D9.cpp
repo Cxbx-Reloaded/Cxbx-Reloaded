@@ -7806,7 +7806,8 @@ void CxbxrImpl_SetTransform
 {
     LOG_INIT
 	//update xbox d3d transform matrix array fast.
-	CxbxrImpl_SetTransformFast(State, pMatrix);
+	// no need to update xbox transform here since we already xtrmp to xbox's SetTransform().
+	//CxbxrImpl_SetTransformFast(State, pMatrix);
 
 	d3d8TransformState.SetTransform(State, pMatrix);
 

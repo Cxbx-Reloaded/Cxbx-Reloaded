@@ -225,6 +225,7 @@ void reset_IVB_DECL_override(void)
 static const int D3D_inline_attribute_size = 4 * sizeof(float); // Each inline vertex attribute is four floats wide
 static const int D3D_inline_vertex_stride = X_VSH_MAX_ATTRIBUTES * D3D_inline_attribute_size; // The IVB reserves room for all 16 attributes per vertex
 xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store the vertex buffer/stride info used by each attributes after vertex buffer grouping
+xbox::X_D3DVertexBuffer NV2A_Xbox_VertexBuffer[X_VSH_MAX_STREAMS] = { 0 };
 unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
 // textures to store the conversion info from NV2A KelvinPrimitive.SetTexture[4]
 xbox::X_D3DBaseTexture NV2A_texture_stage_texture[xbox::X_D3DTS_STAGECOUNT];
@@ -284,6 +285,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	for (int stage = 0; stage < 4; stage++) {
+		DWORD warp = stage;
 		// process texture stage texture info if it's dirty
 		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage)) != 0) {
 			// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
@@ -481,17 +483,18 @@ FORCEINLINE DWORD MinFilter(
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXMIPLEVEL, maxMipMapLevel);
 
 				address = pg->KelvinPrimitive.SetTexture[stage].Address;
-				DWORD warp=address & 0xFF000000; 
+				warp=address & 0xFF000000; 
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSU, address& NV097_SET_TEXTURE_ADDRESS_U);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSV, address & NV097_SET_TEXTURE_ADDRESS_V>>8);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSW, address & NV097_SET_TEXTURE_ADDRESS_P>>16);
 
-				//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
-				//since the kelvin contents all info which already includes wrap and texcoordindex, here we set them to default and update the warp0~3 accroding to what we have here.
-				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, stage);
-				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 			}
 		}
+		//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
+        //since the kelvin contents all info which already includes wrap and texcoordindex, here we set them to default and update the warp0~3 accroding to what we have here.
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, stage);
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
+
 	}
 	//reset texture stage dirty flag
 	//NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
@@ -771,6 +774,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 		NV2A_alphaArg0[i] = 1;
 
 		// if start stage both colorOP and alphaOP are D3DTOP_DISABLE, then all stage after it shall be D3DTOP_DISABLE.
+		/*
 		if (stage == startStage) {
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
@@ -780,6 +784,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 			}
 		}
+		*/
 		// FIXME!!! can we really continue the loop when colorOP == X_D3DTOP_DISABLE?
 		if (NV2A_colorOP[i] == xbox::X_D3DTOP_DISABLE) {
 			;// NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_DISABLE);
@@ -2979,7 +2984,9 @@ void D3D_draw_state_update(NV2AState* d)
 		uint32_t group_stride = SortedAttributes[0].stride;
 		//store the vertex buffer address of stream[current_stream_index]
 		if (SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE) {
-			D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = (xbox::X_D3DVertexBuffer  *)group_offset;
+			((xbox::X_D3DResource*)(&D3D_Xbox_StreamSource[current_stream_index].VertexBuffer))->Data = group_offset;//(xbox::X_D3DVertexBuffer  *)
+			NV2A_Xbox_VertexBuffer[current_stream_index].Data= group_offset;
+			D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = &NV2A_Xbox_VertexBuffer[current_stream_index];
 			D3D_Xbox_StreamSource[current_stream_index].Stride = group_stride;
 			D3D_Xbox_StreamCount++;
 		}
@@ -2997,7 +3004,8 @@ void D3D_draw_state_update(NV2AState* d)
 					group_offset = SortedAttributes[i].offset;
 					group_stride = SortedAttributes[i].stride;
 					//store the vertex buffer address of stream[current_stream_index]
-					D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = (xbox::X_D3DVertexBuffer  *)group_offset;
+					NV2A_Xbox_VertexBuffer[current_stream_index].Data = group_offset;
+					D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = &NV2A_Xbox_VertexBuffer[current_stream_index];
 					D3D_Xbox_StreamSource[current_stream_index].Stride = group_stride;
 					D3D_Xbox_StreamCount++;
 				}
@@ -3222,7 +3230,8 @@ void D3D_draw_inline_elements(NV2AState *d)
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.uiXboxVertexStreamZeroStride = (pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8); // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
-	DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
+	//set pXboxVertexStreamZeroData=0 because we're not using DrawIndexedPrimitiveUp. let CxbxDrawIndexed() convert the stream/vertex buffer.
+	DrawContext.pXboxVertexStreamZeroData = 0;// (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
 	DrawContext.dwVertexCount = pg->inline_elements_length;
 	DrawContext.dwStartVertex = 0;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
