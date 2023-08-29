@@ -37,7 +37,7 @@
 typedef struct _CxbxDrawContext
 {
     IN     xbox::X_D3DPRIMITIVETYPE    XboxPrimitiveType;
-    IN     DWORD                 dwVertexCount;
+    IN     DWORD                 dwVertexCount; // in none indexed draw calls this is the number of vertices in vertx buffer to be used. In indexed draw calls, this is the index counts in index buffer.
     IN     DWORD                 dwStartVertex; // Only D3DDevice_DrawVertices sets this (potentially higher than default 0)
 	IN	   PWORD				 pXboxIndexData; // Set by D3DDevice_DrawIndexedVertices, D3DDevice_DrawIndexedVerticesUP and D3D_draw_inline_elements
 	IN	   DWORD				 dwBaseVertexIndex; // Set to g_Xbox_BaseVertexIndex in D3DDevice_DrawIndexedVertices

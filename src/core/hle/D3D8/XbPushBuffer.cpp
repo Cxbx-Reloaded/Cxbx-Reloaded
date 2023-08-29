@@ -681,7 +681,7 @@ void CxbxrImpl_CommonSetTextureBumpEnv(NV2AState *d)
 }
 DWORD convert_NV2A_combiner_reg_to_xbox_reg(DWORD nvreg) {
 	DWORD xboxreg = xbox::X_D3DTA_CURRENT;
-	assert(nvreg >= NV097_SET_COMBINER_COLOR_ICW_D_SOURCE_REG_4);
+	assert(nvreg >= NV097_SET_COMBINER_COLOR_ICW_D_SOURCE_REG_4 ||nvreg== NV097_SET_COMBINER_COLOR_ICW_D_SOURCE_REG_1);
 	assert(nvreg <= NV097_SET_COMBINER_COLOR_ICW_D_SOURCE_REG_D);
 	switch (nvreg) {
 	//case NV097_SET_COMBINER_COLOR_ICW_D_SOURCE_REG_0:xboxreg = xbox::X_D3DTA_CURRENT; break; //FIXME!!! REG ZERo
@@ -2947,6 +2947,8 @@ void D3D_draw_state_update(NV2AState* d)
 				// TODO ? Reword : update update vertex buffer/stream if draw_mode == DrawMode::DrawArrays or InlineElements. KelvinPrimitive.SetVertexDataArrayOffset[] is only set/update in these two draw modes
 				SortedAttributes[i].stride = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] >> 8; // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE // The byte increment to step from the start of one vertex attribute to the next
 				SortedAttributes[i].size_and_type = pg->KelvinPrimitive.SetVertexDataArrayFormat[i] & (NV097_SET_VERTEX_DATA_ARRAY_FORMAT_TYPE | NV097_SET_VERTEX_DATA_ARRAY_FORMAT_SIZE);
+				// when the attribute is reference to a none existed stream, both the stride and offset will be 0;
+				// todo: shall we simplify this condition to check whether stride == 0?
 				// Detect disabled slots by their format (0x02 : size count zero, type float) :
 				if (SortedAttributes[i].size_and_type == xbox::X_D3DVSDT_NONE){
 					SortedAttributes[i].offset = 0xFFFFFFFF; // Make sure disabled slots get sorted to the end
@@ -2955,7 +2957,12 @@ void D3D_draw_state_update(NV2AState* d)
 					// TODO ? Reword : for draw_mode == DrawMode::InlineArray, only KelvinPrimitive.SetVertexDataArrayFormat[] was set/update. we have to compose the vertex offset ourselves?
 					SortedAttributes[i].offset = pg->KelvinPrimitive.SetVertexDataArrayOffset[i];
 				}
-				assert(SortedAttributes[i].stride > 0);
+				if (SortedAttributes[i].stride == 0) {
+					SortedAttributes[i].size_and_type = xbox::X_D3DVSDT_NONE;
+					SortedAttributes[i].offset = 0xFFFFFFFF; // Make sure disabled slots get sorted to the end
+				}
+				//stride could be 0 when a none existed stream was referenced.
+				//assert(SortedAttributes[i].stride > 0);
 				assert(SortedAttributes[i].stride <= D3D_inline_vertex_stride); // TODO : replace with actual NV2A maximum stride, might be 2048?
 				break;
 			}
@@ -2965,10 +2972,11 @@ void D3D_draw_state_update(NV2AState* d)
 	// Only necessary for pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements, and the overhead must be reduced.
 	if (pg->draw_mode == DrawMode::DrawArrays || pg->draw_mode == DrawMode::InlineElements) {
 		// Sort out intermediate attribute slot array on memory offset (and on slot, to guarantee deterministic ordering when offsets overlap) :
+		/* redunt code.
 		if (pg->draw_mode == DrawMode::InlineElements) {
 			SortedAttributes[0].size_and_type = SortedAttributes[0].size_and_type;
 		}
-
+		*/
 		std::sort(/*First=*/&SortedAttributes[0], /*Last=*/&SortedAttributes[X_VSH_MAX_ATTRIBUTES - 1], /*Pred=*/[](const auto& x, const auto& y)
 			{ return std::tie(x.offset, x.slot_index) < std::tie(y.offset, y.slot_index); });
 
@@ -3131,21 +3139,60 @@ void D3D_draw_arrays(NV2AState *d)
 	
 	//assert(D3D_StreamZeroStride > 0);
 	DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
+	
+	extern void CxbxDrawPrimitive(CxbxDrawContext & DrawContext);
 
-	for (unsigned array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
-		//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
-		//this is only assuming there was only one vertex buffer and the SetVertexDataArrayOffset[0] is the starting address of the vertex buffer. this code should be revised once we finish the vertex buffer lookup code in D3D_draw_state_update()
-		DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
-		DrawContext.pXboxIndexData = nullptr;
-		DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
-		DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
-		//because CxbxDrawPrimitiveUP() can only handle dwStartVertex == 0, so we shift the pXboxVertexStreamZeroData to where dwStartVertex is, and reset dwStartVertex to 0.
-		DrawContext.pXboxVertexStreamZeroData = (PVOID)((DWORD)DrawContext.pXboxVertexStreamZeroData + DrawContext.uiXboxVertexStreamZeroStride*DrawContext.dwStartVertex);
-		DrawContext.dwStartVertex = 0;
-		// draw arrays 
-		CxbxDrawPrimitiveUP(DrawContext);
+	if (D3D_Xbox_StreamCount == 1) {
+		for (unsigned array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
+			//todo: make sure the stream input would be properly set when D3D_Xbox_StreamCount > 1
+			// draw arrays
+
+			//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
+			//this is only assuming there was only one vertex buffer and the SetVertexDataArrayOffset[0] is the starting address of the vertex buffer. this code should be revised once we finish the vertex buffer lookup code in D3D_draw_state_update()
+			DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] | CONTIGUOUS_MEMORY_BASE);
+			DrawContext.pXboxIndexData = nullptr;
+			DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
+			DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
+			//because CxbxDrawPrimitiveUP() can only handle dwStartVertex == 0, so we shift the pXboxVertexStreamZeroData to where dwStartVertex is, and reset dwStartVertex to 0.
+			DrawContext.pXboxVertexStreamZeroData = (PVOID)((DWORD)DrawContext.pXboxVertexStreamZeroData + DrawContext.uiXboxVertexStreamZeroStride * DrawContext.dwStartVertex);
+			DrawContext.dwStartVertex = 0;
+
+			CxbxDrawPrimitiveUP(DrawContext);
+
+		}
 	}
+	else {
+		/*
+		// get max vertex count in all arrays.
+		unsigned int maxVtxCount = pg->gl_draw_arrays_count[0];
+		for (int i = 1; i < pg->draw_arrays_length; i++) {
+			if (maxVtxCount < pg->gl_draw_arrays_count[i])
+				maxVtxCount = pg->gl_draw_arrays_count[i];
+		}
 
+		// setup temp index buffer to call CxbxDrawIndexed()
+		INDEX16* tmpIndex = (INDEX16*)malloc(maxVtxCount * sizeof(INDEX16));
+		for (int i = 0; i < maxVtxCount; i++)
+			DrawContext.pXboxIndexData[i] = i;
+		*/
+		for (unsigned array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
+			//todo: make sure the stream input would be properly set when D3D_Xbox_StreamCount > 1
+
+			//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
+			//set pXboxVertexStreamZeroData = 0 to let CxbxDrawPrimitive() setup stream inputs.
+			DrawContext.pXboxVertexStreamZeroData = 0;
+			DrawContext.pXboxIndexData = nullptr;
+			DrawContext.dwBaseVertexIndex = 0;
+			DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
+			DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
+			// keep this assert() here to let us check whether there was really a draw call using multiple stream input or not.
+			assert(D3D_Xbox_StreamCount == 1);
+			// todo: check the vertex buffer/stream input convert code for multiple stream input and the effect of StartVertex.
+			CxbxDrawPrimitive(DrawContext);
+		}
+		//free the temp index buffer
+		//free(tmpIndex);
+	}
 }
 
 void D3D_draw_inline_buffer(NV2AState *d)
@@ -3179,7 +3226,7 @@ void D3D_draw_inline_buffer(NV2AState *d)
 	DrawContext.pXboxVertexStreamZeroData = pg->inline_buffer;
 	//assert(D3D_StreamZeroStride > 0);
 	DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
-
+	//assert(D3D_Xbox_StreamCount == 1);
 	CxbxDrawPrimitiveUP(DrawContext);
 	//reset vertex attribute setting flags.
 	for (unsigned slot = 0; slot < X_VSH_MAX_ATTRIBUTES; slot++) {
@@ -3217,6 +3264,7 @@ void D3D_draw_inline_array(NV2AState *d)
 		//DrawContext.dwStartVertex = 0;
 		DrawContext.pXboxVertexStreamZeroData = pg->inline_array;
 		DrawContext.uiXboxVertexStreamZeroStride = D3D_StreamZeroStride;
+		//assert(D3D_Xbox_StreamCount == 1);
 		//inline array
 		CxbxDrawPrimitiveUP(DrawContext);
 
@@ -3231,12 +3279,22 @@ void D3D_draw_inline_elements(NV2AState *d)
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.uiXboxVertexStreamZeroStride = (pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8); // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
 	//set pXboxVertexStreamZeroData=0 because we're not using DrawIndexedPrimitiveUp. let CxbxDrawIndexed() convert the stream/vertex buffer.
-	DrawContext.pXboxVertexStreamZeroData = 0;// (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);
+	DrawContext.pXboxVertexStreamZeroData =(PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);//0
 	DrawContext.dwVertexCount = pg->inline_elements_length;
 	DrawContext.dwStartVertex = 0;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
-
-	CxbxDrawIndexed(DrawContext);
+	extern void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext & DrawContext);
+	//todo: for some cases, there is only one stream input when dealing with pgraph kelvin, and we could simply use codes similar to CxbxDrawPrimitiveUP() and call g_pD3DDevice->DrawIndexedPrimitiveUP() to simplify the code and save some time in copying vetex buffers.
+	if (D3D_Xbox_StreamCount == 1) {
+		CxbxDrawIndexedPrimitiveUP(DrawContext);
+	}
+	// xdk sample DohphinClassic uses 2 stream input, and declare 3 streams in vertex shader decl.
+	// Otogi also uses multiple stream input.
+	else {
+	
+		DrawContext.pXboxVertexStreamZeroData = 0;
+		CxbxDrawIndexed(DrawContext);
+	}
 
 }
 
