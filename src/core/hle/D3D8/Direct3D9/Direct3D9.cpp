@@ -7315,6 +7315,8 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			//todo: the texture transform matrix in Kelvin was altered per different in/out counts and whether there are projected output or not. here we simply copy the hardware content to ffShaderState.Transforms.Texture
 			// later we should check the fixed function vertex shader codes to see how it uses these matrix.
 			memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
+			//the texture transform matrix in kelvin is not transposed, but it's relocated depending on the input and output coordinate counts.
+			//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)pgraph_get_TextureTransformMatrix(i));
 		}
 	}
 	else {
@@ -8274,7 +8276,7 @@ constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage) / VERTICES_PER_TRIA
 // and only needs to grow when  current length doesn't suffices for a larger draw.
 INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices)
 {
-	NrOfQuadIndices = (NrOfQuadIndices - 2) * 3;//we're passing in the xbox vertex count, which minus 2 becomes quad count, multiply 3 becomes triangle list index count
+	NrOfQuadIndices = (NrOfQuadIndices/2) * 3;//we're passing in the xbox vertex count, which minus 2 becomes quad count, multiply 3 becomes triangle list index count
 	if (g_QuadListToTriangleIndexData_Size < NrOfQuadIndices)
 	{
 		g_QuadListToTriangleIndexData_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
@@ -8283,8 +8285,8 @@ INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices)
 			free(g_pQuadListToTriangleIndexData);
 		}
 
-		g_pQuadListToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleIndices * sizeof(INDEX16));
-		CxbxConvertQuadListToTriangleListIndices(nullptr, NrOfTriangleIndices, g_pQuadListToTriangleIndexData);
+		g_pQuadListToTriangleIndexData = (INDEX16 *)malloc(g_QuadListToTriangleIndexData_Size * sizeof(INDEX16));
+		CxbxConvertQuadListToTriangleListIndices(nullptr, g_QuadListToTriangleIndexData_Size, g_pQuadListToTriangleIndexData);
 	}
 
 	return g_pQuadListToTriangleIndexData;
@@ -8303,8 +8305,8 @@ INDEX16* CxbxConvertQuadListIndexData(CxbxDrawContext& DrawContext)
 			free(g_pQuadListToTriangleIndexData);
 		}
 
-		g_pQuadListToTriangleIndexData = (INDEX16*)malloc(NrOfTriangleIndices * sizeof(INDEX16));
-		CxbxConvertQuadListToTriangleListIndices(DrawContext.pXboxIndexData, NrOfTriangleIndices, g_pQuadListToTriangleIndexData);
+		g_pQuadListToTriangleIndexData = (INDEX16*)malloc(g_QuadListToTriangleIndexData_Size * sizeof(INDEX16));
+		CxbxConvertQuadListToTriangleListIndices(DrawContext.pXboxIndexData, g_QuadListToTriangleIndexData_Size, g_pQuadListToTriangleIndexData);
 	}
 
 	return g_pQuadListToTriangleIndexData;
@@ -8332,8 +8334,8 @@ INDEX16 *CxbxAssureQuadStripIndexData(UINT NrOfQuadIndices)
 			free(g_pQuadStripToTriangleIndexData);
 		}
 
-		g_pQuadStripToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleIndices * sizeof(INDEX16));
-		CxbxConvertQuadStripToTriangleListIndices(nullptr, NrOfTriangleIndices, g_pQuadStripToTriangleIndexData);
+		g_pQuadStripToTriangleIndexData = (INDEX16 *)malloc(g_QuadListToTriangleIndexData_Size * sizeof(INDEX16));
+		CxbxConvertQuadStripToTriangleListIndices(nullptr, g_QuadListToTriangleIndexData_Size, g_pQuadStripToTriangleIndexData);
 	}
 
 	return g_pQuadStripToTriangleIndexData;
@@ -8353,8 +8355,8 @@ INDEX16* CxbxConvertQuadStripIndexData(CxbxDrawContext& DrawContext)
 			free(g_pQuadStripToTriangleIndexData);
 		}
 
-		g_pQuadStripToTriangleIndexData = (INDEX16*)malloc(NrOfTriangleIndices * sizeof(INDEX16));
-		CxbxConvertQuadStripToTriangleListIndices(DrawContext.pXboxIndexData, NrOfTriangleIndices, g_pQuadStripToTriangleIndexData);
+		g_pQuadStripToTriangleIndexData = (INDEX16*)malloc(g_QuadListToTriangleIndexData_Size * sizeof(INDEX16));
+		CxbxConvertQuadStripToTriangleListIndices(DrawContext.pXboxIndexData, g_QuadListToTriangleIndexData_Size, g_pQuadStripToTriangleIndexData);
 	}
 
 	return g_pQuadStripToTriangleIndexData;
@@ -8583,6 +8585,8 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		INDEX16* pIndexData = CxbxConvertQuadListIndexData(DrawContext);
+		//DrawContext.dwVertexCount = DrawContext.dwHostPrimitiveCount * 3;
+		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
 		// Convert quad vertex-count to triangle vertex count :
 		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
@@ -8590,7 +8594,7 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
 			/*MinVertexIndex=*/0, // Always 0 for converted quadlist data
-			/*NumVertices=*/DrawContext.dwVertexCount,
+			/*NumVertices=*/DrawContext.dwVertexCount, // this is the actual vertex range within vertex buffer, starting from base vertex index + MinVertexIndex to base vertex index + MaxVertexIndex.
 			DrawContext.dwHostPrimitiveCount,
 			pIndexData,
 			/*IndexDataFormat=*/D3DFMT_INDEX16,
@@ -8605,6 +8609,8 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 		// LOG_TEST_CASE("X_D3DPT_QUADSTRIP"); // test-case : GUN
 		// Draw quadstrips using a single 'quadstrip-to-triangle mapping' index buffer :
 		INDEX16* pIndexData = CxbxConvertQuadStripIndexData(DrawContext);
+		//DrawContext.dwVertexCount = DrawContext.dwHostPrimitiveCount * 3;
+		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
 		// Convert quad vertex-count to triangle vertex count :
 		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
@@ -8692,6 +8698,8 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		INDEX16 *pIndexData = CxbxAssureQuadListIndexData(DrawContext.dwVertexCount);
+		//DrawContext.dwVertexCount = DrawContext.dwHostPrimitiveCount * 3;
+		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
 		// Convert quad vertex-count to triangle vertex count :
 		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
@@ -8714,6 +8722,8 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		// LOG_TEST_CASE("X_D3DPT_QUADSTRIP"); // test-case : GUN
 		// Draw quadstrips using a single 'quadstrip-to-triangle mapping' index buffer :
 		INDEX16 *pIndexData = CxbxAssureQuadStripIndexData(DrawContext.dwVertexCount);
+		//DrawContext.dwVertexCount = DrawContext.dwHostPrimitiveCount * 3;
+		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
 		// Convert quad vertex-count to triangle vertex count :
 		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 
@@ -8781,8 +8791,11 @@ void CxbxDrawPrimitive(CxbxDrawContext& DrawContext)
 		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		INDEX16* pIndexData = CxbxAssureQuadListIndexData(DrawContext.dwVertexCount);
+		// VertexBufferConverter.Apply(&DrawContext) already convert xbox quad list to HostPrimitive triangle list primitive count.
+		//DrawContext.dwVertexCount = DrawContext.dwHostPrimitiveCount * 3;
+		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
 		//we're only using this function call to setup host index buffer.
-		ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount, false);
+		ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwHostPrimitiveCount * 3, false);
 
 		// Note : CxbxUpdateActiveIndexBuffer calls SetIndices
 
@@ -8798,9 +8811,9 @@ void CxbxDrawPrimitive(CxbxDrawContext& DrawContext)
 			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
 			/* BaseVertexIndex, = */0, // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
 			/* MinVertexIndex = */0,
-			/* NumVertices = */DrawContext.dwHostPrimitiveCount*3,
+			/* NumVertices = */DrawContext.dwVertexCount,
 			/* startIndex = DrawContext.dwStartVertex = */0,
-			DrawContext.dwHostPrimitiveCount*2);
+			DrawContext.dwHostPrimitiveCount);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
@@ -8809,8 +8822,11 @@ void CxbxDrawPrimitive(CxbxDrawContext& DrawContext)
 		// LOG_TEST_CASE("X_D3DPT_QUADSTRIP"); // test-case : GUN
 		// Draw quadstrips using a single 'quadstrip-to-triangle mapping' index buffer :
 		INDEX16* pIndexData = CxbxAssureQuadStripIndexData(DrawContext.dwVertexCount);
+		//DrawContext.dwVertexCount = DrawContext.dwHostPrimitiveCount * 3;
+		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
+
 		//we're only using this function call to setup host index buffer.
-		ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount, false);
+		ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwHostPrimitiveCount * 3, false);
 		// Note : CxbxUpdateActiveIndexBuffer calls SetIndices
 
         // Set LowIndex and HighIndex *before* VerticesInBuffer gets derived
@@ -8825,9 +8841,9 @@ void CxbxDrawPrimitive(CxbxDrawContext& DrawContext)
 			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
 			/* BaseVertexIndex, = */0, // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
 			/* MinVertexIndex = */0,
-			/* NumVertices = */DrawContext.dwHostPrimitiveCount * 3,
+			/* NumVertices = */DrawContext.dwVertexCount,
 			/* startIndex = DrawContext.dwStartVertex = */0,
-			DrawContext.dwHostPrimitiveCount*2);
+			DrawContext.dwHostPrimitiveCount);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
@@ -9109,25 +9125,27 @@ void CxbxUpdateHostVertexShaderConstants()
 		// Need for Speed: Hot Pursuit 2 (car select)
 		// 
 		CxbxUpdateHostViewPortOffsetAndScaleConstants();
-	}
 
-	// Placed this here until we find a better place
-	uint32_t fogTableMode;
-	float fogDensity, fogStart, fogEnd;
-	if (is_pgraph_using_NV2A_Kelvin()) {
-		fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
-		fogDensity = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
-		fogStart = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
-		fogEnd = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+		// fixed mode vertex shader already has fog state constats, these constants below should be for user program/pass through only.
+		// Placed this here until we find a better place
+		uint32_t fogTableMode;
+		float fogDensity, fogStart, fogEnd;
+		if (is_pgraph_using_NV2A_Kelvin()) {
+			fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+			fogDensity = DWtoF(NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY));
+			fogStart = DWtoF(NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART));
+			fogEnd = DWtoF(NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND));
+		}
+		else {
+			fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+			fogDensity = DWtoF(XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY));
+			fogStart = DWtoF(XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART));
+			fogEnd = DWtoF(XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND));
+		}
+		float fogStuff[4] = { (float)fogTableMode, fogDensity, fogStart, fogEnd };
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
+
 	}
-	else {
-		fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
-		fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
-		fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
-		fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
-	}
-	float fogStuff[4] = { (float)fogTableMode, fogDensity, fogStart, fogEnd };
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
 }
 
 void CxbxUpdateHostViewport() {

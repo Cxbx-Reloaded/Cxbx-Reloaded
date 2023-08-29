@@ -285,7 +285,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	for (int stage = 0; stage < 4; stage++) {
-		DWORD warp = stage;
+		DWORD warp = D3DWRAPCOORD_0| D3DWRAPCOORD_1;
 		// process texture stage texture info if it's dirty
 		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage)) != 0) {
 			// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
@@ -492,7 +492,10 @@ FORCEINLINE DWORD MinFilter(
 		}
 		//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
         //since the kelvin contents all info which already includes wrap and texcoordindex, here we set them to default and update the warp0~3 accroding to what we have here.
-		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, stage);
+		extern unsigned int kelvin_to_xbox_map_texgen(uint32_t parameter);
+		DWORD texgen = kelvin_to_xbox_map_texgen(pg->KelvinPrimitive.SetTexgen[stage].S);
+		texgen |= stage;
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texgen);
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 
 	}
@@ -670,13 +673,28 @@ void CxbxrImpl_CommonSetTextureBumpEnv(NV2AState *d)
 	bool isUserMode = pNV2A_PixelShader==nullptr?false:true;
 	unsigned int d3d_stage = (isUserMode) ? 1 : 0;
 	unsigned int nv2a_stage;
-	for (nv2a_stage = 1; nv2a_stage <= 3; nv2a_stage++, d3d_stage++) {
-		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT00, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat00);
-		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT01, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat01);
-		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT11, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat11);
-		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT10, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat10);
-		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLSCALE, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvScale);
-		XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLOFFSET, pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvOffset);
+	//for (nv2a_stage = 1; nv2a_stage <4; nv2a_stage++, d3d_stage++) {
+	// default d3d_stage to be the same as NV2A_stage, and sets xbox TextureStates in the same stage. and we also set bumpenv in stage 0.
+	d3d_stage = 0;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		for (nv2a_stage = 0; nv2a_stage < 4; nv2a_stage++, d3d_stage++) {
+			NV2ATextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT00, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat00));
+			NV2ATextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT01, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat01));
+			NV2ATextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT11, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat11));
+			NV2ATextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT10, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat10));
+			NV2ATextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLSCALE, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvScale));
+			NV2ATextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLOFFSET, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvOffset));
+		}
+	}
+	else {
+		for (nv2a_stage = 0; nv2a_stage < 4; nv2a_stage++, d3d_stage++) {
+			XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT00, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat00));
+			XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT01, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat01));
+			XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT11, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat11));
+			XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVMAT10, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvMat10));
+			XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLSCALE, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvScale));
+			XboxTextureStates.Set(d3d_stage, xbox::X_D3DTSS_BUMPENVLOFFSET, FtoDW(pg->KelvinPrimitive.SetTexture[nv2a_stage].SetBumpEnvOffset));
+		}
 	}
 }
 DWORD convert_NV2A_combiner_reg_to_xbox_reg(DWORD nvreg) {
@@ -1801,7 +1819,8 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 	pg->bumpenv_dirty[1] = false;
 	pg->bumpenv_dirty[2] = false;
 	pg->bumpenv_dirty[3] = false;
-	CxbxrImpl_SetPixelShader((xbox::dword_xt)pNV2A_PixelShader);
+	// it's not necessary to call CxbxrImpl_SetPixelShader() which simply copies NV2A_PixelShader to xbox_PixelShader and we don't need it to do so.
+	//CxbxrImpl_SetPixelShader((xbox::dword_xt)pNV2A_PixelShader);
 }
 
 void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
@@ -1978,10 +1997,12 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 
 
 			// Now specifically handle texgens:
-
-			DWORD texgen = D3DTSS_TCI_PASSTHRU;
+			extern unsigned int kelvin_to_xbox_map_texgen(uint32_t parameter);
+			DWORD texgen = kelvin_to_xbox_map_texgen(pg->KelvinPrimitive.SetTexgen[stage].S);
             //  whether texture coordinate with (0, 0, 0, 1) to get a '1' into 'W' because we leave Q disabled.
 			// and SetTexgen[stage].s==t==r. reversed from D3DDevice_SetTextureState_TexCoordIndex()
+			
+			/*
 			if (pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].T && pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].R &&
 				pg->KelvinPrimitive.SetVertexData4ub[xbox::X_D3DVSDE_TEXCOORD0 + stage] == 0xFF000000)
 			{
@@ -2011,11 +2032,12 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 					texgen = D3DTSS_TCI_CAMERASPACEPOSITION;// = 0x20000
 				}
 			}
+			*/
 			// Handle the re-mapping of a stage: xbox converts remapping before it sets Kelvin's vertex attribute and stream. so no need to remap if we compose vertex attr from kelvin. check StateUp()/StateVb()
 			// NV097_SET_VERTEX_DATA_ARRAY_FORMAT and NV097_SET_VERTEX_DATA_ARRAY_OFFSET are update with slot mapping included. so we don't worry about it here.
 
 			// compose texCoordIndex with stage mapping index and texgen, set it to defaul when we compose vertex attr from kelvin.
-			texCoordIndex = texgen&0xFFFF0000|stage;
+			texCoordIndex = (texgen&0xFFFF0000)|stage;
 			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texCoordIndex);
 
 			// todo: shall we compose the FVF pVertexShader->Dimensionality here with the inCount?
@@ -3186,7 +3208,7 @@ void D3D_draw_arrays(NV2AState *d)
 			DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
 			DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
 			// keep this assert() here to let us check whether there was really a draw call using multiple stream input or not.
-			assert(D3D_Xbox_StreamCount == 1);
+			//assert(D3D_Xbox_StreamCount == 1);
 			// todo: check the vertex buffer/stream input convert code for multiple stream input and the effect of StartVertex.
 			CxbxDrawPrimitive(DrawContext);
 		}

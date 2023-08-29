@@ -1204,7 +1204,7 @@ D3DMATRIX* pgraph_get_TextureTransformMatrix(unsigned index)
     NV2AState* d = g_NV2A->GetDeviceState();
     PGRAPHState* pg = &d->pgraph;
 
-    return (D3DMATRIX*)&pg->KelvinPrimitive.SetTextureMatrix[index][index];
+    return (D3DMATRIX*)&pg->KelvinPrimitive.SetTextureMatrix[index][0];
 }
 
 void kelvin_validate_struct_field_offsets_against_NV097_defines()
@@ -2888,13 +2888,14 @@ int pgraph_handle_method(
 					break;
 
                 CASE_4(NV097_SET_TEXGEN_S, 16) : {//done //pg->KelvinPrimitive.SetTexgen[2].S  {S,T,R,Q}
-                    slot = (method - NV097_SET_TEXGEN_S) / 16; //slot is 0 or 1
+                    slot = (method - NV097_SET_TEXGEN_S) / 16; //slot is 0 ..4  1
                     //unsigned int reg = (slot <2) ? NV_PGRAPH_CSV1_A / 4
                     //	: NV_PGRAPH_CSV1_B / 4;
                     //unsigned int mask = (slot % 2) ? NV_PGRAPH_CSV1_A_T1_S
                     //	: NV_PGRAPH_CSV1_A_T0_S;
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV1_A / 4], mask, kelvin_map_texgen(arg0, 0));
-                    pg->KelvinPrimitive.SetTexgen[slot].S = kelvin_map_texgen(arg0, 0);
+                    //pg->KelvinPrimitive.SetTexgen[slot].S = kelvin_map_texgen(arg0, 0);
+                    
                     break;
                 }
                 CASE_4(NV097_SET_TEXGEN_T, 16) : {//done //pg->KelvinPrimitive.SetTexgen[2].T  {S,T,R,Q}
@@ -6870,6 +6871,30 @@ static unsigned int kelvin_map_texgen(uint32_t parameter, unsigned int channel)
         texgen = NV_PGRAPH_CSV1_A_T0_S_NORMAL_MAP; break;
     default:
         assert(false);
+        break;
+    }
+    return texgen;
+}
+unsigned int kelvin_to_xbox_map_texgen(uint32_t parameter)
+{
+    
+    unsigned int texgen;
+    switch (parameter) {
+    case NV097_SET_TEXGEN_S_DISABLE:
+        texgen = D3DTSS_TCI_PASSTHRU; break;
+    case NV097_SET_TEXGEN_S_EYE_LINEAR:
+        texgen = D3DTSS_TCI_CAMERASPACEPOSITION; break;
+    //case NV097_SET_TEXGEN_S_OBJECT_LINEAR:
+    //   texgen = D3DTSS_TCI_OBJECT; break;
+    //case NV097_SET_TEXGEN_S_SPHERE_MAP:
+    //    texgen = D3DTSS_TCI_SPHERE; break;
+    case NV097_SET_TEXGEN_S_REFLECTION_MAP:
+        texgen = D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR; break;
+    case NV097_SET_TEXGEN_S_NORMAL_MAP:
+        texgen = D3DTSS_TCI_CAMERASPACENORMAL; break;
+    default:
+        assert(false);
+        texgen = D3DTSS_TCI_PASSTHRU;
         break;
     }
     return texgen;
