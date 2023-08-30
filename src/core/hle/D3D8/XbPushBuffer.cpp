@@ -3301,7 +3301,7 @@ void D3D_draw_inline_elements(NV2AState *d)
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.uiXboxVertexStreamZeroStride = (pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8); // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
 	//set pXboxVertexStreamZeroData=0 because we're not using DrawIndexedPrimitiveUp. let CxbxDrawIndexed() convert the stream/vertex buffer.
-	DrawContext.pXboxVertexStreamZeroData =(PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] + CONTIGUOUS_MEMORY_BASE);//0
+	DrawContext.pXboxVertexStreamZeroData =(PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] | CONTIGUOUS_MEMORY_BASE);//0
 	DrawContext.dwVertexCount = pg->inline_elements_length;
 	DrawContext.dwStartVertex = 0;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
