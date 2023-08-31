@@ -2052,7 +2052,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetRenderState:  break;
                     case X_D3DDevice_SetRenderState_Simple:  break;
                     case X_D3DDevice_SetRenderStateNotInline:  break;
-                    case X_D3DDevice_SetRenderTarget:  break;
+                    case X_D3DDevice_SetRenderTarget:
+                        CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface *)argv[1], (xbox::X_D3DSurface *)argv[2]);
+                        break;
                     case X_D3DDevice_SetRenderTarget_0:  break;
                     case X_D3DDevice_SetRenderTargetFast:  break;
                     case X_D3DDevice_SetScissors:  break;
@@ -2101,7 +2103,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVertexShaderInput:  break;
                     case X_D3DDevice_SetVertexShaderInputDirect:  break;
                     case X_D3DDevice_SetVerticalBlankCallback:  break;
-                    case X_D3DDevice_SetViewport:  break;
+                    case X_D3DDevice_SetViewport:
+                        CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8 * )argv[1]);
+                        break;
                     case X_D3DDevice_SetWaitCallback:  break;
                     case X_D3DDevice_Swap:
                         CxbxrImpl_Swap(argv[1]);
@@ -4522,7 +4526,9 @@ int pgraph_handle_method(
 					// this is a dirty hack, if NV097_SET_SHADER_OTHER_STAGE_INPUT was called and set with 0x00210000, and all 16 texture factors are the same, then we're in fixed mode pixel shader
                     // there is no simple way to tell whether we're in fixed mode or program mode pixel shader.
                     // hack remove this condition(NV2A_ShaderOtherStageInputDirty == true) && 
-					if((pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000)&&(NV2A_TextureFactorAllTheSame==true)){
+                    DWORD shaderMode;
+                    shaderMode = pg->KelvinPrimitive.SetShaderStageProgram;
+                    if((pg->KelvinPrimitive.SetShaderOtherStageInput == 0x00210000)&&(NV2A_TextureFactorAllTheSame==true)){
 						pgraph_use_FixedPixelShader();
                         // reset NV2A_ShaderOtherStageInputDirty dirty flag
                         NV2A_ShaderOtherStageInputDirty = false;

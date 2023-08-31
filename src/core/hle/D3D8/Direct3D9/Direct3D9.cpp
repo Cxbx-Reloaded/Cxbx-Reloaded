@@ -208,6 +208,8 @@ static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT
 
 
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
+	   std::map<UINT64, xbox::X_D3DBaseTexture*> g_TextureCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
+
 static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
 xbox::X_D3DVIEWPORT8 g_Xbox_Viewport = { 0 };
@@ -254,7 +256,7 @@ static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wPara
 static xbox::void_xt NTAPI          EmuUpdateTickCount(xbox::PVOID Arg);
 static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
-static void							CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_D3DSurface *pNewZStencil);
+void							CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_D3DSurface *pNewZStencil);
 
 #define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_D3DCREATED)
 
@@ -4688,7 +4690,30 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 	// Always call the Xbox SetViewPort to update D3D Internal State
 	XB_TRMP(D3DDevice_SetViewport)(pViewport);
 
+#if !USEPGRAPH_SetViewport
 	CxbxrImpl_SetViewport(pViewport);
+#else
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetViewport;//enum of this patched API
+	pPush_local[2] = (DWORD)&pPush_local[3]; //total 14 DWORD space for arguments.
+	pPush_local[3] = (DWORD)pViewport->X;
+	pPush_local[4] = (DWORD)pViewport->Y;
+	pPush_local[5] = (DWORD)pViewport->Width;
+	pPush_local[6] = (DWORD)pViewport->Height;
+	pPush_local[7] = FtoDW(pViewport->MinZ);
+	pPush_local[8] = FtoDW(pViewport->MaxZ);
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
+#endif
 }
 
 // Set the viewport
@@ -5052,6 +5077,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LT
     }
 }
 
+
 // ******************************************************************
 // * patch: D3DDevice_SetTexture
 // ******************************************************************
@@ -5068,7 +5094,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
 	XB_TRMP(D3DDevice_SetTexture)(Stage, pTexture);
-
+	if (pTexture != nullptr) {
+		UINT64 key = (pTexture->Format << 32) | pTexture->Data;
+		auto it = g_TextureCache.find(key);
+		if (it == g_TextureCache.end())
+			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, pTexture));
+	}
+	//update the currently used stage texture
 	g_pXbox_SetTexture[Stage] = pTexture;
 }
 
@@ -5087,9 +5119,9 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 		LOG_FUNC_ARG(Data)
 		LOG_FUNC_ARG(Format)
 		LOG_FUNC_END;
-	if (is_pushbuffer_recording()) {
+	//if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SwitchTexture)(Method, Data, Format);
-	}
+	//}
     DWORD Stage = -1;
 	/*
 	switch (Method) { // Detect which of the 4 (X_D3DTS_STAGECOUNT) texture stages is given by the (NV2A) Method argument
@@ -5140,8 +5172,13 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 			CxbxActiveTextureCopies[Stage].Lock = 0;
 			CxbxActiveTextureCopies[Stage].Size = g_pXbox_SetTexture[Stage]->Size;
 
+			
 			// Use the above modified copy, instead of altering the active Xbox texture
 			g_pXbox_SetTexture[Stage] = &CxbxActiveTextureCopies[Stage];
+			UINT64 key = (g_pXbox_SetTexture[Stage]->Format << 32) | g_pXbox_SetTexture[Stage]->Data;
+			auto it = g_TextureCache.find(key);
+			if (it == g_TextureCache.end())
+				g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, g_pXbox_SetTexture[Stage]));
 			// Note : Since g_pXbox_SetTexture and CxbxActiveTextureCopies are host-managed,
 			// Xbox code should never alter these members (so : no reference counting, etc).
 			// As long as that's guaranteed, this is a safe way to emulate SwitchTexture.
@@ -7307,6 +7344,31 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	ffShaderState.Modes.VertexBlend_NrOfMatrices = (float)NrBlendMatrices;
 	ffShaderState.Modes.VertexBlend_CalcLastWeight = (float)CalcLastBlendWeight;
 
+	// Texture state: TextureTransformFlagsCount and TextureTransformFlagsProjected must be updated prior to TextureTransform
+    // use NV2ATextureStates when we're in pgraph handling
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+			auto transformFlags = NV2ATextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
+			ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
+			ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
+
+			auto texCoordIndex = NV2ATextureStates.Get(i, X_D3DTSS_TEXCOORDINDEX);
+			ffShaderState.TextureStates[i].TexCoordIndex = (float)(texCoordIndex & 0x7); // 8 coords
+			ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
+		}
+	}
+	else {
+		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+			auto transformFlags = XboxTextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
+			ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
+			ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
+
+			auto texCoordIndex = XboxTextureStates.Get(i, X_D3DTSS_TEXCOORDINDEX);
+			ffShaderState.TextureStates[i].TexCoordIndex = (float)(texCoordIndex & 0x7); // 8 coords
+			ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
+		}
+	}
+
 	// Transforms
 	// Transpose row major to column major for HLSL
 	// check if we're in DirectModelView transform mode.
@@ -7496,30 +7558,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_NONE;
 	}
 
-	// Texture state
-	// use NV2ATextureStates when we're in pgraph handling
-	if (is_pgraph_using_NV2A_Kelvin()) {
-		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-			auto transformFlags = NV2ATextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
-			ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
-			ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
 
-			auto texCoordIndex = NV2ATextureStates.Get(i, X_D3DTSS_TEXCOORDINDEX);
-			ffShaderState.TextureStates[i].TexCoordIndex = (float)(texCoordIndex & 0x7); // 8 coords
-			ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
-		}
-	}
-	else {
-		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-			auto transformFlags = XboxTextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
-			ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
-			ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
-
-			auto texCoordIndex = XboxTextureStates.Get(i, X_D3DTSS_TEXCOORDINDEX);
-			ffShaderState.TextureStates[i].TexCoordIndex = (float)(texCoordIndex & 0x7); // 8 coords
-			ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
-		}
-	}
 	// Read current TexCoord component counts
 	xbox::X_VERTEXATTRIBUTEFORMAT* pXboxVertexAttributeFormat = GetXboxVertexAttributeFormat();
 	// Note : There seem to be other ways to access this, but we can use only this one;
@@ -8583,7 +8622,8 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 	assert(DrawContext.pXboxVertexStreamZeroData != xbox::zeroptr);
 	assert(DrawContext.uiXboxVertexStreamZeroStride > 0);
 	assert(DrawContext.dwBaseVertexIndex == 0); // No IndexBase under Draw*UP
-
+	// in DrawIndexedPrimitiveUP(), the XboxIndexBuffer isn't nullptr, so LowIndex and HighIndex will be updated per the conten of XboxIndexBuffer.
+	// the XboxZeroStream isn't nullptr and will not be adjusted via LowIndex.
 	VertexBufferConverter.Apply(&DrawContext);
 	//convert dwHostPrimitiveCount here. the quad to d3d9 triangle is considered already.
 	assert(DrawContext.XboxPrimitiveType != xbox::X_D3DPT_POLYGON);
@@ -10127,7 +10167,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 // Test case: Midtown Madness 3
 static thread_local uint32_t setRenderTargetCount = 0;
 
-static void CxbxrImpl_SetRenderTarget
+void CxbxrImpl_SetRenderTarget
 (
     xbox::X_D3DSurface    *pRenderTarget,
     xbox::X_D3DSurface    *pNewZStencil
@@ -10213,7 +10253,7 @@ static void CxbxrImpl_SetRenderTarget
         ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
     }
 }
-
+static bool bRenderTargetInit = false;
 // ******************************************************************
 // * patch: D3DDevice_SetRenderTarget
 // ******************************************************************
@@ -10231,8 +10271,27 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 	NestedPatchCounter call(setRenderTargetCount);
 
 	XB_TRMP(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
+	if (!bRenderTargetInit) {
+		bRenderTargetInit = true;
+		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+	}
+	else {
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget;//enum of this patched API
+		pPush_local[2] = (DWORD)pRenderTarget; //total 14 DWORD space for arguments.
+		pPush_local[3] = (DWORD)pNewZStencil;
+
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+	}
 }
 
 // LTCG specific D3DDevice_SetRenderTarget function...

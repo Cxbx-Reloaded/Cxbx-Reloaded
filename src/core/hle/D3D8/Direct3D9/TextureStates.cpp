@@ -187,7 +187,14 @@ void XboxTextureStateConverter::Apply()
 	// TODO use stage 3 when we roll our own point sprites after moving off D3D9
     bool pointSpriteOverride = false;
     bool pointSpritesEnabled = false;
-    pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+    extern bool is_pgraph_using_NV2A_Kelvin(void);
+    extern XboxRenderStateConverter NV2ARenderStates;
+
+    if(is_pgraph_using_NV2A_Kelvin())
+        pointSpritesEnabled = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+    else
+        pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+
     if (pointSpritesEnabled) {
         pointSpriteOverride = true;
     }

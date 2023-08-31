@@ -280,10 +280,12 @@ FORCEINLINE DWORD Round(
 extern float CxbxrGetSuperSampleScale(void);
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
 static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
+extern std::map<UINT64, xbox::X_D3DBaseTexture*> g_TextureCache;
 
 void CxbxrImpl_LazySetTextureState(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
+	
 	for (int stage = 0; stage < 4; stage++) {
 		DWORD warp = D3DWRAPCOORD_0| D3DWRAPCOORD_1;
 		// process texture stage texture info if it's dirty
@@ -295,56 +297,74 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 			}
 			// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
 			else {
-				g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
-				NV2A_texture_stage_texture[stage].Data   = pg->KelvinPrimitive.SetTexture[stage].Offset;
-				NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
-				unsigned width = 0, height = 0, pitch = 0, depth = 0;
 
-				DWORD format = pg->KelvinPrimitive.SetTexture[stage].Format;
-				bool dma_select =
-					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA) == 2;
-				bool cubemap =
-					format & NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;
-				unsigned int border_source =
-					format & NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE;
-				unsigned int dimensionality =
-					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY);
-				unsigned int color_format =
-					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_COLOR);
-				unsigned int levels =
-					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS);
-				unsigned int log_width =
-					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U);
-				unsigned int log_height =
-					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V);
-				unsigned int log_depth =
-					GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P);
-
-				// texture.Size could be 0
-				// when size ==0, Control1 and ImageRect won't be updated. So we use a hack to always reset these two vars whenever NV097_SET_TEXTURE_OFFSET was hit.
-				if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
-				// when log_width/height/depth !=0, which means the size was represent by these log values, so size would be zero.
-				//if( (log_width!=0) || (log_height!=0)||(log_depth!=0)){
-					NV2A_texture_stage_texture[stage].Size = 0;
-					/* not used, D3D will take the log dimentions when size==0
-					width = 1 << log_width;
-					height = 1 << log_height;
-					depth = 1 << log_depth;
-					*/
+				UINT64 key = (pg->KelvinPrimitive.SetTexture[stage].Format << 32) | pg->KelvinPrimitive.SetTexture[stage].Offset;
+				auto it = g_TextureCache.find(key);
+				if (it != g_TextureCache.end()) {
+					g_pNV2A_SetTexture[stage] = (xbox::X_D3DBaseTexture*)it->second;
+					// can't return directly since we still have to process certain texture related TextureStates
+					//return;
 				}
-				//size!=0, using Control1 and ImageRect to convert pitch/height/width to texture.Size
-				else {
-					pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1 & NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
-					width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
-					height = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
+				else{
+					g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
+					NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
+					NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
+					unsigned width = 0, height = 0, pitch = 0, depth = 0;
 
-					width = (width - 1) & X_D3DSIZE_WIDTH_MASK;
-					height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK;
-					pitch = ((pitch / 64) - 1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
-					NV2A_texture_stage_texture[stage].Size = pitch | height | width;
-				}
-				NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource,
-				NV2A_texture_stage_texture[stage].Lock = 0;
+					DWORD format = pg->KelvinPrimitive.SetTexture[stage].Format;
+					bool dma_select =
+						GET_MASK(format, NV097_SET_TEXTURE_FORMAT_CONTEXT_DMA) == 2;
+					bool cubemap =
+						format & NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;
+					unsigned int border_source =
+						format & NV097_SET_TEXTURE_FORMAT_BORDER_SOURCE;
+					unsigned int dimensionality =
+						GET_MASK(format, NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY);
+					unsigned int color_format =
+						GET_MASK(format, NV097_SET_TEXTURE_FORMAT_COLOR);
+					unsigned int levels =
+						GET_MASK(format, NV097_SET_TEXTURE_FORMAT_MIPMAP_LEVELS);
+					unsigned int log_width =
+						GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_U);
+					unsigned int log_height =
+						GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_V);
+					unsigned int log_depth =
+						GET_MASK(format, NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P);
+
+					bool bCubeness = (format
+						& NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE) != 0;
+					DWORD Dimensionality = (format & NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY) >> 4;
+
+
+					// texture.Size could be 0
+					// when size ==0, Control1 and ImageRect won't be updated. So we use a hack to always reset these two vars whenever NV097_SET_TEXTURE_OFFSET was hit.
+					if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
+						// when log_width/height/depth !=0, which means the size was represent by these log values, so size would be zero.
+						//if( (log_width!=0) || (log_height!=0)||(log_depth!=0)){
+						NV2A_texture_stage_texture[stage].Size = 0;
+						/* not used, D3D will take the log dimentions when size==0
+						width = 1 << log_width;
+						height = 1 << log_height;
+						depth = 1 << log_depth;
+						*/
+					}
+					//size!=0, using Control1 and ImageRect to convert pitch/height/width to texture.Size
+					else {
+						pitch = (pg->KelvinPrimitive.SetTexture[stage].Control1 & NV097_SET_TEXTURE_CONTROL1_IMAGE_PITCH) >> 16;
+						width = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_WIDTH) >> 16;
+						height = (pg->KelvinPrimitive.SetTexture[stage].ImageRect & NV097_SET_TEXTURE_IMAGE_RECT_HEIGHT);
+
+						width = (width - 1) & X_D3DSIZE_WIDTH_MASK;
+						height = ((height - 1) << X_D3DSIZE_HEIGHT_SHIFT) & X_D3DSIZE_HEIGHT_MASK;
+						pitch = ((pitch / 64) - 1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
+						NV2A_texture_stage_texture[stage].Size = pitch | height | width;
+					}
+
+
+
+					NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource,
+					NV2A_texture_stage_texture[stage].Lock = 0;
+			    }// end of if (it != g_TextureCache.end())/else
 				//update texture stage states
 				DWORD filter, address, control0, magFilter, minFilter, colorSign, convolutionKernel;
 				INT lodBias;
@@ -1718,6 +1738,7 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 		}
 		// update texture stage texture pointers and format per stageProgram
 		DWORD stageProgram = pg->KelvinPrimitive.SetShaderStageProgram;
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, stageProgram);
 		DWORD stageMode;
 		for (int stage = 0; stage < 4; stage++) {
 			stageMode= stageProgram & 0x1f;
@@ -2906,11 +2927,11 @@ void D3D_draw_state_update(NV2AState* d)
 			pgraph_ComposeViewport(d);
 			// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
 			// D3DDevice_SetViewport() was patched and HLEed, here we only implement it when we're in RunPushbuffer().
-			if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
+			//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
 				xbox::X_D3DVIEWPORT8 Viewport;
 				CxbxrGetViewport(Viewport);
 				CxbxrImpl_SetViewport(&Viewport);
-			}
+			//}
 			NV2A_viewport_dirty = false;
 		}
 	//}
@@ -3171,7 +3192,7 @@ void D3D_draw_arrays(NV2AState *d)
 
 			//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
 			//this is only assuming there was only one vertex buffer and the SetVertexDataArrayOffset[0] is the starting address of the vertex buffer. this code should be revised once we finish the vertex buffer lookup code in D3D_draw_state_update()
-			DrawContext.pXboxVertexStreamZeroData = (PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] | CONTIGUOUS_MEMORY_BASE);
+			DrawContext.pXboxVertexStreamZeroData = (PVOID)(D3D_Xbox_StreamSource[0].VertexBuffer->Data | CONTIGUOUS_MEMORY_BASE);
 			DrawContext.pXboxIndexData = nullptr;
 			DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
 			DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
@@ -3301,12 +3322,13 @@ void D3D_draw_inline_elements(NV2AState *d)
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.uiXboxVertexStreamZeroStride = (pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8); // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
 	//set pXboxVertexStreamZeroData=0 because we're not using DrawIndexedPrimitiveUp. let CxbxDrawIndexed() convert the stream/vertex buffer.
-	DrawContext.pXboxVertexStreamZeroData =(PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] | CONTIGUOUS_MEMORY_BASE);//0
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)(D3D_Xbox_StreamSource[0].VertexBuffer->Data | CONTIGUOUS_MEMORY_BASE);//(PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] | CONTIGUOUS_MEMORY_BASE);//0
 	DrawContext.dwVertexCount = pg->inline_elements_length;
 	DrawContext.dwStartVertex = 0;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 	extern void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext & DrawContext);
 	//todo: for some cases, there is only one stream input when dealing with pgraph kelvin, and we could simply use codes similar to CxbxDrawPrimitiveUP() and call g_pD3DDevice->DrawIndexedPrimitiveUP() to simplify the code and save some time in copying vetex buffers.
+	
 	if (D3D_Xbox_StreamCount == 1) {
 		CxbxDrawIndexedPrimitiveUP(DrawContext);
 	}
