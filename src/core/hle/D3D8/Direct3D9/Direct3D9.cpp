@@ -5104,14 +5104,17 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
 	XB_TRMP(D3DDevice_SetTexture)(Stage, pTexture);
 	if (pTexture != nullptr) {
-		UINT64 key = (pTexture->Format << 32) | pTexture->Data;
+		UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
 		auto it = g_TextureCache.find(key);
-		// erase the pTexture if the key already existed in the map.
-		if (it != g_TextureCache.end())
-			g_TextureCache.erase(key);
+		// we should better erase the pTexture if the key already existed in the map.
+		// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
+		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
+		if (it == g_TextureCache.end())
+			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, pTexture));
+			//g_TextureCache.erase(key);
 		// always insert the new pTexture.
 		// todo: shall we keep the whole Texture resource here instead of the pTexture only?
-		g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, pTexture));
+		//
 	}
 	//update the currently used stage texture
 	g_pXbox_SetTexture[Stage] = pTexture;
@@ -5188,7 +5191,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 			
 			// Use the above modified copy, instead of altering the active Xbox texture
 			g_pXbox_SetTexture[Stage] = &CxbxActiveTextureCopies[Stage];
-			UINT64 key = (g_pXbox_SetTexture[Stage]->Format << 32) | g_pXbox_SetTexture[Stage]->Data;
+			UINT64 key = ((UINT64)(g_pXbox_SetTexture[Stage]->Format) << 32) | g_pXbox_SetTexture[Stage]->Data;
 			auto it = g_TextureCache.find(key);
 			if (it == g_TextureCache.end())
 				g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, g_pXbox_SetTexture[Stage]));

@@ -289,6 +289,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 	for (int stage = 0; stage < 4; stage++) {
 		DWORD warp = D3DWRAPCOORD_0| D3DWRAPCOORD_1;
 		// process texture stage texture info if it's dirty
+		
 		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage)) != 0) {
 			// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
 			// FIXME!! check (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 should be enough, but there are (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) != 0 and the texture is empty. could be HLE/NV2A confliction
@@ -297,15 +298,22 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 			}
 			// texture stage enabled, convert the KelvinPrimitive.SetTexture[stage] to NV2A_texture_stage_texture[stage], and set g_pXbox_SetTexture[stage]
 			else {
-
-				UINT64 key = (pg->KelvinPrimitive.SetTexture[stage].Format << 32) | pg->KelvinPrimitive.SetTexture[stage].Offset;
+				bool bTextureFound = false;
+				UINT64 key = ((UINT64)(pg->KelvinPrimitive.SetTexture[stage].Format) << 32) | pg->KelvinPrimitive.SetTexture[stage].Offset;
 				auto it = g_TextureCache.find(key);
-				if (it != g_TextureCache.end()) {
-					g_pNV2A_SetTexture[stage] = (xbox::X_D3DBaseTexture*)it->second;
-					// can't return directly since we still have to process certain texture related TextureStates
-					//return;
+				if (it != g_TextureCache.end()){
+					//if the key is the same, both Format and Data shall be the same. but we still compare them in case the hose code altered the texture resouce.
+					if ((it->second->Format == pg->KelvinPrimitive.SetTexture[stage].Format)
+						&& (it->second->Data == pg->KelvinPrimitive.SetTexture[stage].Offset)) {
+						NV2A_texture_stage_texture[stage] = *(it->second);
+						g_pNV2A_SetTexture[stage] = (xbox::X_D3DBaseTexture*)it->second;
+						bTextureFound = true;
+						// can't return directly since we still have to process certain texture related TextureStates
+						//return;
+					}
 				}
-				else{
+			    // if the texture is not found via the texture cache map, then we have to compose the texture via kelvin.
+				if(!bTextureFound){
 					g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
 					NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
 					NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
