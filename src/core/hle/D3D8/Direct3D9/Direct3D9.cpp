@@ -5106,8 +5106,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 	if (pTexture != nullptr) {
 		UINT64 key = (pTexture->Format << 32) | pTexture->Data;
 		auto it = g_TextureCache.find(key);
-		if (it == g_TextureCache.end())
-			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, pTexture));
+		// erase the pTexture if the key already existed in the map.
+		if (it != g_TextureCache.end())
+			g_TextureCache.erase(key);
+		// always insert the new pTexture.
+		// todo: shall we keep the whole Texture resource here instead of the pTexture only?
+		g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, pTexture));
 	}
 	//update the currently used stage texture
 	g_pXbox_SetTexture[Stage] = pTexture;
