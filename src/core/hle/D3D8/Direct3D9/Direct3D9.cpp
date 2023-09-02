@@ -434,7 +434,9 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4,                            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
-    
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DResource_AddRef,                                 (xbox::X_D3DResource*)                                                                                );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DResource_Release,                                (xbox::X_D3DResource*)                                                                                );  \
+
 XB_TRAMPOLINES(XB_trampoline_declare);
 
 void LookupTrampolinesD3D()
@@ -4702,14 +4704,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetViewport;//enum of this patched API
-	pPush_local[2] = (DWORD)&pPush_local[3]; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)pViewport->X;
-	pPush_local[4] = (DWORD)pViewport->Y;
-	pPush_local[5] = (DWORD)pViewport->Width;
-	pPush_local[6] = (DWORD)pViewport->Height;
-	pPush_local[7] = FtoDW(pViewport->MinZ);
-	pPush_local[8] = FtoDW(pViewport->MaxZ);
-
+	if (pViewport) {
+		pPush_local[2] = (DWORD)&pPush_local[3]; //total 14 DWORD space for arguments.
+		pPush_local[3] = (DWORD)pViewport->X;
+		pPush_local[4] = (DWORD)pViewport->Y;
+		pPush_local[5] = (DWORD)pViewport->Width;
+		pPush_local[6] = (DWORD)pViewport->Height;
+		pPush_local[7] = FtoDW(pViewport->MinZ);
+		pPush_local[8] = FtoDW(pViewport->MaxZ);
+	}
+	else {
+		pPush_local[2] = (DWORD)pViewport;
+	}
 	//set pushbuffer pointer to the new beginning
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
@@ -10253,6 +10259,16 @@ void CxbxrImpl_SetRenderTarget
         ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
     }
 }
+void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface* pTarget, xbox::X_D3DSurface* pZbuffer)
+{
+	if (XB_TRMP(D3DResource_AddRef)) {
+		if (pTarget)
+			XB_TRMP(D3DResource_AddRef)(pTarget);
+		if (pZbuffer)
+			XB_TRMP(D3DResource_AddRef)(pZbuffer);
+	}
+}
+
 static bool bRenderTargetInit = false;
 // ******************************************************************
 // * patch: D3DDevice_SetRenderTarget
@@ -10291,6 +10307,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		//set pushbuffer pointer to the new beginning
 		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 		*(DWORD**)g_pXbox_pPush += 0x10;
+		// add reference to the surfaces to prevent them being released before we access them in pgraph.
+		if (XB_TRMP(D3DResource_AddRef)) {
+			if(pRenderTarget)
+				XB_TRMP(D3DResource_AddRef)(pRenderTarget);
+			if(pNewZStencil)
+				XB_TRMP(D3DResource_AddRef)(pNewZStencil);
+		}
+
 	}
 }
 

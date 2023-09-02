@@ -3328,17 +3328,17 @@ void D3D_draw_inline_elements(NV2AState *d)
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;
 	extern void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext & DrawContext);
 	//todo: for some cases, there is only one stream input when dealing with pgraph kelvin, and we could simply use codes similar to CxbxDrawPrimitiveUP() and call g_pD3DDevice->DrawIndexedPrimitiveUP() to simplify the code and save some time in copying vetex buffers.
-	
+	/*
 	if (D3D_Xbox_StreamCount == 1) {
 		CxbxDrawIndexedPrimitiveUP(DrawContext);
 	}
 	// xdk sample DohphinClassic uses 2 stream input, and declare 3 streams in vertex shader decl.
 	// Otogi also uses multiple stream input.
 	else {
-	
+	*/
 		DrawContext.pXboxVertexStreamZeroData = 0;
 		CxbxDrawIndexed(DrawContext);
-	}
+	//}
 
 }
 

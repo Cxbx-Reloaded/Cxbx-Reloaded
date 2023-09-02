@@ -307,7 +307,7 @@ DWORD CxbxrImpl_Swap(xbox::dword_xt Flags);
 #define PGRAPHUSE_EmuKickOff 0
 #define PGRAPHUSE_EmuKickOffWait 0
 xbox::dword_xt* CxbxrImpl_MakeSpace(void);
-
+void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurface*pZbuffer);
 
 /*
 notes for my trials and errors.
