@@ -4700,18 +4700,21 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
 	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
+	static X_D3DVIEWPORT8 HLE_Viewport;
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetViewport;//enum of this patched API
 	if (pViewport) {
-		pPush_local[2] = (DWORD)&pPush_local[3]; //total 14 DWORD space for arguments.
+		HLE_Viewport = *pViewport;
+		pPush_local[2] = (DWORD)&HLE_Viewport; //total 14 DWORD space for arguments.
+		/*
 		pPush_local[3] = (DWORD)pViewport->X;
 		pPush_local[4] = (DWORD)pViewport->Y;
 		pPush_local[5] = (DWORD)pViewport->Width;
 		pPush_local[6] = (DWORD)pViewport->Height;
 		pPush_local[7] = FtoDW(pViewport->MinZ);
 		pPush_local[8] = FtoDW(pViewport->MaxZ);
+		*/
 	}
 	else {
 		pPush_local[2] = (DWORD)pViewport;
