@@ -3056,9 +3056,11 @@ void init_xboxD3dGlobalPointer(void)
 		if (it != g_SymbolAddresses.end()) {
 			g_pXbox_D3DDevice = (xbox::dword_xt*)it->second;
 		}
-	}else{
-		CxbxrAbort("D3D_g_pDevice not available!");
 	}
+	if((g_pXbox_D3DDevice == nullptr)
+		|| (*g_pXbox_D3DDevice == 0))
+		CxbxrAbort("D3D_g_pDevice not available!");
+	
 
 	// get the transform matrix pointer in xbox d3d and store it in g_xbox_transform_matrix if it's not set yet
 	if (g_xbox_transform_matrix == nullptr) {
@@ -3074,7 +3076,7 @@ void init_xboxD3dGlobalPointer(void)
 			}
 		}
 		else {
-			it = g_SymbolAddresses.find("D3DDevice_SetTransform_0");
+			it = g_SymbolAddresses.find("D3DDevice_SetTransform_0__LTCG_eax1_edx2");
 			if (it != g_SymbolAddresses.end()) {
 				pSetTransform = (byte*)it->second;
 				// currently only fit for LTCG 5849
@@ -3096,7 +3098,15 @@ void Direct3D_CreateDevice_Start
 {
 #if 1
 	// init xbox d3d related pointers, D3DDevice, transform matrix, etx..
-	init_xboxD3dGlobalPointer();
+	if (g_pXbox_D3DDevice == nullptr) {
+		auto it = g_SymbolAddresses.find("D3D_g_pDevice");
+		if (it != g_SymbolAddresses.end()) {
+			g_pXbox_D3DDevice = (xbox::dword_xt*)it->second;
+		}
+	}
+	if (g_pXbox_D3DDevice == nullptr)
+		CxbxrAbort("D3D_g_pDevice not available!");
+
 #endif
 	CxbxVertexShaderSetFlags();
 
@@ -3135,14 +3145,7 @@ void Direct3D_CreateDevice_End
 )
 {
 #if 1 // restore the usage for EmuKickOff()
-    // Set g_pXbox_D3DDevice to point to the Xbox D3D Device
-    auto it = g_SymbolAddresses.find("D3D_g_pDevice");
-    if (it != g_SymbolAddresses.end()) {
-        g_pXbox_D3DDevice = (xbox::dword_xt *)it->second;
-    }
-    else {
-        EmuLog(LOG_LEVEL::ERROR2, "D3D_g_pDevice was not found!");
-    }
+	init_xboxD3dGlobalPointer();
 #endif
 
     UpdateHostBackBufferDesc();
