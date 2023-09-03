@@ -208,7 +208,7 @@ static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT
 
 
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
-	   std::map<UINT64, xbox::X_D3DBaseTexture*> g_TextureCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
+	   std::map<UINT64, xbox::X_D3DBaseTexture> g_TextureCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
 
 static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
@@ -3013,9 +3013,11 @@ void GetBackBufferPixelDimensions(float& x, float& y) {
 	}
 }
 
+static DWORD makeSpaceCount = 0;
 
 xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 {
+	makeSpaceCount++;
 	DWORD d3ddevice = *g_pXbox_D3DDevice;
 	xbox::dword_xt* result;
 	if (XB_TRMP(D3DDevice_MakeSpace)){
@@ -5131,7 +5133,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 		// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
 		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
 		if (it == g_TextureCache.end())
-			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, pTexture));
+			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture >(key, *pTexture));
 			//g_TextureCache.erase(key);
 		// always insert the new pTexture.
 		// todo: shall we keep the whole Texture resource here instead of the pTexture only?
@@ -5215,7 +5217,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 			UINT64 key = ((UINT64)(g_pXbox_SetTexture[Stage]->Format) << 32) | g_pXbox_SetTexture[Stage]->Data;
 			auto it = g_TextureCache.find(key);
 			if (it == g_TextureCache.end())
-				g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, g_pXbox_SetTexture[Stage]));
+				g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture >(key, CxbxActiveTextureCopies[Stage]));
 			// Note : Since g_pXbox_SetTexture and CxbxActiveTextureCopies are host-managed,
 			// Xbox code should never alter these members (so : no reference counting, etc).
 			// As long as that's guaranteed, this is a safe way to emulate SwitchTexture.
@@ -5705,7 +5707,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
 	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
+	
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer;//enum of this patched API

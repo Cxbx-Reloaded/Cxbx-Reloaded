@@ -280,7 +280,7 @@ FORCEINLINE DWORD Round(
 extern float CxbxrGetSuperSampleScale(void);
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
 static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
-extern std::map<UINT64, xbox::X_D3DBaseTexture*> g_TextureCache;
+extern std::map<UINT64, xbox::X_D3DBaseTexture> g_TextureCache;
 
 void CxbxrImpl_LazySetTextureState(NV2AState* d)
 {
@@ -302,15 +302,11 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				UINT64 key = ((UINT64)(pg->KelvinPrimitive.SetTexture[stage].Format) << 32) | pg->KelvinPrimitive.SetTexture[stage].Offset;
 				auto it = g_TextureCache.find(key);
 				if (it != g_TextureCache.end()){
-					//if the key is the same, both Format and Data shall be the same. but we still compare them in case the hose code altered the texture resouce.
-					if ((it->second->Format == pg->KelvinPrimitive.SetTexture[stage].Format)
-						&& (it->second->Data == pg->KelvinPrimitive.SetTexture[stage].Offset)) {
-						NV2A_texture_stage_texture[stage] = *(it->second);
-						g_pNV2A_SetTexture[stage] = (xbox::X_D3DBaseTexture*)it->second;
-						bTextureFound = true;
+					NV2A_texture_stage_texture[stage] = it->second;
+					g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
+					bTextureFound = true;
 						// can't return directly since we still have to process certain texture related TextureStates
 						//return;
-					}
 				}
 			    // if the texture is not found via the texture cache map, then we have to compose the texture via kelvin.
 				if(!bTextureFound){
@@ -3175,6 +3171,9 @@ void D3D_draw_arrays(NV2AState *d)
 
 	//LOG_INCOMPLETE(); // TODO : Implement D3D_draw_arrays
 
+	if (D3D_Xbox_StreamCount == 0)
+		return;
+
 	//DWORD vertex data array, 
 	// To be used as a replacement for DrawVertices, the caller needs to set the vertex format using IDirect3DDevice8::SetVertexInput before calling BeginPush.
 	// All attributes in the vertex format must be padded DWORD multiples, and the vertex attributes must be specified in the canonical FVF ordering
@@ -3325,6 +3324,9 @@ void D3D_draw_inline_array(NV2AState *d)
 void D3D_draw_inline_elements(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
+
+	if (D3D_Xbox_StreamCount == 0)
+		return;
 
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
@@ -3594,17 +3596,24 @@ extern void EmuExecutePushBufferRaw
 				dma_get_jmp_shadow = dma_get;
                 dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
                 //the first long jump is the jump to pushbuffer base set in CDevice init.
+
+				// NV2A uses long jump as subroutine call return. so we always clear subr_active here.
+				subr_active = false;
+
                 continue; // while
             case COMMAND_TYPE_CALL: // Note : NV2A call is used as jump, the sub_return is used as a flag to indicate where the jump was orginated.
-                if (subr_active) {
+				
+				
+				if (subr_active) {
                     LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
                     // TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
-                    goto finish; // For now, don't even attempt to run through
+					// treat call normally. 
+                    //goto finish; // For now, don't even attempt to run through
                 }
                 else {
                     LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
                 }
-
+				
                 subr_return = dma_get;
                 subr_active = true;
                 dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
