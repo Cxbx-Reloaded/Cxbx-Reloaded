@@ -3044,13 +3044,9 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void)
     }
 	return result;
 }
-
-void Direct3D_CreateDevice_Start
-(
-	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
-)
+static D3DMATRIX* g_xbox_transform_matrix = nullptr;
+void init_xboxD3dGlobalPointer(void)
 {
-#if 1
 	// restore the usage for EmuKickOff()/SetTransform()/GetTransform()
 	// Set g_pXbox_D3DDevice to point to the Xbox D3D Device
 	if (g_pXbox_D3DDevice == nullptr) {
@@ -3058,7 +3054,47 @@ void Direct3D_CreateDevice_Start
 		if (it != g_SymbolAddresses.end()) {
 			g_pXbox_D3DDevice = (xbox::dword_xt*)it->second;
 		}
+	}else{
+		CxbxrAbort("D3D_g_pDevice not available!");
 	}
+
+	// get the transform matrix pointer in xbox d3d and store it in g_xbox_transform_matrix if it's not set yet
+	if (g_xbox_transform_matrix == nullptr) {
+		byte* pSetTransform = nullptr;
+		auto it = g_SymbolAddresses.find("D3DDevice_SetTransform");
+		if (it != g_SymbolAddresses.end()) {
+			pSetTransform = (byte*)it->second;
+			if ((*(byte*)(pSetTransform + 0x11)) == 0x8D) {
+				g_xbox_transform_matrix = (D3DMATRIX*)(((*(byte*)(pSetTransform + 0x13)) * 0x40) + *g_pXbox_D3DDevice);
+			}
+			else {
+				g_xbox_transform_matrix = (D3DMATRIX*)((*(DWORD*)(pSetTransform + 0x19)) + *g_pXbox_D3DDevice);
+			}
+		}
+		else {
+			it = g_SymbolAddresses.find("D3DDevice_SetTransform_0");
+			if (it != g_SymbolAddresses.end()) {
+				pSetTransform = (byte*)it->second;
+				// currently only fit for LTCG 5849
+				if ((*(byte*)(pSetTransform + 0x10)) == 0x19) {
+					// not sure the offset is 0x19 or not, need to verify.
+					g_xbox_transform_matrix = (D3DMATRIX*)((*(DWORD*)(pSetTransform + 0x11)) + *g_pXbox_D3DDevice);
+				}
+			}
+		}
+	}
+	if (g_xbox_transform_matrix == nullptr)
+		CxbxrAbort("D3DDevice_SetTransform not available!");
+
+}
+void Direct3D_CreateDevice_Start
+(
+	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+#if 1
+	// init xbox d3d related pointers, D3DDevice, transform matrix, etx..
+	init_xboxD3dGlobalPointer();
 #endif
 	CxbxVertexShaderSetFlags();
 
@@ -3675,30 +3711,15 @@ void EmuKickOff(void)
 	DWORD * pXbox_D3DDevice;
 	DWORD  Xbox_D3DDevice;
 	// Set g_Xbox_D3DDevice to point to the Xbox D3D Device
-	auto it = g_SymbolAddresses.find("D3DDEVICE");
-	if (it != g_SymbolAddresses.end()) {
-		pXbox_D3DDevice = (DWORD*)it->second;
-		Xbox_D3DDevice =*pXbox_D3DDevice;
-		__asm {
+	// g_Xbox_D3DDevice is supposed to be set in D3DDevice_CreateDevice(), g_Xbox_D3DDevice to point to the Xbox D3D Device
+
+	Xbox_D3DDevice = *g_pXbox_D3DDevice;
+	__asm {
 			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
 			mov  ecx, Xbox_D3DDevice
 		}
-		XB_TRMP(CDevice_KickOff)();
-	}
-	// g_Xbox_D3DDevice is supposed to be set in D3DDevice_CreateDevice(), g_Xbox_D3DDevice to point to the Xbox D3D Device
-	if (g_pXbox_D3DDevice == nullptr) {
-		auto it = g_SymbolAddresses.find("D3DDEVICE");
-		if (it != g_SymbolAddresses.end()) {
-			g_pXbox_D3DDevice = (xbox::dword_xt *)it->second;
-		}
-	}
-	Xbox_D3DDevice = *g_pXbox_D3DDevice;
-	__asm {
-		//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
-		mov  ecx, Xbox_D3DDevice
-	}
-	XB_TRMP(CDevice_KickOff)();
-
+		if(XB_TRMP(CDevice_KickOff))
+		    XB_TRMP(CDevice_KickOff)();
 }
 
 void EmuKickOffWait(void)
@@ -5849,24 +5870,37 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 (
-    X_D3DSurface* pSourceSurface,
-    CONST RECT* pSourceRectsArray,
-    uint_xt                cRects,
-    X_D3DSurface* pDestinationSurface,
-    CONST POINT* pDestPointsArray
-)
+	X_D3DSurface* pSourceSurface,
+	CONST RECT* pSourceRectsArray,
+	uint_xt                cRects,
+	X_D3DSurface* pDestinationSurface,
+	CONST POINT* pDestPointsArray
+	)
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pSourceSurface);
-        LOG_FUNC_ARG(pSourceRectsArray);
-        LOG_FUNC_ARG(cRects);
-        LOG_FUNC_ARG(pDestinationSurface);
-        LOG_FUNC_ARG(pDestPointsArray);
-    LOG_FUNC_END;
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSourceSurface);
+	LOG_FUNC_ARG(pSourceRectsArray);
+	LOG_FUNC_ARG(cRects);
+	LOG_FUNC_ARG(pDestinationSurface);
+	LOG_FUNC_ARG(pDestPointsArray);
+	LOG_FUNC_END;
 	// Call trampoline if pushbuffer is recording.
+	/* // CopyRects() is not allowed in pushbuffer recording. so we don't need to trampoline here even we're recording the pushbuffer.
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_CopyRects)(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
 	}
+	*/
+	CxbxrImpl_CopyRects(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
+}
+void WINAPI CxbxrImpl_CopyRects
+(
+	xbox::X_D3DSurface * pSourceSurface,
+	CONST RECT * pSourceRectsArray,
+	xbox::uint_xt                cRects,
+	xbox::X_D3DSurface * pDestinationSurface,
+	CONST POINT * pDestPointsArray
+	)
+{
 	// We skip the trampoline to prevent unnecessary work
     // As our surfaces remain on the GPU, calling the trampoline would just
     // result in a memcpy from an empty Xbox surface to another empty Xbox Surface
@@ -7269,7 +7303,6 @@ D3DMATRIX g_xbox_transform_ViewportTransform;
 D3DMATRIX g_xbox_transform_ProjectionViewportTransform;
 
 extern inline bool is_pgraph_using_NV2A_Kelvin(void);
-static D3DMATRIX * g_xbox_transform_matrix = nullptr;
 static D3DMATRIX * g_xbox_ProjectionViewportTransform = nullptr;
 
 void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient) {
@@ -7801,31 +7834,6 @@ void CxbxrImpl_GetTransform
 	D3DMATRIX *pMatrix
 )
 {
-	// get the transform matrix pointer in xbox d3d and store it in g_xbox_transform_matrix if it's not set yet
-	if (g_xbox_transform_matrix == nullptr) {
-		byte* pSetTransform = nullptr;
-		auto it = g_SymbolAddresses.find("D3DDevice_SetTransform");
-		if (it != g_SymbolAddresses.end()) {
-			pSetTransform = (byte*)it->second;
-			if ((*(byte*)(pSetTransform + 0x11)) == 0x8D) {
-				g_xbox_transform_matrix = (D3DMATRIX*)(((*(byte*)(pSetTransform + 0x13)) * 0x40) + *g_pXbox_D3DDevice);
-			}
-			else {
-				g_xbox_transform_matrix = (D3DMATRIX*)((*(DWORD*)(pSetTransform + 0x19)) + *g_pXbox_D3DDevice);
-			}
-		}
-		else {
-			it = g_SymbolAddresses.find("D3DDevice_SetTransform_0");
-			if (it != g_SymbolAddresses.end()) {
-				pSetTransform = (byte*)it->second;
-				// currently only fit for LTCG 5849
-				if ((*(byte*)(pSetTransform + 0x10)) == 0x19) {
-					// not sure the offset is 0x19 or not, need to verify.
-					g_xbox_transform_matrix = (D3DMATRIX*)((*(DWORD*)(pSetTransform + 0x11)) + *g_pXbox_D3DDevice);
-				}
-			}
-		}
-	}
 	// get the transform matrix
 	if (g_xbox_transform_matrix != nullptr && pMatrix!=nullptr) {
 		*pMatrix = *(g_xbox_transform_matrix + State);
@@ -7838,37 +7846,11 @@ void CxbxrImpl_SetTransformFast
 	CONST D3DMATRIX *pMatrix
 )
 {
-	// get the transform matrix pointer in xbox d3d and store it in g_xbox_transform_matrix if it's not set yet
-	if (g_xbox_transform_matrix == nullptr) {
-		byte * pSetTransform = nullptr;
-		auto it = g_SymbolAddresses.find("D3DDevice_SetTransform");
-		if (it != g_SymbolAddresses.end()) {
-			pSetTransform = (byte *)it->second;
-			if ((*(byte*)(pSetTransform + 0x11)) == 0x8D) {
-				g_xbox_transform_matrix = (D3DMATRIX *)(((*(byte*)(pSetTransform + 0x13)) * 0x40) + *g_pXbox_D3DDevice);
-			}
-			else {
-				g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x19)) + *g_pXbox_D3DDevice);
-			}
-		}
-		else {
-			it = g_SymbolAddresses.find("D3DDevice_SetTransform_0");
-			if (it != g_SymbolAddresses.end()) {
-				pSetTransform = (byte *)it->second;
-				// currently only fit for LTCG 5849
-				if ((*(byte*)(pSetTransform + 0x10)) == 0x19) {
-					// not sure the offset is 0x19 or not, need to verify.
-					g_xbox_transform_matrix = (D3DMATRIX *)((*(DWORD*)(pSetTransform + 0x11)) + *g_pXbox_D3DDevice);
-				}
-			}
-		}
-	}
 	// set xbox d3d transform matrix
 	if (g_xbox_transform_matrix != nullptr && pMatrix != nullptr) {
 		// store the transform matrix
 		*(g_xbox_transform_matrix + State) = *pMatrix;
 	}
-
 }
 
 void CxbxrImpl_SetTransform
@@ -8347,7 +8329,7 @@ constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage) / VERTICES_PER_TRIA
 // and only needs to grow when  current length doesn't suffices for a larger draw.
 INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices)
 {
-	NrOfQuadIndices = (NrOfQuadIndices/2) * 3;//we're passing in the xbox vertex count, which minus 2 becomes quad count, multiply 3 becomes triangle list index count
+	NrOfQuadIndices = (NrOfQuadIndices * 3 /2) ;//we're passing in the xbox vertex count, which minus 2 becomes quad count, multiply 3 becomes triangle list index count
 	if (g_QuadListToTriangleIndexData_Size < NrOfQuadIndices)
 	{
 		g_QuadListToTriangleIndexData_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
