@@ -469,12 +469,15 @@ extern void EmuExecutePushBufferRaw
 			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
+			//NV2A uses COMMAND_TYPE_JUMP_LONG as return for COMMAND_TYPE_CALL. we clear the subr_active here to indicate we have returned from COMMAND_TYPE_CALL.
+			subr_active = false;
 			continue; // while
 		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
 			if (subr_active) {
 				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
 				// TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
-				return; // For now, don't even attempt to run through
+				// For now, don't even attempt to run through, this should never happened, if it happened, the pgraph handler will go crazy.
+				CxbxrAbort("Pushbuffer COMMAND_TYPE_CALL called without return!");
 			}
 			else {
 				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
