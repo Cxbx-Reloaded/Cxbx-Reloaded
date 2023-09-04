@@ -816,17 +816,22 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 		NV2A_alphaArg0[i] = 1;
 
 		// if start stage both colorOP and alphaOP are D3DTOP_DISABLE, then all stage after it shall be D3DTOP_DISABLE.
-		/*
-		if (stage == startStage) {
+		
+		if (stage == 0) {//todo: 0 or start stage?
+			// xbox convert stage 0 colorOP==X_D3DTOP_DISABLE to selec arg1 with arg1=current, and in stage 0, current==diffuse.
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
 			//if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& (alphaICW == (0x14200000)) && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-			if ((colorICW == 0x04200000) && (alphaICW == (0x14200000)) && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
+			if ((colorICW == 0x04200000)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
+				//NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
+			}
+			if ((alphaICW == (0x14200000))) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
+				//NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 			}
 		}
-		*/
+		
 		// FIXME!!! can we really continue the loop when colorOP == X_D3DTOP_DISABLE?
 		if (NV2A_colorOP[i] == xbox::X_D3DTOP_DISABLE) {
 			;// NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_DISABLE);
@@ -1042,6 +1047,22 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 					//FIXME!!! shall we continue loop here?
 				}
+				// xbox convert stage 0 colorOP==X_D3DTOP_DISABLE to selec arg1 with arg1=current, and in stage 0, current==diffuse.
+				if (i == 0) {
+					if (NV2A_colorArg0[i] == 0) {
+						NV2A_colorArg0[i] = 1;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg0[i]);
+					}
+					if (NV2A_colorArg1[i] == 0) {
+						NV2A_colorArg1[i] = 1;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg1[i]);
+					}
+					if (NV2A_colorArg2[i] == 0) {
+						NV2A_colorArg2[i] = 1;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg2[i]);
+					}
+				}
+
 			}
 		}
 		
@@ -1282,6 +1303,22 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 				else {
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 				}
+				// xbox convert stage 0 colorOP==X_D3DTOP_DISABLE to selec arg1 with arg1=current, and in stage 0, current==diffuse.
+				if (i == 0) {
+					if (NV2A_alphaArg0[i] == 0) {
+						NV2A_alphaArg0[i] = 1;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
+					}
+					if (NV2A_alphaArg1[i] == 0) {
+						NV2A_alphaArg1[i] = 1;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg1[i]);
+					}
+					if (NV2A_alphaArg2[i] == 0) {
+						NV2A_alphaArg2[i] = 1;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg2[i]);
+					}
+				}
+
 			}
 		}
 		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAOP, NV2A_alphaOP[i]);
@@ -1858,8 +1895,8 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		float bias, scale;
 		fogGenMode = pg->KelvinPrimitive.SetFogGenMode;
 		fogMode = pg->KelvinPrimitive.SetFogMode;
-		bias = DWtoF(pg->KelvinPrimitive.SetFogParamsBias);
-		scale = DWtoF(pg->KelvinPrimitive.SetFogParamsScale);
+		bias = pg->KelvinPrimitive.SetFogParamsBias;
+		scale = pg->KelvinPrimitive.SetFogParamsScale;
 		// D3D__RenderState[D3DRS_RANGEFOGENABLE] == true fogGenMode =NV097_SET_FOG_GEN_MODE_V_RADIAL, else fogGenMode =NV097_SET_FOG_GEN_MODE_V_PLANAR
 		// notice that when fogTableMode == D3DFOG_NONE, fogGenMode will be reset to NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA, in  that case, we won't be able to know what D3D__RenderState[D3DRS_RANGEFOGENABLE] should be
 		bool bD3DRS_RangeFogEnable = fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL ? true : false;
@@ -2889,8 +2926,7 @@ void D3D_draw_state_update(NV2AState* d)
 	if (pNV2A_PixelShader == nullptr) {
 		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
 			// only update the combiner state when we're in fixed function pixel shader
-			if (pNV2A_PixelShader == nullptr)
-				CxbxrImpl_LazySetCombiners(d);
+			CxbxrImpl_LazySetCombiners(d);
 			// clear dirty flag
 			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 		}
