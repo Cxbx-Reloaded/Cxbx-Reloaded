@@ -1064,21 +1064,22 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					//FIXME!!! shall we continue loop here?
 				}
 				// xbox convert stage 0 colorOP==X_D3DTOP_DISABLE to selec arg1 with arg1=current, and in stage 0, current==diffuse.
+				/*
 				if (i == 0) {
-					if (NV2A_colorArg0[i] == 0) {
-						NV2A_colorArg0[i] = 1;
+					if (NV2A_colorArg0[i] == xbox::X_D3DTA_DIFFUSE) {
+						NV2A_colorArg0[i] = xbox::X_D3DTA_CURRENT;
 						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg0[i]);
 					}
-					if (NV2A_colorArg1[i] == 0) {
-						NV2A_colorArg1[i] = 1;
-						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg1[i]);
+					if (NV2A_colorArg1[i] == xbox::X_D3DTA_DIFFUSE) {
+						NV2A_colorArg1[i] = xbox::X_D3DTA_CURRENT;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG1, NV2A_colorArg1[i]);
 					}
-					if (NV2A_colorArg2[i] == 0) {
-						NV2A_colorArg2[i] = 1;
-						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg2[i]);
+					if (NV2A_colorArg2[i] == xbox::X_D3DTA_DIFFUSE) {
+						NV2A_colorArg2[i] = xbox::X_D3DTA_CURRENT;
+						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
 					}
 				}
-
+				*/
 			}
 		}
 		
