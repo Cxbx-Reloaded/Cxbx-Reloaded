@@ -2695,9 +2695,10 @@ static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
 
 // Get the raw X and Y scale of the multisample mode
 // Both MSAA and SSAA result in increased rendertarget size
+// add BuckBufferScale to comply xbox behavior
 void GetMultiSampleScaleRaw(float& xScale, float& yScale) {
-	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType));
-	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType));
+	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType))* g_Xbox_BackbufferScaleX;
+	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType))* g_Xbox_BackbufferScaleY;
 }
 
 // Get the "screen" scale factors
@@ -2730,24 +2731,42 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	// The title uses MSAA, which increases the rendertarget size, but leaves the screen scale unaffected
 	// The backbuffer scale is (0.75, 1), which contributes to the screen scale
 	// So the Xbox expects vertices in 480*480 coordinate space
-
-	// SSAA increases the screen scale (but MSAA does not)
-	bool isMultiSampleEnabled = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
+	// todo: find supersample type info from kelvin and use it here.
 	bool isSuperSampleMode = g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_SUPER;
+	extern bool is_pgraph_using_NV2A_Kelvin(void);
+	extern void CxbxrGetSuperSampleScaleXY(float& x, float& y);
 
-	// Apply multisample scale if supersampling is enabled
-	// Test cases:
-	// Antialias sample (text overlay is drawn with antialiasing disabled)
-	if (isMultiSampleEnabled && isSuperSampleMode) {
-		GetMultiSampleScaleRaw(scaleX, scaleY);
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		bool isMultiSampleEnabled = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
+
+		// Apply multisample scale if supersampling is enabled
+		// Test cases:
+		// Antialias sample (text overlay is drawn with antialiasing disabled)
+		if (isMultiSampleEnabled && isSuperSampleMode) {
+			CxbxrGetSuperSampleScaleXY(scaleX, scaleY);
+			scaleX*= g_Xbox_BackbufferScaleX;
+			scaleY*= g_Xbox_BackbufferScaleY;
+		}
+	}
+	else {
+		// SSAA increases the screen scale (but MSAA does not)
+		bool isMultiSampleEnabled = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
+		//bool isSuperSampleMode = g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_SUPER;
+
+		// Apply multisample scale if supersampling is enabled
+		// Test cases:
+		// Antialias sample (text overlay is drawn with antialiasing disabled)
+		if (isMultiSampleEnabled && isSuperSampleMode) {
+			GetMultiSampleScaleRaw(scaleX, scaleY);
+		}
 	}
 
 	// Account for the backbuffer scale
 	// Test cases:
 	// Vertex program passthrough equivalent (title does apply backbuffer scale):
 	// - NFS:HP2 (car speed and other in-game UI elements)
-	scaleX *= g_Xbox_BackbufferScaleX;
-	scaleY *= g_Xbox_BackbufferScaleY;
+	//scaleX *= g_Xbox_BackbufferScaleX;
+	//scaleY *= g_Xbox_BackbufferScaleY;
 }
 
 // Get the raw subpixel dimensions of the rendertarget buffer
@@ -3486,6 +3505,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 
 	g_Xbox_BackbufferScaleX = x;
 	g_Xbox_BackbufferScaleY = y;
+	// todo: shall we follow xbox behavior to call SetRenderTarget() here?
 }
 
 // ******************************************************************
@@ -4110,6 +4130,7 @@ void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 	// Antialiasing mode affects the viewport offset and scale
 	float aaScaleX, aaScaleY;
 	float aaOffsetX, aaOffsetY;
+	//GetScreenScaleFactors() returns scales from kelvin when we're in pgraph draw calls
 	GetScreenScaleFactors(aaScaleX, aaScaleY);
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
 
@@ -4153,6 +4174,7 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 
 	float screenScaleX, screenScaleY;
 	float aaOffsetX, aaOffsetY;
+	//GetScreenScaleFactors() returns scales from kelvin when we're in pgraph draw calls
 	GetScreenScaleFactors(screenScaleX, screenScaleY);
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
 
@@ -5077,10 +5099,32 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
     }
 }
 
-// ******************************************************************
-// * patch: D3DDevice_Swap
-// ******************************************************************
-xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
+ void CxbxrGetXboxBackBuffer(int BackBuffer, xbox::X_D3DSurface** ppXboxFBuffer)
+{
+	 xbox::X_D3DSurface* pXboxBackBuffer;
+
+	 if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
+		 XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, ppXboxFBuffer);
+	 }
+	 else if (XB_TRMP(D3DDevice_GetBackBuffer2) != nullptr) {
+		 *ppXboxFBuffer = XB_TRMP(D3DDevice_GetBackBuffer2)(BackBuffer);
+	 }
+	 else {
+		 __asm {
+			 mov  eax, BackBuffer
+			 call XB_TRMP(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
+			 mov pXboxBackBuffer, eax
+		 }
+		 *ppXboxFBuffer = pXboxBackBuffer;
+	 }
+
+	 // Now pXboxBackbuffer points to the requested Xbox backbuffer
+	 if (*ppXboxFBuffer == nullptr) {
+		 CxbxrAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
+	 }
+}
+
+DWORD CxbxrImpl_Swap
 (
 	dword_xt Flags
 )
@@ -5090,35 +5134,105 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	// Handle swap flags
 	// We don't maintain a swap chain, and draw everything to backbuffer 0
 	// so just hack around the swap flags for now...
-	static float prevBackBufferScaleX;
-	if (Flags == X_D3DSWAP_BYPASSCOPY) {
+	// xdk sample BackbufferScale uses D3DSWAP_COPY when BackBufferScale was altered, and uses D3DSWAP_FINISH when 
+	static float prevBackBufferScaleX, prevBackBufferScaleY;
+	/*
+	if ((Flags == xbox::X_D3DSWAP_BYPASSCOPY)
+	  ||(Flags == xbox::X_D3DSWAP_COPY)) {
 		// Test case: MotoGp2
 		// Title handles copying to the frontbuffer itself, but we don't keep track of one
 		// MotoGp2 seems to copy a black rectangle over the backbuffer
 		// HACK: Effectively disable drawing - so the title can't copy anything around via draws
 		// and we just have to hope the title leaves the backbuffer untouched...
 		prevBackBufferScaleX = g_Xbox_BackbufferScaleX;
-		g_Xbox_BackbufferScaleX = 0;
+		prevBackBufferScaleY = g_Xbox_BackbufferScaleY;
+		// default 
+		g_Xbox_BackbufferScaleX = 1.0;
+		g_Xbox_BackbufferScaleY = 1.0;
 	}
-	else if (g_LastD3DSwap == X_D3DSWAP_BYPASSCOPY) {
-		g_Xbox_BackbufferScaleX = prevBackBufferScaleX;
+	else if ((g_LastD3DSwap == xbox::X_D3DSWAP_BYPASSCOPY)
+		   ||(Flags == xbox::X_D3DSWAP_FINISH)) {
+		// todo:this might be unnecessary, the backbuffer scale seems to be reset evry time swap() was called.
+		//g_Xbox_BackbufferScaleX = prevBackBufferScaleX;
+		//g_Xbox_BackbufferScaleY = prevBackBufferScaleY;
 	}
-
+	*/
 	g_LastD3DSwap = (xbox::X_D3DSWAP)Flags;
+
+	HRESULT hRet;
+	//reset BackbufferScale before any possible early return of swap(),
 
 	// Early exit if we're not ready to present
 	// Test Case: Antialias sample, BackBufferScale sample
 	// Which use D3DSWAP_COPY to render UI directly to the frontbuffer
 	// If we present before the UI is drawn, it will flicker
-	if (Flags != X_D3DSWAP_DEFAULT && !(Flags & X_D3DSWAP_FINISH)) {
-		if (Flags == X_D3DSWAP_COPY) { LOG_TEST_CASE("X_D3DSWAP_COPY"); }
-		if (Flags == X_D3DSWAP_BYPASSCOPY) { LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY"); }
+	if (Flags != xbox::X_D3DSWAP_DEFAULT && !(Flags & xbox::X_D3DSWAP_FINISH)) {
+
+		if (Flags == xbox::X_D3DSWAP_COPY) {
+			LOG_TEST_CASE("X_D3DSWAP_COPY");
+			xbox::X_D3DSurface* pXboxFrontBufferSurface;
+			CxbxrGetXboxBackBuffer(-1,&pXboxFrontBufferSurface);
+			//use xbox front buffer as temp buffer for scale up destination.
+			auto pXboxFrontBufferHostSurface = GetHostSurface(pXboxFrontBufferSurface, D3DUSAGE_RENDERTARGET);
+			//
+			auto pXboxRenderTargetSurface = GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET);
+			float height, width;
+			//width/height devided by the aaScaleX/aaScaleY which already multiplied by BackBufferScale.
+			GetRenderTargetBaseDimensions(width, height);
+
+			GetRenderTargetRawDimensions(width, height, g_pXbox_RenderTarget);
+
+			float aaX, aaY;
+			GetMultiSampleScaleRaw(aaX, aaY);
+
+			width *= aaX;
+			height *= aaY;
+			
+			IDirect3DSurface* pExistingHostRenderTarget = nullptr;
+			hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingHostRenderTarget);
+			assert(hRet == D3D_OK);
+
+			RECT scr{};
+			scr.top = (LONG)0;
+			scr.left = (LONG)0;
+			scr.right = (LONG)width;
+			scr.bottom = (LONG)height;
+
+			// stretch original render target rect(smaller) to full destination render target.
+			hRet = g_pD3DDevice->StretchRect(
+				/* pSourceSurface = */ pExistingHostRenderTarget,
+				/* pSourceRect = */ &scr,
+				/* pDestSurface = */ pXboxFrontBufferHostSurface,
+				/* pDestRect = */ nullptr,
+				/* Filter = */ D3DTEXF_LINEAR
+			);
+			assert(hRet == D3D_OK);
+
+			// using StretchRect to update full surfaces
+			hRet = g_pD3DDevice->StretchRect(
+				/* pSourceSurface = */ pXboxFrontBufferHostSurface,
+				/* pSourceRect = */ NULL,
+				/* pDestSurface = */ pExistingHostRenderTarget,
+				/* pDestRect = */ nullptr,
+				/* Filter = */ D3DTEXF_LINEAR
+			);
+			assert(hRet == D3D_OK);
+
+		}
+
+		if (Flags == xbox::X_D3DSWAP_BYPASSCOPY) {
+			LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY");
+		}
+		g_Xbox_BackbufferScaleX = 1.0;
+		g_Xbox_BackbufferScaleY = 1.0;
 		return g_Xbox_SwapData.Swap;
 	}
 
+	g_Xbox_BackbufferScaleX = 1.0;
+	g_Xbox_BackbufferScaleY = 1.0;
 	// Fetch the host backbuffer
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
-	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+	hRet = g_pD3DDevice->GetBackBuffer(
 		0, // iSwapChain
 		0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 
@@ -5237,7 +5351,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 				// We also need to account for any MSAA which may have enlarged the Xbox Backbuffer
 				float xScale, yScale;
 				GetMultiSampleScaleRaw(xScale, yScale);
-
+				
                 xScale = (float)width / ((float)XboxBackBufferWidth / xScale);
                 yScale = (float)height / ((float)XboxBackBufferHeight / yScale);
 
@@ -5347,6 +5461,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
     // RenderStates need reapplying each frame, but can be re-used between draw calls
     // This forces them to be reset
     XboxRenderStates.SetDirty();
+	NV2ARenderStates.SetDirty();
 
     // Check if we need to enable our frame-limiter
     xbox::dword_xt presentationInverval = g_Xbox_PresentationInterval_Override > 0 ? g_Xbox_PresentationInterval_Override : g_Xbox_PresentationInterval_Default;
