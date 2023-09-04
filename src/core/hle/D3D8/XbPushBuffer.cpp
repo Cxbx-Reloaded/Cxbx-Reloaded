@@ -371,7 +371,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 			    }// end of if (it != g_TextureCache.end())/else
 				//update texture stage states
 				DWORD filter, address, control0, magFilter, minFilter, colorSign, convolutionKernel;
-				INT lodBias;
+				float lodBias;
 				filter = pg->KelvinPrimitive.SetTexture[stage].Filter;//NV097_SET_TEXTURE_FILTER(stage)
 				/*
 				DWORD filter
@@ -397,12 +397,11 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				colorSign = pg->KelvinPrimitive.SetTexture[stage].Filter & 0xF0000000;// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORSIGN, colorSign);
 				// bumpenv always force setting color sign to D3DTSIGN_GSIGNED | D3DTSIGN_BSIGNED
-				if (colorSign == (NV097_SET_TEXTURE_FILTER_GSIGNED | NV097_SET_TEXTURE_FILTER_BSIGNED)) {
-					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
-				}
-				magFilter = (filter & NV097_SET_TEXTURE_FILTER_MAG) >> 24;
-				minFilter = (filter & NV097_SET_TEXTURE_FILTER_MIN) >> 16;
-				lodBias = DWtoF(filter & NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS);
+				//if (colorSign == (NV097_SET_TEXTURE_FILTER_GSIGNED | NV097_SET_TEXTURE_FILTER_BSIGNED)) {
+				//	NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
+				//}
+				
+				lodBias = (float)(filter & NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS);
 				
 				// Fixedme!!!
 				/*
@@ -421,7 +420,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				float mipMapLodBias = lodBias-256.0*SuperSampleLODBias;
 
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPMAPLODBIAS, FtoDW(mipMapLodBias));
-				convolutionKernel = filter&(0x70000|0x4000|0x2000);//NV097_SET_TEXTURE_FILTER_MIN_CONVOLUTION_2D_LOD0 | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3 | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_QUINCUNX
+				
 /*
 #define NV097_SET_TEXTURE_FILTER_MIN_BOX_LOD0                               0x00000001
 #define NV097_SET_TEXTURE_FILTER_MIN_TENT_LOD0                              0x00000002
@@ -465,36 +464,53 @@ FORCEINLINE DWORD MinFilter(
 				//control0 |= DRF_NUMFAST(097, _SET_TEXTURE_CONTROL0, _LOG_MAX_ANISO,maxAnisotropy);
 				DWORD maxAnisotropy = (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_LOG_MAX_ANISO) >> 4;
 				DWORD minMipFilter = xbox::X_D3DTEXF_NONE;
-				if ((magFilter == xbox::X_D3DTEXF_QUINCUNX)) {//NV097_SET_TEXTURE_FILTER_MAG_CONVOLUTION_2D_LOD0=0x4, D3DTEXF_LINEAR=2
+				magFilter = (filter & NV097_SET_TEXTURE_FILTER_MAG) >> 24;
+				minFilter = (filter & NV097_SET_TEXTURE_FILTER_MIN) >> 16;
+				//reverse minMipFilter and minFilter from g_MinFilter[2][3]
+				minMipFilter = (minFilter - 1) / 2;
+				minFilter = (minFilter & 1) ? 1 : 2;
+				convolutionKernel = filter & NV097_SET_TEXTURE_FILTER_MIN | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL | NV097_SET_TEXTURE_FILTER_MAG;//(0x70000 | 0x4000 | 0x2000)
+				//NV097_SET_TEXTURE_FILTER_MIN_CONVOLUTION_2D_LOD0 | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3 | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_QUINCUNX 
+				if (((convolutionKernel& NV097_SET_TEXTURE_FILTER_MIN) == NV097_SET_TEXTURE_FILTER_MIN_CONVOLUTION_2D_LOD0)
+					&&(magFilter == xbox::X_D3DTEXF_QUINCUNX)
+					&&(minFilter == xbox::X_D3DTEXF_LINEAR)) {//NV097_SET_TEXTURE_FILTER_MAG_CONVOLUTION_2D_LOD0=0x4, D3DTEXF_LINEAR=2
 					//(minFilter > D3DTEXF_ANISOTROPIC) ||	(magFilter > D3DTEXF_ANISOTROPIC)
 					magFilter = xbox::X_D3DTEXF_QUINCUNX;
-					if (((convolutionKernel & 0x0004000) != 0)) {//NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3=0x02<<13
+					if (((convolutionKernel & NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL) == NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3)) {//NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3=0x02<<13
 						magFilter = xbox::X_D3DTEXF_GAUSSIANCUBIC;;//(minFilter == D3DTEXF_GAUSSIANCUBIC) ||	(magFilter == D3DTEXF_GAUSSIANCUBIC) //xbox::X_D3DTEXF_GAUSSIANCUBIC=5
 					}
 					minFilter = magFilter;
 				}
-				else {
-					minFilter = (minFilter & 1)?1:2;
-					minMipFilter = (minFilter-1) /2 ;
-					
+				//only reverse mag/min filter back to when maxAnisotropy is working
+				else if((maxAnisotropy > 0)
+					&&(magFilter== xbox::X_D3DTEXF_LINEAR)
+					&&(minFilter == xbox::X_D3DTEXF_LINEAR)){
+					//control0 |= NV097_SET_TEXTURE_CONTROL0_LOG_MAX_ANISO,maxAnisotropy;
+					/*
 					if ((minFilter == xbox::X_D3DTEXF_POINT) && (magFilter == xbox::X_D3DTEXF_POINT) && (maxAnisotropy == 0)) {//D3DTEXF_POINT=1
 						//(minFilter < D3DTEXF_ANISOTROPIC) && (magFilter < D3DTEXF_ANISOTROPIC) // D3DTEXF_ANISOTROPIC=3
-						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, 0);
+						//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, 0);
 						minFilter = 3;
 						magFilter = 3;
 				    }
 					else if ((minFilter == xbox::X_D3DTEXF_LINEAR) && (magFilter == xbox::X_D3DTEXF_LINEAR)&&(maxAnisotropy!=0)) {//D3DTEXF_LINEAR=2
 						//(minFilter < D3DTEXF_ANISOTROPIC) && (magFilter < D3DTEXF_ANISOTROPIC)
-						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, maxAnisotropy + 1);
+						//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, maxAnisotropy + 1);
+						maxAnisotropy++;
 						minFilter = 3;
 						magFilter = 3;
 					}
 					else {
 						;//minFilter and magFilter untouched.
 					}
-					NV2ARenderStates.SetXboxRenderState(xbox::X_D3DTSS_MIPFILTER, minMipFilter);
+					*/
+					maxAnisotropy++;
+					minFilter = xbox::X_D3DTEXF_ANISOTROPIC;
+					magFilter = xbox::X_D3DTEXF_ANISOTROPIC;
 				}
-
+				// for other cases, we keep min/mag filters as is.
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, maxAnisotropy);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPFILTER, minMipFilter);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MINFILTER, minFilter);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAGFILTER, magFilter);
 
@@ -509,8 +525,8 @@ FORCEINLINE DWORD MinFilter(
 				address = pg->KelvinPrimitive.SetTexture[stage].Address;
 				warp=address & 0xFF000000; 
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSU, address& NV097_SET_TEXTURE_ADDRESS_U);
-				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSV, address & NV097_SET_TEXTURE_ADDRESS_V>>8);
-				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSW, address & NV097_SET_TEXTURE_ADDRESS_P>>16);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSV, (address & NV097_SET_TEXTURE_ADDRESS_V)>>8);
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSW, (address & NV097_SET_TEXTURE_ADDRESS_P)>>16);
 
 			}
 		}
@@ -1522,7 +1538,8 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 				if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
 					
 					CxbxrGetViewport(Viewport);
-					CxbxrImpl_SetViewport(&Viewport);
+					// our viewport will be update to host later.
+					//CxbxrImpl_SetViewport(&Viewport);
 				}
 				NV2A_viewport_dirty = false;
 			}
@@ -2970,7 +2987,8 @@ void D3D_draw_state_update(NV2AState* d)
 			//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
 				xbox::X_D3DVIEWPORT8 Viewport;
 				CxbxrGetViewport(Viewport);
-				CxbxrImpl_SetViewport(&Viewport);
+				// no need to call SetViewport here.in CxbxUpdateNativeD3DResources(), CxbxUpdateHostViewport() will pickup our viewport.
+				//CxbxrImpl_SetViewport(&Viewport);
 			//}
 			NV2A_viewport_dirty = false;
 		}

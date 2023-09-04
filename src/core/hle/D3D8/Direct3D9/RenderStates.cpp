@@ -427,7 +427,7 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_STENCILFAIL:
             Value = EmuXB2PC_D3DSTENCILOP(Value);
             break;
-        case xbox::X_D3DRS_MULTISAMPLETYPE:
+        case xbox::X_D3DRS_MULTISAMPLETYPE://D3DRS_MULTISAMPLEMODE
             SetXboxMultiSampleType(Value);
             break;
         default:

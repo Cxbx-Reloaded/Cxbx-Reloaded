@@ -9211,7 +9211,11 @@ void CxbxUpdateHostViewport() {
 	float aaOffsetX, aaOffsetY;
 	GetMultiSampleScaleRaw(aaScaleX, aaScaleY);
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
-
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		CxbxrGetSuperSampleScaleXY(aaScaleX, aaScaleY);
+		if (aaScaleX < 1.0)aaScaleX = 1.0;
+		if (aaScaleY < 1.0)aaScaleY = 1.0;
+	}
 	DWORD HostRenderTarget_Width, HostRenderTarget_Height;
 	if (!GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
 		LOG_TEST_CASE("Could not get rendertarget dimensions while setting the viewport");
@@ -9223,6 +9227,9 @@ void CxbxUpdateHostViewport() {
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
 		D3DVIEWPORT hostViewport = g_Xbox_Viewport;
+		// use viewport composed from kelvin when we're in pgraph draw calls.
+		if(is_pgraph_using_NV2A_Kelvin())
+		    CxbxrGetViewport(hostViewport);
 		hostViewport.X *= Xscale;
 		hostViewport.Y *= Yscale;
 		hostViewport.Width *= Xscale;

@@ -3650,9 +3650,10 @@ int pgraph_handle_method(
                 case NV097_SET_LOGIC_OP://done, D3DRS_LOGICOP //pg->KelvinPrimitive.SetLogicOp
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_BLEND / 4],
                     //		 NV_PGRAPH_BLEND_LOGICOP, arg0 & 0xF);
-                    if (pg->KelvinPrimitive.SetLogicOp !=0)//D3DLOGICOP_NONE)
+                    if (pg->KelvinPrimitive.SetLogicOp != 0) {
                         NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, pg->KelvinPrimitive.SetLogicOp);
-                    else
+                    }
+                    else//D3DLOGICOP_NONE)
                         NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, 0);
                     break;
 
@@ -3815,7 +3816,7 @@ int pgraph_handle_method(
                             pgraph_notuse_NV2A_Kelvin();
                             break;
                         }
-                        case DrawMode::InlineArray: {
+                        case DrawMode::InlineArray: {// d3d DrawVerticesUP()
                             NV2A_GL_DPRINTF(false, "Inline Array");
 
                             assert(pg->draw_arrays_length == 0);
