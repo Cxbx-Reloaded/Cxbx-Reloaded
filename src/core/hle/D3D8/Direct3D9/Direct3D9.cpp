@@ -2752,6 +2752,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 		// (due to alignment) always-zero least significant bit :
 		LookupKey |= 1;
 	}
+	/* // quadstrip doesn't need convertion. only need to convert the primitive type to triangle strip.
 	else if(convertIndexBuffer == convertQuadStrip) {
 			LOG_TEST_CASE("ConvertQuadStripToTriangleList");
 			RequiredIndexCount = QuadListToTriangleListVertexCount( (XboxIndexCount-2)*2+6 );//in quadstrip, (vertex count -2 )/2 == quad count, quad count X2=triangle count, triangle count X3 = triangle list vertex count. we need two more triangles for quad strip convertion.
@@ -2759,6 +2760,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 			// (due to alignment) always-zero least significant bit :
 			LookupKey |= 1;
 	}
+	*/
 	// Poor-mans eviction policy : when exceeding treshold, clear entire cache :
 	if (g_IndexBufferCache.size() > INDEX_BUFFER_CACHE_SIZE) {
 		g_IndexBufferCache.clear(); // Note : ConvertedIndexBuffer destructor will release any assigned pHostIndexBuffer
@@ -8566,9 +8568,11 @@ void CxbxDrawIndexed(CxbxDrawContext& DrawContext)
 	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
 		convertIndexBuffer = convertQuadList;
 	}
+	/* // quad strip doesn't require and convertion. only convert the primitive type from quad strip to triangle strip.
 	else if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP){
 		convertIndexBuffer = convertQuadStrip;
     }
+	*/
 	ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(DrawContext.pXboxIndexData, DrawContext.dwVertexCount, convertIndexBuffer);
 	// Set LowIndex and HighIndex *before* VerticesInBuffer gets derived
 	DrawContext.LowIndex = CacheEntry.LowIndex;
@@ -8656,6 +8660,7 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 	}
+#if 0
 	else if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
 		// LOG_TEST_CASE("X_D3DPT_QUADSTRIP"); // test-case : GUN
 		// Draw quadstrips using a single 'quadstrip-to-triangle mapping' index buffer :
@@ -8664,7 +8669,7 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
 		// Convert quad vertex-count to triangle vertex count :
 		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
-
+    */
 		// Draw indexed triangles instead of quads
 		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
@@ -8681,6 +8686,7 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 
 	}
+#endif    
 	else {
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawPrimitiveUP call :
 		//?? for xbox::X_D3DPT_LINELOOP, we convert it to d3d9 line strip, but that will require an additional repeated vertex of vertex 0 to be appended in the last.
@@ -8769,23 +8775,18 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 	}
+#if 0
 	else if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
 		// LOG_TEST_CASE("X_D3DPT_QUADSTRIP"); // test-case : GUN
-		// Draw quadstrips using a single 'quadstrip-to-triangle mapping' index buffer :
-		INDEX16 *pIndexData = CxbxAssureQuadStripIndexData(DrawContext.dwVertexCount);
-		//DrawContext.dwVertexCount = DrawContext.dwHostPrimitiveCount * 3;
-		//DrawContext.NumVerticesToUse = DrawContext.dwVertexCount;
-		// Convert quad vertex-count to triangle vertex count :
-		//UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+		// NV2A uses OpenGL quad strip which uses the same vertex order as d3d triangle strip.
+		// ref. http://edeleastar.github.io/opengl-programming/topic06/pdf/1.Polygons.pdf
+		// https://learn.microsoft.com/en-us/windows/win32/direct3d9/triangle-strips
+		// so we simply convert quad strip to triangle strip and use the same vertex count.
+		// since this code section is identical to the default draw call, we could simply discard this section and use the default draw call. 
 
-		// Draw indexed triangles instead of quads
-		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
-			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
-			/*MinVertexIndex=*/0, // Always 0 for converted quadlist data
-			/*NumVertices=*/DrawContext.dwVertexCount,
+		HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP(
+			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
 			DrawContext.dwHostPrimitiveCount,
-			pIndexData,
-			/*IndexDataFormat=*/D3DFMT_INDEX16,
 			DrawContext.pHostVertexStreamZeroData,
 			DrawContext.uiHostVertexStreamZeroStride
 		);
@@ -8794,6 +8795,7 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 
 	}
+#endif
 	else {
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawPrimitiveUP call :
 		//?? for xbox::X_D3DPT_LINELOOP, we convert it to d3d9 line strip, but that will require an additional repeated vertex of vertex 0 to be appended in the last.
@@ -8869,6 +8871,7 @@ void CxbxDrawPrimitive(CxbxDrawContext& DrawContext)
 
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 	}
+#if 0
 	else if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
 		// LOG_TEST_CASE("X_D3DPT_QUADSTRIP"); // test-case : GUN
 		// Draw quadstrips using a single 'quadstrip-to-triangle mapping' index buffer :
@@ -8900,6 +8903,7 @@ void CxbxDrawPrimitive(CxbxDrawContext& DrawContext)
 		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 
 	}
+#endif
 	else {
 		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawPrimitiveUP call :
 		//?? for xbox::X_D3DPT_LINELOOP, we convert it to d3d9 line strip, but that will require an additional repeated vertex of vertex 0 to be appended in the last.
@@ -9793,7 +9797,7 @@ void WINAPI CxbxrImpl_DrawVerticesUP
 	}
 
 	// TODO : Call unpatched CDevice_SetStateUP();
-	EmuKickOffWait();
+	//EmuKickOffWait();
 	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
