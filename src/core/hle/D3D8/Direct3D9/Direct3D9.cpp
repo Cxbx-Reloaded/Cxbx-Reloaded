@@ -2696,10 +2696,9 @@ static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
 
 // Get the raw X and Y scale of the multisample mode
 // Both MSAA and SSAA result in increased rendertarget size
-// add BuckBufferScale to comply xbox behavior
 void GetMultiSampleScaleRaw(float& xScale, float& yScale) {
-	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType))* g_Xbox_BackbufferScaleX;
-	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType))* g_Xbox_BackbufferScaleY;
+	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType));
+	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType));
 }
 
 // Get the "screen" scale factors
@@ -2732,10 +2731,6 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	// The title uses MSAA, which increases the rendertarget size, but leaves the screen scale unaffected
 	// The backbuffer scale is (0.75, 1), which contributes to the screen scale
 	// So the Xbox expects vertices in 480*480 coordinate space
-	// todo: find supersample type info from kelvin and use it here.
-	bool isSuperSampleMode = g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_SUPER;
-	extern bool is_pgraph_using_NV2A_Kelvin(void);
-	extern void CxbxrGetSuperSampleScaleXY(float& x, float& y);
 
 	// SSAA increases the screen scale (but MSAA does not)
 	bool isMultiSampleEnabled = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
@@ -3490,7 +3485,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 
 	g_Xbox_BackbufferScaleX = x;
 	g_Xbox_BackbufferScaleY = y;
-	// todo: shall we follow xbox behavior to call SetRenderTarget() here?
 }
 
 // ******************************************************************
@@ -4115,7 +4109,6 @@ void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 	// Antialiasing mode affects the viewport offset and scale
 	float aaScaleX, aaScaleY;
 	float aaOffsetX, aaOffsetY;
-	//GetScreenScaleFactors() returns scales from kelvin when we're in pgraph draw calls
 	GetScreenScaleFactors(aaScaleX, aaScaleY);
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
 
@@ -4159,7 +4152,6 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 
 	float screenScaleX, screenScaleY;
 	float aaOffsetX, aaOffsetY;
-	//GetScreenScaleFactors() returns scales from kelvin when we're in pgraph draw calls
 	GetScreenScaleFactors(screenScaleX, screenScaleY);
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
 
@@ -5052,7 +5044,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 		 __asm {
 			 push eax
 			 mov  eax, BackBuffer
-			 call XB_TRMP(D3DDevice_GetBackBuffer_8)(D3DBACKBUFFER_TYPE_MONO, ppXboxBackBuffer)
+		 }
+		 XB_TRMP(D3DDevice_GetBackBuffer_8)(D3DBACKBUFFER_TYPE_MONO, ppXboxBackBuffer);
+		 __asm {
 			 pop eax
 		 }
 	 }
@@ -5157,7 +5151,7 @@ DWORD CxbxrImpl_Swap
 	g_Xbox_BackbufferScaleY = 1.0;
 	// Fetch the host backbuffer
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
-	hRet = g_pD3DDevice->GetBackBuffer(
+	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
 		0, // iSwapChain
 		0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 
@@ -5276,7 +5270,7 @@ DWORD CxbxrImpl_Swap
 				// We also need to account for any MSAA which may have enlarged the Xbox Backbuffer
 				float xScale, yScale;
 				GetMultiSampleScaleRaw(xScale, yScale);
-				
+
                 xScale = (float)width / ((float)XboxBackBufferWidth / xScale);
                 yScale = (float)height / ((float)XboxBackBufferHeight / yScale);
 
