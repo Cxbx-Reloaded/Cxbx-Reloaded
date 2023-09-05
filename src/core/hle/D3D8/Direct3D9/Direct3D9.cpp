@@ -3943,6 +3943,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 	g_Xbox_BackbufferScaleX = x;
 	g_Xbox_BackbufferScaleY = y;
 	// todo: shall we follow xbox behavior to call SetRenderTarget() here?
+	// no need to call SetRenderTarget() because the trampoline will call SetRenderTarget() for us.
 }
 
 // ******************************************************************
@@ -6121,7 +6122,8 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
 		 CxbxrAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
 	 }
 }
-
+ 
+  
 DWORD CxbxrImpl_Swap
 (
 	xbox::dword_xt Flags
@@ -6190,7 +6192,22 @@ DWORD CxbxrImpl_Swap
 			float aaX, aaY;
 			GetMultiSampleScaleRaw(aaX, aaY);
 
-			width *= aaX;
+			
+			/*
+			    xbox passed scaled render target width/height to NV2A with
+
+				// NV097_SET_SURFACE_CLIP_HORIZONTAL:
+
+			      (NV097_SET_SURFACE_CLIP_HORIZONTAL_X, 0)
+				| (NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH, width);
+
+				// NV097_SET_SURFACE_CLIP_VERTICAL:
+
+				  (NV097_SET_SURFACE_CLIP_VERTICAL_Y, 0)
+				| (NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT, height);
+		    */
+
+			width *= aaX; 
 			height *= aaY;
 			
 			IDirect3DSurface* pExistingHostRenderTarget = nullptr;
@@ -6200,8 +6217,8 @@ DWORD CxbxrImpl_Swap
 			RECT scr{};
 			scr.top = (LONG)0;
 			scr.left = (LONG)0;
-			scr.right = (LONG)width;
-			scr.bottom = (LONG)height;
+			scr.right = (LONG)(width + 0.5f);   //
+			scr.bottom = (LONG)(height + 0.5f); //
 
 			// stretch original render target rect(smaller) to full destination render target.
 			hRet = g_pD3DDevice->StretchRect(
