@@ -2734,7 +2734,7 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 
 	// SSAA increases the screen scale (but MSAA does not)
 	bool isMultiSampleEnabled = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
-	//bool isSuperSampleMode = g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_SUPER;
+	bool isSuperSampleMode = g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_SUPER;
 
 	// Apply multisample scale if supersampling is enabled
 	// Test cases:
@@ -5151,7 +5151,7 @@ DWORD CxbxrImpl_Swap
 	g_Xbox_BackbufferScaleY = 1.0;
 	// Fetch the host backbuffer
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
-	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+	hRet = g_pD3DDevice->GetBackBuffer(
 		0, // iSwapChain
 		0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 
