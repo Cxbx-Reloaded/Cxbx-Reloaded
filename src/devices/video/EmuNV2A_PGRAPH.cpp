@@ -2028,7 +2028,9 @@ int pgraph_handle_method(
                         CxbxrImpl_SelectVertexShader(argv[1], argv[2]);
                         break;
                     case X_D3DDevice_SelectVertexShaderDirect:  break;
-                    case X_D3DDevice_SetBackBufferScale:  break;
+                    case X_D3DDevice_SetBackBufferScale:
+                        CxbxrImpl_SetBackBufferScale((xbox::float_xt) DWtoF(argv[1]), (xbox::float_xt) DWtoF(argv[2]));
+                        break;
                     case X_D3DDevice_SetBackMaterial:  break;
                     case X_D3DDevice_SetCopyRectsState:  break;
                     case X_D3DDevice_SetDebugMarker:  break;
@@ -2055,6 +2057,7 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetRenderTarget:
                         CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface *)argv[1], (xbox::X_D3DSurface *)argv[2]);
                         // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
+                        // todo: implement this function by ourselves instead of trampoline to xbox since it's dangerous to trampoline to xbox from pgraph.
                         CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
                         break;
                     case X_D3DDevice_SetRenderTarget_0:  break;
@@ -2106,7 +2109,11 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVertexShaderInputDirect:  break;
                     case X_D3DDevice_SetVerticalBlankCallback:  break;
                     case X_D3DDevice_SetViewport:
-                        CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8 * )argv[1]);
+                        
+                        //extern xbox::X_D3DVIEWPORT8 refViewport;
+                        //if(argv[1]!=0)
+                        //    refViewport = *(xbox::X_D3DVIEWPORT8*)argv[1];
+                        //CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8 * )argv[1]);
                         break;
                     case X_D3DDevice_SetWaitCallback:  break;
                     case X_D3DDevice_Swap:

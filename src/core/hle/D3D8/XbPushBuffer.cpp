@@ -1355,15 +1355,15 @@ extern float g_Xbox_BackbufferScaleX;
 extern float g_Xbox_BackbufferScaleY;
 extern xbox::X_D3DSurface           *g_pXbox_RenderTarget;
 extern xbox::X_D3DSurface           *g_pXbox_BackBufferSurface;
-extern void CxbxrGetSuperSampleScaleXY(float& x, float& y);
+extern void CxbxrGetSuperSampleScaleXY(NV2AState* ,float& x, float& y);
 extern void CxbxrGetScreenSpaceOffsetXY(float& x, float& y);
 extern void CxbxrSetViewport(xbox::X_D3DVIEWPORT8& Viewport);
 extern void CxbxrGetViewport(xbox::X_D3DVIEWPORT8& Viewport);
 extern void CxbxrSetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar);
 extern void CxbxrGetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar);
 extern float CxbxrGetZScale(void);
-
-
+extern void GetRenderTargetRawDimensions(float& x, float& y, xbox::X_D3DSurface* rt);
+xbox::X_D3DVIEWPORT8 refViewport;
 bool NV2A_viewport_dirty = false;
 void pgraph_ComposeViewport(NV2AState *d)
 {
@@ -1375,9 +1375,9 @@ void pgraph_ComposeViewport(NV2AState *d)
 	float SuperSampleScale, ScaleX, ScaleY, ScaleZ, ScreenSpaceOffsetX, ScreenSpaceOffsetY;
 	//float aaOffsetX, aaOffsetY;
 	
-	CxbxrGetSuperSampleScaleXY(ScaleX, ScaleY);
-	if (ScaleX < 1.0)ScaleX = 1.0;
-	if (ScaleY < 1.0)ScaleY = 1.0;
+	CxbxrGetSuperSampleScaleXY(d,ScaleX, ScaleY);
+	if (ScaleX <= 0)ScaleX = 1.0;
+	if (ScaleY <= 0)ScaleY = 1.0;
 	SuperSampleScale = MIN(ScaleX, ScaleY);
 
 	CxbxrGetScreenSpaceOffsetXY(ScreenSpaceOffsetX, ScreenSpaceOffsetY);
@@ -1403,7 +1403,8 @@ void pgraph_ComposeViewport(NV2AState *d)
     // set default W parameters.
 	CxbxrSetWNearFarInverseWFar(WNear, WFar, InverseWFar);
 
-	GetRenderTargetBaseDimensions(rendertargetBaseWidth, rendertargetBaseHeight);
+	//GetRenderTargetBaseDimensions(rendertargetBaseWidth, rendertargetBaseHeight);
+	GetRenderTargetRawDimensions(rendertargetBaseWidth, rendertargetBaseHeight, g_pXbox_RenderTarget);
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 	//if ((float)pg->KelvinPrimitive.SetViewportOffset[2] == 0.0 && (float)pg->KelvinPrimitive.SetViewportOffset[3] == 0.0) {
 		xViewport = pg->KelvinPrimitive.SetViewportOffset[0];
@@ -1504,6 +1505,16 @@ void pgraph_ComposeViewport(NV2AState *d)
 	*/
 	Viewport.X = (xViewport - ScreenSpaceOffsetX) / ScaleX;
 	Viewport.Y = (yViewport - ScreenSpaceOffsetX) / ScaleY;
+	
+	extern xbox::X_D3DVIEWPORT8 HLE_Viewport;
+	extern xbox::X_D3DVIEWPORT8 g_Xbox_Viewport;
+	//if (Viewport.Width != HLE_Viewport.Width || Viewport.Height != Viewport.Height || Viewport.X != HLE_Viewport.X || Viewport.Y != HLE_Viewport.Y)
+	//if(refViewport.Width!=0x7FFFFFFF&& refViewport.Width!=0)
+	    //assert(Viewport.Width == refViewport.Width);
+	//if (refViewport.Height != 0x7FFFFFFF && refViewport.Height)
+	    //assert(Viewport.Height == refViewport.Height!=0);
+	//assert(Viewport.X == g_Xbox_Viewport.X);
+	//assert(Viewport.Y == g_Xbox_Viewport.Y);
 	CxbxrSetViewport(Viewport);
 	//CxbxrImpl_SetViewport(&Viewport);
 }
@@ -1596,9 +1607,9 @@ void CxbxrImpl_GetViewportTransform(NV2AState* d)
 	float fm11, fm22, fm33, fm41, fm42, fm43, fm44;
 	float SuperSampleScaleX, SuperSampleScaleY,ZScale, ScreenSpaceOffsetX, ScreenSpaceOffsetY;
 	
-	CxbxrGetSuperSampleScaleXY(SuperSampleScaleX, SuperSampleScaleY);
-	if (SuperSampleScaleX < 1.0)SuperSampleScaleX = 1.0;
-	if (SuperSampleScaleY < 1.0)SuperSampleScaleY = 1.0;
+	CxbxrGetSuperSampleScaleXY(d,SuperSampleScaleX, SuperSampleScaleY);
+	if (SuperSampleScaleX <= 0)SuperSampleScaleX = 1.0;
+	if (SuperSampleScaleY <= 0)SuperSampleScaleY = 1.0;
 	ZScale=CxbxrGetZScale();
 	if (ZScale < 1.0)ZScale = 1.0;
 	
@@ -2989,7 +3000,13 @@ void D3D_draw_state_update(NV2AState* d)
 				xbox::X_D3DVIEWPORT8 Viewport;
 				CxbxrGetViewport(Viewport);
 				// no need to call SetViewport here.in CxbxUpdateNativeD3DResources(), CxbxUpdateHostViewport() will pickup our viewport.
-				//CxbxrImpl_SetViewport(&Viewport);
+                /*
+				Viewport.X = pg->KelvinPrimitive.SetSurfaceClipHorizontal & 0xFFFF;
+				Viewport.Width = (pg->KelvinPrimitive.SetSurfaceClipHorizontal >> 16) & 0xFFFF;
+				Viewport.Y = pg->KelvinPrimitive.SetSurfaceClipVertical & 0xFFFF;
+				Viewport.Height = (pg->KelvinPrimitive.SetSurfaceClipVertical >> 16) & 0xFFFF;
+				*/
+				CxbxrImpl_SetViewport(&Viewport);
 			//}
 			NV2A_viewport_dirty = false;
 		}

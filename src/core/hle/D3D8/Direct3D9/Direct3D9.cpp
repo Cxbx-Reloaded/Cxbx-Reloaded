@@ -424,7 +424,9 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SetVertexShaderConstantNotInlineFast,     (xbox::int_xt, CONST xbox::PVOID, xbox::dword_xt)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SwitchTexture,                            (xbox::dword_xt, xbox::dword_xt, xbox::dword_xt)                                                     );  \
+    XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap,                                     (xbox::dword_xt)                                                                                      );  \
+    XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap_0,                                   ()                                                                                      );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SwitchTexture,                            (xbox::dword_xt, xbox::dword_xt, xbox::dword_xt)                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                       );  \
@@ -1172,10 +1174,25 @@ float CxbxrGetSuperSampleScale(void)
 	}
 	return ssScale;
 }
-void CxbxrGetSuperSampleScaleXY(float& x, float& y)
+extern void GetMultiSampleScaleRaw(float& xScale, float& yScale);
+void CxbxrGetSuperSampleScaleXY(NV2AState* d,float& x, float& y)
 {
-	x = g_SuperSampleScaleX;
+	PGRAPHState* pg = &d->pgraph;
+	//get aaScaleX, aaScaleY
+	GetMultiSampleScaleRaw(x, y);
+	DWORD surfaceFormat = pg->KelvinPrimitive.SetSurfaceFormat;
+	
+	//D3DMULTISAMPLEMODE_4X
+	if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4<<12)) != 0) {
+		y /= 2.0;
+	}
+	//D3DMULTISAMPLEMODE_2X
+	if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2<<12)) != 0) {
+		x /= 2.0;
+	}
+	/*x = g_SuperSampleScaleX;
 	y = g_SuperSampleScaleY;
+	*/
 }
 void CxbxrSetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar)
 {
@@ -2969,7 +2986,7 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	// todo: find supersample type info from kelvin and use it here.
 	bool isSuperSampleMode = g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_SUPER;
 	extern bool is_pgraph_using_NV2A_Kelvin(void);
-	extern void CxbxrGetSuperSampleScaleXY(float& x, float& y);
+	extern void CxbxrGetSuperSampleScaleXY(NV2AState *,float& x, float& y);
 
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		bool isMultiSampleEnabled = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
@@ -2978,9 +2995,11 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 		// Test cases:
 		// Antialias sample (text overlay is drawn with antialiasing disabled)
 		if (isMultiSampleEnabled && isSuperSampleMode) {
-			CxbxrGetSuperSampleScaleXY(scaleX, scaleY);
-			scaleX*= g_Xbox_BackbufferScaleX;
-			scaleY*= g_Xbox_BackbufferScaleY;
+			GetMultiSampleScaleRaw(scaleX, scaleY);
+			
+			//CxbxrGetSuperSampleScaleXY(scaleX, scaleY);
+			//scaleX*= g_Xbox_BackbufferScaleX;
+			//scaleY*= g_Xbox_BackbufferScaleY;
 		}
 	}
 	else {
@@ -3929,6 +3948,12 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
     return CxbxrImpl_EndVisibilityTest(Index);
 }
 
+void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y)
+{
+	g_Xbox_BackbufferScaleX = x;
+	g_Xbox_BackbufferScaleY = y;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetBackBufferScale
 // ******************************************************************
@@ -3938,13 +3963,32 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
 		LOG_FUNC_END;
-    // always trampoline
-	XB_TRMP(D3DDevice_SetBackBufferScale)(x, y);
 
-	g_Xbox_BackbufferScaleX = x;
-	g_Xbox_BackbufferScaleY = y;
-	// todo: shall we follow xbox behavior to call SetRenderTarget() here?
-	// no need to call SetRenderTarget() because the trampoline will call SetRenderTarget() for us.
+
+	// always trampoline
+	if(XB_TRMP(D3DDevice_SetBackBufferScale))
+		XB_TRMP(D3DDevice_SetBackBufferScale)(x, y);
+	/*
+	xbox SetBAckBufferScale takes effect on aaScaleX/ssScaleY, which will be multiplied to render starge width/height
+	SuperSampleScaleX/Y are aaSaleX/Y multiplied by 0.5 if super sample mode was set. width/height will be multiplied by 0.5 when super sample mode was set.
+	then it calls SetViwport(0) which resulted in calling SetScissors(0,0,0) which resulted in updating the scaled width/height be set to SetSurfaceClip,
+	and then it scaled the internal Viewport to SetWindowClip
+	*/
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetBackBufferScale;//enum of this patched API
+	pPush_local[2] = FtoDW(x); //total 14 DWORD space for arguments.
+	pPush_local[3] = FtoDW(y);
+	
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
 }
 
 // ******************************************************************
@@ -4752,16 +4796,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
 	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-	static X_D3DVIEWPORT8 HLE_Viewport;
+	
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetViewport;//enum of this patched API
 	if (pViewport) {
-		HLE_Viewport = *pViewport;
-		pPush_local[2] = (DWORD)&HLE_Viewport; //total 14 DWORD space for arguments.
-		/*
-		pPush_local[3] = (DWORD)pViewport->X;
-		pPush_local[4] = (DWORD)pViewport->Y;
+		pPush_local[2] = (DWORD)&pPush_local[3]; //total 14 DWORD space for arguments.
+		//extern xbox::X_D3DVIEWPORT8 g_Xbox_Viewport;
+		*(X_D3DVIEWPORT8 *)&pPush_local[3] = g_Xbox_Viewport;
+		/*pPush_local[4] = (DWORD)pViewport->Y;
 		pPush_local[5] = (DWORD)pViewport->Width;
 		pPush_local[6] = (DWORD)pViewport->Height;
 		pPush_local[7] = FtoDW(pViewport->MinZ);
@@ -6134,7 +6177,9 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
 		 CxbxrAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
 	 }
 }
- 
+ xbox::X_D3DSurface* pXbox_RenderTargetNew;
+ xbox::X_D3DSurface Xbox_RenderTargetNew;
+ IDirect3DSurface* pXbox_RenderTargetHostSurfaceNew;
   
 DWORD CxbxrImpl_Swap
 (
@@ -6160,12 +6205,26 @@ DWORD CxbxrImpl_Swap
 	// If we present before the UI is drawn, it will flicker
 	if (Flags != xbox::X_D3DSWAP_DEFAULT && !(Flags & xbox::X_D3DSWAP_FINISH)) {
 
-		if (Flags == xbox::X_D3DSWAP_COPY|| g_Xbox_BackbufferScaleX != 1.0|| g_Xbox_BackbufferScaleY != 1.0) {
+		if ((Flags == xbox::X_D3DSWAP_COPY)&& (g_Xbox_BackbufferScaleX != 1.0|| g_Xbox_BackbufferScaleY != 1.0)) {
 			LOG_TEST_CASE("X_D3DSWAP_COPY");
-			xbox::X_D3DSurface* pXboxFrontBufferSurface;
-			CxbxrGetXboxBackBuffer(-1,&pXboxFrontBufferSurface);
+			//xbox::X_D3DSurface* pXboxFrontBufferSurface;
+			//CxbxrGetXboxBackBuffer(-1,&pXboxFrontBufferSurface);
 			//use xbox front buffer as temp buffer for scale up destination.
-			auto pXboxFrontBufferHostSurface = GetHostSurface(pXboxFrontBufferSurface, D3DUSAGE_RENDERTARGET);
+			//auto pXboxFrontBufferHostSurface = GetHostSurface(pXboxFrontBufferSurface, D3DUSAGE_RENDERTARGET);
+			auto pRenderTargetNewPrevKey = GetHostResourceKey(pXbox_RenderTargetNew);
+			Xbox_RenderTargetNew = *g_pXbox_RenderTarget;
+			pXbox_RenderTargetNew = &Xbox_RenderTargetNew;
+			DWORD commonMask = 0x01000000;
+			DWORD common = g_pXbox_RenderTarget->Common & commonMask;
+			Xbox_RenderTargetNew.Common &= ~commonMask;
+			Xbox_RenderTargetNew.Common |= (~common)& commonMask;
+			auto pXboxRenderTargetSurfaceNew= GetHostSurface(pXbox_RenderTargetNew, D3DUSAGE_RENDERTARGET);
+			if (pXbox_RenderTargetHostSurfaceNew != pXboxRenderTargetSurfaceNew) {
+				if (pXbox_RenderTargetHostSurfaceNew != nullptr)
+					FreeHostResource(pRenderTargetNewPrevKey);
+				pXbox_RenderTargetHostSurfaceNew = pXboxRenderTargetSurfaceNew;
+			}
+
 			//
 			auto pXboxRenderTargetSurface = GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET);
 			float height, width;
@@ -6201,27 +6260,51 @@ DWORD CxbxrImpl_Swap
 			hRet = g_pD3DDevice->StretchRect(
 				/* pSourceSurface = */ pExistingHostRenderTarget,
 				/* pSourceRect = */ &scr,
-				/* pDestSurface = */ pXboxFrontBufferHostSurface,
+				/* pDestSurface = */ pXboxRenderTargetSurfaceNew,
 				/* pDestRect = */ nullptr,
 				/* Filter = */ D3DTEXF_LINEAR
 			);
 			assert(hRet == D3D_OK);
 
+
+
+
+
+#if 1
 			// using StretchRect to update full surfaces
 			hRet = g_pD3DDevice->StretchRect(
-				/* pSourceSurface = */ pXboxFrontBufferHostSurface,
+				/* pSourceSurface = */ pXboxRenderTargetSurfaceNew,
 				/* pSourceRect = */ NULL,
 				/* pDestSurface = */ pExistingHostRenderTarget,
 				/* pDestRect = */ nullptr,
 				/* Filter = */ D3DTEXF_LINEAR
 			);
 			assert(hRet == D3D_OK);
-
+#endif			
 		}
-
-		if (Flags == xbox::X_D3DSWAP_BYPASSCOPY) {
-			LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY");
+		DWORD flag = xbox::X_D3DSWAP_BYPASSCOPY;
+		//trampo line to xbox D3DDevice_Swap(X_D3DSWAP_BYPASSCOPY) to reset backbuffer scale inside xbox
+		/* this is way too complicate, we trampoline to xbox D3DDevice_SetBackBufferScale(1.0,1.0) instead
+		// well, seems it's not feasible to trampoline when we're in pgraph thread, somehow it gets crashed whatever funcation we trampolined.
+		if (XB_TRMP(D3DDevice_Swap))
+			XB_TRMP(D3DDevice_Swap)(flag);
+		else if (XB_TRMP(D3DDevice_Swap_0)) {
+			__asm {
+				LTCG_PROLOGUE
+				mov  eax, flag
+				call XB_TRMP(D3DDevice_Swap_0)
+				LTCG_EPILOGUE
+			}
 		}
+		else {
+			LOG_TEST_CASE("No D3DDevice_Swap available");
+		}
+        //-------------------------------------------		
+		if (XB_TRMP(D3DDevice_SetBackBufferScale))
+			XB_TRMP(D3DDevice_SetBackBufferScale)(1.0, 1.0);
+		else
+			LOG_TEST_CASE("D3DDevice_SetBackBufferScale not available");
+*/
 		g_Xbox_BackbufferScaleX = 1.0;
 		g_Xbox_BackbufferScaleY = 1.0;
 		return g_Xbox_SwapData.Swap;
@@ -6567,6 +6650,12 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	//set pushbuffer pointer to the new beginning
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
+
+	if (XB_TRMP(D3DDevice_SetBackBufferScale))
+		XB_TRMP(D3DDevice_SetBackBufferScale)(1.0, 1.0);
+	else
+		LOG_TEST_CASE("D3DDevice_SetBackBufferScale not available");
+
 	return S_OK;
 #else
 	return CxbxrImpl_Swap(Flags);
@@ -9321,15 +9410,16 @@ void CxbxUpdateHostViewport() {
 	// Antialiasing mode affects the viewport offset and scale
 	float aaScaleX, aaScaleY;
 	float aaOffsetX, aaOffsetY;
+	//GetMultiSampleScaleRaw() return scales include backbuffer scale
 	GetMultiSampleScaleRaw(aaScaleX, aaScaleY);
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
+/*
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		CxbxrGetSuperSampleScaleXY(aaScaleX, aaScaleY);
-		aaScaleX *= g_Xbox_BackbufferScaleX;
-		aaScaleY *= g_Xbox_BackbufferScaleY;
-		if (aaScaleX < 1.0)aaScaleX = 1.0;
-		if (aaScaleY < 1.0)aaScaleY = 1.0;
+		if (aaScaleX <= 0)aaScaleX = 1.0;
+		if (aaScaleY <= 0)aaScaleY = 1.0;
 	}
+*/
 	DWORD HostRenderTarget_Width, HostRenderTarget_Height;
 	if (!GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height)) {
 		LOG_TEST_CASE("Could not get rendertarget dimensions while setting the viewport");
@@ -10380,15 +10470,74 @@ void CxbxrImpl_SetRenderTarget
         DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
         ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
     }
+	//
 }
+
+
+ULONG CxbxrImpl_Resource_AddRef
+(
+	xbox::X_D3DResource* pResource
+)
+{
+	// If the resource being referenced is a surface then we also need
+	// to increment the refcount on its parent.  We only do this once.
+	if ((pResource->Common & X_D3DCOMMON_REFCOUNT_MASK) == 0)
+	{
+		if ((pResource->Common & X_D3DCOMMON_TYPE_MASK) == X_D3DCOMMON_TYPE_SURFACE)
+		{
+			xbox::X_D3DBaseTexture* pParent = ((xbox::X_D3DBaseTexture**)pResource)[5];
+
+			if (pParent)
+			{
+				CxbxrImpl_Resource_AddRef(pParent);
+			}
+		}
+	}
+
+	return ++pResource->Common & X_D3DCOMMON_REFCOUNT_MASK;
+}
+
+ULONG CxbxrImpl_Resource_Release
+(
+	xbox::X_D3DResource* pResource
+)
+{
+
+	if ((pResource->Common & X_D3DCOMMON_REFCOUNT_MASK) == 1)
+	{
+		// If this is the last external release from a surface then we need
+		// to release its external reference on the parent.
+		//
+		if ((pResource->Common & X_D3DCOMMON_TYPE_MASK) == X_D3DCOMMON_TYPE_SURFACE)
+		{
+			xbox::X_D3DBaseTexture* pParent = ((xbox::X_D3DBaseTexture**)pResource)[5];
+
+			if (pParent)
+			{
+				CxbxrImpl_Resource_Release(pParent);
+			}
+		}
+
+		// Only destroy this if the internal refcount is zero.
+		if ((pResource->Common & X_D3DCOMMON_INTREFCOUNT_MASK) == 0)
+		{
+			// Release the host copy (if it exists!)
+			FreeHostResource(GetHostResourceKey(pResource));
+
+			return 0;
+		}
+	}
+
+	return --pResource->Common & X_D3DCOMMON_REFCOUNT_MASK;
+}
+
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface* pTarget, xbox::X_D3DSurface* pZbuffer)
 {
-	if (XB_TRMP(D3DResource_AddRef)) {
-		if (pTarget)
-			XB_TRMP(D3DResource_AddRef)(pTarget);
-		if (pZbuffer)
-			XB_TRMP(D3DResource_AddRef)(pZbuffer);
-	}
+	
+	if (pTarget)
+		CxbxrImpl_Resource_Release(pTarget);
+	if (pZbuffer)
+		CxbxrImpl_Resource_Release(pZbuffer);
 }
 
 static bool bRenderTargetInit = false;
@@ -10430,13 +10579,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 		*(DWORD**)g_pXbox_pPush += 0x10;
 		// add reference to the surfaces to prevent them being released before we access them in pgraph.
-		if (XB_TRMP(D3DResource_AddRef)) {
-			if(pRenderTarget)
-				XB_TRMP(D3DResource_AddRef)(pRenderTarget);
-			if(pNewZStencil)
-				XB_TRMP(D3DResource_AddRef)(pNewZStencil);
-		}
-
+		if(pRenderTarget)
+			CxbxrImpl_Resource_AddRef(pRenderTarget);
+		if(pNewZStencil)
+			CxbxrImpl_Resource_AddRef(pNewZStencil);
 	}
 }
 

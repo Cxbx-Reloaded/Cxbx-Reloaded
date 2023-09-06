@@ -1238,6 +1238,8 @@
 #       define NV097_SET_FOG_COLOR_BLUE                           0x00FF0000
 #       define NV097_SET_FOG_COLOR_ALPHA                          0xFF000000
 #   define NV097_SET_WINDOW_CLIP_TYPE                         0x000002B4
+#      define NV097_SET_WINDOW_CLIP_TYPE_V_INCLUSIVE                              0x00000000
+#      define NV097_SET_WINDOW_CLIP_TYPE_V_EXCLUSIVE                              0x00000001
 #   define NV097_SET_WINDOW_CLIP_HORIZONTAL                   0x000002C0 // [8]
 #       define NV097_SET_WINDOW_CLIP_HORIZONTAL_XMIN              0x00000FFF
 #       define NV097_SET_WINDOW_CLIP_HORIZONTAL_XMAX              0x0FFF0000

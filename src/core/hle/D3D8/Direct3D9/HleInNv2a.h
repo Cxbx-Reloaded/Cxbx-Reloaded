@@ -273,7 +273,7 @@ void CxbxrImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
 void WINAPI CxbxrImpl_RunVertexStateShader(xbox::dword_xt Address, CONST xbox::float_xt* pData);
 void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 #define USEPGRAPH_SelectVertexShader 0
-//void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
+void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
 //void WINAPI CxbxrImpl_SetLight(xbox::dword_xt Index, CONST xbox::X_D3DLIGHT8* pLight);
 //void WINAPI CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8* pMaterial);
 //void WINAPI CxbxrImpl_SetModelView(CONST D3DMATRIX* pModelView, CONST D3DMATRIX* pInverseModelView, CONST D3DMATRIX* pComposite);
@@ -306,6 +306,7 @@ DWORD CxbxrImpl_Swap(xbox::dword_xt Flags);
 //void WINAPI CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
 #define PGRAPHUSE_EmuKickOff 0
 #define PGRAPHUSE_EmuKickOffWait 0
+// Warning: CxbxrImpl_MakeSpace() uses trampoline inside, do not use this function in pgraph. only use it in xbox/HLE patch.
 xbox::dword_xt* CxbxrImpl_MakeSpace(void);
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurface*pZbuffer);
 
@@ -463,6 +464,7 @@ Render States related pgraph methods/xbox calls
                  NV097_SET_VERTEX_DATA_ARRAY_OFFSET(i),
                  offset);
    
-            
+do not trampoline to xbox code from pgraph handler. this will cause pushbuffer data corruption.
+
     */
 
