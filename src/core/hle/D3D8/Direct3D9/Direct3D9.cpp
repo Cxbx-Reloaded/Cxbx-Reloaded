@@ -2697,8 +2697,8 @@ static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
 // Get the raw X and Y scale of the multisample mode
 // Both MSAA and SSAA result in increased rendertarget size
 void GetMultiSampleScaleRaw(float& xScale, float& yScale) {
-	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType));
-	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType));
+	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleX;
+	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleY;
 }
 
 // Get the "screen" scale factors
