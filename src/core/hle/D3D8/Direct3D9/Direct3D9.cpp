@@ -425,8 +425,8 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
     XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap,                                     (xbox::dword_xt)                                                                                      );  \
-    XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap_0,                                   ()                                                                                      );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SwitchTexture,                            (xbox::dword_xt, xbox::dword_xt, xbox::dword_xt)                                                      );  \
+    XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap_0,                                   ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SwitchTexture,                            (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                       );  \
@@ -5230,10 +5230,22 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 		LOG_FUNC_ARG(Data)
 		LOG_FUNC_ARG(Format)
 		LOG_FUNC_END;
-	//if (is_pushbuffer_recording()) {
-		XB_TRMP(D3DDevice_SwitchTexture)(Method, Data, Format);
-	//}
-    DWORD Stage = -1;
+/*
+	if(XB_TRMP(D3DDevice_SwitchTexture)){
+		__asm {
+			push ecx
+			mov ecx, Method
+			push edx
+			mov edx,Data
+		}
+		XB_TRMP(D3DDevice_SwitchTexture)(Format);
+		__asm {
+			pop edx
+			pop ecx
+		}
+	}
+*/
+	DWORD Stage = -1;
 	/*
 	switch (Method) { // Detect which of the 4 (X_D3DTS_STAGECOUNT) texture stages is given by the (NV2A) Method argument
 	// This code contains D3DPUSH_ENCODE(NV2A_TX_OFFSET(v), 2) = 2 DWORD's, shifted left PUSH_COUNT_SHIFT (18) left
@@ -5294,6 +5306,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 			// Xbox code should never alter these members (so : no reference counting, etc).
 			// As long as that's guaranteed, this is a safe way to emulate SwitchTexture.
 			// (GetHostResourceKey also avoids using any Xbox texture resource memory address.)
+			XB_TRMP(D3DDevice_SetTexture)(Stage, g_pXbox_SetTexture[Stage]);
 		}
     }
 }
