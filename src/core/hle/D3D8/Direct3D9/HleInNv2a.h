@@ -296,7 +296,7 @@ void CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::d
 void CxbxrImpl_SetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* pMatrix);
 void CxbxrImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
 void CxbxrImpl_SetVertexShader(DWORD Handle);
-#define USEPGRAPH_SetVertexShader 0
+#define USEPGRAPH_SetVertexShader 1
 //all SetVertexShaderConstant variants are unpatched now. but we have to use CxbxrImpl_SetVertexShaderConstant() to handle the constant change in pgraph.
 //void CxbxrImpl_GetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
 //void CxbxrImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
