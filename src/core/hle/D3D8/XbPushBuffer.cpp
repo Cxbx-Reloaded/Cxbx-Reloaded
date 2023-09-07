@@ -1363,7 +1363,7 @@ extern void CxbxrSetWNearFarInverseWFar(float& WNear, float& WFar, float& WInver
 extern void CxbxrGetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar);
 extern float CxbxrGetZScale(void);
 extern void GetRenderTargetRawDimensions(float& x, float& y, xbox::X_D3DSurface* rt);
-xbox::X_D3DVIEWPORT8 refViewport;
+xbox::X_D3DVIEWPORT8 HLEViewport;
 bool NV2A_viewport_dirty = false;
 void pgraph_ComposeViewport(NV2AState *d)
 {

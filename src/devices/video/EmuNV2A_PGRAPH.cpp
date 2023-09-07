@@ -2120,10 +2120,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVerticalBlankCallback:  break;
                     case X_D3DDevice_SetViewport:
                         
-                        //extern xbox::X_D3DVIEWPORT8 refViewport;
-                        //if(argv[1]!=0)
-                        //    refViewport = *(xbox::X_D3DVIEWPORT8*)argv[1];
-                        //CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8 * )argv[1]);
+                        extern xbox::X_D3DVIEWPORT8 HLEViewport;
+                        if(argv[1]!=0)
+                            HLEViewport = *(xbox::X_D3DVIEWPORT8*)argv[1];
+                        CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8 * )argv[1]);
                         break;
                     case X_D3DDevice_SetWaitCallback:  break;
                     case X_D3DDevice_Swap:
