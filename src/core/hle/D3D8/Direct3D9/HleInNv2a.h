@@ -269,12 +269,12 @@ void CxbxrImpl_End();
 void CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACKTYPE Type, xbox::X_D3DCALLBACK pCallback, xbox::dword_xt Context);
 //void WINAPI CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
 void CxbxrImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister);
-#define USEPGRAPH_LoadVertexShader 0
+#define USEPGRAPH_LoadVertexShader 1
 void CxbxrImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
 #define USEPGRAPH_LoadVertexShaderProgram 0
 void WINAPI CxbxrImpl_RunVertexStateShader(xbox::dword_xt Address, CONST xbox::float_xt* pData);
 void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address);
-#define USEPGRAPH_SelectVertexShader 0
+#define USEPGRAPH_SelectVertexShader 1
 void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
 // todo: CxbxrImpl_SetFlickerFilter() not implemented yet.
 void WINAPI CxbxrImpl_SetFlickerFilter(xbox::dword_xt Filter);

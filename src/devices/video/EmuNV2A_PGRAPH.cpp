@@ -2119,10 +2119,12 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVertexShaderInputDirect:  break;
                     case X_D3DDevice_SetVerticalBlankCallback:  break;
                     case X_D3DDevice_SetViewport:
-                        
+                        // todo: special case:argv[1] is actually pointing to PBTokenArray[3] where PBTokenArray[] would be over written by other patched HLE apis so we have to preserve the viewport and call CxbxImpl_SetViewport() with the preserved viewport.
                         extern xbox::X_D3DVIEWPORT8 HLEViewport;
-                        if(argv[1]!=0)
-                            HLEViewport = *(xbox::X_D3DVIEWPORT8*)argv[1];
+                        if (argv[1] != 0) {
+                            HLEViewport = *(xbox::X_D3DVIEWPORT8*)&argv[2];
+                            CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8*)&HLEViewport);
+                        }
                         CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8 * )argv[1]);
                         break;
                     case X_D3DDevice_SetWaitCallback:  break;
