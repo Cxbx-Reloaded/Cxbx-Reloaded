@@ -2063,7 +2063,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetRenderTarget_0:  break;
                     case X_D3DDevice_SetRenderTargetFast:  break;
                     case X_D3DDevice_SetScissors:  break;
-                    case X_D3DDevice_SetScreenSpaceOffset:  break;
+                    case X_D3DDevice_SetScreenSpaceOffset:
+                        CxbxrImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
+                        break;
                     case X_D3DDevice_SetShaderConstantMode:  break;
                     case X_D3DDevice_SetShaderConstantMode_0__LTCG_eax1:  break;
                     case X_D3DDevice_SetSoftDisplayFilter:  break;
