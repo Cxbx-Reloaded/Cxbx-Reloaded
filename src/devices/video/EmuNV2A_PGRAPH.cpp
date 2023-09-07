@@ -2066,15 +2066,19 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetScreenSpaceOffset:
                         CxbxrImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
                         break;
-                    case X_D3DDevice_SetShaderConstantMode:  break;
-                    case X_D3DDevice_SetShaderConstantMode_0__LTCG_eax1:  break;
+                    case X_D3DDevice_SetShaderConstantMode:  //break;
+                    case X_D3DDevice_SetShaderConstantMode_0__LTCG_eax1:
+                        CxbxrImpl_SetShaderConstantMode((xbox::X_VERTEXSHADERCONSTANTMODE )argv[1]);
+                        break;
                     case X_D3DDevice_SetSoftDisplayFilter:  break;
                     case X_D3DDevice_SetStipple:  break;
-                    case X_D3DDevice_SetStreamSource:  break;
-                    case X_D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride:  break;
-                    case X_D3DDevice_SetStreamSource_4:  break;
-                    case X_D3DDevice_SetStreamSource_8:  break;
-                    case X_D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber:  break;
+                    case X_D3DDevice_SetStreamSource:  //break;
+                    case X_D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride:  //break;
+                    case X_D3DDevice_SetStreamSource_4:  //break;
+                    case X_D3DDevice_SetStreamSource_8:  //break;
+                    case X_D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber:
+                        CxbxrImpl_SetStreamSource((UINT) argv[1], (xbox::X_D3DVertexBuffer *)argv[2], (UINT)argv[3]);
+                        break;
                     case X_D3DDevice_SetSwapCallback:  break;
                     case X_D3DDevice_SetTexture:
                         CxbxrImpl_SetTexture((xbox::dword_xt) argv[1], (xbox::X_D3DBaseTexture *) argv[2]);

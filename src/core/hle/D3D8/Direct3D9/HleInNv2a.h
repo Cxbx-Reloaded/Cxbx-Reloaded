@@ -286,7 +286,10 @@ void CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSur
 #define USEPGRAPH_SetRenderTarget 0 /*SetRenderTarget() is used in D3DDevice_Create() and we need it to be implemented right away. to do: */
 void CxbxrImpl_SetScreenSpaceOffset(float x, float y);
 #define USEPGRAPH_SetScreenSpaceOffset 0
-//void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
+void WINAPI CxbxrImpl_SetShaderConstantMode(xbox::X_VERTEXSHADERCONSTANTMODE Mode);
+// todo: CxbxrImpl_SetSoftDisplayFilter() not implemented yet.
+void WINAPI CxbxrImpl_SetSoftDisplayFilter(xbox::bool_xt Enable);
+void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
 //#define USEPGRAPH_SetStreamSource 0 /*not permitted in pushbuffer recording*/
 void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture);
 void CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
@@ -316,7 +319,18 @@ void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurfac
 //helper functions
 ULONG CxbxrImpl_Resource_AddRef(xbox::X_D3DResource* pResource);
 ULONG CxbxrImpl_Resource_Release(xbox::X_D3DResource* pResource);
-
+extern DWORD PBTokenArray[16];
+void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount, DWORD* argv);
+/*
+    // with this helper function, we can reduce the token pushbuffer setup in a further simpler way.
+    
+    //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+    PBTokenArray[2] = (DWORD)StreamNumber;
+    PBTokenArray[3] = (DWORD)pStreamData;
+    PBTokenArray[4] = (DWORD)Stride;
+    //give the correct token enum here, and it's done.
+    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource, 3);//argCount, not necessary, default to 14
+*/
 
 /*
 notes for my trials and errors.
