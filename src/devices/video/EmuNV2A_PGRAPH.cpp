@@ -2089,8 +2089,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetTextureStageStateNotInline:  break;
                     case X_D3DDevice_SetTile:  break;
                     case X_D3DDevice_SetTimerCallback:  break;
-                    case X_D3DDevice_SetTransform:  break;
-                    case X_D3DDevice_SetTransform_0__LTCG_eax1_edx2:  break;
+                    case X_D3DDevice_SetTransform:  //break;
+                    case X_D3DDevice_SetTransform_0__LTCG_eax1_edx2:
+                        CxbxrImpl_SetTransform((xbox::X_D3DTRANSFORMSTATETYPE) argv[1], (CONST D3DMATRIX * )argv[2]);
+                        break;
                     case X_D3DDevice_SetVertexBlendModelView:  break;
                     case X_D3DDevice_SetVertexData2f:  break;
                     case X_D3DDevice_SetVertexData2s:  break;
