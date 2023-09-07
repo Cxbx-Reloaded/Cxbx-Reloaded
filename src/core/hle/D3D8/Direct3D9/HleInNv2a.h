@@ -286,7 +286,8 @@ void CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSur
 #define USEPGRAPH_SetScreenSpaceOffset 0
 //void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
 //#define USEPGRAPH_SetStreamSource 0 /*not permitted in pushbuffer recording*/
-//void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture);
+void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture);
+void CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
 //void WINAPI CxbxrImpl_SetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* pMatrix);
 void CxbxrImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
 void CxbxrImpl_SetVertexShader(DWORD Handle);
@@ -309,6 +310,11 @@ DWORD CxbxrImpl_Swap(xbox::dword_xt Flags);
 // Warning: CxbxrImpl_MakeSpace() uses trampoline inside, do not use this function in pgraph. only use it in xbox/HLE patch.
 xbox::dword_xt* CxbxrImpl_MakeSpace(void);
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurface*pZbuffer);
+
+//helper functions
+ULONG CxbxrImpl_Resource_AddRef(xbox::X_D3DResource* pResource);
+ULONG CxbxrImpl_Resource_Release(xbox::X_D3DResource* pResource);
+
 
 /*
 notes for my trials and errors.

@@ -280,7 +280,7 @@ FORCEINLINE DWORD Round(
 extern float CxbxrGetSuperSampleScale(void);
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
 static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
-extern std::map<UINT64, xbox::X_D3DBaseTexture> g_TextureCache;
+extern std::map<UINT64, xbox::X_D3DBaseTexture*> g_TextureCache;
 
 void CxbxrImpl_LazySetTextureState(NV2AState* d)
 {
@@ -302,8 +302,9 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				UINT64 key = ((UINT64)(pg->KelvinPrimitive.SetTexture[stage].Format) << 32) | pg->KelvinPrimitive.SetTexture[stage].Offset;
 				auto it = g_TextureCache.find(key);
 				if (it != g_TextureCache.end()){
-					NV2A_texture_stage_texture[stage] = it->second;
-					g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
+					//preserve the whole texture incase we need to debug and the host side released it.
+					NV2A_texture_stage_texture[stage] = *(it->second);
+					g_pNV2A_SetTexture[stage] = it->second; //&NV2A_texture_stage_texture[stage];
 					bTextureFound = true;
 						// can't return directly since we still have to process certain texture related TextureStates
 						//return;
@@ -537,7 +538,6 @@ FORCEINLINE DWORD MinFilter(
 		texgen |= stage;
 		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texgen);
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
-
 	}
 	//reset texture stage dirty flag
 	//NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;

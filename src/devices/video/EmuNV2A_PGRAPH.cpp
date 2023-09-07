@@ -2074,7 +2074,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetStreamSource_8:  break;
                     case X_D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber:  break;
                     case X_D3DDevice_SetSwapCallback:  break;
-                    case X_D3DDevice_SetTexture:  break;
+                    case X_D3DDevice_SetTexture:
+                        CxbxrImpl_SetTexture((xbox::dword_xt) argv[1], (xbox::X_D3DBaseTexture *) argv[2]);
+                        break;
                     case X_D3DDevice_SetTexture_4__LTCG_eax_pTexture:  break;
                     case X_D3DDevice_SetTexture_4__LTCG_eax_Stage:  break;
                     case X_D3DDevice_SetTextureStageState:  break;
@@ -2122,7 +2124,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_Swap_0:
                         CxbxrImpl_Swap(argv[1]);
                         break;
-                    case X_D3DDevice_SwitchTexture:  break;
+                    case X_D3DDevice_SwitchTexture:
+                        CxbxrImpl_SwitchTexture((xbox::dword_xt)argv[1], (xbox::dword_xt)argv[2], (xbox::dword_xt)argv[3]);
+                        break;
                     case X_D3DDevice_UpdateOverlay:  break;
                     case X_D3DResource_BlockUntilNotBusy:  break;
                     case X_D3D_BlockOnTime:  break;	case X_D3D_BlockOnTime_4:  break;

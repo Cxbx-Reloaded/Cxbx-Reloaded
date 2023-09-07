@@ -208,7 +208,7 @@ static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT
 
 
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
-	   std::map<UINT64, xbox::X_D3DBaseTexture> g_TextureCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
+	   std::map<UINT64, xbox::X_D3DBaseTexture*> g_TextureCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
 
 static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
@@ -426,7 +426,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
     XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap,                                     (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap_0,                                   ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SwitchTexture,                            (xbox::dword_xt)                                                                                      );  \
+    XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SwitchTexture,                            (xbox::dword_xt,xbox::dword_xt,xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                       );  \
@@ -3966,8 +3966,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 
 
 	// always trampoline
-	if(XB_TRMP(D3DDevice_SetBackBufferScale))
-		XB_TRMP(D3DDevice_SetBackBufferScale)(x, y);
+	XB_TRMP(D3DDevice_SetBackBufferScale)(x, y);
 	/*
 	xbox SetBAckBufferScale takes effect on aaScaleX/ssScaleY, which will be multiplied to render starge width/height
 	SuperSampleScaleX/Y are aaSaleX/Y multiplied by 0.5 if super sample mode was set. width/height will be multiplied by 0.5 when super sample mode was set.
@@ -5180,16 +5179,33 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LT
         ret  4
     }
 }
-
+void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture)
+{
+	if (pTexture != nullptr) {
+		UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
+		auto it = g_TextureCache.find(key);
+		// we should better erase the pTexture if the key already existed in the map.
+		// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
+		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
+		if (it != g_TextureCache.end()) {
+			//release ref. count since we add ref. count in HLE patch.
+			CxbxrImpl_Resource_Release(pTexture);
+			g_TextureCache.erase(it);
+		}
+		g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture *>(key, pTexture));
+	}
+	//update the currently used stage texture
+	g_pXbox_SetTexture[Stage] = pTexture;
+}
 
 // ******************************************************************
 // * patch: D3DDevice_SetTexture
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 (
-    dword_xt           Stage,
-	X_D3DBaseTexture  *pTexture
-)
+	dword_xt           Stage,
+	X_D3DBaseTexture* pTexture
+	)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Stage)
@@ -5197,71 +5213,38 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 		LOG_FUNC_END;
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	CxbxrImpl_Resource_AddRef(pTexture);
 	XB_TRMP(D3DDevice_SetTexture)(Stage, pTexture);
-	if (pTexture != nullptr) {
-		UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
-		auto it = g_TextureCache.find(key);
-		// we should better erase the pTexture if the key already existed in the map.
-		// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
-		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
-		if (it == g_TextureCache.end())
-			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture >(key, *pTexture));
-			//g_TextureCache.erase(key);
-		// always insert the new pTexture.
-		// todo: shall we keep the whole Texture resource here instead of the pTexture only?
-		//
-	}
-	//update the currently used stage texture
-	g_pXbox_SetTexture[Stage] = pTexture;
+
+
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetTexture;//enum of this patched API
+	pPush_local[2] = (DWORD)Stage; //total 14 DWORD space for arguments.
+	pPush_local[3] = (DWORD)pTexture;
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x10;
 }
 
-// ******************************************************************
-// * patch: D3DDevice_SwitchTexture
-// ******************************************************************
-xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
-(
-    dword_xt           Method,
-    dword_xt           Data,
-    dword_xt           Format
-)
+void CxbxrImpl_SwitchTexture(
+	xbox::dword_xt Method,
+	xbox::dword_xt Data,
+	xbox::dword_xt Format
+    )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Method)
-		LOG_FUNC_ARG(Data)
-		LOG_FUNC_ARG(Format)
-		LOG_FUNC_END;
-/*
-	if(XB_TRMP(D3DDevice_SwitchTexture)){
-		__asm {
-			push ecx
-			mov ecx, Method
-			push edx
-			mov edx,Data
-		}
-		XB_TRMP(D3DDevice_SwitchTexture)(Format);
-		__asm {
-			pop edx
-			pop ecx
-		}
-	}
-*/
 	DWORD Stage = -1;
-	/*
-	switch (Method) { // Detect which of the 4 (X_D3DTS_STAGECOUNT) texture stages is given by the (NV2A) Method argument
-	// This code contains D3DPUSH_ENCODE(NV2A_TX_OFFSET(v), 2) = 2 DWORD's, shifted left PUSH_COUNT_SHIFT (18) left
-	case 0x00081b00: Stage = 0; break;
-	case 0x00081b40: Stage = 1; break;
-	case 0x00081b80: Stage = 2; break;
-	case 0x00081bc0: Stage = 3; break;
-	default:
-		LOG_TEST_CASE("D3DDevice_SwitchTexture Unknown Method");
-        EmuLog(LOG_LEVEL::WARNING, "Unknown Method (0x%.08X)", Method);
-	}
-	*/
-
 	Stage = ((Method & 0x01FFC) - 0x01b00) / 0x40;
+	// Update data and format separately, instead of via GetDataFromXboxResource()
 
-    if (Stage >= 0 && Stage <=3) {
+	if (Stage >= 0 && Stage <= 3) {
 		// Switch Texture updates the data pointer of an active texture using pushbuffer commands
 		if (g_pXbox_SetTexture[Stage] == xbox::zeroptr) {
 			LOG_TEST_CASE("D3DDevice_SwitchTexture without an active texture");
@@ -5288,27 +5271,90 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 			// Test-case : Richard Burns Rally
 			// Test-case : Spider - Man 2
 
-			// Update data and format separately, instead of via GetDataFromXboxResource()
 			CxbxActiveTextureCopies[Stage].Common = g_pXbox_SetTexture[Stage]->Common;
 			CxbxActiveTextureCopies[Stage].Data = Data;
 			CxbxActiveTextureCopies[Stage].Format = Format;
 			CxbxActiveTextureCopies[Stage].Lock = 0;
 			CxbxActiveTextureCopies[Stage].Size = g_pXbox_SetTexture[Stage]->Size;
 
-			
 			// Use the above modified copy, instead of altering the active Xbox texture
 			g_pXbox_SetTexture[Stage] = &CxbxActiveTextureCopies[Stage];
 			UINT64 key = ((UINT64)(g_pXbox_SetTexture[Stage]->Format) << 32) | g_pXbox_SetTexture[Stage]->Data;
 			auto it = g_TextureCache.find(key);
-			if (it == g_TextureCache.end())
-				g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture >(key, CxbxActiveTextureCopies[Stage]));
+			if (it != g_TextureCache.end()) {
+				//release ref. count since we add ref. count in HLE patch.
+				//CxbxrImpl_Resource_Release(it->second);
+				g_TextureCache.erase(key);
+			}
+			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture* >(key, &CxbxActiveTextureCopies[Stage]));
 			// Note : Since g_pXbox_SetTexture and CxbxActiveTextureCopies are host-managed,
 			// Xbox code should never alter these members (so : no reference counting, etc).
 			// As long as that's guaranteed, this is a safe way to emulate SwitchTexture.
 			// (GetHostResourceKey also avoids using any Xbox texture resource memory address.)
-			XB_TRMP(D3DDevice_SetTexture)(Stage, g_pXbox_SetTexture[Stage]);
 		}
-    }
+	}
+}
+// ******************************************************************
+// * patch: D3DDevice_SwitchTexture
+// ******************************************************************
+xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
+(
+    dword_xt           Method,
+    dword_xt           Data,
+    dword_xt           Format
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Method)
+		LOG_FUNC_ARG(Data)
+		LOG_FUNC_ARG(Format)
+		LOG_FUNC_END;
+	
+		/*
+				__asm {
+			push ecx
+			mov ecx, Method
+			push edx
+			mov edx,Data
+		}
+*/
+		//__fastcall XB_TRMP(D3DDevice_SwitchTexture) is a  __fastcall which put first arg in ecx, 2nd arg in edx, args starting from 3rd arg are put in stack
+	XB_TRMP(D3DDevice_SwitchTexture)(Method, Data, Format);
+/*
+		__asm {
+			pop edx
+			pop ecx
+		}
+	}
+*/
+	/*
+	switch (Method) { // Detect which of the 4 (X_D3DTS_STAGECOUNT) texture stages is given by the (NV2A) Method argument
+	// This code contains D3DPUSH_ENCODE(NV2A_TX_OFFSET(v), 2) = 2 DWORD's, shifted left PUSH_COUNT_SHIFT (18) left
+	case 0x00081b00: Stage = 0; break;
+	case 0x00081b40: Stage = 1; break;
+	case 0x00081b80: Stage = 2; break;
+	case 0x00081bc0: Stage = 3; break;
+	default:
+		LOG_TEST_CASE("D3DDevice_SwitchTexture Unknown Method");
+        EmuLog(LOG_LEVEL::WARNING, "Unknown Method (0x%.08X)", Method);
+	}
+	*/
+	// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SwitchTexture;//enum of this patched API
+		pPush_local[2] = (DWORD)Method; //total 14 DWORD space for arguments.
+		pPush_local[3] = (DWORD)Data;
+		pPush_local[4] = (DWORD)Format;
+
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
 }
 
 // ******************************************************************
@@ -10492,6 +10538,8 @@ ULONG CxbxrImpl_Resource_AddRef
 	xbox::X_D3DResource* pResource
 )
 {
+	if (pResource == nullptr)
+		return 0L;
 	// If the resource being referenced is a surface then we also need
 	// to increment the refcount on its parent.  We only do this once.
 	if ((pResource->Common & X_D3DCOMMON_REFCOUNT_MASK) == 0)
@@ -10515,7 +10563,8 @@ ULONG CxbxrImpl_Resource_Release
 	xbox::X_D3DResource* pResource
 )
 {
-
+	if (pResource == nullptr)
+		return 0L;
 	if ((pResource->Common & X_D3DCOMMON_REFCOUNT_MASK) == 1)
 	{
 		// If this is the last external release from a surface then we need
