@@ -1,6 +1,6 @@
 // virtual NV2A register for HLE API handler
 #   define NV097_HLE_API                                      0x00000080
-
+#include "..\XbD3D8Types.h"
 // enum for xbox D3DDevice APIs
 typedef enum _X_D3DAPI_ENUM {
 
@@ -254,7 +254,9 @@ void CxbxrImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType);
 void CxbxrImpl_Clear(xbox::dword_xt Count, CONST D3DRECT* pRects, xbox::dword_xt Flags, D3DCOLOR Color, float Z, xbox::dword_xt Stencil);
 #define USEPGRAPH_Clear 1
 void WINAPI CxbxrImpl_CopyRects(xbox::X_D3DSurface* pSourceSurface, CONST RECT* pSourceRectsArray, xbox::uint_xt cRects, xbox::X_D3DSurface* pDestinationSurface, CONST POINT* pDestPointsArray);
-#define USEPGRAPH_CopyRects 0 /*CopyRects() is not permitted in pushbuffer recording.*/
+#define USEPGRAPH_CopyRects 1 /*CopyRects() is not permitted in pushbuffer recording.*/
+;
+;
 //void WINAPI CxbxrImpl_DrawIndexedVertices(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PWORD pIndexData);
 //void WINAPI CxbxrImpl_DrawIndexedVerticesUP(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PVOID pIndexData, CONST PVOID pVertexStreamZeroData, xbox::uint_xt VertexStreamZeroStride);
 //void WINAPI CxbxrImpl_DrawRectPatch(xbox::uint_xt	Handle, CONST xbox::float_xt* pNumSegs, CONST D3DRECTPATCH_INFO* pRectPatchInfo);
@@ -315,6 +317,10 @@ DWORD CxbxrImpl_Swap(xbox::dword_xt Flags);
 // Warning: CxbxrImpl_MakeSpace() uses trampoline inside, do not use this function in pgraph. only use it in xbox/HLE patch.
 xbox::dword_xt* CxbxrImpl_MakeSpace(void);
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurface*pZbuffer);
+
+// D3D api
+void WINAPI CxbxrImpl_DestroyResource(xbox::X_D3DResource* pResource);
+
 
 //helper functions
 ULONG CxbxrImpl_Resource_AddRef(xbox::X_D3DResource* pResource);

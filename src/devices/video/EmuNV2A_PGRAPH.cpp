@@ -2139,8 +2139,10 @@ int pgraph_handle_method(
                     case X_D3DResource_BlockUntilNotBusy:  break;
                     case X_D3D_BlockOnTime:  break;	case X_D3D_BlockOnTime_4:  break;
                     case X_D3D_CommonSetRenderTarget:  break;
-                    case X_D3D_DestroyResource:  break;
-                    case X_D3D_DestroyResource__LTCG:  break;
+                    case X_D3D_DestroyResource:  //break;
+                    case X_D3D_DestroyResource__LTCG:
+                        CxbxrImpl_DestroyResource((xbox::X_D3DResource *) argv[1]);
+                        break;
                     case X_D3D_LazySetPointParams:  break;
                     case X_D3D_SetCommonDebugRegisters:  break;
                     case X_Direct3D_CreateDevice:  break;
