@@ -277,9 +277,9 @@ void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 #define USEPGRAPH_SelectVertexShader 1
 void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
 // todo: CxbxrImpl_SetFlickerFilter() not implemented yet.
-void WINAPI CxbxrImpl_SetFlickerFilter(xbox::dword_xt Filter);
-xbox::hresult_xt  WINAPI CxbxrImpl_SetLight(xbox::dword_xt Index, CONST xbox::X_D3DLIGHT8* pLight);
+//void WINAPI CxbxrImpl_SetFlickerFilter(xbox::dword_xt Filter);
 xbox::hresult_xt WINAPI CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
+xbox::hresult_xt  WINAPI CxbxrImpl_SetLight(xbox::dword_xt Index, CONST xbox::X_D3DLIGHT8* pLight);
 //void WINAPI CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8* pMaterial);
 //void WINAPI CxbxrImpl_SetModelView(CONST D3DMATRIX* pModelView, CONST D3DMATRIX* pInverseModelView, CONST D3DMATRIX* pComposite);
 void CxbxrImpl_SetPalette(xbox::dword_xt Stage, xbox::X_D3DPalette* pPalette);
@@ -291,7 +291,7 @@ void CxbxrImpl_SetScreenSpaceOffset(float x, float y);
 #define USEPGRAPH_SetScreenSpaceOffset 0
 void WINAPI CxbxrImpl_SetShaderConstantMode(xbox::X_VERTEXSHADERCONSTANTMODE Mode);
 // todo: CxbxrImpl_SetSoftDisplayFilter() not implemented yet.
-void WINAPI CxbxrImpl_SetSoftDisplayFilter(xbox::bool_xt Enable);
+//void WINAPI CxbxrImpl_SetSoftDisplayFilter(xbox::bool_xt Enable);
 void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
 //#define USEPGRAPH_SetStreamSource 0 /*not permitted in pushbuffer recording*/
 void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture);

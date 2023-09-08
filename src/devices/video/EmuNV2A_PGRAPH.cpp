@@ -1989,7 +1989,7 @@ int pgraph_handle_method(
                     case X_D3DDevice_IsFencePending:  break;
                     case X_D3DDevice_KickPushBuffer:  break;
                     case X_D3DDevice_LightEnable:
-                        CxbxrImpl_LightEnable((xbox::dword_xt)argv[1], (xbox::bool_xt) argv[2]);
+                        CxbxrImpl_LightEnable((xbox::dword_xt) /* Index */ argv[1], (xbox::bool_xt) /* bEnable */ argv[2]);
                         break;
                     case X_D3DDevice_LoadVertexShader:       // break;
                     case X_D3DDevice_LoadVertexShader_4:
@@ -2042,7 +2042,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetGammaRamp:  break;
                     case X_D3DDevice_SetIndices:  break;
                     case X_D3DDevice_SetIndices_4:  break;
-                    case X_D3DDevice_SetLight:  break;
+                    case X_D3DDevice_SetLight:
+                        CxbxrImpl_SetLight((xbox::dword_xt) /* Index */ argv[1], (CONST xbox::X_D3DLIGHT8*) /* pLight */ argv[2]);
+                        break;
                     case X_D3DDevice_SetMaterial:  break;
                     case X_D3DDevice_SetModelView:  break;
                     case X_D3DDevice_SetOverscanColor:  break;

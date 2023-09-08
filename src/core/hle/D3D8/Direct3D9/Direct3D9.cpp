@@ -10391,11 +10391,17 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 
 	XB_TRMP(D3DDevice_SetLight)(Index, pLight);
 
-	HRESULT hRet = CxbxrImpl_SetLight(Index, pLight);
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Index;
+	PBTokenArray[3] = (DWORD)pLight;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetLight, 2);//argCount, not necessary, default to 14
 
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
+	//HRESULT hRet = CxbxrImpl_SetLight(Index, pLight);
 
-    return hRet;
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
+
+	return S_OK;//hRet;
 }
 xbox::hresult_xt WINAPI CxbxrImpl_SetMaterial
 (
