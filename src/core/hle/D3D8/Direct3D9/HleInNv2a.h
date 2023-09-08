@@ -336,7 +336,7 @@ void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount, DWORD* argv);
     PBTokenArray[3] = (DWORD)pStreamData;
     PBTokenArray[4] = (DWORD)Stride;
     //give the correct token enum here, and it's done.
-    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource, 3);//argCount, not necessary, default to 14
+    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_APIName, argCount, PBTokenArray);//argCount 14
 */
 
 /*
