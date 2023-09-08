@@ -11133,25 +11133,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 		return;
 	}
 	// make sure pushbuffer is processed.
-	EmuKickOffWait();
-	//CxbxrImpl_RunVertexStateShader(Address,pData);
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+	// CxbxrImpl_RunVertexStateShader(Address,pData);
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_RunVertexStateShader;//enum of this patched API
-	pPush_local[2] = (DWORD)Address; //total 14 DWORD space for arguments.
-    //copy the vertex shader constant to pushbuffer as well, and revise the pData 
-	pPush_local[3] = (DWORD)&pPush_local[4];
-	memcpy(&pPush_local[4], pData, sizeof(float) * 4);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Address;
+	PBTokenArray[3] = (DWORD)&PBTokenArray[4];
+	memcpy(&PBTokenArray[4], pData, sizeof(float) * 4);
+	
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunVertexStateShader, 6, PBTokenArray);//argCount 14
 }
 
 // ******************************************************************
