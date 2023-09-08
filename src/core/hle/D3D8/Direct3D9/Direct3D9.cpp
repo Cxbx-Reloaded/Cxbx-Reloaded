@@ -11860,13 +11860,13 @@ void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
     LOG_FUNC_ONE_ARG(pResource);
 
     // Release the host copy (if it exists!)
-    //FreeHostResource(GetHostResourceKey(pResource));
-
+    FreeHostResource(GetHostResourceKey(pResource));
+#if 0
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pResource;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_DestroyResource, 1);//argCount, not necessary, default to 14
-
+#endif
 	// Call the Xbox version of DestroyResource
     XB_TRMP(D3D_DestroyResource)(pResource);
 }
@@ -11891,13 +11891,13 @@ __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
     D3D_DestroyResource__LTCG(pResource);
 
     // Release the host copy (if it exists!)
-    // FreeHostResource(GetHostResourceKey(pResource));
-
+    FreeHostResource(GetHostResourceKey(pResource));
+#if 0
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pResource;
 	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_DestroyResource, 1);//argCount, not necessary, default to 14
-
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_DestroyResource__LTCG, 1);//argCount, not necessary, default to 14
+#endif
     // Call the Xbox version of DestroyResource
     __asm {
         mov  edi, pResource
