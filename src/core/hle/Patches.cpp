@@ -122,7 +122,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	//PATCH_ENTRY("D3DDevice_MultiplyTransform", xbox::EMUPATCH(D3DDevice_MultiplyTransform), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_PersistDisplay", xbox::EMUPATCH(D3DDevice_PersistDisplay), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Present", xbox::EMUPATCH(D3DDevice_Present), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_PrimeVertexCache", xbox::EMUPATCH(D3DDevice_PrimeVertexCache), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_PrimeVertexCache", xbox::EMUPATCH(D3DDevice_PrimeVertexCache), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Reset", xbox::EMUPATCH(D3DDevice_Reset), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Reset_0__LTCG_edi1", xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_edi1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Reset_0__LTCG_ebx1", xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1), PATCH_HLE_D3D),
