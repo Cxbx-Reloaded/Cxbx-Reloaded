@@ -4244,7 +4244,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShad
 	PBTokenArray[2] = (DWORD)Handle;
 	PBTokenArray[3] = (DWORD)Address;
 	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader, 2, PBTokenArray);//argCount, not necessary, default to 14
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2, 2, PBTokenArray);//argCount, not necessary, default to 14
 #endif
     __asm {
         LTCG_EPILOGUE
@@ -4291,7 +4291,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShad
 	PBTokenArray[2] = (DWORD)Handle;
 	PBTokenArray[3] = (DWORD)Address;
 	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader, 2, PBTokenArray);//argCount, not necessary, default to 14
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_4__LTCG_eax1, 2, PBTokenArray);//argCount, not necessary, default to 14
 #endif
 
     __asm {
