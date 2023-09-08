@@ -6151,11 +6151,16 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 	pPush_local[2] = (DWORD)pSourceRect; //total 14 DWORD space for arguments.
 	pPush_local[3] = (DWORD)pDestRect;
 	pPush_local[4] = (DWORD)pDummy1;
-	pPush_local[5] = (DWORD)pDummy2;
+	pPush_local[5] = (DWORD)pDummy1;
 
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pSourceRect;
+	PBTokenArray[3] = (DWORD)pDestRect;
+	PBTokenArray[4] = (DWORD)pDummy1;
+	PBTokenArray[5] = (DWORD)pDummy1;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Present, 4);//argCount, not necessary, default to 14
 #else
 	CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);  // Xbox present ignores
 #endif
