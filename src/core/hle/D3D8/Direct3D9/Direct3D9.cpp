@@ -3972,26 +3972,17 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 	// always trampoline
 	XB_TRMP(D3DDevice_SetBackBufferScale)(x, y);
 	/*
-	xbox SetBAckBufferScale takes effect on aaScaleX/ssScaleY, which will be multiplied to render starge width/height
-	SuperSampleScaleX/Y are aaSaleX/Y multiplied by 0.5 if super sample mode was set. width/height will be multiplied by 0.5 when super sample mode was set.
+	xbox SetBackBufferScale takes effect on aaScaleX/ssScaleY, which will be multiplied to render starge width/height
+	SuperSampleScaleX/Y are aaSaleX/Y multiplied by 0.5 if super sample mode was set. width/height will also be devided by 2 when super sample mode was set.
 	then it calls SetViwport(0) which resulted in calling SetScissors(0,0,0) which resulted in updating the scaled width/height be set to SetSurfaceClip,
 	and then it scaled the internal Viewport to SetWindowClip
 	*/
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetBackBufferScale;//enum of this patched API
-	pPush_local[2] = FtoDW(x); //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(y);
 	
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = FtoDW(x);
+	PBTokenArray[3] = FtoDW(y);
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetBackBufferScale, 2, PBTokenArray);//argCount 14
 }
 
 // ******************************************************************
