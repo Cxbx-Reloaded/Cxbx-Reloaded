@@ -1992,7 +1992,9 @@ int pgraph_handle_method(
                         CxbxrImpl_LightEnable((xbox::dword_xt) /* Index */ argv[1], (xbox::bool_xt) /* bEnable */ argv[2]);
                         break;
                     case X_D3DDevice_LoadVertexShader:       // break;
-                    case X_D3DDevice_LoadVertexShader_4:
+                    case X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle:       // break;  //fall through
+                    case X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle:       // break;  //fall through
+                    case X_D3DDevice_LoadVertexShader_4:                                    // break;  //fall through
                         CxbxrImpl_LoadVertexShader(argv[1], argv[2]);
                         break;
                     case X_D3DDevice_LoadVertexShaderProgram:
