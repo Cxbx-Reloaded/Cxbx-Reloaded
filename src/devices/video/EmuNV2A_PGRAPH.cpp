@@ -1988,7 +1988,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_IsBusy:  break;
                     case X_D3DDevice_IsFencePending:  break;
                     case X_D3DDevice_KickPushBuffer:  break;
-                    case X_D3DDevice_LightEnable:  break;
+                    case X_D3DDevice_LightEnable:
+                        CxbxrImpl_LightEnable((xbox::dword_xt)argv[1], (xbox::bool_xt) argv[2]);
+                        break;
                     case X_D3DDevice_LoadVertexShader:       // break;
                     case X_D3DDevice_LoadVertexShader_4:
                         CxbxrImpl_LoadVertexShader(argv[1], argv[2]);

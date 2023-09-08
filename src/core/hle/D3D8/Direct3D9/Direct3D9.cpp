@@ -10435,7 +10435,7 @@ xbox::hresult_xt WINAPI CxbxrImpl_LightEnable
 	d3d8LightState.EnableLight(Index, bEnable);
 
 	HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
-
+	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");
 	return hRet;
 }
 // ******************************************************************
@@ -10454,11 +10454,16 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 
 	XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
 
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Index;
+	PBTokenArray[3] = (DWORD)bEnable;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_LightEnable, 2);//argCount, not necessary, default to 14
 
-	HRESULT hRet = CxbxrImpl_LightEnable(Index, bEnable);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
+	//HRESULT hRet = CxbxrImpl_LightEnable(Index, bEnable);
+	//
 
-    return hRet;
+	return S_OK;//hRet;
 }
 
 // SetRenderTarget can call CommonSetRenderTarget, nested call detection is required
