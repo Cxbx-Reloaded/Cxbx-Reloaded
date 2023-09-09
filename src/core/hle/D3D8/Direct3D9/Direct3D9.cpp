@@ -6028,13 +6028,25 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 	LOG_FUNC_ARG(pDestinationSurface);
 	LOG_FUNC_ARG(pDestPointsArray);
 	LOG_FUNC_END;
-	// Call trampoline if pushbuffer is recording.
-	/* // CopyRects() is not allowed in pushbuffer recording. so we don't need to trampoline here even we're recording the pushbuffer.
-	if (is_pushbuffer_recording()) {
+	//trampoline draw call if we're recording pushbuffer
+	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_CopyRects)(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
+	}else{
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_CopyRects, 1);//argCount, not necessary, default to 14
+		//kickoff pushbuffer handler
+		EmuKickOff();
+		//wait till our flag been reset
+		while (WaitForPGRAPH)
+			;
+		//now do our job
+		CxbxrImpl_CopyRects(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
 	}
-	*/
-	CxbxrImpl_CopyRects(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
 }
 void WINAPI CxbxrImpl_CopyRects
 (
@@ -6166,20 +6178,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 		LOG_FUNC_ARG(pDummy2)
 		LOG_FUNC_END;
 #if USEPGRAPH_Present
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Present;//enum of this patched API
-	pPush_local[2] = (DWORD)pSourceRect; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)pDestRect;
-	pPush_local[4] = (DWORD)pDummy1;
-	pPush_local[5] = (DWORD)pDummy1;
-
 
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pSourceRect;
@@ -7721,10 +7719,13 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 
 	// Transforms
 	// Transpose row major to column major for HLSL
-	// check if we're in DirectModelView transform mode.
-	if (is_pgraph_DirectModelView()) {
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_xbox_DirectModelView_Projection);
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
+	// use NV2ATextureStates when we're in pgraph handling
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		//NV2A always uses modelView matrix, and the matrix in Kelvin was transposed already.
+		extern D3DMATRIX g_NV2A_DirectModelView_Projection;
+		extern D3DMATRIX g_NV2A_DirectModelView_View;
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_NV2A_DirectModelView_Projection);
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_NV2A_DirectModelView_View);
 
 		for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
 			// FIXME! stick with g_xbox_transform_ModelView[0] and g_xbox_DirectModelView_InverseWorldViewTransposed[0] when we're not in skinning mode. 
@@ -7748,19 +7749,46 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		}
 	}
 	else {
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
+		// check if we're in DirectModelView transform mode.
+		if (is_pgraph_DirectModelView()) {
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_xbox_DirectModelView_Projection);
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
 
-		for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
+			for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
+				// FIXME! stick with g_xbox_transform_ModelView[0] and g_xbox_DirectModelView_InverseWorldViewTransposed[0] when we're not in skinning mode. 
+				// when RenderState[X_D3DRS_VERTEXBLEND]==0, we're not in skinning mode, use modelview matrix 0 only. else use corresponded matrix
+				unsigned int count = (XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND) == 0) ? 0 : i;
+				// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)&g_xbox_transform_ModelView);
+				// transposed xbox modelview transform == kelvin modelview transform
+				ffShaderState.Transforms.WorldView[i] = *pgraph_get_ModelViewMatrix(count);
+				// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed);
+				// xbox InverseWorldView transform == Kelvin InverseModelView transform
+				ffShaderState.Transforms.WorldViewInverseTranspose[i] = *pgraph_get_InverseModelViewMatrix(count);
+			}
+
+			for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
+				//texture transform matrix in Kelvin was transposed already.
+				//todo: the texture transform matrix in Kelvin was altered per different in/out counts and whether there are projected output or not. here we simply copy the hardware content to ffShaderState.Transforms.Texture
+				// later we should check the fixed function vertex shader codes to see how it uses these matrix.
+				memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
+				//the texture transform matrix in kelvin is not transposed, but it's relocated depending on the input and output coordinate counts.
+				//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)pgraph_get_TextureTransformMatrix(i));
+			}
 		}
+		else {
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
 
-		for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
+			for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
+				D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
+				D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
+			}
+
+			for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
+				D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
+			}
 		}
 	}
-
 
 	// Lighting, pgraph CxbxrLazySetLights()
 	// Point sprites aren't lit - 'each point is always rendered with constant colors.'
@@ -8067,6 +8095,36 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
     g_pXbox_VerticalBlankCallback = pCallback;    
 }
 
+void WINAPI CxbxrImpl_SetRenderState_Simple
+(
+	xbox::dword_xt Method,
+	xbox::dword_xt Value
+	)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Method)
+		LOG_FUNC_ARG(Value)
+		LOG_FUNC_END;
+
+	// Fetch the RenderState conversion info for the given input
+	int XboxRenderStateIndex = -1;
+	for (int i = xbox::X_D3DRS_FIRST; i <= xbox::X_D3DRS_LAST; i++) {
+		if (GetDxbxRenderStateInfo(i).M == PUSH_METHOD(Method)) {
+			XboxRenderStateIndex = i;
+			break;
+		}
+	}
+
+	// If we could not map it, log and return
+	if (XboxRenderStateIndex == -1) {
+		EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) could not be found in RenderState table", Method, GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
+		return;
+	}
+
+	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
+
+    XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
+}
 
 // ******************************************************************
 // * patch: D3DDevice_SetRenderState_Simple
@@ -8077,31 +8135,14 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
     dword_xt Value
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Method)
-        LOG_FUNC_ARG(Value)
-        LOG_FUNC_END;
 
     XB_TRMP(D3DDevice_SetRenderState_Simple)(Method, Value);
 
-    // Fetch the RenderState conversion info for the given input
-    int XboxRenderStateIndex = -1;
-    for (int i = X_D3DRS_FIRST; i <= X_D3DRS_LAST; i++) {
-        if (GetDxbxRenderStateInfo(i).M == PUSH_METHOD(Method)) {
-            XboxRenderStateIndex = i;
-            break;
-        }
-    }
-
-    // If we could not map it, log and return
-    if (XboxRenderStateIndex == -1) {
-        EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) could not be found in RenderState table", Method, GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
-        return;
-    }
-
-	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
-
-    XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Method;
+	PBTokenArray[3] = (DWORD)Value;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderState_Simple, 2);//argCount, not necessary, default to 14
 }
 
 void CxbxrImpl_GetProjectionViewportMatrix(D3DMATRIX *pProjectionViewportTransform)
@@ -9951,14 +9992,10 @@ void WINAPI CxbxrImpl_DrawVertices
 	}
 
 	// TODO : Call unpatched CDevice_SetStateVB(0);
-	// Flush pushbuffer
-	EmuKickOffWait();
 	// map pgraph status to D3D
 	NV2AState* d = g_NV2A->GetDeviceState();
 	// this shall update all NV2A texture/transform/vertex shader/pixel shader
 	// D3D_draw_state_update(d);
-
-	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
 
@@ -9968,12 +10005,12 @@ void WINAPI CxbxrImpl_DrawVertices
 
 	VertexBufferConverter.Apply(&DrawContext);
 	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
-		if (StartVertex == 0) {
+		//if (StartVertex == 0) {
 			//LOG_TEST_CASE("X_D3DPT_QUADLIST (StartVertex == 0)"); // disabled, hit too often
 			// test-case : ?X-Marbles
 			// test-case XDK Samples : AlphaFog, AntiAlias, BackBufferScale, BeginPush, Cartoon, TrueTypeFont (?maybe PlayField?)
-		}
-		else {
+		//}
+		//else {
 			LOG_TEST_CASE("X_D3DPT_QUADLIST (StartVertex > 0)");
 			// https://github.com/Cxbx-Reloaded/Cxbx-Reloaded/issues/1156
 			// test-case : All - Star Baseball '03
@@ -10003,7 +10040,7 @@ void WINAPI CxbxrImpl_DrawVertices
 			// test-case : Worms 3D Special Edition
 			// test-case : XDK sample Lensflare (4, for 10 flare-out quads that use a linear texture; rendered incorrectly: https://youtu.be/idwlxHl9nAA?t=439)
 			DrawContext.dwStartVertex = StartVertex; // Breakpoint location for testing.
-		}
+		//}
 
 		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
 		// Assure & activate that special index buffer :
@@ -10066,26 +10103,7 @@ void D3DDevice_DrawVertices
 		LOG_FUNC_ARG(StartVertex)
 		LOG_FUNC_ARG(VertexCount)
 		LOG_FUNC_END;
-#if USEPGRAPH_DrawVertices
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_DrawVertices;//enum of this patched API
-	pPush_local[2] = (DWORD)PrimitiveType; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)StartVertex;
-	pPush_local[4] = (DWORD)VertexCount;
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
-#else
 	CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
-#endif
 }
 
 // ******************************************************************
@@ -10106,16 +10124,29 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__
         mov  VertexCount, eax
         mov  StartVertex, ecx
     }
-#if !USEPGRAPH_DrawVertices
-	if (is_pushbuffer_recording()) {
+	//trampoline draw call if we're recording pushbuffer
+	if (g_pXbox_BeginPush_Buffer != nullptr){
 		XB_TRMP(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)(PrimitiveType);
-	}
-#endif
-	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
-	// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
-	// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
-	D3DDevice_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+	}else{
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+		PBTokenArray[3] = (DWORD)StartVertex;
+		PBTokenArray[4] = (DWORD)VertexCount;
 
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3, 3);//argCount, not necessary, default to 14
+
+		EmuKickOff();
+
+		while (WaitForPGRAPH)
+			;
+		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
+		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+		D3DDevice_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+	}
     __asm {
         LTCG_EPILOGUE
         ret  4
@@ -10137,16 +10168,30 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__
         LTCG_PROLOGUE
         mov  VertexCount, eax
     }
-#if !USEPGRAPH_DrawVertices
-	if (is_pushbuffer_recording()) {
+	//trampoline draw call if we're recording pushbuffer
+	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_DrawVertices_8__LTCG_eax3)(PrimitiveType, StartVertex);
 	}
-#endif
-	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
-	// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
-	// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
-	D3DDevice_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+	else {
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+		PBTokenArray[3] = (DWORD)StartVertex;
+		PBTokenArray[4] = (DWORD)VertexCount;
 
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVertices_8__LTCG_eax3, 3);//argCount, not necessary, default to 14
+
+		EmuKickOff();
+
+		while (WaitForPGRAPH)
+			;
+		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
+		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+		D3DDevice_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+	}
     __asm {
         LTCG_EPILOGUE
         ret  4
@@ -10165,15 +10210,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 {
 	
 	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
-#if !USEPGRAPH_DrawVertices
-	if (is_pushbuffer_recording()) {
-		XB_TRMP(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+
+	if (g_pXbox_BeginPush_Buffer != nullptr){
+	    XB_TRMP(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+	}else{
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+		PBTokenArray[3] = (DWORD)StartVertex;
+		PBTokenArray[4] = (DWORD)VertexCount;
+
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVertices, 3);//argCount, not necessary, default to 14
+
+		EmuKickOff();
+
+		while (WaitForPGRAPH)
+			;
+		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
+		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
+		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
+		D3DDevice_DrawVertices(PrimitiveType, StartVertex, VertexCount);
 	}
-#endif
-	// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
-	// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
-	// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
-	D3DDevice_DrawVertices(PrimitiveType, StartVertex, VertexCount);
 }
 
 
@@ -10189,10 +10248,9 @@ void WINAPI CxbxrImpl_DrawVerticesUP
 		LOG_TEST_CASE("Invalid VertexCount");
 		return;
 	}
-
 	// TODO : Call unpatched CDevice_SetStateUP();
-	//EmuKickOffWait();
-	CxbxUpdateNativeD3DResources();
+    //we update the resources in pgraph handler
+	//CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
 
@@ -10221,23 +10279,6 @@ void D3DDevice_DrawVerticesUP
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
 #if USEPGRAPH_DrawVerticesUP
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_DrawVerticesUP;//enum of this patched API
-	pPush_local[2] = (DWORD)PrimitiveType; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)VertexCount;
-	pPush_local[4] = (DWORD)pVertexStreamZeroData;
-	pPush_local[5] = (DWORD)VertexStreamZeroStride;
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
 #endif
 }
 
@@ -10252,13 +10293,30 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 	uint_xt             VertexStreamZeroStride
 	)
 {
-#if !USEPGRAPH_DrawVerticesUP
-	if (is_pushbuffer_recording()) {
+	//trampoline draw call if we're recording pushbuffer
+	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
-#endif
-	//CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
-	D3DDevice_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	else {
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+		PBTokenArray[3] = (DWORD)VertexCount;
+		PBTokenArray[4] = (DWORD)pVertexStreamZeroData;
+		PBTokenArray[5] = (DWORD)VertexStreamZeroStride;
+
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVerticesUP, 4);//argCount, not necessary, default to 14
+
+		EmuKickOff();
+
+		while (WaitForPGRAPH)
+			;
+		//pgraph_use_NV2A_Kelvin();
+			//g_nv2a_use_Kelvin = true;
+		CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	}
 }
 
 
@@ -10277,15 +10335,31 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_1
         LTCG_PROLOGUE
         mov  pVertexStreamZeroData, ebx
     }
-#if !USEPGRAPH_DrawVerticesUP
-	if (is_pushbuffer_recording()) {
+	//trampoline draw call if we're recording pushbuffer
+	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)(PrimitiveType, VertexCount, VertexStreamZeroStride);
 	}
-#endif
-	// We can't call emupatch() here because the target function calls trampoline which might not be available in guest code.
-	//EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
-	//CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
-	D3DDevice_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	else {
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+		PBTokenArray[3] = (DWORD)VertexCount;
+		PBTokenArray[4] = (DWORD)pVertexStreamZeroData;
+		PBTokenArray[5] = (DWORD)VertexStreamZeroStride;
+
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3, 4);//argCount, not necessary, default to 14
+
+		EmuKickOff();
+
+		while (WaitForPGRAPH)
+			;
+		// We can't call emupatch() here because the target function calls trampoline which might not be available in guest code.
+		//EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+		//CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+		D3DDevice_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	}
     __asm {
         LTCG_EPILOGUE
         ret  0Ch
@@ -10304,8 +10378,8 @@ void WINAPI CxbxrImpl_DrawIndexedVertices
 	}
 
 	// TODO : Call unpatched CDevice_SetStateVB[_8](g_Xbox_BaseVertexIndex);
-
-	CxbxUpdateNativeD3DResources();
+	// we update the resources in pgraph handler
+	//CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
 
@@ -10339,12 +10413,28 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		LOG_FUNC_ARG(VertexCount)
 		LOG_FUNC_ARG(pIndexData)
 		LOG_FUNC_END;
-	// Call trampoline if pushbuffer is recording.
-	if (is_pushbuffer_recording()) {
+	//trampoline draw call if we're recording pushbuffer
+	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_DrawIndexedVertices)(PrimitiveType, VertexCount, pIndexData);
 	}
-	CxbxrImpl_DrawIndexedVertices(PrimitiveType, VertexCount, pIndexData);
+	else {
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+		PBTokenArray[3] = (DWORD)VertexCount;
+		PBTokenArray[4] = (DWORD)pIndexData;
 
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawIndexedVertices, 3);//argCount, not necessary, default to 14
+
+		EmuKickOff();
+
+		while (WaitForPGRAPH)
+			;
+
+		CxbxrImpl_DrawIndexedVertices(PrimitiveType, VertexCount, pIndexData);
+	}
 }
 
 void WINAPI CxbxrImpl_DrawIndexedVerticesUP
@@ -10457,13 +10547,28 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		LOG_FUNC_ARG(pVertexStreamZeroData)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
-	// Call trampoline if pushbuffer is recording.
-	if (is_pushbuffer_recording()) {
+	//trampoline draw call if we're recording pushbuffer
+	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_DrawIndexedVerticesUP)(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
+	else {
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+		PBTokenArray[3] = (DWORD)VertexCount;
+		PBTokenArray[4] = (DWORD)pIndexData;
 
-	CxbxrImpl_DrawIndexedVerticesUP(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawIndexedVerticesUP, 3);//argCount, not necessary, default to 14
 
+		EmuKickOff();
+
+		while (WaitForPGRAPH)
+			;
+
+		CxbxrImpl_DrawIndexedVerticesUP(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
+	}
 }
 
 xbox::hresult_xt WINAPI CxbxrImpl_SetLight
@@ -11187,6 +11292,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 		LOG_FUNC_ARG(pStreamInputs)
 		LOG_FUNC_END;
 
+	// Call trampoline
+	XB_TRMP(D3DDevice_SetVertexShaderInput)(Handle, StreamCount, pStreamInputs);
+
 	// When this API is in effect, VertexBuffers as set by Xbox SetStreamSource are disregarded,
 	// instead, the pStreamInputs[].VertexBuffer streams are used.
 
@@ -11210,11 +11318,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 		Spyro A Hero's Tail-b18e00e5.ini:D3DDevice_SetVertexShaderInputDirect = 0x286760
 	*/
 
-	CxbxrImpl_SetVertexShaderInput(Handle, StreamCount, pStreamInputs);
+	//CxbxrImpl_SetVertexShaderInput(Handle, StreamCount, pStreamInputs);
 
-	// Call trampoline
-	if (XB_TRMP(D3DDevice_SetVertexShaderInput))
-		XB_TRMP(D3DDevice_SetVertexShaderInput)(Handle, StreamCount, pStreamInputs);
+	 //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Handle;
+	PBTokenArray[3] = (DWORD)StreamCount;
+	PBTokenArray[4] = (DWORD)pStreamInputs;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShaderInput, 3);//argCount, not necessary, default to 14
 }
 
 extern xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress); // tmp glue
@@ -11397,7 +11508,14 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 
     HRESULT hRet = D3D_OK;
 
-	CxbxrImpl_SetDepthClipPlanes(Near, Far, Flags);
+	//CxbxrImpl_SetDepthClipPlanes(Near, Far, Flags);
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = FtoDW(Near);
+	PBTokenArray[3] = FtoDW(Far),
+	PBTokenArray[4] = (DWORD)Flags;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetDepthClipPlanes, 3, PBTokenArray);//argCount 14
 
 	return hRet;
 }
@@ -11531,11 +11649,23 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
 		LOG_FUNC_ARG(pRectPatchInfo)
 		LOG_FUNC_END;
 
-	CxbxUpdateNativeD3DResources();
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)pPresentationParameters;
 
-	HRESULT hRet = g_pD3DDevice->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawRectPatch, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		;
+	//resource update call is called via pgraph token handler
+	//CxbxUpdateNativeD3DResources();
+
+	HRESULT hRet = g_pD3DDevice->DrawRectPatch(Handle, pNumSegs, pRectPatchInfo);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawRectPatch");
-
 	return hRet;
 }
 
@@ -11555,7 +11685,20 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
 		LOG_FUNC_ARG(pTriPatchInfo)
 		LOG_FUNC_END;
 
-	CxbxUpdateNativeD3DResources();
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)pPresentationParameters;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawTriPatch, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		;
+	//resource update call is called via pgraph token handler
+	//CxbxUpdateNativeD3DResources();
 
 	HRESULT hRet = g_pD3DDevice->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawTriPatch");
@@ -11749,9 +11892,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_PersistDisplay)()
 	// 6. Call AvSetSavedDataAddress, passing the xbox surface data pointer
 
 	// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
-	if (XB_TRMP(D3DDevice_PersistDisplay)) {
+	//if (XB_TRMP(D3DDevice_PersistDisplay)) {
 		return XB_TRMP(D3DDevice_PersistDisplay)();
-	}
+	//}
 	return 0;
 }
 
@@ -11882,10 +12025,14 @@ void WINAPI CxbxrImpl_SetModelView
 	CONST D3DMATRIX* pComposite
 )
 {
+	extern void CxbxrImpl_LazySetTransform(NV2AState * d);
+	NV2AState* d = g_NV2A->GetDeviceState();
+	//PGRAPHState* pg = &d->pgraph;
 	// only calls d3d implememtation when pushbuffer is not recording.
 	if (g_pXbox_BeginPush_Buffer == nullptr) {
-
-		CxbxrImpl_SetModelView_Calc(pModelView, pInverseModelView, pComposite);
+		// CxbxrImpl_SetModleView_Cale() uses trampoline, which is not feasible for pgraph token handler, we call pgraph transform setup routine CxbxrImpl_LazySetTransform(NV2AState* d) instaed.
+		//CxbxrImpl_SetModelView_Calc(pModelView, pInverseModelView, pComposite);
+		CxbxrImpl_LazySetTransform(d);
 		// set DirectModelView/Transform flag.
 		if (pModelView != nullptr) {
 			pgraph_use_DirectModelView();
