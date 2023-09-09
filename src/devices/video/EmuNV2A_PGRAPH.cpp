@@ -2049,7 +2049,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetLight:
                         CxbxrImpl_SetLight((xbox::dword_xt) /* Index */ argv[1], (CONST xbox::X_D3DLIGHT8*) /* pLight */ argv[2]);
                         break;
-                    case X_D3DDevice_SetMaterial:  break;
+                    case X_D3DDevice_SetMaterial:
+                        CxbxrImpl_SetMaterial((CONST xbox::X_D3DMATERIAL8 *)/* pMaterial */argv[1]);
+                        break;
                     case X_D3DDevice_SetModelView:  break;
                     case X_D3DDevice_SetOverscanColor:  break;
                     case X_D3DDevice_SetPalette:  //break;  //fall through

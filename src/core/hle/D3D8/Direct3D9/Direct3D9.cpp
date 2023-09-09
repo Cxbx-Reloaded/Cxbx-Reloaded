@@ -10467,7 +10467,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 {
 	LOG_FUNC_ONE_ARG(pMaterial);
 	XB_TRMP(D3DDevice_SetMaterial)(pMaterial);
-	HRESULT hRet = CxbxrImpl_SetMaterial(pMaterial);
+	//HRESULT hRet = CxbxrImpl_SetMaterial(pMaterial);
+	HRESULT hRet = S_OK;
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pMaterial;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetMaterial, 1, PBTokenArray);//argCount 14
 	
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
 }
