@@ -2042,8 +2042,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetFlickerFilter:  break;
                     case X_D3DDevice_SetFlickerFilter_0:  break;
                     case X_D3DDevice_SetGammaRamp:  break;
-                    case X_D3DDevice_SetIndices:  break;
-                    case X_D3DDevice_SetIndices_4:  break;
+                    case X_D3DDevice_SetIndices:  //break;  //fall through
+                    case X_D3DDevice_SetIndices_4:
+                        CxbxrImpl_SetIndices((xbox::X_D3DIndexBuffer *)/* pIndexData */argv[1], (xbox::uint_xt) /* BaseVertexIndex */ argv[2]);
+                        break;
                     case X_D3DDevice_SetLight:
                         CxbxrImpl_SetLight((xbox::dword_xt) /* Index */ argv[1], (CONST xbox::X_D3DLIGHT8*) /* pLight */ argv[2]);
                         break;

@@ -3448,6 +3448,16 @@ static void D3DDevice_SetIndices_4
         LOG_FUNC_END;
 }
 
+void WINAPI CxbxrImpl_SetIndices
+(
+	xbox::X_D3DIndexBuffer* pIndexData,
+	xbox::uint_xt           BaseVertexIndex
+)
+{
+// Cache the base vertex index then call the Xbox function
+ g_Xbox_BaseVertexIndex = BaseVertexIndex;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetIndices_4
 // LTCG specific D3DDevice_SetIndices function...
@@ -3463,18 +3473,24 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
     __asm {
         LTCG_PROLOGUE
         mov  pIndexData, ebx
-    }
+	//	mov  ebx, pIndexData
+		push BaseVertexIndex
+		call XB_TRMP(D3DDevice_SetIndices_4);
+	}
     // Log
     D3DDevice_SetIndices_4(pIndexData, BaseVertexIndex);
 
     // Cache the base vertex index
-    g_Xbox_BaseVertexIndex = BaseVertexIndex;
+    // g_Xbox_BaseVertexIndex = BaseVertexIndex;
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pIndexData;
+	PBTokenArray[3] = (DWORD)BaseVertexIndex;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetIndices_4, 2, PBTokenArray);//argCount 14
 
     // Call LTCG-specific trampoline
     __asm {
-        mov  ebx, pIndexData
-        push BaseVertexIndex
-        call XB_TRMP(D3DDevice_SetIndices_4);
 
         LTCG_EPILOGUE
         ret  4
@@ -3496,7 +3512,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices)
 		LOG_FUNC_ARG(BaseVertexIndex)
 		LOG_FUNC_END;
 	// Cache the base vertex index then call the Xbox function
-	g_Xbox_BaseVertexIndex = BaseVertexIndex;
+	// g_Xbox_BaseVertexIndex = BaseVertexIndex;
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pIndexData;
+	PBTokenArray[3] = (DWORD)BaseVertexIndex;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetIndices, 2, PBTokenArray);//argCount 14
 
 	XB_TRMP(D3DDevice_SetIndices)(pIndexData, BaseVertexIndex);
 }
