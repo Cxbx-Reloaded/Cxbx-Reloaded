@@ -2158,6 +2158,8 @@ int pgraph_handle_method(
                     case X_D3D_CommonSetRenderTarget:
                         //todo:this might be redundant because the HLE implementation of this api never set the call level, so this patch will always calls CxbxrImpl_SetRenderTarget(). we might use the fall through directly.
                         CxbxrImpl_D3D_CommonSetRenderTarget((xbox::X_D3DSurface*)/* pRenderTarget*/argv[1], (xbox::X_D3DSurface*)/* pNewZStencil*/argv[2], (void*)/* unknown*/argv[3]);
+                        // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
+                        CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
                         break;
                     case X_D3D_DestroyResource:  //break;
                     case X_D3D_DestroyResource__LTCG:
