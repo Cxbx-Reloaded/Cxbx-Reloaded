@@ -316,8 +316,8 @@ xbox::void_xt WINAPI CxbxrImpl_Present(xbox::dword_xt Flags);
 DWORD CxbxrImpl_Swap(xbox::dword_xt Flags);
 #define USEPGRAPH_Swap 1 /*Present() calles Swap() implementation. Present() is not permitted in pushbuffer recording*/
 //void WINAPI CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
-#define PGRAPHUSE_EmuKickOff 0
-#define PGRAPHUSE_EmuKickOffWait 0
+#define PGRAPHUSE_EmuKickOff 1
+#define PGRAPHUSE_EmuKickOffWait 1
 // Warning: CxbxrImpl_MakeSpace() uses trampoline inside, do not use this function in pgraph. only use it in xbox/HLE patch.
 xbox::dword_xt* CxbxrImpl_MakeSpace(void);
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurface*pZbuffer);

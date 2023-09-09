@@ -1876,7 +1876,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_Clear:
                         CxbxrImpl_Clear((xbox::dword_xt) argv[1], (D3DRECT *)argv[2], (xbox::dword_xt) argv[3], (D3DCOLOR) argv[4], DWtoF(argv[5]), (xbox::dword_xt) argv[6]);
                         break;
-                    case X_D3DDevice_CopyRects:  break;
+                    case X_D3DDevice_CopyRects:
+                        *(bool*)argv[1] = false;
+                        break;
                     case X_D3DDevice_CreateCubeTexture:  break;
                     case X_D3DDevice_CreateDepthStencilSurface:  break;
                     case X_D3DDevice_CreateFixup:  break;
@@ -1898,23 +1900,23 @@ int pgraph_handle_method(
                     case X_D3DDevice_DeleteStateBlock:  break;
                     case X_D3DDevice_DeleteVertexShader:  break;
                     case X_D3DDevice_DeleteVertexShader_0:  break;
-                    case X_D3DDevice_DrawIndexedPrimitive:  break;
-                    case X_D3DDevice_DrawIndexedPrimitiveUP:  break;
-                    case X_D3DDevice_DrawIndexedVertices:  break;
-                    case X_D3DDevice_DrawIndexedVerticesUP:  break;
-                    case X_D3DDevice_DrawPrimitive:  break;
-                    case X_D3DDevice_DrawPrimitiveUP:  break;
-                    case X_D3DDevice_DrawRectPatch:  break;
-                    case X_D3DDevice_DrawTriPatch:  break;
-                    case X_D3DDevice_DrawVertices:  //break;
-                    case X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3:  //break;
-                    case X_D3DDevice_DrawVertices_8__LTCG_eax3:
-                        //CxbxrImpl_DrawVertices((xbox::X_D3DPRIMITIVETYPE)argv[1], (xbox::uint_xt)argv[2], (xbox::uint_xt)argv[3]);
-                        break;
-                    case X_D3DDevice_DrawVerticesUP:  //break;
-                    case X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3:
-                        //CxbxrImpl_DrawVerticesUP((xbox::X_D3DPRIMITIVETYPE)argv[1],(xbox::uint_xt) argv[2], (xbox::PVOID) argv[3], (xbox::uint_xt)argv[4]);
-                        break;
+                    case X_D3DDevice_DrawIndexedPrimitive:  //break;  //fall through
+                    case X_D3DDevice_DrawIndexedPrimitiveUP:  //break;  //fall through
+                    case X_D3DDevice_DrawIndexedVertices:  //break;  //fall through
+                    case X_D3DDevice_DrawIndexedVerticesUP:  //break;  //fall through
+                    case X_D3DDevice_DrawPrimitive:  //break;  //fall through
+                    case X_D3DDevice_DrawPrimitiveUP:  //break;  //fall through
+                    case X_D3DDevice_DrawRectPatch:  //break;  //fall through
+                    case X_D3DDevice_DrawTriPatch:  //break;  //fall through
+                    case X_D3DDevice_DrawVertices:  //break;  //fall through
+                    case X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3:  //break;  //fall through
+                    case X_D3DDevice_DrawVertices_8__LTCG_eax3:  //break;  //fall through
+                    case X_D3DDevice_DrawVerticesUP:  //break;  //fall through
+                    case X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3: {
+                        extern void CxbxUpdateNativeD3DResources();
+                        CxbxUpdateNativeD3DResources();
+                        *(bool*)argv[1] = false;
+                    }break;
                     case X_D3DDevice_EnableOverlay:  break;
                     case X_D3DDevice_End:
                         CxbxrImpl_End();
