@@ -6272,6 +6272,8 @@ DWORD CxbxrImpl_Swap
 	g_LastD3DSwap = (xbox::X_D3DSWAP)Flags;
 
 	HRESULT hRet;
+	// Write Xbox constants
+	auto pg = &(g_NV2A->GetDeviceState()->pgraph);
 	//reset BackbufferScale before any possible early return of swap(),
 
 	// Early exit if we're not ready to present
@@ -6302,12 +6304,20 @@ DWORD CxbxrImpl_Swap
 
 			//
 			auto pXboxRenderTargetSurface = GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET);
+			/*
+			//old code to use xbox cached backbuffer scale.
+			//new code retrieve the scaled render target width/height from NV2A
 			float height, width;
 			GetRenderTargetRawDimensions(width, height, g_pXbox_RenderTarget);
 			float aaX, aaY;
 			GetMultiSampleScaleRaw(aaX, aaY);
 			width *= aaX;
 			height *= aaY;
+			if (is_pgraph_using_NV2A_Kelvin()) {
+				width = (float)((pg->KelvinPrimitive.SetSurfaceClipHorizontal & 0xFFFF0000) >> 16);
+				height = (float)((pg->KelvinPrimitive.SetSurfaceClipVertical & 0xFFFF0000) >> 16);
+			}
+			*/
 			/*
 			    xbox passed scaled render target width/height to NV2A with
 
@@ -6328,8 +6338,8 @@ DWORD CxbxrImpl_Swap
 			RECT scr{};
 			scr.top = (LONG)0;
 			scr.left = (LONG)0;
-			scr.right = (LONG)(width + 0.5f);   //
-			scr.bottom = (LONG)(height + 0.5f); //
+			scr.right = (LONG)((pg->KelvinPrimitive.SetSurfaceClipHorizontal & 0xFFFF0000) >> 16);//was (LONG)(width + 0.5f);   //
+			scr.bottom = (LONG)((pg->KelvinPrimitive.SetSurfaceClipVertical & 0xFFFF0000) >> 16);//was (LONG)(height + 0.5f); //
 
 			// stretch original render target rect(smaller) to full destination render target.
 			hRet = g_pD3DDevice->StretchRect(
