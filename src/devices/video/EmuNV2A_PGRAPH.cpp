@@ -2070,14 +2070,12 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetRenderState:  break;
                     case X_D3DDevice_SetRenderState_Simple:  break;
                     case X_D3DDevice_SetRenderStateNotInline:  break;
-                    case X_D3DDevice_SetRenderTarget:  //break;  //fall through
-                    case X_D3DDevice_SetRenderTarget_0:
+                    case X_D3DDevice_SetRenderTarget:    //break;  //fall through
+                    case X_D3DDevice_SetRenderTarget_0:  //break;  //fall through
+                    case X_D3DDevice_SetRenderTargetFast:
                         CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
                         // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
                         CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
-                        break;
-                    case X_D3DDevice_SetRenderTargetFast:
-                        //todo: check whether this api exist or not
                         break;
                     case X_D3DDevice_SetScissors:  break;
                     case X_D3DDevice_SetScreenSpaceOffset:

@@ -10770,7 +10770,12 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_
 		PBTokenArray[2] = (DWORD)pRenderTarget;
 		PBTokenArray[3] = (DWORD)pNewZStencil;
 		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget_0, 2, PBTokenArray);//argCount 14
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget, 2, PBTokenArray);//argCount 14
+		// add reference to the surfaces to prevent them being released before we access them in pgraph.
+		if (pRenderTarget)
+			CxbxrImpl_Resource_AddRef(pRenderTarget);
+		if (pNewZStencil)
+			CxbxrImpl_Resource_AddRef(pNewZStencil);
 	}
 
 	__asm {
@@ -10821,6 +10826,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
 	PBTokenArray[4] = (DWORD)unknown;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_CommonSetRenderTarget, 3, PBTokenArray);//argCount 14
+	// add reference to the surfaces to prevent them being released before we access them in pgraph.
+	if (pRenderTarget)
+		CxbxrImpl_Resource_AddRef(pRenderTarget);
+	if (pNewZStencil)
+		CxbxrImpl_Resource_AddRef(pNewZStencil);
     //for variants of SetRenderTarget(), we need to setup HLE to pgraph token first in order to make sure the execution ordre of NestedPatchCounter call(setRenderTargetCount);
 	XB_TRMP(D3D_CommonSetRenderTarget)(pRenderTarget, pNewZStencil, unknown);
 
@@ -11971,6 +11981,7 @@ void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
 
     // Release the host copy (if it exists!)
     FreeHostResource(GetHostResourceKey(pResource));
+	//do not sync D3D_DestroyResource() with pgraph, might introduce memory corruption
 #if 0
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pResource;
@@ -12002,6 +12013,7 @@ __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
 
     // Release the host copy (if it exists!)
     FreeHostResource(GetHostResourceKey(pResource));
+	//do not sync D3D_DestroyResource() with pgraph, might introduce memory corruption
 #if 0
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pResource;
@@ -12034,11 +12046,22 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 	// Redirect to the standard version.
 	
 	//EMUPATCH(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
-	NestedPatchCounter call(setRenderTargetCount);
+	//NestedPatchCounter call(setRenderTargetCount);
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pRenderTarget;
+	PBTokenArray[3] = (DWORD)pNewZStencil;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget, 2, PBTokenArray);//argCount 14
+	// add reference to the surfaces to prevent them being released before we access them in pgraph.
+	if (pRenderTarget)
+		CxbxrImpl_Resource_AddRef(pRenderTarget);
+	if (pNewZStencil)
+		CxbxrImpl_Resource_AddRef(pNewZStencil);
 
 	XB_TRMP(D3DDevice_SetRenderTargetFast)(pRenderTarget, pNewZStencil,Flags);
 
-	CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+	//CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 }
 
 // ******************************************************************
