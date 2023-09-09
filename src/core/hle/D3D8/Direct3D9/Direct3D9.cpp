@@ -205,6 +205,10 @@ bool is_pushbuffer_recording(void)
 	   xbox::X_PixelShader          g_Xbox_PixelShader = {0};
 static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
 static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
+// NV2A Kelvin alternatives
+xbox::X_D3DPalette           g_NV2A_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { 0 };
+xbox::PVOID                  g_pNV2A_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
+unsigned                     g_NV2A_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
 
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
@@ -1040,7 +1044,7 @@ resource_cache_t& GetResourceCache(resource_key_t& key)
 	return IsResourceAPixelContainer(key.Common) && IsPaletizedTexture(key.Format)
 		? g_Cxbx_Cached_PaletizedTextures : g_Cxbx_Cached_Direct3DResources;
 }
-
+extern bool is_pgraph_using_NV2A_Kelvin(void);
 resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextureStage = -1)
 {
 	resource_key_t key = {};
@@ -1053,6 +1057,16 @@ resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextu
 			auto pPixelContainer = (xbox::X_D3DPixelContainer*)pXboxResource;
 			key.Format = pPixelContainer->Format;
 			key.Size = pPixelContainer->Size;
+
+			void* data;
+			int size;
+			data = g_pXbox_Palette_Data[iTextureStage];
+			size = g_Xbox_Palette_Size[iTextureStage];
+			if (is_pgraph_using_NV2A_Kelvin()) {
+				data = g_pNV2A_Palette_Data[iTextureStage];
+				size = g_NV2A_Palette_Size[iTextureStage];
+			}
+
 			// For paletized textures, include the current palette hash as well
 			if (IsPaletizedTexture(pPixelContainer->Format)) {
 				if (iTextureStage < 0) {
@@ -1061,11 +1075,11 @@ resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextu
 				} else {
 					assert(iTextureStage < xbox::X_D3DTS_STAGECOUNT);
 					// Protect for when this gets hit before an actual palette is set
-					if (g_Xbox_Palette_Size[iTextureStage] > 0) {
+					if (size > 0) {
 						// This caters for palette changes (only the active one will be used,
 						// any intermediate changes have no effect). Obsolete palette texture
 						// conversions will be pruned from g_Cxbx_Cached_PaletizedTextures
-						key.PaletteHash = ComputeHash(g_pXbox_Palette_Data[iTextureStage], g_Xbox_Palette_Size[iTextureStage]);
+						key.PaletteHash = ComputeHash(data, size);
 					}
 				}
 			}
@@ -7317,7 +7331,15 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// In case where there is a palettized texture without a palette attached,
 					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
 					// Test case: DRIV3R
-					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && g_pXbox_Palette_Data[iTextureStage] == nullptr;
+					void* data;
+					int size;
+					data = g_pXbox_Palette_Data[iTextureStage];
+					size = g_Xbox_Palette_Size[iTextureStage];
+					if (is_pgraph_using_NV2A_Kelvin()) {
+						data = g_pNV2A_Palette_Data[iTextureStage];
+						size = g_NV2A_Palette_Size[iTextureStage];
+					}
+					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && data/*g_pXbox_Palette_Data[iTextureStage]*/ == nullptr;
 					if (missingPalette) {
 						LOG_TEST_CASE("Palettized texture bound without a palette");
 
@@ -7330,7 +7352,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
 							pDst, dwDstRowPitch, dwDstSlicePitch,
 							pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
-							g_pXbox_Palette_Data[iTextureStage])) {
+							data/*g_pXbox_Palette_Data[iTextureStage]*/)) {
 							CxbxrAbort("Unhandled conversion!");
 						}
 					}
@@ -10769,7 +10791,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
 		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	}
 }
-//NV097_SET_TEXTURE_PALETTE(Stage)
+//NV097_SET_TEXTURE_PALETTE(Stage) //pPalette->Data | (pPalette->Common >> D3DPALETTE_COMMON_PALETTESET_SHIFT) & D3DPALETTE_COMMON_PALETTESET_MASK
 void CxbxrImpl_SetPalette
 (
     xbox::dword_xt      Stage,
