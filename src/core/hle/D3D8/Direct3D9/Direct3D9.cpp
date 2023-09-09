@@ -10769,8 +10769,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
 		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	}
 }
-
-static void CxbxrImpl_SetPalette
+//NV097_SET_TEXTURE_PALETTE(Stage)
+void CxbxrImpl_SetPalette
 (
     xbox::dword_xt      Stage,
     xbox::X_D3DPalette *pPalette
@@ -10822,7 +10822,13 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 		call XB_TRMP(D3DDevice_SetPalette_4)
 	}
 
-	CxbxrImpl_SetPalette(Stage, pPalette);
+	//CxbxrImpl_SetPalette(Stage, pPalette);
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Stage;
+	PBTokenArray[3] = (DWORD)pPalette;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPalette_4, 2, PBTokenArray);//argCount 14
 
 	__asm {
 		LTCG_EPILOGUE
@@ -10847,7 +10853,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
 	XB_TRMP(D3DDevice_SetPalette)(Stage, pPalette);
 
-	CxbxrImpl_SetPalette(Stage, pPalette);
+	//CxbxrImpl_SetPalette(Stage, pPalette);
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Stage;
+	PBTokenArray[3] = (DWORD)pPalette;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPalette, 2, PBTokenArray);//argCount 14
 }
 
 // LTCG specific D3DDevice_SetFlickerFilter function...
