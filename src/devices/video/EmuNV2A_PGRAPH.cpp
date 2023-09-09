@@ -2060,8 +2060,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetPalette_4:
                         CxbxrImpl_SetPalette((xbox::dword_xt)/* Stage */argv[1], (xbox::X_D3DPalette *)/* pPalette */argv[2]);
                         break;
-                    case X_D3DDevice_SetPixelShader:  break;
-                    case X_D3DDevice_SetPixelShader_0__LTCG_eax_handle:  break;
+                    case X_D3DDevice_SetPixelShader:  //break;  //fall through
+                    case X_D3DDevice_SetPixelShader_0__LTCG_eax_handle:
+                        CxbxrImpl_SetPixelShader((xbox::dword_xt)/*Handle*/argv[1]);
+                        break;
                     case X_D3DDevice_SetPixelShaderConstant:  break;
                     case X_D3DDevice_SetPixelShaderConstant_4:  break;
                     case X_D3DDevice_SetPixelShaderProgram:  break;

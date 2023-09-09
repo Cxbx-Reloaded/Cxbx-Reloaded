@@ -9849,7 +9849,11 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0
         call XB_TRMP(D3DDevice_SetPixelShader_0__LTCG_eax_handle)
     }
 
-    CxbxrImpl_SetPixelShader(Handle);
+    //CxbxrImpl_SetPixelShader(Handle);
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Handle;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader_0__LTCG_eax_handle, 1, PBTokenArray);//argCount 14
 
     __asm {
         LTCG_EPILOGUE
@@ -9870,7 +9874,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 	// Call the Xbox function to make sure D3D structures get set
 	XB_TRMP(D3DDevice_SetPixelShader)(Handle);
 
-	CxbxrImpl_SetPixelShader(Handle);
+	//CxbxrImpl_SetPixelShader(Handle);
+
+	//CxbxrImpl_SetPixelShader(Handle);
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Handle;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader, 1, PBTokenArray);//argCount 14
 }
 
 extern void D3D_draw_state_update(NV2AState* d);
