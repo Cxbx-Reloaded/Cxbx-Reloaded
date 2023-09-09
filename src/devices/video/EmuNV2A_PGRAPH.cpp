@@ -2070,13 +2070,15 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetRenderState:  break;
                     case X_D3DDevice_SetRenderState_Simple:  break;
                     case X_D3DDevice_SetRenderStateNotInline:  break;
-                    case X_D3DDevice_SetRenderTarget:
-                        CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface *)argv[1], (xbox::X_D3DSurface *)argv[2]);
+                    case X_D3DDevice_SetRenderTarget:  //break;  //fall through
+                    case X_D3DDevice_SetRenderTarget_0:
+                        CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
                         // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
                         CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
                         break;
-                    case X_D3DDevice_SetRenderTarget_0:  break;
-                    case X_D3DDevice_SetRenderTargetFast:  break;
+                    case X_D3DDevice_SetRenderTargetFast:
+                        //todo: check whether this api exist or not
+                        break;
                     case X_D3DDevice_SetScissors:  break;
                     case X_D3DDevice_SetScreenSpaceOffset:
                         CxbxrImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
@@ -2155,7 +2157,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_UpdateOverlay:  break;
                     case X_D3DResource_BlockUntilNotBusy:  break;
                     case X_D3D_BlockOnTime:  break;	case X_D3D_BlockOnTime_4:  break;
-                    case X_D3D_CommonSetRenderTarget:  break;
+                    case X_D3D_CommonSetRenderTarget:
+                        //todo:this might be redundant because the HLE implementation of this api never set the call level, so this patch will always calls CxbxrImpl_SetRenderTarget(). we might use the fall through directly.
+                        CxbxrImpl_D3D_CommonSetRenderTarget((xbox::X_D3DSurface*)/* pRenderTarget*/argv[1], (xbox::X_D3DSurface*)/* pNewZStencil*/argv[2], (void*)/* unknown*/argv[3]);
+                        break;
                     case X_D3D_DestroyResource:  //break;
                     case X_D3D_DestroyResource__LTCG:
                         CxbxrImpl_DestroyResource((xbox::X_D3DResource *) argv[1]);

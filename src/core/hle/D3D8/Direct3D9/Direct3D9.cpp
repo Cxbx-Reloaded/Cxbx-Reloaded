@@ -10539,7 +10539,7 @@ void CxbxrImpl_SetRenderTarget
 )
 {
 	LOG_INIT;
-
+	NestedPatchCounter call(setRenderTargetCount);
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
@@ -10651,7 +10651,8 @@ ULONG CxbxrImpl_Resource_Release
 	xbox::X_D3DResource* pResource
 )
 {
-	if (pResource == nullptr)
+
+    if (pResource == nullptr)
 		return 0L;
 	if ((pResource->Common & X_D3DCOMMON_REFCOUNT_MASK) == 1)
 	{
@@ -10704,8 +10705,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		LOG_FUNC_ARG(pRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
-
-	NestedPatchCounter call(setRenderTargetCount);
+	//move to CxbxrImpl_SetRenderTarget()
+	//NestedPatchCounter call(setRenderTargetCount);
 
 	XB_TRMP(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
 	if (!bRenderTargetInit) {
@@ -10713,21 +10714,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	}
 	else {
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget;//enum of this patched API
-		pPush_local[2] = (DWORD)pRenderTarget; //total 14 DWORD space for arguments.
-		pPush_local[3] = (DWORD)pNewZStencil;
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)pRenderTarget;
+		PBTokenArray[3] = (DWORD)pNewZStencil;
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget, 2, PBTokenArray);//argCount 14
 		// add reference to the surfaces to prevent them being released before we access them in pgraph.
 		if(pRenderTarget)
 			CxbxrImpl_Resource_AddRef(pRenderTarget);
@@ -10749,15 +10740,8 @@ static void D3DDevice_SetRenderTarget_0
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
 
-	NestedPatchCounter call(setRenderTargetCount);
 
-	__asm {
-		mov  ecx, pRenderTarget
-		mov  eax, pNewZStencil
-		call XB_TRMP(D3DDevice_SetRenderTarget_0)
-	}
-
-	CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+	//
 }
 
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
@@ -10771,16 +10755,45 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_
 		mov  pRenderTarget, ecx
 		mov  pNewZStencil, eax
 	}
-
-	// Actual function body
+	//this must be called before we trampolin to avoid HLE D3D_CommonSetRenderTarget() being called twice
+	//move to CxbxrImpl_SetRenderTarget()
+	//NestedPatchCounter call(setRenderTargetCount);
+	// logging only
 	D3DDevice_SetRenderTarget_0(pRenderTarget, pNewZStencil);
+	//CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+	if (!bRenderTargetInit) {
+		bRenderTargetInit = true;
+		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+	}
+	else {
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)pRenderTarget;
+		PBTokenArray[3] = (DWORD)pNewZStencil;
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget_0, 2, PBTokenArray);//argCount 14
+	}
 
 	__asm {
+		mov  ecx, pRenderTarget
+		mov  eax, pNewZStencil
+		call XB_TRMP(D3DDevice_SetRenderTarget_0)
 		LTCG_EPILOGUE
 		ret
 	}
 }
+void WINAPI CxbxrImpl_D3D_CommonSetRenderTarget
+(
+	xbox::X_D3DSurface* pRenderTarget,
+	xbox::X_D3DSurface* pNewZStencil,
+	void* unknown
+)
+{
+	NestedPatchCounter call(setRenderTargetCount);
 
+	if (call.GetLevel() == 0) {
+		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
+	}
+}
 // ******************************************************************
 // * patch: D3D_CommonSetRenderTarget
 // ******************************************************************
@@ -10798,14 +10811,19 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_ARG(unknown)
 		LOG_FUNC_END;
+	//move to CxbxrImpl_D3D_CommonSetRenderTarget()
+	//NestedPatchCounter call(setRenderTargetCount);
 
-	NestedPatchCounter call(setRenderTargetCount);
-
+	//CxbxrImpl_D3D_CommonSetRenderTarget(pRenderTarget,pNewZStencil,unknown);
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pRenderTarget;
+	PBTokenArray[3] = (DWORD)pNewZStencil;
+	PBTokenArray[4] = (DWORD)unknown;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_CommonSetRenderTarget, 3, PBTokenArray);//argCount 14
+    //for variants of SetRenderTarget(), we need to setup HLE to pgraph token first in order to make sure the execution ordre of NestedPatchCounter call(setRenderTargetCount);
 	XB_TRMP(D3D_CommonSetRenderTarget)(pRenderTarget, pNewZStencil, unknown);
 
-	if (call.GetLevel() == 0) {
-		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
-	}
 }
 //NV097_SET_TEXTURE_PALETTE(Stage) //pPalette->Data | (pPalette->Common >> D3DPALETTE_COMMON_PALETTESET_SHIFT) & D3DPALETTE_COMMON_PALETTESET_MASK
 void CxbxrImpl_SetPalette
