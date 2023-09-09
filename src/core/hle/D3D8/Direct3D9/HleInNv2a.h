@@ -324,8 +324,7 @@ void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurfac
 
 // D3D api
 void WINAPI CxbxrImpl_DestroyResource(xbox::X_D3DResource* pResource);
-
-
+void WINAPI CxbxrImpl_Lock2DSurface(xbox::X_D3DPixelContainer* pPixelContainer, D3DCUBEMAP_FACES FaceType, xbox::uint_xt Level, D3DLOCKED_RECT* pLockedRect, RECT* pRect, xbox::dword_xt Flags);
 //helper functions
 ULONG CxbxrImpl_Resource_AddRef(xbox::X_D3DResource* pResource);
 ULONG CxbxrImpl_Resource_Release(xbox::X_D3DResource* pResource);

@@ -8276,6 +8276,19 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 
 }
 
+void WINAPI CxbxrImpl_Lock2DSurface
+(
+	xbox::X_D3DPixelContainer* pPixelContainer,
+	D3DCUBEMAP_FACES           FaceType,
+	xbox::uint_xt              Level,
+	D3DLOCKED_RECT*            pLockedRect,
+	RECT*                      pRect,
+	xbox::dword_xt             Flags
+)
+{
+	ForceResourceRehash(pPixelContainer);
+}
+
 // ******************************************************************
 // * patch: Lock2DSurface
 // ******************************************************************
@@ -8303,7 +8316,17 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	XB_TRMP(Lock2DSurface)(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
 
 	// Mark the resource as modified
-	ForceResourceRehash(pPixelContainer);
+	//ForceResourceRehash(pPixelContainer);
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pPixelContainer;
+	PBTokenArray[3] = (DWORD)FaceType;
+	PBTokenArray[4] = (DWORD)Level;
+	PBTokenArray[5] = (DWORD)pLockedRect;
+	PBTokenArray[6] = (DWORD)pRect;
+	PBTokenArray[7] = (DWORD)Flags;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock2DSurface, 6, PBTokenArray);//argCount 14
 }
 
 
