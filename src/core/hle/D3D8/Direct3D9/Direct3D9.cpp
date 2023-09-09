@@ -8329,6 +8329,17 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock2DSurface, 6, PBTokenArray);//argCount 14
 }
 
+void WINAPI CxbxrImpl_Lock3DSurface
+(
+	xbox::X_D3DPixelContainer* pPixelContainer,
+	xbox::uint_xt              Level,
+	D3DLOCKED_BOX*             pLockedVolume,
+	D3DBOX*                    pBox,
+	xbox::dword_xt			   Flags
+)
+{
+	ForceResourceRehash(pPixelContainer);
+}
 
 // ******************************************************************
 // * patch: Lock3DSurface
@@ -8354,7 +8365,16 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	XB_TRMP(Lock3DSurface)(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
 	// Mark the resource as modified
-	ForceResourceRehash(pPixelContainer);
+	//ForceResourceRehash(pPixelContainer);
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pPixelContainer;
+	PBTokenArray[3] = (DWORD)Level;
+	PBTokenArray[4] = (DWORD)pLockedVolume;
+	PBTokenArray[5] = (DWORD)pBox;
+	PBTokenArray[6] = (DWORD)Flags;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock3DSurface, 5, PBTokenArray);//argCount 14
 }
 
 // Overload for logging

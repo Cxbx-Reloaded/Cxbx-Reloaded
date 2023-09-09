@@ -2172,7 +2172,9 @@ int pgraph_handle_method(
                     case X_Lock2DSurface:
                         CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
                         break;
-                    case X_Lock3DSurface:  break;
+                    case X_Lock3DSurface:
+                        CxbxrImpl_Lock3DSurface((xbox::X_D3DPixelContainer*)/* pPixelContainer*/argv[1], (xbox::uint_xt)/*Level*/argv[2], (D3DLOCKED_BOX*)/* pLockedVolume*/argv[3], (D3DBOX*)/* pBox*/argv[4], (xbox::dword_xt)/*Flags*/argv[5]);
+                        break;
                     default:break;
                     }
                 }
