@@ -11685,7 +11685,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 extern void pgraph_use_Transform();
 extern void pgraph_use_DirectModelView();
 
-void WINAPI CxbxrImpl_SetModelView
+void WINAPI CxbxrImpl_SetModelView_Calc
 (
 	CONST D3DMATRIX *pModelView,
 	CONST D3DMATRIX *pInverseModelView,
@@ -11783,6 +11783,27 @@ void WINAPI CxbxrImpl_SetModelView
 	}
 
 }
+
+void WINAPI CxbxrImpl_SetModelView
+(
+	CONST D3DMATRIX* pModelView,
+	CONST D3DMATRIX* pInverseModelView,
+	CONST D3DMATRIX* pComposite
+)
+{
+	// only calls d3d implememtation when pushbuffer is not recording.
+	if (g_pXbox_BeginPush_Buffer == nullptr) {
+
+		CxbxrImpl_SetModelView_Calc(pModelView, pInverseModelView, pComposite);
+		// set DirectModelView/Transform flag.
+		if (pModelView != nullptr) {
+			pgraph_use_DirectModelView();
+		}
+		else {
+			pgraph_use_Transform();
+		}
+	}
+}
 // ******************************************************************
 // * patch: D3DDevice_SetModelView
 // ******************************************************************
@@ -11800,22 +11821,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 		LOG_FUNC_END;
 	// Trampoline to pushbuffer.
 	XB_TRMP(D3DDevice_SetModelView)(pModelView, pInverseModelView, pComposite);
-	// only calls d3d implememtation when pushbuffer is not recording.
-	if (g_pXbox_BeginPush_Buffer == nullptr){
-	
-	    CxbxrImpl_SetModelView(pModelView, pInverseModelView, pComposite);
-	    // set DirectModelView/Transform flag.
-		if(pModelView!=nullptr){
-			pgraph_use_DirectModelView();
-		}else{
-			pgraph_use_Transform();
-		}
-	}
-	//LOG_UNIMPLEMENTED();
-	//LOG_UNIMPLEMENTED();
 
-	// TODO handle other matrices
-	//d3d8TransformState.SetWorldView(0, pModelView);
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)pModelView;
+	PBTokenArray[3] = (DWORD)pInverseModelView;
+	PBTokenArray[4] = (DWORD)pComposite;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetModelView, 3, PBTokenArray);//argCount 14
+
 	LOG_TEST_CASE("SetModelView");
 }
 

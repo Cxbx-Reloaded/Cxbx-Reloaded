@@ -1712,7 +1712,7 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 		// transpose KelvinPrimitive transform back to xbox d3d transform
 		D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
 		// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
-		//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+		//CxbxrImpl_SetModelView_Calc(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
 		//clear ModelView dirty flags.
 			//g_xbox_transform_ModelView_dirty[0] = false;
 			//g_xbox_transform_InverseModelView_dirty[0] = false;
@@ -1723,7 +1723,7 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 		if (pg->KelvinPrimitive.SetSkinMode == 0) {
 			D3DXMatrixMultiply((D3DXMATRIX*)&g_xbox_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_xbox_transform_InverseModelView, (D3DXMATRIX*)&g_xbox_transform_Composite);
 			// update projectionviewport transform for use in UpdateFixedFunctionShaderLight() and UpdateFixedFunctionVertexShaderState()
-			//CxbxrImpl_SetModelView(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
+			//CxbxrImpl_SetModelView_Calc(&g_xbox_transform_ModelView, &g_xbox_transform_InverseModelView, &g_xbox_transform_Composite);
 		}
 		// skinning mode, the commposite matrix doesn't include the ModelView matrix, only ViewPortTransform.
 		// SetModelViewMatrix[1] was set.
