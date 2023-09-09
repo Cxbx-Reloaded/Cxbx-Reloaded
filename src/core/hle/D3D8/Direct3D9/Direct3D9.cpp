@@ -11172,9 +11172,63 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 #endif
 }
 
+void WINAPI CxbxrImpl_SetDepthClipPlanes
+(
+	xbox::float_xt Near,
+	xbox::float_xt Far,
+	xbox::dword_xt Flags
+)
+{
+	HRESULT hRet = D3D_OK;
+
+	switch (Flags) // Member of X_D3DSET_DEPTH_CLIP_PLANES_FLAGS enum
+	{
+	case xbox::X_D3DSDCP_SET_VERTEXPROGRAM_PLANES:
+	{
+		// Sets the depth-clipping planes used whenever vertex shader programs are active
+		// TODO
+
+		// pDevice->fNear = Near
+		// pDevice->fFar  = Far
+	}
+	break;
+
+	case xbox::X_D3DSDCP_SET_FIXEDFUNCTION_PLANES:
+	{
+		// Sets the depth-clipping planes used whenever the fixed-function pipeline is in use. 
+		// TODO
+
+		// pDevice->fNear = Near
+		// pDevice->fFar  = Far
+	}
+	break;
+	//Near and Far values passed in will be ignored in this case
+	case xbox::X_D3DSDCP_USE_DEFAULT_VERTEXPROGRAM_PLANES:
+	{
+		// Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_VERTEXPROGRAM_PLANE. 
+		// Direct3D will resume using its own internally calculated clip planes when vertex shader programs are active. 
+		// TODO
+	}
+	break;
+	//Near and Far values passed in will be ignored in this case
+	case xbox::X_D3DSDCP_USE_DEFAULT_FIXEDFUNCTION_PLANES:
+	{
+		// Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_FIXEDFUNCTION_PLANES. 
+		// Direct3D will resume using its own internally calculated clip planes when the fixed-function pipeline is active.
+		// TODO
+	}
+	break;
+
+	default:
+		EmuLog(LOG_LEVEL::WARNING, "Unknown SetDepthClipPlanes Flags provided");
+	}
+
+	// TODO
+}
 // ******************************************************************
 // * patch: D3DDevice_SetDepthClipPlanes
 // ******************************************************************
+// test cases: Tak 2_ The Staff Of Dreams
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 (
     float_xt Near,
@@ -11190,53 +11244,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 
     HRESULT hRet = D3D_OK;
 
-    switch(Flags) // Member of X_D3DSET_DEPTH_CLIP_PLANES_FLAGS enum
-    {
-        case X_D3DSDCP_SET_VERTEXPROGRAM_PLANES:
-        {
-            // Sets the depth-clipping planes used whenever vertex shader programs are active
-            // TODO
+	CxbxrImpl_SetDepthClipPlanes(Near, Far, Flags);
 
-            // pDevice->fNear = Near
-            // pDevice->fFar  = Far
-        }
-        break;
-
-        case X_D3DSDCP_SET_FIXEDFUNCTION_PLANES:
-        {
-            // Sets the depth-clipping planes used whenever the fixed-function pipeline is in use. 
-            // TODO
-
-            // pDevice->fNear = Near
-            // pDevice->fFar  = Far
-        }
-        break;
-
-        case X_D3DSDCP_USE_DEFAULT_VERTEXPROGRAM_PLANES:
-        {
-            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_VERTEXPROGRAM_PLANE. 
-            // Direct3D will resume using its own internally calculated clip planes when vertex shader programs are active. 
-            // TODO
-        }
-        break;
-
-        case X_D3DSDCP_USE_DEFAULT_FIXEDFUNCTION_PLANES:
-        {
-            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_FIXEDFUNCTION_PLANES. 
-            // Direct3D will resume using its own internally calculated clip planes when the fixed-function pipeline is active.
-            // TODO
-        }
-        break;
-
-        default:
-            EmuLog(LOG_LEVEL::WARNING, "Unknown SetDepthClipPlanes Flags provided");
-    }
-
-    // TODO
-
-    
-
-    return hRet;
+	return hRet;
 }
 
 // ******************************************************************

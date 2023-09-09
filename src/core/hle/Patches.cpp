@@ -133,7 +133,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2", xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SelectVertexShader_4__LTCG_eax1", xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LTCG_eax1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetBackBufferScale", xbox::EMUPATCH(D3DDevice_SetBackBufferScale), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_SetDepthClipPlanes", xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_SetDepthClipPlanes", xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetFlickerFilter", xbox::EMUPATCH(D3DDevice_SetFlickerFilter), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetFlickerFilter_0", xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetGammaRamp", xbox::EMUPATCH(D3DDevice_SetGammaRamp), PATCH_HLE_D3D),
