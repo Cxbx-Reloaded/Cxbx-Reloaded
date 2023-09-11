@@ -2098,7 +2098,7 @@ int pgraph_handle_method(
                         break;
                     case X_D3DDevice_SetSwapCallback:  break;
                     case X_D3DDevice_SetTexture:
-                        CxbxrImpl_SetTexture((xbox::dword_xt) argv[1], (xbox::X_D3DBaseTexture *) argv[2]);
+                        CxbxrImpl_SetTexture((xbox::dword_xt) argv[1], (xbox::X_D3DBaseTexture *) argv[2], (xbox::X_D3DBaseTexture*)argv[3]);
                         break;
                     case X_D3DDevice_SetTexture_4__LTCG_eax_pTexture:  break;
                     case X_D3DDevice_SetTexture_4__LTCG_eax_Stage:  break;

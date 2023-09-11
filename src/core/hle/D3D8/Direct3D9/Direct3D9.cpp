@@ -5237,7 +5237,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LT
         ret  4
     }
 }
-void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture)
+void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture, xbox::X_D3DBaseTexture* pTexturePrev)
 {
 	if (pTexture != nullptr) {
 		UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
@@ -5247,10 +5247,12 @@ void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* p
 		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
 		if (it != g_TextureCache.end()) {
 			//release ref. count since we add ref. count in HLE patch.
-			CxbxrImpl_Resource_Release(pTexture);
-			g_TextureCache.erase(it);
+			//CxbxrImpl_Resource_Release(pTexture);
+			//g_TextureCache.erase(it);
+			if(pTexturePrev==it->second)
+				g_TextureCache.erase(it);
 		}
-		g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture *>(key, pTexture));
+		g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture*>(key, pTexture));
 	}
 	//update the currently used stage texture
 	g_pXbox_SetTexture[Stage] = pTexture;
@@ -5273,23 +5275,30 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
 	CxbxrImpl_Resource_AddRef(pTexture);
 	XB_TRMP(D3DDevice_SetTexture)(Stage, pTexture);
+	//*(UINT64*)& PBTokenArray[4] = pTexture->Data;
+	//PBTokenArray[5] = (DWORD)pTexture->Format;
+	PBTokenArray[4] = (DWORD)0;
+	if (pTexture != nullptr) {
+		UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
+		auto it = g_TextureCache.find(key);
+		// we should better erase the pTexture if the key already existed in the map.
+		// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
+		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
+		if (it != g_TextureCache.end()) {
+			//release ref. count since we add ref. count in HLE patch.
+			//CxbxrImpl_Resource_Release(pTexture);
+			//g_TextureCache.erase(it);
+			if(pTexture!= it->second)
+			    PBTokenArray[4] = (DWORD)it->second;
+		}
+		//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DBaseTexture*>(key, pTexture));
+	}
 
-
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetTexture;//enum of this patched API
-	pPush_local[2] = (DWORD)Stage; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)pTexture;
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)Stage;
+	PBTokenArray[3] = (DWORD)pTexture;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetTexture, 4, PBTokenArray);//argCount 14
 }
 
 void CxbxrImpl_SwitchTexture(
@@ -5442,28 +5451,31 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 )
 {
 	LOG_FUNC_ONE_ARG(PrimitiveType);
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_Begin)(PrimitiveType);
 	}
-	*/
-	assert((xbox::X_D3DPRIMITIVETYPE)PrimitiveType != xbox::X_D3DPT_INVALID);
-	CxbxrImpl_Begin(PrimitiveType);
+	else {
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		assert((xbox::X_D3DPRIMITIVETYPE)PrimitiveType != xbox::X_D3DPT_INVALID);
+		CxbxrImpl_Begin(PrimitiveType);
+		/*
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Begin;//enum of this patched API
-	pPush_local[2] = (DWORD)PrimitiveType; //total 14 DWORD space for arguments.
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Begin;//enum of this patched API
+		pPush_local[2] = (DWORD)PrimitiveType; //total 14 DWORD space for arguments.
 
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+		*/
+	}
 }
 
 // ******************************************************************
@@ -5481,31 +5493,33 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 		LOG_FUNC_ARG(a)
 		LOG_FUNC_ARG(b)
 		LOG_FUNC_END;
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData2f)(Register, a, b);
 	}
-	*/
-	//CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
+	else {
+	    CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
+		/*
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
+		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
+		pPush_local[3] = FtoDW(a);
+		pPush_local[4] = FtoDW(b);
+		pPush_local[5] = FtoDW(0.0f);
+		pPush_local[6] = FtoDW(1.0f);
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(a);
-	pPush_local[4] = FtoDW(b);
-	pPush_local[5] = FtoDW(0.0f);
-	pPush_local[6] = FtoDW(1.0f);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+		*/
+	}
 }
 
 //static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
@@ -5526,39 +5540,40 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 		LOG_FUNC_ARG(a)
 		LOG_FUNC_ARG(b)
 		LOG_FUNC_END;
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData2s)(Register, a, b);
 	}
-	*/
-	// Test case: Halo
-	// Note : XQEMU verified that the int16_t arguments
-	// must be mapped to floats in the range [-32768.0, 32767.0]
-	// (See https://github.com/xqemu/xqemu/pull/176)
-	const float fa = static_cast<float>(a);
-	const float fb = static_cast<float>(b);
+	else {
+		// Test case: Halo
+		// Note : XQEMU verified that the int16_t arguments
+		// must be mapped to floats in the range [-32768.0, 32767.0]
+		// (See https://github.com/xqemu/xqemu/pull/176)
+		const float fa = static_cast<float>(a);
+		const float fb = static_cast<float>(b);
 
+		CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
+		/*
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	//CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
+		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
+		pPush_local[3] = FtoDW(fa);
+		pPush_local[4] = FtoDW(fb);
+		pPush_local[5] = FtoDW(0.0f);
+		pPush_local[6] = FtoDW(1.0f);
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(fa);
-	pPush_local[4] = FtoDW(fb);
-	pPush_local[5] = FtoDW(0.0f);
-	pPush_local[6] = FtoDW(1.0f);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+		*/
+	}
 }
 
 extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in PushBuffer.cpp
@@ -5582,7 +5597,7 @@ static void D3DDevice_SetVertexData4f_16
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
-
+	/*
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
@@ -5601,6 +5616,7 @@ static void D3DDevice_SetVertexData4f_16
 	//set pushbuffer pointer to the new beginning
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
+	*/
 }
 
 // ******************************************************************
@@ -5621,16 +5637,16 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_
 		LTCG_PROLOGUE
 		mov  Register, edi
 	}
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4f_16)(a, b, c, d);
 	}
-	*/
-	// Log
-	D3DDevice_SetVertexData4f_16(Register, a, b, c, d);
+	else {
+		// Log
+		D3DDevice_SetVertexData4f_16(Register, a, b, c, d);
 
-	// CxbxrImpl_SetVertexData4f(Register, a, b, c, d);
-
+		CxbxrImpl_SetVertexData4f(Register, a, b, c, d);
+	}
 	_asm {
 		LTCG_EPILOGUE
 		ret  10h
@@ -5656,31 +5672,33 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4f)(Register, a, b, c, d);
 	}
-	*/
-	//CxbxrImpl_SetVertexData4f(Register, a, b, c, d);
+	else {
+		CxbxrImpl_SetVertexData4f(Register, a, b, c, d);
+		/*
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
+		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
+		pPush_local[3] = FtoDW(a);
+		pPush_local[4] = FtoDW(b);
+		pPush_local[5] = FtoDW(c);
+		pPush_local[6] = FtoDW(d);
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(a);
-	pPush_local[4] = FtoDW(b);
-	pPush_local[5] = FtoDW(c);
-	pPush_local[6] = FtoDW(d);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+		*/
+	}
 }
 
 // ******************************************************************
@@ -5702,36 +5720,38 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4ub)(Register, a, b, c, d);
 	}
-	*/
-	const float fa = a / 255.0f;
-	const float fb = b / 255.0f;
-	const float fc = c / 255.0f;
-	const float fd = d / 255.0f;
+	else {
+		const float fa = a / 255.0f;
+		const float fb = b / 255.0f;
+		const float fc = c / 255.0f;
+		const float fd = d / 255.0f;
 
-    //CxbxrImpl_SetVertexData4f(Register, fa, fb, fc, fd);
+		CxbxrImpl_SetVertexData4f(Register, fa, fb, fc, fd);
+		/*
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
+		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
+		pPush_local[3] = FtoDW(fa);
+		pPush_local[4] = FtoDW(fb);
+		pPush_local[5] = FtoDW(fc);
+		pPush_local[6] = FtoDW(fd);
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(fa);
-	pPush_local[4] = FtoDW(fb);
-	pPush_local[5] = FtoDW(fc);
-	pPush_local[6] = FtoDW(fd);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+		*/
+	}
 }
 
 // ******************************************************************
@@ -5753,40 +5773,42 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4s)(Register, a, b, c, d);
 	}
-	*/
-	// Test case: Halo
-	// Note : XQEMU verified that the int16_t arguments
-	// must be mapped to floats in the range [-32768.0, 32767.0]
-	// (See https://github.com/xqemu/xqemu/pull/176)
-	const float fa = static_cast<float>(a);
-	const float fb = static_cast<float>(b);
-	const float fc = static_cast<float>(c);
-	const float fd = static_cast<float>(d);
+	else {
+		// Test case: Halo
+		// Note : XQEMU verified that the int16_t arguments
+		// must be mapped to floats in the range [-32768.0, 32767.0]
+		// (See https://github.com/xqemu/xqemu/pull/176)
+		const float fa = static_cast<float>(a);
+		const float fb = static_cast<float>(b);
+		const float fc = static_cast<float>(c);
+		const float fd = static_cast<float>(d);
 
-    //CxbxrImpl_SetVertexData4f(Register, fa, fb, fc, fd);
+		CxbxrImpl_SetVertexData4f(Register, fa, fb, fc, fd);
+		/*
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
+		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
+		pPush_local[3] = FtoDW(fa);
+		pPush_local[4] = FtoDW(fb);
+		pPush_local[5] = FtoDW(fc);
+		pPush_local[6] = FtoDW(fd);
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(fa);
-	pPush_local[4] = FtoDW(fb);
-	pPush_local[5] = FtoDW(fc);
-	pPush_local[6] = FtoDW(fd);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+		*/
+	}
 }
 
 // ******************************************************************
@@ -5802,33 +5824,35 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 		LOG_FUNC_ARG(Register)
 		LOG_FUNC_ARG(Color)
 		LOG_FUNC_END;
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexDataColor)(Register, Color);
 	}
-	*/
-    const D3DXCOLOR XColor = Color;
+	else {
+		const D3DXCOLOR XColor = Color;
 
-    //CxbxrImpl_SetVertexData4f(Register, XColor.r, XColor.g, XColor.b, XColor.a);
+		CxbxrImpl_SetVertexData4f(Register, XColor.r, XColor.g, XColor.b, XColor.a);
+		/*
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
+		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
+		pPush_local[3] = FtoDW(XColor.r);
+		pPush_local[4] = FtoDW(XColor.g);
+		pPush_local[5] = FtoDW(XColor.b);
+		pPush_local[6] = FtoDW(XColor.a);
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(XColor.r);
-	pPush_local[4] = FtoDW(XColor.g);
-	pPush_local[5] = FtoDW(XColor.b);
-	pPush_local[6] = FtoDW(XColor.a);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+		*/
+	}
 }
 
 // ******************************************************************
@@ -5837,40 +5861,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
 {
 	LOG_FUNC();
-	/*
+	
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_End)();
 	}
-	*/
-	// if we unpatch D3DDevice_Begin/End, then this EmuKickOffWait() must be called in order to keep pushbuffer/HLE from race condition.
-	// EmuKickOffWait();
+	else {
 
-	// in CxbxrImpl_End() EmuKickOffWait() is called.
-	//CxbxrImpl_End(); //we unpatched D3DDevice_End, but found that there are memory corruptions introduced by multi entrance. so we have to come out a workaround.
+		static bool WaitForPGRAPH;
+		WaitForPGRAPH = true;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		//give the correct token enum here, and it's done.
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_End, 1, PBTokenArray);//argCount, not necessary, default to 14
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_End;//enum of this patched API
+		EmuKickOff();
 
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+		while (WaitForPGRAPH)
+			;
 
-	//this is a tmp patch before we remove all HLE patches. only to prevent multi entrance confliction
-	//1st we trampoline back to guest code D3DDevice_EndPush()
-
+		CxbxrImpl_End(); //we unpatched D3DDevice_End, but found that there are memory corruptions introduced by multi entrance. so we have to come out a workaround.
+	}
 	hresult_xt result = 0;// XB_TRMP(D3DDevice_End)();
-	//2nd we wait for pfifo_run_pusher() to complete the pushbuffer paring, then we return to guest code.
-	//with this wait, we can make sure the pfifo_run_pusher()running in another thread won't conflict with the following guest code we're going to run.
-	//this wait is not necessary once we remove all HLE patches.
-	
-	
+
 	return result;
 	
 }
@@ -10307,7 +10320,7 @@ void D3DDevice_DrawVerticesUP
 #if USEPGRAPH_DrawVerticesUP
 #endif
 }
-
+extern bool g_nv2a_use_Kelvin;
 // ******************************************************************
 // * patch: D3DDevice_DrawVerticesUP
 // ******************************************************************
