@@ -627,7 +627,7 @@ void pgraph_use_UserPixelShader(void)
 	pNV2A_PixelShader = &NV2A_PixelShader;
 	NV2A_PixelShader.pPSDef = &NV2A_PSDef;
 	// set dirty flag
-	NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+	//NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 }
 
 void pgraph_use_FixedPixelShader(void)
@@ -635,7 +635,7 @@ void pgraph_use_FixedPixelShader(void)
 	// set pixel shader pointer to null for fixed function pixel shader
 	pNV2A_PixelShader = nullptr;
 	// set dirty flag
-	NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+	//NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 }
 // called when SetModelVeiw(0,0,0) was called.
 void pgraph_use_Transform(void)

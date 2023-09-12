@@ -6757,6 +6757,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	)
 {
 	LOG_FUNC_ONE_ARG(Flags);
+	hresult_xt hret = S_OK;
 #if USEPGRAPH_Swap
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
@@ -6772,16 +6773,16 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	//set pushbuffer pointer to the new beginning
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
-
+#else
+	hret=CxbxrImpl_Swap(Flags);
+#endif
 	if (XB_TRMP(D3DDevice_SetBackBufferScale))
 		XB_TRMP(D3DDevice_SetBackBufferScale)(1.0, 1.0);
 	else
 		LOG_TEST_CASE("D3DDevice_SetBackBufferScale not available");
 
-	return S_OK;
-#else
-	return CxbxrImpl_Swap(Flags);
-#endif
+	return hret;
+
 }
 bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage) {
 	// TODO : Nuance the following, because the Direct3D 8 docs states
@@ -9917,12 +9918,9 @@ void CxbxrImpl_InsertCallback
 	*/
 
 }
-
 xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle)
 {
-    // Cache the active shader handle
-    g_pXbox_PixelShader = (xbox::X_PixelShader*)Handle;
-
+    
     // Copy the Pixel Shader data to our RenderState handler (this includes values for pixel shader constants)
     // This mirrors the fact that unpatched SetPixelShader does the same thing!
     // This shouldn't be necessary anymore, but shaders still break if we don't do this
@@ -9930,17 +9928,23 @@ xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle)
 	// By writing to render state during this patch, we avoid missing out on updates that push buffer commands would perform.
 	// However, any updates that occur mid-way can overwrite what we store here, and still cause problems!
 	// The only viable solution for that would be to draw entirely based on push-buffer handling (which might require removing possibly all D3D patches!)
-    if (g_pXbox_PixelShader != nullptr) {
-		if (is_pgraph_using_NV2A_Kelvin()) {
+    
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		if (pNV2A_PixelShader != nullptr) {
 			// TODO : If D3DDevice_SetPixelShader() in XDKs don't overwrite the X_D3DRS_PS_RESERVED slot with PSDef.PSTextureModes,
 			// store it here and restore after memcpy, or alternatively, perform two separate memcpy's (the halves before, and after the reserved slot).
-			memcpy(NV2ARenderStates.GetPixelShaderRenderStatePointer(), g_pXbox_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
+			memcpy(NV2ARenderStates.GetPixelShaderRenderStatePointer(), pNV2A_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
 			// Copy the PSDef.PSTextureModes field to it's dedicated slot, which lies outside the range of PixelShader render state slots
 			// Note : This seems to be what XDK's do as well. Needs verification.
 
-			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, g_pXbox_PixelShader->pPSDef->PSTextureModes);
+			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, pNV2A_PixelShader->pPSDef->PSTextureModes);
 		}
-		else {
+	}
+	else {
+		// Cache the active shader handle
+		g_pXbox_PixelShader = (xbox::X_PixelShader*)Handle;
+
+		if (g_pXbox_PixelShader != nullptr) {
 			// TODO : If D3DDevice_SetPixelShader() in XDKs don't overwrite the X_D3DRS_PS_RESERVED slot with PSDef.PSTextureModes,
 			// store it here and restore after memcpy, or alternatively, perform two separate memcpy's (the halves before, and after the reserved slot).
 			memcpy(XboxRenderStates.GetPixelShaderRenderStatePointer(), g_pXbox_PixelShader->pPSDef, sizeof(xbox::X_D3DPIXELSHADERDEF) - 3 * sizeof(DWORD));
@@ -9949,7 +9953,7 @@ xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle)
 
 			XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, g_pXbox_PixelShader->pPSDef->PSTextureModes);
 		}
-    }
+	}
 }
 
 // Overload for logging

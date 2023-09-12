@@ -58,6 +58,7 @@ extern IDirect3DDevice9Ex *g_pD3DDevice;
 extern xbox::dword_xt g_Xbox_VertexShader_Handle;
 
 extern xbox::X_PixelShader *g_pXbox_PixelShader;
+extern xbox::X_PixelShader* pNV2A_PixelShader;
 
 extern xbox::X_D3DBaseTexture *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 

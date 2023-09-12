@@ -1306,7 +1306,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  // Bump Environment Material registers
 	  // xbox bumpenv uses stage 0~2 when g_pXbox_PixelShader == nullptr, stage 1~3 when g_pXbox_PixelShader != nullptr
 	  // this check is probably redundant, we're here because we're user program. xbox bumpenv stage shall be 1~3 maps to NV2A stage 1~3
-	  unsigned xbox_bump_stage = (g_pXbox_PixelShader == nullptr) ? 0 : 1;
+	  unsigned xbox_bump_stage = (pNV2A_PixelShader == nullptr) ? 0 : 1;
 	  
 	  for (int stage_nr = 1; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++, xbox_bump_stage++) {
 		  xbox_bump_stage = stage_nr;
