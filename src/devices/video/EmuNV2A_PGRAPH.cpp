@@ -4105,23 +4105,55 @@ int pgraph_handle_method(
                 case NV097_INLINE_VERTEX_REUSE:break;//not implement //pg->KelvinPrimitive.InlineVertexReuse
 
                 CASE_32(NV097_SET_VERTEX_DATA2F_M, 4): {//done //pg->KelvinPrimitive.SetVertexData2f[16].M[2]
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-					for (size_t argc = 0; argc < method_count; argc++) {
-						//register is set one at a time per method, for loop should be redundant.
-						slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
-						slot += argc;
-						unsigned int part = slot % 2;// 0:a or 1:b
-						slot /= 2;//register
-						float *inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
-						inline_value[part] = pg->KelvinPrimitive.SetVertexData2f[slot].M[part];
-						if (part == 1) {
-							inline_value[2] = 0.0f;
-							inline_value[3] = 1.0f;
-							if (slot == NV2A_VERTEX_ATTR_POSITION) {
-								pgraph_finish_inline_buffer_vertex(pg);
-							}
-						}
-					}
+					//test case HALO: use this to setup slot 0xA default value
+                    if (pg->KelvinPrimitive.SetBeginEnd == NV097_SET_BEGIN_END_OP_END) {
+                        //we're out side of Begin/End block, should be setting fix function vertex shader color persist attribute value
+                        // 4 bytes for each float
+                        slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
+                        // we have 2 floats for each slot
+                        slot /= 2;
+
+                        // preserve persist color value in R/G/B/A float4 format in KelvinPrimitive.SetVertexData4f[slot]
+                        // D3DCOLOR format persiste in KelvinPrimitive.SetVertexData4ub[slot]
+                        float* fm_inline_value = &pg->KelvinPrimitive.SetVertexData4f[slot].M[0];
+                        // We set color in float4 in R/G/B/A. no need to swap R/B here.
+                        // these value are never used after this. should be disabled.
+                        fm_inline_value[0] = pg->KelvinPrimitive.SetVertexData2f[16].M[0];
+                        fm_inline_value[1] = pg->KelvinPrimitive.SetVertexData2f[16].M[1];
+                        fm_inline_value[2] = 0.0f;
+                        fm_inline_value[3] = 1.0f;
+
+                        // we set the color value to each vertex attribute becaue xbox uses this method to set default vertex colors.
+                        float* inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
+                        // We set color in float4 in R/G/B/A. no need to swap R/B here.
+                        inline_value[0] = pg->KelvinPrimitive.SetVertexData2f[16].M[0];
+                        inline_value[1] = pg->KelvinPrimitive.SetVertexData2f[16].M[1];
+                        inline_value[2] = 0.0f;
+                        inline_value[3] = 1.0f;
+
+                        extern void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
+                        // sets default register value to host d3d constant.
+                        CxbxSetVertexAttribute(slot, inline_value[0], inline_value[1], inline_value[2], inline_value[3]);
+
+                    }
+                    else {//in Begin/End block. data transferred are vertices.
+                        for (size_t argc = 0; argc < method_count; argc++) {
+                            //register is set one at a time per method, for loop should be redundant.
+                            slot = (method - NV097_SET_VERTEX_DATA2F_M) / 4;
+                            slot += argc;
+                            unsigned int part = slot % 2;// 0:a or 1:b
+                            slot /= 2;//register
+                            float* inline_value = pgraph_allocate_inline_buffer_vertices(pg, slot);
+                            inline_value[part] = pg->KelvinPrimitive.SetVertexData2f[slot].M[part];
+                            if (part == 1) {
+                                inline_value[2] = 0.0f;
+                                inline_value[3] = 1.0f;
+                                if (slot == NV2A_VERTEX_ATTR_POSITION) {
+                                    pgraph_finish_inline_buffer_vertex(pg);
+                                }
+                            }
+                        }
+                    }
 					break;
                 }
 
