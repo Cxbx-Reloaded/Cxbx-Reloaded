@@ -3109,10 +3109,10 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 		__asm {
 			push edx
 			push ecx
-			push eax
+            // CDevice_MakeSpace() is a __thiscall which requires this pointer to be in ecx
+			mov  ecx, d3ddevice
 			call XB_TRMP(CDevice_MakeSpace)
 			mov result, eax
-			pop eax
 			pop ecx
 			pop edx
 		}
@@ -3195,11 +3195,11 @@ void Direct3D_CreateDevice_Start
 	extern XboxRenderStateConverter NV2ARenderStates; // this var directly access Xbox internal renderstate variables.
 	extern XboxTextureStateConverter NV2ATextureStates; // this var directly access Xbox intern TextureState variables.
 	if (!NV2ARenderStates.InitWithNV2A()) {
-		CxbxrAbort("Failed to init XboxRenderStates");
+		CxbxrAbort("Failed to init NV2ARenderStates");
 	}
 
 	if (!NV2ATextureStates.InitWithNV2A(&NV2ARenderStates)) {
-		CxbxrAbort("Failed to init XboxTextureStates");
+		CxbxrAbort("Failed to init NV2ATextureStates");
 	}
 
 	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
@@ -5273,7 +5273,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 		LOG_FUNC_END;
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	CxbxrImpl_Resource_AddRef(pTexture);
+	//CxbxrImpl_Resource_AddRef(pTexture);
 	XB_TRMP(D3DDevice_SetTexture)(Stage, pTexture);
 	//*(UINT64*)& PBTokenArray[4] = pTexture->Data;
 	//PBTokenArray[5] = (DWORD)pTexture->Format;
@@ -6890,6 +6890,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// the following call to GetHostBaseTexture would reject non-texture resources,
 			// which would seem to trigger a "CreateCubeTexture Failed!" regression.
 			IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
+			//this is for debug only, try to catch why pParentHostBaseTexture == nullptr when pParentXboxTexture != nullptr
+			if(pParentHostBaseTexture==nullptr)
+				pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
             ComPtr<IDirect3DSurface> pNewHostSurface;
 			switch (pParentHostBaseTexture->GetType()) {
 			case D3DRTYPE_VOLUMETEXTURE: {
@@ -9764,7 +9767,6 @@ void CxbxUpdateNativeD3DResources()
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		NV2ARenderStates.Apply();
 		NV2ATextureStates.Apply();
-
 	}
 	else {
 		XboxRenderStates.Apply();
