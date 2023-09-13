@@ -1792,7 +1792,42 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
-
+	// update texture stage texture pointers and format per stageProgram
+	DWORD stageProgram = pg->KelvinPrimitive.SetShaderStageProgram;
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, stageProgram);
+/*  //disable this code block since the texture format already includes these properties.
+	DWORD stageMode;
+	for (int stage = 0; stage < 4; stage++) {
+		stageMode = stageProgram & 0x1f;
+		xbox::X_D3DBaseTexture* pTexture = g_pNV2A_SetTexture[stage];
+		if (pTexture != nullptr) {
+			if (stage > 0) {
+				//setup bumenv if necessary
+				if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP) {
+					NV2ATextureStates.Set(stage - 1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
+				}
+				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE) {
+					NV2ATextureStates.Set(stage - 1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAPLUMINANCE);
+				}
+			}
+			if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_CUBE_MAP) {
+				pTexture->Format |= NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;// texture format cubmap. pTexture->Format &	DRF_DEF(097, _SET_TEXTURE_FORMAT, _CUBEMAP_ENABLE, _TRUE))
+			}
+			else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_3D_PROJECTIVE) {
+				//todo : either NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE should be set in the Format, but we can't figure out which one.
+				// the hack is to set both.
+				pTexture->Format |= 0x40000000 | 0x30; //NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE;// NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY || NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE
+			}
+			else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_2D_PROJECTIVE) {
+				;// deafult stage mode, we do nothing here.
+			}
+			else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE) {
+				pTexture = nullptr;//null out the texture pointer
+			}
+		}
+		stageProgram >>= 5;
+	}
+*/
 	if (pNV2A_PixelShader == nullptr) {
 		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
 		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
@@ -1800,72 +1835,8 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 			// clear dirty flag
 			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 		}
-		// update texture stage texture pointers and format per stageProgram
-		DWORD stageProgram = pg->KelvinPrimitive.SetShaderStageProgram;
-		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, stageProgram);
-		DWORD stageMode;
-		for (int stage = 0; stage < 4; stage++) {
-			stageMode= stageProgram & 0x1f;
-			xbox::X_D3DBaseTexture* pTexture = g_pNV2A_SetTexture[stage];
-			if (pTexture != nullptr) {
-				if (stage > 0) {
-					//setup bumenv if necessary
-					if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP) {
-						NV2ATextureStates.Set(stage - 1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
-					}
-					else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE) {
-						NV2ATextureStates.Set(stage - 1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAPLUMINANCE);
-					}
-				}
-				if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_CUBE_MAP) {
-					pTexture->Format |= NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;// texture format cubmap. pTexture->Format &	DRF_DEF(097, _SET_TEXTURE_FORMAT, _CUBEMAP_ENABLE, _TRUE))
-				}
-				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_3D_PROJECTIVE) {
-					//todo : either NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE should be set in the Format, but we can't figure out which one.
-					// the hack is to set both.
-					pTexture->Format |= 0x40000000 | 0x30; //NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE;// NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY || NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE
-				}
-				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_2D_PROJECTIVE) {
-					;// deafult stage mode, we do nothing here.
-				}
-				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE) {
-					pTexture = nullptr;//null out the texture pointer
-				}
-			}
-			stageProgram >>= 5;
-		}
 	}
 	else { // user mode
-		// update texture stage texture pointers and format per stageProgram
-		// in user mode, original ShaderStageProgram=pPSDef->PSTextureModes;
-		DWORD stageProgram = pg->KelvinPrimitive.SetShaderStageProgram;
-		DWORD stageMode;
-		extern enum PS_TEXTUREMODES;
-		for (int stage = 0; stage < 4; stage++) {
-			stageMode = stageProgram & 0x1f;
-			xbox::X_D3DBaseTexture* pTexture = g_pNV2A_SetTexture[stage];
-			if (pTexture != nullptr) {
-				if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_CUBE_MAP) {
-                    pTexture->Format |= NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;// texture format cubmap. pTexture->Format &	DRF_DEF(097, _SET_TEXTURE_FORMAT, _CUBEMAP_ENABLE, _TRUE))
-				}
-				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_3D_PROJECTIVE) {
-					//todo : either NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE should be set in the Format, but we can't figure out which one.
-					// the hack is to set both.
-					pTexture->Format |= 0x40000000 | 0x30; //NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE;// NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY || NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE
-				}
-				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_2D_PROJECTIVE) {
-					;// deafult stage mode, we do nothing here.
-				}
-				else if ((stageMode == PS_TEXTUREMODES_DOT_STR_3D) || (stageMode == PS_TEXTUREMODES_DOT_STR_CUBE)) {
-					pTexture->Format |= (stageMode == PS_TEXTUREMODES_DOT_STR_CUBE) ? NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE : 0;
-				}
-				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE) {
-					pTexture = nullptr;//null out the texture pointer
-				}
-			}
-			stageProgram >>= 5;
-		}
-
 		// Populate all required PSDef fields by copying over from KelvinPrimitive fields;
 		// TODO : Refactor DxbxUpdateActivePixelShader to directly read from KelvinPrimitive (once we can otherwise drop PSDef entirely)
 		memcpy(&NV2A_PSDef.PSAlphaInputs[0], &pg->KelvinPrimitive.SetCombinerAlphaICW[0], 8 * sizeof(DWORD));
