@@ -1532,14 +1532,14 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 		min = pg->KelvinPrimitive.SetPointParamsMin;
 		if (min < 0.0f)min = 0.0f;
 		delta = pg->KelvinPrimitive.SetPointParamsDeltaA;
-		max = min + delta;
-		if (max > 64.0f)max = 64.0f;
 
 		//float hostMinSize, hostMaxSize;
 		//hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
 		//hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
 		// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
 		if (pg->KelvinPrimitive.SetPointParamsEnable != 0) {
+			max = (min + delta);
+
 			//FIXEDME!!! we need viewport height, not sure including SuperSampleScaleY is correct or not.
 			xbox::X_D3DVIEWPORT8 Viewport;
 			if (NV2A_viewport_dirty == true) {
@@ -1571,6 +1571,7 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTSCALE_C, FtoDW(xboxScaleC));
 		}
 		else {
+			max = 64.0;
 			float ssScale = CxbxrGetSuperSampleScale();
 			size /= ssScale;
 		}
@@ -2659,6 +2660,7 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 		NV2A_SceneMateirals[0].Emissive.r = 1.0f;
 		NV2A_SceneMateirals[0].Emissive.g = 1.0f;
 		NV2A_SceneMateirals[0].Emissive.b = 1.0f;
+		NV2A_SceneMateirals[0].Emissive.a = 0.0f;
 	}
 	else
 	{
@@ -2666,6 +2668,7 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 		NV2A_SceneMateirals[0].Emissive.r = 0.0f;
 		NV2A_SceneMateirals[0].Emissive.g = 0.0f;
 		NV2A_SceneMateirals[0].Emissive.b = 0.0f;
+		NV2A_SceneMateirals[0].Emissive.a = 0.0f;
 		
 		ambientR = (ambientR - NV2A_SceneMateirals[0].Emissive.r) / NV2A_SceneMateirals[0].Ambient.r;
 		ambientG = (ambientG - NV2A_SceneMateirals[0].Emissive.g) / NV2A_SceneMateirals[0].Ambient.g;
@@ -2674,7 +2677,7 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 	NV2A_SceneAmbient[0].r = ambientR;//NV097_SET_SCENE_AMBIENT_COLOR
 	NV2A_SceneAmbient[0].g = ambientG;
 	NV2A_SceneAmbient[0].b = ambientB;
-	NV2A_SceneAmbient[0].a = 1.0;
+	NV2A_SceneAmbient[0].a = 0.0f;
 	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
 
 	// set back side ambient and materials
