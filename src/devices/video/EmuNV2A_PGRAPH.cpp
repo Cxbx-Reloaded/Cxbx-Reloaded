@@ -3820,7 +3820,7 @@ int pgraph_handle_method(
 
                             pgraph_use_NV2A_Kelvin();
                             // set vertex declaration override, will be used for the next draw :
-                            set_IVB_DECL_override();
+                            //set_IVB_DECL_override();
 
                             //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
                             //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
@@ -3833,7 +3833,7 @@ int pgraph_handle_method(
                             }
 
                             //reset the vertex declaration after we finish the draw call
-                            reset_IVB_DECL_override();
+                            //reset_IVB_DECL_override();
                             pgraph_notuse_NV2A_Kelvin();
                             break;
                         }
@@ -3849,7 +3849,7 @@ int pgraph_handle_method(
                             pgraph_use_NV2A_Kelvin();
 
                             // set vertex declaration override, will be used for the next draw :
-                            set_IVB_DECL_override();
+                            //set_IVB_DECL_override();
 
                             //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
                             //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
@@ -3862,7 +3862,7 @@ int pgraph_handle_method(
                             }
 
                             //reset the vertex declaration after we finish the draw call
-                            reset_IVB_DECL_override();
+                            //reset_IVB_DECL_override();
 
                             pgraph_notuse_NV2A_Kelvin();
                             break;
@@ -3877,7 +3877,7 @@ int pgraph_handle_method(
 
                             pgraph_use_NV2A_Kelvin();
                             // set vertex declaration override, will be used for the next draw :
-                            set_IVB_DECL_override();
+                            //set_IVB_DECL_override();
 
                             //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
                             //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
@@ -3890,7 +3890,7 @@ int pgraph_handle_method(
                             }
 
                             //reset the vertex declaration after we finish the draw call
-                            reset_IVB_DECL_override();
+                            //reset_IVB_DECL_override();
                             pgraph_notuse_NV2A_Kelvin();
                             break;
                         }
@@ -3904,7 +3904,7 @@ int pgraph_handle_method(
 
                             pgraph_use_NV2A_Kelvin();
                             // set vertex declaration override, will be used for the next draw :
-                            set_IVB_DECL_override();
+                            // set_IVB_DECL_override();
 
                             //we shall update the pgraph_draw_state_update(d) before we are really calling the HLE draw calls.
                             //because the vertex attr comes from different sources, depends on which how the vertex data are transfefred to NV2A. and it's not decided yet in this moment.
@@ -3917,7 +3917,7 @@ int pgraph_handle_method(
                             }
 
                             //reset the vertex declaration after we finish the draw call
-                            reset_IVB_DECL_override();
+                            //reset_IVB_DECL_override();
                             pgraph_notuse_NV2A_Kelvin();
                             break;
                         }

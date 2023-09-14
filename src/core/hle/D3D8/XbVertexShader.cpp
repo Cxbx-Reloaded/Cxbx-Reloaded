@@ -347,12 +347,19 @@ int GetXboxVertexDataComponentCount(int d3dvsdt) {
 }
 
 extern xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride; // TMP glue
+extern bool is_pgraph_using_NV2A_Kelvin(void);
+extern xbox::X_VERTEXATTRIBUTEFORMAT g_NV2AVertexAttributeFormat;
 
 xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat()
 {
+	// Special case for pgraph LLE draw calls , using  &g_NV2AVertexAttributeFormat
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		return &g_NV2AVertexAttributeFormat;
+	}
+
 	// Special case for CxbxrImpl_End() based drawing
 	if (g_InlineVertexBuffer_DeclarationOverride != nullptr) {
-		return g_InlineVertexBuffer_DeclarationOverride; // either &g_InlineVertexBuffer_AttributeFormat or &g_NV2AVertexAttributeFormat
+		return g_InlineVertexBuffer_DeclarationOverride; // either &g_InlineVertexBuffer_AttributeFormat
 	}
 
 	xbox::X_D3DVertexShader* pXboxVertexShader = GetXboxVertexShader();
