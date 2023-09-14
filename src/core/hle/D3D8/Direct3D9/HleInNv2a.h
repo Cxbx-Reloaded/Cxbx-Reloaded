@@ -280,6 +280,7 @@ void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
 // todo: CxbxrImpl_SetFlickerFilter() not implemented yet.
 //void WINAPI CxbxrImpl_SetFlickerFilter(xbox::dword_xt Filter);
+void CxbxrImpl__SetGammaRamp(xbox::dword_xt dwFlags, CONST D3DGAMMARAMP* pRamp);
 void WINAPI CxbxrImpl_SetIndices(xbox::X_D3DIndexBuffer* pIndexData, xbox::uint_xt BaseVertexIndex);
 xbox::hresult_xt WINAPI CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
 xbox::hresult_xt WINAPI CxbxrImpl_SetLight(xbox::dword_xt Index, CONST xbox::X_D3DLIGHT8* pLight);

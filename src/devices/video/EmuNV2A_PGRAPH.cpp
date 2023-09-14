@@ -2045,7 +2045,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetDepthClipPlanes:  break;
                     case X_D3DDevice_SetFlickerFilter:  break;
                     case X_D3DDevice_SetFlickerFilter_0:  break;
-                    case X_D3DDevice_SetGammaRamp:  break;
+                    case X_D3DDevice_SetGammaRamp:
+                        CxbxrImpl__SetGammaRamp((xbox::dword_xt)/* dwFlags*/argv[1], (D3DGAMMARAMP*)/* pRamp*/argv[2]);
+                        break;
                     case X_D3DDevice_SetIndices:  //break;  //fall through
                     case X_D3DDevice_SetIndices_4:
                         CxbxrImpl_SetIndices((xbox::X_D3DIndexBuffer *)/* pIndexData */argv[1], (xbox::uint_xt) /* BaseVertexIndex */ argv[2]);

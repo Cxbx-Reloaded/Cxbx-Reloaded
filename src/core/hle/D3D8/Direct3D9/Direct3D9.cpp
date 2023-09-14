@@ -4381,7 +4381,21 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 #endif
 	
 }
+void CxbxrImpl__SetGammaRamp(
+	xbox::dword_xt                   dwFlags,
+	CONST D3DGAMMARAMP * pRamp
+)
+{
+	// remove D3DSGR_IMMEDIATE
+	DWORD dwPCFlags = dwFlags & (~0x00000002);
 
+#if 1 // TODO : Why is this disabled?
+	g_pD3DDevice->SetGammaRamp(
+		0, // iSwapChain
+		dwPCFlags, pRamp);
+#endif
+
+}
 // ******************************************************************
 // * patch: D3DDevice_SetGammaRamp
 // ******************************************************************
@@ -4396,9 +4410,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
 		LOG_FUNC_ARG(pRamp)
 		LOG_FUNC_END;
 
-    // remove D3DSGR_IMMEDIATE
-    DWORD dwPCFlags = dwFlags & (~0x00000002);
-    D3DGAMMARAMP PCRamp;
+    static D3DGAMMARAMP PCRamp;
 
     for(int v=0;v<255;v++)
     {
@@ -4406,12 +4418,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
         PCRamp.green[v] = pRamp->green[v];
         PCRamp.blue[v]  = pRamp->blue[v];
     }
-
-#if 0 // TODO : Why is this disabled?
-	g_pD3DDevice->SetGammaRamp(
-		0, // iSwapChain
-		dwPCFlags, &PCRamp);
-#endif
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)dwFlags;
+	PBTokenArray[3] = (DWORD)&PCRamp;
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetGammaRamp, 2, PBTokenArray);//argCount 14
 }
 
 // ******************************************************************
