@@ -8245,6 +8245,9 @@ void CxbxrImpl_SetTransformFast
 		// store the transform matrix
 		*(g_xbox_transform_matrix + State) = *pMatrix;
 	}
+	else {
+		CxbxrAbort("g_xbox_transform_matrix is nullptr in CxbxrImpl_SetTransformFast!");
+	}
 }
 
 void CxbxrImpl_SetTransform
