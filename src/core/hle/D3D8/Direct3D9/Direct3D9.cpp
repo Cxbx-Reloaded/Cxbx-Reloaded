@@ -4919,7 +4919,7 @@ xbox::void_xt WINAPI CxbxrImpl_SetShaderConstantMode
 		// reset Transform
 
 		// reset fixed function T&L constants
-		CxbxrImpl_SetVertexShaderConstant(NV_IGRAPH_XF_XFCTX_CONS0, (xbox::PVOID)&FixedFunctionPipelineConstants[0], 3);
+		CxbxrImpl_SetVertexShaderConstant(NV_IGRAPH_XF_XFCTX_CONS0 - X_D3DSCM_CORRECTION, (xbox::PVOID)&FixedFunctionPipelineConstants[0], 3);
 		// reset 4 Texgen Planes with Identity Matrix
 
 		// reset Fog Plane with (0.0f, 0.0f, 0.0f, 1.0f)
