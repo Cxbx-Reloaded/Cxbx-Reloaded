@@ -3248,12 +3248,14 @@ int pgraph_handle_method(
                             NV2A_TextureFactorAllTheSame = false;
                         }
                     }
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
                 }
                     break;
 
                 CASE_8(NV097_SET_COMBINER_FACTOR1, 4) ://done //pg->KelvinPrimitive.SetCombinerFactor1[8]
                     slot = (method - NV097_SET_COMBINER_FACTOR1) / 4;
                     //pg->pgraph_regs[NV_PGRAPH_COMBINEFACTOR1/ 4 + slot * 4] = arg0;
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
                     break;
 
                 CASE_8(NV097_SET_COMBINER_ALPHA_OCW, 4) ://done //pg->KelvinPrimitive.SetCombinerAlphaOCW[8]
@@ -3793,7 +3795,9 @@ int pgraph_handle_method(
                     break;
 
                 CASE_3(NV097_SET_LINEAR_FOG_CONST, 4) :break;//not implement yet //pg->KelvinPrimitive.SetLinearFogConst[3]
-                case NV097_SET_SHADER_CLIP_PLANE_MODE:break;  //not implement //pg->KelvinPrimitive.SetShaderClipPlaneMode
+                case NV097_SET_SHADER_CLIP_PLANE_MODE:
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
+                    break;  //not implement //pg->KelvinPrimitive.SetShaderClipPlaneMode
 
 //**********************this case is very complicate, need more time to verify it.
                 case NV097_SET_BEGIN_END: {//consider done  //pg->KelvinPrimitive.SetBeginEnd
@@ -4604,7 +4608,8 @@ int pgraph_handle_method(
 #   define NV097_SET_END_TRANSITION                           0x00001E1C
 #endif
 				CASE_2(NV097_SET_SPECULAR_FOG_FACTOR,4):// [2]
-					break;
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SPECFOG_COMBINER;
+                    break;
 				CASE_6(NV097_SET_BACK_SPECULAR_PARAMS,4)://[6]
 					NV2A_DirtyFlags|=X_D3DDIRTYFLAG_LIGHTS;
 					break;
@@ -4612,7 +4617,8 @@ int pgraph_handle_method(
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
 				    break;
 				case NV097_SET_COMBINER_CONTROL:
-					break;
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
+                    break;
 				case NV097_SET_SHADOW_ZSLOPE_THRESHOLD://done //pg->KelvinPrimitive.SetShadowZSlopeThreshold
                     //pg->pgraph_regs[NV_PGRAPH_SHADOWZSLOPETHRESHOLD/4] = arg0;
                     assert(arg0 == 0x7F800000); /* FIXME: Unimplemented */
@@ -4646,6 +4652,7 @@ int pgraph_handle_method(
 
                 case NV097_SET_DOT_RGBMAPPING:{//not implement  //pg->KelvinPrimitive.SetDotRGBMapping
                     NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSDOTMAPPING, pg->KelvinPrimitive.SetDotRGBMapping);
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
                     break;
                 }
 
@@ -4654,6 +4661,7 @@ int pgraph_handle_method(
 					// set NV2A_ShaderOtherStageInputDirty, so later in NV097_SET_SHADER_STAGE_PROGRAM we could tell this is fixed mode pixel shader.
 					NV2A_ShaderOtherStageInputDirty = true;
 					//pgraph_use_FixedPixelShader();
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
                     break;
 
                 CASE_4(NV097_SET_TRANSFORM_DATA,4):break;//not implement //pg->KelvinPrimitive.SetTransformData[4]

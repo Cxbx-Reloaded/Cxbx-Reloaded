@@ -2917,33 +2917,28 @@ void D3D_draw_state_update(NV2AState* d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
 	}
 	//}
+	// update pixel shader when either X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM| X_D3DDIRTYFLAG_COMBINERS| X_D3DDIRTYFLAG_SPECFOG_COMBINER flag was set
+	if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM| X_D3DDIRTYFLAG_COMBINERS| X_D3DDIRTYFLAG_SPECFOG_COMBINER)) != 0) {
 
-	// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
-	// only update combiners when in fixed pixel shader.
-	if (pNV2A_PixelShader == nullptr) {
-		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
-			// only update the combiner state when we're in fixed function pixel shader
-			CxbxrImpl_LazySetCombiners(d);
-			// clear dirty flag
-			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
+		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
+		// only update combiners when in fixed pixel shader.
+		if (pNV2A_PixelShader == nullptr) {
+			if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
+				// only update the combiner state when we're in fixed function pixel shader
+				CxbxrImpl_LazySetCombiners(d);
+				// clear dirty flag
+				NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
+			}
 		}
-	}
 
-	// update spec fog combiner state
-
-	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER) != 0) {
-		CxbxrImpl_LazySetSpecFogCombiner(d);
-		// clear dirty flag
-		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SPECFOG_COMBINER;
-	}
-
-	// update pixel shader
-	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM) != 0) {
-		// only update pixel shader when in pushbuffer replay mode, this is to solve the HLE/NV2A confliction 
-		//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) !=0) {
+		// update spec fog combiner state
+		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER) != 0) {
+			CxbxrImpl_LazySetSpecFogCombiner(d);
+			// clear dirty flag
+			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SPECFOG_COMBINER;
+		}
 
 		CxbxrImpl_LazySetShaderStageProgram(d);
-		//}
 
 		// clear dirty flag xbox::dword_xt
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
