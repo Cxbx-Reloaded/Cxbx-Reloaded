@@ -1871,7 +1871,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_BeginVisibilityTest:  break;
                     case X_D3DDevice_BlockOnFence:  break;
                     case X_D3DDevice_BlockUntilIdle:  break;
-                    case X_D3DDevice_BlockUntilVerticalBlank:  break;
+                    case X_D3DDevice_BlockUntilVerticalBlank:
+                        CxbxrImpl_BlockUntilVerticalBlank();
+                        break;
                     case X_D3DDevice_CaptureStateBlock:  break;
                     case X_D3DDevice_Clear:
                         CxbxrImpl_Clear((xbox::dword_xt) argv[1], (D3DRECT *)argv[2], (xbox::dword_xt) argv[3], (D3DCOLOR) argv[4], DWtoF(argv[5]), (xbox::dword_xt) argv[6]);

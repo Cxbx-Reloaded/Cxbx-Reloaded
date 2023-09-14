@@ -251,6 +251,8 @@ static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 // prototypes for xbox D3DDevice API HLE handlers in NV2A pgraph, implemented in Direct3D9.cpp, called in EmuNV2A_PGRAPH.cpp
 // we create defines for each patched api in general format USEPGRAPH_ + apu post names without D3DDevice_. define it as 1 to enable the patch and prgaph handler, as 0 to keep original Cxbxr behavior. this is to speed up the test which api is not feasible for this POC.
 void CxbxrImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType);
+void CxbxrImpl_BlockUntilVerticalBlank();
+#define USEPGRAPH_BlockUntilVerticalBlank 0
 void CxbxrImpl_Clear(xbox::dword_xt Count, CONST D3DRECT* pRects, xbox::dword_xt Flags, D3DCOLOR Color, float Z, xbox::dword_xt Stencil);
 #define USEPGRAPH_Clear 1
 void WINAPI CxbxrImpl_CopyRects(xbox::X_D3DSurface* pSourceSurface, CONST RECT* pSourceRectsArray, xbox::uint_xt cRects, xbox::X_D3DSurface* pDestinationSurface, CONST POINT* pDestPointsArray);

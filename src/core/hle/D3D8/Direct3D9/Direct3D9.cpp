@@ -8113,7 +8113,11 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
     // TODO: Actually check for update status
     return TRUE;
 }
-
+void CxbxrImpl_BlockUntilVerticalBlank()
+{
+	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+	g_VBConditionVariable.wait(lk);
+}
 // ******************************************************************
 // * patch: D3DDevice_BlockUntilVerticalBlank
 // ******************************************************************
@@ -8121,8 +8125,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
 {
 	LOG_FUNC();
 
-	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
-	g_VBConditionVariable.wait(lk);
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+#if USEPGRAPH_BlockUntilVerticalBlank
+	//give the correct token enum here, and it's done.
+	//Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_BlockUntilVerticalBlank, 0, PBTokenArray);//argCount 14
+#else
+	CxbxrImpl_BlockUntilVerticalBlank();
+#endif
 }
 
 // ******************************************************************
