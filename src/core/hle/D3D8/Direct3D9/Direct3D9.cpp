@@ -8432,9 +8432,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	// Pass through to the Xbox implementation of this function
 	XB_TRMP(Lock2DSurface)(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
 
-	// Mark the resource as modified
-	//ForceResourceRehash(pPixelContainer);
-
+#if USEPGRAPH_Lock2DSurface
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pPixelContainer;
 	PBTokenArray[3] = (DWORD)FaceType;
@@ -8444,6 +8442,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	PBTokenArray[7] = (DWORD)Flags;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock2DSurface, 6, PBTokenArray);//argCount 14
+#else
+	// Mark the resource as modified
+	ForceResourceRehash(pPixelContainer);
+#endif
 }
 
 void WINAPI CxbxrImpl_Lock3DSurface
@@ -8481,9 +8483,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	// Pass through to the Xbox implementation of this function
 	XB_TRMP(Lock3DSurface)(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
-	// Mark the resource as modified
-	//ForceResourceRehash(pPixelContainer);
-
+#if USEPGRAPH_Lock3DSurface
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pPixelContainer;
 	PBTokenArray[3] = (DWORD)Level;
@@ -8492,6 +8492,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	PBTokenArray[6] = (DWORD)Flags;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock3DSurface, 5, PBTokenArray);//argCount 14
+#else
+	// Mark the resource as modified
+    ForceResourceRehash(pPixelContainer);
+#endif
 }
 
 // Overload for logging

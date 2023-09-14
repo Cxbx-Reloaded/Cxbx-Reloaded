@@ -274,6 +274,8 @@ void CxbxrImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister);
 #define USEPGRAPH_LoadVertexShader 1
 void CxbxrImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
 #define USEPGRAPH_LoadVertexShaderProgram 0
+#define USEPGRAPH_Lock2DSurface 0
+#define USEPGRAPH_Lock3DSurface 0
 void WINAPI CxbxrImpl_RunVertexStateShader(xbox::dword_xt Address, CONST xbox::float_xt* pData);
 void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 #define USEPGRAPH_SelectVertexShader 1

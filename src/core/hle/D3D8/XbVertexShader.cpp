@@ -1364,7 +1364,11 @@ static void CxbxSetVertexShaderPassthroughProgram()
 	extern void CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, D3DMATRIX * pMatrix); // temp glue
 	extern D3DMATRIX g_xbox_transform_Projection;
 	CxbxrImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &g_xbox_transform_Projection);
-	if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE) == D3DFOG_NONE)
+	DWORD fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE);
+	extern XboxRenderStateConverter NV2ARenderStates;
+	if(is_pgraph_using_NV2A_Kelvin())
+		fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE);
+	if (fogTableMode == D3DFOG_NONE)
 	{
 		programDwords = sizeof(g_PassthruProgramSpecularFog) / sizeof(DWORD);
 		XboxShaderBinaryPassthrough =(DWORD *) g_PassthruProgramSpecularFog;
