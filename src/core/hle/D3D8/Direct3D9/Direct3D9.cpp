@@ -4388,7 +4388,7 @@ void CxbxrImpl__SetGammaRamp(
 )
 {
 	// remove D3DSGR_IMMEDIATE
-	DWORD dwPCFlags = dwFlags & (~0x00000002);
+	DWORD dwPCFlags = D3DSGR_NO_CALIBRATION;// dwFlags& (~0x00000002);
 
 #if 1 // TODO : Why is this disabled?
 	g_pD3DDevice->SetGammaRamp(
@@ -4419,11 +4419,21 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
         PCRamp.green[v] = pRamp->green[v];
         PCRamp.blue[v]  = pRamp->blue[v];
     }
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)dwFlags;
 	PBTokenArray[3] = (DWORD)&PCRamp;
+	PBTokenArray[4] = (DWORD)&WaitForPGRAPH;
+
 	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetGammaRamp, 2, PBTokenArray);//argCount 14
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetGammaRamp, 3, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
+	WaitForPGRAPH = false;
 }
 
 // ******************************************************************
@@ -4437,6 +4447,20 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
 	LOG_FUNC_ONE_ARG(pRamp);
 	static D3DGAMMARAMP PCGammaRamp = { 0 };
 	D3DGAMMARAMP* pGammaRamp = &PCGammaRamp;// (D3DGAMMARAMP*)malloc(sizeof(D3DGAMMARAMP));
+
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_GetGammaRamp, 3, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
+
 
     g_pD3DDevice->GetGammaRamp(
 		0, // iSwapChain

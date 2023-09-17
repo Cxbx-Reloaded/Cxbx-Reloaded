@@ -1946,7 +1946,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_GetDirect3D:  break;
                     case X_D3DDevice_GetDisplayFieldStatus:  break;
                     case X_D3DDevice_GetDisplayMode:  break;
-                    case X_D3DDevice_GetGammaRamp:  break;
+                    case X_D3DDevice_GetGammaRamp:
+                        *(bool*)argv[1] = false;
+                        break;
                     case X_D3DDevice_GetIndices:  break;
                     case X_D3DDevice_GetLight:  break;
                     case X_D3DDevice_GetLightEnable:  break;
@@ -2047,6 +2049,7 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetFlickerFilter_0:  break;
                     case X_D3DDevice_SetGammaRamp:
                         CxbxrImpl__SetGammaRamp((xbox::dword_xt)/* dwFlags*/argv[1], (D3DGAMMARAMP*)/* pRamp*/argv[2]);
+                        *(bool*)argv[3] = false;
                         break;
                     case X_D3DDevice_SetIndices:  //break;  //fall through
                     case X_D3DDevice_SetIndices_4:
