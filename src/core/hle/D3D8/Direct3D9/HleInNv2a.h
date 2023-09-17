@@ -334,6 +334,7 @@ void WINAPI CxbxrImpl_Lock3DSurface(xbox::X_D3DPixelContainer* pPixelContainer, 
 //helper functions
 ULONG CxbxrImpl_Resource_AddRef(xbox::X_D3DResource* pResource);
 ULONG CxbxrImpl_Resource_Release(xbox::X_D3DResource* pResource);
+void EmuKickOff(void);
 extern DWORD PBTokenArray[16];
 void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount, DWORD* argv);
 /*
