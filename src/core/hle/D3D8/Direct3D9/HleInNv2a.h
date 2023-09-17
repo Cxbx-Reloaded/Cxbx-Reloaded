@@ -348,6 +348,26 @@ void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount, DWORD* argv);
 */
 
 /*
+
+    //template for syncing HLE apis with pgraf using waiting lock
+    static bool WaitForPGRAPH;
+    WaitForPGRAPH = true;
+    //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+    PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+    PBTokenArray[3] = (DWORD)StartVertex;
+    PBTokenArray[4] = (DWORD)VertexCount;
+
+    //give the correct token enum here, and it's done.
+    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_APIName, argCount, PBTokenArray);//argCount, not necessary, default to 14
+
+    EmuKickOff();
+
+    while (WaitForPGRAPH)
+    ; //this line is must have
+
+*/
+
+/*
 notes for my trials and errors.
 Original idea was to use a virtual pushbuffer method to represent each patched HLE api and push the virtual pushbuffer method to pushbuffer then let pgraph method handler handle the patched HLE api later.
 this should solve the sync issue between pushbuffer and HLE api.

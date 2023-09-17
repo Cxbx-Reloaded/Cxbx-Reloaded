@@ -4435,8 +4435,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
 )
 {
 	LOG_FUNC_ONE_ARG(pRamp);
-
-    D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
+	static D3DGAMMARAMP PCGammaRamp = { 0 };
+	D3DGAMMARAMP* pGammaRamp = &PCGammaRamp;// (D3DGAMMARAMP*)malloc(sizeof(D3DGAMMARAMP));
 
     g_pD3DDevice->GetGammaRamp(
 		0, // iSwapChain
@@ -4449,7 +4449,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
         pRamp->blue[v] = (BYTE)pGammaRamp->blue[v];
     }
 
-	free(pGammaRamp);
+	//free(pGammaRamp);
 }
 
 
