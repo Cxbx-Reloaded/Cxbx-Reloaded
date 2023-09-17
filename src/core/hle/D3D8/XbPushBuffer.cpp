@@ -228,7 +228,7 @@ xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store t
 xbox::X_D3DVertexBuffer NV2A_Xbox_VertexBuffer[X_VSH_MAX_STREAMS] = { 0 };
 unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
 // textures to store the conversion info from NV2A KelvinPrimitive.SetTexture[4]
-xbox::X_D3DBaseTexture NV2A_texture_stage_texture[xbox::X_D3DTS_STAGECOUNT];
+xbox::X_D3DSurface NV2A_texture_stage_texture[xbox::X_D3DTS_STAGECOUNT];
 // pointers to textures which store the converted texture from NV2A KelvinPrimitive.SetTexture[4]
 xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT]= { 0,0,0,0 };
 // unused, replaced by NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage;
@@ -280,7 +280,7 @@ FORCEINLINE DWORD Round(
 extern float CxbxrGetSuperSampleScale(void);
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
 static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
-extern std::map<UINT64, xbox::X_D3DBaseTexture*> g_TextureCache;
+extern std::map<UINT64, xbox::X_D3DSurface> g_TextureCache;
 
 void CxbxrImpl_LazySetTextureState(NV2AState* d)
 {
@@ -303,15 +303,18 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				auto it = g_TextureCache.find(key);
 				if (it != g_TextureCache.end()){
 					//preserve the whole texture incase we need to debug and the host side released it.
-					NV2A_texture_stage_texture[stage] = *(it->second);
-					g_pNV2A_SetTexture[stage] = it->second; //&NV2A_texture_stage_texture[stage];
+					NV2A_texture_stage_texture[stage] = it->second;
+					extern DWORD GetXboxCommonResourceType(const xbox::dword_xt XboxResource_Common);
+					g_pNV2A_SetTexture[stage] =(xbox::X_D3DBaseTexture*) & NV2A_texture_stage_texture[stage]; //&NV2A_texture_stage_texture[stage];
+					if (GetXboxCommonResourceType(g_pNV2A_SetTexture[stage]->Common) != X_D3DCOMMON_TYPE_SURFACE)
+						NV2A_texture_stage_texture[stage].Parent = nullptr;
 					bTextureFound = true;
 						// can't return directly since we still have to process certain texture related TextureStates
 						//return;
 				}
 			    // if the texture is not found via the texture cache map, then we have to compose the texture via kelvin.
 				if(!bTextureFound){
-					g_pNV2A_SetTexture[stage] = &NV2A_texture_stage_texture[stage];
+					g_pNV2A_SetTexture[stage] = (xbox::X_D3DBaseTexture*)&NV2A_texture_stage_texture[stage];
 					NV2A_texture_stage_texture[stage].Data = pg->KelvinPrimitive.SetTexture[stage].Offset;
 					NV2A_texture_stage_texture[stage].Format = pg->KelvinPrimitive.SetTexture[stage].Format;
 					unsigned width = 0, height = 0, pitch = 0, depth = 0;
@@ -369,6 +372,8 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 
 					NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource,
 					NV2A_texture_stage_texture[stage].Lock = 0;
+					//default to texture, no parent
+					NV2A_texture_stage_texture[stage].Parent = nullptr;
 			    }// end of if (it != g_TextureCache.end())/else
 				//update texture stage states
 				DWORD filter, address, control0, magFilter, minFilter, colorSign, convolutionKernel;
