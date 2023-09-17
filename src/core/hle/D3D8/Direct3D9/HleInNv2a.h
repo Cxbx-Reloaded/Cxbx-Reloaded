@@ -369,6 +369,46 @@ void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount, DWORD* argv);
 */
 
 /*
+List of HLE apis synced with pgraph
+most of them are draw call related.
+
+//handled by pgraph
+D3DDevice_Clear 
+
+//synced using waiting flag
+D3DDevice_CopyRects
+
+D3DDevice_DrawIndexedPrimitive
+D3DDevice_DrawIndexedPrimitiveUP
+D3DDevice_DrawIndexedVertices
+D3DDevice_DrawIndexedVerticesUP
+D3DDevice_DrawPrimitive
+D3DDevice_DrawPrimitiveUP
+D3DDevice_DrawRectPatch
+D3DDevice_DrawTriPatch
+D3DDevice_DrawVertices
+D3DDevice_DrawVertices_4__LTCG_ecx2_eax3
+D3DDevice_DrawVertices_8__LTCG_eax3
+D3DDevice_DrawVerticesUP
+D3DDevice_DrawVerticesUP_12__LTCG_ebx3
+
+D3DDevice_Reset
+D3DDevice_Reset_0__LTCG_edi1
+D3DDevice_Reset_0__LTCG_ebx1
+
+D3DDevice_GetGammaRamp
+D3DDevice_SetGammaRamp
+//special flow, pgraph handle the CxbxrImpl_SetGammaRamp()
+//which HLE is waiting for the waiting flag to be cleard. after running CxbxrImpl_SetGammaRamp(),
+//then the HLE presumes execution. this is to ensure both followed HLE draw call and LLE draw call run after CxbxrImpl_SetGammaRamp()
+
+D3DDevice_SetIndices
+D3DDevice_SetIndices_4
+
+*/
+
+
+/*
 notes for my trials and errors.
 Original idea was to use a virtual pushbuffer method to represent each patched HLE api and push the virtual pushbuffer method to pushbuffer then let pgraph method handler handle the patched HLE api later.
 this should solve the sync issue between pushbuffer and HLE api.
