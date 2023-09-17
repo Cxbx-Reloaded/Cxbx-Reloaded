@@ -2015,9 +2015,11 @@ int pgraph_handle_method(
                         CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
                         break;
                     case X_D3DDevice_PrimeVertexCache:  break;
-                    case X_D3DDevice_Reset:  break;
-                    case X_D3DDevice_Reset_0__LTCG_edi1:  break;
-                    case X_D3DDevice_Reset_0__LTCG_ebx1:  break;
+                    case X_D3DDevice_Reset:               //break;  //fall through
+                    case X_D3DDevice_Reset_0__LTCG_edi1:  //break;  //fall through
+                    case X_D3DDevice_Reset_0__LTCG_ebx1:
+                        *(bool*)argv[1] = false;
+                        break;
                     case X_D3DDevice_RunPushBuffer:
                         //todo: RunPushbuffer() could be nested, here we assume it only runs in one level. 
                         if (argv[1] != 0) {

@@ -3622,6 +3622,19 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset)
 {
 	LOG_FUNC_ONE_ARG(pPresentationParameters);
 
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Reset, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
+
 	CxbxrImpl_Reset(pPresentationParameters);
 
 	// Call the Xbox Reset function to do the rest of the work for us
@@ -3649,6 +3662,19 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG
 
 	// Log
 	D3DDevice_Reset_0__LTCG_edi1(pPresentationParameters);
+
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Reset_0__LTCG_edi1, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
 
 	CxbxrImpl_Reset(pPresentationParameters);
 
@@ -3681,6 +3707,19 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG
 
 	// Log
 	D3DDevice_Reset_0__LTCG_ebx1(pPresentationParameters);
+
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Reset_0__LTCG_ebx1, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
 
 	CxbxrImpl_Reset(pPresentationParameters);
 
