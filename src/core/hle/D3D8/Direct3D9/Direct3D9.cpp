@@ -8507,7 +8507,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		}
 		
 		//it->second.forceRehash = true;
-		pHostSourceSurface->GetDesc(&HostSurfaceDesc);
+		hRet=pHostSourceSurface->GetDesc(&HostSurfaceDesc);
 		if (hRet != D3D_OK) {
 			EmuLog(LOG_LEVEL::WARNING, "Could not get host surface desc in Lock2DSurface");
 		}
