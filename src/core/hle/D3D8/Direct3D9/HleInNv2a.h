@@ -337,6 +337,7 @@ ULONG CxbxrImpl_Resource_Release(xbox::X_D3DResource* pResource);
 void EmuKickOff(void);
 extern DWORD PBTokenArray[16];
 void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount, DWORD* argv);
+IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture* pBaseTexture);
 /*
     // with this helper function, we can reduce the token pushbuffer setup in a further simpler way.
     

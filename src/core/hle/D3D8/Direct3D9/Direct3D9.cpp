@@ -4453,7 +4453,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
 
     static D3DGAMMARAMP PCRamp;
 
-    for(int v=0;v<255;v++)
+    for(int v=0;v<256;v++)
     {
         PCRamp.red[v]   = pRamp->red[v];
         PCRamp.green[v] = pRamp->green[v];
@@ -5313,6 +5313,17 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LT
         ret  4
     }
 }
+
+bool IsXboxResourceCached(xbox::X_D3DResource* pXboxResource, DWORD D3DUsage = 0, int iTextureStage = -1)
+{
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto it = ResourceCache.find(key);
+	if (it == ResourceCache.end()) {
+		return false;
+	}
+	return true;
+}
 void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture)
 {
 	//update the currently used stage texture
@@ -5333,7 +5344,84 @@ void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* p
 		else {
 			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface >(key, g_Xbox_SetTexture[Stage]));
 		}
-
+		//let's process the resource cache here for some special cases. some title will use xbox backbuffer as texture stage texture but not using the backbuffer surface directly,
+		//instead the title might use XGSetTextureHeader() to create a new texture which using the Foramt/Data/Size from backbuffer, but with totally different Common type.
+		//test case: DynamicGamma sample. in this case, the backbuffer surface is a surface without parent texture, Common is 0x01050001, but when setting a nex texture header to get a new texture using the backbuffer data,
+		//the new Common becomes 0x00040001. it mean not created by D3D, and the resource type is texture instead of surface. when we retrieve host resource using this texture, we'll get a different host resource from what we get with the xbox backbuffer
+		//so the data won't be linked even their xbox data point to the same address.
+		DWORD oldCommon = pTexture->Common;
+		DWORD newCommon;
+		IDirect3DSurface* pHostSurface;
+		IDirect3DTexture9* pHostTexture;
+		auto xboxSurface = (xbox::X_D3DSurface*)pTexture;
+		auto xboxTexture = (xbox::X_D3DTexture*)pTexture;
+		if (!IsXboxResourceCached(pTexture, 0, Stage)) {
+			pTexture->Common = 0x01040001;
+			if (IsXboxResourceCached(pTexture, 0, Stage)) {
+				//pHostTexture = (IDirect3DTexture9*)GetHostResource(pTexture, D3DUSAGE_RENDERTARGET, Stage);
+				auto key = GetHostResourceKey(pTexture, Stage);
+				auto& ResourceCache = GetResourceCache(key);
+				auto it = ResourceCache.find(key);
+				auto hostResource = it->second.pHostResource.Get();
+				auto xboxResourceType = GetXboxD3DResourceType(pTexture);
+				// Determine if the associated host resource is a render target already, if so, do nothing
+				HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
+				D3DSURFACE_DESC surfaceDesc;
+				hRet = ((IDirect3DTexture*)hostResource)->GetLevelDesc(0, &surfaceDesc);
+				if (SUCCEEDED(hRet)) {
+					// If this resource is already created as a render target on the host, simply return
+					if (surfaceDesc.Usage & D3DUSAGE_RENDERTARGET) {
+						//restore original common
+						pTexture->Common = oldCommon;
+						//resource_info_t newResource;
+						//ResourceCache[key] = newResource;
+						//set the host resource of render target to our texture variants.
+						if (xboxResourceType == xbox::X_D3DRTYPE_TEXTURE)
+						    SetHostResource(pTexture, hostResource, Stage, 0);
+						else {
+							EmuLog(LOG_LEVEL::WARNING, "xboxResourceType isn't texture in CxbxrImpl_SetTexture!");
+						}
+						return;
+					}
+				}
+				else {
+					EmuLog(LOG_LEVEL::WARNING, "Failed getting texture/surface desc in CxbxrImpl_SetTexture!");
+				}
+			}else{
+				auto xboxResourceType = GetXboxD3DResourceType(pTexture);
+				pTexture->Common = 0x01050001;
+				if (IsXboxResourceCached(pTexture, 0, Stage)) {
+					//pHostTexture = (IDirect3DTexture9*)GetHostResource(pTexture, D3DUSAGE_RENDERTARGET, Stage);
+					auto key = GetHostResourceKey(pTexture, Stage);
+					auto& ResourceCache = GetResourceCache(key);
+					auto it = ResourceCache.find(key);
+					auto hostResource = it->second.pHostResource.Get();
+					// Determine if the associated host resource is a render target already, if so, do nothing
+					HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
+					D3DSURFACE_DESC HostSurfaceDesc;
+					hRet = ((IDirect3DSurface*)hostResource)->GetDesc(&HostSurfaceDesc);
+					// to previous resource management behavior
+					if (SUCCEEDED(hRet)) {
+						// If this resource is already created as a render target on the host, simply return
+						if (HostSurfaceDesc.Usage & D3DUSAGE_RENDERTARGET) {
+							//restore original common
+							IDirect3DBaseTexture* pHostTexture;
+							pHostTexture=CxbxConvertXboxSurfaceToHostTexture(pTexture);
+							pTexture->Common = oldCommon;
+							if(xboxResourceType== xbox::X_D3DRTYPE_TEXTURE)
+								SetHostResource(pTexture, pHostTexture, Stage, 0);
+							else {
+								EmuLog(LOG_LEVEL::WARNING, "xboxResourceType isn't texture in CxbxrImpl_SetTexture!");
+							}
+							return;
+						}
+					}
+					else {
+						EmuLog(LOG_LEVEL::WARNING, "Failed getting texture/surface desc in CxbxrImpl_SetTexture!");
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -8535,41 +8623,88 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		}
 
 		if (HostSurfaceDesc.Usage == D3DUSAGE_RENDERTARGET)
-			g_IsRenderTexture = true;
+		    g_IsRenderTexture = true;
 
-		//if (GetXboxCommonResourceType(pPixelContainer) != X_D3DCOMMON_TYPE_SURFACE) { //GetHostSurface(pPixelContainer);
-		//{
-			hRet = pHostSourceSurface->GetDesc(&HostSurfaceDesc);
-			xbox::X_D3DBaseTexture OffScreenTexture, * pOffScreenTexture;
-			pOffScreenTexture = &OffScreenTexture;
-			OffScreenTexture = *(xbox::X_D3DBaseTexture*)pPixelContainer;
+		xbox::X_D3DBaseTexture OffScreenTexture, * pOffScreenTexture;
+		pOffScreenTexture = &OffScreenTexture;
+		OffScreenTexture = *(xbox::X_D3DBaseTexture*)pPixelContainer;
 
-			DWORD common = pPixelContainer->Common & X_D3DCOMMON_D3DCREATED;
-			//invert the X_D3DCOMMON_D3DCREATED bit for OffScreenTexture.
-			if (common != 0)
-				OffScreenTexture.Common &= ~common;
-			else
-				OffScreenTexture.Common |= X_D3DCOMMON_D3DCREATED;
-			// set OffScreenTexture to X_D3DCOMMON_TYPE_TEXTURE
-			if (GetXboxCommonResourceType(pPixelContainer) == X_D3DCOMMON_TYPE_SURFACE) {
-				OffScreenTexture.Common &= ~X_D3DCOMMON_TYPE_MASK;
-				OffScreenTexture.Common |= X_D3DCOMMON_TYPE_TEXTURE;
+		DWORD common = pPixelContainer->Common & X_D3DCOMMON_D3DCREATED;
+		//invert the X_D3DCOMMON_D3DCREATED bit for OffScreenTexture.
+		if (common != 0)
+			OffScreenTexture.Common &= ~common;
+		else
+			OffScreenTexture.Common |= X_D3DCOMMON_D3DCREATED;
+		// set OffScreenTexture to X_D3DCOMMON_TYPE_TEXTURE
+		if (GetXboxCommonResourceType(pPixelContainer) == X_D3DCOMMON_TYPE_SURFACE) {
+			OffScreenTexture.Common &= ~X_D3DCOMMON_TYPE_MASK;
+			OffScreenTexture.Common |= X_D3DCOMMON_TYPE_TEXTURE;
+		}
+		// get the virtual texture corresponded to pPixelContainer
+		//OffScreenTexture = (IDirect3DTexture9*)GetHostResource(pOffScreenTexture);
+		IDirect3DTexture9* pHostOffScreenTexture;
+		IDirect3DSurface9* pHostOffScreenSurface;
+		//g_IsRenderTexture = true;
+		bool bOffScreenSurfaceNeedRelease = false;
+		if (g_IsRenderTexture)
+		{
+			hRet= g_pD3DDevice->CreateTexture(
+				HostSurfaceDesc.Width,
+				HostSurfaceDesc.Height,
+				1,
+				D3DUSAGE_DYNAMIC,
+				HostSurfaceDesc.Format,
+				D3DPOOL_SYSTEMMEM,
+				&pHostOffScreenTexture,
+				NULL
+			);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
 			}
-			// get the virtual texture corresponded to pPixelContainer
-			//OffScreenTexture = (IDirect3DTexture9*)GetHostResource(pOffScreenTexture);
-			IDirect3DTexture9* pHostOffScreenTexture;
-			IDirect3DSurface9* pHostOffScreenSurface;
-			//g_IsRenderTexture = true;
-			bool bOffScreenSurfaceNeedRelease = false;
-			if (g_IsRenderTexture)
-			{
-				hRet= g_pD3DDevice->CreateTexture(
+			bOffScreenSurfaceNeedRelease = true;
+			hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
+			}
+				
+			hRet = g_pD3DDevice->GetRenderTargetData(pHostSourceSurface, pHostOffScreenSurface);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
+			}
+			D3DSURFACE_DESC HostOffScreenSurfaceDesc;
+			pHostOffScreenSurface->GetDesc(&HostOffScreenSurfaceDesc);
+
+			assert(HostOffScreenSurfaceDesc.Width  == HostSurfaceDesc.Width);
+			assert(HostOffScreenSurfaceDesc.Height == HostSurfaceDesc.Height);
+
+			hostFlag = D3DLOCK_READONLY;
+			pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
+			}
+		}
+        //not render target texture, process it as regular texture, LockRect then transfer to xbox data with conversion.
+		//if the texture is not lockable, then copy it to a lockable surface with StretchRect() then transfer to xbox with conversion.
+		else {
+			hostFlag = D3DLOCK_READONLY;
+			pHostOffScreenSurface = pHostSourceSurface;
+			hRet=pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+
+			if (hRet == D3D_OK) {
+				;
+			}
+			else {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in Lock2DSurface");
+
+				//hRet = g_pD3DDevice->CreateTexture(textureDesc.Width, textureDesc.Height,1, textureDesc.Usage, textureDesc.Format, D3DPOOL_DEFAULT, &pTexture,(HANDLE*)nullptr);
+				D3DUsage = D3DUSAGE_DYNAMIC;// textureDesc.Usage;// 
+				hRet = g_pD3DDevice->CreateTexture(
 					HostSurfaceDesc.Width,
 					HostSurfaceDesc.Height,
 					1,
 					D3DUSAGE_DYNAMIC,
 					HostSurfaceDesc.Format,
-					D3DPOOL_SYSTEMMEM,
+					D3DPOOL_DEFAULT,
 					&pHostOffScreenTexture,
 					NULL
 				);
@@ -8577,82 +8712,31 @@ void WINAPI CxbxrImpl_Lock2DSurface
 					EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
 				}
 				bOffScreenSurfaceNeedRelease = true;
+
 				hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
 				if (hRet != D3D_OK) {
 					EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
 				}
-				
-				hRet = g_pD3DDevice->GetRenderTargetData(pHostSourceSurface, pHostOffScreenSurface);
+				// Copy Surface to Surface
+					
+				hRet = g_pD3DDevice->StretchRect(
+					pHostSourceSurface,
+					NULL,
+					pHostOffScreenSurface,
+					NULL,
+					D3DTEXF_NONE
+				);
 				if (hRet != D3D_OK) {
-					EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
+					EmuLog(LOG_LEVEL::WARNING, "Failed in g_pD3DDevice->StretchRect() in Lock2DSurface");
 				}
-				D3DSURFACE_DESC HostOffScreenSurfaceDesc;
-				pHostOffScreenSurface->GetDesc(&HostOffScreenSurfaceDesc);
-
-				assert(HostOffScreenSurfaceDesc.Width  == HostSurfaceDesc.Width);
-				assert(HostOffScreenSurfaceDesc.Height == HostSurfaceDesc.Height);
-
+					
 				hostFlag = D3DLOCK_READONLY;
-				pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+				hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
 				if (hRet != D3D_OK) {
-					EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
-				}
-			}
-            //not render target texture, process it as regular texture, LockRect then transfer to xbox data with conversion.
-			//if the texture is not lockable, then copy it to a lockable surface with StretchRect() then transfer to xbox with conversion.
-			else {
-				hostFlag = D3DLOCK_READONLY;
-				pHostOffScreenSurface = pHostSourceSurface;
-				hRet=pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
-
-				if (hRet == D3D_OK) {
-					;
-				}
-				else {
 					EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in Lock2DSurface");
-
-					//hRet = g_pD3DDevice->CreateTexture(textureDesc.Width, textureDesc.Height,1, textureDesc.Usage, textureDesc.Format, D3DPOOL_DEFAULT, &pTexture,(HANDLE*)nullptr);
-					D3DUsage = D3DUSAGE_DYNAMIC;// textureDesc.Usage;// 
-					hRet = g_pD3DDevice->CreateTexture(
-						HostSurfaceDesc.Width,
-						HostSurfaceDesc.Height,
-						1,
-						D3DUSAGE_DYNAMIC,
-						HostSurfaceDesc.Format,
-						D3DPOOL_DEFAULT,
-						&pHostOffScreenTexture,
-						NULL
-					);
-					if (hRet != D3D_OK) {
-						EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
-					}
-					bOffScreenSurfaceNeedRelease = true;
-
-					hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
-					if (hRet != D3D_OK) {
-						EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
-					}
-					// Copy Surface to Surface
-					
-					hRet = g_pD3DDevice->StretchRect(
-						pHostSourceSurface,
-						NULL,
-						pHostOffScreenSurface,
-						NULL,
-						D3DTEXF_NONE
-					);
-					if (hRet != D3D_OK) {
-						EmuLog(LOG_LEVEL::WARNING, "Failed in g_pD3DDevice->StretchRect() in Lock2DSurface");
-					}
-					
-					hostFlag = D3DLOCK_READONLY;
-					hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
-					if (hRet != D3D_OK) {
-						EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in Lock2DSurface");
-					}
 				}
 			}
-		//}
+		}
 		//process host surface data transfer to xbox data with data conversion.
 		xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
 		// Interpret Width/Height/BPP
@@ -8697,12 +8781,15 @@ void WINAPI CxbxrImpl_Lock2DSurface
 				// Then use matching host format
 				PCFormat = EmuXB2PC_D3DFormat(X_Format);
 				assert(PCFormat == HostSurfaceDesc.Format);
+				byte* hostPtr = (byte*)HostLockedRect.pBits;
+				//extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
+				byte* xboxPtr = (byte*)GetDataFromXboxResource(pPixelContainer);// (byte*)pPixelContainer->Data;
+				// Retrieve and test the xbox resource buffer address
+				//VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
 				if (HostLockedRect.Pitch == dwRowPitch)
-					memcpy((void*)pPixelContainer->Data, HostLockedRect.pBits, HostLockedRect.Pitch * xboxHeight);
+					memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * xboxHeight);
 				else {
 					DWORD minPitch = MIN(HostLockedRect.Pitch , dwRowPitch);
-					byte* hostPtr = (byte*)HostLockedRect.pBits;
-					byte* xboxPtr = (byte*)pPixelContainer->Data;
 					for (int i = 0; i < xboxHeight; i++) {
 						memcpy(xboxPtr, hostPtr, minPitch);
 						xboxPtr += dwRowPitch;
@@ -8740,11 +8827,15 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		//release the created pHostOffScreenTexture and pHostOffScreenSurface
 		if (bOffScreenSurfaceNeedRelease) {
 			pHostOffScreenSurface->Release();
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->Release() in Lock2DSurface");
+			}
 			pHostOffScreenTexture->Release();
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->Release() in Lock2DSurface");
+			}
 		}
-		if (hRet != D3D_OK) {
-			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in Lock2DSurface");
-		}
+		
 	}
 	else {
 		//if the target surface isn't registered yet, then there is nothing to transfer from host to xbox data.
