@@ -2927,14 +2927,14 @@ void D3D_draw_state_update(NV2AState* d)
 
 		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
 		// only update combiners when in fixed pixel shader.
-		if (pNV2A_PixelShader == nullptr) {
+		//if (pNV2A_PixelShader == nullptr) {
 			if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
 				// only update the combiner state when we're in fixed function pixel shader
 				CxbxrImpl_LazySetCombiners(d);
 				// clear dirty flag
 				NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 			}
-		}
+		//}
 
 		// update spec fog combiner state
 		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER) != 0) {
