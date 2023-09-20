@@ -950,7 +950,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
 				}
 				// D3DTOP_PREMODULATE, A=Arg1, if stage 0, B==D3DTA_TEXTURE, if stage1 or stage2 B=1, C and D not set
-				else if ((i > 0 && i << 3 && ((colorICW & 0xF0FFFFFF) == 0x00200000)) || (i == 0 && ((colorICW & 0xF0FFFFFF) == 0x00020000))) {
+				else if ((i > 0 && i < 3 && ((colorICW & 0xF0FFFFFF) == 0x00200000)) || (i == 0 && ((colorICW & 0xF0FFFFFF) == 0x00020000))) {
 					NV2A_colorOP[i] = xbox::X_D3DTOP_PREMODULATE;
 					// arg1 in source A
 					NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF);
@@ -1216,7 +1216,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 
 				}
 				// D3DTOP_PREMODULATE, A=Arg1, if stage 0, B==D3DTA_TEXTURE, if stage1 or stage2 B=1, C and D default to 0
-				else if((i > 0 && i << 3 && ((alphaICW & 0xF0FFFFFF) == 0x10200000)) || (i == 0 && ((alphaICW & 0xF0FFFFFF) == 0x10120000))) {
+				else if((i > 0 && i < 3 && ((alphaICW & 0xF0FFFFFF) == 0x10200000)) || (i == 0 && ((alphaICW & 0xF0FFFFFF) == 0x10120000))) {
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_PREMODULATE;
 					// arg1 in source A
 					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
