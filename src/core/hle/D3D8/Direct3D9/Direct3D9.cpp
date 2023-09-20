@@ -4434,6 +4434,10 @@ void CxbxrImpl__SetGammaRamp(
 	g_pD3DDevice->SetGammaRamp(
 		0, // iSwapChain
 		dwPCFlags, pRamp);
+
+	//g_pD3DDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, true);
+	//g_pD3DDevice->SetSamplerState(0, D3DSAMP_SRGBTEXTURE,true);
+
 #endif
 
 }
@@ -6851,6 +6855,16 @@ DWORD CxbxrImpl_Swap
 	}
 
 	g_pD3DDevice->EndScene();
+#if 0	
+	IDirect3DSwapChain9* pSwapChain;
+	hRet = g_pD3DDevice->GetSwapChain(
+		/*[in]  UINT  iSwapChain*/ 0,
+		/*[in]  IDirect3DSwapChain9 * *ppSwapChain*/&pSwapChain
+	);
+
+	
+	pSwapChain->Present(0, 0, 0, 0, D3DPRESENT_LINEAR_CONTENT);
+#endif	
 
 	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
 	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
