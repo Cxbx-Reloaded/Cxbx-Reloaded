@@ -82,7 +82,7 @@
 
 #include "nv2a_vsh_emulator.h"
 #include "HleInNv2a.h"
-#include "dxgi.h"
+//#include "dxgi.h"
 #include "D3dx9tex.h""
 using namespace Microsoft::WRL;
 
@@ -8794,7 +8794,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 			if (IsSupportedFormat(X_Format, (xbox::X_D3DRESOURCETYPE)XboxResourceType, D3DUsage)) {
 				// Then use matching host format
 				PCFormat = EmuXB2PC_D3DFormat(X_Format);
-				assert(PCFormat == HostSurfaceDesc.Format);
+				//assert(PCFormat == HostSurfaceDesc.Format);
 				byte* hostPtr = (byte*)HostLockedRect.pBits;
 				//extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
 				byte* xboxPtr = (byte*)GetDataFromXboxResource(pPixelContainer);// (byte*)pPixelContainer->Data;
@@ -9908,18 +9908,145 @@ extern xbox::X_D3DBaseTexture * g_pNV2A_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 void CxbxUpdateHostTextures()
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
+	DWORD stageProgram = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+	// use texture stage textures from NV2A if we're in pushbuffer replay mode
+	// if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
+	// using textures composed from Kelvin
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		stageProgram = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+	}
+	DWORD stageMode[4];
+	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++)
+		stageMode[stage] = (stageProgram >> (stage * 5)) & 0x1f;
 	// Set the host texture for each stage
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
-		// use texture stage textures from NV2A if we're in pushbuffer replay mode
-		// if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
-		// using textures composed from Kelvin
-		if (is_pgraph_using_NV2A_Kelvin())
+		if (is_pgraph_using_NV2A_Kelvin()) {
 			pXboxBaseTexture = g_pNV2A_SetTexture[stage];
+			//stageProgram = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+		}
+
 		IDirect3DBaseTexture* pHostBaseTexture = nullptr;
 		bool bNeedRelease = false;
+		
+		// for UV texture format, xbox has alias formats which are not UV format. in most cases xbox uses UV format as UV format and this happened in bumpenv texture stage.
+		// so cxbxr converts xbox UV texture to d3d9 UV texture by default.
+		// but for certain cases, xbox uses alias format and the texture in alias format is not used in bumpenv stage, in this case we need to force convert the UV format texture to ARGB texture
+		// test case: DynamicGamma sample.
+		// check the xbox format is an UV format or not, if UV format, then check if we're bumpenv stage or not. if an UV format is set in none bumpenv stage, recreate the host texture in ARGB
+		extern bool g_bForceHostARGBConversion;
+		extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
+#if 0
+		if (stage < 3)
+		if(pXboxBaseTexture!=nullptr){
+			xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxBaseTexture);
+			//bumpmap is not so frequently used, let's check it first.
+			if (EmuXBFormatIsBumpMap(X_Format)){
+				//if a bumpmap is used in none bumpenv stage, let's convert it to ARGB
+				
+				if (   (stageMode[stage+1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP))
+					//&& (stageMode[stage+1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE))
+				{
+					//get xbox format and related PC format
+					D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(X_Format);
+					//if both xbox format and PC format are UV format, then we need to create the host texture with ARGB conversion in none bumpenv stage
+				
+					//GetHostResource(); CreateHostResource();
+					auto key = GetHostResourceKey(pXboxBaseTexture, stage);
+					auto& ResourceCache = GetResourceCache(key);
+					auto it = ResourceCache.find(key);
+					//if source not found, just create a host texture with ARGB
+					if (it != ResourceCache.end()) {
+						if (it->second.pHostResource!=nullptr) {
+							//todo: in CreateHostResource, we could store the PCFormat of the created host resource in the resource cache by creating a new member in _resource_info_t, this would speed up the speed here.
+							IDirect3DTexture* pCurrnetStageHostTexture = (IDirect3DTexture*)it->second.pHostResource.Get();
+							IDirect3DSurface* pCurrentStageHostSurface;
+							HRESULT hRet = pCurrnetStageHostTexture->GetSurfaceLevel(0, &pCurrentStageHostSurface);
+							D3DSURFACE_DESC surfaceDesc;
+							hRet = pCurrentStageHostSurface->GetDesc(&surfaceDesc);
+							//if the host resource isn't converted to D3DFMT_A8R8G8B8, then we have to disgard the old host resource force the ARGB conversion
+							if (surfaceDesc.Format != D3DFMT_A8R8G8B8) {
+								FreeHostResource(key);
+								//erase the host resource empty key
+								//ResourceCache.erase(key);
+							}
+						}
+						else {
+							//erase the host resource empty key
+							ResourceCache.erase(key);
+						}
+						EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
+					}
+					if (EmuXBFormatCanBeConvertedToARGB(X_Format))
+							g_bForceHostARGBConversion = true;
+				}
+//#if 0
+				else {
+					//get xbox format and related PC format
+					D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(X_Format);
+					//if both xbox format and PC format are UV format, then we need to create the host texture with ARGB conversion in none bumpenv stage
 
+					//GetHostResource(); CreateHostResource();
+					auto key = GetHostResourceKey(pXboxBaseTexture, stage);
+					auto& ResourceCache = GetResourceCache(key);
+					auto it = ResourceCache.find(key);
+					//if source not found, just create a host texture with ARGB
+					if (it != ResourceCache.end()) {
+						if (it->second.pHostResource != nullptr) {
+							//todo: in CreateHostResource, we could store the PCFormat of the created host resource in the resource cache by creating a new member in _resource_info_t, this would speed up the speed here.
+							IDirect3DTexture* pCurrnetStageHostTexture = (IDirect3DTexture*)it->second.pHostResource.Get();
+							IDirect3DSurface* pCurrentStageHostSurface;
+							HRESULT hRet = pCurrnetStageHostTexture->GetSurfaceLevel(0, &pCurrentStageHostSurface);
+							D3DSURFACE_DESC surfaceDesc;
+							hRet = pCurrentStageHostSurface->GetDesc(&surfaceDesc);
+							//if the host resource was converted to D3DFMT_A8R8G8B8, then we have to disgard the old host resource and force recreate bumpmap
+							if (surfaceDesc.Format == D3DFMT_A8R8G8B8) {
+								//if previous host texture was a render target, then we need to copy the contents from previous texture to xbox resource before we erase the content.
+								if (surfaceDesc.Usage & D3DUSAGE_RENDERTARGET) {
+									FreeHostResource(key);
+									DWORD XboxResourceType = GetXboxCommonResourceType(pXboxBaseTexture);
+									switch (XboxResourceType) {
+									case X_D3DCOMMON_TYPE_TEXTURE:
+										pHostBaseTexture = GetHostBaseTexture(pXboxBaseTexture, /*D3DUsage=*/0, stage);
+										break;
+									case X_D3DCOMMON_TYPE_SURFACE:
+										// Surfaces can be set in the texture stages, instead of textures
+										LOG_TEST_CASE("ActiveTexture set to a surface (non-texture) resource"); // Test cases : Burnout, Outrun 2006
+										// We must wrap the surface before using it as a texture
+										pHostBaseTexture = CxbxConvertXboxSurfaceToHostTexture(pXboxBaseTexture);
+										// Release this texture (after SetTexture) when we succeeded in creating it :
+										bNeedRelease = pHostBaseTexture != nullptr;
+										break;
+									default:
+										LOG_TEST_CASE("ActiveTexture set to an unhandled resource type!");
+										break;
+									}
+									IDirect3DSurface* pNewStageHostSurface;
+									hRet = ((IDirect3DTexture*)pHostBaseTexture)->GetSurfaceLevel(0, &pNewStageHostSurface);
+									D3DSURFACE_DESC NewSurfaceDesc;
+									hRet = pNewStageHostSurface->GetDesc(&NewSurfaceDesc);
+									if (hRet == S_OK) {
+										//pNewStageHostSurface->FromSurface();
+										hRet = D3DXLoadSurfaceFromSurface(pNewStageHostSurface, nullptr, NULL, pCurrentStageHostSurface, nullptr, NULL, D3DTEXF_POINT, 0);
+										//hRet = g_pD3DDevice->StretchRect(pCurrentStageHostSurface, NULL, pNewStageHostSurface, NULL, D3DTEXF_NONE);
+									}
+									pCurrentStageHostSurface->Release();
+									pCurrnetStageHostTexture->Release();
+								}
+								if (bNeedRelease) {
+									pHostBaseTexture->Release();
+									bNeedRelease = false;
+								}
+								
+							}
+						}
+						EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
+					}
+				}
+//#endif
+			}
+		}
+#endif
 		if (pXboxBaseTexture != xbox::zeroptr) {
 			DWORD XboxResourceType = GetXboxCommonResourceType(pXboxBaseTexture);
 			switch (XboxResourceType) {
@@ -9939,6 +10066,8 @@ void CxbxUpdateHostTextures()
 				break;
 			}
 		}
+		// reset the force ARGB xbox to host resource conversion 
+		g_bForceHostARGBConversion = false;
 
 		HRESULT hRet = g_pD3DDevice->SetTexture(stage, pHostBaseTexture);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
