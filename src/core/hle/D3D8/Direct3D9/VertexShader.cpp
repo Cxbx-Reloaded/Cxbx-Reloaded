@@ -443,7 +443,8 @@ VS_OUTPUT main(const VS_INPUT xIn)
 
 	// Fogging
 	// TODO deduplicate
-	const float fogDepth      =   abs(oFog.x); 
+	float fogDepth      =  oFog.x;
+		if(oFog.x < 0) fogDepth = -oFog.x;
 	const float fogTableMode  =   CxbxFogInfo.x;
 	const float fogDensity    =   CxbxFogInfo.y;
 	const float fogStart      =   CxbxFogInfo.z;

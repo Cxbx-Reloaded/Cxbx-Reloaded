@@ -17,10 +17,7 @@ float4 PerformColorSign(const float4 ColorSign, float4 t)
 	if (ColorSign.g > 0) t.g = unsigned_to_signed(t.g);
 	if (ColorSign.b > 0) t.b = unsigned_to_signed(t.b);
 	if (ColorSign.a > 0) t.a = unsigned_to_signed(t.a);
-	if (ColorSign.r < 0) t.r = signed_to_unsigned(t.r);
-	if (ColorSign.g < 0) t.g = signed_to_unsigned(t.g);
-	if (ColorSign.b < 0) t.b = signed_to_unsigned(t.b);
-	if (ColorSign.a < 0) t.a = signed_to_unsigned(t.a);
+	
 	// TODO : Instead of the above, create a mirror texture with a host format that has identical component layout, but with all components signed.
 	// Then, in here, when any component has to be read as signed, sample the signed texture (ouch : with what dimension and coordinate?!)
 	// and replace the components that we read from the unsigned texture, but which have to be signed, with the signed components read from the signed mirror texture.
@@ -181,7 +178,7 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 		// Test case: PerPixelLighting
 		arg1.rgb = (arg1.rgb*2) -1; // TODO : These bias and scale operations should not be performed here, but when the input-texture is sampled (same as for X_D3DTOP_BUMPENVMAP*)
 		arg2.rgb = (arg2.rgb*2)-1;
-		return (dot(arg1.rgb, arg2.rgb));
+		return saturate(dot(arg1.rgb, arg2.rgb));
 	}
 	// Note arg0 below is arg1 in D3D docs
 	// since it becomes the first argument for operations supporting 3 arguments...
@@ -190,7 +187,7 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 	else if (op == X_D3DTOP_LERP)
 		return arg0 * arg1 + (1 - arg0) * arg2;
 	else if (op >= X_D3DTOP_BUMPENVMAP) { // Also handles X_D3DTOP_BUMPENVMAPLUMINANCE
-		arg1 = ctx.CURRENT; // TODO : Verify bump mapping indeed uses previous pixel value (CURRENT, or possibly TEXTURE, but not COLORARG1)
+		arg1 = PerformColorSign(stage.COLORSIGN,ctx.CURRENT); // TODO : Verify bump mapping indeed uses previous pixel value (CURRENT, or possibly TEXTURE, but not COLORARG1)
 		//arg1.xy = (arg1.xy - 0.5) * 2; // TODO : This bias and scale operation should not be performed here, but when the input-texture is sampled (same as for X_D3DTOP_DOTPRODUCT3)
 		// Note : default component order .xyzw is identical to .rgba, and z (red) should not be scaled here, as it's used for luminance which is an unsigned input.
 		return float4(
@@ -239,15 +236,11 @@ TextureArgs ExecuteTextureStage(
 	else if (type == SAMPLE_CUBE)
 		t = texCUBE(samplers[i], TexCoord.xyz);
 
-	// Bump environment mapping with luminance special case
-	if (previousOp == X_D3DTOP_BUMPENVMAPLUMINANCE) {
-		// Multiply sampled texture rgb values by L'
-		t.rgb *= ctx.CURRENT.z;
-	}
+	
 
 	// TODO : Figure out in which order the following operations should be performed :
-	t = PerformColorSign(stage.COLORSIGN, t);
-	t = PerformColorKeyOp(stage.COLORKEYOP, stage.COLORKEYCOLOR, t);
+	//t = PerformColorSign(stage.COLORSIGN, t);
+	//t = PerformColorKeyOp(stage.COLORKEYOP, stage.COLORKEYCOLOR, t);
 	PerformAlphaKill(stage.ALPHAKILL, t);
 
 	// Assign the final value for TEXTURE
@@ -289,7 +282,7 @@ TextureArgs ExecuteTextureStage(
 	// Use CURRENT for anything other than TEMP
 	// Test case: DoA 3
 	if (s.RESULTARG == X_D3DTA_TEMP)
-		ctx.TEMP = value;
+		ctx.TEMP = PerformColorKeyOp(stage.COLORKEYOP, stage.COLORKEYCOLOR, value);
 	else
 		ctx.CURRENT = value;
 
