@@ -1066,7 +1066,7 @@ D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 	// If not, research why this (then incorret) change *does* improve both BumpEarth samples
 	// (while keeping BumpLens and JSFR boost dash effect working). Perhaps duplicate signed range conversion in the shader?
 	 bool HostTextureFormatIsSignedForA = (H == D3DFMT_Q8W8V8U8) ;
-	 bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);;
+	 bool HostTextureFormatIsSignedForR = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
 	 bool HostTextureFormatIsSignedForG = (H == D3DFMT_Q8W8V8U8) || (H == D3DFMT_L6V5U5) || (H == D3DFMT_V8U8) || (H == D3DFMT_V16U16) || (H == D3DFMT_X8L8V8U8);
 	 bool HostTextureFormatIsSignedForB = (H == D3DFMT_Q8W8V8U8) ;
 #endif
