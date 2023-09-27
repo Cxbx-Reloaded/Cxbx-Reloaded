@@ -1,6 +1,3 @@
-// This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
-R"DELIMITER(
-
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
@@ -92,11 +89,7 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
    #define PS_FINALCOMBINERSETTING_CLAMP_SUM
 #endif
 
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
-
+// DEFINES INSERTION MARKER
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
 	#define C0 c0_[stage] // concatenate stage to form c0_0 .. c0_7
@@ -173,11 +166,7 @@ R"DELIMITER(
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
-
+	// XBOX SHADER PROGRAM MARKER
 float m21d(const float input)
 {
 	int tmp = (int)(input * 255); // Convert float 0..1 into byte 0..255
@@ -400,5 +389,3 @@ R"DELIMITER(
 
 	return xOut;
 }
-
-// End of pixel shader footer)DELIMITER" /* This terminates the footer raw string" // */

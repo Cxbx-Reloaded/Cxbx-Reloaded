@@ -696,8 +696,13 @@ constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; //
 // This concludes the set of constants that need to be set on host :
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
 
-std::string GetFixedFunctionShaderTemplate() {
+std::string GetFixedFunctionShaderTemplate()
+// See GetCustomPixelShaderTemplate()
+{
 	static bool loaded = false;
+	// TODO : Consider merging GetFixedFunctionShaderTemplate and GetCustomPixelShaderTemplate, adding a flag to load and return CxbxPixelShaderTemplate.hlsl or FixedFunctionPixelShader.hlsl
+// TODO : reset loaded flag (so a reload will happen) when the file was changed since last read (perhaps using https://github.com/apetrone/simplefilewatcher or the Windows API ReadDirectoryChangesW ?)
+// TODO : if load or reload happens, return that to the caller, so one-time search-initializations can be redone as well
 	static std::string hlslString;
 
 	// TODO does this need to be thread safe?
