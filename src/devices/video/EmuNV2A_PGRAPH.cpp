@@ -2012,7 +2012,8 @@ int pgraph_handle_method(
                     case X_D3DDevice_Present:
 #define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
 
-                        CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
+                        //CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
+                        * (bool*)argv[1] = false;
                         break;
                     case X_D3DDevice_PrimeVertexCache:  break;
                     case X_D3DDevice_Reset:               //break;  //fall through
@@ -2155,10 +2156,11 @@ int pgraph_handle_method(
                         break;
                     case X_D3DDevice_SetWaitCallback:  break;
                     case X_D3DDevice_Swap:
-                        CxbxrImpl_Swap(argv[1]);
-                        break;
+                        //CxbxrImpl_Swap(argv[1]);
+                        //break; //fall through
                     case X_D3DDevice_Swap_0:
-                        CxbxrImpl_Swap(argv[1]);
+                        //CxbxrImpl_Swap(argv[1]);
+                        *(bool*)argv[1] = false;
                         break;
                     case X_D3DDevice_SwitchTexture:
                         CxbxrImpl_SwitchTexture((xbox::dword_xt)argv[1], (xbox::dword_xt)argv[2], (xbox::dword_xt)argv[3]);

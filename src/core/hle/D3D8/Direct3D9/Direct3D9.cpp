@@ -6418,7 +6418,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 		LOG_FUNC_ARG(pDummy1)
 		LOG_FUNC_ARG(pDummy2)
 		LOG_FUNC_END;
-#if USEPGRAPH_Present
+#if !USEPGRAPH_Present
 
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pSourceRect;
@@ -6428,6 +6428,19 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Present, 4);//argCount, not necessary, default to 14
 #else
+	//template for syncing HLE apis with pgraf using waiting lock
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Present, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
 	CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);  // Xbox present ignores
 #endif
 }
@@ -6973,7 +6986,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 {
 	LOG_FUNC_ONE_ARG(Flags);
 	hresult_xt hret = S_OK;
-#if USEPGRAPH_Swap
+#if !USEPGRAPH_Swap
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
@@ -6989,6 +7002,19 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
 #else
+	//template for syncing HLE apis with pgraf using waiting lock
+	static bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Swap, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
 	hret=CxbxrImpl_Swap(Flags);
 #endif
 	if (XB_TRMP(D3DDevice_SetBackBufferScale))
