@@ -9954,9 +9954,11 @@ void CxbxUpdateHostTextures()
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		stageProgram = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
 	}
-	DWORD stageMode[4];
+	DWORD stageMode[5];
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++)
 		stageMode[stage] = (stageProgram >> (stage * 5)) & 0x1f;
+	//this is to generalized the checking code for bumpmap texture which will index the stage mode of next stage.
+	stageMode[4] = NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE;
 	// Set the host texture for each stage
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
@@ -9977,7 +9979,7 @@ void CxbxUpdateHostTextures()
 		extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
 #if 1
 		//if (stage < 3)
-		if(pXboxBaseTexture!=nullptr){
+		if(pXboxBaseTexture!=nullptr && stageMode[stage]!=NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE){
 			xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxBaseTexture);
 			//bumpmap is not so frequently used, let's check it first.
 			if (EmuXBFormatIsBumpMap(X_Format)){
@@ -10062,7 +10064,7 @@ void CxbxUpdateHostTextures()
 			}
 		}
 #endif
-		if (pXboxBaseTexture != xbox::zeroptr) {
+		if (pXboxBaseTexture != xbox::zeroptr && stageMode[stage] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE) {
 			DWORD XboxResourceType = GetXboxCommonResourceType(pXboxBaseTexture);
 			switch (XboxResourceType) {
 			case X_D3DCOMMON_TYPE_TEXTURE:
