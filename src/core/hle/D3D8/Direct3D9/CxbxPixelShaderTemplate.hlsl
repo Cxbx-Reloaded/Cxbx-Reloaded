@@ -90,6 +90,7 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
 #endif
 
 // DEFINES INSERTION MARKER
+
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
 	#define C0 c0_[stage] // concatenate stage to form c0_0 .. c0_7
@@ -166,7 +167,7 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-	// XBOX SHADER PROGRAM MARKER
+
 float m21d(const float input)
 {
 	int tmp = (int)(input * 255); // Convert float 0..1 into byte 0..255
@@ -192,14 +193,6 @@ float m21(const float input)
 	} // 0 stays 0, 127 stays 127
 
 	return (float)tmp / 127; // -128 scales to -1.007874016, 0 scales to 0.0, 127 scales to 1.0
-}
-
-float UV2ARGB(float input)
-{
-	 input*= 255.0;
-     if (input >= 128.0) input-=256.0;// 128.0 lowers to -128.0, 255.0 lowers to -1.0
-     input/=127.0;
-     return input;
 }
 
 float hls(float input) // 0..65535 range
@@ -279,9 +272,8 @@ float4 Sample6F(int ts, float3 s)
 float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 src)
 {
 	// Convert the input bump map (source texture) value range into two's complement signed values (from (0, +1) to (-1, +1), using s_bx2):
-	const float4 BumpMap = UV2ARGB(src);//m21(src);//;//s_bx2(src); // Note : medievil discovered s_bias improved JSRF, PatrickvL changed it into s_bx2 thanks to http://www.rastertek.com/dx11tut20.html
-	// TODO : The above should be removed when we use UV bumpmap format and texture sampler do output pixel with signed value ranges -1.0~1.0.
-    //        But unfortunately there seems d3d9 texture sampler always output positive pixel color values. So we're foring all UV format to be converted to ARGB first and do the conversion here.
+    const float4 BumpMap = src;//    m21(src); //s_bx2(src); // Note : medieval discovered s_bias improved JSRF, PatrickvL changed it into s_bx2 thanks to http://www.rastertek.com/dx11tut20.html
+	// TODO : The above should be removed, and replaced by some form of COLORSIGN handling, which may not be possible inside this pixel shader, because filtering-during-sampling would cause artifacts.
 
 	const float u = TexCoord.x + (BumpEnvMat.x * BumpMap.r) + (BumpEnvMat.z * BumpMap.g); // Or : TexCoord.x + dot(BumpEnvMat.xz, BumpMap.rg)
 	const float v = TexCoord.y + (BumpEnvMat.y * BumpMap.r) + (BumpEnvMat.w * BumpMap.g); // Or : TexCoord.y + dot(BumpEnvMat.yw, BumpMap.rg)
@@ -313,7 +305,7 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 #define Normal3(ts)   float3(dot_[ts-2], dot_[ts-1], dot_[ts])              // Two preceding and current stage dot result.
 #define Eye           float3(iT[1].w,    iT[2].w,    iT[3].w)               // 4th (q) component of input texture coordinates 1, 2 and 3. Only used by texm3x3vspec/PS_TEXTUREMODES_DOT_RFLCT_SPEC, always at stage 3. TODO : Map iT[1/2/3] through PS_INPUTTEXTURE_[]?
 #define Reflect(n, e) 2 * (dot(n, e) / dot(n, n)) * n - e                   // https://documentation.help/directx8_c/texm3x3vspec.htm
-#define BumpEnv(ts)   s.xyz=DoBumpEnv(iT[ts], BEM[ts], src(ts));            v = Sample2D(ts, s); t[ts] = v                  // Will be input for Sample2D.
+#define BumpEnv(ts)   s.xyz=DoBumpEnv(iT[ts], BEM[ts], src(ts));  v = Sample2D(ts, s); t[ts] = v      // Will be input for Sample2D.
 #define LSO(ts)       (LUM[ts].x * src(ts).b) + LUM[ts].y                   // Uses PSH_XBOX_CONSTANT_LUM .x = D3DTSS_BUMPENVLSCALE .y = D3DTSS_BUMPENVLOFFSET
 
 // Implementations for all possible texture modes, with stage as argument (prefixed with valid stages and corresponding pixel shader 1.3 assembly texture addressing instructions)
@@ -324,7 +316,7 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 /*0123 tex          */ #define PS_TEXTUREMODES_CUBEMAP(ts)                                            s = iT[ts].xyz;      v = Sample6F(ts, s); t[ts] = v // TODO : Test
 /*0123 texcoord     */ #define PS_TEXTUREMODES_PASSTHRU(ts)                                                                v = Passthru(ts);    t[ts] = v // Seems to work
 /*0123 texkill      */ #define PS_TEXTUREMODES_CLIPPLANE(ts)            PS_COMPAREMODE_ ## ts(iT[ts]);                     v = black;           t[ts] = v // Seems to work (setting black to texture register, in case it gets read)
-/*-123 texbem       */ #define PS_TEXTUREMODES_BUMPENVMAP(ts)                                         BumpEnv(ts);                                        // Seems to work
+/*-123 texbem       */ #define PS_TEXTUREMODES_BUMPENVMAP(ts)                                         s = BumpEnv(ts);     v = Sample2D(ts, s); t[ts] = v // Seems to work
 /*-123 texbeml      */ #define PS_TEXTUREMODES_BUMPENVMAP_LUM(ts)       PS_TEXTUREMODES_BUMPENVMAP(ts);                    v.rgb *= LSO(ts);    t[ts] = v // TODO : Test
 /*--23 texbrdf      */ #define PS_TEXTUREMODES_BRDF(ts)                                               s = Brdf(ts);        v = Sample3D(ts, s); t[ts] = v // TODO : Test (t[ts-2] is 16 bit eyePhi,eyeSigma; t[ts-1] is lightPhi,lightSigma)
 /*--23 texm3x2tex   */ #define PS_TEXTUREMODES_DOT_ST(ts)               CalcDot(ts); n = Normal2(ts); s = n;               v = Sample2D(ts, s); t[ts] = v // TODO : Test
@@ -377,10 +369,7 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
 	fog = float4(c_fog.rgb, xIn.iFog); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
 
-	// Xbox shader program
-)DELIMITER",  /* This terminates the 2nd raw string within the 16380 single-byte characters limit. // */
-// Third and last raw string, the footer :
-R"DELIMITER(
+	// XBOX SHADER PROGRAM MARKER
 
 	// Copy r0.rgba to output
 	PS_OUTPUT xOut;

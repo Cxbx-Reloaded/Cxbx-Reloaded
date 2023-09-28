@@ -1008,6 +1008,7 @@ void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource)
 
 typedef struct _resource_info_t {
 	ComPtr<IDirect3DResource> pHostResource;
+	D3DFORMAT PCFormat = D3DFMT_UNKNOWN;
 	DWORD dwXboxResourceType = 0;
 	void* pXboxData = xbox::zeroptr;
 	size_t szXboxDataSize = 0;
@@ -1352,6 +1353,16 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 	resourceInfo.forceRehash = false;
+}
+
+void SetHostResourcePCFormat(xbox::X_D3DResource* pXboxResource, D3DFORMAT PCFormat, int iTextureStage = -1, DWORD dwSize = 0)
+{
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
+
+	// Increments reference count
+	resourceInfo.PCFormat = PCFormat;
 }
 
 IDirect3DSurface *GetHostSurface(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
@@ -7219,6 +7230,8 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 			}
 		}
+		//store the PCFormat of created host resource for the ease of bumpmap/none bumpmap signed/unsigned format conversion.
+		SetHostResourcePCFormat(pResource, PCFormat);
 
 		// Update D3DPool accordingly to the active D3DUsage flags
 		if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
@@ -9936,15 +9949,21 @@ void CxbxUpdateHostTextures()
 		// check the xbox format is an UV format or not, if UV format, then check if we're bumpenv stage or not. if an UV format is set in none bumpenv stage, recreate the host texture in ARGB
 		extern bool g_bForceHostARGBConversion;
 		extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
-#if 0
-		if (stage < 3)
+#if 1
+		//if (stage < 3)
 		if(pXboxBaseTexture!=nullptr){
 			xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxBaseTexture);
 			//bumpmap is not so frequently used, let's check it first.
 			if (EmuXBFormatIsBumpMap(X_Format)){
 				//if a bumpmap is used in none bumpenv stage, let's convert it to ARGB
 				
-				if (   (stageMode[stage+1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP))
+				//if (   (stageMode[stage+1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP)
+				//	&& (stageMode[stage + 1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP))
+				DWORD colorSign = NV2ATextureStates.Get(stage, xbox::X_D3DTSS_COLORSIGN);
+				if ( colorSign== 0
+					//&& (stageMode[stage ] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE)
+					&& (stageMode[stage + 1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE)
+					&&  stageMode[stage + 1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP)
 					//&& (stageMode[stage+1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE))
 				{
 					//get xbox format and related PC format
@@ -9959,6 +9978,7 @@ void CxbxUpdateHostTextures()
 					if (it != ResourceCache.end()) {
 						if (it->second.pHostResource!=nullptr) {
 							//todo: in CreateHostResource, we could store the PCFormat of the created host resource in the resource cache by creating a new member in _resource_info_t, this would speed up the speed here.
+							/*
 							IDirect3DTexture* pCurrnetStageHostTexture = (IDirect3DTexture*)it->second.pHostResource.Get();
 							IDirect3DSurface* pCurrentStageHostSurface;
 							HRESULT hRet = pCurrnetStageHostTexture->GetSurfaceLevel(0, &pCurrentStageHostSurface);
@@ -9966,21 +9986,23 @@ void CxbxUpdateHostTextures()
 							hRet = pCurrentStageHostSurface->GetDesc(&surfaceDesc);
 							//if the host resource isn't converted to D3DFMT_A8R8G8B8, then we have to disgard the old host resource force the ARGB conversion
 							if (surfaceDesc.Format != D3DFMT_A8R8G8B8) {
-								FreeHostResource(key);
+							*/
+							if(it->second.PCFormat!= D3DFMT_A8R8G8B8){
+								//FreeHostResource(key);
 								//erase the host resource empty key
-								//ResourceCache.erase(key);
+								ResourceCache.erase(key);
 							}
 						}
 						else {
 							//erase the host resource empty key
-							ResourceCache.erase(key);
+							;//ResourceCache.erase(key);
 						}
 						EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
 					}
 					if (EmuXBFormatCanBeConvertedToARGB(X_Format))
 							g_bForceHostARGBConversion = true;
 				}
-//#if 0
+#if 1           //we have to force the texture format to be set to bumpenv format
 				else {
 					//get xbox format and related PC format
 					D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(X_Format);
@@ -9994,6 +10016,7 @@ void CxbxUpdateHostTextures()
 					if (it != ResourceCache.end()) {
 						if (it->second.pHostResource != nullptr) {
 							//todo: in CreateHostResource, we could store the PCFormat of the created host resource in the resource cache by creating a new member in _resource_info_t, this would speed up the speed here.
+							/*
 							IDirect3DTexture* pCurrnetStageHostTexture = (IDirect3DTexture*)it->second.pHostResource.Get();
 							IDirect3DSurface* pCurrentStageHostSurface;
 							HRESULT hRet = pCurrnetStageHostTexture->GetSurfaceLevel(0, &pCurrentStageHostSurface);
@@ -10001,49 +10024,15 @@ void CxbxUpdateHostTextures()
 							hRet = pCurrentStageHostSurface->GetDesc(&surfaceDesc);
 							//if the host resource was converted to D3DFMT_A8R8G8B8, then we have to disgard the old host resource and force recreate bumpmap
 							if (surfaceDesc.Format == D3DFMT_A8R8G8B8) {
-								//if previous host texture was a render target, then we need to copy the contents from previous texture to xbox resource before we erase the content.
-								if (surfaceDesc.Usage & D3DUSAGE_RENDERTARGET) {
-									FreeHostResource(key);
-									DWORD XboxResourceType = GetXboxCommonResourceType(pXboxBaseTexture);
-									switch (XboxResourceType) {
-									case X_D3DCOMMON_TYPE_TEXTURE:
-										pHostBaseTexture = GetHostBaseTexture(pXboxBaseTexture, /*D3DUsage=*/0, stage);
-										break;
-									case X_D3DCOMMON_TYPE_SURFACE:
-										// Surfaces can be set in the texture stages, instead of textures
-										LOG_TEST_CASE("ActiveTexture set to a surface (non-texture) resource"); // Test cases : Burnout, Outrun 2006
-										// We must wrap the surface before using it as a texture
-										pHostBaseTexture = CxbxConvertXboxSurfaceToHostTexture(pXboxBaseTexture);
-										// Release this texture (after SetTexture) when we succeeded in creating it :
-										bNeedRelease = pHostBaseTexture != nullptr;
-										break;
-									default:
-										LOG_TEST_CASE("ActiveTexture set to an unhandled resource type!");
-										break;
-									}
-									IDirect3DSurface* pNewStageHostSurface;
-									hRet = ((IDirect3DTexture*)pHostBaseTexture)->GetSurfaceLevel(0, &pNewStageHostSurface);
-									D3DSURFACE_DESC NewSurfaceDesc;
-									hRet = pNewStageHostSurface->GetDesc(&NewSurfaceDesc);
-									if (hRet == S_OK) {
-										//pNewStageHostSurface->FromSurface();
-										hRet = D3DXLoadSurfaceFromSurface(pNewStageHostSurface, nullptr, NULL, pCurrentStageHostSurface, nullptr, NULL, D3DTEXF_POINT, 0);
-										//hRet = g_pD3DDevice->StretchRect(pCurrentStageHostSurface, NULL, pNewStageHostSurface, NULL, D3DTEXF_NONE);
-									}
-									pCurrentStageHostSurface->Release();
-									pCurrnetStageHostTexture->Release();
-								}
-								if (bNeedRelease) {
-									pHostBaseTexture->Release();
-									bNeedRelease = false;
-								}
-								
+							*/
+							if (it->second.PCFormat == D3DFMT_A8R8G8B8){
+								ResourceCache.erase(key);
 							}
 						}
 						EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
 					}
 				}
-//#endif
+#endif
 			}
 		}
 #endif
