@@ -224,9 +224,9 @@ void reset_IVB_DECL_override(void)
 
 static const int D3D_inline_attribute_size = 4 * sizeof(float); // Each inline vertex attribute is four floats wide
 static const int D3D_inline_vertex_stride = X_VSH_MAX_ATTRIBUTES * D3D_inline_attribute_size; // The IVB reserves room for all 16 attributes per vertex
-xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store the vertex buffer/stride info used by each attributes after vertex buffer grouping
-xbox::X_D3DVertexBuffer NV2A_Xbox_VertexBuffer[X_VSH_MAX_STREAMS] = { 0 };
-unsigned D3D_Xbox_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
+xbox::X_STREAMINPUT NV2A_StreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Store the vertex buffer/stride info used by each attributes after vertex buffer grouping
+xbox::X_D3DVertexBuffer NV2A_VertexBuffer[X_VSH_MAX_STREAMS] = { 0 };
+unsigned NV2A_StreamCount = 0;// Store the stream count used by each attributes after vertex buffer grouping, strating from 1
 // textures to store the conversion info from NV2A KelvinPrimitive.SetTexture[4]
 xbox::X_D3DSurface NV2A_texture_stage_texture[xbox::X_D3DTS_STAGECOUNT];
 // pointers to textures which store the converted texture from NV2A KelvinPrimitive.SetTexture[4]
@@ -536,13 +536,17 @@ FORCEINLINE DWORD MinFilter(
 
 			}
 		}
+
+		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 		//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
         //since the kelvin contents all info which already includes wrap and texcoordindex, here we set them to default and update the warp0~3 accroding to what we have here.
+		/*  // texgen, texcoordinidex are update to NV2ATextureStates in LazySetTextureTransforms(), not here.
 		extern unsigned int kelvin_to_xbox_map_texgen(uint32_t parameter);
 		DWORD texgen = kelvin_to_xbox_map_texgen(pg->KelvinPrimitive.SetTexgen[stage].S);
 		texgen |= stage;
 		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texgen);
-		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
+		*/
+		
 	}
 	//reset texture stage dirty flag
 	//NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
@@ -1598,6 +1602,7 @@ D3DMATRIX g_NV2A_transform_ViewportTransform;
 D3DMATRIX g_NV2A_transform_ProjectionViewportTransform;
 D3DMATRIX g_NV2A_DirectModelView_InverseWorldViewTransposed;
 D3DMATRIX g_NV2A_DirectModelView_View;
+D3DMATRIX g_NV2A_DirectModelView_InverseView;
 D3DMATRIX g_NV2A_DirectModelView_World;
 D3DMATRIX g_NV2A_DirectModelView_Projection;
 
@@ -1711,11 +1716,17 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 	matUnit._33 = 1.0;
 	matUnit._44 = 1.0;
 	// TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
-	g_xbox_DirectModelView_View = matUnit;
-
+	g_NV2A_DirectModelView_View = matUnit;
+	// use X_D3DTS_VIEW matrix from xbox side instead of unit matrix.
+	//CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE::X_D3DTS_VIEW, &g_NV2A_DirectModelView_View);
+	//calculate inverse matrix of X_D3DTS_VIEW
+	D3DXMatrixInverse((D3DXMATRIX*)&g_NV2A_DirectModelView_InverseView, NULL, (D3DXMATRIX*)&g_NV2A_DirectModelView_View);
 	D3DXMatrixTranspose((D3DXMATRIX*)&g_NV2A_transform_ModelView, (D3DXMATRIX*)&pg->KelvinPrimitive.SetModelViewMatrix[0][0]);
 	D3DXMatrixTranspose((D3DXMATRIX*)&g_NV2A_transform_Composite, (D3DXMATRIX*)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
 	D3DXMatrixInverse((D3DXMATRIX*)&g_NV2A_transform_InverseModelView, NULL, (D3DXMATRIX*)&g_NV2A_transform_ModelView);
+	//calculate world matrix
+	D3DXMatrixMultiply((D3DXMATRIX*)&g_NV2A_DirectModelView_World, (D3DXMATRIX*)&g_NV2A_transform_ModelView, (D3DXMATRIX*)&g_NV2A_DirectModelView_InverseView);
+
 #if 1 //pgraph always used modelview matrix, only difference is 
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_DIRECT_MODELVIEW) != 0) {
 		// transpose KelvinPrimitive transform back to xbox d3d transform
@@ -1739,7 +1750,7 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 
 	// compose xbox side matrix for use in d3d vertex shader update.
 	// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FVF mode vertex shader constant update routine
-	D3DXMatrixTranspose((D3DXMATRIX*)&g_NV2A_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_xbox_transform_InverseModelView);
+	D3DXMatrixTranspose((D3DXMATRIX*)&g_NV2A_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_NV2A_transform_InverseModelView);
 	// update g_xbox_DirectModelView_Projection from g_xbox_transform_PrjectionViewportTransform
 	// set g_NV2A_transform_ViewportTransform
 	CxbxrImpl_GetViewportTransform(d);
@@ -1749,7 +1760,8 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 	D3DXMatrixInverse((D3DXMATRIX*)&matInverseViewportTransform, NULL, (D3DXMATRIX*)&g_NV2A_transform_ViewportTransform);
 
 	D3DXMatrixMultiply((D3DXMATRIX*)&g_NV2A_DirectModelView_Projection, (D3DXMATRIX*)&g_NV2A_transform_ProjectionViewportTransform, (D3DXMATRIX*)&matInverseViewportTransform);
-
+	// xbox GetTransform() returns the same matrix content as we calculated above.
+	//CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE::X_D3DTS_PROJECTION, &g_NV2A_DirectModelView_Projection);
 	// clear pgraph transform matrix dirty flags.
 	for (int i = 0; i < 4; i++) {
 		// update InverseModelView matrix if only ModelView matrix is updated
@@ -2101,6 +2113,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			// compose texCoordIndex with stage mapping index and texgen, set it to defaul when we compose vertex attr from kelvin.
 			texCoordIndex = (texgen&0xFFFF0000)|stage;
 			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texCoordIndex);
+			//NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 
 			// todo: shall we compose the FVF pVertexShader->Dimensionality here with the inCount?
 			// inCount = (pVertexShader->Dimensionality 	>> (8 * index)) & 0xff;
@@ -2763,20 +2776,14 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE+i, (colorMaterial>>(2*(7-i)))&0x03);
 			}
 		}
-
 		SetSceneAmbientAndMaterialEmission(d);
-
-
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
 		//set lights
-
 		int lightNum;
-
 		D3DVECTOR pos;
 		D3DVECTOR dir;
 		D3DVECTOR hv, EyeDirection;
 		EyeDirection = { 0.0,0.0,-1.0 };
-
 		for (lightNum = 0; lightNum < 8; lightNum++) {
 			bool bEnable;
 			DWORD lightType = (lightEnableMask >> (lightNum << 1)) & 0x03;
@@ -2825,24 +2832,17 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
 				/*
 				Explut(pLight->Light8.Falloff, &pLight->Falloff_L, &pLight->Falloff_M);
-    
             pLight->Falloff_N = 1.0f + pLight->Falloff_L - pLight->Falloff_M;
-                
             // Attenuate the spot direction to get falloff to work:
-    
             FLOAT theta2 = Cos(0.5f * pLight->Light8.Theta);
             FLOAT phi2 = Cos(0.5f * pLight->Light8.Phi);
-    
             // Handle case in which theta gets close to or overtakes phi, since 
             // hardware can't:
-    
             if (phi2 >= theta2)     // Outer angle <= inner angle, oops
             {        
                 // Make outer angle cosine slightly smaller:
-    
                 phi2 = 0.999f * theta2;  
             }
-    
             pLight->Scale = nvInv(theta2 - phi2);
             pLight->W = -phi2 * pLight->Scale;
 */
@@ -2863,9 +2863,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				NV2A_Light8[lightNum].Theta = 2.0f*acos(theta2);
 				NV2A_Light8[lightNum].Phi = 2.0f*acos(phi2);
 				bEnable = true;
-
 				break;
-
 			}
 			// Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
 			// hack, we use colors in kelvin directly since these colors are composed with D3DRS_AMBIENT/SetMaterial/SetBackMaterial/ and the color of each light.
@@ -3074,16 +3072,16 @@ void D3D_draw_state_update(NV2AState* d)
 	
 		// Using our sorted attibutes, derive the g_NV2AVertexAttributeFormat slot values :
 		DWORD current_stream_index = 0;
-		D3D_Xbox_StreamCount = 0;
+		NV2A_StreamCount = 0;
 		uint32_t group_offset = SortedAttributes[0].offset;
 		uint32_t group_stride = SortedAttributes[0].stride;
 		//store the vertex buffer address of stream[current_stream_index]
 		if (SortedAttributes[0].size_and_type != xbox::X_D3DVSDT_NONE) {
-			((xbox::X_D3DResource*)(&D3D_Xbox_StreamSource[current_stream_index].VertexBuffer))->Data = group_offset;//(xbox::X_D3DVertexBuffer  *)
-			NV2A_Xbox_VertexBuffer[current_stream_index].Data= group_offset;
-			D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = &NV2A_Xbox_VertexBuffer[current_stream_index];
-			D3D_Xbox_StreamSource[current_stream_index].Stride = group_stride;
-			D3D_Xbox_StreamCount++;
+			((xbox::X_D3DResource*)(&NV2A_StreamSource[current_stream_index].VertexBuffer))->Data = group_offset;//(xbox::X_D3DVertexBuffer  *)
+			NV2A_VertexBuffer[current_stream_index].Data= group_offset;
+			NV2A_StreamSource[current_stream_index].VertexBuffer = &NV2A_VertexBuffer[current_stream_index];
+			NV2A_StreamSource[current_stream_index].Stride = group_stride;
+			NV2A_StreamCount++;
 		}
 		for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // identical to NV2A_VERTEXSHADER_ATTRIBUTES
 			DWORD current_delta = 0;
@@ -3099,10 +3097,10 @@ void D3D_draw_state_update(NV2AState* d)
 					group_offset = SortedAttributes[i].offset;
 					group_stride = SortedAttributes[i].stride;
 					//store the vertex buffer address of stream[current_stream_index]
-					NV2A_Xbox_VertexBuffer[current_stream_index].Data = group_offset;
-					D3D_Xbox_StreamSource[current_stream_index].VertexBuffer = &NV2A_Xbox_VertexBuffer[current_stream_index];
-					D3D_Xbox_StreamSource[current_stream_index].Stride = group_stride;
-					D3D_Xbox_StreamCount++;
+					NV2A_VertexBuffer[current_stream_index].Data = group_offset;
+					NV2A_StreamSource[current_stream_index].VertexBuffer = &NV2A_VertexBuffer[current_stream_index];
+					NV2A_StreamSource[current_stream_index].Stride = group_stride;
+					NV2A_StreamCount++;
 				}
 				else { // this attribute starts inside the current vertex stride. it's using the same vertex buffer.
 					assert(group_offset <= SortedAttributes[i].offset); // Verify all attributes in the same group lie next to the group starting offset
@@ -3209,7 +3207,7 @@ void D3D_draw_arrays(NV2AState *d)
 
 	//LOG_INCOMPLETE(); // TODO : Implement D3D_draw_arrays
 
-	if (D3D_Xbox_StreamCount == 0)
+	if (NV2A_StreamCount == 0)
 		return;
 
 	//DWORD vertex data array, 
@@ -3230,14 +3228,14 @@ void D3D_draw_arrays(NV2AState *d)
 	
 	extern void CxbxDrawPrimitive(CxbxDrawContext & DrawContext);
 
-	if (D3D_Xbox_StreamCount == 1) {
+	if (NV2A_StreamCount == 1) {
 		for (unsigned array_index = 0; array_index < pg->draw_arrays_length; array_index++) {
 			//todo: make sure the stream input would be properly set when D3D_Xbox_StreamCount > 1
 			// draw arrays
 
 			//the address in pg->KelvinPrimitive.SetVertexDataArrayOffset[] are offsets from VRAM base 0x80000000, we have to add the base address to get full address.
 			//this is only assuming there was only one vertex buffer and the SetVertexDataArrayOffset[0] is the starting address of the vertex buffer. this code should be revised once we finish the vertex buffer lookup code in D3D_draw_state_update()
-			DrawContext.pXboxVertexStreamZeroData = (PVOID)(D3D_Xbox_StreamSource[0].VertexBuffer->Data | CONTIGUOUS_MEMORY_BASE);
+			DrawContext.pXboxVertexStreamZeroData = (PVOID)(NV2A_StreamSource[0].VertexBuffer->Data | CONTIGUOUS_MEMORY_BASE);
 			DrawContext.pXboxIndexData = nullptr;
 			DrawContext.dwVertexCount = pg->gl_draw_arrays_count[array_index];
 			DrawContext.dwStartVertex = pg->gl_draw_arrays_start[array_index];
@@ -3363,14 +3361,14 @@ void D3D_draw_inline_elements(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 
-	if (D3D_Xbox_StreamCount == 0)
+	if (NV2A_StreamCount == 0)
 		return;
 
 	CxbxDrawContext DrawContext = {};
 	DrawContext.XboxPrimitiveType = (xbox::X_D3DPRIMITIVETYPE)pg->primitive_mode;
 	DrawContext.uiXboxVertexStreamZeroStride = (pg->KelvinPrimitive.SetVertexDataArrayFormat[0] >> 8); // NV097_SET_VERTEX_DATA_ARRAY_FORMAT_STRIDE
 	//set pXboxVertexStreamZeroData=0 because we're not using DrawIndexedPrimitiveUp. let CxbxDrawIndexed() convert the stream/vertex buffer.
-	DrawContext.pXboxVertexStreamZeroData = (PVOID)(D3D_Xbox_StreamSource[0].VertexBuffer->Data | CONTIGUOUS_MEMORY_BASE);//(PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] | CONTIGUOUS_MEMORY_BASE);//0
+	DrawContext.pXboxVertexStreamZeroData = (PVOID)(NV2A_StreamSource[0].VertexBuffer->Data | CONTIGUOUS_MEMORY_BASE);//(PVOID)(pg->KelvinPrimitive.SetVertexDataArrayOffset[0] | CONTIGUOUS_MEMORY_BASE);//0
 	DrawContext.dwVertexCount = pg->inline_elements_length;
 	DrawContext.dwStartVertex = 0;
 	DrawContext.pXboxIndexData = d->pgraph.inline_elements;

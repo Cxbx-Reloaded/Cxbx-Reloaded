@@ -7880,6 +7880,7 @@ D3DMATRIX g_xbox_transform_ModelView;
 D3DMATRIX g_xbox_transform_InverseModelView;
 D3DMATRIX g_xbox_transform_Composite;
 D3DMATRIX g_xbox_DirectModelView_View;
+D3DMATRIX g_xbox_DirectModelView_InverseView;
 D3DMATRIX g_xbox_DirectModelView_World;
 D3DMATRIX g_xbox_DirectModelView_Projection;
 D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;
@@ -8007,12 +8008,16 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	// Transpose row major to column major for HLSL
 	// use NV2ATextureStates when we're in pgraph handling
 	if (is_pgraph_using_NV2A_Kelvin()) {
+	//if(false){
 		//NV2A always uses modelView matrix, and the matrix in Kelvin was transposed already.
 		extern D3DMATRIX g_NV2A_DirectModelView_Projection;
 		extern D3DMATRIX g_NV2A_DirectModelView_View;
+		// pgraph calculation of projection matrix is very close to the matrix set with D3DDevice_SetTransform()
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_NV2A_DirectModelView_Projection);
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_NV2A_DirectModelView_View);
-
+		// todo:we can't calculate the View matrix via NV2A content. We can set it as unity matrix and set world martix the same as modelView matrix. but there is no world matrix in ffShaderState.Transforms.
+		// test result showed using identity matrix or the view matrix set with D3DDevice_SetTransform() output the same rendering. testcsae: BumpEarth sample.
+		// D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_NV2A_DirectModelView_View);
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
 		for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
 			// FIXME! stick with g_xbox_transform_ModelView[0] and g_xbox_DirectModelView_InverseWorldViewTransposed[0] when we're not in skinning mode. 
 			// when RenderState[X_D3DRS_VERTEXBLEND]==0, we're not in skinning mode, use modelview matrix 0 only. else use corresponded matrix
@@ -8022,14 +8027,26 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			ffShaderState.Transforms.WorldView[i] = *pgraph_get_ModelViewMatrix(count);
 			// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed);
 			// xbox InverseWorldView transform == Kelvin InverseModelView transform
-			ffShaderState.Transforms.WorldViewInverseTranspose[i] = *pgraph_get_InverseModelViewMatrix(count);
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i] , (D3DXMATRIX*)pgraph_get_InverseModelViewMatrix(count));
+
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
+
 		}
 
 		for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
 			//texture transform matrix in Kelvin was transposed already.
 			//todo: the texture transform matrix in Kelvin was altered per different in/out counts and whether there are projected output or not. here we simply copy the hardware content to ffShaderState.Transforms.Texture
 			// later we should check the fixed function vertex shader codes to see how it uses these matrix.
-			memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
+			// test case: BumpEarth sample
+			// using pgraph_get_TextureTransformMatrix(i) without transpose or d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i] with transpose seems to have the same result.
+			//memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
+			
+			//D3DXMATRIX textureTransform;
+			//extern void CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, D3DMATRIX * pMatrix);
+			//CxbxrImpl_GetTransform((xbox::X_D3DTRANSFORMSTATETYPE)(xbox::X_D3DTRANSFORMSTATETYPE::X_D3DTS_TEXTURE0 + i),&textureTransform);
+			//textureTransform = d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i];
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)& d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
 			//the texture transform matrix in kelvin is not transposed, but it's relocated depending on the input and output coordinate counts.
 			//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)pgraph_get_TextureTransformMatrix(i));
 		}
@@ -8037,6 +8054,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	else {
 		// check if we're in DirectModelView transform mode.
 		if (is_pgraph_DirectModelView()) {
+		//if(false){
 			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_xbox_DirectModelView_Projection);
 			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
 
@@ -8057,6 +8075,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 				//todo: the texture transform matrix in Kelvin was altered per different in/out counts and whether there are projected output or not. here we simply copy the hardware content to ffShaderState.Transforms.Texture
 				// later we should check the fixed function vertex shader codes to see how it uses these matrix.
 				memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
+				D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
 				//the texture transform matrix in kelvin is not transposed, but it's relocated depending on the input and output coordinate counts.
 				//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)pgraph_get_TextureTransformMatrix(i));
 			}
@@ -8592,10 +8611,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
     //CxbxrImpl_SetTransform(State, pMatrix);
 	
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)State;
-	PBTokenArray[3] = (DWORD)pMatrix;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetTransform, 2);//argCount, not necessary, default to 14
+	
+	//
+	// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+	// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform;
+	// always copy the whole buffer
+	pPush_local[2] = (DWORD)State;
+	//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+	pPush_local[3] = (DWORD)&pPush_local[4];
+	// store the transform matrix in pushbuffer so we can leave it along.
+	// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+	*(D3DMATRIX * )&pPush_local[4]=*pMatrix;
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x20;
 }
 
 // ******************************************************************
