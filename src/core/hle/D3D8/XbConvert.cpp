@@ -200,6 +200,20 @@ void __G16B16ToARGBRow_C(const uint8_t* src_g16b16, uint8_t* dst_argb, int width
 	}
 }
 
+void __V16U16ToXLVURow_C(const uint8_t* src_V16U16, uint8_t* dst_XLVU, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t U = src_V16U16[1]; //take the high byte of U
+		uint8_t V = src_V16U16[3]; //take the high byte of V
+		dst_XLVU[0] = U;
+		dst_XLVU[1] = V;
+		dst_XLVU[2] = 0;
+		dst_XLVU[3] = 0;
+		dst_XLVU += 4;
+		src_V16U16 += 4; //V16U16 takes 4 bytes per pixel
+	}
+}
+
 void ______A8ToARGBRow_C(const uint8_t* src_a8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
@@ -222,9 +236,24 @@ void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width
 		dst_argb[0] = (b << 3) | (b >> 2);
 		dst_argb[1] = (g << 3) | (g >> 2);
 		dst_argb[2] = (r << 2) | (r >> 4);
-		dst_argb[3] = 255u;
+		dst_argb[3] = 255u; // alpha component set to 1.0f normalized
 		dst_argb += 4;
 		src_r6g5b5 += 2;
+	}
+}
+
+void __L6V5U5ToX8L8V8U8Row_C(const uint8_t* src_L6V5U5, uint8_t* dst_XLVU, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t U = src_L6V5U5[0] & 0x1f;
+		uint8_t V = (src_L6V5U5[0] >> 5) | ((src_L6V5U5[1] & 0x03) << 3);
+		uint8_t L = src_L6V5U5[1] >> 2;
+		dst_XLVU[0] = (U << 3);// | (U >> 2);
+		dst_XLVU[1] = (V << 3);// | (V >> 2);
+		dst_XLVU[2] = (L << 2);// | (L >> 4);
+		dst_XLVU[3] = 0u;// X component set to 0.0f normalized
+		dst_XLVU += 4;
+		src_L6V5U5 += 2;
 	}
 }
 
@@ -855,7 +884,7 @@ static const FormatToARGBRow ComponentConverters[] = {
 	______P8ToARGBRow_C, // ______P8
 	____YUY2ToARGBRow_C, // ____YUY2
 	____UYVYToARGBRow_C, // ____UYVY
-	__G16B16ToARGBRow_C, // ____G16B16, // NOTE : A takes G, R takes B
+	__G16B16ToARGBRow_C, // __G16B16, // NOTE : A takes G, R takes B
 };
 
 enum _FormatStorage {
@@ -1733,6 +1762,55 @@ bool ConvertD3DTextureToARGBBuffer(
 		for (int y = 0; y < SrcHeight; y++) {
 			*(int*)pDstRow = AdditionalArgument; // Dirty hack, to avoid an extra parameter to all conversion callbacks
 			ConvertRowToARGB(pSrcRow, pDstRow, SrcWidth);
+			pSrcRow += SrcRowPitch;
+			pDstRow += DstRowPitch;
+		}
+
+		pSrcSlice += SrcSlicePitch;
+		pDstSlice += DstSlicePitch;
+	}
+
+	if (unswizleBuffer)
+		free(unswizleBuffer);
+
+	return true;
+}
+
+bool ConvertL6V5U5ToX8L8V8U8Buffer(
+	xbox::X_D3DFORMAT X_Format,
+	uint8_t* pSrc,
+	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
+	uint8_t* pDst, int DstRowPitch, int DstSlicePitch,
+	unsigned int uiDepth,
+	bool bIsV16U16
+)
+{
+	uint8_t* unswizleBuffer = nullptr;
+	if (EmuXBFormatIsSwizzled(X_Format)) {
+		unswizleBuffer = (uint8_t*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
+		// First we need to unswizzle the texture data
+		EmuUnswizzleBox(
+			pSrc, SrcWidth, SrcHeight, uiDepth,
+			EmuXBFormatBytesPerPixel(X_Format),
+			// Note : use src pitch on dest, because this is an intermediate step :
+			unswizleBuffer, SrcRowPitch, SrcSlicePitch
+		);
+		// Convert colors from the unswizzled buffer
+		pSrc = unswizleBuffer;
+	}
+
+	int AdditionalArgument = DstRowPitch;
+
+	uint8_t* pSrcSlice = pSrc;
+	uint8_t* pDstSlice = pDst;
+	for (unsigned int z = 0; z < uiDepth; z++) {
+		uint8_t* pSrcRow = pSrcSlice;
+		uint8_t* pDstRow = pDstSlice;
+		for (int y = 0; y < SrcHeight; y++) {
+			if(bIsV16U16)
+				__V16U16ToXLVURow_C(pSrcRow, pDstRow, SrcWidth);
+			else
+			    __L6V5U5ToX8L8V8U8Row_C(pSrcRow, pDstRow, SrcWidth);
 			pSrcRow += SrcRowPitch;
 			pDstRow += DstRowPitch;
 		}

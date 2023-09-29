@@ -7617,7 +7617,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				if (face == D3DCUBEMAP_FACE_POSITIVE_X && mipmap_level >= dwMipMapLevels - 1) {
 					actualSlicePitch = ROUND_UP(((UINT)pSrc + mipSlicePitch) - (UINT)VirtualAddr, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
 				}
-
+				
 				// Copy texture data to the host resource
 				if (bConvertToARGB) {
 					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to D3DFMT_A8R8G8B8");
@@ -7650,8 +7650,27 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 							CxbxrAbort("Unhandled conversion!");
 						}
 					}
-				}
-				else if (bSwizzled) {
+				}else if (X_Format == xbox::X_D3DFMT_L6V5U5 || X_Format == xbox::X_D3DFMT_LIN_L6V5U5
+					      || X_Format == xbox::X_D3DFMT_V16U16 || X_Format == xbox::X_D3DFMT_LIN_V16U16) {
+					// Try to convert to ARGB
+					bool bIsV16U16 = (X_Format == xbox::X_D3DFMT_V16U16 || X_Format == xbox::X_D3DFMT_LIN_V16U16) ? true : false;
+					extern bool ConvertL6V5U5ToX8L8V8U8Buffer(
+						xbox::X_D3DFORMAT X_Format,
+						uint8_t * pSrc,
+						int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
+						uint8_t * pDst, int DstRowPitch, int DstSlicePitch,
+						unsigned int uiDepth,
+						bool bIsV16U16
+					);
+					if (!ConvertL6V5U5ToX8L8V8U8Buffer(
+						X_Format,
+						pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
+						pDst, dwDstRowPitch, dwDstSlicePitch,
+						pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
+						bIsV16U16/*g_pXbox_Palette_Data[iTextureStage]*/)) {
+						CxbxrAbort("Unhandled conversion, failed in converting X_D3DFMT_L6V5U5 or X_D3DFMT_LIN_L6V5U5 to D3DFMT_X8L8V8U8!");
+					}
+				}else if (bSwizzled) {
 					// Unswizzle the texture data into the host texture
 					EmuUnswizzleBox(
 						pSrc, pxMipWidth, pxMipHeight, pxMipDepth,
