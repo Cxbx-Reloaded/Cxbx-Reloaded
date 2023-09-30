@@ -3634,7 +3634,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset)
 {
 	LOG_FUNC_ONE_ARG(pPresentationParameters);
 
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -3675,7 +3675,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG
 	// Log
 	D3DDevice_Reset_0__LTCG_edi1(pPresentationParameters);
 
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -3720,7 +3720,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG
 	// Log
 	D3DDevice_Reset_0__LTCG_ebx1(pPresentationParameters);
 
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -4474,7 +4474,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
         PCRamp.green[v] = pRamp->green[v];
         PCRamp.blue[v]  = pRamp->blue[v];
     }
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)dwFlags;
@@ -4503,7 +4503,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
 	static D3DGAMMARAMP PCGammaRamp = { 0 };
 	D3DGAMMARAMP* pGammaRamp = &PCGammaRamp;// (D3DGAMMARAMP*)malloc(sizeof(D3DGAMMARAMP));
 
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;
@@ -6069,7 +6069,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
 	}
 	else {
 
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -6273,7 +6273,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_CopyRects)(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
 	}else{
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -6429,7 +6429,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Present, 4);//argCount, not necessary, default to 14
 #else
 	//template for syncing HLE apis with pgraf using waiting lock
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -7003,7 +7003,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	*(DWORD**)g_pXbox_pPush += 0x10;
 #else
 	//template for syncing HLE apis with pgraf using waiting lock
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -10944,7 +10944,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__
 	if (g_pXbox_BeginPush_Buffer != nullptr){
 		XB_TRMP(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)(PrimitiveType);
 	}else{
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -10989,7 +10989,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__
 		XB_TRMP(D3DDevice_DrawVertices_8__LTCG_eax3)(PrimitiveType, StartVertex);
 	}
 	else {
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -11030,7 +11030,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 	if (g_pXbox_BeginPush_Buffer != nullptr){
 	    XB_TRMP(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
 	}else{
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -11114,7 +11114,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 		XB_TRMP(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
 	else {
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -11156,7 +11156,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_1
 		XB_TRMP(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)(PrimitiveType, VertexCount, VertexStreamZeroStride);
 	}
 	else {
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -11234,7 +11234,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		XB_TRMP(D3DDevice_DrawIndexedVertices)(PrimitiveType, VertexCount, pIndexData);
 	}
 	else {
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -11368,7 +11368,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		XB_TRMP(D3DDevice_DrawIndexedVerticesUP)(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
 	else {
-		static bool WaitForPGRAPH;
+		bool WaitForPGRAPH;
 		WaitForPGRAPH = true;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
@@ -12465,7 +12465,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
 		LOG_FUNC_ARG(pRectPatchInfo)
 		LOG_FUNC_END;
 
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)pPresentationParameters;
@@ -12501,7 +12501,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
 		LOG_FUNC_ARG(pTriPatchInfo)
 		LOG_FUNC_END;
 
-	static bool WaitForPGRAPH;
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)pPresentationParameters;
