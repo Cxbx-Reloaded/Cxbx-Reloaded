@@ -8027,7 +8027,6 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	// Transpose row major to column major for HLSL
 	// use NV2ATextureStates when we're in pgraph handling
 	if (is_pgraph_using_NV2A_Kelvin()) {
-	//if(false){
 		//NV2A always uses modelView matrix, and the matrix in Kelvin was transposed already.
 		extern D3DMATRIX g_NV2A_DirectModelView_Projection;
 		extern D3DMATRIX g_NV2A_DirectModelView_View;
@@ -8041,42 +8040,25 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			// FIXME! stick with g_xbox_transform_ModelView[0] and g_xbox_DirectModelView_InverseWorldViewTransposed[0] when we're not in skinning mode. 
 			// when RenderState[X_D3DRS_VERTEXBLEND]==0, we're not in skinning mode, use modelview matrix 0 only. else use corresponded matrix
 			unsigned int count = (NV2ARenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND) == 0) ? 0 : i;
-			// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)&g_xbox_transform_ModelView);
 			// transposed xbox modelview transform == kelvin modelview transform
 			ffShaderState.Transforms.WorldView[i] = *pgraph_get_ModelViewMatrix(count);
-			// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed);
 			// xbox InverseWorldView transform == Kelvin InverseModelView transform
 			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i] , (D3DXMATRIX*)pgraph_get_InverseModelViewMatrix(count));
-
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
-
 		}
-
 		for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
 			//texture transform matrix in Kelvin was transposed already.
 			//todo: the texture transform matrix in Kelvin was altered per different in/out counts and whether there are projected output or not. here we simply copy the hardware content to ffShaderState.Transforms.Texture
 			// later we should check the fixed function vertex shader codes to see how it uses these matrix.
 			// test case: BumpEarth sample
 			// using pgraph_get_TextureTransformMatrix(i) without transpose or d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i] with transpose seems to have the same result.
-			//memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
-			
-			//D3DXMATRIX textureTransform;
-			//extern void CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, D3DMATRIX * pMatrix);
-			//CxbxrImpl_GetTransform((xbox::X_D3DTRANSFORMSTATETYPE)(xbox::X_D3DTRANSFORMSTATETYPE::X_D3DTS_TEXTURE0 + i),&textureTransform);
-			//textureTransform = d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i];
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)& d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
-			//the texture transform matrix in kelvin is not transposed, but it's relocated depending on the input and output coordinate counts.
-			//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)pgraph_get_TextureTransformMatrix(i));
+			memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
 		}
 	}
 	else {
 		// check if we're in DirectModelView transform mode.
 		if (is_pgraph_DirectModelView()) {
-		//if(false){
 			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&g_xbox_DirectModelView_Projection);
-			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
-
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
 			for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
 				// FIXME! stick with g_xbox_transform_ModelView[0] and g_xbox_DirectModelView_InverseWorldViewTransposed[0] when we're not in skinning mode. 
 				// when RenderState[X_D3DRS_VERTEXBLEND]==0, we're not in skinning mode, use modelview matrix 0 only. else use corresponded matrix
@@ -8086,7 +8068,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 				ffShaderState.Transforms.WorldView[i] = *pgraph_get_ModelViewMatrix(count);
 				// was D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)&g_xbox_DirectModelView_InverseWorldViewTransposed);
 				// xbox InverseWorldView transform == Kelvin InverseModelView transform
-				ffShaderState.Transforms.WorldViewInverseTranspose[i] = *pgraph_get_InverseModelViewMatrix(count);
+				D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)pgraph_get_InverseModelViewMatrix(count));
 			}
 
 			for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
@@ -8094,9 +8076,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 				//todo: the texture transform matrix in Kelvin was altered per different in/out counts and whether there are projected output or not. here we simply copy the hardware content to ffShaderState.Transforms.Texture
 				// later we should check the fixed function vertex shader codes to see how it uses these matrix.
 				memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
-				D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
-				//the texture transform matrix in kelvin is not transposed, but it's relocated depending on the input and output coordinate counts.
-				//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)pgraph_get_TextureTransformMatrix(i));
+				//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
 			}
 		}
 		else {
