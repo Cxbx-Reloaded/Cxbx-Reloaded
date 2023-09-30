@@ -938,8 +938,9 @@ private:
 			if (pSlot->StreamIndex == pSlotPrev->StreamIndex && pSlot->Offset == pSlotPrev->Offset)
 				bTexcoordRepeat = true;
 			else
-				//assert if xbox vertex shader input slot is not contiguous.!
-				assert(pSlotPrev->Offset + XboxVertexElementByteSizePrev == pSlot->Offset);
+				if(pSlot->Offset!=0)//avoid false alarm when switch to a new stream.
+					//assert if xbox vertex shader input slot is not contiguous.!
+					assert(pSlotPrev->Offset + XboxVertexElementByteSizePrev == pSlot->Offset);
 		}
 
 

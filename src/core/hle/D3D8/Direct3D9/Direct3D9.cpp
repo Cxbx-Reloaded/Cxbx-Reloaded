@@ -8697,7 +8697,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		D3DSURFACE_DESC HostSurfaceDesc;
 		D3DLOCKED_RECT HostLockedRect;
 		if (GetXboxCommonResourceType(pPixelContainer) != X_D3DCOMMON_TYPE_SURFACE) {
-			hRet=pHostSourceTexture->GetSurfaceLevel(0,&pHostSourceSurface);
+			hRet = pHostSourceTexture->GetSurfaceLevel(0, &pHostSourceSurface);
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Could not get host surface from host texture in Lock2DSurface");
 			}
@@ -8705,15 +8705,15 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		else {
 			pHostSourceSurface = (IDirect3DSurface*)it->second.pHostResource.Get();
 		}
-		
+
 		//it->second.forceRehash = true;
-		hRet=pHostSourceSurface->GetDesc(&HostSurfaceDesc);
+		hRet = pHostSourceSurface->GetDesc(&HostSurfaceDesc);
 		if (hRet != D3D_OK) {
 			EmuLog(LOG_LEVEL::WARNING, "Could not get host surface desc in Lock2DSurface");
 		}
 
 		if (HostSurfaceDesc.Usage == D3DUSAGE_RENDERTARGET)
-		    g_IsRenderTexture = true;
+			g_IsRenderTexture = true;
 
 		xbox::X_D3DBaseTexture OffScreenTexture, * pOffScreenTexture;
 		pOffScreenTexture = &OffScreenTexture;
@@ -8738,7 +8738,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		bool bOffScreenSurfaceNeedRelease = false;
 		if (g_IsRenderTexture)
 		{
-			hRet= g_pD3DDevice->CreateTexture(
+			hRet = g_pD3DDevice->CreateTexture(
 				HostSurfaceDesc.Width,
 				HostSurfaceDesc.Height,
 				1,
@@ -8756,7 +8756,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
 			}
-				
+
 			hRet = g_pD3DDevice->GetRenderTargetData(pHostSourceSurface, pHostOffScreenSurface);
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
@@ -8764,21 +8764,21 @@ void WINAPI CxbxrImpl_Lock2DSurface
 			D3DSURFACE_DESC HostOffScreenSurfaceDesc;
 			pHostOffScreenSurface->GetDesc(&HostOffScreenSurfaceDesc);
 
-			assert(HostOffScreenSurfaceDesc.Width  == HostSurfaceDesc.Width);
+			assert(HostOffScreenSurfaceDesc.Width == HostSurfaceDesc.Width);
 			assert(HostOffScreenSurfaceDesc.Height == HostSurfaceDesc.Height);
 
 			hostFlag = D3DLOCK_READONLY;
-			pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+			hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
 			}
 		}
-        //not render target texture, process it as regular texture, LockRect then transfer to xbox data with conversion.
+		//not render target texture, process it as regular texture, LockRect then transfer to xbox data with conversion.
 		//if the texture is not lockable, then copy it to a lockable surface with StretchRect() then transfer to xbox with conversion.
 		else {
 			hostFlag = D3DLOCK_READONLY;
 			pHostOffScreenSurface = pHostSourceSurface;
-			hRet=pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+			hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
 
 			if (hRet == D3D_OK) {
 				;
@@ -8808,7 +8808,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 					EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
 				}
 				// Copy Surface to Surface
-					
+
 				hRet = g_pD3DDevice->StretchRect(
 					pHostSourceSurface,
 					NULL,
@@ -8819,7 +8819,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 				if (hRet != D3D_OK) {
 					EmuLog(LOG_LEVEL::WARNING, "Failed in g_pD3DDevice->StretchRect() in Lock2DSurface");
 				}
-					
+
 				hostFlag = D3DLOCK_READONLY;
 				hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
 				if (hRet != D3D_OK) {
@@ -8856,6 +8856,7 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		xbox::X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pPixelContainer);
 
 		D3DUsage = HostSurfaceDesc.Usage;
+		extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
 
 		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 			bConvertToARGB = true;
@@ -8864,6 +8865,76 @@ void WINAPI CxbxrImpl_Lock2DSurface
 			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
 			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
 			D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
+		}
+		else if (EmuXBFormatIsBumpMap(X_Format)){
+			//xbox resource is bumpmap format by default, we need to check whether it's converted to ARGB or not.
+			PCFormat = D3DFMT_A8R8G8B8;
+			/*
+			if (HostSurfaceDesc.Format == D3DFMT_A8R8G8B8) {
+				byte* hostPtr = (byte*)HostLockedRect.pBits;
+				byte* pARGBtoBumpBuffer =(byte *) malloc(HostSurfaceDesc.Height* HostLockedRect.Pitch*4);
+				switch (X_Format) {
+				case xbox::X_D3DFMT_V8U8:
+					//break; fall through
+				case xbox::X_D3DFMT_LIN_V8U8:
+					ARGBtoV8U8row();
+					break;
+				case xbox::X_D3DFMT_V16U16:
+					//break; fall through
+				case xbox::X_D3DFMT_LIN_V16U16:
+					ARGBtoV16U16row();
+					break;
+				case xbox::X_D3DFMT_L6V5U5:
+					//break; fall through
+				case xbox::X_D3DFMT_LIN_L6V5U5:
+					ARGBtoL6V5U5row();
+					break;
+				case xbox::X_D3DFMT_X8L8V8U8:
+					//break; fall through
+				case xbox::X_D3DFMT_LIN_X8L8V8U8:
+					ARGBtoX8L8V8U8row();
+					break;
+				case xbox::X_D3DFMT_Q8W8V8U8:
+					//break; fall through
+				case xbox::X_D3DFMT_LIN_Q8W8V8U8:
+					//ARGBtoQ8W8V8U8row();
+					ARGBtoX8L8V8U8row();
+					break;
+				}
+				//extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
+				byte* xboxPtr = (byte*)GetDataFromXboxResource(pPixelContainer);// (byte*)pPixelContainer->Data;
+				// Retrieve and test the xbox resource buffer address
+				//VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
+				if (HostLockedRect.Pitch == dwRowPitch)
+					memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * xboxHeight);
+				else {
+					DWORD minPitch = MIN(HostLockedRect.Pitch, dwRowPitch);
+					for (int i = 0; i < xboxHeight; i++) {
+						memcpy(xboxPtr, hostPtr, minPitch);
+						xboxPtr += dwRowPitch;
+						hostPtr += HostLockedRect.Pitch;
+					}
+				}
+				
+			}
+			else {
+				byte* hostPtr = (byte*)HostLockedRect.pBits;
+				//extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
+				byte* xboxPtr = (byte*)GetDataFromXboxResource(pPixelContainer);// (byte*)pPixelContainer->Data;
+				// Retrieve and test the xbox resource buffer address
+				//VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
+				if (HostLockedRect.Pitch == dwRowPitch)
+					memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * xboxHeight);
+				else {
+					DWORD minPitch = MIN(HostLockedRect.Pitch, dwRowPitch);
+					for (int i = 0; i < xboxHeight; i++) {
+						memcpy(xboxPtr, hostPtr, minPitch);
+						xboxPtr += dwRowPitch;
+						hostPtr += HostLockedRect.Pitch;
+					}
+				}
+			}
+			*/
 		}
 		else {
 			// Does host CheckDeviceFormat() succeed on this format?
@@ -8978,6 +9049,21 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock2DSurface, 6, PBTokenArray);//argCount 14
 #else
+    
+	//template for syncing HLE apis with pgraf using waiting lock
+	bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock2DSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
+
 	// Mark the resource as modified
 	//ForceResourceRehash(pPixelContainer);
 	CxbxrImpl_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
@@ -8993,7 +9079,7 @@ void WINAPI CxbxrImpl_Lock3DSurface
 	xbox::dword_xt			   Flags
 )
 {
-	//ForceResourceRehash(pPixelContainer);
+	ForceResourceRehash(pPixelContainer);
 
 }
 
@@ -9031,8 +9117,21 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock3DSurface, 5, PBTokenArray);//argCount 14
 #else
 	// Mark the resource as modified
+		//template for syncing HLE apis with pgraf using waiting lock
+	bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
 
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock3DSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
 	//ForceResourceRehash(pPixelContainer);
+	CxbxrImpl_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 #endif
 }
 
