@@ -385,10 +385,10 @@ xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat()
 xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber)
 {
 	extern bool is_pgraph_using_NV2A_Kelvin(void);
-	extern xbox::X_STREAMINPUT NV2A_StreamSource[X_VSH_MAX_STREAMS];
+	extern xbox::X_STREAMINPUT D3D_Xbox_StreamSource[X_VSH_MAX_STREAMS];
 	// If kelvin is used, return streaminput source composed from Kelvin
 	if (is_pgraph_using_NV2A_Kelvin())
-		return NV2A_StreamSource[XboxStreamNumber];
+		return D3D_Xbox_StreamSource[XboxStreamNumber];
 	// If SetVertexShaderInput is active, its arguments overrule those of SetStreamSource
 	if (g_Xbox_SetVertexShaderInput_Count > 0) {
 		return g_Xbox_SetVertexShaderInput_Data[XboxStreamNumber];
@@ -728,14 +728,14 @@ private:
 
 	// VERTEX SHADER
 
-	bool VshConvertToken_STREAMDATA_REG(DWORD VertexRegister, xbox::X_VERTEXSHADERINPUT *pSlot, xbox::X_VERTEXSHADERINPUT* pSlotPrev)
+	bool VshConvertToken_STREAMDATA_REG(DWORD VertexRegister, xbox::X_VERTEXSHADERINPUT &slot)
 	{
-		DWORD XboxVertexElementDataType = pSlot->Format;
+		DWORD XboxVertexElementDataType = slot.Format;
 
 		// Does this attribute use no storage present the vertex (check this as early as possible to avoid needless processing) ?
 		if (XboxVertexElementDataType == xbox::X_D3DVSDT_NONE) {
 			// Handle tessellating attributes
-			switch (pSlot->TessellationType) {
+			switch (slot.TessellationType) {
 			case 0: return false; // AUTONONE
 			case 1: // AUTONORMAL
 				// Note : .Stream, .Offset and .Type are copied from pAttributeSlot->TessellationSource in a post-processing step below,
@@ -905,22 +905,19 @@ private:
 
 		assert(HostVertexElementDataType < D3DDECLTYPE_UNUSED);
 		assert(HostVertexElementByteSize > 0);
-		static WORD accuStride;
-		static DWORD XboxVertexElementByteSizePrev;
+
 		// Select new stream, if needed
 		if ((pCurrentVertexShaderStreamInfo == nullptr)
-		 || (pCurrentVertexShaderStreamInfo->XboxStreamIndex != pSlot->StreamIndex)) {
-			assert(pSlot->StreamIndex < X_VSH_MAX_STREAMS);
+		 || (pCurrentVertexShaderStreamInfo->XboxStreamIndex != slot.StreamIndex)) {
+			assert(slot.StreamIndex < X_VSH_MAX_STREAMS);
 			assert(pCurrentVertexDeclaration->NumberOfVertexStreams < X_VSH_MAX_STREAMS);
 
 			pCurrentVertexShaderStreamInfo =
 				&(pCurrentVertexDeclaration->VertexStreams[
 					pCurrentVertexDeclaration->NumberOfVertexStreams++]);
 			pCurrentVertexShaderStreamInfo->NeedPatch = FALSE;
-			pCurrentVertexShaderStreamInfo->XboxStreamIndex = (WORD)pSlot->StreamIndex;
-			accuStride = (WORD)pSlot->Offset;
-			XboxVertexElementByteSizePrev = 0;
-			pCurrentVertexShaderStreamInfo->HostVertexStride = (WORD)pSlot->Offset;// (WORD)GetXboxVertexStreamInput(pSlot->StreamIndex).Stride;// 
+			pCurrentVertexShaderStreamInfo->XboxStreamIndex = (WORD)slot.StreamIndex;
+			pCurrentVertexShaderStreamInfo->HostVertexStride = (WORD)slot.Offset;
 			pCurrentVertexShaderStreamInfo->NumberOfVertexElements = 0;
 			// Dxbx note : Use Dophin(s), FieldRender, MatrixPaletteSkinning and PersistDisplay as a testcase
 		}
@@ -931,20 +928,6 @@ private:
 		CxbxVertexShaderStreamElement* pCurrentVertexShaderStreamElementInfo =
 			&(pCurrentVertexShaderStreamInfo->VertexElements[
 				pCurrentVertexShaderStreamInfo->NumberOfVertexElements++]);
-
-		// setup bool flag to indicate a texcoord using the same texcoord in previous slot. this happened when two texture stage use the same texcoord input. 
-		bool bTexcoordRepeat = false;
-		if (pSlotPrev != nullptr) {
-			if (pSlot->StreamIndex == pSlotPrev->StreamIndex && pSlot->Offset == pSlotPrev->Offset)
-				bTexcoordRepeat = true;
-			else
-				if(pSlot->Offset!=0)//avoid false alarm when switch to a new stream.
-					//assert if xbox vertex shader input slot is not contiguous.!
-					assert(pSlotPrev->Offset + XboxVertexElementByteSizePrev == pSlot->Offset);
-		}
-
-
-		pCurrentVertexShaderStreamElementInfo->TexcoordRepeat = bTexcoordRepeat;
 
 		if (XboxVertexElementByteSize == 0) {
 			XboxVertexElementByteSize = HostVertexElementByteSize;
@@ -960,7 +943,7 @@ private:
 		// Convert to host vertex element
 		pCurrentHostVertexElement->Stream = pCurrentVertexShaderStreamInfo->XboxStreamIndex; // Use Xbox stream index on host
 		// FIXME Don't assume vertex elements are contiguous!
-		pCurrentHostVertexElement->Offset = pCurrentVertexShaderStreamInfo->HostVertexStride;//(WORD)slot.Offset;//
+		pCurrentHostVertexElement->Offset = pCurrentVertexShaderStreamInfo->HostVertexStride;
 		pCurrentHostVertexElement->Type = pCurrentVertexShaderStreamElementInfo->HostDataType;
 		pCurrentHostVertexElement->Method = D3DDECLMETHOD_DEFAULT;
 		if (IsFixedFunction) {
@@ -975,14 +958,9 @@ private:
 			pCurrentHostVertexElement->Usage = D3DDECLUSAGE_TEXCOORD;
 			pCurrentHostVertexElement->UsageIndex = (BYTE)VertexRegister;
 		}
-		//adjust host offset when encounter repeat texcoord vertex element.
-		if (bTexcoordRepeat)
-			pCurrentHostVertexElement->Offset -= HostVertexElementByteSize;
-		else 
-		    pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
-		accuStride += HostVertexElementByteSize;
-		//assert(accuStride == (WORD)slot.Offset + HostVertexElementByteSize);
-		XboxVertexElementByteSizePrev = XboxVertexElementByteSize;
+
+		pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
+
 		return true;
 	}
 
@@ -1019,14 +997,14 @@ public:
 				return std::tie(regX.StreamIndex, regX.Offset)
 					 < std::tie(regY.StreamIndex, regY.Offset);
 			});
-		xbox::X_VERTEXSHADERINPUT* pSlotPrev = nullptr;// &pXboxDeclaration->Slots[0];
+
 		EmuLog(LOG_LEVEL::DEBUG, "Parsing vertex declaration");
 		for (size_t i = 0; i < orderedRegisterIndices.size(); i++) {
 			auto regIndex = orderedRegisterIndices[i];
-			auto pSlot = &pXboxDeclaration->Slots[regIndex];
-			if (pSlot->Format > xbox::X_D3DVSDT_NONE) {
+			auto &slot = pXboxDeclaration->Slots[regIndex];
+			if (slot.Format > xbox::X_D3DVSDT_NONE) {
 				// Set Direct3D9 vertex element (declaration) members :
-				if (VshConvertToken_STREAMDATA_REG(regIndex, pSlot,pSlotPrev)) {
+				if (VshConvertToken_STREAMDATA_REG(regIndex, slot)) {
 					// Add this register to the list of declared registers
 					RegVIsPresentInDeclaration[regIndex] = true;
 					// Remember a pointer to this register
@@ -1034,11 +1012,10 @@ public:
 					pCurrentHostVertexElement++;
 
 					EmuLog(LOG_LEVEL::DEBUG, "\tXbox Stream %d, Offset %d, Format %d, Slot %d",
-						pSlot->StreamIndex, pSlot->Offset, pSlot->Format, regIndex);
+						slot.StreamIndex, slot.Offset, slot.Format, regIndex);
 					EmuLog(LOG_LEVEL::DEBUG, "\tHost Stream %d, Offset %d, Format %d, Usage %d-%d",
 						pCurrentHostVertexElement->Stream, pCurrentHostVertexElement->Offset, pCurrentHostVertexElement->Type, pCurrentHostVertexElement->Usage, pCurrentHostVertexElement->UsageIndex);
 				}
-				pSlotPrev = pSlot;
 			}
 		}
 
