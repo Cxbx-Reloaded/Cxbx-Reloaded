@@ -10135,7 +10135,7 @@ void CxbxUpdateHostTextures()
 					//&& (stageMode[stage+1] != NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE))
 				{
 					//get xbox format and related PC format
-					D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(X_Format);
+					D3DFORMAT defaultPCFormat = EmuXB2PC_D3DFormat(X_Format);
 					//if both xbox format and PC format are UV format, then we need to create the host texture with ARGB conversion in none bumpenv stage
 				
 					//GetHostResource(); CreateHostResource();
@@ -10145,17 +10145,9 @@ void CxbxUpdateHostTextures()
 					//if source not found, just create a host texture with ARGB
 					if (it != ResourceCache.end()) {
 						if (it->second.pHostResource!=nullptr) {
-							//todo: in CreateHostResource, we could store the PCFormat of the created host resource in the resource cache by creating a new member in _resource_info_t, this would speed up the speed here.
-							/*
-							IDirect3DTexture* pCurrnetStageHostTexture = (IDirect3DTexture*)it->second.pHostResource.Get();
-							IDirect3DSurface* pCurrentStageHostSurface;
-							HRESULT hRet = pCurrnetStageHostTexture->GetSurfaceLevel(0, &pCurrentStageHostSurface);
-							D3DSURFACE_DESC surfaceDesc;
-							hRet = pCurrentStageHostSurface->GetDesc(&surfaceDesc);
-							//if the host resource isn't converted to D3DFMT_A8R8G8B8, then we have to disgard the old host resource force the ARGB conversion
-							if (surfaceDesc.Format != D3DFMT_A8R8G8B8) {
-							*/
-							if(it->second.PCFormat!= D3DFMT_A8R8G8B8){
+							//if(it->second.PCFormat!= D3DFMT_A8R8G8B8){
+                            //defaultPCFormat is UV bumpmap format, if the host resource is uv bumpmap format, we erase it from cache and force regenerate it with ARGB
+							if (it->second.PCFormat == defaultPCFormat) {
 								//FreeHostResource(key);
 								//erase the host resource empty key
 								ResourceCache.erase(key);
