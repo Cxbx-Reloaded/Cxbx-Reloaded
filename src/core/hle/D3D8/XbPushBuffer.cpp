@@ -2007,7 +2007,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 		bool bTextureTransformEnable = pg->KelvinPrimitive.SetTextureMatrixEnable[stage];
         //default texCoordIndex
 		DWORD texCoordIndex = stage;
-
+		DWORD texgen = D3DTSS_TCI_PASSTHRU;
 		if (!bTextureTransformEnable) {
 			transformFlags = D3DTTFF_DISABLE;
 			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS, transformFlags);
@@ -2072,7 +2072,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 
 			// Now specifically handle texgens:
 			extern unsigned int kelvin_to_xbox_map_texgen(uint32_t parameter);
-			DWORD texgen = kelvin_to_xbox_map_texgen(pg->KelvinPrimitive.SetTexgen[stage].S);
+			texgen = kelvin_to_xbox_map_texgen(pg->KelvinPrimitive.SetTexgen[stage].S);
             //  whether texture coordinate with (0, 0, 0, 1) to get a '1' into 'W' because we leave Q disabled.
 			// and SetTexgen[stage].s==t==r. reversed from D3DDevice_SetTextureState_TexCoordIndex()
 			
@@ -2111,8 +2111,6 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			// NV097_SET_VERTEX_DATA_ARRAY_FORMAT and NV097_SET_VERTEX_DATA_ARRAY_OFFSET are update with slot mapping included. so we don't worry about it here.
 
 			// compose texCoordIndex with stage mapping index and texgen, set it to defaul when we compose vertex attr from kelvin.
-			texCoordIndex = (texgen&0xFFFF0000)|stage;
-			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texCoordIndex);
 			//NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 
 			// todo: shall we compose the FVF pVertexShader->Dimensionality here with the inCount?
@@ -2132,6 +2130,8 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			//TexGenInverseNeeded &= ~(1 << Stage);
 			//TexGenInverseNeeded |= (needsInverseModelViewState << stage);
 		}
+		texCoordIndex = (texgen & 0xFFFF0000) | stage;
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texCoordIndex);
 		//reversed codes for reference. check Otogi for LazySetTextureTransform()
 #if 0
 			/*
@@ -3118,6 +3118,28 @@ void D3D_draw_state_update(NV2AState* d)
 			g_NV2AVertexAttributeFormat.Slots[index].Format = current_format;
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationType = 0; // TODO or ignore?
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
+		}
+		//check for duplicated texcoord slots, if a texcoord slot is duplicated with other texcoord slot prior to it, set texcoord index of current slot to the prior duplicated slot and disable current slot.
+		for (int current = xbox::X_D3DVSDE_TEXCOORD0+1; current <= xbox::X_D3DVSDE_TEXCOORD3; current++) {
+            //only check for duplications when current slot is not unused
+			if (g_NV2AVertexAttributeFormat.Slots[current].Format!= xbox::X_D3DVSDT_NONE)
+				//only check texcoord slots prior to current slot, always set texcoord index of later texture stages to prior texture stages.
+				for (int prior = xbox::X_D3DVSDE_TEXCOORD0; prior <current; prior++) {
+					if (g_NV2AVertexAttributeFormat.Slots[current].StreamIndex == g_NV2AVertexAttributeFormat.Slots[prior].StreamIndex
+						&& g_NV2AVertexAttributeFormat.Slots[current].Offset == g_NV2AVertexAttributeFormat.Slots[prior].Offset) {
+						//retrive texgen from NV2ATextureStates
+						DWORD texcoordIndex = NV2ATextureStates.Get(current- xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX);
+						texcoordIndex &= 0xFFFF0000;
+						//update texcoordIndex
+						texcoordIndex |= (prior- xbox::X_D3DVSDE_TEXCOORD0) & 0x0000FFFF;
+						//store updated texcoordIndex
+						NV2ATextureStates.Set(current-xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX, texcoordIndex);
+						//disable current slot
+						g_NV2AVertexAttributeFormat.Slots[current].Offset = 0;
+						g_NV2AVertexAttributeFormat.Slots[current].Format = xbox::X_D3DVSDT_NONE;
+						break;
+					}
+				}
 		}
 	}
 	// update other D3D states
