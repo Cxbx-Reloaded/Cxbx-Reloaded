@@ -1355,7 +1355,7 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.forceRehash = false;
 }
 
-void SetHostResourcePCFormat(xbox::X_D3DResource* pXboxResource, D3DFORMAT PCFormat, int iTextureStage = -1, DWORD dwSize = 0)
+void SetHostResourcePCFormat(xbox::X_D3DResource* pXboxResource, D3DFORMAT PCFormat, int iTextureStage = -1)
 {
 	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
 	auto& ResourceCache = GetResourceCache(key);
@@ -5391,8 +5391,10 @@ void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* p
 						//resource_info_t newResource;
 						//ResourceCache[key] = newResource;
 						//set the host resource of render target to our texture variants.
-						if (xboxResourceType == xbox::X_D3DRTYPE_TEXTURE)
+						if (xboxResourceType == xbox::X_D3DRTYPE_TEXTURE){
 						    SetHostResource(pTexture, hostResource, Stage, 0);
+						    SetHostResourcePCFormat(pTexture, surfaceDesc.Format, Stage);
+						}
 						else {
 							EmuLog(LOG_LEVEL::WARNING, "xboxResourceType isn't texture in CxbxrImpl_SetTexture!");
 						}
@@ -5423,8 +5425,10 @@ void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* p
 							IDirect3DBaseTexture* pHostTexture;
 							pHostTexture=CxbxConvertXboxSurfaceToHostTexture(pTexture);
 							pTexture->Common = oldCommon;
-							if(xboxResourceType== xbox::X_D3DRTYPE_TEXTURE)
+							if (xboxResourceType == xbox::X_D3DRTYPE_TEXTURE) {
 								SetHostResource(pTexture, pHostTexture, Stage, 0);
+								SetHostResourcePCFormat(pTexture, HostSurfaceDesc.Format, Stage);
+							}
 							else {
 								EmuLog(LOG_LEVEL::WARNING, "xboxResourceType isn't texture in CxbxrImpl_SetTexture!");
 							}
