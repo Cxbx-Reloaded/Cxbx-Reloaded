@@ -12370,9 +12370,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)Address;
-	PBTokenArray[3] = (DWORD)&PBTokenArray[4];
-	memcpy(&PBTokenArray[4], pData, sizeof(float) * 4);
-	
+	if (pData != nullptr) {
+		PBTokenArray[3] = (DWORD)&PBTokenArray[4];
+		memcpy(&PBTokenArray[4], pData, sizeof(float) * 4);
+	}
+	else {
+		PBTokenArray[3]= (DWORD)nullptr;
+	}
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunVertexStateShader, 6, PBTokenArray);//argCount 14
 }
