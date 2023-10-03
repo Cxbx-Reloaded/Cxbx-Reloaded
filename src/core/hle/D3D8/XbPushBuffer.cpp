@@ -36,7 +36,8 @@
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
 #include "core\hle\D3D8\Direct3D9\TextureStates.h"
-#include "core\hle\D3D8\Direct3D9\RenderStates.h" 
+#include "core\hle\D3D8\Direct3D9\RenderStates.h"
+#include "core\hle\D3D8\FixedFunctionState.h"
 #include <d3dx9math.h> // for D3DXMatrix, etc
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
@@ -1708,6 +1709,9 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 			// FIXME! shall we allow the g_xbox_transform_Composite_dirty== false here? could titles assumes composite matrix could persist? all xbox d3d api update ModelView and Composite matrix in the same time.
 			// update the modelview and composite matrix whenever either one matrix was dirty.
 	// handle DirectModelView()
+	// todo: figure out how to compose View matrix via NV2A content. here is hack using View matrix from xbox d3d.
+	extern D3D8TransformState d3d8TransformState;
+	g_xbox_DirectModelView_View= (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 
 	D3DMATRIX matUnit;
 	memset(&matUnit._11, 0, sizeof(matUnit));
@@ -2800,8 +2804,6 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_INFINITE://D3DLIGHT_DIRECTIONAL
 				NV2A_Light8[lightNum].Type= D3DLIGHT_DIRECTIONAL;
-				//NV097_SET_LIGHT_INFINITE_DIRECTION
-				//Push1f(pPush,NV097_SET_LIGHT_LOCAL_RANGE(lightNum),	1e30f);
 				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
 				NV2A_Light8[lightNum].Direction.x =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
 				NV2A_Light8[lightNum].Direction.y =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
@@ -2822,7 +2824,6 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				break;
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_SPOT: //D3DLIGHT_SPOT
 				NV2A_Light8[lightNum].Type = D3DLIGHT_SPOT;
-				//Push1f(pPush,NV097_SET_LIGHT_LOCAL_RANGE(lightNum),	pLight->Light8.Range);
 				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
 				NV2A_Light8[lightNum].Position.x = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[0];
 				NV2A_Light8[lightNum].Position.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
@@ -2830,22 +2831,6 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				NV2A_Light8[lightNum].Attenuation0 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[0];
 				NV2A_Light8[lightNum].Attenuation1 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[1];
 				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
-				/*
-				Explut(pLight->Light8.Falloff, &pLight->Falloff_L, &pLight->Falloff_M);
-            pLight->Falloff_N = 1.0f + pLight->Falloff_L - pLight->Falloff_M;
-            // Attenuate the spot direction to get falloff to work:
-            FLOAT theta2 = Cos(0.5f * pLight->Light8.Theta);
-            FLOAT phi2 = Cos(0.5f * pLight->Light8.Phi);
-            // Handle case in which theta gets close to or overtakes phi, since 
-            // hardware can't:
-            if (phi2 >= theta2)     // Outer angle <= inner angle, oops
-            {        
-                // Make outer angle cosine slightly smaller:
-                phi2 = 0.999f * theta2;  
-            }
-            pLight->Scale = nvInv(theta2 - phi2);
-            pLight->W = -phi2 * pLight->Scale;
-*/
 				float Falloff_L = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[0]; //todo: Falloff_L/Falloff_M/Falloff_N there should be 3 components but not found in Light8/Light9
 				float Falloff_M = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[1];
 				float Falloff_N = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[2];

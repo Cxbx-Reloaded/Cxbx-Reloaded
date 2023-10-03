@@ -7948,7 +7948,9 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	// use lights composed from kelvin.
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		d3dLight=CxbxrGetLight8Ptr(d3dLightIndex);
+		// g_xbox_DirectModelView_View was set to )d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW]
 		viewTransform = g_xbox_DirectModelView_View;
+		//viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 	}else {
 		viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 	}
