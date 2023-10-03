@@ -359,8 +359,8 @@ R"DELIMITER(
     float fogFactor;
     if(fogTableMode == FOG_TABLE_NONE)
        fogFactor = fogDepth;
-         if(fogDepth < 0)
-         fogFactor = 1 + fogDepth;
+         //if(fogDepth < 0)
+         //fogFactor = 1 + fogDepth;
     if(fogTableMode == FOG_TABLE_EXP) 
        fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
     if(fogTableMode == FOG_TABLE_EXP2) 
@@ -371,7 +371,7 @@ R"DELIMITER(
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = clean(fogFactor).x; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
+	xOut.oFog = fogFactor;//clean(fogFactor); // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);
