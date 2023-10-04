@@ -40,13 +40,14 @@ namespace NtDll
 
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h"
+#include "core\hle\D3D8\XBD3d8Types.h"
 #include "devices\x86\EmuX86.h"
 
 #include "EmuKrnlAvModes.h"
 #include "devices\Xbox.h" // For g_NV2A
 #include "devices\video\nv2a_int.h"
 #include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
-
+#include "core\kernel\memory-manager\VMManager.h"
 
 // HW Register helper functions
 xbox::uchar_xt REG_RD08(void* Ptr, xbox::ulong_xt Addr)
@@ -153,15 +154,23 @@ ULONG AvQueryAvCapabilities()
 }
 
 xbox::PVOID xbox::AvSavedDataAddress = xbox::zeroptr;
-
+extern xbox::X_D3DSurface* CxbxrImpl_GetPersistedSurface();
+extern xbox::X_D3DSurface xboxPersistSurface;
+extern VMManager g_VMManager;;
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 {
 	LOG_FUNC();
-
-	RETURN(AvSavedDataAddress);
+	//g_VMManager.GetPersistentMemory();
+	//RETURN(AvSavedDataAddress);
+	//if xbox persist surface was not created yet, create it first.
+	if (xboxPersistSurface.Data == NULL)
+		//CxbxrImpl_PersistDisplay();
+		return nullptr;
+	else
+	    return CxbxrImpl_GetPersistedSurface();
 }
 
 // ******************************************************************

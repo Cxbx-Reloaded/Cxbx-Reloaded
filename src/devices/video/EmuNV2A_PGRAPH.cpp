@@ -1957,7 +1957,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_GetOverlayUpdateStatus:  break;
                     case X_D3DDevice_GetOverscanColor:  break;
                     case X_D3DDevice_GetPalette:  break;
-                    case X_D3DDevice_GetPersistedSurface:  break;
+                    case X_D3DDevice_GetPersistedSurface:
+                        *(bool*)argv[1] = false;
+                        break;
                     case X_D3DDevice_GetPixelShader:  break;
                     case X_D3DDevice_GetPixelShaderConstant:  break;
                     case X_D3DDevice_GetPixelShaderFunction:  break;
@@ -2008,7 +2010,9 @@ int pgraph_handle_method(
                         break;
                     case X_D3DDevice_MultiplyTransform:  break;
                     case X_D3DDevice_Nop:  break;
-                    case X_D3DDevice_PersistDisplay:  break;
+                    case X_D3DDevice_PersistDisplay:
+                        *(bool*)argv[1] = false;
+                        break;
                     case X_D3DDevice_Present:
 #define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
 

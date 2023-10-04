@@ -364,6 +364,8 @@ g_EmuCDPD;
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetDepthStencilSurface2,                  (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetDisplayMode,                           (xbox::X_D3DDISPLAYMODE*)                                                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetProjectionViewportMatrix,              (CONST D3DMATRIX*)                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetPersistedSurface,                      (xbox::X_D3DSurface**)                                                                                );  \
+    XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetPersistedSurface2,                     (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetRenderTarget,                          (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetRenderTarget2,                         (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
@@ -12869,29 +12871,196 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSwapCallback)
     g_pXbox_SwapCallback = pCallback;
 }
 
+xbox::X_D3DBaseTexture xboxPersistTexture;
+xbox::X_D3DSurface xboxPersistSurface;
+IDirect3DSurface* pXboxBackBufferHostSurface;
+D3DSURFACE_DESC pXboxBackBufferHostSurdaceDesc;
+xbox::X_D3DSurface* CxbxrImpl_GetPersistedSurface()
+{
+	LOG_INIT
+
+	IDirect3DSurface* pXboxPersistSurfaceHostSurface;
+	IDirect3DTexture* pXboxPersistTextureHostTexture;
+	HRESULT hRet = g_pD3DDevice->CreateTexture(pXboxBackBufferHostSurdaceDesc.Width, pXboxBackBufferHostSurdaceDesc.Height,
+		1, // Levels
+		D3DUSAGE_DYNAMIC, // Usage always as render target
+		pXboxBackBufferHostSurdaceDesc.Format,
+		D3DPOOL_SYSTEMMEM, // D3DPOOL_DEFAULT
+		&pXboxPersistTextureHostTexture,
+		nullptr // pSharedHandle
+	);
+	DEBUG_D3DRESULT(hRet, "D3DDevice_PersistDisplay::CreateTexture");
+
+	if (hRet == D3D_OK) {
+		hRet = pXboxPersistTextureHostTexture->GetSurfaceLevel(0, &pXboxPersistSurfaceHostSurface);
+		DEBUG_D3DRESULT(hRet, "D3DDevice_PersistDisplay::pNewHostSurface");
+	}
+	hRet = g_pD3DDevice->GetRenderTargetData(pXboxBackBufferHostSurface, pXboxPersistSurfaceHostSurface);
+	if (hRet != D3D_OK) {
+		EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
+	}
+
+	D3DLOCKED_RECT HostLockedRect;
+	hRet = pXboxPersistSurfaceHostSurface->LockRect(&HostLockedRect, NULL, NULL);
+	if (hRet != D3D_OK) {
+		EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
+	}
+	BYTE* dst, * src;
+	src = (BYTE*)xboxPersistSurface.Data;
+	dst = (BYTE*)HostLockedRect.pBits;
+	memcpy(dst, src, HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height);
+	pXboxPersistSurfaceHostSurface->UnlockRect();
+	//set host texture and surface to xbox persist texture and surface
+	SetHostResource(&xboxPersistSurface, pXboxPersistSurfaceHostSurface);
+	SetHostResource(&xboxPersistTexture, pXboxPersistTextureHostTexture);
+	//return the created xbox persist surface.
+	return &xboxPersistSurface;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_GetPersistedSurface
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetPersistedSurface)(xbox::X_D3DSurface** ppSurface)
+{
+	//template for syncing HLE apis with pgraf using waiting lock
+	bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_GetPersistedSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
+	//if xbox persist surface was not created yet, create it first.
+	if (xboxPersistSurface.Data == NULL)
+		//CxbxrImpl_PersistDisplay();
+		*ppSurface = nullptr;
+	else
+	    *ppSurface= CxbxrImpl_GetPersistedSurface();
+}
+// ******************************************************************
+// * patch: D3DDevice_GetPersistedSurface2
+// ******************************************************************
+xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetPersistedSurface2)()
+{
+	//template for syncing HLE apis with pgraf using waiting lock
+	bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
+
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_GetPersistedSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
+	//if xbox persist surface was not created yet, create it first.
+	if (xboxPersistSurface.Data == NULL)
+		//CxbxrImpl_PersistDisplay();
+		return nullptr;
+	else
+	    return CxbxrImpl_GetPersistedSurface();
+}
+
+void CxbxrImpl_PersistDisplay()
+{
+	LOG_INIT
+	//free previously stored persist surface data if it exists
+	if (xboxPersistSurface.Data != NULL) {
+		free((void*)xboxPersistSurface.Data);
+		xboxPersistSurface.Data = NULL;
+		xboxPersistTexture.Data = NULL;
+	}
+	//retrive xbox back buffer surface, if backbuffer surface doesn't exist, use xbox render target surface instead.
+	xboxPersistSurface = g_pXbox_BackBufferSurface != nullptr ? *g_pXbox_BackBufferSurface : *g_pXbox_RenderTarget;
+	pXboxBackBufferHostSurface = GetHostSurface(&xboxPersistSurface);
+	pXboxBackBufferHostSurface->GetDesc(&pXboxBackBufferHostSurdaceDesc);
+	//alter common flags of xbox persist texture and surface.
+	xboxPersistSurface.Common &= 0x00FFFFFF;
+	xboxPersistTexture = (xbox::X_D3DBaseTexture)xboxPersistSurface;
+	xboxPersistTexture.Common &= 0x00FEFFFF;
+	IDirect3DSurface* pXboxPersistSurfaceHostSurface;
+	IDirect3DTexture* pXboxPersistTextureHostTexture;
+	HRESULT hRet = g_pD3DDevice->CreateTexture(pXboxBackBufferHostSurdaceDesc.Width, pXboxBackBufferHostSurdaceDesc.Height,
+		1, // Levels
+		D3DUSAGE_DYNAMIC, // Usage always as render target
+		pXboxBackBufferHostSurdaceDesc.Format,
+		D3DPOOL_SYSTEMMEM, // D3DPOOL_DEFAULT
+		&pXboxPersistTextureHostTexture,
+		nullptr // pSharedHandle
+	);
+	DEBUG_D3DRESULT(hRet, "D3DDevice_PersistDisplay::CreateTexture");
+
+	if (hRet == D3D_OK) {
+		hRet = pXboxPersistTextureHostTexture->GetSurfaceLevel(0, &pXboxPersistSurfaceHostSurface);
+		DEBUG_D3DRESULT(hRet, "D3DDevice_PersistDisplay::pNewHostSurface");
+	}
+	hRet = g_pD3DDevice->GetRenderTargetData(pXboxBackBufferHostSurface, pXboxPersistSurfaceHostSurface);
+	if (hRet != D3D_OK) {
+		EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
+	}
+
+	D3DLOCKED_RECT HostLockedRect;
+	hRet = pXboxPersistSurfaceHostSurface->LockRect(&HostLockedRect, NULL, D3DLOCK_READONLY);
+	if (hRet != D3D_OK) {
+		EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
+	}
+	
+	xboxPersistSurface.Data = (DWORD)malloc(HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height);//g_VMManager.AllocateContiguousMemory(HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height,0x10000,0x80000,0x400, XBOX_PAGE_READWRITE);
+	//todo:g_VMManager.AllocateContiguousMemory() always failed. figure out why. and after fast reboot, how do we link variables with persisted memory?
+	//xboxPersistSurface.Data = g_VMManager.AllocateContiguousMemory(HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height,0x10000,0x80000,0x1000, XBOX_PAGE_READWRITE);
+	xboxPersistTexture.Data = xboxPersistSurface.Data;
+	BYTE* dst, * src;
+	dst = (BYTE*)xboxPersistSurface.Data;
+	src = (BYTE*)HostLockedRect.pBits;
+	memcpy(dst, src, HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height);
+	pXboxPersistSurfaceHostSurface->UnlockRect();
+	//g_VMManager.PersistMemory(xboxPersistSurface.Data, HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height,true);
+	//g_VMManager.PersistMemory((VAddr) & xboxPersistSurface, sizeof(xbox::X_D3DSurface), true);
+	//g_VMManager.PersistMemory((VAddr) & xboxPersistTexture, sizeof(xbox::X_D3DBaseTexture), true);
+	//g_VMManager.SavePersistentMemory();
+}
 // ******************************************************************
 // * patch: D3DDevice_PersistDisplay
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_PersistDisplay)()
 {
-	LOG_FUNC();
+	LOG_INIT
 
-	LOG_INCOMPLETE();
+		// TODO: This function simply saves a copy of the display to a surface and persists it in contiguous memory
+		// This function, if ever required, can be implemented as the following
+		// 1. Check for an existing persisted surface via AvGetSavedDataAddress, free it if necessary
+		// 2. Create an Xbox format surface with the same size and format as active display
+		// 3. Copy the host framebuffer to the xbox surface, converting format if necessary
+		// 4. Set the display mode via AvSetDisplayMode to the same format as the persisted surface,
+		//    passing the ->Data pointer of the xbox surface as the framebuffer pointer.
+		// 5. Use MmPersistContigousMemory to persist the surface data across reboot
+		// 6. Call AvSetSavedDataAddress, passing the xbox surface data pointer
 
-	// TODO: This function simply saves a copy of the display to a surface and persists it in contiguous memory
-	// This function, if ever required, can be implemented as the following
-	// 1. Check for an existing persisted surface via AvGetSavedDataAddress, free it if necessary
-	// 2. Create an Xbox format surface with the same size and format as active display
-	// 3. Copy the host framebuffer to the xbox surface, converting format if necessary
-	// 4. Set the display mode via AvSetDisplayMode to the same format as the persisted surface,
-	//    passing the ->Data pointer of the xbox surface as the framebuffer pointer.
-	// 5. Use MmPersistContigousMemory to persist the surface data across reboot
-	// 6. Call AvSetSavedDataAddress, passing the xbox surface data pointer
+		// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
+		//if (XB_TRMP(D3DDevice_PersistDisplay)) {
+			//return XB_TRMP(D3DDevice_PersistDisplay)();
+		//}
+	//template for syncing HLE apis with pgraf using waiting lock
+    bool WaitForPGRAPH;
+	WaitForPGRAPH = true;
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
 
-	// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
-	//if (XB_TRMP(D3DDevice_PersistDisplay)) {
-		return XB_TRMP(D3DDevice_PersistDisplay)();
-	//}
+	//give the correct token enum here, and it's done.
+	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_PersistDisplay, 1, PBTokenArray);//argCount, not necessary, default to 14
+
+	EmuKickOff();
+
+	while (WaitForPGRAPH)
+		; //this line is must have
+	CxbxrImpl_PersistDisplay();
 	return 0;
 }
 

@@ -354,7 +354,7 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
 /*
 
     //template for syncing HLE apis with pgraf using waiting lock
-    static bool WaitForPGRAPH;
+    bool WaitForPGRAPH;
     WaitForPGRAPH = true;
     //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
     PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;

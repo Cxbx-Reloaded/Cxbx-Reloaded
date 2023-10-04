@@ -1961,8 +1961,12 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_PersistDisplay)();
 // ******************************************************************
 // * patch: D3DDevice_GetPersistedSurface
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSurface);
-X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetPersistedSurface2)();
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetPersistedSurface)(xbox::X_D3DSurface **ppSurface);
+
+// ******************************************************************
+// * patch: D3DDevice_GetPersistedSurface2
+// ******************************************************************
+xbox::X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetPersistedSurface2)();
 
 // ******************************************************************
 // * patch: D3D_CMiniport_GetDisplayCapabilities
