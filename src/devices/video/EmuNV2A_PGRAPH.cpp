@@ -3824,10 +3824,15 @@ int pgraph_handle_method(
                     bool stencil_test = pg->KelvinPrimitive.SetStencilTestEnable!=0;
 
                     if (arg0 == NV097_SET_BEGIN_END_OP_END) { // the DrawXXX call completes the pushbuffer operation. we can process the rendering.
-						// some titles might use inline arrays with zero method counts, which is empty draw call and won't set the draw_mode, we shall skip the draw call processing directly.
-						if (pg->draw_mode == DrawMode::None)
-							break;
-						
+						// D3DDevice_PrimeVertexCache() will call NV097_SET_BEGIN_END twice in series, with pritive type in 1st call, OP_END in 2nd call, nothing in between.
+                        // this is to flush out any vertices cached in the transform/lighting stages.
+                        // then it will begin passing in indexed buffer data with NV097_ARRAY_ELEMENT16/NV097_ARRAY_ELEMENT32 without calling NV097_SET_BEGIN_END with primitive type setting.
+                        // this is to fill transform/lighting stages with vertex first.
+                        if (pg->draw_mode == DrawMode::None|| pg->draw_mode == DrawMode::PrimeVertexCache) {
+                            pg->draw_mode = DrawMode::PrimeVertexCache;
+                            pg->primitive_mode = arg0;
+                            break;
+                        }
                         switch (pg->draw_mode) {
                         case  DrawMode::DrawArrays:  {
                             NV2A_GL_DPRINTF(false, "Draw Arrays");
@@ -3959,6 +3964,10 @@ int pgraph_handle_method(
                         // Copy arg0/KelvinPrimitive.SetBeginEnd, because we still need this value when
                         // it gets overwritten by NV097_SET_BEGIN_END_OP_END (which triggers the draw) :
                         pg->primitive_mode = arg0; // identical to reading pg->KelvinPrimitive.SetBeginEnd
+                        //only initialize these states when we're not in PrimeVertexCache mode.
+                        if (pg->draw_mode == DrawMode::PrimeVertexCache)
+                            // use DrawMode::PrimeVertexCache (0x10)as bit flag.
+                            pg->draw_mode = DrawMode::None;
 
                         //init in inline_elements_length for indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
                         pg->inline_elements_length = 0;
@@ -3970,13 +3979,13 @@ int pgraph_handle_method(
                         pg->draw_arrays_max_count = 0;
                         //init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
                         pg->inline_buffer_length = 0;//this counts the total vertex count
-						pg->inline_buffer_attr_length = 0;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
-						//reset attribute flag for in_line_buffer
-						for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
-							//reset the attribute flag for next draw call.
-							pg->vertex_attributes[i].set_by_inline_buffer = false;
-						}
-
+                        pg->inline_buffer_attr_length = 0;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
+                        //reset attribute flag for in_line_buffer
+                        for (int i = 0; i < NV2A_VERTEXSHADER_ATTRIBUTES; i++) {
+                            //reset the attribute flag for next draw call.
+                            pg->vertex_attributes[i].set_by_inline_buffer = false;
+                        }
+                        
                     }
 
                     //pgraph_set_surface_dirty(pg, true, depth_test || stencil_test);
@@ -3984,8 +3993,11 @@ int pgraph_handle_method(
                 }
 
                 case NV097_ARRAY_ELEMENT16://xbox D3DDevice_DrawIndexedVertices() calls this
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-					if (pg->draw_mode == DrawMode::None)
+					//assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+                    //we do nothing with PrimeVertexCache
+                    if (pg->draw_mode == DrawMode::PrimeVertexCache)
+                        break;
+                    if (pg->draw_mode == DrawMode::None)
 						pg->draw_mode = DrawMode::InlineElements;
 					else
 						assert(pg->draw_mode == DrawMode::InlineElements);
@@ -4012,9 +4024,11 @@ int pgraph_handle_method(
 					break;
 
                 case NV097_ARRAY_ELEMENT32://xbox D3DDevice_DrawIndexedVertices() calls this
-					assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
-					//case NV097_ARRAY_ELEMENT32 is only used to handle the very last odd element (if ever has). so the this case was hit, the DrawMode must be DrawMode::InlineElements, unless there is only one element)
-					if (pg->draw_mode == DrawMode::None)
+					//assert(pg->KelvinPrimitive.SetBeginEnd > NV097_SET_BEGIN_END_OP_END);
+                    //we do nothing with PrimeVertexCache
+                    if (pg->draw_mode == DrawMode::PrimeVertexCache)
+                        break;
+                    if (pg->draw_mode == DrawMode::None)
 						pg->draw_mode = DrawMode::InlineElements;
 					else
 						assert(pg->draw_mode == DrawMode::InlineElements);

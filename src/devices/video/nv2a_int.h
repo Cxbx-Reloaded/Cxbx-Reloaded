@@ -669,6 +669,7 @@ typedef enum class _DrawMode {
 	InlineArray,
 	InlineElements,
 	InlineBuffer, // Values for this mode are set via SetVertex(Data){type}
+	PrimeVertexCache,
 } DrawMode;
 
 typedef struct PGRAPHState {

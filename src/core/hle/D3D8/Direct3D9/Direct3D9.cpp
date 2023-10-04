@@ -13079,6 +13079,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 		LOG_FUNC_END;
 
 	// TODO: Implement
+	// no need to implement this in HLE or trampoline to xbox. this function's purpose is to pre-fill GPU's vertex cache before actual draw call in order to speed up draw calls.
+	// simply skip this function and handle the draw calls followed up is enough. trampoline is ok since pgraph is capable of handling this situation.
 	LOG_UNIMPLEMENTED();
 }
 
