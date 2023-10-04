@@ -557,6 +557,7 @@ extern D3DMATRIX g_xbox_transform_ModelView;
 extern D3DMATRIX g_xbox_transform_InverseModelView;
 extern D3DMATRIX g_xbox_transform_Composite;
 extern D3DMATRIX g_xbox_DirectModelView_View;
+extern D3DMATRIX g_xbox_DirectModelView_InverseView;
 extern D3DMATRIX g_xbox_DirectModelView_World;
 extern D3DMATRIX g_xbox_DirectModelView_Projection;
 extern bool g_VertexShader_dirty;
@@ -1712,7 +1713,7 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 	// todo: figure out how to compose View matrix via NV2A content. here is hack using View matrix from xbox d3d.
 	extern D3D8TransformState d3d8TransformState;
 	g_xbox_DirectModelView_View= (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
-
+	D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_DirectModelView_InverseView, NULL, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
 	D3DMATRIX matUnit;
 	memset(&matUnit._11, 0, sizeof(matUnit));
 	matUnit._11 = 1.0;
@@ -2756,6 +2757,14 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
 
 }
+
+void XformBy4x3(D3DVECTOR * res, CONST D3DVECTOR * v, FLOAT w, CONST D3DMATRIX * m)
+{				
+	res->x = v->x*m->_11 + v->y*m->_21 + v->z*m->_31 + w*m->_41;
+	res->y = v->x*m->_12 + v->y*m->_22 + v->z*m->_32 + w*m->_42;
+	res->z = v->x*m->_13 + v->y*m->_23 + v->z*m->_33 + w*m->_43;
+				
+}
 // Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
 void CxbxrImpl_LazySetLights(NV2AState* d)
 {
@@ -2787,6 +2796,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 		D3DVECTOR pos;
 		D3DVECTOR dir;
 		D3DVECTOR hv, EyeDirection;
+		D3DVECTOR NV2ALightdir, tmpDir, NV2ALightPosition, tmpPosition;
 		EyeDirection = { 0.0,0.0,-1.0 };
 		for (lightNum = 0; lightNum < 8; lightNum++) {
 			bool bEnable;
@@ -2805,18 +2815,30 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_INFINITE://D3DLIGHT_DIRECTIONAL
 				NV2A_Light8[lightNum].Type= D3DLIGHT_DIRECTIONAL;
 				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
-				NV2A_Light8[lightNum].Direction.x =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
-				NV2A_Light8[lightNum].Direction.y =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
-				NV2A_Light8[lightNum].Direction.z =- pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[2];
+				NV2ALightdir.x = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
+				NV2ALightdir.y = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
+				NV2ALightdir.z = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[2];
+				
+				XformBy4x3(&tmpDir, &NV2ALightdir,0.0f, &g_xbox_DirectModelView_InverseView);
+
+				NV2A_Light8[lightNum].Direction.x =-tmpDir.x;
+				NV2A_Light8[lightNum].Direction.y =-tmpDir.y;
+				NV2A_Light8[lightNum].Direction.z =-tmpDir.z;
 				bEnable = true;
 				break;
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_LOCAL: //D3DLIGHT_POINT
 				NV2A_Light8[lightNum].Type = D3DLIGHT_POINT;
 				//Push1f(pPush,NV097_SET_LIGHT_LOCAL_RANGE(lightNum),	pLight->Light8.Range);
 				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
-				NV2A_Light8[lightNum].Position.x = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[0];
-				NV2A_Light8[lightNum].Position.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
-				NV2A_Light8[lightNum].Position.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
+				NV2ALightPosition.x = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[0];
+				NV2ALightPosition.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
+				NV2ALightPosition.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
+
+				XformBy4x3(&tmpPosition, &NV2ALightPosition, 1.0f, &g_xbox_DirectModelView_InverseView);
+
+				NV2A_Light8[lightNum].Position.x = tmpPosition.x;
+				NV2A_Light8[lightNum].Position.y = tmpPosition.y;
+				NV2A_Light8[lightNum].Position.z = tmpPosition.z;
 				NV2A_Light8[lightNum].Attenuation0 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[0];
 				NV2A_Light8[lightNum].Attenuation1 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[1];
 				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
@@ -2825,18 +2847,30 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_SPOT: //D3DLIGHT_SPOT
 				NV2A_Light8[lightNum].Type = D3DLIGHT_SPOT;
 				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
-				NV2A_Light8[lightNum].Position.x = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[0];
-				NV2A_Light8[lightNum].Position.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
-				NV2A_Light8[lightNum].Position.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
+				NV2ALightPosition.x = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[0];
+				NV2ALightPosition.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
+				NV2ALightPosition.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
+
+				XformBy4x3(&tmpPosition, &NV2ALightPosition, 1.0f, &g_xbox_DirectModelView_InverseView);
+
+				NV2A_Light8[lightNum].Position.x = tmpPosition.x;
+				NV2A_Light8[lightNum].Position.y = tmpPosition.y;
+				NV2A_Light8[lightNum].Position.z = tmpPosition.z;
 				NV2A_Light8[lightNum].Attenuation0 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[0];
 				NV2A_Light8[lightNum].Attenuation1 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[1];
 				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
 				float Falloff_L = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[0]; //todo: Falloff_L/Falloff_M/Falloff_N there should be 3 components but not found in Light8/Light9
 				float Falloff_M = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[1];
 				float Falloff_N = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[2];
-				NV2A_Light8[lightNum].Direction.x = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[0];
-				NV2A_Light8[lightNum].Direction.y = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[1];
-				NV2A_Light8[lightNum].Direction.z = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[2];
+				NV2ALightdir.x = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[0];
+				NV2ALightdir.y = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[1];
+				NV2ALightdir.z = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[2];
+
+				XformBy4x3(&tmpDir, &NV2ALightdir, 0.0f, &g_xbox_DirectModelView_InverseView);
+
+				NV2A_Light8[lightNum].Direction.x = -tmpDir.x;
+				NV2A_Light8[lightNum].Direction.y = -tmpDir.y;
+				NV2A_Light8[lightNum].Direction.z = -tmpDir.z;
 				float W = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[3]; // there is no W member of Light8
 				// Fixme!!! there is no eazy way to reverse Falloff from Falloff_L/Falloff_M, so I put the default value 1.0f here.
 				NV2A_Light8[lightNum].Falloff = 1.0f;
@@ -2881,6 +2915,13 @@ void D3D_draw_state_update(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
+
+	// update transfoms
+	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
+	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM) {
+		CxbxrImpl_LazySetTransform(d);
+		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TRANSFORM;
+	}
 
 	// update point params, Xbox takes everything from texture stage 3
 	// hack since we're using all pgraph processing now.
@@ -2963,12 +3004,6 @@ void D3D_draw_state_update(NV2AState* d)
 		}
 	//}
 
-	// update transfoms
-	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
-	if(NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM){
-		CxbxrImpl_LazySetTransform(d);
-		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TRANSFORM;
-	}
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
