@@ -1868,7 +1868,9 @@ int pgraph_handle_method(
                     case X_D3DDevice_BeginScene:  break;
                     case X_D3DDevice_BeginState:  break;	case X_D3DDevice_BeginStateBig:  break;
                     case X_D3DDevice_BeginStateBlock:  break;
-                    case X_D3DDevice_BeginVisibilityTest:  break;
+                    case X_D3DDevice_BeginVisibilityTest:
+                        *(bool*)argv[1] = false;
+                        break;
                     case X_D3DDevice_BlockOnFence:  break;
                     case X_D3DDevice_BlockUntilIdle:  break;
                     case X_D3DDevice_BlockUntilVerticalBlank:
@@ -1928,8 +1930,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_EndScene:  break;
                     case X_D3DDevice_EndState:  break;
                     case X_D3DDevice_EndStateBlock:  break;
-                    case X_D3DDevice_EndVisibilityTest:  break;
-                    case X_D3DDevice_EndVisibilityTest_0:  break;
+                    case X_D3DDevice_EndVisibilityTest:  //break;  //fall through
+                    case X_D3DDevice_EndVisibilityTest_0:
+                        *(bool*)argv[1] = false;
+                        break;
                     case X_D3DDevice_FlushVertexCache:  break;
                     case X_D3DDevice_GetBackBuffer:  break;
                     case X_D3DDevice_GetBackBuffer2:  break;

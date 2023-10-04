@@ -358,11 +358,9 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
     WaitForPGRAPH = true;
     //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
     PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-    PBTokenArray[3] = (DWORD)StartVertex;
-    PBTokenArray[4] = (DWORD)VertexCount;
 
     //give the correct token enum here, and it's done.
-    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_APIName, argCount, PBTokenArray);//argCount, not necessary, default to 14
+    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_APIName, 1, PBTokenArray);//argCount, not necessary, default to 14
 
     EmuKickOff();
 
