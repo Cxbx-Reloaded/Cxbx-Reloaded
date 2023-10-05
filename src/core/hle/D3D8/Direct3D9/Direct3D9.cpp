@@ -9003,15 +9003,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_InsertCallback)
 	LOG_INCOMPLETE();
 }
 
+unsigned int MaxRectPatchVertexCount = 0;
+std::map<uint32_t, D3DRECTPATCH_INFO> g_RectPatchInfoCache;
+std::map<uint32_t, D3DTRIPATCH_INFO>  g_TriPatchInfoCache;
 // ******************************************************************
 // * patch: D3DDevice_DrawRectPatch
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
 (
 	uint_xt					Handle,
-	CONST float_xt				*pNumSegs,
-	CONST D3DRECTPATCH_INFO *pRectPatchInfo
-)
+	CONST float_xt* pNumSegs,
+	CONST D3DRECTPATCH_INFO* pRectPatchInfo
+	)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Handle)
@@ -9020,10 +9023,26 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
 		LOG_FUNC_END;
 
 	CxbxUpdateNativeD3DResources();
-
-	HRESULT hRet = g_pD3DDevice->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
+    //setup DrawContext in order to call VertexBufferConverter.Apply() to setup stream source and vertex buffer
+	CxbxDrawContext DrawContext = {};
+	DrawContext.XboxPrimitiveType = xbox::X_D3DPRIMITIVETYPE::X_D3DPT_QUADLIST;
+	D3DRECTPATCH_INFO tmpRectPatchInfo;
+	if (pRectPatchInfo != nullptr) {
+		g_RectPatchInfoCache.insert(std::pair<uint32_t, D3DRECTPATCH_INFO>(Handle, *pRectPatchInfo));
+	}
+	else {
+		//d3d9 seems unhappy when pRectPatchInfo==nullptr
+		auto it = g_RectPatchInfoCache.find(Handle);
+		tmpRectPatchInfo = it->second;
+		pRectPatchInfo = &tmpRectPatchInfo;
+	}
+	DrawContext.dwVertexCount = (pRectPatchInfo->StartVertexOffsetHeight + pRectPatchInfo->Height) * pRectPatchInfo->Stride;
+	//keep max. vertex count so we can use same vertex count in DrawContext which will result in using the same vertex buffer cache.
+	if (MaxRectPatchVertexCount < DrawContext.dwVertexCount)MaxRectPatchVertexCount = DrawContext.dwVertexCount;
+	DrawContext.dwVertexCount = MaxRectPatchVertexCount;
+	VertexBufferConverter.Apply(&DrawContext);
+	HRESULT hRet = g_pD3DDevice->DrawRectPatch(Handle, pNumSegs, pRectPatchInfo);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawRectPatch");
-
 	return hRet;
 }
 
