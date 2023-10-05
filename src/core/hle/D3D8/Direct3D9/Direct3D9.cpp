@@ -12968,7 +12968,7 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSwapCallback)
 }
 
 xbox::X_D3DBaseTexture xboxPersistTexture = { 0 };
-xbox::X_D3DSurface xboxPersistSurface = { 0 };
+//xbox::X_D3DSurface xboxPersistSurface = { 0 };
 extern xbox::PVOID xbox::AvSavedDataAddress;
 extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
 extern bool g_bForceHostARGBConversion;
@@ -12980,10 +12980,14 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 		return nullptr;
 	//now we copy the host surface data in the buffer to the surface AvSetSavedDataAddress pointing to so it can persist after rebooting.
 	xbox::X_D3DSurface* pPersistSurface = (xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
-	if (xboxPersistSurface.Data != NULL)
-		return &xboxPersistSurface;
+	if (xboxPersistTexture.Data != NULL)
+		return (xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
 	IDirect3DSurface* pHostPersistSurface;
 	pHostPersistSurface = GetHostSurface(pPersistSurface, D3DUSAGE_RENDERTARGET);
+	//copy AVSavedAddress common and modify it then set to our own persist texture/surface
+	xboxPersistTexture = *(xbox::X_D3DBaseTexture*)xbox::AvSavedDataAddress;
+	xboxPersistTexture.Common &= 0xFFFEFFFF;
+
 	// Interpret Width/Height/BPP
 	xbox::X_D3DPixelContainer* pPixelContainer = (xbox::X_D3DPixelContainer*)pPersistSurface;
 	xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
@@ -12997,15 +13001,6 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 	UINT xboxWidth, xboxHeight, dwDepth, dwRowPitch, dwSlicePitch;
 	// Interpret Width/Height/BPP
 	CxbxGetPixelContainerMeasures(pPixelContainer, 0, &xboxWidth, &xboxHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
-	//copy AVSavedAddress common and modify it then set to our own persist texture/surface
-	xboxPersistTexture = *(xbox::X_D3DBaseTexture*)xbox::AvSavedDataAddress;
-	xboxPersistTexture.Common &= 0x00FEFFFF;
-	xboxPersistSurface = *(xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
-	xboxPersistSurface.Common &= 0x00FFFFFF;
-	//copy persisted data from AVSavedAddress->data to newly allocated memroy buffer.
-	xboxPersistSurface.Data = (DWORD)malloc(dwSlicePitch);
-	xboxPersistTexture.Data = xboxPersistSurface.Data;
-	memcpy((BYTE *)xboxPersistSurface.Data, (BYTE*)((DWORD)pPersistSurface->Data|0x80000000), dwSlicePitch);
 	// Host width and height dimensions
 	UINT hostWidth = xboxWidth;
 	UINT hostHeight = xboxHeight;
@@ -13035,10 +13030,11 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 			if ((PCFormat == HostAVSavedSurdaceDesc.Format)
 				&& (dwSlicePitch == TmpLockedRect.Pitch * HostAVSavedSurdaceDesc.Height)) {
 				BYTE* dst = (BYTE*)TmpLockedRect.pBits;
-				BYTE* src = (BYTE*)xboxPersistTexture.Data;
+				BYTE* src = (BYTE*)GetDataFromXboxResource(pPersistSurface);
 				memcpy(dst, src, TmpLockedRect.Pitch * HostAVSavedSurdaceDesc.Height);
 			}
 		}
+		hRet = pTmpHostSurface->UnlockRect();
 	}
 	IDirect3DTexture* pNewHostPersistTexture;
 	IDirect3DSurface* pNewHostPersistSurface;
@@ -13066,14 +13062,14 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 				SetHostResourceForcedXboxData(&xboxPersistTexture, pNewHostPersistTexture, -1);
 				SetHostResourcePCFormat(&xboxPersistTexture, HostAVSavedSurdaceDesc.Format);
 				SetHostResourcehashLifeTime(&xboxPersistTexture, 1000ms);
-				SetHostResourceForcedXboxData(&xboxPersistSurface, pNewHostPersistSurface, -1);
-				SetHostResourcePCFormat(&xboxPersistSurface, HostAVSavedSurdaceDesc.Format);
-				SetHostResourcehashLifeTime(&xboxPersistSurface, 1000ms);
+				SetHostResourceForcedXboxData(pPersistSurface, pNewHostPersistSurface, -1);
+				SetHostResourcePCFormat(pPersistSurface, HostAVSavedSurdaceDesc.Format);
+				SetHostResourcehashLifeTime(pPersistSurface, 1000ms);
 				SetHostResourcePCFormat((xbox::X_D3DResource*)xbox::AvSavedDataAddress, HostAVSavedSurdaceDesc.Format);
 				pHostPersistSurface->Release();
 				//pNewHostPersistTexture->Release();
 				//pNewHostPersistSurface->Release();
-				return &xboxPersistSurface;
+				return pPersistSurface;
 			}
 		}
 	}
@@ -13128,15 +13124,14 @@ void CxbxrImpl_PersistDisplay()
 {
 	LOG_INIT
 	//free previously stored persist surface data if it exists
-	if (xboxPersistSurface.Data != NULL) {
-		free((void*)xboxPersistSurface.Data);
-		xboxPersistSurface.Data = NULL;
+	if (xboxPersistTexture.Data != NULL) {
+//		free((void*)xboxPersistTexture.Data);
 		xboxPersistTexture.Data = NULL;
 	}
 	IDirect3DSurface* pXboxBackBufferHostSurface;
 	D3DSURFACE_DESC pXboxBackBufferHostSurdaceDesc;
 	//retrive xbox back buffer surface, if backbuffer surface doesn't exist, use xbox render target surface instead.
-	xboxPersistSurface = g_pXbox_BackBufferSurface != nullptr ? *g_pXbox_BackBufferSurface : *g_pXbox_RenderTarget;
+	xbox::X_D3DSurface xboxPersistSurface = g_pXbox_BackBufferSurface != nullptr ? *g_pXbox_BackBufferSurface : *g_pXbox_RenderTarget;
 	pXboxBackBufferHostSurface = GetHostSurface(&xboxPersistSurface);
 	pXboxBackBufferHostSurface->GetDesc(&pXboxBackBufferHostSurdaceDesc);
 	//alter common flags of xbox persist texture and surface.
@@ -13169,44 +13164,14 @@ void CxbxrImpl_PersistDisplay()
 	if (hRet != D3D_OK) {
 		EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
 	}
-	
-	xboxPersistSurface.Data = (DWORD)malloc(HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height);//g_VMManager.AllocateContiguousMemory(HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height,0x10000,0x80000,0x400, XBOX_PAGE_READWRITE);
-	xboxPersistTexture.Data = xboxPersistSurface.Data;
+	//now we copy the host surface data in the buffer to the surface AvSetSavedDataAddress pointing to so it can persist after rebooting.
+	xbox::X_D3DSurface* pPersistSurface = (xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
+
 	BYTE* dst, * src;
-	dst = (BYTE*)(xboxPersistSurface.Data);
+	dst = (BYTE*)GetDataFromXboxResource(pPersistSurface);
 	src = (BYTE*)((DWORD)HostLockedRect.pBits );
 	memcpy(dst, src, HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height);
 	pXboxPersistSurfaceHostSurface->UnlockRect();
-
-	//now we copy the host surface data in the buffer to the surface AvSetSavedDataAddress pointing to so it can persist after rebooting.
-	xbox::X_D3DSurface* pPersistSurface = (xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
-	//CreateHostResource();
-	// Interpret Width/Height/BPP
-	xbox::X_D3DPixelContainer* pPixelContainer = (xbox::X_D3DPixelContainer*)pPersistSurface;
-	xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
-	D3DFORMAT PCFormat = EmuXB2PC_D3DFormat(X_Format);
-	bool bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
-	bool bSwizzled = EmuXBFormatIsSwizzled(X_Format);
-	bool bCompressed = EmuXBFormatIsCompressed(X_Format);
-	UINT dwBPP = EmuXBFormatBytesPerPixel(X_Format);
-	UINT dwMipMapLevels = CxbxGetPixelContainerMipMapLevels(pPixelContainer);
-	UINT xboxWidth, xboxHeight, dwDepth, dwRowPitch, dwSlicePitch;
-	// Interpret Width/Height/BPP
-	CxbxGetPixelContainerMeasures(pPixelContainer, 0, &xboxWidth, &xboxHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
-	// Host width and height dimensions
-	UINT hostWidth = xboxWidth;
-	UINT hostHeight = xboxHeight;
-	//if (PCFormat == pXboxBackBufferHostSurdaceDesc.Format) {
-	if(dwSlicePitch>= HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height){
-		dst = (BYTE*)(pPersistSurface->Data | 0x80000000);
-		src = (BYTE*)(xboxPersistSurface.Data );
-		memcpy(dst, src, HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height);
-	}
-	else {
-		;//show warning message.
-	}
-
-
 }
 // ******************************************************************
 // * patch: D3DDevice_PersistDisplay
