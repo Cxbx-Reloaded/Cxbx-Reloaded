@@ -35,6 +35,7 @@
 #define LOG_PREFIX CXBXR_MODULE::SDL
 
 #include <assert.h>
+#include <algorithm>
 #include <thread>
 #include "core\kernel\support\Emu.h"
 #include "SdlJoystick.h"

@@ -84,6 +84,4 @@ extern volatile bool g_bPrintfOn;
 #define CxbxSetThreadName(Name)
 #endif
 
-#include <filesystem>
-
 #endif
