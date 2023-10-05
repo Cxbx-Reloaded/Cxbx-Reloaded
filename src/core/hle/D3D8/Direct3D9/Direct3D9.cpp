@@ -62,7 +62,7 @@
 #include "common\input\DInputKeyboardMouse.h"
 #include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
-#include "VertexShaderSource.h"
+#include "VertexShaderCache.h"
 #include "Timer.h"
 
 #include <imgui.h>
@@ -2273,7 +2273,7 @@ static void CreateDefaultD3D9Device
     DrawInitialBlackScreen();
 
     // Set up cache
-    g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
+    g_VertexShaderCache.ResetD3DDevice(g_pD3DDevice);
 
     // Set up ImGui's render backend
     ImGui_ImplDX9_Init(g_pD3DDevice);

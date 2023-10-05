@@ -34,7 +34,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\Direct3D9\RenderStates.h" // For XboxRenderStateConverter
-#include "core\hle\D3D8\Direct3D9\VertexShaderSource.h" // For g_VertexShaderSource
+#include "core\hle\D3D8\Direct3D9\VertexShaderCache.h" // For g_VertexShaderCache
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
@@ -1170,8 +1170,8 @@ void CxbxUpdateHostVertexShader()
 		assert(pTokens);
 		// Create a vertex shader from the tokens
 		DWORD shaderSize;
-		auto VertexShaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
-		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderSource.GetShader(VertexShaderKey);
+		auto VertexShaderKey = g_VertexShaderCache.CreateShader(pTokens, &shaderSize);
+		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderCache.GetShader(VertexShaderKey);
 		HRESULT hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
@@ -1559,7 +1559,7 @@ void CxbxImpl_DeleteVertexShader(DWORD Handle)
 	RegisterCxbxVertexDeclaration(pCxbxVertexDeclaration->Key, nullptr); // Remove from cache (which will free present pCxbxVertexDeclaration)
 
 	// Release the host vertex shader
-	g_VertexShaderSource.ReleaseShader(pCxbxVertexShader->Key);
+	g_VertexShaderCache.ReleaseShader(pCxbxVertexShader->Key);
 #endif
 }
 
