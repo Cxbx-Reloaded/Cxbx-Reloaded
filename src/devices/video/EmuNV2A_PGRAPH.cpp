@@ -3450,72 +3450,15 @@ int pgraph_handle_method(
                 /* Handles all the light source props except for NV097_SET_BACK_LIGHT_* */
                 CASE_256(NV097_SET_LIGHT_AMBIENT_COLOR, 4): {//pg->KelvinPrimitive.SetLight[8].{AmbientColor[3],DiffuseColor[3],SpecularColor[3],LocalRange,InfiniteHalfVector[3],InfiniteDirection[3],SpotFalloff[3],SpotDirection[4],LocalPosition[3],LocalAttenuation[3],Rev_1074[3]}
 					slot = (method - NV097_SET_LIGHT_AMBIENT_COLOR) / 4;
-
+                 /*
                     for (size_t arg_count = 0; arg_count < method_count; arg_count++,slot++) {
                         arg0 = ldl_le_p(argv + arg_count);
 
                         unsigned int part = slot % 32;
-                        unsigned int light_index = slot / 32; /* [Light index] */ //each light holds 32 dwords 
+                        unsigned int light_index = slot/32; // [Light index]  //each light holds 32 dwords 
                         assert(light_index < 8);
-                        /*  //disable LLE OpenGL code
-                        switch(part) {//check the definition of pg->ltctxb, then correlate to KelvinPrimitive.SetBackLight.???
-                            CASE_3(0, 1)://NV097_SET_LIGHT_AMBIENT_COLOR
-                                //part -= NV097_SET_LIGHT_AMBIENT_COLOR / 4;
-                                pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_AMB + light_index *6][part] = arg0;
-                                pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_AMB + light_index *6] = true;
-                                break;
-                            CASE_3(3, 1)://NV097_SET_LIGHT_DIFFUSE_COLOR
-                                //part -= NV097_SET_LIGHT_DIFFUSE_COLOR / 4;
-                                pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_DIF + light_index *6][part] = arg0;
-                                pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_DIF + light_index *6] = true;
-                                break;
-                            CASE_3(6, 1)://NV097_SET_LIGHT_SPECULAR_COLOR
-                                //part -= NV097_SET_LIGHT_SPECULAR_COLOR / 4;
-                                pg->ltctxb[NV_IGRAPH_XF_LTCTXB_L0_SPC + light_index *6][part] = arg0;
-                                pg->ltctxb_dirty[NV_IGRAPH_XF_LTCTXB_L0_SPC + light_index *6] = true;
-                                break;
-                            case 9://NV097_SET_LIGHT_LOCAL_RANGE:
-                                pg->ltc1[NV_IGRAPH_XF_LTC1_r0 + light_index][0] = arg0;
-                                pg->ltc1_dirty[NV_IGRAPH_XF_LTC1_r0 + light_index] = true;
-                                break;
-                            CASE_3(10,1)://NV097_SET_LIGHT_INFINITE_HALF_VECTOR
-                                //part -= NV097_SET_LIGHT_INFINITE_HALF_VECTOR / 4;
-                                //KelvinPrimitive.SetLight[8].InfiniteHalfVector[3]
-                                //pg->light_infinite_half_vector[light_index][part] = *(float*)&arg0;
-                                break;
-                            CASE_3(13,1)://NV097_SET_LIGHT_INFINITE_DIRECTION
-                                //part -= NV097_SET_LIGHT_INFINITE_DIRECTION / 4;
-                                //KelvinPrimitive.SetLight[8].InfiniteDirection[3]
-                                //pg->light_infinite_direction[light_index][part] = *(float*)&arg0;
-                                break;
-                            CASE_3(16,1)://NV097_SET_LIGHT_SPOT_FALLOFF
-                                //part -= NV097_SET_LIGHT_SPOT_FALLOFF / 4;
-                                pg->ltctxa[NV_IGRAPH_XF_LTCTXA_L0_K + light_index *2][part] = arg0;
-                                pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_L0_K + light_index *2] = true;
-                                break;
-                            CASE_4(19,1)://NV097_SET_LIGHT_SPOT_DIRECTION
-                                //part -= NV097_SET_LIGHT_SPOT_DIRECTION / 4;
-                                //KelvinPrimitive.SetLight[8].SpotDirection[4]
-                                pg->ltctxa[NV_IGRAPH_XF_LTCTXA_L0_SPT + light_index *2][part] = arg0;
-                                pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_L0_SPT + light_index *2] = true;
-                                break;
-                            CASE_3(23,1)://NV097_SET_LIGHT_LOCAL_POSITION
-                                //part -= NV097_SET_LIGHT_LOCAL_POSITION / 4;
-                                //KelvinPrimitive.SetLight[8].LocalPosition[]
-                                //pg->light_local_position[light_index][part] = *(float*)&arg0;
-                                break;
-                            CASE_3(26,1)://NV097_SET_LIGHT_LOCAL_ATTENUATION
-                                //part -= NV097_SET_LIGHT_LOCAL_ATTENUATION / 4;
-                                //pg->KelvinPrimitive.SetLight[8].LocalAttenuation[3]
-                                //pg->light_local_attenuation[light_index][part] = *(float*)&arg0;
-                                break;
-                            default:
-                                //assert(false);
-								//Rev_1074[3]
-								break;
-                        }
-                        */
                     }
+                */
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 }

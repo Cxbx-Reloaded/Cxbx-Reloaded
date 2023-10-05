@@ -1505,7 +1505,7 @@
 #   define NV097_SET_LIGHT_INFINITE_HALF_VECTOR               0x00001028 // [8.4][3]
 #   define NV097_SET_LIGHT_INFINITE_DIRECTION                 0x00001034 // [8.5][3]
 #   define NV097_SET_LIGHT_SPOT_FALLOFF                       0x00001040 // [8.6][3]
-#   define NV097_SET_LIGHT_SPOT_DIRECTION                     0x0000104C // [8.7]
+#   define NV097_SET_LIGHT_SPOT_DIRECTION                     0x0000104C // [8.7][3]
 #   define NV097_SET_LIGHT_LOCAL_POSITION                     0x0000105C // [8.8][3]
 #   define NV097_SET_LIGHT_LOCAL_ATTENUATION                  0x00001068 // [8.9][3]
 #   define NV097_SET_STIPPLE_CONTROL                          0x0000147C  
