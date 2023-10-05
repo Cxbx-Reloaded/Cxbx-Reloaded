@@ -1357,6 +1357,40 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.forceRehash = false;
 }
 
+void SetHostResourceForcedXboxData(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD dwSize = 0)
+{
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
+
+	if (resourceInfo.pHostResource) {
+		EmuLog(LOG_LEVEL::WARNING, "SetHostResource: Overwriting an existing host resource");
+	}
+
+	// Increments reference count
+	resourceInfo.pHostResource = pHostResource;
+	resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxResource);
+	resourceInfo.pXboxData = (void *)pXboxResource->Data;
+	resourceInfo.szXboxDataSize = dwSize > 0 ? dwSize : GetXboxResourceSize(pXboxResource);
+	resourceInfo.hash = ComputeHash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize);
+	resourceInfo.hashLifeTime = 1ms;
+	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
+	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
+	resourceInfo.forceRehash = false;
+}
+
+void SetHostResourcehashLifeTime(xbox::X_D3DResource* pXboxResource, std::chrono::milliseconds hashLifeTime=1ms, int iTextureStage = -1)
+{
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
+
+	resourceInfo.hashLifeTime = hashLifeTime;
+	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
+	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
+	resourceInfo.forceRehash = false;
+}
+
 void SetHostResourcePCFormat(xbox::X_D3DResource* pXboxResource, D3DFORMAT PCFormat, int iTextureStage = -1)
 {
 	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
@@ -6342,13 +6376,98 @@ void WINAPI CxbxrImpl_CopyRects
 	CONST POINT * pDestPointsArray
 	)
 {
+	xbox::X_D3DFORMAT src_X_Format = GetXboxPixelContainerFormat(pSourceSurface);
+	xbox::X_D3DFORMAT dst_X_Format = GetXboxPixelContainerFormat(pDestinationSurface);
+	extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
+	bool bSourceIsBumpmap = EmuXBFormatIsBumpMap(src_X_Format);
+	bool bDestinationIsBumpmap = EmuXBFormatIsBumpMap(dst_X_Format);
+	D3DSURFACE_DESC hostSourceDesc, hostDestDesc;
+	auto pHostSourceSurface = GetHostSurface(pSourceSurface);
+	pHostSourceSurface->GetDesc(&hostSourceDesc);
+	auto pHostDestSurface = GetHostSurface(pDestinationSurface);
+	pHostDestSurface->GetDesc(&hostDestDesc);
+	HRESULT hRet;
+	//is we have one is bumpmap and one is not, deal with it to make both the same.
+	if (bSourceIsBumpmap) {
+		if (hostSourceDesc.Format == D3DFMT_A8R8G8B8) {
+			if (hostDestDesc.Format != D3DFMT_A8R8G8B8) {
+				//GetHostResource(); CreateHostResource();
+				auto key = GetHostResourceKey(pDestinationSurface);
+				auto& ResourceCache = GetResourceCache(key);
+				auto it = ResourceCache.find(key);
+				//if source not found, just create a host texture with ARGB
+				if (it != ResourceCache.end()) {
+					if (it->second.pHostResource != nullptr) {
+						D3DFORMAT defaultPCFormat = EmuXB2PC_D3DFormat(dst_X_Format);
+						//if(it->second.PCFormat!= D3DFMT_A8R8G8B8){
+						//defaultPCFormat is UV bumpmap format, if the host resource is uv bumpmap format, we erase it from cache and force regenerate it with ARGB
+						//if (it->second.PCFormat == defaultPCFormat) {
+							//FreeHostResource(key);
+							//erase the host resource empty key
+							ResourceCache.erase(key);
+						//}
+					}
+					else {
+						//erase the host resource empty key
+						;//ResourceCache.erase(key);
+					}
+					EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
+				}
+				xbox::X_D3DBaseTexture* pDestinationTexture;
+				if (pDestinationSurface->Parent != nullptr) {
+					pDestinationTexture = pDestinationSurface->Parent;
+				}
+				else {
+					pDestinationTexture = (xbox::X_D3DBaseTexture*)pDestinationSurface;
+					pDestinationTexture->Common &= 0xFFFEFFFF;
+				}
+				key = GetHostResourceKey(pDestinationTexture);
+				it = ResourceCache.find(key);
+				if (it != ResourceCache.end()) {
+					if (it->second.pHostResource != nullptr) {
+						D3DFORMAT defaultPCFormat = EmuXB2PC_D3DFormat(dst_X_Format);
+						//if(it->second.PCFormat!= D3DFMT_A8R8G8B8){
+						//defaultPCFormat is UV bumpmap format, if the host resource is uv bumpmap format, we erase it from cache and force regenerate it with ARGB
+						//if (it->second.PCFormat == defaultPCFormat) {
+							//FreeHostResource(key);
+							//erase the host resource empty key
+							ResourceCache.erase(key);
+						//}
+					}
+					else {
+						//erase the host resource empty key
+						;//ResourceCache.erase(key);
+					}
+					EmuLog(LOG_LEVEL::WARNING, "GetHostResource: Resource not registered or does not have a host counterpart!");
+				}
+				IDirect3DTexture* pHostDestTexture;
+				extern bool g_bForceHostARGBConversion;
+				if (EmuXBFormatCanBeConvertedToARGB(dst_X_Format))
+					g_bForceHostARGBConversion = true;
+				HRESULT hRet = g_pD3DDevice->CreateTexture(hostDestDesc.Width, hostDestDesc.Height,
+					1, // Levels
+					D3DUSAGE_DYNAMIC, // Usage always as render target D3DUSAGE_DYNAMIC
+					hostSourceDesc.Format,
+					D3DPOOL_DEFAULT, // D3DPOOL_DEFAULT D3DPOOL_SYSTEMMEM
+					&pHostDestTexture,
+					nullptr // pSharedHandle
+				);
+				//HRESULT hRet = pHostDestSurface->GetContainer(IID_PPV_ARGS(&pHostDestTexture));
+				//pHostDestTexture =(IDirect3DTexture*) GetHostBaseTexture(pDestinationTexture);
+				SetHostTexture(pDestinationTexture, pHostDestTexture, -1);
+				hRet = pHostDestTexture->GetSurfaceLevel(0, &pHostDestSurface);
+				pHostDestSurface->GetDesc(&hostDestDesc);
+				SetHostSurface(pDestinationSurface, pHostDestSurface, -1);
+				//SetHostSurface(pDestinationSurface, pHostDestSurface,-1);
+				g_bForceHostARGBConversion = false;
+			}
+		}
+	}
+
 	// We skip the trampoline to prevent unnecessary work
     // As our surfaces remain on the GPU, calling the trampoline would just
     // result in a memcpy from an empty Xbox surface to another empty Xbox Surface
-    D3DSURFACE_DESC hostSourceDesc, hostDestDesc;
-    auto pHostSourceSurface = GetHostSurface(pSourceSurface);
-    auto pHostDestSurface = GetHostSurface(pDestinationSurface);
-
+    
     if (pHostSourceSurface == nullptr || pHostDestSurface == nullptr) {
         // Test Case: DOA2 attempts to copy from an index buffer resource type
         // TODO: What should we do here?
@@ -6356,9 +6475,7 @@ void WINAPI CxbxrImpl_CopyRects
         return;
     }
 
-    pHostSourceSurface->GetDesc(&hostSourceDesc);
-    pHostDestSurface->GetDesc(&hostDestDesc);
-
+    
     // If the source is a render-target and the destination is not, we need force it to be re-created as one
     // This is because StrechRects cannot copy from a Render-Target to a Non-Render Target
     // Test Case: Crash Bandicoot: Wrath of Cortex attemps to copy the render-target to a texture
@@ -6423,12 +6540,20 @@ void WINAPI CxbxrImpl_CopyRects
         DestRect.top *= destScaleY;
         DestRect.bottom *= destScaleY;
 
-        HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
+        hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
         if (FAILED(hRet)) {
 			// Fallback for cases which StretchRect cannot handle (such as copying from texture to texture)
 			hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, &DestRect, pHostSourceSurface, nullptr, &SourceRect, D3DTEXF_LINEAR, 0);
 			if (FAILED(hRet)) {
 				LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
+				D3DLOCKED_RECT HostSrcLockedRect, HostDstLockedRect;
+				hRet = pHostSourceSurface->LockRect(&HostSrcLockedRect, NULL, D3DLOCK_NOOVERWRITE);
+				if (hRet == D3D_OK) {
+					hRet = pHostDestSurface->LockRect(&HostDstLockedRect, NULL, D3DLOCK_NOOVERWRITE);
+					if (hRet == D3D_OK) {
+						if (HostSrcLockedRect.Pitch == HostDstLockedRect.Pitch && hostDestDesc.Format == hostSourceDesc.Format);
+					}
+				}
 			}
         }
     }
@@ -7300,9 +7425,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				}
 			}
 		}
-		//store the PCFormat of created host resource for the ease of bumpmap/none bumpmap signed/unsigned format conversion.
-		SetHostResourcePCFormat(pResource, PCFormat);
-
+		
 		// Update D3DPool accordingly to the active D3DUsage flags
 		if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 			D3DPool = D3DPOOL_DEFAULT;
@@ -7372,6 +7495,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		ComPtr<IDirect3DCubeTexture> pIntermediateHostCubeTexture;
 
 		HRESULT hRet;
+
+		//store the PCFormat of created host resource for the ease of bumpmap/none bumpmap signed/unsigned format conversion.
+		SetHostResourcePCFormat(pResource, PCFormat);
 
 		// Create the surface/volume/(volume/cube/)texture
 		switch (XboxResourceType) {
@@ -12855,7 +12981,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 	//now we copy the host surface data in the buffer to the surface AvSetSavedDataAddress pointing to so it can persist after rebooting.
 	xbox::X_D3DSurface* pPersistSurface = (xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
 	if (xboxPersistSurface.Data != NULL)
-		free((BYTE *)xboxPersistSurface.Data);
+		return &xboxPersistSurface;
 	IDirect3DSurface* pHostPersistSurface;
 	pHostPersistSurface = GetHostSurface(pPersistSurface, D3DUSAGE_RENDERTARGET);
 	// Interpret Width/Height/BPP
@@ -12871,27 +12997,56 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 	UINT xboxWidth, xboxHeight, dwDepth, dwRowPitch, dwSlicePitch;
 	// Interpret Width/Height/BPP
 	CxbxGetPixelContainerMeasures(pPixelContainer, 0, &xboxWidth, &xboxHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
-	//
+	//copy AVSavedAddress common and modify it then set to our own persist texture/surface
+	xboxPersistTexture = *(xbox::X_D3DBaseTexture*)xbox::AvSavedDataAddress;
+	xboxPersistTexture.Common &= 0x00FEFFFF;
+	xboxPersistSurface = *(xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
+	xboxPersistSurface.Common &= 0x00FFFFFF;
+	//copy persisted data from AVSavedAddress->data to newly allocated memroy buffer.
 	xboxPersistSurface.Data = (DWORD)malloc(dwSlicePitch);
 	xboxPersistTexture.Data = xboxPersistSurface.Data;
 	memcpy((BYTE *)xboxPersistSurface.Data, (BYTE*)((DWORD)pPersistSurface->Data|0x80000000), dwSlicePitch);
 	// Host width and height dimensions
 	UINT hostWidth = xboxWidth;
 	UINT hostHeight = xboxHeight;
-    //copy AVSavedAddress common and modify it then set to our own persist texture/surface
-	xboxPersistTexture = *(xbox::X_D3DBaseTexture*)xbox::AvSavedDataAddress;
-	xboxPersistTexture.Common &= 0x00FEFFFF;
-	xboxPersistSurface = *(xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
-	xboxPersistSurface.Common &= 0x00FFFFFF;
 	D3DSURFACE_DESC HostAVSavedSurdaceDesc;
 	pHostPersistSurface->GetDesc(&HostAVSavedSurdaceDesc);
-	IDirect3DTexture* pNewHostPersistTexture;
-	IDirect3DSurface* pNewHostPersistSurface;
+	IDirect3DTexture* pTmpHostTexture;
+	IDirect3DSurface* pTmpHostSurface;
 	HRESULT hRet = g_pD3DDevice->CreateTexture(HostAVSavedSurdaceDesc.Width, HostAVSavedSurdaceDesc.Height,
 		1, // Levels
-		D3DUSAGE_DYNAMIC, // Usage always as render target
+		D3DUSAGE_DYNAMIC, // Usage always as render target D3DUSAGE_DYNAMIC
 		HostAVSavedSurdaceDesc.Format,
-		D3DPOOL_SYSTEMMEM, // D3DPOOL_DEFAULT
+		D3DPOOL_SYSTEMMEM, // D3DPOOL_DEFAULT D3DPOOL_SYSTEMMEM
+		&pTmpHostTexture,
+		nullptr // pSharedHandle
+	);
+	DEBUG_D3DRESULT(hRet, "D3DDevice_GetPersistedSurface::CreateTexture");
+	D3DLOCKED_RECT TmpLockedRect;
+	if (hRet == D3D_OK) {
+		hRet = pTmpHostTexture->GetSurfaceLevel(0, &pTmpHostSurface);
+		DEBUG_D3DRESULT(hRet, "D3DDevice_GetPersistedSurface::pNewHostSurface");
+		hRet = pTmpHostSurface->LockRect(&TmpLockedRect, NULL, D3DLOCK_NOSYSLOCK);
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in D3DDevice_GetPersistedSurface");
+			return nullptr;
+		}
+		else {
+			if ((PCFormat == HostAVSavedSurdaceDesc.Format)
+				&& (dwSlicePitch == TmpLockedRect.Pitch * HostAVSavedSurdaceDesc.Height)) {
+				BYTE* dst = (BYTE*)TmpLockedRect.pBits;
+				BYTE* src = (BYTE*)xboxPersistTexture.Data;
+				memcpy(dst, src, TmpLockedRect.Pitch * HostAVSavedSurdaceDesc.Height);
+			}
+		}
+	}
+	IDirect3DTexture* pNewHostPersistTexture;
+	IDirect3DSurface* pNewHostPersistSurface;
+	hRet = g_pD3DDevice->CreateTexture(HostAVSavedSurdaceDesc.Width, HostAVSavedSurdaceDesc.Height,
+		1, // Levels
+		D3DUSAGE_DYNAMIC, // Usage always as render target D3DUSAGE_DYNAMIC
+		HostAVSavedSurdaceDesc.Format,
+		D3DPOOL_DEFAULT, // D3DPOOL_DEFAULT D3DPOOL_SYSTEMMEM
 		&pNewHostPersistTexture,
 		nullptr // pSharedHandle
 	);
@@ -12900,20 +13055,20 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 	if (hRet == D3D_OK) {
 		hRet = pNewHostPersistTexture->GetSurfaceLevel(0, &pNewHostPersistSurface);
 		DEBUG_D3DRESULT(hRet, "D3DDevice_GetPersistedSurface::pNewHostSurface");
-		hRet = pNewHostPersistSurface->LockRect(&HostLockedRect, NULL, D3DLOCK_READONLY);
 		if (hRet != D3D_OK) {
 			EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in D3DDevice_GetPersistedSurface");
 			return nullptr;
 		}
 		else {
-			if ((PCFormat == HostAVSavedSurdaceDesc.Format)
-				&& (dwSlicePitch == HostLockedRect.Pitch * HostAVSavedSurdaceDesc.Height)) {
-				BYTE* dst = (BYTE*)HostLockedRect.pBits;
-				BYTE* src = (BYTE*)xboxPersistTexture.Data;
-				memcpy(dst, src, HostLockedRect.Pitch * HostAVSavedSurdaceDesc.Height);
-				SetHostTexture(&xboxPersistTexture, pNewHostPersistTexture, -1);
+			//CreateHostResource()
+			hRet = g_pD3DDevice->UpdateTexture(pTmpHostTexture, pNewHostPersistTexture);
+			if(!FAILED(hRet)){
+				SetHostResourceForcedXboxData(&xboxPersistTexture, pNewHostPersistTexture, -1);
 				SetHostResourcePCFormat(&xboxPersistTexture, HostAVSavedSurdaceDesc.Format);
-				SetHostSurface(&xboxPersistSurface, pNewHostPersistSurface, -1);
+				SetHostResourcehashLifeTime(&xboxPersistTexture, 1000ms);
+				SetHostResourceForcedXboxData(&xboxPersistSurface, pNewHostPersistSurface, -1);
+				SetHostResourcePCFormat(&xboxPersistSurface, HostAVSavedSurdaceDesc.Format);
+				SetHostResourcehashLifeTime(&xboxPersistSurface, 1000ms);
 				SetHostResourcePCFormat((xbox::X_D3DResource*)xbox::AvSavedDataAddress, HostAVSavedSurdaceDesc.Format);
 				pHostPersistSurface->Release();
 				//pNewHostPersistTexture->Release();
@@ -12922,55 +13077,10 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 			}
 		}
 	}
+
 	if(pHostPersistSurface)
 		pHostPersistSurface->Release();
 	return nullptr;//show warning message.
-}
-
-
-xbox::X_D3DSurface* CxbxrImpl_GetPersistedSurface()
-{
-	LOG_INIT
-
-	IDirect3DSurface* pXboxPersistSurfaceHostSurface;
-	IDirect3DTexture* pXboxPersistTextureHostTexture;
-	IDirect3DSurface* pXboxBackBufferHostSurface;
-	D3DSURFACE_DESC pXboxBackBufferHostSurdaceDesc;
-
-	HRESULT hRet = g_pD3DDevice->CreateTexture(pXboxBackBufferHostSurdaceDesc.Width, pXboxBackBufferHostSurdaceDesc.Height,
-		1, // Levels
-		D3DUSAGE_DYNAMIC, // Usage always as render target
-		pXboxBackBufferHostSurdaceDesc.Format,
-		D3DPOOL_SYSTEMMEM, // D3DPOOL_DEFAULT
-		&pXboxPersistTextureHostTexture,
-		nullptr // pSharedHandle
-	);
-	DEBUG_D3DRESULT(hRet, "D3DDevice_PersistDisplay::CreateTexture");
-
-	if (hRet == D3D_OK) {
-		hRet = pXboxPersistTextureHostTexture->GetSurfaceLevel(0, &pXboxPersistSurfaceHostSurface);
-		DEBUG_D3DRESULT(hRet, "D3DDevice_PersistDisplay::pNewHostSurface");
-	}
-	hRet = g_pD3DDevice->GetRenderTargetData(pXboxBackBufferHostSurface, pXboxPersistSurfaceHostSurface);
-	if (hRet != D3D_OK) {
-		EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
-	}
-
-	D3DLOCKED_RECT HostLockedRect;
-	hRet = pXboxPersistSurfaceHostSurface->LockRect(&HostLockedRect, NULL, NULL);
-	if (hRet != D3D_OK) {
-		EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
-	}
-	BYTE* dst, * src;
-	src = (BYTE*)xboxPersistSurface.Data;
-	dst = (BYTE*)HostLockedRect.pBits;
-	memcpy(dst, src, HostLockedRect.Pitch * pXboxBackBufferHostSurdaceDesc.Height);
-	pXboxPersistSurfaceHostSurface->UnlockRect();
-	//set host texture and surface to xbox persist texture and surface
-	SetHostResource(&xboxPersistSurface, pXboxPersistSurfaceHostSurface);
-	SetHostResource(&xboxPersistTexture, pXboxPersistTextureHostTexture);
-	//return the created xbox persist surface.
-	return &xboxPersistSurface;
 }
 
 // ******************************************************************
