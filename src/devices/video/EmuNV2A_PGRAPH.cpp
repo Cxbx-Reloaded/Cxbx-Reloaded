@@ -2377,52 +2377,38 @@ int pgraph_handle_method(
                     break;
 
                 case NV097_SET_SURFACE_CLIP_HORIZONTAL://done KelvinPrimitive.SetSurfaceClipHorizontal could use union with word ClipX, ClipWidth
-                    pgraph_update_surface(d, false, true, true);
-                    pg->surface_shape.clip_x =
-                        GET_MASK(arg0, NV097_SET_SURFACE_CLIP_HORIZONTAL_X);
-                    pg->surface_shape.clip_width =
-                        GET_MASK(arg0, NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH);
                     break;
                 case NV097_SET_SURFACE_CLIP_VERTICAL://done KelvinPrimitive.SetSurfaceClipVertical could use union with word ClipY, ClipHeight
-                    pgraph_update_surface(d, false, true, true);
-                    pg->surface_shape.clip_y =
-                        GET_MASK(arg0, NV097_SET_SURFACE_CLIP_VERTICAL_Y);
-                    pg->surface_shape.clip_height =
-                        GET_MASK(arg0, NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT);
                     break;
-                case NV097_SET_SURFACE_FORMAT://done
-                    pgraph_update_surface(d, false, true, true);
-                    pg->surface_shape.color_format =
-                        GET_MASK(arg0, NV097_SET_SURFACE_FORMAT_COLOR);
-                    pg->surface_shape.zeta_format =
-                        GET_MASK(arg0, NV097_SET_SURFACE_FORMAT_ZETA);
-                    pg->surface_type =
-                        GET_MASK(arg0, NV097_SET_SURFACE_FORMAT_TYPE);
-                    pg->surface_shape.anti_aliasing =
-                        GET_MASK(arg0, NV097_SET_SURFACE_FORMAT_ANTI_ALIASING);
-                    pg->surface_shape.log_width =
-                        GET_MASK(arg0, NV097_SET_SURFACE_FORMAT_WIDTH);
-                    pg->surface_shape.log_height =
-                        GET_MASK(arg0, NV097_SET_SURFACE_FORMAT_HEIGHT);
-                    break;
+                case NV097_SET_SURFACE_FORMAT://done //pg->KelvinPrimitive.SetSurfaceFormat
+                {
+                    // D3DMULTISAMPLEMODE_1X/D3DMULTISAMPLEMODE_2X/D3DMULTISAMPLEMODE_4X
+                    // D3DRS_MULTISAMPLEMODE D3DRS_MULTISAMPLERENDERTARGETMODE = NV097_SET_SURFACE_FORMAT
+                    // NV097_SET_SURFACE_FORMAT_ANTI_ALIASING = 0x0000F000,
+                    // NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2 = 1,
+                    // NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4 = 2
+                    DWORD MultiSampleMode = (pg->KelvinPrimitive.SetSurfaceFormat & 0x0000F000) >> 12;
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEMODE, MultiSampleMode);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLERENDERTARGETMODE, MultiSampleMode);
+                    //here we setup multisample mode only. bool flag of X_D3DRS_MULTISAMPLEANTIALIAS will be set at NV097_SET_ANTI_ALIASING_CONTROL, inlcuding X_D3DRS_MULTISAMPLEANTIALIAS and X_D3DRS_MULTISAMPLEMASK
+                    //NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS, MultiSampleMode!=0?true:false);
+                    extern float CxbxrGetSuperSampleScale(void);
+                    if (MultiSampleMode == 2) {
+                        //supersample scale X=2.0, supersample scale Y=2.0, AAScaleX=2.0, AAScaleY=2.0,
+
+                    }
+                    else if (MultiSampleMode == 1) {
+                        //supersample scale X =2.0,  supersample scale Y=1.0,AAScaleX=2.0 AAScaleY=1.0, 
+                    }
+                    else {
+                        //supersample scale X =1.0,  supersample scale Y=1.0,AAScaleX=1.0 AAScaleY=1.0, 
+                    }
+                }   break;
                 case NV097_SET_SURFACE_PITCH://done
-                    pgraph_update_surface(d, false, true, true);
-                    pg->surface_color.pitch =
-                        GET_MASK(arg0, NV097_SET_SURFACE_PITCH_COLOR);
-                    pg->surface_zeta.pitch =
-                        GET_MASK(arg0, NV097_SET_SURFACE_PITCH_ZETA);
-                    pg->surface_color.buffer_dirty = true;
-                    pg->surface_zeta.buffer_dirty = true;
                     break;
                 case NV097_SET_SURFACE_COLOR_OFFSET://done
-                    pgraph_update_surface(d, false, true, true);
-                    pg->surface_color.offset = arg0;
-                    pg->surface_color.buffer_dirty = true;
                     break;
                 case NV097_SET_SURFACE_ZETA_OFFSET://done
-                    pgraph_update_surface(d, false, true, true);
-                    pg->surface_zeta.offset = arg0;
-                    pg->surface_zeta.buffer_dirty = true;
                     break;
 
                 CASE_8(NV097_SET_COMBINER_ALPHA_ICW, 4) ://done
