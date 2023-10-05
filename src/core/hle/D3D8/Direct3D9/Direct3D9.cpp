@@ -189,6 +189,7 @@ static xbox::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0}; // current vertical blan
 static xbox::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbox::zeroptr; // Vertical-Blank callback routine
 
        xbox::X_D3DSurface           *g_pXbox_BackBufferSurface = xbox::zeroptr;
+	   bool                          g_bXbox_BackBufferSurfaceLocked = false;
 static xbox::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbox::zeroptr;
        xbox::X_D3DSurface           *g_pXbox_RenderTarget = xbox::zeroptr;
 static xbox::X_D3DSurface           *g_pXbox_DepthStencil = xbox::zeroptr;
@@ -1355,6 +1356,16 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 	resourceInfo.forceRehash = false;
+}
+
+void EraseHostResource(xbox::X_D3DResource* pXboxResource,  int iTextureStage = -1)
+{
+	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
+	auto& ResourceCache = GetResourceCache(key);
+	auto  it = ResourceCache.find(key);
+	if (it != ResourceCache.end()) {
+		ResourceCache.erase(key);
+	}
 }
 
 void SetHostResourceForcedXboxData(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD dwSize = 0)
@@ -4687,7 +4698,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 	else if (XB_TRMP(D3DDevice_GetBackBuffer2) != nullptr) {
 		pXboxBackBuffer = XB_TRMP(D3DDevice_GetBackBuffer2)(BackBuffer);
 	}
-	else {
+	else if(XB_TRMP(D3DDevice_GetBackBuffer2_0__LTCG_eax1)!=nullptr) {
 		__asm {
 			mov  eax, BackBuffer
 			call XB_TRMP(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
@@ -4751,7 +4762,9 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 {
 	LOG_FUNC_ONE_ARG(BackBuffer);
 
-	return CxbxrImpl_GetBackBuffer2(BackBuffer);
+	//return CxbxrImpl_GetBackBuffer2(BackBuffer);
+	CxbxrImpl_Resource_AddRef(g_pXbox_BackBufferSurface);
+	return g_pXbox_BackBufferSurface;
 }
 
 static void D3DDevice_GetBackBuffer2_0__LTCG_eax1(xbox::int_xt BackBuffer)
@@ -4776,7 +4789,9 @@ __declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuf
 	// Log
 	D3DDevice_GetBackBuffer2_0__LTCG_eax1(BackBuffer);
 
-	pBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
+	//pBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
+	CxbxrImpl_Resource_AddRef(g_pXbox_BackBufferSurface);
+	pBackBuffer = g_pXbox_BackBufferSurface;
 
 	__asm {
 		mov  eax, pBackBuffer
@@ -4796,8 +4811,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
 )
 {
 	LOG_FORWARD("D3DDevice_GetBackBuffer2");
-	
-    *ppBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
+	CxbxrImpl_Resource_AddRef(g_pXbox_BackBufferSurface);
+	*ppBackBuffer = g_pXbox_BackBufferSurface;// CxbxrImpl_GetBackBuffer2(BackBuffer);
 }
 
 bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr)
@@ -6673,10 +6688,52 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
 		 CxbxrAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
 	 }
 }
- xbox::X_D3DSurface* pXbox_RenderTargetNew;
- xbox::X_D3DSurface Xbox_RenderTargetNew;
- IDirect3DSurface* pXbox_RenderTargetHostSurfaceNew;
-  
+
+void CxbxrUpdateHostXboxBackBufferSurface(xbox::X_D3DSurface *pXboxSurface)
+{
+	LOG_INIT
+
+		IDirect3DSurface* pHostXboxSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
+	IDirect3DSurface* pTmpHostSurface = nullptr;
+	IDirect3DTexture* pTmpHostTexture = nullptr;
+	D3DSURFACE_DESC HostXboxSurfaceDesc;
+	HRESULT hRet = pHostXboxSurface->GetDesc(&HostXboxSurfaceDesc);
+	//create temp texture and surface to load xbox surface data
+	hRet = g_pD3DDevice->CreateTexture(HostXboxSurfaceDesc.Width, HostXboxSurfaceDesc.Height,
+		1, // Levels
+		D3DUSAGE_DYNAMIC, // Usage always as render target
+		HostXboxSurfaceDesc.Format,
+		D3DPOOL_SYSTEMMEM, // D3DPOOL_DEFAULT
+		&pTmpHostTexture,
+		nullptr // pSharedHandle
+	);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture");
+	if (hRet == D3D_OK) {
+		hRet = pTmpHostTexture->GetSurfaceLevel(0, &pTmpHostSurface);
+		DEBUG_D3DRESULT(hRet, "pNewHostTexture->pNewHostSurface");
+	}
+	D3DLOCKED_RECT LockedRect = {};
+	if (hRet == D3D_OK) {
+		hRet = pTmpHostSurface->LockRect(&LockedRect,NULL, D3DLOCK_NOSYSLOCK);
+		DEBUG_D3DRESULT(hRet, "pNewHostTexture->pNewHostSurface");
+	}
+	if (hRet == D3D_OK) {
+		BYTE* src = (BYTE*)GetDataFromXboxResource(pXboxSurface);
+		BYTE* dst = (BYTE*)LockedRect.pBits;
+		memcpy(dst, src, HostXboxSurfaceDesc.Height * LockedRect.Pitch);
+
+		pTmpHostSurface->UnlockRect();
+		hRet = D3DXLoadSurfaceFromSurface(pHostXboxSurface, nullptr, nullptr, pTmpHostSurface, nullptr, nullptr, D3DTEXF_POINT, 0);
+	}
+
+	if (pTmpHostSurface != nullptr)pTmpHostSurface -> Release();
+	if (pTmpHostTexture != nullptr)pTmpHostTexture->Release();
+
+}
+xbox::X_D3DSurface* pXbox_RenderTargetNew;
+xbox::X_D3DSurface Xbox_RenderTargetNew;
+IDirect3DSurface* pXbox_RenderTargetHostSurfaceNew;
+
 DWORD CxbxrImpl_Swap
 (
 	xbox::dword_xt Flags
@@ -6696,6 +6753,11 @@ DWORD CxbxrImpl_Swap
 	// Write Xbox constants
 	auto pg = &(g_NV2A->GetDeviceState()->pgraph);
 	//reset BackbufferScale before any possible early return of swap(),
+	//if xbox backbuffer was locked before swap, we have to update xbox backbuffer surface to it's host suface
+	if (g_bXbox_BackBufferSurfaceLocked) {
+		CxbxrUpdateHostXboxBackBufferSurface(g_pXbox_BackBufferSurface);
+		g_bXbox_BackBufferSurfaceLocked = false;
+	}
 
 	// Early exit if we're not ready to present
 	// Test Case: Antialias sample, BackBufferScale sample
@@ -6705,10 +6767,6 @@ DWORD CxbxrImpl_Swap
 
 		if ((Flags == xbox::X_D3DSWAP_COPY)&& (g_Xbox_BackbufferScaleX != 1.0|| g_Xbox_BackbufferScaleY != 1.0)) {
 			LOG_TEST_CASE("X_D3DSWAP_COPY");
-			//xbox::X_D3DSurface* pXboxFrontBufferSurface;
-			//CxbxrGetXboxBackBuffer(-1,&pXboxFrontBufferSurface);
-			//use xbox front buffer as temp buffer for scale up destination.
-			//auto pXboxFrontBufferHostSurface = GetHostSurface(pXboxFrontBufferSurface, D3DUSAGE_RENDERTARGET);
 			auto pRenderTargetNewPrevKey = GetHostResourceKey(pXbox_RenderTargetNew);
 			Xbox_RenderTargetNew = *g_pXbox_RenderTarget;
 			pXbox_RenderTargetNew = &Xbox_RenderTargetNew;
@@ -6725,36 +6783,7 @@ DWORD CxbxrImpl_Swap
 					FreeHostResource(pRenderTargetNewPrevKey);
 				pXbox_RenderTargetHostSurfaceNew = pXboxRenderTargetSurfaceNew;
 			}
-
-			//
 			auto pXboxRenderTargetSurface = GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET);
-			/*
-			//old code to use xbox cached backbuffer scale.
-			//new code retrieve the scaled render target width/height from NV2A
-			float height, width;
-			GetRenderTargetRawDimensions(width, height, g_pXbox_RenderTarget);
-			float aaX, aaY;
-			GetMultiSampleScaleRaw(aaX, aaY);
-			width *= aaX;
-			height *= aaY;
-			if (is_pgraph_using_NV2A_Kelvin()) {
-				width = (float)((pg->KelvinPrimitive.SetSurfaceClipHorizontal & 0xFFFF0000) >> 16);
-				height = (float)((pg->KelvinPrimitive.SetSurfaceClipVertical & 0xFFFF0000) >> 16);
-			}
-			*/
-			/*
-			    xbox passed scaled render target width/height to NV2A with
-
-				// NV097_SET_SURFACE_CLIP_HORIZONTAL:
-
-			      (NV097_SET_SURFACE_CLIP_HORIZONTAL_X, 0)
-				| (NV097_SET_SURFACE_CLIP_HORIZONTAL_WIDTH, width);
-
-				// NV097_SET_SURFACE_CLIP_VERTICAL:
-
-				  (NV097_SET_SURFACE_CLIP_VERTICAL_Y, 0)
-				| (NV097_SET_SURFACE_CLIP_VERTICAL_HEIGHT, height);
-		    */
 			IDirect3DSurface* pExistingHostRenderTarget = nullptr;
 			hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingHostRenderTarget);
 			assert(hRet == D3D_OK);
@@ -6774,12 +6803,6 @@ DWORD CxbxrImpl_Swap
 				/* Filter = */ D3DTEXF_LINEAR
 			);
 			assert(hRet == D3D_OK);
-
-
-
-
-
-#if 1
 			// using StretchRect to update full surfaces
 			hRet = g_pD3DDevice->StretchRect(
 				/* pSourceSurface = */ pXboxRenderTargetSurfaceNew,
@@ -6789,31 +6812,8 @@ DWORD CxbxrImpl_Swap
 				/* Filter = */ D3DTEXF_LINEAR
 			);
 			assert(hRet == D3D_OK);
-#endif			
 		}
 		DWORD flag = xbox::X_D3DSWAP_BYPASSCOPY;
-		//trampo line to xbox D3DDevice_Swap(X_D3DSWAP_BYPASSCOPY) to reset backbuffer scale inside xbox
-		/* this is way too complicate, we trampoline to xbox D3DDevice_SetBackBufferScale(1.0,1.0) instead
-		// well, seems it's not feasible to trampoline when we're in pgraph thread, somehow it gets crashed whatever funcation we trampolined.
-		if (XB_TRMP(D3DDevice_Swap))
-			XB_TRMP(D3DDevice_Swap)(flag);
-		else if (XB_TRMP(D3DDevice_Swap_0)) {
-			__asm {
-				LTCG_PROLOGUE
-				mov  eax, flag
-				call XB_TRMP(D3DDevice_Swap_0)
-				LTCG_EPILOGUE
-			}
-		}
-		else {
-			LOG_TEST_CASE("No D3DDevice_Swap available");
-		}
-        //-------------------------------------------		
-		if (XB_TRMP(D3DDevice_SetBackBufferScale))
-			XB_TRMP(D3DDevice_SetBackBufferScale)(1.0, 1.0);
-		else
-			LOG_TEST_CASE("D3DDevice_SetBackBufferScale not available");
-*/
 		g_Xbox_BackbufferScaleX = 1.0;
 		g_Xbox_BackbufferScaleY = 1.0;
 		return g_Xbox_SwapData.Swap;
@@ -8867,6 +8867,12 @@ void WINAPI CxbxrImpl_Lock2DSurface
 {
 	if (pPixelContainer == nullptr)
 		return;
+	if (pPixelContainer == g_pXbox_BackBufferSurface) {
+		//not read only, xbox title could use back buffer direct operation to draw certain things. setup a flag to indicate this event and update host surface before next draw call or sawp.
+		if ((Flags & X_D3DLOCK_READONLY) == 0) {
+			g_bXbox_BackBufferSurfaceLocked = true;
+		}
+	}
 	//D3D9 D3DLOCK_READONLY 0x00000010L, D3DLOCK_NOOVERWRITE 0x00001000L, xbox 
     //xbox X_D3DLOCK_READONLY 0x00000080, X_D3DLOCK_NOOVERWRITE 0x00000020 ,  X_D3DLOCK_NOFLUSH 0x00000010, X_D3DLOCK_TILED 0x00000040                                                                                       
 	DWORD hostFlag=0;// = D3DLOCK_READONLY;
@@ -8945,23 +8951,23 @@ void WINAPI CxbxrImpl_Lock2DSurface
 				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
 			}
 			bOffScreenSurfaceNeedRelease = true;
-			hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
+			if(hRet == D3D_OK)hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
 			}
 
-			hRet = g_pD3DDevice->GetRenderTargetData(pHostSourceSurface, pHostOffScreenSurface);
+			if (hRet == D3D_OK)hRet = g_pD3DDevice->GetRenderTargetData(pHostSourceSurface, pHostOffScreenSurface);
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
 			}
 			D3DSURFACE_DESC HostOffScreenSurfaceDesc;
-			pHostOffScreenSurface->GetDesc(&HostOffScreenSurfaceDesc);
+			if (hRet == D3D_OK)pHostOffScreenSurface->GetDesc(&HostOffScreenSurfaceDesc);
 
 			assert(HostOffScreenSurfaceDesc.Width == HostSurfaceDesc.Width);
 			assert(HostOffScreenSurfaceDesc.Height == HostSurfaceDesc.Height);
 
 			hostFlag = D3DLOCK_READONLY;
-			hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+			if (hRet == D3D_OK)hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
 			}
@@ -9054,7 +9060,6 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 			bConvertToARGB = true;
 			PCFormat = D3DFMT_A8R8G8B8;
-
 			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
 			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
 			D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
@@ -9062,6 +9067,27 @@ void WINAPI CxbxrImpl_Lock2DSurface
 		else if (EmuXBFormatIsBumpMap(X_Format)){
 			//xbox resource is bumpmap format by default, we need to check whether it's converted to ARGB or not.
 			PCFormat = D3DFMT_A8R8G8B8;
+			// Does host CheckDeviceFormat() succeed on this format?
+			// Then use matching host format
+			//assert(PCFormat == HostSurfaceDesc.Format);
+			if (HostSurfaceDesc.Format == PCFormat) {
+
+				byte* hostPtr = (byte*)HostLockedRect.pBits;
+				//extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
+				byte* xboxPtr = (byte*)GetDataFromXboxResource(pPixelContainer);// (byte*)pPixelContainer->Data;
+				// Retrieve and test the xbox resource buffer address
+				//VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
+				if (HostLockedRect.Pitch == dwRowPitch)
+					memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * xboxHeight);
+				else {
+					DWORD minPitch = MIN(HostLockedRect.Pitch, dwRowPitch);
+					for (int i = 0; i < xboxHeight; i++) {
+						memcpy(xboxPtr, hostPtr, minPitch);
+						xboxPtr += dwRowPitch;
+						hostPtr += HostLockedRect.Pitch;
+					}
+				}
+			}
 		}
 		else {
 			// Does host CheckDeviceFormat() succeed on this format?
@@ -10631,7 +10657,13 @@ extern void CxbxUpdateHostVertexShader(); // TMP glue
 void CxbxUpdateNativeD3DResources()
 {
 	extern bool g_VertexShader_dirty; // tmp glue
-	//EmuKickOffWait();
+
+	//if xbox backbuffer was locked before swap, we have to update xbox backbuffer surface to it's host suface
+	if (g_bXbox_BackBufferSurfaceLocked) {
+		CxbxrUpdateHostXboxBackBufferSurface(g_pXbox_BackBufferSurface);
+		//clear the flag so we won't do the data transfer multiple time with unchanged data.
+		g_bXbox_BackBufferSurfaceLocked = false;
+	}
 
 	// Before we start, make sure our resource cache stays limited in size
 	PrunePaletizedTexturesCache(); // TODO : Could we move this to Swap instead?
@@ -11969,10 +12001,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		//give the correct token enum here, and it's done.
 		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget, 2, PBTokenArray);//argCount 14
 		// add reference to the surfaces to prevent them being released before we access them in pgraph.
-		if(pRenderTarget)
-			CxbxrImpl_Resource_AddRef(pRenderTarget);
-		if(pNewZStencil)
-			CxbxrImpl_Resource_AddRef(pNewZStencil);
+		//if(pRenderTarget)
+			//CxbxrImpl_Resource_AddRef(pRenderTarget);
+		//if(pNewZStencil)
+			//CxbxrImpl_Resource_AddRef(pNewZStencil);
 	}
 }
 
