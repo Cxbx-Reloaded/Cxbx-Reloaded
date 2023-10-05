@@ -31,6 +31,8 @@ extern std::string g_DataFilePath;
 extern std::string g_DiskBasePath;
 extern std::string g_MuBasePath;
 
+#include <filesystem>
+
 //TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
 // Let filesystem library clean it up for us, including resolve host's symbolic link path.
 // Since internal kernel do translate to full path than preserved host symoblic link path.

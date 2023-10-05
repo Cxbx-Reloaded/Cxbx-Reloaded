@@ -25,6 +25,7 @@
 #define LOG_PREFIX CXBXR_MODULE::FILE
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
+#include <filesystem>
 #include "common/cxbxr.hpp"
 #include "Settings.hpp"
 #include "EmuShared.h"

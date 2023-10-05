@@ -26,6 +26,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h>
+#include <filesystem>
 #include "core\kernel\init\CxbxKrnl.h"
 #include <vector>
 #include <cstdio>
