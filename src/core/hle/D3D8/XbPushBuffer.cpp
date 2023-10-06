@@ -2776,7 +2776,11 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 	DWORD control = 0;
 	DWORD colorMaterial = 0;
 	DWORD lightEnableMask = 0;
-	if (pg->KelvinPrimitive.SetLightingEnable != false) {
+	bool bLightintEnable = pg->KelvinPrimitive.SetLightingEnable != false;
+	//xbox sets D3DRS_LightEnable to false when vertex shader is not fixed mode.
+	if (g_Xbox_VertexShaderMode != VertexShaderMode::FixedFunction)bLightintEnable = true;
+	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, bLightintEnable);
+	if (bLightintEnable) {
 		control = pg->KelvinPrimitive.SetLightControl;
 		if (pg->KelvinPrimitive.SetSpecularEnable != false) {
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOCALVIEWER, (control& NV097_SET_LIGHT_CONTROL_LOCALEYE_TRUE)!=0? true:false);
