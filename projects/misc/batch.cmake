@@ -28,13 +28,8 @@ message("Runtime Build Directory: ${TargetRunTimeDir}")
 set(CXBXR_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
 file(COPY ${CXBXR_GLEW_DLL} DESTINATION  ${TargetRunTimeDir})
 
-# Copy certain HLSL files to the output directory, which we will load at runtime
-set(CXBXR_HLSL_FILES
-"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
-"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
-"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsli"
-"${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsl"
-)
+# Copy HLSL files to the output directory, which are loaded at runtime
+FILE(GLOB CXBXR_HLSL_FILES "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/*.hlsl*")
 set(HlslOutputDir ${TargetRunTimeDir}/hlsl)
 file(MAKE_DIRECTORY ${HlslOutputDir})
 file(COPY ${CXBXR_HLSL_FILES} DESTINATION ${HlslOutputDir})

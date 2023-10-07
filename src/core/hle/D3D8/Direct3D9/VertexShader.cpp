@@ -283,6 +283,56 @@ void BuildShader(IntermediateVertexShader* pShader, std::stringstream& hlsl)
 	}
 }
 
+std::string vertexShaderTemplateHlsl[2];
+std::string fixedFunctionVertexShaderHlsl;
+std::string fixedFunctionVertexShaderPath;
+
+std::ifstream OpenWithRetry(const std::string& path) {
+	auto fstream = std::ifstream(path);
+	int failures = 0;
+	while (fstream.fail()) {
+		Sleep(50);
+		fstream = std::ifstream(path);
+
+		if (failures++ > 10) {
+			// crash?
+			CxbxrAbort("Error opening shader file: %s", path);
+			break;
+		}
+	}
+
+	return fstream;
+}
+
+void LoadShadersFromDisk() {
+	const auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
+		.parent_path()
+		.append("hlsl");
+
+	// Vertex Shader Template
+	{
+		std::stringstream tmp;
+		auto dir = hlslDir;
+		dir.append("CxbxVertexShaderTemplate.hlsl");
+		tmp << OpenWithRetry(dir.string()).rdbuf();
+		std::string hlsl = tmp.str();
+
+		const std::string insertionPoint = "// <XBOX SHADER PROGRAM GOES HERE>\n";
+		auto index = hlsl.find(insertionPoint);
+		vertexShaderTemplateHlsl[0] = hlsl.substr(0, index);
+		vertexShaderTemplateHlsl[1] = hlsl.substr(index + insertionPoint.length());
+	}
+
+	// Fixed Function Vertex Shader
+	{
+		auto dir = hlslDir;
+		fixedFunctionVertexShaderPath = dir.append("FixedFunctionVertexShader.hlsl").string();
+		std::stringstream tmp;
+		tmp << OpenWithRetry(fixedFunctionVertexShaderPath).rdbuf();
+		fixedFunctionVertexShaderHlsl = tmp.str();
+	}
+}
+
 // recompile xbox vertex shader function
 extern HRESULT EmuCompileVertexShader
 (
@@ -290,26 +340,23 @@ extern HRESULT EmuCompileVertexShader
 	ID3DBlob** ppHostShader
 )
 {
-	// Include HLSL header and footer as raw strings :
-	static std::string hlsl_template[2] = {
-		#include "core\hle\D3D8\Direct3D9\CxbxVertexShaderTemplate.hlsl"
-	};
-
-	auto hlsl_stream = std::stringstream();
-	hlsl_stream << hlsl_template[0]; // Start with the HLSL template header
 	assert(pIntermediateShader->Instructions.size() > 0);
-	BuildShader(pIntermediateShader, hlsl_stream);
 
-	hlsl_stream << hlsl_template[1]; // Finish with the HLSL template footer
+	// Combine the shader template with the shader program
+	auto hlsl_stream = std::stringstream();
+	hlsl_stream << vertexShaderTemplateHlsl[0]; // Start with the HLSL template header
+	BuildShader(pIntermediateShader, hlsl_stream);
+	hlsl_stream << vertexShaderTemplateHlsl[1]; // Finish with the HLSL template footer
 	std::string hlsl_str = hlsl_stream.str();
 
-	HRESULT hRet = EmuCompileShader(hlsl_str, g_vs_model, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
+	auto notionalSourceName = "CxbxVertexShaderTemplate.hlsl";
+	HRESULT hRet = EmuCompileShader(hlsl_str, g_vs_model, ppHostShader, notionalSourceName);
 	
 	if (FAILED(hRet) && (g_vs_model != vs_model_3_0)) {
 		// If the shader failed in the default vertex shader model, retry in vs_model_3_0
 		// This allows shaders too large for 2_a to be compiled (Test Case: Shenmue 2)
 		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Retrying with shader model 3.0");
-		hRet = EmuCompileShader(hlsl_str, vs_model_3_0, ppHostShader, "CxbxVertexShaderTemplate.hlsl");
+		hRet = EmuCompileShader(hlsl_str, vs_model_3_0, ppHostShader, notionalSourceName);
 	}
 		
 	return hRet;
@@ -317,27 +364,8 @@ extern HRESULT EmuCompileVertexShader
 
 extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
 {
-	static ID3DBlob* pShader = nullptr;
-
-	// TODO does this need to be thread safe?
-	if (pShader == nullptr) {
-		// Determine the filename and directory for the fixed function shader
-		auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
-			.parent_path()
-			.append("hlsl");
-
-		auto sourceFile = hlslDir.append("FixedFunctionVertexShader.hlsl").string();
-
-		// Load the shader into a string
-		std::ifstream hlslStream(sourceFile);
-		std::stringstream hlsl;
-		hlsl << hlslStream.rdbuf();
-
-		// Compile the shader
-		EmuCompileShader(hlsl.str(), g_vs_model, &pShader, sourceFile.c_str());
-	}
-
-	*ppHostShader = pShader;
+	// Compile the shader
+	EmuCompileShader(fixedFunctionVertexShaderHlsl, g_vs_model, ppHostShader, fixedFunctionVertexShaderPath.c_str());
 };
 
 static ID3DBlob* pPassthroughShader = nullptr;

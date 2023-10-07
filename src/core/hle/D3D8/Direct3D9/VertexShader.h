@@ -19,6 +19,8 @@ extern HRESULT EmuCompileVertexShader
     ID3DBlob** ppHostShader
 );
 
+void LoadShadersFromDisk();
+
 extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader);
 
 extern HRESULT EmuCompileXboxPassthrough(ID3DBlob** ppHostShader);

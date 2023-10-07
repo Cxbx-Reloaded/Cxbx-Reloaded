@@ -49,6 +49,7 @@
 #include <unordered_map>
 #include <array>
 #include <bitset>
+#include <filesystem>
 
 // External symbols :
 extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS]; // Declared in XbVertexBuffer.cpp
@@ -80,6 +81,8 @@ static xbox::X_D3DVertexShader g_Xbox_VertexShader_ForFVF = {};
 
 static uint32_t                g_X_VERTEXSHADER_FLAG_PROGRAM; // X_VERTEXSHADER_FLAG_PROGRAM flag varies per XDK, so it is set on runtime
 static uint32_t                g_X_VERTEXSHADER_FLAG_VALID_MASK; // For a test case
+
+static volatile bool isShaderFolderDirty = false;
 
 void CxbxVertexShaderSetFlags()
 {
@@ -1128,6 +1131,20 @@ static IDirect3DVertexShader* passthroughshader;
 void CxbxUpdateHostVertexShader()
 {
 	extern bool g_bUsePassthroughHLSL; // TMP glue
+	static IDirect3DVertexShader* fixedFunctionShader = nullptr; // TODO move to shader cache
+
+	if (isShaderFolderDirty) {
+		LoadShadersFromDisk();
+
+		g_VertexShaderCache.Clear();
+
+		if (fixedFunctionShader) {
+			fixedFunctionShader->Release();
+		}
+		fixedFunctionShader = nullptr;
+
+		isShaderFolderDirty = false;
+	}
 
 	// TODO Call this when state is dirty
 	// Rather than every time state changes
@@ -1135,20 +1152,17 @@ void CxbxUpdateHostVertexShader()
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
-		IDirect3DVertexShader* fixedFunctionShader = nullptr;
 		HRESULT hRet;
 
 		if (g_UseFixedFunctionVertexShader) {
-			static IDirect3DVertexShader* ffHlsl = nullptr;
-			if (ffHlsl == nullptr) {
+			if (fixedFunctionShader == nullptr) {
 				ID3DBlob* pBlob = nullptr;
 				EmuCompileFixedFunction(&pBlob);
 				if (pBlob) {
-					hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &ffHlsl);
+					hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &fixedFunctionShader);
 					if (FAILED(hRet)) CxbxrAbort("Failed to create fixed-function shader");
 				}
 			}
-			fixedFunctionShader = ffHlsl;
 		}
 
 		hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);
@@ -1606,4 +1620,50 @@ extern void EmuParseVshFunction
 	while (XboxVertexShaderDecoder::VshConvertToIntermediate(pCurToken, pShader)) {
 		pCurToken += X_VSH_INSTRUCTION_SIZE;
 	}
+}
+
+
+void InitShaderHotloading() {
+	LoadShadersFromDisk();
+
+	EmuLog(LOG_LEVEL::DEBUG, "Starting shader file watcher...");
+	HANDLE fsWatcherThread = CreateThread(nullptr, 0, [](void *param) -> DWORD {
+
+			// Determine the filename and directory for the fixed function shader
+			char cxbxExePath[MAX_PATH];
+			GetModuleFileName(GetModuleHandle(nullptr), cxbxExePath, MAX_PATH);
+			auto hlslDir = std::filesystem::path(cxbxExePath)
+				.parent_path()
+				.append("hlsl/");
+
+			HANDLE changeHandle = FindFirstChangeNotification(hlslDir.string().c_str(), false, FILE_NOTIFY_CHANGE_LAST_WRITE);
+
+			if (changeHandle == INVALID_HANDLE_VALUE) {
+				DWORD errorCode = GetLastError();
+				EmuLog(LOG_LEVEL::ERROR2, "Error initializing shader file watcher: %d", errorCode);
+				
+				return 1;
+			}
+
+			while (true) {
+				if (FindNextChangeNotification(changeHandle)) {
+					WaitForSingleObject(changeHandle, INFINITE);
+
+					// Wait for changes to stop..
+					// Will usually be at least two - one for the file and one for the directory
+					while (true) {
+						FindNextChangeNotification(changeHandle);
+						if (WaitForSingleObject(changeHandle, 100) == WAIT_TIMEOUT) {
+							break;
+						}
+					}
+
+					isShaderFolderDirty = true;
+				}
+				else {
+					EmuLog(LOG_LEVEL::ERROR2, "Shader filewatcher failed to get the next notification");
+					return 1;
+				}
+			}
+		}, nullptr, 0, nullptr);
 }

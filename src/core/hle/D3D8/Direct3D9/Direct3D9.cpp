@@ -682,6 +682,10 @@ void CxbxInitWindow(bool bFullInit)
 	g_renderbase->SetWindowRelease([] {
 		ImGui_ImplWin32_Shutdown();
 	});
+
+	extern void InitShaderHotloading();
+	InitShaderHotloading();
+	
 }
 
 void DrawUEM(HWND hWnd)

@@ -16,6 +16,7 @@ public:
 	void ReleaseShader(ShaderKey key);
 
 	void ResetD3DDevice(IDirect3DDevice9* pD3DDevice);
+	void Clear();
 
 	// TODO
 	// WriteCacheToDisk

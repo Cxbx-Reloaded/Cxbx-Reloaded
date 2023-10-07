@@ -114,6 +114,12 @@ IDirect3DVertexShader* VertexShaderCache::GetShader(ShaderKey key)
 		EmuLog(LOG_LEVEL::DEBUG, "Waiting for shader %llx...", key);
 		pCompiledShader = pLazyShader->compileResult.get();
 
+		if (!pCompiledShader) {
+			EmuLog(LOG_LEVEL::ERROR2, "Failed to compile vertex shader for %llx", key);
+			pLazyShader->isReady = true;
+			return nullptr;
+		}
+
 		// Create the shader
 		auto hRet = pD3DDevice->CreateVertexShader
 		(
@@ -169,5 +175,22 @@ void VertexShaderCache::ReleaseShader(ShaderKey key)
 void VertexShaderCache::ResetD3DDevice(IDirect3DDevice9* newDevice)
 {
 	EmuLog(LOG_LEVEL::DEBUG, "Resetting D3D device");
+	cache.clear();
 	this->pD3DDevice = newDevice;
+}
+
+void VertexShaderCache::Clear()
+{
+	for (auto& x : cache) {
+		if (!x.second.isReady) {
+			auto pBlob = x.second.compileResult.get();
+			if (pBlob) {
+				pBlob->Release();
+			}
+		}
+		else if(x.second.pHostVertexShader) {
+			x.second.pHostVertexShader->Release();
+		}
+	}
+	cache.clear();
 }
