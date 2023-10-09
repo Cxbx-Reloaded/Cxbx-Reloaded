@@ -849,11 +849,11 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
 			//if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& (alphaICW == (0x14200000)) && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-			if ((colorICW == 0x04200000)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
+			if ((colorICW == 0x04200000)&& pg->KelvinPrimitive.SetCombinerColorICW[1]==0) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				//NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 			}
-			if ((alphaICW == (0x14200000))) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
+			if ((alphaICW == (0x14200000))&& pg->KelvinPrimitive.SetCombinerAlphaICW[1]==0) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				//NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 			}
@@ -3143,29 +3143,30 @@ void D3D_draw_state_update(NV2AState* d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationType = 0; // TODO or ignore?
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
-		//check for duplicated texcoord slots, if a texcoord slot is duplicated with other texcoord slot prior to it, set texcoord index of current slot to the prior duplicated slot and disable current slot.
-		for (int current = xbox::X_D3DVSDE_TEXCOORD0+1; current <= xbox::X_D3DVSDE_TEXCOORD3; current++) {
-            //only check for duplications when current slot is not unused
-			if (g_NV2AVertexAttributeFormat.Slots[current].Format!= xbox::X_D3DVSDT_NONE)
-				//only check texcoord slots prior to current slot, always set texcoord index of later texture stages to prior texture stages.
-				for (int prior = xbox::X_D3DVSDE_TEXCOORD0; prior <current; prior++) {
-					if (g_NV2AVertexAttributeFormat.Slots[current].StreamIndex == g_NV2AVertexAttributeFormat.Slots[prior].StreamIndex
-						&& g_NV2AVertexAttributeFormat.Slots[current].Offset == g_NV2AVertexAttributeFormat.Slots[prior].Offset) {
-						//retrive texgen from NV2ATextureStates
-						DWORD texcoordIndex = NV2ATextureStates.Get(current- xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX);
-						texcoordIndex &= 0xFFFF0000;
-						//update texcoordIndex
-						texcoordIndex |= (prior- xbox::X_D3DVSDE_TEXCOORD0) & 0x0000FFFF;
-						//store updated texcoordIndex
-						NV2ATextureStates.Set(current-xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX, texcoordIndex);
-						//disable current slot
-						g_NV2AVertexAttributeFormat.Slots[current].Offset = 0;
-						g_NV2AVertexAttributeFormat.Slots[current].Format = xbox::X_D3DVSDT_NONE;
-						break;
-					}
-				}
+	}
+	//check for duplicated texcoord slots, if a texcoord slot is duplicated with other texcoord slot prior to it, set texcoord index of current slot to the prior duplicated slot and disable current slot.
+	for (int current = xbox::X_D3DVSDE_TEXCOORD0 + 1; current <= xbox::X_D3DVSDE_TEXCOORD3; current++) {
+		//only check for duplications when current slot is not unused
+		//if (g_NV2AVertexAttributeFormat.Slots[current].Format!= xbox::X_D3DVSDT_NONE)
+			//only check texcoord slots prior to current slot, always set texcoord index of later texture stages to prior texture stages.
+		for (int prior = xbox::X_D3DVSDE_TEXCOORD0; prior < current; prior++) {
+			if (g_NV2AVertexAttributeFormat.Slots[current].StreamIndex == g_NV2AVertexAttributeFormat.Slots[prior].StreamIndex
+				&& g_NV2AVertexAttributeFormat.Slots[current].Offset == g_NV2AVertexAttributeFormat.Slots[prior].Offset) {
+				//retrive texgen from NV2ATextureStates
+				DWORD texcoordIndex = NV2ATextureStates.Get(current - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX);
+				texcoordIndex &= 0xFFFF0000;
+				//update texcoordIndex
+				texcoordIndex |= (prior - xbox::X_D3DVSDE_TEXCOORD0) & 0x0000FFFF;
+				//store updated texcoordIndex
+				NV2ATextureStates.Set(current - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX, texcoordIndex);
+				//disable current slot
+				g_NV2AVertexAttributeFormat.Slots[current].Offset = 0;
+				g_NV2AVertexAttributeFormat.Slots[current].Format = xbox::X_D3DVSDT_NONE;
+				break;
+			}
 		}
 	}
+
 	// update other D3D states
 	// FIXME!! CxbxUpdateNativeD3DResources() calls XboxRenderStates.Apply() and XboxTextureStates.Apply() to apply Xbox D3D states to Host.
 	// so what we set to host here might be over write later. safer way is to update XboxTextureStates/XboxTextureStates and let CxbxUpdateNativeD3DResources() update them to host.
