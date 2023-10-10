@@ -189,10 +189,15 @@ static xbox::X_D3DVBLANKDATA			g_Xbox_VBlankData = {0}; // current vertical blan
 static xbox::X_D3DVBLANKCALLBACK     g_pXbox_VerticalBlankCallback   = xbox::zeroptr; // Vertical-Blank callback routine
 
        xbox::X_D3DSurface           *g_pXbox_BackBufferSurface = xbox::zeroptr;
+	   xbox::X_D3DSurface            g_Xbox_BackBufferSurface = {0};
+
 	   bool                          g_bXbox_BackBufferSurfaceLocked = false;
 static xbox::X_D3DSurface           *g_pXbox_DefaultDepthStencilSurface = xbox::zeroptr;
+static xbox::X_D3DSurface            g_Xbox_DefaultDepthStencilSurface = {0};
        xbox::X_D3DSurface           *g_pXbox_RenderTarget = xbox::zeroptr;
+	   xbox::X_D3DSurface            g_Xbox_RenderTarget = { 0 };
 static xbox::X_D3DSurface           *g_pXbox_DepthStencil = xbox::zeroptr;
+static xbox::X_D3DSurface            g_Xbox_DepthStencil = { 0 };
        xbox::X_D3DMULTISAMPLE_TYPE   g_Xbox_MultiSampleType = xbox::X_D3DMULTISAMPLE_NONE;
 
        xbox::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
@@ -5106,7 +5111,7 @@ xbox::void_xt WINAPI CxbxrImpl_SetShaderConstantMode
 	}
 }
 //generalize pushbuffer token setup.
-DWORD PBTokenArray[16] = { HLE_API_PUSHBFFER_COMMAND ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+DWORD PBTokenArray[16] = { HLE_API_PUSHBFFER_COMMAND_64 ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount=14, DWORD* argv= PBTokenArray)
 {
@@ -5579,7 +5584,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 		}
 		//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
 	}
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 	pPush_local[1] = (DWORD)X_D3DDevice_SetTexture;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
@@ -5708,7 +5713,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SwitchTexture;//enum of this patched API
 		pPush_local[2] = (DWORD)Method; //total 14 DWORD space for arguments.
 		pPush_local[3] = (DWORD)Data;
@@ -5762,7 +5767,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Begin;//enum of this patched API
 		pPush_local[2] = (DWORD)PrimitiveType; //total 14 DWORD space for arguments.
 
@@ -5802,7 +5807,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
 		pPush_local[3] = FtoDW(a);
@@ -5856,7 +5861,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
 		pPush_local[3] = FtoDW(fa);
@@ -5900,7 +5905,7 @@ static void D3DDevice_SetVertexData4f_16
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
 	pPush_local[3] = FtoDW(a);
@@ -5981,7 +5986,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
 		pPush_local[3] = FtoDW(a);
@@ -6034,7 +6039,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
 		pPush_local[3] = FtoDW(fa);
@@ -6091,7 +6096,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
 		pPush_local[3] = FtoDW(fa);
@@ -6135,7 +6140,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
 		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
 		pPush_local[3] = FtoDW(XColor.r);
@@ -6198,25 +6203,35 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 		LOG_FUNC_END;
 	// this patch is only to notify the pgraph handler we're starting to run a recorded pushbuffer.
 	// pPush_local[2]!=0 for start running, pPush_local[2]==0 for end running.
+	bool WaitForPgraph = true;
+
 
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pPushBuffer;
 	PBTokenArray[3] = (DWORD)pFixup;
+	PBTokenArray[4] = (DWORD)&WaitForPgraph;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer, 2);//argCount, not necessary, default to 14
-	
+
+	EmuKickOff();
+	while (WaitForPgraph)
+		;
+
 	//if (is_pushbuffer_recording()) {
 	XB_TRMP(D3DDevice_RunPushBuffer)(pPushBuffer, pFixup);
 	//}
 	//EmuExecutePushBuffer(pPushBuffer, pFixup);
 
 	// notify pgraph handler we've done running pushbuffer.
-
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = 0;
-	PBTokenArray[3] = 0;
+	PBTokenArray[3] = (DWORD) & WaitForPgraph;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer, 2);//argCount, not necessary, default to 14
+	EmuKickOff();
+	while (WaitForPgraph)
+		;
+	return;
 }
 void CxbxrImpl_Clear
 (
@@ -6328,7 +6343,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Clear;//enum of this patched API
 	pPush_local[2] = (DWORD)Count; //total 14 DWORD space for arguments.
 	pPush_local[3] = (DWORD)pRects;
@@ -7163,7 +7178,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Swap;//enum of this patched API
 	pPush_local[2] = (DWORD)Flags; //total 14 DWORD space for arguments.
 
@@ -8245,6 +8260,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			// test case: BumpEarth sample
 			// using pgraph_get_TextureTransformMatrix(i) without transpose or d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i] with transpose seems to have the same result.
 			memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
+			//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
 		}
 	}
 	else {
@@ -8295,6 +8311,8 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	DWORD fogTableMode, density, fogEnd, fogStart;
 
 	extern xbox::X_D3DMATERIAL8 NV2A_SceneMateirals[2];
+	NV2AState* d = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &d->pgraph;
 	// use NV2ARenderStates when we're in pgraph handling
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		PointSpriteEnable = NV2ARenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
@@ -8306,6 +8324,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 
 		// Material sources, pgraph update these renderstates in CxbxrLazySetLights()
 		ColorVertex = NV2ARenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
+		ColorVertex=pg->KelvinPrimitive.SetColorMaterial != 0;
 		ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
 		ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
 		ffShaderState.Modes.SpecularMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
@@ -11813,23 +11832,26 @@ void CxbxrImpl_SetRenderTarget
 	IDirect3DSurface *pHostDepthStencil = nullptr;
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
-	if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
-		g_pXbox_BackBufferSurface = pRenderTarget;
+	if (g_pXbox_BackBufferSurface == xbox::zeroptr && pRenderTarget != nullptr) {
+		g_Xbox_BackBufferSurface = *pRenderTarget;
+		g_pXbox_BackBufferSurface = &g_Xbox_BackBufferSurface;
 		// TODO : Some titles might render to another backbuffer later on,
 		// if that happens, we might need to skip the first one or two calls?
 	}
 
 	// In Xbox titles, CreateDevice calls SetRenderTarget (our caller) for the depth stencil
 	// We can use this to determine the Xbox depth stencil surface for later use!
-    if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
-        g_pXbox_DefaultDepthStencilSurface = pNewZStencil;
+    if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr && pNewZStencil != nullptr) {
+		g_Xbox_DefaultDepthStencilSurface = *pNewZStencil;
+		g_pXbox_DefaultDepthStencilSurface = &g_Xbox_DefaultDepthStencilSurface;
 		// TODO : Some titles might set another depth stencil later on,
 		// if that happens, we might need to skip the first one or two calls?
     }
 
 	// The current render target is only replaced if it's passed in here non-null
 	if (pRenderTarget != xbox::zeroptr) {
-		g_pXbox_RenderTarget = pRenderTarget;
+		g_Xbox_RenderTarget = *pRenderTarget;
+		g_pXbox_RenderTarget = &g_Xbox_RenderTarget;
 	}
 	else {
 		// If non is given, use the current Xbox render target
@@ -11863,7 +11885,15 @@ void CxbxrImpl_SetRenderTarget
 	}
 
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
-	g_pXbox_DepthStencil = pNewZStencil;
+	
+	if (pNewZStencil != nullptr) {
+		g_Xbox_DepthStencil = *pNewZStencil;
+		g_pXbox_DepthStencil = &g_Xbox_DepthStencil;
+	}
+	else {
+		g_pXbox_DepthStencil = nullptr;
+	}
+
 	g_ZScale = GetZScaleForPixelContainer(g_pXbox_DepthStencil); // TODO : Discern between Xbox and host and do this in UpdateDepthStencilFlags?
     pHostDepthStencil = GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL);
 	if (pHostDepthStencil != nullptr) {
@@ -11995,16 +12025,33 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	}
 	else {
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)pRenderTarget;
-		PBTokenArray[3] = (DWORD)pNewZStencil;
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget, 2, PBTokenArray);//argCount 14
-		// add reference to the surfaces to prevent them being released before we access them in pgraph.
-		//if(pRenderTarget)
-			//CxbxrImpl_Resource_AddRef(pRenderTarget);
-		//if(pNewZStencil)
-			//CxbxrImpl_Resource_AddRef(pNewZStencil);
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+		pPush_local[1] = (DWORD)X_D3DDevice_SetRenderTarget;//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		
+		if(pRenderTarget){
+			pPush_local[2] = (DWORD)&pPush_local[4];
+			*(X_D3DSurface*)&pPush_local[4] = *pRenderTarget;
+		}
+		else {
+            pPush_local[2] = 0;
+		}
+
+		if(pNewZStencil){
+			pPush_local[3] = (DWORD)&pPush_local[10];
+			*(X_D3DSurface*)&pPush_local[10] = *pNewZStencil;
+		}
+		else {
+			pPush_local[3] = 0;
+		}
+		//set pushbuffer pointer to the new beginning, HLE_API_PUSHBFFER_COMMAND_128 requires 0x20 dwords offset to pPush.
+		*(DWORD**)g_pXbox_pPush += 0x20;
 	}
 }
 
@@ -12552,7 +12599,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShaderProgram;//enum of this patched API
 	pPush_local[2] = (DWORD)pFunction; //total 14 DWORD space for arguments.
 	pPush_local[3] = (DWORD)Address;
@@ -12729,7 +12776,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND;
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
 	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetScreenSpaceOffset;//enum of this patched API
 	pPush_local[2] = FtoDW(x); //total 14 DWORD space for arguments.
 	pPush_local[3] = FtoDW(y);

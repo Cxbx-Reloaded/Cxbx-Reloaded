@@ -2034,10 +2034,14 @@ int pgraph_handle_method(
                         if (argv[1] != 0) {
                             //NV2A_stateFlags |= X_STATE_RUNPUSHBUFFERWASCALLED;
                             pgraph_SetNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
+                            if (argv[3] != 0)
+                                *(bool*)argv[3] = false;
                         }
                         else {
                             //NV2A_stateFlags &= !X_STATE_RUNPUSHBUFFERWASCALLED;
                             pgraph_ClearNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
+                            if (argv[2] != 0)
+                                *(bool*)argv[2] = false;
                         }
                         break;
                     case X_D3DDevice_RunVertexStateShader:
@@ -2236,12 +2240,21 @@ int pgraph_handle_method(
                     case NVX_FLIP_SYNCHRONIZED: break;
                     case NVX_PUSH_BUFFER_RUN: break;
                     case NVX_PUSH_BUFFER_FIXUP: break;
-                    case NVX_FENCE: break;
+                    case NVX_FENCE:
+                        /*
+                        semaphore is set in NV097_BACK_END_WRITE_SEMAPHORE_RELEASE or NV097_TEXTURE_READ_SEMAPHORE_RELEASE
+                        KelvinPrimitive.SetBackEndWriteSemaphoreRelease= cpu time when InsertFence() was called.
+
+                        */
+
+                        break;
                     case NVX_READ_CALLBACK:
-                        CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_READ,(xbox::X_D3DCALLBACK) pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                        //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_READ,(xbox::X_D3DCALLBACK) pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                        ((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);
                         break;
                     case NVX_WRITE_CALLBACK:
-                        CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_WRITE, (xbox::X_D3DCALLBACK)pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                        //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_WRITE, (xbox::X_D3DCALLBACK)pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                        ((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);
                         break;
                     case NVX_DXT1_NOISE_ENABLE://value stores in NV097_SET_ZSTENCIL_CLEAR_VALUE  D3DRS_DXT1NOISEENABLE //KelvinPrimitive.
                         NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DXT1NOISEENABLE, pg->KelvinPrimitive.SetZStencilClearValue);
@@ -2469,7 +2482,7 @@ int pgraph_handle_method(
 				case NV097_SET_LIGHT_CONTROL:
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
-                case NV097_SET_COLOR_MATERIAL: {//done
+                case NV097_SET_COLOR_MATERIAL: {//done //pg->KelvinPrimitive.SetColorMaterial
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_EMISSION,  //(pg->KelvinPrimitive.SetColorMaterial >> 0) & 3)
                     //	(arg0 >> 0) & 3);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_AMBIENT,  //(pg->KelvinPrimitive.SetColorMaterial >> 2) & 3)
@@ -2478,6 +2491,9 @@ int pgraph_handle_method(
                     //	(arg0 >> 4) & 3);
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_SPECULAR,  //(pg->KelvinPrimitive.SetColorMaterial >> 6) & 3
                     //	(arg0 >> 6) & 3);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORVERTEX, pg->KelvinPrimitive.SetColorMaterial!=0);
+                    for(int i=0;i<8;i++)
+                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE+i,(pg->KelvinPrimitive.SetColorMaterial >> (14-2*i)) & 3);
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 }
