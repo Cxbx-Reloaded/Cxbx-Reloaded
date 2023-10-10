@@ -2178,4 +2178,17 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetMaterial)
 
 } // end of namespace xbox
 
+// ******************************************************************
+// * patch: D3DDevice_GetMaterial
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
+(
+    UINT Length,
+    DWORD Usage,
+    DWORD FVF,
+    D3DPOOL Pool,
+    xbox::X_D3DVertexBuffer* pBuffer,
+    UINT Data
+);
+
 #endif

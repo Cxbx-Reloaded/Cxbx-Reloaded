@@ -207,6 +207,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("Direct3D_CreateDevice_4", xbox::EMUPATCH(Direct3D_CreateDevice_4), PATCH_HLE_D3D),
 	PATCH_ENTRY("Lock2DSurface", xbox::EMUPATCH(Lock2DSurface), PATCH_HLE_D3D),
 	//PATCH_ENTRY("Lock3DSurface", xbox::EMUPATCH(Lock3DSurface), PATCH_HLE_D3D),
+	PATCH_ENTRY("XGSetVertexBufferHeader", EMUPATCH(XGSetVertexBufferHeader), PATCH_HLE_D3D),
 
 	// DSOUND
 	PATCH_ENTRY("CDirectSound3DCalculator_Calculate3D", xbox::EMUPATCH(CDirectSound3DCalculator_Calculate3D), PATCH_HLE_DSOUND),

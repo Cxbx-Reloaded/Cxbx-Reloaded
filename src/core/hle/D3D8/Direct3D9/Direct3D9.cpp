@@ -446,7 +446,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetSoftDisplayFilter,                     (bool)                                                                                                );  \
     XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap,                                     (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::dword_xt,      WINAPI,     D3DDevice_Swap_0,                                   ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SwitchTexture,                            (xbox::dword_xt,xbox::dword_xt,xbox::dword_xt)                                                                                      );  \
+    XB_MACRO(xbox::void_xt,       __fastcall, D3DDevice_SwitchTexture,                            (xbox::dword_xt,xbox::dword_xt,xbox::dword_xt)                                                        );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource__LTCG,                          (xbox::void_xt)                                                                                       );  \
@@ -457,6 +457,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4,                            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     XGSetVertexBufferHeader,                            (UINT , DWORD, DWORD, D3DPOOL, xbox::X_D3DVertexBuffer*, UINT)                                        );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DResource_AddRef,                                 (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DResource_Release,                                (xbox::X_D3DResource*)                                                                                );  \
 
@@ -9305,6 +9306,45 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	//ForceResourceRehash(pPixelContainer);
 	CxbxrImpl_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 #endif
+}
+//cache for data offset of vertex buffers created using XGSetVertexBufferHeader, this is for D3DDevice_SetRenderTarget() to check whether it should transfer data from host surface back to xbox.
+//32 cache size should be more than enough since this is a vertex buffer. let's see.
+std::array<UINT, 32>  g_XGVertexBufferData;
+
+// ******************************************************************
+// * patch: D3DDevice_GetMaterial
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
+(
+	UINT Length,
+	DWORD Usage,
+	DWORD FVF,
+	D3DPOOL Pool,
+	xbox::X_D3DVertexBuffer* pBuffer,
+	UINT Data
+)
+{
+	//trampoline
+	XB_TRMP(XGSetVertexBufferHeader)(Length, Usage, FVF, Pool, pBuffer, Data);
+	bool bVertexBufferDataFound = false;
+	auto val = g_XGVertexBufferData.begin();
+	for (; val < g_XGVertexBufferData.end(); val++) {
+		if (*val == 0) {
+			bVertexBufferDataFound = true;
+			*val = Data;
+			break;
+		}
+		if (*val == Data) {
+			bVertexBufferDataFound = true;
+			break;
+		}
+	}
+	//add vertex buffer data offset to cache
+	if (!bVertexBufferDataFound) {
+		//assert when we search the whole cache without finding the vertex buffer data offset on hand. which means the we ran out of cache.
+//		if (val == g_XGVertexBufferData.end())
+			assert(false);
+	}
 }
 
 // Overload for logging
