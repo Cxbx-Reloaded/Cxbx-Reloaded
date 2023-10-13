@@ -8875,6 +8875,933 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 
 }
 
+/*
+GetMasks2
+
+  Purpose: produces the coordinate masks for manuvering through swizzled textures
+
+  Parameters:
+	IN Width: the width of the texture to be swizzled
+	IN Height: the height of the texture to be swizzled
+	OUT pMaskU: the mask for the u-coodinate
+	OUT pMaskV: the mask for the v-coordinate
+
+  Notes: This is a much faster algorithm for getting the masks than the
+	more generic algorithm used in the Swizzler class defined in xgraphics.h.
+	This algorithm works only for 2d textures. Swizzler's works for 2d and 3d.
+
+
+Quick-Swizzling algorithm:
+
+  The 2d swizzling/unswizzling code grabs a rectangular block of optimized size from the texture,
+  rearranges that, moves it to the destination, then repeats with the next block.
+
+  swizzling,                  8-bit or 16-bit
+  linear:                     swizzled:
+  00 01 02 03 04 05 06 07
+  10 11 12 13 14 15 16 17
+  20 21 22 23 24 25 26 27     00 01 10 11 02 03 12 13 20 21 30 31 22 23 32 33 \
+  30 31 32 33 34 35 36 37 =>  04 05 14 15 06 07 16 17 24 25 34 35 26 27 36 37 \
+  40 41 42 43 44 45 46 47     40 41 50 51 42 43 52 53 60 61 70 71 62 63 72 73 \
+  50 51 52 53 54 55 56 57     44 45 54 55 46 47 56 57 64 65 74 75 66 67 76 77
+  60 61 62 63 64 65 66 67
+  70 71 72 73 74 75 76 77
+
+  swizzling,                  32-bit
+  linear:                     swizzled:
+  00 01 02 03 04 05 06 07
+  10 11 12 13 14 15 16 17 =>  00 01 10 11 02 03 12 13 20 21 30 31 22 23 32 33 \
+  20 21 22 23 24 25 26 27     04 05 14 15 06 07 16 17 24 25 34 35 26 27 36 37
+  30 31 32 33 34 35 36 37
+
+  unswizzling, 8-bit or 16-bit
+  swizzled:                                             linear:
+  00 01 10 11 02 03 12 13 20 21 30 31 22 21 32 31 \     00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
+  04 05 14 15 06 07 16 17 24 25 34 35 26 27 36 37... => 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+  08 09 18 19 0a 0b 1a 1b 28 29 38 39 2a 2b 3a 3b \     20 21 22 23 24 25 26 27 28 29 2a 2b 2c 2d 2e 2f
+  0c 0d 1c 1d 0e 0f 1e 1f 2c 2d 3c 3d 2e 2f 3e 3f       30 31 32 33 34 35 36 37 38 39 3a 3b 3c 3d 3e 3f
+
+  unswizzling, 32-bit
+  swizzled:	                                            linear:
+														00 01 02 03 04 05 06 07
+  00 01 10 11 02 03 12 13 20 21 30 31 22 23 32 33 \  => 10 11 12 13 14 15 16 17
+  04 05 14 15 06 07 16 17 24 25 34 35 26 27 36 37       20 21 22 23 24 25 26 27
+														30 31 32 33 34 35 36 37
+
+  The algorithm moves through the linear texture left->right, top->bottom,
+  which means the swizzled array gets 64 or 128-byte blocks written to it in a
+  seemingly random order.
+
+  AddValU and AddValV are set to move to the next block. (-32), (-64), (-128),
+  and (-256) were precalculated using the following algorithm (using
+  Swizzler class methods):
+
+	After finishing with one block, the U coordinate must be incrimented to
+	the next block. Since all blocks are 4 texels wide, the value to add will
+	be constant. Swizzing (4) for use with the U coordinate results in 16.
+	(This assumes that the texture is at least 4 texels wide and 2 texels tall).
+	Then, 16 is plugged into the AddU formula from the Swizzler class:
+
+	  m_u = (m_u - ((-num) & m_MaskU)) & m_MaskU
+
+	AddValU is set equal to ((-num) & m_MaskU). AddValV is calculated in a
+	similar manner.
+
+  This algorithm only works with textures with width and height >= block_size.
+  This means that special-cases must occur when the is smaller. XBSwizzleRect
+  and XBUnswizzleRect take care of this. Textures with width < 4, or height < 2
+  actually look exactly the same in memory when they are swizzled as when they
+  are deswizzled. memcpy() is used in that condition. For sizes between (2,4) and
+  (blocksize_x, blocksize_y), the texture is swizzled in 2x1 blocks.
+*/
+
+
+typedef struct _XGPOINT3D
+{
+	DWORD u;
+	DWORD v;
+	DWORD w;
+}
+XGPOINT3D;
+
+typedef DWORD SWIZNUM;
+
+class Swizzler
+{
+public:
+
+	// Dimensions of the texture
+	DWORD m_Width;
+	DWORD m_Height;
+	DWORD m_Depth;
+
+	// Internal mask for each coordinate
+	DWORD m_MaskU;
+	DWORD m_MaskV;
+	DWORD m_MaskW;
+
+	// Swizzled texture coordinates
+	DWORD m_u;
+	DWORD m_v;
+	DWORD m_w;
+
+	Swizzler() : m_Width(0), m_Height(0), m_Depth(0),
+		m_MaskU(0), m_MaskV(0), m_MaskW(0),
+		m_u(0), m_v(0), m_w(0)
+	{ }
+
+	// Initializes the swizzler
+	Swizzler(
+		DWORD width,
+		DWORD height,
+		DWORD depth
+	)
+	{
+		Init(width, height, depth);
+	}
+
+	void Init(
+		DWORD width,
+		DWORD height,
+		DWORD depth
+	)
+	{
+		m_Width = width;
+		m_Height = height;
+		m_Depth = depth;
+		m_MaskU = 0;
+		m_MaskV = 0;
+		m_MaskW = 0;
+		m_u = 0;
+		m_v = 0;
+		m_w = 0;
+
+		DWORD i = 1;
+		DWORD j = 1;
+		DWORD k;
+
+		do
+		{
+			k = 0;
+			if (i < width)
+			{
+				m_MaskU |= j;
+				k = (j <<= 1);
+			}
+
+			if (i < height)
+			{
+				m_MaskV |= j;
+				k = (j <<= 1);
+			}
+
+			if (i < depth)
+			{
+				m_MaskW |= j;
+				k = (j <<= 1);
+			}
+
+			i <<= 1;
+		} while (k);
+	}
+
+	// Swizzles a texture coordinate
+	SWIZNUM SwizzleU(
+		DWORD num
+	)
+	{
+		SWIZNUM r = 0;
+
+		for (DWORD i = 1; i <= m_MaskU; i <<= 1)
+		{
+			if (m_MaskU & i)
+			{
+				r |= (num & i);
+			}
+			else
+			{
+				num <<= 1;
+			}
+		}
+
+		return r;
+	}
+
+	SWIZNUM SwizzleV(
+		DWORD num
+	)
+	{
+		SWIZNUM r = 0;
+
+		for (DWORD i = 1; i <= m_MaskV; i <<= 1)
+		{
+			if (m_MaskV & i)
+			{
+				r |= (num & i);
+			}
+			else
+			{
+				num <<= 1;
+			}
+		}
+
+		return r;
+	}
+
+	SWIZNUM SwizzleW(
+		DWORD num
+	)
+	{
+		SWIZNUM r = 0;
+
+		for (DWORD i = 1; i <= m_MaskW; i <<= 1)
+		{
+			if (m_MaskW & i)
+			{
+				r |= (num & i);
+			}
+			else
+			{
+				num <<= 1;
+			}
+		}
+
+		return r;
+	}
+
+	SWIZNUM Swizzle(
+		DWORD u,
+		DWORD v,
+		DWORD w
+	)
+	{
+		return SwizzleU(u) | SwizzleV(v) | SwizzleW(w);
+	}
+
+	// Unswizzles a texture coordinate
+	DWORD UnswizzleU(
+		SWIZNUM num
+	)
+	{
+		DWORD r = 0;
+
+		for (DWORD i = 1, j = 1; i; i <<= 1)
+		{
+			if (m_MaskU & i)
+			{
+				r |= (num & j);
+				j <<= 1;
+			}
+			else
+			{
+				num >>= 1;
+			}
+		}
+
+		return r;
+	}
+
+	DWORD UnswizzleV(
+		SWIZNUM num
+	)
+	{
+		DWORD r = 0;
+
+		for (DWORD i = 1, j = 1; i; i <<= 1)
+		{
+			if (m_MaskV & i)
+			{
+				r |= (num & j);
+				j <<= 1;
+			}
+			else
+			{
+				num >>= 1;
+			}
+		}
+
+		return r;
+	}
+
+	DWORD UnswizzleW(
+		SWIZNUM num
+	)
+	{
+		DWORD r = 0;
+
+		for (DWORD i = 1, j = 1; i; i <<= 1)
+		{
+			if (m_MaskW & i)
+			{
+				r |= (num & j);
+				j <<= 1;
+			}
+			else
+			{
+				num >>= 1;
+			}
+		}
+
+		return r;
+	}
+
+	// Sets a texture coordinate
+	__forceinline SWIZNUM SetU(SWIZNUM num) { return m_u = num /* & m_MaskU */; }
+	__forceinline SWIZNUM SetV(SWIZNUM num) { return m_v = num /* & m_MaskV */; }
+	__forceinline SWIZNUM SetW(SWIZNUM num) { return m_w = num /* & m_MaskW */; }
+
+	// Adds a value to a texture coordinate
+	__forceinline SWIZNUM AddU(SWIZNUM num) { return m_u = (m_u - ((0 - num) & m_MaskU)) & m_MaskU; }
+	__forceinline SWIZNUM AddV(SWIZNUM num) { return m_v = (m_v - ((0 - num) & m_MaskV)) & m_MaskV; }
+	__forceinline SWIZNUM AddW(SWIZNUM num) { return m_w = (m_w - ((0 - num) & m_MaskW)) & m_MaskW; }
+
+	// Subtracts a value from a texture coordinate
+	__forceinline SWIZNUM SubU(SWIZNUM num) { return m_u = (m_u - num /* & m_MaskU */) & m_MaskU; }
+	__forceinline SWIZNUM SubV(SWIZNUM num) { return m_v = (m_v - num /* & m_MaskV */) & m_MaskV; }
+	__forceinline SWIZNUM SubW(SWIZNUM num) { return m_w = (m_w - num /* & m_MaskW */) & m_MaskW; }
+
+	// Increments a texture coordinate
+	__forceinline SWIZNUM IncU() { return m_u = (m_u - m_MaskU) & m_MaskU; }
+	__forceinline SWIZNUM IncV() { return m_v = (m_v - m_MaskV) & m_MaskV; }
+	__forceinline SWIZNUM IncW() { return m_w = (m_w - m_MaskW) & m_MaskW; }
+
+	// Decrements a texture coordinate
+	__forceinline SWIZNUM DecU() { return m_u = (m_u - 1) & m_MaskU; }
+	__forceinline SWIZNUM DecV() { return m_v = (m_v - 1) & m_MaskV; }
+	__forceinline SWIZNUM DecW() { return m_w = (m_w - 1) & m_MaskW; }
+
+	// Gets the current swizzled address for a 2D or 3D texture
+	__forceinline SWIZNUM Get2D() { return m_u | m_v; }
+	__forceinline SWIZNUM Get3D() { return m_u | m_v | m_w; }
+};
+
+//----------------------------------------------------------------------------
+// Swizzle a box from a buffer into a larger texture.  The destination box 
+// must be completely contained within the destination texture (no clipping).
+//
+extern "C"
+VOID WINAPI EmuSwizzleBox(
+	LPCVOID     pSource,      // The buffer that contains the source rectangle
+	DWORD       RowPitch,     // Byte offset from the left edge of one row to
+	                          // the left edge of the next row
+	DWORD       SlicePitch,   // Byte offset from the top-left of one slice to
+	                          // the top-left of the next deepest slice
+	CONST D3DBOX * pBox,      // The box within the buffer to copy.
+	LPVOID      pDest,        // The destination texture.
+	DWORD       Width,        // The width of the entire destination texture.
+	DWORD       Height,       // The height of the entire destination texture.
+	DWORD       Depth,        // The depth of the entire destination texture.
+	CONST XGPOINT3D * pPoint, // Where to put the rectangle in the texture.
+	DWORD       BytesPerPixel
+)
+{
+	//PERF: swizzling/unswizzling when Width==1 || Height==1 || Depth==1 is the same as 2d 
+	//PERF: if 2 of the following are true: Width==2, Height==1, Depth==1: use memcpy
+
+	//PERF: optimal swiz/unswiz of 32-bit should be done with 8x2x2. (requires 8x4x4 area, aligned to 8x2x2)
+	//PERF: optimal 16-bit unswiz is 8x2x2 movups (requires 8x4x4 area, aligned to 8x2x2)
+	//PERF: optimal 16-bit swiz is 8x2x2 movntps (requires 8x4x4 area, aligned to 8x2x2)
+	//PERF: optimal 8-bit swiz is 4x2x2 movq 
+
+	DWORD RWidth;
+	DWORD RHeight;
+	DWORD RDepth;
+	DWORD UOffset;
+	DWORD VOffset;
+	DWORD WOffset;
+	if (!pBox && !pPoint && !RowPitch && !SlicePitch)
+	{
+		RWidth = Width;
+		RHeight = Height;
+		RDepth = Depth;
+		UOffset = 0;
+		VOffset = 0;
+		WOffset = 0;
+		RowPitch = Width * BytesPerPixel;
+		SlicePitch = RowPitch * Height;
+	}
+	else
+	{
+		pSource = (void*)((BYTE*)pSource + pBox->Left + pBox->Top * RowPitch + pBox->Front * SlicePitch);
+		RWidth = pBox->Right - pBox->Left;
+		RHeight = pBox->Bottom - pBox->Top;
+		RDepth = pBox->Back - pBox->Front;
+		UOffset = pPoint->u;
+		VOffset = pPoint->v;
+		WOffset = pPoint->w;
+	}
+	unsigned int u, v, w;
+	Swizzler swiz(Width, Height, Depth);
+	DWORD SwizU = swiz.SwizzleU(UOffset);
+	DWORD SwizV = swiz.SwizzleV(VOffset);
+	DWORD SwizW = swiz.SwizzleW(WOffset);
+
+	swiz.SetW(SwizW);
+	if (BytesPerPixel == 4)
+	{
+		DWORD* pSrc = (DWORD*)pSource;
+		DWORD* pDst = (DWORD*)pDest;
+		DWORD RowPitchAdjust = RowPitch - RWidth * BytesPerPixel;
+		DWORD SlicePitchAdjust = SlicePitch - RHeight * RowPitch;
+		for (w = RDepth; w--;)
+		{
+			swiz.SetV(SwizV);
+			for (v = RHeight; v--;)
+			{
+				swiz.SetU(SwizU);
+				for (u = RWidth; u--;)
+				{
+					pDst[swiz.Get3D()] = *(pSrc++);
+					swiz.IncU();
+				}
+				pSrc = (DWORD*)((BYTE*)pSrc + RowPitchAdjust);
+				swiz.IncV();
+			}
+			pSrc = (DWORD*)((BYTE*)pSrc + SlicePitchAdjust);
+			swiz.IncW();
+		}
+	}
+	else if (BytesPerPixel == 2)
+	{
+		WORD* pSrc = (WORD*)pSource;
+		WORD* pDst = (WORD*)pDest;
+		DWORD RowPitchAdjust = RowPitch - RWidth * BytesPerPixel;
+		DWORD SlicePitchAdjust = SlicePitch - RHeight * RowPitch;
+		for (w = RDepth; w--;)
+		{
+			swiz.SetV(SwizV);
+			for (v = RHeight; v--;)
+			{
+				swiz.SetU(SwizU);
+				for (u = RWidth; u--;)
+				{
+					pDst[swiz.Get3D()] = *(pSrc++);
+					swiz.IncU();
+				}
+				pSrc = (WORD*)((BYTE*)pSrc + RowPitchAdjust);
+				swiz.IncV();
+			}
+			pSrc = (WORD*)((BYTE*)pSrc + SlicePitchAdjust);
+			swiz.IncW();
+		}
+	}
+	else
+	{
+		BYTE* pSrc = (BYTE*)pSource;
+		BYTE* pDst = (BYTE*)pDest;
+		DWORD RowPitchAdjust = RowPitch - RWidth * BytesPerPixel;
+		DWORD SlicePitchAdjust = SlicePitch - RHeight * RowPitch;
+		for (w = RDepth; w--;)
+		{
+			swiz.SetV(SwizV);
+			for (v = RHeight; v--;)
+			{
+				swiz.SetU(SwizU);
+				for (u = RWidth; u--;)
+				{
+					pDst[swiz.Get3D()] = *(pSrc++);
+					swiz.IncU();
+				}
+				pSrc = pSrc + RowPitchAdjust;
+				swiz.IncV();
+			}
+			pSrc = pSrc + SlicePitchAdjust;
+			swiz.IncW();
+		}
+	}
+}
+
+//----------------------------------------------------------------------------
+// Swizzle a subrectangle from a buffer into a larger texture.  The 
+// destination rectangle must be completely contained within the destination 
+// texture (no clipping).
+//
+// If pRect is NULL, pPoint is NULL and Pitch == 0, this routine will
+// assume that the source buffer is exactly the same size as the destination
+// texture and will swizzle the whole thing.  This routine will run
+// considerably faster in that case.
+//
+extern "C"
+VOID WINAPI EmuSwizzleRect(
+	LPCVOID pSource,      // The buffer that contains the source rectangle
+	DWORD   Pitch,        // The pitch of the buffer that contains the source
+	LPCRECT pRect,        // The rectangle within the buffer to copy.
+	LPVOID  pDest,        // The destination texture.
+	DWORD   Width,        // The width of the entire destination texture.
+	DWORD   Height,       // The height of the entire destination texture.
+	CONST LPPOINT pPoint, // Where to put the rectangle in the texture.
+	DWORD   BytesPerPixel
+)
+{
+	//if SSE instructions are not supported, XGSwizzleBox with depth==1 does the same thing as 
+	  //XGSwizzleRect, but doesn't use pentium-3-specific instructions
+	D3DBOX Box, * pBox = &Box;
+	XGPOINT3D Point3, * pPoint3 = &Point3;
+	if (!pRect) {
+		pBox = NULL;
+	}
+	else {
+		Box.Left = pRect->left;
+		Box.Right = pRect->right;
+		Box.Top = pRect->top;
+		Box.Bottom = pRect->bottom;
+		Box.Front = 0;
+		Box.Back = 1;
+	}
+	if (!pPoint) {
+		pPoint3 = NULL;
+	}
+	else {
+		Point3.u = pPoint->x;
+		Point3.v = pPoint->y;
+		Point3.w = 0;
+	}
+	EmuSwizzleBox(pSource, Pitch, Pitch * Width, pBox, pDest, Width, Height, 1, pPoint3, BytesPerPixel);
+	return;
+}
+
+
+//finds a surface within a pixel container with specified cube face type and surface level.
+//reversed from DisplacementMap sample.
+void FindSurfaceWithinTexture(
+	xbox::X_D3DPixelContainer* pPixels,
+	D3DCUBEMAP_FACES FaceType,
+	UINT Level,
+	BYTE** ppbData,
+	DWORD* pRowPitch,
+	DWORD* pSlicePitch,
+	DWORD* pFormat,
+	DWORD* pSize
+)
+{
+	BYTE* pbData = (BYTE*)pPixels->Data;
+	xbox::X_D3DFORMAT X_Format=GetXboxPixelContainerFormat(pPixels->Format);
+	DWORD TexelSize = EmuXBFormatBitsPerPixel(X_Format);
+	DWORD RowPitch, SlicePitch;
+	DWORD Size = pPixels->Size;
+	if (!Size)
+	{
+		DWORD TextureLogWidth = (pPixels->Format & X_D3DFORMAT_USIZE_MASK) >> X_D3DFORMAT_USIZE_SHIFT;
+		DWORD TextureLogHeight = (pPixels->Format & X_D3DFORMAT_VSIZE_MASK) >> X_D3DFORMAT_VSIZE_SHIFT;
+		DWORD TextureLogDepth = (pPixels->Format & X_D3DFORMAT_PSIZE_MASK) >> X_D3DFORMAT_PSIZE_SHIFT;
+		DWORD LogMin = EmuXBFormatIsCompressed(X_Format) ? 2 : 0;
+		if (FaceType != D3DCUBEMAP_FACE_POSITIVE_X)
+		{
+			DWORD cLevels = (pPixels->Format & X_D3DFORMAT_MIPMAP_MASK) >> X_D3DFORMAT_MIPMAP_SHIFT;
+			DWORD LogWidth = TextureLogWidth;
+			DWORD LogHeight = TextureLogHeight;
+			DWORD LogDepth = TextureLogDepth;
+			DWORD FaceSize = 0;
+			for (; cLevels; cLevels--)
+			{
+				FaceSize += (1 << (MAX(LogWidth, LogMin) + MAX(LogHeight, LogMin))) * TexelSize / 8;
+				if (LogWidth > 0)
+				{
+					LogWidth--;
+				}
+				if (LogHeight > 0)
+				{
+					LogHeight--;
+				}
+				if (LogDepth > 0)
+				{
+					LogDepth--;
+				}
+			}
+			FaceSize = (FaceSize + X_D3DTEXTURE_CUBEFACE_ALIGNMENT - 1) & ~(X_D3DTEXTURE_CUBEFACE_ALIGNMENT - 1);
+			pbData += FaceSize * FaceType;
+		}
+		if (Level)
+		{
+			DWORD cLevels = Level;
+			DWORD LogSize;
+			for (; cLevels; cLevels--)
+			{
+				LogSize = MAX(TextureLogWidth, LogMin) + MAX(TextureLogHeight, LogMin) + TextureLogDepth;
+				pbData += (1 << LogSize) * TexelSize / 8;
+				if (TextureLogWidth > 0)
+				{
+					TextureLogWidth--;
+				}
+				if (TextureLogHeight > 0)
+				{
+					TextureLogHeight--;
+				}
+				if (TextureLogDepth > 0)
+				{
+					TextureLogDepth--;
+				}
+			}
+		}
+		DWORD Format = pPixels->Format & ~(X_D3DFORMAT_USIZE_MASK | X_D3DFORMAT_VSIZE_MASK | X_D3DFORMAT_PSIZE_MASK);
+		Format |= TextureLogWidth << X_D3DFORMAT_USIZE_SHIFT;
+		Format |= TextureLogHeight << X_D3DFORMAT_VSIZE_SHIFT;
+		Format |= TextureLogDepth << X_D3DFORMAT_PSIZE_SHIFT;
+		TextureLogWidth = MAX(TextureLogWidth, LogMin);
+		TextureLogHeight = MAX(TextureLogHeight, LogMin);
+		switch (X_Format)
+		{
+		case xbox::X_D3DFMT_DXT1://0x0C
+			RowPitch = (1 << TextureLogWidth) * 2;
+			break;
+		case xbox::X_D3DFMT_DXT2://0x0E
+		case xbox::X_D3DFMT_DXT4://0x0F
+			RowPitch = (1 << TextureLogWidth) * 4;
+			break;
+		default:
+			RowPitch = (1 << TextureLogWidth) * TexelSize / 8;
+		}
+		SlicePitch = (1 << (TextureLogWidth + TextureLogHeight)) * TexelSize / 8;
+		*pFormat = Format;
+		*pSize = pPixels->Size;
+	}
+	else
+	{
+		DWORD TextureWidth = (Size & X_D3DSIZE_WIDTH_MASK) + 1;
+		DWORD TextureHeight = ((Size & X_D3DSIZE_HEIGHT_MASK) >> X_D3DSIZE_HEIGHT_SHIFT) + 1;
+		DWORD Pitch = (((Size & X_D3DSIZE_PITCH_MASK) >> X_D3DSIZE_PITCH_SHIFT) + 1) * X_D3DTEXTURE_PITCH_ALIGNMENT;
+		RowPitch = Pitch;
+		SlicePitch = RowPitch * TextureHeight;
+		*pFormat = pPixels->Format;
+		*pSize = pPixels->Size;
+	}
+	*ppbData = pbData;
+	*pRowPitch = RowPitch;
+	*pSlicePitch = SlicePitch;
+}
+typedef enum _ComponentEncoding {
+	NoCmpnts = 0, // Format doesn't contain any component (ARGB/QWVU)
+	A1R5G5B5,
+	X1R5G5B5, // NOTE : A=255
+	A4R4G4B4,
+	__R5G6B5, // NOTE : A=255
+	A8R8G8B8,
+	X8R8G8B8, // NOTE : A=255
+	____R8B8, // NOTE : A takes R, G takes B
+	____G8B8, // NOTE : A takes G, R takes B
+	______A8, // TEST : R=G=B= 255
+	__R6G5B5, // NOTE : A=255
+	R5G5B5A1,
+	R4G4B4A4,
+	A8B8G8R8,
+	B8G8R8A8,
+	R8G8B8A8,
+	______L8, // NOTE : A=255, R=G=B= L
+	_____AL8, // NOTE : A=R=G=B= L
+	_____L16, // NOTE : Actually G8B8, with A=R=255
+	____A8L8, // NOTE : R=G=B= L
+	____DXT1,
+	____DXT3,
+	____DXT5,
+	______P8,
+	____YUY2,
+	____UYVY,
+	__G16B16, // NOTE : A takes G, R takes B
+	__R8G8B8,
+}ComponentEncoding;
+extern DWORD EmuPCFormatBytesPerPixel(D3DFORMAT pc);
+//extern enum ComponentEncoding;
+extern ComponentEncoding EmuPCFormatComponentEncoding(D3DFORMAT pc);
+extern ComponentEncoding EmuXBFormatComponentEncoding(xbox::X_D3DFORMAT Format);
+extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
+
+//find corresponding host surface, lock it and transfer data from host surface to xbox surface. swizzle the data if xbox surface format is swizzle format
+void LoadSurfaceDataFromHost(xbox::X_D3DSurface* pXboxSurface)
+{
+	//check if the pPixelContainer  is in our resource cache or not
+	auto key = GetHostResourceKey(pXboxSurface); // Note : iTextureStage is unknown here!
+	auto& ResourceCache = GetResourceCache(key);
+	auto it = ResourceCache.find(key);
+	//return without any update when there is no host resource been created with this surface.
+	if (it == ResourceCache.end())
+		return;
+	//from here, we're sure our xbox surface has an corresponding host surface exists.
+	DWORD D3DUsage = D3DUSAGE_DYNAMIC;//only D3DUSAGE_DYNAMIC is lockable; 
+	IDirect3DSurface* pHostSourceSurface;
+	pHostSourceSurface = (IDirect3DSurface*)it->second.pHostResource.Get();
+	bool g_IsRenderTexture = false;
+	D3DSURFACE_DESC HostSurfaceDesc;
+	D3DLOCKED_RECT HostLockedRect;
+	HRESULT hRet;
+
+	hRet = pHostSourceSurface->GetDesc(&HostSurfaceDesc);
+	if (hRet != D3D_OK) {
+		EmuLog(LOG_LEVEL::WARNING, "Could not get host surface desc in LoadSurfaceDataFromHost");
+	}
+
+	if (HostSurfaceDesc.Usage == D3DUSAGE_RENDERTARGET)
+		g_IsRenderTexture = true;
+
+	//xbox::X_D3DBaseTexture OffScreenTexture, * pOffScreenTexture;
+	//pOffScreenTexture = &OffScreenTexture;
+	//OffScreenTexture = *(xbox::X_D3DBaseTexture*)pXboxSurface;
+
+	IDirect3DTexture9* pHostOffScreenTexture;
+	IDirect3DSurface9* pHostOffScreenSurface;
+	//g_IsRenderTexture = true;
+	bool bOffScreenSurfaceNeedRelease = false;
+	DWORD hostFlag = D3DLOCK_READONLY;
+	if (g_IsRenderTexture)
+	{
+		hRet = g_pD3DDevice->CreateTexture(
+			HostSurfaceDesc.Width,
+			HostSurfaceDesc.Height,
+			1,
+			D3DUSAGE_DYNAMIC,
+			HostSurfaceDesc.Format,
+			D3DPOOL_SYSTEMMEM,
+			&pHostOffScreenTexture,
+			NULL
+		);
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in LoadSurfaceDataFromHost");
+		}
+		bOffScreenSurfaceNeedRelease = true;
+		if (hRet == D3D_OK)hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in LoadSurfaceDataFromHost");
+		}
+
+		if (hRet == D3D_OK)hRet = g_pD3DDevice->GetRenderTargetData(pHostSourceSurface, pHostOffScreenSurface);
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in LoadSurfaceDataFromHost");
+		}
+		D3DSURFACE_DESC HostOffScreenSurfaceDesc;
+		if (hRet == D3D_OK)pHostOffScreenSurface->GetDesc(&HostOffScreenSurfaceDesc);
+
+		assert(HostOffScreenSurfaceDesc.Width == HostSurfaceDesc.Width);
+		assert(HostOffScreenSurfaceDesc.Height == HostSurfaceDesc.Height);
+		hostFlag = D3DLOCK_READONLY;
+		if (hRet == D3D_OK)hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in LoadSurfaceDataFromHost");
+		}
+	}
+	//not render target texture, process it as regular texture, LockRect then transfer to xbox data with conversion.
+	//if the texture is not lockable, then copy it to a lockable surface with StretchRect() then transfer to xbox with conversion.
+	else {
+		pHostOffScreenSurface = pHostSourceSurface;
+		hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+
+		if (hRet == D3D_OK) {
+			;
+		}
+		else {
+			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in LoadSurfaceDataFromHost");
+
+			//hRet = g_pD3DDevice->CreateTexture(textureDesc.Width, textureDesc.Height,1, textureDesc.Usage, textureDesc.Format, D3DPOOL_DEFAULT, &pTexture,(HANDLE*)nullptr);
+			D3DUsage = D3DUSAGE_DYNAMIC;// textureDesc.Usage;// 
+			hRet = g_pD3DDevice->CreateTexture(
+				HostSurfaceDesc.Width,
+				HostSurfaceDesc.Height,
+				1,
+				D3DUSAGE_DYNAMIC,
+				HostSurfaceDesc.Format,
+				D3DPOOL_DEFAULT,
+				&pHostOffScreenTexture,
+				NULL
+			);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in LoadSurfaceDataFromHost");
+			}
+			bOffScreenSurfaceNeedRelease = true;
+
+			hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in LoadSurfaceDataFromHost");
+			}
+			// Copy Surface to Surface
+
+			hRet = g_pD3DDevice->StretchRect(
+				pHostSourceSurface,
+				NULL,
+				pHostOffScreenSurface,
+				NULL,
+				D3DTEXF_NONE
+			);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in g_pD3DDevice->StretchRect() in LoadSurfaceDataFromHost");
+			}
+
+			hostFlag = D3DLOCK_READONLY;
+			hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in LoadSurfaceDataFromHost");
+			}
+		}
+	}
+
+	//process host surface data transfer to xbox data with data conversion.
+	xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pXboxSurface);
+	// Interpret Width/Height/BPP
+	bool bXBSwizzled = EmuXBFormatIsSwizzled(X_Format);
+	bool bCompressed = EmuXBFormatIsCompressed(X_Format);
+	UINT XB_BPP = EmuXBFormatBytesPerPixel(X_Format);
+	UINT MipMapLevels = CxbxGetPixelContainerMipMapLevels(pXboxSurface);
+	UINT XBWidth, XBHeight, XBDepth, XBRowPitch, XBSlicePitch;
+	ComponentEncoding XBComponentEncoding = EmuXBFormatComponentEncoding(X_Format);
+	// Interpret Width/Height/BPP
+	CxbxGetPixelContainerMeasures(pXboxSurface, 0, &XBWidth, &XBHeight, &XBDepth, &XBRowPitch, &XBSlicePitch);
+
+	// Host width and height dimensions
+	UINT PCWidth = HostSurfaceDesc.Width;
+	UINT PCHeight = HostSurfaceDesc.Height;
+	UINT PCPitch = HostLockedRect.Pitch;
+	// instead of using width/height from xbox surface directly, getting host width/height from the host surface desc
+	// these two dimensions should be the same, shall we check if they might be different?
+	assert(XBWidth == PCWidth);
+	assert(XBHeight == PCHeight);
+	D3DFORMAT PCFormat = HostSurfaceDesc.Format;
+
+	UINT PC_BPP = EmuPCFormatBytesPerPixel(PCFormat);
+	ComponentEncoding PCComponentEncoding= EmuPCFormatComponentEncoding(PCFormat);
+
+	//bool bConvertToARGB = false;
+	//xbox::X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pXboxSurface);
+
+	//D3DUsage = HostSurfaceDesc.Usage;
+	byte* hostPtr = (byte*)HostLockedRect.pBits;
+	byte* xboxPtr = (byte*)GetDataFromXboxResource(pXboxSurface);// (byte*)pPixelContainer->Data;
+
+	// check host format and xbox format, convert format if necessary.
+	// todo:test if comparing BPP is enough
+	if (PC_BPP == XB_BPP ){//&& PCComponentEncoding == XBComponentEncoding) {
+		//same format, no format conversion.
+		;
+	}
+	else {
+		//different format, need format conversion.
+		//hack: assuming formats are the same, so put an assert() here just in case there are different formats.
+		assert(0);
+	}
+
+
+	byte* SwizzleBuffer = nullptr;
+	// check xbox format is swizzle format or not. swizzle xbox surface data when xbox format is swizzle format.
+	//bXBSwizzled = false;
+	if (bXBSwizzled) {
+		//xbox is swizzle format, let's swizzle the data.
+		hostPtr = (byte*)HostLockedRect.pBits;
+		xboxPtr = (byte*)GetDataFromXboxResource(pXboxSurface);// (byte*)pPixelContainer->Data;
+		if (PCPitch != XBRowPitch) {
+			//allocate an temp buffer to adjust host data row pitch to be the same as xbox row pitch so EmuSwizzleRect can work.
+			SwizzleBuffer = (byte*)malloc(XBSlicePitch);
+			xboxPtr = SwizzleBuffer;
+			for (int i = 0; i < XBHeight; i++) {
+				memcpy(xboxPtr, hostPtr, XBRowPitch);
+				xboxPtr += XBRowPitch;
+				hostPtr += PCPitch;
+			}
+			hostPtr = SwizzleBuffer;
+			xboxPtr = (byte*)GetDataFromXboxResource(pXboxSurface);
+		}
+		//
+		EmuSwizzleRect(
+			hostPtr,        // The buffer that contains the source rectangle
+			0,//XBRowPitch,     // The pitch of the buffer that contains the source
+			nullptr,        // The rectangle within the buffer to copy.
+			xboxPtr,        // The destination texture.
+			XBWidth,        // The width of the entire destination texture.
+			XBHeight,       // The height of the entire destination texture.
+			nullptr,        // Where to put the rectangle in the texture.
+			XB_BPP
+		);
+	}
+	else {
+		//xbox is not swizzle format, just copy the data from host to xbox.
+		if (HostLockedRect.Pitch == XBRowPitch)
+			memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * XBHeight);
+		else {
+			DWORD minPitch = MIN(HostLockedRect.Pitch, XBRowPitch);
+			for (int i = 0; i < XBHeight; i++) {
+				memcpy(xboxPtr, hostPtr, minPitch);
+				xboxPtr += XBRowPitch;
+				hostPtr += HostLockedRect.Pitch;
+			}
+		}
+	}
+	if (SwizzleBuffer != nullptr)
+		free(SwizzleBuffer);
+	//unlock surface before we leave
+	hRet = pHostOffScreenSurface->UnlockRect();
+	//release the created pHostOffScreenTexture and pHostOffScreenSurface
+	if (bOffScreenSurfaceNeedRelease) {
+		pHostOffScreenSurface->Release();
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->Release() in Lock2DSurface");
+		}
+		pHostOffScreenTexture->Release();
+		if (hRet != D3D_OK) {
+			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->Release() in Lock2DSurface");
+		}
+	}
+}
+
+void GetXboxSurfaceAndTransferFromHostSurface
+(
+	xbox::X_D3DPixelContainer* pPixelContainer,
+	D3DCUBEMAP_FACES           FaceType,
+	xbox::uint_xt              Level
+)
+{
+	//first we find the surface in the pixel container
+	BYTE* pbData;
+	DWORD RowPitch;
+	DWORD SlicePitch;
+	DWORD Format;
+	DWORD Size;
+	FindSurfaceWithinTexture(pPixelContainer, FaceType,	Level, &pbData,	&RowPitch, &SlicePitch,	&Format, &Size);
+
+	xbox::X_D3DSurface XboxSurface = {0};
+	XboxSurface.Data = (DWORD)pbData;
+	XboxSurface.Format = Format;
+	XboxSurface.Size = Size;
+	XboxSurface.Common = pPixelContainer->Common & 0x010FFFFF;
+	XboxSurface.Common |= 0x00010000;
+	xbox::X_D3DSurface* pXboxSurface = &XboxSurface;
+	LoadSurfaceDataFromHost(pXboxSurface);
+}
+
 void WINAPI CxbxrImpl_Lock2DSurface
 (
 	xbox::X_D3DPixelContainer* pPixelContainer,
@@ -8885,298 +9812,8 @@ void WINAPI CxbxrImpl_Lock2DSurface
 	xbox::dword_xt             Flags
 )
 {
-	if (pPixelContainer == nullptr)
-		return;
-	if (pPixelContainer == g_pXbox_BackBufferSurface) {
-		//not read only, xbox title could use back buffer direct operation to draw certain things. setup a flag to indicate this event and update host surface before next draw call or sawp.
-		if ((Flags & X_D3DLOCK_READONLY) == 0) {
-			g_bXbox_BackBufferSurfaceLocked = true;
-		}
-	}
-	//D3D9 D3DLOCK_READONLY 0x00000010L, D3DLOCK_NOOVERWRITE 0x00001000L, xbox 
-    //xbox X_D3DLOCK_READONLY 0x00000080, X_D3DLOCK_NOOVERWRITE 0x00000020 ,  X_D3DLOCK_NOFLUSH 0x00000010, X_D3DLOCK_TILED 0x00000040                                                                                       
-	DWORD hostFlag=0;// = D3DLOCK_READONLY;
-	if ((Flags & X_D3DLOCK_READONLY) != 0)
-		hostFlag |= D3DLOCK_READONLY;
-	if ((Flags & X_D3DLOCK_NOOVERWRITE) != 0)
-		hostFlag |= D3DLOCK_NOOVERWRITE;
-	int iTextureStage = -1;
-	DWORD D3DUsage = D3DUSAGE_DYNAMIC;//only D3DUSAGE_DYNAMIC is lockable; 
-	IDirect3DTexture* pHostSourceTexture;// = (IDirect3DTexture*)GetHostResource((xbox::X_D3DResource*)pPixelContainer, D3DUsage, iTextureStage);
-	IDirect3DSurface* pHostSourceSurface;
-	//check if the pPixelContainer  is in our resource cache or not
-	auto key = GetHostResourceKey(pPixelContainer); // Note : iTextureStage is unknown here!
-	auto& ResourceCache = GetResourceCache(key);
-	auto it = ResourceCache.find(key);
-	HRESULT hRet=E_FAIL;
-	//if it's in our cache. then copy the host surface data to xbox surface data in case the xbox title read it directly from xbox data after locking it.
-	if (it != ResourceCache.end() && it->second.pHostResource) {
-		pHostSourceTexture = (IDirect3DTexture*)it->second.pHostResource.Get();
-		bool g_IsRenderTexture = false;
-		D3DSURFACE_DESC HostSurfaceDesc;
-		D3DLOCKED_RECT HostLockedRect;
-		if (GetXboxCommonResourceType(pPixelContainer) != X_D3DCOMMON_TYPE_SURFACE) {
-			hRet = pHostSourceTexture->GetSurfaceLevel(0, &pHostSourceSurface);
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Could not get host surface from host texture in Lock2DSurface");
-			}
-		}
-		else {
-			pHostSourceSurface = (IDirect3DSurface*)it->second.pHostResource.Get();
-		}
+	GetXboxSurfaceAndTransferFromHostSurface(pPixelContainer, FaceType, Level);
 
-		//it->second.forceRehash = true;
-		hRet = pHostSourceSurface->GetDesc(&HostSurfaceDesc);
-		if (hRet != D3D_OK) {
-			EmuLog(LOG_LEVEL::WARNING, "Could not get host surface desc in Lock2DSurface");
-		}
-
-		if (HostSurfaceDesc.Usage == D3DUSAGE_RENDERTARGET)
-			g_IsRenderTexture = true;
-
-		xbox::X_D3DBaseTexture OffScreenTexture, * pOffScreenTexture;
-		pOffScreenTexture = &OffScreenTexture;
-		OffScreenTexture = *(xbox::X_D3DBaseTexture*)pPixelContainer;
-
-		DWORD common = pPixelContainer->Common & X_D3DCOMMON_D3DCREATED;
-		//invert the X_D3DCOMMON_D3DCREATED bit for OffScreenTexture.
-		if (common != 0)
-			OffScreenTexture.Common &= ~common;
-		else
-			OffScreenTexture.Common |= X_D3DCOMMON_D3DCREATED;
-		// set OffScreenTexture to X_D3DCOMMON_TYPE_TEXTURE
-		if (GetXboxCommonResourceType(pPixelContainer) == X_D3DCOMMON_TYPE_SURFACE) {
-			OffScreenTexture.Common &= ~X_D3DCOMMON_TYPE_MASK;
-			OffScreenTexture.Common |= X_D3DCOMMON_TYPE_TEXTURE;
-		}
-		// get the virtual texture corresponded to pPixelContainer
-		//OffScreenTexture = (IDirect3DTexture9*)GetHostResource(pOffScreenTexture);
-		IDirect3DTexture9* pHostOffScreenTexture;
-		IDirect3DSurface9* pHostOffScreenSurface;
-		//g_IsRenderTexture = true;
-		bool bOffScreenSurfaceNeedRelease = false;
-		if (g_IsRenderTexture)
-		{
-			hRet = g_pD3DDevice->CreateTexture(
-				HostSurfaceDesc.Width,
-				HostSurfaceDesc.Height,
-				1,
-				D3DUSAGE_DYNAMIC,
-				HostSurfaceDesc.Format,
-				D3DPOOL_SYSTEMMEM,
-				&pHostOffScreenTexture,
-				NULL
-			);
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
-			}
-			bOffScreenSurfaceNeedRelease = true;
-			if(hRet == D3D_OK)hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
-			}
-
-			if (hRet == D3D_OK)hRet = g_pD3DDevice->GetRenderTargetData(pHostSourceSurface, pHostOffScreenSurface);
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
-			}
-			D3DSURFACE_DESC HostOffScreenSurfaceDesc;
-			if (hRet == D3D_OK)pHostOffScreenSurface->GetDesc(&HostOffScreenSurfaceDesc);
-
-			assert(HostOffScreenSurfaceDesc.Width == HostSurfaceDesc.Width);
-			assert(HostOffScreenSurfaceDesc.Height == HostSurfaceDesc.Height);
-
-			hostFlag = D3DLOCK_READONLY;
-			if (hRet == D3D_OK)hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
-			}
-		}
-		//not render target texture, process it as regular texture, LockRect then transfer to xbox data with conversion.
-		//if the texture is not lockable, then copy it to a lockable surface with StretchRect() then transfer to xbox with conversion.
-		else {
-			hostFlag = D3DLOCK_READONLY;
-			pHostOffScreenSurface = pHostSourceSurface;
-			hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
-
-			if (hRet == D3D_OK) {
-				;
-			}
-			else {
-				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in Lock2DSurface");
-
-				//hRet = g_pD3DDevice->CreateTexture(textureDesc.Width, textureDesc.Height,1, textureDesc.Usage, textureDesc.Format, D3DPOOL_DEFAULT, &pTexture,(HANDLE*)nullptr);
-				D3DUsage = D3DUSAGE_DYNAMIC;// textureDesc.Usage;// 
-				hRet = g_pD3DDevice->CreateTexture(
-					HostSurfaceDesc.Width,
-					HostSurfaceDesc.Height,
-					1,
-					D3DUSAGE_DYNAMIC,
-					HostSurfaceDesc.Format,
-					D3DPOOL_DEFAULT,
-					&pHostOffScreenTexture,
-					NULL
-				);
-				if (hRet != D3D_OK) {
-					EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
-				}
-				bOffScreenSurfaceNeedRelease = true;
-
-				hRet = pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface);
-				if (hRet != D3D_OK) {
-					EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->GetSurfaceLevel(0, &pHostOffScreenSurface); in Lock2DSurface");
-				}
-				// Copy Surface to Surface
-
-				hRet = g_pD3DDevice->StretchRect(
-					pHostSourceSurface,
-					NULL,
-					pHostOffScreenSurface,
-					NULL,
-					D3DTEXF_NONE
-				);
-				if (hRet != D3D_OK) {
-					EmuLog(LOG_LEVEL::WARNING, "Failed in g_pD3DDevice->StretchRect() in Lock2DSurface");
-				}
-
-				hostFlag = D3DLOCK_READONLY;
-				hRet = pHostOffScreenSurface->LockRect(&HostLockedRect, NULL, hostFlag);
-				if (hRet != D3D_OK) {
-					EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->LockRect(pLockedRect, NULL, hostFlag); in Lock2DSurface");
-				}
-			}
-		}
-		//process host surface data transfer to xbox data with data conversion.
-		xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
-		// Interpret Width/Height/BPP
-		bool bCubemap = pPixelContainer->Format & X_D3DFORMAT_CUBEMAP;
-		bool bSwizzled = EmuXBFormatIsSwizzled(X_Format);
-		bool bCompressed = EmuXBFormatIsCompressed(X_Format);
-		UINT dwBPP = EmuXBFormatBytesPerPixel(X_Format);
-		UINT dwMipMapLevels = CxbxGetPixelContainerMipMapLevels(pPixelContainer);
-		UINT xboxWidth, xboxHeight, dwDepth, dwRowPitch, dwSlicePitch;
-
-		// Interpret Width/Height/BPP
-		CxbxGetPixelContainerMeasures(pPixelContainer, 0, &xboxWidth, &xboxHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
-
-		// Host width and height dimensions
-		UINT hostWidth = xboxWidth;
-		UINT hostHeight = xboxHeight;
-		// instead of using width/height from xbox surface directly, getting host width/height from the host surface desc
-		// these two dimensions should be the same, shall we check if they might be different?
-		assert(xboxWidth == HostSurfaceDesc.Width);
-		assert(xboxHeight == HostSurfaceDesc.Height);
-		hostWidth = HostSurfaceDesc.Width;
-		hostHeight = HostSurfaceDesc.Height;
-
-		// Determine the format we'll be using on host D3D
-		D3DFORMAT PCFormat;
-		bool bConvertToARGB = false;
-		xbox::X_D3DRESOURCETYPE XboxResourceType = GetXboxD3DResourceType(pPixelContainer);
-
-		D3DUsage = HostSurfaceDesc.Usage;
-		extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
-
-		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
-			bConvertToARGB = true;
-			PCFormat = D3DFMT_A8R8G8B8;
-			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
-			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
-			D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
-		}
-		else if (EmuXBFormatIsBumpMap(X_Format)){
-			//xbox resource is bumpmap format by default, we need to check whether it's converted to ARGB or not.
-			PCFormat = D3DFMT_A8R8G8B8;
-			// Does host CheckDeviceFormat() succeed on this format?
-			// Then use matching host format
-			//assert(PCFormat == HostSurfaceDesc.Format);
-			if (HostSurfaceDesc.Format == PCFormat) {
-
-				byte* hostPtr = (byte*)HostLockedRect.pBits;
-				//extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
-				byte* xboxPtr = (byte*)GetDataFromXboxResource(pPixelContainer);// (byte*)pPixelContainer->Data;
-				// Retrieve and test the xbox resource buffer address
-				//VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
-				if (HostLockedRect.Pitch == dwRowPitch)
-					memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * xboxHeight);
-				else {
-					DWORD minPitch = MIN(HostLockedRect.Pitch, dwRowPitch);
-					for (int i = 0; i < xboxHeight; i++) {
-						memcpy(xboxPtr, hostPtr, minPitch);
-						xboxPtr += dwRowPitch;
-						hostPtr += HostLockedRect.Pitch;
-					}
-				}
-			}
-		}
-		else {
-			// Does host CheckDeviceFormat() succeed on this format?
-			if (IsSupportedFormat(X_Format, (xbox::X_D3DRESOURCETYPE)XboxResourceType, D3DUsage)) {
-				// Then use matching host format
-				PCFormat = EmuXB2PC_D3DFormat(X_Format);
-				//assert(PCFormat == HostSurfaceDesc.Format);
-				byte* hostPtr = (byte*)HostLockedRect.pBits;
-				//extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
-				byte* xboxPtr = (byte*)GetDataFromXboxResource(pPixelContainer);// (byte*)pPixelContainer->Data;
-				// Retrieve and test the xbox resource buffer address
-				//VAddr VirtualAddr = (VAddr)GetDataFromXboxResource(pResource);
-				if (HostLockedRect.Pitch == dwRowPitch)
-					memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * xboxHeight);
-				else {
-					DWORD minPitch = MIN(HostLockedRect.Pitch , dwRowPitch);
-					for (int i = 0; i < xboxHeight; i++) {
-						memcpy(xboxPtr, hostPtr, minPitch);
-						xboxPtr += dwRowPitch;
-						hostPtr += HostLockedRect.Pitch;
-					}
-				}
-			}
-			else {
-				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
-					// If it was a depth stencil, fall back to a known supported depth format
-					EmuLog(LOG_LEVEL::WARNING, "Xbox Format %x will be converted to D3DFMT_D24S8", X_Format);
-					PCFormat = D3DFMT_D24S8;
-				}
-				else if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
-					EmuLog(LOG_LEVEL::WARNING, "Xbox Format %x will be converted to ARGB", X_Format);
-					bConvertToARGB = true;
-					PCFormat = D3DFMT_A8R8G8B8;
-				}
-				else {
-					// Otherwise, use a best matching format
-					/*CxbxrAbort*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible format!");
-					PCFormat = EmuXB2PC_D3DFormat(X_Format);
-				}
-			}
-		}
-
-		if (bConvertToARGB) {
-            //void * pARGB=malloc(hostWidth*hostHeight*4);
-			//Cxbxr_ConvertHostSurfaceToARGB(pARGB,HostSurfaceDesc.Format,pHostLockedRect->pBits, hostWidth, hostHeight, pHostLockedRect->Pitch);
-			//Cxbxr_ConvertARGBToXboxSurface(pARGB,              X_Format,pPixelContainer->Data , xboxWidth, xboxHeight,             dwRowPitch, dwDepth, dwSlicePitch);
-			//free(pARGB);
-		}
-		//unlock surface before we leave
-		hRet = pHostOffScreenSurface->UnlockRect();
-		//release the created pHostOffScreenTexture and pHostOffScreenSurface
-		if (bOffScreenSurfaceNeedRelease) {
-			pHostOffScreenSurface->Release();
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->Release() in Lock2DSurface");
-			}
-			pHostOffScreenTexture->Release();
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->Release() in Lock2DSurface");
-			}
-		}
-		
-	}
-	else {
-		//if the target surface isn't registered yet, then there is nothing to transfer from host to xbox data.
-		hRet = S_OK;
-	}
-	//when xbox data got modified, the hash will change, and a new host texture/surface will be created with new xbox data transferred.
-	//this solve the case where xbox title write to xbox data directly
 	//only force rehash xbox data when there is no X_D3DLOCK_READONLY flag. because read only lock doesn't write data to xbox data.
 	if ((Flags & X_D3DLOCK_READONLY) == 0)
 	    ForceResourceRehash(pPixelContainer);
@@ -9210,19 +9847,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 
 	if (pPixelContainer == nullptr)
 		return;
-
-#if USEPGRAPH_Lock2DSurface
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pPixelContainer;
-	PBTokenArray[3] = (DWORD)FaceType;
-	PBTokenArray[4] = (DWORD)Level;
-	PBTokenArray[5] = (DWORD)pLockedRect;
-	PBTokenArray[6] = (DWORD)pRect;
-	PBTokenArray[7] = (DWORD)Flags;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock2DSurface, 6, PBTokenArray);//argCount 14
-#else
-    
+   
 	//template for syncing HLE apis with pgraf using waiting lock
 	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
@@ -9238,9 +9863,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 		; //this line is must have
 
 	// Mark the resource as modified
-	//ForceResourceRehash(pPixelContainer);
 	CxbxrImpl_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
-#endif
 }
 
 void WINAPI CxbxrImpl_Lock3DSurface
@@ -9252,8 +9875,10 @@ void WINAPI CxbxrImpl_Lock3DSurface
 	xbox::dword_xt			   Flags
 )
 {
-	ForceResourceRehash(pPixelContainer);
-
+	GetXboxSurfaceAndTransferFromHostSurface(pPixelContainer, D3DCUBEMAP_FACE_POSITIVE_X, Level);
+	//only force rehash xbox data when there is no X_D3DLOCK_READONLY flag. because read only lock doesn't write data to xbox data.
+	if ((Flags & X_D3DLOCK_READONLY) == 0)
+		ForceResourceRehash(pPixelContainer);
 }
 
 // ******************************************************************
@@ -9279,16 +9904,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	// Pass through to the Xbox implementation of this function
 	XB_TRMP(Lock3DSurface)(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
-#if USEPGRAPH_Lock3DSurface
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pPixelContainer;
-	PBTokenArray[3] = (DWORD)Level;
-	PBTokenArray[4] = (DWORD)pLockedVolume;
-	PBTokenArray[5] = (DWORD)pBox;
-	PBTokenArray[6] = (DWORD)Flags;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock3DSurface, 5, PBTokenArray);//argCount 14
-#else
 	// Mark the resource as modified
 		//template for syncing HLE apis with pgraf using waiting lock
 	bool WaitForPGRAPH;
@@ -9303,9 +9918,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 
 	while (WaitForPGRAPH)
 		; //this line is must have
-	//ForceResourceRehash(pPixelContainer);
 	CxbxrImpl_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
-#endif
 }
 //cache for data offset of vertex buffers created using XGSetVertexBufferHeader, this is for D3DDevice_SetRenderTarget() to check whether it should transfer data from host surface back to xbox.
 //32 cache size should be more than enough since this is a vertex buffer. let's see.
@@ -11860,6 +12473,16 @@ void CxbxrImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3
 	}
 }
 
+bool IsDataOffsetCachedVertexBuffer(uint32_t Data)
+{
+	for (auto val = g_XGVertexBufferData.begin(); val < g_XGVertexBufferData.end(); val++) {
+		if (*val == Data) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void CxbxrImpl_SetRenderTarget
 (
     xbox::X_D3DSurface    *pRenderTarget,
@@ -11870,6 +12493,14 @@ void CxbxrImpl_SetRenderTarget
 	NestedPatchCounter call(setRenderTargetCount);
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
+
+	//check if previous render target data offset has duplicate with vertex buffer data offset in cache. If the data offset of previous render target is cached, we have to transfer the data from host surface to xbox surface. 
+	if(g_pXbox_RenderTarget!=nullptr)
+		if (IsDataOffsetCachedVertexBuffer(g_pXbox_RenderTarget->Data)) {
+			LoadSurfaceDataFromHost(g_pXbox_RenderTarget);
+		}
+
+
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
 	if (g_pXbox_BackBufferSurface == xbox::zeroptr && pRenderTarget != nullptr) {

@@ -41,7 +41,7 @@
 // B = blue
 // L = luminance, byte : 0 = pure black ARGB(1, 0,0,0) to 255 = pure white ARGB(1,255,255,255)
 // P = pallete
-enum _ComponentEncoding {
+typedef enum _ComponentEncoding {
 	NoCmpnts = 0, // Format doesn't contain any component (ARGB/QWVU)
 	A1R5G5B5,
 	X1R5G5B5, // NOTE : A=255
@@ -69,7 +69,8 @@ enum _ComponentEncoding {
 	____YUY2,
 	____UYVY,
 	__G16B16, // NOTE : A takes G, R takes B
-};
+	__R8G8B8,
+}ComponentEncoding;
 
 // Conversion functions copied from libyuv
 // See https://chromium.googlesource.com/libyuv/libyuv/+/master/source/row_common.cc
@@ -885,6 +886,7 @@ static const FormatToARGBRow ComponentConverters[] = {
 	____YUY2ToARGBRow_C, // ____YUY2
 	____UYVYToARGBRow_C, // ____UYVY
 	__G16B16ToARGBRow_C, // __G16B16, // NOTE : A takes G, R takes B
+	nullptr, // R8G8B8,
 };
 
 enum _FormatStorage {
@@ -994,6 +996,116 @@ static const FormatInfo FormatInfos[] = {
 #endif
 };
 
+
+// FormatInfo array for PCFormat. because PCFormat includes 4CC so we can't index it direcly using the value of PCFormat,
+// we can only loop from the beginning and when PCFormat==D3DFMT_FORCE_DWORD it means we reached the end of array.
+static const FormatInfo PCFormatInfos[] = {
+	{"false",	0	,	Linear	,	NoCmpnts	,                 D3DFMT_UNKNOWN,  	Texture,	nullptr},
+	//	  { 	false	, 	24	, 	Linear	, 	__R8G8B8	, 	    D3DFMT_R8G8B8       	, 	Texture	, 	nullptr	 }, 	
+	{ 	false, 32, Linear, A8R8G8B8, D3DFMT_A8R8G8B8, RenderTarget, nullptr	 }, 	// backbuffer
+	{ false	, 	32	, 	Linear	, 	X8R8G8B8	, 	    D3DFMT_X8R8G8B8     	, 	RenderTarget, 	nullptr }, 	// backbuffer
+	{ false	, 	16	, 	Linear	, 	__R6G5B5	, 	    D3DFMT_R5G6B5       	, 	RenderTarget, 	nullptr }, 	// backbuffer
+	{ false	, 	16	, 	Linear	, 	X1R5G5B5	, 	    D3DFMT_X1R5G5B5     	, 	RenderTarget, 	nullptr }, 	// backbuffer
+	{ false	, 	16	, 	Linear	, 	A1R5G5B5	, 	    D3DFMT_A1R5G5B5     	, 	RenderTarget, 	nullptr }, 	// backbuffer
+	{ false	, 	16	, 	Linear	, 	A4R4G4B4	, 	    D3DFMT_A4R4G4B4     	, 	Texture	, 	nullptr },
+	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R3G3B2       	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	8	, 	Linear	, 	______A8	, 	    D3DFMT_A8           	, 	Texture	, 	nullptr },
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A8R3G3B2     	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_X4R4G4B4     	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2B10G10R10  	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	32	, 	Linear	, 	A8B8G8R8	, 	    D3DFMT_A8B8G8R8     	, 	Texture	, 	nullptr },
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_X8B8G8R8     	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G16R16       	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2R10G10B10  	, 	RenderTarget	, 	nullptr	 }, 	// backbuffer
+	//	  { 	false	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A16B16G16R16 	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A8P8         	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	8	, 	Linear	, 	______P8	, 	    D3DFMT_P8           	, 	Texture	, 	nullptr },
+	{ false	, 	8	, 	Linear	, 	______L8	, 	    D3DFMT_L8           	, 	RenderTarget	, 	nullptr },
+	{ false	, 	16	, 	Linear	, 	____A8L8	, 	    D3DFMT_A8L8         	, 	Texture	, 	nullptr },
+	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A4L4         	, 	Texture	, 	nullptr	 }, 	
+	{ true	, 	16	, 	Linear	, 	____G8B8	, 	    D3DFMT_V8U8         	, 	Texture	, 	nullptr },
+	{ true	, 	16	, 	Linear	, 	__R6G5B5	, 	    D3DFMT_L6V5U5       	, 	Texture	, 	nullptr },
+	{ true	, 	32	, 	Linear	, 	X8R8G8B8	, 	    D3DFMT_X8L8V8U8     	, 	Texture	, 	nullptr },
+	{ true	, 	32	, 	Linear	, 	A8R8G8B8	, 	    D3DFMT_Q8W8V8U8     	, 	Texture	, 	nullptr },
+	{ true	, 	32	, 	Linear	, 	__G16B16	, 	    D3DFMT_V16U16       	, 	Texture	, 	nullptr },
+	//	  { 	true	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2W10V10U10  	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	16	, 	Linear	, 	____UYVY	, 	    D3DFMT_UYVY         	, 	Texture	, 	nullptr },
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R8G8_B8G8    	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	16	, 	Linear	, 	____YUY2	, 	    D3DFMT_YUY2         	, 	Texture	, 	nullptr },
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G8R8_G8B8    	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	4	, 	Cmprsd	, 	____DXT1	, 	    D3DFMT_DXT1         	, 	Texture	, 	nullptr },
+	//	  { 	false	, 		, 	Cmprsd	, 	NoCmpnts	, 	    D3DFMT_DXT2         	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	8	, 	Cmprsd	, 	____DXT3	, 	    D3DFMT_DXT3         	, 	Texture	, 	nullptr },
+	//	  { 	false	, 		, 	Cmprsd	, 	NoCmpnts	, 	    D3DFMT_DXT4         	, 	Texture	, 	nullptr	 }, 	
+	{ false	, 	8	, 	Cmprsd	, 	____DXT5	, 	    D3DFMT_DXT5         	, 	Texture	, 	nullptr },
+	{ false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D16_LOCKABLE 	, 	DepthBuffer	, 	nullptr },
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D32          	, 	DepthBuffer	, 	nullptr	 }, 	
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D15S1        	, 	DepthBuffer	, 	nullptr	 }, 	
+	{ false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24S8        	, 	DepthBuffer	, 	nullptr },
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24X8        	, 	DepthBuffer	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24X4S4      	, 	DepthBuffer	, 	nullptr	 }, 	
+	{ false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D16          	, 	DepthBuffer	, 	nullptr },
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D32F_LOCKABLE	, 	DepthBuffer	, 	nullptr	 }, 	
+	{ false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24FS8       	, 	DepthBuffer	, 	nullptr },
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D32_LOCKABLE 	, 	DepthBuffer	, 	nullptr	 }, 	
+	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_S8_LOCKABLE  	, 	DepthBuffer	, 	nullptr	 }, 	
+	{ false	, 	16	, 	Linear	, 	_____L16	, 	    D3DFMT_L16          	, 	Texture	, 	nullptr },
+	//	  { 	false	, 	0	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_VERTEXDATA   	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_INDEX16      	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_INDEX32      	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	true	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_Q16W16V16U16 	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_MULTI2_ARGB8 	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R16F         	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G16R16F      	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A16B16G16R16F	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R32F         	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G32R32F      	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	128	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A32B32G32R32F	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	true	, 	16	, 	Cmprsd	, 	NoCmpnts	, 	    D3DFMT_CxV8U8       	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	1	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A1           	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2B10G10R10_XR_BIAS 	, 	Texture	, 	nullptr	 }, 	
+	//	  { 	false	, 	0	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_BINARYBUFFER 	, 	Texture	, 	nullptr	 }, 	
+	//{ false	, 	0x7FFFFFFF	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_FORCE_DWORD  	, 	Texture	, 	nullptr },
+};
+
+int EmuGetPCFormatInfoIndex(D3DFORMAT pc)
+{
+#define PCFormatInfosCount sizeof(PCFormatInfos)/sizeof(FormatInfo)
+	int index = 0;
+	for (index = 0; index < PCFormatInfosCount; index++)
+		if (PCFormatInfos[index].pc == pc)
+			break;
+	if (index == PCFormatInfosCount)
+		index = 0;
+	return index;
+}
+
+DWORD EmuPCFormatBitsPerPixel(D3DFORMAT pc)
+{
+	int index = EmuGetPCFormatInfoIndex(pc);
+
+	if (PCFormatInfos[index].bits_per_pixel > 0) // TODO : Remove this
+		return PCFormatInfos[index].bits_per_pixel;
+	else
+	    return 16; // TODO : 8
+}
+
+DWORD EmuPCFormatBytesPerPixel(D3DFORMAT pc)
+{
+	return ((EmuPCFormatBitsPerPixel(pc) + 4) / 8);
+}
+
+ComponentEncoding EmuPCFormatComponentEncoding(D3DFORMAT pc)
+{
+	int index = EmuGetPCFormatInfoIndex(pc);
+
+	if (PCFormatInfos[index].bits_per_pixel > 0) // TODO : Remove this
+		return PCFormatInfos[index].components;
+	else
+		return NoCmpnts;
+}
+
+
 const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format)
 {
 	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
@@ -1084,6 +1196,11 @@ BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format)
 BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format)
 {
 	return FormatInfos[Format].is_bumpmap;
+}
+
+ComponentEncoding EmuXBFormatComponentEncoding(xbox::X_D3DFORMAT Format)
+{
+	return FormatInfos[Format].components;
 }
 
 
