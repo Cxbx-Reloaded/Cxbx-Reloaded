@@ -9932,6 +9932,40 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	return hRet;
 }
 
+CONST DWORD g_TilePitches[] =
+{
+	0x0200	, //	D3DTILE_PITCH_0200      
+	0x0300	, //	D3DTILE_PITCH_0300
+	0x0400	, //	D3DTILE_PITCH_0400
+	0x0500	, //	D3DTILE_PITCH_0500
+	0x0600	, //	D3DTILE_PITCH_0600
+	0x0700	, //	D3DTILE_PITCH_0700
+	0x0800	, //	D3DTILE_PITCH_0800
+	0x0A00	, //	D3DTILE_PITCH_0A00
+	0x0C00	, //	D3DTILE_PITCH_0C00
+	0x0E00	, //	D3DTILE_PITCH_0E00
+	0x1000	, //	D3DTILE_PITCH_1000
+	0x1400	, //	D3DTILE_PITCH_1400
+	0x1800	, //	D3DTILE_PITCH_1800
+	0x1C00	, //	D3DTILE_PITCH_1C00
+	0x2000	, //	D3DTILE_PITCH_2000
+	0x2800	, //	D3DTILE_PITCH_2800
+	0x3000	, //	D3DTILE_PITCH_3000
+	0x3800	, //	D3DTILE_PITCH_3800
+	0x4000	, //	D3DTILE_PITCH_4000
+	0x5000	, //	D3DTILE_PITCH_5000
+	0x6000	, //	D3DTILE_PITCH_6000
+	0x7000	, //	D3DTILE_PITCH_7000
+	0x8000	, //	D3DTILE_PITCH_8000
+	0xA000	, //	D3DTILE_PITCH_A000
+	0xC000	, //	D3DTILE_PITCH_C000
+	0xE000	, //	D3DTILE_PITCH_E000
+};
+//using fixed size array to cache the textures.
+//todo: check if 32 is enough or not.
+xbox::X_D3DTexture g_XGSetTexture[32] = {0};
+
+// this function is only to log the *pTexture in cache for D3DDevice_SetTile() to retrive corresponded xbox surface in order to set correct render target or depth stencil surface.
 xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 (
 	UINT Width,
@@ -9943,7 +9977,7 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 	xbox::X_D3DTexture* pTexture,
 	UINT Data,
 	UINT Pitch
-)
+	)
 {
 	HRESULT hRet = XB_TRMP(XGSetTextureHeader)(
 		Width,
@@ -9955,6 +9989,26 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 		pTexture,
 		Data,
 		Pitch);
+	bool bPitchValid = false;
+	int arraySize = sizeof(g_XGSetTexture) / sizeof(g_XGSetTexture[0]);
+	for (int i = 0; i < arraySize; i++) {
+		if (Pitch == g_TilePitches[i]) {
+			bPitchValid = true;
+			break;
+		}
+	}
+	//only cache the texture if pitch is valid render target or depth stencil pitch
+	if (pTexture != nullptr && bPitchValid && Data != 0) {
+		int i;
+		for (i = 0; i < arraySize; i++) {
+			if (g_XGSetTexture[i].Data == 0) {
+				g_XGSetTexture[i] = *pTexture;
+			}
+			//assert if we couldn't find an empty slot in cache.
+			if (i == arraySize)
+				assert(0);
+		}
+	}
 	return hRet;
 }
 
