@@ -404,19 +404,19 @@ X_D3DSurface * WINAPI EMUPATCH(D3DDevice_GetDepthStencilSurface2)();
 // ******************************************************************
 // * patch: D3DDevice_GetTile
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetTile)
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetTile)
 (
-    dword_xt           Index,
-    X_D3DTILE      *pTile
+    xbox::dword_xt            Index,
+    CONST xbox::X_D3DTILE *   pTile
 );
 
 // ******************************************************************
 // * patch: D3DDevice_SetTile
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTile)
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_SetTile)
 (
-    dword_xt               Index,
-    CONST X_D3DTILE    *pTile
+    xbox::dword_xt          Index,
+    CONST xbox::X_D3DTILE * pTile
 );
 
 // ******************************************************************
@@ -841,7 +841,7 @@ xbox::void_xt WINAPI EMUPATCH(Lock2DSurface)
 // ******************************************************************
 // * patch: Lock3DSurface
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(Lock3DSurface)
+xbox::hresult_xt WINAPI EMUPATCH(Lock3DSurface)
 (
     X_D3DPixelContainer *pPixelContainer,
     uint_xt				Level,
@@ -2181,7 +2181,23 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetMaterial)
 // ******************************************************************
 // * patch: D3DDevice_GetMaterial
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
+xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
+(
+    UINT Width,
+    UINT Height,
+    UINT  Levels,
+    DWORD Usage,
+    xbox::X_D3DFORMAT Format,
+    D3DPOOL Pool,
+    xbox::X_D3DTexture* pTexture,
+    UINT Data,
+    UINT Pitch
+);
+
+// ******************************************************************
+// * patch: D3DDevice_GetMaterial
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 (
     UINT Length,
     DWORD Usage,

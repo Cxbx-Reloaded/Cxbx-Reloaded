@@ -101,6 +101,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	//PATCH_ENTRY("D3DDevice_GetPersistedSurface", xbox::EMUPATCH(D3DDevice_GetPersistedSurface), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_GetPersistedSurface2", xbox::EMUPATCH(D3DDevice_GetPersistedSurface2), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_GetShaderConstantMode", xbox::EMUPATCH(D3DDevice_GetShaderConstantMode), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_GetTile", xbox::EMUPATCH(D3DDevice_GetTile), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_GetTransform", xbox::EMUPATCH(D3DDevice_GetTransform), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_GetVertexShader", xbox::EMUPATCH(D3DDevice_GetVertexShader), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_GetVertexShaderConstant", xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant), PATCH_HLE_D3D),
@@ -167,6 +168,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SetTexture", xbox::EMUPATCH(D3DDevice_SetTexture), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetTexture_4__LTCG_eax_pTexture", xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetTexture_4__LTCG_eax_Stage", xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_Stage), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_SetTile", xbox::EMUPATCH(D3DDevice_SetTile), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetTransform", xbox::EMUPATCH(D3DDevice_SetTransform), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetTransform_0__LTCG_eax1_edx2", xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetVertexData2f", xbox::EMUPATCH(D3DDevice_SetVertexData2f), PATCH_HLE_D3D),
@@ -206,7 +208,8 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface", xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface), PATCH_HLE_D3D),
 	PATCH_ENTRY("Direct3D_CreateDevice_4", xbox::EMUPATCH(Direct3D_CreateDevice_4), PATCH_HLE_D3D),
 	PATCH_ENTRY("Lock2DSurface", xbox::EMUPATCH(Lock2DSurface), PATCH_HLE_D3D),
-	//PATCH_ENTRY("Lock3DSurface", xbox::EMUPATCH(Lock3DSurface), PATCH_HLE_D3D),
+	PATCH_ENTRY("Lock3DSurface", xbox::EMUPATCH(Lock3DSurface), PATCH_HLE_D3D),
+	PATCH_ENTRY("XGSetTextureHeader", EMUPATCH(XGSetTextureHeader), PATCH_HLE_D3D),
 	PATCH_ENTRY("XGSetVertexBufferHeader", EMUPATCH(XGSetVertexBufferHeader), PATCH_HLE_D3D),
 
 	// DSOUND

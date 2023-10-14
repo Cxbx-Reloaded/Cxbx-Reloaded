@@ -374,6 +374,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetPersistedSurface2,                     (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetRenderTarget,                          (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetRenderTarget2,                         (xbox::void_xt)                                                                                       );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetTile,                                  (xbox::dword_xt, CONST xbox::X_D3DTILE*)                                                              );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     CDevice_KickOff,                                    ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0,                                  ()                                                                                                    );  \
@@ -396,7 +397,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SelectVertexShader,                       (xbox::dword_xt, xbox::dword_xt)                                                                      );  \
     XB_MACRO(xbox::void_xt,       __stdcall,  D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2,     ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       __stdcall,  D3DDevice_SelectVertexShader_4__LTCG_eax1,          (xbox::dword_xt)                                                                                      );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetFlickerFilter_0,                       ()                                                                                      );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetFlickerFilter_0,                       ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetFlickerFilter,                         (xbox::dword_xt)                                                                                      );  \
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetGammaRamp,                             (xbox::dword_xt, CONST X_D3DGAMMARAMP*)                                                               );*/\
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetIndices,                               (xbox::X_D3DIndexBuffer*, xbox::uint_xt)                                                              );  \
@@ -412,7 +413,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*)                                                            );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTargetFast,                      (xbox::X_D3DSurface*, xbox::X_D3DSurface*, xbox::dword_xt)                                            );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetRenderTarget_0,                        ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetScreenSpaceOffset,                     (xbox::float_xt, xbox::float_xt)                                                            );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetScreenSpaceOffset,                     (xbox::float_xt, xbox::float_xt)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetShaderConstantMode,                    (xbox::X_VERTEXSHADERCONSTANTMODE)                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetShaderConstantMode_0__LTCG_eax1,       ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetStreamSource,                          (xbox::uint_xt, xbox::X_D3DVertexBuffer*, xbox::uint_xt)                                              );  \
@@ -423,6 +424,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture,                               (xbox::dword_xt, xbox::X_D3DBaseTexture*)                                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture_4__LTCG_eax_pTexture,          (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTexture_4__LTCG_eax_Stage,             (xbox::X_D3DBaseTexture*)                                                                             );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_SetTile,                                  (xbox::dword_xt, CONST xbox::X_D3DTILE*)                                                              );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform_0__LTCG_eax1_edx2,           ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexData2f,                          (xbox::int_xt, xbox::float_xt, xbox::float_xt)                                                        );  \
@@ -456,8 +458,9 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface, (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)         );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4,                            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     XGSetVertexBufferHeader,                            (UINT , DWORD, DWORD, D3DPOOL, xbox::X_D3DVertexBuffer*, UINT)                                        );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     XGSetTextureHeader,                                 (UINT , UINT, UINT, DWORD, xbox::X_D3DFORMAT, D3DPOOL, xbox::X_D3DTexture*, UINT, UINT)               );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     XGSetVertexBufferHeader,                            (UINT , DWORD, DWORD, D3DPOOL, xbox::X_D3DVertexBuffer*, UINT)                                        );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DResource_AddRef,                                 (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DResource_Release,                                (xbox::X_D3DResource*)                                                                                );  \
 
@@ -9891,7 +9894,7 @@ void WINAPI CxbxrImpl_Lock3DSurface
 // ******************************************************************
 // * patch: Lock3DSurface
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
+xbox::hresult_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 (
 	X_D3DPixelContainer *pPixelContainer,
 	uint_xt				Level,
@@ -9909,7 +9912,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 		LOG_FUNC_END;
 
 	// Pass through to the Xbox implementation of this function
-	XB_TRMP(Lock3DSurface)(pPixelContainer, Level, pLockedVolume, pBox, Flags);
+	HRESULT hRet = XB_TRMP(Lock3DSurface)(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
 	// Mark the resource as modified
 		//template for syncing HLE apis with pgraf using waiting lock
@@ -9926,7 +9929,55 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	while (WaitForPGRAPH)
 		; //this line is must have
 	CxbxrImpl_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
+	return hRet;
 }
+
+xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
+(
+	UINT Width,
+	UINT Height,
+	UINT  Levels,
+	DWORD Usage,
+	xbox::X_D3DFORMAT Format,
+	D3DPOOL Pool,
+	xbox::X_D3DTexture* pTexture,
+	UINT Data,
+	UINT Pitch
+)
+{
+	HRESULT hRet = XB_TRMP(XGSetTextureHeader)(
+		Width,
+		Height,
+		Levels,
+		Usage,
+		Format,
+		Pool,
+		pTexture,
+		Data,
+		Pitch);
+	return hRet;
+}
+
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTile)
+(
+	xbox::dword_xt Index,
+	CONST xbox::X_D3DTILE* pTile
+)
+{
+	HRESULT hRet = XB_TRMP(D3DDevice_SetTile)(Index, pTile);
+	return hRet;
+}
+
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetTile)
+(
+	xbox::dword_xt Index,
+	CONST xbox::X_D3DTILE* pTile
+)
+{
+	HRESULT hRet= XB_TRMP(D3DDevice_GetTile)(Index, pTile);
+	return hRet;
+}
+
 //cache for data offset of vertex buffers created using XGSetVertexBufferHeader, this is for D3DDevice_SetRenderTarget() to check whether it should transfer data from host surface back to xbox.
 //32 cache size should be more than enough since this is a vertex buffer. let's see.
 std::array<UINT, 32>  g_XGVertexBufferData;
@@ -9934,7 +9985,7 @@ std::array<UINT, 32>  g_XGVertexBufferData;
 // ******************************************************************
 // * patch: D3DDevice_GetMaterial
 // ******************************************************************
-xbox::void_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
+xbox::hresult_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 (
 	UINT Length,
 	DWORD Usage,
@@ -9945,7 +9996,7 @@ xbox::void_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 )
 {
 	//trampoline
-	XB_TRMP(XGSetVertexBufferHeader)(Length, Usage, FVF, Pool, pBuffer, Data);
+	HRESULT hRet = XB_TRMP(XGSetVertexBufferHeader)(Length, Usage, FVF, Pool, pBuffer, Data);
 	bool bVertexBufferDataFound = false;
 	auto val = g_XGVertexBufferData.begin();
 	for (; val < g_XGVertexBufferData.end(); val++) {
@@ -9965,6 +10016,7 @@ xbox::void_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 //		if (val == g_XGVertexBufferData.end())
 			assert(false);
 	}
+	return hRet;
 }
 
 // Overload for logging
