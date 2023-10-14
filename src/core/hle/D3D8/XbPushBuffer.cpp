@@ -378,20 +378,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 			    }// end of if (it != g_TextureCache.end())/else
 				//update texture stage states
 				DWORD filter, address, control0, magFilter, minFilter, colorSign, convolutionKernel;
-				float lodBias;
 				filter = pg->KelvinPrimitive.SetTexture[stage].Filter;//NV097_SET_TEXTURE_FILTER(stage)
-				/*
-				DWORD filter
-				= DRF_NUM(097, _SET_TEXTURE_FILTER, _MIPMAP_LOD_BIAS, lodBias)
-
-				| convolutionKernel
-
-				| MinFilter(minFilter, pTextureStates[D3DTSS_MIPFILTER])
-
-				| DRF_NUMFAST(097, _SET_TEXTURE_FILTER, _MAG, magFilter)
-
-				| colorSign;
-				*/
 #define D3DTSIGN_ASIGNED           0x10000000
 #define D3DTSIGN_AUNSIGNED         0
 #define D3DTSIGN_RSIGNED           0x20000000
@@ -403,68 +390,29 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 
 				colorSign = pg->KelvinPrimitive.SetTexture[stage].Filter & 0xF0000000;// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORSIGN, colorSign);
-				// bumpenv always force setting color sign to D3DTSIGN_GSIGNED | D3DTSIGN_BSIGNED
-				//if (colorSign == (NV097_SET_TEXTURE_FILTER_GSIGNED | NV097_SET_TEXTURE_FILTER_BSIGNED)) {
-				//	NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
-				//}
-				
-				lodBias = (float)(filter & NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS);
 				
 				// Fixedme!!!
 				/*
 				// this code was reversed from Otogi::LazySetTextureStates()
-				INT lodBias = Round(D3DTSS_MIPMAPLODBIAS + 256.0f * (Floatify(m_SuperSampleLODBias));
+				INT lodBias = Round( 256.0f *D3DTSS_MIPMAPLODBIAS + (Floatify(m_SuperSampleLODBias));
 
 				// from Present()
-				
+
 				m_SuperSampleScale = minScale;
 				m_SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
 				*/
+				int intLodBias;
+				intLodBias = (filter & NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS);
+				if ((intLodBias & 0x1000) != 0)
+					intLodBias |= 0xFFFFF000;
+				float fLodBias = float(intLodBias);
+				float mipMapLodBias = fLodBias/256.0;
+
+				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPMAPLODBIAS, FtoDW(mipMapLodBias));
 
 				extern float CxbxrGetSuperSampleScale(void);
 				float minScale = CxbxrGetSuperSampleScale();
 				float SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
-				float mipMapLodBias = lodBias-256.0*SuperSampleLODBias;
-
-				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPMAPLODBIAS, FtoDW(mipMapLodBias));
-				
-/*
-#define NV097_SET_TEXTURE_FILTER_MIN_BOX_LOD0                               0x00000001
-#define NV097_SET_TEXTURE_FILTER_MIN_TENT_LOD0                              0x00000002
-#define NV097_SET_TEXTURE_FILTER_MIN_BOX_NEARESTLOD                         0x00000003
-#define NV097_SET_TEXTURE_FILTER_MIN_TENT_NEARESTLOD                        0x00000004
-#define NV097_SET_TEXTURE_FILTER_MIN_BOX_TENT_LOD                           0x00000005
-#define NV097_SET_TEXTURE_FILTER_MIN_TENT_TENT_LOD                          0x00000006
-#define NV097_SET_TEXTURE_FILTER_MIN_CONVOLUTION_2D_LOD0                    0x00000007
-// g_MinFilter
-
-D3DCONST DWORD g_MinFilter[2][3] =
-{
-	// Min == POINT:
-
-	DRF_DEF(097, _SET_TEXTURE_FILTER, _MIN, _BOX_LOD0),        // Mip == NONE    0x1<<16
-	DRF_DEF(097, _SET_TEXTURE_FILTER, _MIN, _BOX_NEARESTLOD),  // Mip == POINT   0x3<<16
-	DRF_DEF(097, _SET_TEXTURE_FILTER, _MIN, _BOX_TENT_LOD),    // Mip == LINEAR  0x5<<16
-
-	// Min == LINEAR:
-
-	DRF_DEF(097, _SET_TEXTURE_FILTER, _MIN, _TENT_LOD0),       // Mip == NONE   0x2<<16
-	DRF_DEF(097, _SET_TEXTURE_FILTER, _MIN, _TENT_NEARESTLOD), // Mip == POINT  0x4<<16
-	DRF_DEF(097, _SET_TEXTURE_FILTER, _MIN, _TENT_TENT_LOD),   // Mip == LINEAR 0x6<<16
-};
-			//------------------------------------------------------------------------------
-// MinFilter
-
-FORCEINLINE DWORD MinFilter(
-	DWORD MinFilter,
-	DWORD MipFilter)
-{
-	ASSERT((MinFilter <= D3DTEXF_LINEAR) && (MipFilter <= D3DTEXF_LINEAR));
-	ASSERT(MinFilter > D3DTEXF_NONE);
-
-	return g_MinFilter[MinFilter - 1][MipFilter];
-}
-*/
 
 				DWORD colorKeyOp = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x3;// colorkeyop in Contrlo0 bit 1:0 //XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
 				DWORD ALPHAKILL = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x4;//  alphakill in Contrlo0 bit 2//XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
