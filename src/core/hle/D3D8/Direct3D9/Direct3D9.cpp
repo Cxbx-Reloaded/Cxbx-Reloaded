@@ -270,7 +270,7 @@ static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DRes
 static void							UpdateCurrentMSpFAndFPS(); // Used for benchmarking/fps count
 void							CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_D3DSurface *pNewZStencil);
 
-#define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK | X_D3DCOMMON_D3DCREATED)
+#define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK)// | X_D3DCOMMON_D3DCREATED)
 
 
 // Those should be used with LTCG patches which use __declspec(naked)
