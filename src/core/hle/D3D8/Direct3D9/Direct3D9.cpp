@@ -12348,63 +12348,28 @@ void CxbxrImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3
 {
 	LOG_INIT;
 	if (pXborSurface != nullptr) {
-		IDirect3DTexture9* pHostTexture;
-		xbox::X_D3DTexture XboxTexture, * pXboxTexture;
-		XboxTexture = *(xbox::X_D3DTexture*)pXborSurface;
-		pXboxTexture = &XboxTexture;
-		//set the common to resource type texture.
-		XboxTexture.Common = (pXborSurface->Common & 0xFFF8FFFF) | 0x00040000;
-
-		//insert the dummy texture key and texture resource to texture cache for D3DDevice_SetTexture()
-		UINT64 key = ((UINT64)(pXboxTexture->Format) << 32) | pXboxTexture->Data;
-		auto it = g_TextureCache.find(key);
-		if (it != g_TextureCache.end()) {
-			if ((it->second.Common & CXBX_D3DCOMMON_IDENTIFYING_MASK) != (pXboxTexture->Common & CXBX_D3DCOMMON_IDENTIFYING_MASK)) {
-				g_TextureCache.erase(key);
-				g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface >(key, XboxTexture));
-			}
-		}
-		else {
-			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface >(key, XboxTexture));
-		}
-
-		//pHostTexture = CxbxConvertXboxSurfaceToHostTexture(pXboxTexture);
-		auto hRet = pHostSurface->GetContainer(IID_PPV_ARGS(&pHostTexture));
-		DEBUG_D3DRESULT(hRet, "CxbxrImpl_SetRenderTargetTexture: pHostSurface->GetContainer");
-		if (FAILED(hRet)) {
-			LOG_TEST_CASE("CxbxrImpl_SetRenderTargetTexture: Failed to get Texture from Surface");
-		}else{
-			auto key = GetHostResourceKey(pXboxTexture);
-			auto& ResourceCache = GetResourceCache(key);
-			auto it = ResourceCache.find(key);
-			if (it != ResourceCache.end()) {
-				//pHostTexture = (IDirect3DTexture9*)GetHostResource(pTexture, D3DUSAGE_RENDERTARGET, Stage);
-				
-				auto hostResource = it->second.pHostResource.Get();
-				//if cached host resource doesn't equal to the container of host surface, erase the old resource and key, then reinsert the key and set the host resource of surface container to it.
-				if (hostResource!= pHostTexture) {
-					//erase key will automatically release the host resource set to the key.
-					ResourceCache.erase(key);
-					//reinsert the key to get a new item in resource cache without host resource and PCFormt set to it.
-					//ResourceCache.insert(key);
-					auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
-
-					if (resourceInfo.pHostResource) {
-						EmuLog(LOG_LEVEL::WARNING, "SetHostResource: Overwriting an existing host resource");
-					}
-
-					resourceInfo.pHostResource = pHostTexture;
-					resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxTexture);
-					resourceInfo.pXboxData = GetDataFromXboxResource(pXboxTexture);
-					resourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxTexture);
-					resourceInfo.hash = ComputeHash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize);
-					resourceInfo.hashLifeTime = 1ms;
-					resourceInfo.lastUpdate = std::chrono::steady_clock::now();
-					resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
-					resourceInfo.forceRehash = false;
-					resourceInfo.PCFormat =  HostSurfaceDesc.Format;
-				}
+		//if there is not parent texture of xbox surface, then we create a dummy texture for it and put it into cache.
+		if(pXborSurface->Parent==nullptr){
+			IDirect3DTexture9* pHostTexture;
+			xbox::X_D3DTexture XboxTexture, * pXboxTexture;
+			XboxTexture = *(xbox::X_D3DTexture*)pXborSurface;
+			pXboxTexture = &XboxTexture;
+			//set the common to resource type texture.
+			XboxTexture.Common = (pXborSurface->Common & 0xFFF8FFFF) | 0x00040000;
+			//insert the dummy texture key and texture resource to texture cache for D3DDevice_SetTexture()
+			UINT64 key = ((UINT64)(pXboxTexture->Format) << 32) | pXboxTexture->Data;
+			auto it = g_TextureCache.find(key);
+			g_TextureCache[key] = (xbox::X_D3DSurface)XboxTexture;
+			g_TextureCache[key].Parent = nullptr;
+			//pHostTexture = CxbxConvertXboxSurfaceToHostTexture(pXboxTexture);
+			auto hRet = pHostSurface->GetContainer(IID_PPV_ARGS(&pHostTexture));
+			DEBUG_D3DRESULT(hRet, "CxbxrImpl_SetRenderTargetTexture: pHostSurface->GetContainer");
+			if (FAILED(hRet)) {
+				LOG_TEST_CASE("CxbxrImpl_SetRenderTargetTexture: Failed to get Texture from Surface");
 			}else{
+				auto key = GetHostResourceKey(pXboxTexture);
+				auto& ResourceCache = GetResourceCache(key);
+				auto it = ResourceCache.find(key);
 				//insert the key to get a new item in resource cache without host resource and PCFormt set to it.
 				//ResourceCache.insert(key);
 				auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
@@ -12419,29 +12384,33 @@ void CxbxrImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3
 				resourceInfo.forceRehash = false;
 				resourceInfo.PCFormat = HostSurfaceDesc.Format;
 			}
-			//create additional link for xbox texture not created by xbox d3d but by the xbox titles.
-			DWORD oldCommon = pXboxTexture->Common;
-			bool bIsXboxCreated = (oldCommon & 0x01000000)!=0;
-			pXboxTexture->Common =(oldCommon & 0xFEFFFFFF )| (  bIsXboxCreated? 0 : 0x01000000);
-			key = GetHostResourceKey(pXboxTexture);
-			ResourceCache = GetResourceCache(key);
-			it = ResourceCache.find(key);
-			if (it != ResourceCache.end()) {
-				//pHostTexture = (IDirect3DTexture9*)GetHostResource(pTexture, D3DUSAGE_RENDERTARGET, Stage);
-
-				auto hostResource = it->second.pHostResource.Get();
-				//if cached host resource doesn't equal to the container of host surface, erase the old resource and key, then reinsert the key and set the host resource of surface container to it.
-				if (hostResource != pHostTexture) {
-					//erase key will automatically release the host resource set to the key.
-					ResourceCache.erase(key);
-					//reinsert the key to get a new item in resource cache without host resource and PCFormt set to it.
+		}
+		// there is parent texture, check if parent texture is pure texure, if so, put parent texture into cache and set host resource to it.
+        else {
+			IDirect3DTexture9* pHostTexture;
+			xbox::X_D3DTexture* pXboxTexture;
+			pXboxTexture = (xbox::X_D3DTexture*)pXborSurface->Parent;
+			bool bCubemap = pXboxTexture->Format & X_D3DFORMAT_CUBEMAP;
+			if ((pXboxTexture->Common & X_D3DCOMMON_TYPE_MASK) == X_D3DCOMMON_TYPE_TEXTURE
+				&& !bCubemap) {
+				//insert the dummy texture key and texture resource to texture cache for D3DDevice_SetTexture()
+				UINT64 key = ((UINT64)(pXboxTexture->Format) << 32) | pXboxTexture->Data;
+				auto it = g_TextureCache.find(key);
+				g_TextureCache[key] = *(xbox::X_D3DSurface*)pXboxTexture;
+				g_TextureCache[key].Parent = nullptr;
+				//pHostTexture = CxbxConvertXboxSurfaceToHostTexture(pXboxTexture);
+				auto hRet = pHostSurface->GetContainer(IID_PPV_ARGS(&pHostTexture));
+				DEBUG_D3DRESULT(hRet, "CxbxrImpl_SetRenderTargetTexture: pHostSurface->GetContainer");
+				if (FAILED(hRet)) {
+					LOG_TEST_CASE("CxbxrImpl_SetRenderTargetTexture: Failed to get Texture from Surface");
+				}
+				else {
+					auto key = GetHostResourceKey(pXboxTexture);
+					auto& ResourceCache = GetResourceCache(key);
+					auto it = ResourceCache.find(key);
+					//insert the key to get a new item in resource cache without host resource and PCFormt set to it.
 					//ResourceCache.insert(key);
 					auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
-
-					if (resourceInfo.pHostResource) {
-						EmuLog(LOG_LEVEL::WARNING, "SetHostResource: Overwriting an existing host resource");
-					}
-
 					resourceInfo.pHostResource = pHostTexture;
 					resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxTexture);
 					resourceInfo.pXboxData = GetDataFromXboxResource(pXboxTexture);
@@ -12453,21 +12422,6 @@ void CxbxrImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3
 					resourceInfo.forceRehash = false;
 					resourceInfo.PCFormat = HostSurfaceDesc.Format;
 				}
-			}
-			else {
-				//insert the key to get a new item in resource cache without host resource and PCFormt set to it.
-				//ResourceCache.insert(key);
-				auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
-				resourceInfo.pHostResource = pHostTexture;
-				resourceInfo.dwXboxResourceType = GetXboxCommonResourceType(pXboxTexture);
-				resourceInfo.pXboxData = GetDataFromXboxResource(pXboxTexture);
-				resourceInfo.szXboxDataSize = GetXboxResourceSize(pXboxTexture);
-				resourceInfo.hash = ComputeHash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize);
-				resourceInfo.hashLifeTime = 1ms;
-				resourceInfo.lastUpdate = std::chrono::steady_clock::now();
-				resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
-				resourceInfo.forceRehash = false;
-				resourceInfo.PCFormat = HostSurfaceDesc.Format;
 			}
 		}
 	}
