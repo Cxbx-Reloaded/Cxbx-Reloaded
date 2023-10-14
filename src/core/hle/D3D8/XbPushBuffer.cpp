@@ -977,8 +977,8 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAOP, NV2A_alphaOP[i]);
 				}
 				// D3DTOP_LERP, 
-				//A=arg0, B=Arg1, C=1-arg1 CFLAG_COMPLEMENT, D=Arg2
-				else if (((colorICW & 0xF0F0F0F0)== 0x00002000) && ((colorICW >> 16) & 0xF) == ((colorICW >> 8) & 0xF)) {
+				//A=arg0, B=Arg1, C=1-arg0 CFLAG_COMPLEMENT, D=Arg2
+				else if (((colorICW & 0xF0F0F0F0)== 0x00002000) && ((colorICW >> 24) & 0xF) == ((colorICW >> 8) & 0xF)) {
 
 					NV2A_colorOP[i] = xbox::X_D3DTOP_LERP;
 					// arg0 in source A
@@ -1236,8 +1236,8 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_resultArg[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorOCW >> 4) & 0xF);
 				}
 				*/
-				// D3DTOP_LERP, A=Arg0,B=Arg1, C=(1-Arg1) CFLAG_COMPLEMENT set, D=Arg2
-				else if (((alphaICW & 0xF0F0F0F0) == 0x10103010) && ((alphaICW >> 16) & 0xF) == ((alphaICW >> 8) & 0xF)) {
+				// D3DTOP_LERP, A=Arg0,B=Arg1, C=(1-Arg0) CFLAG_COMPLEMENT set, D=Arg2
+				else if (((alphaICW & 0xF0F0F0F0) == 0x10103010) && ((alphaICW >> 24) & 0xF) == ((alphaICW >> 8) & 0xF)) {
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_LERP;
 					// arg0 in source A
 					NV2A_alphaArg0[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
@@ -2727,7 +2727,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 	bool bLightintEnable = pg->KelvinPrimitive.SetLightingEnable != false;
 	//xbox sets D3DRS_LightEnable to false when vertex shader is not fixed mode.
 	if (g_Xbox_VertexShaderMode != VertexShaderMode::FixedFunction)bLightintEnable = true;
-	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, bLightintEnable);
+	//NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, bLightintEnable);
 	if (bLightintEnable) {
 		control = pg->KelvinPrimitive.SetLightControl;
 		if (pg->KelvinPrimitive.SetSpecularEnable != false) {

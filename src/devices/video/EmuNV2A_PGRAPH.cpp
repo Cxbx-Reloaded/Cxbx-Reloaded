@@ -3269,6 +3269,9 @@ int pgraph_handle_method(
                             NV2A_TextureFactorAllTheSame = false;
                         }
                     }
+                    else {
+                        NV2A_TextureFactorAllTheSame = false;
+                    }
                     NV2A_DirtyFlags |= X_D3DDIRTYFLAG_COMBINERS;
                 }
                     break;
