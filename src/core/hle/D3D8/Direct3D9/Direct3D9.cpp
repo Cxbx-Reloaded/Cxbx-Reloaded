@@ -9775,6 +9775,13 @@ void LoadSurfaceDataFromHost(xbox::X_D3DSurface* pXboxSurface)
 			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->Release() in Lock2DSurface");
 		}
 	}
+	//update xbox data hash and related time variables to prevent unnecessary host surface update.
+	auto& resourceInfo = ResourceCache[key];	// Implicitely inserts a new entry if not already existing
+	resourceInfo.hash = ComputeHash(resourceInfo.pXboxData, resourceInfo.szXboxDataSize);
+	resourceInfo.hashLifeTime = 1ms;
+	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
+	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
+	resourceInfo.forceRehash = false;
 }
 
 void GetXboxSurfaceAndTransferFromHostSurface
