@@ -1719,7 +1719,7 @@
 #		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P_TRUE                            0x00000001<<20
 #		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_Q                                 0xFF000000  // FIXME should be D3D__RenderState[D3DRS_WRAP0 + TexCoordIndex]
 #		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_Q_FALSE                           0x00000000
-#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_Q_TRUE                            0x00000001<<24
+#		define NV097_SET_TEXTURE_ADDRESS_CYLWRAP_Q_TRUE                            0x00000001<<28
 #   define NV097_SET_TEXTURE_CONTROL0                         0x00001B0C // [4.3]
 #       define NV097_SET_TEXTURE_CONTROL0_ENABLE                 (1 << 30)
 #       define NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP           0x3FFC0000
