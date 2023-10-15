@@ -856,8 +856,9 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		bool previousStageDisabled = false;
 		int startStage = 0;
 		int stage = 0;
-		if (pointSpriteEnable)
+		if (pointSpriteEnable) {
 			startStage = 3;
+		}
 		// stage is for D3D texture stage, i is for kelvin hardware stage. when pointSpriteEnable is true, the stage starts with 3 instead of 0, but hardware stage always starts with 0.
 		for (int i = 0,stage=startStage; stage < 4; i++,stage++) {
 			// Determine COLOROP
@@ -1057,8 +1058,9 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	
 	int startStage = 0;
 	int stage = 0;
-	if (pointSpriteEnable)
+	if (pointSpriteEnable){
 		startStage = 3;
+	}
 	// stage is for D3D texture stage, i is for kelvin hardware stage. when pointSpriteEnable is true, the stage starts with 3 instead of 0, but hardware stage always starts with 0.
 	for (int i = 0, stage = startStage; stage < 4; i++, stage++) {
 #ifdef ENABLE_FF_ALPHAKILL
@@ -1272,18 +1274,6 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   if (CurrentPixelShader.Get() != RecompiledPixelShader->ConvertedPixelShader) {
     g_pD3DDevice->SetPixelShader(RecompiledPixelShader->ConvertedPixelShader);
   }
-
-  //PS_TEXTUREMODES psTextureModes[xbox::X_D3DTS_STAGECOUNT];
-  //PSH_XBOX_SHADER::GetPSTextureModes(pPSDef, psTextureModes);
-  //
-  //for (i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
-  //{
-  //    switch (psTextureModes[i])
-  //    {
-  //    default:
-  //        break;
-  //    }
-  //}
 
   // Set constants, not based on g_PixelShaderConstants, but based on
   // the render state slots containing the pixel shader constants,
