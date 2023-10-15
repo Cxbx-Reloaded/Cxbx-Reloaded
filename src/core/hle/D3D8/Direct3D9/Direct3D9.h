@@ -2179,7 +2179,20 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetMaterial)
 } // end of namespace xbox
 
 // ******************************************************************
-// * patch: D3DDevice_GetMaterial
+// * patch: D3DDevice_XGSetSurfaceHeader
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(XGSetSurfaceHeader)
+(
+    UINT Width,
+    UINT Height,
+    xbox::X_D3DFORMAT Format,
+    xbox::X_D3DSurface* pSurface,
+    UINT Data,
+    UINT Pitch
+);
+
+// ******************************************************************
+// * patch: D3DDevice_XGSetTextureHeader
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 (

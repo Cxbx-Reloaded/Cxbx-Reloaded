@@ -459,6 +459,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4,                            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     XGSetSurfaceHeader,                                 (UINT , UINT, xbox::X_D3DFORMAT, xbox::X_D3DSurface*, UINT, UINT)                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     XGSetTextureHeader,                                 (UINT , UINT, UINT, DWORD, xbox::X_D3DFORMAT, D3DPOOL, xbox::X_D3DTexture*, UINT, UINT)               );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     XGSetVertexBufferHeader,                            (UINT , DWORD, DWORD, D3DPOOL, xbox::X_D3DVertexBuffer*, UINT)                                        );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DResource_AddRef,                                 (xbox::X_D3DResource*)                                                                                );  \
@@ -9771,11 +9772,11 @@ void LoadSurfaceDataFromHost(xbox::X_D3DSurface* pXboxSurface)
 	if (bOffScreenSurfaceNeedRelease) {
 		pHostOffScreenSurface->Release();
 		if (hRet != D3D_OK) {
-			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->Release() in Lock2DSurface");
+			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenSurface->Release() in LoadSurfaceDataFromHost");
 		}
 		pHostOffScreenTexture->Release();
 		if (hRet != D3D_OK) {
-			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->Release() in Lock2DSurface");
+			EmuLog(LOG_LEVEL::WARNING, "Failed in pHostOffScreenTexture->Release() in LoadSurfaceDataFromHost");
 		}
 	}
 	//update xbox data hash and related time variables to prevent unnecessary host surface update.
@@ -9963,7 +9964,8 @@ CONST DWORD g_TilePitches[] =
 };
 //using fixed size array to cache the textures.
 //todo: check if 32 is enough or not.
-xbox::X_D3DTexture g_XGSetTexture[32] = {0};
+xbox::X_D3DSurface g_XGSetSurface[32] = {0};
+xbox::X_D3DSurface *g_pXGSetSurface[32] = { 0 };
 
 // this function is only to log the *pTexture in cache for D3DDevice_SetTile() to retrive corresponded xbox surface in order to set correct render target or depth stencil surface.
 xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
@@ -9977,7 +9979,7 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 	xbox::X_D3DTexture* pTexture,
 	UINT Data,
 	UINT Pitch
-	)
+)
 {
 	HRESULT hRet = XB_TRMP(XGSetTextureHeader)(
 		Width,
@@ -9989,8 +9991,23 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 		pTexture,
 		Data,
 		Pitch);
+#if 0
+	DWORD RowPitch, SlicePitch, X_Format, Size;
+	BYTE* pbData;
+	/*
+	FindSurfaceWithinTexture(
+		pTexture,
+		D3DCUBEMAP_FACE_POSITIVE_X,
+		0,
+		/*BYTE ** */&pbData,
+		/*DWORD * */&RowPitch,
+		/*DWORD * */&SlicePitch,
+		/*DWORD * */&X_Format,
+		/*DWORD * */&Size
+	);
+#endif
 	bool bPitchValid = false;
-	int arraySize = sizeof(g_XGSetTexture) / sizeof(g_XGSetTexture[0]);
+	int arraySize = sizeof(g_pXGSetSurface) / sizeof(g_pXGSetSurface[0]);
 	for (int i = 0; i < arraySize; i++) {
 		if (Pitch == g_TilePitches[i]) {
 			bPitchValid = true;
@@ -9998,11 +10015,64 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 		}
 	}
 	//only cache the texture if pitch is valid render target or depth stencil pitch
-	if (pTexture != nullptr && bPitchValid && Data != 0) {
+	if (pTexture != nullptr && bPitchValid ) {
 		int i;
 		for (i = 0; i < arraySize; i++) {
-			if (g_XGSetTexture[i].Data == 0) {
-				g_XGSetTexture[i] = *pTexture;
+			if (g_pXGSetSurface[i] == nullptr) {
+				g_pXGSetSurface[i] = &g_XGSetSurface[i];
+				/*
+				g_XGSetSurface[i].Format = Format;
+				g_XGSetSurface[i].Size=Height* Pitch;
+				g_XGSetSurface[i].Data = Data;
+				*/
+				g_XGSetSurface[i] = *(xbox::X_D3DSurface*)pTexture;
+				g_XGSetSurface[i].Parent = pTexture;
+				g_XGSetSurface[i].Common &= 0xFFF8FFFF;
+				g_XGSetSurface[i].Common |= 0x00050000;
+				break;
+			}
+		}
+		//assert if we couldn't find an empty slot in cache.
+		if (i == arraySize)
+			assert(0);
+	}
+	return hRet;
+}
+
+// this function is only to log the *pTexture in cache for D3DDevice_SetTile() to retrive corresponded xbox surface in order to set correct render target or depth stencil surface.
+xbox::hresult_xt WINAPI EMUPATCH(XGSetSurfaceHeader)
+(
+	UINT Width,
+	UINT Height,
+	xbox::X_D3DFORMAT Format,
+	xbox::X_D3DSurface* pSurface,
+	UINT Data,
+	UINT Pitch
+)
+{
+	HRESULT hRet = XB_TRMP(XGSetSurfaceHeader)(
+		Width,
+		Height,
+		Format,
+		pSurface,
+		Data,
+		Pitch);
+	bool bPitchValid = false;
+	int arraySize = sizeof(g_pXGSetSurface) / sizeof(g_pXGSetSurface[0]);
+	for (int i = 0; i < arraySize; i++) {
+		if (Pitch == g_TilePitches[i]) {
+			bPitchValid = true;
+			break;
+		}
+	}
+	//only cache the texture if pitch is valid render target or depth stencil pitch
+	if (pSurface != nullptr && bPitchValid ) {
+		int i;
+		for (i = 0; i < arraySize; i++) {
+			if (g_pXGSetSurface[i] == nullptr) {
+				g_pXGSetSurface[i] = pSurface;
+				g_XGSetSurface[i]= *pSurface;
+				break;
 			}
 			//assert if we couldn't find an empty slot in cache.
 			if (i == arraySize)
@@ -10012,6 +10082,41 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 	return hRet;
 }
 
+
+
+#define X_D3DTILE_FLAGS_ZBUFFER       0x00000001
+#define X_D3DTILE_FLAGS_ZCOMPRESS     0x80000000
+#define X_D3DTILE_FLAGS_Z32BITS       0x04000000
+#define X_D3DTILE_FLAGS_Z16BITS       0x00000000
+#define X_D3DTILE_FLAGS_ZBUFFER_FLAGS (X_D3DTILE_FLAGS_ZBUFFER | X_D3DTILE_FLAGS_ZCOMPRESS | X_D3DTILE_FLAGS_Z32BITS | X_D3DTILE_FLAGS_Z16BITS)
+
+xbox::X_D3DTILE* g_pTile[8] = { 0 };
+xbox::X_D3DTILE g_Tile[8] = { 0 };
+xbox::X_D3DSurface g_TileSurface[8] = { 0 };
+xbox::X_D3DSurface* g_pTileSurface[8] = { 0 };
+
+void EmuSetXboxDepthBuffer(xbox::X_D3DSurface* pDepthBufferSurface)
+{
+	//preserve original xbox depth stencil surface
+	//g_TileSurface[1]= g_Xbox_DepthStencil;
+	//g_pTileSurface[1] = g_pXbox_DepthStencil;
+
+	g_Xbox_DepthStencil = *pDepthBufferSurface;
+	g_pXbox_DepthStencil = pDepthBufferSurface;
+	CxbxrImpl_SetRenderTarget(g_pXbox_BackBufferSurface, g_pXbox_DepthStencil);
+}
+
+void EmuSetXboxBackBuffer(xbox::X_D3DSurface* pBackBufferSurface)
+{
+	//preserve original xbox back buffer surface
+	//g_TileSurface[0] = g_Xbox_BackBufferSurface;
+	//g_pTileSurface[0] = g_pXbox_BackBufferSurface;
+
+	g_Xbox_BackBufferSurface = *pBackBufferSurface;
+	g_pXbox_BackBufferSurface = pBackBufferSurface;
+	CxbxrImpl_SetRenderTarget(g_pXbox_BackBufferSurface, g_pXbox_DepthStencil);
+}
+
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTile)
 (
 	xbox::dword_xt Index,
@@ -10019,6 +10124,47 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTile)
 )
 {
 	HRESULT hRet = XB_TRMP(D3DDevice_SetTile)(Index, pTile);
+	if(pTile!=nullptr){
+		if (pTile->pMemory != nullptr) {
+			//if (Index > 1 ) {
+			g_Tile[Index] = *pTile;
+			g_pTile[Index] = &g_Tile[Index];
+			int arraySize = sizeof(g_XGSetSurface) / sizeof(g_XGSetSurface[0]);
+			DWORD RowPitch, SlicePitch, Format, Size;
+			BYTE* pbData;
+			for (int i = 0; i < arraySize; i++) {
+				if (g_XGSetSurface[i].Data == 0 && g_pXGSetSurface[i] != nullptr) {
+					if (g_pXGSetSurface[i]->Parent != nullptr)
+						g_pXGSetSurface[i]->Data = g_pXGSetSurface[i]->Parent->Data;
+					g_XGSetSurface[i].Data = g_pXGSetSurface[i]->Data;
+				}
+				if (pTile->pMemory == GetDataFromXboxResource(g_pXGSetSurface[i])) {
+					g_TileSurface[Index] = g_XGSetSurface[i];
+					g_pTileSurface[Index] = g_pXGSetSurface[i];
+					if ((pTile->Flags & X_D3DTILE_FLAGS_ZBUFFER_FLAGS) != 0) {
+						//set depth stencil buffer
+						EmuSetXboxDepthBuffer(g_pTileSurface[Index]);
+					}
+					else {
+						//set back buffer
+						EmuSetXboxBackBuffer(g_pTileSurface[Index]);
+					}
+					break;
+				}
+			}
+		}
+		else {
+			g_pTile[Index] = nullptr;
+		}
+    }
+	else {
+	    g_pTile[Index] = nullptr;
+	}
+	//it tile was disabled, restore xbox back buffer and depth stencil surface.
+	if (g_pTile[Index] == nullptr) {
+		;//CxbxrImpl_SetRenderTarget(g_pTileSurface[0], g_pTileSurface[1]);
+	}
+
 	return hRet;
 }
 
@@ -14111,13 +14257,13 @@ void CxbxrImpl_PersistDisplay()
 	}
 	hRet = g_pD3DDevice->GetRenderTargetData(pXboxBackBufferHostSurface, pXboxPersistSurfaceHostSurface);
 	if (hRet != D3D_OK) {
-		EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in Lock2DSurface");
+		EmuLog(LOG_LEVEL::WARNING, "Failed in GetRenderTargetData in CxbxrImpl_PersistDisplay");
 	}
 
 	D3DLOCKED_RECT HostLockedRect;
 	hRet = pXboxPersistSurfaceHostSurface->LockRect(&HostLockedRect, NULL, D3DLOCK_READONLY);
 	if (hRet != D3D_OK) {
-		EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in Lock2DSurface");
+		EmuLog(LOG_LEVEL::WARNING, "Could not lock Host Surface for Xbox texture in CxbxrImpl_PersistDisplay");
 	}
 	//now we copy the host surface data in the buffer to the surface AvSetSavedDataAddress pointing to so it can persist after rebooting.
 	xbox::X_D3DSurface* pPersistSurface = (xbox::X_D3DSurface*)xbox::AvSavedDataAddress;
