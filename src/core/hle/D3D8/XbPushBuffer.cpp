@@ -288,9 +288,8 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 	PGRAPHState* pg = &d->pgraph;
 	
 	for (int stage = 0; stage < 4; stage++) {
-		DWORD warp = D3DWRAPCOORD_0| D3DWRAPCOORD_1;
+		DWORD warp = 0;// NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V_TRUE;
 		// process texture stage texture info if it's dirty
-		
 		if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage)) != 0) {
 			// if the texture stage is disabled, pg->KelvinPrimitive.SetTexture[stage].Control0 when xbox d3d SetTexture(stage,0), but in actual situation Control0 isn't 0, Offset and Format are 0.
 			// FIXME!! check (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) == 0 should be enough, but there are (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_ENABLE) != 0 and the texture is empty. could be HLE/NV2A confliction
@@ -343,19 +342,12 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 					bool bCubeness = (format
 						& NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE) != 0;
 					DWORD Dimensionality = (format & NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY) >> 4;
-
-
 					// texture.Size could be 0
 					// when size ==0, Control1 and ImageRect won't be updated. So we use a hack to always reset these two vars whenever NV097_SET_TEXTURE_OFFSET was hit.
 					if (pg->KelvinPrimitive.SetTexture[stage].Control1 == 0 && pg->KelvinPrimitive.SetTexture[stage].ImageRect == 0) {
 						// when log_width/height/depth !=0, which means the size was represent by these log values, so size would be zero.
 						//if( (log_width!=0) || (log_height!=0)||(log_depth!=0)){
 						NV2A_texture_stage_texture[stage].Size = 0;
-						/* not used, D3D will take the log dimentions when size==0
-						width = 1 << log_width;
-						height = 1 << log_height;
-						depth = 1 << log_depth;
-						*/
 					}
 					//size!=0, using Control1 and ImageRect to convert pitch/height/width to texture.Size
 					else {
@@ -368,9 +360,6 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 						pitch = ((pitch / 64) - 1) << X_D3DSIZE_PITCH_SHIFT;//&X_D3DSIZE_PITCH_MASK
 						NV2A_texture_stage_texture[stage].Size = pitch | height | width;
 					}
-
-
-
 					NV2A_texture_stage_texture[stage].Common = 0x00040001;// fake xbox d3d resource,
 					NV2A_texture_stage_texture[stage].Lock = 0;
 					//default to texture, no parent
@@ -391,16 +380,6 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				colorSign = pg->KelvinPrimitive.SetTexture[stage].Filter & 0xF0000000;// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORSIGN, colorSign);
 				
-				// Fixedme!!!
-				/*
-				// this code was reversed from Otogi::LazySetTextureStates()
-				INT lodBias = Round( 256.0f *D3DTSS_MIPMAPLODBIAS + (Floatify(m_SuperSampleLODBias));
-
-				// from Present()
-
-				m_SuperSampleScale = minScale;
-				m_SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
-				*/
 				int intLodBias;
 				intLodBias = (filter & NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS);
 				if ((intLodBias & 0x1000) != 0)
@@ -414,25 +393,21 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				float minScale = CxbxrGetSuperSampleScale();
 				float SuperSampleLODBias = g_LODBias2x[Round(2.0f * minScale) - 2];
 
-				DWORD colorKeyOp = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x3;// colorkeyop in Contrlo0 bit 1:0 //XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYOP);
-				DWORD ALPHAKILL = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x4;//  alphakill in Contrlo0 bit 2//XboxTextureStates.Get(i, xbox::X_D3DTSS_ALPHAKILL);
-				//control0 |= DRF_NUMFAST(097, _SET_TEXTURE_CONTROL0, _LOG_MAX_ANISO,maxAnisotropy);
+				DWORD colorKeyOp = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x3;
+				DWORD ALPHAKILL = pg->KelvinPrimitive.SetTexture[stage].Control0 & 0x4;
 				DWORD maxAnisotropy = (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_LOG_MAX_ANISO) >> 4;
 				DWORD minMipFilter = xbox::X_D3DTEXF_NONE;
 				magFilter = (filter & NV097_SET_TEXTURE_FILTER_MAG) >> 24;
 				minFilter = (filter & NV097_SET_TEXTURE_FILTER_MIN) >> 16;
-				//reverse minMipFilter and minFilter from g_MinFilter[2][3]
 				minMipFilter = (minFilter - 1) / 2;
 				minFilter = (minFilter & 1) ? 1 : 2;
-				convolutionKernel = filter & NV097_SET_TEXTURE_FILTER_MIN | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL | NV097_SET_TEXTURE_FILTER_MAG;//(0x70000 | 0x4000 | 0x2000)
-				//NV097_SET_TEXTURE_FILTER_MIN_CONVOLUTION_2D_LOD0 | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3 | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_QUINCUNX 
+				convolutionKernel = filter & NV097_SET_TEXTURE_FILTER_MIN | NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL | NV097_SET_TEXTURE_FILTER_MAG;
 				if (((convolutionKernel& NV097_SET_TEXTURE_FILTER_MIN) == NV097_SET_TEXTURE_FILTER_MIN_CONVOLUTION_2D_LOD0)
 					&&(magFilter == xbox::X_D3DTEXF_QUINCUNX)
-					&&(minFilter == xbox::X_D3DTEXF_LINEAR)) {//NV097_SET_TEXTURE_FILTER_MAG_CONVOLUTION_2D_LOD0=0x4, D3DTEXF_LINEAR=2
-					//(minFilter > D3DTEXF_ANISOTROPIC) ||	(magFilter > D3DTEXF_ANISOTROPIC)
+					&&(minFilter == xbox::X_D3DTEXF_LINEAR)) {
 					magFilter = xbox::X_D3DTEXF_QUINCUNX;
-					if (((convolutionKernel & NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL) == NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3)) {//NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3=0x02<<13
-						magFilter = xbox::X_D3DTEXF_GAUSSIANCUBIC;;//(minFilter == D3DTEXF_GAUSSIANCUBIC) ||	(magFilter == D3DTEXF_GAUSSIANCUBIC) //xbox::X_D3DTEXF_GAUSSIANCUBIC=5
+					if (((convolutionKernel & NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL) == NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3)) {
+						magFilter = xbox::X_D3DTEXF_GAUSSIANCUBIC;;
 					}
 					minFilter = magFilter;
 				}
@@ -469,36 +444,22 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MINFILTER, minFilter);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAGFILTER, magFilter);
 
-
-				DWORD COLORKEYCOLOR = pg->KelvinPrimitive.SetColorKeyColor[stage];// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR);
-				DWORD maxMipMapLevel = (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP)>>(18+8); //D3DTSS_MAXMIPLEVEL
+				DWORD COLORKEYCOLOR = pg->KelvinPrimitive.SetColorKeyColor[stage];
+				DWORD maxMipMapLevel = (pg->KelvinPrimitive.SetTexture[stage].Control0 & NV097_SET_TEXTURE_CONTROL0_MIN_LOD_CLAMP)>>(18+8); 
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORKEYOP, colorKeyOp);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAKILL, ALPHAKILL);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORKEYCOLOR, COLORKEYCOLOR);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXMIPLEVEL, maxMipMapLevel);
 
 				address = pg->KelvinPrimitive.SetTexture[stage].Address;
-				warp=address & 0xFF000000; 
+				warp=address & (NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P_TRUE);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSU, address& NV097_SET_TEXTURE_ADDRESS_U);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSV, (address & NV097_SET_TEXTURE_ADDRESS_V)>>8);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ADDRESSW, (address & NV097_SET_TEXTURE_ADDRESS_P)>>16);
-
 			}
 		}
-
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
-		//D3DTSS_TEXCOORDINDEX shall be unique for each stage.
-        //since the kelvin contents all info which already includes wrap and texcoordindex, here we set them to default and update the warp0~3 accroding to what we have here.
-		/*  // texgen, texcoordinidex are update to NV2ATextureStates in LazySetTextureTransforms(), not here.
-		extern unsigned int kelvin_to_xbox_map_texgen(uint32_t parameter);
-		DWORD texgen = kelvin_to_xbox_map_texgen(pg->KelvinPrimitive.SetTexgen[stage].S);
-		texgen |= stage;
-		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texgen);
-		*/
-		
 	}
-	//reset texture stage dirty flag
-	//NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_STATE;
 }
 extern NV2ADevice* g_NV2A; //TMP GLUE
 extern D3DMATRIX g_xbox_transform_ModelView;
@@ -735,7 +696,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 	// but even when startStage==3, the first updated stage in hardware still starts from 0; all unused combiner stages shall be zero out.
 	// i for hardware combiner stage index:ranges 0~8
 	// stage for xbox texture stage index: ranges 0~3, when point sprite was enabled, it starts with 3
-	for (int i = 0; stage < 4; i++,stage++) {
+	for (int i =0; stage < 4; i++,stage++) {
 
 		auto colorOp = pg->KelvinPrimitive.SetCombinerColorICW[i];// = XboxTextureStates.Get(i, xbox::X_D3DTSS_COLOROP);// FIXME!!!
 
@@ -1766,39 +1727,6 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 	// update texture stage texture pointers and format per stageProgram
 	DWORD stageProgram = pg->KelvinPrimitive.SetShaderStageProgram;
 	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, stageProgram);
-/*  //disable this code block since the texture format already includes these properties.
-	DWORD stageMode;
-	for (int stage = 0; stage < 4; stage++) {
-		stageMode = stageProgram & 0x1f;
-		xbox::X_D3DBaseTexture* pTexture = g_pNV2A_SetTexture[stage];
-		if (pTexture != nullptr) {
-			if (stage > 0) {
-				//setup bumenv if necessary
-				if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP) {
-					NV2ATextureStates.Set(stage - 1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAP);
-				}
-				else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_BUMPENVMAP_LUMINANCE) {
-					NV2ATextureStates.Set(stage - 1, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_BUMPENVMAPLUMINANCE);
-				}
-			}
-			if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_CUBE_MAP) {
-				pTexture->Format |= NV097_SET_TEXTURE_FORMAT_CUBEMAP_ENABLE;// texture format cubmap. pTexture->Format &	DRF_DEF(097, _SET_TEXTURE_FORMAT, _CUBEMAP_ENABLE, _TRUE))
-			}
-			else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_3D_PROJECTIVE) {
-				//todo : either NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE should be set in the Format, but we can't figure out which one.
-				// the hack is to set both.
-				pTexture->Format |= 0x40000000 | 0x30; //NV097_SET_TEXTURE_FORMAT_BASE_SIZE_P_16 or  NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE;// NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY || NV097_SET_TEXTURE_FORMAT_DIMENSIONALITY_THREE
-			}
-			else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_2D_PROJECTIVE) {
-				;// deafult stage mode, we do nothing here.
-			}
-			else if (stageMode == NV097_SET_SHADER_STAGE_PROGRAM_STAGE1_PROGRAM_NONE) {
-				pTexture = nullptr;//null out the texture pointer
-			}
-		}
-		stageProgram >>= 5;
-	}
-*/
 	if (pNV2A_PixelShader == nullptr) {
 		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
 		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_COMBINERS) != 0) {
@@ -1834,8 +1762,6 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 		NV2A_PSDef.PSTextureModes = pg->KelvinPrimitive.SetShaderStageProgram; // Was : XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
 		NV2A_PSDef.PSDotMapping = pg->KelvinPrimitive.SetDotRGBMapping; // Note : Adjacent to above and below fields, but 3 assignments are cheaper than memcpy call overhead
 		NV2A_PSDef.PSInputTexture = pg->KelvinPrimitive.SetShaderOtherStageInput;
-		//Set D3DRS_PSTEXTUREMODES via NV2A_PSDef.PSTextureModes
-		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, NV2A_PSDef.PSTextureModes);
 		// set pixel shader
 		pgraph_use_UserPixelShader();
 	}
@@ -1846,8 +1772,6 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 	pg->bumpenv_dirty[1] = false;
 	pg->bumpenv_dirty[2] = false;
 	pg->bumpenv_dirty[3] = false;
-	// it's not necessary to call CxbxrImpl_SetPixelShader() which simply copies NV2A_PixelShader to xbox_PixelShader and we don't need it to do so.
-	//CxbxrImpl_SetPixelShader((xbox::dword_xt)pNV2A_PixelShader);
 }
 
 void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
@@ -3093,23 +3017,36 @@ void D3D_draw_state_update(NV2AState* d)
 		}
 	}
 	//check for duplicated texcoord slots, if a texcoord slot is duplicated with other texcoord slot prior to it, set texcoord index of current slot to the prior duplicated slot and disable current slot.
-	for (int current = xbox::X_D3DVSDE_TEXCOORD0 + 1; current <= xbox::X_D3DVSDE_TEXCOORD3; current++) {
+	for (int currentSlot = xbox::X_D3DVSDE_TEXCOORD0 + 1, currentStage=1; currentStage <4; currentSlot++, currentStage++) {
+		// skip to next loop if current stage texture is not set.
+		if (g_pNV2A_SetTexture[currentStage] == nullptr)
+			break;
 		//only check for duplications when current slot is not unused
 		//if (g_NV2AVertexAttributeFormat.Slots[current].Format!= xbox::X_D3DVSDT_NONE)
 			//only check texcoord slots prior to current slot, always set texcoord index of later texture stages to prior texture stages.
-		for (int prior = xbox::X_D3DVSDE_TEXCOORD0; prior < current; prior++) {
-			if (g_NV2AVertexAttributeFormat.Slots[current].StreamIndex == g_NV2AVertexAttributeFormat.Slots[prior].StreamIndex
-				&& g_NV2AVertexAttributeFormat.Slots[current].Offset == g_NV2AVertexAttributeFormat.Slots[prior].Offset) {
+		for (int priorSlot = xbox::X_D3DVSDE_TEXCOORD0, priorStage=0; priorSlot < currentSlot; priorSlot++,priorStage++) {
+			// skip to next loop if prior stage texture is not set.
+			if (g_pNV2A_SetTexture[priorStage] == nullptr)
+				break;
+			// compare stream index/slot offset to see if two slots uses the same texcoord.
+			if (g_NV2AVertexAttributeFormat.Slots[currentSlot].StreamIndex == g_NV2AVertexAttributeFormat.Slots[priorSlot].StreamIndex
+				&& g_NV2AVertexAttributeFormat.Slots[currentSlot].Offset == g_NV2AVertexAttributeFormat.Slots[priorSlot].Offset) {
+				
 				//retrive texgen from NV2ATextureStates
-				DWORD texcoordIndex = NV2ATextureStates.Get(current - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX);
-				texcoordIndex &= 0xFFFF0000;
+				DWORD texcoordIndex = NV2ATextureStates.Get(currentSlot - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX);
+				DWORD texgen=texcoordIndex & 0xFFFF0000;
 				//update texcoordIndex
-				texcoordIndex |= (prior - xbox::X_D3DVSDE_TEXCOORD0) & 0x0000FFFF;
+				texcoordIndex = texgen|((priorStage) & 0x0000FFFF);
+				/* //todo: update texcoord index should be enough because the indexed prior stage warp shall be the same as the warp set in current stage in NV2A.
+				DWORD address = pg->KelvinPrimitive.SetTexture[currentStage].Address;
+				DWORD warp = address & (NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P_TRUE);
+				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0+ priorStage, warp);
+				*/
 				//store updated texcoordIndex
-				NV2ATextureStates.Set(current - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX, texcoordIndex);
+				NV2ATextureStates.Set(currentSlot - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX, texcoordIndex);
 				//disable current slot
-				g_NV2AVertexAttributeFormat.Slots[current].Offset = 0;
-				g_NV2AVertexAttributeFormat.Slots[current].Format = xbox::X_D3DVSDT_NONE;
+				g_NV2AVertexAttributeFormat.Slots[currentSlot].Offset = 0;
+				g_NV2AVertexAttributeFormat.Slots[currentSlot].Format = xbox::X_D3DVSDT_NONE;
 				break;
 			}
 		}
