@@ -398,7 +398,7 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
             //texCoord.yz = texCoord.x;
         //if (countFlag == 2)
             //texCoord.z = texCoord.y;
-        texCoord.xyzw = texCoord.xyzw / texCoord.w;
+        //texCoord.xyzw = texCoord.xyzw / texCoord.w;
     }
 
     return texCoord;
