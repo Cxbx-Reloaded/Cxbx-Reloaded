@@ -390,10 +390,14 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
     // Test case: ProjectedTexture sample, which uses 3 coordinates
     // We'll need to implement the divide when D3D stops handling it for us?
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtexturetransformflags
-
+    // padding makes no differences in LLE. LLE works with ProjectedTexture sample without padding, but to be devided by w is necessary.
 
     if (projected)
     {
+        //if (countFlag == 1)
+            //texCoord.yz = texCoord.x;
+        //if (countFlag == 2)
+            //texCoord.z = texCoord.y;
         texCoord.xyzw = texCoord.xyzw / texCoord.w;
     }
 

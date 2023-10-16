@@ -2480,7 +2480,8 @@ int pgraph_handle_method(
                     break;
                 }
 				case NV097_SET_LIGHT_CONTROL:
-					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LOCALVIEWER, (pg->KelvinPrimitive.SetLightControl & NV097_SET_LIGHT_CONTROL_LOCALEYE_TRUE) != 0 ? true : false);
+                    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_LIGHTS;
 					break;
                 case NV097_SET_COLOR_MATERIAL: {//done //pg->KelvinPrimitive.SetColorMaterial
                     //SET_MASK(pg->pgraph_regs[NV_PGRAPH_CSV0_C / 4], NV_PGRAPH_CSV0_C_EMISSION,  //(pg->KelvinPrimitive.SetColorMaterial >> 0) & 3)

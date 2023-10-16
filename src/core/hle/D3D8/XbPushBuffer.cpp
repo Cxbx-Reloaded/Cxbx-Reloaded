@@ -758,10 +758,10 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
 			//if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& (alphaICW == (0x14200000)) && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-			if ((colorICW == 0x04200000)&& pg->KelvinPrimitive.SetCombinerColorICW[1]==0) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-				NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
+			//if ((colorICW == 0x04200000)&& pg->KelvinPrimitive.SetCombinerColorICW[1]==0) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
+				//NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				//NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
-			}
+			//}
 			if ((alphaICW == (0x14200000))&& pg->KelvinPrimitive.SetCombinerAlphaICW[1]==0) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				//NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
@@ -2659,12 +2659,12 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 		}
 		colorMaterial = pg->KelvinPrimitive.SetColorMaterial;//NV097_SET_COLOR_MATERIAL, colorMaterial  // 0x298
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORVERTEX, colorMaterial!=0?true:false);
-		if(colorMaterial!=0){
+		//if(colorMaterial!=0){
 			// retrive material source render state.
 			for (int i = 0; i < 8; i++) {
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKSPECULARMATERIALSOURCE+i, (colorMaterial>>(2*(7-i)))&0x03);
 			}
-		}
+		//}
 		SetSceneAmbientAndMaterialEmission(d);
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
 		//set lights

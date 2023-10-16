@@ -8264,6 +8264,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 			// later we should check the fixed function vertex shader codes to see how it uses these matrix.
 			// test case: BumpEarth sample
 			// using pgraph_get_TextureTransformMatrix(i) without transpose or d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i] with transpose seems to have the same result.
+			// todo: PixelShader and ModifyPixelShader sample only works with xbox transform matrices. have to figure out how to use NV2A matrices.
 			memcpy(&ffShaderState.Transforms.Texture[i], pgraph_get_TextureTransformMatrix(i), sizeof(float) * 16);
 			//D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
 		}
@@ -8326,9 +8327,8 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		ffShaderState.Modes.TwoSidedLighting = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
 		ffShaderState.Modes.LocalViewer = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
 
-
 		// Material sources, pgraph update these renderstates in CxbxrLazySetLights()
-		ColorVertex = NV2ARenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
+		//ColorVertex = NV2ARenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
 		ColorVertex=pg->KelvinPrimitive.SetColorMaterial != 0;
 		ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
 		ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
@@ -10018,7 +10018,11 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 	if (pTexture != nullptr && bPitchValid ) {
 		int i;
 		for (i = 0; i < arraySize; i++) {
-			if (g_pXGSetSurface[i] == nullptr) {
+			bool bParentMatch = false;
+			if(g_pXGSetSurface[i]!=nullptr)
+				if(g_pXGSetSurface[i]->Parent==pTexture)
+					bParentMatch = true;
+			if (bParentMatch || g_pXGSetSurface[i] == nullptr) {
 				g_pXGSetSurface[i] = &g_XGSetSurface[i];
 				/*
 				g_XGSetSurface[i].Format = Format;
