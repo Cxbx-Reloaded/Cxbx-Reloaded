@@ -34,6 +34,7 @@
 
 #include <cmath>
 #include <iomanip> // For std::setfill and std::setw
+#include <filesystem>
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"

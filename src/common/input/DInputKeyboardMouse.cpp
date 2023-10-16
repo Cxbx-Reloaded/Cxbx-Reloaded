@@ -37,6 +37,7 @@
 #include "DInputKeyboardMouse.h"
 #include "InputManager.h"
 #include "core\kernel\support\Emu.h"
+#include <algorithm>
 
 // Unfortunately, sdl doesn't seem to be able to capture keyboard/mouse input from windows it didn't create (we currently use
 // win32 for that). So unless we create sdl windows, we will have to keep dinput around to handle keyboard/mouse input.

@@ -26,7 +26,6 @@
 // ******************************************************************
 #ifndef SETTINGS_HPP
 #define SETTINGS_HPP
-#include "Cxbx.h"
 
 #include "SimpleIni.h"
 #include "common\input\InputManager.h"
