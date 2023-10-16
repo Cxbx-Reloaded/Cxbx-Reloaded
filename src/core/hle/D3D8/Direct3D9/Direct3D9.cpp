@@ -8136,6 +8136,7 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 		viewTransform = g_xbox_DirectModelView_View;
 		//viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 	}else {
+		//d3dLight = &d3d8LightState.Lights[d3dLightIndex];
 		viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 	}
 	// TODO remove D3DX usage
@@ -8157,9 +8158,12 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 	D3DXVec3Transform(&directionV, (D3DXVECTOR3*)&d3dLight->Direction, &viewTransform3x3);
 	D3DXVec3Normalize((D3DXVECTOR3*)&pShaderLight->DirectionVN, (D3DXVECTOR3*)&directionV);
 
-	bool SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
+	bool SpecularEnable;
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		SpecularEnable = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
+	}
+	else {
+		SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
 	}
 	// Map D3D light to state struct
 	pShaderLight->Type = (float)((int)d3dLight->Type);
@@ -8330,14 +8334,14 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		// Material sources, pgraph update these renderstates in CxbxrLazySetLights()
 		//ColorVertex = NV2ARenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
 		ColorVertex=pg->KelvinPrimitive.SetColorMaterial != 0;
-		ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.SpecularMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.EmissiveMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackAmbientMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackDiffuseMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackSpecularMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackEmissiveMaterialSource = (float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.AmbientMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.DiffuseMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.SpecularMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.EmissiveMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackAmbientMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackDiffuseMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackSpecularMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackEmissiveMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
 		// Scene materials, HLE uses SetMaterial()/SetBackMaterial(), pgraph update materials in CxbxrLazySetLights()
 
 		memcpy(&ffShaderState.Materials[0], &NV2A_SceneMateirals[0], sizeof(NV2A_SceneMateirals[0]));
@@ -8478,17 +8482,20 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	extern D3DCOLORVALUE NV2A_SceneAmbient[2];
 	D3DXVECTOR4 Ambient, BackAmbient;
 	if (is_pgraph_using_NV2A_Kelvin()) {
+		//todo: check if accumulate active light ambient and add it to scene ambient is necessary or not.
 		for (size_t i = 0; i < 8; i++) {
 			if (CxbxrNV2ALight8EnableMask(i) != 0) {
+				//accumulate LightAmbient with each active light
 				UpdateFixedFunctionShaderLight(i, &ffShaderState.Lights[i], &LightAmbient);
 			}
 			else {
+				//this simply set the light.type to 0 in order to disable it in shader.
 				UpdateFixedFunctionShaderLight(-1, &ffShaderState.Lights[i], &LightAmbient);
 			}
 		}
         // X_D3DRS_AMBIENT and X_D3DRS_BACKAMBIENT renderstates are updated by pgraph in CxbxrLazySetLights() already. but here we directly use the D3DCOLORVAL NV2A_SceneAmbient[] preventing conversion loss.
-		Ambient = toVector(NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
-		BackAmbient = toVector(NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
+		Ambient = D3DXVECTOR4(NV2A_SceneAmbient[0].r, NV2A_SceneAmbient[0].g, NV2A_SceneAmbient[0].b, NV2A_SceneAmbient[0].a);//toVector(NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
+		BackAmbient = D3DXVECTOR4(NV2A_SceneAmbient[1].r, NV2A_SceneAmbient[1].g, NV2A_SceneAmbient[1].b, NV2A_SceneAmbient[1].a);//toVector(NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
 		// Misc flags
 		ffShaderState.Modes.NormalizeNormals = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
 
