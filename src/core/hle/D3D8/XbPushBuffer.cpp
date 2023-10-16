@@ -3860,6 +3860,8 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			NV2A_SceneMateirals[0].Power = 0.0f;
 			NV2A_SceneMateirals[1].Power = 0.0f;
 		}
+		extern xbox::hresult_xt WINAPI CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8 * pMaterial);
+		CxbxrImpl_SetMaterial(&NV2A_SceneMateirals[0]);
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
 		//set lights
 		int lightNum;
