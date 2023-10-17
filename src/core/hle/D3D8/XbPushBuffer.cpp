@@ -758,12 +758,12 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
 			//if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& (alphaICW == (0x14200000)) && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-			/*
+			
 			if ((colorICW == 0x04200000)&& (pg->KelvinPrimitive.SetCombinerColorICW[1]==0)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 			}
-			*/
+			
 			if ((alphaICW == (0x14200000))&& pg->KelvinPrimitive.SetCombinerAlphaICW[1]==0) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				//NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
@@ -789,12 +789,14 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					// arg1 always source A
 					NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF); // FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not 6
 					//special case happen with RSC. ICW =0x04201000, OCW=00010C000, which means result ARG = (arg1*1+0)<<1==2*arg1. we use arg1+arg1 to replace the multiplication.
+					/*
 					if ((colorOCW & NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTLEFTBY1_BIAS) == NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTLEFTBY1) {
 						//special case
 						NV2A_colorOP[i] = xbox::X_D3DTOP_ADD;
 						NV2A_colorArg2[i]= NV2A_colorArg1[i];
 						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
 					}
+					*/
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG1, NV2A_colorArg1[i]);
 				}
 				// colorOP SelectARG2, A == 0, B ==0, C == 1, D == Arg2
@@ -1041,12 +1043,14 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_SELECTARG1;
 					// arg1 always source A
 					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);// FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
+					/*
 					if ((alphaOCW & NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTLEFTBY1_BIAS) == NV097_SET_COMBINER_COLOR_OCW_OP_SHIFTLEFTBY1) {
 						//special case
 						NV2A_alphaOP[i] = xbox::X_D3DTOP_ADD;
 						NV2A_alphaArg2[i] = NV2A_alphaArg1[i];
 						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
 					}
+					*/
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
 				}
 				// alphaOP SelectARG2 A=0, B=0, C=1, D=arg2
