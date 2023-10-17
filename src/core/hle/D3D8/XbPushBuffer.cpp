@@ -789,8 +789,8 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_colorArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW) & 0xF);// FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
 				}
-				// OP modulate, A*B, C==0, D==0
-				else if ((colorICW & 0xF0F0FFFF) == 0x0) {
+				// OP modulate, A*B, C==0, D==0, test case PlayField sample, color op = Modulate, arg1=Txture, arg2=Texture|Alpha, colorICW=081819000
+				else if ((colorICW & 0xE0E00FFF) == 0x0) {
 					// arg1 in source A
 					NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF);
 					// arg2 in source B
@@ -808,7 +808,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					}
 				}
 				// OP ADD, source A + D, A == Arg1, B == 1, C == 1, D == Arg2
-				else if ((colorICW & 0xF0FFFFF0) == 0x00202000) {
+				else if ((colorICW & 0xE0EFFFF0) == 0x00202000) {
 					NV2A_colorOP[i] = xbox::X_D3DTOP_ADD;
 					if ((colorOCW & 0x18000) == 0x8000)
 						NV2A_colorOP[i] = xbox::X_D3DTOP_ADDSIGNED;
@@ -822,7 +822,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
 				}
 				// D3DTOP_SUBTRACT,  source A - D, A == Arg1, B == 1, C == -1, D == Arg2
-				else if ((colorICW & 0xF0FFFFF0) == 0x00204000) {
+				else if ((colorICW & 0xE0EFFFF0) == 0x00204000) {
 					NV2A_colorOP[i] = xbox::X_D3DTOP_SUBTRACT;
 					// arg1 in source A
 					NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF);
@@ -832,7 +832,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
 				}
 				// D3DTOP_ADDSMOOTH, A+C*D, A=Arg1, B=1, C=1-Arg1, D=Arg2
-				else if (((colorICW & 0xF0FFF0F0) == 0x00202000) && (convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 8) & 0xF))) {
+				else if (((colorICW & 0xE0FFE0E0) == 0x00202000) && (convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 8) & 0xF))) {
 					NV2A_colorOP[i] = xbox::X_D3DTOP_ADDSMOOTH;
 					// arg1 in source A
 					NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF);
@@ -865,7 +865,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
 				}
 				// D3DTOP_PREMODULATE, A=Arg1, if stage 0, B==D3DTA_TEXTURE, if stage1 or stage2 B=1, C and D not set
-				else if ((i > 0 && i < 3 && ((colorICW & 0xF0FFFFFF) == 0x00200000)) || (i == 0 && ((colorICW & 0xF0FFFFFF) == 0x00020000))) {
+				else if ((i > 0 && i < 3 && ((colorICW & 0xE0FFFFFF) == 0x00200000)) || (i == 0 && ((colorICW & 0xF0FFFFFF) == 0x00020000))) {
 					NV2A_colorOP[i] = xbox::X_D3DTOP_PREMODULATE;
 					// arg1 in source A
 					NV2A_colorArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorICW >> 24) & 0xF);
@@ -1042,7 +1042,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 
 				}
 				// OP modulate, A*B, C==0, D==0, A=Arg1, B=Arg2, 
-				else if ((alphaICW & 0xF0F0FFFF) == 0x10100000) {
+				else if ((alphaICW & 0xE0E00FFF) == 0x0000000) {
 					// arg1 in source A
 					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 					// arg2 in source B
@@ -3861,7 +3861,9 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			NV2A_SceneMateirals[1].Power = 0.0f;
 		}
 		extern xbox::hresult_xt WINAPI CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8 * pMaterial);
-		CxbxrImpl_SetMaterial(&NV2A_SceneMateirals[0]);
+		//CxbxrImpl_SetMaterial(&NV2A_SceneMateirals[0]);
+		//calls host api directly since in CxbxrImpl_SetMaterial() it updates the fixed mode vertex shader states directly which we have to distinguish from xbox api.
+		HRESULT hRet = g_pD3DDevice->SetMaterial(&NV2A_SceneMateirals[0]);
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
 		//set lights
 		int lightNum;
