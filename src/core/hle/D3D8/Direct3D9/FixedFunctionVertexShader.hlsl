@@ -351,9 +351,9 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
        // TODO move alongside the texture transformation when it stops angering the HLSL compiler
         const float componentCount = state.TexCoordComponentCount[texCoordIndex];
         if (componentCount == 1)
-            texCoord.yzw = float3(1, 1, 1);
+            texCoord.yzw = float3(0, 0, 1);
         if (componentCount == 2)
-            texCoord.zw = float2(1, 1);
+            texCoord.zw = float2(0, 1);
         if (componentCount == 3)
             texCoord.w = 1;
     }   // Generate texture coordinates
