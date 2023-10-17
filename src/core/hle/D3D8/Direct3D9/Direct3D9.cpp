@@ -10191,7 +10191,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetTile)
 
 //cache for data offset of vertex buffers created using XGSetVertexBufferHeader, this is for D3DDevice_SetRenderTarget() to check whether it should transfer data from host surface back to xbox.
 //32 cache size should be more than enough since this is a vertex buffer. let's see.
-std::array<UINT, 32>  g_XGVertexBufferData;
+std::array<UINT, 100>  g_XGVertexBufferData;
 
 // ******************************************************************
 // * patch: D3DDevice_GetMaterial
