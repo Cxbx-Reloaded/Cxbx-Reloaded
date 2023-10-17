@@ -83,17 +83,11 @@ extern void EmuKickOff(void);// in Direct3D9.cpp
 extern void EmuKickOffWait(void);// in Direct3D9.cpp
 extern bool g_nv2a_fifo_is_busy;// in Direct3D9.cpp
 extern bool is_pushbuffer_recording(void);
-/*
-{
-	//return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
-	extern xbox::dword_xt                  *g_pXbox_BeginPush_Buffer;
-	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
-}
-*/
 void backup_xbox_texture_state(void);
 void restore_xbox_texture_state(void);
 void pgraph_purge_dirty_and_state_flag(void);
 void D3D_draw_state_update(NV2AState *d);
+//this function is no longer used since we can't call pgraph method handler directly in xbox api side, or we would introduce memory corruption in pushbuffer.
 void EmuExecutePushBuffer
 (
 	xbox::X_D3DPushBuffer       *pPushBuffer,
@@ -247,11 +241,8 @@ void restore_xbox_texture_state(void)
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++)
 		g_pXbox_SetTexture[i] = pXbox_SetTexture_Backup[i];
 }
-//------------------------------------------------------------------------------
-// g_LODBias
-//
-// A simple log2 table...
 
+// log2 table 
 const float g_LODBias2x[] =
 {
 	0.000f, // 1.0
@@ -267,7 +258,6 @@ _declspec(naked) long FloatToLong(float f)
 	_asm
 	{
 		// Note that this does a truncate, not a floor:
-
 		cvttss2si eax, [esp + 4]
 		ret 4
 	}
@@ -309,8 +299,6 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 					if (GetXboxCommonResourceType(g_pNV2A_SetTexture[stage]->Common) != X_D3DCOMMON_TYPE_SURFACE)
 						NV2A_texture_stage_texture[stage].Parent = nullptr;
 					bTextureFound = true;
-						// can't return directly since we still have to process certain texture related TextureStates
-						//return;
 				}
 			    // if the texture is not found via the texture cache map, then we have to compose the texture via kelvin.
 				if(!bTextureFound){
@@ -415,25 +403,6 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				else if((maxAnisotropy > 0)
 					&&(magFilter== xbox::X_D3DTEXF_LINEAR)
 					&&(minFilter == xbox::X_D3DTEXF_LINEAR)){
-					//control0 |= NV097_SET_TEXTURE_CONTROL0_LOG_MAX_ANISO,maxAnisotropy;
-					/*
-					if ((minFilter == xbox::X_D3DTEXF_POINT) && (magFilter == xbox::X_D3DTEXF_POINT) && (maxAnisotropy == 0)) {//D3DTEXF_POINT=1
-						//(minFilter < D3DTEXF_ANISOTROPIC) && (magFilter < D3DTEXF_ANISOTROPIC) // D3DTEXF_ANISOTROPIC=3
-						//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, 0);
-						minFilter = 3;
-						magFilter = 3;
-				    }
-					else if ((minFilter == xbox::X_D3DTEXF_LINEAR) && (magFilter == xbox::X_D3DTEXF_LINEAR)&&(maxAnisotropy!=0)) {//D3DTEXF_LINEAR=2
-						//(minFilter < D3DTEXF_ANISOTROPIC) && (magFilter < D3DTEXF_ANISOTROPIC)
-						//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MAXANISOTROPY, maxAnisotropy + 1);
-						maxAnisotropy++;
-						minFilter = 3;
-						magFilter = 3;
-					}
-					else {
-						;//minFilter and magFilter untouched.
-					}
-					*/
 					maxAnisotropy++;
 					minFilter = xbox::X_D3DTEXF_ANISOTROPIC;
 					magFilter = xbox::X_D3DTEXF_ANISOTROPIC;
@@ -546,23 +515,16 @@ void pgraph_use_UserPixelShader(void)
 	// set pixel shader pointers
 	pNV2A_PixelShader = &NV2A_PixelShader;
 	NV2A_PixelShader.pPSDef = &NV2A_PSDef;
-	// set dirty flag
-	//NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 }
 
 void pgraph_use_FixedPixelShader(void)
 {
 	// set pixel shader pointer to null for fixed function pixel shader
 	pNV2A_PixelShader = nullptr;
-	// set dirty flag
-	//NV2A_DirtyFlags |= X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 }
 // called when SetModelVeiw(0,0,0) was called.
 void pgraph_use_Transform(void)
 {
-	//g_xbox_transform_ModelView_dirty[0] = false;
-	//g_xbox_transform_InverseModelView_dirty[0] =false;
-	//g_xbox_transform_Composite_dirty = false;
 	g_xbox_transform_use_DirectModelView = false;
 }
 
@@ -582,24 +544,15 @@ bool pgraph_is_ModelView_dirty(void)
 
 void pgraph_SetModelViewMatrixDirty(unsigned int index)
 {
-	//PGRAPHState *pg = &d->pgraph;
-	//D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_ModelView, (D3DXMATRIX *)&pg->KelvinPrimitive.SetModelViewMatrix0[0]);
 	g_NV2A_transform_ModelView_dirty[index] = true;
-	//g_xbox_transform_use_DirectModelView = true;
 }
 void pgraph_SetInverseModelViewMatrixDirty(unsigned int index)
 {
-	//PGRAPHState *pg = &d->pgraph;
-	//g_xbox_transform_InverseModelView = *(D3DMATRIX *)(&pg->KelvinPrimitive.SetInverseModelViewMatrix0[0]);
 	g_NV2A_transform_InverseModelView_dirty[index] = true;
-	//g_xbox_transform_use_DirectModelView = true;
 }
 void pgraph_SetCompositeMatrixDirty(void)
 {
-	//PGRAPHState *pg = &d->pgraph;
-	//D3DXMatrixTranspose((D3DXMATRIX *)&g_xbox_transform_Composite, (D3DXMATRIX *)&pg->KelvinPrimitive.SetCompositeMatrix[0]);
 	g_NV2A_transform_Composite_dirty = true;
-	//g_xbox_transform_use_DirectModelView = true;
 }
 // this function purges NV2A internal dirty flags and state flags. this shall be called before replaying a pushbuffer in order to clear any intermediate state left over by the HLE part running prior to the replay pushbuffer
 void pgraph_purge_dirty_and_state_flag(void)
@@ -614,8 +567,6 @@ void pgraph_purge_dirty_and_state_flag(void)
 	NV2A_ShaderOtherStageInputDirty = false;
 	//reset texture stage dirty flags
 	for(int i=0;i<4;i++){
-		// reset SetTexture dirty flags, unused, replaced by NV2A_DirtyFlags & X_D3DDIRTYFLAG_TEXTURE_STATE_0 << stage;
-		// NV2A_SetTexture_dirty[i] = false;
 		// reset bumpenv dirty flags
 		pg->bumpenv_dirty[i] = false;
 	}
@@ -634,7 +585,7 @@ void CxbxrImpl_CommonSetTextureBumpEnv(NV2AState *d)
 	unsigned int d3d_stage = (isUserMode) ? 1 : 0;
 	unsigned int nv2a_stage;
 	//for (nv2a_stage = 1; nv2a_stage <4; nv2a_stage++, d3d_stage++) {
-	// default d3d_stage to be the same as NV2A_stage, and sets xbox TextureStates in the same stage. and we also set bumpenv in stage 0.
+	//default d3d_stage to be the same as NV2A_stage, and sets xbox TextureStates in the same stage. and we also set bumpenv in stage 0.
 	d3d_stage = 0;
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		for (nv2a_stage = 0; nv2a_stage < 4; nv2a_stage++, d3d_stage++) {
@@ -685,14 +636,13 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 	// FIXME!! in user program, the actual stage used could exceed 4, Otogi uses stage 0~5. xbox d3d colorOP/args setting with stage might not comply with the compiled result of user program.
 	// there is not feasible way to reverse user program back to xbox d3d color OP.
 	// fortunately we only need these reversed info for fixed function pixel shader.
-	// in fixed mode, we only use stage 0~3, and when point sprite is enabled, only stage 3 will be used.
+	// in fixed mode, we only use stage 0~3, and when point sprite is enabled, combiner set to texture stage state 3 will be redirect to NV2A combiner stage 0, but the point sprite texture remains in stage 3.
 	int startStage = 0;
-	// FIXME!!! if we start with stage 3, what will happen with stage 0~2? 
-    // when point sprite is enabled, only stage 3 will be used. set colorOp in stage 0~2 disabled.
+	// FIXME!!! there is a stage over ride in Apply() of TextureStageStates class. When point sprite was enabled, it will override stage 0 with state from stage 3.
 	if (pg->KelvinPrimitive.SetPointSmoothEnable != 0)
 		startStage = 3;
 	int stage = startStage;
-	// xbox LazySetCombiners() start with both i and startStage as 3 when point sprite was enabled without updating i==0~2.
+	// xbox LazySetCombiners() start with both i and startStage as 3 when point sprite was enabled without updating i==0~2. // this is questionable since the actual combiner content suggest that when point sprite is enabled, only combiner stage 0 will be set.
 	// but even when startStage==3, the first updated stage in hardware still starts from 0; all unused combiner stages shall be zero out.
 	// i for hardware combiner stage index:ranges 0~8
 	// stage for xbox texture stage index: ranges 0~3, when point sprite was enabled, it starts with 3
@@ -733,16 +683,6 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 			NV2A_resultArg[i] = ((resultarg >> 4) & 0xF) == 0xC ? xbox::X_D3DTA_CURRENT : xbox::X_D3DTA_TEMP;
 			OPMode = OPMode_ADD;
 		}
-		/* // leave resultArg as defaul value, this happened when resultArg=0 and both colorOP and alphaOP = 0 which means both OPs are disabled.
-		else {
-			// we shouldn't be here because there is no feasible result register set.
-			assert(0);
-			// set resultArg to current.
-			NV2A_resultArg[i]== xbox::X_D3DTA_CURRENT;
-
-		}
-		*/
-
 		// set color OP with invalid value as flag to process later
 		NV2A_colorOP[i] = (colorICW == 0 && colorOCW == 0) ? xbox::X_D3DTOP_DISABLE : xbox::X_D3DTOP_LAST + 1;
 		// set alpha OP as X_D3DTOP_DISABLE
@@ -752,35 +692,21 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 		NV2A_alphaArg0[i] = 1;
 
 		// if start stage both colorOP and alphaOP are D3DTOP_DISABLE, then all stage after it shall be D3DTOP_DISABLE.
-		
 		if (stage == 0) {//todo: 0 or start stage?
 			// xbox convert stage 0 colorOP==X_D3DTOP_DISABLE to selec arg1 with arg1=current, and in stage 0, current==diffuse.
 			// FIXME!! if stage 0 was disabled, should we still setup the combiner with default values just like xbox d3d does instead of skipping it?
 			// and for PointSprite enabled, the combiner stage update starts at stage 3, not 0, so this condition will happen in stage 3. what shall we do with stage 0 and 1?
-			//if ((colorICW == 0x04200000 || colorICW == 0x00002004)&& (alphaICW == (0x14200000)) && (alphaOCW == colorOCW)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-			
 			if ((colorICW == 0x04200000)&& (pg->KelvinPrimitive.SetCombinerColorICW[1]==0)) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
 				NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 			}
 			
 			if ((alphaICW == (0x14200000))&& pg->KelvinPrimitive.SetCombinerAlphaICW[1]==0) {//(colorICW == (NV097_SET_COMBINER_COLOR_ICW_A_SOURCE_REG_4 | NV097_SET_COMBINER_COLOR_ICW_B_MAP_UNSIGNED_INVERT  )) && alphaICW == (colorICW | NV097_SET_COMBINER_COLOR_ICW_A_ALPHA )) { //,(0x10 & 0x20) << 23)
-				//NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
 			}
-			/*
-			if (colorICW == 0x04200000 && (alphaICW == (0x14200000)) && colorOCW == alphaOCW) {
-				//NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
-				NV2A_alphaOP[i] = xbox::X_D3DTOP_DISABLE;
-			}
-			*/
 		}
 		
-		// FIXME!!! can we really continue the loop when colorOP == X_D3DTOP_DISABLE?
-		if (NV2A_colorOP[i] == xbox::X_D3DTOP_DISABLE) {
-			;// NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, xbox::X_D3DTOP_DISABLE);
-		}
-		else {
+		if (NV2A_colorOP[i] != xbox::X_D3DTOP_DISABLE) {
 			// process color OP if it's not X_D3DTOP_LAST
 			if (NV2A_colorOP[i] > xbox::X_D3DTOP_LAST) {
 				// colorOP SelectARG1 , A == Arg1, B == 1, C == 0, D == 0
@@ -1000,28 +926,9 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_colorOP[i] = xbox::X_D3DTOP_DISABLE;
 					//FIXME!!! shall we continue loop here?
 				}
-				// xbox convert stage 0 colorOP==X_D3DTOP_DISABLE to selec arg1 with arg1=current, and in stage 0, current==diffuse.
-				/*
-				if (i == 0) {
-					if (NV2A_colorArg0[i] == xbox::X_D3DTA_DIFFUSE) {
-						NV2A_colorArg0[i] = xbox::X_D3DTA_CURRENT;
-						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg0[i]);
-					}
-					if (NV2A_colorArg1[i] == xbox::X_D3DTA_DIFFUSE) {
-						NV2A_colorArg1[i] = xbox::X_D3DTA_CURRENT;
-						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG1, NV2A_colorArg1[i]);
-					}
-					if (NV2A_colorArg2[i] == xbox::X_D3DTA_DIFFUSE) {
-						NV2A_colorArg2[i] = xbox::X_D3DTA_CURRENT;
-						NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG2, NV2A_colorArg2[i]);
-					}
-				}
-				*/
 			}
 		}
 		
-		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, NV2A_colorOP[i]);
-		// FIXME!!! can we really continue the loop when colorOP == X_D3DTOP_DISABLE?
 		/*
 		// invalid alphaOP list
 		D3DTOP_MODULATEALPHA_ADDCOLOR
@@ -1032,10 +939,7 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 		D3DTOP_BUMPENVMAP
 		D3DTOP_BUMPENVMAPLUMINANCE
 		*/
-		if (NV2A_alphaOP[i] == xbox::X_D3DTOP_DISABLE) {
-			;//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAOP, NV2A_alphaOP[i]);;
-		}
-		else {
+		if (NV2A_alphaOP[i] != xbox::X_D3DTOP_DISABLE) {
 			// now we process alphaOP
 			if (NV2A_alphaOP[i] > xbox::X_D3DTOP_LAST) {
 				// alphaOP SelectARG1  A=arg1, B=1
@@ -1058,8 +962,6 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_SELECTARG2;
 					// arg2 always source D
 					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);// FIXME!!!,  reg 4 is D3DTA_DIFFUSE :0, not sure this direct shift is correct or not6
-					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
-					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
 
 				}
@@ -1069,7 +971,6 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 					// arg2 in source B
 					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF);
-					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
 
@@ -1097,7 +998,6 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
-
 				}
 				// D3DTOP_SUBTRACT,  source A - D, A == Arg1, B == 1, C == -1, D == Arg2
 				else if ((alphaICW & 0xF0FFFFF0) == 0x10204010) {
@@ -1109,7 +1009,6 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
-
 				}
 				// D3DTOP_ADDSMOOTH, A+C*D, A=Arg1, B=1, C=1-Arg1, D=Arg2
 				// verify flags of A/B/C/D, B=reg0, reg(A)==reg(C)
@@ -1119,10 +1018,8 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 					// arg2 in source D
 					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
-					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
-
 				}
 				// D3DTOP_BLENDDIFFUSEALPHA/D3DTOP_BLENDCURRENTALPHA/D3DTOP_BLENDTEXTUREALPHA/D3DTOP_BLENDFACTORALPHA,
 				// A+C*D, A=Arg1, B=alpha(alphaOP-12) and CFLAG_ALPHAREPLICATE set , C=alpht(1-(alphaOP-12)) CFLAG_COMPLEMENT|CFLAG_ALPHAREPLICATE set , D=Arg2
@@ -1147,7 +1044,6 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
 					// arg2 in source D
 					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
-					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
 
@@ -1157,68 +1053,8 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_PREMODULATE;
 					// arg1 in source A
 					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
-					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG0, NV2A_alphaArg0[i]);
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG1, NV2A_alphaArg1[i]);
-					//NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
-
 				}
-				/* // colorOP only
-				// D3DTOP_MODULATEALPHA_ADDCOLOR, A=Arg1, B=1,  C =alpha(Arg1) CFLAG_ALPHAREPLICATE set,  D =Arg2
-				else if ((alphaICW & 0xF0FFF0F0 == 0x00201000) && (convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF))) {
-					NV2A_alphaOP[i] = xbox::X_D3DTOP_MODULATEALPHA_ADDCOLOR;
-					// arg1 in source A
-					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
-					// arg2 in source D
-					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
-				}
-				*/
-				/* // colorOP only
-				// D3DTOP_MODULATECOLOR_ADDALPHA, A=Arg1, B=Arg2,  C =alpha(Arg1) CFLAG_ALPHAREPLICATE set,  D =1
-				else if (((alphaICW & 0xF0F0F0FF) == 0x00001020) && (convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF))) {
-
-					NV2A_alphaOP[i] = xbox::X_D3DTOP_MODULATECOLOR_ADDALPHA;
-					// arg1 in source A
-					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
-					// arg2 in source D
-					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF);
-				}
-				*/
-				/* // colorOP only
-				// D3DTOP_MODULATEINVALPHA_ADDCOLOR, A=Arg1, B=1,  C =alpha(Arg1) CFLAG_ALPHAREPLICATE CFLAG_COMPLEMENT set,  D =Arg2
-				else if ((alphaICW & 0xF0FFF0F0 == 0x00203000) && (convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF))) {
-					NV2A_alphaOP[i] = xbox::X_D3DTOP_MODULATEINVALPHA_ADDCOLOR;
-					// arg1 in source A
-					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
-					// arg2 in source D
-					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW) & 0xF);
-				}
-				*/
-				/*
-				// D3DTOP_MODULATEINVCOLOR_ADDALPHA, A=Arg1, B=Arg2,  C =alpha(Arg1) CFLAG_ALPHAREPLICATE CFLAG_COMPLEMENT set,  D =1
-				else if (((alphaICW & 0xF0F0F0FF) == 0x00003020) && (convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 8) & 0xF))) {
-
-					NV2A_alphaOP[i] = xbox::X_D3DTOP_MODULATEINVCOLOR_ADDALPHA;
-					// arg1 in source A
-					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
-					// arg2 in source D
-					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF);
-				}
-				*/
-				/* // colorOP only
-				// D3DTOP_DOTPRODUCT3, A=Arg1 CFLAG_EXPANDNORMAL set, B=Arg2 CFLAG_EXPANDNORMAL set,  C and D default 0
-				// OCW |= NV097_SET_COMBINER_alpha_OCW_AB_DOT_ENABLE_TRUE| NV097_SET_COMBINER_alpha_OCW_CD_DOT_ENABLE_FALSE | NV097_SET_COMBINER_alpha_OCW_BLUETOALPHA_AB_AB_DST_ENABLE | NV097_SET_COMBINER_alpha_OCW_BLUETOALPHA_CD_DISABLE
-				// only for color OP
-				else if ((alphaICW & 0xF0F00000 == 0x40400000) && (alphaOCW & 0x00082000 == 0x82000)) {
-
-					NV2A_alphaOP[i] = xbox::X_D3DTOP_DOTPRODUCT3;
-					// arg1 in source A
-					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
-					// arg2 in source D
-					NV2A_alphaArg2[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 16) & 0xF);
-					// result arg in OCW AB dst
-					NV2A_resultArg[i] = convert_NV2A_combiner_reg_to_xbox_reg((colorOCW >> 4) & 0xF);
-				}
-				*/
 				// D3DTOP_LERP, A=Arg0,B=Arg1, C=(1-Arg0) CFLAG_COMPLEMENT set, D=Arg2
 				else if (((alphaICW & 0xF0F0F0F0) == 0x10103010) && ((alphaICW >> 24) & 0xF) == ((alphaICW >> 8) & 0xF)) {
 					NV2A_alphaOP[i] = xbox::X_D3DTOP_LERP;
@@ -1233,15 +1069,6 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 					NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAARG2, NV2A_alphaArg2[i]);
 
 				}
-				// D3DTOP_BUMPENVMAP/D3DTOP_BUMPENVMAPLUMINANCE, A=D3DTA_CURRENT,B=1, C and D default 0
-				/* // only for color OP
-				else if ((alphaICW & 0xF0FFFFFF == 0x00200000) && convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF) == xbox::X_D3DTA_CURRENT) {
-					// FIXME!!! we can't tell D3DTOP_BUMPENVMAP/D3DTOP_BUMPENVMAPLUMINANCE here!. need a way to tell the difference.
-					NV2A_alphaOP[i] = xbox::X_D3DTOP_BUMPENVMAP;
-					// arg1 in source A
-					NV2A_alphaArg1[i] = convert_NV2A_combiner_reg_to_xbox_reg((alphaICW >> 24) & 0xF);
-				}
-				*/
 				// D3DTOP_MULTIPLYADD, A=Arg0,B=1, C=Arg1, D=Arg2
 				// FIXME!!! condition too simple. so this case is arranged here almost in very last.
 				else if (((alphaICW & 0xF0FFF0F0) == 0x10201010)) {
@@ -1280,6 +1107,8 @@ void CxbxrImpl_LazySetCombiners(NV2AState *d)
 
 			}
 		}
+
+		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLOROP, NV2A_colorOP[i]);
 		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_ALPHAOP, NV2A_alphaOP[i]);
 
 		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORARG0, NV2A_colorArg0[i]);
@@ -1315,7 +1144,6 @@ void pgraph_ComposeViewport(NV2AState *d)
 
 	float fm11, fm22, fm33, fm41, fm42, fm43, clipNear, clipFar;
 	float SuperSampleScale, ScaleX, ScaleY, ScaleZ, ScreenSpaceOffsetX, ScreenSpaceOffsetY;
-	//float aaOffsetX, aaOffsetY;
 	
 	CxbxrGetSuperSampleScaleXY(d,ScaleX, ScaleY);
 	if (ScaleX <= 0)ScaleX = 1.0;
@@ -1363,9 +1191,7 @@ void pgraph_ComposeViewport(NV2AState *d)
 			if (clipNear != 0.0f) {
 				;// TODO:no feasible way to compose WNear and WFar, we need these two vars to calculate Projection Matrix.
 			}
-
 			//Viewport.MinZ = ScaleZ /(clipNear / ScaleZ); //was ScaleZ/(WNear *InverseWFar);
-			
 		}
 		else {
 			Viewport.MinZ = clipNear / ScaleZ;
@@ -1376,28 +1202,10 @@ void pgraph_ComposeViewport(NV2AState *d)
 		
 		Viewport.Width=rendertargetBaseWidth;
 		Viewport.Height = rendertargetBaseHeight;
-
-
 	}
 	else {
 		ScaleZ = clipFar;
 		g_ZScale = ScaleZ;
-
-		/*
-		Push4f(pPush, 
-                   NV097_SET_VIEWPORT_OFFSET(0), 
-                   fm41 + xViewport, 
-                   fm42 + yViewport, 
-                   fm43, 
-                   0.0f);
-        
-        Push4f(pPush + 5,
-                   NV097_SET_VIEWPORT_SCALE(0), 
-                   fm11, 
-                   fm22, 
-                   fm33, 
-                   0.0f);
-	    */
 		fm11 = pg->KelvinPrimitive.SetViewportScale[0];
 		fm22 = pg->KelvinPrimitive.SetViewportScale[1];
 		fm33 = pg->KelvinPrimitive.SetViewportScale[2];
@@ -1408,21 +1216,6 @@ void pgraph_ComposeViewport(NV2AState *d)
 		xViewport = pg->KelvinPrimitive.SetViewportOffset[0] - fm41;
 		yViewport = pg->KelvinPrimitive.SetViewportOffset[1] - fm42;
 
-		/*
-		    FLOAT fm11 = 0.5f * pDevice->m_Viewport.Width 
-                              * pDevice->m_SuperSampleScaleX;
-            FLOAT fm41 = fm11;
-        
-            FLOAT fm22 = -0.5f * pDevice->m_Viewport.Height 
-                               * pDevice->m_SuperSampleScaleY;
-            FLOAT fm42 = -fm22;
-        
-            FLOAT fm33 = pDevice->m_ZScale * (pDevice->m_Viewport.MaxZ - 
-                                              pDevice->m_Viewport.MinZ);
-            FLOAT fm43 = pDevice->m_ZScale * (pDevice->m_Viewport.MinZ);
-		*/
-
-
 		Viewport.MinZ = fm43 / ScaleZ;
 		Viewport.MaxZ = (fm33 / ScaleZ) + Viewport.MinZ;
 		Viewport.Height = fm22 / (-0.5*ScaleY);
@@ -1430,35 +1223,17 @@ void pgraph_ComposeViewport(NV2AState *d)
 
 
 	}
-	// if ((pDevice->m_StateFlags & STATE_MULTISAMPLING) &&	(D3D__RenderState[D3DRS_MULTISAMPLEANTIALIAS]))
-	// (pg->KelvinPrimitive.SetSurfaceFormat&(NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2| NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4))!=0 means we're in STATE_MULTISAMPLING
-	//if ((GET_MASK(pg->KelvinPrimitive.SetSurfaceFormat, NV097_SET_SURFACE_FORMAT_ANTI_ALIASING)&(NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2| NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4))!=0)
-		//&&(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS)!=0))
 	if((pg->KelvinPrimitive.SetAntiAliasingControl & NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE) !=0)
 	{
 		xViewport += 0.5f;
 		yViewport += 0.5f;
 	}
-	/*
-	FLOAT xViewport = pDevice->m_Viewport.X * pDevice->m_SuperSampleScaleX
-                    + pDevice->m_ScreenSpaceOffsetX;
-    FLOAT yViewport = pDevice->m_Viewport.Y * pDevice->m_SuperSampleScaleY
-                    + pDevice->m_ScreenSpaceOffsetY;
-	*/
 	Viewport.X = (xViewport - ScreenSpaceOffsetX) / ScaleX;
 	Viewport.Y = (yViewport - ScreenSpaceOffsetX) / ScaleY;
 	
 	extern xbox::X_D3DVIEWPORT8 HLE_Viewport;
 	extern xbox::X_D3DVIEWPORT8 g_Xbox_Viewport;
-	//if (Viewport.Width != HLE_Viewport.Width || Viewport.Height != Viewport.Height || Viewport.X != HLE_Viewport.X || Viewport.Y != HLE_Viewport.Y)
-	//if(refViewport.Width!=0x7FFFFFFF&& refViewport.Width!=0)
-	    //assert(Viewport.Width == refViewport.Width);
-	//if (refViewport.Height != 0x7FFFFFFF && refViewport.Height)
-	    //assert(Viewport.Height == refViewport.Height!=0);
-	//assert(Viewport.X == g_Xbox_Viewport.X);
-	//assert(Viewport.Y == g_Xbox_Viewport.Y);
 	CxbxrSetViewport(Viewport);
-	//CxbxrImpl_SetViewport(&Viewport);
 }
 
 void CxbxrImpl_LazySetPointParameters(NV2AState* d)
@@ -1475,10 +1250,6 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 		if (min < 0.0f)min = 0.0f;
 		delta = pg->KelvinPrimitive.SetPointParamsDeltaA;
 
-		//float hostMinSize, hostMaxSize;
-		//hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MIN, (DWORD*)&hostMinSize);
-		//hRet = g_pD3DDevice->GetRenderState(D3DRS_POINTSIZE_MAX, (DWORD*)&hostMaxSize);
-		// D3D__RenderState[D3DRS_POINTSCALEENABLE]== false, set host point size only, disable host point scale
 		if (pg->KelvinPrimitive.SetPointParamsEnable != 0) {
 			max = (min + delta);
 
@@ -1490,10 +1261,7 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 				// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
 				// D3DDevice_SetViewport() was patched and HLEed, here we only implement it when we're in RunPushbuffer().
 				if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-					
 					CxbxrGetViewport(Viewport);
-					// our viewport will be update to host later.
-					//CxbxrImpl_SetViewport(&Viewport);
 				}
 				NV2A_viewport_dirty = false;
 			}
@@ -1549,9 +1317,6 @@ void CxbxrImpl_GetViewportTransform(NV2AState* d)
 		// this only compose viewport from pgraph content 
 		pgraph_ComposeViewport(d);
 		// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
-		//xbox::X_D3DVIEWPORT8 Viewport;
-		//CxbxrGetViewport(Viewport);
-		//CxbxrImpl_SetViewport(&Viewport);
 	}
 	NV2A_viewport_dirty = false;
 
@@ -1626,9 +1391,9 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 	// SetModelView() call only be calaled when pg->KelvinPrimitive.SetSkinMode==0.
 	//
 	// SetModelview() sets:
-	// PushMatrixTransposed(pPush, NV097_SET_MODEL_VIEW_MATRIX0(0), pModelView);
-	// PushMatrixTransposed(pPush + 17, NV097_SET_COMPOSITE_MATRIX(0), pComposite);
-	// inverse modelview matrix is optional: PushInverseModelViewMatrix(pPush,NV097_SET_INVERSE_MODEL_VIEW_MATRIX0(0),pInverseModelView);
+	// PushMatrixTransposed(pPush, NV097_SET_MODEL_VIEW_MATRIX0, pModelView);
+	// PushMatrixTransposed(pPush + 17, NV097_SET_COMPOSITE_MATRIX, pComposite);
+	// inverse modelview matrix is optional: PushInverseModelViewMatrix(pPush,NV097_SET_INVERSE_MODEL_VIEW_MATRIX0,pInverseModelView);
 	// 
 	// when pg->KelvinPrimitive.SetSkinMode==0, it's still possible that SetTransform() was called.
 	// in this situation, LazySetsTransform() sets:
@@ -1663,13 +1428,12 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 	//calculate world matrix
 	D3DXMatrixMultiply((D3DXMATRIX*)&g_NV2A_DirectModelView_World, (D3DXMATRIX*)&g_NV2A_transform_ModelView, (D3DXMATRIX*)&g_NV2A_DirectModelView_InverseView);
 
-#if 1 //pgraph always used modelview matrix, only difference is 
+    //pgraph always used modelview matrix, only difference is 
 	if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_DIRECT_MODELVIEW) != 0) {
 		// transpose KelvinPrimitive transform back to xbox d3d transform
 		D3DXMatrixMultiply((D3DXMATRIX*)&g_NV2A_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_NV2A_transform_InverseModelView, (D3DXMATRIX*)&g_NV2A_transform_Composite);
 	}
 	else {
-#endif
 		// not in skinning mode
 		if (pg->KelvinPrimitive.SetSkinMode == 0) {
 			D3DXMatrixMultiply((D3DXMATRIX*)&g_NV2A_transform_ProjectionViewportTransform, (D3DXMATRIX*)&g_NV2A_transform_InverseModelView, (D3DXMATRIX*)&g_NV2A_transform_Composite);
@@ -1680,10 +1444,8 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 			g_NV2A_transform_ProjectionViewportTransform = g_NV2A_transform_Composite; 
 			D3DXMatrixMultiply((D3DXMATRIX*)&g_NV2A_transform_Composite, (D3DXMATRIX*)&g_NV2A_transform_ModelView, (D3DXMATRIX*)&g_NV2A_transform_ProjectionViewportTransform);
 			//we got every thing we need already. 
-			//CxbxrImpl_SetModelView(&g_NV2A_transform_ModelView, &g_NV2A_transform_InverseModelView, &g_NV2A_transform_Composite);
 		}
 	}
-
 	// compose xbox side matrix for use in d3d vertex shader update.
 	// update g_xbox_DirectModelView_InverseWorldViewTransposed for use in FVF mode vertex shader constant update routine
 	D3DXMatrixTranspose((D3DXMATRIX*)&g_NV2A_DirectModelView_InverseWorldViewTransposed, (D3DXMATRIX*)&g_NV2A_transform_InverseModelView);
@@ -1697,11 +1459,10 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 
 	D3DXMatrixMultiply((D3DXMATRIX*)&g_NV2A_DirectModelView_Projection, (D3DXMATRIX*)&g_NV2A_transform_ProjectionViewportTransform, (D3DXMATRIX*)&matInverseViewportTransform);
 	// xbox GetTransform() returns the same matrix content as we calculated above.
-	//CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE::X_D3DTS_PROJECTION, &g_NV2A_DirectModelView_Projection);
+	// CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE::X_D3DTS_PROJECTION, &g_NV2A_DirectModelView_Projection);
 	// clear pgraph transform matrix dirty flags.
 	for (int i = 0; i < 4; i++) {
 		// update InverseModelView matrix if only ModelView matrix is updated
-
 		if ((g_NV2A_transform_ModelView_dirty[i] == true) || (g_NV2A_transform_InverseModelView_dirty[i] == false)) {
 			D3DXMATRIX matModelViewTransposed;
 			// InverseModelView transform in KelvinPrim is the same as xbox d3d transform, not transposed.
@@ -1715,8 +1476,6 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 		g_NV2A_transform_InverseModelView_dirty[i] = false;
 	}
 	g_NV2A_transform_Composite_dirty = false;
-	//}
-
 	//these matrix will be used in UpdateFixedFunctionShaderLight(): view transform, and UpdateFixedFunctionVertexShaderState():  later in CxbxUpdateNativeD3DResources();
 }
 enum PS_TEXTUREMODES
@@ -1742,6 +1501,7 @@ enum PS_TEXTUREMODES
 	PS_TEXTUREMODES_DOT_RFLCT_SPEC_CONST = 0x12L, // - - - *
 	// 0x13-0x1f reserved
 };
+
 void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
@@ -1814,28 +1574,20 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		fogTableMode = D3DFOG_NONE;
 		if (fogMode == NV097_SET_FOG_MODE_V_EXP2) {
 			fogTableMode = D3DFOG_EXP2;
-			// scale =  -fogTableDensity * (1 / (2 * sqrt(5.5452)))
-			// scale = -fogTableDensity * (1.0f / (2.0f * 2.354824834249885f));
-			
 			fogTableDensity = -scale / 0.21233003f;
-
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 		}
 		else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
 			fogTableMode = D3DFOG_EXP;
-			// scale = -fogTableDensity * (1.0f / (2.0f * 5.5452f));
 			fogTableDensity = -scale/ 0.090168074;
-
-			//hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, fogTableDensity);
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 		}
 		else if (fogMode == NV097_SET_FOG_MODE_V_LINEAR) {
 			if (fogGenMode == NV097_SET_FOG_GEN_MODE_V_SPEC_ALPHA) {
 				fogTableMode = D3DFOG_NONE;
-				// RIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
+				// FIXME!!! need to set bD3DRS_RangeFogEnable here because fogGenMode is not correctly verified.
 				// D3DFOG_NONE : No fog effect, so set D3DRS_RangeFogEnable to false
-				//bD3DRS_RangeFogEnable = false;
+				// bD3DRS_RangeFogEnable = false;
 			}else{
 				fogTableMode = D3DFOG_LINEAR;
 				FLOAT fogTableLinearScale;
@@ -1843,14 +1595,10 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 				fogTableEnd = (bias - 1.0f) / fogTableLinearScale;
 				// MAX_FOG_SCALE == 8192.0f
 				if (fogTableLinearScale == 8192.0f) {
-					//fogTableStart== fogTableEnd
 					fogTableStart == fogTableEnd;
 				}
 				else {
-					// fogTableLinearScale = 1.0f / (fogTableEnd - fogTableStart);
-					// fogTableStart = fogTableEnd - 1.0f/fogTableLinearScale
 					fogTableStart = fogTableEnd - 1.0f / fogTableLinearScale;
-					
 				}
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGSTART, FtoDW(fogTableStart));
 				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGEND, FtoDW(fogTableEnd));
@@ -1859,17 +1607,12 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		}
 		
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, true);
-		/*
-		fogGenMode = D3D__RenderState[D3DRS_RANGEFOGENABLE]
-						 ? NV097_SET_FOG_GEN_MODE_V_RADIAL
-						 : NV097_SET_FOG_GEN_MODE_V_PLANAR;
-		*/
 		bD3DRS_RangeFogEnable = (fogGenMode == NV097_SET_FOG_GEN_MODE_V_RADIAL)? true:false;
 		
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_RANGEFOGENABLE, bD3DRS_RangeFogEnable);
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE, fogTableMode);
 		uint32_t fog_color = pg->KelvinPrimitive.SetFogColor;
-		/* Kelvin Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
+		/* Kelvin fog color channels are ABGR, PGRAPH channels are ARGB */
 		// fog color was handled by pgraph handler in NV097_SET_FOG_COLOR directly.
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color));
 		// D3D__RenderState[D3DRS_SPECULARENABLE] == true
@@ -1879,7 +1622,6 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		else {
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE, false);
 		}
-
 	}
 	else {
 		NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGENABLE, false);
@@ -1902,7 +1644,6 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 	for (stage = 0; stage < 4; stage++)
 	{
 		DWORD transformFlags;// = D3D__TextureState[stage]	[D3DTSS_TEXTURETRANSFORMFLAGS];
-		//Push1(pPush, NV097_SET_TEXTURE_MATRIX_ENABLE(stage), FALSE);
 		bool bTextureTransformEnable = pg->KelvinPrimitive.SetTextureMatrixEnable[stage];
         //default texCoordIndex
 		DWORD texCoordIndex = stage;
@@ -1912,8 +1653,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS, transformFlags);
 		}
 		else {
-			// Enable the transform:
-
+			// Enable the texture transform:
 			DWORD texCoord;// = D3D__TextureState[stage][D3DTSS_TEXCOORDINDEX];
 			//DWORD texgen;// = texCoord & 0xffff0000;
 			DWORD inCount,outCount;
@@ -1962,276 +1702,36 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 				inCount = 2;
 
 			// compose texgen 
-
 			// Initialize assuming D3DTSS_TCI_PASSTHRU:
 			DWORD needsInverseModelViewState = false;
 			DWORD mapToStage = stage;
 			DWORD texgenMode = NV097_SET_TEXGEN_S_DISABLE;
-
-
 			// Now specifically handle texgens:
 			extern unsigned int kelvin_to_xbox_map_texgen(uint32_t parameter);
 			texgen = kelvin_to_xbox_map_texgen(pg->KelvinPrimitive.SetTexgen[stage].S);
-            //  whether texture coordinate with (0, 0, 0, 1) to get a '1' into 'W' because we leave Q disabled.
+            // whether texture coordinate with (0, 0, 0, 1) to get a '1' into 'W' because we leave Q disabled.
 			// and SetTexgen[stage].s==t==r. reversed from D3DDevice_SetTextureState_TexCoordIndex()
 			
-			/*
-			if (pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].T && pg->KelvinPrimitive.SetTexgen[stage].S == pg->KelvinPrimitive.SetTexgen[stage].R &&
-				pg->KelvinPrimitive.SetVertexData4ub[xbox::X_D3DVSDE_TEXCOORD0 + stage] == 0xFF000000)
-			{
-				// Since texgen is enabled, we obviously don't need to read texture 
-				// coordinates from the vertex buffer for this stage.  Rather than 
-				// add special logic in the vertex buffer setup code, we simply make
-				// sure we map to this stage, and work under the assumption that
-				// the caller won't specify a texture coordinate for this stage in
-				// their FVF.
-
-				if (texgenMode == NV097_SET_TEXGEN_S_OBJECT_LINEAR || texgenMode == NV097_SET_TEXGEN_S_SPHERE_MAP)     //0x2401 0x2402           
-				{
-					texgen = D3DTSS_TCI_SPHEREMAP;//NV097_SET_TEXGEN_S_OBJECT_LINEAR and NV097_SET_TEXGEN_S_SPHERE_MAP are actually not supported in xbox. the D3DTSS_TCI_SPHEREMAP doesn't exist in xbox d3d api.
-				}
-				else if (texgenMode == NV097_SET_TEXGEN_S_REFLECTION_MAP)  //0x8511
-				{
-					texgen = D3DTSS_TCI_CAMERASPACEREFLECTIONVECTOR;
-					needsInverseModelViewState = true;
-				}
-				else if (texgenMode == NV097_SET_TEXGEN_S_NORMAL_MAP)//0x8512
-				{
-					texgen = D3DTSS_TCI_CAMERASPACENORMAL;
-					needsInverseModelViewState = true;
-				}
-				else if (texgenMode == NV097_SET_TEXGEN_S_EYE_LINEAR)   // 0x2400
-				{
-					texgen = D3DTSS_TCI_CAMERASPACEPOSITION;// = 0x20000
-				}
-			}
-			*/
 			// Handle the re-mapping of a stage: xbox converts remapping before it sets Kelvin's vertex attribute and stream. so no need to remap if we compose vertex attr from kelvin. check StateUp()/StateVb()
 			// NV097_SET_VERTEX_DATA_ARRAY_FORMAT and NV097_SET_VERTEX_DATA_ARRAY_OFFSET are update with slot mapping included. so we don't worry about it here.
 
 			// compose texCoordIndex with stage mapping index and texgen, set it to defaul when we compose vertex attr from kelvin.
-			//NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
+			// NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0 + stage, warp);
 
 			// todo: shall we compose the FVF pVertexShader->Dimensionality here with the inCount?
 			// inCount = (pVertexShader->Dimensionality 	>> (8 * index)) & 0xff;
 			// pVertexShader->Dimensionality|= incount<<  (8 * index);// index==stage here. the actual index shall be the render state WARP0~3 indexed with texture render state D3DTSS_TEXCOORDINDEX. but we can't reverse both variables with the inCount value directly.
 			// so we arrume for each texture stage D3DTSS_TEXCOORDINDEX==stage, and each stage indexes WARP(stage). this is xbox default setting.
 			NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS, transformFlags);
-			//extern FixedFunctionVertexShaderState ffShaderState;
-			//ffShaderState.Transforms.Texture[] are updated in UpdateFixedFunctionVertexShaderState() with the same code below.
-			//memcpy(&ffShaderState.Transforms.Texture[stage], &pg->KelvinPrimitive.SetTextureMatrix[0], sizeof(float) * 16);
-
-
-			// todo:set transform dirty if needed
-			//if (!(TexGenInverseNeeded) && (needsInverseModelViewState))
-			//    NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TRANSFORM;
-
-			//TexGenInverseNeeded &= ~(1 << Stage);
-			//TexGenInverseNeeded |= (needsInverseModelViewState << stage);
 		}
 		texCoordIndex = (texgen & 0xFFFF0000) | stage;
 		NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX, texCoordIndex);
 		//reversed codes for reference. check Otogi for LazySetTextureTransform()
-#if 0
-			/*
-			if (texgen)
-			{
-				inCount = 3;
-			}
-			else
-			{
-				DWORD index = texCoord & 0xffff;
-
-				// If the index is invalid, just use (0, 0):
-
-				inCount = (pDevice->m_pVertexShader->Dimensionality
-					>> (8 * index)) & 0xff;
-
-				if (inCount == 0)
-					inCount = 2;// inCount is either 2 or 3, always. (s,t), or (s,t,r)
-				/* inCount is the vertex attribute for the texture coordinates (s,t,r).. of texture used in this stage, which also presented in
-				vertex_attribute.Slot[i + SLOT_TEXTURE0].SizeAndType
-				= DRF_NUMFAST(097, _SET_VERTEX_DATA_ARRAY_FORMAT, _SIZE, count)
-					| DRF_DEF(097, _SET_VERTEX_DATA_ARRAY_FORMAT, _TYPE, _F);
-				So we check NV097_SET_VERTEX_DATA_ARRAY_FORMAT for vertex_attribute->count, vertex attribute SLOT_TEXTURE0~3 correspondes to texture number 0~3, it's also texture stage number because xbox API requires texture stage 0 to use texture 0, stage 1 to use texture 1, etc.
-				and we can compose the vertex shader's Dimensionality.
-
-				outCount is the actual texture coordinate counts of the texture used in this stage, (s,t,r,q)...
-				if (transformFlags & D3DTTFF_PROJECTED) != 0), then the outCount includes one projected coordinate "q". if the texture coordinate uses S,T, the outCount shall be 2, but is D3DTTFF_PROJECTED(0x100) was ORed in the transformFlags, then the outCount shall add 1 and become 3.
-				when D3DTTFF_PROJECTED was set, the outPut coordinate should be devided by the projected value "q". so the output would become (s/q, t/q, r/q).
-		    */
-			/*
-				DWORD outCount = transformFlags & 0xff;
-				
-
-				DWORD matrixType = (inCount << 8) |
-					(outCount << 4) |
-					((transformFlags & D3DTTFF_PROJECTED) != 0);
-
-				D3DMATRIX* pMatrix
-					= &pDevice->m_Transform[D3DTS_TEXTURE0 + stage];
-
-				Push1(pPush, NV097_SET_TEXTURE_MATRIX_ENABLE(stage), TRUE);
-
-				PushCount(pPush + 2,
-					NV097_SET_TEXTURE_MATRIX0(0) + stage * 0x40,
-					16);
-
-				D3DMATRIX* pDst = (D3DMATRIX*)(pPush + 3);
-
-				pPush += 19;
-
-				// The way we emit the matrix varies widely because of D3D.
-				//
-				// A. When there are two incoming coordinates, we must move 
-				//    the 3rd matrix row to the fourth, because D3D expects 
-				//    the appended q to sit in the third slot, whereas in 
-				//    the hardware, it sits in the 4th.
-				// B. When the matrix is projective and there are only 3 
-				//    outgoing coordinates (including q) we must shift the 
-				//    value in the third outgoing slot (where D3D puts q) to 
-				//    the 4th slot (where the hardware wants it) by moving the 
-				//    3rd column to the 4th
-				// C. When the matrix is non-projective, it becomes our job to 
-				//    override the relevant row of the matrix, forcing the 
-				//    outgoing q to 1.0
-				//
-				// Finally, when all is said and done, the matrix must be 
-				// "transposed" to change it from D3D style to hardware style.
-				// input vector will always be added a q coordinate as 1.0f, so if input cout==2, there will be a 3rd cooridnate q set with 1.0.
-				// output will always has a q coordinate, when there is no projected output, the output q will alwaays be 1.0.
-				// input vector(s,t,r,q), output vector(s,t,r,q). hardware matrix is transposed.
-				// from the actual NV097_SET_TEXTURE_MATRIX(stage), we could compose the outCount and whether D3DTTFF_PROJECTED was set or not.
-				//
-
-				switch (matrixType)
-				{
-				case 0x220:
-					// (s,t,1.0) in, (s,t,1.0) out
-					SetTextureTransformMatrixType220(pDst, pMatrix);
-
-					
-					e
-					FORCEINLINE VOID SetTextureTransformMatrixType220(
-						D3DMATRIX * pDst,
-						CONST D3DMATRIX * pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
-						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
-						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
-					}
-					break;
-				case 0x230:
-					// (s,t,1.0) in, (s,t,r,1.0) out
-					SetTextureTransformMatrixType230(pDst, pMatrix);
-
-					FORCEINLINE VOID SetTextureTransformMatrixType230(
-						D3DMATRIX* pDst,
-						CONST D3DMATRIX* pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
-						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, 0.0f, pMatrix->_33);
-						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
-					}
-					break;
-				case 0x231:
-					// (s,t,1.0) in, (s,t,q) out
-					SetTextureTransformMatrixType231(pDst, pMatrix);
-
-					FORCEINLINE VOID SetTextureTransformMatrixType231(
-						D3DMATRIX* pDst,
-						CONST D3DMATRIX* pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
-						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
-						Set4f(&pDst->m[3][0], pMatrix->_13, pMatrix->_23, 0.0f, pMatrix->_33);
-					}
-					break;
-				case 0x241:
-					// (s,t,1.0) in, (s,t,r,q) out
-					SetTextureTransformMatrixType241(pDst, pMatrix);
-
-					FORCEINLINE VOID SetTextureTransformMatrixType241(
-						D3DMATRIX* pDst,
-						CONST D3DMATRIX* pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, 0.0f, pMatrix->_31);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, 0.0f, pMatrix->_32);
-						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, 0.0f, pMatrix->_33);
-						Set4f(&pDst->m[3][0], pMatrix->_14, pMatrix->_24, 0.0f, pMatrix->_34);
-					}
-					break;
-				case 0x320:
-					// (s,t,r,1.0) in, (s,t,1.0) out
-					SetTextureTransformMatrixType320(pDst, pMatrix);
-
-					FORCEINLINE VOID SetTextureTransformMatrixType320(
-						D3DMATRIX* pDst,
-						CONST D3DMATRIX* pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
-						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
-						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
-					}
-					break;
-				case 0x330:
-					// (s,t,r,1.0) in, (s,t,r,1.0) out
-					SetTextureTransformMatrixType330(pDst, pMatrix);
-
-					FORCEINLINE VOID SetTextureTransformMatrixType330(
-						D3DMATRIX* pDst,
-						CONST D3DMATRIX* pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
-						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, pMatrix->_33, pMatrix->_43);
-						Set4f(&pDst->m[3][0], 0.0f, 0.0f, 0.0f, 1.0f);
-					}
-					break;
-				case 0x331:
-					// (s,t,r,1.0) in, (s,t,q) out
-					SetTextureTransformMatrixType331(pDst, pMatrix);
-
-					FORCEINLINE VOID SetTextureTransformMatrixType331(
-						D3DMATRIX* pDst,
-						CONST D3DMATRIX* pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
-						Set4f(&pDst->m[2][0], 0.0f, 0.0f, 0.0f, 0.0f);
-						Set4f(&pDst->m[3][0], pMatrix->_13, pMatrix->_23, pMatrix->_33, pMatrix->_43);
-					}
-					break;
-				case 0x341:
-					// (s,t,r,1.0) in, (s,t,r,q) out
-					SetTextureTransformMatrixType341(pDst, pMatrix);
-
-					FORCEINLINE VOID SetTextureTransformMatrixType341(
-						D3DMATRIX* pDst,
-						CONST D3DMATRIX* pMatrix)
-					{
-						Set4f(&pDst->m[0][0], pMatrix->_11, pMatrix->_21, pMatrix->_31, pMatrix->_41);
-						Set4f(&pDst->m[1][0], pMatrix->_12, pMatrix->_22, pMatrix->_32, pMatrix->_42);
-						Set4f(&pDst->m[2][0], pMatrix->_13, pMatrix->_23, pMatrix->_33, pMatrix->_43);
-						Set4f(&pDst->m[3][0], pMatrix->_14, pMatrix->_24, pMatrix->_34, pMatrix->_44);
-					}
-					break;
-				default:
-					;//("Unhandled texture transform type\n");
-				}
-				*/
-#endif
-		
-	}// stage for loop
+	}
 	return;
-
 }
-// scale a 3-component vector
 
+// scale a 3-component vector
 void ScaleVector3(D3DVECTOR* out, CONST D3DVECTOR* v1, FLOAT scale)
 {
 	out->x = scale * v1->x;
@@ -2239,10 +1739,7 @@ void ScaleVector3(D3DVECTOR* out, CONST D3DVECTOR* v1, FLOAT scale)
 	out->z = scale * v1->z;
 }
 
-//---------------------------------------------------------------------------
-
 // add two 3-component vectors
-
 void AddVectors3(D3DVECTOR* out, CONST D3DVECTOR* v1, CONST D3DVECTOR* v2)
 {
 	out->x = v1->x + v2->x;
@@ -2251,25 +1748,20 @@ void AddVectors3(D3DVECTOR* out, CONST D3DVECTOR* v1, CONST D3DVECTOR* v2)
 }
 
 // substract two 3-component vectors
-
 void SubVectors3(D3DVECTOR* out, CONST D3DVECTOR* v1, CONST D3DVECTOR* v2)
 {
 	out->x = v1->x - v2->x;
 	out->y = v1->y - v2->y;
 	out->z = v1->z - v2->z;
 }
-//---------------------------------------------------------------------------
 
 // return the square of the magnitude of a 3-component vectors
-
 FLOAT SquareMagnitude3(CONST D3DVECTOR* v)
 {
 	return (v->x * v->x + v->y * v->y + v->z * v->z);
 }
-//---------------------------------------------------------------------------
 
 // returns  1 / sqrt(x)
-
 static float _0_47 = 0.47f;
 static float _1_47 = 1.47f;
 
@@ -2308,20 +1800,8 @@ float JBInvSqrt(const float x)
 
 	return (r);
 }
-//---------------------------------------------------------------------------
 
-//  1/x = 1 / sqrt(x*x) plus sign bit
-
-float nvInv(float x)
-{
-	DWORD dwSign = *(DWORD*)&x & 0x80000000;
-	float invSqRt = JBInvSqrt(x * x);
-	DWORD dwInv = dwSign | *(DWORD*)&invSqRt;
-	return (*(float*)(&dwInv));
-}
-//---------------------------------------------------------------------------
 // normalize a 3-component vector
-
 void NormalizeVector3(D3DVECTOR* v)
 {
 	FLOAT invmag = JBInvSqrt(SquareMagnitude3(v));
@@ -2330,161 +1810,7 @@ void NormalizeVector3(D3DVECTOR* v)
 	v->y *= invmag;
 	v->z *= invmag;
 }
-const float g_Lar[32] =
-{
-	 0.000000f,  // error=0.687808
-	-0.023353f,  // error=0.070106
-	-0.095120f,  // error=0.010402
-	-0.170208f,  // error=0.016597
-	-0.251038f,  // error=0.021605
-	-0.336208f,  // error=0.025186
-	-0.421539f,  // error=0.027635
-	-0.503634f,  // error=0.029262
-	-0.579592f,  // error=0.030311
-	-0.647660f,  // error=0.030994
-	-0.708580f,  // error=0.031427
-	-0.760208f,  // error=0.031702
-	-0.803673f,  // error=0.031889
-	-0.840165f,  // error=0.031995
-	-0.871344f,  // error=0.032067
-	-0.896105f,  // error=0.032105
-	-0.916457f,  // error=0.032139
-	-0.933262f,  // error=0.032165
-	-0.946507f,  // error=0.032173
-	-0.957755f,  // error=0.032285
-	-0.966165f,  // error=0.032230
-	-0.972848f,  // error=0.032189
-	-0.978413f,  // error=0.032191
-	-0.983217f,  // error=0.032718
-	-0.986471f,  // error=0.032289
-	-0.988778f,  // error=0.033091
-	-0.991837f,  // error=0.035067
-	-0.993452f,  // error=0.034156
-	-0.994839f,  // error=0.034863
-	-0.995434f,  // error=0.034785
-	-0.996690f,  // error=0.033426
-	-1.000000f
-};
 
-const float g_Mar[32] =
-{
-	-0.494592f,  // error=0.687808
-	-0.494592f,  // error=0.070106
-	-0.570775f,  // error=0.010402
-	-0.855843f,  // error=0.016597
-	-1.152452f,  // error=0.021605
-	-1.436778f,  // error=0.025186
-	-1.705918f,  // error=0.027635
-	-1.948316f,  // error=0.029262
-	-2.167573f,  // error=0.030311
-	-2.361987f,  // error=0.030994
-	-2.512236f,  // error=0.031427
-	-2.652873f,  // error=0.031702
-	-2.781295f,  // error=0.031889
-	-2.890906f,  // error=0.031995
-	-2.938739f,  // error=0.032067
-	-3.017491f,  // error=0.032105
-	-3.077762f,  // error=0.032139
-	-3.099087f,  // error=0.032165
-	-3.144977f,  // error=0.032173
-	-3.100986f,  // error=0.032285
-	-3.151608f,  // error=0.032230
-	-3.212636f,  // error=0.032189
-	-3.219419f,  // error=0.032191
-	-3.079402f,  // error=0.032718
-	-3.174922f,  // error=0.032289
-	-3.469706f,  // error=0.033091
-	-2.895668f,  // error=0.035067
-	-2.959919f,  // error=0.034156
-	-2.917150f,  // error=0.034863
-	-3.600301f,  // error=0.034785
-	-3.024990f,  // error=0.033426
-	-3.300000f
-};
-const float LOG_64F = 4.15888308336f;
-const float INV_LOG_2F = 1.44269504089f;
-
-// Exponent
-float Exp(float e)
-{
-	WORD istat;
-	WORD fstat;
-
-	_asm
-	{
-		fld[e]
-
-		xor ch, ch; result is always positive
-		fldl2e
-		fmul; convert log base e to log base 2
-
-		fld	st(0); copy TOS
-		frndint; near round to integer
-		ftst
-		fstsw[istat]; save integer part status
-		fwait
-		fxch; NOS gets integer part
-		fsub	st, st(1); TOS gets fraction
-		ftst
-		fstsw[fstat]; save fraction part status
-		fabs
-		f2xm1
-
-		fld1
-		fadd
-		test[fstat + 1], 1; if fraction > 0 (TOS > 0)
-		jz	ExpNoInvert;	 bypass 2 ^ x invert
-
-		fld1
-		fdivrp	st(1), st(0)
-
-		ExpNoInvert:
-		test[istat + 1], 040h; if integer part was zero
-			jnz	ExpScaled;	 bypass scaling to avoid bug
-			fscale; now TOS = 2 ^ x
-
-			ExpScaled :
-		or ch, ch; check for negate flag
-			jz	expret
-			fchs; negate result(negreal ^ odd integer)
-
-			expret:
-		fxch
-			fstp st(0)
-	}
-}
-// Log
-_declspec(naked) float Log(float e)
-{
-
-	_asm
-	{
-		fldln2
-		fld[esp + 4]
-		fyl2x
-		ret 4
-	}
-}
-
-void Explut(float n, float* l, float* m)
-{
-	float idx, f, a;
-	long  i;
-
-	if (n < 1.f) {
-		a = (n == 0.f) ? 0.f : (float)Exp(-LOG_64F / n);
-		*l = -a;
-		*m = 1.f - (1.f - a) * n;
-	}
-	else {
-		idx = 3.f * (float)Log(n) * INV_LOG_2F;
-		i = FloatToLong(idx);
-		f = idx - i;
-
-		*l = g_Lar[i] * (1.f - f) + g_Lar[i + 1] * f;
-		*m = g_Mar[i] * (1.f - f) + g_Mar[i + 1] * f;
-	}
-}
 void SetSceneAmbientAndMaterialEmission(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
@@ -2495,7 +1821,6 @@ void SetSceneAmbientAndMaterialEmission(NV2AState* d)
 	DWORD ambient;
 
 	//Material.Diffuse.a=alpha;
-
 	DWORD colorMaterial = pg->KelvinPrimitive.SetColorMaterial;//NV097_SET_COLOR_MATERIAL, colorMaterial  // 0x298
 	// Set scene ambient color,
 	extern D3DCOLOR FromVector(D3DCOLORVALUE v);
@@ -2519,26 +1844,6 @@ void SetSceneAmbientAndMaterialEmission(NV2AState* d)
 	NV2A_SceneMateirals[1].Emissive = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_BACK_MATERIAL_EMISSION
 	NV2A_SceneMateirals[1].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_BACK_MATERIAL_EMISSION
 
-	/*
-	NV2A_SceneAmbient[0] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetSceneAmbientColor);//NV097_SET_SCENE_AMBIENT_COLOR
-	NV2A_SceneAmbient[0].a = 1.0;
-	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_AMBIENT, FromVector(NV2A_SceneAmbient[0]));
-
-	NV2A_SceneAmbient[1] = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackSceneAmbientColor);//NV097_SET_BACK_SCENE_AMBIENT_COLOR
-	NV2A_SceneAmbient[1].a = 1.0;
-	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
-    */
-
-/*
-*
-DWORD i = D3D__RenderState[D3DRS_TWOSIDEDLIGHTING];
-DWORD ambient = D3D__RenderState[D3DRS_AMBIENT];
-D3DMATERIAL8* pMaterial = &pDevice->m_Material;
-
-PushCount(pPush, NV097_SET_SCENE_AMBIENT_COLOR(0), 3);
-PushCount(pPush + 4, NV097_SET_MATERIAL_EMISSION(0), 3);
-PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
-*/
 	float colorScale = 2.1;
 	emissiveR = pg->KelvinPrimitive.SetMaterialEmission[0];
 	emissiveG = pg->KelvinPrimitive.SetMaterialEmission[1];
@@ -2552,22 +1857,11 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 
 	if ((colorMaterial & 0xC) !=0)//		NV097_SET_COLOR_MATERIAL_AMBIENT_MATERIAL bit 3:2
 	{
-		/*
-		 // Ambient is being pulled from the vertex, use D3DMCS_COLOR1 or D3DMCS_COLOR2 as material ambient source:
-
-			emissiveR = ambientR;
-			emissiveG = ambientG;
-			emissiveB = ambientB;
-
-			ambientR = pMaterial->Emissive.r;
-			ambientG = pMaterial->Emissive.g;
-			ambientB = pMaterial->Emissive.b;
-		*/
 		NV2A_SceneMateirals[0].Emissive.r= ambientR;
 		NV2A_SceneMateirals[0].Emissive.g= ambientG;
 		NV2A_SceneMateirals[0].Emissive.b= ambientB;
 		NV2A_SceneMateirals[0].Emissive.a = 1.0f;
-		// value of material ambient color is don't care since the color source is from default color.
+
 		NV2A_SceneMateirals[0].Ambient.r = 1.0f;
 		NV2A_SceneMateirals[0].Ambient.g = 1.0f;
 		NV2A_SceneMateirals[0].Ambient.b = 1.0f;
@@ -2579,26 +1873,12 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 	}
 	else if ((colorMaterial &0x3)!=0) //NV097_SET_COLOR_MATERIAL_EMISSIVE_MATERIAL bit 1:0
 	{
-		/*
-		// Emissive is being pulled from the vertex, and ambient is not:
 
-		ambientR = ambientR * pMaterial->Ambient.r;
-		ambientG = ambientG * pMaterial->Ambient.g;
-		ambientB = ambientB * pMaterial->Ambient.b;
-
-		emissiveR = 1.0f;
-		emissiveG = 1.0f;
-		emissiveB = 1.0f;
-		*/
-		// value of material emissive color is don't care since the color source is from default color.
 		NV2A_SceneMateirals[0].Emissive.r = 1.0f;
 		NV2A_SceneMateirals[0].Emissive.g = 1.0f;
 		NV2A_SceneMateirals[0].Emissive.b = 1.0f;
 		NV2A_SceneMateirals[0].Emissive.a = 1.0f;
 
-		//ambientR = ambientR / NV2A_SceneMateirals[0].Ambient.r;
-		//ambientG = ambientG / NV2A_SceneMateirals[0].Ambient.g;
-		//ambientB = ambientB / NV2A_SceneMateirals[0].Ambient.b;
         //hack:set material ambient to 1.0, and leave all ambientR/G/B to scene ambient.
 		//todo:figure out either to leave ambientR/G/b to scene ambient or material enbient is better.
 		NV2A_SceneMateirals[0].Ambient.r = 1.0f;
@@ -2608,17 +1888,6 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 	}
 	else
 	{
-		/*
-		 // Neither ambient nor emissive is being pulled from the vertex:
-
-			ambientR = (ambientR * pMaterial->Ambient.r) + pMaterial->Emissive.r;
-			ambientG = (ambientG * pMaterial->Ambient.g) + pMaterial->Emissive.g;
-			ambientB = (ambientB * pMaterial->Ambient.b) + pMaterial->Emissive.b;
-
-			emissiveR = 0.0f;
-			emissiveG = 0.0f;
-			emissiveB = 0.0f;
-		*/
 		//hack:set material ambient to 0.0, and leave all ambientR/G/B to scene ambient.
 		//todo:figure out either to leave ambientR/G/b to scene ambient or material enbient is better.
 		NV2A_SceneMateirals[0].Emissive.r = 0.0f;
@@ -2632,11 +1901,6 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 		NV2A_SceneMateirals[0].Ambient.g = 1.0f;
 		NV2A_SceneMateirals[0].Ambient.b = 1.0f;
 		NV2A_SceneMateirals[0].Ambient.a = 1.0f;
-		/*
-		ambientR = (ambientR - NV2A_SceneMateirals[0].Emissive.r) / NV2A_SceneMateirals[0].Ambient.r;
-		ambientG = (ambientG - NV2A_SceneMateirals[0].Emissive.g) / NV2A_SceneMateirals[0].Ambient.g;
-		ambientB = (ambientB - NV2A_SceneMateirals[0].Emissive.b) / NV2A_SceneMateirals[0].Ambient.b;
-		*/
 	}
 	NV2A_SceneAmbient[0].r = colorScale * ambientR;//NV097_SET_SCENE_AMBIENT_COLOR
 	NV2A_SceneAmbient[0].g = colorScale * ambientG;
@@ -2661,22 +1925,11 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 
 	if ((colorMaterial & 0xC) != 0)//		NV097_SET_COLOR_MATERIAL_AMBIENT_MATERIAL bit 3:2
 	{
-		/*
-		 // Ambient is being pulled from the vertex, use D3DMCS_COLOR1 or D3DMCS_COLOR2 as material ambient source:
-
-			emissiveR = ambientR;
-			emissiveG = ambientG;
-			emissiveB = ambientB;
-
-			ambientR = pMaterial->Emissive.r;
-			ambientG = pMaterial->Emissive.g;
-			ambientB = pMaterial->Emissive.b;
-		*/
 		NV2A_SceneMateirals[1].Emissive.r = ambientR;
 		NV2A_SceneMateirals[1].Emissive.g = ambientG;
 		NV2A_SceneMateirals[1].Emissive.b = ambientB;
 		NV2A_SceneMateirals[1].Emissive.a = 1.0f;
-		// value of material ambient color is don't care since the color source is from default color.
+
 		NV2A_SceneMateirals[1].Ambient.r = 1.0f;
 		NV2A_SceneMateirals[1].Ambient.g = 1.0f;
 		NV2A_SceneMateirals[1].Ambient.b = 1.0f;
@@ -2688,26 +1941,12 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 	}
 	else if ((colorMaterial & 0x3) != 0) //NV097_SET_COLOR_MATERIAL_EMISSIVE_MATERIAL bit 1:0
 	{
-		/*
-		// Emissive is being pulled from the vertex, and ambient is not:
-
-		ambientR = ambientR * pMaterial->Ambient.r;
-		ambientG = ambientG * pMaterial->Ambient.g;
-		ambientB = ambientB * pMaterial->Ambient.b;
-
-		emissiveR = 1.0f;
-		emissiveG = 1.0f;
-		emissiveB = 1.0f;
-		*/
 		// value of material emissive color is don't care since the color source is from default color.
 		NV2A_SceneMateirals[1].Emissive.r = 1.0f;
 		NV2A_SceneMateirals[1].Emissive.g = 1.0f;
 		NV2A_SceneMateirals[1].Emissive.b = 1.0f;
 		NV2A_SceneMateirals[1].Emissive.a = 1.0f;
 
-		//ambientR = ambientR / NV2A_SceneMateirals[0].Ambient.r;
-		//ambientG = ambientG / NV2A_SceneMateirals[0].Ambient.g;
-		//ambientB = ambientB / NV2A_SceneMateirals[0].Ambient.b;
 		//hack:set material ambient to 1.0, and leave all ambientR/G/B to scene ambient.
 		//todo:figure out either to leave ambientR/G/b to scene ambient or material enbient is better.
 		NV2A_SceneMateirals[1].Ambient.r = 1.0f;
@@ -2717,17 +1956,6 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 	}
 	else
 	{
-		/*
-		 // Neither ambient nor emissive is being pulled from the vertex:
-
-			ambientR = (ambientR * pMaterial->Ambient.r) + pMaterial->Emissive.r;
-			ambientG = (ambientG * pMaterial->Ambient.g) + pMaterial->Emissive.g;
-			ambientB = (ambientB * pMaterial->Ambient.b) + pMaterial->Emissive.b;
-
-			emissiveR = 0.0f;
-			emissiveG = 0.0f;
-			emissiveB = 0.0f;
-		*/
 		//hack:set material ambient to 0.0, and leave all ambientR/G/B to scene ambient.
 		//todo:figure out either to leave ambientR/G/b to scene ambient or material enbient is better.
 		NV2A_SceneMateirals[1].Emissive.r = 0.0f;
@@ -2741,25 +1969,19 @@ PushCount(pPush + 8, NV097_SET_MATERIAL_ALPHA, 1);
 		NV2A_SceneMateirals[1].Ambient.g = 1.0f;
 		NV2A_SceneMateirals[1].Ambient.b = 1.0f;
 		NV2A_SceneMateirals[1].Ambient.a = 1.0f;
-		/*
-		ambientR = (ambientR - NV2A_SceneMateirals[0].Emissive.r) / NV2A_SceneMateirals[0].Ambient.r;
-		ambientG = (ambientG - NV2A_SceneMateirals[0].Emissive.g) / NV2A_SceneMateirals[0].Ambient.g;
-		ambientB = (ambientB - NV2A_SceneMateirals[0].Emissive.b) / NV2A_SceneMateirals[0].Ambient.b;
-		*/
 	}
 	NV2A_SceneAmbient[1].r = colorScale * ambientR;//NV097_SET_SCENE_AMBIENT_COLOR
 	NV2A_SceneAmbient[1].g = colorScale * ambientG;
 	NV2A_SceneAmbient[1].b = colorScale * ambientB;
 	NV2A_SceneAmbient[1].a = alpha;
 	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_BACKAMBIENT, FromVector(NV2A_SceneAmbient[1]));
-
 }
 
 struct ReverseExpluteInfo
 {
 	float Power;
 	float N;
-	float N1;
+	float N1;//N1 could be removed since we're only look up Power with N.
 };
 // specular power look up table, look up power via N or N1. This table is generated by stepping Power from 0 to 100 in 0.1 and calculate N/N1.
 // todo: N1 is not used in look up, we could remove N1 from 
@@ -3771,7 +2993,7 @@ ReverseExpluteInfo g_ReverseExpluteTable[]=
 { 	100.099	, 	3.18274	, 	3.16553	},
 #endif
 };
-
+// todo: this function is not tested yet. need test sample.
 void SetSpecularPower(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
@@ -3859,8 +3081,8 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 	DWORD lightEnableMask = 0;
 	bool bLightintEnable = pg->KelvinPrimitive.SetLightingEnable != false;
 	//xbox sets D3DRS_LightEnable to false when vertex shader is not fixed mode.
-	if (g_Xbox_VertexShaderMode != VertexShaderMode::FixedFunction)bLightintEnable = true;
-	//NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, bLightintEnable);
+	if (g_Xbox_VertexShaderMode != VertexShaderMode::FixedFunction)
+		bLightintEnable = true;
 	if (bLightintEnable) {
 		control = pg->KelvinPrimitive.SetLightControl;
 		if (pg->KelvinPrimitive.SetSpecularEnable != false) {
@@ -3883,7 +3105,6 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			NV2A_SceneMateirals[1].Power = 0.0f;
 		}
 		extern xbox::hresult_xt WINAPI CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8 * pMaterial);
-		//CxbxrImpl_SetMaterial(&NV2A_SceneMateirals[0]);
 		//calls host api directly since in CxbxrImpl_SetMaterial() it updates the fixed mode vertex shader states directly which we have to distinguish from xbox api.
 		HRESULT hRet = g_pD3DDevice->SetMaterial(&NV2A_SceneMateirals[0]);
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
@@ -3982,7 +3203,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			}
 			// Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
 			// hack, we use colors in kelvin directly since these colors are composed with D3DRS_AMBIENT/SetMaterial/SetBackMaterial/ and the color of each light.
-			// hack, use a constant color scale to scale up light color.
+			// here we use a constant color scale to scale up light color. scale comes from the actual result of HighDynamicRange sample.
 			float colorScale = 2.1;
 			NV2A_Light8[lightNum].Ambient.r = colorScale * pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[0];
 			NV2A_Light8[lightNum].Ambient.g = colorScale * pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[1];
@@ -3998,15 +3219,10 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			NV2A_Light8[lightNum].Diffuse.a = 1.0f;
 			// here we calls Host D3D for SetLight() and LightEnable(). because originaly there two are called directly from HLE patch.
 			HRESULT hRet = g_pD3DDevice->SetLight(lightNum, &NV2A_Light8[lightNum]);
-			//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");
 			hRet = g_pD3DDevice->LightEnable(lightNum, bEnable);
 		}
 	}
-    else {
-		;
-	}
 	return;
-
 }
 
 void D3D_draw_state_update(NV2AState* d)
@@ -4014,7 +3230,6 @@ void D3D_draw_state_update(NV2AState* d)
 	PGRAPHState* pg = &d->pgraph;
 	HRESULT hRet;
 
-	// update transfoms
 	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
 	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM) {
 		CxbxrImpl_LazySetTransform(d);
@@ -4043,10 +3258,8 @@ void D3D_draw_state_update(NV2AState* d)
 		CxbxrImpl_LazySetTextureTransform(d);
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_TEXTURE_TRANSFORM;
 	}
-	//}
 	// update pixel shader when either X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM| X_D3DDIRTYFLAG_COMBINERS| X_D3DDIRTYFLAG_SPECFOG_COMBINER flag was set
 	if ((NV2A_DirtyFlags & (X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM| X_D3DDIRTYFLAG_COMBINERS| X_D3DDIRTYFLAG_SPECFOG_COMBINER)) != 0) {
-
 		// update combiners, combiners must be update prior to pixel shader, because we have to compose colorOp before we compose fix funtion pixel shaders.
 		// only update combiners when in fixed pixel shader.
 		if (pNV2A_PixelShader == nullptr) {
@@ -4057,55 +3270,39 @@ void D3D_draw_state_update(NV2AState* d)
 				NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_COMBINERS;
 			}
 		}
-
 		// update spec fog combiner state
 		if ((NV2A_DirtyFlags & X_D3DDIRTYFLAG_SPECFOG_COMBINER) != 0) {
 			CxbxrImpl_LazySetSpecFogCombiner(d);
 			// clear dirty flag
 			NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SPECFOG_COMBINER;
 		}
-
 		CxbxrImpl_LazySetShaderStageProgram(d);
-
 		// clear dirty flag xbox::dword_xt
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM;
 	}
-
 	// update texture transfoms
 	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_LIGHTS) {
 		CxbxrImpl_LazySetLights(d);
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_LIGHTS;
 	}
-
 	// update viewport state when we're in pushbuffer replay mode.
-	// if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-		// CxbxUpdateNativeD3DResources() calls CxbxUpdateHostViewport() to update host viewpot, we call pgraph_SetViewport(d) to convert NV2A viewport content to xbox vieport and then call CxbxrImpl_SetViewport() there.
-		// only update viewport if viewport got dirty.
-		if (NV2A_viewport_dirty == true) {
-			// this only compose viewport from pgraph content 
-			pgraph_ComposeViewport(d);
-			// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
-			// D3DDevice_SetViewport() was patched and HLEed, here we only implement it when we're in RunPushbuffer().
-			//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-				xbox::X_D3DVIEWPORT8 Viewport;
-				CxbxrGetViewport(Viewport);
-				// no need to call SetViewport here.in CxbxUpdateNativeD3DResources(), CxbxUpdateHostViewport() will pickup our viewport.
-                /*
-				Viewport.X = pg->KelvinPrimitive.SetSurfaceClipHorizontal & 0xFFFF;
-				Viewport.Width = (pg->KelvinPrimitive.SetSurfaceClipHorizontal >> 16) & 0xFFFF;
-				Viewport.Y = pg->KelvinPrimitive.SetSurfaceClipVertical & 0xFFFF;
-				Viewport.Height = (pg->KelvinPrimitive.SetSurfaceClipVertical >> 16) & 0xFFFF;
-				*/
-				CxbxrImpl_SetViewport(&Viewport);
-			//}
-			NV2A_viewport_dirty = false;
-		}
-	//}
+	// CxbxUpdateNativeD3DResources() calls CxbxUpdateHostViewport() to update host viewpot, we call pgraph_SetViewport(d) to convert NV2A viewport content to xbox vieport and then call CxbxrImpl_SetViewport() there.
+	// only update viewport if viewport got dirty.
+	if (NV2A_viewport_dirty == true) {
+		// this only compose viewport from pgraph content 
+		pgraph_ComposeViewport(d);
+		// todo: actually setviewport with the composed viewport, currently we don't set the host viewport via pgraph content, yet. the SetViewport() is currently HLEed and not processed in pushbuffer.
+		// D3DDevice_SetViewport() was patched and HLEed, here we only implement it when we're in RunPushbuffer().
+		xbox::X_D3DVIEWPORT8 Viewport;
+		CxbxrGetViewport(Viewport);
+		// no need to call SetViewport here.in CxbxUpdateNativeD3DResources(), CxbxUpdateHostViewport() will pickup our viewport.
+		// CxbxrImpl_SetViewport(&Viewport);
+		NV2A_viewport_dirty = false;
+	}
 
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
-
 
 	// setup vertes format, and vertex buffer from here.
 	// Derive vertex attribute layout, using an intermediate array
@@ -4275,11 +3472,6 @@ void D3D_draw_state_update(NV2AState* d)
 	}
 
 	// update other D3D states
-	// FIXME!! CxbxUpdateNativeD3DResources() calls XboxRenderStates.Apply() and XboxTextureStates.Apply() to apply Xbox D3D states to Host.
-	// so what we set to host here might be over write later. safer way is to update XboxTextureStates/XboxTextureStates and let CxbxUpdateNativeD3DResources() update them to host.
-	// only update state to host when we're in pushbuffer replay mode. other wise HLE shall handle the host update task.
-	//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0) {
-	//}
 	CxbxUpdateNativeD3DResources();
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D
 }
@@ -4313,7 +3505,6 @@ void D3D_draw_clear(NV2AState *d)
 	Count = 1;
 	DWORD HostFlags = 0;
 	// Clear requires the Xbox viewport to be applied
-	// CxbxUpdateNativeD3DResources();
 
 	// make adjustments to parameters to make sense with windows d3d
 	{
