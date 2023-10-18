@@ -1175,7 +1175,8 @@ void pgraph_ComposeViewport(NV2AState *d)
 
 	//GetRenderTargetBaseDimensions(rendertargetBaseWidth, rendertargetBaseHeight);
 	GetRenderTargetRawDimensions(rendertargetBaseWidth, rendertargetBaseHeight, g_pXbox_RenderTarget);
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+	if (g_NV2A_VertexShaderMode == VertexShaderMode::FixedFunction) {
 	//if ((float)pg->KelvinPrimitive.SetViewportOffset[2] == 0.0 && (float)pg->KelvinPrimitive.SetViewportOffset[3] == 0.0) {
 		xViewport = pg->KelvinPrimitive.SetViewportOffset[0];
 		yViewport = pg->KelvinPrimitive.SetViewportOffset[1];
@@ -3081,7 +3082,8 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 	DWORD lightEnableMask = 0;
 	bool bLightintEnable = pg->KelvinPrimitive.SetLightingEnable != false;
 	//xbox sets D3DRS_LightEnable to false when vertex shader is not fixed mode.
-	if (g_Xbox_VertexShaderMode != VertexShaderMode::FixedFunction)
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+	if (g_NV2A_VertexShaderMode != VertexShaderMode::FixedFunction)
 		bLightintEnable = true;
 	if (bLightintEnable) {
 		control = pg->KelvinPrimitive.SetLightControl;
@@ -3470,7 +3472,11 @@ void D3D_draw_state_update(NV2AState* d)
 			}
 		}
 	}
-
+	// todo: call CxbxrImpl_SetVertexShader() here. There are certain varialbes needs to be initialized, mostly setup unexisting vertex attribute defaults.
+	extern bool g_NV2AVertexShader_dirty; // tmp glue
+	extern void pgraph_SetVertexShader(NV2AState* d);// tmp glue, XBVertexShader.cpp
+	if (g_NV2AVertexShader_dirty)
+		pgraph_SetVertexShader(d);
 	// update other D3D states
 	CxbxUpdateNativeD3DResources();
 	LOG_INCOMPLETE(); // TODO : Read state from pgraph, convert to D3D

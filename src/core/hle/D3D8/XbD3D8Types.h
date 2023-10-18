@@ -1170,7 +1170,7 @@ struct X_D3DVertexShader
 	DWORD Flags; // Contains X_VERTEXSHADER_FLAG_* bits
 	DWORD ProgramSize;//vertex shader program size in dwords.
 	DWORD ProgramAndConstantsDwords; // the length of ProgramAndConstants[], Sum of ProgramSize + constant count + pushbuffer command in front and in between to load transfrorm program and constants, expressed in instruction slots, taking 4 DWORD's per slot (see X_VSH_INSTRUCTION_SIZE)
-	BYTE Dimensionality[4] ; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
+	BYTE  Dimensionality[4] ; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
 	X_VERTEXATTRIBUTEFORMAT VertexAttribute;
 	DWORD ProgramAndConstants[X_VSH_MAX_INSTRUCTION_COUNT]; // Variable length array, a pushbuffer snapshop of pushbuffer command to load the vertex shader program and constants and the program and constants. The binary function data and constants (contents continues futher outside this struct, up to ProgramAndConstantsDwords * 4 (=X_VSH_INSTRUCTION_SIZE) DWORD's)
 };

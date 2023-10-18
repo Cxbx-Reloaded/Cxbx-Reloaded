@@ -60,14 +60,21 @@ extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
  xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes = { 0 }; // Read by GetXboxVertexAttributes when g_Xbox_SetVertexShaderInput_Count > 0
 
 VertexShaderMode g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction;
+VertexShaderMode g_NV2A_VertexShaderMode = VertexShaderMode::FixedFunction;
+
 bool g_UseFixedFunctionVertexShader = true;
 bool g_VertexShader_dirty = false;
+bool g_NV2AVertexShader_dirty = false;
 
                 xbox::dword_xt g_Xbox_VertexShader_Handle = 0;
+				xbox::dword_xt g_NV2A_VertexShader_Handle = 0;
+				xbox::X_D3DVertexShader* pNV2AVertexShader;
+				xbox::X_D3DVertexShader  NV2AVertexShader;
 #ifdef CXBX_USE_GLOBAL_VERTEXSHADER_POINTER // TODO : Would this be more accurate / simpler?
       xbox::X_D3DVertexShader *g_Xbox_VertexShader_Ptr = nullptr;
 #endif
                 xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+				xbox::dword_xt g_NV2A_VertexShader_FunctionSlots_StartAddress = 0;
 
 // Variable set by [D3DDevice|CxbxImpl]_LoadVertexShader() / [D3DDevice|CxbxImpl]_LoadVertexShaderProgram() (both through CxbxCopyVertexShaderFunctionSlots):
                 //xbox::dword_xt g_Xbox_VertexShader_FunctionSlots[(X_VSH_MAX_INSTRUCTION_COUNT + 1) * X_VSH_INSTRUCTION_SIZE] = { 0 }; // One extra for FLD_FINAL terminator
@@ -1100,7 +1107,12 @@ VertexDeclarationKey GetXboxVertexAttributesKey(xbox::X_VERTEXATTRIBUTEFORMAT* p
 	auto attributeHash = ComputeHash((void*)pXboxVertexAttributeFormat, sizeof(xbox::X_VERTEXATTRIBUTEFORMAT));
 	// For now, we use different declarations depending on if the fixed function pipeline
 	// is in use, even if the attributes are the same
-	return g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		VSHMode = g_NV2A_VertexShaderMode;
+	}
+	return VSHMode == VertexShaderMode::FixedFunction
 		? attributeHash
 		: attributeHash ^ 1;
 }
@@ -1149,8 +1161,12 @@ void CxbxUpdateHostVertexShader()
 	// Rather than every time state changes
 
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		VSHMode = g_NV2A_VertexShaderMode;
+	}
+	if (VSHMode == VertexShaderMode::FixedFunction) {
 		IDirect3DVertexShader* fixedFunctionShader = nullptr;
 		HRESULT hRet;
 
@@ -1185,7 +1201,10 @@ void CxbxUpdateHostVertexShader()
 
 
 	else {
-		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
+		xbox::dword_xt VSH_FunctionSlots_StartAddress=g_Xbox_VertexShader_FunctionSlots_StartAddress;
+		if (is_pgraph_using_NV2A_Kelvin())
+			VSH_FunctionSlots_StartAddress = g_NV2A_VertexShader_FunctionSlots_StartAddress;
+		auto pTokens = GetCxbxVertexShaderSlotPtr(VSH_FunctionSlots_StartAddress);
 		assert(pTokens);
 		// Create a vertex shader from the tokens
 		DWORD shaderSize;
@@ -1432,6 +1451,11 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 
 	auto XboxVertexAttributesKey = GetXboxVertexAttributesKey(pXboxVertexAttributeFormat);
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = FetchCachedCxbxVertexDeclaration(XboxVertexAttributesKey);
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		VSHMode = g_NV2A_VertexShaderMode;
+	}
 	if (pCxbxVertexDeclaration == nullptr) {
 		pCxbxVertexDeclaration = (CxbxVertexDeclaration*)calloc(1, sizeof(CxbxVertexDeclaration));
 
@@ -1439,7 +1463,8 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 		D3DVERTEXELEMENT* pRecompiledVertexElements = EmuRecompileVshDeclaration(
 			pXboxVertexAttributeFormat,
 			//g_Xbox_VertexShaderMode != VertexShaderMode::ShaderProgram,
-			g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction,
+
+			VSHMode == VertexShaderMode::FixedFunction,
 			pCxbxVertexDeclaration);
 
 		// Create the vertex declaration
@@ -1541,7 +1566,7 @@ void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 #endif
 		g_Xbox_VertexShader_Handle = Handle;
 	}
-	extern bool g_VertexShader_dirty; // tmp glue
+	//extern bool g_VertexShader_dirty; // tmp glue
 	// set vertex shader dirty flag
 	g_VertexShader_dirty = true;
 }
@@ -1673,6 +1698,46 @@ void SetFixedFunctionDefaultVertexAttributes(DWORD vshFlags) {
 	}
 }
 
+// Set default values for attributes missing from vertex declaration and vshFlags, called via NV2A_SetVertexShader()
+void NV2ASetFixedFunctionDefaultVertexAttributes(DWORD& vshFlags) {
+	// Test case: Mechassault (skybox)
+	// Test case: KOTOR (overlay)
+	auto decl = CxbxGetVertexDeclaration();
+	for (int i = 0; i < xbox::X_D3DVSDE_TEXCOORD3; i++) {
+		if (decl->vRegisterInDeclaration[i]) {
+            //setup vshFlags 
+			if (i == xbox::X_D3DVSDE_DIFFUSE)
+				vshFlags |= X_VERTEXSHADER_FLAG_HASDIFFUSE;
+			if (i == xbox::X_D3DVSDE_BACKDIFFUSE;
+				vshFlags |= X_VERTEXSHADER_FLAG_HASBACKDIFFUSE);
+			if (i == xbox::X_D3DVSDE_SPECULAR)
+				vshFlags |= X_VERTEXSHADER_FLAG_HASSPECULAR;
+			if (i == xbox::X_D3DVSDE_BACKSPECULAR)
+				vshFlags |= X_VERTEXSHADER_FLAG_HASBACKSPECULAR;
+			continue; // only reset missing attributes
+		}
+
+		const float white[4] = { 1, 1, 1, 1 };
+		const float black[4] = { 0, 0, 0, 0 };
+		const float unset[4] = { 0, 0, 0, 1 };
+		const float* value = unset;
+
+		// Account for flags that override this reset behaviour
+		if (i == xbox::X_D3DVSDE_DIFFUSE && !(vshFlags & X_VERTEXSHADER_FLAG_HASDIFFUSE) ||
+			i == xbox::X_D3DVSDE_BACKDIFFUSE && !(vshFlags & X_VERTEXSHADER_FLAG_HASBACKDIFFUSE)) {
+			value = white;
+		}
+		else if (i == xbox::X_D3DVSDE_SPECULAR && !(vshFlags & X_VERTEXSHADER_FLAG_HASSPECULAR) ||
+			i == xbox::X_D3DVSDE_BACKSPECULAR && !(vshFlags & X_VERTEXSHADER_FLAG_HASBACKSPECULAR)) {
+			value = black;
+		}
+
+		// Note : We avoid calling CxbxrImpl_SetVertexData4f here, as that would
+		// start populating g_InlineVertexBuffer_Table, which is not our intent here.
+		CxbxSetVertexAttribute(i, value[0], value[1], value[2], value[3]);
+	}
+}
+
 void CxbxrImpl_SetVertexShader(DWORD Handle)
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
@@ -1745,6 +1810,49 @@ void CxbxrImpl_SetVertexShader(DWORD Handle)
 	// set vertex shader dirty flag
 	g_VertexShader_dirty = true;
 }
+
+//NV2A version of CxbxrImpl_SetVertexShader(), called via end of D3D_draw_state_update()
+void pgraph_SetVertexShader(NV2AState* d)
+{
+	PGRAPHState* pg = &d->pgraph;
+	
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	HRESULT hRet = D3D_OK;
+	
+	xbox::X_D3DVertexShader* pNV2AVertexShader =&NV2AVertexShader;//CxbxGetXboxVertexShaderForHandle(g_NV2A_VertexShader_Handle);
+    /*
+	if ((pNV2AVertexShader->Flags & g_X_VERTEXSHADER_FLAG_VALID_MASK) != pNV2AVertexShader->Flags) {
+		LOG_TEST_CASE("Unknown vertex shader flag");
+	}
+	*/
+	//g_NV2A_VertexShader_Handle = Handle;
+	g_NV2A_VertexShader_FunctionSlots_StartAddress = 0;
+
+	//if (pNV2AVertexShader->Flags & g_X_VERTEXSHADER_FLAG_PROGRAM) { // Global variable set from CxbxVertexShaderSetFlags
+	// Global variable set from EmuNV2A_PGRAPH
+	if (g_NV2A_VertexShaderMode== VertexShaderMode::ShaderProgram) { 
+		pNV2AVertexShader->Flags|= g_X_VERTEXSHADER_FLAG_PROGRAM;
+		g_NV2A_VertexShader_FunctionSlots_StartAddress = pg->KelvinPrimitive.SetTransformProgramStart;
+	}
+	else {
+		//setup default values for vertex attributes not declared. and setup  pNV2AVertexShader->Flags
+		NV2ASetFixedFunctionDefaultVertexAttributes(pNV2AVertexShader->Flags);
+
+		// Switch to passthrough program, if so required
+		if (g_NV2A_VertexShaderMode == VertexShaderMode::Passthrough) {
+			CxbxSetVertexShaderPassthroughProgram();
+		}
+		else {
+			// Test-case : Many XDK samples, Crazy taxi 3
+			//LOG_TEST_CASE("Other or no vertex shader flags");
+		}
+	}
+	//extern bool g_NV2AVertexShader_dirty; // tmp glue
+	// set vertex shader dirty flag
+	g_NV2AVertexShader_dirty = true;
+}
+
 
 void CxbxrImpl_DeleteVertexShader(DWORD Handle)
 {

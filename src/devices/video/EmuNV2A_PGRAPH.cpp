@@ -1156,9 +1156,12 @@ void OpenGL_init_pgraph_plugins()
 static uint32_t subchannel_to_graphic_class[8] = { NV_KELVIN_PRIMITIVE,NV_MEMORY_TO_MEMORY_FORMAT,NV_IMAGE_BLIT,NV_CONTEXT_SURFACES_2D,0,NV_CONTEXT_PATTERN,0,0, };
 extern VertexShaderMode g_Xbox_VertexShaderMode;
 extern bool g_VertexShader_dirty;
+extern bool g_NV2AVertexShader_dirty;
 extern void CxbxUpdateHostVertexShader();
 //starting address of vertex shader user program
 extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
+extern VertexShaderMode g_NV2A_VertexShaderMode;
+extern xbox::dword_xt g_NV2A_VertexShader_FunctionSlots_StartAddress;
 //xbox vertex shader attributes slots. set by SetVertexShaderInput(). try to set it directly before set vertex shader or draw prmitives.
 extern xbox::X_VERTEXATTRIBUTEFORMAT g_Xbox_SetVertexShaderInput_Attributes;
 extern DWORD ABGR_to_ARGB(const uint32_t color);
@@ -3353,9 +3356,8 @@ int pgraph_handle_method(
                     // use CxbxSetVertexShaderSlots() directly, these codes come from CxbxrImpl_LoadVertexShaderProgram(). update pg->KelvinPrimitive.SetTransformProgramLoad accrodingly.
                     extern void CxbxSetVertexShaderSlots(DWORD * pTokens, DWORD Address, DWORD NrInstructions);
                     CxbxSetVertexShaderSlots((DWORD*) & argv[0], pg->KelvinPrimitive.SetTransformProgramLoad, (method_count / 4));
-                    extern bool g_VertexShader_dirty; // tmp glue
                     // set vertex shader dirty flag
-                    g_VertexShader_dirty = true;
+                    g_NV2AVertexShader_dirty = true;
                     pg->KelvinPrimitive.SetTransformProgramLoad += (method_count / 4);
                     break;
                 }
@@ -3393,7 +3395,7 @@ int pgraph_handle_method(
                     
                     
                     //pick up SuperSampleScaleX/SuperSampleScaleY/ZScale/wScale after calling CommonSetPassthroughProgram().
-                    if (g_VertexShader_dirty == true && g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && pg->KelvinPrimitive.SetTransformConstantLoad==0) {
+                    if (g_NV2AVertexShader_dirty == true && g_NV2A_VertexShaderMode == VertexShaderMode::Passthrough && pg->KelvinPrimitive.SetTransformConstantLoad==0) {
                         //float tempConstant[4];
                         // read constant register 0, CommonSetPassThroughProgram() sets register 0 constant with SuperSampleScaleX/Y
                         //CxbxrImpl_GetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, tempConstant, 1);
@@ -4712,7 +4714,7 @@ int pgraph_handle_method(
 								 // NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN:
 								      VertexShader.Flags & VERTEXSHADER_WRITE, method count 2)
 						*/
-						if (method_count==2){
+                        if (method_count==2){
                             // dirty hack. for program shader, there will be a NV097_SET_TRANSFORM_PROGRAM_START right after NV097_SET_TRANSFORM_EXECUTION_MODE in SelectVertexShader().
                             // but for passthrough shader, it won't call SelectVertexShader(), but only use NV097_SET_TRANSFORM_PROGRAM_START right before NV097_SET_TRANSFORM_EXECUTION_MODE
                             if ((argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY)&& ((argv[2]& COMMAND_WORD_MASK_METHOD)== NV097_SET_TRANSFORM_PROGRAM_START)) {
@@ -4724,28 +4726,28 @@ int pgraph_handle_method(
 								// ** passthrough in SelectVertexShader() calls NV097_SET_TRANSFORM_PROGRAM_START first, then calls NV097_SET_TRANSFORM_EXECUTION_MODE
 
 
-                                g_Xbox_VertexShaderMode = VertexShaderMode::ShaderProgram;
+                                g_NV2A_VertexShaderMode = VertexShaderMode::ShaderProgram;
                                 //g_UseFixedFunctionVertexShader = false;
 
                                 // for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
                                 //g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
 
                                 // set vertex shader dirty flag
-                                g_VertexShader_dirty = true;
+                                g_NV2AVertexShader_dirty = true;
 
                             }
                             else {
                                 // if we hit here with g_Xbox_VertexShaderMode==FixedFunction, then we're in Passthrough
                                 //if (g_VertexShader_dirty == false) {
 
-                                    g_Xbox_VertexShaderMode = VertexShaderMode::Passthrough;
+                                    g_NV2A_VertexShaderMode = VertexShaderMode::Passthrough;
                                     //g_UseFixedFunctionVertexShader = false;
 
                                     // for shader program, here we set it to default register 0, later when we reach NV097_SET_TRANSFORM_PROGRAM_START, we'll use the register addr passed in.
-                                    g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+                                    g_NV2A_VertexShader_FunctionSlots_StartAddress = 0;
 
                                     // set vertex shader dirty flag
-                                    g_VertexShader_dirty = true;
+                                    g_NV2AVertexShader_dirty = true;
 
                                     // funtion key F7 flips this variable
                                     g_bUsePassthroughHLSL = true;
@@ -4770,15 +4772,15 @@ int pgraph_handle_method(
 						//to set vertex format info, but wihthout stream info.
 
 						// set fixed function vertex shader program mode
-						g_Xbox_VertexShaderMode = VertexShaderMode::FixedFunction;
+						g_NV2A_VertexShaderMode = VertexShaderMode::FixedFunction;
 
 						// enable g_UseFixedFunctionVertexShader
 						g_UseFixedFunctionVertexShader = true;
 
-                        g_Xbox_VertexShader_FunctionSlots_StartAddress = 0;
+                        g_NV2A_VertexShader_FunctionSlots_StartAddress = 0;
 
 						// set vertex shader dirty flag
-						g_VertexShader_dirty = true;
+						g_NV2AVertexShader_dirty = true;
 
 					}
 					break;
@@ -4839,11 +4841,11 @@ int pgraph_handle_method(
 
 					//set starting program slot
 					//if (g_Xbox_VertexShaderMode == VertexShaderMode::ShaderProgram) {
-					g_Xbox_VertexShader_FunctionSlots_StartAddress = arg0;
+					g_NV2A_VertexShader_FunctionSlots_StartAddress = arg0;
 
                     //}
                     // set vertex shader dirty flag
-                    g_VertexShader_dirty = true;
+                    g_NV2AVertexShader_dirty = true;
 
 					break;
 				}

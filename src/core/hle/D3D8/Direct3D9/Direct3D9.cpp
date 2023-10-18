@@ -3058,7 +3058,12 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	// - Shenmue II (Menu)
 	// Fixed-func passthrough, title does not apply backbuffer scale:
 	// - Antialias sample(background gradient)
-	if (g_Xbox_VertexShaderMode != VertexShaderMode::ShaderProgram) {
+	extern bool is_pgraph_using_NV2A_Kelvin(void);
+	extern VertexShaderMode g_NV2A_VertexShaderMode;
+	VertexShaderMode VSHMode=g_Xbox_VertexShaderMode;
+	if (is_pgraph_using_NV2A_Kelvin())
+		VSHMode = g_NV2A_VertexShaderMode;
+	if (VSHMode != VertexShaderMode::ShaderProgram) {
 		return;
 	}
 
@@ -3075,7 +3080,6 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	// So the Xbox expects vertices in 480*480 coordinate space
 	// todo: find supersample type info from kelvin and use it here.
 	bool isSuperSampleMode = g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_SUPER;
-	extern bool is_pgraph_using_NV2A_Kelvin(void);
 	extern void CxbxrGetSuperSampleScaleXY(NV2AState *,float& x, float& y);
 
 	if (is_pgraph_using_NV2A_Kelvin()) {
@@ -4948,7 +4952,8 @@ void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 {
     float vScaleOffset[2][4]; // 0 - scale 1 - offset
-    GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
+	// todo: use viewport offset and scale from pg->vsh_constants[-38+96][]
+	GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
 
 
 	// Xbox outputs vertex positions in rendertarget pixel coordinate space, with non-normalized Z
@@ -8190,7 +8195,8 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 {
 	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
 	using namespace xbox;
-
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
 	// Vertex blending
 	// Prepare vertex blending mode variables used in transforms, below
 	auto VertexBlend = XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
@@ -8253,6 +8259,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		// test result showed using identity matrix or the view matrix set with D3DDevice_SetTransform() output the same rendering. testcsae: BumpEarth sample.
 		// D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&g_NV2A_DirectModelView_View);
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
+//		float temp =  pg->vsh_constants[0][0];
 		for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
 			// FIXME! stick with g_xbox_transform_ModelView[0] and g_xbox_DirectModelView_InverseWorldViewTransposed[0] when we're not in skinning mode. 
 			// when RenderState[X_D3DRS_VERTEXBLEND]==0, we're not in skinning mode, use modelview matrix 0 only. else use corresponded matrix
@@ -8321,8 +8328,6 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	DWORD fogTableMode, density, fogEnd, fogStart;
 
 	extern xbox::X_D3DMATERIAL8 NV2A_SceneMateirals[2];
-	NV2AState* d = g_NV2A->GetDeviceState();
-	PGRAPHState* pg = &d->pgraph;
 	// use NV2ARenderStates when we're in pgraph handling
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		PointSpriteEnable = NV2ARenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
@@ -10478,6 +10483,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
 		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 	}
+#if 0
 #if !USEPGRAPH_SetVertexShader
 
 	CxbxrImpl_SetVertexShader(Handle);
@@ -10486,6 +10492,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	PBTokenArray[2] = (DWORD)Handle;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader, 1);//argCount, not necessary, default to 14
+#endif
 #endif
 }
 
@@ -10523,12 +10530,12 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_
 		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
 		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 	}
-
+#if 0
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)Handle;
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader, 1);//argCount, not necessary, default to 14
-
+#endif
 #if !USEPGRAPH_SetVertexShader
 	//CxbxrImpl_SetVertexShader(Handle);
 #endif
@@ -11332,13 +11339,16 @@ void CxbxUpdateHostTextureScaling()
 	// We'll store scale factors for each texture coordinate set
 	std::array<std::array<float, 4>, xbox::X_D3DTS_STAGECOUNT> texcoordScales;
 	texcoordScales.fill({ 1, 1, 1, 1 });
-
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
+		VertexShaderMode  VSHMode=g_Xbox_VertexShaderMode;
 		// use texture stage textures from NV2A if we're in pushbuffer replay mode
 		//if ((NV2A_stateFlags & X_STATE_RUNPUSHBUFFERWASCALLED) != 0)
-		if (is_pgraph_using_NV2A_Kelvin())
+		if (is_pgraph_using_NV2A_Kelvin()){
 			pXboxBaseTexture = g_pNV2A_SetTexture[stage];
+			VSHMode = g_NV2A_VertexShaderMode;
+		}
 		// No texture, no scaling to do
 		if (pXboxBaseTexture == xbox::zeroptr) {
 			continue;
@@ -11346,7 +11356,7 @@ void CxbxUpdateHostTextureScaling()
 
 		// Texcoord index. Just the texture stage unless fixed function mode
 		int texCoordIndex = stage;
-		if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+		if (VSHMode == VertexShaderMode::FixedFunction) {
 			// Get TEXCOORDINDEX for the current texture stage's state
 			// Stores both the texture stage index and information for generating coordinates
 			// See D3DTSS_TEXCOORDINDEX
@@ -11462,8 +11472,12 @@ void CxbxUpdateHostVertexShaderConstants()
 	// Track which constants are currently written
 	// So we can skip updates
 	static bool isXboxConstants = false;
-
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		VSHMode = g_NV2A_VertexShaderMode;
+	}
+	if (VSHMode == VertexShaderMode::FixedFunction && g_UseFixedFunctionVertexShader) {
 		// Write host FF shader state
 		// TODO dirty tracking like for Xbox constants?
 		UpdateFixedFunctionVertexShaderState();
@@ -11543,8 +11557,12 @@ void CxbxUpdateHostViewport() {
 
 	float Xscale = aaScaleX * g_RenderUpscaleFactor;
 	float Yscale = aaScaleY * g_RenderUpscaleFactor;
-
-	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		VSHMode = g_NV2A_VertexShaderMode;
+	}
+	if (VSHMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
 		D3DVIEWPORT hostViewport = g_Xbox_Viewport;
 		// use viewport composed from kelvin when we're in pgraph draw calls.
@@ -11595,6 +11613,8 @@ void CxbxUpdateHostViewport() {
 
 extern void CxbxUpdateHostVertexDeclaration(); // TMP glue
 extern void CxbxUpdateHostVertexShader(); // TMP glue
+extern void pgraph_use_NV2A_Kelvin(void);
+extern bool g_NV2AVertexShader_dirty;
 
 void CxbxUpdateNativeD3DResources()
 {
@@ -11612,10 +11632,19 @@ void CxbxUpdateNativeD3DResources()
 
 	CxbxUpdateHostVertexDeclaration();
 	// setup vertex shader input if there are any changes
-	if (g_VertexShader_dirty == true) {
-		CxbxUpdateHostVertexShader();
-		// reset dirty flag
-		g_VertexShader_dirty = false;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		if (g_NV2AVertexShader_dirty == true) {
+			CxbxUpdateHostVertexShader();
+			// reset dirty flag
+			g_NV2AVertexShader_dirty = false;
+		}
+	}
+	else {
+		if (g_VertexShader_dirty == true) {
+			CxbxUpdateHostVertexShader();
+			// reset dirty flag
+			g_VertexShader_dirty = false;
+		}
 	}
 	
 

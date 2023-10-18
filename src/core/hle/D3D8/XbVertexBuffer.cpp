@@ -140,7 +140,13 @@ UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext) con
     } 
 	
 	// TODO: This code and CountActiveD3DStreams must be removed once we can rely on CxbxGetVertexDeclaration always being set
-	if (g_Xbox_VertexShader_Handle) {
+	xbox::dword_xt VSHHandle = g_Xbox_VertexShader_Handle;
+	extern bool is_pgraph_using_NV2A_Kelvin(void); // tmp glue
+	extern xbox::dword_xt g_NV2A_VertexShader_Handle;// tmp glue
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		VSHHandle = g_NV2A_VertexShader_Handle;
+	}
+	if (VSHHandle) {
 		return CountActiveD3DStreams();
     }
 
