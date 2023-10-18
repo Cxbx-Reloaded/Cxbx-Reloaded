@@ -5000,7 +5000,12 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 
 	// Passthrough should range 0 to 1, instead of 0 to zbuffer depth
 	// Test case: DoA3 character select
-	float zOutputScale = g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough ? 1 : g_ZScale;
+	extern bool is_pgraph_using_NV2A_Kelvin(void);
+	extern VertexShaderMode g_NV2A_VertexShaderMode;
+	VertexShaderMode VSHMode = g_Xbox_VertexShaderMode;
+	if (is_pgraph_using_NV2A_Kelvin())
+		VSHMode = g_NV2A_VertexShaderMode;
+	float zOutputScale = VSHMode == VertexShaderMode::Passthrough ? 1 : g_ZScale;
 
 	float screenspaceScale[4] = { xboxScreenspaceWidth / 2,  -xboxScreenspaceHeight / 2, zOutputScale, 1 };
 	float screenspaceOffset[4] = { xboxScreenspaceWidth / 2 + aaOffsetX, xboxScreenspaceHeight / 2 + aaOffsetY, 0, 0 };

@@ -1187,7 +1187,7 @@ void CxbxUpdateHostVertexShader()
 		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
 	}
 	// // funtion key F7 flips g_bUsePassthroughHLSL
-	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
+	else if (VSHMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
 		if (passthroughshader == nullptr) {
 			ID3DBlob* pBlob = nullptr;
 			EmuCompileXboxPassthrough(&pBlob);
