@@ -436,6 +436,7 @@ D3DDevice_SetIndices_4
 
 /*
 notes for my trials and errors.
+
 Original idea was to use a virtual pushbuffer method to represent each patched HLE api and push the virtual pushbuffer method to pushbuffer then let pgraph method handler handle the patched HLE api later.
 this should solve the sync issue between pushbuffer and HLE api.
 So I introudced a new virtual method 0x00000080, with method count 15, NOINC, sub channel 0. each HLE api has a unique token represented with a enum X_D3DAPI_ENUM, which will be the first argument.
@@ -450,147 +451,16 @@ XboxTextureStateConverter XboxTextureStates; // this var directly access Xbox in
 
 NV2ARenderStates and NV2ATextureStates are counter parts which we store states composed from NV2A/KelvinPrimitive.
 
-
 D3D8LightState d3d8LightState = D3D8LightState();
 D3D8TransformState d3d8TransformState = D3D8TransformState();
 FixedFunctionVertexShaderState ffShaderState = {0}; // this var converts xbox states to vertex shader/pixel shader settings/constants.
-
-
-D3DDevice_RunPushBuffer() must be unpatched to prevent reentrance of pgraph_handle_method()
-DrawVertices/DrawVerticesUP/DrawIndexedXXX calls can't be HLEed inside pgraph because xbox pushes all vertex data directly into pushbuffer.
-SetVertexShader/LoadVertexShader/SelectVertexShader/LoadVertexShaderProgram can't be HLEed, because xbox pushes all shader programs/vertex formats into pushbuffer.
-SetVertexConstantsXXX variants are unpatched and handled inside pgraph because of the timing sync with acutal shader/draw calls.
-extra EmuKickOff()/EmuKickOffWait() shall be removed to avoid PFIFO reentrance issue.// TODO: this might not be true, the real root cause should be the patched D3DDevice_RunPushBuffer()
-MakeSpace() shall make sure there is a "this" pointer available before trampoline was called. // TODO: we shall check similar trampoline calls
-g_pXbox_PixelShader=&g_Xbox_PixelShader which is a xbox pixel shader made up from contents of KelvinPrimitive.
-
-Render States related pgraph methods/xbox calls
-    NV097_SET_DOT_RGBMAPPING),               D3DRS_PSDOTMAPPING,       //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_PSDOTMAPPING, pg->KelvinPrimitive.SetDotRGBMapping);
-    NV097_SET_SHADER_OTHER_STAGE_INPUT),     D3DRS_PSINPUTTEXTURE,
-
-    NV097_SET_DEPTH_FUNC),                   D3DRS_ZFUNC,              // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZFUNC, pg->KelvinPrimitive.SetDepthFunc);
-    NV097_SET_ALPHA_FUNC),                   D3DRS_ALPHAFUNC,          // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHAFUNC, pg->KelvinPrimitive.SetAlphaFunc);
-    NV097_SET_BLEND_ENABLE),                 D3DRS_ALPHABLENDENABLE,   // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHABLENDENABLE, pg->KelvinPrimitive.SetBlendEnable);
-    NV097_SET_ALPHA_TEST_ENABLE),            D3DRS_ALPHATESTENABLE,    // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE, pg->KelvinPrimitive.SetAlphaTestEnable);
-    NV097_SET_ALPHA_REF),                    D3DRS_ALPHAREF,           // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ALPHAREF, pg->KelvinPrimitive.SetAlphaRef);
-    NV097_SET_BLEND_FUNC_SFACTOR),           D3DRS_SRCBLEND,           // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SRCBLEND, pg->KelvinPrimitive.SetBlendFuncSfactor);
-    NV097_SET_BLEND_FUNC_DFACTOR),           D3DRS_DESTBLEND,          // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DESTBLEND, pg->KelvinPrimitive.SetBlendFuncDfactor);
-    NV097_SET_DEPTH_MASK),                   D3DRS_ZWRITEENABLE,       // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZWRITEENABLE, pg->KelvinPrimitive.SetDepthMask);
-    NV097_SET_DITHER_ENABLE),                D3DRS_DITHERENABLE,       // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DITHERENABLE, pg->KelvinPrimitive.SetDitherEnable);
-    NV097_SET_SHADE_MODE),                   D3DRS_SHADEMODE,          // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SHADEMODE, pg->KelvinPrimitive.SetShadeMode);
-    NV097_SET_COLOR_MASK),                   D3DRS_COLORWRITEENABLE,   // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_COLORWRITEENABLE, pg->KelvinPrimitive.SetColorMask);
-    NV097_SET_STENCIL_OP_ZFAIL),             D3DRS_STENCILZFAIL,       // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILZFAIL, pg->KelvinPrimitive.SetStencilOpZfail);
-    NV097_SET_STENCIL_OP_ZPASS),             D3DRS_STENCILPASS,        // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILPASS, pg->KelvinPrimitive.SetStencilOpZpass);
-    NV097_SET_STENCIL_FUNC),                 D3DRS_STENCILFUNC,        // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILFUNC, pg->KelvinPrimitive.SetStencilFunc);
-    NV097_SET_STENCIL_FUNC_REF),             D3DRS_STENCILREF,         // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILREF, pg->KelvinPrimitive.SetStencilFuncRef);
-    NV097_SET_STENCIL_FUNC_MASK),            D3DRS_STENCILMASK,        // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILMASK, pg->KelvinPrimitive.SetStencilFuncMask);
-    NV097_SET_STENCIL_MASK),                 D3DRS_STENCILWRITEMASK,   // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILWRITEMASK, pg->KelvinPrimitive.SetStencilMask);
-    NV097_SET_BLEND_EQUATION),               D3DRS_BLENDOP,            // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BLENDOP, pg->KelvinPrimitive.SetBlendEquation);
-    NV097_SET_BLEND_COLOR),                  D3DRS_BLENDCOLOR,         // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_BLENDCOLOR, pg->KelvinPrimitive.SetBlendColor);
-    NV097_SET_SWATH_WIDTH),                  D3DRS_SWATHWIDTH,         // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SWATHWIDTH, pg->KelvinPrimitive.SetSwathWidth);
-    NV097_SET_POLYGON_OFFSET_SCALE_FACTOR),  D3DRS_POLYGONOFFSETZSLOPESCALE,  // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZSLOPESCALE, pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
-    NV097_SET_POLYGON_OFFSET_BIAS),          D3DRS_POLYGONOFFSETZOFFSET,      // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZOFFSET, pg->KelvinPrimitive.SetPolygonOffsetBias);
-    NV097_SET_POLY_OFFSET_POINT_ENABLE),     D3DRS_POINTOFFSETENABLE,         // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_POINTOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
-    NV097_SET_POLY_OFFSET_LINE_ENABLE),      D3DRS_WIREFRAMEOFFSETENABLE,     // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_WIREFRAMEOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
-    NV097_SET_POLY_OFFSET_FILL_ENABLE),      D3DRS_SOLIDOFFSETENABLE,         // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SOLIDOFFSETENABLE, pg->KelvinPrimitive.SetPolyOffsetPointEnable);
-
-    NV097_SET_LINE_SMOOTH_ENABLE == NV097_SET_POLY_SMOOTH_ENABLE   D3DRS_EDGEANTIALIAS // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_EDGEANTIALIAS, pg->KelvinPrimitive.SetPolySmoothEnable);
-    NV097_SET_SHADOW_DEPTH_FUNC(value-D3DCMP_NEVER(== 0x200) )     D3DRS_SHADOWFUNC    // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_SHADOWFUNC, pg->KelvinPrimitive.SetShadowDepthFunc + 0x200);
-    NV097_SET_FOG_COLOR SwapRgb(Value)                             D3DRS_FOGCOLOR      // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGCOLOR, xbox_fog_color);
-    NV097_SET_CULL_FACE_ENABLE  D3DRS_CULLMODE    // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_CULLMODE, pg->KelvinPrimitive.SetCullFaceEnable);
-    NV097_SET_CULL_FACE         D3DRS_FRONTFACE   // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_FRONTFACE, pg->KelvinPrimitive.SetCullFace);
-    NV097_SET_NORMALIZATION_ENABLE  D3DRS_NORMALIZENORMALS  //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_NORMALIZENORMALS, pg->KelvinPrimitive.SetNormalizationEnable);
-    NV097_SET_DEPTH_TEST_ENABLE  NV097_SET_ZMIN_MAX_CONTROL D3DRS_ZENABLE could be D3DZB_FALSE(0), D3DZB_TRUE(1), D3DZB_USEW(2) depending on NV097_SET_ZMIN_MAX_CONTROL
-        //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_ZENABLE, pg->KelvinPrimitive.SetDepthTestEnable); 
-    NV097_SET_STENCIL_TEST_ENABLE  D3DRS_STENCILENABLE  //  XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILENABLE, pg->KelvinPrimitive.SetStencilTestEnable);
-    NV097_SET_STENCIL_OP_FAIL D3DRS_STENCILFAIL  //  XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILFAIL, pg->KelvinPrimitive.SetStencilOpFail);
-    NV097_SET_COMBINER_FACTOR0 NV097_SET_COMBINER_FACTOR1 D3DRS_TEXTUREFACTOR=value only when fix funciton pixel shader in place // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR, argv[0]);
-    NV097_SET_LINE_WIDTH D3DRS_LINEWIDTH // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LINEWIDTH, FtoDW(DWtoF(pg->KelvinPrimitive.SetLineWidth) / 8.0f));  // need SuperSampleScale
-    NV097_NO_OPERATION with arg0= NVX_DXT1_NOISE_ENABLE, value stores in NV097_SET_ZSTENCIL_CLEAR_VALUE  D3DRS_DXT1NOISEENABLE  //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_DXT1NOISEENABLE, pg->KelvinPrimitive.SetZStencilClearValue);
-    NV097_SET_OCCLUDE_ZSTENCIL_EN  D3DRS_OCCLUSIONCULLENABLE D3DRS_STENCILCULLENABLE    //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_OCCLUSIONCULLENABLE, 1); XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_STENCILCULLENABLE, (pg->KelvinPrimitive.SetOccludeZStencilEn & NV097_SET_OCCLUDE_ZSTENCIL_EN_OCCLUDE_STENCIL_EN_ENABLE));
-    CommonSetDebugRegisters() D3DRS_ROPZCMPALWAYSREAD D3DRS_ROPZREAD D3DRS_DONOTCULLUNCOMPRESSED //
-    CommonSetAntiAliasingControl NV097_SET_ANTI_ALIASING_CONTROL D3DRS_MULTISAMPLEANTIALIAS D3DRS_MULTISAMPLEMASK//XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS, pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE);
-                    //XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEMASK, (pg->KelvinPrimitive.SetAntiAliasingControl& NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE)>>16);
-    NV097_SET_LOGIC_OP_ENABLE D3DRS_LOGICOP // if (pg->KelvinPrimitive.SetLogicOp == 0) XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, 0); else if (method_count == 2) XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_LOGICOP, argv[1]);
-    NV097_SET_FRONT_POLYGON_MODE NV097_SET_BACK_POLYGON_MODE D3DRS_FILLMODE D3DRS_BACKFILLMODE D3DRS_TWOSIDEDLIGHTING //
-    NV097_SET_SKIN_MODE D3DRS_VERTEXBLEND // XboxRenderStates.SetXboxRenderState(xbox::X_D3DRS_VERTEXBLEND, pg->KelvinPrimitive.SetSkinMode);
-    D3DMULTISAMPLEMODE_1X/D3DMULTISAMPLEMODE_2X/D3DMULTISAMPLEMODE_4X D3DRS_MULTISAMPLEMODE D3DRS_MULTISAMPLERENDERTARGETMODE = NV097_SET_SURFACE_FORMAT NV097_SET_SURFACE_FORMAT_ANTI_ALIASING = 0x0000F000, NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2 =1 , NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4 = 2
-
-    LazySetLights()  NV097_SET_LIGHTING_ENABLE NV097_SET_SPECULAR_ENABLE NV097_SET_LIGHT_CONTROL NV097_SET_TWO_SIDE_LIGHT_EN D3DRS_LIGHTING NV097_SET_COLOR_MATERIAL NV097_SET_LIGHT_LOCAL_RANGE NV097_SET_LIGHT_LOCAL_POSITION NV097_SET_LIGHT_ENABLE_MASK D3DRS_SPECULARENABLE D3DRS_TWOSIDEDLIGHTING D3DRS_LOCALVIEWER 
-    LazySetTransform()
-    LazySetPointParams() NV097_SET_POINT_PARAMS_ENABLE/D3DRS_POINTSCALEENABLE  NV097_SET_POINT_SMOOTH_ENABLE/D3DRS_POINTSPRITEENABLE NV097_SET_POINT_SIZE NV097_SET_POINT_PARAMS/D3DRS_POINTSIZE D3DRS_POINTSIZE_MIN D3DRS_POINTSIZE_MAX D3DRS_POINTSCALE_A D3DRS_POINTSCALE_B D3DRS_POINTSCALE_C
-    LazySetCombiners()
-
-    double check:
-    1. pixel shader set/update: done
-    2. vertex shader set/update
-    3. vertex format/vertex buffer/stream srouce
-    CxbxrImpl_SetVertexShaderInput() affects these globals/routines.
-        GetXboxVertexAttributeFormat(),  uses g_Xbox_SetVertexShaderInput_Count g_Xbox_SetVertexShaderInput_Attributes : using set_IVB_DECL_override(), g_InlineVertexBuffer_DeclarationOverride = &g_NV2AVertexAttributeFormat; use pgraph vertex data array format setup g_NV2AVertexAttributeFormat
-            UpdateFixedFunctionVertexShaderState()/CxbxGetVertexDeclaration()
-        GetXboxVertexStreamInput() g_Xbox_SetVertexShaderInput_Data g_Xbox_SetVertexShaderInput_Count : pDrawContext->pXboxVertexStreamZeroData set to pgraph vertex data array offset or inline array vertex buffer can avoid using GetXboxVertexStreamInput()
-            CountActiveD3DStreams()/CxbxVertexBufferConverter::ConvertStream
-        
-    4. xbox draw call internals and pgraph instructions.
-
-        DrawVerticesUP
-            SetStateUP() // compose g_NV2AVertexAttributeFormat with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), calculate vertex stride, set DrawContext->pXboxVertexStreamZeroData to inline array vertex buffer.
-            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
-            PushCount(pPush++, PUSHER_NOINC(NV097_INLINE_ARRAY), count);
-            Push1(pPush, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
-
-        DrawIndexedVerticesUP
-            SetStateUP(); // compose g_NV2AVertexAttributeFormat with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), calculate vertex stride, set DrawContext->pXboxVertexStreamZeroData to inline array vertex buffer.
-            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
-            PushCount(pPush++, PUSHER_NOINC(NV097_INLINE_ARRAY), count);
-            Push1(pPush, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
-
-        DrawVertices
-            SetStateVB(0); // compose g_NV2AVertexAttributeFormat and vertex stride with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), set DrawContext->pXboxVertexStreamZeroData to NV097_SET_VERTEX_DATA_ARRAY_OFFSET(i)
-            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
-            PushCount(pPush + 2, PUSHER_NOINC(NV097_DRAW_ARRAYS), drawArraysCount);
-            while (VertexCount > DRAW_COUNT_BATCH)
-            {
-                *(pPush + 3) = DRF_NUMFAST(097, _DRAW_ARRAYS, _COUNT, DRAW_COUNT_BATCH - 1)
-                             | DRF_NUMFAST(097, _DRAW_ARRAYS, _START_INDEX, StartVertex);
-
-                pPush++;
-                StartVertex += DRAW_COUNT_BATCH;
-                VertexCount -= DRAW_COUNT_BATCH;
-            }
-            *(pPush + 3) = DRF_NUMFAST(097, _DRAW_ARRAYS, _COUNT, VertexCount - 1)
-                 | DRF_NUMFAST(097, _DRAW_ARRAYS, _START_INDEX, StartVertex);
-
-            Push1(pPush + 4, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
-
-        DrawIndexedVertices  // compose g_NV2AVertexAttributeFormat and vertex stride with NV097_SET_VERTEX_DATA_ARRAY_FORMAT(i), set DrawContext->pXboxVertexStreamZeroData to NV097_SET_VERTEX_DATA_ARRAY_OFFSET(i)
-                             // compose index buffer from NV097_ARRAY_ELEMENT16/NV097_ARRAY_ELEMENT32
-            SetStateVB(IndexBase);
-            Push1(pPush, NV097_SET_BEGIN_END, PrimitiveType);
-                PushCount(pPush, PUSHER_NOINC(NV097_ARRAY_ELEMENT16), arrayCount);//put two indexes in one dword, send in via multiple method_count.
-                Push1(pPush, NV097_ARRAY_ELEMENT32, (DWORD) *pIndexData); //optional if there were odd vertex index, handle the very last index.
-            Push1(pPush, NV097_SET_BEGIN_END, NV097_SET_BEGIN_END_OP_END);
-
-        SetStateUP()  // set vertex format with  sizeAndType but without vertex stride. NV097_SET_VERTEX_DATA_ARRAY_OFFSET(0) is not set because all vertex attributes shall be pushed to pushbuffer with NV097_INLINE_ARRAY
-            PushCount(pPush++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT(0), 16);
-                sizeAndType = pVertexShader->Slot[slot].SizeAndType;
-                *pPush++ = sizeAndType;
-
-        SetStateVB(pIndexBase) // set vertex format with sizeAndType and vertex stride<<8. NV097_SET_VERTEX_DATA_ARRAY_OFFSET(0) is set to each stream's vertex buffer source offset.
-            PushCount(pPush++, NV097_SET_VERTEX_DATA_ARRAY_FORMAT(0), 16);
-                *pPush++ = pVertexShader->Slot[slot].SizeAndType
-                    + (g_Stream[pVertexShader->Slot[slot].StreamIndex].Stride << 8);
-            
-                offset = GetGPUDataFromResource(pStream->pVertexBuffer)
-                                     + pVertexShader->Slot[slot].Offset
-                                     + pStream->Offset;
-           if (IndexBase != 0)
-               offset += IndexBase * pStream->Stride;
-           Push1(pPush,
-                 NV097_SET_VERTEX_DATA_ARRAY_OFFSET(i),
-                 offset);
    
-do not trampoline to xbox code from pgraph handler. this will cause pushbuffer data corruption.
+ATTN: ***do not trampoline to xbox code from pgraph handler. this will cause pushbuffer data corruption.
 
-    */
+todos:
+   * D3DDevice_SetVertexShader() is ready to be unpatched. todo: we still need this patch to initialize g_pXbox_pPush. need to find a reliable way to initialize g_pXbox_pPush as early as possible so we can unpatch D3DDevice_SetVertexShader()
+   * I tried to keep original xbox globals untouched as possible as I could so it would be easier if we wanna implement a hybrid rendering with both HLE and pushbuffer based rendering. 
+   * in GetXboxViewportOffsetAndScale() we use viewport scale and offsets from vsh_constants[][] directly when we're in NV2A mode. but whether scale[3] should be set with 0.0 like the actual content in vsh_constants or should it be 1.0 like our code need verifications.
+   * 
+*/
 
