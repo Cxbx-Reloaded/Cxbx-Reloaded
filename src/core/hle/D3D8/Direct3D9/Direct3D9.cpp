@@ -4917,10 +4917,27 @@ float GetZScaleForPixelContainer(xbox::X_D3DPixelContainer* pSurface)
     return 1.0f;
 }
 
+extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); //tmp glue
+
 // Get viewport offset and scale values intended to match the XDK calculations
 // We should remove this when we can get the real viewport values from the xbox reliably via NV2A LLE
 void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 {
+	if (is_pgraph_using_NV2A_Kelvin) {
+		float* fptr = HLE_get_NV2A_vertex_constant_float4_ptr(96 - 38);
+		vScale[0] = fptr[0];
+		vScale[1] = fptr[1];
+		vScale[2] = fptr[2];
+		// todo, in this function, it sets default scale[3] as 1.0, but xbox api actually set scale[3] as 0.0 in vsh_constants[][].
+		// need to verify whether 1.0 or 0.0 is correct.
+		vScale[3] = fptr[3];// or vScale[3]=1.0?
+		fptr = HLE_get_NV2A_vertex_constant_float4_ptr(96 - 37);
+		vOffset[0] = fptr[0];
+		vOffset[1] = fptr[1];
+		vOffset[2] = fptr[2];
+		vOffset[3] = fptr[3];
+		return;
+	}
 	// Antialiasing mode affects the viewport offset and scale
 	float aaScaleX, aaScaleY;
 	float aaOffsetX, aaOffsetY;
@@ -4954,7 +4971,6 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
     float vScaleOffset[2][4]; // 0 - scale 1 - offset
 	// todo: use viewport offset and scale from pg->vsh_constants[-38+96][]
 	GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
-
 
 	// Xbox outputs vertex positions in rendertarget pixel coordinate space, with non-normalized Z
 	// e.g. 0 < x < 640 and 0 < y < 480
