@@ -4750,7 +4750,7 @@ int pgraph_handle_method(
                                     g_NV2AVertexShader_dirty = true;
 
                                     // funtion key F7 flips this variable
-                                    g_bUsePassthroughHLSL = true;
+                                    //g_bUsePassthroughHLSL = true;
                                     //float tempConstant[4];
                                     // read constant register 0, CommonSetPassThroughProgram() sets register 0 constant with SuperSampleScaleX/Y
                                     //CxbxrImpl_GetVertexShaderConstant(0 - X_D3DSCM_CORRECTION, tempConstant, 1);
