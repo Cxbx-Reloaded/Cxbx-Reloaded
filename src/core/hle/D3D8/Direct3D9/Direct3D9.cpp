@@ -12975,7 +12975,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64;
 		pPush_local[1] = (DWORD)X_D3DDevice_SetRenderTarget;//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		if (pRenderTarget) {
 			pPush_local[2] = (DWORD)pRenderTarget;
@@ -13040,7 +13040,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_
 		PBTokenArray[2] = (DWORD)pRenderTarget;
 		PBTokenArray[3] = (DWORD)pNewZStencil;
 		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget, 2, PBTokenArray);//argCount 14
+		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget_0, 2, PBTokenArray);//argCount 14
 		// add reference to the surfaces to prevent them being released before we access them in pgraph.
 		if (pRenderTarget)
 			CxbxrImpl_Resource_AddRef(pRenderTarget);
