@@ -12769,11 +12769,12 @@ void CxbxrImpl_SetRenderTarget
 	IDirect3DSurface *pHostDepthStencil = nullptr;
 
 	//check if previous render target data offset has duplicate with vertex buffer data offset in cache. If the data offset of previous render target is cached, we have to transfer the data from host surface to xbox surface. 
+    /*
 	if(g_pXbox_RenderTarget!=nullptr)
 		if (IsDataOffsetCachedVertexBuffer(g_pXbox_RenderTarget->Data)) {
 			LoadSurfaceDataFromHost(g_pXbox_RenderTarget);
 		}
-
+	*/
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
 	if (g_pXbox_BackBufferSurface == xbox::zeroptr && pRenderTarget != nullptr) {
