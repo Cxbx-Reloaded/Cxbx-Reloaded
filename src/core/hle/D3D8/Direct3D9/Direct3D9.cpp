@@ -12769,12 +12769,12 @@ void CxbxrImpl_SetRenderTarget
 			LoadSurfaceDataFromHost(g_pXbox_RenderTarget);
 		}
 
-
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
 	if (g_pXbox_BackBufferSurface == xbox::zeroptr && pRenderTarget != nullptr) {
 		g_Xbox_BackBufferSurface = *pRenderTarget;
-		g_pXbox_BackBufferSurface = &g_Xbox_BackBufferSurface;
+		g_pXbox_BackBufferSurface = pRenderTarget;
+		//g_pXbox_BackBufferSurface = pRenderTarget;
 		// TODO : Some titles might render to another backbuffer later on,
 		// if that happens, we might need to skip the first one or two calls?
 	}
@@ -12783,7 +12783,7 @@ void CxbxrImpl_SetRenderTarget
 	// We can use this to determine the Xbox depth stencil surface for later use!
     if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr && pNewZStencil != nullptr) {
 		g_Xbox_DefaultDepthStencilSurface = *pNewZStencil;
-		g_pXbox_DefaultDepthStencilSurface = &g_Xbox_DefaultDepthStencilSurface;
+		g_pXbox_DefaultDepthStencilSurface = pNewZStencil;
 		// TODO : Some titles might set another depth stencil later on,
 		// if that happens, we might need to skip the first one or two calls?
     }
@@ -12791,7 +12791,7 @@ void CxbxrImpl_SetRenderTarget
 	// The current render target is only replaced if it's passed in here non-null
 	if (pRenderTarget != xbox::zeroptr) {
 		g_Xbox_RenderTarget = *pRenderTarget;
-		g_pXbox_RenderTarget = &g_Xbox_RenderTarget;
+		g_pXbox_RenderTarget = pRenderTarget;
 	}
 	else {
 		// If non is given, use the current Xbox render target
@@ -12828,7 +12828,7 @@ void CxbxrImpl_SetRenderTarget
 	
 	if (pNewZStencil != nullptr) {
 		g_Xbox_DepthStencil = *pNewZStencil;
-		g_pXbox_DepthStencil = &g_Xbox_DepthStencil;
+		g_pXbox_DepthStencil = pNewZStencil;
 	}
 	else {
 		g_pXbox_DepthStencil = nullptr;
@@ -12868,9 +12868,7 @@ void CxbxrImpl_SetRenderTarget
         DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
         ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
     }
-	//
 }
-
 
 ULONG CxbxrImpl_Resource_AddRef
 (
@@ -12968,30 +12966,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		// init pushbuffer related pointers
 		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
 		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
 		pPush_local[1] = (DWORD)X_D3DDevice_SetRenderTarget;//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		
-		if(pRenderTarget){
-			pPush_local[2] = (DWORD)&pPush_local[4];
-			*(X_D3DSurface*)&pPush_local[4] = *pRenderTarget;
+		if (pRenderTarget) {
+			pPush_local[2] = (DWORD)pRenderTarget;
+			CxbxrImpl_Resource_AddRef(pRenderTarget);
 		}
 		else {
-            pPush_local[2] = 0;
+			pPush_local[2] = 0;
 		}
 
-		if(pNewZStencil){
-			pPush_local[3] = (DWORD)&pPush_local[10];
-			*(X_D3DSurface*)&pPush_local[10] = *pNewZStencil;
+		if (pNewZStencil) {
+			pPush_local[3] = (DWORD)pNewZStencil;
+			CxbxrImpl_Resource_AddRef(pNewZStencil);
 		}
 		else {
 			pPush_local[3] = 0;
 		}
 		//set pushbuffer pointer to the new beginning, HLE_API_PUSHBFFER_COMMAND_128 requires 0x20 dwords offset to pPush.
-		*(DWORD**)g_pXbox_pPush += 0x20;
+		*(DWORD**)g_pXbox_pPush += 0x10;
 	}
 }
 
