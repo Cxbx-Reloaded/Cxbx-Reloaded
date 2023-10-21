@@ -154,7 +154,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SetRenderTarget", xbox::EMUPATCH(D3DDevice_SetRenderTarget), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderTargetFast", xbox::EMUPATCH(D3DDevice_SetRenderTargetFast), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetRenderTarget_0", xbox::EMUPATCH(D3DDevice_SetRenderTarget_0), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_SetScreenSpaceOffset", xbox::EMUPATCH(D3DDevice_SetScreenSpaceOffset), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_SetScreenSpaceOffset", xbox::EMUPATCH(D3DDevice_SetScreenSpaceOffset), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetShaderConstantMode", xbox::EMUPATCH(D3DDevice_SetShaderConstantMode), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetShaderConstantMode_0__LTCG_eax1", xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0__LTCG_eax1), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetSoftDisplayFilter", xbox::EMUPATCH(D3DDevice_SetSoftDisplayFilter), PATCH_HLE_D3D),
