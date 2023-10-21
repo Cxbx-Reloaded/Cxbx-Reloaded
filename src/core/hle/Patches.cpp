@@ -190,7 +190,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	//PATCH_ENTRY("D3DDevice_SetVertexShaderInput", xbox::EMUPATCH(D3DDevice_SetVertexShaderInput), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetVertexShaderInputDirect", xbox::EMUPATCH(D3DDevice_SetVertexShaderInputDirect), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetVerticalBlankCallback", xbox::EMUPATCH(D3DDevice_SetVerticalBlankCallback), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_SetViewport", xbox::EMUPATCH(D3DDevice_SetViewport), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_SetViewport", xbox::EMUPATCH(D3DDevice_SetViewport), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Swap", xbox::EMUPATCH(D3DDevice_Swap), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Swap_0", xbox::EMUPATCH(D3DDevice_Swap_0), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SwitchTexture", xbox::EMUPATCH(D3DDevice_SwitchTexture), PATCH_HLE_D3D),
