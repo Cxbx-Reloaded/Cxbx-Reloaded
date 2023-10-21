@@ -377,7 +377,8 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetTile,                                  (xbox::dword_xt, CONST xbox::X_D3DTILE*)                                                              );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     CDevice_KickOff,                                    ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0,                                  ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0_ecx,                              ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0_edx,                              ()                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_LightEnable,                              (xbox::dword_xt, xbox::bool_xt)                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader,                         (xbox::dword_xt, xbox::dword_xt)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShaderProgram,                  (CONST xbox::dword_xt*, xbox::dword_xt)                                                               );  \
@@ -387,6 +388,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::dword_xt*,     WINAPI,     CDevice_MakeSpace,                                  ()                                                                                                    );  \
     XB_MACRO(xbox::dword_xt*,     WINAPI,     D3DDevice_MakeSpace,                                ()                                                                                                    );  \
     XB_MACRO(xbox::dword_xt*,     WINAPI,     D3DDevice_MakeSpace_0,                              ()                                                                                                    );  \
+    XB_MACRO(xbox::dword_xt*,     WINAPI,     D3D_MakeRequestedSpace_4__LTCG_eax_RequestedSpace,  (xbox::void_xt)                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_PersistDisplay,                           (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_Reset,                                    (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
@@ -3150,10 +3152,11 @@ void GetBackBufferPixelDimensions(float& x, float& y) {
 
 static DWORD makeSpaceCount = 0;
 
-xbox::dword_xt* CxbxrImpl_MakeSpace(void)
+__declspec(naked) xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 {
 	makeSpaceCount++;
-	DWORD d3ddevice = *g_pXbox_D3DDevice;
+	DWORD d3ddevice;
+	d3ddevice = *g_pXbox_D3DDevice;
 	xbox::dword_xt* result;
 	if (XB_TRMP(D3DDevice_MakeSpace)){
 		__asm {
@@ -3165,6 +3168,8 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 			pop eax
 			pop ecx
 			pop edx
+			mov eax, result
+			ret
 		}
 	}
 	else if (XB_TRMP(D3DDevice_MakeSpace_0)) {
@@ -3177,6 +3182,8 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 			pop eax
 			pop ecx
 			pop edx
+            mov eax, result
+			ret
 		}
 	}
 	else if (XB_TRMP(CDevice_MakeSpace)) {
@@ -3189,11 +3196,31 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 			mov result, eax
 			pop ecx
 			pop edx
+			mov eax, result
+			ret
 		}
-	}else{
+	}
+	else if (XB_TRMP(D3D_MakeRequestedSpace_4__LTCG_eax_RequestedSpace)) {
+		__asm {
+			LTCG_PROLOGUE
+			// D3D_MakeRequestedSpace_4__LTCG_eax_RequestedSpace() doesn't require this pointer., max size in eax (0x8000), min. size in stack (0x4000)
+			mov  eax, 0x4000
+			push eax
+			shl  eax,1
+			call XB_TRMP(D3D_MakeRequestedSpace_4__LTCG_eax_RequestedSpace)
+			mov result, eax
+			pop eax
+			mov eax, result
+			LTCG_EPILOGUE
+			ret 
+		}
+	}
+	else{
 		CxbxrAbort("MakeSpace not available!");
+		__asm {
+			ret
+		}
     }
-	return result;
 }
 static D3DMATRIX* g_xbox_transform_matrix = nullptr;
 void init_xboxD3dGlobalPointer(void)
@@ -3937,12 +3964,19 @@ void EmuKickOff(void)
 		XB_TRMP(CDevice_KickOff)();
 	}
 	//LTCG version, CDevice in edx
-	else if (XB_TRMP(CDevice_KickOff_0)) {
+	else if (XB_TRMP(CDevice_KickOff_0_edx)) {
 		__asm {
 			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
 			mov  edx, Xbox_D3DDevice
 		}
-		XB_TRMP(CDevice_KickOff_0)();
+		XB_TRMP(CDevice_KickOff_0_edx)();
+	}
+	else if (XB_TRMP(CDevice_KickOff_0_ecx)) {
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  ecx, Xbox_D3DDevice
+		}
+		XB_TRMP(CDevice_KickOff_0_ecx)();
 	}else
 		CxbxrAbort("EmuKickOff:CDevice_KickOff not available!!!");
 }
@@ -8801,13 +8835,34 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
         LOG_FUNC_END;
 
     setTransformCount++;
+	setTransformCount++;
 
-    __asm {
-        // Trampoline to guest code to remove the need for a GetTransform patch
-        mov  eax, State
-        mov  edx, pMatrix
-        call XB_TRMP(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
-    }
+	//CxbxrImpl_SetTransform(State, pMatrix);
+
+	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+
+	//
+	// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+	// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
+	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform_0__LTCG_eax1_edx2;
+	// always copy the whole buffer
+	pPush_local[2] = (DWORD)State;
+	//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+	pPush_local[3] = (DWORD)&pPush_local[4];
+	// store the transform matrix in pushbuffer so we can leave it along.
+	// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+	*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
+
+	//set pushbuffer pointer to the new beginning
+	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x20;
 
 	//CxbxrImpl_SetTransform(State, pMatrix);
 }
@@ -8821,17 +8876,11 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__
     __asm {
         LTCG_PROLOGUE
         mov  State, eax
-        mov  pMatrix, edx   
+        mov  pMatrix, edx
+		call XB_TRMP(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
     }
 
-	// Log + implementation
 	D3DDevice_SetTransform_0__LTCG_eax1_edx2(State, pMatrix);
-
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)State;
-	PBTokenArray[3] = (DWORD)pMatrix;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetTransform, 2);//argCount, not necessary, default to 14
 
     __asm {
         LTCG_EPILOGUE
