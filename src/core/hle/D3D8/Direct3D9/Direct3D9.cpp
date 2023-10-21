@@ -8835,13 +8835,9 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
         LOG_FUNC_END;
 
     setTransformCount++;
-	setTransformCount++;
 
 	//CxbxrImpl_SetTransform(State, pMatrix);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-
-	//
 	// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
 	// init pushbuffer related pointers
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
@@ -8864,7 +8860,6 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x20;
 
-	//CxbxrImpl_SetTransform(State, pMatrix);
 }
 
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
@@ -8906,9 +8901,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 
     // Trampoline to guest code to remove the need for a GetTransform patch
     XB_TRMP(D3DDevice_SetTransform)(State, pMatrix);
-    //CxbxrImpl_SetTransform(State, pMatrix);
-	
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	
 	//
 	// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
