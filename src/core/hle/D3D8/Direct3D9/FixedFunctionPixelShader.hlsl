@@ -1,5 +1,65 @@
 #include "FixedFunctionPixelShader.hlsli"
 
+#if 1 // TODO : Move these (and other) helper functions to a (potentially pre-compiled) hlsl(i) file, to be shared with CxbxPixelShaderTemplate.hlsl
+
+static const float4 WarningColor = float4(0, 1, 1, 1); // Returned when unhandled scenario is encountered
+
+#define unsigned_to_signed(x) (((x) * 2) - 1) // Shifts range from [0..1] to [-1..1] (just like s_bx2)
+#define signed_to_unsigned(x) (((x) + 1) / 2) // Shifts range from [-1..1] to [0..1]
+
+float4 PerformColorSign(const float4 ColorSign, float4 t)
+{
+	// Per color channel, based on the ColorSign setting :
+	// either keep the value range as-is (when ColorSign is zero)
+	// or convert from [0..1] to [-1..+1] (when ColorSign is more than zero, often used for bumpmaps),
+	// or convert from [-1..1] to [0..1] (when ColorSign is less than zero):
+	if (ColorSign.r > 0) t.r = unsigned_to_signed(t.r);
+	if (ColorSign.g > 0) t.g = unsigned_to_signed(t.g);
+	if (ColorSign.b > 0) t.b = unsigned_to_signed(t.b);
+	if (ColorSign.a > 0) t.a = unsigned_to_signed(t.a);
+	
+	// TODO : Instead of the above, create a mirror texture with a host format that has identical component layout, but with all components signed.
+	// Then, in here, when any component has to be read as signed, sample the signed texture (ouch : with what dimension and coordinate?!)
+	// and replace the components that we read from the unsigned texture, but which have to be signed, with the signed components read from the signed mirror texture.
+	// This way, texture filtering can still be allowed, as that would be performed separately over the unsigned vs unsigned textures (so no mixing between the two).
+
+	return t;
+}
+
+float4 PerformColorKeyOp(const float ColorKeyOp, const float4 ColorKeyColor, float4 t)
+{
+	// Handle all D3DTCOLORKEYOP_ modes :
+	if (ColorKeyOp == 0) // = _DISABLE
+		return t; // No color-key checking
+
+	if (any(t - ColorKeyColor))
+		return t; // Cxbx assumption : On color mismatch, simply return the input. TODO : This might require a more elaborate operation? (Like "when any of the texels were filtered with a non-zero weight", whatever that means)
+
+	if (ColorKeyOp == 1) // = _ALPHA
+		return float4(t.rgb, 0);
+
+	if (ColorKeyOp == 2) // = _RGBA
+		return 0;
+
+#ifdef ENABLE_FF_ALPHAKILL
+	if (ColorKeyOp == 3) // = _KILL
+		discard; // When compiled into FixedFunctionPixelShader.hlsl, compile errors arise
+
+#endif
+	// Undefined ColorKeyOp mode
+	return WarningColor;
+}
+
+void PerformAlphaKill(const float AlphaKill, float4 t)
+{
+#ifdef ENABLE_FF_ALPHAKILL
+	if (AlphaKill)
+		if (t.a == 0)
+			discard; // When compiled into FixedFunctionPixelShader.hlsl, compile errors arise
+#endif
+}
+#endif
+
 uniform FixedFunctionPixelShaderState state : register(c0);
 sampler samplers[4] : register(s0);
 
@@ -72,7 +132,7 @@ float4 GetArg(float arg, TextureArgs ctx) {
 float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, TextureArgs ctx, PsTextureStageState stage) {
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtextureop
 
-	// Note if we use ifs here instead of else if
+	// Note : When we use separate "if"'s here instead of below "else if"'s,
 	// D3DCompile may stackoverflow at runtime
 	if (op == X_D3DTOP_SELECTARG1)
 		return arg1;
@@ -114,33 +174,30 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 		return float4((1 - arg1.a) * arg2.rgb + arg1.rgb, 1);
 	else if (op == X_D3DTOP_MODULATEINVCOLOR_ADDALPHA)
 		return float4((1 - arg1.rgb) * arg2.rgb + arg1.a, 1);
-	else if (op == X_D3DTOP_DOTPRODUCT3)
+	else if (op == X_D3DTOP_DOTPRODUCT3) {
 		// Test case: PerPixelLighting
-		return saturate(dot(
-			(arg1.rgb - 0.5) * 2,
-			(arg2.rgb - 0.5) * 2
-		));
+		arg1.rgb = (arg1.rgb*2) -1; // TODO : These bias and scale operations should not be performed here, but when the input-texture is sampled (same as for X_D3DTOP_BUMPENVMAP*)
+		arg2.rgb = (arg2.rgb*2)-1;
+		return saturate(dot(arg1.rgb, arg2.rgb));
+	}
 	// Note arg0 below is arg1 in D3D docs
 	// since it becomes the first argument for operations supporting 3 arguments...
 	else if (op == X_D3DTOP_MULTIPLYADD)
 		return arg0 + arg1 * arg2;
 	else if (op == X_D3DTOP_LERP)
 		return arg0 * arg1 + (1 - arg0) * arg2;
-	else if (op == X_D3DTOP_BUMPENVMAP)
+	else if (op >= X_D3DTOP_BUMPENVMAP) { // Also handles X_D3DTOP_BUMPENVMAPLUMINANCE
+		arg1 = PerformColorSign(stage.COLORSIGN,ctx.CURRENT); // TODO : Verify bump mapping indeed uses previous pixel value (CURRENT, or possibly TEXTURE, but not COLORARG1)
+		//arg1.xy = (arg1.xy - 0.5) * 2; // TODO : This bias and scale operation should not be performed here, but when the input-texture is sampled (same as for X_D3DTOP_DOTPRODUCT3)
+		// Note : default component order .xyzw is identical to .rgba, and z (red) should not be scaled here, as it's used for luminance which is an unsigned input.
 		return float4(
 			arg1.x * stage.BUMPENVMAT00 + arg1.y * stage.BUMPENVMAT10,
 			arg1.x * stage.BUMPENVMAT01 + arg1.y * stage.BUMPENVMAT11,
-			1, 1);
-	else if (op == X_D3DTOP_BUMPENVMAPLUMINANCE)
-		return float4(
-			arg1.x * stage.BUMPENVMAT00 + arg1.y * stage.BUMPENVMAT10,
-			arg1.x * stage.BUMPENVMAT01 + arg1.y * stage.BUMPENVMAT11,
-			arg1.z * stage.BUMPENVLSCALE + stage.BUMPENVLOFFSET,
+			(op == X_D3DTOP_BUMPENVMAPLUMINANCE) ? arg1.z * stage.BUMPENVLSCALE + stage.BUMPENVLOFFSET : 1,
 			1);
-
+	}
 	// Something is amiss... we should have returned by now!
-	// Return a bright colour
-	return float4(0, 1, 1, 1);
+	return WarningColor;
 }
 
 TextureArgs ExecuteTextureStage(
@@ -156,19 +213,15 @@ TextureArgs ExecuteTextureStage(
 
 	PsTextureStageState stage = state.stages[i];
 
-	// Determine the texture for this stage
-	float3 offset = float3(0, 0, 0);
-	float4 factor = float4(1, 1, 1, 1);
+	// Fetch the texture coordinates for this stage
+	float3 TexCoord = TexCoords[i].xyz;
 
-	// Bumpmap special case
-	if (previousOp == X_D3DTOP_BUMPENVMAP ||
-		previousOp == X_D3DTOP_BUMPENVMAPLUMINANCE) {
+	// Bump environment mapping special case
+	if (previousOp >= X_D3DTOP_BUMPENVMAP) { // Also handles X_D3DTOP_BUMPENVMAPLUMINANCE
 		// Assume U, V, L is in CURRENT
 		// Add U', V', to the texture coordinates
-		// And multiply by L'
 		// https://docs.microsoft.com/en-us/windows/win32/direct3d9/bump-mapping-formulas
-		offset.xy = ctx.CURRENT.xy;
-		factor.rgb = ctx.CURRENT.z;
+		TexCoord.xy += ctx.CURRENT.xy;
 	}
 
 	// Sample the texture
@@ -177,20 +230,21 @@ TextureArgs ExecuteTextureStage(
 	if (type == SAMPLE_NONE)
 		t = 1; // Test case JSRF
 	else if (type == SAMPLE_2D)
-		t = tex2D(samplers[i], TexCoords[i].xy + offset.xy);
+		t = tex2D(samplers[i], TexCoord.xy);
 	else if (type == SAMPLE_3D)
-		t = tex3D(samplers[i], TexCoords[i].xyz + offset.xyz);
+		t = tex3D(samplers[i], TexCoord.xyz);
 	else if (type == SAMPLE_CUBE)
-		t = texCUBE(samplers[i], TexCoords[i].xyz + offset.xyz);
+		t = texCUBE(samplers[i], TexCoord.xyz);
 
-#ifdef ENABLE_FF_ALPHAKILL
-	if (stage.ALPHAKILL)
-		if (t.a == 0)
-			discard;
+	
 
-#endif
+	// TODO : Figure out in which order the following operations should be performed :
+	//t = PerformColorSign(stage.COLORSIGN, t);
+	//t = PerformColorKeyOp(stage.COLORKEYOP, stage.COLORKEYCOLOR, t);
+	PerformAlphaKill(stage.ALPHAKILL, t);
+
 	// Assign the final value for TEXTURE
-	ctx.TEXTURE = t * factor;
+	ctx.TEXTURE = t;
 
 	// Premodulate special case
 	if (previousOp == X_D3DTOP_PREMODULATE) {
@@ -228,7 +282,7 @@ TextureArgs ExecuteTextureStage(
 	// Use CURRENT for anything other than TEMP
 	// Test case: DoA 3
 	if (s.RESULTARG == X_D3DTA_TEMP)
-		ctx.TEMP = value;
+		ctx.TEMP = PerformColorKeyOp(stage.COLORKEYOP, stage.COLORKEYCOLOR, value);
 	else
 		ctx.CURRENT = value;
 

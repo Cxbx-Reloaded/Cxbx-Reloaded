@@ -53,9 +53,11 @@ enum _ComponentEncoding {
 	____G8B8, // NOTE : A takes G, R takes B
 	______A8, // TEST : R=G=B= 255
 	__R6G5B5, // NOTE : A=255
+	__L6V5U5, // NOTE : A=255
 	R5G5B5A1,
 	R4G4B4A4,
 	A8B8G8R8,
+	Q8W8V8U8,
 	B8G8R8A8,
 	R8G8B8A8,
 	______L8, // NOTE : A=255, R=G=B= L
@@ -70,52 +72,209 @@ enum _ComponentEncoding {
 	____UYVY,
 };
 
-// Conversion functions copied from libyuv
+// Bitfield extraction macros, reading a field from right-to-left specified bit widths.
+// Invoker is responsible for passing in assigned and big enough data pointers.
+// Input and return values are unsigned bytes.
+// The *_top pairs replace a single AND (in extract) and two shifts (in expand) by just two shifts (one in extract and one in expand)
+// Note : Below expressions must be embraced, otherwise macro-expansion would cause incorrect expressions!
+
+// 3 components, 5:5:6
+#define  extract1from556_top(src)  (src[0] << 2)
+#define  extract1from556(src)  (src[0] & 0x3f)
+#ifdef BIG_ENDIAN
+#define  extract2from556(src) ((src[0] >> 6) | ((src[1] & 0x07) << 2))
+#else // LITTLE_ENDIAN
+#define  extract2from556(src) ((*(uint16_t*)src >> 6) & 0x1f)
+#endif
+#define  extract3from556(src)  (src[1] >> 3)
+
+// 3 components, 5:6:5
+#define  extract1from565_top(src)  (src[0] << 3)
+#define  extract1from565(src)  (src[0] & 0x1f)
+#ifdef BIG_ENDIAN
+#define  extract2from565(src) ((src[0] >> 5) | ((src[1] & 0x07) << 3))
+#else // LITTLE_ENDIAN
+#define  extract2from565(src) ((*(uint16_t*)src >> 5) & 0x1f)
+#endif
+#define  extract3from565(src)  (src[1] >> 3)
+
+// 3 components, 6:5:5
+#define  extract1from655_top(src)  (src[0] << 3)
+#define  extract1from655(src)  (src[0] & 0x1f)
+#ifdef BIG_ENDIAN
+#define  extract2from655(src) ((src[0] >> 5) | ((src[1] & 0x03) << 3))
+#else // LITTLE_ENDIAN
+#define  extract2from655(src) ((*(uint16_t*)src >> 5) & 0x1f)
+#endif
+#define  extract3from655(src)  (src[1] >> 2)
+
+// 4 components, 1:5:5:5
+#define extract1from1555_top(src)  (src[0] << 3)
+#define extract1from1555(src)  (src[0] & 0x1f)
+#ifdef BIG_ENDIAN
+#define extract2from1555(src) ((src[0] >> 5) | ((src[1] & 0x03) << 3))
+#define extract3from1555(src) ((src[1] >> 2) & 0x1f)
+#else // LITTLE_ENDIAN
+#define extract2from1555(src) ((*(uint16_t*)src >> 5) & 0x1f)
+#define extract3from1555(src) ((*(uint16_t*)src >> 10) & 0x1f)
+#endif
+#define extract4from1555(src)  (src[1] >> 7)
+
+// 4 components, 5:5:5:1
+#define extract1from5551(src)  (src[0] & 1)
+#define extract2from5551(src) ((src[0] >> 1) & 0x1f)
+#ifdef BIG_ENDIAN
+#define extract3from5551(src) ((src[0] >> 6) | ((src[1] & 0x07) << 2))
+#else // LITTLE_ENDIAN
+#define extract3from5551(src) ((*(uint16_t*)src >> 6) & 0x1f)
+#endif
+#define extract4from5551(src)  (src[1] >> 3)
+
+// 4 components, 4:4:4:4
+#define extract1from4444_top(src)  (src[0] << 4)
+#define extract1from4444(src)  (src[0] & 0x0f)
+#define extract2from4444(src)  (src[0] >> 4)
+#define extract3from4444_top(src)  (src[1] << 4)
+#define extract3from4444(src)  (src[1] & 0x0f)
+#define extract4from4444(src)  (src[1] >> 4)
+
+// Range expansion for less-than-8 bit unsigned values, towards 8-bit unsigned values
+// by repeating the topmost bits, resulting in a linear range in the full 8-bits output.
+// Note : Input values *must not* exceed the number of significant input bits.
+// Guarding against that is caller's responsibility.
+
+#if 0 // unused
+inline uint8_t u_expand7(const uint8_t value)
+{
+	return (value << 1) | (value >> 6);
+}
+#endif
+
+inline uint8_t u_expand6_top(const uint8_t value)
+{
+	return value | (value >> 6);
+}
+
+inline uint8_t u_expand6(const uint8_t value)
+{
+	return (value << 2) | (value >> 4);
+}
+
+inline uint8_t u_expand5_top(const uint8_t value)
+{
+	return value | (value >> 5);
+}
+
+inline uint8_t u_expand5(const uint8_t value)
+{
+	return (value << 3) | (value >> 2);
+}
+
+inline uint8_t u_expand4_top(const uint8_t value)
+{
+	return value | (value >> 4);
+}
+
+inline uint8_t u_expand4(const uint8_t value)
+{
+	return (value << 4) | value;
+}
+
+#if 0 // unused
+inline uint8_t u_expand3(const uint8_t value)
+{
+	return (value << 5) | (value << 2) || (value >> 1);
+}
+
+inline uint8_t u_expand2(const uint8_t value)
+{
+	return (value << 6) | (value << 4) || (value << 2) | value;
+}
+#endif
+
+inline uint8_t u_expand1(const uint8_t value)
+{
+	return -value; // bit hack : zero stays zero, 1 becomes -1 (all-ones)
+}
+
+// Range expansion for input with a sign bit
+inline uint8_t s_expand6(const uint8_t value)
+{
+	return (value << 2) | ((value >> 3) & 0x03);
+}
+
+inline uint8_t s_expand5(const uint8_t value)
+{
+	return (value << 3) | ((value >> 1) & 0x07);
+}
+
+
+// Conversion functions derived from libyuv
 // See https://chromium.googlesource.com/libyuv/libyuv/+/master/source/row_common.cc
-void RGB565ToARGBRow_C(const uint8_t* src_rgb565, uint8_t* dst_argb, int width) {
+//
+// Here a few layouts, with capital letters indicating most significant bit:
+// Note, that source and destination formats are declared right-to-left.
+//
+// ARGB     : byte[0]=Bbbbbbbb, byte[1]=Gggggggg, byte[2]=Rrrrrrrr, byte[3]=Aaaaaaaa (destination format)
+//
+// ARGB4444 : byte[0]=GgggBbbb, byte[1]=AaaaRrrr
+// RGB565   : byte[0]=gggBbbbb, byte[1]=RrrrrGgg
+// ARGB1555 : byte[0]=gggBbbbb, byte[1]=ARrrrrGg
+// X1R5G5B5 : byte[0]=gggBbbbb, byte[1]=XRrrrrGg (X is ignored)
+// R6G5B5   : byte[0]=gggBbbbb, byte[1]=RrrrrrGg
+// L6V5U5   : byte[0]=vvvUuuuu, byte[1]=LlllllVv (Note : U and V, but not L, are stored in two's complement, signed, form)
+// R5G5B5A1 : byte[0]=ggBbbbbA, byte[1]=RrrrrGgg
+// R4G4B4A4 : byte[0]=BbbbAaaa, byte[1]=RrrrGggg
+
+void RGB565ToARGBRow_C(const uint8_t* src_rgb565, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_rgb565[0] & 0x1f;
-        uint8_t g = (src_rgb565[0] >> 5) | ((src_rgb565[1] & 0x07) << 3);
-        uint8_t r = src_rgb565[1] >> 3;
-		dst_argb[0] = (b << 3) | (b >> 2);
-		dst_argb[1] = (g << 2) | (g >> 4);
-		dst_argb[2] = (r << 3) | (r >> 2);
+		uint8_t b5 = extract1from565_top(src_rgb565);
+		uint8_t g6 = extract2from565(src_rgb565);
+		uint8_t r5 = extract3from565(src_rgb565);
+		dst_argb[0] = u_expand5_top(b5);
+		dst_argb[1] = u_expand6(g6);
+		dst_argb[2] = u_expand5(r5);
 		dst_argb[3] = 255u;
 		dst_argb += 4;
 		src_rgb565 += 2;
 	}
 }
+
 void ARGB1555ToARGBRow_C(const uint8_t* src_argb1555,
-    uint8_t* dst_argb,
-	int width) {
+	uint8_t* dst_argb,
+	int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_argb1555[0] & 0x1f;
-        uint8_t g = (src_argb1555[0] >> 5) | ((src_argb1555[1] & 0x03) << 3);
-        uint8_t r = (src_argb1555[1] & 0x7c) >> 2;
-        uint8_t a = src_argb1555[1] >> 7;
-		dst_argb[0] = (b << 3) | (b >> 2);
-		dst_argb[1] = (g << 3) | (g >> 2);
-		dst_argb[2] = (r << 3) | (r >> 2);
-		dst_argb[3] = -a;
+		uint8_t b5 = extract1from1555_top(src_argb1555);
+		uint8_t g5 = extract2from1555(src_argb1555);
+		uint8_t r5 = extract3from1555(src_argb1555);
+		uint8_t a1 = extract4from1555(src_argb1555);
+		dst_argb[0] = u_expand5_top(b5);
+		dst_argb[1] = u_expand5(g5);
+		dst_argb[2] = u_expand5(r5);
+		dst_argb[3] = u_expand1(a1);
 		dst_argb += 4;
 		src_argb1555 += 2;
 	}
 }
+
 void ARGB4444ToARGBRow_C(const uint8_t* src_argb4444,
-    uint8_t* dst_argb,
-	int width) {
+	uint8_t* dst_argb,
+	int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_argb4444[0] & 0x0f;
-        uint8_t g = src_argb4444[0] >> 4;
-        uint8_t r = src_argb4444[1] & 0x0f;
-        uint8_t a = src_argb4444[1] >> 4;
-		dst_argb[0] = (b << 4) | b;
-		dst_argb[1] = (g << 4) | g;
-		dst_argb[2] = (r << 4) | r;
-		dst_argb[3] = (a << 4) | a;
+		uint8_t b4 = extract1from4444_top(src_argb4444);
+		uint8_t g4 = extract2from4444(src_argb4444);
+		uint8_t r4 = extract3from4444_top(src_argb4444);
+		uint8_t a4 = extract4from4444(src_argb4444);
+		dst_argb[0] = u_expand4_top(b4);
+		dst_argb[1] = u_expand4(g4);
+		dst_argb[2] = u_expand4_top(r4);
+		dst_argb[3] = u_expand4(a4);
 		dst_argb += 4;
 		src_argb4444 += 2;
 	}
@@ -123,209 +282,282 @@ void ARGB4444ToARGBRow_C(const uint8_t* src_argb4444,
 
 // Cxbx color component conversion functions 
 void X1R5G5B5ToARGBRow_C(const uint8_t* src_x1r5g5b5, uint8_t* dst_argb,
-	int width) {
+	int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_x1r5g5b5[0] & 0x1f;
-        uint8_t g = (src_x1r5g5b5[0] >> 5) | ((src_x1r5g5b5[1] & 0x03) << 3);
-        uint8_t r = (src_x1r5g5b5[1] & 0x7c) >> 2;
-		dst_argb[0] = (b << 3) | (b >> 2);
-		dst_argb[1] = (g << 3) | (g >> 2);
-		dst_argb[2] = (r << 3) | (r >> 2);
+		uint8_t b5 = extract1from1555_top(src_x1r5g5b5);
+		uint8_t g5 = extract2from1555(src_x1r5g5b5);
+		uint8_t r5 = extract3from1555(src_x1r5g5b5);
+		// Note : X1 is ignored, so no extract4from1555
+		dst_argb[0] = u_expand5_top(b5);
+		dst_argb[1] = u_expand5(g5);
+		dst_argb[2] = u_expand5(r5);
 		dst_argb[3] = 255u;
 		dst_argb += 4;
 		src_x1r5g5b5 += 2;
 	}
 }
 
-void A8R8G8B8ToARGBRow_C(const uint8_t* src_a8r8g8b8, uint8_t* dst_argb, int width) {
+void A8R8G8B8ToARGBRow_C(const uint8_t* src_a8r8g8b8, uint8_t* dst_argb, int width)
+{
 	memcpy(dst_argb, src_a8r8g8b8, width * sizeof(D3DCOLOR)); // Cxbx pass-through
 }
 
-void X8R8G8B8ToARGBRow_C(const uint8_t* src_x8r8g8b8, uint8_t* dst_argb, int width) {
+void X8R8G8B8ToARGBRow_C(const uint8_t* src_x8r8g8b8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-		uint8_t b = src_x8r8g8b8[0];
-		uint8_t g = src_x8r8g8b8[1];
-		uint8_t r = src_x8r8g8b8[2];
-		dst_argb[0] = b;
-		dst_argb[1] = g;
-		dst_argb[2] = r;
+		uint8_t b8 = src_x8r8g8b8[0];
+		uint8_t g8 = src_x8r8g8b8[1];
+		uint8_t r8 = src_x8r8g8b8[2];
+		dst_argb[0] = b8;
+		dst_argb[1] = g8;
+		dst_argb[2] = r8;
 		dst_argb[3] = 255u;
 		dst_argb += 4;
 		src_x8r8g8b8 += 4;
 	}
 }
 
-void ____R8B8ToARGBRow_C(const uint8_t* src_r8b8, uint8_t* dst_argb, int width) {
+void ____R8B8ToARGBRow_C(const uint8_t* src_r8b8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_r8b8[0];
-        uint8_t r = src_r8b8[1];
-		dst_argb[0] = b;
-		dst_argb[1] = b;
-		dst_argb[2] = r;
-		dst_argb[3] = r;
+		uint8_t b8 = src_r8b8[0];
+		uint8_t r8 = src_r8b8[1];
+		dst_argb[0] = b8;
+		dst_argb[1] = b8;
+		dst_argb[2] = r8;
+		dst_argb[3] = r8;
 		dst_argb += 4;
 		src_r8b8 += 2;
 	}
 }
 
-void ____G8B8ToARGBRow_C(const uint8_t* src_g8b8, uint8_t* dst_argb, int width) {
+void ____G8B8ToARGBRow_C(const uint8_t* src_g8b8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_g8b8[0];
-        uint8_t g = src_g8b8[1];
-		dst_argb[0] = b;
-		dst_argb[1] = g;
-		dst_argb[2] = b;
-		dst_argb[3] = g;
+		uint8_t b8 = src_g8b8[0];
+		uint8_t g8 = src_g8b8[1];
+		dst_argb[0] = b8;
+		dst_argb[1] = g8;
+		dst_argb[2] = b8;
+		dst_argb[3] = g8;
 		dst_argb += 4;
 		src_g8b8 += 2;
 	}
 }
 
-void ______A8ToARGBRow_C(const uint8_t* src_a8, uint8_t* dst_argb, int width) {
+void ______A8ToARGBRow_C(const uint8_t* src_a8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t a = src_a8[0];
+		uint8_t a8 = src_a8[0];
 		dst_argb[0] = 255u;
 		dst_argb[1] = 255u;
 		dst_argb[2] = 255u;
-		dst_argb[3] = a;
+		dst_argb[3] = a8;
 		dst_argb += 4;
 		src_a8 += 1;
 	}
 }
 
-void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width) {
+void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_r6g5b5[0] & 0x1f;
-        uint8_t g = (src_r6g5b5[0] >> 5) | ((src_r6g5b5[1] & 0x03) << 3);
-        uint8_t r = src_r6g5b5[1] >> 2;
-		dst_argb[0] = (b << 3) | (b >> 2);
-		dst_argb[1] = (g << 3) | (g >> 2);
-		dst_argb[2] = (r << 2) | (r >> 4);
+		uint8_t b5 = extract1from655_top(src_r6g5b5);
+		uint8_t g5 = extract2from655(src_r6g5b5);
+		uint8_t r6 = extract3from655(src_r6g5b5);
+		dst_argb[0] = u_expand5_top(b5);
+		dst_argb[1] = u_expand5(g5);
+		dst_argb[2] = u_expand6(r6);
 		dst_argb[3] = 255u;
 		dst_argb += 4;
 		src_r6g5b5 += 2;
 	}
 }
 
-void R5G5B5A1ToARGBRow_C(const uint8_t* src_r5g5b5a1, uint8_t* dst_argb, int width) {
+void __L6V5U5ToARGBRow_C(const uint8_t* src_l6v5u5, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t a = src_r5g5b5a1[0] & 1;
-        uint8_t b = (src_r5g5b5a1[0] & 0x3e) >> 1;
-        uint8_t g = (src_r5g5b5a1[0] >> 6) | ((src_r5g5b5a1[1] & 0x07) << 2);
-        uint8_t r = (src_r5g5b5a1[1] & 0xf8) >> 3;
-		dst_argb[0] = (b << 3) | (b >> 2);
-		dst_argb[1] = (g << 3) | (g >> 2);
-		dst_argb[2] = (r << 3) | (r >> 2);
-		dst_argb[3] = -a;
+		// Note : U and V are stored in two's complement (signed) form, but since
+		// ARGB doesn't support signed values, we convert the range into unsigned
+		// and rely on COLORSIGN support in our pixel shaders to convert it back!
+		// However, be aware that this causes different values after normalization!
+		// See https://github.com/wine-staging/wine-patched/blob/9ac6333e9bad75d6c23b9de604c71a41c151f65b/dlls/wined3d/utils.c#L699-L729
+		// and https://www.khronos.org/opengl/wiki/Normalized_Integer
+		uint8_t u5 = (extract1from655(src_l6v5u5) + 0x10) & 0x1f;
+		uint8_t v5 = (extract2from655(src_l6v5u5) + 0x10) & 0x1f;
+		uint8_t l6 = extract3from655(src_l6v5u5);
+		// Note : Countrary to R6G5B5 (which gets converted to B8, G8, R8, A8=255),
+		// L6U5V5 does not reverse its components (and becomes L8, V8, U8, A8=255)!
+		dst_argb[0] = u_expand6(l6);
+		dst_argb[1] = u_expand5(v5);
+		dst_argb[2] = u_expand5(u5);
+		dst_argb[3] = 255u;
+		dst_argb += 4;
+		src_l6v5u5 += 2;
+	}
+}
+
+void __L6V5U5ToX8L8V8U8Row_C(const uint8_t* src_l6v5u5, uint8_t* dst_xlvu, int width)
+{
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t u5 = extract1from655(src_l6v5u5);
+		uint8_t v5 = extract2from655(src_l6v5u5);
+		uint8_t l6 = extract3from655(src_l6v5u5);
+		dst_xlvu[0] = s_expand5(u5);
+		dst_xlvu[1] = s_expand5(v5);
+		dst_xlvu[2] = u_expand6(l6);
+		dst_xlvu[3] = 255u;
+		dst_xlvu += 4;
+		src_l6v5u5 += 2;
+	}
+}
+
+void R5G5B5A1ToARGBRow_C(const uint8_t* src_r5g5b5a1, uint8_t* dst_argb, int width)
+{
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t a1 = extract1from5551(src_r5g5b5a1);
+		uint8_t b5 = extract2from5551(src_r5g5b5a1);
+		uint8_t g5 = extract3from5551(src_r5g5b5a1);
+		uint8_t r5 = extract4from5551(src_r5g5b5a1);
+		dst_argb[0] = u_expand5(b5);
+		dst_argb[1] = u_expand5(g5);
+		dst_argb[2] = u_expand5(r5);
+		dst_argb[3] = u_expand1(a1);
 		dst_argb += 4;
 		src_r5g5b5a1 += 2;
 	}
 }
 
-void R4G4B4A4ToARGBRow_C(const uint8_t* src_r4g4b4a4, uint8_t* dst_argb, int width) {
+void R4G4B4A4ToARGBRow_C(const uint8_t* src_r4g4b4a4, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t a = src_r4g4b4a4[0] & 0x0f;
-        uint8_t b = src_r4g4b4a4[0] >> 4;
-        uint8_t g = src_r4g4b4a4[1] & 0x0f;
-        uint8_t r = src_r4g4b4a4[1] >> 4;
-		dst_argb[0] = (b << 4) | b;
-		dst_argb[1] = (g << 4) | g;
-		dst_argb[2] = (r << 4) | r;
-		dst_argb[3] = (a << 4) | a;
+		uint8_t a4 = extract1from4444_top(src_r4g4b4a4);
+		uint8_t b4 = extract2from4444(src_r4g4b4a4);
+		uint8_t g4 = extract3from4444_top(src_r4g4b4a4);
+		uint8_t r4 = extract4from4444(src_r4g4b4a4);
+		dst_argb[0] = u_expand4(b4);
+		dst_argb[1] = u_expand4_top(g4);
+		dst_argb[2] = u_expand4(r4);
+		dst_argb[3] = u_expand4_top(a4);
 		dst_argb += 4;
 		src_r4g4b4a4 += 2;
 	}
 }
 
-void A8B8G8R8ToARGBRow_C(const uint8_t* src_a8b8g8r8, uint8_t* dst_argb, int width) {
+void Q8W8V8U8ToARGBRow_C(const uint8_t* src_a8b8g8r8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t r = src_a8b8g8r8[0];
-        uint8_t g = src_a8b8g8r8[1];
-        uint8_t b = src_a8b8g8r8[3];
-        uint8_t a = src_a8b8g8r8[4];
-		dst_argb[0] = b;
-		dst_argb[1] = g;
-		dst_argb[2] = r;
-		dst_argb[3] = a;
+		uint8_t u8 = src_a8b8g8r8[0];
+		uint8_t v8 = src_a8b8g8r8[1];
+		uint8_t w8 = src_a8b8g8r8[2];
+		uint8_t q8 = src_a8b8g8r8[3];
+		dst_argb[0] = (u8);
+		dst_argb[1] = (v8);
+		dst_argb[2] = (w8);
+		dst_argb[3] = (q8);
 		dst_argb += 4;
 		src_a8b8g8r8 += 4;
 	}
 }
 
-void B8G8R8A8ToARGBRow_C(const uint8_t* src_b8g8r8a8, uint8_t* dst_argb, int width) {
+void A8B8G8R8ToARGBRow_C(const uint8_t* src_a8b8g8r8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t a = src_b8g8r8a8[0];
-        uint8_t r = src_b8g8r8a8[1];
-        uint8_t g = src_b8g8r8a8[3];
-        uint8_t b = src_b8g8r8a8[4];
-		dst_argb[0] = b;
-		dst_argb[1] = g;
-		dst_argb[2] = r;
-		dst_argb[3] = a;
+		uint8_t r8 = src_a8b8g8r8[0];
+		uint8_t g8 = src_a8b8g8r8[1];
+		uint8_t b8 = src_a8b8g8r8[2];
+		uint8_t a8 = src_a8b8g8r8[3];
+		dst_argb[0] = b8;
+		dst_argb[1] = g8;
+		dst_argb[2] = r8;
+		dst_argb[3] = a8;
+		dst_argb += 4;
+		src_a8b8g8r8 += 4;
+	}
+}
+
+void B8G8R8A8ToARGBRow_C(const uint8_t* src_b8g8r8a8, uint8_t* dst_argb, int width)
+{
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t a8 = src_b8g8r8a8[0];
+		uint8_t r8 = src_b8g8r8a8[1];
+		uint8_t g8 = src_b8g8r8a8[2];
+		uint8_t b8 = src_b8g8r8a8[3];
+		dst_argb[0] = b8;
+		dst_argb[1] = g8;
+		dst_argb[2] = r8;
+		dst_argb[3] = a8;
 		dst_argb += 4;
 		src_b8g8r8a8 += 4;
 	}
 }
 
-void R8G8B8A8ToARGBRow_C(const uint8_t* src_r8g8b8a8, uint8_t* dst_argb, int width) {
+void R8G8B8A8ToARGBRow_C(const uint8_t* src_r8g8b8a8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t a = src_r8g8b8a8[0];
-        uint8_t b = src_r8g8b8a8[1];
-        uint8_t g = src_r8g8b8a8[3];
-        uint8_t r = src_r8g8b8a8[4];
-		dst_argb[0] = b;
-		dst_argb[1] = g;
-		dst_argb[2] = r;
-		dst_argb[3] = a;
+		uint8_t a8 = src_r8g8b8a8[0];
+		uint8_t b8 = src_r8g8b8a8[1];
+		uint8_t g8 = src_r8g8b8a8[2];
+		uint8_t r8 = src_r8g8b8a8[3];
+		dst_argb[0] = b8;
+		dst_argb[1] = g8;
+		dst_argb[2] = r8;
+		dst_argb[3] = a8;
 		dst_argb += 4;
 		src_r8g8b8a8 += 4;
 	}
 }
 
-void ______L8ToARGBRow_C(const uint8_t* src_l8, uint8_t* dst_argb, int width) {
+void ______L8ToARGBRow_C(const uint8_t* src_l8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t l = src_l8[0];
-		dst_argb[0] = l;
-		dst_argb[1] = l;
-		dst_argb[2] = l;
+		uint8_t l8 = src_l8[0];
+		dst_argb[0] = l8;
+		dst_argb[1] = l8;
+		dst_argb[2] = l8;
 		dst_argb[3] = 255u;
 		dst_argb += 4;
 		src_l8 += 1;
 	}
 }
 
-void _____AL8ToARGBRow_C(const uint8_t* src_al8, uint8_t* dst_argb, int width) {
+void _____AL8ToARGBRow_C(const uint8_t* src_al8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t l = src_al8[0];
-		dst_argb[0] = l;
-		dst_argb[1] = l;
-		dst_argb[2] = l;
-		dst_argb[3] = l;
+		uint8_t l8 = src_al8[0];
+		dst_argb[0] = l8;
+		dst_argb[1] = l8;
+		dst_argb[2] = l8;
+		dst_argb[3] = l8;
 		dst_argb += 4;
 		src_al8 += 1;
 	}
 }
 
-void _____L16ToARGBRow_C(const uint8_t* src_l16, uint8_t* dst_argb, int width) {
+void _____L16ToARGBRow_C(const uint8_t* src_l16, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t b = src_l16[0];
-        uint8_t g = src_l16[1];
-		dst_argb[0] = b;
-		dst_argb[1] = g;
+		uint8_t b8 = src_l16[0];
+		uint8_t g8 = src_l16[1];
+		dst_argb[0] = b8;
+		dst_argb[1] = g8;
 		dst_argb[2] = 255u;
 		dst_argb[3] = 255u;
 		dst_argb += 4;
@@ -333,15 +565,16 @@ void _____L16ToARGBRow_C(const uint8_t* src_l16, uint8_t* dst_argb, int width) {
 	}
 }
 
-void ____A8L8ToARGBRow_C(const uint8_t* src_a8l8, uint8_t* dst_argb, int width) {
+void ____A8L8ToARGBRow_C(const uint8_t* src_a8l8, uint8_t* dst_argb, int width)
+{
 	int x;
 	for (x = 0; x < width; ++x) {
-        uint8_t l = src_a8l8[0];
-        uint8_t a = src_a8l8[1];
-		dst_argb[0] = l;
-		dst_argb[1] = l;
-		dst_argb[2] = l;
-		dst_argb[3] = a;
+		uint8_t l8 = src_a8l8[0];
+		uint8_t a8 = src_a8l8[1];
+		dst_argb[0] = l8;
+		dst_argb[1] = l8;
+		dst_argb[2] = l8;
+		dst_argb[3] = a8;
 		dst_argb += 4;
 		src_a8l8 += 2;
 	}
@@ -357,7 +590,8 @@ typedef struct TRGB32
 
 // DXT1 info (MSDN Block Compression) : https://msdn.microsoft.com/en-us/library/bb694531.aspx
 // https://msdn.microsoft.com/en-us/library/windows/desktop/bb147243(v=vs.85).aspx
-void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
+void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width)
+{
 	int dst_pitch = *(int*)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; x+=4) {
@@ -366,24 +600,24 @@ void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 		uint16_t color_1 = data[2] | (data[3] << 8);
 
 		// Read 5+6+5 bit color channels
-        uint8_t b0 = color_0 & 0x1f;
-        uint8_t g0 = (color_0 >> 5) & 0x3f;
-        uint8_t r0 = color_0 >> 11;
+		uint8_t b0 = color_0 & 0x1f;
+		uint8_t g0 = (color_0 >> 5) & 0x3f;
+		uint8_t r0 = color_0 >> 11;
 
-        uint8_t b1 = color_1 & 0x1f;
-        uint8_t g1 = (color_1 >> 5) & 0x3f;
-        uint8_t r1 = color_1 >> 11;
+		uint8_t b1 = color_1 & 0x1f;
+		uint8_t g1 = (color_1 >> 5) & 0x3f;
+		uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
+		colormap[0].B = u_expand5(b0);
+		colormap[0].G = u_expand6(g0);
+		colormap[0].R = u_expand5(r0);
 		colormap[0].A = 255u;
 
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		colormap[1].B = u_expand5(b1);
+		colormap[1].G = u_expand6(g1);
+		colormap[1].R = u_expand5(r1);
 		colormap[1].A = 255u;
 
 		// Build second half of RGB32 color map :
@@ -414,8 +648,8 @@ void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 			colormap[3].A = 0u;
 		}
 
-        uint8_t indices0 = data[4];
-        uint8_t indices1 = data[5];
+		uint8_t indices0 = data[4];
+		uint8_t indices1 = data[5];
 		uint8_t indices2 = data[6];
 		uint8_t indices3 = data[7];
 
@@ -451,7 +685,8 @@ void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 }
 
 // DXT3 info : https://en.wikipedia.org/wiki/S3_Texture_Compression#DXT2_and_DXT3
-void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
+void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width)
+{
 	int dst_pitch = *(int*)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; x += 4) {
@@ -466,8 +701,8 @@ void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 		uint8_t alpha7 = data[7];
 
 		// Read two 16-bit pixels
-        uint16_t color_0 = data[8] | (data[9] << 8);
-        uint16_t color_1 = data[10] | (data[11] << 8);
+		uint16_t color_0 = data[8] | (data[9] << 8);
+		uint16_t color_1 = data[10] | (data[11] << 8);
 
 		// Read 5+6+5 bit color channels
 		uint8_t b0 = color_0 & 0x1f;
@@ -480,13 +715,13 @@ void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
+		colormap[0].B = u_expand5(b0);
+		colormap[0].G = u_expand6(g0);
+		colormap[0].R = u_expand5(r0);
 
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		colormap[1].B = u_expand5(b1);
+		colormap[1].G = u_expand6(g1);
+		colormap[1].R = u_expand5(r1);
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
@@ -551,7 +786,8 @@ void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 }
 
 // DXT5 info : http://www.matejtomcik.com/Public/KnowHow/DXTDecompression/
-void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
+void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width)
+{
 	int dst_pitch = *(int*)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; x += 4) {
@@ -588,7 +824,7 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 
 		// Read two 16-bit colors
 		uint16_t color_0 = data[8] | (data[9] << 8);
-        uint16_t color_1 = data[10] | (data[11] << 8);
+		uint16_t color_1 = data[10] | (data[11] << 8);
 
 		// Read 5+6+5 bit color channels
 		uint8_t b0 = color_0 & 0x1f;
@@ -601,13 +837,13 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
+		colormap[0].B = u_expand5(b0);
+		colormap[0].G = u_expand6(g0);
+		colormap[0].R = u_expand5(r0);
 
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		colormap[1].B = u_expand5(b1);
+		colormap[1].G = u_expand6(g1);
+		colormap[1].R = u_expand5(r1);
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
@@ -671,7 +907,8 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 	}
 }
 
-void ______P8ToARGBRow_C(const uint8_t* src_p8, uint8_t* dst_argb, int width) {
+void ______P8ToARGBRow_C(const uint8_t* src_p8, uint8_t* dst_argb, int width)
+{
 	TRGB32 *pTexturePalette = *(TRGB32 **)dst_argb; // dirty hack to avoid another argument
 	int x;
 	for (x = 0; x < width; ++x) {
@@ -681,15 +918,18 @@ void ______P8ToARGBRow_C(const uint8_t* src_p8, uint8_t* dst_argb, int width) {
 	}
 }
 
-static __inline int32_t clamp0(int32_t v) {
+static __inline int32_t clamp0(int32_t v)
+{
 	return ((-(v) >> 31) & (v));
 }
 
-static __inline int32_t clamp255(int32_t v) {
+static __inline int32_t clamp255(int32_t v)
+{
 	return (((255 - (v)) >> 31) | (v)) & 255;
 }
 
-static __inline uint32_t Clamp(int32_t val) {
+static __inline uint32_t Clamp(int32_t val)
+{
 	int v = clamp0(val);
 	return (uint32_t)(clamp255(v));
 }
@@ -792,8 +1032,9 @@ void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2,
 }
 
 void ____UYVYToARGBRow_C(const uint8_t* src_uyvy,
-    uint8_t* rgb_buf,
-	int width) {
+	uint8_t* rgb_buf,
+	int width)
+{
 	const struct YuvConstants* yuvconstants = &kYuvIConstants; // hack to avoid another argument
 	int x;
 	for (x = 0; x < width - 1; x += 2) {
@@ -814,7 +1055,7 @@ void ____UYVYToARGBRow_C(const uint8_t* src_uyvy,
 }
 
 static const FormatToARGBRow ComponentConverters[] = {
-	nullptr, // NoCmpnts,
+	nullptr,             // NoCmpnts,
 	ARGB1555ToARGBRow_C, // A1R5G5B5,
 	X1R5G5B5ToARGBRow_C, // X1R5G5B5, // Test : Convert X into 255
 	ARGB4444ToARGBRow_C, // A4R4G4B4,
@@ -825,8 +1066,10 @@ static const FormatToARGBRow ComponentConverters[] = {
 	____G8B8ToARGBRow_C, // ____G8B8, // NOTE : A takes G, R takes B
 	______A8ToARGBRow_C, // ______A8,
 	__R6G5B5ToARGBRow_C, // __R6G5B5,
+	__L6V5U5ToARGBRow_C, // __L6V5U5,
 	R5G5B5A1ToARGBRow_C, // R5G5B5A1,
 	R4G4B4A4ToARGBRow_C, // R4G4B4A4,
+	Q8W8V8U8ToARGBRow_C, // A8B8G8R8,
 	A8B8G8R8ToARGBRow_C, // A8B8G8R8,
 	B8G8R8A8ToARGBRow_C, // B8G8R8A8,
 	R8G8B8A8ToARGBRow_C, // R8G8B8A8,
@@ -872,8 +1115,8 @@ static const FormatInfo FormatInfos[] = {
 	// could lead to out-of-bounds access violations.
 	// * Each format for which the host D3D8 doesn't have an identical native format,
 	// and does specify color components (other than NoCmpnts), MUST specify this fact
-	// in the warning field, so EmuXBFormatRequiresConversionToARGB can return a conversion
-	// to ARGB is needed (which is implemented in EMUPATCH(D3DResource_Register).
+	// in the warning field, so EmuXBFormatRequiresConversion can return a conversion
+	// to ARGB is needed (which is implemented in ConvertD3DTextureToARGBBuffer).
 
 	/* 0x00 X_D3DFMT_L8           */ {  8, Swzzld, ______L8, D3DFMT_L8        },
 	/* 0x01 X_D3DFMT_AL8          */ {  8, Swzzld, _____AL8, D3DFMT_L8        , Texture, "X_D3DFMT_AL8 -> D3DFMT_L8" },
@@ -914,7 +1157,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x24 X_D3DFMT_YUY2         */ { 16, Linear, ____YUY2, D3DFMT_YUY2      },
 	/* 0x25 X_D3DFMT_UYVY         */ { 16, Linear, ____UYVY, D3DFMT_UYVY      },
 	/* 0x26 undefined             */ {},
-	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __R6G5B5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
+	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __L6V5U5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
 	/* 0x28 X_D3DFMT_V8U8         */ { 16, Swzzld, ____G8B8, D3DFMT_V8U8      }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
 	/* 0x29 X_D3DFMT_R8B8         */ { 16, Swzzld, ____R8B8, D3DFMT_R5G6B5    , Texture, "X_D3DFMT_R8B8 -> D3DFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
 	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, D3DFMT_D24S8     , DepthBuffer },
@@ -930,10 +1173,10 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x34 undefined             */ {},
 	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, D3DFMT_L16       },
 	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, D3DFMT_V16U16    }, // Note : Seems unused on Xbox
-	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_LIN_R6G5B5
+	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __L6V5U5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_LIN_R6G5B5
 	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
 	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
-	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, A8B8G8R8, D3DFMT_Q8W8V8U8  }, // Alias : X_D3DFMT_A8B8G8R8 // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
+	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, Q8W8V8U8, D3DFMT_A8B8G8R8  , Texture, "X_D3DFMT_Q8W8V8U8 -> D3DFMT_A8B8G8R8" }, // Alias : X_D3DFMT_A8B8G8R8 // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
 	/* 0x3B X_D3DFMT_B8G8R8A8     */ { 32, Swzzld, B8G8R8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
 	/* 0x3C X_D3DFMT_R8G8B8A8     */ { 32, Swzzld, R8G8B8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
 	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { 16, Linear, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_LIN_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
@@ -950,34 +1193,46 @@ static const FormatInfo FormatInfos[] = {
 
 const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
-		if (FormatInfos[Format].components != NoCmpnts)
-			return ComponentConverters[FormatInfos[Format].components];
-
+	if (Format <= xbox::X_D3DFMT_LAST) {
+		const _ComponentEncoding components = FormatInfos[Format].components;
+		if (components == __L6V5U5) {
+			return __L6V5U5ToX8L8V8U8Row_C;
+		}
+		if (components != NoCmpnts) {
+			return ComponentConverters[components];
+		}
+	}
 	return nullptr;
 }
 
-// Is there a converter available from the supplied format to ARGB?
-bool EmuXBFormatCanBeConvertedToARGB(xbox::X_D3DFORMAT Format)
+// Is there a converter available from the supplied format? (PCFormat will receive host target format)
+bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat)
 {
 	const FormatToARGBRow info = EmuXBFormatComponentConverter(Format);
-	return (info != nullptr);
+	if (info != nullptr) {
+		/*&*/PCFormat = (FormatInfos[Format].components == __L6V5U5) ? D3DFMT_X8L8V8U8 : D3DFMT_A8R8G8B8;
+		return true;
+	}
+	return false;
 }
 
-// Returns if convertion to ARGB is required. This is the case when
+// Returns if conversion is required. This is the case when
 // the format has a warning message and there's a converter present.
-bool EmuXBFormatRequiresConversionToARGB(xbox::X_D3DFORMAT Format)
+// When conversion is required, the host target format is set in PCFormat.
+bool EmuXBFormatRequiresConversion(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat)
 {
-	if (FormatInfos[Format].warning != nullptr)
-		if (EmuXBFormatCanBeConvertedToARGB(Format))
+	if (FormatInfos[Format].warning != nullptr) {
+		if (EmuXBFormatCanBeConverted(Format, /*&*/PCFormat)) {
 			return true;
+		}
+	}
 
 	return false;
 }
 
 DWORD EmuXBFormatBitsPerPixel(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LAST)
 		if (FormatInfos[Format].bits_per_pixel > 0) // TODO : Remove this
 			return FormatInfos[Format].bits_per_pixel;
 
@@ -991,7 +1246,7 @@ DWORD EmuXBFormatBytesPerPixel(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LAST)
 		return (FormatInfos[Format].stored == Cmprsd);
 
 	return false;
@@ -999,7 +1254,7 @@ BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LAST)
 		return (FormatInfos[Format].stored == Linear);
 
 	return (Format == xbox::X_D3DFMT_VERTEXDATA); // TODO : false;
@@ -1007,7 +1262,7 @@ BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LAST)
 		return (FormatInfos[Format].stored == Swzzld);
 
 	return false;
@@ -1015,7 +1270,7 @@ BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LAST)
 		return (FormatInfos[Format].usage == RenderTarget);
 
 	return false;
@@ -1023,7 +1278,7 @@ BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if (Format <= xbox::X_D3DFMT_LAST)
 		return (FormatInfos[Format].usage == DepthBuffer);
 
 	return false;
@@ -1031,7 +1286,7 @@ BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format)
 
 D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
+	if (Format <= xbox::X_D3DFMT_LAST && Format != -1 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr) {
@@ -1053,106 +1308,24 @@ D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 	return D3DFMT_UNKNOWN;
 }
 
-xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear)
-{
-	xbox::X_D3DFORMAT result;
-	switch(Format)
-	{
-	case D3DFMT_YUY2:
-		result = xbox::X_D3DFMT_YUY2;
-		break;
-	case D3DFMT_UYVY:
-		result = xbox::X_D3DFMT_UYVY;
-		break;
-	case D3DFMT_R5G6B5:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_R5G6B5 : xbox::X_D3DFMT_R5G6B5;
-		break;
-	case D3DFMT_D24S8:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_D24S8 : xbox::X_D3DFMT_D24S8;
-		break;
-	case D3DFMT_DXT5:
-		result = xbox::X_D3DFMT_DXT5; // Compressed
-		break;
-	case D3DFMT_DXT4:
-		result = xbox::X_D3DFMT_DXT4;  // Compressed // Same as xbox::X_D3DFMT_DXT5
-		break;
-	case D3DFMT_DXT3:
-		result = xbox::X_D3DFMT_DXT3; // Compressed
-		break;
-	case D3DFMT_DXT2:
-		result = xbox::X_D3DFMT_DXT2; // Compressed // Same as xbox::X_D3DFMT_DXT3
-		break;
-	case D3DFMT_DXT1:
-		result = xbox::X_D3DFMT_DXT1; // Compressed
-		break;
-	case D3DFMT_A1R5G5B5:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A1R5G5B5 : xbox::X_D3DFMT_A1R5G5B5;
-		break;
-	case D3DFMT_X8R8G8B8:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_X8R8G8B8 : xbox::X_D3DFMT_X8R8G8B8;
-		break;
-	case D3DFMT_A8R8G8B8:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A8R8G8B8 : xbox::X_D3DFMT_A8R8G8B8;
-		break;
-	case D3DFMT_A4R4G4B4:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A4R4G4B4 : xbox::X_D3DFMT_A4R4G4B4;
-		break;
-	case D3DFMT_X1R5G5B5:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_X1R5G5B5 : xbox::X_D3DFMT_X1R5G5B5;
-		break;
-	case D3DFMT_A8:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A8 : xbox::X_D3DFMT_A8;
-		break;
-	case D3DFMT_L8:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_L8 : xbox::X_D3DFMT_L8;
-		break;
-	case D3DFMT_D16:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_D16 : xbox::X_D3DFMT_D16;
-		break;
-	case D3DFMT_D16_LOCKABLE:
-		result = xbox::X_D3DFMT_D16_LOCKABLE;
-		break; 
-	case D3DFMT_UNKNOWN:
-		result = ((xbox::X_D3DFORMAT)0xffffffff); // TODO : return xbox::X_D3DFMT_UNKNOWN ?
-		break;
-	// Dxbx additions :
-	case D3DFMT_L6V5U5:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_L6V5U5 : xbox::X_D3DFMT_L6V5U5;
-		break;
-	case D3DFMT_V8U8:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_V8U8 : xbox::X_D3DFMT_V8U8;
-		break;
-	case D3DFMT_V16U16:
-		result = bPreferLinear ? xbox::X_D3DFMT_LIN_V16U16 : xbox::X_D3DFMT_V16U16;
-		break;
-	case D3DFMT_VERTEXDATA:
-		result = xbox::X_D3DFMT_VERTEXDATA;
-		break;
-	default:
-		CxbxrAbort("EmuPC2XB_D3DFormat: Unknown Format (%d)", Format);
-	}
-
-	return result;
-}
-
 DWORD EmuXB2PC_D3DLock(DWORD Flags)
 {
-    DWORD NewFlags = 0;
+	DWORD NewFlags = 0;
 
-    // Need to convert the flags, TODO: fix the xbox extensions
-//    if(Flags & X_D3DLOCK_NOFLUSH)
-//        NewFlags ^= 0;
+	// Need to convert the flags, TODO: fix the xbox extensions
+//	if(Flags & X_D3DLOCK_NOFLUSH)
+//		NewFlags ^= 0;
 
 	if(Flags & X_D3DLOCK_NOOVERWRITE)
-        NewFlags |= D3DLOCK_NOOVERWRITE;
+		NewFlags |= D3DLOCK_NOOVERWRITE;
 
 //	if(Flags & X_D3DLOCK_TILED)
-//        NewFlags ^= 0;
+//		NewFlags ^= 0;
 
 	if(Flags & X_D3DLOCK_READONLY)
-        NewFlags |= D3DLOCK_READONLY;
+		NewFlags |= D3DLOCK_READONLY;
 
-    return NewFlags;
+	return NewFlags;
 }
 
 // convert from xbox to pc multisample formats
@@ -1194,7 +1367,7 @@ const unsigned g_XboxPrimitiveTypeInfo[11][2] =
 	// Second number the number of vertices per primitive
 	// Example : Triangle list, has no starting vertices, and uses 3 vertices for each triangle
 	// Example : Triangle strip, starts with 2 vertices, and adds 1 for each triangle
-    {0, 0}, // NULL
+	{0, 0}, // NULL
 	{0, 1}, // X_D3DPT_POINTLIST
 	{0, 2}, // X_D3DPT_LINELIST
 	{1, 1}, // X_D3DPT_LINELOOP
@@ -1210,18 +1383,18 @@ const unsigned g_XboxPrimitiveTypeInfo[11][2] =
 // conversion table for xbox->pc primitive types
 const D3DPRIMITIVETYPE g_XboxPrimitiveTypeToHost[] =
 {
-    /* NULL                   = 0         */ (D3DPRIMITIVETYPE)0,
-    /* X_D3DPT_POINTLIST      = 1,        */ D3DPT_POINTLIST,
-    /* X_D3DPT_LINELIST       = 2,        */ D3DPT_LINELIST,
-    /* X_D3DPT_LINELOOP       = 3,  Xbox  */ D3DPT_LINESTRIP,
-    /* X_D3DPT_LINESTRIP      = 4,        */ D3DPT_LINESTRIP,
-    /* X_D3DPT_TRIANGLELIST   = 5,        */ D3DPT_TRIANGLELIST,
-    /* X_D3DPT_TRIANGLESTRIP  = 6,        */ D3DPT_TRIANGLESTRIP,
-    /* X_D3DPT_TRIANGLEFAN    = 7,        */ D3DPT_TRIANGLEFAN,
-    /* X_D3DPT_QUADLIST       = 8,  Xbox  */ D3DPT_TRIANGLELIST,
-    /* X_D3DPT_QUADSTRIP      = 9,  Xbox  */ D3DPT_TRIANGLESTRIP,
-    /* X_D3DPT_POLYGON        = 10, Xbox  */ D3DPT_TRIANGLEFAN,
-    /* X_D3DPT_MAX            = 11,       */ (D3DPRIMITIVETYPE)11
+	/* NULL                   = 0         */ (D3DPRIMITIVETYPE)0,
+	/* X_D3DPT_POINTLIST      = 1,        */ D3DPT_POINTLIST,
+	/* X_D3DPT_LINELIST       = 2,        */ D3DPT_LINELIST,
+	/* X_D3DPT_LINELOOP       = 3,  Xbox  */ D3DPT_LINESTRIP,
+	/* X_D3DPT_LINESTRIP      = 4,        */ D3DPT_LINESTRIP,
+	/* X_D3DPT_TRIANGLELIST   = 5,        */ D3DPT_TRIANGLELIST,
+	/* X_D3DPT_TRIANGLESTRIP  = 6,        */ D3DPT_TRIANGLESTRIP,
+	/* X_D3DPT_TRIANGLEFAN    = 7,        */ D3DPT_TRIANGLEFAN,
+	/* X_D3DPT_QUADLIST       = 8,  Xbox  */ D3DPT_TRIANGLELIST,
+	/* X_D3DPT_QUADSTRIP      = 9,  Xbox  */ D3DPT_TRIANGLESTRIP,
+	/* X_D3DPT_POLYGON        = 10, Xbox  */ D3DPT_TRIANGLEFAN,
+	/* X_D3DPT_MAX            = 11,       */ (D3DPRIMITIVETYPE)11
 };
 
 void EmuUnswizzleBox
@@ -1355,8 +1528,8 @@ void EmuUnswizzleBox
 // * XDK versions that have been verified : 3944, 4039, 4134, 4242, 4361, 4432, 4531, 4627, 4721, 4831, 4928, 5028, 5120, 5233, 5344, 5455, 5558, 5659, 5788, 5849, 5933
 // * Renderstates with uncertain validity are marked "Verified absent in #XDK#" and/or "present in #XDK#". Some have "Might be introduced "... "in between" or "around #XDK#"
 // * Renderstates after D3DRS_MULTISAMPLEMASK have no host DX9 D3DRS mapping, thus no impact
-const RenderStateInfo DxbxRenderStateInfo[1+xbox::X_D3DRS_DONOTCULLUNCOMPRESSED] = {
-
+const RenderStateInfo DxbxRenderStateInfo[1+xbox::X_D3DRS_DONOTCULLUNCOMPRESSED] =
+{
 	// String                                 Ord  Version Type                   Method              Native
 	{ "D3DRS_PSALPHAINPUTS0"              /*=   0*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(0) },
 	{ "D3DRS_PSALPHAINPUTS1"              /*=   1*/, 3424, xtDWORD,               NV2A_RC_IN_ALPHA(1) },
@@ -1744,7 +1917,7 @@ uint8_t* ConvertD3DTextureToARGB(
 
 	// Now we know ConvertD3DTextureToARGBBuffer will do it's thing, allocate the resulting buffer
 	int DstDepth = 1; // for now TODO : Use SrcDepth when supporting volume textures
-	int DstRowPitch = (*pWidth) * sizeof(DWORD); // = sizeof ARGB pixel. TODO : Is this correct?
+	int DstRowPitch = (*pWidth) * 4;// sizeof(*pWidth); // = sizeof ARGB pixel. TODO : Is this correct?
 	int DstSlicePitch = DstRowPitch * (*pHeight); // TODO : Is this correct?
 	int DstSize = DstSlicePitch * DstDepth;
 	uint8_t* pDst = (uint8_t*)malloc(DstSize);

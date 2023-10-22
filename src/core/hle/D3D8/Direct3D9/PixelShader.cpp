@@ -30,8 +30,11 @@
 #include <sstream> // std::stringstream
 #include "Shader.h" // EmuCompileShader
 #include "PixelShader.h" // EmuCompilePixelShader
+#include "common/FilePaths.hpp" // For szFilePath_CxbxReloaded_Exe
 //#include "core\kernel\init\CxbxKrnl.h"
 //#include "core\kernel\support\Emu.h"
+#include <fstream>
+#include <sstream>
 
 extern const char* g_ps_model = ps_model_3_0;
 
@@ -287,12 +290,61 @@ bool IsTextureSampled(DecodedRegisterCombiner* pShader, int reg)
 	return false;
 } */
 
+std::string GetCustomPixelShaderTemplate()
+// See GetFixedFunctionShaderTemplate()
+{
+	static bool loaded = false;
+	// TODO : Consider merging GetFixedFunctionShaderTemplate and GetCustomPixelShaderTemplate, adding a flag to load and return CxbxPixelShaderTemplate.hlsl or FixedFunctionPixelShader.hlsl
+	// TODO : reset loaded flag (so a reload will happen) when the file was changed since last read (perhaps using https://github.com/apetrone/simplefilewatcher or the Windows API ReadDirectoryChangesW ?)
+	// TODO : if load or reload happens, return that to the caller, so one-time search-initializations can be redone as well
+	static std::string hlslString;
+
+	// TODO does this need to be thread safe?
+	if (!loaded) {
+		loaded = true;
+
+		// Determine the filename and directory for the fixed function shader
+		// TODO make this a relative path so we guarantee an LPCSTR for D3DCompile
+		auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
+			.parent_path()
+			.append("hlsl");
+
+		auto sourceFile = hlslDir.append("CxbxPixelShaderTemplate.hlsl").string();
+
+		// Load the shader into a string
+		std::ifstream hlslStream(sourceFile);
+		std::stringstream hlsl;
+		hlsl << hlslStream.rdbuf();
+
+		hlslString = hlsl.str();
+	}
+
+	return hlslString;
+}
+
 void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 {
-	// Include HLSL header and footer as raw strings :
-	static const std::string hlsl_template[4] = {
-		#include "core\hle\D3D8\Direct3D9\CxbxPixelShaderTemplate.hlsl"
-	};
+	// Build and compile a new shader
+	static std::string hlsl_template[3] = {};
+	if (hlsl_template[0] == "") {
+		// TODO : only (re-)calculate hlsl_template[] when the file underlying hlslTemplate is changed.
+		auto hlslTemplate = GetCustomPixelShaderTemplate();
+		static const std::string defines_key = "// DEFINES INSERTION MARKER";
+		static const std::string program_key = "// XBOX SHADER PROGRAM MARKER";
+		static const std::string exit_key    = "// EXIT";
+		std::size_t defines_pos = hlslTemplate.find(defines_key);
+		std::size_t program_pos = hlslTemplate.find(program_key);
+		std::size_t exit_pos    = hlslTemplate.find(exit_key);
+		if (defines_pos == std::string::npos) return; // TODO : Log error
+		if (program_pos == std::string::npos) return; // TODO : Log error
+		defines_pos += defines_key.length();
+		program_pos += program_key.length();   
+		exit_pos    += exit_key.length();
+		// Cut up the template in 3 parts (header, code and footer) :
+		hlsl_template[0] = hlslTemplate.substr(0, defines_pos);
+		hlsl_template[1] = hlslTemplate.substr(exit_pos , program_pos - defines_pos);
+		hlsl_template[2] = hlslTemplate.substr(program_pos + 1);
+	}
 
 	hlsl << hlsl_template[0]; // Start with the HLSL template header
 
@@ -343,7 +395,6 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 	OutputDefineFlag(hlsl, pShader->FinalCombiner.ClampSum, "PS_FINALCOMBINERSETTING_CLAMP_SUM");
 
 	hlsl << hlsl_template[1];
-	hlsl << hlsl_template[2];
 
 	// Generate all four texture stages
 	for (unsigned i = 0; i < PSH_XBOX_MAX_T_REGISTER_COUNT; i++) {
@@ -390,7 +441,7 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 
 	FinalCombinerStageHlsl(hlsl, pShader->FinalCombiner, pShader->hasFinalCombiner);
 
-	hlsl << hlsl_template[3]; // Finish with the HLSL template footer
+	hlsl << hlsl_template[2]; // Finish with the HLSL template footer
 }
 
 // recompile xbox pixel shader function

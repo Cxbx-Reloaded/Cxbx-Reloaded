@@ -1,6 +1,3 @@
-// This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
-R"DELIMITER(
-
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
@@ -51,10 +48,13 @@ uniform const float4 c_fog : register(c18); // Note : Maps to PSH_XBOX_CONSTANT_
 // Constant registers used only in final combiner stage (xfc 'opcode') :
 uniform const float4 FC0 : register(c16); // Note : Maps to PSH_XBOX_CONSTANT_FC0, must be generated as argument to xfc instead of C0
 uniform const float4 FC1 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC1, must be generated as argument to xfc instead of C1
-uniform const float4 BEM[4] : register(c19); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
-uniform const float4 LUM[4] : register(c23); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
-uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
+// Texture color sign
+uniform const float4 COLORSIGN[4] : register(c19); // Note : PSH_XBOX_CONSTANT_COLORSIGN for 4 texture stages
+// Bump environment mapping
+uniform const float4 BEM[4] : register(c23); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
+uniform const float4 LUM[4] : register(c27); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
 
+uniform const float  FRONTFACE_FACTOR : register(c31); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
 
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
 #define CM_GE(c) if(c >= 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_GE
@@ -92,11 +92,8 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
    #define PS_FINALCOMBINERSETTING_CLAMP_SUM
 #endif
 
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
-
+// DEFINES INSERTION MARKER
+// EXIT
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
 	#define C0 c0_[stage] // concatenate stage to form c0_0 .. c0_7
@@ -173,10 +170,6 @@ R"DELIMITER(
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
 
 float m21d(const float input)
 {
@@ -243,6 +236,51 @@ return input * input;
 // TODO : Generate sampler status?
 sampler samplers[4] : register(s0);
 
+static const float4 WarningColor = float4(0, 1, 1, 1); // Returned when unhandled scenario is encountered
+#define unsigned_to_signed(x) (((x) * 2) - 1) // Shifts range from [0..1] to [-1..1] (just like s_bx2)
+#define signed_to_unsigned(x) (((x) + 1) / 2) // Shifts range from [-1..1] to [0..1]
+
+float4 PerformColorSign(const float4 ColorSign, float4 t)
+{
+	// Per color channel, based on the ColorSign setting :
+	// either keep the value range as-is (when ColorSign is zero)
+	// or convert from [0..1] to [-1..+1] (when ColorSign is more than zero, often used for bumpmaps),
+	
+	if (ColorSign.r > 0) t.r = unsigned_to_signed(t.r);
+	if (ColorSign.g > 0) t.g = unsigned_to_signed(t.g);
+	if (ColorSign.b > 0) t.b = unsigned_to_signed(t.b);
+	if (ColorSign.a > 0) t.a = unsigned_to_signed(t.a);
+	
+	// TODO : Instead of the above, create a mirror texture with a host format that has identical component layout, but with all components signed.
+	// Then, in here, when any component has to be read as signed, sample the signed texture (ouch : with what dimension and coordinate?!)
+	// and replace the components that we read from the unsigned texture, but which have to be signed, with the signed components read from the signed mirror texture.
+	// This way, texture filtering can still be allowed, as that would be performed separately over the unsigned vs unsigned textures (so no mixing between the two).
+
+	return t;
+}
+
+float4 PerformColorKeyOp(const float ColorKeyOp, const float4 ColorKeyColor, float4 t)
+{
+	// Handle all D3DTCOLORKEYOP_ modes :
+	if (ColorKeyOp == 0) // = _DISABLE
+		return t; // No color-key checking
+
+	if (any(t - ColorKeyColor))
+		return t; // Cxbx assumption : On color mismatch, simply return the input. TODO : This might require a more elaborate operation? (Like "when any of the texels were filtered with a non-zero weight", whatever that means)
+
+	if (ColorKeyOp == 1) // = _ALPHA
+		return float4(t.rgb, 0);
+
+	if (ColorKeyOp == 2) // = _RGBA
+		return 0;
+
+	if (ColorKeyOp == 3) // = _KILL
+		discard;
+
+	// Undefined ColorKeyOp mode
+	return WarningColor;
+}
+
 // Declare alphakill as a variable (avoiding a constant, to allow false's to be optimized away) :
 #ifndef ALPHAKILL
 	#define ALPHAKILL {false, false, false, false}
@@ -282,7 +320,7 @@ float4 Sample6F(int ts, float3 s)
 float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 src)
 {
 	// Convert the input bump map (source texture) value range into two's complement signed values (from (0, +1) to (-1, +1), using s_bx2):
-	const float4 BumpMap = s_bx2(src); // Note : medieval discovered s_bias improved JSRF, PatrickvL changed it into s_bx2 thanks to http://www.rastertek.com/dx11tut20.html
+	const float4 BumpMap = (src); // Note : medieval discovered s_bias improved JSRF, PatrickvL changed it into s_bx2 thanks to http://www.rastertek.com/dx11tut20.html
 	// TODO : The above should be removed, and replaced by some form of COLORSIGN handling, which may not be possible inside this pixel shader, because filtering-during-sampling would cause artifacts.
 
 	const float u = TexCoord.x + (BumpEnvMat.x * BumpMap.r) + (BumpEnvMat.z * BumpMap.g); // Or : TexCoord.x + dot(BumpEnvMat.xz, BumpMap.rg)
@@ -298,7 +336,8 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 #define t3 t[3]
 
 // Resolve a stage number via 'input texture (index) mapping' to it's corresponding output texture register (rgba?)
-#define src(ts) t[PS_INPUTTEXTURE_[ts]]
+#define src1(ts) t[PS_INPUTTEXTURE_[ts]]
+#define src(ts) PerformColorSign(COLORSIGN[ts],src1(ts))
 
 // Calculate the dot result for a given texture stage. Since any given stage is input-mapped to always be less than or equal the stage it appears in, this won't cause read-ahead issues
 // Test case: BumpDemo demo
@@ -378,11 +417,8 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	v0 = isFrontFace ? xIn.iD0 : xIn.iB0; // Diffuse front/back
 	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
 	fog = float4(c_fog.rgb, xIn.iFog); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
-
-	// Xbox shader program
-)DELIMITER",  /* This terminates the 2nd raw string within the 16380 single-byte characters limit. // */
-// Third and last raw string, the footer :
-R"DELIMITER(
+	
+	// XBOX SHADER PROGRAM MARKER
 
 	// Copy r0.rgba to output
 	PS_OUTPUT xOut;
@@ -391,5 +427,3 @@ R"DELIMITER(
 
 	return xOut;
 }
-
-// End of pixel shader footer)DELIMITER" /* This terminates the footer raw string" // */

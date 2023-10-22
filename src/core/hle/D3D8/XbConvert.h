@@ -45,9 +45,9 @@ typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width)
 
 extern const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format);
 
-bool EmuXBFormatCanBeConvertedToARGB(xbox::X_D3DFORMAT Format);
+bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat);
 
-bool EmuXBFormatRequiresConversionToARGB(xbox::X_D3DFORMAT Format);
+bool EmuXBFormatRequiresConversion(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat);
 
 // how many bits does this format use per pixel?
 extern DWORD EmuXBFormatBitsPerPixel(xbox::X_D3DFORMAT Format);
@@ -72,9 +72,6 @@ extern BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format);
 
 // convert from xbox to pc color formats
 extern D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format);
-
-// convert from pc to xbox color formats
-extern xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(D3DFORMAT Format, bool bPreferLinear = true);
 
 // convert from xbox to pc d3d lock flags
 extern DWORD EmuXB2PC_D3DLock(DWORD Flags);
