@@ -11435,10 +11435,8 @@ void CxbxUpdateHostTextureScaling()
 
 			// Determine the texture coordinate addressing this texture stage
 			texCoordIndex = (texCoordIndexState & 0x3); // 0 - 3
-			// NV2A doesn't preserve X_D3DTSS_TEXCOORDINDEX, so we keep it as stage value.
-			// this code is redundant because in pgraph we already set NV2ATextureStates.Set(stage, xbox::X_D3DTSS_TEXCOORDINDEX)as stage
-			//if (is_pgraph_using_NV2A_Kelvin())
-			//	texCoordIndex = stage; // 0 - 3
+			// NV2A doesn't preserve X_D3DTSS_TEXCOORDINDEX, instead xbox api maps the texcoord index directly when setting up vertex attr. offset.
+			// we already revers the texcoord index via vertex attr. offset mapping when we compose vertex format and stream info from NV2A.
 		}
 
 		auto texCoordScale = &texcoordScales[texCoordIndex];
