@@ -3458,9 +3458,11 @@ void D3D_draw_state_update(NV2AState* d)
 					// Slice pitch (does not include mipmaps!)
 					UINT* pSlicePitch
 				);
-				CxbxGetPixelContainerMeasures(pXboxSurface, 0, &XBWidth, &XBHeight, &XBDepth, &XBRowPitch, &XBSlicePitch);
+				//CxbxGetPixelContainerMeasures(pXboxSurface, 0, &XBWidth, &XBHeight, &XBDepth, &XBRowPitch, &XBSlicePitch);
 				extern void LoadSurfaceDataFromHost(xbox::X_D3DSurface* pXboxSurface);
-				if (streamData >= pXboxSurface->Data && streamData < (pXboxSurface->Data + XBSlicePitch)) {
+				//if (streamData >= pXboxSurface->Data && streamData < (pXboxSurface->Data + XBSlicePitch)) {
+				// todo: this is a simplified version of data over lap checking. it's quicker, but might be missing certain edge cases.
+				if (streamData == pXboxSurface->Data ) {
 					//transfer host data to xbox if the stream data over lapped with dirty render target surface data range.
 					LoadSurfaceDataFromHost(pXboxSurface);
 					//delete the render target from dirty render target surface cache since we update the xbox data.
