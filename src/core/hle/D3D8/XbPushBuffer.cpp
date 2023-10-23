@@ -3469,40 +3469,39 @@ void D3D_draw_state_update(NV2AState* d)
 				}
 			}
 		}
+		//check for duplicated texcoord slots, if a texcoord slot is duplicated with other texcoord slot prior to it, set texcoord index of current slot to the prior duplicated slot and disable current slot.
+		for (int currentSlot = xbox::X_D3DVSDE_TEXCOORD0 + 1, currentStage = 1; currentStage < 4; currentSlot++, currentStage++) {
+			// skip to next loop if current stage texture is not set.
+			if (g_pNV2A_SetTexture[currentStage] == nullptr)
+				break;
+			//only check for duplications when current slot is not unused
+			//if (g_NV2AVertexAttributeFormat.Slots[current].Format!= xbox::X_D3DVSDT_NONE)
+				//only check texcoord slots prior to current slot, always set texcoord index of later texture stages to prior texture stages.
+			for (int priorSlot = xbox::X_D3DVSDE_TEXCOORD0, priorStage = 0; priorSlot < currentSlot; priorSlot++, priorStage++) {
+				// skip to next loop if prior stage texture is not set.
+				if (g_pNV2A_SetTexture[priorStage] == nullptr)
+					break;
+				// compare stream index/slot offset to see if two slots uses the same texcoord.
+				if (g_NV2AVertexAttributeFormat.Slots[currentSlot].StreamIndex == g_NV2AVertexAttributeFormat.Slots[priorSlot].StreamIndex
+					&& g_NV2AVertexAttributeFormat.Slots[currentSlot].Offset == g_NV2AVertexAttributeFormat.Slots[priorSlot].Offset) {
 
-	}
-	//check for duplicated texcoord slots, if a texcoord slot is duplicated with other texcoord slot prior to it, set texcoord index of current slot to the prior duplicated slot and disable current slot.
-	for (int currentSlot = xbox::X_D3DVSDE_TEXCOORD0 + 1, currentStage=1; currentStage <4; currentSlot++, currentStage++) {
-		// skip to next loop if current stage texture is not set.
-		if (g_pNV2A_SetTexture[currentStage] == nullptr)
-			break;
-		//only check for duplications when current slot is not unused
-		//if (g_NV2AVertexAttributeFormat.Slots[current].Format!= xbox::X_D3DVSDT_NONE)
-			//only check texcoord slots prior to current slot, always set texcoord index of later texture stages to prior texture stages.
-		for (int priorSlot = xbox::X_D3DVSDE_TEXCOORD0, priorStage=0; priorSlot < currentSlot; priorSlot++,priorStage++) {
-			// skip to next loop if prior stage texture is not set.
-			if (g_pNV2A_SetTexture[priorStage] == nullptr)
-				break;
-			// compare stream index/slot offset to see if two slots uses the same texcoord.
-			if (g_NV2AVertexAttributeFormat.Slots[currentSlot].StreamIndex == g_NV2AVertexAttributeFormat.Slots[priorSlot].StreamIndex
-				&& g_NV2AVertexAttributeFormat.Slots[currentSlot].Offset == g_NV2AVertexAttributeFormat.Slots[priorSlot].Offset) {
-				
-				//retrive texgen from NV2ATextureStates
-				DWORD texcoordIndex = NV2ATextureStates.Get(currentSlot - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX);
-				DWORD texgen=texcoordIndex & 0xFFFF0000;
-				//update texcoordIndex
-				texcoordIndex = texgen|((priorStage) & 0x0000FFFF);
-				/* //todo: update texcoord index should be enough because the indexed prior stage warp shall be the same as the warp set in current stage in NV2A.
-				DWORD address = pg->KelvinPrimitive.SetTexture[currentStage].Address;
-				DWORD warp = address & (NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P_TRUE);
-				NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0+ priorStage, warp);
-				*/
-				//store updated texcoordIndex
-				NV2ATextureStates.Set(currentSlot - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX, texcoordIndex);
-				//disable current slot
-				g_NV2AVertexAttributeFormat.Slots[currentSlot].Offset = 0;
-				g_NV2AVertexAttributeFormat.Slots[currentSlot].Format = xbox::X_D3DVSDT_NONE;
-				break;
+					//retrive texgen from NV2ATextureStates
+					DWORD texcoordIndex = NV2ATextureStates.Get(currentSlot - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX);
+					DWORD texgen = texcoordIndex & 0xFFFF0000;
+					//update texcoordIndex
+					texcoordIndex = texgen | ((priorStage) & 0x0000FFFF);
+					/* //todo: update texcoord index should be enough because the indexed prior stage warp shall be the same as the warp set in current stage in NV2A.
+					DWORD address = pg->KelvinPrimitive.SetTexture[currentStage].Address;
+					DWORD warp = address & (NV097_SET_TEXTURE_ADDRESS_CYLWRAP_U_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_V_TRUE | NV097_SET_TEXTURE_ADDRESS_CYLWRAP_P_TRUE);
+					NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_WRAP0+ priorStage, warp);
+					*/
+					//store updated texcoordIndex
+					NV2ATextureStates.Set(currentSlot - xbox::X_D3DVSDE_TEXCOORD0, xbox::X_D3DTSS_TEXCOORDINDEX, texcoordIndex);
+					//disable current slot
+					g_NV2AVertexAttributeFormat.Slots[currentSlot].Offset = 0;
+					g_NV2AVertexAttributeFormat.Slots[currentSlot].Format = xbox::X_D3DVSDT_NONE;
+					break;
+				}
 			}
 		}
 	}

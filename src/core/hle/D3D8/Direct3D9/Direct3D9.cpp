@@ -10276,25 +10276,6 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 {
 	//trampoline
 	HRESULT hRet = XB_TRMP(XGSetVertexBufferHeader)(Length, Usage, FVF, Pool, pBuffer, Data);
-	bool bVertexBufferDataFound = false;
-	auto val = g_XGVertexBufferData.begin();
-	for (; val < g_XGVertexBufferData.end(); val++) {
-		if (*val == 0) {
-			bVertexBufferDataFound = true;
-			*val = Data;
-			break;
-		}
-		if (*val == Data) {
-			bVertexBufferDataFound = true;
-			break;
-		}
-	}
-	//add vertex buffer data offset to cache
-	if (!bVertexBufferDataFound) {
-		//assert when we search the whole cache without finding the vertex buffer data offset on hand. which means the we ran out of cache.
-//		if (val == g_XGVertexBufferData.end())
-			assert(false);
-	}
 	return hRet;
 }
 
