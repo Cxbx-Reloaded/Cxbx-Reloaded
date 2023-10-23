@@ -129,7 +129,7 @@ static bool                         g_bHasDepth = false;    // Does device have 
 	   float                        g_SuperSampleScaleY = 1.0;
 	   float                        g_ScreenSpaceOffsetX = 1.0;
 	   float                        g_ScreenSpaceOffsetY = 1.0;
-	   xbox::X_D3DVIEWPORT8         g_Viewport;
+	   xbox::X_D3DVIEWPORT8         g_NV2A_Viewport;
 static bool                         g_bHasStencil = false;  // Does device have a Stencil Buffer?
 static DWORD						g_dwPrimPerFrame = 0;	// Number of primitives within one frame
        bool                         g_bUsePassthroughHLSL = true;
@@ -1182,7 +1182,7 @@ void CxbxrSetWScale(float w)
 }
 void CxbxrSetViewport(xbox::X_D3DVIEWPORT8& Viewport)
 {
-	g_Viewport=Viewport;
+	g_NV2A_Viewport=Viewport;
 }
 float CxbxrGetZScale(void)
 {
@@ -1251,7 +1251,7 @@ void CxbxrGetScreenSpaceOffsetXY(float &x, float &y)
 }
 void CxbxrGetViewport(xbox::X_D3DVIEWPORT8& Viewport)
 {
-	Viewport=g_Viewport;
+	Viewport=g_NV2A_Viewport;
 }
 // Forward declaration of CxbxGetPixelContainerMeasures to prevent
 // polluting the diff too much by reshuffling functions around
