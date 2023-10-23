@@ -3226,7 +3226,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 	}
 	return;
 }
-
+extern std::map<UINT64, xbox::X_D3DSurface> g_RenderTargetCache;
 void D3D_draw_state_update(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
@@ -3436,6 +3436,40 @@ void D3D_draw_state_update(NV2AState* d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationType = 0; // TODO or ignore?
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
+		// check each stream if it's within the data range of dirty render targets in g_RenderTargetCache
+		for (int streamIndex = 0; streamIndex < NV2A_StreamCount; streamIndex++) {
+			DWORD streamData= NV2A_StreamSource[streamIndex].VertexBuffer->Data;
+			
+			for (auto it = g_RenderTargetCache.begin(); it != g_RenderTargetCache.end(); it++) {
+                //calculate xbox surface data size.
+				// todo: calculate and cache the xbox data size in CxbxrImpl_SetRenderTarget to save overheads here.
+				//process host surface data transfer to xbox data with data conversion.
+				xbox::X_D3DSurface* pXboxSurface = &it->second;
+				UINT XBWidth, XBHeight, XBDepth, XBRowPitch, XBSlicePitch;
+				extern void CxbxGetPixelContainerMeasures
+				(
+					xbox::X_D3DPixelContainer* pPixelContainer,
+					// TODO : Add X_D3DCUBEMAP_FACES argument
+					DWORD dwMipMapLevel, // unused - TODO : Use
+					UINT* pWidth,
+					UINT* pHeight,
+					UINT* pDepth,
+					UINT* pRowPitch,
+					// Slice pitch (does not include mipmaps!)
+					UINT* pSlicePitch
+				);
+				CxbxGetPixelContainerMeasures(pXboxSurface, 0, &XBWidth, &XBHeight, &XBDepth, &XBRowPitch, &XBSlicePitch);
+				extern void LoadSurfaceDataFromHost(xbox::X_D3DSurface* pXboxSurface);
+				if (streamData >= pXboxSurface->Data && streamData < (pXboxSurface->Data + XBSlicePitch)) {
+					//transfer host data to xbox if the stream data over lapped with dirty render target surface data range.
+					LoadSurfaceDataFromHost(pXboxSurface);
+					//delete the render target from dirty render target surface cache since we update the xbox data.
+					g_RenderTargetCache.erase(it);
+					break;
+				}
+			}
+		}
+
 	}
 	//check for duplicated texcoord slots, if a texcoord slot is duplicated with other texcoord slot prior to it, set texcoord index of current slot to the prior duplicated slot and disable current slot.
 	for (int currentSlot = xbox::X_D3DVSDE_TEXCOORD0 + 1, currentStage=1; currentStage <4; currentSlot++, currentStage++) {

@@ -221,6 +221,7 @@ unsigned                     g_NV2A_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
 	   xbox::X_D3DSurface            g_Xbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0};
 	   std::map<UINT64, xbox::X_D3DSurface> g_TextureCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
+	   std::map<UINT64, xbox::X_D3DSurface> g_RenderTargetCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
 
 static xbox::X_D3DSurface        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
@@ -7223,6 +7224,10 @@ DWORD CxbxrImpl_Swap
 	else
 		result = g_Xbox_SwapData.Swap; // Swap returns number of swaps
 
+	//before we exit swap(), we clear the dirty render target cache. which means we only cache dirty render target within the same frame.
+	//todo: shall we cache the dirty render targets for multi frame?
+	g_RenderTargetCache.clear();
+
     return result;
 }
 // ******************************************************************
@@ -10256,10 +10261,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetTile)
 	return hRet;
 }
 
-//cache for data offset of vertex buffers created using XGSetVertexBufferHeader, this is for D3DDevice_SetRenderTarget() to check whether it should transfer data from host surface back to xbox.
-//32 cache size should be more than enough since this is a vertex buffer. let's see.
-std::array<UINT, 100>  g_XGVertexBufferData;
-
 // ******************************************************************
 // * patch: D3DDevice_GetMaterial
 // ******************************************************************
@@ -12786,16 +12787,6 @@ void CxbxrImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3
 	}
 }
 
-bool IsDataOffsetCachedVertexBuffer(uint32_t Data)
-{
-	for (auto val = g_XGVertexBufferData.begin(); val < g_XGVertexBufferData.end(); val++) {
-		if (*val == Data) {
-			return true;
-		}
-	}
-	return false;
-}
-
 void CxbxrImpl_SetRenderTarget
 (
     xbox::X_D3DSurface    *pRenderTarget,
@@ -12807,13 +12798,13 @@ void CxbxrImpl_SetRenderTarget
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
 
-	//check if previous render target data offset has duplicate with vertex buffer data offset in cache. If the data offset of previous render target is cached, we have to transfer the data from host surface to xbox surface. 
-    /*
-	if(g_pXbox_RenderTarget!=nullptr)
-		if (IsDataOffsetCachedVertexBuffer(g_pXbox_RenderTarget->Data)) {
-			LoadSurfaceDataFromHost(g_pXbox_RenderTarget);
-		}
-	*/
+	// whenever SetRenderTarget was called, we insert the previous render target surface to render target cache. every surface in the cache is dirty.
+	// when we compose vertex stream in NV2A, we check whether the vertex stream is withing the data range of these dirty render targets. if a match was found, we transfer data from host to xbox for the matched render target and remove it from cache.
+	if(g_pXbox_RenderTarget!=nullptr){
+		UINT64 key = ((UINT64)(g_pXbox_RenderTarget->Format) << 32) | g_pXbox_RenderTarget->Data;
+		g_RenderTargetCache[key]=*g_pXbox_RenderTarget;
+	}
+
 	// In Xbox titles, CreateDevice calls SetRenderTarget for the back buffer
 	// We can use this to determine the Xbox backbuffer surface for later use!
 	if (g_pXbox_BackBufferSurface == xbox::zeroptr && pRenderTarget != nullptr) {
