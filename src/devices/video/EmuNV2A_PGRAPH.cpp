@@ -4783,8 +4783,8 @@ int pgraph_handle_method(
 
                 case NV097_LAUNCH_TRANSFORM_PROGRAM://not implement //pg->KelvinPrimitive.LaunchTransformProgram
 					// D3DDevice_RunVertexStateShader() calls NV097_LAUNCH_TRANSFORM_PROGRAM to launch vertex state shader
-					// it loads vertex shader constants to constant slot 0 first.
-					assert(0);
+					// it loads vertex shader constants to NV097_SET_TRANSFORM_DATA, and sets starting vertex state shader address to NV097_LAUNCH_TRANSFORM_PROGRAM
+                    CxbxrImpl_RunVertexStateShader(arg0,&pg->KelvinPrimitive.SetTransformData[0]);
 					break;
 
 				extern bool g_bUsePassthroughHLSL;//TMP glue
