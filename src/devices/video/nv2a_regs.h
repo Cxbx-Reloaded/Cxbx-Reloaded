@@ -347,6 +347,8 @@
 #define NV_PGRAPH_CHANNEL_CTX_TRIGGER                    0x00000788
 #   define NV_PGRAPH_CHANNEL_CTX_TRIGGER_READ_IN                (1 << 0)
 #   define NV_PGRAPH_CHANNEL_CTX_TRIGGER_WRITE_OUT              (1 << 1)
+#define NV_PGRAPH_OFFSET                                 0x00000828 //Offset adjusting, testcase: Tony Hawk's Pro Skater 2X (xdk 3947)
+#define NV_PGRAPH_PITCH                                  0x00000858 //Pitch  adjusting, testcase: Tony Hawk's Pro Skater 2X (xdk 3947)
 #define NV_PGRAPH_DEBUG_2                                0x00000880
 #define NV_PGRAPH_TTILE(i)                               0x00000900 + (i * 0x10)
 #define NV_PGRAPH_TLIMIT(i)                              0x00000904 + (i * 0x10)
@@ -1065,6 +1067,19 @@
 #       define NVX_WRITE_CALLBACK                             0x00000007
 #       define NVX_DXT1_NOISE_ENABLE                          0x00000008
 #       define NVX_WRITE_REGISTER_VALUE                       0x00000009
+#       define NVX_FLIP_IMMEDIATE_3911                        0x00000300 //guest work
+#       define NVX_FLIP_SYNCHRONIZED_3911                     0x00000304 //guest work
+#       define NVX_PUSH_BUFFER_RUN_3911                       0x00000308
+#       define NVX_PUSH_BUFFER_FIXUP_3911                     0x0000030C
+#       define NVX_FENCE_3911                                 0x00000310
+#       define NVX_READ_CALLBACK_3911                         0x00000314
+#       define NVX_WRITE_CALLBACK_3911                        0x00000318
+#       define NVX_DXT1_NOISE_ENABLE_3911                     0x0000031C
+#       define NVX_WRITE_REGISTER_VALUE_3911                  0x00000320
+#       define NVX_ADJUST_OFFSET_PITCH_3947                   0x00000324 //new method in xdk 3947, and only in 3947. testcase: Tony Hawk's Pro Skater 2X
+#       define NVX_PUSH_BUFFER_RUN_5855                       0x0000000C
+#       define NVX_PUSH_BUFFER_RUN_NOTINLINED_5855            0x0000000D
+#       define NVX_PUSH_BUFFER_FIXUP_5855                     0x0000000E
 #   define NV097_NOTIFY                                       0x00000104
 #   define NV097_SET_WARNING_ENABLE                           0x00000108
 #   define NV097_GET_STATE                                    0x0000010C

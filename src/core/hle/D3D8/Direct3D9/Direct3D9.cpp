@@ -3998,7 +3998,51 @@ void EmuKickOffWait(void)
 		EmuKickOff();
 	}
 }
+static DWORD* pFixupInfoBase = nullptr;
+static DWORD* pFixupInfoIntrCount = nullptr;
+DWORD* pgraph_get_xbox_fixupInfo_address(DWORD index) {
+	
+	if(pFixupInfoBase==nullptr)
+		pFixupInfoBase=(DWORD*)(*g_pXbox_D3DDevice + 0x264);
+	    pFixupInfoIntrCount= (DWORD*)(*g_pXbox_D3DDevice + 0x50);
+		if (pFixupInfoBase[1] != 0 && pFixupInfoBase[0] == 0) {
+			pFixupInfoBase--;
+			pFixupInfoIntrCount--;
+		}
+		return (DWORD*)((DWORD)pFixupInfoBase + index*20);
+}
 
+void pgraph_dec_xbox_fixupInfoIntrCount(void)
+{
+	if(pFixupInfoIntrCount!=nullptr)
+		*pFixupInfoIntrCount= *pFixupInfoIntrCount-1;
+}
+
+void D3DBuffer_ApplyFixup
+(
+	DWORD* pStart,
+	DWORD* pFixupData,
+	DWORD* pReturnOffset,
+	DWORD ReturnAddress
+)
+{
+	if (pFixupData != nullptr) {
+		DWORD FixupSize = pFixupData[0];
+		DWORD FixupOffset = pFixupData[1];
+		void* src = &pFixupData[2];
+		void* dst = (void*)((DWORD)pStart + FixupOffset);
+		while (FixupSize != 0xFFFFFFFF) {
+			memcpy(dst, src, FixupSize);
+			pFixupData = (DWORD*)((DWORD)pFixupData + 4 + 4 + FixupSize);
+			FixupSize = pFixupData[0];
+			FixupOffset = pFixupData[1];
+			src = &pFixupData[2];
+			dst = (void*)((DWORD)pStart + FixupOffset);
+		}
+	}
+	//setup return address jump. 
+	*pReturnOffset = ReturnAddress | 1;
+}
 // ******************************************************************
 // * patch: D3DDevice_EndPush
 // ******************************************************************
@@ -6270,24 +6314,25 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 	// this patch is only to notify the pgraph handler we're starting to run a recorded pushbuffer.
 	// pPush_local[2]!=0 for start running, pPush_local[2]==0 for end running.
 	bool WaitForPgraph = true;
-
-
+	if ((pPushBuffer->Common & 0x80000000) == 0)
+		WaitForPgraph = false;
+	//pPushBuffer->Common |= 0x80000000;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)pPushBuffer;
 	PBTokenArray[3] = (DWORD)pFixup;
 	PBTokenArray[4] = (DWORD)&WaitForPgraph;
 	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer, 2);//argCount, not necessary, default to 14
+	//Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer, 2);//argCount, not necessary, default to 14
 
-	EmuKickOff();
-	while (WaitForPgraph)
-		;
+	//EmuKickOff();
+	//while (WaitForPgraph)
+	//	;
 
 	//if (is_pushbuffer_recording()) {
 	XB_TRMP(D3DDevice_RunPushBuffer)(pPushBuffer, pFixup);
 	//}
 	//EmuExecutePushBuffer(pPushBuffer, pFixup);
-
+	/*
 	// notify pgraph handler we've done running pushbuffer.
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = 0;
@@ -6297,6 +6342,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 	EmuKickOff();
 	while (WaitForPgraph)
 		;
+	*/
 	return;
 }
 void CxbxrImpl_Clear

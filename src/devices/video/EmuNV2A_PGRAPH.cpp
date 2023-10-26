@@ -2212,7 +2212,7 @@ int pgraph_handle_method(
                 }
                     break;
                 case NV097_NO_OPERATION://done
-                    /* The bios uses nop as a software method call -
+                {    /* The bios uses nop as a software method call -
                      * it seems to expect a notify interrupt if the parameter isn't 0.
                      * According to a nouveau guy it should still be a nop regardless
                      * of the parameter. It's possible a debug register enables this,
@@ -2238,60 +2238,155 @@ int pgraph_handle_method(
 					*
 					
 					 */
-                    switch (arg0) {
-                    case NVX_FLIP_IMMEDIATE: break;
-                    case NVX_FLIP_SYNCHRONIZED: break;
-                    case NVX_PUSH_BUFFER_RUN: break;
-                    case NVX_PUSH_BUFFER_FIXUP: break;
-                    case NVX_FENCE:
-                        /*
-                        semaphore is set in NV097_BACK_END_WRITE_SEMAPHORE_RELEASE or NV097_TEXTURE_READ_SEMAPHORE_RELEASE
-                        KelvinPrimitive.SetBackEndWriteSemaphoreRelease= cpu time when InsertFence() was called.
+                    extern DWORD* pgraph_get_xbox_fixupInfo_address(DWORD offset);
+                    extern void pgraph_dec_xbox_fixupInfoIntrCount(void);
+                    extern void D3DBuffer_ApplyFixup(DWORD* pStart, DWORD* pFixupData, DWORD* pReturnOffset, DWORD ReturnAddress);
+                    DWORD* pFixupInfo;
 
-                        */
-
-                        break;
-                    case NVX_READ_CALLBACK:
-                        //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_READ,(xbox::X_D3DCALLBACK) pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
-                        ((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);
-                        break;
-                    case NVX_WRITE_CALLBACK:
-                        //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_WRITE, (xbox::X_D3DCALLBACK)pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
-                        ((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);
-                        break;
-                    case NVX_DXT1_NOISE_ENABLE://value stores in NV097_SET_ZSTENCIL_CLEAR_VALUE  D3DRS_DXT1NOISEENABLE //KelvinPrimitive.
-                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DXT1NOISEENABLE, pg->KelvinPrimitive.SetZStencilClearValue);
-                        break;
-                    case NVX_WRITE_REGISTER_VALUE:
-                        switch ((pg->KelvinPrimitive.SetZStencilClearValue&0xffff)) {
-                        case NV_PGRAPH_DEBUG_5://D3DRS_DONOTCULLUNCOMPRESSED
-                            if((pg->KelvinPrimitive.SetColorClearValue& NV_PGRAPH_DEBUG_5_ZCULL_RETURN_COMP_ENABLED)!=0)
-                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 1);
-                            else
-                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 0);
+                    DWORD softMethod = arg0 & 0x1F;
+                    DWORD data = arg0 >> 5;
+                    //for xdk prior to 3925 or earlier, it uses soft method 0x308 and 0x30c for pushbuffer fixup. valide method ranges from 0x300 to 0x320
+                    //here we substitude the soft method for the ease of swich cases.
+                    //todo: there is a CMiniport_SoftwareMethod() in xbox OS which is called by Dpc() or PFIFIO interrupt service routine to handle interrupts. It's possible to trampoline to that function and let it process these software methods.
+                    //      to do that, we have to update our symbol database first. or we could try to enable the pfifo interrupt function and let xbox handle these funciton directly.
+                    //      but I couldn't get the interrupt working.
+                    //      current test case is Tony Hawk's Pro Skater 2X(3947) and Simpsons - Road Rage(4034), xdk versions verified:3947/4034
+                    if (g_LibVersion_D3D8 <= 3947) {
+                        switch (arg0) {
+                        case NVX_FLIP_IMMEDIATE_3911:
+                            softMethod = NVX_FLIP_IMMEDIATE;
                             break;
-                        case NV_PGRAPH_DEBUG_6://D3DRS_ROPZCMPALWAYSREAD D3DRS_ROPZREAD
-                            if ((pg->KelvinPrimitive.SetColorClearValue & NV_PGRAPH_DEBUG_6_ROP_ZCMP_ALWAYS_READ_ENABLED) != 0)
-                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 1);
-                            else
-                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 0);
-
-                            if ((pg->KelvinPrimitive.SetColorClearValue & NV_PGRAPH_DEBUG_6_ROP_ZREAD_FORCE_ZREAD) != 0)
-                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 1);
-                            else
-                                NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 0);
-                            
+                        case NVX_FLIP_SYNCHRONIZED_3911:
+                            softMethod = NVX_FLIP_SYNCHRONIZED;
                             break;
-
+                        case NVX_PUSH_BUFFER_RUN_3911:
+                            softMethod = NVX_PUSH_BUFFER_RUN;
+                            break;
+                        case NVX_PUSH_BUFFER_FIXUP_3911:
+                            softMethod = NVX_PUSH_BUFFER_FIXUP;
+                            break;
+                        case NVX_READ_CALLBACK_3911:
+                            softMethod = NVX_READ_CALLBACK;
+                            break;
+                        case NVX_WRITE_CALLBACK_3911:
+                            softMethod = NVX_WRITE_CALLBACK;
+                            break;
+                        case NVX_DXT1_NOISE_ENABLE_3911:
+                            softMethod = NVX_DXT1_NOISE_ENABLE;
+                        case NVX_WRITE_REGISTER_VALUE_3911:
+                            softMethod = NVX_WRITE_REGISTER_VALUE;
+                            break;
+                        case NVX_ADJUST_OFFSET_PITCH_3947:
+                            break;
                         }
-
-
-                        break;
                     }
-                    if (arg0 != 0) {
+                        
+                    switch (softMethod) {
+                        case NVX_FLIP_IMMEDIATE:
+                            break;
+                        case NVX_FLIP_SYNCHRONIZED:
+                            break;
+
+                        // NVX_PUSH_BUFFER_RUN and NVX_PUSH_BUFFER_FIXUP are used in early XDK versions, test case Crimson Sea. pFixupInfo is passed via pg->KelvinPrimitive.SetZStencilClearValue
+                        // test case: Crimson Sea
+                        /*
+                        struct PUSHBUFFERFIXUPINFO
+                        {
+                            DWORD* pFixupData;     //pointer to 1st pushbuffer Fixup data, includes fixup.data+fixup.run
+                            BYTE*  pStart;         //pointer to start of pushbuffer
+                            DWORD  ReturnOffset;   //offset value from start of pushbuffer to the end of pushbuffer, where the patched long jump should be placed.
+                            DWORD* ReturnAddress;  //target return address of the pgraph pushbuffer after running pushbuffer.
+                        };
+                        // newer XDK version uses software method 0xC/0xD (NVX_PUSH_BUFFER_NEW_JUMP/NVX_PUSH_BUFFER_NEW_CALL)for fixed up info stored in d3d device, 0xE (NVX_PUSH_BUFFER_NEW_FIXUP)for fixed up info stored in pushbuffer right after jump command.
+                        */
+                        //pFixupInfo is passed via pg->KelvinPrimitive.SetZStencilClearValue, it's supposed to be the address in pushbuffer right after jump command.
+                        case NVX_PUSH_BUFFER_RUN:
+                            //break; //fall through
+                        case NVX_PUSH_BUFFER_FIXUP:
+                            pFixupInfo = (DWORD*)(pg->KelvinPrimitive.SetZStencilClearValue | 0x80000000);
+                            D3DBuffer_ApplyFixup((DWORD*)pFixupInfo[4], (DWORD*)pFixupInfo[3], (DWORD*)((pFixupInfo[2] & 0x0FFFFFFC) | 0x80000000), ((pFixupInfo[0] & 0x0FFFFFFC) | 0x80000000));
+                            //pgraph_dec_xbox_fixupInfoIntrCount();
+                            break;
+                        /*
+                        //new XDK version uses these 3 new soft methods to fixup pushbuffers passed via RunPushBuffer() without CPU copy.
+                        // test case: PushBuffer sample XDK version 5849.
+                        struct PUSHBUFFERFIXUPINFO
+                        {
+                            DWORD* ReturnAddress;  //target return address of the pgraph pushbuffer after running pushbuffer.
+                            DWORD  0;              //unknown
+                            DWORD  ReturnOffset;   //address where the patched long jump should be placed. it includes start address of pushbuffer and offset from the start to the end of pushbuffer, 
+                            DWORD* pFixupData;     //pointer to 1st pushbuffer Fixup data, includes fixup.data+fixup.run
+                            BYTE*  pStart;         //pointer to start of pushbuffer
+                        };
+                        */
+                        //todo: not sure which one is jump, which one is call. or maybe it means something else.
+                        //FixUpInfo in pushbuffer after jump command next to this NOP method. just like NVX_PUSH_BUFFER_NEW_FIXUP
+                        case NVX_PUSH_BUFFER_RUN_5855:
+                            pFixupInfo = (DWORD*)(data|0x80000000);
+                            D3DBuffer_ApplyFixup((DWORD*)pFixupInfo[4], (DWORD*)pFixupInfo[3], (DWORD*)((pFixupInfo[2] & 0x0FFFFFFC) | 0x80000000), ((pFixupInfo[0] & 0x0FFFFFFC) | 0x80000000));
+                            pgraph_dec_xbox_fixupInfoIntrCount();
+                            break;
+                        // fixup info in d3d device
+                        case NVX_PUSH_BUFFER_RUN_NOTINLINED_5855:
+                            pFixupInfo = pgraph_get_xbox_fixupInfo_address(data);
+                            D3DBuffer_ApplyFixup((DWORD*)pFixupInfo[4], (DWORD*)pFixupInfo[3], (DWORD*)pFixupInfo[2], ((pFixupInfo[0] & 0x0FFFFFFF) | 0x80000000));
+                            pgraph_dec_xbox_fixupInfoIntrCount();
+                            break;
+                        //FixUpInfo in pushbuffer after jump command next to this NOP method.
+                        case NVX_PUSH_BUFFER_FIXUP_5855:
+                            pFixupInfo = (DWORD*)(data | 0x80000000);
+                            D3DBuffer_ApplyFixup((DWORD*)pFixupInfo[4], (DWORD*)pFixupInfo[3], (DWORD*)((pFixupInfo[2] & 0x0FFFFFFC) | 0x80000000), ((pFixupInfo[0] & 0x0FFFFFFF) | 0x80000000));
+                            pgraph_dec_xbox_fixupInfoIntrCount();
+                            break;
+
+                        case NVX_FENCE:
+                            /*
+                            semaphore is set in NV097_BACK_END_WRITE_SEMAPHORE_RELEASE or NV097_TEXTURE_READ_SEMAPHORE_RELEASE
+                            KelvinPrimitive.SetBackEndWriteSemaphoreRelease= cpu time when InsertFence() was called.
+                            xbox handler calls KeSetEvent((PRKEVENT)??, 1, 0) to handle this method.
+                            */
+                            break;
+                        case NVX_READ_CALLBACK:
+                            //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_READ,(xbox::X_D3DCALLBACK) pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                            //((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);
+                            //break; //fall through
+                        case NVX_WRITE_CALLBACK:
+                            //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_WRITE, (xbox::X_D3DCALLBACK)pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
+                            ((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);
+                            break;
+                        case NVX_DXT1_NOISE_ENABLE://value stores in NV097_SET_ZSTENCIL_CLEAR_VALUE  D3DRS_DXT1NOISEENABLE //KelvinPrimitive.
+                            NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DXT1NOISEENABLE, pg->KelvinPrimitive.SetZStencilClearValue);
+                            break;
+                        case NVX_WRITE_REGISTER_VALUE:
+                            switch ((pg->KelvinPrimitive.SetZStencilClearValue&0xffff)) {
+                                case NV_PGRAPH_DEBUG_5://D3DRS_DONOTCULLUNCOMPRESSED
+                                    if((pg->KelvinPrimitive.SetColorClearValue& NV_PGRAPH_DEBUG_5_ZCULL_RETURN_COMP_ENABLED)!=0)
+                                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 1);
+                                    else
+                                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_DONOTCULLUNCOMPRESSED, 0);
+                                    break;
+                                case NV_PGRAPH_DEBUG_6://D3DRS_ROPZCMPALWAYSREAD D3DRS_ROPZREAD
+                                    if ((pg->KelvinPrimitive.SetColorClearValue & NV_PGRAPH_DEBUG_6_ROP_ZCMP_ALWAYS_READ_ENABLED) != 0)
+                                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 1);
+                                    else
+                                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZCMPALWAYSREAD, 0);
+
+                                    if ((pg->KelvinPrimitive.SetColorClearValue & NV_PGRAPH_DEBUG_6_ROP_ZREAD_FORCE_ZREAD) != 0)
+                                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 1);
+                                    else
+                                        NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_ROPZREAD, 0);
+                            
+                                    break;
+
+                            }
+                            break;
+                    }
+
+                    /*
+                    if (method_count>0 && arg0 != 0) {
 						
 						//disable the original code. now we know how this code shall work. but it's not implement yet.
-						/*
+						
 						assert(!(pg->pending_interrupts & NV_PGRAPH_INTR_ERROR));
 
                         SET_MASK(pg->pgraph_regs[NV_PGRAPH_TRAPPED_ADDR / 4],
@@ -2313,9 +2408,13 @@ int pgraph_handle_method(
                         while (pg->pending_interrupts & NV_PGRAPH_INTR_ERROR) {
                             qemu_cond_wait(&pg->interrupt_cond, &pg->pgraph_lock);
                         }
-						*/
+						
                     }
+                    */
+
                     num_words_consumed = method_count; //test case: xdk pushbuffer sample. 3rd method from file is NOP with method count 0x81.
+                }
+
                     break;
 
                 case NV097_WAIT_FOR_IDLE://done  //this method is used to wait for NV2A state machine to sync to pushbuffer.

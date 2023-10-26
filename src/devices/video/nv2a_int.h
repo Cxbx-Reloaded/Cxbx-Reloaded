@@ -659,8 +659,8 @@ typedef union {
 #define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
 	};
 #define COMMAND_WORD_MASK_METHOD    0x00001FFC /*  2 .. 12 */ // See NV_PFIFO_CACHE1_DMA_STATE_METHOD, PUSH_METHOD_MASK
-#define COMMAND_WORD_MASK_JUMP      0x1FFFFFFC /*  2 .. 31 */
-#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 28 */
+#define COMMAND_WORD_MASK_JUMP      0x1FFFFFFC /*  2 .. 28 */
+#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 31 */
 } nv_fifo_command;
 
 typedef enum class _DrawMode {
