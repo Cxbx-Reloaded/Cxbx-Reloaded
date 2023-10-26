@@ -3234,11 +3234,14 @@ void init_xboxD3dGlobalPointer(void)
 			g_pXbox_D3DDevice = (xbox::dword_xt*)it->second;
 		}
 	}
-	if((g_pXbox_D3DDevice == nullptr)
-		|| (*g_pXbox_D3DDevice == 0))
+	if ((g_pXbox_D3DDevice == nullptr)
+		|| (*g_pXbox_D3DDevice == 0)) {
 		CxbxrAbort("D3D_g_pDevice not available!");
-	
-
+	}
+	else {
+		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
+		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
+	}
 	// get the transform matrix pointer in xbox d3d and store it in g_xbox_transform_matrix if it's not set yet
 	if (g_xbox_transform_matrix == nullptr) {
 		byte* pSetTransform = nullptr;
@@ -5668,40 +5671,45 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 	//*(UINT64*)& PBTokenArray[4] = pTexture->Data;
 	//PBTokenArray[5] = (DWORD)pTexture->Format;
 	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-	pPush_local[3] = (DWORD)0;// pTexture;
-
-	if (pTexture != nullptr) {
-		// we should better erase the pTexture if the key already existed in the map.
-		// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
-		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
-		pPush_local[3] = (DWORD)&pPush_local[4];// pTexture;
-		*(X_D3DSurface*)pPush_local[3] = *(X_D3DSurface*)pTexture;
-		if (GetXboxCommonResourceType(pTexture->Common) != X_D3DCOMMON_TYPE_SURFACE)
-			((X_D3DSurface*)pPush_local[3])->Parent = nullptr;
-
-		UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
-		auto it = g_TextureCache.find(key);
-		if (it != g_TextureCache.end()) {
-			//release ref. count since we add ref. count in HLE patch.
-			//CxbxrImpl_Resource_Release(pTexture);
-			//g_TextureCache.erase(it);
-			if(GetXboxCommonResourceType(pTexture) != X_D3DCOMMON_TYPE_SURFACE)
-				((X_D3DSurface*)pPush_local[3])->Parent = nullptr;
-		}
-		//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
+	if (g_pXbox_pPush == nullptr) {
+		CxbxrImpl_SetTexture(Stage, pTexture);
 	}
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[1] = (DWORD)X_D3DDevice_SetTexture;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	pPush_local[2] = (DWORD)Stage;
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	else {
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		pPush_local[3] = (DWORD)0;// pTexture;
+
+		if (pTexture != nullptr) {
+			// we should better erase the pTexture if the key already existed in the map.
+			// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
+			// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
+			pPush_local[3] = (DWORD)&pPush_local[4];// pTexture;
+			*(X_D3DSurface*)pPush_local[3] = *(X_D3DSurface*)pTexture;
+			if (GetXboxCommonResourceType(pTexture->Common) != X_D3DCOMMON_TYPE_SURFACE)
+				((X_D3DSurface*)pPush_local[3])->Parent = nullptr;
+
+			UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
+			auto it = g_TextureCache.find(key);
+			if (it != g_TextureCache.end()) {
+				//release ref. count since we add ref. count in HLE patch.
+				//CxbxrImpl_Resource_Release(pTexture);
+				//g_TextureCache.erase(it);
+				if (GetXboxCommonResourceType(pTexture) != X_D3DCOMMON_TYPE_SURFACE)
+					((X_D3DSurface*)pPush_local[3])->Parent = nullptr;
+			}
+			//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
+		}
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64;
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[1] = (DWORD)X_D3DDevice_SetTexture;
+		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
+		pPush_local[2] = (DWORD)Stage;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+	}
 }
 
 void CxbxrImpl_SwitchTexture(
@@ -6448,26 +6456,30 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 	}
 	CxbxrImpl_Clear(  Count, pRects, Flags, Color, Z, Stencil);
 #else
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+	if (g_pXbox_pPush == nullptr) {
+		CxbxrImpl_Clear(Count, pRects, Flags, Color, Z, Stencil);
+	}
+	else {
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Clear;//enum of this patched API
-	pPush_local[2] = (DWORD)Count; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)pRects;
-	pPush_local[4] = (DWORD)Flags;
-	pPush_local[5] = (DWORD)Color;
-	pPush_local[6] = FtoDW(Z);
-	pPush_local[7] = (DWORD)Stencil;
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64;
+		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Clear;//enum of this patched API
+		pPush_local[2] = (DWORD)Count; //total 14 DWORD space for arguments.
+		pPush_local[3] = (DWORD)pRects;
+		pPush_local[4] = (DWORD)Flags;
+		pPush_local[5] = (DWORD)Color;
+		pPush_local[6] = FtoDW(Z);
+		pPush_local[7] = (DWORD)Stencil;
 
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
-
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x10;
+	}
 #endif
 }
 // ******************************************************************
@@ -8886,31 +8898,33 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
         LOG_FUNC_END;
 
     setTransformCount++;
+	if (g_pXbox_pPush == nullptr) {
+		CxbxrImpl_SetTransform(State, pMatrix);
+	}
+	else {
 
-	//CxbxrImpl_SetTransform(State, pMatrix);
+		// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform_0__LTCG_eax1_edx2;
+		// always copy the whole buffer
+		pPush_local[2] = (DWORD)State;
+		//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+		pPush_local[3] = (DWORD)&pPush_local[4];
+		// store the transform matrix in pushbuffer so we can leave it along.
+		// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
 
-	// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-	// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform_0__LTCG_eax1_edx2;
-	// always copy the whole buffer
-	pPush_local[2] = (DWORD)State;
-	//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
-	pPush_local[3] = (DWORD)&pPush_local[4];
-	// store the transform matrix in pushbuffer so we can leave it along.
-	// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
-	*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x20;
-
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x20;
+	}
 }
 
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
@@ -8953,28 +8967,32 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
     // Trampoline to guest code to remove the need for a GetTransform patch
     XB_TRMP(D3DDevice_SetTransform)(State, pMatrix);
 	
-	//
-	// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-	// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform;
-	// always copy the whole buffer
-	pPush_local[2] = (DWORD)State;
-	//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
-	pPush_local[3] = (DWORD)&pPush_local[4];
-	// store the transform matrix in pushbuffer so we can leave it along.
-	// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
-	*(D3DMATRIX * )&pPush_local[4]=*pMatrix;
+	if (g_pXbox_pPush == nullptr) {
+		CxbxrImpl_SetTransform(State, pMatrix);
+	}
+	else {
+		// use special template for allocating 0x20 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
+		// init pushbuffer related pointers
+		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+		if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
+			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+		// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
+		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+		pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform;
+		// always copy the whole buffer
+		pPush_local[2] = (DWORD)State;
+		//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+		pPush_local[3] = (DWORD)&pPush_local[4];
+		// store the transform matrix in pushbuffer so we can leave it along.
+		// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
 
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x20;
+		//set pushbuffer pointer to the new beginning
+		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
+		*(DWORD**)g_pXbox_pPush += 0x20;
+	}
 }
 
 // ******************************************************************
@@ -10573,6 +10591,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
 		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 	}
+	else {
+		CxbxrImpl_SetVertexShader(Handle);
+	}
 #if 0
 #if !USEPGRAPH_SetVertexShader
 
@@ -10619,6 +10640,9 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_
 	if (g_pXbox_pPush == nullptr) {
 		g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
 		g_pXbox_pPushLimit = g_pXbox_pPush + 1;
+	}
+	else {
+		CxbxrImpl_SetVertexShader(Handle);
 	}
 #if 0
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
@@ -14340,6 +14364,10 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetPersistedSurface2)()
 void CxbxrImpl_PersistDisplay()
 {
 	LOG_INIT
+
+	if (xbox::AvSavedDataAddress == nullptr) {
+		return;
+	}
 	//free previously stored persist surface data if it exists
 	if (xboxPersistTexture.Data != NULL) {
 //		free((void*)xboxPersistTexture.Data);
@@ -14410,8 +14438,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_PersistDisplay)()
 	// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
 	HRESULT hRet= XB_TRMP(D3DDevice_PersistDisplay)();
 
-	//template for syncing HLE apis with pgraf using waiting lock
-    bool WaitForPGRAPH;
+	//template for syncing HLE apis with pgraph using waiting lock
+	bool WaitForPGRAPH;
 	WaitForPGRAPH = true;
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
