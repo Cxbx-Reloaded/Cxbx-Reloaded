@@ -458,9 +458,22 @@ FixedFunctionVertexShaderState ffShaderState = {0}; // this var converts xbox st
 ATTN: ***do not trampoline to xbox code from pgraph handler. this will cause pushbuffer data corruption.
 
 todos:
-   * D3DDevice_SetVertexShader() is ready to be unpatched. todo: we still need this patch to initialize g_pXbox_pPush. need to find a reliable way to initialize g_pXbox_pPush as early as possible so we can unpatch D3DDevice_SetVertexShader()
    * I tried to keep original xbox globals untouched as possible as I could so it would be easier if we wanna implement a hybrid rendering with both HLE and pushbuffer based rendering. 
    * in GetXboxViewportOffsetAndScale() we use viewport scale and offsets from vsh_constants[][] directly when we're in NV2A mode. but whether scale[3] should be set with 0.0 like the actual content in vsh_constants or should it be 1.0 like our code need verifications.
-   * 
+   * Essential trampolines/patches for this branch to work.
+   * KickOff() and MakeSpace or MakeRequestedSpace(), these two trampolines are essential for pgraph token handling because we need to access the pushbuffer directly.
+   * D3DDevice_SetRenderTarget()/D3DDevice_SetRenderTargetFast(): this patch could be removed if we compose the render target/depth buffer via NV097_SET_SURFACE_FORMAT, NV097_SET_SURFACE_PITCH, NV097_SET_SURFACE_COLOR_OFFSET, NV097_SET_SURFACE_ZETA_OFFSET
+   * the reason we keep this patch is for the ease of mapping to xbox resource cache.
+   * D3DDevice_SetTexture()/D3DDevice_SwitchTexture(), these two patches can be removed since we're already capable of recomposing xbox textures via NV2A. again this patch is for the ease of mapping to xbox resource cache.
+   * D3DDevice_SetTransform(), this patch is merely for us to access xbox view transform matrix which is necessary for fixed mode vertex shader state input. If we could revise the fixed mode vertex shader from requiring view matrix, we could remove this patch.
+   * D3DDevice_Clear(), this patch could be removed once we reverse engineer the related pushbuffer command
+   * D3DDevice_Swap(), this patch could be removed  once we reverse engineer the related pushbuffer command
+   * D3DDevice_Reset(), so far I have no ideas regarding to this patch, need further study.
+   * some xbox titles/samples uses depth buffer as texture stage input texture. they render the scene in 1st pass, take the output depth buffer as input texture, and render in 2nd pass.
+   * currently in D3D9 we have no feasible way to get a lockable depth buffer working with correct render output in first pass. known lockable depth buffer format includes D32_Lockable, D16_Lockable, FOURCC(INTZ), FOURCC(R32F)
+   * this will require further study or wait for D3D11 implementation.
+   * D3DDevice_SetGammaRamps(), need to implement additional rendering pass in CxbxrImpl_Swap() to render xbox backbuffer to host backbuffer with color swap texture for Gamma Ramps conversion.
+   * D3DDevice_DrawRectPatch()/D3DDevice_DrawTriPatch(), these two patches require high order tessellation implementation in D3D11 or if an software tessellation implementation.
+
 */
 

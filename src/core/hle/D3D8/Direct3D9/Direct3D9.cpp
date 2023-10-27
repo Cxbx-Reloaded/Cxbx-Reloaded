@@ -13898,7 +13898,7 @@ xbox::hresult_xt WINAPI CxbxrImpl_DrawRectPatch
 	 give vertex V7, (x,y)=(2,1), index = 2 + 1* 5 =7
 
 	 vertex index in upper row is index(V7) - Stride = 7 - 5 = 2
-	 vertex index in lower rwo is index(V7) + stride = 7 + 5 = 12
+	 vertex index in lower roW is index(V7) + stride = 7 + 5 = 12
 	 vertex index in right is     index(V7) + 1 = 8
 	 vertex index in left is      index(V7) - 1 = 6
 
@@ -13918,8 +13918,8 @@ xbox::hresult_xt WINAPI CxbxrImpl_DrawRectPatch
 			  |  \|  \|
 	V20 V21  V22 V23 V24
 
-	test case: Patch sample uses 4X4 RectPatch
-	test case: True Crime Streets of LA ?
+	testcase: Patch sample uses 4X4 RectPatch
+	testcase: True Crime Streets of LA ?
 
 	*/
 
