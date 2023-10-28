@@ -221,8 +221,15 @@ unsigned                     g_NV2A_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
 	   xbox::X_D3DSurface            g_Xbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0};
 	   std::map<UINT64, xbox::X_D3DSurface> g_TextureCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
-	   std::map<UINT64, xbox::X_D3DSurface> g_RenderTargetCache;// cache all pTexture passed to SetTexture() and SwitchTexture()
-
+	   std::map<UINT64, xbox::X_D3DSurface> g_RenderTargetCache;// cache all pRenderTarget passed to SetRenderTarget() 
+struct DepthBufferResource
+{
+	xbox::X_D3DSurface XboxDepthBufferSurface;
+	//IDirect3DSurface* pHostDepthStencil;
+	IDirect3DSurface* pHostDepthStencilTextureSurface;
+	IDirect3DTexture* pHostDepthStencilTexture;
+};
+       std::map<UINT64, DepthBufferResource> g_DepthBufferCache;// cache all pDepthBuffer passed to SetRenderTarget() 
 static xbox::X_D3DSurface        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
 xbox::X_D3DVIEWPORT8 g_Xbox_Viewport = { 0 };
@@ -2263,6 +2270,10 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 			break;
 		case D3DFMT_D32:
 			g_bHasDepth = true;
+			break;
+		default:
+			g_bHasDepth = true;
+			g_bHasStencil = true;
 			break;
 		}
 	}
@@ -5548,7 +5559,7 @@ void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* p
 {
 	//update the currently used stage texture
 	g_pXbox_SetTexture[Stage] = pTexture;
-
+	HRESULT hRet;
 	if (pTexture != nullptr) {
 		g_Xbox_SetTexture[Stage] = *(xbox::X_D3DSurface*)pTexture;
 		g_pXbox_SetTexture[Stage] = (xbox::X_D3DBaseTexture*)&g_Xbox_SetTexture[Stage];
@@ -5557,13 +5568,44 @@ void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* p
 		auto it = g_TextureCache.find(key);
 		if (it != g_TextureCache.end()) {
 				if ((it->second.Common & CXBX_D3DCOMMON_IDENTIFYING_MASK) != (g_pXbox_SetTexture[Stage]->Common & CXBX_D3DCOMMON_IDENTIFYING_MASK)) {
-					g_TextureCache.erase(key);
-					g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface >(key, g_Xbox_SetTexture[Stage]));
+					//g_TextureCache.erase(key);
+					//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface >(key, g_Xbox_SetTexture[Stage]));
+					g_TextureCache[key] = g_Xbox_SetTexture[Stage];
 				}
+				//UINT64 key = ((UINT64)(g_pXbox_DepthStencil->Format) << 32) | g_pXbox_DepthStencil->Data;
+				//xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat((xbox::X_D3DPixelContainer*)pTexture);
+				//if (EmuXBFormatIsDepthBuffer(X_Format)) {
+				//}
 		}
 		else {
 			g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface >(key, g_Xbox_SetTexture[Stage]));
 		}
+
+		for (auto it2 = g_DepthBufferCache.begin(); it2 != g_DepthBufferCache.end(); it2++) {
+			if (pTexture->Data == it2->second.XboxDepthBufferSurface.Data) {
+				/*
+				hRet = D3DXLoadSurfaceFromSurface(it2->second.pHostDepthStencilTextureSurface, nullptr, NULL, it2->second.pHostDepthStencil, nullptr, NULL, D3DX_FILTER_NONE, 0);
+				if (hRet != S_OK) {
+					hRet = g_pD3DDevice->StretchRect(it2->second.pHostDepthStencil, NULL, it2->second.pHostDepthStencilTextureSurface, NULL, D3DTEXF_NONE);
+					if (hRet != S_OK) {
+						D3DSURFACE_DESC hostSourceDesc, hostDestDesc;
+						it2->second.pHostDepthStencil->GetDesc(&hostSourceDesc);
+						D3DLOCKED_RECT HostSrcLockedRect, HostDstLockedRect;
+						hRet = it2->second.pHostDepthStencil->LockRect(&HostSrcLockedRect, NULL, D3DLOCK_NOOVERWRITE);
+						if (hRet == D3D_OK) {
+							hRet = it2->second.pHostDepthStencilTextureSurface->LockRect(&HostDstLockedRect, NULL, D3DLOCK_NOSYSLOCK);
+							if (hRet == D3D_OK) {
+								memcpy(HostDstLockedRect.pBits, HostSrcLockedRect.pBits, HostSrcLockedRect.Pitch * hostSourceDesc.Height);
+							}
+						}
+					}
+				}
+				*/
+				//if (hRet == S_OK)
+				SetHostResource(pTexture, it2->second.pHostDepthStencilTexture);
+			}
+		}
+
 #if 0	//link pTexture to possible render target or depth buffer is implemented in D3DDevice_SetRenderTarget(). Disable this section of code for testing. test case: DynamicGamma and HeatShimmer sample.
 		//let's process the resource cache here for some special cases. some title will use xbox backbuffer as texture stage texture but not using the backbuffer surface directly,
 		//instead the title might use XGSetTextureHeader() to create a new texture which using the Foramt/Data/Size from backbuffer, but with totally different Common type.
@@ -6705,7 +6747,8 @@ void WINAPI CxbxrImpl_CopyRects
 				if (hRet == D3D_OK) {
 					hRet = pHostDestSurface->LockRect(&HostDstLockedRect, NULL, D3DLOCK_NOOVERWRITE);
 					if (hRet == D3D_OK) {
-						if (HostSrcLockedRect.Pitch == HostDstLockedRect.Pitch && hostDestDesc.Format == hostSourceDesc.Format);
+						if (HostSrcLockedRect.Pitch == HostDstLockedRect.Pitch && hostDestDesc.Format == hostSourceDesc.Format)
+						    memcpy(HostDstLockedRect.pBits, HostSrcLockedRect.pBits, HostSrcLockedRect.Pitch* hostSourceDesc.Height);
 					}
 				}
 			}
@@ -12794,6 +12837,8 @@ void CxbxrImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3
 				resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 				resourceInfo.forceRehash = false;
 				resourceInfo.PCFormat = HostSurfaceDesc.Format;
+
+				SetHostResource(pXborSurface, pHostSurface);
 			}
 		}
 		// there is parent texture, check if parent texture is pure texure, if so, put parent texture into cache and set host resource to it.
@@ -12848,7 +12893,8 @@ void CxbxrImpl_SetRenderTarget
 	NestedPatchCounter call(setRenderTargetCount);
 	IDirect3DSurface *pHostRenderTarget = nullptr;
 	IDirect3DSurface *pHostDepthStencil = nullptr;
-
+	IDirect3DSurface* pHostDepthStencilSurface = nullptr;
+	IDirect3DTexture* pHostDepthStencilTexture = nullptr;
 	// whenever SetRenderTarget was called, we insert the previous render target surface to render target cache. every surface in the cache is dirty.
 	// when we compose vertex stream in NV2A, we check whether the vertex stream is withing the data range of these dirty render targets. if a match was found, we transfer data from host to xbox for the matched render target and remove it from cache.
 	if(g_pXbox_RenderTarget!=nullptr){
@@ -12922,14 +12968,72 @@ void CxbxrImpl_SetRenderTarget
 	}
 
 	g_ZScale = GetZScaleForPixelContainer(g_pXbox_DepthStencil); // TODO : Discern between Xbox and host and do this in UpdateDepthStencilFlags?
-    pHostDepthStencil = GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL);
-	if (pHostDepthStencil != nullptr) {
-		// Get current host render target dimensions
-		D3DSURFACE_DESC HostDepthStencil_Desc;
-		pHostDepthStencil->GetDesc(&HostDepthStencil_Desc);
-		CxbxrImpl_SetRenderTargetTexture(g_pXbox_DepthStencil, pHostDepthStencil, HostDepthStencil_Desc);
-	}
+
 	HRESULT hRet;
+
+	if (g_pXbox_DepthStencil != nullptr) {
+		UINT64 key = ((UINT64)(g_pXbox_DepthStencil->Format) << 32) | g_pXbox_DepthStencil->Data;
+		auto it = g_DepthBufferCache.find(key);
+		if (it != g_DepthBufferCache.end()) {
+			//pHostDepthStencil = g_DepthBufferCache[key].pHostDepthStencil;
+			pHostDepthStencilSurface = g_DepthBufferCache[key].pHostDepthStencilTextureSurface;
+		}else{
+			xbox::X_D3DFORMAT X_Format=GetXboxPixelContainerFormat((xbox::X_D3DPixelContainer*)g_pXbox_DepthStencil);
+			bool bDepthBuffer = EmuXBFormatIsDepthBuffer(X_Format);
+			bool bSwizzled = EmuXBFormatIsSwizzled(X_Format);
+			bool bCompressed = EmuXBFormatIsCompressed(X_Format);
+			UINT dwBPP = EmuXBFormatBytesPerPixel(X_Format);
+			UINT dwMipMapLevels = CxbxGetPixelContainerMipMapLevels(g_pXbox_DepthStencil);
+			UINT xboxWidth, xboxHeight, dwDepth, dwRowPitch, dwSlicePitch;
+			D3DFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
+
+			// Interpret Width/Height/BPP
+			CxbxGetPixelContainerMeasures(g_pXbox_DepthStencil, 0, &xboxWidth, &xboxHeight, &dwDepth, &dwRowPitch, &dwSlicePitch);
+
+			//CreateHostResource(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL);
+			//hack: forcing PCFormat to be the host format we specified
+			PCFormat = (D3DFORMAT)MAKEFOURCC('I', 'N', 'T', 'Z');
+			//PCFormat = (D3DFORMAT)MAKEFOURCC('R', '3', '2', 'F');
+			//PCFormat = D3DFMT_D16_LOCKABLE;//D3DFMT_D32_LOCKABLE, D3DFMT_D16_LOCKABLE, D3DFMT_D32F_LOCKABLE, D3DFMT_S8_LOCKABLE
+
+			hRet = g_pD3DDevice->CreateTexture(xboxWidth, xboxHeight,
+				1, // Levels
+				D3DUSAGE_DEPTHSTENCIL, // D3DUSAGE_DYNAMIC
+				PCFormat,
+				D3DPOOL_DEFAULT, // D3DPOOL_DEFAULT D3DPOOL_SYSTEMMEM
+				&pHostDepthStencilTexture,
+				nullptr // pSharedHandle
+			);
+
+			if (hRet == S_OK) {
+				hRet = pHostDepthStencilTexture->GetSurfaceLevel(0, &pHostDepthStencilSurface);
+			}
+
+			
+			hRet = g_pD3DDevice->CreateDepthStencilSurface(xboxWidth, xboxHeight, PCFormat,
+				g_EmuCDPD.HostPresentationParameters.MultiSampleType,
+				0, // MultisampleQuality
+				false, // Discard
+				&pHostDepthStencil,
+				nullptr // pSharedHandle
+			);
+			
+			if (hRet == S_OK) {
+				UINT64 key = ((UINT64)(g_pXbox_DepthStencil->Format) << 32) | g_pXbox_DepthStencil->Data;
+				//g_DepthBufferCache[key].pHostDepthStencil = pHostDepthStencil;
+				g_DepthBufferCache[key].XboxDepthBufferSurface = *g_pXbox_DepthStencil;
+				g_DepthBufferCache[key].pHostDepthStencilTextureSurface = pHostDepthStencilSurface;
+				g_DepthBufferCache[key].pHostDepthStencilTexture = pHostDepthStencilTexture;
+			}
+			
+			if (pHostDepthStencil != nullptr) {
+				// Get current host render target dimensions
+				D3DSURFACE_DESC HostDepthStencilSurface_Desc;
+				hRet = pHostDepthStencilSurface->GetDesc(&HostDepthStencilSurface_Desc);
+				CxbxrImpl_SetRenderTargetTexture(g_pXbox_DepthStencil, pHostDepthStencilSurface, HostDepthStencilSurface_Desc);
+			}
+		}
+	}
 	// Mimick Direct3D 8 SetRenderTarget by only setting render target if non-null
 	if (pHostRenderTarget) {
 		hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
@@ -12940,12 +13044,12 @@ void CxbxrImpl_SetRenderTarget
 		}
 	}
 
-	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
+	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencilSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetDepthStencilSurface");
 
 	if (SUCCEEDED(hRet)) {
 		// Once we're sure the host depth-stencil is activated...
-		UpdateDepthStencilFlags(pHostDepthStencil);
+		UpdateDepthStencilFlags(pHostDepthStencilSurface);
 	}
 
     // Validate that our host render target is still the correct size
