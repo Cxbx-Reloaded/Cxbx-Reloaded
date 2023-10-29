@@ -67,7 +67,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	//PATCH_ENTRY("D3DDevice_BeginPushBuffer", xbox::EMUPATCH(D3DDevice_BeginPushBuffer), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_BeginVisibilityTest", xbox::EMUPATCH(D3DDevice_BeginVisibilityTest), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_BlockOnFence", xbox::EMUPATCH(D3DDevice_BlockOnFence), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_BlockUntilVerticalBlank", xbox::EMUPATCH(D3DDevice_BlockUntilVerticalBlank), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_BlockUntilVerticalBlank", xbox::EMUPATCH(D3DDevice_BlockUntilVerticalBlank), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_Clear", xbox::EMUPATCH(D3DDevice_Clear), PATCH_HLE_D3D),
     PATCH_ENTRY("D3DDevice_CopyRects", xbox::EMUPATCH(D3DDevice_CopyRects), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_CreateVertexShader", xbox::EMUPATCH(D3DDevice_CreateVertexShader), PATCH_HLE_D3D),
