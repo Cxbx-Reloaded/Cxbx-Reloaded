@@ -385,8 +385,10 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetTile,                                  (xbox::dword_xt, CONST xbox::X_D3DTILE*)                                                              );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     CDevice_KickOff,                                    ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0_ecx,                              ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0_edx,                              ()                                                                                                    );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     CDevice_KickOff_4,                                  ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0__LTCG_eax1,                       ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0__LTCG_ecx1,                       ()                                                                                                    );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0__LTCG_edx1,                       ()                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_LightEnable,                              (xbox::dword_xt, xbox::bool_xt)                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader,                         (xbox::dword_xt, xbox::dword_xt)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShaderProgram,                  (CONST xbox::dword_xt*, xbox::dword_xt)                                                               );  \
@@ -3978,21 +3980,36 @@ void EmuKickOff(void)
 		}
 		XB_TRMP(CDevice_KickOff)();
 	}
-	//LTCG version, CDevice in edx
-	else if (XB_TRMP(CDevice_KickOff_0_edx)) {
-		__asm {
-			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
-			mov  edx, Xbox_D3DDevice
-		}
-		XB_TRMP(CDevice_KickOff_0_edx)();
-	}
-	else if (XB_TRMP(CDevice_KickOff_0_ecx)) {
+	else if (XB_TRMP(CDevice_KickOff_4)) {
 		__asm {
 			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
 			mov  ecx, Xbox_D3DDevice
 		}
-		XB_TRMP(CDevice_KickOff_0_ecx)();
-	}else
+		XB_TRMP(CDevice_KickOff)();
+	}
+	//LTCG version, CDevice in edx
+	else if (XB_TRMP(CDevice_KickOff_0__LTCG_edx1)) {
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  edx, Xbox_D3DDevice
+		}
+		XB_TRMP(CDevice_KickOff_0__LTCG_edx1)();
+	}
+	else if (XB_TRMP(CDevice_KickOff_0__LTCG_ecx1)) {
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  ecx, Xbox_D3DDevice
+		}
+		XB_TRMP(CDevice_KickOff_0__LTCG_ecx1)();
+	}
+	else if (XB_TRMP(CDevice_KickOff_0__LTCG_eax1)) {
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  eax, Xbox_D3DDevice
+		}
+		XB_TRMP(CDevice_KickOff_0__LTCG_eax1)();
+	}
+	else
 		CxbxrAbort("EmuKickOff:CDevice_KickOff not available!!!");
 }
 
