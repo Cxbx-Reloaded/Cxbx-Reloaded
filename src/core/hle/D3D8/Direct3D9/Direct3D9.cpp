@@ -385,7 +385,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetTile,                                  (xbox::dword_xt, CONST xbox::X_D3DTILE*)                                                              );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     CDevice_KickOff,                                    ()                                                                                                    );  \
-    XB_MACRO(xbox::hresult_xt,    WINAPI,     CDevice_KickOff_4,                                  ()                                                                                                    );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     CDevice_KickOff_4,                                  (DWORD)                                                                                               );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0__LTCG_eax1,                       ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0__LTCG_ecx1,                       ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     CDevice_KickOff_0__LTCG_edx1,                       ()                                                                                                    );  \
@@ -3981,11 +3981,7 @@ void EmuKickOff(void)
 		XB_TRMP(CDevice_KickOff)();
 	}
 	else if (XB_TRMP(CDevice_KickOff_4)) {
-		__asm {
-			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
-			mov  ecx, Xbox_D3DDevice
-		}
-		XB_TRMP(CDevice_KickOff)();
+		XB_TRMP(CDevice_KickOff_4)(Xbox_D3DDevice);
 	}
 	//LTCG version, CDevice in edx
 	else if (XB_TRMP(CDevice_KickOff_0__LTCG_edx1)) {
