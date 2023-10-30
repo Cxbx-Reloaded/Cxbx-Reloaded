@@ -2129,7 +2129,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetTexture_4__LTCG_eax_Stage:  break;
                     case X_D3DDevice_SetTextureStageState:  break;
                     case X_D3DDevice_SetTextureStageStateNotInline:  break;
-                    case X_D3DDevice_SetTile:  break;
+                    case X_D3DDevice_SetTile:
+                        if(argv[3]!=0)
+                            *(bool*)argv[3] = false;
+                        break;
                     case X_D3DDevice_SetTimerCallback:  break;
                     case X_D3DDevice_SetTransform:  //break;//fall throught
                     case X_D3DDevice_SetTransform_0__LTCG_eax1_edx2:

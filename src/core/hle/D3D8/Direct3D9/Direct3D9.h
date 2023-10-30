@@ -406,8 +406,8 @@ X_D3DSurface * WINAPI EMUPATCH(D3DDevice_GetDepthStencilSurface2)();
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetTile)
 (
-    xbox::dword_xt            Index,
-    CONST xbox::X_D3DTILE *   pTile
+    xbox::dword_xt      Index,
+    xbox::X_D3DTILE *   pTile
 );
 
 // ******************************************************************
@@ -850,6 +850,26 @@ xbox::hresult_xt WINAPI EMUPATCH(Lock3DSurface)
 	dword_xt				Flags
 );
 
+// ******************************************************************
+// * patch: IDirect3DTexture8_GetSurfaceLevel
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel)
+(
+    X_D3DTexture* pThis,
+    uint_xt            Level,
+    X_D3DSurface** ppSurfaceLevel
+);
+
+// ******************************************************************
+// * patch: IDirect3DTexture8_GetSurfaceLevel2
+// ******************************************************************
+X_D3DSurface* WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
+(
+    X_D3DTexture* pThis,
+    uint_xt            Level
+);
+
+
 #if 0 // patch disabled
 // ******************************************************************
 // * patch: Get2DSurfaceDesc
@@ -882,23 +902,6 @@ xbox::void_xt WINAPI EMUPATCH(D3DSurface_LockRect)
 );
 
 // ******************************************************************
-// * patch: IDirect3DBaseTexture8_GetLevelCount
-// ******************************************************************
-xbox::dword_xt WINAPI EMUPATCH(D3DBaseTexture_GetLevelCount)
-(
-    X_D3DBaseTexture   *pThis
-);
-
-// ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel2
-// ******************************************************************
-X_D3DSurface * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
-(
-    X_D3DTexture   *pThis,
-    uint_xt            Level
-);
-
-// ******************************************************************
 // * patch: IDirect3DTexture8_LockRect
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DTexture_LockRect)
@@ -911,13 +914,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DTexture_LockRect)
 );
 
 // ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel
+// * patch: IDirect3DBaseTexture8_GetLevelCount
 // ******************************************************************
-xbox::hresult_xt WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel)
+xbox::dword_xt WINAPI EMUPATCH(D3DBaseTexture_GetLevelCount)
 (
-    X_D3DTexture   *pThis,
-    uint_xt            Level,
-    X_D3DSurface  **ppSurfaceLevel
+    X_D3DBaseTexture* pThis
 );
 
 // ******************************************************************
@@ -2192,7 +2193,7 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetSurfaceHeader)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_XGSetTextureHeader
+// * patch: XGSetTextureHeader
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 (
@@ -2208,7 +2209,7 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetTextureHeader)
 );
 
 // ******************************************************************
-// * patch: D3DDevice_GetMaterial
+// * patch: XGSetVertexBufferHeader
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 (
@@ -2218,6 +2219,17 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
     D3DPOOL Pool,
     xbox::X_D3DVertexBuffer* pBuffer,
     UINT Data
+);
+
+// ******************************************************************
+// * patch: CreateStandAloneSurface
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(CreateStandAloneSurface)
+(
+    DWORD Width,
+    DWORD Height,
+    xbox::X_D3DFORMAT XFormat,
+    xbox::X_D3DSurface** ppSurface
 );
 
 #endif
