@@ -201,7 +201,7 @@ typedef enum _X_D3DAPI_ENUM {
 //pushbuffer command word for total 8 bytes including command word, for 0 argument dword, pPush offset 2 dwords
 #define HLE_API_PUSHBFFER_COMMAND_8 0x40040080
 //pushbuffer command word for total 12 bytes including command word, for 1 argument dword, pPush offset 3 dwords
-#define HLE_API_PUSHBFFER_COMMAND_8 0x40080080
+#define HLE_API_PUSHBFFER_COMMAND_12 0x40080080
 //pushbuffer command word for total 16 bytes including command word, for 2 argument dword, pPush offset 4 dwords
 #define HLE_API_PUSHBFFER_COMMAND_16 0x400C0080
 //pushbuffer command word for total 32 bytes including command word, for 6 argument dword, pPush offset 8 dwords
