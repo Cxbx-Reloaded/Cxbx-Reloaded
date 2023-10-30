@@ -12969,9 +12969,20 @@ void EmuSetRenderTarget
 		// TODO : Some titles might render to another backbuffer later on,
 		// if that happens, we might need to skip the first one or two calls?
 	}
+	bool bRenderTargetValid = false;
 
+	if (pRenderTarget != xbox::zeroptr) 
+		if (pRenderTarget->Data == 0){
+            //xbox title is setting render target with an dummy render target which has no Data. we need a valid Data here.
+			//todo: here we use a hack to "borrow" the data from g_Xbox_BackBufferSurface. need to figure out how to handle this situation.
+			DWORD newData = g_Xbox_BackBufferSurface.Data;
+			pRenderTarget->Data = (DWORD)newData;
+			if (pRenderTarget->Parent != nullptr)
+				if (pRenderTarget->Parent->Data == 0)
+					pRenderTarget->Parent->Data = (DWORD)newData;
+		}
 	// The current render target is only replaced if it's passed in here non-null
-	if (pRenderTarget != xbox::zeroptr) {
+	if (pRenderTarget!=nullptr) {
 		g_Xbox_RenderTarget = *pRenderTarget;
 		g_pXbox_RenderTarget = pRenderTarget;
 	}
