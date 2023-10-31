@@ -2210,6 +2210,11 @@ int pgraph_handle_method(
                         //CxbxrImpl_Lock3DSurface((xbox::X_D3DPixelContainer*)/* pPixelContainer*/argv[1], (xbox::uint_xt)/*Level*/argv[2], (D3DLOCKED_BOX*)/* pLockedVolume*/argv[3], (D3DBOX*)/* pBox*/argv[4], (xbox::dword_xt)/*Flags*/argv[5]);
                         *(bool*)argv[1] = false;
                         break;
+                    case X_EmuKickOffWait:
+                        //argv[2] is the token of the API which calls EmuKickOffWait()
+                        if(argv[1]!=0)
+                            *(DWORD*)argv[1] = 0;
+                        break;
                     default:break;
                     }
                 }

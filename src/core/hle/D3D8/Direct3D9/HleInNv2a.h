@@ -195,6 +195,7 @@ typedef enum _X_D3DAPI_ENUM {
     X_Direct3D_CreateDevice, X_Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface, X_Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface, X_Direct3D_CreateDevice_4,
     X_Lock2DSurface,
     X_Lock3DSurface,
+    X_EmuKickOffWait,
     X_D3DAPI_FORCE_DWORD = 0x7fffffff,
 
 } X_D3DAPI_ENUM;

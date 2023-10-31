@@ -3707,7 +3707,89 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 
 	return hRet;
 }
+//global for pfifo_run_pusher() to indicate whether it has completed the pushbuffer pasing or not.
+bool g_nv2a_fifo_is_busy = false;
+extern NV2ADevice* g_NV2A;// tmp glue
+extern bool is_nv2a_pfifo_busy(NV2AState* d);//tmp glue
 
+void EmuKickOff(void)
+{
+#if !PGRAPHUSE_EmuKickOff
+	return;
+#endif
+
+	DWORD* pXbox_D3DDevice;
+	DWORD  Xbox_D3DDevice;
+	// Set g_Xbox_D3DDevice to point to the Xbox D3D Device
+	// g_Xbox_D3DDevice is supposed to be set in D3DDevice_CreateDevice(), g_Xbox_D3DDevice to point to the Xbox D3D Device
+
+	Xbox_D3DDevice = *g_pXbox_D3DDevice;
+	if (XB_TRMP(CDevice_KickOff)) {
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  ecx, Xbox_D3DDevice
+		}
+		XB_TRMP(CDevice_KickOff)();
+	}
+	else if (XB_TRMP(CDevice_KickOff_4)) {
+		XB_TRMP(CDevice_KickOff_4)(Xbox_D3DDevice);
+	}
+	//LTCG version, CDevice in edx
+	else if (XB_TRMP(CDevice_KickOff_0__LTCG_edx1)) {
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  edx, Xbox_D3DDevice
+		}
+		XB_TRMP(CDevice_KickOff_0__LTCG_edx1)();
+	}
+	else if (XB_TRMP(CDevice_KickOff_0__LTCG_eax1)) {
+		__asm {
+			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
+			mov  eax, Xbox_D3DDevice
+		}
+		XB_TRMP(CDevice_KickOff_0__LTCG_eax1)();
+	}
+	else
+		CxbxrAbort("EmuKickOff:CDevice_KickOff not available!!!");
+}
+
+void EmuKickOffWait(X_D3DAPI_ENUM token)
+{
+	//template for syncing HLE apis with pgraf using waiting lock
+	DWORD WaitForPGRAPH;
+	WaitForPGRAPH = 1;
+	// init pushbuffer related pointers
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	if ((unsigned int)pPush_local + 16 >= (unsigned int)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	pPush_local[0] = (DWORD)HLE_API_PUSHBFFER_COMMAND_16;
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[1] = (DWORD)X_EmuKickOffWait;
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[2] = (DWORD)&WaitForPGRAPH;
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[3] = (DWORD)token;
+
+	//set pushbuffer pointer to the new beginning
+	//reserve 1 command DWORD, 1 API enum, and 2 argmenet DWORDs.
+	*(DWORD**)g_pXbox_pPush += 0x4;
+
+	EmuKickOff();
+
+	//while (WaitForPGRAPH!=0)
+	//	;
+	
+	__asm {
+		waitloop :
+		    cmp         dword ptr [WaitForPGRAPH],0  
+			je          getout
+			jmp         waitloop
+		getout :
+	}
+	return;
+}
 // ******************************************************************
 // * patch: D3DDevice_Reset
 // ******************************************************************
@@ -3744,18 +3826,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset)
 {
 	LOG_FUNC_ONE_ARG(pPresentationParameters);
 
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Reset, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_Reset);
 
 	CxbxrImpl_Reset(pPresentationParameters);
 
@@ -3785,18 +3856,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG
 	// Log
 	D3DDevice_Reset_0__LTCG_edi1(pPresentationParameters);
 
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Reset_0__LTCG_edi1, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_Reset_0__LTCG_edi1);
 
 	CxbxrImpl_Reset(pPresentationParameters);
 
@@ -3830,18 +3890,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG
 	// Log
 	D3DDevice_Reset_0__LTCG_ebx1(pPresentationParameters);
 
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Reset_0__LTCG_ebx1, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_Reset_0__LTCG_ebx1);
 
 	CxbxrImpl_Reset(pPresentationParameters);
 
@@ -3961,68 +4010,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginPushBuffer)(dword_xt * pPu
 	xbox::hresult_xt result = 0;
 	return result;
 }
-//global for pfifo_run_pusher() to indicate whether it has completed the pushbuffer pasing or not.
-bool g_nv2a_fifo_is_busy = false;
-extern NV2ADevice* g_NV2A;// tmp glue
-extern bool is_nv2a_pfifo_busy(NV2AState* d);//tmp glue
 
-void EmuKickOff(void)
-{
-#if !PGRAPHUSE_EmuKickOff
-	return;
-#endif
-
-	DWORD * pXbox_D3DDevice;
-	DWORD  Xbox_D3DDevice;
-	// Set g_Xbox_D3DDevice to point to the Xbox D3D Device
-	// g_Xbox_D3DDevice is supposed to be set in D3DDevice_CreateDevice(), g_Xbox_D3DDevice to point to the Xbox D3D Device
-
-	Xbox_D3DDevice = *g_pXbox_D3DDevice;
-	if (XB_TRMP(CDevice_KickOff)) {
-		__asm {
-			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
-			mov  ecx, Xbox_D3DDevice
-		}
-		XB_TRMP(CDevice_KickOff)();
-	}
-	else if (XB_TRMP(CDevice_KickOff_4)) {
-		XB_TRMP(CDevice_KickOff_4)(Xbox_D3DDevice);
-	}
-	//LTCG version, CDevice in edx
-	else if (XB_TRMP(CDevice_KickOff_0__LTCG_edx1)) {
-		__asm {
-			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
-			mov  edx, Xbox_D3DDevice
-		}
-		XB_TRMP(CDevice_KickOff_0__LTCG_edx1)();
-	}
-	else if (XB_TRMP(CDevice_KickOff_0__LTCG_eax1)) {
-		__asm {
-			//XB_TRAMPOLINE_D3DDevice_KickOff() require D3DDEVICE in ecx as this pointer.
-			mov  eax, Xbox_D3DDevice
-		}
-		XB_TRMP(CDevice_KickOff_0__LTCG_eax1)();
-	}
-	else
-		CxbxrAbort("EmuKickOff:CDevice_KickOff not available!!!");
-}
-
-void EmuKickOffWait(void)
-{
-#if !PGRAPHUSE_EmuKickOffWait
-	return;
-#endif
-	NV2AState* d = g_NV2A->GetDeviceState();
-	EmuKickOff();
-	//while (g_nv2a_fifo_is_busy) {
-	while (is_nv2a_pfifo_busy(d)) {
-		//__asm {
-			//mov  ecx, Xbox_D3DDevice
-		//}
-		// KickOff xbox d3d pushbuffer just in case pfifo_pusher_thread() gets trapped in qemu_cond_wait(). 
-		EmuKickOff();
-	}
-}
 static DWORD* pFixupInfoBase = nullptr;
 static DWORD* pFixupInfoIntrCount = nullptr;
 DWORD* pgraph_get_xbox_fixupInfo_address(DWORD index) {
@@ -4134,19 +4122,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPushBuffer)(void)
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {
 	LOG_FUNC();
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_BeginVisibilityTest, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_BeginVisibilityTest);
 	if (g_bEnableHostQueryVisibilityTest) {
 		// Create a D3D occlusion query to handle "visibility test" with
 		IDirect3DQuery* pHostQueryVisibilityTest = nullptr;
@@ -4218,19 +4194,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibility
     }
 
 	XB_TRMP(D3DDevice_EndVisibilityTest_0)();
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_EndVisibilityTest_0, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_EndVisibilityTest_0);
 	result = CxbxrImpl_EndVisibilityTest(Index);//EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 
     __asm {
@@ -4251,19 +4215,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 	LOG_FUNC_ONE_ARG(Index);
 
 	XB_TRMP(D3DDevice_EndVisibilityTest)(Index);
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_EndVisibilityTest, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_EndVisibilityTest);
     return CxbxrImpl_EndVisibilityTest(Index);
 }
 
@@ -4675,21 +4627,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
         PCRamp.green[v] = pRamp->green[v];
         PCRamp.blue[v]  = pRamp->blue[v];
     }
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)dwFlags;
-	PBTokenArray[3] = (DWORD)&PCRamp;
-	PBTokenArray[4] = (DWORD)&WaitForPGRAPH;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetGammaRamp, 3, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
-	WaitForPGRAPH = false;
+	EmuKickOffWait(X_D3DDevice_SetGammaRamp);
+	
 }
 
 // ******************************************************************
@@ -4704,19 +4643,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
 	static D3DGAMMARAMP PCGammaRamp = { 0 };
 	D3DGAMMARAMP* pGammaRamp = &PCGammaRamp;// (D3DGAMMARAMP*)malloc(sizeof(D3DGAMMARAMP));
 
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_GetGammaRamp, 3, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
-
+	EmuKickOffWait(X_D3DDevice_GetGammaRamp);
 
     g_pD3DDevice->GetGammaRamp(
 		0, // iSwapChain
@@ -5907,7 +5834,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_ApplyStateBlock)
 
 	xbox::hresult_xt result = XB_TRMP(D3DDevice_ApplyStateBlock)(Token);
 
-	EmuKickOffWait();
+	EmuKickOffWait(X_D3DDevice_ApplyStateBlock);
 
 	return result;
 
@@ -6338,18 +6265,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
 	}
 	else {
 
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_End, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_End);
 
 		CxbxrImpl_End(); //we unpatched D3DDevice_End, but found that there are memory corruptions introduced by multi entrance. so we have to come out a workaround.
 	}
@@ -6373,37 +6289,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 		LOG_FUNC_ARG(pFixup)
 		LOG_FUNC_END;
 	// this patch is only to notify the pgraph handler we're starting to run a recorded pushbuffer.
-	// pPush_local[2]!=0 for start running, pPush_local[2]==0 for end running.
-	bool WaitForPgraph = true;
-	if ((pPushBuffer->Common & 0x80000000) == 0)
-		WaitForPgraph = false;
-	//pPushBuffer->Common |= 0x80000000;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pPushBuffer;
-	PBTokenArray[3] = (DWORD)pFixup;
-	PBTokenArray[4] = (DWORD)&WaitForPgraph;
-	//give the correct token enum here, and it's done.
-	//Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer, 2);//argCount, not necessary, default to 14
-
-	//EmuKickOff();
-	//while (WaitForPgraph)
-	//	;
+	//EmuKickOffWait(X_D3DDevice_RunPushBuffer);
 
 	//if (is_pushbuffer_recording()) {
 	XB_TRMP(D3DDevice_RunPushBuffer)(pPushBuffer, pFixup);
 	//}
 	//EmuExecutePushBuffer(pPushBuffer, pFixup);
-	/*
-	// notify pgraph handler we've done running pushbuffer.
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = 0;
-	PBTokenArray[3] = (DWORD) & WaitForPgraph;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_RunPushBuffer, 2);//argCount, not necessary, default to 14
-	EmuKickOff();
-	while (WaitForPgraph)
-		;
-	*/
 	return;
 }
 void CxbxrImpl_Clear
@@ -6558,18 +6449,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_CopyRects)(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
 	}else{
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_CopyRects, 1);//argCount, not necessary, default to 14
-		//kickoff pushbuffer handler
-		EmuKickOff();
-		//wait till our flag been reset
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_CopyRects);
 		//now do our job
 		CxbxrImpl_CopyRects(pSourceSurface, pSourceRectsArray, cRects, pDestinationSurface, pDestPointsArray);
 	}
@@ -6805,19 +6685,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 	//give the correct token enum here, and it's done.
 	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Present, 4);//argCount, not necessary, default to 14
 #else
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Present, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_Present);
 	CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);  // Xbox present ignores
 #endif
 }
@@ -7368,19 +7236,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
 	*(DWORD**)g_pXbox_pPush += 0x10;
 #else
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Swap, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_Swap);
 	hret=CxbxrImpl_Swap(Flags);
 #endif
 	if (XB_TRMP(D3DDevice_SetBackBufferScale))
@@ -10056,19 +9912,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	if (pPixelContainer == nullptr)
 		return;
    
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock2DSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_Lock2DSurface);
 
 	// Mark the resource as modified
 	CxbxrImpl_Lock2DSurface(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
@@ -10113,19 +9957,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Lock3DSurface)
 	HRESULT hRet = XB_TRMP(Lock3DSurface)(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 
 	// Mark the resource as modified
-		//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_Lock3DSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_Lock3DSurface);
 	CxbxrImpl_Lock3DSurface(pPixelContainer, Level, pLockedVolume, pBox, Flags);
 	return hRet;
 }
@@ -10360,20 +10192,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTile)
 		return S_OK;
 	// do not trampoline. we don't need xbox to setup tile.
 	//HRESULT hRet = XB_TRMP(D3DDevice_SetTile)(Index, pTile);
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Index;
-	PBTokenArray[3] = (DWORD)pTile;
-	PBTokenArray[4] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetTile, 3);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		;
+	EmuKickOffWait(X_D3DDevice_SetTile);
 	CxbxrImpl_SetTile(Index, pTile);
 	return S_OK;
 }
@@ -12244,20 +12063,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__
 	if (g_pXbox_BeginPush_Buffer != nullptr){
 		XB_TRMP(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)(PrimitiveType);
 	}else{
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-		PBTokenArray[3] = (DWORD)StartVertex;
-		PBTokenArray[4] = (DWORD)VertexCount;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3, 3);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3);
 		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
 		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
@@ -12289,20 +12095,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__
 		XB_TRMP(D3DDevice_DrawVertices_8__LTCG_eax3)(PrimitiveType, StartVertex);
 	}
 	else {
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-		PBTokenArray[3] = (DWORD)StartVertex;
-		PBTokenArray[4] = (DWORD)VertexCount;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVertices_8__LTCG_eax3, 3);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_DrawVertices_8__LTCG_eax3);
 		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
 		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
@@ -12330,20 +12123,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 	if (g_pXbox_BeginPush_Buffer != nullptr){
 	    XB_TRMP(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
 	}else{
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-		PBTokenArray[3] = (DWORD)StartVertex;
-		PBTokenArray[4] = (DWORD)VertexCount;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVertices, 3);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_DrawVertices);
 		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
 		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
@@ -12414,21 +12194,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 		XB_TRMP(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
 	else {
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-		PBTokenArray[3] = (DWORD)VertexCount;
-		PBTokenArray[4] = (DWORD)pVertexStreamZeroData;
-		PBTokenArray[5] = (DWORD)VertexStreamZeroStride;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVerticesUP, 4);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_DrawVerticesUP);
 		//pgraph_use_NV2A_Kelvin();
 			//g_nv2a_use_Kelvin = true;
 		CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
@@ -12456,21 +12222,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_1
 		XB_TRMP(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)(PrimitiveType, VertexCount, VertexStreamZeroStride);
 	}
 	else {
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-		PBTokenArray[3] = (DWORD)VertexCount;
-		PBTokenArray[4] = (DWORD)pVertexStreamZeroData;
-		PBTokenArray[5] = (DWORD)VertexStreamZeroStride;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3, 4);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3);
 		// We can't call emupatch() here because the target function calls trampoline which might not be available in guest code.
 		//EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 		//CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
@@ -12534,20 +12286,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 		XB_TRMP(D3DDevice_DrawIndexedVertices)(PrimitiveType, VertexCount, pIndexData);
 	}
 	else {
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-		PBTokenArray[3] = (DWORD)VertexCount;
-		PBTokenArray[4] = (DWORD)pIndexData;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawIndexedVertices, 3);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_DrawIndexedVertices);
 
 		CxbxrImpl_DrawIndexedVertices(PrimitiveType, VertexCount, pIndexData);
 	}
@@ -12568,7 +12307,7 @@ void WINAPI CxbxrImpl_DrawIndexedVerticesUP
 	}
 
 	// TODO : Call unpatched CDevice_SetStateUP();
-	EmuKickOffWait();
+	//EmuKickOffWait(X_D3DDevcie_DrawIndexedVerticesUP);
 	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
@@ -12668,20 +12407,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		XB_TRMP(D3DDevice_DrawIndexedVerticesUP)(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
 	else {
-		bool WaitForPGRAPH;
-		WaitForPGRAPH = true;
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-		PBTokenArray[3] = (DWORD)VertexCount;
-		PBTokenArray[4] = (DWORD)pIndexData;
-
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawIndexedVerticesUP, 3);//argCount, not necessary, default to 14
-
-		EmuKickOff();
-
-		while (WaitForPGRAPH)
-			;
+		EmuKickOffWait(X_D3DDevice_DrawIndexedVerticesUP);
 
 		CxbxrImpl_DrawIndexedVerticesUP(PrimitiveType, VertexCount, pIndexData, pVertexStreamZeroData, VertexStreamZeroStride);
 	}
@@ -14189,18 +13915,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
 		LOG_FUNC_ARG(pRectPatchInfo)
 		LOG_FUNC_END;
 
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)pPresentationParameters;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawRectPatch, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		;
+	EmuKickOffWait(X_D3DDevice_DrawRectPatch);
 
 	HRESULT hRet = CxbxrImpl_DrawRectPatch(Handle, pNumSegs, pRectPatchInfo);
 	return hRet;
@@ -14222,18 +13937,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
 		LOG_FUNC_ARG(pTriPatchInfo)
 		LOG_FUNC_END;
 
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)pPresentationParameters;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_DrawTriPatch, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		;
+	EmuKickOffWait(X_D3DDevice_DrawTriPatch);
 	//resource update call is called via pgraph token handler
 	//CxbxUpdateNativeD3DResources();
 
@@ -14526,19 +14230,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetPersistedSurface)(xbox::X_D3DSurface** ppSurface)
 {
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_GetPersistedSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_GetPersistedSurface);
 	*ppSurface = CxbxrImpl_GetAvSavedDataSurface();// CxbxrImpl_GetPersistedSurface();
 }
 // ******************************************************************
@@ -14546,19 +14238,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetPersistedSurface)(xbox::X_D3DSu
 // ******************************************************************
 xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetPersistedSurface2)()
 {
-	//template for syncing HLE apis with pgraf using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_GetPersistedSurface, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_GetPersistedSurface);
 	return CxbxrImpl_GetAvSavedDataSurface();// CxbxrImpl_GetPersistedSurface();
 }
 
@@ -14639,19 +14319,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_PersistDisplay)()
 	// Call the native Xbox function so that AvSetSavedDataAddress is called and the VMManager can know its correct address
 	HRESULT hRet= XB_TRMP(D3DDevice_PersistDisplay)();
 
-	//template for syncing HLE apis with pgraph using waiting lock
-	bool WaitForPGRAPH;
-	WaitForPGRAPH = true;
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_PersistDisplay, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-	EmuKickOff();
-
-	while (WaitForPGRAPH)
-		; //this line is must have
+	EmuKickOffWait(X_D3DDevice_PersistDisplay);
 	CxbxrImpl_PersistDisplay();
 	return  hRet;
 }
