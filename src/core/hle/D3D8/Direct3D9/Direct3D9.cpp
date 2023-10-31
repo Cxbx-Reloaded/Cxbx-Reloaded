@@ -6626,24 +6626,32 @@ void WINAPI CxbxrImpl_CopyRects
         DestRect.right *= destScaleX;
         DestRect.top *= destScaleY;
         DestRect.bottom *= destScaleY;
-
-        hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
-        if (FAILED(hRet)) {
-			// Fallback for cases which StretchRect cannot handle (such as copying from texture to texture)
-			hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, &DestRect, pHostSourceSurface, nullptr, &SourceRect, D3DTEXF_LINEAR, 0);
-			if (FAILED(hRet)) {
-				LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
-				D3DLOCKED_RECT HostSrcLockedRect, HostDstLockedRect;
-				hRet = pHostSourceSurface->LockRect(&HostSrcLockedRect, NULL, D3DLOCK_NOOVERWRITE);
-				if (hRet == D3D_OK) {
-					hRet = pHostDestSurface->LockRect(&HostDstLockedRect, NULL, D3DLOCK_NOOVERWRITE);
-					if (hRet == D3D_OK) {
-						if (HostSrcLockedRect.Pitch == HostDstLockedRect.Pitch && hostDestDesc.Format == hostSourceDesc.Format)
-						    memcpy(HostDstLockedRect.pBits, HostSrcLockedRect.pBits, HostSrcLockedRect.Pitch* hostSourceDesc.Height);
+		//hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, NULL, pHostDestSurface, NULL, D3DTEXF_NONE);
+		hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, &DestRect, pHostSourceSurface, nullptr, &SourceRect, D3DTEXF_LINEAR, 0);
+		if (FAILED(hRet)){
+		    hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, NULL, pHostSourceSurface, nullptr, NULL, D3DTEXF_NONE, 0);
+			if (FAILED(hRet)){
+				hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, NULL, pHostDestSurface, NULL, D3DTEXF_NONE);
+				//hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, NULL, pHostSourceSurface, nullptr, NULL, D3DTEXF_NONE, 0);
+				if (FAILED(hRet)) {
+					// Fallback for cases which StretchRect cannot handle (such as copying from texture to texture)
+					//hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, &DestRect, pHostSourceSurface, nullptr, &SourceRect, D3DTEXF_LINEAR, 0);
+					//hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, NULL, pHostSourceSurface, nullptr, NULL, D3DTEXF_NONE, 0);
+					if (FAILED(hRet)) {
+						LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
+						D3DLOCKED_RECT HostSrcLockedRect, HostDstLockedRect;
+						hRet = pHostSourceSurface->LockRect(&HostSrcLockedRect, NULL, D3DLOCK_NOOVERWRITE);
+						if (hRet == D3D_OK) {
+							hRet = pHostDestSurface->LockRect(&HostDstLockedRect, NULL, D3DLOCK_NOOVERWRITE);
+							if (hRet == D3D_OK) {
+								if (HostSrcLockedRect.Pitch == HostDstLockedRect.Pitch && hostDestDesc.Format == hostSourceDesc.Format)
+									memcpy(HostDstLockedRect.pBits, HostSrcLockedRect.pBits, HostSrcLockedRect.Pitch* hostSourceDesc.Height);
+							}
+						}
 					}
-				}
+			    }
 			}
-        }
+		}
     }
 }
 
