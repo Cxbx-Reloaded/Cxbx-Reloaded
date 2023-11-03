@@ -36,17 +36,23 @@
 #define PUSH_TYPE_JMP_FAR       1 // jump far
 #define PUSH_TYPE_CALL_FAR      2 // call far
 #define PUSH_TYPE_METHOD_UNUSED 3 // method (unused)
+
 #define PUSH_METHOD_MASK       0x00001FFC // 12 bits
 #define PUSH_METHOD_SHIFT      0 // Dxbx note : Not 2, because methods are actually DWORD offsets (and thus defined with increments of 4)
+
 #define PUSH_SUBCH_MASK        0x0000E000 // 3 bits
 #define PUSH_SUBCH_SHIFT       13
+#define PUSH_SUBCH_0            0
+
 #define PUSH_COUNT_MASK        0x1FFC0000 // 11 bits
 #define PUSH_COUNT_SHIFT       18
+
 #define PUSH_INSTR_MASK        0xE0000000 // 3 bits
 #define PUSH_INSTR_SHIFT       29
 #define PUSH_INSTR_IMM_INCR     0 // immediate, increment
 #define PUSH_INSTR_JMP_NEAR     1 // near jump
 #define PUSH_INSTR_IMM_NOINC    2 // immediate, no-increment
+
 #define PUSH_ADDR_FAR_MASK     0xFFFFFFFC // 30 bits
 #define PUSH_ADDR_FAR_SHIFT    0
 #define PUSH_ADDR_NEAR_MASK    0x1FFFFFFC // 27 bits
@@ -63,6 +69,14 @@
 #define PUSH_METHOD_MAX ((PUSH_METHOD_MASK | 3) >> PUSH_METHOD_SHIFT) // = 8191
 #define PUSH_SUBCH_MAX (PUSH_SUBCH_MASK >> PUSH_SUBCH_SHIFT) // = 7
 #define PUSH_COUNT_MAX (PUSH_COUNT_MASK >> PUSH_COUNT_SHIFT) // = 2047
+
+#define PUSH_ENCODE(instr, count, subch, method, type) \
+	( (((instr)  << PUSH_INSTR_SHIFT)  & PUSH_INSTR_MASK) \
+	| (((count)  << PUSH_COUNT_SHIFT)  & PUSH_COUNT_MASK) \
+	| (((subch)  << PUSH_SUBCH_SHIFT)  & PUSH_SUBCH_MASK) \
+	| (((method) << PUSH_METHOD_SHIFT) & PUSH_METHOD_MASK) \
+	| (((type)   << PUSH_TYPE_SHIFT)   & PUSH_TYPE_MASK) \
+	)
 
 // Decode push buffer command (inverse of D3DPUSH_ENCODE)
 inline void D3DPUSH_DECODE(const DWORD dwPushCommand, DWORD & dwMethod, DWORD & dwSubCh, DWORD & dwCount)

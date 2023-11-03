@@ -1823,7 +1823,7 @@ int pgraph_handle_method(
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
                 //case NV097_SET_OBJECT:
-                case NV097_HLE_API:
+                case HLE_API_METHOD:
 				case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
 				// NV097_ARRAY_ELEMENT32 is PUSH_INSTR_IMM_INC, test case: Otogi. it's logical since NV097_ARRAY_ELEMENT32 is used to transfer the last odd index, if there were one.
@@ -1856,7 +1856,7 @@ int pgraph_handle_method(
             switch (method) {
                 case NV097_SET_OBJECT://done
                     break;
-                case NV097_HLE_API:
+                case HLE_API_METHOD:
                 {
                     X_D3DAPI_ENUM HLEApi;
                     HLEApi = (X_D3DAPI_ENUM)argv[0];
@@ -4824,7 +4824,8 @@ int pgraph_handle_method(
                         if (method_count==2){
                             // dirty hack. for program shader, there will be a NV097_SET_TRANSFORM_PROGRAM_START right after NV097_SET_TRANSFORM_EXECUTION_MODE in SelectVertexShader().
                             // but for passthrough shader, it won't call SelectVertexShader(), but only use NV097_SET_TRANSFORM_PROGRAM_START right before NV097_SET_TRANSFORM_EXECUTION_MODE
-                            if ((argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY)&& ((argv[2]& COMMAND_WORD_MASK_METHOD)== NV097_SET_TRANSFORM_PROGRAM_START)) {
+                            if ((argv[1] == NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY)
+                                && ((argv[2]& COMMAND_WORD_MASK_METHOD)== NV097_SET_TRANSFORM_PROGRAM_START)) {
 								// for passthrough, argv[1] is always 0:NV097_SET_TRANSFORM_PROGRAM_CXT_WRITE_EN_V_READ_ONLY
 								// for program, argv[1] is vertexshader.flags & VERTEXSHADER_WRITE:1
 								// ** the only way to tell whether a vertexh shader is a program or a pass through,

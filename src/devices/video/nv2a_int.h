@@ -626,7 +626,10 @@ typedef struct NV097KelvinPrimitive {
 typedef union {
 	/* https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#the-commands-pre-gf100-format
 
+		bit counter per group :
 	    123 12345678901 12 123 12345678901 12
+
+		fifo command encoding :
 		000 CCCCCCCCCCC 00 SSS MMMMMMMMMMM 00	increasing methods [NV4+]
 		000 00000000000 10 000 00000000000 00	return [NV1A+, NV4-style only]
 		001 JJJJJJJJJJJ JJ JJJ JJJJJJJJJJJ 00	old jump [NV4+, NV4-style only]
@@ -637,30 +640,67 @@ typedef union {
 		C = method Count, S = Subchannel, M = first Method, J = Jump address
 	*/
 	// Entire 32 bit command word, and an overlay for the above use-cases :
-	uint32_t            word;                    /*  0 .. 31 */
+	uint32_t            word;                     /*  0 .. 31 */
 	struct {
-		uint32_t        type : 2;        /*  0 ..  1 */
+#if 0 // Expirimental bit tuple macros, applied to declare FIFO commands as bit fields
+// Arguments for bit tuples
+#define BIT_TUPLE_ARG_OFFSET(offset, size, name) offset
+#define BIT_TUPLE_ARG_SIZE(offset, size, name) size
+#define BIT_TUPLE_ARG_NAME(offset, size, name) name
+
+// Bit tuples for FIFO commands
+#define BIT_TUPLE_FIFOCMD_TYPE(args)         args( 0,  2, type)
+#define BIT_TUPLE_FIFOCMD_METHOD(args)       args( 2, 11, method)
+#define BIT_TUPLE_FIFOCMD_SUBCHANNEL(args)   args(13,  3, subchannel)
+#define BIT_TUPLE_FIFOCMD_FLAGS(args)        args(16,  2, flags)
+#define BIT_TUPLE_FIFOCMD_METHOD_COUNT(args) args(18, 11, method_count)
+#define BIT_TUPLE_FIFOCMD_INSTRUCTION(args)  args(29,  3, instruction)
+
+// Visit all FIFO command bit tuples (ordered from least, to most significant, bit offset)
+#define FIFO_COMMAND_TUPLES(VISIT) \
+	VISIT(BIT_TUPLE_FIFOCMD_TYPE) \
+	VISIT(BIT_TUPLE_FIFOCMD_METHOD) \
+	VISIT(BIT_TUPLE_FIFOCMD_SUBCHANNEL) \
+	VISIT(BIT_TUPLE_FIFOCMD_FLAGS) \
+	VISIT(BIT_TUPLE_FIFOCMD_METHOD_COUNT) \
+	VISIT(BIT_TUPLE_FIFOCMD_INSTRUCTION)
+
+// Declare FIFO command as a bit-field: uint32_t name : size;
+#define FIFO_COMMAND_TUPLE_DECLARE(bit_tuple) uint32_t BIT_TUPLE_ARG_NAME(bit_tuple) : BIT_TUPLE_ARG_SIZE(bit_tuple);
+
+		// Declare all FIFO commands as bit-fields
+		FIFO_COMMAND_TUPLES(FIFO_COMMAND_TUPLE_DECLARE)
+#else
+		uint32_t        type : 2;                 /*  0 ..  1 */
 			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-control-flow-commands
 #define COMMAND_TYPE_NONE        0
 #define COMMAND_TYPE_JUMP_LONG   1
 #define COMMAND_TYPE_CALL        2
-		uint32_t        method : 11;       /*  2 .. 12 */
-		uint32_t        subchannel : 3;        /* 13 .. 15 */
-		uint32_t        flags : 2;        /* 16 .. 17 */
+		uint32_t        method : 11;              /*  2 .. 12 */
+		uint32_t        subchannel : 3;           /* 13 .. 15 */
+		uint32_t        flags : 2;                /* 16 .. 17 */
 			// See https://envytools.readthedocs.io/en/latest/hw/fifo/dma-pusher.html#nv4-method-submission-commands
 #define COMMAND_FLAGS_NONE                         0
 #define COMMAND_FLAGS_SLI_CONDITIONAL              1 // (NV40+)
 #define COMMAND_FLAGS_RETURN                       2
 #define COMMAND_FLAGS_LONG_NON_INCREASING_METHODS  3 // [IB-mode only] 
-		uint32_t        method_count : 11;       /* 18 .. 28 */
-		uint32_t        instruction : 3;        /* 29 .. 31 */
+		uint32_t        method_count : 11;        /* 18 .. 28 */
+		uint32_t        instruction : 3;          /* 29 .. 31 */
 #define COMMAND_INSTRUCTION_INCREASING_METHODS     0
 #define COMMAND_INSTRUCTION_JUMP                   1
 #define COMMAND_INSTRUCTION_NON_INCREASING_METHODS 2
+#endif
 	};
-#define COMMAND_WORD_MASK_METHOD    0x00001FFC /*  2 .. 12 */ // See NV_PFIFO_CACHE1_DMA_STATE_METHOD, PUSH_METHOD_MASK
-#define COMMAND_WORD_MASK_JUMP      0x1FFFFFFC /*  2 .. 28 */
-#define COMMAND_WORD_MASK_JUMP_LONG 0xFFFFFFFC /*  2 .. 31 */
+
+#define COMMAND_WORD_MASK_TYPE         0x00000003 /*  0 ..  1 */
+#define COMMAND_WORD_MASK_METHOD       0x00001FFC /*  2 .. 12 */ // See NV_PFIFO_CACHE1_DMA_STATE_METHOD, PUSH_METHOD_MASK
+#define COMMAND_WORD_MASK_SUBCHANNEL   0x0000E000 /* 13 .. 15 */
+#define COMMAND_WORD_MASK_FLAGS        0x00030000 /* 16 .. 17 */
+#define COMMAND_WORD_MASK_METHOD_COUNT 0x1FFC0000 /* 18 .. 28 */
+#define COMMAND_WORD_MASK_INSTRUCTION  0xE0000000 /* 29 .. 31 */
+
+#define COMMAND_WORD_MASK_JUMP         0x1FFFFFFC /*  2 .. 28 */
+#define COMMAND_WORD_MASK_JUMP_LONG    0xFFFFFFFC /*  2 .. 31 */
 } nv_fifo_command;
 
 typedef enum class _DrawMode {

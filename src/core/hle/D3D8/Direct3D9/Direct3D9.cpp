@@ -3257,6 +3257,103 @@ LTCG_DECL xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 	}
 }
 
+// init pushbuffer related pointers
+DWORD* HLE_PushPrepare(X_D3DAPI_ENUM hleAPI, int dword_count)
+{
+	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	DWORD* pPush_end = pPush_local + dword_count;
+
+	// TODO : Try if just 'pPush_end > pPush_limit' works as well
+	if ((uint32_t)pPush_end >= (uint32_t)pPush_limit)//check if we still have enough space
+		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
+
+	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
+	pPush_local[0] = (DWORD)HLE_PUSH_ENCODE(dword_count); // was HLE_API_COMMAND_4
+	pPush_local[1] = (DWORD)hleAPI;
+	return pPush_local;
+	// Note : caller must set remaining arguments in pPush_local[2] onwards
+	// and after that increase pushbuffer pointer to the new beginning.
+	// If needed, dword_count can be read via PUSH_COUNT(pPush_local[0])
+}
+
+void HLE_PushApi(X_D3DAPI_ENUM hleAPI)
+{
+	const int dword_count = 2;
+
+	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
+	*(DWORD**)g_pXbox_pPush += dword_count;
+}
+
+void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2)
+{
+	const int dword_count = 3;
+
+	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
+	pPush_local[2] = arg2;
+	*(DWORD**)g_pXbox_pPush += dword_count;
+}
+
+void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3)
+{
+	const int dword_count = 4;
+
+	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
+	pPush_local[2] = arg2;
+	pPush_local[3] = arg3;
+	*(DWORD**)g_pXbox_pPush += dword_count;
+}
+
+void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4)
+{
+	const int dword_count = 5;
+
+	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
+	pPush_local[2] = arg2;
+	pPush_local[3] = arg3;
+	pPush_local[4] = arg4;
+	*(DWORD**)g_pXbox_pPush += dword_count;
+}
+
+void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD arg5)
+{
+	const int dword_count = 6;
+
+	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
+	pPush_local[2] = arg2;
+	pPush_local[3] = arg3;
+	pPush_local[4] = arg4;
+	pPush_local[5] = arg5;
+	*(DWORD**)g_pXbox_pPush += dword_count;
+}
+
+void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD arg5, DWORD arg6)
+{
+	const int dword_count = 7;
+
+	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
+	pPush_local[2] = arg2;
+	pPush_local[3] = arg3;
+	pPush_local[4] = arg4;
+	pPush_local[5] = arg5;
+	pPush_local[6] = arg6;
+	*(DWORD**)g_pXbox_pPush += dword_count;
+}
+
+void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD arg5, DWORD arg6, DWORD arg7)
+{
+	const int dword_count = 8;
+
+	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
+	pPush_local[2] = arg2;
+	pPush_local[3] = arg3;
+	pPush_local[4] = arg4;
+	pPush_local[5] = arg5;
+	pPush_local[6] = arg6;
+	pPush_local[7] = arg7;
+	*(DWORD**)g_pXbox_pPush += dword_count;
+}
+
 static D3DMATRIX* g_xbox_transform_matrix = nullptr;
 
 void init_xboxD3dGlobalPointer(void)
@@ -3659,12 +3756,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
     // Cache the base vertex index
     // g_Xbox_BaseVertexIndex = BaseVertexIndex;
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pIndexData;
-	PBTokenArray[3] = (DWORD)BaseVertexIndex;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetIndices_4, 2, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetIndices_4,
+		(DWORD)pIndexData,
+		(DWORD)BaseVertexIndex);
 
     // Call LTCG-specific trampoline
     __asm {
@@ -3691,12 +3785,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices)
 	// Cache the base vertex index then call the Xbox function
 	// g_Xbox_BaseVertexIndex = BaseVertexIndex;
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pIndexData;
-	PBTokenArray[3] = (DWORD)BaseVertexIndex;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetIndices, 2, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetIndices,
+		(DWORD)pIndexData,
+		(DWORD)BaseVertexIndex);
 
 	XB_TRMP(D3DDevice_SetIndices)(pIndexData, BaseVertexIndex);
 }
@@ -3782,39 +3873,24 @@ void EmuKickOff(void)
 void EmuKickOffWait(X_D3DAPI_ENUM token)
 {
 	//template for syncing HLE apis with pgraf using waiting lock
-	DWORD WaitForPGRAPH;
+	volatile DWORD WaitForPGRAPH;
 	WaitForPGRAPH = 1;
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 16 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	pPush_local[0] = (DWORD)HLE_API_PUSHBFFER_COMMAND_16;
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[1] = (DWORD)X_EmuKickOffWait;
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[2] = (DWORD)&WaitForPGRAPH;
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[3] = (DWORD)token;
-
-	//set pushbuffer pointer to the new beginning
-	//reserve 1 command DWORD, 1 API enum, and 2 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x4;
+	HLE_PushApi(
+		X_EmuKickOffWait,
+		(DWORD)&WaitForPGRAPH,
+		(DWORD)token);
 
 	EmuKickOff();
 
-	//while (WaitForPGRAPH!=0)
-	//	;
+	// Wait until the volatile WaitForPGRAPH value changes to 0 (as done
+	// in pgraph_handle_method() switch (method) case X_EmuKickOffWait)
+	while (WaitForPGRAPH != 0)
+		// Note : This spin-loop is not expected to stop quickly,
+		// so don't keep the CPU busy (not even via a _mm_pause)
+		// but instead give other threads some breathing room :
+		SwitchToThread();
 
-	__asm {
-		waitloop :
-		    cmp         dword ptr [WaitForPGRAPH],0  
-			je          getout
-			jmp         waitloop
-		getout :
-	}
 	return;
 }
 
@@ -4289,12 +4365,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 	and then it scaled the internal Viewport to SetWindowClip
 	*/
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = FtoDW(x);
-	PBTokenArray[3] = FtoDW(y);
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetBackBufferScale, 2, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetBackBufferScale,
+		FtoDW(x),
+		FtoDW(y));
 }
 
 // ******************************************************************
@@ -4377,11 +4450,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
 
     //CxbxrImpl_LoadVertexShader(Handle, Address);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)Address;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle, 2, PBTokenArray);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle,
+		(DWORD)Handle,
+		(DWORD)Address);
 
     __asm {
         LTCG_EPILOGUE
@@ -4423,11 +4494,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
 
     //CxbxrImpl_LoadVertexShader(Handle, Address);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)Address;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle, 2, PBTokenArray);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle,
+		(DWORD)Handle,
+		(DWORD)Address);
 
     __asm {
         LTCG_EPILOGUE
@@ -4468,11 +4537,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
 
     //CxbxrImpl_LoadVertexShader(Handle, Address);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)Address;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_4, 2, PBTokenArray);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_4,
+		(DWORD)Handle,
+		(DWORD)Address);
 
     __asm {
         LTCG_EPILOGUE
@@ -4499,12 +4566,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader)
 #if !USEPGRAPH_LoadVertexShader
 	CxbxrImpl_LoadVertexShader(Handle, Address);
 #else
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)Address;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader, 2, PBTokenArray);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader,
+		(DWORD)Handle,
+		(DWORD)Address);
 #endif
 }
 
@@ -4546,12 +4610,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LT
 #if !USEPGRAPH_SelectVertexShader
     CxbxrImpl_SelectVertexShader(Handle, Address);
 #else
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)Address;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2, 2, PBTokenArray);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2,
+		(DWORD)Handle,
+		(DWORD)Address);
 #endif
     __asm {
         LTCG_EPILOGUE
@@ -4593,12 +4654,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LT
 #if !USEPGRAPH_SelectVertexShader
 	CxbxrImpl_SelectVertexShader(Handle, Address);
 #else
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)Address;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_4__LTCG_eax1, 2, PBTokenArray);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_4__LTCG_eax1,
+		(DWORD)Handle,
+		(DWORD)Address);
 #endif
 
     __asm {
@@ -4626,12 +4684,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 #if !USEPGRAPH_SelectVertexShader
 	CxbxrImpl_SelectVertexShader(Handle, Address);
 #else
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)Address;
-
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader, 2, PBTokenArray);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader,
+		(DWORD)Handle,
+		(DWORD)Address);
 #endif
 }
 
@@ -5227,25 +5282,21 @@ xbox::void_xt WINAPI CxbxrImpl_SetShaderConstantMode
 }
 
 //generalize pushbuffer token setup.
-DWORD PBTokenArray[16] = { HLE_API_PUSHBFFER_COMMAND_64 ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+DWORD PBTokenArray[16] = { HLE_API_COMMAND_16,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
+// Note : Prefer HLE_PushApi
 void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount=14, DWORD* argv= PBTokenArray)
 {
 	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
+	int dwordCount = 2 + argCount;
+	DWORD* pPush_local = HLE_PushPrepare(token, dwordCount);
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	PBTokenArray[1] = (DWORD)token;
 	// always copy the whole buffer
-	memcpy(pPush_local, PBTokenArray,16*sizeof(DWORD));
+	memcpy(&pPush_local[2], &PBTokenArray[2], argCount * sizeof(DWORD));
 
 	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	// always reserve 1 command DWORD, 1 API enum, and 14 argument DWORDs.
+	*(DWORD**)g_pXbox_pPush += dwordCount;
 }
 
 // LTCG specific D3DDevice_SetShaderConstantMode function...
@@ -5287,9 +5338,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 	else {
 		//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
 		//CxbxrImpl_SetShaderConstantMode(Mode);
-		//1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)Mode;
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetShaderConstantMode, 1);
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetShaderConstantMode,
+			(DWORD)Mode);
 	}
 }
 
@@ -5744,14 +5794,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 			}
 			//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
 		}
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64;
+		pPush_local[0] = HLE_API_COMMAND_16;
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 		pPush_local[1] = (DWORD)X_D3DDevice_SetTexture;
 		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 		pPush_local[2] = (DWORD)Stage;
 		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		// always reserve 1 command DWORD, 1 API enum, and 14 argument DWORDs.
+		*(DWORD**)g_pXbox_pPush += 16;
 	}
 }
 
@@ -5867,22 +5917,10 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 	}
 	*/
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SwitchTexture;//enum of this patched API
-	pPush_local[2] = (DWORD)Method; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)Data;
-	pPush_local[4] = (DWORD)Format;
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SwitchTexture,
+		(DWORD)Method,
+		(DWORD)Data,
+		(DWORD)Format);
 }
 
 // ******************************************************************
@@ -5920,20 +5958,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 		assert((xbox::X_D3DPRIMITIVETYPE)PrimitiveType != xbox::X_D3DPT_INVALID);
 		CxbxrImpl_Begin(PrimitiveType);
 		/*
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Begin;//enum of this patched API
-		pPush_local[2] = (DWORD)PrimitiveType; //total 14 DWORD space for arguments.
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_Begin,
+			(DWORD)PrimitiveType);
 		*/
 	}
 }
@@ -5960,24 +5986,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 	else {
 	    CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 		/*
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-		pPush_local[3] = FtoDW(a);
-		pPush_local[4] = FtoDW(b);
-		pPush_local[5] = FtoDW(0.0f);
-		pPush_local[6] = FtoDW(1.0f);
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4fm
+			(DWORD)Register,
+			FtoDW(a),
+			FtoDW(b),
+			FtoDW(0.0f),
+			FtoDW(1.0f));
 		*/
 	}
 }
@@ -6014,24 +6028,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 
 		CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 		/*
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-		pPush_local[3] = FtoDW(fa);
-		pPush_local[4] = FtoDW(fb);
-		pPush_local[5] = FtoDW(0.0f);
-		pPush_local[6] = FtoDW(1.0f);
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4fm
+			(DWORD)Register,
+			FtoDW(fa),
+			FtoDW(fb),
+			FtoDW(0.0f),
+			FtoDW(1.0f));
 		*/
 	}
 }
@@ -6059,24 +6061,12 @@ static void D3DDevice_SetVertexData4f_16
 		LOG_FUNC_END;
 
 	/*
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-	pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(a);
-	pPush_local[4] = FtoDW(b);
-	pPush_local[5] = FtoDW(c);
-	pPush_local[6] = FtoDW(d);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
+		(DWORD)Register,
+		FtoDW(a),
+		FtoDW(b),
+		FtoDW(c),
+		FtoDW(d));
 	*/
 }
 
@@ -6139,24 +6129,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 	else {
 		CxbxrImpl_SetVertexData4f(Register, a, b, c, d);
 		/*
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-		pPush_local[3] = FtoDW(a);
-		pPush_local[4] = FtoDW(b);
-		pPush_local[5] = FtoDW(c);
-		pPush_local[6] = FtoDW(d);
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
+			(DWORD)Register,
+			FtoDW(a),
+			FtoDW(b),
+			FtoDW(c),
+			FtoDW(d));
 		*/
 	}
 }
@@ -6192,24 +6170,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 
 		CxbxrImpl_SetVertexData4f(Register, fa, fb, fc, fd);
 		/*
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-		pPush_local[3] = FtoDW(fa);
-		pPush_local[4] = FtoDW(fb);
-		pPush_local[5] = FtoDW(fc);
-		pPush_local[6] = FtoDW(fd);
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
+			(DWORD)Register,
+			FtoDW(fa),
+			FtoDW(fb),
+			FtoDW(fc),
+			FtoDW(fd));
 		*/
 	}
 }
@@ -6249,24 +6215,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 
 		CxbxrImpl_SetVertexData4f(Register, fa, fb, fc, fd);
 		/*
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-		pPush_local[3] = FtoDW(fa);
-		pPush_local[4] = FtoDW(fb);
-		pPush_local[5] = FtoDW(fc);
-		pPush_local[6] = FtoDW(fd);
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4fm
+			(DWORD)Register,
+			FtoDW(fa),
+			FtoDW(fb),
+			FtoDW(fc),
+			FtoDW(fd));
 		*/
 	}
 }
@@ -6293,24 +6247,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 
 		CxbxrImpl_SetVertexData4f(Register, XColor.r, XColor.g, XColor.b, XColor.a);
 		/*
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f;//enum of this patched API
-		pPush_local[2] = (DWORD)Register; //total 14 DWORD space for arguments.
-		pPush_local[3] = FtoDW(XColor.r);
-		pPush_local[4] = FtoDW(XColor.g);
-		pPush_local[5] = FtoDW(XColor.b);
-		pPush_local[6] = FtoDW(XColor.a);
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
+			(DWORD)Register,
+			FtoDW(XColor.r),
+			FtoDW(XColor.g),
+			FtoDW(XColor.b),
+			FtoDW(XColor.a));
 		*/
 	}
 }
@@ -6466,25 +6408,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 		CxbxrImpl_Clear(Count, pRects, Flags, Color, Z, Stencil);
 	}
 	else {
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64;
-		pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Clear;//enum of this patched API
-		pPush_local[2] = (DWORD)Count; //total 14 DWORD space for arguments.
-		pPush_local[3] = (DWORD)pRects;
-		pPush_local[4] = (DWORD)Flags;
-		pPush_local[5] = (DWORD)Color;
-		pPush_local[6] = FtoDW(Z);
-		pPush_local[7] = (DWORD)Stencil;
-
-		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_Clear,
+			(DWORD)Count,
+			(DWORD)pRects,
+			(DWORD)Flags,
+			(DWORD)Color,
+			FtoDW(Z),
+			(DWORD)Stencil);
 	}
 #endif
 }
@@ -6749,13 +6679,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 		LOG_FUNC_END;
 
 #if !USEPGRAPH_Present
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pSourceRect;
-	PBTokenArray[3] = (DWORD)pDestRect;
-	PBTokenArray[4] = (DWORD)pDummy1;
-	PBTokenArray[5] = (DWORD)pDummy1;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_Present, 4);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_Present,
+		(DWORD)pSourceRect,
+		(DWORD)pDestRect,
+		(DWORD)pDummy1,
+		(DWORD)pDummy2);
 #else
 	EmuKickOffWait(X_D3DDevice_Present);
 	CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);  // Xbox present ignores
@@ -7294,20 +7222,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 	hresult_xt hret = S_OK;
 #if !USEPGRAPH_Swap
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_Swap;//enum of this patched API
-	pPush_local[2] = (DWORD)Flags; //total 14 DWORD space for arguments.
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_Swap,
+		(DWORD)Flags);
 #else
 	EmuKickOffWait(X_D3DDevice_Swap);
 	hret=CxbxrImpl_Swap(Flags);
@@ -8719,7 +8635,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
 	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
 #if USEPGRAPH_BlockUntilVerticalBlank
 	//give the correct token enum here, and it's done.
-	//Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_BlockUntilVerticalBlank, 0, PBTokenArray);//argCount 14
+	//HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_BlockUntilVerticalBlank);
 #else
 	CxbxrImpl_BlockUntilVerticalBlank();
 #endif
@@ -8778,14 +8694,11 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
     dword_xt Value
 )
 {
-
     XB_TRMP(D3DDevice_SetRenderState_Simple)(Method, Value);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Method;
-	PBTokenArray[3] = (DWORD)Value;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderState_Simple, 2);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetRenderState_Simple,
+		(DWORD)Method,
+		(DWORD)Value);
 }
 
 void CxbxrImpl_GetProjectionViewportMatrix(D3DMATRIX *pProjectionViewportTransform)
@@ -8892,7 +8805,7 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 		if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 		// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+		pPush_local[0] = HLE_API_COMMAND_32;
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 		pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform_0__LTCG_eax1_edx2;
 		// always copy the whole buffer
@@ -8904,8 +8817,9 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
 
 		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x20;
+		// always reserve 1 command DWORD, 1 API enum, and 14 argument DWORDs.
+		// here we add 16 more DWORDs because a matrix takes 16 DWORDs.
+		*(DWORD**)g_pXbox_pPush += 32;
 	}
 }
 
@@ -8960,7 +8874,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 		if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
 			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 		// using special pgraph method to allocate 0x1F method count of DWORDs, ie. 0x7C bytes not including the command dword itself.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+		pPush_local[0] = HLE_API_COMMAND_32;
 		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 		pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetTransform;
 		// always copy the whole buffer
@@ -8972,8 +8886,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
 
 		//set pushbuffer pointer to the new beginning
-		// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs. here we add 16 more DWORDs because a matrix takes 16 DWORDs.
-		*(DWORD**)g_pXbox_pPush += 0x20;
+		// always reserve 1 command DWORD, 1 API enum, and 14 argument DWORDs.
+		// here we add 16 more DWORDs because a matrix takes 16 DWORDs.
+		*(DWORD**)g_pXbox_pPush += 32;
 	}
 }
 
@@ -10336,11 +10251,10 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_
 
 	//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
 	//CxbxrImpl_SetShaderConstantMode(Mode);
-	//1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)StreamNumber;
-	PBTokenArray[3] = (DWORD)pStreamData;
-	PBTokenArray[4] = (DWORD)Stride;
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource, 3);
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource,
+		(DWORD)StreamNumber,
+		(DWORD)pStreamData,
+		(DWORD)Stride);
 
     __asm {
         mov  eax, StreamNumber
@@ -10390,11 +10304,10 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_4)
 
 	//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
 	//CxbxrImpl_SetShaderConstantMode(Mode);
-	//1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)StreamNumber;
-	PBTokenArray[3] = (DWORD)pStreamData;
-	PBTokenArray[4] = (DWORD)Stride;
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource, 3);
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource,
+		(DWORD)StreamNumber,
+		(DWORD)pStreamData,
+		(DWORD)Stride);
 
     // Forward to Xbox implementation
     // This should stop us having to patch GetStreamSource!
@@ -10444,11 +10357,11 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_8)
 
 	//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
 	//CxbxrImpl_SetShaderConstantMode(Mode);
-	//1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)StreamNumber;
-	PBTokenArray[3] = (DWORD)pStreamData;
-	PBTokenArray[4] = (DWORD)Stride;
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource, 3);
+
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource,
+		(DWORD)StreamNumber,
+		(DWORD)pStreamData,
+		(DWORD)Stride);
 
     // Forward to Xbox implementation
     // This should stop us having to patch GetStreamSource!
@@ -10487,12 +10400,11 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx_St
 
 	//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
 	//CxbxrImpl_SetShaderConstantMode(Mode);
-	//1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)StreamNumber;
-	PBTokenArray[3] = (DWORD)pStreamData;
-	PBTokenArray[4] = (DWORD)Stride;
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource, 3);
 
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource,
+		(DWORD)StreamNumber,
+		(DWORD)pStreamData,
+		(DWORD)Stride);
 }
 
 // ******************************************************************
@@ -10518,12 +10430,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource)
 	//CxbxrImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
 
 	//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
+
 	//CxbxrImpl_SetShaderConstantMode(Mode);
-	//1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)StreamNumber;
-	PBTokenArray[3] = (DWORD)pStreamData;
-	PBTokenArray[4] = (DWORD)Stride;
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource, 3);
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetStreamSource,
+		(DWORD)StreamNumber,
+		(DWORD)pStreamData,
+		(DWORD)Stride);
 }
 
 // ******************************************************************
@@ -10553,10 +10465,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 
 	CxbxrImpl_SetVertexShader(Handle);
 #else	
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader, 1);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader,
+		(DWORD)Handle);
 #endif
 #endif
 }
@@ -10599,10 +10509,8 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
 		CxbxrImpl_SetVertexShader(Handle);
 	}
 #if 0
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader, 1);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader,
+		(DWORD)Handle);
 #endif
 #if !USEPGRAPH_SetVertexShader
 	//CxbxrImpl_SetVertexShader(Handle);
@@ -11945,10 +11853,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_e
     }
 
     //CxbxrImpl_SetPixelShader(Handle);
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader_0__LTCG_eax_handle, 1, PBTokenArray);//argCount 14
+
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader_0__LTCG_eax_handle,
+		(DWORD)Handle);
 
     __asm {
         LTCG_EPILOGUE
@@ -11971,11 +11878,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 
 	//CxbxrImpl_SetPixelShader(Handle);
 
-	//CxbxrImpl_SetPixelShader(Handle);
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader, 1, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader,
+		(DWORD)Handle);
 }
 
 extern void D3D_draw_state_update(NV2AState* d);
@@ -12519,7 +12423,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
 	if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_128;
+	pPush_local[0] = HLE_API_COMMAND_32;
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
 	pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetLight;
 
@@ -12527,8 +12431,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 	pPush_local[3] = (DWORD)&pPush_local[4];
 	*(X_D3DLIGHT8*)pPush_local[3] = *pLight;
 	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x20;
+	// always reserve 1 command DWORD, 1 API enum, and 14 argument DWORDs.
+	// here we add 16 more DWORDs because a matrix takes 16 DWORDs.
+	*(DWORD**)g_pXbox_pPush += 32;
 
 	//HRESULT hRet = CxbxrImpl_SetLight(Index, pLight);
 
@@ -12560,14 +12465,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 )
 {
 	LOG_FUNC_ONE_ARG(pMaterial);
+
 	XB_TRMP(D3DDevice_SetMaterial)(pMaterial);
+
 	//HRESULT hRet = CxbxrImpl_SetMaterial(pMaterial);
 	HRESULT hRet = S_OK;
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pMaterial;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetMaterial, 1, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetMaterial,
+		(DWORD)pMaterial);
 
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
 }
@@ -12601,11 +12506,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 
 	XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Index;
-	PBTokenArray[3] = (DWORD)bEnable;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_LightEnable, 2);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LightEnable,
+		(DWORD)Index,
+		(DWORD)bEnable);
 
 	//HRESULT hRet = CxbxrImpl_LightEnable(Index, bEnable);
 	//
@@ -13041,6 +12944,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		LOG_FUNC_ARG(pRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
+
 	//move to CxbxrImpl_SetRenderTarget()
 	//NestedPatchCounter call(setRenderTargetCount);
 
@@ -13050,32 +12954,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	}
 	else {
-		// init pushbuffer related pointers
-		DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-		DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-		if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-			pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-		// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-		pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64;
-		pPush_local[1] = (DWORD)X_D3DDevice_SetRenderTarget;//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		if (pRenderTarget) {
-			pPush_local[2] = (DWORD)pRenderTarget;
+		if (pRenderTarget)
 			CxbxrImpl_Resource_AddRef(pRenderTarget);
-		}
-		else {
-			pPush_local[2] = 0;
-		}
-
-		if (pNewZStencil) {
-			pPush_local[3] = (DWORD)pNewZStencil;
+		if (pNewZStencil)
 			CxbxrImpl_Resource_AddRef(pNewZStencil);
-		}
-		else {
-			pPush_local[3] = 0;
-		}
-		//set pushbuffer pointer to the new beginning, HLE_API_PUSHBFFER_COMMAND_128 requires 0x20 dwords offset to pPush.
-		*(DWORD**)g_pXbox_pPush += 0x10;
+
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget,
+			(DWORD)pRenderTarget,
+			(DWORD)pNewZStencil);
 	}
 }
 
@@ -13118,16 +13004,15 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
 		CxbxrImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	}
 	else {
-		//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-		PBTokenArray[2] = (DWORD)pRenderTarget;
-		PBTokenArray[3] = (DWORD)pNewZStencil;
-		//give the correct token enum here, and it's done.
-		Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget_0, 2, PBTokenArray);//argCount 14
 		// add reference to the surfaces to prevent them being released before we access them in pgraph.
 		if (pRenderTarget)
 			CxbxrImpl_Resource_AddRef(pRenderTarget);
 		if (pNewZStencil)
 			CxbxrImpl_Resource_AddRef(pNewZStencil);
+
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget_0,
+			(DWORD)pRenderTarget,
+			(DWORD)pNewZStencil);
 	}
 
 	__asm {
@@ -13174,18 +13059,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
 	//NestedPatchCounter call(setRenderTargetCount);
 
 	//CxbxrImpl_D3D_CommonSetRenderTarget(pRenderTarget,pNewZStencil,unknown);
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pRenderTarget;
-	PBTokenArray[3] = (DWORD)pNewZStencil;
-	PBTokenArray[4] = (DWORD)unknown;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_CommonSetRenderTarget, 3, PBTokenArray);//argCount 14
+
 	// add reference to the surfaces to prevent them being released before we access them in pgraph.
 	if (pRenderTarget)
 		CxbxrImpl_Resource_AddRef(pRenderTarget);
 
 	if (pNewZStencil)
 		CxbxrImpl_Resource_AddRef(pNewZStencil);
+
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3D_CommonSetRenderTarget,
+		(DWORD)pRenderTarget,
+		(DWORD)pNewZStencil,
+		(DWORD)unknown);
 
     //for variants of SetRenderTarget(), we need to setup HLE to pgraph token first in order to make sure the execution ordre of NestedPatchCounter call(setRenderTargetCount);
 	XB_TRMP(D3D_CommonSetRenderTarget)(pRenderTarget, pNewZStencil, unknown);
@@ -13246,11 +13131,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 
 	//CxbxrImpl_SetPalette(Stage, pPalette);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Stage;
-	PBTokenArray[3] = (DWORD)pPalette;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPalette_4, 2, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPalette_4,
+		(DWORD)Stage,
+		(DWORD)pPalette);
 
 	__asm {
 		LTCG_EPILOGUE
@@ -13264,7 +13147,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 (
 	dword_xt      Stage,
-	X_D3DPalette *pPalette
+	X_D3DPalette* pPalette
 )
 {
 	LOG_FUNC_BEGIN
@@ -13277,11 +13160,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 
 	//CxbxrImpl_SetPalette(Stage, pPalette);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Stage;
-	PBTokenArray[3] = (DWORD)pPalette;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetPalette, 2, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPalette,
+		(DWORD)Stage,
+		(DWORD)pPalette);
 }
 
 // LTCG specific D3DDevice_SetFlickerFilter function...
@@ -13300,10 +13181,8 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0)
 		//EMUPATCH(D3DDevice_SetFlickerFilter)(Filter);
 	}
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Filter;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetFlickerFilter, 1);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetFlickerFilter,
+		(DWORD)Filter);
 
 	__asm {
 		LTCG_EPILOGUE
@@ -13321,13 +13200,12 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter)
 )
 {
 	LOG_FUNC_ONE_ARG(Filter);
+
 	// always trampoline with HLE patches
 	XB_TRMP(D3DDevice_SetFlickerFilter)(Filter);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Filter;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetFlickerFilter, 1);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetFlickerFilter,
+		(DWORD)Filter);
 
 	LOG_IGNORED();
 }
@@ -13341,11 +13219,12 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 )
 {
 	LOG_FUNC_ONE_ARG(Enable);
+
 	XB_TRMP(D3DDevice_SetSoftDisplayFilter)(Enable);
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Enable;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetSoftDisplayFilter, 1);//argCount, not necessary, default to 14
+
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetSoftDisplayFilter,
+		(DWORD)Enable);
+
 	LOG_IGNORED();
 }
 
@@ -13515,12 +13394,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 
 	//CxbxrImpl_SetVertexShaderInput(Handle, StreamCount, pStreamInputs);
 
-	 //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)Handle;
-	PBTokenArray[3] = (DWORD)StreamCount;
-	PBTokenArray[4] = (DWORD)pStreamInputs;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShaderInput, 3);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShaderInput,
+		(DWORD)Handle,
+		(DWORD)StreamCount,
+		(DWORD)pStreamInputs);
 }
 
 extern xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress); // tmp glue
@@ -13611,27 +13488,19 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 		LOG_FUNC_ARG(pFunction)
 		LOG_FUNC_ARG(Address)
 		LOG_FUNC_END;
+
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_LoadVertexShaderProgram)(pFunction, Address);
 	}
 #if !USEPGRAPH_LoadVertexShaderProgram
 	CxbxrImpl_LoadVertexShaderProgram((DWORD *)pFunction, Address);
 #else
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShaderProgram;//enum of this patched API
-	pPush_local[2] = (DWORD)pFunction; //total 14 DWORD space for arguments.
-	pPush_local[3] = (DWORD)Address;
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	// TODO : Likely, the entire program should be pushed here instead of just the pointer
+	// which the X_D3DDevice_LoadVertexShaderProgram handler must cater for as well.
+	// Even better would be to unpatch this entirely and let regular pgraph commands handle this
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShaderProgram,
+		(DWORD)pFunction,
+		(DWORD)Address);
 #endif
 }
 
@@ -13709,12 +13578,10 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 
 	//CxbxrImpl_SetDepthClipPlanes(Near, Far, Flags);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = FtoDW(Near);
-	PBTokenArray[3] = FtoDW(Far),
-	PBTokenArray[4] = (DWORD)Flags;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetDepthClipPlanes, 3, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetDepthClipPlanes,
+		FtoDW(Near),
+		FtoDW(Far),
+		(DWORD)Flags);
 
 	return hRet;
 }
@@ -13791,24 +13658,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 		LOG_FUNC_ARG(x)
 		LOG_FUNC_ARG(y)
 		LOG_FUNC_END;
+
 	XB_TRMP(D3DDevice_SetScreenSpaceOffset)(x, y);
 	//CxbxrImpl_SetScreenSpaceOffset(x, y);
 
-	// init pushbuffer related pointers
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-	if ((unsigned int)pPush_local + 64 >= (unsigned int)pPush_limit)//check if we still have enough space
-		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = HLE_API_PUSHBFFER_COMMAND_64 ;
-	pPush_local[1] = X_D3DAPI_ENUM::X_D3DDevice_SetScreenSpaceOffset;//enum of this patched API
-	pPush_local[2] = FtoDW(x); //total 14 DWORD space for arguments.
-	pPush_local[3] = FtoDW(y);
-
-	//set pushbuffer pointer to the new beginning
-	// always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-	*(DWORD**)g_pXbox_pPush += 0x10;
+	// was using 64 bytes (HLE_API_COMMAND_16 dword)
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetScreenSpaceOffset,
+		FtoDW(x),
+		FtoDW(y));
 }
 
 // ******************************************************************
@@ -14572,12 +14429,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 	// Trampoline to pushbuffer.
 	XB_TRMP(D3DDevice_SetModelView)(pModelView, pInverseModelView, pComposite);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pModelView;
-	PBTokenArray[3] = (DWORD)pInverseModelView;
-	PBTokenArray[4] = (DWORD)pComposite;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetModelView, 3, PBTokenArray);//argCount 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetModelView,
+		(DWORD)pModelView,
+		(DWORD)pInverseModelView,
+		(DWORD)pComposite);
 
 	LOG_TEST_CASE("SetModelView");
 }
@@ -14694,10 +14549,8 @@ void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
     FreeHostResource(GetHostResourceKey(pResource));
 	//do not sync D3D_DestroyResource() with pgraph, might introduce memory corruption
 #if 0
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pResource;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_DestroyResource, 1);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3D_DestroyResource,
+		(DWORD)pResource);
 #endif
 	// Call the Xbox version of DestroyResource
     XB_TRMP(D3D_DestroyResource)(pResource);
@@ -14726,10 +14579,8 @@ LTCG_DECL void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
     FreeHostResource(GetHostResourceKey(pResource));
 	//do not sync D3D_DestroyResource() with pgraph, might introduce memory corruption
 #if 0
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pResource;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3D_DestroyResource__LTCG, 1);//argCount, not necessary, default to 14
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3D_DestroyResource__LTCG,
+		(DWORD)pResource);
 #endif
     // Call the Xbox version of DestroyResource
     __asm {
@@ -14758,17 +14609,16 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 	//EMUPATCH(D3DDevice_SetRenderTarget)(pRenderTarget, pNewZStencil);
 	//NestedPatchCounter call(setRenderTargetCount);
 
-	//fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-	PBTokenArray[2] = (DWORD)pRenderTarget;
-	PBTokenArray[3] = (DWORD)pNewZStencil;
-	//give the correct token enum here, and it's done.
-	Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget, 2, PBTokenArray);//argCount 14
 	// add reference to the surfaces to prevent them being released before we access them in pgraph.
 	if (pRenderTarget)
 		CxbxrImpl_Resource_AddRef(pRenderTarget);
 
 	if (pNewZStencil)
 		CxbxrImpl_Resource_AddRef(pNewZStencil);
+
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget,
+		(DWORD)pRenderTarget,
+		(DWORD)pNewZStencil);
 
 	XB_TRMP(D3DDevice_SetRenderTargetFast)(pRenderTarget, pNewZStencil,Flags);
 
