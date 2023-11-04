@@ -1858,9 +1858,9 @@ int pgraph_handle_method(
                     break;
                 case HLE_API_METHOD:
                 {
-                    X_D3DAPI_ENUM HLEApi;
-                    HLEApi = (X_D3DAPI_ENUM)argv[0];
-                    switch (HLEApi)
+                    X_D3DAPI_ENUM hleAPI;
+                    hleAPI = (X_D3DAPI_ENUM)argv[0];
+                    switch (hleAPI)
                     {
                     //case X_CDevice_SetStateUP:  break;	case X_CDevice_SetStateUP_4:  break;	case X_CDevice_SetStateUP_0__LTCG_esi1:  break;
                     //case X_CDevice_SetStateVB:  break;	case X_CDevice_SetStateVB_8:  break;
