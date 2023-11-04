@@ -203,20 +203,6 @@ typedef enum _X_D3DAPI_ENUM {
 
 #define HLE_PUSH_ENCODE(dword_count) PUSH_ENCODE(PUSH_INSTR_IMM_NOINC, dword_count, PUSH_SUBCH_0, HLE_API_METHOD, PUSH_TYPE_METHOD)
 
-//pushbuffer command word for total 8 bytes including command word, for 0 argument dword, pPush offset 2 dwords
-#define HLE_API_COMMAND_2 HLE_PUSH_ENCODE(2) // 0x40040080
-//pushbuffer command word for total 12 bytes including command word, for 1 argument dword, pPush offset 3 dwords
-#define HLE_API_COMMAND_3 HLE_PUSH_ENCODE(3) // 0x40080080
-//pushbuffer command word for total 16 bytes including command word, for 2 argument dword, pPush offset 4 dwords
-#define HLE_API_COMMAND_4 HLE_PUSH_ENCODE(4) // 0x400C0080
-//pushbuffer command word for total 32 bytes including command word, for 6 argument dword, pPush offset 8 dwords
-#define HLE_API_COMMAND_8 HLE_PUSH_ENCODE(8) // 0x401C0080
-//pushbuffer command word for total 64 bytes including command word, for 14 argument dword, pPush offset 16 dwords
-#define HLE_API_COMMAND_16 HLE_PUSH_ENCODE(16) // 0x403C0080
-//pushbuffer command word for total 128 bytes including command word, for 30 argument dword, pPush offset 32 dwords
-#define HLE_API_COMMAND_32 HLE_PUSH_ENCODE(32) // 0x407C0080
-
-
 /*
 //template for xbox D3D API patch routine
 
@@ -349,63 +335,10 @@ void WINAPI CxbxrImpl_Lock3DSurface(xbox::X_D3DPixelContainer* pPixelContainer, 
 ULONG CxbxrImpl_Resource_AddRef(xbox::X_D3DResource* pResource);
 ULONG CxbxrImpl_Resource_Release(xbox::X_D3DResource* pResource);
 void EmuKickOff(void);
-extern DWORD PBTokenArray[16];
-void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount, DWORD* argv);
+
 IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture* pBaseTexture);
 void EmuSetDepthStencil(xbox::X_D3DSurface* pDepthBufferSurface);
 void EmuSetRenderTarget(xbox::X_D3DSurface* pBackBufferSurface);
-/*
-    // with this helper function, we can reduce the token pushbuffer setup in a further simpler way.
-    
-    //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-    PBTokenArray[2] = (DWORD)StreamNumber;
-    PBTokenArray[3] = (DWORD)pStreamData;
-    PBTokenArray[4] = (DWORD)Stride;
-    //give the correct token enum here, and it's done.
-    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_APIName, argCount, PBTokenArray);//argCount 14
-*/
-
-/*
-    //template for syncing HLE apis with pgraf using waiting lock
-
-    volatile DWORD WaitForPGRAPH;
-    WaitForPGRAPH = 1;
-
-    //fill in the args first. 1st arg goes to PBTokenArray[2], float args need FtoDW(arg)
-    PBTokenArray[2] = (DWORD)&WaitForPGRAPH;// (DWORD)PrimitiveType;
-
-    //give the correct token enum here, and it's done.
-    Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM::X_D3DDevice_APIName, 1, PBTokenArray);//argCount, not necessary, default to 14
-
-    EmuKickOff();
-
-    while (WaitForPGRAPH != 0)
-#if 0
-        ; //this line is must have
-#else
-        SwitchToThread();
-#endif
-*/
-
-/*  //special token setup with 128 bytes pushbuffer allocation including command word. this is for passing large variables directly such as textures, lights, transform matrices.
-
-    // init pushbuffer related pointers
-    DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-    DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-    if ((unsigned int)pPush_local + 128 >= (unsigned int)pPush_limit)//check if we still have enough space
-        pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-    pPush_local[0] = HLE_API_COMMAND_32;
-    // process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-    pPush_local[1] = (DWORD)X_D3DAPI_ENUM::X_D3DDevice_SetLight;
-
-    pPush_local[2] = (DWORD)Index;
-    pPush_local[3] = (DWORD)&pPush_local[4];
-    *(X_D3DLIGHT8*)pPush_local[3] = *pLight;
-    //set pushbuffer pointer to the new beginning
-    // always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-    *(DWORD**)g_pXbox_pPush += 32;
-*/
 
 /*
 List of HLE apis synced with pgraph

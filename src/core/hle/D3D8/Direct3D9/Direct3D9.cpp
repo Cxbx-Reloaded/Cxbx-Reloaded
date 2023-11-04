@@ -3275,7 +3275,7 @@ DWORD* HLE_PushPrepare(X_D3DAPI_ENUM hleAPI, int dword_count)
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = (DWORD)HLE_PUSH_ENCODE(dword_count); // was HLE_API_COMMAND_4
+	pPush_local[0] = (DWORD)HLE_PUSH_ENCODE(dword_count - 1);
 	pPush_local[1] = (DWORD)hleAPI;
 	return pPush_local;
 	// Note : caller must set remaining arguments in pPush_local[2] onwards
@@ -13628,7 +13628,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 	XB_TRMP(D3DDevice_SetScreenSpaceOffset)(x, y);
 	//CxbxrImpl_SetScreenSpaceOffset(x, y);
 
-	// was using 64 bytes (HLE_API_COMMAND_16 dword)
 	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetScreenSpaceOffset,
 		FtoDW(x),
 		FtoDW(y));

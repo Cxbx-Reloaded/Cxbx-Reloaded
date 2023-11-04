@@ -4083,7 +4083,9 @@ extern void EmuExecutePushBufferRaw
 
 #endif
         //words still available in the pushbuffer.
-        uint32_t max_words_available = (dma_get>dma_put)?((uint32_t)dma_limit - (uint32_t)word_ptr) / 4: ((uint32_t)dma_put - (uint32_t)word_ptr) / 4;
+        uint32_t max_words_available = (dma_get>dma_put)
+			? ((uint32_t)dma_limit - (uint32_t)word_ptr) / 4
+			: ((uint32_t)dma_put - (uint32_t)word_ptr) / 4;
         uint32_t num_processed = 1;
 
         if (dma_state.mcnt > max_words_available) { 
