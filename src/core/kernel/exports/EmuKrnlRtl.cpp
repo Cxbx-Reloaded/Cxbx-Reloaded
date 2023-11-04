@@ -899,9 +899,9 @@ XBSYSAPI EXPORTNUM(281) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedIntegerMultip
 		LOG_FUNC_ARG(Multiplier)
 		LOG_FUNC_END;
 
-	LARGE_INTEGER ret;
-
-	ret.QuadPart = Multiplicand.QuadPart* (LONGLONG)Multiplier;
+	LARGE_INTEGER ret = {
+		Multiplicand.QuadPart * (LONGLONG)Multiplier
+	};
 
 	RETURN(ret);
 }
@@ -969,8 +969,6 @@ XBSYSAPI EXPORTNUM(283) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedMagicDivide
 		LOG_FUNC_ARG(ShiftCount)
 		LOG_FUNC_END;
 
-	LARGE_INTEGER result;
-
 	ULONGLONG dividend_high;
 	ULONGLONG dividend_low;
 	ULONGLONG inverse_divisor_high;
@@ -996,14 +994,15 @@ XBSYSAPI EXPORTNUM(283) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedMagicDivide
 	ah_bl = dividend_high * inverse_divisor_low;
 	al_bh = dividend_low * inverse_divisor_high;
 
-	result.QuadPart =
-	   (LONGLONG) ((dividend_high * inverse_divisor_high +
-	                UPPER_32(ah_bl) +
-	                UPPER_32(al_bh) +
-	                UPPER_32(LOWER_32(ah_bl) + LOWER_32(al_bh) +
-	                         UPPER_32(dividend_low * inverse_divisor_low))) >> ShiftCount);
+	LARGE_INTEGER result = {
+		(LONGLONG)((dividend_high * inverse_divisor_high +
+					UPPER_32(ah_bl) +
+					UPPER_32(al_bh) +
+					UPPER_32(LOWER_32(ah_bl) + LOWER_32(al_bh) +
+							 UPPER_32(dividend_low * inverse_divisor_low))) >> ShiftCount)
+	};
 	if (!positive) {
-	   result.QuadPart = -result.QuadPart;
+		result.QuadPart = -result.QuadPart;
 	}
 
 	RETURN(result);
@@ -1107,7 +1106,7 @@ XBSYSAPI EXPORTNUM(288) xbox::void_xt NTAPI xbox::RtlGetCallersAddress
 	LOG_FUNC_END;
 
 	/* Get the tow back trace address */
-	PVOID BackTrace[2];
+	PVOID BackTrace[2] = {};
 	ushort_xt FrameCount = RtlCaptureStackBackTrace(2, 2, &BackTrace[0], zeroptr);
 
 	/* Only if user want it */
@@ -1225,7 +1224,7 @@ XBSYSAPI EXPORTNUM(292) xbox::ntstatus_xt NTAPI xbox::RtlIntegerToChar
         return STATUS_INVALID_PARAMETER;
     }
 
-	CHAR buffer[33];
+	CHAR buffer[33]; // Keep uninitialized, because it's filled below
 	PCHAR pos = &buffer[32];
 
 	*pos = '\0';   
@@ -1279,11 +1278,11 @@ XBSYSAPI EXPORTNUM(293) xbox::ntstatus_xt NTAPI xbox::RtlIntegerToUnicodeString
     NTSTATUS Status = RtlIntegerToChar(Value, Base, sizeof(Buffer), Buffer);
 
     if (X_NT_SUCCESS(Status)) {
-		ANSI_STRING AnsiString;
-
-        AnsiString.Buffer = Buffer;
-        AnsiString.Length = (USHORT)strlen(Buffer);
-        AnsiString.MaximumLength = sizeof(Buffer);
+		ANSI_STRING AnsiString = {
+			/*Length =*/ (USHORT)strlen(Buffer),
+			/*MaximumLength =*/ sizeof(Buffer),
+			/*Buffer =*/ Buffer
+		};
 
         Status = RtlAnsiStringToUnicodeString(String, &AnsiString, FALSE);
     }
@@ -1576,11 +1575,9 @@ XBSYSAPI EXPORTNUM(303) xbox::void_xt NTAPI xbox::RtlRaiseStatus
 {
 	LOG_FUNC_ONE_ARG(Status);
 
-	EXCEPTION_RECORD record;
+	EXCEPTION_RECORD record = {};
 	record.ExceptionCode = Status;
 	record.ExceptionFlags = X_EXCEPTION_NONCONTINUABLE;
-	record.ExceptionRecord = NULL;
-	record.NumberParameters = 0;
 
 	RtlRaiseException(&record);
 }
@@ -2175,7 +2172,7 @@ XBSYSAPI EXPORTNUM(319) xbox::ulong_xt NTAPI xbox::RtlWalkFrameChain
 	IN ulong_xt Flags
 )
 {
-	ulong_ptr_xt Stack;
+	ulong_ptr_xt Stack; // Keep unassigned, because it's set in assembly
 	/* Get current EBP */
 #if defined __GNUC__
 	__asm__("mov %%ebp, %0" : "=r" (Stack) : );
