@@ -4595,10 +4595,6 @@ static void D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2
         LOG_FUNC_ARG(Handle)
         LOG_FUNC_ARG(Address)
         LOG_FUNC_END;
-
-#if USEPGRAPH_SelectVertexShader
-	// TODO?
-#endif
 }
 
 // LTCG specific D3DDevice_SelectVertexShader function...
@@ -4619,6 +4615,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LT
 
 	// Log
     D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2(Handle, Address);
+
 #if !USEPGRAPH_SelectVertexShader
     CxbxrImpl_SelectVertexShader(Handle, Address);
 #else
