@@ -3769,7 +3769,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
     // Cache the base vertex index
     // g_Xbox_BaseVertexIndex = BaseVertexIndex;
 
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetIndices_4,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetIndices,
 		(DWORD)pIndexData,
 		(DWORD)BaseVertexIndex);
 
@@ -3972,7 +3972,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)()
 	// Log
 	D3DDevice_Reset_0__LTCG_edi1(pPresentationParameters);
 
-	EmuKickOffWait(X_D3DDevice_Reset_0__LTCG_edi1);
+	EmuKickOffWait(X_D3DDevice_Reset);
 
 	CxbxrImpl_Reset(pPresentationParameters);
 
@@ -4006,7 +4006,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)()
 	// Log
 	D3DDevice_Reset_0__LTCG_ebx1(pPresentationParameters);
 
-	EmuKickOffWait(X_D3DDevice_Reset_0__LTCG_ebx1);
+	EmuKickOffWait(X_D3DDevice_Reset);
 
 	CxbxrImpl_Reset(pPresentationParameters);
 
@@ -4325,7 +4325,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 
 	xbox::hresult_xt result;
 
-	EmuKickOffWait(X_D3DDevice_EndVisibilityTest_0);
+	EmuKickOffWait(X_D3DDevice_EndVisibilityTest);
 	result = CxbxrImpl_EndVisibilityTest(Index);//EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 
     __asm {
@@ -4462,7 +4462,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
 
     //CxbxrImpl_LoadVertexShader(Handle, Address);
 
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader,
 		(DWORD)Handle,
 		(DWORD)Address);
 
@@ -4506,7 +4506,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
 
     //CxbxrImpl_LoadVertexShader(Handle, Address);
 
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader,
 		(DWORD)Handle,
 		(DWORD)Address);
 
@@ -4549,7 +4549,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
 
     //CxbxrImpl_LoadVertexShader(Handle, Address);
 
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader_4,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_LoadVertexShader,
 		(DWORD)Handle,
 		(DWORD)Address);
 
@@ -4622,7 +4622,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LT
 #if !USEPGRAPH_SelectVertexShader
     CxbxrImpl_SelectVertexShader(Handle, Address);
 #else
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader,
 		(DWORD)Handle,
 		(DWORD)Address);
 #endif
@@ -4666,7 +4666,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LT
 #if !USEPGRAPH_SelectVertexShader
 	CxbxrImpl_SelectVertexShader(Handle, Address);
 #else
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader_4__LTCG_eax1,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SelectVertexShader,
 		(DWORD)Handle,
 		(DWORD)Address);
 #endif
@@ -4937,7 +4937,6 @@ LTCG_DECL xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2_0__
 (
 )
 {
-
 	int_xt BackBuffer; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
@@ -5980,7 +5979,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 	else {
 	    CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 		/*
-		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4fm
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
 			(DWORD)Register,
 			FtoDW(a),
 			FtoDW(b),
@@ -6022,7 +6021,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 
 		CxbxrImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 		/*
-		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4fm
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
 			(DWORD)Register,
 			FtoDW(fa),
 			FtoDW(fb),
@@ -6053,15 +6052,6 @@ static void D3DDevice_SetVertexData4f_16
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
-
-	/*
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
-		(DWORD)Register,
-		FtoDW(a),
-		FtoDW(b),
-		FtoDW(c),
-		FtoDW(d));
-	*/
 }
 
 // ******************************************************************
@@ -6090,6 +6080,15 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
 		D3DDevice_SetVertexData4f_16(Register, a, b, c, d);
 
 		CxbxrImpl_SetVertexData4f(Register, a, b, c, d);
+
+		/*
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
+			(DWORD)Register,
+			FtoDW(a),
+			FtoDW(b),
+			FtoDW(c),
+			FtoDW(d));
+		*/
 	}
 	_asm {
 		LTCG_EPILOGUE
@@ -6209,7 +6208,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 
 		CxbxrImpl_SetVertexData4f(Register, fa, fb, fc, fd);
 		/*
-		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4fm
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexData4f,
 			(DWORD)Register,
 			FtoDW(fa),
 			FtoDW(fb),
@@ -6306,7 +6305,6 @@ void CxbxrImpl_Clear
 	xbox::dword_xt           Stencil
 )
 {
-
 	DWORD HostFlags = 0;
 
 	// Clear requires the Xbox viewport to be applied
@@ -6382,7 +6380,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 	dword_xt           Stencil
 )
 {
-
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(Count)
 		LOG_FUNC_ARG(pRects)
@@ -6412,6 +6409,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 	}
 #endif
 }
+
 // ******************************************************************
 // * patch: D3DDevice_CopyRects
 // ******************************************************************
@@ -6748,7 +6746,7 @@ void CxbxrUpdateHostXboxBackBufferSurface(xbox::X_D3DSurface *pXboxSurface)
 {
 	LOG_INIT
 
-		IDirect3DSurface* pHostXboxSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
+	IDirect3DSurface* pHostXboxSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 	IDirect3DSurface* pTmpHostSurface = nullptr;
 	IDirect3DTexture* pTmpHostTexture = nullptr;
 	D3DSURFACE_DESC HostXboxSurfaceDesc;
@@ -7204,6 +7202,7 @@ DWORD CxbxrImpl_Swap
 
     return result;
 }
+
 // ******************************************************************
 // * patch: D3DDevice_Swap
 // ******************************************************************
@@ -8122,6 +8121,7 @@ D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
 extern bool is_pgraph_DirectModelView(void);
 extern bool is_pgraph_using_NV2A_Kelvin();// tmp glue
 extern xbox::X_D3DLIGHT8* CxbxrGetLight8Ptr(int lightNum);
+
 D3DMATRIX g_xbox_transform_ModelView;
 D3DMATRIX g_xbox_transform_InverseModelView;
 D3DMATRIX g_xbox_transform_Composite;
@@ -8137,7 +8137,8 @@ D3DMATRIX g_xbox_transform_ProjectionViewportTransform;
 extern inline bool is_pgraph_using_NV2A_Kelvin(void);
 static D3DMATRIX * g_xbox_ProjectionViewportTransform = nullptr;
 
-void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient) {
+void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient)
+{
 	if (d3dLightIndex == -1) {
 		pShaderLight->Type = 0; // Disable the light
 		return;
@@ -8728,6 +8729,7 @@ void CxbxrImpl_GetTransform
 		*pMatrix = *(g_xbox_transform_matrix + State);
 	}
 }
+
 // sets xbox d3d transform matrix directly without applying any d3d transforms.
 void CxbxrImpl_SetTransformFast
 (
@@ -8792,7 +8794,7 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 		// Allocate 32 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
 		const int dword_count = 32; // Note : 2 + 1 + 1 + 16 would be enough
 
-		DWORD* pPush_local = HLE_PushPrepare(X_D3DAPI_ENUM::X_D3DDevice_SetTransform_0__LTCG_eax1_edx2, dword_count);
+		DWORD* pPush_local = HLE_PushPrepare(X_D3DAPI_ENUM::X_D3DDevice_SetTransform, dword_count);
 		pPush_local[2] = (DWORD)State;
 		//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
 		pPush_local[3] = (DWORD)&pPush_local[4];
@@ -9947,6 +9949,7 @@ CONST DWORD g_TilePitches[] =
 	0xC000	, //	D3DTILE_PITCH_C000
 	0xE000	, //	D3DTILE_PITCH_E000
 };
+
 //using fixed size array to cache the textures.
 //todo: check if 32 is enough or not.
 xbox::X_D3DSurface g_XGSetSurface[32] = {0};
@@ -10436,7 +10439,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	CxbxrImpl_SetVertexShader(Handle);
 #else	
 	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader,
-		(DWORD)Handle);
+		Handle);
 #endif
 #endif
 }
@@ -10479,7 +10482,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
 	}
 #if 0
 	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetVertexShader,
-		(DWORD)Handle);
+		Handle);
 #endif
 #if !USEPGRAPH_SetVertexShader
 	//CxbxrImpl_SetVertexShader(Handle);
@@ -11823,7 +11826,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_e
 
     //CxbxrImpl_SetPixelShader(Handle);
 
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader_0__LTCG_eax_handle,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPixelShader,
 		(DWORD)Handle);
 
     __asm {
@@ -12003,7 +12006,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx
 	if (g_pXbox_BeginPush_Buffer != nullptr){
 		XB_TRMP(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)(PrimitiveType);
 	}else{
-		EmuKickOffWait(X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3);
+		EmuKickOffWait(X_D3DDevice_DrawVertices);
 		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
 		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
@@ -12036,7 +12039,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__LTCG_eax
 		XB_TRMP(D3DDevice_DrawVertices_8__LTCG_eax3)(PrimitiveType, StartVertex);
 	}
 	else {
-		EmuKickOffWait(X_D3DDevice_DrawVertices_8__LTCG_eax3);
+		EmuKickOffWait(X_D3DDevice_DrawVertices);
 		// Dxbx Note : In DrawVertices and DrawIndexedVertices, PrimitiveType may not be D3DPT_POLYGON
 		// Move original implementation code to CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount); for duplicate usage with D3DDevice_DrawVertices_4
 		// CxbxrImpl_DrawVertices(PrimitiveType, StartVertex, VertexCount);
@@ -12163,7 +12166,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_
 		XB_TRMP(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)(PrimitiveType, VertexCount, VertexStreamZeroStride);
 	}
 	else {
-		EmuKickOffWait(X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3);
+		EmuKickOffWait(X_D3DDevice_DrawVerticesUP);
 		// We can't call emupatch() here because the target function calls trampoline which might not be available in guest code.
 		//EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 		//CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
@@ -12973,7 +12976,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
 		if (pNewZStencil)
 			CxbxrImpl_Resource_AddRef(pNewZStencil);
 
-		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget_0,
+		HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetRenderTarget,
 			(DWORD)pRenderTarget,
 			(DWORD)pNewZStencil);
 	}
@@ -13094,7 +13097,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 
 	//CxbxrImpl_SetPalette(Stage, pPalette);
 
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPalette_4,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3DDevice_SetPalette,
 		(DWORD)Stage,
 		(DWORD)pPalette);
 
@@ -14544,7 +14547,7 @@ LTCG_DECL void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
     FreeHostResource(GetHostResourceKey(pResource));
 	//do not sync D3D_DestroyResource() with pgraph, might introduce memory corruption
 #if 0
-	HLE_PushApi(X_D3DAPI_ENUM::X_D3D_DestroyResource__LTCG,
+	HLE_PushApi(X_D3DAPI_ENUM::X_D3D_DestroyResource,
 		(DWORD)pResource);
 #endif
     // Call the Xbox version of DestroyResource

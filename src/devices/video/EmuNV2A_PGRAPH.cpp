@@ -1906,7 +1906,6 @@ int pgraph_handle_method(
                     case X_D3DDevice_DeletePixelShader:  break;
                     case X_D3DDevice_DeleteStateBlock:  break;
                     case X_D3DDevice_DeleteVertexShader:  break;
-                    case X_D3DDevice_DeleteVertexShader_0:  break;
                     case X_D3DDevice_DrawIndexedPrimitive:  //break;  //fall through
                     case X_D3DDevice_DrawIndexedPrimitiveUP:  //break;  //fall through
                     case X_D3DDevice_DrawIndexedVertices:  //break;  //fall through
@@ -1916,10 +1915,7 @@ int pgraph_handle_method(
                     case X_D3DDevice_DrawRectPatch:  //break;  //fall through
                     case X_D3DDevice_DrawTriPatch:  //break;  //fall through
                     case X_D3DDevice_DrawVertices:  //break;  //fall through
-                    case X_D3DDevice_DrawVertices_4__LTCG_ecx2_eax3:  //break;  //fall through
-                    case X_D3DDevice_DrawVertices_8__LTCG_eax3:  //break;  //fall through
                     case X_D3DDevice_DrawVerticesUP:  //break;  //fall through
-                    case X_D3DDevice_DrawVerticesUP_12__LTCG_ebx3: {
                         extern void CxbxUpdateNativeD3DResources();
                         CxbxUpdateNativeD3DResources();
                         *(bool*)argv[1] = false;
@@ -1933,14 +1929,12 @@ int pgraph_handle_method(
                     case X_D3DDevice_EndScene:  break;
                     case X_D3DDevice_EndState:  break;
                     case X_D3DDevice_EndStateBlock:  break;
-                    case X_D3DDevice_EndVisibilityTest:  //break;  //fall through
-                    case X_D3DDevice_EndVisibilityTest_0:
+                    case X_D3DDevice_EndVisibilityTest:
                         *(bool*)argv[1] = false;
                         break;
                     case X_D3DDevice_FlushVertexCache:  break;
                     case X_D3DDevice_GetBackBuffer:  break;
                     case X_D3DDevice_GetBackBuffer2:  break;
-                    case X_D3DDevice_GetBackBuffer2_0__LTCG_eax1:  break;
                     case X_D3DDevice_GetBackBufferScale:  break;
                     case X_D3DDevice_GetBackMaterial:  break;
                     case X_D3DDevice_GetCopyRectsState:  break;
@@ -2006,10 +2000,7 @@ int pgraph_handle_method(
                     case X_D3DDevice_LightEnable:
                         CxbxrImpl_LightEnable((xbox::dword_xt) /* Index */ argv[1], (xbox::bool_xt) /* bEnable */ argv[2]);
                         break;
-                    case X_D3DDevice_LoadVertexShader:       // break;
-                    case X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle:       // break;  //fall through
-                    case X_D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle:       // break;  //fall through
-                    case X_D3DDevice_LoadVertexShader_4:                                    // break;  //fall through
+                    case X_D3DDevice_LoadVertexShader:
                         CxbxrImpl_LoadVertexShader(argv[1], argv[2]);
                         break;
                     case X_D3DDevice_LoadVertexShaderProgram:
@@ -2027,9 +2018,7 @@ int pgraph_handle_method(
                         * (bool*)argv[1] = false;
                         break;
                     case X_D3DDevice_PrimeVertexCache:  break;
-                    case X_D3DDevice_Reset:               //break;  //fall through
-                    case X_D3DDevice_Reset_0__LTCG_edi1:  //break;  //fall through
-                    case X_D3DDevice_Reset_0__LTCG_ebx1:
+                    case X_D3DDevice_Reset:
                         *(bool*)argv[1] = false;
                         break;
                     case X_D3DDevice_RunPushBuffer:
@@ -2050,9 +2039,7 @@ int pgraph_handle_method(
                     case X_D3DDevice_RunVertexStateShader:
                         CxbxrImpl_RunVertexStateShader(argv[1], (xbox::float_xt*)argv[2]);
                         break;
-                    case X_D3DDevice_SelectVertexShader:                  // break;
-                    case X_D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2: // break;
-                    case X_D3DDevice_SelectVertexShader_4__LTCG_eax1:
+                    case X_D3DDevice_SelectVertexShader:
                         CxbxrImpl_SelectVertexShader(argv[1], argv[2]);
                         break;
                     case X_D3DDevice_SelectVertexShaderDirect:  break;
@@ -2064,13 +2051,11 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetDebugMarker:  break;
                     case X_D3DDevice_SetDepthClipPlanes:  break;
                     case X_D3DDevice_SetFlickerFilter:  break;
-                    case X_D3DDevice_SetFlickerFilter_0:  break;
                     case X_D3DDevice_SetGammaRamp:
                         CxbxrImpl__SetGammaRamp((xbox::dword_xt)/* dwFlags*/argv[1], (D3DGAMMARAMP*)/* pRamp*/argv[2]);
                         *(bool*)argv[3] = false;
                         break;
-                    case X_D3DDevice_SetIndices:  //break;  //fall through
-                    case X_D3DDevice_SetIndices_4:
+                    case X_D3DDevice_SetIndices:
                         CxbxrImpl_SetIndices((xbox::X_D3DIndexBuffer *)/* pIndexData */argv[1], (xbox::uint_xt) /* BaseVertexIndex */ argv[2]);
                         break;
                     case X_D3DDevice_SetLight:
@@ -2083,23 +2068,18 @@ int pgraph_handle_method(
                         CxbxrImpl_SetModelView((CONST D3DMATRIX *)/*pModelView*/argv[1], (CONST D3DMATRIX *)/*pInverseModelView*/argv[2], (CONST D3DMATRIX *) /*pComposite*/argv[3]);
                         break;
                     case X_D3DDevice_SetOverscanColor:  break;
-                    case X_D3DDevice_SetPalette:  //break;  //fall through
-                    case X_D3DDevice_SetPalette_4:
+                    case X_D3DDevice_SetPalette:
                         CxbxrImpl_SetPalette((xbox::dword_xt)/* Stage */argv[1], (xbox::X_D3DPalette *)/* pPalette */argv[2]);
                         break;
-                    case X_D3DDevice_SetPixelShader:  //break;  //fall through
-                    case X_D3DDevice_SetPixelShader_0__LTCG_eax_handle:
+                    case X_D3DDevice_SetPixelShader:
                         CxbxrImpl_SetPixelShader((xbox::dword_xt)/*Handle*/argv[1]);
                         break;
                     case X_D3DDevice_SetPixelShaderConstant:  break;
-                    case X_D3DDevice_SetPixelShaderConstant_4:  break;
                     case X_D3DDevice_SetPixelShaderProgram:  break;
                     case X_D3DDevice_SetRenderState:  break;
                     case X_D3DDevice_SetRenderState_Simple:  break;
                     case X_D3DDevice_SetRenderStateNotInline:  break;
-                    case X_D3DDevice_SetRenderTarget:    //break;  //fall through
-                    case X_D3DDevice_SetRenderTarget_0:  //break;  //fall through
-                    case X_D3DDevice_SetRenderTargetFast:
+                    case X_D3DDevice_SetRenderTarget:
                         CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
                         // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
                         CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
@@ -2108,25 +2088,18 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetScreenSpaceOffset:
                         CxbxrImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
                         break;
-                    case X_D3DDevice_SetShaderConstantMode:  //break;
-                    case X_D3DDevice_SetShaderConstantMode_0__LTCG_eax1:
+                    case X_D3DDevice_SetShaderConstantMode:
                         CxbxrImpl_SetShaderConstantMode((xbox::X_VERTEXSHADERCONSTANTMODE )argv[1]);
                         break;
                     case X_D3DDevice_SetSoftDisplayFilter:  break;
                     case X_D3DDevice_SetStipple:  break;
-                    case X_D3DDevice_SetStreamSource:  //break;
-                    case X_D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride:  //break;
-                    case X_D3DDevice_SetStreamSource_4:  //break;
-                    case X_D3DDevice_SetStreamSource_8:  //break;
-                    case X_D3DDevice_SetStreamSource_8__LTCG_edx_StreamNumber:
+                    case X_D3DDevice_SetStreamSource:
                         CxbxrImpl_SetStreamSource((UINT) argv[1], (xbox::X_D3DVertexBuffer *)argv[2], (UINT)argv[3]);
                         break;
                     case X_D3DDevice_SetSwapCallback:  break;
                     case X_D3DDevice_SetTexture:
                         CxbxrImpl_SetTexture((xbox::dword_xt) argv[1], (xbox::X_D3DBaseTexture *) argv[2]);
                         break;
-                    case X_D3DDevice_SetTexture_4__LTCG_eax_pTexture:  break;
-                    case X_D3DDevice_SetTexture_4__LTCG_eax_Stage:  break;
                     case X_D3DDevice_SetTextureStageState:  break;
                     case X_D3DDevice_SetTextureStageStateNotInline:  break;
                     case X_D3DDevice_SetTile:
@@ -2134,8 +2107,7 @@ int pgraph_handle_method(
                             *(bool*)argv[3] = false;
                         break;
                     case X_D3DDevice_SetTimerCallback:  break;
-                    case X_D3DDevice_SetTransform:  //break;//fall throught
-                    case X_D3DDevice_SetTransform_0__LTCG_eax1_edx2:
+                    case X_D3DDevice_SetTransform:
                         CxbxrImpl_SetTransform((xbox::X_D3DTRANSFORMSTATETYPE) argv[1], (CONST D3DMATRIX * )argv[2]);
                         break;
                     case X_D3DDevice_SetVertexBlendModelView:  break;
@@ -2148,18 +2120,10 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVertexData4s:  break;
                     case X_D3DDevice_SetVertexData4ub:  break;
                     case X_D3DDevice_SetVertexDataColor:  break;
-                    case X_D3DDevice_SetVertexShader:   // break;
-                    case X_D3DDevice_SetVertexShader_0:
+                    case X_D3DDevice_SetVertexShader:
                         CxbxrImpl_SetVertexShader((DWORD)argv[1]);
                         break;
                     case X_D3DDevice_SetVertexShaderConstant:  break;
-                    case X_D3DDevice_SetVertexShaderConstant_8:  break;
-                    case X_D3DDevice_SetVertexShaderConstant1:  break;
-                    case X_D3DDevice_SetVertexShaderConstant4:  break;
-                    case X_D3DDevice_SetVertexShaderConstantFast:  break;
-                    case X_D3DDevice_SetVertexShaderConstant1Fast:  break;
-                    case X_D3DDevice_SetVertexShaderConstantNotInline:  break;
-                    case X_D3DDevice_SetVertexShaderConstantNotInlineFast:  break;
                     case X_D3DDevice_SetVertexShaderInput:  break;
                     case X_D3DDevice_SetVertexShaderInputDirect:  break;
                     case X_D3DDevice_SetVerticalBlankCallback:  break;
@@ -2175,9 +2139,6 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetWaitCallback:  break;
                     case X_D3DDevice_Swap:
                         //CxbxrImpl_Swap(argv[1]);
-                        //break; //fall through
-                    case X_D3DDevice_Swap_0:
-                        //CxbxrImpl_Swap(argv[1]);
                         *(bool*)argv[1] = false;
                         break;
                     case X_D3DDevice_SwitchTexture:
@@ -2185,23 +2146,19 @@ int pgraph_handle_method(
                         break;
                     case X_D3DDevice_UpdateOverlay:  break;
                     case X_D3DResource_BlockUntilNotBusy:  break;
-                    case X_D3D_BlockOnTime:  break;	case X_D3D_BlockOnTime_4:  break;
+                    case X_D3D_BlockOnTime:  break;
                     case X_D3D_CommonSetRenderTarget:
                         //todo:this might be redundant because the HLE implementation of this api never set the call level, so this patch will always calls CxbxrImpl_SetRenderTarget(). we might use the fall through directly.
                         CxbxrImpl_D3D_CommonSetRenderTarget((xbox::X_D3DSurface*)/* pRenderTarget*/argv[1], (xbox::X_D3DSurface*)/* pNewZStencil*/argv[2], (void*)/* unknown*/argv[3]);
                         // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
                         CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
                         break;
-                    case X_D3D_DestroyResource:  //break;
-                    case X_D3D_DestroyResource__LTCG:
+                    case X_D3D_DestroyResource:
                         CxbxrImpl_DestroyResource((xbox::X_D3DResource *) argv[1]);
                         break;
                     case X_D3D_LazySetPointParams:  break;
                     case X_D3D_SetCommonDebugRegisters:  break;
                     case X_Direct3D_CreateDevice:  break;
-                    case X_Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface:  break;
-                    case X_Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface:  break;
-                    case X_Direct3D_CreateDevice_4:  break;
                     case X_Lock2DSurface:
                         //CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
                         *(bool*)argv[1] = false;
