@@ -275,7 +275,9 @@ void							CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface *pRenderTarget, xbox::X_
 
 #define CXBX_D3DCOMMON_IDENTIFYING_MASK (X_D3DCOMMON_TYPE_MASK)// | X_D3DCOMMON_D3DCREATED)
 
-// Those should be used with LTCG patches which use __declspec(naked)
+#define LTCG_DECL __declspec(naked)
+
+// Those should be used with LTCG patches which use LTCG_DECL
 #define LTCG_PROLOGUE \
 		__asm push ebp \
 		__asm mov  ebp, esp \
@@ -868,7 +870,7 @@ void CxbxReleaseCursor()
 
 static void CxbxUpdateCursor(bool forceShow = false) {
 	// Getting cursor info is a requirement in order to prevent a bug occur with ShowCursor redundant calls.
-	CURSORINFO cursorInfo;
+	CURSORINFO cursorInfo = {};
 	cursorInfo.cbSize = sizeof(cursorInfo);
 	if (!GetCursorInfo(&cursorInfo)) {
 		// If cursor info is not available, then ignore the cursor update.
@@ -2140,7 +2142,7 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             }
 
             if (!g_bIsTrackingMoLeave) {
-                TRACKMOUSEEVENT tme;
+                TRACKMOUSEEVENT tme = {};
                 tme.cbSize = sizeof(TRACKMOUSEEVENT);
                 tme.hwndTrack = hWnd;
                 tme.dwFlags = TME_LEAVE;
@@ -2510,7 +2512,7 @@ static void CreateDefaultD3D9Device
 
     // IDirect3D9::CreateDevice must be called from the window message thread
     // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
-    HRESULT hr;
+    HRESULT hr = 0;
     RunOnWndMsgThread([&hr, BehaviorFlags, &displayMode] {
         hr = g_pDirect3D->CreateDeviceEx(
             g_EmuCDPD.Adapter,
@@ -3184,12 +3186,12 @@ void GetBackBufferPixelDimensions(float& x, float& y)
 
 static DWORD makeSpaceCount = 0;
 
-__declspec(naked) xbox::dword_xt* CxbxrImpl_MakeSpace(void)
+LTCG_DECL xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 {
 	makeSpaceCount++;
 	DWORD d3ddevice;
 	d3ddevice = *g_pXbox_D3DDevice;
-	xbox::dword_xt* result;
+	xbox::dword_xt* result; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	if (XB_TRMP(D3DDevice_MakeSpace)){
 		__asm {
 			push edx
@@ -3438,14 +3440,14 @@ static void Direct3D_CreateDevice_4
 // LTCG specific Direct3D_CreateDevice function...
 // This uses a custom calling with parameters passed in EAX, ECX and the stack
 // Test-case: Ninja Gaiden, Halo 2
-__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4)
+LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4)
 (
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-    DWORD BehaviorFlags;
-    xbox::X_D3DDevice **ppReturnedDeviceInterface;
-    __asm {
+	DWORD BehaviorFlags; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+	xbox::X_D3DDevice **ppReturnedDeviceInterface; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
+	__asm {
 		LTCG_PROLOGUE
 		mov  BehaviorFlags, eax
 		mov  ppReturnedDeviceInterface, ecx
@@ -3457,7 +3459,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
-	hresult_xt hRet;
+	hresult_xt hRet; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		push pPresentationParameters
 		mov  eax, BehaviorFlags
@@ -3499,7 +3501,7 @@ static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDevic
 // LTCG specific Direct3D_CreateDevice function...
 // This uses a custom calling convention passing parameters on stack, in EAX and ECX
 // Test-case: Aggressive Inline, Midtown Madness 3
-__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface)
+LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface)
 (
     uint_xt                     Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -3507,8 +3509,8 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-	dword_xt BehaviorFlags;
-	xbox::X_D3DDevice **ppReturnedDeviceInterface;
+	dword_xt BehaviorFlags; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+	xbox::X_D3DDevice **ppReturnedDeviceInterface;  // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  BehaviorFlags, eax
@@ -3521,7 +3523,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
-	hresult_xt hRet;
+	hresult_xt hRet; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		push pPresentationParameters
 		push hFocusWindow
@@ -3566,7 +3568,7 @@ static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDevic
 // LTCG specific Direct3D_CreateDevice function...
 // This uses a custom calling convention passing parameters on stack, in EAX and EBX
 // Test-case: NASCAR Heat 2002
-__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
+LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface)
 (
     uint_xt                     Adapter,
     D3DDEVTYPE                  DeviceType,
@@ -3574,8 +3576,8 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-	dword_xt BehaviorFlags;
-	xbox::X_D3DDevice **ppReturnedDeviceInterface;
+	dword_xt BehaviorFlags; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+	xbox::X_D3DDevice **ppReturnedDeviceInterface; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  BehaviorFlags, eax
@@ -3588,7 +3590,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
 	// Only then call Xbox CreateDevice function
-	hresult_xt hRet;
+	hresult_xt hRet; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		push pPresentationParameters
 		push hFocusWindow
@@ -3638,12 +3640,12 @@ void WINAPI CxbxrImpl_SetIndices
 // This uses a custom calling convention where parameter is passed in EBX and Stack
 // Test Case: Conker
 // ******************************************************************
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
 (
     uint_xt                BaseVertexIndex
 )
 {
-    X_D3DIndexBuffer   *pIndexData;
+    X_D3DIndexBuffer   *pIndexData; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  pIndexData, ebx
@@ -3742,7 +3744,7 @@ void EmuKickOff(void)
 	return;
 
 #endif
-	DWORD* pXbox_D3DDevice;
+	DWORD* pXbox_D3DDevice = nullptr;
 	DWORD  Xbox_D3DDevice;
 	// Set g_Xbox_D3DDevice to point to the Xbox D3D Device
 	// g_Xbox_D3DDevice is supposed to be set in D3DDevice_CreateDevice(), g_Xbox_D3DDevice to point to the Xbox D3D Device
@@ -3871,9 +3873,9 @@ static void D3DDevice_Reset_0__LTCG_edi1(xbox::X_D3DPRESENT_PARAMETERS* pPresent
 	LOG_FUNC_ONE_ARG(pPresentationParameters);
 }
 
-__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)()
+LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)()
 {
-	X_D3DPRESENT_PARAMETERS* pPresentationParameters;
+	X_D3DPRESENT_PARAMETERS* pPresentationParameters; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  pPresentationParameters, edi
@@ -3905,9 +3907,9 @@ static void D3DDevice_Reset_0__LTCG_ebx1(xbox::X_D3DPRESENT_PARAMETERS* pPresent
 	LOG_FUNC_ONE_ARG(pPresentationParameters);
 }
 
-__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)()
+LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)()
 {
-	X_D3DPRESENT_PARAMETERS* pPresentationParameters;
+	X_D3DPRESENT_PARAMETERS* pPresentationParameters; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  pPresentationParameters, ebx
@@ -4103,7 +4105,7 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	xbox::dword_xt* result = XB_TRMP(D3DDevice_EndPush)(pPush);
 
 	//in D3DDevice_EndPush() before it returns, it has g_pDevice in ECX, which we need it to pass to XB_TRMP(D3DDevice_KickOff)() as this pointer.
-	//DWORD * Xbox_D3DDevice;
+	//DWORD * Xbox_D3DDevice; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	//__asm {
 	//	mov  Xbox_D3DDevice, ecx
 	//}
@@ -4221,18 +4223,20 @@ xbox::hresult_xt WINAPI CxbxrImpl_EndVisibilityTest
 // LTCG specific D3DDevice_EndVisibilityTest function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Test Drive: Eve of Destruction
-__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0)
+LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0)
 (
 )
 {
-    dword_xt Index;
-	xbox::hresult_xt result;
+    dword_xt Index; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Index, eax
     }
 
 	XB_TRMP(D3DDevice_EndVisibilityTest_0)();
+
+	xbox::hresult_xt result;
+
 	EmuKickOffWait(X_D3DDevice_EndVisibilityTest_0);
 	result = CxbxrImpl_EndVisibilityTest(Index);//EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 
@@ -4355,12 +4359,12 @@ static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle
 // LTCG specific D3DDevice_LoadVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX, ECX
 // Test-case: Aggressive Inline
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle)
 (
 )
 {
-    dword_xt Handle;
-    dword_xt Address;
+    dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+    dword_xt Address; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Address, eax
@@ -4401,12 +4405,12 @@ static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle
 // LTCG specific D3DDevice_LoadVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX, EDX
 // Test-case: World Racing 2, Project Zero 2 (PAL)
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle)
 (
 )
 {
-    dword_xt Handle;
-    dword_xt Address;
+    dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+    dword_xt Address; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Address, eax
@@ -4446,12 +4450,12 @@ static void D3DDevice_LoadVertexShader_4
 
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Ninja Gaiden
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
 (
     dword_xt                       Address
 )
 {
-    dword_xt Handle;
+    dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Handle, eax
@@ -4524,13 +4528,13 @@ static void D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2
 // LTCG specific D3DDevice_SelectVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX, EBX
 // Test-case: Star Wars - Battlefront
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2)
 (
 )
 {
-    dword_xt Handle;
-    dword_xt Address;
-    __asm {
+    dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+    dword_xt Address; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+	__asm {
         LTCG_PROLOGUE
         mov  Handle, eax
         mov  Address, ebx
@@ -4571,12 +4575,12 @@ static void D3DDevice_SelectVertexShader_4__LTCG_eax1
 // LTCG specific D3DDevice_SelectVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Aggressive Inline
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LTCG_eax1)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LTCG_eax1)
 (
     dword_xt                       Address
 )
 {
-    dword_xt Handle;
+    dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Handle, eax
@@ -4862,13 +4866,12 @@ static void D3DDevice_GetBackBuffer2_0__LTCG_eax1(xbox::int_xt BackBuffer)
 
 // LTCG specific GetBackBuffer2 function...
 // This uses a custom calling convention where parameter is passed in EAX
-__declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
+LTCG_DECL xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
 (
 )
 {
 
-	int_xt BackBuffer;
-	xbox::X_D3DSurface* pBackBuffer;
+	int_xt BackBuffer; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  BackBuffer, eax
@@ -4877,6 +4880,7 @@ __declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuf
 	// Log
 	D3DDevice_GetBackBuffer2_0__LTCG_eax1(BackBuffer);
 
+	xbox::X_D3DSurface* pBackBuffer;
 	//pBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
 	CxbxrImpl_Resource_AddRef(g_pXbox_BackBufferSurface);
 	pBackBuffer = g_pXbox_BackBufferSurface;
@@ -5045,7 +5049,7 @@ void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 
 void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 {
-    float vScaleOffset[2][4]; // 0 - scale 1 - offset
+	float vScaleOffset[2][4] = {}; // 0 - scale 1 - offset
 
 	// todo: use viewport offset and scale from pg->vsh_constants[-38+96][]
 	GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
@@ -5246,11 +5250,11 @@ void Cxbxr_PushHLESyncToken(X_D3DAPI_ENUM token, int argCount=14, DWORD* argv= P
 
 // LTCG specific D3DDevice_SetShaderConstantMode function...
 // This uses a custom calling convention where parameter is passed in EAX
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0__LTCG_eax1)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode_0__LTCG_eax1)
 (
 )
 {
-    X_VERTEXSHADERCONSTANTMODE Mode;
+    X_VERTEXSHADERCONSTANTMODE Mode; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Mode, eax
@@ -5464,12 +5468,12 @@ static void D3DDevice_SetTexture_4__LTCG_eax_pTexture
 // LTCG specific D3DDevice_SetTexture function...
 // This uses a custom calling convention where pTexture is passed in EAX
 // Test-case: NASCAR Heat 2002
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_pTexture)
 (
     dword_xt           Stage
 )
 {
-    X_D3DBaseTexture *pTexture;
+    X_D3DBaseTexture *pTexture; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  pTexture, eax
@@ -5509,12 +5513,12 @@ static void D3DDevice_SetTexture_4__LTCG_eax_Stage
 // LTCG specific D3DDevice_SetTexture function...
 // This uses a custom calling convention where Stage is passed in EAX
 // Test-case: Metal Wolf Chaos
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_Stage)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_Stage)
 (
     X_D3DBaseTexture  *pTexture
 )
 {
-    dword_xt Stage;
+    dword_xt Stage; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Stage, eax
@@ -5555,7 +5559,7 @@ void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* p
 {
 	//update the currently used stage texture
 	g_pXbox_SetTexture[Stage] = pTexture;
-	HRESULT hRet;
+	//HRESULT hRet;
 
 	if (pTexture != nullptr) {
 		g_Xbox_SetTexture[Stage] = *(xbox::X_D3DSurface*)pTexture;
@@ -6080,7 +6084,7 @@ static void D3DDevice_SetVertexData4f_16
 // * patch: D3DDevice_SetVertexData4f_16
 // ******************************************************************
 // This is an LTCG specific version of SetVertexData4f where the first param is passed in EDI
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
 (
 	float_xt   a,
 	float_xt   b,
@@ -6088,8 +6092,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_
 	float_xt   d
 )
 {
-	int_xt Register;
-
+	int_xt Register; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  Register, edi
@@ -6645,7 +6648,8 @@ void WINAPI CxbxrImpl_CopyRects
     auto xboxDestHeight = GetPixelContainerHeight(pDestinationSurface);
 
     for (UINT i = 0; i < cRects; i++) {
-        RECT SourceRect, DestRect;
+		RECT SourceRect;
+		RECT DestRect = {};
 
         if (pSourceRectsArray != nullptr) {
             SourceRect = pSourceRectsArray[i];
@@ -6762,12 +6766,12 @@ std::chrono::steady_clock::time_point frameStartTime;
 
 // LTCG specific swap function...
 // This uses a custom calling convention where parameter is passed in EAX
-__declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
+LTCG_DECL xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
 (
 )
 {
-    dword_xt Flags;
-	dword_xt result;
+    dword_xt Flags; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+	dword_xt result; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Flags, eax
@@ -6784,7 +6788,7 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
 
  void CxbxrGetXboxBackBuffer(int BackBuffer, xbox::X_D3DSurface** ppXboxFBuffer)
 {
-	 xbox::X_D3DSurface* pXboxBackBuffer;
+	 xbox::X_D3DSurface* pXboxBackBuffer = nullptr;
 
 	 if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
 		 XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, ppXboxFBuffer);
@@ -6797,7 +6801,7 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
 			 push eax
 			 mov  eax, BackBuffer
 		 }
-		     XB_TRMP(D3DDevice_GetBackBuffer_8)(D3DBACKBUFFER_TYPE_MONO, ppXboxFBuffer);
+		 XB_TRMP(D3DDevice_GetBackBuffer_8)(D3DBACKBUFFER_TYPE_MONO, ppXboxFBuffer);
 		 __asm {
 		     pop eax
 		 }
@@ -8905,12 +8909,12 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 	}
 }
 
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
 (
 )
 {
-	xbox::X_D3DTRANSFORMSTATETYPE State;
-    CONST D3DMATRIX *pMatrix;
+	xbox::X_D3DTRANSFORMSTATETYPE State; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+    CONST D3DMATRIX *pMatrix; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  State, eax
@@ -9497,8 +9501,10 @@ VOID WINAPI EmuSwizzleRect(
 {
 	//if SSE instructions are not supported, XGSwizzleBox with depth==1 does the same thing as 
 	  //XGSwizzleRect, but doesn't use pentium-3-specific instructions
-	D3DBOX Box, * pBox = &Box;
-	XGPOINT3D Point3, * pPoint3 = &Point3;
+	D3DBOX Box = {};
+	D3DBOX *pBox = &Box;
+	XGPOINT3D Point3 = {};
+	XGPOINT3D *pPoint3 = &Point3;
 	if (!pRect) {
 		pBox = NULL;
 	}
@@ -10311,18 +10317,19 @@ static void D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_e
 // LTCG specific D3DDevice_SetStreamSource function...
 // This uses a custom calling convention where parameters are passed in EAX, EDI, EBX
 // Test-case: Juiced
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride)()
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride)()
 {
-    uint_xt StreamNumber;
-    X_D3DVertexBuffer *pStreamData;
-    uint_xt Stride;
+    uint_xt StreamNumber; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+    X_D3DVertexBuffer *pStreamData; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
+    uint_xt Stride; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  StreamNumber, eax
         mov  pStreamData, edi
         mov  Stride, ebx
     }
-    // Log
+
+	// Log
     D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride(StreamNumber, pStreamData, Stride);
 
     //CxbxrImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
@@ -10364,13 +10371,13 @@ static void D3DDevice_SetStreamSource_4
 // LTCG specific D3DDevice_SetStreamSource function...
 // This uses a custom calling convention where parameter is passed in EBX, EAX
 // Test-case: Ninja Gaiden
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_4)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_4)
 (
     uint_xt                Stride
 )
 {
-    uint_xt StreamNumber;
-    X_D3DVertexBuffer *pStreamData;
+    uint_xt StreamNumber; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+    X_D3DVertexBuffer *pStreamData; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  pStreamData, ebx
@@ -10419,13 +10426,13 @@ static void D3DDevice_SetStreamSource_8
 
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Superman - The Man Of Steel
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_8)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_8)
 (
     X_D3DVertexBuffer  *pStreamData,
     uint_xt             Stride
 )
 {
-    uint_xt StreamNumber;
+    uint_xt StreamNumber; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  StreamNumber, eax
@@ -10565,9 +10572,9 @@ static void D3DDevice_SetVertexShader_0
 
 // This uses a custom calling convention where Handle is passed in EBX
 // Test-case: NASCAR Heat 2002
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
 {
-	dword_xt Handle;
+	dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  Handle, ebx
@@ -10999,9 +11006,9 @@ void CxbxDrawIndexedPrimitiveUP(CxbxDrawContext& DrawContext)
 				DrawContext.pHostVertexStreamZeroData,
 				DrawContext.uiHostVertexStreamZeroStride
 			);
-			INDEX16 closeLineIndex[2];
-			closeLineIndex[0] = DrawContext.pXboxIndexData[0];
-			closeLineIndex[1] = DrawContext.pXboxIndexData[DrawContext.dwVertexCount -1];
+			INDEX16 closeLineIndex[2] = {
+				DrawContext.pXboxIndexData[0],
+				DrawContext.pXboxIndexData[DrawContext.dwVertexCount - 1] };
 			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 				/*PrimitiveType=*/EmuXB2PC_D3DPrimitiveType(xbox::X_D3DPT_LINELIST),
 				/*MinVertexIndex=*/0, // min. index is 0.
@@ -11399,8 +11406,8 @@ void CxbxUpdateHostTextureScaling()
 
 	// Each texture stage has one texture coordinate set associated with it
 	// We'll store scale factors for each texture coordinate set
-	std::array<std::array<float, 4>, xbox::X_D3DTS_STAGECOUNT> texcoordScales;
-	texcoordScales.fill({ 1, 1, 1, 1 });
+	std::array<std::array<float, 4>, xbox::X_D3DTS_STAGECOUNT> texcoordScales = {};
+	texcoordScales.fill({ 1.f, 1.f, 1.f, 1.f });
 	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
@@ -11575,7 +11582,7 @@ void CxbxUpdateHostVertexShaderConstants()
 		// Placed this here until we find a better place
 		uint32_t fogTableMode;
 		float fogDensity, fogStart, fogEnd;
-		DWORD density, start, end;
+		//DWORD density, start, end;
 		if (is_pgraph_using_NV2A_Kelvin()) {
 			fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
 			fogDensity = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
@@ -11635,9 +11642,7 @@ void CxbxUpdateHostViewport() {
 		g_pD3DDevice->SetViewport(&hostViewport);
 
 		// Reset scissor rect
-		RECT viewportRect;
-		viewportRect.left = 0;
-		viewportRect.top = 0;
+		RECT viewportRect = {};
 		viewportRect.right = HostRenderTarget_Width;
 		viewportRect.bottom = HostRenderTarget_Height;
 		g_pD3DDevice->SetScissorRect(&viewportRect);
@@ -11649,9 +11654,7 @@ void CxbxUpdateHostViewport() {
 		// with the currently set viewport
 		// Test case: ???
 
-		D3DVIEWPORT hostViewport;
-		hostViewport.X = 0;
-		hostViewport.Y = 0;
+		D3DVIEWPORT hostViewport = {};
 		hostViewport.Width = HostRenderTarget_Width;
 		hostViewport.Height = HostRenderTarget_Height;
 		hostViewport.MinZ = 0.0f;
@@ -11662,7 +11665,7 @@ void CxbxUpdateHostViewport() {
 		// We still need to clip to the viewport
 		// Scissor to viewport
 		g_pD3DDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
-		RECT viewportRect;
+		RECT viewportRect = {};
 		viewportRect.left = g_Xbox_Viewport.X * Xscale;
 		viewportRect.top = g_Xbox_Viewport.Y * Yscale;
 		viewportRect.right = viewportRect.left + (g_Xbox_Viewport.Width * Xscale);
@@ -11925,9 +11928,9 @@ static void D3DDevice_SetPixelShader_0__LTCG_eax_handle
 // Test-case: Metal Wolf Chaos
 // Test-case: Lord of the Rings: The Third Age
 // Test-case: Midtown Madness 3
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_eax_handle)()
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_eax_handle)()
 {
-    dword_xt Handle;
+    dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  Handle, eax
@@ -12110,13 +12113,13 @@ void D3DDevice_DrawVertices
 // This uses a custom calling convention where parameter is passed in ECX, EAX and Stack
 // Test Case: Conker
 // ******************************************************************
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)
 (
     X_D3DPRIMITIVETYPE PrimitiveType
 )
 {
-    uint_xt VertexCount;
-    uint_xt StartVertex;
+    uint_xt VertexCount; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+    uint_xt StartVertex; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  VertexCount, eax
@@ -12143,13 +12146,13 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__
 // * patch: D3DDevice_DrawVertices_8__LTCG_eax3
 // LTCG specific D3DDevice_DrawVertices function...
 // ******************************************************************
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__LTCG_eax3)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__LTCG_eax3)
 (
     X_D3DPRIMITIVETYPE PrimitiveType,
     uint_xt            StartVertex
 )
 {
-    uint_xt VertexCount;
+    uint_xt VertexCount; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  VertexCount, eax
@@ -12269,15 +12272,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 // LTCG specific D3DDevice_DrawVerticesUP function...
 // This uses a custom calling convention where pVertexStreamZeroData is passed in EBX
 // Test-case: NASCAR Heat 20002
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
 (
     X_D3DPRIMITIVETYPE  PrimitiveType,
     uint_xt             VertexCount,
     uint_xt             VertexStreamZeroStride
 )
 {
-    PVOID pVertexStreamZeroData;
-
+    PVOID pVertexStreamZeroData; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  pVertexStreamZeroData, ebx
@@ -13093,12 +13095,12 @@ static void D3DDevice_SetRenderTarget_0
 	//
 }
 
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
 (
 )
 {
-	X_D3DSurface *pRenderTarget;
-    X_D3DSurface *pNewZStencil;
+	X_D3DSurface *pRenderTarget; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
+	X_D3DSurface *pNewZStencil; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  pRenderTarget, ecx
@@ -13221,12 +13223,12 @@ static void D3DDevice_SetPalette_4
 // LTCG specific D3DDevice_SetPalette function...
 // This uses a custom calling convention where Stage parameter is passed in EAX
 // Test-case: Ninja Gaiden
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 (
 	X_D3DPalette *pPalette
 )
 {
-	dword_xt Stage;
+	dword_xt Stage; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  Stage, eax
@@ -13285,11 +13287,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
 // LTCG specific D3DDevice_SetFlickerFilter function...
 // This uses a custom calling convention where parameter is passed in ESI
 // Test-case: Metal Wolf Chaos
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0)
 (
 )
 {
-	dword_xt Filter;
+	dword_xt Filter; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  Filter, esi
@@ -13359,11 +13361,11 @@ static void D3DDevice_DeleteVertexShader_0
 // LTCG specific D3DDevice_DeleteVertexShader function...
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Midtown Madness 3
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader_0)
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 (
 )
 {
-	dword_xt Handle;
+	dword_xt Handle; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  Handle, eax
@@ -14088,7 +14090,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateVB)(ulong_xt Unknown1)
 {
-	addr_xt _this;
+	addr_xt _this; // Keep unassigned, because it's set in assembly
 	__asm mov _this, ecx;
 
 	LOG_FUNC_BEGIN
@@ -14128,7 +14130,7 @@ xbox::void_xt CxbxrImpl_CDevice_SetStateUP(xbox::addr_xt _this)
 
 xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP)()
 {
-	addr_xt _this;
+	addr_xt _this; // Keep unassigned, because it's set in assembly
 	__asm mov _this, ecx;
 
 	LOG_FUNC_ONE_ARG(_this);
@@ -14148,9 +14150,9 @@ static void CDevice_SetStateUP_0__LTCG_esi1(xbox::addr_xt _this)
 	LOG_FUNC_ONE_ARG(_this);
 }
 
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP_0__LTCG_esi1)()
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP_0__LTCG_esi1)()
 {
-	addr_xt _this;
+	addr_xt _this; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  _this, esi
@@ -14272,7 +14274,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface()
 		nullptr // pSharedHandle
 	);
 	DEBUG_D3DRESULT(hRet, "D3DDevice_GetPersistedSurface::CreateTexture");
-	D3DLOCKED_RECT HostLockedRect;
+	D3DLOCKED_RECT HostLockedRect = {};
 	if (hRet == D3D_OK) {
 		hRet = pNewHostPersistTexture->GetSurfaceLevel(0, &pNewHostPersistSurface);
 		DEBUG_D3DRESULT(hRet, "D3DDevice_GetPersistedSurface::pNewHostSurface");
@@ -14447,12 +14449,11 @@ void WINAPI CxbxrImpl_SetModelView_Calc
 	if (pComposite != nullptr)g_xbox_transform_Composite = *pComposite;
 	if(pInverseModelView!=nullptr)g_xbox_transform_InverseModelView = *pInverseModelView;
 	// matModelView=matWorld*matView, we have no idea of these two Matrix. so we use unit matrix for view matrix, and matModelView matrix for matWorld
-	D3DMATRIX matUnit;
-	memset(&matUnit._11, 0, sizeof(matUnit));
-	matUnit._11 = 1.0;
-	matUnit._22 = 1.0;
-	matUnit._33 = 1.0;
-	matUnit._44 = 1.0;
+	D3DMATRIX matUnit = {};
+	matUnit._11 = 1.0f;
+	matUnit._22 = 1.0f;
+	matUnit._33 = 1.0f;
+	matUnit._44 = 1.0f;
 
 	//CxbxrImpl_SetTransform(xbox::X_D3DTS_WORLD, pModelView);
 	//CxbxrImpl_SetTransform(xbox::X_D3DTS_VIEW, &matUnit);
@@ -14660,9 +14661,9 @@ void WINAPI xbox::EMUPATCH(D3D_BlockOnTime)( dword_xt Unknown1, int Unknown2 )
 // LTCG specific D3D_BlockOnTime function
 // This uses a custom calling convention where parameter is passed in EAX
 // Test case: Burnout 3
-__declspec(naked) void WINAPI xbox::EMUPATCH(D3D_BlockOnTime_4)( dword_xt Unknown1 )
+LTCG_DECL void WINAPI xbox::EMUPATCH(D3D_BlockOnTime_4)( dword_xt Unknown1 )
 {
-	int Unknown2;
+	int Unknown2; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
 	__asm {
 		LTCG_PROLOGUE
 		mov  Unknown2, eax
@@ -14710,9 +14711,9 @@ static void D3D_DestroyResource__LTCG(xbox::X_D3DResource* pResource)
 	LOG_FUNC_ONE_ARG(pResource);
 }
 
-__declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
+LTCG_DECL void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
 {
-    X_D3DResource* pResource;
+    X_D3DResource* pResource; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
     __asm {
         LTCG_PROLOGUE
         mov  pResource, edi

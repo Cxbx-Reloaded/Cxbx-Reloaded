@@ -755,7 +755,7 @@ void OpenGL_draw_state_update(NV2AState *d)
     bool green = pg->KelvinPrimitive.SetColorMask & NV097_SET_COLOR_MASK_GREEN_WRITE_ENABLE;
     bool blue = pg->KelvinPrimitive.SetColorMask & NV097_SET_COLOR_MASK_BLUE_WRITE_ENABLE;
     glColorMask(red, green, blue, alpha);
-    glDepthMask(!!(pg->KelvinPrimitive.SetDepthMask&0x1!=0));
+    glDepthMask(!!(pg->KelvinPrimitive.SetDepthMask & 0x1));
     glStencilMask(pg->KelvinPrimitive.SetStencilMask & 0xFF);
 
     //uint32_t blend = pg->pgraph_regs[NV_PGRAPH_BLEND / 4];
@@ -1803,7 +1803,7 @@ int pgraph_handle_method(
 			* TODO: Check this range is correct for the nv2a */
 
 			if (method >= 0x180 && method < 0x200) {
-				for (int argc = 0; argc < method_count; argc++) {
+				for (uint32_t argc = 0; argc < method_count; argc++) {
 					arg0 = argv[argc];
 					//qemu_mutex_lock_iothread();
 					RAMHTEntry entry = ramht_lookup(d, arg0);
@@ -5080,7 +5080,6 @@ static void pgraph_log_method(unsigned int subchannel,
 static float *pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
                                                    unsigned int attr)
 {
-    unsigned int i;
     VertexAttribute *vertex_attribute = &pg->vertex_attributes[attr];
 
 	//set flag so when each vertex is completed, it can know which attribute is set and require to be pushed to vertex buffer.
@@ -5098,7 +5097,7 @@ static float *pgraph_allocate_inline_buffer_vertices(PGRAPHState *pg,
 		/* Now upload the previous vertex_attribute value */
 		/* don't upload the whole inline buffer of attribute here. this routine is only for buffer allocation. */
 		// this code is assuming that attribute could be set/inserted not in the very first vertex. so when the attribute is set, we must duplicate it's value from the beginning of vertex buffer to the current vertex.
-		for (int i = 0; i < pg->inline_buffer_length; i++) {
+		for (unsigned int i = 0; i < pg->inline_buffer_length; i++) {
 			memcpy(&vertex_attribute->inline_buffer[i * 4],
 					inline_value,
 					sizeof(float) * 4);
@@ -5295,25 +5294,23 @@ static void pgraph_update_shader_constants(PGRAPHState *pg,
 
     /* update combiner constants */
     for (i = 0; i<= 8; i++) {
-        uint32_t constant[2];
-        if (i == 8) {
-            /* final combiner */
-            constant[0] = pg->KelvinPrimitive.SetSpecularFogFactor[0];
-            constant[1] = pg->KelvinPrimitive.SetSpecularFogFactor[1];
-        } else {
-            constant[0] = pg->KelvinPrimitive.SetCombinerFactor0[i];
-            constant[1] = pg->KelvinPrimitive.SetCombinerFactor1[i];
-        }
+        uint32_t constant[2] = {
+            /* (i == 8) reads (final combiner) SpecularFog[0/1], others read CombinerFactor[i] */
+            (i == 8) ? pg->KelvinPrimitive.SetSpecularFogFactor[0]
+                     : pg->KelvinPrimitive.SetCombinerFactor0[i],
+            (i == 8) ? pg->KelvinPrimitive.SetSpecularFogFactor[1]
+                     : pg->KelvinPrimitive.SetCombinerFactor1[i]
+        };
 
         for (j = 0; j < 2; j++) {
             GLint loc = binding->psh_constant_loc[i][j];
             if (loc != -1) {
-                float value[4];
-                value[0] = (float) ((constant[j] >> 16) & 0xFF) / 255.0f;
-                value[1] = (float) ((constant[j] >> 8) & 0xFF) / 255.0f;
-                value[2] = (float) (constant[j] & 0xFF) / 255.0f;
-                value[3] = (float) ((constant[j] >> 24) & 0xFF) / 255.0f;
-
+                float value[4] = {
+                    (float)((constant[j] >> 16) & 0xFF) / 255.0f,
+                    (float)((constant[j] >> 8) & 0xFF) / 255.0f,
+                    (float)(constant[j] & 0xFF) / 255.0f,
+                    (float)((constant[j] >> 24) & 0xFF) / 255.0f
+                };
                 glUniform4fv(loc, 1, value);
             }
         }
@@ -5493,7 +5490,7 @@ static void pgraph_bind_shaders(PGRAPHState *pg)
 
     ShaderBinding* old_binding = pg->shader_binding;
 
-    ShaderState state;
+    ShaderState state = {};
     /* register combiner stuff */
 	state.psh.window_clip_exclusive = pg->KelvinPrimitive.SetWindowClipType & 0x1;
     state.psh.combiner_control = pg->KelvinPrimitive.SetCombinerControl;
@@ -6313,7 +6310,7 @@ static void pgraph_bind_textures(NV2AState *d)
             }
         }
 
-        TextureShape state;
+        TextureShape state = {};
         state.cubemap = cubemap;
         state.dimensionality = dimensionality;
         state.color_format = color_format;

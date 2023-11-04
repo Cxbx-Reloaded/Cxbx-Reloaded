@@ -351,7 +351,8 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 					NV2A_texture_stage_texture[stage].Parent = nullptr;
 			    }// end of if (it != g_TextureCache.end())/else
 				//update texture stage states
-				DWORD filter, address, control0, magFilter, minFilter, colorSign, convolutionKernel;
+				//DWORD control0;
+				DWORD filter, address, magFilter, minFilter, colorSign, convolutionKernel;
 				filter = pg->KelvinPrimitive.SetTexture[stage].Filter;//NV097_SET_TEXTURE_FILTER(stage)
 #define D3DTSIGN_ASIGNED           0x10000000
 #define D3DTSIGN_AUNSIGNED         0
@@ -365,12 +366,13 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 				colorSign = pg->KelvinPrimitive.SetTexture[stage].Filter & 0xF0000000;// XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORSIGN);
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_COLORSIGN, colorSign);
 				
-				int intLodBias;
+				int32_t intLodBias;
 				intLodBias = (filter & NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS);
-				if ((intLodBias & 0x1000) != 0)
+				// sign-extend highest (sign-)bit of NV097_SET_TEXTURE_FILTER_MIPMAP_LOD_BIAS :
+				if (intLodBias & 0x1000)
 					intLodBias |= 0xFFFFF000;
-				float fLodBias = float(intLodBias);
-				float mipMapLodBias = fLodBias/256.0;
+				float fLodBias = (float)intLodBias;
+				float mipMapLodBias = fLodBias/256.0f;
 
 				NV2ATextureStates.Set(stage, xbox::X_D3DTSS_MIPMAPLODBIAS, FtoDW(mipMapLodBias));
 
@@ -1136,8 +1138,7 @@ bool NV2A_viewport_dirty = false;
 void pgraph_ComposeViewport(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
-	HRESULT hRet;
-	xbox::X_D3DVIEWPORT8 Viewport;
+	xbox::X_D3DVIEWPORT8 Viewport = {};
 
 	float fm11, fm22, fm33, fm41, fm42, fm43, clipNear, clipFar;
 	float SuperSampleScale, ScaleX, ScaleY, ScaleZ, ScreenSpaceOffsetX, ScreenSpaceOffsetY;
@@ -1184,7 +1185,7 @@ void pgraph_ComposeViewport(NV2AState *d)
 			// FIXME !! need WNear *InverseWFar input
 			// clipNear = pDevice->m_ZScale * pDevice->m_WNear * pDevice->m_InverseWFar;  pDevice->m_WNear * pDevice->m_InverseWFar=clipNear/pDevice->m_ZScale;
 			
-			float WNear, WFar, InverseWFar;
+			//float WNear, WFar, InverseWFar;
 			// WNear=0.0, WFar=1.0,WInverseWFar=0.0
 			if (clipNear != 0.0f) {
 				;// TODO:no feasible way to compose WNear and WFar, we need these two vars to calculate Projection Matrix.
@@ -1198,8 +1199,8 @@ void pgraph_ComposeViewport(NV2AState *d)
 		//FIXME!! Viewport.Width/Height are not set in Fixed Mode. xbox d3d set it to 0x7FFFFFFF,
 		// CxbxrImpl_SetViewport() will cap the Width/Height to render target width/height. anyway, we cap them to render target value here.
 		
-		Viewport.Width=rendertargetBaseWidth;
-		Viewport.Height = rendertargetBaseHeight;
+		Viewport.Width= (DWORD)rendertargetBaseWidth;
+		Viewport.Height = (DWORD)rendertargetBaseHeight;
 	}
 	else {
 		ScaleZ = clipFar;
@@ -1216,8 +1217,8 @@ void pgraph_ComposeViewport(NV2AState *d)
 
 		Viewport.MinZ = fm43 / ScaleZ;
 		Viewport.MaxZ = (fm33 / ScaleZ) + Viewport.MinZ;
-		Viewport.Height = fm22 / (-0.5*ScaleY);
-		Viewport.Width = fm11 / (0.5*ScaleX);
+		Viewport.Height = (DWORD)(fm22 / (-0.5*ScaleY));
+		Viewport.Width = (DWORD)(fm11 / (0.5*ScaleX));
 
 
 	}
@@ -1226,8 +1227,8 @@ void pgraph_ComposeViewport(NV2AState *d)
 		xViewport += 0.5f;
 		yViewport += 0.5f;
 	}
-	Viewport.X = (xViewport - ScreenSpaceOffsetX) / ScaleX;
-	Viewport.Y = (yViewport - ScreenSpaceOffsetX) / ScaleY;
+	Viewport.X = (DWORD)((xViewport - ScreenSpaceOffsetX) / ScaleX);
+	Viewport.Y = (DWORD)((yViewport - ScreenSpaceOffsetX) / ScaleY);
 	
 	extern xbox::X_D3DVIEWPORT8 HLE_Viewport;
 	extern xbox::X_D3DVIEWPORT8 g_Xbox_Viewport;
@@ -1237,11 +1238,10 @@ void pgraph_ComposeViewport(NV2AState *d)
 void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
 	    // the LazySetPointParameters() converts the point size from float into DWORD and set it to pg->KelvinPrimitive.SetPointSize
-		float FixedSize = pg->KelvinPrimitive.SetPointSize;
+		float FixedSize = (float)pg->KelvinPrimitive.SetPointSize;
 		// reversed to xbox d3d fixed point size
-		float size = FixedSize/8.0;
+		float size = FixedSize/8.0f;
 		float max, min;
 		float delta, factor, height;
 		min = pg->KelvinPrimitive.SetPointParamsMin;
@@ -1264,7 +1264,7 @@ void CxbxrImpl_LazySetPointParameters(NV2AState* d)
 				NV2A_viewport_dirty = false;
 			}
 			CxbxrGetViewport(Viewport);
-			height = Viewport.Height;
+			height = (float)Viewport.Height;
 			factor = delta / (size * height);
 			factor *= factor;
 			float xboxScaleA = pg->KelvinPrimitive.SetPointParamsFactorMulA / factor;
@@ -1308,7 +1308,6 @@ D3DMATRIX g_NV2A_DirectModelView_Projection;
 void CxbxrImpl_GetViewportTransform(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
 	// compose viewport parameters via pgraph contents if needed
 	// update Viewport info if needed. though this should already been updated before we got here.
 	if (NV2A_viewport_dirty == true) {
@@ -1383,8 +1382,6 @@ void CxbxrImpl_GetViewportTransform(NV2AState* d)
 void CxbxrImpl_LazySetTransform(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
-
 
 	// SetModelView() call only be calaled when pg->KelvinPrimitive.SetSkinMode==0.
 	//
@@ -1408,12 +1405,11 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 	extern D3D8TransformState d3d8TransformState;
 	g_xbox_DirectModelView_View= (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
 	D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_DirectModelView_InverseView, NULL, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
-	D3DMATRIX matUnit;
-	memset(&matUnit._11, 0, sizeof(matUnit));
-	matUnit._11 = 1.0;
-	matUnit._22 = 1.0;
-	matUnit._33 = 1.0;
-	matUnit._44 = 1.0;
+	D3DMATRIX matUnit = {};
+	matUnit._11 = 1.0f;
+	matUnit._22 = 1.0f;
+	matUnit._33 = 1.0f;
+	matUnit._44 = 1.0f;
 	// TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
 	g_NV2A_DirectModelView_View = matUnit;
 	// use X_D3DTS_VIEW matrix from xbox side instead of unit matrix.
@@ -1503,7 +1499,6 @@ enum PS_TEXTUREMODES
 void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
 	// update texture stage texture pointers and format per stageProgram
 	DWORD stageProgram = pg->KelvinPrimitive.SetShaderStageProgram;
 	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES, stageProgram);
@@ -1557,7 +1552,6 @@ void CxbxrImpl_LazySetShaderStageProgram(NV2AState* d)
 void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
 	if (pg->KelvinPrimitive.SetFogEnable != 0) {
 		float fogTableStart, fogTableEnd, fogTableDensity;
 		DWORD fogTableMode, fogGenMode, fogMode;
@@ -1577,7 +1571,7 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 		}
 		else if (fogMode == NV097_SET_FOG_MODE_V_EXP) {
 			fogTableMode = D3DFOG_EXP;
-			fogTableDensity = -scale/ 0.090168074;
+			fogTableDensity = -scale/ 0.090168074f;
 			NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_FOGDENSITY, FtoDW(fogTableDensity));
 		}
 		else if (fogMode == NV097_SET_FOG_MODE_V_LINEAR) {
@@ -1636,7 +1630,6 @@ void CxbxrImpl_LazySetSpecFogCombiner(NV2AState* d)
 void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
 	DWORD stage;
 
 	for (stage = 0; stage < 4; stage++)
@@ -1652,7 +1645,7 @@ void CxbxrImpl_LazySetTextureTransform(NV2AState* d)
 		}
 		else {
 			// Enable the texture transform:
-			DWORD texCoord;// = D3D__TextureState[stage][D3DTSS_TEXCOORDINDEX];
+			//DWORD texCoord;// = D3D__TextureState[stage][D3DTSS_TEXCOORDINDEX];
 			//DWORD texgen;// = texCoord & 0xffff0000;
 			DWORD inCount,outCount;
 			bool m2_0000 = false, m3_0001 = false, isProjected = false;
@@ -1765,8 +1758,8 @@ static float _1_47 = 1.47f;
 
 float JBInvSqrt(const float x)
 {
-	DWORD y;
-	float r;
+	DWORD y = 0;
+	float r = 0.f;
 
 	_asm
 	{
@@ -1815,8 +1808,8 @@ void SetSceneAmbientAndMaterialEmission(NV2AState* d)
 	FLOAT ambientR, ambientG, ambientB;
 	FLOAT emissiveR, emissiveG, emissiveB,alpha;
 
-	xbox::X_D3DMATERIAL8 Material;
-	DWORD ambient;
+	//xbox::X_D3DMATERIAL8 Material;
+	//DWORD ambient;
 
 	//Material.Diffuse.a=alpha;
 	DWORD colorMaterial = pg->KelvinPrimitive.SetColorMaterial;//NV097_SET_COLOR_MATERIAL, colorMaterial  // 0x298
@@ -1842,7 +1835,7 @@ void SetSceneAmbientAndMaterialEmission(NV2AState* d)
 	NV2A_SceneMateirals[1].Emissive = *(D3DCOLORVALUE*)&(pg->KelvinPrimitive.SetBackMaterialEmission);//NV097_SET_BACK_MATERIAL_EMISSION
 	NV2A_SceneMateirals[1].Diffuse.a = pg->KelvinPrimitive.SetBackMaterialAlpha;//NV097_SET_BACK_MATERIAL_EMISSION
 
-	float colorScale = 2.1;
+	float colorScale = 2.1f;
 	emissiveR = pg->KelvinPrimitive.SetMaterialEmission[0];
 	emissiveG = pg->KelvinPrimitive.SetMaterialEmission[1];
 	emissiveB = pg->KelvinPrimitive.SetMaterialEmission[2];
@@ -3070,7 +3063,6 @@ void XformBy4x3(D3DVECTOR * res, CONST D3DVECTOR * v, FLOAT w, CONST D3DMATRIX *
 void CxbxrImpl_LazySetLights(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
 	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_LIGHTING, pg->KelvinPrimitive.SetLightingEnable);
 	NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING, pg->KelvinPrimitive.SetTwoSidedLightEn);
 	//pg->KelvinPrimitive.SetLight[8].{AmbientColor[3],DiffuseColor[3],SpecularColor[3],LocalRange,InfiniteHalfVector[3],InfiniteDirection[3],SpotFalloff[3],SpotDirection[4],LocalPosition[3],LocalAttenuation[3],Rev_1074[3]
@@ -3109,11 +3101,14 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
 		//set lights
 		int lightNum;
-		D3DVECTOR pos;
-		D3DVECTOR dir;
-		D3DVECTOR hv, EyeDirection;
-		D3DVECTOR NV2ALightdir, tmpDir, NV2ALightPosition, tmpPosition;
-		EyeDirection = { 0.0,0.0,-1.0 };
+		//D3DVECTOR pos;
+		//D3DVECTOR dir;
+		//D3DVECTOR hv;
+		D3DVECTOR EyeDirection = { 0.0,0.0,-1.0 };
+		D3DVECTOR NV2ALightdir = {};
+		D3DVECTOR tmpDir;
+		D3DVECTOR NV2ALightPosition = {};
+		D3DVECTOR tmpPosition;
 		for (lightNum = 0; lightNum < 8; lightNum++) {
 			bool bEnable;
 			DWORD lightType = (lightEnableMask >> (lightNum << 1)) & 0x03;
@@ -3193,8 +3188,8 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				D3DVECTOR dirNormal = NV2A_Light8[lightNum].Direction;
 				NormalizeVector3(&dirNormal);
 				float Scale = NV2A_Light8[lightNum].Direction.x / dirNormal.x; // there is no Scale member of Light8
-				float phi2 = -1.0*W / Scale;
-				float theta2 = phi2 + 1.0 / Scale;
+				float phi2 = -1.0f*W / Scale;
+				float theta2 = phi2 + 1.0f / Scale;
 				NV2A_Light8[lightNum].Theta = 2.0f*acos(theta2);
 				NV2A_Light8[lightNum].Phi = 2.0f*acos(phi2);
 				bEnable = true;
@@ -3203,7 +3198,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			// Fixme!!! we need D3D__RenderState[D3DRS_AMBIENT] and materials set with SetMaterial()/SetBackMaterial() to reverse the light colors.
 			// hack, we use colors in kelvin directly since these colors are composed with D3DRS_AMBIENT/SetMaterial/SetBackMaterial/ and the color of each light.
 			// here we use a constant color scale to scale up light color. scale comes from the actual result of HighDynamicRange sample.
-			float colorScale = 2.1;
+			float colorScale = 2.1f;
 			NV2A_Light8[lightNum].Ambient.r = colorScale * pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[0];
 			NV2A_Light8[lightNum].Ambient.g = colorScale * pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[1];
 			NV2A_Light8[lightNum].Ambient.b = colorScale * pg->KelvinPrimitive.SetLight[lightNum].AmbientColor[2];
@@ -3227,7 +3222,6 @@ extern std::map<UINT64, xbox::X_D3DSurface> g_RenderTargetCache;
 void D3D_draw_state_update(NV2AState* d)
 {
 	PGRAPHState* pg = &d->pgraph;
-	HRESULT hRet;
 
 	// update transform matrix using NV2A KevlvinPrimitive contents if we're in direct ModelView transform mode.
 	if (NV2A_DirtyFlags & X_D3DDIRTYFLAG_TRANSFORM) {
@@ -3305,7 +3299,7 @@ void D3D_draw_state_update(NV2AState* d)
 
 	// setup vertes format, and vertex buffer from here.
 	// Derive vertex attribute layout, using an intermediate array
-	struct { int slot_index; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedAttributes[X_VSH_MAX_ATTRIBUTES];
+	struct { int slot_index; uint32_t offset; uint32_t stride; uint32_t size_and_type; } SortedAttributes[X_VSH_MAX_ATTRIBUTES] = {};
 	uint32_t inline_offset = 0; // This applies only to IVB draw. TODO : instead of nullptr, start at the memory address of an IVB-dedicated host D3D VertexBuffer
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) { // X_VSH_MAX_ATTRIBUTES == NV2A_VERTEXSHADER_ATTRIBUTES
 		SortedAttributes[i].slot_index = i; // Store index of each slot, used in ordering predicate, and to allow access to original slot after sorting
@@ -3434,7 +3428,7 @@ void D3D_draw_state_update(NV2AState* d)
 			g_NV2AVertexAttributeFormat.Slots[index].TessellationSource = 0; // TODO or ignore?
 		}
 		// check each stream if it's within the data range of dirty render targets in g_RenderTargetCache
-		for (int streamIndex = 0; streamIndex < NV2A_StreamCount; streamIndex++) {
+		for (unsigned int streamIndex = 0; streamIndex < NV2A_StreamCount; streamIndex++) {
 			DWORD streamData= NV2A_StreamSource[streamIndex].VertexBuffer->Data;
 			
 			for (auto it = g_RenderTargetCache.begin(); it != g_RenderTargetCache.end(); it++) {
@@ -3442,7 +3436,7 @@ void D3D_draw_state_update(NV2AState* d)
 				// todo: calculate and cache the xbox data size in CxbxrImpl_SetRenderTarget to save overheads here.
 				//process host surface data transfer to xbox data with data conversion.
 				xbox::X_D3DSurface* pXboxSurface = &it->second;
-				UINT XBWidth, XBHeight, XBDepth, XBRowPitch, XBSlicePitch;
+				//UINT XBWidth, XBHeight, XBDepth, XBRowPitch, XBSlicePitch;
 				extern void CxbxGetPixelContainerMeasures
 				(
 					xbox::X_D3DPixelContainer* pPixelContainer,
@@ -3518,7 +3512,8 @@ void D3D_draw_clear(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
 	xbox::dword_xt Count;
-	D3DRECT  *pRects,Rect;
+	D3DRECT *pRects;
+	D3DRECT Rect = {};
 	xbox::dword_xt Flags;
 	D3DCOLOR Color;
 	float Z;
@@ -3526,8 +3521,8 @@ void D3D_draw_clear(NV2AState *d)
 
 	Flags = pg->KelvinPrimitive.ClearSurface;
 	Color = pg->KelvinPrimitive.SetColorClearValue;
-	Z = pg->KelvinPrimitive.SetZStencilClearValue;
-	Stencil = Z;
+	Z = (float)pg->KelvinPrimitive.SetZStencilClearValue;
+	Stencil = pg->KelvinPrimitive.SetZStencilClearValue; // Was Z, but would require casting through float and back to dword
 	
 	DWORD x1, x2, y1, y2;
 	// FIXME, x1,x2, y2, y2 are premultiplied with supersamplescale already. shall we reverse the scale back before calling EMUPATCH(D3DDevice_Clear)?
