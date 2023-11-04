@@ -3906,10 +3906,6 @@ void EmuKickOffWait(X_D3DAPI_ENUM hleAPI)
 	return;
 }
 
-// ******************************************************************
-// * patch: D3DDevice_Reset
-// ******************************************************************
-
 static void CxbxrImpl_Reset(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
 	// Unlike the host version of Reset, The Xbox version does not actually reset the entire device
@@ -3935,6 +3931,9 @@ static void CxbxrImpl_Reset(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParamete
 	// Perform CxbxrImpl_SetRenderTarget call.
 }
 
+// ******************************************************************
+// * patch: D3DDevice_Reset
+// ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset)
 (
 	X_D3DPRESENT_PARAMETERS* pPresentationParameters
@@ -5196,7 +5195,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 		pPush_local[2] = (DWORD)&pPush_local[3];
 		*(X_D3DVIEWPORT8*)&pPush_local[3] = *pViewport;
 
-		//extern xbox::X_D3DVIEWPORT8 g_Xbox_Viewport;
 		//todo: we preserve the viewport for debug. could be removed in future.
 		g_Xbox_Viewport = *pViewport;
 	}
@@ -5248,7 +5246,6 @@ void CxbxrImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 
 const DWORD FixedFunctionPipelineConstants[] =
 {
-
 	0x00000000,   // 0.0
 	0x3f000000,   // 0.5
 	0x3f800000,   // 1.0
@@ -5862,6 +5859,7 @@ void CxbxrImpl_SwitchTexture(
 		}
 	}
 }
+
 // ******************************************************************
 // * patch: D3DDevice_SwitchTexture
 // ******************************************************************
@@ -9552,8 +9550,8 @@ typedef enum _ComponentEncoding {
 	__G16B16, // NOTE : A takes G, R takes B
 	__R8G8B8,
 }ComponentEncoding;
+
 extern DWORD EmuPCFormatBytesPerPixel(D3DFORMAT pc);
-//extern enum ComponentEncoding;
 extern ComponentEncoding EmuPCFormatComponentEncoding(D3DFORMAT pc);
 extern ComponentEncoding EmuXBFormatComponentEncoding(xbox::X_D3DFORMAT Format);
 extern BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format);
@@ -9991,7 +9989,7 @@ xbox::X_D3DTILE g_Tile[8] = { 0 };
 xbox::X_D3DSurface g_TileSurface[8] = { 0 };
 
 // ******************************************************************
-// * patch: IDirect3DResource8_Register
+// * patch: D3DResource_Register (was IDirect3DResource8_Register)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DResource_Register)
 (
@@ -10051,7 +10049,7 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetSurfaceHeader)
 }
 
 // ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel
+// * patch: D3DTexture_GetSurfaceLevel (was IDirect3DTexture8_GetSurfaceLevel)
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DTexture_GetSurfaceLevel)
 (
@@ -10071,7 +10069,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DTexture_GetSurfaceLevel)
 }
 
 // ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel2
+// * patch: D3DTexture_GetSurfaceLevel2 (was IDirect3DTexture8_GetSurfaceLevel2)
 // ******************************************************************
 xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DTexture_GetSurfaceLevel2)
 (
@@ -10168,7 +10166,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetTile)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_GetMaterial
+// * patch: XGSetVertexBufferHeader
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 (
@@ -13435,7 +13433,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 		memcpy(&pPush_local[4], pData, sizeof(float) * 4);
 	}
 	else {
-		pPush_local[3]= 0; // No pData
+		pPush_local[3] = 0; // No pData
 	}
 
 	HLE_PushEnd(dword_count);
@@ -13598,7 +13596,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockOnFence)
 }
 
 // ******************************************************************
-// * patch: IDirect3DResource8_BlockUntilNotBusy
+// * patch: D3DResource_BlockUntilNotBusy (was IDirect3DResource8_BlockUntilNotBusy)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DResource_BlockUntilNotBusy)
 (
@@ -13939,9 +13937,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateVB_8)(addr_xt _this, ulong_x
 	LOG_UNIMPLEMENTED();
 }
 
-// ******************************************************************
-// * patch: CDevice_SetStateUP (D3D::CDevice::SetStateUP)
-// ******************************************************************
 xbox::void_xt CxbxrImpl_CDevice_SetStateUP(xbox::addr_xt _this)
 {
 	LOG_UNIMPLEMENTED();
@@ -13950,6 +13945,9 @@ xbox::void_xt CxbxrImpl_CDevice_SetStateUP(xbox::addr_xt _this)
 	//__asm int 3;
 }
 
+// ******************************************************************
+// * patch: CDevice_SetStateUP (D3D::CDevice::SetStateUP)
+// ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP)()
 {
 	addr_xt _this; // Keep unassigned, because it's set in assembly
@@ -14521,14 +14519,14 @@ void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
     XB_TRMP(D3D_DestroyResource)(pResource);
 }
 
-// ******************************************************************
-// * patch: D3D_DestroyResource_LTCG
-// ******************************************************************
 static void D3D_DestroyResource__LTCG(xbox::X_D3DResource* pResource)
 {
 	LOG_FUNC_ONE_ARG(pResource);
 }
 
+// ******************************************************************
+// * patch: D3D_DestroyResource_LTCG
+// ******************************************************************
 LTCG_DECL void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
 {
     X_D3DResource* pResource; // = nullptr initialized auto or register variable not allowed at function scope in 'naked' function
@@ -14591,7 +14589,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 }
 
 // ******************************************************************
-// * patch: D3D::LazySetPointParams
+// * patch: D3D_LazySetPointParams (D3D::LazySetPointParams)
 // ******************************************************************
 void WINAPI xbox::EMUPATCH(D3D_LazySetPointParams)
 (

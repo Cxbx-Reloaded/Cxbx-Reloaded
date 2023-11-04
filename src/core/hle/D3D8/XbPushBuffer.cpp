@@ -1133,8 +1133,10 @@ extern void CxbxrSetWNearFarInverseWFar(float& WNear, float& WFar, float& WInver
 extern void CxbxrGetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar);
 extern float CxbxrGetZScale(void);
 extern void GetRenderTargetRawDimensions(float& x, float& y, xbox::X_D3DSurface* rt);
+
 xbox::X_D3DVIEWPORT8 HLEViewport;
 bool NV2A_viewport_dirty = false;
+
 void pgraph_ComposeViewport(NV2AState *d)
 {
 	PGRAPHState *pg = &d->pgraph;
@@ -1219,8 +1221,6 @@ void pgraph_ComposeViewport(NV2AState *d)
 		Viewport.MaxZ = (fm33 / ScaleZ) + Viewport.MinZ;
 		Viewport.Height = (DWORD)(fm22 / (-0.5*ScaleY));
 		Viewport.Width = (DWORD)(fm11 / (0.5*ScaleX));
-
-
 	}
 	if((pg->KelvinPrimitive.SetAntiAliasingControl & NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE) !=0)
 	{
@@ -1230,8 +1230,6 @@ void pgraph_ComposeViewport(NV2AState *d)
 	Viewport.X = (DWORD)((xViewport - ScreenSpaceOffsetX) / ScaleX);
 	Viewport.Y = (DWORD)((yViewport - ScreenSpaceOffsetX) / ScaleY);
 	
-	extern xbox::X_D3DVIEWPORT8 HLE_Viewport;
-	extern xbox::X_D3DVIEWPORT8 g_Xbox_Viewport;
 	CxbxrSetViewport(Viewport);
 }
 
