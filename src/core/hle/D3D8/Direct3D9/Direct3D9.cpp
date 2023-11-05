@@ -4360,7 +4360,11 @@ void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y)
 // ******************************************************************
 // * patch: D3DDevice_SetBackBufferScale
 // ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, float_xt y)
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)
+(
+	float_xt x,
+	float_xt y
+)
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(x)
@@ -5189,7 +5193,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 #else
 	const int dword_count = 9;
 
-	DWORD* pPush_local = HLE_PushPrepare(X_D3DAPI_ENUM::X_D3DDevice_RunVertexStateShader, dword_count);
+	DWORD* pPush_local = HLE_PushPrepare(X_D3DAPI_ENUM::X_D3DDevice_SetViewport, dword_count);
+	// special case: pPush_local[2] is actually pointing to pPush_local[3] where pPush_local[] would be over written by other patched HLE apis so we have to preserve the viewport and call CxbxImpl_SetViewport() with the preserved viewport.
 
 	// pass the pViewport and it's content to pushbuffer.
 	if (pViewport) {
@@ -7381,7 +7386,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host surface level - falling through to regular surface creation");
 		}
-		FALL_THROUGH // from case xbox::X_D3DRTYPE_SURFACE to xbox::X_D3DRTYPE_VOLUME
+		[[fallthrough]]; // from case xbox::X_D3DRTYPE_SURFACE to xbox::X_D3DRTYPE_VOLUME
 	}
 	case xbox::X_D3DRTYPE_VOLUME: {
 		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design) 
@@ -7403,10 +7408,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host volume level - falling through to regular volume creation");
 		}
-		FALL_THROUGH // from case xbox::X_D3DRTYPE_VOLUME to xbox::X_D3DRTYPE_TEXTURE
+		[[fallthrough]]; // from case xbox::X_D3DRTYPE_VOLUME to xbox::X_D3DRTYPE_TEXTURE
 	}
-	case xbox::X_D3DRTYPE_TEXTURE: FALL_THROUGH
-	case xbox::X_D3DRTYPE_VOLUMETEXTURE: FALL_THROUGH
+	case xbox::X_D3DRTYPE_TEXTURE: [[fallthrough]];
+	case xbox::X_D3DRTYPE_VOLUMETEXTURE: [[fallthrough]];
 	case xbox::X_D3DRTYPE_CUBETEXTURE: {
 		xbox::X_D3DPixelContainer *pPixelContainer = (xbox::X_D3DPixelContainer*)pResource;
 		xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);

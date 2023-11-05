@@ -1824,7 +1824,7 @@ int pgraph_handle_method(
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
                 //case NV097_SET_OBJECT:
-                case HLE_API_METHOD:
+                case HLE_API_METHOD: [[fallthrough]];
 				case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
 				// NV097_ARRAY_ELEMENT32 is PUSH_INSTR_IMM_INC, test case: Otogi. it's logical since NV097_ARRAY_ELEMENT32 is used to transfer the last odd index, if there were one.
@@ -1907,15 +1907,15 @@ int pgraph_handle_method(
                     case X_D3DDevice_DeletePixelShader:  break;
                     case X_D3DDevice_DeleteStateBlock:  break;
                     case X_D3DDevice_DeleteVertexShader:  break;
-                    case X_D3DDevice_DrawIndexedPrimitive: FALL_THROUGH
-                    case X_D3DDevice_DrawIndexedPrimitiveUP: FALL_THROUGH
-                    case X_D3DDevice_DrawIndexedVertices: FALL_THROUGH
-                    case X_D3DDevice_DrawIndexedVerticesUP: FALL_THROUGH
-                    case X_D3DDevice_DrawPrimitive: FALL_THROUGH
-                    case X_D3DDevice_DrawPrimitiveUP: FALL_THROUGH
-                    case X_D3DDevice_DrawRectPatch: FALL_THROUGH
-                    case X_D3DDevice_DrawTriPatch: FALL_THROUGH
-                    case X_D3DDevice_DrawVertices: FALL_THROUGH
+                    case X_D3DDevice_DrawIndexedPrimitive: [[fallthrough]];
+                    case X_D3DDevice_DrawIndexedPrimitiveUP: [[fallthrough]];
+                    case X_D3DDevice_DrawIndexedVertices: [[fallthrough]];
+                    case X_D3DDevice_DrawIndexedVerticesUP: [[fallthrough]];
+                    case X_D3DDevice_DrawPrimitive: [[fallthrough]];
+                    case X_D3DDevice_DrawPrimitiveUP: [[fallthrough]];
+                    case X_D3DDevice_DrawRectPatch: [[fallthrough]];
+                    case X_D3DDevice_DrawTriPatch: [[fallthrough]];
+                    case X_D3DDevice_DrawVertices: [[fallthrough]];
                     case X_D3DDevice_DrawVerticesUP:
                         CxbxUpdateNativeD3DResources();
                         *(bool*)argv[1] = false;
@@ -2128,7 +2128,6 @@ int pgraph_handle_method(
                     case X_D3DDevice_SetVertexShaderInputDirect:  break;
                     case X_D3DDevice_SetVerticalBlankCallback:  break;
                     case X_D3DDevice_SetViewport:
-                        // todo: special case:argv[1] is actually pointing to PBTokenArray[3] where PBTokenArray[] would be over written by other patched HLE apis so we have to preserve the viewport and call CxbxImpl_SetViewport() with the preserved viewport.
                         extern xbox::X_D3DVIEWPORT8 HLEViewport;
                         if (argv[1] != 0) {
                             HLEViewport = *(xbox::X_D3DVIEWPORT8*)&argv[2];
@@ -2265,8 +2264,7 @@ int pgraph_handle_method(
                         // newer XDK version uses software method 0xC/0xD (NVX_PUSH_BUFFER_NEW_JUMP/NVX_PUSH_BUFFER_NEW_CALL)for fixed up info stored in d3d device, 0xE (NVX_PUSH_BUFFER_NEW_FIXUP)for fixed up info stored in pushbuffer right after jump command.
                         */
                         //pFixupInfo is passed via pg->KelvinPrimitive.SetZStencilClearValue, it's supposed to be the address in pushbuffer right after jump command.
-                        case NVX_PUSH_BUFFER_RUN:
-                            //break; //fall through
+                        case NVX_PUSH_BUFFER_RUN: [[fallthrough]];
                         case NVX_PUSH_BUFFER_FIXUP:
                             pFixupInfo = (DWORD*)(pg->KelvinPrimitive.SetZStencilClearValue | 0x80000000);
                             D3DBuffer_ApplyFixup((DWORD*)pFixupInfo[4], (DWORD*)pFixupInfo[3], (DWORD*)((pFixupInfo[2] & 0x0FFFFFFC) | 0x80000000), ((pFixupInfo[0] & 0x0FFFFFFC) | 0x80000000));
@@ -2314,7 +2312,7 @@ int pgraph_handle_method(
                         case NVX_READ_CALLBACK:
                             //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_READ,(xbox::X_D3DCALLBACK) pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
                             //((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);
-                            //break; //fall through
+                            [[fallthrough]];
                         case NVX_WRITE_CALLBACK:
                             //CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACK_WRITE, (xbox::X_D3DCALLBACK)pg->KelvinPrimitive.SetZStencilClearValue, pg->KelvinPrimitive.SetColorClearValue);
                             ((xbox::X_D3DCALLBACK)(pg->KelvinPrimitive.SetZStencilClearValue))(pg->KelvinPrimitive.SetColorClearValue);

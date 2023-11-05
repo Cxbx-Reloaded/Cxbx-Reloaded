@@ -55,17 +55,6 @@ extern bool g_bIntegrityChecking;
 #define CXBX_CHECK_INTEGRITY()
 #endif
 
-#if defined(_MSC_VER)
-	#define FALL_THROUGH [[fallthrough]];
-//	#define FALL_THROUGH __fallthrough;
-#elif defined(__GNUC__) && __GNUC__ >= 7 || defined(__clang__) && __clang_major__ >= 12
-	#define FALL_THROUGH __attribute__ ((fallthrough))
-#else
-	#define FALL_THROUGH ((void)0)
-	// or #define FALL_THROUGH do {} while (0)
-#endif
-
-
 /*! debug mode choices */
 enum DebugMode { DM_NONE, DM_CONSOLE, DM_FILE };
 
