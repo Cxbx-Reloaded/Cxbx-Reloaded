@@ -1530,6 +1530,327 @@ extern XboxRenderStateConverter XboxRenderStates; // temp glue
 extern XboxRenderStateConverter NV2ARenderStates; // temp glue
 extern XboxTextureStateConverter NV2ATextureStates;
 
+void HLE_API_handle_method
+(
+    uint32_t* argv
+)
+{
+    X_D3DAPI_ENUM hleAPI;
+    hleAPI = (X_D3DAPI_ENUM)argv[0];
+    switch (hleAPI)
+    {
+    //case X_CDevice_SetStateUP:  break;
+    //case X_CDevice_SetStateVB:  break;
+    case X_D3DDevice_ApplyStateBlock:  break;
+    case X_D3DDevice_Begin: CxbxrImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]); break;
+    case X_D3DDevice_BeginPush:  break;
+    case X_D3DDevice_BeginPushBuffer:  break;
+    case X_D3DDevice_BeginScene:  break;
+    case X_D3DDevice_BeginState:  break;	case X_D3DDevice_BeginStateBig:  break;
+    case X_D3DDevice_BeginStateBlock:  break;
+    case X_D3DDevice_BeginVisibilityTest:
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_BlockOnFence:  break;
+    case X_D3DDevice_BlockUntilIdle:  break;
+    case X_D3DDevice_BlockUntilVerticalBlank:
+        CxbxrImpl_BlockUntilVerticalBlank();
+        break;
+    case X_D3DDevice_CaptureStateBlock:  break;
+    case X_D3DDevice_Clear:
+        CxbxrImpl_Clear((xbox::dword_xt)argv[1], (D3DRECT*)argv[2], (xbox::dword_xt)argv[3], (D3DCOLOR)argv[4], DWtoF(argv[5]), (xbox::dword_xt)argv[6]);
+        break;
+    case X_D3DDevice_CopyRects:
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_CreateCubeTexture:  break;
+    case X_D3DDevice_CreateDepthStencilSurface:  break;
+    case X_D3DDevice_CreateFixup:  break;
+    case X_D3DDevice_CreateImageSurface:  break;
+    case X_D3DDevice_CreateIndexBuffer:  break;
+    case X_D3DDevice_CreatePalette:  break;
+    case X_D3DDevice_CreatePixelShader:  break;
+    case X_D3DDevice_CreatePushBuffer:  break;
+    case X_D3DDevice_CreateRenderTarget:  break;
+    case X_D3DDevice_CreateStateBlock:  break;
+    case X_D3DDevice_CreateTexture:  break;
+    case X_D3DDevice_CreateTexture2:  break;
+    case X_D3DDevice_CreateVertexBuffer:  break;
+    case X_D3DDevice_CreateVertexBuffer2:  break;
+    case X_D3DDevice_CreateVertexShader:  break;
+    case X_D3DDevice_CreateVolumeTexture:  break;
+    case X_D3DDevice_DeletePatch:  break;
+    case X_D3DDevice_DeletePixelShader:  break;
+    case X_D3DDevice_DeleteStateBlock:  break;
+    case X_D3DDevice_DeleteVertexShader:  break;
+    case X_D3DDevice_DrawIndexedPrimitive: [[fallthrough]];
+    case X_D3DDevice_DrawIndexedPrimitiveUP: [[fallthrough]];
+    case X_D3DDevice_DrawIndexedVertices: [[fallthrough]];
+    case X_D3DDevice_DrawIndexedVerticesUP: [[fallthrough]];
+    case X_D3DDevice_DrawPrimitive: [[fallthrough]];
+    case X_D3DDevice_DrawPrimitiveUP: [[fallthrough]];
+    case X_D3DDevice_DrawRectPatch: [[fallthrough]];
+    case X_D3DDevice_DrawTriPatch: [[fallthrough]];
+    case X_D3DDevice_DrawVertices: [[fallthrough]];
+    case X_D3DDevice_DrawVerticesUP:
+        CxbxUpdateNativeD3DResources();
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_EnableOverlay:  break;
+    case X_D3DDevice_End:
+        CxbxrImpl_End();
+        break;
+    case X_D3DDevice_EndPush:  break;
+    case X_D3DDevice_EndPushBuffer:  break;
+    case X_D3DDevice_EndScene:  break;
+    case X_D3DDevice_EndState:  break;
+    case X_D3DDevice_EndStateBlock:  break;
+    case X_D3DDevice_EndVisibilityTest:
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_FlushVertexCache:  break;
+    case X_D3DDevice_GetBackBuffer:  break;
+    case X_D3DDevice_GetBackBuffer2:  break;
+    case X_D3DDevice_GetBackBufferScale:  break;
+    case X_D3DDevice_GetBackMaterial:  break;
+    case X_D3DDevice_GetCopyRectsState:  break;
+    case X_D3DDevice_GetCreationParameters:  break;
+    case X_D3DDevice_GetDebugMarker:  break;
+    case X_D3DDevice_GetDepthClipPlanes:  break;
+    case X_D3DDevice_GetDepthStencilSurface:  break;
+    case X_D3DDevice_GetDepthStencilSurface2:  break;
+    case X_D3DDevice_GetDeviceCaps:  break;
+    case X_D3DDevice_GetDirect3D:  break;
+    case X_D3DDevice_GetDisplayFieldStatus:  break;
+    case X_D3DDevice_GetDisplayMode:  break;
+    case X_D3DDevice_GetGammaRamp:
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_GetIndices:  break;
+    case X_D3DDevice_GetLight:  break;
+    case X_D3DDevice_GetLightEnable:  break;
+    case X_D3DDevice_GetMaterial:  break;
+    case X_D3DDevice_GetModelView:  break;
+    case X_D3DDevice_GetOverlayUpdateStatus:  break;
+    case X_D3DDevice_GetOverscanColor:  break;
+    case X_D3DDevice_GetPalette:  break;
+    case X_D3DDevice_GetPersistedSurface:
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_GetPixelShader:  break;
+    case X_D3DDevice_GetPixelShaderConstant:  break;
+    case X_D3DDevice_GetPixelShaderFunction:  break;
+    case X_D3DDevice_GetProjectionViewportMatrix:  break;
+    case X_D3DDevice_GetPushBufferOffset:  break;
+    case X_D3DDevice_GetPushDistance:  break;
+    case X_D3DDevice_GetRasterStatus:  break;
+    case X_D3DDevice_GetRenderState:  break;
+    case X_D3DDevice_GetRenderTarget:  break;
+    case X_D3DDevice_GetRenderTarget2:  break;
+    case X_D3DDevice_GetScissors:  break;
+    case X_D3DDevice_GetScreenSpaceOffset:  break;
+    case X_D3DDevice_GetShaderConstantMode:  break;
+    case X_D3DDevice_GetStipple:  break;
+    case X_D3DDevice_GetStreamSource:  break;
+    case X_D3DDevice_GetTexture:  break;
+    case X_D3DDevice_GetTextureStageState:  break;
+    case X_D3DDevice_GetTile:  break;
+    case X_D3DDevice_GetTileCompressionTags:  break;
+    case X_D3DDevice_GetTransform:  break;
+    case X_D3DDevice_GetVertexBlendModelView:  break;
+    case X_D3DDevice_GetVertexShader:  break;
+    case X_D3DDevice_GetVertexShaderConstant:  break;
+    case X_D3DDevice_GetVertexShaderDeclaration:  break;
+    case X_D3DDevice_GetVertexShaderFunction:  break;
+    case X_D3DDevice_GetVertexShaderInput:  break;
+    case X_D3DDevice_GetVertexShaderSize:  break;
+    case X_D3DDevice_GetVertexShaderType:  break;
+    case X_D3DDevice_GetViewport:  break;
+    case X_D3DDevice_GetViewportOffsetAndScale:  break;
+    case X_D3DDevice_GetVisibilityTestResult:  break;
+    case X_D3DDevice_InsertCallback:  break;
+    case X_D3DDevice_InsertFence:  break;
+    case X_D3DDevice_IsBusy:  break;
+    case X_D3DDevice_IsFencePending:  break;
+    case X_D3DDevice_KickPushBuffer:  break;
+    case X_D3DDevice_LightEnable:
+        CxbxrImpl_LightEnable((xbox::dword_xt) /* Index */ argv[1], (xbox::bool_xt) /* bEnable */ argv[2]);
+        break;
+    case X_D3DDevice_LoadVertexShader:
+        CxbxrImpl_LoadVertexShader(argv[1], argv[2]);
+        break;
+    case X_D3DDevice_LoadVertexShaderProgram:
+        CxbxrImpl_LoadVertexShaderProgram((DWORD*)argv[1], argv[2]);
+        break;
+    case X_D3DDevice_MultiplyTransform:  break;
+    case X_D3DDevice_Nop:  break;
+    case X_D3DDevice_PersistDisplay:
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_Present:
+#define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+
+        //CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
+        * (bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_PrimeVertexCache:  break;
+    case X_D3DDevice_Reset:
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_RunPushBuffer:
+        //todo: RunPushbuffer() could be nested, here we assume it only runs in one level. 
+        if (argv[1] != 0) {
+            //NV2A_stateFlags |= X_STATE_RUNPUSHBUFFERWASCALLED;
+            pgraph_SetNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
+            if (argv[3] != 0)
+                *(bool*)argv[3] = false;
+        }
+        else {
+            //NV2A_stateFlags &= !X_STATE_RUNPUSHBUFFERWASCALLED;
+            pgraph_ClearNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
+            if (argv[2] != 0)
+                *(bool*)argv[2] = false;
+        }
+        break;
+    case X_D3DDevice_RunVertexStateShader:
+        CxbxrImpl_RunVertexStateShader(argv[1], (xbox::float_xt*)argv[2]);
+        break;
+    case X_D3DDevice_SelectVertexShader:
+        CxbxrImpl_SelectVertexShader(argv[1], argv[2]);
+        break;
+    case X_D3DDevice_SelectVertexShaderDirect:  break;
+    case X_D3DDevice_SetBackBufferScale:
+        CxbxrImpl_SetBackBufferScale((xbox::float_xt)DWtoF(argv[1]), (xbox::float_xt)DWtoF(argv[2]));
+        break;
+    case X_D3DDevice_SetBackMaterial:  break;
+    case X_D3DDevice_SetCopyRectsState:  break;
+    case X_D3DDevice_SetDebugMarker:  break;
+    case X_D3DDevice_SetDepthClipPlanes:  break;
+    case X_D3DDevice_SetFlickerFilter:  break;
+    case X_D3DDevice_SetGammaRamp:
+        CxbxrImpl__SetGammaRamp((xbox::dword_xt)/* dwFlags*/argv[1], (D3DGAMMARAMP*)/* pRamp*/argv[2]);
+        *(bool*)argv[3] = false;
+        break;
+    case X_D3DDevice_SetIndices:
+        CxbxrImpl_SetIndices((xbox::X_D3DIndexBuffer*)/* pIndexData */argv[1], (xbox::uint_xt) /* BaseVertexIndex */ argv[2]);
+        break;
+    case X_D3DDevice_SetLight:
+        CxbxrImpl_SetLight((xbox::dword_xt) /* Index */ argv[1], (CONST xbox::X_D3DLIGHT8*) /* pLight */ argv[2]);
+        break;
+    case X_D3DDevice_SetMaterial:
+        CxbxrImpl_SetMaterial((CONST xbox::X_D3DMATERIAL8*)/* pMaterial */argv[1]);
+        break;
+    case X_D3DDevice_SetModelView:
+        CxbxrImpl_SetModelView((CONST D3DMATRIX*)/*pModelView*/argv[1], (CONST D3DMATRIX*)/*pInverseModelView*/argv[2], (CONST D3DMATRIX*) /*pComposite*/argv[3]);
+        break;
+    case X_D3DDevice_SetOverscanColor:  break;
+    case X_D3DDevice_SetPalette:
+        CxbxrImpl_SetPalette((xbox::dword_xt)/* Stage */argv[1], (xbox::X_D3DPalette*)/* pPalette */argv[2]);
+        break;
+    case X_D3DDevice_SetPixelShader:
+        CxbxrImpl_SetPixelShader((xbox::dword_xt)/*Handle*/argv[1]);
+        break;
+    case X_D3DDevice_SetPixelShaderConstant:  break;
+    case X_D3DDevice_SetPixelShaderProgram:  break;
+    case X_D3DDevice_SetRenderState:  break;
+    case X_D3DDevice_SetRenderState_Simple:  break;
+    case X_D3DDevice_SetRenderStateNotInline:  break;
+    case X_D3DDevice_SetRenderTarget:
+        CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
+        // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
+        CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
+        break;
+    case X_D3DDevice_SetScissors:  break;
+    case X_D3DDevice_SetScreenSpaceOffset:
+        CxbxrImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
+        break;
+    case X_D3DDevice_SetShaderConstantMode:
+        CxbxrImpl_SetShaderConstantMode((xbox::X_VERTEXSHADERCONSTANTMODE)argv[1]);
+        break;
+    case X_D3DDevice_SetSoftDisplayFilter:  break;
+    case X_D3DDevice_SetStipple:  break;
+    case X_D3DDevice_SetStreamSource:
+        CxbxrImpl_SetStreamSource((UINT)argv[1], (xbox::X_D3DVertexBuffer*)argv[2], (UINT)argv[3]);
+        break;
+    case X_D3DDevice_SetSwapCallback:  break;
+    case X_D3DDevice_SetTexture:
+        CxbxrImpl_SetTexture((xbox::dword_xt)argv[1], (xbox::X_D3DBaseTexture*)argv[2]);
+        break;
+    case X_D3DDevice_SetTextureStageState:  break;
+    case X_D3DDevice_SetTextureStageStateNotInline:  break;
+    case X_D3DDevice_SetTile:
+        if (argv[3] != 0)
+            *(bool*)argv[3] = false;
+        break;
+    case X_D3DDevice_SetTimerCallback:  break;
+    case X_D3DDevice_SetTransform:
+        CxbxrImpl_SetTransform((xbox::X_D3DTRANSFORMSTATETYPE)argv[1], (CONST D3DMATRIX*)argv[2]);
+        break;
+    case X_D3DDevice_SetVertexBlendModelView:  break;
+    case X_D3DDevice_SetVertexData2f:  break;
+    case X_D3DDevice_SetVertexData2s:  break;
+    case X_D3DDevice_SetVertexData4f:
+        CxbxrImpl_SetVertexData4f(argv[1], DWtoF(argv[2]), DWtoF(argv[3]), DWtoF(argv[4]), DWtoF(argv[5]));
+        break;
+    case X_D3DDevice_SetVertexData4f_16:  break;
+    case X_D3DDevice_SetVertexData4s:  break;
+    case X_D3DDevice_SetVertexData4ub:  break;
+    case X_D3DDevice_SetVertexDataColor:  break;
+    case X_D3DDevice_SetVertexShader:
+        CxbxrImpl_SetVertexShader((DWORD)argv[1]);
+        break;
+    case X_D3DDevice_SetVertexShaderConstant:  break;
+    case X_D3DDevice_SetVertexShaderInput:  break;
+    case X_D3DDevice_SetVertexShaderInputDirect:  break;
+    case X_D3DDevice_SetVerticalBlankCallback:  break;
+    case X_D3DDevice_SetViewport:
+        extern xbox::X_D3DVIEWPORT8 HLEViewport;
+        if (argv[1] != 0) {
+            HLEViewport = *(xbox::X_D3DVIEWPORT8*)&argv[2];
+            CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8*)&HLEViewport);
+        }
+        CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8*)argv[1]);
+        break;
+    case X_D3DDevice_SetWaitCallback:  break;
+    case X_D3DDevice_Swap:
+        //CxbxrImpl_Swap(argv[1]);
+        *(bool*)argv[1] = false;
+        break;
+    case X_D3DDevice_SwitchTexture:
+        CxbxrImpl_SwitchTexture((xbox::dword_xt)argv[1], (xbox::dword_xt)argv[2], (xbox::dword_xt)argv[3]);
+        break;
+    case X_D3DDevice_UpdateOverlay:  break;
+    case X_D3DResource_BlockUntilNotBusy:  break;
+    case X_D3D_BlockOnTime:  break;
+    case X_D3D_CommonSetRenderTarget:
+        //todo:this might be redundant because the HLE implementation of this api never set the call level, so this patch will always calls CxbxrImpl_SetRenderTarget(). we might use the fall through directly.
+        CxbxrImpl_D3D_CommonSetRenderTarget((xbox::X_D3DSurface*)/* pRenderTarget*/argv[1], (xbox::X_D3DSurface*)/* pNewZStencil*/argv[2], (void*)/* unknown*/argv[3]);
+        // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
+        CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
+        break;
+    case X_D3D_DestroyResource:
+        CxbxrImpl_DestroyResource((xbox::X_D3DResource*)argv[1]);
+        break;
+    case X_D3D_LazySetPointParams:  break;
+    case X_D3D_SetCommonDebugRegisters:  break;
+    case X_Direct3D_CreateDevice:  break;
+    case X_Lock2DSurface:
+        //CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
+        *(bool*)argv[1] = false;
+        break;
+    case X_Lock3DSurface:
+        //CxbxrImpl_Lock3DSurface((xbox::X_D3DPixelContainer*)/* pPixelContainer*/argv[1], (xbox::uint_xt)/*Level*/argv[2], (D3DLOCKED_BOX*)/* pLockedVolume*/argv[3], (D3DBOX*)/* pBox*/argv[4], (xbox::dword_xt)/*Flags*/argv[5]);
+        *(bool*)argv[1] = false;
+        break;
+    case X_EmuKickOffWait:
+        //argv[2] is the token of the API which calls EmuKickOffWait()
+        if (argv[1] != 0)
+            *(DWORD*)argv[1] = 0;
+        break;
+    default:break;
+    }
+}
+
 //method count always represnt total dword needed as the arguments following the method.
 //caller must ensure there are enough argements available in argv.
 int pgraph_handle_method(
@@ -1858,322 +2179,7 @@ int pgraph_handle_method(
                 case NV097_SET_OBJECT://done
                     break;
                 case HLE_API_METHOD:
-                {
-                    X_D3DAPI_ENUM hleAPI;
-                    hleAPI = (X_D3DAPI_ENUM)argv[0];
-                    switch (hleAPI)
-                    {
-                    //case X_CDevice_SetStateUP:  break;
-                    //case X_CDevice_SetStateVB:  break;
-                    case X_D3DDevice_ApplyStateBlock:  break;
-                    case X_D3DDevice_Begin: CxbxrImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]); break;
-                    case X_D3DDevice_BeginPush:  break;
-                    case X_D3DDevice_BeginPushBuffer:  break;
-                    case X_D3DDevice_BeginScene:  break;
-                    case X_D3DDevice_BeginState:  break;	case X_D3DDevice_BeginStateBig:  break;
-                    case X_D3DDevice_BeginStateBlock:  break;
-                    case X_D3DDevice_BeginVisibilityTest:
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_BlockOnFence:  break;
-                    case X_D3DDevice_BlockUntilIdle:  break;
-                    case X_D3DDevice_BlockUntilVerticalBlank:
-                        CxbxrImpl_BlockUntilVerticalBlank();
-                        break;
-                    case X_D3DDevice_CaptureStateBlock:  break;
-                    case X_D3DDevice_Clear:
-                        CxbxrImpl_Clear((xbox::dword_xt) argv[1], (D3DRECT *)argv[2], (xbox::dword_xt) argv[3], (D3DCOLOR) argv[4], DWtoF(argv[5]), (xbox::dword_xt) argv[6]);
-                        break;
-                    case X_D3DDevice_CopyRects:
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_CreateCubeTexture:  break;
-                    case X_D3DDevice_CreateDepthStencilSurface:  break;
-                    case X_D3DDevice_CreateFixup:  break;
-                    case X_D3DDevice_CreateImageSurface:  break;
-                    case X_D3DDevice_CreateIndexBuffer:  break;
-                    case X_D3DDevice_CreatePalette:  break;
-                    case X_D3DDevice_CreatePixelShader:  break;
-                    case X_D3DDevice_CreatePushBuffer:  break;
-                    case X_D3DDevice_CreateRenderTarget:  break;
-                    case X_D3DDevice_CreateStateBlock:  break;
-                    case X_D3DDevice_CreateTexture:  break;
-                    case X_D3DDevice_CreateTexture2:  break;
-                    case X_D3DDevice_CreateVertexBuffer:  break;
-                    case X_D3DDevice_CreateVertexBuffer2:  break;
-                    case X_D3DDevice_CreateVertexShader:  break;
-                    case X_D3DDevice_CreateVolumeTexture:  break;
-                    case X_D3DDevice_DeletePatch:  break;
-                    case X_D3DDevice_DeletePixelShader:  break;
-                    case X_D3DDevice_DeleteStateBlock:  break;
-                    case X_D3DDevice_DeleteVertexShader:  break;
-                    case X_D3DDevice_DrawIndexedPrimitive: [[fallthrough]];
-                    case X_D3DDevice_DrawIndexedPrimitiveUP: [[fallthrough]];
-                    case X_D3DDevice_DrawIndexedVertices: [[fallthrough]];
-                    case X_D3DDevice_DrawIndexedVerticesUP: [[fallthrough]];
-                    case X_D3DDevice_DrawPrimitive: [[fallthrough]];
-                    case X_D3DDevice_DrawPrimitiveUP: [[fallthrough]];
-                    case X_D3DDevice_DrawRectPatch: [[fallthrough]];
-                    case X_D3DDevice_DrawTriPatch: [[fallthrough]];
-                    case X_D3DDevice_DrawVertices: [[fallthrough]];
-                    case X_D3DDevice_DrawVerticesUP:
-                        CxbxUpdateNativeD3DResources();
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_EnableOverlay:  break;
-                    case X_D3DDevice_End:
-                        CxbxrImpl_End();
-                        break;
-                    case X_D3DDevice_EndPush:  break;
-                    case X_D3DDevice_EndPushBuffer:  break;
-                    case X_D3DDevice_EndScene:  break;
-                    case X_D3DDevice_EndState:  break;
-                    case X_D3DDevice_EndStateBlock:  break;
-                    case X_D3DDevice_EndVisibilityTest:
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_FlushVertexCache:  break;
-                    case X_D3DDevice_GetBackBuffer:  break;
-                    case X_D3DDevice_GetBackBuffer2:  break;
-                    case X_D3DDevice_GetBackBufferScale:  break;
-                    case X_D3DDevice_GetBackMaterial:  break;
-                    case X_D3DDevice_GetCopyRectsState:  break;
-                    case X_D3DDevice_GetCreationParameters:  break;
-                    case X_D3DDevice_GetDebugMarker:  break;
-                    case X_D3DDevice_GetDepthClipPlanes:  break;
-                    case X_D3DDevice_GetDepthStencilSurface:  break;
-                    case X_D3DDevice_GetDepthStencilSurface2:  break;
-                    case X_D3DDevice_GetDeviceCaps:  break;
-                    case X_D3DDevice_GetDirect3D:  break;
-                    case X_D3DDevice_GetDisplayFieldStatus:  break;
-                    case X_D3DDevice_GetDisplayMode:  break;
-                    case X_D3DDevice_GetGammaRamp:
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_GetIndices:  break;
-                    case X_D3DDevice_GetLight:  break;
-                    case X_D3DDevice_GetLightEnable:  break;
-                    case X_D3DDevice_GetMaterial:  break;
-                    case X_D3DDevice_GetModelView:  break;
-                    case X_D3DDevice_GetOverlayUpdateStatus:  break;
-                    case X_D3DDevice_GetOverscanColor:  break;
-                    case X_D3DDevice_GetPalette:  break;
-                    case X_D3DDevice_GetPersistedSurface:
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_GetPixelShader:  break;
-                    case X_D3DDevice_GetPixelShaderConstant:  break;
-                    case X_D3DDevice_GetPixelShaderFunction:  break;
-                    case X_D3DDevice_GetProjectionViewportMatrix:  break;
-                    case X_D3DDevice_GetPushBufferOffset:  break;
-                    case X_D3DDevice_GetPushDistance:  break;
-                    case X_D3DDevice_GetRasterStatus:  break;
-                    case X_D3DDevice_GetRenderState:  break;
-                    case X_D3DDevice_GetRenderTarget:  break;
-                    case X_D3DDevice_GetRenderTarget2:  break;
-                    case X_D3DDevice_GetScissors:  break;
-                    case X_D3DDevice_GetScreenSpaceOffset:  break;
-                    case X_D3DDevice_GetShaderConstantMode:  break;
-                    case X_D3DDevice_GetStipple:  break;
-                    case X_D3DDevice_GetStreamSource:  break;
-                    case X_D3DDevice_GetTexture:  break;
-                    case X_D3DDevice_GetTextureStageState:  break;
-                    case X_D3DDevice_GetTile:  break;
-                    case X_D3DDevice_GetTileCompressionTags:  break;
-                    case X_D3DDevice_GetTransform:  break;
-                    case X_D3DDevice_GetVertexBlendModelView:  break;
-                    case X_D3DDevice_GetVertexShader:  break;
-                    case X_D3DDevice_GetVertexShaderConstant:  break;
-                    case X_D3DDevice_GetVertexShaderDeclaration:  break;
-                    case X_D3DDevice_GetVertexShaderFunction:  break;
-                    case X_D3DDevice_GetVertexShaderInput:  break;
-                    case X_D3DDevice_GetVertexShaderSize:  break;
-                    case X_D3DDevice_GetVertexShaderType:  break;
-                    case X_D3DDevice_GetViewport:  break;
-                    case X_D3DDevice_GetViewportOffsetAndScale:  break;
-                    case X_D3DDevice_GetVisibilityTestResult:  break;
-                    case X_D3DDevice_InsertCallback:  break;
-                    case X_D3DDevice_InsertFence:  break;
-                    case X_D3DDevice_IsBusy:  break;
-                    case X_D3DDevice_IsFencePending:  break;
-                    case X_D3DDevice_KickPushBuffer:  break;
-                    case X_D3DDevice_LightEnable:
-                        CxbxrImpl_LightEnable((xbox::dword_xt) /* Index */ argv[1], (xbox::bool_xt) /* bEnable */ argv[2]);
-                        break;
-                    case X_D3DDevice_LoadVertexShader:
-                        CxbxrImpl_LoadVertexShader(argv[1], argv[2]);
-                        break;
-                    case X_D3DDevice_LoadVertexShaderProgram:
-                        CxbxrImpl_LoadVertexShaderProgram((DWORD * )argv[1], argv[2]);
-                        break;
-                    case X_D3DDevice_MultiplyTransform:  break;
-                    case X_D3DDevice_Nop:  break;
-                    case X_D3DDevice_PersistDisplay:
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_Present:
-#define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
-
-                        //CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
-                        * (bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_PrimeVertexCache:  break;
-                    case X_D3DDevice_Reset:
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_RunPushBuffer:
-                        //todo: RunPushbuffer() could be nested, here we assume it only runs in one level. 
-                        if (argv[1] != 0) {
-                            //NV2A_stateFlags |= X_STATE_RUNPUSHBUFFERWASCALLED;
-                            pgraph_SetNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
-                            if (argv[3] != 0)
-                                *(bool*)argv[3] = false;
-                        }
-                        else {
-                            //NV2A_stateFlags &= !X_STATE_RUNPUSHBUFFERWASCALLED;
-                            pgraph_ClearNV2AStateFlag(X_STATE_RUNPUSHBUFFERWASCALLED);
-                            if (argv[2] != 0)
-                                *(bool*)argv[2] = false;
-                        }
-                        break;
-                    case X_D3DDevice_RunVertexStateShader:
-                        CxbxrImpl_RunVertexStateShader(argv[1], (xbox::float_xt*)argv[2]);
-                        break;
-                    case X_D3DDevice_SelectVertexShader:
-                        CxbxrImpl_SelectVertexShader(argv[1], argv[2]);
-                        break;
-                    case X_D3DDevice_SelectVertexShaderDirect:  break;
-                    case X_D3DDevice_SetBackBufferScale:
-                        CxbxrImpl_SetBackBufferScale((xbox::float_xt) DWtoF(argv[1]), (xbox::float_xt) DWtoF(argv[2]));
-                        break;
-                    case X_D3DDevice_SetBackMaterial:  break;
-                    case X_D3DDevice_SetCopyRectsState:  break;
-                    case X_D3DDevice_SetDebugMarker:  break;
-                    case X_D3DDevice_SetDepthClipPlanes:  break;
-                    case X_D3DDevice_SetFlickerFilter:  break;
-                    case X_D3DDevice_SetGammaRamp:
-                        CxbxrImpl__SetGammaRamp((xbox::dword_xt)/* dwFlags*/argv[1], (D3DGAMMARAMP*)/* pRamp*/argv[2]);
-                        *(bool*)argv[3] = false;
-                        break;
-                    case X_D3DDevice_SetIndices:
-                        CxbxrImpl_SetIndices((xbox::X_D3DIndexBuffer *)/* pIndexData */argv[1], (xbox::uint_xt) /* BaseVertexIndex */ argv[2]);
-                        break;
-                    case X_D3DDevice_SetLight:
-                        CxbxrImpl_SetLight((xbox::dword_xt) /* Index */ argv[1], (CONST xbox::X_D3DLIGHT8*) /* pLight */ argv[2]);
-                        break;
-                    case X_D3DDevice_SetMaterial:
-                        CxbxrImpl_SetMaterial((CONST xbox::X_D3DMATERIAL8 *)/* pMaterial */argv[1]);
-                        break;
-                    case X_D3DDevice_SetModelView:
-                        CxbxrImpl_SetModelView((CONST D3DMATRIX *)/*pModelView*/argv[1], (CONST D3DMATRIX *)/*pInverseModelView*/argv[2], (CONST D3DMATRIX *) /*pComposite*/argv[3]);
-                        break;
-                    case X_D3DDevice_SetOverscanColor:  break;
-                    case X_D3DDevice_SetPalette:
-                        CxbxrImpl_SetPalette((xbox::dword_xt)/* Stage */argv[1], (xbox::X_D3DPalette *)/* pPalette */argv[2]);
-                        break;
-                    case X_D3DDevice_SetPixelShader:
-                        CxbxrImpl_SetPixelShader((xbox::dword_xt)/*Handle*/argv[1]);
-                        break;
-                    case X_D3DDevice_SetPixelShaderConstant:  break;
-                    case X_D3DDevice_SetPixelShaderProgram:  break;
-                    case X_D3DDevice_SetRenderState:  break;
-                    case X_D3DDevice_SetRenderState_Simple:  break;
-                    case X_D3DDevice_SetRenderStateNotInline:  break;
-                    case X_D3DDevice_SetRenderTarget:
-                        CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
-                        // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
-                        CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
-                        break;
-                    case X_D3DDevice_SetScissors:  break;
-                    case X_D3DDevice_SetScreenSpaceOffset:
-                        CxbxrImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
-                        break;
-                    case X_D3DDevice_SetShaderConstantMode:
-                        CxbxrImpl_SetShaderConstantMode((xbox::X_VERTEXSHADERCONSTANTMODE )argv[1]);
-                        break;
-                    case X_D3DDevice_SetSoftDisplayFilter:  break;
-                    case X_D3DDevice_SetStipple:  break;
-                    case X_D3DDevice_SetStreamSource:
-                        CxbxrImpl_SetStreamSource((UINT) argv[1], (xbox::X_D3DVertexBuffer *)argv[2], (UINT)argv[3]);
-                        break;
-                    case X_D3DDevice_SetSwapCallback:  break;
-                    case X_D3DDevice_SetTexture:
-                        CxbxrImpl_SetTexture((xbox::dword_xt) argv[1], (xbox::X_D3DBaseTexture *) argv[2]);
-                        break;
-                    case X_D3DDevice_SetTextureStageState:  break;
-                    case X_D3DDevice_SetTextureStageStateNotInline:  break;
-                    case X_D3DDevice_SetTile:
-                        if(argv[3]!=0)
-                            *(bool*)argv[3] = false;
-                        break;
-                    case X_D3DDevice_SetTimerCallback:  break;
-                    case X_D3DDevice_SetTransform:
-                        CxbxrImpl_SetTransform((xbox::X_D3DTRANSFORMSTATETYPE) argv[1], (CONST D3DMATRIX * )argv[2]);
-                        break;
-                    case X_D3DDevice_SetVertexBlendModelView:  break;
-                    case X_D3DDevice_SetVertexData2f:  break;
-                    case X_D3DDevice_SetVertexData2s:  break;
-                    case X_D3DDevice_SetVertexData4f:
-                        CxbxrImpl_SetVertexData4f(argv[1],DWtoF(argv[2]), DWtoF(argv[3]), DWtoF(argv[4]), DWtoF(argv[5]));
-                        break;
-                    case X_D3DDevice_SetVertexData4f_16:  break;
-                    case X_D3DDevice_SetVertexData4s:  break;
-                    case X_D3DDevice_SetVertexData4ub:  break;
-                    case X_D3DDevice_SetVertexDataColor:  break;
-                    case X_D3DDevice_SetVertexShader:
-                        CxbxrImpl_SetVertexShader((DWORD)argv[1]);
-                        break;
-                    case X_D3DDevice_SetVertexShaderConstant:  break;
-                    case X_D3DDevice_SetVertexShaderInput:  break;
-                    case X_D3DDevice_SetVertexShaderInputDirect:  break;
-                    case X_D3DDevice_SetVerticalBlankCallback:  break;
-                    case X_D3DDevice_SetViewport:
-                        extern xbox::X_D3DVIEWPORT8 HLEViewport;
-                        if (argv[1] != 0) {
-                            HLEViewport = *(xbox::X_D3DVIEWPORT8*)&argv[2];
-                            CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8*)&HLEViewport);
-                        }
-                        CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8 * )argv[1]);
-                        break;
-                    case X_D3DDevice_SetWaitCallback:  break;
-                    case X_D3DDevice_Swap:
-                        //CxbxrImpl_Swap(argv[1]);
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_D3DDevice_SwitchTexture:
-                        CxbxrImpl_SwitchTexture((xbox::dword_xt)argv[1], (xbox::dword_xt)argv[2], (xbox::dword_xt)argv[3]);
-                        break;
-                    case X_D3DDevice_UpdateOverlay:  break;
-                    case X_D3DResource_BlockUntilNotBusy:  break;
-                    case X_D3D_BlockOnTime:  break;
-                    case X_D3D_CommonSetRenderTarget:
-                        //todo:this might be redundant because the HLE implementation of this api never set the call level, so this patch will always calls CxbxrImpl_SetRenderTarget(). we might use the fall through directly.
-                        CxbxrImpl_D3D_CommonSetRenderTarget((xbox::X_D3DSurface*)/* pRenderTarget*/argv[1], (xbox::X_D3DSurface*)/* pNewZStencil*/argv[2], (void*)/* unknown*/argv[3]);
-                        // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
-                        CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
-                        break;
-                    case X_D3D_DestroyResource:
-                        CxbxrImpl_DestroyResource((xbox::X_D3DResource *) argv[1]);
-                        break;
-                    case X_D3D_LazySetPointParams:  break;
-                    case X_D3D_SetCommonDebugRegisters:  break;
-                    case X_Direct3D_CreateDevice:  break;
-                    case X_Lock2DSurface:
-                        //CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_Lock3DSurface:
-                        //CxbxrImpl_Lock3DSurface((xbox::X_D3DPixelContainer*)/* pPixelContainer*/argv[1], (xbox::uint_xt)/*Level*/argv[2], (D3DLOCKED_BOX*)/* pLockedVolume*/argv[3], (D3DBOX*)/* pBox*/argv[4], (xbox::dword_xt)/*Flags*/argv[5]);
-                        *(bool*)argv[1] = false;
-                        break;
-                    case X_EmuKickOffWait:
-                        //argv[2] is the token of the API which calls EmuKickOffWait()
-                        if(argv[1]!=0)
-                            *(DWORD*)argv[1] = 0;
-                        break;
-                    default:break;
-                    }
-                }
+                    HLE_API_handle_method(argv);
                     break;
                 case NV097_NO_OPERATION://done
                 {    /* The bios uses nop as a software method call -
