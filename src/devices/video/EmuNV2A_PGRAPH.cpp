@@ -1535,8 +1535,8 @@ void HLE_API_handle_method
     uint32_t* argv
 )
 {
-    X_D3DAPI_ENUM hleAPI;
-    hleAPI = (X_D3DAPI_ENUM)argv[0];
+    X_D3DAPI_ENUM hleAPI = (X_D3DAPI_ENUM)argv[0];
+
     switch (hleAPI)
     {
     //case X_CDevice_SetStateUP:  break;
@@ -2145,7 +2145,7 @@ int pgraph_handle_method(
             switch (method) { // TODO : Replace 'special cases' with check on (arg0 >> 29 == COMMAND_INSTRUCTION_NON_INCREASING_METHODS)
                 //list all special cases here.
                 //case NV097_SET_OBJECT:
-                case HLE_API_METHOD: [[fallthrough]];
+                case NV097_HLE_API: [[fallthrough]];
 				case NV097_NO_OPERATION:	//this is used as short jump or interrupt, padding in front of fixups in order to make sure fixup will be applied before the instruction enter cache.
                 //case NV097_SET_BEGIN_END://now we use pg->primitive_mode for PrititiveType state   //enclave subset of drawing instructions. need special handling.
 				// NV097_ARRAY_ELEMENT32 is PUSH_INSTR_IMM_INC, test case: Otogi. it's logical since NV097_ARRAY_ELEMENT32 is used to transfer the last odd index, if there were one.
@@ -2178,7 +2178,7 @@ int pgraph_handle_method(
             switch (method) {
                 case NV097_SET_OBJECT://done
                     break;
-                case HLE_API_METHOD:
+                case NV097_HLE_API:
                     HLE_API_handle_method(argv);
                     break;
                 case NV097_NO_OPERATION://done

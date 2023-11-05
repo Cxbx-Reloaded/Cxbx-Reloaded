@@ -194,9 +194,11 @@ typedef enum _X_D3DAPI_ENUM {
 } X_D3DAPI_ENUM;
 
 // virtual NV2A register for HLE API handler
-#define HLE_API_METHOD 0x00000080 // See COMMAND_WORD_MASK_METHOD
+#   define NV097_HLE_API                                      0x00000080 /* Snugged this method in the middle between
+#   define NV097_SET_OBJECT                                   0x00000000    the first method, and the next known one :
+#   define NV097_NO_OPERATION                                 0x00000100    Aternatively, move to the end, after NV097_DEBUG_INIT */
 
-#define HLE_PUSH_ENCODE(dword_count) PUSH_ENCODE(PUSH_INSTR_IMM_NOINC, dword_count, PUSH_SUBCH_0, HLE_API_METHOD, PUSH_TYPE_METHOD)
+#define HLE_PUSH_ENCODE(dword_count) PUSH_ENCODE(PUSH_INSTR_IMM_NOINC, dword_count, PUSH_SUBCH_0, NV097_HLE_API, PUSH_TYPE_METHOD)
 
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
 static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
@@ -334,7 +336,7 @@ D3DDevice_SetIndices_4
 
 
 /*
-notes for my trials and errors.
+jackchen notes for my trials and errors.
 
 Original idea was to use a virtual pushbuffer method to represent each patched HLE api and push the virtual pushbuffer method to pushbuffer then let pgraph method handler handle the patched HLE api later.
 this should solve the sync issue between pushbuffer and HLE api.
