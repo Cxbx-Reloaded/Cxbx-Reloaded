@@ -1804,7 +1804,7 @@ int pgraph_handle_method(
 			* TODO: Check this range is correct for the nv2a */
 
 			if (method >= 0x180 && method < 0x200) {
-				for (uint32_t argc = 0; argc < method_count; argc++) {
+				for (unsigned int argc = 0; argc < method_count; argc++) {
 					arg0 = argv[argc];
 					//qemu_mutex_lock_iothread();
 					RAMHTEntry entry = ramht_lookup(d, arg0);
@@ -1841,7 +1841,7 @@ int pgraph_handle_method(
                     assert(command_word >> 29 == COMMAND_INSTRUCTION_INCREASING_METHODS); // Actually, all other commands should be increasing (as jumps and unknown bits shouldn't arrive here!)
 
 #if 0
-                    for (int argc = 0; argc < method_count; argc++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++) {
                         pg->regs[ method/4 + argc] = argv[argc];
                     }
 #else
@@ -1863,11 +1863,11 @@ int pgraph_handle_method(
                     hleAPI = (X_D3DAPI_ENUM)argv[0];
                     switch (hleAPI)
                     {
-                    //case X_CDevice_SetStateUP:  break;	case X_CDevice_SetStateUP_4:  break;	case X_CDevice_SetStateUP_0__LTCG_esi1:  break;
-                    //case X_CDevice_SetStateVB:  break;	case X_CDevice_SetStateVB_8:  break;
+                    //case X_CDevice_SetStateUP:  break;
+                    //case X_CDevice_SetStateVB:  break;
                     case X_D3DDevice_ApplyStateBlock:  break;
                     case X_D3DDevice_Begin: CxbxrImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]); break;
-                    case X_D3DDevice_BeginPush:  break;	case X_D3DDevice_BeginPush_4:  break;	case X_D3DDevice_BeginPush_8:  break;
+                    case X_D3DDevice_BeginPush:  break;
                     case X_D3DDevice_BeginPushBuffer:  break;
                     case X_D3DDevice_BeginScene:  break;
                     case X_D3DDevice_BeginState:  break;	case X_D3DDevice_BeginStateBig:  break;
@@ -3089,7 +3089,7 @@ int pgraph_handle_method(
 					assert(0);
 					slot = (method - NV097_SET_PROJECTION_MATRIX) / 4;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         // pg->projection_matrix[slot] = *(float*)&parameter;
                         unsigned int row = NV_IGRAPH_XF_XFCTX_PMAT0 + slot / 4;
@@ -3107,7 +3107,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_MODEL_VIEW_MATRIX) / 4;
                     unsigned int matnum = slot / 16;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						matnum = slot / 16;
 						unsigned int entry = slot % 16;
@@ -3142,7 +3142,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_INVERSE_MODEL_VIEW_MATRIX) / 4;
                     unsigned int matnum;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						matnum = slot / 16;
                         unsigned int entry = slot % 16;
@@ -3166,7 +3166,7 @@ int pgraph_handle_method(
                         //KelvinPrimitive.SetCompositeMatrix[16] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_COMPOSITE_MATRIX) / 4;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         unsigned int row = NV_IGRAPH_XF_XFCTX_CMAT0 + slot / 4;
                         pg->vsh_constants[row][slot % 4] = arg0;
@@ -3184,7 +3184,7 @@ int pgraph_handle_method(
 					/*
 					// the vertex shader constant can't be update unconditionaly. it can only be update when in fixed vertex shader program, and not in 192 constant mode.
 					// when unpatch all xbox d3d apis, these conditions will be considered by xbox d3d.
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+					for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         unsigned int tex = slot / 16;
                         unsigned int entry = slot % 16;
@@ -3203,7 +3203,7 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetTexgenPlane[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_TEXGEN_PLANE_S) / 4;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         unsigned int tex = slot / 16;
                         unsigned int entry = slot % 16;
@@ -3218,7 +3218,7 @@ int pgraph_handle_method(
                 CASE_3(NV097_SET_FOG_PARAMS, 4) ://done //pg->KelvinPrimitive.SetFogParams[3]
                     //KelvinPrimitive.SetFogParams[3] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_FOG_PARAMS) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+					for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         /* Cxbx note: slot = 2 is right after slot = 1 */
                         //pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FOG_K][slot] = arg0;
@@ -3236,7 +3236,7 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetFogPlane[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_FOG_PLANE) / 4;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];                        
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_FOG][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_FOG] = true;
@@ -3247,7 +3247,7 @@ int pgraph_handle_method(
                 CASE_6(NV097_SET_SPECULAR_PARAMS, 4) ://done //pg->KelvinPrimitive.SetSpecularParams[6]
                     //KelvinPrimitive.SetSpecularParams[6] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_SPECULAR_PARAMS) / 4;
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+					for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                     // this state is not implemented yet.
                         //pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
@@ -3267,7 +3267,7 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetSceneAmbientColor[3] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_SCENE_AMBIENT_COLOR) / 4;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         pg->ltctxa[NV_IGRAPH_XF_LTCTXA_FR_AMB][slot] = arg0;
                         pg->ltctxa_dirty[NV_IGRAPH_XF_LTCTXA_FR_AMB] = true;
@@ -3280,7 +3280,7 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetViewportOffset[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_VIEWPORT_OFFSET) / 4;
                     // reserved vertex shader constant -37
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+					for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						// vertex shader constant register -37
 						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
@@ -3294,7 +3294,7 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetPointParams[8] is update already. we update the vertex shader contant as well.
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_POINTPARAMS;
 					slot = (method - NV097_SET_POINT_PARAMS) / 4;
-					//for (int argc = 0; argc < method_count; argc++, slot++) {
+					//for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         //arg0 = argv[argc];
                         //pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPOFF][slot] = arg0;
                         //pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_VPOFF] = true;
@@ -3305,7 +3305,7 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetEyePosition[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_EYE_POSITION) / 4;
                     /* //reg -40
-					for (int argc = 0; argc < method_count; argc++, slot++) {
+					for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         pg->vsh_constants[NV_IGRAPH_XF_XFCTX_EYEP][slot] = arg0;
                         pg->vsh_constants_dirty[NV_IGRAPH_XF_XFCTX_EYEP] = true;
@@ -3372,7 +3372,7 @@ int pgraph_handle_method(
                     //KelvinPrimitive.SetViewportScale[4] is update already. we update the vertex shader contant as well.
 					slot = (method - NV097_SET_VIEWPORT_SCALE) / 4;
                     
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
 						// vertex shader constant register -38 D3DVS_XBOX_RESERVEDCONSTANT1, -37 D3DVS_XBOX_RESERVEDCONSTANT2
 						pg->vsh_constants[NV_IGRAPH_XF_XFCTX_VPSCL][slot] = arg0;
@@ -3391,7 +3391,7 @@ int pgraph_handle_method(
 					slot = (method - NV097_SET_TRANSFORM_PROGRAM) / 4;
                     // ONLY INCREMENT IN BELOW COPY LOOP : pg->KelvinPrimitive.SetTransformProgramLoad += slot/4;
                     /*
-                    for (int argc = 0; argc < method_count; argc++, slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++, slot++) {
                         arg0 = argv[argc];
                         //target program register address is prestored in KelvinPrimitive.SetTransformProgramLoad
                         assert(pg->KelvinPrimitive.SetTransformProgramLoad < NV2A_MAX_TRANSFORM_PROGRAM_LENGTH);
@@ -3435,7 +3435,7 @@ int pgraph_handle_method(
                     //slot is sopposed to be 0 here.
                     // ONLY INCREMENT IN BELOW COPY LOOP : pg->KelvinPrimitive.SetTransformConstantLoad += slot/4;
                     /*
-                    for (int argc = 0; argc < method_count; argc++,slot++) {
+                    for (unsigned int argc = 0; argc < method_count; argc++,slot++) {
                         arg0 = argv[argc];
                         //the target constant register address is prestored in NV097_SET_TRANSFORM_CONSTANT_LOAD  KelvinPrimitive.SetTransformConstantLoad
                         assert(pg->KelvinPrimitive.SetTransformConstantLoad < NV2A_VERTEXSHADER_CONSTANTS);
@@ -4372,12 +4372,13 @@ int pgraph_handle_method(
 						arg0 = argv[0];
 						method += (NV097_SET_TEXTURE_FORMAT - NV097_SET_TEXTURE_OFFSET);
 						goto SETTEXTUREFORMAT;
-					}
+                        [[fallthrough]]; // to NV097_SET_TEXTURE_FORMAT
+                    }
+                    else
                     */
 					break;
 				}
 				CASE_4(NV097_SET_TEXTURE_FORMAT, 64) : {//KelvinPrimitive.SetTexture[4].Format , sizeof(SetTexture[])==64
-					SETTEXTUREFORMAT:
 					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_FORMAT) / 64;
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;
@@ -4428,13 +4429,12 @@ int pgraph_handle_method(
 						argv += 1;
 						arg0 = argv[0];
 						method += (NV097_SET_TEXTURE_CONTROL0 - NV097_SET_TEXTURE_ADDRESS);
-						goto SETTEXTURECONTROL0;
-					}
+                        [[fallthrough]]; // to NV097_SET_TEXTURE_CONTROL0
+					} else
                     */
                     break;
 
                 CASE_4(NV097_SET_TEXTURE_CONTROL0, 64) :////KelvinPrimitive.SetTexture[4].Control0 , sizeof(SetTexture[])==64
-					SETTEXTURECONTROL0:
 					//get texture[] index
                     slot = (method - NV097_SET_TEXTURE_OFFSET) / 64;
 					NV2A_DirtyFlags |= X_D3DDIRTYFLAG_TEXTURE_STATE_0 << slot;

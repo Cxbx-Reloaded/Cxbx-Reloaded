@@ -4,15 +4,10 @@
 typedef enum _X_D3DAPI_ENUM {
 
     X_CDevice_SetStateUP,
-    X_CDevice_SetStateUP_4,
-    X_CDevice_SetStateUP_0__LTCG_esi1,
     X_CDevice_SetStateVB,
-    X_CDevice_SetStateVB_8,
     X_D3DDevice_ApplyStateBlock,
     X_D3DDevice_Begin,
     X_D3DDevice_BeginPush,
-    X_D3DDevice_BeginPush_4,
-    X_D3DDevice_BeginPush_8,
     X_D3DDevice_BeginPushBuffer,
     X_D3DDevice_BeginScene,
     X_D3DDevice_BeginState,
@@ -203,48 +198,6 @@ typedef enum _X_D3DAPI_ENUM {
 
 #define HLE_PUSH_ENCODE(dword_count) PUSH_ENCODE(PUSH_INSTR_IMM_NOINC, dword_count, PUSH_SUBCH_0, HLE_API_METHOD, PUSH_TYPE_METHOD)
 
-/*
-//template for xbox D3D API patch routine
-
-    API_name(args)
-{
-    // init pushbuffer related pointers
-    DWORD * pPush_local = (DWORD *)*g_pXbox_pPush;         //pointer to current pushbuffer
-    DWORD * pPush_limit = (DWORD *)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
-    if ( (unsigned int)pPush_local+64 >= (unsigned int)pPush_limit )//check if we still have enough space
-        pPush_local = (DWORD *)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
-
-    // process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-    pPush_local[0]=HLE_API_COMMAND_16;
-    pPush_local[1]=X_D3DAPI_ENUM::X_APINAME;//enum of this patched API
-    pPush_local[2] = (DWORD) arg[0]; //total 14 DWORD space for arguments.
-    pPush_local[3] = (DWORD) arg[1];
-    pPush_local[4] = (DWORD) arg[2];
-    pPush_local[5] = (DWORD) arg[3]; 
-    pPush_local[6] = (DWORD) arg[4];
-    pPush_local[7] = (DWORD) arg[5];
-    pPush_local[8] =  *(DWORD*) &  arg[6];// use this to copy float arg to pushbuffer
-
-    //set pushbuffer pointer to the new beginning
-    // always reserve 1 command DWORD, 1 API enum, and 14 argmenet DWORDs.
-    *(DWORD **)g_pXbox_pPush+=16; 
-
-}
-
-//template for xbox D3D API handler in pgraph
-
-HLEApi=arg[0];
-switch (HLEApi)
-    
-{
-    case X_APIName:
-        // convert arg[1]... to corresponded arg[0] of CabxrImpl_APIName() handler.
-        call CxbxrImpl_APIName(arg[1]....);
-
-    break;
-}
-
-*/
 static inline DWORD FtoDW(FLOAT f) { return *((DWORD*)&f); }
 static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 
