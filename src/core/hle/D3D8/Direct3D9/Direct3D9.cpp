@@ -82,7 +82,7 @@
 #include "nv2a_vsh_emulator.h"
 #include "HleInNv2a.h"
 //#include "dxgi.h"
-#include "D3dx9tex.h""
+#include "D3dx9tex.h"
 using namespace Microsoft::WRL;
 
 XboxRenderStateConverter XboxRenderStates;
@@ -769,6 +769,7 @@ void CxbxInitWindow(bool bFullInit)
     // create window message processing thread
     {
 		HANDLE hStartEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
+		assert(hStartEvent != 0);
 		HANDLE hRenderWindowThread = CreateThread(nullptr, 0, EmuRenderWindow, &hStartEvent, 0, nullptr);
 
 		if (hRenderWindowThread == NULL) {
@@ -5065,7 +5066,7 @@ extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); //t
 // We should remove this when we can get the real viewport values from the xbox reliably via NV2A LLE
 void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 {
-	if (is_pgraph_using_NV2A_Kelvin) {
+	if (is_pgraph_using_NV2A_Kelvin()) {
 		float* fptr = HLE_get_NV2A_vertex_constant_float4_ptr(96 - 38);
 		vScale[0] = fptr[0];
 		vScale[1] = fptr[1];
@@ -6814,7 +6815,7 @@ DWORD CxbxrImpl_Swap
 	// If we present before the UI is drawn, it will flicker
 	if (Flags != xbox::X_D3DSWAP_DEFAULT && !(Flags & xbox::X_D3DSWAP_FINISH)) {
 
-		if ((Flags == xbox::X_D3DSWAP_COPY)&& (g_Xbox_BackbufferScaleX != 1.0|| g_Xbox_BackbufferScaleY != 1.0)) {
+		if ((Flags == xbox::X_D3DSWAP_COPY) && (g_Xbox_BackbufferScaleX != 1.0f || g_Xbox_BackbufferScaleY != 1.0f)) {
 			LOG_TEST_CASE("X_D3DSWAP_COPY");
 			auto pRenderTargetNewPrevKey = GetHostResourceKey(pXbox_RenderTargetNew);
 			Xbox_RenderTargetNew = *g_pXbox_RenderTarget;
@@ -7380,7 +7381,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host surface level - falling through to regular surface creation");
 		}
-		// fall through
+		FALL_THROUGH // from case xbox::X_D3DRTYPE_SURFACE to xbox::X_D3DRTYPE_VOLUME
 	}
 	case xbox::X_D3DRTYPE_VOLUME: {
 		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design) 
@@ -7402,10 +7403,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host volume level - falling through to regular volume creation");
 		}
-		// fall through
+		FALL_THROUGH // from case xbox::X_D3DRTYPE_VOLUME to xbox::X_D3DRTYPE_TEXTURE
 	}
-	case xbox::X_D3DRTYPE_TEXTURE:
-	case xbox::X_D3DRTYPE_VOLUMETEXTURE:
+	case xbox::X_D3DRTYPE_TEXTURE: FALL_THROUGH
+	case xbox::X_D3DRTYPE_VOLUMETEXTURE: FALL_THROUGH
 	case xbox::X_D3DRTYPE_CUBETEXTURE: {
 		xbox::X_D3DPixelContainer *pPixelContainer = (xbox::X_D3DPixelContainer*)pResource;
 		xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(pPixelContainer);
@@ -7830,7 +7831,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					dwDstRowPitch = LockedRect.Pitch;
 					dwDstSlicePitch = 0;
 				}
-
+				assert(pDst != nullptr);
 				uint8_t *pSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
 
 				// If this is the final mip of the first cube face, set the cube face size
@@ -8348,14 +8349,14 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		// Material sources, pgraph update these renderstates in CxbxrLazySetLights()
 		//ColorVertex = NV2ARenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
 		ColorVertex=pg->KelvinPrimitive.SetColorMaterial != 0;
-		ffShaderState.Modes.AmbientMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.DiffuseMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.SpecularMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.EmissiveMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackAmbientMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackDiffuseMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackSpecularMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
-		ffShaderState.Modes.BackEmissiveMaterialSource = NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.AmbientMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.DiffuseMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.SpecularMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.EmissiveMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackAmbientMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackDiffuseMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackSpecularMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackEmissiveMaterialSource = (float)NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE);//(float)(ColorVertex ? NV2ARenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
 		// Scene materials, HLE uses SetMaterial()/SetBackMaterial(), pgraph update materials in CxbxrLazySetLights()
 
 		memcpy(&ffShaderState.Materials[0], &NV2A_SceneMateirals[0], sizeof(NV2A_SceneMateirals[0]));
@@ -8380,7 +8381,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		ffShaderState.PointSprite.PointScaleABC.y = PointScaleEnable ? pointScale_B : 0.0f;
 		ffShaderState.PointSprite.PointScaleABC.z = PointScaleEnable ? pointScale_C : 0.0f;
 		ffShaderState.PointSprite.XboxRenderTargetHeight = PointScaleEnable ? renderTargetHeight : 1.0f;
-		ffShaderState.PointSprite.RenderUpscaleFactor = g_RenderUpscaleFactor;
+		ffShaderState.PointSprite.RenderUpscaleFactor = (float)g_RenderUpscaleFactor;
 
 		// Fog
 		// Determine how the fog depth is transformed into the fog factor
@@ -8427,7 +8428,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 		ffShaderState.PointSprite.PointScaleABC.y = PointScaleEnable ? pointScale_B : 0.0f;
 		ffShaderState.PointSprite.PointScaleABC.z = PointScaleEnable ? pointScale_C : 0.0f;
 		ffShaderState.PointSprite.XboxRenderTargetHeight = PointScaleEnable ? renderTargetHeight : 1.0f;
-		ffShaderState.PointSprite.RenderUpscaleFactor = g_RenderUpscaleFactor;
+		ffShaderState.PointSprite.RenderUpscaleFactor = (float)g_RenderUpscaleFactor;
 
 		// Fog
 		// Determine how the fog depth is transformed into the fog factor
@@ -8442,7 +8443,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	// FIXME remove when fixed function PS is implemented
 	// Note if we are using the fixed function pixel shader
 	// We only want to produce the fog depth value in the VS, not the fog factor
-	ffShaderState.Fog.TableMode = !g_UseFixedFunctionPixelShader ? D3DFOG_NONE : fogTableMode;
+	ffShaderState.Fog.TableMode = (float)(!g_UseFixedFunctionPixelShader ? D3DFOG_NONE : fogTableMode);
 
 	// Determine how fog depth is calculated
 	if (fogEnable && fogTableMode != D3DFOG_NONE) {
@@ -9252,32 +9253,30 @@ VOID WINAPI EmuSwizzleBox(
 	//PERF: optimal 16-bit swiz is 8x2x2 movntps (requires 8x4x4 area, aligned to 8x2x2)
 	//PERF: optimal 8-bit swiz is 4x2x2 movq 
 
-	DWORD RWidth;
-	DWORD RHeight;
-	DWORD RDepth;
-	DWORD UOffset;
-	DWORD VOffset;
-	DWORD WOffset;
+	DWORD RWidth = Width;
+	DWORD RHeight = Height;
+	DWORD RDepth = Depth;
+	DWORD UOffset = 0;
+	DWORD VOffset = 0;
+	DWORD WOffset = 0;
 	if (!pBox && !pPoint && !RowPitch && !SlicePitch)
 	{
-		RWidth = Width;
-		RHeight = Height;
-		RDepth = Depth;
-		UOffset = 0;
-		VOffset = 0;
-		WOffset = 0;
 		RowPitch = Width * BytesPerPixel;
 		SlicePitch = RowPitch * Height;
 	}
 	else
 	{
-		pSource = (void*)((BYTE*)pSource + pBox->Left + pBox->Top * RowPitch + pBox->Front * SlicePitch);
-		RWidth = pBox->Right - pBox->Left;
-		RHeight = pBox->Bottom - pBox->Top;
-		RDepth = pBox->Back - pBox->Front;
-		UOffset = pPoint->u;
-		VOffset = pPoint->v;
-		WOffset = pPoint->w;
+		if (pBox) {
+			pSource = (void*)((BYTE*)pSource + pBox->Left + pBox->Top * RowPitch + pBox->Front * SlicePitch);
+			RWidth = pBox->Right - pBox->Left;
+			RHeight = pBox->Bottom - pBox->Top;
+			RDepth = pBox->Back - pBox->Front;
+		}
+		if (pPoint) {
+			UOffset = pPoint->u;
+			VOffset = pPoint->v;
+			WOffset = pPoint->w;
+		}
 	}
 	unsigned int u, v, w;
 	Swizzler swiz(Width, Height, Depth);
@@ -9736,8 +9735,9 @@ void LoadSurfaceDataFromHost(xbox::X_D3DSurface* pXboxSurface)
 		if (PCPitch != XBRowPitch) {
 			//allocate an temp buffer to adjust host data row pitch to be the same as xbox row pitch so EmuSwizzleRect can work.
 			SwizzleBuffer = (byte*)malloc(XBSlicePitch);
+			assert(SwizzleBuffer);
 			xboxPtr = SwizzleBuffer;
-			for (int i = 0; i < XBHeight; i++) {
+			for (UINT i = 0; i < XBHeight; i++) {
 				memcpy(xboxPtr, hostPtr, XBRowPitch);
 				xboxPtr += XBRowPitch;
 				hostPtr += PCPitch;
@@ -9762,8 +9762,9 @@ void LoadSurfaceDataFromHost(xbox::X_D3DSurface* pXboxSurface)
 		if (HostLockedRect.Pitch == XBRowPitch)
 			memcpy((void*)xboxPtr, hostPtr, HostLockedRect.Pitch * XBHeight);
 		else {
-			DWORD minPitch = MIN(HostLockedRect.Pitch, XBRowPitch);
-			for (int i = 0; i < XBHeight; i++) {
+			assert(HostLockedRect.Pitch > 0);
+			DWORD minPitch = MIN((UINT)HostLockedRect.Pitch, XBRowPitch);
+			for (UINT i = 0; i < XBHeight; i++) {
 				memcpy(xboxPtr, hostPtr, minPitch);
 				xboxPtr += XBRowPitch;
 				hostPtr += HostLockedRect.Pitch;
@@ -10522,7 +10523,7 @@ INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices)
 // this is for indexed buffer convertion.
 INDEX16* CxbxConvertQuadListIndexData(CxbxDrawContext& DrawContext)
 {
-	int NrOfQuadIndices = DrawContext.dwVertexCount;
+	DWORD NrOfQuadIndices = DrawContext.dwVertexCount;
 	NrOfQuadIndices = (NrOfQuadIndices * 3)/2;//we're passing in the xbox indexed count, which devided by 4 becomes quad count, multiply 2 becomes triangle count, then multiply 3 becomes triangle list index count.
 	if (g_QuadListToTriangleIndexData_Size < NrOfQuadIndices)
 	{
@@ -10571,7 +10572,7 @@ INDEX16 *CxbxAssureQuadStripIndexData(UINT NrOfQuadIndices)
 INDEX16* CxbxConvertQuadStripIndexData(CxbxDrawContext& DrawContext)
 {
 	//we're passing in the xbox vertex count, which minus 2 then deviced by 2 becomes quad count, then multiply 2 becomes triangle list count, then multiply 3 becomes triangle list index count, add 6 more index space for CxbxConvertQuadStripToTriangleListIndices()
-	int NrOfQuadIndices = DrawContext.dwVertexCount;
+	DWORD NrOfQuadIndices = DrawContext.dwVertexCount;
 	NrOfQuadIndices = (NrOfQuadIndices - 2) * 3 + 6;
 	if (g_QuadStripToTriangleIndexData_Size < NrOfQuadIndices)
 	{
@@ -11085,7 +11086,7 @@ void CxbxDrawPrimitive(CxbxDrawContext& DrawContext)
 		if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_LINELOOP) {
 			// test-case : XDK samples reaching this case : DebugKeyboard, Gamepad, Tiling, ShadowBuffer
 			// Close line-loops using a final single line, drawn from the end to the start vertex :
-			INDEX16 pIndexData[2] = {0,DrawContext.dwVertexCount};
+			INDEX16 pIndexData[2] = { 0, (INDEX16)DrawContext.dwVertexCount };
 			//we're only using this function call to setup host index buffer.
 			ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(pIndexData, DrawContext.dwVertexCount, convertIndexBuffer::passthrough);
 
@@ -11476,7 +11477,8 @@ void CxbxUpdateHostVertexShaderConstants()
 	}
 }
 
-void CxbxUpdateHostViewport() {
+void CxbxUpdateHostViewport()
+{
 	// We don't have a fixed function shader so we rely on D3D9 fixed function mode
 	// So we have to set a viewport based on the current Xbox viewport
 	// Antialiasing mode affects the viewport offset and scale
@@ -11501,6 +11503,7 @@ void CxbxUpdateHostViewport() {
 	float Yscale = aaScaleY * g_RenderUpscaleFactor;
 	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
 	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
+
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		VSHMode = g_NV2A_VertexShaderMode;
 	}
@@ -11510,16 +11513,20 @@ void CxbxUpdateHostViewport() {
 		// use viewport composed from kelvin when we're in pgraph draw calls.
 		if(is_pgraph_using_NV2A_Kelvin())
 		    CxbxrGetViewport(hostViewport);
-		hostViewport.X *= Xscale;
-		hostViewport.Y *= Yscale;
-		hostViewport.Width *= Xscale;
-		hostViewport.Height *= Yscale;
+		// scale viewport
+		hostViewport.X = (DWORD)(hostViewport.X * Xscale);
+		hostViewport.Y = (DWORD)(hostViewport.Y * Yscale);
+		hostViewport.Width = (DWORD)(hostViewport.Width * Xscale);
+		hostViewport.Height = (DWORD)(hostViewport.Height * Yscale);
 		g_pD3DDevice->SetViewport(&hostViewport);
 
 		// Reset scissor rect
-		RECT viewportRect = {};
-		viewportRect.right = HostRenderTarget_Width;
-		viewportRect.bottom = HostRenderTarget_Height;
+		RECT viewportRect = {
+			/* left */0,
+			/* top = */0,
+			/* right = */(LONG)HostRenderTarget_Width,
+			/* bottom = */(LONG)HostRenderTarget_Height
+		};
 		g_pD3DDevice->SetScissorRect(&viewportRect);
 	}
 	else {
@@ -11528,30 +11535,31 @@ void CxbxUpdateHostViewport() {
 		// So we can handle shaders that don't use the Xbox viewport constants and don't align
 		// with the currently set viewport
 		// Test case: ???
-
-		D3DVIEWPORT hostViewport = {};
-		hostViewport.Width = HostRenderTarget_Width;
-		hostViewport.Height = HostRenderTarget_Height;
-		hostViewport.MinZ = 0.0f;
-		hostViewport.MaxZ = 1.0f;
+		D3DVIEWPORT hostViewport = {
+			/* X = */0,
+			/* Y = */0,
+			/* Width = */HostRenderTarget_Width,
+			/* Height = */HostRenderTarget_Height,
+			/* MinZ = */0.0f,
+			/* MaxZ = */1.0f
+		};
 
 		g_pD3DDevice->SetViewport(&hostViewport);
-
 		// We still need to clip to the viewport
 		// Scissor to viewport
 		g_pD3DDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
-		RECT viewportRect = {};
-		viewportRect.left = g_Xbox_Viewport.X * Xscale;
-		viewportRect.top = g_Xbox_Viewport.Y * Yscale;
-		viewportRect.right = viewportRect.left + (g_Xbox_Viewport.Width * Xscale);
-		viewportRect.bottom = viewportRect.top + (g_Xbox_Viewport.Height * Yscale);
+		RECT viewportRect = {
+			/* left = */ (LONG)(g_Xbox_Viewport.X * Xscale),
+			/* top = */ (LONG)(g_Xbox_Viewport.Y * Yscale),
+			/* right = */ viewportRect.left + (LONG)(g_Xbox_Viewport.Width * Xscale),
+			/* bottom = */ viewportRect.top + (LONG)(g_Xbox_Viewport.Height * Yscale)
+		};
 		g_pD3DDevice->SetScissorRect(&viewportRect);
 	}
 }
 
 extern void CxbxUpdateHostVertexDeclaration(); // TMP glue
 extern void CxbxUpdateHostVertexShader(); // TMP glue
-extern void pgraph_use_NV2A_Kelvin(void);
 extern bool g_NV2AVertexShader_dirty;
 
 void CxbxUpdateNativeD3DResources()
@@ -13753,15 +13761,15 @@ xbox::hresult_xt WINAPI CxbxrImpl_DrawRectPatch
 	HRESULT hRet = S_OK;
 	if (!g_bUseDrawPatch) {
 		int index = 0;
-		int stride = pRectPatchInfo->Stride;
-		int originY = pRectPatchInfo->StartVertexOffsetHeight;
-		int originX = pRectPatchInfo->StartVertexOffsetWidth;
-		int y;
-		int StartVertexIndex = pRectPatchInfo->StartVertexOffsetHeight * pRectPatchInfo->Stride + pRectPatchInfo->StartVertexOffsetWidth;
-		for (int deltaY = 1; deltaY < (pRectPatchInfo->Height); deltaY++) {
+		UINT stride = pRectPatchInfo->Stride;
+		UINT originY = pRectPatchInfo->StartVertexOffsetHeight;
+		UINT originX = pRectPatchInfo->StartVertexOffsetWidth;
+		UINT y;
+		UINT StartVertexIndex = pRectPatchInfo->StartVertexOffsetHeight * pRectPatchInfo->Stride + pRectPatchInfo->StartVertexOffsetWidth;
+		for (UINT deltaY = 1; deltaY < (pRectPatchInfo->Height); deltaY++) {
 			y = originY + deltaY;
-			int x;
-			for (int deltaX = 0; deltaX < (pRectPatchInfo->Width); deltaX++) {
+			UINT x;
+			for (UINT deltaX = 0; deltaX < (pRectPatchInfo->Width); deltaX++) {
 				x = originX + deltaX;
 				/*
 						  (x,y-1)(x+1,y-1)

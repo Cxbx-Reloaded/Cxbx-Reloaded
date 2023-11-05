@@ -314,6 +314,7 @@ bool XboxRenderStateConverter::InitWithNV2A()
 {
     // allocate 
     D3D__RenderState =(uint32_t*) malloc(sizeof(DWORD)*(xbox::X_D3DRS_LAST + 1));//(uint32_t*)g_SymbolAddresses["D3D_g_RenderState"];
+    assert(D3D__RenderState != nullptr);
     memset(D3D__RenderState, 0, sizeof(DWORD) * (xbox::X_D3DRS_LAST + 1));
     // Build a mapping of Cxbx Render State indexes to indexes within the current XDK
     BuildRenderStateMappingTable();
@@ -339,7 +340,7 @@ bool XboxRenderStateConverter::InitWithNV2A()
     return true;
 }
 
-bool IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo& aRenderStateInfo)
+bool IsRenderStateAvailableInCurrentXboxD3D8Lib(const RenderStateInfo& aRenderStateInfo)
 {
 	bool bIsRenderStateAvailable = (aRenderStateInfo.V <= g_LibVersion_D3D8);
 	if (aRenderStateInfo.R > 0) { // Applies to xbox::X_D3DRS_MULTISAMPLETYPE
@@ -358,7 +359,7 @@ void XboxRenderStateConverter::BuildRenderStateMappingTable()
 
     int XboxIndex = 0;
     for (unsigned int RenderState = xbox::X_D3DRS_FIRST; RenderState <= xbox::X_D3DRS_LAST; RenderState++) {
-        auto RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
+        const RenderStateInfo& RenderStateInfo = GetDxbxRenderStateInfo(RenderState);
         if (IsRenderStateAvailableInCurrentXboxD3D8Lib(RenderStateInfo)) {
             XboxRenderStateOffsets[RenderState] = XboxIndex;
             EmuLog(LOG_LEVEL::INFO, "%s = %d", RenderStateInfo.S, XboxIndex);
@@ -490,7 +491,7 @@ void XboxRenderStateConverter::Apply()
 
 void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t Value)
 {
-	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
+    const RenderStateInfo& RenderStateInfo = GetDxbxRenderStateInfo(State);
 
     switch (State) {
         case xbox::X_D3DRS_COLORWRITEENABLE: {
@@ -559,7 +560,7 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
 
 void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t Value)
 {
-	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
+	const RenderStateInfo& RenderStateInfo = GetDxbxRenderStateInfo(State);
 
 	// Convert from Xbox Data Formats to PC
     switch (State) {
@@ -647,7 +648,7 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
 
 void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t Value)
 {
-	auto RenderStateInfo = GetDxbxRenderStateInfo(State);
+    const RenderStateInfo& RenderStateInfo = GetDxbxRenderStateInfo(State);
 
 	switch (State) {
         case xbox::X_D3DRS_VERTEXBLEND:

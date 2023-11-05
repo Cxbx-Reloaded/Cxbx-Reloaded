@@ -233,7 +233,7 @@ void CDECL EmuRegisterSymbol(const char* library_str,
                 case XREF_ADDR_NOT_FOUND:
                 {
                     EmuLog(LOG_LEVEL::WARNING, "Found OOVPA after first finding nothing?");
-                    // fallthrough to XREF_ADDR_UNDETERMINED
+                    FALL_THROUGH // to XREF_ADDR_UNDETERMINED
                 }
                 case XREF_ADDR_UNDETERMINED:
                 {

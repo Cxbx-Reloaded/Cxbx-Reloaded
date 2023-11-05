@@ -1158,6 +1158,7 @@ extern VertexShaderMode g_Xbox_VertexShaderMode;
 extern bool g_VertexShader_dirty;
 extern bool g_NV2AVertexShader_dirty;
 extern void CxbxUpdateHostVertexShader();
+extern void CxbxUpdateNativeD3DResources();
 //starting address of vertex shader user program
 extern xbox::dword_xt g_Xbox_VertexShader_FunctionSlots_StartAddress;
 extern VertexShaderMode g_NV2A_VertexShaderMode;
@@ -1906,20 +1907,19 @@ int pgraph_handle_method(
                     case X_D3DDevice_DeletePixelShader:  break;
                     case X_D3DDevice_DeleteStateBlock:  break;
                     case X_D3DDevice_DeleteVertexShader:  break;
-                    case X_D3DDevice_DrawIndexedPrimitive:  //break;  //fall through
-                    case X_D3DDevice_DrawIndexedPrimitiveUP:  //break;  //fall through
-                    case X_D3DDevice_DrawIndexedVertices:  //break;  //fall through
-                    case X_D3DDevice_DrawIndexedVerticesUP:  //break;  //fall through
-                    case X_D3DDevice_DrawPrimitive:  //break;  //fall through
-                    case X_D3DDevice_DrawPrimitiveUP:  //break;  //fall through
-                    case X_D3DDevice_DrawRectPatch:  //break;  //fall through
-                    case X_D3DDevice_DrawTriPatch:  //break;  //fall through
-                    case X_D3DDevice_DrawVertices:  //break;  //fall through
-                    case X_D3DDevice_DrawVerticesUP:  //break;  //fall through
-                        extern void CxbxUpdateNativeD3DResources();
+                    case X_D3DDevice_DrawIndexedPrimitive: FALL_THROUGH
+                    case X_D3DDevice_DrawIndexedPrimitiveUP: FALL_THROUGH
+                    case X_D3DDevice_DrawIndexedVertices: FALL_THROUGH
+                    case X_D3DDevice_DrawIndexedVerticesUP: FALL_THROUGH
+                    case X_D3DDevice_DrawPrimitive: FALL_THROUGH
+                    case X_D3DDevice_DrawPrimitiveUP: FALL_THROUGH
+                    case X_D3DDevice_DrawRectPatch: FALL_THROUGH
+                    case X_D3DDevice_DrawTriPatch: FALL_THROUGH
+                    case X_D3DDevice_DrawVertices: FALL_THROUGH
+                    case X_D3DDevice_DrawVerticesUP:
                         CxbxUpdateNativeD3DResources();
                         *(bool*)argv[1] = false;
-                    }break;
+                        break;
                     case X_D3DDevice_EnableOverlay:  break;
                     case X_D3DDevice_End:
                         CxbxrImpl_End();

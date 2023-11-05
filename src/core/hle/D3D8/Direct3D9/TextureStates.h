@@ -52,8 +52,8 @@ private:
     // Pointer to Xbox texture states
     // Note mappings may change between XDK versions
     uint32_t* D3D__TextureState = nullptr;
-    std::array<int, xbox::X_D3DTSS_LAST + 1> XboxTextureStateOffsets;
-    XboxRenderStateConverter* pXboxRenderStates;
+    std::array<int, xbox::X_D3DTSS_LAST + 1> XboxTextureStateOffsets = {};
+    XboxRenderStateConverter* pXboxRenderStates = nullptr;
     // Holds the last state that was set, so we don't set it again
     std::optional<DWORD> PreviousStates[xbox::X_D3DTS_STAGECOUNT][xbox::X_D3DTSS_LAST + 1] = {};
 };
