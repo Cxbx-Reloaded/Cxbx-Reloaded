@@ -82,7 +82,7 @@ static xbox::X_D3DVertexShader g_Xbox_VertexShader_ForFVF = {};
 static uint32_t                g_X_VERTEXSHADER_FLAG_PROGRAM; // X_VERTEXSHADER_FLAG_PROGRAM flag varies per XDK, so it is set on runtime
 static uint32_t                g_X_VERTEXSHADER_FLAG_VALID_MASK; // For a test case
 
-static volatile bool isShaderFolderDirty = false;
+static volatile bool isShaderFolderDirty = true;
 
 void CxbxVertexShaderSetFlags()
 {
@@ -1127,6 +1127,20 @@ IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pD
 	return pHostVertexDeclaration;
 }
 
+IDirect3DVertexShader* InitShader(void (*compileFunc)(ID3DBlob**), const char* label) {
+	IDirect3DVertexShader* shader = nullptr;
+
+	ID3DBlob* pBlob = nullptr;
+	compileFunc(&pBlob);
+	if (pBlob) {
+		HRESULT hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &shader);
+		pBlob->Release();
+		if (FAILED(hRet)) CxbxrAbort("Failed to create shader: %s", label);
+	}
+
+	return shader;
+}
+
 void CxbxUpdateHostVertexShader()
 {
 	extern bool g_bUsePassthroughHLSL; // TMP glue
@@ -1134,6 +1148,7 @@ void CxbxUpdateHostVertexShader()
 	static IDirect3DVertexShader* passthroughShader = nullptr;
 
 	if (isShaderFolderDirty) {
+		EmuLog(LOG_LEVEL::INFO, "Loading vertex shaders...");
 		LoadShadersFromDisk();
 
 		g_VertexShaderCache.Clear();
@@ -1142,11 +1157,13 @@ void CxbxUpdateHostVertexShader()
 			fixedFunctionShader->Release();
 			fixedFunctionShader = nullptr;
 		}
+		fixedFunctionShader = InitShader(EmuCompileFixedFunction, "Fixed Function Vertex Shader");
 
 		if (passthroughShader) {
 			passthroughShader->Release();
 			passthroughShader = nullptr;
 		}
+		passthroughShader = InitShader(EmuCompileXboxPassthrough, "Passthrough Vertex Shader");
 
 		isShaderFolderDirty = false;
 	}
@@ -1157,32 +1174,12 @@ void CxbxUpdateHostVertexShader()
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
-		HRESULT hRet;
-
-		if (g_UseFixedFunctionVertexShader) {
-			if (fixedFunctionShader == nullptr) {
-				ID3DBlob* pBlob = nullptr;
-				EmuCompileFixedFunction(&pBlob);
-				if (pBlob) {
-					hRet = g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &fixedFunctionShader);
-					if (FAILED(hRet)) CxbxrAbort("Failed to create fixed-function shader");
-				}
-			}
-		}
-
-		hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);
+		 HRESULT hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);
 		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
 	}
 	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
-		if (passthroughShader == nullptr) {
-			ID3DBlob* pBlob = nullptr;
-			EmuCompileXboxPassthrough(&pBlob);
-			if (pBlob) {
-				g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &passthroughShader);
-			}
-		}
-
 		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughShader);
+		if (FAILED(hRet)) CxbxrAbort("Failed to set passthrough shader");
 	}
 	else {
 		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
@@ -1629,8 +1626,6 @@ extern void EmuParseVshFunction
 
 
 void InitShaderHotloading() {
-	LoadShadersFromDisk();
-
 	EmuLog(LOG_LEVEL::DEBUG, "Starting shader file watcher...");
 	HANDLE fsWatcherThread = CreateThread(nullptr, 0, [](void *param) -> DWORD {
 

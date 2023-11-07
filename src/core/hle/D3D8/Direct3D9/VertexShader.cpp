@@ -378,8 +378,6 @@ extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
 	EmuCompileShader(fixedFunctionVertexShaderHlsl, g_vs_model, ppHostShader, fixedFunctionVertexShaderPath.c_str());
 };
 
-static ID3DBlob* pPassthroughShader = nullptr;
-
 extern void EmuCompileXboxPassthrough(ID3DBlob** ppHostShader)
 {
 	EmuCompileShader(vertexShaderPassthroughHlsl, g_vs_model, ppHostShader, vertexShaderPassthroughPath.c_str());
