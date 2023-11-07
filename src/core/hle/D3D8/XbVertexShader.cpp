@@ -1127,11 +1127,11 @@ IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pD
 	return pHostVertexDeclaration;
 }
 
-static IDirect3DVertexShader* passthroughshader;
 void CxbxUpdateHostVertexShader()
 {
 	extern bool g_bUsePassthroughHLSL; // TMP glue
 	static IDirect3DVertexShader* fixedFunctionShader = nullptr; // TODO move to shader cache
+	static IDirect3DVertexShader* passthroughShader = nullptr;
 
 	if (isShaderFolderDirty) {
 		LoadShadersFromDisk();
@@ -1140,8 +1140,13 @@ void CxbxUpdateHostVertexShader()
 
 		if (fixedFunctionShader) {
 			fixedFunctionShader->Release();
+			fixedFunctionShader = nullptr;
 		}
-		fixedFunctionShader = nullptr;
+
+		if (passthroughShader) {
+			passthroughShader->Release();
+			passthroughShader = nullptr;
+		}
 
 		isShaderFolderDirty = false;
 	}
@@ -1169,15 +1174,15 @@ void CxbxUpdateHostVertexShader()
 		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
 	}
 	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
-		if (passthroughshader == nullptr) {
+		if (passthroughShader == nullptr) {
 			ID3DBlob* pBlob = nullptr;
 			EmuCompileXboxPassthrough(&pBlob);
 			if (pBlob) {
-				g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &passthroughshader);
+				g_pD3DDevice->CreateVertexShader((DWORD*)pBlob->GetBufferPointer(), &passthroughShader);
 			}
 		}
 
-		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughshader);
+		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughShader);
 	}
 	else {
 		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);

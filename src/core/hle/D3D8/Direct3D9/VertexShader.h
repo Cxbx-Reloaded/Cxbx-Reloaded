@@ -23,5 +23,5 @@ void LoadShadersFromDisk();
 
 extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader);
 
-extern HRESULT EmuCompileXboxPassthrough(ID3DBlob** ppHostShader);
+extern void EmuCompileXboxPassthrough(ID3DBlob** ppHostShader);
 
