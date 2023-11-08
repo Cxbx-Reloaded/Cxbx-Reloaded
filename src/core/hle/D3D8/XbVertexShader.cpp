@@ -35,6 +35,7 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\Direct3D9\RenderStates.h" // For XboxRenderStateConverter
 #include "core\hle\D3D8\Direct3D9\VertexShaderCache.h" // For g_VertexShaderCache
+#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderHlsl
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
@@ -1144,12 +1145,16 @@ IDirect3DVertexShader* InitShader(void (*compileFunc)(ID3DBlob**), const char* l
 void CxbxUpdateHostVertexShader()
 {
 	extern bool g_bUsePassthroughHLSL; // TMP glue
+	// TODO move d3d9 state to VertexShader.cpp
 	static IDirect3DVertexShader* fixedFunctionShader = nullptr; // TODO move to shader cache
 	static IDirect3DVertexShader* passthroughShader = nullptr;
+	static int vertexShaderVersion = -1;
 
-	if (isShaderFolderDirty) {
+	int shaderVersion = g_ShaderHlsl.UpdateShaders();
+	if (vertexShaderVersion != shaderVersion) {
+		vertexShaderVersion = shaderVersion;
+
 		EmuLog(LOG_LEVEL::INFO, "Loading vertex shaders...");
-		LoadShadersFromDisk();
 
 		g_VertexShaderCache.Clear();
 
@@ -1164,8 +1169,6 @@ void CxbxUpdateHostVertexShader()
 			passthroughShader = nullptr;
 		}
 		passthroughShader = InitShader(EmuCompileXboxPassthrough, "Passthrough Vertex Shader");
-
-		isShaderFolderDirty = false;
 	}
 
 	// TODO Call this when state is dirty
@@ -1622,65 +1625,4 @@ extern void EmuParseVshFunction
 	while (XboxVertexShaderDecoder::VshConvertToIntermediate(pCurToken, pShader)) {
 		pCurToken += X_VSH_INSTRUCTION_SIZE;
 	}
-}
-
-
-void InitShaderHotloading() {
-	static HANDLE fsWatcherThread = 0;
-
-	if (fsWatcherThread) {
-		EmuLog(LOG_LEVEL::ERROR2, "Ignoring request to start shader file watcher - it has already been started.");
-		return;
-	}
-
-	EmuLog(LOG_LEVEL::DEBUG, "Starting shader file watcher...");
-
-	auto fsWatcher = [](void* param) -> DWORD {
-		// Determine the filename and directory for the fixed function shader
-		char cxbxExePath[MAX_PATH];
-		GetModuleFileName(GetModuleHandle(nullptr), cxbxExePath, MAX_PATH);
-		auto hlslDir = std::filesystem::path(cxbxExePath)
-			.parent_path()
-			.append("hlsl/");
-
-		HANDLE changeHandle = FindFirstChangeNotification(hlslDir.string().c_str(), false, FILE_NOTIFY_CHANGE_LAST_WRITE);
-
-		if (changeHandle == INVALID_HANDLE_VALUE) {
-			DWORD errorCode = GetLastError();
-			EmuLog(LOG_LEVEL::ERROR2, "Error initializing shader file watcher: %d", errorCode);
-
-			return 1;
-		}
-
-		while (true) {
-			if (FindNextChangeNotification(changeHandle)) {
-				WaitForSingleObject(changeHandle, INFINITE);
-
-				// Wait for changes to stop..
-				// Will usually be at least two - one for the file and one for the directory
-				while (true) {
-					FindNextChangeNotification(changeHandle);
-					if (WaitForSingleObject(changeHandle, 100) == WAIT_TIMEOUT) {
-						break;
-					}
-				}
-
-				EmuLog(LOG_LEVEL::DEBUG, "Change detected in shader folder");
-				isShaderFolderDirty = true;
-			}
-			else {
-				EmuLog(LOG_LEVEL::ERROR2, "Shader filewatcher failed to get the next notification");
-				break;
-			}
-		}
-
-		EmuLog(LOG_LEVEL::DEBUG, "Shader file watcher exiting...");
-
-		// until there is a way to disable hotloading
-		// this is always an error
-		FindCloseChangeNotification(changeHandle);
-		return 1;
-	};
-
-	fsWatcherThread = CreateThread(nullptr, 0, fsWatcher, nullptr, 0, nullptr);
 }

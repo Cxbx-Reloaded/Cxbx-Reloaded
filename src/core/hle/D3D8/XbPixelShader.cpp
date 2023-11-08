@@ -39,6 +39,7 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_pXbox_PixelShader
+#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderHlsl
 #include "core\hle\D3D8\XbPixelShader.h"
 #include "core\hle\D3D8\Direct3D9\PixelShader.h" // EmuCompilePixelShader
 #include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
@@ -664,30 +665,8 @@ constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; //
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
 
 std::string GetFixedFunctionShaderTemplate() {
-	static bool loaded = false;
-	static std::string hlslString;
-
-	// TODO does this need to be thread safe?
-	if (!loaded) {
-		loaded = true;
-
-		// Determine the filename and directory for the fixed function shader
-		// TODO make this a relative path so we guarantee an LPCSTR for D3DCompile
-		auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
-			.parent_path()
-			.append("hlsl");
-
-		auto sourceFile = hlslDir.append("FixedFunctionPixelShader.hlsl").string();
-
-		// Load the shader into a string
-		std::ifstream hlslStream(sourceFile);
-		std::stringstream hlsl;
-		hlsl << hlslStream.rdbuf();
-
-		hlslString = hlsl.str();
-	}
-
-	return hlslString;
+	// TODO hlsl hotloading support
+	return g_ShaderHlsl.fixedFunctionPixelShaderHlsl;
 }
 
 std::string_view GetD3DTOPString(int d3dtop) {

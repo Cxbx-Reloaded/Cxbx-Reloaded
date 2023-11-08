@@ -1,6 +1,3 @@
-// This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
-R"DELIMITER(
-
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
@@ -92,10 +89,9 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
    #define PS_FINALCOMBINERSETTING_CLAMP_SUM
 #endif
 
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
+	// Hardcoded state will be inserted here
+    // <HARDCODED STATE GOES HERE>
+	// End hardcoded state
 
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
@@ -173,10 +169,6 @@ R"DELIMITER(
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
 
 float m21d(const float input)
 {
@@ -379,10 +371,9 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
 	fog = float4(c_fog.rgb, xIn.iFog); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
 
-	// Xbox shader program
-)DELIMITER",  /* This terminates the 2nd raw string within the 16380 single-byte characters limit. // */
-// Third and last raw string, the footer :
-R"DELIMITER(
+	// Xbox shader program will be inserted here
+    // <XBOX SHADER PROGRAM GOES HERE>
+	// End Xbox shader program
 
 	// Copy r0.rgba to output
 	PS_OUTPUT xOut;
@@ -391,5 +382,3 @@ R"DELIMITER(
 
 	return xOut;
 }
-
-// End of pixel shader footer)DELIMITER" /* This terminates the footer raw string" // */

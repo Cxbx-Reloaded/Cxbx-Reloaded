@@ -42,6 +42,7 @@
 #include "..\FixedFunctionState.h"
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For LPDIRECTDRAWSURFACE7
+#include "core\hle\D3D8\Direct3D9\Shader.h" // For InitShaderHotloading
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbPixelShader.h" // For DxbxUpdateActivePixelShader
@@ -683,8 +684,8 @@ void CxbxInitWindow(bool bFullInit)
 		ImGui_ImplWin32_Shutdown();
 	});
 
-	extern void InitShaderHotloading();
-	InitShaderHotloading();
+	g_ShaderHlsl.UpdateShaders();
+	g_ShaderHlsl.InitShaderHotloading();
 	
 }
 

@@ -4,9 +4,7 @@
 #include "VertexShader.h" // EmuCompileVertexShader
 #include "core\kernel\init\CxbxKrnl.h" // implicit CxbxKrnl_Xbe used in LOG_TEST_CASE
 #include "core\kernel\support\Emu.h" // LOG_TEST_CASE (via Logging.h)
-#include "common/FilePaths.hpp" // For szFilePath_CxbxReloaded_Exe
 
-#include <fstream>
 #include <sstream> // std::stringstream
 
 extern const char* g_vs_model = vs_model_3_0;
@@ -283,67 +281,6 @@ void BuildShader(IntermediateVertexShader* pShader, std::stringstream& hlsl)
 	}
 }
 
-std::string vertexShaderTemplateHlsl[2];
-std::string fixedFunctionVertexShaderHlsl;
-std::string fixedFunctionVertexShaderPath;
-std::string vertexShaderPassthroughHlsl;
-std::string vertexShaderPassthroughPath;
-
-std::ifstream OpenWithRetry(const std::string& path) {
-	auto fstream = std::ifstream(path);
-	int failures = 0;
-	while (fstream.fail()) {
-		Sleep(50);
-		fstream = std::ifstream(path);
-
-		if (failures++ > 10) {
-			// crash?
-			CxbxrAbort("Error opening shader file: %s", path);
-			break;
-		}
-	}
-
-	return fstream;
-}
-
-void LoadShadersFromDisk() {
-	const auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
-		.parent_path()
-		.append("hlsl");
-
-	// Vertex Shader Template
-	{
-		std::stringstream tmp;
-		auto dir = hlslDir;
-		dir.append("CxbxVertexShaderTemplate.hlsl");
-		tmp << OpenWithRetry(dir.string()).rdbuf();
-		std::string hlsl = tmp.str();
-
-		const std::string insertionPoint = "// <XBOX SHADER PROGRAM GOES HERE>\n";
-		auto index = hlsl.find(insertionPoint);
-		vertexShaderTemplateHlsl[0] = hlsl.substr(0, index);
-		vertexShaderTemplateHlsl[1] = hlsl.substr(index + insertionPoint.length());
-	}
-
-	// Fixed Function Vertex Shader
-	{
-		auto dir = hlslDir;
-		fixedFunctionVertexShaderPath = dir.append("FixedFunctionVertexShader.hlsl").string();
-		std::stringstream tmp;
-		tmp << OpenWithRetry(fixedFunctionVertexShaderPath).rdbuf();
-		fixedFunctionVertexShaderHlsl = tmp.str();
-	}
-
-	// Passthrough Vertex Shader
-	{
-		auto dir = hlslDir;
-		vertexShaderPassthroughPath = dir.append("CxbxVertexShaderPassthrough.hlsl").string();
-		std::stringstream tmp;
-		tmp << OpenWithRetry(vertexShaderPassthroughPath).rdbuf();
-		vertexShaderPassthroughHlsl = tmp.str();
-	}
-}
-
 // recompile xbox vertex shader function
 extern HRESULT EmuCompileVertexShader
 (
@@ -355,9 +292,9 @@ extern HRESULT EmuCompileVertexShader
 
 	// Combine the shader template with the shader program
 	auto hlsl_stream = std::stringstream();
-	hlsl_stream << vertexShaderTemplateHlsl[0]; // Start with the HLSL template header
+	hlsl_stream << g_ShaderHlsl.vertexShaderTemplateHlsl[0]; // Start with the HLSL template header
 	BuildShader(pIntermediateShader, hlsl_stream);
-	hlsl_stream << vertexShaderTemplateHlsl[1]; // Finish with the HLSL template footer
+	hlsl_stream << g_ShaderHlsl.vertexShaderTemplateHlsl[1]; // Finish with the HLSL template footer
 	std::string hlsl_str = hlsl_stream.str();
 
 	auto notionalSourceName = "CxbxVertexShaderTemplate.hlsl";
@@ -375,10 +312,10 @@ extern HRESULT EmuCompileVertexShader
 
 extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
 {
-	EmuCompileShader(fixedFunctionVertexShaderHlsl, g_vs_model, ppHostShader, fixedFunctionVertexShaderPath.c_str());
+	EmuCompileShader(g_ShaderHlsl.fixedFunctionVertexShaderHlsl, g_vs_model, ppHostShader, g_ShaderHlsl.fixedFunctionVertexShaderPath.c_str());
 };
 
 extern void EmuCompileXboxPassthrough(ID3DBlob** ppHostShader)
 {
-	EmuCompileShader(vertexShaderPassthroughHlsl, g_vs_model, ppHostShader, vertexShaderPassthroughPath.c_str());
+	EmuCompileShader(g_ShaderHlsl.vertexShaderPassthroughHlsl, g_vs_model, ppHostShader, g_ShaderHlsl.vertexShaderPassthroughPath.c_str());
 }
