@@ -3,6 +3,7 @@
 // enum for xbox D3DDevice APIs
 typedef enum _X_D3DAPI_ENUM {
     // Keep below sorted to ease future edits
+    X__Invalid = 0,
     X_CDevice_SetStateUP,
     X_CDevice_SetStateVB,
     X_D3D_BlockOnTime,
@@ -196,6 +197,9 @@ typedef enum _X_D3DAPI_ENUM {
     // Keep X_D3DAPI_FORCE_DWORD last to force X_D3DAPI_ENUM into 4 bytes
     X_D3DAPI_FORCE_DWORD = 0x7fffffff,
 } X_D3DAPI_ENUM;
+
+#define X_D3DAPI_ENUM_START X_CDevice_SetStateUP
+#define X_D3DAPI_ENUM_END X_Lock3DSurface
 
 // virtual NV2A register for HLE API handler
 #   define NV097_HLE_API                                      0x00000080 /* Snugged this method in the middle between

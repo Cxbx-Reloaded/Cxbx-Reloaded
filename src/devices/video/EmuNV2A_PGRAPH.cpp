@@ -1535,6 +1535,19 @@ void HLE_API_handle_method
     uint32_t* argv
 )
 {
+// Clear volatile DWORD WaitForPGRAPH in EmuKickOffWait(),
+// satifying the waiting spin loop therein.
+#define ClearKickOffWaitForPGRAPH() *(DWORD*)argv[1] = 0
+
+#if 1 // [Toggle for debugging previous EmuKickOffWait behavior]
+// X_D3DAPI_ENUM's passed into EmuKickOffWait(), as called by some EMUPATCH'es,
+// are not pushed themselves, should be unreachable and need no acknowledgement.
+#define ReceiveKickOffWaitForAPI() assert(false && "Unexpected hleAPI - either KickOffWait or handle it's arguments")
+#else
+// (Before, they needlessly performed ClearKickOffWaitForPGRAPH too.)
+#define ReceiveKickOffWaitForAPI() ClearKickOffWaitForPGRAPH()
+#endif
+
     X_D3DAPI_ENUM hleAPI = (X_D3DAPI_ENUM)argv[0];
 
     switch (hleAPI)
@@ -1553,7 +1566,9 @@ void HLE_API_handle_method
         break;
     case X_D3D_LazySetPointParams:  break;
     case X_D3D_SetCommonDebugRegisters:  break;
-    case X_D3DDevice_ApplyStateBlock:  break;
+    case X_D3DDevice_ApplyStateBlock:
+        ReceiveKickOffWaitForAPI(); // was missing
+        break;
     case X_D3DDevice_Begin:
         CxbxrImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]);
         break;
@@ -1564,7 +1579,7 @@ void HLE_API_handle_method
     case X_D3DDevice_BeginStateBig:  break;
     case X_D3DDevice_BeginStateBlock:  break;
     case X_D3DDevice_BeginVisibilityTest:
-        *(bool*)argv[1] = false;
+        ReceiveKickOffWaitForAPI();
         break;
     case X_D3DDevice_BlockOnFence:  break;
     case X_D3DDevice_BlockUntilIdle:  break;
@@ -1576,7 +1591,7 @@ void HLE_API_handle_method
         CxbxrImpl_Clear((xbox::dword_xt)argv[1], (D3DRECT*)argv[2], (xbox::dword_xt)argv[3], (D3DCOLOR)argv[4], DWtoF(argv[5]), (xbox::dword_xt)argv[6]);
         break;
     case X_D3DDevice_CopyRects:
-        *(bool*)argv[1] = false;
+        ReceiveKickOffWaitForAPI();
         break;
     case X_D3DDevice_CreateCubeTexture:  break;
     case X_D3DDevice_CreateDepthStencilSurface:  break;
@@ -1598,22 +1613,41 @@ void HLE_API_handle_method
     case X_D3DDevice_DeletePixelShader:  break;
     case X_D3DDevice_DeleteStateBlock:  break;
     case X_D3DDevice_DeleteVertexShader:  break;
-    case X_D3DDevice_DrawIndexedPrimitive: [[fallthrough]];
-    case X_D3DDevice_DrawIndexedPrimitiveUP: [[fallthrough]];
-    case X_D3DDevice_DrawIndexedVertices: [[fallthrough]];
-    case X_D3DDevice_DrawIndexedVerticesUP: [[fallthrough]];
-    case X_D3DDevice_DrawPrimitive: [[fallthrough]];
-    case X_D3DDevice_DrawPrimitiveUP: [[fallthrough]];
-    case X_D3DDevice_DrawRectPatch: [[fallthrough]];
-    case X_D3DDevice_DrawTriPatch: [[fallthrough]];
-    case X_D3DDevice_DrawVertices: [[fallthrough]];
-    case X_D3DDevice_DrawVerticesUP:
+    case X_D3DDevice_DrawIndexedPrimitive:  break;
+    case X_D3DDevice_DrawIndexedPrimitiveUP:  break;
+    case X_D3DDevice_DrawIndexedVertices:
+        ReceiveKickOffWaitForAPI();
+        break;
+    case X_D3DDevice_DrawIndexedVerticesUP:
+#if 0 // experimental
         CxbxUpdateNativeD3DResources();
-        *(bool*)argv[1] = false;
+#else
+        ReceiveKickOffWaitForAPI();
+#endif
+        break;
+    case X_D3DDevice_DrawPrimitive:
+        break;
+    case X_D3DDevice_DrawPrimitiveUP:  break;
+    case X_D3DDevice_DrawRectPatch:
+        ReceiveKickOffWaitForAPI();
+        break;
+    case X_D3DDevice_DrawTriPatch:
+        ReceiveKickOffWaitForAPI();
+        break;
+    case X_D3DDevice_DrawVertices:
+        ReceiveKickOffWaitForAPI();
+        break;
+    case X_D3DDevice_DrawVerticesUP:
+        ReceiveKickOffWaitForAPI();
         break;
     case X_D3DDevice_EnableOverlay:  break;
     case X_D3DDevice_End:
+#if 1 // X_D3DDevice_End calls EmuKickOffWait
+        ReceiveKickOffWaitForAPI(); // was missing
+        CxbxrImpl_End(); // This has no use (waited-for API's aren't pushed thus not handled)
+#else // experimental 
         CxbxrImpl_End();
+#endif
         break;
     case X_D3DDevice_EndPush:  break;
     case X_D3DDevice_EndPushBuffer:  break;
@@ -1621,7 +1655,7 @@ void HLE_API_handle_method
     case X_D3DDevice_EndState:  break;
     case X_D3DDevice_EndStateBlock:  break;
     case X_D3DDevice_EndVisibilityTest:
-        *(bool*)argv[1] = false;
+        ReceiveKickOffWaitForAPI();
         break;
     case X_D3DDevice_FlushVertexCache:  break;
     case X_D3DDevice_GetBackBuffer:  break;
@@ -1639,7 +1673,7 @@ void HLE_API_handle_method
     case X_D3DDevice_GetDisplayFieldStatus:  break;
     case X_D3DDevice_GetDisplayMode:  break;
     case X_D3DDevice_GetGammaRamp:
-        *(bool*)argv[1] = false;
+        ReceiveKickOffWaitForAPI();
         break;
     case X_D3DDevice_GetIndices:  break;
     case X_D3DDevice_GetLight:  break;
@@ -1650,7 +1684,7 @@ void HLE_API_handle_method
     case X_D3DDevice_GetOverscanColor:  break;
     case X_D3DDevice_GetPalette:  break;
     case X_D3DDevice_GetPersistedSurface:
-        *(bool*)argv[1] = false;
+        ReceiveKickOffWaitForAPI();
         break;
     case X_D3DDevice_GetPixelShader:  break;
     case X_D3DDevice_GetPixelShaderConstant:  break;
@@ -1699,15 +1733,20 @@ void HLE_API_handle_method
         break;
     case X_D3DDevice_MultiplyTransform:  break;
     case X_D3DDevice_Nop:  break;
-    case X_D3DDevice_PersistDisplay: *(bool*)argv[1] = false; break;
+    case X_D3DDevice_PersistDisplay:
+        ReceiveKickOffWaitForAPI();
+        break;
     case X_D3DDevice_Present:
+#if 0 // experimental
 #define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
-        //CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
-        *(bool*)argv[1] = false;
+        CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
+#else
+        ReceiveKickOffWaitForAPI();
+#endif
         break;
     case X_D3DDevice_PrimeVertexCache:  break;
     case X_D3DDevice_Reset:
-        *(bool*)argv[1] = false;
+        ReceiveKickOffWaitForAPI();
         break;
     case X_D3DDevice_RunPushBuffer:
         //todo: RunPushbuffer() could be nested, here we assume it only runs in one level. 
@@ -1740,8 +1779,11 @@ void HLE_API_handle_method
     case X_D3DDevice_SetDepthClipPlanes:  break;
     case X_D3DDevice_SetFlickerFilter:  break;
     case X_D3DDevice_SetGammaRamp:
+#if 0 // Was doing both, which had no use (waited-for API's aren't pushed thus not handled)
         CxbxrImpl__SetGammaRamp((xbox::dword_xt)/* dwFlags*/argv[1], (D3DGAMMARAMP*)/* pRamp*/argv[2]);
-        *(bool*)argv[3] = false;
+#else
+        ReceiveKickOffWaitForAPI(); // Note: Was clearing argv[3] (wrong offset)
+#endif
         break;
     case X_D3DDevice_SetIndices:
         CxbxrImpl_SetIndices((xbox::X_D3DIndexBuffer*)/* pIndexData */argv[1], (xbox::uint_xt) /* BaseVertexIndex */ argv[2]);
@@ -1791,8 +1833,7 @@ void HLE_API_handle_method
     case X_D3DDevice_SetTextureStageState:  break;
     case X_D3DDevice_SetTextureStageStateNotInline:  break;
     case X_D3DDevice_SetTile:
-        if (argv[3] != 0)
-            *(bool*)argv[3] = false;
+        ReceiveKickOffWaitForAPI(); // Note: Was clearing argv[3] (wrong offset)
         break;
     case X_D3DDevice_SetTimerCallback:  break;
     case X_D3DDevice_SetTransform:
@@ -1825,8 +1866,11 @@ void HLE_API_handle_method
         break;
     case X_D3DDevice_SetWaitCallback:  break;
     case X_D3DDevice_Swap:
-        //CxbxrImpl_Swap(argv[1]);
-        *(bool*)argv[1] = false;
+#if 0 // experimental
+        CxbxrImpl_Swap(argv[1]);
+#else
+        ReceiveKickOffWaitForAPI();
+#endif
         break;
     case X_D3DDevice_SwitchTexture:
         CxbxrImpl_SwitchTexture((xbox::dword_xt)argv[1], (xbox::dword_xt)argv[2], (xbox::dword_xt)argv[3]);
@@ -1835,17 +1879,25 @@ void HLE_API_handle_method
     case X_D3DResource_BlockUntilNotBusy:  break;
     case X_Direct3D_CreateDevice:  break;
     case X_EmuKickOffWait:
-        //argv[2] is the token of the API which calls EmuKickOffWait()
-        if (argv[1] != 0)
-            *(DWORD*)argv[1] = 0;
+        assert(argv[1] != 0 && "X_EmuKickOffWait must receive an assigned pointer to WaitForPGRAPH");
+        assert(X_D3DAPI_ENUM_START <= argv[2] && argv[2] <= X_D3DAPI_ENUM_END && "X_EmuKickOffWait received invalid X_D3DAPI_ENUM argument");
+        assert(argv[2] != X_EmuKickOffWait && "X_EmuKickOffWait cannot wait for itself");
+        // Note : Since the X_D3DAPI_ENUM being waited for isn't pushed itself, we can't detect it's actually finished!
+        ClearKickOffWaitForPGRAPH();
         break;
     case X_Lock2DSurface:
-        //CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
-        *(bool*)argv[1] = false;
+#if 0 // experimental
+        CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
+#else
+        ReceiveKickOffWaitForAPI();
+#endif
         break;
     case X_Lock3DSurface:
-        //CxbxrImpl_Lock3DSurface((xbox::X_D3DPixelContainer*)/* pPixelContainer*/argv[1], (xbox::uint_xt)/*Level*/argv[2], (D3DLOCKED_BOX*)/* pLockedVolume*/argv[3], (D3DBOX*)/* pBox*/argv[4], (xbox::dword_xt)/*Flags*/argv[5]);
-        *(bool*)argv[1] = false;
+#if 0 // experimental
+        CxbxrImpl_Lock3DSurface((xbox::X_D3DPixelContainer*)/* pPixelContainer*/argv[1], (xbox::uint_xt)/*Level*/argv[2], (D3DLOCKED_BOX*)/* pLockedVolume*/argv[3], (D3DBOX*)/* pBox*/argv[4], (xbox::dword_xt)/*Flags*/argv[5]);
+#else
+        ReceiveKickOffWaitForAPI();
+#endif
         break;
     default:
         break;
