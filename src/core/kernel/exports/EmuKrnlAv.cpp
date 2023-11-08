@@ -156,7 +156,7 @@ ULONG AvQueryAvCapabilities()
 xbox::PVOID xbox::AvSavedDataAddress = xbox::zeroptr;
 extern xbox::X_D3DSurface* CxbxrImpl_GetPersistedSurface();
 extern xbox::X_D3DSurface xboxPersistSurface;
-extern VMManager g_VMManager;;
+extern VMManager g_VMManager;
 extern xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface();
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()

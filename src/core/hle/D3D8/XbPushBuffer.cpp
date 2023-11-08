@@ -394,7 +394,7 @@ void CxbxrImpl_LazySetTextureState(NV2AState* d)
 					&&(minFilter == xbox::X_D3DTEXF_LINEAR)) {
 					magFilter = xbox::X_D3DTEXF_QUINCUNX;
 					if (((convolutionKernel & NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL) == NV097_SET_TEXTURE_FILTER_CONVOLUTION_KERNEL_GAUSSIAN_3)) {
-						magFilter = xbox::X_D3DTEXF_GAUSSIANCUBIC;;
+						magFilter = xbox::X_D3DTEXF_GAUSSIANCUBIC;
 					}
 					minFilter = magFilter;
 				}
