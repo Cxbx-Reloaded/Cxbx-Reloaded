@@ -3276,7 +3276,8 @@ DWORD* HLE_PushPrepare(X_D3DAPI_ENUM hleAPI, int dword_count)
 		pPush_local = (DWORD*)CxbxrImpl_MakeSpace(); //make new pushbuffer space and get the pointer to it.
 
 	// process xbox D3D API enum and arguments and push them to pushbuffer for pgraph to handle later.
-	pPush_local[0] = (DWORD)HLE_PUSH_ENCODE(dword_count - 1);
+	int argument_count = dword_count - 1;
+	pPush_local[0] = (DWORD)HLE_PUSH_ENCODE(argument_count);
 	pPush_local[1] = (DWORD)hleAPI;
 	return pPush_local;
 	// Note : caller must set remaining arguments in pPush_local[2] onwards
