@@ -1858,10 +1858,9 @@ void HLE_API_handle_method
     case X_D3DDevice_SetVerticalBlankCallback:  break;
     case X_D3DDevice_SetViewport:
         extern xbox::X_D3DVIEWPORT8 HLEViewport;
-        if (argv[1] != 0) {
-            HLEViewport = *(xbox::X_D3DVIEWPORT8*)&argv[2];
-            CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8*)&HLEViewport);
-        }
+        if (argv[1] != 0)
+            HLEViewport = *(xbox::X_D3DVIEWPORT8*)argv[1];
+
         CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8*)argv[1]);
         break;
     case X_D3DDevice_SetWaitCallback:  break;
@@ -2975,12 +2974,12 @@ int pgraph_handle_method(
 
                 case NV097_SET_POLYGON_OFFSET_SCALE_FACTOR://done //pg->KelvinPrimitive.SetPolygonOffsetScaleFactor
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
-                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZSLOPESCALE, pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZSLOPESCALE, (uint32_t)pg->KelvinPrimitive.SetPolygonOffsetScaleFactor);
                     break;
 
                 case NV097_SET_POLYGON_OFFSET_BIAS://done //pg->KelvinPrimitive.SetPolygonOffsetBias
                     // TODO : float assert(arg0 == pg->KelvinPrimitive.SetPolygonOffsetBias);
-                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZOFFSET, pg->KelvinPrimitive.SetPolygonOffsetBias);
+                    NV2ARenderStates.SetXboxRenderState(xbox::X_D3DRS_POLYGONOFFSETZOFFSET, (uint32_t)pg->KelvinPrimitive.SetPolygonOffsetBias);
                     break;
 
                 case NV097_SET_FRONT_POLYGON_MODE://D3DRS_FILLMODE D3DRS_TWOSIDEDLIGHTING//pg->KelvinPrimitive.SetFrontPolygonMode , xbox sets KelvinPrimitive.SetBackPolygonMode together with KelvinPrimitive.SetFrontPolygonMode in the same time

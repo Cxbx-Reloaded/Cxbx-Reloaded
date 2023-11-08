@@ -3266,6 +3266,10 @@ void HLE_PushInit()
 	g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 }
 
+const int HLE_PushStart = 2;
+
+#define NR_DWORDS(size) (ROUND_UP(size, sizeof(DWORD)) / sizeof(DWORD))
+
 /// Init pushbuffer related pointers
 DWORD* HLE_PushPrepare(X_D3DAPI_ENUM hleAPI, int dword_count)
 {
@@ -3296,7 +3300,7 @@ void HLE_PushEnd(int dword_count)
 
 void HLE_PushApi(X_D3DAPI_ENUM hleAPI)
 {
-	const int dword_count = 2;
+	const int dword_count = HLE_PushStart;
 
 	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
 	HLE_PushEnd(dword_count);
@@ -3304,7 +3308,7 @@ void HLE_PushApi(X_D3DAPI_ENUM hleAPI)
 
 void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2)
 {
-	const int dword_count = 3;
+	const int dword_count = HLE_PushStart + 1;
 
 	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
 	pPush_local[2] = arg2;
@@ -3313,7 +3317,7 @@ void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2)
 
 void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3)
 {
-	const int dword_count = 4;
+	const int dword_count = HLE_PushStart + 2;
 
 	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
 	pPush_local[2] = arg2;
@@ -3323,7 +3327,7 @@ void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3)
 
 void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4)
 {
-	const int dword_count = 5;
+	const int dword_count = HLE_PushStart + 3;
 
 	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
 	pPush_local[2] = arg2;
@@ -3334,7 +3338,7 @@ void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4)
 
 void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD arg5)
 {
-	const int dword_count = 6;
+	const int dword_count = HLE_PushStart + 4;
 
 	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
 	pPush_local[2] = arg2;
@@ -3346,7 +3350,7 @@ void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD
 
 void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD arg5, DWORD arg6)
 {
-	const int dword_count = 7;
+	const int dword_count = HLE_PushStart + 5;
 
 	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
 	pPush_local[2] = arg2;
@@ -3359,7 +3363,7 @@ void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD
 
 void HLE_PushApi(X_D3DAPI_ENUM hleAPI, DWORD arg2, DWORD arg3, DWORD arg4, DWORD arg5, DWORD arg6, DWORD arg7)
 {
-	const int dword_count = 8;
+	const int dword_count = HLE_PushStart + 6;
 
 	DWORD* pPush_local = HLE_PushPrepare(hleAPI, dword_count);
 	pPush_local[2] = arg2;
@@ -5200,7 +5204,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 #if !USEPGRAPH_SetViewport
 	CxbxrImpl_SetViewport(pViewport);
 #else
-	const int dword_count = 9;
+	int dword_count = HLE_PushStart + 1;
+	if (pViewport)
+		dword_count += NR_DWORDS(sizeof(X_D3DVIEWPORT8));
 
 	DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetViewport, dword_count);
 	// special case: pPush_local[2] is actually pointing to pPush_local[3] where pPush_local[] would be over written by other patched HLE apis so we have to preserve the viewport and call CxbxImpl_SetViewport() with the preserved viewport.
@@ -5209,13 +5215,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 	if (pViewport) {
 		pPush_local[2] = (DWORD)&pPush_local[3];
 		*(X_D3DVIEWPORT8*)&pPush_local[3] = *pViewport;
-
 		//todo: we preserve the viewport for debug. could be removed in future.
 		g_Xbox_Viewport = *pViewport;
 	}
-	else {
+	else
 		pPush_local[2] = 0; // No pViewport
-	}
 
 	HLE_PushEnd(dword_count);
 #endif
@@ -5771,7 +5775,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 		CxbxrImpl_SetTexture(Stage, pTexture);
 	}
 	else {
-		const int dword_count = 16;
+		int dword_count = HLE_PushStart + 2;
 
 		DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
 
@@ -5796,9 +5800,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 			}
 			//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
 		}
-		else {
+		else
 			pPush_local[3] = 0; // no pTexture
-		}
 
 		//*(UINT64*)& pPush_local[4] = pTexture->Data;
 		//pPush_local[5] = (DWORD)pTexture->Format;
@@ -8801,16 +8804,22 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
 		CxbxrImpl_SetTransform(State, pMatrix);
 	}
 	else {
-		// Allocate 32 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
-		const int dword_count = 32; // Note : 2 + 1 + 1 + 16 would be enough
+		int dword_count = HLE_PushStart + 2;
+		if (pMatrix)
+			dword_count += NR_DWORDS(sizeof(D3DMATRIX));
 
 		DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTransform, dword_count);
+
 		pPush_local[2] = (DWORD)State;
-		//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
-		pPush_local[3] = (DWORD)&pPush_local[4];
-		// store the transform matrix in pushbuffer so we can leave it along.
-		// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
-		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
+		if (pMatrix) {
+			//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+			pPush_local[3] = (DWORD)&pPush_local[4];
+			// store the transform matrix in pushbuffer so we can leave it along.
+			// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+			*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
+		}
+		else
+			pPush_local[3] = 0; // No pMatrix
 
 		HLE_PushEnd(dword_count);
 	}
@@ -8860,16 +8869,23 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 		CxbxrImpl_SetTransform(State, pMatrix);
 	}
 	else {
-		// allocate 32 DWORDS, ie. 128 bytes in pushbuffer because we're storing the whole transform matrix into the pushbuffer and point pMatrix to it.
-		const int dword_count = 32; // Note : 2 + 1 + 1 + 16 would be enough
+		int dword_count = HLE_PushStart + 2;
+		if (pMatrix)
+			dword_count += NR_DWORDS(sizeof(D3DMATRIX));
 
 		DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTransform, dword_count);
+
 		pPush_local[2] = (DWORD)State;
-		//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
-		pPush_local[3] = (DWORD)&pPush_local[4];
-		// store the transform matrix in pushbuffer so we can leave it along.
-		// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
-		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
+		if (pMatrix)
+		{
+			//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+			pPush_local[3] = (DWORD)&pPush_local[4];
+			// store the transform matrix in pushbuffer so we can leave it along.
+			// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+			*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
+		}
+		else
+			pPush_local[3] = 0; // No pMatrix
 
 		HLE_PushEnd(dword_count);
 	}
@@ -12405,16 +12421,22 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 
 	XB_TRMP(D3DDevice_SetLight)(Index, pLight);
 
-	const int dword_count = 32; // TODO : 2 + 1 + 1 + 13 would be enough
+	int dword_count = HLE_PushStart + 2;
+	if (pLight)
+		dword_count += NR_DWORDS(sizeof(X_D3DLIGHT8));
 
 	// Passing in whole *pLight to pushbuffer to prevent content of *pLight being altered before we reach CxbxrImpl_SetLight()
 	// both xbox api and HLE patch copy *pLight and preserve the variable.
-
 	DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetLight, dword_count);
 
 	pPush_local[2] = (DWORD)Index;
-	pPush_local[3] = (DWORD)&pPush_local[4];
-	*(X_D3DLIGHT8*)pPush_local[3] = *pLight;
+	if (pLight)
+	{
+		pPush_local[3] = (DWORD)&pPush_local[4];
+		*(X_D3DLIGHT8*)pPush_local[4] = *pLight;
+	}
+	else
+		pPush_local[3] = 0; // No pLight
 
 	HLE_PushEnd(dword_count);
 
@@ -13445,7 +13467,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 	// make sure pushbuffer is processed.
 	// CxbxrImpl_RunVertexStateShader(Address,pData);
 
-	const int dword_count = 8;
+	int dword_count = HLE_PushStart + 2;
+	if (pData)
+		dword_count += 4;
 
 	DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_RunVertexStateShader, dword_count);
 
@@ -13454,9 +13478,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 		pPush_local[3] = (DWORD)&pPush_local[4];
 		memcpy(&pPush_local[4], pData, sizeof(float) * 4);
 	}
-	else {
+	else
 		pPush_local[3] = 0; // No pData
-	}
 
 	HLE_PushEnd(dword_count);
 }
