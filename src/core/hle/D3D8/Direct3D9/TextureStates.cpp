@@ -193,7 +193,6 @@ bool XboxTextureStateConverter::InitWithNV2A(XboxRenderStateConverter* pState)
     return true;
 }
 
-
 void XboxTextureStateConverter::BuildTextureStateMappingTable()
 {
     EmuLog(LOG_LEVEL::INFO, "Building Cxbx to XDK Texture State Mapping Table");
@@ -486,16 +485,19 @@ void XboxTextureStateConverter::Set(int textureStage, DWORD xboxState, DWORD Val
 
     return;
 }
+
 // copy whole internal buffer to buffer via argument
-void XboxTextureStateConverter::CopyTo(uint32_t* ptarget) {
+void XboxTextureStateConverter::CopyTo(uint32_t* ptarget)
+{
     // Read the value of the current stage/state from the Xbox data structure
     memcpy(ptarget,D3D__TextureState, sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
 
     return;
 }
-// return internal buffer pointer
-uint32_t* XboxTextureStateConverter::Buffer(void) {
 
+// return internal buffer pointer
+uint32_t* XboxTextureStateConverter::Buffer(void)
+{
     // Read the value of the current stage/state from the Xbox data structure
     return D3D__TextureState;
 }

@@ -31,8 +31,8 @@
 
 // Universal Error Message (UEM)
 static std::string uem_str = "Your Xbox requires service.\n\nPlease call Xbox Customer Support.\n"
-"\n\nIhre Xbox muss gewartet werden.\n\nBitte den Xbox-Kundendienst anrufen.\n"
-"\n\nLa consola Xbox requiere asistencia técnica.\n\nLlame al servicio de soporte al cliente de la Xbox.\n"
-"\n\nXbox ha bisogno di manutenzione.\n\nChiamare l'Assistenza Clienti di Xbox.\n"
-"\n\nVotre Xbox ne fonctionne pas correctement.\n\nVeuillez contacter le Support à la clientèle Xbox.\n"
-;//                             "\n\n不具合が生じました。お手数ですが、\n\nXboxカスタマー　サポートにお問い合わせください。";
+                             "\n\nIhre Xbox muss gewartet werden.\n\nBitte den Xbox-Kundendienst anrufen.\n"
+                             "\n\nLa consola Xbox requiere asistencia técnica.\n\nLlame al servicio de soporte al cliente de la Xbox.\n"
+                             "\n\nXbox ha bisogno di manutenzione.\n\nChiamare l'Assistenza Clienti di Xbox.\n"
+                             "\n\nVotre Xbox ne fonctionne pas correctement.\n\nVeuillez contacter le Support à la clientèle Xbox.\n"
+                             "\n\n不具合が生じました。お手数ですが、\n\nXboxカスタマー　サポートにお問い合わせください。";

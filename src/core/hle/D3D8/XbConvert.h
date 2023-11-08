@@ -315,7 +315,6 @@ inline DWORD EmuXB2PC_D3DPrimitiveCount(DWORD vertex_count,xbox::X_D3DPRIMITIVET
 	return hostprimitivecount;
 }
 
-
 extern void EmuUnswizzleBox
 (
 	CONST PVOID pSrcBuff,

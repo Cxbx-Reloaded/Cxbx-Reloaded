@@ -1231,7 +1231,6 @@
 #        define NV097_SET_LIGHT_CONTROL_SEPARATE_SPECULAR_EN                        0x00000001
 #        define NV097_SET_LIGHT_CONTROL_SEPARATE_SPECULAR_EN_FALSE                  0x00000000
 #        define NV097_SET_LIGHT_CONTROL_SEPARATE_SPECULAR_EN_TRUE                   0x00000001
-
 #   define NV097_SET_COLOR_MATERIAL                           0x00000298
 #   define NV097_SET_FOG_MODE                                 0x0000029C
 #       define NV097_SET_FOG_MODE_V_LINEAR                        0x2601
@@ -2159,7 +2158,6 @@
 #define NV2A_LTCTXA_COUNT  26
 #define NV2A_LTCTXB_COUNT  52
 #define NV2A_LTC1_COUNT    20
-
 
 #define NV2A_RENDER_MEMORY_ALIGNMENT        64
 

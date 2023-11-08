@@ -45,9 +45,6 @@
 #include "nv2a_regs.h" // For NV2A_MAX_TEXTURES, etc
 
 
-
-
-
 typedef xbox::addr_xt hwaddr; // Compatibility; Cxbx uses xbox::addr_xt, xqemu and OpenXbox use hwaddr 
 typedef uint32_t value_t; // Compatibility; Cxbx values are uint32_t (xqemu and OpenXbox use uint64_t)
 
@@ -117,7 +114,6 @@ static int ffs(int valu)
 #define CASE_6(v, step) CASE_4(v, step) : CASE_2(v + (step) * 4, step)
 #define CASE_10(v, step) CASE_8(v, step) : CASE_2(v + (step) * 8, step)
 
-
 #define NV2A_DEVICE(obj) \
     OBJECT_CHECK(NV2AState, (obj), "nv2a")
 
@@ -159,7 +155,7 @@ typedef struct VertexAttribute {
 	uint32_t stride;
 
 	bool needs_conversion;
-	uint8_t *converted_buffer=nullptr;
+	uint8_t *converted_buffer = nullptr;
 	unsigned int converted_elements;
 	unsigned int converted_size;
 	unsigned int converted_count;
@@ -726,12 +722,14 @@ typedef struct PGRAPHState {
 
 	QemuCond fifo_access_cond;
 	QemuCond flip_3d;
+
 	//KelvinPrimitive.SetContextDmaColor ,  KelvinPrimitive.SetContextDmaZeta
 	//xbox::addr_xt dma_color, dma_zeta;
 	Surface surface_color, surface_zeta;
 	unsigned int surface_type;
 	SurfaceShape surface_shape;
 	SurfaceShape last_surface_shape;
+
 	//use pg->KelvinPrimitive.SetContextDmaA , pg->KelvinPrimitive.SetContextDmaB
 	//xbox::addr_xt dma_a, dma_b;
 #ifdef USE_TEXTURE_CACHE
@@ -744,6 +742,7 @@ typedef struct PGRAPHState {
 	GHashTable *shader_cache;
 #endif
 	ShaderBinding *shader_binding;
+
 	//KelvinPrimitive.SetTextureMatrixEnable[4]
 	//bool texture_matrix_enable[NV2A_MAX_TEXTURES];
 
@@ -814,16 +813,20 @@ typedef struct PGRAPHState {
 	//float light_local_attenuation[NV2A_MAX_LIGHTS][3];
 
 	VertexAttribute vertex_attributes[NV2A_VERTEXSHADER_ATTRIBUTES];
+
 	//init in inline_array_length for drawUP draw calls, which vertices are pushed to pushbuffer, vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
 	DrawMode draw_mode;
 	unsigned int inline_array_length;
 	uint32_t inline_array[NV2A_MAX_BATCH_LENGTH];
 	GLuint gl_inline_array_buffer;
+
 	//init in inline_elements_length for indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
 	unsigned int inline_elements_length;
 	uint16_t inline_elements[NV2A_MAX_BATCH_LENGTH]; // Cxbx-Reloaded TODO : Restore uint32_t once D3D_draw_inline_elements can using that
+
 	//init in inline_buffer_length for draw calls using BeginEng()/SetVertexDataColor()/SetVertexData4f(), which vertices are pushed to pushbuffer, vertex attrs must be collected during each SetVertexDataXX() calls.
 	unsigned int inline_buffer_length;//this counts the total vertex count
+
 	unsigned int inline_buffer_attr_length;//this counts the total attr counts. let's say if we have i vertices, and a attrs for each vertex, and inline_buffer_attr_length == i * a; this is for the ease of vertex setup process.
 	float inline_buffer[NV2A_MAX_BATCH_LENGTH*16*4];
 	//init in inline_elements_length for non indexed draw calls, which vertex buffers are set in KelvinPrimitive.SetVertexDataOffset[16], vertex attrs are set in KelvinPrimitive.SetVertexDataFormat[16]
@@ -837,7 +840,7 @@ typedef struct PGRAPHState {
 	GLuint gl_element_buffer;
 	GLuint gl_memory_buffer;
 	GLuint gl_vertex_array;
-	
+
 	bool waiting_for_nop;
 	bool waiting_for_flip;
 	bool waiting_for_context_switch;
@@ -847,14 +850,12 @@ typedef struct PGRAPHState {
 	uint32_t pgraph_regs[NV_PGRAPH_SIZE/4];//NV_PGRAPH_SIZE is in bytes, we're declare this array in dwords. for all access to this array, the register offset must be divided by 4.
 
 	volatile union { //map regs[] with struct with members from reverse engineering xbox d3d code. trace xbox d3d call, follow the pushbuffer command/args, and corresponding NV097 methods, we can guess the meanings of them.
-            uint32_t regs[0x2000/4];//NV097_XXX register offset is in bytes, we're declare this array in dwords. when use register offset as index, the register offset must be divided by 4.
-			NV097KelvinPrimitive KelvinPrimitive;
+		uint32_t regs[0x2000/4];//NV097_XXX register offset is in bytes, we're declare this array in dwords. when use register offset as index, the register offset must be divided by 4.
+		NV097KelvinPrimitive KelvinPrimitive;
 	};
 
 	//handle for fix function vertex shader.
 	DWORD vsh_FVF_handle;
-
-
 } PGRAPHState;
 
 typedef struct OverlayState {

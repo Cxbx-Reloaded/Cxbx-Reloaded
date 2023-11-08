@@ -83,6 +83,7 @@
 #include "HleInNv2a.h"
 //#include "dxgi.h"
 #include "D3dx9tex.h"
+
 using namespace Microsoft::WRL;
 
 XboxRenderStateConverter XboxRenderStates;
@@ -201,11 +202,7 @@ static xbox::X_D3DSurface            g_Xbox_DepthStencil = { 0 };
        xbox::X_VERTEXSHADERCONSTANTMODE g_Xbox_VertexShaderConstantMode = X_D3DSCM_192CONSTANTS; // Set by D3DDevice_SetShaderConstantMode, TODO : Move to XbVertexShader.cpp
 static xbox::dword_xt                   g_Xbox_BaseVertexIndex = 0; // Set by D3DDevice_SetIndices, read by D3DDevice_DrawIndexedVertices : a value that's effectively added to every vertex index (as stored in an index buffer) by multiplying this by vertex stride and added to the vertex buffer start (see BaseVertexIndex in CxbxDrawIndexed)
 static xbox::dword_xt                  *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
-bool is_pushbuffer_recording(void)
-{
-	//return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
-	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
-}
+
        xbox::X_PixelShader*			g_pXbox_PixelShader = xbox::zeroptr;
 	   xbox::X_PixelShader          g_Xbox_PixelShader = {0};
 static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
@@ -236,6 +233,12 @@ float g_Xbox_BackbufferScaleY = 1;
 xbox::X_D3DSWAP g_LastD3DSwap = (xbox::X_D3DSWAP) -1;
 
 static constexpr size_t INDEX_BUFFER_CACHE_SIZE = 10000;
+
+bool is_pushbuffer_recording(void)
+{
+	//return (NV2A_stateFlags & X_STATE_RECORDPUSHBUFFER) != 0;
+	return g_pXbox_BeginPush_Buffer == nullptr ? false : true;
+}
 
 static void CxbxImGui_RenderD3D9(ImGuiUI* m_imgui, IDirect3DSurface9* renderTarget)
 {
@@ -1005,7 +1008,6 @@ inline bool IsXboxResourceLocked(const xbox::X_D3DResource *pXboxResource)
 inline bool IsXboxResourceD3DCreated(const xbox::X_D3DResource *pXboxResource)
 {
 	bool result = !!(pXboxResource->Common & X_D3DCOMMON_D3DCREATED);
-
 	return result;
 }
 #endif
@@ -1181,7 +1183,7 @@ void CxbxrSetScreenSpaceOffsetXY(float x, float y)
 
 void CxbxrSetZScale(float z)
 {
-	g_ZScale=z;
+	g_ZScale = z;
 }
 
 void CxbxrSetWScale(float w)
@@ -1198,8 +1200,8 @@ float CxbxrGetZScale(void)
 {
 	float ssScale = g_ZScale;
 
-	if (ssScale < 1.0)
-		ssScale = 1.0;
+	if (ssScale < 1.0f)
+		ssScale = 1.0f;
 
 	return ssScale;
 }
@@ -1208,8 +1210,8 @@ float CxbxrGetWScale(void)
 {
 	float ssScale = g_WScale;
 
-	if (ssScale < 1.0)
-		ssScale = 1.0;
+	if (ssScale < 1.0f)
+		ssScale = 1.0f;
 
 	return ssScale;
 }
@@ -1218,8 +1220,8 @@ float CxbxrGetSuperSampleScale(void)
 {
 	float ssScale=MIN(g_SuperSampleScaleX,g_SuperSampleScaleY);
 
-	if (ssScale<1.0)
-		ssScale = 1.0;
+	if (ssScale < 1.0f)
+		ssScale = 1.0f;
 
 	return ssScale;
 }
@@ -1236,12 +1238,12 @@ void CxbxrGetSuperSampleScaleXY(NV2AState* d,float& x, float& y)
 
 	//D3DMULTISAMPLEMODE_4X
 	if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4<<12)) != 0) {
-		y /= 2.0;
+		y /= 2.0f;
 	}
 
 	//D3DMULTISAMPLEMODE_2X
 	if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2<<12)) != 0) {
-		x /= 2.0;
+		x /= 2.0f;
 	}
 
 	/*x = g_SuperSampleScaleX;
@@ -2950,7 +2952,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
 			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Converting quads to %d triangle indices (D3DFMT_INDEX16)", RequiredIndexCount);
 			CxbxConvertQuadListToTriangleListIndices(pXboxIndexData, RequiredIndexCount, pHostIndexBufferData);
-		}else if (convertIndexBuffer == convertQuadStrip) {
+		} else if (convertIndexBuffer == convertQuadStrip) {
 			// Note, that LowIndex and HighIndex won't change due to any quad-to-triangle conversion,
 			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
 			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Converting quads to %d triangle indices (D3DFMT_INDEX16)", RequiredIndexCount);
@@ -3081,8 +3083,8 @@ void GetMultiSampleScaleRaw(float& xScale, float& yScale)
 // so we need to know the space they are in to interpret it correctly
 void GetScreenScaleFactors(float& scaleX, float& scaleY)
 {
-	scaleX = 1;
-	scaleY = 1;
+	scaleX = 1.f;
+	scaleY = 1.f;
 
 	// With fixed-function mode, titles don't have to account for these scale factors,
 	// so we don't have reverse them.

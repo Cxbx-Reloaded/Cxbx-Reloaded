@@ -1090,7 +1090,9 @@ static bool FreeCxbxVertexDeclaration(CxbxVertexDeclaration *pCxbxVertexDeclarat
 
 	return false;
 }
+
 extern xbox::dword_xt * HLE_get_NV2A_vertex_program_slot_ptr(const DWORD slot_index);
+
 xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress)
 {
 	if (SlotIndexAddress < X_VSH_MAX_INSTRUCTION_COUNT) {
@@ -1108,10 +1110,12 @@ VertexDeclarationKey GetXboxVertexAttributesKey(xbox::X_VERTEXATTRIBUTEFORMAT* p
 	// For now, we use different declarations depending on if the fixed function pipeline
 	// is in use, even if the attributes are the same
 	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+
 	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		VSHMode = g_NV2A_VertexShaderMode;
 	}
+
 	return VSHMode == VertexShaderMode::FixedFunction
 		? attributeHash
 		: attributeHash ^ 1;
@@ -1162,16 +1166,19 @@ void CxbxUpdateHostVertexShader()
 
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+
 	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		VSHMode = g_NV2A_VertexShaderMode;
 	}
+
 	if (VSHMode == VertexShaderMode::FixedFunction) {
 		IDirect3DVertexShader* fixedFunctionShader = nullptr;
 		HRESULT hRet;
 
 		if (g_UseFixedFunctionVertexShader) {
 			static IDirect3DVertexShader* ffHlsl = nullptr;
+
 			if (ffHlsl == nullptr) {
 				ID3DBlob* pBlob = nullptr;
 				EmuCompileFixedFunction(&pBlob);
@@ -1180,6 +1187,7 @@ void CxbxUpdateHostVertexShader()
 					if (FAILED(hRet)) CxbxrAbort("Failed to create fixed-function shader");
 				}
 			}
+
 			fixedFunctionShader = ffHlsl;
 		}
 
@@ -1198,20 +1206,21 @@ void CxbxUpdateHostVertexShader()
 
 		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughshader);
 	}
-
-
 	else {
 		xbox::dword_xt VSH_FunctionSlots_StartAddress=g_Xbox_VertexShader_FunctionSlots_StartAddress;
 		if (is_pgraph_using_NV2A_Kelvin())
 			VSH_FunctionSlots_StartAddress = g_NV2A_VertexShader_FunctionSlots_StartAddress;
+
 		auto pTokens = GetCxbxVertexShaderSlotPtr(VSH_FunctionSlots_StartAddress);
 		assert(pTokens);
+
 		// Create a vertex shader from the tokens
 		DWORD shaderSize;
         // there is already a cache existing in CreateShader.
 		auto VertexShaderKey = g_VertexShaderSource.CreateShader(pTokens, &shaderSize);
 		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderSource.GetShader(VertexShaderKey);
 		HRESULT hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
+
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
 }
@@ -1230,12 +1239,12 @@ void CxbxSetVertexShaderSlots(DWORD* pTokens, DWORD Address, DWORD NrInstruction
 	}
 
 	memcpy(CxbxVertexShaderSlotPtr, pTokens, NrInstructions * X_VSH_INSTRUCTION_SIZE_BYTES);
-
 	// Make sure slot parsing in EmuParseVshFunction (VshConvertToIntermediate) stops after the last slot;
 	// Just setting bit 0 in 3rd DWORD suffices (see XboxVertexShaderDecoder.VshGetField.FieldMapping[FLD_FINAL]) :
 	//g_Xbox_VertexShader_FunctionSlots[(X_VSH_MAX_INSTRUCTION_COUNT * X_VSH_INSTRUCTION_SIZE) + 3] = 1;
 	HLE_get_NV2A_vertex_program_slot_ptr(X_VSH_MAX_INSTRUCTION_COUNT)[3] = 1;
 }
+
 //------------------------------------------------------------------------------
 // g_PassthruProgramSpecularFog 
 //
@@ -1360,6 +1369,7 @@ CONST DWORD g_PassthruProgramWFog[] =
 		0x00000000, 0x0020161b, 0x0836106c, 0x2070f858,
 		0x00000000, 0x0020181b, 0x0836106c, 0x2070f861
 };
+
 static void CxbxSetVertexShaderPassthroughProgram()
 {
 	DWORD* XboxShaderBinaryPassthrough;
@@ -1379,14 +1389,19 @@ static void CxbxSetVertexShaderPassthroughProgram()
 	};
 	*/
 	DWORD programDwords=0;
+
 	//get xbox side projection transform matrix to determin the whether for source is Z or W.
 	extern void CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, D3DMATRIX * pMatrix); // temp glue
 	extern D3DMATRIX g_xbox_transform_Projection;
+
 	CxbxrImpl_GetTransform(xbox::X_D3DTS_PROJECTION, &g_xbox_transform_Projection);
 	DWORD fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE);
+
 	extern XboxRenderStateConverter NV2ARenderStates;
+
 	if(is_pgraph_using_NV2A_Kelvin())
 		fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGTABLEMODE);
+
 	if (fogTableMode == D3DFOG_NONE)
 	{
 		programDwords = sizeof(g_PassthruProgramSpecularFog) / sizeof(DWORD);
@@ -1403,6 +1418,7 @@ static void CxbxSetVertexShaderPassthroughProgram()
 		programDwords = sizeof(g_PassthruProgramWFog) / sizeof(DWORD);
 		XboxShaderBinaryPassthrough = (DWORD*)g_PassthruProgramWFog;
 	}
+
 	// LOG_TEST_CASE("Setting Xbox passthrough shader");
 	// Test cases : Many XDK samples & games
 
@@ -1451,11 +1467,14 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 
 	auto XboxVertexAttributesKey = GetXboxVertexAttributesKey(pXboxVertexAttributeFormat);
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = FetchCachedCxbxVertexDeclaration(XboxVertexAttributesKey);
+
 	extern VertexShaderMode g_NV2A_VertexShaderMode;//tmp glue
+
 	VertexShaderMode  VSHMode = g_Xbox_VertexShaderMode;
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		VSHMode = g_NV2A_VertexShaderMode;
 	}
+
 	if (pCxbxVertexDeclaration == nullptr) {
 		pCxbxVertexDeclaration = (CxbxVertexDeclaration*)calloc(1, sizeof(CxbxVertexDeclaration));
 

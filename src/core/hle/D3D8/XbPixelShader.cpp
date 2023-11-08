@@ -460,7 +460,7 @@ typedef struct s_CxbxPSDef {
 
 		return true;
 	}
-	
+
 	void SnapshotRuntimeVariables()
 	{
 		// Retrieve NV2AState via the (LLE) NV2A device :
@@ -482,14 +482,13 @@ typedef struct s_CxbxPSDef {
 		else {
 			// Fetch currently active texture types, which impact AdjustTextureModes
 			for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-				
-
 				if (g_pXbox_SetTexture[i])
 					ActiveTextureTypes[i] = GetXboxD3DResourceType(g_pXbox_SetTexture[i]);
 				else
 					ActiveTextureTypes[i] = xbox::X_D3DRTYPE_NONE;
 			}
 		}
+
 		// Pre-decode TexModeAdjust, which impacts AdjustTextureModes
 		DecodedTexModeAdjust = ((PSDef.PSFinalCombinerConstants >> PS_GLOBALFLAGS_SHIFT) & PS_GLOBALFLAGS_TEXMODE_ADJUST) > 0;
 
@@ -859,6 +858,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		if (pointSpriteEnable) {
 			startStage = 3;
 		}
+
 		// stage is for D3D texture stage, i is for kelvin hardware stage. when pointSpriteEnable is true, the stage starts with 3 instead of 0, but hardware stage always starts with 0.
 		for (int i = 0,stage=startStage; stage < 4; i++,stage++) {
 			// Determine COLOROP
@@ -926,6 +926,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 				else
 					sampleType[i] = SAMPLE_2D;
 			}
+
 			// FIXME!!!  colorOp/colorArg/alphaOp/alphaArg all have not direct equivalent in KelvinPrimitive. see reversed SetCombiners() code.
 			// why don't we set states[i].COLOROP?
 			states[i].COLORARG0 = (float)NV2A_colorArg0[i];// (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORARG0);// FIXME!!!
@@ -951,6 +952,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		int stage = 0;
 		if (pointSpriteEnable)
 			startStage = 3;
+
 		// stage is for D3D texture stage, i is for kelvin hardware stage. when pointSpriteEnable is true, the stage starts with 3 instead of 0, but hardware stage always starts with 0.
 		for (int i = 0, stage = startStage; stage < 4; i++, stage++) {
 			// Determine COLOROP
@@ -1014,6 +1016,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 			states[i].RESULTARG = (float)XboxTextureStates.Get(i, xbox::X_D3DTSS_RESULTARG);
 		}
 	}
+
 	// Create a key from the shader state
 	// Note currently this is padded since it's what we send to the GPU
 	auto key = 3 * ComputeHash(states, sizeof(states))
@@ -1220,9 +1223,9 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   extern xbox::X_PixelShader* pNV2A_PixelShader;
   const xbox::X_D3DPIXELSHADERDEF* pPSDef;
   if (is_pgraph_using_NV2A_Kelvin())
-	  pPSDef = pNV2A_PixelShader != nullptr ? pNV2A_PixelShader->pPSDef : nullptr;//(xbox::X_D3DPIXELSHADERDEF*)(NV2ARenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
+    pPSDef = pNV2A_PixelShader != nullptr ? pNV2A_PixelShader->pPSDef : nullptr;//(xbox::X_D3DPIXELSHADERDEF*)(NV2ARenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
   else
-	pPSDef = g_pXbox_PixelShader != nullptr ? (xbox::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
+    pPSDef = g_pXbox_PixelShader != nullptr ? (xbox::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
 
   if (pPSDef == nullptr) {
 	IDirect3DPixelShader9* pShader = nullptr;
@@ -1239,13 +1242,14 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   CxbxPSDef CompletePSDef;
   CompletePSDef.PSDef = *pPSDef;
   if (is_pgraph_using_NV2A_Kelvin()) {
-	  // read TextureModes directly from PSDef since it's copied from NV2A KelvinPrivinPrimitive
-	  CompletePSDef.PSDef.PSTextureModes = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+    // read TextureModes directly from PSDef since it's copied from NV2A KelvinPrivinPrimitive
+    CompletePSDef.PSDef.PSTextureModes = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
   }
   else {
-	  // Copy-in the PSTextureModes value which is stored outside the range of Xbox pixel shader render state slots :
-	  CompletePSDef.PSDef.PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
+    // Copy-in the PSTextureModes value which is stored outside the range of Xbox pixel shader render state slots :
+    CompletePSDef.PSDef.PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
   }
+
   // Fetch all other values that are used in the IsEquivalent check :
   // CompletePSDef.SnapshotRuntimeVariables() also require code change to see whether we sould pickup values from Kelvin or not.
   CompletePSDef.SnapshotRuntimeVariables();
