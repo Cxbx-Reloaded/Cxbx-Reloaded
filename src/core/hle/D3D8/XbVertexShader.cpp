@@ -1626,44 +1626,61 @@ extern void EmuParseVshFunction
 
 
 void InitShaderHotloading() {
+	static HANDLE fsWatcherThread = 0;
+
+	if (fsWatcherThread) {
+		EmuLog(LOG_LEVEL::ERROR2, "Ignoring request to start shader file watcher - it has already been started.");
+		return;
+	}
+
 	EmuLog(LOG_LEVEL::DEBUG, "Starting shader file watcher...");
-	HANDLE fsWatcherThread = CreateThread(nullptr, 0, [](void *param) -> DWORD {
 
-			// Determine the filename and directory for the fixed function shader
-			char cxbxExePath[MAX_PATH];
-			GetModuleFileName(GetModuleHandle(nullptr), cxbxExePath, MAX_PATH);
-			auto hlslDir = std::filesystem::path(cxbxExePath)
-				.parent_path()
-				.append("hlsl/");
+	auto fsWatcher = [](void* param) -> DWORD {
+		// Determine the filename and directory for the fixed function shader
+		char cxbxExePath[MAX_PATH];
+		GetModuleFileName(GetModuleHandle(nullptr), cxbxExePath, MAX_PATH);
+		auto hlslDir = std::filesystem::path(cxbxExePath)
+			.parent_path()
+			.append("hlsl/");
 
-			HANDLE changeHandle = FindFirstChangeNotification(hlslDir.string().c_str(), false, FILE_NOTIFY_CHANGE_LAST_WRITE);
+		HANDLE changeHandle = FindFirstChangeNotification(hlslDir.string().c_str(), false, FILE_NOTIFY_CHANGE_LAST_WRITE);
 
-			if (changeHandle == INVALID_HANDLE_VALUE) {
-				DWORD errorCode = GetLastError();
-				EmuLog(LOG_LEVEL::ERROR2, "Error initializing shader file watcher: %d", errorCode);
-				
-				return 1;
-			}
+		if (changeHandle == INVALID_HANDLE_VALUE) {
+			DWORD errorCode = GetLastError();
+			EmuLog(LOG_LEVEL::ERROR2, "Error initializing shader file watcher: %d", errorCode);
 
-			while (true) {
-				if (FindNextChangeNotification(changeHandle)) {
-					WaitForSingleObject(changeHandle, INFINITE);
+			return 1;
+		}
 
-					// Wait for changes to stop..
-					// Will usually be at least two - one for the file and one for the directory
-					while (true) {
-						FindNextChangeNotification(changeHandle);
-						if (WaitForSingleObject(changeHandle, 100) == WAIT_TIMEOUT) {
-							break;
-						}
+		while (true) {
+			if (FindNextChangeNotification(changeHandle)) {
+				WaitForSingleObject(changeHandle, INFINITE);
+
+				// Wait for changes to stop..
+				// Will usually be at least two - one for the file and one for the directory
+				while (true) {
+					FindNextChangeNotification(changeHandle);
+					if (WaitForSingleObject(changeHandle, 100) == WAIT_TIMEOUT) {
+						break;
 					}
+				}
 
-					isShaderFolderDirty = true;
-				}
-				else {
-					EmuLog(LOG_LEVEL::ERROR2, "Shader filewatcher failed to get the next notification");
-					return 1;
-				}
+				EmuLog(LOG_LEVEL::DEBUG, "Change detected in shader folder");
+				isShaderFolderDirty = true;
 			}
-		}, nullptr, 0, nullptr);
+			else {
+				EmuLog(LOG_LEVEL::ERROR2, "Shader filewatcher failed to get the next notification");
+				break;
+			}
+		}
+
+		EmuLog(LOG_LEVEL::DEBUG, "Shader file watcher exiting...");
+
+		// until there is a way to disable hotloading
+		// this is always an error
+		FindCloseChangeNotification(changeHandle);
+		return 1;
+	};
+
+	fsWatcherThread = CreateThread(nullptr, 0, fsWatcher, nullptr, 0, nullptr);
 }
