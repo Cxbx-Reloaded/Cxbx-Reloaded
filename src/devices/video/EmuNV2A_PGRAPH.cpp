@@ -1541,12 +1541,27 @@ void HLE_API_handle_method
     {
     //case X_CDevice_SetStateUP:  break;
     //case X_CDevice_SetStateVB:  break;
+    case X_D3D_BlockOnTime:  break;
+    case X_D3D_CommonSetRenderTarget:
+        //todo:this might be redundant because the HLE implementation of this api never set the call level, so this patch will always calls CxbxrImpl_SetRenderTarget(). we might use the fall through directly.
+        CxbxrImpl_D3D_CommonSetRenderTarget((xbox::X_D3DSurface*)/* pRenderTarget*/argv[1], (xbox::X_D3DSurface*)/* pNewZStencil*/argv[2], (void*)/* unknown*/argv[3]);
+        // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
+        CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
+        break;
+    case X_D3D_DestroyResource:
+        CxbxrImpl_DestroyResource((xbox::X_D3DResource*)argv[1]);
+        break;
+    case X_D3D_LazySetPointParams:  break;
+    case X_D3D_SetCommonDebugRegisters:  break;
     case X_D3DDevice_ApplyStateBlock:  break;
-    case X_D3DDevice_Begin: CxbxrImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]); break;
+    case X_D3DDevice_Begin:
+        CxbxrImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]);
+        break;
     case X_D3DDevice_BeginPush:  break;
     case X_D3DDevice_BeginPushBuffer:  break;
     case X_D3DDevice_BeginScene:  break;
-    case X_D3DDevice_BeginState:  break;	case X_D3DDevice_BeginStateBig:  break;
+    case X_D3DDevice_BeginState:  break;
+    case X_D3DDevice_BeginStateBig:  break;
     case X_D3DDevice_BeginStateBlock:  break;
     case X_D3DDevice_BeginVisibilityTest:
         *(bool*)argv[1] = false;
@@ -1684,14 +1699,11 @@ void HLE_API_handle_method
         break;
     case X_D3DDevice_MultiplyTransform:  break;
     case X_D3DDevice_Nop:  break;
-    case X_D3DDevice_PersistDisplay:
-        *(bool*)argv[1] = false;
-        break;
+    case X_D3DDevice_PersistDisplay: *(bool*)argv[1] = false; break;
     case X_D3DDevice_Present:
 #define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
-
         //CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
-        * (bool*)argv[1] = false;
+        *(bool*)argv[1] = false;
         break;
     case X_D3DDevice_PrimeVertexCache:  break;
     case X_D3DDevice_Reset:
@@ -1821,19 +1833,12 @@ void HLE_API_handle_method
         break;
     case X_D3DDevice_UpdateOverlay:  break;
     case X_D3DResource_BlockUntilNotBusy:  break;
-    case X_D3D_BlockOnTime:  break;
-    case X_D3D_CommonSetRenderTarget:
-        //todo:this might be redundant because the HLE implementation of this api never set the call level, so this patch will always calls CxbxrImpl_SetRenderTarget(). we might use the fall through directly.
-        CxbxrImpl_D3D_CommonSetRenderTarget((xbox::X_D3DSurface*)/* pRenderTarget*/argv[1], (xbox::X_D3DSurface*)/* pNewZStencil*/argv[2], (void*)/* unknown*/argv[3]);
-        // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
-        CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
-        break;
-    case X_D3D_DestroyResource:
-        CxbxrImpl_DestroyResource((xbox::X_D3DResource*)argv[1]);
-        break;
-    case X_D3D_LazySetPointParams:  break;
-    case X_D3D_SetCommonDebugRegisters:  break;
     case X_Direct3D_CreateDevice:  break;
+    case X_EmuKickOffWait:
+        //argv[2] is the token of the API which calls EmuKickOffWait()
+        if (argv[1] != 0)
+            *(DWORD*)argv[1] = 0;
+        break;
     case X_Lock2DSurface:
         //CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
         *(bool*)argv[1] = false;
@@ -1842,12 +1847,8 @@ void HLE_API_handle_method
         //CxbxrImpl_Lock3DSurface((xbox::X_D3DPixelContainer*)/* pPixelContainer*/argv[1], (xbox::uint_xt)/*Level*/argv[2], (D3DLOCKED_BOX*)/* pLockedVolume*/argv[3], (D3DBOX*)/* pBox*/argv[4], (xbox::dword_xt)/*Flags*/argv[5]);
         *(bool*)argv[1] = false;
         break;
-    case X_EmuKickOffWait:
-        //argv[2] is the token of the API which calls EmuKickOffWait()
-        if (argv[1] != 0)
-            *(DWORD*)argv[1] = 0;
+    default:
         break;
-    default:break;
     }
 }
 

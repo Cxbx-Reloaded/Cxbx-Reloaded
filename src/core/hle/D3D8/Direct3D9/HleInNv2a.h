@@ -2,9 +2,14 @@
 
 // enum for xbox D3DDevice APIs
 typedef enum _X_D3DAPI_ENUM {
-
+    // Keep below sorted to ease future edits
     X_CDevice_SetStateUP,
     X_CDevice_SetStateVB,
+    X_D3D_BlockOnTime,
+    X_D3D_CommonSetRenderTarget,
+    X_D3D_DestroyResource,
+    X_D3D_LazySetPointParams,
+    X_D3D_SetCommonDebugRegisters,
     X_D3DDevice_ApplyStateBlock,
     X_D3DDevice_Begin,
     X_D3DDevice_BeginPush,
@@ -59,14 +64,16 @@ typedef enum _X_D3DAPI_ENUM {
     X_D3DDevice_EndStateBlock,
     X_D3DDevice_EndVisibilityTest,
     X_D3DDevice_FlushVertexCache,
-    X_D3DDevice_GetBackBuffer, X_D3DDevice_GetBackBuffer2,
+    X_D3DDevice_GetBackBuffer,
+    X_D3DDevice_GetBackBuffer2,
     X_D3DDevice_GetBackBufferScale,
     X_D3DDevice_GetBackMaterial,
     X_D3DDevice_GetCopyRectsState,
     X_D3DDevice_GetCreationParameters,
     X_D3DDevice_GetDebugMarker,
     X_D3DDevice_GetDepthClipPlanes,
-    X_D3DDevice_GetDepthStencilSurface, X_D3DDevice_GetDepthStencilSurface2,
+    X_D3DDevice_GetDepthStencilSurface,
+    X_D3DDevice_GetDepthStencilSurface2,
     X_D3DDevice_GetDeviceCaps,
     X_D3DDevice_GetDirect3D,
     X_D3DDevice_GetDisplayFieldStatus,
@@ -89,7 +96,8 @@ typedef enum _X_D3DAPI_ENUM {
     X_D3DDevice_GetPushDistance,
     X_D3DDevice_GetRasterStatus,
     X_D3DDevice_GetRenderState,
-    X_D3DDevice_GetRenderTarget, X_D3DDevice_GetRenderTarget2,
+    X_D3DDevice_GetRenderTarget,
+    X_D3DDevice_GetRenderTarget2,
     X_D3DDevice_GetScissors,
     X_D3DDevice_GetScreenSpaceOffset,
     X_D3DDevice_GetShaderConstantMode,
@@ -165,7 +173,8 @@ typedef enum _X_D3DAPI_ENUM {
     X_D3DDevice_SetVertexBlendModelView,
     X_D3DDevice_SetVertexData2f,
     X_D3DDevice_SetVertexData2s,
-    X_D3DDevice_SetVertexData4f, X_D3DDevice_SetVertexData4f_16,
+    X_D3DDevice_SetVertexData4f,
+    X_D3DDevice_SetVertexData4f_16,
     X_D3DDevice_SetVertexData4s,
     X_D3DDevice_SetVertexData4ub,
     X_D3DDevice_SetVertexDataColor,
@@ -180,17 +189,12 @@ typedef enum _X_D3DAPI_ENUM {
     X_D3DDevice_SwitchTexture,
     X_D3DDevice_UpdateOverlay,
     X_D3DResource_BlockUntilNotBusy,
-    X_D3D_BlockOnTime,
-    X_D3D_CommonSetRenderTarget,
-    X_D3D_DestroyResource,
-    X_D3D_LazySetPointParams,
-    X_D3D_SetCommonDebugRegisters,
     X_Direct3D_CreateDevice,
+    X_EmuKickOffWait,
     X_Lock2DSurface,
     X_Lock3DSurface,
-    X_EmuKickOffWait,
+    // Keep X_D3DAPI_FORCE_DWORD last to force X_D3DAPI_ENUM into 4 bytes
     X_D3DAPI_FORCE_DWORD = 0x7fffffff,
-
 } X_D3DAPI_ENUM;
 
 // virtual NV2A register for HLE API handler
