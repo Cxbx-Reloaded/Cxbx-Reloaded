@@ -199,8 +199,14 @@ void ShaderHlsl::LoadShadersFromDisk() {
 			auto insertionPoint = insertionPoints[i];
 			auto index = hlsl.find(insertionPoint, pos);
 
-			this->pixelShaderTemplateHlsl[i] = hlsl.substr(pos, index - pos);
-			pos = index + insertionPoint.length();
+			if (index == std::string::npos) {
+				// Handle broken shaders
+				this->pixelShaderTemplateHlsl[i] = "";
+			}
+			else {
+				this->pixelShaderTemplateHlsl[i] = hlsl.substr(pos, index - pos);
+				pos = index + insertionPoint.length();
+			}
 		}
 		this->pixelShaderTemplateHlsl[insertionPoints.size()] = hlsl.substr(pos);
 	}
@@ -224,8 +230,17 @@ void ShaderHlsl::LoadShadersFromDisk() {
 
 		const std::string insertionPoint = "// <XBOX SHADER PROGRAM GOES HERE>\n";
 		auto index = hlsl.find(insertionPoint);
-		this->vertexShaderTemplateHlsl[0] = hlsl.substr(0, index);
-		this->vertexShaderTemplateHlsl[1] = hlsl.substr(index + insertionPoint.length());
+
+		if (index == std::string::npos) {
+			// Handle broken shaders
+			this->vertexShaderTemplateHlsl[0] = hlsl;
+			this->vertexShaderTemplateHlsl[1] = "";
+		}
+		else
+		{
+			this->vertexShaderTemplateHlsl[0] = hlsl.substr(0, index);
+			this->vertexShaderTemplateHlsl[1] = hlsl.substr(index + insertionPoint.length());
+		}
 	}
 
 	// Fixed Function Vertex Shader

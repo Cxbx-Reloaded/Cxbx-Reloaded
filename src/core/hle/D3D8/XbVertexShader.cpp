@@ -1153,6 +1153,7 @@ void CxbxUpdateHostVertexShader()
 	int shaderVersion = g_ShaderHlsl.UpdateShaders();
 	if (vertexShaderVersion != shaderVersion) {
 		vertexShaderVersion = shaderVersion;
+		g_pD3DDevice->SetVertexShader(nullptr);
 
 		EmuLog(LOG_LEVEL::INFO, "Loading vertex shaders...");
 
