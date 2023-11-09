@@ -664,11 +664,6 @@ constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; //
 // This concludes the set of constants that need to be set on host :
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
 
-std::string GetFixedFunctionShaderTemplate() {
-	// TODO hlsl hotloading support
-	return g_ShaderHlsl.fixedFunctionPixelShaderHlsl;
-}
-
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
 #ifdef ENABLE_FF_ALPHAKILL
@@ -769,6 +764,19 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	// TODO move this cache elsewhere - and flush it when the device is released!
 	static std::unordered_map<uint64_t, IDirect3DPixelShader9*> ffPsCache = {};
 
+	// Support hotloading hlsl
+	static int pixelShaderVersion = -1;
+	int shaderVersion = g_ShaderHlsl.UpdateShaders();
+	if (pixelShaderVersion != shaderVersion) {
+		pixelShaderVersion = shaderVersion;
+
+		for (auto& hostShader : ffPsCache) {
+			hostShader.second->Release();
+		}
+
+		ffPsCache.clear();
+	}
+
 	// Create a key from state that will be baked in to the shader
 	PsTextureHardcodedState states[4] = {};
 	int sampleType[4] = { SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE };
@@ -851,7 +859,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	}
 
 	// Build and compile a new shader
-	auto hlslTemplate = GetFixedFunctionShaderTemplate();
+	std::string hlslTemplate = g_ShaderHlsl.fixedFunctionPixelShaderHlsl;
 
 	// In D3D9 it seems we need to know hardcode if we're doing a 2D or 3D lookup
 	const std::string sampleTypePattern = "TEXTURE_SAMPLE_TYPE;";
@@ -927,8 +935,9 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	// Create shader object for the device
 	IDirect3DPixelShader9* pShader = nullptr;
 	auto hRet = g_pD3DDevice->CreatePixelShader((DWORD*)pShaderBlob->GetBufferPointer(), &pShader);
-	if (hRet != S_OK)
-		CxbxrAbort("Failed to compile fixed function pixel shader");
+	if (hRet != S_OK) {
+		EmuLog(LOG_LEVEL::ERROR2, "Failed to compile fixed function pixel shader");
+	}
 	pShaderBlob->Release();
 
 	// Insert the shader into the cache
@@ -1008,6 +1017,19 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   CompletePSDef.PSDef.PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
   // Fetch all other values that are used in the IsEquivalent check :
   CompletePSDef.SnapshotRuntimeVariables();
+
+  // Support hotloading hlsl
+  static int pixelShaderVersion = -1;
+  int shaderVersion = g_ShaderHlsl.UpdateShaders();
+  if (pixelShaderVersion != shaderVersion) {
+	  pixelShaderVersion = shaderVersion;
+
+	  for (auto& hostShader : g_RecompiledPixelShaders) {
+		  hostShader.ConvertedPixelShader->Release();
+	  }
+
+	  g_RecompiledPixelShaders.clear();
+  }
 
   // Now, see if we already have a shader compiled for this definition :
   // TODO : Change g_RecompiledPixelShaders into an unordered_map, hash just the identifying PSDef members, and add cache eviction (clearing host resources when pruning)
