@@ -83,8 +83,6 @@ static xbox::X_D3DVertexShader g_Xbox_VertexShader_ForFVF = {};
 static uint32_t                g_X_VERTEXSHADER_FLAG_PROGRAM; // X_VERTEXSHADER_FLAG_PROGRAM flag varies per XDK, so it is set on runtime
 static uint32_t                g_X_VERTEXSHADER_FLAG_VALID_MASK; // For a test case
 
-static volatile bool isShaderFolderDirty = true;
-
 void CxbxVertexShaderSetFlags()
 {
 	// Set an appropriate X_VERTEXSHADER_FLAG_PROGRAM version and mask off the "wrong" one
