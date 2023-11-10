@@ -39,7 +39,7 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_pXbox_PixelShader
-#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderHlsl
+#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbPixelShader.h"
 #include "core\hle\D3D8\Direct3D9\PixelShader.h" // EmuCompilePixelShader
 #include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
@@ -766,7 +766,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 	// Support hotloading hlsl
 	static int pixelShaderVersion = -1;
-	int shaderVersion = g_ShaderHlsl.UpdateShaders();
+	int shaderVersion = g_ShaderSources.Update();
 	if (pixelShaderVersion != shaderVersion) {
 		pixelShaderVersion = shaderVersion;
 		g_pD3DDevice->SetPixelShader(nullptr);
@@ -861,7 +861,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	}
 
 	// Build and compile a new shader
-	std::string hlslTemplate = g_ShaderHlsl.fixedFunctionPixelShaderHlsl;
+	std::string hlslTemplate = g_ShaderSources.fixedFunctionPixelShaderHlsl;
 
 	// In D3D9 it seems we need to know hardcode if we're doing a 2D or 3D lookup
 	const std::string sampleTypePattern = "TEXTURE_SAMPLE_TYPE;";
@@ -1030,7 +1030,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 
   // Support hotloading hlsl
   static int pixelShaderVersion = -1;
-  int shaderVersion = g_ShaderHlsl.UpdateShaders();
+  int shaderVersion = g_ShaderSources.Update();
   if (pixelShaderVersion != shaderVersion) {
 	  pixelShaderVersion = shaderVersion;
 	  g_pD3DDevice->SetPixelShader(nullptr);

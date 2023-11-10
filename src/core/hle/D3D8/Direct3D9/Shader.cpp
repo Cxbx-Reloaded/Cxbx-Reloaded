@@ -39,7 +39,7 @@
 #include <thread>
 //#include <sstream>
 
-ShaderHlsl g_ShaderHlsl;
+ShaderSources g_ShaderSources;
 
 std::string DebugPrependLineNumbers(std::string shaderString) {
 	std::stringstream shader(shaderString);
@@ -166,7 +166,7 @@ std::ifstream OpenWithRetry(const std::string& path) {
 	return fstream;
 }
 
-int ShaderHlsl::UpdateShaders() {
+int ShaderSources::Update() {
 	int versionOnDisk = shaderVersionOnDisk;
 	if (shaderVersionLoadedFromDisk != versionOnDisk) {
 		LoadShadersFromDisk();
@@ -176,7 +176,7 @@ int ShaderHlsl::UpdateShaders() {
 	return shaderVersionLoadedFromDisk;
 }
 
-void ShaderHlsl::LoadShadersFromDisk() {
+void ShaderSources::LoadShadersFromDisk() {
 	const auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
 		.parent_path()
 		.append("hlsl");
@@ -262,7 +262,7 @@ void ShaderHlsl::LoadShadersFromDisk() {
 	}
 }
 
-void ShaderHlsl::InitShaderHotloading() {
+void ShaderSources::InitShaderHotloading() {
 	static std::thread fsWatcherThread;
 
 	if (fsWatcherThread.joinable()) {
@@ -303,7 +303,7 @@ void ShaderHlsl::InitShaderHotloading() {
 				}
 
 				EmuLog(LOG_LEVEL::DEBUG, "Change detected in shader folder");
-				g_ShaderHlsl.shaderVersionOnDisk += 1;
+				g_ShaderSources.shaderVersionOnDisk += 1;
 			}
 			else {
 				EmuLog(LOG_LEVEL::ERROR2, "Shader filewatcher failed to get the next notification");

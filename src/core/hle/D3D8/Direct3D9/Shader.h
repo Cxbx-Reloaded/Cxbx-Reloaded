@@ -11,7 +11,7 @@ extern HRESULT EmuCompileShader
 	const char* pSourceName = nullptr
 );
 
-struct ShaderHlsl {
+struct ShaderSources {
 	// Pixel Shader
 	std::string pixelShaderTemplateHlsl[3];
 
@@ -29,7 +29,7 @@ struct ShaderHlsl {
 
 	// Load shaders from disk (if out-of-date)
 	// and return the current loaded shader version
-	int UpdateShaders();
+	int Update();
 
 	// Start a thread to watch for changes in the shader folder
 	void InitShaderHotloading();
@@ -44,4 +44,4 @@ private:
 	int shaderVersionLoadedFromDisk = -1;
 };
 
-extern ShaderHlsl g_ShaderHlsl;
+extern ShaderSources g_ShaderSources;

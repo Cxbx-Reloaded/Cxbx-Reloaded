@@ -35,7 +35,7 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\Direct3D9\RenderStates.h" // For XboxRenderStateConverter
 #include "core\hle\D3D8\Direct3D9\VertexShaderCache.h" // For g_VertexShaderCache
-#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderHlsl
+#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
@@ -1148,7 +1148,7 @@ void CxbxUpdateHostVertexShader()
 	static IDirect3DVertexShader* passthroughShader = nullptr;
 	static int vertexShaderVersion = -1;
 
-	int shaderVersion = g_ShaderHlsl.UpdateShaders();
+	int shaderVersion = g_ShaderSources.Update();
 	if (vertexShaderVersion != shaderVersion) {
 		vertexShaderVersion = shaderVersion;
 		g_pD3DDevice->SetVertexShader(nullptr);

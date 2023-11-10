@@ -292,9 +292,9 @@ extern HRESULT EmuCompileVertexShader
 
 	// Combine the shader template with the shader program
 	auto hlsl_stream = std::stringstream();
-	hlsl_stream << g_ShaderHlsl.vertexShaderTemplateHlsl[0]; // Start with the HLSL template header
+	hlsl_stream << g_ShaderSources.vertexShaderTemplateHlsl[0]; // Start with the HLSL template header
 	BuildShader(pIntermediateShader, hlsl_stream);
-	hlsl_stream << g_ShaderHlsl.vertexShaderTemplateHlsl[1]; // Finish with the HLSL template footer
+	hlsl_stream << g_ShaderSources.vertexShaderTemplateHlsl[1]; // Finish with the HLSL template footer
 	std::string hlsl_str = hlsl_stream.str();
 
 	auto notionalSourceName = "CxbxVertexShaderTemplate.hlsl";
@@ -312,10 +312,10 @@ extern HRESULT EmuCompileVertexShader
 
 extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader)
 {
-	EmuCompileShader(g_ShaderHlsl.fixedFunctionVertexShaderHlsl, g_vs_model, ppHostShader, g_ShaderHlsl.fixedFunctionVertexShaderPath.c_str());
+	EmuCompileShader(g_ShaderSources.fixedFunctionVertexShaderHlsl, g_vs_model, ppHostShader, g_ShaderSources.fixedFunctionVertexShaderPath.c_str());
 };
 
 extern void EmuCompileXboxPassthrough(ID3DBlob** ppHostShader)
 {
-	EmuCompileShader(g_ShaderHlsl.vertexShaderPassthroughHlsl, g_vs_model, ppHostShader, g_ShaderHlsl.vertexShaderPassthroughPath.c_str());
+	EmuCompileShader(g_ShaderSources.vertexShaderPassthroughHlsl, g_vs_model, ppHostShader, g_ShaderSources.vertexShaderPassthroughPath.c_str());
 }
