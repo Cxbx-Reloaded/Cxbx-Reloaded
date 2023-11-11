@@ -431,7 +431,7 @@ void SetupXboxDeviceTypes()
 }
 
 template<bool IsXInputPoll>
-xbox::dword_xt CxbxrImpl_XInputHandler(xbox::HANDLE hDevice, xbox::PXINPUT_STATE pState)
+xbox::dword_xt CxbxImpl_XInputHandler(xbox::HANDLE hDevice, xbox::PXINPUT_STATE pState)
 {
 	xbox::dword_xt status = ERROR_DEVICE_NOT_CONNECTED;
 	DeviceState *dev = static_cast<DeviceState *>(hDevice);
@@ -673,7 +673,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputPoll)
 	LOG_FUNC_ONE_ARG(hDevice);
 
 	// Test cases: Oddworld: Stranger's Wrath, Jet Set Radio Future, Splinter Cell 2, Panzer Dragoon Orta and 1
-	dword_xt ret = CxbxrImpl_XInputHandler<true>(hDevice, nullptr);
+	dword_xt ret = CxbxImpl_XInputHandler<true>(hDevice, nullptr);
 
 	RETURN(ret);
 }
@@ -721,7 +721,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XInputGetState)
 		LOG_FUNC_ARG_OUT(pState)
 		LOG_FUNC_END;
 
-	dword_xt ret = CxbxrImpl_XInputHandler<false>(hDevice, pState);
+	dword_xt ret = CxbxImpl_XInputHandler<false>(hDevice, pState);
     
 	RETURN(ret);
 }

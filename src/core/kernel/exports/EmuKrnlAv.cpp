@@ -154,22 +154,25 @@ ULONG AvQueryAvCapabilities()
 }
 
 xbox::PVOID xbox::AvSavedDataAddress = xbox::zeroptr;
-extern xbox::X_D3DSurface* CxbxrImpl_GetPersistedSurface();
-extern xbox::X_D3DSurface xboxPersistSurface;
-extern VMManager g_VMManager;
+
 extern xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface();
+
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
 XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 {
 	LOG_FUNC();
-	//RETURN(AvSavedDataAddress);
+
+#if 0
+	RETURN(AvSavedDataAddress);
+#else
 	//if xbox persist surface was not created yet, create it first.
 	if (AvSavedDataAddress != nullptr)
 		return CxbxrImpl_GetAvSavedDataSurface();
 	else
 		return nullptr;
+#endif
 }
 
 // ******************************************************************

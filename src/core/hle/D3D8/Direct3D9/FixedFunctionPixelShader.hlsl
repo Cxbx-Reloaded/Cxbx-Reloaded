@@ -179,9 +179,9 @@ TextureArgs ExecuteTextureStage(
 	// The w component can be set by titles in vertex shaders
 	// without using texture transform flags
 	// Test case: DoA 3 reflections on 'Ice Stage'
-    //float4 coords;// = TexCoords[i].xyzw / TexCoords[i].w;
-    if (TexCoords[i].w > 1.0) 
-        TexCoords[i].xyzw = TexCoords[i].xyzw / TexCoords[i].w;
+	//float4 coords;// = TexCoords[i].xyzw / TexCoords[i].w;
+	if (TexCoords[i].w > 1.0) 
+		TexCoords[i].xyzw = TexCoords[i].xyzw / TexCoords[i].w;
 	if (type == SAMPLE_NONE)
 		t = 1; // Test case JSRF
 	else if (type == SAMPLE_2D)

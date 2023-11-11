@@ -204,7 +204,7 @@ typedef enum _X_D3DAPI_ENUM {
 // virtual NV2A register for HLE API handler
 #   define NV097_HLE_API                                      0x00000080 /* Snugged this method in the middle between
 #   define NV097_SET_OBJECT                                   0x00000000    the first method, and the next known one :
-#   define NV097_NO_OPERATION                                 0x00000100    Aternatively, move to the end, after NV097_DEBUG_INIT */
+#   define NV097_NO_OPERATION                                 0x00000100    Alternatively, move to the end, after NV097_DEBUG_INIT */
 
 #define HLE_PUSH_ENCODE(dword_count) PUSH_ENCODE(PUSH_INSTR_IMM_NOINC, dword_count, PUSH_SUBCH_0, NV097_HLE_API, PUSH_TYPE_METHOD)
 
@@ -213,7 +213,7 @@ static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 
 // prototypes for xbox D3DDevice API HLE handlers in NV2A pgraph, implemented in Direct3D9.cpp, called in EmuNV2A_PGRAPH.cpp
 // we create defines for each patched api in general format USEPGRAPH_ + apu post names without D3DDevice_. define it as 1 to enable the patch and prgaph handler, as 0 to keep original Cxbxr behavior. this is to speed up the test which api is not feasible for this POC.
-void CxbxrImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType);
+void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType);
 void CxbxrImpl_BlockUntilVerticalBlank();
 #define USEPGRAPH_BlockUntilVerticalBlank 0
 void CxbxrImpl_Clear(xbox::dword_xt Count, CONST D3DRECT* pRects, xbox::dword_xt Flags, D3DCOLOR Color, float Z, xbox::dword_xt Stencil);
@@ -230,17 +230,17 @@ void WINAPI CxbxrImpl_CopyRects(xbox::X_D3DSurface* pSourceSurface, CONST RECT* 
 #define USEPGRAPH_DrawVertices 0
 void WINAPI CxbxrImpl_DrawVerticesUP(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PVOID pVertexStreamZeroData, xbox::uint_xt VertexStreamZeroStride);
 #define USEPGRAPH_DrawVerticesUP 0
-void CxbxrImpl_End();
+void CxbxImpl_End();
 void CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACKTYPE Type, xbox::X_D3DCALLBACK pCallback, xbox::dword_xt Context);
 //void WINAPI CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
-void CxbxrImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister);
+void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister);
 #define USEPGRAPH_LoadVertexShader 1
-void CxbxrImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
+void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
 #define USEPGRAPH_LoadVertexShaderProgram 0
 #define USEPGRAPH_Lock2DSurface 0
 #define USEPGRAPH_Lock3DSurface 0
 void WINAPI CxbxrImpl_RunVertexStateShader(xbox::dword_xt Address, CONST xbox::float_xt* pData);
-void CxbxrImpl_SelectVertexShader(DWORD Handle, DWORD Address);
+void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 #define USEPGRAPH_SelectVertexShader 1
 void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
 // todo: CxbxrImpl_SetFlickerFilter() not implemented yet.
@@ -254,29 +254,29 @@ void WINAPI CxbxrImpl_SetModelView(CONST D3DMATRIX* pModelView, CONST D3DMATRIX*
 void CxbxrImpl_SetPalette(xbox::dword_xt Stage, xbox::X_D3DPalette* pPalette);
 void CxbxrImpl_SetPixelShader(xbox::dword_xt Handle);
 //void WINAPI CxbxrImpl_SetRenderState_Simple(xbox::dword_xt Method, xbox::dword_xt Value);
-void CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
+void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
 void WINAPI CxbxrImpl_D3D_CommonSetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil, void* unknown);
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface* pTarget, xbox::X_D3DSurface* pZbuffer);
 #define USEPGRAPH_SetRenderTarget 0 /*SetRenderTarget() is used in D3DDevice_Create() and we need it to be implemented right away. to do: */
-void CxbxrImpl_SetScreenSpaceOffset(float x, float y);
+void CxbxImpl_SetScreenSpaceOffset(float x, float y);
 #define USEPGRAPH_SetScreenSpaceOffset 0
 void WINAPI CxbxrImpl_SetShaderConstantMode(xbox::X_VERTEXSHADERCONSTANTMODE Mode);
 // todo: CxbxrImpl_SetSoftDisplayFilter() not implemented yet.
 //void WINAPI CxbxrImpl_SetSoftDisplayFilter(xbox::bool_xt Enable);
-void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
+void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
 //#define USEPGRAPH_SetStreamSource 0 /*not permitted in pushbuffer recording*/
 void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture);
 void CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
 void CxbxrImpl_SetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* pMatrix);
-void CxbxrImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
-void CxbxrImpl_SetVertexShader(DWORD Handle);
+void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
+void CxbxImpl_SetVertexShader(DWORD Handle);
 #define USEPGRAPH_SetVertexShader 1
-//all SetVertexShaderConstant variants are unpatched now. but we have to use CxbxrImpl_SetVertexShaderConstant() to handle the constant change in pgraph.
+//all SetVertexShaderConstant variants are unpatched now. but we have to use CxbxImpl_SetVertexShaderConstant() to handle the constant change in pgraph.
 //void CxbxrImpl_GetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
-//void CxbxrImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
-//void CxbxrImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
-//void WINAPI CxbxrImpl_SetVertexShaderInputDirect(xbox::X_VERTEXATTRIBUTEFORMAT* pVAF, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
-void CxbxrImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
+//void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD ConstantCount);
+//void CxbxImpl_SetVertexShaderInput(DWORD Handle, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
+//void WINAPI CxbxImpl_SetVertexShaderInputDirect(xbox::X_VERTEXATTRIBUTEFORMAT* pVAF, UINT StreamCount, xbox::X_STREAMINPUT* pStreamInputs);
+void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 #define USEPGRAPH_SetViewport 1
 // Present() also calls Swap(), patched LTCG version of Swap also calls Swap(). so we only handle Swap().
 xbox::void_xt WINAPI CxbxrImpl_Present(xbox::dword_xt Flags);

@@ -58,9 +58,9 @@ float4 clean(float4 x)
 	// https://shader-playground.timjones.io/0bbe04704caddadb52cd4134daab8ac3
 	// Test case: Otogi does math ops on -NaN
 	// which seems to become +NaN -> +1 in the PS
-    return (x < 0.f || x > 0.f || x == 0.f) ? x : 1;
+	return (x < 0.f || x > 0.f || x == 0.f) ? x : 1;
 }
-	
+
 float4 c(int register_number)
 {
 	// Map Xbox [-96, 95] to Host [0, 191]
@@ -336,8 +336,8 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	init_v( 8); init_v( 9); init_v(10); init_v(11);
 	init_v(12); init_v(13); init_v(14); init_v(15);
 
-    // Temp variable for paired VS instruction
-    float4 temp;
+	// Temp variable for paired VS instruction
+	float4 temp;
 
 	// Xbox shader program)DELIMITER", /* This terminates the header raw string" // */
 
@@ -360,7 +360,7 @@ R"DELIMITER(
 	const float FOG_TABLE_LINEAR  = 3;
  
     float fogFactor;
-    if(fogTableMode == FOG_TABLE_NONE)
+    if(fogTableMode == FOG_TABLE_NONE) 
        fogFactor = fogDepth;
          //if(fogDepth < 0)
          //fogFactor = 1 + fogDepth;

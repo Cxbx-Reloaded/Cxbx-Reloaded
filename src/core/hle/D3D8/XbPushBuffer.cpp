@@ -449,7 +449,7 @@ bool g_xbox_transform_use_DirectModelView = false;
 bool g_NV2A_transform_ModelView_dirty[4] = { false,false,false,false };
 bool g_NV2A_transform_InverseModelView_dirty[4] = { false,false,false,false };
 bool g_NV2A_transform_Composite_dirty = false;
-// virtual pixle shader, convert content from KelvinPrimitive to the pixel shader below and call CxbxrImpl_SetPixelShader(pNV2A_PixelShader). 
+// virtual pixel shader, convert content from KelvinPrimitive to the pixel shader below and call CxbxrImpl_SetPixelShader(pNV2A_PixelShader). 
 xbox::X_PixelShader* pNV2A_PixelShader;
 xbox::X_PixelShader NV2A_PixelShader;
 xbox::X_D3DPIXELSHADERDEF NV2A_PSDef;
@@ -1199,7 +1199,7 @@ void pgraph_ComposeViewport(NV2AState *d)
 			Viewport.MaxZ = clipFar / ScaleZ;
 		}
 		//FIXME!! Viewport.Width/Height are not set in Fixed Mode. xbox d3d set it to 0x7FFFFFFF,
-		// CxbxrImpl_SetViewport() will cap the Width/Height to render target width/height. anyway, we cap them to render target value here.
+		// CxbxImpl_SetViewport() will cap the Width/Height to render target width/height. anyway, we cap them to render target value here.
 		
 		Viewport.Width= (DWORD)rendertargetBaseWidth;
 		Viewport.Height = (DWORD)rendertargetBaseHeight;
@@ -3277,7 +3277,7 @@ void D3D_draw_state_update(NV2AState* d)
 		NV2A_DirtyFlags &= ~X_D3DDIRTYFLAG_LIGHTS;
 	}
 	// update viewport state when we're in pushbuffer replay mode.
-	// CxbxUpdateNativeD3DResources() calls CxbxUpdateHostViewport() to update host viewpot, we call pgraph_SetViewport(d) to convert NV2A viewport content to xbox vieport and then call CxbxrImpl_SetViewport() there.
+	// CxbxUpdateNativeD3DResources() calls CxbxUpdateHostViewport() to update host viewpot, we call pgraph_SetViewport(d) to convert NV2A viewport content to xbox vieport and then call CxbxImpl_SetViewport() there.
 	// only update viewport if viewport got dirty.
 	if (NV2A_viewport_dirty == true) {
 		// this only compose viewport from pgraph content 
@@ -3287,7 +3287,7 @@ void D3D_draw_state_update(NV2AState* d)
 		xbox::X_D3DVIEWPORT8 Viewport;
 		CxbxrGetViewport(Viewport);
 		// no need to call SetViewport here.in CxbxUpdateNativeD3DResources(), CxbxUpdateHostViewport() will pickup our viewport.
-		// CxbxrImpl_SetViewport(&Viewport);
+		// CxbxImpl_SetViewport(&Viewport);
 		NV2A_viewport_dirty = false;
 	}
 
@@ -3431,7 +3431,7 @@ void D3D_draw_state_update(NV2AState* d)
 			
 			for (auto it = g_RenderTargetCache.begin(); it != g_RenderTargetCache.end(); it++) {
                 //calculate xbox surface data size.
-				// todo: calculate and cache the xbox data size in CxbxrImpl_SetRenderTarget to save overheads here.
+				// todo: calculate and cache the xbox data size in CxbxImpl_SetRenderTarget to save overheads here.
 				//process host surface data transfer to xbox data with data conversion.
 				xbox::X_D3DSurface* pXboxSurface = &it->second;
 				//UINT XBWidth, XBHeight, XBDepth, XBRowPitch, XBSlicePitch;
@@ -3496,7 +3496,7 @@ void D3D_draw_state_update(NV2AState* d)
 			}
 		}
 	}
-	// todo: call CxbxrImpl_SetVertexShader() here. There are certain varialbes needs to be initialized, mostly setup unexisting vertex attribute defaults.
+	// todo: call CxbxImpl_SetVertexShader() here. There are certain varialbes needs to be initialized, mostly setup unexisting vertex attribute defaults.
 	extern bool g_NV2AVertexShader_dirty; // tmp glue
 	extern void pgraph_SetVertexShader(NV2AState* d);// tmp glue, XBVertexShader.cpp
 	if (g_NV2AVertexShader_dirty)

@@ -30,272 +30,119 @@
 #include "RenderStates.h"
 #include "Logging.h"
 #include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For g_pD3DDevice
+#include "core/hle/D3D8/XbD3D8Types.h"
 #include "core/hle/D3D8/XbConvert.h"
 
 void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE value);
+
 #define F_ONE 0x3f800000
 #define F_64 0x42800000
-typedef enum _X_D3DCMPFUNC {
-    X_D3DCMP_NEVER = 0x200,
-    X_D3DCMP_LESS = 0x201,
-    X_D3DCMP_EQUAL = 0x202,
-    X_D3DCMP_LESSEQUAL = 0x203,
-    X_D3DCMP_GREATER = 0x204,
-    X_D3DCMP_NOTEQUAL = 0x205,
-    X_D3DCMP_GREATEREQUAL = 0x206,
-    X_D3DCMP_ALWAYS = 0x207,
-    X_D3DCMP_FORCE_DWORD = 0x7fffffff,
-} X_D3DCMPFUNC;
 
-typedef enum _X_D3DBLEND {
-    X_D3DBLEND_ZERO = 0,
-    X_D3DBLEND_ONE = 1,
-    X_D3DBLEND_SRCCOLOR = 0x300,
-    X_D3DBLEND_INVSRCCOLOR = 0x301,
-    X_D3DBLEND_SRCALPHA = 0x302,
-    X_D3DBLEND_INVSRCALPHA = 0x303,
-    X_D3DBLEND_DESTALPHA = 0x304,
-    X_D3DBLEND_INVDESTALPHA = 0x305,
-    X_D3DBLEND_DESTCOLOR = 0x306,
-    X_D3DBLEND_INVDESTCOLOR = 0x307,
-    X_D3DBLEND_SRCALPHASAT = 0x308,
-    X_D3DBLEND_CONSTANTCOLOR = 0x8001,
-    X_D3DBLEND_INVCONSTANTCOLOR = 0x8002,
-    X_D3DBLEND_CONSTANTALPHA = 0x8003,
-    X_D3DBLEND_INVCONSTANTALPHA = 0x8004,
-    X_D3DBLEND_FORCE_DWORD = 0x7fffffff,
-} X_D3DBLEND;
+namespace xbox {
 
-typedef enum _X_D3DSHADEMODE {
-    X_D3DSHADE_FLAT = 0x1d00,
-    X_D3DSHADE_GOURAUD = 0x1d01,
-    X_D3DSHADE_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
-} X_D3DSHADEMODE;
-
-typedef enum _X_D3DSTENCILOP {
-    X_D3DSTENCILOP_KEEP = 0x1e00,
-    X_D3DSTENCILOP_ZERO = 0,
-    X_D3DSTENCILOP_REPLACE = 0x1e01,
-    X_D3DSTENCILOP_INCRSAT = 0x1e02,
-    X_D3DSTENCILOP_DECRSAT = 0x1e03,
-    X_D3DSTENCILOP_INVERT = 0x150a,
-    X_D3DSTENCILOP_INCR = 0x8507,
-    X_D3DSTENCILOP_DECR = 0x8508,
-    X_D3DSTENCILOP_FORCE_DWORD = 0x7fffffff,
-} X_D3DSTENCILOP;
-
-typedef enum _X_D3DSWATHWIDTH {
-    X_D3DSWATH_8 = 0,
-    X_D3DSWATH_16 = 1,
-    X_D3DSWATH_32 = 2,
-    X_D3DSWATH_64 = 3,
-    X_D3DSWATH_128 = 4,
-    X_D3DSWATH_OFF = 0xf,
-    X_D3DSWATH_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
-} X_D3DSWATHWIDTH;
-
-typedef enum _X_D3DBLENDOP {
-    X_D3DBLENDOP_ADD = 0x8006,
-    X_D3DBLENDOP_SUBTRACT = 0x800a,
-    X_D3DBLENDOP_REVSUBTRACT = 0x800b,
-    X_D3DBLENDOP_MIN = 0x8007,
-    X_D3DBLENDOP_MAX = 0x8008,
-    X_D3DBLENDOP_ADDSIGNED = 0xf006,     // Xbox extension
-    X_D3DBLENDOP_REVSUBTRACTSIGNED = 0xf005,     // Xbox extension
-    X_D3DBLENDOP_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
-} X_D3DBLENDOP;
-
-typedef enum _X_D3DFOGMODE {
-    X_D3DFOG_NONE = 0,
-    X_D3DFOG_EXP = 1,
-    X_D3DFOG_EXP2 = 2,
-    X_D3DFOG_LINEAR = 3,
-
-    X_D3DFOG_FORCE_DWORD = 0x7fffffff
-} X_D3DFOGMODE;
-
-typedef enum _X_D3DMATERIALCOLORSOURCE {
-    X_D3DMCS_MATERIAL = 0,
-    X_D3DMCS_COLOR1 = 1,
-    X_D3DMCS_COLOR2 = 2,
-
-    X_D3DMCS_FORCE_DWORD = 0x7fffffff
-} X_D3DMATERIALCOLORSOURCE;
-
-typedef enum _X_D3DPATCHEDGESTYLE {
-    X_D3DPATCHEDGE_DISCRETE = 0,
-    X_D3DPATCHEDGE_CONTINUOUS = 1,
-
-    X_D3DPATCHEDGE_FORCE_DWORD = 0x7fffffff,
-} X_D3DPATCHEDGESTYLE;
-
-typedef enum _X_D3DVERTEXBLENDFLAGS {
-    X_D3DVBF_DISABLE = 0,     // Disable vertex blending
-    X_D3DVBF_1WEIGHTS = 1,     // 2 matrix blending
-    X_D3DVBF_2WEIGHTS = 3,     // 3 matrix blending
-    X_D3DVBF_3WEIGHTS = 5,     // 4 matrix blending
-    X_D3DVBF_2WEIGHTS2MATRICES = 2,     // Xbox extension
-    X_D3DVBF_3WEIGHTS3MATRICES = 4,     // Xbox extension
-    X_D3DVBF_4WEIGHTS4MATRICES = 6,     // Xbox extension
-
-    X_D3DVBF_MAX = 7,
-    X_D3DVBF_FORCE_DWORD = 0x7fffffff, // force 32-bit size enum
-
-} X_D3DVERTEXBLENDFLAGS;
-
-typedef enum _X_D3DFILLMODE {
-    X_D3DFILL_POINT = 0x1b00,
-    X_D3DFILL_WIREFRAME = 0x1b01,
-    X_D3DFILL_SOLID = 0x1b02,
-    X_D3DFILL_FORCE_DWORD = 0x7fffffff,
-} X_D3DFILLMODE;
-
-typedef enum _X_D3DFRONT {        // Xbox extension
-    X_D3DFRONT_CW = 0x900,
-    X_D3DFRONT_CCW = 0x901,
-    X_D3DFRONT_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
-} X_D3DFRONT;
-
-typedef enum _X_D3DCULL {
-    X_D3DCULL_NONE = 0,
-    X_D3DCULL_CW = 0x900,
-    X_D3DCULL_CCW = 0x901,
-    X_D3DCULL_FORCE_DWORD = 0x7fffffff,
-}X_D3DCULL;
-
-typedef enum _X_D3DLOGICOP {   // Xbox extension
-    X_D3DLOGICOP_NONE = 0,
-    X_D3DLOGICOP_CLEAR = 0x1500,
-    X_D3DLOGICOP_AND = 0x1501,
-    X_D3DLOGICOP_AND_REVERSE = 0x1502,
-    X_D3DLOGICOP_COPY = 0x1503,
-    X_D3DLOGICOP_AND_INVERTED = 0x1504,
-    X_D3DLOGICOP_NOOP = 0x1505,
-    X_D3DLOGICOP_XOR = 0x1506,
-    X_D3DLOGICOP_OR = 0x1507,
-    X_D3DLOGICOP_NOR = 0x1508,
-    X_D3DLOGICOP_EQUIV = 0x1509,
-    X_D3DLOGICOP_INVERT = 0x150a,
-    X_D3DLOGICOP_OR_REVERSE = 0x150b,
-    X_D3DLOGICOP_COPY_INVERTED = 0x150c,
-    X_D3DLOGICOP_OR_INVERTED = 0x150d,
-    X_D3DLOGICOP_NAND = 0x150e,
-    X_D3DLOGICOP_SET = 0x150f,
-    X_D3DLOGICOP_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
-} X_D3DLOGICOP;
-
-typedef enum _X_D3DMULTISAMPLEMODE
+const uint32_t g_DefaultRenderStates[][2] =
 {
-    X_D3DMULTISAMPLEMODE_1X = 0,
-    X_D3DMULTISAMPLEMODE_2X = 1,
-    X_D3DMULTISAMPLEMODE_4X = 2,
-
-    X_D3DMULTISAMPLEMODE_FORCE_DWORD = 0x7fffffff
-} X_D3DMULTISAMPLETYPE;
-
-
-CONST UINT32 g_DefaultRenderStates[][2] =
-{
-{     xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ZFUNC            ,      _X_D3DCMPFUNC::X_D3DCMP_LESSEQUAL },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ALPHAFUNC                 ,      X_D3DCMP_ALWAYS },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ALPHABLENDENABLE          ,      FALSE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ALPHATESTENABLE           ,      FALSE },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ALPHAREF                  ,      0 },
-{               xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SRCBLEND                  ,      X_D3DBLEND_ONE },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_DESTBLEND                 ,      X_D3DBLEND_ZERO },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ZWRITEENABLE              ,      TRUE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_DITHERENABLE              ,      FALSE },
-{           xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SHADEMODE                 ,      X_D3DSHADE_GOURAUD },
-{    xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_COLORWRITEENABLE          ,      xbox::X_D3DCOLORWRITEENABLE_ALL },
-{          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILZFAIL              ,      X_D3DSTENCILOP_KEEP },
-{          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILPASS               ,      X_D3DSTENCILOP_KEEP },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILFUNC               ,      X_D3DCMP_ALWAYS },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILREF                ,      0 },
-{                 xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILMASK               ,      0xffffffff },
-{                 xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILWRITEMASK          ,      0xffffffff },
-{             xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BLENDOP                   ,      X_D3DBLENDOP_ADD },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BLENDCOLOR                ,      0 },
-{               xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SWATHWIDTH                ,      X_D3DSWATH_128 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POLYGONOFFSETZSLOPESCALE  ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POLYGONOFFSETZOFFSET      ,      0 },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTOFFSETENABLE         ,      FALSE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_WIREFRAMEOFFSETENABLE     ,      FALSE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SOLIDOFFSETENABLE         ,      FALSE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE                 ,      FALSE },
-{                xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE              ,      X_D3DFOG_NONE },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART                  ,      0 },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND                    ,      F_ONE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY                ,      F_ONE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_RANGEFOGENABLE            ,      FALSE },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_WRAP0                     ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_WRAP1                     ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_WRAP2                     ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_WRAP3                     ,      0 },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_LIGHTING                  ,      TRUE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SPECULARENABLE            ,      FALSE },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_LOCALVIEWER               ,      TRUE },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_COLORVERTEX               ,      TRUE },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BACKSPECULARMATERIALSOURCE,      X_D3DMCS_COLOR2 },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BACKDIFFUSEMATERIALSOURCE ,      X_D3DMCS_COLOR1 },
-{            xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BACKAMBIENTMATERIALSOURCE ,      X_D3DMCS_MATERIAL },
-{            xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BACKEMISSIVEMATERIALSOURCE,      X_D3DMCS_MATERIAL },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SPECULARMATERIALSOURCE    ,      X_D3DMCS_COLOR2 },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_DIFFUSEMATERIALSOURCE     ,      X_D3DMCS_COLOR1 },
-{            xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_AMBIENTMATERIALSOURCE     ,      X_D3DMCS_MATERIAL },
-{            xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_EMISSIVEMATERIALSOURCE    ,      X_D3DMCS_MATERIAL },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BACKAMBIENT               ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_AMBIENT                   ,      0 },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSIZE                 ,      F_ONE },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSIZE_MIN             ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSPRITEENABLE         ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALEENABLE          ,      0 },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALE_A              ,      F_ONE },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALE_B              ,      0 },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALE_C              ,      0 },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_POINTSIZE_MAX             ,      F_64 },
-{      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_PATCHEDGESTYLE            ,      X_D3DPATCHEDGE_DISCRETE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_PATCHSEGMENTS             ,      F_ONE },
-{                 xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SWAPFILTER,      0xdeadbeef },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_PSTEXTUREMODES            ,      0 },
-{             xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_VERTEXBLEND               ,      X_D3DVBF_DISABLE },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGCOLOR                  ,      0 },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FILLMODE                  ,      X_D3DFILL_SOLID },
-{              xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_BACKFILLMODE              ,      X_D3DFILL_SOLID },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_TWOSIDEDLIGHTING          ,      FALSE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_NORMALIZENORMALS          ,      FALSE },
-{                 xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ZENABLE,      D3DZB_USEW },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILENABLE             ,      FALSE },
-{          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILFAIL               ,      X_D3DSTENCILOP_KEEP },
-{                xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FRONTFACE                 ,      X_D3DFRONT_CW },
-{                xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_CULLMODE                  ,      X_D3DCULL_CCW },
-{                 xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_TEXTUREFACTOR             ,      0xffffffff },
-{                          xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ZBIAS                     ,      0 },
-{            xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_LOGICOP                   ,      X_D3DLOGICOP_NONE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_EDGEANTIALIAS             ,      FALSE },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLEANTIALIAS      ,      TRUE },
-{                 xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLEMASK           ,      0xffffffff },
-{                 xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLEMODE,      0xdeadbeef },
-{      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLERENDERTARGETMODE,      X_D3DMULTISAMPLEMODE_1X },
-{               xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_SHADOWFUNC                ,      D3DCMP_NEVER },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_LINEWIDTH                 ,      F_ONE },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_DXT1NOISEENABLE,      TRUE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_YUVENABLE,      FALSE },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_OCCLUSIONCULLENABLE,      TRUE },
-{                       xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_STENCILCULLENABLE,      TRUE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ROPZCMPALWAYSREAD,      FALSE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_ROPZREAD,      FALSE },
-{                      xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_DONOTCULLUNCOMPRESSED,      FALSE },
+{     X_D3DRENDERSTATETYPE::X_D3DRS_ZFUNC            ,       X_D3DCMPFUNC::X_D3DCMP_LESSEQUAL },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_ALPHAFUNC                 ,      X_D3DCMP_ALWAYS },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_ALPHABLENDENABLE          ,      FALSE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_ALPHATESTENABLE           ,      FALSE },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_ALPHAREF                  ,      0 },
+{               X_D3DRENDERSTATETYPE::X_D3DRS_SRCBLEND                  ,      X_D3DBLEND_ONE },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_DESTBLEND                 ,      X_D3DBLEND_ZERO },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_ZWRITEENABLE              ,      TRUE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_DITHERENABLE              ,      FALSE },
+{           X_D3DRENDERSTATETYPE::X_D3DRS_SHADEMODE                 ,      X_D3DSHADE_GOURAUD },
+{    X_D3DRENDERSTATETYPE::X_D3DRS_COLORWRITEENABLE          ,      X_D3DCOLORWRITEENABLE_ALL },
+{          X_D3DRENDERSTATETYPE::X_D3DRS_STENCILZFAIL              ,      X_D3DSTENCILOP_KEEP },
+{          X_D3DRENDERSTATETYPE::X_D3DRS_STENCILPASS               ,      X_D3DSTENCILOP_KEEP },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_STENCILFUNC               ,      X_D3DCMP_ALWAYS },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_STENCILREF                ,      0 },
+{                 X_D3DRENDERSTATETYPE::X_D3DRS_STENCILMASK               ,      0xffffffff },
+{                 X_D3DRENDERSTATETYPE::X_D3DRS_STENCILWRITEMASK          ,      0xffffffff },
+{             X_D3DRENDERSTATETYPE::X_D3DRS_BLENDOP                   ,      X_D3DBLENDOP_ADD },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_BLENDCOLOR                ,      0 },
+{               X_D3DRENDERSTATETYPE::X_D3DRS_SWATHWIDTH                ,      X_D3DSWATH_128 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_POLYGONOFFSETZSLOPESCALE  ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_POLYGONOFFSETZOFFSET      ,      0 },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_POINTOFFSETENABLE         ,      FALSE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_WIREFRAMEOFFSETENABLE     ,      FALSE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_SOLIDOFFSETENABLE         ,      FALSE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE                 ,      FALSE },
+{                X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE              ,      X_D3DFOG_NONE },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART                  ,      0 },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND                    ,      F_ONE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY                ,      F_ONE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_RANGEFOGENABLE            ,      FALSE },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_WRAP0                     ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_WRAP1                     ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_WRAP2                     ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_WRAP3                     ,      0 },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_LIGHTING                  ,      TRUE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_SPECULARENABLE            ,      FALSE },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_LOCALVIEWER               ,      TRUE },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_COLORVERTEX               ,      TRUE },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_BACKSPECULARMATERIALSOURCE,      X_D3DMCS_COLOR2 },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_BACKDIFFUSEMATERIALSOURCE ,      X_D3DMCS_COLOR1 },
+{            X_D3DRENDERSTATETYPE::X_D3DRS_BACKAMBIENTMATERIALSOURCE ,      X_D3DMCS_MATERIAL },
+{            X_D3DRENDERSTATETYPE::X_D3DRS_BACKEMISSIVEMATERIALSOURCE,      X_D3DMCS_MATERIAL },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_SPECULARMATERIALSOURCE    ,      X_D3DMCS_COLOR2 },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_DIFFUSEMATERIALSOURCE     ,      X_D3DMCS_COLOR1 },
+{            X_D3DRENDERSTATETYPE::X_D3DRS_AMBIENTMATERIALSOURCE     ,      X_D3DMCS_MATERIAL },
+{            X_D3DRENDERSTATETYPE::X_D3DRS_EMISSIVEMATERIALSOURCE    ,      X_D3DMCS_MATERIAL },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_BACKAMBIENT               ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_AMBIENT                   ,      0 },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_POINTSIZE                 ,      F_ONE },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_POINTSIZE_MIN             ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_POINTSPRITEENABLE         ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALEENABLE          ,      0 },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALE_A              ,      F_ONE },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALE_B              ,      0 },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_POINTSCALE_C              ,      0 },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_POINTSIZE_MAX             ,      F_64 },
+{      X_D3DRENDERSTATETYPE::X_D3DRS_PATCHEDGESTYLE            ,      X_D3DPATCHEDGE_DISCRETE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_PATCHSEGMENTS             ,      F_ONE },
+{                 X_D3DRENDERSTATETYPE::X_D3DRS_SWAPFILTER,      0xdeadbeef },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_PSTEXTUREMODES            ,      0 },
+{             X_D3DRENDERSTATETYPE::X_D3DRS_VERTEXBLEND               ,      X_D3DVBF_DISABLE },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_FOGCOLOR                  ,      0 },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_FILLMODE                  ,      X_D3DFILL_SOLID },
+{              X_D3DRENDERSTATETYPE::X_D3DRS_BACKFILLMODE              ,      X_D3DFILL_SOLID },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_TWOSIDEDLIGHTING          ,      FALSE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_NORMALIZENORMALS          ,      FALSE },
+{                 X_D3DRENDERSTATETYPE::X_D3DRS_ZENABLE,      D3DZB_USEW },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_STENCILENABLE             ,      FALSE },
+{          X_D3DRENDERSTATETYPE::X_D3DRS_STENCILFAIL               ,      X_D3DSTENCILOP_KEEP },
+{                X_D3DRENDERSTATETYPE::X_D3DRS_FRONTFACE                 ,      X_D3DFRONT_CW },
+{                X_D3DRENDERSTATETYPE::X_D3DRS_CULLMODE                  ,      X_D3DCULL_CCW },
+{                 X_D3DRENDERSTATETYPE::X_D3DRS_TEXTUREFACTOR             ,      0xffffffff },
+{                          X_D3DRENDERSTATETYPE::X_D3DRS_ZBIAS                     ,      0 },
+{            X_D3DRENDERSTATETYPE::X_D3DRS_LOGICOP                   ,      X_D3DLOGICOP_NONE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_EDGEANTIALIAS             ,      FALSE },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLEANTIALIAS      ,      TRUE },
+{                 X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLEMASK           ,      0xffffffff },
+{                 X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLEMODE,      0xdeadbeef },
+{      X_D3DRENDERSTATETYPE::X_D3DRS_MULTISAMPLERENDERTARGETMODE,      X_D3DMULTISAMPLEMODE_1X },
+{               X_D3DRENDERSTATETYPE::X_D3DRS_SHADOWFUNC                ,      D3DCMP_NEVER },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_LINEWIDTH                 ,      F_ONE },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_DXT1NOISEENABLE,      TRUE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_YUVENABLE,      FALSE },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_OCCLUSIONCULLENABLE,      TRUE },
+{                       X_D3DRENDERSTATETYPE::X_D3DRS_STENCILCULLENABLE,      TRUE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_ROPZCMPALWAYSREAD,      FALSE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_ROPZREAD,      FALSE },
+{                      X_D3DRENDERSTATETYPE::X_D3DRS_DONOTCULLUNCOMPRESSED,      FALSE },
 // use 0xFFFFFFFF for both elements to indicate the end of array.
 {  0xFFFFFFFF,0xFFFFFFFF }
 };
+
+}; // namespace xbox
 
 bool XboxRenderStateConverter::Init()
 {
     // Get render state
     if (g_SymbolAddresses.find("D3D_g_RenderState") != g_SymbolAddresses.end()) {
         D3D__RenderState = (uint32_t*)g_SymbolAddresses["D3D_g_RenderState"];
-    }
-    else {
+    } else {
         EmuLog(LOG_LEVEL::ERROR2, "D3D_g_RenderState was not found!");
         return false;
     }
@@ -320,16 +167,16 @@ bool XboxRenderStateConverter::InitWithNV2A()
     BuildRenderStateMappingTable();
     // steup default xbox render state values.
     // another way is to use XboxRenderStages.GetXboxRenderState() to get xbox values and set to NV2ARenderStages
-    int i = 0;
-    while (g_DefaultRenderStates[i][0]!=0xFFFFFFFF) {
-        unsigned int RenderState = g_DefaultRenderStates[i][0];
-        unsigned int value = g_DefaultRenderStates [i][1];
+    unsigned int i = 0;
+    while (xbox::g_DefaultRenderStates[i][0]!=0xFFFFFFFF) {
+        uint32_t renderState = xbox::g_DefaultRenderStates[i][0];
+        uint32_t value = xbox::g_DefaultRenderStates[i][1];
         // Skip Render States that don't exist within this XDK
-        if (!XboxRenderStateExists(RenderState)) {
+        if (!XboxRenderStateExists(renderState)) {
             i++;
             continue;
         }
-        SetXboxRenderState(RenderState,value);
+        SetXboxRenderState(renderState, value);
         i++;
     }
 
@@ -519,23 +366,23 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             }
         } break;
         case xbox::X_D3DRS_SHADEMODE:
-            Value = EmuXB2PC_D3DSHADEMODE(Value);
+            Value = EmuXB2PC_D3DSHADEMODE((xbox::X_D3DSHADEMODE)Value);
             break;
         case xbox::X_D3DRS_BLENDOP:
-            Value = EmuXB2PC_D3DBLENDOP(Value);
+            Value = EmuXB2PC_D3DBLENDOP((xbox::X_D3DBLENDOP)Value);
             break;
         case xbox::X_D3DRS_SRCBLEND:
         case xbox::X_D3DRS_DESTBLEND:
-            Value = EmuXB2PC_D3DBLEND(Value);
+            Value = EmuXB2PC_D3DBLEND((xbox::X_D3DBLEND)Value);
             break;
         case xbox::X_D3DRS_ZFUNC:
         case xbox::X_D3DRS_ALPHAFUNC:
         case xbox::X_D3DRS_STENCILFUNC:
-            Value = EmuXB2PC_D3DCMPFUNC(Value);
+            Value = EmuXB2PC_D3DCMPFUNC((xbox::X_D3DCMPFUNC)Value);
             break;
         case xbox::X_D3DRS_STENCILZFAIL:
         case xbox::X_D3DRS_STENCILPASS:
-            Value = EmuXB2PC_D3DSTENCILOP(Value);
+            Value = EmuXB2PC_D3DSTENCILOP((xbox::X_D3DSTENCILOP)Value);
             break;
         case xbox::X_D3DRS_ALPHATESTENABLE:
         case xbox::X_D3DRS_ALPHABLENDENABLE:
@@ -668,7 +515,7 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
             }
             break;
         case xbox::X_D3DRS_FILLMODE:
-            Value = EmuXB2PC_D3DFILLMODE(Value);
+            Value = EmuXB2PC_D3DFILLMODE((xbox::X_D3DFILLMODE)Value);
 
             if (WireFrameMode > 0) {
                 if (WireFrameMode == 1) {
@@ -701,10 +548,10 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_MULTISAMPLEMASK:
             break;
         case xbox::X_D3DRS_STENCILFAIL:
-            Value = EmuXB2PC_D3DSTENCILOP(Value);
+            Value = EmuXB2PC_D3DSTENCILOP((xbox::X_D3DSTENCILOP)Value);
             break;
         case xbox::X_D3DRS_MULTISAMPLETYPE://D3DRS_MULTISAMPLEMODE
-            SetXboxMultiSampleType(Value);
+            SetXboxMultiSampleType((xbox::X_D3DMULTISAMPLE_TYPE)Value);
             break;
         default:
             // Only log missing state if it has a PC counterpart

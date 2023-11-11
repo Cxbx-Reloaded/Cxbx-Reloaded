@@ -37,9 +37,9 @@
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
-#include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
+#include "devices/Xbox.h" // For g_NV2A
+#include "devices/video/nv2a.h" // For PGRAPHState
 #include "devices/video/nv2a_int.h" // For NV** defines
-
 
 #include <imgui.h>
 
@@ -63,12 +63,20 @@ UINT                           g_InlineVertexBuffer_TableOffset = 0;
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
 xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
 
-extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); // Declared in PushBuffer.cpp
+extern float* pgraph_get_vertex_attribute_inline_value(PGRAPHState* pg, int attribute_index); // Implemented in EmuNV2A_PGRAPH.cpp
 
 void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
 uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer* pPixelContainer);
 uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer* pPixelContainer);
+
+float* HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
+{
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
+
+	return pgraph_get_vertex_attribute_inline_value(pg, slot);
+}
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamNumber) const
 {
@@ -703,13 +711,13 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
 }
 
-void CxbxrImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
+void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
 {
 	g_InlineVertexBuffer_PrimitiveType = PrimitiveType;
 	g_InlineVertexBuffer_TableOffset = 0;
 }
 
-void CxbxrImpl_End()
+void CxbxImpl_End()
 {
 	using namespace xbox;
 
@@ -752,7 +760,7 @@ void CxbxrImpl_End()
 	//	ExFreePool(g_InlineVertexBuffer_Table);
 }
 
-void CxbxrImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
+void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 {
 	using namespace xbox;
 
@@ -816,10 +824,10 @@ void CxbxrImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	}
 }
 
-void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride)
+void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride)
 {
 	if (pStreamData != xbox::zeroptr && Stride == 0) {
-		LOG_TEST_CASE("CxbxrImpl_SetStreamSource : Stream assigned, and stride set to 0 (might be okay)");
+		LOG_TEST_CASE("CxbxImpl_SetStreamSource : Stream assigned, and stride set to 0 (might be okay)");
 	}
 
 	assert(StreamNumber < X_VSH_MAX_STREAMS);
@@ -827,15 +835,3 @@ void CxbxrImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStre
 	g_Xbox_SetStreamSource[StreamNumber].VertexBuffer = pStreamData;
 	g_Xbox_SetStreamSource[StreamNumber].Stride = Stride;
 }
-
-extern NV2ADevice* g_NV2A;// TMP glue
-extern float *pgraph_get_vertex_attribute_inline_value(PGRAPHState *pg, int attribute_index); // Implemented in EmuNV2A_PGRAPH.cpp
-
-float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
-{
-	NV2AState* dev = g_NV2A->GetDeviceState();
-	PGRAPHState *pg = &(dev->pgraph);
-
-	return pgraph_get_vertex_attribute_inline_value(pg, slot);
-}
-

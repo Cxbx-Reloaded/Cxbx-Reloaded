@@ -1203,7 +1203,6 @@ ComponentEncoding EmuXBFormatComponentEncoding(xbox::X_D3DFORMAT Format)
 	return FormatInfos[Format].components;
 }
 
-
 D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 {
 	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)

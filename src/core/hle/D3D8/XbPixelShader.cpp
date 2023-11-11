@@ -1220,7 +1220,6 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // manually read from D3D__RenderState[X_D3DRS_PSTEXTUREMODES] for that one field.
   // See D3DDevice_SetPixelShaderCommon which implements this
   extern XboxRenderStateConverter NV2ARenderStates;
-  extern xbox::X_PixelShader* pNV2A_PixelShader;
   const xbox::X_D3DPIXELSHADERDEF* pPSDef;
   if (is_pgraph_using_NV2A_Kelvin())
     pPSDef = pNV2A_PixelShader != nullptr ? pNV2A_PixelShader->pPSDef : nullptr;//(xbox::X_D3DPIXELSHADERDEF*)(NV2ARenderStates.GetPixelShaderRenderStatePointer()) : nullptr;

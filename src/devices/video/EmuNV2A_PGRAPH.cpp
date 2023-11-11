@@ -1570,7 +1570,7 @@ void HLE_API_handle_method
         ReceiveKickOffWaitForAPI(); // was missing
         break;
     case X_D3DDevice_Begin:
-        CxbxrImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]);
+        CxbxImpl_Begin((xbox::X_D3DPRIMITIVETYPE)argv[1]);
         break;
     case X_D3DDevice_BeginPush:  break;
     case X_D3DDevice_BeginPushBuffer:  break;
@@ -1644,9 +1644,9 @@ void HLE_API_handle_method
     case X_D3DDevice_End:
 #if 1 // X_D3DDevice_End calls EmuKickOffWait
         ReceiveKickOffWaitForAPI(); // was missing
-        CxbxrImpl_End(); // This has no use (waited-for API's aren't pushed thus not handled)
+        CxbxImpl_End(); // This has no use (waited-for API's aren't pushed thus not handled)
 #else // experimental 
-        CxbxrImpl_End();
+        CxbxImpl_End();
 #endif
         break;
     case X_D3DDevice_EndPush:  break;
@@ -1726,10 +1726,10 @@ void HLE_API_handle_method
         CxbxrImpl_LightEnable((xbox::dword_xt) /* Index */ argv[1], (xbox::bool_xt) /* bEnable */ argv[2]);
         break;
     case X_D3DDevice_LoadVertexShader:
-        CxbxrImpl_LoadVertexShader(argv[1], argv[2]);
+        CxbxImpl_LoadVertexShader(argv[1], argv[2]);
         break;
     case X_D3DDevice_LoadVertexShaderProgram:
-        CxbxrImpl_LoadVertexShaderProgram((DWORD*)argv[1], argv[2]);
+        CxbxImpl_LoadVertexShaderProgram((DWORD*)argv[1], argv[2]);
         break;
     case X_D3DDevice_MultiplyTransform:  break;
     case X_D3DDevice_Nop:  break;
@@ -1767,7 +1767,7 @@ void HLE_API_handle_method
         CxbxrImpl_RunVertexStateShader(argv[1], (xbox::float_xt*)argv[2]);
         break;
     case X_D3DDevice_SelectVertexShader:
-        CxbxrImpl_SelectVertexShader(argv[1], argv[2]);
+        CxbxImpl_SelectVertexShader(argv[1], argv[2]);
         break;
     case X_D3DDevice_SelectVertexShaderDirect:  break;
     case X_D3DDevice_SetBackBufferScale:
@@ -1810,13 +1810,13 @@ void HLE_API_handle_method
     case X_D3DDevice_SetRenderState_Simple:  break;
     case X_D3DDevice_SetRenderStateNotInline:  break;
     case X_D3DDevice_SetRenderTarget:
-        CxbxrImpl_SetRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
+        CxbxImpl_SetRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
         // release reference to the surfaces since we add extra references to them in the patched SetRenderTarget()
         CxbxrImpl_ReleaseRenderTarget((xbox::X_D3DSurface*)argv[1], (xbox::X_D3DSurface*)argv[2]);
         break;
     case X_D3DDevice_SetScissors:  break;
     case X_D3DDevice_SetScreenSpaceOffset:
-        CxbxrImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
+        CxbxImpl_SetScreenSpaceOffset(DWtoF(argv[1]), DWtoF(argv[2]));
         break;
     case X_D3DDevice_SetShaderConstantMode:
         CxbxrImpl_SetShaderConstantMode((xbox::X_VERTEXSHADERCONSTANTMODE)argv[1]);
@@ -1824,7 +1824,7 @@ void HLE_API_handle_method
     case X_D3DDevice_SetSoftDisplayFilter:  break;
     case X_D3DDevice_SetStipple:  break;
     case X_D3DDevice_SetStreamSource:
-        CxbxrImpl_SetStreamSource((UINT)argv[1], (xbox::X_D3DVertexBuffer*)argv[2], (UINT)argv[3]);
+        CxbxImpl_SetStreamSource((UINT)argv[1], (xbox::X_D3DVertexBuffer*)argv[2], (UINT)argv[3]);
         break;
     case X_D3DDevice_SetSwapCallback:  break;
     case X_D3DDevice_SetTexture:
@@ -1843,14 +1843,14 @@ void HLE_API_handle_method
     case X_D3DDevice_SetVertexData2f:  break;
     case X_D3DDevice_SetVertexData2s:  break;
     case X_D3DDevice_SetVertexData4f:
-        CxbxrImpl_SetVertexData4f(argv[1], DWtoF(argv[2]), DWtoF(argv[3]), DWtoF(argv[4]), DWtoF(argv[5]));
+        CxbxImpl_SetVertexData4f(argv[1], DWtoF(argv[2]), DWtoF(argv[3]), DWtoF(argv[4]), DWtoF(argv[5]));
         break;
     case X_D3DDevice_SetVertexData4f_16:  break;
     case X_D3DDevice_SetVertexData4s:  break;
     case X_D3DDevice_SetVertexData4ub:  break;
     case X_D3DDevice_SetVertexDataColor:  break;
     case X_D3DDevice_SetVertexShader:
-        CxbxrImpl_SetVertexShader((DWORD)argv[1]);
+        CxbxImpl_SetVertexShader((DWORD)argv[1]);
         break;
     case X_D3DDevice_SetVertexShaderConstant:  break;
     case X_D3DDevice_SetVertexShaderInput:  break;
@@ -1861,7 +1861,7 @@ void HLE_API_handle_method
         if (argv[1] != 0)
             HLEViewport = *(xbox::X_D3DVIEWPORT8*)argv[1];
 
-        CxbxrImpl_SetViewport((xbox::X_D3DVIEWPORT8*)argv[1]);
+        CxbxImpl_SetViewport((xbox::X_D3DVIEWPORT8*)argv[1]);
         break;
     case X_D3DDevice_SetWaitCallback:  break;
     case X_D3DDevice_Swap:
@@ -3473,7 +3473,7 @@ int pgraph_handle_method(
 					// safe guard to make sure vertex shader program token parser won't went over the end of final slot.
 					pg->vsh_program_slots[X_VSH_MAX_INSTRUCTION_COUNT][3] = 1; // TODO : Move this to immediately prior to parsing
                     */
-                    // use CxbxSetVertexShaderSlots() directly, these codes come from CxbxrImpl_LoadVertexShaderProgram(). update pg->KelvinPrimitive.SetTransformProgramLoad accrodingly.
+                    // use CxbxSetVertexShaderSlots() directly, these codes come from CxbxImpl_LoadVertexShaderProgram(). update pg->KelvinPrimitive.SetTransformProgramLoad accrodingly.
                     extern void CxbxSetVertexShaderSlots(DWORD * pTokens, DWORD Address, DWORD NrInstructions);
                     CxbxSetVertexShaderSlots((DWORD*) & argv[0], pg->KelvinPrimitive.SetTransformProgramLoad, (method_count / 4));
                     // set vertex shader dirty flag
@@ -3510,8 +3510,8 @@ int pgraph_handle_method(
                         }
                     }
                     */
-                    // use CxbxrImpl_SetVertexShaderConstant() directly and update KelvinPrimitive.SetTransformConstantLoad accrodingly.
-                    CxbxrImpl_SetVertexShaderConstant(pg->KelvinPrimitive.SetTransformConstantLoad- X_D3DSCM_CORRECTION,&argv[0],method_count/4);
+                    // use CxbxImpl_SetVertexShaderConstant() directly and update KelvinPrimitive.SetTransformConstantLoad accrodingly.
+                    CxbxImpl_SetVertexShaderConstant(pg->KelvinPrimitive.SetTransformConstantLoad- X_D3DSCM_CORRECTION,&argv[0],method_count/4);
                     
                     
                     //pick up SuperSampleScaleX/SuperSampleScaleY/ZScale/wScale after calling CommonSetPassthroughProgram().
@@ -4888,7 +4888,7 @@ int pgraph_handle_method(
 						*/
 					}else if (slot== NV097_SET_TRANSFORM_EXECUTION_MODE_MODE_FIXED){//fix function mode
 
-						//Call CxbxrImpl_SetVertexShaderInput(pg->vsh_FVF_handle) here? or set the global xbox vertex attribute []
+						//Call CxbxImpl_SetVertexShaderInput(pg->vsh_FVF_handle) here? or set the global xbox vertex attribute []
 						//or g_Xbox_SetVertexShaderInput_Attributes = *CxbxGetVertexShaderAttributes(pXboxVertexShader); ??
 						//to set vertex format info, but wihthout stream info.
 

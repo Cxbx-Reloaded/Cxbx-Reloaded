@@ -44,8 +44,8 @@ extern void CxbxInitWindow(bool bFullInit);
 
 void CxbxUpdateNativeD3DResources();
 
-void CxbxrImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
-void CxbxrImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
+void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
+void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 
 // initialize direct3d
 extern void EmuD3DInit();
@@ -58,7 +58,7 @@ extern IDirect3DDevice9Ex *g_pD3DDevice;
 extern xbox::dword_xt g_Xbox_VertexShader_Handle;
 
 extern xbox::X_PixelShader *g_pXbox_PixelShader;
-extern xbox::X_PixelShader* pNV2A_PixelShader;
+extern xbox::X_PixelShader* pNV2A_PixelShader; // Declared in XbPushBuffer.cpp
 
 extern xbox::X_D3DBaseTexture *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
@@ -396,7 +396,7 @@ X_D3DSurface * WINAPI EMUPATCH(D3DDevice_GetDepthStencilSurface2)();
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetTile)
 (
     xbox::dword_xt      Index,
-    xbox::X_D3DTILE *   pTile
+    xbox::X_D3DTILE    *pTile
 );
 
 // ******************************************************************
@@ -405,7 +405,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetTile)
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_SetTile)
 (
     xbox::dword_xt          Index,
-    CONST xbox::X_D3DTILE * pTile
+    CONST xbox::X_D3DTILE  *pTile
 );
 
 // ******************************************************************
@@ -839,26 +839,6 @@ xbox::hresult_xt WINAPI EMUPATCH(Lock3DSurface)
 	dword_xt				Flags
 );
 
-// ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel
-// ******************************************************************
-xbox::hresult_xt WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel)
-(
-    X_D3DTexture* pThis,
-    uint_xt            Level,
-    X_D3DSurface** ppSurfaceLevel
-);
-
-// ******************************************************************
-// * patch: IDirect3DTexture8_GetSurfaceLevel2
-// ******************************************************************
-X_D3DSurface* WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
-(
-    X_D3DTexture* pThis,
-    uint_xt            Level
-);
-
-
 #if 0 // patch disabled
 // ******************************************************************
 // * patch: Get2DSurfaceDesc
@@ -891,6 +871,25 @@ xbox::void_xt WINAPI EMUPATCH(D3DSurface_LockRect)
 );
 
 // ******************************************************************
+// * patch: IDirect3DBaseTexture8_GetLevelCount
+// ******************************************************************
+xbox::dword_xt WINAPI EMUPATCH(D3DBaseTexture_GetLevelCount)
+(
+    X_D3DBaseTexture   *pThis
+);
+#endif
+
+// ******************************************************************
+// * patch: IDirect3DTexture8_GetSurfaceLevel2
+// ******************************************************************
+X_D3DSurface * WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel2)
+(
+    X_D3DTexture   *pThis,
+    uint_xt            Level
+);
+
+#if 0 // patch disabled
+// ******************************************************************
 // * patch: IDirect3DTexture8_LockRect
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DTexture_LockRect)
@@ -901,15 +900,19 @@ xbox::void_xt WINAPI EMUPATCH(D3DTexture_LockRect)
     CONST RECT     *pRect,
     dword_xt           Flags
 );
+#endif
 
 // ******************************************************************
-// * patch: IDirect3DBaseTexture8_GetLevelCount
+// * patch: IDirect3DTexture8_GetSurfaceLevel
 // ******************************************************************
-xbox::dword_xt WINAPI EMUPATCH(D3DBaseTexture_GetLevelCount)
+xbox::hresult_xt WINAPI EMUPATCH(D3DTexture_GetSurfaceLevel)
 (
-    X_D3DBaseTexture* pThis
+    X_D3DTexture   *pThis,
+    uint_xt            Level,
+    X_D3DSurface  **ppSurfaceLevel
 );
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: IDirect3DVolumeTexture8_LockBox
 // ******************************************************************
@@ -1537,14 +1540,6 @@ xbox::void_xt WINAPI EMUPATCH(D3D_CommonSetRenderTarget)
     X_D3DSurface    *pRenderTarget,
     X_D3DSurface    *pNewZStencil,
     void            *unknown
-);
-
-// ******************************************************************
-// * patch: D3D_UpdateProjectionViewportTransform
-// ******************************************************************
-xbox::hresult_xt WINAPI EMUPATCH(D3D_UpdateProjectionViewportTransform)
-(
-	xbox::void_xt
 );
 
 // ******************************************************************
@@ -2234,4 +2229,12 @@ xbox::hresult_xt WINAPI EMUPATCH(CreateStandAloneSurface)
     xbox::X_D3DSurface** ppSurface
 );
 
-#endif
+// ******************************************************************
+// * patch: D3D_UpdateProjectionViewportTransform
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(D3D_UpdateProjectionViewportTransform)
+(
+    xbox::void_xt
+);
+
+#endif // DIRECT3D9_H
