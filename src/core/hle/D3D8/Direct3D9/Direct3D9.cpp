@@ -684,7 +684,7 @@ void CxbxInitWindow(bool bFullInit)
 		ImGui_ImplWin32_Shutdown();
 	});
 
-	g_ShaderSources.Update();
+	(void) g_ShaderSources.Update();
 	g_ShaderSources.InitShaderHotloading();
 	
 }

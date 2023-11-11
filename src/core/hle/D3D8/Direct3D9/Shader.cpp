@@ -263,7 +263,7 @@ void ShaderSources::LoadShadersFromDisk() {
 }
 
 void ShaderSources::InitShaderHotloading() {
-	static std::thread fsWatcherThread;
+	static std::jthread fsWatcherThread;
 
 	if (fsWatcherThread.joinable()) {
 		EmuLog(LOG_LEVEL::ERROR2, "Ignoring request to start shader file watcher - it has already been started.");
@@ -272,13 +272,11 @@ void ShaderSources::InitShaderHotloading() {
 
 	EmuLog(LOG_LEVEL::DEBUG, "Starting shader file watcher...");
 
-	fsWatcherThread = std::thread([]{
+	fsWatcherThread = std::jthread([]{
 		// Determine the filename and directory for the fixed function shader
 		char cxbxExePath[MAX_PATH];
 		GetModuleFileName(GetModuleHandle(nullptr), cxbxExePath, MAX_PATH);
-		auto hlslDir = std::filesystem::path(cxbxExePath)
-			.parent_path()
-			.append("hlsl/");
+		auto hlslDir = std::filesystem::path(cxbxExePath).parent_path().append("hlsl/");
 
 		HANDLE changeHandle = FindFirstChangeNotification(hlslDir.string().c_str(), false, FILE_NOTIFY_CHANGE_LAST_WRITE);
 
@@ -303,7 +301,8 @@ void ShaderSources::InitShaderHotloading() {
 				}
 
 				EmuLog(LOG_LEVEL::DEBUG, "Change detected in shader folder");
-				g_ShaderSources.shaderVersionOnDisk += 1;
+
+				g_ShaderSources.shaderVersionOnDisk++;
 			}
 			else {
 				EmuLog(LOG_LEVEL::ERROR2, "Shader filewatcher failed to get the next notification");

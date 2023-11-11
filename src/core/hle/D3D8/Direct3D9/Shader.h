@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <string> // std::string
 #include <d3dcompiler.h> // ID3DBlob (via d3d9.h > d3d11shader.h > d3dcommon.h)
 
@@ -38,7 +39,7 @@ private:
 	void LoadShadersFromDisk();
 
 	// counts upwards on every change detected to the shader source files at runtime
-	volatile int shaderVersionOnDisk = 0;
+	std::atomic_int shaderVersionOnDisk = 0;
 	// current loaded shader version
 	// Initialized to < shaderVersionOnDisk
 	int shaderVersionLoadedFromDisk = -1;
