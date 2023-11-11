@@ -59,6 +59,7 @@
 #include <io.h>
 #include <shlobj.h>
 
+#include <filesystem>
 #include <sstream> // for std::stringstream
 #include <fstream>
 #include <iostream>

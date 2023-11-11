@@ -26,12 +26,14 @@
 #ifndef CXBXUTIL_H
 #define CXBXUTIL_H
 
+#include <stdexcept>
 #include "xbox_types.h"
 #include "Cxbx.h"
 #include <stdint.h>
 #include <assert.h>
 #include <string>
 #include <type_traits>
+#include <vector>
 #include "std_extend.hpp" // for ARRAY_SIZE
 
 /* This is a linux struct for vectored I/O. See readv() and writev() */

@@ -32,7 +32,7 @@ jobs:
         configuration: [Release, Debug]
         vsver: [2022]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Generate CMake files
@@ -57,7 +57,7 @@ jobs:
     needs: build-windows
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -72,7 +72,7 @@ jobs:
               exit 1
             fi
           done
-          echo "::set-output name=tag_name::CI-${GITHUB_SHA::7}"
+          echo "tag_name=CI-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

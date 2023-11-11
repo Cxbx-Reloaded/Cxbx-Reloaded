@@ -52,6 +52,7 @@
 #include <assert.h> // assert()
 #include <process.h>
 #include <locale.h>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 

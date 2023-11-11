@@ -25,6 +25,7 @@
 // *
 // ******************************************************************
 
+#include <algorithm>
 #include "Button.h"
 #include "InputManager.h"
 #include "layout_xbox_device.h"
