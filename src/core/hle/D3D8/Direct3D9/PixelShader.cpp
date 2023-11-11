@@ -33,6 +33,7 @@
 #include "PixelShader.h" // EmuCompilePixelShader
 //#include "core\kernel\init\CxbxKrnl.h"
 //#include "core\kernel\support\Emu.h"
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
