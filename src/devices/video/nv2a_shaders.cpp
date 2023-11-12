@@ -217,9 +217,9 @@ static void append_skinning_code(QString* str, bool mix,
 			qstring_append(str, "{\n"
 				"  float weight_i;\n"
 				"  float weight_n = 1.0;\n");
-			int i;
+			unsigned int i;
 			for (i = 0; i < count; i++) {
-				if (i < (count - 1)) {
+				if (i + 1 < count) {
 					char c = "xyzw"[i];
 					qstring_append_fmt(str, "  weight_i = weight.%c;\n"
 						"  weight_n -= weight_i;\n",
@@ -235,7 +235,7 @@ static void append_skinning_code(QString* str, bool mix,
 		}
 		else {
 			/* Individual weights */
-			int i;
+			unsigned int i;
 			for (i = 0; i < count; i++) {
 				char c = "xyzw"[i];
 				qstring_append_fmt(str, "%s += (%s * %s%d).%s * weight.%c;\n",

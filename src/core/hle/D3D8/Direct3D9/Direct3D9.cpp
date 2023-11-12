@@ -13404,8 +13404,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 		(DWORD)pStreamInputs);
 }
 
-extern xbox::dword_xt* GetCxbxVertexShaderSlotPtr(const DWORD SlotIndexAddress); // tmp glue
-
 void WINAPI CxbxrImpl_RunVertexStateShader(
 	xbox::dword_xt Address,
 	CONST xbox::float_xt* pData)
@@ -13420,7 +13418,7 @@ void WINAPI CxbxrImpl_RunVertexStateShader(
 	//        and here just point program.steps to global vsh_program_steps[Address].
 	Nv2aVshParseResult result = nv2a_vsh_parse_program(
 		&program, // Note : program.steps will be malloc'ed
-		GetCxbxVertexShaderSlotPtr(Address), // TODO : At some point, use pg->program_data[Address] here instead
+		HLE_get_NV2A_vertex_program_slot_ptr(Address),
 		NV2A_MAX_TRANSFORM_PROGRAM_LENGTH - Address);
 	if (result != NV2AVPR_SUCCESS) {
 		LOG_TEST_CASE("nv2a_vsh_parse_program failed");

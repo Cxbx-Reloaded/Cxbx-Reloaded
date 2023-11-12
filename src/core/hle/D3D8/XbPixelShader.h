@@ -337,7 +337,9 @@ enum PS_CHANNEL
     PS_CHANNEL_BLUE=  0x00, // used as ALPHA source
     PS_CHANNEL_ALPHA= 0x10, // used as RGB or ALPHA source
 
-    PS_CHANNEL_MASK=  0x10
+    PS_CHANNEL_MASK=  0x10,
+
+    PS_CHANNEL_FORCE_DWORD = 0x7fffffff // This also avoids compiler warnings on equality compares, that imply this type contains only bit-flags
 };
 
 enum PS_FINALCOMBINERSETTING

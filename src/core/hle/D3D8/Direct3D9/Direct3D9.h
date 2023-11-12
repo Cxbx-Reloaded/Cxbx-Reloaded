@@ -62,6 +62,8 @@ extern xbox::X_PixelShader* pNV2A_PixelShader; // Declared in XbPushBuffer.cpp
 
 extern xbox::X_D3DBaseTexture *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
+extern xbox::dword_xt* HLE_get_NV2A_vertex_program_slot_ptr(unsigned slot_address);
+
 namespace xbox {
 
 // ******************************************************************

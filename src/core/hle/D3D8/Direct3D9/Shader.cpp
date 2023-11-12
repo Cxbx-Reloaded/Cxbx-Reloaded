@@ -39,8 +39,8 @@ std::string DebugPrependLineNumbers(std::string shaderString) {
 
 	int i = 1;
 	for (std::string line; std::getline(shader, line); ) {
-		auto lineNumber = std::to_string(i++);
-		auto paddedLineNumber = lineNumber.insert(0, 3 - lineNumber.size(), ' ');
+		std::string lineNumber = std::to_string(i++);
+		std::string paddedLineNumber = lineNumber.insert(0, 3 - lineNumber.size(), ' ');
 		debugShader << "/* " << paddedLineNumber << " */ " << line << "\n";
 	}
 

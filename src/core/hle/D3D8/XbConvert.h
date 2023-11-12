@@ -263,7 +263,7 @@ extern const D3DPRIMITIVETYPE g_XboxPrimitiveTypeToHost[];
 // convert xbox->pc primitive type
 inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType)
 {
-	if (XboxPrimitiveType >= xbox::X_D3DPT_MAX) {
+	if (!((unsigned)XboxPrimitiveType < xbox::X_D3DPT_MAX)) {
 		LOG_TEST_CASE("XboxPrimitiveType too large");
 		return D3DPT_FORCE_DWORD;
 	}
@@ -274,7 +274,7 @@ inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(xbox::X_D3DPRIMITIVETYPE XboxP
 // convert xbox->pc primitive type
 inline DWORD EmuXB2PC_D3DPrimitiveCount(DWORD vertex_count,xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType)
 {
-	if (XboxPrimitiveType >= xbox::X_D3DPT_MAX) {
+	if (!((unsigned)XboxPrimitiveType < xbox::X_D3DPT_MAX)) {
 		LOG_TEST_CASE("XboxPrimitiveType too large");
 		return D3DPT_FORCE_DWORD;
 	}

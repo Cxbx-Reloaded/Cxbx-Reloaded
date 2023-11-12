@@ -394,10 +394,10 @@ void ____A8L8ToARGBRow_C(const uint8_t* src_a8l8, uint8_t* dst_argb, int width) 
 
 typedef struct TRGB32
 {
-	unsigned char B;
-	unsigned char G;
-	unsigned char R;
-	unsigned char A;
+	uint8_t B;
+	uint8_t G;
+	uint8_t R;
+	uint8_t A;
 } TRGB32;
 
 // DXT1 info (MSDN Block Compression) : https://msdn.microsoft.com/en-us/library/bb694531.aspx
@@ -420,16 +420,17 @@ void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
         uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
-		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
-		colormap[0].A = 255u;
-
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
-		colormap[1].A = 255u;
+		TRGB32 colormap[4] = { {
+		/*colormap[0].B = */(b0 << 3) | (b0 >> 2),
+		/*colormap[0].G = */(g0 << 2) | (g0 >> 4),
+		/*colormap[0].R = */(r0 << 3) | (r0 >> 2),
+		/*colormap[0].A = */255u
+		}, {
+		/*colormap[1].B = */(b1 << 3) | (b1 >> 2),
+		/*colormap[1].G = */(g1 << 2) | (g1 >> 4),
+		/*colormap[1].R = */(r1 << 3) | (r1 >> 2),
+		/*colormap[1].A = */255u
+		} };
 
 		// Build second half of RGB32 color map :
 		if (color_0 > color_1)
@@ -524,14 +525,17 @@ void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 		uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
-		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
-
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		TRGB32 colormap[4] = { {
+		/*colormap[0].B = */(b0 << 3) | (b0 >> 2),
+		/*colormap[0].G = */(g0 << 2) | (g0 >> 4),
+		/*colormap[0].R = */(r0 << 3) | (r0 >> 2),
+		/*colormap[0].A = */0u
+		}, {
+		/*colormap[1].B = */(b1 << 3) | (b1 >> 2),
+		/*colormap[1].G = */(g1 << 2) | (g1 >> 4),
+		/*colormap[1].R = */(r1 << 3) | (r1 >> 2),
+		/*colormap[1].A = */0u
+		} };
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
@@ -601,9 +605,10 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; x += 4) {
 		// Read two 8-bit alphas
-		uint8_t alphamap[8];
-		alphamap[0] = data[0];
-		alphamap[1] = data[1];
+		uint8_t alphamap[8] = {
+		/*alphamap[0] = */data[0],
+		/*alphamap[1] = */data[1],
+		};
 
 		// Build rest of alpha map
 		if (alphamap[0] > alphamap[1]) {
@@ -645,14 +650,17 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 		uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
-		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
-
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		TRGB32 colormap[4] = { {
+		/*colormap[0].B = */(b0 << 3) | (b0 >> 2),
+		/*colormap[0].G = */(g0 << 2) | (g0 >> 4),
+		/*colormap[0].R = */(r0 << 3) | (r0 >> 2),
+		/*colormap[0].A = */0u
+		}, {
+		/*colormap[1].B = */(b1 << 3) | (b1 >> 2),
+		/*colormap[1].G = */(g1 << 2) | (g1 >> 4),
+		/*colormap[1].R = */(r1 << 3) | (r1 >> 2),
+		/*colormap[0].A = */0u
+		} };
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
@@ -998,74 +1006,72 @@ static const FormatInfo FormatInfos[] = {
 
 
 // FormatInfo array for PCFormat. because PCFormat includes 4CC so we can't index it direcly using the value of PCFormat,
-// we can only loop from the beginning and when PCFormat==D3DFMT_FORCE_DWORD it means we reached the end of array.
 static const FormatInfo PCFormatInfos[] = {
-	{"false",	0	,	Linear	,	NoCmpnts	,                 D3DFMT_UNKNOWN,  	Texture,	nullptr},
-	//	  { 	false	, 	24	, 	Linear	, 	__R8G8B8	, 	    D3DFMT_R8G8B8       	, 	Texture	, 	nullptr	 }, 	
-	{ 	false, 32, Linear, A8R8G8B8, D3DFMT_A8R8G8B8, RenderTarget, nullptr	 }, 	// backbuffer
-	{ false	, 	32	, 	Linear	, 	X8R8G8B8	, 	    D3DFMT_X8R8G8B8     	, 	RenderTarget, 	nullptr }, 	// backbuffer
-	{ false	, 	16	, 	Linear	, 	__R6G5B5	, 	    D3DFMT_R5G6B5       	, 	RenderTarget, 	nullptr }, 	// backbuffer
-	{ false	, 	16	, 	Linear	, 	X1R5G5B5	, 	    D3DFMT_X1R5G5B5     	, 	RenderTarget, 	nullptr }, 	// backbuffer
-	{ false	, 	16	, 	Linear	, 	A1R5G5B5	, 	    D3DFMT_A1R5G5B5     	, 	RenderTarget, 	nullptr }, 	// backbuffer
-	{ false	, 	16	, 	Linear	, 	A4R4G4B4	, 	    D3DFMT_A4R4G4B4     	, 	Texture	, 	nullptr },
-	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R3G3B2       	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	8	, 	Linear	, 	______A8	, 	    D3DFMT_A8           	, 	Texture	, 	nullptr },
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A8R3G3B2     	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_X4R4G4B4     	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2B10G10R10  	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	32	, 	Linear	, 	A8B8G8R8	, 	    D3DFMT_A8B8G8R8     	, 	Texture	, 	nullptr },
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_X8B8G8R8     	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G16R16       	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2R10G10B10  	, 	RenderTarget	, 	nullptr	 }, 	// backbuffer
-	//	  { 	false	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A16B16G16R16 	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A8P8         	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	8	, 	Linear	, 	______P8	, 	    D3DFMT_P8           	, 	Texture	, 	nullptr },
-	{ false	, 	8	, 	Linear	, 	______L8	, 	    D3DFMT_L8           	, 	RenderTarget	, 	nullptr },
-	{ false	, 	16	, 	Linear	, 	____A8L8	, 	    D3DFMT_A8L8         	, 	Texture	, 	nullptr },
-	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A4L4         	, 	Texture	, 	nullptr	 }, 	
-	{ true	, 	16	, 	Linear	, 	____G8B8	, 	    D3DFMT_V8U8         	, 	Texture	, 	nullptr },
-	{ true	, 	16	, 	Linear	, 	__R6G5B5	, 	    D3DFMT_L6V5U5       	, 	Texture	, 	nullptr },
-	{ true	, 	32	, 	Linear	, 	X8R8G8B8	, 	    D3DFMT_X8L8V8U8     	, 	Texture	, 	nullptr },
-	{ true	, 	32	, 	Linear	, 	A8R8G8B8	, 	    D3DFMT_Q8W8V8U8     	, 	Texture	, 	nullptr },
-	{ true	, 	32	, 	Linear	, 	__G16B16	, 	    D3DFMT_V16U16       	, 	Texture	, 	nullptr },
-	//	  { 	true	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2W10V10U10  	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	16	, 	Linear	, 	____UYVY	, 	    D3DFMT_UYVY         	, 	Texture	, 	nullptr },
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R8G8_B8G8    	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	16	, 	Linear	, 	____YUY2	, 	    D3DFMT_YUY2         	, 	Texture	, 	nullptr },
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G8R8_G8B8    	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	4	, 	Cmprsd	, 	____DXT1	, 	    D3DFMT_DXT1         	, 	Texture	, 	nullptr },
-	//	  { 	false	, 		, 	Cmprsd	, 	NoCmpnts	, 	    D3DFMT_DXT2         	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	8	, 	Cmprsd	, 	____DXT3	, 	    D3DFMT_DXT3         	, 	Texture	, 	nullptr },
-	//	  { 	false	, 		, 	Cmprsd	, 	NoCmpnts	, 	    D3DFMT_DXT4         	, 	Texture	, 	nullptr	 }, 	
-	{ false	, 	8	, 	Cmprsd	, 	____DXT5	, 	    D3DFMT_DXT5         	, 	Texture	, 	nullptr },
-	{ false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D16_LOCKABLE 	, 	DepthBuffer	, 	nullptr },
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D32          	, 	DepthBuffer	, 	nullptr	 }, 	
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D15S1        	, 	DepthBuffer	, 	nullptr	 }, 	
-	{ false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24S8        	, 	DepthBuffer	, 	nullptr },
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24X8        	, 	DepthBuffer	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24X4S4      	, 	DepthBuffer	, 	nullptr	 }, 	
-	{ false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D16          	, 	DepthBuffer	, 	nullptr },
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D32F_LOCKABLE	, 	DepthBuffer	, 	nullptr	 }, 	
-	{ false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D24FS8       	, 	DepthBuffer	, 	nullptr },
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_D32_LOCKABLE 	, 	DepthBuffer	, 	nullptr	 }, 	
-	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_S8_LOCKABLE  	, 	DepthBuffer	, 	nullptr	 }, 	
-	{ false	, 	16	, 	Linear	, 	_____L16	, 	    D3DFMT_L16          	, 	Texture	, 	nullptr },
-	//	  { 	false	, 	0	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_VERTEXDATA   	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_INDEX16      	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_INDEX32      	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	true	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_Q16W16V16U16 	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	8	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_MULTI2_ARGB8 	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	16	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R16F         	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G16R16F      	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A16B16G16R16F	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_R32F         	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	64	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_G32R32F      	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	128	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A32B32G32R32F	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	true	, 	16	, 	Cmprsd	, 	NoCmpnts	, 	    D3DFMT_CxV8U8       	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	1	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A1           	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	32	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_A2B10G10R10_XR_BIAS 	, 	Texture	, 	nullptr	 }, 	
-	//	  { 	false	, 	0	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_BINARYBUFFER 	, 	Texture	, 	nullptr	 }, 	
-	//{ false	, 	0x7FFFFFFF	, 	Linear	, 	NoCmpnts	, 	    D3DFMT_FORCE_DWORD  	, 	Texture	, 	nullptr },
+	{ false,  0, Linear, NoCmpnts, D3DFMT_UNKNOWN            , Texture },
+//	{ false, 24, Linear, __R8G8B8, D3DFMT_R8G8B8             , Texture },
+	{ false, 32, Linear, A8R8G8B8, D3DFMT_A8R8G8B8           , RenderTarget }, // backbuffer
+	{ false, 32, Linear, X8R8G8B8, D3DFMT_X8R8G8B8           , RenderTarget }, // backbuffer
+	{ false, 16, Linear, __R6G5B5, D3DFMT_R5G6B5             , RenderTarget }, // backbuffer
+	{ false, 16, Linear, X1R5G5B5, D3DFMT_X1R5G5B5           , RenderTarget }, // backbuffer
+	{ false, 16, Linear, A1R5G5B5, D3DFMT_A1R5G5B5           , RenderTarget }, // backbuffer
+	{ false, 16, Linear, A4R4G4B4, D3DFMT_A4R4G4B4           , Texture },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_R3G3B2             , Texture },
+	{ false,  8, Linear, ______A8, D3DFMT_A8                 , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_A8R3G3B2           , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_X4R4G4B4           , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_A2B10G10R10        , Texture },
+	{ false, 32, Linear, A8B8G8R8, D3DFMT_A8B8G8R8           , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_X8B8G8R8           , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_G16R16             , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_A2R10G10B10        , RenderTarget }, // backbuffer
+//	{ false, 64, Linear, NoCmpnts, D3DFMT_A16B16G16R16       , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_A8P8               , Texture },
+	{ false,  8, Linear, ______P8, D3DFMT_P8                 , Texture },
+	{ false,  8, Linear, ______L8, D3DFMT_L8                 , RenderTarget },
+	{ false, 16, Linear, ____A8L8, D3DFMT_A8L8               , Texture },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_A4L4               , Texture },
+	{  true, 16, Linear, ____G8B8, D3DFMT_V8U8               , Texture },
+	{  true, 16, Linear, __R6G5B5, D3DFMT_L6V5U5             , Texture },
+	{  true, 32, Linear, X8R8G8B8, D3DFMT_X8L8V8U8           , Texture },
+	{  true, 32, Linear, A8R8G8B8, D3DFMT_Q8W8V8U8           , Texture },
+	{  true, 32, Linear, __G16B16, D3DFMT_V16U16             , Texture },
+//	{  true, 32, Linear, NoCmpnts, D3DFMT_A2W10V10U10        , Texture },
+	{ false, 16, Linear, ____UYVY, D3DFMT_UYVY               , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_R8G8_B8G8          , Texture },
+	{ false, 16, Linear, ____YUY2, D3DFMT_YUY2               , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_G8R8_G8B8          , Texture },
+	{ false,  4, Cmprsd, ____DXT1, D3DFMT_DXT1               , Texture },
+//	{ false,  0, Cmprsd, NoCmpnts, D3DFMT_DXT2               , Texture },
+	{ false,  8, Cmprsd, ____DXT3, D3DFMT_DXT3               , Texture },
+//	{ false,  0, Cmprsd, NoCmpnts, D3DFMT_DXT4               , Texture },
+	{ false,  8, Cmprsd, ____DXT5, D3DFMT_DXT5               , Texture },
+	{ false, 16, Linear, NoCmpnts, D3DFMT_D16_LOCKABLE       , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D32                , DepthBuffer },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_D15S1              , DepthBuffer },
+	{ false, 32, Linear, NoCmpnts, D3DFMT_D24S8              , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D24X8              , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D24X4S4            , DepthBuffer },
+	{ false, 16, Linear, NoCmpnts, D3DFMT_D16                , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D32F_LOCKABL       , DepthBuffer },
+	{ false, 32, Linear, NoCmpnts, D3DFMT_D24FS8             , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D32_LOCKABLE       , DepthBuffer },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_S8_LOCKABLE        , DepthBuffer },
+	{ false, 16, Linear, _____L16, D3DFMT_L16                , Texture },
+//	{ false,  0, Linear, NoCmpnts, D3DFMT_VERTEXDATA         , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_INDEX16            , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_INDEX32            , Texture },
+//	{  true, 64, Linear, NoCmpnts, D3DFMT_Q16W16V16U16       , Texture },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_MULTI2_ARGB8       , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_R16F               , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_G16R16F            , Texture },
+//	{ false, 64, Linear, NoCmpnts, D3DFMT_A16B16G16R16F      , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_R32F               , Texture },
+//	{ false, 64, Linear, NoCmpnts, D3DFMT_G32R32F            , Texture },
+//	{ false,128, Linear, NoCmpnts, D3DFMT_A32B32G32R32F      , Texture },
+//	{  true, 16, Cmprsd, NoCmpnts, D3DFMT_CxV8U8             , Texture },
+//	{ false,  1, Linear, NoCmpnts, D3DFMT_A1                 , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_A2B10G10R10_XR_BIAS, Texture },
+//	{ false,  0, Linear, NoCmpnts, D3DFMT_BINARYBUFFER       , Texture },
 };
 
 int EmuGetPCFormatInfoIndex(D3DFORMAT pc)
@@ -1108,7 +1114,7 @@ ComponentEncoding EmuPCFormatComponentEncoding(D3DFORMAT pc)
 
 const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		if (FormatInfos[Format].components != NoCmpnts)
 			return ComponentConverters[FormatInfos[Format].components];
 
@@ -1141,7 +1147,7 @@ bool EmuXBFormatRequiresConversionToARGB(xbox::X_D3DFORMAT Format)
 
 DWORD EmuXBFormatBitsPerPixel(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		if (FormatInfos[Format].bits_per_pixel > 0) // TODO : Remove this
 			return FormatInfos[Format].bits_per_pixel;
 
@@ -1155,7 +1161,7 @@ DWORD EmuXBFormatBytesPerPixel(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Cmprsd);
 
 	return false;
@@ -1163,7 +1169,7 @@ BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Linear);
 
 	return (Format == xbox::X_D3DFMT_VERTEXDATA); // TODO : false;
@@ -1171,7 +1177,7 @@ BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Swzzld);
 
 	return false;
@@ -1179,7 +1185,7 @@ BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].usage == RenderTarget);
 
 	return false;
@@ -1187,7 +1193,7 @@ BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].usage == DepthBuffer);
 
 	return false;
@@ -1205,7 +1211,7 @@ ComponentEncoding EmuXBFormatComponentEncoding(xbox::X_D3DFORMAT Format)
 
 D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format >= 0 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr) {

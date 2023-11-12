@@ -660,9 +660,9 @@ PSH_RECOMPILED_SHADER CxbxRecompilePixelShader(CxbxPSDef &CompletePSDef)
 	ID3DBlob *pShader = nullptr;
 	EmuCompilePixelShader(&RC, &pShader);
 
-	PSH_RECOMPILED_SHADER Result;
-	Result.CompletePSDef = CompletePSDef;
-	Result.ConvertedPixelShader = nullptr;
+	PSH_RECOMPILED_SHADER Result = {
+	/*.CompletePSDef = */CompletePSDef,
+	/*.ConvertedPixelShader = */nullptr };
 	if (pShader) {
 		DWORD *pFunction = (DWORD*)pShader->GetBufferPointer();
 		if (pFunction) {
@@ -800,7 +800,7 @@ std::string GetD3DTASumString(int d3dta, bool allowModifier = true) {
 		i = 7; // undefined
 	}
 
-	auto str = argToString[i];
+	std::string str = argToString[i];
 	if (iFlags) {
 		if (!allowModifier) {
 			EmuLog(LOG_LEVEL::ERROR2, "Modifier not expected on texture argument");
@@ -1050,7 +1050,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		<< typeToString[sampleType[2]] << ", "
 		<< typeToString[sampleType[3]] << "};";
 
-	auto finalShader = hlslTemplate.replace(sampleTypeReplace, sampleTypePattern.size(), sampleTypeString.str());
+	std::string finalShader = hlslTemplate.replace(sampleTypeReplace, sampleTypePattern.size(), sampleTypeString.str());
 
 	// Hardcode the texture stage operations and arguments
 	// So the shader handles exactly one combination of values
@@ -1239,7 +1239,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   }
 
   // Create a copy of the pixel shader definition, as it is residing in render state register slots :
-  CxbxPSDef CompletePSDef;
+  CxbxPSDef CompletePSDef = {};
   CompletePSDef.PSDef = *pPSDef;
   if (is_pgraph_using_NV2A_Kelvin()) {
     // read TextureModes directly from PSDef since it's copied from NV2A KelvinPrivinPrimitive
@@ -1385,14 +1385,14 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  // Test cases:
 	  // Amped (snowboard trails should use front colours, but use both CW and CCW winding)
 	  // TwoSidedLighting sample
-	  float frontfaceFactor = 0; // 0 == always use the front colours
+	  float frontfaceFactor = 0.f; // 0 == always use the front colours
 	  //if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING)) {
 	  if(pg->KelvinPrimitive.SetTwoSidedLightEn!=0){
 		  LOG_TEST_CASE("Two sided lighting");
 		  // VFACE is positive for clockwise faces
 		  // If Xbox designates counter-clockwise as front-facing, we invert VFACE
 		  //auto cwFrontface = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FRONTFACE) == 0x900; // clockwise; = NV097_SET_FRONT_FACE_V_CW = NV2A_FRONT_FACE_CW
-		  frontfaceFactor = (pg->KelvinPrimitive.SetFrontFace == 0x900) ? 1.0 : -1.0;
+		  frontfaceFactor = (pg->KelvinPrimitive.SetFrontFace == 0x900) ? 1.0f : -1.0f;
 	  }
 	  fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
 
@@ -1475,13 +1475,13 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  // Test cases:
 	  // Amped (snowboard trails should use front colours, but use both CW and CCW winding)
 	  // TwoSidedLighting sample
-	  float frontfaceFactor = 0; // 0 == always use the front colours
+	  float frontfaceFactor = 0.f; // 0 == always use the front colours
 	  if (XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TWOSIDEDLIGHTING)) {
 		  LOG_TEST_CASE("Two sided lighting");
 		  // VFACE is positive for clockwise faces
 		  // If Xbox designates counter-clockwise as front-facing, we invert VFACE
 		  auto cwFrontface = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FRONTFACE) == 0x900; // clockwise; = NV097_SET_FRONT_FACE_V_CW = NV2A_FRONT_FACE_CW
-		  frontfaceFactor = cwFrontface ? 1.0 : -1.0;
+		  frontfaceFactor = cwFrontface ? 1.0f : -1.0f;
 	  }
 	  fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
 
