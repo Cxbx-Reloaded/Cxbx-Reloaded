@@ -1221,7 +1221,6 @@ D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 	case ((xbox::X_D3DFORMAT)0xffffffff):
 		return D3DFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
-		//EmuLog(LOG_LEVEL::DEBUG, "EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
 		CxbxrAbort("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
 	}
 

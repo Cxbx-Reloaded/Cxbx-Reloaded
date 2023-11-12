@@ -40,14 +40,12 @@ namespace NtDll
 
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h"
-#include "core\hle\D3D8\XBD3d8Types.h"
 #include "devices\x86\EmuX86.h"
 
 #include "EmuKrnlAvModes.h"
 #include "devices\Xbox.h" // For g_NV2A
 #include "devices\video\nv2a_int.h"
 #include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
-#include "core\kernel\memory-manager\VMManager.h"
 
 // HW Register helper functions
 xbox::uchar_xt REG_RD08(void* Ptr, xbox::ulong_xt Addr)

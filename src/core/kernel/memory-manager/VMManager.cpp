@@ -297,7 +297,6 @@ void VMManager::GetPersistentMemory()
 	m_PersistentMemoryHandle = OpenFileMapping(FILE_MAP_READ, FALSE, persisted_mem_sid.c_str());
 	if (m_PersistentMemoryHandle == nullptr) {
 		CxbxrAbort("Couldn't open persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
-		//EmuLog(LOG_LEVEL::WARNING, "Couldn't open persistent memory! OpenFileMapping failed with error 0x%08X", GetLastError());
 		return;
 	}
 }

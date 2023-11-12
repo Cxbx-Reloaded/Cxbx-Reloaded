@@ -100,7 +100,6 @@ extern HRESULT EmuCompileShader
 
 		if (FAILED(hRet)) {
 			LOG_TEST_CASE("Couldn't assemble recompiled shader");
-			//EmuLog(LOG_LEVEL::WARNING, "Couldn't assemble recompiled shader");
 		}
 	}
 
