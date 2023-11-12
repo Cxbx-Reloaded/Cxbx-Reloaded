@@ -92,7 +92,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
     VS_OUTPUT xOut;
 
     // Fogging
-    // TODO deduplicate
+    // TODO: deduplicate
     const float fogDepth      =   abs(oFog.x); 
     const float fogTableMode  =   CxbxFogInfo.x;
     const float fogDensity    =   CxbxFogInfo.y;
@@ -121,7 +121,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
     xOut.oPts = oPts.x;
     xOut.oB0 = saturate(oB0);
     xOut.oB1 = saturate(oB1);
-    // Scale textures (TODO : or should we apply this to the input register values?)
+    // Scale textures (TODO: or should we apply this to the input register values?)
     xOut.oT0 = oT0 / xboxTextureScale[0];
     xOut.oT1 = oT1 / xboxTextureScale[1];
     xOut.oT2 = oT2 / xboxTextureScale[2];

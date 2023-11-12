@@ -1143,8 +1143,8 @@ IDirect3DVertexShader* InitShader(void (*compileFunc)(ID3DBlob**), const char* l
 void CxbxUpdateHostVertexShader()
 {
 	extern bool g_bUsePassthroughHLSL; // TMP glue
-	// TODO move d3d9 state to VertexShader.cpp
-	static IDirect3DVertexShader* fixedFunctionShader = nullptr; // TODO move to shader cache
+	// TODO: move d3d9 state to VertexShader.cpp
+	static IDirect3DVertexShader* fixedFunctionShader = nullptr; // TODO: move to shader cache
 	static IDirect3DVertexShader* passthroughShader = nullptr;
 	static int vertexShaderVersion = -1;
 
