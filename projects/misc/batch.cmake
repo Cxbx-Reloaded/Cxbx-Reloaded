@@ -33,3 +33,8 @@ FILE(GLOB CXBXR_HLSL_FILES "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/*.hl
 set(HlslOutputDir ${TargetRunTimeDir}/hlsl)
 file(MAKE_DIRECTORY ${HlslOutputDir})
 file(COPY ${CXBXR_HLSL_FILES} DESTINATION ${HlslOutputDir})
+# These files can be edited.
+# Create backup copies for convenience of restoring original shader behaviour.
+set(HlslBackupOutputDir ${HlslOutputDir}/backup)
+file(MAKE_DIRECTORY ${HlslBackupOutputDir})
+file(COPY ${CXBXR_HLSL_FILES} DESTINATION ${HlslBackupOutputDir})
