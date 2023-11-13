@@ -4636,6 +4636,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LT
 		(DWORD)Handle,
 		(DWORD)Address);
 #endif
+
     __asm {
         LTCG_EPILOGUE
         ret
@@ -5344,14 +5345,16 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 
 	XB_TRMP(D3DDevice_SetShaderConstantMode)(Mode);
 
-	if(g_pXbox_pPush==nullptr)
+	// While HLE_PushInit() hasn't been called yet, skip the push buffer and call the implementation directly
+	if (g_pXbox_pPush == nullptr) {
 		CxbxrImpl_SetShaderConstantMode(Mode);
-	else {
-		//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
-		//CxbxrImpl_SetShaderConstantMode(Mode);
-		HLE_PushApi(X_D3DDevice_SetShaderConstantMode,
-			(DWORD)Mode);
+		return;
 	}
+
+	//EMUPATCH(D3DDevice_SetShaderConstantMode)(Mode);
+	//CxbxrImpl_SetShaderConstantMode(Mode);
+	HLE_PushApi(X_D3DDevice_SetShaderConstantMode,
+		(DWORD)Mode);
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
@@ -5773,48 +5776,46 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 	//CxbxrImpl_Resource_AddRef(pTexture);
 	XB_TRMP(D3DDevice_SetTexture)(Stage, pTexture);
 
+	// While HLE_PushInit() hasn't been called yet, skip the push buffer and call the implementation directly
 	if (g_pXbox_pPush == nullptr) {
 		CxbxrImpl_SetTexture(Stage, pTexture);
+		return;
 	}
-	else {
-		int dword_count = HLE_PushStart + 2;
 
-		DWORD* pPush_local;// = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
+	int dword_count = HLE_PushStart + 2;
+	if (pTexture)
+		dword_count += NR_DWORDS(sizeof(X_D3DSurface));
 
-		if (pTexture) {
-			dword_count += sizeof(X_D3DSurface) / 4;
-			pPush_local = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
-			pPush_local[2] = (DWORD)Stage;
-			// we should better erase the pTexture if the key already existed in the map.
-			// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
-			// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
-			pPush_local[3] = (DWORD)&pPush_local[4];// pTexture;
-			*(X_D3DSurface*)pPush_local[3] = *(X_D3DSurface*)pTexture;
-			if (GetXboxCommonResourceType(pTexture->Common) != X_D3DCOMMON_TYPE_SURFACE)
+	DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
+
+	pPush_local[2] = (DWORD)Stage;
+	if (pTexture) {
+		// we should better erase the pTexture if the key already existed in the map.
+		// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
+		// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
+		pPush_local[3] = (DWORD)&pPush_local[4];// pTexture;
+		*(X_D3DSurface*)pPush_local[3] = *(X_D3DSurface*)pTexture;
+		if (GetXboxCommonResourceType(pTexture->Common) != X_D3DCOMMON_TYPE_SURFACE)
+			((X_D3DSurface*)pPush_local[3])->Parent = nullptr;
+
+		UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
+		auto it = g_TextureCache.find(key);
+		if (it != g_TextureCache.end()) {
+			//release ref. count since we add ref. count in HLE patch.
+			//CxbxrImpl_Resource_Release(pTexture);
+			//g_TextureCache.erase(it);
+			if (GetXboxCommonResourceType(pTexture) != X_D3DCOMMON_TYPE_SURFACE)
 				((X_D3DSurface*)pPush_local[3])->Parent = nullptr;
-
-			UINT64 key = ((UINT64)(pTexture->Format) << 32) | pTexture->Data;
-			auto it = g_TextureCache.find(key);
-			if (it != g_TextureCache.end()) {
-				//release ref. count since we add ref. count in HLE patch.
-				//CxbxrImpl_Resource_Release(pTexture);
-				//g_TextureCache.erase(it);
-				if (GetXboxCommonResourceType(pTexture) != X_D3DCOMMON_TYPE_SURFACE)
-					((X_D3DSurface*)pPush_local[3])->Parent = nullptr;
-			}
-			//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
 		}
-		else {
-			pPush_local = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
-			pPush_local[2] = (DWORD)Stage;
-			pPush_local[3] = 0; // no pTexture
-		}
-
-		//*(UINT64*)& pPush_local[4] = pTexture->Data;
-		//pPush_local[5] = (DWORD)pTexture->Format;
-
-		HLE_PushEnd(dword_count);
+		//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
 	}
+	else
+		pPush_local[3] = 0; // no pTexture
+
+	//*(UINT64*)& pPush_local[4] = pTexture->Data;
+	//pPush_local[5] = (DWORD)pTexture->Format;
+
+	HLE_PushEnd(dword_count);
 }
 
 void CxbxrImpl_SwitchTexture(
@@ -6412,18 +6413,19 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 	}
 	CxbxrImpl_Clear(  Count, pRects, Flags, Color, Z, Stencil);
 #else
+	// While HLE_PushInit() hasn't been called yet, skip the push buffer and call the implementation directly
 	if (g_pXbox_pPush == nullptr) {
 		CxbxrImpl_Clear(Count, pRects, Flags, Color, Z, Stencil);
+		return;
 	}
-	else {
-		HLE_PushApi(X_D3DDevice_Clear,
-			(DWORD)Count,
-			(DWORD)pRects,
-			(DWORD)Flags,
-			(DWORD)Color,
-			FtoDW(Z),
-			(DWORD)Stencil);
-	}
+
+	HLE_PushApi(X_D3DDevice_Clear,
+		(DWORD)Count,
+		(DWORD)pRects,
+		(DWORD)Flags,
+		(DWORD)Color,
+		FtoDW(Z),
+		(DWORD)Stencil);
 #endif
 }
 
@@ -7231,13 +7233,15 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	LOG_FUNC_ONE_ARG(Flags);
 
 	hresult_xt hret = S_OK;
+
 #if !USEPGRAPH_Swap
 	HLE_PushApi(X_D3DDevice_Swap,
 		(DWORD)Flags);
 #else
 	EmuKickOffWait(X_D3DDevice_Swap);
-	hret=CxbxrImpl_Swap(Flags);
+	hret = CxbxrImpl_Swap(Flags);
 #endif
+
 	if (XB_TRMP(D3DDevice_SetBackBufferScale))
 		XB_TRMP(D3DDevice_SetBackBufferScale)(1.0, 1.0);
 	else
@@ -8804,29 +8808,31 @@ static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
         LOG_FUNC_END;
 
     setTransformCount++;
+
+	// While HLE_PushInit() hasn't been called yet, skip the push buffer and call the implementation directly
 	if (g_pXbox_pPush == nullptr) {
 		CxbxrImpl_SetTransform(State, pMatrix);
+		return;
 	}
-	else {
-		int dword_count = HLE_PushStart + 2;
-		if (pMatrix)
-			dword_count += NR_DWORDS(sizeof(D3DMATRIX));
 
-		DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTransform, dword_count);
+	int dword_count = HLE_PushStart + 2;
+	if (pMatrix)
+		dword_count += NR_DWORDS(sizeof(D3DMATRIX));
 
-		pPush_local[2] = (DWORD)State;
-		if (pMatrix) {
-			//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
-			pPush_local[3] = (DWORD)&pPush_local[4];
-			// store the transform matrix in pushbuffer so we can leave it along.
-			// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
-			*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
-		}
-		else
-			pPush_local[3] = 0; // No pMatrix
+	DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTransform, dword_count);
 
-		HLE_PushEnd(dword_count);
+	pPush_local[2] = (DWORD)State;
+	if (pMatrix) {
+		//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+		pPush_local[3] = (DWORD)&pPush_local[4];
+		// store the transform matrix in pushbuffer so we can leave it along.
+		// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
 	}
+	else
+		pPush_local[3] = 0; // No pMatrix
+
+	HLE_PushEnd(dword_count);
 }
 
 LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
@@ -8869,30 +8875,31 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
     // Trampoline to guest code to remove the need for a GetTransform patch
     XB_TRMP(D3DDevice_SetTransform)(State, pMatrix);
 
+	// While HLE_PushInit() hasn't been called yet, skip the push buffer and call the implementation directly
 	if (g_pXbox_pPush == nullptr) {
 		CxbxrImpl_SetTransform(State, pMatrix);
+		return;
 	}
-	else {
-		int dword_count = HLE_PushStart + 2;
-		if (pMatrix)
-			dword_count += NR_DWORDS(sizeof(D3DMATRIX));
 
-		DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTransform, dword_count);
+	int dword_count = HLE_PushStart + 2;
+	if (pMatrix)
+		dword_count += NR_DWORDS(sizeof(D3DMATRIX));
 
-		pPush_local[2] = (DWORD)State;
-		if (pMatrix)
-		{
-			//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
-			pPush_local[3] = (DWORD)&pPush_local[4];
-			// store the transform matrix in pushbuffer so we can leave it along.
-			// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
-			*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
-		}
-		else
-			pPush_local[3] = 0; // No pMatrix
+	DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTransform, dword_count);
 
-		HLE_PushEnd(dword_count);
+	pPush_local[2] = (DWORD)State;
+	if (pMatrix)
+	{
+		//point the pMatrix for CxbxrImpl_SetTransform() to the matrix in pPush_local[4]
+		pPush_local[3] = (DWORD)&pPush_local[4];
+		// store the transform matrix in pushbuffer so we can leave it along.
+		// if we pass the pMatrix from the input argument directly, when pushbuffer reaches the X_D3DDevice_SetTransform handler the content of pMatrix could be modified by code in xbox side already.
+		*(D3DMATRIX*)&pPush_local[4] = *pMatrix;
 	}
+	else
+		pPush_local[3] = 0; // No pMatrix
+
+	HLE_PushEnd(dword_count);
 }
 
 // ******************************************************************
@@ -8919,7 +8926,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 	if (setTransformCount == 0) {
 		LOG_TEST_CASE("MultiplyTransform did not appear to call SetTransform");
 	}
-
 }
 
 /*
@@ -10460,17 +10466,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	if (g_pXbox_pPush == nullptr) {
 		HLE_PushInit();
 	}
-	else {
-		CxbxImpl_SetVertexShader(Handle);
-	}
-#if 0
-#if !USEPGRAPH_SetVertexShader
 
+#if !USEPGRAPH_SetVertexShader
 	CxbxImpl_SetVertexShader(Handle);
 #else	
 	HLE_PushApi(X_D3DDevice_SetVertexShader,
 		Handle);
-#endif
 #endif
 }
 
@@ -10507,15 +10508,12 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
 	if (g_pXbox_pPush == nullptr) {
 		HLE_PushInit();
 	}
-	else {
-		CxbxImpl_SetVertexShader(Handle);
-	}
-#if 0
+
+#if !USEPGRAPH_SetVertexShader
+	CxbxImpl_SetVertexShader(Handle);
+#else
 	HLE_PushApi(X_D3DDevice_SetVertexShader,
 		Handle);
-#endif
-#if !USEPGRAPH_SetVertexShader
-	//CxbxImpl_SetVertexShader(Handle);
 #endif
 
 	__asm {
@@ -12139,6 +12137,7 @@ void WINAPI CxbxrImpl_DrawVerticesUP
 	CxbxHandleXboxCallbacks();
 }
 
+// Overload for logging
 void D3DDevice_DrawVerticesUP
 (
 	xbox::X_D3DPRIMITIVETYPE  PrimitiveType,
@@ -12153,8 +12152,6 @@ void D3DDevice_DrawVerticesUP
 		LOG_FUNC_ARG(pVertexStreamZeroData)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
-#if USEPGRAPH_DrawVerticesUP
-#endif
 }
 
 extern bool g_nv2a_use_Kelvin;
@@ -12198,6 +12195,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_
         mov  pVertexStreamZeroData, ebx
     }
 
+	// Log
+	D3DDevice_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+
 	//trampoline draw call if we're recording pushbuffer
 	if (g_pXbox_BeginPush_Buffer != nullptr) {
 		XB_TRMP(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)(PrimitiveType, VertexCount, VertexStreamZeroStride);
@@ -12206,8 +12206,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_
 		EmuKickOffWait(X_D3DDevice_DrawVerticesUP);
 		// We can't call emupatch() here because the target function calls trampoline which might not be available in guest code.
 		//EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
-		//CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
-		D3DDevice_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+#if false // TODO : @Jack, why is CxbxrImpl_DrawVerticesUP not called here?
+		CxbxrImpl_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+#endif
 	}
 
     __asm {
@@ -13503,6 +13504,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_LoadVertexShaderProgram)(pFunction, Address);
 	}
+
 #if !USEPGRAPH_LoadVertexShaderProgram
 	CxbxImpl_LoadVertexShaderProgram((DWORD *)pFunction, Address);
 #else
