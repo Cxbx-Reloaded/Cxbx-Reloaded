@@ -3542,7 +3542,7 @@ void Direct3D_CreateDevice_End
     }
 }
 
-// Overload for logging
+namespace Logging {
 static void Direct3D_CreateDevice_4
 (
     xbox::dword_xt                BehaviorFlags,
@@ -3555,6 +3555,7 @@ static void Direct3D_CreateDevice_4
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
+}
 }
 
 // LTCG specific Direct3D_CreateDevice function...
@@ -3573,8 +3574,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4)
 		mov  ppReturnedDeviceInterface, ecx
 	}
 
-	// Log
-	Direct3D_CreateDevice_4(BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+	Logging::Direct3D_CreateDevice_4(BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
@@ -3597,7 +3597,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4)
 	}
 }
 
-// Overload for logging
+namespace Logging {
 static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface
 (
     xbox::uint_xt                 Adapter,
@@ -3616,6 +3616,7 @@ static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDevic
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
+}
 }
 
 // LTCG specific Direct3D_CreateDevice function...
@@ -3637,8 +3638,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_
 		mov  ppReturnedDeviceInterface, ecx
 	}
 
-	// Log
-	Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+	Logging::Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ecx_ppReturnedDeviceInterface(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
@@ -3664,7 +3664,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_
 	}
 }
 
-// Overload for logging
+namespace Logging {
 static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface
 (
     xbox::uint_xt                 Adapter,
@@ -3683,6 +3683,7 @@ static void Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDevic
 		LOG_FUNC_ARG(pPresentationParameters)
 		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
 		LOG_FUNC_END;
+}
 }
 
 // LTCG specific Direct3D_CreateDevice function...
@@ -3704,8 +3705,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_
 		mov  ppReturnedDeviceInterface, ebx
 	}
 
-	// Log
-	Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+	Logging::Direct3D_CreateDevice_16__LTCG_eax_BehaviorFlags_ebx_ppReturnedDeviceInterface(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
 
 	Direct3D_CreateDevice_Start(pPresentationParameters);
 
@@ -3731,7 +3731,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_
 	}
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetIndices_4
 (
     xbox::X_D3DIndexBuffer   *pIndexData,
@@ -3742,6 +3742,7 @@ static void D3DDevice_SetIndices_4
         LOG_FUNC_ARG(pIndexData)
         LOG_FUNC_ARG(BaseVertexIndex)
         LOG_FUNC_END;
+}
 }
 
 void WINAPI CxbxrImpl_SetIndices
@@ -3773,8 +3774,8 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4)
 		push BaseVertexIndex
 		call XB_TRMP(D3DDevice_SetIndices_4);
 	}
-    // Log
-    D3DDevice_SetIndices_4(pIndexData, BaseVertexIndex);
+
+	Logging::D3DDevice_SetIndices_4(pIndexData, BaseVertexIndex);
 
     // Cache the base vertex index
     // g_Xbox_BaseVertexIndex = BaseVertexIndex;
@@ -3965,9 +3966,11 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset)
 	return hRet;
 }
 
+namespace Logging {
 static void D3DDevice_Reset_0__LTCG_edi1(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
 	LOG_FUNC_ONE_ARG(pPresentationParameters);
+}
 }
 
 LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)()
@@ -3978,8 +3981,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)()
 		mov  pPresentationParameters, edi
 	}
 
-	// Log
-	D3DDevice_Reset_0__LTCG_edi1(pPresentationParameters);
+	Logging::D3DDevice_Reset_0__LTCG_edi1(pPresentationParameters);
 
 	EmuKickOffWait(X_D3DDevice_Reset);
 
@@ -3999,9 +4001,11 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_edi1)()
 	}
 }
 
+namespace Logging {
 static void D3DDevice_Reset_0__LTCG_ebx1(xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
 	LOG_FUNC_ONE_ARG(pPresentationParameters);
+}
 }
 
 LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)()
@@ -4012,8 +4016,7 @@ LTCG_DECL xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)()
 		mov  pPresentationParameters, ebx
 	}
 
-	// Log
-	D3DDevice_Reset_0__LTCG_ebx1(pPresentationParameters);
+	Logging::D3DDevice_Reset_0__LTCG_ebx1(pPresentationParameters);
 
 	EmuKickOffWait(X_D3DDevice_Reset);
 
@@ -4441,7 +4444,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
     return D3D_OK;
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle
 (
     xbox::dword_xt                 Handle,
@@ -4452,6 +4455,7 @@ static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle
         LOG_FUNC_ARG(Handle)
         LOG_FUNC_ARG(Address)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_LoadVertexShader function...
@@ -4470,8 +4474,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
 		call XB_TRMP(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle)
     }
 
-    // Log
-    D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle(Handle, Address);
+	Logging::D3DDevice_LoadVertexShader_0__LTCG_eax_Address_ecx_Handle(Handle, Address);
 
     //CxbxImpl_LoadVertexShader(Handle, Address);
 
@@ -4485,7 +4488,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
     }
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle
 (
     xbox::dword_xt                 Handle,
@@ -4496,6 +4499,7 @@ static void D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle
         LOG_FUNC_ARG(Handle)
         LOG_FUNC_ARG(Address)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_LoadVertexShader function...
@@ -4514,8 +4518,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
 		call XB_TRMP(D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle)
     }
 
-	// Log
-    D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle(Handle, Address);
+	Logging::D3DDevice_LoadVertexShader_0__LTCG_eax_Address_edx_Handle(Handle, Address);
 
     //CxbxImpl_LoadVertexShader(Handle, Address);
 
@@ -4529,7 +4532,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG
     }
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_LoadVertexShader_4
 (
     xbox::dword_xt                 Handle,
@@ -4540,6 +4543,7 @@ static void D3DDevice_LoadVertexShader_4
         LOG_FUNC_ARG(Handle)
         LOG_FUNC_ARG(Address)
         LOG_FUNC_END;
+}
 }
 
 // This uses a custom calling convention where parameter is passed in EAX
@@ -4557,8 +4561,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4)
 
 	XB_TRMP(D3DDevice_LoadVertexShader_4)(Address);
 
-	// Log
-    D3DDevice_LoadVertexShader_4(Handle, Address);
+	Logging::D3DDevice_LoadVertexShader_4(Handle, Address);
 
     //CxbxImpl_LoadVertexShader(Handle, Address);
 
@@ -4597,7 +4600,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader)
 #endif
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2
 (
     xbox::dword_xt                 Handle,
@@ -4608,6 +4611,7 @@ static void D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2
         LOG_FUNC_ARG(Handle)
         LOG_FUNC_ARG(Address)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_SelectVertexShader function...
@@ -4626,8 +4630,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LT
 		call XB_TRMP(D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2)
     }
 
-	// Log
-    D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2(Handle, Address);
+	Logging::D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2(Handle, Address);
 
 #if !USEPGRAPH_SelectVertexShader
     CxbxImpl_SelectVertexShader(Handle, Address);
@@ -4643,7 +4646,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LT
     }
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SelectVertexShader_4__LTCG_eax1
 (
     xbox::dword_xt                 Handle,
@@ -4654,6 +4657,7 @@ static void D3DDevice_SelectVertexShader_4__LTCG_eax1
         LOG_FUNC_ARG(Handle)
         LOG_FUNC_ARG(Address)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_SelectVertexShader function...
@@ -4670,9 +4674,9 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LT
         mov  Handle, eax
     }
 
+	Logging::D3DDevice_SelectVertexShader_4__LTCG_eax1(Handle, Address);
+
 	XB_TRMP(D3DDevice_SelectVertexShader_4__LTCG_eax1)(Address);
-    // Log
-    D3DDevice_SelectVertexShader_4__LTCG_eax1(Handle, Address);
 
 #if !USEPGRAPH_SelectVertexShader
 	CxbxImpl_SelectVertexShader(Handle, Address);
@@ -4943,9 +4947,11 @@ xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 	return g_pXbox_BackBufferSurface;
 }
 
+namespace Logging {
 static void D3DDevice_GetBackBuffer2_0__LTCG_eax1(xbox::int_xt BackBuffer)
 {
 	LOG_FUNC_ONE_ARG(BackBuffer);
+}
 }
 
 // LTCG specific GetBackBuffer2 function...
@@ -4960,8 +4966,7 @@ LTCG_DECL xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2_0__
 		mov  BackBuffer, eax
 	}
 
-	// Log
-	D3DDevice_GetBackBuffer2_0__LTCG_eax1(BackBuffer);
+	Logging::D3DDevice_GetBackBuffer2_0__LTCG_eax1(BackBuffer);
 
 	xbox::X_D3DSurface* pBackBuffer;
 	//pBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
@@ -5516,7 +5521,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
 	CxbxImpl_SetVertexShaderConstant(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetTexture_4__LTCG_eax_pTexture
 (
     xbox::dword_xt           Stage,
@@ -5527,6 +5532,7 @@ static void D3DDevice_SetTexture_4__LTCG_eax_pTexture
         LOG_FUNC_ARG(Stage)
         LOG_FUNC_ARG(pTexture)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -5543,8 +5549,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_p
         mov  pTexture, eax
     }
 
-    // Log
-    D3DDevice_SetTexture_4__LTCG_eax_pTexture(Stage, pTexture);
+	Logging::D3DDevice_SetTexture_4__LTCG_eax_pTexture(Stage, pTexture);
 
     // Call the Xbox implementation of this function, to properly handle reference counting for us
     __asm {
@@ -5561,7 +5566,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_p
     }
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetTexture_4__LTCG_eax_Stage
 (
     xbox::dword_xt           Stage,
@@ -5572,6 +5577,7 @@ static void D3DDevice_SetTexture_4__LTCG_eax_Stage
         LOG_FUNC_ARG(Stage)
         LOG_FUNC_ARG(pTexture)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -5588,8 +5594,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax_S
         mov  Stage, eax
     }
 
-    // Log
-	D3DDevice_SetTexture_4__LTCG_eax_Stage(Stage, pTexture);
+	Logging::D3DDevice_SetTexture_4__LTCG_eax_Stage(Stage, pTexture);
 
     // Call the Xbox implementation of this function, to properly handle reference counting for us
     __asm {
@@ -6053,7 +6058,7 @@ extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in Pus
 
 extern NV2ADevice* g_NV2A;
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetVertexData4f_16
 (
     xbox::int_xt     Register,
@@ -6070,6 +6075,7 @@ static void D3DDevice_SetVertexData4f_16
 		LOG_FUNC_ARG(c)
 		LOG_FUNC_ARG(d)
 		LOG_FUNC_END;
+}
 }
 
 // ******************************************************************
@@ -6090,13 +6096,12 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_16)
 		mov  Register, edi
 	}
 
+	Logging::D3DDevice_SetVertexData4f_16(Register, a, b, c, d);
+
 	if (is_pushbuffer_recording()) {
 		XB_TRMP(D3DDevice_SetVertexData4f_16)(a, b, c, d);
 	}
 	else {
-		// Log
-		D3DDevice_SetVertexData4f_16(Register, a, b, c, d);
-
 		CxbxImpl_SetVertexData4f(Register, a, b, c, d);
 
 		/*
@@ -10224,7 +10229,7 @@ xbox::hresult_xt WINAPI EMUPATCH(XGSetVertexBufferHeader)
 	return hRet;
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride
 (
     xbox::uint_xt            StreamNumber,
@@ -10237,6 +10242,7 @@ static void D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_e
         LOG_FUNC_ARG(pStreamData)
         LOG_FUNC_ARG(Stride)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_SetStreamSource function...
@@ -10254,8 +10260,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_
         mov  Stride, ebx
     }
 
-	// Log
-    D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride(StreamNumber, pStreamData, Stride);
+	Logging::D3DDevice_SetStreamSource_0__LTCG_eax_StreamNumber_edi_pStreamData_ebx_Stride(StreamNumber, pStreamData, Stride);
 
     //CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
 
@@ -10277,7 +10282,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_
     }
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetStreamSource_4
 (
     xbox::uint_xt            StreamNumber,
@@ -10290,6 +10295,7 @@ static void D3DDevice_SetStreamSource_4
         LOG_FUNC_ARG(pStreamData)
         LOG_FUNC_ARG(Stride)
         LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_SetStreamSource function...
@@ -10307,8 +10313,8 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_4)
         mov  pStreamData, ebx
         mov  StreamNumber, eax
     }
-    // Log
-    D3DDevice_SetStreamSource_4(StreamNumber, pStreamData, Stride);
+
+	Logging::D3DDevice_SetStreamSource_4(StreamNumber, pStreamData, Stride);
 
     //CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
 
@@ -10332,7 +10338,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_4)
     }
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetStreamSource_8
 (
     xbox::uint_xt            StreamNumber,
@@ -10345,6 +10351,7 @@ static void D3DDevice_SetStreamSource_8
         LOG_FUNC_ARG(pStreamData)
         LOG_FUNC_ARG(Stride)
         LOG_FUNC_END;
+}
 }
 
 // This uses a custom calling convention where parameter is passed in EAX
@@ -10360,8 +10367,8 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_8)
         LTCG_PROLOGUE
         mov  StreamNumber, eax
     }
-    // Log
-    D3DDevice_SetStreamSource_8(StreamNumber, pStreamData, Stride);
+
+	Logging::D3DDevice_SetStreamSource_8(StreamNumber, pStreamData, Stride);
 
     //CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
 
@@ -10475,13 +10482,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 #endif
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetVertexShader_0
 (
     xbox::dword_xt Handle
 )
 {
 	LOG_FUNC_ONE_ARG(Handle);
+}
 }
 
 // This uses a custom calling convention where Handle is passed in EBX
@@ -10494,8 +10502,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
 		mov  Handle, ebx
 	}
 
-	// Log
-	D3DDevice_SetVertexShader_0(Handle);
+	Logging::D3DDevice_SetVertexShader_0(Handle);
 
 	// This trampoline leads to calling D3DDevice_LoadVertexShader and D3DDevice_SelectVertexShader
 	// Please raise the alarm if this is ever not the case
@@ -11829,13 +11836,14 @@ xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle)
 	}
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetPixelShader_0__LTCG_eax_handle
 (
     xbox::dword_xt      Handle
 )
 {
     LOG_FUNC_ONE_ARG(Handle);
+}
 }
 
 // LTCG specific D3DDevice_SetPixelShader function...
@@ -11851,8 +11859,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_e
         mov  Handle, eax
     }
 
-    // Log
-    D3DDevice_SetPixelShader_0__LTCG_eax_handle(Handle);
+	Logging::D3DDevice_SetPixelShader_0__LTCG_eax_handle(Handle);
 
     __asm {
         mov  eax, Handle
@@ -12137,7 +12144,7 @@ void WINAPI CxbxrImpl_DrawVerticesUP
 	CxbxHandleXboxCallbacks();
 }
 
-// Overload for logging
+namespace Logging {
 void D3DDevice_DrawVerticesUP
 (
 	xbox::X_D3DPRIMITIVETYPE  PrimitiveType,
@@ -12152,6 +12159,7 @@ void D3DDevice_DrawVerticesUP
 		LOG_FUNC_ARG(pVertexStreamZeroData)
 		LOG_FUNC_ARG(VertexStreamZeroStride)
 		LOG_FUNC_END;
+}
 }
 
 extern bool g_nv2a_use_Kelvin;
@@ -12195,8 +12203,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_
         mov  pVertexStreamZeroData, ebx
     }
 
-	// Log
-	D3DDevice_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+	Logging::D3DDevice_DrawVerticesUP(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
 	//trampoline draw call if we're recording pushbuffer
 	if (g_pXbox_BeginPush_Buffer != nullptr) {
@@ -12975,8 +12982,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget)
 	}
 }
 
-// LTCG specific D3DDevice_SetRenderTarget function...
-// Passes pRenderTarget in ecx and pNewZStencil in eax
+namespace Logging {
 static void D3DDevice_SetRenderTarget_0
 (
     xbox::X_D3DSurface    *pRenderTarget,
@@ -12987,10 +12993,11 @@ static void D3DDevice_SetRenderTarget_0
 		LOG_FUNC_ARG(pRenderTarget)
 		LOG_FUNC_ARG(pNewZStencil)
 		LOG_FUNC_END;
-
-	//
+}
 }
 
+// LTCG specific D3DDevice_SetRenderTarget function...
+// Passes pRenderTarget in ecx and pNewZStencil in eax
 LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
 (
 )
@@ -13006,8 +13013,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTarget_0)
 	//this must be called before we trampolin to avoid HLE D3D_CommonSetRenderTarget() being called twice
 	//move to CxbxImpl_SetRenderTarget()
 	//NestedPatchCounter call(setRenderTargetCount);
-	// logging only
-	D3DDevice_SetRenderTarget_0(pRenderTarget, pNewZStencil);
+	Logging::D3DDevice_SetRenderTarget_0(pRenderTarget, pNewZStencil);
 	//CxbxImpl_SetRenderTarget(pRenderTarget, pNewZStencil);
 	if (!bRenderTargetInit) {
 		bRenderTargetInit = true;
@@ -13102,7 +13108,7 @@ void CxbxrImpl_SetPalette
 	}
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_SetPalette_4
 (
 	xbox::dword_xt      Stage,
@@ -13113,6 +13119,7 @@ static void D3DDevice_SetPalette_4
 		LOG_FUNC_ARG(Stage)
 		LOG_FUNC_ARG(pPalette)
 		LOG_FUNC_END;
+}
 }
 
 // LTCG specific D3DDevice_SetPalette function...
@@ -13129,8 +13136,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
 		mov  Stage, eax
 	}
 
-	// Log
-	D3DDevice_SetPalette_4(Stage, pPalette);
+	Logging::D3DDevice_SetPalette_4(Stage, pPalette);
 
 	// Call the Xbox implementation of this function, to properly handle reference counting for us
 	__asm {
@@ -13238,13 +13244,14 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
 	LOG_IGNORED();
 }
 
-// Overload for logging
+namespace Logging {
 static void D3DDevice_DeleteVertexShader_0
 (
 	xbox::dword_xt Handle
 )
 {
 	LOG_FUNC_ONE_ARG(Handle);
+}
 }
 
 // LTCG specific D3DDevice_DeleteVertexShader function...
@@ -13260,8 +13267,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader_0)
 		mov  Handle, eax
 	}
 
-	// Log
-	D3DDevice_DeleteVertexShader_0(Handle);
+	Logging::D3DDevice_DeleteVertexShader_0(Handle);
 
 	CxbxImpl_DeleteVertexShader(Handle);
 
@@ -14014,9 +14020,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP_4)(xbox::addr_xt _this)
 	CxbxrImpl_CDevice_SetStateUP(_this);
 }
 
+namespace Logging {
 static void CDevice_SetStateUP_0__LTCG_esi1(xbox::addr_xt _this)
 {
 	LOG_FUNC_ONE_ARG(_this);
+}
 }
 
 LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP_0__LTCG_esi1)()
@@ -14027,8 +14035,7 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateUP_0__LTCG_esi1)()
 		mov  _this, esi
 	}
 
-	// Log
-	CDevice_SetStateUP_0__LTCG_esi1(_this);
+	Logging::CDevice_SetStateUP_0__LTCG_esi1(_this);
 
 	CxbxrImpl_CDevice_SetStateUP(_this);
 
@@ -14551,6 +14558,7 @@ void WINAPI CxbxrImpl_DestroyResource(xbox::X_D3DResource* pResource)
 	if(pResource != nullptr)
 		FreeHostResource(GetHostResourceKey(pResource));
 }
+
 // ******************************************************************
 // * patch: D3D_DestroyResource
 // ******************************************************************
@@ -14569,9 +14577,11 @@ void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
     XB_TRMP(D3D_DestroyResource)(pResource);
 }
 
+namespace Logging {
 static void D3D_DestroyResource__LTCG(xbox::X_D3DResource* pResource)
 {
 	LOG_FUNC_ONE_ARG(pResource);
+}
 }
 
 // ******************************************************************
@@ -14585,8 +14595,7 @@ LTCG_DECL void WINAPI xbox::EMUPATCH(D3D_DestroyResource__LTCG)()
         mov  pResource, edi
     }
 
-    // Log
-    D3D_DestroyResource__LTCG(pResource);
+	Logging::D3D_DestroyResource__LTCG(pResource);
 
     // Release the host copy (if it exists!)
     FreeHostResource(GetHostResourceKey(pResource));
