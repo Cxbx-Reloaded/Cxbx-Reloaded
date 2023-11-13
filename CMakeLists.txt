@@ -144,6 +144,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxPixelShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.Logging.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsli"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
