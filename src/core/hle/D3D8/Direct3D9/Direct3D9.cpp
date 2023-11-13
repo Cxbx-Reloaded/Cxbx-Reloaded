@@ -5779,10 +5779,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 	else {
 		int dword_count = HLE_PushStart + 2;
 
-		DWORD* pPush_local = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
+		DWORD* pPush_local;// = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
 
-		pPush_local[2] = (DWORD)Stage;
 		if (pTexture) {
+			dword_count += sizeof(X_D3DSurface) / 4;
+			pPush_local = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
+			pPush_local[2] = (DWORD)Stage;
 			// we should better erase the pTexture if the key already existed in the map.
 			// but this would introduce a data confliction if the pgraph is accessing the same key which we're trying to erase.
 			// either a lock should be implemented here with g_TextureCache, or we simply keep the old key without updating it.
@@ -5802,8 +5804,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 			}
 			//g_TextureCache.insert(std::pair<UINT64, xbox::X_D3DSurface>(key, pTexture));
 		}
-		else
+		else {
+			pPush_local = HLE_PushPrepare(X_D3DDevice_SetTexture, dword_count);
+			pPush_local[2] = (DWORD)Stage;
 			pPush_local[3] = 0; // no pTexture
+		}
 
 		//*(UINT64*)& pPush_local[4] = pTexture->Data;
 		//pPush_local[5] = (DWORD)pTexture->Format;
