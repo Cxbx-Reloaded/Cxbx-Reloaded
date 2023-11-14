@@ -218,54 +218,54 @@ void CxbxrImpl_BlockUntilVerticalBlank();
 #define USEPGRAPH_BlockUntilVerticalBlank 0
 void CxbxrImpl_Clear(xbox::dword_xt Count, CONST D3DRECT* pRects, xbox::dword_xt Flags, D3DCOLOR Color, float Z, xbox::dword_xt Stencil);
 #define USEPGRAPH_Clear 1
-void WINAPI CxbxrImpl_CopyRects(xbox::X_D3DSurface* pSourceSurface, CONST RECT* pSourceRectsArray, xbox::uint_xt cRects, xbox::X_D3DSurface* pDestinationSurface, CONST POINT* pDestPointsArray);
+void CxbxrImpl_CopyRects(xbox::X_D3DSurface* pSourceSurface, CONST RECT* pSourceRectsArray, xbox::uint_xt cRects, xbox::X_D3DSurface* pDestinationSurface, CONST POINT* pDestPointsArray);
 #define USEPGRAPH_CopyRects 1 /*CopyRects() is not permitted in pushbuffer recording.*/
 ;
 ;
-//void WINAPI CxbxrImpl_DrawIndexedVertices(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PWORD pIndexData);
-//void WINAPI CxbxrImpl_DrawIndexedVerticesUP(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PVOID pIndexData, CONST PVOID pVertexStreamZeroData, xbox::uint_xt VertexStreamZeroStride);
-//void WINAPI CxbxrImpl_DrawRectPatch(xbox::uint_xt	Handle, CONST xbox::float_xt* pNumSegs, CONST D3DRECTPATCH_INFO* pRectPatchInfo);
-//void WINAPI CxbxrImpl_DrawTriPatch(xbox::uint_xt	Handle, CONST xbox::float_xt* pNumSegs, CONST D3DTRIPATCH_INFO* pTriPatchInfo);
-//void WINAPI CxbxrImpl_DrawVertices(xbox::X_D3DPRIMITIVETYPE PrimitiveType, xbox::uint_xt StartVertex, xbox::uint_xt VertexCount);
+//void CxbxrImpl_DrawIndexedVertices(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PWORD pIndexData);
+//void CxbxrImpl_DrawIndexedVerticesUP(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PVOID pIndexData, CONST PVOID pVertexStreamZeroData, xbox::uint_xt VertexStreamZeroStride);
+//void CxbxrImpl_DrawRectPatch(xbox::uint_xt	Handle, CONST xbox::float_xt* pNumSegs, CONST D3DRECTPATCH_INFO* pRectPatchInfo);
+//void CxbxrImpl_DrawTriPatch(xbox::uint_xt	Handle, CONST xbox::float_xt* pNumSegs, CONST D3DTRIPATCH_INFO* pTriPatchInfo);
+//void CxbxrImpl_DrawVertices(xbox::X_D3DPRIMITIVETYPE PrimitiveType, xbox::uint_xt StartVertex, xbox::uint_xt VertexCount);
 #define USEPGRAPH_DrawVertices 0
-void WINAPI CxbxrImpl_DrawVerticesUP(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PVOID pVertexStreamZeroData, xbox::uint_xt VertexStreamZeroStride);
+void CxbxrImpl_DrawVerticesUP(xbox::X_D3DPRIMITIVETYPE  PrimitiveType, xbox::uint_xt VertexCount, CONST PVOID pVertexStreamZeroData, xbox::uint_xt VertexStreamZeroStride);
 #define USEPGRAPH_DrawVerticesUP 0
 void CxbxImpl_End();
 void CxbxrImpl_InsertCallback(xbox::X_D3DCALLBACKTYPE Type, xbox::X_D3DCALLBACK pCallback, xbox::dword_xt Context);
-//void WINAPI CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
+//void CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
 void CxbxImpl_LoadVertexShader(DWORD Handle, DWORD ProgramRegister);
 #define USEPGRAPH_LoadVertexShader 1
 void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);
 #define USEPGRAPH_LoadVertexShaderProgram 0
 #define USEPGRAPH_Lock2DSurface 0
 #define USEPGRAPH_Lock3DSurface 0
-void WINAPI CxbxrImpl_RunVertexStateShader(xbox::dword_xt Address, CONST xbox::float_xt* pData);
+void CxbxrImpl_RunVertexStateShader(xbox::dword_xt Address, CONST xbox::float_xt* pData);
 void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address);
 #define USEPGRAPH_SelectVertexShader 1
-void WINAPI CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
+void CxbxrImpl_SetBackBufferScale(xbox::float_xt x, xbox::float_xt y);
 // todo: CxbxrImpl_SetFlickerFilter() not implemented yet.
-//void WINAPI CxbxrImpl_SetFlickerFilter(xbox::dword_xt Filter);
+//void CxbxrImpl_SetFlickerFilter(xbox::dword_xt Filter);
 void CxbxrImpl__SetGammaRamp(xbox::dword_xt dwFlags, CONST D3DGAMMARAMP* pRamp);
-void WINAPI CxbxrImpl_SetIndices(xbox::X_D3DIndexBuffer* pIndexData, xbox::uint_xt BaseVertexIndex);
-xbox::hresult_xt WINAPI CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
-xbox::hresult_xt WINAPI CxbxrImpl_SetLight(xbox::dword_xt Index, CONST xbox::X_D3DLIGHT8* pLight);
-xbox::hresult_xt WINAPI CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8* pMaterial);
-void WINAPI CxbxrImpl_SetModelView(CONST D3DMATRIX* pModelView, CONST D3DMATRIX* pInverseModelView, CONST D3DMATRIX* pComposite);
+void CxbxrImpl_SetIndices(xbox::X_D3DIndexBuffer* pIndexData, xbox::uint_xt BaseVertexIndex);
+xbox::hresult_xt CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable);
+xbox::hresult_xt CxbxrImpl_SetLight(xbox::dword_xt Index, CONST xbox::X_D3DLIGHT8* pLight);
+xbox::hresult_xt CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8* pMaterial);
+void CxbxrImpl_SetModelView(CONST D3DMATRIX* pModelView, CONST D3DMATRIX* pInverseModelView, CONST D3DMATRIX* pComposite);
 void CxbxrImpl_SetPalette(xbox::dword_xt Stage, xbox::X_D3DPalette* pPalette);
 void CxbxrImpl_SetPixelShader(xbox::dword_xt Handle);
-//void WINAPI CxbxrImpl_SetRenderState_Simple(xbox::dword_xt Method, xbox::dword_xt Value);
+//void CxbxrImpl_SetRenderState_Simple(xbox::dword_xt Method, xbox::dword_xt Value);
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
-void WINAPI CxbxrImpl_D3D_CommonSetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil, void* unknown);
+void CxbxrImpl_D3D_CommonSetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil, void* unknown);
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface* pTarget, xbox::X_D3DSurface* pZbuffer);
 #define USEPGRAPH_SetRenderTarget 0 /*SetRenderTarget() is used in D3DDevice_Create() and we need it to be implemented right away. to do: */
 void CxbxImpl_SetScreenSpaceOffset(float x, float y);
 #define USEPGRAPH_SetScreenSpaceOffset 0
-void WINAPI CxbxrImpl_SetShaderConstantMode(xbox::X_VERTEXSHADERCONSTANTMODE Mode);
+void CxbxrImpl_SetShaderConstantMode(xbox::X_VERTEXSHADERCONSTANTMODE Mode);
 // todo: CxbxrImpl_SetSoftDisplayFilter() not implemented yet.
-//void WINAPI CxbxrImpl_SetSoftDisplayFilter(xbox::bool_xt Enable);
+//void CxbxrImpl_SetSoftDisplayFilter(xbox::bool_xt Enable);
 void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
 //#define USEPGRAPH_SetStreamSource 0 /*not permitted in pushbuffer recording*/
-void WINAPI CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture);
+void CxbxrImpl_SetTexture(xbox::dword_xt Stage, xbox::X_D3DBaseTexture* pTexture);
 void CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
 void CxbxrImpl_SetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* pMatrix);
 void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
@@ -279,11 +279,11 @@ void CxbxImpl_SetVertexShader(DWORD Handle);
 void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 #define USEPGRAPH_SetViewport 1
 // Present() also calls Swap(), patched LTCG version of Swap also calls Swap(). so we only handle Swap().
-xbox::void_xt WINAPI CxbxrImpl_Present(xbox::dword_xt Flags);
+void CxbxrImpl_Present(xbox::dword_xt Flags);
 #define USEPGRAPH_Present 1
 DWORD CxbxrImpl_Swap(xbox::dword_xt Flags);
 #define USEPGRAPH_Swap 1 /*Present() calles Swap() implementation. Present() is not permitted in pushbuffer recording*/
-//void WINAPI CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
+//void CxbxrImpl_SwitchTexture(xbox::dword_xt Method, xbox::dword_xt Data, xbox::dword_xt Format);
 #define PGRAPHUSE_EmuKickOff 1
 #define PGRAPHUSE_EmuKickOffWait 1
 // Warning: CxbxrImpl_MakeSpace() uses trampoline inside, do not use this function in pgraph. only use it in xbox/HLE patch.
@@ -291,9 +291,9 @@ xbox::dword_xt* CxbxrImpl_MakeSpace(void);
 void CxbxrImpl_ReleaseRenderTarget(xbox::X_D3DSurface*pTarget, xbox::X_D3DSurface*pZbuffer);
 
 // D3D api
-void WINAPI CxbxrImpl_DestroyResource(xbox::X_D3DResource* pResource);
-void WINAPI CxbxrImpl_Lock2DSurface(xbox::X_D3DPixelContainer* pPixelContainer, D3DCUBEMAP_FACES FaceType, xbox::uint_xt Level, D3DLOCKED_RECT* pLockedRect, RECT* pRect, xbox::dword_xt Flags);
-void WINAPI CxbxrImpl_Lock3DSurface(xbox::X_D3DPixelContainer* pPixelContainer, xbox::uint_xt Level, D3DLOCKED_BOX* pLockedVolume, D3DBOX* pBox, xbox::dword_xt Flags);
+void CxbxrImpl_DestroyResource(xbox::X_D3DResource* pResource);
+void CxbxrImpl_Lock2DSurface(xbox::X_D3DPixelContainer* pPixelContainer, D3DCUBEMAP_FACES FaceType, xbox::uint_xt Level, D3DLOCKED_RECT* pLockedRect, RECT* pRect, xbox::dword_xt Flags);
+void CxbxrImpl_Lock3DSurface(xbox::X_D3DPixelContainer* pPixelContainer, xbox::uint_xt Level, D3DLOCKED_BOX* pLockedVolume, D3DBOX* pBox, xbox::dword_xt Flags);
 //helper functions
 ULONG CxbxrImpl_Resource_AddRef(xbox::X_D3DResource* pResource);
 ULONG CxbxrImpl_Resource_Release(xbox::X_D3DResource* pResource);

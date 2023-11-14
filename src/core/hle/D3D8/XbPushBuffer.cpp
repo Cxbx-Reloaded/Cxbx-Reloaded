@@ -439,7 +439,7 @@ extern D3DMATRIX g_xbox_DirectModelView_World;
 extern D3DMATRIX g_xbox_DirectModelView_Projection;
 extern bool g_VertexShader_dirty;
 
-extern xbox::void_xt WINAPI CxbxrImpl_SetModelView
+extern void CxbxrImpl_SetModelView
 (
 	CONST D3DMATRIX *pModelView,
 	CONST D3DMATRIX *pInverseModelView,
@@ -572,7 +572,7 @@ void pgraph_purge_dirty_and_state_flag(void)
 }
 extern XboxTextureStateConverter XboxTextureStates;
 extern XboxRenderStateConverter XboxRenderStates;
-extern xbox::void_xt CxbxrImpl_SetPixelShader(xbox::dword_xt Handle);
+extern void CxbxrImpl_SetPixelShader(xbox::dword_xt Handle);
 extern void GetMultiSampleScaleRaw(float& xScale, float& yScale);// tmp glue
 
 
@@ -3093,7 +3093,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			NV2A_SceneMateirals[0].Power = 0.0f;
 			NV2A_SceneMateirals[1].Power = 0.0f;
 		}
-		extern xbox::hresult_xt WINAPI CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8 * pMaterial);
+		extern xbox::hresult_xt CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8 * pMaterial);
 		//calls host api directly since in CxbxrImpl_SetMaterial() it updates the fixed mode vertex shader states directly which we have to distinguish from xbox api.
 		HRESULT hRet = g_pD3DDevice->SetMaterial(&NV2A_SceneMateirals[0]);
 		lightEnableMask = pg->KelvinPrimitive.SetLightEnableMask;//Push1(pPush, NV097_SET_LIGHT_ENABLE_MASK, enableMask);      // 0x3bc;
