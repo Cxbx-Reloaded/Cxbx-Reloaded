@@ -4557,19 +4557,20 @@ int pgraph_handle_method(
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_OFFSET, offset);
 					*/
 					//double check required.
-                    extern xbox::X_D3DPalette           g_NV2A_Palette_Data[xbox::X_D3DTS_STAGECOUNT];
+                    extern xbox::X_D3DPalette           g_NV2A_Palette[xbox::X_D3DTS_STAGECOUNT];
                     extern xbox::PVOID                  g_pNV2A_Palette_Data[xbox::X_D3DTS_STAGECOUNT];
                     extern unsigned                     g_NV2A_Palette_Size[xbox::X_D3DTS_STAGECOUNT];
                     extern int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size);
                     extern inline xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette* pPalette);
+                    extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
 
-                    g_pNV2A_Palette_Data[slot] = &g_NV2A_Palette_Data[slot];
-                    g_NV2A_Palette_Data[slot].Data = pg->KelvinPrimitive.SetTexture[4].Palette & 0xFFFFFFFC;// X_D3DPALETTE_COMMON_PALETTESET_MASK=0xC0000000
+                    g_NV2A_Palette[slot].Data = pg->KelvinPrimitive.SetTexture[slot].Palette & 0xFFFFFFFC;// X_D3DPALETTE_COMMON_PALETTESET_MASK=0xC0000000
                     //setup xbox resource.common for palette. could hack to use cached palette from HLE
-                    DWORD common = (pg->KelvinPrimitive.SetTexture[4].Palette & 0x3) << 30 | 1;// X_D3DPALETTE_COMMON_PALETTESET_SHIFT=30, setup the palette size and add one ref count.
-                    g_NV2A_Palette_Data[slot].Common = common;
-                    g_NV2A_Palette_Data[slot].Lock = 0;
-                    g_NV2A_Palette_Size[slot] = XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(&g_NV2A_Palette_Data[slot]));
+                    DWORD common = (pg->KelvinPrimitive.SetTexture[slot].Palette & 0x3) << 30 | 0x00030001;// X_D3DPALETTE_COMMON_PALETTESET_SHIFT=30, setup the palette size and add one ref count.
+                    g_NV2A_Palette[slot].Common = common;
+                    g_NV2A_Palette[slot].Lock = 0;
+                    g_pNV2A_Palette_Data[slot] = GetDataFromXboxResource((xbox::X_D3DResource*) &g_NV2A_Palette[slot]);
+                    g_NV2A_Palette_Size[slot] = XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(&g_NV2A_Palette[slot]));
 					break;
 				}
                 CASE_4(NV097_SET_TEXTURE_BORDER_COLOR, 64) :// D3DTSS_BORDERCOLOR, KelvinPrimitive.SetTexture[slot].SetTextureBorderColor
