@@ -846,7 +846,7 @@ typedef struct PGRAPHState {
 	bool waiting_for_context_switch;
 	bool downloads_pending;
 	bool gl_sync_pending;
-	//for very few pgarph state vars which we couldn't remap to KelvinPrimitive, use pgraph_regs[] instead. check for codes access pg->regs[NV_PGRAPH_XXXX] and replace with pg->pgraph_regs[NV_PGRAPH_XXXX]
+	//for very few pgraph state vars which we couldn't remap to KelvinPrimitive, use pgraph_regs[] instead. check for codes access pg->regs[NV_PGRAPH_XXXX] and replace with pg->pgraph_regs[NV_PGRAPH_XXXX]
 	uint32_t pgraph_regs[NV_PGRAPH_SIZE/4];//NV_PGRAPH_SIZE is in bytes, we're declare this array in dwords. for all access to this array, the register offset must be divided by 4.
 
 	volatile union { //map regs[] with struct with members from reverse engineering xbox d3d code. trace xbox d3d call, follow the pushbuffer command/args, and corresponding NV097 methods, we can guess the meanings of them.

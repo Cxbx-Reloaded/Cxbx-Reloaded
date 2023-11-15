@@ -150,7 +150,6 @@ typedef enum _X_D3DAPI_ENUM {
     X_D3DDevice_SetMaterial,
     X_D3DDevice_SetModelView,
     X_D3DDevice_SetOverscanColor,
-    X_D3DDevice_SetPalette,
     X_D3DDevice_SetPixelShader,
     X_D3DDevice_SetPixelShaderConstant,
     X_D3DDevice_SetPixelShaderProgram,
@@ -251,7 +250,6 @@ xbox::hresult_xt CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnab
 xbox::hresult_xt CxbxrImpl_SetLight(xbox::dword_xt Index, CONST xbox::X_D3DLIGHT8* pLight);
 xbox::hresult_xt CxbxrImpl_SetMaterial(CONST xbox::X_D3DMATERIAL8* pMaterial);
 void CxbxrImpl_SetModelView(CONST D3DMATRIX* pModelView, CONST D3DMATRIX* pInverseModelView, CONST D3DMATRIX* pComposite);
-void CxbxrImpl_SetPalette(xbox::dword_xt Stage, xbox::X_D3DPalette* pPalette);
 void CxbxrImpl_SetPixelShader(xbox::dword_xt Handle);
 //void CxbxrImpl_SetRenderState_Simple(xbox::dword_xt Method, xbox::dword_xt Value);
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);

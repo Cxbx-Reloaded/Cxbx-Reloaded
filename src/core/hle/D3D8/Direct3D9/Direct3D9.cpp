@@ -207,12 +207,6 @@ static xbox::dword_xt                  *g_pXbox_BeginPush_Buffer = xbox::zeroptr
 
        xbox::X_PixelShader*			g_pXbox_PixelShader = xbox::zeroptr;
 	   xbox::X_PixelShader          g_Xbox_PixelShader = {0};
-static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
-static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
-// NV2A Kelvin alternatives
-xbox::X_D3DPalette           g_NV2A_Palette[xbox::X_D3DTS_STAGECOUNT] = { 0 };
-xbox::PVOID                  g_pNV2A_Palette_Data[xbox::X_D3DTS_STAGECOUNT] = { xbox::zeroptr, xbox::zeroptr, xbox::zeroptr, xbox::zeroptr }; // cached palette pointer
-unsigned                     g_NV2A_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
 	   xbox::X_D3DSurface            g_Xbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0};
@@ -1075,6 +1069,25 @@ resource_cache_t& GetResourceCache(resource_key_t& key)
 		? g_Cxbx_Cached_PaletizedTextures : g_Cxbx_Cached_Direct3DResources;
 }
 
+extern NV2ADevice* g_NV2A;// tmp glue
+
+unsigned int HLE_get_NV2A_palette_size(int texture_stage)
+{
+	extern size_t get_palette_length(NV2AState * d, int texture_stage);
+
+	NV2AState* d = g_NV2A->GetDeviceState();
+	return get_palette_length(d, texture_stage);
+}
+
+// Test-case: Ninja Gaiden
+void* HLE_get_NV2A_palette_data(int texture_stage)
+{
+	uint8_t* get_palette_data(NV2AState * d, int texture_stage);
+
+	NV2AState* d = g_NV2A->GetDeviceState();
+	return get_palette_data(d, texture_stage);
+}
+
 extern bool is_pgraph_using_NV2A_Kelvin(void);
 
 resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextureStage = -1)
@@ -1090,13 +1103,8 @@ resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextu
 			key.Format = pPixelContainer->Format;
 			key.Size = pPixelContainer->Size;
 
-			void* palette_data = g_pXbox_Palette_Data[iTextureStage];
-			int palette_size = g_Xbox_Palette_Size[iTextureStage];
-			if (is_pgraph_using_NV2A_Kelvin()) {
-				palette_data = g_pNV2A_Palette_Data[iTextureStage];
-				palette_size = g_NV2A_Palette_Size[iTextureStage];
-			}
-
+			void* palette_data = HLE_get_NV2A_palette_data(iTextureStage);
+			int palette_size = HLE_get_NV2A_palette_size(iTextureStage);
 			// For paletized textures, include the current palette hash as well
 			if (IsPaletizedTexture(pPixelContainer->Format)) {
 				if (iTextureStage < 0) {
@@ -1105,7 +1113,7 @@ resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextu
 				} else {
 					assert(iTextureStage < xbox::X_D3DTS_STAGECOUNT);
 					// Protect for when this gets hit before an actual palette is set
-					if (palette_size > 0) {
+					if (palette_data != nullptr && palette_size > 0) {
 						// This caters for palette changes (only the active one will be used,
 						// any intermediate changes have no effect). Obsolete palette texture
 						// conversions will be pruned from g_Cxbx_Cached_PaletizedTextures
@@ -1559,30 +1567,6 @@ void SetHostIndexBuffer(xbox::X_D3DResource *pXboxResource, IDirect3DIndexBuffer
 	assert(GetXboxCommonResourceType(pXboxResource) == X_D3DCOMMON_TYPE_INDEXBUFFER);
 
 	SetHostResource(pXboxResource, pHostIndexBuffer);
-}
-
-int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size)
-{
-/*
-	static int lk[4] =
-	{
-		256 * sizeof(D3DCOLOR),    // D3DPALETTE_256
-		128 * sizeof(D3DCOLOR),    // D3DPALETTE_128
-		64 * sizeof(D3DCOLOR),     // D3DPALETTE_64
-		32 * sizeof(D3DCOLOR)      // D3DPALETTE_32
-	};
-
-	return lk[Size];
-*/
-	return (256 * sizeof(D3DCOLOR)) >> (unsigned)Size;
-}
-
-inline xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette *pPalette)
-{
-	xbox::X_D3DPALETTESIZE PaletteSize = (xbox::X_D3DPALETTESIZE)
-		((pPalette->Common & X_D3DPALETTE_COMMON_PALETTESIZE_MASK) >> X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
-
-	return PaletteSize;
 }
 
 int GetD3DResourceRefCount(IDirect3DResource *EmuResource)
@@ -3096,7 +3080,6 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY)
 	// - Shenmue II (Menu)
 	// Fixed-func passthrough, title does not apply backbuffer scale:
 	// - Antialias sample(background gradient)
-	extern bool is_pgraph_using_NV2A_Kelvin(void);
 	extern VertexShaderMode g_NV2A_VertexShaderMode;
 
 	VertexShaderMode VSHMode = g_Xbox_VertexShaderMode;
@@ -3767,7 +3750,6 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 
 //global for pfifo_run_pusher() to indicate whether it has completed the pushbuffer pasing or not.
 bool g_nv2a_fifo_is_busy = false;
-extern NV2ADevice* g_NV2A;// tmp glue
 extern bool is_nv2a_pfifo_busy(NV2AState* d);//tmp glue
 
 void EmuKickOff(void)
@@ -4976,7 +4958,6 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 
 	// Passthrough should range 0 to 1, instead of 0 to zbuffer depth
 	// Test case: DoA3 character select
-	extern bool is_pgraph_using_NV2A_Kelvin(void);
 	extern VertexShaderMode g_NV2A_VertexShaderMode;
 
 	VertexShaderMode VSHMode = g_Xbox_VertexShaderMode;
@@ -5816,8 +5797,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 }
 
 extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in PushBuffer.cpp
-
-extern NV2ADevice* g_NV2A;
 
 // ******************************************************************
 // * patch: D3DDevice_SetVertexData4f_16
@@ -7571,15 +7550,9 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// In case where there is a palettized texture without a palette attached,
 					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
 					// Test case: DRIV3R
-					void* data;
-					int size;
-					data = g_pXbox_Palette_Data[iTextureStage];
-					size = g_Xbox_Palette_Size[iTextureStage];
-					if (is_pgraph_using_NV2A_Kelvin()) {
-						data = g_pNV2A_Palette_Data[iTextureStage];
-						size = g_NV2A_Palette_Size[iTextureStage];
-					}
-					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && data/*g_pXbox_Palette_Data[iTextureStage]*/ == nullptr;
+					void* palette_data = HLE_get_NV2A_palette_data(iTextureStage);
+					int palette_size = HLE_get_NV2A_palette_size(iTextureStage);
+					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && palette_data == nullptr;
 					if (missingPalette) {
 						LOG_TEST_CASE("Palettized texture bound without a palette");
 
@@ -7592,7 +7565,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 							pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
 							pDst, dwDstRowPitch, dwDstSlicePitch,
 							pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
-							data/*g_pXbox_Palette_Data[iTextureStage]*/)) {
+							palette_data)) {
 							CxbxrAbort("Unhandled conversion!");
 						}
 					}
@@ -7613,7 +7586,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 						pSrc, pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
 						pDst, dwDstRowPitch, dwDstSlicePitch,
 						pxMipDepth,//used pxMipDepth here because in 3D mip map the 3rd dimension also shrinked to 1/2 at each mip level.
-						bIsV16U16/*g_pXbox_Palette_Data[iTextureStage]*/)) {
+						bIsV16U16)) {
 						CxbxrAbort("Unhandled conversion, failed in converting X_D3DFMT_L6V5U5 or X_D3DFMT_LIN_L6V5U5 to D3DFMT_X8L8V8U8!");
 					}
 				}else if (bSwizzled) {
@@ -7840,7 +7813,6 @@ D3DXVECTOR4 toVector(D3DCOLORVALUE val) {
 }
 
 extern bool is_pgraph_DirectModelView(void);
-extern bool is_pgraph_using_NV2A_Kelvin();// tmp glue
 extern xbox::X_D3DLIGHT8* CxbxrGetLight8Ptr(int lightNum);
 
 D3DMATRIX g_xbox_transform_ModelView;
@@ -7855,7 +7827,6 @@ D3DMATRIX g_xbox_transform_Projection;
 D3DMATRIX g_xbox_transform_ViewportTransform;
 D3DMATRIX g_xbox_transform_ProjectionViewportTransform;
 
-extern inline bool is_pgraph_using_NV2A_Kelvin(void);
 static D3DMATRIX * g_xbox_ProjectionViewportTransform = nullptr;
 
 void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DXVECTOR4* pLightAmbient)
@@ -12616,78 +12587,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3D_CommonSetRenderTarget)
 
     //for variants of SetRenderTarget(), we need to setup HLE to pgraph token first in order to make sure the execution ordre of NestedPatchCounter call(setRenderTargetCount);
 	XB_TRMP(D3D_CommonSetRenderTarget)(pRenderTarget, pNewZStencil, unknown);
-}
-
-//NV097_SET_TEXTURE_PALETTE(Stage) //pPalette->Data | (pPalette->Common >> D3DPALETTE_COMMON_PALETTESET_SHIFT) & D3DPALETTE_COMMON_PALETTESET_MASK
-void CxbxrImpl_SetPalette
-(
-    xbox::dword_xt      Stage,
-    xbox::X_D3DPalette *pPalette
-)
-{
-	if (Stage >= xbox::X_D3DTS_STAGECOUNT) {
-		LOG_TEST_CASE("Stage out of bounds");
-	} else {
-		// Note : Actual update of paletized textures (X_D3DFMT_P8) happens in CxbxUpdateHostTextures!
-		g_pXbox_Palette_Data[Stage] = GetDataFromXboxResource(pPalette);
-		g_Xbox_Palette_Size[Stage] = pPalette ? XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(pPalette)) : 0;
-	}
-}
-
-// LTCG specific D3DDevice_SetPalette function...
-// This uses a custom calling convention where Stage parameter is passed in EAX
-// Test-case: Ninja Gaiden
-LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
-(
-	X_D3DPalette *pPalette
-)
-{
-	dword_xt Stage; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
-	__asm {
-		LTCG_PROLOGUE
-		mov  Stage, eax
-	}
-
-	Logging::D3DDevice_SetPalette(Stage, pPalette);
-
-	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	__asm {
-		push pPalette
-		mov  eax, Stage
-		call XB_TRMP(D3DDevice_SetPalette_4)
-	}
-
-	//CxbxrImpl_SetPalette(Stage, pPalette);
-
-	HLE_PushApi(X_D3DDevice_SetPalette,
-		(DWORD)Stage,
-		(DWORD)pPalette);
-
-	__asm {
-		LTCG_EPILOGUE
-		ret  4
-	}
-}
-
-// ******************************************************************
-// * patch: D3DDevice_SetPalette
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
-(
-	dword_xt      Stage,
-	X_D3DPalette* pPalette
-)
-{
-	Logging::D3DDevice_SetPalette(Stage, pPalette);
-
-	// Call the Xbox implementation of this function, to properly handle reference counting for us
-	XB_TRMP(D3DDevice_SetPalette)(Stage, pPalette);
-
-	//CxbxrImpl_SetPalette(Stage, pPalette);
-
-	HLE_PushApi(X_D3DDevice_SetPalette,
-		(DWORD)Stage,
-		(DWORD)pPalette);
 }
 
 // LTCG specific D3DDevice_SetFlickerFilter function...

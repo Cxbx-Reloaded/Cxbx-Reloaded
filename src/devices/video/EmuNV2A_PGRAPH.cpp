@@ -1798,9 +1798,6 @@ void HLE_API_handle_method
         CxbxrImpl_SetModelView((CONST D3DMATRIX*)/*pModelView*/argv[1], (CONST D3DMATRIX*)/*pInverseModelView*/argv[2], (CONST D3DMATRIX*) /*pComposite*/argv[3]);
         break;
     case X_D3DDevice_SetOverscanColor:  break;
-    case X_D3DDevice_SetPalette:
-        CxbxrImpl_SetPalette((xbox::dword_xt)/* Stage */argv[1], (xbox::X_D3DPalette*)/* pPalette */argv[2]);
-        break;
     case X_D3DDevice_SetPixelShader:
         CxbxrImpl_SetPixelShader((xbox::dword_xt)/*Handle*/argv[1]);
         break;
@@ -2212,17 +2209,13 @@ int pgraph_handle_method(
                 default:
                     assert(command_word >> 29 != COMMAND_INSTRUCTION_NON_INCREASING_METHODS); // All other commands should not be non-increasing
                     assert(command_word >> 29 == COMMAND_INSTRUCTION_INCREASING_METHODS); // Actually, all other commands should be increasing (as jumps and unknown bits shouldn't arrive here!)
+                    assert(method + (method_count * sizeof(uint32_t)) <= sizeof(pg->regs) && "NV097 method out of bounds!");
 
-#if 0
-                    for (unsigned int argc = 0; argc < method_count; argc++) {
-                        pg->regs[ method/4 + argc] = argv[argc];
-                    }
-#else
-                    assert(method + (method_count * sizeof(uint32_t)) <= sizeof(pg->regs));
-
+                    // Avoid case-specific writes in below method-case handlers, by copying
+                    // any command (other than the above) straight into pg->regs (which is
+                    // also accessible via the unioned pg->KelvinPrimitive fields).
+                    // (Assuming incrementally populated KelvinPrimitive regs without overlap.)
                     memcpy(&(pg->regs[method / 4]), argv, method_count * sizeof(uint32_t));
-#endif
-                    // Note : Writing to pg->regs[] will also reflect in unioned pg->KelvinPrimitive fields!
                     break;
             }
 		 
@@ -4538,7 +4531,6 @@ int pgraph_handle_method(
 					break;
 
                     //NV097_SET_TEXTURE_PALETTE(Stage) //pPalette->Data | (pPalette->Common >> D3DPALETTE_COMMON_PALETTESET_SHIFT) & D3DPALETTE_COMMON_PALETTESET_MASK
-                    //HLE stores the palette data in g_pXbox_Palette_Data[],g_Xbox_Palette_Size[]
 				CASE_4(NV097_SET_TEXTURE_PALETTE, 64) :{ //KelvinPrimitive.SetTexture[4].Palette , sizeof(SetTexture[])==64
 					//get texture[] index
 					slot = (method - NV097_SET_TEXTURE_PALETTE) / 64;
@@ -4556,21 +4548,6 @@ int pgraph_handle_method(
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_LENGTH, length);
 					SET_MASK(*reg, NV_PGRAPH_TEXPALETTE0_OFFSET, offset);
 					*/
-					//double check required.
-                    extern xbox::X_D3DPalette           g_NV2A_Palette[xbox::X_D3DTS_STAGECOUNT];
-                    extern xbox::PVOID                  g_pNV2A_Palette_Data[xbox::X_D3DTS_STAGECOUNT];
-                    extern unsigned                     g_NV2A_Palette_Size[xbox::X_D3DTS_STAGECOUNT];
-                    extern int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size);
-                    extern inline xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette* pPalette);
-                    extern void* GetDataFromXboxResource(xbox::X_D3DResource* pXboxResource);
-
-                    g_NV2A_Palette[slot].Data = pg->KelvinPrimitive.SetTexture[slot].Palette & 0xFFFFFFFC;// X_D3DPALETTE_COMMON_PALETTESET_MASK=0xC0000000
-                    //setup xbox resource.common for palette. could hack to use cached palette from HLE
-                    DWORD common = (pg->KelvinPrimitive.SetTexture[slot].Palette & 0x3) << 30 | 0x00030001;// X_D3DPALETTE_COMMON_PALETTESET_SHIFT=30, setup the palette size and add one ref count.
-                    g_NV2A_Palette[slot].Common = common;
-                    g_NV2A_Palette[slot].Lock = 0;
-                    g_pNV2A_Palette_Data[slot] = GetDataFromXboxResource((xbox::X_D3DResource*) &g_NV2A_Palette[slot]);
-                    g_NV2A_Palette_Size[slot] = XboxD3DPaletteSizeToBytes(GetXboxPaletteSize(&g_NV2A_Palette[slot]));
 					break;
 				}
                 CASE_4(NV097_SET_TEXTURE_BORDER_COLOR, 64) :// D3DTSS_BORDERCOLOR, KelvinPrimitive.SetTexture[slot].SetTextureBorderColor
@@ -6086,6 +6063,55 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
     }
 }
 
+size_t get_palette_length(NV2AState* d, int texture_stage)
+{
+    PGRAPHState* pg = &d->pgraph;
+
+    uint32_t palette;
+    uint32_t palette_length_index;
+    size_t palette_length;
+
+    palette = pg->KelvinPrimitive.SetTexture[texture_stage].Palette;
+    palette_length_index = GET_MASK(palette, NV_PGRAPH_TEXPALETTE0_LENGTH);
+
+    switch (palette_length_index) {
+    case NV_PGRAPH_TEXPALETTE0_LENGTH_256: palette_length = 256; break;
+    case NV_PGRAPH_TEXPALETTE0_LENGTH_128: palette_length = 128; break;
+    case NV_PGRAPH_TEXPALETTE0_LENGTH_64: palette_length = 64; break;
+    case NV_PGRAPH_TEXPALETTE0_LENGTH_32: palette_length = 32; break;
+    default: assert(false && "Unhandled palette_length_index"); break;
+    }
+
+    return palette_length;
+}
+
+uint8_t* get_palette_data(NV2AState* d, int texture_stage)
+{
+    PGRAPHState* pg = &d->pgraph;
+
+    uint32_t palette;
+    uint32_t palette_offset;
+    bool palette_dma_select;
+    hwaddr palette_dma_len;
+    uint8_t* palette_data;
+
+    palette = pg->KelvinPrimitive.SetTexture[texture_stage].Palette;
+
+    palette_offset = palette & NV_PGRAPH_TEXPALETTE0_OFFSET;
+    palette_dma_select = palette & NV_PGRAPH_TEXPALETTE0_CONTEXT_DMA;
+    if (palette_dma_select) {
+        palette_data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaB, &palette_dma_len);
+    }
+    else {
+        palette_data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaA, &palette_dma_len);
+    }
+
+    assert(palette_offset < palette_dma_len);
+    palette_data += palette_offset;
+
+    return palette_data;
+}
+
 static void pgraph_bind_textures(NV2AState *d)
 {
     int i;
@@ -6103,7 +6129,6 @@ static void pgraph_bind_textures(NV2AState *d)
         uint32_t fmt = pg->KelvinPrimitive.SetTexture[i].Format;
         uint32_t filter = pg->KelvinPrimitive.SetTexture[i].Filter;
         uint32_t address = pg->KelvinPrimitive.SetTexture[i].Address;
-        uint32_t palette =  pg->KelvinPrimitive.SetTexture[i].Palette;
 
         bool enabled = ctl_0 & NV_PGRAPH_TEXCTL0_0_ENABLE;
         unsigned int min_mipmap_level =
@@ -6148,21 +6173,9 @@ static void pgraph_bind_textures(NV2AState *d)
 
         unsigned int offset = pg->KelvinPrimitive.SetTexture[i].Offset;
 
-        bool palette_dma_select =
-            palette & NV_PGRAPH_TEXPALETTE0_CONTEXT_DMA;
-        unsigned int palette_length_index =
-            GET_MASK(palette, NV_PGRAPH_TEXPALETTE0_LENGTH);
-        unsigned int palette_offset =
-            palette & NV_PGRAPH_TEXPALETTE0_OFFSET;
-
-        unsigned int palette_length = 0;
-        switch (palette_length_index) {
-        case NV_PGRAPH_TEXPALETTE0_LENGTH_256: palette_length = 256; break;
-        case NV_PGRAPH_TEXPALETTE0_LENGTH_128: palette_length = 128; break;
-        case NV_PGRAPH_TEXPALETTE0_LENGTH_64: palette_length = 64; break;
-        case NV_PGRAPH_TEXPALETTE0_LENGTH_32: palette_length = 32; break;
-        default: assert(false); break;
-        }
+#ifdef USE_TEXTURE_CACHE
+        size_t palette_length = get_palette_length(d, i);
+#endif
 
         /* Check for unsupported features */
         assert(!(filter & NV_PGRAPH_TEXFILTER0_ASIGNED));
@@ -6271,15 +6284,7 @@ static void pgraph_bind_textures(NV2AState *d)
         assert(offset < dma_len);
         texture_data += offset;
 
-        hwaddr palette_dma_len;
-        uint8_t *palette_data;
-        if (palette_dma_select) {
-            palette_data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaB, &palette_dma_len);
-        } else {
-            palette_data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaA, &palette_dma_len);
-        }
-        assert(palette_offset < palette_dma_len);
-        palette_data += palette_offset;
+        uint8_t *palette_data = get_palette_data(d, i);
 
         NV2A_DPRINTF(" - 0x%tx\n", texture_data - d->vram_ptr);
 

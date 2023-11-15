@@ -2233,3 +2233,28 @@ bool WndMain::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *da
 	return true;
 }
 #endif
+
+// Unused
+inline xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette* pPalette)
+{
+	xbox::X_D3DPALETTESIZE PaletteSize = (xbox::X_D3DPALETTESIZE)
+		((pPalette->Common & X_D3DPALETTE_COMMON_PALETTESIZE_MASK) >> X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
+
+	return PaletteSize;
+}
+
+int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size)
+{
+	/*
+		static int lk[4] =
+		{
+			256 * sizeof(D3DCOLOR),    // D3DPALETTE_256
+			128 * sizeof(D3DCOLOR),    // D3DPALETTE_128
+			64 * sizeof(D3DCOLOR),     // D3DPALETTE_64
+			32 * sizeof(D3DCOLOR)      // D3DPALETTE_32
+		};
+
+		return lk[Size];
+	*/
+	return (256 * sizeof(D3DCOLOR)) >> (unsigned)Size;
+}

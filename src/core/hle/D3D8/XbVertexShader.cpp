@@ -392,7 +392,6 @@ xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat()
 // (These values are set through SetStreamSource and can be overridden by SetVertexShaderInput.)
 xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber)
 {
-	extern bool is_pgraph_using_NV2A_Kelvin(void);
 	extern xbox::X_STREAMINPUT NV2A_StreamSource[X_VSH_MAX_STREAMS];
 	// If kelvin is used, return streaminput source composed from Kelvin
 	if (is_pgraph_using_NV2A_Kelvin())
