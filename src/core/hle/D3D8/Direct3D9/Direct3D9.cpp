@@ -1107,9 +1107,6 @@ resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextu
 			auto pPixelContainer = (xbox::X_D3DPixelContainer*)pXboxResource;
 			key.Format = pPixelContainer->Format;
 			key.Size = pPixelContainer->Size;
-
-			void* palette_data = get_NV2A_texture_palette_data(iTextureStage);
-			int palette_size = get_NV2A_texture_palette_size_in_bytes(iTextureStage);
 			// For paletized textures, include the current palette hash as well
 			if (IsPaletizedTexture(pPixelContainer->Format)) {
 				if (iTextureStage < 0) {
@@ -1117,6 +1114,8 @@ resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextu
 					LOG_TEST_CASE("Unknown texture stage!");
 				} else {
 					assert(iTextureStage < xbox::X_D3DTS_STAGECOUNT);
+					void* palette_data = get_NV2A_texture_palette_data(iTextureStage);
+					int palette_size = get_NV2A_texture_palette_size_in_bytes(iTextureStage);
 					// Protect for when this gets hit before an actual palette is set
 					if (palette_data != nullptr && palette_size > 0) {
 						// This caters for palette changes (only the active one will be used,
@@ -7556,7 +7555,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
 					// Test case: DRIV3R
 					void* palette_data = get_NV2A_texture_palette_data(iTextureStage);
-					int palette_size = get_NV2A_texture_palette_size_in_bytes(iTextureStage);
+					// ignored: int palette_size = get_NV2A_texture_palette_size_in_bytes(iTextureStage);
 					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && palette_data == nullptr;
 					if (missingPalette) {
 						LOG_TEST_CASE("Palettized texture bound without a palette");
