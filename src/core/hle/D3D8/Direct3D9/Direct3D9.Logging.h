@@ -306,7 +306,10 @@ namespace Logging // Note : For ease of maintenance, sort below functions
 		LOG_FUNC_ONE_ARG(pMaterial);
 	}
 
-	static void D3DDevice_GetModelView(D3DXMATRIX* pModelView)
+	static void D3DDevice_GetModelView
+	(
+		D3DXMATRIX* pModelView
+	)
 	{
 		LOG_FUNC_ONE_ARG(pModelView);
 	}
