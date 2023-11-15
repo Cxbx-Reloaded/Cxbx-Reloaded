@@ -1440,7 +1440,6 @@ void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
     uint_xt             VertexStreamZeroStride
 );
 
-
 // ******************************************************************
 // * patch: D3DDevice_DrawIndexedVertices
 // ******************************************************************
@@ -1503,6 +1502,7 @@ hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable)
 // ******************************************************************
 ulong_xt WINAPI EMUPATCH(D3DDevice_Release)();
 
+#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_CreatePalette
 // ******************************************************************
@@ -1519,6 +1519,7 @@ X_D3DPalette * WINAPI EMUPATCH(D3DDevice_CreatePalette2)
 (
     X_D3DPALETTESIZE    Size
 );
+#endif
 
 // ******************************************************************
 // * patch: D3DDevice_SetRenderTarget

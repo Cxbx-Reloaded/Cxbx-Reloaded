@@ -1142,7 +1142,7 @@ void UpdateFixedFunctionPixelShaderState()
 	extern DWORD ABGR_to_ARGB(const uint32_t color);
 	extern D3DXVECTOR4 toVector(D3DCOLOR color);
 	extern XboxTextureStateConverter NV2ATextureStates;
-	//extern FLOAT DWtoF(DWORD f);
+
 	FixedFunctionPixelShaderState ffPsState;
 	// use NV2A/KelvinPrimitive content if we're in pushbuffer replay mode
 	if (is_pgraph_using_NV2A_Kelvin()) {

@@ -1572,7 +1572,7 @@ void CxbxImpl_SelectVertexShader(DWORD Handle, DWORD Address)
 #endif
 		g_Xbox_VertexShader_Handle = Handle;
 	}
-	//extern bool g_VertexShader_dirty; // tmp glue
+
 	// set vertex shader dirty flag
 	g_VertexShader_dirty = true;
 }
@@ -1855,7 +1855,7 @@ void pgraph_SetVertexShader(NV2AState* d)
 			//LOG_TEST_CASE("Other or no vertex shader flags");
 		}
 	}
-	//extern bool g_NV2AVertexShader_dirty; // tmp glue
+
 	// set vertex shader dirty flag
 	g_NV2AVertexShader_dirty = true;
 }

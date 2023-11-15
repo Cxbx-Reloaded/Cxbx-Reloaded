@@ -1071,21 +1071,26 @@ resource_cache_t& GetResourceCache(resource_key_t& key)
 
 extern NV2ADevice* g_NV2A;// tmp glue
 
-unsigned int HLE_get_NV2A_palette_size(int texture_stage)
+unsigned int get_NV2A_texture_palette_length(int texture_stage)
 {
-	extern size_t get_palette_length(NV2AState * d, int texture_stage);
+	extern size_t get_kelvin_texture_palette_length(NV2AState* d, int texture_stage);
 
 	NV2AState* d = g_NV2A->GetDeviceState();
-	return get_palette_length(d, texture_stage);
+	return get_kelvin_texture_palette_length(d, texture_stage);
+}
+
+inline unsigned int get_NV2A_texture_palette_size_in_bytes(int texture_stage)
+{
+	return get_NV2A_texture_palette_length(texture_stage) * 4; // each palette entry is sizeof(D3DCOLOR)
 }
 
 // Test-case: Ninja Gaiden
-void* HLE_get_NV2A_palette_data(int texture_stage)
+void* get_NV2A_texture_palette_data(int texture_stage)
 {
-	extern uint8_t* get_palette_data(NV2AState * d, int texture_stage);
+	extern uint8_t* get_kelvin_texture_palette_data(NV2AState* d, int texture_stage);
 
 	NV2AState* d = g_NV2A->GetDeviceState();
-	return get_palette_data(d, texture_stage);
+	return get_kelvin_texture_palette_data(d, texture_stage);
 }
 
 extern bool is_pgraph_using_NV2A_Kelvin(void);
@@ -1103,8 +1108,8 @@ resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextu
 			key.Format = pPixelContainer->Format;
 			key.Size = pPixelContainer->Size;
 
-			void* palette_data = HLE_get_NV2A_palette_data(iTextureStage);
-			int palette_size = HLE_get_NV2A_palette_size(iTextureStage);
+			void* palette_data = get_NV2A_texture_palette_data(iTextureStage);
+			int palette_size = get_NV2A_texture_palette_size_in_bytes(iTextureStage);
 			// For paletized textures, include the current palette hash as well
 			if (IsPaletizedTexture(pPixelContainer->Format)) {
 				if (iTextureStage < 0) {
@@ -7550,8 +7555,8 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 					// In case where there is a palettized texture without a palette attached,
 					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
 					// Test case: DRIV3R
-					void* palette_data = HLE_get_NV2A_palette_data(iTextureStage);
-					int palette_size = HLE_get_NV2A_palette_size(iTextureStage);
+					void* palette_data = get_NV2A_texture_palette_data(iTextureStage);
+					int palette_size = get_NV2A_texture_palette_size_in_bytes(iTextureStage);
 					bool missingPalette = X_Format == xbox::X_D3DFMT_P8 && palette_data == nullptr;
 					if (missingPalette) {
 						LOG_TEST_CASE("Palettized texture bound without a palette");
@@ -10882,7 +10887,6 @@ void CxbxUpdateHostTextures()
 
 void CxbxUpdateHostTextureScaling()
 {
-	//extern NV2ADevice* g_NV2A;
 	NV2AState *d = g_NV2A->GetDeviceState();
 	PGRAPHState *pg = &d->pgraph;
 	// Xbox works with "Linear" and "Swizzled" texture formats
@@ -12753,7 +12757,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
     );
 	*/
 	// read Vertex Shader constants from nv2a
-	//extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
 	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(Register);
 	memcpy(pConstantData, constant_floats, ConstantCount * sizeof(float) * 4);
 

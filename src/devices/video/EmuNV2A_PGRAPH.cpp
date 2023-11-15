@@ -6063,53 +6063,35 @@ static void pgraph_update_surface(NV2AState *d, bool upload,
     }
 }
 
-size_t get_palette_length(NV2AState* d, int texture_stage)
+size_t get_kelvin_texture_palette_length(NV2AState* d, int texture_stage)
 {
     PGRAPHState* pg = &d->pgraph;
-
-    uint32_t palette;
-    uint32_t palette_length_index;
+    uint32_t palette = pg->KelvinPrimitive.SetTexture[texture_stage].Palette;
+    uint32_t palette_length_index = GET_MASK(palette, NV097_SET_TEXTURE_PALETTE_LENGTH); // == NV_PGRAPH_TEXPALETTE0_LENGTH
     size_t palette_length;
-
-    palette = pg->KelvinPrimitive.SetTexture[texture_stage].Palette;
-    palette_length_index = GET_MASK(palette, NV_PGRAPH_TEXPALETTE0_LENGTH);
-
     switch (palette_length_index) {
-    case NV_PGRAPH_TEXPALETTE0_LENGTH_256: palette_length = 256; break;
-    case NV_PGRAPH_TEXPALETTE0_LENGTH_128: palette_length = 128; break;
-    case NV_PGRAPH_TEXPALETTE0_LENGTH_64: palette_length = 64; break;
-    case NV_PGRAPH_TEXPALETTE0_LENGTH_32: palette_length = 32; break;
-    default: assert(false && "Unhandled palette_length_index"); break;
+    case NV097_SET_TEXTURE_PALETTE_LENGTH_256: palette_length = 256; break; // == NV_PGRAPH_TEXPALETTE0_LENGTH_256
+    case NV097_SET_TEXTURE_PALETTE_LENGTH_128: palette_length = 128; break; // NV_PGRAPH_TEXPALETTE0_LENGTH_128
+    case NV097_SET_TEXTURE_PALETTE_LENGTH_64: palette_length = 64; break; // NV_PGRAPH_TEXPALETTE0_LENGTH_64
+    case NV097_SET_TEXTURE_PALETTE_LENGTH_32: palette_length = 32; break; // NV_PGRAPH_TEXPALETTE0_LENGTH_32
+    default: assert(false && "Unhandled palette_length_index"); palette_length = 0; break;
     }
-
     return palette_length;
 }
 
-uint8_t* get_palette_data(NV2AState* d, int texture_stage)
+uint8_t* get_kelvin_texture_palette_data(NV2AState* d, int texture_stage)
 {
     PGRAPHState* pg = &d->pgraph;
-
-    uint32_t palette;
-    uint32_t palette_offset;
-    bool palette_dma_select;
+    uint32_t palette = pg->KelvinPrimitive.SetTexture[texture_stage].Palette; // NV097_SET_TEXTURE_PALETTE[] 0x00001B20 
+    bool palette_dma_select = GET_MASK(palette, NV097_SET_TEXTURE_PALETTE_CONTEXT_DMA); // == NV_PGRAPH_TEXPALETTE0_CONTEXT_DMA
+    uint32_t palette_offset = GET_MASK(palette, NV097_SET_TEXTURE_PALETTE_OFFSET); // == NV_PGRAPH_TEXPALETTE0_OFFSET
+    // TODO : Must palette_offset be shifted/multipied by some amount?
+    hwaddr dma_obj_address = palette_dma_select ? pg->KelvinPrimitive.SetContextDmaB : pg->KelvinPrimitive.SetContextDmaA;
+    // Note : hwaddr equals xbox::addr_xt, as received by dma_obj_address argument of nv_dma_map()
     hwaddr palette_dma_len;
-    uint8_t* palette_data;
-
-    palette = pg->KelvinPrimitive.SetTexture[texture_stage].Palette;
-
-    palette_offset = palette & NV_PGRAPH_TEXPALETTE0_OFFSET;
-    palette_dma_select = palette & NV_PGRAPH_TEXPALETTE0_CONTEXT_DMA;
-    if (palette_dma_select) {
-        palette_data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaB, &palette_dma_len);
-    }
-    else {
-        palette_data = (uint8_t*)nv_dma_map(d, pg->KelvinPrimitive.SetContextDmaA, &palette_dma_len);
-    }
-
+    uint8_t* palette_data = (uint8_t*)nv_dma_map(d, dma_obj_address, &palette_dma_len);
     assert(palette_offset < palette_dma_len);
-    palette_data += palette_offset;
-
-    return palette_data;
+    return palette_data + palette_offset;
 }
 
 static void pgraph_bind_textures(NV2AState *d)
@@ -6174,7 +6156,7 @@ static void pgraph_bind_textures(NV2AState *d)
         unsigned int offset = pg->KelvinPrimitive.SetTexture[i].Offset;
 
 #ifdef USE_TEXTURE_CACHE
-        size_t palette_length = get_palette_length(d, i);
+        size_t palette_length = get_kelvin_texture_palette_length(d, i) * 4; // each color is 4 bytes
 #endif
 
         /* Check for unsupported features */
@@ -6284,7 +6266,7 @@ static void pgraph_bind_textures(NV2AState *d)
         assert(offset < dma_len);
         texture_data += offset;
 
-        uint8_t *palette_data = get_palette_data(d, i);
+        uint8_t *palette_data = get_kelvin_texture_palette_data(d, i);
 
         NV2A_DPRINTF(" - 0x%tx\n", texture_data - d->vram_ptr);
 

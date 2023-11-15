@@ -551,7 +551,7 @@ typedef struct NV097KelvinPrimitive {
 		uint32_t Filter;					//	0x00001B14 +i*0x40  // MipMapLoadBias bit12:0, ConvolutionKernel bit 15:13, Min bit 23:16, Mag Bit 27:24, COLORSIGN A bit28, R bit29, G bit30, B bit 31.
 		uint32_t Rev_1b18[0x4 / 4];			//	0x00001B18 +i*0x40 			
 		uint32_t ImageRect;					//	0x00001B1C +i*0x40
-		uint32_t Palette;					//	0x00001B20 +i*0x40  // PaletteOFfset bit 31:6, PaletteLength bit 5:2, ContextDMA bit 1:0
+		uint32_t Palette;					//	0x00001B20 +i*0x40  // NV097_SET_TEXTURE_PALETTE PaletteOffset bit 31:6, PaletteLength bit 5:2, ContextDMA bit 1:0
 		uint32_t BorderColor;				//	0x00001B24 +i*0x40  // ColorV
 		//shall we make these 4 bump vars union bump_env_matrix[4]?
 		float SetBumpEnvMat00;				//	0x00001B28 +i*0x40
