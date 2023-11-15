@@ -1082,7 +1082,7 @@ unsigned int HLE_get_NV2A_palette_size(int texture_stage)
 // Test-case: Ninja Gaiden
 void* HLE_get_NV2A_palette_data(int texture_stage)
 {
-	uint8_t* get_palette_data(NV2AState * d, int texture_stage);
+	extern uint8_t* get_palette_data(NV2AState * d, int texture_stage);
 
 	NV2AState* d = g_NV2A->GetDeviceState();
 	return get_palette_data(d, texture_stage);
