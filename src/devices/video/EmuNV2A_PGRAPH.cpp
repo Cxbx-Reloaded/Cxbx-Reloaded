@@ -6084,8 +6084,8 @@ uint8_t* get_kelvin_texture_palette_data(NV2AState* d, int texture_stage)
     PGRAPHState* pg = &d->pgraph;
     uint32_t palette = pg->KelvinPrimitive.SetTexture[texture_stage].Palette; // NV097_SET_TEXTURE_PALETTE[] 0x00001B20 
     bool palette_dma_select = GET_MASK(palette, NV097_SET_TEXTURE_PALETTE_CONTEXT_DMA); // == NV_PGRAPH_TEXPALETTE0_CONTEXT_DMA
-    uint32_t palette_offset = GET_MASK(palette, NV097_SET_TEXTURE_PALETTE_OFFSET); // == NV_PGRAPH_TEXPALETTE0_OFFSET
-    // TODO : Must palette_offset be shifted/multipied by some amount?
+    uint32_t palette_offset = palette & NV097_SET_TEXTURE_PALETTE_OFFSET; // == NV_PGRAPH_TEXPALETTE0_OFFSET
+    // Note : Don't use GET_MASK for palette_offset (apparently, the mask matches the offset bits, aligned on X_D3DPALETTE_ALIGNMENT)
     hwaddr dma_obj_address = palette_dma_select ? pg->KelvinPrimitive.SetContextDmaB : pg->KelvinPrimitive.SetContextDmaA;
     // Note : hwaddr equals xbox::addr_xt, as received by dma_obj_address argument of nv_dma_map()
     hwaddr palette_dma_len;
