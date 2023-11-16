@@ -198,3 +198,16 @@ set_source_files_properties(
   HEADER_FILE_ONLY TRUE
   VS_TOOL_OVERRIDE "None"
 )
+
+# Copy HLSL files to the output directory, which are loaded at runtime
+file(GLOB CXBXR_HLSL_FILES "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/*.hlsl*")
+add_custom_command(
+	TARGET cxbx PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:cxbx>/hlsl
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} $<TARGET_FILE_DIR:cxbx>/hlsl
+	# These files can be edited.
+	# Create backup copies for convenience of restoring original shader behaviour.
+	COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:cxbx>/hlsl/backup
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} $<TARGET_FILE_DIR:cxbx>/hlsl/backup
+)
+install(DIRECTORY $<TARGET_FILE_DIR:cxbx>/hlsl DESTINATION bin)

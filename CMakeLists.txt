@@ -469,16 +469,6 @@ install(FILES ${cxbxr_INSTALL_files}
   DESTINATION bin
 )
 
-install(FILES
- "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/CxbxPixelShaderTemplate.hlsl"
- "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderPassthrough.hlsl"
- "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsl"
- "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsli"
- "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
- "${CMAKE_SOURCE_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
- DESTINATION bin/hlsl
-)
-
 set(cxbxr_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
 
 install(PROGRAMS ${cxbxr_GLEW_DLL}
