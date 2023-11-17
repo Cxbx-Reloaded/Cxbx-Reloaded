@@ -469,6 +469,20 @@ install(FILES ${cxbxr_INSTALL_files}
   DESTINATION bin
 )
 
+# Copy HLSL files to the output directory, which are loaded at runtime
+set(CXBXR_HLSL_FILES ${CXBXR_HEADER_EMU})
+list(FILTER CXBXR_HLSL_FILES INCLUDE REGEX ".*/src/core/hle/D3D8/Direct3D9/[^/]+\.hlsli?")
+add_custom_command(
+	TARGET misc-batch POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl"
+	# These files can be edited.
+	# Create backup copies for convenience of restoring original shader behaviour.
+	COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup"
+)
+install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl DESTINATION bin)
+
 set(cxbxr_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
 
 install(PROGRAMS ${cxbxr_GLEW_DLL}
