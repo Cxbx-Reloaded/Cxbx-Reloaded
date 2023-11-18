@@ -550,8 +550,17 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_STENCILFAIL:
             Value = EmuXB2PC_D3DSTENCILOP((xbox::X_D3DSTENCILOP)Value);
             break;
-        case xbox::X_D3DRS_MULTISAMPLETYPE://D3DRS_MULTISAMPLEMODE
+        case xbox::X_D3DRS_MULTISAMPLETYPE:
             SetXboxMultiSampleType((xbox::X_D3DMULTISAMPLE_TYPE)Value);
+            break;
+        case xbox::X_D3DRS_MULTISAMPLEMODE:
+        case xbox::X_D3DRS_MULTISAMPLERENDERTARGETMODE:
+            if(Value==2)
+                SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR);
+            else if(Value==1)
+                SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR);
+            else
+                SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_NONE);
             break;
         default:
             // Only log missing state if it has a PC counterpart
