@@ -12364,7 +12364,7 @@ void EmuSetDepthStencil
 			//PCFormat = (D3DFORMAT)MAKEFOURCC('R', '3', '2', 'F');
 			//PCFormat = D3DFMT_D16_LOCKABLE;//D3DFMT_D32_LOCKABLE, D3DFMT_D16_LOCKABLE, D3DFMT_D32F_LOCKABLE, D3DFMT_S8_LOCKABLE
 
-			hRet = g_pD3DDevice->CreateTexture(xboxWidth, xboxHeight,
+			hRet = g_pD3DDevice->CreateTexture(xboxWidth* g_RenderUpscaleFactor, xboxHeight* g_RenderUpscaleFactor,
 				1, // Levels
 				D3DUSAGE_DEPTHSTENCIL, // D3DUSAGE_DYNAMIC
 				PCFormat,
