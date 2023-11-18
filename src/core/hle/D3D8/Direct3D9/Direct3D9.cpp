@@ -1248,19 +1248,19 @@ void CxbxrGetSuperSampleScaleXY(NV2AState* d,float& x, float& y)
 
 	//get aaScaleX, aaScaleY
 	GetMultiSampleScaleRaw(x, y);
+	/*
 	DWORD surfaceFormat = pg->KelvinPrimitive.SetSurfaceFormat;
 
-	//D3DMULTISAMPLEMODE_4X
 	if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4<<12)) != 0) {
+		//D3DMULTISAMPLEMODE_4X
 		y /= 2.0f;
-	}
-
-	//D3DMULTISAMPLEMODE_2X
-	if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2<<12)) != 0) {
+		x /= 2.0f;
+	}else if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2<<12)) != 0) {
+		//D3DMULTISAMPLEMODE_2X
 		x /= 2.0f;
 	}
 
-	/*x = g_SuperSampleScaleX;
+	x = g_SuperSampleScaleX;
 	y = g_SuperSampleScaleY;
 	*/
 }
@@ -3050,8 +3050,14 @@ void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE arg)
 
 float GetMultiSampleOffsetDelta()
 {
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		NV2AState* d = g_NV2A->GetDeviceState();
+		PGRAPHState* pg = &d->pgraph;
+		bool isSuperSampleMode = (pg->KelvinPrimitive.SetSurfaceFormat & ((NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4 | NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2) << 12)) != 0;
+		return (isSuperSampleMode) ? 0.0f : 0.5f;
+	}else
 	// TODO : What impact does X_D3DMULTISAMPLE_SAMPLING_SUPER have on offset?
-	return (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) ? 0.0f : 0.5f;
+	    return (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) ? 0.0f : 0.5f;
 }
 
 static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
@@ -3064,8 +3070,27 @@ static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
 // add BuckBufferScale to comply xbox behavior
 void GetMultiSampleScaleRaw(float& xScale, float& yScale)
 {
-	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleX;
-	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleY;
+	NV2AState* d = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &d->pgraph;
+	DWORD surfaceFormat = pg->KelvinPrimitive.SetSurfaceFormat;
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		xScale = g_Xbox_BackbufferScaleX;
+		yScale = g_Xbox_BackbufferScaleY;
+
+		if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4 << 12)) != 0) {
+			//D3DMULTISAMPLEMODE_4X
+			yScale *= 2.0f;
+			xScale *= 2.0f;
+		}
+		else if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2 << 12)) != 0) {
+			//D3DMULTISAMPLEMODE_2X
+			xScale *= 2.0f;
+		}
+	}
+	else {
+		xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleX;
+		yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleY;
+	}
 }
 
 // Get the "screen" scale factors
@@ -3110,8 +3135,10 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY)
 	extern void CxbxrGetSuperSampleScaleXY(NV2AState *,float& x, float& y);
 
 	if (is_pgraph_using_NV2A_Kelvin()) {
-		bool isMultiSampleEnabled = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
-
+		NV2AState* d = g_NV2A->GetDeviceState();
+		PGRAPHState* pg = &d->pgraph;
+		bool isMultiSampleEnabled = (pg->KelvinPrimitive.SetAntiAliasingControl & NV097_SET_ANTI_ALIASING_CONTROL_ENABLE_TRUE)!=0;//was NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_MULTISAMPLEANTIALIAS);
+		// isSuperSampleMode = (pg->KelvinPrimitive.SetSurfaceFormat & ((NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4 | NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2) << 12)) != 0;
 		// Apply multisample scale if supersampling is enabled
 		// Test cases:
 		// Antialias sample (text overlay is drawn with antialiasing disabled)
@@ -3169,12 +3196,23 @@ void GetBackBufferPixelDimensions(float& x, float& y)
 	GetRenderTargetRawDimensions(x, y, g_pXbox_BackBufferSurface);
 
 	// MSAA introduces subpixels, so scale them away
-	if (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) {
+    /*
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		NV2AState* d = g_NV2A->GetDeviceState();
+		PGRAPHState* pg = &d->pgraph;
+		bool isSuperSampleMode = (pg->KelvinPrimitive.SetSurfaceFormat & ((NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4 | NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_CENTER_CORNER_2) << 12)) != 0;
 		float aaX, aaY;
 		GetMultiSampleScaleRaw(aaX, aaY);
 		x /= aaX;
 		y /= aaY;
-	}
+	}else
+	*/
+		if (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) {
+			float aaX, aaY;
+			GetMultiSampleScaleRaw(aaX, aaY);
+			x /= aaX;
+			y /= aaY;
+		}
 }
 
 static DWORD makeSpaceCount = 0;
