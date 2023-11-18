@@ -1401,15 +1401,17 @@ void CxbxrImpl_LazySetTransform(NV2AState* d)
 	// handle DirectModelView()
 	// todo: figure out how to compose View matrix via NV2A content. here is hack using View matrix from xbox d3d.
 	extern D3D8TransformState d3d8TransformState;
-	g_xbox_DirectModelView_View= (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
-	D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_DirectModelView_InverseView, NULL, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
+	//g_xbox_DirectModelView_View= (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
+	//D3DXMatrixInverse((D3DXMATRIX*)&g_xbox_DirectModelView_InverseView, NULL, (D3DXMATRIX*)&g_xbox_DirectModelView_View);
+	/*
 	D3DMATRIX matUnit = {};
 	matUnit._11 = 1.0f;
 	matUnit._22 = 1.0f;
 	matUnit._33 = 1.0f;
 	matUnit._44 = 1.0f;
-	// TODO: this is a hack, we set cached View  Matrix to unit matrix and leave all variables in the cached projection matrix.
-	g_NV2A_DirectModelView_View = matUnit;
+	g_xbox_DirectModelView_View = matUnit;
+	g_xbox_DirectModelView_InverseView = matUnit;
+	*/
 	// use X_D3DTS_VIEW matrix from xbox side instead of unit matrix.
 	//CxbxrImpl_GetTransform(xbox::X_D3DTRANSFORMSTATETYPE::X_D3DTS_VIEW, &g_NV2A_DirectModelView_View);
 	//calculate inverse matrix of X_D3DTS_VIEW
@@ -3104,7 +3106,6 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 		//D3DVECTOR hv;
 		D3DVECTOR EyeDirection = { 0.0,0.0,-1.0 };
 		D3DVECTOR NV2ALightdir = {};
-		D3DVECTOR tmpDir;
 		D3DVECTOR NV2ALightPosition = {};
 		D3DVECTOR tmpPosition;
 		for (lightNum = 0; lightNum < 8; lightNum++) {
@@ -3113,7 +3114,7 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			//default:
 			NV2A_Light8[lightNum].Type = (D3DLIGHTTYPE)0;
 			bEnable = false;
-
+			D3DVECTOR dirNormal;
 			switch (lightType) {
 
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_OFF: //light disable
@@ -3124,15 +3125,15 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_INFINITE://D3DLIGHT_DIRECTIONAL
 				NV2A_Light8[lightNum].Type= D3DLIGHT_DIRECTIONAL;
 				NV2A_Light8[lightNum].Range = pg->KelvinPrimitive.SetLight[lightNum].LocalRange;
-				NV2ALightdir.x = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
-				NV2ALightdir.y = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
-				NV2ALightdir.z = pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[2];
+				NV2ALightdir.x = -pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[0];
+				NV2ALightdir.y = -pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[1];
+				NV2ALightdir.z = -pg->KelvinPrimitive.SetLight[lightNum].InfiniteDirection[2];
 				
-				XformBy4x3(&tmpDir, &NV2ALightdir,0.0f, &g_xbox_DirectModelView_InverseView);
+				//XformBy4x3(&tmpDir, &NV2ALightdir,0.0f, &g_xbox_DirectModelView_InverseView);
+				
+				NormalizeVector3(&NV2ALightdir);
 
-				NV2A_Light8[lightNum].Direction.x =-tmpDir.x;
-				NV2A_Light8[lightNum].Direction.y =-tmpDir.y;
-				NV2A_Light8[lightNum].Direction.z =-tmpDir.z;
+				NV2A_Light8[lightNum].Direction = NV2ALightdir;
 				bEnable = true;
 				break;
 			case NV097_SET_LIGHT_ENABLE_MASK_LIGHT0_LOCAL: //D3DLIGHT_POINT
@@ -3143,11 +3144,11 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				NV2ALightPosition.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
 				NV2ALightPosition.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
 
-				XformBy4x3(&tmpPosition, &NV2ALightPosition, 1.0f, &g_xbox_DirectModelView_InverseView);
+				//XformBy4x3(&tmpPosition, &NV2ALightPosition, 1.0f, &g_xbox_DirectModelView_InverseView);
 
-				NV2A_Light8[lightNum].Position.x = tmpPosition.x;
-				NV2A_Light8[lightNum].Position.y = tmpPosition.y;
-				NV2A_Light8[lightNum].Position.z = tmpPosition.z;
+				NV2A_Light8[lightNum].Position.x = NV2ALightPosition.x;
+				NV2A_Light8[lightNum].Position.y = NV2ALightPosition.y;
+				NV2A_Light8[lightNum].Position.z = NV2ALightPosition.z;
 				NV2A_Light8[lightNum].Attenuation0 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[0];
 				NV2A_Light8[lightNum].Attenuation1 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[1];
 				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
@@ -3160,32 +3161,33 @@ void CxbxrImpl_LazySetLights(NV2AState* d)
 				NV2ALightPosition.y = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[1];
 				NV2ALightPosition.z = pg->KelvinPrimitive.SetLight[lightNum].LocalPosition[2];
 
-				XformBy4x3(&tmpPosition, &NV2ALightPosition, 1.0f, &g_xbox_DirectModelView_InverseView);
+				//XformBy4x3(&tmpPosition, &NV2ALightPosition, 1.0f, &g_xbox_DirectModelView_InverseView);
 
-				NV2A_Light8[lightNum].Position.x = tmpPosition.x;
-				NV2A_Light8[lightNum].Position.y = tmpPosition.y;
-				NV2A_Light8[lightNum].Position.z = tmpPosition.z;
+				NV2A_Light8[lightNum].Position.x = NV2ALightPosition.x;
+				NV2A_Light8[lightNum].Position.y = NV2ALightPosition.y;
+				NV2A_Light8[lightNum].Position.z = NV2ALightPosition.z;
 				NV2A_Light8[lightNum].Attenuation0 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[0];
 				NV2A_Light8[lightNum].Attenuation1 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[1];
 				NV2A_Light8[lightNum].Attenuation2 = pg->KelvinPrimitive.SetLight[lightNum].LocalAttenuation[2];
 				float Falloff_L = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[0]; //todo: Falloff_L/Falloff_M/Falloff_N there should be 3 components but not found in Light8/Light9
 				float Falloff_M = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[1];
 				float Falloff_N = pg->KelvinPrimitive.SetLight[lightNum].SpotFalloff[2];
-				NV2ALightdir.x = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[0];
-				NV2ALightdir.y = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[1];
-				NV2ALightdir.z = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[2];
+				NV2ALightdir.x = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[0];
+				NV2ALightdir.y = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[1];
+				NV2ALightdir.z = -pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[2];
 
-				XformBy4x3(&tmpDir, &NV2ALightdir, 0.0f, &g_xbox_DirectModelView_InverseView);
+				//XformBy4x3(&tmpDir, &NV2ALightdir, 0.0f, &g_xbox_DirectModelView_InverseView);
 
-				NV2A_Light8[lightNum].Direction.x = -tmpDir.x;
-				NV2A_Light8[lightNum].Direction.y = -tmpDir.y;
-				NV2A_Light8[lightNum].Direction.z = -tmpDir.z;
+				NV2A_Light8[lightNum].Direction.x = NV2ALightdir.x;
+				NV2A_Light8[lightNum].Direction.y = NV2ALightdir.y;
+				NV2A_Light8[lightNum].Direction.z = NV2ALightdir.z;
 				float W = pg->KelvinPrimitive.SetLight[lightNum].SpotDirection[3]; // there is no W member of Light8
 				// Fixme!!! there is no eazy way to reverse Falloff from Falloff_L/Falloff_M, so I put the default value 1.0f here.
 				NV2A_Light8[lightNum].Falloff = 1.0f;
-				D3DVECTOR dirNormal = NV2A_Light8[lightNum].Direction;
-				NormalizeVector3(&dirNormal);
-				float Scale = NV2A_Light8[lightNum].Direction.x / dirNormal.x; // there is no Scale member of Light8
+				dirNormal = NV2A_Light8[lightNum].Direction;
+				NormalizeVector3(&NV2ALightdir);
+				float Scale = NV2A_Light8[lightNum].Direction.x / NV2ALightdir.x; // there is no Scale member of Light8
+				NV2A_Light8[lightNum].Direction = NV2ALightdir;
 				float phi2 = -1.0f*W / Scale;
 				float theta2 = phi2 + 1.0f / Scale;
 				NV2A_Light8[lightNum].Theta = 2.0f*acos(theta2);

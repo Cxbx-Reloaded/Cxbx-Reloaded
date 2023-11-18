@@ -7822,8 +7822,9 @@ extern xbox::X_D3DLIGHT8* CxbxrGetLight8Ptr(int lightNum);
 D3DMATRIX g_xbox_transform_ModelView;
 D3DMATRIX g_xbox_transform_InverseModelView;
 D3DMATRIX g_xbox_transform_Composite;
-D3DMATRIX g_xbox_DirectModelView_View;
-D3DMATRIX g_xbox_DirectModelView_InverseView;
+//view matrix and inverse view matrix are no longer needed in fixed mode vertex shader
+//D3DMATRIX g_xbox_DirectModelView_View;
+//D3DMATRIX g_xbox_DirectModelView_InverseView;
 D3DMATRIX g_xbox_DirectModelView_World;
 D3DMATRIX g_xbox_DirectModelView_Projection;
 D3DMATRIX g_xbox_DirectModelView_InverseWorldViewTransposed;
@@ -7842,40 +7843,39 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 
 	auto d3dLight = &d3d8LightState.Lights[d3dLightIndex];
 	D3DXMATRIX viewTransform;
+	bool SpecularEnable;
 	// use lights composed from kelvin.
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		d3dLight=CxbxrGetLight8Ptr(d3dLightIndex);
 		// g_xbox_DirectModelView_View was set to )d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW]
-		viewTransform = g_xbox_DirectModelView_View;
+		//viewTransform = g_xbox_DirectModelView_View;
+		//Light position and direction in NV2A are already in view space. No need to transform them with view matrix here.
 		//viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
+		pShaderLight->PositionV = d3dLight->Position;
+		pShaderLight->DirectionVN = d3dLight->Direction;
+		SpecularEnable = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
 	}else {
 		//d3dLight = &d3d8LightState.Lights[d3dLightIndex];
 		viewTransform = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_VIEW];
-	}
-	// TODO remove D3DX usage
+		// TODO remove D3DX usage
 	// Pre-transform light position to viewspace
-	D3DXVECTOR4 positionV;
-	D3DXVec3Transform(&positionV, (D3DXVECTOR3*)&d3dLight->Position, &viewTransform);
-	pShaderLight->PositionV = (D3DXVECTOR3)positionV;
+		D3DXVECTOR4 positionV;
+		D3DXVec3Transform(&positionV, (D3DXVECTOR3*)&d3dLight->Position, &viewTransform);
+		pShaderLight->PositionV = (D3DXVECTOR3)positionV;
 
-	// Pre-transform light direction to viewspace and normalize
-	D3DXVECTOR4 directionV;
-	D3DXMATRIX viewTransform3x3;
-	D3DXMatrixIdentity(&viewTransform3x3);
-	for (int y = 0; y < 3; y++) {
-		for (int x = 0; x < 3; x++) {
-			viewTransform3x3.m[x][y] = viewTransform.m[x][y];
+		// Pre-transform light direction to viewspace and normalize
+		D3DXVECTOR4 directionV;
+		D3DXMATRIX viewTransform3x3;
+		D3DXMatrixIdentity(&viewTransform3x3);
+		for (int y = 0; y < 3; y++) {
+			for (int x = 0; x < 3; x++) {
+				viewTransform3x3.m[x][y] = viewTransform.m[x][y];
+			}
 		}
-	}
 
-	D3DXVec3Transform(&directionV, (D3DXVECTOR3*)&d3dLight->Direction, &viewTransform3x3);
-	D3DXVec3Normalize((D3DXVECTOR3*)&pShaderLight->DirectionVN, (D3DXVECTOR3*)&directionV);
+		D3DXVec3Transform(&directionV, (D3DXVECTOR3*)&d3dLight->Direction, &viewTransform3x3);
+		D3DXVec3Normalize((D3DXVECTOR3*)&pShaderLight->DirectionVN, (D3DXVECTOR3*)&directionV);
 
-	bool SpecularEnable;
-	if (is_pgraph_using_NV2A_Kelvin()) {
-		SpecularEnable = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
-	}
-	else {
 		SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE) != FALSE;
 	}
 	// Map D3D light to state struct
@@ -8197,14 +8197,7 @@ void UpdateFixedFunctionVertexShaderState()//(NV2ASTATE *d)
 	if (is_pgraph_using_NV2A_Kelvin()) {
 		//todo: check if accumulate active light ambient and add it to scene ambient is necessary or not.
 		for (size_t i = 0; i < 8; i++) {
-			if (CxbxrNV2ALight8EnableMask(i) != 0) {
-				//accumulate LightAmbient with each active light
-				UpdateFixedFunctionShaderLight(i, &ffShaderState.Lights[i], &LightAmbient);
-			}
-			else {
-				//this simply set the light.type to 0 in order to disable it in shader.
-				UpdateFixedFunctionShaderLight(-1, &ffShaderState.Lights[i], &LightAmbient);
-			}
+			UpdateFixedFunctionShaderLight(CxbxrNV2ALight8EnableMask(i) != 0?i:-1, &ffShaderState.Lights[i], &LightAmbient);
 		}
         // X_D3DRS_AMBIENT and X_D3DRS_BACKAMBIENT renderstates are updated by pgraph in CxbxrLazySetLights() already. but here we directly use the D3DCOLORVAL NV2A_SceneAmbient[] preventing conversion loss.
 		Ambient = D3DXVECTOR4(NV2A_SceneAmbient[0].r, NV2A_SceneAmbient[0].g, NV2A_SceneAmbient[0].b, NV2A_SceneAmbient[0].a);//toVector(NV2ARenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
@@ -13681,15 +13674,16 @@ void CxbxrImpl_SetModelView_Calc
 	if (pComposite != nullptr)g_xbox_transform_Composite = *pComposite;
 	if(pInverseModelView!=nullptr)g_xbox_transform_InverseModelView = *pInverseModelView;
 	// matModelView=matWorld*matView, we have no idea of these two Matrix. so we use unit matrix for view matrix, and matModelView matrix for matWorld
+	
 	D3DMATRIX matUnit = {};
 	matUnit._11 = 1.0f;
 	matUnit._22 = 1.0f;
 	matUnit._33 = 1.0f;
 	matUnit._44 = 1.0f;
-
+	
 	//CxbxrImpl_SetTransform(xbox::X_D3DTS_WORLD, pModelView);
 	//CxbxrImpl_SetTransform(xbox::X_D3DTS_VIEW, &matUnit);
-	g_xbox_DirectModelView_View= matUnit;
+	//g_xbox_DirectModelView_View= matUnit;
 	g_xbox_DirectModelView_World= *pModelView; 
 	// use g_xbox_transform_ViewportTransform
 	//D3DXMATRIX matViewportTransform;
