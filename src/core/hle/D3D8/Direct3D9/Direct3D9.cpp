@@ -1248,7 +1248,6 @@ void CxbxrGetSuperSampleScaleXY(NV2AState* d,float& x, float& y)
 
 	//get aaScaleX, aaScaleY
 	GetMultiSampleScaleRaw(x, y);
-	/*
 	DWORD surfaceFormat = pg->KelvinPrimitive.SetSurfaceFormat;
 
 	if ((surfaceFormat & (NV097_SET_SURFACE_FORMAT_ANTI_ALIASING_SQUARE_OFFSET_4<<12)) != 0) {
@@ -1259,10 +1258,6 @@ void CxbxrGetSuperSampleScaleXY(NV2AState* d,float& x, float& y)
 		//D3DMULTISAMPLEMODE_2X
 		x /= 2.0f;
 	}
-
-	x = g_SuperSampleScaleX;
-	y = g_SuperSampleScaleY;
-	*/
 }
 
 void CxbxrSetWNearFarInverseWFar(float& WNear, float& WFar, float& WInverseWFar)
@@ -3144,9 +3139,6 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY)
 		// Antialias sample (text overlay is drawn with antialiasing disabled)
 		if (isMultiSampleEnabled && isSuperSampleMode) {
 			GetMultiSampleScaleRaw(scaleX, scaleY);
-			//CxbxrGetSuperSampleScaleXY(scaleX, scaleY);
-			//scaleX*= g_Xbox_BackbufferScaleX;
-			//scaleY*= g_Xbox_BackbufferScaleY;
 		}
 	}
 	else {
