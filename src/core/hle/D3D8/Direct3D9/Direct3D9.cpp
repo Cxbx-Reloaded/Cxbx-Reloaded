@@ -3293,6 +3293,7 @@ const int HLE_PushStart = 2;
 /// Init pushbuffer related pointers
 DWORD* HLE_PushPrepare(X_D3DAPI_ENUM hleAPI, int dword_count)
 {
+	HLE_PushInit();
 	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
 	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
 	DWORD* pPush_end = pPush_local + dword_count;
