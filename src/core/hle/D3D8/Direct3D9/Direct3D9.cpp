@@ -4141,7 +4141,7 @@ xbox::dword_xt* WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 	//}
 	// KickOff xbox d3d pushbuffer first. 
 	// this EmuKickOffWait() must be called in order to keep pushbuffer/HLE from race condition.
-	EmuKickOff();
+	EmuKickOffWait(X_D3DDevice_EndPush);
 
 	return result;
 }
