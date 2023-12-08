@@ -899,9 +899,8 @@ XBSYSAPI EXPORTNUM(281) xbox::LARGE_INTEGER NTAPI xbox::RtlExtendedIntegerMultip
 		LOG_FUNC_ARG(Multiplier)
 		LOG_FUNC_END;
 
-	LARGE_INTEGER ret = {
-		Multiplicand.QuadPart * (LONGLONG)Multiplier
-	};
+	LARGE_INTEGER ret{};
+	ret.QuadPart = Multiplicand.QuadPart * (longlong_xt)Multiplier;
 
 	RETURN(ret);
 }
