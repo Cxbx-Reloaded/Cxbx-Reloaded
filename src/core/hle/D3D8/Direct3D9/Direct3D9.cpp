@@ -12102,18 +12102,18 @@ static thread_local uint32_t setRenderTargetCount = 0;
 //create cache key of xbox texture which contents the render target surface. and get host container resource of host surface set to that xbox render target surface,
 //then set host container resource to xbox texture key. this is in case any render target (including render target and depth buffer) being used as texture input in texture stage.
 //by creating the texture in cache and setup the correct host container resource, the data will be linked.
-void CxbxImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3DSurface* pHostSurface, D3DSURFACE_DESC HostSurfaceDesc)
+void CxbxImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXboxSurface, IDirect3DSurface* pHostSurface, D3DSURFACE_DESC HostSurfaceDesc)
 {
 	LOG_INIT;
-	if (pXborSurface != nullptr) {
+	if (pXboxSurface != nullptr) {
 		//if there is not parent texture of xbox surface, then we create a dummy texture for it and put it into cache.
-		if(pXborSurface->Parent==nullptr){
+		if(pXboxSurface->Parent==nullptr){
 			IDirect3DTexture9* pHostTexture;
 			xbox::X_D3DTexture XboxTexture, * pXboxTexture;
-			XboxTexture = *(xbox::X_D3DTexture*)pXborSurface;
+			XboxTexture = *(xbox::X_D3DTexture*)pXboxSurface;
 			pXboxTexture = &XboxTexture;
 			//set the common to resource type texture.
-			XboxTexture.Common = (pXborSurface->Common & 0xFFF8FFFF) | 0x00040000;
+			XboxTexture.Common = (pXboxSurface->Common & 0xFFF8FFFF) | 0x00040000;
 			//insert the dummy texture key and texture resource to texture cache for D3DDevice_SetTexture()
 			UINT64 key = ((UINT64)(pXboxTexture->Format) << 32) | pXboxTexture->Data;
 			auto it = g_TextureCache.find(key);
@@ -12142,14 +12142,14 @@ void CxbxImpl_SetRenderTargetTexture(xbox::X_D3DSurface* pXborSurface, IDirect3D
 				resourceInfo.forceRehash = false;
 				resourceInfo.PCFormat = HostSurfaceDesc.Format;
 
-				SetHostResource(pXborSurface, pHostSurface);
+				SetHostResource(pXboxSurface, pHostSurface);
 			}
 		}
 		// there is parent texture, check if parent texture is pure texure, if so, put parent texture into cache and set host resource to it.
         else {
 			IDirect3DTexture9* pHostTexture;
 			xbox::X_D3DTexture* pXboxTexture;
-			pXboxTexture = (xbox::X_D3DTexture*)pXborSurface->Parent;
+			pXboxTexture = (xbox::X_D3DTexture*)pXboxSurface->Parent;
 			bool bCubemap = pXboxTexture->Format & X_D3DFORMAT_CUBEMAP;
 			if ((pXboxTexture->Common & X_D3DCOMMON_TYPE_MASK) == X_D3DCOMMON_TYPE_TEXTURE
 				&& !bCubemap) {
