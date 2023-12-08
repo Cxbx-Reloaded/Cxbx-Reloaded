@@ -1714,8 +1714,8 @@ void NV2ASetFixedFunctionDefaultVertexAttributes(DWORD& vshFlags) {
             //setup vshFlags 
 			if (i == xbox::X_D3DVSDE_DIFFUSE)
 				vshFlags |= X_VERTEXSHADER_FLAG_HASDIFFUSE;
-			if (i == xbox::X_D3DVSDE_BACKDIFFUSE;
-				vshFlags |= X_VERTEXSHADER_FLAG_HASBACKDIFFUSE);
+			if (i == xbox::X_D3DVSDE_BACKDIFFUSE)
+				vshFlags |= X_VERTEXSHADER_FLAG_HASBACKDIFFUSE;
 			if (i == xbox::X_D3DVSDE_SPECULAR)
 				vshFlags |= X_VERTEXSHADER_FLAG_HASSPECULAR;
 			if (i == xbox::X_D3DVSDE_BACKSPECULAR)
