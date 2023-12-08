@@ -421,14 +421,14 @@ void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4] = { {
-		/*colormap[0].B = */(b0 << 3) | (b0 >> 2),
-		/*colormap[0].G = */(g0 << 2) | (g0 >> 4),
-		/*colormap[0].R = */(r0 << 3) | (r0 >> 2),
+		/*colormap[0].B = */(uint8_t)((b0 << 3) | (b0 >> 2)),
+		/*colormap[0].G = */(uint8_t)((g0 << 2) | (g0 >> 4)),
+		/*colormap[0].R = */(uint8_t)((r0 << 3) | (r0 >> 2)),
 		/*colormap[0].A = */255u
 		}, {
-		/*colormap[1].B = */(b1 << 3) | (b1 >> 2),
-		/*colormap[1].G = */(g1 << 2) | (g1 >> 4),
-		/*colormap[1].R = */(r1 << 3) | (r1 >> 2),
+		/*colormap[1].B = */(uint8_t)((b1 << 3) | (b1 >> 2)),
+		/*colormap[1].G = */(uint8_t)((g1 << 2) | (g1 >> 4)),
+		/*colormap[1].R = */(uint8_t)((r1 << 3) | (r1 >> 2)),
 		/*colormap[1].A = */255u
 		} };
 
@@ -526,14 +526,14 @@ void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4] = { {
-		/*colormap[0].B = */(b0 << 3) | (b0 >> 2),
-		/*colormap[0].G = */(g0 << 2) | (g0 >> 4),
-		/*colormap[0].R = */(r0 << 3) | (r0 >> 2),
+		/*colormap[0].B = */(uint8_t)((b0 << 3) | (b0 >> 2)),
+		/*colormap[0].G = */(uint8_t)((g0 << 2) | (g0 >> 4)),
+		/*colormap[0].R = */(uint8_t)((r0 << 3) | (r0 >> 2)),
 		/*colormap[0].A = */0u
 		}, {
-		/*colormap[1].B = */(b1 << 3) | (b1 >> 2),
-		/*colormap[1].G = */(g1 << 2) | (g1 >> 4),
-		/*colormap[1].R = */(r1 << 3) | (r1 >> 2),
+		/*colormap[1].B = */(uint8_t)((b1 << 3) | (b1 >> 2)),
+		/*colormap[1].G = */(uint8_t)((g1 << 2) | (g1 >> 4)),
+		/*colormap[1].R = */(uint8_t)((r1 << 3) | (r1 >> 2)),
 		/*colormap[1].A = */0u
 		} };
 
@@ -651,14 +651,14 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
 		TRGB32 colormap[4] = { {
-		/*colormap[0].B = */(b0 << 3) | (b0 >> 2),
-		/*colormap[0].G = */(g0 << 2) | (g0 >> 4),
-		/*colormap[0].R = */(r0 << 3) | (r0 >> 2),
+		/*colormap[0].B = */(uint8_t)((b0 << 3) | (b0 >> 2)),
+		/*colormap[0].G = */(uint8_t)((g0 << 2) | (g0 >> 4)),
+		/*colormap[0].R = */(uint8_t)((r0 << 3) | (r0 >> 2)),
 		/*colormap[0].A = */0u
 		}, {
-		/*colormap[1].B = */(b1 << 3) | (b1 >> 2),
-		/*colormap[1].G = */(g1 << 2) | (g1 >> 4),
-		/*colormap[1].R = */(r1 << 3) | (r1 >> 2),
+		/*colormap[1].B = */(uint8_t)((b1 << 3) | (b1 >> 2)),
+		/*colormap[1].G = */(uint8_t)((g1 << 2) | (g1 >> 4)),
+		/*colormap[1].R = */(uint8_t)((r1 << 3) | (r1 >> 2)),
 		/*colormap[0].A = */0u
 		} };
 
