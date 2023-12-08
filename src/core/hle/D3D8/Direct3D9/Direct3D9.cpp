@@ -3280,11 +3280,21 @@ LTCG_DECL xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 	}
 }
 
+// Normally, this would be triggered from our D3DDevice_SetVertexShader EmuPatch, which
+// should be called as one of the first Xbox API's from inside the Xbox CreateDevice() call,
+// which is normally the entry point for all Xbox D3D 'things'.
 void HLE_PushInit()
 {
+	// Avoid an exception when g_pXbox_D3DDevice is not set yet.
+	if (g_pXbox_D3DDevice == nullptr)
+		return;
+
 	g_pXbox_pPush = (xbox::dword_xt**)*g_pXbox_D3DDevice;
 	g_pXbox_pPushLimit = g_pXbox_pPush + 1;
 }
+
+const int MaxInitialPushDwords = 256; // Big enough to fit the biggest possible initial push buffer command
+DWORD InitialPushBuffer[MaxInitialPushDwords];
 
 const int HLE_PushStart = 2;
 
@@ -3293,9 +3303,29 @@ const int HLE_PushStart = 2;
 /// Init pushbuffer related pointers
 DWORD* HLE_PushPrepare(X_D3DAPI_ENUM hleAPI, int dword_count)
 {
-	HLE_PushInit();
-	DWORD* pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
-	DWORD* pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	DWORD* pPush_local;
+	DWORD* pPush_limit;
+
+	if (g_pXbox_pPush == nullptr) {
+		// Init g_pXbox_pPush and g_pXbox_pPushLimit when not done yet.
+		HLE_PushInit();
+		// When the Xbox pushbuffer is located, cause redo (no risk of endless recursion as this happens only once)
+		if (g_pXbox_pPush != nullptr)
+			return HLE_PushPrepare(hleAPI, dword_count);
+
+		// Since it's possible to reach here where there's no Xbox push buffer yet,
+		// just write to temporary buffer (effectively ignoring the command).
+		pPush_local = &InitialPushBuffer[0];
+		pPush_limit = &InitialPushBuffer[MaxInitialPushDwords - 1];
+		// Note : Since MaxInitialPushDwords is set higher than any possible input
+		// dword_count, the below code won't call into CxbxrImpl_MakeSpace, which
+		// would otherwise crash due to g_pXbox_D3DDevice still being nullptr here!
+	}
+	else {
+		pPush_local = (DWORD*)*g_pXbox_pPush;         //pointer to current pushbuffer
+		pPush_limit = (DWORD*)*g_pXbox_pPushLimit;    //pointer to the end of current pushbuffer
+	}
+
 	DWORD* pPush_end = pPush_local + dword_count;
 
 	// TODO : Try if just 'pPush_end > pPush_limit' works as well
@@ -10079,11 +10109,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader)
 	// Please raise the alarm if this is ever not the case
 	XB_TRMP(D3DDevice_SetVertexShader)(Handle);
 
-	//init g_pXbox_pPush and g_pXbox_pPushLimit since SetVertexShader is always called inside CreateDevice().
-	if (g_pXbox_pPush == nullptr) {
-		HLE_PushInit();
-	}
-
 #if !USEPGRAPH_SetVertexShader
 	CxbxImpl_SetVertexShader(Handle);
 #else	
@@ -10109,11 +10134,6 @@ LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_0)()
 	__asm {
 		mov  ebx, Handle
 		call XB_TRMP(D3DDevice_SetVertexShader_0)
-	}
-
-	//init g_pXbox_pPush and g_pXbox_pPushLimit since SetVertexShader is always called inside CreateDevice().
-	if (g_pXbox_pPush == nullptr) {
-		HLE_PushInit();
 	}
 
 #if !USEPGRAPH_SetVertexShader
