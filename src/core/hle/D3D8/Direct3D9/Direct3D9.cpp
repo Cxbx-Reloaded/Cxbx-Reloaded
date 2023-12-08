@@ -6711,6 +6711,7 @@ DWORD CxbxrImpl_Swap
 			// as either YUV or RGB format (note that either one must be a 3 bytes per pixel format)
 			D3DFORMAT PCFormat;
 			// TODO : Before reading from pgraph, flush all pending push-buffer commands
+			// which seems possible now we have EmuKickOffWait()
 			NV2AState* d = g_NV2A->GetDeviceState();
 			PGRAPHState* pg = &d->pgraph;
 
@@ -11062,6 +11063,7 @@ void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
 
 extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
 // TODO : Once we're able to flush the NV2A push buffer
+// which seems possible now we have EmuKickOffWait(),
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()
 {
