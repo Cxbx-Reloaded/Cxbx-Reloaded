@@ -5113,7 +5113,7 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 
 	// The SetRenderTarget trampoline calls SetViewport with
 	// both Width and Height set to INT_MAX
-	if ((pViewport->Width == INT_MAX) ^ (pViewport->Height == INT_MAX)) {
+	if ((pViewport->Width == INT_MAX) != (pViewport->Height == INT_MAX)) {
 		LOG_TEST_CASE("SetViewport called with only one of width/height set to INT_MAX");
 	}
 
