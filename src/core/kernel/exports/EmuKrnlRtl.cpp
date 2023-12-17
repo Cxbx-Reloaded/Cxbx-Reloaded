@@ -108,23 +108,28 @@ XBSYSAPI EXPORTNUM(260) xbox::ntstatus_xt NTAPI xbox::RtlAnsiStringToUnicodeStri
 	dword_xt total = RtlAnsiStringToUnicodeSize(SourceString);
 
 	if (total > 0xffff) {
-		return X_STATUS_INVALID_PARAMETER_2;
+		RETURN(X_STATUS_INVALID_PARAMETER_2);
 	}
 
 	DestinationString->Length = (USHORT)(total - sizeof(WCHAR));
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)total;
 		if (!(DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag(total, 'grtS'))) {
-			return X_STATUS_NO_MEMORY;
+			RETURN(X_STATUS_NO_MEMORY);
 		}
 	}
 	else {
 		if (total > DestinationString->MaximumLength) {
-			return X_STATUS_BUFFER_OVERFLOW;
+			RETURN(X_STATUS_BUFFER_OVERFLOW);
 		}
 	}
 
-	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer, (ULONG)DestinationString->Length, NULL, SourceString->Buffer, SourceString->Length);
+	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer,
+	                       (ULONG)DestinationString->Length,
+	                       NULL,
+	                       SourceString->Buffer,
+	                       SourceString->Length);
+
 	DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
 
 	RETURN(X_STATUS_SUCCESS);
