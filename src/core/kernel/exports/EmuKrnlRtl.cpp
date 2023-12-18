@@ -114,7 +114,7 @@ XBSYSAPI EXPORTNUM(260) xbox::ntstatus_xt NTAPI xbox::RtlAnsiStringToUnicodeStri
 	DestinationString->Length = (USHORT)(total - sizeof(WCHAR));
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)total;
-		if (!(DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag(total, 'grtS'))) {
+		if (!(DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag(total, 'grtS'))) {
 			RETURN(X_STATUS_NO_MEMORY);
 		}
 	}
@@ -657,7 +657,7 @@ XBSYSAPI EXPORTNUM(274) xbox::boolean_xt NTAPI xbox::RtlCreateUnicodeString
 	BOOLEAN result = TRUE;
 
 	ULONG bufferSize = (std::u16string(SourceString).length() + 1) * sizeof(WCHAR);
-	DestinationString->Buffer = (USHORT *)ExAllocatePoolWithTag(bufferSize, 'grtS');
+	DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag(bufferSize, 'grtS');
 	if (!DestinationString->Buffer) {
 		result = FALSE;
 	}
@@ -705,7 +705,7 @@ XBSYSAPI EXPORTNUM(276) xbox::ntstatus_xt NTAPI xbox::RtlDowncaseUnicodeString
 
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = SourceString->Length;
-		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
+		DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
 		if (DestinationString->Buffer == NULL) {
 			return X_STATUS_NO_MEMORY;
 		}
@@ -1178,9 +1178,9 @@ XBSYSAPI EXPORTNUM(290) xbox::void_xt NTAPI xbox::RtlInitUnicodeString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	DestinationString->Buffer = (USHORT*)SourceString;
+	DestinationString->Buffer = (wchar_xt*)SourceString;
 	if (SourceString != NULL) {
-		DestinationString->Buffer = (USHORT*)SourceString;
+		DestinationString->Buffer = (wchar_xt*)SourceString;
 		DestinationString->Length = (USHORT)std::u16string(SourceString).length() * 2;
 		DestinationString->MaximumLength = DestinationString->Length + 2;
 	}
@@ -2030,7 +2030,7 @@ XBSYSAPI EXPORTNUM(314) xbox::ntstatus_xt NTAPI xbox::RtlUpcaseUnicodeString
 
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = SourceString->Length;
-		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
+		DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
 		if (DestinationString->Buffer == NULL) {
 			return X_STATUS_NO_MEMORY;
 		}
