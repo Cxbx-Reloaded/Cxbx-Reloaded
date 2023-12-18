@@ -1883,7 +1883,7 @@ void HLE_API_handle_method
         break;
     case X_Lock2DSurface:
 #if 0 // experimental
-        CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[3], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
+        CxbxrImpl_Lock2DSurface((xbox::X_D3DPixelContainer *) /*pPixelContainer*/argv[1], (D3DCUBEMAP_FACES)/* FaceType*/argv[2], (xbox::uint_xt)/* Level*/argv[3], (D3DLOCKED_RECT *)/* pLockedRect*/argv[4], (RECT *)/* pRect*/argv[5], (xbox::dword_xt)/* Flags*/argv[6]);
 #else
         ReceiveKickOffWaitForAPI();
 #endif
