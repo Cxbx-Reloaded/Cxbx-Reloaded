@@ -2224,6 +2224,11 @@ XBSYSAPI EXPORTNUM(319) xbox::ulong_xt NTAPI xbox::RtlWalkFrameChain
 			ulong_ptr_xt NewStack = *(ulong_ptr_xt*)Stack;
 			ulong_xt Eip = *(ulong_ptr_xt*)(Stack + sizeof(ulong_ptr_xt));
 
+			/* Check if Eip is not below executable's dos header */
+			if (Eip < KiB(64)) {
+				break;
+			}
+
 			/* Check if the new pointer is above the old one and past the end */
 			if (!((Stack < NewStack) && (NewStack < StackEnd))) {
 				/* Stop searching after this entry */
