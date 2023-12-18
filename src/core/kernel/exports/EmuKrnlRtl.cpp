@@ -526,23 +526,31 @@ XBSYSAPI EXPORTNUM(270) xbox::long_xt NTAPI xbox::RtlCompareString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result;
+	const USHORT l1 = String1->Length;
+	const USHORT l2 = String2->Length;
+	const USHORT maxLen = (l1 <= l2 ? l1 : l2);
 
-	USHORT l1 = String1->Length;
-	USHORT l2 = String2->Length;
-	USHORT maxLen = l1 <= l2 ? l1 : l2;
-
-	CHAR *str1 = String1->Buffer;
-	CHAR *str2 = String2->Buffer;
+	const PCHAR str1 = String1->Buffer;
+	const PCHAR str2 = String2->Buffer;
 
 	if (CaseInSensitive) {
-		result = _strnicmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			UCHAR char1 = RtlLowerChar(str1[i]);
+			UCHAR char2 = RtlLowerChar(str2[i]);
+			if (char1 != char2) {
+				RETURN(char1 - char2);
+			}
+		}
 	}
 	else {
-		result = strncmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			if (str1[i] != str2[i]) {
+				RETURN(str1[i] - str2[i]);
+			}
+		}
 	}
 
-	RETURN(result);
+	RETURN(l1 - l2);
 }
 
 // ******************************************************************
@@ -561,23 +569,32 @@ XBSYSAPI EXPORTNUM(271) xbox::long_xt NTAPI xbox::RtlCompareUnicodeString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result;
+	const USHORT l1 = String1->Length;
+	const USHORT l2 = String2->Length;
+	const USHORT maxLen = (l1 <= l2 ? l1 : l2) / sizeof(WCHAR);
 
-	USHORT l1 = String1->Length;
-	USHORT l2 = String2->Length;
-	USHORT maxLen = l1 <= l2 ? l1 : l2;
-
-	WCHAR *str1 = (WCHAR*)(String1->Buffer);
-	WCHAR *str2 = (WCHAR*)(String2->Buffer);
+	const wchar_xt* str1 = String1->Buffer;
+	const wchar_xt* str2 = String2->Buffer;
 
 	if (CaseInSensitive) {
-		result = _wcsnicmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			wchar_xt char1 = towlower(str1[i]);
+			wchar_xt char2 = towlower(str2[i]);
+
+			if (char1 != char2) {
+				RETURN(char1 - char2);
+			}
+		}
 	}
 	else {
-		result = wcsncmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			if (str1[i] != str2[i]) {
+				RETURN(str1[i] - str2[i]);
+			}
+		}
 	}
 
-	RETURN(result);
+	RETURN(l1 - l2);
 }
 
 // ******************************************************************
