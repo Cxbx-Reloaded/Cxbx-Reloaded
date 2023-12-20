@@ -1197,7 +1197,6 @@ XBSYSAPI EXPORTNUM(290) xbox::void_xt NTAPI xbox::RtlInitUnicodeString
 
 	DestinationString->Buffer = (wchar_xt*)SourceString;
 	if (SourceString != NULL) {
-		DestinationString->Buffer = (wchar_xt*)SourceString;
 		DestinationString->Length = (USHORT)std::u16string(SourceString).length() * 2;
 		DestinationString->MaximumLength = DestinationString->Length + 2;
 	}
