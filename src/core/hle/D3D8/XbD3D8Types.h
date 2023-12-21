@@ -95,23 +95,178 @@ typedef D3DVIEWPORT9 X_D3DVIEWPORT8;
 // TODO: fill out these enumeration tables for convienance
 typedef D3DSWAPEFFECT X_D3DSWAPEFFECT;
 typedef D3DXVECTOR4 X_D3DXVECTOR4;
-typedef DWORD X_D3DBLENDOP;
-typedef DWORD X_D3DBLEND;
-typedef DWORD X_D3DCMPFUNC;
-typedef DWORD X_D3DFILLMODE;
-typedef DWORD X_D3DMULTISAMPLE_TYPE;
-typedef DWORD X_D3DSHADEMODE;
-typedef DWORD X_D3DSTENCILOP;
-typedef DWORD X_D3DTEXTURESTAGESTATETYPE;
 
-typedef enum _X_D3DCULL
-{
+typedef enum _X_D3DBLEND {
+    X_D3DBLEND_ZERO = 0,
+    X_D3DBLEND_ONE = 1,
+    X_D3DBLEND_SRCCOLOR = 0x300,
+    X_D3DBLEND_INVSRCCOLOR = 0x301,
+    X_D3DBLEND_SRCALPHA = 0x302,
+    X_D3DBLEND_INVSRCALPHA = 0x303,
+    X_D3DBLEND_DESTALPHA = 0x304,
+    X_D3DBLEND_INVDESTALPHA = 0x305,
+    X_D3DBLEND_DESTCOLOR = 0x306,
+    X_D3DBLEND_INVDESTCOLOR = 0x307,
+    X_D3DBLEND_SRCALPHASAT = 0x308,
+    X_D3DBLEND_CONSTANTCOLOR = 0x8001,
+    X_D3DBLEND_INVCONSTANTCOLOR = 0x8002,
+    X_D3DBLEND_CONSTANTALPHA = 0x8003,
+    X_D3DBLEND_INVCONSTANTALPHA = 0x8004,
+
+	X_D3DBLEND_FORCE_DWORD = 0x7fffffff
+} X_D3DBLEND;
+
+typedef enum _X_D3DBLENDOP {
+	X_D3DBLENDOP_ADD = 0x8006,
+	X_D3DBLENDOP_SUBTRACT = 0x800a,
+	X_D3DBLENDOP_REVSUBTRACT = 0x800b,
+	X_D3DBLENDOP_MIN = 0x8007,
+	X_D3DBLENDOP_MAX = 0x8008,
+	X_D3DBLENDOP_ADDSIGNED = 0xf006,     // Xbox extension
+	X_D3DBLENDOP_REVSUBTRACTSIGNED = 0xf005,     // Xbox extension
+
+	X_D3DBLENDOP_FORCE_DWORD = 0x7fffffff /* force 32-bit size enum */
+} X_D3DBLENDOP;
+
+typedef enum _X_D3DCMPFUNC {
+	X_D3DCMP_NEVER = 0x200,
+	X_D3DCMP_LESS = 0x201,
+	X_D3DCMP_EQUAL = 0x202,
+	X_D3DCMP_LESSEQUAL = 0x203,
+	X_D3DCMP_GREATER = 0x204,
+	X_D3DCMP_NOTEQUAL = 0x205,
+	X_D3DCMP_GREATEREQUAL = 0x206,
+	X_D3DCMP_ALWAYS = 0x207,
+
+	X_D3DCMP_FORCE_DWORD = 0x7fffffff
+} X_D3DCMPFUNC;
+
+typedef enum _X_D3DCULL {
 	X_D3DCULL_NONE = 0,
 	X_D3DCULL_CW = 0x900,
 	X_D3DCULL_CCW = 0x901,
+
 	X_D3DCULL_FORCE_DWORD = 0x7fffffff
-}
-X_D3DCULL;
+} X_D3DCULL;
+
+typedef enum _X_D3DFILLMODE {
+	X_D3DFILL_POINT = 0x1b00,
+	X_D3DFILL_WIREFRAME = 0x1b01,
+	X_D3DFILL_SOLID = 0x1b02,
+
+	X_D3DFILL_FORCE_DWORD = 0x7fffffff
+} X_D3DFILLMODE;
+
+typedef enum _X_D3DFOGMODE {
+	X_D3DFOG_NONE = 0,
+	X_D3DFOG_EXP = 1,
+	X_D3DFOG_EXP2 = 2,
+	X_D3DFOG_LINEAR = 3,
+
+	X_D3DFOG_FORCE_DWORD = 0x7fffffff
+} X_D3DFOGMODE;
+
+typedef enum _X_D3DFRONT {        // Xbox extension
+	X_D3DFRONT_CW = 0x900,
+	X_D3DFRONT_CCW = 0x901,
+
+	X_D3DFRONT_FORCE_DWORD = 0x7fffffff /* force 32-bit size enum */
+} X_D3DFRONT;
+
+typedef enum _X_D3DLOGICOP {   // Xbox extension
+	X_D3DLOGICOP_NONE = 0,
+	X_D3DLOGICOP_CLEAR = 0x1500,
+	X_D3DLOGICOP_AND = 0x1501,
+	X_D3DLOGICOP_AND_REVERSE = 0x1502,
+	X_D3DLOGICOP_COPY = 0x1503,
+	X_D3DLOGICOP_AND_INVERTED = 0x1504,
+	X_D3DLOGICOP_NOOP = 0x1505,
+	X_D3DLOGICOP_XOR = 0x1506,
+	X_D3DLOGICOP_OR = 0x1507,
+	X_D3DLOGICOP_NOR = 0x1508,
+	X_D3DLOGICOP_EQUIV = 0x1509,
+	X_D3DLOGICOP_INVERT = 0x150a,
+	X_D3DLOGICOP_OR_REVERSE = 0x150b,
+	X_D3DLOGICOP_COPY_INVERTED = 0x150c,
+	X_D3DLOGICOP_OR_INVERTED = 0x150d,
+	X_D3DLOGICOP_NAND = 0x150e,
+	X_D3DLOGICOP_SET = 0x150f,
+
+	X_D3DLOGICOP_FORCE_DWORD = 0x7fffffff /* force 32-bit size enum */
+} X_D3DLOGICOP;
+
+typedef enum _X_D3DMATERIALCOLORSOURCE {
+	X_D3DMCS_MATERIAL = 0,
+	X_D3DMCS_COLOR1 = 1,
+	X_D3DMCS_COLOR2 = 2,
+
+	X_D3DMCS_FORCE_DWORD = 0x7fffffff
+} X_D3DMATERIALCOLORSOURCE;
+
+// Multisample types
+typedef enum _X_D3DMULTISAMPLEMODE
+{
+	X_D3DMULTISAMPLEMODE_1X = 0,
+	X_D3DMULTISAMPLEMODE_2X = 1,
+	X_D3DMULTISAMPLEMODE_4X = 2,
+
+	X_D3DMULTISAMPLEMODE_FORCE_DWORD = 0x7fffffff
+} X_D3DMULTISAMPLEMODE;
+
+typedef enum _X_D3DMULTISAMPLE_TYPE
+{
+	X_D3DMULTISAMPLE_NONE = 0x0011,
+	X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR = 0x1021,
+	X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX = 0x1121,
+	X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR = 0x2021,
+	X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR = 0x2012,
+	X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR = 0x1022,
+	X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN = 0x1222,
+	X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR = 0x2022,
+	X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN = 0x2222,
+	X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN = 0x1233,
+	X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN = 0x2233,
+
+	X_D3DMULTISAMPLE_FORCE_DWORD = 0x7fffffff /* force 32-bit size enum */
+} X_D3DMULTISAMPLE_TYPE;
+
+typedef enum _X_D3DPATCHEDGESTYLE {
+	X_D3DPATCHEDGE_DISCRETE = 0,
+	X_D3DPATCHEDGE_CONTINUOUS = 1,
+
+	X_D3DPATCHEDGE_FORCE_DWORD = 0x7fffffff
+} X_D3DPATCHEDGESTYLE;
+
+typedef enum _X_D3DSHADEMODE {
+	X_D3DSHADE_FLAT = 0x1d00,
+	X_D3DSHADE_GOURAUD = 0x1d01,
+
+	X_D3DSHADE_FORCE_DWORD = 0x7fffffff /* force 32-bit size enum */
+} X_D3DSHADEMODE;
+
+typedef enum _X_D3DSTENCILOP {
+	X_D3DSTENCILOP_KEEP = 0x1e00,
+	X_D3DSTENCILOP_ZERO = 0,
+	X_D3DSTENCILOP_REPLACE = 0x1e01,
+	X_D3DSTENCILOP_INCRSAT = 0x1e02,
+	X_D3DSTENCILOP_DECRSAT = 0x1e03,
+	X_D3DSTENCILOP_INVERT = 0x150a,
+	X_D3DSTENCILOP_INCR = 0x8507,
+	X_D3DSTENCILOP_DECR = 0x8508,
+
+	X_D3DSTENCILOP_FORCE_DWORD = 0x7fffffff
+} X_D3DSTENCILOP;
+
+typedef enum _X_D3DSWATHWIDTH {
+	X_D3DSWATH_8 = 0,
+	X_D3DSWATH_16 = 1,
+	X_D3DSWATH_32 = 2,
+	X_D3DSWATH_64 = 3,
+	X_D3DSWATH_128 = 4,
+	X_D3DSWATH_OFF = 0xf,
+
+	X_D3DSWATH_FORCE_DWORD = 0x7fffffff /* force 32-bit size enum */
+} X_D3DSWATHWIDTH;
 
 typedef enum _X_D3DFORMAT
 {
@@ -297,6 +452,7 @@ X_D3DRESOURCETYPE;
 
 #define X_D3D_RENDER_MEMORY_ALIGNMENT     64
 
+#define X_D3DPALETTE_ALIGNMENT            X_D3D_RENDER_MEMORY_ALIGNMENT
 #define X_D3DSURFACE_ALIGNMENT            X_D3D_RENDER_MEMORY_ALIGNMENT
 #define X_D3DTEXTURE_ALIGNMENT            (2 * X_D3D_RENDER_MEMORY_ALIGNMENT)
 #define X_D3DTEXTURE_CUBEFACE_ALIGNMENT   (2 * X_D3D_RENDER_MEMORY_ALIGNMENT)
@@ -464,19 +620,6 @@ struct X_D3DResource
 #define X_D3DLOCK_NOOVERWRITE           0x00000020
 #define X_D3DLOCK_TILED                 0x00000040 // Xbox extension
 #define X_D3DLOCK_READONLY              0x00000080
-
-// Multisample modes
-const int X_D3DMULTISAMPLE_NONE                                    = 0x0011;
-const int X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_LINEAR            = 0x1021;
-const int X_D3DMULTISAMPLE_2_SAMPLES_MULTISAMPLE_QUINCUNX          = 0x1121;
-const int X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_HORIZONTAL_LINEAR = 0x2021;
-const int X_D3DMULTISAMPLE_2_SAMPLES_SUPERSAMPLE_VERTICAL_LINEAR   = 0x2012;
-const int X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_LINEAR            = 0x1022;
-const int X_D3DMULTISAMPLE_4_SAMPLES_MULTISAMPLE_GAUSSIAN          = 0x1222;
-const int X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_LINEAR            = 0x2022;
-const int X_D3DMULTISAMPLE_4_SAMPLES_SUPERSAMPLE_GAUSSIAN          = 0x2222;
-const int X_D3DMULTISAMPLE_9_SAMPLES_MULTISAMPLE_GAUSSIAN          = 0x1233;
-const int X_D3DMULTISAMPLE_9_SAMPLES_SUPERSAMPLE_GAUSSIAN          = 0x2233;
 
 // Multisample masks (Cxbx additions)
 const int X_D3DMULTISAMPLE_YSCALE_MASK                             = 0x000F;
@@ -895,41 +1038,46 @@ constexpr DWORD X_D3DWRAP_V = 0x00001000;
 constexpr DWORD X_D3DWRAP_W = 0x00100000;
 
 // X_D3DTEXTURESTAGESTATETYPE values :
-// Dxbx note : See DxbxFromOldVersion_D3DTSS(), as these might need correction for older SDK versions!
-// The set starts out with "deferred" texture states :
-constexpr DWORD X_D3DTSS_ADDRESSU = 0;
-constexpr DWORD X_D3DTSS_ADDRESSV = 1;
-constexpr DWORD X_D3DTSS_ADDRESSW = 2;
-constexpr DWORD X_D3DTSS_MAGFILTER = 3;
-constexpr DWORD X_D3DTSS_MINFILTER = 4;
-constexpr DWORD X_D3DTSS_MIPFILTER = 5;
-constexpr DWORD X_D3DTSS_MIPMAPLODBIAS = 6;
-constexpr DWORD X_D3DTSS_MAXMIPLEVEL = 7;
-constexpr DWORD X_D3DTSS_MAXANISOTROPY = 8;
-constexpr DWORD X_D3DTSS_COLORKEYOP = 9; // Xbox ext.
-constexpr DWORD X_D3DTSS_COLORSIGN = 10; // Xbox ext.
-constexpr DWORD X_D3DTSS_ALPHAKILL = 11; // Xbox ext.
-constexpr DWORD X_D3DTSS_COLOROP = 12;
-constexpr DWORD X_D3DTSS_COLORARG0 = 13;
-constexpr DWORD X_D3DTSS_COLORARG1 = 14;
-constexpr DWORD X_D3DTSS_COLORARG2 = 15;
-constexpr DWORD X_D3DTSS_ALPHAOP = 16;
-constexpr DWORD X_D3DTSS_ALPHAARG0 = 17;
-constexpr DWORD X_D3DTSS_ALPHAARG1 = 18;
-constexpr DWORD X_D3DTSS_ALPHAARG2 = 19;
-constexpr DWORD X_D3DTSS_RESULTARG = 20;
-constexpr DWORD X_D3DTSS_TEXTURETRANSFORMFLAGS = 21;
-// End of "deferred" texture states, continuing with the rest :
-constexpr DWORD X_D3DTSS_BUMPENVMAT00 = 22;
-constexpr DWORD X_D3DTSS_BUMPENVMAT01 = 23;
-constexpr DWORD X_D3DTSS_BUMPENVMAT11 = 24;
-constexpr DWORD X_D3DTSS_BUMPENVMAT10 = 25;
-constexpr DWORD X_D3DTSS_BUMPENVLSCALE = 26;
-constexpr DWORD X_D3DTSS_BUMPENVLOFFSET = 27;
-constexpr DWORD X_D3DTSS_TEXCOORDINDEX = 28;
-constexpr DWORD X_D3DTSS_BORDERCOLOR = 29;
-constexpr DWORD X_D3DTSS_COLORKEYCOLOR = 30; // Xbox ext.
-constexpr DWORD X_D3DTSS_UNSUPPORTED = 31; // Note : Somehow, this one comes through D3DDevice_SetTextureStageStateNotInline sometimes
+typedef enum _X_D3DTEXTURESTAGESTATETYPE
+{
+	// Dxbx note : See DxbxFromOldVersion_D3DTSS(), as these might need correction for older SDK versions!
+	// The set starts out with "deferred" texture states :
+	X_D3DTSS_ADDRESSU = 0,
+	X_D3DTSS_ADDRESSV = 1,
+	X_D3DTSS_ADDRESSW = 2,
+	X_D3DTSS_MAGFILTER = 3,
+	X_D3DTSS_MINFILTER = 4,
+	X_D3DTSS_MIPFILTER = 5,
+	X_D3DTSS_MIPMAPLODBIAS = 6,
+	X_D3DTSS_MAXMIPLEVEL = 7,
+	X_D3DTSS_MAXANISOTROPY = 8,
+	X_D3DTSS_COLORKEYOP = 9, // Xbox ext.
+	X_D3DTSS_COLORSIGN = 10, // Xbox ext.
+	X_D3DTSS_ALPHAKILL = 11, // Xbox ext.
+	X_D3DTSS_COLOROP = 12,
+	X_D3DTSS_COLORARG0 = 13,
+	X_D3DTSS_COLORARG1 = 14,
+	X_D3DTSS_COLORARG2 = 15,
+	X_D3DTSS_ALPHAOP = 16,
+	X_D3DTSS_ALPHAARG0 = 17,
+	X_D3DTSS_ALPHAARG1 = 18,
+	X_D3DTSS_ALPHAARG2 = 19,
+	X_D3DTSS_RESULTARG = 20,
+	X_D3DTSS_TEXTURETRANSFORMFLAGS = 21,
+	// End of "deferred" texture states, continuing with the rest :
+	X_D3DTSS_BUMPENVMAT00 = 22,
+	X_D3DTSS_BUMPENVMAT01 = 23,
+	X_D3DTSS_BUMPENVMAT11 = 24,
+	X_D3DTSS_BUMPENVMAT10 = 25,
+	X_D3DTSS_BUMPENVLSCALE = 26,
+	X_D3DTSS_BUMPENVLOFFSET = 27,
+	X_D3DTSS_TEXCOORDINDEX = 28,
+	X_D3DTSS_BORDERCOLOR = 29,
+	X_D3DTSS_COLORKEYCOLOR = 30, // Xbox ext.
+	X_D3DTSS_UNSUPPORTED = 31, // Note : Somehow, this one comes through D3DDevice_SetTextureStageStateNotInline sometimes
+
+	X_D3DTSS_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
+} X_D3DTEXTURESTAGESTATETYPE;
 // End of texture states.
 
 // Texture state boundaries :
@@ -977,6 +1125,18 @@ constexpr DWORD X_D3DTOP_BUMPENVMAPLUMINANCE = 26;
 constexpr DWORD X_D3DTOP_FIRST = X_D3DTOP_DISABLE;
 constexpr DWORD X_D3DTOP_LAST = X_D3DTOP_BUMPENVMAPLUMINANCE;
 
+// D3DTA taken from D3D9 - we don't have Xbox definitions
+// for these so I guess they're the same?
+constexpr DWORD X_D3DTA_DIFFUSE = 0x00000000;  // select diffuse color (read only)
+constexpr DWORD X_D3DTA_CURRENT = 0x00000001;  // select stage destination register (read/write)
+constexpr DWORD X_D3DTA_TEXTURE = 0x00000002;  // select texture color (read only)
+constexpr DWORD X_D3DTA_TFACTOR = 0x00000003;  // select D3DRS_TEXTUREFACTOR (read only)
+constexpr DWORD X_D3DTA_SPECULAR = 0x00000004;  // select specular color (read only)
+constexpr DWORD X_D3DTA_TEMP = 0x00000005;  // select temporary register color (read/write)
+constexpr DWORD X_D3DTA_CONSTANT = 0x00000006;  // select texture stage constant
+constexpr DWORD X_D3DTA_COMPLEMENT = 0x00000010;  // take 1.0 - x (read modifier)
+constexpr DWORD X_D3DTA_ALPHAREPLICATE = 0x00000020;  // replicate alpha to color components (read modifier)
+
 // X_D3DTEXTUREADDRESS values :
 constexpr DWORD X_D3DTADDRESS_WRAP = 1;
 constexpr DWORD X_D3DTADDRESS_MIRROR = 2;
@@ -1008,9 +1168,6 @@ constexpr DWORD X_D3DCOLORWRITEENABLE_BLUE = (1 << 0);
 constexpr DWORD X_D3DCOLORWRITEENABLE_ALPHA = (1 << 24);
 constexpr DWORD X_D3DCOLORWRITEENABLE_ALL = 0x01010101; // Xbox ext.
 
-// deferred texture stage state "unknown" flag
-#define X_D3DTSS_UNK 0x7fffffff
-
 typedef enum _D3DVERTEXBLENDFLAGS
 {
 	X_D3DVBF_DISABLE = 0,              // 1 matrix,   0 weights => final weight effectively 1 (Disable vertex blending)
@@ -1020,6 +1177,8 @@ typedef enum _D3DVERTEXBLENDFLAGS
 	X_D3DVBF_2WEIGHTS2MATRICES = 2,    // 2 matrices, 2 weights (Xbox ext.)
 	X_D3DVBF_3WEIGHTS3MATRICES = 4,    // 3 matrices, 3 weights (Xbox ext.)
 	X_D3DVBF_4WEIGHTS4MATRICES = 6,    // 4 matrices, 4 weights (Xbox ext.)
+
+	X_D3DVBF_MAX = 7,
 	X_D3DVBF_FORCE_DWORD = 0x7fffffff
 } X_D3DVERTEXBLENDFLAGS;
 
@@ -1156,11 +1315,11 @@ struct X_D3DVertexShader
 #endif
 	DWORD RefCount; // Based on the observation this member is set to 1 in D3DDevice_CreateVertexShader and decreased in D3DDevice_DeleteVertexShader
 	DWORD Flags; // Contains X_VERTEXSHADER_FLAG_* bits
-	DWORD ProgramSize;
-	DWORD ProgramAndConstantsDwords; // Sum of ProgramSize + constant count, expressed in instruction slots, taking 4 DWORD's per slot (see X_VSH_INSTRUCTION_SIZE)
-	BYTE Dimensionality[4] ; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
+	DWORD ProgramSize;//vertex shader program size in dwords.
+	DWORD ProgramAndConstantsDwords; // the length of ProgramAndConstants[], Sum of ProgramSize + constant count + pushbuffer command in front and in between to load transfrorm program and constants, expressed in instruction slots, taking 4 DWORD's per slot (see X_VSH_INSTRUCTION_SIZE)
+	BYTE  Dimensionality[4] ; // Guesswork, since all 4 bytes (for all 4 textures) are most often set to 0 (or 2 when a texture isn't used) and 1, 3 and 4 also occur (and nothing else)
 	X_VERTEXATTRIBUTEFORMAT VertexAttribute;
-	DWORD ProgramAndConstants[X_VSH_MAX_INSTRUCTION_COUNT]; // The binary function data and constants (contents continues futher outside this struct, up to ProgramAndConstantsDwords * 4 (=X_VSH_INSTRUCTION_SIZE) DWORD's)
+	DWORD ProgramAndConstants[X_VSH_MAX_INSTRUCTION_COUNT]; // Variable length array, a pushbuffer snapshop of pushbuffer command to load the vertex shader program and constants and the program and constants. The binary function data and constants (contents continues futher outside this struct, up to ProgramAndConstantsDwords * 4 (=X_VSH_INSTRUCTION_SIZE) DWORD's)
 };
 
 // X_D3DVertexShader.Flags values :
@@ -1338,6 +1497,49 @@ enum X_D3DTRANSFORMSTATETYPE {
 };
 
 typedef DWORD NV2AMETHOD;
+
+// values used by xbox d3d to bit mask d3d dirty flag
+#define X_D3DDIRTYFLAG_TEXTURE_STATE                      0x0000000F
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_0                    0x00000001
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_1                    0x00000002
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_2                    0x00000004
+#define X_D3DDIRTYFLAG_TEXTURE_STATE_3                    0x00000008
+#define X_D3DDIRTYFLAG_VERTEXFORMAT_VB                    0x00000010
+#define X_D3DDIRTYFLAG_VERTEXFORMAT_UP                    0x00000020
+#define X_VERTEXFORMAT_OFFSETS                            0x00000040
+#define X_VERTEXFORMAT                                    0x00000070
+#define X_D3DDIRTYFLAG_POINTPARAMS                        0x00000100
+#define X_D3DDIRTYFLAG_TRANSFORM                          0x00000200
+#define X_D3DDIRTYFLAG_TEXTURE_TRANSFORM                  0x00000400
+#define X_D3DDIRTYFLAG_COMBINERS                          0x00000800
+#define X_D3DDIRTYFLAG_SPECFOG_COMBINER                   0x00002000
+#define X_D3DDIRTYFLAG_SHADER_STAGE_PROGRAM               0x00004000
+#define X_D3DDIRTYFLAG_LIGHTS                             0x00FF1000
+#define X_D3DDIRTYFLAG_DIRECT_INPUT                       0x40000000  // set when SetVertexShaderInput/SetVertexShaderInputDirect was called. means all vertex formats/offsets set.
+// when SetTransform() was called, the ModelView/Composite matrix will still be update using the new transform.
+// this makes sense, NV2A uses ModelView/Composite internally. so xbox always has to convert its transform to ModelView/Composite.
+#define X_D3DDIRTYFLAG_DIRECT_MODELVIEW                   0x80000000  // set when direct modelview mode was set.
+#define X_SET_STATE_FLAGS                                 0x3FFFFF8F
+// valuse for direct mode, when set, overwrite original api priority
+// but from reversed code, even X_D3DDIRTYFLAG_DIRECT_INPUT is set,
+
+// xbox d3d stateFlags, also used by NV2A_stateFlags
+
+#define X_STATE_DXTNOISEENABLE 0x1 // Must be one
+#define X_STATE_FOGSOURCEZ 0x2
+#define X_STATE_RECORDPUSHBUFFER 0x4
+#define X_STATE_PUREDEVICE 0x10 // Same as D3DCREATE_PUREDEVICE
+#define X_STATE_RECORDBLOCK 0x20
+#define X_STATE_COMBINERNEEDSSPECULAR 0x40
+#define X_STATE_RECORDPUSHBUFFERPADDED 0x80
+#define X_STATE_FLIPSTALLPENDING 0x100
+#define X_STATE_NORESERVEDCONSTANTS 0x200
+#define X_STATE_RUNPUSHBUFFERWASCALLED 0x400
+#define X_STATE_BEGINENDBRACKET 0x800
+#define X_STATE_SEGMENTFENCEPENDING 0x1000
+#define X_STATE_NULLHARDWARE 0x2000
+#define X_STATE_COPYSWAP 0x4000
+#define X_STATE_MULTISAMPLING 0x8000
 
 //
 // Below declarations are used by Cxbx, not by the Xbox!!!

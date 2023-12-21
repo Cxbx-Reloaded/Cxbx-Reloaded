@@ -1,6 +1,3 @@
-// This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
-R"DELIMITER(
-
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
@@ -92,10 +89,7 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
    #define PS_FINALCOMBINERSETTING_CLAMP_SUM
 #endif
 
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
+// DEFINES INSERTION MARKER
 
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
@@ -173,10 +167,6 @@ R"DELIMITER(
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-)DELIMITER",  /* This terminates the 1st raw string within the 16380 single-byte characters limit. // */
-// See https://docs.microsoft.com/en-us/cpp/error-messages/compiler-errors-1/compiler-error-c2026?f1url=%3FappId%3DDev15IDEF1%26l%3DEN-US%26k%3Dk(C2026)%26rd%3Dtrue&view=vs-2019
-// Second raw string :
-R"DELIMITER(
 
 float m21d(const float input)
 {
@@ -282,7 +272,7 @@ float4 Sample6F(int ts, float3 s)
 float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 src)
 {
 	// Convert the input bump map (source texture) value range into two's complement signed values (from (0, +1) to (-1, +1), using s_bx2):
-	const float4 BumpMap = s_bx2(src); // Note : medieval discovered s_bias improved JSRF, PatrickvL changed it into s_bx2 thanks to http://www.rastertek.com/dx11tut20.html
+	const float4 BumpMap = src;//    m21(src); //s_bx2(src); // Note : medieval discovered s_bias improved JSRF, PatrickvL changed it into s_bx2 thanks to http://www.rastertek.com/dx11tut20.html
 	// TODO : The above should be removed, and replaced by some form of COLORSIGN handling, which may not be possible inside this pixel shader, because filtering-during-sampling would cause artifacts.
 
 	const float u = TexCoord.x + (BumpEnvMat.x * BumpMap.r) + (BumpEnvMat.z * BumpMap.g); // Or : TexCoord.x + dot(BumpEnvMat.xz, BumpMap.rg)
@@ -315,7 +305,7 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 #define Normal3(ts)   float3(dot_[ts-2], dot_[ts-1], dot_[ts])              // Two preceding and current stage dot result.
 #define Eye           float3(iT[1].w,    iT[2].w,    iT[3].w)               // 4th (q) component of input texture coordinates 1, 2 and 3. Only used by texm3x3vspec/PS_TEXTUREMODES_DOT_RFLCT_SPEC, always at stage 3. TODO : Map iT[1/2/3] through PS_INPUTTEXTURE_[]?
 #define Reflect(n, e) 2 * (dot(n, e) / dot(n, n)) * n - e                   // https://documentation.help/directx8_c/texm3x3vspec.htm
-#define BumpEnv(ts)   DoBumpEnv(iT[ts], BEM[ts], src(ts))                   // Will be input for Sample2D.
+#define BumpEnv(ts)   s.xyz=DoBumpEnv(iT[ts], BEM[ts], src(ts));  v = Sample2D(ts, s); t[ts] = v      // Will be input for Sample2D.
 #define LSO(ts)       (LUM[ts].x * src(ts).b) + LUM[ts].y                   // Uses PSH_XBOX_CONSTANT_LUM .x = D3DTSS_BUMPENVLSCALE .y = D3DTSS_BUMPENVLOFFSET
 
 // Implementations for all possible texture modes, with stage as argument (prefixed with valid stages and corresponding pixel shader 1.3 assembly texture addressing instructions)
@@ -379,10 +369,7 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
 	fog = float4(c_fog.rgb, xIn.iFog); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
 
-	// Xbox shader program
-)DELIMITER",  /* This terminates the 2nd raw string within the 16380 single-byte characters limit. // */
-// Third and last raw string, the footer :
-R"DELIMITER(
+	// XBOX SHADER PROGRAM MARKER
 
 	// Copy r0.rgba to output
 	PS_OUTPUT xOut;
@@ -391,5 +378,3 @@ R"DELIMITER(
 
 	return xOut;
 }
-
-// End of pixel shader footer)DELIMITER" /* This terminates the footer raw string" // */

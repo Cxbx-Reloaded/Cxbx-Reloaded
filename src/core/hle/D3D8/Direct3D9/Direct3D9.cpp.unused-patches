@@ -4256,3 +4256,60 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderInput)
 
     return 0;
 }
+
+// LTCG specific D3DDevice_SetPalette function...
+// This uses a custom calling convention where Stage parameter is passed in EAX
+// Test-case: Ninja Gaiden
+LTCG_DECL xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette_4)
+(
+	X_D3DPalette *pPalette
+)
+{
+	dword_xt Stage; // = 0 initialized auto or register variable not allowed at function scope in 'naked' function
+	__asm {
+		LTCG_PROLOGUE
+		mov  Stage, eax
+	}
+
+	Logging::D3DDevice_SetPalette(Stage, pPalette);
+
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	__asm {
+		push pPalette
+		mov  eax, Stage
+		call XB_TRMP(D3DDevice_SetPalette_4)
+	}
+
+	//CxbxrImpl_SetPalette(Stage, pPalette);
+
+	HLE_PushApi(X_D3DDevice_SetPalette,
+		(DWORD)Stage,
+		(DWORD)pPalette);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret  4
+	}
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetPalette
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPalette)
+(
+	dword_xt      Stage,
+	X_D3DPalette* pPalette
+)
+{
+	Logging::D3DDevice_SetPalette(Stage, pPalette);
+
+	// Call the Xbox implementation of this function, to properly handle reference counting for us
+	XB_TRMP(D3DDevice_SetPalette)(Stage, pPalette);
+
+	//CxbxrImpl_SetPalette(Stage, pPalette);
+
+	HLE_PushApi(X_D3DDevice_SetPalette,
+		(DWORD)Stage,
+		(DWORD)pPalette);
+}
+

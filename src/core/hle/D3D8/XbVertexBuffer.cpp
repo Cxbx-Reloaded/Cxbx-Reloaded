@@ -37,6 +37,9 @@
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
+#include "devices/Xbox.h" // For g_NV2A
+#include "devices/video/nv2a.h" // For PGRAPHState
+#include "devices/video/nv2a_int.h" // For NV** defines
 
 #include <imgui.h>
 
@@ -49,22 +52,31 @@
 CxbxVertexBufferConverter VertexBufferConverter = {};
 
 // Inline vertex buffer emulation
-xbox::X_D3DPRIMITIVETYPE      g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
-xbox::X_VERTEXATTRIBUTEFORMAT g_InlineVertexBuffer_AttributeFormat = {};
-bool                          g_InlineVertexBuffer_DeclarationOverride = false;
-std::vector<D3DIVB>           g_InlineVertexBuffer_Table;
-UINT                          g_InlineVertexBuffer_TableLength = 0;
-UINT                          g_InlineVertexBuffer_TableOffset = 0;
+xbox::X_D3DPRIMITIVETYPE       g_InlineVertexBuffer_PrimitiveType = xbox::X_D3DPT_INVALID;
+int                            g_InlineVertexBuffer_Stride = 0;
+xbox::X_VERTEXATTRIBUTEFORMAT  g_InlineVertexBuffer_AttributeFormat = {};
+xbox::X_VERTEXATTRIBUTEFORMAT *g_InlineVertexBuffer_DeclarationOverride = nullptr;
+std::vector<D3DIVB>            g_InlineVertexBuffer_Table;
+UINT                           g_InlineVertexBuffer_TableLength = 0;
+UINT                           g_InlineVertexBuffer_TableOffset = 0;
 
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
 xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
 
-extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); // Declared in PushBuffer.cpp
+extern float* pgraph_get_vertex_attribute_inline_value(PGRAPHState* pg, int attribute_index); // Implemented in EmuNV2A_PGRAPH.cpp
 
 void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
 uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer* pPixelContainer);
 uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer* pPixelContainer);
+
+float* HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
+{
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
+
+	return pgraph_get_vertex_attribute_inline_value(pg, slot);
+}
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamNumber) const
 {
@@ -136,7 +148,13 @@ UINT CxbxVertexBufferConverter::GetNbrStreams(CxbxDrawContext *pDrawContext) con
     } 
 	
 	// TODO: This code and CountActiveD3DStreams must be removed once we can rely on CxbxGetVertexDeclaration always being set
-	if (g_Xbox_VertexShader_Handle) {
+	xbox::dword_xt VSHHandle = g_Xbox_VertexShader_Handle;
+	extern bool is_pgraph_using_NV2A_Kelvin(void); // tmp glue
+	extern xbox::dword_xt g_NV2A_VertexShader_Handle;// tmp glue
+	if (is_pgraph_using_NV2A_Kelvin()) {
+		VSHHandle = g_NV2A_VertexShader_Handle;
+	}
+	if (VSHHandle) {
 		return CountActiveD3DStreams();
     }
 
@@ -642,6 +660,8 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 		ConvertStream(pDrawContext, pCxbxVertexDeclaration, i);
     }
 
+	pDrawContext->dwHostPrimitiveCount = EmuXB2PC_D3DPrimitiveCount(pDrawContext->dwVertexCount, pDrawContext->XboxPrimitiveType);
+	/*
 	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_QUADSTRIP) {
 		// Quad strip is just like a triangle strip, but requires two vertices per primitive.
 		// A quadstrip starts with 4 vertices and adds 2 vertices per additional quad.
@@ -657,7 +677,7 @@ void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 	} else {
 		pDrawContext->dwHostPrimitiveCount = ConvertXboxVertexCountToPrimitiveCount(pDrawContext->XboxPrimitiveType, pDrawContext->dwVertexCount);
 	}
-
+	*/
 	if (pDrawContext->XboxPrimitiveType == xbox::X_D3DPT_POLYGON) {
 		// Convex polygon is the same as a triangle fan.
 		// No need to set : pDrawContext->XboxPrimitiveType = X_D3DPT_TRIANGLEFAN;
@@ -706,24 +726,21 @@ void CxbxImpl_End()
 	}
 
 	// Compose an Xbox vertex attribute format to pass through all registers
-	static UINT uiStride = 0;
-	static bool isIvbFormatInitialized = false;
-	if (!isIvbFormatInitialized) {
-		isIvbFormatInitialized = true;
+	if (g_InlineVertexBuffer_Stride == 0) { // Do this just once, as the IVB attributes will always be the same, thus also the stride
 		for (int reg = 0; reg < X_VSH_MAX_ATTRIBUTES; reg++) {
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = X_D3DVSDT_FLOAT4;
-			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = uiStride;
-			uiStride += sizeof(float) * 4;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Format = xbox::X_D3DVSDT_FLOAT4;
+			g_InlineVertexBuffer_AttributeFormat.Slots[reg].Offset = g_InlineVertexBuffer_Stride;
+			g_InlineVertexBuffer_Stride += sizeof(float) * 4;
 		}
 	}
 
 	// Arrange for g_InlineVertexBuffer_AttributeFormat to be returned in CxbxGetVertexDeclaration,
-	// so that our above composed declaration will be used for the next draw :
-	g_InlineVertexBuffer_DeclarationOverride = true;
+	// so that that declaration will be used for the next draw :
+	g_InlineVertexBuffer_DeclarationOverride = &g_InlineVertexBuffer_AttributeFormat;
 	// Note, that g_Xbox_VertexShaderMode should be left untouched,
 	// because except for the declaration override, the Xbox shader (either FVF
 	// or a program, or even passthrough shaders) should still be in effect!
-
+	// must call kickoff and wait here for FastVSConstant sample to render in fast constant mode.
 	CxbxUpdateNativeD3DResources();
 
 	CxbxDrawContext DrawContext = {};
@@ -731,12 +748,12 @@ void CxbxImpl_End()
 	DrawContext.XboxPrimitiveType = g_InlineVertexBuffer_PrimitiveType;
 	DrawContext.dwVertexCount = g_InlineVertexBuffer_TableOffset;
 	DrawContext.pXboxVertexStreamZeroData = g_InlineVertexBuffer_Table.data();
-	DrawContext.uiXboxVertexStreamZeroStride = uiStride;
+	DrawContext.uiXboxVertexStreamZeroStride = g_InlineVertexBuffer_Stride;
 
 	CxbxDrawPrimitiveUP(DrawContext);
 
 	// Now that we've drawn, stop our override in CxbxGetVertexDeclaration :
-	g_InlineVertexBuffer_DeclarationOverride = false;
+	g_InlineVertexBuffer_DeclarationOverride = nullptr;
 
 	// TODO: Should technically clean this up at some point..but on XP doesnt matter much
 	//	ExFreePool(g_InlineVertexBuffer_pData);

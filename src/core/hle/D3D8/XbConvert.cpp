@@ -41,7 +41,7 @@
 // B = blue
 // L = luminance, byte : 0 = pure black ARGB(1, 0,0,0) to 255 = pure white ARGB(1,255,255,255)
 // P = pallete
-enum _ComponentEncoding {
+typedef enum _ComponentEncoding {
 	NoCmpnts = 0, // Format doesn't contain any component (ARGB/QWVU)
 	A1R5G5B5,
 	X1R5G5B5, // NOTE : A=255
@@ -68,7 +68,9 @@ enum _ComponentEncoding {
 	______P8,
 	____YUY2,
 	____UYVY,
-};
+	__G16B16, // NOTE : A takes G, R takes B
+	__R8G8B8,
+}ComponentEncoding;
 
 // Conversion functions copied from libyuv
 // See https://chromium.googlesource.com/libyuv/libyuv/+/master/source/row_common.cc
@@ -185,6 +187,34 @@ void ____G8B8ToARGBRow_C(const uint8_t* src_g8b8, uint8_t* dst_argb, int width) 
 	}
 }
 
+void __G16B16ToARGBRow_C(const uint8_t* src_g16b16, uint8_t* dst_argb, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t b = src_g16b16[1]; //take the high byte of b
+		uint8_t g = src_g16b16[3]; //take the high byte of g
+		dst_argb[0] = b;
+		dst_argb[1] = g;
+		dst_argb[2] = b;
+		dst_argb[3] = g;
+		dst_argb += 4;
+		src_g16b16 += 4; //g16b16 takes 4 bytes per pixel
+	}
+}
+
+void __V16U16ToXLVURow_C(const uint8_t* src_V16U16, uint8_t* dst_XLVU, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t U = src_V16U16[1]; //take the high byte of U
+		uint8_t V = src_V16U16[3]; //take the high byte of V
+		dst_XLVU[0] = U;
+		dst_XLVU[1] = V;
+		dst_XLVU[2] = 0;
+		dst_XLVU[3] = 0;
+		dst_XLVU += 4;
+		src_V16U16 += 4; //V16U16 takes 4 bytes per pixel
+	}
+}
+
 void ______A8ToARGBRow_C(const uint8_t* src_a8, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; ++x) {
@@ -207,9 +237,24 @@ void __R6G5B5ToARGBRow_C(const uint8_t* src_r6g5b5, uint8_t* dst_argb, int width
 		dst_argb[0] = (b << 3) | (b >> 2);
 		dst_argb[1] = (g << 3) | (g >> 2);
 		dst_argb[2] = (r << 2) | (r >> 4);
-		dst_argb[3] = 255u;
+		dst_argb[3] = 255u; // alpha component set to 1.0f normalized
 		dst_argb += 4;
 		src_r6g5b5 += 2;
+	}
+}
+
+void __L6V5U5ToX8L8V8U8Row_C(const uint8_t* src_L6V5U5, uint8_t* dst_XLVU, int width) {
+	int x;
+	for (x = 0; x < width; ++x) {
+		uint8_t U = src_L6V5U5[0] & 0x1f;
+		uint8_t V = (src_L6V5U5[0] >> 5) | ((src_L6V5U5[1] & 0x03) << 3);
+		uint8_t L = src_L6V5U5[1] >> 2;
+		dst_XLVU[0] = (U << 3);// | (U >> 2);
+		dst_XLVU[1] = (V << 3);// | (V >> 2);
+		dst_XLVU[2] = (L << 2);// | (L >> 4);
+		dst_XLVU[3] = 0u;// X component set to 0.0f normalized
+		dst_XLVU += 4;
+		src_L6V5U5 += 2;
 	}
 }
 
@@ -349,10 +394,10 @@ void ____A8L8ToARGBRow_C(const uint8_t* src_a8l8, uint8_t* dst_argb, int width) 
 
 typedef struct TRGB32
 {
-	unsigned char B;
-	unsigned char G;
-	unsigned char R;
-	unsigned char A;
+	uint8_t B;
+	uint8_t G;
+	uint8_t R;
+	uint8_t A;
 } TRGB32;
 
 // DXT1 info (MSDN Block Compression) : https://msdn.microsoft.com/en-us/library/bb694531.aspx
@@ -375,16 +420,17 @@ void ____DXT1ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
         uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
-		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
-		colormap[0].A = 255u;
-
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
-		colormap[1].A = 255u;
+		TRGB32 colormap[4] = { {
+		/*colormap[0].B = */(uint8_t)((b0 << 3) | (b0 >> 2)),
+		/*colormap[0].G = */(uint8_t)((g0 << 2) | (g0 >> 4)),
+		/*colormap[0].R = */(uint8_t)((r0 << 3) | (r0 >> 2)),
+		/*colormap[0].A = */255u
+		}, {
+		/*colormap[1].B = */(uint8_t)((b1 << 3) | (b1 >> 2)),
+		/*colormap[1].G = */(uint8_t)((g1 << 2) | (g1 >> 4)),
+		/*colormap[1].R = */(uint8_t)((r1 << 3) | (r1 >> 2)),
+		/*colormap[1].A = */255u
+		} };
 
 		// Build second half of RGB32 color map :
 		if (color_0 > color_1)
@@ -479,14 +525,17 @@ void ____DXT3ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 		uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
-		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
-
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		TRGB32 colormap[4] = { {
+		/*colormap[0].B = */(uint8_t)((b0 << 3) | (b0 >> 2)),
+		/*colormap[0].G = */(uint8_t)((g0 << 2) | (g0 >> 4)),
+		/*colormap[0].R = */(uint8_t)((r0 << 3) | (r0 >> 2)),
+		/*colormap[0].A = */0u
+		}, {
+		/*colormap[1].B = */(uint8_t)((b1 << 3) | (b1 >> 2)),
+		/*colormap[1].G = */(uint8_t)((g1 << 2) | (g1 >> 4)),
+		/*colormap[1].R = */(uint8_t)((r1 << 3) | (r1 >> 2)),
+		/*colormap[1].A = */0u
+		} };
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
@@ -556,9 +605,10 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 	int x;
 	for (x = 0; x < width; x += 4) {
 		// Read two 8-bit alphas
-		uint8_t alphamap[8];
-		alphamap[0] = data[0];
-		alphamap[1] = data[1];
+		uint8_t alphamap[8] = {
+		/*alphamap[0] = */data[0],
+		/*alphamap[1] = */data[1],
+		};
 
 		// Build rest of alpha map
 		if (alphamap[0] > alphamap[1]) {
@@ -600,14 +650,17 @@ void ____DXT5ToARGBRow_C(const uint8_t* data, uint8_t* dst_argb, int width) {
 		uint8_t r1 = color_1 >> 11;
 
 		// Build first half of RGB32 color map (converting 5+6+5 to 8+8+8):
-		TRGB32 colormap[4];
-		colormap[0].B = (b0 << 3) | (b0 >> 2);
-		colormap[0].G = (g0 << 2) | (g0 >> 4);
-		colormap[0].R = (r0 << 3) | (r0 >> 2);
-
-		colormap[1].B = (b1 << 3) | (b1 >> 2);
-		colormap[1].G = (g1 << 2) | (g1 >> 4);
-		colormap[1].R = (r1 << 3) | (r1 >> 2);
+		TRGB32 colormap[4] = { {
+		/*colormap[0].B = */(uint8_t)((b0 << 3) | (b0 >> 2)),
+		/*colormap[0].G = */(uint8_t)((g0 << 2) | (g0 >> 4)),
+		/*colormap[0].R = */(uint8_t)((r0 << 3) | (r0 >> 2)),
+		/*colormap[0].A = */0u
+		}, {
+		/*colormap[1].B = */(uint8_t)((b1 << 3) | (b1 >> 2)),
+		/*colormap[1].G = */(uint8_t)((g1 << 2) | (g1 >> 4)),
+		/*colormap[1].R = */(uint8_t)((r1 << 3) | (r1 >> 2)),
+		/*colormap[0].A = */0u
+		} };
 
 		// Build second half of RGB32 color map :
 		// Make up new color : 2/3 A + 1/3 B :
@@ -840,6 +893,8 @@ static const FormatToARGBRow ComponentConverters[] = {
 	______P8ToARGBRow_C, // ______P8
 	____YUY2ToARGBRow_C, // ____YUY2
 	____UYVYToARGBRow_C, // ____UYVY
+	__G16B16ToARGBRow_C, // __G16B16, // NOTE : A takes G, R takes B
+	nullptr, // R8G8B8,
 };
 
 enum _FormatStorage {
@@ -856,6 +911,7 @@ enum _FormatUsage {
 };
 
 typedef struct _FormatInfo {
+	bool is_bumpmap;
 	uint8_t bits_per_pixel;
 	_FormatStorage stored;
 	_ComponentEncoding components;
@@ -875,72 +931,72 @@ static const FormatInfo FormatInfos[] = {
 	// in the warning field, so EmuXBFormatRequiresConversionToARGB can return a conversion
 	// to ARGB is needed (which is implemented in EMUPATCH(D3DResource_Register).
 
-	/* 0x00 X_D3DFMT_L8           */ {  8, Swzzld, ______L8, D3DFMT_L8        },
-	/* 0x01 X_D3DFMT_AL8          */ {  8, Swzzld, _____AL8, D3DFMT_L8        , Texture, "X_D3DFMT_AL8 -> D3DFMT_L8" },
-	/* 0x02 X_D3DFMT_A1R5G5B5     */ { 16, Swzzld, A1R5G5B5, D3DFMT_A1R5G5B5  },
-	/* 0x03 X_D3DFMT_X1R5G5B5     */ { 16, Swzzld, X1R5G5B5, D3DFMT_X1R5G5B5  , RenderTarget },
-	/* 0x04 X_D3DFMT_A4R4G4B4     */ { 16, Swzzld, A4R4G4B4, D3DFMT_A4R4G4B4  },
-	/* 0x05 X_D3DFMT_R5G6B5       */ { 16, Swzzld, __R5G6B5, D3DFMT_R5G6B5    , RenderTarget },
-	/* 0x06 X_D3DFMT_A8R8G8B8     */ { 32, Swzzld, A8R8G8B8, D3DFMT_A8R8G8B8  , RenderTarget },
-	/* 0x07 X_D3DFMT_X8R8G8B8     */ { 32, Swzzld, X8R8G8B8, D3DFMT_X8R8G8B8  , RenderTarget }, // Alias : X_D3DFMT_X8L8V8U8 
-	/* 0x08 undefined             */ {},
-	/* 0x09 undefined             */ {},
-	/* 0x0A undefined             */ {},
-	/* 0x0B X_D3DFMT_P8           */ {  8, Swzzld, ______P8, D3DFMT_P8        , Texture, "X_D3DFMT_P8 -> D3DFMT_L8" }, // 8-bit palletized
-	/* 0x0C X_D3DFMT_DXT1         */ {  4, Cmprsd, ____DXT1, D3DFMT_DXT1      }, // opaque/one-bit alpha // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
-	/* 0x0D undefined             */ {},
-	/* 0x0E X_D3DFMT_DXT3         */ {  8, Cmprsd, ____DXT3, D3DFMT_DXT3      }, // Alias : X_D3DFMT_DXT2 // linear alpha
-	/* 0x0F X_D3DFMT_DXT5         */ {  8, Cmprsd, ____DXT5, D3DFMT_DXT5      }, // Alias : X_D3DFMT_DXT4 // interpolated alpha
-	/* 0x10 X_D3DFMT_LIN_A1R5G5B5 */ { 16, Linear, A1R5G5B5, D3DFMT_A1R5G5B5  },
-	/* 0x11 X_D3DFMT_LIN_R5G6B5   */ { 16, Linear, __R5G6B5, D3DFMT_R5G6B5    , RenderTarget },
-	/* 0x12 X_D3DFMT_LIN_A8R8G8B8 */ { 32, Linear, A8R8G8B8, D3DFMT_A8R8G8B8  , RenderTarget },
-	/* 0x13 X_D3DFMT_LIN_L8       */ {  8, Linear, ______L8, D3DFMT_L8        , RenderTarget },
-	/* 0x14 undefined             */ {},
-	/* 0x15 undefined             */ {},
-	/* 0x16 X_D3DFMT_LIN_R8B8     */ { 16, Linear, ____R8B8, D3DFMT_R5G6B5    , Texture, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" },
-	/* 0x17 X_D3DFMT_LIN_G8B8     */ { 16, Linear, ____G8B8, D3DFMT_R5G6B5    , RenderTarget, "X_D3DFMT_LIN_G8B8 -> D3DFMT_R5G6B5" }, // Alias : X_D3DFMT_LIN_V8U8
-	/* 0x18 undefined             */ {},
-	/* 0x19 X_D3DFMT_A8           */ {  8, Swzzld, ______A8, D3DFMT_A8        , Texture, "X_D3DFMT_A8 -> D3DFMT_A8R8G8B8" },  // D3D9 sets RGB = 0 instead of 1
-	/* 0x1A X_D3DFMT_A8L8         */ { 16, Swzzld, ____A8L8, D3DFMT_A8L8      },
-	/* 0x1B X_D3DFMT_LIN_AL8      */ {  8, Linear, _____AL8, D3DFMT_L8        , Texture, "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" },
-	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, D3DFMT_X1R5G5B5  , RenderTarget },
-	/* 0x1D X_D3DFMT_LIN_A4R4G4B4 */ { 16, Linear, A4R4G4B4, D3DFMT_A4R4G4B4  },
-	/* 0x1E X_D3DFMT_LIN_X8R8G8B8 */ { 32, Linear, X8R8G8B8, D3DFMT_X8R8G8B8  , RenderTarget }, // Alias : X_D3DFMT_LIN_X8L8V8U8
-	/* 0x1F X_D3DFMT_LIN_A8       */ {  8, Linear, ______A8, D3DFMT_A8        , Texture, "X_D3DFMT_LIN_A8 -> D3DFMT_A8R8G8B8" }, // D3D9 sets RGB = 0 instead of 1
-	/* 0x20 X_D3DFMT_LIN_A8L8     */ { 16, Linear, ____A8L8, D3DFMT_A8L8      },
-	/* 0x21 undefined             */ {},
-	/* 0x22 undefined             */ {},
-	/* 0x23 undefined             */ {},
-	/* 0x24 X_D3DFMT_YUY2         */ { 16, Linear, ____YUY2, D3DFMT_YUY2      },
-	/* 0x25 X_D3DFMT_UYVY         */ { 16, Linear, ____UYVY, D3DFMT_UYVY      },
-	/* 0x26 undefined             */ {},
-	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __R6G5B5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
-	/* 0x28 X_D3DFMT_V8U8         */ { 16, Swzzld, ____G8B8, D3DFMT_V8U8      }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
-	/* 0x29 X_D3DFMT_R8B8         */ { 16, Swzzld, ____R8B8, D3DFMT_R5G6B5    , Texture, "X_D3DFMT_R8B8 -> D3DFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
-	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, D3DFMT_D24S8     , DepthBuffer },
-	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, D3DFMT_D24FS8    , DepthBuffer },
-	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
-	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, D3DFMT_D16       , DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
-	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, D3DFMT_D24S8     , DepthBuffer },
-	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, D3DFMT_D24FS8    , DepthBuffer },
-	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
-	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, D3DFMT_D16       , DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
-	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, D3DFMT_L16       },
-	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, D3DFMT_V16U16    },
-	/* 0x34 undefined             */ {},
-	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, D3DFMT_L16       },
-	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, D3DFMT_V16U16    }, // Note : Seems unused on Xbox
-	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, D3DFMT_L6V5U5    }, // Alias : X_D3DFMT_LIN_R6G5B5
-	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
-	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
-	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, A8B8G8R8, D3DFMT_Q8W8V8U8  }, // Alias : X_D3DFMT_A8B8G8R8 // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
-	/* 0x3B X_D3DFMT_B8G8R8A8     */ { 32, Swzzld, B8G8R8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
-	/* 0x3C X_D3DFMT_R8G8B8A8     */ { 32, Swzzld, R8G8B8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
-	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { 16, Linear, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_LIN_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
-	/* 0x3E X_D3DFMT_LIN_R4G4B4A4 */ { 16, Linear, R4G4B4A4, D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_LIN_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
-	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { 32, Linear, A8B8G8R8, D3DFMT_A8B8G8R8  }, // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
-	/* 0x40 X_D3DFMT_LIN_B8G8R8A8 */ { 32, Linear, B8G8R8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_LIN_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
-	/* 0x41 X_D3DFMT_LIN_R8G8B8A8 */ { 32, Linear, R8G8B8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_LIN_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x00 X_D3DFMT_L8           */ { false,  8, Swzzld, ______L8, D3DFMT_L8        },
+	/* 0x01 X_D3DFMT_AL8          */ { false,  8, Swzzld, _____AL8, D3DFMT_L8        , Texture, "X_D3DFMT_AL8 -> D3DFMT_L8" },
+	/* 0x02 X_D3DFMT_A1R5G5B5     */ { false, 16, Swzzld, A1R5G5B5, D3DFMT_A1R5G5B5  },
+	/* 0x03 X_D3DFMT_X1R5G5B5     */ { false, 16, Swzzld, X1R5G5B5, D3DFMT_X1R5G5B5  , RenderTarget },
+	/* 0x04 X_D3DFMT_A4R4G4B4     */ { false, 16, Swzzld, A4R4G4B4, D3DFMT_A4R4G4B4  },
+	/* 0x05 X_D3DFMT_R5G6B5       */ { false, 16, Swzzld, __R5G6B5, D3DFMT_R5G6B5    , RenderTarget },
+	/* 0x06 X_D3DFMT_A8R8G8B8     */ { false, 32, Swzzld, A8R8G8B8, D3DFMT_A8R8G8B8  , RenderTarget },
+	/* 0x07 X_D3DFMT_X8L8V8U8     */ {  true, 32, Swzzld, X8R8G8B8, D3DFMT_X8L8V8U8  , RenderTarget },//"X_D3DFMT_X8L8V8U8 forced to D3DFMT_A8G8G8B8" }, // Alias : X_D3DFMT_X8R8G8B8
+	/* 0x08 undefined             */ { false,},
+	/* 0x09 undefined             */ { false,},
+	/* 0x0A undefined             */ { false,},
+	/* 0x0B X_D3DFMT_P8           */ { false,  8, Swzzld, ______P8, D3DFMT_P8        , Texture, "X_D3DFMT_P8 -> D3DFMT_L8" }, // 8-bit palletized
+	/* 0x0C X_D3DFMT_DXT1         */ { false,  4, Cmprsd, ____DXT1, D3DFMT_DXT1      }, // opaque/one-bit alpha // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
+	/* 0x0D undefined             */ { false,},
+	/* 0x0E X_D3DFMT_DXT3         */ { false,  8, Cmprsd, ____DXT3, D3DFMT_DXT3      }, // Alias : X_D3DFMT_DXT2 // linear alpha
+	/* 0x0F X_D3DFMT_DXT5         */ { false,  8, Cmprsd, ____DXT5, D3DFMT_DXT5      }, // Alias : X_D3DFMT_DXT4 // interpolated alpha
+	/* 0x10 X_D3DFMT_LIN_A1R5G5B5 */ { false, 16, Linear, A1R5G5B5, D3DFMT_A1R5G5B5  },
+	/* 0x11 X_D3DFMT_LIN_R5G6B5   */ { false, 16, Linear, __R5G6B5, D3DFMT_R5G6B5    , RenderTarget },
+	/* 0x12 D3DFMT_LIN_Q8W8V8U8   */ {  true, 32, Linear, A8R8G8B8, D3DFMT_Q8W8V8U8  , RenderTarget },//"D3DFMT_LIN_Q8W8V8U8 forced to D3DFMT_A8G8G8B8" },//alias X_D3DFMT_LIN_A8R8G8B8 
+	/* 0x13 X_D3DFMT_LIN_L8       */ { false,  8, Linear, ______L8, D3DFMT_L8        , RenderTarget },
+	/* 0x14 undefined             */ { false,},
+	/* 0x15 undefined             */ { false,},
+	/* 0x16 X_D3DFMT_LIN_R8B8     */ { false, 16, Linear, ____R8B8, D3DFMT_R5G6B5    , Texture, "X_D3DFMT_LIN_R8B8 -> D3DFMT_R5G6B5" },
+	/* 0x17 X_D3DFMT_LIN_V8U8     */ {  true, 16, Linear, ____G8B8, D3DFMT_V8U8      , RenderTarget },//"X_D3DFMT_LIN_V8U8 forced to D3DFMT_A8G8G8B8" }, // Alias : X_D3DFMT_LIN_G8B8
+	/* 0x18 undefined             */ { false,},
+	/* 0x19 X_D3DFMT_A8           */ { false,  8, Swzzld, ______A8, D3DFMT_A8        , Texture},// "X_D3DFMT_A8 -> D3DFMT_A8R8G8B8" },  // D3D9 sets RGB = 0 instead of 1
+	/* 0x1A X_D3DFMT_A8L8         */ { false, 16, Swzzld, ____A8L8, D3DFMT_A8L8      },
+	/* 0x1B X_D3DFMT_LIN_AL8      */ { false,  8, Linear, _____AL8, D3DFMT_L8        , Texture, "X_D3DFMT_LIN_AL8 -> D3DFMT_L8" },
+	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { false, 16, Linear, X1R5G5B5, D3DFMT_X1R5G5B5  , RenderTarget },
+	/* 0x1D X_D3DFMT_LIN_A4R4G4B4 */ { false, 16, Linear, A4R4G4B4, D3DFMT_A4R4G4B4  },
+	/* 0x1E X_D3DFMT_LIN_X8L8V8U8 */ {  true, 32, Linear, X8R8G8B8, D3DFMT_X8L8V8U8  , RenderTarget },//"X_D3DFMT_LIN_X8L8V8U8 forced to D3DFMT_A8G8G8B8" }, // Alias : X_D3DFMT_LIN_X8R8G8B8
+	/* 0x1F X_D3DFMT_LIN_A8       */ { false,  8, Linear, ______A8, D3DFMT_A8        , Texture, "X_D3DFMT_LIN_A8 -> D3DFMT_A8R8G8B8" }, // D3D9 sets RGB = 0 instead of 1
+	/* 0x20 X_D3DFMT_LIN_A8L8     */ { false, 16, Linear, ____A8L8, D3DFMT_A8L8      },
+	/* 0x21 undefined             */ { false,},
+	/* 0x22 undefined             */ { false,},
+	/* 0x23 undefined             */ { false,},
+	/* 0x24 X_D3DFMT_YUY2         */ { false, 16, Linear, ____YUY2, D3DFMT_YUY2      },
+	/* 0x25 X_D3DFMT_UYVY         */ { false, 16, Linear, ____UYVY, D3DFMT_UYVY      },
+	/* 0x26 undefined             */ { false,},
+	/* 0x27 X_D3DFMT_L6V5U5       */ {  true, 16, Swzzld, __R6G5B5, D3DFMT_X8L8V8U8  , Texture},//"X_D3DFMT_L6V5U5 forced to D3DFMT_A8G8G8B8" }, //was D3DFMT_L6V5U5 but some PC doesn't support it. Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
+	/* 0x28 X_D3DFMT_V8U8         */ {  true, 16, Swzzld, ____G8B8, D3DFMT_V8U8      , Texture},//"X_D3DFMT_V8U8 forced to D3DFMT_A8G8G8B8" }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
+	/* 0x29 X_D3DFMT_R8B8         */ { false, 16, Swzzld, ____R8B8, D3DFMT_R5G6B5    , Texture, "X_D3DFMT_R8B8 -> D3DFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
+	/* 0x2A X_D3DFMT_D24S8        */ { false, 32, Swzzld, NoCmpnts, D3DFMT_D24S8     , DepthBuffer },
+	/* 0x2B X_D3DFMT_F24S8        */ { false, 32, Swzzld, NoCmpnts, D3DFMT_D24FS8    , DepthBuffer },
+	/* 0x2C X_D3DFMT_D16          */ { false, 16, Swzzld, NoCmpnts, D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x2D X_D3DFMT_F16          */ { false, 16, Swzzld, NoCmpnts, D3DFMT_D16       , DepthBuffer, "X_D3DFMT_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
+	/* 0x2E X_D3DFMT_LIN_D24S8    */ { false, 32, Linear, NoCmpnts, D3DFMT_D24S8     , DepthBuffer },
+	/* 0x2F X_D3DFMT_LIN_F24S8    */ { false, 32, Linear, NoCmpnts, D3DFMT_D24FS8    , DepthBuffer },
+	/* 0x30 X_D3DFMT_LIN_D16      */ { false, 16, Linear, NoCmpnts, D3DFMT_D16       , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, D3DFMT_D16 on host is not, but D3DFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x31 X_D3DFMT_LIN_F16      */ { false, 16, Linear, NoCmpnts, D3DFMT_D16       , DepthBuffer, "X_D3DFMT_LIN_F16 -> D3DFMT_D16" }, // HACK : PC doesn't have D3DFMT_F16 (Float vs Int) // TODO : Use D3DFMT_R16F?
+	/* 0x32 X_D3DFMT_L16          */ { false, 16, Swzzld, _____L16, D3DFMT_L16       },
+	/* 0x33 X_D3DFMT_V16U16       */ {  true, 32, Swzzld, __G16B16, D3DFMT_V16U16    , Texture},//"X_D3DFMT_V16U16 forced to D3DFMT_A8G8G8B8" },
+	/* 0x34 undefined             */ { false,},
+	/* 0x35 X_D3DFMT_LIN_L16      */ { false, 16, Linear, _____L16, D3DFMT_L16       },
+	/* 0x36 X_D3DFMT_LIN_V16U16   */ {  true, 32, Linear, __G16B16, D3DFMT_V16U16    , Texture},//"X_D3DFMT_LIN_V16U16 forced to D3DFMT_A8G8G8B8" }, // Note : Seems unused on Xbox
+	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ {  true, 16, Linear, __R6G5B5, D3DFMT_X8L8V8U8  , Texture},//"X_D3DFMT_LIN_L6V5U5 forced to D3DFMT_A8G8G8B8"}, //was D3DFMT_L6V5U5 but some PC doesn't support it. Alias : X_D3DFMT_LIN_R6G5B5
+	/* 0x38 X_D3DFMT_R5G5B5A1     */ { false, 16, Swzzld, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
+	/* 0x39 X_D3DFMT_R4G4B4A4     */ { false, 16, Swzzld, R4G4B4A4, D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
+	/* 0x3A X_D3DFMT_Q8W8V8U8     */ {  true, 32, Swzzld, A8B8G8R8, D3DFMT_Q8W8V8U8  , Texture},//"X_D3DFMT_Q8W8V8U8 forced to D3DFMT_A8G8G8B8"}, // Alias : X_D3DFMT_A8B8G8R8 // Note : D3DFMT_A8B8G8R8=32 D3DFMT_Q8W8V8U8=63 // TODO : Needs testcase.
+	/* 0x3B X_D3DFMT_B8G8R8A8     */ { false, 32, Swzzld, B8G8R8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x3C X_D3DFMT_R8G8B8A8     */ { false, 32, Swzzld, R8G8B8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { false, 16, Linear, R5G5B5A1, D3DFMT_A1R5G5B5  , Texture, "X_D3DFMT_LIN_R5G5B5A1 -> D3DFMT_A1R5G5B5" },
+	/* 0x3E X_D3DFMT_LIN_R4G4B4A4 */ { false, 16, Linear, R4G4B4A4, D3DFMT_A4R4G4B4  , Texture, "X_D3DFMT_LIN_R4G4B4A4 -> D3DFMT_A4R4G4B4" },
+	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { false, 32, Linear, A8B8G8R8, D3DFMT_A8B8G8R8  }, // Note : D3DFMT_A8B8G8R8=32 D3DFMT_LIN_A8B8G8R8=63 // TODO : Needs testcase.
+	/* 0x40 X_D3DFMT_LIN_B8G8R8A8 */ { false, 32, Linear, B8G8R8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_LIN_B8G8R8A8 -> D3DFMT_A8R8G8B8" },
+	/* 0x41 X_D3DFMT_LIN_R8G8B8A8 */ { false, 32, Linear, R8G8B8A8, D3DFMT_A8R8G8B8  , Texture, "X_D3DFMT_LIN_R8G8B8A8 -> D3DFMT_A8R8G8B8" },
 #if 0
 	/* 0x42 to 0x63 undefined     */ {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},
 	/* 0x64 X_D3DFMT_VERTEXDATA   */ {  8, Linear, NoCmpnts, D3DFMT_VERTEXDATA },
@@ -948,9 +1004,117 @@ static const FormatInfo FormatInfos[] = {
 #endif
 };
 
+
+// FormatInfo array for PCFormat. because PCFormat includes 4CC so we can't index it direcly using the value of PCFormat,
+static const FormatInfo PCFormatInfos[] = {
+	{ false,  0, Linear, NoCmpnts, D3DFMT_UNKNOWN            , Texture },
+//	{ false, 24, Linear, __R8G8B8, D3DFMT_R8G8B8             , Texture },
+	{ false, 32, Linear, A8R8G8B8, D3DFMT_A8R8G8B8           , RenderTarget }, // backbuffer
+	{ false, 32, Linear, X8R8G8B8, D3DFMT_X8R8G8B8           , RenderTarget }, // backbuffer
+	{ false, 16, Linear, __R6G5B5, D3DFMT_R5G6B5             , RenderTarget }, // backbuffer
+	{ false, 16, Linear, X1R5G5B5, D3DFMT_X1R5G5B5           , RenderTarget }, // backbuffer
+	{ false, 16, Linear, A1R5G5B5, D3DFMT_A1R5G5B5           , RenderTarget }, // backbuffer
+	{ false, 16, Linear, A4R4G4B4, D3DFMT_A4R4G4B4           , Texture },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_R3G3B2             , Texture },
+	{ false,  8, Linear, ______A8, D3DFMT_A8                 , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_A8R3G3B2           , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_X4R4G4B4           , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_A2B10G10R10        , Texture },
+	{ false, 32, Linear, A8B8G8R8, D3DFMT_A8B8G8R8           , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_X8B8G8R8           , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_G16R16             , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_A2R10G10B10        , RenderTarget }, // backbuffer
+//	{ false, 64, Linear, NoCmpnts, D3DFMT_A16B16G16R16       , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_A8P8               , Texture },
+	{ false,  8, Linear, ______P8, D3DFMT_P8                 , Texture },
+	{ false,  8, Linear, ______L8, D3DFMT_L8                 , RenderTarget },
+	{ false, 16, Linear, ____A8L8, D3DFMT_A8L8               , Texture },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_A4L4               , Texture },
+	{  true, 16, Linear, ____G8B8, D3DFMT_V8U8               , Texture },
+	{  true, 16, Linear, __R6G5B5, D3DFMT_L6V5U5             , Texture },
+	{  true, 32, Linear, X8R8G8B8, D3DFMT_X8L8V8U8           , Texture },
+	{  true, 32, Linear, A8R8G8B8, D3DFMT_Q8W8V8U8           , Texture },
+	{  true, 32, Linear, __G16B16, D3DFMT_V16U16             , Texture },
+//	{  true, 32, Linear, NoCmpnts, D3DFMT_A2W10V10U10        , Texture },
+	{ false, 16, Linear, ____UYVY, D3DFMT_UYVY               , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_R8G8_B8G8          , Texture },
+	{ false, 16, Linear, ____YUY2, D3DFMT_YUY2               , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_G8R8_G8B8          , Texture },
+	{ false,  4, Cmprsd, ____DXT1, D3DFMT_DXT1               , Texture },
+//	{ false,  0, Cmprsd, NoCmpnts, D3DFMT_DXT2               , Texture },
+	{ false,  8, Cmprsd, ____DXT3, D3DFMT_DXT3               , Texture },
+//	{ false,  0, Cmprsd, NoCmpnts, D3DFMT_DXT4               , Texture },
+	{ false,  8, Cmprsd, ____DXT5, D3DFMT_DXT5               , Texture },
+	{ false, 16, Linear, NoCmpnts, D3DFMT_D16_LOCKABLE       , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D32                , DepthBuffer },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_D15S1              , DepthBuffer },
+	{ false, 32, Linear, NoCmpnts, D3DFMT_D24S8              , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D24X8              , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D24X4S4            , DepthBuffer },
+	{ false, 16, Linear, NoCmpnts, D3DFMT_D16                , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D32F_LOCKABL       , DepthBuffer },
+	{ false, 32, Linear, NoCmpnts, D3DFMT_D24FS8             , DepthBuffer },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_D32_LOCKABLE       , DepthBuffer },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_S8_LOCKABLE        , DepthBuffer },
+	{ false, 16, Linear, _____L16, D3DFMT_L16                , Texture },
+//	{ false,  0, Linear, NoCmpnts, D3DFMT_VERTEXDATA         , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_INDEX16            , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_INDEX32            , Texture },
+//	{  true, 64, Linear, NoCmpnts, D3DFMT_Q16W16V16U16       , Texture },
+//	{ false,  8, Linear, NoCmpnts, D3DFMT_MULTI2_ARGB8       , Texture },
+//	{ false, 16, Linear, NoCmpnts, D3DFMT_R16F               , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_G16R16F            , Texture },
+//	{ false, 64, Linear, NoCmpnts, D3DFMT_A16B16G16R16F      , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_R32F               , Texture },
+//	{ false, 64, Linear, NoCmpnts, D3DFMT_G32R32F            , Texture },
+//	{ false,128, Linear, NoCmpnts, D3DFMT_A32B32G32R32F      , Texture },
+//	{  true, 16, Cmprsd, NoCmpnts, D3DFMT_CxV8U8             , Texture },
+//	{ false,  1, Linear, NoCmpnts, D3DFMT_A1                 , Texture },
+//	{ false, 32, Linear, NoCmpnts, D3DFMT_A2B10G10R10_XR_BIAS, Texture },
+//	{ false,  0, Linear, NoCmpnts, D3DFMT_BINARYBUFFER       , Texture },
+};
+
+int EmuGetPCFormatInfoIndex(D3DFORMAT pc)
+{
+#define PCFormatInfosCount sizeof(PCFormatInfos)/sizeof(FormatInfo)
+	int index = 0;
+	for (index = 0; index < PCFormatInfosCount; index++)
+		if (PCFormatInfos[index].pc == pc)
+			break;
+	if (index == PCFormatInfosCount)
+		index = 0;
+	return index;
+}
+
+DWORD EmuPCFormatBitsPerPixel(D3DFORMAT pc)
+{
+	int index = EmuGetPCFormatInfoIndex(pc);
+
+	if (PCFormatInfos[index].bits_per_pixel > 0) // TODO : Remove this
+		return PCFormatInfos[index].bits_per_pixel;
+	else
+	    return 16; // TODO : 8
+}
+
+DWORD EmuPCFormatBytesPerPixel(D3DFORMAT pc)
+{
+	return ((EmuPCFormatBitsPerPixel(pc) + 4) / 8);
+}
+
+ComponentEncoding EmuPCFormatComponentEncoding(D3DFORMAT pc)
+{
+	int index = EmuGetPCFormatInfoIndex(pc);
+
+	if (PCFormatInfos[index].bits_per_pixel > 0) // TODO : Remove this
+		return PCFormatInfos[index].components;
+	else
+		return NoCmpnts;
+}
+
+
 const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		if (FormatInfos[Format].components != NoCmpnts)
 			return ComponentConverters[FormatInfos[Format].components];
 
@@ -965,9 +1129,15 @@ bool EmuXBFormatCanBeConvertedToARGB(xbox::X_D3DFORMAT Format)
 }
 
 // Returns if convertion to ARGB is required. This is the case when
+
+bool g_bForceHostARGBConversion = false;
+
 // the format has a warning message and there's a converter present.
 bool EmuXBFormatRequiresConversionToARGB(xbox::X_D3DFORMAT Format)
 {
+	//return true when g_bForceHostARGBConversion was set. this happended when in CxbxUpdateHostTextures() a UV format texture was set to an none bumpenv stage.
+	if (g_bForceHostARGBConversion)return true;
+
 	if (FormatInfos[Format].warning != nullptr)
 		if (EmuXBFormatCanBeConvertedToARGB(Format))
 			return true;
@@ -977,7 +1147,7 @@ bool EmuXBFormatRequiresConversionToARGB(xbox::X_D3DFORMAT Format)
 
 DWORD EmuXBFormatBitsPerPixel(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		if (FormatInfos[Format].bits_per_pixel > 0) // TODO : Remove this
 			return FormatInfos[Format].bits_per_pixel;
 
@@ -991,7 +1161,7 @@ DWORD EmuXBFormatBytesPerPixel(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Cmprsd);
 
 	return false;
@@ -999,7 +1169,7 @@ BOOL EmuXBFormatIsCompressed(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Linear);
 
 	return (Format == xbox::X_D3DFMT_VERTEXDATA); // TODO : false;
@@ -1007,7 +1177,7 @@ BOOL EmuXBFormatIsLinear(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].stored == Swzzld);
 
 	return false;
@@ -1015,7 +1185,7 @@ BOOL EmuXBFormatIsSwizzled(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].usage == RenderTarget);
 
 	return false;
@@ -1023,15 +1193,25 @@ BOOL EmuXBFormatIsRenderTarget(xbox::X_D3DFORMAT Format)
 
 BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
+	if ((unsigned)Format <= xbox::X_D3DFMT_LIN_R8G8B8A8)
 		return (FormatInfos[Format].usage == DepthBuffer);
 
 	return false;
 }
 
+BOOL EmuXBFormatIsBumpMap(xbox::X_D3DFORMAT Format)
+{
+	return FormatInfos[Format].is_bumpmap;
+}
+
+ComponentEncoding EmuXBFormatComponentEncoding(xbox::X_D3DFORMAT Format)
+{
+	return FormatInfos[Format].components;
+}
+
 D3DFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 {
-	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format != -1 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
+	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format >= 0 /*xbox::X_D3DFMT_UNKNOWN*/) // The last bit prevents crashing (Metal Slug 3)
 	{
 		const FormatInfo *info = &FormatInfos[Format];
 		if (info->warning != nullptr) {
@@ -1717,6 +1897,55 @@ bool ConvertD3DTextureToARGBBuffer(
 	return true;
 }
 
+bool ConvertL6V5U5ToX8L8V8U8Buffer(
+	xbox::X_D3DFORMAT X_Format,
+	uint8_t* pSrc,
+	int SrcWidth, int SrcHeight, int SrcRowPitch, int SrcSlicePitch,
+	uint8_t* pDst, int DstRowPitch, int DstSlicePitch,
+	unsigned int uiDepth,
+	bool bIsV16U16
+)
+{
+	uint8_t* unswizleBuffer = nullptr;
+	if (EmuXBFormatIsSwizzled(X_Format)) {
+		unswizleBuffer = (uint8_t*)malloc(SrcSlicePitch * uiDepth); // TODO : Reuse buffer when performance is important
+		// First we need to unswizzle the texture data
+		EmuUnswizzleBox(
+			pSrc, SrcWidth, SrcHeight, uiDepth,
+			EmuXBFormatBytesPerPixel(X_Format),
+			// Note : use src pitch on dest, because this is an intermediate step :
+			unswizleBuffer, SrcRowPitch, SrcSlicePitch
+		);
+		// Convert colors from the unswizzled buffer
+		pSrc = unswizleBuffer;
+	}
+
+	int AdditionalArgument = DstRowPitch;
+
+	uint8_t* pSrcSlice = pSrc;
+	uint8_t* pDstSlice = pDst;
+	for (unsigned int z = 0; z < uiDepth; z++) {
+		uint8_t* pSrcRow = pSrcSlice;
+		uint8_t* pDstRow = pDstSlice;
+		for (int y = 0; y < SrcHeight; y++) {
+			if(bIsV16U16)
+				__V16U16ToXLVURow_C(pSrcRow, pDstRow, SrcWidth);
+			else
+			    __L6V5U5ToX8L8V8U8Row_C(pSrcRow, pDstRow, SrcWidth);
+			pSrcRow += SrcRowPitch;
+			pDstRow += DstRowPitch;
+		}
+
+		pSrcSlice += SrcSlicePitch;
+		pDstSlice += DstSlicePitch;
+	}
+
+	if (unswizleBuffer)
+		free(unswizleBuffer);
+
+	return true;
+}
+
 // Called by WndMain::LoadGameLogo() to load game logo bitmap
 uint8_t* ConvertD3DTextureToARGB(
 	xbox::X_D3DPixelContainer* pXboxPixelContainer,
@@ -2004,3 +2233,28 @@ bool WndMain::ReadSwizzled16bitFormatIntoBitmap(uint32 format, unsigned char *da
 	return true;
 }
 #endif
+
+// Unused
+inline xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette* pPalette)
+{
+	xbox::X_D3DPALETTESIZE PaletteSize = (xbox::X_D3DPALETTESIZE)
+		((pPalette->Common & X_D3DPALETTE_COMMON_PALETTESIZE_MASK) >> X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
+
+	return PaletteSize;
+}
+
+int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size)
+{
+	/*
+		static int lk[4] =
+		{
+			256 * sizeof(D3DCOLOR),    // D3DPALETTE_256
+			128 * sizeof(D3DCOLOR),    // D3DPALETTE_128
+			64 * sizeof(D3DCOLOR),     // D3DPALETTE_64
+			32 * sizeof(D3DCOLOR)      // D3DPALETTE_32
+		};
+
+		return lk[Size];
+	*/
+	return (256 * sizeof(D3DCOLOR)) >> (unsigned)Size;
+}

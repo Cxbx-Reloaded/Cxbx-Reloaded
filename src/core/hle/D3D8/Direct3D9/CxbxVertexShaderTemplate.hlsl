@@ -48,6 +48,19 @@ float4 _tof4(float4 src) { return src; }
 float4 _ssss(float s)    { return float4(s, s, s, s); } // a scalar output replicated across a 4-component vector
 #define _scalar(src) _tof4(src).x /* a scalar input */
 
+// Clean up values before they go to the PS
+// FIXME On hw it appears NaN becomes 1 or 0 depending
+// on the sign bit, which might require bitwise ops in SM4+
+float4 clean(float4 x)
+{
+	// Convert NaN into 1
+	// Note IsNaN() just gets optimized away...
+	// https://shader-playground.timjones.io/0bbe04704caddadb52cd4134daab8ac3
+	// Test case: Otogi does math ops on -NaN
+	// which seems to become +NaN -> +1 in the PS
+	return (x < 0.f || x > 0.f || x == 0.f) ? x : 1;
+}
+
 float4 c(int register_number)
 {
 	// Map Xbox [-96, 95] to Host [0, 191]
@@ -349,6 +362,8 @@ R"DELIMITER(
     float fogFactor;
     if(fogTableMode == FOG_TABLE_NONE) 
        fogFactor = fogDepth;
+         //if(fogDepth < 0)
+         //fogFactor = 1 + fogDepth;
     if(fogTableMode == FOG_TABLE_EXP) 
        fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
     if(fogTableMode == FOG_TABLE_EXP2) 
@@ -359,7 +374,7 @@ R"DELIMITER(
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
+	xOut.oFog = clean(fogFactor).x; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);

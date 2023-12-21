@@ -351,9 +351,9 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
        // TODO move alongside the texture transformation when it stops angering the HLSL compiler
         const float componentCount = state.TexCoordComponentCount[texCoordIndex];
         if (componentCount == 1)
-            texCoord.yzw = float3(1, 0, 0);
+            texCoord.yzw = float3(0, 0, 1);
         if (componentCount == 2)
-            texCoord.zw = float2(1, 0);
+            texCoord.zw = float2(0, 1);
         if (componentCount == 3)
             texCoord.w = 1;
     }   // Generate texture coordinates
@@ -390,14 +390,15 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
     // Test case: ProjectedTexture sample, which uses 3 coordinates
     // We'll need to implement the divide when D3D stops handling it for us?
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtexturetransformflags
+    // padding makes no differences in LLE. LLE works with ProjectedTexture sample without padding, but to be devided by w is necessary.
+
     if (projected)
     {
-        if (countFlag == 1)
-            texCoord.yzw = texCoord.x;
-        if (countFlag == 2)
-            texCoord.zw = texCoord.y;
-        if (countFlag == 3)
-            texCoord.w = texCoord.z;
+        //if (countFlag == 1)
+            //texCoord.yz = texCoord.x;
+        //if (countFlag == 2)
+            //texCoord.z = texCoord.y;
+        //texCoord.xyzw = texCoord.xyzw / texCoord.w;
     }
 
     return texCoord;

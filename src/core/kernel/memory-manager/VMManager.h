@@ -152,7 +152,7 @@ class VMManager : public PhysicalMemory
 		// an array of structs used to track the free/allocated vma's in the various memory regions
 		MemoryRegion m_MemoryRegionArray[COUNTRegion];
 		// critical section lock to synchronize accesses
-		CRITICAL_SECTION m_CriticalSection;
+		CRITICAL_SECTION m_CriticalSection = {};
 		// the allocation granularity of the host
 		DWORD m_AllocationGranularity = 0;
 		// number of bytes reserved with XBOX_MEM_RESERVE by XbAllocateVirtualMemory

@@ -47,7 +47,6 @@ namespace NtDll
 #include "devices\video\nv2a_int.h"
 #include "devices\video\nv2a.h" // For NV2ABlockInfo, EmuNV2A_Block()
 
-
 // HW Register helper functions
 xbox::uchar_xt REG_RD08(void* Ptr, xbox::ulong_xt Addr)
 {
@@ -154,6 +153,8 @@ ULONG AvQueryAvCapabilities()
 
 xbox::PVOID xbox::AvSavedDataAddress = xbox::zeroptr;
 
+extern xbox::X_D3DSurface* CxbxrImpl_GetAvSavedDataSurface();
+
 // ******************************************************************
 // * 0x0001 - AvGetSavedDataAddress()
 // ******************************************************************
@@ -161,7 +162,15 @@ XBSYSAPI EXPORTNUM(1) xbox::PVOID NTAPI xbox::AvGetSavedDataAddress(void)
 {
 	LOG_FUNC();
 
+#if 0
 	RETURN(AvSavedDataAddress);
+#else
+	//if xbox persist surface was not created yet, create it first.
+	if (AvSavedDataAddress != nullptr)
+		return CxbxrImpl_GetAvSavedDataSurface();
+	else
+		return nullptr;
+#endif
 }
 
 // ******************************************************************

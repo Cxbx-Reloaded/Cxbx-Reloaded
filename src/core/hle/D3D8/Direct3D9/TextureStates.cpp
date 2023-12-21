@@ -77,6 +77,71 @@ TextureStateInfo CxbxTextureStateInfo[] = {
     { "D3DTSS_COLORKEYCOLOR",           false,  0 },
 };
 
+typedef enum _X_D3DTEXTURECOLORKEYOP {  // Xbox extension
+    X_D3DTCOLORKEYOP_DISABLE = 0,
+    X_D3DTCOLORKEYOP_ALPHA = 1,
+    X_D3DTCOLORKEYOP_RGBA = 2,
+    X_D3DTCOLORKEYOP_KILL = 3,
+
+    X_D3DTCOLORKEYOP_MAX = 4,
+    X_D3DTCOLORKEYOP_FORCE_DWORD = 0x7fffffff, /* force 32-bit size enum */
+} X_D3DTEXTURECOLORKEYOP;
+
+typedef enum _X_D3DTEXTUREALPHAKILL { // Xbox extension
+    X_D3DTALPHAKILL_DISABLE = 0,
+    X_D3DTALPHAKILL_ENABLE = 4,
+    X_D3DTALPHAKILL_FORCE_DWORD = 0x7fffffff
+} X_D3DTEXTUREALPHAKILL;
+
+typedef enum _X_D3DTEXTURETRANSFORMFLAGS {
+    X_D3DTTFF_DISABLE = 0,
+    X_D3DTTFF_COUNT1 = 1,
+    X_D3DTTFF_COUNT2 = 2,
+    X_D3DTTFF_COUNT3 = 3,
+    X_D3DTTFF_COUNT4 = 4,
+    X_D3DTTFF_PROJECTED = 256,
+
+    X_D3DTTFF_FORCE_DWORD = 0x7fffffff
+} X_D3DTEXTURETRANSFORMFLAGS;
+
+
+CONST UINT32 g_DefaultTextureStates[][2] =
+{
+{  xbox::X_D3DTSS_ADDRESSU              ,      xbox::X_D3DTADDRESS_WRAP },
+{  xbox::X_D3DTSS_ADDRESSV              ,      xbox::X_D3DTADDRESS_WRAP },
+{  xbox::X_D3DTSS_ADDRESSW              ,      xbox::X_D3DTADDRESS_WRAP },
+{  xbox::X_D3DTSS_MAGFILTER             ,      xbox::X_D3DTEXF_POINT },
+{  xbox::X_D3DTSS_MINFILTER             ,      xbox::X_D3DTEXF_POINT },
+{  xbox::X_D3DTSS_MIPFILTER             ,      xbox::X_D3DTEXF_NONE },
+{  xbox::X_D3DTSS_MIPMAPLODBIAS         ,      0 },
+{  xbox::X_D3DTSS_MAXMIPLEVEL           ,      0 },
+{  xbox::X_D3DTSS_MAXANISOTROPY         ,      1 },
+{  xbox::X_D3DTSS_COLORKEYOP            ,      X_D3DTCOLORKEYOP_DISABLE },
+{  xbox::X_D3DTSS_COLORSIGN             ,      0 },
+{  xbox::X_D3DTSS_ALPHAKILL             ,      X_D3DTALPHAKILL_DISABLE },
+{  xbox::X_D3DTSS_COLOROP,      xbox::X_D3DTOP_DISABLE },
+{  xbox::X_D3DTSS_COLORARG0 ,      xbox::X_D3DTA_CURRENT },
+{  xbox::X_D3DTSS_COLORARG1             ,      xbox::X_D3DTA_TEXTURE },
+{  xbox::X_D3DTSS_COLORARG2             ,      xbox::X_D3DTA_CURRENT },
+{  xbox::X_D3DTSS_ALPHAOP,      xbox::X_D3DTOP_DISABLE },
+{  xbox::X_D3DTSS_ALPHAARG0             ,      xbox::X_D3DTA_CURRENT },
+{  xbox::X_D3DTSS_ALPHAARG1             ,      xbox::X_D3DTA_TEXTURE },
+{  xbox::X_D3DTSS_ALPHAARG2             ,      xbox::X_D3DTA_CURRENT },
+{  xbox::X_D3DTSS_RESULTARG             ,      xbox::X_D3DTA_CURRENT },
+{  xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS ,      X_D3DTTFF_DISABLE },
+{  xbox::X_D3DTSS_BUMPENVMAT00          ,      0 },
+{  xbox::X_D3DTSS_BUMPENVMAT01          ,      0 },
+{  xbox::X_D3DTSS_BUMPENVMAT11          ,      0 },
+{  xbox::X_D3DTSS_BUMPENVMAT10          ,      0 },
+{  xbox::X_D3DTSS_BUMPENVLSCALE         ,      0 },
+{  xbox::X_D3DTSS_BUMPENVLOFFSET        ,      0 },
+{  xbox::X_D3DTSS_TEXCOORDINDEX,      0 },
+{  xbox::X_D3DTSS_BORDERCOLOR           ,      0 },
+{  xbox::X_D3DTSS_COLORKEYCOLOR         ,      0 },
+// pair of 0xFFFFFFFF indicate end of array
+{  0xFFFFFFFF         ,      0xFFFFFFFF }
+};
+
 bool XboxTextureStateConverter::Init(XboxRenderStateConverter* pState)
 {
     // Deferred states start at 0, this means that D3D_g_DeferredTextureState IS D3D__TextureState
@@ -94,6 +159,36 @@ bool XboxTextureStateConverter::Init(XboxRenderStateConverter* pState)
     // Store a handle to the Xbox Render State manager
     // This is used to check for Point Sprites
     pXboxRenderStates = pState;
+
+    return true;
+}
+
+bool XboxTextureStateConverter::InitWithNV2A(XboxRenderStateConverter* pState)
+{
+    // Deferred states start at 0, this means that D3D_g_DeferredTextureState IS D3D__TextureState
+    // No further works is required to derive the offset
+    // we have 4 texture stages, so we have to allocate memory for all 4 stages.
+    D3D__TextureState = (uint32_t*)malloc(4*sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
+    
+    // Build a mapping of Cxbx Texture State indexes to indexes within the current XDK
+    BuildTextureStateMappingTable();
+
+    //g_DefaultTextureStates[][2]
+
+    // Store a handle to the Xbox Render State manager
+    // This is used to check for Point Sprites
+    pXboxRenderStates = pState;
+
+    // steup default xbox texture stage state values.
+    // another way is to use XboxTextureStageStates.Get() to get xbox values and set to NV2ARenderStages
+    int i = 0;
+    for(int stage=0;stage<4;stage++)
+        while (g_DefaultTextureStates[i][0] != 0xFFFFFFFF) {
+            unsigned int TextureStageState = g_DefaultTextureStates[i][0];
+            unsigned int value = g_DefaultTextureStates[i][1];
+            Set(stage, TextureStageState, value);
+            i++;
+        }
 
     return true;
 }
@@ -169,7 +264,14 @@ void XboxTextureStateConverter::Apply()
 	// TODO use stage 3 when we roll our own point sprites after moving off D3D9
     bool pointSpriteOverride = false;
     bool pointSpritesEnabled = false;
-    pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+    extern bool is_pgraph_using_NV2A_Kelvin(void);
+    extern XboxRenderStateConverter NV2ARenderStates;
+
+    if(is_pgraph_using_NV2A_Kelvin())
+        pointSpritesEnabled = NV2ARenderStates.GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+    else
+        pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
+
     if (pointSpritesEnabled) {
         pointSpriteOverride = true;
     }
@@ -370,4 +472,32 @@ uint32_t XboxTextureStateConverter::Get(int textureStage, DWORD xboxState) {
     DWORD rawValue = D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[xboxState]];
 
     return NormalizeValue(xboxState, rawValue);
+}
+
+void XboxTextureStateConverter::Set(int textureStage, DWORD xboxState, DWORD Value) {
+    if (textureStage < 0 || textureStage > 3)
+        CxbxrAbort("Written texture stage was out of range: %d", textureStage);
+    if (xboxState < xbox::X_D3DTSS_FIRST || xboxState > xbox::X_D3DTSS_LAST)
+        CxbxrAbort("Written texture state was out of range: %d", xboxState);
+
+    // Read the value of the current stage/state from the Xbox data structure
+    D3D__TextureState[(textureStage * xbox::X_D3DTS_STAGESIZE) + XboxTextureStateOffsets[xboxState]] = Value;
+
+    return;
+}
+
+// copy whole internal buffer to buffer via argument
+void XboxTextureStateConverter::CopyTo(uint32_t* ptarget)
+{
+    // Read the value of the current stage/state from the Xbox data structure
+    memcpy(ptarget,D3D__TextureState, sizeof(DWORD) * (xbox::X_D3DTSS_LAST + 1));
+
+    return;
+}
+
+// return internal buffer pointer
+uint32_t* XboxTextureStateConverter::Buffer(void)
+{
+    // Read the value of the current stage/state from the Xbox data structure
+    return D3D__TextureState;
 }

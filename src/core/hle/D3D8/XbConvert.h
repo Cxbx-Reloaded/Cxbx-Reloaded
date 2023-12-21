@@ -263,12 +263,56 @@ extern const D3DPRIMITIVETYPE g_XboxPrimitiveTypeToHost[];
 // convert xbox->pc primitive type
 inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType)
 {
-	if (XboxPrimitiveType >= xbox::X_D3DPT_MAX) {
+	if (!((unsigned)XboxPrimitiveType < xbox::X_D3DPT_MAX)) {
 		LOG_TEST_CASE("XboxPrimitiveType too large");
 		return D3DPT_FORCE_DWORD;
 	}
 
     return g_XboxPrimitiveTypeToHost[XboxPrimitiveType];
+}
+
+// convert xbox->pc primitive type
+inline DWORD EmuXB2PC_D3DPrimitiveCount(DWORD vertex_count,xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType)
+{
+	if (!((unsigned)XboxPrimitiveType < xbox::X_D3DPT_MAX)) {
+		LOG_TEST_CASE("XboxPrimitiveType too large");
+		return D3DPT_FORCE_DWORD;
+	}
+	unsigned int hostprimitivecount = 0;
+	switch (XboxPrimitiveType) {
+		case xbox::X_D3DPT_POINTLIST:
+			hostprimitivecount= vertex_count;//D3D9 converte to point list
+			break;
+		case xbox::X_D3DPT_LINELIST:
+			hostprimitivecount = vertex_count/2;//D3D9 converte to line list
+			break;
+		case xbox::X_D3DPT_LINELOOP:
+			hostprimitivecount = vertex_count-1;//D3D9 converte to line strip, the very last line strip is handled seperately.
+			break;
+		case xbox::X_D3DPT_LINESTRIP:
+			hostprimitivecount = vertex_count-1;//D3D9 converte to line strip
+			break;
+		case xbox::X_D3DPT_TRIANGLELIST:
+			hostprimitivecount = vertex_count/3;//D3D9 converte to triangle list
+			break;
+		case xbox::X_D3DPT_TRIANGLESTRIP:
+			hostprimitivecount = vertex_count-2;//D3D9 converte to triangle strip
+			break;
+		case xbox::X_D3DPT_TRIANGLEFAN:
+			hostprimitivecount = vertex_count-2;//D3D9 converte to triangle fan
+			break;
+		case xbox::X_D3DPT_QUADLIST:
+			hostprimitivecount = vertex_count/2;//xbox is vertex_count/4, D3D9 converte to triangle list, so multiply by 2.
+			break;
+		case xbox::X_D3DPT_QUADSTRIP:
+			hostprimitivecount = vertex_count-2;//xbox is (vertex_count-2)/2, D3D9 converte to triangle strip (vertex_count-2)
+			break;
+		case xbox::X_D3DPT_POLYGON:
+			hostprimitivecount = vertex_count-2;//D3D9 converte to triangle fan
+			break;
+	}
+
+	return hostprimitivecount;
 }
 
 extern void EmuUnswizzleBox
@@ -1528,7 +1572,17 @@ extern void EmuUnswizzleBox
 	BITFLD(NV2A_TX_NPOT_SIZE_H_MASK,									0x0000ffff) \
 	BITFLD(NV2A_TX_NPOT_SIZE_W_SHIFT,								16) \
 	BITFLD(NV2A_TX_NPOT_SIZE_W_MASK,									0xffff0000) \
-	RANGED(NV2A_TX_PALETTE_OFFSET,								0x00001b20, 0x40, 4) \
+	RANGED(NV2A_TX_PALETTE,										0x00001b20, 0x40, 4) \
+	BITFLD(NV2A_TX_PALETTE_CONTEXT_DMA_SHIFT,						0) \
+	BITFLD(NV2A_TX_PALETTE_CONTEXT_DMA_MASK,							0x00000001) \
+	BITFLD(NV2A_TX_PALETTE_LENGTH_SHIFT,							1) \
+	BITFLD(NV2A_TX_PALETTE_LENGTH_MASK,									0x0000000c) \
+	 VALUE(NV2A_TX_PALETTE_LENGTH_256,									0x00000000) \
+	 VALUE(NV2A_TX_PALETTE_LENGTH_128,									0x00000002) \
+	 VALUE(NV2A_TX_PALETTE_LENGTH_64,									0x00000004) \
+	 VALUE(NV2A_TX_PALETTE_LENGTH_32,									0x00000006) \
+	BITFLD(NV2A_TX_PALETTE_OFFSET_SHIFT,							6) \
+	BITFLD(NV2A_TX_PALETTE_OFFSET_MASK,									0xffffffc0) \
 	RANGED(NV2A_TX_BORDER_COLOR,								0x00001b24, 0x40, 4) \
 	BITFLD(NV2A_TX_BORDER_COLOR_B_SHIFT,							0) \
 	BITFLD(NV2A_TX_BORDER_COLOR_B_MASK,									0x000000ff) \

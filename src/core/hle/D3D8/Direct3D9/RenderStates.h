@@ -37,6 +37,7 @@ class XboxRenderStateConverter
 {
 public:
     bool Init();
+    bool InitWithNV2A();
     void Apply();
 
     void* GetPixelShaderRenderStatePointer();
@@ -47,6 +48,8 @@ public:
     void SetDirty();
     uint32_t GetXboxRenderState(uint32_t State);
     float GetXboxRenderStateAsFloat(uint32_t State);
+    void CopyTo(uint32_t* ptarget);
+    uint32_t* Buffer(void);
 private:
     void VerifyAndFixDeferredRenderStateOffset();
     void DeriveRenderStateOffsetFromDeferredRenderStateOffset();

@@ -103,7 +103,7 @@ void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const
 
 	LOG_INIT
 
-	if (state >= this->Transforms.size()) {
+	if (!((unsigned)state < this->Transforms.size())) {
 		LOG_TEST_CASE("Transform state was not in expected range");
 		return;
 	}
