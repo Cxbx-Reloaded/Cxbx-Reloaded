@@ -108,23 +108,28 @@ XBSYSAPI EXPORTNUM(260) xbox::ntstatus_xt NTAPI xbox::RtlAnsiStringToUnicodeStri
 	dword_xt total = RtlAnsiStringToUnicodeSize(SourceString);
 
 	if (total > 0xffff) {
-		return X_STATUS_INVALID_PARAMETER_2;
+		RETURN(X_STATUS_INVALID_PARAMETER_2);
 	}
 
 	DestinationString->Length = (USHORT)(total - sizeof(WCHAR));
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = (USHORT)total;
-		if (!(DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag(total, 'grtS'))) {
-			return X_STATUS_NO_MEMORY;
+		if (!(DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag(total, 'grtS'))) {
+			RETURN(X_STATUS_NO_MEMORY);
 		}
 	}
 	else {
 		if (total > DestinationString->MaximumLength) {
-			return X_STATUS_BUFFER_OVERFLOW;
+			RETURN(X_STATUS_BUFFER_OVERFLOW);
 		}
 	}
 
-	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer, (ULONG)DestinationString->Length, NULL, SourceString->Buffer, SourceString->Length);
+	RtlMultiByteToUnicodeN((PWSTR)DestinationString->Buffer,
+	                       (ULONG)DestinationString->Length,
+	                       NULL,
+	                       SourceString->Buffer,
+	                       SourceString->Length);
+
 	DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
 
 	RETURN(X_STATUS_SUCCESS);
@@ -521,23 +526,31 @@ XBSYSAPI EXPORTNUM(270) xbox::long_xt NTAPI xbox::RtlCompareString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result;
+	const USHORT l1 = String1->Length;
+	const USHORT l2 = String2->Length;
+	const USHORT maxLen = (l1 <= l2 ? l1 : l2);
 
-	USHORT l1 = String1->Length;
-	USHORT l2 = String2->Length;
-	USHORT maxLen = l1 <= l2 ? l1 : l2;
-
-	CHAR *str1 = String1->Buffer;
-	CHAR *str2 = String2->Buffer;
+	const PCHAR str1 = String1->Buffer;
+	const PCHAR str2 = String2->Buffer;
 
 	if (CaseInSensitive) {
-		result = _strnicmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			UCHAR char1 = RtlLowerChar(str1[i]);
+			UCHAR char2 = RtlLowerChar(str2[i]);
+			if (char1 != char2) {
+				RETURN(char1 - char2);
+			}
+		}
 	}
 	else {
-		result = strncmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			if (str1[i] != str2[i]) {
+				RETURN(str1[i] - str2[i]);
+			}
+		}
 	}
 
-	RETURN(result);
+	RETURN(l1 - l2);
 }
 
 // ******************************************************************
@@ -556,23 +569,32 @@ XBSYSAPI EXPORTNUM(271) xbox::long_xt NTAPI xbox::RtlCompareUnicodeString
 		LOG_FUNC_ARG(CaseInSensitive)
 		LOG_FUNC_END;
 
-	LONG result;
+	const USHORT l1 = String1->Length;
+	const USHORT l2 = String2->Length;
+	const USHORT maxLen = (l1 <= l2 ? l1 : l2) / sizeof(WCHAR);
 
-	USHORT l1 = String1->Length;
-	USHORT l2 = String2->Length;
-	USHORT maxLen = l1 <= l2 ? l1 : l2;
-
-	WCHAR *str1 = (WCHAR*)(String1->Buffer);
-	WCHAR *str2 = (WCHAR*)(String2->Buffer);
+	const wchar_xt* str1 = String1->Buffer;
+	const wchar_xt* str2 = String2->Buffer;
 
 	if (CaseInSensitive) {
-		result = _wcsnicmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			wchar_xt char1 = towlower(str1[i]);
+			wchar_xt char2 = towlower(str2[i]);
+
+			if (char1 != char2) {
+				RETURN(char1 - char2);
+			}
+		}
 	}
 	else {
-		result = wcsncmp(str1, str2, maxLen);
+		for (unsigned i = 0; i < maxLen; i++) {
+			if (str1[i] != str2[i]) {
+				RETURN(str1[i] - str2[i]);
+			}
+		}
 	}
 
-	RETURN(result);
+	RETURN(l1 - l2);
 }
 
 // ******************************************************************
@@ -652,7 +674,7 @@ XBSYSAPI EXPORTNUM(274) xbox::boolean_xt NTAPI xbox::RtlCreateUnicodeString
 	BOOLEAN result = TRUE;
 
 	ULONG bufferSize = (std::u16string(SourceString).length() + 1) * sizeof(WCHAR);
-	DestinationString->Buffer = (USHORT *)ExAllocatePoolWithTag(bufferSize, 'grtS');
+	DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag(bufferSize, 'grtS');
 	if (!DestinationString->Buffer) {
 		result = FALSE;
 	}
@@ -700,7 +722,7 @@ XBSYSAPI EXPORTNUM(276) xbox::ntstatus_xt NTAPI xbox::RtlDowncaseUnicodeString
 
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = SourceString->Length;
-		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
+		DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
 		if (DestinationString->Buffer == NULL) {
 			return X_STATUS_NO_MEMORY;
 		}
@@ -1173,9 +1195,8 @@ XBSYSAPI EXPORTNUM(290) xbox::void_xt NTAPI xbox::RtlInitUnicodeString
 		LOG_FUNC_ARG(SourceString)
 		LOG_FUNC_END;
 
-	DestinationString->Buffer = (USHORT*)SourceString;
+	DestinationString->Buffer = (wchar_xt*)SourceString;
 	if (SourceString != NULL) {
-		DestinationString->Buffer = (USHORT*)SourceString;
 		DestinationString->Length = (USHORT)std::u16string(SourceString).length() * 2;
 		DestinationString->MaximumLength = DestinationString->Length + 2;
 	}
@@ -2025,7 +2046,7 @@ XBSYSAPI EXPORTNUM(314) xbox::ntstatus_xt NTAPI xbox::RtlUpcaseUnicodeString
 
 	if (AllocateDestinationString) {
 		DestinationString->MaximumLength = SourceString->Length;
-		DestinationString->Buffer = (USHORT*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
+		DestinationString->Buffer = (wchar_xt*)ExAllocatePoolWithTag((ULONG)DestinationString->MaximumLength, 'grtS');
 		if (DestinationString->Buffer == NULL) {
 			return X_STATUS_NO_MEMORY;
 		}
@@ -2218,6 +2239,11 @@ XBSYSAPI EXPORTNUM(319) xbox::ulong_xt NTAPI xbox::RtlWalkFrameChain
 			/* Get new stack and EIP */
 			ulong_ptr_xt NewStack = *(ulong_ptr_xt*)Stack;
 			ulong_xt Eip = *(ulong_ptr_xt*)(Stack + sizeof(ulong_ptr_xt));
+
+			/* Check if Eip is not below executable's dos header */
+			if (Eip < KiB(64)) {
+				break;
+			}
 
 			/* Check if the new pointer is above the old one and past the end */
 			if (!((Stack < NewStack) && (NewStack < StackEnd))) {

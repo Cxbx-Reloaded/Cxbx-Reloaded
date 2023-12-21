@@ -266,7 +266,7 @@ typedef struct _UNICODE_STRING
 {
     ushort_xt  Length;
     ushort_xt  MaximumLength;
-    ushort_xt *Buffer;
+    wchar_xt  *Buffer;
 }
 UNICODE_STRING, *PUNICODE_STRING;
 
