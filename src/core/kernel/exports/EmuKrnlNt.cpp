@@ -1215,12 +1215,12 @@ XBSYSAPI EXPORTNUM(209) xbox::ntstatus_xt NTAPI xbox::NtQueryEvent
 XBSYSAPI EXPORTNUM(210) xbox::ntstatus_xt NTAPI xbox::NtQueryFullAttributesFile
 (
 	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-	OUT xbox::PFILE_NETWORK_OPEN_INFORMATION   Attributes
+	OUT xbox::PFILE_NETWORK_OPEN_INFORMATION   FileInformation
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ObjectAttributes)
-		LOG_FUNC_ARG_OUT(Attributes)
+		LOG_FUNC_ARG_OUT(FileInformation)
 		LOG_FUNC_END;
 
 	//	__asm int 3;
@@ -1238,7 +1238,7 @@ XBSYSAPI EXPORTNUM(210) xbox::ntstatus_xt NTAPI xbox::NtQueryFullAttributesFile
 			&nativeNetOpenInfo);
 
 	// Convert Attributes to Xbox
-	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION));
+	NTToXboxFileInformation(&nativeNetOpenInfo, FileInformation, FileNetworkOpenInformation, sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION));
 
 	if (FAILED(ret))
 		EmuLog(LOG_LEVEL::WARNING, "NtQueryFullAttributesFile failed! (0x%.08X)", ret);

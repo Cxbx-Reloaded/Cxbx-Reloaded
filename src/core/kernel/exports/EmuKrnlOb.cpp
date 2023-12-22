@@ -477,12 +477,12 @@ XBSYSAPI EXPORTNUM(239) xbox::ntstatus_xt NTAPI xbox::ObCreateObject
 	while (RemainingName.Length != 0) {
 		ObDissectName(RemainingName, &ElementName, &RemainingName);
 		if ((RemainingName.Length != 0) && (RemainingName.Buffer[0] == OBJ_NAME_PATH_SEPARATOR)) {
-			return STATUS_OBJECT_NAME_INVALID;
+			RETURN(X_STATUS_OBJECT_NAME_INVALID);
 		}
 	}
 
 	if (ElementName.Length == 0) {
-		return STATUS_OBJECT_NAME_INVALID;
+		RETURN(X_STATUS_OBJECT_NAME_INVALID);
 	}
 
 	ObjectBodySize = ALIGN_UP(ObjectBodySize, ULONG);
@@ -492,7 +492,7 @@ XBSYSAPI EXPORTNUM(239) xbox::ntstatus_xt NTAPI xbox::ObCreateObject
 		ObjectBodySize + ElementName.Length, ObjectType->PoolTag);
 
 	if (ObjectNameInfo == NULL) {
-		return X_STATUS_INSUFFICIENT_RESOURCES;
+		RETURN(X_STATUS_INSUFFICIENT_RESOURCES);
 	}
 
 	POBJECT_HEADER ObjectHeader = (POBJECT_HEADER)(ObjectNameInfo + 1);
@@ -898,6 +898,10 @@ CleanupAndExit:
 	ObfDereferenceObject(Object);
 	*ReturnedHandle = Handle;
 
+	LOG_FUNC_BEGIN_ARG_RESULT
+		LOG_FUNC_ARG_RESULT(ReturnedHandle)
+	LOG_FUNC_END_ARG_RESULT;
+
 	RETURN(result);
 }
 
@@ -973,6 +977,10 @@ XBSYSAPI EXPORTNUM(243) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByName
 		result = X_STATUS_SUCCESS;
 	}
 
+	LOG_FUNC_BEGIN_ARG_RESULT
+		LOG_FUNC_ARG_RESULT(Handle)
+	LOG_FUNC_END_ARG_RESULT;
+
 	RETURN(result);
 }
 
@@ -994,6 +1002,11 @@ XBSYSAPI EXPORTNUM(244) xbox::ntstatus_xt NTAPI xbox::ObOpenObjectByPointer
 
 	ntstatus_xt result = ObReferenceObjectByPointer(Object, ObjectType);
 	*Handle = ObpGetHandleByObjectThenDereferenceInline(Object, result);
+
+	LOG_FUNC_BEGIN_ARG_RESULT
+		LOG_FUNC_ARG_RESULT(Handle)
+	LOG_FUNC_END_ARG_RESULT;
+
 	RETURN(result);
 }
 
@@ -1031,7 +1044,7 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 			ObjectHeader = OBJECT_TO_OBJECT_HEADER(Object);
 			InterlockedIncrement((::PLONG)(&ObjectHeader->PointerCount));
 			*ReturnedObject = Object;
-			return X_STATUS_SUCCESS;
+			goto ObjectObtained;
 		}
 		else {
 			result = STATUS_OBJECT_TYPE_MISMATCH;
@@ -1051,7 +1064,7 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 			else if (GetHandleInformation(Handle, &flags)) {
 				// This was a Windows Handle, so return it.
 				*ReturnedObject = Handle;
-				return X_STATUS_SUCCESS;
+				goto ObjectObtained;
 			}
 			// TODO: Remove above, inside if statement, to leave only result value set here.
 			result = STATUS_INVALID_HANDLE;
@@ -1063,7 +1076,7 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 			// Verify if object type do match with found object or any if null object type.
 			if ((ObjectType == ObjectHeader->Type) || (!ObjectType)) {
 				*ReturnedObject = Object;
-				return X_STATUS_SUCCESS;
+				goto ObjectObtained;
 			}
 			else {
 				ObfDereferenceObject(Object);
@@ -1075,6 +1088,13 @@ XBSYSAPI EXPORTNUM(246) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByHandle
 	*ReturnedObject = NULL;
 
 	RETURN(result);
+
+	ObjectObtained:
+	LOG_FUNC_BEGIN_ARG_RESULT
+		LOG_FUNC_ARG_RESULT(ReturnedObject)
+	LOG_FUNC_END_ARG_RESULT;
+
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1097,7 +1117,12 @@ XBSYSAPI EXPORTNUM(247) xbox::ntstatus_xt NTAPI xbox::ObReferenceObjectByName
 		LOG_FUNC_ARG_OUT(Object)
 		LOG_FUNC_END;
 
-	NTSTATUS result = ObpReferenceObjectByName(NULL, ObjectName, Attributes, ObjectType, ParseContext, Object);
+	ntstatus_xt result = ObpReferenceObjectByName(NULL, ObjectName, Attributes, ObjectType, ParseContext, Object);
+
+	LOG_FUNC_BEGIN_ARG_RESULT
+		LOG_FUNC_ARG_RESULT(Object)
+	LOG_FUNC_END_ARG_RESULT;
+
 	RETURN(result);
 }
 

@@ -124,8 +124,8 @@ extern std::string g_DiskBasePath;
 extern std::string g_MuBasePath;
 extern HANDLE g_DiskBasePathHandle;
 
-const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation] = {
-	0,                                                    // (index 0)
+const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation + 1] = {
+	0,                                                    // (index 0, unused)
 	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileDirectoryInformation
 	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileFullDirectoryInformation
 	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileBothDirectoryInformation
@@ -154,18 +154,15 @@ const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation] = {
 	sizeof(xbox::FILE_MAILSLOT_QUERY_INFORMATION),        // FileMailslotQueryInformation
 	sizeof(xbox::FILE_MAILSLOT_SET_INFORMATION),          // FileMailslotSetInformation
 	sizeof(xbox::FILE_COMPRESSION_INFORMATION),           // FileCompressionInformation
-	0,                                                    // FileCopyOnWriteInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileObjectIdInformation
 	sizeof(xbox::FILE_COMPLETION_INFORMATION),            // FileCompletionInformation
 	sizeof(xbox::FILE_MOVE_CLUSTER_INFORMATION),          // FileMoveClusterInformation
 	0,                                                    // FileQuotaInformation
 	sizeof(xbox::FILE_REPARSE_POINT_INFORMATION),         // FileReparsePointInformation
 	sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION),          // FileNetworkOpenInformation
-	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileObjectIdInformation
+	sizeof(xbox::FILE_ATTRIBUTE_TAG_INFORMATION),         // FileAttributeTagInformation
 	sizeof(xbox::FILE_TRACKING_INFORMATION),              // FileTrackingInformation
-	0,                                                    // FileOleDirectoryInformation
-	0,                                                    // FileContentIndexInformation
-	0,                                                    // FileInheritContentIndexInformation
-	0                                                     // FileOleInformation
+	0xFF                                                  // FileMaximumInformation
 };
 
 
