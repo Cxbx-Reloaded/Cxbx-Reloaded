@@ -39,6 +39,7 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_pXbox_PixelShader
+#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbPixelShader.h"
 #include "core\hle\D3D8\Direct3D9\PixelShader.h" // EmuCompilePixelShader
 #include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
@@ -663,33 +664,6 @@ constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; //
 // This concludes the set of constants that need to be set on host :
 constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
 
-std::string GetFixedFunctionShaderTemplate() {
-	static bool loaded = false;
-	static std::string hlslString;
-
-	// TODO does this need to be thread safe?
-	if (!loaded) {
-		loaded = true;
-
-		// Determine the filename and directory for the fixed function shader
-		// TODO make this a relative path so we guarantee an LPCSTR for D3DCompile
-		auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
-			.parent_path()
-			.append("hlsl");
-
-		auto sourceFile = hlslDir.append("FixedFunctionPixelShader.hlsl").string();
-
-		// Load the shader into a string
-		std::ifstream hlslStream(sourceFile);
-		std::stringstream hlsl;
-		hlsl << hlslStream.rdbuf();
-
-		hlslString = hlsl.str();
-	}
-
-	return hlslString;
-}
-
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
 #ifdef ENABLE_FF_ALPHAKILL
@@ -790,6 +764,21 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	// TODO move this cache elsewhere - and flush it when the device is released!
 	static std::unordered_map<uint64_t, IDirect3DPixelShader9*> ffPsCache = {};
 
+	// Support hotloading hlsl
+	static int pixelShaderVersion = -1;
+	int shaderVersion = g_ShaderSources.Update();
+	if (pixelShaderVersion != shaderVersion) {
+		pixelShaderVersion = shaderVersion;
+		g_pD3DDevice->SetPixelShader(nullptr);
+
+		for (auto& hostShader : ffPsCache) {
+			if (hostShader.second)
+				hostShader.second->Release();
+		}
+
+		ffPsCache.clear();
+	}
+
 	// Create a key from state that will be baked in to the shader
 	PsTextureHardcodedState states[4] = {};
 	int sampleType[4] = { SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE, SAMPLE_NONE };
@@ -872,67 +861,73 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	}
 
 	// Build and compile a new shader
-	auto hlslTemplate = GetFixedFunctionShaderTemplate();
+	std::string hlslTemplate = g_ShaderSources.fixedFunctionPixelShaderHlsl;
 
 	// In D3D9 it seems we need to know hardcode if we're doing a 2D or 3D lookup
 	const std::string sampleTypePattern = "TEXTURE_SAMPLE_TYPE;";
 	auto sampleTypeReplace = hlslTemplate.find(sampleTypePattern);
+	std::string finalShader = hlslTemplate;
 
-	static constexpr std::string_view typeToString[] = {
-		"SAMPLE_NONE",
-		"SAMPLE_2D",
-		"SAMPLE_3D",
-		"SAMPLE_CUBE"
-	};
+	if (sampleTypeReplace != std::string::npos) {
+		static constexpr std::string_view typeToString[] = {
+			"SAMPLE_NONE",
+			"SAMPLE_2D",
+			"SAMPLE_3D",
+			"SAMPLE_CUBE"
+		};
 
-	std::stringstream sampleTypeString;
-	sampleTypeString << "{"
-		<< typeToString[sampleType[0]] << ", "
-		<< typeToString[sampleType[1]] << ", "
-		<< typeToString[sampleType[2]] << ", "
-		<< typeToString[sampleType[3]] << "};";
+		std::stringstream sampleTypeString;
+		sampleTypeString << "{"
+			<< typeToString[sampleType[0]] << ", "
+			<< typeToString[sampleType[1]] << ", "
+			<< typeToString[sampleType[2]] << ", "
+			<< typeToString[sampleType[3]] << "};";
 
-	auto finalShader = hlslTemplate.replace(sampleTypeReplace, sampleTypePattern.size(), sampleTypeString.str());
+		finalShader = hlslTemplate.replace(sampleTypeReplace, sampleTypePattern.size(), sampleTypeString.str());
+	}
 
 	// Hardcode the texture stage operations and arguments
 	// So the shader handles exactly one combination of values
 	const std::string stageDef = "// STAGE DEFINITIONS";
-	auto stageDefInsert = finalShader.find(stageDef) + stageDef.size();
+	auto stageDefInsert = finalShader.find(stageDef);
+	if (stageDefInsert != std::string::npos) {
+		stageDefInsert += stageDef.size();
 
-	std::stringstream stageSetup;
-	stageSetup << '\n';
+		std::stringstream stageSetup;
+		stageSetup << '\n';
 
-	for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 4; i++) {
 #ifdef ENABLE_FF_ALPHAKILL
-		// Even when a stage is disabled, we still have to fully initialize it's values, to prevent
-		// "error X4000: variable 'stages' used without having been completely initialized"
+			// Even when a stage is disabled, we still have to fully initialize it's values, to prevent
+			// "error X4000: variable 'stages' used without having been completely initialized"
 #else
-		// The stage is initialized to be disabled
-		// We don't have to output anything
-		if (states[i].COLOROP == X_D3DTOP_DISABLE)
-			continue;
+			// The stage is initialized to be disabled
+			// We don't have to output anything
+			if (states[i].COLOROP == X_D3DTOP_DISABLE)
+				continue;
 
 #endif
-		std::string target = "stages[" + std::to_string(i) + "].";
+			std::string target = "stages[" + std::to_string(i) + "].";
 
-		auto s = states[i];
-		stageSetup << target << "COLOROP = " << GetD3DTOPString(s.COLOROP) << ";\n";
+			auto s = states[i];
+			stageSetup << target << "COLOROP = " << GetD3DTOPString(s.COLOROP) << ";\n";
 
-		stageSetup << target << "COLORARG0 = " << GetD3DTASumString(s.COLORARG0) << ";\n";
-		stageSetup << target << "COLORARG1 = " << GetD3DTASumString(s.COLORARG1) << ";\n";
-		stageSetup << target << "COLORARG2 = " << GetD3DTASumString(s.COLORARG2) << ";\n";
+			stageSetup << target << "COLORARG0 = " << GetD3DTASumString(s.COLORARG0) << ";\n";
+			stageSetup << target << "COLORARG1 = " << GetD3DTASumString(s.COLORARG1) << ";\n";
+			stageSetup << target << "COLORARG2 = " << GetD3DTASumString(s.COLORARG2) << ";\n";
 
-		stageSetup << target << "ALPHAOP = " << GetD3DTOPString(s.ALPHAOP) << ";\n";
+			stageSetup << target << "ALPHAOP = " << GetD3DTOPString(s.ALPHAOP) << ";\n";
 
-		stageSetup << target << "ALPHAARG0 = " << GetD3DTASumString(s.ALPHAARG0) << ";\n";
-		stageSetup << target << "ALPHAARG1 = " << GetD3DTASumString(s.ALPHAARG1) << ";\n";
-		stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(s.ALPHAARG2) << ";\n";
+			stageSetup << target << "ALPHAARG0 = " << GetD3DTASumString(s.ALPHAARG0) << ";\n";
+			stageSetup << target << "ALPHAARG1 = " << GetD3DTASumString(s.ALPHAARG1) << ";\n";
+			stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(s.ALPHAARG2) << ";\n";
 
-		stageSetup << target << "RESULTARG = " << GetD3DTASumString(s.RESULTARG, false) << ";\n";
-		stageSetup << '\n';
+			stageSetup << target << "RESULTARG = " << GetD3DTASumString(s.RESULTARG, false) << ";\n";
+			stageSetup << '\n';
+		}
+
+		finalShader = finalShader.insert(stageDefInsert, stageSetup.str());
 	}
-
-	finalShader = finalShader.insert(stageDefInsert, stageSetup.str());
 
 	// Compile the shader
 	ID3DBlob* pShaderBlob;
@@ -945,12 +940,15 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 	auto pseudoSourceFile = hlslDir.append(pseudoFileName).string();
 	EmuCompileShader(finalShader, "ps_3_0", &pShaderBlob, pseudoSourceFile.c_str());
 
-	// Create shader object for the device
 	IDirect3DPixelShader9* pShader = nullptr;
-	auto hRet = g_pD3DDevice->CreatePixelShader((DWORD*)pShaderBlob->GetBufferPointer(), &pShader);
-	if (hRet != S_OK)
-		CxbxrAbort("Failed to compile fixed function pixel shader");
-	pShaderBlob->Release();
+	if (pShaderBlob) {
+		// Create shader object for the device
+		auto hRet = g_pD3DDevice->CreatePixelShader((DWORD*)pShaderBlob->GetBufferPointer(), &pShader);
+		if (hRet != S_OK) {
+			EmuLog(LOG_LEVEL::ERROR2, "Failed to compile fixed function pixel shader");
+		}
+		pShaderBlob->Release();
+	}
 
 	// Insert the shader into the cache
 	ffPsCache[key] = pShader;
@@ -1029,6 +1027,21 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   CompletePSDef.PSDef.PSTextureModes = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSTEXTUREMODES);
   // Fetch all other values that are used in the IsEquivalent check :
   CompletePSDef.SnapshotRuntimeVariables();
+
+  // Support hotloading hlsl
+  static int pixelShaderVersion = -1;
+  int shaderVersion = g_ShaderSources.Update();
+  if (pixelShaderVersion != shaderVersion) {
+	  pixelShaderVersion = shaderVersion;
+	  g_pD3DDevice->SetPixelShader(nullptr);
+
+	  for (auto& hostShader : g_RecompiledPixelShaders) {
+		  if (hostShader.ConvertedPixelShader)
+			  hostShader.ConvertedPixelShader->Release();
+	  }
+
+	  g_RecompiledPixelShaders.clear();
+  }
 
   // Now, see if we already have a shader compiled for this definition :
   // TODO : Change g_RecompiledPixelShaders into an unordered_map, hash just the identifying PSDef members, and add cache eviction (clearing host resources when pruning)

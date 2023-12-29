@@ -1,14 +1,15 @@
 #define LOG_PREFIX CXBXR_MODULE::VSHCACHE
 
-#include "VertexShaderSource.h"
+#include "VertexShaderCache.h"
 
 #include "core/kernel/init/CxbxKrnl.h"
 #include "util/hasher.h"
 #include "core/kernel/support/Emu.h"
 
-VertexShaderSource g_VertexShaderSource = VertexShaderSource();
+VertexShaderCache g_VertexShaderCache = VertexShaderCache();
 // FIXME : This should really be released and created in step with the D3D device lifecycle rather than being a thing on its own
 // (And the ResetD3DDevice method should be removed)
+
 
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {
 	ID3DBlob* pCompiledShader;
@@ -25,7 +26,7 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
 
 // Find a shader
 // Return true if the shader was found
- bool VertexShaderSource::_FindShader(ShaderKey key, LazyVertexShader** ppLazyShader) {
+ bool VertexShaderCache::_FindShader(ShaderKey key, LazyVertexShader** ppLazyShader) {
 	auto it = cache.find(key);
 	if (it == cache.end()) {
 		// We didn't find anything! Was CreateShader called?
@@ -39,7 +40,7 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
 
  // Create a new shader
  // If the shader was already created, just increase its reference count
-ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, DWORD *pXboxFunctionSize) {
+ShaderKey VertexShaderCache::CreateShader(const xbox::dword_xt* pXboxFunction, DWORD *pXboxFunctionSize) {
 	IntermediateVertexShader intermediateShader;
 
 	*pXboxFunctionSize = GetVshFunctionSize(pXboxFunction);
@@ -86,7 +87,7 @@ ShaderKey VertexShaderSource::CreateShader(const xbox::dword_xt* pXboxFunction, 
 }
 
 // Get a shader using the given key
-IDirect3DVertexShader* VertexShaderSource::GetShader(ShaderKey key)
+IDirect3DVertexShader* VertexShaderCache::GetShader(ShaderKey key)
 {
 	LazyVertexShader* pLazyShader = nullptr;
 
@@ -112,6 +113,12 @@ IDirect3DVertexShader* VertexShaderSource::GetShader(ShaderKey key)
 		// TODO one day, check is_ready before logging this (non-standard..?)
 		EmuLog(LOG_LEVEL::DEBUG, "Waiting for shader %llx...", key);
 		pCompiledShader = pLazyShader->compileResult.get();
+
+		if (!pCompiledShader) {
+			EmuLog(LOG_LEVEL::ERROR2, "Failed to compile vertex shader for %llx", key);
+			pLazyShader->isReady = true;
+			return nullptr;
+		}
 
 		// Create the shader
 		auto hRet = pD3DDevice->CreateVertexShader
@@ -145,7 +152,7 @@ IDirect3DVertexShader* VertexShaderSource::GetShader(ShaderKey key)
 }
 
 // Release a shader. Doesn't actually release any resources for now
-void VertexShaderSource::ReleaseShader(ShaderKey key)
+void VertexShaderCache::ReleaseShader(ShaderKey key)
 {
 	// For now, don't bother releasing any shaders
 	LazyVertexShader* pLazyShader;
@@ -165,8 +172,25 @@ void VertexShaderSource::ReleaseShader(ShaderKey key)
 	}
 }
 
-void VertexShaderSource::ResetD3DDevice(IDirect3DDevice9* newDevice)
+void VertexShaderCache::ResetD3DDevice(IDirect3DDevice9* newDevice)
 {
 	EmuLog(LOG_LEVEL::DEBUG, "Resetting D3D device");
+	cache.clear();
 	this->pD3DDevice = newDevice;
+}
+
+void VertexShaderCache::Clear()
+{
+	for (auto& x : cache) {
+		if (!x.second.isReady) {
+			auto pBlob = x.second.compileResult.get();
+			if (pBlob) {
+				pBlob->Release();
+			}
+		}
+		else if(x.second.pHostVertexShader) {
+			x.second.pHostVertexShader->Release();
+		}
+	}
+	cache.clear();
 }

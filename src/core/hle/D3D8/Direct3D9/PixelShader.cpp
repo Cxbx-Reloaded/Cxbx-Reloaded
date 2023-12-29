@@ -289,12 +289,7 @@ bool IsTextureSampled(DecodedRegisterCombiner* pShader, int reg)
 
 void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 {
-	// Include HLSL header and footer as raw strings :
-	static const std::string hlsl_template[4] = {
-		#include "core\hle\D3D8\Direct3D9\CxbxPixelShaderTemplate.hlsl"
-	};
-
-	hlsl << hlsl_template[0]; // Start with the HLSL template header
+	hlsl << g_ShaderSources.pixelShaderTemplateHlsl[0]; // Start with the HLSL template header
 
 	hlsl << "\n#define ALPHAKILL {"
 		<< (pShader->AlphaKill[0] ? "true, " : "false, ")
@@ -341,9 +336,9 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 	OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementV1, "PS_FINALCOMBINERSETTING_COMPLEMENT_V1");
 	OutputDefineFlag(hlsl, pShader->FinalCombiner.ComplementR0, "PS_FINALCOMBINERSETTING_COMPLEMENT_R0");
 	OutputDefineFlag(hlsl, pShader->FinalCombiner.ClampSum, "PS_FINALCOMBINERSETTING_CLAMP_SUM");
+	hlsl << '\n';
 
-	hlsl << hlsl_template[1];
-	hlsl << hlsl_template[2];
+	hlsl << g_ShaderSources.pixelShaderTemplateHlsl[1];
 
 	// Generate all four texture stages
 	for (unsigned i = 0; i < PSH_XBOX_MAX_T_REGISTER_COUNT; i++) {
@@ -390,7 +385,7 @@ void BuildShader(DecodedRegisterCombiner* pShader, std::stringstream& hlsl)
 
 	FinalCombinerStageHlsl(hlsl, pShader->FinalCombiner, pShader->hasFinalCombiner);
 
-	hlsl << hlsl_template[3]; // Finish with the HLSL template footer
+	hlsl << g_ShaderSources.pixelShaderTemplateHlsl[2]; // Finish with the HLSL template footer
 }
 
 // recompile xbox pixel shader function

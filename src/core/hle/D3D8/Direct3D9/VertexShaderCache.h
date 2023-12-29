@@ -8,7 +8,7 @@
 typedef uint64_t ShaderKey;
 
 // Manages creation and caching of vertex shaders
-class VertexShaderSource {
+class VertexShaderCache {
 
 public:
 	ShaderKey CreateShader(const xbox::dword_xt* pXboxFunction, DWORD* pXboxFunctionSize);
@@ -16,6 +16,7 @@ public:
 	void ReleaseShader(ShaderKey key);
 
 	void ResetD3DDevice(IDirect3DDevice9* pD3DDevice);
+	void Clear();
 
 	// TODO
 	// WriteCacheToDisk
@@ -42,6 +43,6 @@ private:
 	bool _FindShader(ShaderKey key, LazyVertexShader** ppLazyShader);
 };
 
-extern VertexShaderSource g_VertexShaderSource;
+extern VertexShaderCache g_VertexShaderCache;
 
 #endif

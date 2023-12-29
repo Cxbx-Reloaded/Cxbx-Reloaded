@@ -1,6 +1,3 @@
-// This starts the raw string (comment to get syntax highlighting, UNCOMMENT to compile) :
-R"DELIMITER(// Xbox HLSL vertex shader (template populated at runtime)
-
 struct VS_INPUT
 {
 	float4 v[16] : TEXCOORD;
@@ -326,9 +323,9 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	// Temp variable for paired VS instruction
 	float4 temp;
 
-	// Xbox shader program)DELIMITER", /* This terminates the header raw string" // */
-
-R"DELIMITER(
+	// Xbox shader program will be inserted here
+	// <XBOX SHADER PROGRAM GOES HERE>
+	// End Xbox shader program
 
 	// Copy variables to output struct
     VS_OUTPUT xOut;
@@ -371,5 +368,3 @@ R"DELIMITER(
 
 	return xOut;
 }
-
-// End of vertex shader footer)DELIMITER" /* This terminates the footer raw string" // */

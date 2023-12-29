@@ -42,6 +42,7 @@
 #include "..\FixedFunctionState.h"
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For LPDIRECTDRAWSURFACE7
+#include "core\hle\D3D8\Direct3D9\Shader.h" // For InitShaderHotloading
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbPixelShader.h" // For DxbxUpdateActivePixelShader
@@ -62,7 +63,7 @@
 #include "common\input\DInputKeyboardMouse.h"
 #include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
-#include "VertexShaderSource.h"
+#include "VertexShaderCache.h"
 #include "Timer.h"
 
 #include <imgui.h>
@@ -682,6 +683,10 @@ void CxbxInitWindow(bool bFullInit)
 	g_renderbase->SetWindowRelease([] {
 		ImGui_ImplWin32_Shutdown();
 	});
+
+	(void) g_ShaderSources.Update();
+	g_ShaderSources.InitShaderHotloading();
+	
 }
 
 void DrawUEM(HWND hWnd)
@@ -2273,7 +2278,7 @@ static void CreateDefaultD3D9Device
     DrawInitialBlackScreen();
 
     // Set up cache
-    g_VertexShaderSource.ResetD3DDevice(g_pD3DDevice);
+    g_VertexShaderCache.ResetD3DDevice(g_pD3DDevice);
 
     // Set up ImGui's render backend
     ImGui_ImplDX9_Init(g_pD3DDevice);
