@@ -42,6 +42,7 @@ namespace NtDll
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort()
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
+#include "EmuKrnlKi.h"
 #include <assert.h>
 
 #ifdef _WIN32
@@ -1661,7 +1662,10 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 		TimeFields->Hour) * MINSPERHOUR +
 		TimeFields->Minute) * SECSPERMIN +
 		TimeFields->Second) * 1000 +
-		TimeFields->Millisecond) * TICKSPERMSEC;
+		TimeFields->Millisecond);
+
+	// This function must return a time expressed in 100ns units (the Windows time interval), so it needs a final multiplication here
+	*Time = RtlExtendedIntegerMultiply(*Time, CLOCK_TIME_INCREMENT);
 
 	RETURN(TRUE);
 }
