@@ -1622,19 +1622,29 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 
 	int month, year, cleaps, day;
 
-	/* FIXME: normalize the TIME_FIELDS structure here */
-	/* No, native just returns 0 (error) if the fields are not */
-	if (TimeFields->Millisecond < 0 || TimeFields->Millisecond > 999 ||
-		TimeFields->Second < 0 || TimeFields->Second > 59 ||
-		TimeFields->Minute < 0 || TimeFields->Minute > 59 ||
-		TimeFields->Hour < 0 || TimeFields->Hour > 23 ||
-		TimeFields->Month < 1 || TimeFields->Month > 12 ||
-		TimeFields->Day < 1 ||
-		TimeFields->Day > MonthLengths
-			[TimeFields->Month == 2 || IsLeapYear(TimeFields->Year)]
-			[TimeFields->Month - 1] ||
-		TimeFields->Year < 1601)
+	/* Verify each TimeFields' variables are within range */
+	if (TimeFields->Millisecond < 0 || TimeFields->Millisecond > 999) {
 		return FALSE;
+	}
+	if (TimeFields->Second < 0 || TimeFields->Second > 59) {
+		return FALSE;
+	}
+	if (TimeFields->Minute < 0 || TimeFields->Minute > 59) {
+		return FALSE;
+	}
+	if (TimeFields->Hour < 0 || TimeFields->Hour > 23) {
+		return FALSE;
+	}
+	if (TimeFields->Month < 1 || TimeFields->Month > 12) {
+		return FALSE;
+	}
+	if (TimeFields->Day < 1 ||
+		TimeFields->Day > MonthLengths[IsLeapYear(TimeFields->Year)][TimeFields->Month - 1]) {
+		return FALSE;
+	}
+	if (TimeFields->Year < 1601) {
+		return FALSE;
+	}
 
 	/* now calculate a day count from the date
 	* First start counting years from March. This way the leap days
