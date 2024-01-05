@@ -1660,11 +1660,11 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 		month = TimeFields->Month + 1;
 		year = TimeFields->Year;
 	}
-	cleaps = (3 * (year / 100) + 3) / 4;   /* nr of "century leap years"*/
-	day = (36525 * year) / 100 - cleaps + /* year * dayperyr, corrected */
-			(1959 * month) / 64 +         /* months * daypermonth */
-			TimeFields->Day -				/* day of the month */
-			584817;							/* zero that on 1601-01-01 */
+	cleaps = (3 * (year / 100) + 3) / 4;  /* nr of "century leap years"*/
+	day = (36525 * year) / 100 - cleaps + /* year * DayPerYear, corrected */
+	      (1959 * month) / 64 +           /* months * DayPerMonth */
+	      TimeFields->Day -               /* day of the month */
+	      584817;                         /* zero that on 1601-01-01 */
 	/* done */
 
 	/* Convert into Time format */
