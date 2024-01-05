@@ -1667,11 +1667,12 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 			584817;							/* zero that on 1601-01-01 */
 	/* done */
 
-	Time->QuadPart = (((((LONGLONG)day * HOURSPERDAY +
-		TimeFields->Hour) * MINSPERHOUR +
-		TimeFields->Minute) * SECSPERMIN +
-		TimeFields->Second) * 1000 +
-		TimeFields->Millisecond) * TICKSPERMSEC;
+	/* Convert into Time format */
+	Time->QuadPart = day * HOURSPERDAY;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Hour) * MINSPERHOUR;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Minute) * SECSPERMIN;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Second) * 1000;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Millisecond) * TICKSPERMSEC;
 
 	RETURN(TRUE);
 }
