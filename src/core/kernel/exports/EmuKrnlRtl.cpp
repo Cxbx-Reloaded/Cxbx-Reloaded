@@ -1615,11 +1615,6 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 	OUT PLARGE_INTEGER  Time
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(TimeFields)
-		LOG_FUNC_ARG_OUT(Time)
-		LOG_FUNC_END;
-
 	int month, year, cleaps, day;
 
 	/* Verify each TimeFields' variables are within range */
@@ -1674,7 +1669,7 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 	Time->QuadPart = (Time->QuadPart + TimeFields->Second) * 1000;
 	Time->QuadPart = (Time->QuadPart + TimeFields->Millisecond) * TICKSPERMSEC;
 
-	RETURN(TRUE);
+	return TRUE;
 }
 
 // ******************************************************************
