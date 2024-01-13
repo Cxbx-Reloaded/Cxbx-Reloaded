@@ -1562,6 +1562,11 @@ no_mapping:
 #define SECS_1601_TO_1980  ((379 * 365 + 91) * (ULONGLONG)SECSPERDAY)
 #define TICKS_1601_TO_1980 (SECS_1601_TO_1980 * TICKSPERSEC)
 
+const xbox::LARGE_INTEGER Magic10000 = { .QuadPart = 0xd1b71758e219652ci64 };
+#define SHIFT10000 13
+xbox::LARGE_INTEGER Magic86400000 = { .QuadPart = 0xc6d750ebfa67b90ei64 };
+#define SHIFT86400000 26
+
 
 static const int MonthLengths[2][MONSPERYEAR] =
 {
@@ -1686,31 +1691,27 @@ XBSYSAPI EXPORTNUM(305) xbox::void_xt NTAPI xbox::RtlTimeToTimeFields
 		LOG_FUNC_ARG_OUT(TimeFields)
 		LOG_FUNC_END;
 
-	int SecondsInDay;
-	long int cleaps, years, yearday, months;
-	long int Days;
-	LONGLONG _Time;
+	LONGLONG Days, cleaps, years, yearday, months;
 
-	/* Extract millisecond from time and convert time into seconds */
-	TimeFields->Millisecond =
-		(cshort_xt)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
-	_Time = Time->QuadPart / TICKSPERSEC;
-
-	/* The native version of RtlTimeToTimeFields does not take leap seconds
-	* into account */
-
-	/* Split the time into days and seconds within the day */
-	Days = (long int )(_Time / SECSPERDAY);
-	SecondsInDay = _Time % SECSPERDAY;
+	/* Extract milliseconds from time and days from milliseconds */
+	// NOTE: Reverse engineered native kernel uses RtlExtendedMagicDivide calls.
+	// Using similar code of ReactOS does not emulate native kernel's implement for
+	// one increment over large integer's max value.
+	xbox::LARGE_INTEGER MillisecondsTotal = RtlExtendedMagicDivide(*Time, Magic10000, SHIFT10000);
+	Days = RtlExtendedMagicDivide(MillisecondsTotal, Magic86400000, SHIFT86400000).u.LowPart;
+	MillisecondsTotal.QuadPart -= Days * SECSPERDAY * 1000;
 
 	/* compute time of day */
-	TimeFields->Hour = (cshort_xt)(SecondsInDay / SECSPERHOUR);
-	SecondsInDay = SecondsInDay % SECSPERHOUR;
-	TimeFields->Minute = (cshort_xt)(SecondsInDay / SECSPERMIN);
-	TimeFields->Second = (cshort_xt)(SecondsInDay % SECSPERMIN);
+	TimeFields->Millisecond = MillisecondsTotal.u.LowPart % 1000;
+	dword_xt RemainderTime = MillisecondsTotal.u.LowPart / 1000;
+	TimeFields->Second = RemainderTime % SECSPERMIN;
+	RemainderTime /= SECSPERMIN;
+	TimeFields->Minute = RemainderTime % MINSPERHOUR;
+	RemainderTime /= MINSPERHOUR;
+	TimeFields->Hour = RemainderTime; // NOTE: Remaining hours did not received 24 hours modulo treatment.
 
 	/* compute day of week */
-	TimeFields->Weekday = (cshort_xt)((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
+	TimeFields->Weekday = (EPOCHWEEKDAY + Days) % DAYSPERWEEK;
 
 	/* compute year, month and day of month. */
 	cleaps = (3 * ((4 * Days + 1227) / DAYSPERQUADRICENTENNIUM) + 3) / 4;
