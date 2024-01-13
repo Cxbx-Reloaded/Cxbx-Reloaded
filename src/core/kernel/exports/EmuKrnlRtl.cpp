@@ -1719,7 +1719,7 @@ XBSYSAPI EXPORTNUM(305) xbox::void_xt NTAPI xbox::RtlTimeToTimeFields
 	yearday = Days - (years * DAYSPERNORMALQUADRENNIUM) / 4;
 	months = (64 * yearday) / 1959;
 	/* the result is based on a year starting on March.
-	* To convert take 12 from Januari and Februari and
+	* To convert take 12 from January and February and
 	* increase the year by one. */
 	if (months < 14) {
 		TimeFields->Month = (USHORT)(months - 1);
