@@ -1686,11 +1686,6 @@ XBSYSAPI EXPORTNUM(305) xbox::void_xt NTAPI xbox::RtlTimeToTimeFields
 	OUT PTIME_FIELDS    TimeFields
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Time)
-		LOG_FUNC_ARG_OUT(TimeFields)
-		LOG_FUNC_END;
-
 	LONGLONG Days, cleaps, years, yearday, months;
 
 	/* Extract milliseconds from time and days from milliseconds */
