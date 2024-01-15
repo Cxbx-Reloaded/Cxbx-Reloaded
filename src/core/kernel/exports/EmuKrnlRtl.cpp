@@ -1544,6 +1544,7 @@ no_mapping:
 
 #define TICKSPERSEC        10000000
 #define TICKSPERMSEC       10000
+#define MSECSPERSEC        1000
 #define SECSPERDAY         86400
 #define SECSPERHOUR        3600
 #define SECSPERMIN         60
@@ -1671,7 +1672,7 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 	Time->QuadPart = day * HOURSPERDAY;
 	Time->QuadPart = (Time->QuadPart + TimeFields->Hour) * MINSPERHOUR;
 	Time->QuadPart = (Time->QuadPart + TimeFields->Minute) * SECSPERMIN;
-	Time->QuadPart = (Time->QuadPart + TimeFields->Second) * 1000;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Second) * MSECSPERSEC;
 	Time->QuadPart = (Time->QuadPart + TimeFields->Millisecond) * TICKSPERMSEC;
 
 	return TRUE;
@@ -1694,11 +1695,11 @@ XBSYSAPI EXPORTNUM(305) xbox::void_xt NTAPI xbox::RtlTimeToTimeFields
 	// one increment over large integer's max value.
 	xbox::LARGE_INTEGER MillisecondsTotal = RtlExtendedMagicDivide(*Time, Magic10000, SHIFT10000);
 	Days = RtlExtendedMagicDivide(MillisecondsTotal, Magic86400000, SHIFT86400000).u.LowPart;
-	MillisecondsTotal.QuadPart -= Days * SECSPERDAY * 1000;
+	MillisecondsTotal.QuadPart -= Days * SECSPERDAY * MSECSPERSEC;
 
 	/* compute time of day */
-	TimeFields->Millisecond = MillisecondsTotal.u.LowPart % 1000;
-	dword_xt RemainderTime = MillisecondsTotal.u.LowPart / 1000;
+	TimeFields->Millisecond = MillisecondsTotal.u.LowPart % MSECSPERSEC;
+	dword_xt RemainderTime = MillisecondsTotal.u.LowPart / MSECSPERSEC;
 	TimeFields->Second = RemainderTime % SECSPERMIN;
 	RemainderTime /= SECSPERMIN;
 	TimeFields->Minute = RemainderTime % MINSPERHOUR;
