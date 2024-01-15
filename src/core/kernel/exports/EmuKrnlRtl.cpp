@@ -42,7 +42,6 @@ namespace NtDll
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort()
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
-#include "EmuKrnlKi.h"
 #include <assert.h>
 
 #ifdef _WIN32
@@ -1545,6 +1544,7 @@ no_mapping:
 
 #define TICKSPERSEC        10000000
 #define TICKSPERMSEC       10000
+#define MSECSPERSEC        1000
 #define SECSPERDAY         86400
 #define SECSPERHOUR        3600
 #define SECSPERMIN         60
@@ -1562,6 +1562,11 @@ no_mapping:
 /* 1601 to 1980 is 379 years plus 91 leap days */
 #define SECS_1601_TO_1980  ((379 * 365 + 91) * (ULONGLONG)SECSPERDAY)
 #define TICKS_1601_TO_1980 (SECS_1601_TO_1980 * TICKSPERSEC)
+
+const xbox::LARGE_INTEGER Magic10000 = { .QuadPart = 0xd1b71758e219652ci64 };
+#define SHIFT10000 13
+xbox::LARGE_INTEGER Magic86400000 = { .QuadPart = 0xc6d750ebfa67b90ei64 };
+#define SHIFT86400000 26
 
 
 static const int MonthLengths[2][MONSPERYEAR] =
@@ -1616,26 +1621,31 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 	OUT PLARGE_INTEGER  Time
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(TimeFields)
-		LOG_FUNC_ARG_OUT(Time)
-		LOG_FUNC_END;
-
 	int month, year, cleaps, day;
 
-	/* FIXME: normalize the TIME_FIELDS structure here */
-	/* No, native just returns 0 (error) if the fields are not */
-	if (TimeFields->Millisecond < 0 || TimeFields->Millisecond > 999 ||
-		TimeFields->Second < 0 || TimeFields->Second > 59 ||
-		TimeFields->Minute < 0 || TimeFields->Minute > 59 ||
-		TimeFields->Hour < 0 || TimeFields->Hour > 23 ||
-		TimeFields->Month < 1 || TimeFields->Month > 12 ||
-		TimeFields->Day < 1 ||
-		TimeFields->Day > MonthLengths
-			[TimeFields->Month == 2 || IsLeapYear(TimeFields->Year)]
-			[TimeFields->Month - 1] ||
-		TimeFields->Year < 1601)
+	/* Verify each TimeFields' variables are within range */
+	if (TimeFields->Millisecond < 0 || TimeFields->Millisecond > 999) {
 		return FALSE;
+	}
+	if (TimeFields->Second < 0 || TimeFields->Second > 59) {
+		return FALSE;
+	}
+	if (TimeFields->Minute < 0 || TimeFields->Minute > 59) {
+		return FALSE;
+	}
+	if (TimeFields->Hour < 0 || TimeFields->Hour > 23) {
+		return FALSE;
+	}
+	if (TimeFields->Month < 1 || TimeFields->Month > 12) {
+		return FALSE;
+	}
+	if (TimeFields->Day < 1 ||
+		TimeFields->Day > MonthLengths[IsLeapYear(TimeFields->Year)][TimeFields->Month - 1]) {
+		return FALSE;
+	}
+	if (TimeFields->Year < 1601) {
+		return FALSE;
+	}
 
 	/* now calculate a day count from the date
 	* First start counting years from March. This way the leap days
@@ -1651,23 +1661,21 @@ XBSYSAPI EXPORTNUM(304) xbox::boolean_xt NTAPI xbox::RtlTimeFieldsToTime
 		month = TimeFields->Month + 1;
 		year = TimeFields->Year;
 	}
-	cleaps = (3 * (year / 100) + 3) / 4;   /* nr of "century leap years"*/
-	day = (36525 * year) / 100 - cleaps + /* year * dayperyr, corrected */
-			(1959 * month) / 64 +         /* months * daypermonth */
-			TimeFields->Day -				/* day of the month */
-			584817;							/* zero that on 1601-01-01 */
+	cleaps = (3 * (year / 100) + 3) / 4;  /* nr of "century leap years"*/
+	day = (36525 * year) / 100 - cleaps + /* year * DayPerYear, corrected */
+	      (1959 * month) / 64 +           /* months * DayPerMonth */
+	      TimeFields->Day -               /* day of the month */
+	      584817;                         /* zero that on 1601-01-01 */
 	/* done */
 
-	Time->QuadPart = (((((LONGLONG)day * HOURSPERDAY +
-		TimeFields->Hour) * MINSPERHOUR +
-		TimeFields->Minute) * SECSPERMIN +
-		TimeFields->Second) * 1000 +
-		TimeFields->Millisecond);
+	/* Convert into Time format */
+	Time->QuadPart = day * HOURSPERDAY;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Hour) * MINSPERHOUR;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Minute) * SECSPERMIN;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Second) * MSECSPERSEC;
+	Time->QuadPart = (Time->QuadPart + TimeFields->Millisecond) * TICKSPERMSEC;
 
-	// This function must return a time expressed in 100ns units (the Windows time interval), so it needs a final multiplication here
-	*Time = RtlExtendedIntegerMultiply(*Time, CLOCK_TIME_INCREMENT);
-
-	RETURN(TRUE);
+	return TRUE;
 }
 
 // ******************************************************************
@@ -1679,36 +1687,27 @@ XBSYSAPI EXPORTNUM(305) xbox::void_xt NTAPI xbox::RtlTimeToTimeFields
 	OUT PTIME_FIELDS    TimeFields
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Time)
-		LOG_FUNC_ARG_OUT(TimeFields)
-		LOG_FUNC_END;
+	LONGLONG Days, cleaps, years, yearday, months;
 
-	int SecondsInDay;
-	long int cleaps, years, yearday, months;
-	long int Days;
-	LONGLONG _Time;
-
-	/* Extract millisecond from time and convert time into seconds */
-	TimeFields->Millisecond =
-		(cshort_xt)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
-	_Time = Time->QuadPart / TICKSPERSEC;
-
-	/* The native version of RtlTimeToTimeFields does not take leap seconds
-	* into account */
-
-	/* Split the time into days and seconds within the day */
-	Days = (long int )(_Time / SECSPERDAY);
-	SecondsInDay = _Time % SECSPERDAY;
+	/* Extract milliseconds from time and days from milliseconds */
+	// NOTE: Reverse engineered native kernel uses RtlExtendedMagicDivide calls.
+	// Using similar code of ReactOS does not emulate native kernel's implement for
+	// one increment over large integer's max value.
+	xbox::LARGE_INTEGER MillisecondsTotal = RtlExtendedMagicDivide(*Time, Magic10000, SHIFT10000);
+	Days = RtlExtendedMagicDivide(MillisecondsTotal, Magic86400000, SHIFT86400000).u.LowPart;
+	MillisecondsTotal.QuadPart -= Days * SECSPERDAY * MSECSPERSEC;
 
 	/* compute time of day */
-	TimeFields->Hour = (cshort_xt)(SecondsInDay / SECSPERHOUR);
-	SecondsInDay = SecondsInDay % SECSPERHOUR;
-	TimeFields->Minute = (cshort_xt)(SecondsInDay / SECSPERMIN);
-	TimeFields->Second = (cshort_xt)(SecondsInDay % SECSPERMIN);
+	TimeFields->Millisecond = MillisecondsTotal.u.LowPart % MSECSPERSEC;
+	dword_xt RemainderTime = MillisecondsTotal.u.LowPart / MSECSPERSEC;
+	TimeFields->Second = RemainderTime % SECSPERMIN;
+	RemainderTime /= SECSPERMIN;
+	TimeFields->Minute = RemainderTime % MINSPERHOUR;
+	RemainderTime /= MINSPERHOUR;
+	TimeFields->Hour = RemainderTime; // NOTE: Remaining hours did not received 24 hours modulo treatment.
 
 	/* compute day of week */
-	TimeFields->Weekday = (cshort_xt)((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
+	TimeFields->Weekday = (EPOCHWEEKDAY + Days) % DAYSPERWEEK;
 
 	/* compute year, month and day of month. */
 	cleaps = (3 * ((4 * Days + 1227) / DAYSPERQUADRICENTENNIUM) + 3) / 4;
@@ -1717,7 +1716,7 @@ XBSYSAPI EXPORTNUM(305) xbox::void_xt NTAPI xbox::RtlTimeToTimeFields
 	yearday = Days - (years * DAYSPERNORMALQUADRENNIUM) / 4;
 	months = (64 * yearday) / 1959;
 	/* the result is based on a year starting on March.
-	* To convert take 12 from Januari and Februari and
+	* To convert take 12 from January and February and
 	* increase the year by one. */
 	if (months < 14) {
 		TimeFields->Month = (USHORT)(months - 1);
