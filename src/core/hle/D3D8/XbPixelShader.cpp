@@ -662,7 +662,9 @@ constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 23..26
 // Which winding order to consider as the front face
 constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; // = 27
 // This concludes the set of constants that need to be set on host :
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
+constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1;
+constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1;
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 28
 
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
@@ -1164,7 +1166,18 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  frontfaceFactor = cwFrontface ? 1.0 : -1.0;
   }
   fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
-
+  float fogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE) > 0;
+  const uint32_t fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+  const float fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+  const float fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+  const float fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+  
+  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].r = fogTableMode;
+  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].g = fogDensity;
+  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].b = fogStart;
+  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].a = fogEnd;
+  fColor[PSH_XBOX_CONSTANT_FOGENABLE].r = fogEnable;
+  
   // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
   // Read the color from the corresponding render state slot :
   // Set all host constant values using a single call:

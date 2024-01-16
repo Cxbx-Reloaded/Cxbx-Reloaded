@@ -1,8 +1,8 @@
 #include "FixedFunctionPixelShader.hlsli"
-
+#include "FixedFunctionVertexShaderState.hlsli"
 uniform FixedFunctionPixelShaderState state : register(c0);
 sampler samplers[4] : register(s0);
-
+uniform FixedFunctionVertexShaderState state : register(c0);
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
@@ -239,6 +239,7 @@ float4 main(const PS_INPUT input) : COLOR {
 
 	TexCoords = input.iT;
 
+		
 	// Each stage is passed and returns
 	// a set of texture arguments
 	// And will usually update the CURRENT value

@@ -91,33 +91,12 @@ VS_OUTPUT main(const VS_INPUT xIn)
     // Copy variables to output struct
     VS_OUTPUT xOut;
 
-    // Fogging
-    // TODO: deduplicate
-    const float fogDepth      =   abs(oFog.x); 
-    const float fogTableMode  =   CxbxFogInfo.x;
-    const float fogDensity    =   CxbxFogInfo.y;
-    const float fogStart      =   CxbxFogInfo.z;
-    const float fogEnd        =   CxbxFogInfo.w;  
-
-    const float FOG_TABLE_NONE    = 0;
-    const float FOG_TABLE_EXP     = 1;
-    const float FOG_TABLE_EXP2    = 2;
-    const float FOG_TABLE_LINEAR  = 3;
- 
-    float fogFactor;
-    if(fogTableMode == FOG_TABLE_NONE) 
-       fogFactor = fogDepth;
-    if(fogTableMode == FOG_TABLE_EXP) 
-       fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
-    if(fogTableMode == FOG_TABLE_EXP2) 
-       fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
-    if(fogTableMode == FOG_TABLE_LINEAR) 
-       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
+    
 
     xOut.oPos = reverseScreenspaceTransform(oPos);
     xOut.oD0 = saturate(oD0);
     xOut.oD1 = saturate(oD1);
-    xOut.oFog = fogFactor; // Note : Xbox clamps fog in pixel shader
+    xOut.oFog = oFog.x; // Note : Xbox clamps fog in pixel shader
     xOut.oPts = oPts.x;
     xOut.oB0 = saturate(oB0);
     xOut.oB1 = saturate(oB1);
