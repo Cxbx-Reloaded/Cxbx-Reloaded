@@ -51,8 +51,8 @@ uniform const float4 FC1 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC
 uniform const float4 BEM[4] : register(c19); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
 uniform const float4 LUM[4] : register(c23); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
 uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
-uniform const float4 FOGFACTOR : register(c28);
-uniform       float  FOGENABLE : register(c29);
+uniform const float4 FOGINFO : register(c28);
+uniform const float  FOGENABLE : register(c29);
 
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
 #define CM_GE(c) if(c >= 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_GE
@@ -337,14 +337,13 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 
 PS_OUTPUT main(const PS_INPUT xIn)
 {
-	float fogEnable = xIn.iFog.x;
-	if (FOGENABLE == 0)
-	  fogEnable = 1;
-	const float fogDepth      =   fogEnable; // Don't abs this value! Test-case : DolphinClassic xdk sampl
-	const int   fogTableMode  =   FOGFACTOR.x;
-	const float fogDensity    =   FOGFACTOR.y;
-	const float fogStart      =   FOGFACTOR.z;
-	const float fogEnd        =   FOGFACTOR.w;  
+	
+	
+	const float fogDepth      =   xIn.iFog.x; // Don't abs this value! Test-case : DolphinClassic xdk sampl
+	const int   fogTableMode  =   FOGINFO.x;
+	const float fogDensity    =   FOGINFO.y;
+	const float fogStart      =   FOGINFO.z;
+	const float fogEnd        =   FOGINFO.w;  
 
 	const int FOG_TABLE_NONE    = 0;
 	const int FOG_TABLE_EXP     = 1;
@@ -354,15 +353,16 @@ PS_OUTPUT main(const PS_INPUT xIn)
     float fogFactor;
 	 
     if(fogTableMode == FOG_TABLE_NONE) 
-       fogFactor = fogDepth;
-	   
+       fogFactor = fogDepth;  
     if(fogTableMode == FOG_TABLE_EXP) 
        fogFactor = 1 / exp(fogDepth * fogDensity); // 1 / e^(d * density)
     if(fogTableMode == FOG_TABLE_EXP2) 
        fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); // 1 / e^((d * density)^2)
     if(fogTableMode == FOG_TABLE_LINEAR) 
        fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
-	   
+	if (FOGENABLE == 0)
+	   fogFactor = 1;
+	  
 	// Local constants
 	const float4 zero = 0;
 	const float4 half = 0.5; // = s_negbias(zero)
@@ -396,7 +396,7 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	// Note : VFACE/FrontFace has been unreliable, investigate again if some test-case shows bland colors
 	v0 = isFrontFace ? xIn.iD0 : xIn.iB0; // Diffuse front/back
 	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
-	fog = float4(c_fog.rgb, fogFactor); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
+	fog = float4(c_fog.rgb, clamp(fogFactor, 0, 1)); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
 
 	// Xbox shader program will be inserted here
     // <XBOX SHADER PROGRAM GOES HERE>

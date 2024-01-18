@@ -1,8 +1,8 @@
 #include "FixedFunctionPixelShader.hlsli"
-#include "FixedFunctionVertexShaderState.hlsli"
+
 uniform FixedFunctionPixelShaderState state : register(c0);
 sampler samplers[4] : register(s0);
-uniform FixedFunctionVertexShaderState state : register(c0);
+
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
