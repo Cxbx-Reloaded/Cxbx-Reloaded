@@ -672,6 +672,7 @@ PSH_RECOMPILED_SHADER CxbxRecompilePixelShader(CxbxPSDef &CompletePSDef)
 			}
 		}
 		pShader->Release();
+		
 	}
 
 	return Result;
@@ -693,8 +694,12 @@ constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_FOG + 1; // = 19..22
 constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 23..26
 // Which winding order to consider as the front face
 constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; // = 27
+// FogTable info
+constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
+//Fog enable flag
+constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1; // = 29
 // This concludes the set of constants that need to be set on host :
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 30
 
 std::string GetFixedFunctionShaderTemplate()
 // See GetCustomPixelShaderTemplate()
@@ -1485,6 +1490,29 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  }
 	  fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
 
+	  
+	  float fogDensity, fogStart, fogEnd, fogTableMode, fogEnable;
+	  //DWORD density, start, end;
+	  if (is_pgraph_using_NV2A_Kelvin()) {
+		  fogEnable = NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE) > 0;
+		  fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+		  fogDensity = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+		  fogStart = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+		  fogEnd = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+	  }
+	  else {
+		  fogEnable = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE) > 0;
+		  fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+		  fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+		  fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+		  fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+	  }
+	 
+	  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].r = fogTableMode;
+	  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].g = fogDensity;
+	  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].b = fogStart;
+	  fColor[CXBX_D3DPS_CONSTREG_FOGINFO].a = fogEnd;
+	  fColor[PSH_XBOX_CONSTANT_FOGENABLE].r = fogEnable;
 	  // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
 	  // Read the color from the corresponding render state slot :
 	  // Set all host constant values using a single call:

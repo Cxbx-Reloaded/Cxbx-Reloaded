@@ -1,3 +1,5 @@
+
+
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
@@ -51,7 +53,8 @@ uniform const float4 FC1 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC
 uniform const float4 BEM[4] : register(c19); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
 uniform const float4 LUM[4] : register(c23); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
 uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
-
+uniform const float4 FOGINFO : register(c28);
+uniform const float  FOGENABLE : register(c29);
 
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
 #define CM_GE(c) if(c >= 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_GE
@@ -90,6 +93,8 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
 #endif
 
 // DEFINES INSERTION MARKER
+
+
 
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
@@ -167,7 +172,8 @@ uniform const float  FRONTFACE_FACTOR : register(c27); // Note : PSH_XBOX_CONSTA
 // HLSL : https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-lerp
 // lerp(x,  y,  s )  x*(1-s ) +  y*s == x + s(y-x)
 // lerp(s2, s1, s0) s2*(1-s0) + s1*s0
-
+																																					 
+					  
 float m21d(const float input)
 {
 	int tmp = (int)(input * 255); // Convert float 0..1 into byte 0..255
@@ -334,6 +340,31 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 
 PS_OUTPUT main(const PS_INPUT xIn)
 {
+	//Fog
+	const float fogDepth      =   xIn.iFog.x; // Don't abs this value! Test-case : DolphinClassic xdk sampl
+	const float fogTableMode  =   FOGINFO.x;
+	const float fogDensity    =   FOGINFO.y;
+	const float fogStart      =   FOGINFO.z;
+	const float fogEnd        =   FOGINFO.w;  
+
+	const int FOG_TABLE_NONE    = 0;
+	const int FOG_TABLE_EXP     = 1;
+	const int FOG_TABLE_EXP2    = 2;
+	const int FOG_TABLE_LINEAR  = 3;
+
+    float fogFactor;
+
+    if(fogTableMode == FOG_TABLE_NONE) 
+       fogFactor = fogDepth;
+    if(fogTableMode == FOG_TABLE_EXP) 
+       fogFactor = 1 / exp(fogDepth * fogDensity); // 1 / e^(d * density)
+    if(fogTableMode == FOG_TABLE_EXP2) 
+       fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); // 1 / e^((d * density)^2)
+    if(fogTableMode == FOG_TABLE_LINEAR) 
+       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
+	if (FOGENABLE == 0)
+	   fogFactor = 1;
+	   
 	// Local constants
 	const float4 zero = 0;
 	const float4 half = 0.5; // = s_negbias(zero)
@@ -367,10 +398,10 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	// Note : VFACE/FrontFace has been unreliable, investigate again if some test-case shows bland colors
 	v0 = isFrontFace ? xIn.iD0 : xIn.iB0; // Diffuse front/back
 	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
-	fog = float4(c_fog.rgb, xIn.iFog); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
+	fog = float4(c_fog.rgb, clamp(fogFactor, 0, 1)); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
 
 	// XBOX SHADER PROGRAM MARKER
-
+			
 	// Copy r0.rgba to output
 	PS_OUTPUT xOut;
 
@@ -378,3 +409,4 @@ PS_OUTPUT main(const PS_INPUT xIn)
 
 	return xOut;
 }
+
