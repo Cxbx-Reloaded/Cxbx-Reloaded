@@ -91,8 +91,6 @@ VS_OUTPUT main(const VS_INPUT xIn)
     // Copy variables to output struct
     VS_OUTPUT xOut;
 
-    
-
     xOut.oPos = reverseScreenspaceTransform(oPos);
     xOut.oD0 = saturate(oD0);
     xOut.oD1 = saturate(oD1);

@@ -238,8 +238,7 @@ TextureArgs ExecuteTextureStage(
 float4 main(const PS_INPUT input) : COLOR {
 
 	TexCoords = input.iT;
-
-		
+	
 	// Each stage is passed and returns
 	// a set of texture arguments
 	// And will usually update the CURRENT value
@@ -285,7 +284,7 @@ float4 main(const PS_INPUT input) : COLOR {
 
 	// Add fog if enabled
 	if (state.FogEnable) {
-		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, saturate(input.iFog));
+		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, clamp(input.iFog, 0, 1));
 	}
 
 	// Add specular if enabled

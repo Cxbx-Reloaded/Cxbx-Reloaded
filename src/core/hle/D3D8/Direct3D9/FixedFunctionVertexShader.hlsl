@@ -288,9 +288,7 @@ float DoFog(const VS_INPUT xIn)
         fogDepth = abs(Projection.Position.z);
     if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_W)
         fogDepth = Projection.Position.w;
-
-    
-
+		
     return fogDepth;
 }
 

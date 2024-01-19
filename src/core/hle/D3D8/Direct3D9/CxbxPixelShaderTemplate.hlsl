@@ -337,8 +337,7 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 sr
 
 PS_OUTPUT main(const PS_INPUT xIn)
 {
-	
-	
+	// fogging
 	const float fogDepth      =   xIn.iFog.x; // Don't abs this value! Test-case : DolphinClassic xdk sampl
 	const int   fogTableMode  =   FOGINFO.x;
 	const float fogDensity    =   FOGINFO.y;
