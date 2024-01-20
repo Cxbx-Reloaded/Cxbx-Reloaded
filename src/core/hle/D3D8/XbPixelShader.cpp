@@ -973,7 +973,10 @@ void UpdateFixedFunctionPixelShaderState()
 	ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE);
 	ffPsState.FogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE);
 	ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
-
+	ffPsState.FogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+	ffPsState.FogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
+	ffPsState.FogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
+	ffPsState.FogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
 	// Texture state
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 

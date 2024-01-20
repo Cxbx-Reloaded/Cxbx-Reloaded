@@ -174,6 +174,14 @@ TextureArgs ExecuteTextureStage(
 	// Sample the texture
 	float4 t;
 	int type = TextureSampleType[i];
+	// Divide texcoords by w when sampling
+	// Which corresponds to D3DTTFF_PROJECTED behaviour
+	// The w component can be set by titles in vertex shaders
+	// without using texture transform flags
+	// Test case: DoA 3 reflections on 'Ice Stage'
+	//float4 coords;// = TexCoords[i].xyzw / TexCoords[i].w;
+	if (TexCoords[i].w > 1.0) 
+		TexCoords[i].xyzw = TexCoords[i].xyzw / TexCoords[i].w;
 	if (type == SAMPLE_NONE)
 		t = 1; // Test case JSRF
 	else if (type == SAMPLE_2D)
@@ -237,8 +245,22 @@ TextureArgs ExecuteTextureStage(
 
 float4 main(const PS_INPUT input) : COLOR {
 
+// Calculate the fog factor
+    // Some of this might be better done in the pixel shader?
+    float fogFactor;
+    if (state.FogTableMode == FOG_TABLE_NONE)
+        fogFactor = input.iFog;
+    if (state.FogTableMode == FOG_TABLE_EXP)
+        fogFactor = 1 / exp(input.iFog * state.FogDensity); // 1 / e^(d * density)
+    if (state.FogTableMode == FOG_TABLE_EXP2)
+        fogFactor = 1 / exp(pow(input.iFog * state.FogDensity, 2)); // 1 / e^((d * density)^2)
+    if (state.FogTableMode == FOG_TABLE_LINEAR)
+        fogFactor = (state.FogEnd - input.iFog) / (state.FogEnd - state.FogStart); // (end - d) / (end - start)
+    if (state.FogEnable == 0)
+	    fogFactor = 1;
+		
 	TexCoords = input.iT;
-	
+
 	// Each stage is passed and returns
 	// a set of texture arguments
 	// And will usually update the CURRENT value
@@ -284,7 +306,7 @@ float4 main(const PS_INPUT input) : COLOR {
 
 	// Add fog if enabled
 	if (state.FogEnable) {
-		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, clamp(input.iFog, 0, 1));
+		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, clamp(fogFactor, 0, 1));
 	}
 
 	// Add specular if enabled
