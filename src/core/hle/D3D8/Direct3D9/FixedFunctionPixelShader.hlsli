@@ -67,8 +67,8 @@ namespace FixedFunctionPixelShader {
     const int SAMPLE_2D = 1;
     const int SAMPLE_3D = 2;
     const int SAMPLE_CUBE = 3;
-	
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/fog-formulas
+
+    // https://docs.microsoft.com/en-us/windows/win32/direct3d9/fog-formulas
     const float FOG_TABLE_NONE = 0;
     const float FOG_TABLE_EXP = 1;
     const float FOG_TABLE_EXP2 = 2;
@@ -127,15 +127,15 @@ namespace FixedFunctionPixelShader {
 
 	struct FixedFunctionPixelShaderState {
 		alignas(16) arr(stages, PsTextureStageState, 4);
-		alignas(16)     float4 TextureFactor;
-		alignas(16)     float SpecularEnable;
-		alignas(16)     float FogEnable;
-		alignas(16)     float3 FogColor;
-		alignas(16)     float FogTableMode;
-		alignas(16)     float FogDensity;
-		alignas(16)     float FogStart;
-		alignas(16)     float FogEnd;
-    };
+		alignas(16) float4 TextureFactor;
+		alignas(16) float SpecularEnable;
+		alignas(16) float FogEnable;
+		alignas(16) float3 FogColor;
+		alignas(16) float FogTableMode;
+		alignas(16) float FogDensity;
+		alignas(16) float FogStart;
+		alignas(16) float FogEnd;
+	};
 #ifdef  __cplusplus
 } // FixedFunctionPixelShader namespace
 #endif

@@ -362,9 +362,9 @@ PS_OUTPUT main(const PS_INPUT xIn)
        fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); // 1 / e^((d * density)^2)
     if(fogTableMode == FOG_TABLE_LINEAR) 
        fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
-	if (FOGENABLE == 0)
-	   fogFactor = 1;
-	   
+    if (FOGENABLE == 0)
+       fogFactor = 1;
+
 	// Local constants
 	const float4 zero = 0;
 	const float4 half = 0.5; // = s_negbias(zero)
