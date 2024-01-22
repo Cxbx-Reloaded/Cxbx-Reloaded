@@ -3285,6 +3285,7 @@ LTCG_DECL xbox::dword_xt* CxbxrImpl_MakeSpace(void)
 // which is normally the entry point for all Xbox D3D 'things'.
 void HLE_PushInit()
 {
+	SwitchToThread();
 	// Avoid an exception when g_pXbox_D3DDevice is not set yet.
 	if (g_pXbox_D3DDevice == nullptr)
 		return;
