@@ -246,8 +246,12 @@ TextureArgs ExecuteTextureStage(
 float4 main(const PS_INPUT input) : COLOR {
 
     // Calculate the fog factor
-    // Some of this might be better done in the pixel shader?
     float fogFactor;
+
+    if (state.FogEnable == 0){
+        fogFactor = 1;
+    }
+    else{
     if (state.FogTableMode == FOG_TABLE_NONE)
         fogFactor = input.iFog;
     if (state.FogTableMode == FOG_TABLE_EXP)
@@ -258,7 +262,7 @@ float4 main(const PS_INPUT input) : COLOR {
         fogFactor = (state.FogEnd - input.iFog) / (state.FogEnd - state.FogStart); // (end - d) / (end - start)
     if (state.FogEnable == 0)
         fogFactor = 1;
-
+    }
 	TexCoords = input.iT;
 
 	// Each stage is passed and returns
