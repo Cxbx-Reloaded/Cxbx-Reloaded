@@ -661,10 +661,12 @@ constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_FOG + 1; // = 19..22
 constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 23..26
 // Which winding order to consider as the front face
 constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; // = 27
+// Fog table information {Table mode, density, start and end}
+constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 28
+//Fog enable flag
+constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1; // = 29
 // This concludes the set of constants that need to be set on host :
-constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1;
-constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1;
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 28
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 30
 
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
