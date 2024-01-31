@@ -1,5 +1,3 @@
-
-
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
 	float2 iPos : VPOS;   // Screen space x,y pixel location
@@ -93,8 +91,6 @@ uniform const float  FOGENABLE : register(c29);
 #endif
 
 // DEFINES INSERTION MARKER
-
-
 
 // PS_COMBINERCOUNT_UNIQUE_C0 steers whether for C0 to use combiner stage-specific constants c0_0 .. c0_7, or c0_0 for all stages
 #ifdef PS_COMBINERCOUNT_UNIQUE_C0
@@ -352,7 +348,7 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	const int FOG_TABLE_EXP2    = 2;
 	const int FOG_TABLE_LINEAR  = 3;
 
-          float fogFactor;
+		float fogFactor;
 	
 	if (FOGENABLE == 0) {
 		fogFactor = 1;
