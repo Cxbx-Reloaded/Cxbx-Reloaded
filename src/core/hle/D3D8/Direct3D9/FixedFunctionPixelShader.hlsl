@@ -245,7 +245,7 @@ TextureArgs ExecuteTextureStage(
 
 float4 main(const PS_INPUT input) : COLOR {
 
-// Calculate the fog factor
+	// Calculate the fog factor
 	// Some of this might be better done in the pixel shader?
 		float fogFactor;
 		
