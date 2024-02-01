@@ -37,6 +37,9 @@
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
 
+const float FloatTrue = 1.0;
+const float FloatFalse = 0.0;
+
 void LookupTrampolinesD3D();
 
 // initialize render window

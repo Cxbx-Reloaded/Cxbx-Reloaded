@@ -1299,8 +1299,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   D3DXCOLOR fColor[PSH_XBOX_CONSTANT_MAX];
   extern XboxTextureStateConverter NV2ATextureStates;
   float fogEnable, fogTableMode, fogDensity, fogStart, fogEnd;
-  float Fog_Enabled = 1;
-  float Fog_Disabled = 0;
+  
   // update bumpenv
   // use NV2A bumpenv
   if(is_pgraph_using_NV2A_Kelvin()){
@@ -1411,7 +1410,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 		  frontfaceFactor = (pg->KelvinPrimitive.SetFrontFace == 0x900) ? 1.0f : -1.0f;
 	  }
 	  fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
-	  fogEnable = (NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE) > 0 == Fog_Enabled) ? Fog_Enabled : Fog_Disabled;
+	  fogEnable = (NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE) > 0) ? FloatTrue : FloatFalse;
 	  fogTableMode = NV2ARenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
 	  fogDensity = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 	  fogStart = NV2ARenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
@@ -1511,7 +1510,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	  }
 	  fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
 
-	  fogEnable = (XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE) > 0 == Fog_Enabled) ? Fog_Enabled : Fog_Disabled;
+	  fogEnable = (XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGENABLE) > 0) ? FloatTrue : FloatFalse;
 	  fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
 	  fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 	  fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
