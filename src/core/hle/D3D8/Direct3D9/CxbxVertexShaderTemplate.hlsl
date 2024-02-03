@@ -65,19 +65,19 @@ float4 c(int register_number)
 {
 	// Map Xbox [-96, 95] to Host [0, 191]
 	// Account for Xbox's negative constant indexes
-    register_number += X_D3DSCM_CORRECTION;
+	register_number += X_D3DSCM_CORRECTION;
 
-    // Like Xbox, out-of-range indices are guaranteed to be zero in HLSL
-    // so no need to bounds check negative numbers
-    // if (register_number < 0)
-    //    return 0;
+	// Like Xbox, out-of-range indices are guaranteed to be zero in HLSL
+	// so no need to bounds check negative numbers
+	// if (register_number < 0)
+	//	 return 0;
 
-    // If the index is too large, set it to -1 so 0 is returned
-    // Note: returning 0 directly requires many more instructions
-    if (register_number >= X_D3DVS_CONSTREG_COUNT) // X_D3DVS_CONSTREG_COUNT
-        register_number = -1;
+	// If the index is too large, set it to -1 so 0 is returned
+	// Note: returning 0 directly requires many more instructions
+	if (register_number >= X_D3DVS_CONSTREG_COUNT) // X_D3DVS_CONSTREG_COUNT
+		register_number = -1;
 
-    return C[register_number];
+	return C[register_number];
 }
 
 // Due to rounding differences with the Xbox (and increased precision on PC?)
@@ -183,13 +183,13 @@ float _rsq(float src)
 #define x_expp(dest, mask, src0) dest.mask = _expp(_scalar(src0)).mask
 float4 _expp(float src)
 {
-    float floor_src = x_floor(src);
+	float floor_src = x_floor(src);
 
-    float4 dest;
-    dest.x = exp2(floor_src);
-    dest.y = src - floor_src;
-    dest.z = exp2(src);
-    dest.w = 1;
+	float4 dest;
+	dest.x = exp2(floor_src);
+	dest.y = src - floor_src;
+	dest.z = exp2(src);
+	dest.w = 1;
 
 	return dest;
 }
@@ -222,7 +222,7 @@ float4 _logp(float src)
 		dest.z = -1.#INF;
 	}
 #endif
-    dest.w = 1;    
+	dest.w = 1;    
 	return dest;
 }
 
@@ -344,37 +344,16 @@ VS_OUTPUT main(const VS_INPUT xIn)
 R"DELIMITER(
 
 	// Copy variables to output struct
-    VS_OUTPUT xOut;
+	VS_OUTPUT xOut;
 
 	// Fogging
 	// TODO deduplicate
-	const float fogDepth      =   oFog.x; // Don't abs this value! Test-case : DolphinClassic xdk sample
-	const float fogTableMode  =   CxbxFogInfo.x;
-	const float fogDensity    =   CxbxFogInfo.y;
-	const float fogStart      =   CxbxFogInfo.z;
-	const float fogEnd        =   CxbxFogInfo.w;  
+	
 
-	const float FOG_TABLE_NONE    = 0;
-	const float FOG_TABLE_EXP     = 1;
-	const float FOG_TABLE_EXP2    = 2;
-	const float FOG_TABLE_LINEAR  = 3;
- 
-    float fogFactor;
-    if(fogTableMode == FOG_TABLE_NONE) 
-       fogFactor = fogDepth;
-         //if(fogDepth < 0)
-         //fogFactor = 1 + fogDepth;
-    if(fogTableMode == FOG_TABLE_EXP) 
-       fogFactor = 1 / exp(fogDepth * fogDensity); /* / 1 / e^(d * density)*/
-    if(fogTableMode == FOG_TABLE_EXP2) 
-       fogFactor = 1 / exp(pow(fogDepth * fogDensity, 2)); /* / 1 / e^((d * density)^2)*/
-    if(fogTableMode == FOG_TABLE_LINEAR) 
-       fogFactor = (fogEnd - fogDepth) / (fogEnd - fogStart);
-       
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = clean(fogFactor).x; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
+	xOut.oFog = clean(oFog).x; // Note : Xbox clamps fog in pixel shader -> *NEEDS TESTING* /was oFog.x 
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);
