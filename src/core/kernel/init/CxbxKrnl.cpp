@@ -542,7 +542,10 @@ static void CxbxrKrnlSetupMemorySystem(int BootFlags, unsigned emulate_system, u
 	}
 }
 
-static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems, blocks_reserved_t blocks_reserved)
+static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
+                                       unsigned& reserved_systems,
+                                       blocks_reserved_t blocks_reserved,
+                                       HardwareModel &hardwareModel)
 {
 	unsigned int emulate_system = 0;
 	// Get title path :
@@ -717,6 +720,17 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags, unsigned& reserved_systems
 	g_bIsChihiro = (emulate_system == SYSTEM_CHIHIRO);
 	g_bIsDevKit = (emulate_system == SYSTEM_DEVKIT);
 	g_bIsRetail = (emulate_system == SYSTEM_XBOX);
+	if (g_bIsChihiro) {
+		hardwareModel = HardwareModel::Chihiro_Type1; // TODO: Make configurable to support Type-3 console.
+	}
+	else if (g_bIsDevKit) {
+		hardwareModel = HardwareModel::DebugKit_r1_2; // Unlikely need to make configurable.
+	}
+	// Retail (default)
+	else {
+		// Should not be configurable. Otherwise, titles compiled with newer XDK will patch older xbox kernel.
+		hardwareModel = HardwareModel::Revision1_6;
+	}
 
 #ifdef CHIHIRO_WORK
 	// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
@@ -934,7 +948,8 @@ static bool CxbxrKrnlPrepareXbeMap()
 	Xbe::Header* XbeHeader,
 	uint32_t XbeHeaderSize,
 	void (*Entry)(),
-	int BootFlags
+	int BootFlags,
+	HardwareModel hardwareModel
 );
 
 void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_reserved)
@@ -1088,7 +1103,8 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 	// using XeLoadImage from LaunchDataPage->Header.szLaunchPath
 
 	// Now we can load the XBE :
-	if (!CxbxrKrnlXbeSystemSelector(BootFlags, reserved_systems, blocks_reserved)) {
+	HardwareModel hardwareModel = HardwareModel::Revision1_6; // It is configured by CxbxrKrnlXbeSystemSelector function according to console type.
+	if (!CxbxrKrnlXbeSystemSelector(BootFlags, reserved_systems, blocks_reserved, hardwareModel)) {
 		return;
 	}
 
@@ -1116,7 +1132,8 @@ void CxbxKrnlEmulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 			(Xbe::Header*)CxbxKrnl_Xbe->m_Header.dwBaseAddr,
 			CxbxKrnl_Xbe->m_Header.dwSizeofHeaders,
 			(void(*)())EntryPoint,
- 			BootFlags
+ 			BootFlags,
+			hardwareModel
 		);
 	}
 
@@ -1178,7 +1195,8 @@ static void CxbxrKrnlInitHacks()
 	Xbe::Header            *pXbeHeader,
 	uint32_t                dwXbeHeaderSize,
 	void(*Entry)(),
-	int BootFlags)
+	int BootFlags,
+	HardwareModel hardwareModel)
 {
 	unsigned Host2XbStackBaseReserved = 0;
 	__asm mov Host2XbStackBaseReserved, esp;
@@ -1383,7 +1401,7 @@ static void CxbxrKrnlInitHacks()
 		SetupXboxDeviceTypes();
 	}
 
-	InitXboxHardware(HardwareModel::Revision1_5); // TODO : Make configurable
+	InitXboxHardware(hardwareModel);
 
 	// Read Xbox video mode from the SMC, store it in HalBootSMCVideoMode
 	xbox::HalReadSMBusValue(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, SMC_COMMAND_AV_PACK, FALSE, (xbox::PULONG)&xbox::HalBootSMCVideoMode);

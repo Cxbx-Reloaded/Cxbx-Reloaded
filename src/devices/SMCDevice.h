@@ -93,10 +93,14 @@
 
 typedef enum {
 	// https://xboxdevwiki.net/System_Management_Controller
+	// https://xboxdevwiki.net/Xboxen_Info
 	P01,
+	P05,
+	P11,
 	P2L,
 	D01, // Seen in a debug kit 
 	D05, // Seen in a earlier model chihiro
+	B11,
 } SCMRevision;
 
 class SMCDevice : public SMDevice {

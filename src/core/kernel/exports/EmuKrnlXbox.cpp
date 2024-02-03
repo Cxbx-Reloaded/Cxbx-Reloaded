@@ -43,9 +43,11 @@ XBSYSAPI EXPORTNUM(321) xbox::XBOX_KEY_DATA xbox::XboxEEPROMKey = { 0 };
 // ******************************************************************
 XBSYSAPI EXPORTNUM(322) xbox::XBOX_HARDWARE_INFO xbox::XboxHardwareInfo =
 {
-	0xC0000031, // Flags: 1=INTERNAL_USB, 2=DEVKIT, 4=MACROVISION, 8=CHIHIRO
-	0xA2, // GpuRevision, byte read from NV2A first register, at 0xFD0000000 - see NV_PMC_BOOT_0
-	0xD3, // McpRevision, Retail 1.6 - see https://github.com/JayFoxRox/xqemu-jfr/wiki/MCPX-and-bootloader
+	// TODO: What exactly 0xC0000030 flags are? Might need default to null then set them later properly.
+	// NOTE: Will be set by src/devices/Xbox.cpp and maybe other file(s)...
+	0xC0000030, // Flags: 1=INTERNAL_USB, 2=DEVKIT, 4=MACROVISION, 8=CHIHIRO
+	0xD3, // GpuRevision, byte read from NV2A first register, at 0xFD0000000 - see NV_PMC_BOOT_0
+	0, // NOTE: Will be set by src/devices/Xbox.cpp file.
 	0, // unknown
 	0 // unknown
 };

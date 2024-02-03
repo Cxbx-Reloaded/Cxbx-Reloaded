@@ -25,8 +25,12 @@
 // *
 // ******************************************************************
 
+#define LOG_PREFIX CXBXR_MODULE::XBOX
+
 #include "Xbox.h" // For HardwareModel
 #include "common\xbe\Xbe.h"  // Without this HLEIntercept complains about some undefined xbe variables
+#include "core\kernel\common\xbox.h"
+#include "cxbxr.hpp"
 #include "core\hle\Intercept.hpp"
 
 PCIBus* g_PCIBus;
@@ -41,66 +45,82 @@ USBDevice* g_USB0;
 
 MCPXRevision MCPXRevisionFromHardwareModel(HardwareModel hardwareModel)
 {
-	switch (hardwareModel) {
-	case Revision1_0:
-	case Revision1_1:
-	case Revision1_2:
-	case Revision1_3:
-	case Revision1_4:
-	case Revision1_5:
-	case Revision1_6:
+	// https://xboxdevwiki.net/Xboxen_Info
+	switch (GET_HW_CONSOLE(hardwareModel)) {
+	case Retail:
 		return MCPXRevision::MCPX_X3;
 	case DebugKit:
-		// EmuLog(LOG_LEVEL::WARNING, "Guessing MCPXVersion");
+	case Chihiro:
 		return MCPXRevision::MCPX_X2;
 	default:
-		// UNREACHABLE(hardwareModel);
-		return MCPXRevision::MCPX_X3;
+		CxbxrAbort("MCPXRevisionFromHardwareModel: Unknown conversion for hardware model (0x%02X)", hardwareModel);
 	}
 }
 
 SCMRevision SCMRevisionFromHardwareModel(HardwareModel hardwareModel)
 {
+	// https://xboxdevwiki.net/Xboxen_Info
 	switch (hardwareModel) {
 	case Revision1_0:
-		return SCMRevision::P01; // Our SCM returns PIC version string "P01"
+		return SCMRevision::P01;
 	case Revision1_1:
+		return SCMRevision::P05;
 	case Revision1_2:
 	case Revision1_3:
 	case Revision1_4:
+		return SCMRevision::P11;
 	case Revision1_5:
 	case Revision1_6:
-		// EmuLog(LOG_LEVEL::WARNING, "Guessing SCMRevision");
-		return SCMRevision::P2L; // Assumption; Our SCM returns PIC version string "P05"
-	case DebugKit:
-		return SCMRevision::D01; // Our SCM returns PIC version string "DXB"
-	default:
-		// UNREACHABLE(hardwareModel);
 		return SCMRevision::P2L;
+	case DebugKit:
+		return SCMRevision::D01;
+	case Chihiro_Type1:
+		return SCMRevision::D05;
+	case DebugKit_r1_2:
+	case Chihiro_Type3:
+		return SCMRevision::B11;
+	default:
+		CxbxrAbort("SCMRevisionFromHardwareModel: Unknown conversion for hardware model (0x%02X)", hardwareModel);
 	}
 }
 
 TVEncoder TVEncoderFromHardwareModel(HardwareModel hardwareModel)
 {
-	switch (hardwareModel) {
+	// https://xboxdevwiki.net/Xboxen_Info
+	// LukeUsher : My debug kit and at least most of them (maybe all?)
+	// are equivalent to v1.0 and have Conexant encoders.
+	switch (GET_HW_REVISION(hardwareModel)) {
 	case Revision1_0:
 	case Revision1_1:
 	case Revision1_2:
 	case Revision1_3:
 		return TVEncoder::Conexant;
 	case Revision1_4:
+	case Revision1_5: // Assumption
 		return TVEncoder::Focus;
-	case Revision1_5:
-		return TVEncoder::Focus; // Assumption
 	case Revision1_6:
 		return TVEncoder::XCalibur;
-	case DebugKit:
-		// LukeUsher : My debug kit and at least most of them (maybe all?)
-		// are equivalent to v1.0 and have Conexant encoders.
-		return TVEncoder::Conexant;
-	default: 
-		// UNREACHABLE(hardwareModel);
-		return TVEncoder::Focus;
+	default:
+		CxbxrAbort("TVEncoderFromHardwareModel: Unknown conversion for hardware model (0x%02X)", hardwareModel);
+	}
+}
+
+xbox::uchar_xt MCP_PCIRevisionFromHardwareModel(HardwareModel hardwareModel)
+{
+	// https://xboxdevwiki.net/Xboxen_Info
+	switch (GET_HW_REVISION(hardwareModel)) {
+		case Revision1_0:
+			return 0xB2;
+		case Revision1_1:
+		case Revision1_2:
+		case Revision1_3:
+		case Revision1_4:
+		case Revision1_5: // Assumption
+			return 0xD4;
+		case Revision1_6:
+			return 0xD5;
+		default:
+			CxbxrAbort("MCP_PCIRevisionFromHardwareModel: Unknown conversion for hardware model (0x%02X)", hardwareModel);
 	}
 }
 
@@ -111,16 +131,29 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	SCMRevision smc_revision = SCMRevisionFromHardwareModel(hardwareModel);
 	TVEncoder tv_encoder = TVEncoderFromHardwareModel(hardwareModel);
 
+	// Only Xbox 1.0 has usb daughterboard supplied, later revisions are integrated onto motherboard.
+	if (GET_HW_REVISION(hardwareModel) == HardwareModel::Revision1_0) {
+		xbox::XboxHardwareInfo.Flags |= XBOX_HW_FLAG_INTERNAL_USB_HUB;
+	}
+	// Set the special type of consoles according to xbox kernel designed respectively.
+	if (IS_DEVKIT(hardwareModel)) {
+		xbox::XboxHardwareInfo.Flags |= XBOX_HW_FLAG_DEVKIT_KERNEL;
+	}
+	else if (IS_CHIHIRO(hardwareModel)) {
+		xbox::XboxHardwareInfo.Flags |= XBOX_HW_FLAG_ARCADE;
+	}
+
+	xbox::XboxHardwareInfo.McpRevision = MCP_PCIRevisionFromHardwareModel(hardwareModel);
+
 	// Create busses
 	g_PCIBus = new PCIBus();
 	g_SMBus = new SMBus();
 
 	// Create devices
 	g_MCPX = new MCPXDevice(mcpx_revision);
-															
-	g_SMC = new SMCDevice(smc_revision, g_bIsChihiro ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
-															   // SMC uses different AV_PACK values than the Kernel
-															   // See https://xboxdevwiki.net/PIC#The_AV_Pack
+	g_SMC = new SMCDevice(smc_revision, IS_CHIHIRO(hardwareModel) ? 6 : 1); // 6 = AV_PACK_STANDARD, 1 = AV_PACK_HDTV. Chihiro doesn't support HDTV!
+	                                                                        // SMC uses different AV_PACK values than the Kernel
+	                                                                        // See https://xboxdevwiki.net/PIC#The_AV_Pack
 	g_EEPROM = new EEPROMDevice();
 	g_NVNet = new NVNetDevice();
 	g_NV2A = new NV2ADevice();
