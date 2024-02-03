@@ -302,7 +302,7 @@ float4 main(const PS_INPUT input) : COLOR {
 
 	// Add fog if enabled
 	if (state.FogEnable) {
-		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, clamp(fogFactor, 0, 1));
+		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, saturate(fogFactor));
 	}
 
 	// Add specular if enabled

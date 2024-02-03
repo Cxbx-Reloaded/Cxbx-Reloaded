@@ -398,7 +398,7 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	// Note : VFACE/FrontFace has been unreliable, investigate again if some test-case shows bland colors
 	v0 = isFrontFace ? xIn.iD0 : xIn.iB0; // Diffuse front/back
 	v1 = isFrontFace ? xIn.iD1 : xIn.iB1; // Specular front/back
-	fog = float4(c_fog.rgb, clamp(fogFactor, 0, 1)); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
+	fog = float4(c_fog.rgb, saturate(fogFactor)); // color from PSH_XBOX_CONSTANT_FOG, alpha from vertex shader output / pixel shader input
 
 	// Xbox shader program will be inserted here
     // <XBOX SHADER PROGRAM GOES HERE>
