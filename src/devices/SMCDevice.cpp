@@ -91,10 +91,13 @@ uint8_t SMCDevice::ReadByte(uint8_t command)
 		// See https://xboxdevwiki.net/PIC#PIC_version_string
 		switch (m_revision) {
 		case SCMRevision::P01: buffer[1] = "P01"[m_PICVersionStringIndex]; break;
-		case SCMRevision::P2L: buffer[1] = "P05"[m_PICVersionStringIndex]; break; // ??
+		case SCMRevision::P05: buffer[1] = "P05"[m_PICVersionStringIndex]; break;
+		case SCMRevision::P11: buffer[1] = "P11"[m_PICVersionStringIndex]; break;
+		case SCMRevision::P2L: buffer[1] = "P2L"[m_PICVersionStringIndex]; break;
 		case SCMRevision::D01: buffer[1] = "DXB"[m_PICVersionStringIndex]; break;
 		case SCMRevision::D05: buffer[1] = "D05"[m_PICVersionStringIndex]; break; // ??
-		// default: UNREACHABLE(m_revision);
+		case SCMRevision::B11: buffer[1] = "B11"[m_PICVersionStringIndex]; break; // ??
+		default: CxbxrAbort("Unknown PIC revision: %d", m_revision);
 		}
 
 		m_PICVersionStringIndex = (m_PICVersionStringIndex + 1) % 3;

@@ -53,8 +53,20 @@ typedef enum {
 	Revision1_4,
 	Revision1_5,
 	Revision1_6,
-	DebugKit
+	Retail = 0x00,
+	// We don't need include revison 1.0 to 1.6 here, use above revision range instead.
+	DebugKit = 0x10, // TODO: Since there are 1.0/1.1/1.2 revisions. For now, let's go with 1.2 by default.
+	DebugKit_r1_2 = DebugKit | Revision1_2,
+	Chihiro = 0x20,
+	Chihiro_Type1 = Chihiro | Revision1_1,
+	Chihiro_Type3 = Chihiro | Revision1_2, // TODO: Need verify on Chihiro hw, it is currently base on (B11) Debug Kit list.
 } HardwareModel;
+
+#define GET_HW_REVISION(hardwareModel) (hardwareModel & 0x0F)
+#define GET_HW_CONSOLE(hardwareModel) (hardwareModel & 0xF0)
+#define IS_RETAIL(hardwareModel) (GET_HW_CONSOLE(hardwareModel) == Retail)
+#define IS_DEVKIT(hardwareModel) (GET_HW_CONSOLE(hardwareModel) == DebugKit)
+#define IS_CHIHIRO(hardwareModel) (GET_HW_CONSOLE(hardwareModel) == Chihiro)
 
 typedef enum { // TODO : Move to it's own file
 	// https://xboxdevwiki.net/Hardware_Revisions#Video_encoder

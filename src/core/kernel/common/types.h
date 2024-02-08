@@ -2081,6 +2081,11 @@ typedef enum _XC_VALUE_INDEX
 }
 XC_VALUE_INDEX, *PXC_VALUE_INDEX;
 
+#define XBOX_HW_FLAG_INTERNAL_USB_HUB 0x00000001
+#define XBOX_HW_FLAG_DEVKIT_KERNEL    0x00000002
+#define XBOX_480P_MACROVISION_ENABLED 0x00000004
+#define XBOX_HW_FLAG_ARCADE           0x00000008
+
 // ******************************************************************
 // * XBOX_HARDWARE_INFO
 // ******************************************************************
