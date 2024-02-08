@@ -288,20 +288,8 @@ float DoFog(const VS_INPUT xIn)
         fogDepth = abs(Projection.Position.z);
     if (state.Fog.DepthMode == FixedFunctionVertexShader::FOG_DEPTH_W)
         fogDepth = Projection.Position.w;
-
-    // Calculate the fog factor
-    // Some of this might be better done in the pixel shader?
-    float fogFactor;
-    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_NONE)
-        fogFactor = fogDepth;
-    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_EXP)
-        fogFactor = 1 / exp(fogDepth * state.Fog.Density); // 1 / e^(d * density)
-    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_EXP2)
-        fogFactor = 1 / exp(pow(fogDepth * state.Fog.Density, 2)); // 1 / e^((d * density)^2)
-    if (state.Fog.TableMode == FixedFunctionVertexShader::FOG_TABLE_LINEAR)
-        fogFactor = (state.Fog.End - fogDepth) / (state.Fog.End - state.Fog.Start); // (end - d) / (end - start)
-
-    return fogFactor;
+		
+    return fogDepth;
 }
 
 float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
@@ -351,9 +339,9 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
        // TODO move alongside the texture transformation when it stops angering the HLSL compiler
         const float componentCount = state.TexCoordComponentCount[texCoordIndex];
         if (componentCount == 1)
-            texCoord.yzw = float3(1, 0, 0);
+            texCoord.yzw = float3(0, 0, 1);
         if (componentCount == 2)
-            texCoord.zw = float2(1, 0);
+            texCoord.zw = float2(0, 1);
         if (componentCount == 3)
             texCoord.w = 1;
     }   // Generate texture coordinates
@@ -390,14 +378,15 @@ float4 DoTexCoord(const uint stage, const VS_INPUT xIn)
     // Test case: ProjectedTexture sample, which uses 3 coordinates
     // We'll need to implement the divide when D3D stops handling it for us?
     // https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtexturetransformflags
+    // padding makes no differences in LLE. LLE works with ProjectedTexture sample without padding, but to be devided by w is necessary.
+
     if (projected)
     {
-        if (countFlag == 1)
-            texCoord.yzw = texCoord.x;
-        if (countFlag == 2)
-            texCoord.zw = texCoord.y;
-        if (countFlag == 3)
-            texCoord.w = texCoord.z;
+        //if (countFlag == 1)
+            //texCoord.yz = texCoord.x;
+        //if (countFlag == 2)
+            //texCoord.z = texCoord.y;
+        //texCoord.xyzw = texCoord.xyzw / texCoord.w;
     }
 
     return texCoord;
