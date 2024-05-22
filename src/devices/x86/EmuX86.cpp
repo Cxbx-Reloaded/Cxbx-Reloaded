@@ -57,8 +57,6 @@ extern std::atomic_bool g_bEnableAllInterrupts;
 
 static int field_pin = 0;
 
-static thread_local bool g_tls_isEmuX86Managed;
-
 uint32_t EmuX86_IORead(xbox::addr_xt addr, int size)
 {
 	switch (addr) {
@@ -197,11 +195,8 @@ uint32_t EmuX86_Read(xbox::addr_xt addr, int size)
 		return value;
 	}
 
-	// EmuX86 is not suppose to do direct read to host memory and should be handle from
-	// redirect from above statements. If it doesn't meet any requirement, then should be
-	// handle as possible fatal crash instead of return corrupt value.
-	g_tls_isEmuX86Managed = false;
-
+	// EmuX86 should not directly access host memory.
+	EmuLog(LOG_LEVEL::WARNING, "EmuX86_Read(0x%08X, %d) [Unhandled]", addr, size);
 	return 0;
 }
 
@@ -223,10 +218,8 @@ void EmuX86_Write(xbox::addr_xt addr, uint32_t value, int size)
 		return;
 	}
 
-	// EmuX86 is not suppose to do direct write to host memory and should be handle from
-	// redirect from above statements. If it doesn't meet any requirement, then should be
-	// handle as possible fatal crash instead of set corrupt value.
-	g_tls_isEmuX86Managed = false;
+	// EmuX86 should not directly access host memory.
+	EmuLog(LOG_LEVEL::WARNING, "EmuX86_Write(0x%08X, 0x%08X, %d) [Unhandled]", addr, value, size);
 }
 
 int ContextRecordOffsetByRegisterType[/*_RegisterType*/R_DR7 + 1] = { 0 };
@@ -2928,7 +2921,6 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 	// However, if for any reason, an opcode operand cannot be read from or written to,
 	// that case may be logged, but it shouldn't fail the opcode handler.
 	_DInst info;
-	g_tls_isEmuX86Managed = true;
 	DWORD StartingEip = e->ContextRecord->Eip;
 	EmuLog(LOG_LEVEL::DEBUG, "Starting instruction emulation from 0x%08X", e->ContextRecord->Eip);
 
@@ -3294,15 +3286,11 @@ bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 				return true;
 		} // switch info.opcode
 
-		if (g_tls_isEmuX86Managed) {
-			e->ContextRecord->Eip += info.size;
-		}
-		else {
-			break;
-		}
+
+		e->ContextRecord->Eip += info.size;
 	} // while true
 
-	return g_tls_isEmuX86Managed;
+	return true;
 
 opcode_error:
 	EmuLog(LOG_LEVEL::WARNING, "0x%08X: Error while handling instruction %s (%u)", e->ContextRecord->Eip, Distorm_OpcodeString(info.opcode), info.opcode);
