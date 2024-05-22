@@ -63,10 +63,16 @@ namespace FixedFunctionPixelShader {
 	const float X_D3DTA_COMPLEMENT = 0x00000010;  // take 1.0 - x (read modifier)
 	const float X_D3DTA_ALPHAREPLICATE = 0x00000020;  // replicate alpha to color components (read modifier)
 
-	const int SAMPLE_NONE = 0;
-	const int SAMPLE_2D = 1;
-	const int SAMPLE_3D = 2;
-	const int SAMPLE_CUBE = 3;
+    const int SAMPLE_NONE = 0;
+    const int SAMPLE_2D = 1;
+    const int SAMPLE_3D = 2;
+    const int SAMPLE_CUBE = 3;
+
+    // https://docs.microsoft.com/en-us/windows/win32/direct3d9/fog-formulas
+    const float FOG_TABLE_NONE = 0;
+    const float FOG_TABLE_EXP = 1;
+    const float FOG_TABLE_EXP2 = 2;
+    const float FOG_TABLE_LINEAR = 3;
 
 	// This state is passed to the shader
 	struct PsTextureStageState {
@@ -125,7 +131,11 @@ namespace FixedFunctionPixelShader {
 		alignas(16) float SpecularEnable;
 		alignas(16) float FogEnable;
 		alignas(16) float3 FogColor;
-	};
+		alignas(16) float FogTableMode;
+		alignas(16) float FogDensity;
+		alignas(16) float FogStart;
+		alignas(16) float FogEnd;
+    };
 #ifdef  __cplusplus
 } // FixedFunctionPixelShader namespace
 #endif

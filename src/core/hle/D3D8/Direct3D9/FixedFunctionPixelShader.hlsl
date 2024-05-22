@@ -237,6 +237,24 @@ TextureArgs ExecuteTextureStage(
 
 float4 main(const PS_INPUT input) : COLOR {
 
+    // Calculate the fog factor
+    float fogFactor;
+
+    if (state.FogEnable == 0){
+        fogFactor = 1;
+    }
+    else{
+    if (state.FogTableMode == FOG_TABLE_NONE)
+        fogFactor = input.iFog;
+    if (state.FogTableMode == FOG_TABLE_EXP)
+        fogFactor = 1 / exp(input.iFog * state.FogDensity); // 1 / e^(d * density)
+    if (state.FogTableMode == FOG_TABLE_EXP2)
+        fogFactor = 1 / exp(pow(input.iFog * state.FogDensity, 2)); // 1 / e^((d * density)^2)
+    if (state.FogTableMode == FOG_TABLE_LINEAR)
+        fogFactor = (state.FogEnd - input.iFog) / (state.FogEnd - state.FogStart); // (end - d) / (end - start)
+    if (state.FogEnable == 0)
+        fogFactor = 1;
+    }
 	TexCoords = input.iT;
 
 	// Each stage is passed and returns
@@ -284,7 +302,7 @@ float4 main(const PS_INPUT input) : COLOR {
 
 	// Add fog if enabled
 	if (state.FogEnable) {
-		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, saturate(input.iFog));
+		ctx.CURRENT.rgb = lerp(state.FogColor.rgb, ctx.CURRENT.rgb, saturate(fogFactor));
 	}
 
 	// Add specular if enabled
