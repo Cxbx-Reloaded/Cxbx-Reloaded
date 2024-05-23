@@ -68,9 +68,6 @@ extern HWND   g_hEmuWindow;
 
 extern HANDLE g_CurrentProcessHandle; // Set in CxbxKrnlMain
 
-// Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime
-extern std::atomic_int64_t HostSystemTimeDelta;
-
 typedef struct DUMMY_KERNEL
 {
 	IMAGE_DOS_HEADER DosHeader;

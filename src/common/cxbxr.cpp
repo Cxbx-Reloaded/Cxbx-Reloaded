@@ -121,9 +121,6 @@ bool HandleFirstLaunch()
 	}
 
 	// NOTE: Require to be after g_renderbase's shutdown process.
-	// Next thing we need to do is shutdown our timer threads.
-	Timer_Shutdown();
-
 	// NOTE: Must be last step of shutdown process and before CxbxUnlockFilePath call!
 	// Shutdown the memory manager
 	g_VMManager.Shutdown();

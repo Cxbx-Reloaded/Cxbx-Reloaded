@@ -35,17 +35,13 @@
 
 #include "common\util\CxbxUtil.h"
 
-#define NANOSECONDS_PER_SECOND 1000000000
 
 /* PTIMER - time measurement and time-based alarms */
-static uint64_t ptimer_get_clock(NV2AState * d)
+static uint64_t ptimer_get_clock(NV2AState *d)
 {
-	// Get time in nanoseconds
-    uint64_t time = std::chrono::duration<uint64_t, std::nano>(std::chrono::steady_clock::now().time_since_epoch()).count();
-
-	return Muldiv64(Muldiv64(time,
+	return Muldiv64(Muldiv64(get_now(),
 					(uint32_t)d->pramdac.core_clock_freq, // TODO : Research how this can be updated to accept uint64_t
-					NANOSECONDS_PER_SECOND), // Was CLOCKS_PER_SEC
+					SCALE_S_IN_US), // Was CLOCKS_PER_SEC
 				d->ptimer.denominator,
 				d->ptimer.numerator);
 }
@@ -91,6 +87,13 @@ DEVICE_WRITE32(PTIMER)
 		break;
 	case NV_PTIMER_INTR_EN_0:
 		d->ptimer.enabled_interrupts = value;
+		if (d->ptimer.enabled_interrupts & NV_PTIMER_INTR_EN_0_ALARM) {
+			d->ptimer_last = get_now();
+			d->ptimer_active = true;
+		}
+		else if ((d->ptimer.enabled_interrupts & NV_PTIMER_INTR_EN_0_ALARM) == 0) {
+			d->ptimer_active = false;
+		}
 		update_irq(d);
 		break;
 	case NV_PTIMER_DENOMINATOR:
@@ -101,6 +104,7 @@ DEVICE_WRITE32(PTIMER)
 		break;
 	case NV_PTIMER_ALARM_0:
 		d->ptimer.alarm_time = value;
+		d->ptimer_period = ((uint64_t(d->ptimer.alarm_time >> 5) * SCALE_S_IN_US) / d->pramdac.core_clock_freq);
 		break;
 	default: 
 		//DEVICE_WRITE32_REG(ptimer); // Was : DEBUG_WRITE32_UNHANDLED(PTIMER);
