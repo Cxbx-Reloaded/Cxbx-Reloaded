@@ -64,7 +64,7 @@ INT_PTR CALLBACK DlgAboutProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SendMessageW(hWndDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 
 			// Build the Tab Control
-			constexpr size_t text_len = longest_str({ "About", "Contributors", "License" }) + 1;
+			const size_t text_len = longest_str({ "About", "Contributors", "License" }) + 1;
 			char text[text_len];
 			TCITEM tabInfo;
 			memset(&tabInfo, 0, sizeof(tabInfo));

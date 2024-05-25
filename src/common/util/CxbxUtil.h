@@ -26,6 +26,7 @@
 #ifndef CXBXUTIL_H
 #define CXBXUTIL_H
 
+#include <algorithm>
 #include <stdexcept>
 #include "xbox_types.h"
 #include "Cxbx.h"
