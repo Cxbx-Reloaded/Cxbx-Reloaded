@@ -82,6 +82,7 @@ DEVICE_WRITE32(PRAMDAC)
 		} else {
 			d->pramdac.core_clock_freq = (NV2A_CRYSTAL_FREQ * n)
 				/ (1 << p) / m;
+			d->ptimer_period = ((uint64_t(d->ptimer.alarm_time >> 5) * SCALE_S_IN_US) / d->pramdac.core_clock_freq);
 		}
 
 		break;

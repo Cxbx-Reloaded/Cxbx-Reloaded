@@ -98,6 +98,8 @@ typedef void* LPSECURITY_ATTRIBUTES;
 #define X_STATUS_FILE_IS_A_DIRECTORY 0xC00000BAL
 #define X_STATUS_END_OF_FILE 0xC0000011L
 #define X_STATUS_INVALID_PAGE_PROTECTION 0xC0000045L
+#define X_STATUS_SUSPEND_COUNT_EXCEEDED 0xC000004AL
+#define X_STATUS_THREAD_IS_TERMINATING 0xC000004BL
 #define X_STATUS_CONFLICTING_ADDRESSES 0xC0000018L
 #define X_STATUS_UNABLE_TO_FREE_VM 0xC000001AL
 #define X_STATUS_FREE_VM_NOT_AT_BASE 0xC000009FL
@@ -1945,7 +1947,7 @@ typedef struct _KTHREAD
 	/* 0x56/86 */ char_xt WaitNext;
 	/* 0x57/87 */ char_xt WaitReason;
 	/* 0x58/88 */ PKWAIT_BLOCK WaitBlockList;
-	/* 0x5C/92 */ LIST_ENTRY WaitListEntry;
+	/* 0x5C/92 */ LIST_ENTRY WaitListEntry; // Used to place the thread in the ready list of the scheduler
 	/* 0x64/100 */ ulong_xt WaitTime;
 	/* 0x68/104 */ ulong_xt KernelApcDisable;
 	/* 0x6C/108 */ ulong_xt Quantum;
@@ -1968,6 +1970,8 @@ typedef struct _KTHREAD
 	/* 0x10C/268 */ uchar_xt _padding[4];
 }
 KTHREAD, *PKTHREAD, *RESTRICTED_POINTER PRKTHREAD;
+
+#define X_MAXIMUM_SUSPEND_COUNT 0x7F
 
 // ******************************************************************
 // * ETHREAD

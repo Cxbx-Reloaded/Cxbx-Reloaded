@@ -27,6 +27,8 @@
 
 namespace xbox
 {
+	extern std::atomic_flag KeSystemTimeChanged;
+
 	void_xt NTAPI KeSetSystemTime
 	(
 		IN  PLARGE_INTEGER NewTime,
@@ -50,5 +52,16 @@ namespace xbox
 		IN PKPROCESS Process
 	);
 
+	xbox::void_xt KeResumeThreadEx
+	(
+		IN PKTHREAD Thread
+	);
+
+	xbox::void_xt KeSuspendThreadEx
+	(
+		IN PKTHREAD Thread
+	);
+
 	void_xt KeEmptyQueueApc();
+	void_xt KeWaitForDpc();
 }

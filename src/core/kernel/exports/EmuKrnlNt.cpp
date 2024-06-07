@@ -47,6 +47,7 @@ namespace NtDll
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
 #include "core\kernel\memory-manager\VMManager.h" // For g_VMManager
 #include "core\kernel\support\NativeHandle.h"
+#include "devices\Xbox.h"
 #include "CxbxDebugger.h"
 
 #pragma warning(disable:4005) // Ignore redefined status values
@@ -58,7 +59,7 @@ namespace NtDll
 #include <mutex>
 
 // Prevent setting the system time from multiple threads at the same time
-std::mutex NtSystemTimeMtx;
+xbox::RTL_CRITICAL_SECTION xbox::NtSystemTimeCritSec;
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -1039,7 +1040,7 @@ XBSYSAPI EXPORTNUM(206) xbox::ntstatus_xt NTAPI xbox::NtQueueApcThread
 
 	PKAPC Apc = static_cast<PKAPC>(ExAllocatePoolWithTag(sizeof(KAPC), 'pasP'));
 	if (Apc != zeroptr) {
-		KeInitializeApc(Apc, &Thread->Tcb, zeroptr, zeroptr, reinterpret_cast<PKNORMAL_ROUTINE>(ApcRoutine), UserMode, ApcRoutineContext);
+		KeInitializeApc(Apc, &Thread->Tcb, KiFreeUserApc, zeroptr, reinterpret_cast<PKNORMAL_ROUTINE>(ApcRoutine), UserMode, ApcRoutineContext);
 		if (!KeInsertQueueApc(Apc, ApcStatusBlock, ApcReserved, 0)) {
 			ExFreePool(Apc);
 			result = X_STATUS_UNSUCCESSFUL;
@@ -1711,6 +1712,16 @@ XBSYSAPI EXPORTNUM(219) xbox::ntstatus_xt NTAPI xbox::NtReadFile
 		CxbxDebugger::ReportFileRead(FileHandle, Length, Offset);
 	}
 
+	// If we are emulating the Chihiro, we need to hook mbcom
+	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
+		g_MediaBoard->ComRead(ByteOffset->QuadPart, Buffer, Length);
+
+		// Update the Status Block
+		IoStatusBlock->Status = STATUS_SUCCESS;
+		IoStatusBlock->Information = Length;
+		return STATUS_SUCCESS;
+	}
+
 	if (ApcRoutine != nullptr) {
 		// Pack the original parameters to a wrapped context for a custom APC routine
 		CxbxIoDispatcherContext* cxbxContext = new CxbxIoDispatcherContext(IoStatusBlock, ApcRoutine, ApcContext);
@@ -1856,15 +1867,20 @@ XBSYSAPI EXPORTNUM(224) xbox::ntstatus_xt NTAPI xbox::NtResumeThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	if (const auto &nativeHandle = GetNativeHandle(ThreadHandle)) {
-		// Thread handles are created by ob
-		RETURN(NtDll::NtResumeThread(*nativeHandle, (::PULONG)PreviousSuspendCount));
-	}
-	else {
-		RETURN(X_STATUS_INVALID_HANDLE);
+	PETHREAD Thread;
+	ntstatus_xt result = ObReferenceObjectByHandle(ThreadHandle, &PsThreadObjectType, reinterpret_cast<PVOID *>(&Thread));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
 	}
 
-	// TODO : Once we do our own thread-switching, implement NtResumeThread using KetResumeThread
+	ulong_xt PrevSuspendCount = KeResumeThread(&Thread->Tcb);
+	ObfDereferenceObject(Thread);
+
+	if (PreviousSuspendCount) {
+		*PreviousSuspendCount = PrevSuspendCount;
+	}
+
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -1971,7 +1987,7 @@ XBSYSAPI EXPORTNUM(228) xbox::ntstatus_xt NTAPI xbox::NtSetSystemTime
 		ret = STATUS_ACCESS_VIOLATION;
 	}
 	else {
-		NtSystemTimeMtx.lock();
+		RtlEnterCriticalSectionAndRegion(&NtSystemTimeCritSec);
 		NewSystemTime = *SystemTime;
 		if (NewSystemTime.u.HighPart > 0 && NewSystemTime.u.HighPart <= 0x20000000) {
 			/* Convert the time and set it in HAL */
@@ -1991,7 +2007,7 @@ XBSYSAPI EXPORTNUM(228) xbox::ntstatus_xt NTAPI xbox::NtSetSystemTime
 		else {
 			ret = STATUS_INVALID_PARAMETER;
 		}
-		NtSystemTimeMtx.unlock();
+		RtlLeaveCriticalSectionAndRegion(&NtSystemTimeCritSec);
 	}
 
 	RETURN(ret);
@@ -2079,15 +2095,30 @@ XBSYSAPI EXPORTNUM(231) xbox::ntstatus_xt NTAPI xbox::NtSuspendThread
 		LOG_FUNC_ARG_OUT(PreviousSuspendCount)
 		LOG_FUNC_END;
 
-	if (const auto &nativeHandle = GetNativeHandle(ThreadHandle)) {
-		// Thread handles are created by ob
-		RETURN(NtDll::NtSuspendThread(*nativeHandle, (::PULONG)PreviousSuspendCount));
-	}
-	else {
-		RETURN(X_STATUS_INVALID_HANDLE);
+	PETHREAD Thread;
+	ntstatus_xt result = ObReferenceObjectByHandle(ThreadHandle, &PsThreadObjectType, reinterpret_cast<PVOID *>(&Thread));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
 	}
 
-	// TODO : Once we do our own thread-switching, implement NtSuspendThread using KeSuspendThread
+	if (Thread != PspGetCurrentThread()) {
+		if (Thread->Tcb.HasTerminated) {
+			ObfDereferenceObject(Thread);
+			RETURN(X_STATUS_THREAD_IS_TERMINATING);
+		}
+	}
+
+	ulong_xt PrevSuspendCount = KeSuspendThread(&Thread->Tcb);
+	ObfDereferenceObject(Thread);
+	if (PrevSuspendCount == X_STATUS_SUSPEND_COUNT_EXCEEDED) {
+		RETURN(X_STATUS_SUSPEND_COUNT_EXCEEDED);
+	}
+
+	if (PreviousSuspendCount) {
+		*PreviousSuspendCount = PrevSuspendCount;
+	}
+
+	RETURN(X_STATUS_SUCCESS);
 }
 
 // ******************************************************************
@@ -2201,15 +2232,23 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		if (const auto &nativeHandle = GetNativeHandle(Handles[i])) {
 			// This is a ob handle, so replace it with its native counterpart
 			nativeHandles[i] = *nativeHandle;
+			EmuLog(LOG_LEVEL::DEBUG, "xbox handle: %p", nativeHandles[i]);
 		}
 		else {
 			nativeHandles[i] = Handles[i];
+			EmuLog(LOG_LEVEL::DEBUG, "native handle: %p", nativeHandles[i]);
 		}
 	}
 
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 
-	xbox::ntstatus_xt ret = WaitApc([Count, &nativeHandles, WaitType, Alertable]() -> std::optional<ntstatus_xt> {
+	PKTHREAD kThread = KeGetCurrentThread();
+	kThread->WaitStatus = X_STATUS_SUCCESS;
+	if (!AddWaitObject(kThread, Timeout)) {
+		RETURN(X_STATUS_TIMEOUT);
+	}
+
+	xbox::ntstatus_xt ret = WaitApc<true>([Count, &nativeHandles, WaitType, Alertable](xbox::PKTHREAD kThread) -> std::optional<ntstatus_xt> {
 		NtDll::LARGE_INTEGER ExpireTime;
 		ExpireTime.QuadPart = 0;
 		NTSTATUS Status = NtDll::NtWaitForMultipleObjects(
@@ -2221,8 +2260,11 @@ XBSYSAPI EXPORTNUM(235) xbox::ntstatus_xt NTAPI xbox::NtWaitForMultipleObjectsEx
 		if (Status == STATUS_TIMEOUT) {
 			return std::nullopt;
 		}
-		return std::make_optional<ntstatus_xt>(Status);
-		}, Timeout, Alertable, WaitMode);
+		// If the wait was satisfied with the host, then also unwait the thread on the guest side, to be sure to remove WaitBlocks that might have been added
+		// to the thread. Test case: Steel Battalion
+		xbox::KiUnwaitThreadAndLock(kThread, Status, 0);
+		return std::make_optional<ntstatus_xt>(kThread->WaitStatus);
+		}, Timeout, Alertable, WaitMode, kThread);
 
 	RETURN(ret);
 }
@@ -2267,6 +2309,16 @@ XBSYSAPI EXPORTNUM(236) xbox::ntstatus_xt NTAPI xbox::NtWriteFile
 			Offset = ByteOffset->QuadPart;
 		
 		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
+	}
+
+	// If we are emulating the Chihiro, we need to hook mbcom
+	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
+		g_MediaBoard->ComWrite(ByteOffset->QuadPart, Buffer, Length);
+
+		// Update the Status Block
+		IoStatusBlock->Status = STATUS_SUCCESS;
+		IoStatusBlock->Information = Length;
+		return STATUS_SUCCESS;
 	}
 
 	if (ApcRoutine != nullptr) {

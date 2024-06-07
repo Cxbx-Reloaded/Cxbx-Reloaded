@@ -89,6 +89,11 @@ xbox::boolean_xt RtlpCaptureStackLimits(
 	return TRUE;
 }
 
+xbox::void_xt xbox::RtlInitSystem()
+{
+	xbox::RtlInitializeCriticalSection(&NtSystemTimeCritSec);
+}
+
 // ******************************************************************
 // * 0x0104 - RtlAnsiStringToUnicodeString()
 // ******************************************************************

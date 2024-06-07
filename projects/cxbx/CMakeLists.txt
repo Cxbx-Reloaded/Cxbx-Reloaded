@@ -42,6 +42,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   LTC_NO_PRNGS
   LTC_NO_MISC
   LTC_NO_PROTOTYPES
+
+  # Enable Chihiro work
+  CHIHIRO_WORK
  )
  
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
@@ -176,6 +179,7 @@ target_link_libraries(cxbx
  SDL2
  imgui
  libusb
+ mio::mio_min_winapi
 
  ${WINS_LIB}
 )

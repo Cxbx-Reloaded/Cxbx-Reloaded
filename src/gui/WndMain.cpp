@@ -394,6 +394,13 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		};
 		break; // added per PVS suggestion.
 
+		case WM_TIMECHANGE:
+		{
+			ipc_send_kernel_update(IPC_UPDATE_KERNEL::CONFIG_CHANGE_TIME, 0, reinterpret_cast<std::uintptr_t>(m_hwndChild));
+			return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		}
+		break;
+
 		case WM_TIMER:
 		{
 			switch (wParam)

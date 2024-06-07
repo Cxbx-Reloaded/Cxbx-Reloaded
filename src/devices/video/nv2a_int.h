@@ -357,10 +357,15 @@ typedef struct OverlayState {
 } OverlayState;
 
 typedef struct NV2AState {
+	void(* vblank_cb)(void *);
+	uint64_t vblank_last;
     // PCIDevice dev;
     // qemu_irq irq;
     bool exiting;
 	bool enable_overlay = false;
+	bool ptimer_active = false;
+	uint64_t ptimer_last;
+	uint64_t ptimer_period;
 
     // VGACommonState vga;
     // GraphicHwOps hw_ops;
