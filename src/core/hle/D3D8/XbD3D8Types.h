@@ -100,6 +100,42 @@ typedef D3D11_RECT D3DRECT;
 #define IDirect3DVolume                 IDirect3DVolume9
 #define IDirect3DQuery                  _9_11(IDirect3DQuery9,             ID3D11Query)
 
+
+// D3D9 D3FFORMAT to D3D11 DXGI_FORMAT mapping : https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-legacy-formats
+#define CXBXFMT_A1R5G5B5                _9_11(D3DFMT_A1R5G5B5,             DXGI_FORMAT_B5G5R5A1_UNORM) // Note : CXBXFMT_X1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
+#define CXBXFMT_A4R4G4B4                _9_11(D3DFMT_A4R4G4B4,             DXGI_FORMAT_B4G4R4A4_UNORM)
+#define CXBXFMT_A8                      _9_11(D3DFMT_A8,                   DXGI_FORMAT_A8_UNORM)
+#define CXBXFMT_A8B8G8R8                _9_11(D3DFMT_A8B8G8R8,             DXGI_FORMAT_R8G8B8A8_UNORM)
+#define CXBXFMT_A8L8                    _9_11(D3DFMT_A8L8,                 DXGI_FORMAT_R8G8_UNORM)
+#define CXBXFMT_A8R8G8B8                _9_11(D3DFMT_A8R8G8B8,             DXGI_FORMAT_B8G8R8A8_UNORM)
+#define CXBXFMT_D16                     _9_11(D3DFMT_D16,                  DXGI_FORMAT_D16_UNORM)
+#define CXBXFMT_D24FS8                  _9_11(D3DFMT_D24FS8,               DXGI_FORMAT_R24G8_TYPELESS)
+#define CXBXFMT_D24S8                   _9_11(D3DFMT_D24S8,                DXGI_FORMAT_D24_UNORM_S8_UINT)
+#define CXBXFMT_DXT1                    _9_11(D3DFMT_DXT1,                 DXGI_FORMAT_BC1_UNORM)
+#define CXBXFMT_DXT3                    _9_11(D3DFMT_DXT3,                 DXGI_FORMAT_BC2_UNORM)
+#define CXBXFMT_DXT5                    _9_11(D3DFMT_DXT5,                 DXGI_FORMAT_BC3_UNORM)
+#define CXBXFMT_L16                     _9_11(D3DFMT_L16,                  DXGI_FORMAT_R16_UNORM)
+#define CXBXFMT_L8                      _9_11(D3DFMT_L8,                   DXGI_FORMAT_R8_UNORM)
+#define CXBXFMT_P8                      _9_11(D3DFMT_P8,                   DXGI_FORMAT_R8_UINT)
+#define CXBXFMT_Q8W8V8U8                _9_11(D3DFMT_Q8W8V8U8,             DXGI_FORMAT_R8G8B8A8_SNORM)
+#define CXBXFMT_R16F                    _9_11(D3DFMT_R16F,                 DXGI_FORMAT_R16_FLOAT)
+#define CXBXFMT_R5G6B5                  _9_11(D3DFMT_R5G6B5,               DXGI_FORMAT_B5G6R5_UNORM)
+#define CXBXFMT_UNKNOWN                 _9_11(D3DFMT_UNKNOWN,              DXGI_FORMAT_UNKNOWN) // Note : Used when format is unknown (duh)
+#define CXBXFMT_V16U16                  _9_11(D3DFMT_V16U16,               DXGI_FORMAT_R16G16_SNORM)
+#define CXBXFMT_V8U8                    _9_11(D3DFMT_V8U8,                 DXGI_FORMAT_R8G8_SNORM)
+#define CXBXFMT_X1R5G5B5                _9_11(D3DFMT_X1R5G5B5,             DXGI_FORMAT_B5G5R5A1_UNORM) // Note : CXBXFMT_A1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
+#define CXBXFMT_X8R8G8B8                _9_11(D3DFMT_X8R8G8B8,             DXGI_FORMAT_B8G8R8X8_UNORM)
+#define CXBXFMT_YUY2                    _9_11(D3DFMT_YUY2,                 DXGI_FORMAT_YUY2)
+
+#define	DXGI_FORMAT_NOT_AVAILABLE       DXGI_FORMAT_UNKNOWN // TODO : Replace below occurences with a suitable format and corresponding conversion
+// Unmappable to Direct3D 11 :
+#define CXBXFMT_D16_LOCKABLE            _9_11(D3DFMT_D16_LOCKABLE,         DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)200 ? How to handle in our code?
+#define CXBXFMT_DXT2                    _9_11(D3DFMT_DXT2,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)201 ? How to handle in our code?
+#define CXBXFMT_DXT4                    _9_11(D3DFMT_DXT4,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)202 ? How to handle in our code?
+#define CXBXFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)203 ? How to handle in our code?
+#define CXBXFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)204 ? How to handle in our code?
+#define CXBXFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)205 ? How to handle in our code?
+
 typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
 
 namespace xbox {
