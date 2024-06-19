@@ -94,7 +94,7 @@ XboxTextureStateConverter XboxTextureStates;
 
 D3D8LightState d3d8LightState = D3D8LightState();
 D3D8TransformState d3d8TransformState = D3D8TransformState();
-FixedFunctionVertexShaderState ffShaderState = {0}; // TODO find a home for this and associated code
+FixedFunctionVertexShaderState ffShaderState = {}; // TODO find a home for this and associated code
 
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
@@ -211,8 +211,16 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D11
-	hRet = g_pD3DDeviceContext->OMSetRenderTargets(1, &pHostRenderTarget, NULL);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDeviceContext->OMSetRenderTargets");
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
+	renderTargetViewDesc.Format = (DXGI_FORMAT)0;// TODO : textureDesc  (CXBXFORMAT)FormatInfo.pc
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+	ComPtr<ID3D11RenderTargetView> renderTargetView;
+	hRet = g_pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pHostRenderTarget, &renderTargetViewDesc, renderTargetView.GetAddressOf());
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
+
+	g_pD3DDeviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), nullptr);
 #else
 	hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
