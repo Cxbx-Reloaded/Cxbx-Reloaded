@@ -1553,19 +1553,19 @@ void WndMain::LoadGameLogo()
 	switch (*(DWORD*)pSection) {
 	case MAKEFOURCC('D', 'D', 'S', ' '): {
 		DDS_HEADER *pDDSHeader = (DDS_HEADER *)(pSection + sizeof(DWORD));
-		xbox::X_D3DFORMAT XboxFormat = xbox::X_D3DFMT_UNKNOWN;
+		CXBXFORMAT Format = CXBXFMT_UNKNOWN;
 		if (pDDSHeader->ddspf.dwFlags & DDPF_FOURCC) {
 			switch (pDDSHeader->ddspf.dwFourCC) {
-			case MAKEFOURCC('D', 'X', 'T', '1'): XboxFormat = xbox::X_D3DFMT_DXT1; break;
-			case MAKEFOURCC('D', 'X', 'T', '3'): XboxFormat = xbox::X_D3DFMT_DXT3; break;
-			case MAKEFOURCC('D', 'X', 'T', '5'): XboxFormat = xbox::X_D3DFMT_DXT5; break;
+			case MAKEFOURCC('D', 'X', 'T', '1'): Format = CXBXFMT_DXT1; break;
+			case MAKEFOURCC('D', 'X', 'T', '3'): Format = CXBXFMT_DXT3; break;
+			case MAKEFOURCC('D', 'X', 'T', '5'): Format = CXBXFMT_DXT5; break;
 			}
 		}
 		else {
 			// TODO : Determine D3D format based on pDDSHeader->ddspf.dwABitMask, .dwRBitMask, .dwGBitMask and .dwBBitMask
 		}
 
-		if (XboxFormat == xbox::X_D3DFMT_UNKNOWN)
+		if (Format == CXBXFMT_UNKNOWN)
 			return;
 
 		ImageData = (uint8_t *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
