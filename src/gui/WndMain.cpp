@@ -43,7 +43,6 @@
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxSetPixelContainerHeader
-#include "core\hle\D3D8\XbConvert.h" // For EmuPC2XB_D3DFormat
 #include "common\Settings.hpp"
 #include "common/util/cliConfig.hpp"
 #include "common/win32/WineEnv.h"
@@ -1502,19 +1501,19 @@ void WndMain::LoadGameLogo()
 	switch (*(DWORD*)pSection) {
 	case MAKEFOURCC('D', 'D', 'S', ' '): {
 		DDS_HEADER *pDDSHeader = (DDS_HEADER *)(pSection + sizeof(DWORD));
-		CXBXFORMAT Format = CXBXFMT_UNKNOWN;
+		xbox::X_D3DFORMAT XbFormat = xbox::X_D3DFMT_UNKNOWN;
 		if (pDDSHeader->ddspf.dwFlags & DDPF_FOURCC) {
 			switch (pDDSHeader->ddspf.dwFourCC) {
-			case MAKEFOURCC('D', 'X', 'T', '1'): Format = CXBXFMT_DXT1; break;
-			case MAKEFOURCC('D', 'X', 'T', '3'): Format = CXBXFMT_DXT3; break;
-			case MAKEFOURCC('D', 'X', 'T', '5'): Format = CXBXFMT_DXT5; break;
+			case MAKEFOURCC('D', 'X', 'T', '1'): XbFormat = xbox::X_D3DFMT_DXT1; break;
+			case MAKEFOURCC('D', 'X', 'T', '3'): XbFormat = xbox::X_D3DFMT_DXT3; break;
+			case MAKEFOURCC('D', 'X', 'T', '5'): XbFormat = xbox::X_D3DFMT_DXT5; break;
 			}
 		}
 		else {
 			// TODO : Determine D3D format based on pDDSHeader->ddspf.dwABitMask, .dwRBitMask, .dwGBitMask and .dwBBitMask
 		}
 
-		if (Format == CXBXFMT_UNKNOWN)
+		if (XbFormat == xbox::X_D3DFMT_UNKNOWN)
 			return;
 
 		ImageData = (uint8_t *)(pSection + sizeof(DWORD) + pDDSHeader->dwSize);
@@ -1527,7 +1526,7 @@ void WndMain::LoadGameLogo()
 			(UINT)pDDSHeader->dwWidth,
 			(UINT)pDDSHeader->dwHeight,
 			1,
-			EmuPC2XB_D3DFormat(Format),
+			XbFormat,
 			2,
 			(UINT)pDDSHeader->dwPitchOrLinearSize);
 		break;
