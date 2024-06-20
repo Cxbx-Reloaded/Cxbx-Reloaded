@@ -80,7 +80,7 @@ typedef D3D11_RECT D3DRECT;
 
 #define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                         D3DCAPS9
-#define CXBXFORMAT                      _9_11(D3DFORMAT,                   DXGI_FORMAT)
+#define EMUFORMAT                      _9_11(D3DFORMAT,                   DXGI_FORMAT)
 #define D3DVERTEXELEMENT                _9_11(D3DVERTEXELEMENT9,           D3D11_INPUT_ELEMENT_DESC)
 #define D3DVIEWPORT                     _9_11(D3DVIEWPORT9,                D3D11_VIEWPORT)
 #define D3DSurfaceDesc                  _9_11(D3DSURFACE_DESC,             D3D11_TEXTURE2D_DESC)
@@ -102,39 +102,39 @@ typedef D3D11_RECT D3DRECT;
 
 
 // D3D9 D3FFORMAT to D3D11 DXGI_FORMAT mapping : https://docs.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-legacy-formats
-#define CXBXFMT_A1R5G5B5                _9_11(D3DFMT_A1R5G5B5,             DXGI_FORMAT_B5G5R5A1_UNORM) // Note : CXBXFMT_X1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
-#define CXBXFMT_A4R4G4B4                _9_11(D3DFMT_A4R4G4B4,             DXGI_FORMAT_B4G4R4A4_UNORM)
-#define CXBXFMT_A8                      _9_11(D3DFMT_A8,                   DXGI_FORMAT_A8_UNORM)
-#define CXBXFMT_A8B8G8R8                _9_11(D3DFMT_A8B8G8R8,             DXGI_FORMAT_R8G8B8A8_UNORM)
-#define CXBXFMT_A8L8                    _9_11(D3DFMT_A8L8,                 DXGI_FORMAT_R8G8_UNORM)
-#define CXBXFMT_A8R8G8B8                _9_11(D3DFMT_A8R8G8B8,             DXGI_FORMAT_B8G8R8A8_UNORM)
-#define CXBXFMT_D16                     _9_11(D3DFMT_D16,                  DXGI_FORMAT_D16_UNORM)
-#define CXBXFMT_D24FS8                  _9_11(D3DFMT_D24FS8,               DXGI_FORMAT_R24G8_TYPELESS)
-#define CXBXFMT_D24S8                   _9_11(D3DFMT_D24S8,                DXGI_FORMAT_D24_UNORM_S8_UINT)
-#define CXBXFMT_DXT1                    _9_11(D3DFMT_DXT1,                 DXGI_FORMAT_BC1_UNORM)
-#define CXBXFMT_DXT3                    _9_11(D3DFMT_DXT3,                 DXGI_FORMAT_BC2_UNORM)
-#define CXBXFMT_DXT5                    _9_11(D3DFMT_DXT5,                 DXGI_FORMAT_BC3_UNORM)
-#define CXBXFMT_L16                     _9_11(D3DFMT_L16,                  DXGI_FORMAT_R16_UNORM)
-#define CXBXFMT_L8                      _9_11(D3DFMT_L8,                   DXGI_FORMAT_R8_UNORM)
-#define CXBXFMT_P8                      _9_11(D3DFMT_P8,                   DXGI_FORMAT_R8_UINT)
-#define CXBXFMT_Q8W8V8U8                _9_11(D3DFMT_Q8W8V8U8,             DXGI_FORMAT_R8G8B8A8_SNORM)
-#define CXBXFMT_R16F                    _9_11(D3DFMT_R16F,                 DXGI_FORMAT_R16_FLOAT)
-#define CXBXFMT_R5G6B5                  _9_11(D3DFMT_R5G6B5,               DXGI_FORMAT_B5G6R5_UNORM)
-#define CXBXFMT_UNKNOWN                 _9_11(D3DFMT_UNKNOWN,              DXGI_FORMAT_UNKNOWN) // Note : Used when format is unknown (duh)
-#define CXBXFMT_V16U16                  _9_11(D3DFMT_V16U16,               DXGI_FORMAT_R16G16_SNORM)
-#define CXBXFMT_V8U8                    _9_11(D3DFMT_V8U8,                 DXGI_FORMAT_R8G8_SNORM)
-#define CXBXFMT_X1R5G5B5                _9_11(D3DFMT_X1R5G5B5,             DXGI_FORMAT_B5G5R5A1_UNORM) // Note : CXBXFMT_A1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
-#define CXBXFMT_X8R8G8B8                _9_11(D3DFMT_X8R8G8B8,             DXGI_FORMAT_B8G8R8X8_UNORM)
-#define CXBXFMT_YUY2                    _9_11(D3DFMT_YUY2,                 DXGI_FORMAT_YUY2)
+#define EMUFMT_A1R5G5B5                _9_11(D3DFMT_A1R5G5B5,             DXGI_FORMAT_B5G5R5A1_UNORM) // Note : EMUFMT_X1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
+#define EMUFMT_A4R4G4B4                _9_11(D3DFMT_A4R4G4B4,             DXGI_FORMAT_B4G4R4A4_UNORM)
+#define EMUFMT_A8                      _9_11(D3DFMT_A8,                   DXGI_FORMAT_A8_UNORM)
+#define EMUFMT_A8B8G8R8                _9_11(D3DFMT_A8B8G8R8,             DXGI_FORMAT_R8G8B8A8_UNORM)
+#define EMUFMT_A8L8                    _9_11(D3DFMT_A8L8,                 DXGI_FORMAT_R8G8_UNORM)
+#define EMUFMT_A8R8G8B8                _9_11(D3DFMT_A8R8G8B8,             DXGI_FORMAT_B8G8R8A8_UNORM)
+#define EMUFMT_D16                     _9_11(D3DFMT_D16,                  DXGI_FORMAT_D16_UNORM)
+#define EMUFMT_D24FS8                  _9_11(D3DFMT_D24FS8,               DXGI_FORMAT_R24G8_TYPELESS)
+#define EMUFMT_D24S8                   _9_11(D3DFMT_D24S8,                DXGI_FORMAT_D24_UNORM_S8_UINT)
+#define EMUFMT_DXT1                    _9_11(D3DFMT_DXT1,                 DXGI_FORMAT_BC1_UNORM)
+#define EMUFMT_DXT3                    _9_11(D3DFMT_DXT3,                 DXGI_FORMAT_BC2_UNORM)
+#define EMUFMT_DXT5                    _9_11(D3DFMT_DXT5,                 DXGI_FORMAT_BC3_UNORM)
+#define EMUFMT_L16                     _9_11(D3DFMT_L16,                  DXGI_FORMAT_R16_UNORM)
+#define EMUFMT_L8                      _9_11(D3DFMT_L8,                   DXGI_FORMAT_R8_UNORM)
+#define EMUFMT_P8                      _9_11(D3DFMT_P8,                   DXGI_FORMAT_R8_UINT)
+#define EMUFMT_Q8W8V8U8                _9_11(D3DFMT_Q8W8V8U8,             DXGI_FORMAT_R8G8B8A8_SNORM)
+#define EMUFMT_R16F                    _9_11(D3DFMT_R16F,                 DXGI_FORMAT_R16_FLOAT)
+#define EMUFMT_R5G6B5                  _9_11(D3DFMT_R5G6B5,               DXGI_FORMAT_B5G6R5_UNORM)
+#define EMUFMT_UNKNOWN                 _9_11(D3DFMT_UNKNOWN,              DXGI_FORMAT_UNKNOWN) // Note : Used when format is unknown (duh)
+#define EMUFMT_V16U16                  _9_11(D3DFMT_V16U16,               DXGI_FORMAT_R16G16_SNORM)
+#define EMUFMT_V8U8                    _9_11(D3DFMT_V8U8,                 DXGI_FORMAT_R8G8_SNORM)
+#define EMUFMT_X1R5G5B5                _9_11(D3DFMT_X1R5G5B5,             DXGI_FORMAT_B5G5R5A1_UNORM) // Note : EMUFMT_A1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
+#define EMUFMT_X8R8G8B8                _9_11(D3DFMT_X8R8G8B8,             DXGI_FORMAT_B8G8R8X8_UNORM)
+#define EMUFMT_YUY2                    _9_11(D3DFMT_YUY2,                 DXGI_FORMAT_YUY2)
 
 #define	DXGI_FORMAT_NOT_AVAILABLE       DXGI_FORMAT_UNKNOWN // TODO : Replace below occurences with a suitable format and corresponding conversion
 // Unmappable to Direct3D 11 :
-#define CXBXFMT_D16_LOCKABLE            _9_11(D3DFMT_D16_LOCKABLE,         DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)200 ? How to handle in our code?
-#define CXBXFMT_DXT2                    _9_11(D3DFMT_DXT2,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)201 ? How to handle in our code?
-#define CXBXFMT_DXT4                    _9_11(D3DFMT_DXT4,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)202 ? How to handle in our code?
-#define CXBXFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)203 ? How to handle in our code?
-#define CXBXFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)204 ? How to handle in our code?
-#define CXBXFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // TODO : (CXBXFORMAT)205 ? How to handle in our code?
+#define EMUFMT_D16_LOCKABLE            _9_11(D3DFMT_D16_LOCKABLE,         DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)200 ? How to handle in our code?
+#define EMUFMT_DXT2                    _9_11(D3DFMT_DXT2,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)201 ? How to handle in our code?
+#define EMUFMT_DXT4                    _9_11(D3DFMT_DXT4,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)202 ? How to handle in our code?
+#define EMUFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)203 ? How to handle in our code?
+#define EMUFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)204 ? How to handle in our code?
+#define EMUFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)205 ? How to handle in our code?
 
 typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
 

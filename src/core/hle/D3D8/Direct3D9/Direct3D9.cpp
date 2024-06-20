@@ -212,7 +212,7 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D11
 	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
-	renderTargetViewDesc.Format = (DXGI_FORMAT)0;// TODO : textureDesc  (CXBXFORMAT)FormatInfo.pc
+	renderTargetViewDesc.Format = (DXGI_FORMAT)0;// TODO : textureDesc  (EMUFORMAT)FormatInfo.pc
 	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
 	renderTargetViewDesc.Texture2D.MipSlice = 0;
 
@@ -2080,25 +2080,25 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 		pDepthStencilSurface->GetDesc(&Desc);
 
 		switch (Desc.Format) {
-		case CXBXFMT_D16:
+		case EMUFMT_D16:
 			g_bHasDepth = true;
 			break;
-		case CXBXFMT_D15S1:
-			g_bHasDepth = true;
-			g_bHasStencil = true;
-			break;
-		case CXBXFMT_D24X8:
-			g_bHasDepth = true;
-			break;
-		case CXBXFMT_D24S8:
+		case EMUFMT_D15S1:
 			g_bHasDepth = true;
 			g_bHasStencil = true;
 			break;
-		case CXBXFMT_D24X4S4:
+		case EMUFMT_D24X8:
+			g_bHasDepth = true;
+			break;
+		case EMUFMT_D24S8:
 			g_bHasDepth = true;
 			g_bHasStencil = true;
 			break;
-		case CXBXFMT_D32:
+		case EMUFMT_D24X4S4:
+			g_bHasDepth = true;
+			g_bHasStencil = true;
+			break;
+		case EMUFMT_D32:
 			g_bHasDepth = true;
 			break;
 		}
@@ -2175,8 +2175,8 @@ static void DetermineSupportedD3DFormats
         // Only process Xbox formats that are directly mappable to host
         if (!EmuXBFormatRequiresConversionToARGB((xbox::X_D3DFORMAT)X_Format)) {
             // Convert the Xbox format into host format (without warning, thanks to the above restriction)
-            const CXBXFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
-            if (PCFormat != CXBXFMT_UNKNOWN) {
+            const EMUFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
+            if (PCFormat != EMUFMT_UNKNOWN) {
                 // Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
 #ifdef CBXB_USE_D3D11
                 UINT FormatSupport = 0;
@@ -2752,7 +2752,7 @@ IDirect3DIndexBuffer* CxbxCreateIndexBuffer(unsigned IndexCount)
 	HRESULT hRet = g_pD3DDevice->CreateIndexBuffer(
 		uiIndexBufferSize, // Size of the index buffer, in bytes.
 		D3DUsage,
-		/*Format=*/CXBXFMT_INDEX16,
+		/*Format=*/EMUFMT_INDEX16,
 		D3DPool,
 		&Result,
 		nullptr // pSharedHandle
@@ -2833,10 +2833,10 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 		if (bConvertQuadListToTriangleList) {
 			// Note, that LowIndex and HighIndex won't change due to any quad-to-triangle conversion,
 			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
-			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Converting quads to %d triangle indices (CXBXFMT_INDEX16)", RequiredIndexCount);
+			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Converting quads to %d triangle indices (EMUFMT_INDEX16)", RequiredIndexCount);
 			CxbxConvertQuadListToTriangleListIndices(pXboxIndexData, RequiredIndexCount, pHostIndexBufferData);
 		} else {
-			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Copying %d indices (CXBXFMT_INDEX16)", XboxIndexCount);
+			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Copying %d indices (EMUFMT_INDEX16)", XboxIndexCount);
 			memcpy(pHostIndexBufferData, pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
 		}
 
@@ -4108,7 +4108,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 		if(pCachedPrimarySurface == nullptr) {
 			// create a buffer to return
 			// TODO: Verify the surface is always 640x480
-			hRet = g_pD3DDevice->CreateOffscreenPlainSurface(640, 480, CXBXFMT_A8R8G8B8, /*D3DPool=* /0, &pCachedPrimarySurface, nullptr);
+			hRet = g_pD3DDevice->CreateOffscreenPlainSurface(640, 480, EMUFMT_A8R8G8B8, /*D3DPool=* /0, &pCachedPrimarySurface, nullptr);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateOffscreenPlainSurface");
 		}
 
@@ -5463,22 +5463,22 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 			// Interpret the Xbox overlay data (depending the color space conversion render state)
 			// as either YUV or RGB format (note that either one must be a 3 bytes per pixel format)
-			CXBXFORMAT PCFormat;
+			EMUFORMAT PCFormat;
 			// TODO : Before reading from pgraph, flush all pending push-buffer commands
 			switch (GET_MASK(HLE_read_NV2A_pgraph_register(NV_PGRAPH_CONTROL_0), NV_PGRAPH_CONTROL_0_CSCONVERT)) {
 			case 0:  // = pass-through
-				PCFormat = CXBXFMT_YUY2;
+				PCFormat = EMUFMT_YUY2;
 				break;
 			case 1: // = CRYCB_TO_RGB
-				PCFormat = CXBXFMT_YUY2; // Test-case : Turok (intro movie)
+				PCFormat = EMUFMT_YUY2; // Test-case : Turok (intro movie)
 				break;
 			case 2: // = SCRYSCB_TO_RGB
 				LOG_TEST_CASE("SCRYSCB_TO_RGB");
-				PCFormat = CXBXFMT_YUY2;
+				PCFormat = EMUFMT_YUY2;
 				break;
 			default:
 				LOG_TEST_CASE("Unrecognized NV_PGRAPH_CONTROL_0_CSCONVERT");
-				PCFormat = CXBXFMT_YUY2;
+				PCFormat = EMUFMT_YUY2;
 				break;
 			}
 
@@ -5559,7 +5559,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
                 OverlayWidth,
                 OverlayHeight,
-                CXBXFMT_A8R8G8B8,
+                EMUFMT_A8R8G8B8,
                 D3DPOOL_DEFAULT,
                 &pTemporaryOverlaySurface,
                 nullptr
@@ -5902,12 +5902,12 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		// Determine the format we'll be using on host D3D
-		CXBXFORMAT PCFormat;
+		EMUFORMAT PCFormat;
 		bool bConvertToARGB = false;
 
 		if (EmuXBFormatRequiresConversionToARGB(X_Format)) {
 			bConvertToARGB = true;
-			PCFormat = CXBXFMT_A8R8G8B8;
+			PCFormat = EMUFMT_A8R8G8B8;
 
 			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
 			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
@@ -5922,12 +5922,12 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			else {
 				if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
 					// If it was a depth stencil, fall back to a known supported depth format
-					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to CXBXFMT_D24S8", ResourceTypeName, X_Format);
-					PCFormat = CXBXFMT_D24S8;
+					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to EMUFMT_D24S8", ResourceTypeName, X_Format);
+					PCFormat = EMUFMT_D24S8;
 				} else if (EmuXBFormatCanBeConvertedToARGB(X_Format)) {
 					EmuLog(LOG_LEVEL::WARNING, "Xbox %s Format %x will be converted to ARGB", ResourceTypeName, X_Format);
 					bConvertToARGB = true;
-					PCFormat = CXBXFMT_A8R8G8B8;
+					PCFormat = EMUFMT_A8R8G8B8;
 				} else {
 					// Otherwise, use a best matching format
 					/*CxbxrAbort*/EmuLog(LOG_LEVEL::WARNING, "Encountered a completely incompatible %s format!", ResourceTypeName);
@@ -6133,22 +6133,22 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 #endif
 
 			// If the above failed, we might be able to use an ARGB texture instead
-			if ((hRet != D3D_OK) && (PCFormat != CXBXFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
+			if ((hRet != D3D_OK) && (PCFormat != EMUFMT_A8R8G8B8) && EmuXBFormatCanBeConvertedToARGB(X_Format)) {
 #ifdef CXBX_USE_D3D11
-				desc.Format = CXBXFMT_A8R8G8B8;
+				desc.Format = EMUFMT_A8R8G8B8;
 				hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf()); // TODO : pNewHostResource.Get() ?
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
-					D3DUsage, CXBXFMT_A8R8G8B8, D3DPool, pNewHostTexture.GetAddressOf(),
+					D3DUsage, EMUFMT_A8R8G8B8, D3DPool, pNewHostTexture.GetAddressOf(),
 					nullptr
 				);
-				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(CXBXFMT_A8R8G8B8)");
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture(EMUFMT_A8R8G8B8)");
 #endif
 				if (hRet == D3D_OK) {
 					// Okay, now this works, make sure the texture gets converted
 					bConvertToARGB = true;
-					PCFormat = _9_11(CXBXFMT_A8R8G8B8, desc.Format);
+					PCFormat = _9_11(EMUFMT_A8R8G8B8, desc.Format);
 				}
 			}
 
@@ -6383,7 +6383,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 				// Copy texture data to the host resource
 				if (bConvertToARGB) {
-					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to CXBXFMT_A8R8G8B8");
+					EmuLog(LOG_LEVEL::DEBUG, "Unsupported texture format, expanding to EMUFMT_A8R8G8B8");
 
 					// In case where there is a palettized texture without a palette attached,
 					// fill it with zeroes for now. This might not be correct, but it prevents a crash.
@@ -7487,7 +7487,7 @@ void CxbxDrawIndexedClosingLineUP(INDEX16 LowIndex, INDEX16 HighIndex, void *pHo
 		/*NumVertices=*/(HighIndex - LowIndex) + 1,
 		/*PrimitiveCount=*/1,
 		/*pIndexData=*/CxbxClosingLineIndices,
-		/*IndexDataFormat=*/CXBXFMT_INDEX16,
+		/*IndexDataFormat=*/EMUFMT_INDEX16,
 		pHostVertexStreamZeroData,
 		uiHostVertexStreamZeroStride
 	);
@@ -7612,7 +7612,7 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 			/*NumVertices=*/DrawContext.dwVertexCount,
 			PrimitiveCount,
 			pIndexData,
-			/*IndexDataFormat=*/CXBXFMT_INDEX16,
+			/*IndexDataFormat=*/EMUFMT_INDEX16,
 			DrawContext.pHostVertexStreamZeroData,
 			DrawContext.uiHostVertexStreamZeroStride
 		);
@@ -8529,7 +8529,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			/*NumVertexIndices=*/(DrawContext.HighIndex - DrawContext.LowIndex) + 1,
 			PrimitiveCount,
 			pHostIndexData,
-			/*IndexDataFormat=*/CXBXFMT_INDEX16,
+			/*IndexDataFormat=*/EMUFMT_INDEX16,
 			DrawContext.pHostVertexStreamZeroData,
 			DrawContext.uiHostVertexStreamZeroStride
 		);

@@ -1,91 +1,91 @@
 ﻿// convert from pc to xbox color formats
 //extern
-xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(CXBXFORMAT Format, bool bPreferLinear = true);
+xbox::X_D3DFORMAT EmuPC2XB_D3DFormat(EMUFORMAT Format, bool bPreferLinear = true);
 {
 	xbox::X_D3DFORMAT result;
 	switch(Format)
 	{
-	case CXBXFMT_YUY2:
+	case EMUFMT_YUY2:
 		result = xbox::X_D3DFMT_YUY2;
 		break;
 #ifndef CXBX_USE_D3D11 // Mapped to DXGI_FORMAT_NOT_AVAILABLE
-	case CXBXFMT_UYVY:
+	case EMUFMT_UYVY:
 		result = xbox::X_D3DFMT_UYVY;
 		break;
 #endif
-	case CXBXFMT_R5G6B5:
+	case EMUFMT_R5G6B5:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_R5G6B5 : xbox::X_D3DFMT_R5G6B5;
 		break;
-	case CXBXFMT_D24S8:
+	case EMUFMT_D24S8:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_D24S8 : xbox::X_D3DFMT_D24S8;
 		break;
-	case CXBXFMT_DXT5:
+	case EMUFMT_DXT5:
 		result = xbox::X_D3DFMT_DXT5; // Compressed
 		break;
 #ifndef CXBX_USE_D3D11 // Mapped to DXGI_FORMAT_NOT_AVAILABLE
-	case CXBXFMT_DXT4:
+	case EMUFMT_DXT4:
 		result = xbox::X_D3DFMT_DXT4;  // Compressed // Same as xbox::X_D3DFMT_DXT5
 		break;
 #endif
-	case CXBXFMT_DXT3:
+	case EMUFMT_DXT3:
 		result = xbox::X_D3DFMT_DXT3; // Compressed
 		break;
 #ifndef CXBX_USE_D3D11 // Mapped to DXGI_FORMAT_NOT_AVAILABLE
-	case CXBXFMT_DXT2:
+	case EMUFMT_DXT2:
 		result = xbox::X_D3DFMT_DXT2; // Compressed // Same as xbox::X_D3DFMT_DXT3
 		break;
 #endif
-	case CXBXFMT_DXT1:
+	case EMUFMT_DXT1:
 		result = xbox::X_D3DFMT_DXT1; // Compressed
 		break;
-	case CXBXFMT_A1R5G5B5:
+	case EMUFMT_A1R5G5B5:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A1R5G5B5 : xbox::X_D3DFMT_A1R5G5B5;
 		break;
-	case CXBXFMT_X8R8G8B8:
+	case EMUFMT_X8R8G8B8:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_X8R8G8B8 : xbox::X_D3DFMT_X8R8G8B8;
 		break;
-	case CXBXFMT_A8R8G8B8:
+	case EMUFMT_A8R8G8B8:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A8R8G8B8 : xbox::X_D3DFMT_A8R8G8B8;
 		break;
-	case CXBXFMT_A4R4G4B4:
+	case EMUFMT_A4R4G4B4:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A4R4G4B4 : xbox::X_D3DFMT_A4R4G4B4;
 		break;
-#ifndef CXBX_USE_D3D11 // Note : CXBXFMT_A1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
-	case CXBXFMT_X1R5G5B5:
+#ifndef CXBX_USE_D3D11 // Note : EMUFMT_A1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
+	case EMUFMT_X1R5G5B5:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_X1R5G5B5 : xbox::X_D3DFMT_X1R5G5B5;
 		break;
 #endif
-	case CXBXFMT_A8:
+	case EMUFMT_A8:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_A8 : xbox::X_D3DFMT_A8;
 		break;
-	case CXBXFMT_L8:
+	case EMUFMT_L8:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_L8 : xbox::X_D3DFMT_L8;
 		break;
-	case CXBXFMT_D16:
+	case EMUFMT_D16:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_D16 : xbox::X_D3DFMT_D16;
 		break;
 #ifndef CXBX_USE_D3D11 // Mapped to DXGI_FORMAT_NOT_AVAILABLE
-	case CXBXFMT_D16_LOCKABLE:
+	case EMUFMT_D16_LOCKABLE:
 		result = xbox::X_D3DFMT_D16_LOCKABLE;
 		break; 
 #endif
-	case CXBXFMT_UNKNOWN:
+	case EMUFMT_UNKNOWN:
 		result = ((xbox::X_D3DFORMAT)0xffffffff); // TODO : return xbox::X_D3DFMT_UNKNOWN ?
 		break;
 	// Dxbx additions :
 #ifndef CXBX_USE_D3D11 // Mapped to DXGI_FORMAT_NOT_AVAILABLE
-	case CXBXFMT_L6V5U5:
+	case EMUFMT_L6V5U5:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_L6V5U5 : xbox::X_D3DFMT_L6V5U5;
 		break;
 #endif
-	case CXBXFMT_V8U8:
+	case EMUFMT_V8U8:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_V8U8 : xbox::X_D3DFMT_V8U8;
 		break;
-	case CXBXFMT_V16U16:
+	case EMUFMT_V16U16:
 		result = bPreferLinear ? xbox::X_D3DFMT_LIN_V16U16 : xbox::X_D3DFMT_V16U16;
 		break;
 #ifndef CXBX_USE_D3D11 // Mapped to DXGI_FORMAT_NOT_AVAILABLE
-	case CXBXFMT_VERTEXDATA:
+	case EMUFMT_VERTEXDATA:
 		result = xbox::X_D3DFMT_VERTEXDATA;
 		break;
 #endif
@@ -343,15 +343,15 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateImageSurface)
     *ppSurface = EmuNewD3DSurface();
 	XTL::IDirect3DSurface8 *pNewHostSurface = nullptr;
 
-    CXBXFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+    EMUFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
     HRESULT hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, PCFormat, &pNewHostSurface);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface");
 
 	if(FAILED(hRet))
 		if(Format == X_D3DFMT_LIN_D24S8)
 		{
-			EmuWarning("CreateImageSurface: CXBXFMT_LIN_D24S8 -> CXBXFMT_A8R8G8B8");
-			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, CXBXFMT_A8R8G8B8, &pNewHostSurface);
+			EmuWarning("CreateImageSurface: EMUFMT_LIN_D24S8 -> EMUFMT_A8R8G8B8");
+			hRet = g_pD3DDevice8->CreateImageSurface(Width, Height, EMUFMT_A8R8G8B8, &pNewHostSurface);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateImageSurface(ARGB)");
 		}
 	
@@ -522,33 +522,33 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateTexture)
     else
     {
 		// Convert Format (Xbox->PC)
-		CXBXFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+		EMUFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
 		// TODO: HACK: Devices that don't support this should somehow emulate it!
 		//* This is OK on my GeForce FX 5600
-		if(PCFormat == CXBXFMT_D16)
+		if(PCFormat == EMUFMT_D16)
 		{
-			EmuWarning("CXBXFMT_D16 is an unsupported texture format!");
-			PCFormat = CXBXFMT_R5G6B5;
+			EmuWarning("EMUFMT_D16 is an unsupported texture format!");
+			PCFormat = EMUFMT_R5G6B5;
 		}
 		//*
-		else if(PCFormat == CXBXFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+		else if(PCFormat == EMUFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
 		{
-			EmuWarning("CXBXFMT_P8 is an unsupported texture format!");
-			PCFormat = CXBXFMT_L8;
+			EmuWarning("EMUFMT_P8 is an unsupported texture format!");
+			PCFormat = EMUFMT_L8;
 		}
 		//*/
 		//* This is OK on my GeForce FX 5600
-		else if(PCFormat == CXBXFMT_D24S8)
+		else if(PCFormat == EMUFMT_D24S8)
 		{
-			EmuWarning("CXBXFMT_D24S8 is an unsupported texture format!");
-			PCFormat = CXBXFMT_X8R8G8B8; // TODO : Use CXBXFMT_A8R8G8B8?
+			EmuWarning("EMUFMT_D24S8 is an unsupported texture format!");
+			PCFormat = EMUFMT_X8R8G8B8; // TODO : Use EMUFMT_A8R8G8B8?
 		}//*/
 		// TODO: HACK: This texture format fails on some newer hardware
-		else if(PCFormat == CXBXFMT_X1R5G5B5)
+		else if(PCFormat == EMUFMT_X1R5G5B5)
 		{
-			EmuWarning("CXBXFMT_X1R5G5B5 -> CXBXFMT_R5G6B5");
-			PCFormat = CXBXFMT_R5G6B5;
+			EmuWarning("EMUFMT_X1R5G5B5 -> EMUFMT_R5G6B5");
+			PCFormat = EMUFMT_R5G6B5;
 		}
 
         DWORD   PCUsage = Usage & (D3DUSAGE_RENDERTARGET);
@@ -675,23 +675,23 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateVolumeTexture)
     else
     {
 		// Convert Format (Xbox->PC)
-		CXBXFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+		EMUFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
 		// TODO: HACK: Devices that don't support this should somehow emulate it!
-		if (PCFormat == CXBXFMT_D16)
+		if (PCFormat == EMUFMT_D16)
 		{
-			EmuWarning("CXBXFMT_D16 is an unsupported texture format!");
-			PCFormat = CXBXFMT_X8R8G8B8; // TODO : Use CXBXFMT_R5G6B5 ?
+			EmuWarning("EMUFMT_D16 is an unsupported texture format!");
+			PCFormat = EMUFMT_X8R8G8B8; // TODO : Use EMUFMT_R5G6B5 ?
 		}
-		else if (PCFormat == CXBXFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+		else if (PCFormat == EMUFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
 		{
-			EmuWarning("CXBXFMT_P8 is an unsupported texture format!");
-			PCFormat = CXBXFMT_L8;
+			EmuWarning("EMUFMT_P8 is an unsupported texture format!");
+			PCFormat = EMUFMT_L8;
 		}
-		else if (PCFormat == CXBXFMT_D24S8)
+		else if (PCFormat == EMUFMT_D24S8)
 		{
-			EmuWarning("CXBXFMT_D24S8 is an unsupported texture format!");
-			PCFormat = CXBXFMT_X8R8G8B8; // TODO : Use CXBXFMT_A8R8G8B8?
+			EmuWarning("EMUFMT_D24S8 is an unsupported texture format!");
+			PCFormat = EMUFMT_X8R8G8B8; // TODO : Use EMUFMT_A8R8G8B8?
 		}
 
 		EmuAdjustPower2(&Width, &Height);
@@ -746,23 +746,23 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateCubeTexture)
     }
 
     // Convert Format (Xbox->PC)
-    CXBXFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
+    EMUFORMAT PCFormat = EmuXB2PC_D3DFormat(Format);
 
     // TODO: HACK: Devices that don't support this should somehow emulate it!
-    if(PCFormat == CXBXFMT_D16)
+    if(PCFormat == EMUFMT_D16)
     {
-        EmuWarning("CXBXFMT_D16 is an unsupported texture format!");
-        PCFormat = CXBXFMT_X8R8G8B8; // TODO : Use CXBXFMT_R5G6B5?
+        EmuWarning("EMUFMT_D16 is an unsupported texture format!");
+        PCFormat = EMUFMT_X8R8G8B8; // TODO : Use EMUFMT_R5G6B5?
     }
-    else if(PCFormat == CXBXFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+    else if(PCFormat == EMUFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
     {
-        EmuWarning("CXBXFMT_P8 is an unsupported texture format!");
-        PCFormat = CXBXFMT_L8;
+        EmuWarning("EMUFMT_P8 is an unsupported texture format!");
+        PCFormat = EMUFMT_L8;
     }
-    else if(PCFormat == CXBXFMT_D24S8)
+    else if(PCFormat == EMUFMT_D24S8)
     {
-        EmuWarning("CXBXFMT_D24S8 is an unsupported texture format!");
-        PCFormat = CXBXFMT_X8R8G8B8; // TODO : Use CXBXFMT_A8R8G8B8?
+        EmuWarning("EMUFMT_D24S8 is an unsupported texture format!");
+        PCFormat = EMUFMT_X8R8G8B8; // TODO : Use EMUFMT_A8R8G8B8?
     }
     
     *ppCubeTexture = EmuNewD3DCubeTexture();
@@ -817,7 +817,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_CreateIndexBuffer)
 
 	HRESULT hRet = g_pD3DDevice8->CreateIndexBuffer
     (
-        Length/*InBytes*/, /*Usage=*/0, CXBXFMT_INDEX16, D3DPOOL_MANAGED, &pNewHostIndexBuffer
+        Length/*InBytes*/, /*Usage=*/0, EMUFMT_INDEX16, D3DPOOL_MANAGED, &pNewHostIndexBuffer
     );
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice8->CreateIndexBuffer");
     if(SUCCEEDED(hRet))
@@ -1806,7 +1806,7 @@ VOID WINAPI XTL::EMUPATCH(D3DDevice_GetPersistedSurface)(X_D3DSurface **ppSurfac
 	*ppSurface = EmuNewD3DSurface();
 	IDirect3DSurface8 *pNewHostSurface = nullptr;
 
-	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, CXBXFMT_X8R8G8B8, &pNewHostSurface);
+	HRESULT hr = g_pD3DDevice8->CreateImageSurface( 640, 480, EMUFMT_X8R8G8B8, &pNewHostSurface);
 	DEBUG_D3DRESULT(hr, "g_pD3DDevice8->CreateImageSurface - Could not create temporary surface!");
 
 	if( SUCCEEDED( hr ) )
@@ -1960,23 +1960,23 @@ HRESULT WINAPI XTL::EMUPATCH(Direct3D_CheckDeviceMultiSampleType)
         EmuWarning("DeviceType == D3DDEVTYPE_FORCE_DWORD");
 
     // Convert SurfaceFormat (Xbox->PC)
-    CXBXFORMAT PCSurfaceFormat = EmuXB2PC_D3DFormat(SurfaceFormat);
+    EMUFORMAT PCSurfaceFormat = EmuXB2PC_D3DFormat(SurfaceFormat);
 
     // TODO: HACK: Devices that don't support this should somehow emulate it!
-    if(PCSurfaceFormat == CXBXFMT_D16)
+    if(PCSurfaceFormat == EMUFMT_D16)
     {
-        EmuWarning("CXBXFMT_D16 is an unsupported texture format!");
-        PCSurfaceFormat = CXBXFMT_X8R8G8B8;
+        EmuWarning("EMUFMT_D16 is an unsupported texture format!");
+        PCSurfaceFormat = EMUFMT_X8R8G8B8;
     }
-    else if(PCSurfaceFormat == CXBXFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
+    else if(PCSurfaceFormat == EMUFMT_P8 && !g_bSupportsTextureFormat[X_D3DFMT_P8])
     {
-        EmuWarning("CXBXFMT_P8 is an unsupported texture format!");
-        PCSurfaceFormat = CXBXFMT_X8R8G8B8;
+        EmuWarning("EMUFMT_P8 is an unsupported texture format!");
+        PCSurfaceFormat = EMUFMT_X8R8G8B8;
     }
-    else if(PCSurfaceFormat == CXBXFMT_D24S8)
+    else if(PCSurfaceFormat == EMUFMT_D24S8)
     {
-        EmuWarning("CXBXFMT_D24S8 is an unsupported texture format!");
-        PCSurfaceFormat = CXBXFMT_X8R8G8B8;
+        EmuWarning("EMUFMT_D24S8 is an unsupported texture format!");
+        PCSurfaceFormat = EMUFMT_X8R8G8B8;
     }
 
     if(Windowed != FALSE)

@@ -348,7 +348,7 @@ void RefreshDirect3DDevice()
         {
             uint32_t dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(
                 g_XBVideo.adapter
-				, CXBXFMT_X8R8G8B8
+				, EMUFMT_X8R8G8B8
 			);
 
             SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Xbox Default)");
@@ -362,23 +362,23 @@ void RefreshDirect3DDevice()
 
                 g_pDirect3D->EnumAdapterModes(
 					g_XBVideo.adapter,
-					CXBXFMT_X8R8G8B8,
+					EMUFMT_X8R8G8B8,
 					v,
 					&displayMode
 				);
 
                 switch(displayMode.Format)
                 {
-                    case CXBXFMT_X1R5G5B5:
+                    case EMUFMT_X1R5G5B5:
                         szFormat = "16bit x1r5g5b5";
                         break;
-                    case CXBXFMT_R5G6B5:
+                    case EMUFMT_R5G6B5:
                         szFormat = "16bit r5g6r5";
                         break;
-                    case CXBXFMT_X8R8G8B8:
+                    case EMUFMT_X8R8G8B8:
                         szFormat = "32bit x8r8g8b8";
                         break;
-                    case CXBXFMT_A8R8G8B8:
+                    case EMUFMT_A8R8G8B8:
                         szFormat = "32bit a8r8g8b8";
                         break;
                     default:

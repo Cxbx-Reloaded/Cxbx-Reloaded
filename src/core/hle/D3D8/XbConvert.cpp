@@ -859,7 +859,7 @@ typedef struct _FormatInfo {
 	uint8_t bits_per_pixel;
 	_FormatStorage stored;
 	_ComponentEncoding components;
-	CXBXFORMAT pc;
+	EMUFORMAT pc;
 	_FormatUsage usage;
 	const char *warning;
 } FormatInfo;
@@ -875,76 +875,76 @@ static const FormatInfo FormatInfos[] = {
 	// in the warning field, so EmuXBFormatRequiresConversionToARGB can return a conversion
 	// to ARGB is needed (which is implemented in EMUPATCH(D3DResource_Register).
 
-	/* 0x00 X_D3DFMT_L8           */ {  8, Swzzld, ______L8, CXBXFMT_L8       },
-	/* 0x01 X_D3DFMT_AL8          */ {  8, Swzzld, _____AL8, CXBXFMT_L8       , Texture, "X_D3DFMT_AL8 -> CXBXFMT_L8" },
-	/* 0x02 X_D3DFMT_A1R5G5B5     */ { 16, Swzzld, A1R5G5B5, CXBXFMT_A1R5G5B5 },
-	/* 0x03 X_D3DFMT_X1R5G5B5     */ { 16, Swzzld, X1R5G5B5, CXBXFMT_X1R5G5B5 , RenderTarget }, // D3D11 TODO : Default A in shader
-	/* 0x04 X_D3DFMT_A4R4G4B4     */ { 16, Swzzld, A4R4G4B4, CXBXFMT_A4R4G4B4 },
-	/* 0x05 X_D3DFMT_R5G6B5       */ { 16, Swzzld, __R5G6B5, CXBXFMT_R5G6B5   , RenderTarget },
-	/* 0x06 X_D3DFMT_A8R8G8B8     */ { 32, Swzzld, A8R8G8B8, CXBXFMT_A8R8G8B8 , RenderTarget },
-	/* 0x07 X_D3DFMT_X8R8G8B8     */ { 32, Swzzld, X8R8G8B8, CXBXFMT_X8R8G8B8 , RenderTarget }, // Alias : X_D3DFMT_X8L8V8U8 
+	/* 0x00 X_D3DFMT_L8           */ {  8, Swzzld, ______L8, EMUFMT_L8       },
+	/* 0x01 X_D3DFMT_AL8          */ {  8, Swzzld, _____AL8, EMUFMT_L8       , Texture, "X_D3DFMT_AL8 -> EMUFMT_L8" },
+	/* 0x02 X_D3DFMT_A1R5G5B5     */ { 16, Swzzld, A1R5G5B5, EMUFMT_A1R5G5B5 },
+	/* 0x03 X_D3DFMT_X1R5G5B5     */ { 16, Swzzld, X1R5G5B5, EMUFMT_X1R5G5B5 , RenderTarget }, // D3D11 TODO : Default A in shader
+	/* 0x04 X_D3DFMT_A4R4G4B4     */ { 16, Swzzld, A4R4G4B4, EMUFMT_A4R4G4B4 },
+	/* 0x05 X_D3DFMT_R5G6B5       */ { 16, Swzzld, __R5G6B5, EMUFMT_R5G6B5   , RenderTarget },
+	/* 0x06 X_D3DFMT_A8R8G8B8     */ { 32, Swzzld, A8R8G8B8, EMUFMT_A8R8G8B8 , RenderTarget },
+	/* 0x07 X_D3DFMT_X8R8G8B8     */ { 32, Swzzld, X8R8G8B8, EMUFMT_X8R8G8B8 , RenderTarget }, // Alias : X_D3DFMT_X8L8V8U8 
 	/* 0x08 undefined             */ {},
 	/* 0x09 undefined             */ {},
 	/* 0x0A undefined             */ {},
-	/* 0x0B X_D3DFMT_P8           */ {  8, Swzzld, ______P8, CXBXFMT_P8       , Texture, "X_D3DFMT_P8 -> CXBXFMT_L8" }, // 8-bit palletized
-	/* 0x0C X_D3DFMT_DXT1         */ {  4, Cmprsd, ____DXT1, CXBXFMT_DXT1     }, // opaque/one-bit alpha // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
+	/* 0x0B X_D3DFMT_P8           */ {  8, Swzzld, ______P8, EMUFMT_P8       , Texture, "X_D3DFMT_P8 -> EMUFMT_L8" }, // 8-bit palletized
+	/* 0x0C X_D3DFMT_DXT1         */ {  4, Cmprsd, ____DXT1, EMUFMT_DXT1     }, // opaque/one-bit alpha // NOTE : DXT1 is half byte per pixel, so divide Size and Pitch calculations by two!
 	/* 0x0D undefined             */ {},
-	/* 0x0E X_D3DFMT_DXT3         */ {  8, Cmprsd, ____DXT3, CXBXFMT_DXT3     }, // Alias : X_D3DFMT_DXT2 // linear alpha
-	/* 0x0F X_D3DFMT_DXT5         */ {  8, Cmprsd, ____DXT5, CXBXFMT_DXT5     }, // Alias : X_D3DFMT_DXT4 // interpolated alpha
-	/* 0x10 X_D3DFMT_LIN_A1R5G5B5 */ { 16, Linear, A1R5G5B5, CXBXFMT_A1R5G5B5 },
-	/* 0x11 X_D3DFMT_LIN_R5G6B5   */ { 16, Linear, __R5G6B5, CXBXFMT_R5G6B5   , RenderTarget },
-	/* 0x12 X_D3DFMT_LIN_A8R8G8B8 */ { 32, Linear, A8R8G8B8, CXBXFMT_A8R8G8B8 , RenderTarget },
-	/* 0x13 X_D3DFMT_LIN_L8       */ {  8, Linear, ______L8, CXBXFMT_L8       , RenderTarget },
+	/* 0x0E X_D3DFMT_DXT3         */ {  8, Cmprsd, ____DXT3, EMUFMT_DXT3     }, // Alias : X_D3DFMT_DXT2 // linear alpha
+	/* 0x0F X_D3DFMT_DXT5         */ {  8, Cmprsd, ____DXT5, EMUFMT_DXT5     }, // Alias : X_D3DFMT_DXT4 // interpolated alpha
+	/* 0x10 X_D3DFMT_LIN_A1R5G5B5 */ { 16, Linear, A1R5G5B5, EMUFMT_A1R5G5B5 },
+	/* 0x11 X_D3DFMT_LIN_R5G6B5   */ { 16, Linear, __R5G6B5, EMUFMT_R5G6B5   , RenderTarget },
+	/* 0x12 X_D3DFMT_LIN_A8R8G8B8 */ { 32, Linear, A8R8G8B8, EMUFMT_A8R8G8B8 , RenderTarget },
+	/* 0x13 X_D3DFMT_LIN_L8       */ {  8, Linear, ______L8, EMUFMT_L8       , RenderTarget },
 	/* 0x14 undefined             */ {},
 	/* 0x15 undefined             */ {},
-	/* 0x16 X_D3DFMT_LIN_R8B8     */ { 16, Linear, ____R8B8, CXBXFMT_A8L8     , Texture, "X_D3DFMT_LIN_R8B8 -> CXBXFMT_R5G6B5" },
-	/* 0x17 X_D3DFMT_LIN_G8B8     */ { 16, Linear, ____G8B8, CXBXFMT_A8L8     , RenderTarget, "X_D3DFMT_LIN_G8B8 -> CXBXFMT_R5G6B5" }, // Alias : X_D3DFMT_LIN_V8U8
+	/* 0x16 X_D3DFMT_LIN_R8B8     */ { 16, Linear, ____R8B8, EMUFMT_A8L8     , Texture, "X_D3DFMT_LIN_R8B8 -> EMUFMT_R5G6B5" },
+	/* 0x17 X_D3DFMT_LIN_G8B8     */ { 16, Linear, ____G8B8, EMUFMT_A8L8     , RenderTarget, "X_D3DFMT_LIN_G8B8 -> EMUFMT_R5G6B5" }, // Alias : X_D3DFMT_LIN_V8U8
 	/* 0x18 undefined             */ {},
-	/* 0x19 X_D3DFMT_A8           */ {  8, Swzzld, ______A8, CXBXFMT_A8       , Texture, "X_D3DFMT_A8 -> CXBXFMT_A8R8G8B8" },  // D3D9 sets RGB = 0 instead of 1
-	/* 0x1A X_D3DFMT_A8L8         */ { 16, Swzzld, ____A8L8, CXBXFMT_A8L8     },
-	/* 0x1B X_D3DFMT_LIN_AL8      */ {  8, Linear, _____AL8, CXBXFMT_L8       , Texture, "X_D3DFMT_LIN_AL8 -> CXBXFMT_L8" },
-	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, CXBXFMT_X1R5G5B5 , RenderTarget }, // D3D11 TODO : Default A in shader
-	/* 0x1D X_D3DFMT_LIN_A4R4G4B4 */ { 16, Linear, A4R4G4B4, CXBXFMT_A4R4G4B4 },
-	/* 0x1E X_D3DFMT_LIN_X8R8G8B8 */ { 32, Linear, X8R8G8B8, CXBXFMT_X8R8G8B8 , RenderTarget }, // Alias : X_D3DFMT_LIN_X8L8V8U8
-	/* 0x1F X_D3DFMT_LIN_A8       */ {  8, Linear, ______A8, CXBXFMT_A8       , Texture, "X_D3DFMT_LIN_A8 -> CXBXFMT_A8R8G8B8" }, // D3D9 sets RGB = 0 instead of 1
-	/* 0x20 X_D3DFMT_LIN_A8L8     */ { 16, Linear, ____A8L8, CXBXFMT_A8L8     },
+	/* 0x19 X_D3DFMT_A8           */ {  8, Swzzld, ______A8, EMUFMT_A8       , Texture, "X_D3DFMT_A8 -> EMUFMT_A8R8G8B8" },  // D3D9 sets RGB = 0 instead of 1
+	/* 0x1A X_D3DFMT_A8L8         */ { 16, Swzzld, ____A8L8, EMUFMT_A8L8     },
+	/* 0x1B X_D3DFMT_LIN_AL8      */ {  8, Linear, _____AL8, EMUFMT_L8       , Texture, "X_D3DFMT_LIN_AL8 -> EMUFMT_L8" },
+	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, EMUFMT_X1R5G5B5 , RenderTarget }, // D3D11 TODO : Default A in shader
+	/* 0x1D X_D3DFMT_LIN_A4R4G4B4 */ { 16, Linear, A4R4G4B4, EMUFMT_A4R4G4B4 },
+	/* 0x1E X_D3DFMT_LIN_X8R8G8B8 */ { 32, Linear, X8R8G8B8, EMUFMT_X8R8G8B8 , RenderTarget }, // Alias : X_D3DFMT_LIN_X8L8V8U8
+	/* 0x1F X_D3DFMT_LIN_A8       */ {  8, Linear, ______A8, EMUFMT_A8       , Texture, "X_D3DFMT_LIN_A8 -> EMUFMT_A8R8G8B8" }, // D3D9 sets RGB = 0 instead of 1
+	/* 0x20 X_D3DFMT_LIN_A8L8     */ { 16, Linear, ____A8L8, EMUFMT_A8L8     },
 	/* 0x21 undefined             */ {},
 	/* 0x22 undefined             */ {},
 	/* 0x23 undefined             */ {},
-	/* 0x24 X_D3DFMT_YUY2         */ { 16, Linear, ____YUY2, CXBXFMT_YUY2     }, // DXGI_FORMAT_NOT_AVAILABLE ?
-	/* 0x25 X_D3DFMT_UYVY         */ { 16, Linear, ____UYVY, CXBXFMT_UYVY     },
+	/* 0x24 X_D3DFMT_YUY2         */ { 16, Linear, ____YUY2, EMUFMT_YUY2     }, // DXGI_FORMAT_NOT_AVAILABLE ?
+	/* 0x25 X_D3DFMT_UYVY         */ { 16, Linear, ____UYVY, EMUFMT_UYVY     },
 	/* 0x26 undefined             */ {},
-	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __R6G5B5, CXBXFMT_L6V5U5   }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
-	/* 0x28 X_D3DFMT_V8U8         */ { 16, Swzzld, ____G8B8, CXBXFMT_V8U8     }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
-	/* 0x29 X_D3DFMT_R8B8         */ { 16, Swzzld, ____R8B8, CXBXFMT_A8L8     , Texture, "X_D3DFMT_R8B8 -> CXBXFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
-	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, CXBXFMT_D24S8    , DepthBuffer },
-	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, CXBXFMT_D24FS8   , DepthBuffer },
-	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, CXBXFMT_D16      , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, CXBXFMT_D16 on host is not, but CXBXFMT_D16_LOCKABLE often fails SetRenderTarget.
-	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, CXBXFMT_R16F     , DepthBuffer, "X_D3DFMT_F16 -> CXBXFMT_R16F" }, // HACK : PC doesn't have CXBXFMT_F16 (Float vs Int) // TODO : Use CXBXFMT_R16F?
-	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, CXBXFMT_D24S8    , DepthBuffer },
-	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, CXBXFMT_D24FS8   , DepthBuffer },
-	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, CXBXFMT_D16      , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, CXBXFMT_D16 on host is not, but CXBXFMT_D16_LOCKABLE often fails SetRenderTarget.
-	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, CXBXFMT_R16F     , DepthBuffer, "X_D3DFMT_LIN_F16 -> CXBXFMT_R16F" }, // HACK : PC doesn't have CXBXFMT_F16 (Float vs Int) // TODO : Use CXBXFMT_R16F?
-	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, CXBXFMT_L16      },
-	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, CXBXFMT_V16U16   },
+	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __R6G5B5, EMUFMT_L6V5U5   }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
+	/* 0x28 X_D3DFMT_V8U8         */ { 16, Swzzld, ____G8B8, EMUFMT_V8U8     }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
+	/* 0x29 X_D3DFMT_R8B8         */ { 16, Swzzld, ____R8B8, EMUFMT_A8L8     , Texture, "X_D3DFMT_R8B8 -> EMUFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
+	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, EMUFMT_D24S8    , DepthBuffer },
+	/* 0x2B X_D3DFMT_F24S8        */ { 32, Swzzld, NoCmpnts, EMUFMT_D24FS8   , DepthBuffer },
+	/* 0x2C X_D3DFMT_D16          */ { 16, Swzzld, NoCmpnts, EMUFMT_D16      , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, EMUFMT_D16 on host is not, but EMUFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x2D X_D3DFMT_F16          */ { 16, Swzzld, NoCmpnts, EMUFMT_R16F     , DepthBuffer, "X_D3DFMT_F16 -> EMUFMT_R16F" }, // HACK : PC doesn't have EMUFMT_F16 (Float vs Int) // TODO : Use EMUFMT_R16F?
+	/* 0x2E X_D3DFMT_LIN_D24S8    */ { 32, Linear, NoCmpnts, EMUFMT_D24S8    , DepthBuffer },
+	/* 0x2F X_D3DFMT_LIN_F24S8    */ { 32, Linear, NoCmpnts, EMUFMT_D24FS8   , DepthBuffer },
+	/* 0x30 X_D3DFMT_LIN_D16      */ { 16, Linear, NoCmpnts, EMUFMT_D16      , DepthBuffer }, // Note : X_D3DFMT_D16 is always lockable on Xbox, EMUFMT_D16 on host is not, but EMUFMT_D16_LOCKABLE often fails SetRenderTarget.
+	/* 0x31 X_D3DFMT_LIN_F16      */ { 16, Linear, NoCmpnts, EMUFMT_R16F     , DepthBuffer, "X_D3DFMT_LIN_F16 -> EMUFMT_R16F" }, // HACK : PC doesn't have EMUFMT_F16 (Float vs Int) // TODO : Use EMUFMT_R16F?
+	/* 0x32 X_D3DFMT_L16          */ { 16, Swzzld, _____L16, EMUFMT_L16      },
+	/* 0x33 X_D3DFMT_V16U16       */ { 32, Swzzld, NoCmpnts, EMUFMT_V16U16   },
 	/* 0x34 undefined             */ {},
-	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, CXBXFMT_L16      },
-	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, CXBXFMT_V16U16   }, // Note : Seems unused on Xbox
-	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, CXBXFMT_L6V5U5   }, // Alias : X_D3DFMT_LIN_R6G5B5
-	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, CXBXFMT_A1R5G5B5 , Texture, "X_D3DFMT_R5G5B5A1 -> CXBXFMT_A1R5G5B5" },
-	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, CXBXFMT_A4R4G4B4 , Texture, "X_D3DFMT_R4G4B4A4 -> CXBXFMT_A4R4G4B4" },
-	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, A8B8G8R8, CXBXFMT_Q8W8V8U8 }, // Alias : X_D3DFMT_A8B8G8R8 // Note : CXBXFMT_A8B8G8R8=32 CXBXFMT_Q8W8V8U8=63 // TODO : Needs testcase.
-	/* 0x3B X_D3DFMT_B8G8R8A8     */ { 32, Swzzld, B8G8R8A8, CXBXFMT_A8R8G8B8 , Texture, "X_D3DFMT_B8G8R8A8 -> CXBXFMT_A8R8G8B8" },
-	/* 0x3C X_D3DFMT_R8G8B8A8     */ { 32, Swzzld, R8G8B8A8, CXBXFMT_A8R8G8B8 , Texture, "X_D3DFMT_R8G8B8A8 -> CXBXFMT_A8R8G8B8" },
-	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { 16, Linear, R5G5B5A1, CXBXFMT_A1R5G5B5 , Texture, "X_D3DFMT_LIN_R5G5B5A1 -> CXBXFMT_A1R5G5B5" },
-	/* 0x3E X_D3DFMT_LIN_R4G4B4A4 */ { 16, Linear, R4G4B4A4, CXBXFMT_A4R4G4B4 , Texture, "X_D3DFMT_LIN_R4G4B4A4 -> CXBXFMT_A4R4G4B4" },
-	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { 32, Linear, A8B8G8R8, CXBXFMT_A8B8G8R8 }, // Note : CXBXFMT_A8B8G8R8=32 CXBXFMT_Q8W8V8U8=63 // TODO : Needs testcase.
-	/* 0x40 X_D3DFMT_LIN_B8G8R8A8 */ { 32, Linear, B8G8R8A8, CXBXFMT_A8R8G8B8 , Texture, "X_D3DFMT_LIN_B8G8R8A8 -> CXBXFMT_A8R8G8B8" },
-	/* 0x41 X_D3DFMT_LIN_R8G8B8A8 */ { 32, Linear, R8G8B8A8, CXBXFMT_A8R8G8B8 , Texture, "X_D3DFMT_LIN_R8G8B8A8 -> CXBXFMT_A8R8G8B8" },
+	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, EMUFMT_L16      },
+	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, EMUFMT_V16U16   }, // Note : Seems unused on Xbox
+	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, EMUFMT_L6V5U5   }, // Alias : X_D3DFMT_LIN_R6G5B5
+	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, EMUFMT_A1R5G5B5 , Texture, "X_D3DFMT_R5G5B5A1 -> EMUFMT_A1R5G5B5" },
+	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, EMUFMT_A4R4G4B4 , Texture, "X_D3DFMT_R4G4B4A4 -> EMUFMT_A4R4G4B4" },
+	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, A8B8G8R8, EMUFMT_Q8W8V8U8 }, // Alias : X_D3DFMT_A8B8G8R8 // Note : EMUFMT_A8B8G8R8=32 EMUFMT_Q8W8V8U8=63 // TODO : Needs testcase.
+	/* 0x3B X_D3DFMT_B8G8R8A8     */ { 32, Swzzld, B8G8R8A8, EMUFMT_A8R8G8B8 , Texture, "X_D3DFMT_B8G8R8A8 -> EMUFMT_A8R8G8B8" },
+	/* 0x3C X_D3DFMT_R8G8B8A8     */ { 32, Swzzld, R8G8B8A8, EMUFMT_A8R8G8B8 , Texture, "X_D3DFMT_R8G8B8A8 -> EMUFMT_A8R8G8B8" },
+	/* 0x3D X_D3DFMT_LIN_R5G5B5A1 */ { 16, Linear, R5G5B5A1, EMUFMT_A1R5G5B5 , Texture, "X_D3DFMT_LIN_R5G5B5A1 -> EMUFMT_A1R5G5B5" },
+	/* 0x3E X_D3DFMT_LIN_R4G4B4A4 */ { 16, Linear, R4G4B4A4, EMUFMT_A4R4G4B4 , Texture, "X_D3DFMT_LIN_R4G4B4A4 -> EMUFMT_A4R4G4B4" },
+	/* 0x3F X_D3DFMT_LIN_A8B8G8R8 */ { 32, Linear, A8B8G8R8, EMUFMT_A8B8G8R8 }, // Note : EMUFMT_A8B8G8R8=32 EMUFMT_Q8W8V8U8=63 // TODO : Needs testcase.
+	/* 0x40 X_D3DFMT_LIN_B8G8R8A8 */ { 32, Linear, B8G8R8A8, EMUFMT_A8R8G8B8 , Texture, "X_D3DFMT_LIN_B8G8R8A8 -> EMUFMT_A8R8G8B8" },
+	/* 0x41 X_D3DFMT_LIN_R8G8B8A8 */ { 32, Linear, R8G8B8A8, EMUFMT_A8R8G8B8 , Texture, "X_D3DFMT_LIN_R8G8B8A8 -> EMUFMT_A8R8G8B8" },
 #if 0
 	/* 0x42 to 0x63 undefined     */ {},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},
-	/* 0x64 X_D3DFMT_VERTEXDATA   */ {  8, Linear, NoCmpnts, CXBXFMT_VERTEXDATA },
-	/* 0x65 X_D3DFMT_INDEX16      */ { 16, Linear, NoCmpnts, CXBXFMT_INDEX16    }, // Dxbx addition : X_D3DFMT_INDEX16 is not an Xbox format, but used internally
+	/* 0x64 X_D3DFMT_VERTEXDATA   */ {  8, Linear, NoCmpnts, EMUFMT_VERTEXDATA },
+	/* 0x65 X_D3DFMT_INDEX16      */ { 16, Linear, NoCmpnts, EMUFMT_INDEX16    }, // Dxbx addition : X_D3DFMT_INDEX16 is not an Xbox format, but used internally
 #endif
 };
 
@@ -1029,7 +1029,7 @@ BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format)
 	return false;
 }
 
-CXBXFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
+EMUFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 {
 	if (Format <= xbox::X_D3DFMT_LIN_R8G8B8A8 && Format >= 0) // The last bit prevents crashing (Metal Slug 3)
 	{
@@ -1046,16 +1046,16 @@ CXBXFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 #ifdef CXBX_USE_D3D11
 		[[fallthrough]]; // This case is unlikely to ever get passed in here anyway
 #else
-		return CXBXFMT_VERTEXDATA;
+		return EMUFMT_VERTEXDATA;
 #endif
 	case xbox::X_D3DFMT_UNKNOWN: [[fallthrough]]; // Test-case : Metal Slug 3?
 	case ((xbox::X_D3DFORMAT)0xffffffff):
-		return CXBXFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
+		return EMUFMT_UNKNOWN; // TODO -oCXBX: Not sure if this counts as swizzled or not...
 	default:
 		CxbxrAbort("EmuXB2PC_D3DFormat: Unknown Format (0x%.08X)", Format);
 	}
 
-	return CXBXFMT_UNKNOWN;
+	return EMUFMT_UNKNOWN;
 }
 
 DWORD EmuXB2PC_D3DLock(DWORD Flags)
