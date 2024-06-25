@@ -2238,12 +2238,36 @@ static void DetermineSupportedD3DFormats
     }
 }
 
+HRESULT CxbxPresent()
+{
+	LOG_INIT;
+
+	HRESULT hRet;
+
+#ifdef CXBX_USE_D3D11
+	hRet = g_pSwapChain->Present(0, 0);
+	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
+#else
+
+	hRet = g_pD3DDevice->EndScene();
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->EndScene");
+
+	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
+
+	// Make sure that the actual Present return result is returned back, not the
+	// result of this subsequent BeginScene, using another variable for that :
+	HRESULT hRet2 = g_pD3DDevice->BeginScene();
+	DEBUG_D3DRESULT(hRet2, "g_pD3DDevice->BeginScene(2nd)");
+#endif
+
+	return hRet;
+}
+
 static void DrawInitialBlackScreen
 (
 )
 {
-    LOG_INIT;
-
     // initially, show a black screen
     // Only clear depth buffer and stencil if present
     //
@@ -2259,27 +2283,13 @@ static void DrawInitialBlackScreen
 		/*Z=*/g_bHasDepth ? 1.0f : 0.0f,
 		/*Stencil=*/0);
 
-	HRESULT hRet;
-
 #ifdef CXBX_USE_D3D11
 	// Direct3D 11 doesn't have a BeginScene / EndScene counterpart
-
-	hRet = g_pSwapChain->Present(0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
 #else
-
-	hRet = g_pD3DDevice->BeginScene();
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene");
-
-    hRet = g_pD3DDevice->EndScene();
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->EndScene");
-
-    hRet = g_pD3DDevice->Present(0, 0, 0, 0);
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
-
-    hRet = g_pD3DDevice->BeginScene();
-    DEBUG_D3DRESULT(hRet, "g_pD3DDevice->BeginScene(2nd)");
+	g_pD3DDevice->BeginScene();
 #endif
+
+	CxbxPresent();
 }
 
 static void CreateDefaultD3D9Device
@@ -5615,17 +5625,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		pCurrentHostBackBuffer->Release();
 	}
 
-#ifdef CXBX_USE_D3D11
-	hRet = g_pSwapChain->Present(0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
-#else
-	g_pD3DDevice->EndScene();
+	hRet = CxbxPresent();
 
-	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
-
-	hRet = g_pD3DDevice->BeginScene();
-#endif
     // RenderStates need reapplying each frame, but can be re-used between draw calls
     // This forces them to be reset
     XboxRenderStates.SetDirty();
