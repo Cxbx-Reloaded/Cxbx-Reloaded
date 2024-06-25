@@ -127,14 +127,19 @@ typedef D3D11_RECT D3DRECT;
 #define EMUFMT_X8R8G8B8                _9_11(D3DFMT_X8R8G8B8,             DXGI_FORMAT_B8G8R8X8_UNORM)
 #define EMUFMT_YUY2                    _9_11(D3DFMT_YUY2,                 DXGI_FORMAT_YUY2)
 
-#define	DXGI_FORMAT_NOT_AVAILABLE       DXGI_FORMAT_UNKNOWN // TODO : Replace below occurences with a suitable format and corresponding conversion
+#define	DXGI_FORMAT_NOT_AVAILABLE       DXGI_FORMAT_UNKNOWN // TODO : Replace below occurrences with a suitable format and corresponding conversion
 // Unmappable to Direct3D 11 :
-#define EMUFMT_D16_LOCKABLE            _9_11(D3DFMT_D16_LOCKABLE,         DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)200 ? How to handle in our code?
-#define EMUFMT_DXT2                    _9_11(D3DFMT_DXT2,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)201 ? How to handle in our code?
-#define EMUFMT_DXT4                    _9_11(D3DFMT_DXT4,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)202 ? How to handle in our code?
-#define EMUFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)203 ? How to handle in our code?
-#define EMUFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)204 ? How to handle in our code?
-#define EMUFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)205 ? How to handle in our code?
+#define EMUFMT_D15S1                   _9_11(D3DFMT_D15S1,                DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)200 ? How to handle in our code?
+#define EMUFMT_D16_LOCKABLE            _9_11(D3DFMT_D16_LOCKABLE,         DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)201 ? How to handle in our code?
+#define EMUFMT_D24X4S4                 _9_11(D3DFMT_D24X4S4,              DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)202 ? How to handle in our code?
+#define EMUFMT_D24X8                   _9_11(D3DFMT_D24X8,                DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)203 ? How to handle in our code?
+#define EMUFMT_D32                     _9_11(D3DFMT_D32,                  DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)204 ? How to handle in our code?
+#define EMUFMT_DXT2                    _9_11(D3DFMT_DXT2,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)205 ? How to handle in our code?
+#define EMUFMT_DXT4                    _9_11(D3DFMT_DXT4,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)206 ? How to handle in our code?
+#define EMUFMT_INDEX16                 _9_11(D3DFMT_INDEX16,              DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)207 ? How to handle in our code?
+#define EMUFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)208 ? How to handle in our code?
+#define EMUFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)209 ? How to handle in our code?
+#define EMUFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)210 ? How to handle in our code?
 
 typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
 
@@ -1353,7 +1358,7 @@ typedef DWORD X_VERTEXSHADERCONSTANTMODE;
 #define VERSION_XVSW                   0x7778 // 'xw' Xbox vertex read/write shader. Corresponds to X_VST_READWRITE
 
 /// nv2a microcode header
-typedef struct
+typedef struct _VSH_SHADER_HEADER
 {
 	uint16_t Version; // See VERSION_XVS*
 	uint16_t NumInst;
@@ -1375,7 +1380,8 @@ typedef struct _X_VERTEXSHADERINPUT
 }
 X_VERTEXSHADERINPUT;
 
-typedef struct {
+typedef struct _VertexShaderSlot
+{
 	DWORD StreamIndex;
 	DWORD Offset;
 	DWORD SizeAndType;
