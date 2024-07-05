@@ -1304,7 +1304,7 @@ static void CxbxrKrnlInitHacks()
 	xbox::PsInitSystem();
 	xbox::KiInitSystem();
 	xbox::RtlInitSystem();
-	
+
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
 	CxbxInitWindow();
@@ -1448,7 +1448,7 @@ void CxbxrKrnlSuspendThreads()
 
 	// Don't use EmuKeGetPcr because that asserts kpcr
 	xbox::KPCR* Pcr = reinterpret_cast<xbox::PKPCR>(__readfsdword(TIB_ArbitraryDataSlot));
-	
+
 	// If there's nothing in list entry, skip this step.
 	if (!ThreadListEntry) {
 		return;

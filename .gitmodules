@@ -43,3 +43,7 @@
 [submodule "import/nv2a_vsh_cpu"]
 	path = import/nv2a_vsh_cpu
 	url = https://github.com/abaire/nv2a_vsh_cpu.git
+[submodule "import/mio"]
+	path = import/mio
+	url = https://github.com/mandreyel/mio.git
+	shadow = true
