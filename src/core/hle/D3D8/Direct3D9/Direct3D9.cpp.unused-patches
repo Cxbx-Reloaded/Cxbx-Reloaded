@@ -4256,3 +4256,27 @@ HRESULT WINAPI XTL::EMUPATCH(D3DDevice_GetVertexShaderInput)
 
     return 0;
 }
+
+// ******************************************************************
+// * patch: D3DDevice_BlockUntilVerticalBlank
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockUntilVerticalBlank)()
+{
+	LOG_FUNC();
+
+	std::unique_lock<std::mutex> lk(g_VBConditionMutex);
+	g_VBConditionVariable.wait(lk);
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetVerticalBlankCallback
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
+(
+    X_D3DVBLANKCALLBACK pCallback
+)
+{
+	LOG_FUNC_ONE_ARG(pCallback);
+
+    g_pXbox_VerticalBlankCallback = pCallback;
+}

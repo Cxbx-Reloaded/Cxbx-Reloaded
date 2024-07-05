@@ -51,6 +51,7 @@
 
 #include "core\kernel\init\CxbxKrnl.h" // For XBOX_MEMORY_SIZE, DWORD, etc
 #include "core\kernel\support\Emu.h"
+#include "core\kernel\support\NativeHandle.h"
 #include "core\kernel\exports\EmuKrnl.h"
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -58,6 +59,7 @@
 #include "core\hle\Intercept.hpp"
 #include "common/win32/Threads.h"
 #include "Logging.h"
+#include "Timer.h"
 
 #include "vga.h"
 #include "nv2a.h" // For NV2AState
@@ -126,6 +128,14 @@ static void update_irq(NV2AState *d)
 	}
 	else {
 		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PVIDEO;
+	}
+
+	/* PTIMER */
+	if (d->ptimer.pending_interrupts & d->ptimer.enabled_interrupts) {
+		d->pmc.pending_interrupts |= NV_PMC_INTR_0_PTIMER;
+	}
+	else {
+		d->pmc.pending_interrupts &= ~NV_PMC_INTR_0_PTIMER;
 	}
 
 	/* TODO : PBUS * /
@@ -319,8 +329,8 @@ const NV2ABlockInfo* EmuNV2A_Block(xbox::addr_xt addr)
 
 // HACK: Until we implement VGA/proper interrupt generation
 // we simulate VBLANK by calling the interrupt at 60Hz
-std::thread vblank_thread;
 extern std::chrono::steady_clock::time_point GetNextVBlankTime();
+extern void hle_vblank();
 
 void _check_gl_reset()
 {
@@ -1097,25 +1107,27 @@ void NV2ADevice::UpdateHostDisplay(NV2AState *d)
 }
 
 // TODO: Fix this properly
-static void nv2a_vblank_thread(NV2AState *d)
+template<bool should_update_hle>
+void nv2a_vblank_interrupt(void *opaque)
 {
-	g_AffinityPolicy->SetAffinityOther();
-	CxbxSetThreadName("Cxbx NV2A VBLANK");
-	auto nextVBlankTime = GetNextVBlankTime();
+	NV2AState *d = static_cast<NV2AState *>(opaque);
 
-	while (!d->exiting) {
-		// Handle VBlank
-		if (std::chrono::steady_clock::now() > nextVBlankTime) {
-			d->pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
-			update_irq(d);
-			nextVBlankTime = GetNextVBlankTime();
+	if (!d->exiting) [[likely]] {
+		d->pcrtc.pending_interrupts |= NV_PCRTC_INTR_0_VBLANK;
+		update_irq(d);
 
-			// TODO: We should swap here for the purposes of supporting overlays + direct framebuffer access
-			// But it causes crashes on AMD hardware for reasons currently unknown...
-			//NV2ADevice::UpdateHostDisplay(d);
+		// trigger the gpu interrupt if it was asserted in update_irq
+		if (g_bEnableAllInterrupts && HalSystemInterrupts[3].IsPending() && EmuInterruptList[3] && EmuInterruptList[3]->Connected) {
+			HalSystemInterrupts[3].Trigger(EmuInterruptList[3]);
 		}
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// TODO: We should swap here for the purposes of supporting overlays + direct framebuffer access
+		// But it causes crashes on AMD hardware for reasons currently unknown...
+		//NV2ADevice::UpdateHostDisplay(d);
+
+		if constexpr (should_update_hle) {
+			hle_vblank();
+		}
 	}
 }
 
@@ -1189,8 +1201,8 @@ void NV2ADevice::Init()
 	d->vram_ptr = (uint8_t*)PHYSICAL_MAP_BASE;
 	d->vram_size = g_SystemMaxMemory;
 
-	d->pramdac.core_clock_coeff = 0x00011c01; /* 189MHz...? */
-	d->pramdac.core_clock_freq = 189000000;
+	d->pramdac.core_clock_coeff = 0x00011C01; /* 233MHz...? */
+	d->pramdac.core_clock_freq = 233333324;
 	d->pramdac.memory_clock_coeff = 0;
 	d->pramdac.video_clock_coeff = 0x0003C20D; /* 25182Khz...? */
 
@@ -1202,7 +1214,13 @@ void NV2ADevice::Init()
 		pvideo_init(d);
 	}
 
-    vblank_thread = std::thread(nv2a_vblank_thread, d);
+	d->vblank_last = get_now();
+	if (bLLE_GPU) {
+		d->vblank_cb = nv2a_vblank_interrupt<false>;
+	}
+	else {
+		d->vblank_cb = nv2a_vblank_interrupt<true>;
+	}
 
     qemu_mutex_init(&d->pfifo.pfifo_lock);
     qemu_cond_init(&d->pfifo.puller_cond);
@@ -1227,9 +1245,8 @@ void NV2ADevice::Reset()
 	qemu_cond_broadcast(&d->pfifo.pusher_cond);
 	d->pfifo.puller_thread.join();
 	d->pfifo.pusher_thread.join();
-	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cbxbx addition
+	qemu_mutex_destroy(&d->pfifo.pfifo_lock); // Cxbxr addition
 	if (d->pgraph.opengl_enabled) {
-		vblank_thread.join();
 		pvideo_destroy(d);
 	}
 
@@ -1376,4 +1393,46 @@ int NV2ADevice::GetFrameWidth(NV2AState* d)
 	width /= frame_pixel_bytes;
 
 	return width;
+}
+
+uint64_t NV2ADevice::vblank_next(uint64_t now)
+{
+	// TODO: this should use a vblank period of 20ms when we are in 50Hz PAL mode
+	constexpr uint64_t vblank_period = 16.6666666667 * 1000;
+	uint64_t next = m_nv2a_state->vblank_last + vblank_period;
+
+	if (now >= next) {
+		m_nv2a_state->vblank_cb(m_nv2a_state);
+		m_nv2a_state->vblank_last = get_now();
+		return vblank_period;
+	}
+
+	return m_nv2a_state->vblank_last + vblank_period - now; // time remaining until next vblank
+}
+
+uint64_t NV2ADevice::ptimer_next(uint64_t now)
+{
+	// Test case: Dead or Alive Ultimate uses this when in PAL50 mode only
+	if (m_nv2a_state->ptimer_active) {
+		const uint64_t ptimer_period = m_nv2a_state->ptimer_period;
+		uint64_t next = m_nv2a_state->ptimer_last + ptimer_period;
+
+		if (now >= next) {
+			if (!m_nv2a_state->exiting) [[likely]] {
+				m_nv2a_state->ptimer.pending_interrupts |= NV_PTIMER_INTR_0_ALARM;
+				update_irq(m_nv2a_state);
+
+				// trigger the gpu interrupt if it was asserted in update_irq
+				if (g_bEnableAllInterrupts && HalSystemInterrupts[3].IsPending() && EmuInterruptList[3] && EmuInterruptList[3]->Connected) {
+					HalSystemInterrupts[3].Trigger(EmuInterruptList[3]);
+				}
+			}
+			m_nv2a_state->ptimer_last = get_now();
+			return ptimer_period;
+		}
+
+		return m_nv2a_state->ptimer_last + ptimer_period - now; // time remaining until next ptimer interrupt
+	}
+
+	return -1;
 }

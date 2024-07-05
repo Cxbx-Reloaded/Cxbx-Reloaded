@@ -81,3 +81,6 @@ extern DsBufferStreaming g_dsBufferStreaming;
 
 extern void DirectSoundDoWork_Buffer(xbox::LARGE_INTEGER& time);
 extern void DirectSoundDoWork_Stream(xbox::LARGE_INTEGER& time);
+extern void dsound_async_worker();
+extern void dsound_worker();
+extern uint64_t dsound_next(uint64_t now);

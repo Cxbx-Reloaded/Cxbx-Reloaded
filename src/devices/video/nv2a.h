@@ -108,6 +108,10 @@ public:
 
 	static int GetFrameWidth(NV2AState *d);
 	static int GetFrameHeight(NV2AState *d);
+
+	uint64_t vblank_next(uint64_t now);
+	uint64_t ptimer_next(uint64_t now);
+
 private:
 	NV2AState *m_nv2a_state;
 };

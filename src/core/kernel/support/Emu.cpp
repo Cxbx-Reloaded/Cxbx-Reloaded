@@ -49,11 +49,6 @@ bool g_DisablePixelShaders = false;
 bool g_UseAllCores = false;
 bool g_SkipRdtscPatching = false;
 
-// Delta added to host SystemTime, used in KiClockIsr and KeSetSystemTime
-// This shouldn't need to be atomic, but because raising the IRQL to high lv in KeSetSystemTime doesn't really stop KiClockIsr from running,
-// we need it for now to prevent reading a corrupted value while KeSetSystemTime is in the middle of updating it
-std::atomic_int64_t HostSystemTimeDelta(0);
-
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
 
