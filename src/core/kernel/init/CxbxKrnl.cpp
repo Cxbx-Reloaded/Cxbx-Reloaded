@@ -627,6 +627,7 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 		// Detect XBE type :
 		XbeType xbeType = CxbxKrnl_Xbe->GetXbeType();
 		EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
+
 		// Convert XBE type into corresponding system to emulate.
 		switch (xbeType) {
 			case XbeType::xtChihiro:
@@ -639,6 +640,10 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 				emulate_system = SYSTEM_XBOX;
 				break;
 			DEFAULT_UNREACHABLE;
+		}
+
+		if (std::filesystem::exists(xbeDirectory / "boot.id")) {
+			emulate_system = SYSTEM_CHIHIRO;
 		}
 	}
 
@@ -1304,7 +1309,7 @@ static void CxbxrKrnlInitHacks()
 	xbox::PsInitSystem();
 	xbox::KiInitSystem();
 	xbox::RtlInitSystem();
-	
+
 	// initialize graphics
 	EmuLogInit(LOG_LEVEL::DEBUG, "Initializing render window.");
 	CxbxInitWindow();
@@ -1448,7 +1453,7 @@ void CxbxrKrnlSuspendThreads()
 
 	// Don't use EmuKeGetPcr because that asserts kpcr
 	xbox::KPCR* Pcr = reinterpret_cast<xbox::PKPCR>(__readfsdword(TIB_ArbitraryDataSlot));
-	
+
 	// If there's nothing in list entry, skip this step.
 	if (!ThreadListEntry) {
 		return;
