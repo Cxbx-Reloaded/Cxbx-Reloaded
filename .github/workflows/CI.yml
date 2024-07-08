@@ -31,12 +31,14 @@ jobs:
       matrix:
         configuration: [Release, Debug]
         vsver: [2019]
+        winver: [7]
+        sdkver: [10.0.22621]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Generate CMake files
-        run: cmake -B build -A Win32 -DCMAKE_SYSTEM_VERSION=10.0.22621.0
+        run: cmake -B build -A Win32,version=${{ matrix.sdkver }} -DCMAKE_SYSTEM_VERSION=${{ matrix.winver }}
       - name: Build
         run: cmake --build build --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
       - name: Prepare artifacts
