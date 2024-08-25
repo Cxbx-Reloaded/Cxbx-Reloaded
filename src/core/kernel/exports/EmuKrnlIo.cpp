@@ -281,6 +281,17 @@ XBSYSAPI EXPORTNUM(66) xbox::ntstatus_xt NTAPI xbox::IoCreateFile
 	// Force ShareAccess to all 
 	ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
+	// Force set DELETE permission flag if write attributes flag is set.
+	// Testcase: dashupdate.xbe (4928, untested with other versions but newer dashupdate did not call for deletion on fail).
+	if (DesiredAccess & FILE_WRITE_ATTRIBUTES) {
+		DesiredAccess |= DELETE;
+	}
+
+	// Force sanitize before call to NtDll::NtCreateFile
+	// Testcase:
+	//  * Exhibition Demo discs - Attempt to create music folder fail internally which then show unable to copy soundtrack dialog.
+	FileAttributes &= FILE_ATTRIBUTE_VALID_FLAGS;
+
     if (SUCCEEDED(ret))
     {
         // redirect to NtCreateFile
