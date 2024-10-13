@@ -1,26 +1,32 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
-#include "Version.h"
-#include "CxbxVersion.h"
-#include <string>
+#include <iostream>
+#include <stdexcept>
 
-/*! version string dependent on trace flag */
-#ifndef _DEBUG_TRACE
-const char* CxbxVersionStr = _GIT_VERSION " (" __DATE__  ")";
-const char *CxbxrHashBuild = _GIT_VERSION;
-#else
-const char* CxbxVersionStr = _GIT_VERSION "-Trace (" __DATE__  ")";
-const char *CxbxrHashBuild = _GIT_VERSION "-Trace";
-#endif
-
-static constexpr const char *GitVersionStr = _GIT_VERSION;
-static constexpr size_t GitVersionLength = std::char_traits<char>::length(GitVersionStr);
-static_assert(GitVersionLength < GitVersionMaxLength);
-
-const char *const GetGitVersionStr() {
-    return GitVersionStr;
+// Function to calculate factorial
+unsigned long long factorial(int n) {
+    if (n < 0) {
+        throw std::invalid_argument("Factorial is not defined for negative numbers.");
+    }
+    unsigned long long result = 1;
+    for (int i = 1; i <= n; ++i) {
+        result *= i;
+    }
+    return result;
 }
 
-const size_t GetGitVersionLength() {
-    return GitVersionLength;
+int main() {
+    int number;
+
+    std::cout << "Enter a positive integer: ";
+    std::cin >> number;
+
+    try {
+        unsigned long long result = factorial(number);
+        std::cout << "Factorial of " << number << " is " << result << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+
+    return 0;
 }
