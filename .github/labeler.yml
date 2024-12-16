@@ -1,75 +1,111 @@
 # Labels are in alphabetical order.
 
 cmake:
-  - 'CMake*'
-  - '**/CMakeLists.txt'
-  - '**/*.cmake'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'CMake*'
+    - '**/CMakeLists.txt'
+    - '**/*.cmake'
 
 cpu-emulation:
-  - 'src/devices/x86/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/devices/x86/**'
 
 deployment:
-  - '*.yml'
-  - '.github/workflows/CI.yml'
+- changed-files:
+  - any-glob-to-any-file:
+    - '*.yml'
+    - '.github/workflows/CI.yml'
 
 file-system:
-  - 'src/core/kernel/support/EmuFile*'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/kernel/support/EmuFile*'
 
 graphics:
-  - 'src/core/hle/D3D8/**'
-  - 'src/core/hle/XGRAPHIC/**'
-  - 'src/devices/video/**'
-  - 'src/gui/*Video*'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/hle/D3D8/**'
+    - 'src/core/hle/XGRAPHIC/**'
+    - 'src/devices/video/**'
+    - 'src/gui/*Video*'
 
 HLE:
-  - 'src/core/hle/**'
-  - 'src/core/kernel/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/hle/**'
+    - 'src/core/kernel/**'
 
 informational:
-  - '**/*Logging*'
-  - '**/*Logging*/**'
-  - '**/README.md'
+- changed-files:
+  - any-glob-to-any-file:
+    - '**/*Logging*'
+    - '**/*Logging*/**'
+    - '**/README.md'
 
 input:
-  - 'src/common/input/**'
-  - 'src/core/hle/XAPI/input/**'
-  - 'src/devices/usb/**'
-  - 'src/gui/controllers/**'
-  - 'src/gui/*Input*'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/common/input/**'
+    - 'src/core/hle/XAPI/input/**'
+    - 'src/devices/usb/**'
+    - 'src/gui/controllers/**'
+    - 'src/gui/*Input*'
 
 kernel:
-  - 'src/core/kernel/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/kernel/**'
 
 LLE:
-  - 'src/devices/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/devices/**'
 
 memory:
-  - 'src/core/kernel/memory-manager/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/kernel/memory-manager/**'
 
 networking:
-  - 'src/core/hle/XONLINE/**'
-  - 'src/devices/network/**'
-  - 'src/gui/*Network*'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/hle/XONLINE/**'
+    - 'src/devices/network/**'
+    - 'src/gui/*Network*'
 
 sound:
-  - 'src/common/audio/**'
-  - 'src/core/hle/DSOUND/**'
-  - 'src/core/hle/XACTENG/**'
-  - 'src/devices/audio/**'
-  - 'src/gui/*Audio*'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/common/audio/**'
+    - 'src/core/hle/DSOUND/**'
+    - 'src/core/hle/XACTENG/**'
+    - 'src/devices/audio/**'
+    - 'src/gui/*Audio*'
 
 modules:
-  - 'import/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'import/**'
 
 threading:
-  - 'src/core/kernel/support/EmuFS*'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/kernel/support/EmuFS*'
 
 timing:
-  - 'src/common/Timer*'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/common/Timer*'
 
 user interface:
-  - 'src/core/common/imgui/*'
-  - 'src/gui/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/core/common/imgui/*'
+    - 'src/gui/**'
 
 xbdm:
-  - 'src/common/xbdm/**'
+- changed-files:
+  - any-glob-to-any-file:
+    - 'src/common/xbdm/**'

@@ -44,7 +44,7 @@ jobs:
       - name: Prepare artifacts
         if: matrix.configuration == 'Release'
         run: cmake --install build --config ${{ matrix.configuration }} --prefix artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: matrix.configuration == 'Release'
         with:
           name: CxbxReloaded-${{ matrix.configuration }}-VS${{ matrix.vsver }}
@@ -61,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
       - name: Re-zip artifacts
