@@ -121,7 +121,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/compiler-options-listed-alphabetically
  # /Zi   = create a PDB file without affecting optimization
- # /Ob2  = Controls inline expansion of functions.
+ # /Ob3  = Controls inline expansion of functions.
  # /Oi   = Generate intrinsic functions
  # /Ot   = In favor of using fast code than small code
  # /GL   = Whole program optimization
@@ -132,7 +132,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # Set optimization options for release build
  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} \
   /Zi \
-  /Ob2 \
+  /Ob3 \
   /Oi \
   /Ot \
   /GL \
