@@ -131,7 +131,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # Set optimization options for release build
  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} \
   /Zi \
-  /Ob2 \
+  /Ob3 \
   /Oi \
   /Ot \
   /GL \
@@ -144,7 +144,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 
 # Windows libraries
-set(WINS_LIB 
+set(WINS_LIB
  legacy_stdio_definitions
  d3d9
  d3dcompiler
