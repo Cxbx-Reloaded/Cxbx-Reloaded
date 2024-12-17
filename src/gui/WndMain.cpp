@@ -56,6 +56,8 @@
 #undef GetSystemMetrics // Force remove DirectX 8's multimon.h defined function (redirect to xGetSystemMetrics).
 #include <WinUser.h> // For GetSystemMetrics
 
+#include <dwmapi.h> // For DwmSetWindowAttribute
+
 #include <io.h>
 #include <shlobj.h>
 
@@ -322,6 +324,10 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			ChangeWindowMessageFilterEx(hwnd, WM_DROPFILES, MSGFLT_ALLOW, nullptr);
 			ChangeWindowMessageFilterEx(hwnd, WM_COPYDATA, MSGFLT_ALLOW, nullptr);
 			ChangeWindowMessageFilterEx(hwnd, 0x0049, MSGFLT_ALLOW, nullptr);
+
+			// Remove rounded corners from the render window on Windows 11
+			const DWM_WINDOW_CORNER_PREFERENCE corner_preference = DWMWCP_DONOTROUND;
+			DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corner_preference, sizeof(corner_preference));
 
             m_bCreated = true;
         }
