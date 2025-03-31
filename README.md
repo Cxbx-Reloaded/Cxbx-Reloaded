@@ -97,9 +97,11 @@ Don't open `CMakeLists.txt` from Visual Studio, as it won't generate files in th
 1. If you don't have CMake installed, open `___ Native Tools Command Prompt for VS 20##`.
 2. `cd` to the Cxbx-Reloaded directory.
 3. Run these commands.
-    1. `mkdir build & cd build`
+    1. `mkdir build && cd build`
     2. `cmake .. -G "Visual Studio 17 2022" -A Win32`
         * VS2022 17.0 or later is required.
+        * To build the Cxbx-Reloaded Debugger, add the variable `-DBUILD_CXBXR_DEBUGGER=ON` to the above command.
+          * **NOTE**: _This debugger is deprecated, use the Visual Studio debugger instead._
 4. Open `Cxbx-Reloaded.sln` from the `build` directory.
 5. Select the Release configuration, then click Build.
     * Debug builds are **significantly slower, and only for developers**.

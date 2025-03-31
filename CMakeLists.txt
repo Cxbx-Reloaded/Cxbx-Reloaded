@@ -11,6 +11,14 @@ if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${Cxbx-Reloaded_BINARY_DIR}/bin")
 endif()
 
+set(BUILD_CXBXR_DEBUGGER OFF CACHE BOOL "Build the Cxbx-Reloaded debugger")
+message("BUILD_CXBXR_DEBUGGER=${BUILD_CXBXR_DEBUGGER}")
+
+configure_file(
+ "${CMAKE_SOURCE_DIR}/src/common/CxbxDebugger.h.in" "${CMAKE_SOURCE_DIR}/src/common/CxbxDebugger.h" @ONLY
+ NEWLINE_STYLE LF
+)
+
 set(SUBHOOK_TESTS OFF)
 set(SUBHOOK_INSTALL OFF)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/subhook" EXCLUDE_FROM_ALL)
@@ -454,20 +462,23 @@ endif()
 
 # Check if generator is Visual Studio then enable Cxbxr-Debugger project.
 # Since C# is currently supported with Visual Studio for now.
-if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
- # Issues with compile (the same with develop branch) and
- # for some reason did not put the files into virtual folder?
- # Might need to put the list in the source folder for workaround fix.
- add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
+if(${BUILD_CXBXR_DEBUGGER})
+ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
+  # Issues with compile (the same with develop branch) and
+  # for some reason did not put the files into virtual folder?
+  # Might need to put the list in the source folder for workaround fix.
 
- set_target_properties(Tests_cs_x86
-  PROPERTIES EXCLUDE_FROM_ALL TRUE
- )
+  add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/src/CxbxDebugger")
 
- # Cxbx-Debugger project with third-party libraries
- set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared
-  PROPERTIES FOLDER Cxbx-Reloaded/debugger
- )
+  set_target_properties(Tests_cs_x86
+   PROPERTIES EXCLUDE_FROM_ALL TRUE
+  )
+
+  # Cxbx-Debugger project with third-party libraries
+  set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared
+   PROPERTIES FOLDER Cxbx-Reloaded/debugger
+  )
+ endif()
 endif()
 
 install(FILES ${cxbxr_INSTALL_files}
