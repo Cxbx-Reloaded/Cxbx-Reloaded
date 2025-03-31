@@ -189,8 +189,10 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin
 )
 
-if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
-  add_dependencies(cxbx cxbxr-debugger)
+if(${BUILD_CXBXR_DEBUGGER})
+ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])")
+   add_dependencies(cxbx cxbxr-debugger)
+ endif()
 endif()
 
 add_dependencies(cxbx cxbxr-ldr cxbxr-emu misc-batch)

@@ -25,6 +25,8 @@
 
 #pragma once
 
+#cmakedefine BUILD_CXBXR_DEBUGGER
+
 namespace CxbxDebugger
 {
 	// Skip exception codes produced by the debugger (workaround for child process debugging)

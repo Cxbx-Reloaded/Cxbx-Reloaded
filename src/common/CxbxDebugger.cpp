@@ -143,7 +143,11 @@ namespace CxbxDebugger
 
 	bool CanReport()
 	{
+#ifdef BUILD_CXBXR_DEBUGGER
 		return Internal::IsAttached();
+#else
+		return false;
+#endif
 	}
 
 	void ReportDebuggerInit(const char* XbeTitle)

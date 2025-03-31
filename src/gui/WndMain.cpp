@@ -48,6 +48,7 @@
 #include "common/util/cliConfig.hpp"
 #include "common/win32/WineEnv.h"
 #include "common/xbe/XbePrinter.h" // for FormatTitleId
+#include "common/CxbxDebugger.h"
 
 #include "resource/ResCxbx.h"
 #include "CxbxVersion.h"
@@ -558,7 +559,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
 					// fall through
 				}
-
+#ifdef BUILD_CXBXR_DEBUGGER
 				case VK_F9:
 				{
 					// Start emulation with the debugger
@@ -574,7 +575,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					}
 					// fall through
 				}
-
+#endif
                 default:
                 {
                     if(m_hwndChild != NULL)
@@ -1248,14 +1249,14 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                     StartEmulation(hwnd);
                 }
                 break;
-
+#ifdef BUILD_CXBXR_DEBUGGER
             case ID_EMULATION_STARTDEBUGGER:
                 if (m_Xbe != nullptr)
                 {
                     StartEmulation(hwnd, debuggerOn);
                 }
                 break;
-
+#endif
             case ID_EMULATION_STOP:
                 StopEmulation();
                 break;
@@ -1748,10 +1749,10 @@ void WndMain::RefreshMenus()
 
             // enable emulation start
             EnableMenuItem(emul_menu, ID_EMULATION_START, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
-
+#ifdef BUILD_CXBXR_DEBUGGER
             // enable emulation with debugging
             EnableMenuItem(emul_menu, ID_EMULATION_STARTDEBUGGER, MF_BYCOMMAND | MF_WhenXbeLoadedNotRunning);
-
+#endif
             // enable emulation stop
             EnableMenuItem(emul_menu, ID_EMULATION_STOP, MF_BYCOMMAND | MF_WhenXbeLoadedAndRunning);
         }

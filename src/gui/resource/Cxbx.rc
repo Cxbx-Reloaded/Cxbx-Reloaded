@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "ResCxbx.h"
+#include "CxbxDebugger.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -801,7 +802,9 @@ BEGIN
     POPUP "E&mulation",                     65535,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "&Start\tF5",                  ID_EMULATION_START,MFT_STRING,MFS_ENABLED
+#ifdef BUILD_CXBXR_DEBUGGER
         MENUITEM "Start &Debugger...\tF9",      ID_EMULATION_STARTDEBUGGER,MFT_STRING,MFS_ENABLED
+#endif
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "S&top\tF6",                   ID_EMULATION_STOP,MFT_STRING,MFS_ENABLED
     END
