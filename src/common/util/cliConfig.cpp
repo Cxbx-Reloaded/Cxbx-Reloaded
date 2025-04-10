@@ -60,6 +60,15 @@ bool hasKey(std::string key)
     return false;
 }
 
+// Delete the key if it exist
+void DeleteKey(std::string key)
+{
+    auto found = g_cli_configs.find(key);
+    if (found != g_cli_configs.end()) {
+        g_cli_configs.erase(found);
+    }
+}
+
 // Generic getter
 bool GetValue(const std::string key, std::string* value)
 {
@@ -177,6 +186,14 @@ void SetSystemType(const std::string value)
         || value.compare(cli_config::system_chihiro) == 0) {
         SetValue(value, "");
     }
+}
+
+void ClearSystemType()
+{
+    // Clear any system types key existence.
+    DeleteKey(cli_config::system_retail);
+    DeleteKey(cli_config::system_devkit);
+    DeleteKey(cli_config::system_chihiro);
 }
 
 }

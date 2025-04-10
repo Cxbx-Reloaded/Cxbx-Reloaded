@@ -46,6 +46,14 @@ extern uint16_t g_LibVersion_DSOUND;
  "Invalid "#type" size, please verify structure is align, not adding new member, or is using placeholder reserves." \
  " Otherwise, please perform versioning upgrade and update "#type" sizeof check."
 
+// Toggle emulation console mode.
+typedef enum _EMU_CONSOLE_TYPE {
+	EMU_CONSOLE_TYPE_AUTO = 0,
+	EMU_CONSOLE_TYPE_RETAIL = 1,
+	EMU_CONSOLE_TYPE_DEVKIT = 2,
+	EMU_CONSOLE_TYPE_CHIHIRO = 3,
+} EMU_CONSOLE_TYPE;
+
 // Cxbx-Reloaded's data storage location.
 typedef enum _CXBX_DATA {
 	CXBX_DATA_INVALID = -1,
@@ -91,6 +99,7 @@ public:
 		std::string szCustomLocation = "";
 		bool bIgnoreInvalidXbeSig;
 		bool bIgnoreInvalidXbeSec;
+		unsigned int ConsoleTypeToggle;
 	} m_gui;
 
 	// Core settings

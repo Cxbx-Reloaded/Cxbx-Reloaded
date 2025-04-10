@@ -70,6 +70,8 @@
 
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
 
+static const char* popup_force_blank_console_type = "By force using the %s console type may cause side effects and may not be used to report to the game compatibility website.";
+
 static int gameLogoWidth, gameLogoHeight;
 static int splashLogoWidth, splashLogoHeight;
 
@@ -978,6 +980,37 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
+			case ID_SETTINGS_CONFIG_CONT_AUTO:
+			{
+				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_AUTO;
+				RefreshMenus();
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_CONT_RETAIL:
+			{
+				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_RETAIL;
+				PopupWarning(m_hwnd, popup_force_blank_console_type, "retail");
+				RefreshMenus();
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_CONT_DEVKIT:
+			{
+				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_DEVKIT;
+				PopupWarning(m_hwnd, popup_force_blank_console_type, "devkit");
+				RefreshMenus();
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_CONT_CHIHIRO:
+			{
+				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_CHIHIRO;
+				PopupWarning(m_hwnd, popup_force_blank_console_type, "chihiro");
+				RefreshMenus();
+			}
+			break;
+
 			case ID_SETTINGS_CONFIG_DLOCCUSTOM:
 			{
 				char szDir[MAX_PATH];
@@ -1712,6 +1745,36 @@ void WndMain::RefreshMenus()
 			chk_flag = (g_Settings->m_hacks.SkipRdtscPatching) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_HACKS_SKIPRDTSCPATCHING, chk_flag);
 
+			switch (g_Settings->m_gui.ConsoleTypeToggle) {
+				case EMU_CONSOLE_TYPE_AUTO:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_AUTO, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_RETAIL, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_DEVKIT, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_CHIHIRO, MF_UNCHECKED);
+					break;
+
+				case EMU_CONSOLE_TYPE_RETAIL:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_AUTO, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_RETAIL, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_DEVKIT, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_CHIHIRO, MF_UNCHECKED);
+					break;
+
+				case EMU_CONSOLE_TYPE_DEVKIT:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_AUTO, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_RETAIL, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_DEVKIT, MF_CHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_CHIHIRO, MF_UNCHECKED);
+					break;
+
+				case EMU_CONSOLE_TYPE_CHIHIRO:
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_AUTO, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_RETAIL, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_DEVKIT, MF_UNCHECKED);
+					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_CONT_CHIHIRO, MF_CHECKED);
+					break;
+			}
+
 			switch (g_Settings->m_gui.DataStorageToggle) {
 				case CXBX_DATA_APPDATA:
 					CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_DLOCAPPDATA, MF_CHECKED);
@@ -2250,6 +2313,20 @@ void WndMain::StartEmulation(HWND hwndParent, DebuggerState LocalDebuggerState /
         cli_config::SetLoad(m_XbeFilename);
         cli_config::SetValue(cli_config::hwnd, hwndParent);
         cli_config::SetValue(cli_config::debug_mode, g_Settings->m_core.KrnlDebugMode);
+        cli_config::ClearSystemType(); // Require to reset system type in GUI in order to choose the new system option.
+        if (g_Settings->m_gui.ConsoleTypeToggle > 0) {
+            switch (g_Settings->m_gui.ConsoleTypeToggle) {
+                case EMU_CONSOLE_TYPE_RETAIL:
+                    cli_config::SetSystemType(cli_config::system_retail);
+                    break;
+                case EMU_CONSOLE_TYPE_DEVKIT:
+                    cli_config::SetSystemType(cli_config::system_devkit);
+                    break;
+                case EMU_CONSOLE_TYPE_CHIHIRO:
+                    cli_config::SetSystemType(cli_config::system_chihiro);
+                    break;
+            }
+        }
         if (g_Settings->m_core.KrnlDebugMode == DM_FILE) {
             cli_config::SetValue(cli_config::debug_file, g_Settings->m_core.szKrnlDebug);
         }

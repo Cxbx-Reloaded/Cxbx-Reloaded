@@ -57,5 +57,6 @@ long long GetSessionID();
 void SetLoad(const std::string value);
 
 void SetSystemType(const std::string value);
+void ClearSystemType();
 
 }

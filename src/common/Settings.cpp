@@ -90,6 +90,7 @@ static struct {
 	const char* DataCustomLocation = "DataCustomLocation";
 	const char* IgnoreInvalidXbeSig = "IgnoreInvalidXbeSig";
 	const char *IgnoreInvalidXbeSec = "IgnoreInvalidXbeSec";
+	const char* ConsoleTypeToggle = "ConsoleTypeToggle";
 } sect_gui_keys;
 
 static const char* section_core = "core";
@@ -342,6 +343,8 @@ bool Settings::LoadConfig()
 	m_gui.bIgnoreInvalidXbeSig = m_si.GetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSig, /*Default=*/false);
 	m_gui.bIgnoreInvalidXbeSec = m_si.GetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSec, /*Default=*/false);
 
+	m_gui.ConsoleTypeToggle = (EMU_CONSOLE_TYPE)m_si.GetLongValue(section_gui, sect_gui_keys.ConsoleTypeToggle, /*Default=*/EMU_CONSOLE_TYPE_AUTO);
+
 	// ==== GUI End =============
 
 	// ==== Core Begin ==========
@@ -587,6 +590,8 @@ bool Settings::Save(std::string file_path)
 
 	m_si.SetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSig, m_gui.bIgnoreInvalidXbeSig, nullptr, true);
 	m_si.SetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSec, m_gui.bIgnoreInvalidXbeSec, nullptr, true);
+
+	m_si.SetLongValue(section_gui, sect_gui_keys.ConsoleTypeToggle, m_gui.ConsoleTypeToggle, nullptr, true, true);
 
 	// ==== GUI End =============
 
