@@ -38,7 +38,7 @@ jobs:
         with:
           submodules: recursive
       - name: Generate CMake files
-        run: cmake -B build -A Win32,version=${{ matrix.sdkver }} -DCMAKE_SYSTEM_VERSION=${{ matrix.winver }}
+        run: cmake -B build -A Win32,version=${{ matrix.sdkver }} -DCMAKE_SYSTEM_VERSION=${{ matrix.winver }} -DBUILD_CXBXR_DEBUGGER=ON
       - name: Build
         run: cmake --build build --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
       - name: Prepare artifacts

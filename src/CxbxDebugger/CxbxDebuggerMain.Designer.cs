@@ -41,6 +41,7 @@
             this.windowsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+            this.lblStatusDeprecate = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblStatus = new System.Windows.Forms.ToolStripStatusLabel();
             this.menuStrip.SuspendLayout();
             this.statusStrip1.SuspendLayout();
@@ -132,18 +133,29 @@
             // 
             this.statusStrip1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblStatusDeprecate,
             this.lblStatus});
+            this.statusStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.statusStrip1.Location = new System.Drawing.Point(0, 339);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 9, 0);
-            this.statusStrip1.Size = new System.Drawing.Size(734, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(734, 61);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
+            // 
+            // lblStatusDeprecate
+            // 
+            this.lblStatusDeprecate.BackColor = System.Drawing.Color.Yellow;
+            this.lblStatusDeprecate.Name = "lblStatusDeprecate";
+            this.lblStatusDeprecate.Size = new System.Drawing.Size(723, 15);
+            this.lblStatusDeprecate.Spring = true;
+            this.lblStatusDeprecate.Text = "WARNING: cxbxr-debugger will eventually be removed from upstream branch.";
+            this.lblStatusDeprecate.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblStatus
             // 
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(39, 17);
+            this.lblStatus.Size = new System.Drawing.Size(723, 15);
             this.lblStatus.Text = "Ready";
             // 
             // CxbxDebuggerMain
@@ -180,6 +192,7 @@
         private System.Windows.Forms.ToolStripMenuItem miSuspend;
         private System.Windows.Forms.ToolStripMenuItem miResume;
         private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel lblStatusDeprecate;
         private System.Windows.Forms.ToolStripStatusLabel lblStatus;
     }
 }
