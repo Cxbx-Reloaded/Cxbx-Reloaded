@@ -89,6 +89,7 @@ Don't open `CMakeLists.txt` from Visual Studio, as it won't generate files in th
 1. [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2022
     * C++ and C# desktop development
     * Windows Universal CRT SDK
+    * Windows 11 SDK (10.0.22621.0) or later
     * C++ CMake tools for Windows
       * *Optional if CMake is installed*
     * [Microsoft Child Process Debugging Power Tool](https://marketplace.visualstudio.com/items?itemName=vsdbgplat.MicrosoftChildProcessDebuggingPowerTool)
