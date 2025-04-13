@@ -763,6 +763,13 @@ BEGIN
         MENUITEM "Config &Network...",          ID_SETTINGS_CONFIG_NETWORK,MFT_STRING,MFS_ENABLED
         MENUITEM "Config &Eeprom...",           ID_SETTINGS_CONFIG_EEPROM,MFT_STRING,MFS_ENABLED
         MENUITEM "Config &Logging...",          ID_SETTINGS_CONFIG_LOGGING,MFT_STRING,MFS_ENABLED
+        POPUP "Config &Console Type..."
+        BEGIN
+            MENUITEM "&Auto",                       ID_SETTINGS_CONFIG_CONT_AUTO
+            MENUITEM "&Retail",                     ID_SETTINGS_CONFIG_CONT_RETAIL
+            MENUITEM "&Devkit",                     ID_SETTINGS_CONFIG_CONT_DEVKIT
+            MENUITEM "&Chihiro",                    ID_SETTINGS_CONFIG_CONT_CHIHIRO
+        END
         POPUP "Config &Data Location...",       65535,MFT_STRING,MFS_ENABLED
         BEGIN
             MENUITEM "Store in AppData",            ID_SETTINGS_CONFIG_DLOCAPPDATA,MFT_STRING,MFS_ENABLED

@@ -514,12 +514,84 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 	// Load Xbe (this one will reside above WinMain's virtual_memory_placeholder)
 	std::filesystem::path xbeDirectory = std::filesystem::path(xbePath).parent_path();
 
+	CxbxKrnl_Xbe = new Xbe(xbePath.c_str()); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
+
+	if (CxbxKrnl_Xbe->HasFatalError()) {
+		CxbxrAbort(CxbxKrnl_Xbe->GetError().c_str());
+		return false;
+	}
+
+	// Check the signature of the xbe
+	if (CxbxKrnl_Xbe->CheckSignature()) {
+		EmuLogInit(LOG_LEVEL::INFO, "Valid xbe signature. Xbe is legit");
+	}
+	else {
+		EmuLogInit(LOG_LEVEL::WARNING, "Invalid xbe signature. Homebrew, tampered or pirated xbe?");
+	}
+
+	// Check the integrity of the xbe sections
+	for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
+		if (CxbxKrnl_Xbe->CheckSectionIntegrity(sectionIndex)) {
+			EmuLogInit(LOG_LEVEL::INFO, "SHA hash check of section %s successful", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		}
+		else {
+			EmuLogInit(LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, section is corrupted", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
+		}
+	}
+
+	// If CLI has given console type, then enforce it.
+	if (cli_config::hasKey(cli_config::system_chihiro)) {
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
+		emulate_system = SYSTEM_CHIHIRO;
+	}
+	else if (cli_config::hasKey(cli_config::system_devkit)) {
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
+		emulate_system = SYSTEM_DEVKIT;
+	}
+	else if (cli_config::hasKey(cli_config::system_retail)) {
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
+		emulate_system = SYSTEM_XBOX;
+	}
+	// Otherwise, use auto detect method.
+	else {
+		// Detect XBE type :
+		XbeType xbeType = CxbxKrnl_Xbe->GetXbeType();
+		EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
+
+		// Convert XBE type into corresponding system to emulate.
+		switch (xbeType) {
+			case XbeType::xtChihiro:
+				emulate_system = SYSTEM_CHIHIRO;
+				break;
+			case XbeType::xtDebug:
+				emulate_system = SYSTEM_DEVKIT;
+				break;
+			case XbeType::xtRetail:
+				emulate_system = SYSTEM_XBOX;
+				break;
+			DEFAULT_UNREACHABLE;
+		}
+
+		// If the XBE path contains a boot.id, it must be a Chihiro title
+		// This is necessary as some Chihiro games use the Debug xor instead of the Chihiro ones
+		// which means we cannot rely on that alone.
+		if (std::filesystem::exists(xbeDirectory / "boot.id")) {
+			emulate_system = SYSTEM_CHIHIRO;
+		}
+	}
+
+	EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
+	// If the system to emulate isn't supported on host, enforce failure.
+	if (!isSystemFlagSupport(reserved_systems, emulate_system)) {
+		CxbxrAbort("Unable to emulate system type due to host is not able to reserve required memory ranges.");
+		return false;
+	}
+	// Clear emulation system from reserved systems so all unneeded memory ranges can be freed.
+	reserved_systems &= ~emulate_system;
+
 #ifdef CHIHIRO_WORK
 	// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
-	// If the XBE path contains a boot.id, it must be a Chihiro title
-	// This is necessary as some Chihiro games use the Debug xor instead of the Chihiro ones
-	// which means we cannot rely on that alone.
-	if (BootFlags == BOOT_NONE && std::filesystem::exists(xbeDirectory / "boot.id")) {
+	if (BootFlags == BOOT_NONE && emulate_system == SYSTEM_CHIHIRO) {
 
 		std::string chihiroMediaBoardRom = g_DataFilePath + "/EmuDisk/" + MediaBoardRomFile;
 		if (!std::filesystem::exists(chihiroMediaBoardRom)) {
@@ -580,81 +652,8 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 		// Launch Segaboot
 		CxbxLaunchNewXbe(chihiroSegaBootNew);
 		CxbxrShutDown(true);
-
 	}
 #endif // Chihiro wip block
-
-	CxbxKrnl_Xbe = new Xbe(xbePath.c_str()); // TODO : Instead of using the Xbe class, port Dxbx _ReadXbeBlock()
-
-	if (CxbxKrnl_Xbe->HasFatalError()) {
-		CxbxrAbort(CxbxKrnl_Xbe->GetError().c_str());
-		return false;
-	}
-
-	// Check the signature of the xbe
-	if (CxbxKrnl_Xbe->CheckSignature()) {
-		EmuLogInit(LOG_LEVEL::INFO, "Valid xbe signature. Xbe is legit");
-	}
-	else {
-		EmuLogInit(LOG_LEVEL::WARNING, "Invalid xbe signature. Homebrew, tampered or pirated xbe?");
-	}
-
-	// Check the integrity of the xbe sections
-	for (uint32_t sectionIndex = 0; sectionIndex < CxbxKrnl_Xbe->m_Header.dwSections; sectionIndex++) {
-		if (CxbxKrnl_Xbe->CheckSectionIntegrity(sectionIndex)) {
-			EmuLogInit(LOG_LEVEL::INFO, "SHA hash check of section %s successful", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-		}
-		else {
-			EmuLogInit(LOG_LEVEL::WARNING, "SHA hash of section %s doesn't match, section is corrupted", CxbxKrnl_Xbe->m_szSectionName[sectionIndex]);
-		}
-	}
-
-	// If CLI has given console type, then enforce it.
-	if (cli_config::hasKey(cli_config::system_chihiro)) {
-		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as chihiro.");
-		emulate_system = SYSTEM_CHIHIRO;
-	}
-	else if (cli_config::hasKey(cli_config::system_devkit)) {
-		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as devkit.");
-		emulate_system = SYSTEM_DEVKIT;
-	}
-	else if (cli_config::hasKey(cli_config::system_retail)) {
-		EmuLogInit(LOG_LEVEL::INFO, "Auto detect is disabled, running as retail.");
-		emulate_system = SYSTEM_XBOX;
-	}
-	// Otherwise, use auto detect method.
-	else {
-		// Detect XBE type :
-		XbeType xbeType = CxbxKrnl_Xbe->GetXbeType();
-		EmuLogInit(LOG_LEVEL::INFO, "Auto detect: XbeType = %s", GetXbeTypeToStr(xbeType));
-
-		// Convert XBE type into corresponding system to emulate.
-		switch (xbeType) {
-			case XbeType::xtChihiro:
-				emulate_system = SYSTEM_CHIHIRO;
-				break;
-			case XbeType::xtDebug:
-				emulate_system = SYSTEM_DEVKIT;
-				break;
-			case XbeType::xtRetail:
-				emulate_system = SYSTEM_XBOX;
-				break;
-			DEFAULT_UNREACHABLE;
-		}
-
-		if (std::filesystem::exists(xbeDirectory / "boot.id")) {
-			emulate_system = SYSTEM_CHIHIRO;
-		}
-	}
-
-	EmuLogInit(LOG_LEVEL::INFO, "Host's compatible system types: %2X", reserved_systems);
-	// If the system to emulate isn't supported on host, enforce failure.
-	if (!isSystemFlagSupport(reserved_systems, emulate_system)) {
-		CxbxrAbort("Unable to emulate system type due to host is not able to reserve required memory ranges.");
-		return false;
-	}
-	// Clear emulation system from reserved systems so all unneeded memory ranges can be freed.
-	reserved_systems &= ~emulate_system;
 
 	// Once we have determine which system type to run as, enforce it in future reboots.
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
