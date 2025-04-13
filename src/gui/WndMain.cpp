@@ -71,6 +71,7 @@
 #define XBOX_LED_FLASH_PERIOD 176 // if you know a more accurate value, put it here
 
 static const char* popup_force_blank_console_type = "By force using the %s console type may cause side effects and may not be used to report to the game compatibility website.";
+static const char* popup_will_not_take_effect_until_the_next_emulation = "This will not take effect until the next time emulation is started.";
 
 static int gameLogoWidth, gameLogoHeight;
 static int splashLogoWidth, splashLogoHeight;
@@ -983,6 +984,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_SETTINGS_CONFIG_CONT_AUTO:
 			{
 				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_AUTO;
+				if (m_bIsStarted) {
+					PopupInfo(m_hwnd, popup_will_not_take_effect_until_the_next_emulation);
+				}
 				RefreshMenus();
 			}
 			break;
@@ -991,6 +995,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_RETAIL;
 				PopupWarning(m_hwnd, popup_force_blank_console_type, "retail");
+				if (m_bIsStarted) {
+					PopupInfo(m_hwnd, popup_will_not_take_effect_until_the_next_emulation);
+				}
 				RefreshMenus();
 			}
 			break;
@@ -999,6 +1006,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_DEVKIT;
 				PopupWarning(m_hwnd, popup_force_blank_console_type, "devkit");
+				if (m_bIsStarted) {
+					PopupInfo(m_hwnd, popup_will_not_take_effect_until_the_next_emulation);
+				}
 				RefreshMenus();
 			}
 			break;
@@ -1007,6 +1017,9 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			{
 				g_Settings->m_gui.ConsoleTypeToggle = EMU_CONSOLE_TYPE_CHIHIRO;
 				PopupWarning(m_hwnd, popup_force_blank_console_type, "chihiro");
+				if (m_bIsStarted) {
+					PopupInfo(m_hwnd, popup_will_not_take_effect_until_the_next_emulation);
+				}
 				RefreshMenus();
 			}
 			break;
@@ -1138,7 +1151,7 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 				else {
 					g_Settings->m_core.KrnlDebugMode = DM_NONE;
 				}
-				PopupInfo(m_hwnd, "This will not take effect until the next time emulation is started.");
+				PopupInfo(m_hwnd, popup_will_not_take_effect_until_the_next_emulation);
 
 				RefreshMenus();
 
