@@ -22,23 +22,20 @@ on:
 
 jobs:
   build-windows:
-    name: Build (Windows, ${{ matrix.configuration }}, VS${{ matrix.vsver }}) # runner.os doesn't work here
-    runs-on: windows-${{ matrix.vsver }}
+    name: Build (Windows, ${{ matrix.configuration }}) # runner.os doesn't work here
+    runs-on: windows-2025
     env:
       POWERSHELL_TELEMETRY_OPTOUT: 1
     strategy:
       fail-fast: false
       matrix:
         configuration: [Release, Debug]
-        vsver: [2019]
-        winver: [7]
-        sdkver: [10.0.22621.0]
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: Generate CMake files
-        run: cmake -B build -A Win32,version=${{ matrix.sdkver }} -DCMAKE_SYSTEM_VERSION=${{ matrix.winver }} -DBUILD_CXBXR_DEBUGGER=ON
+        run: cmake -B build -A Win32 -DBUILD_CXBXR_DEBUGGER=ON -DCMAKE_SYSTEM_VERSION=7
       - name: Build
         run: cmake --build build --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
       - name: Prepare artifacts
@@ -47,7 +44,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: matrix.configuration == 'Release'
         with:
-          name: CxbxReloaded-${{ matrix.configuration }}-VS${{ matrix.vsver }}
+          name: CxbxReloaded-${{ matrix.configuration }}
           path: artifacts/bin
           if-no-files-found: error
 
