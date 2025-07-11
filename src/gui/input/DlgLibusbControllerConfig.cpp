@@ -31,6 +31,7 @@
 #include "gui\resource\ResCxbx.h"
 #include "input\InputWindow.h"
 #include "common\input\LibusbDevice.h"
+#include <chrono>
 
 
 static LibusbInputWindow *g_InputWindow = nullptr;

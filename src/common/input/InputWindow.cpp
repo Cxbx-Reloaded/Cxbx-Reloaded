@@ -33,6 +33,7 @@
 #include "EmuShared.h"
 #include "Logging.h"
 #include <future>
+#include <chrono>
 
 
 constexpr ControlState INPUT_DETECT_THRESHOLD = 0.35; // NOTE: this should probably be made user configurable
