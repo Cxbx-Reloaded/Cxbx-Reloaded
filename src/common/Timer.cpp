@@ -28,6 +28,7 @@
 #include <core\kernel\exports\xboxkrnl.h>
 
 #include <windows.h>
+#include <chrono>
 #include <thread>
 #include <vector>
 #include <mutex>

@@ -26,6 +26,7 @@
 // ******************************************************************
 
 #include <core\kernel\exports\xboxkrnl.h>
+#include <chrono>
 #include <unordered_map>
 #include <shared_mutex>
 #include "Windows.h"

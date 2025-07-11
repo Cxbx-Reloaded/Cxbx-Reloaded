@@ -74,6 +74,7 @@
 
 #include <assert.h>
 #include <process.h>
+#include <chrono>
 #include <clocale>
 #include <functional>
 #include <unordered_map>
