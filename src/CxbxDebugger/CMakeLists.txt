@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.12)
 project(cxbxr-debugger LANGUAGES CSharp)
 
 # Output all binary files into one folder

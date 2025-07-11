@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.12)
 project(imgui LANGUAGES CXX)
 # Since imgui doesn't have CMake, we'll make an interface project here.
 
