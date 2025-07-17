@@ -307,7 +307,8 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0,                     ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                              );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                        );  \
-    XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                        );  \
+    XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                                    );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetBackBuffer_8,                          (D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                                            );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetDepthStencilSurface,                   (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetDepthStencilSurface2,                  (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetDisplayMode,                           (xbox::X_D3DDISPLAYMODE*)                                                                             );  \
@@ -2680,8 +2681,8 @@ static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
 // Get the raw X and Y scale of the multisample mode
 // Both MSAA and SSAA result in increased rendertarget size
 void GetMultiSampleScaleRaw(float& xScale, float& yScale) {
-	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType));
-	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType));
+	xScale = static_cast<float>(CXBX_D3DMULTISAMPLE_XSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleX;
+	yScale = static_cast<float>(CXBX_D3DMULTISAMPLE_YSCALE(g_Xbox_MultiSampleType)) * g_Xbox_BackbufferScaleY;
 }
 
 // Get the "screen" scale factors
@@ -2725,13 +2726,11 @@ void GetScreenScaleFactors(float& scaleX, float& scaleY) {
 	if (isMultiSampleEnabled && isSuperSampleMode) {
 		GetMultiSampleScaleRaw(scaleX, scaleY);
 	}
-
+    // the scales returned from GetMultiSampleScaleRaw(scaleX, scaleY) are already scaled with back buffer scales.
 	// Account for the backbuffer scale
 	// Test cases:
 	// Vertex program passthrough equivalent (title does apply backbuffer scale):
 	// - NFS:HP2 (car speed and other in-game UI elements)
-	scaleX *= g_Xbox_BackbufferScaleX;
-	scaleY *= g_Xbox_BackbufferScaleY;
 }
 
 // Get the raw subpixel dimensions of the rendertarget buffer
@@ -5019,60 +5018,48 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
     }
 }
 
-#define CXBX_SWAP_PRESENT_FORWARD (256 + X_D3DSWAP_FINISH + X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+#define CXBX_SWAP_PRESENT_FORWARD (256 + xbox::X_D3DSWAP_FINISH + xbox::X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
 
-// ******************************************************************
-// * patch: D3DDevice_Present
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
-(
-    CONST RECT* pSourceRect,
-    CONST RECT* pDestRect,
-    PVOID       pDummy1,
-    PVOID       pDummy2
-)
+
+ void CxbxrGetXboxBackBuffer(int BackBuffer, xbox::X_D3DSurface** ppXboxBackBuffer)
 {
-	// LOG_FORWARD("D3DDevice_Swap");
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pSourceRect)
-		LOG_FUNC_ARG(pDestRect)
-		LOG_FUNC_ARG(pDummy1)
-		LOG_FUNC_ARG(pDummy2)
-		LOG_FUNC_END;
-
-	EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
+	 if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
+		 XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, ppXboxBackBuffer);
+	 }
+	 else if (XB_TRMP(D3DDevice_GetBackBuffer2) != nullptr) {
+		 *ppXboxBackBuffer = XB_TRMP(D3DDevice_GetBackBuffer2)(BackBuffer);
+	 }
+	 else if (XB_TRMP(D3DDevice_GetBackBuffer_8)) {
+		 //unsigned int __userpurge D3DDevice_GetBackBuffer_8@<eax>(int backbuffer@<eax>, int type, xbox::X_D3DSurface** ppBackBuffer)
+		 __asm {
+			 push eax
+			 mov  eax, BackBuffer
+		 }
+		 XB_TRMP(D3DDevice_GetBackBuffer_8)(D3DBACKBUFFER_TYPE_MONO, ppXboxBackBuffer);
+		 __asm {
+			 pop eax
+		 }
+	 }
+	 else if(XB_TRMP(D3DDevice_GetBackBuffer2_0__LTCG_eax1)) {
+		 xbox::X_D3DSurface* pXboxBackBuffer;
+		 __asm {
+			 mov  eax, BackBuffer
+			 call XB_TRMP(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
+			 mov pXboxBackBuffer, eax
+		 }
+		 *ppXboxBackBuffer = pXboxBackBuffer;
+	 }
+	 // Now pXboxBackbuffer points to the requested Xbox backbuffer
+	 if (*ppXboxBackBuffer == nullptr) {
+		 CxbxrAbort("D3DDevice_GetBackBuffer2: Could not get Xbox backbuffer");
+	 }
 }
 
 std::chrono::steady_clock::time_point frameStartTime;
 
-// LTCG specific swap function...
-// This uses a custom calling convention where parameter is passed in EAX
-__declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
+DWORD CxbxrImpl_Swap
 (
-)
-{
-    dword_xt Flags;
-	dword_xt result;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Flags, eax
-    }
-
-    result = EMUPATCH(D3DDevice_Swap)(Flags);
-
-    __asm {
-		mov  eax, result
-        LTCG_EPILOGUE
-        ret
-    }
-}
-
-// ******************************************************************
-// * patch: D3DDevice_Swap
-// ******************************************************************
-xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
-(
-	dword_xt Flags
+	xbox::dword_xt Flags
 )
 {
 	LOG_FUNC_ONE_ARG(Flags);
@@ -5080,35 +5067,81 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	// Handle swap flags
 	// We don't maintain a swap chain, and draw everything to backbuffer 0
 	// so just hack around the swap flags for now...
-	static float prevBackBufferScaleX;
-	if (Flags == X_D3DSWAP_BYPASSCOPY) {
-		// Test case: MotoGp2
-		// Title handles copying to the frontbuffer itself, but we don't keep track of one
-		// MotoGp2 seems to copy a black rectangle over the backbuffer
-		// HACK: Effectively disable drawing - so the title can't copy anything around via draws
-		// and we just have to hope the title leaves the backbuffer untouched...
-		prevBackBufferScaleX = g_Xbox_BackbufferScaleX;
-		g_Xbox_BackbufferScaleX = 0;
-	}
-	else if (g_LastD3DSwap == X_D3DSWAP_BYPASSCOPY) {
-		g_Xbox_BackbufferScaleX = prevBackBufferScaleX;
-	}
-
+	// xdk sample BackbufferScale uses D3DSWAP_COPY when BackBufferScale was altered, and uses D3DSWAP_FINISH when it's ready to blit to front buffer.
+	static float prevBackBufferScaleX, prevBackBufferScaleY;
 	g_LastD3DSwap = (xbox::X_D3DSWAP)Flags;
+
+	HRESULT hRet;
 
 	// Early exit if we're not ready to present
 	// Test Case: Antialias sample, BackBufferScale sample
 	// Which use D3DSWAP_COPY to render UI directly to the frontbuffer
 	// If we present before the UI is drawn, it will flicker
-	if (Flags != X_D3DSWAP_DEFAULT && !(Flags & X_D3DSWAP_FINISH)) {
-		if (Flags == X_D3DSWAP_COPY) { LOG_TEST_CASE("X_D3DSWAP_COPY"); }
-		if (Flags == X_D3DSWAP_BYPASSCOPY) { LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY"); }
+	if (Flags != xbox::X_D3DSWAP_DEFAULT && !(Flags & xbox::X_D3DSWAP_FINISH)) {
+
+		if (Flags == xbox::X_D3DSWAP_COPY|| g_Xbox_BackbufferScaleX!=1.0 || g_Xbox_BackbufferScaleY!=1.0) {
+			LOG_TEST_CASE("X_D3DSWAP_COPY");
+			xbox::X_D3DSurface* pXboxFrontBufferSurface;
+			CxbxrGetXboxBackBuffer(-1,&pXboxFrontBufferSurface);
+			//use xbox front buffer as temp buffer for scale up destination.
+			auto pXboxFrontBufferHostSurface = GetHostSurface(pXboxFrontBufferSurface, D3DUSAGE_RENDERTARGET);
+			float height, width;
+			//width/height devided by the aaScaleX/aaScaleY which already multiplied by BackBufferScale.
+			GetRenderTargetRawDimensions(width, height, g_pXbox_RenderTarget);
+			float aaX, aaY;
+			GetMultiSampleScaleRaw(aaX, aaY);
+			width *= aaX;
+			height *= aaY;
+			IDirect3DSurface* pExistingHostRenderTarget = nullptr;
+			hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingHostRenderTarget);
+			assert(hRet == D3D_OK);
+			// todo: there are jitters in stretching up, the source rect should be one possible cause.
+			//   if we trampoline D3DDevice_SetBackBufferScale() and D3DDevice_SetRenderTarget(),
+			//   the scaled back buffer width/height will be set to NV2A in NV097_SET_SURFACE_CLIP_HORIZONTAL and  NV097_SET_SURFACE_CLIP_VERTICAL
+			//   multisample mode will be set to NV097_SET_SURFACE_FORMAT. these info can be retirved.
+			RECT scr{};
+			scr.top = (LONG)0;
+			scr.left = (LONG)0;
+			scr.right = (LONG)width;
+			scr.bottom = (LONG)height;
+
+			// todo: stretch to a new render target and use the render target as is without copying back to previous renter target.
+			// stretch original render target rect(smaller) to full destination render target.
+			hRet = g_pD3DDevice->StretchRect(
+				/* pSourceSurface = */ pExistingHostRenderTarget,
+				/* pSourceRect = */ &scr,
+				/* pDestSurface = */ pXboxFrontBufferHostSurface,
+				/* pDestRect = */ nullptr,
+				/* Filter = */ D3DTEXF_LINEAR
+			);
+			assert(hRet == D3D_OK);
+
+			// using StretchRect to update full surfaces
+			hRet = g_pD3DDevice->StretchRect(
+				/* pSourceSurface = */ pXboxFrontBufferHostSurface,
+				/* pSourceRect = */ NULL,
+				/* pDestSurface = */ pExistingHostRenderTarget,
+				/* pDestRect = */ nullptr,
+				/* Filter = */ D3DTEXF_LINEAR
+			);
+			assert(hRet == D3D_OK);
+
+		}
+
+		if (Flags == xbox::X_D3DSWAP_BYPASSCOPY) {
+			LOG_TEST_CASE("X_D3DSWAP_BYPASSCOPY");
+		}
+		// always reset back buffer scale.
+		g_Xbox_BackbufferScaleX = 1.0;
+		g_Xbox_BackbufferScaleY = 1.0;
 		return g_Xbox_SwapData.Swap;
 	}
-
+	// always reset back buffer scale. these two line should be redundant because when we got here, we're going to blit to front buffer, the scales should be reset in previous swap already.
+	g_Xbox_BackbufferScaleX = 1.0;
+	g_Xbox_BackbufferScaleY = 1.0;
 	// Fetch the host backbuffer
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
-	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
+	hRet = g_pD3DDevice->GetBackBuffer(
 		0, // iSwapChain
 		0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
 
@@ -5170,8 +5203,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 		// Is there an overlay to be presented too?
 		if (g_OverlayProxy.Surface.Common) {
-			X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
-			if (X_Format != X_D3DFMT_YUY2) {
+			xbox::X_D3DFORMAT X_Format = GetXboxPixelContainerFormat(&g_OverlayProxy.Surface);
+			if (X_Format != xbox::X_D3DFMT_YUY2) {
 				LOG_TEST_CASE("Xbox overlay surface isn't using X_D3DFMT_YUY2");
 			}
 
@@ -5413,6 +5446,65 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		result = g_Xbox_SwapData.Swap; // Swap returns number of swaps
 
     return result;
+}
+// ******************************************************************
+// * patch: D3DDevice_Present
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
+(
+	CONST RECT* pSourceRect,
+	CONST RECT* pDestRect,
+	PVOID       pDummy1,
+	PVOID       pDummy2
+	)
+{
+	// LOG_FORWARD("D3DDevice_Swap");
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSourceRect)
+		LOG_FUNC_ARG(pDestRect)
+		LOG_FUNC_ARG(pDummy1)
+		LOG_FUNC_ARG(pDummy2)
+		LOG_FUNC_END;
+
+	//EMUPATCH(D3DDevice_Swap)(CXBX_SWAP_PRESENT_FORWARD); // Xbox present ignores
+	CxbxrImpl_Swap(CXBX_SWAP_PRESENT_FORWARD);
+}
+
+// LTCG specific swap function...
+// This uses a custom calling convention where parameter is passed in EAX
+__declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0)
+(
+	)
+{
+	dword_xt Flags;
+	dword_xt result;
+	__asm {
+		LTCG_PROLOGUE
+		mov  Flags, eax
+	}
+
+	//result = EMUPATCH(D3DDevice_Swap)(Flags);
+	result = CxbxrImpl_Swap(Flags);
+
+	__asm {
+		mov  eax, result
+		LTCG_EPILOGUE
+		ret
+	}
+}
+
+
+// ******************************************************************
+// * patch: D3DDevice_Swap
+// ******************************************************************
+xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
+(
+	dword_xt Flags
+	)
+{
+	LOG_FUNC_ONE_ARG(Flags);
+
+	return CxbxrImpl_Swap(Flags);
 }
 
 bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage) {
