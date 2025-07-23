@@ -4280,3 +4280,50 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVerticalBlankCallback)
 
     g_pXbox_VerticalBlankCallback = pCallback;
 }
+
+// LTCG specific D3DDevice_SetFlickerFilter function...
+// This uses a custom calling convention where parameter is passed in ESI
+// Test-case: Metal Wolf Chaos
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0__LTCG_esi1)
+(
+)
+{
+	dword_xt Filter;
+	__asm {
+		LTCG_PROLOGUE
+		mov  Filter, esi
+	}
+
+	EMUPATCH(D3DDevice_SetFlickerFilter)(Filter);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret
+	}
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetFlickerFilter
+// ******************************************************************
+void WINAPI xbox::EMUPATCH(D3DDevice_SetFlickerFilter)
+(
+    dword_xt         Filter
+)
+{
+	LOG_FUNC_ONE_ARG(Filter);
+
+	LOG_IGNORED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetSoftDisplayFilter
+// ******************************************************************
+void WINAPI xbox::EMUPATCH(D3DDevice_SetSoftDisplayFilter)
+(
+    bool_xt Enable
+)
+{
+	LOG_FUNC_ONE_ARG(Enable);
+
+	LOG_IGNORED();
+}

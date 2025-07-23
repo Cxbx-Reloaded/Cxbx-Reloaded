@@ -211,6 +211,7 @@ XBSYSAPI EXPORTNUM(2) xbox::void_xt NTAPI xbox::AvSendTVEncoderOption
 		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_FLICKER_FILTER:
+		// Test case: Is called from AvSetDisplayMode (kernel) and D3DDevice_SetFlickerFilter (D3D8) functions.
 		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_ZERO_MODE:
@@ -220,6 +221,7 @@ XBSYSAPI EXPORTNUM(2) xbox::void_xt NTAPI xbox::AvSendTVEncoderOption
 		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_ENABLE_LUMA_FILTER:
+		// Test case: Is called from AvSetDisplayMode (kernel) and D3DDevice_SetSoftDisplayFilter (D3D8) functions.
 		LOG_UNIMPLEMENTED();
 		break;
 	case AV_OPTION_GUESS_FIELD:
