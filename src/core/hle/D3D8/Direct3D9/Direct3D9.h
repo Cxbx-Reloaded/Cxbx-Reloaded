@@ -1364,6 +1364,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_MultiplyTransform)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2)();
+
+// ******************************************************************
 // * patch: D3DDevice_GetTransform
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetTransform)

@@ -349,6 +349,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform_0__LTCG_eax1_edx2,           ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2,      ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource_0__LTCG_edi1,                   (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice,                              (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::dword_xt, xbox::X_D3DPRESENT_PARAMETERS*, xbox::X_D3DDevice**));  \
@@ -6811,13 +6812,39 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
     CxbxImpl_SetTransform(State, pMatrix);
 }
 
+static void CxbxrImpl_MultiplyTransform(
+	xbox::X_D3DTRANSFORMSTATETYPE State,
+	CONST D3DMATRIX              *pMatrix
+)
+{
+	setTransformCount = 0;
+
+	// Trampoline to guest code, which we expect to call SetTransform
+	// If we find a case where the trampoline doesn't call SetTransform
+	// (or we can't detect the call) we will need to implement this
+	if (XB_TRMP(D3DDevice_MultiplyTransform) != nullptr) {
+		XB_TRMP(D3DDevice_MultiplyTransform)(State, pMatrix);
+	}
+	else {
+		__asm {
+			mov  eax, pMatrix
+			mov  ebx, State
+			call XB_TRMP(D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2)
+		}
+	}
+
+	if (setTransformCount == 0) {
+		LOG_TEST_CASE("MultiplyTransform did not appear to call SetTransform");
+	}
+}
+
 // ******************************************************************
 // * patch: D3DDevice_MultiplyTransform
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 (
     xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST D3DMATRIX      *pMatrix
+    CONST D3DMATRIX              *pMatrix
 )
 {
     LOG_FUNC_BEGIN
@@ -6825,17 +6852,44 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
         LOG_FUNC_ARG(pMatrix)
         LOG_FUNC_END;
 
-	setTransformCount = 0;
+	CxbxrImpl_MultiplyTransform(State, pMatrix);
+}
 
-    // Trampoline to guest code, which we expect to call SetTransform
-	// If we find a case where the trampoline doesn't call SetTransform
-	// (or we can't detect the call) we will need to implement this
-    XB_TRMP(D3DDevice_MultiplyTransform)(State, pMatrix);
+// ******************************************************************
+// * patch: D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2
+// ******************************************************************
+// Overload for logging
+static void D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2(
+    xbox::X_D3DTRANSFORMSTATETYPE State,
+    CONST D3DMATRIX              *pMatrix
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(State)
+        LOG_FUNC_ARG(pMatrix)
+        LOG_FUNC_END;
+}
 
-	if (setTransformCount == 0) {
-		LOG_TEST_CASE("MultiplyTransform did not appear to call SetTransform");
+// This uses a custom calling convention where parameter is passed in EBX, EAX
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2)()
+{
+	xbox::X_D3DTRANSFORMSTATETYPE State;
+    D3DMATRIX *pMatrix;
+    __asm {
+        LTCG_PROLOGUE
+        mov  State, eax
+        mov  pMatrix, ebx
+    }
+
+    // Log
+    D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2(State, pMatrix);
+
+	CxbxrImpl_MultiplyTransform(State, pMatrix);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret
 	}
-
 }
 
 // ******************************************************************
