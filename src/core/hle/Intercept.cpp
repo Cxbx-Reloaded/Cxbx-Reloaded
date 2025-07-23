@@ -208,8 +208,12 @@ void CDECL EmuRegisterSymbol(const char* library_str,
                              uint32_t library_flag,
                              uint32_t xref_index,
                              const char* symbol_str,
-                             uint32_t func_addr,
-                             uint32_t revision)
+                             xbaddr symbol_addr,
+                             uint32_t build_version,
+                             uint32_t symbol_type,
+                             uint32_t call_type,
+                             uint32_t param_count,
+                             const XbSDBSymbolParam* param_list)
 {
     // Ignore registered symbol in current database.
     uint32_t hasSymbol = g_SymbolAddresses[symbol_str];
@@ -218,8 +222,8 @@ void CDECL EmuRegisterSymbol(const char* library_str,
 
     // Output some details
     std::stringstream output;
-    output << "Symbol: 0x" << std::setfill('0') << std::setw(8) << std::hex << func_addr
-        << " -> " << symbol_str << " " << std::dec << revision;
+    output << "Symbol: 0x" << std::setfill('0') << std::setw(8) << std::hex << symbol_addr
+        << " -> " << symbol_str << " " << std::dec << build_version;
 
 #if 0 // TODO: XbSymbolDatabase - Need to create a structure for patch and stuff.
     bool IsXRef = OovpaTable->Oovpa->XRefSaveIndex != XRefNoSaveIndex;
@@ -286,7 +290,7 @@ void CDECL EmuRegisterSymbol(const char* library_str,
 
 	output << "\n";
 
-	g_SymbolAddresses[symbol_str] = func_addr;
+	g_SymbolAddresses[symbol_str] = symbol_addr;
     printf(output.str().c_str());
 }
 
@@ -297,22 +301,22 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
     g_EmuShared->GetFlagsLLE(&FlagsLLE);
 
     if ((FlagsLLE & LLE_GPU) == false
-        && !((XbLibScan & XbSymbolLib_D3D8) > 0
-            || (XbLibScan & XbSymbolLib_D3D8LTCG) > 0)) {
+        && !((XbLibScan & XBSDBLIB_D3D8) > 0
+            || (XbLibScan & XBSDBLIB_D3D8LTCG) > 0)) {
         bLLE_GPU = true;
         FlagsLLE ^= LLE_GPU;
         EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE GPU.");
     }
 
     if ((FlagsLLE & LLE_APU) == false
-        && (XbLibScan & XbSymbolLib_DSOUND) == 0) {
+        && (XbLibScan & XBSDBLIB_DSOUND) == 0) {
         bLLE_APU = true;
         FlagsLLE ^= LLE_APU;
         EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE APU.");
     }
 #if 0 // Reenable this when LLE USB actually works
 	if ((FlagsLLE & LLE_USB) == false
-		&& (XbLibScan & XbSymbolLib_XAPILIB) == 0) {
+		&& (XbLibScan & XBSDBLIB_XAPILIB) == 0) {
 		bLLE_USB = true;
 		FlagsLLE ^= LLE_USB;
 		EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE USB.");
@@ -346,16 +350,16 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			if (xdkVersion < BuildVersion) {
 				xdkVersion = BuildVersion;
 			}
-			XbLibFlag = XbSymbolDatabase_LibraryToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
+			XbLibFlag = XbSDB_LibraryToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
 			XbLibScan |= XbLibFlag;
 
 			// Keep certain library versions for plugin usage.
-			if ((XbLibFlag & (XbSymbolLib_D3D8 | XbSymbolLib_D3D8LTCG)) > 0) {
+			if ((XbLibFlag & (XBSDBLIB_D3D8 | XBSDBLIB_D3D8LTCG)) > 0) {
 				if (g_LibVersion_D3D8 < BuildVersion) {
 					g_LibVersion_D3D8 = BuildVersion;
 				}
 			}
-			else if ((XbLibFlag & XbSymbolLib_DSOUND) > 0) {
+			else if ((XbLibFlag & XBSDBLIB_DSOUND) > 0) {
 				g_LibVersion_DSOUND = BuildVersion;
 			}
 		}
@@ -363,8 +367,8 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		// Since XDK 4039 title does not have library version for DSOUND, let's check section header if it exists or not.
 		for (unsigned int v = 0; v < pXbeHeader->dwSections; v++) {
 			SectionName = (const char*)pSectionHeaders[v].dwSectionNameAddr;
-			if (strncmp(SectionName, Lib_DSOUND, 8) == 0) {
-				XbLibScan |= XbSymbolLib_DSOUND;
+			if (strncmp(SectionName, LIB_DSOUND, 8) == 0) {
+				XbLibScan |= XBSDBLIB_DSOUND;
 
 				// If DSOUND version is not set, we need to force set it.
 				if (g_LibVersion_DSOUND == 0) {
@@ -417,7 +421,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 		// Verify the version of the cache file against the Symbol Database version hash
 		const uint32_t SymbolDatabaseVersionHash = symbolCacheData.GetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, /*Default=*/0);
 
-		if (SymbolDatabaseVersionHash == XbSymbolDatabase_LibraryVersion()) {
+		if (SymbolDatabaseVersionHash == XbSDB_LibraryVersion()) {
 			g_SymbolCacheUsed = true;
 			CSimpleIniA::TNamesDepend symbol_names;
 
@@ -488,9 +492,9 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
         }
 #endif
 
-		XbSymbolDatabase_SetOutputMessage(EmuOutputMessage);
+        XbSDB_SetOutputMessage(EmuOutputMessage);
 
-		XbSymbolScan(pXbeHeader, EmuRegisterSymbol, false);
+        XbSDB_Scan(pXbeHeader, EmuRegisterSymbol, false);
 	}
 
 	std::printf("\n");
@@ -499,7 +503,7 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	symbolCacheData.Reset();
 
 	// Store Symbol Database version
-	symbolCacheData.SetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, XbSymbolDatabase_LibraryVersion(), nullptr, /*UseHex =*/false);
+	symbolCacheData.SetLongValue(section_info, sect_info_keys.SymbolDatabaseVersionHash, XbSDB_LibraryVersion(), nullptr, /*UseHex =*/false);
 
 	// Store Certificate Details
 	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.Name, tAsciiTitle);
