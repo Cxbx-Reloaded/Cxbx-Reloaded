@@ -1701,6 +1701,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunVertexStateShader)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_RunVertexStateShader_4__LTCG_esi2
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunVertexStateShader_4__LTCG_esi2)
+(
+    dword_xt Address
+);
+
+// ******************************************************************
 // * patch: D3DDevice_LoadVertexShaderProgram
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShaderProgram)
