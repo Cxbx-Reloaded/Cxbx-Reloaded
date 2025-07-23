@@ -6487,25 +6487,16 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay_0__LTCG)()
 	CxbxrImpl_EnableOverlay();
 }
 
-// ******************************************************************
-// * patch: D3DDevice_UpdateOverlay
-// ******************************************************************
-xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_UpdateOverlay)
+static void CxbxrImpl_UpdateOverlay
 (
-	X_D3DSurface *pSurface,
-	CONST RECT   *SrcRect,
-	CONST RECT   *DstRect,
-	bool_xt          EnableColorKey,
-	D3DCOLOR      ColorKey
+	xbox::X_D3DSurface *pSurface,
+	CONST RECT         *SrcRect,
+	CONST RECT         *DstRect,
+	xbox::bool_xt       EnableColorKey,
+	D3DCOLOR            ColorKey
 )
 {
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(pSurface)
-		LOG_FUNC_ARG(SrcRect)
-		LOG_FUNC_ARG(DstRect)
-		LOG_FUNC_ARG(EnableColorKey)
-		LOG_FUNC_ARG(ColorKey)
-		LOG_FUNC_END;
+	using namespace xbox;
 
 	// Reset and remember the overlay arguments, so our D3DDevice_Swap patch
 	// can correctly show this overlay surface data.
@@ -6527,6 +6518,76 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_UpdateOverlay)
 		}
 
 		g_OverlaySwap = g_Xbox_SwapData.Swap;
+	}
+}
+
+// ******************************************************************
+// * patch: D3DDevice_UpdateOverlay
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_UpdateOverlay)
+(
+	X_D3DSurface *pSurface,
+	CONST RECT   *SrcRect,
+	CONST RECT   *DstRect,
+	bool_xt       EnableColorKey,
+	D3DCOLOR      ColorKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSurface)
+		LOG_FUNC_ARG(SrcRect)
+		LOG_FUNC_ARG(DstRect)
+		LOG_FUNC_ARG(EnableColorKey)
+		LOG_FUNC_ARG(ColorKey)
+		LOG_FUNC_END;
+
+	CxbxrImpl_UpdateOverlay(pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
+}
+
+// ******************************************************************
+// * patch: D3DDevice_UpdateOverlay_16__LTCG_eax2
+// ******************************************************************
+static void D3DDevice_UpdateOverlay_16__LTCG_eax2
+(
+	xbox::X_D3DSurface *pSurface,
+	CONST RECT         *SrcRect,
+	CONST RECT         *DstRect,
+	xbox::bool_xt       EnableColorKey,
+	D3DCOLOR            ColorKey
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pSurface)
+		LOG_FUNC_ARG(SrcRect)
+		LOG_FUNC_ARG(DstRect)
+		LOG_FUNC_ARG(EnableColorKey)
+		LOG_FUNC_ARG(ColorKey)
+		LOG_FUNC_END;
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_UpdateOverlay_16__LTCG_eax2)
+(
+	X_D3DSurface *pSurface,
+	CONST RECT   *DstRect,
+	bool_xt       EnableColorKey,
+	D3DCOLOR      ColorKey
+)
+{
+	RECT* SrcRect;
+	__asm {
+		LTCG_PROLOGUE
+		mov  SrcRect, eax
+	}
+
+	// Log
+	D3DDevice_UpdateOverlay_16__LTCG_eax2(pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
+
+	CxbxrImpl_UpdateOverlay(pSurface, SrcRect, DstRect, EnableColorKey, ColorKey);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret  16
 	}
 }
 

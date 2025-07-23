@@ -999,7 +999,18 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay)
     X_D3DSurface *pSurface,
     CONST RECT   *SrcRect,
     CONST RECT   *DstRect,
-    bool_xt          EnableColorKey,
+    bool_xt       EnableColorKey,
+    D3DCOLOR      ColorKey
+);
+
+// ******************************************************************
+// * patch: D3DDevice_UpdateOverlay
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay_16__LTCG_eax2)
+(
+    X_D3DSurface *pSurface,
+    CONST RECT   *DstRect,
+    bool_xt       EnableColorKey,
     D3DCOLOR      ColorKey
 );
 
