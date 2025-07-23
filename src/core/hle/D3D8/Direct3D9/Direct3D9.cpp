@@ -4409,9 +4409,9 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
 // ******************************************************************
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
 (
-    int_xt         Register,
+    int_xt      Register,
     CONST PVOID pConstantData,
-    dword_xt       ConstantCount
+    dword_xt    ConstantCount
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
@@ -4420,6 +4420,42 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInli
     // but D3DDevice_SetVertexShaderConstant expects -96..95 range
     // so we adjust before forwarding
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3
+// ******************************************************************
+// Overload for logging
+static void D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3()
+{
+	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
+}
+
+// This uses a custom calling convention where parameter is passed in EBX, EDX, EAX
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3)()
+{
+	int_xt Register;
+	PVOID pConstantData;
+	dword_xt ConstantCount;
+	__asm {
+		LTCG_PROLOGUE
+		mov Register, ebx
+		mov pConstantData, edx
+		mov ConstantCount, eax
+	}
+
+	// Log
+	D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3();
+
+	// The XDK uses a macro to automatically adjust to 0..191 range
+	// but D3DDevice_SetVertexShaderConstant expects -96..95 range
+	// so we adjust before forwarding
+	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
+
+	__asm {
+        LTCG_EPILOGUE
+        ret
+    }
 }
 
 // ******************************************************************

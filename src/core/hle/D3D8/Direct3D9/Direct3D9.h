@@ -484,6 +484,11 @@ xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3)();
+
+// ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstantNotInlineFast
 // ******************************************************************
 xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
