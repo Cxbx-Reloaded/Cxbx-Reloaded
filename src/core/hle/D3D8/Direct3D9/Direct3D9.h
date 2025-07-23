@@ -737,6 +737,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_RunPushBuffer_4__LTCG_eax2
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer_4__LTCG_eax2)
+(
+    X_D3DPushBuffer *pPushBuffer
+);
+
+// ******************************************************************
 // * patch: D3DDevice_Clear
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_Clear)

@@ -4823,6 +4823,45 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 }
 
 // ******************************************************************
+// * patch: D3DDevice_RunPushBuffer_4__LTCG_eax2
+// ******************************************************************
+// Overload for logging
+static void D3DDevice_RunPushBuffer_4__LTCG_eax2
+(
+    xbox::X_D3DPushBuffer       *pPushBuffer,
+	xbox::X_D3DFixup            *pFixup
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPushBuffer)
+		LOG_FUNC_ARG(pFixup)
+		LOG_FUNC_END;
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer_4__LTCG_eax2)
+(
+    X_D3DPushBuffer *pPushBuffer
+)
+{
+	X_D3DFixup* pFixup;
+	__asm {
+		LTCG_PROLOGUE
+		mov  pFixup, eax
+	}
+
+	// Log
+	D3DDevice_RunPushBuffer_4__LTCG_eax2(pPushBuffer, pFixup);
+
+	EmuExecutePushBuffer(pPushBuffer, pFixup);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret  4
+	}
+}
+
+// ******************************************************************
 // * patch: D3DDevice_Clear
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
