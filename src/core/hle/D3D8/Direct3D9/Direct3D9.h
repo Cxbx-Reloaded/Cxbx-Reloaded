@@ -987,6 +987,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_EnableOverlay)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_EnableOverlay_0__LTCG
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_EnableOverlay_0__LTCG)();
+
+// ******************************************************************
 // * patch: D3DDevice_UpdateOverlay
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay)

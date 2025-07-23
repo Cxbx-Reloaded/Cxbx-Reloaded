@@ -6455,6 +6455,15 @@ void UpdateFixedFunctionVertexShaderState()
 	}
 }
 
+static void CxbxrImpl_EnableOverlay()
+{
+	// The Xbox D3DDevice_EnableOverlay call merely resets the active
+	// NV2A overlay state, it doesn't actually enable or disable anything.
+	// Thus, we should just reset our overlay state here too. A title will
+	// show new overlay data via D3DDevice_UpdateOverlay (see below).
+	g_OverlayProxy = {};
+}
+
 // ******************************************************************
 // * patch: D3DDevice_EnableOverlay
 // ******************************************************************
@@ -6464,12 +6473,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay)
 )
 {
 	LOG_FUNC_ONE_ARG(Enable);
-	
-	// The Xbox D3DDevice_EnableOverlay call merely resets the active
-	// NV2A overlay state, it doesn't actually enable or disable anything.
-	// Thus, we should just reset our overlay state here too. A title will
-	// show new overlay data via D3DDevice_UpdateOverlay (see below).
-	g_OverlayProxy = {};
+
+	CxbxrImpl_EnableOverlay();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_EnableOverlay_0__LTCG
+// ******************************************************************
+xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay_0__LTCG)()
+{
+	LOG_FUNC();
+
+	CxbxrImpl_EnableOverlay();
 }
 
 // ******************************************************************
