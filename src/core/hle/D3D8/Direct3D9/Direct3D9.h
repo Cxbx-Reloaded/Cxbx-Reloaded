@@ -843,10 +843,21 @@ xbox::void_xt WINAPI EMUPATCH(Lock2DSurface_16__LTCG_esi4_eax5)
 xbox::void_xt WINAPI EMUPATCH(Lock3DSurface)
 (
     X_D3DPixelContainer *pPixelContainer,
-    uint_xt				Level,
-	D3DLOCKED_BOX		*pLockedVolume,
-	D3DBOX				*pBox,
-	dword_xt				Flags
+    uint_xt              Level,
+    D3DLOCKED_BOX       *pLockedVolume,
+    D3DBOX              *pBox,
+    dword_xt             Flags
+);
+
+// ******************************************************************
+// * patch: Lock3DSurface_16__LTCG_eax4
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(Lock3DSurface_16__LTCG_eax4)
+(
+    X_D3DPixelContainer *pPixelContainer,
+    uint_xt              Level,
+    D3DLOCKED_BOX       *pLockedVolume,
+    dword_xt             Flags
 );
 
 #if 0 // patch disabled
