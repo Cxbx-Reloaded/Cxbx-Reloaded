@@ -209,8 +209,8 @@ void JVS_Init()
 	// Determine which version of JVS_SendCommand this title is using and derive the offset
 	// TODO: Extract this into a function and also locate PINSB
 	static int JvsSendCommandVersion = -1;
-	g_pPINSA = nullptr;
-	g_pPINSB = nullptr;
+	g_pPINSA = (DWORD*)GetXboxSymbolPointer("JVS_g_pPINSA");
+	g_pPINSB = (DWORD*)GetXboxSymbolPointer("JVS_g_pPINSB");
 
 	auto JvsSendCommandOffset1 = (uintptr_t)GetXboxSymbolPointer("JVS_SendCommand");
 	auto JvsSendCommandOffset2 = (uintptr_t)GetXboxSymbolPointer("JVS_SendCommand2");
@@ -218,26 +218,14 @@ void JVS_Init()
 
 	if (JvsSendCommandOffset1) {
 		JvsSendCommandVersion = 1;
-		g_pPINSA = *(DWORD**)(JvsSendCommandOffset1 + 0x2A0);
-		g_pPINSB = (DWORD*)((DWORD)g_pPINSA - 8);
 	}
 
 	if (JvsSendCommandOffset2) {
 		JvsSendCommandVersion = 2;
-		g_pPINSA = *(DWORD**)(JvsSendCommandOffset2 + 0x312);
-		g_pPINSB = (DWORD*)((DWORD)g_pPINSA - 8);
 	}
 
 	if (JvsSendCommandOffset3) {
 		JvsSendCommandVersion = 3;
-		g_pPINSA = *(DWORD**)(JvsSendCommandOffset3 + 0x307);
-		g_pPINSB = (DWORD*)((DWORD)g_pPINSA - 8);
-
-		if ((DWORD)g_pPINSA > XBE_MAX_VA) { 
-			// This was invalid, we must have the other varient of SendCommand3 (SEGABOOT)
-			g_pPINSA = *(DWORD**)(JvsSendCommandOffset3 + 0x302);
-			g_pPINSB = (DWORD*)((DWORD)g_pPINSA - 8);
-		}
 	}
 
 	// Set state to a sane initial default
