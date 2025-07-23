@@ -313,6 +313,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetRenderTarget,                          (xbox::X_D3DSurface**)                                                                                );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetRenderTarget2,                         (xbox::void_xt)                                                                                       );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_LightEnable,                              (xbox::dword_xt, xbox::bool_xt)                                                                       );  \
+    XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_LightEnable_4__LTCG_eax1,                 (xbox::bool_xt)                                                                                       );  \
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader,                         (xbox::dword_xt, xbox::dword_xt)                                                                      );*/\
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShaderProgram,                  (CONST xbox::dword_xt*, xbox::dword_xt)                                                               );*/\
   /*XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_LoadVertexShader_4__LTCG_eax1,            (xbox::dword_xt)                                                                                      );*/\
@@ -8604,13 +8605,25 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
 }
 
+static HRESULT CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable)
+{
+	LOG_INIT;
+
+	d3d8LightState.EnableLight(Index, bEnable);
+
+	HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");
+
+	return hRet;
+}
+
 // ******************************************************************
 // * patch: D3DDevice_LightEnable
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 (
-    dword_xt            Index,
-    bool_xt             bEnable
+    dword_xt Index,
+    bool_xt  bEnable
 )
 {
 	LOG_FUNC_BEGIN
@@ -8620,12 +8633,56 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable)
 
 	XB_TRMP(D3DDevice_LightEnable)(Index, bEnable);
 
-	d3d8LightState.EnableLight(Index, bEnable);
-
-    HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");    
+	HRESULT hRet = CxbxrImpl_LightEnable(Index, bEnable);
 
     return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_LightEnable_4__LTCG_eax1
+// ******************************************************************
+// Overload for logging
+static void D3DDevice_LightEnable_4__LTCG_eax1
+(
+    xbox::dword_xt Index,
+    xbox::bool_xt  bEnable
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Index)
+		LOG_FUNC_ARG(bEnable)
+		LOG_FUNC_END;
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable_4__LTCG_eax1)
+(
+    bool_xt bEnable
+)
+{
+	xbox::dword_xt Index;
+	HRESULT hRet;
+	__asm {
+		LTCG_PROLOGUE
+		mov  Index, eax
+	}
+
+	// Log
+	D3DDevice_LightEnable_4__LTCG_eax1(Index, bEnable);
+
+	__asm {
+		push bEnable
+		mov  eax, Index
+		call XB_TRMP(D3DDevice_LightEnable_4__LTCG_eax1)
+	}
+
+	hRet = CxbxrImpl_LightEnable(Index, bEnable);
+
+	__asm {
+		mov  eax, hRet
+		LTCG_EPILOGUE
+		ret  4
+	}
 }
 
 // SetRenderTarget can call CommonSetRenderTarget, nested call detection is required

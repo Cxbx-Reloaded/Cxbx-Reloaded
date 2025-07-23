@@ -1557,6 +1557,14 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_LightEnable_4__LTCG_eax1
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable_4__LTCG_eax1)
+(
+    bool_xt bEnable
+);
+
+// ******************************************************************
 // * patch: D3DDevice_Release
 // ******************************************************************
 xbox::ulong_xt WINAPI EMUPATCH(D3DDevice_Release)();
