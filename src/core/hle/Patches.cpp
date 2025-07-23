@@ -90,6 +90,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_EndVisibilityTest_0__LTCG_eax1", xbox::EMUPATCH(D3DDevice_EndVisibilityTest_0__LTCG_eax1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_FlushVertexCache", xbox::EMUPATCH(D3DDevice_FlushVertexCache), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetBackBuffer", xbox::EMUPATCH(D3DDevice_GetBackBuffer), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_GetBackBuffer_8__LTCG_eax1", xbox::EMUPATCH(D3DDevice_GetBackBuffer_8__LTCG_eax1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetBackBuffer2", xbox::EMUPATCH(D3DDevice_GetBackBuffer2), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetBackBuffer2_0__LTCG_eax1", xbox::EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetDisplayFieldStatus", xbox::EMUPATCH(D3DDevice_GetDisplayFieldStatus), PATCH_HLE_D3D),

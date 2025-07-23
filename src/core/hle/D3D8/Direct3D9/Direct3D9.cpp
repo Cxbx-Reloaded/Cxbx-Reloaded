@@ -304,6 +304,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader,                       (xbox::dword_xt)                                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_DeleteVertexShader_0__LTCG_eax1,          ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer,                            (xbox::int_xt, D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                              );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_GetBackBuffer_8__LTCG_eax1,               (D3DBACKBUFFER_TYPE, xbox::X_D3DSurface**)                                                            );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2,                           (xbox::int_xt)                                                                                        );  \
     XB_MACRO(xbox::X_D3DSurface*, WINAPI,     D3DDevice_GetBackBuffer2_0__LTCG_eax1,              ()                                                                                                    );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     D3DDevice_GetDepthStencilSurface,                   (xbox::X_D3DSurface**)                                                                                );  \
@@ -3889,6 +3890,15 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 	if (XB_TRMP(D3DDevice_GetBackBuffer) != nullptr) {
 		XB_TRMP(D3DDevice_GetBackBuffer)(BackBuffer, D3DBACKBUFFER_TYPE_MONO, &pXboxBackBuffer);
 	}
+	else if (XB_TRMP(D3DDevice_GetBackBuffer_8__LTCG_eax1) != nullptr) {
+		__asm {
+			lea  eax, pXboxBackBuffer
+			push eax
+			push D3DBACKBUFFER_TYPE_MONO
+			mov  eax, BackBuffer
+			call XB_TRMP(D3DDevice_GetBackBuffer_8__LTCG_eax1)
+		}
+	}
 	else if (XB_TRMP(D3DDevice_GetBackBuffer2) != nullptr) {
 		pXboxBackBuffer = XB_TRMP(D3DDevice_GetBackBuffer2)(BackBuffer);
 	}
@@ -3896,7 +3906,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 		__asm {
 			mov  eax, BackBuffer
 			call XB_TRMP(D3DDevice_GetBackBuffer2_0__LTCG_eax1)
-			mov pXboxBackBuffer, eax
+			mov  pXboxBackBuffer, eax
 		}
 	}
 
@@ -3995,14 +4005,48 @@ __declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuf
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
 (
-    int_xt                 BackBuffer,
+    int_xt              BackBuffer,
     D3DBACKBUFFER_TYPE  Type,
     X_D3DSurface      **ppBackBuffer
 )
 {
 	LOG_FORWARD("D3DDevice_GetBackBuffer2");
 
-    *ppBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
+	*ppBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
+}
+
+// ******************************************************************
+// * patch: D3DDevice_GetBackBuffer_8__LTCG_eax1
+// ******************************************************************
+// Overload for logging
+static void D3DDevice_GetBackBuffer_8__LTCG_eax1()
+{
+	LOG_FORWARD("D3DDevice_GetBackBuffer2");
+}
+
+// Test case: NBA 2K2
+// This uses a custom calling convention where parameter is passed in EAX
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer_8__LTCG_eax1)
+(
+    D3DBACKBUFFER_TYPE Type,
+    X_D3DSurface     **ppBackBuffer
+)
+{
+	int_xt BackBuffer;
+	__asm {
+		LTCG_PROLOGUE
+		mov  BackBuffer, eax
+	}
+
+	// Log
+	D3DDevice_GetBackBuffer_8__LTCG_eax1();
+
+	*ppBackBuffer = CxbxrImpl_GetBackBuffer2(BackBuffer);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret  8
+	}
 }
 
 bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr)
