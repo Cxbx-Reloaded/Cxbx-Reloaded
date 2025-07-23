@@ -357,6 +357,7 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax4_ecx6,           (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4__LTCG_eax1_ecx3,            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface_16__LTCG_esi4_eax5,                   (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, xbox::dword_xt)                         );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                     );  \
 
@@ -6686,10 +6687,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 (
 	X_D3DPixelContainer *pPixelContainer,
 	D3DCUBEMAP_FACES     FaceType,
-	uint_xt                 Level,
+	uint_xt              Level,
 	D3DLOCKED_RECT      *pLockedRect,
 	RECT                *pRect,
-	dword_xt                Flags
+	dword_xt             Flags
 )
 {
 	LOG_FUNC_BEGIN
@@ -6709,6 +6710,69 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 	ForceResourceRehash(pPixelContainer);
 }
 
+// ******************************************************************
+// * patch: Lock2DSurface_16__LTCG_esi4_eax5
+// ******************************************************************
+// Overload for logging
+static void Lock2DSurface_16__LTCG_esi4_eax5
+(
+	xbox::X_D3DPixelContainer *pPixelContainer,
+	D3DCUBEMAP_FACES           FaceType,
+	xbox::uint_xt              Level,
+	D3DLOCKED_RECT            *pLockedRect,
+	RECT                      *pRect,
+	xbox::dword_xt             Flags
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(pPixelContainer)
+		LOG_FUNC_ARG(FaceType)
+		LOG_FUNC_ARG(Level)
+		LOG_FUNC_ARG(pLockedRect)
+		LOG_FUNC_ARG(pRect)
+		LOG_FUNC_ARG(Flags)
+		LOG_FUNC_END;
+}
+
+// This uses a custom calling convention where parameter is passed in ESI, EAX
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface_16__LTCG_esi4_eax5)
+(
+	X_D3DPixelContainer *pPixelContainer,
+	D3DCUBEMAP_FACES     FaceType,
+	uint_xt              Level,
+	dword_xt             Flags
+)
+{
+	D3DLOCKED_RECT *pLockedRect;
+	RECT *pRect;
+	__asm {
+		LTCG_PROLOGUE
+		mov  pRect, eax
+		mov  pLockedRect, esi
+	}
+
+	// Log
+	Lock2DSurface_16__LTCG_esi4_eax5(pPixelContainer, FaceType, Level, pLockedRect, pRect, Flags);
+
+	// Pass through to the Xbox implementation of this function
+	__asm {
+		push Flags
+		mov  eax, pRect
+		mov  esi, pLockedRect
+		push Level
+		push FaceType
+		push pPixelContainer
+		call XB_TRMP(Lock2DSurface_16__LTCG_esi4_eax5)
+	}
+
+	// Mark the resource as modified
+	ForceResourceRehash(pPixelContainer);
+
+	__asm {
+		LTCG_EPILOGUE
+		ret  16
+	}
+}
 
 // ******************************************************************
 // * patch: Lock3DSurface
