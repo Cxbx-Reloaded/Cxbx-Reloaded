@@ -52,6 +52,8 @@
 #include <bitset>
 #include <filesystem>
 
+#include "nv2a_vsh_emulator.h"
+
 // External symbols :
 extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS]; // Declared in XbVertexBuffer.cpp
 extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
@@ -1624,4 +1626,45 @@ extern void EmuParseVshFunction
 	while (XboxVertexShaderDecoder::VshConvertToIntermediate(pCurToken, pShader)) {
 		pCurToken += X_VSH_INSTRUCTION_SIZE;
 	}
+}
+
+void CxbxrImpl_RunVertexStateShader(DWORD Address, CONST FLOAT *pData)
+{
+	// If pData is assigned, pData[0..3] is pushed towards nv2a transform data registers
+	// then sends the nv2a a command to launch the vertex shader function located at Address
+	if (Address >= NV2A_MAX_TRANSFORM_PROGRAM_LENGTH) {
+		LOG_TEST_CASE("Address out of bounds");
+		return;
+	}
+
+	NV2AState* dev = g_NV2A->GetDeviceState();
+	PGRAPHState* pg = &(dev->pgraph);
+
+	Nv2aVshProgram program = {}; // Note: This nulls program.steps
+	// TODO : Retain program globally and perform nv2a_vsh_parse_program only when
+	//        the address-range we're about to emulate was modified since last parse.
+	// TODO : As a suggestion for this, parse all NV2A_MAX_TRANSFORM_PROGRAM_LENGTH slots,
+	//        and here just point program.steps to global vsh_program_steps[Address].
+	Nv2aVshParseResult result = nv2a_vsh_parse_program(
+		&program, // Note : program.steps will be malloc'ed
+		GetCxbxVertexShaderSlotPtr(Address), // TODO : At some point, use pg->program_data[Address] here instead
+		NV2A_MAX_TRANSFORM_PROGRAM_LENGTH - Address);
+	if (result != NV2AVPR_SUCCESS) {
+		LOG_TEST_CASE("nv2a_vsh_parse_program failed");
+		// TODO : Dump Nv2aVshParseResult as string and program for debugging purposes
+		return;
+	}
+
+	Nv2aVshCPUXVSSExecutionState state_linkage;
+	Nv2aVshExecutionState state = nv2a_vsh_emu_initialize_xss_execution_state(
+		&state_linkage, (float*)pg->vsh_constants); // Note : This wil memset(state_linkage, 0)
+	if (pData != nullptr)
+		//if pData != nullptr, then it contains v0.xyzw, we shall copy the binary content directly.
+		memcpy(state_linkage.input_regs, pData, sizeof(state_linkage.input_regs));
+
+	nv2a_vsh_emu_execute_track_context_writes(&state, &program, pg->vsh_constants_dirty);
+	// Note: Above emulation's primary purpose is to update pg->vsh_constants and pg->vsh_constants_dirty
+	// therefor, nothing else needs to be done here, other than to cleanup
+
+	nv2a_vsh_program_destroy(&program); // Note: program.steps will be free'ed
 }
