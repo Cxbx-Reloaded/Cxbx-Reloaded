@@ -309,9 +309,18 @@ X_D3DSurface* WINAPI EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetBackBuffer)
 (
-    int_xt                 BackBuffer,
-    D3DBACKBUFFER_TYPE  Type,
-    X_D3DSurface      **ppBackBuffer
+    int_xt             BackBuffer,
+    D3DBACKBUFFER_TYPE Type,
+    X_D3DSurface     **ppBackBuffer
+);
+
+// ******************************************************************
+// * patch: D3DDevice_GetBackBuffer_8__LTCG_eax1
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetBackBuffer_8__LTCG_eax1)
+(
+    D3DBACKBUFFER_TYPE Type,
+    X_D3DSurface     **ppBackBuffer
 );
 
 // ******************************************************************
@@ -473,6 +482,11 @@ xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
     CONST PVOID pConstantData,
     dword_xt       ConstantCount
 );
+
+// ******************************************************************
+// * patch: D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline_0__LTCG_ebx1_edx2_eax3)();
 
 // ******************************************************************
 // * patch: D3DDevice_SetVertexShaderConstantNotInlineFast
@@ -737,6 +751,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_RunPushBuffer_4__LTCG_eax2
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer_4__LTCG_eax2)
+(
+    X_D3DPushBuffer *pPushBuffer
+);
+
+// ******************************************************************
 // * patch: D3DDevice_Clear
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_Clear)
@@ -820,10 +842,21 @@ xbox::void_xt WINAPI EMUPATCH(Lock2DSurface)
 (
     X_D3DPixelContainer *pPixelContainer,
     D3DCUBEMAP_FACES     FaceType,
-    uint_xt                 Level,
+    uint_xt              Level,
     D3DLOCKED_RECT      *pLockedRect,
     RECT                *pRect,
-    dword_xt                Flags
+    dword_xt             Flags
+);
+
+// ******************************************************************
+// * patch: Lock2DSurface_16__LTCG_esi4_eax5
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(Lock2DSurface_16__LTCG_esi4_eax5)
+(
+    X_D3DPixelContainer *pPixelContainer,
+    D3DCUBEMAP_FACES     FaceType,
+    uint_xt              Level,
+    dword_xt             Flags
 );
 
 // ******************************************************************
@@ -832,10 +865,21 @@ xbox::void_xt WINAPI EMUPATCH(Lock2DSurface)
 xbox::void_xt WINAPI EMUPATCH(Lock3DSurface)
 (
     X_D3DPixelContainer *pPixelContainer,
-    uint_xt				Level,
-	D3DLOCKED_BOX		*pLockedVolume,
-	D3DBOX				*pBox,
-	dword_xt				Flags
+    uint_xt              Level,
+    D3DLOCKED_BOX       *pLockedVolume,
+    D3DBOX              *pBox,
+    dword_xt             Flags
+);
+
+// ******************************************************************
+// * patch: Lock3DSurface_16__LTCG_eax4
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(Lock3DSurface_16__LTCG_eax4)
+(
+    X_D3DPixelContainer *pPixelContainer,
+    uint_xt              Level,
+    D3DLOCKED_BOX       *pLockedVolume,
+    dword_xt             Flags
 );
 
 #if 0 // patch disabled
@@ -965,6 +1009,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_EnableOverlay)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_EnableOverlay_0__LTCG
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_EnableOverlay_0__LTCG)();
+
+// ******************************************************************
 // * patch: D3DDevice_UpdateOverlay
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay)
@@ -972,7 +1021,18 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay)
     X_D3DSurface *pSurface,
     CONST RECT   *SrcRect,
     CONST RECT   *DstRect,
-    bool_xt          EnableColorKey,
+    bool_xt       EnableColorKey,
+    D3DCOLOR      ColorKey
+);
+
+// ******************************************************************
+// * patch: D3DDevice_UpdateOverlay
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay_16__LTCG_eax2)
+(
+    X_D3DSurface *pSurface,
+    CONST RECT   *DstRect,
+    bool_xt       EnableColorKey,
     D3DCOLOR      ColorKey
 );
 
@@ -1309,6 +1369,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_MultiplyTransform)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2)();
+
+// ******************************************************************
 // * patch: D3DDevice_GetTransform
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetTransform)
@@ -1492,6 +1557,14 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable)
 );
 
 // ******************************************************************
+// * patch: D3DDevice_LightEnable_4__LTCG_eax1
+// ******************************************************************
+xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable_4__LTCG_eax1)
+(
+    bool_xt bEnable
+);
+
+// ******************************************************************
 // * patch: D3DDevice_Release
 // ******************************************************************
 xbox::ulong_xt WINAPI EMUPATCH(D3DDevice_Release)();
@@ -1660,6 +1733,14 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunVertexStateShader)
 (
     dword_xt        Address,
     CONST float_xt *pData
+);
+
+// ******************************************************************
+// * patch: D3DDevice_RunVertexStateShader_4__LTCG_esi2
+// ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunVertexStateShader_4__LTCG_esi2)
+(
+    dword_xt Address
 );
 
 // ******************************************************************
