@@ -1305,6 +1305,16 @@ typedef struct _IRP
 IRP, *PIRP;
 
 // ******************************************************************
+// TYPE_OBJECT
+// * Generic reader for any type of objects.
+// ******************************************************************
+typedef struct _TYPE_OBJECT
+{
+	cshort_xt Type;
+	ushort_xt Size;
+} TYPE_OBJECT, * PTYPE_OBJECT;
+
+// ******************************************************************
 // DEVICE_OBJECT
 // ******************************************************************
 typedef struct _DEVICE_OBJECT

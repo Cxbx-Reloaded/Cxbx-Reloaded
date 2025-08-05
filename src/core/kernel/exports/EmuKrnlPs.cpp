@@ -403,10 +403,7 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 		ObfReferenceObject(eThread);
 
 		KeQuerySystemTime(&eThread->CreateTime);
-		RegisterXboxHandle(*ThreadHandle, handle);
-		HANDLE dupHandle = OpenThread(THREAD_ALL_ACCESS, FALSE, ThreadId);
-		assert(dupHandle);
-		RegisterXboxHandle(eThread->UniqueThread, dupHandle);
+		RegisterXboxObject(eThread, handle);
 
 		eThread->Tcb.Priority = GetThreadPriority(handle);
 		g_AffinityPolicy->SetAffinityXbox(handle);

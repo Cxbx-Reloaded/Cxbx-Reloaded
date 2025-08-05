@@ -29,6 +29,10 @@
 
 #include <optional>
 
-void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle);
-void RemoveXboxHandle(xbox::HANDLE xhandle);
+// Use GetObjectNativeHandle if certain object type is fully implemented, otherwise use GetNativeHandle instead.
 template<bool NoConversion = false> std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle);
+
+template<bool PartitionConversion = false> void RegisterXboxObject(xbox::PVOID xobject, HANDLE nhandle);
+void RemoveXboxObject(xbox::PVOID xobject);
+// Use GetObjectNativeHandle if certain object type is fully implemented, otherwise use GetNativeHandle instead.
+template<bool PartitionConversion = true> std::optional<HANDLE> GetObjectNativeHandle(xbox::PVOID xobject);

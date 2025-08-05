@@ -34,44 +34,18 @@
 #include "NativeHandle.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core/kernel/support/EmuFS.h"
+#include "EmuFile.h"
 
+// prevent name collisions
+namespace NtDll
+{
+	#include "core\kernel\support\EmuNtDll.h"
+};
 
-std::unordered_map<xbox::HANDLE, HANDLE> g_RegisteredHandles;
 std::shared_mutex g_MapMtx;
 
-void RegisterXboxHandle(xbox::HANDLE xhandle, HANDLE nhandle)
-{
-	std::unique_lock<std::shared_mutex> lck(g_MapMtx);
-	auto ret = g_RegisteredHandles.try_emplace(xhandle, nhandle);
-	if (ret.second == false) {
-		// This can happen when an ob handle has been destroyed, but then a thread switch happens before the first thread
-		// got a chance to remove the old handle from g_RegisteredHandles with RemoveXboxHandle
-		// Test case: dashboard
-		auto now = std::chrono::system_clock::now();
-		auto timeout = now + std::chrono::milliseconds(2000);
-		while (now <= timeout) {
-			lck.unlock();
-			std::this_thread::sleep_for(std::chrono::milliseconds(5));
-			lck.lock();
-			ret = g_RegisteredHandles.try_emplace(xhandle, nhandle);
-			if (ret.second) {
-				return;
-			}
-			now += std::chrono::milliseconds(5);
-		}
-
-		// If we reach here, it means that we could not insert the handle after more than two seconds of trying. This probably means
-		// that we have forgotten to call RemoveXboxHandle on the old handle, or the other thread is waiting/deadlocked, so this is a bug
-		CxbxrAbortEx(CXBXR_MODULE::CXBXR, "Failed to register new xbox handle after more than two seconds!");
-	}
-}
-
-void RemoveXboxHandle(xbox::HANDLE xhandle)
-{
-	std::unique_lock<std::shared_mutex> lck(g_MapMtx);
-	[[maybe_unused]] auto ret = g_RegisteredHandles.erase(xhandle);
-	assert(ret == 1);
-}
+std::unordered_map<xbox::PVOID, HANDLE> g_RegisteredObjects;
+std::unordered_map<xbox::PVOID, HANDLE> g_RegisteredPartitions;
 
 template<bool NoConversion>
 std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle)
@@ -96,15 +70,120 @@ std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle)
 		}
 	}
 
+	// Get object from xHandle bind, then return host's handle.
+	xbox::PVOID Object;
+	const auto& result = xbox::ObReferenceObjectByHandle(xhandle, xbox::zeroptr, &Object);
+	std::optional<HANDLE> hHandle;
+
+	if (X_NT_SUCCESS(result)) {
+		hHandle = GetObjectNativeHandle(Object);
+		xbox::ObfDereferenceObject(Object);
+	}
+	return hHandle;
+}
+template std::optional<HANDLE> GetNativeHandle<true>(xbox::HANDLE xhandle);
+template std::optional<HANDLE> GetNativeHandle<false>(xbox::HANDLE xhandle);
+
+std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
+{
+	constexpr size_t INITIAL_BUF_SIZE = MAX_PATH;
+	std::wstring path(INITIAL_BUF_SIZE, '\0');
+
+	DWORD size = GetFinalPathNameByHandleW(hFile, path.data(), INITIAL_BUF_SIZE, VOLUME_NAME_DOS);
+	if (size == 0) {
+		return L"";
+	}
+
+	// If the function fails because lpszFilePath is too small to hold the string plus the terminating null character,
+	// the return value is the required buffer size, in TCHARs. This value includes the size of the terminating null character.
+	if (size >= INITIAL_BUF_SIZE) {
+		path.resize(size);
+		size = GetFinalPathNameByHandleW(hFile, path.data(), size, VOLUME_NAME_DOS);
+	}
+	path.resize(size);
+
+	return path;
+}
+
+template<bool PartitionConversion>
+void RegisterXboxObject(xbox::PVOID xobject, HANDLE nhandle)
+{
+	std::unique_lock<std::shared_mutex> lck(g_MapMtx);
+	xbox::PTYPE_OBJECT ObjectType = reinterpret_cast<xbox::PTYPE_OBJECT>(xobject);
+	std::unordered_map<xbox::PVOID, HANDLE>* nHandleList;
+	// Check if type is device and does not have any remaining name length
+	if (PartitionConversion && ObjectType->Type == xbox::IO_TYPE_DEVICE) {
+		nHandleList = &g_RegisteredPartitions;
+	}
+	// Otherwise, perform normal routine
+	else {
+		nHandleList = &g_RegisteredObjects;
+	}
+
+	auto ret = nHandleList->try_emplace(xobject, nhandle);
+	if (ret.second == false) {
+		// This can happen when an ob handle has been destroyed, but then a thread switch happens before the first thread
+		// got a chance to remove the old handle from g_RegisteredHandles with RemoveXboxHandle
+		// Test case: dashboard
+		auto now = std::chrono::system_clock::now();
+		auto timeout = now + std::chrono::milliseconds(2000);
+		while (now <= timeout) {
+			lck.unlock();
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			lck.lock();
+			ret = nHandleList->try_emplace(xobject, nhandle);
+			if (ret.second) {
+				return;
+			}
+			now += std::chrono::milliseconds(5);
+		}
+		assert(ret.second == true);
+		// If we reach here, it means that we could not insert the handle after more than two seconds of trying. This probably means
+		// that we have forgotten to call RemoveXboxHandle on the old handle, or the other thread is waiting/deadlocked, so this is a bug
+		CxbxrAbortEx(CXBXR_MODULE::CXBXR, "Failed to register new xbox handle after more than two seconds!");
+	}
+}
+template void RegisterXboxObject<true>(xbox::PVOID xobject, HANDLE nhandle);
+template void RegisterXboxObject<false>(xbox::PVOID xobject, HANDLE nhandle);
+
+void RemoveXboxObject(xbox::PVOID xobject)
+{
+	std::unique_lock<std::shared_mutex> lck(g_MapMtx);
+	const auto& it1 = g_RegisteredObjects.find(xobject);
+	if (it1 != g_RegisteredObjects.end()) {
+		NtDll::NtClose(it1->second);
+		[[maybe_unused]] auto ret = g_RegisteredObjects.erase(xobject);
+		assert(ret == 1);
+	}
+	const auto& it2 = g_RegisteredPartitions.find(xobject);
+	if (it2 != g_RegisteredPartitions.end()) {
+		NtDll::NtClose(it2->second);
+		[[maybe_unused]] auto ret = g_RegisteredPartitions.erase(xobject);
+		assert(ret == 1);
+	}
+}
+
+template<bool PartitionConversion>
+std::optional<HANDLE> GetObjectNativeHandle(xbox::PVOID xobject)
+{
 	std::shared_lock<std::shared_mutex> lck(g_MapMtx);
-	const auto &it = g_RegisteredHandles.find(xhandle);
-	if (it == g_RegisteredHandles.end()) {
+	xbox::PTYPE_OBJECT ObjectType = reinterpret_cast<xbox::PTYPE_OBJECT>(xobject);
+	std::unordered_map<xbox::PVOID, HANDLE>* nHandleList;
+	// Check if type is device and does not have any remaining name length
+	if (PartitionConversion && ObjectType->Type == xbox::IO_TYPE_DEVICE) {
+		nHandleList = &g_RegisteredPartitions;
+	}
+	// Otherwise, perform normal routine
+	else {
+		nHandleList = &g_RegisteredObjects;
+	}
+	const auto& it = nHandleList->find(xobject);
+	if (it == nHandleList->end()) {
 		return std::nullopt;
 	}
 	else {
 		return it->second;
 	}
 }
-
-template std::optional<HANDLE> GetNativeHandle<true>(xbox::HANDLE xhandle);
-template std::optional<HANDLE> GetNativeHandle<false>(xbox::HANDLE xhandle);
+template std::optional<HANDLE> GetObjectNativeHandle<true>(xbox::PVOID xobject);
+template std::optional<HANDLE> GetObjectNativeHandle<false>(xbox::PVOID xobject);
