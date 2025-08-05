@@ -401,18 +401,14 @@ typedef enum _FILE_INFORMATION_CLASS
     FileMailslotQueryInformation,
     FileMailslotSetInformation,
     FileCompressionInformation,
-    FileCopyOnWriteInformation,
+    FileObjectIdInformation,
     FileCompletionInformation,
     FileMoveClusterInformation,
     FileQuotaInformation,
     FileReparsePointInformation,
     FileNetworkOpenInformation,
-    FileObjectIdInformation,
+    FileAttributeTagInformation,
     FileTrackingInformation,
-    FileOleDirectoryInformation,
-    FileContentIndexInformation,
-    FileInheritContentIndexInformation,
-    FileOleInformation,
     FileMaximumInformation
 }
 FILE_INFORMATION_CLASS, *PFILE_INFORMATION_CLASS;

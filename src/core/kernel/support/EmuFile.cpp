@@ -45,13 +45,10 @@
 #include "EmuShared.h"
 #include "common/FilePaths.hpp"
 #include "common/cxbxr.hpp"
+#include "EmuDisk.hpp"
+#include "EmuCdRom.hpp"
 
 #include <filesystem>
-
-// partition emulation directory handles
-HANDLE g_hCurDir_hack = NULL; // HACK: We should not be depending on this variable. Instead, we should fix/implement Ob/Io objects such as IoCreateDevice.
-
-HANDLE g_DiskBasePathHandle;
 
 // Default Xbox Partition Table
 #define PE_PARTFLAGS_IN_USE	0x80000000
@@ -184,32 +181,11 @@ static bool CxbxrIsPathInsideEmuMu(const std::filesystem::path& path)
 	return CxbxrIsPathInsideRootPath(path, g_MuBasePath);
 }
 
-DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile)
+void CxbxCreatePartitionHeaderFile(const std::filesystem::path& filename, bool partition0, std::size_t size)
 {
-	const std::filesystem::path path = CxbxGetFinalPathNameByHandle(hFile);
-
-	if (CxbxrIsPathInsideEmuDisk(path)) {
-		return DeviceType::Harddisk0;
-	}
-
-	if (CxbxrIsPathInsideEmuMu(path)) {
-		return DeviceType::MU;
-	}
-
-	EmuDirPath hybrid_path;
-	FindEmuDirPathByDevice(DeviceCdrom0, hybrid_path);
-	if (!hybrid_path.HostDirPath.empty() && CxbxrIsPathInsideRootPath(path, hybrid_path.HostDirPath)) {
-		return DeviceType::Cdrom0;
-	}
-
-	return DeviceType::Invalid;
-}
-
-void CxbxCreatePartitionHeaderFile(std::string filename, bool partition0 = false, std::size_t size = 512 * ONE_KB)
-{
-	HANDLE hf = CreateFile(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+	HANDLE hf = CreateFileW(filename.c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
 	if (!hf) {
-		CxbxrAbort("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename.c_str());
+		CxbxrAbort("CxbxCreatePartitionHeaderFile Failed\nUnable to create file: %s (%s)", filename.u8string().c_str());
 		return;
 	}
 
@@ -267,7 +243,7 @@ std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 
 	DWORD size = GetFinalPathNameByHandleW(hFile, path.data(), INITIAL_BUF_SIZE, VOLUME_NAME_DOS);
 	if (size == 0) {
-		CxbxrAbort("CxbxGetPartitionNumberFromHandle Failed:\nUnable to determine path for HANDLE 0x%08X", hFile);
+		return L"";
 	}
 
 	// If the function fails because lpszFilePath is too small to hold the string plus the terminating null character,
@@ -279,69 +255,6 @@ std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
 	path.resize(size);
 
 	return path;
-}
-
-static int CxbxGetPartitionNumber(const std::wstring_view path)
-{
-	const std::wstring_view partitionString = L"\\EmuDisk\\Partition";
-	const size_t pos = path.rfind(partitionString);
-	if (pos == std::string::npos) {
-		return 0;
-	}
-	const std::wstring_view partitionNumberString = path.substr(pos + partitionString.length(), 1);
-
-	// wcstol returns 0 on non-numeric characters, so we don't need to error check here
-	return wcstol(partitionNumberString.data(), nullptr, 0);
-}
-
-int CxbxGetPartitionNumberFromPath(const std::wstring_view path)
-{
-	return CxbxGetPartitionNumber(path);
-}
-
-int CxbxGetPartitionNumberFromHandle(HANDLE hFile)
-{
-	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
-	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
-
-	return CxbxGetPartitionNumber(path);
-}
-
-std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile)
-{
-	// Get which partition number is being accessed, by parsing the filename and extracting the last portion 
-	const std::wstring path = CxbxGetFinalPathNameByHandle(hFile);
-
-	std::wstring partitionPath;
-	const std::wstring_view partitionString = L"\\EmuDisk\\Partition";
-	const size_t pos = path.rfind(partitionString);
-	if (pos != std::string::npos) {
-		partitionPath = path.substr(0, path.find(partitionString) + partitionString.length() + 1);
-	}
-	return partitionPath;
-}
-
-void CxbxFormatPartitionByHandle(HANDLE hFile)
-{
-	const std::filesystem::path partitionPath = CxbxGetPartitionDataPathFromHandle(hFile);
-
-	// Sanity check, make sure we are actually deleting something within the Cxbx-Reloaded folder
-	if (!CxbxrIsPathInsideEmuDisk(partitionPath)) {
-		EmuLog(LOG_LEVEL::WARNING, "Attempting to format a path that is not within a Cxbx-Reloaded data folder... Ignoring!\n");
-		return;
-	}
-
-
-	// Format the partition, by iterating through the contents and removing all files/folders within
-	// Previously, we deleted and re-created the folder, but that caused permission issues for some users
-	std::error_code er;
-	for (const auto& directoryEntry : std::filesystem::directory_iterator(partitionPath, er)) {
-		if (!er) {
-			std::filesystem::remove_all(directoryEntry, er);
-		}
-	}
-
-	printf("Formatted EmuDisk Partition%d\n", CxbxGetPartitionNumberFromHandle(hFile));
 }
 
 void NTAPI CxbxIoApcDispatcher(PVOID ApcContext, xbox::PIO_STATUS_BLOCK /*IoStatusBlock*/, xbox::ulong_xt Reserved)
@@ -386,7 +299,8 @@ const std::string DevicePrefix = "\\Device";
 const std::string DeviceCdrom0 = DevicePrefix + "\\CdRom0";
 const std::string DeviceHarddisk0 = DevicePrefix + "\\Harddisk0";
 const std::string DeviceMU = DevicePrefix + "\\MU_";
-const std::string DeviceHarddisk0PartitionPrefix = DevicePrefix + "\\Harddisk0\\partition";
+const std::string PartitionPrefix = "Partition";
+const std::string DeviceHarddisk0PartitionPrefix = DevicePrefix + "\\Harddisk0\\" + PartitionPrefix;
 const std::string DeviceHarddisk0Partition0 = DeviceHarddisk0PartitionPrefix + "0"; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
 const std::string DeviceHarddisk0Partition1 = DeviceHarddisk0PartitionPrefix + "1"; // Data partition. Contains TDATA and UDATA folders.
 const std::string DeviceHarddisk0Partition2 = DeviceHarddisk0PartitionPrefix + "2"; // Shell partition. Contains Dashboard (cpxdash.xbe, evoxdash.xbe or xboxdash.xbe)
@@ -417,79 +331,38 @@ const std::string DeviceMU5 = DeviceMU + "5";
 const std::string DeviceMU6 = DeviceMU + "6";
 const std::string DeviceMU7 = DeviceMU + "7"; // 7 = Largest possible mu number
 
-EmuNtSymbolicLinkObject* NtSymbolicLinkObjects['Z' - 'A' + 1];
-std::vector<XboxDevice> Devices;
-
-EmuHandle::EmuHandle(EmuNtObject* ntObject)
+void CxbxrSetupDrives(std::filesystem::path& CdRomPath, int BootFlags)
 {
-	NtObject = ntObject;
-}
+	// All consoles has HDD
+	// (Chihiro may not have device , needs investigation where saved data are at.)
+	EmuDiskSetup();
 
-std::unordered_set<EmuHandle*> EmuHandle::EmuHandleLookup = {};
-std::shared_mutex EmuHandle::EmuHandleLookupLock = {};
-
-EmuHandle* EmuHandle::CreateEmuHandle(EmuNtObject* ntObject) {
-	auto emuHandle = new EmuHandle(ntObject);
-
-	// Register EmuHandle
-	{
-		std::unique_lock scopedLock(EmuHandleLookupLock);
-		EmuHandleLookup.insert(emuHandle);
+	// Chihiro has Media Board, contain emulated CD-ROM, and JVS
+	if (g_bIsChihiro) {
+		// TODO: Implement Media Board (which also has symbolic link to CD-ROM device)
+		//       (This functionality already has been implemented by RadWolfie, expect to see this in chihiro branch soon)
+	}
+	// Other type of consoles has CD-ROM and Memory Unit
+	else {
+		EmuCdRomSetup(CdRomPath, BootFlags);
 	}
 
-	return emuHandle;
-}
+#if 0 // Disabled as we are going to use newer method see above functions.
+	// From CxbxrKrnlRegisterDevicePaths function which has been remove.
 
-NTSTATUS EmuHandle::NtClose()
-{
-	auto status = NtObject->NtClose();
+	CxbxRegisterDeviceHostPath(DevicePrefix + "\\Chihiro", g_DiskBasePath + "Chihiro");
 
-	// Unregister the handle
-	if (status == STATUS_SUCCESS) {
-		std::unique_lock scopedLock(EmuHandleLookupLock);
-		EmuHandleLookup.erase(this);
-	}
-
-	return status;
-}
-
-bool EmuHandle::IsEmuHandle(HANDLE Handle)
-{
-	std::shared_lock scopedLock(EmuHandleLookupLock);
-	auto iter = EmuHandleLookup.find((EmuHandle*) Handle);
-	return !(iter == EmuHandleLookup.end());
-}
-
-NTSTATUS EmuHandle::NtDuplicateObject(PHANDLE TargetHandle, DWORD Options)
-{
-	*TargetHandle = NtObject->NtDuplicateObject(Options)->NewHandle();
-	return X_STATUS_SUCCESS;
-}
-
-EmuNtObject::EmuNtObject()
-{
-	RefCount = 1;
-}
-
-HANDLE EmuNtObject::NewHandle()
-{
-	RefCount++;
-	return EmuHandle::CreateEmuHandle(this);
-}
-
-NTSTATUS EmuNtObject::NtClose()
-{
-	if (--RefCount <= 0) {
-		delete this;
-	}
-
-	return X_STATUS_SUCCESS;
-}
-
-EmuNtObject* EmuNtObject::NtDuplicateObject(DWORD Options)
-{
-	RefCount++;
-	return this;
+	// TODO: Create EmuMu source file and move below into there.
+	// Create the MU directories and the bin files
+	CxbxRegisterDeviceHostPath(DeviceMU0, g_MuBasePath + "F", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU1, g_MuBasePath + "G", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU2, g_MuBasePath + "H", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU3, g_MuBasePath + "I", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU4, g_MuBasePath + "J", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU5, g_MuBasePath + "K", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU6, g_MuBasePath + "L", false, sizeof(FATX_SUPERBLOCK));
+	CxbxRegisterDeviceHostPath(DeviceMU7, g_MuBasePath + "M", false, sizeof(FATX_SUPERBLOCK));
+#endif
 }
 
 std::wstring string_to_wstring(std::string const & src)
@@ -533,180 +406,15 @@ void replace_all(std::string& str, const std::string& from, const std::string& t
 	}
 }
 
-NTSTATUS CxbxConvertFilePath(
-	std::string RelativeXboxPath,
-	OUT std::wstring &RelativeHostPath,
-	IN OUT NtDll::HANDLE *RootDirectory,
-	std::string aFileAPIName,
-	bool partitionHeader)
-{
-	std::string OriginalPath = RelativeXboxPath;
-	std::string RelativePath = RelativeXboxPath;
-	std::string XboxFullPath;
-	std::string HostPath;
-	EmuNtSymbolicLinkObject* NtSymbolicLinkObject = nullptr;
-	EmuDirPath find_path;
-
-	// Always trim '\??\' off :
-	if (RelativePath.compare(0, DrivePrefix.length(), DrivePrefix.c_str()) == 0)
-		RelativePath.erase(0, 4);
-
-	// Check if we were called from a File-handling API :
-	if (!aFileAPIName.empty()) {
-		if (RelativePath.compare(DriveMbrom0) == 0) {
-			*RootDirectory = g_DiskBasePathHandle;
-			HostPath = g_DiskBasePath;
-			RelativePath = MediaBoardSegaBoot0;
-		}
-		else if (RelativePath.compare(DriveMbrom1) == 0) {
-			*RootDirectory = g_DiskBasePathHandle;
-			HostPath = g_DiskBasePath;
-			RelativePath = MediaBoardSegaBoot1;
-		}
-		else if (!partitionHeader) {
-			// Check if the path starts with a volume indicator :
-			if ((RelativePath.length() >= 2) && (RelativePath[1] == ':')) {
-				// Look up the symbolic link information using the drive letter :
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByDriveLetter(RelativePath[0]);
-				RelativePath.erase(0, 2); // Remove 'C:'
-
-				// If the remaining path starts with a ':', remove it (to prevent errors) :
-				if ((RelativePath.length() > 0) && (RelativePath[0] == ':'))
-					RelativePath.erase(0, 1);  // xbmp needs this, as it accesses 'e::\'
-			}
-			else if (RelativePath[0] == '$') {
-				if (RelativePath.compare(0, 5, "$HOME") == 0) // "xbmp" needs this
-				{
-					NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
-					RelativePath.erase(0, 5); // Remove '$HOME'
-				}
-				else
-					CxbxrAbort(("Unsupported path macro : " + OriginalPath).c_str());
-			}
-			// Check if the path starts with a relative path indicator :
-			else if (RelativePath[0] == '.') {// "4x4 Evo 2" needs this
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
-				RelativePath.erase(0, 1); // Remove the '.'
-			}
-			else {
-				// TODO : How should we handle accesses to the serial: (?semi-)volume?
-				if (RelativePath.compare(0, 7, "serial:") == 0) {
-					return STATUS_UNRECOGNIZED_VOLUME;
-				}
-
-				// TODO: CDROM0: need access to raw file handle which doesn't exist in file system.
-				//       Similar concept with serial: and perhaps mediaboards.
-				// Raw handle access to the CDROM0:
-				/*if (RelativePath.compare(0, 7, "CDROM0:") == 0) {
-					// we should have a return and likely forward to special handler function, including serial: above.
-					return ?;
-				}*/
-
-				// The path seems to be a device path, look it up :
-				FindEmuDirPathByDevice(RelativePath, find_path);
-				// Fixup RelativePath path here
-				if (!find_path.HostDirPath.empty()) {
-					RelativePath.erase(0, find_path.XboxDirPath.length()); // Remove '\Device\Harddisk0\Partition2'
-				}
-			}
-
-			if (NtSymbolicLinkObject != nullptr || !find_path.HostDirPath.empty()) {
-				// If found, then we can skip misc checks below.
-			}
-			// Check if the path accesses a partition from Harddisk0 :
-			else if (_strnicmp(RelativePath.c_str(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0) {
-				XboxFullPath = RelativePath;
-				// Remove Harddisk0 prefix, in the hope that the remaining path might work :
-				RelativePath.erase(0, DeviceHarddisk0.length() + 1);
-				// And set Root to the folder containing the partition-folders :
-				*RootDirectory = g_DiskBasePathHandle;
-				HostPath = g_DiskBasePath;
-			}
-			// NOTE: RootDirectory cannot be ignored.
-			// Any special handling for it should be done below.
-			else if (*RootDirectory == nullptr) {
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
-			}
-			else if (*RootDirectory == ObDosDevicesDirectory()) {
-				// This is a special handle that tells the API that this is a DOS device
-				// We can safely remove it and forward to the Xbe directory.
-				// Test case GTA3
-				NtSymbolicLinkObject = FindNtSymbolicLinkObjectByRootHandle(g_hCurDir_hack);
-			}
-			else if (*RootDirectory == ObWin32NamedObjectsDirectory()) {
-				// NOTE: A handle of -4 on the Xbox signifies the path should be in the BaseNamedObjects namespace.
-				// This handle doesn't exist on Windows, so we prefix the name instead. (note from LukeUsher)
-				// Handle special root directory constants
-				*RootDirectory = NULL;
-
-				if (OriginalPath.size() == 0){
-					RelativePath = "\\BaseNamedObjects";
-				} else {
-					RelativePath = "\\BaseNamedObjects\\" + OriginalPath;
-				}
-			}
-			// else {} // NOTE: Allow RootDirectory handle to take control of relative path.
-			// Test-case: Turok Evolution
-
-			if (NtSymbolicLinkObject != nullptr) {
-				HostPath = NtSymbolicLinkObject->HostSymbolicLinkPath;
-
-				XboxFullPath = NtSymbolicLinkObject->XboxSymbolicLinkPath;
-
-				// If accessing a partition as a directly, set the root directory handle and keep relative path as is
-				*RootDirectory = NtSymbolicLinkObject->RootDirectoryHandle;
-			}
-			else if (!find_path.HostDirPath.empty()) {
-				HostPath = find_path.HostDirPath;
-				XboxFullPath = find_path.XboxDirPath;
-				*RootDirectory = find_path.HostDirHandle;
-			}
-		} else {
-			*RootDirectory = g_DiskBasePathHandle;
-			HostPath = g_DiskBasePath;
-			RelativePath = RelativeXboxPath.substr(DeviceHarddisk0.length()) + ".bin";
-		}
-
-		// If the remaining path starts with a '\', remove it (to prevent working in a native root) :
-		if ((RelativePath.length() > 0) && (RelativePath[0] == '\\')) {
-			RelativePath.erase(0, 1);
-			// And if needed, add it to the host path instead :
-			if (HostPath.back() != '\\')
-				HostPath.append(1, '\\');
-		}
-
-		// Lastly, remove any '\\' sequences in the string (this should fix the problem with Azurik game saves)
-		replace_all( RelativePath, "\\\\", "\\" );
-
-		if (g_bPrintfOn) {
-			EmuLog(LOG_LEVEL::DEBUG, "%s Corrected path...", aFileAPIName.c_str());
-			EmuLog(LOG_LEVEL::DEBUG, "  Org:\"%s\"", OriginalPath.c_str());
-			if (_strnicmp(HostPath.c_str(), g_DiskBasePath.c_str(), g_DiskBasePath.length()) == 0) {
-				EmuLog(LOG_LEVEL::DEBUG, "  New:\"$CxbxPath\\%s%s\"", (HostPath.substr(g_DiskBasePath.length(), std::string::npos)).c_str(), RelativePath.c_str());
-			}
-			else
-				EmuLog(LOG_LEVEL::DEBUG, "  New:\"$XbePath\\%s\"", RelativePath.c_str());
-		}
-	}
-	else
-	{
-		// For non-file API calls, prefix with '\??\' again :
-		RelativePath = DrivePrefix + RelativePath;
-		*RootDirectory = 0;
-	}
-
-	// Convert the relative path to unicode
-	RelativeHostPath = string_to_wstring(RelativePath);
-
-	return STATUS_SUCCESS;
-}
-
 NTSTATUS CxbxObjectAttributesToNT(
-	xbox::POBJECT_ATTRIBUTES ObjectAttributes, 
-	OUT NativeObjectAttributes& nativeObjectAttributes, 
+	xbox::POBJECT_ATTRIBUTES ObjectAttributes,
+	OUT NativeObjectAttributes& nativeObjectAttributes,
 	const std::string aFileAPIName,
 	bool partitionHeader)
 {
+#if 0
+	return X_STATUS_INVALID_PARAMETER;
+#else
 	if (ObjectAttributes == NULL)
 	{
 		// When the pointer is nil, make sure we pass nil to Windows too :
@@ -724,11 +432,14 @@ NTSTATUS CxbxObjectAttributesToNT(
 
 	// Is there a filename API given?
 	if (aFileAPIName.size() > 0) {
+#if 0
 		// Then interpret the ObjectName as a filename, and update it to host relative :
 		NTSTATUS result = CxbxConvertFilePath(ObjectName, /*OUT*/RelativeHostPath, /*IN OUT*/&RootDirectory, aFileAPIName, partitionHeader);
 		if (FAILED(result)) {
 			return result;
 		}
+#endif
+		return X_STATUS_INVALID_PARAMETER;
 	}
 	else {
 		// When not called from a file-handling API, just convert the ObjectName to a wide string :
@@ -744,335 +455,28 @@ NTSTATUS CxbxObjectAttributesToNT(
 	nativeObjectAttributes.NtObjAttrPtr = &nativeObjectAttributes.NtObjAttr;
 
 	return STATUS_SUCCESS;
+#endif
 }
 
-int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath)
-{
-	for (size_t i = 0; i < Devices.size(); i++)
-		if (_strnicmp(XboxDevicePath, Devices[i].XboxDevicePath.c_str(), Devices[i].XboxDevicePath.length()) == 0)
-			return(i);
-
-	return -1;
-}
-
-int CxbxDeviceIndexByHostPath(const char * HostDevicePath)
-{
-	for (size_t i = 0; i < Devices.size(); i++)
-		if (_strnicmp(HostDevicePath, Devices[i].HostDevicePath.c_str(), Devices[i].HostDevicePath.length()) == 0)
-			return(i);
-
-	return -1;
-}
-
-XboxDevice *CxbxDeviceByDevicePath(const std::string_view XboxDevicePath)
-{
-	int DeviceIndex = CxbxDeviceIndexByDevicePath(XboxDevicePath.data());
-	if (DeviceIndex >= 0)
-		return &Devices[DeviceIndex];
-
-	return nullptr;
-}
-
-XboxDevice *CxbxDeviceByHostPath(const std::string_view HostDevicePath)
-{
-	int DeviceIndex = CxbxDeviceIndexByHostPath(HostDevicePath.data());
-	if (DeviceIndex >= 0)
-		return &Devices[DeviceIndex];
-
-	return nullptr;
-}
-
-// Convert Xbox XBE Path to Host Path
+// Convert Xbox Path to Host Path
 std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath)
 {
-	HANDLE rootDirectoryHandle = nullptr;
-	std::wstring wXbePath;
-	// We pretend to come from NtCreateFile to force symbolic link resolution
-	CxbxConvertFilePath(XboxDevicePath.data(), wXbePath, &rootDirectoryHandle, "NtCreateFile");
-	std::filesystem::path XbePath;
-
-	// If the rootDirectoryHandle is not null, we have a relative path
-	// We need to prepend the path of the root directory to get a full DOS path
-	if (rootDirectoryHandle != nullptr) {
-		WCHAR directoryPathBuffer[MAX_PATH];
-		GetFinalPathNameByHandleW(rootDirectoryHandle, directoryPathBuffer, MAX_PATH, VOLUME_NAME_DOS);
-		XbePath = directoryPathBuffer;
-		XbePath /= wXbePath;
+	std::string HostPath;
+	if (_strnicmp(DeviceHarddisk0.c_str(), XboxDevicePath.data(), DeviceHarddisk0.size()) == 0) {
+		HostPath = g_DiskBasePath + XboxDevicePath.substr(DeviceHarddisk0.size() + 1).data();
 	}
-	else {
-		XbePath = wXbePath;
+	else if (_strnicmp(DeviceCdrom0.c_str(), XboxDevicePath.data(), DeviceCdrom0.size()) == 0) {
+		HostPath = g_TitleMountPath + XboxDevicePath.substr(DeviceCdrom0.size()).data();
 	}
-
-	return XbePath.string();
+	// TODO: Should we check for Memory Unit? I think we don't need to.
+	return HostPath;
 }
-
-int CxbxRegisterDeviceHostPath(const std::string_view XboxDevicePath, std::string HostDevicePath, bool IsFile, std::size_t size)
-{
-	XboxDevice newDevice;
-	newDevice.XboxDevicePath = XboxDevicePath;
-	newDevice.HostDevicePath = HostDevicePath;
-
-	bool succeeded{ false };
-
-	// All HDD and MU partitions have a .bin file to allow direct file io on the partition info
-	if (_strnicmp(XboxDevicePath.data(), DeviceHarddisk0PartitionPrefix.c_str(), DeviceHarddisk0PartitionPrefix.length()) == 0 ||
-		_strnicmp(XboxDevicePath.data(), DeviceMU.c_str(), DeviceMU.length()) == 0) {
-		std::string partitionHeaderPath = HostDevicePath + ".bin";
-		if (!std::filesystem::exists(partitionHeaderPath)) {
-			CxbxCreatePartitionHeaderFile(partitionHeaderPath, XboxDevicePath == DeviceHarddisk0Partition0, size);
-		}
-
-		succeeded = true;
-	}
-
-	// If this path is not a raw file partition, create the directory for it
-	if (!IsFile) {
-		std::error_code error; // We do not want filesystem to throw an exception on directory creation. Instead, listen for return value to fail.
-		succeeded = std::filesystem::exists(HostDevicePath) || std::filesystem::create_directory(HostDevicePath, error);
-	}
-
-	if (succeeded) {
-		newDevice.HostRootHandle = CreateFile(newDevice.HostDevicePath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-		Devices.push_back(newDevice);
-		return static_cast<int>(Devices.size()) - 1;
-	}
-
-	EmuLog(LOG_LEVEL::FATAL, "Failed to register host device (%s)\n", HostDevicePath.c_str());
-
-	return -1;
-}
-
-
-xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath)
-{
-	xbox::ntstatus_xt result = 0;
-	EmuNtSymbolicLinkObject* SymbolicLinkObject = FindNtSymbolicLinkObjectByName(SymbolicLinkName);
-	
-	// If symbolic link exist, return object name collsion. Do NOT delete existing symlink object!
-	if (SymbolicLinkObject != NULL) {
-		return X_STATUS_OBJECT_NAME_COLLISION;
-	}
-
-	// Now (re)create a symbolic link object, and initialize it with the new definition :
-	SymbolicLinkObject = new EmuNtSymbolicLinkObject();
-	result = SymbolicLinkObject->Init(SymbolicLinkName, FullPath);
-
-	if (result != X_STATUS_SUCCESS) {
-		SymbolicLinkObject->NtClose();
-	}
-	// TODO: Remove whole else if statement below, see g_hCurDir_hack's comment for remark.
-	else if (SymbolicLinkObject->DriveLetter == CxbxAutoMountDriveLetter) {
-		g_hCurDir_hack = SymbolicLinkObject->RootDirectoryHandle;
-	}
-
-	return result;
-}
-
-
-NTSTATUS EmuNtSymbolicLinkObject::Init(std::string aSymbolicLinkName, std::string aFullPath)
-{
-	NTSTATUS result = STATUS_OBJECT_NAME_INVALID;
-	int i = 0;
-	int DeviceIndex = -1;
-
-	// If aFullPath is an empty string, set it to the CD-ROM drive
-	// This should work for all titles, as CD-ROM is mapped to the current working directory
-	// This fixes the issue where titles crash after being launched from the update.xbe
-	if (aFullPath.length() == 0) {
-		aFullPath = DeviceCdrom0;
-	}
-
-	DriveLetter = SymbolicLinkToDriveLetter(aSymbolicLinkName);
-	if (DriveLetter >= 'A' && DriveLetter <= 'Z')
-	{
-		result = X_STATUS_OBJECT_NAME_COLLISION;
-		if (FindNtSymbolicLinkObjectByDriveLetter(DriveLetter) == NULL)
-		{
-			// Look up the partition in the list of pre-registered devices :
-			result = STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
-
-			// If aFullPath starts with a Drive letter, find the originating path and substitute that
-			if (aFullPath[1] == ':' && aFullPath[0] >= 'A' && aFullPath[0] <= 'Z') {
-				EmuNtSymbolicLinkObject* DriveLetterLink = FindNtSymbolicLinkObjectByDriveLetter(aFullPath[0]);
-				if (DriveLetterLink != NULL) {
-					aFullPath = DriveLetterLink->XboxSymbolicLinkPath;
-				}
-			}
-
- 		    // Make a distinction between Xbox paths (starting with '\Device'...) and host paths :
-			IsHostBasedPath = _strnicmp(aFullPath.c_str(), DevicePrefix.c_str(), DevicePrefix.length()) != 0;
-			if (IsHostBasedPath) {
-				DeviceIndex = CxbxDeviceIndexByHostPath(aFullPath.c_str());
-			}
-			else {
-				DeviceIndex = CxbxDeviceIndexByDevicePath(aFullPath.c_str());
-			}
-
-			if (DeviceIndex >= 0)
-			{
-				result = X_STATUS_SUCCESS;
-				SymbolicLinkName = aSymbolicLinkName;
-				if (IsHostBasedPath) {
-					// Handle the case where a sub folder of the partition is mounted (instead of it's root) :
-					std::string ExtraPath = aFullPath.substr(Devices[DeviceIndex].HostDevicePath.length(), std::string::npos);
-
-					XboxSymbolicLinkPath = Devices[DeviceIndex].XboxDevicePath + ExtraPath;
-					HostSymbolicLinkPath = aFullPath;
-
-				}
-				else {
-					XboxSymbolicLinkPath = aFullPath;
-					HostSymbolicLinkPath = Devices[DeviceIndex].HostDevicePath;
-					// Handle the case where a sub folder of the partition is mounted (instead of it's root) :
-					std::string ExtraPath = aFullPath.substr(Devices[DeviceIndex].XboxDevicePath.length(), std::string::npos);
-
-					if (!ExtraPath.empty()) {
-						HostSymbolicLinkPath = HostSymbolicLinkPath + ExtraPath;
-					}
-				}
-
-				RootDirectoryHandle = CreateFile(HostSymbolicLinkPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-				if (RootDirectoryHandle == INVALID_HANDLE_VALUE)
-				{
-					result = STATUS_DEVICE_DOES_NOT_EXIST; // TODO : Is this the correct error?
-					CxbxrAbort((std::string("Could not map ") + HostSymbolicLinkPath).c_str());
-				}
-				else
-				{
-					NtSymbolicLinkObjects[DriveLetter - 'A'] = this;
-					EmuLog(LOG_LEVEL::DEBUG, "Linked \"%s\" to \"%s\" (residing at \"%s\")", aSymbolicLinkName.c_str(), aFullPath.c_str(), HostSymbolicLinkPath.c_str());
-				}
-			}
-		}
-	}
-
-	return result;
-}
-
- EmuNtSymbolicLinkObject::~EmuNtSymbolicLinkObject()
-{
-	if (DriveLetter >= 'A' && DriveLetter <= 'Z') {
-		NtSymbolicLinkObjects[DriveLetter - 'A'] = NULL;
-		NtDll::NtClose(RootDirectoryHandle);
-		// TODO: Remove whole if statement below, see g_hCurDir_hack's comment for remark.
-		if (DriveLetter == CxbxAutoMountDriveLetter) {
-			g_hCurDir_hack = NULL;
-		}
-	}
-}
-
-char SymbolicLinkToDriveLetter(std::string SymbolicLinkName)
-{
-	char result = '\0';
-	// SymbolicLinkName must look like this : "\??\D:"
-	if ((SymbolicLinkName.size() == 6) && (SymbolicLinkName[0] == '\\') && (SymbolicLinkName[1] == '?') && (SymbolicLinkName[2] == '?') && (SymbolicLinkName[3] == '\\') && (SymbolicLinkName[5] == ':'))
-	{
-		result = SymbolicLinkName[4];
-		if (result >= 'A' && result <= 'Z')
-			return result;
-
-		if (result >= 'a' && result <= 'z') {
-			return result + 'A' - 'a';
-		}
-	}
-	
-	return NULL;
-}
-
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveLetter)
-{
-	if (DriveLetter >= 'A' && DriveLetter <= 'Z')
-		return NtSymbolicLinkObjects[DriveLetter - 'A'];
-		
-	if (DriveLetter >= 'a' && DriveLetter <= 'z')
-		return NtSymbolicLinkObjects[DriveLetter - 'a'];
-
-	return NULL;
-}
-
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName)
-{
-	return FindNtSymbolicLinkObjectByDriveLetter(SymbolicLinkToDriveLetter(SymbolicLinkName));
-}
-
-
-void FindEmuDirPathByDevice(std::string DeviceName, EmuDirPath& hybrid_path)
-{
-	for (auto device = Devices.begin(); device != Devices.end(); device++) {
-		if (_strnicmp(DeviceName.c_str(), device->XboxDevicePath.c_str(), device->XboxDevicePath.length()) == 0) {
-			hybrid_path.XboxDirPath = device->XboxDevicePath;
-			hybrid_path.HostDirPath = device->HostDevicePath;
-			hybrid_path.HostDirHandle = device->HostRootHandle;
-			return;
-		}
-	}
-
-	hybrid_path.HostDirPath = "";
-}
-
-
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(const HANDLE Handle)
-{
-	for (char DriveLetter = 'A'; DriveLetter <= 'Z'; DriveLetter++)
-	{
-		EmuNtSymbolicLinkObject* result = NtSymbolicLinkObjects[DriveLetter - 'A'];
-		if ((result != NULL) && (Handle == result->RootDirectoryHandle))
-			return result;
-	}
-	
-	return NULL;
-}
-
 
 void _CxbxPVOIDDeleter(PVOID *ptr)
 {
 	if (*ptr) {
 		xbox::ExFreePool(*ptr);
 	}
-}
-
-// ----------------------------------------------------------------------------
-// Xbox to NT converters
-// ----------------------------------------------------------------------------
-
-NtDll::FILE_LINK_INFORMATION * _XboxToNTLinkInfo(xbox::FILE_LINK_INFORMATION *xboxLinkInfo, ULONG *Length)
-{
-	// Convert the path from Xbox to native
-	std::string originalFileName(xboxLinkInfo->FileName, xboxLinkInfo->FileNameLength);
-	std::wstring convertedFileName;
-	NtDll::HANDLE RootDirectory = nullptr;
-	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*IN OUT*/&RootDirectory, "NtSetInformationFile");
-	// TODO : handle if(FAILED(res))
-
-	// Build the native FILE_LINK_INFORMATION struct
-	*Length = sizeof(NtDll::FILE_LINK_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
-	NtDll::FILE_LINK_INFORMATION *ntLinkInfo = (NtDll::FILE_LINK_INFORMATION *)xbox::ExAllocatePool(*Length);
-	ntLinkInfo->ReplaceIfExists = xboxLinkInfo->ReplaceIfExists;
-	ntLinkInfo->RootDirectory = RootDirectory;
-	ntLinkInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);
-	wmemcpy_s(ntLinkInfo->FileName, convertedFileName.size(), convertedFileName.c_str(), convertedFileName.size());
-	
-	return ntLinkInfo;
-}
-
-NtDll::FILE_RENAME_INFORMATION * _XboxToNTRenameInfo(xbox::FILE_RENAME_INFORMATION *xboxRenameInfo, ULONG *Length)
-{
-	// Convert the path from Xbox to native
-	std::string originalFileName(xboxRenameInfo->FileName.Buffer, xboxRenameInfo->FileName.Length);
-	std::wstring convertedFileName;
-	NtDll::HANDLE RootDirectory = nullptr;
-	NTSTATUS res = CxbxConvertFilePath(originalFileName, /*OUT*/convertedFileName, /*IN OUT*/&RootDirectory, "NtSetInformationFile");
-	// TODO : handle if(FAILED(res))
-
-	// Build the native FILE_RENAME_INFORMATION struct
-	*Length = sizeof(NtDll::FILE_RENAME_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
-	NtDll::FILE_RENAME_INFORMATION *ntRenameInfo = (NtDll::FILE_RENAME_INFORMATION *)xbox::ExAllocatePool(*Length);
-	ntRenameInfo->ReplaceIfExists = xboxRenameInfo->ReplaceIfExists;
-	ntRenameInfo->RootDirectory = RootDirectory;
-	ntRenameInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);
-	wmemcpy_s(ntRenameInfo->FileName, convertedFileName.size(), convertedFileName.c_str(), convertedFileName.size());
-
-	return ntRenameInfo;
 }
 
 // ----------------------------------------------------------------------------
@@ -1156,46 +560,6 @@ NTSTATUS _NTToXboxAllInfo(NtDll::FILE_ALL_INFORMATION *ntAllInfo, xbox::FILE_ALL
 // ----------------------------------------------------------------------------
 // File information struct converters
 // ----------------------------------------------------------------------------
-
-PVOID _XboxToNTFileInformation
-(
-	IN  PVOID xboxFileInformation,
-	IN  ULONG FileInformationClass,
-	OUT ULONG *Length
-)
-{
-	// The following classes of file information structs are identical between platforms:
-	//   FileBasicInformation
-	//   FileDispositionInformation
-	//   FileEndOfFileInformation
-	//   FileLinkInformation
-	//   FilePositionInformation
-
-	PVOID result = NULL;
-
-	switch (FileInformationClass)
-	{
-		case xbox::FileLinkInformation:
-		{
-			xbox::FILE_LINK_INFORMATION *xboxLinkInfo = reinterpret_cast<xbox::FILE_LINK_INFORMATION *>(xboxFileInformation);
-			result = _XboxToNTLinkInfo(xboxLinkInfo, Length);
-			break;
-		}
-		case xbox::FileRenameInformation:
-		{
-			xbox::FILE_RENAME_INFORMATION *xboxRenameInfo = reinterpret_cast<xbox::FILE_RENAME_INFORMATION *>(xboxFileInformation);
-			result = _XboxToNTRenameInfo(xboxRenameInfo, Length);
-			break;
-		}
-		default:
-		{
-			result = NULL;
-			break;
-		}
-	}
-
-	return result;
-}
 
 NTSTATUS NTToXboxFileInformation
 (
