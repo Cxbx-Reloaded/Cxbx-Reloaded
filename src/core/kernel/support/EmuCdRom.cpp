@@ -86,7 +86,6 @@ std::string g_TitleMountPath;
 static xbox::STRING xDeviceCdRom0;
 static xbox::STRING xDriveCdRom0;
 static xbox::STRING xDriveD;
-static xbox::STRING xDriveMbfs;
 
 static void EmuBugCheckInline(const xbox::ntstatus_xt result)
 {
@@ -100,7 +99,6 @@ void EmuCdRomSetup(std::filesystem::path CdRomPath, int BootFlags)
 	xbox::RtlInitAnsiString(&xDeviceCdRom0, DeviceCdrom0.c_str());
 	xbox::RtlInitAnsiString(&xDriveCdRom0, DriveCdRom0.c_str());
 	xbox::RtlInitAnsiString(&xDriveD, DriveD.c_str());
-	xbox::RtlInitAnsiString(&xDriveMbfs, DriveMbfs.c_str()); // Not part of CdRom0 device.
 
 	xbox::PDEVICE_OBJECT CdRomDeviceObject;
 	xbox::ntstatus_xt result = xbox::IoCreateDevice(&xbox::CdRomDriverObject, 0, &xDeviceCdRom0, xbox::FILE_DEVICE_CD_ROM2, FALSE, &CdRomDeviceObject);
@@ -131,7 +129,7 @@ void EmuCdRomSetup(std::filesystem::path CdRomPath, int BootFlags)
 	bool isEmuDisk = CxbxrIsPathInsideEmuDisk(CdRomPath);
 
 	if (default_mount_path.native()[0] == 0 && BootFlags == BOOT_NONE) {
-		// Remember our first initialize mount path for CdRom0 and Mbfs.
+		// Remember our first initialize mount path for CdRom0
 		if (!isEmuDisk) {
 			g_EmuShared->SetTitleMountPath(CdRomPath.string().c_str());
 			default_mount_path = CdRomPath.c_str();
@@ -139,12 +137,6 @@ void EmuCdRomSetup(std::filesystem::path CdRomPath, int BootFlags)
 	}
 
 	if (default_mount_path.native()[0] != 0) {
-		// Since Chihiro also map Mbfs to the same path as Cdrom0, we'll map it the same way.
-		if (g_bIsChihiro) {
-			// TODO: Need to map Mbfs device from somewhere.
-			result = xbox::IoCreateSymbolicLink(&xDriveMbfs, &xDeviceCdRom0);
-			EmuBugCheckInline(result);
-		}
 		g_TitleMountPath = default_mount_path.string();
 	}
 

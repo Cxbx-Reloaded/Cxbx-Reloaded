@@ -593,9 +593,9 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 		emulate_system == SYSTEM_CHIHIRO &&
 		std::filesystem::exists(xbeDirectory / "boot.id")) {
 
-		std::string chihiroMediaBoardRom = g_DataFilePath + "/EmuDisk/" + MediaBoardRomFile;
+		std::string chihiroMediaBoardRom = g_MediaBoardBasePath + MediaBoardRomFile;
 		if (!std::filesystem::exists(chihiroMediaBoardRom)) {
-			CxbxrAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found (should be placed in /EmuDisk/Chihiro/)");
+			CxbxrAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found (should be placed in /EmuMediaBoard/)");
 		}
 
 		// Open a handle to the mediaboard rom
@@ -615,8 +615,8 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 
 		// Extract SEGABOOT_OLD.XBE and SEGABOOT.XBE from Media Rom
 		// We only do this if SEGABOOT_OLD and SEGABOOT.XBE are *not* already present
-		std::string chihiroSegaBootOld = g_DataFilePath + "/EmuDisk/" + MediaBoardSegaBoot0;
-		std::string chihiroSegaBootNew = g_DataFilePath + "/EmuDisk/" + MediaBoardSegaBoot1;
+		std::string chihiroSegaBootOld = g_MediaBoardBasePath + MediaBoardSegaBoot0;
+		std::string chihiroSegaBootNew = g_MediaBoardBasePath + MediaBoardSegaBoot1;
 		if (!std::filesystem::exists(chihiroSegaBootOld) || !std::filesystem::exists(chihiroSegaBootNew)) {
 			FILE* fpSegaBootOld = fopen(chihiroSegaBootOld.c_str(), "wb");
 			FILE* fpSegaBootNew = fopen(chihiroSegaBootNew.c_str(), "wb");

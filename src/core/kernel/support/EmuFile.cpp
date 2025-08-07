@@ -47,7 +47,9 @@
 #include "common/cxbxr.hpp"
 #include "EmuDisk.hpp"
 #include "EmuCdRom.hpp"
+#include "EmuMediaBoard.hpp"
 #include "EmuMu.hpp"
+#include "common/FilePaths.hpp"
 
 #include <filesystem>
 
@@ -266,16 +268,18 @@ void NTAPI CxbxIoApcDispatcher(PVOID ApcContext, xbox::PIO_STATUS_BLOCK /*IoStat
 	delete cxbxContext;
 }
 
-const std::string MediaBoardRomFile = "Chihiro\\fpr21042_m29w160et.bin";
-const std::string MediaBoardSegaBoot0 = "Chihiro\\SEGABOOT_MBROM0.XBE";
-const std::string MediaBoardSegaBoot1 = "Chihiro\\SEGABOOT_MBROM1.XBE";
+const std::string PartitionPrefix = "Partition";
+const std::string MediaBoardRomFile = "fpr21042_m29w160et.bin";
+const std::string MediaBoardSegaBoot0 = PartitionPrefix + "2.bin";
+const std::string MediaBoardSegaBoot1 = PartitionPrefix + "3.bin";
 const std::string DrivePrefix = "\\??\\";
 const std::string DriveSerial = DrivePrefix + "serial:";
 const std::string DriveCdRom0 = DrivePrefix + "CdRom0:"; // CD-ROM device
-const std::string DriveMbfs = "mbfs:"; // media board's file system area device
-const std::string DriveMbcom = "mbcom:"; // media board's communication area device
-const std::string DriveMbrom0 = "mbrom0:"; // media board's boot ROM device (first image)
-const std::string DriveMbrom1 = "mbrom1:"; // media board's boot ROM device (second image)
+const std::string DriveMbfs = DrivePrefix + "mbfs:"; // media board's file system area device // Partition0
+const std::string mbcom = "mbcom:"; // media board's communication area device // Partition1
+const std::string DriveMbcom = DrivePrefix + mbcom; // media board's communication area device // Partition1
+const std::string DriveMbrom0 = DrivePrefix + "mbrom0:"; // media board's boot ROM device (first image) // Partition2
+const std::string DriveMbrom1 = DrivePrefix + "mbrom1:"; // media board's boot ROM device (second image) // Partition3
 const std::string DriveA = DrivePrefix + "A:"; // A: could be CDROM
 const std::string DriveC = DrivePrefix + "C:"; // C: is HDD0
 const std::string DriveD = DrivePrefix + "D:"; // D: is DVD Player
@@ -299,10 +303,11 @@ const std::string DriveZ = DrivePrefix + "Z:"; // Z: is Title utility data regio
 const std::string DevicePrefix = "\\Device";
 const std::string DeviceCdrom0 = DevicePrefix + "\\CdRom0";
 const std::string DeviceHarddisk0 = DevicePrefix + "\\Harddisk0";
+const std::string DeviceMediaBoard = DevicePrefix + "\\MediaBoard";
 const std::string MUPrefix = "\\MU_";
 const std::string DeviceMUPrefix = DevicePrefix + MUPrefix;
-const std::string PartitionPrefix = "Partition";
-const std::string DeviceHarddisk0PartitionPrefix = DevicePrefix + "\\Harddisk0\\" + PartitionPrefix;
+const std::string DeviceMediaBoardPartitionPrefix = DeviceMediaBoard + "\\" + PartitionPrefix;
+const std::string DeviceHarddisk0PartitionPrefix = DeviceHarddisk0 + "\\" + PartitionPrefix;
 const std::string DeviceHarddisk0Partition0 = DeviceHarddisk0PartitionPrefix + "0"; // Contains raw config sectors (like XBOX_REFURB_INFO) + entire hard disk
 const std::string DeviceHarddisk0Partition1 = DeviceHarddisk0PartitionPrefix + "1"; // Data partition. Contains TDATA and UDATA folders.
 const std::string DeviceHarddisk0Partition2 = DeviceHarddisk0PartitionPrefix + "2"; // Shell partition. Contains Dashboard (cpxdash.xbe, evoxdash.xbe or xboxdash.xbe)
@@ -341,8 +346,7 @@ void CxbxrSetupDrives(std::filesystem::path& CdRomPath, int BootFlags)
 
 	// Chihiro has Media Board, contain emulated CD-ROM, and JVS
 	if (g_bIsChihiro) {
-		// TODO: Implement Media Board (which also has symbolic link to CD-ROM device)
-		//       (This functionality already has been implemented by RadWolfie, expect to see this in chihiro branch soon)
+		EmuMediaBoardSetup(CdRomPath, BootFlags);
 	}
 	// Other type of consoles has CD-ROM and Memory Unit
 	else {

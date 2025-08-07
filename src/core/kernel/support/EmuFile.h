@@ -57,8 +57,10 @@ extern const std::string DrivePrefix;
 extern const std::string DriveSerial;
 extern const std::string DriveCdRom0;
 extern const std::string DriveMbfs;
+extern const std::string mbcom;
 extern const std::string DriveMbcom;
-extern const std::string DriveMbrom;
+extern const std::string DriveMbrom0;
+extern const std::string DriveMbrom1;
 extern const std::string DriveA;
 extern const std::string DriveC;
 extern const std::string DriveD;
@@ -75,9 +77,11 @@ extern const std::string DriveZ;
 extern const std::string DevicePrefix;
 extern const std::string DeviceCdrom0;
 extern const std::string DeviceHarddisk0;
+extern const std::string DeviceMediaBoard;
 extern const std::string MUPrefix;
 extern const std::string DeviceMUPrefix;
 extern const std::string PartitionPrefix;
+extern const std::string DeviceMediaBoardPartitionPrefix;
 extern const std::string DeviceHarddisk0PartitionPrefix;
 extern const std::string DeviceHarddisk0Partition0;
 extern const std::string DeviceHarddisk0Partition1;
@@ -115,9 +119,6 @@ inline constexpr xbox::ulong_xt fsctl_read_fatx_metadata = 0x0009411C;
 inline constexpr xbox::ulong_xt fsctl_write_fatx_metadata = 0x00098120;
 
 inline constexpr std::size_t mu_max_name_lenght = 32 * sizeof(xbox::wchar_xt); // MU names are in wide chars
-extern std::string g_DiskBasePath;
-extern std::string g_MuBasePath;
-extern std::string g_TitleMountPath;
 
 // TODO: Need verify if matches with xbox kernel and anything else.
 static const size_t IopQueryOperationLength[xbox::FileMaximumInformation + 1] = {

@@ -44,6 +44,7 @@
 #include "devices\Xbox.h" // For g_SMBus, SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER
 #include "devices\SMCDevice.h" // For SMC_COMMAND_SCRATCH
 #include "core\kernel\memory-manager\VMManager.h"
+#include "common/FilePaths.hpp"
 
 #include <algorithm> // for std::replace
 #include <locale>
@@ -544,16 +545,20 @@ XBSYSAPI EXPORTNUM(49) xbox::void_xt DECLSPEC_NORETURN NTAPI xbox::HalReturnToFi
 
 			// If the title path was an empty string, we need to launch the dashboard
 			// Or in the case of Chihiro: SEGABOOT
+			std::string XbePath;
 			if (TitlePath.length() == 0) {
 				if (g_bIsChihiro) {
-					TitlePath = DevicePrefix + "\\" + MediaBoardRomFile;
+					//TitlePath = DevicePrefix + "\\" + MediaBoardRomFile;
+					XbePath = g_MediaBoardBasePath + "\\" + MediaBoardRomFile;
 				}
 				else {
 					TitlePath = DeviceHarddisk0Partition2 + "\\xboxdash.xbe";
 				}
 			}
 
-			const std::string& XbePath = CxbxConvertXboxToHostPath(TitlePath);
+			if (XbePath.empty()) {
+				XbePath = CxbxConvertXboxToHostPath(TitlePath);
+			}
 
 			// Relaunch Cxbx, to load another Xbe
 			{

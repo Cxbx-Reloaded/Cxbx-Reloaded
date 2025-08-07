@@ -38,6 +38,7 @@ char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
 
 std::string g_DataFilePath;
 std::string g_DiskBasePath;
+std::string g_MediaBoardBasePath;
 std::string g_MuBasePath;
 
 //TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
@@ -104,6 +105,15 @@ void CxbxrInitFilePaths()
 	g_MuBasePath = std::filesystem::path(g_MuBasePath).append("").string();
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", g_DataFilePath.c_str());
+
+	// Make sure the EmuMediaBoard folder exists
+	g_MediaBoardBasePath = g_DataFilePath + "\\EmuMediaBoard";
+	result = std::filesystem::exists(g_MediaBoardBasePath);
+	if (!result && !std::filesystem::create_directory(g_MediaBoardBasePath)) {
+		CxbxrAbort("%s : Couldn't create Cxbx-Reloaded EmuMediaBoard folder!", __func__);
+	}
+	CxbxResolveHostToFullPath(g_MediaBoardBasePath, "Cxbx-Reloaded's EmuMediaBoard directory");
+	g_MediaBoardBasePath = std::filesystem::path(g_MediaBoardBasePath).append("").string();
 
 	GetModuleFileName(GetModuleHandle(nullptr), szFilePath_CxbxReloaded_Exe, MAX_PATH);
 }

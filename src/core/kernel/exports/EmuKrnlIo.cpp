@@ -500,6 +500,14 @@ XBSYSAPI EXPORTNUM(66) xbox::ntstatus_xt NTAPI xbox::IoCreateFile
 		}
 	}
 
+	// If we are emulating the Chihiro, we need to hook mbcom, so return an easily identifable handle
+	if (g_bIsChihiro) {
+		if (strncmp(ObjectAttributes->ObjectName->Buffer, mbcom.c_str(), mbcom.length()) == 0) {
+			*FileHandle = CHIHIRO_MBCOM_HANDLE;
+			return X_STATUS_SUCCESS;
+		}
+	}
+
 	/* Check if we have allocation size */
 	LARGE_INTEGER SafeAllocationSize;
 	if (AllocationSize)
