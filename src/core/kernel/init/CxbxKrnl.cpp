@@ -588,7 +588,10 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 	reserved_systems &= ~emulate_system;
 
 	// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
-	if (BootFlags == BOOT_NONE && emulate_system == SYSTEM_CHIHIRO) {
+	// All checks are absolutely necessary in order to support both "auto select" and forced chihiro mode.
+	if (BootFlags == BOOT_NONE &&
+		emulate_system == SYSTEM_CHIHIRO &&
+		std::filesystem::exists(xbeDirectory / "boot.id")) {
 
 		std::string chihiroMediaBoardRom = g_DataFilePath + "/EmuDisk/" + MediaBoardRomFile;
 		if (!std::filesystem::exists(chihiroMediaBoardRom)) {
