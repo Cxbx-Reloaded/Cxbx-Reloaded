@@ -43,9 +43,7 @@
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxInitWindow, EmuD3DInit
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp" // For CxbxInitAudio
-#ifdef CHIHIRO_WORK
 #include "core\hle\JVS\JVS.h" // For JVS_Init
-#endif
 #include "core\hle\Intercept.hpp"
 #include "core\kernel\memory-manager\VMManager.h"
 #include "CxbxDebugger.h"
@@ -589,7 +587,6 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 	// Clear emulation system from reserved systems so all unneeded memory ranges can be freed.
 	reserved_systems &= ~emulate_system;
 
-#ifdef CHIHIRO_WORK
 	// If the Xbe is Chihiro, and we were not launched by SEGABOOT, we need to load SEGABOOT from the Chihiro Media Board rom instead!
 	if (BootFlags == BOOT_NONE && emulate_system == SYSTEM_CHIHIRO) {
 
@@ -653,7 +650,6 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 		CxbxLaunchNewXbe(chihiroSegaBootNew);
 		CxbxrShutDown(true);
 	}
-#endif // Chihiro wip block
 
 	// Once we have determine which system type to run as, enforce it in future reboots.
 	if ((BootFlags & BOOT_QUICK_REBOOT) == 0) {
@@ -677,17 +673,11 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 		hardwareModel = HardwareModel::Revision1_6;
 	}
 
-#ifdef CHIHIRO_WORK
 	// If this is a Chihiro title, we need to patch the init flags to disable HDD setup
 	// The Chihiro kernel does this, so we should too!
 	if (g_bIsChihiro) {
 		CxbxKrnl_Xbe->m_Header.dwInitFlags.bDontSetupHarddisk = true;
 	}
-#else
-	if (g_bIsChihiro) {
-		CxbxrAbort("Emulating Chihiro mode does not work yet. Please use different title to emulate.");
-	}
-#endif
 
 	CxbxrKrnlSetupMemorySystem(BootFlags, emulate_system, reserved_systems, blocks_reserved);
 	return true;
@@ -1412,12 +1402,10 @@ static void CxbxrKrnlInitHacks()
 
 	EmuInitFS();
 
-#ifdef CHIHIRO_WORK
 	// If this title is Chihiro, Setup JVS
 	if (g_bIsChihiro) {
 		JVS_Init();
 	}
-#endif
 
 	EmuX86_Init();
 	// Start the event thread
