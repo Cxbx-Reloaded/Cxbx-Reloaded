@@ -2419,6 +2419,10 @@ DWORD WndMain::CrashMonitorWrapper(LPVOID lpParam)
 		static_cast<WndMain*>(pCMD->pWndMain)->m_iIsEmulating--; // Multi-xbe boots usage check
 	}
 
+	if (!static_cast<WndMain*>(pCMD->pWndMain)->m_iIsEmulating) {
+		static_cast<WndMain*>(pCMD->pWndMain)->StopEmulation();
+	}
+
 	free(lpParam);
 
 	return 0;
@@ -2427,7 +2431,6 @@ DWORD WndMain::CrashMonitorWrapper(LPVOID lpParam)
 // monitor for crashes
 void WndMain::CrashMonitor(DWORD dwChildProcID)
 {
-	int iBootFlags;
 	DWORD dwExitCode = 0;
 
 	// If we do receive valid process ID, let's do the next step.
@@ -2442,23 +2445,8 @@ void WndMain::CrashMonitor(DWORD dwChildProcID)
 
 			GetExitCodeProcess(hProcess, &dwExitCode);
 			CloseHandle(hProcess);
-
-			g_EmuShared->GetBootFlags(&iBootFlags);
-
-			// Check if reboot did occur.
-			if (iBootFlags) {
-				// Destroy this thread and start a new one
-				// since emulation is still running.
-				return;
-			}
-			// Otherwise emulation did stopped or crashed
-			// But need to tell GUI that emulation did end.
 		}
 	}
-
-	// Crash clean up.
-
-	StopEmulation();
 }
 
 // monitor for Debugger to close then set as "available" (For limit to 1 debugger per Cxbx GUI.)

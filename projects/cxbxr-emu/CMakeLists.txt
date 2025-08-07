@@ -48,9 +48,6 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
   # Use inline XXHash version
   XXH_INLINE_ALL
-
-  # Enable Chihiro work
-  CHIHIRO_WORK
  )
  add_compile_options(
   /EHs
