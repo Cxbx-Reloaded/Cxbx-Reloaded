@@ -52,10 +52,12 @@
 
 typedef struct {
     char magic[4];              // 0x00 (Always BTID)
-    uint32_t unknown0[3];
-    uint32_t unknown1[4];
+    uint32_t totalSize;         // Size of the bootid file, below 0x1F0 and above 0x20
+    uint32_t version;           // Must be 1
+    uint32_t unknown0;          // All have a value of 1 but segaboot does not check this?
+    uint32_t padding0[4];
     char mediaboardType[4];     // 0x20 (XBAM for Chihiro)
-    uint32_t unknown2;
+    uint32_t size;              // totalSize - 0x20
     uint16_t year;              // 0x28
     uint8_t month;              // 0x2A
     uint8_t day;                // 0x2B
@@ -65,7 +67,9 @@ typedef struct {
     uint8_t unknown4;
     char gameId[8];             // 0x30
     uint32_t regionFlags;       // 0x38
-    uint32_t unknown6[9];
+    uint32_t unknown6;          //
+    uint32_t padding1[4];       //
+    uint32_t creditSettings[4]; // Segaboot saves this and gameid to the onboard eeprom using the credits system
     char manufacturer[0x20];    // 0x60
     char gameName[0x20];        // 0x80
     char gameExecutable[0x20];  // 0xA0
