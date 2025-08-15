@@ -595,13 +595,13 @@ static bool CxbxrKrnlXbeSystemSelector(int BootFlags,
 
 		std::string chihiroMediaBoardRom = g_DataFilePath + "/EmuDisk/" + MediaBoardRomFile;
 		if (!std::filesystem::exists(chihiroMediaBoardRom)) {
-			CxbxrAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found");
+			CxbxrAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be found (should be placed in /EmuDisk/Chihiro/)");
 		}
 
 		// Open a handle to the mediaboard rom
 		FILE* fpRom = fopen(chihiroMediaBoardRom.c_str(), "rb");
 		if (fpRom == nullptr) {
-			CxbxrAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not opened for read");
+			CxbxrAbort("Chihiro Media Board ROM (fpr21042_m29w160et.bin) could not be opened for read");
 		}
 
 		// Verify the size of media board rom
