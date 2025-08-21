@@ -557,7 +557,7 @@ extern thread_local std::string _logThreadPrefix;
 // Macro's for Flags-ToString conversions :
 #define FLAGS2STR_HEADER(FlagType) LOGRENDER_HEADER_BY_REF(FlagType);
 #define FLAGS2STR_START(FlagType) std::string TYPE2PCHAR(FlagType)(const FlagType &value) { std::stringstream ss;
-#define FLAG2STR(f) if (((uint32_t)value & f) == f) ss << #f << "|";
+#define FLAG2STR(f) if ((f && ((uint32_t)value & f) == f) || ((uint32_t)value == f)) ss << #f << "|";
 #define FLAG2STR_MASK(f) ss << #f"=" << (value & f) << "|";
 #define FLAGS2STR_END std::string res = ss.str(); if (!res.empty()) res.pop_back(); return res; }
 #define FLAGS2STR_END_and_LOGRENDER(FlagType) FLAGS2STR_END LOGRENDER_TYPE(FlagType)
