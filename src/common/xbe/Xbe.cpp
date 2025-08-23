@@ -732,30 +732,53 @@ void Xbe::PurgeBadChar(std::string& s, const std::string& illegalChars)
 	}
 }
 
-const char *Xbe::GameRegionToString(uint32_t dwRegionFlags)
+// The string is our format to R (N)
+// R = Official region code based on pressed discs allocated with
+//     region code (hex) has been used throughout the Xbox ecosystem.
+// N = It is our own naming method for easier reading. i.e., JAPAN
+//     is NTSC-J and North America only uses NTSC. Yet there is a
+//     combo to support both North America and Japan, which had to
+//     use as NTSC+JAPAN naming method.
+static const std::string Regions[] = {
+    "? (Unknown)",
+    "A (NTSC)",
+    "J (JAPAN)",
+    "K (NTSC+JAPAN)",
+    "E (PAL)",
+    "L (PAL+NTSC)",
+    "? (PAL+JAPAN)",
+    "W (Region Free)",
+};
+
+static const uint32_t game_regions_code = XBEIMAGE_GAME_REGION_NA |
+                                          XBEIMAGE_GAME_REGION_JAPAN |
+                                          XBEIMAGE_GAME_REGION_RESTOFWORLD;
+
+static const uint32_t game_regions_valid = game_regions_code |
+                                           XBEIMAGE_GAME_REGION_MANUFACTURING;
+
+std::string Xbe::GameRegionToString(uint32_t dwRegionFlags)
 {
     if (!dwRegionFlags) {
         dwRegionFlags = m_Certificate.dwGameRegion;
     }
 
-    const char *Region_text[] = {
-        "Unknown", "NTSC", "JAPAN", "NTSC+JAPAN",
-        "PAL", "PAL+NTSC", "PAL+JAPAN", "Region Free",
-        "DEBUG", "NTSC (DEBUG)", "JAPAN (DEBUG)", "NTSC+JAPAN (DEBUG)",
-        "PAL (DEBUG)", "PAL+NTSC (DEBUG)", "PAL+JAPAN (DEBUG)", "Region Free (DEBUG)"
-    };
-    const uint32_t all_regions = XBEIMAGE_GAME_REGION_NA |
-                               XBEIMAGE_GAME_REGION_JAPAN |
-                               XBEIMAGE_GAME_REGION_RESTOFWORLD |
-                               XBEIMAGE_GAME_REGION_MANUFACTURING;
-
-    if(dwRegionFlags & ~all_regions) {
+    if (dwRegionFlags & ~game_regions_valid) {
         return "REGION ERROR";
     }
 
-    uint8_t index = (dwRegionFlags & XBEIMAGE_GAME_REGION_MANUFACTURING) ? 0x8 : 0;
-    index |= (dwRegionFlags & 0x7);
-    return Region_text[index];
+    std::string region = Regions[dwRegionFlags & game_regions_code];
+
+    if (dwRegionFlags & XBEIMAGE_GAME_REGION_MANUFACTURING) {
+        region += " (DEBUG)";
+    }
+    return region;
+}
+
+std::string Xbe::VersionToString()
+{
+    // Xbe class already has two functions made for this purpose, no need to re-write the code that does the same thing.
+    return std::to_string(GetDiscVersion()) + "." + std::to_string(GetPatchVersion());
 }
 
 const wchar_t *Xbe::GetUnicodeFilenameAddr()

@@ -81,7 +81,10 @@ class Xbe : public Error
 		void PurgeBadChar(std::string& s, const std::string& illegalChars = "\\/:?\"<>|");
 
         // Convert game region field to string
-        const char *GameRegionToString(uint32_t dwRegionFlags = 0);
+        std::string GameRegionToString(uint32_t dwRegionFlags = 0);
+
+        // Convert version field to string
+        std::string VersionToString();
 
         XbeType GetXbeType();
 
