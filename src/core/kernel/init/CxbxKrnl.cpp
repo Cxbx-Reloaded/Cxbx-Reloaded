@@ -1101,7 +1101,10 @@ static void CxbxrLogDumpXbeInfo(Xbe::LibraryVersion* libVersionInfo)
 		}
 		EmuLogInit(LOG_LEVEL::INFO, "XBE Version (Hex): %08X", g_pCertificate->dwVersion);
 		EmuLogInit(LOG_LEVEL::INFO, "XBE TitleName : %.40ls", g_pCertificate->wsTitleName);
-		EmuLogInit(LOG_LEVEL::INFO, "XBE Region : %s", CxbxKrnl_Xbe->GameRegionToString());
+		if (CxbxKrnl_Xbe != nullptr) {
+			EmuLogInit(LOG_LEVEL::INFO, "XBE Region : %s", CxbxKrnl_Xbe->GameRegionToString().c_str());
+		}
+		EmuLogInit(LOG_LEVEL::INFO, "XBE Region (Hex): %08X", g_pCertificate->dwGameRegion);
 	}
 
 	// Dump Xbe library build numbers

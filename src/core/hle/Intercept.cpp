@@ -65,6 +65,9 @@ static struct {
 	const char* TitleID = "TitleID";
 	const char* TitleIDHex = "TitleIDHex";
 	const char* Region = "Region";
+	const char* RegionHex = "RegionHex";
+	const char* Version = "Version";
+	const char* VersionHex = "VersionHex";
 } sect_certificate_keys;
 
 static const char* section_libs = "Libs";
@@ -509,7 +512,10 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.Name, tAsciiTitle);
 	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.TitleID, FormatTitleId(CxbxKrnl_Xbe->m_Certificate.dwTitleId).c_str());
 	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.TitleIDHex, CxbxKrnl_Xbe->m_Certificate.dwTitleId, nullptr, /*UseHex =*/true);
-	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.Region, CxbxKrnl_Xbe->m_Certificate.dwGameRegion, nullptr, /*UseHex =*/true);
+	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.Region, CxbxKrnl_Xbe->GameRegionToString().c_str());
+	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.RegionHex, CxbxKrnl_Xbe->m_Certificate.dwGameRegion, nullptr, /*UseHex =*/true);
+	symbolCacheData.SetValue(section_certificate, sect_certificate_keys.Version, CxbxKrnl_Xbe->VersionToString().c_str());
+	symbolCacheData.SetLongValue(section_certificate, sect_certificate_keys.VersionHex, CxbxKrnl_Xbe->m_Certificate.dwVersion, nullptr, /*UseHex =*/true);
 
 	// Store Library Details
 	for (unsigned int i = 0; i < pXbeHeader->dwLibraryVersions; i++) {
