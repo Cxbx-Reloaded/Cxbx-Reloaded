@@ -1377,24 +1377,42 @@ typedef struct _DRIVER_OBJECT
 	PDRIVER_STARTIO      DriverStartIo;
 	PDRIVER_DELETEDEVICE DriverDeleteDevice;
 	PDRIVER_UNKNOWN      DriverUnknown2;
-	PDRIVER_DISPATCH     MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1]; // See below for complete list of each offset function use.
-	// Base on what has been discovered, all the question marks seem to only return invalid request.
-	// IRP_MJ_CREATE
-	// IRP_MJ_CLOSE
-	// IRP_MJ_READ
-	// IRP_MJ_WRITE
-	// IRP_MJ_???
-	// IRP_MJ_???
-	// IRP_MJ_FLUSH_BUFFERS
-	// IRP_MJ_???
-	// IRP_MJ_???
-	// IRP_MJ_???
-	// IRP_MJ_DEVICE_CONTROL
-	// IRP_MJ_INTERNAL_DEVICE_CONTROL
-	// IRP_MJ_???
-	// IRP_MJ_???
-	// TODO: Find out what unknown functions above are used for base on IO_STACK_LOCATION's Parameters.
-	//       Currently, it's too early to tell.
+	union {
+		PDRIVER_DISPATCH     MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1]; // See below for complete list of each offset function use.
+		// Base on what has been discovered, all the question marks seem to only return invalid request.
+		// IRP_MJ_CREATE
+		// IRP_MJ_CLOSE
+		// IRP_MJ_READ
+		// IRP_MJ_WRITE
+		// IRP_MJ_???
+		// IRP_MJ_???
+		// IRP_MJ_FLUSH_BUFFERS
+		// IRP_MJ_???
+		// IRP_MJ_???
+		// IRP_MJ_???
+		// IRP_MJ_DEVICE_CONTROL
+		// IRP_MJ_INTERNAL_DEVICE_CONTROL
+		// IRP_MJ_???
+		// IRP_MJ_???
+		// TODO: Find out what unknown functions above are used for base on IO_STACK_LOCATION's Parameters.
+		//       Currently, it's too early to tell.
+		struct {
+			PDRIVER_DISPATCH CREATE;
+			PDRIVER_DISPATCH CLOSE;
+			PDRIVER_DISPATCH READ;
+			PDRIVER_DISPATCH WRITE;
+			PDRIVER_DISPATCH UNKNOWN4;
+			PDRIVER_DISPATCH UNKNOWN5;
+			PDRIVER_DISPATCH FLUSH_BUFFERS;
+			PDRIVER_DISPATCH UNKNOWN7;
+			PDRIVER_DISPATCH UNKNOWN8;
+			PDRIVER_DISPATCH UNKNOWN9;
+			PDRIVER_DISPATCH DEVICE_CONTROL;
+			PDRIVER_DISPATCH INTERNAL_DEVICE_CONTROL;
+			PDRIVER_DISPATCH UNKNOWN12;
+			PDRIVER_DISPATCH UNKNOWN13;
+		} MajorFunction_IRP_MJ;
+	};
 } DRIVER_OBJECT, *PDRIVER_OBJECT;
 
 // ******************************************************************
