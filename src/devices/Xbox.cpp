@@ -172,6 +172,13 @@ void InitXboxHardware(HardwareModel hardwareModel)
         g_MediaBoard->SetMountPath(MediaBoardMountPath);
 	}
 
+	if (g_bIsChihiro) {
+        g_MediaBoard = new MediaBoard();
+        char MediaBoardMountPath[xbox::max_path];
+        g_EmuShared->GetTitleMountPath(MediaBoardMountPath);
+        g_MediaBoard->SetMountPath(MediaBoardMountPath);
+	}
+
 	// Connect devices to SM bus
 	g_SMBus->ConnectDevice(SMBUS_ADDRESS_SYSTEM_MICRO_CONTROLLER, g_SMC); // W 0x20 R 0x21
 	g_SMBus->ConnectDevice(SMBUS_ADDRESS_EEPROM, g_EEPROM); // W 0xA8 R 0xA9

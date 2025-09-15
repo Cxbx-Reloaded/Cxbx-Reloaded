@@ -29,7 +29,9 @@ extern char szFilePath_EEPROM_bin[MAX_PATH];
 
 extern std::string g_DataFilePath;
 extern std::string g_DiskBasePath;
+extern std::string g_MediaBoardBasePath;
 extern std::string g_MuBasePath;
+extern std::string g_TitleMountPath;
 
 #include <filesystem>
 

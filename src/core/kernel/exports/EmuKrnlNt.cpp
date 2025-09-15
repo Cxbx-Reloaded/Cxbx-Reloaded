@@ -30,6 +30,7 @@
 
 
 #include <core\kernel\exports\xboxkrnl.h> // For NtAllocateVirtualMemory, etc.
+#include "EmuKrnlNt.hpp"
 #include "EmuKrnl.h"
 #include "Logging.h" // For LOG_FUNC()
 #include "EmuKrnlLogging.h"
@@ -45,6 +46,7 @@ namespace NtDll
 #include "EmuKrnlKi.h"
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFile.h" // For EmuNtSymbolicLinkObject, NtStatusToString(), etc.
+#include "core/kernel/support/NativeHandle.h" // For Xbox objects to native handle and back
 #include "core\kernel\memory-manager\VMManager.h" // For g_VMManager
 #include "core\kernel\support\NativeHandle.h"
 #include "devices\Xbox.h"
@@ -60,6 +62,59 @@ namespace NtDll
 
 // Prevent setting the system time from multiple threads at the same time
 xbox::RTL_CRITICAL_SECTION xbox::NtSystemTimeCritSec;
+
+// Source: ReactOS, modified for xbox compatibility layer
+xbox::ntstatus_xt xbox::NtMakeTemporaryObject(
+	IN HANDLE Handle
+)
+{
+	/* Reference the object */
+	PVOID Object;
+	ntstatus_xt result = ObReferenceObjectByHandle(Handle, nullptr, &Object);
+	if (!X_NT_SUCCESS(result)) {
+		return result;
+	}
+
+	/* Set it as temporary and dereference it */
+	ObMakeTemporaryObject(Object);
+	ObfDereferenceObject(Object);
+
+	return X_STATUS_SUCCESS;
+}
+
+xbox::ntstatus_xt xbox::NtCreateSymbolicLinkObject(
+	OUT PHANDLE LinkHandle,
+	IN OUT POBJECT_ATTRIBUTES ObjectAttributes,
+	IN PSTRING LinkTarget)
+{
+	/* Xbox kernel does a bit different method to find LinkTarget */
+	PVOID LinkTargetObject;
+	ntstatus_xt result = ObpResolveLinkTarget(LinkTarget, &LinkTargetObject);
+	if (X_NT_SUCCESS(result)) {
+
+		/* Create the object */
+		POBJECT_SYMBOLIC_LINK SymLinkObject;
+		result = ObCreateObject(&ObSymbolicLinkObjectType, ObjectAttributes, sizeof(OBJECT_SYMBOLIC_LINK) + LinkTarget->Length + 1, reinterpret_cast<PVOID*>(&SymLinkObject));
+		if (!X_NT_SUCCESS(result)) {
+			ObfDereferenceObject(LinkTargetObject);
+		}
+		else {
+			/* Initialize the remaining name, dos drive index and target object */
+			PCHAR LinkTargetBuffer = reinterpret_cast<PCHAR>(SymLinkObject + 1);
+			std::memcpy(LinkTargetBuffer, LinkTarget->Buffer, LinkTarget->Length);
+			LinkTargetBuffer[LinkTarget->Length] = NULL;
+			SymLinkObject->LinkTargetObject = LinkTargetObject;
+			SymLinkObject->LinkTarget.Buffer = LinkTargetBuffer;
+			SymLinkObject->LinkTarget.Length = LinkTarget->Length;
+			SymLinkObject->LinkTarget.MaximumLength = LinkTarget->Length + 1;
+
+			/* Insert it into the object tree */
+			result = ObInsertObject(SymLinkObject, ObjectAttributes, 0, LinkHandle);
+		}
+	}
+
+	return result;
+}
 
 // ******************************************************************
 // * 0x00B8 - NtAllocateVirtualMemory()
@@ -141,42 +196,34 @@ XBSYSAPI EXPORTNUM(187) xbox::ntstatus_xt NTAPI xbox::NtClose
 {
 	LOG_FUNC_ONE_ARG(Handle);
 
-	NTSTATUS ret = X_STATUS_SUCCESS;
+	ntstatus_xt result = X_STATUS_SUCCESS;
 
-	if (EmuHandle::IsEmuHandle(Handle)) {
-		// EmuHandles are only created for symbolic links with NtOpenSymbolicLinkObject, and ob handles are currently not created
-		// for those, so we can skip the call to ObpClose for now
-		// delete 'special' handles
-		auto iEmuHandle = (EmuHandle*)Handle;
-		ret = iEmuHandle->NtClose();
+	if (CxbxDebugger::CanReport())
+	{
+		CxbxDebugger::ReportFileClosed(Handle);
 	}
-    else {
-		// Handle everything else
-        if (CxbxDebugger::CanReport())
-        {
-            CxbxDebugger::ReportFileClosed(Handle);
-        }
 
-		if (const auto &nativeHandle = GetNativeHandle(Handle)) {
-			// This was a handle created by Ob
-			if (ntstatus_xt status = ObpClose(Handle) != X_STATUS_SUCCESS) {
-				RETURN(status);
-			}
+	PVOID Object;
+	ntstatus_xt hresult = ObReferenceObjectByHandle(Handle, zeroptr, &Object);
+	if (X_NT_SUCCESS(hresult)) {
+		// This was a handle created by Ob
+		ObfDereferenceObject(Object);
+		result = ObpClose(Handle);
+	}
+	// Otherwise, it could be native handle
+	// What has not been managed by Ob:
+	// * Mutant
+	// * Semaphore
+	// * Fiber(?)
+	// * Event
+	// * Timer
+	// * What else?
+	// TODO: Remove "else if" statement once all items from list above is done.
+	else if (DWORD flags = 0; GetHandleInformation(Handle, &flags)) {
+		result = NtDll::NtClose(Handle);
+	}
 
-			RemoveXboxHandle(Handle);
-			Handle = *nativeHandle;
-		}
-
-		// Now also close the native handle
-		// Prevent exceptions when using invalid NTHandle
-		DWORD flags = 0;
-		if (GetHandleInformation(Handle, &flags) != 0) {
-			// This was a native handle, call NtDll::NtClose
-			ret = NtDll::NtClose(Handle);
-		}
-    }
-
-	RETURN(ret);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -199,10 +246,6 @@ XBSYSAPI EXPORTNUM(188) xbox::ntstatus_xt NTAPI xbox::NtCreateDirectoryObject
 	if (X_NT_SUCCESS(status)) {
 		std::memset(directoryObject, 0, sizeof(OBJECT_DIRECTORY));
 		status = ObInsertObject(directoryObject, ObjectAttributes, 0, DirectoryHandle);
-
-		if (X_NT_SUCCESS(status)) {
-			RegisterXboxHandle(*DirectoryHandle, NULL); // we don't need to create a native handle for a directory object
-		}
 	}
 
 	RETURN(status);
@@ -304,9 +347,7 @@ XBSYSAPI EXPORTNUM(190) xbox::ntstatus_xt NTAPI xbox::NtCreateFile
 )
 {
 	LOG_FORWARD("IoCreateFile");
-
-	// TODO : How to base IoCreateFile on ObCreateObject, KeInitialize and ObInsertObject ?
-
+	/* Call the I/O Function */
 	return xbox::IoCreateFile(
 		FileHandle,
 		DesiredAccess,
@@ -553,6 +594,7 @@ XBSYSAPI EXPORTNUM(194) xbox::ntstatus_xt NTAPI xbox::NtCreateTimer
 // ******************************************************************
 // * 0x00C3 - NtDeleteFile()
 // ******************************************************************
+// Source: ReactOS, modified to support xbox compatibility layer
 XBSYSAPI EXPORTNUM(195) xbox::ntstatus_xt NTAPI xbox::NtDeleteFile
 (
 	IN POBJECT_ATTRIBUTES ObjectAttributes
@@ -560,27 +602,240 @@ XBSYSAPI EXPORTNUM(195) xbox::ntstatus_xt NTAPI xbox::NtDeleteFile
 {
 	LOG_FUNC_ONE_ARG(ObjectAttributes);
 
-	NativeObjectAttributes nativeObjectAttributes;
-	NTSTATUS ret = CxbxObjectAttributesToNT(
-		ObjectAttributes,
-		nativeObjectAttributes,
-		"NtDeleteFile");
+	DUMMY_FILE_OBJECT LocalFileObject;
+	OPEN_PACKET OpenPacket;
+	/* Setup the Open Packet */
+	std::memset(&OpenPacket, 0, sizeof(OPEN_PACKET));
+	OpenPacket.Type = IO_TYPE_OPEN_PACKET;
+	OpenPacket.Size = sizeof(OPEN_PACKET);
+	OpenPacket.CreateOptions = FILE_DELETE_ON_CLOSE;
+	OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+	OpenPacket.Disposition = FILE_OPEN;
+	OpenPacket.DeleteOnly = TRUE;
+	OpenPacket.LocalFileObject = &LocalFileObject;
+	OpenPacket.DesiredAccess = DELETE;
 
-	if (ret == X_STATUS_SUCCESS)
+	/*
+	 * Attempt opening the file. This will call the I/O Parse Routine for
+	 * the File Object (IopParseDevice) which will use the dummy file object
+	 * send the IRP to its device object. Note that we have two statuses
+	 * to worry about: the Object Manager's status (in Status) and the I/O
+	 * status, which is in the Open Packet's Final Status, and determined
+	 * by the Parse Check member.
+	 */
+	HANDLE Handle;
+	ntstatus_xt result = ObOpenObjectByName(ObjectAttributes, &IoFileObjectType, &OpenPacket, &Handle);
+	if (OpenPacket.ParseCheck == FALSE) return result;
+
+	/* Retrn the Io status */
+	return OpenPacket.FinalStatus;
+}
+
+namespace xbox {
+
+	static ntstatus_xt IopDeviceFsIoControl
+	(
+		IN HANDLE FileHandle,
+		IN HANDLE Event OPTIONAL,
+		IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+		IN PVOID ApcContext OPTIONAL,
+		OUT PIO_STATUS_BLOCK IoStatusBlock,
+		IN ulong_xt IoControlCode,
+		IN PVOID InputBuffer OPTIONAL,
+		IN ulong_xt InputBufferLength,
+		OUT PVOID OutputBuffer OPTIONAL,
+		IN ulong_xt OutputBufferLength,
+		IN boolean_xt isDeviceIoControlFile)
 	{
-		ret = NtDll::NtDeleteFile(
-			nativeObjectAttributes.NtObjAttrPtr);
-	}
+		PFILE_OBJECT FileObject;
+		ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, reinterpret_cast<xbox::PVOID*>(&FileObject));
+		if (!X_NT_SUCCESS(result)) {
+			return result;
+		}
 
-	if (FAILED(ret))
-		EmuLog(LOG_LEVEL::WARNING, "NtDeleteFile Failed!");
-	
-	RETURN(ret);
+		/* Can't use an I/O completion port and an APC at the same time */
+		if (FileObject->CompletionContext && ApcRoutine) {
+			/* Fail */
+			ObfDereferenceObject(FileObject);
+			return X_STATUS_INVALID_PARAMETER;
+		}
+
+		/* Check for an event */
+		if (Event) {
+#if ENABLE_OB_EVENT // TODO: Enable this block once event handle is handled by xbox's end.
+			/* Reference it */
+			PKEVENT EventObject;
+			result = ObReferenceObjectByHandle(Event, &ExEventObjectType, reinterpret_cast<PVOID*>(&EventObject));
+			if (!X_NT_SUCCESS(result)) {
+				/* Dereference the file object and fail */
+				ObfDereferenceObject(FileObject);
+				return result;
+			}
+
+			/* Clear it */
+			NtClearEvent(EventObject);
+#else // Forward native handle
+			NtClearEvent(Event);
+#endif
+		}
+
+		// ...
+
+		PDEVICE_OBJECT DeviceObject = FileObject->DeviceObject;
+
+		if (isDeviceIoControlFile) {
+			switch (IoControlCode)
+			{
+			case 0x4D014: { // IOCTL_SCSI_PASS_THROUGH_DIRECT
+				PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
+				PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
+
+				// Should be just enough info to pass XapiVerifyMediaInDrive
+				Authentication->AuthenticationPage.CDFValid = 1;
+				Authentication->AuthenticationPage.PartitionArea = 1;
+				Authentication->AuthenticationPage.Authentication = 1;
+			}
+			break;
+
+			case 0x70000: { // IOCTL_DISK_GET_DRIVE_GEOMETRY
+				PDISK_GEOMETRY DiskGeometry = (PDISK_GEOMETRY)OutputBuffer;
+
+				if (DeviceObject->DeviceType == FILE_DEVICE_DISK2) {
+					DiskGeometry->MediaType = FixedMedia;
+					DiskGeometry->TracksPerCylinder = 1;
+					DiskGeometry->SectorsPerTrack = 1;
+					DiskGeometry->BytesPerSector = 512;
+					DiskGeometry->Cylinders.QuadPart = 0x1400000;	// 10GB, size of stock xbox HDD
+				}
+				else if (DeviceObject->DeviceType == FILE_DEVICE_MEMORY_UNIT) {
+					DiskGeometry->MediaType = FixedMedia;
+					DiskGeometry->TracksPerCylinder = 1;
+					DiskGeometry->SectorsPerTrack = 1;
+					DiskGeometry->BytesPerSector = 512;
+					DiskGeometry->Cylinders.QuadPart = 0x4000;	// 8MB, Microsoft original MUs
+				}
+				else {
+					EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_DRIVE_GEOMETRY.", __func__, FileHandle);
+					result = X_STATUS_INVALID_HANDLE;
+				}
+			}
+			break;
+
+			case 0x74004: { // IOCTL_DISK_GET_PARTITION_INFO
+				PPARTITION_INFORMATION partitioninfo = (PPARTITION_INFORMATION)OutputBuffer;
+
+				switch (DeviceObject->DeviceType) {
+				case FILE_DEVICE_DISK2: {
+					XboxPartitionTable partitionTable = CxbxGetPartitionTable();
+					xbox::PIDE_DISK_EXTENSION DeviceExtension = reinterpret_cast<xbox::PIDE_DISK_EXTENSION>(DeviceObject->DeviceExtension);
+					dword_xt PartitionNumber = DeviceExtension->PartitionInformation.PartitionNumber;
+
+					// Now we read from the partition table, to fill in the partitionInfo struct
+					partitioninfo->PartitionNumber = PartitionNumber;
+					partitioninfo->StartingOffset.QuadPart = partitionTable.TableEntries[PartitionNumber - 1].LBAStart * 512;
+					partitioninfo->PartitionLength.QuadPart = partitionTable.TableEntries[PartitionNumber - 1].LBASize * 512;
+					partitioninfo->HiddenSectors = partitionTable.TableEntries[PartitionNumber - 1].Reserved;
+					partitioninfo->RecognizedPartition = true;
+				}
+				break;
+				case FILE_DEVICE_MEMORY_UNIT: {
+					partitioninfo->PartitionNumber = 0;
+					partitioninfo->StartingOffset.QuadPart = 0; // FIXME: where does the MU partition start?
+					partitioninfo->PartitionLength.QuadPart = 16384; // 8MB
+					partitioninfo->HiddenSectors = 0;
+					partitioninfo->RecognizedPartition = true;
+				}
+				break;
+				default:
+					EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_PARTITION_INFO.", __func__, FileHandle);
+					result = X_STATUS_INVALID_HANDLE;
+					break;
+				}
+			}
+			break;
+
+			default:
+				LOG_UNIMPLEMENTED();
+			}
+		}
+		else {
+			switch (IoControlCode) {
+			case fsctl_dismount_volume: {
+
+				if (DeviceObject->DeviceType == FILE_DEVICE_DISK2) {
+					// HACK: this should just free the resources assocoated with the volume, it should not reformat it
+					xbox::PIDE_DISK_EXTENSION DeviceExtension = reinterpret_cast<xbox::PIDE_DISK_EXTENSION>(DeviceObject->DeviceExtension);
+					dword_xt PartitionNumber = DeviceExtension->PartitionInformation.PartitionNumber;
+					if (EmuDiskFormatPartition(PartitionNumber)) {
+						result = X_STATUS_SUCCESS;
+					}
+					else {
+						// TODO: Is it correct status?
+						result = X_STATUS_INVALID_DEVICE_REQUEST;
+					}
+				}
+				else {
+					LOG_UNIMPLEMENTED();
+				}
+			}
+			break;
+
+			case fsctl_read_fatx_metadata: {
+				if (DeviceObject->DeviceType == FILE_DEVICE_MEMORY_UNIT) {
+					// Ensure that InputBuffer is indeed what we think it is
+					pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
+					assert(InputBufferLength == sizeof(fatx_volume_metadata));
+					xbox::PMU_EXTENSION DeviceExtension = reinterpret_cast<xbox::PMU_EXTENSION>(DeviceObject->DeviceExtension);
+					g_io_mu_metadata->read(DeviceExtension->PartitionNumber, volume->offset, static_cast<char*>(volume->buffer), volume->length);
+					result = X_STATUS_SUCCESS;
+				}
+				else {
+					result = X_STATUS_INVALID_HANDLE;
+				}
+			}
+			break;
+
+			case fsctl_write_fatx_metadata: {
+				if (DeviceObject->DeviceType == FILE_DEVICE_MEMORY_UNIT) {
+					// Ensure that InputBuffer is indeed what we think it is
+					pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
+					assert(InputBufferLength == sizeof(fatx_volume_metadata));
+					xbox::PMU_EXTENSION DeviceExtension = reinterpret_cast<xbox::PMU_EXTENSION>(DeviceObject->DeviceExtension);
+					g_io_mu_metadata->write(DeviceExtension->PartitionNumber, volume->offset, static_cast<const char*>(volume->buffer), volume->length);
+					result = X_STATUS_SUCCESS;
+				}
+				else {
+					result = X_STATUS_INVALID_HANDLE;
+				}
+			}
+			break;
+
+			}
+
+			LOG_INCOMPLETE();
+		}
+		//FileObject->Event.Header.SignalState = 0;
+
+		// ...
+
+		// irp code goes here
+
+		//int MajorFunction = isDeviceIoControlFile ? IRP_MJ_DEVICE_CONTROL : IRP_MJ_FILE_SYSTEM_CONTROL;
+
+		/* Perform the call */
+		//return IopPerformSynchronousRequest(...);
+
+		// TODO: Remove ObfDereferenceObject as it may already had been done elsewhere.
+		ObfDereferenceObject(FileObject);
+
+		return result;
+	}
 }
 
 // ******************************************************************
 // * 0x00C4 - NtDeviceIoControlFile()
 // ******************************************************************
+// Source: ReactOS
 XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 (
 	IN HANDLE FileHandle,
@@ -608,80 +863,14 @@ XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = X_STATUS_SUCCESS;
+	/* Call the Generic Function */
+	ntstatus_xt result = IopDeviceFsIoControl(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, IoControlCode, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, true);
 
-	switch (IoControlCode)
-	{
-	case 0x4D014: { // IOCTL_SCSI_PASS_THROUGH_DIRECT
-		PSCSI_PASS_THROUGH_DIRECT PassThrough = (PSCSI_PASS_THROUGH_DIRECT)InputBuffer;
-		PDVDX2_AUTHENTICATION Authentication = (PDVDX2_AUTHENTICATION)PassThrough->DataBuffer;
+	LOG_FUNC_BEGIN_ARG_RESULT
+		LOG_FUNC_ARG_RESULT(IoStatusBlock)
+	LOG_FUNC_END_ARG_RESULT;
 
-		// Should be just enough info to pass XapiVerifyMediaInDrive
-		Authentication->AuthenticationPage.CDFValid = 1;
-		Authentication->AuthenticationPage.PartitionArea = 1;
-		Authentication->AuthenticationPage.Authentication = 1;
-	}
-	break;
-
-	case 0x70000: { // IOCTL_DISK_GET_DRIVE_GEOMETRY
-		PDISK_GEOMETRY DiskGeometry = (PDISK_GEOMETRY)OutputBuffer;
-
-		DeviceType type = CxbxrGetDeviceTypeFromHandle(FileHandle);
-		if (type == DeviceType::Harddisk0) {
-			DiskGeometry->MediaType = FixedMedia;
-			DiskGeometry->TracksPerCylinder = 1;
-			DiskGeometry->SectorsPerTrack = 1;
-			DiskGeometry->BytesPerSector = 512;
-			DiskGeometry->Cylinders.QuadPart = 0x1400000;	// 10GB, size of stock xbox HDD
-		}
-		else if (type == DeviceType::MU) {
-			DiskGeometry->MediaType = FixedMedia;
-			DiskGeometry->TracksPerCylinder = 1;
-			DiskGeometry->SectorsPerTrack = 1;
-			DiskGeometry->BytesPerSector = 512;
-			DiskGeometry->Cylinders.QuadPart = 0x4000;	// 8MB, Microsoft original MUs
-		}
-		else {
-			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_DRIVE_GEOMETRY.", __func__, FileHandle);
-			ret = X_STATUS_INVALID_HANDLE;
-		}
-	}
-	break;
-
-	case 0x74004: { // IOCTL_DISK_GET_PARTITION_INFO
-		PPARTITION_INFORMATION partitioninfo = (PPARTITION_INFORMATION)OutputBuffer;
-
-		DeviceType type = CxbxrGetDeviceTypeFromHandle(FileHandle);
-		if (type == DeviceType::Harddisk0) {
-			XboxPartitionTable partitionTable = CxbxGetPartitionTable();
-			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-
-			// Now we read from the partition table, to fill in the partitionInfo struct
-			partitioninfo->PartitionNumber = partitionNumber;
-			partitioninfo->StartingOffset.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBAStart * 512;
-			partitioninfo->PartitionLength.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize * 512;
-			partitioninfo->HiddenSectors = partitionTable.TableEntries[partitionNumber - 1].Reserved;
-			partitioninfo->RecognizedPartition = true;
-		}
-		else if (type == DeviceType::MU) {
-			partitioninfo->PartitionNumber = 0;
-			partitioninfo->StartingOffset.QuadPart = 0; // FIXME: where does the MU partition start?
-			partitioninfo->PartitionLength.QuadPart = 16384; // 8MB
-			partitioninfo->HiddenSectors = 0;
-			partitioninfo->RecognizedPartition = true;
-		}
-		else {
-			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with IoControlCode IOCTL_DISK_GET_PARTITION_INFO.", __func__, FileHandle);
-			ret = X_STATUS_INVALID_HANDLE;
-		}
-	}
-	break;
-
-	default:
-		LOG_UNIMPLEMENTED();
-	}
-
-	RETURN(ret);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -689,9 +878,9 @@ XBSYSAPI EXPORTNUM(196) xbox::ntstatus_xt NTAPI xbox::NtDeviceIoControlFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 (
-	HANDLE  SourceHandle,
-	HANDLE *TargetHandle,
-	dword_xt   Options
+	HANDLE   SourceHandle,
+	PHANDLE  TargetHandle,
+	dword_xt Options
 )
 {
 	LOG_FUNC_BEGIN
@@ -700,71 +889,47 @@ XBSYSAPI EXPORTNUM(197) xbox::ntstatus_xt NTAPI xbox::NtDuplicateObject
 		LOG_FUNC_ARG(Options)
 		LOG_FUNC_END;
 
-	ntstatus_xt status;
+	ntstatus_xt result;
 
-	if (EmuHandle::IsEmuHandle(SourceHandle)) {
-		auto iEmuHandle = (EmuHandle*)SourceHandle;
-		status = iEmuHandle->NtDuplicateObject(TargetHandle, Options);
+	PVOID Object;
+	result = ObReferenceObjectByHandle(SourceHandle, zeroptr, &Object);
+	if (X_NT_SUCCESS(result)) {
+		if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE)) {
+			NtClose(SourceHandle);
+		}
+
+		result = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, TargetHandle);
+		if (!X_NT_SUCCESS(result)) {
+			*TargetHandle = NULL;
+			RETURN(result);
+		}
+
+		ObfDereferenceObject(Object);
 	}
-	else {
-		// On the xbox, the duplicated handle always has the same access rigths of the source handle
+	// TODO: Remove "else if" statement once all items from list from NtClose is done.
+	// Check if Handle is from Host's end.
+	else if (DWORD flags = 0; GetHandleInformation(SourceHandle, &flags)) {
+		// On the xbox, the duplicated handle always has the same access rights of the source handle
 		const ACCESS_MASK DesiredAccess = 0;
 		const ULONG Attributes = 0;
 		const ULONG nativeOptions = (Options | DUPLICATE_SAME_ATTRIBUTES | DUPLICATE_SAME_ACCESS);
 
-		if (const auto &nativeHandle = GetNativeHandle(SourceHandle)) {
-			// This was a handle created by Ob
-			PVOID Object;
-			status = ObReferenceObjectByHandle(SourceHandle, zeroptr, &Object);
-			if (X_NT_SUCCESS(status)) {
-				if (ObpIsFlagSet(Options, DUPLICATE_CLOSE_SOURCE)) {
-					NtClose(SourceHandle);
-				}
+		::HANDLE dupHandle;
+		result = NtDll::NtDuplicateObject(
+			/*SourceProcessHandle=*/g_CurrentProcessHandle,
+			SourceHandle,
+			/*TargetProcessHandle=*/g_CurrentProcessHandle,
+			&dupHandle,
+			DesiredAccess,
+			Attributes,
+			nativeOptions);
 
-				status = ObOpenObjectByPointer(Object, OBJECT_TO_OBJECT_HEADER(Object)->Type, TargetHandle);
-				if (!X_NT_SUCCESS(status)) {
-					*TargetHandle = NULL;
-					RETURN(status);
-				}
-
-				ObfDereferenceObject(Object);
-
-				// If nativeHandle is NULL, then skip NtDll::NtDuplicateObject. This happens when SourceHandle is an xbox handle with a corresponding
-				// NULL native handle (e.g. directory objects hit this case)
-				if (*nativeHandle != NULL) {
-					::HANDLE dupHandle;
-					status = NtDll::NtDuplicateObject(
-						/*SourceProcessHandle=*/g_CurrentProcessHandle,
-						*nativeHandle,
-						/*TargetProcessHandle=*/g_CurrentProcessHandle,
-						&dupHandle,
-						DesiredAccess,
-						Attributes,
-						nativeOptions);
-					RegisterXboxHandle(*TargetHandle, dupHandle);
-				}
-				else {
-					RegisterXboxHandle(*TargetHandle, NULL);
-				}
-			}
-		}
-		else {
-			status = NtDll::NtDuplicateObject(
-				/*SourceProcessHandle=*/g_CurrentProcessHandle,
-				SourceHandle,
-				/*TargetProcessHandle=*/g_CurrentProcessHandle,
-				TargetHandle,
-				DesiredAccess,
-				Attributes,
-				nativeOptions);
-		}
-
-		if (!X_NT_SUCCESS(status)) {
+		if (!X_NT_SUCCESS(result)) {
 			CxbxrAbort("NtDll::NtDuplicateObject failed to duplicate the handle 0x%.8X!", SourceHandle);
 		}
 	}
 
-	RETURN(status);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -780,14 +945,27 @@ XBSYSAPI EXPORTNUM(198) xbox::ntstatus_xt NTAPI xbox::NtFlushBuffersFile
 		LOG_FUNC_ARG(FileHandle)
 		LOG_FUNC_ARG_OUT(IoStatusBlock)
 		LOG_FUNC_END;
-	NTSTATUS ret = X_STATUS_SUCCESS;
-	
-	if (EmuHandle::IsEmuHandle(FileHandle))
-		LOG_UNIMPLEMENTED();
-	else
-		ret = NtDll::NtFlushBuffersFile(FileHandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
 
-	RETURN(ret);
+	/* Get the File Object */
+	PVOID Object;
+	ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, &Object);
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
+	}
+
+	// TODO: Implement irp work here.
+
+	if (const auto& nhandle = GetObjectNativeHandle(Object)) {
+		result = NtDll::NtFlushBuffersFile(*nhandle, (NtDll::IO_STATUS_BLOCK*)IoStatusBlock);
+	}
+	else {
+		EmuLog(LOG_LEVEL::ERROR2, "%s: Could not get native handle from xobject: %08X", __func__, Object);
+		result = X_STATUS_INVALID_HANDLE;
+	}
+
+	ObfDereferenceObject(Object);
+
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -817,6 +995,7 @@ XBSYSAPI EXPORTNUM(199) xbox::ntstatus_xt NTAPI xbox::NtFreeVirtualMemory
 // ******************************************************************
 // * 0x00C8 - NtFsControlFile
 // ******************************************************************
+// Source: ReactOS
 XBSYSAPI EXPORTNUM(200) xbox::ntstatus_xt NTAPI xbox::NtFsControlFile
 (
 	IN HANDLE               FileHandle,
@@ -844,57 +1023,14 @@ XBSYSAPI EXPORTNUM(200) xbox::ntstatus_xt NTAPI xbox::NtFsControlFile
 		LOG_FUNC_ARG(OutputBufferLength)
 		LOG_FUNC_END;
 
-	ntstatus_xt ret = STATUS_INVALID_PARAMETER;
+	/* Call the Generic Function */
+	ntstatus_xt result = IopDeviceFsIoControl(FileHandle, Event, ApcRoutine, ApcContext, IoStatusBlock, FsControlCode, InputBuffer, InputBufferLength, OutputBuffer, OutputBufferLength, false);
 
-	switch (FsControlCode)
-	{
-	case fsctl_dismount_volume: {
-		// HACK: this should just free the resources assocoated with the volume, it should not reformat it
-		int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
-		if (partitionNumber > 0) {
-			CxbxFormatPartitionByHandle(FileHandle);
-			ret = X_STATUS_SUCCESS;
-		}
-	}
-	break;
+	LOG_FUNC_BEGIN_ARG_RESULT
+		LOG_FUNC_ARG_RESULT(IoStatusBlock)
+		LOG_FUNC_END_ARG_RESULT;
 
-	case fsctl_read_fatx_metadata: {
-		const std::wstring path = CxbxGetFinalPathNameByHandle(FileHandle);
-		size_t pos = path.rfind(L"\\EmuMu");
-		if (pos != std::string::npos && path[pos + 6] == '\\') {
-			// Ensure that InputBuffer is indeed what we think it is
-			pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
-			assert(InputBufferLength == sizeof(fatx_volume_metadata));
-			g_io_mu_metadata->read(path[pos + 7], volume->offset, static_cast<char *>(volume->buffer), volume->length);
-			ret = X_STATUS_SUCCESS;
-		}
-		else {
-			ret = X_STATUS_INVALID_HANDLE;
-		}
-	}
-	break;
-
-	case fsctl_write_fatx_metadata: {
-		const std::wstring path = CxbxGetFinalPathNameByHandle(FileHandle);
-		size_t pos = path.rfind(L"\\EmuMu");
-		if (pos != std::string::npos && path[pos + 6] == '\\') {
-			// Ensure that InputBuffer is indeed what we think it is
-			pfatx_volume_metadata volume = static_cast<pfatx_volume_metadata>(InputBuffer);
-			assert(InputBufferLength == sizeof(fatx_volume_metadata));
-			g_io_mu_metadata->write(path[pos + 7], volume->offset, static_cast<const char *>(volume->buffer), volume->length);
-			ret = X_STATUS_SUCCESS;
-		}
-		else {
-			ret = X_STATUS_INVALID_HANDLE;
-		}
-	}
-	break;
-
-	}
-
-	LOG_INCOMPLETE();
-
-	RETURN(ret);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -1090,6 +1226,21 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 	if (FileInformationClass != FileDirectoryInformation)   // Due to unicode->string conversion
 		CxbxrAbort("Unsupported FileInformationClass");
 
+	/* Get File Object */
+	PFILE_OBJECT FileObject;
+	ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, reinterpret_cast<PVOID*>(&FileObject));
+	if (!X_NT_SUCCESS(result)) {
+		/* Fail */
+		RETURN(result);
+	}
+
+	if (FileObject->CompletionContext && ApcRoutine) {
+		ObfDereferenceObject(FileObject);
+		return X_STATUS_INVALID_PARAMETER;
+	}
+
+	const auto& nFileHandle = GetObjectNativeHandle(FileObject);
+
 	NtDll::UNICODE_STRING NtFileMask;
 
 	wchar_t wszObjectName[MAX_PATH];
@@ -1123,7 +1274,7 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 		ZeroMemory(wcstr, MAX_PATH * sizeof(wchar_t));
 
 		ret = NtDll::NtQueryDirectoryFile(
-			FileHandle, 
+			*nFileHandle,
 			Event, 
 			(NtDll::PIO_APC_ROUTINE)ApcRoutine,
 			ApcContext,
@@ -1151,6 +1302,8 @@ XBSYSAPI EXPORTNUM(207) xbox::ntstatus_xt NTAPI xbox::NtQueryDirectoryFile
 
 	// TODO: Cache the last search result for quicker access with CreateFile (xbox does this internally!)
 	free(NtFileDirInfo);
+
+	ObfDereferenceObject(FileObject);
 
 	RETURN(ret);
 }
@@ -1215,35 +1368,41 @@ XBSYSAPI EXPORTNUM(209) xbox::ntstatus_xt NTAPI xbox::NtQueryEvent
 XBSYSAPI EXPORTNUM(210) xbox::ntstatus_xt NTAPI xbox::NtQueryFullAttributesFile
 (
 	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-	OUT xbox::PFILE_NETWORK_OPEN_INFORMATION   Attributes
+	OUT xbox::PFILE_NETWORK_OPEN_INFORMATION   FileInformation
 )
 {
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(ObjectAttributes)
-		LOG_FUNC_ARG_OUT(Attributes)
+		LOG_FUNC_ARG_OUT(FileInformation)
 		LOG_FUNC_END;
 
-	//	__asm int 3;
-	NativeObjectAttributes nativeObjectAttributes;
-	NtDll::FILE_NETWORK_OPEN_INFORMATION nativeNetOpenInfo;
+	OPEN_PACKET OpenPacket{};
+	[[maybe_unused]] DUMMY_FILE_OBJECT LocalFileObject;
 
-	NTSTATUS ret = CxbxObjectAttributesToNT(
-		ObjectAttributes,
-		/*var*/nativeObjectAttributes,
-		"NtQueryFullAttributesFile");
+	OpenPacket.Type = IO_TYPE_OPEN_PACKET;
+	OpenPacket.Size = sizeof(OPEN_PACKET);
+	OpenPacket.ShareAccess = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
+	OpenPacket.Disposition = FILE_OPEN;
+	OpenPacket.DesiredAccess = FILE_READ_ATTRIBUTES;
+	OpenPacket.NetworkInformation = FileInformation;
+	OpenPacket.LocalFileObject = &LocalFileObject;
+	OpenPacket.QueryOnly = true;
 
-	if (ret == X_STATUS_SUCCESS)
-		ret = NtDll::NtQueryFullAttributesFile(
-			nativeObjectAttributes.NtObjAttrPtr,
-			&nativeNetOpenInfo);
 
-	// Convert Attributes to Xbox
-	NTToXboxFileInformation(&nativeNetOpenInfo, Attributes, FileNetworkOpenInformation, sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION));
+	// Since we perform query information, we can pass it on to ObOpenObjectByName function to do the work for us.
+	HANDLE handle;
+	ntstatus_xt result = ObOpenObjectByName(ObjectAttributes, &IoFileObjectType, &OpenPacket, &handle);
 
-	if (FAILED(ret))
-		EmuLog(LOG_LEVEL::WARNING, "NtQueryFullAttributesFile failed! (0x%.08X)", ret);
+	if (OpenPacket.ParseCheck == false) {
+		/* Parse failed */
+		//DPRINT("IopQueryAttributesFile failed for '%wZ' with 0x%lx\n", ObjectAttributes->ObjectName, result);
+		RETURN(result);
+	}
+	else {
+		result = OpenPacket.FinalStatus;
+	}
 
-	RETURN(ret);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -1266,26 +1425,55 @@ XBSYSAPI EXPORTNUM(211) xbox::ntstatus_xt NTAPI xbox::NtQueryInformationFile
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
-	NTSTATUS ret;
-	PVOID ntFileInfo;
+	/* Validate the information class */
+	if ((FileInformationClass < 0) ||
+		(FileInformationClass >= FileMaximumInformation) ||
+		!(IopQueryOperationLength[FileInformationClass]))
+	{
+		/* Invalid class */
+		return X_STATUS_INVALID_INFO_CLASS;
+	}
+
+	/* Validate the length */
+	if (Length < IopQueryOperationLength[FileInformationClass])
+	{
+		/* Invalid length */
+		return X_STATUS_INFO_LENGTH_MISMATCH;
+	}
+
+	PFILE_OBJECT FileObject;
+	ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, reinterpret_cast<PVOID*>(&FileObject));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
+	}
+
+	// TODO: Need to implement IRP here for query callback.
 
 	// Start with sizeof(corresponding struct)
-	size_t bufferSize = XboxFileInfoStructSizes[FileInformationClass];
+	size_t bufferSize = IopQueryOperationLength[FileInformationClass];
+
+	const auto& nHandle = GetObjectNativeHandle(FileObject);
+	if (!nHandle) {
+		RETURN(X_STATUS_INVALID_PARAMETER);
+	}
+
+	ObfDereferenceObject(FileObject);
 
 	// We need to retry the operation in case the buffer is too small to fit the data
+	PVOID ntFileInfo;
 	do
 	{
 		ntFileInfo = malloc(bufferSize);
 
-		ret = NtDll::NtQueryInformationFile(
-			FileHandle,
+		result = NtDll::NtQueryInformationFile(
+			*nHandle,
 			(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
 			ntFileInfo,
 			bufferSize,
 			(NtDll::FILE_INFORMATION_CLASS)FileInformationClass);
 
 		// Buffer is too small; make a larger one
-		if (ret == X_STATUS_BUFFER_OVERFLOW)
+		if (result == X_STATUS_BUFFER_OVERFLOW)
 		{
 			free(ntFileInfo);
 
@@ -1294,23 +1482,23 @@ XBSYSAPI EXPORTNUM(211) xbox::ntstatus_xt NTAPI xbox::NtQueryInformationFile
 			if (bufferSize > 65536)
 				return STATUS_INVALID_PARAMETER;   // TODO: what's the appropriate error code to return here?
 		}
-	} while (ret == X_STATUS_BUFFER_OVERFLOW);
+	} while (result == X_STATUS_BUFFER_OVERFLOW);
 	
 	// Convert and copy NT data to the given Xbox struct
-	NTSTATUS convRet = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
+	result = NTToXboxFileInformation(ntFileInfo, FileInformation, FileInformationClass, Length);
 
 	// Make sure to free the memory first
 	free(ntFileInfo);
 
-	if (FAILED(ret))
-		EmuLog(LOG_LEVEL::WARNING, "NtQueryInformationFile failed! (0x%.08X)", ret);
+	if (FAILED(result))
+		EmuLog(LOG_LEVEL::WARNING, "NtQueryInformationFile failed! (0x%.08X)", result);
 
 	// Prioritize the buffer overflow over real return code,
 	// in case the Xbox program decides to follow the same procedure above
-	if (convRet == X_STATUS_BUFFER_OVERFLOW)
-		return convRet;
+	if (result == X_STATUS_BUFFER_OVERFLOW)
+		RETURN(result);
 
-	RETURN(ret);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -1389,6 +1577,7 @@ XBSYSAPI EXPORTNUM(214) xbox::ntstatus_xt NTAPI xbox::NtQuerySemaphore
 // ******************************************************************
 // * 0x00D7 - NtQuerySymbolicLinkObject()
 // ******************************************************************
+// Source: ReactOS, modified for xbox compatibility layer
 XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 (
 	HANDLE LinkHandle,
@@ -1402,43 +1591,49 @@ XBSYSAPI EXPORTNUM(215) xbox::ntstatus_xt NTAPI xbox::NtQuerySymbolicLinkObject
 		LOG_FUNC_ARG_OUT(ReturnedLength)
 		LOG_FUNC_END;
 
-	NTSTATUS ret = STATUS_INVALID_HANDLE;
-	EmuNtSymbolicLinkObject* symbolicLinkObject = NULL;
+	POBJECT_SYMBOLIC_LINK SymlinkObject;
+	POBJECT_HEADER ObjectHeader;
 
-	// We expect LinkHandle to always be an EmuHandle
-	if (!EmuHandle::IsEmuHandle(LinkHandle)) {
-		LOG_UNIMPLEMENTED();
-		return ret;
+	/* Reference the object */
+	ntstatus_xt result = ObReferenceObjectByHandle(LinkHandle, &ObSymbolicLinkObjectType,reinterpret_cast<PVOID*>(&SymlinkObject));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
 	}
 
-	auto iEmuHandle = (EmuHandle*)LinkHandle;
-	// Retrieve the NtSymbolicLinkObject and populate the output arguments :
-	ret = X_STATUS_SUCCESS;
-	symbolicLinkObject = (EmuNtSymbolicLinkObject*)iEmuHandle->NtObject;
+	/* Get the object header */
+	ObjectHeader = OBJECT_TO_OBJECT_HEADER(SymlinkObject);
 
-	if (symbolicLinkObject->IsHostBasedPath) {
-		// TODO : What should we do with symbolic links 
-		ret = STATUS_UNRECOGNIZED_VOLUME;
-	} else {
-		if (LinkTarget != NULL)
-		{
-			if (LinkTarget->MaximumLength >= symbolicLinkObject->XboxSymbolicLinkPath.length() + sizeof(char)) {
-				copy_string_to_PSTRING_to(symbolicLinkObject->XboxSymbolicLinkPath, LinkTarget);
-			}
-			else {
-				ret = X_STATUS_BUFFER_TOO_SMALL;
-			}
-		}
+	/*
+	 * So here's the thing: If you specify a return length, then the
+	 * implementation will use the maximum length. If you don't, then
+	 * it will use the length.
+	 */
+	ULONG LengthUsed = SymlinkObject->LinkTarget.Length;
 
-		if (ReturnedLength != NULL)
-		{
-			*ReturnedLength = symbolicLinkObject->XboxSymbolicLinkPath.length(); // Return full length (even if buffer was too small)
-		}
+	/* Make sure our buffer will fit */
+	if (LengthUsed <= LinkTarget->MaximumLength) {
+		/* Copy the buffer */
+		std::memcpy(LinkTarget->Buffer, SymlinkObject->LinkTarget.Buffer, LengthUsed);
+
+		/* Copy the new length */
+		LinkTarget->Length = SymlinkObject->LinkTarget.Length;
 	}
-	if (ret != X_STATUS_SUCCESS)
-		EmuLog(LOG_LEVEL::WARNING, "NtQuerySymbolicLinkObject failed! (%s)", NtStatusToString(ret));
+	else {
+		/* Otherwise set the failure status */
+		result = X_STATUS_BUFFER_TOO_SMALL;
+	}
 
-	RETURN(ret);
+	/* In both cases, check if the required length was requested */
+	if (ReturnedLength) {
+		/* Then return it */
+		*ReturnedLength = SymlinkObject->LinkTarget.MaximumLength;
+	}
+
+	/* Dereference the object */
+	ObfDereferenceObject(SymlinkObject);
+
+	/* Return query status */
+	return result;
 }
 
 // ******************************************************************
@@ -1531,6 +1726,20 @@ XBSYSAPI EXPORTNUM(217) xbox::ntstatus_xt NTAPI xbox::NtQueryVirtualMemory
 	RETURN(ret);
 }
 
+xbox::uchar_xt IopQueryFsOperationLength[] = {
+	0,
+	sizeof(NtDll::FILE_FS_VOLUME_INFORMATION),
+	0,
+	sizeof(NtDll::FILE_FS_SIZE_INFORMATION),
+	sizeof(NtDll::FILE_FS_DEVICE_INFORMATION),
+	sizeof(NtDll::FILE_FS_ATTRIBUTE_INFORMATION),
+	0,//sizeof(NtDll::FILE_FS_CONTROL_INFORMATION),
+	sizeof(NtDll::FILE_FS_FULL_SIZE_INFORMATION),
+	sizeof(NtDll::FILE_FS_OBJECTID_INFORMATION),
+	0,//sizeof(NtDll::FILE_FS_DRIVER_PATH_INFORMATION),
+	0xFF
+};
+
 // ******************************************************************
 // * 0x00DA - NtQueryVolumeInformationFile()
 // ******************************************************************
@@ -1551,17 +1760,37 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
 
+	/* Validate the information class */
+	if ((FileInformationClass < 0) ||
+		(FileInformationClass >= FileFsMaximumInformation) ||
+		!(IopQueryFsOperationLength[FileInformationClass])) {
+		/* Invalid class */
+		return X_STATUS_INVALID_INFO_CLASS;
+	}
+
+	/* Validate the length */
+	if (Length < IopQueryFsOperationLength[FileInformationClass]) {
+		/* Invalid length */
+		return X_STATUS_INFO_LENGTH_MISMATCH;
+	}
+
+	/* Get File Object */
+	PFILE_OBJECT FileObject;
+	ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, reinterpret_cast<PVOID*>(&FileObject));
+	if (!X_NT_SUCCESS(result)) {
+		return result;
+	}
+
 	// FileFsSizeInformation is a special case that should read from our emulated partition table
 	if ((DWORD)FileInformationClass == FileFsSizeInformation) {
-		ntstatus_xt status;
 		PFILE_FS_SIZE_INFORMATION XboxSizeInfo = (PFILE_FS_SIZE_INFORMATION)FileInformation;
 
-		// This might access the HDD, a MU or the DVD drive, so we need to figure out the correct one first
-		DeviceType type = CxbxrGetDeviceTypeFromHandle(FileHandle);
-		if (type == DeviceType::Harddisk0) {
+		switch (FileObject->DeviceObject->DeviceType) {
+		case FILE_DEVICE_DISK2: {
 
 			XboxPartitionTable partitionTable = CxbxGetPartitionTable();
-			int partitionNumber = CxbxGetPartitionNumberFromHandle(FileHandle);
+			PIDE_DISK_EXTENSION DeviceExtension = reinterpret_cast<PIDE_DISK_EXTENSION>(FileObject->DeviceObject->DeviceExtension);
+			int partitionNumber = DeviceExtension->PartitionInformation.PartitionNumber;
 			FATX_SUPERBLOCK superBlock = CxbxGetFatXSuperBlock(partitionNumber);
 
 			XboxSizeInfo->BytesPerSector = 512;
@@ -1578,31 +1807,42 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 			XboxSizeInfo->TotalAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
 			XboxSizeInfo->AvailableAllocationUnits.QuadPart = partitionTable.TableEntries[partitionNumber - 1].LBASize / XboxSizeInfo->SectorsPerAllocationUnit;
 
-			status = X_STATUS_SUCCESS;
+			result = X_STATUS_SUCCESS;
 		}
-		else if (type == DeviceType::MU) {
+		break;
+
+		case FILE_DEVICE_MEMORY_UNIT:
 
 			XboxSizeInfo->BytesPerSector = 512;
 			XboxSizeInfo->SectorsPerAllocationUnit = 32;
 			XboxSizeInfo->TotalAllocationUnits.QuadPart = 512; // 8MB -> ((1024)^2 * 8) / (BytesPerSector * SectorsPerAllocationUnit)
 			XboxSizeInfo->AvailableAllocationUnits.QuadPart = 512; // constant, so there's always free space available to write stuff
 
-			status = X_STATUS_SUCCESS;
-		}
-		else if (type == DeviceType::Cdrom0) {
+			result = X_STATUS_SUCCESS;
+			break;
 
+		case FILE_DEVICE_CD_ROM2:
 			XboxSizeInfo->BytesPerSector = 2048;
 			XboxSizeInfo->SectorsPerAllocationUnit = 1;
 			XboxSizeInfo->TotalAllocationUnits.QuadPart = 3820880; // assuming DVD-9 (dual layer), redump reports a total size in bytes of 7825162240
 
-			status = X_STATUS_SUCCESS;
-		}
-		else {
+			result = X_STATUS_SUCCESS;
+			break;
+
+		default:
 			EmuLog(LOG_LEVEL::WARNING, "%s: Unrecongnized handle 0x%X with class FileFsSizeInformation.", __func__, FileHandle);
-			status = X_STATUS_INVALID_HANDLE;
+			result = X_STATUS_INVALID_HANDLE;
+			break;
+		}
+		ObfDereferenceObject(FileObject);
+
+		if (X_NT_SUCCESS(result)) {
+			LOG_FUNC_BEGIN_ARG_RESULT
+				LOG_FUNC_ARG_RESULT(FileInformation)
+			LOG_FUNC_END_ARG_RESULT;
 		}
 
-		RETURN(status);
+		RETURN(result);
 	}
 
 	// Get the required size for the host buffer
@@ -1633,8 +1873,10 @@ XBSYSAPI EXPORTNUM(218) xbox::ntstatus_xt NTAPI xbox::NtQueryVolumeInformationFi
 
 	PVOID NativeFileInformation = _aligned_malloc(HostBufferSize, 8);
 
+	const auto& nFileHandle = GetObjectNativeHandle(FileObject);
+
 	NTSTATUS ret = NtDll::NtQueryVolumeInformationFile(
-		FileHandle,
+		*nFileHandle,
 		(NtDll::PIO_STATUS_BLOCK)IoStatusBlock,
 		(NtDll::PFILE_FS_SIZE_INFORMATION)NativeFileInformation, HostBufferSize,
 		(NtDll::FS_INFORMATION_CLASS)FileInformationClass);
@@ -1712,6 +1954,8 @@ XBSYSAPI EXPORTNUM(219) xbox::ntstatus_xt NTAPI xbox::NtReadFile
 		CxbxDebugger::ReportFileRead(FileHandle, Length, Offset);
 	}
 
+	// TODO: This may need removal and use actual driver for Chihiro.
+	//       Check if there's another branch has chihiro support somewhere? I think nope.
 	// If we are emulating the Chihiro, we need to hook mbcom
 	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
 		g_MediaBoard->ComRead(ByteOffset->QuadPart, Buffer, Length);
@@ -1722,6 +1966,19 @@ XBSYSAPI EXPORTNUM(219) xbox::ntstatus_xt NTAPI xbox::NtReadFile
 		return STATUS_SUCCESS;
 	}
 
+	PFILE_OBJECT FileObject;
+	ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, reinterpret_cast<PVOID*>(&FileObject));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
+	}
+
+#ifdef ENABLE_DRIVER_FILESYSTEM // TODO: Implement file system's driver support then enable read/write access check.
+	if (!FileObject->ReadAccess) {
+		ObfDereferenceObject(FileObject);
+		RETURN(X_STATUS_ACCESS_DENIED);
+	}
+#endif
+
 	if (ApcRoutine != nullptr) {
 		// Pack the original parameters to a wrapped context for a custom APC routine
 		CxbxIoDispatcherContext* cxbxContext = new CxbxIoDispatcherContext(IoStatusBlock, ApcRoutine, ApcContext);
@@ -1729,22 +1986,30 @@ XBSYSAPI EXPORTNUM(219) xbox::ntstatus_xt NTAPI xbox::NtReadFile
 		ApcContext = cxbxContext;
 	}
 
-	NTSTATUS ret = NtDll::NtReadFile(
-		FileHandle,
-		Event,
-		ApcRoutine,
-		ApcContext,
-		IoStatusBlock,
-		Buffer,
-		Length,
-		(NtDll::LARGE_INTEGER*)ByteOffset,
-		/*Key=*/nullptr);
+	// TODO: Start irp work here...
 
-    if (FAILED(ret)) {
-        EmuLog(LOG_LEVEL::WARNING, "NtReadFile Failed! (0x%.08X)", ret);
-    }
+	if (const auto& nFileHandle = GetObjectNativeHandle(FileObject)) {
+		result = NtDll::NtReadFile(
+			*nFileHandle,
+			Event,
+			ApcRoutine,
+			ApcContext,
+			IoStatusBlock,
+			Buffer,
+			Length,
+			(NtDll::LARGE_INTEGER*)ByteOffset,
+			/*Key=*/nullptr);
 
-	RETURN(ret);
+		if (FAILED(result)) {
+			EmuLog(LOG_LEVEL::WARNING, "NtReadFile Failed! (0x%.08X)", result);
+		}
+	}
+	else {
+		result = X_STATUS_INVALID_PARAMETER;
+	}
+
+	ObfDereferenceObject(FileObject);
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -1907,6 +2172,106 @@ XBSYSAPI EXPORTNUM(225) xbox::ntstatus_xt NTAPI xbox::NtSetEvent
 	RETURN(ret);
 }
 
+xbox::ntstatus_xt IopOpenLinkOrRenameTarget(
+	OUT xbox::PHANDLE Handle,
+	IN xbox::PIRP Irp,
+	IN xbox::FILE_RENAME_INFORMATION* RenameInfo,
+	IN xbox::PFILE_OBJECT FileObject,
+	OUT xbox::PFILE_OBJECT* FileObjectTarget
+)
+{
+	using namespace xbox;
+	ntstatus_xt Status;
+	HANDLE TargetHandle;
+	OBJECT_STRING FileName;
+	PFILE_OBJECT TargetFileObject;
+	IO_STATUS_BLOCK IoStatusBlock;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	ACCESS_MASK DesiredAccess = FILE_WRITE_DATA;
+
+	//PAGED_CODE();
+
+#if 0
+	/* First, establish whether our target is a directory */
+	if (!(FileObject->Flags & FO_DIRECT_DEVICE_OPEN)) {
+		FILE_BASIC_INFORMATION BasicInfo;
+		Status = IopGetBasicInformationFile(FileObject, &BasicInfo);
+		if (!X_NT_SUCCESS(Status)) {
+			return Status;
+		}
+
+		if (BasicInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			DesiredAccess = FILE_ADD_SUBDIRECTORY;
+		}
+	}
+#endif
+
+	/* Setup the string to the target */
+	FileName = RenameInfo->FileName;
+
+	X_InitializeObjectAttributes(&ObjectAttributes,&FileName,
+		/*(FileObject->Flags & FO_OPENED_CASE_SENSITIVE ? 0 : */ OBJ_CASE_INSENSITIVE /*)*/,
+		RenameInfo->RootDirectory);
+
+	/* And open its parent directory */
+	Status = IoCreateFile(&TargetHandle,
+		DesiredAccess | SYNCHRONIZE,
+		&ObjectAttributes,
+		&IoStatusBlock,
+		NULL,
+		0,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		FILE_OPEN,
+		FILE_OPEN_FOR_BACKUP_INTENT,
+		IO_FORCE_ACCESS_CHECK | IO_OPEN_TARGET_DIRECTORY | IO_NO_PARAMETER_CHECKING);
+
+	if (!X_NT_SUCCESS(Status)) {
+		return Status;
+	}
+
+	/* Once open, continue only if:
+	 * Target exists and we're allowed to overwrite it
+	 */
+#if 0 // TODO: add IRP function then enable below for any remaining fix up.
+	PIO_STACK_LOCATION Stack;
+	Stack = IoGetNextIrpStackLocation(Irp);
+	if (Stack->Parameters.SetFile.FileInformationClass == FileLinkInformation &&
+		!RenameInfo->ReplaceIfExists &&
+		IoStatusBlock.Information == FILE_EXISTS) {
+		ObCloseHandle(TargetHandle);
+		return X_STATUS_OBJECT_NAME_COLLISION;
+	}
+#endif
+
+	/* Now, we'll get the associated device of the target, to check for same device location
+	 * So, get the FO first
+	 */
+	Status = ObReferenceObjectByHandle(TargetHandle, &IoFileObjectType, reinterpret_cast<PVOID*>(&TargetFileObject));
+	if (!X_NT_SUCCESS(Status)) {
+		ObpClose(TargetHandle);
+		return Status;
+	}
+
+	/* We can dereference, we have the handle */
+	ObfDereferenceObject(TargetFileObject);
+	/* If we're not on the same device, error out **/
+	if (TargetFileObject->DeviceObject != FileObject->DeviceObject)
+	{
+		ObpClose(TargetHandle);
+		return X_STATUS_NOT_SAME_DEVICE;
+	}
+
+	/* Return parent directory file object and handle */
+#if 0 // TODO: use stack and remove else block.
+	Stack->Parameters.SetFile.FileObject = TargetFileObject;
+#else
+	*FileObjectTarget = TargetFileObject;
+#endif
+	*Handle = TargetHandle;
+
+	return X_STATUS_SUCCESS;
+}
+
 // ******************************************************************
 // * 0x00E2 - NtSetInformationFile()
 // ******************************************************************
@@ -1926,17 +2291,123 @@ XBSYSAPI EXPORTNUM(226) xbox::ntstatus_xt NTAPI xbox::NtSetInformationFile
 		LOG_FUNC_ARG(Length)
 		LOG_FUNC_ARG(FileInformationClass)
 		LOG_FUNC_END;
-	
-	XboxToNTFileInformation(convertedFileInfo, FileInformation, FileInformationClass, (::PULONG)&Length);
 
-	NTSTATUS ret = NtDll::NtSetInformationFile(
-		FileHandle,
-		IoStatusBlock,
-		convertedFileInfo,
-		Length,
-		FileInformationClass);
+	PFILE_OBJECT FileObjectSource;
+	ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, reinterpret_cast<PVOID*>(&FileObjectSource));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
+	}
 
-	RETURN(ret);
+	// TODO: Do irp work here.
+
+	[[maybe_unused]] OBJECT_ATTRIBUTES ObjectAttributes;
+	HANDLE FileHandleTarget = zeroptr;
+	NtDll::PVOID ntFileInfo = nullptr;
+	bool isXbox2Nt = false;
+	switch (FileInformationClass) {
+		case FileRenameInformation: {
+			isXbox2Nt = true;
+			FILE_RENAME_INFORMATION* xboxRenameInfo = reinterpret_cast<FILE_RENAME_INFORMATION*>(FileInformation);
+
+			PFILE_OBJECT FileObjectTarget;
+			result = IopOpenLinkOrRenameTarget(&FileHandleTarget, zeroptr, xboxRenameInfo, FileObjectSource, &FileObjectTarget);
+
+			if (X_NT_SUCCESS(result)) {
+
+				const auto& ParentDirHandle = GetObjectNativeHandle<false>(FileObjectTarget);
+
+				// Get file name only since FileObjectTarget will return parent directory handle.
+				auto FileName = PSTRING_to_string(&xboxRenameInfo->FileName);
+				if (std::size_t n; (n = FileName.find_last_of("\\")) != std::string::npos) {
+					FileName = FileName.substr(n + 1);
+				}
+
+				// Build the native FILE_RENAME_INFORMATION struct
+				std::wstring convertedFileName = string_to_wstring(FileName);
+				Length = sizeof(NtDll::FILE_RENAME_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
+				NtDll::FILE_RENAME_INFORMATION* ntRenameInfo = reinterpret_cast<NtDll::FILE_RENAME_INFORMATION*>(ExAllocatePool(Length));
+				ntRenameInfo->ReplaceIfExists = xboxRenameInfo->ReplaceIfExists;
+				ntRenameInfo->RootDirectory = *ParentDirHandle;
+				ntRenameInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);
+				wmemcpy_s(ntRenameInfo->FileName, convertedFileName.size(), convertedFileName.c_str(), convertedFileName.size());
+				ntFileInfo = ntRenameInfo;
+			}
+			break;
+		}
+		case FileLinkInformation: {
+			// TODO: Is FileLinkInformation used?
+			// NOTE: This is untested code as there appear to be no FileLinkInformation usage in dumped kernel.
+			LOG_TEST_CASE("FileInformationClass == FileLinkInformation");
+			isXbox2Nt = true;
+			FILE_LINK_INFORMATION* xboxLinkInfo = reinterpret_cast<FILE_LINK_INFORMATION*>(FileInformation);
+			OBJECT_STRING ObjectStringTarget;
+			RtlInitAnsiString(&ObjectStringTarget, xboxLinkInfo->FileName);
+
+			// Forward details to rename function looks the same for FileLinkInformation.
+			FILE_RENAME_INFORMATION xboxRenameInfo{
+			    .ReplaceIfExists = xboxLinkInfo->ReplaceIfExists,
+			    .RootDirectory = xboxLinkInfo->RootDirectory,
+			    .FileName = ObjectStringTarget
+			};
+
+			PFILE_OBJECT FileObjectTarget;
+			result = IopOpenLinkOrRenameTarget(&FileHandleTarget, zeroptr, &xboxRenameInfo, FileObjectSource, &FileObjectTarget);
+
+			if (X_NT_SUCCESS(result)) {
+
+				const auto& ParentDirHandle = GetObjectNativeHandle<false>(FileObjectTarget);
+
+				// Get file name only since FileObjectTarget will return parent directory handle.
+				auto FileName = PSTRING_to_string(&ObjectStringTarget);
+				if (std::size_t n = FileName.find_last_of("\\") != std::string::npos) {
+					FileName = FileName.substr(n + 1);
+				}
+
+				// Build the native FILE_RENAME_INFORMATION struct
+				std::wstring convertedFileName = string_to_wstring(FileName);
+				Length = sizeof(NtDll::FILE_RENAME_INFORMATION) + convertedFileName.size() * sizeof(wchar_t);
+				NtDll::FILE_RENAME_INFORMATION* ntRenameInfo = reinterpret_cast<NtDll::FILE_RENAME_INFORMATION*>(ExAllocatePool(Length));
+				ntRenameInfo->ReplaceIfExists = xboxLinkInfo->ReplaceIfExists;
+				ntRenameInfo->RootDirectory = *ParentDirHandle;
+				ntRenameInfo->FileNameLength = convertedFileName.size() * sizeof(wchar_t);
+				wmemcpy_s(ntRenameInfo->FileName, convertedFileName.size(), convertedFileName.c_str(), convertedFileName.size());
+				ntFileInfo = ntRenameInfo;
+			}
+			break;
+		}
+		default: {
+			// The following classes of file information structs are identical between platforms:
+			//   FileBasicInformation
+			//   FileDispositionInformation
+			//   FileEndOfFileInformation
+			//   FileLinkInformation
+			//   FilePositionInformation
+			ntFileInfo = FileInformation;
+			break;
+		}
+	}
+
+	if (X_NT_SUCCESS(result)) {
+		const auto& ntHandleSource = GetObjectNativeHandle<false>(FileObjectSource);
+		result = NtDll::NtSetInformationFile(
+			*ntHandleSource,
+			IoStatusBlock,
+			ntFileInfo,
+			Length,
+			FileInformationClass);
+
+		if (FileHandleTarget) {
+			NtClose(FileHandleTarget);
+		}
+	}
+
+	if (isXbox2Nt && ntFileInfo) {
+		ExFreePool(ntFileInfo);
+	}
+
+	ObfDereferenceObject(FileObjectSource);
+
+	RETURN(result);
 }
 
 // ******************************************************************
@@ -2311,6 +2782,8 @@ XBSYSAPI EXPORTNUM(236) xbox::ntstatus_xt NTAPI xbox::NtWriteFile
 		CxbxDebugger::ReportFileWrite(FileHandle, Length, Offset);
 	}
 
+	// TODO: This may need removal and use actual driver for Chihiro.
+	//       Check if there's another branch has chihiro support somewhere? I think nope.
 	// If we are emulating the Chihiro, we need to hook mbcom
 	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
 		g_MediaBoard->ComWrite(ByteOffset->QuadPart, Buffer, Length);
@@ -2321,6 +2794,19 @@ XBSYSAPI EXPORTNUM(236) xbox::ntstatus_xt NTAPI xbox::NtWriteFile
 		return STATUS_SUCCESS;
 	}
 
+	PFILE_OBJECT FileObject;
+	ntstatus_xt result = ObReferenceObjectByHandle(FileHandle, &IoFileObjectType, reinterpret_cast<PVOID*>(&FileObject));
+	if (!X_NT_SUCCESS(result)) {
+		RETURN(result);
+	}
+
+#ifdef ENABLE_DRIVER_FILESYSTEM // TODO: Implement file system's driver support then enable read/write access check.
+	if (!FileObject->WriteAccess) {
+		ObfDereferenceObject(FileObject);
+		RETURN(X_STATUS_ACCESS_DENIED);
+	}
+#endif
+
 	if (ApcRoutine != nullptr) {
 		// Pack the original parameters to a wrapped context for a custom APC routine
 		CxbxIoDispatcherContext* cxbxContext = new CxbxIoDispatcherContext(IoStatusBlock, ApcRoutine, ApcContext);
@@ -2328,21 +2814,29 @@ XBSYSAPI EXPORTNUM(236) xbox::ntstatus_xt NTAPI xbox::NtWriteFile
 		ApcContext = cxbxContext;
 	}
 
-	NTSTATUS ret = NtDll::NtWriteFile(
-		FileHandle,
-		Event,
-		ApcRoutine,
-		ApcContext,
-		IoStatusBlock,
-		Buffer,
-		Length,
-		(NtDll::LARGE_INTEGER*)ByteOffset,
-		/*Key=*/nullptr);
+	// TODO: Do irp work here...
 
-	if (FAILED(ret))
-		EmuLog(LOG_LEVEL::WARNING, "NtWriteFile Failed! (0x%.08X)", ret);
+	if (const auto& nFileHandle = GetObjectNativeHandle(FileObject)) {
+		result = NtDll::NtWriteFile(
+			*nFileHandle,
+			Event,
+			ApcRoutine,
+			ApcContext,
+			IoStatusBlock,
+			Buffer,
+			Length,
+			(NtDll::LARGE_INTEGER*)ByteOffset,
+			/*Key=*/nullptr);
 
-	RETURN(ret);
+		if (FAILED(result))
+			EmuLog(LOG_LEVEL::WARNING, "NtWriteFile Failed! (0x%.08X)", result);
+	}
+	else {
+		result = X_STATUS_INVALID_PARAMETER;
+	}
+
+	ObfDereferenceObject(FileObject);
+	RETURN(result);
 }
 
 // ******************************************************************

@@ -1,5 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
 // *  This file is part of the Cxbx project.
@@ -19,26 +17,9 @@
 // *  If not, write to the Free Software Foundation, Inc.,
 // *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
 // *
-// *  (c) 2021 ergo720
-// *
 // *  All rights reserved
 // *
 // ******************************************************************
-
 #pragma once
 
-#include <optional>
-
-// Use GetObjectNativeHandle if certain object type is fully implemented, otherwise use GetNativeHandle instead.
-template<bool NoConversion = false> std::optional<HANDLE> GetNativeHandle(xbox::HANDLE xhandle);
-
-template<bool PartitionConversion = false> void RegisterXboxObject(xbox::PVOID xobject, HANDLE nhandle);
-void RemoveXboxObject(xbox::PVOID xobject);
-// Use GetObjectNativeHandle if certain object type is fully implemented, otherwise use GetNativeHandle instead.
-template<bool PartitionConversion = true> std::optional<HANDLE> GetObjectNativeHandle(xbox::PVOID xobject);
-
-// Attach string to existing xbox object.
-void AttachStringToXboxObject(xbox::PVOID xobject, const std::string& string);
-
-std::string Object2AbsolutePath(xbox::PVOID xobject);
-std::string Object2RemainingPath(xbox::PVOID xobject);
+void EmuMuSetup();

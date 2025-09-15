@@ -129,7 +129,7 @@ XBSYSAPI EXPORTNUM(67) ntstatus_xt NTAPI IoCreateSymbolicLink
 // ******************************************************************
 XBSYSAPI EXPORTNUM(68) void_xt NTAPI IoDeleteDevice
 (
-	IN PDEVICE_OBJECT irql
+	IN PDEVICE_OBJECT DeviceObject
 );
 
 // ******************************************************************
@@ -233,11 +233,11 @@ XBSYSAPI EXPORTNUM(79) ntstatus_xt NTAPI IoSetIoCompletion
 // ******************************************************************
 // * 0x0050 - IoSetShareAccess()
 // ******************************************************************
-XBSYSAPI EXPORTNUM(80) cchar_xt NTAPI IoSetShareAccess
+XBSYSAPI EXPORTNUM(80) void_xt NTAPI IoSetShareAccess
 (
-	IN ulong_xt DesiredAccess,
-	IN ulong_xt DesiredShareAccess,
-	IN PFILE_OBJECT FileObject,
+	IN access_mask_xt DesiredAccess,
+	IN ulong_xt       DesiredShareAccess,
+	IN PFILE_OBJECT   FileObject,
 	OUT PSHARE_ACCESS ShareAccess
 );
 

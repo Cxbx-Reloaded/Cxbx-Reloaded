@@ -267,9 +267,9 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XLaunchNewImageA)
 		{
 			// If no path is specified, then the xbe is rebooting to dashboard
 			char szDashboardPath[xbox::max_path] = { 0 };
-			XboxDevice* rootDevice = CxbxDeviceByDevicePath(DeviceHarddisk0Partition2);
-			if (rootDevice != nullptr)
-				sprintf(szDashboardPath, "%s\\xboxdash.xbe", rootDevice->HostDevicePath.c_str());
+			std::string rootDevice = CxbxrDiskDeviceByHostPath(g_DiskBasePath + PartitionPrefix + "2");
+			if (!rootDevice.empty())
+				sprintf(szDashboardPath, "%s\\xboxdash.xbe", rootDevice.c_str());
 
 			if (PathFileExists(szDashboardPath))
 			{

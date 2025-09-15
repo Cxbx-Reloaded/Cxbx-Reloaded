@@ -165,35 +165,36 @@ void JvsInputThread()
 	}
 }
 
+#define CHIHIRO_PATH "/EmuMediaBoard/Chihiro/"
 
 void JVS_Init()
 {
 	// Init Jvs IO board
 	g_pJvsIo = new JvsIo(&ChihiroBaseBoardState.JvsSense);
 
-	std::string romPath = g_DataFilePath + std::string("\\EmuDisk\\Chihiro");
+	std::string romPath = g_MediaBoardBasePath + std::string("\\Chihiro");
 	std::string baseBoardQcFirmwarePath = "ic10_g24lc64.bin";
 	std::string baseBoardScFirmwarePath = "pc20_g24lc64.bin";
 	std::string baseBoardEepromPath = "ic11_24lc024.bin";
 	std::string baseBoardBackupRamPath = "backup_ram.bin";
 
 	if (!JVS_LoadFile((romPath + "\\" + baseBoardQcFirmwarePath).c_str(), g_BaseBoardQcFirmware)) {
-		CxbxrAbort("Failed to load base board firmware: %s", baseBoardQcFirmwarePath.c_str());
+		CxbxrAbort("Failed to load base board firmware: " CHIHIRO_PATH "%s", baseBoardQcFirmwarePath.c_str());
 	}
 
 	if (!JVS_LoadFile((romPath + "\\" + baseBoardScFirmwarePath).c_str(), g_BaseBoardScFirmware)) {
-		CxbxrAbort("Failed to load base board qc firmware: %s", baseBoardScFirmwarePath.c_str());
+		CxbxrAbort("Failed to load base board qc firmware: " CHIHIRO_PATH "%s", baseBoardScFirmwarePath.c_str());
 	}
 
 	if (!JVS_LoadFile((romPath + "\\" + baseBoardEepromPath).c_str(), g_BaseBoardEeprom)) {
-		CxbxrAbort("Failed to load base board EEPROM: %s", baseBoardEepromPath.c_str());
+		CxbxrAbort("Failed to load base board EEPROM: " CHIHIRO_PATH "%s", baseBoardEepromPath.c_str());
 	}
 
 	// backup ram is a special case, we can create it automatically if it doesn't exist
 	if (!std::filesystem::exists(romPath + "\\" + baseBoardBackupRamPath)) {
 		FILE *fp = fopen((romPath + "\\" + baseBoardBackupRamPath).c_str(), "w");
 		if (fp == nullptr) {
-			CxbxrAbort("Could not create Backup File: %s", baseBoardBackupRamPath.c_str());
+			CxbxrAbort("Could not create Backup File: " CHIHIRO_PATH "%s", baseBoardBackupRamPath.c_str());
 		}
 
 		// Create 128kb empty file for backup ram
@@ -203,7 +204,7 @@ void JVS_Init()
 	}
 
 	if (!JVS_LoadFile((romPath + "\\" + baseBoardBackupRamPath).c_str(), g_BaseBoardBackupMemory)) {
-		CxbxrAbort("Failed to load base board BACKUP RAM: %s", baseBoardBackupRamPath.c_str());
+		CxbxrAbort("Failed to load base board BACKUP RAM: " CHIHIRO_PATH "%s", baseBoardBackupRamPath.c_str());
 	}
 
 	// Determine which version of JVS_SendCommand this title is using and derive the offset
@@ -255,6 +256,8 @@ void JVS_Init()
 	// Spawn the Chihiro/JVS Input Thread
 	std::thread(JvsInputThread).detach();
 }
+
+#undef CHIHIRO_PATH
 
 DWORD WINAPI xbox::EMUPATCH(JVS_SendCommand)
 (

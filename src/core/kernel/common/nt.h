@@ -172,9 +172,9 @@ XBSYSAPI EXPORTNUM(196) ntstatus_xt NTAPI NtDeviceIoControlFile
 // ******************************************************************
 XBSYSAPI EXPORTNUM(197) ntstatus_xt NTAPI NtDuplicateObject
 (
-    PVOID   SourceHandle,
-    PVOID  *TargetHandle,
-    dword_xt   Options
+    HANDLE   SourceHandle,
+    PHANDLE  TargetHandle,
+    dword_xt Options
 );
 
 // ******************************************************************
@@ -310,7 +310,7 @@ XBSYSAPI EXPORTNUM(209) ntstatus_xt NTAPI NtQueryEvent
 XBSYSAPI EXPORTNUM(210) ntstatus_xt NTAPI NtQueryFullAttributesFile
 (
 	IN  POBJECT_ATTRIBUTES          ObjectAttributes,
-	OUT PFILE_NETWORK_OPEN_INFORMATION  Attributes
+	OUT PFILE_NETWORK_OPEN_INFORMATION  FileInformation
 );
 
 // ******************************************************************

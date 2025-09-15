@@ -181,18 +181,14 @@ ENUM2STR_START(FILE_INFORMATION_CLASS)
 	ENUM2STR_CASE(FileMailslotQueryInformation)
 	ENUM2STR_CASE(FileMailslotSetInformation)
 	ENUM2STR_CASE(FileCompressionInformation)
-	ENUM2STR_CASE(FileCopyOnWriteInformation)
+	ENUM2STR_CASE(FileObjectIdInformation)
 	ENUM2STR_CASE(FileCompletionInformation)
 	ENUM2STR_CASE(FileMoveClusterInformation)
 	ENUM2STR_CASE(FileQuotaInformation)
 	ENUM2STR_CASE(FileReparsePointInformation)
 	ENUM2STR_CASE(FileNetworkOpenInformation)
-	ENUM2STR_CASE(FileObjectIdInformation)
+	ENUM2STR_CASE(FileAttributeTagInformation)
 	ENUM2STR_CASE(FileTrackingInformation)
-	ENUM2STR_CASE(FileOleDirectoryInformation)
-	ENUM2STR_CASE(FileContentIndexInformation)
-	ENUM2STR_CASE(FileInheritContentIndexInformation)
-	ENUM2STR_CASE(FileOleInformation)
 	ENUM2STR_CASE(FileMaximumInformation)
 ENUM2STR_END_and_LOGRENDER(FILE_INFORMATION_CLASS)
 
@@ -358,6 +354,39 @@ ENUM2STR_END_and_LOGRENDER(XC_VALUE_INDEX)
 // Render Xbox kernel types :
 //
 
+LOGRENDER(DEVICE_OBJECT)
+{
+	return os
+		LOGRENDER_MEMBER(Type)
+		LOGRENDER_MEMBER(Size)
+		LOGRENDER_MEMBER(ReferenceCount)
+		LOGRENDER_MEMBER(DriverObject)
+		LOGRENDER_MEMBER(MountedOrSelfDevice)
+		LOGRENDER_MEMBER(CurrentIrp)
+		LOGRENDER_MEMBER(Flags)
+		LOGRENDER_MEMBER(DeviceExtension)
+		LOGRENDER_MEMBER(DeviceType)
+		LOGRENDER_MEMBER(StartIoFlags)
+		LOGRENDER_MEMBER_TYPE(byte_xt, StackSize)
+		LOGRENDER_MEMBER(DeletePending)
+		LOGRENDER_MEMBER(SectorSize)
+		LOGRENDER_MEMBER(AlignmentRequirement)
+		LOGRENDER_MEMBER(DeviceQueue)
+		LOGRENDER_MEMBER(DeviceLock)
+		LOGRENDER_MEMBER(StartIoKey);
+}
+
+LOGRENDER(DISPATCHER_HEADER)
+{
+	return os
+		LOGRENDER_MEMBER(Type)
+		LOGRENDER_MEMBER(Absolute)
+		LOGRENDER_MEMBER(Size)
+		LOGRENDER_MEMBER(Inserted)
+		LOGRENDER_MEMBER(SignalState)
+		LOGRENDER_MEMBER(WaitListHead);
+}
+
 LOGRENDER(FILETIME)
 {
 	return os
@@ -365,9 +394,80 @@ LOGRENDER(FILETIME)
 		LOGRENDER_MEMBER(dwHighDateTime);
 }
 
+LOGRENDER(FILE_ATTRIBUTE_TAG_INFORMATION)
+{
+	return os
+		LOGRENDER_MEMBER(FileAttributes)
+		LOGRENDER_MEMBER(ReparseTag);
+}
+
+LOGRENDER(FILE_FS_SIZE_INFORMATION)
+{
+	return os
+		LOGRENDER_MEMBER(TotalAllocationUnits)
+		LOGRENDER_MEMBER(AvailableAllocationUnits)
+		LOGRENDER_MEMBER(SectorsPerAllocationUnit)
+		LOGRENDER_MEMBER(BytesPerSector);
+}
+
+LOGRENDER(FILE_OBJECT)
+{
+	return os
+		LOGRENDER_MEMBER(Type)
+		LOGRENDER_MEMBER(DeletePending)
+		LOGRENDER_MEMBER(ReadAccess)
+		LOGRENDER_MEMBER(WriteAccess)
+		LOGRENDER_MEMBER(DeleteAccess)
+		LOGRENDER_MEMBER(SharedRead)
+		LOGRENDER_MEMBER(SharedWrite)
+		LOGRENDER_MEMBER(SharedDelete)
+		LOGRENDER_MEMBER(Reserved)
+		LOGRENDER_MEMBER(Flags)
+		LOGRENDER_MEMBER(DeviceObject)
+		LOGRENDER_MEMBER(FsContext)
+		LOGRENDER_MEMBER(FsContext2)
+		LOGRENDER_MEMBER(FinalStatus)
+		LOGRENDER_MEMBER(CurrentByteOffset)
+		LOGRENDER_MEMBER(RelatedFileObject)
+		LOGRENDER_MEMBER(CompletionContext)
+		LOGRENDER_MEMBER(LockCount)
+		LOGRENDER_MEMBER(Lock)
+		LOGRENDER_MEMBER(Event);
+}
+
+LOGRENDER(IDE_DISK_EXTENSION)
+{
+	return os
+		LOGRENDER_MEMBER(DeviceObject)
+		LOGRENDER_MEMBER(PartitionInformation);
+}
+
+LOGRENDER(IO_STATUS_BLOCK)
+{
+	return os
+		LOGRENDER_MEMBER(Status)
+		LOGRENDER_MEMBER_TYPE(ulong_xt, Information);
+}
+
+LOGRENDER(KDEVICE_QUEUE)
+{
+	return os
+		LOGRENDER_MEMBER(Type)
+		LOGRENDER_MEMBER(Size)
+		LOGRENDER_MEMBER(Busy)
+		LOGRENDER_MEMBER(DeviceListHead);
+
+}
+
+LOGRENDER(KEVENT)
+{
+	return os
+		LOGRENDER_MEMBER(Header);
+}
+
 LOGRENDER(LARGE_INTEGER)
 {
-	return os 
+	return os
 		LOGRENDER_MEMBER(QuadPart);
 }
 
@@ -388,6 +488,13 @@ LOGRENDER(LAUNCH_DATA_PAGE)
 		LOGRENDER_MEMBER_SANITIZED(LaunchData, char *, /*Length=*/sizeof(value.LaunchData) / sizeof(value.LaunchData[0]));
 }
 
+LOGRENDER(LIST_ENTRY)
+{
+	return os
+		LOGRENDER_MEMBER_TYPE(PVOID, Flink)
+		LOGRENDER_MEMBER_TYPE(PVOID, Blink);
+}
+
 LOGRENDER(MM_STATISTICS)
 {
 	return os
@@ -403,12 +510,55 @@ LOGRENDER(MM_STATISTICS)
 		LOGRENDER_MEMBER(ImagePagesCommitted);
 }
 
+LOGRENDER(MU_EXTENSION)
+{
+	return os
+		LOGRENDER_MEMBER(DeviceObject)
+		LOGRENDER_MEMBER(PartitionNumber);
+}
+
 LOGRENDER(OBJECT_ATTRIBUTES)
 {
 	return os
 		LOGRENDER_MEMBER(RootDirectory)
 		LOGRENDER_MEMBER(ObjectName)
 		LOGRENDER_MEMBER(Attributes);
+}
+
+LOGRENDER(OPEN_PACKET)
+{
+	return os
+		LOGRENDER_MEMBER(Type) // TODO: Add IO_TYPE type
+		LOGRENDER_MEMBER(Size)
+		LOGRENDER_MEMBER(FileObject)
+		LOGRENDER_MEMBER(FinalStatus)
+		LOGRENDER_MEMBER(Information)
+		LOGRENDER_MEMBER(ParseCheck)
+		LOGRENDER_MEMBER(RelatedFileObject)
+		LOGRENDER_MEMBER(AllocationSize)
+		LOGRENDER_MEMBER_TYPE(CREATE_OPTION, CreateOptions)
+		LOGRENDER_MEMBER(FileAttributes)
+		LOGRENDER_MEMBER(ShareAccess) // TODO: Add additional type
+		LOGRENDER_MEMBER(Options) // TODO: Add additional type
+		LOGRENDER_MEMBER_TYPE(CREATE_DISPOSITION, Disposition)
+		LOGRENDER_MEMBER(DesiredAccess) // TODO: Add additional type
+		LOGRENDER_MEMBER(NetworkInformation)
+		LOGRENDER_MEMBER(LocalFileObject)
+		LOGRENDER_MEMBER(QueryOnly)
+		LOGRENDER_MEMBER(DeleteOnly);
+}
+
+LOGRENDER(PARTITION_INFORMATION)
+{
+	return os
+		LOGRENDER_MEMBER(StartingOffset)
+		LOGRENDER_MEMBER(PartitionLength)
+		LOGRENDER_MEMBER(HiddenSectors)
+		LOGRENDER_MEMBER(PartitionNumber)
+		LOGRENDER_MEMBER(PartitionType)
+		LOGRENDER_MEMBER(BootIndicator)
+		LOGRENDER_MEMBER(RecognizedPartition)
+		LOGRENDER_MEMBER(RewritePartition);
 }
 
 LOGRENDER(STRING)

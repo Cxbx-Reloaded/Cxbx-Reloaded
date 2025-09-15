@@ -57,8 +57,10 @@ extern const std::string DrivePrefix;
 extern const std::string DriveSerial;
 extern const std::string DriveCdRom0;
 extern const std::string DriveMbfs;
+extern const std::string mbcom;
 extern const std::string DriveMbcom;
-extern const std::string DriveMbrom;
+extern const std::string DriveMbrom0;
+extern const std::string DriveMbrom1;
 extern const std::string DriveA;
 extern const std::string DriveC;
 extern const std::string DriveD;
@@ -75,7 +77,11 @@ extern const std::string DriveZ;
 extern const std::string DevicePrefix;
 extern const std::string DeviceCdrom0;
 extern const std::string DeviceHarddisk0;
-extern const std::string DeviceMU;
+extern const std::string DeviceMediaBoard;
+extern const std::string MUPrefix;
+extern const std::string DeviceMUPrefix;
+extern const std::string PartitionPrefix;
+extern const std::string DeviceMediaBoardPartitionPrefix;
 extern const std::string DeviceHarddisk0PartitionPrefix;
 extern const std::string DeviceHarddisk0Partition0;
 extern const std::string DeviceHarddisk0Partition1;
@@ -106,26 +112,17 @@ extern const std::string DeviceMU4;
 extern const std::string DeviceMU5;
 extern const std::string DeviceMU6;
 extern const std::string DeviceMU7;
-constexpr char CxbxAutoMountDriveLetter = 'D';
-
-enum class DeviceType : int {
-	Invalid = -1,
-	Cdrom0,
-	Harddisk0,
-	MU,
-};
+constexpr char CxbxAutoMountDriveLetter = 'D'; // TODO: Make this useful, likely need to be "D:" string. Check in EmuFile or various Emu prefix source files.
 
 inline constexpr xbox::ulong_xt fsctl_dismount_volume = 0x00090020;
 inline constexpr xbox::ulong_xt fsctl_read_fatx_metadata = 0x0009411C;
 inline constexpr xbox::ulong_xt fsctl_write_fatx_metadata = 0x00098120;
 
 inline constexpr std::size_t mu_max_name_lenght = 32 * sizeof(xbox::wchar_xt); // MU names are in wide chars
-extern std::string g_DiskBasePath;
-extern std::string g_MuBasePath;
-extern HANDLE g_DiskBasePathHandle;
 
-const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation] = {
-	0,                                                    // (index 0)
+// TODO: Need verify if matches with xbox kernel and anything else.
+static const size_t IopQueryOperationLength[xbox::FileMaximumInformation + 1] = {
+	0,                                                    // (index 0, unused)
 	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileDirectoryInformation
 	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileFullDirectoryInformation
 	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileBothDirectoryInformation
@@ -154,22 +151,16 @@ const size_t XboxFileInfoStructSizes[xbox::FileMaximumInformation] = {
 	sizeof(xbox::FILE_MAILSLOT_QUERY_INFORMATION),        // FileMailslotQueryInformation
 	sizeof(xbox::FILE_MAILSLOT_SET_INFORMATION),          // FileMailslotSetInformation
 	sizeof(xbox::FILE_COMPRESSION_INFORMATION),           // FileCompressionInformation
-	0,                                                    // FileCopyOnWriteInformation
+	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileObjectIdInformation
 	sizeof(xbox::FILE_COMPLETION_INFORMATION),            // FileCompletionInformation
 	sizeof(xbox::FILE_MOVE_CLUSTER_INFORMATION),          // FileMoveClusterInformation
 	0,                                                    // FileQuotaInformation
 	sizeof(xbox::FILE_REPARSE_POINT_INFORMATION),         // FileReparsePointInformation
 	sizeof(xbox::FILE_NETWORK_OPEN_INFORMATION),          // FileNetworkOpenInformation
-	sizeof(xbox::FILE_DIRECTORY_INFORMATION),             // FileObjectIdInformation
+	sizeof(xbox::FILE_ATTRIBUTE_TAG_INFORMATION),         // FileAttributeTagInformation
 	sizeof(xbox::FILE_TRACKING_INFORMATION),              // FileTrackingInformation
-	0,                                                    // FileOleDirectoryInformation
-	0,                                                    // FileContentIndexInformation
-	0,                                                    // FileInheritContentIndexInformation
-	0                                                     // FileOleInformation
+	0xFF                                                  // FileMaximumInformation
 };
-
-
-class EmuNtObject;
 
 struct NativeObjectAttributes {
 	wchar_t wszObjectName[160];
@@ -181,74 +172,8 @@ struct NativeObjectAttributes {
 };
 
 NTSTATUS CxbxObjectAttributesToNT(xbox::POBJECT_ATTRIBUTES ObjectAttributes, NativeObjectAttributes& nativeObjectAttributes, std::string aFileAPIName = "", bool partitionHeader = false);
-NTSTATUS CxbxConvertFilePath(std::string RelativeXboxPath, OUT std::wstring &RelativeHostPath, IN OUT NtDll::HANDLE *RootDirectory, std::string aFileAPIName = "", bool partitionHeader = false);
 
-// ******************************************************************
-// * Wrapper of a handle object
-// ******************************************************************
-class EmuHandle
-{
-public:
-	NTSTATUS NtClose();
-	NTSTATUS NtDuplicateObject(PHANDLE TargetHandle, DWORD Options);
-	EmuNtObject* NtObject;
-
-	static EmuHandle* CreateEmuHandle(EmuNtObject* ntObject);
-	static bool IsEmuHandle(HANDLE Handle);
-private:
-	EmuHandle(EmuNtObject* ntObject);
-	// Keep track of every EmuHandle wrapper
-	// If we remember what EmuHandle objects we hand out, we can tell the difference between an EmuHandle and garbage
-	// We used to rely on the high bit to differentiatean EmuHandles
-	// But titles may attempt to operate on invalid handles with the high bit set
-	// Test case: Amped sets a handle value to 0xFDFDFDFD (coincidentally a VS debugger guard value)
-	static std::unordered_set<EmuHandle*> EmuHandleLookup;
-	static std::shared_mutex EmuHandleLookupLock;
-};
-
-// ******************************************************************
-// * An NT fake object
-// ******************************************************************
-class EmuNtObject
-{
-public:
-	EmuNtObject();
-	HANDLE NewHandle();
-	NTSTATUS NtClose();
-	EmuNtObject* NtDuplicateObject(DWORD Options);
-protected:
-	virtual ~EmuNtObject() {};
-private:
-	ULONG RefCount;
-
-};
-
-// ******************************************************************
-// * Emulated symbolic link handle
-// ******************************************************************
-class EmuNtSymbolicLinkObject : public EmuNtObject {
-public:
-	char DriveLetter;
-	std::string SymbolicLinkName;
-	bool IsHostBasedPath;
-	std::string XboxSymbolicLinkPath;
-	std::string HostSymbolicLinkPath;
-	HANDLE RootDirectoryHandle;
-	NTSTATUS Init(std::string aSymbolicLinkName, std::string aFullPath);
-	~EmuNtSymbolicLinkObject();
-};
-
-struct XboxDevice {
-	std::string XboxDevicePath;
-	std::string HostDevicePath;
-	HANDLE HostRootHandle;
-};
-
-struct EmuDirPath {
-	std::string_view XboxDirPath;
-	std::string_view HostDirPath;
-	HANDLE HostDirHandle;
-};
+std::string CxbxrDiskDeviceByHostPath(const std::filesystem::path& HostDiskDevicePath); // From EmuDisk for exposure.
 
 typedef struct _fatx_volume_metadata {
 	xbox::dword_xt offset;
@@ -263,8 +188,8 @@ class io_mu_metadata
 public:
 	io_mu_metadata(const std::wstring_view root_path);
 	~io_mu_metadata();
-	void read(const wchar_t lett, std::size_t offset, char *buff, std::size_t size);
-	void write(const wchar_t lett, std::size_t offset, const char *buff, std::size_t size);
+	void read(const xbox::dword_xt PartitionNumber, std::size_t offset, char *buff, std::size_t size);
+	void write(const xbox::dword_xt PartitionNumber, std::size_t offset, const char *buff, std::size_t size);
 	void flush(const wchar_t lett);
 
 private:
@@ -274,23 +199,12 @@ private:
 };
 extern io_mu_metadata *g_io_mu_metadata;
 
-int CxbxRegisterDeviceHostPath(std::string_view XboxFullPath, std::string HostDevicePath, bool IsFile = false, std::size_t size = 512 * ONE_KB);
-int CxbxDeviceIndexByDevicePath(const char *XboxDevicePath);
-XboxDevice* CxbxDeviceByDevicePath(const std::string_view XboxDevicePath);
-XboxDevice* CxbxDeviceByHostPath(const std::string_view HostPath);
+void CxbxrSetupDrives(std::filesystem::path& CdRomPath, int BootFlags);
+void CxbxCreatePartitionHeaderFile(const std::filesystem::path& filename, bool partition0 = false, std::size_t size = 512 * ONE_KB);
+
 std::string CxbxConvertXboxToHostPath(const std::string_view XboxDevicePath);
 bool CxbxrIsPathInsideEmuDisk(const std::filesystem::path& path);
-
-char SymbolicLinkToDriveLetter(std::string aSymbolicLinkName);
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByDriveLetter(const char DriveLetter);
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByName(std::string SymbolicLinkName);
-void FindEmuDirPathByDevice(std::string DeviceName, EmuDirPath& hybrid_path);
-EmuNtSymbolicLinkObject* FindNtSymbolicLinkObjectByRootHandle(HANDLE Handle);
-DeviceType CxbxrGetDeviceTypeFromHandle(HANDLE hFile);
-void CleanupSymbolicLinks();
-
-HANDLE CxbxGetDeviceNativeRootHandle(std::string XboxFullPath);
-xbox::ntstatus_xt CxbxCreateSymbolicLink(std::string SymbolicLinkName, std::string FullPath);
+bool CxbxrIsPathInsideEmuMu(const std::filesystem::path& path);
 
 std::wstring string_to_wstring(std::string const & src);
 std::wstring PUNICODE_STRING_to_wstring(NtDll::PUNICODE_STRING const & src);
@@ -303,6 +217,7 @@ static int NtPathBufferSize = MAX_PATH * sizeof(wchar_t);
 // Deletes structs created by the converters
 void _CxbxPVOIDDeleter(PVOID *ptr);
 
+// NOTE: Was used with XboxToNTFileInformation except it is removed as not needed anymore.
 // Creates a PVOID variable named var which takes the given value
 // and is automatically deleted when it goes out of scope
 #define SMART_PVOID(var, value, orig)                     \
@@ -315,16 +230,6 @@ void _CxbxPVOIDDeleter(PVOID *ptr);
 	}                                                     \
 	else                                                  \
 		__var_shared_ptr = std::shared_ptr<PVOID>(&var, _CxbxPVOIDDeleter);
-
-// Converts an Xbox FileInformation struct to the NT equivalent.
-// Used by NtSetInformationFile.
-#define XboxToNTFileInformation(var, i, c, l)  SMART_PVOID(var, _XboxToNTFileInformation(i, c, l), i)
-PVOID _XboxToNTFileInformation
-(
-	IN  PVOID xboxFileInformation,
-	IN  ULONG FileInformationClass,
-	OUT ULONG *Length
-);
 
 // Converts an NT FileInformation struct to the Xbox equivalent.
 // Used by NtQueryInformationFile and NtQueryDirectoryFile
@@ -374,11 +279,9 @@ static_assert(sizeof(FATX_SUPERBLOCK) == PAGE_SIZE);
 
 XboxPartitionTable CxbxGetPartitionTable();
 FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber);
-int CxbxGetPartitionNumberFromHandle(HANDLE hFile);
-int CxbxGetPartitionNumberFromPath(const std::wstring_view path);
-std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile);
-std::filesystem::path CxbxGetPartitionDataPathFromHandle(HANDLE hFile);
-void CxbxFormatPartitionByHandle(HANDLE hFile);
+
+// From EmuDisk source file
+bool EmuDiskFormatPartition(xbox::dword_xt PartitionNumber);
 
 // Ensures that an original IoStatusBlock gets passed to the completion callback
 // Used by NtReadFile and NtWriteFile

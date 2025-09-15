@@ -925,7 +925,7 @@ xbox::LPVOID WINAPI xbox::EMUPATCH(ConvertThreadToFiber)
 	
 	RETURN(pRet);
 }
-	
+
 // ******************************************************************
 // * patch: SignalObjectAndWait
 // ******************************************************************
@@ -1052,11 +1052,10 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMUA)
 	char title_id_buff[9];
 	std::sprintf(title_id_buff, "%08lx", CxbxKrnl_Xbe->m_Certificate.dwTitleId);
 	std::string mu_path_str(DrivePrefix + lett + ":");
-	std::string mu_dev_str(DeviceMU + std::to_string(MuPort2Idx(dwPort, dwSlot)));
+	std::string mu_dev_str(DeviceMUPrefix + std::to_string(MuPort2Idx(dwPort, dwSlot)) + "\\");
 	ANSI_STRING mu_dev, mu_path;
 	RtlInitAnsiString(&mu_path, mu_path_str.data());
 	RtlInitAnsiString(&mu_dev, mu_dev_str.data());
-	mu_dev_str += '\\';
 
 	ntstatus_xt status = XB_TRMP(XapiMapLetterToDirectory)(&mu_path, &mu_dev, title_id_buff, 1,
 		reinterpret_cast<const char16_t *>(CxbxKrnl_Xbe->m_Certificate.wsTitleName), 0);
@@ -1100,7 +1099,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XMountMURootA)
 	}
 
 	std::string mu_path_str(DrivePrefix + lett + ":");
-	std::string mu_dev_str(DeviceMU + std::to_string(MuPort2Idx(dwPort, dwSlot)));
+	std::string mu_dev_str(DeviceMUPrefix + std::to_string(MuPort2Idx(dwPort, dwSlot)) + "\\");
 	ANSI_STRING mu_dev, mu_path;
 	RtlInitAnsiString(&mu_path, mu_path_str.data());
 	RtlInitAnsiString(&mu_dev, mu_dev_str.data());
@@ -1201,7 +1200,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(XReadMUMetaData)
 	std::string mu_path_str(DrivePrefix + lett + ":");
 	ANSI_STRING mu_path;
 	RtlInitAnsiString(&mu_path, mu_path_str.data());
-	X_InitializeObjectAttributes(&obj, &mu_path, OBJ_CASE_INSENSITIVE, ObDosDevicesDirectory());
+	X_InitializeObjectAttributes(&obj, &mu_path, OBJ_CASE_INSENSITIVE, xbox::zeroptr);
 
 	HANDLE handle;
 	IO_STATUS_BLOCK io_status_block;
