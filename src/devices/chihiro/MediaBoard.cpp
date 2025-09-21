@@ -90,9 +90,6 @@ void MediaBoard::ComRead(uint32_t offset, void* buffer, uint32_t length)
 
 void MediaBoard::ComWrite(uint32_t offset, void* buffer, uint32_t length)
 {
-    // Instant replies cause race conditions, software seems to expect at least a little delay
-    Sleep(100);
-
     if (offset == 0x900000) { // Some kind of reset?
         memcpy(readBuffer, buffer, 0x20);
         return;
