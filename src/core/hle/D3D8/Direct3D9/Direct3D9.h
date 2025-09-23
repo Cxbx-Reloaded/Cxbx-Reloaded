@@ -59,6 +59,8 @@ extern xbox::dword_xt g_Xbox_VertexShader_Handle;
 
 extern xbox::X_PixelShader *g_pXbox_PixelShader;
 
+extern D3DFORMAT g_HostTextureFormats[xbox::X_D3DTS_STAGECOUNT];
+
 extern xbox::X_D3DBaseTexture *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 
 namespace xbox {
