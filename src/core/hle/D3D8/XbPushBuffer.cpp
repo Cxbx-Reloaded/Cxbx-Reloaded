@@ -469,8 +469,7 @@ extern void EmuExecutePushBufferRaw
 			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
-			//NV2A uses COMMAND_TYPE_JUMP_LONG as return for COMMAND_TYPE_CALL. we clear the subr_active here to indicate we have returned from COMMAND_TYPE_CALL.
-			subr_active = false;
+			// NV2A uses COMMAND_TYPE_JUMP_LONG as return for COMMAND_TYPE_CALL. This is because the RET command is broken at the hw level
 			continue; // while
 		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
 			if (subr_active) {
