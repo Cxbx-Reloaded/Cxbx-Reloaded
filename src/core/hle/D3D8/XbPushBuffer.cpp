@@ -466,22 +466,12 @@ extern void EmuExecutePushBufferRaw
 		case COMMAND_TYPE_NONE:
 			break; // fall through
 		case COMMAND_TYPE_JUMP_LONG:
-			LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_JUMP_LONG");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
-			// NV2A uses COMMAND_TYPE_JUMP_LONG as return for COMMAND_TYPE_CALL. This is because the RET command is broken at the hw level
 			continue; // while
-		case COMMAND_TYPE_CALL: // Note : NV2A return is said not to work?
-			if (subr_active) {
-				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL while another call was active!");
-				// TODO : throw DMA_PUSHER(CALL_SUBR_ACTIVE);
-				// For now, don't even attempt to run through, this should never happened, if it happened, the pgraph handler will go crazy.
-				CxbxrAbort("Pushbuffer COMMAND_TYPE_CALL called without return!");
-			}
-			else {
-				LOG_TEST_CASE("Pushbuffer COMMAND_TYPE_CALL");
-			}
-
+		case COMMAND_TYPE_CALL:
+			// We don't check the subroutine active flag here, because we expect the check to fail after a second CALL command. This is because the RET command is broken at the hw level,
+			// so it cannot be used to clear the subroutine active flag
 			subr_return = dma_get;
 			subr_active = true;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP_LONG));
@@ -497,7 +487,6 @@ extern void EmuExecutePushBufferRaw
 			dma_state.ni = false;
 			break;
 		case COMMAND_INSTRUCTION_JUMP:
-			LOG_TEST_CASE("Pushbuffer COMMAND_INSTRUCTION_JUMP");
 			dma_get_jmp_shadow = dma_get;
 			dma_get = (uint32_t *)(CONTIGUOUS_MEMORY_BASE | (word & COMMAND_WORD_MASK_JUMP));
 			continue; // while
@@ -516,13 +505,10 @@ extern void EmuExecutePushBufferRaw
 			dma_state.subc = command.subchannel;
 			dma_state.mcnt = command.method_count;
 			break; // fall through
-		case COMMAND_FLAGS_RETURN: // Note : NV2A return is said not to work?
+		case COMMAND_FLAGS_RETURN:
 			if (word != 0x00020000) {
 				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN with additional bits?!");
 				return; // For now, don't even attempt to run through
-			}
-			else {
-				LOG_TEST_CASE("Pushbuffer COMMAND_FLAGS_RETURN");
 			}
 
 			if (!subr_active) {
