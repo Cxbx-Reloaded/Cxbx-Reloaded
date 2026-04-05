@@ -91,12 +91,13 @@ public:
 	void ComWrite(uint32_t offset, void* buffer, uint32_t length);
     chihiro_bootid &GetBootId();
 private:
-	uint8_t readBuffer[512];
-	uint8_t writeBuffer[512];
+    uint32_t temp_0x4026 = 0;
+    uint8_t buffer_800000[512] = {};
+    uint8_t buffer_900000[512] = {};
 
     std::string m_MountPath;
+    chihiro_bootid BootID = {};
 
-    chihiro_bootid BootID;
 };
 
 #endif

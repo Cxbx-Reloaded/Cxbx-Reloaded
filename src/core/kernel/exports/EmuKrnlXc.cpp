@@ -235,7 +235,13 @@ xbox::void_xt NTAPI JumpedKeyTable
 )
 {
 	if (dwCipher) {
-		mbedtls_des3_set3key_enc((mbedtls_des3_context*)pbKeyTable, pbKey);
+		// Xbox uses 2-key Triple-DES (EDE) with a 16-byte key (K1, K2), where K3 = K1.
+		// mbedtls_des3_set3key_enc expects a 24-byte key, so we construct it locally
+		// to avoid reading 8 bytes past the end of the 16-byte Xbox key buffer.
+		unsigned char key24[MBEDTLS_DES_KEY_SIZE * 3];
+		memcpy(key24, pbKey, MBEDTLS_DES_KEY_SIZE * 2);
+		memcpy(key24 + MBEDTLS_DES_KEY_SIZE * 2, pbKey, MBEDTLS_DES_KEY_SIZE); // K3 = K1
+		mbedtls_des3_set3key_enc((mbedtls_des3_context*)pbKeyTable, key24);
 	}
 	else {
 		mbedtls_des_setkey_enc((mbedtls_des_context*)pbKeyTable, pbKey);
@@ -657,7 +663,7 @@ XBSYSAPI EXPORTNUM(347) xbox::void_xt NTAPI xbox::XcKeyTable
 	LOG_FUNC_BEGIN
 		LOG_FUNC_ARG(dwCipher)
 		LOG_FUNC_ARG_OUT(pbKeyTable)
-		LOG_FUNC_ARG_TYPE(PBYTE, pbKey)
+		LOG_FUNC_ARG_OUT(pbKey)
 	LOG_FUNC_END;
 
 	UpdatedCryptoStruct.pXcKeyTable(dwCipher, pbKeyTable, pbKey);

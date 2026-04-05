@@ -26,6 +26,8 @@
 
 #include "JvsIo.h"
 #include <cstdio>
+#include <cstdarg>
+#include <ctime>
 #include <string>
 
 JvsIo* g_pJvsIo;
@@ -33,6 +35,89 @@ JvsIo* g_pJvsIo;
 //#define DEBUG_JVS_PACKETS
 #include <vector>
 #include <Windows.h>
+
+
+// ============================================================================
+// JVS logging
+// ============================================================================
+#ifdef JVS_LOG
+FILE* g_JvsLogFile = nullptr;
+static ULONGLONG g_JvsLogStartMs = 0;
+
+void JvsLog(const char* fmt, ...)
+{
+	if (!g_JvsLogFile) return;
+	va_list args;
+	va_start(args, fmt);
+	vfprintf(g_JvsLogFile, fmt, args);
+	va_end(args);
+	fflush(g_JvsLogFile);
+}
+
+// Returns milliseconds elapsed since the JVS log was opened
+static ULONGLONG JvsElapsedMs()
+{
+	return GetTickCount64() - g_JvsLogStartMs;
+}
+
+void JvsIo::OpenLog(const std::string& dataFilePath)
+{
+	if (!dataFilePath.empty()) {
+		std::string path = dataFilePath + "\\jvs_io.log";
+		g_JvsLogFile = fopen(path.c_str(), "wt");
+	}
+	if (!g_JvsLogFile) {
+		// Fallback: open in working directory
+		g_JvsLogFile = fopen("jvs_io.log", "wt");
+	}
+	g_JvsLogStartMs = GetTickCount64();
+	time_t now = time(nullptr);
+	JvsLog("JVS I/O log opened %s", ctime(&now));
+	JvsLog("BoardID: %s\n", BoardID.c_str());
+	JvsLog("Emulated: CommandFormatRevision=0x%02X JvsVersion=0x%02X CommVersion=0x%02X\n\n",
+		CommandFormatRevision, JvsVersion, CommunicationVersion);
+}
+#else
+void JvsIo::OpenLog(const std::string& /*dataFilePath*/) {}
+#endif
+
+// Returns a human-readable name for a JVS command byte
+static const char* JvsCommandName(uint8_t cmd)
+{
+	switch (cmd) {
+		case 0xF0: return "F0_Reset";
+		case 0xF1: return "F1_SetDeviceId";
+		case 0x10: return "10_GetBoardId";
+		case 0x11: return "11_GetCommandFormat";
+		case 0x12: return "12_GetJvsRevision";
+		case 0x13: return "13_GetCommunicationVersion";
+		case 0x14: return "14_GetCapabilities";
+		case 0x15: return "15_ConveyMainBoardId";
+		case 0x20: return "20_ReadSwitchInputs";
+		case 0x21: return "21_ReadCoinInputs";
+		case 0x22: return "22_ReadAnalogInputs";
+		case 0x26: return "26_ReadMiscSwitchInputs";
+		case 0x2E: return "2E_ReadPayoutHopperStatus";
+		case 0x2F: return "2F_RetransmitData";
+		case 0x30: return "30_CoinDecrease";
+		case 0x31: return "31_CoinIncrease";
+		case 0x32: return "32_GeneralPurposeOutput";
+		case 0x33: return "33_AnalogOutput";
+		case 0x34: return "34_CharacterOutput";
+		case 0x36: return "36_PayoutSubtractionOutput";
+		case 0x37: return "37_GeneralPurposeOutput2";
+		case 0x70: return "70_NamcoCustom";
+		default:   return "??_Unknown";
+	}
+}
+
+static void LogPacketHex(const char* prefix, const uint8_t* data, size_t len)
+{
+	JvsLog("%s (%zu bytes):", prefix, len);
+	for (size_t i = 0; i < len; i++) JvsLog(" %02X", data[i]);
+	JvsLog("\n");
+}
+
 // We will emulate SEGA 837-13551 IO Board
 JvsIo::JvsIo(uint8_t* sense)
 {
@@ -77,9 +162,11 @@ int JvsIo::Jvs_Command_F0_Reset(uint8_t* data)
 
 	if (ensure_reset == 0xD9) {
 		// Set sense to 3 (2.5v) to instruct the baseboard we're ready.
+		uint8_t prevSense = *pSense;
 		*pSense = 3;
 		ResponseBuffer.push_back(ReportCode::Handled); // Note : Without this, Chihiro software stops sending packets (but JVS V3 doesn't send this?)
 		DeviceId = 0;
+		JvsLog("  F0_Reset: sense %u->3 (2.5V, ready), DeviceId reset to 0\n", prevSense);
 	}
 #if 0 // TODO : Is the following required?
 	else {
@@ -103,10 +190,13 @@ int JvsIo::Jvs_Command_F0_Reset(uint8_t* data)
 int JvsIo::Jvs_Command_F1_SetDeviceId(uint8_t* data)
 {
 	// Set Address
+	uint8_t prevId = DeviceId;
 	DeviceId = data[1];
 
+	uint8_t prevSense = *pSense;
 	*pSense = 0; // Set sense to 0v
 	ResponseBuffer.push_back(ReportCode::Handled);
+	JvsLog("  F1_SetDeviceId: DeviceId %u->%u, sense %u->0 (0V, assigned)\n", prevId, DeviceId, prevSense);
 
 	return 1;
 }
@@ -185,7 +275,8 @@ int JvsIo::Jvs_Command_15_ConveyMainBoardId(uint8_t* data, size_t remaining)
 	// Main board sends its ID as a null-terminated string
 	// We just acknowledge it
 	ResponseBuffer.push_back(ReportCode::Handled);
-
+	ResponseBuffer.push_back(0x01);
+	ResponseBuffer.push_back(0x05);
 	// Scan past the null-terminated string starting at data[1]
 	int consumed = 0;
 	for (size_t j = 1; j < remaining; j++) {
@@ -482,10 +573,15 @@ void JvsIo::HandlePacket(jvs_packet_header_t* header, std::vector<uint8_t>& pack
 			case 0x7F:
 			case 0x80: i += Jvs_Command_78_80_SkipNamcoUnknownCustom(); break;
 			default:
-				// Overwrite the verly-optimistic StatusCode::StatusOkay with Status::Unsupported command
-				// Don't process any further commands. Existing processed commands must still return their responses.
-				ResponseBuffer[0] = StatusCode::UnsupportedCommand;
-				printf("JvsIo::HandlePacket: Unhandled Command %02X\n", packet[i]);
+				// Do NOT set UnsupportedCommand in the packet status byte — that signals to the game that the
+				// IO board is entirely disconnected (causes "Error 11 JVS I/O not connected" in Virtua Cop 3
+				// when the cabinet sends a header-light LED command with no registered handler).
+				// Instead, append InvalidParameter in the report for this specific command so the game sees
+				// a valid response and knows the board is alive.  We must still stop processing further
+				// commands in this packet because we don't know the unknown command's parameter byte count.
+				ResponseBuffer.push_back(ReportCode::InvalidParameter);
+				JvsLog("  UNKNOWN command 0x%02X at offset %zu — returning InvalidParameter (board stays connected)\n", packet[i], i);
+				printf("JvsIo::HandlePacket: Unhandled Command %02X (acknowledged with InvalidParameter)\n", packet[i]);
 				return;
 		}
 	}
@@ -493,6 +589,7 @@ void JvsIo::HandlePacket(jvs_packet_header_t* header, std::vector<uint8_t>& pack
 
 size_t JvsIo::SendPacket(uint8_t* buffer)
 {
+	std::lock_guard<std::mutex> lock(IoBoardMutex);
 	// Remember where the buffer started (so we can calculate the number of bytes we've handled)
 	uint8_t* buffer_start = buffer;
 
@@ -512,9 +609,14 @@ size_t JvsIo::SendPacket(uint8_t* buffer)
 		return 1;
 	}
 
-	// Read the target and count bytes
-	header.target = GetEscapedByte(buffer);
-	header.count = GetEscapedByte(buffer);
+	// Read the target and count bytes.
+	// NOTE: JVS over Chihiro USB is a raw byte stream — the escape-byte mechanism (0xD0)
+	// is a physical RS-485 layer concern and is NOT applied by the Xbox USB driver.
+	// Using GetEscapedByte here would misinterpret any data byte that happens to equal
+	// ESCAPE_BYTE (0xD0), consuming the following byte (often the real checksum) as the
+	// escape suffix and cascading the mis-alignment across several subsequent packets.
+	header.target = GetByte(buffer);
+	header.count = GetByte(buffer);
 
 	// Calculate the checksum
 	uint8_t actual_checksum = header.target + header.count;
@@ -522,13 +624,13 @@ size_t JvsIo::SendPacket(uint8_t* buffer)
 	// Decode the payload data
 	std::vector<uint8_t> packet;
 	for (int i = 0; i < header.count - 1; i++) { // Note : -1 to avoid adding the checksum byte to the packet
-		uint8_t value = GetEscapedByte(buffer);
+		uint8_t value = GetByte(buffer);
 		packet.push_back(value);
 		actual_checksum += value;
 	}
 
-	// Read the checksum from the last byte
-	uint8_t packet_checksum = GetEscapedByte(buffer);
+	// Read the checksum from the last byte (raw — not escaped, see note above)
+	uint8_t packet_checksum = GetByte(buffer);
 #ifdef DEBUG_JVS_PACKETS
 	printf("\n");
 #endif
@@ -537,10 +639,21 @@ size_t JvsIo::SendPacket(uint8_t* buffer)
 	ResponseBuffer.clear();
 	if (packet_checksum != actual_checksum) {
 		ResponseBuffer.push_back(StatusCode::ChecksumError);
+		JvsLog("SendPacket: CHECKSUM ERROR target=0x%02X count=%u expected=0x%02X got=0x%02X — discarding packet\n",
+			header.target, header.count, actual_checksum, packet_checksum);
 	} else {
 		// If the packet was intended for us, we need to handle it
 		if (header.target == TARGET_BROADCAST || header.target == DeviceId) {
+			// Log full raw packet bytes
+			JvsLog("[+%llums] SendPacket -> target=0x%02X (DeviceId=%u) count=%u payload(%zu):",
+				JvsElapsedMs(), header.target, DeviceId, header.count, packet.size());
+			for (size_t pi = 0; pi < packet.size(); pi++)
+				JvsLog(" %02X", packet[pi]);
+			JvsLog("\n");
 			HandlePacket(&header, packet);
+		} else {
+			JvsLog("SendPacket: packet for target=0x%02X ignored (our DeviceId=%u)\n",
+				header.target, DeviceId);
 		}
 	}
 
@@ -568,6 +681,7 @@ void JvsIo::SendEscapedByte(uint8_t* &buffer, uint8_t value)
 
 size_t JvsIo::ReceivePacket(uint8_t* buffer)
 {
+	std::lock_guard<std::mutex> lock(IoBoardMutex);
 	if (ResponseBuffer.empty()) {
 		return 0;
 	}
@@ -584,8 +698,8 @@ size_t JvsIo::ReceivePacket(uint8_t* buffer)
 
 	// Send the header bytes
 	SendByte(buffer, header.sync); // Do not escape the sync byte!
-	SendEscapedByte(buffer, header.target);
-	SendEscapedByte(buffer, header.count);
+	SendByte(buffer, header.target);
+	SendByte(buffer, header.count);
 
 	// Calculate the checksum
 	uint8_t packet_checksum = header.target + header.count;
@@ -593,12 +707,12 @@ size_t JvsIo::ReceivePacket(uint8_t* buffer)
 	// Encode the payload data
 	for (size_t i = 0; i < ResponseBuffer.size(); i++) {
 		uint8_t value = ResponseBuffer[i];
-		SendEscapedByte(buffer, value);
+		SendByte(buffer, value);
 		packet_checksum += value;
 	}
 
 	// Write the checksum to the last byte
-	SendEscapedByte(buffer, packet_checksum);
+	SendByte(buffer, packet_checksum);
 
 	ResponseBuffer.clear();
 
@@ -612,6 +726,13 @@ size_t JvsIo::ReceivePacket(uint8_t* buffer)
 	}
 
 	printf("\n");
+#endif
+	// Log outgoing response
+#ifdef JVS_LOG
+	if (g_JvsLogFile && total_packet_size > 0) {
+		JvsLog("[+%llums] ", JvsElapsedMs());
+		LogPacketHex("ReceivePacket <-", buffer_start, total_packet_size);
+	}
 #endif
 	return total_packet_size;
 }

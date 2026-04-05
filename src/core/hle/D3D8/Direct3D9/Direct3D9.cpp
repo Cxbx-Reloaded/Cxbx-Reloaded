@@ -65,6 +65,7 @@
 #include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderCache.h"
+#include "Shader.h"
 #include "Timer.h"
 
 #include <imgui.h>
@@ -913,7 +914,7 @@ void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource)
 DWORD D3DUSAGE_INVALID = -1;
 
 typedef struct _resource_info_t {
-	
+
 	ComPtr<IDirect3DResource> pHostResource;
 	D3DFORMAT HostFormat = D3DFMT_UNKNOWN;
 	DWORD HostUsage = D3DUSAGE_INVALID;
@@ -1982,8 +1983,9 @@ static void SetupPresentationParameters
 
     params.Windowed = !g_XBVideo.bFullScreen;
 
-    // TODO: Investigate the best option for this
-    params.SwapEffect = D3DSWAPEFFECT_COPY;
+    // D3DSWAPEFFECT_DISCARD is the most performant swap effect and avoids AMD's slow copy-swap path.
+    // Every frame we do a full StretchRect blit before Present, so the previous frame's content is never needed.
+    params.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
     // Any backbuffer format should do, since we render to a separate xbox backbuffer
     // We need to specify something to support fullscreen exclusive mode
@@ -1991,6 +1993,19 @@ static void SetupPresentationParameters
     D3DDISPLAYMODE D3DDisplayMode;
     g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
     params.BackBufferFormat = D3DDisplayMode.Format;
+
+    // Capture GPU/driver identity for shader disk-cache validation.
+    // If the GPU or driver changes between runs, stale cached shader bytecode
+    // is automatically purged so the driver can never reject it and crash.
+    {
+        D3DADAPTER_IDENTIFIER9 adapterID = {};
+        if (SUCCEEDED(g_pDirect3D->GetAdapterIdentifier(g_EmuCDPD.Adapter, 0, &adapterID))) {
+            ShaderCacheSetAdapterFingerprint(
+                adapterID.Description,
+                adapterID.DriverVersion.HighPart,
+                adapterID.DriverVersion.LowPart);
+        }
+    }
 
     params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
     g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->PresentationInterval;
@@ -2002,8 +2017,9 @@ static void SetupPresentationParameters
     params.MultiSampleType = D3DMULTISAMPLE_NONE;
     params.MultiSampleQuality = 0;
 
-    // We want a lockable backbuffer for swapping/blitting purposes
-    params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+    // The host backbuffer is only used as a StretchRect destination, never directly locked.
+    // D3DPRESENTFLAG_LOCKABLE_BACKBUFFER forces AMD to place it in slower cacheable memory, so omit it.
+    params.Flags = 0;
 
     // retrieve resolution from configuration
     char szBackBufferFormat[16] = {};
@@ -2278,7 +2294,7 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 			auto xboxSurface = (xbox::X_D3DSurface*)pResource;
 			auto xboxTexture = (xbox::X_D3DTexture*)pResource;
 			auto xboxResourceType = GetXboxD3DResourceType(pResource);
-            
+
 
             // Only continue checking if we were able to get the surface desc, if it failed, we fall-through
             // to previous resource management behavior
@@ -4232,6 +4248,20 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 		return;
 	}
 
+	// Always store the viewport state the game requested
+	if (pViewport != nullptr) {
+		g_Xbox_Viewport = *pViewport;
+	}
+
+	// Guard against Xbox surface structs in Xbox VM regions not committed in host memory
+	// (e.g. Chihiro arcade games with firmware pre-mapped surfaces)
+	{
+		MEMORY_BASIC_INFORMATION mbi;
+		if (!VirtualQuery(g_pXbox_RenderTarget, &mbi, sizeof(mbi)) || mbi.State != MEM_COMMIT) {
+			return; // Surface struct not CPU-accessible; skip dimension-based viewport clamping
+		}
+	}
+
 	float rendertargetBaseWidth;
 	float rendertargetBaseHeight;
 	GetRenderTargetBaseDimensions(rendertargetBaseWidth, rendertargetBaseHeight);
@@ -4244,10 +4274,7 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 		g_Xbox_Viewport.Width = rendertargetBaseWidth;
 		g_Xbox_Viewport.Height = rendertargetBaseHeight;
 	} else {
-		// Update the current viewport
-		g_Xbox_Viewport = *pViewport;
-
-		// The SetRenderTarget trampoline calls SetViewport with
+		//  The SetRenderTarget trampoline calls SetViewport with
 		// both Width and Height set to INT_MAX
 		if ((pViewport->Width == INT_MAX) ^ (pViewport->Height == INT_MAX)) {
 			LOG_TEST_CASE("SetViewport called with only one of width/height set to INT_MAX");
@@ -5201,6 +5228,9 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 	g_LastD3DSwap = (xbox::X_D3DSWAP)Flags;
 
+	// Prune the paletized texture cache once per frame (not per draw call)
+	PrunePaletizedTexturesCache();
+
 	// Early exit if we're not ready to present
 	// Test Case: Antialias sample, BackBufferScale sample
 	// Which use D3DSWAP_COPY to render UI directly to the frontbuffer
@@ -5221,23 +5251,6 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	if (hRet == D3D_OK) {
 		assert(pCurrentHostBackBuffer != nullptr);
 
-        // Clear the backbuffer surface, this prevents artifacts when switching aspect-ratio
-        // Test-case: Dashboard
-        IDirect3DSurface* pExistingRenderTarget = nullptr;
-        hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
-        if (hRet == D3D_OK) {
-            g_pD3DDevice->SetRenderTarget(0, pCurrentHostBackBuffer);
-            g_pD3DDevice->Clear(
-                /*Count=*/0,
-                /*pRects=*/nullptr,
-                D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
-                /*Color=*/0xFF000000, // TODO : Use constant for this
-                /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
-                /*Stencil=*/0);
-            g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
-            pExistingRenderTarget->Release();
-        }
-        
         // TODO: Implement a hot-key to change the filter?
         // Note: LoadSurfaceFilter Must be D3DTEXF_NONE, D3DTEXF_POINT or D3DTEXF_LINEAR
         // Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
@@ -5250,6 +5263,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
         const auto width = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleWidth * g_AspectRatioScale : g_HostBackBufferDesc.Width;
         const auto height = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleHeight * g_AspectRatioScale : g_HostBackBufferDesc.Height;
 
+		// Pre-compute the destination rectangle so we can decide whether a pre-clear is necessary
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
             // Calculate the centered rectangle
@@ -5258,6 +5272,30 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             dest.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
             dest.right = (LONG)(dest.left + width);
             dest.bottom = (LONG)(dest.top + height);
+
+            // Clear the backbuffer to black only when StretchRect won't cover the full surface.
+            // When dest equals the full backbuffer (stretch mode / matching aspect ratio) the blit
+            // overwrites every pixel, making a pre-clear redundant and expensive (3 API calls saved per frame).
+            // Test-case: Dashboard (black bars during aspect-ratio change)
+            const bool bFullCoverage = (dest.left == 0 && dest.top == 0 &&
+                dest.right == (LONG)g_HostBackBufferDesc.Width &&
+                dest.bottom == (LONG)g_HostBackBufferDesc.Height);
+            if (!bFullCoverage) {
+                IDirect3DSurface* pExistingRenderTarget = nullptr;
+                hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
+                if (hRet == D3D_OK) {
+                    g_pD3DDevice->SetRenderTarget(0, pCurrentHostBackBuffer);
+                    g_pD3DDevice->Clear(
+                        /*Count=*/0,
+                        /*pRects=*/nullptr,
+                        D3DCLEAR_TARGET,
+                        /*Color=*/0xFF000000,
+                        /*Z=*/1.0f,
+                        /*Stencil=*/0);
+                    g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
+                    pExistingRenderTarget->Release();
+                }
+            }
 
             // Blit Xbox BackBuffer to host BackBuffer
             hRet = g_pD3DDevice->StretchRect(
@@ -6030,6 +6068,18 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
             return;
         }
 
+		// For X_D3DRTYPE_SURFACE, pNewHostSurface lives in D3DPOOL_DEFAULT and is not lockable.
+		// Create a SYSTEMMEM staging surface to lock/unlock, then upload via UpdateSurface.
+		ComPtr<IDirect3DSurface9> tempHostSurface;
+		if (XboxResourceType == xbox::X_D3DRTYPE_SURFACE) {
+			HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
+				hostWidth, hostHeight, PCFormat, D3DPOOL_SYSTEMMEM, tempHostSurface.GetAddressOf(), nullptr);
+			if (hRet != D3D_OK) {
+				EmuLog(LOG_LEVEL::WARNING, "CreateOffscreenPlainSurface %s failed!", ResourceTypeName);
+				return;
+			}
+		}
+
 		DWORD dwCubeFaceOffset = 0;
 		D3DCUBEMAP_FACES last_face = (bCubemap) ? D3DCUBEMAP_FACE_NEGATIVE_Z : D3DCUBEMAP_FACE_POSITIVE_X;
 
@@ -6069,13 +6119,16 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				DWORD mipSlicePitch = mip2dSize * pxMipDepth; // the total size of the mip slice (depth is only > 1 for volume textures)
 
 				// Lock the host resource
+				// Intermediate textures always reside in D3DPOOL_SYSTEMMEM, so D3DLOCK_NOSYSLOCK is
+				// unnecessary (it only benefits DEFAULT-pool resources) and can cause extra driver
+				// synchronisation overhead on AMD. Use no flags for a straightforward CPU-side lock.
 				D3DLOCKED_RECT LockedRect = {};
 				D3DLOCKED_BOX LockedBox = {};
-				DWORD D3DLockFlags = D3DLOCK_NOSYSLOCK;
+				DWORD D3DLockFlags = 0;
 
 				switch (XboxResourceType) {
 				case xbox::X_D3DRTYPE_SURFACE:
-					hRet = pNewHostSurface->LockRect(&LockedRect, nullptr, D3DLockFlags);
+					hRet = tempHostSurface->LockRect(&LockedRect, nullptr, D3DLockFlags);
 					break;
 				case xbox::X_D3DRTYPE_VOLUME:
 					hRet = pNewHostVolume->LockBox(&LockedBox, nullptr, D3DLockFlags);
@@ -6177,7 +6230,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 				// Unlock the host resource
 				switch (XboxResourceType) {
 				case xbox::X_D3DRTYPE_SURFACE:
-					hRet = pNewHostSurface->UnlockRect();
+					hRet = tempHostSurface->UnlockRect();
 					break;
 				case xbox::X_D3DRTYPE_VOLUME:
 					hRet = pNewHostVolume->UnlockBox();
@@ -6230,9 +6283,12 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
         // This is necessary because CopyRects/StretchRects only works on resources in the DEFAULT pool
         // But resources in this pool are not lockable: We must use UpdateSurface/UpdateTexture instead!
         switch (XboxResourceType) {
-        case xbox::X_D3DRTYPE_SURFACE:
+        case xbox::X_D3DRTYPE_SURFACE: {
+            hRet = g_pD3DDevice->UpdateSurface(tempHostSurface.Get(), NULL, pNewHostSurface.Get(), NULL);
+            break;
+        }
         case xbox::X_D3DRTYPE_VOLUME:
-            // We didn't use a copy for Surfaces or Volumes
+            // We didn't use a copy for Volumes
             break;
         case xbox::X_D3DRTYPE_TEXTURE:
             g_pD3DDevice->UpdateTexture(pIntermediateHostTexture.Get(), pNewHostTexture.Get());
@@ -6248,7 +6304,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
         }
 
         if (hRet != D3D_OK) {
-            EmuLog(LOG_LEVEL::WARNING, "Updating host %s failed!", ResourceTypeName);
+            EmuLog(LOG_LEVEL::WARNING, "Updating host %s failed! 0x%08X", ResourceTypeName, hRet);
         }
 
 		// Debug resource dumping
@@ -7798,7 +7854,11 @@ void CxbxUpdateHostTextureScaling()
 	// the shader and allow scaling on any of the input registers (so we'd
 	// need to allow scaling on all 16 attributes, instead of just the four
 	// textures like we do right now).
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_TEXTURES_SCALE_BASE, (float*)texcoordScales.data(), CXBX_D3DVS_TEXTURES_SCALE_SIZE);
+	static std::array<std::array<float, 4>, xbox::X_D3DTS_STAGECOUNT> s_lastTexcoordScales = {};
+	if (texcoordScales != s_lastTexcoordScales) {
+		s_lastTexcoordScales = texcoordScales;
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_TEXTURES_SCALE_BASE, (float*)texcoordScales.data(), CXBX_D3DVS_TEXTURES_SCALE_SIZE);
+	}
 }
 
 void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
@@ -7882,7 +7942,11 @@ void CxbxUpdateHostVertexShaderConstants()
 	const float fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
 	const float fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
 	float fogStuff[4] = {fogTableMode, fogDensity, fogStart, fogEnd};
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
+	static float s_lastFogStuff[4] = {-1, -1, -1, -1};
+	if (memcmp(fogStuff, s_lastFogStuff, sizeof(fogStuff)) != 0) {
+		memcpy(s_lastFogStuff, fogStuff, sizeof(fogStuff));
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
+	}
 }
 
 void CxbxUpdateHostViewport() {
@@ -7901,6 +7965,29 @@ void CxbxUpdateHostViewport() {
 
 	float Xscale = aaScaleX * g_RenderUpscaleFactor;
 	float Yscale = aaScaleY * g_RenderUpscaleFactor;
+
+	// Skip redundant D3D9 calls when nothing affecting the host viewport has changed.
+	// In heavy scenes (e.g. WMMT with many cars), this is called 50-100+ times per frame
+	// and the viewport/RT almost never changes between draws.
+	static DWORD s_lastRTWidth = 0, s_lastRTHeight = 0;
+	static float s_lastXscale = -1.0f, s_lastYscale = -1.0f;
+	static xbox::X_D3DVIEWPORT8 s_lastXboxViewport = {};
+	static VertexShaderMode s_lastShaderMode = VertexShaderMode::FixedFunction;
+
+	if (HostRenderTarget_Width == s_lastRTWidth &&
+		HostRenderTarget_Height == s_lastRTHeight &&
+		Xscale == s_lastXscale && Yscale == s_lastYscale &&
+		g_Xbox_VertexShaderMode == s_lastShaderMode &&
+		memcmp(&g_Xbox_Viewport, &s_lastXboxViewport, sizeof(xbox::X_D3DVIEWPORT8)) == 0) {
+		return;
+	}
+
+	s_lastRTWidth = HostRenderTarget_Width;
+	s_lastRTHeight = HostRenderTarget_Height;
+	s_lastXscale = Xscale;
+	s_lastYscale = Yscale;
+	s_lastXboxViewport = g_Xbox_Viewport;
+	s_lastShaderMode = g_Xbox_VertexShaderMode;
 
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		// Set viewport
@@ -7953,9 +8040,6 @@ extern void CxbxUpdateHostVertexShader(); // TMP glue
 
 void CxbxUpdateNativeD3DResources()
 {
-	// Before we start, make sure our resource cache stays limited in size
-	PrunePaletizedTexturesCache(); // TODO : Could we move this to Swap instead?
-
 	CxbxUpdateHostVertexDeclaration();
 
 	CxbxUpdateHostVertexShader();
@@ -8777,9 +8861,12 @@ static void CxbxImpl_SetRenderTarget
     // Validate that our host render target is still the correct size
     DWORD HostRenderTarget_Width, HostRenderTarget_Height;
     if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height, pHostRenderTarget)) {
-        DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXbox_RenderTarget);
-        DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
-        ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
+        MEMORY_BASIC_INFORMATION mbi;
+        if (VirtualQuery(g_pXbox_RenderTarget, &mbi, sizeof(mbi)) && mbi.State == MEM_COMMIT) {
+            DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXbox_RenderTarget);
+            DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
+            ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
+        }
     }
 }
 

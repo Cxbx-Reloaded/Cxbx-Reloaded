@@ -169,14 +169,14 @@ void EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningM
 	LOG_CHECK_ENABLED_EX(cxbxr_module, level) {
 		if (g_bPrintfOn) {
 
-			LOG_THREAD_INIT;
+	LOG_THREAD_INIT;
 
-			va_list argp;
-			va_start(argp, szWarningMessage);
+	va_list argp;
+	va_start(argp, szWarningMessage);
 
-			EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
+	EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
 
-			va_end(argp);
+	va_end(argp);
 		}
 	}
 }

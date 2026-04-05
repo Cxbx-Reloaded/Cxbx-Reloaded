@@ -1149,11 +1149,13 @@ void CxbxUpdateHostVertexShader()
 	static IDirect3DVertexShader* fixedFunctionShader = nullptr; // TODO: move to shader cache
 	static IDirect3DVertexShader* passthroughShader = nullptr;
 	static int vertexShaderVersion = -1;
+	static IDirect3DVertexShader* s_lastSetShader = nullptr; // dirty tracking
 
 	int shaderVersion = g_ShaderSources.Update();
 	if (vertexShaderVersion != shaderVersion) {
 		vertexShaderVersion = shaderVersion;
 		g_pD3DDevice->SetVertexShader(nullptr);
+		s_lastSetShader = nullptr; // force re-apply after recompile
 
 		EmuLog(LOG_LEVEL::INFO, "Loading vertex shaders...");
 
@@ -1172,18 +1174,14 @@ void CxbxUpdateHostVertexShader()
 		passthroughShader = InitShader(EmuCompileXboxPassthrough, "Passthrough Vertex Shader");
 	}
 
-	// TODO Call this when state is dirty
-	// Rather than every time state changes
-
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
+	IDirect3DVertexShader* pNewShader = nullptr;
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
-		 HRESULT hRet = g_pD3DDevice->SetVertexShader(fixedFunctionShader);
-		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
+		pNewShader = fixedFunctionShader;
 	}
 	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
-		HRESULT hRet = g_pD3DDevice->SetVertexShader(passthroughShader);
-		if (FAILED(hRet)) CxbxrAbort("Failed to set passthrough shader");
+		pNewShader = passthroughShader;
 	}
 	else {
 		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
@@ -1191,9 +1189,14 @@ void CxbxUpdateHostVertexShader()
 		// Create a vertex shader from the tokens
 		DWORD shaderSize;
 		auto VertexShaderKey = g_VertexShaderCache.CreateShader(pTokens, &shaderSize);
-		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderCache.GetShader(VertexShaderKey);
-		HRESULT hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
+		pNewShader = g_VertexShaderCache.GetShader(VertexShaderKey);
+	}
+
+	if (pNewShader != s_lastSetShader) {
+		s_lastSetShader = pNewShader;
+		HRESULT hRet = g_pD3DDevice->SetVertexShader(pNewShader);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+		if (FAILED(hRet)) CxbxrAbort("Failed to set vertex shader");
 	}
 }
 
@@ -1306,17 +1309,27 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 
 void CxbxUpdateHostVertexDeclaration()
 {
+	static CxbxVertexDeclaration* s_lastDeclaration = nullptr;
+	static bool s_lastVRegInDeclaration[X_VSH_MAX_ATTRIBUTES] = {};
+
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
-	HRESULT hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration->pHostVertexDeclaration);
+
+	if (pCxbxVertexDeclaration != s_lastDeclaration) {
+		s_lastDeclaration = pCxbxVertexDeclaration;
+		g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration->pHostVertexDeclaration);
+	}
 
 	// Titles can specify default values for registers via calls like SetVertexData4f
 	// HLSL shaders need to know whether to use vertex data or default vertex shader values
 	// Any register not in the vertex declaration should be set to the default value
-	float vertexDefaultFlags[X_VSH_MAX_ATTRIBUTES];
-	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
-		vertexDefaultFlags[i] = pCxbxVertexDeclaration->vRegisterInDeclaration[i] ? 0.0f : 1.0f;
+	if (memcmp(s_lastVRegInDeclaration, pCxbxVertexDeclaration->vRegisterInDeclaration, sizeof(s_lastVRegInDeclaration)) != 0) {
+		memcpy(s_lastVRegInDeclaration, pCxbxVertexDeclaration->vRegisterInDeclaration, sizeof(s_lastVRegInDeclaration));
+		float vertexDefaultFlags[X_VSH_MAX_ATTRIBUTES];
+		for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
+			vertexDefaultFlags[i] = pCxbxVertexDeclaration->vRegisterInDeclaration[i] ? 0.0f : 1.0f;
+		}
+		g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
 	}
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
 }
 
 void CxbxImpl_SetScreenSpaceOffset(float x, float y)

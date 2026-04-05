@@ -63,6 +63,17 @@ static bool IsValidShaderBytecode(uint32_t magic)
 }
 
 static std::string g_ShaderCacheDir;
+// GPU/driver fingerprint supplied from Direct3D9.cpp during device creation.
+// Used to detect stale cache entries from a different GPU or driver version.
+static std::string g_AdapterFingerprint;
+
+void ShaderCacheSetAdapterFingerprint(const char* adapterDesc, uint32_t driverVersionHigh, uint32_t driverVersionLow)
+{
+	char buf[300];
+	snprintf(buf, sizeof(buf), "%s|%08X|%08X", adapterDesc, driverVersionHigh, driverVersionLow);
+	g_AdapterFingerprint = buf;
+}
+
 static std::atomic<int> g_CacheHits{0};
 static std::atomic<int> g_CacheMisses{0};
 static std::atomic<int> g_CacheSaves{0};
@@ -167,12 +178,55 @@ static bool EnsureShaderCacheDir()
 		}
 	}
 
+	// Validate adapter fingerprint — wipe stale .cso files if GPU or driver changed.
+	// This prevents crashes from the device rejecting bytecode compiled for a different GPU.
+	if (!g_AdapterFingerprint.empty()) {
+		std::string fingerprintPath = g_ShaderCacheDir + "\\adapter_fingerprint.txt";
+		std::string storedFingerprint;
+		{
+			std::ifstream f(fingerprintPath);
+			if (f.good()) {
+				std::getline(f, storedFingerprint);
+			}
+		}
+		if (storedFingerprint != g_AdapterFingerprint) {
+			// GPU or driver changed — silently delete all cached shader bytecode.
+			// The .hlsl sources are intact; shaders will recompile on first use.
+			std::error_code ec2;
+			for (auto& entry : std::filesystem::directory_iterator(g_ShaderCacheDir, ec2)) {
+				if (entry.path().extension() == ".cso") {
+					std::filesystem::remove(entry.path(), ec2);
+				}
+			}
+			// Write updated fingerprint
+			std::ofstream f(fingerprintPath, std::ios::trunc);
+			f << g_AdapterFingerprint;
+			// Log the wipe — message will appear in the log after it's opened below
+			EmuLog(LOG_LEVEL::WARNING,
+				"ShaderCache: GPU/driver fingerprint changed (was '%s', now '%s') — "
+				"stale cached shaders deleted, they will recompile on next use.",
+				storedFingerprint.empty() ? "<none>" : storedFingerprint.c_str(),
+				g_AdapterFingerprint.c_str());
+		}
+	}
+
 	// Open log file in the per-game shader cache dir
 	std::string logPath = g_ShaderCacheDir + "\\shader_cache.log";
 	g_ShaderCacheLogFile = fopen(logPath.c_str(), "wt");
 	ShaderCacheLog("ShaderCache initialized: %s\n", g_ShaderCacheDir.c_str());
+	ShaderCacheLog("AdapterFingerprint = %s\n", g_AdapterFingerprint.empty() ? "<not set>" : g_AdapterFingerprint.c_str());
 	ShaderCacheLog("g_DataFilePath = %s\n", g_DataFilePath.c_str());
 	ShaderCacheLog("TitleID = %s, GameName = %s\n", titleIdStr, gameName.c_str());
+
+	// Create Dumped and Replacements subdirectories
+	// Dumped: original HLSL sources written here for user inspection and patching
+	// Replacements: user places modified HLSL here (same filename as Dumped) to override at runtime
+	for (const char* sub : { "Dumped", "Replacements" }) {
+		std::string subPath = g_ShaderCacheDir + "\\" + sub;
+		if (!std::filesystem::exists(subPath)) {
+			std::filesystem::create_directory(subPath, ec);
+		}
+	}
 
 	// Start background save thread
 	if (!g_SaveThreadRunning) {
@@ -189,6 +243,43 @@ static std::string GetShaderCachePath(uint64_t hash)
 	char filename[32];
 	snprintf(filename, sizeof(filename), "%016llx.cso", hash);
 	return g_ShaderCacheDir + "\\" + filename;
+}
+
+// Returns path of the HLSL file for the given hash+profile in 'Dumped' or 'Replacements'.
+// Filename: <hash>_<profile>.hlsl  e.g. 0123456789abcdef_ps_3_0.hlsl
+static std::string GetShaderHlslPath(uint64_t hash, const char* profile, const char* subdir)
+{
+	char filename[80];
+	snprintf(filename, sizeof(filename), "%016llx_%s.hlsl", hash, profile);
+	return g_ShaderCacheDir + "\\" + subdir + "\\" + filename;
+}
+
+// Write the HLSL source to Dumped\ the first time a shader is seen.
+// Subsequent calls for the same hash are no-ops (file presence is the guard).
+static void DumpShaderSource(uint64_t hash, const char* profile, const std::string& hlsl)
+{
+	if (g_ShaderCacheDir.empty()) return;
+	std::string path = GetShaderHlslPath(hash, profile, "Dumped");
+	if (std::filesystem::exists(path)) return; // already dumped
+	std::ofstream f(path);
+	if (f.good()) {
+		f << hlsl;
+		ShaderCacheLog("DUMPED %s\n", path.c_str());
+	}
+}
+
+// Check whether the user placed a replacement HLSL in Replacements\.
+// Returns true and fills out_hlsl if a file exists; otherwise returns false.
+static bool TryLoadReplacementShader(uint64_t hash, const char* profile, std::string& out_hlsl)
+{
+	if (g_ShaderCacheDir.empty()) return false;
+	std::string path = GetShaderHlslPath(hash, profile, "Replacements");
+	std::ifstream f(path);
+	if (!f.good()) return false;
+	out_hlsl.assign(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
+	ShaderCacheLog("REPLACEMENT loaded %s\n", path.c_str());
+	EmuLog(LOG_LEVEL::INFO, "ShaderCache: using replacement shader %s", path.c_str());
+	return true;
 }
 
 static bool LoadCachedShader(uint64_t hash, ID3DBlob** ppBlob)
@@ -319,7 +410,11 @@ static void AsyncCompileWorker(std::string hlsl_str, std::string profile,
 		"main", profile.c_str(), flags1, 0, &pResult, &pErrors);
 
 	if (FAILED(hr)) {
-		if (pErrors) { pErrors->Release(); pErrors = nullptr; }
+		if (pErrors) {
+			ShaderCacheLog("ASYNC COMPILE ERROR (pass 1) %016llx (profile=%s):\n%s\n",
+				hash, profile.c_str(), (char*)pErrors->GetBufferPointer());
+			pErrors->Release(); pErrors = nullptr;
+		}
 		flags1 |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY | D3DCOMPILE_AVOID_FLOW_CONTROL;
 		hr = D3DCompile(
 			hlsl_str.c_str(), hlsl_str.length(),
@@ -328,7 +423,13 @@ static void AsyncCompileWorker(std::string hlsl_str, std::string profile,
 			"main", profile.c_str(), flags1, 0, &pResult, &pErrors);
 	}
 
-	if (pErrors) { pErrors->Release(); pErrors = nullptr; }
+	if (pErrors) {
+		if (FAILED(hr)) {
+			ShaderCacheLog("ASYNC COMPILE ERROR (pass 2/compat) %016llx (profile=%s):\n%s\n",
+				hash, profile.c_str(), (char*)pErrors->GetBufferPointer());
+		}
+		pErrors->Release(); pErrors = nullptr;
+	}
 
 	auto tEnd = std::chrono::high_resolution_clock::now();
 	double ms = std::chrono::duration<double, std::milli>(tEnd - tStart).count();
@@ -378,19 +479,43 @@ extern HRESULT EmuCompileShader
 	std::string cacheInput = hlsl_str + "|" + shader_profile;
 	uint64_t cacheHash = ComputeHash(cacheInput.c_str(), cacheInput.size());
 
+	// Dump original HLSL source to Dumped\ (once per unique shader, for user inspection)
+	if (cacheReady) {
+		DumpShaderSource(cacheHash, shader_profile, hlsl_str);
+	}
+
+	// Check for a user replacement in Replacements\.
+	// If found: use that HLSL instead of the original, compute a distinct cache hash
+	// from the replacement content so edits always trigger a fresh compile, and force
+	// synchronous compilation so the user sees the result immediately.
+	bool hasReplacement = false;
+	uint64_t activeCacheHash = cacheHash;
+	if (cacheReady) {
+		std::string replacementHlsl;
+		if (TryLoadReplacementShader(cacheHash, shader_profile, replacementHlsl)) {
+			hasReplacement = true;
+			hlsl_str = std::move(replacementHlsl);
+			// The replacement cache key encodes the replacement content, so any edit
+			// to the file produces a new key and forces a fresh compile.
+			std::string repInput = hlsl_str + "|" + shader_profile + "|repl";
+			activeCacheHash = ComputeHash(repInput.c_str(), repInput.size());
+		}
+	}
+
 	// 1. Try loading from disk cache first (fast — ~0.08ms)
 	if (cacheReady) {
 		auto t0 = std::chrono::high_resolution_clock::now();
-		if (LoadCachedShader(cacheHash, ppHostShader)) {
+		if (LoadCachedShader(activeCacheHash, ppHostShader)) {
 			auto t1 = std::chrono::high_resolution_clock::now();
 			double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-			ShaderCacheLog("LOAD took %.2f ms (profile=%s)\n", ms, shader_profile);
+			ShaderCacheLog("LOAD took %.2f ms (profile=%s%s)\n", ms, shader_profile, hasReplacement ? " [replacement]" : "");
 			return S_OK;
 		}
 	}
 
-	// 2. Async pixel shader path (only for PS, not VS)
-	if (asyncAllowed && shader_profile[0] == 'p') {
+	// 2. Async pixel shader path (only for PS, not VS, and not for replacements —
+	//    replacements compile synchronously so the user sees the effect immediately)
+	if (asyncAllowed && !hasReplacement && shader_profile[0] == 'p') {
 		// Ensure fallback shader is ready (outside mutex — D3DCompile is slow first time)
 		EnsureFallbackShaders();
 
@@ -433,7 +558,7 @@ extern HRESULT EmuCompileShader
 			// If no fallback (shouldn't happen), fall through to synchronous
 			g_AsyncInFlight.erase(cacheHash);
 		}
-	} else if (asyncAllowed) {
+	} else if (asyncAllowed && !hasReplacement) {
 		// VS path: check async results in case a previous async compile for this hash finished
 		std::lock_guard<std::mutex> lock(g_AsyncMutex);
 		auto it = g_AsyncResults.find(cacheHash);
@@ -500,17 +625,30 @@ extern HRESULT EmuCompileShader
 	double compileMs = std::chrono::duration<double, std::milli>(tCompileEnd - tCompileStart).count();
 	HRESULT compileResult = hRet; // Preserve the actual compile result
 
-	// Determine the log level
+	// Log compiler messages to both EmuLog and shader_cache.log
+	const char* replTag = hasReplacement ? " [replacement]" : "";
 	auto hlslErrorLogLevel = FAILED(hRet) ? LOG_LEVEL::ERROR2 : LOG_LEVEL::DEBUG;
 	if (pErrors) {
-		// Log errors from the initial compilation
-		EmuLog(hlslErrorLogLevel, "%s", (char*)(pErrors->GetBufferPointer()));
+		// Errors from the initial compilation pass
+		const char* msg = (char*)pErrors->GetBufferPointer();
+		EmuLog(hlslErrorLogLevel, "%s", msg);
+		ShaderCacheLog("COMPILE ERROR (pass 1)%s hash=%016llx profile=%s:\n%s\n",
+			replTag, activeCacheHash, shader_profile, msg);
 		pErrors->Release();
 		pErrors = nullptr;
 	}
-
-	// Failure to recompile in compatibility mode ignored for now
 	if (pErrorsCompatibility != nullptr) {
+		// Errors (or warnings) from the compatibility retry
+		const char* msg = (char*)pErrorsCompatibility->GetBufferPointer();
+		if (FAILED(compileResult)) {
+			EmuLog(LOG_LEVEL::ERROR2, "%s", msg);
+			ShaderCacheLog("COMPILE ERROR (pass 2/compat)%s hash=%016llx profile=%s:\n%s\n",
+				replTag, activeCacheHash, shader_profile, msg);
+		} else {
+			// Compiled OK on retry — warnings only
+			ShaderCacheLog("COMPILE WARNING (compat retry)%s hash=%016llx profile=%s:\n%s\n",
+				replTag, activeCacheHash, shader_profile, msg);
+		}
 		pErrorsCompatibility->Release();
 		pErrorsCompatibility = nullptr;
 	}
@@ -537,17 +675,17 @@ extern HRESULT EmuCompileShader
 	// Save successfully compiled shader to disk cache (async — queued to background thread)
 	if (!FAILED(compileResult) && *ppHostShader && cacheReady) {
 		g_CacheMisses++;
-		ShaderCacheLog("SYNC MISS %016llx compile took %.2f ms (profile=%s, blob=%zu bytes) [hits=%d misses=%d]\n",
-			cacheHash, compileMs, shader_profile,
+		ShaderCacheLog("SYNC MISS %016llx compile took %.2f ms (profile=%s%s, blob=%zu bytes) [hits=%d misses=%d]\n",
+			activeCacheHash, compileMs, shader_profile, hasReplacement ? " [replacement]" : "",
 			(*ppHostShader)->GetBufferSize(),
 			g_CacheHits.load(), g_CacheMisses.load());
-		QueueSaveCachedShader(cacheHash, *ppHostShader);
+		QueueSaveCachedShader(activeCacheHash, *ppHostShader);
 	} else if (FAILED(compileResult)) {
-		ShaderCacheLog("COMPILE FAILED hash=%016llx profile=%s hr=0x%08lX\n",
-			cacheHash, shader_profile, compileResult);
+		ShaderCacheLog("COMPILE FAILED hash=%016llx profile=%s%s hr=0x%08lX\n",
+			activeCacheHash, shader_profile, hasReplacement ? " [replacement]" : "", compileResult);
 	} else if (!cacheReady) {
 		ShaderCacheLog("SKIP (cache not ready, g_DataFilePath='%s') hash=%016llx\n",
-			g_DataFilePath.c_str(), cacheHash);
+			g_DataFilePath.c_str(), activeCacheHash);
 	}
 
 	return compileResult;

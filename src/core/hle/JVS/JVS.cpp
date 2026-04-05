@@ -39,6 +39,8 @@
 #include "devices\chihiro\JvsIo.h"
 #include "devices\Xbox.h"
 #include <thread>
+#include <mutex>
+#include <vector>
 
 #pragma warning(disable:4244) // Silence mio compiler warnings
 #include <mio/mmap.hpp>
@@ -163,7 +165,7 @@ void JvsInputThread()
 			*g_pPINSB = ChihiroBaseBoardState.GetPINSB();
 		}
 
-		Sleep(1); // HACK: Somewhere has a race condition occur, but here seems to make segaboot communication become happy.
+		Sleep(1); // 1ms poll rate; kept for segaboot timing compatibility
 	}
 }
 
@@ -173,6 +175,7 @@ void JVS_Init()
 {
 	// Init Jvs IO board
 	g_pJvsIo = new JvsIo(&ChihiroBaseBoardState.JvsSense);
+	g_pJvsIo->OpenLog(g_DataFilePath);
 
 	std::string romPath = g_MediaBoardBasePath + std::string("\\Chihiro");
 	std::string baseBoardQcFirmwarePath = "ic10_g24lc64.bin";
@@ -255,6 +258,96 @@ void JVS_Init()
 		}
 	}
 
+	// === JVS watchdog suppression — "Error 11" / "Error 12" ===
+	//
+	// Chihiro games (confirmed: Virtua Cop 3, House of the Dead 3) contain a
+	// per-node timeout watchdog in the JVS receive loop.  Two counters are
+	// incremented every tick inside a do-while:
+	//   v5[2]  secondary counter — fires Error 11 when >= 60 and a grace timer >= 600
+	//   v5[3]  primary  counter — fires Error 11 immediately when >= 10
+	//
+	// Our emulated JVS doesn't replicate the exact per-node packet accounting
+	// the game expects, so both counters climb until the error fires.
+	//
+	// Fix: NOP the two writeback instructions so neither counter can ever grow:
+	//   89 50 FC  —  MOV [EAX-4], EDX  (v5[2] secondary writeback, 3 bytes)
+	//   89 08     —  MOV [EAX],   ECX  (v5[3] primary  writeback, 2 bytes)
+	//
+	// The surrounding code forms a unique 19-byte signature (verified 1 hit in
+	// every tested XBE).  We scan the whole image so this works on any title
+	// that links the same JVS library version without needing game-specific
+	// address constants.
+	//
+	// Confirmed games and pattern VA (all bytes at +14/+17 verified as 89 50 FC / 89 08):
+	//   Virtua Cop 3              (vc3.xbe)         VA 0x000F50C6
+	//   House of the Dead 3       (hod3xb.xbe)      VA 0x0011CC66
+	//   Ollie King                (OllieKing.xbe)   VA 0x000EEA26
+	//   Ghost Squad               (vsg.xbe)         VA 0x00148626
+	//   Wangan Midnight Maximum Tune 1 Export (V307.xbe)     VA 0x000B44D6
+	//   Wangan Midnight Maximum Tune 2 Export (V322.xbe)     VA 0x0011C3A6
+	//   Wangan Midnight Maximum Tune 2 Japan  (V322.xbe)     VA 0x0011C4F6
+	//   Wangan MT1 Export test                (V307TEST.xbe) VA 0x000BB3D6
+	//   Wangan MT2 Export test                (V322TEST.xbe) VA 0x00124886
+	//   Wangan MT2 Japan  test                (V322TEST.xbe) VA 0x00124A16
+	//   Crazy Taxi High Roller    (ctx_ac[r].xbe)   VA 0x000F8E86
+	//   Crazy Taxi test           (ctx_ac_t.xbe)    VA 0x00057D56
+	//   OutRun 2                  (outrun2.xbe or2) VA 0x000FF0F6
+	//   OutRun 2 test             (Testmode.xbe or2) VA 0x0006EE16
+	//   OutRun 2 (or2b)           (outrun2.xbe)     VA 0x000F3AC6
+	//   OutRun 2 (or2b) test      (Testmode.xbe)    VA 0x0006D296
+	//   OutRun 2 SP               (outrun2.xbe)     VA 0x0012EEA6
+	//   OutRun 2 SP test          (Testmode.xbe)    VA 0x0006E3E6
+	//   Sega Golf Club Network    (golf.xbe)        VA 0x00181FE6
+	// No hit (test-menu-only XBEs, no watchdog): vsg_t.xbe, OKTest.xbe, vc3_t.xbe, golf_test.xbe
+	if (GetXboxSymbolPointer("JvsNodeSendPacket") != nullptr) {
+		static const uint8_t kJvsWatchdogPattern[] = {
+			0x8B, 0x48, 0xF8,              // MOV ECX, [EAX-8]
+			0x85, 0xC9,                    // TEST ECX, ECX
+			0x7E, 0x0E,                    // JLE +14
+			0x8B, 0x50, 0xFC,              // MOV EDX, [EAX-4]   (load v5[2])
+			0x8B, 0x08,                    // MOV ECX, [EAX]      (load v5[3])
+			0x42,                          // INC EDX
+			0x41,                          // INC ECX
+			0x89, 0x50, 0xFC,              // MOV [EAX-4], EDX   (v5[2] writeback) ← patch +14
+			0x89, 0x08                     // MOV [EAX],   ECX   (v5[3] writeback) ← patch +17
+		};
+		static const size_t kPatternLen = sizeof(kJvsWatchdogPattern);
+
+		const uintptr_t base = XBE_IMAGE_BASE;
+		const uintptr_t end  = base + CxbxKrnl_Xbe->m_Header.dwSizeofImage - kPatternLen;
+
+		bool patched = false;
+		for (uintptr_t addr = base; addr <= end; addr++) {
+			if (memcmp((const void*)addr, kJvsWatchdogPattern, kPatternLen) == 0) {
+				// v5[2] writeback: 89 50 FC  → NOP NOP NOP
+				const uintptr_t pV2 = addr + 14;
+				DWORD oldProtect = 0;
+				VirtualProtect((LPVOID)pV2, 3, PAGE_EXECUTE_READWRITE, &oldProtect);
+				*(uint8_t*)(pV2 + 0) = 0x90;
+				*(uint8_t*)(pV2 + 1) = 0x90;
+				*(uint8_t*)(pV2 + 2) = 0x90;
+				VirtualProtect((LPVOID)pV2, 3, oldProtect, &oldProtect);
+				FlushInstructionCache(GetCurrentProcess(), (LPVOID)pV2, 3);
+
+				// v5[3] writeback: 89 08  → NOP NOP
+				const uintptr_t pV3 = addr + 17;
+				VirtualProtect((LPVOID)pV3, 2, PAGE_EXECUTE_READWRITE, &oldProtect);
+				*(uint8_t*)(pV3 + 0) = 0x90;
+				*(uint8_t*)(pV3 + 1) = 0x90;
+				VirtualProtect((LPVOID)pV3, 2, oldProtect, &oldProtect);
+				FlushInstructionCache(GetCurrentProcess(), (LPVOID)pV3, 2);
+
+				JvsLog("JVS watchdog patch applied: NOP'd v5[2] at 0x%08X and v5[3] at 0x%08X (pattern at 0x%08X)\n",
+					(unsigned)pV2, (unsigned)pV3, (unsigned)addr);
+				patched = true;
+				break;
+			}
+		}
+		if (!patched) {
+			JvsLog("JVS watchdog patch: pattern not found in XBE image\n");
+		}
+	}
+
 	// Spawn the Chihiro/JVS Input Thread
 	std::thread(JvsInputThread).detach();
 }
@@ -284,9 +377,21 @@ DWORD WINAPI xbox::EMUPATCH(JVS_SendCommand)
 		LOG_FUNC_ARG(a8)
 		LOG_FUNC_END;
 
-	LOG_UNIMPLEMENTED();
+	// JVS_SendCommand is a higher-level baseboard API used to send management commands
+	// to the SC/QC microcontrollers (not the JVS I/O board directly).
+	// Command 0x15: "CheckBoardReady" / sense-status query called at init.
+	// Returning 0 (failure) causes the game to set an internal "board dead" flag,
+	// which later fires Error 11 at a random time. Return 1 (success) instead.
+	// a5 = output buffer pointer, a6 = output size pointer (both may be null).
+	JvsLog("JVS_SendCommand: a1=0x%08X Command=0x%08X a3=0x%08X Length=%u a5=0x%08X a6=0x%08X a7=0x%08X a8=0x%08X -> returning 1 (success)\n",
+		a1, Command, a3, Length, a5, a6, a7, a8);
 
-	RETURN(0);
+	// Zero out the result size so the caller knows we produced no data
+	if (a6 != 0) {
+		*reinterpret_cast<DWORD*>(a6) = 0;
+	}
+
+	RETURN(1);
 }
 
 DWORD WINAPI xbox::EMUPATCH(JvsBACKUP_Read)
@@ -446,6 +551,12 @@ DWORD WINAPI xbox::EMUPATCH(JvsNodeReceivePacket)
 		// Write the payload size header field
 		*((uint16_t*)&Buffer[4]) = payloadSize; // Packet Length (bytes 4-5)
 		// TODO : Prevent little/big endian issues here by explicitly setting Buffer[4] and Buffer[5]
+
+		JvsLog("JvsNodeReceivePacket: DeviceId=%u payloadSize=%u header=[%02X %02X %02X %02X %02X %02X]\n",
+			DeviceId, payloadSize,
+			Buffer[0], Buffer[1], Buffer[2], Buffer[3], Buffer[4], Buffer[5]);
+	} else {
+		JvsLog("JvsNodeReceivePacket: no payload ready (payloadSize=0)\n");
 	}
 		
 	RETURN(0);
@@ -469,6 +580,12 @@ DWORD WINAPI xbox::EMUPATCH(JvsNodeSendPacket)
 
 	// Ignore Buffer[0] (should be 0x00)
 	unsigned packetCount = Buffer[1];
+	JvsLog("JvsNodeSendPacket: Length=%u packetCount=%u raw=[%02X %02X %02X %02X %02X %02X %02X %02X]\n",
+		Length, packetCount,
+		Length > 0 ? Buffer[0] : 0, Length > 1 ? Buffer[1] : 0,
+		Length > 2 ? Buffer[2] : 0, Length > 3 ? Buffer[3] : 0,
+		Length > 4 ? Buffer[4] : 0, Length > 5 ? Buffer[5] : 0,
+		Length > 6 ? Buffer[6] : 0, Length > 7 ? Buffer[7] : 0);
 	uint8_t* packetPtr = &Buffer[2]; // First JVS packet starts at offset 2;
 
 	for (unsigned i = 0; i < packetCount; i++) {
@@ -477,6 +594,7 @@ DWORD WINAPI xbox::EMUPATCH(JvsNodeSendPacket)
 
 		// Send the packet to the connected I/O board
 		size_t bytes = g_pJvsIo->SendPacket(packetPtr);
+		JvsLog("JvsNodeSendPacket: packet[%u] consumed %zu bytes\n", i, bytes);
 
 		// Set packetPtr to the next packet
 		packetPtr += bytes;
@@ -544,6 +662,7 @@ DWORD WINAPI xbox::EMUPATCH(JvsRTC_Write)
 		LOG_FUNC_ARG(a4)
 		LOG_FUNC_END
 
+	JvsLog("JvsRTC_Write: a1=0x%08X a2=0x%08X [UNIMPLEMENTED]\n", a1, a2);
 	LOG_UNIMPLEMENTED();
 
 	RETURN(0);
@@ -602,6 +721,7 @@ DWORD WINAPI xbox::EMUPATCH(JvsScReceiveMidi)
 		LOG_FUNC_ARG(a3)
 		LOG_FUNC_END
 
+	JvsLog("JvsScReceiveMidi: a1=0x%08X a2=0x%08X a3=0x%08X [UNIMPLEMENTED]\n", a1, a2, a3);
 	LOG_UNIMPLEMENTED();
 
 	RETURN(0);
@@ -620,6 +740,7 @@ DWORD WINAPI xbox::EMUPATCH(JvsScSendMidi)
 		LOG_FUNC_ARG(a3)
 		LOG_FUNC_END
 
+	JvsLog("JvsScSendMidi: a1=0x%08X a2=0x%08X a3=0x%08X [UNIMPLEMENTED]\n", a1, a2, a3);
 	LOG_UNIMPLEMENTED();
 
 	RETURN(0);

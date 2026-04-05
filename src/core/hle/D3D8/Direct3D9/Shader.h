@@ -47,3 +47,9 @@ private:
 };
 
 extern ShaderSources g_ShaderSources;
+
+// Call this once after the D3D9 device is created. The adapter description and
+// driver version are used to validate the on-disk shader bytecode cache: if the
+// GPU or driver has changed since the cache was written, all stale .cso files
+// are silently removed so they are recompiled rather than causing a crash.
+void ShaderCacheSetAdapterFingerprint(const char* adapterDesc, uint32_t driverVersionHigh, uint32_t driverVersionLow);

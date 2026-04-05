@@ -25,9 +25,25 @@
 #ifndef JVSIO_H
 #define JVSIO_H
 
+// Define JVS_LOG to enable JVS/JVSIo verbose logging to jvs_io.log.
+// Comment out or undefine to disable all JVS log output.
+//#define JVS_LOG
+
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <cstdio>
+#include <mutex>
+
+#ifdef JVS_LOG
+// Shared log function — writes to the jvs_io.log file opened by JvsIo::OpenLog()
+extern FILE* g_JvsLogFile;
+void JvsLog(const char* fmt, ...);
+#else
+// JVS_LOG disabled — all JvsLog calls compile away to nothing
+// Use a template to suppress "unused variable" warnings without evaluating arguments
+#define JvsLog(...) do {} while(0)
+#endif
 
 typedef struct {
 	uint8_t sync;
@@ -46,7 +62,7 @@ typedef struct _jvs_switch_player_inputs_t {
 	bool down = false;
 	bool left = false;
 	bool right = false;
-	bool button[7] = { false };
+	bool button[10] = { false };
 
 	uint8_t GetByte0() {
 		uint8_t value = 0;
@@ -68,6 +84,9 @@ typedef struct _jvs_switch_player_inputs_t {
 		value |= button[4] ? 1 << 5 : 0;
 		value |= button[5] ? 1 << 4 : 0;
 		value |= button[6] ? 1 << 3 : 0;
+		value |= button[7] ? 1 << 2 : 0;
+		value |= button[8] ? 1 << 1 : 0;
+		value |= button[9] ? 1 << 0 : 0;
 		return value;
 	}
 } jvs_switch_player_inputs_t;
@@ -135,6 +154,13 @@ public:
 	size_t ReceivePacket(uint8_t *buffer);
 	uint8_t GetDeviceId();
 	void Update();
+	// Open (or re-open) the JVS I/O log file in dataFilePath\jvs_io.log.
+	// Call once after construction, when the data path is known.
+	void OpenLog(const std::string& dataFilePath);
+
+	// Mutex protecting ResponseBuffer and Inputs from concurrent access
+	// between the game thread (SendPacket/ReceivePacket) and JvsInputThread (Update).
+	std::mutex IoBoardMutex;
 
 private:
 	const uint8_t SYNC_BYTE = 0xE0;

@@ -304,11 +304,11 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
     g_EmuShared->GetFlagsLLE(&FlagsLLE);
 
     if ((FlagsLLE & LLE_GPU) == false
-        && !((XbLibScan & XBSDBLIB_D3D8) > 0
-            || (XbLibScan & XBSDBLIB_D3D8LTCG) > 0)) {
-        bLLE_GPU = true;
-        FlagsLLE ^= LLE_GPU;
-        EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE GPU.");
+            && !((XbLibScan & XBSDBLIB_D3D8) > 0
+                || (XbLibScan & XBSDBLIB_D3D8LTCG) > 0)) {
+            bLLE_GPU = true;
+            FlagsLLE ^= LLE_GPU;
+            EmuOutputMessage(XB_OUTPUT_MESSAGE_INFO, "Fallback to LLE GPU.");
     }
 
     if ((FlagsLLE & LLE_APU) == false

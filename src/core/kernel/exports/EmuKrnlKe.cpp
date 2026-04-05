@@ -480,6 +480,23 @@ void ExecuteDpcQueue()
 	// Are there entries in the DpqQueue?
 	while (!IsListEmpty(&(g_DpcData.DpcQueue)))
 	{
+		// Validate DpcListEntry.Blink before RemoveHeadList calls RemoveEntryList on it.
+		// The game can write to KDPC+8 (DpcListEntry.Blink) concurrently after
+		// KeInsertQueueDpc releases the lock, corrupting the pointer (e.g. 0x12A).
+		// RemoveEntryList only checks for nullptr, so a small non-null value crashes.
+		xbox::PLIST_ENTRY pHead = g_DpcData.DpcQueue.Flink;
+		if ((uintptr_t)pHead->Blink < 0x10000u) {
+			EmuLog(LOG_LEVEL::DEBUG, "ExecuteDpcQueue: corrupt DpcListEntry at %p Blink=%p -- skipping",
+				pHead, pHead->Blink);
+			// Manually unlink: bypass the broken Blink write-back
+			g_DpcData.DpcQueue.Flink = pHead->Flink;
+			if (pHead->Flink != nullptr)
+				pHead->Flink->Blink = &g_DpcData.DpcQueue;
+			xbox::PKDPC badDpc = CONTAINING_RECORD(pHead, xbox::KDPC, DpcListEntry);
+			badDpc->Inserted = FALSE;
+			continue;
+		}
+
 		// Extract the head entry and retrieve the containing KDPC pointer for it:
 		pkdpc = CONTAINING_RECORD(RemoveHeadList(&(g_DpcData.DpcQueue)), xbox::KDPC, DpcListEntry);
 		// Mark it as no longer linked into the DpcQueue
@@ -1793,6 +1810,8 @@ XBSYSAPI EXPORTNUM(140) xbox::ulong_xt NTAPI xbox::KeResumeThread
 #else
 			if (const auto &nativeHandle = GetNativeHandle<true>(reinterpret_cast<PETHREAD>(Thread)->UniqueThread)) {
 				ResumeThread(*nativeHandle);
+			} else {
+				EmuLog(LOG_LEVEL::WARNING, "KeResumeThread: GetNativeHandle returned nullopt for UniqueThread 0x%X (Thread 0x%p) - thread will remain suspended!", reinterpret_cast<PETHREAD>(Thread)->UniqueThread, Thread);
 			}
 #endif
 		}

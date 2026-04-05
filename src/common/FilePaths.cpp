@@ -26,12 +26,14 @@
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
 #include <filesystem>
+#include <fstream>
 #include "common/cxbxr.hpp"
 #include "Settings.hpp"
 #include "EmuShared.h"
 #include "xxhash.h" // for XXH3_64bits
 #include "core/kernel/common/xbox.h"
 #include "Logging.h"
+#include "common/util/cliConfig.hpp"
 
 char szFilePath_CxbxReloaded_Exe[MAX_PATH] = { 0 };
 char szFilePath_EEPROM_bin[MAX_PATH] = { 0 };
@@ -110,6 +112,15 @@ void CxbxrInitFilePaths()
 	}
 	CxbxResolveHostToFullPath(g_MuBasePath, "Cxbx-Reloaded's EmuMu directory");
 	g_MuBasePath = std::filesystem::path(g_MuBasePath).append("").string();
+
+	// io_mu_metadata opens F.bin–M.bin with ios::in|ios::out which fails if the file
+	// doesn't exist yet. Create zero-byte stubs so the constructor can open them.
+	for (char letter = 'F'; letter <= 'M'; ++letter) {
+		std::string muBin = g_MuBasePath + letter + ".bin";
+		if (!std::filesystem::exists(muBin)) {
+			std::ofstream stub(muBin, std::ios_base::out | std::ios_base::binary);
+		}
+	}
 
 	snprintf(szFilePath_EEPROM_bin, MAX_PATH, "%s\\EEPROM.bin", g_DataFilePath.c_str());
 

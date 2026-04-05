@@ -52,9 +52,7 @@ private:
 extern class ExceptionManager* g_ExceptionManager;
 
 // print call stack trace
-#ifdef _DEBUG
 void EmuPrintStackTrace(PCONTEXT ContextRecord);
-#endif
 
 // global flags specifying current emulation state
 extern volatile thread_local bool g_bEmuException;

@@ -37,10 +37,8 @@
 #include "core\hle\Intercept.hpp"
 #include "CxbxDebugger.h"
 
-#ifdef _DEBUG
 #include <Dbghelp.h>
-CRITICAL_SECTION dbgCritical;
-#endif
+#pragma comment(lib, "Dbghelp.lib")
 
 // Global Variable(s)
 volatile thread_local  bool    g_bEmuException = false;
@@ -51,6 +49,7 @@ bool g_SkipRdtscPatching = false;
 
 // Static Function(s)
 static int ExitException(LPEXCEPTION_POINTERS e);
+bool IsXboxCodeAddress(xbox::addr_xt addr); // forward declaration
 
 std::string EIPToString(xbox::addr_xt EIP)
 {
@@ -61,9 +60,30 @@ std::string EIPToString(xbox::addr_xt EIP)
 		std::string symbolName = GetDetectedSymbolName(EIP, &symbolOffset);
 		sprintf(buffer, "0x%.08X(=%s+0x%x)", EIP, symbolName.c_str(), symbolOffset);
 	} else {
-		sprintf(buffer, "0x%.08X", EIP);
+		// EIP is outside Xbox memory range — try to resolve as a host process symbol
+		HMODULE hMod = NULL;
+		if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+				               (LPCSTR)(uintptr_t)EIP, &hMod) && hMod != NULL) {
+			char modName[MAX_PATH] = {};
+			GetModuleFileNameA(hMod, modName, sizeof(modName));
+			const char* slash = strrchr(modName, '\\');
+			const char* fname = slash ? slash + 1 : modName;
+			DWORD64 offset = (DWORD64)(uintptr_t)EIP - (DWORD64)(uintptr_t)hMod;
+			// Try to get the symbol name from DbgHelp
+			BYTE symBuf[sizeof(SYMBOL_INFO) + 256] = {};
+			PSYMBOL_INFO pSym = (PSYMBOL_INFO)symBuf;
+			pSym->SizeOfStruct = sizeof(SYMBOL_INFO);
+			pSym->MaxNameLen   = 255;
+			DWORD64 symDisp = 0;
+			if (SymFromAddr(GetCurrentProcess(), (DWORD64)(uintptr_t)EIP, &symDisp, pSym) && pSym->Name[0])
+				sprintf(buffer, "0x%.08X(=%s!%s+0x%llX)", EIP, fname, pSym->Name, symDisp);
+			else
+				sprintf(buffer, "0x%.08X(=%s+0x%llX)", EIP, fname, offset);
+		} else {
+			sprintf(buffer, "0x%.08X", EIP);
+		}
 	}
-	
+
 	std::string result = buffer;
 
 	return result;
@@ -91,10 +111,22 @@ void EmuExceptionPrintDebugInformation(LPEXCEPTION_POINTERS e, bool IsBreakpoint
 			e->ContextRecord->Esi, e->ContextRecord->Edi, e->ContextRecord->Esp, e->ContextRecord->Ebp,
 			e->ContextRecord->Dr2);
 
-#ifdef _DEBUG
+		// Log access-violation specifics (read vs write, exact faulting address)
+		if (e->ExceptionRecord->ExceptionCode == EXCEPTION_ACCESS_VIOLATION &&
+			e->ExceptionRecord->NumberParameters >= 2) {
+			const char* op =
+				e->ExceptionRecord->ExceptionInformation[0] == 0 ? "READ" :
+				e->ExceptionRecord->ExceptionInformation[0] == 1 ? "WRITE" : "DEP";
+			printf(" AV : %s from/to address 0x%.08IX\n",
+				op, (uintptr_t)e->ExceptionRecord->ExceptionInformation[1]);
+			printf(" EIP is %s Xbox code range\n",
+				IsXboxCodeAddress(e->ContextRecord->Eip) ? "inside" : "OUTSIDE");
+			printf("\n");
+		}
+
+		// Stack trace (always — not just in debug builds)
 		CONTEXT Context = *(e->ContextRecord);
 		EmuPrintStackTrace(&Context);
-#endif
 	}
 
 	fflush(stdout);
@@ -406,7 +438,6 @@ bool ExceptionManager::AddVEH(unsigned long first, PVECTORED_EXCEPTION_HANDLER v
 	return isSuccess;
 }
 
-#ifdef _DEBUG
 // print call stack trace
 void EmuPrintStackTrace(PCONTEXT ContextRecord)
 {
@@ -416,9 +447,15 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 	// TODO: Figure out why this causes a loop of Exceptions until the process dies
     //EnterCriticalSection(&dbgCritical);
 
-    IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE) };
+    IMAGEHLP_MODULE64 module = { sizeof(IMAGEHLP_MODULE64) };
 
+    // SymInitialize may already have been called (e.g. from EIPToString); if so,
+    // treat the already-initialized state as success rather than failing.
     BOOL fSymInitialized = SymInitialize(g_CurrentProcessHandle, NULL, TRUE);
+    if (!fSymInitialized && GetLastError() == ERROR_INVALID_PARAMETER) {
+        fSymInitialized = TRUE; // already initialized
+        SymRefreshModuleList(g_CurrentProcessHandle);
+    }
 
     STACKFRAME64 frame = { sizeof(STACKFRAME64) };
     frame.AddrPC.Offset    = ContextRecord->Eip;
@@ -485,4 +522,3 @@ void EmuPrintStackTrace(PCONTEXT ContextRecord)
 
     // LeaveCriticalSection(&dbgCritical);
 }
-#endif
