@@ -63,6 +63,9 @@
 
 extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
 extern XboxTextureStateConverter XboxTextureStates; // Declared in Direct3D9.cpp
+#ifdef CXBX_USE_D3D11
+extern void CxbxD3D11SetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
+#endif
 
 
 #define DbgPshPrintf \
@@ -1014,9 +1017,7 @@ void UpdateFixedFunctionPixelShaderState()
 
 	const int size = (sizeof(FixedFunctionPixelShaderState) + 16 - 1) / 16;
 #ifdef CXBX_USE_D3D11
-	// TODO: Upload fixed function pixel shader state to a D3D11 PS constant buffer
-	// For now, log that this is not yet implemented
-	(void)size;
+	CxbxD3D11SetPixelShaderConstantF(0, (float*)&ffPsState, size);
 #else
 	g_pD3DDevice->SetPixelShaderConstantF(0, (float*)&ffPsState, size);
 #endif
@@ -1243,8 +1244,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // Read the color from the corresponding render state slot :
   // Set all host constant values using a single call:
 #ifdef CXBX_USE_D3D11
-  // TODO: Upload pixel shader constants to a D3D11 PS constant buffer
-  (void)fColor;
+  CxbxD3D11SetPixelShaderConstantF(0, reinterpret_cast<const float*>(fColor), PSH_XBOX_CONSTANT_MAX);
 #else
   g_pD3DDevice->SetPixelShaderConstantF(0, reinterpret_cast<const float*>(fColor), PSH_XBOX_CONSTANT_MAX);
 #endif
