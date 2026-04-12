@@ -388,15 +388,16 @@ void XboxTextureStateConverter::Apply()
     }
 
     if (pointSpritesEnabled) {
-        IDirect3DBaseTexture* pTexture;
-
         // set the point sprites texture
 #ifdef CXBX_USE_D3D11
-        // In D3D11, texture binding is handled via PSSetShaderResources in CxbxUpdateHostTextures
-        // For point sprites, we need to copy stage 3 to stage 0
-        // This is a TODO for proper D3D11 point sprite support
-        pTexture = nullptr;
+        // Copy the SRV from stage 3 to stage 0 for point sprite rendering
+        ID3D11ShaderResourceView* pSRV = nullptr;
+        g_pD3DDeviceContext->PSGetShaderResources(3, 1, &pSRV);
+        g_pD3DDeviceContext->PSSetShaderResources(0, 1, &pSRV);
+        if (pSRV != nullptr)
+            pSRV->Release(); // Release the reference added by PSGetShaderResources
 #else
+        IDirect3DBaseTexture* pTexture;
         g_pD3DDevice->GetTexture(3, &pTexture);
         g_pD3DDevice->SetTexture(0, pTexture); // ID3D11Device::CreateShaderResourceView(), ::PSSetShaderResources()
 
