@@ -9287,7 +9287,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
 #ifdef CXBX_USE_D3D11
 			g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType));
-			g_pD3DDeviceContext->Draw(DrawContext.dwHostPrimitiveCount, 0);
+			g_pD3DDeviceContext->Draw(DrawContext.dwVertexCount, 0);
 			HRESULT hRet = S_OK;
 #else
 			HRESULT hRet = g_pD3DDevice->DrawPrimitive(
