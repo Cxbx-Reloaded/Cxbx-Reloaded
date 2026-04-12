@@ -420,8 +420,9 @@ static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should b
 // startRegister: index of the first float4 register (0..CXBX_D3D11_VS_CB_COUNT-1)
 // pConstantData: array of float4 values
 // Vector4fCount: number of float4 registers to write
-void CxbxD3D11SetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
+void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
 {
+#ifdef CXBX_USE_D3D11
 	if (!g_pD3D11VSConstantBuffer || !pConstantData || Vector4fCount == 0)
 		return;
 
@@ -434,6 +435,9 @@ void CxbxD3D11SetVertexShaderConstantF(UINT startRegister, const float* pConstan
 		memcpy(g_D3D11VSConstants[i], pConstantData + (i - startRegister) * 4, sizeof(float) * 4);
 	}
 	g_bD3D11VSConstantsDirty = true;
+#else
+	g_pD3DDevice->SetVertexShaderConstantF(startRegister, pConstantData, Vector4fCount);
+#endif
 }
 
 // Upload the VS constant buffer to GPU if dirty
@@ -450,12 +454,13 @@ void CxbxD3D11FlushVertexShaderConstants()
 	g_bD3D11VSConstantsDirty = false;
 }
 
-// Helper function to write pixel shader constants to the D3D11 constant buffer
+// Helper function to write pixel shader constants
 // startRegister: index of the first float4 register (0..CXBX_D3D11_PS_CB_COUNT-1)
 // pConstantData: array of float4 values
 // Vector4fCount: number of float4 registers to write
-void CxbxD3D11SetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
+void CxbxSetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
 {
+#ifdef CXBX_USE_D3D11
 	if (!g_pD3D11PSConstantBuffer || !pConstantData || Vector4fCount == 0)
 		return;
 
@@ -468,6 +473,9 @@ void CxbxD3D11SetPixelShaderConstantF(UINT startRegister, const float* pConstant
 		memcpy(g_D3D11PSConstants[i], pConstantData + (i - startRegister) * 4, sizeof(float) * 4);
 	}
 	g_bD3D11PSConstantsDirty = true;
+#else
+	g_pD3DDevice->SetPixelShaderConstantF(startRegister, pConstantData, Vector4fCount);
+#endif
 }
 
 // Upload the PS constant buffer to GPU if dirty
@@ -4918,12 +4926,9 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 	// In D3D11, no half-pixel offset needed
 	screenspaceOffset[0] = xboxScreenspaceWidth / 2;
 	screenspaceOffset[1] = xboxScreenspaceHeight / 2;
-	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_SCALE_BASE, screenspaceScale, CXBX_D3DVS_NORMALIZE_SCALE_SIZE);
-	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_OFFSET_BASE, screenspaceOffset, CXBX_D3DVS_NORMALIZE_OFFSET_SIZE);
-#else
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_SCALE_BASE, screenspaceScale, CXBX_D3DVS_NORMALIZE_SCALE_SIZE);
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_OFFSET_BASE, screenspaceOffset, CXBX_D3DVS_NORMALIZE_OFFSET_SIZE);
 #endif
+	CxbxSetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_SCALE_BASE, screenspaceScale, CXBX_D3DVS_NORMALIZE_SCALE_SIZE);
+	CxbxSetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_OFFSET_BASE, screenspaceOffset, CXBX_D3DVS_NORMALIZE_OFFSET_SIZE);
 
 	// Store viewport offset and scale in constant registers 58 (c-38) and
 	// 59 (c-37) used for screen space transformation.
@@ -4932,11 +4937,7 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 	// Treat this as a flag
 	// Test Case: GTA III, Soldier of Fortune II
 	if (!(g_Xbox_VertexShaderConstantMode & X_D3DSCM_NORESERVEDCONSTANTS)) {
-#ifdef CXBX_USE_D3D11
-		CxbxD3D11SetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_SCALE_CORRECTED, reinterpret_cast<float*>(vScaleOffset), 2);
-#else
-		g_pD3DDevice->SetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_SCALE_CORRECTED, reinterpret_cast<float*>(vScaleOffset), 2);
-#endif
+		CxbxSetVertexShaderConstantF(X_D3DSCM_RESERVED_CONSTANT_SCALE_CORRECTED, reinterpret_cast<float*>(vScaleOffset), 2);
 	}
 
 }
@@ -7462,16 +7463,9 @@ void UpdateFixedFunctionVertexShaderState()
 	// Write fixed function state to shader constants
 	const int slotSize = 16;
 	const int fixedFunctionStateSize = (sizeof(FixedFunctionVertexShaderState) + slotSize - 1) / slotSize;
-#ifdef CXBX_USE_D3D11
-	CxbxD3D11SetVertexShaderConstantF(0, (float*)&ffShaderState, fixedFunctionStateSize);
-	HRESULT hRet = S_OK;
-#else
-	auto hRet = g_pD3DDevice->SetVertexShaderConstantF(0, (float*)&ffShaderState, fixedFunctionStateSize);
-#endif
+	CxbxSetVertexShaderConstantF(0, (float*)&ffShaderState, fixedFunctionStateSize);
 
-	if (FAILED(hRet)) {
-		CxbxrAbort("Failed to write fixed-function HLSL state");
-	}
+	// TODO: Error handling for D3D9 path only (SetVertexShaderConstantF returns HRESULT there)
 }
 
 static void CxbxrImpl_EnableOverlay()
@@ -8881,11 +8875,7 @@ void CxbxUpdateHostTextureScaling()
 	// the shader and allow scaling on any of the input registers (so we'd
 	// need to allow scaling on all 16 attributes, instead of just the four
 	// textures like we do right now).
-#ifdef CXBX_USE_D3D11
-	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_TEXTURES_SCALE_BASE, (float*)texcoordScales.data(), CXBX_D3DVS_TEXTURES_SCALE_SIZE);
-#else
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_TEXTURES_SCALE_BASE, (float*)texcoordScales.data(), CXBX_D3DVS_TEXTURES_SCALE_SIZE);
-#endif
+	CxbxSetVertexShaderConstantF(CXBX_D3DVS_TEXTURES_SCALE_BASE, (float*)texcoordScales.data(), CXBX_D3DVS_TEXTURES_SCALE_SIZE);
 }
 
 void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
@@ -8899,11 +8889,7 @@ void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
 		else if (batchStartIndex != -1 && !dirty[i]) {
 			// Finish the batch
 			int count = i - batchStartIndex;
-#ifdef CXBX_USE_D3D11
-			CxbxD3D11SetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
-#else
-			g_pD3DDevice->SetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
-#endif
+			CxbxSetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
 			batchStartIndex = -1;
 		}
 
@@ -8914,11 +8900,7 @@ void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
 	// Send the final batch
 	if (batchStartIndex != -1) {
 		int count = X_D3DVS_CONSTREG_COUNT - batchStartIndex + 1;
-#ifdef CXBX_USE_D3D11
-		CxbxD3D11SetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
-#else
-		g_pD3DDevice->SetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
-#endif
+		CxbxSetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
 	}
 }
 
@@ -8953,11 +8935,7 @@ void CxbxUpdateHostVertexShaderConstants()
 		}
 		else {
 			// We need to update everything
-#ifdef CXBX_USE_D3D11
-			CxbxD3D11SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
-#else
-			g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
-#endif
+			CxbxSetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
 		}
 
 		// We've written the Xbox constants
@@ -8980,11 +8958,7 @@ void CxbxUpdateHostVertexShaderConstants()
 	const float fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
 	const float fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
 	float fogStuff[4] = {fogTableMode, fogDensity, fogStart, fogEnd};
-#ifdef CXBX_USE_D3D11
-	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
-#else
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
-#endif
+	CxbxSetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_FOGINFO, fogStuff, 1);
 }
 
 void CxbxUpdateHostViewport() {
