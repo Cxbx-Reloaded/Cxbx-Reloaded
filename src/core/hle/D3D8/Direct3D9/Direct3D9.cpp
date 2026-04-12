@@ -4391,17 +4391,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
 		LOG_FUNC_ARG(pRamp)
 		LOG_FUNC_END;
 
-    // remove D3DSGR_IMMEDIATE
-    DWORD dwPCFlags = dwFlags & (~0x00000002);
-    D3DGAMMARAMP PCRamp;
-
-    for(int v=0;v<255;v++)
-    {
-        PCRamp.red[v]   = pRamp->red[v];
-        PCRamp.green[v] = pRamp->green[v];
-        PCRamp.blue[v]  = pRamp->blue[v];
-    }
-
 #ifdef CXBX_USE_D3D11
 	// Use IDXGIOutput::SetGammaControl for D3D11
 	if (g_pSwapChain) {
@@ -4433,6 +4422,17 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
 		}
 	}
 #elif 0 // TODO : Why is this disabled?
+    // remove D3DSGR_IMMEDIATE
+    DWORD dwPCFlags = dwFlags & (~0x00000002);
+    D3DGAMMARAMP PCRamp;
+
+    for(int v=0;v<255;v++)
+    {
+        PCRamp.red[v]   = pRamp->red[v];
+        PCRamp.green[v] = pRamp->green[v];
+        PCRamp.blue[v]  = pRamp->blue[v];
+    }
+
 	g_pD3DDevice->SetGammaRamp(
 		0, // iSwapChain
 		dwPCFlags, &PCRamp);
@@ -4449,13 +4449,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
 {
 	LOG_FUNC_ONE_ARG(pRamp);
 
-    D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
-
-#ifndef CXBX_USE_D3D11
-    g_pD3DDevice->GetGammaRamp(
-		0, // iSwapChain
-		pGammaRamp);
-#else
+#ifdef CXBX_USE_D3D11
     // Use IDXGIOutput::GetGammaControl to retrieve the current gamma ramp
     bool gotGamma = false;
     if (g_pSwapChain) {
@@ -4466,9 +4460,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
                 for (int v = 0; v < 256; v++) {
                     int i = static_cast<int>(v / 255.0f * 1024.0f);
                     if (i > 1024) i = 1024;
-                    pGammaRamp->red[v]   = static_cast<WORD>(gammaControl.GammaCurve[i].Red * 65535.0f);
-                    pGammaRamp->green[v] = static_cast<WORD>(gammaControl.GammaCurve[i].Green * 65535.0f);
-                    pGammaRamp->blue[v]  = static_cast<WORD>(gammaControl.GammaCurve[i].Blue * 65535.0f);
+                    pRamp->red[v]   = static_cast<BYTE>(gammaControl.GammaCurve[i].Red * 255.0f);
+                    pRamp->green[v] = static_cast<BYTE>(gammaControl.GammaCurve[i].Green * 255.0f);
+                    pRamp->blue[v]  = static_cast<BYTE>(gammaControl.GammaCurve[i].Blue * 255.0f);
                 }
                 gotGamma = true;
             }
@@ -4478,12 +4472,17 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
     if (!gotGamma) {
         // Fallback: return a linear ramp
         for (int v = 0; v < 256; v++) {
-            pGammaRamp->red[v]   = (WORD)(v * 257); // Scale 0-255 to 0-65535
-            pGammaRamp->green[v] = (WORD)(v * 257);
-            pGammaRamp->blue[v]  = (WORD)(v * 257);
+            pRamp->red[v]   = (BYTE)v;
+            pRamp->green[v] = (BYTE)v;
+            pRamp->blue[v]  = (BYTE)v;
         }
     }
-#endif
+#else
+    D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
+
+    g_pD3DDevice->GetGammaRamp(
+		0, // iSwapChain
+		pGammaRamp);
 
     for(int v=0;v<256;v++)
     {
@@ -4493,6 +4492,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
     }
 
 	free(pGammaRamp);
+#endif
 }
 
 

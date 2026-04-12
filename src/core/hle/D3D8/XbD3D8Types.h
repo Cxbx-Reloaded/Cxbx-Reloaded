@@ -73,13 +73,20 @@ typedef D3D11_RECT D3DRECT;
 #define _9_11(_9, _11) _9
 #endif
 
-// Alias all host Direct3D 9 symbols to generic symbols
+// Alias all host Direct3D symbols to generic symbols
+#ifndef CXBX_USE_D3D11
+// D3D9-only aliases for error reporting and capability types
 #define DXGetErrorString                DXGetErrorString9A
 #define DXGetErrorDescription           DXGetErrorDescription9A
 #define D3DLockData                     void
-
 #define D3DADAPTER_IDENTIFIER           D3DADAPTER_IDENTIFIER9
 #define D3DCAPS                         D3DCAPS9
+#else
+// D3D11 replacements for error reporting (dxerr9 is not available)
+inline const char* DXGetErrorString(HRESULT hr) { (void)hr; return "D3D11_ERROR"; }
+inline const char* DXGetErrorDescription(HRESULT hr) { (void)hr; return ""; }
+#define D3DLockData                     D3D11_MAPPED_SUBRESOURCE
+#endif
 #define EMUFORMAT                      _9_11(D3DFORMAT,                   DXGI_FORMAT)
 #define D3DVERTEXELEMENT                _9_11(D3DVERTEXELEMENT9,           D3D11_INPUT_ELEMENT_DESC)
 #define D3DVIEWPORT                     _9_11(D3DVIEWPORT9,                D3D11_VIEWPORT)
