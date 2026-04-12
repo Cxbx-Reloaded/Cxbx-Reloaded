@@ -8879,9 +8879,11 @@ void CxbxUpdateNativeD3DResources()
 	// Before we start, make sure our resource cache stays limited in size
 	PrunePaletizedTexturesCache(); // TODO : Could we move this to Swap instead?
 
-	CxbxUpdateHostVertexDeclaration();
-
+	// NOTE: Vertex shader must be updated before vertex declaration,
+	// because D3D11 input layout creation depends on compiled VS bytecode
 	CxbxUpdateHostVertexShader();
+
+	CxbxUpdateHostVertexDeclaration();
 
 	CxbxUpdateHostVertexShaderConstants();
 
