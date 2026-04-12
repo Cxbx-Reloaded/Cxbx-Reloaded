@@ -44,11 +44,6 @@
 #include <chrono>
 #include <algorithm>
 
-#ifdef CXBX_USE_D3D11
-// Forward declaration for D3D11 VS constant helper defined in Direct3D9.cpp
-extern void CxbxD3D11SetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
-#endif
-
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 CxbxVertexBufferConverter VertexBufferConverter = {};
@@ -770,11 +765,7 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	// This allows us to implement Xbox functionality where SetVertexData4f can be used to specify attributes
 	// not present in the vertex declaration.
 	// We use range 193 and up to store these values, as Xbox shaders stop at c192!
-#ifdef CXBX_USE_D3D11
-	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
-#else
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
-#endif
+	CxbxSetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
 }
 
 void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)

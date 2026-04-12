@@ -49,10 +49,6 @@
 #include <sstream>
 #include <unordered_map>
 
-#ifdef CXBX_USE_D3D11
-// Forward declaration for D3D11 VS constant helper defined in Direct3D9.cpp
-extern void CxbxD3D11SetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
-#endif
 #include <array>
 #include <bitset>
 #include <filesystem>
@@ -1531,11 +1527,7 @@ void CxbxUpdateHostVertexDeclaration()
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
 		vertexDefaultFlags[i] = pCxbxVertexDeclaration->vRegisterInDeclaration[i] ? 0.0f : 1.0f;
 	}
-#ifdef CXBX_USE_D3D11
-	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
-#else
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
-#endif
+	CxbxSetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
 }
 
 void CxbxImpl_SetScreenSpaceOffset(float x, float y)
