@@ -208,7 +208,12 @@ void HLE_draw_state_update(NV2AState *d)
 	// Unused : D3DRS_FOGVERTEXMODE
 
 	uint32_t fog_color = pg->regs[NV_PGRAPH_FOGCOLOR];
+#ifndef CXBX_USE_D3D11
 	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+#else
+	(void)hRet;
+	// TODO: Set fog color in VS/PS constant buffers for D3D11
+#endif
 
 // Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
 // Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
