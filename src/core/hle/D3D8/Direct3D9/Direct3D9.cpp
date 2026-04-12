@@ -4781,12 +4781,9 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
         LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
         FreeHostResource(GetHostResourceKey(g_pXbox_RenderTarget)); CxbxSetRenderTarget(GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET));
-#ifdef CXBX_USE_D3D11
-		// For D3D11, depth stencil setting is handled through CxbxImpl_SetRenderTarget
-		// Just free the host resource; it will be recreated next draw call
 		FreeHostResource(GetHostResourceKey(g_pXbox_DepthStencil));
-#else
-        FreeHostResource(GetHostResourceKey(g_pXbox_DepthStencil)); g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL));
+#ifndef CXBX_USE_D3D11
+		g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL));
 #endif
     }
 }
