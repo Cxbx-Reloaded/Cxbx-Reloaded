@@ -74,10 +74,14 @@ extern BOOL EmuXBFormatIsDepthBuffer(xbox::X_D3DFORMAT Format);
 extern EMUFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format);
 
 // convert from xbox to pc d3d lock flags
+#ifndef CXBX_USE_D3D11
 extern DWORD EmuXB2PC_D3DLock(DWORD Flags);
+#endif
 
 // convert from xbox to pc multisample formats
+#ifndef CXBX_USE_D3D11
 extern D3DMULTISAMPLE_TYPE EmuXB2PC_D3DMultiSampleFormat(DWORD Type);
+#endif
 
 /**
 // convert from pc to xbox texture transform state types (unnecessary so far)

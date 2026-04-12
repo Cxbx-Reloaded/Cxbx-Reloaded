@@ -1058,6 +1058,7 @@ EMUFORMAT EmuXB2PC_D3DFormat(xbox::X_D3DFORMAT Format)
 	return EMUFMT_UNKNOWN;
 }
 
+#ifndef CXBX_USE_D3D11
 DWORD EmuXB2PC_D3DLock(DWORD Flags)
 {
     DWORD NewFlags = 0;
@@ -1109,6 +1110,7 @@ D3DMULTISAMPLE_TYPE EmuXB2PC_D3DMultiSampleFormat(DWORD Type)
 	}
 	return result;
 }
+#endif // !CXBX_USE_D3D11
 
 // lookup table for converting vertex count to primitive count
 const unsigned g_XboxPrimitiveTypeInfo[11][2] =
