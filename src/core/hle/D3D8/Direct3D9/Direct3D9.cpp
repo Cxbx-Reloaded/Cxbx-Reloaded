@@ -2546,7 +2546,7 @@ static void CreateDefaultD3D9Device
 	SwapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	SwapChainDesc.BufferCount = 2;
 	SwapChainDesc.Scaling = DXGI_SCALING_STRETCH;
-	SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	SwapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	SwapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 	SwapChainDesc.Flags = 0;
 
