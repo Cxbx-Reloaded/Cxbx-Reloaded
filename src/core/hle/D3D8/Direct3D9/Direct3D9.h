@@ -63,6 +63,34 @@ inline void CxbxEndScene()
 #endif
 }
 
+// Query helpers: dispatch Issue/GetData calls to D3D9 or D3D11 patterns
+inline void CxbxQueryIssueBegin(IDirect3DQuery* pQuery)
+{
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->Begin(pQuery);
+#else
+	pQuery->Issue(D3DISSUE_BEGIN);
+#endif
+}
+
+inline void CxbxQueryIssueEnd(IDirect3DQuery* pQuery)
+{
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->End(pQuery);
+#else
+	pQuery->Issue(D3DISSUE_END);
+#endif
+}
+
+inline HRESULT CxbxQueryGetData(IDirect3DQuery* pQuery, void* pData, DWORD dwSize, DWORD dwGetDataFlags)
+{
+#ifdef CXBX_USE_D3D11
+	return g_pD3DDeviceContext->GetData(pQuery, pData, dwSize, dwGetDataFlags);
+#else
+	return pQuery->GetData(pData, dwSize, dwGetDataFlags);
+#endif
+}
+
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
 void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 

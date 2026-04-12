@@ -4019,18 +4019,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 		HRESULT hRet = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_OCCLUSION, &QueryDesc), &pHostQueryVisibilityTest);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateQuery (visibility test)");
 		if (pHostQueryVisibilityTest != nullptr) {
-#ifdef CXBX_USE_D3D11
-			g_pD3DDeviceContext->Begin(pHostQueryVisibilityTest);
-			HRESULT hRet = S_OK;
-#else
-			hRet = pHostQueryVisibilityTest->Issue(D3DISSUE_BEGIN);
-			DEBUG_D3DRESULT(hRet, "g_pHostQueryVisibilityTest->Issue(D3DISSUE_BEGIN)");
-#endif
-			if (SUCCEEDED(hRet)) {
+			CxbxQueryIssueBegin(pHostQueryVisibilityTest);
+			{
 				g_HostQueryVisibilityTests.push(pHostQueryVisibilityTest);
-			} else {
-				LOG_TEST_CASE("Failed to issue query");
-				pHostQueryVisibilityTest->Release();
 			}
 
 			pHostQueryVisibilityTest = nullptr;
@@ -4087,20 +4078,10 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 		g_HostQueryVisibilityTests.pop();
 		assert(pHostQueryVisibilityTest != nullptr);
 
-		HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-		g_pD3DDeviceContext->End(pHostQueryVisibilityTest);
-		hRet = S_OK;
-#else
-		hRet = pHostQueryVisibilityTest->Issue(D3DISSUE_END);
-		DEBUG_D3DRESULT(hRet, "g_pHostQueryVisibilityTest->Issue(D3DISSUE_END)");
-#endif
-		if (hRet == D3D_OK) {
+		CxbxQueryIssueEnd(pHostQueryVisibilityTest);
+		{
 			// Associate the result of this call with the given Index
 			g_HostVisibilityTestMap[Index] = pHostQueryVisibilityTest;
-		} else {
-			LOG_TEST_CASE("Failed to issue query");
-			pHostQueryVisibilityTest->Release();
 		}
 	}
 
@@ -4150,11 +4131,11 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		// to further prevent any other endless loop situations.
 #ifdef CXBX_USE_D3D11
 		UINT64 occlusionData = 0;
-		while (S_FALSE == g_pD3DDeviceContext->GetData(pHostQueryVisibilityTest, &occlusionData, sizeof(occlusionData), 0));
+		while (S_FALSE == CxbxQueryGetData(pHostQueryVisibilityTest, &occlusionData, sizeof(occlusionData), 0));
 		if (pResult != xbox::zeroptr)
 			*pResult = (uint_xt)occlusionData;
 #else
-		while (S_FALSE == pHostQueryVisibilityTest->GetData(pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
+		while (S_FALSE == CxbxQueryGetData(pHostQueryVisibilityTest, pResult, sizeof(DWORD), D3DGETDATA_FLUSH));
 #endif
 
 		g_HostVisibilityTestMap[Index] = nullptr;
@@ -8725,23 +8706,18 @@ bool CxbxFlushHostGPU()
 		return false;
 	}
 
-#ifdef CXBX_USE_D3D11
-	// In D3D11, issue a query end event to flush the GPU command buffer
-	g_pD3DDeviceContext->End(g_pHostQueryWaitForIdle);
-
-	// Wait until the event query completes (GPU done)
-	BOOL queryData = FALSE;
-	while (g_pD3DDeviceContext->GetData(g_pHostQueryWaitForIdle, &queryData, sizeof(queryData), 0) == S_FALSE)
-		CxbxCPUIdleWait();
-#else
-	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/queries
 	// Add an end marker to the command buffer queue.
 	// This, so that the next GetData will always have at least one
 	// final query event to flush out, after which GPU will be done.
-	g_pHostQueryWaitForIdle->Issue(D3DISSUE_END);
+	CxbxQueryIssueEnd(g_pHostQueryWaitForIdle);
 
 	// Empty the command buffer and wait until host GPU is idle.
-	while (S_FALSE == g_pHostQueryWaitForIdle->GetData(nullptr, 0, D3DGETDATA_FLUSH))
+#ifdef CXBX_USE_D3D11
+	BOOL queryData = FALSE;
+	while (CxbxQueryGetData(g_pHostQueryWaitForIdle, &queryData, sizeof(queryData), 0) == S_FALSE)
+		CxbxCPUIdleWait();
+#else
+	while (S_FALSE == CxbxQueryGetData(g_pHostQueryWaitForIdle, nullptr, 0, D3DGETDATA_FLUSH))
 		CxbxCPUIdleWait();
 #endif
 
@@ -8761,9 +8737,9 @@ void CxbxHandleXboxCallbacks()
 		// Query whether host GPU encountered a callback event already
 #ifdef CXBX_USE_D3D11
 		BOOL queryData = FALSE;
-		if (S_FALSE == g_pD3DDeviceContext->GetData(g_pHostQueryCallbackEvent, &queryData, sizeof(queryData), 0)) {
+		if (S_FALSE == CxbxQueryGetData(g_pHostQueryCallbackEvent, &queryData, sizeof(queryData), 0)) {
 #else
-		if (S_FALSE == g_pHostQueryCallbackEvent->GetData(nullptr, 0, 0)) {
+		if (S_FALSE == CxbxQueryGetData(g_pHostQueryCallbackEvent, nullptr, 0, 0)) {
 #endif
 			// If not, don't handle callbacks
 			return;
@@ -8839,7 +8815,7 @@ void CxbxImpl_InsertCallback
 	if (g_pHostQueryCallbackEvent != nullptr) {
 		// Insert a callback event on host GPU,
 		// which will be handled by CxbxHandleXboxCallback
-		g_pHostQueryCallbackEvent->Issue(D3DISSUE_END);
+		CxbxQueryIssueEnd(g_pHostQueryCallbackEvent);
 	}
 }
 
