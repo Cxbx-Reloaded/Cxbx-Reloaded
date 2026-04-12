@@ -322,7 +322,10 @@ void XboxTextureStateConverter::Apply()
 				HRESULT hRet;
 
 				hRet = g_pD3DDevice->CreateSamplerState(&g_GlobalSamplerDesc, &pSamplerState); // TODO : What about lifetime management?
-				hRet = g_pD3DDeviceContext->PSSetSamplers(0, 1, pSamplerState);
+				if (SUCCEEDED(hRet) && pSamplerState != nullptr) {
+					g_pD3DDeviceContext->PSSetSamplers(HostStage, 1, &pSamplerState);
+					pSamplerState->Release(); // Release after setting; context adds its own reference
+				}
 #else
                 g_pD3DDevice->SetSamplerState(HostStage, (D3DSAMPLERSTATETYPE)CxbxTextureStateInfo[State].PC, PcValue);
 #endif
@@ -372,6 +375,12 @@ void XboxTextureStateConverter::Apply()
         IDirect3DBaseTexture* pTexture;
 
         // set the point sprites texture
+#ifdef CXBX_USE_D3D11
+        // In D3D11, texture binding is handled via PSSetShaderResources in CxbxUpdateHostTextures
+        // For point sprites, we need to copy stage 3 to stage 0
+        // This is a TODO for proper D3D11 point sprite support
+        pTexture = nullptr;
+#else
         g_pD3DDevice->GetTexture(3, &pTexture);
         g_pD3DDevice->SetTexture(0, pTexture); // ID3D11Device::CreateShaderResourceView(), ::PSSetShaderResources()
 
@@ -382,6 +391,7 @@ void XboxTextureStateConverter::Apply()
         // disable all other stages
         g_pD3DDevice->SetTextureStageState(1, D3DTSS_COLOROP, D3DTOP_DISABLE);
         g_pD3DDevice->SetTextureStageState(1, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
+#endif
 
         // no need to actually copy here, since it was handled in the loop above
     }

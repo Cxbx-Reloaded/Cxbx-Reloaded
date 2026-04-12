@@ -255,7 +255,115 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
         return;
     }
 
+#ifdef CXBX_USE_D3D11
+    // For D3D11, map render states to state object members
+    // These will be applied via CxbxD3D11ApplyDirtyStates before draw calls
+    extern D3D11_RASTERIZER_DESC g_D3D11RasterizerDesc;
+    extern D3D11_DEPTH_STENCIL_DESC g_D3D11DepthStencilDesc;
+    extern D3D11_BLEND_DESC g_D3D11BlendDesc;
+    extern bool g_bD3D11RasterizerStateDirty;
+    extern bool g_bD3D11DepthStencilStateDirty;
+    extern bool g_bD3D11BlendStateDirty;
+
+    switch (State) {
+        // Rasterizer state
+        case xbox::X_D3DRS_FILLMODE:
+            switch (Value) {
+                case D3DFILL_SOLID:     g_D3D11RasterizerDesc.FillMode = D3D11_FILL_SOLID; break;
+                case D3DFILL_WIREFRAME: g_D3D11RasterizerDesc.FillMode = D3D11_FILL_WIREFRAME; break;
+                default: break;
+            }
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_CULLMODE:
+            switch (Value) {
+                case D3DCULL_NONE: g_D3D11RasterizerDesc.CullMode = D3D11_CULL_NONE; break;
+                case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
+                case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
+                default: break;
+            }
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_ZBIAS:
+            g_D3D11RasterizerDesc.DepthBias = (INT)Value;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        // Depth/stencil state
+        case xbox::X_D3DRS_ZENABLE:
+            g_D3D11DepthStencilDesc.DepthEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_ZWRITEENABLE:
+            g_D3D11DepthStencilDesc.DepthWriteMask = Value ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_ZFUNC:
+            g_D3D11DepthStencilDesc.DepthFunc = (D3D11_COMPARISON_FUNC)Value; // D3D9 and D3D11 comparison func values match
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILENABLE:
+            g_D3D11DepthStencilDesc.StencilEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILFAIL:
+            g_D3D11DepthStencilDesc.FrontFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILZFAIL:
+            g_D3D11DepthStencilDesc.FrontFace.StencilDepthFailOp = (D3D11_STENCIL_OP)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilDepthFailOp = (D3D11_STENCIL_OP)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILPASS:
+            g_D3D11DepthStencilDesc.FrontFace.StencilPassOp = (D3D11_STENCIL_OP)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilPassOp = (D3D11_STENCIL_OP)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILFUNC:
+            g_D3D11DepthStencilDesc.FrontFace.StencilFunc = (D3D11_COMPARISON_FUNC)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilFunc = (D3D11_COMPARISON_FUNC)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILMASK:
+            g_D3D11DepthStencilDesc.StencilReadMask = (UINT8)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILWRITEMASK:
+            g_D3D11DepthStencilDesc.StencilWriteMask = (UINT8)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        // Blend state
+        case xbox::X_D3DRS_ALPHABLENDENABLE:
+            g_D3D11BlendDesc.RenderTarget[0].BlendEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_SRCBLEND:
+            g_D3D11BlendDesc.RenderTarget[0].SrcBlend = (D3D11_BLEND)Value;
+            g_D3D11BlendDesc.RenderTarget[0].SrcBlendAlpha = (D3D11_BLEND)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_DESTBLEND:
+            g_D3D11BlendDesc.RenderTarget[0].DestBlend = (D3D11_BLEND)Value;
+            g_D3D11BlendDesc.RenderTarget[0].DestBlendAlpha = (D3D11_BLEND)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_BLENDOP:
+            g_D3D11BlendDesc.RenderTarget[0].BlendOp = (D3D11_BLEND_OP)Value;
+            g_D3D11BlendDesc.RenderTarget[0].BlendOpAlpha = (D3D11_BLEND_OP)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_COLORWRITEENABLE:
+            g_D3D11BlendDesc.RenderTarget[0].RenderTargetWriteMask = (UINT8)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        default:
+            // Remaining states not yet mapped to D3D11 state objects
+            break;
+    }
+#else
     g_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)(RenderStateInfo.PC), Value);
+#endif
 }
 
 void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t Value)
@@ -343,7 +451,15 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
         return;
     }
 
+#ifdef CXBX_USE_D3D11
+    // Deferred render states affect fog/lighting - these are handled in the vertex shader
+    // Most deferred render states don't map to D3D11 state objects, they are passed as shader constants instead
+    // (fog settings are handled in CxbxUpdateHostVertexShaderConstants)
+    // For now, just ignore direct D3D9 calls
+    (void)Value; // silence unused warning
+#else
     g_pD3DDevice->SetRenderState(RenderStateInfo.PC, Value);
+#endif
 }
 
 void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t Value)
@@ -415,5 +531,51 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         return;
     }
 
+#ifdef CXBX_USE_D3D11
+    // Map complex render states to D3D11 state objects
+    extern D3D11_RASTERIZER_DESC g_D3D11RasterizerDesc;
+    extern D3D11_DEPTH_STENCIL_DESC g_D3D11DepthStencilDesc;
+    extern D3D11_BLEND_DESC g_D3D11BlendDesc;
+    extern bool g_bD3D11RasterizerStateDirty;
+    extern bool g_bD3D11DepthStencilStateDirty;
+    extern bool g_bD3D11BlendStateDirty;
+
+    switch (State) {
+        case xbox::X_D3DRS_FILLMODE:
+            switch (Value) {
+                case D3DFILL_SOLID:     g_D3D11RasterizerDesc.FillMode = D3D11_FILL_SOLID; break;
+                case D3DFILL_WIREFRAME: g_D3D11RasterizerDesc.FillMode = D3D11_FILL_WIREFRAME; break;
+                default: break;
+            }
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_CULLMODE:
+            switch (Value) {
+                case D3DCULL_NONE: g_D3D11RasterizerDesc.CullMode = D3D11_CULL_NONE; break;
+                case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
+                case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
+                default: break;
+            }
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_ZENABLE:
+            g_D3D11DepthStencilDesc.DepthEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILENABLE:
+            g_D3D11DepthStencilDesc.StencilEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILFAIL:
+            g_D3D11DepthStencilDesc.FrontFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        default:
+            // Other complex states not yet mapped to D3D11 state objects
+            break;
+    }
+#else
     g_pD3DDevice->SetRenderState(RenderStateInfo.PC, Value);
+#endif
 }

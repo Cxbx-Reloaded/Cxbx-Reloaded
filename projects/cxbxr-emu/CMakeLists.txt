@@ -64,6 +64,8 @@ add_compile_definitions(
  NOMINMAX
  CXBXR_EMU
  CXBXR_EMU_EXPORTS
+ # Enable Direct3D 11 rendering path
+ CXBX_USE_D3D11
 )
 
 file (GLOB RESOURCES
@@ -146,7 +148,8 @@ endif()
 # Windows libraries
 set(WINS_LIB 
  legacy_stdio_definitions
- d3d9
+ d3d11
+ dxgi
  d3dcompiler
  delayimp
  dinput8
