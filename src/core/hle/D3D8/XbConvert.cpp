@@ -1102,7 +1102,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x00 X_D3DFMT_L8           */ {  8, Swzzld, ______L8, EMUFMT_L8       },
 	/* 0x01 X_D3DFMT_AL8          */ {  8, Swzzld, _____AL8, EMUFMT_L8       , Texture, "X_D3DFMT_AL8 -> EMUFMT_L8" },
 	/* 0x02 X_D3DFMT_A1R5G5B5     */ { 16, Swzzld, A1R5G5B5, EMUFMT_A1R5G5B5 },
-	/* 0x03 X_D3DFMT_X1R5G5B5     */ { 16, Swzzld, X1R5G5B5, EMUFMT_X1R5G5B5 , RenderTarget }, // D3D11 TODO : Default A in shader
+	/* 0x03 X_D3DFMT_X1R5G5B5     */ { 16, Swzzld, X1R5G5B5, EMUFMT_X1R5G5B5 , RenderTarget }, // D3D11 NOTE : DXGI_FORMAT_B5G5R5A1_UNORM has variable alpha; pixel shader should force alpha=1 when sampling this format
 	/* 0x04 X_D3DFMT_A4R4G4B4     */ { 16, Swzzld, A4R4G4B4, EMUFMT_A4R4G4B4 },
 	/* 0x05 X_D3DFMT_R5G6B5       */ { 16, Swzzld, __R5G6B5, EMUFMT_R5G6B5   , RenderTarget },
 	/* 0x06 X_D3DFMT_A8R8G8B8     */ { 32, Swzzld, A8R8G8B8, EMUFMT_A8R8G8B8 , RenderTarget },
@@ -1127,7 +1127,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x19 X_D3DFMT_A8           */ {  8, Swzzld, ______A8, EMUFMT_A8       , Texture, "X_D3DFMT_A8 -> EMUFMT_A8R8G8B8" },  // D3D9 sets RGB = 0 instead of 1
 	/* 0x1A X_D3DFMT_A8L8         */ { 16, Swzzld, ____A8L8, EMUFMT_A8L8     },
 	/* 0x1B X_D3DFMT_LIN_AL8      */ {  8, Linear, _____AL8, EMUFMT_L8       , Texture, "X_D3DFMT_LIN_AL8 -> EMUFMT_L8" },
-	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, EMUFMT_X1R5G5B5 , RenderTarget }, // D3D11 TODO : Default A in shader
+	/* 0x1C X_D3DFMT_LIN_X1R5G5B5 */ { 16, Linear, X1R5G5B5, EMUFMT_X1R5G5B5 , RenderTarget }, // D3D11 NOTE : DXGI_FORMAT_B5G5R5A1_UNORM has variable alpha; pixel shader should force alpha=1 when sampling this format
 	/* 0x1D X_D3DFMT_LIN_A4R4G4B4 */ { 16, Linear, A4R4G4B4, EMUFMT_A4R4G4B4 },
 	/* 0x1E X_D3DFMT_LIN_X8R8G8B8 */ { 32, Linear, X8R8G8B8, EMUFMT_X8R8G8B8 , RenderTarget }, // Alias : X_D3DFMT_LIN_X8L8V8U8
 	/* 0x1F X_D3DFMT_LIN_A8       */ {  8, Linear, ______A8, EMUFMT_A8       , Texture, "X_D3DFMT_LIN_A8 -> EMUFMT_A8R8G8B8" }, // D3D9 sets RGB = 0 instead of 1
