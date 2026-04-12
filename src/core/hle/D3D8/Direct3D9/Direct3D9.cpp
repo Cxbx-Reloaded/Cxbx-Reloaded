@@ -113,6 +113,8 @@ static ID3D11DepthStencilView      *g_pD3DDepthStencilView = nullptr;
 static ID3D11RenderTargetView      *g_pD3DCurrentRTV = nullptr;
 // D3D11 depth/stencil buffer texture
 static ID3D11Texture2D             *g_pD3DDepthStencilBuffer = nullptr;
+// D3D11 back buffer texture (used as fallback for dimension queries)
+static IDirect3DSurface            *g_pD3DBackBufferSurface = nullptr;
 // D3D11 current host render target surface (used for dimension queries)
 static IDirect3DSurface            *g_pD3DCurrentHostRenderTarget = nullptr;
 // D3D11 state objects used for render state emulation
@@ -242,13 +244,14 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D11
-	g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
 	if (pHostRenderTarget == nullptr) {
-		// Restore back buffer as render target
+		// Restore back buffer as render target; track backbuffer surface for dimension queries
+		g_pD3DCurrentHostRenderTarget = g_pD3DBackBufferSurface;
 		g_pD3DCurrentRTV = g_pD3DBackBufferView;
 		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
 		hRet = S_OK;
 	} else {
+		g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
 		// Get the texture description to determine the format
 		D3D11_TEXTURE2D_DESC textureDesc = {};
 		pHostRenderTarget->GetDesc(&textureDesc);
@@ -2601,6 +2604,10 @@ static void CreateDefaultD3D9Device
 	hr = g_pD3DDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, &g_pD3DBackBufferView);
 	DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateRenderTargetView");
 
+	// Keep a reference to the back buffer texture for dimension queries
+	g_pD3DBackBufferSurface = backBuffer.Get();
+	g_pD3DBackBufferSurface->AddRef();
+
 	D3D11_TEXTURE2D_DESC backBufferDesc = {};
 	backBuffer->GetDesc(&backBufferDesc);
 
@@ -2628,6 +2635,7 @@ static void CreateDefaultD3D9Device
 
 	// Bind render target and depth stencil views to the output merger stage
 	g_pD3DCurrentRTV = g_pD3DBackBufferView;
+	g_pD3DCurrentHostRenderTarget = g_pD3DBackBufferSurface;
 	g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
 
 	// Store back buffer description for later use
