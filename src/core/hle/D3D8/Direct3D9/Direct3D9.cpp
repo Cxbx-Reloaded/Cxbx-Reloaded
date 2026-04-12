@@ -2452,16 +2452,14 @@ HRESULT CxbxPresent()
 	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
 #else
 
-	hRet = g_pD3DDevice->EndScene();
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->EndScene");
+	CxbxEndScene();
 
 	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
 
 	// Make sure that the actual Present return result is returned back, not the
 	// result of this subsequent BeginScene, using another variable for that :
-	HRESULT hRet2 = g_pD3DDevice->BeginScene();
-	DEBUG_D3DRESULT(hRet2, "g_pD3DDevice->BeginScene(2nd)");
+	CxbxBeginScene();
 #endif
 
 	return hRet;
@@ -2486,11 +2484,7 @@ static void DrawInitialBlackScreen
 		/*Z=*/g_bHasDepth ? 1.0f : 0.0f,
 		/*Stencil=*/0);
 
-#ifdef CXBX_USE_D3D11
-	// Direct3D 11 doesn't have a BeginScene / EndScene counterpart
-#else
-	g_pD3DDevice->BeginScene();
-#endif
+	CxbxBeginScene();
 
 	CxbxPresent();
 }
@@ -2506,11 +2500,7 @@ static void CreateDefaultD3D9Device
     if (g_pD3DDevice != nullptr) {
         EmuLog(LOG_LEVEL::DEBUG, "CreateDefaultD3D9Device releasing old Device.");
 
-#ifdef CXBX_USE_D3D11
-		// Direct3D 11 doesn't have a BeginScene / EndScene counterpart
-#else
-		g_pD3DDevice->EndScene();
-#endif
+		CxbxEndScene();
 
         ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
         ClearResourceCache(g_Cxbx_Cached_Direct3DResources);
