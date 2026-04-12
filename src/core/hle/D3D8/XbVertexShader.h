@@ -88,6 +88,13 @@ typedef struct _CxbxVertexDeclaration
 	IDirect3DVertexDeclaration* pHostVertexDeclaration;
 	UINT NumberOfVertexStreams; // The number of streams the vertex shader uses
 	bool vRegisterInDeclaration[X_VSH_MAX_ATTRIBUTES];
+#ifdef CXBX_USE_D3D11
+	// For D3D11, we need to defer input layout creation until we have both
+	// the vertex elements AND compiled vertex shader bytecode.
+	// Store the element descriptors and count for lazy input layout creation.
+	D3DVERTEXELEMENT* pD3D11InputElements;  // Heap-allocated copy of D3D11_INPUT_ELEMENT_DESC[]
+	UINT D3D11InputElementCount;
+#endif
 }
 CxbxVertexDeclaration;
 

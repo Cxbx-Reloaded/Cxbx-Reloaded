@@ -163,7 +163,13 @@ IDirect3DVertexShader* VertexShaderCache::GetShader(ShaderKey key)
 	}
 
 	if (pCompiledShader) {
+#ifdef CXBX_USE_D3D11
+		// Keep the bytecode alive for input layout creation
+		pLazyShader->pBytecode = pCompiledShader;
+		// Don't release it yet - it's kept in pBytecode
+#else
 		pCompiledShader->Release();
+#endif
 
 		// TODO compile the shader at a higher optimization level in a background thread?
 	}
@@ -173,6 +179,17 @@ IDirect3DVertexShader* VertexShaderCache::GetShader(ShaderKey key)
 
 	return pLazyShader->pHostVertexShader;
 }
+
+#ifdef CXBX_USE_D3D11
+ID3DBlob* VertexShaderCache::GetShaderBytecode(ShaderKey key)
+{
+	LazyVertexShader* pLazyShader = nullptr;
+	if (_FindShader(key, &pLazyShader) && pLazyShader->isReady) {
+		return pLazyShader->pBytecode;
+	}
+	return nullptr;
+}
+#endif
 
 // Release a shader. Doesn't actually release any resources for now
 void VertexShaderCache::ReleaseShader(ShaderKey key)
@@ -207,6 +224,12 @@ void VertexShaderCache::Clear()
 		else if(x.second.pHostVertexShader) {
 			x.second.pHostVertexShader->Release();
 		}
+#ifdef CXBX_USE_D3D11
+		if (x.second.pBytecode) {
+			x.second.pBytecode->Release();
+			x.second.pBytecode = nullptr;
+		}
+#endif
 	}
 	cache.clear();
 }
