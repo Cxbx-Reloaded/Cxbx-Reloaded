@@ -111,6 +111,8 @@ static ID3D11RenderTargetView      *g_pD3DBackBufferView = nullptr;
 static ID3D11DepthStencilView      *g_pD3DDepthStencilView = nullptr;
 // D3D11 depth/stencil buffer texture
 static ID3D11Texture2D             *g_pD3DDepthStencilBuffer = nullptr;
+// D3D11 current host render target surface (used for dimension queries)
+static IDirect3DSurface            *g_pD3DCurrentHostRenderTarget = nullptr;
 // D3D11 state objects used for render state emulation
 static ID3D11RasterizerState       *g_pD3DRasterizerState = nullptr;
 static ID3D11DepthStencilState     *g_pD3DDepthStencilState = nullptr;
@@ -238,6 +240,7 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D11
+	g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
 	if (pHostRenderTarget == nullptr) {
 		// Restore back buffer as render target
 		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
@@ -4352,9 +4355,18 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetGammaRamp)
 
     D3DGAMMARAMP *pGammaRamp = (D3DGAMMARAMP *)malloc(sizeof(D3DGAMMARAMP));
 
+#ifndef CXBX_USE_D3D11
     g_pD3DDevice->GetGammaRamp(
 		0, // iSwapChain
 		pGammaRamp);
+#else
+    // D3D11 doesn't have GetGammaRamp - return a linear ramp
+    for (int v = 0; v < 256; v++) {
+        pGammaRamp->red[v]   = (WORD)(v * 257); // Scale 0-255 to 0-65535
+        pGammaRamp->green[v] = (WORD)(v * 257);
+        pGammaRamp->blue[v]  = (WORD)(v * 257);
+    }
+#endif
 
     for(int v=0;v<256;v++)
     {
@@ -4567,11 +4579,16 @@ bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, IDirec
 {
 	bool shouldRelease = false;
 	if (pHostRenderTarget == nullptr) {
+#ifdef CXBX_USE_D3D11
+		// In D3D11, use the current back buffer as the render target
+		pHostRenderTarget = g_pD3DCurrentHostRenderTarget;
+#else
 		g_pD3DDevice->GetRenderTarget(
 			0, // RenderTargetIndex
 			&pHostRenderTarget);
 
 		shouldRelease = true;
+#endif
 	}
 
 	// The following can only work if we could retrieve a host render target
@@ -5583,7 +5600,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
         DestRect.top *= destScaleY;
         DestRect.bottom *= destScaleY;
 
-        HRESULT hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
+        HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+		// In D3D11, use CopySubresourceRegion for same-size copies
+		// For scaled copies a full blit shader is needed; for now do a best-effort copy
+		g_pD3DDeviceContext->CopyResource((ID3D11Resource*)pHostDestSurface, (ID3D11Resource*)pHostSourceSurface);
+		hRet = S_OK;
+#else
+        hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
         if (FAILED(hRet)) {
 			// Fallback for cases which StretchRect cannot handle (such as copying from texture to texture)
 			hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, &DestRect, pHostSourceSurface, nullptr, &SourceRect, D3DTEXF_LINEAR, 0);
@@ -5591,6 +5615,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 				LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
 			}
         }
+#endif
     }
 }
 
@@ -5703,8 +5728,14 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
         // Clear the backbuffer surface, this prevents artifacts when switching aspect-ratio
         // Test-case: Dashboard
         IDirect3DSurface* pExistingRenderTarget = nullptr;
+#ifdef CXBX_USE_D3D11
+        pExistingRenderTarget = g_pD3DCurrentHostRenderTarget;
+        bool bGotRenderTarget = true;
+#else
         hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
-        if (hRet == D3D_OK) {
+        bool bGotRenderTarget = (hRet == D3D_OK);
+#endif
+        if (bGotRenderTarget) {
             (void)CxbxSetRenderTarget(pCurrentHostBackBuffer);
             CxbxD3DClear(
                 /*Count=*/0,
@@ -5714,7 +5745,9 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
                 /*Stencil=*/0);
             (void)CxbxSetRenderTarget(pExistingRenderTarget);
-            pExistingRenderTarget->Release();
+#ifndef CXBX_USE_D3D11
+            if (pExistingRenderTarget) pExistingRenderTarget->Release();
+#endif
         }
         
         // TODO: Implement a hot-key to change the filter?
@@ -5739,6 +5772,11 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             dest.bottom = (LONG)(dest.top + height);
 
             // Blit Xbox BackBuffer to host BackBuffer
+#ifdef CXBX_USE_D3D11
+			// In D3D11, copy the source to the back buffer (without scaling for now)
+			g_pD3DDeviceContext->CopyResource((ID3D11Resource*)pCurrentHostBackBuffer, (ID3D11Resource*)pXboxBackBufferHostSurface);
+			hRet = S_OK;
+#else
             hRet = g_pD3DDevice->StretchRect(
                 /* pSourceSurface = */ pXboxBackBufferHostSurface,
 				/* pSourceRect = */ nullptr,
@@ -5746,6 +5784,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 /* pDestRect = */ &dest,
                 /* Filter = */ LoadSurfaceFilter
             );
+#endif
 		
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
@@ -5853,6 +5892,12 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             // Create a temporary surface to hold the overlay
             // This is faster than loading directly into the backbuffer because it offloads scaling to the GPU
             // Without this, upscaling tanks the frame-rate!
+#ifdef CXBX_USE_D3D11
+            // TODO: D3D11 overlay: create a staging texture and upload the overlay data
+            // For now, skip overlay rendering in D3D11 mode
+            EmuLog(LOG_LEVEL::WARNING, "UpdateOverlay: D3D11 overlay rendering not yet implemented");
+            HRESULT hRet = E_NOTIMPL;
+#else
             IDirect3DSurface* pTemporaryOverlaySurface;
             HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
                 OverlayWidth,
@@ -5902,6 +5947,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
                 pTemporaryOverlaySurface->Release();
             }
+#endif
 		}
 
 		// Render ImGui

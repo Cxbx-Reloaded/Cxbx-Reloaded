@@ -779,7 +779,11 @@ IDirect3DPixelShader* GetFixedFunctionShader()
 	int shaderVersion = g_ShaderSources.Update();
 	if (pixelShaderVersion != shaderVersion) {
 		pixelShaderVersion = shaderVersion;
+#ifdef CXBX_USE_D3D11
+		g_pD3DDeviceContext->PSSetShader(nullptr, nullptr, 0);
+#else
 		g_pD3DDevice->SetPixelShader(nullptr);
+#endif
 
 		for (auto& hostShader : ffPsCache) {
 			if (hostShader.second)
@@ -1009,7 +1013,13 @@ void UpdateFixedFunctionPixelShaderState()
 	}
 
 	const int size = (sizeof(FixedFunctionPixelShaderState) + 16 - 1) / 16;
+#ifdef CXBX_USE_D3D11
+	// TODO: Upload fixed function pixel shader state to a D3D11 PS constant buffer
+	// For now, log that this is not yet implemented
+	(void)size;
+#else
 	g_pD3DDevice->SetPixelShaderConstantF(0, (float*)&ffPsState, size);
+#endif
 }
 
 static IDirect3DPixelShader* g_pActivePixelShader = nullptr; // TODO : Reset when device resets!
@@ -1074,7 +1084,11 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   int shaderVersion = g_ShaderSources.Update();
   if (pixelShaderVersion != shaderVersion) {
 	  pixelShaderVersion = shaderVersion;
+#ifdef CXBX_USE_D3D11
+	  g_pD3DDeviceContext->PSSetShader(nullptr, nullptr, 0);
+#else
 	  g_pD3DDevice->SetPixelShader(nullptr);
+#endif
 
 	  for (auto& hostShader : g_RecompiledPixelShaders) {
 		  if (hostShader.ConvertedPixelShader)
@@ -1214,5 +1228,10 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
   // Read the color from the corresponding render state slot :
   // Set all host constant values using a single call:
+#ifdef CXBX_USE_D3D11
+  // TODO: Upload pixel shader constants to a D3D11 PS constant buffer
+  (void)fColor;
+#else
   g_pD3DDevice->SetPixelShaderConstantF(0, reinterpret_cast<const float*>(fColor), PSH_XBOX_CONSTANT_MAX);
+#endif
 }
