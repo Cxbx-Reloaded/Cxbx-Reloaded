@@ -32,6 +32,9 @@
 // Host D3D LOGRENDER(Type) implementations
 //
 
+#ifndef CXBX_USE_D3D11
+// D3D9-specific enum/flag/caps logging (not available in D3D11 builds)
+
 ENUM2STR_START(D3DFORMAT)
 	ENUM2STR_CASE(D3DFMT_UNKNOWN) // = 0,
 	ENUM2STR_CASE(D3DFMT_R8G8B8) // = 20,
@@ -455,7 +458,6 @@ FLAGS2STR_START(D3DDTCAPS)
 	FLAG2STR(D3DDTCAPS_FLOAT16_4)
 FLAGS2STR_END_and_LOGRENDER(D3DDTCAPS)
 
-#ifndef CXBX_USE_D3D11
 LOGRENDER(D3DCAPS)
 {
 	return os
@@ -530,7 +532,7 @@ LOGRENDER(D3DCAPS)
 		LOGRENDER_MEMBER(MaxPixelShader30InstructionSlots)
 		;
 }
-#endif // !CXBX_USE_D3D11
+#endif // !CXBX_USE_D3D11 (end of D3D9-specific logging)
 
 // prevent name collisions
 namespace xbox {
