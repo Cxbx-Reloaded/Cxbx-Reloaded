@@ -2538,13 +2538,13 @@ static void CreateDefaultD3D9Device
 	// Create a swap chain using the HWND (Win32 window)
 	// Get DXGI objects from device
 	ComPtr<IDXGIDevice1> dxgiDevice;
-	g_pD3DDevice->QueryInterface(__uuidof(IDXGIDevice1), &dxgiDevice);
+	g_pD3DDevice->QueryInterface(__uuidof(IDXGIDevice1), reinterpret_cast<void**>(dxgiDevice.GetAddressOf()));
 
 	ComPtr<IDXGIAdapter> dxgiAdapter;
-	dxgiDevice->GetAdapter(&dxgiAdapter);
+	dxgiDevice->GetAdapter(dxgiAdapter.GetAddressOf());
 
 	ComPtr<IDXGIFactory2> dxgiFactory;
-	dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), &dxgiFactory);
+	dxgiAdapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void**>(dxgiFactory.GetAddressOf()));
 
 	// Configure swap chain description for Win32 HWND
 	DXGI_SWAP_CHAIN_DESC1 SwapChainDesc = {};
@@ -2590,7 +2590,7 @@ static void CreateDefaultD3D9Device
 
 	// Configure the back buffer as a render target
 	ComPtr<ID3D11Texture2D> backBuffer;
-	hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), &backBuffer);
+	hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(backBuffer.GetAddressOf()));
 	DEBUG_D3DRESULT(hr, "IDXGISwapChain::GetBuffer");
 
 	// Create a render target view on the back buffer.
