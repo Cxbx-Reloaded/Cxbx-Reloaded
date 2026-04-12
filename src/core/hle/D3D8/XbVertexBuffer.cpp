@@ -72,12 +72,14 @@ HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer *pHostV
 {
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D11
-	hRet = g_pD3DDeviceContext->IASetVertexBuffers(
-		0, // StartSlot
+	UINT offset = 0;
+	g_pD3DDeviceContext->IASetVertexBuffers(
+		HostStreamNumber, // StartSlot
 		1, // NumBuffers
-		pHostVertexBuffer,
-		&VertexStride,
-		nullptr);
+		&pHostVertexBuffer, // ppVertexBuffers (pointer to array of buffers)
+		&VertexStride, // pStrides
+		&offset); // pOffsets
+	hRet = S_OK;
 #else
 	hRet = g_pD3DDevice->SetStreamSource(
 		HostStreamNumber,
