@@ -44,6 +44,10 @@ extern void CxbxInitWindow();
 
 void CxbxUpdateNativeD3DResources();
 
+// Unified shader constant helpers (dispatch to D3D9 or D3D11 internally)
+void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
+void CxbxSetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
+
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
 void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 
