@@ -8315,7 +8315,7 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 	g_pD3DDeviceContext->DrawIndexed(
 		/*IndexCount=*/bConvertQuadListToTriangleList ? primCount * 3 : DrawContext.dwVertexCount,
 		/*StartIndexLocation=*/0,
-		/*BaseVertexLocation=*/BaseVertexIndex - (INT)CacheEntry.LowIndex
+		/*BaseVertexLocation=*/-(INT)CacheEntry.LowIndex // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
 	);
 	hRet = S_OK;
 #else
