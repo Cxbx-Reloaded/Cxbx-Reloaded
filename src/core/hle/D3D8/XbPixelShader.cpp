@@ -1034,7 +1034,7 @@ void CxbxSetPixelShader(IDirect3DPixelShader* pPixelShader)
 	// pixel shader, to avoid many unnecessary state changes on the local side).
 #ifdef CXBX_USE_D3D11
 	g_pD3DDeviceContext->PSSetShader(
-		pShader,
+		pPixelShader,
 		nullptr, // ppClassInstances
 		0 // NumClassInstances
 		);
