@@ -266,7 +266,12 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
 
 		if (SUCCEEDED(hRet)) {
+			// Release the previous offscreen RTV (if any; not the backbuffer view which is owned separately)
+			if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
+				g_pD3DCurrentRTV->Release();
+			}
 			g_pD3DCurrentRTV = renderTargetView.Get();
+			g_pD3DCurrentRTV->AddRef(); // prevent ComPtr from releasing it when it goes out of scope
 			g_pD3DDeviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), g_pD3DDepthStencilView);
 		}
 	}
