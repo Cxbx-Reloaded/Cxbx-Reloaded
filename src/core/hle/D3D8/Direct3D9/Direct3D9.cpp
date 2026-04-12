@@ -117,15 +117,15 @@ static ID3D11RasterizerState       *g_pD3DRasterizerState = nullptr;
 static ID3D11DepthStencilState     *g_pD3DDepthStencilState = nullptr;
 static ID3D11BlendState            *g_pD3DBlendState = nullptr;
 // Dirty flags to trigger D3D11 state object recreation
-static bool                         g_bD3D11RasterizerStateDirty = true;
-static bool                         g_bD3D11DepthStencilStateDirty = true;
-static bool                         g_bD3D11BlendStateDirty = true;
+bool                                g_bD3D11RasterizerStateDirty = true;
+bool                                g_bD3D11DepthStencilStateDirty = true;
+bool                                g_bD3D11BlendStateDirty = true;
 // D3D11 rasterizer state description (updated by render state changes)
-static D3D11_RASTERIZER_DESC        g_D3D11RasterizerDesc = {};
+D3D11_RASTERIZER_DESC               g_D3D11RasterizerDesc = {};
 // D3D11 depth/stencil state description (updated by render state changes)
-static D3D11_DEPTH_STENCIL_DESC     g_D3D11DepthStencilDesc = {};
+D3D11_DEPTH_STENCIL_DESC            g_D3D11DepthStencilDesc = {};
 // D3D11 blend state description (updated by render state changes)
-static D3D11_BLEND_DESC             g_D3D11BlendDesc = {};
+D3D11_BLEND_DESC                    g_D3D11BlendDesc = {};
 // D3D11 vertex shader constant buffer - holds all Xbox VS constants
 // Size: (CXBX_D3DVS_CONSTREG_FOGINFO + 1) float4 registers
 static const UINT                   CXBX_D3D11_VS_CB_SLOT = 0;

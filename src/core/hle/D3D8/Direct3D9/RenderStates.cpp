@@ -278,8 +278,8 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
         case xbox::X_D3DRS_CULLMODE:
             switch (Value) {
                 case D3DCULL_NONE: g_D3D11RasterizerDesc.CullMode = D3D11_CULL_NONE; break;
-                case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
-                case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
+                case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
+                case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
                 default: break;
             }
             g_bD3D11RasterizerStateDirty = true;
@@ -552,8 +552,8 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_CULLMODE:
             switch (Value) {
                 case D3DCULL_NONE: g_D3D11RasterizerDesc.CullMode = D3D11_CULL_NONE; break;
-                case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
-                case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
+                case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
+                case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
                 default: break;
             }
             g_bD3D11RasterizerStateDirty = true;
