@@ -41,6 +41,9 @@
 
 // TODO: Find somewhere to put this that doesn't conflict with xbox::
 extern void CxbxUpdateHostTextures();
+#ifdef CXBX_USE_D3D11
+extern void CxbxD3D11SetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
+#endif
 
 const char *NV2AMethodToString(DWORD dwMethod); // forward
 
@@ -212,7 +215,12 @@ void HLE_draw_state_update(NV2AState *d)
 	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
 #else
 	(void)hRet;
-	// TODO: Set fog color in VS/PS constant buffers for D3D11
+	// Set fog color in PS constant buffer at PSH_XBOX_CONSTANT_FOG (register 18)
+	// The fog color is stored as ABGR, convert to float4 RGBA
+	{
+		D3DXCOLOR fogColorFloat(ABGR_to_ARGB(fog_color));
+		CxbxD3D11SetPixelShaderConstantF(/*PSH_XBOX_CONSTANT_FOG=*/18, (const float*)&fogColorFloat, 1);
+	}
 #endif
 
 // Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
