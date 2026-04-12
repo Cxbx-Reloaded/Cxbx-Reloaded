@@ -109,6 +109,8 @@ ID3D11DeviceContext                *g_pD3DDeviceContext = nullptr; // Direct3D 1
 // D3D11 render target and depth stencil views for the back buffer
 static ID3D11RenderTargetView      *g_pD3DBackBufferView = nullptr;
 static ID3D11DepthStencilView      *g_pD3DDepthStencilView = nullptr;
+// D3D11 currently bound render target view (backbuffer or offscreen)
+static ID3D11RenderTargetView      *g_pD3DCurrentRTV = nullptr;
 // D3D11 depth/stencil buffer texture
 static ID3D11Texture2D             *g_pD3DDepthStencilBuffer = nullptr;
 // D3D11 current host render target surface (used for dimension queries)
@@ -243,6 +245,7 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 	g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
 	if (pHostRenderTarget == nullptr) {
 		// Restore back buffer as render target
+		g_pD3DCurrentRTV = g_pD3DBackBufferView;
 		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
 		hRet = S_OK;
 	} else {
@@ -260,6 +263,7 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
 
 		if (SUCCEEDED(hRet)) {
+			g_pD3DCurrentRTV = renderTargetView.Get();
 			g_pD3DDeviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), g_pD3DDepthStencilView);
 		}
 	}
@@ -2623,6 +2627,7 @@ static void CreateDefaultD3D9Device
 	}
 
 	// Bind render target and depth stencil views to the output merger stage
+	g_pD3DCurrentRTV = g_pD3DBackBufferView;
 	g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
 
 	// Store back buffer description for later use
@@ -9373,8 +9378,8 @@ static void CxbxImpl_SetRenderTarget
 		} else {
 			if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); g_pD3DDepthStencilView = nullptr; }
 		}
-		// Update the output merger with new DSV
-		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
+		// Update the output merger with the currently bound RTV and new DSV
+		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
 	}
 	hRet = S_OK;
 #else
