@@ -6026,10 +6026,59 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             // This is faster than loading directly into the backbuffer because it offloads scaling to the GPU
             // Without this, upscaling tanks the frame-rate!
 #ifdef CXBX_USE_D3D11
-            // TODO: D3D11 overlay: create a staging texture and upload the overlay data
-            // For now, skip overlay rendering in D3D11 mode
-            EmuLog(LOG_LEVEL::WARNING, "UpdateOverlay: D3D11 overlay rendering not yet implemented");
-            HRESULT hRet = E_NOTIMPL;
+            // D3D11 overlay: create a staging texture, upload the overlay data, and copy to backbuffer
+            // Note: This is a simplified implementation that skips format conversion (assumes ARGB/compatible format)
+            // and does not support scaling (source rect is copied 1:1 to destination position)
+            HRESULT hRet = E_FAIL;
+            {
+                D3D11_TEXTURE2D_DESC texDesc = {};
+                texDesc.Width = OverlayWidth;
+                texDesc.Height = OverlayHeight;
+                texDesc.MipLevels = 1;
+                texDesc.ArraySize = 1;
+                texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; // Matches EMUFMT_A8R8G8B8
+                texDesc.SampleDesc.Count = 1;
+                texDesc.Usage = D3D11_USAGE_STAGING;
+                texDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+                ID3D11Texture2D* pStagingTex = nullptr;
+                hRet = g_pD3DDevice->CreateTexture2D(&texDesc, nullptr, &pStagingTex);
+                if (SUCCEEDED(hRet) && pStagingTex) {
+                    D3D11_MAPPED_SUBRESOURCE mapped = {};
+                    hRet = g_pD3DDeviceContext->Map(pStagingTex, 0, D3D11_MAP_WRITE, 0, &mapped);
+                    if (SUCCEEDED(hRet)) {
+                        // Copy overlay data row by row (source pitch may differ from staging pitch)
+                        const uint8_t* pSrc = pOverlayData;
+                        uint8_t* pDst = (uint8_t*)mapped.pData;
+                        UINT copyWidth = OverlayWidth * 4; // 4 bytes per pixel for ARGB
+                        for (UINT row = 0; row < OverlayHeight; row++) {
+                            memcpy(pDst, pSrc, copyWidth);
+                            pSrc += OverlayRowPitch;
+                            pDst += mapped.RowPitch;
+                        }
+                        g_pD3DDeviceContext->Unmap(pStagingTex, 0);
+
+                        // Copy from staging texture to the backbuffer
+                        D3D11_BOX srcBox = {};
+                        srcBox.left = EmuSourRect.left;
+                        srcBox.top = EmuSourRect.top;
+                        srcBox.right = EmuSourRect.right;
+                        srcBox.bottom = EmuSourRect.bottom;
+                        srcBox.front = 0;
+                        srcBox.back = 1;
+                        g_pD3DDeviceContext->CopySubresourceRegion(
+                            pCurrentHostBackBuffer, 0,
+                            EmuDestRect.left, EmuDestRect.top, 0,
+                            pStagingTex, 0,
+                            &srcBox);
+                    }
+                    pStagingTex->Release();
+                }
+
+                if (FAILED(hRet)) {
+                    EmuLog(LOG_LEVEL::WARNING, "UpdateOverlay: D3D11 overlay rendering failed : %X", hRet);
+                }
+            }
 #else
             IDirect3DSurface* pTemporaryOverlaySurface;
             HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
