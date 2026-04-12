@@ -2445,22 +2445,21 @@ HRESULT CxbxPresent()
 {
 	LOG_INIT;
 
+	CxbxEndScene();
+
 	HRESULT hRet;
 
 #ifdef CXBX_USE_D3D11
 	hRet = g_pSwapChain->Present(0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
 #else
-
-	CxbxEndScene();
-
 	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
+#endif
 
 	// Make sure that the actual Present return result is returned back, not the
 	// result of this subsequent BeginScene, using another variable for that :
 	CxbxBeginScene();
-#endif
 
 	return hRet;
 }
