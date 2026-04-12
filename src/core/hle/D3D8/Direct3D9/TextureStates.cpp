@@ -303,25 +303,41 @@ void XboxTextureStateConverter::Apply()
 
             if (CxbxTextureStateInfo[State].IsSamplerState) {
 #ifdef CXBX_USE_D3D11
-				static D3D11_SAMPLER_DESC g_GlobalSamplerDesc = {}; // TODO : Move to globals section
+				// Per-stage sampler state descriptors and filter tracking
+				static D3D11_SAMPLER_DESC g_SamplerDescs[xbox::X_D3DTS_STAGECOUNT] = {};
+				static DWORD g_MinFilter[xbox::X_D3DTS_STAGECOUNT] = { D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT };
+				static DWORD g_MagFilter[xbox::X_D3DTS_STAGECOUNT] = { D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT };
+				static DWORD g_MipFilter[xbox::X_D3DTS_STAGECOUNT] = { D3DTEXF_NONE, D3DTEXF_NONE, D3DTEXF_NONE, D3DTEXF_NONE };
+
+				D3D11_SAMPLER_DESC &samplerDesc = g_SamplerDescs[HostStage];
 
 				switch (State) {
-				case xbox::X_D3DTSS_ADDRESSU: g_GlobalSamplerDesc.AddressU = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(PcValue); break;
-				case xbox::X_D3DTSS_ADDRESSV: g_GlobalSamplerDesc.AddressV = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(PcValue); break;
-				case xbox::X_D3DTSS_ADDRESSW: g_GlobalSamplerDesc.AddressW = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(PcValue); break;
-				case xbox::X_D3DTSS_MAGFILTER: g_GlobalSamplerDesc.Filter = static_cast<D3D11_FILTER>(PcValue); break; // TODO : There's only 1, not 3 Filter members?
-				case xbox::X_D3DTSS_MINFILTER: g_GlobalSamplerDesc.Filter = static_cast<D3D11_FILTER>(PcValue); break; // TODO : There's only 1, not 3 Filter members?
-				case xbox::X_D3DTSS_MIPFILTER: g_GlobalSamplerDesc.Filter = static_cast<D3D11_FILTER>(PcValue); break; // TODO : There's only 1, not 3 Filter members?
-				case xbox::X_D3DTSS_MIPMAPLODBIAS: g_GlobalSamplerDesc.MipLODBias = /*TODO:FLOAT*/(PcValue); break;
-				case xbox::X_D3DTSS_MAXMIPLEVEL: g_GlobalSamplerDesc.MaxLOD = /*TODO:FLOAT*/(PcValue); break; // TODO : What about MinLOD?
-				case xbox::X_D3DTSS_MAXANISOTROPY: g_GlobalSamplerDesc.MaxAnisotropy = PcValue; break; // Note : MaxAnisotropy type is UINT
-				case xbox::X_D3DTSS_BORDERCOLOR: g_GlobalSamplerDesc.BorderColor = D3DXCOLOR(PcValue); break; // Note : BorderColor type is float[4]
+				case xbox::X_D3DTSS_ADDRESSU: samplerDesc.AddressU = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(PcValue); break;
+				case xbox::X_D3DTSS_ADDRESSV: samplerDesc.AddressV = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(PcValue); break;
+				case xbox::X_D3DTSS_ADDRESSW: samplerDesc.AddressW = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(PcValue); break;
+				case xbox::X_D3DTSS_MAGFILTER: g_MagFilter[HostStage] = PcValue; break;
+				case xbox::X_D3DTSS_MINFILTER: g_MinFilter[HostStage] = PcValue; break;
+				case xbox::X_D3DTSS_MIPFILTER: g_MipFilter[HostStage] = PcValue; break;
+				case xbox::X_D3DTSS_MIPMAPLODBIAS: samplerDesc.MipLODBias = /*TODO:FLOAT*/(PcValue); break;
+				case xbox::X_D3DTSS_MAXMIPLEVEL: samplerDesc.MaxLOD = /*TODO:FLOAT*/(PcValue); break; // TODO : What about MinLOD?
+				case xbox::X_D3DTSS_MAXANISOTROPY: samplerDesc.MaxAnisotropy = PcValue; break; // Note : MaxAnisotropy type is UINT
+				case xbox::X_D3DTSS_BORDERCOLOR: samplerDesc.BorderColor = D3DXCOLOR(PcValue); break; // Note : BorderColor type is float[4]
+				}
+
+				// Combine min/mag/mip filter types into a single D3D11_FILTER
+				if (g_MinFilter[HostStage] == D3DTEXF_ANISOTROPIC || g_MagFilter[HostStage] == D3DTEXF_ANISOTROPIC) {
+					samplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+				} else {
+					D3D11_FILTER_TYPE d3d11Min = (g_MinFilter[HostStage] == D3DTEXF_LINEAR) ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT;
+					D3D11_FILTER_TYPE d3d11Mag = (g_MagFilter[HostStage] == D3DTEXF_LINEAR) ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT;
+					D3D11_FILTER_TYPE d3d11Mip = (g_MipFilter[HostStage] == D3DTEXF_LINEAR) ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT;
+					samplerDesc.Filter = D3D11_ENCODE_BASIC_FILTER(d3d11Min, d3d11Mag, d3d11Mip, D3D11_FILTER_REDUCTION_TYPE_STANDARD);
 				}
 
 				ID3D11SamplerState *pSamplerState = nullptr;
 				HRESULT hRet;
 
-				hRet = g_pD3DDevice->CreateSamplerState(&g_GlobalSamplerDesc, &pSamplerState); // TODO : What about lifetime management?
+				hRet = g_pD3DDevice->CreateSamplerState(&samplerDesc, &pSamplerState);
 				if (SUCCEEDED(hRet) && pSamplerState != nullptr) {
 					g_pD3DDeviceContext->PSSetSamplers(HostStage, 1, &pSamplerState);
 					pSamplerState->Release(); // Release after setting; context adds its own reference
