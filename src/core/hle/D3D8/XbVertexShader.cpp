@@ -715,7 +715,7 @@ private:
 			case D3DDECLUSAGE_TANGENT:      return "TANGENT";
 			case D3DDECLUSAGE_BINORMAL:     return "BINORMAL";
 			case D3DDECLUSAGE_TESSFACTOR:   return "TESSFACTOR";
-			case D3DDECLUSAGE_POSITIONT:    return "SV_POSITION";
+			case D3DDECLUSAGE_POSITIONT:    return "POSITIONT";
 			case D3DDECLUSAGE_COLOR:        return "COLOR";
 			case D3DDECLUSAGE_FOG:          return "FOG";
 			case D3DDECLUSAGE_DEPTH:        return "DEPTH";
