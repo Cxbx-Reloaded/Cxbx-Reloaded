@@ -242,6 +242,21 @@ inline D3DPRIMITIVETYPE EmuXB2PC_D3DPrimitiveType(xbox::X_D3DPRIMITIVETYPE XboxP
     return g_XboxPrimitiveTypeToHost[XboxPrimitiveType];
 }
 
+#ifdef CXBX_USE_D3D11
+extern const D3D_PRIMITIVE_TOPOLOGY g_XboxPrimitiveTypeToD3D11Topology[];
+
+// convert xbox primitive type to D3D11 primitive topology
+inline D3D_PRIMITIVE_TOPOLOGY EmuXB2PC_D3D11PrimitiveTopology(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType)
+{
+	if (XboxPrimitiveType >= xbox::X_D3DPT_MAX) {
+		LOG_TEST_CASE("XboxPrimitiveType too large");
+		return D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+	}
+
+	return g_XboxPrimitiveTypeToD3D11Topology[XboxPrimitiveType];
+}
+#endif
+
 extern void EmuUnswizzleBox
 (
 	CONST PVOID pSrcBuff,

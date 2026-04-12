@@ -1383,6 +1383,26 @@ const D3DPRIMITIVETYPE g_XboxPrimitiveTypeToHost[] =
 	/* X_D3DPT_MAX            = 11,       */ (D3DPRIMITIVETYPE)11
 };
 
+#ifdef CXBX_USE_D3D11
+// D3D11 primitive topology table for Xbox primitive types
+// Note: D3D11 does not support TriangleFan - those must be converted to TriangleList
+const D3D_PRIMITIVE_TOPOLOGY g_XboxPrimitiveTypeToD3D11Topology[] =
+{
+    /* NULL                   = 0         */ D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,
+    /* X_D3DPT_POINTLIST      = 1,        */ D3D_PRIMITIVE_TOPOLOGY_POINTLIST,
+    /* X_D3DPT_LINELIST       = 2,        */ D3D_PRIMITIVE_TOPOLOGY_LINELIST,
+    /* X_D3DPT_LINELOOP       = 3,  Xbox  */ D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,
+    /* X_D3DPT_LINESTRIP      = 4,        */ D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,
+    /* X_D3DPT_TRIANGLELIST   = 5,        */ D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+    /* X_D3DPT_TRIANGLESTRIP  = 6,        */ D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
+    /* X_D3DPT_TRIANGLEFAN    = 7,  Xbox  */ D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, // Convert fan to list
+    /* X_D3DPT_QUADLIST       = 8,  Xbox  */ D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, // Convert quad to list
+    /* X_D3DPT_QUADSTRIP      = 9,  Xbox  */ D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
+    /* X_D3DPT_POLYGON        = 10, Xbox  */ D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, // Convert polygon to list
+    /* X_D3DPT_MAX            = 11,       */ D3D_PRIMITIVE_TOPOLOGY_UNDEFINED
+};
+#endif
+
 void EmuUnswizzleBox
 (
 	CONST PVOID pSrcBuff,

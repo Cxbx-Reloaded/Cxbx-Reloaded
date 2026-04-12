@@ -44,6 +44,11 @@
 #include <chrono>
 #include <algorithm>
 
+#ifdef CXBX_USE_D3D11
+// Forward declaration for D3D11 VS constant helper defined in Direct3D9.cpp
+extern void CxbxD3D11SetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
+#endif
+
 #define MAX_STREAM_NOT_USED_TIME (2 * CLOCKS_PER_SEC) // TODO: Trim the not used time
 
 CxbxVertexBufferConverter VertexBufferConverter = {};
@@ -369,6 +374,14 @@ void CxbxVertexBufferConverter::ConvertStream
             CxbxrAbort("Couldn't allocate the new stream zero buffer");
         }
     } else {
+#ifdef CXBX_USE_D3D11
+        D3D11_BUFFER_DESC bufDesc = {};
+        bufDesc.ByteWidth = dwHostVertexDataSize;
+        bufDesc.Usage = D3D11_USAGE_DYNAMIC;
+        bufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        HRESULT hRet = g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, &pNewHostVertexBuffer);
+#else
         HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
             dwHostVertexDataSize,
             D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
@@ -377,6 +390,7 @@ void CxbxVertexBufferConverter::ConvertStream
             &pNewHostVertexBuffer, // TODO : pNewHostVertexBuffer.GetAddressOf() ?
             nullptr
         );
+#endif
 
         if (FAILED(hRet)) {
             CxbxrAbort("Failed to create vertex buffer");
@@ -385,9 +399,17 @@ void CxbxVertexBufferConverter::ConvertStream
 
     // If we need to lock a host vertex buffer, do so now
     if (pHostVertexData == nullptr && pNewHostVertexBuffer != nullptr) {
+#ifdef CXBX_USE_D3D11
+        D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+        if (FAILED(g_pD3DDeviceContext->Map(pNewHostVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
+            CxbxrAbort("Couldn't map D3D11 vertex buffer");
+        }
+        pHostVertexData = (uint8_t*)mappedResource.pData;
+#else
         if (FAILED(pNewHostVertexBuffer->Lock(0, 0, (D3DLockData **)&pHostVertexData, D3DLOCK_DISCARD))) {
             CxbxrAbort("Couldn't lock vertex buffer");
         }
+#endif
     }
 	
 	if (bNeedVertexPatching) {
@@ -653,7 +675,11 @@ void CxbxVertexBufferConverter::ConvertStream
         patchedStream.bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;
     } else {
         // assert(pNewHostVertexBuffer != nullptr);
+#ifdef CXBX_USE_D3D11
+        g_pD3DDeviceContext->Unmap(pNewHostVertexBuffer, 0);
+#else
         pNewHostVertexBuffer->Unlock();
+#endif
         patchedStream.pCachedHostVertexBuffer = pNewHostVertexBuffer;
     }
 
@@ -742,7 +768,11 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	// This allows us to implement Xbox functionality where SetVertexData4f can be used to specify attributes
 	// not present in the vertex declaration.
 	// We use range 193 and up to store these values, as Xbox shaders stop at c192!
+#ifdef CXBX_USE_D3D11
+	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
+#else
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
+#endif
 }
 
 void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
