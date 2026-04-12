@@ -455,6 +455,7 @@ FLAGS2STR_START(D3DDTCAPS)
 	FLAG2STR(D3DDTCAPS_FLOAT16_4)
 FLAGS2STR_END_and_LOGRENDER(D3DDTCAPS)
 
+#ifndef CXBX_USE_D3D11
 LOGRENDER(D3DCAPS)
 {
 	return os
@@ -529,6 +530,7 @@ LOGRENDER(D3DCAPS)
 		LOGRENDER_MEMBER(MaxPixelShader30InstructionSlots)
 		;
 }
+#endif // !CXBX_USE_D3D11
 
 // prevent name collisions
 namespace xbox {
