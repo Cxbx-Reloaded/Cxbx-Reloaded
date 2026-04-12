@@ -294,15 +294,15 @@ static void CxbxD3DClear(
 	clearColor[2] = ((Color >>  0) & 0xFF) / 255.0f; // B
 	clearColor[3] = ((Color >> 24) & 0xFF) / 255.0f; // A
 
-	if ((Flags & D3DCLEAR_TARGET) && g_pD3DBackBufferView != nullptr) {
+	if ((Flags & D3DCLEAR_TARGET) && g_pD3DCurrentRTV != nullptr) {
 		if (Count > 0 && pRects != nullptr) {
 			// Use ClearView for rect-based clears (requires D3D11.1 context)
 			ComPtr<ID3D11DeviceContext1> context1;
-			if (SUCCEEDED(g_pD3DDeviceContext->QueryInterface(__uuidof(ID3D11DeviceContext1), &context1))) {
-				context1->ClearView(g_pD3DBackBufferView, clearColor, (const D3D11_RECT*)pRects, Count);
+			if (SUCCEEDED(g_pD3DDeviceContext->QueryInterface(IID_PPV_ARGS(context1.GetAddressOf())))) {
+				context1->ClearView(g_pD3DCurrentRTV, clearColor, (const D3D11_RECT*)pRects, Count);
 			}
 		} else {
-			g_pD3DDeviceContext->ClearRenderTargetView(g_pD3DBackBufferView, clearColor);
+			g_pD3DDeviceContext->ClearRenderTargetView(g_pD3DCurrentRTV, clearColor);
 		}
 	}
 
