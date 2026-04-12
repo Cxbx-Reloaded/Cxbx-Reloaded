@@ -596,7 +596,17 @@ struct EmuD3D8CreateDeviceProxyData
     _9_11(xbox::uint_xt, IDXGIAdapter*)  Adapter;
     _9_11(D3DDEVTYPE, D3D_DRIVER_TYPE)   DeviceType;
 	// Set by EmuCreateDeviceProxy()
+#ifdef CXBX_USE_D3D11
+	// D3D11 only needs the common presentation fields (DXGI handles the rest)
+	struct {
+		UINT BackBufferWidth;
+		UINT BackBufferHeight;
+		UINT FullScreen_RefreshRateInHz;
+		BOOL Windowed;
+	} HostPresentationParameters;
+#else
 	D3DPRESENT_PARAMETERS            HostPresentationParameters;
+#endif
 }
 g_EmuCDPD;
 
@@ -2290,28 +2300,26 @@ static void SetupPresentationParameters
     const xbox::X_D3DPRESENT_PARAMETERS     *pXboxPresentationParameters
 )
 {
-    D3DPRESENT_PARAMETERS& params = g_EmuCDPD.HostPresentationParameters;
+    auto& params = g_EmuCDPD.HostPresentationParameters;
 
     params.Windowed = !g_XBVideo.bFullScreen;
 
+#ifndef CXBX_USE_D3D11
     // TODO: Investigate the best option for this
     params.SwapEffect = D3DSWAPEFFECT_COPY;
 
     // Any backbuffer format should do, since we render to a separate xbox backbuffer
     // We need to specify something to support fullscreen exclusive mode
     // Take the current displaymode format
-#ifdef CXBX_USE_D3D11
-    // In D3D11, g_pDirect3D is not available; use a standard display format
-    params.BackBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-#else
     D3DDISPLAYMODE D3DDisplayMode;
     g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
     params.BackBufferFormat = D3DDisplayMode.Format;
-#endif
 
     params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+#endif
     g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->FullScreen_PresentationInterval;
 
+#ifndef CXBX_USE_D3D11
     // We only want *one* backbuffer on the host, triple buffering, etc should be handled by our Present/Swap impl
     params.BackBufferCount = 1;
 
@@ -2321,6 +2329,7 @@ static void SetupPresentationParameters
 
     // We want a lockable backbuffer for swapping/blitting purposes
     params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+#endif
 
     // retrieve resolution from configuration
     char szBackBufferFormat[16] = {};
