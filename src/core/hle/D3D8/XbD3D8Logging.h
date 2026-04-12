@@ -40,6 +40,8 @@ extern const char* D3DErrorString(HRESULT hResult); // Implemented in Direct3D9.
 	} while (0)
 
 // Additional types, exclusively for logging (not really enums) :
+#ifndef CXBX_USE_D3D11
+// D3D9-specific enum forward declarations and logging headers
 enum D3DVS20CAPS : int;
 enum D3DPS20CAPS : int;
 enum _D3DCAPS : int;
@@ -63,6 +65,7 @@ enum D3DFVFCAPS : int;
 enum D3DVTXPCAPS : int;
 enum D3DDEVCAPS2 : int;
 enum D3DDTCAPS : int;
+#endif
 
 namespace xbox {
 
@@ -78,6 +81,8 @@ enum X_D3DRESOURCE_SIZE : int;
 // Headers for rendering host D3D enum types :
 //
 
+#ifndef CXBX_USE_D3D11
+// D3D9-specific logging headers
 FLAGS2STR_HEADER(D3DVS20CAPS) // Not really an enum
 FLAGS2STR_HEADER(D3DPS20CAPS) // Not really an enum
 ENUM2STR_HEADER(D3DDEVTYPE)
@@ -112,10 +117,8 @@ ENUM2STR_HEADER(D3DPOOL)
 
 LOGRENDER_HEADER(D3DVSHADERCAPS2_0)
 LOGRENDER_HEADER(D3DPSHADERCAPS2_0)
-
-#ifndef CXBX_USE_D3D11
 LOGRENDER_HEADER(D3DCAPS)
-#endif
+#endif // !CXBX_USE_D3D11
 
 namespace xbox {
 
