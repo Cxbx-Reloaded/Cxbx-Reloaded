@@ -138,6 +138,14 @@ static ID3D11Buffer*                g_pD3D11VSConstantBuffer = nullptr;
 // Local shadow of VS constants for dirty tracking
 static float                        g_D3D11VSConstants[CXBX_D3D11_VS_CB_COUNT][4] = {};
 static bool                         g_bD3D11VSConstantsDirty = true;
+// D3D11 pixel shader constant buffer - holds all Xbox PS constants
+// Size: PSH_XBOX_CONSTANT_MAX (30) float4 registers, rounded up to 32 (multiple of 16)
+static const UINT                   CXBX_D3D11_PS_CB_SLOT = 0;
+static const UINT                   CXBX_D3D11_PS_CB_COUNT = 32; // 32 float4 registers (must be multiple of 16)
+static ID3D11Buffer*                g_pD3D11PSConstantBuffer = nullptr;
+// Local shadow of PS constants for dirty tracking
+static float                        g_D3D11PSConstants[CXBX_D3D11_PS_CB_COUNT][4] = {};
+static bool                         g_bD3D11PSConstantsDirty = true;
 #endif
 
 // Static Variable(s)
@@ -442,6 +450,40 @@ void CxbxD3D11FlushVertexShaderConstants()
 	g_bD3D11VSConstantsDirty = false;
 }
 
+// Helper function to write pixel shader constants to the D3D11 constant buffer
+// startRegister: index of the first float4 register (0..CXBX_D3D11_PS_CB_COUNT-1)
+// pConstantData: array of float4 values
+// Vector4fCount: number of float4 registers to write
+void CxbxD3D11SetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
+{
+	if (!g_pD3D11PSConstantBuffer || !pConstantData || Vector4fCount == 0)
+		return;
+
+	UINT endRegister = startRegister + Vector4fCount;
+	if (endRegister > CXBX_D3D11_PS_CB_COUNT)
+		endRegister = CXBX_D3D11_PS_CB_COUNT;
+
+	// Update our local shadow
+	for (UINT i = startRegister; i < endRegister; i++) {
+		memcpy(g_D3D11PSConstants[i], pConstantData + (i - startRegister) * 4, sizeof(float) * 4);
+	}
+	g_bD3D11PSConstantsDirty = true;
+}
+
+// Upload the PS constant buffer to GPU if dirty
+void CxbxD3D11FlushPixelShaderConstants()
+{
+	if (!g_pD3D11PSConstantBuffer || !g_bD3D11PSConstantsDirty)
+		return;
+
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	if (SUCCEEDED(g_pD3DDeviceContext->Map(g_pD3D11PSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
+		memcpy(mapped.pData, g_D3D11PSConstants, sizeof(g_D3D11PSConstants));
+		g_pD3DDeviceContext->Unmap(g_pD3D11PSConstantBuffer, 0);
+	}
+	g_bD3D11PSConstantsDirty = false;
+}
+
 // Apply D3D11 state objects that have been marked dirty
 void CxbxD3D11ApplyDirtyStates()
 {
@@ -479,6 +521,7 @@ void CxbxD3D11ApplyDirtyStates()
 	}
 
 	CxbxD3D11FlushVertexShaderConstants();
+	CxbxD3D11FlushPixelShaderConstants();
 }
 #endif
 
@@ -2700,6 +2743,22 @@ static void CreateDefaultD3D9Device
 		DEBUG_D3DRESULT(cbHr, "g_pD3DDevice->CreateBuffer (VS constant buffer)");
 		if (SUCCEEDED(cbHr)) {
 			g_pD3DDeviceContext->VSSetConstantBuffers(CXBX_D3D11_VS_CB_SLOT, 1, &g_pD3D11VSConstantBuffer);
+		}
+	}
+
+	// Create the pixel shader constant buffer for D3D11
+	{
+		D3D11_BUFFER_DESC cbDesc = {};
+		cbDesc.ByteWidth = CXBX_D3D11_PS_CB_COUNT * sizeof(float) * 4;
+		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		cbDesc.MiscFlags = 0;
+		cbDesc.StructureByteStride = 0;
+		HRESULT cbHr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11PSConstantBuffer);
+		DEBUG_D3DRESULT(cbHr, "g_pD3DDevice->CreateBuffer (PS constant buffer)");
+		if (SUCCEEDED(cbHr)) {
+			g_pD3DDeviceContext->PSSetConstantBuffers(CXBX_D3D11_PS_CB_SLOT, 1, &g_pD3D11PSConstantBuffer);
 		}
 	}
 #else
