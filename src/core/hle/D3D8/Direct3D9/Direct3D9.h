@@ -48,6 +48,21 @@ void CxbxUpdateNativeD3DResources();
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
 void CxbxSetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
 
+// BeginScene/EndScene: no-ops in D3D11
+inline void CxbxBeginScene()
+{
+#ifndef CXBX_USE_D3D11
+	g_pD3DDevice->BeginScene();
+#endif
+}
+
+inline void CxbxEndScene()
+{
+#ifndef CXBX_USE_D3D11
+	g_pD3DDevice->EndScene();
+#endif
+}
+
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
 void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);
 
