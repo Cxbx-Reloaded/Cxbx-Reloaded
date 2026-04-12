@@ -48,6 +48,11 @@
 #include "XbD3D8Types.h" // For X_D3DVSDE_*
 #include <sstream>
 #include <unordered_map>
+
+#ifdef CXBX_USE_D3D11
+// Forward declaration for D3D11 VS constant helper defined in Direct3D9.cpp
+extern void CxbxD3D11SetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
+#endif
 #include <array>
 #include <bitset>
 #include <filesystem>
@@ -83,6 +88,12 @@ static xbox::X_D3DVertexShader g_Xbox_VertexShader_ForFVF = {};
 
 static uint32_t                g_X_VERTEXSHADER_FLAG_PROGRAM; // X_VERTEXSHADER_FLAG_PROGRAM flag varies per XDK, so it is set on runtime
 static uint32_t                g_X_VERTEXSHADER_FLAG_VALID_MASK; // For a test case
+
+#ifdef CXBX_USE_D3D11
+// Track the current active vertex shader key (used to retrieve bytecode for input layout creation)
+static ShaderKey g_D3D11ActiveVertexShaderKey = 0;
+static bool g_D3D11HasActiveShaderKey = false;
+#endif
 
 void CxbxVertexShaderSetFlags()
 {
@@ -690,6 +701,30 @@ protected:
 private:
 	#define D3DDECLUSAGE_UNSUPPORTED ((D3DDECLUSAGE)-1)
 
+#ifdef CXBX_USE_D3D11
+	// Map D3D9 usage enum to D3D11 semantic name string
+	static const char* D3DUsageToSemanticName(D3DDECLUSAGE usage)
+	{
+		switch (usage) {
+			case D3DDECLUSAGE_POSITION:     return "POSITION";
+			case D3DDECLUSAGE_BLENDWEIGHT:  return "BLENDWEIGHT";
+			case D3DDECLUSAGE_BLENDINDICES: return "BLENDINDICES";
+			case D3DDECLUSAGE_NORMAL:       return "NORMAL";
+			case D3DDECLUSAGE_PSIZE:        return "PSIZE";
+			case D3DDECLUSAGE_TEXCOORD:     return "TEXCOORD";
+			case D3DDECLUSAGE_TANGENT:      return "TANGENT";
+			case D3DDECLUSAGE_BINORMAL:     return "BINORMAL";
+			case D3DDECLUSAGE_TESSFACTOR:   return "TESSFACTOR";
+			case D3DDECLUSAGE_POSITIONT:    return "SV_POSITION";
+			case D3DDECLUSAGE_COLOR:        return "COLOR";
+			case D3DDECLUSAGE_FOG:          return "FOG";
+			case D3DDECLUSAGE_DEPTH:        return "DEPTH";
+			case D3DDECLUSAGE_SAMPLE:       return "SAMPLE";
+			default:                        return "TEXCOORD"; // fallback
+		}
+	}
+#endif
+
 	D3DDECLUSAGE Xb2PCRegisterType(DWORD VertexRegister, BYTE &UsageIndex)
 	{
 		UsageIndex = 0;
@@ -731,16 +766,26 @@ private:
 			case 1: // AUTONORMAL
 				// Note : .Stream, .Offset and .Type are copied from pAttributeSlot->TessellationSource in a post-processing step below,
 				// because these could all go through an Xbox to host conversion step, so must be copied over afterwards.
+#ifndef CXBX_USE_D3D11
 				pCurrentHostVertexElement->Method = D3DDECLMETHOD_CROSSUV; // for D3DVSD_TESSNORMAL
 				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // TODO : Is this correct?
+#else
+				pCurrentHostVertexElement->SemanticName = "NORMAL";
+				pCurrentHostVertexElement->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+#endif
 				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 0; // Note : 1 would be wrong
 				return true;
 			case 2: // AUTOTEXCOORD
 				// pCurrentHostVertexElement->Stream = 0; // The input stream is unused (but must be set to 0), which is the current default value
 				// pCurrentHostVertexElement->_9_11(Offset, AlignedByteOffset) = 0; // The input offset is unused (but must be set to 0), which is the current default value
 				pCurrentHostVertexElement->_9_11(Type, Format) = _9_11(D3DDECLTYPE_UNUSED, DXGI_FORMAT_UNKNOWN); // The input type for D3DDECLMETHOD_UV must be D3DDECLTYPE_UNUSED (the output type implied by D3DDECLMETHOD_UV is D3DDECLTYPE_FLOAT2)
+#ifndef CXBX_USE_D3D11
 				pCurrentHostVertexElement->Method = D3DDECLMETHOD_UV; // For X_D3DVSD_MASK_TESSUV
 				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // Note : In Fixed Function Vertex Pipeline, D3DDECLMETHOD_UV must specify usage D3DDECLUSAGE_TEXCOORD or D3DDECLUSAGE_BLENDWEIGHT. TODO : So, what to do?
+#else
+				pCurrentHostVertexElement->SemanticName = "NORMAL";
+				pCurrentHostVertexElement->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+#endif
 				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 1; // TODO ; Is this correct?
 				return true;
 			default:
@@ -984,22 +1029,40 @@ private:
 		pCurrentVertexShaderStreamElementInfo->HostByteSize = HostVertexElementByteSize;
 
 		// Convert to host vertex element
-		pCurrentHostVertexElement->Stream = pCurrentVertexShaderStreamInfo->XboxStreamIndex; // Use Xbox stream index on host
+		pCurrentHostVertexElement->_9_11(Stream, InputSlot) = pCurrentVertexShaderStreamInfo->XboxStreamIndex; // Use Xbox stream index on host
 		// FIXME Don't assume vertex elements are contiguous!
 		pCurrentHostVertexElement->_9_11(Offset, AlignedByteOffset) = pCurrentVertexShaderStreamInfo->HostVertexStride;
 		pCurrentHostVertexElement->_9_11(Type, Format) = pCurrentVertexShaderStreamElementInfo->HostDataType;
+#ifndef CXBX_USE_D3D11
 		pCurrentHostVertexElement->Method = D3DDECLMETHOD_DEFAULT;
+#endif
 		if (IsFixedFunction) {
+#ifndef CXBX_USE_D3D11
 			pCurrentHostVertexElement->Usage = Xb2PCRegisterType(VertexRegister, /*&*/pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex));
+#else
+			BYTE usageIndex = 0;
+			D3DDECLUSAGE usage = Xb2PCRegisterType(VertexRegister, usageIndex);
+			pCurrentHostVertexElement->SemanticName = D3DUsageToSemanticName(usage);
+			pCurrentHostVertexElement->SemanticIndex = usageIndex;
+			pCurrentHostVertexElement->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+			pCurrentHostVertexElement->InstanceDataStepRate = 0;
+#endif
 		}
 		else {
-			// D3DDECLUSAGE_TEXCOORD can be useds for any user-defined data
+			// D3DDECLUSAGE_TEXCOORD can be used for any user-defined data
 			// We need this because there is no reliable way to detect the real usage
 			// Xbox has no concept of 'usage types', it only requires a list of attribute register numbers.
 			// So we treat them all as 'user-defined' with an Index of the Vertex Register Index
 			// this prevents information loss in shaders due to non-matching dcl types!
+#ifndef CXBX_USE_D3D11
 			pCurrentHostVertexElement->Usage = D3DDECLUSAGE_TEXCOORD;
 			pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = (BYTE)VertexRegister;
+#else
+			pCurrentHostVertexElement->SemanticName = "TEXCOORD";
+			pCurrentHostVertexElement->SemanticIndex = (UINT)VertexRegister;
+			pCurrentHostVertexElement->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+			pCurrentHostVertexElement->InstanceDataStepRate = 0;
+#endif
 		}
 
 		pCurrentVertexShaderStreamInfo->HostVertexStride += HostVertexElementByteSize;
@@ -1056,19 +1119,34 @@ public:
 
 					EmuLog(LOG_LEVEL::DEBUG, "\tXbox Stream %d, Offset %d, Format %d, Slot %d",
 						slot.StreamIndex, slot.Offset, slot.Format, regIndex);
+#ifndef CXBX_USE_D3D11
 					EmuLog(LOG_LEVEL::DEBUG, "\tHost Stream %d, Offset %d, Format %d, Usage %d-%d",
 						pCurrentHostVertexElement->Stream,
 						pCurrentHostVertexElement->_9_11(Offset, AlignedByteOffset),
 						pCurrentHostVertexElement->Type,
 						pCurrentHostVertexElement->Usage,
 						pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex));
+#else
+					EmuLog(LOG_LEVEL::DEBUG, "\tHost InputSlot %d, Offset %d, Format %d, Semantic %s-%d",
+						pCurrentHostVertexElement->InputSlot,
+						pCurrentHostVertexElement->AlignedByteOffset,
+						pCurrentHostVertexElement->Format,
+						pCurrentHostVertexElement->SemanticName ? pCurrentHostVertexElement->SemanticName : "(null)",
+						pCurrentHostVertexElement->SemanticIndex);
+#endif
 				}
 			}
 		}
 
+#ifndef CXBX_USE_D3D11
 		*pCurrentHostVertexElement = D3DDECL_END();
+#else
+		// In D3D11 mode, terminate with a zero-initialized element (SemanticName will be nullptr)
+		memset(pCurrentHostVertexElement, 0, sizeof(D3DVERTEXELEMENT));
+#endif
 
 		// Post-process host vertex elements that have a D3DDECLMETHOD_CROSSUV method :
+#ifndef CXBX_USE_D3D11
 		for (int AttributeIndex = 0; AttributeIndex < X_VSH_MAX_ATTRIBUTES; AttributeIndex++) {
 			auto pHostElement = HostVertexElementPerRegister[AttributeIndex];
 			if (pHostElement == nullptr) continue;
@@ -1084,13 +1162,17 @@ public:
 				// TODO : Should we assert this?
 			}
 		}
+#endif
 
-		// Ensure valid ordering of the vertex declaration (http://doc.51windows.net/Directx9_SDK/graphics/programmingguide/gettingstarted/vertexdeclaration/vertexdeclaration.htm)
+		// Ensure valid ordering of the vertex declaration
 		// In particular "All vertex elements for a stream must be consecutive and sorted by offset"
 		// Test case: King Kong (due to register redefinition)
 		// Note : Xbox slots might use non-ordered stream indices, so we can't rely on the output ordering of our converted elements!
 		std::sort(/*First=*/HostVertexElements, /*Last=*/pCurrentHostVertexElement, /*Pred=*/[] (const auto& x, const auto& y)
+#ifndef CXBX_USE_D3D11
 			{ return std::tie(x.Stream, x.Method, x._9_11(Offset, AlignedByteOffset)) < std::tie(y.Stream, y.Method, y._9_11(Offset, AlignedByteOffset)); });
+#else
+			{ return std::tie(x.InputSlot, x.AlignedByteOffset) < std::tie(y.InputSlot, y.AlignedByteOffset); });
 
 		// Record which registers are in the vertex declaration
 		for (size_t i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
@@ -1124,6 +1206,12 @@ static bool FreeCxbxVertexDeclaration(CxbxVertexDeclaration *pCxbxVertexDeclarat
 			HRESULT hRet = pCxbxVertexDeclaration->pHostVertexDeclaration->Release();
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader(pHostVertexDeclaration)");
 		}
+#ifdef CXBX_USE_D3D11
+		if (pCxbxVertexDeclaration->pD3D11InputElements) {
+			free(pCxbxVertexDeclaration->pD3D11InputElements);
+			pCxbxVertexDeclaration->pD3D11InputElements = nullptr;
+		}
+#endif
 		free(pCxbxVertexDeclaration);
 		return true;
 	}
@@ -1179,8 +1267,16 @@ IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pD
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
 	IDirect3DVertexDeclaration* pHostVertexDeclaration = nullptr;
+#ifdef CXBX_USE_D3D11
+	// For D3D11, we cannot create an input layout without compiled shader bytecode.
+	// Return nullptr here; the actual ID3D11InputLayout will be created lazily
+	// in CxbxUpdateHostVertexDeclaration when both elements and a compiled shader are available.
+	// The elements are stored in CxbxVertexDeclaration::pD3D11InputElements.
+	(void)pDeclaration;
+#else
 	HRESULT hRet = g_pD3DDevice->CreateVertexDeclaration(pDeclaration, &pHostVertexDeclaration);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
+#endif
 
 	return pHostVertexDeclaration;
 }
@@ -1189,11 +1285,12 @@ HRESULT CxbxSetVertexShader(IDirect3DVertexShader* pHostVertexShader)
 {
 	HRESULT hRet;
 #ifdef CXBX_USE_D3D11
-	hRet = g_pD3DDevice->VSSetShader(
+	g_pD3DDeviceContext->VSSetShader(
 		pHostVertexShader,
 		nullptr, // ppClassInstances
 		0 // NumClassInstances
 	);
+	hRet = S_OK;
 #else
 	hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
 #endif
@@ -1265,6 +1362,11 @@ void CxbxUpdateHostVertexShader()
 		DWORD shaderSize;
 		auto VertexShaderKey = g_VertexShaderCache.CreateShader(pTokens, &shaderSize);
 		IDirect3DVertexShader* pHostVertexShader = g_VertexShaderCache.GetShader(VertexShaderKey);
+#ifdef CXBX_USE_D3D11
+		// Track the active shader key so CxbxUpdateHostVertexDeclaration can create the input layout
+		g_D3D11ActiveVertexShaderKey = VertexShaderKey;
+		g_D3D11HasActiveShaderKey = true;
+#endif
 		HRESULT hRet = CxbxSetVertexShader(pHostVertexShader);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
 	}
@@ -1358,7 +1460,7 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 	if (pCxbxVertexDeclaration == nullptr) {
 		pCxbxVertexDeclaration = (CxbxVertexDeclaration*)calloc(1, sizeof(CxbxVertexDeclaration));
 
-		// Convert Xbox vertex attributes towards host Direct3D 9 vertex element
+		// Convert Xbox vertex attributes towards host Direct3D vertex element
 		D3DVERTEXELEMENT* pRecompiledVertexElements = EmuRecompileVshDeclaration(
 			pXboxVertexAttributeFormat,
 			g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction,
@@ -1366,6 +1468,22 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 
 		// Create the vertex declaration
 		pCxbxVertexDeclaration->pHostVertexDeclaration = CxbxCreateHostVertexDeclaration(pRecompiledVertexElements);
+
+#ifdef CXBX_USE_D3D11
+		// For D3D11, store a copy of the vertex elements for lazy input layout creation
+		// Count the elements (terminated by an element with SemanticName==nullptr in D3D11)
+		UINT elementCount = 0;
+		if (pRecompiledVertexElements != nullptr) {
+			while (pRecompiledVertexElements[elementCount].SemanticName != nullptr) {
+				elementCount++;
+			}
+		}
+		if (elementCount > 0) {
+			pCxbxVertexDeclaration->pD3D11InputElements = (D3DVERTEXELEMENT*)malloc(elementCount * sizeof(D3DVERTEXELEMENT));
+			memcpy(pCxbxVertexDeclaration->pD3D11InputElements, pRecompiledVertexElements, elementCount * sizeof(D3DVERTEXELEMENT));
+		}
+		pCxbxVertexDeclaration->D3D11InputElementCount = elementCount;
+#endif
 
 		free(pRecompiledVertexElements);
 
@@ -1381,10 +1499,30 @@ void CxbxUpdateHostVertexDeclaration()
 {
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
 #ifdef CXBX_USE_D3D11
-	HRESULT hRet = g_pD3DDeviceContext->IASetInputLayout(pCxbxVertexDeclaration->pHostVertexDeclaration);
+	// For D3D11, create the input layout lazily using the current vertex shader's bytecode
+	if (pCxbxVertexDeclaration != nullptr && pCxbxVertexDeclaration->pHostVertexDeclaration == nullptr
+		&& pCxbxVertexDeclaration->pD3D11InputElements != nullptr && pCxbxVertexDeclaration->D3D11InputElementCount > 0
+		&& g_D3D11HasActiveShaderKey) {
+		ID3DBlob* pBytecode = g_VertexShaderCache.GetShaderBytecode(g_D3D11ActiveVertexShaderKey);
+		if (pBytecode != nullptr) {
+			HRESULT hRet = g_pD3DDevice->CreateInputLayout(
+				pCxbxVertexDeclaration->pD3D11InputElements,
+				pCxbxVertexDeclaration->D3D11InputElementCount,
+				pBytecode->GetBufferPointer(),
+				pBytecode->GetBufferSize(),
+				&pCxbxVertexDeclaration->pHostVertexDeclaration
+			);
+			if (FAILED(hRet)) {
+				EmuLog(LOG_LEVEL::WARNING, "CxbxUpdateHostVertexDeclaration: CreateInputLayout failed (0x%08X)", hRet);
+			}
+		}
+	}
+	g_pD3DDeviceContext->IASetInputLayout(pCxbxVertexDeclaration != nullptr ? pCxbxVertexDeclaration->pHostVertexDeclaration : nullptr);
+	HRESULT hRet = S_OK;
 #else
 	HRESULT hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration->pHostVertexDeclaration);
 #endif
+	(void)hRet;
 
 	// Titles can specify default values for registers via calls like SetVertexData4f
 	// HLSL shaders need to know whether to use vertex data or default vertex shader values
@@ -1393,7 +1531,11 @@ void CxbxUpdateHostVertexDeclaration()
 	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
 		vertexDefaultFlags[i] = pCxbxVertexDeclaration->vRegisterInDeclaration[i] ? 0.0f : 1.0f;
 	}
+#ifdef CXBX_USE_D3D11
+	CxbxD3D11SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
+#else
 	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_BASE, vertexDefaultFlags, CXBX_D3DVS_CONSTREG_VREGDEFAULTS_FLAG_SIZE);
+#endif
 }
 
 void CxbxImpl_SetScreenSpaceOffset(float x, float y)
