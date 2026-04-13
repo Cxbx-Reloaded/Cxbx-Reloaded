@@ -379,6 +379,76 @@ static void CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
 #endif
 }
 
+// Lock (Map) an index buffer for writing, returning a pointer to the data.
+// Returns nullptr on failure.
+static INDEX16* CxbxLockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	LOG_INIT;
+
+	INDEX16* pData = nullptr;
+#ifdef CXBX_USE_D3D11
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hRet = g_pD3DDeviceContext->Map(pHostIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	DEBUG_D3DRESULT(hRet, "CxbxLockIndexBuffer: Map");
+	if (SUCCEEDED(hRet))
+		pData = (INDEX16*)mapped.pData;
+#else
+	HRESULT hRet = pHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData**)&pData, D3DLOCK_DISCARD);
+	DEBUG_D3DRESULT(hRet, "CxbxLockIndexBuffer: Lock");
+#endif
+	return pData;
+}
+
+// Unlock (Unmap) a previously locked index buffer.
+static void CxbxUnlockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	LOG_INIT;
+
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->Unmap(pHostIndexBuffer, 0);
+#else
+	HRESULT hRet = pHostIndexBuffer->Unlock();
+	DEBUG_D3DRESULT(hRet, "CxbxUnlockIndexBuffer: Unlock");
+#endif
+}
+
+// Draw indexed primitives using the currently bound index/vertex buffers.
+static HRESULT CxbxDrawIndexedPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT IndexCount, INT BaseVertexIndex, UINT StartIndex, UINT MinIndex, UINT NumVertices, UINT PrimCount)
+{
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
+	g_pD3DDeviceContext->DrawIndexed(IndexCount, StartIndex, BaseVertexIndex);
+	hRet = S_OK;
+#else
+	hRet = g_pD3DDevice->DrawIndexedPrimitive(
+		EmuXB2PC_D3DPrimitiveType(XboxPrimitiveType),
+		BaseVertexIndex,
+		MinIndex,
+		NumVertices,
+		StartIndex,
+		PrimCount);
+#endif
+	return hRet;
+}
+
+// Draw non-indexed primitives using the currently bound vertex buffers.
+static HRESULT CxbxDrawPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount, UINT StartVertex, UINT PrimCount)
+{
+	HRESULT hRet;
+#ifdef CXBX_USE_D3D11
+	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
+	g_pD3DDeviceContext->Draw(VertexCount, StartVertex);
+	hRet = S_OK;
+#else
+	hRet = g_pD3DDevice->DrawPrimitive(
+		EmuXB2PC_D3DPrimitiveType(XboxPrimitiveType),
+		StartVertex,
+		PrimCount);
+#endif
+	return hRet;
+}
+
 static void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget)
 {
 #ifdef CXBX_USE_D3D11
@@ -3184,16 +3254,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 		CacheEntry.Hash = uiHash;
 
 		// Update the host index buffer
-		INDEX16* pHostIndexBufferData = nullptr;
-#ifdef CXBX_USE_D3D11
-		D3D11_MAPPED_SUBRESOURCE mapped = {};
-		HRESULT hRet = g_pD3DDeviceContext->Map(CacheEntry.pHostIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDeviceContext->Map (index buffer)");
-		pHostIndexBufferData = (INDEX16*)mapped.pData;
-#else
-		HRESULT hRet = CacheEntry.pHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
-		DEBUG_D3DRESULT(hRet, "CacheEntry.pHostIndexBuffer->Lock");
-#endif
+		INDEX16* pHostIndexBufferData = CxbxLockIndexBuffer(CacheEntry.pHostIndexBuffer);
 		if (pHostIndexBufferData == nullptr) {
 			CxbxrAbort("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
@@ -3210,11 +3271,7 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 			memcpy(pHostIndexBufferData, pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
 		}
 
-#ifdef CXBX_USE_D3D11
-		g_pD3DDeviceContext->Unmap(CacheEntry.pHostIndexBuffer, 0);
-#else
-		CacheEntry.pHostIndexBuffer->Unlock();
-#endif
+		CxbxUnlockIndexBuffer(CacheEntry.pHostIndexBuffer);
 	}
 
 	// Activate the new native index buffer :
@@ -8345,26 +8402,13 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
 			CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
 
 		// Put quadlist-to-triangle-list index mappings into this buffer :
-		INDEX16* pHostIndexBufferData = nullptr;
-#ifdef CXBX_USE_D3D11
-		D3D11_MAPPED_SUBRESOURCE mapped = {};
-		HRESULT hRet = g_pD3DDeviceContext->Map(g_pQuadToTriangleHostIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-		DEBUG_D3DRESULT(hRet, "g_pQuadToTriangleHostIndexBuffer->Map");
-		pHostIndexBufferData = (INDEX16*)mapped.pData;
-#else
-		HRESULT hRet = g_pQuadToTriangleHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
-		DEBUG_D3DRESULT(hRet, "g_pQuadToTriangleHostIndexBuffer->Lock");
-#endif
+		INDEX16* pHostIndexBufferData = CxbxLockIndexBuffer(g_pQuadToTriangleHostIndexBuffer);
 		if (pHostIndexBufferData == nullptr)
 			CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
 
 		memcpy(pHostIndexBufferData, CxbxAssureQuadListIndexData(NrOfQuadIndices), NrOfTriangleIndices * sizeof(INDEX16));
 
-#ifdef CXBX_USE_D3D11
-		g_pD3DDeviceContext->Unmap(g_pQuadToTriangleHostIndexBuffer, 0);
-#else
-		g_pQuadToTriangleHostIndexBuffer->Unlock();
-#endif
+		CxbxUnlockIndexBuffer(g_pQuadToTriangleHostIndexBuffer);
 	}
 
 	// Activate the new native index buffer :
@@ -8385,48 +8429,25 @@ void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex)
 			CxbxrAbort("Unable to create g_pClosingLineLoopHostIndexBuffer for D3DPT_LINELOOP emulation");
 	}
 
-	INDEX16 *pCxbxClosingLineLoopIndexBufferData = nullptr;
-#ifdef CXBX_USE_D3D11
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	hRet = g_pD3DDeviceContext->Map(g_pClosingLineLoopHostIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-	DEBUG_D3DRESULT(hRet, "g_pClosingLineLoopHostIndexBuffer->Map");
-	pCxbxClosingLineLoopIndexBufferData = (INDEX16*)mapped.pData;
-#else
-	hRet = g_pClosingLineLoopHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pCxbxClosingLineLoopIndexBufferData, D3DLOCK_DISCARD);
-	DEBUG_D3DRESULT(hRet, "g_pClosingLineLoopHostIndexBuffer->Lock");
-#endif
+	INDEX16 *pCxbxClosingLineLoopIndexBufferData = CxbxLockIndexBuffer(g_pClosingLineLoopHostIndexBuffer);
 
 	// Set the indices for the two VERTICES_PER_LINE :
 	pCxbxClosingLineLoopIndexBufferData[0] = LowIndex;
 	pCxbxClosingLineLoopIndexBufferData[1] = HighIndex;
 
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->Unmap(g_pClosingLineLoopHostIndexBuffer, 0);
-#else
-	hRet = g_pClosingLineLoopHostIndexBuffer->Unlock();
-	DEBUG_D3DRESULT(hRet, "g_pClosingLineLoopHostIndexBuffer->Unlock");
-#endif
+	CxbxUnlockIndexBuffer(g_pClosingLineLoopHostIndexBuffer);
 
 	CxbxSetIndices(g_pClosingLineLoopHostIndexBuffer);
 
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-	g_pD3DDeviceContext->DrawIndexed(
+	hRet = CxbxDrawIndexedPrimitive(
+		/*XboxPrimitiveType=*/(xbox::X_D3DPRIMITIVETYPE)xbox::X_D3DPT_LINELIST,
 		/*IndexCount=*/VERTICES_PER_LINE,
-		/*StartIndexLocation=*/0,
-		/*BaseVertexLocation=*/0
-	);
-	hRet = S_OK;
-#else
-	hRet = g_pD3DDevice->DrawIndexedPrimitive(
-		/*PrimitiveType=*/D3DPT_LINELIST,
 		/*BaseVertexIndex=*/0, // Note : Callers must apply BaseVertexIndex to the LowIndex and HighIndex argument values
-		/*MinVertexIndex=*/LowIndex,
+		/*StartIndex=*/0,
+		/*MinIndex=*/LowIndex,
 		/*NumVertices=*/VERTICES_PER_LINE,
-		/*startIndex=*/0,
-		/*primCount=*/1
+		/*PrimCount=*/1
 	);
-#endif
 	DEBUG_D3DRESULT(hRet, "DrawIndexedPrimitive(CxbxDrawIndexedClosingLine)");
 
 	g_dwPrimPerFrame++;
@@ -8536,24 +8557,14 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 
 	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
 	// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
-	HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType));
-	g_pD3DDeviceContext->DrawIndexed(
+	HRESULT hRet = CxbxDrawIndexedPrimitive(
+		DrawContext.XboxPrimitiveType,
 		/*IndexCount=*/bConvertQuadListToTriangleList ? primCount * 3 : DrawContext.dwVertexCount,
-		/*StartIndexLocation=*/0,
-		/*BaseVertexLocation=*/-(INT)CacheEntry.LowIndex // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
-	);
-	hRet = S_OK;
-#else
-	hRet = g_pD3DDevice->DrawIndexedPrimitive(
-		/* PrimitiveType = */EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
-		/* BaseVertexIndex, = */-CacheEntry.LowIndex, // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
-		/* MinVertexIndex = */CacheEntry.LowIndex,
-		/* NumVertices = */(CacheEntry.HighIndex - CacheEntry.LowIndex) + 1,
-		/* startIndex = DrawContext.dwStartVertex = */0,
+		/*BaseVertexIndex=*/-(INT)CacheEntry.LowIndex, // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
+		/*StartIndex=*/0,
+		/*MinIndex=*/CacheEntry.LowIndex,
+		/*NumVertices=*/(CacheEntry.HighIndex - CacheEntry.LowIndex) + 1,
 		primCount);
-#endif
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive");
 
 	g_dwPrimPerFrame += primCount;
@@ -9469,37 +9480,27 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
 			// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
 			// Emulate drawing quads by drawing each quad with two indexed triangles :
-#ifdef CXBX_USE_D3D11
-			g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			g_pD3DDeviceContext->DrawIndexed(primCount * 3, 0, 0);
-			HRESULT hRet = S_OK;
-#else
-			HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitive(
-				/*PrimitiveType=*/D3DPT_TRIANGLELIST,
+			HRESULT hRet = CxbxDrawIndexedPrimitive(
+				/*XboxPrimitiveType=*/(xbox::X_D3DPRIMITIVETYPE)xbox::X_D3DPT_TRIANGLELIST,
+				/*IndexCount=*/primCount * 3,
 				/*BaseVertexIndex=*/0, // Base vertex index has been accounted for in the stream conversion
-				/*MinVertexIndex=*/0,
+				/*StartIndex=*/0,
+				/*MinIndex=*/0,
 				NumVertices,
-				/*startIndex=*/0,
 				primCount
 			);
-#endif
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(X_D3DPT_QUADLIST)");
 
 			g_dwPrimPerFrame += primCount;
 		}
 		else {
 			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
-#ifdef CXBX_USE_D3D11
-			g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType));
-			g_pD3DDeviceContext->Draw(DrawContext.dwVertexCount, 0);
-			HRESULT hRet = S_OK;
-#else
-			HRESULT hRet = g_pD3DDevice->DrawPrimitive(
-				EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
+			HRESULT hRet = CxbxDrawPrimitive(
+				DrawContext.XboxPrimitiveType,
+				DrawContext.dwVertexCount,
 				/*StartVertex=*/0, // Start vertex has been accounted for in the stream conversion
 				DrawContext.dwHostPrimitiveCount
 			);
-#endif
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitive");
 
 			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
