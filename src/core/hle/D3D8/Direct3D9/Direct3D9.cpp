@@ -6603,8 +6603,8 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host surface level - falling through to regular surface creation");
-		}
 #endif // !CXBX_USE_D3D11
+		}
 		// fall through
 	}
 	case xbox::X_D3DRTYPE_VOLUME: {
