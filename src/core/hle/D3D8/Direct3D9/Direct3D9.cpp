@@ -1781,8 +1781,21 @@ void EmuD3DInit()
 	// Initialise CreateDevice Proxy Data struct
 	{
 #ifdef CXBX_USE_D3D11
-		g_EmuCDPD.Adapter = nullptr; // Specify nullptr to use the default adapter. TODO : Use g_XBVideo.adapter
+		g_EmuCDPD.Adapter = nullptr; // Will be set below if user selected a non-default adapter
 		g_EmuCDPD.DeviceType = (g_XBVideo.direct3DDevice == 0) ? D3D_DRIVER_TYPE_HARDWARE : D3D_DRIVER_TYPE_REFERENCE;
+		// Enumerate DXGI adapters to select the one matching g_XBVideo.adapter index
+		if (g_XBVideo.adapter != 0) {
+			IDXGIFactory1 *pFactory = nullptr;
+			if (SUCCEEDED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&pFactory)))) {
+				IDXGIAdapter *pAdapter = nullptr;
+				if (SUCCEEDED(pFactory->EnumAdapters(g_XBVideo.adapter, &pAdapter))) {
+					g_EmuCDPD.Adapter = pAdapter; // Takes ownership; released when device is destroyed
+					// When specifying an adapter, driver type must be D3D_DRIVER_TYPE_UNKNOWN
+					g_EmuCDPD.DeviceType = D3D_DRIVER_TYPE_UNKNOWN;
+				}
+				pFactory->Release();
+			}
+		}
 #else
 		g_EmuCDPD.Adapter = g_XBVideo.adapter;
 		g_EmuCDPD.DeviceType = (g_XBVideo.direct3DDevice == 0) ? D3DDEVTYPE_HAL : D3DDEVTYPE_REF;
