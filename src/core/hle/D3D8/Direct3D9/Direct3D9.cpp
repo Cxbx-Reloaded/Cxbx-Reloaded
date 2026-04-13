@@ -2390,16 +2390,16 @@ static void DetermineSupportedD3DFormats
                 UINT FormatSupport = 0;
 				g_pD3DDevice->CheckFormatSupport(PCFormat, &FormatSupport);
 
-                g_bSupportsFormatSurface[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURE2D;
-                g_bSupportsFormatSurfaceRenderTarget[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_RENDER_TARGET;
-                g_bSupportsFormatSurfaceDepthStencil[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_DEPTH_STENCIL;
-                // TODO : How to make a distinction between surfaces above and textures below?
-                g_bSupportsFormatTexture[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURE2D;
-                g_bSupportsFormatTextureRenderTarget[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_RENDER_TARGET;
-                g_bSupportsFormatTextureDepthStencil[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_DEPTH_STENCIL;
+                g_bSupportsFormatSurface[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D;
+                g_bSupportsFormatSurfaceRenderTarget[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_RENDER_TARGET;
+                g_bSupportsFormatSurfaceDepthStencil[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_DEPTH_STENCIL;
+                // In D3D11, surfaces are textures, so the same format support applies
+                g_bSupportsFormatTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D;
+                g_bSupportsFormatTextureRenderTarget[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_RENDER_TARGET;
+                g_bSupportsFormatTextureDepthStencil[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_DEPTH_STENCIL;
 
-                g_bSupportsFormatVolumeTexture[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURE3D;
-                g_bSupportsFormatCubeTexture[X_Format] = FormatSupport & D3D10_FORMAT_SUPPORT_TEXTURECUBE;
+                g_bSupportsFormatVolumeTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE3D;
+                g_bSupportsFormatCubeTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURECUBE;
 #else
                 g_bSupportsFormatSurface[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
                         g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
