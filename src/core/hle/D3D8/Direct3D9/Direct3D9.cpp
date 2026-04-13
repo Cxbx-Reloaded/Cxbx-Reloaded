@@ -6415,8 +6415,22 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// the following call to GetHostBaseTexture would reject non-texture resources,
 			// which would seem to trigger a "CreateCubeTexture Failed!" regression.
 #ifdef CXBX_USE_D3D11
-			// TODO D3D11: Port child surface creation (need subresource index instead of GetSurfaceLevel/GetCubeMapSurface)
-			EmuLog(LOG_LEVEL::WARNING, "CreateHostResource : D3D11 child surface creation not yet implemented - falling through");
+			// In D3D11, child surfaces are the same texture as the parent — subresource
+			// indices (computed from face + mip level) are used when creating views.
+			// Get the parent host texture and map this child surface to it.
+			IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
+			if (pParentHostBaseTexture) {
+				// Determine face and level for logging
+				int CubeMapFace = 0;
+				UINT SurfaceLevel = 0;
+				GetSurfaceFaceAndLevelWithinTexture(pXboxSurface, pParentXboxTexture, SurfaceLevel, CubeMapFace);
+				// Map the child Xbox surface to the parent host texture resource
+				SetHostSurface(pXboxSurface, (IDirect3DSurface *)pParentHostBaseTexture, iTextureStage);
+				EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : D3D11 mapped child surface to parent texture (Face: %u, Level: %u, pResource: 0x%.08X)",
+					CubeMapFace, SurfaceLevel, pResource);
+				return;
+			}
+			EmuLog(LOG_LEVEL::WARNING, "CreateHostResource : D3D11 failed to get parent host texture - falling through");
 #else
 			IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
             ComPtr<IDirect3DSurface> pNewHostSurface;
@@ -6475,8 +6489,17 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		xbox::X_D3DVolumeTexture *pParentXboxVolumeTexture = (pXboxVolume) ? (xbox::X_D3DVolumeTexture *)pXboxVolume->Parent : xbox::zeroptr;
 		if (pParentXboxVolumeTexture) {
 #ifdef CXBX_USE_D3D11
-			// TODO D3D11: Port volume level retrieval (need subresource index approach)
-			EmuLog(LOG_LEVEL::WARNING, "CreateHostResource : D3D11 volume level creation not yet implemented - falling through");
+			// In D3D11, volumes are the same texture as the parent — subresource
+			// indices are used when creating views.
+			IDirect3DVolumeTexture *pParentHostVolumeTexture = GetHostVolumeTexture(pParentXboxVolumeTexture, iTextureStage);
+			if (pParentHostVolumeTexture) {
+				SetHostVolume(pXboxVolume, (IDirect3DVolume *)pParentHostVolumeTexture, iTextureStage);
+				UINT VolumeLevel = 0; // TODO : Derive actual level based on pXboxVolume->Data delta to pParentXboxVolumeTexture->Data
+				EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : D3D11 mapped child volume to parent texture (Level: %u, pResource: 0x%.08X)",
+					VolumeLevel, pResource);
+				return;
+			}
+			EmuLog(LOG_LEVEL::WARNING, "CreateHostResource : D3D11 failed to get parent host volume texture - falling through");
 #else
 			// For volumes with a parent volume texture, map these to a host volume texture first
 			IDirect3DVolumeTexture *pParentHostVolumeTexture = GetHostVolumeTexture(pParentXboxVolumeTexture, iTextureStage);
@@ -6707,14 +6730,7 @@ EMUFORMAT PCFormat;
 			// hRet = pNewHostVolumeTexture->GetVolumeLevel(level, pNewHostVolume.GetAddressOf());
 			// So, we need to do this differently - we need to step up to the containing VolumeTexture,
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
-#ifdef CXBX_USE_D3D11
-			// TODO : Port
-#else
-			pNewHostVolume = nullptr;
-#endif
-			// SetHostVolume(pResource, _9_11(pNewHostVolume, pNewHostResource), iTextureStage);
-			// EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-			//	ResourceTypeName, pResource, pNewHostVolume);
+			// TODO : Implement standalone volume creation for both D3D9 and D3D11
 			break;
 		}
 
