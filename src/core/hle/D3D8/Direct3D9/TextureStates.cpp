@@ -305,6 +305,13 @@ void XboxTextureStateConverter::Apply()
 #ifdef CXBX_USE_D3D11
 				// Per-stage sampler state descriptors and filter tracking
 				static D3D11_SAMPLER_DESC g_SamplerDescs[xbox::X_D3DTS_STAGECOUNT] = {};
+				static bool g_SamplerDescsInitialized = false;
+				if (!g_SamplerDescsInitialized) {
+					for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+						g_SamplerDescs[i].MaxLOD = D3D11_FLOAT32_MAX;
+					}
+					g_SamplerDescsInitialized = true;
+				}
 				static DWORD g_MinFilter[xbox::X_D3DTS_STAGECOUNT] = { D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT };
 				static DWORD g_MagFilter[xbox::X_D3DTS_STAGECOUNT] = { D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT };
 				static DWORD g_MipFilter[xbox::X_D3DTS_STAGECOUNT] = { D3DTEXF_NONE, D3DTEXF_NONE, D3DTEXF_NONE, D3DTEXF_NONE };
@@ -318,8 +325,8 @@ void XboxTextureStateConverter::Apply()
 				case xbox::X_D3DTSS_MAGFILTER: g_MagFilter[HostStage] = PcValue; break;
 				case xbox::X_D3DTSS_MINFILTER: g_MinFilter[HostStage] = PcValue; break;
 				case xbox::X_D3DTSS_MIPFILTER: g_MipFilter[HostStage] = PcValue; break;
-				case xbox::X_D3DTSS_MIPMAPLODBIAS: samplerDesc.MipLODBias = /*TODO:FLOAT*/(PcValue); break;
-				case xbox::X_D3DTSS_MAXMIPLEVEL: samplerDesc.MaxLOD = /*TODO:FLOAT*/(PcValue); break; // TODO : What about MinLOD?
+				case xbox::X_D3DTSS_MIPMAPLODBIAS: samplerDesc.MipLODBias = *(const float*)&PcValue; break;
+				case xbox::X_D3DTSS_MAXMIPLEVEL: samplerDesc.MinLOD = (float)PcValue; break; // D3D9's MAXMIPLEVEL is the min LOD index
 				case xbox::X_D3DTSS_MAXANISOTROPY: samplerDesc.MaxAnisotropy = PcValue; break; // Note : MaxAnisotropy type is UINT
 				case xbox::X_D3DTSS_BORDERCOLOR: {
 					D3DXCOLOR c(PcValue);
