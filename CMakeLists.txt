@@ -342,6 +342,7 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.cpp"
  "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/PatchDraw.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/PixelShader.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/RenderStates.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Shader.cpp"

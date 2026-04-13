@@ -65,6 +65,7 @@
 #include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp" // for utf8_to_utf16
 #include "VertexShaderCache.h"
+#include "PatchDraw.h"
 #include "Timer.h"
 
 #include <imgui.h>
@@ -10618,9 +10619,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
 	CxbxUpdateNativeD3DResources();
 
 #ifdef CXBX_USE_D3D11
-	// D3D11 does not support patch drawing - log and return unimplemented
-	LOG_TEST_CASE("D3DDevice_DrawRectPatch not supported in D3D11");
-	HRESULT hRet = E_NOTIMPL;
+	// D3D11 has no DrawRectPatch - use CPU tessellation
+	HRESULT hRet = CxbxDrawRectPatchD3D11(Handle, pNumSegs, pRectPatchInfo);
+	DEBUG_D3DRESULT(hRet, "CxbxDrawRectPatchD3D11");
 #else
 	HRESULT hRet = g_pD3DDevice->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawRectPatch");
@@ -10648,9 +10649,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
 	CxbxUpdateNativeD3DResources();
 
 #ifdef CXBX_USE_D3D11
-	// D3D11 does not support patch drawing - log and return unimplemented
-	LOG_TEST_CASE("D3DDevice_DrawTriPatch not supported in D3D11");
-	HRESULT hRet = E_NOTIMPL;
+	// D3D11 has no DrawTriPatch - use CPU tessellation
+	HRESULT hRet = CxbxDrawTriPatchD3D11(Handle, pNumSegs, pTriPatchInfo);
+	DEBUG_D3DRESULT(hRet, "CxbxDrawTriPatchD3D11");
 #else
 	HRESULT hRet = g_pD3DDevice->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawTriPatch");
