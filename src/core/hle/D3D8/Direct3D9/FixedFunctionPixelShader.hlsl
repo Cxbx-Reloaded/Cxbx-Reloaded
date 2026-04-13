@@ -44,22 +44,18 @@ float4 PerformColorKeyOp(const float ColorKeyOp, const float4 ColorKeyColor, flo
 	if (ColorKeyOp == 2) // = _RGBA
 		return 0;
 
-#ifdef ENABLE_FF_ALPHAKILL
 	if (ColorKeyOp == 3) // = _KILL
-		discard; // When compiled into FixedFunctionPixelShader.hlsl, compile errors arise
+		clip(-1); // Use clip(-1) instead of discard to avoid compile errors in fixed function shader
 
-#endif
 	// Undefined ColorKeyOp mode
 	return WarningColor;
 }
 
 void PerformAlphaKill(const float AlphaKill, float4 t)
 {
-#ifdef ENABLE_FF_ALPHAKILL
 	if (AlphaKill)
 		if (t.a == 0)
-			discard; // When compiled into FixedFunctionPixelShader.hlsl, compile errors arise
-#endif
+			clip(-1); // Use clip(-1) instead of discard to avoid compile errors in fixed function shader
 }
 #endif
 

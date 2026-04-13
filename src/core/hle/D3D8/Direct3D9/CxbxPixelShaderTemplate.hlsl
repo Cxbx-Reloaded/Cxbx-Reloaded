@@ -53,13 +53,17 @@ uniform const float4 FC1 : register(c17); // Note : Maps to PSH_XBOX_CONSTANT_FC
 
 // Texture color sign
 uniform const float4 COLORSIGN[4] : register(c19); // Note : PSH_XBOX_CONSTANT_COLORSIGN for 4 texture stages
+// Texture color key operation
+uniform const float4 COLORKEYOP[4] : register(c23); // Note : PSH_XBOX_CONSTANT_COLORKEYOP for 4 texture stages
+// Texture color key color
+uniform const float4 COLORKEYCOLOR[4] : register(c27); // Note : PSH_XBOX_CONSTANT_COLORKEYCOLOR for 4 texture stages
 // Bump environment mapping
-uniform const float4 BEM[4] : register(c23); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
-uniform const float4 LUM[4] : register(c27); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
+uniform const float4 BEM[4] : register(c31); // Note : PSH_XBOX_CONSTANT_BEM for 4 texture stages
+uniform const float4 LUM[4] : register(c35); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
 
-uniform const float  FRONTFACE_FACTOR : register(c31); // Note : PSH_XBOX_CONSTANT_LUM for 4 texture stages
-uniform const float4 FOGINFO : register(c32);
-uniform const float  FOGENABLE : register(c33);
+uniform const float  FRONTFACE_FACTOR : register(c39); // Note : PSH_XBOX_CONSTANT_FRONTFACE_FACTOR
+uniform const float4 FOGINFO : register(c40);
+uniform const float  FOGENABLE : register(c41);
 
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
 #define CM_GE(c) if(c >= 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_GE
@@ -312,7 +316,7 @@ float4 PostProcessTexel(const int ts, float4 t)
 {
 	// TODO : Figure out in which order the following operations should be performed :
 	t = PerformColorSign(COLORSIGN[ts], t);
-	// TODO : Enable once the data is available : t = PerformColorKeyOp(COLORKEYOP[ts], COLORKEYCOLOR[ts], t);
+	t = PerformColorKeyOp(COLORKEYOP[ts].x, COLORKEYCOLOR[ts], t);
 	PerformAlphaKill(alphakill[ts], t);
 
 	return t;

@@ -657,26 +657,26 @@ constexpr int PSH_XBOX_CONSTANT_FC1 = PSH_XBOX_CONSTANT_FC0 + 1; // = 17
 constexpr int PSH_XBOX_CONSTANT_FOG = PSH_XBOX_CONSTANT_FC1 + 1; // = 18
 // Texture color sign
 constexpr int PSH_XBOX_CONSTANT_COLORSIGN = PSH_XBOX_CONSTANT_FOG + 1; // = 19..22
+// Texture color key operation
+constexpr int PSH_XBOX_CONSTANT_COLORKEYOP = PSH_XBOX_CONSTANT_COLORSIGN + 4; // = 23..26
+// Texture color key color
+constexpr int PSH_XBOX_CONSTANT_COLORKEYCOLOR = PSH_XBOX_CONSTANT_COLORKEYOP + 4; // = 27..30
 // Bump Environment Material registers
-constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_COLORSIGN + 4; // = 23..26
+constexpr int PSH_XBOX_CONSTANT_BEM = PSH_XBOX_CONSTANT_COLORKEYCOLOR + 4; // = 31..34
 // Bump map Luminance registers
-constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 27..30
+constexpr int PSH_XBOX_CONSTANT_LUM = PSH_XBOX_CONSTANT_BEM + 4; // = 35..38
 // Which winding order to consider as the front face
-constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; // = 31
+constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; // = 39
 // Fog table information {Table mode, density, start and end}
-constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 32
+constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 40
 //Fog enable flag
-constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1; // = 33
+constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1; // = 41
 // This concludes the set of constants that need to be set on host :
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 34
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 42
 
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
-#ifdef ENABLE_FF_ALPHAKILL
-		"X_D3DTOP_DISABLE", // 0 (Was UNDEFINED, but that doesn't compile)
-#else
-		"UNDEFINED", // 0
-#endif
+		"X_D3DTOP_DISABLE", // 0 (initialized for disabled stages)
 		"X_D3DTOP_DISABLE", // 1
 		"X_D3DTOP_SELECTARG1", // 2
 		"X_D3DTOP_SELECTARG2", // 3
@@ -705,11 +705,7 @@ std::string_view GetD3DTOPString(int d3dtop) {
 		"X_D3DTOP_BUMPENVMAPLUMINANCE", // 26
 	};
 
-#ifdef ENABLE_FF_ALPHAKILL
 	if (d3dtop < 0 || d3dtop > 26) {
-#else
-	if (d3dtop < 1 || d3dtop > 26) {
-#endif
 		EmuLog(LOG_LEVEL::ERROR2, "Unmapped texture operation %d", d3dtop);
 		d3dtop = 0; // undefined
 	}
@@ -903,16 +899,8 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		stageSetup << '\n';
 
 		for (int i = 0; i < 4; i++) {
-#ifdef ENABLE_FF_ALPHAKILL
 			// Even when a stage is disabled, we still have to fully initialize it's values, to prevent
 			// "error X4000: variable 'stages' used without having been completely initialized"
-#else
-			// The stage is initialized to be disabled
-			// We don't have to output anything
-			if (states[i].COLOROP == X_D3DTOP_DISABLE)
-				continue;
-
-#endif
 			std::string target = "stages[" + std::to_string(i) + "].";
 
 			auto s = states[i];
@@ -1188,6 +1176,16 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // Texture color sign
   for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
     fColor[PSH_XBOX_CONSTANT_COLORSIGN + stage_nr] = CxbxCalcColorSign(stage_nr);
+  }
+
+  // Texture color key operation
+  for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
+    fColor[PSH_XBOX_CONSTANT_COLORKEYOP + stage_nr].r = (float)XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORKEYOP);
+  }
+
+  // Texture color key color
+  for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
+    fColor[PSH_XBOX_CONSTANT_COLORKEYCOLOR + stage_nr] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORKEYCOLOR);
   }
 
 #if 0 // New, doesn't work yet
