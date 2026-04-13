@@ -2822,7 +2822,7 @@ static void CreateDefaultD3D9Device
 
 	// Initialize default D3D11 rasterizer state desc
 	g_D3D11RasterizerDesc.FillMode = D3D11_FILL_SOLID;
-	g_D3D11RasterizerDesc.CullMode = D3D11_CULL_CCW;
+	g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK;
 	g_D3D11RasterizerDesc.FrontCounterClockwise = FALSE;
 	g_D3D11RasterizerDesc.DepthBias = 0;
 	g_D3D11RasterizerDesc.SlopeScaledDepthBias = 0.0f;

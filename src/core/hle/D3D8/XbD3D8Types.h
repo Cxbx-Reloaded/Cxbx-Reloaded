@@ -455,6 +455,48 @@ typedef struct _D3DCAPS9 {
 #define D3DCLEAR_ZBUFFER 0x00000002
 #define D3DCLEAR_STENCIL 0x00000004
 
+// Cull modes (host D3D9 intermediate values)
+typedef enum _D3DCULL {
+	D3DCULL_NONE = 1,
+	D3DCULL_CW   = 2,
+	D3DCULL_CCW  = 3,
+} D3DCULL;
+
+// Color write enable flags (host D3D9 intermediate values)
+#define D3DCOLORWRITEENABLE_RED   (1 << 0)
+#define D3DCOLORWRITEENABLE_GREEN (1 << 1)
+#define D3DCOLORWRITEENABLE_BLUE  (1 << 2)
+#define D3DCOLORWRITEENABLE_ALPHA (1 << 3)
+
+// Wrap coordinate flags (host D3D9 intermediate values)
+#define D3DWRAPCOORD_0 (1 << 0)
+#define D3DWRAPCOORD_1 (1 << 1)
+#define D3DWRAPCOORD_2 (1 << 2)
+#define D3DWRAPCOORD_3 (1 << 3)
+
+// Vertex blend flags (host D3D9 intermediate values)
+typedef enum _D3DVERTEXBLENDFLAGS {
+	D3DVBF_DISABLE  = 0,
+	D3DVBF_1WEIGHTS = 1,
+	D3DVBF_2WEIGHTS = 2,
+	D3DVBF_3WEIGHTS = 3,
+} D3DVERTEXBLENDFLAGS;
+
+// Material color source (host D3D9 intermediate values)
+typedef enum _D3DMATERIALCOLORSOURCE {
+	D3DMCS_MATERIAL = 0,
+	D3DMCS_COLOR1   = 1,
+	D3DMCS_COLOR2   = 2,
+} D3DMATERIALCOLORSOURCE;
+
+// Fog modes (host D3D9 intermediate values)
+typedef enum _D3DFOGMODE {
+	D3DFOG_NONE   = 0,
+	D3DFOG_EXP    = 1,
+	D3DFOG_EXP2   = 2,
+	D3DFOG_LINEAR = 3,
+} D3DFOGMODE;
+
 // Present interval flags
 #define D3DPRESENT_INTERVAL_DEFAULT   0x00000000
 #define D3DPRESENT_INTERVAL_ONE       0x00000001
@@ -497,6 +539,7 @@ struct D3DXVECTOR3 {
 	D3DXVECTOR3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 	operator float*() { return &x; }
 	operator const float*() const { return &x; }
+	D3DXVECTOR3 operator+(const D3DXVECTOR3& rhs) const { return D3DXVECTOR3(x + rhs.x, y + rhs.y, z + rhs.z); }
 };
 
 struct D3DXVECTOR4 {
@@ -506,6 +549,8 @@ struct D3DXVECTOR4 {
 	D3DXVECTOR4(const float* pf) : x(pf[0]), y(pf[1]), z(pf[2]), w(pf[3]) {}
 	operator float*() { return &x; }
 	operator const float*() const { return &x; }
+	operator D3DXVECTOR3() const { return D3DXVECTOR3(x, y, z); }
+	D3DXVECTOR4 operator+(const D3DXVECTOR4& rhs) const { return D3DXVECTOR4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w); }
 };
 
 struct D3DXCOLOR {
@@ -531,6 +576,7 @@ struct D3DXCOLOR {
 struct D3DXMATRIX : public D3DMATRIX {
 	D3DXMATRIX() { memset(this, 0, sizeof(D3DXMATRIX)); }
 	D3DXMATRIX(const D3DMATRIX& m) { memcpy(this, &m, sizeof(D3DMATRIX)); }
+	D3DXMATRIX(const XMMATRIX& m) { XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(this), m); }
 	operator float*() { return &_11; }
 	operator const float*() const { return &_11; }
 };
