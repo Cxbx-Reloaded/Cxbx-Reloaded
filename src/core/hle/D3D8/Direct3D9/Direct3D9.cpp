@@ -6412,6 +6412,10 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			// TODO : Investigate how it's possible (and how we could fix) the case when
 			// the following call to GetHostBaseTexture would reject non-texture resources,
 			// which would seem to trigger a "CreateCubeTexture Failed!" regression.
+#ifdef CXBX_USE_D3D11
+			// TODO D3D11: Port child surface creation (need subresource index instead of GetSurfaceLevel/GetCubeMapSurface)
+			EmuLog(LOG_LEVEL::WARNING, "CreateHostResource : D3D11 child surface creation not yet implemented - falling through");
+#else
 			IDirect3DBaseTexture *pParentHostBaseTexture = GetHostBaseTexture(pParentXboxTexture, D3DUsage, iTextureStage);
             ComPtr<IDirect3DSurface> pNewHostSurface;
 			switch (pParentHostBaseTexture->GetType()) {
@@ -6460,13 +6464,18 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host surface level - falling through to regular surface creation");
 		}
-		[[fallthrough]];
+#endif // !CXBX_USE_D3D11
+		// fall through
 	}
 	case xbox::X_D3DRTYPE_VOLUME: {
 		// Note : Use and check for null, since X_D3DRTYPE_SURFACE might fall through here (by design) 
 		xbox::X_D3DVolume *pXboxVolume = (XboxResourceType == xbox::X_D3DRTYPE_VOLUME) ? (xbox::X_D3DVolume *)pResource : xbox::zeroptr;
 		xbox::X_D3DVolumeTexture *pParentXboxVolumeTexture = (pXboxVolume) ? (xbox::X_D3DVolumeTexture *)pXboxVolume->Parent : xbox::zeroptr;
 		if (pParentXboxVolumeTexture) {
+#ifdef CXBX_USE_D3D11
+			// TODO D3D11: Port volume level retrieval (need subresource index approach)
+			EmuLog(LOG_LEVEL::WARNING, "CreateHostResource : D3D11 volume level creation not yet implemented - falling through");
+#else
 			// For volumes with a parent volume texture, map these to a host volume texture first
 			IDirect3DVolumeTexture *pParentHostVolumeTexture = GetHostVolumeTexture(pParentXboxVolumeTexture, iTextureStage);
 			UINT VolumeLevel = 0; // TODO : Derive actual level based on pXboxVolume->Data delta to pParentXboxVolumeTexture->Data
@@ -6481,6 +6490,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 
 			EmuLog(LOG_LEVEL::WARNING, "Failed getting host volume level - falling through to regular volume creation");
+#endif // !CXBX_USE_D3D11
 		}
 		[[fallthrough]];
 	}
