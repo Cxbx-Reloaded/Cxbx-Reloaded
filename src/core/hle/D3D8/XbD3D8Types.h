@@ -410,6 +410,119 @@ typedef struct _D3DCAPS9 {
 	// Only the fields needed - add more as required
 } D3DCAPS;
 
+// Texture filter types
+#define D3DTEXF_NONE           0
+#define D3DTEXF_POINT          1
+#define D3DTEXF_LINEAR         2
+#define D3DTEXF_ANISOTROPIC    3
+#define D3DTEXF_PYRAMIDALQUAD  6
+#define D3DTEXF_GAUSSIANQUAD   7
+
+// Texture address modes
+#define D3DTADDRESS_WRAP       1
+#define D3DTADDRESS_MIRROR     2
+#define D3DTADDRESS_CLAMP      3
+#define D3DTADDRESS_BORDER     4
+#define D3DTADDRESS_MIRRORONCE 5
+
+// Texture coordinate index flags
+#define D3DTSS_TCI_SPHEREMAP   0x00040000
+
+// Device type constants (for DlgVideoConfig)
+#define D3DDEVTYPE_HAL  1
+#define D3DDEVTYPE_REF  2
+
+// D3DX math compatibility types and functions
+// These reproduce enough of the <d3dx9math.h> API to compile existing code.
+// Implemented using DirectXMath internally.
+
+struct D3DXVECTOR3 {
+	float x, y, z;
+	D3DXVECTOR3() : x(0), y(0), z(0) {}
+	D3DXVECTOR3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+	operator float*() { return &x; }
+	operator const float*() const { return &x; }
+};
+
+struct D3DXVECTOR4 {
+	float x, y, z, w;
+	D3DXVECTOR4() : x(0), y(0), z(0), w(0) {}
+	D3DXVECTOR4(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {}
+	D3DXVECTOR4(const float* pf) : x(pf[0]), y(pf[1]), z(pf[2]), w(pf[3]) {}
+	operator float*() { return &x; }
+	operator const float*() const { return &x; }
+};
+
+struct D3DXCOLOR {
+	float r, g, b, a;
+	D3DXCOLOR() : r(0), g(0), b(0), a(0) {}
+	D3DXCOLOR(DWORD argb) {
+		a = ((argb >> 24) & 0xFF) / 255.0f;
+		r = ((argb >> 16) & 0xFF) / 255.0f;
+		g = ((argb >> 8) & 0xFF) / 255.0f;
+		b = (argb & 0xFF) / 255.0f;
+	}
+	D3DXCOLOR(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a) {}
+	operator DWORD() const {
+		return (DWORD(a * 255.0f + 0.5f) << 24) | (DWORD(r * 255.0f + 0.5f) << 16) |
+		       (DWORD(g * 255.0f + 0.5f) << 8) | DWORD(b * 255.0f + 0.5f);
+	}
+	operator float*() { return &r; }
+	operator const float*() const { return &r; }
+	operator D3DXVECTOR3() const { return D3DXVECTOR3(r, g, b); }
+	operator D3DXVECTOR4() const { return D3DXVECTOR4(r, g, b, a); }
+};
+
+struct D3DXMATRIX : public D3DMATRIX {
+	D3DXMATRIX() { memset(this, 0, sizeof(D3DXMATRIX)); }
+	D3DXMATRIX(const D3DMATRIX& m) { memcpy(this, &m, sizeof(D3DMATRIX)); }
+	operator float*() { return &_11; }
+	operator const float*() const { return &_11; }
+};
+
+inline D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut) {
+	memset(pOut, 0, sizeof(D3DXMATRIX));
+	pOut->_11 = pOut->_22 = pOut->_33 = pOut->_44 = 1.0f;
+	return pOut;
+}
+
+inline D3DXMATRIX* D3DXMatrixMultiply(D3DXMATRIX* pOut, const D3DXMATRIX* pM1, const D3DXMATRIX* pM2) {
+	XMMATRIX m1 = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(pM1));
+	XMMATRIX m2 = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(pM2));
+	XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(pOut), XMMatrixMultiply(m1, m2));
+	return pOut;
+}
+
+inline D3DXMATRIX* D3DXMatrixInverse(D3DXMATRIX* pOut, float* pDeterminant, const D3DXMATRIX* pM) {
+	XMMATRIX m = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(pM));
+	XMVECTOR det;
+	XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(pOut), XMMatrixInverse(&det, m));
+	if (pDeterminant) *pDeterminant = XMVectorGetX(det);
+	return pOut;
+}
+
+inline D3DXMATRIX* D3DXMatrixTranspose(D3DXMATRIX* pOut, const D3DXMATRIX* pM) {
+	XMMATRIX m = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(pM));
+	XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(pOut), XMMatrixTranspose(m));
+	return pOut;
+}
+
+inline D3DXVECTOR4* D3DXVec3Transform(D3DXVECTOR4* pOut, const D3DXVECTOR3* pV, const D3DXMATRIX* pM) {
+	XMVECTOR v = XMVectorSet(pV->x, pV->y, pV->z, 1.0f);
+	XMMATRIX m = XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(pM));
+	XMStoreFloat4(reinterpret_cast<XMFLOAT4*>(pOut), XMVector3Transform(v, m));
+	return pOut;
+}
+
+inline D3DXVECTOR3* D3DXVec3Normalize(D3DXVECTOR3* pOut, const D3DXVECTOR3* pV) {
+	XMVECTOR v = XMVectorSet(pV->x, pV->y, pV->z, 0.0f);
+	XMVECTOR n = XMVector3Normalize(v);
+	pOut->x = XMVectorGetX(n);
+	pOut->y = XMVectorGetY(n);
+	pOut->z = XMVectorGetZ(n);
+	return pOut;
+}
+
 #else
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900

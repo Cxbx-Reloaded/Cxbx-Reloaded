@@ -321,7 +321,14 @@ void XboxTextureStateConverter::Apply()
 				case xbox::X_D3DTSS_MIPMAPLODBIAS: samplerDesc.MipLODBias = /*TODO:FLOAT*/(PcValue); break;
 				case xbox::X_D3DTSS_MAXMIPLEVEL: samplerDesc.MaxLOD = /*TODO:FLOAT*/(PcValue); break; // TODO : What about MinLOD?
 				case xbox::X_D3DTSS_MAXANISOTROPY: samplerDesc.MaxAnisotropy = PcValue; break; // Note : MaxAnisotropy type is UINT
-				case xbox::X_D3DTSS_BORDERCOLOR: samplerDesc.BorderColor = D3DXCOLOR(PcValue); break; // Note : BorderColor type is float[4]
+				case xbox::X_D3DTSS_BORDERCOLOR: {
+					D3DXCOLOR c(PcValue);
+					samplerDesc.BorderColor[0] = c.r;
+					samplerDesc.BorderColor[1] = c.g;
+					samplerDesc.BorderColor[2] = c.b;
+					samplerDesc.BorderColor[3] = c.a;
+					break;
+				}
 				}
 
 				// Combine min/mag/mip filter types into a single D3D11_FILTER
