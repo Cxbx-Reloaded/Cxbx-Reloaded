@@ -798,6 +798,7 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	case D3DERR_ZBUFFER_NOTPRESENT: return "The requested operation could not be completed because the render target surface does not have an attached depth buffer. ";
 	case DD_OK: return "The request completed successfully.";
 #endif
+#ifndef CXBX_USE_D3D11 // DDERR_* constants require ddraw.h (not available in D3D11 mode)
 	case DDERR_ALREADYINITIALIZED: return "The object has already been initialized.";
 	case DDERR_BLTFASTCANTCLIP: return "A DirectDrawClipper object is attached to a source surface that has passed into a call to the IDirectDrawSurface7::BltFast method.";
 	case DDERR_CANNOTATTACHSURFACE: return "A surface cannot be attached to another requested surface.";
@@ -915,6 +916,7 @@ const char *CxbxGetErrorDescription(HRESULT hResult)
 	case DDERR_WASSTILLDRAWING: return "The previous blit operation that is transferring information to or from this surface is incomplete.";
 	case DDERR_WRONGMODE: return "This surface cannot be restored because it was created in a different mode.";
 	case DDERR_XALIGN: return "The provided rectangle was not horizontally aligned on a required boundary.";
+#endif // !CXBX_USE_D3D11
 	}
 
 	return nullptr;
