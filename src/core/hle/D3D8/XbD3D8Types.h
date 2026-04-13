@@ -477,7 +477,7 @@ inline const char* DXGetErrorDescription(HRESULT hr) { (void)hr; return ""; }
 #define IDirect3DVertexBuffer           _9_11(IDirect3DVertexBuffer9,      ID3D11Buffer)
 #define IDirect3DIndexBuffer            _9_11(IDirect3DIndexBuffer9,       ID3D11Buffer) // or ID3D11ShaderResourceView ?
 #define IDirect3DSurface                _9_11(IDirect3DSurface9,           ID3D11Texture2D)
-#define IDirect3DVolume                 IDirect3DVolume9
+#define IDirect3DVolume                 _9_11(IDirect3DVolume9,            ID3D11Texture3D)
 #define IDirect3DQuery                  _9_11(IDirect3DQuery9,             ID3D11Query)
 
 
