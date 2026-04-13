@@ -38,8 +38,12 @@ using namespace DirectX;
 typedef FXMVECTOR D3DCOLOR;
 typedef D3D11_RECT D3DRECT;
 
-// D3D9 compatibility types needed for trampoline function signatures
-// (Xbox ABI uses these binary-compatible types for patch functions)
+// D3D9 compatibility types and constants
+// These reproduce D3D9 enum values so code that converts Xbox values
+// to host D3D9 intermediate values can compile unchanged. In D3D11
+// mode, these intermediate values get re-mapped to D3D11 state objects
+// by RenderStates.cpp and TextureStates.cpp.
+
 typedef struct _D3DMATRIX {
 	union {
 		struct {
@@ -56,6 +60,9 @@ typedef DWORD D3DBACKBUFFER_TYPE;
 #define D3DBACKBUFFER_TYPE_MONO 0
 
 typedef DWORD D3DDEVTYPE;
+typedef DWORD D3DFORMAT; // Unused in D3D11 mode (EMUFORMAT maps to DXGI_FORMAT)
+typedef DWORD D3DMULTISAMPLE_TYPE;
+typedef DWORD D3DSWAPEFFECT;
 
 typedef enum _D3DCUBEMAP_FACES {
 	D3DCUBEMAP_FACE_POSITIVE_X = 0,
@@ -66,7 +73,342 @@ typedef enum _D3DCUBEMAP_FACES {
 	D3DCUBEMAP_FACE_NEGATIVE_Z = 5,
 } D3DCUBEMAP_FACES;
 
+// Texture transform flags
 #define D3DTTFF_PROJECTED 256
+
+// Blend operations
+typedef enum _D3DBLENDOP {
+	D3DBLENDOP_ADD         = 1,
+	D3DBLENDOP_SUBTRACT    = 2,
+	D3DBLENDOP_REVSUBTRACT = 3,
+	D3DBLENDOP_MIN         = 4,
+	D3DBLENDOP_MAX         = 5,
+} D3DBLENDOP;
+
+// Blend factors
+typedef enum _D3DBLEND {
+	D3DBLEND_ZERO            = 1,
+	D3DBLEND_ONE             = 2,
+	D3DBLEND_SRCCOLOR        = 3,
+	D3DBLEND_INVSRCCOLOR     = 4,
+	D3DBLEND_SRCALPHA        = 5,
+	D3DBLEND_INVSRCALPHA     = 6,
+	D3DBLEND_DESTALPHA       = 7,
+	D3DBLEND_INVDESTALPHA    = 8,
+	D3DBLEND_DESTCOLOR       = 9,
+	D3DBLEND_INVDESTCOLOR    = 10,
+	D3DBLEND_SRCALPHASAT     = 11,
+	D3DBLEND_BLENDFACTOR     = 14,
+	D3DBLEND_INVBLENDFACTOR  = 15,
+} D3DBLEND;
+
+// Comparison functions
+typedef enum _D3DCMPFUNC {
+	D3DCMP_NEVER        = 1,
+	D3DCMP_LESS         = 2,
+	D3DCMP_EQUAL        = 3,
+	D3DCMP_LESSEQUAL    = 4,
+	D3DCMP_GREATER      = 5,
+	D3DCMP_NOTEQUAL     = 6,
+	D3DCMP_GREATEREQUAL = 7,
+	D3DCMP_ALWAYS       = 8,
+} D3DCMPFUNC;
+
+// Fill modes
+typedef enum _D3DFILLMODE {
+	D3DFILL_POINT     = 1,
+	D3DFILL_WIREFRAME = 2,
+	D3DFILL_SOLID     = 3,
+} D3DFILLMODE;
+
+// Shade modes
+typedef enum _D3DSHADEMODE {
+	D3DSHADE_FLAT    = 1,
+	D3DSHADE_GOURAUD = 2,
+} D3DSHADEMODE;
+
+// Stencil operations
+typedef enum _D3DSTENCILOP {
+	D3DSTENCILOP_KEEP    = 1,
+	D3DSTENCILOP_ZERO    = 2,
+	D3DSTENCILOP_REPLACE = 3,
+	D3DSTENCILOP_INCRSAT = 4,
+	D3DSTENCILOP_DECRSAT = 5,
+	D3DSTENCILOP_INVERT  = 6,
+	D3DSTENCILOP_INCR    = 7,
+	D3DSTENCILOP_DECR    = 8,
+} D3DSTENCILOP;
+
+// Primitive types
+typedef enum _D3DPRIMITIVETYPE {
+	D3DPT_POINTLIST     = 1,
+	D3DPT_LINELIST      = 2,
+	D3DPT_LINESTRIP     = 3,
+	D3DPT_TRIANGLELIST  = 4,
+	D3DPT_TRIANGLESTRIP = 5,
+	D3DPT_TRIANGLEFAN   = 6,
+	D3DPT_FORCE_DWORD   = 0x7fffffff,
+} D3DPRIMITIVETYPE;
+
+// Transform state types
+typedef enum _D3DTRANSFORMSTATETYPE {
+	D3DTS_VIEW         = 2,
+	D3DTS_PROJECTION   = 3,
+	D3DTS_TEXTURE0     = 16,
+	D3DTS_TEXTURE1     = 17,
+	D3DTS_TEXTURE2     = 18,
+	D3DTS_TEXTURE3     = 19,
+	D3DTS_TEXTURE4     = 20,
+	D3DTS_TEXTURE5     = 21,
+	D3DTS_TEXTURE6     = 22,
+	D3DTS_TEXTURE7     = 23,
+	D3DTS_FORCE_DWORD  = 0x7fffffff,
+} D3DTRANSFORMSTATETYPE;
+
+// Texture stage state types
+typedef enum _D3DTEXTURESTAGESTATETYPE {
+	D3DTSS_COLOROP                 = 1,
+	D3DTSS_COLORARG1               = 2,
+	D3DTSS_COLORARG2               = 3,
+	D3DTSS_ALPHAOP                 = 4,
+	D3DTSS_ALPHAARG1               = 5,
+	D3DTSS_ALPHAARG2               = 6,
+	D3DTSS_BUMPENVMAT00            = 7,
+	D3DTSS_BUMPENVMAT01            = 8,
+	D3DTSS_BUMPENVMAT10            = 9,
+	D3DTSS_BUMPENVMAT11            = 10,
+	D3DTSS_TEXCOORDINDEX           = 11,
+	D3DTSS_BUMPENVLSCALE           = 22,
+	D3DTSS_BUMPENVLOFFSET          = 23,
+	D3DTSS_TEXTURETRANSFORMFLAGS   = 24,
+	D3DTSS_COLORARG0               = 26,
+	D3DTSS_ALPHAARG0               = 27,
+	D3DTSS_RESULTARG               = 28,
+} D3DTEXTURESTAGESTATETYPE;
+
+// Sampler state types
+typedef enum _D3DSAMPLERSTATETYPE {
+	D3DSAMP_ADDRESSU      = 1,
+	D3DSAMP_ADDRESSV      = 2,
+	D3DSAMP_ADDRESSW      = 3,
+	D3DSAMP_BORDERCOLOR   = 4,
+	D3DSAMP_MAGFILTER     = 5,
+	D3DSAMP_MINFILTER     = 6,
+	D3DSAMP_MIPFILTER     = 7,
+	D3DSAMP_MIPMAPLODBIAS = 8,
+	D3DSAMP_MAXMIPLEVEL   = 9,
+	D3DSAMP_MAXANISOTROPY = 10,
+} D3DSAMPLERSTATETYPE;
+
+// Texture operations (fixed-function texture combine stages)
+typedef enum _D3DTEXTUREOP {
+	D3DTOP_DISABLE                   = 1,
+	D3DTOP_SELECTARG1                = 2,
+	D3DTOP_SELECTARG2                = 3,
+	D3DTOP_MODULATE                  = 4,
+	D3DTOP_MODULATE2X                = 5,
+	D3DTOP_MODULATE4X                = 6,
+	D3DTOP_ADD                       = 7,
+	D3DTOP_ADDSIGNED                 = 8,
+	D3DTOP_ADDSIGNED2X               = 9,
+	D3DTOP_SUBTRACT                  = 10,
+	D3DTOP_ADDSMOOTH                 = 11,
+	D3DTOP_BLENDDIFFUSEALPHA         = 12,
+	D3DTOP_BLENDTEXTUREALPHA         = 13,
+	D3DTOP_BLENDFACTORALPHA          = 14,
+	D3DTOP_BLENDTEXTUREALPHAPM       = 15,
+	D3DTOP_BLENDCURRENTALPHA         = 16,
+	D3DTOP_PREMODULATE               = 17,
+	D3DTOP_MODULATEALPHA_ADDCOLOR    = 18,
+	D3DTOP_MODULATECOLOR_ADDALPHA    = 19,
+	D3DTOP_MODULATEINVALPHA_ADDCOLOR = 20,
+	D3DTOP_MODULATEINVCOLOR_ADDALPHA = 21,
+	D3DTOP_BUMPENVMAP                = 22,
+	D3DTOP_BUMPENVMAPLUMINANCE       = 23,
+	D3DTOP_DOTPRODUCT3               = 24,
+	D3DTOP_MULTIPLYADD               = 25,
+	D3DTOP_LERP                      = 26,
+} D3DTEXTUREOP;
+
+// Texture argument constants
+#define D3DTA_SELECTMASK   0x0000000f
+#define D3DTA_DIFFUSE      0x00000000
+#define D3DTA_CURRENT      0x00000001
+#define D3DTA_TEXTURE      0x00000002
+#define D3DTA_TFACTOR      0x00000003
+#define D3DTA_SPECULAR     0x00000004
+#define D3DTA_TEMP         0x00000005
+#define D3DTA_COMPLEMENT   0x00000010
+#define D3DTA_ALPHAREPLICATE 0x00000020
+
+// Render state type
+typedef DWORD D3DRENDERSTATETYPE;
+
+// Render state values (D3D9 enum constants, used as intermediate host mappings)
+#define D3DRS_ZENABLE                   7
+#define D3DRS_FILLMODE                  8
+#define D3DRS_SHADEMODE                 9
+#define D3DRS_ZWRITEENABLE              14
+#define D3DRS_ALPHATESTENABLE           15
+#define D3DRS_LASTPIXEL                 16
+#define D3DRS_SRCBLEND                  19
+#define D3DRS_DESTBLEND                 20
+#define D3DRS_CULLMODE                  22
+#define D3DRS_ZFUNC                     23
+#define D3DRS_ALPHAREF                  24
+#define D3DRS_ALPHAFUNC                 25
+#define D3DRS_DITHERENABLE              26
+#define D3DRS_ALPHABLENDENABLE          27
+#define D3DRS_FOGENABLE                 28
+#define D3DRS_SPECULARENABLE            29
+#define D3DRS_FOGCOLOR                  34
+#define D3DRS_FOGTABLEMODE              35
+#define D3DRS_FOGSTART                  36
+#define D3DRS_FOGEND                    37
+#define D3DRS_FOGDENSITY                38
+#define D3DRS_RANGEFOGENABLE            48
+#define D3DRS_STENCILENABLE             52
+#define D3DRS_STENCILFAIL               53
+#define D3DRS_STENCILZFAIL              54
+#define D3DRS_STENCILPASS               55
+#define D3DRS_STENCILFUNC               56
+#define D3DRS_STENCILREF                57
+#define D3DRS_STENCILMASK               58
+#define D3DRS_STENCILWRITEMASK          59
+#define D3DRS_TEXTUREFACTOR             60
+#define D3DRS_WRAP0                     128
+#define D3DRS_WRAP1                     129
+#define D3DRS_WRAP2                     130
+#define D3DRS_WRAP3                     131
+#define D3DRS_WRAP4                     132
+#define D3DRS_WRAP5                     133
+#define D3DRS_WRAP6                     134
+#define D3DRS_WRAP7                     135
+#define D3DRS_CLIPPING                  136
+#define D3DRS_LIGHTING                  137
+#define D3DRS_AMBIENT                   139
+#define D3DRS_FOGVERTEXMODE             140
+#define D3DRS_COLORVERTEX               141
+#define D3DRS_LOCALVIEWER               142
+#define D3DRS_NORMALIZENORMALS          143
+#define D3DRS_DIFFUSEMATERIALSOURCE     145
+#define D3DRS_SPECULARMATERIALSOURCE    146
+#define D3DRS_AMBIENTMATERIALSOURCE     147
+#define D3DRS_EMISSIVEMATERIALSOURCE    148
+#define D3DRS_VERTEXBLEND               151
+#define D3DRS_CLIPPLANEENABLE           152
+#define D3DRS_POINTSIZE                 154
+#define D3DRS_POINTSIZE_MIN             155
+#define D3DRS_POINTSPRITEENABLE         156
+#define D3DRS_POINTSCALEENABLE          157
+#define D3DRS_POINTSCALE_A              158
+#define D3DRS_POINTSCALE_B              159
+#define D3DRS_POINTSCALE_C              160
+#define D3DRS_MULTISAMPLEANTIALIAS      161
+#define D3DRS_MULTISAMPLEMASK           162
+#define D3DRS_PATCHEDGESTYLE            163
+#define D3DRS_DEBUGMONITORTOKEN         165
+#define D3DRS_POINTSIZE_MAX             166
+#define D3DRS_INDEXEDVERTEXBLENDENABLE  167
+#define D3DRS_COLORWRITEENABLE          168
+#define D3DRS_TWEENFACTOR               170
+#define D3DRS_BLENDOP                   171
+#define D3DRS_POSITIONORDER             172 // D3DORDERTYPE for N-patches
+#define D3DRS_NORMALORDER               173
+#define D3DRS_DEPTHBIAS                 195
+#define D3DRS_WRAP8                     198
+#define D3DRS_WRAP9                     199
+#define D3DRS_WRAP10                    200
+#define D3DRS_WRAP11                    201
+#define D3DRS_WRAP12                    202
+#define D3DRS_WRAP13                    203
+#define D3DRS_WRAP14                    204
+#define D3DRS_WRAP15                    205
+#define D3DRS_SEPARATEALPHABLENDENABLE  206
+#define D3DRS_SRCBLENDALPHA             207
+#define D3DRS_DESTBLENDALPHA            208
+#define D3DRS_BLENDOPALPHA              209
+#define D3DRS_LINEPATTERN               10 // removed in D3D9
+#define D3DRS_ZVISIBLE                  30 // removed in D3D9
+#define D3DRS_ANTIALIASEDLINEENABLE     176
+#define D3DRS_MINTESSELLATIONLEVEL      178
+#define D3DRS_MAXTESSELLATIONLEVEL      179
+#define D3DRS_ADAPTIVETESS_X            184
+#define D3DRS_ADAPTIVETESS_Y            185
+#define D3DRS_ADAPTIVETESS_Z            186
+#define D3DRS_ADAPTIVETESS_W            187
+#define D3DRS_ENABLEADAPTIVETESSELLATION 188
+#define D3DRS_TWOSIDEDSTENCILMODE       185
+#define D3DRS_CCW_STENCILFAIL           186
+#define D3DRS_CCW_STENCILZFAIL          187
+#define D3DRS_CCW_STENCILPASS           188
+#define D3DRS_CCW_STENCILFUNC           189
+#define D3DRS_COLORWRITEENABLE1         190
+#define D3DRS_COLORWRITEENABLE2         191
+#define D3DRS_COLORWRITEENABLE3         192
+#define D3DRS_BLENDFACTOR               193
+#define D3DRS_SRGBWRITEENABLE           194
+#define D3DRS_SLOPESCALEDEPTHBIAS       175
+#define D3DRS_SCISSORTESTENABLE         174
+#define D3DRS_SOFTWAREVERTEXPROCESSING  153
+#define D3DRS_SEPARATEDESTALPHAENABLE   210 // Non-standard, used by Cxbx
+
+// Resource types
+typedef enum _D3DRESOURCETYPE {
+	D3DRTYPE_SURFACE       = 1,
+	D3DRTYPE_VOLUME        = 2,
+	D3DRTYPE_TEXTURE       = 3,
+	D3DRTYPE_VOLUMETEXTURE = 4,
+	D3DRTYPE_CUBETEXTURE   = 5,
+	D3DRTYPE_VERTEXBUFFER  = 6,
+	D3DRTYPE_INDEXBUFFER   = 7,
+} D3DRESOURCETYPE;
+
+// Resource pool
+typedef enum _D3DPOOL {
+	D3DPOOL_DEFAULT   = 0,
+	D3DPOOL_MANAGED   = 1,
+	D3DPOOL_SYSTEMMEM = 2,
+} D3DPOOL;
+
+// Resource usage flags
+#define D3DUSAGE_RENDERTARGET 0x00000001
+#define D3DUSAGE_DEPTHSTENCIL 0x00000002
+#define D3DUSAGE_DYNAMIC      0x00000200
+
+// Lock flags
+#define D3DLOCK_READONLY  0x00000010
+#define D3DLOCK_DISCARD   0x00002000
+#define D3DLOCK_NOOVERWRITE 0x00001000
+#define D3DLOCK_NOSYSLOCK 0x00000800
+
+// Display mode (for DlgVideoConfig)
+typedef struct _D3DDISPLAYMODE {
+	UINT Width;
+	UINT Height;
+	UINT RefreshRate;
+	DXGI_FORMAT Format;
+} D3DDISPLAYMODE;
+
+// Adapter identifier (stub for DlgVideoConfig)
+typedef struct _D3DADAPTER_IDENTIFIER9 {
+	char Driver[512];
+	char Description[512];
+	char DeviceName[32];
+	LARGE_INTEGER DriverVersion;
+	DWORD VendorId;
+	DWORD DeviceId;
+	DWORD SubSysId;
+	DWORD Revision;
+	GUID DeviceIdentifier;
+	DWORD WHQLLevel;
+} D3DADAPTER_IDENTIFIER;
+
+// Device caps (stub for DlgVideoConfig)
+typedef struct _D3DCAPS9 {
+	DWORD Caps;
+	// Only the fields needed - add more as required
+} D3DCAPS;
 
 #else
 // include direct3d 9x headers
