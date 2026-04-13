@@ -814,7 +814,7 @@ typedef X_D3DBOX D3DBOX;
 #endif
 
 #ifdef CXBX_USE_D3D11
-typedef XMMATRIX X_D3DMATRIX; // TODO : Or CXMMATRIX ?
+typedef XMMATRIX X_D3DMATRIX; // XMMATRIX is the storage type; CXMMATRIX is only for parameter passing
 #else
 typedef D3DXMATRIX X_D3DMATRIX; // TODO : Or D3DMATRIX?
 #endif

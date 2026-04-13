@@ -6669,7 +6669,7 @@ EMUFORMAT PCFormat;
 			desc.MipLevels = 1;
 			desc.ArraySize = 1;
 			desc.Format = PCFormat;
-			desc.SampleDesc.Count = 1; // TODO : Use g_EmuCDPD.HostPresentationParameters.MultiSampleType ?
+			desc.SampleDesc.Count = 1; // No MSAA for now; enabling requires resolve pass infrastructure
 			desc.SampleDesc.Quality = 0;
 			desc.Usage = D3D11_USAGE_DYNAMIC;
 			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | (D3DUsage & D3DUSAGE_DEPTHSTENCIL) ? D3D11_BIND_DEPTH_STENCIL : 0;
@@ -6765,7 +6765,7 @@ EMUFORMAT PCFormat;
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = 0;
 
-			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf()); // TODO : pNewHostResource.Get() ?
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 			hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -6780,7 +6780,7 @@ EMUFORMAT PCFormat;
 			if ((hRet != D3D_OK) && (PCFormat != EMUFMT_A8R8G8B8) && EmuXBFormatCanBeConverted(X_Format, TmpPCFormat)) {
 #ifdef CXBX_USE_D3D11
 				desc.Format = TmpPCFormat;
-				hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf()); // TODO : pNewHostResource.Get() ?
+				hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -6877,7 +6877,7 @@ EMUFORMAT PCFormat;
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf()); // TODO : pNewHostResource.Get()?
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 			hRet = g_pD3DDevice->CreateCubeTexture(hostWidth, dwMipMapLevels, D3DUsage,
