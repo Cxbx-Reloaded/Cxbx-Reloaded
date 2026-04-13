@@ -239,7 +239,7 @@ static xbox::PVOID                   g_pXbox_Palette_Data[xbox::X_D3DTS_STAGECOU
 static unsigned                     g_Xbox_Palette_Size[xbox::X_D3DTS_STAGECOUNT] = { 0 }; // cached palette size
 
 
-             D3DFORMAT               g_HostTextureFormats[xbox::X_D3DTS_STAGECOUNT]; // Updated by CxbxUpdateHostTextures(), read by CxbxCalcColorSign
+             EMUFORMAT               g_HostTextureFormats[xbox::X_D3DTS_STAGECOUNT]; // Updated by CxbxUpdateHostTextures(), read by CxbxCalcColorSign
        xbox::X_D3DBaseTexture       *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT] = {0,0,0,0}; // Set by our D3DDevice_SetTexture and D3DDevice_SwitchTexture patches
 static xbox::X_D3DBaseTexture        CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
@@ -1242,7 +1242,7 @@ DWORD D3DUSAGE_INVALID = -1;
 typedef struct _resource_info_t {
 	
 	ComPtr<IDirect3DResource> pHostResource;
-	D3DFORMAT HostFormat = D3DFMT_UNKNOWN;
+	EMUFORMAT HostFormat = EMUFMT_UNKNOWN;
 	DWORD HostUsage = D3DUSAGE_INVALID;
 	DWORD dwXboxResourceType = 0;
 	void* pXboxData = xbox::zeroptr;
@@ -1466,7 +1466,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, xbox::X_D3DResource* pXboxRe
 	return modified;
 }
 
-void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD D3DUsage = D3DUSAGE_INVALID, D3DFORMAT PCFormat = D3DFMT_UNKNOWN)
+void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD D3DUsage = D3DUSAGE_INVALID, EMUFORMAT PCFormat = EMUFMT_UNKNOWN)
 {
 	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
 	auto& ResourceCache = GetResourceCache(key);
@@ -1486,29 +1486,46 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.lastUpdate = std::chrono::steady_clock::now();
 	resourceInfo.nextHashTime = resourceInfo.lastUpdate + resourceInfo.hashLifeTime;
 	resourceInfo.forceRehash = false;
-	if (PCFormat == D3DFMT_UNKNOWN) {
+	if (PCFormat == EMUFMT_UNKNOWN) {
+#ifdef CXBX_USE_D3D11
+		D3D11_TEXTURE2D_DESC tex2dDesc = {};
+		D3D11_TEXTURE3D_DESC tex3dDesc = {};
+		switch (resourceInfo.dwXboxResourceType) {// TODO : Better check pHostResource class type
+		case xbox::X_D3DRTYPE_SURFACE:
+		case xbox::X_D3DRTYPE_TEXTURE:
+		case xbox::X_D3DRTYPE_CUBETEXTURE:
+			((ID3D11Texture2D*)pHostResource)->GetDesc(&tex2dDesc);
+			PCFormat = tex2dDesc.Format;
+			break;
+		case xbox::X_D3DRTYPE_VOLUMETEXTURE:
+			((ID3D11Texture3D*)pHostResource)->GetDesc(&tex3dDesc);
+			PCFormat = tex3dDesc.Format;
+			break;
+		}
+#else
 		HRESULT hRet = STATUS_INVALID_PARAMETER; // Default to an error condition, so we can use D3D_OK to check for success
 		D3DSURFACE_DESC surfaceDesc;
 		D3DVOLUME_DESC volumeDesc;
 		UINT Level = 0; // TODO : When should Level every be something other than zero, and if so : what other value?
 		switch (resourceInfo.dwXboxResourceType) {// TODO : Better check pHostResource class type
 		case xbox::X_D3DRTYPE_SURFACE:
-			hRet = ((IDirect3DSurface*)pHostResource)->GetDesc(&surfaceDesc);
+			hRet = ((IDirect3DSurface9*)pHostResource)->GetDesc(&surfaceDesc);
 			break;
 		case xbox::X_D3DRTYPE_TEXTURE:
-			hRet = ((IDirect3DTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
+			hRet = ((IDirect3DTexture9*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
 			break;
 		case xbox::X_D3DRTYPE_VOLUMETEXTURE: {
-			hRet = ((IDirect3DVolumeTexture*)pHostResource)->GetLevelDesc(Level, &volumeDesc);
+			hRet = ((IDirect3DVolumeTexture9*)pHostResource)->GetLevelDesc(Level, &volumeDesc);
 			break; }
 		case xbox::X_D3DRTYPE_CUBETEXTURE:
-			hRet = ((IDirect3DCubeTexture*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
+			hRet = ((IDirect3DCubeTexture9*)pHostResource)->GetLevelDesc(Level, &surfaceDesc);
 			break;
 		}
 
 		if (SUCCEEDED(hRet)) {
 			PCFormat = (resourceInfo.dwXboxResourceType == xbox::X_D3DRTYPE_VOLUMETEXTURE) ? volumeDesc.Format : surfaceDesc.Format;
 		}
+#endif
 	}
 
 	resourceInfo.HostFormat = PCFormat;
@@ -2394,7 +2411,7 @@ static void DetermineSupportedD3DFormats
     memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
     for (int X_Format = xbox::X_D3DFMT_FIRST; X_Format <= xbox::X_D3DFMT_LAST; X_Format++) {
         // Only process Xbox formats that are directly mappable to host
-		D3DFORMAT PCFormat; // ignored
+		EMUFORMAT PCFormat; // ignored
         if (!EmuXBFormatRequiresConversion((xbox::X_D3DFORMAT)X_Format, /*&*/PCFormat)) {
             // Convert the Xbox format into host format (without warning, thanks to the above restriction)
             const EMUFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
@@ -4521,7 +4538,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 	if(BackBuffer == -1) {
 		static IDirect3DSurface *pCachedPrimarySurface = nullptr;
 
-		D3DFORMAT PCFormat = D3DFMT_A8R8G8B8;
+		EMUFORMAT PCFormat = EMUFMT_A8R8G8B8;
 		if(pCachedPrimarySurface == nullptr) {
 			// create a buffer to return
 			// TODO: Verify the surface is always 640x480
