@@ -1169,6 +1169,7 @@ public:
 			{ return std::tie(x.Stream, x.Method, x._9_11(Offset, AlignedByteOffset)) < std::tie(y.Stream, y.Method, y._9_11(Offset, AlignedByteOffset)); });
 #else
 			{ return std::tie(x.InputSlot, x.AlignedByteOffset) < std::tie(y.InputSlot, y.AlignedByteOffset); });
+#endif
 
 		// Record which registers are in the vertex declaration
 		for (size_t i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
