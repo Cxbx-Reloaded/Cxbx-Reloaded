@@ -264,6 +264,9 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
     extern bool g_bD3D11RasterizerStateDirty;
     extern bool g_bD3D11DepthStencilStateDirty;
     extern bool g_bD3D11BlendStateDirty;
+    extern UINT g_D3D11StencilRef;
+    extern FLOAT g_D3D11BlendFactor[4];
+    extern UINT g_D3D11SampleMask;
 
     switch (State) {
         // Rasterizer state
@@ -325,6 +328,10 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             g_D3D11DepthStencilDesc.BackFace.StencilFunc = (D3D11_COMPARISON_FUNC)Value;
             g_bD3D11DepthStencilStateDirty = true;
             break;
+        case xbox::X_D3DRS_STENCILREF:
+            g_D3D11StencilRef = Value;
+            g_bD3D11DepthStencilStateDirty = true; // re-apply to pass new ref
+            break;
         case xbox::X_D3DRS_STENCILMASK:
             g_D3D11DepthStencilDesc.StencilReadMask = (UINT8)Value;
             g_bD3D11DepthStencilStateDirty = true;
@@ -353,12 +360,28 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             g_D3D11BlendDesc.RenderTarget[0].BlendOpAlpha = (D3D11_BLEND_OP)Value;
             g_bD3D11BlendStateDirty = true;
             break;
+        case xbox::X_D3DRS_BLENDCOLOR: {
+            // Convert ARGB DWORD to float4 blend factor
+            g_D3D11BlendFactor[0] = ((Value >> 16) & 0xFF) / 255.0f; // R
+            g_D3D11BlendFactor[1] = ((Value >> 8) & 0xFF) / 255.0f;  // G
+            g_D3D11BlendFactor[2] = (Value & 0xFF) / 255.0f;         // B
+            g_D3D11BlendFactor[3] = ((Value >> 24) & 0xFF) / 255.0f;  // A
+            g_bD3D11BlendStateDirty = true; // re-apply to pass new factor
+            break;
+        }
         case xbox::X_D3DRS_COLORWRITEENABLE:
             g_D3D11BlendDesc.RenderTarget[0].RenderTargetWriteMask = (UINT8)Value;
             g_bD3D11BlendStateDirty = true;
             break;
+        // States handled as shader constants (alpha test emulated in pixel shader)
+        case xbox::X_D3DRS_ALPHATESTENABLE:
+        case xbox::X_D3DRS_ALPHAREF:
+        case xbox::X_D3DRS_ALPHAFUNC:
+        case xbox::X_D3DRS_SHADEMODE:
+        case xbox::X_D3DRS_DITHERENABLE:
+            // These are read from xbox render state by the fixed function shader
+            break;
         default:
-            // Remaining states not yet mapped to D3D11 state objects
             break;
     }
 #else
@@ -539,8 +562,10 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
     extern bool g_bD3D11RasterizerStateDirty;
     extern bool g_bD3D11DepthStencilStateDirty;
     extern bool g_bD3D11BlendStateDirty;
+    extern UINT g_D3D11SampleMask;
 
     switch (State) {
+        // Rasterizer state
         case xbox::X_D3DRS_FILLMODE:
             switch (Value) {
                 case D3DFILL_SOLID:     g_D3D11RasterizerDesc.FillMode = D3D11_FILL_SOLID; break;
@@ -558,6 +583,19 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
             }
             g_bD3D11RasterizerStateDirty = true;
             break;
+        case xbox::X_D3DRS_ZBIAS:
+            g_D3D11RasterizerDesc.DepthBias = (INT)Value;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_EDGEANTIALIAS:
+            g_D3D11RasterizerDesc.AntialiasedLineEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_MULTISAMPLEANTIALIAS:
+            g_D3D11RasterizerDesc.MultisampleEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        // Depth/stencil state
         case xbox::X_D3DRS_ZENABLE:
             g_D3D11DepthStencilDesc.DepthEnable = (Value != 0) ? TRUE : FALSE;
             g_bD3D11DepthStencilStateDirty = true;
@@ -571,8 +609,18 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
             g_D3D11DepthStencilDesc.BackFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
             g_bD3D11DepthStencilStateDirty = true;
             break;
+        // Blend/output-merger state
+        case xbox::X_D3DRS_MULTISAMPLEMASK:
+            g_D3D11SampleMask = Value;
+            g_bD3D11BlendStateDirty = true; // re-apply to pass new sample mask
+            break;
+        // States handled as shader constants or elsewhere
+        case xbox::X_D3DRS_FOGCOLOR:
+        case xbox::X_D3DRS_NORMALIZENORMALS:
+        case xbox::X_D3DRS_TEXTUREFACTOR:
+            // These are read from xbox render state by the fixed function shader
+            break;
         default:
-            // Other complex states not yet mapped to D3D11 state objects
             break;
     }
 #else
