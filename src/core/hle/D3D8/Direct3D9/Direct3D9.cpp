@@ -2384,6 +2384,20 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 		pDepthStencilSurface->GetDesc(&Desc);
 
 		switch (Desc.Format) {
+#ifdef CXBX_USE_D3D11
+		// Under D3D11, multiple D3D9 depth formats map to the same DXGI format,
+		// so we switch on the unique DXGI values only :
+		case DXGI_FORMAT_D16_UNORM: // Covers D16, D15S1 (stencil bit lost), D16_LOCKABLE
+			g_bHasDepth = true;
+			break;
+		case DXGI_FORMAT_D24_UNORM_S8_UINT: // Covers D24S8, D24X8, D24X4S4 (all have stencil in D3D11)
+			g_bHasDepth = true;
+			g_bHasStencil = true;
+			break;
+		case DXGI_FORMAT_D32_FLOAT: // Covers D32
+			g_bHasDepth = true;
+			break;
+#else
 		case EMUFMT_D16:
 			g_bHasDepth = true;
 			break;
@@ -2405,6 +2419,7 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 		case EMUFMT_D32:
 			g_bHasDepth = true;
 			break;
+#endif
 		}
 	}
 }
