@@ -45,9 +45,9 @@ typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width)
 
 extern const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format);
 
-bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat);
+bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, EMUFORMAT &PCFormat);
 
-bool EmuXBFormatRequiresConversion(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat);
+bool EmuXBFormatRequiresConversion(xbox::X_D3DFORMAT Format, EMUFORMAT &PCFormat);
 
 // how many bits does this format use per pixel?
 extern DWORD EmuXBFormatBitsPerPixel(xbox::X_D3DFORMAT Format);

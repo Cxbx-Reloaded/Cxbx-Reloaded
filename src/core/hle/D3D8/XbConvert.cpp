@@ -1187,11 +1187,11 @@ const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format)
 }
 
 // Is there a converter available from the supplied format? (PCFormat will receive host target format)
-bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat)
+bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, EMUFORMAT &PCFormat)
 {
 	const FormatToARGBRow info = EmuXBFormatComponentConverter(Format);
 	if (info != nullptr) {
-		/*&*/PCFormat = (FormatInfos[Format].components == __L6V5U5) ? D3DFMT_X8L8V8U8 : D3DFMT_A8R8G8B8;
+		/*&*/PCFormat = (FormatInfos[Format].components == __L6V5U5) ? EMUFMT_X8L8V8U8 : EMUFMT_A8R8G8B8;
 		return true;
 	}
 	return false;
@@ -1200,7 +1200,7 @@ bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat)
 // Returns if conversion is required. This is the case when
 // the format has a warning message and there's a converter present.
 // When conversion is required, the host target format is set in PCFormat.
-bool EmuXBFormatRequiresConversion(xbox::X_D3DFORMAT Format, D3DFORMAT &PCFormat)
+bool EmuXBFormatRequiresConversion(xbox::X_D3DFORMAT Format, EMUFORMAT &PCFormat)
 {
 	if (FormatInfos[Format].warning != nullptr) {
 		if (EmuXBFormatCanBeConverted(Format, /*&*/PCFormat)) {

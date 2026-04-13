@@ -687,6 +687,7 @@ inline const char* DXGetErrorDescription(HRESULT hr) { (void)hr; return ""; }
 #define EMUFMT_INDEX16                 _9_11(D3DFMT_INDEX16,              DXGI_FORMAT_R16_UINT) // Index buffer format
 #define EMUFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // No DXGI equivalent; requires software conversion to ARGB
 #define EMUFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // No DXGI equivalent; requires software conversion
+#define EMUFMT_X8L8V8U8                _9_11(D3DFMT_X8L8V8U8,             DXGI_FORMAT_R8G8B8A8_SNORM) // Approximate; L channel is unsigned in D3D9 but signed in DXGI
 #define EMUFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // Not a texture format; used in vertex declarations only
 
 typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
