@@ -1158,6 +1158,23 @@ public:
 				// TODO : Should we assert this?
 			}
 		}
+#else
+		// Post-process tessellation elements (D3D11 has no Method field; we identify them by TessellationType)
+		for (int AttributeIndex = 0; AttributeIndex < X_VSH_MAX_ATTRIBUTES; AttributeIndex++) {
+			auto pHostElement = HostVertexElementPerRegister[AttributeIndex];
+			if (pHostElement == nullptr) continue;
+			auto &slot = pXboxDeclaration->Slots[AttributeIndex];
+			if (slot.TessellationType == 1 /* AUTONORMAL */) {
+				int TessellationSource = slot.TessellationSource;
+				auto pSourceElement = HostVertexElementPerRegister[TessellationSource];
+				if (pSourceElement != nullptr) {
+					// Copy over the InputSlot, AlignedByteOffset and Format of the source element :
+					pHostElement->InputSlot = pSourceElement->InputSlot;
+					pHostElement->AlignedByteOffset = pSourceElement->AlignedByteOffset;
+					pHostElement->Format = pSourceElement->Format;
+				}
+			}
+		}
 #endif
 
 		// Ensure valid ordering of the vertex declaration
