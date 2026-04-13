@@ -675,19 +675,19 @@ inline const char* DXGetErrorDescription(HRESULT hr) { (void)hr; return ""; }
 #define EMUFMT_X8R8G8B8                _9_11(D3DFMT_X8R8G8B8,             DXGI_FORMAT_B8G8R8X8_UNORM)
 #define EMUFMT_YUY2                    _9_11(D3DFMT_YUY2,                 DXGI_FORMAT_YUY2)
 
-#define	DXGI_FORMAT_NOT_AVAILABLE       DXGI_FORMAT_UNKNOWN // TODO : Replace below occurrences with a suitable format and corresponding conversion
-// Unmappable to Direct3D 11 :
-#define EMUFMT_D15S1                   _9_11(D3DFMT_D15S1,                DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)200 ? How to handle in our code?
-#define EMUFMT_D16_LOCKABLE            _9_11(D3DFMT_D16_LOCKABLE,         DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)201 ? How to handle in our code?
-#define EMUFMT_D24X4S4                 _9_11(D3DFMT_D24X4S4,              DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)202 ? How to handle in our code?
-#define EMUFMT_D24X8                   _9_11(D3DFMT_D24X8,                DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)203 ? How to handle in our code?
-#define EMUFMT_D32                     _9_11(D3DFMT_D32,                  DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)204 ? How to handle in our code?
-#define EMUFMT_DXT2                    _9_11(D3DFMT_DXT2,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)205 ? How to handle in our code?
-#define EMUFMT_DXT4                    _9_11(D3DFMT_DXT4,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)206 ? How to handle in our code?
-#define EMUFMT_INDEX16                 _9_11(D3DFMT_INDEX16,              DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)207 ? How to handle in our code?
-#define EMUFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)208 ? How to handle in our code?
-#define EMUFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)209 ? How to handle in our code?
-#define EMUFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // TODO : (EMUFORMAT)210 ? How to handle in our code?
+#define	DXGI_FORMAT_NOT_AVAILABLE       DXGI_FORMAT_UNKNOWN // Used for formats with no suitable DXGI equivalent
+// Direct3D 9 format to Direct3D 11 best-effort mappings :
+#define EMUFMT_D15S1                   _9_11(D3DFMT_D15S1,                DXGI_FORMAT_D16_UNORM) // Closest; stencil bit is lost
+#define EMUFMT_D16_LOCKABLE            _9_11(D3DFMT_D16_LOCKABLE,         DXGI_FORMAT_D16_UNORM) // D3D11 uses staging textures for readback
+#define EMUFMT_D24X4S4                 _9_11(D3DFMT_D24X4S4,              DXGI_FORMAT_D24_UNORM_S8_UINT) // Superset; 8-bit stencil instead of 4
+#define EMUFMT_D24X8                   _9_11(D3DFMT_D24X8,                DXGI_FORMAT_D24_UNORM_S8_UINT) // Superset; stencil channel unused
+#define EMUFMT_D32                     _9_11(D3DFMT_D32,                  DXGI_FORMAT_D32_FLOAT) // Integer-to-float precision change
+#define EMUFMT_DXT2                    _9_11(D3DFMT_DXT2,                 DXGI_FORMAT_BC2_UNORM) // Same block compression as DXT3; premultiplied alpha is a convention
+#define EMUFMT_DXT4                    _9_11(D3DFMT_DXT4,                 DXGI_FORMAT_BC3_UNORM) // Same block compression as DXT5; premultiplied alpha is a convention
+#define EMUFMT_INDEX16                 _9_11(D3DFMT_INDEX16,              DXGI_FORMAT_R16_UINT) // Index buffer format
+#define EMUFMT_L6V5U5                  _9_11(D3DFMT_L6V5U5,               DXGI_FORMAT_NOT_AVAILABLE) // No DXGI equivalent; requires software conversion to ARGB
+#define EMUFMT_UYVY                    _9_11(D3DFMT_UYVY,                 DXGI_FORMAT_NOT_AVAILABLE) // No DXGI equivalent; requires software conversion
+#define EMUFMT_VERTEXDATA              _9_11(D3DFMT_VERTEXDATA,           DXGI_FORMAT_NOT_AVAILABLE) // Not a texture format; used in vertex declarations only
 
 typedef xbox::word_xt INDEX16; // TODO: Move INDEX16 into xbox namespace
 
