@@ -1602,6 +1602,32 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.HostUsage = D3DUsage;
 }
 
+// Type-safe wrappers for SetHostResource — cast specific D3D types to IDirect3DResource
+inline void SetHostSurface(xbox::X_D3DResource* pXboxResource, IDirect3DSurface* pHostSurface, int iTextureStage = -1)
+{
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostSurface, iTextureStage);
+}
+
+inline void SetHostVolume(xbox::X_D3DResource* pXboxResource, IDirect3DVolume* pHostVolume, int iTextureStage = -1)
+{
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolume, iTextureStage);
+}
+
+inline void SetHostTexture(xbox::X_D3DResource* pXboxResource, IDirect3DTexture* pHostTexture, int iTextureStage = -1)
+{
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostTexture, iTextureStage);
+}
+
+inline void SetHostVolumeTexture(xbox::X_D3DResource* pXboxResource, IDirect3DVolumeTexture* pHostVolumeTexture, int iTextureStage = -1)
+{
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolumeTexture, iTextureStage);
+}
+
+inline void SetHostCubeTexture(xbox::X_D3DResource* pXboxResource, IDirect3DCubeTexture* pHostCubeTexture, int iTextureStage = -1)
+{
+	SetHostResource(pXboxResource, (IDirect3DResource*)pHostCubeTexture, iTextureStage);
+}
+
 IDirect3DSurface *GetHostSurface(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
 {
 	if (pXboxResource == xbox::zeroptr)
