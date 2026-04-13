@@ -37,6 +37,37 @@
 using namespace DirectX;
 typedef FXMVECTOR D3DCOLOR;
 typedef D3D11_RECT D3DRECT;
+
+// D3D9 compatibility types needed for trampoline function signatures
+// (Xbox ABI uses these binary-compatible types for patch functions)
+typedef struct _D3DMATRIX {
+	union {
+		struct {
+			float _11, _12, _13, _14;
+			float _21, _22, _23, _24;
+			float _31, _32, _33, _34;
+			float _41, _42, _43, _44;
+		};
+		float m[4][4];
+	};
+} D3DMATRIX;
+
+typedef DWORD D3DBACKBUFFER_TYPE;
+#define D3DBACKBUFFER_TYPE_MONO 0
+
+typedef DWORD D3DDEVTYPE;
+
+typedef enum _D3DCUBEMAP_FACES {
+	D3DCUBEMAP_FACE_POSITIVE_X = 0,
+	D3DCUBEMAP_FACE_NEGATIVE_X = 1,
+	D3DCUBEMAP_FACE_POSITIVE_Y = 2,
+	D3DCUBEMAP_FACE_NEGATIVE_Y = 3,
+	D3DCUBEMAP_FACE_POSITIVE_Z = 4,
+	D3DCUBEMAP_FACE_NEGATIVE_Z = 5,
+} D3DCUBEMAP_FACES;
+
+#define D3DTTFF_PROJECTED 256
+
 #else
 // include direct3d 9x headers
 #define DIRECT3D_VERSION 0x0900
@@ -263,6 +294,13 @@ typedef struct _X_D3DLOCKED_RECT {
 } X_D3DLOCKED_RECT;
 #else
 typedef D3DLOCKED_RECT X_D3DLOCKED_RECT;
+#endif
+
+// Host-type aliases for D3D11 mode (used in trampoline function signatures)
+#ifdef CXBX_USE_D3D11
+typedef X_D3DLOCKED_RECT D3DLOCKED_RECT;
+typedef X_D3DLOCKED_BOX D3DLOCKED_BOX;
+typedef X_D3DBOX D3DBOX;
 #endif
 
 #ifdef CXBX_USE_D3D11
