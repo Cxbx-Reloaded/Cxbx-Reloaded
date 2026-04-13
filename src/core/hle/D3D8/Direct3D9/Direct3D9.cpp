@@ -130,6 +130,10 @@ D3D11_RASTERIZER_DESC               g_D3D11RasterizerDesc = {};
 D3D11_DEPTH_STENCIL_DESC            g_D3D11DepthStencilDesc = {};
 // D3D11 blend state description (updated by render state changes)
 D3D11_BLEND_DESC                    g_D3D11BlendDesc = {};
+// D3D11 additional state parameters (passed to OMSet* calls)
+UINT                                g_D3D11StencilRef = 0;
+FLOAT                               g_D3D11BlendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+UINT                                g_D3D11SampleMask = 0xFFFFFFFF;
 // D3D11 vertex shader constant buffer - holds all Xbox VS constants
 // Size: (CXBX_D3DVS_CONSTREG_FOGINFO + 1) float4 registers
 static const UINT                   CXBX_D3D11_VS_CB_SLOT = 0;
@@ -512,7 +516,7 @@ void CxbxD3D11ApplyDirtyStates()
 		HRESULT hr = g_pD3DDevice->CreateDepthStencilState(&g_D3D11DepthStencilDesc, &g_pD3DDepthStencilState);
 		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateDepthStencilState");
 		if (SUCCEEDED(hr)) {
-			g_pD3DDeviceContext->OMSetDepthStencilState(g_pD3DDepthStencilState, 0);
+			g_pD3DDeviceContext->OMSetDepthStencilState(g_pD3DDepthStencilState, g_D3D11StencilRef);
 		}
 		g_bD3D11DepthStencilStateDirty = false;
 	}
@@ -522,8 +526,7 @@ void CxbxD3D11ApplyDirtyStates()
 		HRESULT hr = g_pD3DDevice->CreateBlendState(&g_D3D11BlendDesc, &g_pD3DBlendState);
 		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateBlendState");
 		if (SUCCEEDED(hr)) {
-			const FLOAT blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-			g_pD3DDeviceContext->OMSetBlendState(g_pD3DBlendState, blendFactor, 0xFFFFFFFF);
+			g_pD3DDeviceContext->OMSetBlendState(g_pD3DBlendState, g_D3D11BlendFactor, g_D3D11SampleMask);
 		}
 		g_bD3D11BlendStateDirty = false;
 	}
