@@ -10657,9 +10657,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 #endif
 
 #ifdef CXBX_USE_D3D11
-	// D3D11 doesn't have GetTransform - build an identity projection for now
-	// TODO: Track transforms properly for use with fixed function emulation
-	D3DXMatrixIdentity(&mtxProjection);
+	// D3D11 doesn't have GetTransform - use our tracked transform state
+	mtxProjection = (D3DXMATRIX)d3d8TransformState.Transforms[xbox::X_D3DTS_PROJECTION];
 	hRet = S_OK;
 #else
 	// Get current projection matrix
