@@ -383,8 +383,9 @@ void XboxTextureStateConverter::Apply()
 				case xbox::X_D3DTSS_BUMPENVLOFFSET: break;
 				case xbox::X_D3DTSS_TEXCOORDINDEX: break;
 				}
-				// TODO : Are the above all catered for in our fixed function shader, and ignored otherwise?
-				// If not, see which of D3D11_RASTERIZER_DESC1, D3D11_DEPTH_STENCIL_DESC, D3D11_BLEND_DESC1 covers this...
+				// These texture stage states don't map to D3D11 state objects;
+				// they are fixed-function pipeline concepts handled by the FF shader
+				// which reads them from the Xbox texture state table directly
 #else
                 g_pD3DDevice->SetTextureStageState(HostStage, (D3DTEXTURESTAGESTATETYPE)CxbxTextureStateInfo[State].PC, PcValue);
 #endif
