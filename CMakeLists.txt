@@ -126,8 +126,15 @@ file (GLOB CXBXR_HEADER_GUIv1
 )
 
 # Emulator (module)
+if(CXBX_USE_D3D11)
+ set(IMGUI_GFX_HEADER "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx11.h")
+ set(IMGUI_GFX_SOURCE "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx11.cpp")
+else()
+ set(IMGUI_GFX_HEADER "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.h")
+ set(IMGUI_GFX_SOURCE "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.cpp")
+endif()
 file (GLOB CXBXR_HEADER_EMU_IMPORT
- "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.h"
+ "${IMGUI_GFX_HEADER}"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_opengl3.h"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_win32.h"
 )
@@ -325,7 +332,7 @@ file (GLOB CXBXR_KRNL_CPP
  "${CXBXR_ROOT_DIR}/src/core/kernel/init/CxbxKrnl.cpp"
 )
 file (GLOB CXBXR_SOURCE_EMU_IMPORT
- "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.cpp"
+ "${IMGUI_GFX_SOURCE}"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_opengl3.cpp"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_win32.cpp"
 )
