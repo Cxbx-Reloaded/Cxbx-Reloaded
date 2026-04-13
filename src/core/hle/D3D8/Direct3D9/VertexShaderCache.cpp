@@ -8,7 +8,7 @@
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice
 
 VertexShaderCache g_VertexShaderCache = VertexShaderCache();
-// FIXME : This should really be released and created in step with the D3D device lifecycle rather than being a thing on its own
+// Note : Clear() is called in the SetDeviceRelease callback (Direct3D9.cpp) to tie the cache to the D3D device lifecycle
 
 
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {

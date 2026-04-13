@@ -2852,6 +2852,7 @@ static void CreateDefaultD3D9Device
 	ImGui_ImplDX11_Init(g_pD3DDevice);
     g_renderbase->SetDeviceRelease([] {
         ImGui_ImplDX11_Shutdown();
+        g_VertexShaderCache.Clear();
         if (g_pD3DBlendState) { g_pD3DBlendState->Release(); g_pD3DBlendState = nullptr; }
         if (g_pD3DDepthStencilState) { g_pD3DDepthStencilState->Release(); g_pD3DDepthStencilState = nullptr; }
         if (g_pD3DRasterizerState) { g_pD3DRasterizerState->Release(); g_pD3DRasterizerState = nullptr; }
