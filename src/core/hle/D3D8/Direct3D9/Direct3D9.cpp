@@ -4800,7 +4800,24 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
 
         FreeHostResource(GetHostResourceKey(g_pXbox_RenderTarget)); CxbxSetRenderTarget(GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET));
 		FreeHostResource(GetHostResourceKey(g_pXbox_DepthStencil));
-#ifndef CXBX_USE_D3D11
+#ifdef CXBX_USE_D3D11
+		{
+			IDirect3DSurface *pHostDepthStencil = GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL);
+			ID3D11DepthStencilView* pDSV = nullptr;
+			if (pHostDepthStencil != nullptr) {
+				D3D11_TEXTURE2D_DESC texDesc = {};
+				pHostDepthStencil->GetDesc(&texDesc);
+				D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+				dsvDesc.Format = texDesc.Format;
+				dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+				dsvDesc.Texture2D.MipSlice = 0;
+				g_pD3DDevice->CreateDepthStencilView(pHostDepthStencil, &dsvDesc, &pDSV);
+			}
+			if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); }
+			g_pD3DDepthStencilView = pDSV;
+			g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
+		}
+#else
 		g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL));
 #endif
     }
