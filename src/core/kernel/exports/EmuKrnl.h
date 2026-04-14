@@ -30,6 +30,8 @@
 #include "core\kernel\support\EmuFS.h"
 #include "EmuKrnlKi.h"
 #include <future>
+#include <condition_variable>
+#include <mutex>
 
 // CONTAINING_RECORD macro
 // Gets the value of structure member (field - num1),given the type(MYSTRUCT, in this code) and the List_Entry head(temp, in this code)
@@ -54,6 +56,8 @@ extern xbox::LAUNCH_DATA_PAGE DefaultLaunchDataPage;
 extern xbox::PKINTERRUPT EmuInterruptList[MAX_BUS_INTERRUPT_LEVEL + 1];
 // Indicates to disable/enable all interrupts when cli and sti instructions are executed
 inline std::atomic_bool g_bEnableAllInterrupts = true;
+inline std::condition_variable g_InterruptSignal;
+inline std::atomic_bool g_AnyInterruptAsserted = false;
 
 class HalSystemInterrupt {
 public:
