@@ -7962,7 +7962,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform)
 // Overload for logging
 static void D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2(
     xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST D3DMATRIX              *pMatrix
+    CONST xbox::X_D3DMATRIX      *pMatrix
 )
 {
     LOG_FUNC_BEGIN
@@ -7975,7 +7975,7 @@ static void D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2(
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2)()
 {
 	xbox::X_D3DTRANSFORMSTATETYPE State;
-    D3DMATRIX *pMatrix;
+    xbox::X_D3DMATRIX *pMatrix;
     __asm {
         LTCG_PROLOGUE
         mov  State, eax
