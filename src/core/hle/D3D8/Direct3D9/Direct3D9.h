@@ -37,6 +37,12 @@
 #define DIRECTDRAW_VERSION 0x0700
 #include <ddraw.h>
 
+extern IDirect3DDevice *g_pD3DDevice;
+
+#ifdef CXBX_USE_D3D11
+extern ID3D11DeviceContext *g_pD3DDeviceContext;
+#endif
+
 void LookupTrampolinesD3D();
 
 // initialize render window
@@ -99,12 +105,6 @@ extern void EmuD3DInit();
 
 // cleanup direct3d
 extern void EmuD3DCleanup();
-
-extern IDirect3DDevice *g_pD3DDevice;
-
-#ifdef CXBX_USE_D3D11
-extern ID3D11DeviceContext *g_pD3DDeviceContext;
-#endif
 
 extern xbox::dword_xt g_Xbox_VertexShader_Handle;
 
