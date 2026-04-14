@@ -7,7 +7,7 @@
 
 #ifdef CXBX_USE_D3D11
 
-#include "XbD3D8Types.h"
+#include "core\hle\D3D8\XbD3D8Types.h"
 
 // Tessellate a rectangular patch and draw it via D3D11
 HRESULT CxbxDrawRectPatchD3D11(
