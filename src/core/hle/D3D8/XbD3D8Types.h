@@ -32,7 +32,8 @@
 
 #ifdef CXBX_USE_D3D11
 // include direct3d 11 headers
-#include <d3d11.h>
+#include <d3d11_1.h>
+#include <dxgi1_2.h>
 #include <DirectXMath.h> // XMVECTORF32
 using namespace DirectX;
 typedef DWORD D3DCOLOR;
@@ -536,6 +537,22 @@ typedef enum _D3DDECLUSAGE {
 
 // Texture filter type
 typedef DWORD D3DTEXTUREFILTERTYPE;
+
+// D3D locked rect/box (D3D9 types used by Lock2DSurface/Lock3DSurface)
+typedef struct _D3DLOCKED_RECT {
+	INT Pitch;
+	void *pBits;
+} D3DLOCKED_RECT;
+
+typedef struct _D3DLOCKED_BOX {
+	INT RowPitch;
+	INT SlicePitch;
+	void *pBits;
+} D3DLOCKED_BOX;
+
+// Behavior flags for CreateDevice (D3D9 values, used by Xbox title calls)
+#define D3DCREATE_SOFTWARE_VERTEXPROCESSING  0x00000020
+#define D3DCREATE_HARDWARE_VERTEXPROCESSING  0x00000040
 
 // D3DX constants
 #define D3DX_DEFAULT ((UINT)-1)
