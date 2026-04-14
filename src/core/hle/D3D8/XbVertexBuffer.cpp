@@ -474,9 +474,9 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
 						pHostVertexAsFloat[2] = NormShortToFloat(pXboxVertexAsShort[2]);
 					}
+#endif
 					break;
 				}
-#endif
 #ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16G16B16A16_SNORM
 				case xbox::X_D3DVSDT_NORMSHORT4: { // 0x41:
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
@@ -583,8 +583,8 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
 						pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
 					}
-					break;
 #endif
+					break;
 				}
 #ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R8G8B8A8_UNORM
 				case xbox::X_D3DVSDT_PBYTE4: { // 0x44:
