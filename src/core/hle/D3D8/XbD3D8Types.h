@@ -35,8 +35,19 @@
 #include <d3d11.h>
 #include <DirectXMath.h> // XMVECTORF32
 using namespace DirectX;
-typedef FXMVECTOR D3DCOLOR;
+typedef DWORD D3DCOLOR;
 typedef D3D11_RECT D3DRECT;
+
+// Pre-define D3DVECTOR so dsound.h (which is included inside namespace xbox
+// in DirectSound.hpp) doesn't redefine it and cause type conflicts.
+#ifndef D3DVECTOR_DEFINED
+typedef struct _D3DVECTOR {
+	float x;
+	float y;
+	float z;
+} D3DVECTOR;
+#define D3DVECTOR_DEFINED
+#endif
 
 // D3D9 compatibility types and constants
 // These reproduce D3D9 enum values so code that converts Xbox values
@@ -539,6 +550,7 @@ struct D3DXVECTOR3 {
 	D3DXVECTOR3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
 	operator float*() { return &x; }
 	operator const float*() const { return &x; }
+	operator XMFLOAT3() const { return XMFLOAT3(x, y, z); }
 	D3DXVECTOR3 operator+(const D3DXVECTOR3& rhs) const { return D3DXVECTOR3(x + rhs.x, y + rhs.y, z + rhs.z); }
 };
 
@@ -546,10 +558,11 @@ struct D3DXVECTOR4 {
 	float x, y, z, w;
 	D3DXVECTOR4() : x(0), y(0), z(0), w(0) {}
 	D3DXVECTOR4(float _x, float _y, float _z, float _w) : x(_x), y(_y), z(_z), w(_w) {}
-	D3DXVECTOR4(const float* pf) : x(pf[0]), y(pf[1]), z(pf[2]), w(pf[3]) {}
+	explicit D3DXVECTOR4(const float* pf) : x(pf[0]), y(pf[1]), z(pf[2]), w(pf[3]) {}
 	operator float*() { return &x; }
 	operator const float*() const { return &x; }
 	operator D3DXVECTOR3() const { return D3DXVECTOR3(x, y, z); }
+	operator XMFLOAT4() const { return XMFLOAT4(x, y, z, w); }
 	D3DXVECTOR4 operator+(const D3DXVECTOR4& rhs) const { return D3DXVECTOR4(x + rhs.x, y + rhs.y, z + rhs.z, w + rhs.w); }
 };
 
@@ -579,6 +592,7 @@ struct D3DXMATRIX : public D3DMATRIX {
 	D3DXMATRIX(const XMMATRIX& m) { XMStoreFloat4x4(reinterpret_cast<XMFLOAT4X4*>(this), m); }
 	operator float*() { return &_11; }
 	operator const float*() const { return &_11; }
+	operator XMMATRIX() const { return XMLoadFloat4x4(reinterpret_cast<const XMFLOAT4X4*>(this)); }
 };
 
 inline D3DXMATRIX* D3DXMatrixIdentity(D3DXMATRIX* pOut) {

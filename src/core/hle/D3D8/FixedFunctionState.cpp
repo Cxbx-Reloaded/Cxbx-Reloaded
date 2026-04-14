@@ -88,8 +88,12 @@ void D3D8LightState::EnableLight(uint32_t index, bool enable) {
 }
 
 D3D8TransformState::D3D8TransformState() {
+#ifdef CXBX_USE_D3D11
+	XMMATRIX identity = XMMatrixIdentity();
+#else
 	D3DMATRIX identity;
 	D3DXMatrixIdentity((D3DXMATRIX*)&identity);
+#endif
 
 	this->Transforms.fill(identity);
 	this->WorldView.fill(identity);
