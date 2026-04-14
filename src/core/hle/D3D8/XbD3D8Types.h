@@ -550,6 +550,15 @@ typedef struct _D3DLOCKED_BOX {
 	void *pBits;
 } D3DLOCKED_BOX;
 
+typedef struct _D3DBOX {
+	UINT Left;
+	UINT Top;
+	UINT Right;
+	UINT Bottom;
+	UINT Front;
+	UINT Back;
+} D3DBOX;
+
 // Behavior flags for CreateDevice (D3D9 values, used by Xbox title calls)
 #define D3DCREATE_SOFTWARE_VERTEXPROCESSING  0x00000020
 #define D3DCREATE_HARDWARE_VERTEXPROCESSING  0x00000040
@@ -847,6 +856,7 @@ typedef struct _X_D3DVECTOR {
 	float x;
 	float y;
 	float z;
+	_X_D3DVECTOR& operator=(const ::D3DXVECTOR3& rhs) { x = rhs.x; y = rhs.y; z = rhs.z; return *this; }
 } X_D3DVECTOR;
 #else
 typedef D3DVECTOR X_D3DVECTOR;
