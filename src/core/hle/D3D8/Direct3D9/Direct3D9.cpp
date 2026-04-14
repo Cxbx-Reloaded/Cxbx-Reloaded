@@ -2730,9 +2730,28 @@ static void CreateDefaultD3D9Device
 		nullptr, // pFeatureLevel
 		&context // Returns the device immediate context.
 	);
+#if defined(_DEBUG)
+	// If debug layer failed (SDK not installed), retry without it
+	if (FAILED(hr) && (creationFlags & D3D11_CREATE_DEVICE_DEBUG)) {
+		EmuLog(LOG_LEVEL::WARNING, "D3D11CreateDevice failed with debug layer (hr=0x%08X), retrying without", hr);
+		creationFlags &= ~D3D11_CREATE_DEVICE_DEBUG;
+		hr = D3D11CreateDevice(
+			g_EmuCDPD.Adapter,
+			g_EmuCDPD.DeviceType,
+			nullptr,
+			creationFlags,
+			featureLevels,
+			ARRAYSIZE(featureLevels),
+			D3D11_SDK_VERSION,
+			&device,
+			nullptr,
+			&context
+		);
+	}
+#endif
     DEBUG_D3DRESULT(hr, "D3D11CreateDevice");
 	if (FAILED(hr))
-		CxbxrAbort("D3D11CreateDevice failed");
+		CxbxrAbort("D3D11CreateDevice failed (hr=0x%08X)", hr);
 
 	// Store pointers to the Direct3D 11 API device and immediate context.
 	device->QueryInterface(__uuidof(ID3D11Device), reinterpret_cast<void**>(&g_pD3DDevice));
