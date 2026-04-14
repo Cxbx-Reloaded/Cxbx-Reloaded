@@ -2978,7 +2978,7 @@ static void CreateDefaultD3D9Device
 
     // Set up ImGui's render backend
 #ifdef CXBX_USE_D3D11
-	ImGui_ImplDX11_Init(g_pD3DDevice);
+	ImGui_ImplDX11_Init(g_pD3DDevice, g_pD3DDeviceContext);
     g_renderbase->SetDeviceRelease([] {
         ImGui_ImplDX11_Shutdown();
         g_VertexShaderCache.Clear();
@@ -3341,11 +3341,15 @@ void UpdateHostBackBufferDesc()
         CxbxrAbort("Unable to get host backbuffer surface");
     }
 
+#ifdef CXBX_USE_D3D11
+    pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
+#else
     hRet = pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
     if (hRet != D3D_OK) {
         pCurrentHostBackBuffer->Release();
         CxbxrAbort("Unable to determine host backbuffer dimensions");
     }
+#endif
 
     pCurrentHostBackBuffer->Release();
 }
@@ -4817,7 +4821,7 @@ __declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuf
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
 (
     int_xt                BackBuffer,
-    X_D3DBACKBUFFER_TYPE  Type,
+    D3DBACKBUFFER_TYPE    Type,
     X_D3DSurface        **ppBackBuffer
 )
 {
@@ -5858,7 +5862,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 		}
         CxbxD3DClear(Count, rects.data(), HostFlags, Color, Z, Stencil);
     } else {
-		CxbxD3DClear(Count, pRects, HostFlags, Color, Z, Stencil);
+		CxbxD3DClear(Count, reinterpret_cast<const D3DRECT*>(pRects), HostFlags, Color, Z, Stencil);
     }
 }
 
@@ -6810,7 +6814,7 @@ EMUFORMAT PCFormat;
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = 0;
 
-			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
@@ -6866,9 +6870,15 @@ EMUFORMAT PCFormat;
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
 
-			SetHostSurface(pResource, _9_11(pNewHostSurface, pNewHostResource).Get(), iTextureStage);
+#ifdef CXBX_USE_D3D11
+			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
+				ResourceTypeName, pResource, pNewHostResource.Get());
+#else
+			SetHostSurface(pResource, pNewHostSurface.Get(), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostSurface.Get());
+#endif
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Width : %d, Height : %d, Format : %d",
 				hostWidth, hostHeight, PCFormat);
 			break;
@@ -6899,7 +6909,7 @@ EMUFORMAT PCFormat;
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = 0;
 
-			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 			hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -6914,7 +6924,7 @@ EMUFORMAT PCFormat;
 			if ((hRet != D3D_OK) && (PCFormat != EMUFMT_A8R8G8B8) && EmuXBFormatCanBeConverted(X_Format, TmpPCFormat)) {
 #ifdef CXBX_USE_D3D11
 				desc.Format = TmpPCFormat;
-				hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
+				hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
 				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -6945,9 +6955,15 @@ EMUFORMAT PCFormat;
 			}
 #endif
 
-			SetHostTexture(pResource, _9_11(pNewHostTexture, pNewHostResource).Get(), iTextureStage);
+#ifdef CXBX_USE_D3D11
+			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, _9_11(pNewHostTexture, pNewHostResource).Get());
+				ResourceTypeName, pResource, pNewHostResource.Get());
+#else
+			SetHostTexture(pResource, pNewHostTexture.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
+				ResourceTypeName, pResource, pNewHostTexture.Get());
+#endif
 			break;
 		}
 
@@ -6964,7 +6980,7 @@ EMUFORMAT PCFormat;
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = 0;
 
-			hRet = g_pD3DDevice->CreateTexture3D(&desc, NULL, pNewHostResource.GetAddressOf());
+			hRet = g_pD3DDevice->CreateTexture3D(&desc, NULL, reinterpret_cast<ID3D11Texture3D**>(pNewHostResource.ReleaseAndGetAddressOf()));
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture3D");
 #else
 			hRet = g_pD3DDevice->CreateVolumeTexture(hostWidth, hostHeight, dwDepth,
@@ -6987,9 +7003,15 @@ EMUFORMAT PCFormat;
 			}
 #endif
 
-			SetHostVolumeTexture(pResource, _9_11(pNewHostVolumeTexture, pNewHostResource).Get(), iTextureStage);
+#ifdef CXBX_USE_D3D11
+			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
+				ResourceTypeName, pResource, pNewHostResource.Get());
+#else
+			SetHostVolumeTexture(pResource, pNewHostVolumeTexture.Get(), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostVolumeTexture.Get());
+#endif
 			break;
 		}
 
@@ -7011,7 +7033,7 @@ EMUFORMAT PCFormat;
 			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
-			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, pNewHostResource.GetAddressOf());
+			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
 			hRet = g_pD3DDevice->CreateCubeTexture(hostWidth, dwMipMapLevels, D3DUsage,
@@ -7034,14 +7056,20 @@ EMUFORMAT PCFormat;
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet)*/);
 			}
 
-			SetHostCubeTexture(pResource, _9_11(pNewHostCubeTexture.Get(), pNewHostResource.Get()), iTextureStage);
+#ifdef CXBX_USE_D3D11
+			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
+				ResourceTypeName, pResource, pNewHostResource.Get());
+#else
+			SetHostCubeTexture(pResource, pNewHostCubeTexture.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
+				ResourceTypeName, pResource, pNewHostCubeTexture.Get());
+#endif
 			// TODO : Cube face surfaces can be used as a render-target,
 			// so we need to associate host surfaces to each surface of this cube texture
             // However, we can't do it here: On Xbox, a new Surface is created on every call to
             // GetCubeMapSurface, so it needs to be done at surface conversion time by looking up
             // the parent CubeTexture
-			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, _9_11(pNewHostCubeTexture.Get(), pNewHostResource.Get()));
 			break;
 		}
 		} // switch XboxResourceType
