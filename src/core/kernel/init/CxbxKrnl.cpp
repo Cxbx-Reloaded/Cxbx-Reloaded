@@ -1132,6 +1132,7 @@ static void CxbxrKrnlInitHacks()
 		bLLE_GPU = (CxbxLLE_Flags & LLE_GPU) > 0;
 		//bLLE_USB = (CxbxLLE_Flags & LLE_USB) > 0; // Reenable this when LLE USB actually works
 		bLLE_JIT = (CxbxLLE_Flags & LLE_JIT) > 0;
+		EmuLogInit(LOG_LEVEL::INFO, "LLE flags from config: CxbxLLE_Flags=0x%X, bLLE_GPU=%d", CxbxLLE_Flags, (int)bLLE_GPU);
 	}
 
 	CxbxrKrnlInitHacks();
@@ -1188,6 +1189,7 @@ static void CxbxrKrnlInitHacks()
 
 	// EmuHLEIntercept must be call before MapThunkTable, otherwise scanning for symbols will not work properly.
 	EmuHLEIntercept(pXbeHeader);
+	EmuLogInit(LOG_LEVEL::INFO, "After EmuHLEIntercept: bLLE_GPU=%d", (int)bLLE_GPU);
 
 	// Decode kernel thunk table address :
 	uint32_t kt = CxbxKrnl_Xbe->m_Header.dwKernelImageThunkAddr;
@@ -1322,9 +1324,11 @@ static void CxbxrKrnlInitHacks()
 		PatchRdtscInstructions();
 	}
 
+	EmuLogInit(LOG_LEVEL::INFO, "Setting up per-title keys...");
 	// Setup per-title encryption keys
 	SetupPerTitleKeys();
 
+	EmuLogInit(LOG_LEVEL::INFO, "Initializing FS register emulation...");
 	EmuInitFS();
 
 	// If this title is Chihiro, Setup JVS
@@ -1332,10 +1336,13 @@ static void CxbxrKrnlInitHacks()
 		JVS_Init();
 	}
 
+	EmuLogInit(LOG_LEVEL::INFO, "Initializing x86 emulation...");
 	EmuX86_Init();
+	EmuLogInit(LOG_LEVEL::INFO, "Starting system event thread...");
 	// Start the event thread
 	xbox::HANDLE hThread;
 	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, system_events, xbox::zeroptr, FALSE);
+	EmuLogInit(LOG_LEVEL::INFO, "Launching XBE entry point thread...");
 	// Launch the xbe
 	xbox::PsCreateSystemThread(&hThread, xbox::zeroptr, CxbxLaunchXbe, Entry, FALSE);
 
