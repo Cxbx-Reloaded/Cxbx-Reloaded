@@ -29,6 +29,7 @@
 #include "common\util\hasher.h" // For ComputeHash
 #include <condition_variable>
 #include <stack>
+#include <algorithm>
 
 
 #include <core\kernel\exports\xboxkrnl.h>
@@ -743,9 +744,9 @@ g_EmuCDPD;
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShader_0__LTCG_ebx1,             ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetVertexShaderInput,                     (xbox::dword_xt, xbox::uint_xt, xbox::X_STREAMINPUT*)                                                 );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetViewport,                              (CONST xbox::X_D3DVIEWPORT8*)                                                                         );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform,                             (xbox::X_D3DTRANSFORMSTATETYPE, CONST xbox::X_D3DMATRIX*)                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_SetTransform_0__LTCG_eax1_edx2,           ()                                                                                                    );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST D3DMATRIX*)                                                     );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform,                        (xbox::X_D3DTRANSFORMSTATETYPE, CONST xbox::X_D3DMATRIX*)                                             );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2,      ()                                                                                                    );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource,                                (xbox::X_D3DResource*)                                                                                );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_DestroyResource_0__LTCG_edi1,                   (xbox::void_xt)                                                                                       );  \
@@ -753,10 +754,10 @@ g_EmuCDPD;
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax4_ebx6,           (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_16__LTCG_eax4_ecx6,           (xbox::uint_xt, D3DDEVTYPE, HWND, xbox::X_D3DPRESENT_PARAMETERS*)                                     );  \
     XB_MACRO(xbox::hresult_xt,    WINAPI,     Direct3D_CreateDevice_4__LTCG_eax1_ecx3,            (xbox::X_D3DPRESENT_PARAMETERS*)                                                                      );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface_16__LTCG_esi4_eax5,                   (xbox::X_D3DPixelContainer*, D3DCUBEMAP_FACES, xbox::uint_xt, xbox::dword_xt)                         );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, D3DBOX*, xbox::dword_xt)                  );  \
-    XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface_16__LTCG_eax4,                        (xbox::X_D3DPixelContainer*, xbox::uint_xt, D3DLOCKED_BOX*, xbox::dword_xt)                           );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::X_D3DCUBEMAP_FACES, xbox::uint_xt, xbox::X_D3DLOCKED_RECT*, RECT*, xbox::dword_xt) );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     Lock2DSurface_16__LTCG_esi4_eax5,                   (xbox::X_D3DPixelContainer*, xbox::X_D3DCUBEMAP_FACES, xbox::uint_xt, xbox::dword_xt)                         );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface,                                      (xbox::X_D3DPixelContainer*, xbox::uint_xt, xbox::X_D3DLOCKED_BOX*, xbox::X_D3DBOX*, xbox::dword_xt)                  );  \
+    XB_MACRO(xbox::void_xt,       WINAPI,     Lock3DSurface_16__LTCG_eax4,                        (xbox::X_D3DPixelContainer*, xbox::uint_xt, xbox::X_D3DLOCKED_BOX*, xbox::dword_xt)                           );  \
     XB_MACRO(xbox::void_xt,       WINAPI,     D3D_CommonSetRenderTarget,                          (xbox::X_D3DSurface*, xbox::X_D3DSurface*, void*)                                                     );  \
 
 XB_TRAMPOLINES(XB_trampoline_declare);
@@ -7124,7 +7125,7 @@ EMUFORMAT PCFormat;
 				// See https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-subresources
 				D3D11_MAPPED_SUBRESOURCE MappedResource;
 
-				hRet = g_pD3DDeviceContext->Map(pNewHostResource, Subresource, D3D11_MAP_WRITE_DISCARD, D3D11_MAP_FLAG_DO_NOT_WAIT, &MappedResource);
+				hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, D3D11_MAP_FLAG_DO_NOT_WAIT, &MappedResource);
 #else
 				// Lock the host resource
 				D3DLOCKED_RECT LockedRect = {};
@@ -7240,7 +7241,7 @@ if (bConvertTextureFormat) {
 
 #ifdef CXBX_USE_D3D11
 				// Unmap the host resource
-				g_pD3DDeviceContext->Unmap(pNewHostResource, Subresource);
+				g_pD3DDeviceContext->Unmap(pNewHostResource.Get(), Subresource);
 #else
 				// Unlock the host resource
 				switch (XboxResourceType) {
@@ -7563,16 +7564,16 @@ void UpdateFixedFunctionVertexShaderState()
 
 	// Determine how fog depth is calculated
 	if (fogEnable && fogTableMode != D3DFOG_NONE) {
-		auto proj = &ffShaderState.Transforms.Projection;
+		D3DXMATRIX projMtx = ffShaderState.Transforms.Projection;
 
 		if (XboxRenderStates.GetXboxRenderState(X_D3DRS_RANGEFOGENABLE)) {
 			LOG_TEST_CASE("Using RANGE fog");
 			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_RANGE;
 		}
-		else if (proj->_14 == 0 &&
-			proj->_24 == 0 &&
-			proj->_34 == 0 &&
-			proj->_44 == 1) {
+		else if (projMtx._14 == 0 &&
+			projMtx._24 == 0 &&
+			projMtx._34 == 0 &&
+			projMtx._44 == 1) {
 			LOG_TEST_CASE("Using Z fog");
 			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_Z;
 		}
@@ -7615,7 +7616,7 @@ void UpdateFixedFunctionVertexShaderState()
 	// Also, the xbox::X_D3DVertexShader.Dimensionality[] field contains somewhat strange values.
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 		auto vertexDataFormat = pXboxVertexAttributeFormat->Slots[xbox::X_D3DVSDE_TEXCOORD0 + i].Format;
-		ffShaderState.TexCoordComponentCount[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
+		reinterpret_cast<float*>(&ffShaderState.TexCoordComponentCount)[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
 	}
 
 	// Update lights
@@ -7675,11 +7676,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay_0__LTCG)()
 
 static void CxbxrImpl_UpdateOverlay
 (
-	X_D3DSurface *pSurface,
-	CONST X_RECT *SrcRect,
-	CONST X_RECT *DstRect,
-	bool_xt       EnableColorKey,
-	X_D3DCOLOR    ColorKey
+	xbox::X_D3DSurface *pSurface,
+	CONST xbox::X_RECT *SrcRect,
+	CONST xbox::X_RECT *DstRect,
+	xbox::bool_xt       EnableColorKey,
+	xbox::X_D3DCOLOR    ColorKey
 )
 {
 	using namespace xbox;
@@ -7914,7 +7915,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 
 static void CxbxrImpl_MultiplyTransform(
 	xbox::X_D3DTRANSFORMSTATETYPE State,
-	CONST D3DMATRIX              *pMatrix
+	CONST xbox::X_D3DMATRIX      *pMatrix
 )
 {
 	setTransformCount = 0;
@@ -8029,9 +8030,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
 static void Lock2DSurface_16__LTCG_esi4_eax5
 (
 	xbox::X_D3DPixelContainer *pPixelContainer,
-	D3DCUBEMAP_FACES           FaceType,
+	xbox::X_D3DCUBEMAP_FACES   FaceType,
 	xbox::uint_xt              Level,
-	D3DLOCKED_RECT            *pLockedRect,
+	xbox::X_D3DLOCKED_RECT    *pLockedRect,
 	RECT                      *pRect,
 	xbox::dword_xt             Flags
 )
@@ -8050,12 +8051,12 @@ static void Lock2DSurface_16__LTCG_esi4_eax5
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface_16__LTCG_esi4_eax5)
 (
 	X_D3DPixelContainer *pPixelContainer,
-	D3DCUBEMAP_FACES     FaceType,
+	X_D3DCUBEMAP_FACES   FaceType,
 	uint_xt              Level,
 	dword_xt             Flags
 )
 {
-	D3DLOCKED_RECT *pLockedRect;
+	X_D3DLOCKED_RECT *pLockedRect;
 	RECT *pRect;
 	__asm {
 		LTCG_PROLOGUE
@@ -8121,8 +8122,8 @@ static void Lock3DSurface_16__LTCG_eax4
 (
 	xbox::X_D3DPixelContainer *pPixelContainer,
 	xbox::uint_xt              Level,
-	D3DLOCKED_BOX             *pLockedVolume,
-	D3DBOX                    *pBox,
+	xbox::X_D3DLOCKED_BOX     *pLockedVolume,
+	xbox::X_D3DBOX            *pBox,
 	xbox::dword_xt             Flags
 )
 {
@@ -8140,11 +8141,11 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(Lock3DSurface_16__LTCG_eax
 (
 	X_D3DPixelContainer *pPixelContainer,
 	uint_xt              Level,
-	D3DLOCKED_BOX       *pLockedVolume,
+	X_D3DLOCKED_BOX     *pLockedVolume,
 	dword_xt             Flags
 )
 {
-	D3DBOX *pBox;
+	X_D3DBOX *pBox;
 	__asm {
 		LTCG_PROLOGUE
 		mov  pBox, eax
@@ -9132,12 +9133,12 @@ void CxbxUpdateHostViewport() {
 		// Test case: ???
 
 		D3DVIEWPORT hostViewport;
-		hostViewport.X = 0;
-		hostViewport.Y = 0;
+		hostViewport._9_11(X, TopLeftX) = 0;
+		hostViewport._9_11(Y, TopLeftY) = 0;
 		hostViewport.Width = HostRenderTarget_Width;
 		hostViewport.Height = HostRenderTarget_Height;
-		hostViewport.MinZ = 0.0f;
-		hostViewport.MaxZ = 1.0f;
+		hostViewport._9_11(MinZ, MinDepth) = 0.0f;
+		hostViewport._9_11(MaxZ, MaxDepth) = 1.0f;
 
 		CxbxSetViewport(&hostViewport);
 
@@ -10389,7 +10390,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 #ifdef CXBX_USE_D3D11
 	// For D3D11, read from our local shadow of the constants
 	if (Register >= 0 && (UINT)Register < CXBX_D3D11_VS_CB_COUNT && pConstantData != nullptr) {
-		UINT copyCount = min((UINT)ConstantCount, CXBX_D3D11_VS_CB_COUNT - (UINT)Register);
+		UINT copyCount = std::min((UINT)ConstantCount, CXBX_D3D11_VS_CB_COUNT - (UINT)Register);
 		memcpy(pConstantData, g_D3D11VSConstants[Register], copyCount * sizeof(float) * 4);
 	}
 #else
@@ -10764,7 +10765,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 	// then before.
 
 	HRESULT hRet;
-	_9_11(D3DXMATRIX, XMMATRIX) Out, mtxProjection, mtxViewport;
+	D3DXMATRIX Out, mtxProjection, mtxViewport;
 	D3DVIEWPORT Viewport;
 
 #ifdef CXBX_USE_D3D11
@@ -10800,8 +10801,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 	float ClipHeight = 2.0f;
 	float ClipX = -1.0f;
 	float ClipY = 1.0f;
+#ifdef CXBX_USE_D3D11
+	float Width = Viewport.Width;
+	float Height = Viewport.Height;
+#else
 	float Width = DWtoF(Viewport.Width);
 	float Height = DWtoF(Viewport.Height);
+#endif
 
 	D3DXMatrixIdentity(&mtxViewport);
 	mtxViewport._11 = Width / ClipWidth;
@@ -10810,7 +10816,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 	mtxViewport._42 = -(ClipY * mtxViewport._22);
 
 	// Multiply projection and viewport matrix together
-	Out = mtxProjection * mtxViewport;
+	D3DXMatrixMultiply(&Out, &mtxProjection, &mtxViewport);
 
 	*pProjectionViewport = Out;
 
