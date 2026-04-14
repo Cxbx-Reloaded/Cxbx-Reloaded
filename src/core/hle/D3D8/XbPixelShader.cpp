@@ -1053,10 +1053,10 @@ void UpdateFixedFunctionPixelShaderState()
 	using namespace FixedFunctionPixelShader;
 
 	FixedFunctionPixelShaderState ffPsState;
-	ffPsState.TextureFactor = (D3DXVECTOR4)((D3DXCOLOR)(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
+	ffPsState.TextureFactor = static_cast<D3DXVECTOR4>(D3DXCOLOR(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)));
 	ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::X_D3DRS_SPECULARENABLE);
 	ffPsState.FogEnable = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::X_D3DRS_FOGENABLE);
-	ffPsState.FogColor = (D3DXVECTOR3)((D3DXCOLOR)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
+	ffPsState.FogColor = static_cast<D3DXVECTOR3>(D3DXCOLOR(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR)));
 	ffPsState.FogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
 	ffPsState.FogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 	ffPsState.FogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
@@ -1077,7 +1077,7 @@ void UpdateFixedFunctionPixelShaderState()
 		stage->BUMPENVMAT11 = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVMAT11));
 		stage->BUMPENVLSCALE = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLSCALE));
 		stage->BUMPENVLOFFSET = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLOFFSET));
-		stage->COLORKEYCOLOR = (D3DXVECTOR4)((D3DXCOLOR)(XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR)));
+		stage->COLORKEYCOLOR = static_cast<D3DXVECTOR4>(D3DXCOLOR(XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR)));
 	}
 
 	const int size = (sizeof(FixedFunctionPixelShaderState) + 16 - 1) / 16;
