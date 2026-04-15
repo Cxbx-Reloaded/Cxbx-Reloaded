@@ -10274,7 +10274,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 	// For D3D11, read from our local shadow of the constants
 	if (Register >= 0 && (UINT)Register < CXBX_D3D11_VS_CB_COUNT && pConstantData != nullptr) {
 		UINT copyCount = std::min((UINT)ConstantCount, CXBX_D3D11_VS_CB_COUNT - (UINT)Register);
-		memcpy(pConstantData, g_D3D11VSConstants[Register], copyCount * sizeof(float) * 4);
+		CxbxGetVertexShaderConstants((UINT)Register, (float*)pConstantData, copyCount);
 	}
 #else
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF

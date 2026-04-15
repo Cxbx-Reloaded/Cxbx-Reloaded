@@ -73,6 +73,9 @@ void CxbxD3D11ApplyDirtyStates();
 void CxbxD3D11FlushVertexShaderConstants();
 void CxbxD3D11FlushPixelShaderConstants();
 
+// Read back vertex shader constants from the shadow buffer
+void CxbxGetVertexShaderConstants(UINT startRegister, float* pConstantData, UINT Vector4fCount);
+
 // D3D11 blit: copy source texture region to dest texture region with optional filtering
 // Fast path for same-size copies, shader-based path for scaled copies
 HRESULT CxbxD3D11Blt(
