@@ -28,7 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Rendering\EmuD3D8.h"
+#include "core\hle\D3D8\Rendering\RenderGlobals.h"
 #include "core\hle\D3D8\Rendering\Shader.h"
 #include "core\hle\D3D8\XbPixelShader.h"
 #include "core\hle\D3D8\Rendering\PixelShader.h"
