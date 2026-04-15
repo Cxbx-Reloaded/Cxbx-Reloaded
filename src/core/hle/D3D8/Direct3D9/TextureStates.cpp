@@ -304,10 +304,20 @@ void XboxTextureStateConverter::Apply()
             if (CxbxTextureStateInfo[State].IsSamplerState) {
 #ifdef CXBX_USE_D3D11
 				// Per-stage sampler state descriptors and filter tracking
+				// TODO: Cache sampler states per stage (keyed by descriptor) to avoid
+				// redundant CreateSamplerState calls. D3D11 deduplicates internally,
+				// but skipping the call entirely would reduce API overhead.
 				static D3D11_SAMPLER_DESC g_SamplerDescs[xbox::X_D3DTS_STAGECOUNT] = {};
 				static bool g_SamplerDescsInitialized = false;
 				if (!g_SamplerDescsInitialized) {
 					for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+						g_SamplerDescs[i].Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+						g_SamplerDescs[i].AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+						g_SamplerDescs[i].AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+						g_SamplerDescs[i].AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+						g_SamplerDescs[i].ComparisonFunc = D3D11_COMPARISON_NEVER;
+						g_SamplerDescs[i].MaxAnisotropy = 1;
+						g_SamplerDescs[i].MinLOD = 0;
 						g_SamplerDescs[i].MaxLOD = D3D11_FLOAT32_MAX;
 					}
 					g_SamplerDescsInitialized = true;
