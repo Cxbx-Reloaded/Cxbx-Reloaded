@@ -79,6 +79,10 @@ HRESULT CxbxPresent();
 void    CxbxSetDepthStencilSurface(IDirect3DSurface* pHostDepthStencil);
 IDirect3DSurface* CxbxGetCurrentRenderTarget(); // Returns current RT (caller owns ref in D3D9, not in D3D11)
 HRESULT CxbxGetBackBuffer(IDirect3DSurface** ppBackBuffer); // Returns back buffer (caller owns ref)
+HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer* pHostVertexBuffer, UINT VertexStride);
+HRESULT CxbxCreateVertexBuffer(UINT Length, IDirect3DVertexBuffer** ppVertexBuffer);
+void*   CxbxLockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer); // Returns mapped pointer, or nullptr on failure
+void    CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer);
 
 // ImGui rendering (still has internal ifdefs for ImGui_Impl backend)
 class ImGuiUI;
