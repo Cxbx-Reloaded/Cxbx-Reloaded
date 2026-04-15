@@ -5,10 +5,10 @@
 #include "core/kernel/init/CxbxKrnl.h"
 #include "util/hasher.h"
 #include "core/kernel/support/Emu.h"
-#include "core\hle\D3D8\Rendering\EmuD3D8.h" // For g_pD3DDevice
+#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For g_pD3DDevice
 
 VertexShaderCache g_VertexShaderCache = VertexShaderCache();
-// Note : Clear() is called in the SetDeviceRelease callback (EmuD3D8.cpp) to tie the cache to the D3D device lifecycle
+// Note : Clear() is called in the SetDeviceRelease callback (RenderGlobals.cpp) to tie the cache to the D3D device lifecycle
 
 
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {

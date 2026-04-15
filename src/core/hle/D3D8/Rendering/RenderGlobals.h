@@ -22,8 +22,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#ifndef DIRECT3D9_H
-#define DIRECT3D9_H
+#ifndef RENDERGLOBALS_H
+#define RENDERGLOBALS_H
 
 #include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 
@@ -39,7 +39,7 @@
 
 extern IDirect3DDevice *g_pD3DDevice;
 
-// Xbox state globals (defined in EmuD3D8.cpp)
+// Xbox state globals (defined in RenderGlobals.cpp)
 class XboxRenderStateConverter;
 class XboxTextureStateConverter;
 class D3D8LightState;
@@ -181,4 +181,4 @@ extern xbox::X_D3DBaseTexture *g_pXbox_SetTexture[xbox::X_D3DTS_STAGECOUNT];
 #include "EmuPatches_Surface.h"
 #include "EmuPatches_Unused.h"
 
-#endif // DIRECT3D9_H
+#endif // RENDERGLOBALS_H

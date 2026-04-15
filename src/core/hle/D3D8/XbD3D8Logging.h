@@ -28,7 +28,7 @@
 #include "Logging.h"
 #include "XbD3D8Types.h"
 
-extern const char* D3DErrorString(HRESULT hResult); // Implemented in EmuD3D8.cpp
+extern const char* D3DErrorString(HRESULT hResult); // Implemented in RenderGlobals.cpp
 
 #define DEBUG_D3DRESULT(hRet, message) \
 	do { \

@@ -35,7 +35,7 @@
 #include "DlgVideoConfig.h"
 #include "resource/ResCxbx.h"
 
-#include "core\hle\D3D8\Rendering\EmuD3D8.h" // For IDirect3D
+#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For IDirect3D
 
 #ifdef CXBX_USE_D3D11
 #include <dxgi.h>
