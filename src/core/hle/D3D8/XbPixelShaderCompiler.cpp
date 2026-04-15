@@ -334,13 +334,7 @@ PSH_RECOMPILED_SHADER CxbxRecompilePixelShader(CxbxPSDef &CompletePSDef)
 	if (pShader) {
 		DWORD *pFunction = (DWORD*)pShader->GetBufferPointer();
 		if (pFunction) {
-			DWORD hRet = g_pD3DDevice->CreatePixelShader(
-				pFunction,
-#ifdef CXBX_USE_D3D11
-				pShader->GetBufferSize(), // BytecodeLength
-				nullptr, // pClassLinkage
-#endif
-				&(Result.ConvertedPixelShader));
+			DWORD hRet = CxbxCreatePixelShader(pShader->GetBufferPointer(), pShader->GetBufferSize(), &(Result.ConvertedPixelShader));
 			if (hRet != D3D_OK) {
 				printf(D3DErrorString(hRet));
 			}
@@ -477,11 +471,7 @@ IDirect3DPixelShader* GetFixedFunctionShader()
 	int shaderVersion = g_ShaderSources.Update();
 	if (pixelShaderVersion != shaderVersion) {
 		pixelShaderVersion = shaderVersion;
-#ifdef CXBX_USE_D3D11
-		g_pD3DDeviceContext->PSSetShader(nullptr, nullptr, 0);
-#else
-		g_pD3DDevice->SetPixelShader(nullptr);
-#endif
+		CxbxRawSetPixelShader(nullptr);
 
 		for (auto& hostShader : ffPsCache) {
 			if (hostShader.second)
@@ -647,13 +637,7 @@ IDirect3DPixelShader* GetFixedFunctionShader()
 	IDirect3DPixelShader* pShader = nullptr;
 	if (pShaderBlob) {
 		// Create shader object for the device
-		auto hRet = g_pD3DDevice->CreatePixelShader(
-			(_9_11(DWORD *, const void*))pShaderBlob->GetBufferPointer(),
-#ifdef CXBX_USE_D3D11
-			pShaderBlob->GetBufferSize(), // BytecodeLength
-			nullptr, // pClassLinkage
-#endif
-			&pShader);
+		auto hRet = CxbxCreatePixelShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), &pShader);
 		if (hRet != S_OK) {
 			EmuLog(LOG_LEVEL::ERROR2, "Failed to compile fixed function pixel shader");
 		}
@@ -794,15 +778,7 @@ void CxbxSetPixelShader(IDirect3DPixelShader* pPixelShader)
 
 	// Switch to the converted pixel shader (if it's any different from our currently active
 	// pixel shader, to avoid many unnecessary state changes on the local side).
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->PSSetShader(
-		pPixelShader,
-		nullptr, // ppClassInstances
-		0 // NumClassInstances
-		);
-#else
-	g_pD3DDevice->SetPixelShader(pPixelShader);
-#endif
+	CxbxRawSetPixelShader(pPixelShader);
 	g_pActivePixelShader = pPixelShader;
 }
 
@@ -846,11 +822,7 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   int shaderVersion = g_ShaderSources.Update();
   if (pixelShaderVersion != shaderVersion) {
 	  pixelShaderVersion = shaderVersion;
-#ifdef CXBX_USE_D3D11
-	  g_pD3DDeviceContext->PSSetShader(nullptr, nullptr, 0);
-#else
-	  g_pD3DDevice->SetPixelShader(nullptr);
-#endif
+	  CxbxRawSetPixelShader(nullptr);
 
 	  for (auto& hostShader : g_RecompiledPixelShaders) {
 		  if (hostShader.ConvertedPixelShader)
