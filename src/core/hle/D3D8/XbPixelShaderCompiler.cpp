@@ -47,9 +47,6 @@
 #include "Rendering\TextureStates.h"
 #include <wrl/client.h>
 
-extern XboxRenderStateConverter XboxRenderStates; // Declared in EmuD3D8.cpp
-extern XboxTextureStateConverter XboxTextureStates; // Declared in EmuD3D8.cpp
-
 void DecodedRegisterCombiner::Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;

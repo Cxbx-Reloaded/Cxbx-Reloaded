@@ -61,9 +61,6 @@
 
 #include <wrl/client.h>
 
-extern XboxRenderStateConverter XboxRenderStates; // Declared in EmuD3D8.cpp
-extern XboxTextureStateConverter XboxTextureStates; // Declared in EmuD3D8.cpp
-
 
 #define DbgPshPrintf \
 	LOG_CHECK_ENABLED(LOG_LEVEL::DEBUG) \
