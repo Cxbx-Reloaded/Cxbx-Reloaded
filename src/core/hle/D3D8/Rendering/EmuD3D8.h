@@ -83,6 +83,8 @@ HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer* pHostV
 HRESULT CxbxCreateVertexBuffer(UINT Length, IDirect3DVertexBuffer** ppVertexBuffer);
 void*   CxbxLockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer); // Returns mapped pointer, or nullptr on failure
 void    CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer);
+HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirect3DPixelShader** ppShader);
+void    CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader);
 
 // ImGui rendering (still has internal ifdefs for ImGui_Impl backend)
 class ImGuiUI;

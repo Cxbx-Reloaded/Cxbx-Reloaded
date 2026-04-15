@@ -590,4 +590,14 @@ void CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
 	g_pD3DDeviceContext->Unmap(pVertexBuffer, 0);
 }
 
+HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirect3DPixelShader** ppShader)
+{
+	return g_pD3DDevice->CreatePixelShader(pFunction, FunctionSize, nullptr, ppShader);
+}
+
+void CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader)
+{
+	g_pD3DDeviceContext->PSSetShader(pPixelShader, nullptr, 0);
+}
+
 #endif // CXBX_USE_D3D11
