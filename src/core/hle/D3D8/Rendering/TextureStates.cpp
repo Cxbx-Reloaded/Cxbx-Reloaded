@@ -283,7 +283,7 @@ void XboxTextureStateConverter::Apply()
                 case xbox::X_D3DTSS_BUMPENVMAT11: case xbox::X_D3DTSS_BUMPENVMAT10:
                 case xbox::X_D3DTSS_BUMPENVLSCALE: case xbox::X_D3DTSS_BUMPENVLOFFSET:
 #if 0 // New, doesn't work yet
-                    continue; // Note : Since DxbxUpdateActivePixelShader() reads these too, you'd expect here we could skip, but alas. TODO: Fix PS HLSL to not depend on host D3D TSS
+                    continue; // Note : Since CxbxUpdateActivePixelShader() reads these too, you'd expect here we could skip, but alas. TODO: Fix PS HLSL to not depend on host D3D TSS
 #endif
                 case xbox::X_D3DTSS_BORDERCOLOR: case xbox::X_D3DTSS_MIPMAPLODBIAS:
                 case xbox::X_D3DTSS_MAXMIPLEVEL: case xbox::X_D3DTSS_MAXANISOTROPY:

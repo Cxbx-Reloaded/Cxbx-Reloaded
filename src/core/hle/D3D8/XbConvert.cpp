@@ -658,7 +658,7 @@ const RenderStateInfo DxbxRenderStateInfo[1+xbox::X_D3DRS_DONOTCULLUNCOMPRESSED]
 	{ "D3DRS_DEFERRED_UNUSED2"            /*= 134*/, 4627, xtDWORD,               0 }, // Verified absent in 4531, present in 4627  TODO : might be introduced in between?
 	{ "D3DRS_DEFERRED_UNUSED1"            /*= 135*/, 4627, xtDWORD,               0 }, // Verified absent in 4531, present in 4627  TODO : might be introduced in between?
 	// End of "deferred" render states, continuing with "complex" render states :
-	{ "D3DRS_PSTEXTUREMODES"              /*= 136*/, 3424, xtDWORD,               0 }, // This is where pPSDef->PSTextureModes is stored (outside the pPSDEF - see DxbxUpdateActivePixelShader)
+	{ "D3DRS_PSTEXTUREMODES"              /*= 136*/, 3424, xtDWORD,               0 }, // This is where pPSDef->PSTextureModes is stored (outside the pPSDEF - see CxbxUpdateActivePixelShader)
 	{ "D3DRS_VERTEXBLEND"                 /*= 137*/, 3424, xtD3DVERTEXBLENDFLAGS, NV2A_SKIN_MODE, D3DRS_VERTEXBLEND },
 	{ "D3DRS_FOGCOLOR"                    /*= 138*/, 3424, xtD3DCOLOR,            NV2A_FOG_COLOR, D3DRS_FOGCOLOR }, // SwapRgb
 	{ "D3DRS_FILLMODE"                    /*= 139*/, 3424, xtD3DFILLMODE,         NV2A_POLYGON_MODE_FRONT, D3DRS_FILLMODE },
