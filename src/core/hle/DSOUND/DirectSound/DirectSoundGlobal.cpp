@@ -77,7 +77,7 @@ void DrawAudioProgress(xbox::XbHybridDSBuffer* pHybrid, float scaleWidth, ImDraw
 	float height = 8;
 
 	float sBuf = height * 0.4f;
-	float sReg = height * 1.0f;
+	float sReg = height * 1;
 	float sPlay = height * 0.4f;
 
 	// Buffer
@@ -88,18 +88,18 @@ void DrawAudioProgress(xbox::XbHybridDSBuffer* pHybrid, float scaleWidth, ImDraw
 	DWORD bufferRangeSize;
 	DSoundBufferRegionCurrentLocation(pHybrid, pBuffer->EmuPlayFlags, bufferRangeStart, bufferRangeSize);
 
-	float bufferRangeStartFloat = bufferRangeStart * scale;
-	float bufferRangeSizeFloat = bufferRangeSize * scale;
+	float fBufferRangeStart = bufferRangeStart * scale;
+	float fBufferRangeSize = bufferRangeSize * scale;
 
 	// Region
-	start = cursor + ImVec2(bufferRangeStartFloat, (height - sReg) / 2);
-	drawList->AddRectFilled(start, start + ImVec2(bufferRangeSizeFloat, sReg), isLooping ? colRegionLoop : colRegion);
+	start = cursor + ImVec2(fBufferRangeStart, (height - sReg) / 2);
+	drawList->AddRectFilled(start, start + ImVec2(fBufferRangeSize, sReg), isLooping ? colRegionLoop : colRegion);
 
 	// Play area
-	start = cursor + ImVec2(bufferRangeStartFloat, (height - sPlay) / 2);
+	start = cursor + ImVec2(fBufferRangeStart, (height - sPlay) / 2);
 	drawList->AddRectFilled(start, start + ImVec2(playCursor, sPlay), colPlay);
 	// Play cursor
-	start = cursor + ImVec2(bufferRangeStartFloat + playCursor, 0);
+	start = cursor + ImVec2(fBufferRangeStart + playCursor, 0);
 	drawList->AddLine(start, start + ImVec2(0, height), colPlay);
 
 	ImGui::Dummy(ImVec2(pBuffer->X_BufferCacheSize * scale, height));
