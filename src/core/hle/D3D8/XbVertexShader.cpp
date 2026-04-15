@@ -57,7 +57,6 @@
 
 // External symbols :
 extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS]; // Declared in XbVertexBuffer.cpp
-extern XboxRenderStateConverter XboxRenderStates; // Declared in EmuD3D8.cpp
 
 // Variables set by [D3DDevice|CxbxImpl]_SetVertexShaderInput() :
                       unsigned g_Xbox_SetVertexShaderInput_Count = 0; // Read by GetXboxVertexAttributes
