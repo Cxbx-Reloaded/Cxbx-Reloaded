@@ -15,7 +15,7 @@
 
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
-#include "Direct3D9.h"
+#include "EmuD3D8.h"
 #include "core/hle/D3D8/XbVertexShader.h"
 #include "core/kernel/support/Emu.h"
 

@@ -34,7 +34,7 @@
 #include "core/hle/Intercept.hpp"
 #include "RenderStates.h"
 #include "core/hle/D3D8/XbVertexShader.h" // For g_Xbox_VertexShaderMode and VertexShaderMode::FixedFunction
-#include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For g_pD3DDevice
+#include "core/hle/D3D8/Rendering/EmuD3D8.h" // For g_pD3DDevice
 #include <optional>
 
 typedef struct {

@@ -1,0 +1,872 @@
+
+// TODO : Move to own file
+void CxbxReleaseQuadListToTriangleListIndexData(void* pHostIndexData)
+{
+	free(pHostIndexData);
+}
+
+class ConvertedIndexBuffer {
+public:
+	uint64_t Hash = 0;
+	DWORD IndexCount = 0;
+	IDirect3DIndexBuffer* pHostIndexBuffer = nullptr;
+	INDEX16 LowIndex = 0;
+	INDEX16 HighIndex = 0;
+
+	~ConvertedIndexBuffer()
+	{
+		if (pHostIndexBuffer != nullptr) {
+			pHostIndexBuffer->Release();
+		}
+	}
+};
+
+	std::unordered_map<uint32_t, ConvertedIndexBuffer> g_IndexBufferCache;
+
+void CxbxRemoveIndexBuffer(PWORD pData)
+{
+	// HACK: Never Free
+}
+
+IDirect3DIndexBuffer* CxbxCreateIndexBuffer(unsigned IndexCount)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	IDirect3DIndexBuffer* Result = nullptr;
+
+	// Create a new native index buffer of the requested size :
+	UINT uiIndexBufferSize = IndexCount * sizeof(INDEX16);
+#ifdef CXBX_USE_D3D11
+	D3D11_BUFFER_DESC bufferDesc = {};
+	bufferDesc.ByteWidth = uiIndexBufferSize;
+	bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	bufferDesc.MiscFlags = 0;
+	bufferDesc.StructureByteStride = 0;
+
+	HRESULT hRet = g_pD3DDevice->CreateBuffer(&bufferDesc, nullptr, &Result);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (index buffer)");
+#else
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/bb147168(v=vs.85).aspx
+	// "Managing Resources (Direct3D 9)"
+	// suggests "for resources which change with high frequency" [...]
+	// "D3DPOOL_DEFAULT along with D3DUSAGE_DYNAMIC should be used."
+	const D3DPOOL D3DPool = D3DPOOL_DEFAULT;
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/bb172625(v=vs.85).aspx
+	// "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+	const DWORD D3DUsage = D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY; // Was D3DUSAGE_WRITEONLY
+
+	HRESULT hRet = g_pD3DDevice->CreateIndexBuffer(
+		uiIndexBufferSize, // Size of the index buffer, in bytes.
+		D3DUsage,
+		/*Format=*/EMUFMT_INDEX16,
+		D3DPool,
+		&Result,
+		nullptr // pSharedHandle
+	);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateIndexBuffer");
+#endif
+	if (FAILED(hRet)) {
+		assert(Result == nullptr);
+	}
+
+	return Result;
+}
+
+ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
+(
+	INDEX16* pXboxIndexData,
+	unsigned XboxIndexCount,
+	bool bConvertQuadListToTriangleList
+)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	uint32_t LookupKey = (uint32_t)pXboxIndexData;
+	unsigned RequiredIndexCount = XboxIndexCount;
+
+	if (bConvertQuadListToTriangleList) {
+		LOG_TEST_CASE("bConvertQuadListToTriangleList");
+		RequiredIndexCount = QuadToTriangleVertexCount(XboxIndexCount);
+		// For now, indicate the quad-to-triangles case using the otherwise
+		// (due to alignment) always-zero least significant bit :
+		LookupKey |= 1;
+	}
+
+	// Poor-mans eviction policy : when exceeding treshold, clear entire cache :
+	if (g_IndexBufferCache.size() > INDEX_BUFFER_CACHE_SIZE) {
+		g_IndexBufferCache.clear(); // Note : ConvertedIndexBuffer destructor will release any assigned pHostIndexBuffer
+	}
+
+	// Create a reference to the active buffer
+	ConvertedIndexBuffer& CacheEntry = g_IndexBufferCache[LookupKey];
+
+	// If the current index buffer size is too small, free it, so it'll get re-created
+	bool bNeedRepopulation = CacheEntry.IndexCount < RequiredIndexCount;
+	if (bNeedRepopulation) {
+		if (CacheEntry.pHostIndexBuffer != nullptr)
+			CacheEntry.pHostIndexBuffer->Release();
+
+		CacheEntry = {};
+	}
+
+	// If we need to create an index buffer, do so.
+	if (CacheEntry.pHostIndexBuffer == nullptr) {
+		CacheEntry.pHostIndexBuffer = CxbxCreateIndexBuffer(RequiredIndexCount);
+		if (!CacheEntry.pHostIndexBuffer)
+			CxbxrAbort("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
+	}
+
+	// TODO : Speeds this up, perhaps by hashing less often, and/or by
+	// doing two hashes : a small subset regularly, all data less frequently.
+	uint64_t uiHash = ComputeHash(pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
+
+	// If the data needs updating, do so
+	bNeedRepopulation |= (uiHash != CacheEntry.Hash);
+	if (bNeedRepopulation)	{
+		// Update the Index Count and the hash
+		CacheEntry.IndexCount = RequiredIndexCount;
+		CacheEntry.Hash = uiHash;
+
+		// Update the host index buffer
+		INDEX16* pHostIndexBufferData = CxbxLockIndexBuffer(CacheEntry.pHostIndexBuffer);
+		if (pHostIndexBufferData == nullptr) {
+			CxbxrAbort("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
+		}
+
+		// Determine highest and lowest index in use :
+		WalkIndexBuffer(CacheEntry.LowIndex, CacheEntry.HighIndex, pXboxIndexData, XboxIndexCount);
+		if (bConvertQuadListToTriangleList) {
+			// Note, that LowIndex and HighIndex won't change due to any quad-to-triangle conversion,
+			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
+			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Converting quads to %d triangle indices (EMUFMT_INDEX16)", RequiredIndexCount);
+			CxbxConvertQuadListToTriangleListIndices(pXboxIndexData, RequiredIndexCount, pHostIndexBufferData);
+		} else {
+			EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Copying %d indices (EMUFMT_INDEX16)", XboxIndexCount);
+			memcpy(pHostIndexBufferData, pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
+		}
+
+		CxbxUnlockIndexBuffer(CacheEntry.pHostIndexBuffer);
+	}
+
+	// Activate the new native index buffer :
+	CxbxSetIndices(CacheEntry.pHostIndexBuffer);
+
+	return CacheEntry;
+}
+
+
+	// MSAA introduces subpixels, so scale them away
+	if (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) {
+		float aaX, aaY;
+		GetMultiSampleScaleRaw(aaX, aaY);
+		x /= aaX;
+		y /= aaY;
+	}
+}
+
+void Direct3D_CreateDevice_Start
+(
+	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+    CxbxVertexShaderSetFlags();
+
+    if (!XboxRenderStates.Init()) {
+        CxbxrAbort("Failed to init XboxRenderStates");
+    }
+
+    if (!XboxTextureStates.Init(&XboxRenderStates)) {
+        CxbxrAbort("Failed to init XboxTextureStates");
+    }
+
+	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
+
+	// create default device *before* calling Xbox Direct3D_CreateDevice trampoline
+	// to avoid hitting EMUPATCH'es that need a valid g_pD3DDevice
+
+	if (g_pD3DDevice != nullptr) { // Check to make sure device is null, otherwise no need to create it
+		return;
+	}
+
+	CreateDefaultD3D9Device(pPresentationParameters);
+}
+
+void Direct3D_CreateDevice_End
+(
+	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+#if 0 // Unused :
+    // Set g_Xbox_D3DDevice to point to the Xbox D3D Device
+    auto it = g_SymbolAddresses.find("D3D_g_pDevice");
+    if (it != g_SymbolAddresses.end()) {
+        g_Xbox_D3DDevice = (DWORD*)it->second;
+    }
+    else {
+        EmuLog(LOG_LEVEL::ERROR2, "D3D_g_pDevice was not found!");
+    }
+#endif
+
+    UpdateHostBackBufferDesc();
+    SetAspectRatioScale(pPresentationParameters);
+
+    // If the Xbox version of CreateDevice didn't call SetRenderTarget, we must derive the default backbuffer ourselves
+    // This works because CreateDevice always sets the current render target to the Xbox Backbuffer
+    // In later XDKs, it does this inline rather than by calling D3DDevice_SetRenderTarget
+    // meaning our patch doesn't always get called in these cases.
+    // We fix the situation by calling the Xbox GetRenderTarget function, which immediately after CreateDevice
+    // WILL always return the Backbuffer!
+    // Test Case: Shin Megami Tensei: Nine
+    if (g_pXbox_BackBufferSurface == xbox::zeroptr && g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
+        // First, log the test case
+        LOG_TEST_CASE("Xbox CreateDevice did not call SetRenderTarget");
+    }
+
+    if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
+        if (XB_TRMP(D3DDevice_GetRenderTarget)) {
+            XB_TRMP(D3DDevice_GetRenderTarget)(&g_pXbox_BackBufferSurface);
+        }
+        else if (XB_TRMP(D3DDevice_GetRenderTarget2)) {
+            g_pXbox_BackBufferSurface = XB_TRMP(D3DDevice_GetRenderTarget2)();
+        }
+
+        // At this point, g_pXbox_BackBufferSurface should now point to a valid render target
+        // if it still doesn't, we cannot continue without crashing at draw time
+        if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
+            CxbxrAbort("Unable to determine default Xbox backbuffer");
+        }
+
+        // Set the backbuffer as the initial rendertarget
+        CxbxImpl_SetRenderTarget(g_pXbox_BackBufferSurface, xbox::zeroptr);
+    }
+
+    // Now do the same, but for the default depth stencil surface
+    if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
+        if (XB_TRMP(D3DDevice_GetDepthStencilSurface)) {
+            XB_TRMP(D3DDevice_GetDepthStencilSurface)(&g_pXbox_DefaultDepthStencilSurface);
+        }
+        else if (XB_TRMP(D3DDevice_GetDepthStencilSurface2)) {
+            g_pXbox_DefaultDepthStencilSurface = XB_TRMP(D3DDevice_GetDepthStencilSurface2)();
+        }
+
+        // At this point, g_pXbox_DefaultDepthStencilSurface should now point to a valid depth stencil
+        // If it doesn't, just log and carry on: Unlike RenderTarget, this situation is not fatal
+        if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
+            LOG_TEST_CASE("Unable to determine default Xbox depth stencil");
+        } else {
+            // Update only the depth stencil
+            CxbxImpl_SetRenderTarget(xbox::zeroptr, g_pXbox_DefaultDepthStencilSurface);
+        }
+    }
+}
+
+// Overload for logging
+static void Direct3D_CreateDevice_4__LTCG_eax1_ecx3
+(
+    xbox::dword_xt                BehaviorFlags,
+    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+    xbox::X_D3DDevice            **ppReturnedDeviceInterface
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(BehaviorFlags)
+		LOG_FUNC_ARG(pPresentationParameters)
+		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
+		LOG_FUNC_END;
+}
+
+// LTCG specific Direct3D_CreateDevice function...
+// This uses a custom calling with parameters passed in EAX, ECX and the stack
+// Test-case: Ninja Gaiden, Halo 2
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4__LTCG_eax1_ecx3)
+(
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+    DWORD BehaviorFlags;
+    xbox::X_D3DDevice **ppReturnedDeviceInterface;
+    __asm {
+		LTCG_PROLOGUE
+		mov  BehaviorFlags, eax
+		mov  ppReturnedDeviceInterface, ecx
+	}
+
+	// Log
+	Direct3D_CreateDevice_4__LTCG_eax1_ecx3(BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+
+	Direct3D_CreateDevice_Start(pPresentationParameters);
+
+	// Only then call Xbox CreateDevice function
+	hresult_xt hRet;
+	__asm {
+		push pPresentationParameters
+		mov  eax, BehaviorFlags
+		mov  ecx, ppReturnedDeviceInterface
+		call XB_TRMP(Direct3D_CreateDevice_4__LTCG_eax1_ecx3)
+		mov  hRet, eax
+	}
+
+	Direct3D_CreateDevice_End(pPresentationParameters);
+
+	__asm {
+		mov  eax, hRet
+		LTCG_EPILOGUE
+		ret  4
+	}
+}
+
+// Overload for logging
+static void Direct3D_CreateDevice_16__LTCG_eax4_ecx6
+(
+    xbox::uint_xt                 Adapter,
+	xbox::X_D3DDEVTYPE            DeviceType,
+	xbox::X_HWND                  hFocusWindow,
+    xbox::dword_xt                BehaviorFlags,
+    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+    xbox::X_D3DDevice            **ppReturnedDeviceInterface
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(hFocusWindow)
+		LOG_FUNC_ARG(BehaviorFlags)
+		LOG_FUNC_ARG(pPresentationParameters)
+		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
+		LOG_FUNC_END;
+}
+
+// LTCG specific Direct3D_CreateDevice function...
+// This uses a custom calling convention passing parameters on stack, in EAX and ECX
+// Test-case: Aggressive Inline, Midtown Madness 3
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ecx6)
+(
+    uint_xt                     Adapter,
+    X_D3DDEVTYPE                DeviceType,
+	X_HWND                      hFocusWindow,
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+	dword_xt BehaviorFlags;
+	xbox::X_D3DDevice **ppReturnedDeviceInterface;
+	__asm {
+		LTCG_PROLOGUE
+		mov  BehaviorFlags, eax
+		mov  ppReturnedDeviceInterface, ecx
+	}
+
+	// Log
+	Direct3D_CreateDevice_16__LTCG_eax4_ecx6(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+
+	Direct3D_CreateDevice_Start(pPresentationParameters);
+
+	// Only then call Xbox CreateDevice function
+	hresult_xt hRet;
+	__asm {
+		push pPresentationParameters
+		push hFocusWindow
+		push DeviceType
+		push Adapter
+		mov  eax, BehaviorFlags
+		mov  ecx, ppReturnedDeviceInterface
+		call XB_TRMP(Direct3D_CreateDevice_16__LTCG_eax4_ecx6)
+		mov  hRet, eax
+	}
+
+	Direct3D_CreateDevice_End(pPresentationParameters);
+
+	__asm {
+		mov  eax, hRet
+		LTCG_EPILOGUE
+		ret  10h
+	}
+}
+
+// Overload for logging
+static void Direct3D_CreateDevice_16__LTCG_eax4_ebx6
+(
+    xbox::uint_xt                 Adapter,
+    xbox::X_D3DDEVTYPE            DeviceType,
+	xbox::X_HWND                  hFocusWindow,
+    xbox::dword_xt                BehaviorFlags,
+    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+    xbox::X_D3DDevice            **ppReturnedDeviceInterface
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Adapter)
+		LOG_FUNC_ARG(DeviceType)
+		LOG_FUNC_ARG(hFocusWindow)
+		LOG_FUNC_ARG(BehaviorFlags)
+		LOG_FUNC_ARG(pPresentationParameters)
+		LOG_FUNC_ARG_OUT(ppReturnedDeviceInterface)
+		LOG_FUNC_END;
+}
+
+// LTCG specific Direct3D_CreateDevice function...
+// This uses a custom calling convention passing parameters on stack, in EAX and EBX
+// Test-case: NASCAR Heat 2002
+__declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ebx6)
+(
+    uint_xt                     Adapter,
+    X_D3DDEVTYPE                DeviceType,
+	X_HWND                      hFocusWindow,
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+)
+{
+	dword_xt BehaviorFlags;
+	xbox::X_D3DDevice **ppReturnedDeviceInterface;
+	__asm {
+		LTCG_PROLOGUE
+		mov  BehaviorFlags, eax
+		mov  ppReturnedDeviceInterface, ebx
+	}
+
+	// Log
+	Direct3D_CreateDevice_16__LTCG_eax4_ebx6(Adapter, DeviceType, hFocusWindow, BehaviorFlags, pPresentationParameters, ppReturnedDeviceInterface);
+
+	Direct3D_CreateDevice_Start(pPresentationParameters);
+
+	// Only then call Xbox CreateDevice function
+	hresult_xt hRet;
+	__asm {
+		push pPresentationParameters
+		push hFocusWindow
+		push DeviceType
+		push Adapter
+		mov  eax, BehaviorFlags
+		mov  ebx, ppReturnedDeviceInterface
+		call XB_TRMP(Direct3D_CreateDevice_16__LTCG_eax4_ebx6)
+		mov  hRet, eax
+	}
+
+	Direct3D_CreateDevice_End(pPresentationParameters);
+
+	__asm {
+		mov  eax, hRet
+		LTCG_EPILOGUE
+		ret  10h
+	}
+}
+
+// Overload for logging
+static void D3DDevice_SetIndices_4__LTCG_ebx1
+(
+    xbox::X_D3DIndexBuffer   *pIndexData,
+    xbox::uint_xt             BaseVertexIndex
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(pIndexData)
+        LOG_FUNC_ARG(BaseVertexIndex)
+        LOG_FUNC_END;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetIndices_4__LTCG_ebx1
+// LTCG specific D3DDevice_SetIndices function...
+// This uses a custom calling convention where parameter is passed in EBX and Stack
+// Test Case: Conker
+// ******************************************************************
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4__LTCG_ebx1)
+(
+    uint_xt                BaseVertexIndex
+)
+{
+    X_D3DIndexBuffer   *pIndexData;
+    __asm {
+        LTCG_PROLOGUE
+        mov  pIndexData, ebx
+    }
+
+    // Log
+    D3DDevice_SetIndices_4__LTCG_ebx1(pIndexData, BaseVertexIndex);
+
+    // Cache the base vertex index
+    g_Xbox_BaseVertexIndex = BaseVertexIndex;
+
+    // Call LTCG-specific trampoline
+    __asm {
+        mov  ebx, pIndexData
+        push BaseVertexIndex
+        call XB_TRMP(D3DDevice_SetIndices_4__LTCG_ebx1);
+
+        LTCG_EPILOGUE
+        ret  4
+    }
+}
+
+
+// ******************************************************************
+// * patch: D3DDevice_SetIndices
+void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+	if (g_QuadToTriangleHostIndexBuffer_Size < NrOfQuadIndices)
+	{
+		// Round the number of indices up so we'll allocate whole pages
+		g_QuadToTriangleHostIndexBuffer_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
+		UINT NrOfTriangleIndices = QuadToTriangleVertexCount(g_QuadToTriangleHostIndexBuffer_Size); // 4 > 6
+
+		// Create a new native index buffer of the above determined size :
+		if (g_pQuadToTriangleHostIndexBuffer != nullptr) {
+			g_pQuadToTriangleHostIndexBuffer->Release(); // test-case : XDK PointSprites
+			g_pQuadToTriangleHostIndexBuffer = nullptr;
+		}
+
+		// Create a new native index buffer of the above determined size :
+		g_pQuadToTriangleHostIndexBuffer = CxbxCreateIndexBuffer(NrOfTriangleIndices);
+		if (g_pQuadToTriangleHostIndexBuffer == nullptr)
+			CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : IndexBuffer Create Failed!");
+
+		// Put quadlist-to-triangle-list index mappings into this buffer :
+		INDEX16* pHostIndexBufferData = CxbxLockIndexBuffer(g_pQuadToTriangleHostIndexBuffer);
+		if (pHostIndexBufferData == nullptr)
+			CxbxrAbort("CxbxAssureQuadListD3DIndexBuffer : Could not lock index buffer!");
+
+		memcpy(pHostIndexBufferData, CxbxAssureQuadListIndexData(NrOfQuadIndices), NrOfTriangleIndices * sizeof(INDEX16));
+
+		CxbxUnlockIndexBuffer(g_pQuadToTriangleHostIndexBuffer);
+	}
+
+	// Activate the new native index buffer :
+	CxbxSetIndices(g_pQuadToTriangleHostIndexBuffer);
+}
+
+// TODO : Move to own file
+// Calls SetIndices with a separate index-buffer, that's populated with the supplied indices.
+void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+	HRESULT hRet;
+
+	if (g_pClosingLineLoopHostIndexBuffer == nullptr) {
+		g_pClosingLineLoopHostIndexBuffer = CxbxCreateIndexBuffer(VERTICES_PER_LINE);
+		if (g_pClosingLineLoopHostIndexBuffer == nullptr)
+			CxbxrAbort("Unable to create g_pClosingLineLoopHostIndexBuffer for D3DPT_LINELOOP emulation");
+	}
+
+	INDEX16 *pCxbxClosingLineLoopIndexBufferData = CxbxLockIndexBuffer(g_pClosingLineLoopHostIndexBuffer);
+
+	// Set the indices for the two VERTICES_PER_LINE :
+	pCxbxClosingLineLoopIndexBufferData[0] = LowIndex;
+	pCxbxClosingLineLoopIndexBufferData[1] = HighIndex;
+
+	CxbxUnlockIndexBuffer(g_pClosingLineLoopHostIndexBuffer);
+
+	CxbxSetIndices(g_pClosingLineLoopHostIndexBuffer);
+
+	hRet = CxbxDrawIndexedPrimitive(
+		/*XboxPrimitiveType=*/(xbox::X_D3DPRIMITIVETYPE)xbox::X_D3DPT_LINELIST,
+		/*IndexCount=*/VERTICES_PER_LINE,
+		/*BaseVertexIndex=*/0, // Note : Callers must apply BaseVertexIndex to the LowIndex and HighIndex argument values
+		/*StartIndex=*/0,
+		/*MinIndex=*/LowIndex,
+		/*NumVertices=*/VERTICES_PER_LINE,
+		/*PrimCount=*/1
+	);
+	DEBUG_D3DRESULT(hRet, "DrawIndexedPrimitive(CxbxDrawIndexedClosingLine)");
+
+	g_dwPrimPerFrame++;
+}
+
+// TODO : Move to own file
+void CxbxDrawIndexedClosingLineUP(INDEX16 LowIndex, INDEX16 HighIndex, void *pHostVertexStreamZeroData, UINT uiHostVertexStreamZeroStride)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+#if 0
+	// Since we can use pHostVertexStreamZeroData here, we can close the line simpler than
+	// via CxbxDrawIndexedClosingLine, by drawing two indices via DrawIndexedPrimitiveUP.
+	// (This is simpler because we use just indices and don't need to copy the vertices.)
+	INDEX16 CxbxClosingLineIndices[2] = { LowIndex, HighIndex };
+
+	HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
+		/*PrimitiveType=*/D3DPT_LINELIST,
+		/*MinVertexIndex=*/LowIndex,
+		/*NumVertices=*/(HighIndex - LowIndex) + 1,
+		/*PrimitiveCount=*/1,
+		/*pIndexData=*/CxbxClosingLineIndices,
+		/*IndexDataFormat=*/EMUFMT_INDEX16,
+		pHostVertexStreamZeroData,
+		uiHostVertexStreamZeroStride
+	);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitiveUP(CxbxDrawIndexedClosingLineUP)");
+#else // TODO : If NumVertices is high, performance might suffer - drawing a copy of the two vertices could be faster
+	// Since we can use pHostVertexStreamZeroData here, we can close the line simpler than
+	// via CxbxDrawIndexedClosingLine, by drawing two vertices via DrawPrimitiveUP.
+	// (This is simpler because we just copy the vertices, and don't need a separate index buffer.)
+	uint8_t VertexData[512]; assert(512 >= 2 * uiHostVertexStreamZeroStride);
+	uint8_t *FirstVertex = (uint8_t *)pHostVertexStreamZeroData + (LowIndex * uiHostVertexStreamZeroStride);
+	uint8_t *SecondVertex = (uint8_t *)pHostVertexStreamZeroData + (HighIndex * uiHostVertexStreamZeroStride);
+
+	memcpy(VertexData, FirstVertex, uiHostVertexStreamZeroStride);
+	memcpy(VertexData + uiHostVertexStreamZeroStride, SecondVertex, uiHostVertexStreamZeroStride);
+
+#ifdef CXBX_USE_D3D11
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.ByteWidth = 2 * uiHostVertexStreamZeroStride;
+	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	D3D11_SUBRESOURCE_DATA vbInit = {};
+	vbInit.pSysMem = VertexData;
+	ID3D11Buffer* pTempVB = nullptr;
+	HRESULT hRet = g_pD3DDevice->CreateBuffer(&vbDesc, &vbInit, &pTempVB);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (DrawIndexedClosingLineUP)");
+	if (SUCCEEDED(hRet) && pTempVB != nullptr) {
+		UINT stride = uiHostVertexStreamZeroStride;
+		UINT offset = 0;
+		g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pTempVB, &stride, &offset);
+		g_pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+		g_pD3DDeviceContext->Draw(2, 0);
+		pTempVB->Release();
+	}
+#else
+	HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP(
+		/*PrimitiveType=*/D3DPT_LINELIST,
+		/*PrimitiveCount=*/1,
+		/*pVertexStreamZeroData=*/VertexData,
+		uiHostVertexStreamZeroStride
+	);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitiveUP(CxbxDrawIndexedClosingLineUP)");
+#endif
+#endif
+
+	g_dwPrimPerFrame++;
+}
+
+// Requires assigned pXboxIndexData
+// Called by D3DDevice_DrawIndexedVertices and EmuExecutePushBufferRaw (twice)
+void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+	assert(DrawContext.dwStartVertex == 0);
+	assert(DrawContext.pXboxIndexData != nullptr);
+	assert(DrawContext.dwVertexCount > 0); // TODO : If this fails, make responsible callers do an early-exit
+
+	bool bConvertQuadListToTriangleList = (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST);
+	ConvertedIndexBuffer& CacheEntry = CxbxUpdateActiveIndexBuffer(DrawContext.pXboxIndexData, DrawContext.dwVertexCount, bConvertQuadListToTriangleList);
+	// Note : CxbxUpdateActiveIndexBuffer calls SetIndices
+
+	// Set LowIndex and HighIndex *before* VerticesInBuffer gets derived
+	DrawContext.LowIndex = CacheEntry.LowIndex;
+	DrawContext.HighIndex = CacheEntry.HighIndex;
+
+	VertexBufferConverter.Apply(&DrawContext); // Sets dwHostPrimitiveCount
+
+	INT BaseVertexIndex = DrawContext.dwBaseVertexIndex;
+	UINT primCount = DrawContext.dwHostPrimitiveCount;
+	if (bConvertQuadListToTriangleList) {
+		if (DrawContext.dwVertexCount == 4)
+			LOG_TEST_CASE("X_D3DPT_QUADLIST (single quad)"); // breakpoint location
+		else
+			LOG_TEST_CASE("X_D3DPT_QUADLIST");
+
+		if (BaseVertexIndex > 0)
+			LOG_TEST_CASE("X_D3DPT_QUADLIST (BaseVertexIndex > 0)");
+
+		// Convert draw arguments from quads to triangles :
+		// Note : BaseVertexIndex must NOT be mapped through QuadToTriangleVertexCount(BaseVertexIndex)!
+		primCount *= TRIANGLES_PER_QUAD;
+	}
+
+	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
+	// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
+	HRESULT hRet = CxbxDrawIndexedPrimitive(
+		DrawContext.XboxPrimitiveType,
+		/*IndexCount=*/bConvertQuadListToTriangleList ? primCount * 3 : DrawContext.dwVertexCount,
+		/*BaseVertexIndex=*/-(INT)CacheEntry.LowIndex, // Base vertex index has been accounted for in the stream conversion, now we need to "un-offset" the index buffer
+		/*StartIndex=*/0,
+		/*MinIndex=*/CacheEntry.LowIndex,
+		/*NumVertices=*/(CacheEntry.HighIndex - CacheEntry.LowIndex) + 1,
+		primCount);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive");
+
+	g_dwPrimPerFrame += primCount;
+	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_LINELOOP) {
+		// Close line-loops using a final single line, drawn from the end to the start vertex
+		if (BaseVertexIndex == 0) {
+			LOG_TEST_CASE("X_D3DPT_LINELOOP");
+		} else {
+			LOG_TEST_CASE("X_D3DPT_LINELOOP (BaseVertexIndex > 0)");
+			// Note : This is to find test-cases for the BaseVertexIndex addition below:
+		}
+		// Read the end and start index from the supplied index data
+		INDEX16 LowIndex = BaseVertexIndex + DrawContext.pXboxIndexData[0];
+		INDEX16 HighIndex = BaseVertexIndex + DrawContext.pXboxIndexData[DrawContext.dwHostPrimitiveCount];
+		// If needed, swap so highest index is higher than lowest (duh)
+		if (HighIndex < LowIndex) {
+			std::swap(HighIndex, LowIndex);
+		}
+
+		// Draw the closing line using a helper function (which will SetIndices)
+		CxbxDrawIndexedClosingLine(LowIndex, HighIndex);
+		// NOTE : We don't restore the previously active index buffer
+	}
+}
+
+// TODO : Move to own file
+// Drawing function specifically for rendering Xbox draw calls supplying a 'User Pointer'.
+// Called by D3DDevice_DrawVerticesUP, EmuExecutePushBufferRaw and CxbxImpl_End
+void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
+{
+	LOG_INIT // Allows use of DEBUG_D3DRESULT
+
+	assert(DrawContext.dwStartVertex == 0);
+	assert(DrawContext.pXboxVertexStreamZeroData != xbox::zeroptr);
+	assert(DrawContext.uiXboxVertexStreamZeroStride > 0);
+	assert(DrawContext.dwBaseVertexIndex == 0); // No IndexBase under Draw*UP
+
+	VertexBufferConverter.Apply(&DrawContext);
+
+#ifdef CXBX_USE_D3D11
+	// D3D11 has no DrawPrimitiveUP - we need to create a temporary vertex buffer
+	UINT vertexDataSize = DrawContext.dwVertexCount * DrawContext.uiHostVertexStreamZeroStride;
+
+	// Create a temporary dynamic vertex buffer for the UP data
+	D3D11_BUFFER_DESC vbDesc = {};
+	vbDesc.ByteWidth = vertexDataSize;
+	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	D3D11_SUBRESOURCE_DATA vbInit = {};
+	vbInit.pSysMem = DrawContext.pHostVertexStreamZeroData;
+
+	ID3D11Buffer* pTempVB = nullptr;
+	HRESULT hRet = g_pD3DDevice->CreateBuffer(&vbDesc, &vbInit, &pTempVB);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (UP vertex buffer)");
+
+	if (SUCCEEDED(hRet) && pTempVB != nullptr) {
+		UINT stride = DrawContext.uiHostVertexStreamZeroStride;
+		UINT offset = 0;
+		g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pTempVB, &stride, &offset);
+
+		if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
+			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
+			INDEX16 *pIndexData = CxbxAssureQuadListIndexData(DrawContext.dwVertexCount);
+			UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+			UINT IndexCount = PrimitiveCount * 3;
+
+			// Create a temporary index buffer for the quad index data
+			D3D11_BUFFER_DESC ibDesc = {};
+			ibDesc.ByteWidth = IndexCount * sizeof(INDEX16);
+			ibDesc.Usage = D3D11_USAGE_DYNAMIC;
+			ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+			ibDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+			D3D11_SUBRESOURCE_DATA ibInit = {};
+			ibInit.pSysMem = pIndexData;
+
+			ID3D11Buffer* pTempIB = nullptr;
+			hRet = g_pD3DDevice->CreateBuffer(&ibDesc, &ibInit, &pTempIB);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (UP index buffer)");
+
+			if (SUCCEEDED(hRet) && pTempIB != nullptr) {
+				g_pD3DDeviceContext->IASetIndexBuffer(pTempIB, DXGI_FORMAT_R16_UINT, 0);
+				g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				g_pD3DDeviceContext->DrawIndexed(IndexCount, 0, 0);
+				pTempIB->Release();
+			}
+
+			g_dwPrimPerFrame += PrimitiveCount;
+		} else {
+			g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType));
+			g_pD3DDeviceContext->Draw(DrawContext.dwVertexCount, 0);
+
+			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
+			if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_LINELOOP) {
+				CxbxDrawIndexedClosingLineUP(
+					(INDEX16)0,
+					(INDEX16)DrawContext.dwHostPrimitiveCount,
+					DrawContext.pHostVertexStreamZeroData,
+					DrawContext.uiHostVertexStreamZeroStride
+				);
+			}
+		}
+
+		pTempVB->Release();
+	}
+#else
+	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
+		// LOG_TEST_CASE("X_D3DPT_QUADLIST"); // test-case : X-Marbles and XDK Sample PlayField
+		// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
+		INDEX16 *pIndexData = CxbxAssureQuadListIndexData(DrawContext.dwVertexCount);
+		// Convert quad vertex-count to triangle vertex count :
+		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+
+		// Draw indexed triangles instead of quads
+		HRESULT hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
+			/*PrimitiveType=*/D3DPT_TRIANGLELIST,
+			/*MinVertexIndex=*/0, // Always 0 for converted quadlist data
+			/*NumVertices=*/DrawContext.dwVertexCount,
+			PrimitiveCount,
+			pIndexData,
+			/*IndexDataFormat=*/EMUFMT_INDEX16,
+			DrawContext.pHostVertexStreamZeroData,
+			DrawContext.uiHostVertexStreamZeroStride
+		);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitieUP(X_D3DPT_QUADLIST)");
+
+		g_dwPrimPerFrame += PrimitiveCount;
+	}
+	else {
+		// Primitives other than X_D3DPT_QUADLIST can be drawn using one DrawPrimitiveUP call :
+		HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP(
+			EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
+			DrawContext.dwHostPrimitiveCount,
+			DrawContext.pHostVertexStreamZeroData,
+			DrawContext.uiHostVertexStreamZeroStride
+		);
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawPrimitiveUP");
+
+		g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
+		if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_LINELOOP) {
+			// test-case : XDK samples reaching this case : DebugKeyboard, Gamepad, Tiling, ShadowBuffer
+			// Close line-loops using a final single line, drawn from the end to the start vertex :
+			CxbxDrawIndexedClosingLineUP(
+				(INDEX16)0, // LowIndex
+				(INDEX16)DrawContext.dwHostPrimitiveCount, // HighIndex,
+				DrawContext.pHostVertexStreamZeroData,
+				DrawContext.uiHostVertexStreamZeroStride
+			);
+		}
+	}
+#endif
+}
+
+IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture* pBaseTexture)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	IDirect3DSurface* pHostSurface = GetHostSurface(pBaseTexture);
+	if (!pHostSurface) {
+        LOG_TEST_CASE("Failed to get host surface");
+		return nullptr;
+	}
+
+#ifdef CXBX_USE_D3D11
+	// For D3D11, the surface IS already the texture (ID3D11Texture2D)
+	// Just add a reference and return it
+	pHostSurface->AddRef();
+	return pHostSurface;
+#else
+	IDirect3DBaseTexture* pNewHostBaseTexture = nullptr;
+	auto hRet = pHostSurface->GetContainer(IID_PPV_ARGS(&pNewHostBaseTexture)); // TODO : pNewHostBaseTexture.GetAddressOf() ?
+    DEBUG_D3DRESULT(hRet, "pHostSurface->GetContainer");
+
+	if (FAILED(hRet)) {
+		LOG_TEST_CASE("Failed to get Texture from Surface");
+		return nullptr;
+	}
+
+	return pNewHostBaseTexture;
+#endif
+}
+

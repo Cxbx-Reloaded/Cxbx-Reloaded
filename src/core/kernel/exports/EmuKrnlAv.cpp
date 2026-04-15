@@ -39,7 +39,7 @@ namespace NtDll
 };
 
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
-#include "core\hle\D3D8\Direct3D9\Direct3D9.h"
+#include "core\hle\D3D8\Rendering\EmuD3D8.h"
 #include "devices\x86\EmuX86.h"
 
 #include "EmuKrnlAvModes.h"
