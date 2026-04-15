@@ -873,31 +873,8 @@ static void CxbxImpl_SetRenderTarget
 		}
 	}
 
-#ifdef CXBX_USE_D3D11
-	// For D3D11, update the depth stencil view from the surface (which is a texture for D3D11)
-	{
-		ID3D11DepthStencilView* pDSV = nullptr;
-		if (pHostDepthStencil != nullptr) {
-			D3D11_TEXTURE2D_DESC texDesc = {};
-			pHostDepthStencil->GetDesc(&texDesc);
-			D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-			dsvDesc.Format = texDesc.Format;
-			dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-			dsvDesc.Texture2D.MipSlice = 0;
-			g_pD3DDevice->CreateDepthStencilView(pHostDepthStencil, &dsvDesc, &pDSV);
-			if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); }
-			g_pD3DDepthStencilView = pDSV;
-		} else {
-			if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); g_pD3DDepthStencilView = nullptr; }
-		}
-		// Update the output merger with the currently bound RTV and new DSV
-		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
-	}
+	CxbxSetDepthStencilSurface(pHostDepthStencil);
 	hRet = S_OK;
-#else
-	hRet = g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetDepthStencilSurface");
-#endif
 
 	if (SUCCEEDED(hRet)) {
 		// Once we're sure the host depth-stencil is activated...

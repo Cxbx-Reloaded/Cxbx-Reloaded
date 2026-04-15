@@ -30,8 +30,29 @@
 #include "core\kernel\init\CxbxKrnl.h" // LOG_INIT, EmuLog
 #include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
 #include "core\hle\D3D8\Rendering\Shader.h" // D3DCompile (via d3dcompiler.h)
+#include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3D11PrimitiveTopology
 
 #include <cstring> // memcpy
+#include <wrl/client.h>
+using namespace Microsoft::WRL;
+
+// ******************************************************************
+// * D3D11 device globals — definitions
+// ******************************************************************
+IDXGISwapChain                     *g_pSwapChain   = nullptr;
+ID3D11DeviceContext                *g_pD3DDeviceContext = nullptr;
+
+// D3D11 render target and depth stencil views for the back buffer
+ID3D11RenderTargetView             *g_pD3DBackBufferView = nullptr;
+ID3D11DepthStencilView             *g_pD3DDepthStencilView = nullptr;
+// D3D11 currently bound render target view (backbuffer or offscreen)
+ID3D11RenderTargetView             *g_pD3DCurrentRTV = nullptr;
+// D3D11 depth/stencil buffer texture
+ID3D11Texture2D                    *g_pD3DDepthStencilBuffer = nullptr;
+// D3D11 back buffer texture (used as fallback for dimension queries)
+IDirect3DSurface                   *g_pD3DBackBufferSurface = nullptr;
+// D3D11 current host render target surface (used for dimension queries)
+IDirect3DSurface                   *g_pD3DCurrentHostRenderTarget = nullptr;
 
 // ******************************************************************
 // * D3D11 state descriptors — definitions
@@ -377,6 +398,165 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11BlitPS) { g_pD3D11BlitPS->Release(); g_pD3D11BlitPS = nullptr; }
 	if (g_pD3D11BlitSamplerLinear) { g_pD3D11BlitSamplerLinear->Release(); g_pD3D11BlitSamplerLinear = nullptr; }
 	if (g_pD3D11BlitSamplerPoint) { g_pD3D11BlitSamplerPoint->Release(); g_pD3D11BlitSamplerPoint = nullptr; }
+}
+
+// ******************************************************************
+// * Rendering helpers (D3D11 implementations)
+// ******************************************************************
+HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
+{
+	LOG_INIT;
+	HRESULT hRet;
+	if (pHostRenderTarget == nullptr) {
+		g_pD3DCurrentHostRenderTarget = g_pD3DBackBufferSurface;
+		if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
+			g_pD3DCurrentRTV->Release();
+		}
+		g_pD3DCurrentRTV = g_pD3DBackBufferView;
+		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
+		hRet = S_OK;
+	} else {
+		g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
+		D3D11_TEXTURE2D_DESC textureDesc = {};
+		pHostRenderTarget->GetDesc(&textureDesc);
+
+		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
+		renderTargetViewDesc.Format = textureDesc.Format;
+		renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+		ComPtr<ID3D11RenderTargetView> renderTargetView;
+		hRet = g_pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pHostRenderTarget, &renderTargetViewDesc, renderTargetView.GetAddressOf());
+		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
+
+		if (SUCCEEDED(hRet)) {
+			if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
+				g_pD3DCurrentRTV->Release();
+			}
+			g_pD3DCurrentRTV = renderTargetView.Get();
+			g_pD3DCurrentRTV->AddRef();
+			g_pD3DDeviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), g_pD3DDepthStencilView);
+		}
+	}
+	return hRet;
+}
+
+void CxbxD3DClear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
+{
+	LOG_INIT;
+	FLOAT clearColor[4];
+	clearColor[0] = ((Color >> 16) & 0xFF) / 255.0f;
+	clearColor[1] = ((Color >>  8) & 0xFF) / 255.0f;
+	clearColor[2] = ((Color >>  0) & 0xFF) / 255.0f;
+	clearColor[3] = ((Color >> 24) & 0xFF) / 255.0f;
+
+	if ((Flags & D3DCLEAR_TARGET) && g_pD3DCurrentRTV != nullptr) {
+		if (Count > 0 && pRects != nullptr) {
+			ComPtr<ID3D11DeviceContext1> context1;
+			if (SUCCEEDED(g_pD3DDeviceContext->QueryInterface(IID_PPV_ARGS(context1.GetAddressOf())))) {
+				context1->ClearView(g_pD3DCurrentRTV, clearColor, (const D3D11_RECT*)pRects, Count);
+			}
+		} else {
+			g_pD3DDeviceContext->ClearRenderTargetView(g_pD3DCurrentRTV, clearColor);
+		}
+	}
+
+	if (g_pD3DDepthStencilView != nullptr) {
+		UINT clearFlags = 0;
+		if (Flags & D3DCLEAR_ZBUFFER) clearFlags |= D3D11_CLEAR_DEPTH;
+		if (Flags & D3DCLEAR_STENCIL) clearFlags |= D3D11_CLEAR_STENCIL;
+		if (clearFlags != 0) {
+			g_pD3DDeviceContext->ClearDepthStencilView(g_pD3DDepthStencilView, clearFlags, Z, (UINT8)Stencil);
+		}
+	}
+}
+
+void CxbxSetViewport(D3DVIEWPORT *pHostViewport)
+{
+	g_pD3DDeviceContext->RSSetViewports(1, pHostViewport);
+}
+
+void CxbxSetScissorRect(CONST RECT *pHostViewportRect)
+{
+	g_pD3DDeviceContext->RSSetScissorRects(1, pHostViewportRect);
+}
+
+void CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	g_pD3DDeviceContext->IASetIndexBuffer(pHostIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
+}
+
+INDEX16* CxbxLockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	LOG_INIT;
+	INDEX16* pData = nullptr;
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hRet = g_pD3DDeviceContext->Map(pHostIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	DEBUG_D3DRESULT(hRet, "CxbxLockIndexBuffer: Map");
+	if (SUCCEEDED(hRet))
+		pData = (INDEX16*)mapped.pData;
+	return pData;
+}
+
+void CxbxUnlockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	g_pD3DDeviceContext->Unmap(pHostIndexBuffer, 0);
+}
+
+HRESULT CxbxDrawIndexedPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT IndexCount, INT BaseVertexIndex, UINT StartIndex, UINT MinIndex, UINT NumVertices, UINT PrimCount)
+{
+	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
+	g_pD3DDeviceContext->DrawIndexed(IndexCount, StartIndex, BaseVertexIndex);
+	return S_OK;
+}
+
+HRESULT CxbxDrawPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount, UINT StartVertex, UINT PrimCount)
+{
+	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
+	g_pD3DDeviceContext->Draw(VertexCount, StartVertex);
+	return S_OK;
+}
+
+HRESULT CxbxBltSurface(IDirect3DSurface* pSrc, const RECT* pSrcRect, IDirect3DSurface* pDst, const RECT* pDstRect, D3DTEXTUREFILTERTYPE Filter)
+{
+	return CxbxD3D11Blt(pSrc, pSrcRect, pDst, pDstRect, Filter);
+}
+
+HRESULT CxbxPresent()
+{
+	LOG_INIT;
+	CxbxEndScene();
+	HRESULT hRet = g_pSwapChain->Present(0, 0);
+	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
+	CxbxBeginScene();
+	return hRet;
+}
+
+void CxbxSetDepthStencilSurface(IDirect3DSurface* pHostDepthStencil)
+{
+	ID3D11DepthStencilView* pDSV = nullptr;
+	if (pHostDepthStencil != nullptr) {
+		D3D11_TEXTURE2D_DESC texDesc = {};
+		pHostDepthStencil->GetDesc(&texDesc);
+		D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+		dsvDesc.Format = texDesc.Format;
+		dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		dsvDesc.Texture2D.MipSlice = 0;
+		g_pD3DDevice->CreateDepthStencilView(pHostDepthStencil, &dsvDesc, &pDSV);
+	}
+	if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); }
+	g_pD3DDepthStencilView = pDSV;
+	g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
+}
+
+IDirect3DSurface* CxbxGetCurrentRenderTarget()
+{
+	return g_pD3DCurrentHostRenderTarget;
+}
+
+HRESULT CxbxGetBackBuffer(IDirect3DSurface** ppBackBuffer)
+{
+	return g_pSwapChain->GetBuffer(0, __uuidof(IDirect3DSurface), reinterpret_cast<void**>(ppBackBuffer));
 }
 
 #endif // CXBX_USE_D3D11

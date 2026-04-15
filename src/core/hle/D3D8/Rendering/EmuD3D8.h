@@ -39,10 +39,6 @@
 
 extern IDirect3DDevice *g_pD3DDevice;
 
-#ifdef CXBX_USE_D3D11
-extern ID3D11DeviceContext *g_pD3DDeviceContext;
-#endif
-
 void LookupTrampolinesD3D();
 
 // initialize render window
@@ -53,6 +49,26 @@ void CxbxUpdateNativeD3DResources();
 // Unified shader constant helpers (dispatch to D3D9 or D3D11 internally)
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
 void CxbxSetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount);
+
+// Rendering helpers (implemented per-backend in Backend_D3D9.cpp / Backend_D3D11.cpp)
+HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget);
+void    CxbxD3DClear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
+void    CxbxSetViewport(D3DVIEWPORT *pHostViewport);
+void    CxbxSetScissorRect(CONST RECT *pHostViewportRect);
+void    CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer);
+INDEX16* CxbxLockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer);
+void    CxbxUnlockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer);
+HRESULT CxbxDrawIndexedPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT IndexCount, INT BaseVertexIndex, UINT StartIndex, UINT MinIndex, UINT NumVertices, UINT PrimCount);
+HRESULT CxbxDrawPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount, UINT StartVertex, UINT PrimCount);
+HRESULT CxbxBltSurface(IDirect3DSurface* pSrc, const RECT* pSrcRect, IDirect3DSurface* pDst, const RECT* pDstRect, D3DTEXTUREFILTERTYPE Filter);
+HRESULT CxbxPresent();
+void    CxbxSetDepthStencilSurface(IDirect3DSurface* pHostDepthStencil);
+IDirect3DSurface* CxbxGetCurrentRenderTarget(); // Returns current RT (caller owns ref in D3D9, not in D3D11)
+HRESULT CxbxGetBackBuffer(IDirect3DSurface** ppBackBuffer); // Returns back buffer (caller owns ref)
+
+// ImGui rendering (still has internal ifdefs for ImGui_Impl backend)
+class ImGuiUI;
+void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget);
 
 // BeginScene/EndScene: no-ops in D3D11
 inline void CxbxBeginScene()

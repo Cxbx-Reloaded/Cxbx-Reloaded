@@ -370,18 +370,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 	// Fetch the host backbuffer
 	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
-#ifdef CXBX_USE_D3D11
-	// Get the surface from the swap chain
-	HRESULT hRet = g_pSwapChain->GetBuffer(
-		0, // Buffer (zero-based buffer index)
-		__uuidof(pCurrentHostBackBuffer),
-		reinterpret_cast<void**>(&pCurrentHostBackBuffer)
-	);
-#else
-	HRESULT hRet = g_pD3DDevice->GetBackBuffer(
-		0, // iSwapChain
-		0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
-#endif
+	HRESULT hRet = CxbxGetBackBuffer(&pCurrentHostBackBuffer);
 
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetBackBuffer - Unable to get backbuffer surface!");
 	if (hRet == D3D_OK) {
@@ -389,15 +378,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
         // Clear the backbuffer surface, this prevents artifacts when switching aspect-ratio
         // Test-case: Dashboard
-        IDirect3DSurface* pExistingRenderTarget = nullptr;
-#ifdef CXBX_USE_D3D11
-        pExistingRenderTarget = g_pD3DCurrentHostRenderTarget;
-        bool bGotRenderTarget = true;
-#else
-        hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
-        bool bGotRenderTarget = (hRet == D3D_OK);
-#endif
-        if (bGotRenderTarget) {
+        IDirect3DSurface* pExistingRenderTarget = CxbxGetCurrentRenderTarget();
+        if (pExistingRenderTarget) {
             (void)CxbxSetRenderTarget(pCurrentHostBackBuffer);
             CxbxD3DClear(
                 /*Count=*/0,
@@ -408,7 +390,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                 /*Stencil=*/0);
             (void)CxbxSetRenderTarget(pExistingRenderTarget);
 #ifndef CXBX_USE_D3D11
-            if (pExistingRenderTarget) pExistingRenderTarget->Release();
+            pExistingRenderTarget->Release();
 #endif
         }
         

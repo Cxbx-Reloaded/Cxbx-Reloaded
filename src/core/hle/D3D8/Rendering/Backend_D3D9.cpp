@@ -27,6 +27,9 @@
 
 #include "Backend_D3D9.h"
 #include "EmuD3D8.h" // g_pD3DDevice
+#include "core\kernel\init\CxbxKrnl.h" // LOG_INIT, EmuLog, CxbxrAbort
+#include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
+#include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3DPrimitiveType
 
 // ******************************************************************
 // * D3D9 globals — definitions
@@ -56,6 +59,115 @@ void CxbxGetVertexShaderConstants(UINT startRegister, float* pConstantData, UINT
 	if (g_pD3DDevice && pConstantData && Vector4fCount > 0) {
 		g_pD3DDevice->GetVertexShaderConstantF(startRegister, pConstantData, Vector4fCount);
 	}
+}
+
+// ******************************************************************
+// * Rendering helpers (D3D9 implementations)
+// ******************************************************************
+HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
+{
+	LOG_INIT;
+	HRESULT hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
+	return hRet;
+}
+
+void CxbxD3DClear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
+{
+	LOG_INIT;
+	HRESULT hRet = g_pD3DDevice->Clear(Count, pRects, Flags, Color, Z, Stencil);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
+}
+
+void CxbxSetViewport(D3DVIEWPORT *pHostViewport)
+{
+	g_pD3DDevice->SetViewport(pHostViewport);
+}
+
+void CxbxSetScissorRect(CONST RECT *pHostViewportRect)
+{
+	g_pD3DDevice->SetScissorRect(pHostViewportRect);
+}
+
+void CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	LOG_INIT;
+	HRESULT hRet = g_pD3DDevice->SetIndices(pHostIndexBuffer);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
+	if (FAILED(hRet))
+		CxbxrAbort("CxbxSetIndices: SetIndices Failed!");
+}
+
+INDEX16* CxbxLockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	LOG_INIT;
+	INDEX16* pData = nullptr;
+	HRESULT hRet = pHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData**)&pData, D3DLOCK_DISCARD);
+	DEBUG_D3DRESULT(hRet, "CxbxLockIndexBuffer: Lock");
+	return pData;
+}
+
+void CxbxUnlockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
+{
+	LOG_INIT;
+	HRESULT hRet = pHostIndexBuffer->Unlock();
+	DEBUG_D3DRESULT(hRet, "CxbxUnlockIndexBuffer: Unlock");
+}
+
+HRESULT CxbxDrawIndexedPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT IndexCount, INT BaseVertexIndex, UINT StartIndex, UINT MinIndex, UINT NumVertices, UINT PrimCount)
+{
+	return g_pD3DDevice->DrawIndexedPrimitive(
+		EmuXB2PC_D3DPrimitiveType(XboxPrimitiveType),
+		BaseVertexIndex,
+		MinIndex,
+		NumVertices,
+		StartIndex,
+		PrimCount);
+}
+
+HRESULT CxbxDrawPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount, UINT StartVertex, UINT PrimCount)
+{
+	return g_pD3DDevice->DrawPrimitive(
+		EmuXB2PC_D3DPrimitiveType(XboxPrimitiveType),
+		StartVertex,
+		PrimCount);
+}
+
+HRESULT CxbxBltSurface(IDirect3DSurface* pSrc, const RECT* pSrcRect, IDirect3DSurface* pDst, const RECT* pDstRect, D3DTEXTUREFILTERTYPE Filter)
+{
+	HRESULT hRet = g_pD3DDevice->StretchRect(pSrc, pSrcRect, pDst, pDstRect, Filter);
+	if (FAILED(hRet)) {
+		// Fallback for cases StretchRect cannot handle (e.g. texture to texture)
+		hRet = D3DXLoadSurfaceFromSurface(pDst, nullptr, pDstRect, pSrc, nullptr, pSrcRect, (Filter == D3DTEXF_LINEAR) ? D3DX_FILTER_LINEAR : D3DX_FILTER_POINT, 0);
+	}
+	return hRet;
+}
+
+HRESULT CxbxPresent()
+{
+	LOG_INIT;
+	CxbxEndScene();
+	HRESULT hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
+	CxbxBeginScene();
+	return hRet;
+}
+
+void CxbxSetDepthStencilSurface(IDirect3DSurface* pHostDepthStencil)
+{
+	g_pD3DDevice->SetDepthStencilSurface(pHostDepthStencil);
+}
+
+IDirect3DSurface* CxbxGetCurrentRenderTarget()
+{
+	IDirect3DSurface* pHostRenderTarget = nullptr;
+	g_pD3DDevice->GetRenderTarget(0, &pHostRenderTarget);
+	return pHostRenderTarget;
+}
+
+HRESULT CxbxGetBackBuffer(IDirect3DSurface** ppBackBuffer)
+{
+	return g_pD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, ppBackBuffer);
 }
 
 #endif // !CXBX_USE_D3D11

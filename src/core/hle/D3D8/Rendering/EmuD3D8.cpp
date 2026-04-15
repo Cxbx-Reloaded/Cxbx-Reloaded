@@ -40,21 +40,6 @@ using namespace std::literals::chrono_literals;
 HWND                                g_hEmuWindow   = NULL; // rendering window
 bool                                g_bClipCursor  = false; // indicates that the mouse cursor should be confined inside the rendering window
 IDirect3DDevice                    *g_pD3DDevice   = nullptr; // Direct3D Device
-#ifdef CXBX_USE_D3D11
-IDXGISwapChain                     *g_pSwapChain   = nullptr; // Direct3D 11 Swap Chain
-ID3D11DeviceContext                *g_pD3DDeviceContext = nullptr; // Direct3D 11 Device Context
-// D3D11 render target and depth stencil views for the back buffer
-static ID3D11RenderTargetView      *g_pD3DBackBufferView = nullptr;
-static ID3D11DepthStencilView      *g_pD3DDepthStencilView = nullptr;
-// D3D11 currently bound render target view (backbuffer or offscreen)
-static ID3D11RenderTargetView      *g_pD3DCurrentRTV = nullptr;
-// D3D11 depth/stencil buffer texture
-static ID3D11Texture2D             *g_pD3DDepthStencilBuffer = nullptr;
-// D3D11 back buffer texture (used as fallback for dimension queries)
-static IDirect3DSurface            *g_pD3DBackBufferSurface = nullptr;
-// D3D11 current host render target surface (used for dimension queries)
-static IDirect3DSurface            *g_pD3DCurrentHostRenderTarget = nullptr;
-#endif
 
 // Static Variable(s)
 static bool                         g_bSupportsFormatSurface[xbox::X_D3DFMT_LAST + 1]; // Does device support surface format?

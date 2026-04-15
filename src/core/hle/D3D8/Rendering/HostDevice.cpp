@@ -705,18 +705,7 @@ void UpdateHostBackBufferDesc()
 {
     IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
 
-#ifdef CXBX_USE_D3D11
-	// Get the surface from the swap chain
-	HRESULT hRet = g_pSwapChain->GetBuffer(
-		0, // Buffer (zero-based buffer index)
-		__uuidof(pCurrentHostBackBuffer),
-		reinterpret_cast<void**>(&pCurrentHostBackBuffer)
-	);
-#else
-	auto hRet = g_pD3DDevice->GetBackBuffer(
-        0, // iSwapChain
-        0, D3DBACKBUFFER_TYPE_MONO, &pCurrentHostBackBuffer);
-#endif
+    HRESULT hRet = CxbxGetBackBuffer(&pCurrentHostBackBuffer);
     if (hRet != D3D_OK) {
         CxbxrAbort("Unable to get host backbuffer surface");
     }
