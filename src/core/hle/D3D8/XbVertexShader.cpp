@@ -812,8 +812,17 @@ private:
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
 			break;
 		case xbox::X_D3DVSDT_D3DCOLOR: // 0x40:
-			HostVertexElementDataType = _9_11(D3DDECLTYPE_D3DCOLOR, DXGI_FORMAT_B8G8R8A8_UNORM); // D3DCOLOR memory layout is [B,G,R,A]
+#ifdef CXBX_USE_D3D11
+			// D3DCOLOR memory layout is [B,G,R,A]. DXGI_FORMAT_B8G8R8A8_UNORM is not universally
+			// supported for vertex input (optional D3D11 feature), so use R8G8B8A8_UNORM and
+			// swap R/B channels in the vertex buffer patching step.
+			HostVertexElementDataType = DXGI_FORMAT_R8G8B8A8_UNORM;
 			HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
+			XboxVertexElementByteSize = 1 * sizeof(D3DCOLOR); // trigger NeedPatch for BGRA→RGBA swizzle
+#else
+			HostVertexElementDataType = D3DDECLTYPE_D3DCOLOR;
+			HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
+#endif
 			break;
 		case xbox::X_D3DVSDT_SHORT2: // 0x25:
 			HostVertexElementDataType = _9_11(D3DDECLTYPE_SHORT2, DXGI_FORMAT_R16G16_SINT);
@@ -1364,10 +1373,16 @@ void CxbxUpdateHostVertexShader()
 	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
 		HRESULT hRet = CxbxSetVertexShader(fixedFunctionShader);
 		if (FAILED(hRet)) CxbxrAbort("Failed to set fixed-function shader");
+#ifdef CXBX_USE_D3D11
+		g_D3D11HasActiveShaderKey = false; // Prevent stale programmable shader key from being used for input layout
+#endif
 	}
 	else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough && g_bUsePassthroughHLSL) {
 		HRESULT hRet = CxbxSetVertexShader(passthroughShader);
 		if (FAILED(hRet)) CxbxrAbort("Failed to set passthrough shader");
+#ifdef CXBX_USE_D3D11
+		g_D3D11HasActiveShaderKey = false; // Prevent stale programmable shader key from being used for input layout
+#endif
 	}
 	else {
 		auto pTokens = GetCxbxVertexShaderSlotPtr(g_Xbox_VertexShader_FunctionSlots_StartAddress);
