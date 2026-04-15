@@ -170,4 +170,28 @@ HRESULT CxbxGetBackBuffer(IDirect3DSurface** ppBackBuffer)
 	return g_pD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, ppBackBuffer);
 }
 
+HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer* pHostVertexBuffer, UINT VertexStride)
+{
+	return g_pD3DDevice->SetStreamSource(HostStreamNumber, pHostVertexBuffer, /*OffsetInBytes=*/0, VertexStride);
+}
+
+HRESULT CxbxCreateVertexBuffer(UINT Length, IDirect3DVertexBuffer** ppVertexBuffer)
+{
+	return g_pD3DDevice->CreateVertexBuffer(Length, D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC, 0, D3DPOOL_DEFAULT, ppVertexBuffer, nullptr);
+}
+
+void* CxbxLockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
+{
+	void* pData = nullptr;
+	if (FAILED(pVertexBuffer->Lock(0, 0, (D3DLockData**)&pData, D3DLOCK_DISCARD))) {
+		return nullptr;
+	}
+	return pData;
+}
+
+void CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
+{
+	pVertexBuffer->Unlock();
+}
+
 #endif // !CXBX_USE_D3D11

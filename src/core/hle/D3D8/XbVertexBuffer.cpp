@@ -63,28 +63,7 @@ extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); 
 
 extern void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource); // Declared in Direct3D.cpp
 
-HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer *pHostVertexBuffer, UINT VertexStride)
-{
-	HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-	UINT offset = 0;
-	g_pD3DDeviceContext->IASetVertexBuffers(
-		HostStreamNumber, // StartSlot
-		1, // NumBuffers
-		&pHostVertexBuffer, // ppVertexBuffers (pointer to array of buffers)
-		&VertexStride, // pStrides
-		&offset); // pOffsets
-	hRet = S_OK;
-#else
-	hRet = g_pD3DDevice->SetStreamSource(
-		HostStreamNumber,
-		pHostVertexBuffer,
-		0, // OffsetInBytes
-		VertexStride);
-#endif
-	//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
-	 return hRet;
-}
+// CxbxSetStreamSource moved to Backend_D3D9.cpp / Backend_D3D11.cpp
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamNumber) const
 {
@@ -371,23 +350,7 @@ void CxbxVertexBufferConverter::ConvertStream
             CxbxrAbort("Couldn't allocate the new stream zero buffer");
         }
     } else {
-#ifdef CXBX_USE_D3D11
-        D3D11_BUFFER_DESC bufDesc = {};
-        bufDesc.ByteWidth = dwHostVertexDataSize;
-        bufDesc.Usage = D3D11_USAGE_DYNAMIC;
-        bufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        HRESULT hRet = g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, &pNewHostVertexBuffer);
-#else
-        HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
-            dwHostVertexDataSize,
-            D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
-            0,
-            D3DPOOL_DEFAULT,
-            &pNewHostVertexBuffer, // TODO : pNewHostVertexBuffer.GetAddressOf() ?
-            nullptr
-        );
-#endif
+        HRESULT hRet = CxbxCreateVertexBuffer(dwHostVertexDataSize, &pNewHostVertexBuffer);
 
         if (FAILED(hRet)) {
             CxbxrAbort("Failed to create vertex buffer");
@@ -396,17 +359,10 @@ void CxbxVertexBufferConverter::ConvertStream
 
     // If we need to lock a host vertex buffer, do so now
     if (pHostVertexData == nullptr && pNewHostVertexBuffer != nullptr) {
-#ifdef CXBX_USE_D3D11
-        D3D11_MAPPED_SUBRESOURCE mappedResource = {};
-        if (FAILED(g_pD3DDeviceContext->Map(pNewHostVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
-            CxbxrAbort("Couldn't map D3D11 vertex buffer");
-        }
-        pHostVertexData = (uint8_t*)mappedResource.pData;
-#else
-        if (FAILED(pNewHostVertexBuffer->Lock(0, 0, (D3DLockData **)&pHostVertexData, D3DLOCK_DISCARD))) {
+        pHostVertexData = (uint8_t*)CxbxLockVertexBuffer(pNewHostVertexBuffer);
+        if (pHostVertexData == nullptr) {
             CxbxrAbort("Couldn't lock vertex buffer");
         }
-#endif
     }
 	
 	if (bNeedVertexPatching) {
@@ -684,11 +640,7 @@ void CxbxVertexBufferConverter::ConvertStream
         patchedStream.bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;
     } else {
         // assert(pNewHostVertexBuffer != nullptr);
-#ifdef CXBX_USE_D3D11
-        g_pD3DDeviceContext->Unmap(pNewHostVertexBuffer, 0);
-#else
-        pNewHostVertexBuffer->Unlock();
-#endif
+        CxbxUnlockVertexBuffer(pNewHostVertexBuffer);
         patchedStream.pCachedHostVertexBuffer = pNewHostVertexBuffer;
     }
 

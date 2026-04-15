@@ -559,4 +559,35 @@ HRESULT CxbxGetBackBuffer(IDirect3DSurface** ppBackBuffer)
 	return g_pSwapChain->GetBuffer(0, __uuidof(IDirect3DSurface), reinterpret_cast<void**>(ppBackBuffer));
 }
 
+HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer* pHostVertexBuffer, UINT VertexStride)
+{
+	UINT offset = 0;
+	g_pD3DDeviceContext->IASetVertexBuffers(HostStreamNumber, 1, &pHostVertexBuffer, &VertexStride, &offset);
+	return S_OK;
+}
+
+HRESULT CxbxCreateVertexBuffer(UINT Length, IDirect3DVertexBuffer** ppVertexBuffer)
+{
+	D3D11_BUFFER_DESC bufDesc = {};
+	bufDesc.ByteWidth = Length;
+	bufDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	return g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, ppVertexBuffer);
+}
+
+void* CxbxLockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
+{
+	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
+	if (FAILED(g_pD3DDeviceContext->Map(pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
+		return nullptr;
+	}
+	return mappedResource.pData;
+}
+
+void CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
+{
+	g_pD3DDeviceContext->Unmap(pVertexBuffer, 0);
+}
+
 #endif // CXBX_USE_D3D11
