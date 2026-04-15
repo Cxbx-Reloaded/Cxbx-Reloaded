@@ -195,7 +195,7 @@ void ShaderSources::LoadShadersFromDisk() {
 			"// <XBOX SHADER PROGRAM GOES HERE>\n",
 		};
 		int pos = 0;
-		for (int i = 0; i < insertionPoints.size(); i++) {
+		for (size_t i = 0; i < insertionPoints.size(); i++) {
 			auto insertionPoint = insertionPoints[i];
 			auto index = hlsl.find(insertionPoint, pos);
 

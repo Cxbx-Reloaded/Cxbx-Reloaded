@@ -914,19 +914,19 @@ IDirect3DPixelShader* GetFixedFunctionShader()
 			std::string target = "stages[" + std::to_string(i) + "].";
 
 			auto s = states[i];
-			stageSetup << target << "COLOROP = " << GetD3DTOPString(s.COLOROP) << ";\n";
+			stageSetup << target << "COLOROP = " << GetD3DTOPString(static_cast<int>(s.COLOROP)) << ";\n";
 
-			stageSetup << target << "COLORARG0 = " << GetD3DTASumString(s.COLORARG0) << ";\n";
-			stageSetup << target << "COLORARG1 = " << GetD3DTASumString(s.COLORARG1) << ";\n";
-			stageSetup << target << "COLORARG2 = " << GetD3DTASumString(s.COLORARG2) << ";\n";
+			stageSetup << target << "COLORARG0 = " << GetD3DTASumString(static_cast<int>(s.COLORARG0)) << ";\n";
+			stageSetup << target << "COLORARG1 = " << GetD3DTASumString(static_cast<int>(s.COLORARG1)) << ";\n";
+			stageSetup << target << "COLORARG2 = " << GetD3DTASumString(static_cast<int>(s.COLORARG2)) << ";\n";
 
-			stageSetup << target << "ALPHAOP = " << GetD3DTOPString(s.ALPHAOP) << ";\n";
+			stageSetup << target << "ALPHAOP = " << GetD3DTOPString(static_cast<int>(s.ALPHAOP)) << ";\n";
 
-			stageSetup << target << "ALPHAARG0 = " << GetD3DTASumString(s.ALPHAARG0) << ";\n";
-			stageSetup << target << "ALPHAARG1 = " << GetD3DTASumString(s.ALPHAARG1) << ";\n";
-			stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(s.ALPHAARG2) << ";\n";
+			stageSetup << target << "ALPHAARG0 = " << GetD3DTASumString(static_cast<int>(s.ALPHAARG0)) << ";\n";
+			stageSetup << target << "ALPHAARG1 = " << GetD3DTASumString(static_cast<int>(s.ALPHAARG1)) << ";\n";
+			stageSetup << target << "ALPHAARG2 = " << GetD3DTASumString(static_cast<int>(s.ALPHAARG2)) << ";\n";
 
-			stageSetup << target << "RESULTARG = " << GetD3DTASumString(s.RESULTARG, false) << ";\n";
+			stageSetup << target << "RESULTARG = " << GetD3DTASumString(static_cast<int>(s.RESULTARG), false) << ";\n";
 			stageSetup << '\n';
 		}
 
@@ -1057,7 +1057,7 @@ void UpdateFixedFunctionPixelShaderState()
 	ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::X_D3DRS_SPECULARENABLE);
 	ffPsState.FogEnable = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::X_D3DRS_FOGENABLE);
 	{ D3DXCOLOR c(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR)); ffPsState.FogColor = D3DXVECTOR3(c.r, c.g, c.b); }
-	ffPsState.FogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+	ffPsState.FogTableMode = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE));
 	ffPsState.FogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 	ffPsState.FogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
 	ffPsState.FogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
@@ -1306,7 +1306,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   }
   fColor[PSH_XBOX_CONSTANT_FRONTFACE_FACTOR].r = frontfaceFactor;
   float fogEnable = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE) > 0;
-  const float fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+  const float fogTableMode = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE));
   const float fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
   const float fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
   const float fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
