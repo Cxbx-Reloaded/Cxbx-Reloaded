@@ -28,6 +28,18 @@
 #include "core\hle\D3D8\XbD3D8Types.h"
 
 // ******************************************************************
+// * D3D11 device globals
+// ******************************************************************
+extern IDXGISwapChain              *g_pSwapChain;
+extern ID3D11DeviceContext         *g_pD3DDeviceContext;
+extern ID3D11RenderTargetView      *g_pD3DBackBufferView;
+extern ID3D11DepthStencilView      *g_pD3DDepthStencilView;
+extern ID3D11RenderTargetView      *g_pD3DCurrentRTV;
+extern ID3D11Texture2D             *g_pD3DDepthStencilBuffer;
+extern IDirect3DSurface            *g_pD3DBackBufferSurface;
+extern IDirect3DSurface            *g_pD3DCurrentHostRenderTarget;
+
+// ******************************************************************
 // * Constant buffer sizing
 // ******************************************************************
 static const UINT CXBX_D3D11_VS_CB_SLOT = 0;

@@ -1,209 +1,7 @@
 #include "EmuD3D8_common.h"
 
 
-static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
-{
-	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
-	HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-	if (pHostRenderTarget == nullptr) {
-		// Restore back buffer as render target; track backbuffer surface for dimension queries
-		g_pD3DCurrentHostRenderTarget = g_pD3DBackBufferSurface;
-		// Release any offscreen RTV before restoring the backbuffer view
-		if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
-			g_pD3DCurrentRTV->Release();
-		}
-		g_pD3DCurrentRTV = g_pD3DBackBufferView;
-		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
-		hRet = S_OK;
-	} else {
-		g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
-		// Get the texture description to determine the format
-		D3D11_TEXTURE2D_DESC textureDesc = {};
-		pHostRenderTarget->GetDesc(&textureDesc);
-
-		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
-		renderTargetViewDesc.Format = textureDesc.Format;
-		renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		renderTargetViewDesc.Texture2D.MipSlice = 0;
-
-		ComPtr<ID3D11RenderTargetView> renderTargetView;
-		hRet = g_pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pHostRenderTarget, &renderTargetViewDesc, renderTargetView.GetAddressOf());
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
-
-		if (SUCCEEDED(hRet)) {
-			// Release the previous offscreen RTV (if any; not the backbuffer view which is owned separately)
-			if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
-				g_pD3DCurrentRTV->Release();
-			}
-			g_pD3DCurrentRTV = renderTargetView.Get();
-			g_pD3DCurrentRTV->AddRef(); // prevent ComPtr from releasing it when it goes out of scope
-			g_pD3DDeviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), g_pD3DDepthStencilView);
-		}
-	}
-#else
-	hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
-#endif
-
-	return hRet;
-}
-
-static void CxbxD3DClear(
-	DWORD          Count,
-	CONST D3DRECT* pRects,
-	DWORD          Flags,
-	D3DCOLOR       Color,
-	float          Z,
-	DWORD          Stencil
-)
-{
-	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
-#ifdef CXBX_USE_D3D11
-	// Convert D3DCOLOR (ARGB) to normalized RGBA float array for D3D11
-	FLOAT clearColor[4];
-	clearColor[0] = ((Color >> 16) & 0xFF) / 255.0f; // R
-	clearColor[1] = ((Color >>  8) & 0xFF) / 255.0f; // G
-	clearColor[2] = ((Color >>  0) & 0xFF) / 255.0f; // B
-	clearColor[3] = ((Color >> 24) & 0xFF) / 255.0f; // A
-
-	if ((Flags & D3DCLEAR_TARGET) && g_pD3DCurrentRTV != nullptr) {
-		if (Count > 0 && pRects != nullptr) {
-			// Use ClearView for rect-based clears (requires D3D11.1 context)
-			ComPtr<ID3D11DeviceContext1> context1;
-			if (SUCCEEDED(g_pD3DDeviceContext->QueryInterface(IID_PPV_ARGS(context1.GetAddressOf())))) {
-				context1->ClearView(g_pD3DCurrentRTV, clearColor, (const D3D11_RECT*)pRects, Count);
-			}
-		} else {
-			g_pD3DDeviceContext->ClearRenderTargetView(g_pD3DCurrentRTV, clearColor);
-		}
-	}
-
-	if (g_pD3DDepthStencilView != nullptr) {
-		UINT clearFlags = 0;
-		if (Flags & D3DCLEAR_ZBUFFER) {
-			clearFlags |= D3D11_CLEAR_DEPTH;
-		}
-		if (Flags & D3DCLEAR_STENCIL) {
-			clearFlags |= D3D11_CLEAR_STENCIL;
-		}
-		if (clearFlags != 0) {
-			g_pD3DDeviceContext->ClearDepthStencilView(g_pD3DDepthStencilView, clearFlags, Z, (UINT8)Stencil);
-		}
-	}
-#else
-	HRESULT hRet = g_pD3DDevice->Clear(Count, pRects, Flags, Color, Z, Stencil);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Clear");
-#endif
-}
-
-static void CxbxSetViewport(D3DVIEWPORT *pHostViewport)
-{
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->RSSetViewports(1, pHostViewport);
-#else
-	g_pD3DDevice->SetViewport(pHostViewport);
-#endif
-}
-
-static void CxbxSetScissorRect(CONST RECT *pHostViewportRect)
-{
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->RSSetScissorRects(1, pHostViewportRect);
-#else
-	g_pD3DDevice->SetScissorRect(pHostViewportRect);
-#endif
-}
-
-static void CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
-{
-	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->IASetIndexBuffer(pHostIndexBuffer, /*Format=*/DXGI_FORMAT_R16_UINT, /*Offset=*/0);
-#else
-	HRESULT hRet = g_pD3DDevice->SetIndices(pHostIndexBuffer);
-	// Note : Under Direct3D 9, the BaseVertexIndex argument is moved towards DrawIndexedPrimitive
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
-
-	if (FAILED(hRet))
-		CxbxrAbort("CxbxSetIndices: SetIndices Failed!"); // +DxbxD3DErrorString(hRet));
-#endif
-}
-
-// Lock (Map) an index buffer for writing, returning a pointer to the data.
-// Returns nullptr on failure.
-static INDEX16* CxbxLockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
-{
-	LOG_INIT;
-
-	INDEX16* pData = nullptr;
-#ifdef CXBX_USE_D3D11
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	HRESULT hRet = g_pD3DDeviceContext->Map(pHostIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-	DEBUG_D3DRESULT(hRet, "CxbxLockIndexBuffer: Map");
-	if (SUCCEEDED(hRet))
-		pData = (INDEX16*)mapped.pData;
-#else
-	HRESULT hRet = pHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData**)&pData, D3DLOCK_DISCARD);
-	DEBUG_D3DRESULT(hRet, "CxbxLockIndexBuffer: Lock");
-#endif
-	return pData;
-}
-
-// Unlock (Unmap) a previously locked index buffer.
-static void CxbxUnlockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
-{
-	LOG_INIT;
-
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->Unmap(pHostIndexBuffer, 0);
-#else
-	HRESULT hRet = pHostIndexBuffer->Unlock();
-	DEBUG_D3DRESULT(hRet, "CxbxUnlockIndexBuffer: Unlock");
-#endif
-}
-
-// Draw indexed primitives using the currently bound index/vertex buffers.
-static HRESULT CxbxDrawIndexedPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT IndexCount, INT BaseVertexIndex, UINT StartIndex, UINT MinIndex, UINT NumVertices, UINT PrimCount)
-{
-	HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
-	g_pD3DDeviceContext->DrawIndexed(IndexCount, StartIndex, BaseVertexIndex);
-	hRet = S_OK;
-#else
-	hRet = g_pD3DDevice->DrawIndexedPrimitive(
-		EmuXB2PC_D3DPrimitiveType(XboxPrimitiveType),
-		BaseVertexIndex,
-		MinIndex,
-		NumVertices,
-		StartIndex,
-		PrimCount);
-#endif
-	return hRet;
-}
-
-// Draw non-indexed primitives using the currently bound vertex buffers.
-static HRESULT CxbxDrawPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount, UINT StartVertex, UINT PrimCount)
-{
-	HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
-	g_pD3DDeviceContext->Draw(VertexCount, StartVertex);
-	hRet = S_OK;
-#else
-	hRet = g_pD3DDevice->DrawPrimitive(
-		EmuXB2PC_D3DPrimitiveType(XboxPrimitiveType),
-		StartVertex,
-		PrimCount);
-#endif
-	return hRet;
-}
-
-static void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget)
+void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget)
 {
 #ifdef CXBX_USE_D3D11
 	ImGui_ImplDX11_NewFrame();
@@ -222,14 +20,12 @@ static void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget
 	ImDrawData* drawData = ImGui::GetDrawData();
 	if (drawData->TotalVtxCount > 0) {
 #ifdef CXBX_USE_D3D11
-		// For D3D11, render ImGui directly to the current render target
 		(void)CxbxSetRenderTarget(renderTarget);
 		ImGui_ImplDX11_RenderDrawData(drawData);
-		// Restore back buffer
 		(void)CxbxSetRenderTarget(nullptr);
 #else
-		IDirect3DSurface* pExistingRenderTarget = nullptr;
-		if (SUCCEEDED(g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget))) {
+		IDirect3DSurface* pExistingRenderTarget = CxbxGetCurrentRenderTarget();
+		if (pExistingRenderTarget) {
 			(void)CxbxSetRenderTarget(renderTarget);
 			ImGui_ImplDX9_RenderDrawData(drawData);
 			(void)CxbxSetRenderTarget(pExistingRenderTarget);
@@ -244,52 +40,10 @@ static void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget
 static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
 */
 
-// Blit a host surface region to another host surface region with filtering.
-// Works for both D3D9 (StretchRect + D3DXLoadSurfaceFromSurface fallback)
-// and D3D11 (CopySubresourceRegion or shader blit).
-static HRESULT CxbxBltSurface(
-	IDirect3DSurface* pSrc, const RECT* pSrcRect,
-	IDirect3DSurface* pDst, const RECT* pDstRect,
-	D3DTEXTUREFILTERTYPE Filter)
-{
-#ifdef CXBX_USE_D3D11
-	return CxbxD3D11Blt(pSrc, pSrcRect, pDst, pDstRect, Filter);
-#else
-	HRESULT hRet = g_pD3DDevice->StretchRect(pSrc, pSrcRect, pDst, pDstRect, Filter);
-	if (FAILED(hRet)) {
-		// Fallback for cases StretchRect cannot handle (e.g. texture to texture)
-		hRet = D3DXLoadSurfaceFromSurface(pDst, nullptr, pDstRect, pSrc, nullptr, pSrcRect, (Filter == D3DTEXF_LINEAR) ? D3DX_FILTER_LINEAR : D3DX_FILTER_POINT, 0);
-	}
-	return hRet;
-#endif
-}
-
 // Static Function(s)
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
 static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
-HRESULT CxbxPresent()
-{
-	LOG_INIT;
-
-	CxbxEndScene();
-
-	HRESULT hRet;
-
-#ifdef CXBX_USE_D3D11
-	hRet = g_pSwapChain->Present(0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
-#else
-	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
-#endif
-
-	// Make sure that the actual Present return result is returned back, not the
-	// result of this subsequent BeginScene, using another variable for that :
-	CxbxBeginScene();
-
-	return hRet;
-}
 
 static void DrawInitialBlackScreen
 (
@@ -707,14 +461,10 @@ bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, IDirec
 {
 	bool shouldRelease = false;
 	if (pHostRenderTarget == nullptr) {
-#ifdef CXBX_USE_D3D11
-		// In D3D11, use the current back buffer as the render target
-		pHostRenderTarget = g_pD3DCurrentHostRenderTarget;
-#else
-		g_pD3DDevice->GetRenderTarget(
-			0, // RenderTargetIndex
-			&pHostRenderTarget);
-
+		pHostRenderTarget = CxbxGetCurrentRenderTarget();
+		// D3D9's GetRenderTarget AddRef's the surface, so we need to release it
+		// D3D11's CxbxGetCurrentRenderTarget returns a non-owning pointer
+#ifndef CXBX_USE_D3D11
 		shouldRelease = true;
 #endif
 	}
@@ -760,26 +510,7 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
 
         FreeHostResource(GetHostResourceKey(g_pXbox_RenderTarget)); CxbxSetRenderTarget(GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET));
 		FreeHostResource(GetHostResourceKey(g_pXbox_DepthStencil));
-#ifdef CXBX_USE_D3D11
-		{
-			IDirect3DSurface *pHostDepthStencil = GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL);
-			ID3D11DepthStencilView* pDSV = nullptr;
-			if (pHostDepthStencil != nullptr) {
-				D3D11_TEXTURE2D_DESC texDesc = {};
-				pHostDepthStencil->GetDesc(&texDesc);
-				D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-				dsvDesc.Format = texDesc.Format;
-				dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-				dsvDesc.Texture2D.MipSlice = 0;
-				g_pD3DDevice->CreateDepthStencilView(pHostDepthStencil, &dsvDesc, &pDSV);
-			}
-			if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); }
-			g_pD3DDepthStencilView = pDSV;
-			g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
-		}
-#else
-		g_pD3DDevice->SetDepthStencilSurface(GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL));
-#endif
+		CxbxSetDepthStencilSurface(GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL));
     }
 }
 
@@ -870,10 +601,12 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 	GetMultiSampleOffset(aaOffsetX, aaOffsetY);
 
 	// Add D3D9 half-pixel offset (-0.5 given this offset is subtracted)
-	// We should be able to remove this when off D3D9
+	// D3D11 doesn't have the half-pixel offset issue
 	// https://aras-p.info/blog/2016/04/08/solving-dx9-half-pixel-offset/
+#ifndef CXBX_USE_D3D11
 	aaOffsetX -= 0.5f;
 	aaOffsetY -= 0.5f;
+#endif
 
 	float xboxScreenspaceWidth = xboxRenderTargetWidth * screenScaleX;
 	float xboxScreenspaceHeight = xboxRenderTargetHeight * screenScaleY;
@@ -884,11 +617,6 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 
 	float screenspaceScale[4] = { xboxScreenspaceWidth / 2,  -xboxScreenspaceHeight / 2, zOutputScale, 1 };
 	float screenspaceOffset[4] = { xboxScreenspaceWidth / 2 + aaOffsetX, xboxScreenspaceHeight / 2 + aaOffsetY, 0, 0 };
-#ifdef CXBX_USE_D3D11
-	// In D3D11, no half-pixel offset needed
-	screenspaceOffset[0] = xboxScreenspaceWidth / 2;
-	screenspaceOffset[1] = xboxScreenspaceHeight / 2;
-#endif
 	CxbxSetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_SCALE_BASE, screenspaceScale, CXBX_D3DVS_NORMALIZE_SCALE_SIZE);
 	CxbxSetVertexShaderConstantF(CXBX_D3DVS_SCREENSPACE_OFFSET_BASE, screenspaceOffset, CXBX_D3DVS_NORMALIZE_OFFSET_SIZE);
 
