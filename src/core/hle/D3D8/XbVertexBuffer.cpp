@@ -622,7 +622,19 @@ void CxbxVertexBufferConverter::ConvertStream
 					// No host element data (but Xbox size can be above zero, when used for X_D3DVSD_MASK_SKIP*
 					break;
 				}
-				case xbox::X_D3DVSDT_D3DCOLOR: [[fallthrough]]; // 0x40: DXGI_FORMAT_R8G8B8A8_UNORM
+#ifdef CXBX_USE_D3D11
+				case xbox::X_D3DVSDT_D3DCOLOR: { // 0x40: DXGI_FORMAT_R8G8B8A8_UNORM
+					// D3DCOLOR is stored as [B,G,R,A] in memory. We use DXGI_FORMAT_R8G8B8A8_UNORM
+					// which reads bytes as [R,G,B,A], so swap bytes 0 (B) and 2 (R) to get correct RGBA.
+					pHostVertexAsByte[0] = pXboxVertexAsByte[2]; // R
+					pHostVertexAsByte[1] = pXboxVertexAsByte[1]; // G
+					pHostVertexAsByte[2] = pXboxVertexAsByte[0]; // B
+					pHostVertexAsByte[3] = pXboxVertexAsByte[3]; // A
+					break;
+				}
+#else
+				case xbox::X_D3DVSDT_D3DCOLOR: [[fallthrough]]; // 0x40: D3DDECLTYPE_D3DCOLOR (BGRA→RGBA handled by hardware)
+#endif
 				case xbox::X_D3DVSDT_FLOAT1: [[fallthrough]]; // 0x12: DXGI_FORMAT_R32_FLOAT
 				case xbox::X_D3DVSDT_FLOAT2: [[fallthrough]]; // 0x22: DXGI_FORMAT_R32G32_FLOAT
 				case xbox::X_D3DVSDT_FLOAT3: [[fallthrough]]; // 0x32: DXGI_FORMAT_R32G32B32_FLOAT
