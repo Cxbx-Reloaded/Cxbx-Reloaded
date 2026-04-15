@@ -1,3 +1,5 @@
+#include "EmuD3D8_common.h"
+
 
 xbox::X_D3DRESOURCETYPE GetXboxD3DResourceType(const xbox::X_D3DResource *pXboxResource)
 {

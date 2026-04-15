@@ -25,7 +25,30 @@
 // *  All rights reserved
 // *
 // ******************************************************************
+#define LOG_PREFIX CXBXR_MODULE::D3D8
 
+#include "core\kernel\support\Emu.h"
+#include "core\hle\D3D8\Rendering\EmuD3D8.h"
+#include "core\hle\D3D8\Rendering\Shader.h"
+#include "core\hle\D3D8\XbPixelShader.h"
+#include "core\hle\D3D8\Rendering\PixelShader.h"
+#include "core\hle\D3D8\XbD3D8Logging.h"
+#include "core\kernel\init\CxbxKrnl.h"
+#include "util\hasher.h"
+#include "core\hle\D3D8\Rendering\FixedFunctionPixelShader.hlsli"
+#include "common/FilePaths.hpp"
+#include <assert.h>
+#include <process.h>
+#include <locale.h>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+#include "Rendering\RenderStates.h"
+#include "Rendering\TextureStates.h"
+#include <wrl/client.h>
+
+extern XboxRenderStateConverter XboxRenderStates; // Declared in EmuD3D8.cpp
+extern XboxTextureStateConverter XboxTextureStates; // Declared in EmuD3D8.cpp
 
 void DecodedRegisterCombiner::Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {

@@ -1,3 +1,5 @@
+#include "EmuD3D8_common.h"
+
 
 bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage) {
 	// TODO : Nuance the following, because the Direct3D 8 docs states
