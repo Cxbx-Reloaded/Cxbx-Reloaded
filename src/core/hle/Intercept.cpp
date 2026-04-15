@@ -303,11 +303,6 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
     unsigned int FlagsLLE;
     g_EmuShared->GetFlagsLLE(&FlagsLLE);
 
-    printf("EmuUpdateLLEStatus: FlagsLLE=0x%X, XbLibScan=0x%X, XBSDBLIB_D3D8=0x%X, XBSDBLIB_D3D8LTCG=0x%X\n",
-        FlagsLLE, XbLibScan, (unsigned)XBSDBLIB_D3D8, (unsigned)XBSDBLIB_D3D8LTCG);
-    printf("  (FlagsLLE & LLE_GPU)=%u, (XbLibScan & XBSDBLIB_D3D8)=%u, (XbLibScan & XBSDBLIB_D3D8LTCG)=%u\n",
-        (FlagsLLE & LLE_GPU), (XbLibScan & XBSDBLIB_D3D8), (XbLibScan & XBSDBLIB_D3D8LTCG));
-
     if ((FlagsLLE & LLE_GPU) == false
         && !((XbLibScan & XBSDBLIB_D3D8) > 0
             || (XbLibScan & XBSDBLIB_D3D8LTCG) > 0)) {
@@ -331,7 +326,6 @@ void EmuUpdateLLEStatus(uint32_t XbLibScan)
 	}
 #endif
     ipc_send_gui_update(IPC_UPDATE_GUI::LLE_FLAGS, FlagsLLE);
-    printf("EmuUpdateLLEStatus result: bLLE_GPU=%d, bLLE_APU=%d\n", (int)bLLE_GPU, (int)bLLE_APU);
     //return FlagsLLE;
 }
 
@@ -361,7 +355,6 @@ void EmuHLEIntercept(Xbe::Header *pXbeHeader)
 			}
 			XbLibFlag = XbSDB_LibraryToFlag(std::string(pLibraryVersion[v].szName, pLibraryVersion[v].szName + 8).c_str());
 			XbLibScan |= XbLibFlag;
-			printf("  Library[%u]: '%.8s' -> flag=0x%X, cumulative XbLibScan=0x%X\n", v, pLibraryVersion[v].szName, XbLibFlag, XbLibScan);
 
 			// Keep certain library versions for plugin usage.
 			if ((XbLibFlag & (XBSDBLIB_D3D8 | XBSDBLIB_D3D8LTCG)) > 0) {

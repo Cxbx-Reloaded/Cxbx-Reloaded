@@ -172,7 +172,7 @@ set(WINS_LIB
 if(CXBX_USE_D3D11)
  list(APPEND WINS_LIB d3d11 dxgi d3dcompiler)
 else()
- list(APPEND WINS_LIB d3d9 d3dx9)
+ list(APPEND WINS_LIB d3d9 d3dx9 d3dcompiler)
 endif()
 
 target_link_libraries(${PROJECT_NAME}
