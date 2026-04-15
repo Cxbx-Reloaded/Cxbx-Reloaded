@@ -33,6 +33,7 @@
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Rendering\EmuD3D8.h" // For g_Xbox_VertexShader_Handle
+#include "core\hle\D3D8\Rendering\Backend_D3D9.h" // For g_D3DCaps
 #include "core\hle\D3D8\Rendering\RenderStates.h" // For XboxRenderStateConverter
 #include "core\hle\D3D8\Rendering\VertexShaderCache.h" // For g_VertexShaderCache
 #include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
@@ -350,10 +351,6 @@ size_t GetVshFunctionSize(const xbox::dword_xt* pXboxFunction) {
 // ****************************************************************************
 // * Vertex shader declaration recompiler
 // ****************************************************************************
-
-#ifndef CXBX_USE_D3D11
-extern D3DCAPS g_D3DCaps;
-#endif
 
 class XboxVertexDeclarationConverter
 {
