@@ -125,6 +125,20 @@ void CxbxSetPixelShaderConstantF(UINT startRegister, const float* pConstantData,
 	g_bD3D11PSConstantsDirty = true;
 }
 
+void CxbxGetVertexShaderConstants(UINT startRegister, float* pConstantData, UINT Vector4fCount)
+{
+	if (!pConstantData || Vector4fCount == 0)
+		return;
+
+	UINT endRegister = startRegister + Vector4fCount;
+	if (endRegister > CXBX_D3D11_VS_CB_COUNT)
+		endRegister = CXBX_D3D11_VS_CB_COUNT;
+
+	for (UINT i = startRegister; i < endRegister; i++) {
+		memcpy(pConstantData + (i - startRegister) * 4, g_D3D11VSConstants[i], sizeof(float) * 4);
+	}
+}
+
 void CxbxD3D11FlushPixelShaderConstants()
 {
 	if (!g_pD3D11PSConstantBuffer || !g_bD3D11PSConstantsDirty)
