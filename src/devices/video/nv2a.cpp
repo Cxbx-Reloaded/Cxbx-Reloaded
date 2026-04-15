@@ -1398,7 +1398,7 @@ int NV2ADevice::GetFrameWidth(NV2AState* d)
 uint64_t NV2ADevice::vblank_next(uint64_t now)
 {
 	// TODO: this should use a vblank period of 20ms when we are in 50Hz PAL mode
-	constexpr uint64_t vblank_period = 16.6666666667 * 1000;
+	constexpr uint64_t vblank_period = static_cast<uint64_t>(16.6666666667 * 1000);
 	uint64_t next = m_nv2a_state->vblank_last + vblank_period;
 
 	if (now >= next) {
