@@ -7603,12 +7603,9 @@ void UpdateFixedFunctionVertexShaderState()
 			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_W;
 		}
 
-		auto density = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGDENSITY);
-		auto fogStart = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGSTART);
-		auto fogEnd = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGEND);
-		ffShaderState.Fog.Density = *reinterpret_cast<float*>(&density);
-		ffShaderState.Fog.Start = *reinterpret_cast<float*>(&fogStart);
-		ffShaderState.Fog.End = *reinterpret_cast<float*>(&fogEnd);
+		ffShaderState.Fog.Density = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGDENSITY);
+		ffShaderState.Fog.Start = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGSTART);
+		ffShaderState.Fog.End = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_FOGEND);
 	}
 	else {
 		ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_NONE;
