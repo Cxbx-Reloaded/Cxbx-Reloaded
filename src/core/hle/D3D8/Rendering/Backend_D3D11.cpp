@@ -26,7 +26,7 @@
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
 #include "Backend_D3D11.h"
-#include "Direct3D9.h" // g_pD3DDevice, g_pD3DDeviceContext
+#include "EmuD3D8.h" // g_pD3DDevice, g_pD3DDeviceContext
 #include "core\kernel\init\CxbxKrnl.h" // LOG_INIT, EmuLog
 #include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
 #include "core\hle\D3D8\Direct3D9\Shader.h" // D3DCompile (via d3dcompiler.h)

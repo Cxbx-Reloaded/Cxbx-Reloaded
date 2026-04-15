@@ -28,7 +28,7 @@
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Direct3D9/Direct3D9.h"
+#include "core\hle\D3D8\Rendering/EmuD3D8.h"
 #include "core\hle\JVS\JVS.h"
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
 #include "Patches.hpp"
