@@ -13,6 +13,12 @@ if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
  add_compile_options(
  /wd4146 # unary minus on unsigned type
  )
+ # s_mp_rand_platform.c relies on dead code elimination to avoid linking
+ # Unix-only random sources (arc4random, getrandom, urandom) on Windows.
+ # MSVC /Od (Debug) disables all optimization including DCE, causing LNK2019.
+ # Strip /RTC1 (incompatible with /O1) and enable minimal optimization for
+ # just this file so DCE works in Debug builds.
+ string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 endif()
 
 file (GLOB HEADERS
@@ -23,10 +29,6 @@ file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/import/libtommath/*.c"
 )
 
-# s_mp_rand_platform.c relies on dead code elimination to avoid linking
-# Unix-only random sources (arc4random, getrandom, urandom) on Windows.
-# MSVC /Od (Debug) disables all optimization including DCE, causing LNK2019.
-# Enable minimal optimization for just this file so DCE works in Debug builds.
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
  set_source_files_properties(
   "${CXBXR_ROOT_DIR}/import/libtommath/s_mp_rand_platform.c"
