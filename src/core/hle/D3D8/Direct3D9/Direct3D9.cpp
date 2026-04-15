@@ -7575,11 +7575,11 @@ void UpdateFixedFunctionVertexShaderState()
 	// Determine how the fog depth is transformed into the fog factor
 	auto fogEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGENABLE);
 	auto fogTableMode = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE);
-	ffShaderState.Fog.Enable = fogEnable;
+	ffShaderState.Fog.Enable = static_cast<float>(fogEnable);
 	// FIXME remove when fixed function PS is implemented
 	// Note if we are using the fixed function pixel shader
 	// We only want to produce the fog depth value in the VS, not the fog factor
-	ffShaderState.Fog.TableMode = !g_UseFixedFunctionPixelShader ? D3DFOG_NONE : fogTableMode;
+	ffShaderState.Fog.TableMode = static_cast<float>(!g_UseFixedFunctionPixelShader ? D3DFOG_NONE : fogTableMode);
 
 	// Determine how fog depth is calculated
 	if (fogEnable && fogTableMode != D3DFOG_NONE) {
@@ -9100,7 +9100,7 @@ void CxbxUpdateHostVertexShaderConstants()
 	}
 
 	// Placed this here until we find a better place
-	const float fogTableMode = XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE);
+	const float fogTableMode = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE));
 	const float fogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 	const float fogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
 	const float fogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
@@ -9154,8 +9154,8 @@ void CxbxUpdateHostViewport() {
 		D3DVIEWPORT hostViewport;
 		hostViewport._9_11(X, TopLeftX) = 0;
 		hostViewport._9_11(Y, TopLeftY) = 0;
-		hostViewport.Width = HostRenderTarget_Width;
-		hostViewport.Height = HostRenderTarget_Height;
+		hostViewport.Width = static_cast<float>(HostRenderTarget_Width);
+		hostViewport.Height = static_cast<float>(HostRenderTarget_Height);
 		hostViewport._9_11(MinZ, MinDepth) = 0.0f;
 		hostViewport._9_11(MaxZ, MaxDepth) = 1.0f;
 
@@ -9170,10 +9170,10 @@ void CxbxUpdateHostViewport() {
 		g_pD3DDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
 #endif
 		RECT viewportRect;
-		viewportRect.left = g_Xbox_Viewport.X * Xscale;
-		viewportRect.top = g_Xbox_Viewport.Y * Yscale;
-		viewportRect.right = viewportRect.left + (g_Xbox_Viewport.Width * Xscale);
-		viewportRect.bottom = viewportRect.top + (g_Xbox_Viewport.Height * Yscale);
+		viewportRect.left = static_cast<LONG>(g_Xbox_Viewport.X * Xscale);
+		viewportRect.top = static_cast<LONG>(g_Xbox_Viewport.Y * Yscale);
+		viewportRect.right = static_cast<LONG>(viewportRect.left + (g_Xbox_Viewport.Width * Xscale));
+		viewportRect.bottom = static_cast<LONG>(viewportRect.top + (g_Xbox_Viewport.Height * Yscale));
 		CxbxSetScissorRect(&viewportRect);
 	}
 }
