@@ -942,7 +942,7 @@ IDirect3DPixelShader* GetFixedFunctionShader()
 
 	auto pseudoFileName = "FixedFunctionPixelShader-" + std::to_string(key) + ".hlsl";
 	auto pseudoSourceFile = hlslDir.append(pseudoFileName).string();
-	EmuCompileShader(finalShader, "ps_3_0", &pShaderBlob, pseudoSourceFile.c_str());
+	EmuCompileShader(finalShader, _9_11("ps_3_0", "ps_5_0"), &pShaderBlob, pseudoSourceFile.c_str());
 
 	IDirect3DPixelShader* pShader = nullptr;
 	if (pShaderBlob) {

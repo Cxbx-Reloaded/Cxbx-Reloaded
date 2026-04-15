@@ -261,6 +261,10 @@ static HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 	if (pHostRenderTarget == nullptr) {
 		// Restore back buffer as render target; track backbuffer surface for dimension queries
 		g_pD3DCurrentHostRenderTarget = g_pD3DBackBufferSurface;
+		// Release any offscreen RTV before restoring the backbuffer view
+		if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
+			g_pD3DCurrentRTV->Release();
+		}
 		g_pD3DCurrentRTV = g_pD3DBackBufferView;
 		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
 		hRet = S_OK;
@@ -498,7 +502,6 @@ static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should b
 // Vector4fCount: number of float4 registers to write
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
 {
-#ifdef CXBX_USE_D3D11
 	if (!g_pD3D11VSConstantBuffer || !pConstantData || Vector4fCount == 0)
 		return;
 
@@ -511,9 +514,6 @@ void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData
 		memcpy(g_D3D11VSConstants[i], pConstantData + (i - startRegister) * 4, sizeof(float) * 4);
 	}
 	g_bD3D11VSConstantsDirty = true;
-#else
-	g_pD3DDevice->SetVertexShaderConstantF(startRegister, pConstantData, Vector4fCount);
-#endif
 }
 
 // Upload the VS constant buffer to GPU if dirty
@@ -536,7 +536,6 @@ void CxbxD3D11FlushVertexShaderConstants()
 // Vector4fCount: number of float4 registers to write
 void CxbxSetPixelShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
 {
-#ifdef CXBX_USE_D3D11
 	if (!g_pD3D11PSConstantBuffer || !pConstantData || Vector4fCount == 0)
 		return;
 
@@ -549,9 +548,6 @@ void CxbxSetPixelShaderConstantF(UINT startRegister, const float* pConstantData,
 		memcpy(g_D3D11PSConstants[i], pConstantData + (i - startRegister) * 4, sizeof(float) * 4);
 	}
 	g_bD3D11PSConstantsDirty = true;
-#else
-	g_pD3DDevice->SetPixelShaderConstantF(startRegister, pConstantData, Vector4fCount);
-#endif
 }
 
 // Upload the PS constant buffer to GPU if dirty
@@ -2523,10 +2519,10 @@ static void DetermineSupportedD3DFormats
     memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
     for (int X_Format = xbox::X_D3DFMT_FIRST; X_Format <= xbox::X_D3DFMT_LAST; X_Format++) {
         // Only process Xbox formats that are directly mappable to host
-		EMUFORMAT PCFormat; // ignored
+		EMUFORMAT PCFormat;
         if (!EmuXBFormatRequiresConversion((xbox::X_D3DFORMAT)X_Format, /*&*/PCFormat)) {
             // Convert the Xbox format into host format (without warning, thanks to the above restriction)
-            const EMUFORMAT PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
+            PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
             if (PCFormat != EMUFMT_UNKNOWN) {
                 // Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
 #ifdef CXBX_USE_D3D11
@@ -3009,6 +3005,9 @@ static void CreateDefaultD3D9Device
         if (g_pD3DDepthStencilBuffer) { g_pD3DDepthStencilBuffer->Release(); g_pD3DDepthStencilBuffer = nullptr; }
         if (g_pD3DBackBufferView) { g_pD3DBackBufferView->Release(); g_pD3DBackBufferView = nullptr; }
         if (g_pD3D11VSConstantBuffer) { g_pD3D11VSConstantBuffer->Release(); g_pD3D11VSConstantBuffer = nullptr; }
+        if (g_pD3D11PSConstantBuffer) { g_pD3D11PSConstantBuffer->Release(); g_pD3D11PSConstantBuffer = nullptr; }
+        if (g_pD3DBackBufferSurface) { g_pD3DBackBufferSurface->Release(); g_pD3DBackBufferSurface = nullptr; }
+        if (g_pD3DCurrentRTV && g_pD3DCurrentRTV != g_pD3DBackBufferView) { g_pD3DCurrentRTV->Release(); g_pD3DCurrentRTV = nullptr; }
         if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = nullptr; }
         if (g_pD3DDeviceContext) { g_pD3DDeviceContext->Release(); g_pD3DDeviceContext = nullptr; }
         g_pD3DDevice->Release();
@@ -6830,8 +6829,18 @@ EMUFORMAT PCFormat;
 			desc.SampleDesc.Count = 1; // No MSAA for now; enabling requires resolve pass infrastructure
 			desc.SampleDesc.Quality = 0;
 			desc.Usage = D3D11_USAGE_DYNAMIC;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | (D3DUsage & D3DUSAGE_DEPTHSTENCIL) ? D3D11_BIND_DEPTH_STENCIL : 0;
-			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+				desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.CPUAccessFlags = 0;
+			} else if (D3DUsage & D3DUSAGE_RENDERTARGET) {
+				desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.CPUAccessFlags = 0;
+			} else {
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			}
 			desc.MiscFlags = 0;
 
 			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
@@ -6849,7 +6858,7 @@ EMUFORMAT PCFormat;
 			}
 			else {
 				// Note : This handles both (D3DUsage & D3DUSAGE_RENDERTARGET) and otherwise alike
-				D3DUsage = D3DUSAGE_RENDERTARGET, // Usage always as render target
+				D3DUsage = D3DUSAGE_RENDERTARGET; // Usage always as render target
 				hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight,
 					1, // Levels
 					D3DUsage,
@@ -7144,7 +7153,7 @@ EMUFORMAT PCFormat;
 				// See https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-subresources
 				D3D11_MAPPED_SUBRESOURCE MappedResource;
 
-				hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, D3D11_MAP_FLAG_DO_NOT_WAIT, &MappedResource);
+				hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
 #else
 				// Lock the host resource
 				D3DLOCKED_RECT LockedRect = {};
