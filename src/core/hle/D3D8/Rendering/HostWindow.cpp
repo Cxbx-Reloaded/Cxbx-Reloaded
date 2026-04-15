@@ -172,25 +172,3 @@ static void CxbxUpdateCursor(bool forceShow = false) {
 	}
 }
 
-inline DWORD GetXboxCommonResourceType(const xbox::dword_xt XboxResource_Common)
-{
-	DWORD dwCommonType = XboxResource_Common & X_D3DCOMMON_TYPE_MASK;
-	return dwCommonType;
-}
-
-inline DWORD GetXboxCommonResourceType(const xbox::X_D3DResource* pXboxResource)
-{
-	// Don't pass in unassigned Xbox resources
-	assert(pXboxResource != xbox::zeroptr);
-
-	return GetXboxCommonResourceType(pXboxResource->Common);
-}
-
-inline int GetXboxPixelContainerDimensionCount(const xbox::X_D3DPixelContainer *pXboxPixelContainer)
-{
-	// Don't pass in unassigned Xbox pixel container
-	assert(pXboxPixelContainer != xbox::zeroptr);
-
-	return (xbox::X_D3DFORMAT)((pXboxPixelContainer->Format & X_D3DFORMAT_DIMENSION_MASK) >> X_D3DFORMAT_DIMENSION_SHIFT);
-}
-
