@@ -396,6 +396,44 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 	CxbxImpl_SetPixelShader(Handle);
 }
 
+// Overload for logging
+static void D3DDevice_SetPixelShader_0__LTCG_eax1
+(
+    xbox::dword_xt      Handle
+)
+{
+    LOG_FUNC_ONE_ARG(Handle);
+}
+
+// LTCG specific D3DDevice_SetPixelShader function...
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Metal Wolf Chaos
+// Test-case: Lord of the Rings: The Third Age
+// Test-case: Midtown Madness 3
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_eax1)()
+{
+    dword_xt Handle;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, eax
+    }
+
+    // Log
+    D3DDevice_SetPixelShader_0__LTCG_eax1(Handle);
+
+    __asm {
+        mov  eax, Handle
+        call XB_TRMP(D3DDevice_SetPixelShader_0__LTCG_eax1)
+    }
+
+    CxbxImpl_SetPixelShader(Handle);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
+}
+
 // ******************************************************************
 // * patch: D3DDevice_DrawVertices_4
 // LTCG specific D3DDevice_DrawVertices function...
