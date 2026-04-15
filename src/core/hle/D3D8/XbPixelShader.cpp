@@ -1054,8 +1054,8 @@ void UpdateFixedFunctionPixelShaderState()
 
 	FixedFunctionPixelShaderState ffPsState;
 	{ D3DXCOLOR c(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)); ffPsState.TextureFactor = D3DXVECTOR4(c.r, c.g, c.b, c.a); }
-	ffPsState.SpecularEnable = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::X_D3DRS_SPECULARENABLE);
-	ffPsState.FogEnable = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::X_D3DRS_FOGENABLE);
+	ffPsState.SpecularEnable = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE));
+	ffPsState.FogEnable = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE));
 	{ D3DXCOLOR c(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR)); ffPsState.FogColor = D3DXVECTOR3(c.r, c.g, c.b); }
 	ffPsState.FogTableMode = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE));
 	ffPsState.FogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
