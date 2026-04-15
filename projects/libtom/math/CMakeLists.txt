@@ -23,6 +23,17 @@ file (GLOB SOURCES
  "${CXBXR_ROOT_DIR}/import/libtommath/*.c"
 )
 
+# s_mp_rand_platform.c relies on dead code elimination to avoid linking
+# Unix-only random sources (arc4random, getrandom, urandom) on Windows.
+# MSVC /Od (Debug) disables all optimization including DCE, causing LNK2019.
+# Enable minimal optimization for just this file so DCE works in Debug builds.
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+ set_source_files_properties(
+  "${CXBXR_ROOT_DIR}/import/libtommath/s_mp_rand_platform.c"
+  PROPERTIES COMPILE_FLAGS "$<$<CONFIG:Debug>:/O1>"
+ )
+endif()
+
 source_group(TREE ${CXBXR_ROOT_DIR}/import/libtommath PREFIX header FILES ${HEADERS})
 
 source_group(TREE ${CXBXR_ROOT_DIR}/import/libtommath PREFIX source FILES ${SOURCES})
