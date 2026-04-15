@@ -38,10 +38,10 @@
 #define LOG_PREFIX CXBXR_MODULE::PXSH
 
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice, g_pXbox_PixelShader
-#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderSources
+#include "core\hle\D3D8\Rendering\EmuD3D8.h" // For g_pD3DDevice, g_pXbox_PixelShader
+#include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbPixelShader.h"
-#include "core\hle\D3D8\Direct3D9\PixelShader.h" // EmuCompilePixelShader
+#include "core\hle\D3D8\Rendering\PixelShader.h" // EmuCompilePixelShader
 #include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort()
@@ -56,13 +56,13 @@
 #include <fstream>
 #include <sstream>
 
-#include "Direct3D9\RenderStates.h" // For XboxRenderStateConverter
-#include "Direct3D9\TextureStates.h" // For XboxTextureStateConverter
+#include "Rendering\RenderStates.h" // For XboxRenderStateConverter
+#include "Rendering\TextureStates.h" // For XboxTextureStateConverter
 
 #include <wrl/client.h>
 
-extern XboxRenderStateConverter XboxRenderStates; // Declared in Direct3D9.cpp
-extern XboxTextureStateConverter XboxTextureStates; // Declared in Direct3D9.cpp
+extern XboxRenderStateConverter XboxRenderStates; // Declared in EmuD3D8.cpp
+extern XboxTextureStateConverter XboxTextureStates; // Declared in EmuD3D8.cpp
 
 
 #define DbgPshPrintf \

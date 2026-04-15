@@ -1,3 +1,5 @@
+#include "EmuD3D8_common.h"
+
 
 static void RunOnWndMsgThread(const std::function<void()>& func)
 {

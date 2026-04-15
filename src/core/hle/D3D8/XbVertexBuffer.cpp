@@ -31,8 +31,8 @@
 #include "core\kernel\memory-manager\VMManager.h"
 #include "common\util\hasher.h"
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice
-#include "core\hle\D3D8\Direct3D9\WalkIndexBuffer.h" // for WalkIndexBuffer
+#include "core\hle\D3D8\Rendering\EmuD3D8.h" // For g_pD3DDevice
+#include "core\hle\D3D8\Rendering\WalkIndexBuffer.h" // for WalkIndexBuffer
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"

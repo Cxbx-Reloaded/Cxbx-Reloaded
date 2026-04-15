@@ -1,3 +1,5 @@
+#include "EmuD3D8_common.h"
+
 
 void CxbxUpdateHostTextures()
 {

@@ -1,3 +1,5 @@
+#include "EmuD3D8_common.h"
+
 
 xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 (

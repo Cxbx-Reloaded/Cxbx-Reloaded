@@ -1,3 +1,5 @@
+#include "EmuD3D8_common.h"
+
 
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {

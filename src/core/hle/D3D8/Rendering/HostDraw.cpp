@@ -1,3 +1,5 @@
+#include "EmuD3D8_common.h"
+
 
 // TODO : Move to own file
 void CxbxReleaseQuadListToTriangleListIndexData(void* pHostIndexData)

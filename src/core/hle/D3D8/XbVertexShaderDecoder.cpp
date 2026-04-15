@@ -32,10 +32,10 @@
 #include "common\util\hasher.h" // For ComputeHash
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
-#include "core\hle\D3D8\Direct3D9\RenderStates.h" // For XboxRenderStateConverter
-#include "core\hle\D3D8\Direct3D9\VertexShaderCache.h" // For g_VertexShaderCache
-#include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderSources
+#include "core\hle\D3D8\Rendering\EmuD3D8.h" // For g_Xbox_VertexShader_Handle
+#include "core\hle\D3D8\Rendering\RenderStates.h" // For XboxRenderStateConverter
+#include "core\hle\D3D8\Rendering\VertexShaderCache.h" // For g_VertexShaderCache
+#include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT

@@ -42,7 +42,7 @@
 #include "DlgLoggingConfig.h"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
-#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For DDPF_FOURCC
+#include "core\hle\D3D8\Rendering\EmuD3D8.h" // For DDPF_FOURCC
 #include "core\hle\D3D8\XbConvert.h" // For CxbxSetPixelContainerHeader, ConvertD3DTextureToARGB
 #include "common\Settings.hpp"
 #include "common/util/cliConfig.hpp"
