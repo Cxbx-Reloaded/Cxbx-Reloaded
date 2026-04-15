@@ -82,10 +82,6 @@ static D3DSurfaceDesc               g_HostBackBufferDesc;
 static Settings::s_video            g_XBVideo;
 
 // D3D based variables
-#ifndef CXBX_USE_D3D11
-static IDirect3D9Ex                *g_pDirect3D = nullptr;
-       D3DCAPS						g_D3DCaps = {};         // Direct3D Caps
-#endif
 static IDirect3DIndexBuffer        *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer        *g_pQuadToTriangleHostIndexBuffer = nullptr;
 

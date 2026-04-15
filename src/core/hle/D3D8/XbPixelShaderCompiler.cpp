@@ -810,7 +810,7 @@ void CxbxSetPixelShader(IDirect3DPixelShader* pPixelShader)
 }
 
 bool g_UseFixedFunctionPixelShader = true;
-void DxbxUpdateActivePixelShader() // NOPATCH
+void CxbxUpdateActivePixelShader() // NOPATCH
 {
   // The first RenderState is PSAlpha,
   // The pixel shader is stored in pDevice->m_pPixelShader

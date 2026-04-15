@@ -1617,7 +1617,7 @@ typedef enum _X_D3DRENDERSTATETYPE {
 
 	// Dxbx note : The PS* render states map 1-on-1 to the X_D3DPIXELSHADERDEF record,
 	// SetPixelShader actually pushes the definition into these render state slots.
-	// See DxbxUpdateActivePixelShader for how this is employed.
+	// See CxbxUpdateActivePixelShader for how this is employed.
 
 	// The set starts out with "pixel-shader" render states (all Xbox extensions) :
 	X_D3DRS_PSALPHAINPUTS0 = 0,

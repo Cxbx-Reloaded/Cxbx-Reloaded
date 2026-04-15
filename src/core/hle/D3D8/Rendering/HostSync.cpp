@@ -369,7 +369,7 @@ void CxbxUpdateNativeD3DResources()
 
     // If Pixel Shaders are not disabled, process them
     if (!g_DisablePixelShaders) {
-        DxbxUpdateActivePixelShader();
+        CxbxUpdateActivePixelShader();
     }
 
 #ifdef CXBX_USE_D3D11

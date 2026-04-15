@@ -24,6 +24,7 @@
 #include "..\FixedFunctionState.h"
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\Rendering\EmuD3D8.h"
+#include "core\hle\D3D8\Rendering\Backend_D3D9.h"
 #include "core\hle\D3D8\Rendering\Backend_D3D11.h"
 #include "core\hle\D3D8\Rendering\Shader.h"
 #include "core\hle\D3D8\XbVertexBuffer.h"
