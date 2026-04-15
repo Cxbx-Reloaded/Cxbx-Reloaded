@@ -152,6 +152,11 @@ static ID3D11Buffer*                g_pD3D11PSConstantBuffer = nullptr;
 // Local shadow of PS constants for dirty tracking
 static float                        g_D3D11PSConstants[CXBX_D3D11_PS_CB_COUNT][4] = {};
 static bool                         g_bD3D11PSConstantsDirty = true;
+// D3D11 blit (StretchRect replacement) resources
+static ID3D11VertexShader          *g_pD3D11BlitVS = nullptr;
+static ID3D11PixelShader           *g_pD3D11BlitPS = nullptr;
+static ID3D11SamplerState          *g_pD3D11BlitSamplerLinear = nullptr;
+static ID3D11SamplerState          *g_pD3D11BlitSamplerPoint = nullptr;
 #endif
 
 // Static Variable(s)
@@ -564,6 +569,175 @@ void CxbxD3D11FlushPixelShaderConstants()
 	g_bD3D11PSConstantsDirty = false;
 }
 
+// Compile blit shaders and create sampler states for D3D11 StretchRect replacement
+void CxbxD3D11InitBlit()
+{
+	LOG_INIT;
+
+	// Full-screen triangle vertex shader (no vertex buffer needed)
+	static const char* blitVS =
+		"void main(uint id : SV_VertexID, out float4 pos : SV_Position, out float2 uv : TEXCOORD0) {\n"
+		"    uv = float2((id << 1) & 2, id & 2);\n"
+		"    pos = float4(uv * float2(2, -2) + float2(-1, 1), 0, 1);\n"
+		"}\n";
+
+	// Simple texture sampling pixel shader
+	static const char* blitPS =
+		"Texture2D tex : register(t0);\n"
+		"SamplerState samp : register(s0);\n"
+		"float4 main(float4 pos : SV_Position, float2 uv : TEXCOORD0) : SV_Target {\n"
+		"    return tex.Sample(samp, uv);\n"
+		"}\n";
+
+	// Compile vertex shader
+	ID3DBlob* pVSBlob = nullptr;
+	ID3DBlob* pErrors = nullptr;
+	HRESULT hr = D3DCompile(blitVS, strlen(blitVS), "CxbxBlitVS", nullptr, nullptr, "main", "vs_5_0", 0, 0, &pVSBlob, &pErrors);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit VS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
+		if (pErrors) pErrors->Release();
+		return;
+	}
+	hr = g_pD3DDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, &g_pD3D11BlitVS);
+	pVSBlob->Release();
+	if (pErrors) pErrors->Release();
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create blit VS");
+		return;
+	}
+
+	// Compile pixel shader
+	pErrors = nullptr;
+	ID3DBlob* pPSBlob = nullptr;
+	hr = D3DCompile(blitPS, strlen(blitPS), "CxbxBlitPS", nullptr, nullptr, "main", "ps_5_0", 0, 0, &pPSBlob, &pErrors);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit PS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
+		if (pErrors) pErrors->Release();
+		return;
+	}
+	hr = g_pD3DDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pD3D11BlitPS);
+	pPSBlob->Release();
+	if (pErrors) pErrors->Release();
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create blit PS");
+		return;
+	}
+
+	// Create linear sampler
+	D3D11_SAMPLER_DESC sd = {};
+	sd.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sd.AddressU = sd.AddressV = sd.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sd.MaxLOD = D3D11_FLOAT32_MAX;
+	hr = g_pD3DDevice->CreateSamplerState(&sd, &g_pD3D11BlitSamplerLinear);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create linear sampler");
+	}
+
+	// Create point sampler
+	sd.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	hr = g_pD3DDevice->CreateSamplerState(&sd, &g_pD3D11BlitSamplerPoint);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create point sampler");
+	}
+}
+
+// D3D11: Blit source texture region to dest texture region with optional filtering.
+// Handles same-size copies via CopySubresourceRegion (fast path) and
+// scaled copies via a full-screen triangle blit shader.
+static HRESULT CxbxD3D11Blt(
+	ID3D11Texture2D* pSrc, const RECT* pSrcRect,
+	ID3D11Texture2D* pDst, const RECT* pDstRect,
+	D3DTEXTUREFILTERTYPE Filter)
+{
+	D3D11_TEXTURE2D_DESC srcDesc, dstDesc;
+	pSrc->GetDesc(&srcDesc);
+	pDst->GetDesc(&dstDesc);
+
+	// Determine source region
+	UINT srcX = pSrcRect ? pSrcRect->left : 0;
+	UINT srcY = pSrcRect ? pSrcRect->top : 0;
+	UINT srcW = pSrcRect ? (pSrcRect->right - pSrcRect->left) : srcDesc.Width;
+	UINT srcH = pSrcRect ? (pSrcRect->bottom - pSrcRect->top) : srcDesc.Height;
+
+	// Determine dest region
+	UINT dstX = pDstRect ? pDstRect->left : 0;
+	UINT dstY = pDstRect ? pDstRect->top : 0;
+	UINT dstW = pDstRect ? (pDstRect->right - pDstRect->left) : dstDesc.Width;
+	UINT dstH = pDstRect ? (pDstRect->bottom - pDstRect->top) : dstDesc.Height;
+
+	// Fast path: same-size, same-format copy — use CopySubresourceRegion
+	if (srcW == dstW && srcH == dstH && srcDesc.Format == dstDesc.Format) {
+		D3D11_BOX srcBox = { srcX, srcY, 0, srcX + srcW, srcY + srcH, 1 };
+		g_pD3DDeviceContext->CopySubresourceRegion(pDst, 0, dstX, dstY, 0, pSrc, 0, &srcBox);
+		return S_OK;
+	}
+
+	// Scaled blit path: need shaders
+	if (!g_pD3D11BlitVS || !g_pD3D11BlitPS) {
+		// Fallback: best-effort full copy (may produce wrong results if sizes differ)
+		g_pD3DDeviceContext->CopyResource(pDst, pSrc);
+		return S_OK;
+	}
+
+	// Create a temporary SRV for the source
+	ID3D11ShaderResourceView* pSRV = nullptr;
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = srcDesc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	HRESULT hr = g_pD3DDevice->CreateShaderResourceView(pSrc, &srvDesc, &pSRV);
+	if (FAILED(hr)) return hr;
+
+	// Create a temporary RTV for the destination
+	ID3D11RenderTargetView* pRTV = nullptr;
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = dstDesc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	hr = g_pD3DDevice->CreateRenderTargetView(pDst, &rtvDesc, &pRTV);
+	if (FAILED(hr)) {
+		pSRV->Release();
+		return hr;
+	}
+
+	// Save current pipeline state we'll clobber
+	ID3D11RenderTargetView* pOldRTV = nullptr;
+	ID3D11DepthStencilView* pOldDSV = nullptr;
+	g_pD3DDeviceContext->OMGetRenderTargets(1, &pOldRTV, &pOldDSV);
+	D3D11_VIEWPORT oldVP;
+	UINT numVP = 1;
+	g_pD3DDeviceContext->RSGetViewports(&numVP, &oldVP);
+
+	// Set blit pipeline state
+	D3D11_VIEWPORT vp = { (FLOAT)dstX, (FLOAT)dstY, (FLOAT)dstW, (FLOAT)dstH, 0.0f, 1.0f };
+	g_pD3DDeviceContext->RSSetViewports(1, &vp);
+	g_pD3DDeviceContext->OMSetRenderTargets(1, &pRTV, nullptr);
+	g_pD3DDeviceContext->VSSetShader(g_pD3D11BlitVS, nullptr, 0);
+	g_pD3DDeviceContext->PSSetShader(g_pD3D11BlitPS, nullptr, 0);
+	g_pD3DDeviceContext->PSSetShaderResources(0, 1, &pSRV);
+	ID3D11SamplerState* pSampler = (Filter == D3DTEXF_LINEAR) ? g_pD3D11BlitSamplerLinear : g_pD3D11BlitSamplerPoint;
+	g_pD3DDeviceContext->PSSetSamplers(0, 1, &pSampler);
+	g_pD3DDeviceContext->IASetInputLayout(nullptr);
+	g_pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// Draw full-screen triangle (3 vertices, no vertex buffer)
+	g_pD3DDeviceContext->Draw(3, 0);
+
+	// Restore previous state
+	g_pD3DDeviceContext->OMSetRenderTargets(1, &pOldRTV, pOldDSV);
+	g_pD3DDeviceContext->RSSetViewports(1, &oldVP);
+	if (pOldRTV) pOldRTV->Release();
+	if (pOldDSV) pOldDSV->Release();
+
+	// Unbind source SRV to avoid hazard if dest is later bound as SRV
+	ID3D11ShaderResourceView* pNullSRV = nullptr;
+	g_pD3DDeviceContext->PSSetShaderResources(0, 1, &pNullSRV);
+
+	pRTV->Release();
+	pSRV->Release();
+
+	return S_OK;
+}
+
 // Apply D3D11 state objects that have been marked dirty
 void CxbxD3D11ApplyDirtyStates()
 {
@@ -603,6 +777,26 @@ void CxbxD3D11ApplyDirtyStates()
 	CxbxD3D11FlushPixelShaderConstants();
 }
 #endif
+
+// Blit a host surface region to another host surface region with filtering.
+// Works for both D3D9 (StretchRect + D3DXLoadSurfaceFromSurface fallback)
+// and D3D11 (CopySubresourceRegion or shader blit).
+static HRESULT CxbxBltSurface(
+	IDirect3DSurface* pSrc, const RECT* pSrcRect,
+	IDirect3DSurface* pDst, const RECT* pDstRect,
+	D3DTEXTUREFILTERTYPE Filter)
+{
+#ifdef CXBX_USE_D3D11
+	return CxbxD3D11Blt(pSrc, pSrcRect, pDst, pDstRect, Filter);
+#else
+	HRESULT hRet = g_pD3DDevice->StretchRect(pSrc, pSrcRect, pDst, pDstRect, Filter);
+	if (FAILED(hRet)) {
+		// Fallback for cases StretchRect cannot handle (e.g. texture to texture)
+		hRet = D3DXLoadSurfaceFromSurface(pDst, nullptr, pDstRect, pSrc, nullptr, pSrcRect, (Filter == D3DTEXF_LINEAR) ? D3DX_FILTER_LINEAR : D3DX_FILTER_POINT, 0);
+	}
+	return hRet;
+#endif
+}
 
 // Static Function(s)
 static DWORD WINAPI                 EmuRenderWindow(LPVOID);
@@ -2995,6 +3189,7 @@ static void CreateDefaultD3D9Device
     // Set up ImGui's render backend
 #ifdef CXBX_USE_D3D11
 	ImGui_ImplDX11_Init(g_pD3DDevice, g_pD3DDeviceContext);
+	CxbxD3D11InitBlit();
     g_renderbase->SetDeviceRelease([] {
         ImGui_ImplDX11_Shutdown();
         g_VertexShaderCache.Clear();
@@ -3008,6 +3203,10 @@ static void CreateDefaultD3D9Device
         if (g_pD3D11PSConstantBuffer) { g_pD3D11PSConstantBuffer->Release(); g_pD3D11PSConstantBuffer = nullptr; }
         if (g_pD3DBackBufferSurface) { g_pD3DBackBufferSurface->Release(); g_pD3DBackBufferSurface = nullptr; }
         if (g_pD3DCurrentRTV && g_pD3DCurrentRTV != g_pD3DBackBufferView) { g_pD3DCurrentRTV->Release(); g_pD3DCurrentRTV = nullptr; }
+        if (g_pD3D11BlitVS) { g_pD3D11BlitVS->Release(); g_pD3D11BlitVS = nullptr; }
+        if (g_pD3D11BlitPS) { g_pD3D11BlitPS->Release(); g_pD3D11BlitPS = nullptr; }
+        if (g_pD3D11BlitSamplerLinear) { g_pD3D11BlitSamplerLinear->Release(); g_pD3D11BlitSamplerLinear = nullptr; }
+        if (g_pD3D11BlitSamplerPoint) { g_pD3D11BlitSamplerPoint->Release(); g_pD3D11BlitSamplerPoint = nullptr; }
         if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = nullptr; }
         if (g_pD3DDeviceContext) { g_pD3DDeviceContext->Release(); g_pD3DDeviceContext = nullptr; }
         g_pD3DDevice->Release();
@@ -5991,21 +6190,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
         DestRect.bottom *= destScaleY;
 
         HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-		// In D3D11, use CopySubresourceRegion for same-size copies
-		// For scaled copies a full blit shader is needed; for now do a best-effort copy
-		g_pD3DDeviceContext->CopyResource((ID3D11Resource*)pHostDestSurface, (ID3D11Resource*)pHostSourceSurface);
-		hRet = S_OK;
-#else
-        hRet = g_pD3DDevice->StretchRect(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
+        hRet = CxbxBltSurface(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
         if (FAILED(hRet)) {
-			// Fallback for cases which StretchRect cannot handle (such as copying from texture to texture)
-			hRet = D3DXLoadSurfaceFromSurface(pHostDestSurface, nullptr, &DestRect, pHostSourceSurface, nullptr, &SourceRect, D3DTEXF_LINEAR, 0);
-			if (FAILED(hRet)) {
-				LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
-			}
+            LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
         }
-#endif
     }
 }
 
@@ -6162,19 +6350,13 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             dest.bottom = (LONG)(dest.top + height);
 
             // Blit Xbox BackBuffer to host BackBuffer
-#ifdef CXBX_USE_D3D11
-			// In D3D11, copy the source to the back buffer (without scaling for now)
-			g_pD3DDeviceContext->CopyResource((ID3D11Resource*)pCurrentHostBackBuffer, (ID3D11Resource*)pXboxBackBufferHostSurface);
-			hRet = S_OK;
-#else
-            hRet = g_pD3DDevice->StretchRect(
-                /* pSourceSurface = */ pXboxBackBufferHostSurface,
-				/* pSourceRect = */ nullptr,
-                /* pDestSurface = */ pCurrentHostBackBuffer,
-                /* pDestRect = */ &dest,
+            hRet = CxbxBltSurface(
+                /* pSrc = */ pXboxBackBufferHostSurface,
+                /* pSrcRect = */ nullptr,
+                /* pDst = */ pCurrentHostBackBuffer,
+                /* pDstRect = */ &dest,
                 /* Filter = */ LoadSurfaceFilter
             );
-#endif
 		
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
