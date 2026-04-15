@@ -30,6 +30,7 @@
 #include "RenderStates.h"
 #include "Logging.h"
 #include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For g_pD3DDevice
+#include "core/hle/D3D8/Direct3D9/Backend_D3D11.h" // For D3D11 state descs & dirty flags
 #include "core/hle/D3D8/XbConvert.h"
 
 void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE value);
@@ -258,15 +259,6 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
 #ifdef CXBX_USE_D3D11
     // For D3D11, map render states to state object members
     // These will be applied via CxbxD3D11ApplyDirtyStates before draw calls
-    extern D3D11_RASTERIZER_DESC g_D3D11RasterizerDesc;
-    extern D3D11_DEPTH_STENCIL_DESC g_D3D11DepthStencilDesc;
-    extern D3D11_BLEND_DESC g_D3D11BlendDesc;
-    extern bool g_bD3D11RasterizerStateDirty;
-    extern bool g_bD3D11DepthStencilStateDirty;
-    extern bool g_bD3D11BlendStateDirty;
-    extern UINT g_D3D11StencilRef;
-    extern FLOAT g_D3D11BlendFactor[4];
-    extern UINT g_D3D11SampleMask;
 
     switch (State) {
         // Rasterizer state
@@ -556,13 +548,6 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
 
 #ifdef CXBX_USE_D3D11
     // Map complex render states to D3D11 state objects
-    extern D3D11_RASTERIZER_DESC g_D3D11RasterizerDesc;
-    extern D3D11_DEPTH_STENCIL_DESC g_D3D11DepthStencilDesc;
-    extern D3D11_BLEND_DESC g_D3D11BlendDesc;
-    extern bool g_bD3D11RasterizerStateDirty;
-    extern bool g_bD3D11DepthStencilStateDirty;
-    extern bool g_bD3D11BlendStateDirty;
-    extern UINT g_D3D11SampleMask;
 
     switch (State) {
         // Rasterizer state
