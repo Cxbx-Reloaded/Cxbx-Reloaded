@@ -812,7 +812,7 @@ private:
 			HostVertexElementByteSize = 4 * sizeof(FLOAT);
 			break;
 		case xbox::X_D3DVSDT_D3DCOLOR: // 0x40:
-			HostVertexElementDataType = _9_11(D3DDECLTYPE_D3DCOLOR, DXGI_FORMAT_R8G8B8A8_UNORM); // D3D11 docs state: "not available"?
+			HostVertexElementDataType = _9_11(D3DDECLTYPE_D3DCOLOR, DXGI_FORMAT_B8G8R8A8_UNORM); // D3DCOLOR memory layout is [B,G,R,A]
 			HostVertexElementByteSize = 1 * sizeof(D3DCOLOR);
 			break;
 		case xbox::X_D3DVSDT_SHORT2: // 0x25:
