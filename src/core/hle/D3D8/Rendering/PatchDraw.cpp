@@ -446,6 +446,7 @@ HRESULT CxbxDrawRectPatchD3D11(
 	const float *pNumSegs,
 	const xbox::X_D3DRECTPATCH_INFO *pRectPatchInfo)
 {
+	(void)Handle; // Not used in D3D11 path (no hardware tessellation cache)
 	if (pRectPatchInfo == nullptr) {
 		EmuLog(LOG_LEVEL::WARNING, "DrawRectPatch: pRectPatchInfo is NULL");
 		return E_INVALIDARG;
@@ -508,6 +509,7 @@ HRESULT CxbxDrawTriPatchD3D11(
 	const float *pNumSegs,
 	const xbox::X_D3DTRIPATCH_INFO *pTriPatchInfo)
 {
+	(void)Handle; // Not used in D3D11 path (no hardware tessellation cache)
 	if (pTriPatchInfo == nullptr) {
 		EmuLog(LOG_LEVEL::WARNING, "DrawTriPatch: pTriPatchInfo is NULL");
 		return E_INVALIDARG;
