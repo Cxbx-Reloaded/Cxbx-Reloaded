@@ -28,7 +28,7 @@
 static HBRUSH g_hBgBrush = NULL; // Background Brush
 static bool g_bIsFauxFullscreen = false;
 static int g_iWireframe = 0; // wireframe toggle
-static bool g_bUsePassthroughHLSL = true;
+bool g_bUsePassthroughHLSL = true;
 
 // Forward declarations (defined later in this file)
 LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
