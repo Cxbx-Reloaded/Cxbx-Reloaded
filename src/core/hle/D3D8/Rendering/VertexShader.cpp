@@ -32,9 +32,9 @@
 #include <sstream> // std::stringstream
 
 #ifdef CXBX_USE_D3D11
-extern const char* g_vs_model = vs_model_4_0;
+const char* g_vs_model = vs_model_4_0;
 #else
-extern const char* g_vs_model = vs_model_3_0;
+const char* g_vs_model = vs_model_3_0;
 #endif
 
 void DestRegisterHlsl(std::stringstream& hlsl, VSH_IMD_DEST& dest) {
