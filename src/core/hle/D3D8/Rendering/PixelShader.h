@@ -29,6 +29,8 @@
 
 static const char* ps_model_2_a = "ps_2_a";
 static const char* ps_model_3_0 = "ps_3_0";
+static const char* ps_model_4_0 = "ps_4_0";  // For D3D11
+static const char* ps_model_5_0 = "ps_5_0";  // For D3D11 with feature level 11.0+
 extern const char* g_ps_model;
 
 extern HRESULT EmuCompilePixelShader

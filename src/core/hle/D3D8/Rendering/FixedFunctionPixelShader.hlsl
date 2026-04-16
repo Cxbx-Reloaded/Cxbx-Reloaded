@@ -64,15 +64,23 @@ sampler samplers[4] : register(s0);
 
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
-	float2 iPos : VPOS;   // Screen space x,y pixel location
-	float4 iD0  : COLOR0; // Front-facing primary (diffuse) vertex color (clamped to 0..1)
-	float4 iD1  : COLOR1; // Front-facing secondary (specular) vertex color (clamped to 0..1)
-	float  iFog : FOG;
-	float  iPts : PSIZE;
-	float4 iB0  : TEXCOORD4; // Back-facing primary (diffuse) vertex color (clamped to 0..1)
-	float4 iB1  : TEXCOORD5; // Back-facing secondary (specular) vertex color (clamped to 0..1)
-	float4 iT[4]  : TEXCOORD0; // Texture Coord 0
-	float  iFF : VFACE; // Front facing if > 0
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+	float4 iPos : SV_Position; // Screen space position (SM4.0+ requires float4 xyzw)
+#else
+    float2 iPos : VPOS; // Screen space x,y pixel location
+#endif
+    float4 iD0 : COLOR0; // Front-facing primary (diffuse) vertex color (clamped to 0..1)
+    float4 iD1 : COLOR1; // Front-facing secondary (specular) vertex color (clamped to 0..1)
+    float iFog : FOG;
+    float iPts : PSIZE;
+    float4 iB0 : TEXCOORD4; // Back-facing primary (diffuse) vertex color (clamped to 0..1)
+    float4 iB1 : TEXCOORD5; // Back-facing secondary (specular) vertex color (clamped to 0..1)
+    float4 iT[4] : TEXCOORD0; // Texture Coord 0
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+	bool   iFF : SV_IsFrontFace; // SM4.0+: bool type required
+#else
+    float iFF : VFACE; // Front facing if > 0
+#endif
 };
 
 // These 'D3DTA' texture argument values
@@ -292,7 +300,13 @@ TextureArgs ExecuteTextureStage(
 	return ctx;
 }
 
-float4 main(const PS_INPUT input) : COLOR {
+// Around line 295, replace:
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+float4 main(const PS_INPUT input) : SV_Target {
+#else
+float4 main(const PS_INPUT input) : COLOR
+{
+#endif
 
     // Calculate the fog factor
     float fogFactor;

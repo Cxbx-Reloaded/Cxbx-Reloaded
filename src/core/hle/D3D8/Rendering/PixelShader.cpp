@@ -33,7 +33,11 @@
 //#include "core\kernel\init\CxbxKrnl.h"
 //#include "core\kernel\support\Emu.h"
 
+#ifdef CXBX_USE_D3D11
+extern const char* g_ps_model = ps_model_4_0;;
+#else
 extern const char* g_ps_model = ps_model_3_0;
+#endif 
 
 // HLSL pixel shader generation
 

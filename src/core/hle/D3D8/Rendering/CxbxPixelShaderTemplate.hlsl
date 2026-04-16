@@ -1,6 +1,10 @@
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
-	float2 iPos : VPOS;   // Screen space x,y pixel location
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+	float4 iPos : SV_Position; // Screen space position (SM4.0+ requires float4 xyzw)
+#else
+        float2 iPos : VPOS; // Screen space x,y pixel location
+#endif
 	float4 iD0  : COLOR0; // Front-facing primary (diffuse) vertex color (clamped to 0..1)
 	float4 iD1  : COLOR1; // Front-facing secondary (specular) vertex color (clamped to 0..1)
 	float  iFog : FOG;
@@ -11,13 +15,21 @@ struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 	float4 iT1  : TEXCOORD1; // Texture Coord 1
 	float4 iT2  : TEXCOORD2; // Texture Coord 2
 	float4 iT3  : TEXCOORD3; // Texture Coord 3
-	float  iFF  : VFACE; // Front facing if > 0
-};
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+	bool   iFF  : SV_IsFrontFace; // SM4.0+: bool type required
+#else
+        float iFF : VFACE; // Front facing if > 0
+#endif
+    };
 
-struct PS_OUTPUT
-{
-	float4 oR0 : COLOR;
-};
+    struct PS_OUTPUT
+    {
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+	float4 oR0 : SV_Target;
+#else
+        float4 oR0 : COLOR;
+#endif
+    };
 
 // Source register modifier macro's, based on enum PS_INPUTMAPPING :
 // TODO : Should all these 'max(0, x)' actually be 'saturate(x)'? This, because the operation may actually clamp the register value to the range [0..1]
@@ -458,7 +470,11 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	float4 v;              // Texture value (temporary)
 
 	// Determine if this is a front face or backface
-	bool isFrontFace = (xIn.iFF * FRONTFACE_FACTOR) >= 0;
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+	bool isFrontFace = (xIn.iFF ? 1.0f : -1.0f) * FRONTFACE_FACTOR >= 0;
+#else
+        bool isFrontFace = (xIn.iFF * FRONTFACE_FACTOR) >= 0;
+#endif
 
 	// Initialize variables
 	r0 = r1 = black; // Note : r0.a/r1.a will be overwritten by t0.a/t1.a (opaque_black will be retained for PS_TEXTUREMODES_NONE)
