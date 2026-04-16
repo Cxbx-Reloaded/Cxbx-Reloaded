@@ -1,3 +1,27 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+// ******************************************************************
+// *
+// *  This file is part of the Cxbx project.
+// *
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
+// *  License as published by the Free Software Foundation; either
+// *  version 2 of the license, or (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have recieved a copy of the GNU General Public License
+// *  along with this program; see the file COPYING.
+// *  If not, write to the Free Software Foundation, Inc.,
+// *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
+// *
+// *  All rights reserved
+// *
+// ******************************************************************
 #ifndef EMUPATCHES_SURFACE_H
 #define EMUPATCHES_SURFACE_H
 
@@ -108,27 +132,6 @@ xbox::void_xt WINAPI EMUPATCH(Lock3DSurface_16__LTCG_eax4)
 );
 
 #if 0 // patch disabled
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3)();
-
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_4__LTCG_eax1_ebx2)
-(
-    uint_xt                Stride
-);
-
-xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_eax1)
-(
-    X_D3DVertexBuffer  *pStreamData,
-    uint_xt                Stride
-);
-
-xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx1)
-(
-    void*,
-    uint_xt                StreamNumber,
-    X_D3DVertexBuffer  *pStreamData,
-    uint_xt                Stride
-);
-
 // ******************************************************************
 // * patch: D3DDevice_PersistDisplay
 // ******************************************************************
