@@ -23,8 +23,11 @@
 // *
 // ******************************************************************
 #include "EmuD3D8_common.h"
+#include "IndexBufferConvert.h"
 
-
+// ******************************************************************
+// * patch: D3DDevice_Begin
+// ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 (
     X_D3DPRIMITIVETYPE     PrimitiveType

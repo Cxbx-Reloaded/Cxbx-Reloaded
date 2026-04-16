@@ -382,6 +382,7 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResourceCreate.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostSync.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostWindow.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/IndexBufferConvert.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/PatchDraw.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/PixelShader.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/RenderStates.cpp"
