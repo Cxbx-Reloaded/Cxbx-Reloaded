@@ -36,6 +36,7 @@
 #include "core/hle/D3D8/XbVertexShader.h" // For g_Xbox_VertexShaderMode and VertexShaderMode::FixedFunction
 #include "core/hle/D3D8/Rendering/RenderGlobals.h" // For g_pD3DDevice
 #include <optional>
+#include <cstring> // For std::memcpy
 
 typedef struct {
     const char* S;          // String representation.
@@ -335,7 +336,7 @@ void XboxTextureStateConverter::Apply()
 				case xbox::X_D3DTSS_MAGFILTER: g_MagFilter[HostStage] = PcValue; break;
 				case xbox::X_D3DTSS_MINFILTER: g_MinFilter[HostStage] = PcValue; break;
 				case xbox::X_D3DTSS_MIPFILTER: g_MipFilter[HostStage] = PcValue; break;
-				case xbox::X_D3DTSS_MIPMAPLODBIAS: samplerDesc.MipLODBias = *(const float*)&PcValue; break;
+				case xbox::X_D3DTSS_MIPMAPLODBIAS: { float f; std::memcpy(&f, &PcValue, sizeof(f)); samplerDesc.MipLODBias = f; break; }
 				case xbox::X_D3DTSS_MAXMIPLEVEL: samplerDesc.MinLOD = (float)PcValue; break; // D3D9's MAXMIPLEVEL is the min LOD index
 				case xbox::X_D3DTSS_MAXANISOTROPY: samplerDesc.MaxAnisotropy = PcValue; break; // Note : MaxAnisotropy type is UINT
 				case xbox::X_D3DTSS_BORDERCOLOR: {
