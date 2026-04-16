@@ -368,11 +368,8 @@ void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE value);
 // HostDraw.cpp
 void Direct3D_CreateDevice_Start(const xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters);
 void Direct3D_CreateDevice_End(const xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters);
-void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices);
+IDirect3DIndexBuffer* CxbxCreateIndexBuffer(unsigned IndexCount);
 void CreateDefaultD3D9Device(const xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters);
-void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex);
-void CxbxDrawIndexedClosingLineUP(INDEX16 LowIndex, INDEX16 HighIndex, void *pHostVertexStreamZeroData, UINT uiHostVertexStreamZeroStride);
-void CxbxReleaseQuadListToTriangleListIndexData(void* pHostIndexData);
 IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture* pBaseTexture);
 
 // HostResource.cpp
@@ -384,12 +381,6 @@ void FreeHostResource(resource_key_t key);
 IDirect3DSurface* GetHostSurface(xbox::X_D3DResource* pXboxResource, DWORD D3DUsage = 0);
 IDirect3DBaseTexture* GetHostBaseTexture(xbox::X_D3DResource* pXboxResource, DWORD D3DUsage = 0, int iTextureStage = 0);
 IDirect3DVolumeTexture* GetHostVolumeTexture(xbox::X_D3DResource* pXboxResource, int iTextureStage = 0);
-UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices);
-void CxbxConvertQuadListToTriangleListIndices(INDEX16* pXboxQuadIndexData, unsigned uNrOfTriangleIndices, INDEX16* pTriangleIndexData);
-INDEX16* CxbxCreateQuadListToTriangleListIndexData(INDEX16* pXboxQuadIndexData, unsigned QuadVertexCount);
-UINT FanToTriangleVertexCount(UINT NrOfFanVertices);
-void CxbxConvertTriFanToTriangleListIndices(INDEX16* pFanIndexData, unsigned uNrOfFanVertices, INDEX16* pTriangleIndexData);
-INDEX16* CxbxCreateTriFanToTriangleListIndexData(INDEX16* pFanIndexData, unsigned FanVertexCount);
 void ClearAllResourceCaches();
 uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer *pPixelContainer);
 uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer *pPixelContainer);

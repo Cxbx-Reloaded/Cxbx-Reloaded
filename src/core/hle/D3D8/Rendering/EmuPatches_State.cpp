@@ -23,10 +23,9 @@
 // *
 // ******************************************************************
 #include "EmuD3D8_common.h"
+#include "IndexBufferConvert.h"
 
 // Variables only used in EmuPatches_State.cpp
-static INDEX16 *g_pQuadToTriangleIndexData = nullptr;
-static size_t g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
 static xbox::X_D3DBaseTexture CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
 
 // Forward declarations (defined later in this file)
@@ -826,40 +825,9 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShader_
 	}
 }
 
-// TODO : Move to own file
-constexpr unsigned int IndicesPerPage = PAGE_SIZE / sizeof(INDEX16);
-constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
-
-// TODO : Move to own file
-// Called by CxbxDrawPrimitiveUP (indirectly by D3DDevice_DrawVerticesUP,
-// EmuExecutePushBufferRaw and CxbxImpl_End) when PrimitiveType == X_D3DPT_QUADLIST.
-// Emulated by calling g_pD3DDevice->DrawIndexedPrimitiveUP with index data that maps
-// quads to triangles. This function creates the index buffer that is needed for this;
-// For every quad that must be drawn, we generate indices for two triangles.
-// Note, that the resulting index data can be re-used for later comparable draw calls
-// and only needs to grow when  current length doesn't suffices for a larger draw.
-INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices)
-{
-	if (g_QuadToTriangleIndexData_Size < NrOfQuadIndices)
-	{
-		g_QuadToTriangleIndexData_Size = RoundUp(NrOfQuadIndices, InputQuadsPerPage);
-		UINT NrOfTriangleIndices = QuadToTriangleVertexCount(g_QuadToTriangleIndexData_Size);
-		if (g_pQuadToTriangleIndexData != nullptr) {
-			free(g_pQuadToTriangleIndexData);
-		}
-
-		g_pQuadToTriangleIndexData = (INDEX16 *)malloc(NrOfTriangleIndices * sizeof(INDEX16));
-		CxbxConvertQuadListToTriangleListIndices(nullptr, NrOfTriangleIndices, g_pQuadToTriangleIndexData);
-	}
-
-	return g_pQuadToTriangleIndexData;
-}
-
-// TODO : Move to own file
-// Makes a D3D IndexBuffer active that contains quadlist-to-trianglelist indices.
-// Uses CxbxAssureQuadListIndexData to populate the index buffer with.
-// Note, that the resulting index buffer can be re-used for later comparable draw calls
-// and only needs to grow when current length doesn't sufficesw for a larger draw.
+// ******************************************************************
+// * patch: D3DDevice_SetLight
+// ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 (
     dword_xt            Index,
