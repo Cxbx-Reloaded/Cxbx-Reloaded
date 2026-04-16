@@ -1,7 +1,30 @@
-// NV2A GPU register/method/bitfield/value definitions
-// Extracted from XbConvert.h for better organization
-#ifndef XBNV2A_H
-#define XBNV2A_H
+// ******************************************************************
+// *
+// *  This file is part of the Cxbx project.
+// *
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
+// *  License as published by the Free Software Foundation; either
+// *  version 2 of the license, or (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have recieved a copy of the GNU General Public License
+// *  along with this program; see the file COPYING.
+// *  If not, write to the Free Software Foundation, Inc.,
+// *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
+// *
+// *  All rights reserved
+// *
+// ******************************************************************
+
+// NV2A Kelvin (0x97) method/bitfield/value definitions
+// Uses X-macro pattern for compile-time enum/table generation
+#ifndef NV2A_METHODS_H
+#define NV2A_METHODS_H
 
 #include <windef.h> // for DWORD
 
@@ -1486,4 +1509,4 @@ constexpr DWORD Name = Value;
 
 ENUM_NV2A(ENUM_METHOD_Declare, ENUM_RANGED_Declare, ENUM_BITFLD_Declare, ENUM_VALUE_Declare)
 
-#endif // XBNV2A_H
+#endif // NV2A_METHODS_H

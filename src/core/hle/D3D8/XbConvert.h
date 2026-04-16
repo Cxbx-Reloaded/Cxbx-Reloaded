@@ -273,7 +273,7 @@ extern void EmuUnswizzleBox
 	CONST DWORD dwDstSlicePitch
 ); // NOPATCH
 
-#include "XbNV2A.h"
+#include "devices/video/nv2a_methods.h"
 
 
 typedef enum _TXBType {
