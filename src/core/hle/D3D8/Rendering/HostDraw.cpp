@@ -29,6 +29,11 @@ static IDirect3DIndexBuffer *g_pClosingLineLoopHostIndexBuffer = nullptr;
 static IDirect3DIndexBuffer *g_pQuadToTriangleHostIndexBuffer = nullptr;
 static size_t g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
 
+// Forward declarations (defined in EmuPatches_State.cpp)
+constexpr unsigned int IndicesPerPage = PAGE_SIZE / sizeof(INDEX16);
+constexpr unsigned int InputQuadsPerPage = ((IndicesPerPage * VERTICES_PER_QUAD) / VERTICES_PER_TRIANGLE) / TRIANGLES_PER_QUAD;
+INDEX16 *CxbxAssureQuadListIndexData(UINT NrOfQuadIndices);
+
 // TODO : Move to own file
 void CxbxReleaseQuadListToTriangleListIndexData(void* pHostIndexData)
 {
@@ -184,16 +189,6 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 	CxbxSetIndices(CacheEntry.pHostIndexBuffer);
 
 	return CacheEntry;
-}
-
-
-	// MSAA introduces subpixels, so scale them away
-	if (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) {
-		float aaX, aaY;
-		GetMultiSampleScaleRaw(aaX, aaY);
-		x /= aaX;
-		y /= aaY;
-	}
 }
 
 void Direct3D_CreateDevice_Start

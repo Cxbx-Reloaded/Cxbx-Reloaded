@@ -26,6 +26,9 @@
 
 static DWORD g_VBLastSwap = 0;
 
+// Forward declarations (defined in XbPushBuffer.cpp)
+extern uint32_t HLE_read_NV2A_pgraph_register(const int reg);
+
 // Forward declaration (defined in HostImGui.cpp)
 extern void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget);
 

@@ -381,6 +381,9 @@ resource_cache_t& GetResourceCache(resource_key_t& key);
 void PrunePaletizedTexturesCache();
 void CxbxGetPixelContainerMeasures(xbox::X_D3DPixelContainer *pPixelContainer, DWORD dwMipMapLevel, UINT *pWidth, UINT *pHeight, UINT *pDepth, UINT *pRowPitch, UINT *pSlicePitch);
 void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
+void ForceResourceRehash(xbox::X_D3DResource* pXboxResource);
+int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size);
+xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette *pPalette);
 
 // Inline resource setters
 inline void SetHostSurface(xbox::X_D3DResource* pXboxResource, IDirect3DSurface* pHostSurface, int iTextureStage = -1)
@@ -427,9 +430,14 @@ xbox::void_xt CxbxImpl_SetPixelShader(xbox::dword_xt Handle);
 // HostWindow.cpp
 void DrawUEM(HWND hWnd);
 void CxbxReleaseCursor();
+void CxbxClipCursor(HWND hWnd);
+void CxbxUpdateCursor(bool forceShow = false);
 void RunOnWndMsgThread(const std::function<void()>& func);
 
 const char *CxbxGetErrorDescription(HRESULT hResult);
+
+// EmuPatches_State.cpp
+xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2(xbox::int_xt BackBuffer);
 
 // Xbox function trampolines -- defined in RenderGlobals.cpp, used across
 // multiple EmuPatches_*.cpp translation units.
