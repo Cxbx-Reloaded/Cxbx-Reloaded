@@ -10,7 +10,7 @@ include(CSharpUtilities)
 
 # Workaround fix since CMake is using static version "3".
 add_compile_options(
- /langversion:6
+ "$<$<COMPILE_LANGUAGE:CSharp>:/langversion:6>"
 )
 
 # First, we must define .NET Framework version before include cs_x86's projects.
