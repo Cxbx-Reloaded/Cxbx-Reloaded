@@ -375,6 +375,7 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/EmuPatches_Surface.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostDevice.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostDraw.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostImGui.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostRender.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResource.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResourceCreate.cpp"
