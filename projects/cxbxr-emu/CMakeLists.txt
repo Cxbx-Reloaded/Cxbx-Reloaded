@@ -128,6 +128,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   LINK_FLAGS_RELEASE "
   /LTCG \
   /DEBUG \
+  /ignore:4099 \
   "
  )
 
