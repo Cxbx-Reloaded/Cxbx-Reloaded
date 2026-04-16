@@ -32,6 +32,9 @@ extern uint32_t HLE_read_NV2A_pgraph_register(const int reg);
 // Forward declaration (defined in HostImGui.cpp)
 extern void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget);
 
+// Forward declaration (defined in XbConvert_ColorFormats.cpp)
+extern void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2, uint8_t* rgb_buf, int width);
+
 
 xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 (
@@ -566,8 +569,6 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             // D3D11 overlay: convert YUY2→ARGB, upload to a default texture, then blit to backbuffer
             HRESULT hRet = E_FAIL;
             {
-                extern void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2, uint8_t* rgb_buf, int width);
-
                 D3D11_TEXTURE2D_DESC texDesc = {};
                 texDesc.Width = OverlayWidth;
                 texDesc.Height = OverlayHeight;
