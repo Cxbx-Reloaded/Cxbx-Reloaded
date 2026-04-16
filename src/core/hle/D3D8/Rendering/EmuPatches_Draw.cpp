@@ -399,6 +399,29 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 
 			g_dwPrimPerFrame += primCount;
 		}
+#ifdef CXBX_USE_D3D11
+		else if (DrawContext.XboxPrimitiveType == X_D3DPT_TRIANGLEFAN
+			|| DrawContext.XboxPrimitiveType == xbox::X_D3DPT_POLYGON) {
+			// D3D11 doesn't support triangle fan topology — convert to indexed triangle list
+			UINT NrOfTriangleIndices = FanToTriangleVertexCount(DrawContext.dwVertexCount);
+			if (NrOfTriangleIndices > 0) {
+				INDEX16* pFanIndices = CxbxCreateTriFanToTriangleListIndexData(nullptr, DrawContext.dwVertexCount);
+				UINT primCount = DrawContext.dwVertexCount - 2;
+
+				static CxbxDynBuffer s_FanIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
+				ID3D11Buffer* pIB = s_FanIB.Update(pFanIndices, NrOfTriangleIndices * sizeof(INDEX16));
+				free(pFanIndices);
+
+				if (pIB != nullptr) {
+					g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
+					g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+					g_pD3DDeviceContext->DrawIndexed(NrOfTriangleIndices, 0, 0);
+				}
+
+				g_dwPrimPerFrame += primCount;
+			}
+		}
+#endif
 		else {
 			// if (StartVertex > 0) LOG_TEST_CASE("StartVertex > 0 (non-quad)"); // Verified test case : XDK Sample (PlayField)
 			HRESULT hRet = CxbxDrawPrimitive(
@@ -580,6 +603,13 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 		UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount;
 
 		bool bConvertQuadListToTriangleList = (DrawContext.XboxPrimitiveType == X_D3DPT_QUADLIST);
+#ifdef CXBX_USE_D3D11
+		bool bConvertTriFanToTriangleList = (DrawContext.XboxPrimitiveType == X_D3DPT_TRIANGLEFAN
+			|| DrawContext.XboxPrimitiveType == xbox::X_D3DPT_POLYGON);
+#else
+		bool bConvertTriFanToTriangleList = false;
+#endif
+		bool bConvertedPrimitive = bConvertQuadListToTriangleList || bConvertTriFanToTriangleList;
 		if (bConvertQuadListToTriangleList) {
 			LOG_TEST_CASE("X_D3DPT_QUADLIST");
 			// Test-case : Buffy: The Vampire Slayer
@@ -589,6 +619,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			PrimitiveCount *= TRIANGLES_PER_QUAD;
 			// Note, that LowIndex and HighIndex won't change due to this quad-to-triangle conversion,
 			// so it's less work to WalkIndexBuffer over the input instead of the converted index buffer.
+		} else if (bConvertTriFanToTriangleList) {
+			pHostIndexData = CxbxCreateTriFanToTriangleListIndexData(pXboxIndexData, VertexCount);
+			PrimitiveCount = (VertexCount >= 3) ? VertexCount - 2 : 0;
 		} else {
 			// LOG_TEST_CASE("DrawIndexedPrimitiveUP"); // Test-case : Burnout, Namco Museum 50th Anniversary
 			pHostIndexData = pXboxIndexData;
@@ -598,7 +631,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 #ifdef CXBX_USE_D3D11
 		// D3D11 has no DrawIndexedPrimitiveUP - use reusable dynamic buffers
 		UINT vertexDataSize = DrawContext.dwVertexCount * DrawContext.uiHostVertexStreamZeroStride;
-		UINT indexDataSize = (bConvertQuadListToTriangleList ? PrimitiveCount * 3 : DrawContext.dwVertexCount) * sizeof(INDEX16);
+		UINT indexDataSize = (bConvertedPrimitive ? PrimitiveCount * 3 : DrawContext.dwVertexCount) * sizeof(INDEX16);
 
 		static CxbxDynBuffer s_IdxUpVB = { nullptr, 0, D3D11_BIND_VERTEX_BUFFER };
 		static CxbxDynBuffer s_IdxUpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
@@ -610,11 +643,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			UINT offset = 0;
 			g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
 			g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
-			D3D_PRIMITIVE_TOPOLOGY topology = bConvertQuadListToTriangleList ?
+			D3D_PRIMITIVE_TOPOLOGY topology = bConvertedPrimitive ?
 				D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST :
 				EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType);
 			g_pD3DDeviceContext->IASetPrimitiveTopology(topology);
-			UINT indexCount = bConvertQuadListToTriangleList ? PrimitiveCount * 3 : DrawContext.dwVertexCount;
+			UINT indexCount = bConvertedPrimitive ? PrimitiveCount * 3 : DrawContext.dwVertexCount;
 			g_pD3DDeviceContext->DrawIndexed(indexCount, 0, 0);
 			hRet = S_OK;
 		}
@@ -634,6 +667,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
 		if (bConvertQuadListToTriangleList) {
 			CxbxReleaseQuadListToTriangleListIndexData(pHostIndexData);
+		}
+		else if (bConvertTriFanToTriangleList) {
+			free(pHostIndexData);
 		}
 
 		g_dwPrimPerFrame += PrimitiveCount;

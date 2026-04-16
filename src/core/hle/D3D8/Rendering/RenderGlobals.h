@@ -387,6 +387,9 @@ IDirect3DVolumeTexture* GetHostVolumeTexture(xbox::X_D3DResource* pXboxResource,
 UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices);
 void CxbxConvertQuadListToTriangleListIndices(INDEX16* pXboxQuadIndexData, unsigned uNrOfTriangleIndices, INDEX16* pTriangleIndexData);
 INDEX16* CxbxCreateQuadListToTriangleListIndexData(INDEX16* pXboxQuadIndexData, unsigned QuadVertexCount);
+UINT FanToTriangleVertexCount(UINT NrOfFanVertices);
+void CxbxConvertTriFanToTriangleListIndices(INDEX16* pFanIndexData, unsigned uNrOfFanVertices, INDEX16* pTriangleIndexData);
+INDEX16* CxbxCreateTriFanToTriangleListIndexData(INDEX16* pFanIndexData, unsigned FanVertexCount);
 void ClearAllResourceCaches();
 uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer *pPixelContainer);
 uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer *pPixelContainer);
