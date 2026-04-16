@@ -1402,7 +1402,6 @@ void CxbxImpl_SetTransform
 
 // MultiplyTransform should call SetTransform, we'd like to know if it didn't
 // Test case: 25 to Life
-static thread_local uint32_t setTransformCount = 0;
 
 // LTCG specific D3DDevice_SetTransform function...
 // This uses a custom calling convention where parameter is passed in EAX, EDX

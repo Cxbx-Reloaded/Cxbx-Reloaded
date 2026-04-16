@@ -175,7 +175,7 @@ void CxbxReleaseCursor()
 	ClipCursor(nullptr);
 }
 
-static void CxbxUpdateCursor(bool forceShow = false) {
+void CxbxUpdateCursor(bool forceShow) {
 	// Getting cursor info is a requirement in order to prevent a bug occur with ShowCursor redundant calls.
 	CURSORINFO cursorInfo;
 	cursorInfo.cbSize = sizeof(cursorInfo);

@@ -141,10 +141,6 @@ void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource)
 
 // D3DUSAGE_INVALID is now constexpr in RenderGlobals.h
 
-// resource_info_t and resource_cache_t are defined in RenderGlobals.h
-resource_cache_t g_Cxbx_Cached_Direct3DResources;
-resource_cache_t g_Cxbx_Cached_PaletizedTextures;
-
 bool IsResourceAPixelContainer(xbox::dword_xt XboxResource_Common)
 {
 	DWORD Type = GetXboxCommonResourceType(XboxResource_Common);
@@ -165,6 +161,10 @@ bool IsResourceAPixelContainer(xbox::X_D3DResource* pXboxResource)
 
 	return IsResourceAPixelContainer(pXboxResource->Common);
 }
+
+// resource_info_t and resource_cache_t are defined in RenderGlobals.h
+resource_cache_t g_Cxbx_Cached_Direct3DResources;
+resource_cache_t g_Cxbx_Cached_PaletizedTextures;
 
 resource_cache_t& GetResourceCache(resource_key_t& key)
 {
@@ -245,6 +245,9 @@ void ForceResourceRehash(xbox::X_D3DResource* pXboxResource)
 		it->second.forceRehash = true;
 	}
 }
+
+// Forward declaration (defined later in this file)
+static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
 
 IDirect3DResource *GetHostResource(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = -1)
 {
@@ -506,7 +509,7 @@ int XboxD3DPaletteSizeToBytes(const xbox::X_D3DPALETTESIZE Size)
 	return (256 * sizeof(D3DCOLOR)) >> (unsigned)Size;
 }
 
-inline xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette *pPalette)
+xbox::X_D3DPALETTESIZE GetXboxPaletteSize(const xbox::X_D3DPalette *pPalette)
 {
 	xbox::X_D3DPALETTESIZE PaletteSize = (xbox::X_D3DPALETTESIZE)
 		((pPalette->Common & X_D3DPALETTE_COMMON_PALETTESIZE_MASK) >> X_D3DPALETTE_COMMON_PALETTESIZE_SHIFT);
@@ -683,8 +686,6 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
     _9_11(D3DCUBEMAP_FACES, int) face;
     GetSurfaceFaceAndLevelWithinTexture(pSurface, pBaseTexture, Level, face);
 }
-
-extern void HLE_init_pgraph_plugins(); // implemented in XbPushBuffer.cpp
 
 // Direct3D initialization (called before emulation begins)
 void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize); // Forward declartion to prevent restructure of code

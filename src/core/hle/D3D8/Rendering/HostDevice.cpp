@@ -30,6 +30,16 @@ static bool g_bIsFauxFullscreen = false;
 static int g_iWireframe = 0; // wireframe toggle
 static bool g_bUsePassthroughHLSL = true;
 
+// Forward declarations (defined later in this file)
+LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+// Forward declarations (defined in HostWindow.cpp)
+void CxbxClipCursor(HWND hWnd);
+void CxbxUpdateCursor(bool forceShow = false);
+
+// Forward declarations (defined in XbPushBuffer.cpp)
+extern void HLE_init_pgraph_plugins();
+
 void EmuD3DInit()
 {
 	HLE_init_pgraph_plugins(); // TODO : Hook more nv_dma_map() result uses in EmuNV2A_PGRAPH.cpp
@@ -902,3 +912,12 @@ void GetRenderTargetBaseDimensions(float& x, float& y) {
 // Get the pixel dimensions of the backbuffer, accounting for multisample mode
 void GetBackBufferPixelDimensions(float& x, float& y) {
 	GetRenderTargetRawDimensions(x, y, g_pXbox_BackBufferSurface);
+
+	// MSAA introduces subpixels, so scale them away
+	if (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) {
+		float aaX, aaY;
+		GetMultiSampleScaleRaw(aaX, aaY);
+		x /= aaX;
+		y /= aaY;
+	}
+}
