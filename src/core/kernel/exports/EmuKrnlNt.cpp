@@ -1955,10 +1955,10 @@ XBSYSAPI EXPORTNUM(219) xbox::ntstatus_xt NTAPI xbox::NtReadFile
 	}
 
 	// TODO: This may need removal and use actual driver for Chihiro.
-	//       Check if there's another branch has chihiro support somewhere? I think nope.
+	//       Check if there's another branch has Chihiro support somewhere? I think nope.
 	// If we are emulating the Chihiro, we need to hook mbcom
 	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
-		g_MediaBoard->ComRead(ByteOffset->QuadPart, Buffer, Length);
+		g_MediaBoard->ComRead(ByteOffset->u.LowPart, Buffer, Length);
 
 		// Update the Status Block
 		IoStatusBlock->Status = STATUS_SUCCESS;
@@ -2783,10 +2783,10 @@ XBSYSAPI EXPORTNUM(236) xbox::ntstatus_xt NTAPI xbox::NtWriteFile
 	}
 
 	// TODO: This may need removal and use actual driver for Chihiro.
-	//       Check if there's another branch has chihiro support somewhere? I think nope.
+	//       Check if there's another branch has Chihiro support somewhere? I think nope.
 	// If we are emulating the Chihiro, we need to hook mbcom
 	if (g_bIsChihiro && FileHandle == CHIHIRO_MBCOM_HANDLE) {
-		g_MediaBoard->ComWrite(ByteOffset->QuadPart, Buffer, Length);
+		g_MediaBoard->ComWrite(ByteOffset->u.LowPart, Buffer, Length);
 
 		// Update the Status Block
 		IoStatusBlock->Status = STATUS_SUCCESS;

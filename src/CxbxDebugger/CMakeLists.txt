@@ -10,7 +10,7 @@ include(CSharpUtilities)
 
 # Workaround fix since CMake is using static version "3".
 add_compile_options(
- /langversion:6
+ "$<$<COMPILE_LANGUAGE:CSharp>:/langversion:6>"
 )
 
 # First, we must define .NET Framework version before include cs_x86's projects.
@@ -131,10 +131,10 @@ set_source_files_properties("${CXBXR_DEBUGGER_SRC_DIR}/RicherTextBox.cs"
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${SOURCES})
 
-add_executable(cxbxr-debugger WIN32 ${SOURCES} ${PROPERTIES} #Test WIN32 like cxbx does if doesn't need compile option set
+add_executable(${PROJECT_NAME} WIN32 ${SOURCES} ${PROPERTIES} #Test WIN32 like cxbx does if doesn't need compile option set
 )
 
-set_target_properties(cxbxr-debugger PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
  VS_DOTNET_REFERENCES
  "Microsoft.CSharp;System;System.Core;System.Data;System.Data.DataSetExtensions;System.Deployment;System.Drawing;System.Windows;System.Windows.Forms;System.Xml;System.Xml.Linq;System.Net.Http"
  VS_GLOBAL_ApplicationIcon "${CXBXR_ROOT_DIR}/src/gui/resource/Cxbx-R.ico"
@@ -144,7 +144,7 @@ set_target_properties(cxbxr-debugger PROPERTIES
  DOTNET_TARGET_FRAMEWORK_VERSION ${DOTNET_TARGET_FRAMEWORK_VERSION}
 )
 
-target_link_libraries(cxbxr-debugger cs_x86)
+target_link_libraries(${PROJECT_NAME} cs_x86)
 
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin

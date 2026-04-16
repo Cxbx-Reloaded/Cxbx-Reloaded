@@ -27,7 +27,6 @@
 #define LOG_PREFIX CXBXR_MODULE::DSOUND
 
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h" // For ImVec
 #include "core/common/imgui/ui.hpp"
 
@@ -72,14 +71,14 @@ void DrawAudioProgress(xbox::XbHybridDSBuffer* pHybrid, float scaleWidth, ImDraw
 	bool isLooping = pBuffer->EmuPlayFlags & X_DSBPLAY_LOOPING;
 
 	auto colSpan = ImColor(0.8f, 0.1f, 0.1f, 0.3f);
-	auto colRegion = ImColor(0.1f, 0.8f, 0.1, 0.3f);
-	auto colRegionLoop = ImColor(0.1f, 0.2f, 0.8, 0.3f);
-	auto colPlay = ImColor(0.8f, 0.8f, 0.1f, 0.6);
+	auto colRegion = ImColor(0.1f, 0.8f, 0.1f, 0.3f);
+	auto colRegionLoop = ImColor(0.1f, 0.2f, 0.8f, 0.3f);
+	auto colPlay = ImColor(0.8f, 0.8f, 0.1f, 0.6f);
 	float height = 8;
 
-	float sBuf = height * 0.4;
-	float sReg = height * 1;
-	float sPlay = height * 0.4;
+	float sBuf = height * 0.4f;
+	float sReg = height * 1.0f;
+	float sPlay = height * 0.4f;
 
 	// Buffer
 	auto start = cursor + ImVec2(0, (height - sBuf) / 2);
@@ -89,18 +88,18 @@ void DrawAudioProgress(xbox::XbHybridDSBuffer* pHybrid, float scaleWidth, ImDraw
 	DWORD bufferRangeSize;
 	DSoundBufferRegionCurrentLocation(pHybrid, pBuffer->EmuPlayFlags, bufferRangeStart, bufferRangeSize);
 
-	bufferRangeStart *= scale;
-	bufferRangeSize *= scale;
+	float bufferRangeStartFloat = bufferRangeStart * scale;
+	float bufferRangeSizeFloat = bufferRangeSize * scale;
 
 	// Region
-	start = cursor + ImVec2(bufferRangeStart, (height - sReg) / 2);
-	drawList->AddRectFilled(start, start + ImVec2(bufferRangeSize, sReg), isLooping ? colRegionLoop : colRegion);
+	start = cursor + ImVec2(bufferRangeStartFloat, (height - sReg) / 2);
+	drawList->AddRectFilled(start, start + ImVec2(bufferRangeSizeFloat, sReg), isLooping ? colRegionLoop : colRegion);
 
 	// Play area
-	start = cursor + ImVec2(bufferRangeStart, (height - sPlay) / 2);
+	start = cursor + ImVec2(bufferRangeStartFloat, (height - sPlay) / 2);
 	drawList->AddRectFilled(start, start + ImVec2(playCursor, sPlay), colPlay);
 	// Play cursor
-	start = cursor + ImVec2(bufferRangeStart + playCursor, 0);
+	start = cursor + ImVec2(bufferRangeStartFloat + playCursor, 0);
 	drawList->AddLine(start, start + ImVec2(0, height), colPlay);
 
 	ImGui::Dummy(ImVec2(pBuffer->X_BufferCacheSize * scale, height));

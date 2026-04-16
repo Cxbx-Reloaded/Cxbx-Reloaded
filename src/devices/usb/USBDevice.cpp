@@ -213,7 +213,7 @@ void USBDevice::USB_PacketSetup(USBPacket* p, int Pid, USBEndpoint* Ep, uint64_t
 {
 	assert(!USB_IsPacketInflight(p));
 	assert(p->IoVec.IoVecStruct != nullptr);
-	p->Id = Id;
+	p->Id = static_cast<uint32_t>(Id);
 	p->Pid = Pid;
 	p->Endpoint = Ep;
 	p->Status = USB_RET_SUCCESS;
@@ -1099,7 +1099,7 @@ int USBDevice::USB_ReadInterfaceDesc(const USBDescIface* iface, int flags, uint8
 	// From the USB 1.1 standard: "The first interface descriptor follows the configuration descriptor.
 	// The endpoint descriptors for the first interface follow the first interface descriptor.
 	// If there are additional interfaces, their interface descriptor and endpoint descriptors
-	// follow the first interface’s endpoint descriptors. Class-specific and/or vendor-specific
+	// follow the first interface's endpoint descriptors. Class-specific and/or vendor-specific
 	// descriptors follow the standard descriptors they extend or modify."
 
 	d->bLength = bLength;

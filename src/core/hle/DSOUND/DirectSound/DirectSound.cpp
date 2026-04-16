@@ -385,7 +385,7 @@ void StreamBufferAudio(xbox::XbHybridDSBuffer* pHybridBuffer, float msToCopy) {
 	// latency issues
 	// Test case: NBA Live 2005 (writes to a very small buffer expecting low latency, can crackle at > 1ms stream interval)
 	// Test case: Halo (intro video delay when writing from play cursor)
-	DWORD writeOffset = writeCursor + cursorGap * g_dsBufferStreaming.tweakCopyOffset;
+	DWORD writeOffset = static_cast<DWORD>(writeCursor + cursorGap * g_dsBufferStreaming.tweakCopyOffset);
 	DWORD writeSize = std::min(
 		(DWORD)(pThis->EmuBufferDesc.lpwfxFormat->nAvgBytesPerSec * msToCopy / 1000),
 		hostBufferSize
@@ -474,7 +474,7 @@ void dsound_worker()
 			DWORD status;
 			HRESULT hRet = pBuffer->emuDSBuffer->EmuDirectSoundBuffer8->GetStatus(&status);
 			if (hRet == 0 && status & DSBSTATUS_PLAYING) {
-				auto streamMs = g_dsBufferStreaming.streamInterval + g_dsBufferStreaming.streamAhead;
+				auto streamMs = static_cast<float>(g_dsBufferStreaming.streamInterval + g_dsBufferStreaming.streamAhead);
 				StreamBufferAudio(pBuffer, streamMs);
 			}
 		}
@@ -671,7 +671,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)
 
         // Process the DSEFFECTMAP in internal image buffer, rebase code segmemt address and state segment address of each effect.
         PBYTE pEffectMaps = (pImageDesc + 8); //EffectMaps array start from here.
-        for (int effect_loop = 0; effect_loop < EffectCount; effect_loop++) {
+        for (DWORD effect_loop = 0; effect_loop < EffectCount; effect_loop++) {
             PBYTE pCodeSeg = pEffectMaps + effect_loop * 32;
             *(PDWORD)pCodeSeg += (DWORD)ImageBufferBackup;
 

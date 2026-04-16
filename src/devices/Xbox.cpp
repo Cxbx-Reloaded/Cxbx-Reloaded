@@ -166,17 +166,10 @@ void InitXboxHardware(HardwareModel hardwareModel)
 	g_USB0 = new USBDevice();
 
 	if (IS_CHIHIRO(hardwareModel)) {
-        g_MediaBoard = new MediaBoard();
-        char MediaBoardMountPath[xbox::max_path];
-        g_EmuShared->GetTitleMountPath(MediaBoardMountPath);
-        g_MediaBoard->SetMountPath(MediaBoardMountPath);
-	}
-
-	if (g_bIsChihiro) {
-        g_MediaBoard = new MediaBoard();
-        char MediaBoardMountPath[xbox::max_path];
-        g_EmuShared->GetTitleMountPath(MediaBoardMountPath);
-        g_MediaBoard->SetMountPath(MediaBoardMountPath);
+		g_MediaBoard = new MediaBoard();
+		char MediaBoardMountPath[xbox::max_path];
+		g_EmuShared->GetTitleMountPath(MediaBoardMountPath);
+		g_MediaBoard->SetMountPath(MediaBoardMountPath);
 	}
 
 	// Connect devices to SM bus
