@@ -3094,8 +3094,8 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4
 static void Direct3D_CreateDevice_16__LTCG_eax4_ecx6
 (
     xbox::uint_xt                 Adapter,
-    D3DDEVTYPE                    DeviceType,
-    HWND                          hFocusWindow,
+	xbox::X_D3DDEVTYPE            DeviceType,
+	xbox::X_HWND                  hFocusWindow,
     xbox::dword_xt                BehaviorFlags,
     xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
     xbox::X_D3DDevice            **ppReturnedDeviceInterface
@@ -3117,8 +3117,8 @@ static void Direct3D_CreateDevice_16__LTCG_eax4_ecx6
 __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ecx6)
 (
     uint_xt                     Adapter,
-    D3DDEVTYPE                  DeviceType,
-    HWND                        hFocusWindow,
+    X_D3DDEVTYPE                DeviceType,
+	X_HWND                      hFocusWindow,
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
@@ -3161,8 +3161,8 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 static void Direct3D_CreateDevice_16__LTCG_eax4_ebx6
 (
     xbox::uint_xt                 Adapter,
-    D3DDEVTYPE                    DeviceType,
-    HWND                          hFocusWindow,
+    xbox::X_D3DDEVTYPE            DeviceType,
+	xbox::X_HWND                  hFocusWindow,
     xbox::dword_xt                BehaviorFlags,
     xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
     xbox::X_D3DDevice            **ppReturnedDeviceInterface
@@ -3184,8 +3184,8 @@ static void Direct3D_CreateDevice_16__LTCG_eax4_ebx6
 __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ebx6)
 (
     uint_xt                     Adapter,
-    D3DDEVTYPE                  DeviceType,
-    HWND                        hFocusWindow,
+    X_D3DDEVTYPE                DeviceType,
+	X_HWND                      hFocusWindow,
     X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
@@ -3297,10 +3297,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices)
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 (
-    uint_xt                        Adapter,
-    D3DDEVTYPE                  DeviceType,
-    HWND                        hFocusWindow,
-    dword_xt                       BehaviorFlags,
+    uint_xt                     Adapter,
+    X_D3DDEVTYPE                DeviceType,
+	X_HWND                      hFocusWindow,
+    dword_xt                    BehaviorFlags,
     X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
     xbox::X_D3DDevice         **ppReturnedDeviceInterface
 )
