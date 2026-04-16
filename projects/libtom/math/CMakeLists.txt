@@ -9,6 +9,10 @@ if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
  _CRT_SECURE_NO_WARNINGS
  _CRT_NONSTDC_NO_DEPRECATE
  )
+ # Suppress warnings in external code
+ add_compile_options(
+ /wd4146 # unary minus on unsigned type
+ )
 endif()
 
 file (GLOB HEADERS
