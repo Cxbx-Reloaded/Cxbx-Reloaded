@@ -771,6 +771,40 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 }
 
 // TODO : Move to own file
+// Convert a triangle fan (N vertices) to triangle list indices.
+// Fan vertex 0 is the hub; for each i in [1..N-2], triangle = (0, i, i+1).
+// When pFanIndexData != null, reads original fan indices; otherwise generates sequential.
+// Output: (N-2)*3 triangle indices written to pTriangleIndexData.
+void CxbxConvertTriFanToTriangleListIndices(
+	INDEX16* pFanIndexData,
+	unsigned uNrOfFanVertices,
+	INDEX16* pTriangleIndexData)
+{
+	assert(uNrOfFanVertices >= 3);
+	assert(pTriangleIndexData);
+
+	unsigned out = 0;
+	for (unsigned i = 1; i + 1 < uNrOfFanVertices; i++) {
+		pTriangleIndexData[out++] = pFanIndexData ? pFanIndexData[0]     : 0;
+		pTriangleIndexData[out++] = pFanIndexData ? pFanIndexData[i]     : (INDEX16)i;
+		pTriangleIndexData[out++] = pFanIndexData ? pFanIndexData[i + 1] : (INDEX16)(i + 1);
+	}
+}
+
+UINT FanToTriangleVertexCount(UINT NrOfFanVertices)
+{
+	return (NrOfFanVertices >= 3) ? (NrOfFanVertices - 2) * VERTICES_PER_TRIANGLE : 0;
+}
+
+INDEX16* CxbxCreateTriFanToTriangleListIndexData(INDEX16* pFanIndexData, unsigned FanVertexCount)
+{
+	UINT NrOfTriangleIndices = FanToTriangleVertexCount(FanVertexCount);
+	INDEX16* pBuffer = (INDEX16*)malloc(NrOfTriangleIndices * sizeof(INDEX16));
+	CxbxConvertTriFanToTriangleListIndices(pFanIndexData, FanVertexCount, pBuffer);
+	return pBuffer;
+}
+
+// TODO : Move to own file
 UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices)
 {
 	return (NrOfQuadVertices * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) / VERTICES_PER_QUAD;
