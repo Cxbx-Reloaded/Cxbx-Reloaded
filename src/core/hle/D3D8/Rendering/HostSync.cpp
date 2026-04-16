@@ -437,7 +437,7 @@ void CxbxUpdateNativeD3DResources()
 */
 }
 
-// This function should be called in thight idle-wait loops.
+// This function should be called in tight idle-wait loops.
 // It's purpose is to lower CPU cost in such a way that the
 // caller will still repond quickly, without actually waiting
 // or giving up it's time-slice.
