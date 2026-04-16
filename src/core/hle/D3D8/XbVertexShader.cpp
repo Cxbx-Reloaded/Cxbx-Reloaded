@@ -759,7 +759,19 @@ void CxbxUpdateHostVertexDeclaration()
 				&pCxbxVertexDeclaration->pHostVertexDeclaration
 			);
 			if (FAILED(hRet)) {
-				EmuLog(LOG_LEVEL::WARNING, "CxbxUpdateHostVertexDeclaration: CreateInputLayout failed (0x%08X)", hRet);
+				EmuLog(LOG_LEVEL::WARNING, "CxbxUpdateHostVertexDeclaration: CreateInputLayout failed (0x%08X) elements=%u bytecodeSize=%zu mode=%d hasKey=%d",
+					hRet,
+					pCxbxVertexDeclaration->D3D11InputElementCount,
+					pBytecode->GetBufferSize(),
+					(int)g_Xbox_VertexShaderMode,
+					(int)g_D3D11HasActiveShaderKey);
+				for (UINT i = 0; i < pCxbxVertexDeclaration->D3D11InputElementCount; i++) {
+					auto& e = pCxbxVertexDeclaration->pD3D11InputElements[i];
+					EmuLog(LOG_LEVEL::WARNING, "  [%u] Semantic=%s/%u Fmt=%u Slot=%u Offset=%u Class=%u Step=%u",
+						i, e.SemanticName ? e.SemanticName : "(null)", e.SemanticIndex,
+						e.Format, e.InputSlot, e.AlignedByteOffset,
+						e.InputSlotClass, e.InstanceDataStepRate);
+				}
 			}
 		}
 	}
