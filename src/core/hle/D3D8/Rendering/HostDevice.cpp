@@ -33,10 +33,6 @@ static bool g_bUsePassthroughHLSL = true;
 // Forward declarations (defined later in this file)
 LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-// Forward declarations (defined in HostWindow.cpp)
-void CxbxClipCursor(HWND hWnd);
-void CxbxUpdateCursor(bool forceShow = false);
-
 // Forward declarations (defined in XbPushBuffer.cpp)
 extern void HLE_init_pgraph_plugins();
 
