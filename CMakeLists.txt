@@ -27,6 +27,9 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/mio" EXCLUDE_FROM_ALL)
 # Cxbx-Reloaded projects
 set(CXBXR_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+# D3D11 option must be set here before imgui backend selection below
+option(CXBX_USE_D3D11 "Enable Direct3D 11 rendering path (instead of D3D9)" ON)
+
 add_custom_target(misc-batch
   ${CMAKE_COMMAND} -DTargetRunTimeDir=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>
   -P ${CXBXR_ROOT_DIR}/projects/misc/batch.cmake
