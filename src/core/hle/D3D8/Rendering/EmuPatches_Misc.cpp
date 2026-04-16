@@ -142,7 +142,13 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		// to further prevent any other endless loop situations.
 #ifdef CXBX_USE_D3D11
 		UINT64 occlusionData = 0;
-		while (S_FALSE == CxbxQueryGetData(pHostQueryVisibilityTest, &occlusionData, sizeof(occlusionData), 0));
+		HRESULT hRet;
+		while ((hRet = CxbxQueryGetData(pHostQueryVisibilityTest, &occlusionData, sizeof(occlusionData), 0)) == S_FALSE) {
+			SwitchToThread(); // Yield CPU while waiting for GPU query result
+		}
+		if (FAILED(hRet)) {
+			EmuLog(LOG_LEVEL::WARNING, "GetVisibilityTestResult: query failed (0x%08X)", hRet);
+		}
 		if (pResult != xbox::zeroptr)
 			*pResult = (uint_xt)occlusionData;
 #else
