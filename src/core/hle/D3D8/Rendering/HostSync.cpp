@@ -236,7 +236,7 @@ void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
 
 	// Send the final batch
 	if (batchStartIndex != -1) {
-		int count = X_D3DVS_CONSTREG_COUNT - batchStartIndex + 1;
+		int count = X_D3DVS_CONSTREG_COUNT - batchStartIndex;
 		CxbxSetVertexShaderConstantF(batchStartIndex, &constants[batchStartIndex * 4], count);
 	}
 }
