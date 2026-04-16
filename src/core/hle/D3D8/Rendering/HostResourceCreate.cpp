@@ -477,9 +477,16 @@ EMUFORMAT PCFormat;
 			desc.Format = PCFormat;
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
-			desc.Usage = D3D11_USAGE_DYNAMIC;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			// D3D11_USAGE_DYNAMIC requires MipLevels == 1; use DEFAULT for mipmapped textures
+			if (dwMipMapLevels == 1) {
+				desc.Usage = D3D11_USAGE_DYNAMIC;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			} else {
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = 0;
+			}
 			desc.MiscFlags = 0;
 
 			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
@@ -549,9 +556,15 @@ EMUFORMAT PCFormat;
 			desc.Depth = dwDepth;
 			desc.MipLevels = dwMipMapLevels;
 			desc.Format = PCFormat;
-			desc.Usage = D3D11_USAGE_DYNAMIC;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			if (dwMipMapLevels == 1) {
+				desc.Usage = D3D11_USAGE_DYNAMIC;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			} else {
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = 0;
+			}
 			desc.MiscFlags = 0;
 
 			hRet = g_pD3DDevice->CreateTexture3D(&desc, NULL, reinterpret_cast<ID3D11Texture3D**>(pNewHostResource.ReleaseAndGetAddressOf()));
@@ -603,9 +616,15 @@ EMUFORMAT PCFormat;
 			desc.Format = PCFormat;
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
-			desc.Usage = D3D11_USAGE_DYNAMIC;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			if (dwMipMapLevels == 1) {
+				desc.Usage = D3D11_USAGE_DYNAMIC;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			} else {
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+				desc.CPUAccessFlags = 0;
+			}
 			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
 			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
@@ -694,12 +713,24 @@ EMUFORMAT PCFormat;
 				DWORD mipSlicePitch = mip2dSize * pxMipDepth; // the total size of the mip slice (depth is only > 1 for volume textures)
 
 #ifdef CXBX_USE_D3D11
-				// Map the host resource
+				// Map the host resource (for DYNAMIC textures) or prepare a staging buffer (for DEFAULT textures)
 				UINT Subresource = (face * dwMipMapLevels) + mipmap_level;
 				// See https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-subresources
 				D3D11_MAPPED_SUBRESOURCE MappedResource;
+				uint8_t* pStagingBuffer = nullptr; // Used for DEFAULT textures only
 
-				hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
+				if (dwMipMapLevels == 1) {
+					hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
+				} else {
+					// For DEFAULT textures, we can't Map; allocate a staging buffer and use UpdateSubresource later
+					DWORD stagingRowPitch = bCompressed ? dwMipRowPitch : pxMipWidth * dwBPP;
+					DWORD stagingSize = stagingRowPitch * numRows * pxMipDepth;
+					pStagingBuffer = (uint8_t*)malloc(stagingSize);
+					MappedResource.pData = pStagingBuffer;
+					MappedResource.RowPitch = stagingRowPitch;
+					MappedResource.DepthPitch = stagingRowPitch * numRows;
+					hRet = D3D_OK;
+				}
 #else
 				// Lock the host resource
 				D3DLOCKED_RECT LockedRect = {};
@@ -814,8 +845,16 @@ if (bConvertTextureFormat) {
 				}
 
 #ifdef CXBX_USE_D3D11
-				// Unmap the host resource
-				g_pD3DDeviceContext->Unmap(pNewHostResource.Get(), Subresource);
+				if (dwMipMapLevels == 1) {
+					// Unmap the host resource (DYNAMIC textures)
+					g_pD3DDeviceContext->Unmap(pNewHostResource.Get(), Subresource);
+				} else {
+					// Upload the staging buffer to the DEFAULT texture
+					g_pD3DDeviceContext->UpdateSubresource(
+						pNewHostResource.Get(), Subresource, nullptr,
+						pStagingBuffer, MappedResource.RowPitch, MappedResource.DepthPitch);
+					free(pStagingBuffer);
+				}
 #else
 				// Unlock the host resource
 				switch (XboxResourceType) {
