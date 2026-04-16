@@ -130,9 +130,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  # /Qpar = Enable automatic parallelize loops in the code
 
  # Set optimization options for release build
+ # Replace CMake's default /Ob2 with /Ob3 for aggressive inlining
+ string(REPLACE "/Ob2" "/Ob3" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} \
   /Zi \
-  /Ob3 \
   /Oi \
   /Ot \
   /GL \
