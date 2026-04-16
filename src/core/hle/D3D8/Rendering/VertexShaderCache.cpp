@@ -183,7 +183,7 @@ IDirect3DVertexShader* VertexShaderCache::GetShader(ShaderKey key)
 
 	}
 	catch (const std::exception & e) {
-		EmuLog(LOG_LEVEL::ERROR2, "Failed compiling shader %llx: %s", e.what());
+		EmuLog(LOG_LEVEL::ERROR2, "Failed compiling shader %llx: %s", key, e.what());
 	}
 
 	if (pCompiledShader) {
