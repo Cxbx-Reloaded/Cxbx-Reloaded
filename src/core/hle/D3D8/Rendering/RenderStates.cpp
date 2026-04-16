@@ -336,6 +336,8 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             g_bD3D11BlendStateDirty = true;
             break;
         case xbox::X_D3DRS_SRCBLEND:
+            // D3D9 D3DBLEND values 1-11, 14-15 match D3D11_BLEND numerically.
+            // Xbox only uses these values, so the cast is safe.
             g_D3D11BlendDesc.RenderTarget[0].SrcBlend = (D3D11_BLEND)Value;
             g_D3D11BlendDesc.RenderTarget[0].SrcBlendAlpha = (D3D11_BLEND)Value;
             g_bD3D11BlendStateDirty = true;
@@ -346,6 +348,7 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             g_bD3D11BlendStateDirty = true;
             break;
         case xbox::X_D3DRS_BLENDOP:
+            // D3D9 D3DBLENDOP values 1-5 match D3D11_BLEND_OP numerically.
             g_D3D11BlendDesc.RenderTarget[0].BlendOp = (D3D11_BLEND_OP)Value;
             g_D3D11BlendDesc.RenderTarget[0].BlendOpAlpha = (D3D11_BLEND_OP)Value;
             g_bD3D11BlendStateDirty = true;
