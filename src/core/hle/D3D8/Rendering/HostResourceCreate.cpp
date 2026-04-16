@@ -488,8 +488,16 @@ EMUFORMAT PCFormat;
 			desc.Format = PCFormat;
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
-			// D3D11_USAGE_DYNAMIC requires MipLevels == 1; use DEFAULT for mipmapped textures
-			if (dwMipMapLevels == 1) {
+			if (D3DUsage & D3DUSAGE_DEPTHSTENCIL) {
+				desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.CPUAccessFlags = 0;
+			} else if (D3DUsage & D3DUSAGE_RENDERTARGET) {
+				desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.CPUAccessFlags = 0;
+			} else if (dwMipMapLevels == 1) {
+				// D3D11_USAGE_DYNAMIC requires MipLevels == 1
 				desc.Usage = D3D11_USAGE_DYNAMIC;
 				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
