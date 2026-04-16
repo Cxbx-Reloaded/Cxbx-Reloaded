@@ -1,5 +1,8 @@
 #include "EmuD3D8_common.h"
 
+// Forward declaration (defined in HostImGui.cpp)
+extern void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget);
+
 
 xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)
 (

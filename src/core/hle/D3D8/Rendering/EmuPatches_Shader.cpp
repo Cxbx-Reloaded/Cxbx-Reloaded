@@ -110,7 +110,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetGammaRamp
+// * patch: D3DDevice_SetShaderConstantMode
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
@@ -381,7 +381,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LT
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetTexture
+// * patch: D3DDevice_SetPixelShader
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 (
@@ -486,7 +486,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__
 }
 
 // ******************************************************************
-// * patch: D3DDevice_DrawVertices
+// * patch: D3DDevice_DeleteVertexShader
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader)
 (
@@ -761,5 +761,120 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_InsertFence
+// * patch: D3DDevice_LoadVertexShader
 // ******************************************************************
+
+// Overload for logging
+static void D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+    LOG_FUNC_END;
+}
+
+// LTCG specific D3DDevice_LoadVertexShader function...
+// This uses a custom calling convention where parameter is passed in EAX, ECX
+// Test-case: Aggressive Inline
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2)
+(
+)
+{
+    dword_xt Handle;
+    dword_xt Address;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, ecx
+        mov  Address, eax
+    }
+
+    // Log
+    D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2(Handle, Address);
+
+    CxbxImpl_LoadVertexShader(Handle, Address);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
+}
+
+// Overload for logging
+static void D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+    LOG_FUNC_END;
+}
+
+// LTCG specific D3DDevice_LoadVertexShader function...
+// This uses a custom calling convention where parameter is passed in EAX, EDX
+// Test-case: World Racing 2, Project Zero 2 (PAL)
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2)
+(
+)
+{
+    dword_xt Handle;
+    dword_xt Address;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, edx
+        mov  Address, eax
+    }
+
+    // Log
+    D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2(Handle, Address);
+
+    CxbxImpl_LoadVertexShader(Handle, Address);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
+}
+
+// Overload for logging
+static void D3DDevice_LoadVertexShader_4__LTCG_eax1
+(
+    xbox::dword_xt                 Handle,
+    xbox::dword_xt                 Address
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Handle)
+        LOG_FUNC_ARG(Address)
+    LOG_FUNC_END;
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Ninja Gaiden
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4__LTCG_eax1)
+(
+    dword_xt                       Address
+)
+{
+    dword_xt Handle;
+    __asm {
+        LTCG_PROLOGUE
+        mov  Handle, eax
+    }
+
+    // Log
+    D3DDevice_LoadVertexShader_4__LTCG_eax1(Handle, Address);
+
+    CxbxImpl_LoadVertexShader(Handle, Address);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret  4
+    }
+}

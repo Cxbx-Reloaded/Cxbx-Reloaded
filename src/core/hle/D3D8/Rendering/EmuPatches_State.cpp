@@ -13,7 +13,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, fl
 }
 
 // ******************************************************************
-// * patch: D3DDevice_GetVisibilityTestResult
+// * patch: D3DDevice_SetGammaRamp
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetGammaRamp)
 (
@@ -281,7 +281,7 @@ xbox::X_D3DSurface* CxbxrImpl_GetBackBuffer2
 }
 
 // ******************************************************************
-// * patch: D3DDevice_GetBackBuffer2
+// * patch: D3DDevice_SetViewport
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetViewport)
 (
@@ -355,7 +355,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstan
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetShaderConstantMode
+// * patch: D3DDevice_SetTexture
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture)
 (
@@ -448,7 +448,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SwitchTexture)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_Begin
+// * patch: D3DDevice_SetTransform
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform)
 (
@@ -549,7 +549,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_MultiplyTransfor
 }
 
 // ******************************************************************
-// * patch: Lock2DSurface
+// * patch: D3DDevice_SetStreamSource
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource)
 (
@@ -1102,7 +1102,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShad
 }
 
 // ******************************************************************
-// * patch: D3DDevice_DeleteVertexShader
+// * patch: D3DDevice_SetScreenSpaceOffset
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 (
@@ -1119,7 +1119,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_InsertCallback
+// * patch: D3DDevice_SetRenderTargetFast
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 (
@@ -1136,7 +1136,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetRenderTargetFast)
 }
 
 // ******************************************************************
-// * patch: D3D::LazySetPointParams
+// * patch: D3D_LazySetPointParams
 // ******************************************************************
 void WINAPI xbox::EMUPATCH(D3D_LazySetPointParams)
 (
@@ -1146,4 +1146,108 @@ void WINAPI xbox::EMUPATCH(D3D_LazySetPointParams)
 	LOG_FUNC_ONE_ARG(Device);
 
 	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetRenderState_Simple
+// ******************************************************************
+xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
+(
+    dword_xt Method,
+    dword_xt Value
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(Method)
+        LOG_FUNC_ARG(Value)
+        LOG_FUNC_END;
+
+    XB_TRMP(D3DDevice_SetRenderState_Simple)(Method, Value);
+
+    // Fetch the RenderState conversion info for the given input
+    int XboxRenderStateIndex = -1;
+    for (int i = X_D3DRS_FIRST; i <= X_D3DRS_LAST; i++) {
+        if (GetDxbxRenderStateInfo(i).M == PUSH_METHOD(Method)) {
+            XboxRenderStateIndex = i;
+            break;
+        }
+    }
+
+    // If we could not map it, log and return
+    if (XboxRenderStateIndex == -1) {
+        EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) could not be found in RenderState table", Method, GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
+        return;
+    }
+
+	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
+
+    XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
+}
+
+// ******************************************************************
+// * patch: D3DDevice_SetTransform
+// ******************************************************************
+void CxbxImpl_SetTransform
+(
+    xbox::X_D3DTRANSFORMSTATETYPE State,
+    CONST xbox::X_D3DMATRIX *pMatrix
+)
+{
+    LOG_INIT
+
+	d3d8TransformState.SetTransform(State, pMatrix);
+	// Note : SetTransform is handled in our fixed function shader  - see UpdateFixedFunctionVertexShaderState()
+}
+
+// MultiplyTransform should call SetTransform, we'd like to know if it didn't
+// Test case: 25 to Life
+static thread_local uint32_t setTransformCount = 0;
+
+// LTCG specific D3DDevice_SetTransform function...
+// This uses a custom calling convention where parameter is passed in EAX, EDX
+
+// Naked functions must not contain objects that would require unwinding
+// so we cheat a bit by stashing the function body in a separate function
+static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
+(
+	xbox::X_D3DTRANSFORMSTATETYPE State,
+    CONST xbox::X_D3DMATRIX *pMatrix
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(State)
+        LOG_FUNC_ARG(pMatrix)
+        LOG_FUNC_END;
+
+    setTransformCount++;
+
+    __asm {
+        // Trampoline to guest code to remove the need for a GetTransform patch
+        mov  eax, State
+        mov  edx, pMatrix
+        call XB_TRMP(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
+    }
+
+	CxbxImpl_SetTransform(State, pMatrix);
+}
+
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
+(
+)
+{
+	X_D3DTRANSFORMSTATETYPE State;
+    CONST X_D3DMATRIX *pMatrix;
+    __asm {
+        LTCG_PROLOGUE
+        mov  State, eax
+        mov  pMatrix, edx   
+    }
+
+	// Log + implementation
+	D3DDevice_SetTransform_0__LTCG_eax1_edx2(State, pMatrix);
+
+    __asm {
+        LTCG_EPILOGUE
+        ret
+    }
 }
