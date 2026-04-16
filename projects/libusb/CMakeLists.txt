@@ -7,6 +7,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  _CRT_SECURE_NO_WARNINGS
  _CRT_NONSTDC_NO_DEPRECATE
  )
+ # Suppress warnings in external code
+ add_compile_options(
+ /wd5287 # operands are different enum types
+ )
 endif()
 
 include_directories(
