@@ -131,12 +131,20 @@ xbox::void_xt WINAPI EMUPATCH(Lock3DSurface_16__LTCG_eax4)
     dword_xt             Flags
 );
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_PersistDisplay
 // ******************************************************************
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_Clear)
+(
+    dword_xt           Count,
+    CONST X_D3DRECT   *pRects,
+    dword_xt           Flags,
+    X_D3DCOLOR         Color,
+    float              Z,
+    dword_xt           Stencil
+);
+
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_PersistDisplay)();
-#endif
 
 } // namespace xbox
 

@@ -24,6 +24,14 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
+// Variables only used in EmuPatches_State.cpp
+static INDEX16 *g_pQuadToTriangleIndexData = nullptr;
+static size_t g_QuadToTriangleIndexData_Size = 0; // = NrOfQuadIndices
+static xbox::X_D3DBaseTexture CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture
+
+// Forward declarations (defined later in this file)
+static thread_local uint32_t setTransformCount;
+void CxbxImpl_SetTransform(xbox::X_D3DTRANSFORMSTATETYPE State, CONST xbox::X_D3DMATRIX *pMatrix);
 
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, float_xt y)
 {
@@ -997,7 +1005,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_LightEnable_4
 // Test case: Midtown Madness 3
 static thread_local uint32_t setRenderTargetCount = 0;
 
-static void CxbxImpl_SetRenderTarget
+void CxbxImpl_SetRenderTarget
 (
     xbox::X_D3DSurface    *pRenderTarget,
     xbox::X_D3DSurface    *pNewZStencil

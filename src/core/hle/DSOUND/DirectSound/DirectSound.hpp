@@ -27,6 +27,7 @@
 #define EMUDSOUND_H
 
 #include "core\kernel\init\CxbxKrnl.h"
+#include "core\hle\XAPI\Xapi.h" // For EMUPATCH
 #include "core\hle\DSOUND\XbDSoundTypes.h"
 #include "core\hle\DSOUND\common\XbInternalStruct.hpp"
 

@@ -258,7 +258,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_SetDepthClipPlanes)
     dword_xt Flags
 );
 
-#if 0 // DISABLED (Just calls MmAllocateContiguousMemory)
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_eax1)();
 
 } // namespace xbox
 

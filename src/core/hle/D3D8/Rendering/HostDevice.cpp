@@ -24,6 +24,11 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
+// Variables only used in HostDevice.cpp
+static HBRUSH g_hBgBrush = NULL; // Background Brush
+static bool g_bIsFauxFullscreen = false;
+static int g_iWireframe = 0; // wireframe toggle
+static bool g_bUsePassthroughHLSL = true;
 
 void EmuD3DInit()
 {
@@ -74,7 +79,7 @@ void EmuD3DInit()
 void EmuD3DCleanup() {}
 
 // window message processing thread
-static DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
+DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
 {
 	CxbxSetThreadName("Cxbx Render Window");
 
@@ -225,7 +230,7 @@ void ToggleFauxFullscreen(HWND hWnd)
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 // rendering window message procedure
-static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	const LRESULT imguiResult = ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 	if (imguiResult != 0) return imguiResult;
@@ -587,7 +592,7 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 	}
 }
 
-static void SetupPresentationParameters
+void SetupPresentationParameters
 (
     const xbox::X_D3DPRESENT_PARAMETERS     *pXboxPresentationParameters
 )
@@ -645,7 +650,7 @@ static void SetupPresentationParameters
     }
 }
 
-static void DetermineSupportedD3DFormats
+void DetermineSupportedD3DFormats
 (
 )
 {
@@ -814,7 +819,7 @@ float GetMultiSampleOffsetDelta()
 	return (g_Xbox_MultiSampleType & xbox::X_D3DMULTISAMPLE_SAMPLING_MULTI) ? 0.0f : 0.5f;
 }
 
-static inline void GetMultiSampleOffset(float& xOffset, float& yOffset)
+void GetMultiSampleOffset(float& xOffset, float& yOffset)
 {
 	xOffset = yOffset = GetMultiSampleOffsetDelta();
 }

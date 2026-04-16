@@ -223,7 +223,6 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetBackMaterial)
 	CONST X_D3DMATERIAL8 *pMaterial
 );
 
-#if 0 // patch disabled
 // ******************************************************************
 // * patch: D3DDevice_SetRenderTargetFast
 // ******************************************************************
@@ -239,9 +238,26 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTargetFast)
 // ******************************************************************
 void WINAPI EMUPATCH(D3D_LazySetPointParams)( void* Device );
 
-} // end of namespace xbox
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3)();
 
-#endif
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_4__LTCG_eax1_ebx2)
+(
+    uint_xt                Stride
+);
+
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_eax1)
+(
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt             Stride
+);
+
+xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx1)
+(
+    void*,
+    uint_xt                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt                Stride
+);
 
 } // namespace xbox
 

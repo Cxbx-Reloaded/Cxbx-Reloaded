@@ -43,6 +43,28 @@ xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice)
     X_D3DDevice           **ppReturnedDeviceInterface
 );
 
+// LTCG variants of Direct3D_CreateDevice
+xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_4__LTCG_eax1_ecx3)
+(
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+);
+
+xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ecx6)
+(
+    uint_xt                     Adapter,
+    X_D3DDEVTYPE                DeviceType,
+	X_HWND                      hFocusWindow,
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+);
+
+xbox::hresult_xt WINAPI EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ebx6)
+(
+    uint_xt                     Adapter,
+    X_D3DDEVTYPE                DeviceType,
+	X_HWND                      hFocusWindow,
+    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+);
+
 // ******************************************************************
 // * patch: D3DDevice_GetDisplayFieldStatus
 // ******************************************************************
@@ -84,6 +106,11 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_Reset_0__LTCG_ebx1)();
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetIndices)
 (
     X_D3DIndexBuffer   *pIndexData,
+    uint_xt                BaseVertexIndex
+);
+
+xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetIndices_4__LTCG_ebx1)
+(
     uint_xt                BaseVertexIndex
 );
 

@@ -1038,8 +1038,6 @@ void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD C
 	}
 }
 
-}
-
 void CxbxrImpl_RunVertexStateShader(DWORD Address, CONST FLOAT *pData)
 {
 	// If pData is assigned, pData[0..3] is pushed towards nv2a transform data registers

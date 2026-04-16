@@ -33,8 +33,6 @@
 #include "core/hle/D3D8/Rendering/Backend_D3D11.h" // For D3D11 state descs & dirty flags
 #include "core/hle/D3D8/XbConvert.h"
 
-void SetXboxMultiSampleType(xbox::X_D3DMULTISAMPLE_TYPE value);
-
 bool XboxRenderStateConverter::Init()
 {
     // Get render state

@@ -42,35 +42,7 @@
 // L = luminance, byte : 0 = pure black ARGB(1, 0,0,0) to 255 = pure white ARGB(1,255,255,255)
 // P = pallete
 
-enum _ComponentEncoding {
-	NoCmpnts = 0, // Format doesn't contain any component (ARGB/QWVU)
-	A1R5G5B5,
-	X1R5G5B5, // NOTE : A=255
-	A4R4G4B4,
-	__R5G6B5, // NOTE : A=255
-	A8R8G8B8,
-	X8R8G8B8, // NOTE : A=255
-	____R8B8, // NOTE : A takes R, G takes B
-	____G8B8, // NOTE : A takes G, R takes B
-	______A8, // TEST : R=G=B= 255
-	__R6G5B5, // NOTE : A=255
-	__L6V5U5, // NOTE : A=255
-	R5G5B5A1,
-	R4G4B4A4,
-	A8B8G8R8,
-	B8G8R8A8,
-	R8G8B8A8,
-	______L8, // NOTE : A=255, R=G=B= L
-	_____AL8, // NOTE : A=R=G=B= L
-	_____L16, // NOTE : Actually G8B8, with A=R=255
-	____A8L8, // NOTE : R=G=B= L
-	____DXT1,
-	____DXT3,
-	____DXT5,
-	______P8,
-	____YUY2,
-	____UYVY,
-};
+// _ComponentEncoding is now defined in XbConvert.h
 
 // Bitfield extraction macros, reading a field from right-to-left specified bit widths.
 // Invoker is responsible for passing in assigned and big enough data pointers.
@@ -1037,7 +1009,7 @@ void ____UYVYToARGBRow_C(const uint8_t* src_uyvy,
 	}
 }
 
-static const FormatToARGBRow ComponentConverters[] = {
+const FormatToARGBRow ComponentConverters[] = {
 	nullptr,             // NoCmpnts,
 	ARGB1555ToARGBRow_C, // A1R5G5B5,
 	X1R5G5B5ToARGBRow_C, // X1R5G5B5, // Test : Convert X into 255

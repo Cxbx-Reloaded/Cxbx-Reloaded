@@ -29,11 +29,6 @@
 static xbox::dword_xt                  *g_Xbox_D3DDevice; // TODO: This should be a D3DDevice structure
 */
 
-// Static Function(s)
-static DWORD WINAPI                 EmuRenderWindow(LPVOID);
-static LRESULT WINAPI               EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static inline void                  EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize);
-
 static void DrawInitialBlackScreen
 (
 )
@@ -58,7 +53,7 @@ static void DrawInitialBlackScreen
 	CxbxPresent();
 }
 
-static void CreateDefaultD3D9Device
+void CreateDefaultD3D9Device
 (
     const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
@@ -71,8 +66,7 @@ static void CreateDefaultD3D9Device
 
 		CxbxEndScene();
 
-        ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
-        ClearResourceCache(g_Cxbx_Cached_Direct3DResources);
+        ClearAllResourceCaches();
 
         // TODO: ensure all other resources are cleaned up too
 
@@ -446,7 +440,7 @@ static void CreateDefaultD3D9Device
 
 
 // check if a resource has been registered yet (if not, register it)
-bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr)
+bool GetHostRenderTargetDimensions(DWORD *pHostWidth, DWORD *pHostHeight, IDirect3DSurface* pHostRenderTarget)
 {
 	bool shouldRelease = false;
 	if (pHostRenderTarget == nullptr) {
