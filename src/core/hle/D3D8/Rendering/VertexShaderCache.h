@@ -23,8 +23,8 @@
 // *
 // ******************************************************************
 
-#ifndef DIRECT3D9SHADERCACHE_H
-#define DIRECT3D9SHADERCACHE_H
+#ifndef VERTEX_SHADER_CACHE_H
+#define VERTEX_SHADER_CACHE_H
 
 #include "VertexShader.h"
 #include <map>
