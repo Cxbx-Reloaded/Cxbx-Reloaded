@@ -32,6 +32,12 @@ void CxbxUpdateHostTextures()
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
+#ifdef CXBX_USE_D3D11
+	// Per-stage SRV cache: avoids recreating SRVs every frame for the same resource
+	static ID3D11Resource*           s_CachedResource[xbox::X_D3DTS_STAGECOUNT] = {};
+	static ID3D11ShaderResourceView* s_CachedSRV[xbox::X_D3DTS_STAGECOUNT] = {};
+#endif
+
 	// Set the host texture for each stage
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
@@ -68,50 +74,69 @@ void CxbxUpdateHostTextures()
 
 #ifdef CXBX_USE_D3D11
 		if (pHostBaseTexture != nullptr) {
-			// Create a shader resource view for the texture
-			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			D3D11_RESOURCE_DIMENSION dim;
-			pHostBaseTexture->GetType(&dim);
-
-			switch (dim) {
-			case D3D11_RESOURCE_DIMENSION_TEXTURE2D: {
-				D3D11_TEXTURE2D_DESC texDesc = {};
-				((ID3D11Texture2D*)pHostBaseTexture)->GetDesc(&texDesc);
-				srvDesc.Format = texDesc.Format;
-				if (texDesc.ArraySize == 6) {
-					srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-					srvDesc.TextureCube.MipLevels = texDesc.MipLevels;
-					srvDesc.TextureCube.MostDetailedMip = 0;
-				} else {
-					srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-					srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
-					srvDesc.Texture2D.MostDetailedMip = 0;
+			// Reuse cached SRV if the underlying resource hasn't changed
+			if (s_CachedResource[stage] == pHostBaseTexture && s_CachedSRV[stage] != nullptr) {
+				g_pD3DDeviceContext->PSSetShaderResources(stage, 1, &s_CachedSRV[stage]);
+			} else {
+				// Release old cached SRV
+				if (s_CachedSRV[stage]) {
+					s_CachedSRV[stage]->Release();
+					s_CachedSRV[stage] = nullptr;
 				}
-				break;
-			}
-			case D3D11_RESOURCE_DIMENSION_TEXTURE3D: {
-				D3D11_TEXTURE3D_DESC texDesc = {};
-				((ID3D11Texture3D*)pHostBaseTexture)->GetDesc(&texDesc);
-				srvDesc.Format = texDesc.Format;
-				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-				srvDesc.Texture3D.MipLevels = texDesc.MipLevels;
-				srvDesc.Texture3D.MostDetailedMip = 0;
-				break;
-			}
-			default:
-				// Unsupported resource type
-				if (bNeedRelease) pHostBaseTexture->Release();
-				continue;
-			}
+				s_CachedResource[stage] = nullptr;
 
-			ID3D11ShaderResourceView* pSRV = nullptr;
-			HRESULT hRet = g_pD3DDevice->CreateShaderResourceView(pHostBaseTexture, &srvDesc, &pSRV);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateShaderResourceView");
-			if (SUCCEEDED(hRet) && pSRV != nullptr) {
-				g_pD3DDeviceContext->PSSetShaderResources(stage, 1, &pSRV);
-				pSRV->Release();
+				// Create a shader resource view for the texture
+				D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				D3D11_RESOURCE_DIMENSION dim;
+				pHostBaseTexture->GetType(&dim);
+
+				switch (dim) {
+				case D3D11_RESOURCE_DIMENSION_TEXTURE2D: {
+					D3D11_TEXTURE2D_DESC texDesc = {};
+					((ID3D11Texture2D*)pHostBaseTexture)->GetDesc(&texDesc);
+					srvDesc.Format = texDesc.Format;
+					if (texDesc.ArraySize == 6) {
+						srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+						srvDesc.TextureCube.MipLevels = texDesc.MipLevels;
+						srvDesc.TextureCube.MostDetailedMip = 0;
+					} else {
+						srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+						srvDesc.Texture2D.MipLevels = texDesc.MipLevels;
+						srvDesc.Texture2D.MostDetailedMip = 0;
+					}
+					break;
+				}
+				case D3D11_RESOURCE_DIMENSION_TEXTURE3D: {
+					D3D11_TEXTURE3D_DESC texDesc = {};
+					((ID3D11Texture3D*)pHostBaseTexture)->GetDesc(&texDesc);
+					srvDesc.Format = texDesc.Format;
+					srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+					srvDesc.Texture3D.MipLevels = texDesc.MipLevels;
+					srvDesc.Texture3D.MostDetailedMip = 0;
+					break;
+				}
+				default:
+					// Unsupported resource type
+					if (bNeedRelease) pHostBaseTexture->Release();
+					continue;
+				}
+
+				ID3D11ShaderResourceView* pSRV = nullptr;
+				HRESULT hRet = g_pD3DDevice->CreateShaderResourceView(pHostBaseTexture, &srvDesc, &pSRV);
+				DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateShaderResourceView");
+				if (SUCCEEDED(hRet) && pSRV != nullptr) {
+					s_CachedResource[stage] = pHostBaseTexture;
+					s_CachedSRV[stage] = pSRV; // Keep ref for cache
+					g_pD3DDeviceContext->PSSetShaderResources(stage, 1, &pSRV);
+				}
 			}
 		} else {
+			// Clear cache and unbind
+			if (s_CachedSRV[stage]) {
+				s_CachedSRV[stage]->Release();
+				s_CachedSRV[stage] = nullptr;
+			}
+			s_CachedResource[stage] = nullptr;
 			ID3D11ShaderResourceView* pNullSRV = nullptr;
 			g_pD3DDeviceContext->PSSetShaderResources(stage, 1, &pNullSRV);
 		}
