@@ -403,17 +403,5 @@ extern HRESULT EmuCompilePixelShader
 	BuildShader(pIntermediateShader, hlsl_stream);
 	std::string hlsl_str = hlsl_stream.str();
 
-#ifdef CXBX_USE_D3D11
-	// In SM4.0+, the pixel shader output semantic must be SV_Target, not COLOR
-	{
-		const std::string oldSemantic = ": COLOR;";
-		const std::string newSemantic = ": SV_Target;";
-		auto pos = hlsl_str.find(oldSemantic);
-		if (pos != std::string::npos) {
-			hlsl_str.replace(pos, oldSemantic.size(), newSemantic);
-		}
-	}
-#endif
-
 	return EmuCompileShader(hlsl_str, g_ps_model, ppHostShader);
 }
