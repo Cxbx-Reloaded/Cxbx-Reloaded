@@ -13,6 +13,7 @@ endif()
 add_compile_definitions(
  IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
  IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
+ IMGUI_DEFINE_MATH_OPERATORS
 )
 
 file (GLOB HEADERS
@@ -39,4 +40,8 @@ add_library(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 target_include_directories(${PROJECT_NAME}
  PUBLIC "${CXBXR_ROOT_DIR}/import/imgui"
+)
+
+target_compile_definitions(${PROJECT_NAME}
+ PUBLIC IMGUI_DEFINE_MATH_OPERATORS
 )

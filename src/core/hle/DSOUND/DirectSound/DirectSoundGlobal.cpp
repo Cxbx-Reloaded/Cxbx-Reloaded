@@ -27,7 +27,6 @@
 #define LOG_PREFIX CXBXR_MODULE::DSOUND
 
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h" // For ImVec
 #include "core/common/imgui/ui.hpp"
 
