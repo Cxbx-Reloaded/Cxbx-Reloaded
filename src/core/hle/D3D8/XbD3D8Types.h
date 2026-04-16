@@ -758,7 +758,7 @@ inline const char* DXGetErrorDescription(HRESULT hr) { (void)hr; return ""; }
 #define EMUFMT_V16U16                  _9_11(D3DFMT_V16U16,               DXGI_FORMAT_R16G16_SNORM)
 #define EMUFMT_V8U8                    _9_11(D3DFMT_V8U8,                 DXGI_FORMAT_R8G8_SNORM)
 #define EMUFMT_X1R5G5B5                _9_11(D3DFMT_X1R5G5B5,             DXGI_FORMAT_B5G5R5A1_UNORM) // Note : EMUFMT_A1R5G5B5 maps to same DXGI_FORMAT_B5G5R5A1_UNORM
-#define EMUFMT_X8R8G8B8                _9_11(D3DFMT_X8R8G8B8,             DXGI_FORMAT_B8G8R8X8_UNORM)
+#define EMUFMT_X8R8G8B8                _9_11(D3DFMT_X8R8G8B8,             DXGI_FORMAT_B8G8R8A8_UNORM) // Note : B8G8R8X8_UNORM has optional SRV support; A8 variant is universally supported
 #define EMUFMT_YUY2                    _9_11(D3DFMT_YUY2,                 DXGI_FORMAT_YUY2)
 
 #define	DXGI_FORMAT_NOT_AVAILABLE       DXGI_FORMAT_UNKNOWN // Used for formats with no suitable DXGI equivalent
