@@ -371,8 +371,10 @@ constexpr int PSH_XBOX_CONSTANT_FRONTFACE_FACTOR = PSH_XBOX_CONSTANT_LUM + 4; //
 constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR + 1; // = 40
 //Fog enable flag
 constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1; // = 41
+// D3D11: Per-stage texture format channel fixup (packed float4, one component per stage)
+constexpr int PSH_XBOX_CONSTANT_TEXFMTFIXUP = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 42
 // This concludes the set of constants that need to be set on host :
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 42
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_TEXFMTFIXUP + 1; // = 43
 
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
@@ -671,6 +673,40 @@ float CxbxComponentColorSignFromXboxAndHost(bool XboxMarksComponentSigned, bool 
 	return -1.0f; // Mark the component for scaling from signed_to_unsigned
 }
 
+float CxbxGetTexFmtFixup(int stage_nr)
+{
+	using namespace FixedFunctionPixelShader;
+
+#ifdef CXBX_USE_D3D11
+	auto pXboxTex = g_pXbox_SetTexture[stage_nr];
+	if (pXboxTex == xbox::zeroptr)
+		return TEXFMTFIXUP_IDENTITY;
+
+	xbox::X_D3DFORMAT xboxFmt = GetXboxPixelContainerFormat((xbox::X_D3DPixelContainer*)pXboxTex);
+	switch (xboxFmt) {
+	case xbox::X_D3DFMT_L8:
+	case xbox::X_D3DFMT_LIN_L8:
+	case xbox::X_D3DFMT_L16:
+	case xbox::X_D3DFMT_LIN_L16:
+		return TEXFMTFIXUP_LUM;
+	case xbox::X_D3DFMT_A8L8:
+	case xbox::X_D3DFMT_LIN_A8L8:
+		return TEXFMTFIXUP_ALUM;
+	// B8G8R8A8 and R8G8B8A8 use GBAR/ABGR swizzles when uploaded raw
+	// (requires corresponding skip of CPU conversion in HostResourceCreate.cpp)
+	case xbox::X_D3DFMT_B8G8R8A8:
+	case xbox::X_D3DFMT_LIN_B8G8R8A8:
+		return TEXFMTFIXUP_GBAR;
+	case xbox::X_D3DFMT_R8G8B8A8:
+	case xbox::X_D3DFMT_LIN_R8G8B8A8:
+		return TEXFMTFIXUP_ABGR;
+	default:
+		break;
+	}
+#endif
+	return TEXFMTFIXUP_IDENTITY;
+}
+
 D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 {
 	// Initially use what the running executable put in COLORSIGN :
@@ -762,6 +798,7 @@ void UpdateFixedFunctionPixelShaderState()
 		stage->BUMPENVLSCALE = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLSCALE));
 		stage->BUMPENVLOFFSET = AsFloat(XboxTextureStates.Get(i, xbox::X_D3DTSS_BUMPENVLOFFSET));
 		{ D3DXCOLOR c(XboxTextureStates.Get(i, xbox::X_D3DTSS_COLORKEYCOLOR)); stage->COLORKEYCOLOR = D3DXVECTOR4(c.r, c.g, c.b, c.a); }
+		stage->TEXFMTFIXUP = CxbxGetTexFmtFixup(i);
 	}
 
 	const int size = (sizeof(FixedFunctionPixelShaderState) + 16 - 1) / 16;
@@ -989,6 +1026,12 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   fColor[CXBX_D3DPS_CONSTREG_FOGINFO].a = fogEnd;
   fColor[PSH_XBOX_CONSTANT_FOGENABLE].r = fogEnable;
   
+  // D3D11: Compute per-stage texture format channel fixup
+  fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].r = CxbxGetTexFmtFixup(0);
+  fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].g = CxbxGetTexFmtFixup(1);
+  fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].b = CxbxGetTexFmtFixup(2);
+  fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].a = CxbxGetTexFmtFixup(3);
+
   // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
   // Read the color from the corresponding render state slot :
   // Set all host constant values using a single call:

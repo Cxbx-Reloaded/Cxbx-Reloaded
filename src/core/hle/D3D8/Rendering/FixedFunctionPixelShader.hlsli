@@ -115,7 +115,15 @@ namespace FixedFunctionPixelShader {
 		// BORDERCOLOR // = 29; set on sampler
 		alignas(16) float4 COLORKEYCOLOR; // = 30; Xbox extension!
 		// UNSUPPORTED // = 31; // Note : Somehow, this one comes through D3DDevice_SetTextureStageStateNotInline sometimes
+		alignas(16) float TEXFMTFIXUP; // D3D11: texture format channel fixup (0=identity, 1=.gbar, 2=.abgr, 3=luminance .rrra, 4=alpha-luminance .rrrg)
 	};
+
+	// Texture format fixup constants (shared between C++ and HLSL)
+	const float TEXFMTFIXUP_IDENTITY = 0;
+	const float TEXFMTFIXUP_GBAR     = 1; // B8G8R8A8 uploaded as R8G8B8A8
+	const float TEXFMTFIXUP_ABGR     = 2; // R8G8B8A8 uploaded as R8G8B8A8
+	const float TEXFMTFIXUP_LUM      = 3; // Luminance: R8→(R,R,R,1)
+	const float TEXFMTFIXUP_ALUM     = 4; // Alpha-luminance: R8G8→(R,R,R,G);
 
 	// This state is compiled into the shader
 	// Values correspond to XD3D8 version of D3DTEXTURESTAGESTATETYPE

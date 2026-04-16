@@ -45,7 +45,7 @@ extern IDirect3DSurface            *g_pD3DCurrentHostRenderTarget;
 static const UINT CXBX_D3D11_VS_CB_SLOT = 0;
 static const UINT CXBX_D3D11_VS_CB_COUNT = 256;
 static const UINT CXBX_D3D11_PS_CB_SLOT = 0;
-static const UINT CXBX_D3D11_PS_CB_COUNT = 42;
+static const UINT CXBX_D3D11_PS_CB_COUNT = 43;
 
 // Constant buffers (created in RenderGlobals.cpp device init, used by Backend_D3D11.cpp)
 extern ID3D11Buffer *g_pD3D11VSConstantBuffer;
