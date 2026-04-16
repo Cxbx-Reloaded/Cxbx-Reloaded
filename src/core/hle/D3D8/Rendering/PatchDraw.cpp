@@ -401,7 +401,7 @@ static bool TessellateTriPatch(
 }
 
 // ---------------------------------------------------------------
-// Draw tessellated vertices via a temporary D3D11 buffer
+// Draw tessellated vertices via a reusable D3D11 dynamic buffer
 // ---------------------------------------------------------------
 static HRESULT DrawTessellatedMesh(const std::vector<Float3> &vertices)
 {
@@ -411,30 +411,20 @@ static HRESULT DrawTessellatedMesh(const std::vector<Float3> &vertices)
 	UINT vertexCount = (UINT)vertices.size();
 	UINT dataSize = vertexCount * sizeof(Float3);
 
-	D3D11_BUFFER_DESC vbDesc = {};
-	vbDesc.ByteWidth = dataSize;
-	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	D3D11_SUBRESOURCE_DATA vbInit = {};
-	vbInit.pSysMem = vertices.data();
-
-	ID3D11Buffer *pTempVB = nullptr;
-	HRESULT hRet = g_pD3DDevice->CreateBuffer(&vbDesc, &vbInit, &pTempVB);
-	if (FAILED(hRet) || pTempVB == nullptr)
-		return hRet;
+	static CxbxDynBuffer s_PatchVB = { nullptr, 0, D3D11_BIND_VERTEX_BUFFER };
+	ID3D11Buffer *pVB = s_PatchVB.Update(vertices.data(), dataSize);
+	if (pVB == nullptr)
+		return E_FAIL;
 
 	// Apply any pending state changes
 	CxbxD3D11ApplyDirtyStates();
 
 	UINT stride = sizeof(Float3);
 	UINT offset = 0;
-	g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pTempVB, &stride, &offset);
+	g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
 	g_pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	g_pD3DDeviceContext->Draw(vertexCount, 0);
 
-	pTempVB->Release();
 	return S_OK;
 }
 
