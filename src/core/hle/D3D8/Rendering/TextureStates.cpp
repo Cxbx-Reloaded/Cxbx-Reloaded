@@ -359,13 +359,29 @@ void XboxTextureStateConverter::Apply()
 					samplerDesc.Filter = D3D11_ENCODE_BASIC_FILTER(d3d11Min, d3d11Mag, d3d11Mip, D3D11_FILTER_REDUCTION_TYPE_STANDARD);
 				}
 
-				ID3D11SamplerState *pSamplerState = nullptr;
-				HRESULT hRet;
+				// Cache of the last-created sampler state per stage, to avoid recreating on every state change
+				static ID3D11SamplerState *s_CachedSamplerStates[xbox::X_D3DTS_STAGECOUNT] = {};
+				static D3D11_SAMPLER_DESC s_CachedSamplerDescs[xbox::X_D3DTS_STAGECOUNT] = {};
+				static bool s_CachedSamplerValid[xbox::X_D3DTS_STAGECOUNT] = {};
 
-				hRet = g_pD3DDevice->CreateSamplerState(&samplerDesc, &pSamplerState);
-				if (SUCCEEDED(hRet) && pSamplerState != nullptr) {
-					g_pD3DDeviceContext->PSSetSamplers(HostStage, 1, &pSamplerState);
-					pSamplerState->Release(); // Release after setting; context adds its own reference
+				// Only recreate if the descriptor actually changed
+				if (!s_CachedSamplerValid[HostStage] || memcmp(&samplerDesc, &s_CachedSamplerDescs[HostStage], sizeof(D3D11_SAMPLER_DESC)) != 0) {
+					if (s_CachedSamplerStates[HostStage]) {
+						s_CachedSamplerStates[HostStage]->Release();
+						s_CachedSamplerStates[HostStage] = nullptr;
+					}
+
+					ID3D11SamplerState *pSamplerState = nullptr;
+					HRESULT hRet = g_pD3DDevice->CreateSamplerState(&samplerDesc, &pSamplerState);
+					if (SUCCEEDED(hRet) && pSamplerState != nullptr) {
+						s_CachedSamplerStates[HostStage] = pSamplerState;
+						s_CachedSamplerDescs[HostStage] = samplerDesc;
+						s_CachedSamplerValid[HostStage] = true;
+						g_pD3DDeviceContext->PSSetSamplers(HostStage, 1, &pSamplerState);
+					}
+				} else {
+					// Desc unchanged — just re-bind the cached sampler
+					g_pD3DDeviceContext->PSSetSamplers(HostStage, 1, &s_CachedSamplerStates[HostStage]);
 				}
 #else
                 g_pD3DDevice->SetSamplerState(HostStage, (D3DSAMPLERSTATETYPE)CxbxTextureStateInfo[State].PC, PcValue);
