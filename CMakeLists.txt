@@ -502,6 +502,15 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])" AND BUILD_CXBXR_DE
   PROPERTIES EXCLUDE_FROM_ALL TRUE
  )
 
+ # Suppress warnings in external capstone code
+ if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+  target_compile_options(capstone-shared PRIVATE
+   /wd4018 # signed/unsigned mismatch
+   /wd4244 # conversion, possible loss of data
+   /wd4267 # conversion from size_t, possible loss of data
+  )
+ endif()
+
  # Cxbx-Debugger project with third-party libraries
  set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared
   PROPERTIES FOLDER Cxbx-Reloaded/debugger
