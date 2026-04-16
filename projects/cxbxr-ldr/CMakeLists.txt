@@ -40,12 +40,12 @@ source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX header FILES ${HEADERS})
 
 source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES ${SOURCES})
 
-add_executable(cxbxr-ldr ${HEADERS} ${SOURCES})
+add_executable(${PROJECT_NAME} ${HEADERS} ${SOURCES})
 
 # Link and compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
- set_target_properties(cxbxr-ldr PROPERTIES
+ set_target_properties(${PROJECT_NAME} PROPERTIES
   LINK_FLAGS "
   /LARGEADDRESSAWARE \
   /FIXED \
@@ -64,7 +64,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  )
 endif()
 
-target_link_libraries(cxbxr-ldr
+target_link_libraries(${PROJECT_NAME}
  PUBLIC kernel32.lib
 )
 
@@ -72,4 +72,4 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin
 )
 
-add_dependencies(cxbxr-ldr misc-batch)
+add_dependencies(${PROJECT_NAME} misc-batch)

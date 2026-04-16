@@ -97,7 +97,7 @@ source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
 
-add_executable(cxbx WIN32 ${RESOURCES}
+add_executable(${PROJECT_NAME} WIN32 ${RESOURCES}
  ${CXBXR_HEADER_GUIv1}
  ${CXBXR_HEADER_COMMON}
  ${CXBXR_SOURCE_GUIv1}
@@ -109,7 +109,7 @@ add_executable(cxbx WIN32 ${RESOURCES}
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
  # Reference: https://docs.microsoft.com/en-us/cpp/build/reference/linker-options
- set_target_properties(cxbx PROPERTIES
+ set_target_properties(${PROJECT_NAME} PROPERTIES
   LINK_FLAGS "
   /NODEFAULTLIB:libcmt \
   "
@@ -173,7 +173,7 @@ set(WINS_LIB
  Dwmapi
 )
 
-target_link_libraries(cxbx
+target_link_libraries(${PROJECT_NAME}
  PUBLIC libXbSymbolDatabase
  subhook
  libtomcrypt
@@ -190,10 +190,10 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])" AND BUILD_CXBXR_DEBUGGER)
-  add_dependencies(cxbx cxbxr-debugger)
+  add_dependencies(${PROJECT_NAME} cxbxr-debugger)
 endif()
 
-add_dependencies(cxbx cxbxr-ldr cxbxr-emu misc-batch)
+add_dependencies(${PROJECT_NAME} cxbxr-ldr cxbxr-emu misc-batch)
 
 # Try to stop cmake from building hlsl files
 # Which are all currently loaded at runtime only

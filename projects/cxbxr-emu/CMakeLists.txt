@@ -94,7 +94,7 @@ source_group(TREE ${CXBXR_ROOT_DIR}/src PREFIX source FILES
 
 source_group(TREE ${CXBXR_ROOT_DIR} FILES ${RESOURCES})
 
-add_library(cxbxr-emu SHARED ${RESOURCES}
+add_library(${PROJECT_NAME} SHARED ${RESOURCES}
  ${CXBXR_HEADER_COMMON}
  ${CXBXR_HEADER_EMU_IMPORT}
  ${CXBXR_HEADER_EMU}
@@ -110,7 +110,7 @@ add_library(cxbxr-emu SHARED ${RESOURCES}
 # Link and compile flags
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 
- set_target_properties(cxbxr-emu PROPERTIES
+ set_target_properties(${PROJECT_NAME} PROPERTIES
   LINK_FLAGS "
   /INCREMENTAL:NO \
   /LARGEADDRESSAWARE \
@@ -164,7 +164,7 @@ set(WINS_LIB
  wpcap
 )
 
-target_link_libraries(cxbxr-emu
+target_link_libraries(${PROJECT_NAME}
  PUBLIC libXbSymbolDatabase
  subhook
  libtomcrypt
@@ -181,7 +181,7 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION bin
 )
 
-add_dependencies(cxbxr-emu cxbxr-ldr misc-batch)
+add_dependencies(${PROJECT_NAME} cxbxr-ldr misc-batch)
 
 # Try to stop cmake from building hlsl files
 # Which are all currently loaded at runtime only
