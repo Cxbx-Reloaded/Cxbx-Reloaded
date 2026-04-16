@@ -51,34 +51,32 @@
 // The intent of this file is to add general functions which are not kernel specific (for those CxbxKrnl.h should be used instead)
 
 #include <cstring> // For memcpy
+#include <limits>
 #include "common\util\CxbxUtil.h"
 
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
-
-// Disable a compiler warning relative to uint64_t -> uint32_t conversions in Muldiv64. This function is taken from
-// QEMU so it should be safe regardless
-#pragma warning(suppress: 4244)
-// Compute (a*b)/c with a 96 bit intermediate result
+// Compute (a * b) / c using a 96-bit intermediate result.
+// Precondition: the result must fit in uint64_t, i.e. (rh / c) <= UINT32_MAX.
+// If that condition is violated the result is silently wrong; the assert below
+// catches it in debug builds. For a fully safe version, use __int128 (gcc/clang)
+// or _umul128 (MSVC x64) to widen the intermediate to 128 bits.
 uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
 {
-	union {
-		uint64_t ll;
-		struct {
-			uint32_t low, high;
-		} l;
-	} u, res;
-	uint64_t rl, rh;
+    const uint32_t a_low  = static_cast<uint32_t>(a);
+    const uint32_t a_high = static_cast<uint32_t>(a >> 32);
 
-	u.ll = a;
-	rl = (uint64_t)u.l.low * (uint64_t)b;
-	rh = (uint64_t)u.l.high * (uint64_t)b;
-	rh += (rl >> 32);
-	res.l.high = static_cast<uint32_t>(rh / c);
-	res.l.low = static_cast<uint32_t>((((rh % c) << 32) + (rl & 0xffffffff)) / c);
-	return res.ll;
+    const uint64_t rl = static_cast<uint64_t>(a_low)  * b;
+    const uint64_t rh = static_cast<uint64_t>(a_high) * b + (rl >> 32);
+
+    assert(rh / c <= std::numeric_limits<uint32_t>::max());
+
+    const uint32_t res_high = static_cast<uint32_t>(rh / c);
+    const uint32_t res_low  = static_cast<uint32_t>(((rh % c) << 32 | (rl & 0xFFFF'FFFFu)) / c);
+
+    return (static_cast<uint64_t>(res_high) << 32) | res_low;
 }
 
 void IoVecReset(IOVector* qiov)
