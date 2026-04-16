@@ -768,8 +768,173 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSwapCallback)
     g_pXbox_SwapCallback = pCallback;
 }
 
+// Overload for logging
+static void D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3
+(
+    xbox::uint_xt            StreamNumber,
+    xbox::X_D3DVertexBuffer *pStreamData,
+    xbox::uint_xt            Stride
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(StreamNumber)
+        LOG_FUNC_ARG(pStreamData)
+        LOG_FUNC_ARG(Stride)
+        LOG_FUNC_END;
+}
+
+// LTCG specific D3DDevice_SetStreamSource function...
+// This uses a custom calling convention where parameters are passed in EAX, EDI, EBX
+// Test-case: Juiced
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3)()
+{
+    uint_xt StreamNumber;
+    X_D3DVertexBuffer *pStreamData;
+    uint_xt Stride;
+    __asm {
+        LTCG_PROLOGUE
+        mov  StreamNumber, eax
+        mov  pStreamData, edi
+        mov  Stride, ebx
+    }
+
+    // Log
+    D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3(StreamNumber, pStreamData, Stride);
+
+    CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+    __asm {
+        mov  eax, StreamNumber
+        mov  edi, pStreamData
+        mov  ebx, Stride
+        call XB_TRMP(D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3)
+
+        LTCG_EPILOGUE
+        ret
+    }
+}
+
+// Overload for logging
+static void D3DDevice_SetStreamSource_4__LTCG_eax1_ebx2
+(
+    xbox::uint_xt            StreamNumber,
+    xbox::X_D3DVertexBuffer *pStreamData,
+    xbox::uint_xt            Stride
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(StreamNumber)
+        LOG_FUNC_ARG(pStreamData)
+        LOG_FUNC_ARG(Stride)
+        LOG_FUNC_END;
+}
+
+// LTCG specific D3DDevice_SetStreamSource function...
+// This uses a custom calling convention where parameter is passed in EAX, EBX
+// Test-case: Ninja Gaiden
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_4__LTCG_eax1_ebx2)
+(
+    uint_xt                Stride
+)
+{
+    uint_xt StreamNumber;
+    X_D3DVertexBuffer *pStreamData;
+    __asm {
+        LTCG_PROLOGUE
+        mov  StreamNumber, eax
+        mov  pStreamData, ebx
+    }
+
+    // Log
+    D3DDevice_SetStreamSource_4__LTCG_eax1_ebx2(StreamNumber, pStreamData, Stride);
+
+    CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+    // Forward to Xbox implementation
+    // This should stop us having to patch GetStreamSource!
+    __asm {
+        push Stride
+        mov  ebx, pStreamData
+        mov  eax, StreamNumber
+        call XB_TRMP(D3DDevice_SetStreamSource_4__LTCG_eax1_ebx2)
+
+        LTCG_EPILOGUE
+        ret  4
+    }
+}
+
+// Overload for logging
+static void D3DDevice_SetStreamSource_8__LTCG_eax1
+(
+    xbox::uint_xt            StreamNumber,
+    xbox::X_D3DVertexBuffer *pStreamData,
+    xbox::uint_xt            Stride
+)
+{
+    LOG_FUNC_BEGIN
+        LOG_FUNC_ARG(StreamNumber)
+        LOG_FUNC_ARG(pStreamData)
+        LOG_FUNC_ARG(Stride)
+        LOG_FUNC_END;
+}
+
+// This uses a custom calling convention where parameter is passed in EAX
+// Test-case: Superman - The Man Of Steel
+__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_eax1)
+(
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt             Stride
+)
+{
+    uint_xt StreamNumber;
+    __asm {
+        LTCG_PROLOGUE
+        mov  StreamNumber, eax
+    }
+
+    // Log
+    D3DDevice_SetStreamSource_8__LTCG_eax1(StreamNumber, pStreamData, Stride);
+
+    CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+    // Forward to Xbox implementation
+    // This should stop us having to patch GetStreamSource!
+    __asm {
+        push Stride
+        push pStreamData
+        mov  eax, StreamNumber
+        call XB_TRMP(D3DDevice_SetStreamSource_8__LTCG_eax1)
+
+        LTCG_EPILOGUE
+        ret  8
+    }
+}
+
+// This uses a custom calling convention where StreamNumber parameter is passed in EDX
+// Test-case: NASCAR Heat 2002
+xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx1)
+(
+    void*,
+    uint_xt                StreamNumber,
+    X_D3DVertexBuffer  *pStreamData,
+    uint_xt                Stride
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(StreamNumber)
+		LOG_FUNC_ARG(pStreamData)
+		LOG_FUNC_ARG(Stride)
+		LOG_FUNC_END;
+
+	CxbxImpl_SetStreamSource(StreamNumber, pStreamData, Stride);
+
+	// Forward to Xbox implementation
+	// This should stop us having to patch GetStreamSource!
+	XB_TRMP(D3DDevice_SetStreamSource_8__LTCG_edx1)(nullptr, StreamNumber, pStreamData, Stride);
+}
+
 // ******************************************************************
-// * patch: D3DDevice_PersistDisplay
+// * patch: D3DDevice_PrimeVertexCache
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 (
@@ -785,7 +950,3 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 	// TODO: Implement
 	LOG_UNIMPLEMENTED();
 }
-
-// ******************************************************************
-// * patch: D3DDevice_SetModelView
-// ******************************************************************
