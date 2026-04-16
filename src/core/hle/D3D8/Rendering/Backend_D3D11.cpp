@@ -344,6 +344,150 @@ HRESULT CxbxD3D11Blt(
 }
 
 // ******************************************************************
+// * Unified D3D11 render state mapping
+// * Called from ApplySimpleRenderState and ApplyComplexRenderState
+// * after Xbox→PC value conversion. Updates D3D11 state descriptors
+// * and sets dirty flags for deferred state object recreation.
+// ******************************************************************
+void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
+{
+    switch (State) {
+        // ---- Rasterizer state ----
+        case xbox::X_D3DRS_FILLMODE:
+            switch (Value) {
+                case D3DFILL_SOLID:     g_D3D11RasterizerDesc.FillMode = D3D11_FILL_SOLID; break;
+                case D3DFILL_WIREFRAME: g_D3D11RasterizerDesc.FillMode = D3D11_FILL_WIREFRAME; break;
+                default: break;
+            }
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_CULLMODE:
+            switch (Value) {
+                case D3DCULL_NONE: g_D3D11RasterizerDesc.CullMode = D3D11_CULL_NONE; break;
+                case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
+                case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
+                default: break;
+            }
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_ZBIAS:
+            g_D3D11RasterizerDesc.DepthBias = (INT)Value;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_EDGEANTIALIAS:
+            g_D3D11RasterizerDesc.AntialiasedLineEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+        case xbox::X_D3DRS_MULTISAMPLEANTIALIAS:
+            g_D3D11RasterizerDesc.MultisampleEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
+
+        // ---- Depth/stencil state ----
+        case xbox::X_D3DRS_ZENABLE:
+            g_D3D11DepthStencilDesc.DepthEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_ZWRITEENABLE:
+            g_D3D11DepthStencilDesc.DepthWriteMask = Value ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_ZFUNC:
+            g_D3D11DepthStencilDesc.DepthFunc = (D3D11_COMPARISON_FUNC)Value; // D3D9 and D3D11 comparison func values match
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILENABLE:
+            g_D3D11DepthStencilDesc.StencilEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILFAIL:
+            g_D3D11DepthStencilDesc.FrontFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILZFAIL:
+            g_D3D11DepthStencilDesc.FrontFace.StencilDepthFailOp = (D3D11_STENCIL_OP)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilDepthFailOp = (D3D11_STENCIL_OP)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILPASS:
+            g_D3D11DepthStencilDesc.FrontFace.StencilPassOp = (D3D11_STENCIL_OP)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilPassOp = (D3D11_STENCIL_OP)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILFUNC:
+            g_D3D11DepthStencilDesc.FrontFace.StencilFunc = (D3D11_COMPARISON_FUNC)Value;
+            g_D3D11DepthStencilDesc.BackFace.StencilFunc = (D3D11_COMPARISON_FUNC)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILREF:
+            g_D3D11StencilRef = Value;
+            g_bD3D11DepthStencilStateDirty = true; // re-apply to pass new ref
+            break;
+        case xbox::X_D3DRS_STENCILMASK:
+            g_D3D11DepthStencilDesc.StencilReadMask = (UINT8)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+        case xbox::X_D3DRS_STENCILWRITEMASK:
+            g_D3D11DepthStencilDesc.StencilWriteMask = (UINT8)Value;
+            g_bD3D11DepthStencilStateDirty = true;
+            break;
+
+        // ---- Blend state ----
+        case xbox::X_D3DRS_ALPHABLENDENABLE:
+            g_D3D11BlendDesc.RenderTarget[0].BlendEnable = (Value != 0) ? TRUE : FALSE;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_SRCBLEND:
+            g_D3D11BlendDesc.RenderTarget[0].SrcBlend = (D3D11_BLEND)Value;
+            g_D3D11BlendDesc.RenderTarget[0].SrcBlendAlpha = (D3D11_BLEND)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_DESTBLEND:
+            g_D3D11BlendDesc.RenderTarget[0].DestBlend = (D3D11_BLEND)Value;
+            g_D3D11BlendDesc.RenderTarget[0].DestBlendAlpha = (D3D11_BLEND)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_BLENDOP:
+            g_D3D11BlendDesc.RenderTarget[0].BlendOp = (D3D11_BLEND_OP)Value;
+            g_D3D11BlendDesc.RenderTarget[0].BlendOpAlpha = (D3D11_BLEND_OP)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_BLENDCOLOR: {
+            // Convert ARGB DWORD to float4 blend factor
+            g_D3D11BlendFactor[0] = ((Value >> 16) & 0xFF) / 255.0f; // R
+            g_D3D11BlendFactor[1] = ((Value >> 8) & 0xFF) / 255.0f;  // G
+            g_D3D11BlendFactor[2] = (Value & 0xFF) / 255.0f;         // B
+            g_D3D11BlendFactor[3] = ((Value >> 24) & 0xFF) / 255.0f;  // A
+            g_bD3D11BlendStateDirty = true; // re-apply to pass new factor
+            break;
+        }
+        case xbox::X_D3DRS_COLORWRITEENABLE:
+            g_D3D11BlendDesc.RenderTarget[0].RenderTargetWriteMask = (UINT8)Value;
+            g_bD3D11BlendStateDirty = true;
+            break;
+        case xbox::X_D3DRS_MULTISAMPLEMASK:
+            g_D3D11SampleMask = Value;
+            g_bD3D11BlendStateDirty = true; // re-apply to pass new sample mask
+            break;
+
+        // ---- States handled as shader constants ----
+        case xbox::X_D3DRS_ALPHATESTENABLE:
+        case xbox::X_D3DRS_ALPHAREF:
+        case xbox::X_D3DRS_ALPHAFUNC:
+        case xbox::X_D3DRS_SHADEMODE:
+        case xbox::X_D3DRS_DITHERENABLE:
+        case xbox::X_D3DRS_FOGCOLOR:
+        case xbox::X_D3DRS_NORMALIZENORMALS:
+        case xbox::X_D3DRS_TEXTUREFACTOR:
+            // These are read from xbox render state by the fixed function shader
+            break;
+        default:
+            break;
+    }
+}
+
+// ******************************************************************
 // * Apply dirty states
 // ******************************************************************
 void CxbxD3D11ApplyDirtyStates()

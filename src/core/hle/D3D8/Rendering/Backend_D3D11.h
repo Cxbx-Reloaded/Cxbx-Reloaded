@@ -78,6 +78,11 @@ void CxbxD3D11InitBlit();
 // Release all D3D11 backend resources (blit shaders, samplers, constant buffers, state objects)
 void CxbxD3D11ReleaseBackendResources();
 
+// Unified D3D11 render state mapping — maps a PC-converted render state
+// to D3D11 state descriptor members and sets appropriate dirty flags.
+// Called from ApplySimpleRenderState and ApplyComplexRenderState.
+void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value);
+
 // Recreate D3D11 state objects that have been marked dirty, and flush constant buffers
 void CxbxD3D11ApplyDirtyStates();
 
