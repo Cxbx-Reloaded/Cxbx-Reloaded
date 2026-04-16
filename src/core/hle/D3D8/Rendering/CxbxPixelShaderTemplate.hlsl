@@ -76,6 +76,7 @@ uniform const float4 LUM[4] : register(c35); // Note : PSH_XBOX_CONSTANT_LUM for
 uniform const float  FRONTFACE_FACTOR : register(c39); // Note : PSH_XBOX_CONSTANT_FRONTFACE_FACTOR
 uniform const float4 FOGINFO : register(c40);
 uniform const float  FOGENABLE : register(c41);
+uniform const float4 TEXFMTFIXUP : register(c42); // D3D11: per-stage texture format channel fixup (0=identity, 1=.gbar, 2=.abgr, 3=luminance, 4=alpha-luminance)
 
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
 #define CM_GE(c) if(c >= 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_GE
@@ -324,8 +325,20 @@ void PerformAlphaKill(const float AlphaKill, float4 t)
 }
 #endif
 
+float4 ApplyTexFmtFixup(float4 t, float fixup)
+{
+	[branch] if (fixup != 0) {
+		if (fixup == 1) return t.gbar;                       // B8G8R8A8 uploaded as R8G8B8A8
+		if (fixup == 2) return t.abgr;                       // R8G8B8A8 uploaded as R8G8B8A8
+		if (fixup == 3) return float4(t.r, t.r, t.r, t.a);   // Luminance: R→(R,R,R,A)
+		if (fixup == 4) return float4(t.r, t.r, t.r, t.g);   // Alpha-luminance: RG→(R,R,R,G)
+	}
+	return t;
+}
+
 float4 PostProcessTexel(const int ts, float4 t)
 {
+	t = ApplyTexFmtFixup(t, TEXFMTFIXUP[ts]);
 	// TODO : Figure out in which order the following operations should be performed :
 	t = PerformColorSign(COLORSIGN[ts], t);
 	t = PerformColorKeyOp(COLORKEYOP[ts].x, COLORKEYCOLOR[ts], t);

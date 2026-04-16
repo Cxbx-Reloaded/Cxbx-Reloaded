@@ -263,6 +263,17 @@ EMUFORMAT PCFormat;
 			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
 			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
 			D3DUsage &= ~D3DUSAGE_DEPTHSTENCIL;
+
+#ifdef CXBX_USE_D3D11
+			// D3D11: For 32-bit formats that differ only in channel order,
+			// skip CPU conversion and upload raw bytes as R8G8B8A8_UNORM.
+			// The pixel shader applies the correct channel swizzle via TEXFMTFIXUP.
+			if (X_Format == xbox::X_D3DFMT_B8G8R8A8 || X_Format == xbox::X_D3DFMT_LIN_B8G8R8A8 ||
+			    X_Format == xbox::X_D3DFMT_R8G8B8A8 || X_Format == xbox::X_D3DFMT_LIN_R8G8B8A8) {
+				bConvertTextureFormat = false;
+				PCFormat = EMUFMT_A8B8G8R8; // = DXGI_FORMAT_R8G8B8A8_UNORM (raw byte order)
+			}
+#endif
 		}
 		else {
 			// Does host CheckDeviceFormat() succeed on this format?
