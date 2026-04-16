@@ -88,6 +88,9 @@ static uint32_t                g_X_VERTEXSHADER_FLAG_VALID_MASK; // For a test c
 // Track the current active vertex shader key (used to retrieve bytecode for input layout creation)
 static ShaderKey g_D3D11ActiveVertexShaderKey = 0;
 static bool g_D3D11HasActiveShaderKey = false;
+// Retained bytecode for FixedFunction and Passthrough vertex shaders (needed for input layout creation)
+static ID3DBlob* g_pD3D11FixedFunctionBytecode = nullptr;
+static ID3DBlob* g_pD3D11PassthroughBytecode = nullptr;
 #endif
 
 void CxbxVertexShaderSetFlags()
@@ -507,14 +510,26 @@ HRESULT CxbxSetVertexShader(IDirect3DVertexShader* pHostVertexShader)
 
 extern IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, const char *shader_category); // Implemented in VertexShaderCache.cpp
 
+#ifdef CXBX_USE_D3D11
+IDirect3DVertexShader* InitShader(void (*compileFunc)(ID3DBlob**), const char* label, ID3DBlob** ppRetainedBytecode = nullptr) {
+#else
 IDirect3DVertexShader* InitShader(void (*compileFunc)(ID3DBlob**), const char* label) {
+#endif
 	IDirect3DVertexShader* shader = nullptr;
 
 	ID3DBlob* pBlob = nullptr;
 	compileFunc(&pBlob);
 	if (pBlob) {
 		shader = CxbxCreateVertexShader(pBlob, label);
+#ifdef CXBX_USE_D3D11
+		if (ppRetainedBytecode) {
+			*ppRetainedBytecode = pBlob; // Caller takes ownership
+		} else {
+			pBlob->Release();
+		}
+#else
 		pBlob->Release();
+#endif
 	}
 
 	return shader;
@@ -541,13 +556,23 @@ void CxbxUpdateHostVertexShader()
 			fixedFunctionShader->Release();
 			fixedFunctionShader = nullptr;
 		}
+#ifdef CXBX_USE_D3D11
+		if (g_pD3D11FixedFunctionBytecode) { g_pD3D11FixedFunctionBytecode->Release(); g_pD3D11FixedFunctionBytecode = nullptr; }
+		fixedFunctionShader = InitShader(EmuCompileFixedFunction, "Fixed Function Vertex Shader", &g_pD3D11FixedFunctionBytecode);
+#else
 		fixedFunctionShader = InitShader(EmuCompileFixedFunction, "Fixed Function Vertex Shader");
+#endif
 
 		if (passthroughShader) {
 			passthroughShader->Release();
 			passthroughShader = nullptr;
 		}
+#ifdef CXBX_USE_D3D11
+		if (g_pD3D11PassthroughBytecode) { g_pD3D11PassthroughBytecode->Release(); g_pD3D11PassthroughBytecode = nullptr; }
+		passthroughShader = InitShader(EmuCompileXboxPassthrough, "Passthrough Vertex Shader", &g_pD3D11PassthroughBytecode);
+#else
 		passthroughShader = InitShader(EmuCompileXboxPassthrough, "Passthrough Vertex Shader");
+#endif
 	}
 
 	// TODO Call this when state is dirty
@@ -715,9 +740,16 @@ void CxbxUpdateHostVertexDeclaration()
 #ifdef CXBX_USE_D3D11
 	// For D3D11, create the input layout lazily using the current vertex shader's bytecode
 	if (pCxbxVertexDeclaration != nullptr && pCxbxVertexDeclaration->pHostVertexDeclaration == nullptr
-		&& pCxbxVertexDeclaration->pD3D11InputElements != nullptr && pCxbxVertexDeclaration->D3D11InputElementCount > 0
-		&& g_D3D11HasActiveShaderKey) {
-		ID3DBlob* pBytecode = g_VertexShaderCache.GetShaderBytecode(g_D3D11ActiveVertexShaderKey);
+		&& pCxbxVertexDeclaration->pD3D11InputElements != nullptr && pCxbxVertexDeclaration->D3D11InputElementCount > 0) {
+		// Get bytecode from the appropriate source: programmable shader cache, or FF/passthrough blobs
+		ID3DBlob* pBytecode = nullptr;
+		if (g_D3D11HasActiveShaderKey) {
+			pBytecode = g_VertexShaderCache.GetShaderBytecode(g_D3D11ActiveVertexShaderKey);
+		} else if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+			pBytecode = g_pD3D11FixedFunctionBytecode;
+		} else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough) {
+			pBytecode = g_pD3D11PassthroughBytecode;
+		}
 		if (pBytecode != nullptr) {
 			HRESULT hRet = g_pD3DDevice->CreateInputLayout(
 				pCxbxVertexDeclaration->pD3D11InputElements,
