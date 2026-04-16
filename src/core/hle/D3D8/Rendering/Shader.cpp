@@ -74,18 +74,32 @@ extern HRESULT EmuCompileShader
 
 	UINT flags1 = D3DCOMPILE_OPTIMIZATION_LEVEL3;
 
+#ifdef CXBX_USE_D3D11
+	// SM4.0+ requires backwards compatibility mode for DX9-style intrinsics (tex2D, texCUBE, etc.)
+	flags1 |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
+#endif
+
+#ifdef CXBX_USE_D3D11
+	D3D_SHADER_MACRO defines[] = {
+		{ "CXBX_USE_D3D11", "1" },
+		{ nullptr, nullptr }
+	};
+#else
+	D3D_SHADER_MACRO* defines = nullptr;
+#endif
+
 	hRet = D3DCompile(
 		hlsl_str.c_str(),
 		hlsl_str.length(),
 		pSourceName,
-		nullptr, // pDefines
-		D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
-		"main", // shader entry poiint
+		defines, // pDefines - was nullptr
+		D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		"main",
 		shader_profile,
-		flags1, // flags1
-		0, // flags2
-		ppHostShader, // out
-		&pErrors // ppErrorMsgs out
+		flags1,
+		0,
+		ppHostShader,
+		&pErrors
 	);
 	if (FAILED(hRet)) {
 		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Recompiling in compatibility mode");
