@@ -513,7 +513,15 @@ EMUFORMAT PCFormat;
 				}
 			}
 
-#ifndef CXBX_USE_D3D11
+#ifdef CXBX_USE_D3D11
+			if (hRet != D3D_OK) {
+				CxbxrAbort("CreateTexture2D Failed!\n\n"
+					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, hostWidth, hostHeight);
+			}
+			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
+				ResourceTypeName, pResource, pNewHostResource.Get());
+#else
             // Now create our intermediate texture for UpdateTexture, but not for render targets or depth stencils
             if (hRet == D3D_OK && (D3DUsage & D3DUSAGE_RENDERTARGET) == 0 && (D3DUsage & D3DUSAGE_DEPTHSTENCIL) == 0) {
                 hRet = g_pD3DDevice->CreateTexture(hostWidth, hostHeight, dwMipMapLevels,
@@ -526,13 +534,6 @@ EMUFORMAT PCFormat;
 				CxbxrAbort("CreateTexture Failed!\n\n"
 					"Error: 0x%X\nFormat: %d\nDimensions: %dx%d", hRet, PCFormat, hostWidth, hostHeight);
 			}
-#endif
-
-#ifdef CXBX_USE_D3D11
-			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
-			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, pNewHostResource.Get());
-#else
 			SetHostTexture(pResource, pNewHostTexture.Get(), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostTexture.Get());
@@ -555,6 +556,14 @@ EMUFORMAT PCFormat;
 
 			hRet = g_pD3DDevice->CreateTexture3D(&desc, NULL, reinterpret_cast<ID3D11Texture3D**>(pNewHostResource.ReleaseAndGetAddressOf()));
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture3D");
+
+			if (hRet != D3D_OK) {
+				CxbxrAbort("CreateTexture3D Failed!\n\n"
+					"Error: 0x%X\nFormat: %d\nDimensions: %dx%dx%d", hRet, PCFormat, hostWidth, hostHeight, dwDepth);
+			}
+			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
+				ResourceTypeName, pResource, pNewHostResource.Get());
 #else
 			hRet = g_pD3DDevice->CreateVolumeTexture(hostWidth, hostHeight, dwDepth,
 				dwMipMapLevels, D3DUsage, PCFormat, D3DPool, pNewHostVolumeTexture.GetAddressOf(),
@@ -574,13 +583,6 @@ EMUFORMAT PCFormat;
 				CxbxrAbort("CreateVolumeTexture Failed!\n\nError: %s\nDesc: %s",
 					DXGetErrorString(hRet), DXGetErrorDescription(hRet));
 			}
-#endif
-
-#ifdef CXBX_USE_D3D11
-			SetHostResource(pResource, pNewHostResource.Get(), iTextureStage);
-			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
-				ResourceTypeName, pResource, pNewHostResource.Get());
-#else
 			SetHostVolumeTexture(pResource, pNewHostVolumeTexture.Get(), iTextureStage);
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostVolumeTexture.Get());
