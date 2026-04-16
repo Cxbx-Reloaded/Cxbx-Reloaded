@@ -396,23 +396,15 @@ void CxbxDrawIndexedClosingLineUP(INDEX16 LowIndex, INDEX16 HighIndex, void *pHo
 	memcpy(VertexData + uiHostVertexStreamZeroStride, SecondVertex, uiHostVertexStreamZeroStride);
 
 #ifdef CXBX_USE_D3D11
-	D3D11_BUFFER_DESC vbDesc = {};
-	vbDesc.ByteWidth = 2 * uiHostVertexStreamZeroStride;
-	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	D3D11_SUBRESOURCE_DATA vbInit = {};
-	vbInit.pSysMem = VertexData;
-	ID3D11Buffer* pTempVB = nullptr;
-	HRESULT hRet = g_pD3DDevice->CreateBuffer(&vbDesc, &vbInit, &pTempVB);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (DrawIndexedClosingLineUP)");
-	if (SUCCEEDED(hRet) && pTempVB != nullptr) {
+	static CxbxDynBuffer s_ClosingLineVB = { nullptr, 0, D3D11_BIND_VERTEX_BUFFER };
+	UINT dataSize = 2 * uiHostVertexStreamZeroStride;
+	ID3D11Buffer* pVB = s_ClosingLineVB.Update(VertexData, dataSize);
+	if (pVB != nullptr) {
 		UINT stride = uiHostVertexStreamZeroStride;
 		UINT offset = 0;
-		g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pTempVB, &stride, &offset);
+		g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
 		g_pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 		g_pD3DDeviceContext->Draw(2, 0);
-		pTempVB->Release();
 	}
 #else
 	HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP(
@@ -517,24 +509,14 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 	// D3D11 has no DrawPrimitiveUP - we need to create a temporary vertex buffer
 	UINT vertexDataSize = DrawContext.dwVertexCount * DrawContext.uiHostVertexStreamZeroStride;
 
-	// Create a temporary dynamic vertex buffer for the UP data
-	D3D11_BUFFER_DESC vbDesc = {};
-	vbDesc.ByteWidth = vertexDataSize;
-	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	// Reusable dynamic vertex buffer for UP draws
+	static CxbxDynBuffer s_UpVB = { nullptr, 0, D3D11_BIND_VERTEX_BUFFER };
+	ID3D11Buffer* pVB = s_UpVB.Update(DrawContext.pHostVertexStreamZeroData, vertexDataSize);
 
-	D3D11_SUBRESOURCE_DATA vbInit = {};
-	vbInit.pSysMem = DrawContext.pHostVertexStreamZeroData;
-
-	ID3D11Buffer* pTempVB = nullptr;
-	HRESULT hRet = g_pD3DDevice->CreateBuffer(&vbDesc, &vbInit, &pTempVB);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (UP vertex buffer)");
-
-	if (SUCCEEDED(hRet) && pTempVB != nullptr) {
+	if (pVB != nullptr) {
 		UINT stride = DrawContext.uiHostVertexStreamZeroStride;
 		UINT offset = 0;
-		g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pTempVB, &stride, &offset);
+		g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
 
 		if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
@@ -542,25 +524,14 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 			UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 			UINT IndexCount = PrimitiveCount * 3;
 
-			// Create a temporary index buffer for the quad index data
-			D3D11_BUFFER_DESC ibDesc = {};
-			ibDesc.ByteWidth = IndexCount * sizeof(INDEX16);
-			ibDesc.Usage = D3D11_USAGE_DYNAMIC;
-			ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-			ibDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			// Reusable dynamic index buffer for quad-to-triangle conversion
+			static CxbxDynBuffer s_UpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
+			ID3D11Buffer* pIB = s_UpIB.Update(pIndexData, IndexCount * sizeof(INDEX16));
 
-			D3D11_SUBRESOURCE_DATA ibInit = {};
-			ibInit.pSysMem = pIndexData;
-
-			ID3D11Buffer* pTempIB = nullptr;
-			hRet = g_pD3DDevice->CreateBuffer(&ibDesc, &ibInit, &pTempIB);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (UP index buffer)");
-
-			if (SUCCEEDED(hRet) && pTempIB != nullptr) {
-				g_pD3DDeviceContext->IASetIndexBuffer(pTempIB, DXGI_FORMAT_R16_UINT, 0);
+			if (pIB != nullptr) {
+				g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
 				g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				g_pD3DDeviceContext->DrawIndexed(IndexCount, 0, 0);
-				pTempIB->Release();
 			}
 
 			g_dwPrimPerFrame += PrimitiveCount;
@@ -578,8 +549,6 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 				);
 			}
 		}
-
-		pTempVB->Release();
 	}
 #else
 	if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {

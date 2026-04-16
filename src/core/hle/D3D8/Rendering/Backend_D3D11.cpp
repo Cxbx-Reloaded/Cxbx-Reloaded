@@ -590,6 +590,50 @@ void CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
 	g_pD3DDeviceContext->Unmap(pVertexBuffer, 0);
 }
 
+ID3D11Buffer *CxbxDynBuffer::Update(const void *pData, UINT size)
+{
+	if (size == 0)
+		return nullptr;
+
+	// Grow the buffer if it's too small (or doesn't exist yet)
+	if (pBuffer == nullptr || capacity < size) {
+		Release();
+		// Round up to next power-of-two-ish size to avoid frequent re-allocs
+		UINT newCap = (size < 4096) ? 4096 : size;
+		// Round up to next multiple of 4096
+		newCap = (newCap + 4095) & ~4095u;
+
+		D3D11_BUFFER_DESC desc = {};
+		desc.ByteWidth = newCap;
+		desc.Usage = D3D11_USAGE_DYNAMIC;
+		desc.BindFlags = bindFlags;
+		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+		HRESULT hr = g_pD3DDevice->CreateBuffer(&desc, nullptr, &pBuffer);
+		if (FAILED(hr) || pBuffer == nullptr)
+			return nullptr;
+		capacity = newCap;
+	}
+
+	// Map-discard and upload
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hr = g_pD3DDeviceContext->Map(pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return nullptr;
+	memcpy(mapped.pData, pData, size);
+	g_pD3DDeviceContext->Unmap(pBuffer, 0);
+	return pBuffer;
+}
+
+void CxbxDynBuffer::Release()
+{
+	if (pBuffer != nullptr) {
+		pBuffer->Release();
+		pBuffer = nullptr;
+	}
+	capacity = 0;
+}
+
 HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirect3DPixelShader** ppShader)
 {
 	return g_pD3DDevice->CreatePixelShader(pFunction, FunctionSize, nullptr, ppShader);

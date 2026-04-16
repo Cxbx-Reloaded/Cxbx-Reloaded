@@ -222,6 +222,22 @@ void    CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer);
 HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirect3DPixelShader** ppShader);
 void    CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader);
 
+#ifdef CXBX_USE_D3D11
+// Reusable grow-to-fit dynamic buffer for D3D11.
+// Avoids per-draw CreateBuffer/Release overhead for temporary vertex/index buffers.
+struct CxbxDynBuffer {
+	ID3D11Buffer *pBuffer = nullptr;
+	UINT          capacity = 0;   // Current buffer size in bytes
+	UINT          bindFlags = 0;  // D3D11_BIND_VERTEX_BUFFER or D3D11_BIND_INDEX_BUFFER
+
+	// Ensure the buffer is at least 'size' bytes, then map-discard and memcpy data in.
+	// Returns the (still-bound) buffer, or nullptr on failure.
+	ID3D11Buffer *Update(const void *pData, UINT size);
+	void Release();
+	~CxbxDynBuffer() { Release(); }
+};
+#endif
+
 // BeginScene/EndScene: no-ops in D3D11
 inline void CxbxBeginScene()
 {

@@ -596,41 +596,20 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 
 		HRESULT hRet;
 #ifdef CXBX_USE_D3D11
-		// D3D11 has no DrawIndexedPrimitiveUP - use temporary dynamic buffers
+		// D3D11 has no DrawIndexedPrimitiveUP - use reusable dynamic buffers
 		UINT vertexDataSize = DrawContext.dwVertexCount * DrawContext.uiHostVertexStreamZeroStride;
 		UINT indexDataSize = (bConvertQuadListToTriangleList ? PrimitiveCount * 3 : DrawContext.dwVertexCount) * sizeof(INDEX16);
 
-		D3D11_BUFFER_DESC vbDesc = {};
-		vbDesc.ByteWidth = vertexDataSize;
-		vbDesc.Usage = D3D11_USAGE_DYNAMIC;
-		vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		static CxbxDynBuffer s_IdxUpVB = { nullptr, 0, D3D11_BIND_VERTEX_BUFFER };
+		static CxbxDynBuffer s_IdxUpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
+		ID3D11Buffer* pVB = s_IdxUpVB.Update(DrawContext.pHostVertexStreamZeroData, vertexDataSize);
+		ID3D11Buffer* pIB = s_IdxUpIB.Update(pHostIndexData, indexDataSize);
 
-		D3D11_SUBRESOURCE_DATA vbInit = {};
-		vbInit.pSysMem = DrawContext.pHostVertexStreamZeroData;
-
-		ID3D11Buffer* pTempVB = nullptr;
-		hRet = g_pD3DDevice->CreateBuffer(&vbDesc, &vbInit, &pTempVB);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (DrawIndexedPrimitiveUP VB)");
-
-		D3D11_BUFFER_DESC ibDesc = {};
-		ibDesc.ByteWidth = indexDataSize;
-		ibDesc.Usage = D3D11_USAGE_DYNAMIC;
-		ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		ibDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		D3D11_SUBRESOURCE_DATA ibInit = {};
-		ibInit.pSysMem = pHostIndexData;
-
-		ID3D11Buffer* pTempIB = nullptr;
-		hRet = g_pD3DDevice->CreateBuffer(&ibDesc, &ibInit, &pTempIB);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateBuffer (DrawIndexedPrimitiveUP IB)");
-
-		if (pTempVB != nullptr && pTempIB != nullptr) {
+		if (pVB != nullptr && pIB != nullptr) {
 			UINT stride = DrawContext.uiHostVertexStreamZeroStride;
 			UINT offset = 0;
-			g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pTempVB, &stride, &offset);
-			g_pD3DDeviceContext->IASetIndexBuffer(pTempIB, DXGI_FORMAT_R16_UINT, 0);
+			g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
+			g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
 			D3D_PRIMITIVE_TOPOLOGY topology = bConvertQuadListToTriangleList ?
 				D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST :
 				EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType);
@@ -639,9 +618,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 			g_pD3DDeviceContext->DrawIndexed(indexCount, 0, 0);
 			hRet = S_OK;
 		}
-
-		if (pTempVB) pTempVB->Release();
-		if (pTempIB) pTempIB->Release();
 #else
 		hRet = g_pD3DDevice->DrawIndexedPrimitiveUP(
 			/*PrimitiveType=*/EmuXB2PC_D3DPrimitiveType(DrawContext.XboxPrimitiveType),
