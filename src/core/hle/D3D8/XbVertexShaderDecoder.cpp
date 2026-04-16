@@ -906,3 +906,4 @@ extern void EmuParseVshFunction
 	while (XboxVertexShaderDecoder::VshConvertToIntermediate(pCurToken, pShader)) {
 		pCurToken += X_VSH_INSTRUCTION_SIZE;
 	}
+}

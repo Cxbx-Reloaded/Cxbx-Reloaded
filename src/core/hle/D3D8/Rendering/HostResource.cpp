@@ -139,24 +139,9 @@ void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource)
 	return (uint8_t*)pData;
 }
 
-DWORD D3DUSAGE_INVALID = -1;
+// D3DUSAGE_INVALID is now constexpr in RenderGlobals.h
 
-typedef struct _resource_info_t {
-	
-	ComPtr<IDirect3DResource> pHostResource;
-	EMUFORMAT HostFormat = EMUFMT_UNKNOWN;
-	DWORD HostUsage = D3DUSAGE_INVALID;
-	DWORD dwXboxResourceType = 0;
-	void* pXboxData = xbox::zeroptr;
-	size_t szXboxDataSize = 0;
-	uint64_t hash = 0;
-	bool forceRehash = false;
-	std::chrono::time_point<std::chrono::steady_clock> nextHashTime;
-	std::chrono::milliseconds hashLifeTime = 1ms;
-    std::chrono::time_point<std::chrono::steady_clock> lastUpdate;
-} resource_info_t;
-
-typedef std::unordered_map<resource_key_t, resource_info_t, resource_key_hash> resource_cache_t;
+// resource_info_t and resource_cache_t are defined in RenderGlobals.h
 resource_cache_t g_Cxbx_Cached_Direct3DResources;
 resource_cache_t g_Cxbx_Cached_PaletizedTextures;
 
@@ -187,7 +172,7 @@ resource_cache_t& GetResourceCache(resource_key_t& key)
 		? g_Cxbx_Cached_PaletizedTextures : g_Cxbx_Cached_Direct3DResources;
 }
 
-resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextureStage = -1)
+resource_key_t GetHostResourceKey(xbox::X_D3DResource* pXboxResource, int iTextureStage)
 {
 	resource_key_t key = {};
 	if (pXboxResource != xbox::zeroptr) {
@@ -234,6 +219,12 @@ void FreeHostResource(resource_key_t key)
 void ClearResourceCache(resource_cache_t& ResourceCache)
 {
 	ResourceCache.clear();
+}
+
+void ClearAllResourceCaches()
+{
+	ClearResourceCache(g_Cxbx_Cached_PaletizedTextures);
+	ClearResourceCache(g_Cxbx_Cached_Direct3DResources);
 }
 
 void PrunePaletizedTexturesCache()
@@ -368,7 +359,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, xbox::X_D3DResource* pXboxRe
 	return modified;
 }
 
-void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage = -1, DWORD D3DUsage = D3DUSAGE_INVALID, EMUFORMAT PCFormat = EMUFMT_UNKNOWN)
+void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHostResource, int iTextureStage, DWORD D3DUsage, EMUFORMAT PCFormat)
 {
 	auto key = GetHostResourceKey(pXboxResource, iTextureStage);
 	auto& ResourceCache = GetResourceCache(key);
@@ -434,33 +425,9 @@ void SetHostResource(xbox::X_D3DResource* pXboxResource, IDirect3DResource* pHos
 	resourceInfo.HostUsage = D3DUsage;
 }
 
-// Type-safe wrappers for SetHostResource — cast specific D3D types to IDirect3DResource
-inline void SetHostSurface(xbox::X_D3DResource* pXboxResource, IDirect3DSurface* pHostSurface, int iTextureStage = -1)
-{
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostSurface, iTextureStage);
-}
+// Inline Set* functions are now in RenderGlobals.h
 
-inline void SetHostVolume(xbox::X_D3DResource* pXboxResource, IDirect3DVolume* pHostVolume, int iTextureStage = -1)
-{
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolume, iTextureStage);
-}
-
-inline void SetHostTexture(xbox::X_D3DResource* pXboxResource, IDirect3DTexture* pHostTexture, int iTextureStage = -1)
-{
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostTexture, iTextureStage);
-}
-
-inline void SetHostVolumeTexture(xbox::X_D3DResource* pXboxResource, IDirect3DVolumeTexture* pHostVolumeTexture, int iTextureStage = -1)
-{
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostVolumeTexture, iTextureStage);
-}
-
-inline void SetHostCubeTexture(xbox::X_D3DResource* pXboxResource, IDirect3DCubeTexture* pHostCubeTexture, int iTextureStage = -1)
-{
-	SetHostResource(pXboxResource, (IDirect3DResource*)pHostCubeTexture, iTextureStage);
-}
-
-IDirect3DSurface *GetHostSurface(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage = 0)
+IDirect3DSurface *GetHostSurface(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage)
 {
 	if (pXboxResource == xbox::zeroptr)
 		return nullptr;
@@ -471,7 +438,7 @@ IDirect3DSurface *GetHostSurface(xbox::X_D3DResource *pXboxResource, DWORD D3DUs
 	return (IDirect3DSurface*) GetHostResource(pXboxResource, D3DUsage);
 }
 
-IDirect3DBaseTexture *GetHostBaseTexture(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage = 0, int iTextureStage = 0)
+IDirect3DBaseTexture *GetHostBaseTexture(xbox::X_D3DResource *pXboxResource, DWORD D3DUsage, int iTextureStage)
 {
 	if (pXboxResource == xbox::zeroptr)
 		return nullptr;
@@ -504,7 +471,7 @@ IDirect3DTexture *GetHostTexture(xbox::X_D3DResource *pXboxResource, int iTextur
 }
 #endif
 
-IDirect3DVolumeTexture *GetHostVolumeTexture(xbox::X_D3DResource *pXboxResource, int iTextureStage = 0)
+IDirect3DVolumeTexture *GetHostVolumeTexture(xbox::X_D3DResource *pXboxResource, int iTextureStage)
 {
 	return (IDirect3DVolumeTexture *)GetHostBaseTexture(pXboxResource, 0, iTextureStage);
 
@@ -803,7 +770,7 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 }
 
 // TODO : Move to own file
-constexpr UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices)
+UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices)
 {
 	return (NrOfQuadVertices * VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) / VERTICES_PER_QUAD;
 }
@@ -822,7 +789,7 @@ bool bUseClockWiseWindingOrder = true; // TODO : Should this be fetched from X_D
 // be pre-allocated to fit the output data.
 // (Note, this function is marked 'constexpr' to allow the compiler to optimize
 // the case when pXboxQuadIndexData is null)
-constexpr void CxbxConvertQuadListToTriangleListIndices(
+void CxbxConvertQuadListToTriangleListIndices(
 	INDEX16* pXboxQuadIndexData,
 	unsigned uNrOfTriangleIndices,
 	INDEX16* pTriangleIndexData)

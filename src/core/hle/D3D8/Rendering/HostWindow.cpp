@@ -25,7 +25,7 @@
 #include "EmuD3D8_common.h"
 
 
-static void RunOnWndMsgThread(const std::function<void()>& func)
+void RunOnWndMsgThread(const std::function<void()>& func)
 {
 	const void* param = &func;
 	SendMessage(g_hEmuWindow, WM_CXBXR_RUN_ON_MESSAGE_THREAD, reinterpret_cast<WPARAM>(param), 0);

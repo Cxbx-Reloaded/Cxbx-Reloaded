@@ -24,6 +24,8 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
+static DWORD g_VBLastSwap = 0;
+
 // Forward declaration (defined in HostImGui.cpp)
 extern void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget);
 
@@ -308,7 +310,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
     }
 }
 
-#define CXBX_SWAP_PRESENT_FORWARD (256 + X_D3DSWAP_FINISH + X_D3DSWAP_COPY) // = CxbxPresentForwardMarker + D3DSWAP_FINISH + D3DSWAP_COPY
+// CXBX_SWAP_PRESENT_FORWARD is now defined in RenderGlobals.h
 
 // ******************************************************************
 // * patch: D3DDevice_Present

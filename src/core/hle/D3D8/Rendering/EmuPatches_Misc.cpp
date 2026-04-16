@@ -24,6 +24,10 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
+// Variables only used in EmuPatches_Misc.cpp
+static DWORD g_OverlaySwap = 0; // Set in D3DDevice_UpdateOverlay
+static std::stack<IDirect3DQuery*> g_HostQueryVisibilityTests;
+static std::map<int, IDirect3DQuery*> g_HostVisibilityTestMap;
 
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_BeginVisibilityTest)()
 {

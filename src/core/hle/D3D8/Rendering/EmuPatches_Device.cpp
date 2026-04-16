@@ -24,6 +24,7 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
+static xbox::dword_xt *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
 
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices)

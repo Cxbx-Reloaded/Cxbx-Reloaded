@@ -41,8 +41,40 @@
 // simple render state encoding lookup table
 #define X_D3DRSSE_UNK 0x7fffffff
 
+enum _ComponentEncoding {
+	NoCmpnts = 0, // Format doesn't contain any component (ARGB/QWVU)
+	A1R5G5B5,
+	X1R5G5B5, // NOTE : A=255
+	A4R4G4B4,
+	__R5G6B5, // NOTE : A=255
+	A8R8G8B8,
+	X8R8G8B8, // NOTE : A=255
+	____R8B8, // NOTE : A takes R, G takes B
+	____G8B8, // NOTE : A takes G, R takes B
+	______A8, // TEST : R=G=B= 255
+	__R6G5B5, // NOTE : A=255
+	__L6V5U5, // NOTE : A=255
+	R5G5B5A1,
+	R4G4B4A4,
+	A8B8G8R8,
+	B8G8R8A8,
+	R8G8B8A8,
+	______L8, // NOTE : A=255, R=G=B= L
+	_____AL8, // NOTE : A=R=G=B= L
+	_____L16, // NOTE : Actually G8B8, with A=R=255
+	____A8L8, // NOTE : R=G=B= L
+	____DXT1,
+	____DXT3,
+	____DXT5,
+	______P8,
+	____YUY2,
+	____UYVY,
+};
+
 typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width);
 
+extern void __L6V5U5ToX8L8V8U8Row_C(const uint8_t* src_l6v5u5, uint8_t* dst_xlvu, int width);
+extern const FormatToARGBRow ComponentConverters[];
 extern const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format);
 
 bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, EMUFORMAT &PCFormat);

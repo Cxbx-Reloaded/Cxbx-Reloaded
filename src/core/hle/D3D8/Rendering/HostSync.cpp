@@ -24,6 +24,9 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
+extern NV2ADevice* g_NV2A;
+
+static std::queue<s_Xbox_Callback> g_Xbox_CallbackQueue;
 
 void CxbxUpdateHostTextures()
 {

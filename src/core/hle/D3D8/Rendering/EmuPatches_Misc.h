@@ -35,7 +35,6 @@ namespace xbox {
 // ******************************************************************
 xbox::bool_xt WINAPI EMUPATCH(D3DDevice_IsBusy)();
 
-#if 0
 // ******************************************************************
 // * patch: D3DDevice_BeginVisibilityTest
 // ******************************************************************
@@ -157,7 +156,6 @@ xbox::void_xt WINAPI EMUPATCH(D3DResource_BlockUntilNotBusy)
     X_D3DResource *pThis
 );
 
-#if 0 // patch DISABLED
 // ******************************************************************
 // * patch: D3DDevice_InsertCallback
 // ******************************************************************
@@ -243,8 +241,6 @@ void WINAPI EMUPATCH(D3D_DestroyResource)( X_D3DResource* pResource );
 // * patch: D3D_DestroyResource_0__LTCG_edi1
 // ******************************************************************
 void WINAPI EMUPATCH(D3D_DestroyResource_0__LTCG_edi1)();
-
-
 
 } // namespace xbox
 

@@ -24,6 +24,10 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
+// Variables only used in HostDraw.cpp
+static IDirect3DIndexBuffer *g_pClosingLineLoopHostIndexBuffer = nullptr;
+static IDirect3DIndexBuffer *g_pQuadToTriangleHostIndexBuffer = nullptr;
+static size_t g_QuadToTriangleHostIndexBuffer_Size = 0; // = NrOfQuadIndices
 
 // TODO : Move to own file
 void CxbxReleaseQuadListToTriangleListIndexData(void* pHostIndexData)
