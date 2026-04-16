@@ -207,15 +207,17 @@ void HLE_draw_state_update(NV2AState *d)
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 	// Unused : D3DRS_FOGVERTEXMODE
 
+	// NV_PGRAPH_FOGCOLOR stores fog color in ARGB format (the PGRAPH extracts
+	// individual R,G,B,A fields from the NV2A ABGR method parameter and
+	// reassembles them into ARGB-ordered bit fields). No byte swap needed.
 	uint32_t fog_color = pg->regs[NV_PGRAPH_FOGCOLOR];
 #ifndef CXBX_USE_D3D11
-	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, fog_color); // NV2A_FOG_COLOR — already ARGB
 #else
 	(void)hRet;
 	// Set fog color in PS constant buffer at PSH_XBOX_CONSTANT_FOG (register 18)
-	// The fog color is stored as ABGR, convert to float4 RGBA
 	{
-		D3DXCOLOR fogColorFloat(ABGR_to_ARGB(fog_color));
+		D3DXCOLOR fogColorFloat(fog_color); // ARGB → correct R,G,B,A
 		CxbxSetPixelShaderConstantF(/*PSH_XBOX_CONSTANT_FOG=*/18, (const float*)&fogColorFloat, 1);
 	}
 #endif

@@ -48,6 +48,15 @@
 #include "Rendering\TextureStates.h"
 #include <wrl/client.h>
 
+// The Xbox kernel's SetRenderState_FogColor swaps R↔B before calling
+// SetRenderState_Simple, so D3D__RenderState stores the fog color in NV2A
+// ABGR format (0xAABBGGRR) rather than D3DCOLOR ARGB (0xAARRGGBB).
+// This helper reverses that swap when reading the stored value.
+static inline DWORD FogColor_ABGR_to_ARGB(DWORD color)
+{
+	return (color & 0xFF00FF00) | ((color & 0x00FF0000) >> 16) | ((color & 0x000000FF) << 16);
+}
+
 void DecodedRegisterCombiner::Decode(xbox::X_D3DPIXELSHADERDEF *pPSDef)
 {
 	NumberOfCombiners = (pPSDef->PSCombinerCount >> 0) & 0xF;
@@ -777,7 +786,7 @@ void UpdateFixedFunctionPixelShaderState()
 	{ D3DXCOLOR c(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_TEXTUREFACTOR)); ffPsState.TextureFactor = D3DXVECTOR4(c.r, c.g, c.b, c.a); }
 	ffPsState.SpecularEnable = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_SPECULARENABLE));
 	ffPsState.FogEnable = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGENABLE));
-	{ D3DXCOLOR c(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR)); ffPsState.FogColor = D3DXVECTOR3(c.r, c.g, c.b); }
+	{ D3DXCOLOR c(FogColor_ABGR_to_ARGB(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR))); ffPsState.FogColor = D3DXVECTOR3(c.r, c.g, c.b); }
 	ffPsState.FogTableMode = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGTABLEMODE));
 	ffPsState.FogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 	ffPsState.FogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
@@ -917,7 +926,7 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   // Fog requires a constant (as host PS1.4 doesn't support the FOG register)
   // Note : FOG.RGB is correct like this, but FOG.a should be coming
   // from the vertex shader (oFog) - however, D3D8 does not forward this...
-  fColor[PSH_XBOX_CONSTANT_FOG] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR);
+  fColor[PSH_XBOX_CONSTANT_FOG] = FogColor_ABGR_to_ARGB(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FOGCOLOR));
 
   // Texture color sign
   for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
