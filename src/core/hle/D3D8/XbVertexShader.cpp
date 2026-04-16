@@ -987,7 +987,7 @@ private:
 			return false;
 		}
 
-		assert(HostVertexElementDataType < D3DDECLTYPE_UNUSED);
+		assert(HostVertexElementDataType _9_11(< D3DDECLTYPE_UNUSED, != DXGI_FORMAT_UNKNOWN));
 		assert(HostVertexElementByteSize > 0);
 
 		// Select new stream, if needed
