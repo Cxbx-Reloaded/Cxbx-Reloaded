@@ -133,7 +133,7 @@ xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx1)
 // * patch: D3DDevice_PersistDisplay
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_PersistDisplay)();
-
+#endif
 
 } // namespace xbox
 

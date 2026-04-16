@@ -282,7 +282,7 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer_4_
 }
 
 // ******************************************************************
-// * patch: D3DDevice_Clear
+// * patch: D3DDevice_DrawVertices
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 (
@@ -661,7 +661,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetLight
+// * patch: CDevice_SetStateVB
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(CDevice_SetStateVB)(ulong_xt Unknown1)
 {
@@ -767,6 +767,10 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSwapCallback)
 
     g_pXbox_SwapCallback = pCallback;
 }
+
+// ******************************************************************
+// * patch: D3DDevice_SetStreamSource
+// ******************************************************************
 
 // Overload for logging
 static void D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3
@@ -949,4 +953,64 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_PrimeVertexCache)
 
 	// TODO: Implement
 	LOG_UNIMPLEMENTED();
+}
+
+// ******************************************************************
+// * patch: D3DDevice_DrawRectPatch
+// ******************************************************************
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
+(
+	uint_xt					Handle,
+	CONST float_xt				*pNumSegs,
+	CONST X_D3DRECTPATCH_INFO *pRectPatchInfo
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pNumSegs)
+		LOG_FUNC_ARG(pRectPatchInfo)
+		LOG_FUNC_END;
+
+	CxbxUpdateNativeD3DResources();
+
+#ifdef CXBX_USE_D3D11
+	// D3D11 has no DrawRectPatch - use CPU tessellation
+	HRESULT hRet = CxbxDrawRectPatchD3D11(Handle, pNumSegs, pRectPatchInfo);
+	DEBUG_D3DRESULT(hRet, "CxbxDrawRectPatchD3D11");
+#else
+	HRESULT hRet = g_pD3DDevice->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawRectPatch");
+#endif
+
+	return hRet;
+}
+
+// ******************************************************************
+// * patch: D3DDevice_DrawTriPatch
+// ******************************************************************
+xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
+(
+	uint_xt					Handle,
+	CONST float_xt				*pNumSegs,
+	CONST X_D3DTRIPATCH_INFO* pTriPatchInfo
+)
+{
+	LOG_FUNC_BEGIN
+		LOG_FUNC_ARG(Handle)
+		LOG_FUNC_ARG(pNumSegs)
+		LOG_FUNC_ARG(pTriPatchInfo)
+		LOG_FUNC_END;
+
+	CxbxUpdateNativeD3DResources();
+
+#ifdef CXBX_USE_D3D11
+	// D3D11 has no DrawTriPatch - use CPU tessellation
+	HRESULT hRet = CxbxDrawTriPatchD3D11(Handle, pNumSegs, pTriPatchInfo);
+	DEBUG_D3DRESULT(hRet, "CxbxDrawTriPatchD3D11");
+#else
+	HRESULT hRet = g_pD3DDevice->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawTriPatch");
+#endif
+
+	return hRet;
 }

@@ -86,10 +86,6 @@ void    CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer);
 HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirect3DPixelShader** ppShader);
 void    CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader);
 
-// ImGui rendering (still has internal ifdefs for ImGui_Impl backend)
-class ImGuiUI;
-void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget);
-
 // BeginScene/EndScene: no-ops in D3D11
 inline void CxbxBeginScene()
 {

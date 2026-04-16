@@ -86,7 +86,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetBackBufferScale
+// * patch: D3DDevice_GetVisibilityTestResult
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
@@ -138,123 +138,8 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
     return D3D_OK;
 }
 
-// Overload for logging
-static void D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2
-(
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
-)
-{
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-    LOG_FUNC_END;
-}
-
-// LTCG specific D3DDevice_LoadVertexShader function...
-// This uses a custom calling convention where parameter is passed in EAX, ECX
-// Test-case: Aggressive Inline
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2)
-(
-)
-{
-    dword_xt Handle;
-    dword_xt Address;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, ecx
-        mov  Address, eax
-    }
-
-    // Log
-    D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2(Handle, Address);
-
-    CxbxImpl_LoadVertexShader(Handle, Address);
-
-    __asm {
-        LTCG_EPILOGUE
-        ret
-    }
-}
-
-// Overload for logging
-static void D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2
-(
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
-)
-{
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-    LOG_FUNC_END;
-}
-
-// LTCG specific D3DDevice_LoadVertexShader function...
-// This uses a custom calling convention where parameter is passed in EAX, EDX
-// Test-case: World Racing 2, Project Zero 2 (PAL)
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2)
-(
-)
-{
-    dword_xt Handle;
-    dword_xt Address;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, edx
-        mov  Address, eax
-    }
-
-    // Log
-    D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2(Handle, Address);
-
-    CxbxImpl_LoadVertexShader(Handle, Address);
-
-    __asm {
-        LTCG_EPILOGUE
-        ret
-    }
-}
-
-// Overload for logging
-static void D3DDevice_LoadVertexShader_4__LTCG_eax1
-(
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
-)
-{
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-    LOG_FUNC_END;
-}
-
-// This uses a custom calling convention where parameter is passed in EAX
-// Test-case: Ninja Gaiden
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4__LTCG_eax1)
-(
-    dword_xt                       Address
-)
-{
-    dword_xt Handle;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, eax
-    }
-
-    // Log
-    D3DDevice_LoadVertexShader_4__LTCG_eax1(Handle, Address);
-
-    CxbxImpl_LoadVertexShader(Handle, Address);
-
-    __asm {
-        LTCG_EPILOGUE
-        ret  4
-    }
-}
-
 // ******************************************************************
-// * patch: D3DDevice_LoadVertexShader
+// * patch: D3DDevice_EnableOverlay
 // ******************************************************************
 static void CxbxrImpl_EnableOverlay()
 {
@@ -265,9 +150,6 @@ static void CxbxrImpl_EnableOverlay()
 	g_OverlayProxy = {};
 }
 
-// ******************************************************************
-// * patch: D3DDevice_EnableOverlay
-// ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay)
 (
     bool_xt Enable
@@ -406,108 +288,7 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetRenderState_Simple
-// ******************************************************************
-xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
-(
-    dword_xt Method,
-    dword_xt Value
-)
-{
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Method)
-        LOG_FUNC_ARG(Value)
-        LOG_FUNC_END;
-
-    XB_TRMP(D3DDevice_SetRenderState_Simple)(Method, Value);
-
-    // Fetch the RenderState conversion info for the given input
-    int XboxRenderStateIndex = -1;
-    for (int i = X_D3DRS_FIRST; i <= X_D3DRS_LAST; i++) {
-        if (GetDxbxRenderStateInfo(i).M == PUSH_METHOD(Method)) {
-            XboxRenderStateIndex = i;
-            break;
-        }
-    }
-
-    // If we could not map it, log and return
-    if (XboxRenderStateIndex == -1) {
-        EmuLog(LOG_LEVEL::WARNING, "RenderState_Simple(0x%.08X (%s), 0x%.08X) could not be found in RenderState table", Method, GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
-        return;
-    }
-
-	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
-
-    XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
-}
-
-void CxbxImpl_SetTransform
-(
-    xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST xbox::X_D3DMATRIX *pMatrix
-)
-{
-    LOG_INIT
-
-	d3d8TransformState.SetTransform(State, pMatrix);
-	// Note : SetTransform is handled in our fixed function shader  - see UpdateFixedFunctionVertexShaderState()
-}
-
-// MultiplyTransform should call SetTransform, we'd like to know if it didn't
-// Test case: 25 to Life
-static thread_local uint32_t setTransformCount = 0;
-
-// LTCG specific D3DDevice_SetTransform function...
-// This uses a custom calling convention where parameter is passed in EAX, EDX
-
-// Naked functions must not contain objects that would require unwinding
-// so we cheat a bit by stashing the function body in a separate function
-static void D3DDevice_SetTransform_0__LTCG_eax1_edx2
-(
-	xbox::X_D3DTRANSFORMSTATETYPE State,
-    CONST xbox::X_D3DMATRIX *pMatrix
-)
-{
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(State)
-        LOG_FUNC_ARG(pMatrix)
-        LOG_FUNC_END;
-
-    setTransformCount++;
-
-    __asm {
-        // Trampoline to guest code to remove the need for a GetTransform patch
-        mov  eax, State
-        mov  edx, pMatrix
-        call XB_TRMP(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
-    }
-
-	CxbxImpl_SetTransform(State, pMatrix);
-}
-
-__declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)
-(
-)
-{
-	X_D3DTRANSFORMSTATETYPE State;
-    CONST X_D3DMATRIX *pMatrix;
-    __asm {
-        LTCG_PROLOGUE
-        mov  State, eax
-        mov  pMatrix, edx   
-    }
-
-	// Log + implementation
-	D3DDevice_SetTransform_0__LTCG_eax1_edx2(State, pMatrix);
-
-    __asm {
-        LTCG_EPILOGUE
-        ret
-    }
-}
-
-// ******************************************************************
-// * patch: D3DDevice_SetTransform
+// * patch: D3DDevice_InsertFence
 // ******************************************************************
 xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_InsertFence)()
 {
@@ -552,7 +333,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockOnFence)
 }
 
 // ******************************************************************
-// * patch: IDirect3DResource8_BlockUntilNotBusy
+// * patch: D3DResource_BlockUntilNotBusy
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DResource_BlockUntilNotBusy)
 (
@@ -566,7 +347,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DResource_BlockUntilNotBusy)
 }
 
 // ******************************************************************
-// * patch: D3DDevice_SetScreenSpaceOffset
+// * patch: D3DDevice_InsertCallback
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_InsertCallback)
 (
@@ -584,66 +365,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_InsertCallback)
 	CxbxImpl_InsertCallback(Type, pCallback, Context);
 
 	LOG_INCOMPLETE();
-}
-
-// ******************************************************************
-// * patch: D3DDevice_DrawRectPatch
-// ******************************************************************
-xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawRectPatch)
-(
-	uint_xt					Handle,
-	CONST float_xt				*pNumSegs,
-	CONST X_D3DRECTPATCH_INFO *pRectPatchInfo
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(pNumSegs)
-		LOG_FUNC_ARG(pRectPatchInfo)
-		LOG_FUNC_END;
-
-	CxbxUpdateNativeD3DResources();
-
-#ifdef CXBX_USE_D3D11
-	// D3D11 has no DrawRectPatch - use CPU tessellation
-	HRESULT hRet = CxbxDrawRectPatchD3D11(Handle, pNumSegs, pRectPatchInfo);
-	DEBUG_D3DRESULT(hRet, "CxbxDrawRectPatchD3D11");
-#else
-	HRESULT hRet = g_pD3DDevice->DrawRectPatch( Handle, pNumSegs, pRectPatchInfo );
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawRectPatch");
-#endif
-
-	return hRet;
-}
-
-// ******************************************************************
-// * patch: D3DDevice_DrawTriPatch
-// ******************************************************************
-xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawTriPatch)
-(
-	uint_xt					Handle,
-	CONST float_xt				*pNumSegs,
-	CONST X_D3DTRIPATCH_INFO* pTriPatchInfo
-)
-{
-	LOG_FUNC_BEGIN
-		LOG_FUNC_ARG(Handle)
-		LOG_FUNC_ARG(pNumSegs)
-		LOG_FUNC_ARG(pTriPatchInfo)
-		LOG_FUNC_END;
-
-	CxbxUpdateNativeD3DResources();
-
-#ifdef CXBX_USE_D3D11
-	// D3D11 has no DrawTriPatch - use CPU tessellation
-	HRESULT hRet = CxbxDrawTriPatchD3D11(Handle, pNumSegs, pTriPatchInfo);
-	DEBUG_D3DRESULT(hRet, "CxbxDrawTriPatchD3D11");
-#else
-	HRESULT hRet = g_pD3DDevice->DrawTriPatch(Handle, pNumSegs, pTriPatchInfo);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawTriPatch");
-#endif
-
-	return hRet;
 }
 
 #pragma warning(disable:4244)
@@ -723,7 +444,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix)
 #pragma warning(default:4244)
 
 // ******************************************************************
-// * patch: CDevice_SetStateVB (D3D::CDevice::SetStateVB)
+// * patch: D3DDevice_SetModelView
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetModelView)
 (
@@ -883,7 +604,3 @@ __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource_0__LTCG_edi1)()
     }
 }
 
-
-// ******************************************************************
-// * patch: D3DDevice_SetRenderTargetFast
-// ******************************************************************
