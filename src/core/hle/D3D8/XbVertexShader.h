@@ -94,6 +94,12 @@ typedef struct _CxbxVertexDeclaration
 	// Store the element descriptors and count for lazy input layout creation.
 	D3DVERTEXELEMENT* pD3D11InputElements;  // Heap-allocated copy of D3D11_INPUT_ELEMENT_DESC[]
 	UINT D3D11InputElementCount;
+	// Tessellation auto-generation metadata (for PatchDraw CPU tessellation).
+	// Register indices are -1 when not requested by the vertex declaration.
+	// NOTE: Must be explicitly initialized to -1 after calloc (see CxbxGetVertexDeclaration).
+	int autoNormalRegister;          // Target register for AUTONORMAL (surface normal)
+	int autoNormalSourceRegister;    // Source register to compute derivatives from
+	int autoTexcoordRegister;        // Target register for AUTOTEXCOORD (parametric UV)
 #endif
 }
 CxbxVertexDeclaration;
@@ -260,6 +266,9 @@ extern bool g_Xbox_VertexShader_IsFixedFunction;
 
 extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();
 extern xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber);
+#ifdef CXBX_USE_D3D11
+extern ID3DBlob* CxbxGetActiveVertexShaderBytecode();
+#endif
 
 extern void CxbxImpl_SetScreenSpaceOffset(float x, float y);
 extern void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);

@@ -437,6 +437,12 @@ private:
 		// Does this attribute use no storage present the vertex (check this as early as possible to avoid needless processing) ?
 		if (XboxVertexElementDataType == xbox::X_D3DVSDT_NONE) {
 			// Handle tessellating attributes
+			// NOTE for D3D11: This code is currently unreachable because the
+			// caller's `slot.Format > X_D3DVSDT_NONE` condition filters out
+			// these slots before they reach here. The semantics below are kept
+			// correct (TEXCOORD + register index) in case the code path is
+			// activated in the future, but see the warning at the call site
+			// about why it must NOT be activated for D3D11 normal draws.
 			switch (slot.TessellationType) {
 			case 0: return false; // AUTONONE
 			case 1: // AUTONORMAL
@@ -445,11 +451,13 @@ private:
 #ifndef CXBX_USE_D3D11
 				pCurrentHostVertexElement->Method = D3DDECLMETHOD_CROSSUV; // for D3DVSD_TESSNORMAL
 				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // TODO : Is this correct?
+				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 0; // Note : 1 would be wrong
 #else
-				pCurrentHostVertexElement->SemanticName = "NORMAL";
+				// D3D11: Use TEXCOORD + register index to match the flat v[16] : TEXCOORD VS_INPUT
+				pCurrentHostVertexElement->SemanticName = "TEXCOORD";
+				pCurrentHostVertexElement->SemanticIndex = (UINT)VertexRegister;
 				pCurrentHostVertexElement->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 #endif
-				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 0; // Note : 1 would be wrong
 				return true;
 			case 2: // AUTOTEXCOORD
 				// pCurrentHostVertexElement->Stream = 0; // The input stream is unused (but must be set to 0), which is the current default value
@@ -458,11 +466,13 @@ private:
 #ifndef CXBX_USE_D3D11
 				pCurrentHostVertexElement->Method = D3DDECLMETHOD_UV; // For X_D3DVSD_MASK_TESSUV
 				pCurrentHostVertexElement->Usage = D3DDECLUSAGE_NORMAL; // Note : In Fixed Function Vertex Pipeline, D3DDECLMETHOD_UV must specify usage D3DDECLUSAGE_TEXCOORD or D3DDECLUSAGE_BLENDWEIGHT. TODO : So, what to do?
+				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 1; // TODO ; Is this correct?
 #else
-				pCurrentHostVertexElement->SemanticName = "NORMAL";
+				// D3D11: Use TEXCOORD + register index to match the flat v[16] : TEXCOORD VS_INPUT
+				pCurrentHostVertexElement->SemanticName = "TEXCOORD";
+				pCurrentHostVertexElement->SemanticIndex = (UINT)VertexRegister;
 				pCurrentHostVertexElement->InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 #endif
-				pCurrentHostVertexElement->_9_11(UsageIndex, SemanticIndex) = 1; // TODO ; Is this correct?
 				return true;
 			default:
 				LOG_TEST_CASE("invalid TessellationType");
@@ -794,6 +804,21 @@ public:
 			auto regIndex = orderedRegisterIndices[i];
 			auto &slot = pXboxDeclaration->Slots[regIndex];
 			if (slot.Format > xbox::X_D3DVSDT_NONE) {
+				// NOTE: The > (not >=) intentionally excludes X_D3DVSDT_NONE (0x02),
+				// which is the Format value for AUTONORMAL/AUTOTEXCOORD tessellation
+				// attributes. Do NOT change this to >= for D3D11: these attributes
+				// have no data in the vertex buffer, so adding them to the input
+				// layout would cause reads from non-existent VB data on normal draws.
+				// PatchDraw handles auto-generated attributes separately by building
+				// its own input layout and populating the data via CPU tessellation.
+				// The tessellation metadata (autoNormalRegister, autoTexcoordRegister)
+				// is recorded in CxbxVertexDeclaration from a separate loop below.
+				// (D3D9 is different: D3DDECLMETHOD_CROSSUV/UV tells the runtime to
+				// generate data during DrawRectPatch, so including them is correct.)
+				//
+				// FUTURE: If this moves to HS/DS hardware tessellation, the DS would
+				// generate these outputs directly, eliminating this concern entirely.
+				// See PatchDraw.cpp header comment for the full HS/DS design.
 				// Set Direct3D9 vertex element (declaration) members :
 				if (VshConvertToken_STREAMDATA_REG(regIndex, slot)) {
 					// Add this register to the list of declared registers
@@ -881,6 +906,24 @@ public:
 		for (size_t i = 0; i < RegVIsPresentInDeclaration.size(); i++) {
 			pCxbxVertexDeclaration->vRegisterInDeclaration[i] = RegVIsPresentInDeclaration[i];
 		}
+
+#ifdef CXBX_USE_D3D11
+		// Record tessellation auto-generation metadata for PatchDraw.
+		// These attributes have Format == X_D3DVSDT_NONE so they are NOT in the host vertex
+		// declaration / input layout (the source VB has no data for them). PatchDraw uses this
+		// metadata to compute and inject the auto-generated data at draw time.
+		for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
+			auto &slot = pXboxDeclaration->Slots[i];
+			if (slot.Format == xbox::X_D3DVSDT_NONE) {
+				if (slot.TessellationType == 1 /* AUTONORMAL */) {
+					pCxbxVertexDeclaration->autoNormalRegister = i;
+					pCxbxVertexDeclaration->autoNormalSourceRegister = slot.TessellationSource;
+				} else if (slot.TessellationType == 2 /* AUTOTEXCOORD */) {
+					pCxbxVertexDeclaration->autoTexcoordRegister = i;
+				}
+			}
+		}
+#endif
 
 		return HostVertexElements;
 	}
