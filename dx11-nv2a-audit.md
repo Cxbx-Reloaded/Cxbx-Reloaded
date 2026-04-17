@@ -285,10 +285,10 @@ Items below identify CPU-bound operations that could be moved to the GPU shader 
 - **Impact**: Games using thick lines now render correctly on D3D11
 
 ### 41. Texture Unswizzle on GPU via Compute Shader
-- [ ] Fixed
-- **Files**: `HostResourceCreate.cpp`, `XbConvert.cpp:385-497`
-- **Description**: Every swizzled Xbox texture is unswizzled on CPU via `EmuUnswizzleBox()` — a triple-nested loop with Morton/Z-order decode per pixel, per mip level. This is the single largest CPU bottleneck during texture uploads. A compute shader could take the raw swizzled bytes (uploaded to a structured buffer), compute the Morton decode in-shader, and write directly to the target texture UAV.
-- **Impact**: Performance — significant CPU time savings on texture-heavy titles
+- [x] Fixed
+- **Files**: `Backend_D3D11.cpp`, `Backend_D3D11.h`, `HostResourceCreate.cpp`
+- **Description**: Every swizzled Xbox texture was unswizzled on CPU via `EmuUnswizzleBox()` — a triple-nested loop with Morton/Z-order decode per pixel. A compute shader (cs_5_0) now takes the raw swizzled bytes via a ByteAddressBuffer SRV, computes Morton masks in a constant buffer, and writes directly to the target texture through a typed UAV. Single-mip 2D textures are created as DEFAULT+UAV and dispatched through the CS path; volume textures and multi-mip textures fall back to the CPU path. A CPU fallback via staging buffer + UpdateSubresource is also provided if UAV creation fails for a given format.
+- **Impact**: Performance — GPU-side texture unswizzle eliminates the largest per-texture CPU bottleneck
 
 ### 42. Index Buffer Topology Conversion on GPU
 - [ ] Fixed
