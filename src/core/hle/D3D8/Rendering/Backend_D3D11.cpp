@@ -135,6 +135,14 @@ static ID3D11Buffer              *g_pD3D11IndexConvertOutputBuf = nullptr; // ou
 static UINT                       g_IndexConvertOutputBufSize = 0;
 static ID3D11UnorderedAccessView *g_pD3D11IndexConvertOutputUAV = nullptr;
 
+// ******************************************************************
+// * Compute shader palette texture expansion resources
+// ******************************************************************
+static ID3D11ComputeShader       *g_pD3D11PaletteExpandCS = nullptr;
+static ID3D11Buffer              *g_pD3D11PaletteExpandCB = nullptr; // constant buffer: maskX, maskY, width, pad
+static ID3D11Buffer              *g_pD3D11PaletteBuf = nullptr; // 256-entry palette upload buffer
+static ID3D11ShaderResourceView  *g_pD3D11PaletteSRV = nullptr;
+
 // Index conversion mode constants
 #define CXBX_INDEX_CONVERT_QUAD_CW  0
 #define CXBX_INDEX_CONVERT_QUAD_CCW 1
@@ -596,6 +604,94 @@ void CxbxD3D11InitBlit()
 	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11IndexConvertCB);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create index convert CB");
+	}
+
+	// ---------------------------------------------------------------
+	// Palette texture expansion compute shader (cs_5_0)
+	// Combines unswizzle + P8 palette lookup in a single dispatch.
+	// ---------------------------------------------------------------
+	const char* paletteExpandCS =
+		"ByteAddressBuffer g_SrcBuffer : register(t0);\n"
+		"ByteAddressBuffer g_Palette : register(t1);\n"
+		"RWTexture2D<uint> g_DstTexture : register(u0);\n"
+		"cbuffer PaletteExpandCB : register(b0) {\n"
+		"    uint maskX; uint maskY; uint texWidth; uint texHeight;\n"
+		"};\n"
+		"uint MortonIndex(uint x, uint y) {\n"
+		"    uint mx = maskX; uint my = maskY;\n"
+		"    uint result = 0;\n"
+		"    uint xBit = 1, yBit = 1, outBit = 1;\n"
+		"    uint totalMask = mx | my;\n"
+		"    [unroll(20)]\n"
+		"    for (uint i = 0; i < 20; i++) {\n"
+		"        if ((totalMask & outBit) == 0) break;\n"
+		"        if (mx & outBit) { if (x & xBit) result |= outBit; xBit <<= 1; }\n"
+		"        if (my & outBit) { if (y & yBit) result |= outBit; yBit <<= 1; }\n"
+		"        outBit <<= 1;\n"
+		"    }\n"
+		"    return result;\n"
+		"}\n"
+		"[numthreads(8, 8, 1)]\n"
+		"void main(uint3 dtid : SV_DispatchThreadID) {\n"
+		"    uint x = dtid.x; uint y = dtid.y;\n"
+		"    if (x >= texWidth || y >= texHeight) return;\n"
+		"    uint mortonIdx = MortonIndex(x, y);\n"
+		"    // Read P8 index byte from swizzled source\n"
+		"    uint dwordAddr = mortonIdx & ~3u;\n"
+		"    uint shift = (mortonIdx & 3u) * 8u;\n"
+		"    uint palIdx = (g_SrcBuffer.Load(dwordAddr) >> shift) & 0xFF;\n"
+		"    // Look up ARGB palette entry (stored as D3DCOLOR = 0xAARRGGBB little-endian = [B,G,R,A] bytes)\n"
+		"    uint argb = g_Palette.Load(palIdx * 4);\n"
+		"    // Swap R and B for R8G8B8A8_UNORM output: BGRA bytes -> RGBA bytes\n"
+		"    uint rgba = ((argb & 0x00FF0000u) >> 16) | (argb & 0x0000FF00u) | ((argb & 0x000000FFu) << 16) | (argb & 0xFF000000u);\n"
+		"    g_DstTexture[uint2(x, y)] = rgba;\n"
+		"}\n";
+
+	ID3DBlob* pPalCSBlob = nullptr;
+	hr = EmuCompileShader(std::string(paletteExpandCS), "cs_5_0", &pPalCSBlob, "CxbxPaletteExpandCS");
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile palette expand CS");
+	} else {
+		hr = g_pD3DDevice->CreateComputeShader(pPalCSBlob->GetBufferPointer(), pPalCSBlob->GetBufferSize(), nullptr, &g_pD3D11PaletteExpandCS);
+		pPalCSBlob->Release();
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette expand CS");
+		}
+	}
+
+	// Create palette expand constant buffer (4 uints: maskX, maskY, width, pad)
+	cbDesc = {};
+	cbDesc.ByteWidth = 16;
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11PaletteExpandCB);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette expand CB");
+	}
+
+	// Create palette data buffer (256 entries * 4 bytes = 1024 bytes)
+	{
+		D3D11_BUFFER_DESC palBufDesc = {};
+		palBufDesc.ByteWidth = 1024;
+		palBufDesc.Usage = D3D11_USAGE_DYNAMIC;
+		palBufDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		palBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		palBufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+		hr = g_pD3DDevice->CreateBuffer(&palBufDesc, nullptr, &g_pD3D11PaletteBuf);
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette buffer");
+		} else {
+			D3D11_SHADER_RESOURCE_VIEW_DESC palSrvDesc = {};
+			palSrvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+			palSrvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+			palSrvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
+			palSrvDesc.BufferEx.NumElements = 256; // 1024 bytes / 4
+			hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11PaletteBuf, &palSrvDesc, &g_pD3D11PaletteSRV);
+			if (FAILED(hr)) {
+				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette SRV");
+			}
+		}
 	}
 }
 
@@ -1060,6 +1156,93 @@ bool CxbxD3D11UnswizzleTexture(
 	ID3D11ShaderResourceView* pNullSRV = nullptr;
 	ID3D11UnorderedAccessView* pNullUAV = nullptr;
 	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &pNullSRV);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+
+	pUAV->Release();
+	return true;
+}
+
+// ******************************************************************
+// * GPU palette texture expansion
+// ******************************************************************
+
+bool CxbxD3D11ExpandPaletteTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSwizzledP8Src,
+	UINT width,
+	UINT height,
+	const void* pPaletteData)
+{
+	if (!g_pD3D11PaletteExpandCS || !g_pD3D11PaletteExpandCB || !g_pD3D11PaletteBuf || !g_pD3D11PaletteSRV)
+		return false;
+
+	UINT dataSize = width * height; // 1 byte per pixel
+	UINT bufferSize = (dataSize + 3) & ~3u;
+
+	// Reuse the unswizzle staging buffer for P8 source data
+	CxbxEnsureUnswizzleStagingBuffer(bufferSize);
+	if (!g_pD3D11UnswizzleStagingBuf || !g_pD3D11UnswizzleSRV)
+		return false;
+
+	// Upload swizzled P8 source data
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hr = g_pD3DDeviceContext->Map(g_pD3D11UnswizzleStagingBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return false;
+	memcpy(mapped.pData, pSwizzledP8Src, dataSize);
+	g_pD3DDeviceContext->Unmap(g_pD3D11UnswizzleStagingBuf, 0);
+
+	// Upload palette data (256 entries * 4 bytes = 1024 bytes)
+	hr = g_pD3DDeviceContext->Map(g_pD3D11PaletteBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return false;
+	memcpy(mapped.pData, pPaletteData, 1024);
+	g_pD3DDeviceContext->Unmap(g_pD3D11PaletteBuf, 0);
+
+	// Compute Morton masks
+	UINT maskX = 0, maskY = 0;
+	for (UINT i = 1, j = 1; (i < width) || (i < height); i <<= 1) {
+		if (i < width)  { maskX |= j; j <<= 1; }
+		if (i < height) { maskY |= j; j <<= 1; }
+	}
+
+	// Update constant buffer
+	UINT cbData[4] = { maskX, maskY, width, height };
+	hr = g_pD3DDeviceContext->Map(g_pD3D11PaletteExpandCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return false;
+	memcpy(mapped.pData, cbData, sizeof(cbData));
+	g_pD3DDeviceContext->Unmap(g_pD3D11PaletteExpandCB, 0);
+
+	// Create UAV for destination texture (R8G8B8A8_UNORM → R32_UINT UAV)
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = DXGI_FORMAT_R32_UINT;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.Texture2D.MipSlice = 0;
+	ID3D11UnorderedAccessView* pUAV = nullptr;
+	hr = g_pD3DDevice->CreateUnorderedAccessView(pTexture, &uavDesc, &pUAV);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11ExpandPaletteTexture: Failed to create UAV (hr=0x%08X)", hr);
+		return false;
+	}
+
+	// Bind CS pipeline: t0=P8 source, t1=palette, u0=destination, b0=constants
+	g_pD3DDeviceContext->CSSetShader(g_pD3D11PaletteExpandCS, nullptr, 0);
+	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11PaletteExpandCB);
+	ID3D11ShaderResourceView* srvs[2] = { g_pD3D11UnswizzleSRV, g_pD3D11PaletteSRV };
+	g_pD3DDeviceContext->CSSetShaderResources(0, 2, srvs);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pUAV, nullptr);
+
+	// Dispatch 8x8 thread groups
+	UINT groupsX = (width + 7) / 8;
+	UINT groupsY = (height + 7) / 8;
+	g_pD3DDeviceContext->Dispatch(groupsX, groupsY, 1);
+
+	// Unbind CS resources
+	ID3D11ShaderResourceView* pNullSRVs[2] = { nullptr, nullptr };
+	ID3D11UnorderedAccessView* pNullUAV = nullptr;
+	g_pD3DDeviceContext->CSSetShaderResources(0, 2, pNullSRVs);
 	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
 	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
 

@@ -135,6 +135,18 @@ bool CxbxD3D11ConvertIndexBufferGPU(
 	UINT outputIndexCount,
 	int conversionMode);
 
+// GPU-accelerated palette texture expansion via compute shader.
+// Combines unswizzle + palette lookup in a single CS dispatch.
+// Texture must be DXGI_FORMAT_R8G8B8A8_UNORM with DEFAULT+UAV.
+// pSwizzledP8Src: raw swizzled P8 pixel data (1 byte per pixel).
+// pPaletteData: 256-entry ARGB palette (1024 bytes).
+bool CxbxD3D11ExpandPaletteTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSwizzledP8Src,
+	UINT width,
+	UINT height,
+	const void* pPaletteData);
+
 #endif // CXBX_USE_D3D11
 
 #endif // BACKEND_D3D11_H

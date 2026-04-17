@@ -529,6 +529,13 @@ EMUFORMAT PCFormat;
 					desc.Usage = D3D11_USAGE_DEFAULT;
 					desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 					desc.CPUAccessFlags = 0;
+				} else if (bSwizzled && X_Format == xbox::X_D3DFMT_P8) {
+					// P8 textures use DEFAULT + UAV for GPU palette expand CS
+					// Use R8G8B8A8_UNORM (not B8G8R8A8) for R32_UINT UAV compatibility
+					desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+					desc.Usage = D3D11_USAGE_DEFAULT;
+					desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+					desc.CPUAccessFlags = 0;
 				} else {
 					// D3D11_USAGE_DYNAMIC requires MipLevels == 1
 					desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -788,6 +795,48 @@ EMUFORMAT PCFormat;
 					uint8_t* pFallbackBuf = (uint8_t*)malloc(fallbackSize);
 					EmuUnswizzleBox(pCsSrc, pxMipWidth, pxMipHeight, 1, dwBPP, pFallbackBuf, fallbackRowPitch, 0);
 					g_pD3DDeviceContext->UpdateSubresource(pNewHostResource.Get(), Subresource, nullptr, pFallbackBuf, fallbackRowPitch, 0);
+					free(pFallbackBuf);
+					continue;
+				}
+
+				// CS palette expand path: for swizzled P8 single-mip 2D textures (DEFAULT+UAV),
+				// combines unswizzle + palette lookup in a single GPU dispatch
+				if (bSwizzled && X_Format == xbox::X_D3DFMT_P8 && dwMipMapLevels == 1 && pxMipDepth == 1
+					&& XboxResourceType == xbox::X_D3DRTYPE_TEXTURE) {
+					if (g_pXbox_Palette_Data[iTextureStage] == nullptr) {
+						// Missing palette — zero-fill via UpdateSubresource (texture is DEFAULT, can't Map)
+						LOG_TEST_CASE("Palettized texture bound without a palette");
+						DWORD zeroRowPitch = pxMipWidth * 4;
+						DWORD zeroSize = zeroRowPitch * pxMipHeight;
+						uint8_t* pZeroBuf = (uint8_t*)calloc(1, zeroSize);
+						g_pD3DDeviceContext->UpdateSubresource(pNewHostResource.Get(), Subresource, nullptr, pZeroBuf, zeroRowPitch, 0);
+						free(pZeroBuf);
+						continue;
+					}
+					uint8_t *pCsSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
+					ID3D11Texture2D* pTexture2D = static_cast<ID3D11Texture2D*>(pNewHostResource.Get());
+					if (CxbxD3D11ExpandPaletteTexture(pTexture2D, pCsSrc, pxMipWidth, pxMipHeight, g_pXbox_Palette_Data[iTextureStage])) {
+						continue; // CS handled it, skip to next mip/face
+					}
+					// CS failed — fall back to CPU conversion via staging buffer
+					EmuLog(LOG_LEVEL::WARNING, "CS palette expand failed, falling back to CPU for %ux%u P8", pxMipWidth, pxMipHeight);
+					DWORD fallbackRowPitch = pxMipWidth * 4; // ARGB = 4 bpp output
+					DWORD fallbackSize = fallbackRowPitch * pxMipHeight;
+					uint8_t* pFallbackBuf = (uint8_t*)malloc(fallbackSize);
+					if (ConvertD3DTextureToARGBBuffer(
+						X_Format, (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset,
+						pxMipWidth, pxMipHeight, dwMipRowPitch, mip2dSize,
+						pFallbackBuf, fallbackRowPitch, fallbackSize,
+						pxMipDepth, g_pXbox_Palette_Data[iTextureStage])) {
+						// ConvertD3DTextureToARGBBuffer writes BGRA byte order,
+						// but texture is R8G8B8A8_UNORM (expects RGBA bytes) — swap R↔B
+						for (DWORD i = 0; i < fallbackSize; i += 4) {
+							uint8_t tmp = pFallbackBuf[i];
+							pFallbackBuf[i] = pFallbackBuf[i + 2];
+							pFallbackBuf[i + 2] = tmp;
+						}
+						g_pD3DDeviceContext->UpdateSubresource(pNewHostResource.Get(), Subresource, nullptr, pFallbackBuf, fallbackRowPitch, 0);
+					}
 					free(pFallbackBuf);
 					continue;
 				}
