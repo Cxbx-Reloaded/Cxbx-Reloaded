@@ -198,7 +198,7 @@ void CxbxD3D11InitBlit()
 	// Compile vertex shader
 	ID3DBlob* pVSBlob = nullptr;
 	ID3DBlob* pErrors = nullptr;
-	HRESULT hr = D3DCompile(blitVS, strlen(blitVS), "CxbxBlitVS", nullptr, nullptr, "main", "vs_5_0", 0, 0, &pVSBlob, &pErrors);
+	HRESULT hr = D3DCompile(blitVS, strlen(blitVS), "CxbxBlitVS", nullptr, nullptr, "main", "vs_4_0", 0, 0, &pVSBlob, &pErrors);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit VS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
 		if (pErrors) pErrors->Release();
@@ -215,7 +215,7 @@ void CxbxD3D11InitBlit()
 	// Compile pixel shader
 	pErrors = nullptr;
 	ID3DBlob* pPSBlob = nullptr;
-	hr = D3DCompile(blitPS, strlen(blitPS), "CxbxBlitPS", nullptr, nullptr, "main", "ps_5_0", 0, 0, &pPSBlob, &pErrors);
+	hr = D3DCompile(blitPS, strlen(blitPS), "CxbxBlitPS", nullptr, nullptr, "main", "ps_4_0", 0, 0, &pPSBlob, &pErrors);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit PS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
 		if (pErrors) pErrors->Release();
