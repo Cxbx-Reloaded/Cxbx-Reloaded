@@ -42,29 +42,33 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 
 ## High (Visible on Many Titles)
 
-### 6. Vertex Format: NORMPACKED3 Broken
-- [ ] Fixed
+### 6. ~~Vertex Format: NORMPACKED3 Broken~~ (N/A)
+- [x] Fixed
 - **Files**: `XbVertexShaderDecoder.cpp:536`, `XbVertexBuffer.cpp`
 - **Description**: NORMPACKED3 is a single packed 32-bit integer with 11/11/10-bit signed components. The code reads it as 3×FLOAT32, producing garbage normals.
-- **Impact**: Incorrect lighting on any title using packed normals
+- **Resolution**: N/A — D3D11 path correctly unpacks 11/11/10-bit fields via bitfield union into 3 floats using `PackedIntToFloat()`. Maps to `DXGI_FORMAT_R32G32B32_FLOAT`.
+- **Impact**: None
 
-### 7. Vertex Format: NORMSHORT3 Uninitialized W
-- [ ] Fixed
+### 7. ~~Vertex Format: NORMSHORT3 Uninitialized W~~ (N/A)
+- [x] Fixed
 - **Files**: `XbVertexShaderDecoder.cpp:545`, `XbVertexBuffer.cpp:598`
 - **Description**: NORMSHORT3 reads 3 signed shorts but leaves the 4th component (W) uninitialized, resulting in a garbage W value.
-- **Impact**: Incorrect vertex transforms if W is read by shader
+- **Resolution**: N/A — D3D11 path maps to `DXGI_FORMAT_R16G16B16A16_SNORM` and explicitly sets `pHostVertexAsShort[3] = 32767` (=1.0 in SNORM).
+- **Impact**: None
 
-### 8. Vertex Format: PBYTE3 Missing Alpha
-- [ ] Fixed
+### 8. ~~Vertex Format: PBYTE3 Missing Alpha~~ (N/A)
+- [x] Fixed
 - **Files**: `XbVertexShaderDecoder.cpp:628`, `XbVertexBuffer.cpp:620`
 - **Description**: PBYTE3 does not explicitly set alpha to 1.0, leaving it undefined.
-- **Impact**: Transparent geometry where opaque was intended
+- **Resolution**: N/A — D3D11 path maps to `DXGI_FORMAT_R8G8B8A8_UNORM` and explicitly sets `pHostVertexAsByte[3] = 255` (=1.0 in UNORM).
+- **Impact**: None
 
-### 9. Vertex Format: PBYTE1/PBYTE2 Missing Expansion
-- [ ] Fixed
+### 9. ~~Vertex Format: PBYTE1/PBYTE2 Missing Expansion~~ (N/A)
+- [x] Fixed
 - **Files**: `XbVertexBuffer.cpp:554`
 - **Description**: No format expansion for signed byte formats PBYTE1 and PBYTE2.
-- **Impact**: Vertex data precision loss for affected formats
+- **Resolution**: N/A — D3D11 uses native `DXGI_FORMAT_R8_UNORM` / `DXGI_FORMAT_R8G8_UNORM` which provide correct default component values (0 for missing RGB, 1 for missing A). No expansion needed.
+- **Impact**: None
 
 ### 10. Fog Coordinate Not Clamped in VS
 - [x] Fixed
@@ -190,11 +194,12 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 - **Description**: NV2A pixel shader constant registers are 8-bit per channel. The emulator uses float32 uniforms. Games relying on 8-bit quantization behavior will see smooth transitions instead of discrete steps.
 - **Impact**: Subtle precision differences in combiner constants
 
-### 29. V0/V1 Range Not Converted (NV2A -1..1 vs D3D9 0..1)
-- [ ] Fixed
+### 29. ~~V0/V1 Range Not Converted (NV2A -1..1 vs D3D9 0..1)~~ (N/A)
+- [x] Fixed
 - **Files**: `XbPixelShaderCompiler.cpp:80-94`
 - **Description**: NV2A vertex color registers v0/v1 have range -1..1 in register combiners, but D3D9 clamps to 0..1. No range conversion applied.
-- **Impact**: Negative vertex colors lost (rare, but some effects depend on it)
+- **Resolution**: N/A — NV2A vertex colors are clamped to [0,1], not [-1,1]. The VS already applies `saturate(oD0)` / `saturate(oD1)` and the COLOR semantic further clamps during rasterization. No range conversion needed.
+- **Impact**: None
 
 ### 30. Screen-Space Transform Precision with Large W
 - [ ] Fixed
@@ -202,11 +207,12 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 - **Description**: Screen-space vertex transformation may lose precision when W is very large, as the reciprocal `1/W` computation differs from NV2A fixed-function hardware.
 - **Impact**: Depth precision artifacts on distant geometry using pre-transformed vertices
 
-### 31. oT0-oT3 Texture Coordinates Not Clamped
-- [ ] Fixed
+### 31. ~~oT0-oT3 Texture Coordinates Not Clamped~~ (N/A)
+- [x] Fixed
 - **Files**: `CxbxVertexShaderTemplate.hlsl:287-290`
 - **Description**: NV2A may clamp texture coordinate outputs; the HLSL vertex shader does not.
-- **Impact**: Texture coordinates outside [0,1] may wrap differently than on hardware
+- **Resolution**: N/A — NV2A does NOT clamp texture coordinate VS outputs. Clamping/wrapping happens at texture sampler stage via address modes. Not clamping is correct behavior.
+- **Impact**: None
 
 ---
 
@@ -230,17 +236,19 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 - **Description**: `CxbxSetRenderTarget()` creates a new RTV every call without format validation or caching. If format doesn't match the texture, D3D11 fails silently.
 - **Impact**: Silent rendering failure; uses stale render target
 
-### 35. LSB Mux Correctness
-- [ ] Fixed
+### 35. ~~LSB Mux Correctness~~ (Verified)
+- [x] Fixed
 - **Files**: `CxbxPixelShaderTemplate.hlsl:141`
 - **Description**: "TODO : Verify correctness" comment on LSB-based mux selection in register combiners.
-- **Impact**: Potential wrong mux branch in final combiner
+- **Resolution**: Math is correct: `(r0.a * 255) % 2 >= 1` extracts the LSB of an 8-bit value. May have float precision issues near integer boundaries but zero known test-cases use LSB mode. TODO comment cleaned up.
+- **Impact**: Theoretical float precision edge case only
 
-### 36. Eye Register Mapping
-- [ ] Fixed
+### 36. ~~Eye Register Mapping~~ (N/A)
+- [x] Fixed
 - **Files**: `CxbxPixelShaderTemplate.hlsl:401`
 - **Description**: "TODO : Map iT[1/2/3] through PS_INPUTTEXTURE_[]?" — eye vector register may not be correctly sourced.
-- **Impact**: Incorrect reflection/specular calculations in rare texture modes
+- **Resolution**: N/A — NV2A `texm3x3vspec` instruction hardcodes the eye vector from the q components of texture coordinates 1, 2, 3. It does NOT route through PS_INPUTTEXTURE mapping. Direct indexing is correct. TODO comment cleaned up.
+- **Impact**: None
 
 ### 37. Project2D/Project3D Perspective Divide
 - [ ] Fixed
@@ -254,8 +262,9 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 - **Description**: "TODO : Implement a better cache eviction algorithm" — simple FIFO instead of LRU causes unnecessary texture re-uploads.
 - **Impact**: Performance only; texture thrashing causes frame drops, not visual errors
 
-### 39. Lazy Input Layout Creation
-- [ ] Fixed
+### 39. ~~Lazy Input Layout Creation~~ (N/A)
+- [x] Fixed
 - **Files**: `XbVertexShader.cpp:729-778`
 - **Description**: Input layout created lazily on first use. If multiple threads access the creation path, a race condition could create duplicate layouts or use a partially initialized one.
-- **Impact**: Potential crash or wrong vertex layout on first frame of a new format
+- **Resolution**: N/A — `CxbxUpdateHostVertexDeclaration()` is called from the draw path which runs on a single emulation/rendering thread. Xbox D3D is single-threaded. No race condition possible.
+- **Impact**: None
