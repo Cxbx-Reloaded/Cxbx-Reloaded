@@ -2049,7 +2049,7 @@ HRESULT WINAPI XTL::EMUPATCH(D3D_SetPushBufferSize)
 
     HRESULT hRet = D3D_OK;
 
-    // This is a Xbox extension, meaning there is no pc counterpart.
+    // This is a Xbox extension, meaning there is no D3D9 counterpart.
 
     
 

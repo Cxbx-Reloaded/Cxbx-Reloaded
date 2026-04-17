@@ -242,14 +242,14 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             // allow SetRenderState to be called with no changes
             break;
         default:
-            // Only log missing state if it has a PC counterpart
+            // Only log missing state if it has a D3D counterpart
             if (RenderStateInfo.PC != 0) {
                 EmuLog(LOG_LEVEL::WARNING, "ApplySimpleRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
-    // Skip RenderStates that don't have a defined PC counterpart
+    // Skip RenderStates that don't have a defined D3D counterpart
     if (RenderStateInfo.PC == 0) {
         return;
     }
@@ -337,14 +337,14 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
             Value |= (OldValue & 0x01000000) ? D3DWRAPCOORD_3 : 0;
         } break;
         default:
-            // Only log missing state if it has a PC counterpart
+            // Only log missing state if it has a D3D counterpart
             if (RenderStateInfo.PC != 0) {
                 EmuLog(LOG_LEVEL::WARNING, "ApplyDeferredRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
-    // Skip RenderStates that don't have a defined PC counterpart
+    // Skip RenderStates that don't have a defined D3D counterpart
     if (RenderStateInfo.PC == 0) {
         return;
     }
@@ -422,23 +422,23 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
             // Map directly to D3D11 rasterizer state
             CxbxD3D11SetRenderState(State, Value);
 #endif
-            return; // No PC counterpart
+            return; // No D3D9 counterpart
         case xbox::X_D3DRS_LINEWIDTH:
 #ifdef CXBX_USE_D3D11
-            // Xbox extension — float-encoded DWORD, no PC counterpart
+            // Xbox extension — float-encoded DWORD, no D3D9 counterpart
             // Route to D3D11 backend for thick line GS
             CxbxD3D11SetRenderState(State, Value);
 #endif
-            return; // No PC counterpart
+            return; // No D3D9 counterpart
         default:
-            // Only log missing state if it has a PC counterpart
+            // Only log missing state if it has a D3D counterpart
             if (RenderStateInfo.PC != 0) {
                 EmuLog(LOG_LEVEL::WARNING, "ApplyComplexRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
-    // Skip RenderStates that don't have a defined PC counterpart
+    // Skip RenderStates that don't have a defined D3D counterpart
     if (RenderStateInfo.PC == 0) {
         return;
     }
