@@ -559,7 +559,7 @@ install(FILES ${cxbxr_INSTALL_files}
 
 # Copy HLSL files to the output directory, which are loaded at runtime
 set(CXBXR_HLSL_FILES ${CXBXR_HEADER_EMU})
-list(FILTER CXBXR_HLSL_FILES INCLUDE REGEX ".*/src/core/hle/D3D8/Direct3D9/[^/]+\.hlsli?")
+list(FILTER CXBXR_HLSL_FILES INCLUDE REGEX ".*/src/core/hle/D3D8/Rendering/[^/]+\.hlsli?")
 add_custom_command(
     TARGET misc-batch POST_BUILD
     COMMENT "Copying any updated hlsl files..."
