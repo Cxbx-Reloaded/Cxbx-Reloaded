@@ -562,6 +562,7 @@ set(CXBXR_HLSL_FILES ${CXBXR_HEADER_EMU})
 list(FILTER CXBXR_HLSL_FILES INCLUDE REGEX ".*/src/core/hle/D3D8/Direct3D9/[^/]+\.hlsli?")
 add_custom_command(
     TARGET misc-batch POST_BUILD
+    COMMENT "Copying any updated hlsl files..."
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl"
     # These files can be edited.
