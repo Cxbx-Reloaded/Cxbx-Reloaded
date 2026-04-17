@@ -79,17 +79,17 @@ void ShowVideoConfig(HWND hwnd)
     /*! retrieve video configuration */
     g_XBVideo = g_Settings->m_video;
 
-    /*! initialize direct3d/dxgi */
+   	/*! initialize direct3d/dxgi */
     {
 #ifdef CXBX_USE_D3D11
-        if(FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&g_pDXGIFactory)))) { goto cleanup; }
+   	   	if(FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), reinterpret_cast<void**>(&g_pDXGIFactory)))) { goto cleanup; }
 
-        g_dwAdapterCount = 0;
-        IDXGIAdapter1 *pAdapter;
-        while(g_pDXGIFactory->EnumAdapters1(g_dwAdapterCount, &pAdapter) != DXGI_ERROR_NOT_FOUND) {
-            pAdapter->Release();
-            g_dwAdapterCount++;
-        }
+   	   	g_dwAdapterCount = 0;
+   	   	IDXGIAdapter1 *pAdapter;
+   	   	while(g_pDXGIFactory->EnumAdapters1(g_dwAdapterCount, &pAdapter) != DXGI_ERROR_NOT_FOUND) {
+   	   	   	pAdapter->Release();
+   	   	   	g_dwAdapterCount++;
+   	   	}
 #else
         if(FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &g_pDirect3D))) { goto cleanup; }
 
@@ -102,14 +102,14 @@ void ShowVideoConfig(HWND hwnd)
 
 cleanup:
 
-    /*! cleanup direct3d/dxgi */
+   	/*! cleanup direct3d/dxgi */
     {
 #ifdef CXBX_USE_D3D11
-        if(g_pDXGIFactory != 0)
-        {
-            g_pDXGIFactory->Release();
-            g_pDXGIFactory = 0;
-        }
+   	   	if(g_pDXGIFactory != 0)
+   	   	{
+   	   	   	g_pDXGIFactory->Release();
+   	   	   	g_pDXGIFactory = 0;
+   	   	}
 #else
         if(g_pDirect3D != 0)
         {
@@ -141,15 +141,15 @@ INT_PTR CALLBACK DlgVideoConfigProc(HWND hWndDlg, UINT uMsg, WPARAM wParam, LPAR
                 for(uint32_t v=0;v<g_dwAdapterCount;v++)
                 {
 #ifdef CXBX_USE_D3D11
-                    IDXGIAdapter1 *pAdapter;
-                    if(SUCCEEDED(g_pDXGIFactory->EnumAdapters1(v, &pAdapter))) {
-                        DXGI_ADAPTER_DESC1 desc;
-                        pAdapter->GetDesc1(&desc);
-                        char szDescription[128];
-                        WideCharToMultiByte(CP_UTF8, 0, desc.Description, -1, szDescription, sizeof(szDescription), nullptr, nullptr);
-                        SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)szDescription);
-                        pAdapter->Release();
-                    }
+   	   	   	   	   	IDXGIAdapter1 *pAdapter;
+   	   	   	   	   	if(SUCCEEDED(g_pDXGIFactory->EnumAdapters1(v, &pAdapter))) {
+   	   	   	   	   	   	DXGI_ADAPTER_DESC1 desc;
+   	   	   	   	   	   	pAdapter->GetDesc1(&desc);
+   	   	   	   	   	   	char szDescription[128];
+   	   	   	   	   	   	WideCharToMultiByte(CP_UTF8, 0, desc.Description, -1, szDescription, sizeof(szDescription), nullptr, nullptr);
+   	   	   	   	   	   	SendMessage(g_hDisplayAdapter, CB_ADDSTRING, 0, (LPARAM)szDescription);
+   	   	   	   	   	   	pAdapter->Release();
+   	   	   	   	   	}
 #else
                     D3DADAPTER_IDENTIFIER adapterIdentifier;
 
@@ -329,9 +329,9 @@ void RefreshDisplayAdapter()
     /*! generate list of device types */
     {
 #ifdef CXBX_USE_D3D11
-        // D3D11 always uses hardware acceleration - no HAL/REF distinction
-        SendMessage(g_hDirect3DDevice, CB_RESETCONTENT, 0, 0);
-        SendMessage(g_hDirect3DDevice, CB_ADDSTRING, 0, (LPARAM)"Direct3D HAL (Hardware Accelerated)");
+   	   	// D3D11 always uses hardware acceleration - no HAL/REF distinction
+   	   	SendMessage(g_hDirect3DDevice, CB_RESETCONTENT, 0, 0);
+   	   	SendMessage(g_hDirect3DDevice, CB_ADDSTRING, 0, (LPARAM)"Direct3D HAL (Hardware Accelerated)");
 #else
         /*! device types */
         static const D3DDEVTYPE devType[2] = { D3DDEVTYPE_HAL, D3DDEVTYPE_REF };
@@ -391,48 +391,48 @@ void RefreshDirect3DDevice()
 
         /*! enumerate display modes */
         {
-            SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Xbox Default)");
+   	   	   	SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)"Automatic (Xbox Default)");
 
 #ifdef CXBX_USE_D3D11
-            IDXGIAdapter1 *pAdapter;
-            if(SUCCEEDED(g_pDXGIFactory->EnumAdapters1(g_XBVideo.adapter, &pAdapter))) {
-                IDXGIOutput *pOutput;
-                if(SUCCEEDED(pAdapter->EnumOutputs(0, &pOutput))) {
-                    UINT numModes = 0;
-                    pOutput->GetDisplayModeList(DXGI_FORMAT_B8G8R8X8_UNORM, 0, &numModes, nullptr);
-                    if(numModes > 0) {
-                        DXGI_MODE_DESC *pModes = new DXGI_MODE_DESC[numModes];
-                        pOutput->GetDisplayModeList(DXGI_FORMAT_B8G8R8X8_UNORM, 0, &numModes, pModes);
+   	   	   	IDXGIAdapter1 *pAdapter;
+   	   	   	if(SUCCEEDED(g_pDXGIFactory->EnumAdapters1(g_XBVideo.adapter, &pAdapter))) {
+   	   	   	   	IDXGIOutput *pOutput;
+   	   	   	   	if(SUCCEEDED(pAdapter->EnumOutputs(0, &pOutput))) {
+   	   	   	   	   	UINT numModes = 0;
+   	   	   	   	   	pOutput->GetDisplayModeList(DXGI_FORMAT_B8G8R8X8_UNORM, 0, &numModes, nullptr);
+   	   	   	   	   	if(numModes > 0) {
+   	   	   	   	   	   	DXGI_MODE_DESC *pModes = new DXGI_MODE_DESC[numModes];
+   	   	   	   	   	   	pOutput->GetDisplayModeList(DXGI_FORMAT_B8G8R8X8_UNORM, 0, &numModes, pModes);
 
-                        for(UINT v = 0; v < numModes; v++)
-                        {
-                            char szBuffer[260];
-                            UINT refreshRate = pModes[v].RefreshRate.Denominator ?
-                                pModes[v].RefreshRate.Numerator / pModes[v].RefreshRate.Denominator : 0;
+   	   	   	   	   	   	for(UINT v = 0; v < numModes; v++)
+   	   	   	   	   	   	{
+   	   	   	   	   	   	   	char szBuffer[260];
+   	   	   	   	   	   	   	UINT refreshRate = pModes[v].RefreshRate.Denominator ?
+   	   	   	   	   	   	   	   	pModes[v].RefreshRate.Numerator / pModes[v].RefreshRate.Denominator : 0;
 
-                            if(refreshRate == 0)
-                            {
-                                sprintf(szBuffer, "%d x %d 32bit x8r8g8b8", pModes[v].Width, pModes[v].Height);
-                            }
-                            else
-                            {
-                                sprintf(szBuffer, "%d x %d 32bit x8r8g8b8 (%d hz)", pModes[v].Width, pModes[v].Height, refreshRate);
-                            }
+   	   	   	   	   	   	   	if(refreshRate == 0)
+   	   	   	   	   	   	   	{
+   	   	   	   	   	   	   	   	sprintf(szBuffer, "%d x %d 32bit x8r8g8b8", pModes[v].Width, pModes[v].Height);
+   	   	   	   	   	   	   	}
+   	   	   	   	   	   	   	else
+   	   	   	   	   	   	   	{
+   	   	   	   	   	   	   	   	sprintf(szBuffer, "%d x %d 32bit x8r8g8b8 (%d hz)", pModes[v].Width, pModes[v].Height, refreshRate);
+   	   	   	   	   	   	   	}
 
-                            if(strcmp(szBuffer, g_XBVideo.szVideoResolution) == 0)
-                            {
-                                dwVideoResolution = v+1;
-                            }
+   	   	   	   	   	   	   	if(strcmp(szBuffer, g_XBVideo.szVideoResolution) == 0)
+   	   	   	   	   	   	   	{
+   	   	   	   	   	   	   	   	dwVideoResolution = v+1;
+   	   	   	   	   	   	   	}
 
-                            SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)szBuffer);
-                        }
+   	   	   	   	   	   	   	SendMessage(g_hVideoResolution, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+   	   	   	   	   	   	}
 
-                        delete[] pModes;
-                    }
-                    pOutput->Release();
-                }
-                pAdapter->Release();
-            }
+   	   	   	   	   	   	delete[] pModes;
+   	   	   	   	   	}
+   	   	   	   	   	pOutput->Release();
+   	   	   	   	}
+   	   	   	   	pAdapter->Release();
+   	   	   	}
 #else
             uint32_t dwAdapterModeCount = g_pDirect3D->GetAdapterModeCount(
                 g_XBVideo.adapter
@@ -455,16 +455,16 @@ void RefreshDirect3DDevice()
 
                 switch(displayMode.Format)
                 {
-                    case EMUFMT_X1R5G5B5:
+   	   	   	   	   	case EMUFMT_X1R5G5B5:
                         szFormat = "16bit x1r5g5b5";
                         break;
-                    case EMUFMT_R5G6B5:
+   	   	   	   	   	case EMUFMT_R5G6B5:
                         szFormat = "16bit r5g6r5";
                         break;
-                    case EMUFMT_X8R8G8B8:
+   	   	   	   	   	case EMUFMT_X8R8G8B8:
                         szFormat = "32bit x8r8g8b8";
                         break;
-                    case EMUFMT_A8R8G8B8:
+   	   	   	   	   	case EMUFMT_A8R8G8B8:
                         szFormat = "32bit a8r8g8b8";
                         break;
                     default:

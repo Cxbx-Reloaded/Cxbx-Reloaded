@@ -27,8 +27,8 @@
 
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader)
 (
-    dword_xt                       Handle,
-    dword_xt                       Address
+   	dword_xt                       Handle,
+   	dword_xt                       Address
 )
 {
 	LOG_FUNC_BEGIN
@@ -42,14 +42,14 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader)
 // Overload for logging
 static void D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2
 (
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
+   	xbox::dword_xt                 Handle,
+   	xbox::dword_xt                 Address
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-        LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Handle)
+   	   	LOG_FUNC_ARG(Address)
+   	   	LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_SelectVertexShader function...
@@ -59,36 +59,36 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShad
 (
 )
 {
-    dword_xt Handle;
-    dword_xt Address;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, eax
-        mov  Address, ebx
-    }
+   	dword_xt Handle;
+   	dword_xt Address;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Handle, eax
+   	   	mov  Address, ebx
+   	}
 
-    // Log
-    D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2(Handle, Address);
+   	// Log
+   	D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2(Handle, Address);
 
-    CxbxImpl_SelectVertexShader(Handle, Address);
+   	CxbxImpl_SelectVertexShader(Handle, Address);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 
 // Overload for logging
 static void D3DDevice_SelectVertexShader_4__LTCG_eax1
 (
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
+   	xbox::dword_xt                 Handle,
+   	xbox::dword_xt                 Address
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-        LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Handle)
+   	   	LOG_FUNC_ARG(Address)
+   	   	LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_SelectVertexShader function...
@@ -96,24 +96,24 @@ static void D3DDevice_SelectVertexShader_4__LTCG_eax1
 // Test-case: Aggressive Inline
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LTCG_eax1)
 (
-    dword_xt                       Address
+   	dword_xt                       Address
 )
 {
-    dword_xt Handle;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, eax
-    }
+   	dword_xt Handle;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Handle, eax
+   	}
 
-    // Log
-    D3DDevice_SelectVertexShader_4__LTCG_eax1(Handle, Address);
+   	// Log
+   	D3DDevice_SelectVertexShader_4__LTCG_eax1(Handle, Address);
 
-    CxbxImpl_SelectVertexShader(Handle, Address);
+   	CxbxImpl_SelectVertexShader(Handle, Address);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret  4
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret  4
+   	}
 }
 
 // ******************************************************************
@@ -121,16 +121,16 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShad
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 (
-    dword_xt                       Handle,
-    dword_xt                       Address
+   	dword_xt                       Handle,
+   	dword_xt                       Address
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-        LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Handle)
+   	   	LOG_FUNC_ARG(Address)
+   	   	LOG_FUNC_END;
 
-    CxbxImpl_SelectVertexShader(Handle, Address);
+   	CxbxImpl_SelectVertexShader(Handle, Address);
 }
 
 // ******************************************************************
@@ -138,12 +138,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SelectVertexShader)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 (
-    X_VERTEXSHADERCONSTANTMODE Mode
+   	X_VERTEXSHADERCONSTANTMODE Mode
 )
 {
 	LOG_FUNC_ONE_ARG(Mode);
 
-    g_Xbox_VertexShaderConstantMode = Mode;
+   	g_Xbox_VertexShaderConstantMode = Mode;
 }
 
 // LTCG specific D3DDevice_SetVertexShaderConstant function...
@@ -151,10 +151,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetShaderConstantMode)
 // Test-case: Murakumo
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8__LTCG_edx3)
 (
-    void*,
-    dword_xt    ConstantCount,
-    int_xt      Register,
-    CONST PVOID pConstantData
+   	void*,
+   	dword_xt    ConstantCount,
+   	int_xt      Register,
+   	CONST PVOID pConstantData
 )
 {
 	LOG_FUNC_BEGIN
@@ -171,9 +171,9 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant_8__LTC
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 (
-    int_xt         Register,
-    CONST PVOID pConstantData,
-    dword_xt       ConstantCount
+   	int_xt         Register,
+   	CONST PVOID pConstantData,
+   	dword_xt       ConstantCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -196,16 +196,16 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant)
 // ******************************************************************
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 (
-    int_xt         Register,
-    CONST PVOID pConstantData
+   	int_xt         Register,
+   	CONST PVOID pConstantData
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0..191 range
-    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
-    // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
+   	// The XDK uses a macro to automatically adjust to 0..191 range
+   	// but D3DDevice_SetVertexShaderConstant expects -96..95 range
+   	// so we adjust before forwarding
+   	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -213,16 +213,16 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1)
 // ******************************************************************
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
 (
-    int_xt         Register,
-    CONST PVOID pConstantData
+   	int_xt         Register,
+   	CONST PVOID pConstantData
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0..191 range
-    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
-    // so we adjust before forwarding
-    EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
+   	// The XDK uses a macro to automatically adjust to 0..191 range
+   	// but D3DDevice_SetVertexShaderConstant expects -96..95 range
+   	// so we adjust before forwarding
+   	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 1);
 }
 
 // ******************************************************************
@@ -230,15 +230,15 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant1Fast)
 // ******************************************************************
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
 (
-    int_xt         Register,
-    CONST PVOID pConstantData
+   	int_xt         Register,
+   	CONST PVOID pConstantData
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0..191 range
-    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
-    // so we adjust before forwarding
+   	// The XDK uses a macro to automatically adjust to 0..191 range
+   	// but D3DDevice_SetVertexShaderConstant expects -96..95 range
+   	// so we adjust before forwarding
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, 4);
 }
 
@@ -247,16 +247,16 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstant4)
 // ******************************************************************
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInline)
 (
-    int_xt      Register,
-    CONST PVOID pConstantData,
-    dword_xt    ConstantCount
+   	int_xt      Register,
+   	CONST PVOID pConstantData,
+   	dword_xt    ConstantCount
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0..191 range
-    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
-    // so we adjust before forwarding
+   	// The XDK uses a macro to automatically adjust to 0..191 range
+   	// but D3DDevice_SetVertexShaderConstant expects -96..95 range
+   	// so we adjust before forwarding
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
@@ -291,9 +291,9 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderC
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 
 	__asm {
-        LTCG_EPILOGUE
-        ret
-    }
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 
 // ******************************************************************
@@ -301,30 +301,30 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderC
 // ******************************************************************
 xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetVertexShaderConstantNotInlineFast)
 (
-    int_xt         Register,
-    CONST PVOID pConstantData,
-    dword_xt       ConstantCount
+   	int_xt         Register,
+   	CONST PVOID pConstantData,
+   	dword_xt       ConstantCount
 )
 {
 	LOG_FORWARD("D3DDevice_SetVertexShaderConstant");
 
-    // The XDK uses a macro to automatically adjust to 0..191 range
-    // but D3DDevice_SetVertexShaderConstant expects -96..95 range
-    // so we adjust before forwarding
+   	// The XDK uses a macro to automatically adjust to 0..191 range
+   	// but D3DDevice_SetVertexShaderConstant expects -96..95 range
+   	// so we adjust before forwarding
 	EMUPATCH(D3DDevice_SetVertexShaderConstant)(Register - X_D3DSCM_CORRECTION, pConstantData, ConstantCount / 4);
 }
 
 // Overload for logging
 static void D3DDevice_SetTexture_4__LTCG_eax2
 (
-    xbox::dword_xt           Stage,
-    xbox::X_D3DBaseTexture  *pTexture
+   	xbox::dword_xt           Stage,
+   	xbox::X_D3DBaseTexture  *pTexture
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Stage)
-        LOG_FUNC_ARG(pTexture)
-        LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Stage)
+   	   	LOG_FUNC_ARG(pTexture)
+   	   	LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -332,44 +332,44 @@ static void D3DDevice_SetTexture_4__LTCG_eax2
 // Test-case: NASCAR Heat 2002
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax2)
 (
-    dword_xt           Stage
+   	dword_xt           Stage
 )
 {
-    X_D3DBaseTexture *pTexture;
-    __asm {
-        LTCG_PROLOGUE
-        mov  pTexture, eax
-    }
+   	X_D3DBaseTexture *pTexture;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  pTexture, eax
+   	}
 
-    // Log
-    D3DDevice_SetTexture_4__LTCG_eax2(Stage, pTexture);
+   	// Log
+   	D3DDevice_SetTexture_4__LTCG_eax2(Stage, pTexture);
 
-    // Call the Xbox implementation of this function, to properly handle reference counting for us
-    __asm {
-        mov eax, pTexture
-        push Stage
-        call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax2)
-    }
+   	// Call the Xbox implementation of this function, to properly handle reference counting for us
+   	__asm {
+   	   	mov eax, pTexture
+   	   	push Stage
+   	   	call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax2)
+   	}
 
-    g_pXbox_SetTexture[Stage] = pTexture;
+   	g_pXbox_SetTexture[Stage] = pTexture;
 
-    __asm {
-        LTCG_EPILOGUE
-        ret  4
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret  4
+   	}
 }
 
 // Overload for logging
 static void D3DDevice_SetTexture_4__LTCG_eax1
 (
-    xbox::dword_xt           Stage,
-    xbox::X_D3DBaseTexture  *pTexture
+   	xbox::dword_xt           Stage,
+   	xbox::X_D3DBaseTexture  *pTexture
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Stage)
-        LOG_FUNC_ARG(pTexture)
-        LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Stage)
+   	   	LOG_FUNC_ARG(pTexture)
+   	   	LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_SetTexture function...
@@ -377,31 +377,31 @@ static void D3DDevice_SetTexture_4__LTCG_eax1
 // Test-case: Metal Wolf Chaos
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetTexture_4__LTCG_eax1)
 (
-    X_D3DBaseTexture  *pTexture
+   	X_D3DBaseTexture  *pTexture
 )
 {
-    dword_xt Stage;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Stage, eax
-    }
+   	dword_xt Stage;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Stage, eax
+   	}
 
-    // Log
+   	// Log
 	D3DDevice_SetTexture_4__LTCG_eax1(Stage, pTexture);
 
-    // Call the Xbox implementation of this function, to properly handle reference counting for us
-    __asm {
-        mov eax, Stage
-        push pTexture
-        call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax1)
-    }
+   	// Call the Xbox implementation of this function, to properly handle reference counting for us
+   	__asm {
+   	   	mov eax, Stage
+   	   	push pTexture
+   	   	call XB_TRMP(D3DDevice_SetTexture_4__LTCG_eax1)
+   	}
 
-    g_pXbox_SetTexture[Stage] = pTexture;
+   	g_pXbox_SetTexture[Stage] = pTexture;
 
-    __asm {
-        LTCG_EPILOGUE
-        ret  4
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret  4
+   	}
 }
 
 // ******************************************************************
@@ -423,10 +423,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader)
 // Overload for logging
 static void D3DDevice_SetPixelShader_0__LTCG_eax1
 (
-    xbox::dword_xt      Handle
+   	xbox::dword_xt      Handle
 )
 {
-    LOG_FUNC_ONE_ARG(Handle);
+   	LOG_FUNC_ONE_ARG(Handle);
 }
 
 // LTCG specific D3DDevice_SetPixelShader function...
@@ -436,26 +436,26 @@ static void D3DDevice_SetPixelShader_0__LTCG_eax1
 // Test-case: Midtown Madness 3
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0__LTCG_eax1)()
 {
-    dword_xt Handle;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, eax
-    }
+   	dword_xt Handle;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Handle, eax
+   	}
 
-    // Log
-    D3DDevice_SetPixelShader_0__LTCG_eax1(Handle);
+   	// Log
+   	D3DDevice_SetPixelShader_0__LTCG_eax1(Handle);
 
-    __asm {
-        mov  eax, Handle
-        call XB_TRMP(D3DDevice_SetPixelShader_0__LTCG_eax1)
-    }
+   	__asm {
+   	   	mov  eax, Handle
+   	   	call XB_TRMP(D3DDevice_SetPixelShader_0__LTCG_eax1)
+   	}
 
-    CxbxImpl_SetPixelShader(Handle);
+   	CxbxImpl_SetPixelShader(Handle);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 
 // ******************************************************************
@@ -466,23 +466,23 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetPixelShader_0
 // ******************************************************************
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__LTCG_ecx2_eax3)
 (
-    X_D3DPRIMITIVETYPE PrimitiveType
+   	X_D3DPRIMITIVETYPE PrimitiveType
 )
 {
-    uint_xt VertexCount;
-    uint_xt StartVertex;
-    __asm {
-        LTCG_PROLOGUE
-        mov  VertexCount, eax
-        mov  StartVertex, ecx
-    }
+   	uint_xt VertexCount;
+   	uint_xt StartVertex;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  VertexCount, eax
+   	   	mov  StartVertex, ecx
+   	}
 
-    EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+   	EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret  4
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret  4
+   	}
 }
 
 // ******************************************************************
@@ -491,22 +491,22 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_4__
 // ******************************************************************
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices_8__LTCG_eax3)
 (
-    X_D3DPRIMITIVETYPE PrimitiveType,
-    uint_xt            StartVertex
+   	X_D3DPRIMITIVETYPE PrimitiveType,
+   	uint_xt            StartVertex
 )
 {
-    uint_xt VertexCount;
-    __asm {
-        LTCG_PROLOGUE
-        mov  VertexCount, eax
-    }
+   	uint_xt VertexCount;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  VertexCount, eax
+   	}
 
-    EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
+   	EMUPATCH(D3DDevice_DrawVertices)(PrimitiveType, StartVertex, VertexCount);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret  4
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret  4
+   	}
 }
 
 // ******************************************************************
@@ -533,15 +533,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DeleteVertexShader)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetShaderConstantMode)
 (
-    dword_xt *pMode
+   	dword_xt *pMode
 )
 {
 	LOG_FUNC_ONE_ARG(pMode);
-        
-    if(pMode)
-    {
-        *pMode = g_Xbox_VertexShaderConstantMode;
-    }
+   	   	
+   	if(pMode)
+   	{
+   	   	*pMode = g_Xbox_VertexShaderConstantMode;
+   	}
 }
 
 // ******************************************************************
@@ -549,15 +549,15 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetShaderConstantMode)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShader)
 (
-    dword_xt *pHandle
+   	dword_xt *pHandle
 )
 {
 	LOG_FUNC_ONE_ARG(pHandle);
 
-    if(pHandle)
-    {
-        (*pHandle) = g_Xbox_VertexShader_Handle;
-    }
+   	if(pHandle)
+   	{
+   	   	(*pHandle) = g_Xbox_VertexShader_Handle;
+   	}
 }
 
 // ******************************************************************
@@ -565,9 +565,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShader)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 (
-    int_xt   Register,
-    void  *pConstantData,
-    dword_xt ConstantCount
+   	int_xt   Register,
+   	void  *pConstantData,
+   	dword_xt ConstantCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -588,11 +588,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 	}
 #else
 	HRESULT hRet = g_pD3DDevice->GetVertexShaderConstantF
-    (
-        Register,
-        (float*)pConstantData, // TODO : Validate this work correctly under D3D9
-        ConstantCount
-    );
+   	(
+   	   	Register,
+   	   	(float*)pConstantData, // TODO : Validate this work correctly under D3D9
+   	   	ConstantCount
+   	);
 
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->GetVertexShaderConstant");
 #endif
@@ -603,9 +603,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVertexShaderConstant)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 (
-    dword_xt              Handle,
-    uint_xt               StreamCount,
-    X_STREAMINPUT     *pStreamInputs
+   	dword_xt              Handle,
+   	uint_xt               StreamCount,
+   	X_STREAMINPUT     *pStreamInputs
 )
 {
 	LOG_FUNC_BEGIN
@@ -649,8 +649,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexShaderInput)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader)
 (
-    dword_xt Address,
-    CONST float_xt *pData
+   	dword_xt Address,
+   	CONST float_xt *pData
 )
 {
 	LOG_FUNC_BEGIN
@@ -680,7 +680,7 @@ static void D3DDevice_RunVertexStateShader_4__LTCG_esi2
 // This uses a custom calling convention where parameter is passed in ESI
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunVertexStateShader_4__LTCG_esi2)
 (
-    dword_xt Address
+   	dword_xt Address
 )
 {
 	float_xt *pData;
@@ -722,9 +722,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShaderProgram)
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 (
-    float_xt Near,
-    float_xt Far,
-    dword_xt Flags
+   	float_xt Near,
+   	float_xt Far,
+   	dword_xt Flags
 )
 {
 	LOG_FUNC_BEGIN
@@ -733,55 +733,55 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 		LOG_FUNC_ARG(Flags)
 		LOG_FUNC_END;
 
-    HRESULT hRet = D3D_OK;
+   	HRESULT hRet = D3D_OK;
 
-    switch(Flags) // Member of X_D3DSET_DEPTH_CLIP_PLANES_FLAGS enum
-    {
-        case X_D3DSDCP_SET_VERTEXPROGRAM_PLANES:
-        {
-            // Sets the depth-clipping planes used whenever vertex shader programs are active
-            // TODO
+   	switch(Flags) // Member of X_D3DSET_DEPTH_CLIP_PLANES_FLAGS enum
+   	{
+   	   	case X_D3DSDCP_SET_VERTEXPROGRAM_PLANES:
+   	   	{
+   	   	   	// Sets the depth-clipping planes used whenever vertex shader programs are active
+   	   	   	// TODO
 
-            // pDevice->fNear = Near
-            // pDevice->fFar  = Far
-        }
-        break;
+   	   	   	// pDevice->fNear = Near
+   	   	   	// pDevice->fFar  = Far
+   	   	}
+   	   	break;
 
-        case X_D3DSDCP_SET_FIXEDFUNCTION_PLANES:
-        {
-            // Sets the depth-clipping planes used whenever the fixed-function pipeline is in use. 
-            // TODO
+   	   	case X_D3DSDCP_SET_FIXEDFUNCTION_PLANES:
+   	   	{
+   	   	   	// Sets the depth-clipping planes used whenever the fixed-function pipeline is in use. 
+   	   	   	// TODO
 
-            // pDevice->fNear = Near
-            // pDevice->fFar  = Far
-        }
-        break;
+   	   	   	// pDevice->fNear = Near
+   	   	   	// pDevice->fFar  = Far
+   	   	}
+   	   	break;
 
-        case X_D3DSDCP_USE_DEFAULT_VERTEXPROGRAM_PLANES:
-        {
-            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_VERTEXPROGRAM_PLANE. 
-            // Direct3D will resume using its own internally calculated clip planes when vertex shader programs are active. 
-            // TODO
-        }
-        break;
+   	   	case X_D3DSDCP_USE_DEFAULT_VERTEXPROGRAM_PLANES:
+   	   	{
+   	   	   	// Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_VERTEXPROGRAM_PLANE. 
+   	   	   	// Direct3D will resume using its own internally calculated clip planes when vertex shader programs are active. 
+   	   	   	// TODO
+   	   	}
+   	   	break;
 
-        case X_D3DSDCP_USE_DEFAULT_FIXEDFUNCTION_PLANES:
-        {
-            // Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_FIXEDFUNCTION_PLANES. 
-            // Direct3D will resume using its own internally calculated clip planes when the fixed-function pipeline is active.
-            // TODO
-        }
-        break;
+   	   	case X_D3DSDCP_USE_DEFAULT_FIXEDFUNCTION_PLANES:
+   	   	{
+   	   	   	// Causes Direct3D to disregard the depth-clipping planes set when using X_D3DSDCP_SET_FIXEDFUNCTION_PLANES. 
+   	   	   	// Direct3D will resume using its own internally calculated clip planes when the fixed-function pipeline is active.
+   	   	   	// TODO
+   	   	}
+   	   	break;
 
-        default:
-            EmuLog(LOG_LEVEL::WARNING, "Unknown SetDepthClipPlanes Flags provided");
-    }
+   	   	default:
+   	   	   	EmuLog(LOG_LEVEL::WARNING, "Unknown SetDepthClipPlanes Flags provided");
+   	}
 
-    // TODO
+   	// TODO
 
-    
+   	
 
-    return hRet;
+   	return hRet;
 }
 
 // ******************************************************************
@@ -791,14 +791,14 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes)
 // Overload for logging
 static void D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2
 (
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
+   	xbox::dword_xt                 Handle,
+   	xbox::dword_xt                 Address
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-    LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Handle)
+   	   	LOG_FUNC_ARG(Address)
+   	LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_LoadVertexShader function...
@@ -808,36 +808,36 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader
 (
 )
 {
-    dword_xt Handle;
-    dword_xt Address;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, ecx
-        mov  Address, eax
-    }
+   	dword_xt Handle;
+   	dword_xt Address;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Handle, ecx
+   	   	mov  Address, eax
+   	}
 
-    // Log
-    D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2(Handle, Address);
+   	// Log
+   	D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2(Handle, Address);
 
-    CxbxImpl_LoadVertexShader(Handle, Address);
+   	CxbxImpl_LoadVertexShader(Handle, Address);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 
 // Overload for logging
 static void D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2
 (
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
+   	xbox::dword_xt                 Handle,
+   	xbox::dword_xt                 Address
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-    LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Handle)
+   	   	LOG_FUNC_ARG(Address)
+   	LOG_FUNC_END;
 }
 
 // LTCG specific D3DDevice_LoadVertexShader function...
@@ -847,58 +847,58 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader
 (
 )
 {
-    dword_xt Handle;
-    dword_xt Address;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, edx
-        mov  Address, eax
-    }
+   	dword_xt Handle;
+   	dword_xt Address;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Handle, edx
+   	   	mov  Address, eax
+   	}
 
-    // Log
-    D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2(Handle, Address);
+   	// Log
+   	D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2(Handle, Address);
 
-    CxbxImpl_LoadVertexShader(Handle, Address);
+   	CxbxImpl_LoadVertexShader(Handle, Address);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 
 // Overload for logging
 static void D3DDevice_LoadVertexShader_4__LTCG_eax1
 (
-    xbox::dword_xt                 Handle,
-    xbox::dword_xt                 Address
+   	xbox::dword_xt                 Handle,
+   	xbox::dword_xt                 Address
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(Handle)
-        LOG_FUNC_ARG(Address)
-    LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(Handle)
+   	   	LOG_FUNC_ARG(Address)
+   	LOG_FUNC_END;
 }
 
 // This uses a custom calling convention where parameter is passed in EAX
 // Test-case: Ninja Gaiden
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_LoadVertexShader_4__LTCG_eax1)
 (
-    dword_xt                       Address
+   	dword_xt                       Address
 )
 {
-    dword_xt Handle;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Handle, eax
-    }
+   	dword_xt Handle;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Handle, eax
+   	}
 
-    // Log
-    D3DDevice_LoadVertexShader_4__LTCG_eax1(Handle, Address);
+   	// Log
+   	D3DDevice_LoadVertexShader_4__LTCG_eax1(Handle, Address);
 
-    CxbxImpl_LoadVertexShader(Handle, Address);
+   	CxbxImpl_LoadVertexShader(Handle, Address);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret  4
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret  4
+   	}
 }

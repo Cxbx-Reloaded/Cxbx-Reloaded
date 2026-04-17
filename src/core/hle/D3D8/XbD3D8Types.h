@@ -604,7 +604,7 @@ struct D3DXCOLOR {
 	D3DXCOLOR(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a) {}
 	operator DWORD() const {
 		return (DWORD(a * 255.0f + 0.5f) << 24) | (DWORD(r * 255.0f + 0.5f) << 16) |
-		       (DWORD(g * 255.0f + 0.5f) << 8) | DWORD(b * 255.0f + 0.5f);
+		   	   (DWORD(g * 255.0f + 0.5f) << 8) | DWORD(b * 255.0f + 0.5f);
 	}
 	operator float*() { return &r; }
 	operator const float*() const { return &r; }

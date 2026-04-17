@@ -167,8 +167,8 @@ void XboxTextureStateConverter::Apply()
     // Track if we need to overwrite state 0 with 3 because of Point Sprites
     // The Xbox NV2A uses only Stage 3 for point-sprites, so we emulate this
     // by mapping Stage 3 to Stage 0, and disabling all stages > 0
-    // D3D11: The geometry shader generates TEXCOORD0 UVs for the sprite quad,
-    // and the SRV from stage 3 is copied to slot 0 after the loop.
+   	// D3D11: The geometry shader generates TEXCOORD0 UVs for the sprite quad,
+   	// and the SRV from stage 3 is copied to slot 0 after the loop.
     bool pointSpriteOverride = false;
     bool pointSpritesEnabled = false;
     pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);
@@ -231,7 +231,7 @@ void XboxTextureStateConverter::Apply()
                             // D3DTEXF_PYRAMIDALQUAD = 6,    // 4-sample tent
                             // D3DTEXF_GAUSSIANQUAD = 7,    // 4-sample gaussian
                             // D3DTEXF_CONVOLUTIONMONO = 8,    // Convolution filter for monochrome textures
-                            LOG_TEST_CASE("X_D3DTEXF_GAUSSIANCUBIC unsupported, falling back to D3DTEXF_GAUSSIANQUAD");
+   	   	   	   	   	   	   	LOG_TEST_CASE("X_D3DTEXF_GAUSSIANCUBIC unsupported, falling back to D3DTEXF_GAUSSIANQUAD");
                             PcValue = D3DTEXF_GAUSSIANQUAD;
                             break;
                         default:
@@ -285,20 +285,20 @@ void XboxTextureStateConverter::Apply()
                 case xbox::X_D3DTSS_BUMPENVMAT11: case xbox::X_D3DTSS_BUMPENVMAT10:
                 case xbox::X_D3DTSS_BUMPENVLSCALE: case xbox::X_D3DTSS_BUMPENVLOFFSET:
 #if 0 // New, doesn't work yet
-                    continue; // Note : Since CxbxUpdateActivePixelShader() reads these too, you'd expect here we could skip, but alas. TODO: Fix PS HLSL to not depend on host D3D TSS
+   	   	   	   	   	continue; // Note : Since CxbxUpdateActivePixelShader() reads these too, you'd expect here we could skip, but alas. TODO: Fix PS HLSL to not depend on host D3D TSS
 #endif
                 case xbox::X_D3DTSS_BORDERCOLOR: case xbox::X_D3DTSS_MIPMAPLODBIAS:
                 case xbox::X_D3DTSS_MAXMIPLEVEL: case xbox::X_D3DTSS_MAXANISOTROPY:
                     break;
                 default:
-                    // Only log missing state if it has a D3D counterpart
+   	   	   	   	   	// Only log missing state if it has a D3D counterpart
                     if (CxbxTextureStateInfo[State].PC != 0) {
                         EmuLog(LOG_LEVEL::WARNING, "XboxTextureStateConverter::Apply(%s, 0x%.08X) is unimplemented!", CxbxTextureStateInfo[State].S, XboxValue);
                     }
                     break;
             }
 
-            // Skip Texture States that don't have a defined D3D counterpart
+   	   	   	// Skip Texture States that don't have a defined D3D counterpart
             if (CxbxTextureStateInfo[State].PC == 0) {
                 continue;
             }
@@ -433,16 +433,16 @@ void XboxTextureStateConverter::Apply()
     if (pointSpritesEnabled) {
         // set the point sprites texture
 #ifdef CXBX_USE_D3D11
-        // Copy the SRV from stage 3 to stage 0 for point sprite rendering
-        ID3D11ShaderResourceView* pSRV = nullptr;
-        g_pD3DDeviceContext->PSGetShaderResources(3, 1, &pSRV);
-        g_pD3DDeviceContext->PSSetShaderResources(0, 1, &pSRV);
-        if (pSRV != nullptr)
-            pSRV->Release(); // Release the reference added by PSGetShaderResources
+   	   	// Copy the SRV from stage 3 to stage 0 for point sprite rendering
+   	   	ID3D11ShaderResourceView* pSRV = nullptr;
+   	   	g_pD3DDeviceContext->PSGetShaderResources(3, 1, &pSRV);
+   	   	g_pD3DDeviceContext->PSSetShaderResources(0, 1, &pSRV);
+   	   	if (pSRV != nullptr)
+   	   	   	pSRV->Release(); // Release the reference added by PSGetShaderResources
 #else
-        IDirect3DBaseTexture* pTexture;
+   	   	IDirect3DBaseTexture* pTexture;
         g_pD3DDevice->GetTexture(3, &pTexture);
-        g_pD3DDevice->SetTexture(0, pTexture); // ID3D11Device::CreateShaderResourceView(), ::PSSetShaderResources()
+   	   	g_pD3DDevice->SetTexture(0, pTexture); // ID3D11Device::CreateShaderResourceView(), ::PSSetShaderResources()
 
         // Avoid a dangling reference that would lead to a memory leak
         if (pTexture != nullptr)

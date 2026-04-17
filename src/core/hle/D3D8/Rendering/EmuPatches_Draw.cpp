@@ -31,7 +31,7 @@
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 (
-    X_D3DPRIMITIVETYPE     PrimitiveType
+   	X_D3DPRIMITIVETYPE     PrimitiveType
 )
 {
 	LOG_FUNC_ONE_ARG(PrimitiveType);
@@ -44,9 +44,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Begin)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2f)
 (
-    int_xt     Register,
-    float_xt   a,
-    float_xt   b
+   	int_xt     Register,
+   	float_xt   a,
+   	float_xt   b
 )
 {
 	LOG_FUNC_BEGIN
@@ -66,9 +66,9 @@ static inline FLOAT DWtoF(DWORD f) { return *((FLOAT*)&f); }
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 (
-    int_xt   Register,
-    short_xt a,
-    short_xt b
+   	int_xt   Register,
+   	short_xt a,
+   	short_xt b
 )
 {
 	LOG_FUNC_BEGIN
@@ -95,11 +95,11 @@ extern NV2ADevice* g_NV2A;
 // Overload for logging
 static void D3DDevice_SetVertexData4f_16__LTCG_edi1
 (
-    xbox::int_xt     Register,
-    xbox::float_xt   a,
-    xbox::float_xt   b,
-    xbox::float_xt   c,
-    xbox::float_xt   d
+   	xbox::int_xt     Register,
+   	xbox::float_xt   a,
+   	xbox::float_xt   b,
+   	xbox::float_xt   c,
+   	xbox::float_xt   d
 )
 {
 	LOG_FUNC_BEGIN
@@ -146,11 +146,11 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f_
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4f)
 (
-    int_xt     Register,
-    float_xt   a,
-    float_xt   b,
-    float_xt   c,
-    float_xt   d
+   	int_xt     Register,
+   	float_xt   a,
+   	float_xt   b,
+   	float_xt   c,
+   	float_xt   d
 )
 {
 	LOG_FUNC_BEGIN
@@ -189,7 +189,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4ub)
 	const float fc = c / 255.0f;
 	const float fd = d / 255.0f;
 
-    CxbxImpl_SetVertexData4f(Register, fa, fb, fc, fd);
+   	CxbxImpl_SetVertexData4f(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -221,7 +221,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 	const float fc = static_cast<float>(c);
 	const float fd = static_cast<float>(d);
 
-    CxbxImpl_SetVertexData4f(Register, fa, fb, fc, fd);
+   	CxbxImpl_SetVertexData4f(Register, fa, fb, fc, fd);
 }
 
 // ******************************************************************
@@ -229,8 +229,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData4s)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 (
-    int_xt      Register,
-    X_D3DCOLOR  Color
+   	int_xt      Register,
+   	X_D3DCOLOR  Color
 )
 {
 	LOG_FUNC_BEGIN
@@ -238,9 +238,9 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexDataColor)
 		LOG_FUNC_ARG(Color)
 		LOG_FUNC_END;
 
-    const D3DXCOLOR XColor = Color;
+   	const D3DXCOLOR XColor = Color;
 
-    CxbxImpl_SetVertexData4f(Register, XColor.r, XColor.g, XColor.b, XColor.a);
+   	CxbxImpl_SetVertexData4f(Register, XColor.r, XColor.g, XColor.b, XColor.a);
 }
 
 // ******************************************************************
@@ -258,8 +258,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_End)()
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 (
-    X_D3DPushBuffer       *pPushBuffer,
-    X_D3DFixup            *pFixup
+   	X_D3DPushBuffer       *pPushBuffer,
+   	X_D3DFixup            *pFixup
 )
 {
 	LOG_FUNC_BEGIN
@@ -276,7 +276,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer)
 // Overload for logging
 static void D3DDevice_RunPushBuffer_4__LTCG_eax2
 (
-    xbox::X_D3DPushBuffer       *pPushBuffer,
+   	xbox::X_D3DPushBuffer       *pPushBuffer,
 	xbox::X_D3DFixup            *pFixup
 )
 {
@@ -289,7 +289,7 @@ static void D3DDevice_RunPushBuffer_4__LTCG_eax2
 // This uses a custom calling convention where parameter is passed in EAX
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer_4__LTCG_eax2)
 (
-    X_D3DPushBuffer *pPushBuffer
+   	X_D3DPushBuffer *pPushBuffer
 )
 {
 	X_D3DFixup* pFixup;
@@ -314,9 +314,9 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_RunPushBuffer_4_
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 (
-    X_D3DPRIMITIVETYPE PrimitiveType,
-    uint_xt            StartVertex,
-    uint_xt            VertexCount
+   	X_D3DPRIMITIVETYPE PrimitiveType,
+   	uint_xt            StartVertex,
+   	uint_xt            VertexCount
 )
 {
 	LOG_FUNC_BEGIN
@@ -472,10 +472,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt             VertexCount,
-    CONST PVOID         pVertexStreamZeroData,
-    uint_xt             VertexStreamZeroStride
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt             VertexCount,
+   	CONST PVOID         pVertexStreamZeroData,
+   	uint_xt             VertexStreamZeroStride
 )
 {
 	LOG_FUNC_BEGIN
@@ -511,23 +511,23 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP)
 // Test-case: NASCAR Heat 20002
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt             VertexCount,
-    uint_xt             VertexStreamZeroStride
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt             VertexCount,
+   	uint_xt             VertexStreamZeroStride
 )
 {
-    PVOID pVertexStreamZeroData;
-    __asm {
-        LTCG_PROLOGUE
-        mov  pVertexStreamZeroData, ebx
-    }
+   	PVOID pVertexStreamZeroData;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  pVertexStreamZeroData, ebx
+   	}
 
-    EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
+   	EMUPATCH(D3DDevice_DrawVerticesUP)(PrimitiveType, VertexCount, pVertexStreamZeroData, VertexStreamZeroStride);
 
-    __asm {
-        LTCG_EPILOGUE
-        ret  0Ch
-    }
+   	__asm {
+   	   	LTCG_EPILOGUE
+   	   	ret  0Ch
+   	}
 }
 
 // ******************************************************************
@@ -535,9 +535,9 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVerticesUP_1
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt             VertexCount,
-    CONST PWORD         pIndexData
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt             VertexCount,
+   	CONST PWORD         pIndexData
 )
 {
 	// Test-cases : XDK samples (Cartoon, Gamepad)
@@ -578,11 +578,11 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVertices)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
-    CONST PVOID         pIndexData,
-    CONST PVOID         pVertexStreamZeroData,
-    uint_xt                VertexStreamZeroStride
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt                VertexCount,
+   	CONST PVOID         pIndexData,
+   	CONST PVOID         pVertexStreamZeroData,
+   	uint_xt                VertexStreamZeroStride
 )
 {
 	LOG_FUNC_BEGIN
@@ -838,7 +838,7 @@ void WINAPI xbox::EMUPATCH(D3DDevice_SetSwapCallback)
 {
 	LOG_FUNC_ONE_ARG(pCallback);
 
-    g_pXbox_SwapCallback = pCallback;
+   	g_pXbox_SwapCallback = pCallback;
 }
 
 // ******************************************************************

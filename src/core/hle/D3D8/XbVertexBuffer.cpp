@@ -413,7 +413,7 @@ void CxbxVertexBufferConverter::ConvertStream
             CxbxrAbort("Couldn't allocate the new stream zero buffer");
         }
     } else {
-        HRESULT hRet = CxbxCreateVertexBuffer(dwHostVertexDataSize, &pNewHostVertexBuffer);
+   	   	HRESULT hRet = CxbxCreateVertexBuffer(dwHostVertexDataSize, &pNewHostVertexBuffer);
 
         if (FAILED(hRet)) {
             CxbxrAbort("Failed to create vertex buffer");
@@ -422,8 +422,8 @@ void CxbxVertexBufferConverter::ConvertStream
 
     // If we need to lock a host vertex buffer, do so now
     if (pHostVertexData == nullptr && pNewHostVertexBuffer != nullptr) {
-        pHostVertexData = (uint8_t*)CxbxLockVertexBuffer(pNewHostVertexBuffer);
-        if (pHostVertexData == nullptr) {
+   	   	pHostVertexData = (uint8_t*)CxbxLockVertexBuffer(pNewHostVertexBuffer);
+   	   	if (pHostVertexData == nullptr) {
             CxbxrAbort("Couldn't lock vertex buffer");
         }
     }
@@ -703,7 +703,7 @@ void CxbxVertexBufferConverter::ConvertStream
         patchedStream.bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;
     } else {
         // assert(pNewHostVertexBuffer != nullptr);
-        CxbxUnlockVertexBuffer(pNewHostVertexBuffer);
+   	   	CxbxUnlockVertexBuffer(pNewHostVertexBuffer);
         patchedStream.pCachedHostVertexBuffer = pNewHostVertexBuffer;
     }
 

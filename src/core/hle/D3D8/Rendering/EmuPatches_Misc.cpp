@@ -63,20 +63,20 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibility
 (
 )
 {
-    dword_xt Index;
+   	dword_xt Index;
 	xbox::hresult_xt result;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Index, eax
-    }
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Index, eax
+   	}
 
-    result = EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
+   	result = EMUPATCH(D3DDevice_EndVisibilityTest)(Index);
 
-    __asm {
-        mov  eax, result
-        LTCG_EPILOGUE
-        ret
-    }
+   	__asm {
+   	   	mov  eax, result
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 
 // ******************************************************************
@@ -84,7 +84,7 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibility
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 (
-    dword_xt                       Index
+   	dword_xt                       Index
 )
 {
 	LOG_FUNC_ONE_ARG(Index);
@@ -110,7 +110,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 		}
 	}
 
-    return D3D_OK;
+   	return D3D_OK;
 }
 
 // ******************************************************************
@@ -118,9 +118,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_EndVisibilityTest)
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
-    dword_xt                       Index,
-    uint_xt                       *pResult,
-    ulonglong_xt                  *pTimeStamp
+   	dword_xt                       Index,
+   	uint_xt                       *pResult,
+   	ulonglong_xt                  *pTimeStamp
 )
 {
 	LOG_FUNC_BEGIN
@@ -169,7 +169,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_GetVisibilityTestResult)
 		*pTimeStamp = sizeof(DWORD); // TODO : This should be an incrementing GPU-memory based DWORD-aligned memory address
 	}
 
-    return D3D_OK;
+   	return D3D_OK;
 }
 
 // ******************************************************************
@@ -186,7 +186,7 @@ static void CxbxrImpl_EnableOverlay()
 
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EnableOverlay)
 (
-    bool_xt Enable
+   	bool_xt Enable
 )
 {
 	LOG_FUNC_ONE_ARG(Enable);
@@ -317,8 +317,8 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(D3DDevice_GetOverlayUpdateStatus)()
 
 	LOG_UNIMPLEMENTED();
 
-    // TODO: Actually check for update status
-    return TRUE;
+   	// TODO: Actually check for update status
+   	return TRUE;
 }
 
 // ******************************************************************
@@ -328,12 +328,12 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_InsertFence)()
 {
 	LOG_FUNC();
 
-    // TODO: Actually implement this
-    dword_xt dwRet = 0x8000BEEF;
+   	// TODO: Actually implement this
+   	dword_xt dwRet = 0x8000BEEF;
 
 	LOG_UNIMPLEMENTED();
 
-    return dwRet;
+   	return dwRet;
 }
 
 // ******************************************************************
@@ -341,7 +341,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_InsertFence)()
 // ******************************************************************
 xbox::bool_xt WINAPI xbox::EMUPATCH(D3DDevice_IsFencePending)
 (
-    dword_xt Fence
+   	dword_xt Fence
 )
 {
 	LOG_FUNC_ONE_ARG(Fence);
@@ -357,12 +357,12 @@ xbox::bool_xt WINAPI xbox::EMUPATCH(D3DDevice_IsFencePending)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockOnFence)
 (
-    dword_xt Fence
+   	dword_xt Fence
 )
 {
 	LOG_FUNC_ONE_ARG(Fence);
 
-    // TODO: Implement
+   	// TODO: Implement
 	LOG_UNIMPLEMENTED();
 }
 
@@ -371,12 +371,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_BlockOnFence)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DResource_BlockUntilNotBusy)
 (
-    X_D3DResource *pThis
+   	X_D3DResource *pThis
 )
 {
 	LOG_FUNC_ONE_ARG(pThis);
 
-    // TODO: Implement
+   	// TODO: Implement
 	LOG_UNIMPLEMENTED();
 }
 
@@ -597,13 +597,13 @@ __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_BlockOnTime_4__LTCG_eax1)(int M
 // ******************************************************************
 void WINAPI xbox::EMUPATCH(D3D_DestroyResource)(X_D3DResource* pResource)
 {
-    LOG_FUNC_ONE_ARG(pResource);
+   	LOG_FUNC_ONE_ARG(pResource);
 
-    // Release the host copy (if it exists!)
-    FreeHostResource(GetHostResourceKey(pResource));
+   	// Release the host copy (if it exists!)
+   	FreeHostResource(GetHostResourceKey(pResource));
 
-    // Call the Xbox version of DestroyResource
-    XB_TRMP(D3D_DestroyResource)(pResource);
+   	// Call the Xbox version of DestroyResource
+   	XB_TRMP(D3D_DestroyResource)(pResource);
 }
 
 // ******************************************************************
@@ -616,25 +616,25 @@ static void D3D_DestroyResource_0__LTCG_edi1(xbox::X_D3DResource* pResource)
 
 __declspec(naked) void WINAPI xbox::EMUPATCH(D3D_DestroyResource_0__LTCG_edi1)()
 {
-    X_D3DResource* pResource;
-    __asm {
-        LTCG_PROLOGUE
-        mov  pResource, edi
-    }
+   	X_D3DResource* pResource;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  pResource, edi
+   	}
 
-    // Log
-    D3D_DestroyResource_0__LTCG_edi1(pResource);
+   	// Log
+   	D3D_DestroyResource_0__LTCG_edi1(pResource);
 
-    // Release the host copy (if it exists!)
-    FreeHostResource(GetHostResourceKey(pResource));
+   	// Release the host copy (if it exists!)
+   	FreeHostResource(GetHostResourceKey(pResource));
 
-    // Call the Xbox version of DestroyResource
-    __asm {
-        mov  edi, pResource
-        call XB_TRMP(D3D_DestroyResource_0__LTCG_edi1)
+   	// Call the Xbox version of DestroyResource
+   	__asm {
+   	   	mov  edi, pResource
+   	   	call XB_TRMP(D3D_DestroyResource_0__LTCG_edi1)
 
-        LTCG_EPILOGUE
-        ret
-    }
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 

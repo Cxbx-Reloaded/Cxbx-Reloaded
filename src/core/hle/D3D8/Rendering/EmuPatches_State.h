@@ -40,8 +40,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetBackBufferScale)(float_xt x, float_xt
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetGammaRamp)
 (
-    dword_xt                   dwFlags,
-    CONST X_D3DGAMMARAMP   *pRamp
+   	dword_xt                   dwFlags,
+   	CONST X_D3DGAMMARAMP   *pRamp
 );
 
 // ******************************************************************
@@ -49,7 +49,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetGammaRamp)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetGammaRamp)
 (
-    X_D3DGAMMARAMP     *pRamp
+   	X_D3DGAMMARAMP     *pRamp
 );
 
 // ******************************************************************
@@ -57,7 +57,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_GetGammaRamp)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetViewport)
 (
-    X_D3DVIEWPORT8 *pViewport
+   	X_D3DVIEWPORT8 *pViewport
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode_0__LTCG_eax1)();
@@ -67,7 +67,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetShaderConstantMode_0__LTCG_eax1)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture)
 (
-    dword_xt           Stage,
+   	dword_xt           Stage,
 	X_D3DBaseTexture  *pTexture
 );
 
@@ -76,9 +76,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTexture)
 // ******************************************************************
 xbox::void_xt __fastcall EMUPATCH(D3DDevice_SwitchTexture)
 (
-    dword_xt           Method,
-    dword_xt           Data,
-    dword_xt           Format
+   	dword_xt           Method,
+   	dword_xt           Data,
+   	dword_xt           Format
 );
 
 // ******************************************************************
@@ -86,7 +86,7 @@ xbox::void_xt __fastcall EMUPATCH(D3DDevice_SwitchTexture)
 // ******************************************************************
 xbox::ulong_xt WINAPI EMUPATCH(D3DResource_AddRef)
 (
-    X_D3DResource      *pThis
+   	X_D3DResource      *pThis
 );
 
 // ******************************************************************
@@ -95,7 +95,7 @@ xbox::ulong_xt WINAPI EMUPATCH(D3DResource_AddRef)
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform)
 (
 	X_D3DTRANSFORMSTATETYPE State,
-    CONST X_D3DMATRIX      *pMatrix
+   	CONST X_D3DMATRIX      *pMatrix
 );
 
 // ******************************************************************
@@ -117,9 +117,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_MultiplyTransform_0__LTCG_ebx1_eax2)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource)
 (
-    uint_xt                StreamNumber,
-    X_D3DVertexBuffer  *pStreamData,
-    uint_xt                Stride
+   	uint_xt                StreamNumber,
+   	X_D3DVertexBuffer  *pStreamData,
+   	uint_xt                Stride
 );
 
 // ******************************************************************
@@ -127,7 +127,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader)
 (
-    dword_xt            Handle
+   	dword_xt            Handle
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader_0__LTCG_ebx1)();
@@ -137,8 +137,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexShader_0__LTCG_ebx1)();
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_SetLight)
 (
-    dword_xt            Index,
-    CONST X_D3DLIGHT8 *pLight
+   	dword_xt            Index,
+   	CONST X_D3DLIGHT8 *pLight
 );
 
 // ******************************************************************
@@ -146,7 +146,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_SetLight)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetMaterial)
 (
-    CONST X_D3DMATERIAL8 *pMaterial
+   	CONST X_D3DMATERIAL8 *pMaterial
 );
 
 // ******************************************************************
@@ -154,8 +154,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetMaterial)
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable)
 (
-    dword_xt            Index,
-    bool_xt             bEnable
+   	dword_xt            Index,
+   	bool_xt             bEnable
 );
 
 // ******************************************************************
@@ -163,7 +163,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable)
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable_4__LTCG_eax1)
 (
-    bool_xt bEnable
+   	bool_xt bEnable
 );
 
 // ******************************************************************
@@ -171,8 +171,8 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_LightEnable_4__LTCG_eax1)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget)
 (
-    X_D3DSurface    *pRenderTarget,
-    X_D3DSurface    *pNewZStencil
+   	X_D3DSurface    *pRenderTarget,
+   	X_D3DSurface    *pNewZStencil
 );
 
 // ******************************************************************
@@ -185,9 +185,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTarget_0__LTCG_ecx1_eax2)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3D_CommonSetRenderTarget)
 (
-    X_D3DSurface    *pRenderTarget,
-    X_D3DSurface    *pNewZStencil,
-    void            *unknown
+   	X_D3DSurface    *pRenderTarget,
+   	X_D3DSurface    *pNewZStencil,
+   	void            *unknown
 );
 
 // ******************************************************************
@@ -195,13 +195,13 @@ xbox::void_xt WINAPI EMUPATCH(D3D_CommonSetRenderTarget)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette)
 (
-    dword_xt         Stage,
-    X_D3DPalette *pPalette
+   	dword_xt         Stage,
+   	X_D3DPalette *pPalette
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetPalette_4__LTCG_eax1)
 (
-    X_D3DPalette *pPalette
+   	X_D3DPalette *pPalette
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader_0__LTCG_eax1)();
@@ -211,8 +211,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DeleteVertexShader_0__LTCG_eax1)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetScreenSpaceOffset)
 (
-    float_xt x,
-    float_xt y
+   	float_xt x,
+   	float_xt y
 );
 
 // ******************************************************************
@@ -228,9 +228,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetBackMaterial)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetRenderTargetFast)
 (
-    X_D3DSurface	*pRenderTarget,
-    X_D3DSurface	*pNewZStencil,
-    dword_xt			Flags
+   	X_D3DSurface	*pRenderTarget,
+   	X_D3DSurface	*pNewZStencil,
+   	dword_xt			Flags
 );
 
 // ******************************************************************
@@ -242,21 +242,21 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_0__LTCG_eax1_edi2_ebx3)(
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_4__LTCG_eax1_ebx2)
 (
-    uint_xt                Stride
+   	uint_xt                Stride
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_eax1)
 (
-    X_D3DVertexBuffer  *pStreamData,
-    uint_xt             Stride
+   	X_D3DVertexBuffer  *pStreamData,
+   	uint_xt             Stride
 );
 
 xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetStreamSource_8__LTCG_edx1)
 (
-    void*,
-    uint_xt                StreamNumber,
-    X_D3DVertexBuffer  *pStreamData,
-    uint_xt                Stride
+   	void*,
+   	uint_xt                StreamNumber,
+   	X_D3DVertexBuffer  *pStreamData,
+   	uint_xt                Stride
 );
 
 } // namespace xbox

@@ -55,20 +55,20 @@ const char *D3DErrorString(HRESULT hResult)
 
 void CxbxInitWindow()
 {
-    g_EmuShared->GetVideoSettings(&g_XBVideo);
+   	g_EmuShared->GetVideoSettings(&g_XBVideo);
 
-    if(g_XBVideo.bFullScreen)
-        CxbxKrnl_hEmuParent = NULL;
+   	if(g_XBVideo.bFullScreen)
+   	   	CxbxKrnl_hEmuParent = NULL;
 
 /* TODO : Port this Dxbx code :
   // create vblank handling thread
-    {
-        dwThreadId = 0;
-        {hThread :=} CreateThread(nullptr, 0, EmuThreadHandleVBlank, nullptr, 0, &dwThreadId);
-    }
+   	{
+   	   	dwThreadId = 0;
+   	   	{hThread :=} CreateThread(nullptr, 0, EmuThreadHandleVBlank, nullptr, 0, &dwThreadId);
+   	}
 */
-    // create window message processing thread
-    {
+   	// create window message processing thread
+   	{
 		HANDLE hStartEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 		HANDLE hRenderWindowThread = CreateThread(nullptr, 0, EmuRenderWindow, &hStartEvent, 0, nullptr);
 
@@ -85,7 +85,7 @@ void CxbxInitWindow()
 		WaitForSingleObject(hStartEvent, INFINITE);
 		CloseHandle(hStartEvent);
 		CloseHandle(hRenderWindowThread);
-    }
+   	}
 
 	SetFocus(g_hEmuWindow);
 	g_renderbase = std::unique_ptr<RenderBase>(new RenderBase());

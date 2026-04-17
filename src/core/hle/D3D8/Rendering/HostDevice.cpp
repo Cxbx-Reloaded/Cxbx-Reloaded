@@ -66,12 +66,12 @@ void EmuD3DInit()
 
 #ifndef CXBX_USE_D3D11 // Based on : https://docs.microsoft.com/en-us/windows/uwp/gaming/simple-port-from-direct3d-9-to-11-1-part-1--initializing-direct3d
 	// create Direct3D8 and retrieve caps
-    {
-        // xbox Direct3DCreate8 returns "1" always, so we need our own ptr
-        if(FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &g_pDirect3D)))
-            CxbxrAbort("Could not initialize Direct3D8!");
+   	{
+   	   	// xbox Direct3DCreate8 returns "1" always, so we need our own ptr
+   	   	if(FAILED(Direct3DCreate9Ex(D3D_SDK_VERSION, &g_pDirect3D)))
+   	   	   	CxbxrAbort("Could not initialize Direct3D8!");
 
-        g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
+   	   	g_pDirect3D->GetDeviceCaps(g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType, &g_D3DCaps);
 
 		// Dump Host D3DCaps to log unconditionally
 		std::cout << "----------------------------------------\n";
@@ -89,30 +89,30 @@ DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
 {
 	CxbxSetThreadName("Cxbx Render Window");
 
-    // register window class
-    {
-        LOGBRUSH logBrush = {BS_SOLID, RGB(0,0,0)};
+   	// register window class
+   	{
+   	   	LOGBRUSH logBrush = {BS_SOLID, RGB(0,0,0)};
 
-        g_hBgBrush = CreateBrushIndirect(&logBrush);
+   	   	g_hBgBrush = CreateBrushIndirect(&logBrush);
 
-        WNDCLASSEX wc =
-        {
-            sizeof(WNDCLASSEX),
-            CS_CLASSDC,
-            EmuMsgProc,
-            0, 0, hActiveModule, // Was GetModuleHandle(nullptr),
+   	   	WNDCLASSEX wc =
+   	   	{
+   	   	   	sizeof(WNDCLASSEX),
+   	   	   	CS_CLASSDC,
+   	   	   	EmuMsgProc,
+   	   	   	0, 0, hActiveModule, // Was GetModuleHandle(nullptr),
 			0, // TODO : LoadIcon(hmodule, ?)
-            LoadCursor(NULL, IDC_ARROW),
-            (HBRUSH)(g_hBgBrush), NULL,
-            "CxbxRender",
+   	   	   	LoadCursor(NULL, IDC_ARROW),
+   	   	   	(HBRUSH)(g_hBgBrush), NULL,
+   	   	   	"CxbxRender",
 			nullptr
-        };
+   	   	};
 
-        RegisterClassEx(&wc);
-    }
+   	   	RegisterClassEx(&wc);
+   	}
 
-    // create the window
-    {
+   	// create the window
+   	{
 		// Peform selection if running in GUI or kernel mode first.
 		HWND hwndParent = (!CxbxKrnl_hEmuParent ? GetDesktopWindow() : CxbxKrnl_hEmuParent);
 		DWORD dwStyle = WS_POPUP;
@@ -139,98 +139,98 @@ DWORD WINAPI EmuRenderWindow(LPVOID lpParam)
 			}
 		}
 
-        g_hEmuWindow = CreateWindow
-        (
-            "CxbxRender", "Cxbx-Reloaded",
-            dwStyle, 
+   	   	g_hEmuWindow = CreateWindow
+   	   	(
+   	   	   	"CxbxRender", "Cxbx-Reloaded",
+   	   	   	dwStyle, 
 			windowRect.left,
 			windowRect.top,
 			windowRect.right - windowRect.left,
 			windowRect.bottom - windowRect.top,
-            hwndParent, nullptr, hActiveModule, // Was GetModuleHandle(nullptr),
-            nullptr
-        );
-    }
+   	   	   	hwndParent, nullptr, hActiveModule, // Was GetModuleHandle(nullptr),
+   	   	   	nullptr
+   	   	);
+   	}
 
-    ShowWindow(g_hEmuWindow, ((CxbxKrnl_hEmuParent == 0) || g_XBVideo.bFullScreen) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
-    UpdateWindow(g_hEmuWindow);
+   	ShowWindow(g_hEmuWindow, ((CxbxKrnl_hEmuParent == 0) || g_XBVideo.bFullScreen) ? SW_SHOWDEFAULT : SW_SHOWMAXIMIZED);
+   	UpdateWindow(g_hEmuWindow);
 
-    if(!g_XBVideo.bFullScreen && (CxbxKrnl_hEmuParent != NULL))
-    {
-        SetFocus(CxbxKrnl_hEmuParent);
-    }
+   	if(!g_XBVideo.bFullScreen && (CxbxKrnl_hEmuParent != NULL))
+   	{
+   	   	SetFocus(CxbxKrnl_hEmuParent);
+   	}
 
-    EmuLog(LOG_LEVEL::DEBUG, "Message-Pump thread is running.");
+   	EmuLog(LOG_LEVEL::DEBUG, "Message-Pump thread is running.");
 
-    SetFocus(g_hEmuWindow);
+   	SetFocus(g_hEmuWindow);
 
-    SetEvent(*reinterpret_cast<PHANDLE>(lpParam));
+   	SetEvent(*reinterpret_cast<PHANDLE>(lpParam));
 
-    // message processing loop
-    {
-        MSG msg;
-        BOOL bRet;
-        while((bRet = GetMessage(&msg, NULL, 0U, 0U)) != FALSE)
-        {
-            if(bRet == -1)
-            {
-                CxbxrAbort("GetMessage failed!");
-            }
+   	// message processing loop
+   	{
+   	   	MSG msg;
+   	   	BOOL bRet;
+   	   	while((bRet = GetMessage(&msg, NULL, 0U, 0U)) != FALSE)
+   	   	{
+   	   	   	if(bRet == -1)
+   	   	   	{
+   	   	   	   	CxbxrAbort("GetMessage failed!");
+   	   	   	}
 
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
+   	   	   	TranslateMessage(&msg);
+   	   	   	DispatchMessage(&msg);
+   	   	}
 
-        CxbxrAbort(nullptr);
-    }
+   	   	CxbxrAbort(nullptr);
+   	}
 
-    return 0;
+   	return 0;
 }
 
 // simple helper function
 void ToggleFauxFullscreen(HWND hWnd)
 {
-    if(g_XBVideo.bFullScreen) {
-        return;
-    }
+   	if(g_XBVideo.bFullScreen) {
+   	   	return;
+   	}
 
-    // Remember last known position and style before go into faux full screen mode.
-    static RECT lRect = {};
-    static LONG gwl_style = {};
+   	// Remember last known position and style before go into faux full screen mode.
+   	static RECT lRect = {};
+   	static LONG gwl_style = {};
 
-    // Require to toggle before start process due to WM_SETFOCUS will get trigger earlier.
-    g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
-    if (g_bIsFauxFullscreen) {
-        GetWindowRect(hWnd, &lRect);
-        gwl_style = GetWindowLong(hWnd, GWL_STYLE);
-        SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
-        // NOTE: Window style must be set before call SetParent.
-        if (CxbxKrnl_hEmuParent) {
-            LONG parent_style = gwl_style & ~WS_CHILD;
-            parent_style |= WS_POPUP;
-            SetWindowLong(hWnd, GWL_STYLE, gwl_style);
-            SetParent(hWnd, NULL);
-        }
-        SetWindowPos(hWnd, HWND_TOPMOST, lRect.left, lRect.top, 0, 0, SWP_NOSIZE);
-        ShowWindow(hWnd, SW_MAXIMIZE);
-    }
-    else {
-        SetWindowLong(hWnd, GWL_STYLE, gwl_style);
-        if(CxbxKrnl_hEmuParent) {
-            // NOTE: This call makes sure that emulation rendering will reappear back into the main window after leaving "faux fullscreen" on non-primary displays.
-            SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_HIDEWINDOW);
+   	// Require to toggle before start process due to WM_SETFOCUS will get trigger earlier.
+   	g_bIsFauxFullscreen = !g_bIsFauxFullscreen;
+   	if (g_bIsFauxFullscreen) {
+   	   	GetWindowRect(hWnd, &lRect);
+   	   	gwl_style = GetWindowLong(hWnd, GWL_STYLE);
+   	   	SetWindowLong(hWnd, GWL_STYLE, WS_POPUP);
+   	   	// NOTE: Window style must be set before call SetParent.
+   	   	if (CxbxKrnl_hEmuParent) {
+   	   	   	LONG parent_style = gwl_style & ~WS_CHILD;
+   	   	   	parent_style |= WS_POPUP;
+   	   	   	SetWindowLong(hWnd, GWL_STYLE, gwl_style);
+   	   	   	SetParent(hWnd, NULL);
+   	   	}
+   	   	SetWindowPos(hWnd, HWND_TOPMOST, lRect.left, lRect.top, 0, 0, SWP_NOSIZE);
+   	   	ShowWindow(hWnd, SW_MAXIMIZE);
+   	}
+   	else {
+   	   	SetWindowLong(hWnd, GWL_STYLE, gwl_style);
+   	   	if(CxbxKrnl_hEmuParent) {
+   	   	   	// NOTE: This call makes sure that emulation rendering will reappear back into the main window after leaving "faux fullscreen" on non-primary displays.
+   	   	   	SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_HIDEWINDOW);
 
-            // NOTE: Window style must be set before call SetParent.
-            SetParent(hWnd, CxbxKrnl_hEmuParent);
-            ShowWindow(hWnd, SW_MAXIMIZE);
-            SetFocus(CxbxKrnl_hEmuParent);
-        }
-        else {
-            ShowWindow(hWnd, SW_RESTORE);
-            SetWindowPos(hWnd, HWND_NOTOPMOST, lRect.left, lRect.top, lRect.right - lRect.left, lRect.bottom - lRect.top, 0);
-            SetFocus(hWnd);
-        }
-    }
+   	   	   	// NOTE: Window style must be set before call SetParent.
+   	   	   	SetParent(hWnd, CxbxKrnl_hEmuParent);
+   	   	   	ShowWindow(hWnd, SW_MAXIMIZE);
+   	   	   	SetFocus(CxbxKrnl_hEmuParent);
+   	   	}
+   	   	else {
+   	   	   	ShowWindow(hWnd, SW_RESTORE);
+   	   	   	SetWindowPos(hWnd, HWND_NOTOPMOST, lRect.left, lRect.top, lRect.right - lRect.left, lRect.bottom - lRect.top, 0);
+   	   	   	SetFocus(hWnd);
+   	   	}
+   	}
 }
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -241,16 +241,16 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	const LRESULT imguiResult = ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 	if (imguiResult != 0) return imguiResult;
 
-    switch(msg)
-    {
-        case WM_DESTROY:
-        {
-            CxbxReleaseCursor();
-            DeleteObject(g_hBgBrush);
-            PostQuitMessage(0);
-            return D3D_OK; // = 0
-        }
-        break;
+   	switch(msg)
+   	{
+   	   	case WM_DESTROY:
+   	   	{
+   	   	   	CxbxReleaseCursor();
+   	   	   	DeleteObject(g_hBgBrush);
+   	   	   	PostQuitMessage(0);
+   	   	   	return D3D_OK; // = 0
+   	   	}
+   	   	break;
 
 		case WM_PAINT:
 		{
@@ -319,187 +319,187 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
-        case WM_SYSKEYDOWN:
-        {
-            if(wParam == VK_RETURN)
-            {
-                ToggleFauxFullscreen(hWnd);
-            }
-            else if(wParam == VK_F4)
-            {
-                PostMessage(hWnd, WM_CLOSE, 0, 0);
-            }
-            // NOTE: Windows does not send F10 key message to WM_KEYDOWN.
-            // Source: https://docs.microsoft.com/en-us/windows/desktop/inputdev/wm-syskeydown
-            else if(wParam == VK_F10)
-            {
-                ToggleFauxFullscreen(hWnd);
-            }
-            else
-            {
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-        }
-        break;
+   	   	case WM_SYSKEYDOWN:
+   	   	{
+   	   	   	if(wParam == VK_RETURN)
+   	   	   	{
+   	   	   	   	ToggleFauxFullscreen(hWnd);
+   	   	   	}
+   	   	   	else if(wParam == VK_F4)
+   	   	   	{
+   	   	   	   	PostMessage(hWnd, WM_CLOSE, 0, 0);
+   	   	   	}
+   	   	   	// NOTE: Windows does not send F10 key message to WM_KEYDOWN.
+   	   	   	// Source: https://docs.microsoft.com/en-us/windows/desktop/inputdev/wm-syskeydown
+   	   	   	else if(wParam == VK_F10)
+   	   	   	{
+   	   	   	   	ToggleFauxFullscreen(hWnd);
+   	   	   	}
+   	   	   	else
+   	   	   	{
+   	   	   	   	return DefWindowProc(hWnd, msg, wParam, lParam);
+   	   	   	}
+   	   	}
+   	   	break;
 
-        case WM_KEYDOWN:
-        {
-            /*! disable fullscreen if we are set to faux mode, and faux fullscreen is active */
-            if(wParam == VK_ESCAPE)
-            {
-                if(g_XBVideo.bFullScreen)
-                {
-                    SendMessage(hWnd, WM_CLOSE, 0, 0);
-                }
-                else if(g_bIsFauxFullscreen)
-                {
-                    ToggleFauxFullscreen(hWnd);
-                }
-            }
-            else if (wParam == VK_F1)
-            {
+   	   	case WM_KEYDOWN:
+   	   	{
+   	   	   	/*! disable fullscreen if we are set to faux mode, and faux fullscreen is active */
+   	   	   	if(wParam == VK_ESCAPE)
+   	   	   	{
+   	   	   	   	if(g_XBVideo.bFullScreen)
+   	   	   	   	{
+   	   	   	   	   	SendMessage(hWnd, WM_CLOSE, 0, 0);
+   	   	   	   	}
+   	   	   	   	else if(g_bIsFauxFullscreen)
+   	   	   	   	{
+   	   	   	   	   	ToggleFauxFullscreen(hWnd);
+   	   	   	   	}
+   	   	   	}
+   	   	   	else if (wParam == VK_F1)
+   	   	   	{
 				if (g_renderbase)
 					g_renderbase->ToggleImGui();
 
-                CxbxUpdateCursor();
-            }
+   	   	   	   	CxbxUpdateCursor();
+   	   	   	}
 			else if (wParam == VK_F2)
 			{
 				g_UseFixedFunctionPixelShader = !g_UseFixedFunctionPixelShader;
 			}
-            else if (wParam == VK_F3)
-            {
-                g_bClipCursor = !g_bClipCursor;
-                g_EmuShared->SetClipCursorFlag(g_bClipCursor);
+   	   	   	else if (wParam == VK_F3)
+   	   	   	{
+   	   	   	   	g_bClipCursor = !g_bClipCursor;
+   	   	   	   	g_EmuShared->SetClipCursorFlag(g_bClipCursor);
 
-                if (g_bClipCursor) {
-                    CxbxClipCursor(hWnd);
-                }
-                else {
-                    CxbxReleaseCursor();
-                }
-            }
-            else if (wParam == VK_F6)
-            {
-                // For some unknown reason, F6 isn't handled in WndMain::WndProc
-                // sometimes, so detect it and stop emulation from here too :
-                SendMessage(hWnd, WM_CLOSE, 0, 0); // See StopEmulation();
-            }
+   	   	   	   	if (g_bClipCursor) {
+   	   	   	   	   	CxbxClipCursor(hWnd);
+   	   	   	   	}
+   	   	   	   	else {
+   	   	   	   	   	CxbxReleaseCursor();
+   	   	   	   	}
+   	   	   	}
+   	   	   	else if (wParam == VK_F6)
+   	   	   	{
+   	   	   	   	// For some unknown reason, F6 isn't handled in WndMain::WndProc
+   	   	   	   	// sometimes, so detect it and stop emulation from here too :
+   	   	   	   	SendMessage(hWnd, WM_CLOSE, 0, 0); // See StopEmulation();
+   	   	   	}
 			else if (wParam == VK_F7)
 			{
 				g_bUsePassthroughHLSL = !g_bUsePassthroughHLSL;
 			}
-            else if(wParam == VK_F8)
-            {
-                g_bPrintfOn = !g_bPrintfOn;
-                g_EmuShared->SetIsKrnlLogEnabled(g_bPrintfOn);
-                LOG_THREAD_INIT;
-                std::cout << _logThreadPrefix << g_EnumModules2String[to_underlying(CXBXR_MODULE::CXBXR)] << "Enable log is " << g_bPrintfOn << std::endl;
-                ipc_send_gui_update(IPC_UPDATE_GUI::LOG_ENABLED, static_cast<UINT>(g_bPrintfOn));
-            }
+   	   	   	else if(wParam == VK_F8)
+   	   	   	{
+   	   	   	   	g_bPrintfOn = !g_bPrintfOn;
+   	   	   	   	g_EmuShared->SetIsKrnlLogEnabled(g_bPrintfOn);
+   	   	   	   	LOG_THREAD_INIT;
+   	   	   	   	std::cout << _logThreadPrefix << g_EnumModules2String[to_underlying(CXBXR_MODULE::CXBXR)] << "Enable log is " << g_bPrintfOn << std::endl;
+   	   	   	   	ipc_send_gui_update(IPC_UPDATE_GUI::LOG_ENABLED, static_cast<UINT>(g_bPrintfOn));
+   	   	   	}
 			else if (wParam == VK_F9)
 			{
 				// Toggle frame-limiting
 				g_bHack_UnlockFramerate = !g_bHack_UnlockFramerate;
 			}
-            else if(wParam == VK_F11)
-            {
-                if (g_iWireframe++ == 2) {
-                    g_iWireframe = 0;
-                }
+   	   	   	else if(wParam == VK_F11)
+   	   	   	{
+   	   	   	   	if (g_iWireframe++ == 2) {
+   	   	   	   	   	g_iWireframe = 0;
+   	   	   	   	}
 
-                XboxRenderStates.SetWireFrameMode(g_iWireframe);
-            }
-            else
-            {
-                return DefWindowProc(hWnd, msg, wParam, lParam);
-            }
-        }
-        break;
+   	   	   	   	XboxRenderStates.SetWireFrameMode(g_iWireframe);
+   	   	   	}
+   	   	   	else
+   	   	   	{
+   	   	   	   	return DefWindowProc(hWnd, msg, wParam, lParam);
+   	   	   	}
+   	   	}
+   	   	break;
 
-        case WM_SIZE:
-        {
-            switch(wParam)
-            {
-                case SIZE_MINIMIZED:
-                {
-                    if(g_XBVideo.bFullScreen)
-                        CxbxrAbort(nullptr);
-                }
-                break;
-            }
+   	   	case WM_SIZE:
+   	   	{
+   	   	   	switch(wParam)
+   	   	   	{
+   	   	   	   	case SIZE_MINIMIZED:
+   	   	   	   	{
+   	   	   	   	   	if(g_XBVideo.bFullScreen)
+   	   	   	   	   	   	CxbxrAbort(nullptr);
+   	   	   	   	}
+   	   	   	   	break;
+   	   	   	}
 
-            if (g_bClipCursor) {
-                CxbxClipCursor(hWnd);
-            }
-        }
-        break;
+   	   	   	if (g_bClipCursor) {
+   	   	   	   	CxbxClipCursor(hWnd);
+   	   	   	}
+   	   	}
+   	   	break;
 
-        case WM_MOVE:
-        {
-            if (g_bClipCursor) {
-                CxbxClipCursor(hWnd);
-            }
-        }
-        break;
+   	   	case WM_MOVE:
+   	   	{
+   	   	   	if (g_bClipCursor) {
+   	   	   	   	CxbxClipCursor(hWnd);
+   	   	   	}
+   	   	}
+   	   	break;
 
-        case WM_MOUSELEAVE:
-        {
-            DInput::mo_leave_wnd = true;
-            g_bIsTrackingMoLeave = false;
-            g_bIsTrackingMoMove = true;
-            CxbxUpdateCursor(true);
-        }
-        break;
+   	   	case WM_MOUSELEAVE:
+   	   	{
+   	   	   	DInput::mo_leave_wnd = true;
+   	   	   	g_bIsTrackingMoLeave = false;
+   	   	   	g_bIsTrackingMoMove = true;
+   	   	   	CxbxUpdateCursor(true);
+   	   	}
+   	   	break;
 
-        case WM_MOUSEMOVE:
-        {
-            if (g_bClipCursor) {
-                CxbxClipCursor(hWnd);
-            }
+   	   	case WM_MOUSEMOVE:
+   	   	{
+   	   	   	if (g_bClipCursor) {
+   	   	   	   	CxbxClipCursor(hWnd);
+   	   	   	}
 
-            if (!g_bIsTrackingMoLeave) {
-                TRACKMOUSEEVENT tme;
-                tme.cbSize = sizeof(TRACKMOUSEEVENT);
-                tme.hwndTrack = hWnd;
-                tme.dwFlags = TME_LEAVE;
-                TrackMouseEvent(&tme);
-                g_bIsTrackingMoLeave = true;
-                CxbxUpdateCursor();
+   	   	   	if (!g_bIsTrackingMoLeave) {
+   	   	   	   	TRACKMOUSEEVENT tme;
+   	   	   	   	tme.cbSize = sizeof(TRACKMOUSEEVENT);
+   	   	   	   	tme.hwndTrack = hWnd;
+   	   	   	   	tme.dwFlags = TME_LEAVE;
+   	   	   	   	TrackMouseEvent(&tme);
+   	   	   	   	g_bIsTrackingMoLeave = true;
+   	   	   	   	CxbxUpdateCursor();
 
-                if (g_bIsTrackingMoMove) {
-                    DInput::mo_leave_wnd = false;
-                    g_bIsTrackingMoMove = false;
-                }
-            }
-        }
-        break;
+   	   	   	   	if (g_bIsTrackingMoMove) {
+   	   	   	   	   	DInput::mo_leave_wnd = false;
+   	   	   	   	   	g_bIsTrackingMoMove = false;
+   	   	   	   	}
+   	   	   	}
+   	   	}
+   	   	break;
 
-        case WM_CLOSE:
-            CxbxReleaseCursor();
-            DestroyWindow(hWnd);
-            CxbxrShutDown();
-            break;
+   	   	case WM_CLOSE:
+   	   	   	CxbxReleaseCursor();
+   	   	   	DestroyWindow(hWnd);
+   	   	   	CxbxrShutDown();
+   	   	   	break;
 
-        case WM_SETFOCUS:
-        {
-            if(CxbxKrnl_hEmuParent && !g_XBVideo.bFullScreen && !g_bIsFauxFullscreen)
-            {
-                SetFocus(CxbxKrnl_hEmuParent);
-            }
-        }
-        break;
+   	   	case WM_SETFOCUS:
+   	   	{
+   	   	   	if(CxbxKrnl_hEmuParent && !g_XBVideo.bFullScreen && !g_bIsFauxFullscreen)
+   	   	   	{
+   	   	   	   	SetFocus(CxbxKrnl_hEmuParent);
+   	   	   	}
+   	   	}
+   	   	break;
 
-        case WM_SETCURSOR:
-        {
-            if(g_XBVideo.bFullScreen || g_bIsFauxFullscreen)
-            {
-                SetCursor(NULL);
-                return S_OK; // = Is not part of D3D8 handling.
-            }
-            return DefWindowProc(hWnd, msg, wParam, lParam);
-        }
-        break;
+   	   	case WM_SETCURSOR:
+   	   	{
+   	   	   	if(g_XBVideo.bFullScreen || g_bIsFauxFullscreen)
+   	   	   	{
+   	   	   	   	SetCursor(NULL);
+   	   	   	   	return S_OK; // = Is not part of D3D8 handling.
+   	   	   	}
+   	   	   	return DefWindowProc(hWnd, msg, wParam, lParam);
+   	   	}
+   	   	break;
 
 		case WM_CXBXR_RUN_ON_MESSAGE_THREAD:
 		{
@@ -508,11 +508,11 @@ LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 
-        default:
-            return DefWindowProc(hWnd, msg, wParam, lParam);
-    }
+   	   	default:
+   	   	   	return DefWindowProc(hWnd, msg, wParam, lParam);
+   	}
 
-    return S_OK; // = Is not part of D3D8 handling.
+   	return S_OK; // = Is not part of D3D8 handling.
 }
 
 std::chrono::steady_clock::time_point GetNextVBlankTime()
@@ -600,184 +600,184 @@ void UpdateDepthStencilFlags(IDirect3DSurface *pDepthStencilSurface)
 
 void SetupPresentationParameters
 (
-    const xbox::X_D3DPRESENT_PARAMETERS     *pXboxPresentationParameters
+   	const xbox::X_D3DPRESENT_PARAMETERS     *pXboxPresentationParameters
 )
 {
-    auto& params = g_EmuCDPD.HostPresentationParameters;
+   	auto& params = g_EmuCDPD.HostPresentationParameters;
 
-    params.Windowed = !g_XBVideo.bFullScreen;
-
-#ifndef CXBX_USE_D3D11
-    // TODO: Investigate the best option for this
-    params.SwapEffect = D3DSWAPEFFECT_COPY;
-
-    // Any backbuffer format should do, since we render to a separate xbox backbuffer
-    // We need to specify something to support fullscreen exclusive mode
-    // Take the current displaymode format
-    D3DDISPLAYMODE D3DDisplayMode;
-    g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
-    params.BackBufferFormat = D3DDisplayMode.Format;
-
-    params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-#endif
-    g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->FullScreen_PresentationInterval;
+   	params.Windowed = !g_XBVideo.bFullScreen;
 
 #ifndef CXBX_USE_D3D11
-    // We only want *one* backbuffer on the host, triple buffering, etc should be handled by our Present/Swap impl
-    params.BackBufferCount = 1;
+   	// TODO: Investigate the best option for this
+   	params.SwapEffect = D3DSWAPEFFECT_COPY;
 
-    // We don't want multisampling on the host backbuffer, it should be applied to Xbox surfaces if required
-    params.MultiSampleType = D3DMULTISAMPLE_NONE;
-    params.MultiSampleQuality = 0;
+   	// Any backbuffer format should do, since we render to a separate xbox backbuffer
+   	// We need to specify something to support fullscreen exclusive mode
+   	// Take the current displaymode format
+   	D3DDISPLAYMODE D3DDisplayMode;
+   	g_pDirect3D->GetAdapterDisplayMode(g_EmuCDPD.Adapter, &D3DDisplayMode);
+   	params.BackBufferFormat = D3DDisplayMode.Format;
 
-    // We want a lockable backbuffer for swapping/blitting purposes
-    params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
+   	params.PresentationInterval = g_XBVideo.bVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+#endif
+   	g_Xbox_PresentationInterval_Default = pXboxPresentationParameters->FullScreen_PresentationInterval;
+
+#ifndef CXBX_USE_D3D11
+   	// We only want *one* backbuffer on the host, triple buffering, etc should be handled by our Present/Swap impl
+   	params.BackBufferCount = 1;
+
+   	// We don't want multisampling on the host backbuffer, it should be applied to Xbox surfaces if required
+   	params.MultiSampleType = D3DMULTISAMPLE_NONE;
+   	params.MultiSampleQuality = 0;
+
+   	// We want a lockable backbuffer for swapping/blitting purposes
+   	params.Flags = D3DPRESENTFLAG_LOCKABLE_BACKBUFFER;
 #endif
 
-    // retrieve resolution from configuration
-    char szBackBufferFormat[16] = {};
-    const char* resolution = g_XBVideo.szVideoResolution;
-    if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
-        &params.BackBufferWidth,
-        &params.BackBufferHeight,
-        szBackBufferFormat,
-        &params.FullScreen_RefreshRateInHz)) {
-        EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s. Using Xbox Default (%d, %d @ %uhz)", resolution,
-            pXboxPresentationParameters->BackBufferWidth, pXboxPresentationParameters->BackBufferHeight,
-            pXboxPresentationParameters->FullScreen_RefreshRateInHz);
-        params.BackBufferWidth = pXboxPresentationParameters->BackBufferWidth;
-        params.BackBufferHeight = pXboxPresentationParameters->BackBufferHeight;
-        params.FullScreen_RefreshRateInHz = pXboxPresentationParameters->FullScreen_RefreshRateInHz;
-    }
+   	// retrieve resolution from configuration
+   	char szBackBufferFormat[16] = {};
+   	const char* resolution = g_XBVideo.szVideoResolution;
+   	if (4 != sscanf(resolution, "%u x %u %*dbit %s (%u hz)",
+   	   	&params.BackBufferWidth,
+   	   	&params.BackBufferHeight,
+   	   	szBackBufferFormat,
+   	   	&params.FullScreen_RefreshRateInHz)) {
+   	   	EmuLog(LOG_LEVEL::DEBUG, "EmuCreateDeviceProxy: Couldn't parse resolution : %s. Using Xbox Default (%d, %d @ %uhz)", resolution,
+   	   	   	pXboxPresentationParameters->BackBufferWidth, pXboxPresentationParameters->BackBufferHeight,
+   	   	   	pXboxPresentationParameters->FullScreen_RefreshRateInHz);
+   	   	params.BackBufferWidth = pXboxPresentationParameters->BackBufferWidth;
+   	   	params.BackBufferHeight = pXboxPresentationParameters->BackBufferHeight;
+   	   	params.FullScreen_RefreshRateInHz = pXboxPresentationParameters->FullScreen_RefreshRateInHz;
+   	}
 
-    if (params.Windowed) {
-        // Refresh rate must be 0 in windowed mode, as is documented
-        params.FullScreen_RefreshRateInHz = 0;
-    }
+   	if (params.Windowed) {
+   	   	// Refresh rate must be 0 in windowed mode, as is documented
+   	   	params.FullScreen_RefreshRateInHz = 0;
+   	}
 }
 
 void DetermineSupportedD3DFormats
 (
 )
 {
-    memset(g_bSupportsFormatSurface, false, sizeof(g_bSupportsFormatSurface));
-    memset(g_bSupportsFormatSurfaceRenderTarget, false, sizeof(g_bSupportsFormatSurfaceRenderTarget));
-    memset(g_bSupportsFormatSurfaceDepthStencil, false, sizeof(g_bSupportsFormatSurfaceDepthStencil));
-    memset(g_bSupportsFormatTexture, false, sizeof(g_bSupportsFormatTexture));
-    memset(g_bSupportsFormatTextureRenderTarget, false, sizeof(g_bSupportsFormatTextureRenderTarget));
-    memset(g_bSupportsFormatTextureDepthStencil, false, sizeof(g_bSupportsFormatTextureDepthStencil));
-    memset(g_bSupportsFormatVolumeTexture, false, sizeof(g_bSupportsFormatVolumeTexture));
-    memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
-    for (int X_Format = xbox::X_D3DFMT_FIRST; X_Format <= xbox::X_D3DFMT_LAST; X_Format++) {
-        // Only process Xbox formats that are directly mappable to host
+   	memset(g_bSupportsFormatSurface, false, sizeof(g_bSupportsFormatSurface));
+   	memset(g_bSupportsFormatSurfaceRenderTarget, false, sizeof(g_bSupportsFormatSurfaceRenderTarget));
+   	memset(g_bSupportsFormatSurfaceDepthStencil, false, sizeof(g_bSupportsFormatSurfaceDepthStencil));
+   	memset(g_bSupportsFormatTexture, false, sizeof(g_bSupportsFormatTexture));
+   	memset(g_bSupportsFormatTextureRenderTarget, false, sizeof(g_bSupportsFormatTextureRenderTarget));
+   	memset(g_bSupportsFormatTextureDepthStencil, false, sizeof(g_bSupportsFormatTextureDepthStencil));
+   	memset(g_bSupportsFormatVolumeTexture, false, sizeof(g_bSupportsFormatVolumeTexture));
+   	memset(g_bSupportsFormatCubeTexture, false, sizeof(g_bSupportsFormatCubeTexture));
+   	for (int X_Format = xbox::X_D3DFMT_FIRST; X_Format <= xbox::X_D3DFMT_LAST; X_Format++) {
+   	   	// Only process Xbox formats that are directly mappable to host
 		EMUFORMAT PCFormat;
-        if (!EmuXBFormatRequiresConversion((xbox::X_D3DFORMAT)X_Format, /*&*/PCFormat)) {
-            // Convert the Xbox format into host format (without warning, thanks to the above restriction)
-            PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
-            if (PCFormat != EMUFMT_UNKNOWN) {
-                // Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
+   	   	if (!EmuXBFormatRequiresConversion((xbox::X_D3DFORMAT)X_Format, /*&*/PCFormat)) {
+   	   	   	// Convert the Xbox format into host format (without warning, thanks to the above restriction)
+   	   	   	PCFormat = EmuXB2PC_D3DFormat((xbox::X_D3DFORMAT)X_Format);
+   	   	   	if (PCFormat != EMUFMT_UNKNOWN) {
+   	   	   	   	// Index with Xbox D3DFormat, because host FourCC codes are too big to be used as indices
 #ifdef CXBX_USE_D3D11
-                UINT FormatSupport = 0;
+   	   	   	   	UINT FormatSupport = 0;
 				g_pD3DDevice->CheckFormatSupport(PCFormat, &FormatSupport);
 
-                g_bSupportsFormatSurface[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D;
-                g_bSupportsFormatSurfaceRenderTarget[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_RENDER_TARGET;
-                g_bSupportsFormatSurfaceDepthStencil[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_DEPTH_STENCIL;
-                // In D3D11, surfaces are textures, so the same format support applies
-                g_bSupportsFormatTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D;
-                g_bSupportsFormatTextureRenderTarget[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_RENDER_TARGET;
-                g_bSupportsFormatTextureDepthStencil[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_DEPTH_STENCIL;
+   	   	   	   	g_bSupportsFormatSurface[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D;
+   	   	   	   	g_bSupportsFormatSurfaceRenderTarget[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_RENDER_TARGET;
+   	   	   	   	g_bSupportsFormatSurfaceDepthStencil[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_DEPTH_STENCIL;
+   	   	   	   	// In D3D11, surfaces are textures, so the same format support applies
+   	   	   	   	g_bSupportsFormatTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE2D;
+   	   	   	   	g_bSupportsFormatTextureRenderTarget[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_RENDER_TARGET;
+   	   	   	   	g_bSupportsFormatTextureDepthStencil[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_DEPTH_STENCIL;
 
-                g_bSupportsFormatVolumeTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE3D;
-                g_bSupportsFormatCubeTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURECUBE;
+   	   	   	   	g_bSupportsFormatVolumeTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURE3D;
+   	   	   	   	g_bSupportsFormatCubeTexture[X_Format] = FormatSupport & D3D11_FORMAT_SUPPORT_TEXTURECUBE;
 #else
-                g_bSupportsFormatSurface[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-                        D3DRTYPE_SURFACE, PCFormat));
+   	   	   	   	g_bSupportsFormatSurface[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+   	   	   	   	   	   	D3DRTYPE_SURFACE, PCFormat));
 
-                g_bSupportsFormatSurfaceRenderTarget[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
-                        D3DRTYPE_SURFACE, PCFormat));
+   	   	   	   	g_bSupportsFormatSurfaceRenderTarget[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
+   	   	   	   	   	   	D3DRTYPE_SURFACE, PCFormat));
 
-                g_bSupportsFormatSurfaceDepthStencil[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
-                        D3DRTYPE_SURFACE, PCFormat));
+   	   	   	   	g_bSupportsFormatSurfaceDepthStencil[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
+   	   	   	   	   	   	D3DRTYPE_SURFACE, PCFormat));
 
-                g_bSupportsFormatTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-                        D3DRTYPE_TEXTURE, PCFormat));
+   	   	   	   	g_bSupportsFormatTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+   	   	   	   	   	   	D3DRTYPE_TEXTURE, PCFormat));
 
-                g_bSupportsFormatTextureRenderTarget[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
-                        D3DRTYPE_TEXTURE, PCFormat));
+   	   	   	   	g_bSupportsFormatTextureRenderTarget[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_RENDERTARGET,
+   	   	   	   	   	   	D3DRTYPE_TEXTURE, PCFormat));
 
-                g_bSupportsFormatTextureDepthStencil[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
-                        D3DRTYPE_TEXTURE, PCFormat));
+   	   	   	   	g_bSupportsFormatTextureDepthStencil[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, D3DUSAGE_DEPTHSTENCIL,
+   	   	   	   	   	   	D3DRTYPE_TEXTURE, PCFormat));
 
-                g_bSupportsFormatVolumeTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-                        D3DRTYPE_VOLUMETEXTURE, PCFormat));
+   	   	   	   	g_bSupportsFormatVolumeTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+   	   	   	   	   	   	D3DRTYPE_VOLUMETEXTURE, PCFormat));
 
-                g_bSupportsFormatCubeTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
-                        g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
-                        g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
-                        D3DRTYPE_CUBETEXTURE, PCFormat));
+   	   	   	   	g_bSupportsFormatCubeTexture[X_Format] = SUCCEEDED(g_pDirect3D->CheckDeviceFormat(
+   	   	   	   	   	   	g_EmuCDPD.Adapter, g_EmuCDPD.DeviceType,
+   	   	   	   	   	   	g_EmuCDPD.HostPresentationParameters.BackBufferFormat, 0,
+   	   	   	   	   	   	D3DRTYPE_CUBETEXTURE, PCFormat));
 #endif
-            }
-        }
-    }
+   	   	   	}
+   	   	}
+   	}
 }
 
 void UpdateHostBackBufferDesc()
 {
-    IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
+   	IDirect3DSurface *pCurrentHostBackBuffer = nullptr;
 
-    HRESULT hRet = CxbxGetBackBuffer(&pCurrentHostBackBuffer);
-    if (hRet != D3D_OK) {
-        CxbxrAbort("Unable to get host backbuffer surface");
-    }
+   	HRESULT hRet = CxbxGetBackBuffer(&pCurrentHostBackBuffer);
+   	if (hRet != D3D_OK) {
+   	   	CxbxrAbort("Unable to get host backbuffer surface");
+   	}
 
 #ifdef CXBX_USE_D3D11
-    pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
+   	pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
 #else
-    hRet = pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
-    if (hRet != D3D_OK) {
-        pCurrentHostBackBuffer->Release();
-        CxbxrAbort("Unable to determine host backbuffer dimensions");
-    }
+   	hRet = pCurrentHostBackBuffer->GetDesc(&g_HostBackBufferDesc);
+   	if (hRet != D3D_OK) {
+   	   	pCurrentHostBackBuffer->Release();
+   	   	CxbxrAbort("Unable to determine host backbuffer dimensions");
+   	}
 #endif
 
-    pCurrentHostBackBuffer->Release();
+   	pCurrentHostBackBuffer->Release();
 }
 
 void SetAspectRatioScale(const xbox::X_D3DPRESENT_PARAMETERS* pPresentationParameters)
 {
-    // NOTE: Some games use anamorphic widesceen (expecting a 4:3 surface to be displayed at 16:9)
-    // For those, we *lie* about the default width, for the scaler
-    // 720p / 1080i are *always* widescreen, and will have the correct backbuffer size, so we only
-    // apply this 'hack' for non-hd resolutions
-    g_AspectRatioScaleWidth = pPresentationParameters->BackBufferWidth;
-    g_AspectRatioScaleHeight = pPresentationParameters->BackBufferHeight;
+   	// NOTE: Some games use anamorphic widesceen (expecting a 4:3 surface to be displayed at 16:9)
+   	// For those, we *lie* about the default width, for the scaler
+   	// 720p / 1080i are *always* widescreen, and will have the correct backbuffer size, so we only
+   	// apply this 'hack' for non-hd resolutions
+   	g_AspectRatioScaleWidth = pPresentationParameters->BackBufferWidth;
+   	g_AspectRatioScaleHeight = pPresentationParameters->BackBufferHeight;
 
-    if (pPresentationParameters->Flags & X_D3DPRESENTFLAG_WIDESCREEN &&
-        pPresentationParameters->BackBufferHeight < 720) {
-        // Lie and pretend we are 1280x720, this works because this ratio is only used in calculations
-        // and not used as actual raw input values
-        g_AspectRatioScaleWidth = 1280;
-        g_AspectRatioScaleHeight = 720;
-    }
-    
-    const auto imageAspect = (float)g_AspectRatioScaleWidth / (float)g_AspectRatioScaleHeight;
-    const auto screenAspect = (float)g_HostBackBufferDesc.Width / (float)g_HostBackBufferDesc.Height;
-    g_AspectRatioScale = screenAspect > imageAspect ? (float)g_HostBackBufferDesc.Height / (float)g_AspectRatioScaleHeight : (float)g_HostBackBufferDesc.Width / (float)g_AspectRatioScaleWidth;
+   	if (pPresentationParameters->Flags & X_D3DPRESENTFLAG_WIDESCREEN &&
+   	   	pPresentationParameters->BackBufferHeight < 720) {
+   	   	// Lie and pretend we are 1280x720, this works because this ratio is only used in calculations
+   	   	// and not used as actual raw input values
+   	   	g_AspectRatioScaleWidth = 1280;
+   	   	g_AspectRatioScaleHeight = 720;
+   	}
+   	
+   	const auto imageAspect = (float)g_AspectRatioScaleWidth / (float)g_AspectRatioScaleHeight;
+   	const auto screenAspect = (float)g_HostBackBufferDesc.Width / (float)g_HostBackBufferDesc.Height;
+   	g_AspectRatioScale = screenAspect > imageAspect ? (float)g_HostBackBufferDesc.Height / (float)g_AspectRatioScaleHeight : (float)g_HostBackBufferDesc.Width / (float)g_AspectRatioScaleWidth;
 }
 
 #define CXBX_D3DMULTISAMPLE_XSCALE(type) (((type) & xbox::X_D3DMULTISAMPLE_XSCALE_MASK) >> xbox::X_D3DMULTISAMPLE_XSCALE_SHIFT)

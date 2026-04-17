@@ -190,15 +190,15 @@ void Direct3D_CreateDevice_Start
 	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-    CxbxVertexShaderSetFlags();
+   	CxbxVertexShaderSetFlags();
 
-    if (!XboxRenderStates.Init()) {
-        CxbxrAbort("Failed to init XboxRenderStates");
-    }
+   	if (!XboxRenderStates.Init()) {
+   	   	CxbxrAbort("Failed to init XboxRenderStates");
+   	}
 
-    if (!XboxTextureStates.Init(&XboxRenderStates)) {
-        CxbxrAbort("Failed to init XboxTextureStates");
-    }
+   	if (!XboxTextureStates.Init(&XboxRenderStates)) {
+   	   	CxbxrAbort("Failed to init XboxTextureStates");
+   	}
 
 	SetXboxMultiSampleType(pPresentationParameters->MultiSampleType);
 
@@ -218,67 +218,67 @@ void Direct3D_CreateDevice_End
 )
 {
 #if 0 // Unused :
-    // Set g_Xbox_D3DDevice to point to the Xbox D3D Device
-    auto it = g_SymbolAddresses.find("D3D_g_pDevice");
-    if (it != g_SymbolAddresses.end()) {
-        g_Xbox_D3DDevice = (DWORD*)it->second;
-    }
-    else {
-        EmuLog(LOG_LEVEL::ERROR2, "D3D_g_pDevice was not found!");
-    }
+   	// Set g_Xbox_D3DDevice to point to the Xbox D3D Device
+   	auto it = g_SymbolAddresses.find("D3D_g_pDevice");
+   	if (it != g_SymbolAddresses.end()) {
+   	   	g_Xbox_D3DDevice = (DWORD*)it->second;
+   	}
+   	else {
+   	   	EmuLog(LOG_LEVEL::ERROR2, "D3D_g_pDevice was not found!");
+   	}
 #endif
 
-    UpdateHostBackBufferDesc();
-    SetAspectRatioScale(pPresentationParameters);
+   	UpdateHostBackBufferDesc();
+   	SetAspectRatioScale(pPresentationParameters);
 
-    // If the Xbox version of CreateDevice didn't call SetRenderTarget, we must derive the default backbuffer ourselves
-    // This works because CreateDevice always sets the current render target to the Xbox Backbuffer
-    // In later XDKs, it does this inline rather than by calling D3DDevice_SetRenderTarget
-    // meaning our patch doesn't always get called in these cases.
-    // We fix the situation by calling the Xbox GetRenderTarget function, which immediately after CreateDevice
-    // WILL always return the Backbuffer!
-    // Test Case: Shin Megami Tensei: Nine
-    if (g_pXbox_BackBufferSurface == xbox::zeroptr && g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
-        // First, log the test case
-        LOG_TEST_CASE("Xbox CreateDevice did not call SetRenderTarget");
-    }
+   	// If the Xbox version of CreateDevice didn't call SetRenderTarget, we must derive the default backbuffer ourselves
+   	// This works because CreateDevice always sets the current render target to the Xbox Backbuffer
+   	// In later XDKs, it does this inline rather than by calling D3DDevice_SetRenderTarget
+   	// meaning our patch doesn't always get called in these cases.
+   	// We fix the situation by calling the Xbox GetRenderTarget function, which immediately after CreateDevice
+   	// WILL always return the Backbuffer!
+   	// Test Case: Shin Megami Tensei: Nine
+   	if (g_pXbox_BackBufferSurface == xbox::zeroptr && g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
+   	   	// First, log the test case
+   	   	LOG_TEST_CASE("Xbox CreateDevice did not call SetRenderTarget");
+   	}
 
-    if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
-        if (XB_TRMP(D3DDevice_GetRenderTarget)) {
-            XB_TRMP(D3DDevice_GetRenderTarget)(&g_pXbox_BackBufferSurface);
-        }
-        else if (XB_TRMP(D3DDevice_GetRenderTarget2)) {
-            g_pXbox_BackBufferSurface = XB_TRMP(D3DDevice_GetRenderTarget2)();
-        }
+   	if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
+   	   	if (XB_TRMP(D3DDevice_GetRenderTarget)) {
+   	   	   	XB_TRMP(D3DDevice_GetRenderTarget)(&g_pXbox_BackBufferSurface);
+   	   	}
+   	   	else if (XB_TRMP(D3DDevice_GetRenderTarget2)) {
+   	   	   	g_pXbox_BackBufferSurface = XB_TRMP(D3DDevice_GetRenderTarget2)();
+   	   	}
 
-        // At this point, g_pXbox_BackBufferSurface should now point to a valid render target
-        // if it still doesn't, we cannot continue without crashing at draw time
-        if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
-            CxbxrAbort("Unable to determine default Xbox backbuffer");
-        }
+   	   	// At this point, g_pXbox_BackBufferSurface should now point to a valid render target
+   	   	// if it still doesn't, we cannot continue without crashing at draw time
+   	   	if (g_pXbox_BackBufferSurface == xbox::zeroptr) {
+   	   	   	CxbxrAbort("Unable to determine default Xbox backbuffer");
+   	   	}
 
-        // Set the backbuffer as the initial rendertarget
-        CxbxImpl_SetRenderTarget(g_pXbox_BackBufferSurface, xbox::zeroptr);
-    }
+   	   	// Set the backbuffer as the initial rendertarget
+   	   	CxbxImpl_SetRenderTarget(g_pXbox_BackBufferSurface, xbox::zeroptr);
+   	}
 
-    // Now do the same, but for the default depth stencil surface
-    if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
-        if (XB_TRMP(D3DDevice_GetDepthStencilSurface)) {
-            XB_TRMP(D3DDevice_GetDepthStencilSurface)(&g_pXbox_DefaultDepthStencilSurface);
-        }
-        else if (XB_TRMP(D3DDevice_GetDepthStencilSurface2)) {
-            g_pXbox_DefaultDepthStencilSurface = XB_TRMP(D3DDevice_GetDepthStencilSurface2)();
-        }
+   	// Now do the same, but for the default depth stencil surface
+   	if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
+   	   	if (XB_TRMP(D3DDevice_GetDepthStencilSurface)) {
+   	   	   	XB_TRMP(D3DDevice_GetDepthStencilSurface)(&g_pXbox_DefaultDepthStencilSurface);
+   	   	}
+   	   	else if (XB_TRMP(D3DDevice_GetDepthStencilSurface2)) {
+   	   	   	g_pXbox_DefaultDepthStencilSurface = XB_TRMP(D3DDevice_GetDepthStencilSurface2)();
+   	   	}
 
-        // At this point, g_pXbox_DefaultDepthStencilSurface should now point to a valid depth stencil
-        // If it doesn't, just log and carry on: Unlike RenderTarget, this situation is not fatal
-        if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
-            LOG_TEST_CASE("Unable to determine default Xbox depth stencil");
-        } else {
-            // Update only the depth stencil
-            CxbxImpl_SetRenderTarget(xbox::zeroptr, g_pXbox_DefaultDepthStencilSurface);
-        }
-    }
+   	   	// At this point, g_pXbox_DefaultDepthStencilSurface should now point to a valid depth stencil
+   	   	// If it doesn't, just log and carry on: Unlike RenderTarget, this situation is not fatal
+   	   	if (g_pXbox_DefaultDepthStencilSurface == xbox::zeroptr) {
+   	   	   	LOG_TEST_CASE("Unable to determine default Xbox depth stencil");
+   	   	} else {
+   	   	   	// Update only the depth stencil
+   	   	   	CxbxImpl_SetRenderTarget(xbox::zeroptr, g_pXbox_DefaultDepthStencilSurface);
+   	   	}
+   	}
 }
 
 // Called by D3DDevice_DrawIndexedVertices and EmuExecutePushBufferRaw (twice)
@@ -539,7 +539,7 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
 
 	IDirect3DSurface* pHostSurface = GetHostSurface(pBaseTexture);
 	if (!pHostSurface) {
-        LOG_TEST_CASE("Failed to get host surface");
+   	   	LOG_TEST_CASE("Failed to get host surface");
 		return nullptr;
 	}
 
@@ -551,7 +551,7 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
 #else
 	IDirect3DBaseTexture* pNewHostBaseTexture = nullptr;
 	auto hRet = pHostSurface->GetContainer(IID_PPV_ARGS(&pNewHostBaseTexture)); // TODO : pNewHostBaseTexture.GetAddressOf() ?
-    DEBUG_D3DRESULT(hRet, "pHostSurface->GetContainer");
+   	DEBUG_D3DRESULT(hRet, "pHostSurface->GetContainer");
 
 	if (FAILED(hRet)) {
 		LOG_TEST_CASE("Failed to get Texture from Surface");

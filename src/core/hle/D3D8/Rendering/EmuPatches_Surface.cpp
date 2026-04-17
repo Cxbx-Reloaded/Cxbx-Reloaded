@@ -82,9 +82,9 @@ __declspec(naked) xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuf
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer)
 (
-    int_xt                BackBuffer,
-    D3DBACKBUFFER_TYPE    Type,
-    X_D3DSurface        **ppBackBuffer
+   	int_xt                BackBuffer,
+   	D3DBACKBUFFER_TYPE    Type,
+   	X_D3DSurface        **ppBackBuffer
 )
 {
 	LOG_FORWARD("D3DDevice_GetBackBuffer2");
@@ -105,8 +105,8 @@ static void D3DDevice_GetBackBuffer_8__LTCG_eax1()
 // This uses a custom calling convention where parameter is passed in EAX
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer_8__LTCG_eax1)
 (
-    D3DBACKBUFFER_TYPE Type,
-    X_D3DSurface     **ppBackBuffer
+   	D3DBACKBUFFER_TYPE Type,
+   	X_D3DSurface     **ppBackBuffer
 )
 {
 	int_xt BackBuffer;
@@ -128,12 +128,12 @@ __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer_8_
 
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 (
-    dword_xt           Count,
-    CONST X_D3DRECT   *pRects,
-    dword_xt           Flags,
+   	dword_xt           Count,
+   	CONST X_D3DRECT   *pRects,
+   	dword_xt           Flags,
 	X_D3DCOLOR         Color,
-    float              Z,
-    dword_xt           Stencil
+   	float              Z,
+   	dword_xt           Stencil
 )
 {
 	LOG_FUNC_BEGIN
@@ -150,8 +150,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 	// Clear requires the Xbox viewport to be applied
 	CxbxUpdateNativeD3DResources();
 
-    // make adjustments to parameters to make sense with windows d3d
-    {
+   	// make adjustments to parameters to make sense with windows d3d
+   	{
 		if (Flags & X_D3DCLEAR_TARGET) {
 			// TODO: D3DCLEAR_TARGET_A, *R, *G, *B don't exist on windows
 			if ((Flags & X_D3DCLEAR_TARGET) != X_D3DCLEAR_TARGET)
@@ -160,7 +160,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 			HostFlags |= D3DCLEAR_TARGET;
 		}
 
-        // Do not needlessly clear Z Buffer
+   	   	// Do not needlessly clear Z Buffer
 		if (Flags & X_D3DCLEAR_ZBUFFER) {
 			if (g_bHasDepth)
 				HostFlags |= D3DCLEAR_ZBUFFER;
@@ -179,28 +179,28 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 				EmuLog(LOG_LEVEL::WARNING, "Unsupported : D3DCLEAR_STENCIL flag for D3DDevice_Clear without ZBuffer");
 		}
 
-        if(Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL))
-            EmuLog(LOG_LEVEL::WARNING, "Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
-    }
+   	   	if(Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL))
+   	   	   	EmuLog(LOG_LEVEL::WARNING, "Unsupported Flag(s) for D3DDevice_Clear : 0x%.08X", Flags & ~(X_D3DCLEAR_TARGET | X_D3DCLEAR_ZBUFFER | X_D3DCLEAR_STENCIL));
+   	}
 
-    if (Count > 0 && pRects != nullptr) {
-        // Scale the fill based on our scale factor and MSAA scale
+   	if (Count > 0 && pRects != nullptr) {
+   	   	// Scale the fill based on our scale factor and MSAA scale
 		float aaX, aaY;
 		GetMultiSampleScaleRaw(aaX, aaY);
 		float Xscale = aaX * g_RenderUpscaleFactor;
 		float Yscale = aaY * g_RenderUpscaleFactor;
 
-        std::vector<D3DRECT> rects(Count);
-        for (DWORD i = 0; i < Count; i++) {
-            rects[i]._9_11(x1, left) = static_cast<LONG>(pRects[i].x1 * Xscale);
-            rects[i]._9_11(x2, right) = static_cast<LONG>(pRects[i].x2 * Xscale);
-            rects[i]._9_11(y1, top) = static_cast<LONG>(pRects[i].y1 * Yscale);
-            rects[i]._9_11(y2, bottom) = static_cast<LONG>(pRects[i].y2 * Yscale);
+   	   	std::vector<D3DRECT> rects(Count);
+   	   	for (DWORD i = 0; i < Count; i++) {
+   	   	   	rects[i]._9_11(x1, left) = static_cast<LONG>(pRects[i].x1 * Xscale);
+   	   	   	rects[i]._9_11(x2, right) = static_cast<LONG>(pRects[i].x2 * Xscale);
+   	   	   	rects[i]._9_11(y1, top) = static_cast<LONG>(pRects[i].y1 * Yscale);
+   	   	   	rects[i]._9_11(y2, bottom) = static_cast<LONG>(pRects[i].y2 * Yscale);
 		}
-        CxbxD3DClear(Count, rects.data(), HostFlags, Color, Z, Stencil);
-    } else {
+   	   	CxbxD3DClear(Count, rects.data(), HostFlags, Color, Z, Stencil);
+   	} else {
 		CxbxD3DClear(Count, reinterpret_cast<const D3DRECT*>(pRects), HostFlags, Color, Z, Stencil);
-    }
+   	}
 }
 
 
@@ -209,111 +209,111 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Clear)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 (
-    X_D3DSurface*  pSourceSurface,
-    CONST X_RECT*  pSourceRectsArray,
-    uint_xt        cRects,
-    X_D3DSurface*  pDestinationSurface,
-    CONST X_POINT* pDestPointsArray
+   	X_D3DSurface*  pSourceSurface,
+   	CONST X_RECT*  pSourceRectsArray,
+   	uint_xt        cRects,
+   	X_D3DSurface*  pDestinationSurface,
+   	CONST X_POINT* pDestPointsArray
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pSourceSurface);
-        LOG_FUNC_ARG(pSourceRectsArray);
-        LOG_FUNC_ARG(cRects);
-        LOG_FUNC_ARG(pDestinationSurface);
-        LOG_FUNC_ARG(pDestPointsArray);
-    LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(pSourceSurface);
+   	   	LOG_FUNC_ARG(pSourceRectsArray);
+   	   	LOG_FUNC_ARG(cRects);
+   	   	LOG_FUNC_ARG(pDestinationSurface);
+   	   	LOG_FUNC_ARG(pDestPointsArray);
+   	LOG_FUNC_END;
 
-    // We skip the trampoline to prevent unnecessary work
-    // As our surfaces remain on the GPU, calling the trampoline would just
-    // result in a memcpy from an empty Xbox surface to another empty Xbox Surface
-    auto pHostSourceSurface = GetHostSurface(pSourceSurface);
-    auto pHostDestSurface = GetHostSurface(pDestinationSurface);
+   	// We skip the trampoline to prevent unnecessary work
+   	// As our surfaces remain on the GPU, calling the trampoline would just
+   	// result in a memcpy from an empty Xbox surface to another empty Xbox Surface
+   	auto pHostSourceSurface = GetHostSurface(pSourceSurface);
+   	auto pHostDestSurface = GetHostSurface(pDestinationSurface);
 
-    if (pHostSourceSurface == nullptr || pHostDestSurface == nullptr) {
-        // Test Case: DOA2 attempts to copy from an index buffer resource type
-        // TODO: What should we do here?
-        LOG_TEST_CASE("D3DDevice-CopyRects: Failed to fetch host surfaces");
-        return;
-    }
+   	if (pHostSourceSurface == nullptr || pHostDestSurface == nullptr) {
+   	   	// Test Case: DOA2 attempts to copy from an index buffer resource type
+   	   	// TODO: What should we do here?
+   	   	LOG_TEST_CASE("D3DDevice-CopyRects: Failed to fetch host surfaces");
+   	   	return;
+   	}
 
 	D3DSurfaceDesc hostSourceDesc, hostDestDesc;
-    pHostSourceSurface->GetDesc(&hostSourceDesc);
-    pHostDestSurface->GetDesc(&hostDestDesc);
+   	pHostSourceSurface->GetDesc(&hostSourceDesc);
+   	pHostDestSurface->GetDesc(&hostDestDesc);
 
-    // If the source is a render-target and the destination is not, we need force it to be re-created as one
-    // This is because StrechRects cannot copy from a Render-Target to a Non-Render Target
-    // Test Case: Crash Bandicoot: Wrath of Cortex attemps to copy the render-target to a texture
-    // This fixes an issue on the pause screen where the screenshot of the current scene was not displayed correctly
-    if ((hostSourceDesc.Usage & D3DUSAGE_RENDERTARGET) != 0 && (hostDestDesc.Usage & D3DUSAGE_RENDERTARGET) == 0) {
-        pHostDestSurface = GetHostSurface(pDestinationSurface, D3DUSAGE_RENDERTARGET);
-        pHostDestSurface->GetDesc(&hostDestDesc);
-    }
+   	// If the source is a render-target and the destination is not, we need force it to be re-created as one
+   	// This is because StrechRects cannot copy from a Render-Target to a Non-Render Target
+   	// Test Case: Crash Bandicoot: Wrath of Cortex attemps to copy the render-target to a texture
+   	// This fixes an issue on the pause screen where the screenshot of the current scene was not displayed correctly
+   	if ((hostSourceDesc.Usage & D3DUSAGE_RENDERTARGET) != 0 && (hostDestDesc.Usage & D3DUSAGE_RENDERTARGET) == 0) {
+   	   	pHostDestSurface = GetHostSurface(pDestinationSurface, D3DUSAGE_RENDERTARGET);
+   	   	pHostDestSurface->GetDesc(&hostDestDesc);
+   	}
 
-    // If no rectangles were given, default to 1 (entire surface)
-    if (cRects == 0) {
-        cRects = 1;
-    }
+   	// If no rectangles were given, default to 1 (entire surface)
+   	if (cRects == 0) {
+   	   	cRects = 1;
+   	}
 
-    // Get Xbox surface dimensions
-    // Host resources may be scaled so we'll account for that later
-    auto xboxSourceWidth = GetPixelContainerWidth(pSourceSurface);
-    auto xboxSourceHeight = GetPixelContainerHeight(pSourceSurface);
-    auto xboxDestWidth = GetPixelContainerWidth(pDestinationSurface);
-    auto xboxDestHeight = GetPixelContainerHeight(pDestinationSurface);
+   	// Get Xbox surface dimensions
+   	// Host resources may be scaled so we'll account for that later
+   	auto xboxSourceWidth = GetPixelContainerWidth(pSourceSurface);
+   	auto xboxSourceHeight = GetPixelContainerHeight(pSourceSurface);
+   	auto xboxDestWidth = GetPixelContainerWidth(pDestinationSurface);
+   	auto xboxDestHeight = GetPixelContainerHeight(pDestinationSurface);
 
-    for (UINT i = 0; i < cRects; i++) {
-        RECT SourceRect, DestRect;
+   	for (UINT i = 0; i < cRects; i++) {
+   	   	RECT SourceRect, DestRect;
 
-        if (pSourceRectsArray != nullptr) {
-            SourceRect.left = pSourceRectsArray[i].left;
-            SourceRect.right = pSourceRectsArray[i].right;
-            SourceRect.top = pSourceRectsArray[i].top;
-            SourceRect.bottom = pSourceRectsArray[i].bottom;
-        } else {
-            SourceRect.left = 0;
-            SourceRect.right = xboxSourceWidth;
-            SourceRect.top = 0;
-            SourceRect.bottom = xboxSourceHeight;
-        }
+   	   	if (pSourceRectsArray != nullptr) {
+   	   	   	SourceRect.left = pSourceRectsArray[i].left;
+   	   	   	SourceRect.right = pSourceRectsArray[i].right;
+   	   	   	SourceRect.top = pSourceRectsArray[i].top;
+   	   	   	SourceRect.bottom = pSourceRectsArray[i].bottom;
+   	   	} else {
+   	   	   	SourceRect.left = 0;
+   	   	   	SourceRect.right = xboxSourceWidth;
+   	   	   	SourceRect.top = 0;
+   	   	   	SourceRect.bottom = xboxSourceHeight;
+   	   	}
 
-        if (pDestPointsArray != nullptr) {
-            DestRect.left = pDestPointsArray[i].x;
-            DestRect.right = DestRect.left + (SourceRect.right - SourceRect.left);
-            DestRect.top = pDestPointsArray[i].y;
-            DestRect.bottom = DestRect.top + (SourceRect.bottom - SourceRect.top);
-        } else if (pSourceRectsArray) {
-            DestRect = SourceRect;
-        } else {
-            DestRect.left = 0;
-            DestRect.right = xboxDestWidth;
-            DestRect.top = 0;
-            DestRect.bottom = xboxDestHeight;
-        }
+   	   	if (pDestPointsArray != nullptr) {
+   	   	   	DestRect.left = pDestPointsArray[i].x;
+   	   	   	DestRect.right = DestRect.left + (SourceRect.right - SourceRect.left);
+   	   	   	DestRect.top = pDestPointsArray[i].y;
+   	   	   	DestRect.bottom = DestRect.top + (SourceRect.bottom - SourceRect.top);
+   	   	} else if (pSourceRectsArray) {
+   	   	   	DestRect = SourceRect;
+   	   	} else {
+   	   	   	DestRect.left = 0;
+   	   	   	DestRect.right = xboxDestWidth;
+   	   	   	DestRect.top = 0;
+   	   	   	DestRect.bottom = xboxDestHeight;
+   	   	}
 
-        // Scale the source and destination rects
-        auto sourceScaleX = (uint32_t)hostSourceDesc.Width / xboxSourceWidth;
-        auto sourceScaleY = (uint32_t)hostSourceDesc.Height / xboxSourceHeight;
+   	   	// Scale the source and destination rects
+   	   	auto sourceScaleX = (uint32_t)hostSourceDesc.Width / xboxSourceWidth;
+   	   	auto sourceScaleY = (uint32_t)hostSourceDesc.Height / xboxSourceHeight;
 
-        SourceRect.left *= sourceScaleX;
-        SourceRect.right *= sourceScaleX;
-        SourceRect.top *= sourceScaleY;
-        SourceRect.bottom *= sourceScaleY;
+   	   	SourceRect.left *= sourceScaleX;
+   	   	SourceRect.right *= sourceScaleX;
+   	   	SourceRect.top *= sourceScaleY;
+   	   	SourceRect.bottom *= sourceScaleY;
 
-        auto destScaleX = (uint32_t) hostDestDesc.Width / xboxDestWidth;
-        auto destScaleY = (uint32_t) hostDestDesc.Height / xboxDestHeight;
+   	   	auto destScaleX = (uint32_t) hostDestDesc.Width / xboxDestWidth;
+   	   	auto destScaleY = (uint32_t) hostDestDesc.Height / xboxDestHeight;
 
-        DestRect.left *= destScaleX;
-        DestRect.right *= destScaleX;
-        DestRect.top *= destScaleY;
-        DestRect.bottom *= destScaleY;
+   	   	DestRect.left *= destScaleX;
+   	   	DestRect.right *= destScaleX;
+   	   	DestRect.top *= destScaleY;
+   	   	DestRect.bottom *= destScaleY;
 
-        HRESULT hRet;
-        hRet = CxbxBltSurface(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
-        if (FAILED(hRet)) {
-            LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
-        }
-    }
+   	   	HRESULT hRet;
+   	   	hRet = CxbxBltSurface(pHostSourceSurface, &SourceRect, pHostDestSurface, &DestRect, D3DTEXF_LINEAR);
+   	   	if (FAILED(hRet)) {
+   	   	   	LOG_TEST_CASE("D3DDevice_CopyRects: Failed to copy surface");
+   	   	}
+   	}
 }
 
 // CXBX_SWAP_PRESENT_FORWARD is now defined in RenderGlobals.h
@@ -323,10 +323,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_CopyRects)
 // ******************************************************************
 xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_Present)
 (
-    CONST X_RECT* pSourceRect,
-    CONST X_RECT* pDestRect,
-    PVOID         pDummy1,
-    PVOID         pDummy2
+   	CONST X_RECT* pSourceRect,
+   	CONST X_RECT* pDestRect,
+   	PVOID         pDummy1,
+   	PVOID         pDummy2
 )
 {
 	// LOG_FORWARD("D3DDevice_Swap");
@@ -348,20 +348,20 @@ __declspec(naked) xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap_0__LTCG_ea
 (
 )
 {
-    dword_xt Flags;
+   	dword_xt Flags;
 	dword_xt result;
-    __asm {
-        LTCG_PROLOGUE
-        mov  Flags, eax
-    }
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  Flags, eax
+   	}
 
-    result = EMUPATCH(D3DDevice_Swap)(Flags);
+   	result = EMUPATCH(D3DDevice_Swap)(Flags);
 
-    __asm {
+   	__asm {
 		mov  eax, result
-        LTCG_EPILOGUE
-        ret
-    }
+   	   	LTCG_EPILOGUE
+   	   	ret
+   	}
 }
 
 // ******************************************************************
@@ -411,53 +411,53 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	if (hRet == D3D_OK) {
 		assert(pCurrentHostBackBuffer != nullptr);
 
-        // Clear the backbuffer surface, this prevents artifacts when switching aspect-ratio
-        // Test-case: Dashboard
-        IDirect3DSurface* pExistingRenderTarget = CxbxGetCurrentRenderTarget();
-        if (pExistingRenderTarget) {
-            (void)CxbxSetRenderTarget(pCurrentHostBackBuffer);
-            CxbxD3DClear(
-                /*Count=*/0,
-                /*pRects=*/nullptr,
-                D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
-                /*Color=*/0xFF000000, // TODO : Use constant for this
-                /*Z=*/g_bHasDepth ? 1.0f : 0.0f,
-                /*Stencil=*/0);
-            (void)CxbxSetRenderTarget(pExistingRenderTarget);
+   	   	// Clear the backbuffer surface, this prevents artifacts when switching aspect-ratio
+   	   	// Test-case: Dashboard
+   	   	IDirect3DSurface* pExistingRenderTarget = CxbxGetCurrentRenderTarget();
+   	   	if (pExistingRenderTarget) {
+   	   	   	(void)CxbxSetRenderTarget(pCurrentHostBackBuffer);
+   	   	   	CxbxD3DClear(
+   	   	   	   	/*Count=*/0,
+   	   	   	   	/*pRects=*/nullptr,
+   	   	   	   	D3DCLEAR_TARGET | (g_bHasDepth ? D3DCLEAR_ZBUFFER : 0) | (g_bHasStencil ? D3DCLEAR_STENCIL : 0),
+   	   	   	   	/*Color=*/0xFF000000, // TODO : Use constant for this
+   	   	   	   	/*Z=*/g_bHasDepth ? 1.0f : 0.0f,
+   	   	   	   	/*Stencil=*/0);
+   	   	   	(void)CxbxSetRenderTarget(pExistingRenderTarget);
 #ifndef CXBX_USE_D3D11
-            pExistingRenderTarget->Release();
+   	   	   	pExistingRenderTarget->Release();
 #endif
-        }
-        
-        // TODO: Implement a hot-key to change the filter?
-        // Note: LoadSurfaceFilter Must be D3DTEXF_NONE, D3DTEXF_POINT or D3DTEXF_LINEAR
-        // Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
-        // Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
-        // LoadOverlayFilter must be a D3DX filter DWORD value
-        const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_LINEAR;
-        const DWORD LoadOverlayFilter = D3DX_DEFAULT;
+   	   	}
+   	   	
+   	   	// TODO: Implement a hot-key to change the filter?
+   	   	// Note: LoadSurfaceFilter Must be D3DTEXF_NONE, D3DTEXF_POINT or D3DTEXF_LINEAR
+   	   	// Before StretchRects we used D3DX_FILTER_POINT here, but that gave jagged edges in Dashboard.
+   	   	// Dxbx note : D3DX_FILTER_LINEAR gives a smoother image, but 'bleeds' across borders
+   	   	// LoadOverlayFilter must be a D3DX filter DWORD value
+   	   	const D3DTEXTUREFILTERTYPE LoadSurfaceFilter = D3DTEXF_LINEAR;
+   	   	const DWORD LoadOverlayFilter = D3DX_DEFAULT;
 
-        // Use backbuffer width/height since that may differ from the Window size
-        const auto width = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleWidth * g_AspectRatioScale : g_HostBackBufferDesc.Width;
-        const auto height = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleHeight * g_AspectRatioScale : g_HostBackBufferDesc.Height;
+   	   	// Use backbuffer width/height since that may differ from the Window size
+   	   	const auto width = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleWidth * g_AspectRatioScale : g_HostBackBufferDesc.Width;
+   	   	const auto height = g_XBVideo.bMaintainAspect ? g_AspectRatioScaleHeight * g_AspectRatioScale : g_HostBackBufferDesc.Height;
 
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
-            // Calculate the centered rectangle
-            RECT dest{};
-            dest.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
-            dest.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
-            dest.right = (LONG)(dest.left + width);
-            dest.bottom = (LONG)(dest.top + height);
+   	   	   	// Calculate the centered rectangle
+   	   	   	RECT dest{};
+   	   	   	dest.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
+   	   	   	dest.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
+   	   	   	dest.right = (LONG)(dest.left + width);
+   	   	   	dest.bottom = (LONG)(dest.top + height);
 
-            // Blit Xbox BackBuffer to host BackBuffer
-            hRet = CxbxBltSurface(
-                /* pSrc = */ pXboxBackBufferHostSurface,
-                /* pSrcRect = */ nullptr,
-                /* pDst = */ pCurrentHostBackBuffer,
-                /* pDstRect = */ &dest,
-                /* Filter = */ LoadSurfaceFilter
-            );
+   	   	   	// Blit Xbox BackBuffer to host BackBuffer
+   	   	   	hRet = CxbxBltSurface(
+   	   	   	   	/* pSrc = */ pXboxBackBufferHostSurface,
+   	   	   	   	/* pSrcRect = */ nullptr,
+   	   	   	   	/* pDst = */ pCurrentHostBackBuffer,
+   	   	   	   	/* pDstRect = */ &dest,
+   	   	   	   	/* Filter = */ LoadSurfaceFilter
+   	   	   	);
 		
 			if (hRet != D3D_OK) {
 				EmuLog(LOG_LEVEL::WARNING, "Couldn't blit Xbox BackBuffer to host BackBuffer : %X", hRet);
@@ -500,8 +500,8 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 				0, // dwMipMapLevel
 				&OverlayWidth, &OverlayHeight, &OverlayDepth, &OverlayRowPitch, &OverlaySlicePitch);
 
-            RECT EmuSourRect = { 0 };
-            RECT EmuDestRect = { 0 };
+   	   	   	RECT EmuSourRect = { 0 };
+   	   	   	RECT EmuDestRect = { 0 };
 
 			if (g_OverlayProxy.SrcRect.right > 0) {
 				EmuSourRect = g_OverlayProxy.SrcRect;
@@ -514,36 +514,36 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 				// If there's a destination rectangle given, copy that into our local variable :
 				EmuDestRect = g_OverlayProxy.DstRect;
 
-                // Make sure to scale the values based on the difference between the Xbox and Host backbuffer
-                // We can't use the scale factor here because we are blitting directly to the host backbuffer
-                // NOT an Xbox surface!
-                DWORD XboxBackBufferWidth = GetPixelContainerWidth(g_pXbox_BackBufferSurface);
-                DWORD XboxBackBufferHeight = GetPixelContainerHeight(g_pXbox_BackBufferSurface);
+   	   	   	   	// Make sure to scale the values based on the difference between the Xbox and Host backbuffer
+   	   	   	   	// We can't use the scale factor here because we are blitting directly to the host backbuffer
+   	   	   	   	// NOT an Xbox surface!
+   	   	   	   	DWORD XboxBackBufferWidth = GetPixelContainerWidth(g_pXbox_BackBufferSurface);
+   	   	   	   	DWORD XboxBackBufferHeight = GetPixelContainerHeight(g_pXbox_BackBufferSurface);
 
 				// We also need to account for any MSAA which may have enlarged the Xbox Backbuffer
 				float xScale, yScale;
 				GetMultiSampleScaleRaw(xScale, yScale);
 
-                xScale = (float)width / ((float)XboxBackBufferWidth / xScale);
-                yScale = (float)height / ((float)XboxBackBufferHeight / yScale);
+   	   	   	   	xScale = (float)width / ((float)XboxBackBufferWidth / xScale);
+   	   	   	   	yScale = (float)height / ((float)XboxBackBufferHeight / yScale);
 
-                // Scale the destination co-ordinates by the correct scale factor
-                EmuDestRect.top = (LONG)(EmuDestRect.top * yScale);
-                EmuDestRect.left = (LONG)(EmuDestRect.left * xScale);
-                EmuDestRect.bottom = (LONG)(EmuDestRect.bottom * yScale);
-                EmuDestRect.right = (LONG)(EmuDestRect.right * xScale);
+   	   	   	   	// Scale the destination co-ordinates by the correct scale factor
+   	   	   	   	EmuDestRect.top = (LONG)(EmuDestRect.top * yScale);
+   	   	   	   	EmuDestRect.left = (LONG)(EmuDestRect.left * xScale);
+   	   	   	   	EmuDestRect.bottom = (LONG)(EmuDestRect.bottom * yScale);
+   	   	   	   	EmuDestRect.right = (LONG)(EmuDestRect.right * xScale);
 
-                // Finally, adjust to correct on-screen position (
-                EmuDestRect.top += (LONG)((g_HostBackBufferDesc.Height - height) / 2);
-                EmuDestRect.left += (LONG)((g_HostBackBufferDesc.Width - width) / 2);
-                EmuDestRect.right += (LONG)((g_HostBackBufferDesc.Width - width) / 2);
-                EmuDestRect.bottom += (LONG)((g_HostBackBufferDesc.Height - height) / 2);
+   	   	   	   	// Finally, adjust to correct on-screen position (
+   	   	   	   	EmuDestRect.top += (LONG)((g_HostBackBufferDesc.Height - height) / 2);
+   	   	   	   	EmuDestRect.left += (LONG)((g_HostBackBufferDesc.Width - width) / 2);
+   	   	   	   	EmuDestRect.right += (LONG)((g_HostBackBufferDesc.Width - width) / 2);
+   	   	   	   	EmuDestRect.bottom += (LONG)((g_HostBackBufferDesc.Height - height) / 2);
 			} else {
-                // Calculate the centered rectangle
-                EmuDestRect.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
-                EmuDestRect.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
-                EmuDestRect.right = (LONG)(EmuDestRect.left + width);
-                EmuDestRect.bottom = (LONG)(EmuDestRect.top + height);
+   	   	   	   	// Calculate the centered rectangle
+   	   	   	   	EmuDestRect.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
+   	   	   	   	EmuDestRect.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
+   	   	   	   	EmuDestRect.right = (LONG)(EmuDestRect.left + width);
+   	   	   	   	EmuDestRect.bottom = (LONG)(EmuDestRect.top + height);
 			}
 
 			// load the YUY2 into the backbuffer
@@ -562,115 +562,115 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 				}
 			}
 
-            // Create a temporary surface to hold the overlay
-            // This is faster than loading directly into the backbuffer because it offloads scaling to the GPU
-            // Without this, upscaling tanks the frame-rate!
+   	   	   	// Create a temporary surface to hold the overlay
+   	   	   	// This is faster than loading directly into the backbuffer because it offloads scaling to the GPU
+   	   	   	// Without this, upscaling tanks the frame-rate!
 #ifdef CXBX_USE_D3D11
-            // D3D11 overlay: convert YUY2→ARGB, upload to a default texture, then blit to backbuffer
-            HRESULT hRet = E_FAIL;
-            {
-                D3D11_TEXTURE2D_DESC texDesc = {};
-                texDesc.Width = OverlayWidth;
-                texDesc.Height = OverlayHeight;
-                texDesc.MipLevels = 1;
-                texDesc.ArraySize = 1;
-                texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-                texDesc.SampleDesc.Count = 1;
-                texDesc.Usage = D3D11_USAGE_DEFAULT;
-                texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+   	   	   	// D3D11 overlay: convert YUY2→ARGB, upload to a default texture, then blit to backbuffer
+   	   	   	HRESULT hRet = E_FAIL;
+   	   	   	{
+   	   	   	   	D3D11_TEXTURE2D_DESC texDesc = {};
+   	   	   	   	texDesc.Width = OverlayWidth;
+   	   	   	   	texDesc.Height = OverlayHeight;
+   	   	   	   	texDesc.MipLevels = 1;
+   	   	   	   	texDesc.ArraySize = 1;
+   	   	   	   	texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+   	   	   	   	texDesc.SampleDesc.Count = 1;
+   	   	   	   	texDesc.Usage = D3D11_USAGE_DEFAULT;
+   	   	   	   	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
-                // Convert YUY2 source to ARGB in a temporary CPU buffer
-                const UINT argbRowPitch = OverlayWidth * 4;
-                uint8_t* argbBuf = new uint8_t[argbRowPitch * OverlayHeight];
-                const uint8_t* pSrcRow = pOverlayData;
-                uint8_t* pDstRow = argbBuf;
-                if (PCFormat == EMUFMT_YUY2) {
-                    for (UINT row = 0; row < OverlayHeight; row++) {
-                        ____YUY2ToARGBRow_C(pSrcRow, pDstRow, OverlayWidth);
-                        pSrcRow += OverlayRowPitch;
-                        pDstRow += argbRowPitch;
-                    }
-                } else {
-                    // Non-YUY2 overlay (rare) - copy raw data assuming ARGB-compatible format
-                    for (UINT row = 0; row < OverlayHeight; row++) {
-                        memcpy(pDstRow, pSrcRow, argbRowPitch);
-                        pSrcRow += OverlayRowPitch;
-                        pDstRow += argbRowPitch;
-                    }
-                }
+   	   	   	   	// Convert YUY2 source to ARGB in a temporary CPU buffer
+   	   	   	   	const UINT argbRowPitch = OverlayWidth * 4;
+   	   	   	   	uint8_t* argbBuf = new uint8_t[argbRowPitch * OverlayHeight];
+   	   	   	   	const uint8_t* pSrcRow = pOverlayData;
+   	   	   	   	uint8_t* pDstRow = argbBuf;
+   	   	   	   	if (PCFormat == EMUFMT_YUY2) {
+   	   	   	   	   	for (UINT row = 0; row < OverlayHeight; row++) {
+   	   	   	   	   	   	____YUY2ToARGBRow_C(pSrcRow, pDstRow, OverlayWidth);
+   	   	   	   	   	   	pSrcRow += OverlayRowPitch;
+   	   	   	   	   	   	pDstRow += argbRowPitch;
+   	   	   	   	   	}
+   	   	   	   	} else {
+   	   	   	   	   	// Non-YUY2 overlay (rare) - copy raw data assuming ARGB-compatible format
+   	   	   	   	   	for (UINT row = 0; row < OverlayHeight; row++) {
+   	   	   	   	   	   	memcpy(pDstRow, pSrcRow, argbRowPitch);
+   	   	   	   	   	   	pSrcRow += OverlayRowPitch;
+   	   	   	   	   	   	pDstRow += argbRowPitch;
+   	   	   	   	   	}
+   	   	   	   	}
 
-                D3D11_SUBRESOURCE_DATA initData = {};
-                initData.pSysMem = argbBuf;
-                initData.SysMemPitch = argbRowPitch;
+   	   	   	   	D3D11_SUBRESOURCE_DATA initData = {};
+   	   	   	   	initData.pSysMem = argbBuf;
+   	   	   	   	initData.SysMemPitch = argbRowPitch;
 
-                ID3D11Texture2D* pOverlayTex = nullptr;
-                hRet = g_pD3DDevice->CreateTexture2D(&texDesc, &initData, &pOverlayTex);
-                if (SUCCEEDED(hRet) && pOverlayTex) {
-                    // Blit overlay to backbuffer (handles scaling via CxbxD3D11Blt)
-                    RECT doNotScaleRect = { 0, 0, (LONG)OverlayWidth, (LONG)OverlayHeight };
-                    hRet = CxbxBltSurface(
-                        pOverlayTex, &doNotScaleRect,
-                        pCurrentHostBackBuffer, &EmuDestRect,
-                        D3DTEXF_LINEAR);
-                    pOverlayTex->Release();
-                }
+   	   	   	   	ID3D11Texture2D* pOverlayTex = nullptr;
+   	   	   	   	hRet = g_pD3DDevice->CreateTexture2D(&texDesc, &initData, &pOverlayTex);
+   	   	   	   	if (SUCCEEDED(hRet) && pOverlayTex) {
+   	   	   	   	   	// Blit overlay to backbuffer (handles scaling via CxbxD3D11Blt)
+   	   	   	   	   	RECT doNotScaleRect = { 0, 0, (LONG)OverlayWidth, (LONG)OverlayHeight };
+   	   	   	   	   	hRet = CxbxBltSurface(
+   	   	   	   	   	   	pOverlayTex, &doNotScaleRect,
+   	   	   	   	   	   	pCurrentHostBackBuffer, &EmuDestRect,
+   	   	   	   	   	   	D3DTEXF_LINEAR);
+   	   	   	   	   	pOverlayTex->Release();
+   	   	   	   	}
 
-                delete[] argbBuf;
+   	   	   	   	delete[] argbBuf;
 
-                if (FAILED(hRet)) {
-                    EmuLog(LOG_LEVEL::WARNING, "UpdateOverlay: D3D11 overlay rendering failed : %X", hRet);
-                }
-            }
+   	   	   	   	if (FAILED(hRet)) {
+   	   	   	   	   	EmuLog(LOG_LEVEL::WARNING, "UpdateOverlay: D3D11 overlay rendering failed : %X", hRet);
+   	   	   	   	}
+   	   	   	}
 #else
-            IDirect3DSurface* pTemporaryOverlaySurface;
-            HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
-                OverlayWidth,
-                OverlayHeight,
-                EMUFMT_A8R8G8B8,
-                D3DPOOL_DEFAULT,
-                &pTemporaryOverlaySurface,
-                nullptr
-            );
+   	   	   	IDirect3DSurface* pTemporaryOverlaySurface;
+   	   	   	HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
+   	   	   	   	OverlayWidth,
+   	   	   	   	OverlayHeight,
+   	   	   	   	EMUFMT_A8R8G8B8,
+   	   	   	   	D3DPOOL_DEFAULT,
+   	   	   	   	&pTemporaryOverlaySurface,
+   	   	   	   	nullptr
+   	   	   	);
 
-            if (FAILED(hRet)) {
-                EmuLog(LOG_LEVEL::WARNING, "Couldn't create temporary overlay surface : %X", hRet);
-            } else {
-                RECT doNotScaleRect = { 0, 0, (LONG)OverlayWidth, (LONG)OverlayHeight };
+   	   	   	if (FAILED(hRet)) {
+   	   	   	   	EmuLog(LOG_LEVEL::WARNING, "Couldn't create temporary overlay surface : %X", hRet);
+   	   	   	} else {
+   	   	   	   	RECT doNotScaleRect = { 0, 0, (LONG)OverlayWidth, (LONG)OverlayHeight };
 
-                // Use D3DXLoadSurfaceFromMemory() to do conversion, we don't stretch at this moment in time
-                // avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
-                // see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
-                hRet = D3DXLoadSurfaceFromMemory(
-                    /* pDestSurface = */ pTemporaryOverlaySurface,
-                    /* pDestPalette = */ nullptr,
-                    /* pDestRect = */ &doNotScaleRect,
-                    /* pSrcMemory = */ pOverlayData, // Source buffer
-                    /* SrcFormat = */ PCFormat,
-                    /* SrcPitch = */ OverlayRowPitch,
-                    /* pSrcPalette = */ nullptr,
-                    /* pSrcRect = */ &doNotScaleRect, // This parameter cannot be NULL
-                    /* Filter = */ LoadOverlayFilter,
-                    /* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
+   	   	   	   	// Use D3DXLoadSurfaceFromMemory() to do conversion, we don't stretch at this moment in time
+   	   	   	   	// avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
+   	   	   	   	// see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
+   	   	   	   	hRet = D3DXLoadSurfaceFromMemory(
+   	   	   	   	   	/* pDestSurface = */ pTemporaryOverlaySurface,
+   	   	   	   	   	/* pDestPalette = */ nullptr,
+   	   	   	   	   	/* pDestRect = */ &doNotScaleRect,
+   	   	   	   	   	/* pSrcMemory = */ pOverlayData, // Source buffer
+   	   	   	   	   	/* SrcFormat = */ PCFormat,
+   	   	   	   	   	/* SrcPitch = */ OverlayRowPitch,
+   	   	   	   	   	/* pSrcPalette = */ nullptr,
+   	   	   	   	   	/* pSrcRect = */ &doNotScaleRect, // This parameter cannot be NULL
+   	   	   	   	   	/* Filter = */ LoadOverlayFilter,
+   	   	   	   	   	/* ColorKey = */ g_OverlayProxy.EnableColorKey ? g_OverlayProxy.ColorKey : 0);
 
-                DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
-                if (hRet != D3D_OK) {
-                    EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host surface : %X", hRet);
-                } else {
-                    hRet = g_pD3DDevice->StretchRect(
-                        /* pSourceSurface = */ pTemporaryOverlaySurface,
-                        /* pSourceRect = */ &EmuSourRect,
-                        /* pDestSurface = */ pCurrentHostBackBuffer,
-                        /* pDestRect = */ &EmuDestRect,
-                        /* Filter = */ LoadSurfaceFilter
-                    );
+   	   	   	   	DEBUG_D3DRESULT(hRet, "D3DXLoadSurfaceFromMemory - UpdateOverlay could not convert buffer!\n");
+   	   	   	   	if (hRet != D3D_OK) {
+   	   	   	   	   	EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host surface : %X", hRet);
+   	   	   	   	} else {
+   	   	   	   	   	hRet = g_pD3DDevice->StretchRect(
+   	   	   	   	   	   	/* pSourceSurface = */ pTemporaryOverlaySurface,
+   	   	   	   	   	   	/* pSourceRect = */ &EmuSourRect,
+   	   	   	   	   	   	/* pDestSurface = */ pCurrentHostBackBuffer,
+   	   	   	   	   	   	/* pDestRect = */ &EmuDestRect,
+   	   	   	   	   	   	/* Filter = */ LoadSurfaceFilter
+   	   	   	   	   	);
 
-                    if (hRet != D3D_OK) {
-                        EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host back buffer : %X", hRet);
-                    }
-                }
+   	   	   	   	   	if (hRet != D3D_OK) {
+   	   	   	   	   	   	EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host back buffer : %X", hRet);
+   	   	   	   	   	}
+   	   	   	   	}
 
-                pTemporaryOverlaySurface->Release();
-            }
+   	   	   	   	pTemporaryOverlaySurface->Release();
+   	   	   	}
 #endif
 		}
 
@@ -685,46 +685,46 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 	hRet = CxbxPresent();
 
-    // RenderStates need reapplying each frame, but can be re-used between draw calls
-    // This forces them to be reset
-    XboxRenderStates.SetDirty();
+   	// RenderStates need reapplying each frame, but can be re-used between draw calls
+   	// This forces them to be reset
+   	XboxRenderStates.SetDirty();
 
-    // Check if we need to enable our frame-limiter
-    xbox::dword_xt presentationInverval = g_Xbox_PresentationInterval_Override > 0 ? g_Xbox_PresentationInterval_Override : g_Xbox_PresentationInterval_Default;
-    if ((presentationInverval != D3DPRESENT_INTERVAL_IMMEDIATE) && !g_bHack_UnlockFramerate) {
-        // If the last frame completed faster than the Xbox target swap rate, wait for it
+   	// Check if we need to enable our frame-limiter
+   	xbox::dword_xt presentationInverval = g_Xbox_PresentationInterval_Override > 0 ? g_Xbox_PresentationInterval_Override : g_Xbox_PresentationInterval_Default;
+   	if ((presentationInverval != D3DPRESENT_INTERVAL_IMMEDIATE) && !g_bHack_UnlockFramerate) {
+   	   	// If the last frame completed faster than the Xbox target swap rate, wait for it
 
-        auto targetRefreshRate = 60.0f; // TODO: Read from Xbox Display Mode
+   	   	auto targetRefreshRate = 60.0f; // TODO: Read from Xbox Display Mode
 
-        // Determine how many 'frames' worth of time we need to wait for
-        // This allows games that require a locked framerate (eg JSRF) to function correctly
-        // While allowing titles with an unlocked frame-rate to not be limited
-        auto multiplier = 1.0f;
-        switch (presentationInverval) {
-            case D3DPRESENT_INTERVAL_ONE:
-            case 0x80000001: // D3DPRESENT_INTERVAL_ONE_OR_IMMEDIATE:
-                multiplier = 1.0f;
-                break;
-            case D3DPRESENT_INTERVAL_TWO:
-            case 0x80000002: // D3DPRESENT_INTERVAL_TWO_OR_IMMEDIATE:
-                multiplier = 2.0f;
-                break;
-            case D3DPRESENT_INTERVAL_THREE:
-                multiplier = 3.0f;
-                break;
-            case D3DPRESENT_INTERVAL_FOUR:
-                multiplier = 4.0f;
-                break;
-        }
+   	   	// Determine how many 'frames' worth of time we need to wait for
+   	   	// This allows games that require a locked framerate (eg JSRF) to function correctly
+   	   	// While allowing titles with an unlocked frame-rate to not be limited
+   	   	auto multiplier = 1.0f;
+   	   	switch (presentationInverval) {
+   	   	   	case D3DPRESENT_INTERVAL_ONE:
+   	   	   	case 0x80000001: // D3DPRESENT_INTERVAL_ONE_OR_IMMEDIATE:
+   	   	   	   	multiplier = 1.0f;
+   	   	   	   	break;
+   	   	   	case D3DPRESENT_INTERVAL_TWO:
+   	   	   	case 0x80000002: // D3DPRESENT_INTERVAL_TWO_OR_IMMEDIATE:
+   	   	   	   	multiplier = 2.0f;
+   	   	   	   	break;
+   	   	   	case D3DPRESENT_INTERVAL_THREE:
+   	   	   	   	multiplier = 3.0f;
+   	   	   	   	break;
+   	   	   	case D3DPRESENT_INTERVAL_FOUR:
+   	   	   	   	multiplier = 4.0f;
+   	   	   	   	break;
+   	   	}
 
-        // Wait until it's time for the next frame
-        auto frameMs = (1000.0 / targetRefreshRate) * multiplier;
-        auto targetDuration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(frameMs));
-        auto targetTimestamp = frameStartTime + targetDuration;
-        SleepPrecise(targetTimestamp);
-    }
+   	   	// Wait until it's time for the next frame
+   	   	auto frameMs = (1000.0 / targetRefreshRate) * multiplier;
+   	   	auto targetDuration = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(frameMs));
+   	   	auto targetTimestamp = frameStartTime + targetDuration;
+   	   	SleepPrecise(targetTimestamp);
+   	}
 
-    frameStartTime = std::chrono::steady_clock::now();
+   	frameStartTime = std::chrono::steady_clock::now();
 
 	g_renderbase->UpdateFPSCounter();
 
@@ -763,7 +763,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	else
 		result = g_Xbox_SwapData.Swap; // Swap returns number of swaps
 
-    return result;
+   	return result;
 }
 
 xbox::void_xt WINAPI xbox::EMUPATCH(Lock2DSurface)
