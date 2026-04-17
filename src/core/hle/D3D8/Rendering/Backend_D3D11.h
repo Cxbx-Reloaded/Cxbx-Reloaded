@@ -147,6 +147,31 @@ bool CxbxD3D11ExpandPaletteTexture(
 	UINT height,
 	const void* pPaletteData);
 
+// Vertex format conversion type constants
+#define CXBX_VTXCONV_COPY       0
+#define CXBX_VTXCONV_NORMSHORT3 1
+#define CXBX_VTXCONV_NORMPACKED3 2
+#define CXBX_VTXCONV_SHORT3     3
+#define CXBX_VTXCONV_PBYTE3     4
+#define CXBX_VTXCONV_FLOAT2H    5
+#define CXBX_VTXCONV_D3DCOLOR   6
+#define CXBX_VTXCONV_NONE       7
+
+// GPU-accelerated vertex format conversion via compute shader.
+// Converts Xbox vertex data to D3D11-compatible layouts on the GPU.
+// pElementDescriptors: array of numElements * 4 UINTs (srcOffset, dstOffset, convType, copyDwords).
+// Returns true if successful, with *ppOutputVB set to the converted vertex buffer.
+bool CxbxD3D11ConvertVertexBufferGPU(
+	const uint8_t* pSrcVertexData,
+	UINT srcDataSize,
+	UINT vertexCount,
+	UINT srcStride,
+	UINT dstStride,
+	UINT numElements,
+	const UINT* pElementDescriptors,
+	UINT dstBufferSize,
+	IDirect3DVertexBuffer** ppOutputVB);
+
 #endif // CXBX_USE_D3D11
 
 #endif // BACKEND_D3D11_H

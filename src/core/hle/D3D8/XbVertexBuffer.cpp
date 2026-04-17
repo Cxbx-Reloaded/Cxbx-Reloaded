@@ -37,6 +37,9 @@
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
+#ifdef CXBX_USE_D3D11
+#include "core\hle\D3D8\Rendering\Backend_D3D11.h"
+#endif
 
 #include <imgui.h>
 
@@ -341,6 +344,66 @@ void CxbxVertexBufferConverter::ConvertStream
 		LOG_TEST_CASE("Attempted to use a 0 sized vertex stream");
 		return;
 	}
+
+#ifdef CXBX_USE_D3D11
+	// Try GPU vertex conversion via compute shader (non-UP, patching case only)
+	if (bNeedVertexPatching && pDrawContext->pXboxVertexStreamZeroData == xbox::zeroptr) {
+		// Check if all host element sizes are multiples of 4 (required for RWBuffer<uint> writes)
+		bool canUseCS = (uiHostVertexStride & 3) == 0;
+		UINT elemDescs[16 * 4]; // Up to 16 elements, 4 uints each
+		UINT srcOff = 0, dstOff = 0;
+		UINT numElems = pVertexShaderStreamInfo->NumberOfVertexElements;
+		if (numElems > 16) canUseCS = false;
+		if (canUseCS) {
+			for (UINT e = 0; e < numElems; e++) {
+				UINT hostSize = pVertexShaderStreamInfo->VertexElements[e].HostByteSize;
+				UINT xboxSize = pVertexShaderStreamInfo->VertexElements[e].XboxByteSize;
+				// All host element sizes and offsets must be 4-byte aligned for CS writes
+				if ((hostSize & 3) != 0 || (dstOff & 3) != 0) {
+					canUseCS = false;
+					break;
+				}
+				UINT convType, copyDwords = 0;
+				switch (pVertexShaderStreamInfo->VertexElements[e].XboxType) {
+				case xbox::X_D3DVSDT_NORMSHORT3:  convType = CXBX_VTXCONV_NORMSHORT3; break;
+				case xbox::X_D3DVSDT_NORMPACKED3: convType = CXBX_VTXCONV_NORMPACKED3; break;
+				case xbox::X_D3DVSDT_SHORT3:      convType = CXBX_VTXCONV_SHORT3; break;
+				case xbox::X_D3DVSDT_PBYTE3:      convType = CXBX_VTXCONV_PBYTE3; break;
+				case xbox::X_D3DVSDT_FLOAT2H:     convType = CXBX_VTXCONV_FLOAT2H; break;
+				case xbox::X_D3DVSDT_D3DCOLOR:    convType = CXBX_VTXCONV_D3DCOLOR; break;
+				case xbox::X_D3DVSDT_NONE:        convType = CXBX_VTXCONV_NONE; break;
+				default:                          convType = CXBX_VTXCONV_COPY; copyDwords = hostSize / 4; break;
+				}
+				elemDescs[e * 4 + 0] = srcOff;
+				elemDescs[e * 4 + 1] = dstOff;
+				elemDescs[e * 4 + 2] = convType;
+				elemDescs[e * 4 + 3] = copyDwords;
+				srcOff += xboxSize;
+				dstOff += hostSize;
+			}
+		}
+		if (canUseCS) {
+			IDirect3DVertexBuffer* pGPUVB = nullptr;
+			if (CxbxD3D11ConvertVertexBufferGPU(
+					pXboxVertexData, xboxVertexDataSize, uiVertexCount,
+					uiXboxVertexStride, uiHostVertexStride,
+					numElems, elemDescs, dwHostVertexDataSize, &pGPUVB)) {
+				patchedStream.isValid = true;
+				patchedStream.XboxPrimitiveType = pDrawContext->XboxPrimitiveType;
+				patchedStream.pCachedXboxVertexData = pXboxVertexData;
+				patchedStream.uiCachedXboxVertexDataSize = xboxVertexDataSize;
+				patchedStream.uiVertexDataHash = vertexDataHash;
+				patchedStream.uiVertexStreamInformationHash = pVertexShaderSteamInfoHash;
+				patchedStream.uiCachedXboxVertexStride = uiXboxVertexStride;
+				patchedStream.uiCachedHostVertexStride = uiHostVertexStride;
+				patchedStream.bCacheIsStreamZeroDrawUP = false;
+				patchedStream.pCachedHostVertexBuffer = pGPUVB;
+				patchedStream.Activate(pDrawContext, HostStreamNumber);
+				return;
+			}
+		}
+	}
+#endif
 
     // Allocate new buffers
     if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {

@@ -143,10 +143,29 @@ static ID3D11Buffer              *g_pD3D11PaletteExpandCB = nullptr; // constant
 static ID3D11Buffer              *g_pD3D11PaletteBuf = nullptr; // 256-entry palette upload buffer
 static ID3D11ShaderResourceView  *g_pD3D11PaletteSRV = nullptr;
 
+// ******************************************************************
+// * Compute shader vertex format conversion resources
+// ******************************************************************
+static ID3D11ComputeShader       *g_pD3D11VertexConvertCS = nullptr;
+static ID3D11Buffer              *g_pD3D11VertexConvertCB = nullptr; // constant buffer: header + 16 element descriptors
+static ID3D11Buffer              *g_pD3D11VertexConvertSrcBuf = nullptr; // staging ByteAddressBuffer for source vertices
+static UINT                       g_VertexConvertSrcBufSize = 0;
+static ID3D11ShaderResourceView  *g_pD3D11VertexConvertSrcSRV = nullptr;
+
 // Index conversion mode constants
 #define CXBX_INDEX_CONVERT_QUAD_CW  0
 #define CXBX_INDEX_CONVERT_QUAD_CCW 1
 #define CXBX_INDEX_CONVERT_FAN      2
+
+// Vertex format conversion type constants
+#define CXBX_VTXCONV_COPY       0
+#define CXBX_VTXCONV_NORMSHORT3 1
+#define CXBX_VTXCONV_NORMPACKED3 2
+#define CXBX_VTXCONV_SHORT3     3
+#define CXBX_VTXCONV_PBYTE3     4
+#define CXBX_VTXCONV_FLOAT2H    5
+#define CXBX_VTXCONV_D3DCOLOR   6
+#define CXBX_VTXCONV_NONE       7
 
 // ******************************************************************
 // * Shader constant functions
@@ -692,6 +711,102 @@ void CxbxD3D11InitBlit()
 				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette SRV");
 			}
 		}
+	}
+
+	// ---------------------------------------------------------------
+	// Vertex format conversion compute shader (cs_5_0)
+	// Converts Xbox vertex formats to D3D11-compatible layouts on GPU.
+	// ---------------------------------------------------------------
+	const char* vertexConvertCS =
+		"ByteAddressBuffer g_SrcBuffer : register(t0);\n"
+		"RWBuffer<uint> g_DstBuffer : register(u0);\n"
+		"cbuffer VertexConvertCB : register(b0) {\n"
+		"    uint g_VertexCount; uint g_SrcStride; uint g_DstStride; uint g_NumElements;\n"
+		"    uint4 g_Elements[16];\n" // x=srcOffset, y=dstOffset, z=convType, w=copyDwords
+		"};\n"
+		"#define CONV_COPY        0\n"
+		"#define CONV_NORMSHORT3  1\n"
+		"#define CONV_NORMPACKED3 2\n"
+		"#define CONV_SHORT3      3\n"
+		"#define CONV_PBYTE3      4\n"
+		"#define CONV_FLOAT2H     5\n"
+		"#define CONV_D3DCOLOR    6\n"
+		"#define CONV_NONE        7\n"
+		"uint ReadU32(uint byteOff) {\n"
+		"    uint a = byteOff & ~3u; uint s = (byteOff & 3u) * 8u;\n"
+		"    if (s == 0) return g_SrcBuffer.Load(a);\n"
+		"    return (g_SrcBuffer.Load(a) >> s) | (g_SrcBuffer.Load(a + 4) << (32 - s));\n"
+		"}\n"
+		"uint ReadU16(uint byteOff) {\n"
+		"    uint a = byteOff & ~3u; uint s = (byteOff & 3u) * 8u;\n"
+		"    uint d = g_SrcBuffer.Load(a);\n"
+		"    if (s <= 16) return (d >> s) & 0xFFFF;\n"
+		"    return ((d >> s) | (g_SrcBuffer.Load(a + 4) << (32 - s))) & 0xFFFF;\n"
+		"}\n"
+		"void WriteU32(uint dstByteOff, uint value) { g_DstBuffer[dstByteOff >> 2] = value; }\n"
+		"float PackedIntToFloat(int v, float pm, float nm) {\n"
+		"    return (v >= 0) ? (float(v) / pm) : (float(v) / nm);\n"
+		"}\n"
+		"[numthreads(64, 1, 1)]\n"
+		"void main(uint3 dtid : SV_DispatchThreadID) {\n"
+		"    uint vi = dtid.x;\n"
+		"    if (vi >= g_VertexCount) return;\n"
+		"    uint sb = vi * g_SrcStride;\n"
+		"    uint db = vi * g_DstStride;\n"
+		"    for (uint e = 0; e < g_NumElements; e++) {\n"
+		"        uint so = sb + g_Elements[e].x;\n"
+		"        uint do_ = db + g_Elements[e].y;\n"
+		"        uint ct = g_Elements[e].z;\n"
+		"        uint cw = g_Elements[e].w;\n"
+		"        if (ct == CONV_COPY) {\n"
+		"            for (uint d = 0; d < cw; d++) WriteU32(do_ + d * 4, ReadU32(so + d * 4));\n"
+		"        } else if (ct == CONV_NORMSHORT3) {\n"
+		"            WriteU32(do_, ReadU32(so));\n"
+		"            WriteU32(do_ + 4, ReadU16(so + 4) | 0x7FFF0000u);\n"
+		"        } else if (ct == CONV_NORMPACKED3) {\n"
+		"            int p = asint(ReadU32(so));\n"
+		"            int x = (p << 21) >> 21; int y = (p << 10) >> 21; int z = p >> 22;\n"
+		"            WriteU32(do_, asuint(PackedIntToFloat(x, 1023.0, 1024.0)));\n"
+		"            WriteU32(do_ + 4, asuint(PackedIntToFloat(y, 1023.0, 1024.0)));\n"
+		"            WriteU32(do_ + 8, asuint(PackedIntToFloat(z, 511.0, 512.0)));\n"
+		"        } else if (ct == CONV_SHORT3) {\n"
+		"            WriteU32(do_, ReadU32(so));\n"
+		"            WriteU32(do_ + 4, ReadU16(so + 4) | (1u << 16));\n"
+		"        } else if (ct == CONV_PBYTE3) {\n"
+		"            WriteU32(do_, (ReadU32(so) & 0x00FFFFFFu) | 0xFF000000u);\n"
+		"        } else if (ct == CONV_FLOAT2H) {\n"
+		"            WriteU32(do_, ReadU32(so));\n"
+		"            WriteU32(do_ + 4, ReadU32(so + 4));\n"
+		"            WriteU32(do_ + 8, 0);\n"
+		"            WriteU32(do_ + 12, ReadU32(so + 8));\n"
+		"        } else if (ct == CONV_D3DCOLOR) {\n"
+		"            uint c = ReadU32(so);\n"
+		"            WriteU32(do_, ((c >> 16) & 0xFFu) | (c & 0xFF00FF00u) | ((c & 0xFFu) << 16));\n"
+		"        }\n" // CONV_NONE: skip
+		"    }\n"
+		"}\n";
+
+	ID3DBlob* pVtxCSBlob = nullptr;
+	hr = EmuCompileShader(std::string(vertexConvertCS), "cs_5_0", &pVtxCSBlob, "CxbxVertexConvertCS");
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile vertex convert CS");
+	} else {
+		hr = g_pD3DDevice->CreateComputeShader(pVtxCSBlob->GetBufferPointer(), pVtxCSBlob->GetBufferSize(), nullptr, &g_pD3D11VertexConvertCS);
+		pVtxCSBlob->Release();
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create vertex convert CS");
+		}
+	}
+
+	// Create vertex convert constant buffer (header 16 bytes + 16 elements * 16 bytes = 272 bytes)
+	cbDesc = {};
+	cbDesc.ByteWidth = 272; // 16 + 16*16, already multiple of 16
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11VertexConvertCB);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create vertex convert CB");
 	}
 }
 
@@ -1247,6 +1362,134 @@ bool CxbxD3D11ExpandPaletteTexture(
 	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
 
 	pUAV->Release();
+	return true;
+}
+
+// ******************************************************************
+// * GPU vertex format conversion
+// ******************************************************************
+
+static void CxbxEnsureVertexConvertSrcBuffer(UINT requiredSize)
+{
+	requiredSize = (requiredSize + 4095) & ~4095u;
+	if (g_pD3D11VertexConvertSrcBuf && g_VertexConvertSrcBufSize >= requiredSize)
+		return;
+
+	if (g_pD3D11VertexConvertSrcSRV) { g_pD3D11VertexConvertSrcSRV->Release(); g_pD3D11VertexConvertSrcSRV = nullptr; }
+	if (g_pD3D11VertexConvertSrcBuf) { g_pD3D11VertexConvertSrcBuf->Release(); g_pD3D11VertexConvertSrcBuf = nullptr; }
+
+	D3D11_BUFFER_DESC bufDesc = {};
+	bufDesc.ByteWidth = requiredSize;
+	bufDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	bufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+	HRESULT hr = g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, &g_pD3D11VertexConvertSrcBuf);
+	if (FAILED(hr)) return;
+	g_VertexConvertSrcBufSize = requiredSize;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	srvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
+	srvDesc.BufferEx.NumElements = requiredSize / 4;
+	hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11VertexConvertSrcBuf, &srvDesc, &g_pD3D11VertexConvertSrcSRV);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxEnsureVertexConvertSrcBuffer: Failed to create SRV");
+	}
+}
+
+bool CxbxD3D11ConvertVertexBufferGPU(
+	const uint8_t* pSrcVertexData,
+	UINT srcDataSize,
+	UINT vertexCount,
+	UINT srcStride,
+	UINT dstStride,
+	UINT numElements,
+	const UINT* pElementDescriptors, // 4 UINTs per element: srcOffset, dstOffset, convType, copyDwords
+	UINT dstBufferSize,
+	IDirect3DVertexBuffer** ppOutputVB)
+{
+	if (!g_pD3D11VertexConvertCS || !g_pD3D11VertexConvertCB || vertexCount == 0)
+		return false;
+
+	// Require dst stride to be a multiple of 4 (for RWBuffer<uint> writes)
+	if ((dstStride & 3) != 0)
+		return false;
+
+	UINT bufferSize = (srcDataSize + 3) & ~3u;
+
+	// Upload source vertex data
+	CxbxEnsureVertexConvertSrcBuffer(bufferSize);
+	if (!g_pD3D11VertexConvertSrcBuf || !g_pD3D11VertexConvertSrcSRV)
+		return false;
+
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hr = g_pD3DDeviceContext->Map(g_pD3D11VertexConvertSrcBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return false;
+	memcpy(mapped.pData, pSrcVertexData, srcDataSize);
+	g_pD3DDeviceContext->Unmap(g_pD3D11VertexConvertSrcBuf, 0);
+
+	// Update constant buffer: header (4 uints) + elements (numElements * 4 uints)
+	hr = g_pD3DDeviceContext->Map(g_pD3D11VertexConvertCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return false;
+	UINT* pCB = (UINT*)mapped.pData;
+	pCB[0] = vertexCount;
+	pCB[1] = srcStride;
+	pCB[2] = dstStride;
+	pCB[3] = numElements;
+	memcpy(&pCB[4], pElementDescriptors, numElements * 4 * sizeof(UINT));
+	// Zero unused element slots
+	if (numElements < 16)
+		memset(&pCB[4 + numElements * 4], 0, (16 - numElements) * 4 * sizeof(UINT));
+	g_pD3DDeviceContext->Unmap(g_pD3D11VertexConvertCB, 0);
+
+	// Create output vertex buffer (DEFAULT + VERTEX_BUFFER + UAV)
+	D3D11_BUFFER_DESC outDesc = {};
+	outDesc.ByteWidth = dstBufferSize;
+	outDesc.Usage = D3D11_USAGE_DEFAULT;
+	outDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_UNORDERED_ACCESS;
+	ID3D11Buffer* pOutputBuf = nullptr;
+	hr = g_pD3DDevice->CreateBuffer(&outDesc, nullptr, &pOutputBuf);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11ConvertVertexBufferGPU: Failed to create output VB (hr=0x%08X)", hr);
+		return false;
+	}
+
+	// Create typed UAV (R32_UINT) for output buffer
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = DXGI_FORMAT_R32_UINT;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	uavDesc.Buffer.FirstElement = 0;
+	uavDesc.Buffer.NumElements = dstBufferSize / 4;
+	ID3D11UnorderedAccessView* pUAV = nullptr;
+	hr = g_pD3DDevice->CreateUnorderedAccessView(pOutputBuf, &uavDesc, &pUAV);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11ConvertVertexBufferGPU: Failed to create UAV");
+		pOutputBuf->Release();
+		return false;
+	}
+
+	// Dispatch CS
+	g_pD3DDeviceContext->CSSetShader(g_pD3D11VertexConvertCS, nullptr, 0);
+	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11VertexConvertCB);
+	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &g_pD3D11VertexConvertSrcSRV);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pUAV, nullptr);
+
+	UINT numGroups = (vertexCount + 63) / 64;
+	g_pD3DDeviceContext->Dispatch(numGroups, 1, 1);
+
+	// Unbind
+	ID3D11ShaderResourceView* pNullSRV = nullptr;
+	ID3D11UnorderedAccessView* pNullUAV = nullptr;
+	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &pNullSRV);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+
+	pUAV->Release();
+	*ppOutputVB = pOutputBuf;
 	return true;
 }
 
