@@ -168,6 +168,85 @@ static ID3D11ShaderResourceView  *g_pD3D11VertexConvertSrcSRV = nullptr;
 #define CXBX_VTXCONV_NONE       7
 
 // ******************************************************************
+// * D3D11 buffer/view creation helpers
+// ******************************************************************
+
+// Create a constant buffer. If bDynamic, uses DYNAMIC + CPU_ACCESS_WRITE
+// (for Map/Unmap); otherwise DEFAULT (for UpdateSubresource).
+static HRESULT CxbxD3D11CreateConstantBuffer(UINT byteWidth, bool bDynamic, ID3D11Buffer** ppBuffer)
+{
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = byteWidth;
+	desc.Usage = bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	desc.CPUAccessFlags = bDynamic ? D3D11_CPU_ACCESS_WRITE : 0;
+	return g_pD3DDevice->CreateBuffer(&desc, nullptr, ppBuffer);
+}
+
+// Create a ByteAddressBuffer (BUFFER_ALLOW_RAW_VIEWS) with optional CPU write access.
+// If bDynamic, uses DYNAMIC + CPU_ACCESS_WRITE; otherwise DEFAULT.
+static HRESULT CxbxD3D11CreateRawBuffer(UINT byteWidth, bool bDynamic, UINT extraBindFlags, ID3D11Buffer** ppBuffer)
+{
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = byteWidth;
+	desc.Usage = bDynamic ? D3D11_USAGE_DYNAMIC : D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | extraBindFlags;
+	desc.CPUAccessFlags = bDynamic ? D3D11_CPU_ACCESS_WRITE : 0;
+	desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+	return g_pD3DDevice->CreateBuffer(&desc, nullptr, ppBuffer);
+}
+
+// Create a R32_TYPELESS raw SRV (for ByteAddressBuffer access in shaders).
+static HRESULT CxbxD3D11CreateRawBufferSRV(ID3D11Buffer* pBuffer, UINT byteWidth, ID3D11ShaderResourceView** ppSRV)
+{
+	D3D11_SHADER_RESOURCE_VIEW_DESC desc = {};
+	desc.Format = DXGI_FORMAT_R32_TYPELESS;
+	desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	desc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
+	desc.BufferEx.NumElements = byteWidth / 4;
+	return g_pD3DDevice->CreateShaderResourceView(pBuffer, &desc, ppSRV);
+}
+
+// Create a R32_UINT typed UAV for a buffer.
+static HRESULT CxbxD3D11CreateTypedBufferUAV(ID3D11Buffer* pBuffer, UINT byteWidth, ID3D11UnorderedAccessView** ppUAV)
+{
+	D3D11_UNORDERED_ACCESS_VIEW_DESC desc = {};
+	desc.Format = DXGI_FORMAT_R32_UINT;
+	desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	desc.Buffer.FirstElement = 0;
+	desc.Buffer.NumElements = byteWidth / 4;
+	return g_pD3DDevice->CreateUnorderedAccessView(pBuffer, &desc, ppUAV);
+}
+
+// Ensure a dynamic raw staging buffer + SRV pair are at least requiredSize bytes.
+// Rounds up to 4KB. Releases and re-creates if too small.
+static void CxbxD3D11EnsureRawStagingBuffer(
+	UINT requiredSize,
+	ID3D11Buffer** ppBuffer, UINT* pCurrentSize,
+	ID3D11ShaderResourceView** ppSRV,
+	const char* debugName)
+{
+	requiredSize = (requiredSize + 4095) & ~4095u;
+	if (*ppBuffer && *pCurrentSize >= requiredSize)
+		return;
+
+	if (*ppSRV) { (*ppSRV)->Release(); *ppSRV = nullptr; }
+	if (*ppBuffer) { (*ppBuffer)->Release(); *ppBuffer = nullptr; }
+
+	HRESULT hr = CxbxD3D11CreateRawBuffer(requiredSize, /*bDynamic=*/true, 0, ppBuffer);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "%s: Failed to create buffer (%u bytes)", debugName, requiredSize);
+		return;
+	}
+	*pCurrentSize = requiredSize;
+
+	hr = CxbxD3D11CreateRawBufferSRV(*ppBuffer, requiredSize, ppSRV);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "%s: Failed to create SRV", debugName);
+	}
+}
+
+// ******************************************************************
 // * Shader constant functions
 // ******************************************************************
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
@@ -467,12 +546,7 @@ void CxbxD3D11InitBlit()
 	}
 
 	// Create GS constant buffer (1 float4: inverse viewport dimensions + line width)
-	D3D11_BUFFER_DESC cbDesc = {};
-	cbDesc.ByteWidth = 16; // 1 float4
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11GSConstantBuffer);
+	hr = CxbxD3D11CreateConstantBuffer(16, true, &g_pD3D11GSConstantBuffer);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create GS constant buffer");
 	}
@@ -534,12 +608,7 @@ void CxbxD3D11InitBlit()
 	}
 
 	// Create unswizzle constant buffer (4 uints: maskX, maskY, width, bpp)
-	cbDesc = {};
-	cbDesc.ByteWidth = 16; // 4 x uint32
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11UnswizzleCB);
+	hr = CxbxD3D11CreateConstantBuffer(16, true, &g_pD3D11UnswizzleCB);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create unswizzle CB");
 	}
@@ -615,12 +684,7 @@ void CxbxD3D11InitBlit()
 	}
 
 	// Create index convert constant buffer (4 uints: vertexCount, mode, isIndexed, pad)
-	cbDesc = {};
-	cbDesc.ByteWidth = 16;
-	cbDesc.Usage = D3D11_USAGE_DEFAULT;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = 0;
-	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11IndexConvertCB);
+	hr = CxbxD3D11CreateConstantBuffer(16, false, &g_pD3D11IndexConvertCB);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create index convert CB");
 	}
@@ -679,37 +743,19 @@ void CxbxD3D11InitBlit()
 	}
 
 	// Create palette expand constant buffer (4 uints: maskX, maskY, width, pad)
-	cbDesc = {};
-	cbDesc.ByteWidth = 16;
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11PaletteExpandCB);
+	hr = CxbxD3D11CreateConstantBuffer(16, true, &g_pD3D11PaletteExpandCB);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette expand CB");
 	}
 
 	// Create palette data buffer (256 entries * 4 bytes = 1024 bytes)
-	{
-		D3D11_BUFFER_DESC palBufDesc = {};
-		palBufDesc.ByteWidth = 1024;
-		palBufDesc.Usage = D3D11_USAGE_DYNAMIC;
-		palBufDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		palBufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		palBufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-		hr = g_pD3DDevice->CreateBuffer(&palBufDesc, nullptr, &g_pD3D11PaletteBuf);
+	hr = CxbxD3D11CreateRawBuffer(1024, true, 0, &g_pD3D11PaletteBuf);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette buffer");
+	} else {
+		hr = CxbxD3D11CreateRawBufferSRV(g_pD3D11PaletteBuf, 1024, &g_pD3D11PaletteSRV);
 		if (FAILED(hr)) {
-			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette buffer");
-		} else {
-			D3D11_SHADER_RESOURCE_VIEW_DESC palSrvDesc = {};
-			palSrvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-			palSrvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-			palSrvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
-			palSrvDesc.BufferEx.NumElements = 256; // 1024 bytes / 4
-			hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11PaletteBuf, &palSrvDesc, &g_pD3D11PaletteSRV);
-			if (FAILED(hr)) {
-				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette SRV");
-			}
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create palette SRV");
 		}
 	}
 
@@ -799,12 +845,7 @@ void CxbxD3D11InitBlit()
 	}
 
 	// Create vertex convert constant buffer (header 16 bytes + 16 elements * 16 bytes = 272 bytes)
-	cbDesc = {};
-	cbDesc.ByteWidth = 272; // 16 + 16*16, already multiple of 16
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11VertexConvertCB);
+	hr = CxbxD3D11CreateConstantBuffer(272, true, &g_pD3D11VertexConvertCB);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create vertex convert CB");
 	}
@@ -1154,38 +1195,9 @@ static void ClearRTVCache()
 // ******************************************************************
 static void CxbxEnsureUnswizzleStagingBuffer(UINT requiredSize)
 {
-	// Round up to next 4KB to avoid frequent re-allocs
-	requiredSize = (requiredSize + 4095) & ~4095u;
-	if (g_pD3D11UnswizzleStagingBuf && g_UnswizzleStagingBufSize >= requiredSize)
-		return;
-
-	// Release old resources
-	if (g_pD3D11UnswizzleSRV) { g_pD3D11UnswizzleSRV->Release(); g_pD3D11UnswizzleSRV = nullptr; }
-	if (g_pD3D11UnswizzleStagingBuf) { g_pD3D11UnswizzleStagingBuf->Release(); g_pD3D11UnswizzleStagingBuf = nullptr; }
-
-	D3D11_BUFFER_DESC bufDesc = {};
-	bufDesc.ByteWidth = requiredSize;
-	bufDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	bufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-	HRESULT hr = g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, &g_pD3D11UnswizzleStagingBuf);
-	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxEnsureUnswizzleStagingBuffer: Failed to create buffer (%u bytes)", requiredSize);
-		return;
-	}
-	g_UnswizzleStagingBufSize = requiredSize;
-
-	// Create raw SRV for ByteAddressBuffer access
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	srvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
-	srvDesc.BufferEx.NumElements = requiredSize / 4;
-	hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11UnswizzleStagingBuf, &srvDesc, &g_pD3D11UnswizzleSRV);
-	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxEnsureUnswizzleStagingBuffer: Failed to create SRV");
-	}
+	CxbxD3D11EnsureRawStagingBuffer(requiredSize,
+		&g_pD3D11UnswizzleStagingBuf, &g_UnswizzleStagingBufSize,
+		&g_pD3D11UnswizzleSRV, "CxbxEnsureUnswizzleStagingBuffer");
 }
 
 bool CxbxD3D11UnswizzleTexture(
@@ -1371,32 +1383,9 @@ bool CxbxD3D11ExpandPaletteTexture(
 
 static void CxbxEnsureVertexConvertSrcBuffer(UINT requiredSize)
 {
-	requiredSize = (requiredSize + 4095) & ~4095u;
-	if (g_pD3D11VertexConvertSrcBuf && g_VertexConvertSrcBufSize >= requiredSize)
-		return;
-
-	if (g_pD3D11VertexConvertSrcSRV) { g_pD3D11VertexConvertSrcSRV->Release(); g_pD3D11VertexConvertSrcSRV = nullptr; }
-	if (g_pD3D11VertexConvertSrcBuf) { g_pD3D11VertexConvertSrcBuf->Release(); g_pD3D11VertexConvertSrcBuf = nullptr; }
-
-	D3D11_BUFFER_DESC bufDesc = {};
-	bufDesc.ByteWidth = requiredSize;
-	bufDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	bufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-	HRESULT hr = g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, &g_pD3D11VertexConvertSrcBuf);
-	if (FAILED(hr)) return;
-	g_VertexConvertSrcBufSize = requiredSize;
-
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	srvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
-	srvDesc.BufferEx.NumElements = requiredSize / 4;
-	hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11VertexConvertSrcBuf, &srvDesc, &g_pD3D11VertexConvertSrcSRV);
-	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxEnsureVertexConvertSrcBuffer: Failed to create SRV");
-	}
+	CxbxD3D11EnsureRawStagingBuffer(requiredSize,
+		&g_pD3D11VertexConvertSrcBuf, &g_VertexConvertSrcBufSize,
+		&g_pD3D11VertexConvertSrcSRV, "CxbxEnsureVertexConvertSrcBuffer");
 }
 
 bool CxbxD3D11ConvertVertexBufferGPU(
@@ -1458,14 +1447,8 @@ bool CxbxD3D11ConvertVertexBufferGPU(
 		return false;
 	}
 
-	// Create typed UAV (R32_UINT) for output buffer
-	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = DXGI_FORMAT_R32_UINT;
-	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-	uavDesc.Buffer.FirstElement = 0;
-	uavDesc.Buffer.NumElements = dstBufferSize / 4;
 	ID3D11UnorderedAccessView* pUAV = nullptr;
-	hr = g_pD3DDevice->CreateUnorderedAccessView(pOutputBuf, &uavDesc, &pUAV);
+	hr = CxbxD3D11CreateTypedBufferUAV(pOutputBuf, dstBufferSize, &pUAV);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11ConvertVertexBufferGPU: Failed to create UAV");
 		pOutputBuf->Release();
@@ -1506,26 +1489,13 @@ static bool CxbxEnsureIndexConvertInputBuffer(UINT requiredSize)
 	if (g_pD3D11IndexConvertInputSRV) { g_pD3D11IndexConvertInputSRV->Release(); g_pD3D11IndexConvertInputSRV = nullptr; }
 	if (g_pD3D11IndexConvertInputBuf) { g_pD3D11IndexConvertInputBuf->Release(); g_pD3D11IndexConvertInputBuf = nullptr; }
 
-	// Round up to 4KB, ensure at least 4 bytes for ByteAddressBuffer
 	UINT newSize = (requiredSize + 4095) & ~4095u;
 	if (newSize < 4) newSize = 4;
 
-	D3D11_BUFFER_DESC desc = {};
-	desc.ByteWidth = newSize;
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
-
-	HRESULT hr = g_pD3DDevice->CreateBuffer(&desc, nullptr, &g_pD3D11IndexConvertInputBuf);
+	HRESULT hr = CxbxD3D11CreateRawBuffer(newSize, /*bDynamic=*/false, 0, &g_pD3D11IndexConvertInputBuf);
 	if (FAILED(hr)) return false;
 
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-	srvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
-	srvDesc.BufferEx.NumElements = newSize / 4;
-
-	hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11IndexConvertInputBuf, &srvDesc, &g_pD3D11IndexConvertInputSRV);
+	hr = CxbxD3D11CreateRawBufferSRV(g_pD3D11IndexConvertInputBuf, newSize, &g_pD3D11IndexConvertInputSRV);
 	if (FAILED(hr)) {
 		g_pD3D11IndexConvertInputBuf->Release();
 		g_pD3D11IndexConvertInputBuf = nullptr;
@@ -1556,13 +1526,7 @@ static bool CxbxEnsureIndexConvertOutputBuffer(UINT requiredByteSize)
 	HRESULT hr = g_pD3DDevice->CreateBuffer(&desc, nullptr, &g_pD3D11IndexConvertOutputBuf);
 	if (FAILED(hr)) return false;
 
-	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = DXGI_FORMAT_R32_UINT;
-	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-	uavDesc.Buffer.FirstElement = 0;
-	uavDesc.Buffer.NumElements = newSize / 4;
-
-	hr = g_pD3DDevice->CreateUnorderedAccessView(g_pD3D11IndexConvertOutputBuf, &uavDesc, &g_pD3D11IndexConvertOutputUAV);
+	hr = CxbxD3D11CreateTypedBufferUAV(g_pD3D11IndexConvertOutputBuf, newSize, &g_pD3D11IndexConvertOutputUAV);
 	if (FAILED(hr)) {
 		g_pD3D11IndexConvertOutputBuf->Release();
 		g_pD3D11IndexConvertOutputBuf = nullptr;
