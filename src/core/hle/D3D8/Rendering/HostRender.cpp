@@ -129,7 +129,12 @@ void CreateDefaultD3D9Device
 	creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 	// only use feature level 10.0
-	D3D_FEATURE_LEVEL featureLevels[] = { D3D_FEATURE_LEVEL_10_0 };
+	D3D_FEATURE_LEVEL featureLevels[] = {
+#ifdef CXBX_USE_D3D11
+		D3D_FEATURE_LEVEL_11_0, // Required for cs_5_0, typed UAV access, ByteAddressBuffer
+#endif
+		D3D_FEATURE_LEVEL_10_0,
+	};
 
 	// Create the Direct3D 11 API device object and a corresponding context.
 	ComPtr<ID3D11Device> device;
