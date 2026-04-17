@@ -269,17 +269,20 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
     switch (State) {
         case xbox::X_D3DRS_FOGSTART:
         case xbox::X_D3DRS_FOGEND: {
+#ifndef CXBX_USE_D3D11
             // HACK: If the fog start/fog-end are negative, make them positive
             // This fixes Smashing Drive on non-nvidia hardware
             // Cause appears to be non-nvidia drivers clamping values < 0 to 0
             // Resulting in the fog formula becoming (0 - d) / 0, which breaks rendering
             // This prevents that scenario for screen-space fog, *hopefully* without breaking eye-based fog also
+            // NOTE: D3D11 handles fog in the pixel shader, so negative values are valid there
             float fogValue = *(float*)& Value;
             if (fogValue < 0.0f) {
                 LOG_TEST_CASE("FOGSTART/FOGEND below 0");
                 fogValue = std::abs(fogValue);
                 Value = *(DWORD*)& fogValue;
             }
+#endif
         } break;
         case xbox::X_D3DRS_FOGENABLE:
         case xbox::X_D3DRS_FOGTABLEMODE:
