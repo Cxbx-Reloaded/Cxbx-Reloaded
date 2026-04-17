@@ -48,7 +48,4 @@ void CxbxAssureQuadListD3DIndexBuffer(UINT NrOfQuadIndices);
 void CxbxDrawIndexedClosingLine(INDEX16 LowIndex, INDEX16 HighIndex);
 void CxbxDrawIndexedClosingLineUP(INDEX16 LowIndex, INDEX16 HighIndex, void *pHostVertexStreamZeroData, UINT uiHostVertexStreamZeroStride);
 
-// Winding order flag (should this be fetched from X_D3DRS_FRONTFACE or X_D3DRS_CULLMODE?)
-extern bool bUseClockWiseWindingOrder;
-
 #endif // INDEXBUFFERCONVERT_H

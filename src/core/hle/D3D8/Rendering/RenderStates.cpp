@@ -413,6 +413,13 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_MULTISAMPLETYPE:
             SetXboxMultiSampleType(Value);
             break;
+        case xbox::X_D3DRS_FRONTFACE:
+#ifdef CXBX_USE_D3D11
+            // Xbox FRONTFACE is an NV2A value (0x900 = CW, 0x901 = CCW)
+            // Map directly to D3D11 rasterizer state
+            CxbxD3D11SetRenderState(State, Value);
+#endif
+            return; // No PC counterpart
         default:
             // Only log missing state if it has a PC counterpart
             if (RenderStateInfo.PC != 0) {
