@@ -72,8 +72,9 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 
 ### 10. Fog Coordinate Not Clamped in VS
 - [x] Fixed
-- **Files**: `CxbxVertexShaderTemplate.hlsl:289`
-- **Description**: Comment says "TODO *NEEDS TESTING*" for fog coordinate output. NV2A clamps fog factor to [0,1]; the shader may pass unclamped values to the pixel shader.
+- **Files**: `CxbxVertexShaderTemplate.hlsl:336`
+- **Description**: NV2A clamps the final fog factor to [0,1], but in the HLE path the VS outputs either a fog factor (FOG_TABLE_NONE) or a fog distance (table fog modes). Clamping in the VS would destroy distance values > 1.0 needed by the PS fog table formulas. The pixel shaders already apply `saturate(fogFactor)` to the computed result.
+- **Resolution**: Removed `saturate()` from VS fog output. PS handles the final clamp.
 - **Impact**: Over-fogged or under-fogged scenes
 
 ### 11. Front/Back Face Detection: D3D11 bool vs D3D9 float
