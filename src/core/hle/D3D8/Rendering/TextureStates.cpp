@@ -167,7 +167,8 @@ void XboxTextureStateConverter::Apply()
     // Track if we need to overwrite state 0 with 3 because of Point Sprites
     // The Xbox NV2A uses only Stage 3 for point-sprites, so we emulate this
     // by mapping Stage 3 to Stage 0, and disabling all stages > 0
-	// TODO use stage 3 when we roll our own point sprites after moving off D3D9
+    // D3D11: The geometry shader generates TEXCOORD0 UVs for the sprite quad,
+    // and the SRV from stage 3 is copied to slot 0 after the loop.
     bool pointSpriteOverride = false;
     bool pointSpritesEnabled = false;
     pointSpritesEnabled = pXboxRenderStates->GetXboxRenderState(xbox::X_D3DRS_POINTSPRITEENABLE);

@@ -226,10 +226,11 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 - **Impact**: Polygon edge AA not accurately reproduced
 
 ### 33. Point Sprite Implementation
-- [ ] Fixed
-- **Files**: `TextureStates.cpp:167`
+- [x] Fixed
+- **Files**: `TextureStates.cpp:167`, `Backend_D3D11.cpp`
 - **Description**: Point sprites require stage 3→stage 0 texture override and shader-side expansion. D3D11's native geometry shader point sprite expansion is not used.
-- **Impact**: Particle systems using point sprites may render incorrectly
+- **Resolution**: Implemented a geometry shader (`gs_4_0`) that expands each point vertex into a screen-aligned quad with generated [0,1]² UVs in TEXCOORD0. The GS reads the VS PSIZE output and viewport dimensions to compute screen-space quad extents. Bound/unbound automatically when `X_D3DRS_POINTSPRITEENABLE` is set. The existing stage 3→0 SRV copy provides the correct texture to the generated UVs.
+- **Impact**: Particle systems using point sprites now render correctly on D3D11
 
 ### 34. Render Target View Cache Miss
 - [x] Fixed

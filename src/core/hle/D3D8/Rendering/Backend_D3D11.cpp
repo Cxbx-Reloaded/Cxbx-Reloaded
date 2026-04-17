@@ -102,6 +102,13 @@ static ID3D11SamplerState  *g_pD3D11BlitSamplerLinear = nullptr;
 static ID3D11SamplerState  *g_pD3D11BlitSamplerPoint = nullptr;
 
 // ******************************************************************
+// * Point sprite geometry shader resources
+// ******************************************************************
+static ID3D11GeometryShader *g_pD3D11PointSpriteGS = nullptr;
+static ID3D11Buffer         *g_pD3D11GSConstantBuffer = nullptr;
+static bool                  g_bPointSpriteEnabled = false;
+
+// ******************************************************************
 // * Shader constant functions
 // ******************************************************************
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
@@ -246,6 +253,94 @@ void CxbxD3D11InitBlit()
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create point sampler");
 	}
+
+	// ************************************************************
+	// Point sprite geometry shader
+	// ************************************************************
+	static const char* pointSpriteGS =
+		"struct GS_INPUT {\n"
+		"    float4 oPos : POSITION;\n"
+		"    float4 oD0  : COLOR0;\n"
+		"    float4 oD1  : COLOR1;\n"
+		"    float  oFog : FOG;\n"
+		"    float  oPts : PSIZE;\n"
+		"    float4 oB0  : TEXCOORD4;\n"
+		"    float4 oB1  : TEXCOORD5;\n"
+		"    float4 oT0  : TEXCOORD0;\n"
+		"    float4 oT1  : TEXCOORD1;\n"
+		"    float4 oT2  : TEXCOORD2;\n"
+		"    float4 oT3  : TEXCOORD3;\n"
+		"};\n"
+		"struct GS_OUTPUT {\n"
+		"    float4 oPos : SV_Position;\n"
+		"    float4 oD0  : COLOR0;\n"
+		"    float4 oD1  : COLOR1;\n"
+		"    float  oFog : FOG;\n"
+		"    float  oPts : PSIZE;\n"
+		"    float4 oB0  : TEXCOORD4;\n"
+		"    float4 oB1  : TEXCOORD5;\n"
+		"    float4 oT0  : TEXCOORD0;\n"
+		"    float4 oT1  : TEXCOORD1;\n"
+		"    float4 oT2  : TEXCOORD2;\n"
+		"    float4 oT3  : TEXCOORD3;\n"
+		"};\n"
+		"cbuffer GSConstants : register(b0) { float4 gsViewportInv; };\n"
+		"[maxvertexcount(4)]\n"
+		"void main(point GS_INPUT input[1], inout TriangleStream<GS_OUTPUT> stream) {\n"
+		"    GS_OUTPUT o;\n"
+		"    o.oD0  = input[0].oD0;\n"
+		"    o.oD1  = input[0].oD1;\n"
+		"    o.oFog = input[0].oFog;\n"
+		"    o.oPts = input[0].oPts;\n"
+		"    o.oB0  = input[0].oB0;\n"
+		"    o.oB1  = input[0].oB1;\n"
+		"    o.oT1  = input[0].oT1;\n"
+		"    o.oT2  = input[0].oT2;\n"
+		"    o.oT3  = input[0].oT3;\n"
+		"    float ptSize = max(input[0].oPts, 1.0);\n"
+		"    float4 pos = input[0].oPos;\n"
+		"    float halfW = ptSize * gsViewportInv.x * pos.w;\n"
+		"    float halfH = ptSize * gsViewportInv.y * pos.w;\n"
+		"    o.oPos = pos + float4(-halfW, -halfH, 0, 0);\n"
+		"    o.oT0 = float4(0, 0, 0, 1);\n"
+		"    stream.Append(o);\n"
+		"    o.oPos = pos + float4(+halfW, -halfH, 0, 0);\n"
+		"    o.oT0 = float4(1, 0, 0, 1);\n"
+		"    stream.Append(o);\n"
+		"    o.oPos = pos + float4(-halfW, +halfH, 0, 0);\n"
+		"    o.oT0 = float4(0, 1, 0, 1);\n"
+		"    stream.Append(o);\n"
+		"    o.oPos = pos + float4(+halfW, +halfH, 0, 0);\n"
+		"    o.oT0 = float4(1, 1, 0, 1);\n"
+		"    stream.Append(o);\n"
+		"    stream.RestartStrip();\n"
+		"}\n";
+
+	ID3DBlob* pGSBlob = nullptr;
+	pErrors = nullptr;
+	hr = D3DCompile(pointSpriteGS, strlen(pointSpriteGS), "CxbxPointSpriteGS", nullptr, nullptr, "main", "gs_4_0", 0, 0, &pGSBlob, &pErrors);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile point sprite GS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
+		if (pErrors) pErrors->Release();
+	} else {
+		hr = g_pD3DDevice->CreateGeometryShader(pGSBlob->GetBufferPointer(), pGSBlob->GetBufferSize(), nullptr, &g_pD3D11PointSpriteGS);
+		pGSBlob->Release();
+		if (pErrors) pErrors->Release();
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create point sprite GS");
+		}
+	}
+
+	// Create GS constant buffer (1 float4: inverse viewport dimensions)
+	D3D11_BUFFER_DESC cbDesc = {};
+	cbDesc.ByteWidth = 16; // 1 float4
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11GSConstantBuffer);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create GS constant buffer");
+	}
 }
 
 // ******************************************************************
@@ -319,6 +414,7 @@ HRESULT CxbxD3D11Blt(
 	g_pD3DDeviceContext->OMSetRenderTargets(1, &pRTV, nullptr);
 	g_pD3DDeviceContext->VSSetShader(g_pD3D11BlitVS, nullptr, 0);
 	g_pD3DDeviceContext->PSSetShader(g_pD3D11BlitPS, nullptr, 0);
+	g_pD3DDeviceContext->GSSetShader(nullptr, nullptr, 0); // Ensure point sprite GS doesn't interfere
 	g_pD3DDeviceContext->PSSetShaderResources(0, 1, &pSRV);
 	ID3D11SamplerState* pSampler = (Filter == D3DTEXF_LINEAR) ? g_pD3D11BlitSamplerLinear : g_pD3D11BlitSamplerPoint;
 	g_pD3DDeviceContext->PSSetSamplers(0, 1, &pSampler);
@@ -494,6 +590,10 @@ void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
         case xbox::X_D3DRS_TEXTUREFACTOR:
             // These are read from xbox render state by the fixed function shader
             break;
+        // ---- Point sprite state ----
+        case xbox::X_D3DRS_POINTSPRITEENABLE:
+            g_bPointSpriteEnabled = (Value != 0);
+            break;
         default:
             break;
     }
@@ -538,6 +638,26 @@ void CxbxD3D11ApplyDirtyStates()
 
 	CxbxD3D11FlushVertexShaderConstants();
 	CxbxD3D11FlushPixelShaderConstants();
+
+	// Bind or unbind the point sprite geometry shader
+	if (g_bPointSpriteEnabled && g_pD3D11PointSpriteGS) {
+		// Update GS constant buffer with inverse viewport dimensions
+		D3D11_VIEWPORT vp = {};
+		UINT numVP = 1;
+		g_pD3DDeviceContext->RSGetViewports(&numVP, &vp);
+		if (vp.Width > 0 && vp.Height > 0 && g_pD3D11GSConstantBuffer) {
+			float gsConstants[4] = { 1.0f / vp.Width, 1.0f / vp.Height, 0.0f, 0.0f };
+			D3D11_MAPPED_SUBRESOURCE mapped = {};
+			if (SUCCEEDED(g_pD3DDeviceContext->Map(g_pD3D11GSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
+				memcpy(mapped.pData, gsConstants, sizeof(gsConstants));
+				g_pD3DDeviceContext->Unmap(g_pD3D11GSConstantBuffer, 0);
+			}
+			g_pD3DDeviceContext->GSSetConstantBuffers(0, 1, &g_pD3D11GSConstantBuffer);
+		}
+		g_pD3DDeviceContext->GSSetShader(g_pD3D11PointSpriteGS, nullptr, 0);
+	} else {
+		g_pD3DDeviceContext->GSSetShader(nullptr, nullptr, 0);
+	}
 }
 
 // ******************************************************************
@@ -554,6 +674,8 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11BlitPS) { g_pD3D11BlitPS->Release(); g_pD3D11BlitPS = nullptr; }
 	if (g_pD3D11BlitSamplerLinear) { g_pD3D11BlitSamplerLinear->Release(); g_pD3D11BlitSamplerLinear = nullptr; }
 	if (g_pD3D11BlitSamplerPoint) { g_pD3D11BlitSamplerPoint->Release(); g_pD3D11BlitSamplerPoint = nullptr; }
+	if (g_pD3D11PointSpriteGS) { g_pD3D11PointSpriteGS->Release(); g_pD3D11PointSpriteGS = nullptr; }
+	if (g_pD3D11GSConstantBuffer) { g_pD3D11GSConstantBuffer->Release(); g_pD3D11GSConstantBuffer = nullptr; }
 	ClearRTVCache();
 }
 
