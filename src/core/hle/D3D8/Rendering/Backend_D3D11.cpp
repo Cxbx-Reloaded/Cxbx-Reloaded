@@ -1922,4 +1922,49 @@ void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration
 		pCxbxVertexDeclaration != nullptr ? pCxbxVertexDeclaration->pHostVertexDeclaration : nullptr);
 }
 
+// ******************************************************************
+// * Dual-backend wrappers — D3D11 implementations
+// ******************************************************************
+
+HRESULT CxbxSetVertexShader(IDirect3DVertexShader* pHostVertexShader)
+{
+	g_pD3DDeviceContext->VSSetShader(pHostVertexShader, nullptr, 0);
+	return S_OK;
+}
+
+IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pDeclaration)
+{
+	// For D3D11, we cannot create an input layout without compiled shader bytecode.
+	// Return nullptr here; the actual ID3D11InputLayout will be created lazily
+	// in CxbxSetHostVertexDeclaration when both elements and a compiled shader are available.
+	(void)pDeclaration;
+	return nullptr;
+}
+
+void CxbxSetHostVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration)
+{
+	CxbxD3D11SetVertexDeclaration(pCxbxVertexDeclaration);
+}
+
+void CxbxSetFogColor(uint32_t fog_color)
+{
+	// D3D11: Set fog color in PS constant buffer at PSH_XBOX_CONSTANT_FOG (register 18)
+	D3DXCOLOR fogColorFloat(fog_color); // ARGB → correct R,G,B,A
+	CxbxSetPixelShaderConstantF(/*PSH_XBOX_CONSTANT_FOG=*/18, (const float*)&fogColorFloat, 1);
+}
+
+void CxbxGetBumpEnvMatrix(int stage, DWORD value[4])
+{
+	value[0] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT00);
+	value[1] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT01);
+	value[2] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT10);
+	value[3] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT11);
+}
+
+void CxbxGetBumpEnvLuminance(int stage, DWORD value[2])
+{
+	value[0] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVLSCALE);
+	value[1] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVLOFFSET);
+}
+
 #endif // CXBX_USE_D3D11

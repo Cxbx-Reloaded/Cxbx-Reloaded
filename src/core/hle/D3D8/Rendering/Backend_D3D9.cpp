@@ -30,6 +30,7 @@
 #include "core\kernel\init\CxbxKrnl.h" // LOG_INIT, EmuLog, CxbxrAbort
 #include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
 #include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3DPrimitiveType
+#include "core\hle\D3D8\XbVertexShader.h" // CxbxVertexDeclaration
 
 // ******************************************************************
 // * D3D9 globals — definitions
@@ -202,6 +203,50 @@ HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirec
 void CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader)
 {
 	g_pD3DDevice->SetPixelShader(pPixelShader);
+}
+
+// ******************************************************************
+// * Dual-backend wrappers — D3D9 implementations
+// ******************************************************************
+
+HRESULT CxbxSetVertexShader(IDirect3DVertexShader* pHostVertexShader)
+{
+	return g_pD3DDevice->SetVertexShader(pHostVertexShader);
+}
+
+IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pDeclaration)
+{
+	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	IDirect3DVertexDeclaration* pHostVertexDeclaration = nullptr;
+	HRESULT hRet = g_pD3DDevice->CreateVertexDeclaration(pDeclaration, &pHostVertexDeclaration);
+	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
+	return pHostVertexDeclaration;
+}
+
+void CxbxSetHostVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration)
+{
+	g_pD3DDevice->SetVertexDeclaration(
+		pCxbxVertexDeclaration != nullptr ? pCxbxVertexDeclaration->pHostVertexDeclaration : nullptr);
+}
+
+void CxbxSetFogColor(uint32_t fog_color)
+{
+	g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, fog_color);
+}
+
+void CxbxGetBumpEnvMatrix(int stage, DWORD value[4])
+{
+	g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT00, &value[0]);
+	g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT01, &value[1]);
+	g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT10, &value[2]);
+	g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVMAT11, &value[3]);
+}
+
+void CxbxGetBumpEnvLuminance(int stage, DWORD value[2])
+{
+	g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLSCALE,  &value[0]);
+	g_pD3DDevice->GetTextureStageState(stage, D3DTSS_BUMPENVLOFFSET, &value[1]);
 }
 
 #endif // !CXBX_USE_D3D11

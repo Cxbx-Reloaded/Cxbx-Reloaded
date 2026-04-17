@@ -221,6 +221,13 @@ void*   CxbxLockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer); // Returns m
 void    CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer);
 HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirect3DPixelShader** ppShader);
 void    CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader);
+HRESULT CxbxSetVertexShader(IDirect3DVertexShader* pHostVertexShader);
+IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pDeclaration);
+struct _CxbxVertexDeclaration;
+void    CxbxSetHostVertexDeclaration(struct _CxbxVertexDeclaration* pCxbxVertexDeclaration);
+void    CxbxSetFogColor(uint32_t fog_color);
+void    CxbxGetBumpEnvMatrix(int stage, DWORD value[4]);
+void    CxbxGetBumpEnvLuminance(int stage, DWORD value[2]);
 
 #ifdef CXBX_USE_D3D11
 // Reusable grow-to-fit dynamic buffer for D3D11.

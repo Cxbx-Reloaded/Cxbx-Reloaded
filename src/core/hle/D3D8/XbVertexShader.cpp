@@ -36,9 +36,6 @@
 #include "core\hle\D3D8\Rendering\RenderStates.h" // For XboxRenderStateConverter
 #include "core\hle\D3D8\Rendering\VertexShaderCache.h" // For g_VertexShaderCache
 #include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
-#ifdef CXBX_USE_D3D11
-#include "core\hle\D3D8\Rendering\Backend_D3D11.h" // For CxbxD3D11SetVertexDeclaration
-#endif
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
@@ -418,7 +415,7 @@ static bool FreeCxbxVertexDeclaration(CxbxVertexDeclaration *pCxbxVertexDeclarat
 	if (pCxbxVertexDeclaration) {
 		if (pCxbxVertexDeclaration->pHostVertexDeclaration) {
 			HRESULT hRet = pCxbxVertexDeclaration->pHostVertexDeclaration->Release();
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DeleteVertexShader(pHostVertexDeclaration)");
+			DEBUG_D3DRESULT(hRet, "pHostVertexDeclaration->Release()");
 		}
 #ifdef CXBX_USE_D3D11
 		if (pCxbxVertexDeclaration->pD3D11InputElements) {
@@ -474,41 +471,6 @@ CxbxVertexDeclaration* FetchCachedCxbxVertexDeclaration(VertexDeclarationKey Cac
 	}
 
 	return nullptr;
-}
-
-IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pDeclaration)
-{
-	LOG_INIT; // Allows use of DEBUG_D3DRESULT
-
-	IDirect3DVertexDeclaration* pHostVertexDeclaration = nullptr;
-#ifdef CXBX_USE_D3D11
-	// For D3D11, we cannot create an input layout without compiled shader bytecode.
-	// Return nullptr here; the actual ID3D11InputLayout will be created lazily
-	// in CxbxUpdateHostVertexDeclaration when both elements and a compiled shader are available.
-	// The elements are stored in CxbxVertexDeclaration::pD3D11InputElements.
-	(void)pDeclaration;
-#else
-	HRESULT hRet = g_pD3DDevice->CreateVertexDeclaration(pDeclaration, &pHostVertexDeclaration);
-	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateVertexDeclaration");
-#endif
-
-	return pHostVertexDeclaration;
-}
-
-HRESULT CxbxSetVertexShader(IDirect3DVertexShader* pHostVertexShader)
-{
-	HRESULT hRet;
-#ifdef CXBX_USE_D3D11
-	g_pD3DDeviceContext->VSSetShader(
-		pHostVertexShader,
-		nullptr, // ppClassInstances
-		0 // NumClassInstances
-	);
-	hRet = S_OK;
-#else
-	hRet = g_pD3DDevice->SetVertexShader(pHostVertexShader);
-#endif
-	return hRet;
 }
 
 extern IDirect3DVertexShader* CxbxCreateVertexShader(ID3DBlob* pCompiledShader, const char *shader_category); // Implemented in VertexShaderCache.cpp
@@ -610,7 +572,7 @@ void CxbxUpdateHostVertexShader()
 		g_D3D11HasActiveShaderKey = true;
 #endif
 		HRESULT hRet = CxbxSetVertexShader(pHostVertexShader);
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetVertexShader");
+		DEBUG_D3DRESULT(hRet, "CxbxSetVertexShader(pHostVertexShader)");
 	}
 }
 
@@ -759,13 +721,7 @@ ID3DBlob* CxbxGetActiveVertexShaderBytecode()
 void CxbxUpdateHostVertexDeclaration()
 {
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
-#ifdef CXBX_USE_D3D11
-	CxbxD3D11SetVertexDeclaration(pCxbxVertexDeclaration);
-	HRESULT hRet = S_OK;
-#else
-	HRESULT hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration->pHostVertexDeclaration);
-#endif
-	(void)hRet;
+	CxbxSetHostVertexDeclaration(pCxbxVertexDeclaration);
 
 	// Titles can specify default values for registers via calls like SetVertexData4f
 	// HLSL shaders need to know whether to use vertex data or default vertex shader values
