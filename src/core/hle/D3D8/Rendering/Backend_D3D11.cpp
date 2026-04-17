@@ -174,7 +174,7 @@ static ID3D11ShaderResourceView  *g_pD3D11VertexConvertSrcSRV = nullptr;
 
 // Create a constant buffer. If bDynamic, uses DYNAMIC + CPU_ACCESS_WRITE
 // (for Map/Unmap); otherwise DEFAULT (for UpdateSubresource).
-static HRESULT CxbxD3D11CreateConstantBuffer(UINT byteWidth, bool bDynamic, ID3D11Buffer** ppBuffer)
+HRESULT CxbxD3D11CreateConstantBuffer(UINT byteWidth, bool bDynamic, ID3D11Buffer** ppBuffer)
 {
 	D3D11_BUFFER_DESC desc = {};
 	desc.ByteWidth = byteWidth;
@@ -247,6 +247,43 @@ static void CxbxD3D11EnsureRawStagingBuffer(
 	}
 }
 
+// Bind CS pipeline state, dispatch, and unbind resources to avoid hazards.
+static void CxbxD3D11DispatchCS(
+	ID3D11ComputeShader* pShader,
+	ID3D11Buffer* pCB,
+	UINT numSRVs,
+	ID3D11ShaderResourceView* const* ppSRVs,
+	ID3D11UnorderedAccessView* pUAV,
+	UINT groupsX, UINT groupsY, UINT groupsZ)
+{
+	g_pD3DDeviceContext->CSSetShader(pShader, nullptr, 0);
+	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &pCB);
+	if (numSRVs > 0)
+		g_pD3DDeviceContext->CSSetShaderResources(0, numSRVs, ppSRVs);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pUAV, nullptr);
+	g_pD3DDeviceContext->Dispatch(groupsX, groupsY, groupsZ);
+
+	// Unbind to avoid resource hazards
+	ID3D11ShaderResourceView* nullSRVs[2] = { nullptr, nullptr };
+	ID3D11UnorderedAccessView* pNullUAV = nullptr;
+	UINT unbindCount = numSRVs > 0 ? numSRVs : 1;
+	g_pD3DDeviceContext->CSSetShaderResources(0, unbindCount, nullSRVs);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+}
+
+// Map a DYNAMIC buffer with WRITE_DISCARD, memcpy data, and Unmap.
+static HRESULT CxbxD3D11UpdateDynamicBuffer(ID3D11Buffer* pBuffer, const void* pData, size_t dataSize)
+{
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hr = g_pD3DDeviceContext->Map(pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return hr;
+	memcpy(mapped.pData, pData, dataSize);
+	g_pD3DDeviceContext->Unmap(pBuffer, 0);
+	return S_OK;
+}
+
 // ******************************************************************
 // * Shader constant functions
 // ******************************************************************
@@ -270,11 +307,7 @@ void CxbxD3D11FlushVertexShaderConstants()
 	if (!g_pD3D11VSConstantBuffer || !g_bD3D11VSConstantsDirty)
 		return;
 
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	if (SUCCEEDED(g_pD3DDeviceContext->Map(g_pD3D11VSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
-		memcpy(mapped.pData, g_D3D11VSConstants, sizeof(g_D3D11VSConstants));
-		g_pD3DDeviceContext->Unmap(g_pD3D11VSConstantBuffer, 0);
-	}
+	CxbxD3D11UpdateDynamicBuffer(g_pD3D11VSConstantBuffer, g_D3D11VSConstants, sizeof(g_D3D11VSConstants));
 	g_bD3D11VSConstantsDirty = false;
 }
 
@@ -312,11 +345,7 @@ void CxbxD3D11FlushPixelShaderConstants()
 	if (!g_pD3D11PSConstantBuffer || !g_bD3D11PSConstantsDirty)
 		return;
 
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	if (SUCCEEDED(g_pD3DDeviceContext->Map(g_pD3D11PSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
-		memcpy(mapped.pData, g_D3D11PSConstants, sizeof(g_D3D11PSConstants));
-		g_pD3DDeviceContext->Unmap(g_pD3D11PSConstantBuffer, 0);
-	}
+	CxbxD3D11UpdateDynamicBuffer(g_pD3D11PSConstantBuffer, g_D3D11PSConstants, sizeof(g_D3D11PSConstants));
 	g_bD3D11PSConstantsDirty = false;
 }
 
@@ -1161,11 +1190,7 @@ void CxbxD3D11ApplyDirtyStates()
 		g_pD3DDeviceContext->RSGetViewports(&numVP, &vp);
 		if (vp.Width > 0 && vp.Height > 0 && g_pD3D11GSConstantBuffer) {
 			float gsConstants[4] = { 1.0f / vp.Width, 1.0f / vp.Height, g_fLineWidth, 0.0f };
-			D3D11_MAPPED_SUBRESOURCE mapped = {};
-			if (SUCCEEDED(g_pD3DDeviceContext->Map(g_pD3D11GSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
-				memcpy(mapped.pData, gsConstants, sizeof(gsConstants));
-				g_pD3DDeviceContext->Unmap(g_pD3D11GSConstantBuffer, 0);
-			}
+			CxbxD3D11UpdateDynamicBuffer(g_pD3D11GSConstantBuffer, gsConstants, sizeof(gsConstants));
 			g_pD3DDeviceContext->GSSetConstantBuffers(0, 1, &g_pD3D11GSConstantBuffer);
 		}
 	}
@@ -1226,12 +1251,9 @@ bool CxbxD3D11UnswizzleTexture(
 		return false;
 
 	// Upload swizzled source data to the staging buffer
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	HRESULT hr = g_pD3DDeviceContext->Map(g_pD3D11UnswizzleStagingBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	HRESULT hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11UnswizzleStagingBuf, pSwizzledSrc, dataSize);
 	if (FAILED(hr))
 		return false;
-	memcpy(mapped.pData, pSwizzledSrc, dataSize);
-	g_pD3DDeviceContext->Unmap(g_pD3D11UnswizzleStagingBuf, 0);
 
 	// Compute Morton masks (same algorithm as EmuUnswizzleBox)
 	UINT maskX = 0, maskY = 0;
@@ -1242,11 +1264,9 @@ bool CxbxD3D11UnswizzleTexture(
 
 	// Update constant buffer
 	UINT cbData[4] = { maskX, maskY, width, bpp };
-	hr = g_pD3DDeviceContext->Map(g_pD3D11UnswizzleCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11UnswizzleCB, cbData, sizeof(cbData));
 	if (FAILED(hr))
 		return false;
-	memcpy(mapped.pData, cbData, sizeof(cbData));
-	g_pD3DDeviceContext->Unmap(g_pD3D11UnswizzleCB, 0);
 
 	// Create a temporary UAV for the destination texture
 	// Map the format to a uint-typed format for RWTexture2D<uint>
@@ -1269,23 +1289,11 @@ bool CxbxD3D11UnswizzleTexture(
 		return false;
 	}
 
-	// Save and set CS pipeline state
-	g_pD3DDeviceContext->CSSetShader(g_pD3D11UnswizzleCS, nullptr, 0);
-	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11UnswizzleCB);
-	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &g_pD3D11UnswizzleSRV);
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pUAV, nullptr);
-
-	// Dispatch: 8x8 thread groups covering the texture dimensions
+	// Dispatch 8x8 thread groups covering the texture dimensions
 	UINT groupsX = (width + 7) / 8;
 	UINT groupsY = (height + 7) / 8;
-	g_pD3DDeviceContext->Dispatch(groupsX, groupsY, 1);
-
-	// Unbind CS resources to avoid hazards
-	ID3D11ShaderResourceView* pNullSRV = nullptr;
-	ID3D11UnorderedAccessView* pNullUAV = nullptr;
-	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &pNullSRV);
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
-	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+	CxbxD3D11DispatchCS(g_pD3D11UnswizzleCS, g_pD3D11UnswizzleCB,
+		1, &g_pD3D11UnswizzleSRV, pUAV, groupsX, groupsY, 1);
 
 	pUAV->Release();
 	return true;
@@ -1314,19 +1322,14 @@ bool CxbxD3D11ExpandPaletteTexture(
 		return false;
 
 	// Upload swizzled P8 source data
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	HRESULT hr = g_pD3DDeviceContext->Map(g_pD3D11UnswizzleStagingBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	HRESULT hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11UnswizzleStagingBuf, pSwizzledP8Src, dataSize);
 	if (FAILED(hr))
 		return false;
-	memcpy(mapped.pData, pSwizzledP8Src, dataSize);
-	g_pD3DDeviceContext->Unmap(g_pD3D11UnswizzleStagingBuf, 0);
 
 	// Upload palette data (256 entries * 4 bytes = 1024 bytes)
-	hr = g_pD3DDeviceContext->Map(g_pD3D11PaletteBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11PaletteBuf, pPaletteData, 1024);
 	if (FAILED(hr))
 		return false;
-	memcpy(mapped.pData, pPaletteData, 1024);
-	g_pD3DDeviceContext->Unmap(g_pD3D11PaletteBuf, 0);
 
 	// Compute Morton masks
 	UINT maskX = 0, maskY = 0;
@@ -1337,11 +1340,9 @@ bool CxbxD3D11ExpandPaletteTexture(
 
 	// Update constant buffer
 	UINT cbData[4] = { maskX, maskY, width, height };
-	hr = g_pD3DDeviceContext->Map(g_pD3D11PaletteExpandCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11PaletteExpandCB, cbData, sizeof(cbData));
 	if (FAILED(hr))
 		return false;
-	memcpy(mapped.pData, cbData, sizeof(cbData));
-	g_pD3DDeviceContext->Unmap(g_pD3D11PaletteExpandCB, 0);
 
 	// Create UAV for destination texture (R8G8B8A8_UNORM → R32_UINT UAV)
 	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
@@ -1355,24 +1356,12 @@ bool CxbxD3D11ExpandPaletteTexture(
 		return false;
 	}
 
-	// Bind CS pipeline: t0=P8 source, t1=palette, u0=destination, b0=constants
-	g_pD3DDeviceContext->CSSetShader(g_pD3D11PaletteExpandCS, nullptr, 0);
-	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11PaletteExpandCB);
+	// Dispatch 8x8 thread groups: t0=P8 source, t1=palette, u0=destination
 	ID3D11ShaderResourceView* srvs[2] = { g_pD3D11UnswizzleSRV, g_pD3D11PaletteSRV };
-	g_pD3DDeviceContext->CSSetShaderResources(0, 2, srvs);
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pUAV, nullptr);
-
-	// Dispatch 8x8 thread groups
 	UINT groupsX = (width + 7) / 8;
 	UINT groupsY = (height + 7) / 8;
-	g_pD3DDeviceContext->Dispatch(groupsX, groupsY, 1);
-
-	// Unbind CS resources
-	ID3D11ShaderResourceView* pNullSRVs[2] = { nullptr, nullptr };
-	ID3D11UnorderedAccessView* pNullUAV = nullptr;
-	g_pD3DDeviceContext->CSSetShaderResources(0, 2, pNullSRVs);
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
-	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+	CxbxD3D11DispatchCS(g_pD3D11PaletteExpandCS, g_pD3D11PaletteExpandCB,
+		2, srvs, pUAV, groupsX, groupsY, 1);
 
 	pUAV->Release();
 	return true;
@@ -1414,12 +1403,9 @@ bool CxbxD3D11ConvertVertexBufferGPU(
 	if (!g_pD3D11VertexConvertSrcBuf || !g_pD3D11VertexConvertSrcSRV)
 		return false;
 
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	HRESULT hr = g_pD3DDeviceContext->Map(g_pD3D11VertexConvertSrcBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	HRESULT hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11VertexConvertSrcBuf, pSrcVertexData, srcDataSize);
 	if (FAILED(hr))
 		return false;
-	memcpy(mapped.pData, pSrcVertexData, srcDataSize);
-	g_pD3DDeviceContext->Unmap(g_pD3D11VertexConvertSrcBuf, 0);
 
 	// Update constant buffer: header (4 uints) + elements (numElements * 4 uints)
 	hr = g_pD3DDeviceContext->Map(g_pD3D11VertexConvertCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
@@ -1457,20 +1443,9 @@ bool CxbxD3D11ConvertVertexBufferGPU(
 	}
 
 	// Dispatch CS
-	g_pD3DDeviceContext->CSSetShader(g_pD3D11VertexConvertCS, nullptr, 0);
-	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11VertexConvertCB);
-	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &g_pD3D11VertexConvertSrcSRV);
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pUAV, nullptr);
-
 	UINT numGroups = (vertexCount + 63) / 64;
-	g_pD3DDeviceContext->Dispatch(numGroups, 1, 1);
-
-	// Unbind
-	ID3D11ShaderResourceView* pNullSRV = nullptr;
-	ID3D11UnorderedAccessView* pNullUAV = nullptr;
-	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &pNullSRV);
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
-	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+	CxbxD3D11DispatchCS(g_pD3D11VertexConvertCS, g_pD3D11VertexConvertCB,
+		1, &g_pD3D11VertexConvertSrcSRV, pUAV, numGroups, 1, 1);
 
 	pUAV->Release();
 	*ppOutputVB = pOutputBuf;
@@ -1574,15 +1549,7 @@ bool CxbxD3D11ConvertIndexBufferGPU(
 	g_pD3DDeviceContext->UpdateSubresource(g_pD3D11IndexConvertCB, 0, nullptr, &cbData, sizeof(cbData), 0);
 
 	// 4. Bind resources and dispatch
-	g_pD3DDeviceContext->CSSetShader(g_pD3D11IndexConvertCS, nullptr, 0);
-	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11IndexConvertCB);
-
-	if (pSourceIndices != nullptr) {
-		g_pD3DDeviceContext->CSSetShaderResources(0, 1, &g_pD3D11IndexConvertInputSRV);
-	}
-
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &g_pD3D11IndexConvertOutputUAV, nullptr);
-
+	UINT numSRVs = (pSourceIndices != nullptr) ? 1 : 0;
 	UINT numWorkItems;
 	if (conversionMode <= CXBX_INDEX_CONVERT_QUAD_CCW) {
 		numWorkItems = sourceVertexCount / 4; // one thread per quad
@@ -1591,17 +1558,11 @@ bool CxbxD3D11ConvertIndexBufferGPU(
 		numWorkItems = (numTris + 1) / 2; // one thread per pair of triangles
 	}
 	UINT numGroups = (numWorkItems + 63) / 64;
+	CxbxD3D11DispatchCS(g_pD3D11IndexConvertCS, g_pD3D11IndexConvertCB,
+		numSRVs, &g_pD3D11IndexConvertInputSRV, g_pD3D11IndexConvertOutputUAV,
+		numGroups, 1, 1);
 
-	g_pD3DDeviceContext->Dispatch(numGroups, 1, 1);
-
-	// 5. Unbind CS resources
-	ID3D11UnorderedAccessView* pNullUAV = nullptr;
-	ID3D11ShaderResourceView* pNullSRV = nullptr;
-	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
-	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &pNullSRV);
-	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
-
-	// 6. Bind output as index buffer (R16_UINT — the CS packed 16-bit indices into 32-bit writes)
+	// 5. Bind output as index buffer (R16_UINT — the CS packed 16-bit indices into 32-bit writes)
 	g_pD3DDeviceContext->IASetIndexBuffer(g_pD3D11IndexConvertOutputBuf, DXGI_FORMAT_R16_UINT, 0);
 
 	return true;
@@ -1902,12 +1863,8 @@ ID3D11Buffer *CxbxDynBuffer::Update(const void *pData, UINT size)
 	}
 
 	// Map-discard and upload
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	HRESULT hr = g_pD3DDeviceContext->Map(pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-	if (FAILED(hr))
+	if (FAILED(CxbxD3D11UpdateDynamicBuffer(pBuffer, pData, size)))
 		return nullptr;
-	memcpy(mapped.pData, pData, size);
-	g_pD3DDeviceContext->Unmap(pBuffer, 0);
 	return pBuffer;
 }
 
