@@ -383,8 +383,10 @@ constexpr int CXBX_D3DPS_CONSTREG_FOGINFO = PSH_XBOX_CONSTANT_FRONTFACE_FACTOR +
 constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1; // = 41
 // D3D11: Per-stage texture format channel fixup (packed float4, one component per stage)
 constexpr int PSH_XBOX_CONSTANT_TEXFMTFIXUP = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 42
+// D3D11: Alpha test state (enable, ref, func, 0) — D3D11 has no fixed-function alpha test
+constexpr int PSH_XBOX_CONSTANT_ALPHATEST = PSH_XBOX_CONSTANT_TEXFMTFIXUP + 1; // = 43
 // This concludes the set of constants that need to be set on host :
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_TEXFMTFIXUP + 1; // = 43
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_ALPHATEST + 1; // = 44
 
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
@@ -791,6 +793,11 @@ void UpdateFixedFunctionPixelShaderState()
 	ffPsState.FogDensity = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGDENSITY);
 	ffPsState.FogStart = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGSTART);
 	ffPsState.FogEnd = XboxRenderStates.GetXboxRenderStateAsFloat(xbox::_X_D3DRENDERSTATETYPE::X_D3DRS_FOGEND);
+	// Alpha test state (D3D11 has no fixed-function alpha test)
+	ffPsState.AlphaTest.x = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE));
+	ffPsState.AlphaTest.y = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHAREF)) / 255.0f;
+	ffPsState.AlphaTest.z = static_cast<float>(EmuXB2PC_D3DCMPFUNC((xbox::X_D3DCMPFUNC)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHAFUNC)));
+	ffPsState.AlphaTest.w = 0;
 	// Texture state
 	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
 		auto stage = &ffPsState.stages[i];
@@ -1041,6 +1048,12 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].g = CxbxGetTexFmtFixup(1);
   fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].b = CxbxGetTexFmtFixup(2);
   fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].a = CxbxGetTexFmtFixup(3);
+
+  // D3D11: Alpha test state (D3D11 has no fixed-function alpha test, so we implement it in the pixel shader)
+  fColor[PSH_XBOX_CONSTANT_ALPHATEST].r = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHATESTENABLE));
+  fColor[PSH_XBOX_CONSTANT_ALPHATEST].g = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHAREF)) / 255.0f;
+  fColor[PSH_XBOX_CONSTANT_ALPHATEST].b = static_cast<float>(EmuXB2PC_D3DCMPFUNC((xbox::X_D3DCMPFUNC)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHAFUNC)));
+  fColor[PSH_XBOX_CONSTANT_ALPHATEST].a = 0;
 
   // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
   // Read the color from the corresponding render state slot :
