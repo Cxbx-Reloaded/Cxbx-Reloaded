@@ -549,6 +549,11 @@ EMUFORMAT PCFormat;
 			}
 			desc.MiscFlags = 0;
 
+			EmuLog(LOG_LEVEL::DEBUG, "CreateTexture2D: XboxFmt=0x%02X PCFmt=%u (%ux%u mips=%u) "
+				"Usage=%u BindFlags=0x%X Swizzled=%d ConvertFmt=%d",
+				X_Format, desc.Format, desc.Width, desc.Height, desc.MipLevels,
+				desc.Usage, desc.BindFlags, bSwizzled, bConvertTextureFormat);
+
 			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture2D");
 #else
