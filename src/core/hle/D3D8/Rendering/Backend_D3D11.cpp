@@ -32,6 +32,7 @@
 #include "core\hle\D3D8\Rendering\Shader.h" // EmuCompileShader
 #include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3D11PrimitiveTopology
 #include "core\hle\D3D8\XbVertexShader.h" // CxbxVertexDeclaration, CxbxGetActiveVertexShaderBytecode
+#include "TextureStates.h" // XboxTextureStateConverter
 
 #include <cstring> // memcpy
 #include <unordered_map>
