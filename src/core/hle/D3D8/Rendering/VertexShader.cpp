@@ -32,7 +32,7 @@
 #include <sstream> // std::stringstream
 
 #ifdef CXBX_USE_D3D11
-const char* g_vs_model = vs_model_4_0;
+const char* g_vs_model = vs_model_5_0;
 #else
 const char* g_vs_model = vs_model_3_0;
 #endif
@@ -328,11 +328,11 @@ extern HRESULT EmuCompileVertexShader
 	const char* notionalSourceName = "CxbxVertexShaderTemplate.hlsl";
 	HRESULT hRet = EmuCompileShader(hlsl_str, g_vs_model, ppHostShader, notionalSourceName);
 	
-	if (FAILED(hRet) && (g_vs_model != _9_11(vs_model_3_0, vs_model_4_0))) {
+	if (FAILED(hRet) && (g_vs_model != _9_11(vs_model_3_0, vs_model_5_0))) {
 		// If the shader failed in the default vertex shader model, retry in a higher model
 		// This allows shaders too large for 2_a to be compiled (Test Case: Shenmue 2)
-		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Retrying with shader model %s", _9_11("3.0", "4.0"));
-		hRet = EmuCompileShader(hlsl_str, _9_11(vs_model_3_0, vs_model_4_0), ppHostShader, notionalSourceName);
+		EmuLog(LOG_LEVEL::WARNING, "Shader compile failed. Retrying with shader model %s", _9_11("3.0", "5.0"));
+		hRet = EmuCompileShader(hlsl_str, _9_11(vs_model_3_0, vs_model_5_0), ppHostShader, notionalSourceName);
 	}
 		
 	return hRet;
