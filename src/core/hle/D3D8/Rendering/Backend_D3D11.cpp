@@ -1010,7 +1010,7 @@ void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
             // Value arrives as a float-encoded DWORD (converted by ApplyComplexRenderState)
             // D3D11 DepthBias is an integer scaled by the depth buffer's minimum representable value
             // For D24: DepthBias * (1 / 2^24). Convert the D3D9 float bias to D3D11 integer bias.
-            float fBias = *reinterpret_cast<const float*>(&Value);
+            float fBias; std::memcpy(&fBias, &Value, sizeof(fBias));
             g_D3D11RasterizerDesc.DepthBias = static_cast<INT>(fBias * (float)(1 << 24));
             g_D3D11RasterizerDesc.DepthBiasClamp = 0.0f;
             g_D3D11RasterizerDesc.SlopeScaledDepthBias = 0.0f;
@@ -1135,7 +1135,7 @@ void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
             break;
         // ---- Line width (Xbox extension, float-encoded DWORD) ----
         case xbox::X_D3DRS_LINEWIDTH:
-            g_fLineWidth = *reinterpret_cast<const float*>(&Value);
+            float fVal; std::memcpy(&fVal, &Value, sizeof(fVal)); g_fLineWidth = fVal;
             if (g_fLineWidth < 1.0f) g_fLineWidth = 1.0f;
             break;
         default:

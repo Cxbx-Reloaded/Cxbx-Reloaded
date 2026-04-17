@@ -29,6 +29,7 @@
 
 #include "RenderStates.h"
 #include "Logging.h"
+#include <cstring> // For std::memcpy
 #include "core/hle/D3D8/Rendering/RenderGlobals.h" // For g_pD3DDevice
 #include "core/hle/D3D8/Rendering/Backend_D3D11.h" // For D3D11 state descs & dirty flags
 #include "core/hle/D3D8/XbConvert.h"
@@ -138,7 +139,7 @@ float XboxRenderStateConverter::GetXboxRenderStateAsFloat(uint32_t State)
         return 0;
     }
 
-    return *reinterpret_cast<float*>(&(D3D__RenderState[XboxRenderStateOffsets[State]]));
+    float f; std::memcpy(&f, &D3D__RenderState[XboxRenderStateOffsets[State]], sizeof(f)); return f;
 }
 
 void XboxRenderStateConverter::StoreInitialValues()
@@ -278,11 +279,11 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
             // NOTE: D3D11 computes fog in its own pixel shader, so negative values pass through
             // correctly. D3D9 passes these to the driver's fixed-function fog pipeline where
             // some non-nvidia drivers clamp them to 0, hence the abs hack is D3D9-only.
-            float fogValue = *(float*)& Value;
+            float fogValue; std::memcpy(&fogValue, &Value, sizeof(fogValue));
             if (fogValue < 0.0f) {
                 LOG_TEST_CASE("FOGSTART/FOGEND below 0");
                 fogValue = std::abs(fogValue);
-                Value = *(DWORD*)& fogValue;
+                std::memcpy(&Value, &fogValue, sizeof(Value));
             }
 #endif
         } break;
