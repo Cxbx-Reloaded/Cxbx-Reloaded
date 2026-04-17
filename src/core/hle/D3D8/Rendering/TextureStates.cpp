@@ -230,7 +230,7 @@ void XboxTextureStateConverter::Apply()
                             // D3DTEXF_PYRAMIDALQUAD = 6,    // 4-sample tent
                             // D3DTEXF_GAUSSIANQUAD = 7,    // 4-sample gaussian
                             // D3DTEXF_CONVOLUTIONMONO = 8,    // Convolution filter for monochrome textures
-                            LOG_TEST_CASE("X_D3DTEXF_QUINCUNX unsupported, falling back to D3DTEXF_GAUSSIANQUAD");
+                            LOG_TEST_CASE("X_D3DTEXF_GAUSSIANCUBIC unsupported, falling back to D3DTEXF_GAUSSIANQUAD");
                             PcValue = D3DTEXF_GAUSSIANQUAD;
                             break;
                         default:
