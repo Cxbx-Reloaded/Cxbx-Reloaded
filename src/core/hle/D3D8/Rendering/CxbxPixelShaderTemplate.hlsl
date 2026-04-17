@@ -512,15 +512,15 @@ PS_OUTPUT main(const PS_INPUT xIn)
 		float alphaRef = ALPHATEST.y;
 		int alphaFunc = (int)ALPHATEST.z;
 		// D3DCMPFUNC: 1=NEVER,2=LESS,3=EQUAL,4=LESSEQUAL,5=GREATER,6=NOTEQUAL,7=GREATEREQUAL,8=ALWAYS
-		bool pass = (alphaFunc == 8); // ALWAYS
-		if (alphaFunc == 1) pass = false;                        // NEVER
-		if (alphaFunc == 2) pass = (xOut.oR0.a < alphaRef);     // LESS
-		if (alphaFunc == 3) pass = (xOut.oR0.a == alphaRef);    // EQUAL
-		if (alphaFunc == 4) pass = (xOut.oR0.a <= alphaRef);    // LESSEQUAL
-		if (alphaFunc == 5) pass = (xOut.oR0.a > alphaRef);     // GREATER
-		if (alphaFunc == 6) pass = (xOut.oR0.a != alphaRef);    // NOTEQUAL
-		if (alphaFunc == 7) pass = (xOut.oR0.a >= alphaRef);    // GREATEREQUAL
-		if (!pass) clip(-1);
+		bool alphaPass = (alphaFunc == 8); // ALWAYS
+		if (alphaFunc == 1) alphaPass = false;                        // NEVER
+		if (alphaFunc == 2) alphaPass = (xOut.oR0.a < alphaRef);     // LESS
+		if (alphaFunc == 3) alphaPass = (xOut.oR0.a == alphaRef);    // EQUAL
+		if (alphaFunc == 4) alphaPass = (xOut.oR0.a <= alphaRef);    // LESSEQUAL
+		if (alphaFunc == 5) alphaPass = (xOut.oR0.a > alphaRef);     // GREATER
+		if (alphaFunc == 6) alphaPass = (xOut.oR0.a != alphaRef);    // NOTEQUAL
+		if (alphaFunc == 7) alphaPass = (xOut.oR0.a >= alphaRef);    // GREATEREQUAL
+		if (!alphaPass) clip(-1);
 	}
 
 	return xOut;
