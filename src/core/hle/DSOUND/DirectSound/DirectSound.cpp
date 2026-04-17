@@ -671,7 +671,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(CDirectSound_DownloadEffectsImage)
 
         // Process the DSEFFECTMAP in internal image buffer, rebase code segmemt address and state segment address of each effect.
         PBYTE pEffectMaps = (pImageDesc + 8); //EffectMaps array start from here.
-        for (DWORD effect_loop = 0; effect_loop < EffectCount; effect_loop++) {
+   	   	for (DWORD effect_loop = 0; effect_loop < EffectCount; effect_loop++) {
             PBYTE pCodeSeg = pEffectMaps + effect_loop * 32;
             *(PDWORD)pCodeSeg += (DWORD)ImageBufferBackup;
 

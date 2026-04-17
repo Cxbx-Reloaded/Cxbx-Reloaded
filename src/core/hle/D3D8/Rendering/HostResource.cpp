@@ -343,7 +343,7 @@ bool HostResourceRequiresUpdate(resource_key_t key, xbox::X_D3DResource* pXboxRe
 		if (it->second.hash != oldHash) {
 			// The data changed, so reset the hash lifetime
 			it->second.hashLifeTime = 1ms;
-            it->second.lastUpdate = now;
+   	   	   	it->second.lastUpdate = now;
 			modified = true;
 		} else if (it->second.lastUpdate + 1000ms < now) {
 			// The data did not change, so increase the hash lifetime
@@ -601,90 +601,90 @@ uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer *pPixelContainer)
 
 void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D3DBaseTexture* pTexture, UINT& Level, _9_11(D3DCUBEMAP_FACES, int)& Face)
 {
-    auto pSurfaceData = (uintptr_t)GetDataFromXboxResource(pSurface);
-    auto pTextureData = (uintptr_t)GetDataFromXboxResource(pTexture);
+   	auto pSurfaceData = (uintptr_t)GetDataFromXboxResource(pSurface);
+   	auto pTextureData = (uintptr_t)GetDataFromXboxResource(pTexture);
 
-    // Fast path: If the data pointers match, this must be the first surface within the texture
-    if (pSurfaceData == pTextureData) {
-        Level = 0;
-        Face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
-        return;
-    }
+   	// Fast path: If the data pointers match, this must be the first surface within the texture
+   	if (pSurfaceData == pTextureData) {
+   	   	Level = 0;
+   	   	Face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
+   	   	return;
+   	}
 
-    int numLevels = CxbxGetPixelContainerMipMapLevels(pTexture);
-    int numFaces = pTexture->Format & X_D3DFORMAT_CUBEMAP ? 6 : 1;
+   	int numLevels = CxbxGetPixelContainerMipMapLevels(pTexture);
+   	int numFaces = pTexture->Format & X_D3DFORMAT_CUBEMAP ? 6 : 1;
 
-    CxbxGetPixelContainerMipMapLevels(pTexture);
+   	CxbxGetPixelContainerMipMapLevels(pTexture);
 
-    // First, we need to fetch the dimensions of both the surface and the texture, for use within our calculations
-    UINT textureWidth, textureHeight, textureDepth, textureRowPitch, textureSlicePitch;
-    CxbxGetPixelContainerMeasures(pTexture, 0, &textureWidth, &textureHeight, &textureDepth, &textureRowPitch, &textureSlicePitch);
+   	// First, we need to fetch the dimensions of both the surface and the texture, for use within our calculations
+   	UINT textureWidth, textureHeight, textureDepth, textureRowPitch, textureSlicePitch;
+   	CxbxGetPixelContainerMeasures(pTexture, 0, &textureWidth, &textureHeight, &textureDepth, &textureRowPitch, &textureSlicePitch);
 
-    UINT surfaceWidth, surfaceHeight, surfaceDepth, surfaceRowPitch, surfaceSlicePitch;
-    CxbxGetPixelContainerMeasures(pSurface, 0, &surfaceWidth, &surfaceHeight, &surfaceDepth, &surfaceRowPitch, &surfaceSlicePitch);
+   	UINT surfaceWidth, surfaceHeight, surfaceDepth, surfaceRowPitch, surfaceSlicePitch;
+   	CxbxGetPixelContainerMeasures(pSurface, 0, &surfaceWidth, &surfaceHeight, &surfaceDepth, &surfaceRowPitch, &surfaceSlicePitch);
 
-    // Iterate through all faces and levels, until we find a matching pointer
-    bool isCompressed = EmuXBFormatIsCompressed(GetXboxPixelContainerFormat(pTexture));
-    int minSize = (isCompressed) ? 4 : 1;
-    int cubeFaceOffset = 0; int cubeFaceSize = 0;
-    auto pData = pTextureData;
+   	// Iterate through all faces and levels, until we find a matching pointer
+   	bool isCompressed = EmuXBFormatIsCompressed(GetXboxPixelContainerFormat(pTexture));
+   	int minSize = (isCompressed) ? 4 : 1;
+   	int cubeFaceOffset = 0; int cubeFaceSize = 0;
+   	auto pData = pTextureData;
 
-    for (int face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0); face < numFaces; face++) {
-        int mipWidth = textureWidth;
-        int mipHeight = textureHeight;
-        int mipDepth = textureDepth;
-        int mipRowPitch = textureRowPitch;
-        int mipDataOffset = 0;
+   	for (int face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0); face < numFaces; face++) {
+   	   	int mipWidth = textureWidth;
+   	   	int mipHeight = textureHeight;
+   	   	int mipDepth = textureDepth;
+   	   	int mipRowPitch = textureRowPitch;
+   	   	int mipDataOffset = 0;
 
-        for (int level = 0; level < numLevels; level++) {
-            if (pData == pSurfaceData) {
-                Level = level;
-                Face = (_9_11(D3DCUBEMAP_FACES, int))face;
-                return;
-            }
+   	   	for (int level = 0; level < numLevels; level++) {
+   	   	   	if (pData == pSurfaceData) {
+   	   	   	   	Level = level;
+   	   	   	   	Face = (_9_11(D3DCUBEMAP_FACES, int))face;
+   	   	   	   	return;
+   	   	   	}
 
-            // Calculate size of this mipmap level
-            UINT dwMipSize = mipRowPitch * mipHeight;
-            if (isCompressed) {
-                dwMipSize /= 4;
-            }
+   	   	   	// Calculate size of this mipmap level
+   	   	   	UINT dwMipSize = mipRowPitch * mipHeight;
+   	   	   	if (isCompressed) {
+   	   	   	   	dwMipSize /= 4;
+   	   	   	}
 
-            // If this is the first face, set the cube face size
-            if (face == _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0)) {
-                cubeFaceSize = ROUND_UP(textureDepth * dwMipSize, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
-            }
+   	   	   	// If this is the first face, set the cube face size
+   	   	   	if (face == _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0)) {
+   	   	   	   	cubeFaceSize = ROUND_UP(textureDepth * dwMipSize, X_D3DTEXTURE_CUBEFACE_ALIGNMENT);
+   	   	   	}
 
-            // Move to the next mip-map and calculate dimensions for the next iteration
-            mipDataOffset += dwMipSize;
+   	   	   	// Move to the next mip-map and calculate dimensions for the next iteration
+   	   	   	mipDataOffset += dwMipSize;
 
-            if (mipWidth > minSize) {
-                mipWidth /= 2;
-                mipRowPitch /= 2;
-            }
+   	   	   	if (mipWidth > minSize) {
+   	   	   	   	mipWidth /= 2;
+   	   	   	   	mipRowPitch /= 2;
+   	   	   	}
 
-            if (mipHeight > minSize) {
-                mipHeight /= 2;
-            }
+   	   	   	if (mipHeight > minSize) {
+   	   	   	   	mipHeight /= 2;
+   	   	   	}
 
-            if (mipDepth > 1) {
-                mipDepth /= 2;
-            }
-        }
+   	   	   	if (mipDepth > 1) {
+   	   	   	   	mipDepth /= 2;
+   	   	   	}
+   	   	}
 
-        // Move to the next face
-        pData += cubeFaceSize;
-    }
+   	   	// Move to the next face
+   	   	pData += cubeFaceSize;
+   	}
 
-    LOG_TEST_CASE("Could not find Surface within Texture, falling back to Level = 0, Face = D3DCUBEMAP_FACE_POSITIVE_X");
-    Level = 0;
-    Face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
+   	LOG_TEST_CASE("Could not find Surface within Texture, falling back to Level = 0, Face = D3DCUBEMAP_FACE_POSITIVE_X");
+   	Level = 0;
+   	Face = _9_11(D3DCUBEMAP_FACE_POSITIVE_X, 0);
 }
 
 // Wrapper function to allow calling without passing a face
 void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D3DBaseTexture* pBaseTexture, UINT& Level)
 {
-    _9_11(D3DCUBEMAP_FACES, int) face;
-    GetSurfaceFaceAndLevelWithinTexture(pSurface, pBaseTexture, Level, face);
+   	_9_11(D3DCUBEMAP_FACES, int) face;
+   	GetSurfaceFaceAndLevelWithinTexture(pSurface, pBaseTexture, Level, face);
 }
 
 // Direct3D initialization (called before emulation begins)
@@ -701,60 +701,60 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 	if (it != ResourceCache.end()) {
 		// TODO : Should this check be (D3DUsage & D3DUSAGE_RENDERTARGET) instead?
 		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource) && EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat((xbox::X_D3DPixelContainer*)pResource))) {
-            // Render targets have special behavior: We can't trash them on guest modification
-            // this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
-            // would be overwritten by the surface created in SetRenderTarget
-            // However, if a non-rendertarget surface is used here, we'll need to recreate it as a render target!
-            auto hostResource = it->second.pHostResource;
+   	   	   	// Render targets have special behavior: We can't trash them on guest modification
+   	   	   	// this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
+   	   	   	// would be overwritten by the surface created in SetRenderTarget
+   	   	   	// However, if a non-rendertarget surface is used here, we'll need to recreate it as a render target!
+   	   	   	auto hostResource = it->second.pHostResource;
 			auto xboxSurface = (xbox::X_D3DSurface*)pResource;
 			auto xboxTexture = (xbox::X_D3DTexture*)pResource;
 			auto xboxResourceType = GetXboxD3DResourceType(pResource);
-            
+   	   	   	
 
-            // Only continue checking if we were able to get the surface desc, if it failed, we fall-through
-            // to previous resource management behavior
-            if (it->second.HostUsage != D3DUSAGE_INVALID) {
-                // If this resource is already created as a render target on the host, simply return
-                if (it->second.HostUsage & D3DUSAGE_RENDERTARGET) {
-                    return;
-                }
+   	   	   	// Only continue checking if we were able to get the surface desc, if it failed, we fall-through
+   	   	   	// to previous resource management behavior
+   	   	   	if (it->second.HostUsage != D3DUSAGE_INVALID) {
+   	   	   	   	// If this resource is already created as a render target on the host, simply return
+   	   	   	   	if (it->second.HostUsage & D3DUSAGE_RENDERTARGET) {
+   	   	   	   	   	return;
+   	   	   	   	}
 
-                // The host resource is not a render target, but the Xbox surface is
-                // We need to re-create it as a render target
-                switch (xboxResourceType) {
-                    case xbox::X_D3DRTYPE_SURFACE: {
-                        auto xboxSurface = (xbox::X_D3DSurface*)pResource;
+   	   	   	   	// The host resource is not a render target, but the Xbox surface is
+   	   	   	   	// We need to re-create it as a render target
+   	   	   	   	switch (xboxResourceType) {
+   	   	   	   	   	case xbox::X_D3DRTYPE_SURFACE: {
+   	   	   	   	   	   	auto xboxSurface = (xbox::X_D3DSurface*)pResource;
 
-                        // Free the host surface
-                        FreeHostResource(key);
+   	   	   	   	   	   	// Free the host surface
+   	   	   	   	   	   	FreeHostResource(key);
 
-                        // Free the parent texture, if present
-                        xbox::X_D3DTexture* pParentXboxTexture = (pResource) ? (xbox::X_D3DTexture*)xboxSurface->Parent : xbox::zeroptr;
+   	   	   	   	   	   	// Free the parent texture, if present
+   	   	   	   	   	   	xbox::X_D3DTexture* pParentXboxTexture = (pResource) ? (xbox::X_D3DTexture*)xboxSurface->Parent : xbox::zeroptr;
 
-                        if (pParentXboxTexture) {
-                            // Re-create the texture with D3DUSAGE_RENDERTARGET, this will automatically create any child-surfaces
-                            FreeHostResource(GetHostResourceKey(pParentXboxTexture, iTextureStage));
-                            CreateHostResource(pParentXboxTexture, D3DUsage, iTextureStage, dwSize);
-                        }
+   	   	   	   	   	   	if (pParentXboxTexture) {
+   	   	   	   	   	   	   	// Re-create the texture with D3DUSAGE_RENDERTARGET, this will automatically create any child-surfaces
+   	   	   	   	   	   	   	FreeHostResource(GetHostResourceKey(pParentXboxTexture, iTextureStage));
+   	   	   	   	   	   	   	CreateHostResource(pParentXboxTexture, D3DUsage, iTextureStage, dwSize);
+   	   	   	   	   	   	}
 
-                        // Re-create the surface with D3DUSAGE_RENDERTARGET
-                        CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
-                    } break;
-                    case xbox::X_D3DRTYPE_TEXTURE: {
-                        auto xboxTexture = (xbox::X_D3DTexture*)pResource;
+   	   	   	   	   	   	// Re-create the surface with D3DUSAGE_RENDERTARGET
+   	   	   	   	   	   	CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
+   	   	   	   	   	} break;
+   	   	   	   	   	case xbox::X_D3DRTYPE_TEXTURE: {
+   	   	   	   	   	   	auto xboxTexture = (xbox::X_D3DTexture*)pResource;
 
-                        // Free the host texture
-                        FreeHostResource(key);
+   	   	   	   	   	   	// Free the host texture
+   	   	   	   	   	   	FreeHostResource(key);
 
-                        // And re-create the texture with D3DUSAGE_RENDERTARGET
-                        CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
-                    } break;
-                    default:
-                        LOG_TEST_CASE("Unimplemented rendertarget type");
-                }
+   	   	   	   	   	   	// And re-create the texture with D3DUSAGE_RENDERTARGET
+   	   	   	   	   	   	CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
+   	   	   	   	   	} break;
+   	   	   	   	   	default:
+   	   	   	   	   	   	LOG_TEST_CASE("Unimplemented rendertarget type");
+   	   	   	   	}
 
-                return;
-            }
+   	   	   	   	return;
+   	   	   	}
 		}
 
 		if (!HostResourceRequiresUpdate(key, pResource, dwSize)) {

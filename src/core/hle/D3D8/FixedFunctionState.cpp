@@ -5,7 +5,7 @@
 #include "core/kernel/init/CxbxKrnl.h"
 
 xbox::X_D3DCOLORVALUE colorValue(float r, float g, float b, float a) {
-    auto value = xbox::X_D3DCOLORVALUE();
+   	auto value = xbox::X_D3DCOLORVALUE();
     value.r = r;
     value.g = g;
     value.b = b;
@@ -14,7 +14,7 @@ xbox::X_D3DCOLORVALUE colorValue(float r, float g, float b, float a) {
 }
 
 xbox::X_D3DVECTOR toVector(float x, float y, float z) {
-    auto value = xbox::X_D3DVECTOR();
+   	auto value = xbox::X_D3DVECTOR();
     value.x = x;
     value.y = y;
     value.z = z;
@@ -25,7 +25,7 @@ D3D8LightState::D3D8LightState() {
     // Define the default light
     // When unset lights are enabled, they're set to the default light
     auto defaultLight = xbox::X_D3DLIGHT8();
-    defaultLight.Type = xbox::X_D3DLIGHTTYPE::D3DLIGHT_DIRECTIONAL;
+   	defaultLight.Type = xbox::X_D3DLIGHTTYPE::D3DLIGHT_DIRECTIONAL;
     defaultLight.Diffuse = colorValue(1, 1, 1, 0);
     defaultLight.Specular = colorValue(0, 0, 0, 0);
     defaultLight.Ambient = colorValue(0, 0, 0, 0);

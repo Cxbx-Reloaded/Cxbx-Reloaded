@@ -35,6 +35,6 @@ extern const char* g_ps_model;
 
 extern HRESULT EmuCompilePixelShader
 (
-    DecodedRegisterCombiner* pIntermediateShader,
-    ID3DBlob** ppHostShader
+   	DecodedRegisterCombiner* pIntermediateShader,
+   	ID3DBlob** ppHostShader
 );

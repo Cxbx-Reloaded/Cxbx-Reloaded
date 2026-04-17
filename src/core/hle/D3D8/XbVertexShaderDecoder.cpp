@@ -932,15 +932,15 @@ public:
 D3DVERTEXELEMENT *EmuRecompileVshDeclaration
 (
 	xbox::X_VERTEXATTRIBUTEFORMAT* pXboxDeclaration,
-    bool                  bIsFixedFunction,
-    CxbxVertexDeclaration *pCxbxVertexDeclaration
+   	bool                  bIsFixedFunction,
+   	CxbxVertexDeclaration *pCxbxVertexDeclaration
 )
 {
 	XboxVertexDeclarationConverter Converter;
 
 	D3DVERTEXELEMENT* pHostVertexElements = Converter.Convert(pXboxDeclaration, bIsFixedFunction, pCxbxVertexDeclaration);
 
-    return pHostVertexElements;
+   	return pHostVertexElements;
 }
 
 

@@ -65,18 +65,18 @@
 // or _umul128 (MSVC x64) to widen the intermediate to 128 bits.
 uint64_t Muldiv64(uint64_t a, uint32_t b, uint32_t c)
 {
-    const uint32_t a_low  = static_cast<uint32_t>(a);
-    const uint32_t a_high = static_cast<uint32_t>(a >> 32);
+   	const uint32_t a_low  = static_cast<uint32_t>(a);
+   	const uint32_t a_high = static_cast<uint32_t>(a >> 32);
 
-    const uint64_t rl = static_cast<uint64_t>(a_low)  * b;
-    const uint64_t rh = static_cast<uint64_t>(a_high) * b + (rl >> 32);
+   	const uint64_t rl = static_cast<uint64_t>(a_low)  * b;
+   	const uint64_t rh = static_cast<uint64_t>(a_high) * b + (rl >> 32);
 
-    assert(rh / c <= std::numeric_limits<uint32_t>::max());
+   	assert(rh / c <= std::numeric_limits<uint32_t>::max());
 
-    const uint32_t res_high = static_cast<uint32_t>(rh / c);
-    const uint32_t res_low  = static_cast<uint32_t>(((rh % c) << 32 | (rl & 0xFFFF'FFFFu)) / c);
+   	const uint32_t res_high = static_cast<uint32_t>(rh / c);
+   	const uint32_t res_low  = static_cast<uint32_t>(((rh % c) << 32 | (rl & 0xFFFF'FFFFu)) / c);
 
-    return (static_cast<uint64_t>(res_high) << 32) | res_low;
+   	return (static_cast<uint64_t>(res_high) << 32) | res_low;
 }
 
 void IoVecReset(IOVector* qiov)

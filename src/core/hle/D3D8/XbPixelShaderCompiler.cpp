@@ -860,7 +860,7 @@ void CxbxUpdateActivePixelShader() // NOPATCH
 	}
 
 	CxbxSetPixelShader(pShader);
-    return;
+   	return;
   }
 
   // Create a copy of the pixel shader definition, as it is residing in render state register slots :
@@ -890,17 +890,17 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   // TODO : Change g_RecompiledPixelShaders into an unordered_map, hash just the identifying PSDef members, and add cache eviction (clearing host resources when pruning)
   const PSH_RECOMPILED_SHADER* RecompiledPixelShader = nullptr;
   for (const auto& it : g_RecompiledPixelShaders) {
-    if (CompletePSDef.IsEquivalent(it.CompletePSDef)) {
-      RecompiledPixelShader = &it;
-      break;
-    }
+   	if (CompletePSDef.IsEquivalent(it.CompletePSDef)) {
+   	  RecompiledPixelShader = &it;
+   	  break;
+   	}
   }
 
   // If none was found, recompile this shader and remember it :
   if (RecompiledPixelShader == nullptr) {
-    // Recompile this pixel shader :
-    g_RecompiledPixelShaders.push_back(CxbxRecompilePixelShader(CompletePSDef));
-    RecompiledPixelShader = &g_RecompiledPixelShaders.back();
+   	// Recompile this pixel shader :
+   	g_RecompiledPixelShaders.push_back(CxbxRecompilePixelShader(CompletePSDef));
+   	RecompiledPixelShader = &g_RecompiledPixelShaders.back();
   }
 
   CxbxSetPixelShader(RecompiledPixelShader->ConvertedPixelShader);
@@ -924,7 +924,7 @@ void CxbxUpdateActivePixelShader() // NOPATCH
 
   // PSH_XBOX_CONSTANT_C0..C15 are stored as-is in (and should thus be read from) the Xbox render state pixel shader constant slots
   for (unsigned constant_nr = 0; constant_nr < 16; constant_nr++) {
-    fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
+   	fColor[PSH_XBOX_CONSTANT_C0 + constant_nr] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSCONSTANT0_0 + constant_nr); // Note : 0xAARRGGBB format
   }
 
   fColor[PSH_XBOX_CONSTANT_FC0] = XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_PSFINALCOMBINERCONSTANT0);
@@ -937,27 +937,27 @@ void CxbxUpdateActivePixelShader() // NOPATCH
 
   // Texture color sign
   for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
-    fColor[PSH_XBOX_CONSTANT_COLORSIGN + stage_nr] = CxbxCalcColorSign(stage_nr);
+   	fColor[PSH_XBOX_CONSTANT_COLORSIGN + stage_nr] = CxbxCalcColorSign(stage_nr);
   }
 
   // Texture color key operation
   for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
-    fColor[PSH_XBOX_CONSTANT_COLORKEYOP + stage_nr].r = (float)XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORKEYOP);
+   	fColor[PSH_XBOX_CONSTANT_COLORKEYOP + stage_nr].r = (float)XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORKEYOP);
   }
 
   // Texture color key color
   for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
-    fColor[PSH_XBOX_CONSTANT_COLORKEYCOLOR + stage_nr] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORKEYCOLOR);
+   	fColor[PSH_XBOX_CONSTANT_COLORKEYCOLOR + stage_nr] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORKEYCOLOR);
   }
 
 #if 0 // New, doesn't work yet
   // Bump Environment Material registers
   for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
-    // Note : No loop, because X_D3DTSS_BUMPENVMAT11 and X_D3DTSS_BUMPENVMAT10 are swapped
-    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].r = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT00); // Maps to BEM[stage].x
-    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].g = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT01); // Maps to BEM[stage].y
-    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].b = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT10); // Maps to BEM[stage].z
-    fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].a = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT11); // Maps to BEM[stage].w
+   	// Note : No loop, because X_D3DTSS_BUMPENVMAT11 and X_D3DTSS_BUMPENVMAT10 are swapped
+   	fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].r = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT00); // Maps to BEM[stage].x
+   	fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].g = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT01); // Maps to BEM[stage].y
+   	fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].b = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT10); // Maps to BEM[stage].z
+   	fColor[PSH_XBOX_CONSTANT_BEM + stage_nr].a = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT11); // Maps to BEM[stage].w
   }
 
   // Bump map Luminance registers
@@ -969,33 +969,33 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   }
 #else
   for (int i = 0; i < PSH_XBOX_CONSTANT_MAX; i++) {
-    switch (i) {
-      case PSH_XBOX_CONSTANT_BEM + 0:
-      case PSH_XBOX_CONSTANT_BEM + 1:
-      case PSH_XBOX_CONSTANT_BEM + 2:
-      case PSH_XBOX_CONSTANT_BEM + 3:
-      {
-        int stage_nr = i - PSH_XBOX_CONSTANT_BEM;
-        DWORD* value = (DWORD*)&fColor[i]; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
+   	switch (i) {
+   	  case PSH_XBOX_CONSTANT_BEM + 0:
+   	  case PSH_XBOX_CONSTANT_BEM + 1:
+   	  case PSH_XBOX_CONSTANT_BEM + 2:
+   	  case PSH_XBOX_CONSTANT_BEM + 3:
+   	  {
+   	   	int stage_nr = i - PSH_XBOX_CONSTANT_BEM;
+   	   	DWORD* value = (DWORD*)&fColor[i]; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
 
-        CxbxGetBumpEnvMatrix(stage_nr, value);
-        // Note : The TSS values being read here, have been transfered from Xbox to host in XboxTextureStateConverter::Apply()
-        break;
-      }
-      case PSH_XBOX_CONSTANT_LUM + 0:
-      case PSH_XBOX_CONSTANT_LUM + 1:
-      case PSH_XBOX_CONSTANT_LUM + 2:
-      case PSH_XBOX_CONSTANT_LUM + 3:
-      {
-        int stage_nr = i - PSH_XBOX_CONSTANT_LUM;
-        DWORD* value = (DWORD*)&fColor[i]; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
+   	   	CxbxGetBumpEnvMatrix(stage_nr, value);
+   	   	// Note : The TSS values being read here, have been transfered from Xbox to host in XboxTextureStateConverter::Apply()
+   	   	break;
+   	  }
+   	  case PSH_XBOX_CONSTANT_LUM + 0:
+   	  case PSH_XBOX_CONSTANT_LUM + 1:
+   	  case PSH_XBOX_CONSTANT_LUM + 2:
+   	  case PSH_XBOX_CONSTANT_LUM + 3:
+   	  {
+   	   	int stage_nr = i - PSH_XBOX_CONSTANT_LUM;
+   	   	DWORD* value = (DWORD*)&fColor[i]; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
 
-        CxbxGetBumpEnvLuminance(stage_nr, value);
-        value[2] = 0;
-        value[3] = 0;
-        break;
-      }
-    }
+   	   	CxbxGetBumpEnvLuminance(stage_nr, value);
+   	   	value[2] = 0;
+   	   	value[3] = 0;
+   	   	break;
+   	  }
+   	}
   }
 #endif
 

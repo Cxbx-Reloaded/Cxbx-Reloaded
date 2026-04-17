@@ -49,12 +49,12 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices)
 // ******************************************************************
 xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 (
-    uint_xt                     Adapter,
-    X_D3DDEVTYPE                DeviceType,
+   	uint_xt                     Adapter,
+   	X_D3DDEVTYPE                DeviceType,
 	X_HWND                      hFocusWindow,
-    dword_xt                    BehaviorFlags,
-    X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
-    X_D3DDevice               **ppReturnedDeviceInterface
+   	dword_xt                    BehaviorFlags,
+   	X_D3DPRESENT_PARAMETERS    *pPresentationParameters,
+   	X_D3DDevice               **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -85,9 +85,9 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice)
 // Overload for logging
 static void Direct3D_CreateDevice_4__LTCG_eax1_ecx3
 (
-    xbox::dword_xt                BehaviorFlags,
-    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
-    xbox::X_D3DDevice            **ppReturnedDeviceInterface
+   	xbox::dword_xt                BehaviorFlags,
+   	xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+   	xbox::X_D3DDevice            **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -102,12 +102,12 @@ static void Direct3D_CreateDevice_4__LTCG_eax1_ecx3
 // Test-case: Ninja Gaiden, Halo 2
 __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4__LTCG_eax1_ecx3)
 (
-    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+   	X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-    DWORD BehaviorFlags;
-    xbox::X_D3DDevice **ppReturnedDeviceInterface;
-    __asm {
+   	DWORD BehaviorFlags;
+   	xbox::X_D3DDevice **ppReturnedDeviceInterface;
+   	__asm {
 		LTCG_PROLOGUE
 		mov  BehaviorFlags, eax
 		mov  ppReturnedDeviceInterface, ecx
@@ -140,12 +140,12 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_4
 // Overload for logging
 static void Direct3D_CreateDevice_16__LTCG_eax4_ecx6
 (
-    xbox::uint_xt                 Adapter,
+   	xbox::uint_xt                 Adapter,
 	xbox::X_D3DDEVTYPE            DeviceType,
 	xbox::X_HWND                  hFocusWindow,
-    xbox::dword_xt                BehaviorFlags,
-    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
-    xbox::X_D3DDevice            **ppReturnedDeviceInterface
+   	xbox::dword_xt                BehaviorFlags,
+   	xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+   	xbox::X_D3DDevice            **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -163,10 +163,10 @@ static void Direct3D_CreateDevice_16__LTCG_eax4_ecx6
 // Test-case: Aggressive Inline, Midtown Madness 3
 __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ecx6)
 (
-    uint_xt                     Adapter,
-    X_D3DDEVTYPE                DeviceType,
+   	uint_xt                     Adapter,
+   	X_D3DDEVTYPE                DeviceType,
 	X_HWND                      hFocusWindow,
-    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+   	X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
 	dword_xt BehaviorFlags;
@@ -207,12 +207,12 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 // Overload for logging
 static void Direct3D_CreateDevice_16__LTCG_eax4_ebx6
 (
-    xbox::uint_xt                 Adapter,
-    xbox::X_D3DDEVTYPE            DeviceType,
+   	xbox::uint_xt                 Adapter,
+   	xbox::X_D3DDEVTYPE            DeviceType,
 	xbox::X_HWND                  hFocusWindow,
-    xbox::dword_xt                BehaviorFlags,
-    xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
-    xbox::X_D3DDevice            **ppReturnedDeviceInterface
+   	xbox::dword_xt                BehaviorFlags,
+   	xbox::X_D3DPRESENT_PARAMETERS *pPresentationParameters,
+   	xbox::X_D3DDevice            **ppReturnedDeviceInterface
 )
 {
 	LOG_FUNC_BEGIN
@@ -230,10 +230,10 @@ static void Direct3D_CreateDevice_16__LTCG_eax4_ebx6
 // Test-case: NASCAR Heat 2002
 __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_16__LTCG_eax4_ebx6)
 (
-    uint_xt                     Adapter,
-    X_D3DDEVTYPE                DeviceType,
+   	uint_xt                     Adapter,
+   	X_D3DDEVTYPE                DeviceType,
 	X_HWND                      hFocusWindow,
-    X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+   	X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
 	dword_xt BehaviorFlags;
@@ -274,14 +274,14 @@ __declspec(naked) xbox::hresult_xt WINAPI xbox::EMUPATCH(Direct3D_CreateDevice_1
 // Overload for logging
 static void D3DDevice_SetIndices_4__LTCG_ebx1
 (
-    xbox::X_D3DIndexBuffer   *pIndexData,
-    xbox::uint_xt             BaseVertexIndex
+   	xbox::X_D3DIndexBuffer   *pIndexData,
+   	xbox::uint_xt             BaseVertexIndex
 )
 {
-    LOG_FUNC_BEGIN
-        LOG_FUNC_ARG(pIndexData)
-        LOG_FUNC_ARG(BaseVertexIndex)
-        LOG_FUNC_END;
+   	LOG_FUNC_BEGIN
+   	   	LOG_FUNC_ARG(pIndexData)
+   	   	LOG_FUNC_ARG(BaseVertexIndex)
+   	   	LOG_FUNC_END;
 }
 
 // ******************************************************************
@@ -292,30 +292,30 @@ static void D3DDevice_SetIndices_4__LTCG_ebx1
 // ******************************************************************
 __declspec(naked) xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetIndices_4__LTCG_ebx1)
 (
-    uint_xt                BaseVertexIndex
+   	uint_xt                BaseVertexIndex
 )
 {
-    X_D3DIndexBuffer   *pIndexData;
-    __asm {
-        LTCG_PROLOGUE
-        mov  pIndexData, ebx
-    }
+   	X_D3DIndexBuffer   *pIndexData;
+   	__asm {
+   	   	LTCG_PROLOGUE
+   	   	mov  pIndexData, ebx
+   	}
 
-    // Log
-    D3DDevice_SetIndices_4__LTCG_ebx1(pIndexData, BaseVertexIndex);
+   	// Log
+   	D3DDevice_SetIndices_4__LTCG_ebx1(pIndexData, BaseVertexIndex);
 
-    // Cache the base vertex index
-    g_Xbox_BaseVertexIndex = BaseVertexIndex;
+   	// Cache the base vertex index
+   	g_Xbox_BaseVertexIndex = BaseVertexIndex;
 
-    // Call LTCG-specific trampoline
-    __asm {
-        mov  ebx, pIndexData
-        push BaseVertexIndex
-        call XB_TRMP(D3DDevice_SetIndices_4__LTCG_ebx1);
+   	// Call LTCG-specific trampoline
+   	__asm {
+   	   	mov  ebx, pIndexData
+   	   	push BaseVertexIndex
+   	   	call XB_TRMP(D3DDevice_SetIndices_4__LTCG_ebx1);
 
-        LTCG_EPILOGUE
-        ret  4
-    }
+   	   	LTCG_EPILOGUE
+   	   	ret  4
+   	}
 }
 
 // ******************************************************************
@@ -486,9 +486,9 @@ xbox::PDWORD WINAPI xbox::EMUPATCH(D3DDevice_BeginPush_4)(dword_xt Count)
 
 	dword_xt *pRet = new dword_xt[Count];
 
-    g_pXbox_BeginPush_Buffer = pRet;
+   	g_pXbox_BeginPush_Buffer = pRet;
 
-    return pRet;
+   	return pRet;
 }
 
 // ******************************************************************
@@ -527,8 +527,8 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_EndPush)(dword_xt *pPush)
 		EmuLog(LOG_LEVEL::WARNING, "D3DDevice_EndPush called without preceding D3DDevice_BeginPush?!");
 	else
 	{
-        // Note: We don't use the count from BeginPush because that specifies the *maximum* count
-        // rather than the count actually in the pushbuffer. 
+   	   	// Note: We don't use the count from BeginPush because that specifies the *maximum* count
+   	   	// rather than the count actually in the pushbuffer. 
 		EmuExecutePushBufferRaw(g_pXbox_BeginPush_Buffer, (uintptr_t)pPush - (uintptr_t)g_pXbox_BeginPush_Buffer);
 
 		delete[] g_pXbox_BeginPush_Buffer;

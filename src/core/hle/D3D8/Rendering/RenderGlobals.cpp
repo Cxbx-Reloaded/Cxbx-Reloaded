@@ -107,8 +107,8 @@ EmuD3D8CreateDeviceProxyData g_EmuCDPD;
 // Define trampolines (XB_TRAMPOLINES macro is defined in RenderGlobals.h)
 // Non-static so they are accessible from other translation units.
 #define XB_trampoline_define(ret, conv, func, arguments) \
-    static const std::string XB_NAME(func) = #func; \
-    XB_TYPE(func) XB_TRMP(func) = nullptr
+   	static const std::string XB_NAME(func) = #func; \
+   	XB_TYPE(func) XB_TRMP(func) = nullptr
 
 XB_TRAMPOLINES(XB_trampoline_define);
 #undef XB_trampoline_define

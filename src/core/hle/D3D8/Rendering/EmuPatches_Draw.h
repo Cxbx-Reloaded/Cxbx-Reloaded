@@ -35,7 +35,7 @@ namespace xbox {
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_Begin)
 (
-    X_D3DPRIMITIVETYPE     PrimitiveType
+   	X_D3DPRIMITIVETYPE     PrimitiveType
 );
 
 // ******************************************************************
@@ -43,9 +43,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_Begin)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 (
-    int_xt     Register,
-    float_xt   a,
-    float_xt   b
+   	int_xt     Register,
+   	float_xt   a,
+   	float_xt   b
 );
 
 // ******************************************************************
@@ -53,9 +53,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2f)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 (
-    int_xt     Register,
-    short_xt   a,
-    short_xt   b
+   	int_xt     Register,
+   	short_xt   a,
+   	short_xt   b
 );
 
 // ******************************************************************
@@ -63,11 +63,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData2s)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4f)
 (
-    int_xt     Register,
-    float_xt   a,
-    float_xt   b,
-    float_xt   c,
-    float_xt   d
+   	int_xt     Register,
+   	float_xt   a,
+   	float_xt   b,
+   	float_xt   c,
+   	float_xt   d
 );
 
 // ******************************************************************
@@ -110,8 +110,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexData4s)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetVertexDataColor)
 (
-    int_xt      Register,
-    X_D3DCOLOR  Color
+   	int_xt      Register,
+   	X_D3DCOLOR  Color
 );
 
 // ******************************************************************
@@ -124,8 +124,8 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_End)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer)
 (
-    X_D3DPushBuffer       *pPushBuffer,
-    X_D3DFixup            *pFixup
+   	X_D3DPushBuffer       *pPushBuffer,
+   	X_D3DFixup            *pFixup
 );
 
 // ******************************************************************
@@ -133,7 +133,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer_4__LTCG_eax2)
 (
-    X_D3DPushBuffer *pPushBuffer
+   	X_D3DPushBuffer *pPushBuffer
 );
 
 // ******************************************************************
@@ -141,17 +141,17 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_RunPushBuffer_4__LTCG_eax2)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
-    CONST PVOID         pVertexStreamZeroData,
-    uint_xt                VertexStreamZeroStride
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt                VertexCount,
+   	CONST PVOID         pVertexStreamZeroData,
+   	uint_xt                VertexStreamZeroStride
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt             VertexCount,
-    uint_xt             VertexStreamZeroStride
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt             VertexCount,
+   	uint_xt             VertexStreamZeroStride
 );
 
 
@@ -160,9 +160,9 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawVerticesUP_12__LTCG_ebx3)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawIndexedVertices)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
-    CONST PWORD         pIndexData
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt                VertexCount,
+   	CONST PWORD         pIndexData
 );
 
 // ******************************************************************
@@ -170,11 +170,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawIndexedVertices)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 (
-    X_D3DPRIMITIVETYPE  PrimitiveType,
-    uint_xt                VertexCount,
-    CONST PVOID         pIndexData,
-    CONST PVOID         pVertexStreamZeroData,
-    uint_xt                VertexStreamZeroStride
+   	X_D3DPRIMITIVETYPE  PrimitiveType,
+   	uint_xt                VertexCount,
+   	CONST PVOID         pIndexData,
+   	CONST PVOID         pVertexStreamZeroData,
+   	uint_xt                VertexStreamZeroStride
 );
 
 // ******************************************************************

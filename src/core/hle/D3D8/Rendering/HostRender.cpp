@@ -33,12 +33,12 @@ static void DrawInitialBlackScreen
 (
 )
 {
-    // initially, show a black screen
-    // Only clear depth buffer and stencil if present
-    //
-    // Avoids following DirectX Debug Runtime error report
-    //    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
-    //
+   	// initially, show a black screen
+   	// Only clear depth buffer and stencil if present
+   	//
+   	// Avoids following DirectX Debug Runtime error report
+   	//    [424] Direct3D8: (ERROR) :Invalid flag D3DCLEAR_ZBUFFER: no zbuffer is associated with device. Clear failed. 
+   	//
 
 	CxbxD3DClear(
 		/*Count=*/0,
@@ -55,59 +55,59 @@ static void DrawInitialBlackScreen
 
 void CreateDefaultD3D9Device
 (
-    const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
+   	const xbox::X_D3DPRESENT_PARAMETERS     *pPresentationParameters
 )
 {
-    LOG_INIT;
+   	LOG_INIT;
 
-    // only one device should be created at once
-    if (g_pD3DDevice != nullptr) {
-        EmuLog(LOG_LEVEL::DEBUG, "CreateDefaultD3D9Device releasing old Device.");
+   	// only one device should be created at once
+   	if (g_pD3DDevice != nullptr) {
+   	   	EmuLog(LOG_LEVEL::DEBUG, "CreateDefaultD3D9Device releasing old Device.");
 
 		CxbxEndScene();
 
-        ClearAllResourceCaches();
+   	   	ClearAllResourceCaches();
 
-        // TODO: ensure all other resources are cleaned up too
+   	   	// TODO: ensure all other resources are cleaned up too
 
-        // Final release of IDirect3DDevice9 must be called from the window message thread
-        // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
-        RunOnWndMsgThread([] {
-            // We only need to call bundled device release once here.
-            g_renderbase->DeviceRelease();
-        });
-    }
+   	   	// Final release of IDirect3DDevice9 must be called from the window message thread
+   	   	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
+   	   	RunOnWndMsgThread([] {
+   	   	   	// We only need to call bundled device release once here.
+   	   	   	g_renderbase->DeviceRelease();
+   	   	});
+   	}
 
-    // Apply render scale factor for high-resolution rendering
-    g_RenderUpscaleFactor = g_XBVideo.renderScaleFactor;
+   	// Apply render scale factor for high-resolution rendering
+   	g_RenderUpscaleFactor = g_XBVideo.renderScaleFactor;
 
-    // Setup the HostPresentationParameters
-    SetupPresentationParameters(pPresentationParameters);
+   	// Setup the HostPresentationParameters
+   	SetupPresentationParameters(pPresentationParameters);
 
 #ifndef CXBX_USE_D3D11
-    // detect vertex processing capabilities
-    DWORD BehaviorFlags;
-    if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuCDPD.DeviceType == D3DDEVTYPE_HAL)
-    {
-        EmuLog(LOG_LEVEL::DEBUG, "Using hardware vertex processing");
+   	// detect vertex processing capabilities
+   	DWORD BehaviorFlags;
+   	if((g_D3DCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) && g_EmuCDPD.DeviceType == D3DDEVTYPE_HAL)
+   	{
+   	   	EmuLog(LOG_LEVEL::DEBUG, "Using hardware vertex processing");
 
-        BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-    }
-    else
-    {
-        EmuLog(LOG_LEVEL::DEBUG, "Using software vertex processing");
+   	   	BehaviorFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+   	}
+   	else
+   	{
+   	   	EmuLog(LOG_LEVEL::DEBUG, "Using software vertex processing");
 
-        BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-    }
+   	   	BehaviorFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+   	}
 
-    // Dxbx addition : Prevent Direct3D from changing the FPU Control word :
-    BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
+   	// Dxbx addition : Prevent Direct3D from changing the FPU Control word :
+   	BehaviorFlags |= D3DCREATE_FPU_PRESERVE;
 
-    // Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
-    BehaviorFlags |= D3DCREATE_MULTITHREADED;
+   	// Direct3D8: (WARN) :Device that was created without D3DCREATE_MULTITHREADED is being used by a thread other than the creation thread.
+   	BehaviorFlags |= D3DCREATE_MULTITHREADED;
 
-    // We never want auto-depth stencil on the host, Xbox D3D will handle this for us
-    g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = FALSE;
+   	// We never want auto-depth stencil on the host, Xbox D3D will handle this for us
+   	g_EmuCDPD.HostPresentationParameters.EnableAutoDepthStencil = FALSE;
 
 	D3DDISPLAYMODEEX displayMode { sizeof(displayMode) };
 	{
@@ -203,7 +203,7 @@ void CreateDefaultD3D9Device
 			&context
 		);
 	}
-    DEBUG_D3DRESULT(hr, "D3D11CreateDevice");
+   	DEBUG_D3DRESULT(hr, "D3D11CreateDevice");
 	if (FAILED(hr))
 		CxbxrAbort("D3D11CreateDevice failed (hr=0x%08X)", hr);
 
@@ -375,90 +375,90 @@ void CreateDefaultD3D9Device
 		}
 	}
 #else
-    // IDirect3D9::CreateDevice must be called from the window message thread
-    // See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
-    HRESULT hr;
-    RunOnWndMsgThread([&hr, BehaviorFlags, &displayMode] {
-        hr = g_pDirect3D->CreateDeviceEx(
-            g_EmuCDPD.Adapter,
-            g_EmuCDPD.DeviceType,
-            g_hEmuWindow,
-            BehaviorFlags,
-            &g_EmuCDPD.HostPresentationParameters,
+   	// IDirect3D9::CreateDevice must be called from the window message thread
+   	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
+   	HRESULT hr;
+   	RunOnWndMsgThread([&hr, BehaviorFlags, &displayMode] {
+   	   	hr = g_pDirect3D->CreateDeviceEx(
+   	   	   	g_EmuCDPD.Adapter,
+   	   	   	g_EmuCDPD.DeviceType,
+   	   	   	g_hEmuWindow,
+   	   	   	BehaviorFlags,
+   	   	   	&g_EmuCDPD.HostPresentationParameters,
 			g_EmuCDPD.HostPresentationParameters.Windowed ? nullptr : &displayMode,
-            &g_pD3DDevice);
-    });
-    DEBUG_D3DRESULT(hr, "IDirect3D::CreateDeviceEx");
+   	   	   	&g_pD3DDevice);
+   	});
+   	DEBUG_D3DRESULT(hr, "IDirect3D::CreateDeviceEx");
 
-    if(FAILED(hr))
-        CxbxrAbort("IDirect3D::CreateDeviceEx failed");
+   	if(FAILED(hr))
+   	   	CxbxrAbort("IDirect3D::CreateDeviceEx failed");
 #endif
 
-    // Which texture formats does this device support?
-    DetermineSupportedD3DFormats();
+   	// Which texture formats does this device support?
+   	DetermineSupportedD3DFormats();
 
 #ifdef CXBX_USE_D3D11
 	D3D11_QUERY_DESC QueryDesc;
 	QueryDesc.Query = D3D11_QUERY_EVENT;
 	QueryDesc.MiscFlags = 0;
 #endif
-    // Can host driver create event queries?
-    if (SUCCEEDED(g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), nullptr))) {
-        // Is host GPU query creation enabled?
-        if (!g_bHack_DisableHostGPUQueries) {
-            // Create a D3D event query to handle "wait-for-idle" with
-            hr = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), &g_pHostQueryWaitForIdle);
-            DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (wait for idle)");
+   	// Can host driver create event queries?
+   	if (SUCCEEDED(g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), nullptr))) {
+   	   	// Is host GPU query creation enabled?
+   	   	if (!g_bHack_DisableHostGPUQueries) {
+   	   	   	// Create a D3D event query to handle "wait-for-idle" with
+   	   	   	hr = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), &g_pHostQueryWaitForIdle);
+   	   	   	DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (wait for idle)");
 
-            // Create a D3D event query to handle "callback events" with
-            hr = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), &g_pHostQueryCallbackEvent);
-            DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (callback event)");
-        }
-    } else {
-        LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_EVENT) on host!");
-    }
+   	   	   	// Create a D3D event query to handle "callback events" with
+   	   	   	hr = g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_EVENT, &QueryDesc), &g_pHostQueryCallbackEvent);
+   	   	   	DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateQuery (callback event)");
+   	   	}
+   	} else {
+   	   	LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_EVENT) on host!");
+   	}
 
-    // Can host driver create occlusion queries?
+   	// Can host driver create occlusion queries?
 #ifdef CXBX_USE_D3D11
 	QueryDesc.Query = D3D11_QUERY_OCCLUSION;
 #endif
-    g_bEnableHostQueryVisibilityTest = false;
-    if (SUCCEEDED(g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_OCCLUSION, &QueryDesc), nullptr))) {
-        // Is host GPU query creation enabled?
-        if (!g_bHack_DisableHostGPUQueries) {
-            g_bEnableHostQueryVisibilityTest = true;
-        } else {
-            LOG_TEST_CASE("Disabled D3DQUERYTYPE_OCCLUSION on host!");
-        }
-    } else {
-        LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_OCCLUSION) on host!");
-    }
+   	g_bEnableHostQueryVisibilityTest = false;
+   	if (SUCCEEDED(g_pD3DDevice->CreateQuery(_9_11(D3DQUERYTYPE_OCCLUSION, &QueryDesc), nullptr))) {
+   	   	// Is host GPU query creation enabled?
+   	   	if (!g_bHack_DisableHostGPUQueries) {
+   	   	   	g_bEnableHostQueryVisibilityTest = true;
+   	   	} else {
+   	   	   	LOG_TEST_CASE("Disabled D3DQUERYTYPE_OCCLUSION on host!");
+   	   	}
+   	} else {
+   	   	LOG_TEST_CASE("Can't CreateQuery(D3DQUERYTYPE_OCCLUSION) on host!");
+   	}
 
-    DrawInitialBlackScreen();
+   	DrawInitialBlackScreen();
 
-    // Set up ImGui's render backend
+   	// Set up ImGui's render backend
 #ifdef CXBX_USE_D3D11
 	ImGui_ImplDX11_Init(g_pD3DDevice, g_pD3DDeviceContext);
 	CxbxD3D11InitBlit();
-    g_renderbase->SetDeviceRelease([] {
-        ImGui_ImplDX11_Shutdown();
-        g_VertexShaderCache.Clear();
-        CxbxD3D11ReleaseBackendResources();
-        if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); g_pD3DDepthStencilView = nullptr; }
-        if (g_pD3DDepthStencilBuffer) { g_pD3DDepthStencilBuffer->Release(); g_pD3DDepthStencilBuffer = nullptr; }
-        if (g_pD3DBackBufferView) { g_pD3DBackBufferView->Release(); g_pD3DBackBufferView = nullptr; }
-        if (g_pD3DBackBufferSurface) { g_pD3DBackBufferSurface->Release(); g_pD3DBackBufferSurface = nullptr; }
-        if (g_pD3DCurrentRTV && g_pD3DCurrentRTV != g_pD3DBackBufferView) { g_pD3DCurrentRTV->Release(); g_pD3DCurrentRTV = nullptr; }
-        if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = nullptr; }
-        if (g_pD3DDeviceContext) { g_pD3DDeviceContext->Release(); g_pD3DDeviceContext = nullptr; }
-        g_pD3DDevice->Release();
-    });
+   	g_renderbase->SetDeviceRelease([] {
+   	   	ImGui_ImplDX11_Shutdown();
+   	   	g_VertexShaderCache.Clear();
+   	   	CxbxD3D11ReleaseBackendResources();
+   	   	if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); g_pD3DDepthStencilView = nullptr; }
+   	   	if (g_pD3DDepthStencilBuffer) { g_pD3DDepthStencilBuffer->Release(); g_pD3DDepthStencilBuffer = nullptr; }
+   	   	if (g_pD3DBackBufferView) { g_pD3DBackBufferView->Release(); g_pD3DBackBufferView = nullptr; }
+   	   	if (g_pD3DBackBufferSurface) { g_pD3DBackBufferSurface->Release(); g_pD3DBackBufferSurface = nullptr; }
+   	   	if (g_pD3DCurrentRTV && g_pD3DCurrentRTV != g_pD3DBackBufferView) { g_pD3DCurrentRTV->Release(); g_pD3DCurrentRTV = nullptr; }
+   	   	if (g_pSwapChain) { g_pSwapChain->Release(); g_pSwapChain = nullptr; }
+   	   	if (g_pD3DDeviceContext) { g_pD3DDeviceContext->Release(); g_pD3DDeviceContext = nullptr; }
+   	   	g_pD3DDevice->Release();
+   	});
 #else
-    ImGui_ImplDX9_Init(g_pD3DDevice);
-    g_renderbase->SetDeviceRelease([] {
-        ImGui_ImplDX9_Shutdown();
-        g_pD3DDevice->Release();
-    });
+   	ImGui_ImplDX9_Init(g_pD3DDevice);
+   	g_renderbase->SetDeviceRelease([] {
+   	   	ImGui_ImplDX9_Shutdown();
+   	   	g_pD3DDevice->Release();
+   	});
 #endif
 }
 
@@ -505,53 +505,53 @@ DWORD ScaleDWORD(DWORD Value, DWORD FromMax, DWORD ToMax)
 
 void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRenderTarget_Height, DWORD XboxRenderTarget_Width, DWORD XboxRenderTarget_Height)
 {
-    // This operation is often used to change the display resolution without calling SetRenderTarget!
-    // This works by updating the underlying Width & Height of the Xbox surface, without reallocating the data
-    // Because of this, we need to validate that the associated host resource still matches the dimensions of the Xbox Render Target
-    // If not, we must force them to be re-created
-    // TEST CASE: Chihiro Factory Test Program
-    DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * g_RenderUpscaleFactor;
-    DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * g_RenderUpscaleFactor;
-    if (HostRenderTarget_Width != XboxRenderTarget_Width_Scaled || HostRenderTarget_Height != XboxRenderTarget_Height_Scaled) {
-        LOG_TEST_CASE("Existing RenderTarget width/height changed");
+   	// This operation is often used to change the display resolution without calling SetRenderTarget!
+   	// This works by updating the underlying Width & Height of the Xbox surface, without reallocating the data
+   	// Because of this, we need to validate that the associated host resource still matches the dimensions of the Xbox Render Target
+   	// If not, we must force them to be re-created
+   	// TEST CASE: Chihiro Factory Test Program
+   	DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * g_RenderUpscaleFactor;
+   	DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * g_RenderUpscaleFactor;
+   	if (HostRenderTarget_Width != XboxRenderTarget_Width_Scaled || HostRenderTarget_Height != XboxRenderTarget_Height_Scaled) {
+   	   	LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
-        FreeHostResource(GetHostResourceKey(g_pXbox_RenderTarget)); CxbxSetRenderTarget(GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET));
+   	   	FreeHostResource(GetHostResourceKey(g_pXbox_RenderTarget)); CxbxSetRenderTarget(GetHostSurface(g_pXbox_RenderTarget, D3DUSAGE_RENDERTARGET));
 		FreeHostResource(GetHostResourceKey(g_pXbox_DepthStencil));
 		CxbxSetDepthStencilSurface(GetHostSurface(g_pXbox_DepthStencil, D3DUSAGE_DEPTHSTENCIL));
-    }
+   	}
 }
 
 float GetZScaleForPixelContainer(xbox::X_D3DPixelContainer* pSurface)
 {
-    // If no surface was present, fallback to 1
-    if (pSurface == xbox::zeroptr) {
-        return 1.0f;
-    }
+   	// If no surface was present, fallback to 1
+   	if (pSurface == xbox::zeroptr) {
+   	   	return 1.0f;
+   	}
 
-    auto format = GetXboxPixelContainerFormat(pSurface);
-    switch (format) {
-        case xbox::X_D3DFMT_D16:
-        case xbox::X_D3DFMT_LIN_D16:
-            return 65535.0f;
+   	auto format = GetXboxPixelContainerFormat(pSurface);
+   	switch (format) {
+   	   	case xbox::X_D3DFMT_D16:
+   	   	case xbox::X_D3DFMT_LIN_D16:
+   	   	   	return 65535.0f;
 
-        case xbox::X_D3DFMT_D24S8:
-        case xbox::X_D3DFMT_LIN_D24S8:
-            return 16777215.0f;
+   	   	case xbox::X_D3DFMT_D24S8:
+   	   	case xbox::X_D3DFMT_LIN_D24S8:
+   	   	   	return 16777215.0f;
 
-        case xbox::X_D3DFMT_F16:
-        case xbox::X_D3DFMT_LIN_F16:
-            return 511.9375f;
+   	   	case xbox::X_D3DFMT_F16:
+   	   	case xbox::X_D3DFMT_LIN_F16:
+   	   	   	return 511.9375f;
 
-        case xbox::X_D3DFMT_F24S8:
-        case xbox::X_D3DFMT_LIN_F24S8:
-            // 24bit floating point is close to precision maximum, so a lower value is used
-            // We can't use a double here since the vertex shader is only at float precision
-            return 1.0e30f; 
-    }
+   	   	case xbox::X_D3DFMT_F24S8:
+   	   	case xbox::X_D3DFMT_LIN_F24S8:
+   	   	   	// 24bit floating point is close to precision maximum, so a lower value is used
+   	   	   	// We can't use a double here since the vertex shader is only at float precision
+   	   	   	return 1.0e30f; 
+   	}
 
-    // Default to 1 if unknown depth format
-    LOG_TEST_CASE("GetZScaleForSurface: Unknown Xbox Depth Format");
-    return 1.0f;
+   	// Default to 1 if unknown depth format
+   	LOG_TEST_CASE("GetZScaleForSurface: Unknown Xbox Depth Format");
+   	return 1.0f;
 }
 
 // Get viewport offset and scale values intended to match the XDK calculations
@@ -587,8 +587,8 @@ void GetXboxViewportOffsetAndScale(float (&vOffset)[4], float(&vScale)[4])
 
 void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 {
-    float vScaleOffset[2][4]; // 0 - scale 1 - offset
-    GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
+   	float vScaleOffset[2][4]; // 0 - scale 1 - offset
+   	GetXboxViewportOffsetAndScale(vScaleOffset[1], vScaleOffset[0]);
 
 
 	// Xbox outputs vertex positions in rendertarget pixel coordinate space, with non-normalized Z

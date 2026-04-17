@@ -45,7 +45,7 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_BeginVisibilityTest)();
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndVisibilityTest)
 (
-    dword_xt                       Index
+   	dword_xt                       Index
 );
 
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndVisibilityTest_0__LTCG_eax1)();
@@ -55,16 +55,16 @@ xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_EndVisibilityTest_0__LTCG_eax1)();
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetVisibilityTestResult)
 (
-    dword_xt                       Index,
-    uint_xt                       *pResult,
-    ulonglong_xt                  *pTimeStamp
+   	dword_xt                       Index,
+   	uint_xt                       *pResult,
+   	ulonglong_xt                  *pTimeStamp
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_ecx1_eax2)();
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_0__LTCG_edx1_eax2)();
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_4__LTCG_eax1)
 (
-    dword_xt                       Address
+   	dword_xt                       Address
 );
 
 // ******************************************************************
@@ -72,7 +72,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_LoadVertexShader_4__LTCG_eax1)
 // ******************************************************************
 dword_xt WINAPI EMUPATCH(D3DDevice_Swap)
 (
-    dword_xt Flags
+   	dword_xt Flags
 );
 
 // ******************************************************************
@@ -80,7 +80,7 @@ dword_xt WINAPI EMUPATCH(D3DDevice_Swap)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_EnableOverlay)
 (
-    bool_xt Enable
+   	bool_xt Enable
 );
 
 // ******************************************************************
@@ -93,11 +93,11 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_EnableOverlay_0__LTCG)();
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay)
 (
-    X_D3DSurface *pSurface,
-    CONST RECT   *SrcRect,
-    CONST RECT   *DstRect,
-    bool_xt       EnableColorKey,
-    D3DCOLOR      ColorKey
+   	X_D3DSurface *pSurface,
+   	CONST RECT   *SrcRect,
+   	CONST RECT   *DstRect,
+   	bool_xt       EnableColorKey,
+   	D3DCOLOR      ColorKey
 );
 
 // ******************************************************************
@@ -105,10 +105,10 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_UpdateOverlay_16__LTCG_eax2)
 (
-    X_D3DSurface *pSurface,
-    CONST RECT   *DstRect,
-    bool_xt       EnableColorKey,
-    X_D3DCOLOR    ColorKey
+   	X_D3DSurface *pSurface,
+   	CONST RECT   *DstRect,
+   	bool_xt       EnableColorKey,
+   	X_D3DCOLOR    ColorKey
 );
 
 // ******************************************************************
@@ -121,8 +121,8 @@ xbox::bool_xt WINAPI EMUPATCH(D3DDevice_GetOverlayUpdateStatus)();
 // ******************************************************************
 xbox::void_xt __fastcall EMUPATCH(D3DDevice_SetRenderState_Simple)
 (
-    dword_xt Method,
-    dword_xt Value
+   	dword_xt Method,
+   	dword_xt Value
 );
 
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_SetTransform_0__LTCG_eax1_edx2)();
@@ -137,7 +137,7 @@ xbox::dword_xt WINAPI EMUPATCH(D3DDevice_InsertFence)();
 // ******************************************************************
 xbox::bool_xt WINAPI EMUPATCH(D3DDevice_IsFencePending)
 (
-    dword_xt Fence
+   	dword_xt Fence
 );
 
 // ******************************************************************
@@ -145,7 +145,7 @@ xbox::bool_xt WINAPI EMUPATCH(D3DDevice_IsFencePending)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DDevice_BlockOnFence)
 (
-    dword_xt Fence
+   	dword_xt Fence
 );
 
 // ******************************************************************
@@ -153,7 +153,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_BlockOnFence)
 // ******************************************************************
 xbox::void_xt WINAPI EMUPATCH(D3DResource_BlockUntilNotBusy)
 (
-    X_D3DResource *pThis
+   	X_D3DResource *pThis
 );
 
 // ******************************************************************
@@ -214,7 +214,7 @@ xbox::void_xt WINAPI EMUPATCH(D3DDevice_FlushVertexCache)();
 // ******************************************************************
 xbox::hresult_xt WINAPI EMUPATCH(D3DDevice_GetModelView)
 (
-    X_D3DMATRIX* pModelView
+   	X_D3DMATRIX* pModelView
 );
 
 // ******************************************************************

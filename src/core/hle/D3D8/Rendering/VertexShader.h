@@ -41,8 +41,8 @@ extern const char* g_vs_model;
 
 extern HRESULT EmuCompileVertexShader
 (
-    IntermediateVertexShader* pIntermediateShader,
-    ID3DBlob** ppHostShader
+   	IntermediateVertexShader* pIntermediateShader,
+   	ID3DBlob** ppHostShader
 );
 
 extern void EmuCompileFixedFunction(ID3DBlob** ppHostShader);

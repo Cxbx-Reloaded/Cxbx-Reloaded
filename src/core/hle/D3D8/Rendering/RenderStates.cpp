@@ -139,7 +139,7 @@ float XboxRenderStateConverter::GetXboxRenderStateAsFloat(uint32_t State)
         return 0;
     }
 
-    float f; std::memcpy(&f, &D3D__RenderState[XboxRenderStateOffsets[State]], sizeof(f)); return f;
+   	float f; std::memcpy(&f, &D3D__RenderState[XboxRenderStateOffsets[State]], sizeof(f)); return f;
 }
 
 void XboxRenderStateConverter::StoreInitialValues()
@@ -243,20 +243,20 @@ void XboxRenderStateConverter::ApplySimpleRenderState(uint32_t State, uint32_t V
             // allow SetRenderState to be called with no changes
             break;
         default:
-            // Only log missing state if it has a D3D counterpart
+   	   	   	// Only log missing state if it has a D3D counterpart
             if (RenderStateInfo.PC != 0) {
                 EmuLog(LOG_LEVEL::WARNING, "ApplySimpleRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
-    // Skip RenderStates that don't have a defined D3D counterpart
+   	// Skip RenderStates that don't have a defined D3D counterpart
     if (RenderStateInfo.PC == 0) {
         return;
     }
 
 #ifdef CXBX_USE_D3D11
-    CxbxD3D11SetRenderState(State, Value);
+   	CxbxD3D11SetRenderState(State, Value);
 #else
     g_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)(RenderStateInfo.PC), Value);
 #endif
@@ -276,14 +276,14 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
             // Cause appears to be non-nvidia drivers clamping values < 0 to 0
             // Resulting in the fog formula becoming (0 - d) / 0, which breaks rendering
             // This prevents that scenario for screen-space fog, *hopefully* without breaking eye-based fog also
-            // NOTE: D3D11 computes fog in its own pixel shader, so negative values pass through
-            // correctly. D3D9 passes these to the driver's fixed-function fog pipeline where
-            // some non-nvidia drivers clamp them to 0, hence the abs hack is D3D9-only.
-            float fogValue; std::memcpy(&fogValue, &Value, sizeof(fogValue));
+   	   	   	// NOTE: D3D11 computes fog in its own pixel shader, so negative values pass through
+   	   	   	// correctly. D3D9 passes these to the driver's fixed-function fog pipeline where
+   	   	   	// some non-nvidia drivers clamp them to 0, hence the abs hack is D3D9-only.
+   	   	   	float fogValue; std::memcpy(&fogValue, &Value, sizeof(fogValue));
             if (fogValue < 0.0f) {
                 LOG_TEST_CASE("FOGSTART/FOGEND below 0");
                 fogValue = std::abs(fogValue);
-                std::memcpy(&Value, &fogValue, sizeof(Value));
+   	   	   	   	std::memcpy(&Value, &fogValue, sizeof(Value));
             }
 #endif
         } break;
@@ -340,24 +340,24 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
             Value |= (OldValue & 0x01000000) ? D3DWRAPCOORD_3 : 0;
         } break;
         default:
-            // Only log missing state if it has a D3D counterpart
+   	   	   	// Only log missing state if it has a D3D counterpart
             if (RenderStateInfo.PC != 0) {
                 EmuLog(LOG_LEVEL::WARNING, "ApplyDeferredRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
-    // Skip RenderStates that don't have a defined D3D counterpart
+   	// Skip RenderStates that don't have a defined D3D counterpart
     if (RenderStateInfo.PC == 0) {
         return;
     }
 
 #ifdef CXBX_USE_D3D11
-    // Deferred render states affect fog/lighting - these are handled in the vertex shader
-    // Most deferred render states don't map to D3D11 state objects, they are passed as shader constants instead
-    // (fog settings are handled in CxbxUpdateHostVertexShaderConstants)
-    // For now, just ignore direct D3D9 calls
-    (void)Value; // silence unused warning
+   	// Deferred render states affect fog/lighting - these are handled in the vertex shader
+   	// Most deferred render states don't map to D3D11 state objects, they are passed as shader constants instead
+   	// (fog settings are handled in CxbxUpdateHostVertexShaderConstants)
+   	// For now, just ignore direct D3D9 calls
+   	(void)Value; // silence unused warning
 #else
     g_pD3DDevice->SetRenderState(RenderStateInfo.PC, Value);
 #endif
@@ -419,35 +419,35 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
         case xbox::X_D3DRS_MULTISAMPLETYPE:
             SetXboxMultiSampleType(Value);
             break;
-        case xbox::X_D3DRS_FRONTFACE:
+   	   	case xbox::X_D3DRS_FRONTFACE:
 #ifdef CXBX_USE_D3D11
-            // Xbox FRONTFACE is an NV2A value (0x900 = CW, 0x901 = CCW)
-            // Map directly to D3D11 rasterizer state
-            CxbxD3D11SetRenderState(State, Value);
+   	   	   	// Xbox FRONTFACE is an NV2A value (0x900 = CW, 0x901 = CCW)
+   	   	   	// Map directly to D3D11 rasterizer state
+   	   	   	CxbxD3D11SetRenderState(State, Value);
 #endif
-            return; // No D3D9 counterpart
-        case xbox::X_D3DRS_LINEWIDTH:
+   	   	   	return; // No D3D9 counterpart
+   	   	case xbox::X_D3DRS_LINEWIDTH:
 #ifdef CXBX_USE_D3D11
-            // Xbox extension — float-encoded DWORD, no D3D9 counterpart
-            // Route to D3D11 backend for thick line GS
-            CxbxD3D11SetRenderState(State, Value);
+   	   	   	// Xbox extension — float-encoded DWORD, no D3D9 counterpart
+   	   	   	// Route to D3D11 backend for thick line GS
+   	   	   	CxbxD3D11SetRenderState(State, Value);
 #endif
-            return; // No D3D9 counterpart
+   	   	   	return; // No D3D9 counterpart
         default:
-            // Only log missing state if it has a D3D counterpart
+   	   	   	// Only log missing state if it has a D3D counterpart
             if (RenderStateInfo.PC != 0) {
                 EmuLog(LOG_LEVEL::WARNING, "ApplyComplexRenderState(%s, 0x%.08X) is unimplemented!", RenderStateInfo.S, Value);
             }
             return;
     }
 
-    // Skip RenderStates that don't have a defined D3D counterpart
+   	// Skip RenderStates that don't have a defined D3D counterpart
     if (RenderStateInfo.PC == 0) {
         return;
     }
 
 #ifdef CXBX_USE_D3D11
-    CxbxD3D11SetRenderState(State, Value);
+   	CxbxD3D11SetRenderState(State, Value);
 #else
     g_pD3DDevice->SetRenderState(RenderStateInfo.PC, Value);
 #endif
