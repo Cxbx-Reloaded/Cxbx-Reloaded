@@ -66,7 +66,12 @@ INDEX16* CxbxCreateTriFanToTriangleListIndexData(INDEX16* pFanIndexData, unsigne
 // * Quad list to triangle list conversion
 // ******************************************************************
 
-bool bUseClockWiseWindingOrder = true; // TODO : Should this be fetched from X_D3DRS_FRONTFACE (or X_D3DRS_CULLMODE)?
+// Determine winding order from X_D3DRS_FRONTFACE render state
+// 0x900 = NV2A_FRONT_FACE_CW (clockwise), anything else = CCW
+static bool CxbxGetClockWiseWindingOrder()
+{
+	return XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FRONTFACE) == 0x900;
+}
 
 UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices)
 {
@@ -94,7 +99,7 @@ void CxbxConvertQuadListToTriangleListIndices(
 	unsigned i = 0;
 	unsigned j = 0;
 	while (i + (VERTICES_PER_TRIANGLE * TRIANGLES_PER_QUAD) <= uNrOfTriangleIndices) {
-		if (bUseClockWiseWindingOrder) {
+		if (CxbxGetClockWiseWindingOrder()) {
 			// ABCD becomes ABD+BCD (split along the B-D diagonal, matching NV2A hardware)
 			pTriangleIndexData[i + 0] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 0] : j + 0; // A
 			pTriangleIndexData[i + 1] = pXboxQuadIndexData ? pXboxQuadIndexData[j + 1] : j + 1; // B

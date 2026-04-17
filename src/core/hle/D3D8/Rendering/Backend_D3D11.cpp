@@ -382,6 +382,11 @@ void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
             g_D3D11RasterizerDesc.MultisampleEnable = (Value != 0) ? TRUE : FALSE;
             g_bD3D11RasterizerStateDirty = true;
             break;
+        case xbox::X_D3DRS_FRONTFACE:
+            // Xbox FRONTFACE: 0x900 = CW, 0x901 = CCW (NV2A values)
+            g_D3D11RasterizerDesc.FrontCounterClockwise = (Value != 0x900) ? TRUE : FALSE;
+            g_bD3D11RasterizerStateDirty = true;
+            break;
 
         // ---- Depth/stencil state ----
         case xbox::X_D3DRS_ZENABLE:
