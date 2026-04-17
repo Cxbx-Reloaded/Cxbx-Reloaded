@@ -170,6 +170,39 @@ void CreateDefaultD3D9Device
 		);
 	}
 #endif
+	// If device creation failed with a specific adapter or non-hardware driver type,
+	// fall back to default adapter with D3D_DRIVER_TYPE_HARDWARE (most compatible, works with DXVK/Proton)
+	if (FAILED(hr) && (g_EmuCDPD.Adapter != nullptr || g_EmuCDPD.DeviceType != D3D_DRIVER_TYPE_HARDWARE)) {
+		EmuLog(LOG_LEVEL::WARNING, "D3D11CreateDevice failed (hr=0x%08X), retrying with default adapter and HARDWARE driver type", hr);
+		hr = D3D11CreateDevice(
+			nullptr,
+			D3D_DRIVER_TYPE_HARDWARE,
+			nullptr,
+			creationFlags,
+			featureLevels,
+			ARRAYSIZE(featureLevels),
+			D3D11_SDK_VERSION,
+			&device,
+			nullptr,
+			&context
+		);
+	}
+	// Last resort: fall back to WARP software rasterizer (Windows only, not available under Wine/Proton)
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "D3D11CreateDevice failed (hr=0x%08X), falling back to WARP", hr);
+		hr = D3D11CreateDevice(
+			nullptr,
+			D3D_DRIVER_TYPE_WARP,
+			nullptr,
+			creationFlags,
+			featureLevels,
+			ARRAYSIZE(featureLevels),
+			D3D11_SDK_VERSION,
+			&device,
+			nullptr,
+			&context
+		);
+	}
     DEBUG_D3DRESULT(hr, "D3D11CreateDevice");
 	if (FAILED(hr))
 		CxbxrAbort("D3D11CreateDevice failed (hr=0x%08X)", hr);
