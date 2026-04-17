@@ -639,7 +639,7 @@ IDirect3DPixelShader* GetFixedFunctionShader()
 	}
 
 	// Compile the shader
-	ID3DBlob* pShaderBlob;
+	ID3DBlob* pShaderBlob = nullptr;
 
 	auto hlslDir = std::filesystem::path(szFilePath_CxbxReloaded_Exe)
 		.parent_path()

@@ -67,6 +67,8 @@ extern HRESULT EmuCompileShader
 	ID3DBlob* pErrorsCompatibility = nullptr;
 	HRESULT             hRet = 0;
 
+	*ppHostShader = nullptr;
+
 	EmuLog(LOG_LEVEL::DEBUG, "--- HLSL conversion ---");
 	EmuLog(LOG_LEVEL::DEBUG, DebugPrependLineNumbers(hlsl_str).c_str());
 	EmuLog(LOG_LEVEL::DEBUG, "-----------------------");
@@ -110,7 +112,7 @@ extern HRESULT EmuCompileShader
 			hlsl_str.c_str(),
 			hlsl_str.length(),
 			pSourceName,
-			nullptr, // pDefines
+			defines, // pDefines
 			D3D_COMPILE_STANDARD_FILE_INCLUDE, // pInclude // TODO precompile x_* HLSL functions?
 			"main", // shader entry poiint
 			shader_profile,
