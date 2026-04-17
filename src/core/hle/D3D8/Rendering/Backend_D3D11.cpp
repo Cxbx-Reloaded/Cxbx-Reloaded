@@ -370,10 +370,16 @@ void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
             }
             g_bD3D11RasterizerStateDirty = true;
             break;
-        case xbox::X_D3DRS_ZBIAS:
-            g_D3D11RasterizerDesc.DepthBias = (INT)Value;
+        case xbox::X_D3DRS_ZBIAS: {
+            // Value arrives as a float-encoded DWORD (converted by ApplyComplexRenderState)
+            // D3D11 DepthBias is an integer scaled by the depth buffer's minimum representable value
+            // For D24: DepthBias * (1 / 2^24). Convert the D3D9 float bias to D3D11 integer bias.
+            float fBias = *reinterpret_cast<const float*>(&Value);
+            g_D3D11RasterizerDesc.DepthBias = static_cast<INT>(fBias * (float)(1 << 24));
+            g_D3D11RasterizerDesc.DepthBiasClamp = 0.0f;
+            g_D3D11RasterizerDesc.SlopeScaledDepthBias = 0.0f;
             g_bD3D11RasterizerStateDirty = true;
-            break;
+        } break;
         case xbox::X_D3DRS_EDGEANTIALIAS:
             g_D3D11RasterizerDesc.AntialiasedLineEnable = (Value != 0) ? TRUE : FALSE;
             g_bD3D11RasterizerStateDirty = true;
