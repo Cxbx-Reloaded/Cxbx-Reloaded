@@ -651,6 +651,18 @@ void CxbxD3D11ApplyDirtyStates()
 	}
 }
 
+// RTV cache: maps texture pointer to its render target view, avoiding
+// redundant CreateRenderTargetView calls for the same texture.
+static std::unordered_map<IDirect3DSurface*, ID3D11RenderTargetView*> g_RTVCache;
+
+static void ClearRTVCache()
+{
+	for (auto &pair : g_RTVCache) {
+		if (pair.second) pair.second->Release();
+	}
+	g_RTVCache.clear();
+}
+
 // ******************************************************************
 // * Release all backend resources (called from device release lambda)
 // ******************************************************************
@@ -673,18 +685,6 @@ void CxbxD3D11ReleaseBackendResources()
 // ******************************************************************
 // * Rendering helpers (D3D11 implementations)
 // ******************************************************************
-
-// RTV cache: maps texture pointer to its render target view, avoiding
-// redundant CreateRenderTargetView calls for the same texture.
-static std::unordered_map<IDirect3DSurface*, ID3D11RenderTargetView*> g_RTVCache;
-
-static void ClearRTVCache()
-{
-	for (auto &pair : g_RTVCache) {
-		if (pair.second) pair.second->Release();
-	}
-	g_RTVCache.clear();
-}
 
 HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 {
