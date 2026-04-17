@@ -34,7 +34,7 @@
 //#include "core\kernel\support\Emu.h"
 
 #ifdef CXBX_USE_D3D11
-const char* g_ps_model = ps_model_4_0;
+const char* g_ps_model = ps_model_5_0;
 #else
 const char* g_ps_model = ps_model_3_0;
 #endif

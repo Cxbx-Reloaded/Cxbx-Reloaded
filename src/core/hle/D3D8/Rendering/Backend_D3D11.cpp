@@ -374,7 +374,7 @@ void CxbxD3D11InitBlit()
 
 	// Compile vertex shader
 	ID3DBlob* pVSBlob = nullptr;
-	HRESULT hr = EmuCompileShader(std::string(blitVS), "vs_4_0", &pVSBlob, "CxbxBlitVS");
+	HRESULT hr = EmuCompileShader(std::string(blitVS), "vs_5_0", &pVSBlob, "CxbxBlitVS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit VS");
 		return;
@@ -388,7 +388,7 @@ void CxbxD3D11InitBlit()
 
 	// Compile pixel shader
 	ID3DBlob* pPSBlob = nullptr;
-	hr = EmuCompileShader(std::string(blitPS), "ps_4_0", &pPSBlob, "CxbxBlitPS");
+	hr = EmuCompileShader(std::string(blitPS), "ps_5_0", &pPSBlob, "CxbxBlitPS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit PS");
 		return;
@@ -480,7 +480,7 @@ void CxbxD3D11InitBlit()
 		"}\n";
 
 	ID3DBlob* pGSBlob = nullptr;
-	hr = EmuCompileShader(std::string(pointSpriteGS), "gs_4_0", &pGSBlob, "CxbxPointSpriteGS");
+	hr = EmuCompileShader(std::string(pointSpriteGS), "gs_5_0", &pGSBlob, "CxbxPointSpriteGS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile point sprite GS");
 	} else {
@@ -565,7 +565,7 @@ void CxbxD3D11InitBlit()
 		"}\n";
 
 	pGSBlob = nullptr;
-	hr = EmuCompileShader(std::string(thickLineGS), "gs_4_0", &pGSBlob, "CxbxThickLineGS");
+	hr = EmuCompileShader(std::string(thickLineGS), "gs_5_0", &pGSBlob, "CxbxThickLineGS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile thick line GS");
 	} else {
