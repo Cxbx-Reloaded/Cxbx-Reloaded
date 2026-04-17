@@ -47,6 +47,7 @@
 #include "Rendering\RenderStates.h"
 #include "Rendering\TextureStates.h"
 #include <wrl/client.h>
+#include <cstring> // For std::memcpy
 
 // The Xbox kernel's SetRenderState_FogColor swaps R↔B before calling
 // SetRenderState_Simple, so D3D__RenderState stores the fog color in NV2A
@@ -666,8 +667,7 @@ IDirect3DPixelShader* GetFixedFunctionShader()
 
 float AsFloat(uint32_t value)
 {
-	auto v = value;
-	return *(float*)&v;
+	float f; std::memcpy(&f, &value, sizeof(f)); return f;
 }
 
 // Determines the Cxbx ColorSign requirement, as handled in the HLSL shaders by PerformColorSign()
