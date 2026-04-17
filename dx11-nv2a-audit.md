@@ -139,10 +139,11 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 ## Moderate (Edge Cases, Specific Titles)
 
 ### 20. Volume Texture Support Incomplete
-- [ ] Fixed
+- [x] Fixed
 - **Files**: `HostResourceCreate.cpp:477`
 - **Description**: Contains "TODO : Implement standalone volume creation" — 3D texture creation may fall back to 2D.
-- **Impact**: 3D textures (fog volumes, 3D LUTs) non-functional
+- **Resolution**: Implemented standalone volume creation for D3D11 (creates a single-depth Texture3D). Fixed `IsSupportedFormat` to use `g_bSupportsFormatVolumeTexture` instead of `g_bSupportsFormatTexture` for `X_D3DRTYPE_VOLUME`. VolumeTexture creation was already working. Cleaned up stale TODO comments.
+- **Impact**: Standalone volume resources now functional on D3D11
 
 ### 21. Fog Calculation: `if` Instead of `else if`
 - [x] Fixed
