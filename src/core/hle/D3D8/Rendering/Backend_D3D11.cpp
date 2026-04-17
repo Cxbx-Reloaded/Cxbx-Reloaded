@@ -33,6 +33,7 @@
 #include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3D11PrimitiveTopology
 
 #include <cstring> // memcpy
+#include <unordered_map>
 #include <wrl/client.h>
 using namespace Microsoft::WRL;
 
@@ -553,11 +554,25 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11BlitPS) { g_pD3D11BlitPS->Release(); g_pD3D11BlitPS = nullptr; }
 	if (g_pD3D11BlitSamplerLinear) { g_pD3D11BlitSamplerLinear->Release(); g_pD3D11BlitSamplerLinear = nullptr; }
 	if (g_pD3D11BlitSamplerPoint) { g_pD3D11BlitSamplerPoint->Release(); g_pD3D11BlitSamplerPoint = nullptr; }
+	ClearRTVCache();
 }
 
 // ******************************************************************
 // * Rendering helpers (D3D11 implementations)
 // ******************************************************************
+
+// RTV cache: maps texture pointer to its render target view, avoiding
+// redundant CreateRenderTargetView calls for the same texture.
+static std::unordered_map<IDirect3DSurface*, ID3D11RenderTargetView*> g_RTVCache;
+
+static void ClearRTVCache()
+{
+	for (auto &pair : g_RTVCache) {
+		if (pair.second) pair.second->Release();
+	}
+	g_RTVCache.clear();
+}
+
 HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 {
 	LOG_INIT;
@@ -572,25 +587,37 @@ HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 		hRet = S_OK;
 	} else {
 		g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
-		D3D11_TEXTURE2D_DESC textureDesc = {};
-		pHostRenderTarget->GetDesc(&textureDesc);
 
-		D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
-		renderTargetViewDesc.Format = textureDesc.Format;
-		renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-		renderTargetViewDesc.Texture2D.MipSlice = 0;
-
-		ComPtr<ID3D11RenderTargetView> renderTargetView;
-		hRet = g_pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pHostRenderTarget, &renderTargetViewDesc, renderTargetView.GetAddressOf());
-		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
-
-		if (SUCCEEDED(hRet)) {
+		// Check RTV cache first
+		auto it = g_RTVCache.find(pHostRenderTarget);
+		if (it != g_RTVCache.end()) {
 			if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
-				g_pD3DCurrentRTV->Release();
+				// Don't release — it's in the cache
 			}
-			g_pD3DCurrentRTV = renderTargetView.Get();
-			g_pD3DCurrentRTV->AddRef();
-			g_pD3DDeviceContext->OMSetRenderTargets(1, renderTargetView.GetAddressOf(), g_pD3DDepthStencilView);
+			g_pD3DCurrentRTV = it->second;
+			g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
+			hRet = S_OK;
+		} else {
+			D3D11_TEXTURE2D_DESC textureDesc = {};
+			pHostRenderTarget->GetDesc(&textureDesc);
+
+			D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
+			renderTargetViewDesc.Format = textureDesc.Format;
+			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+			renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+			ID3D11RenderTargetView* renderTargetView = nullptr;
+			hRet = g_pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pHostRenderTarget, &renderTargetViewDesc, &renderTargetView);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
+
+			if (SUCCEEDED(hRet)) {
+				g_RTVCache[pHostRenderTarget] = renderTargetView;
+				if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
+					// Don't release — it's in the cache
+				}
+				g_pD3DCurrentRTV = renderTargetView;
+				g_pD3DDeviceContext->OMSetRenderTargets(1, &renderTargetView, g_pD3DDepthStencilView);
+			}
 		}
 	}
 	return hRet;
