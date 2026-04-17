@@ -311,8 +311,10 @@ void CxbxDrawIndexedClosingLineUP(INDEX16 LowIndex, INDEX16 HighIndex, void *pHo
 		UINT stride = uiHostVertexStreamZeroStride;
 		UINT offset = 0;
 		g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
+		CxbxBindThickLineGS((xbox::X_D3DPRIMITIVETYPE)xbox::X_D3DPT_LINELIST);
 		g_pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
 		g_pD3DDeviceContext->Draw(2, 0);
+		CxbxUnbindThickLineGS((xbox::X_D3DPRIMITIVETYPE)xbox::X_D3DPT_LINELIST);
 	}
 #else
 	HRESULT hRet = g_pD3DDevice->DrawPrimitiveUP(

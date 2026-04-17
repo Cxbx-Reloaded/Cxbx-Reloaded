@@ -650,8 +650,10 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 				D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST :
 				EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType);
 			g_pD3DDeviceContext->IASetPrimitiveTopology(topology);
+			CxbxBindThickLineGS(DrawContext.XboxPrimitiveType);
 			UINT indexCount = bConvertedPrimitive ? PrimitiveCount * 3 : DrawContext.dwVertexCount;
 			g_pD3DDeviceContext->DrawIndexed(indexCount, 0, 0);
+			CxbxUnbindThickLineGS(DrawContext.XboxPrimitiveType);
 			hRet = S_OK;
 		}
 #else

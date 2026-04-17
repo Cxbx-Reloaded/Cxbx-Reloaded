@@ -278,10 +278,11 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 Items below identify CPU-bound operations that could be moved to the GPU shader pipeline for correctness and/or performance.
 
 ### 40. Thick Line Rendering Not Implemented
-- [ ] Fixed
-- **Files**: `Backend_D3D11.cpp`, `RenderStates.cpp`
+- [x] Fixed
+- **Files**: `Backend_D3D11.cpp`, `Backend_D3D11.h`, `RenderStates.cpp`, `HostDraw.cpp`, `EmuPatches_Draw.cpp`, `IndexBufferConvert.cpp`
 - **Description**: `X_D3DRS_LINEWIDTH` (NV2A register 0x380) is defined but never handled in the D3D11 backend. D3D11 has no native line width control — all lines render at 1 pixel regardless of the game's requested width. Requires a geometry shader to expand line segments into screen-aligned quads, following the same pattern as the point sprite GS.
-- **Impact**: Games using thick lines (debug overlays, UI borders, wireframe modes, racing lines) render too thin
+- **Resolution**: Implemented a geometry shader (`gs_4_0`) that takes each line segment (2 vertices) and expands it into a screen-aligned quad. The GS computes a perpendicular offset in screen space from the line width stored in the shared GS constant buffer (`gsParams.z`). Vertex attributes are correctly propagated from each endpoint. The GS is bound/unbound around draw calls when `LINEWIDTH > 1.0` and the primitive type is a line variant. Added `X_D3DRS_LINEWIDTH` routing through `ApplyDeferredRenderState` to `CxbxD3D11SetRenderState`.
+- **Impact**: Games using thick lines now render correctly on D3D11
 
 ### 41. Texture Unswizzle on GPU via Compute Shader
 - [ ] Fixed

@@ -423,6 +423,13 @@ void XboxRenderStateConverter::ApplyComplexRenderState(uint32_t State, uint32_t 
             CxbxD3D11SetRenderState(State, Value);
 #endif
             return; // No PC counterpart
+        case xbox::X_D3DRS_LINEWIDTH:
+#ifdef CXBX_USE_D3D11
+            // Xbox extension — float-encoded DWORD, no PC counterpart
+            // Route to D3D11 backend for thick line GS
+            CxbxD3D11SetRenderState(State, Value);
+#endif
+            return; // No PC counterpart
         default:
             // Only log missing state if it has a PC counterpart
             if (RenderStateInfo.PC != 0) {
