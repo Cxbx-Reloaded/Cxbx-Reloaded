@@ -291,14 +291,14 @@ void XboxTextureStateConverter::Apply()
                 case xbox::X_D3DTSS_MAXMIPLEVEL: case xbox::X_D3DTSS_MAXANISOTROPY:
                     break;
                 default:
-                    // Only log missing state if it has a PC counterpart
+                    // Only log missing state if it has a D3D counterpart
                     if (CxbxTextureStateInfo[State].PC != 0) {
                         EmuLog(LOG_LEVEL::WARNING, "XboxTextureStateConverter::Apply(%s, 0x%.08X) is unimplemented!", CxbxTextureStateInfo[State].S, XboxValue);
                     }
                     break;
             }
 
-            // Skip Texture States that don't have a defined PC counterpart
+            // Skip Texture States that don't have a defined D3D counterpart
             if (CxbxTextureStateInfo[State].PC == 0) {
                 continue;
             }
