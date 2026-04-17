@@ -38,7 +38,7 @@
 #define LOG_PREFIX CXBXR_MODULE::PXSH
 
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For g_pD3DDevice, g_pXbox_PixelShader
+#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For g_pXbox_PixelShader
 #include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbPixelShader.h"
 #include "core\hle\D3D8\Rendering\PixelShader.h" // EmuCompilePixelShader

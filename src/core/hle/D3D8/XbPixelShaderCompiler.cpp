@@ -978,19 +978,8 @@ void CxbxUpdateActivePixelShader() // NOPATCH
         int stage_nr = i - PSH_XBOX_CONSTANT_BEM;
         DWORD* value = (DWORD*)&fColor[i]; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
 
-#ifdef CXBX_USE_D3D11
-        // Read bump env matrix from Xbox texture state cache
-        value[0] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT00);
-        value[1] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT01);
-        value[2] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT10);
-        value[3] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVMAT11);
-#else
-        g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVMAT00, &value[0]); // Maps to BEM[stage].x
-        g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVMAT01, &value[1]); // Maps to BEM[stage].y
-        g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVMAT10, &value[2]); // Maps to BEM[stage].z
-        g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVMAT11, &value[3]); // Maps to BEM[stage].w
+        CxbxGetBumpEnvMatrix(stage_nr, value);
         // Note : The TSS values being read here, have been transfered from Xbox to host in XboxTextureStateConverter::Apply()
-#endif
         break;
       }
       case PSH_XBOX_CONSTANT_LUM + 0:
@@ -1001,14 +990,7 @@ void CxbxUpdateActivePixelShader() // NOPATCH
         int stage_nr = i - PSH_XBOX_CONSTANT_LUM;
         DWORD* value = (DWORD*)&fColor[i]; // Note : This overlays D3DXCOLOR's FLOAT r, g, b, a
 
-#ifdef CXBX_USE_D3D11
-        // Read bump env luminance from Xbox texture state cache
-        value[0] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVLSCALE);
-        value[1] = XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_BUMPENVLOFFSET);
-#else
-        g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVLSCALE,  &value[0]); // Maps to LUM[stage].x
-        g_pD3DDevice->GetTextureStageState(stage_nr, D3DTSS_BUMPENVLOFFSET, &value[1]); // Maps to LUM[stage].y
-#endif
+        CxbxGetBumpEnvLuminance(stage_nr, value);
         value[2] = 0;
         value[3] = 0;
         break;

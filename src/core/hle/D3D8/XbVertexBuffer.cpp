@@ -31,7 +31,7 @@
 #include "core\kernel\memory-manager\VMManager.h"
 #include "common\util\hasher.h"
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For g_pD3DDevice
+#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For CxbxSetStreamSource, CxbxCreateVertexBuffer, etc.
 #include "core\hle\D3D8\Rendering\WalkIndexBuffer.h" // for WalkIndexBuffer
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
@@ -262,7 +262,7 @@ void CxbxVertexBufferConverter::ConvertStream
 				nullptr, 
 				0);
 			if (FAILED(hRet)) {
-				EmuLog(LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(HostStreamNumber, nullptr, 0)");
+				EmuLog(LOG_LEVEL::WARNING, "CxbxSetStreamSource(HostStreamNumber, nullptr, 0)");
 			}
 
 			return;

@@ -195,13 +195,11 @@ void HLE_draw_state_update(NV2AState *d)
 
 	CxbxUpdateNativeD3DResources();
 
-	HRESULT hRet;
-
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
 	// NV2A_FOG_PLANE?
 	// NV2A_SET_LINEAR_FOG_CONST?
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
@@ -211,16 +209,7 @@ void HLE_draw_state_update(NV2AState *d)
 	// individual R,G,B,A fields from the NV2A ABGR method parameter and
 	// reassembles them into ARGB-ordered bit fields). No byte swap needed.
 	uint32_t fog_color = pg->regs[NV_PGRAPH_FOGCOLOR];
-#ifndef CXBX_USE_D3D11
-	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, fog_color); // NV2A_FOG_COLOR — already ARGB
-#else
-	(void)hRet;
-	// Set fog color in PS constant buffer at PSH_XBOX_CONSTANT_FOG (register 18)
-	{
-		D3DXCOLOR fogColorFloat(fog_color); // ARGB → correct R,G,B,A
-		CxbxSetPixelShaderConstantF(/*PSH_XBOX_CONSTANT_FOG=*/18, (const float*)&fogColorFloat, 1);
-	}
-#endif
+	CxbxSetFogColor(fog_color);
 
 // Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
 // Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
