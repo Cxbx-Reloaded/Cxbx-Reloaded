@@ -1900,6 +1900,21 @@ void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration
 				pBytecode->GetBufferSize(),
 				&pCxbxVertexDeclaration->pHostVertexDeclaration
 			);
+			// If layout creation failed (e.g. the compiled shader optimized away
+			// some TEXCOORD inputs), retry with the FixedFunction shader bytecode
+			// which always declares all 16 TEXCOORD inputs in its signature.
+			if (FAILED(hRet)) {
+				ID3DBlob* pFallback = CxbxGetFixedFunctionVertexShaderBytecode();
+				if (pFallback != nullptr && pFallback != pBytecode) {
+					hRet = g_pD3DDevice->CreateInputLayout(
+						pCxbxVertexDeclaration->pD3D11InputElements,
+						pCxbxVertexDeclaration->D3D11InputElementCount,
+						pFallback->GetBufferPointer(),
+						pFallback->GetBufferSize(),
+						&pCxbxVertexDeclaration->pHostVertexDeclaration
+					);
+				}
+			}
 			if (FAILED(hRet)) {
 				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: CreateInputLayout failed (0x%08X) elements=%u bytecodeSize=%zu",
 					hRet,

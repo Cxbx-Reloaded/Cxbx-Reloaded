@@ -268,6 +268,7 @@ extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();
 extern xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber);
 #ifdef CXBX_USE_D3D11
 extern ID3DBlob* CxbxGetActiveVertexShaderBytecode();
+extern ID3DBlob* CxbxGetFixedFunctionVertexShaderBytecode();
 #endif
 
 extern void CxbxImpl_SetScreenSpaceOffset(float x, float y);

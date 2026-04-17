@@ -255,11 +255,11 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 		}
 
 		// Determine the format we'll be using on host D3D
-EMUFORMAT PCFormat;
-   	   	   	   	bool bConvertTextureFormat = false;
+		EMUFORMAT PCFormat;
+		bool bConvertTextureFormat = false;
 
-   	   	   	   	if (EmuXBFormatRequiresConversion(X_Format, /*&*/PCFormat)) {
-   	   	   	   	   	   	bConvertTextureFormat = true;
+		if (EmuXBFormatRequiresConversion(X_Format, /*&*/PCFormat)) {
+			bConvertTextureFormat = true;
 
 			// Unset D3DUSAGE_DEPTHSTENCIL: It's not possible for ARGB textures to be depth stencils
 			// Fixes CreateTexture error in Virtua Cop 3 (Chihiro)
@@ -357,6 +357,7 @@ EMUFORMAT PCFormat;
 
 #ifdef CXBX_USE_D3D11
 		ComPtr<ID3D11Resource> pNewHostResource;
+		bool bHostIsDynamic = false;
 #else
 		// One of these will be created : each also has an intermediate copy to allow UpdateTexture to work
    	   	// This means we don't need to lock the GPU resource anymore, so we can use D3DPOOL_DEFAULT to allow Stretch/CopyRects to work!
@@ -546,6 +547,7 @@ EMUFORMAT PCFormat;
 					desc.Usage = D3D11_USAGE_DYNAMIC;
 					desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 					desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+					bHostIsDynamic = true;
 				}
 			} else {
 				desc.Usage = D3D11_USAGE_DEFAULT;
@@ -630,6 +632,7 @@ EMUFORMAT PCFormat;
 				desc.Usage = D3D11_USAGE_DYNAMIC;
 				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+				bHostIsDynamic = true;
 			} else {
 				desc.Usage = D3D11_USAGE_DEFAULT;
 				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -686,15 +689,11 @@ EMUFORMAT PCFormat;
 			desc.Format = PCFormat;
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
-			if (dwMipMapLevels == 1) {
-				desc.Usage = D3D11_USAGE_DYNAMIC;
-				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-			} else {
-				desc.Usage = D3D11_USAGE_DEFAULT;
-				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-				desc.CPUAccessFlags = 0;
-			}
+			// D3D11_USAGE_DYNAMIC requires ArraySize==1, but cube textures need 6.
+			// Always use DEFAULT and upload data via UpdateSubresource.
+			desc.Usage = D3D11_USAGE_DEFAULT;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			desc.CPUAccessFlags = 0;
 			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 
 			hRet = g_pD3DDevice->CreateTexture2D(&desc, NULL, reinterpret_cast<ID3D11Texture2D**>(pNewHostResource.ReleaseAndGetAddressOf()));
@@ -851,7 +850,7 @@ EMUFORMAT PCFormat;
 					continue;
 				}
 
-				if (dwMipMapLevels == 1) {
+				if (bHostIsDynamic) {
 					hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
 				} else {
 					// For DEFAULT textures, we can't Map; allocate a staging buffer and use UpdateSubresource later
@@ -977,7 +976,7 @@ if (bConvertTextureFormat) {
 				}
 
 #ifdef CXBX_USE_D3D11
-				if (dwMipMapLevels == 1) {
+				if (bHostIsDynamic) {
 					// Unmap the host resource (DYNAMIC textures)
 					g_pD3DDeviceContext->Unmap(pNewHostResource.Get(), Subresource);
 				} else {

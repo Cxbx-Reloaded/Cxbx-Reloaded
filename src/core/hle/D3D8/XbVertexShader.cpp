@@ -716,6 +716,11 @@ ID3DBlob* CxbxGetActiveVertexShaderBytecode()
 		return g_pD3D11PassthroughBytecode;
 	return nullptr;
 }
+
+ID3DBlob* CxbxGetFixedFunctionVertexShaderBytecode()
+{
+	return g_pD3D11FixedFunctionBytecode;
+}
 #endif
 
 void CxbxUpdateHostVertexDeclaration()
