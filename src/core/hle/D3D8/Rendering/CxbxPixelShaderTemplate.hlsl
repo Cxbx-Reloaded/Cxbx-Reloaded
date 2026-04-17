@@ -140,7 +140,7 @@ uniform const float4 ALPHATEST : register(c43); // D3D11: alpha test state (x=en
 #ifdef PS_COMBINERCOUNT_MUX_MSB
 	#define FCS_MUX (r0.a >= 0.5) // Check r0.a MSB; Having range upto 1 this should be equal to : (((r0.a * 255) /*mod 256*/) >= 128)
 #else // PS_COMBINERCOUNT_MUX_LSB
-	#define FCS_MUX (((r0.a * 255) % 2) >= 1) // Check r0.b LSB; Get LSB by converting 1 into 255 (highest 8-bit value) and using modulo 2. TODO : Verify correctness
+	#define FCS_MUX (((r0.a * 255) % 2) >= 1) // Check r0.a LSB; Get LSB by converting to 8-bit range and using modulo 2. Note: float precision near integer boundaries may cause off-by-one
 #endif
 
 // PS_FINALCOMBINERSETTING_COMPLEMENT_V1, when defined, applies a modifier to the v1 input when calculating the sum register
@@ -400,7 +400,7 @@ float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 Bu
 #define Brdf(ts)      float3(t[ts-2].y,  t[ts-1].y,  t[ts-2].x - t[ts-1].x) // TODO : Complete 16 bit phi/sigma retrieval from float4 texture register. Perhaps use CalcHiLo?
 #define Normal2(ts)   float3(dot_[ts-1], dot_[ts],   0)                     // Preceding and current stage dot result. Will be input for Sample2D.
 #define Normal3(ts)   float3(dot_[ts-2], dot_[ts-1], dot_[ts])              // Two preceding and current stage dot result.
-#define Eye           float3(iT[1].w,    iT[2].w,    iT[3].w)               // 4th (q) component of input texture coordinates 1, 2 and 3. Only used by texm3x3vspec/PS_TEXTUREMODES_DOT_RFLCT_SPEC, always at stage 3. TODO : Map iT[1/2/3] through PS_INPUTTEXTURE_[]?
+#define Eye           float3(iT[1].w,    iT[2].w,    iT[3].w)               // 4th (q) component of input texture coordinates 1, 2 and 3. Only used by texm3x3vspec/PS_TEXTUREMODES_DOT_RFLCT_SPEC, always at stage 3. NV2A hardcodes these indices.
 #define Reflect(n, e) 2 * (dot(n, e) / dot(n, n)) * n - e                   // https://documentation.help/directx8_c/texm3x3vspec.htm
 #define BumpEnv(ts)   DoBumpEnv(iT[ts], BEM[ts], src(ts))                   // Will be input for Sample2D.
 #define LSO(ts)       (LUM[ts].x * src(ts).b) + LUM[ts].y                   // Uses PSH_XBOX_CONSTANT_LUM.x = D3DTSS_BUMPENVLSCALE, and .y = D3DTSS_BUMPENVLOFFSET
