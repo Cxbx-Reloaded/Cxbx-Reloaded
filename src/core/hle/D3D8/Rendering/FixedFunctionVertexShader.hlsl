@@ -9,7 +9,14 @@ uniform FixedFunctionVertexShaderState state : register(c0);
 
 uniform float4 xboxTextureScale[4] : register(c214);
 
+#ifdef CXBX_USE_D3D11
+// D3D11: Use a flat TEXCOORD array so all three vertex shader types
+// (FixedFunction, Passthrough, Programmable) share the same VS_INPUT layout.
+// This matches the NV2A model of 16 generic vertex attribute registers.
+#define CXBX_ALL_TEXCOORD_INPUTS
+#else
 #undef CXBX_ALL_TEXCOORD_INPUTS // Enable this to disable semantics in VS_INPUT (instead, we'll use an array of generic TEXCOORD's)
+#endif
 
 // Input registers
 struct VS_INPUT

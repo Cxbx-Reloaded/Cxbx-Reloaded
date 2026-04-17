@@ -392,6 +392,17 @@ private:
 	D3DDECLUSAGE Xb2PCRegisterType(DWORD VertexRegister, BYTE &UsageIndex)
 	{
 		UsageIndex = 0;
+#ifdef CXBX_USE_D3D11
+		// D3D11: All three VS types (FixedFunction, Passthrough, Programmable)
+		// use a flat float4 v[16] : TEXCOORD array as VS_INPUT, matching
+		// the NV2A's 16 generic vertex attribute registers.
+		// Identity mapping: Xbox register N → TEXCOORD index N.
+		if (VertexRegister <= 15) {
+			UsageIndex = (BYTE)VertexRegister;
+			return D3DDECLUSAGE_TEXCOORD;
+		}
+		return D3DDECLUSAGE_UNSUPPORTED;
+#else
 		switch (VertexRegister) {
 			case xbox::X_D3DVSDE_POSITION    /*= 0*/:                 return D3DDECLUSAGE_POSITION;
 			case xbox::X_D3DVSDE_BLENDWEIGHT /*= 1*/:                 return D3DDECLUSAGE_BLENDWEIGHT;
@@ -400,19 +411,6 @@ private:
 			case xbox::X_D3DVSDE_SPECULAR    /*= 4*/: UsageIndex = 1; return D3DDECLUSAGE_COLOR;
 			case xbox::X_D3DVSDE_FOG         /*= 5*/:                 return D3DDECLUSAGE_FOG;
 			case xbox::X_D3DVSDE_POINTSIZE   /*= 6*/:                 return D3DDECLUSAGE_PSIZE;
-#ifdef CXBX_USE_D3D11
-			// D3D11: Must match FixedFunctionVertexShader.hlsl VS_INPUT semantics
-			// backColor[2] : TEXCOORD4 and reserved[3] : TEXCOORD6
-			case xbox::X_D3DVSDE_BACKDIFFUSE /*= 7*/: UsageIndex = 4; return D3DDECLUSAGE_TEXCOORD;
-			case xbox::X_D3DVSDE_BACKSPECULAR/*= 8*/: UsageIndex = 5; return D3DDECLUSAGE_TEXCOORD;
-			case xbox::X_D3DVSDE_TEXCOORD0   /*= 9*/:                 return D3DDECLUSAGE_TEXCOORD;
-			case xbox::X_D3DVSDE_TEXCOORD1   /*=10*/: UsageIndex = 1; return D3DDECLUSAGE_TEXCOORD;
-			case xbox::X_D3DVSDE_TEXCOORD2   /*=11*/: UsageIndex = 2; return D3DDECLUSAGE_TEXCOORD;
-			case xbox::X_D3DVSDE_TEXCOORD3   /*=12*/: UsageIndex = 3; return D3DDECLUSAGE_TEXCOORD;
-			case 13: UsageIndex = 6; return D3DDECLUSAGE_TEXCOORD;
-			case 14: UsageIndex = 7; return D3DDECLUSAGE_TEXCOORD;
-			case 15: UsageIndex = 8; return D3DDECLUSAGE_TEXCOORD;
-#else
 			case xbox::X_D3DVSDE_BACKDIFFUSE /*= 7*/: UsageIndex = 2; return D3DDECLUSAGE_COLOR;
 			case xbox::X_D3DVSDE_BACKSPECULAR/*= 8*/: UsageIndex = 3; return D3DDECLUSAGE_COLOR;
 			case xbox::X_D3DVSDE_TEXCOORD0   /*= 9*/:                 return D3DDECLUSAGE_TEXCOORD;
@@ -424,10 +422,10 @@ private:
 			case 13: UsageIndex = 4; return D3DDECLUSAGE_TEXCOORD;
 			case 14: UsageIndex = 5; return D3DDECLUSAGE_TEXCOORD;
 			case 15: UsageIndex = 6; return D3DDECLUSAGE_TEXCOORD;
-#endif
 			default:
 				return D3DDECLUSAGE_UNSUPPORTED;
 		}
+#endif
 	}
 
 	// VERTEX SHADER
