@@ -69,17 +69,20 @@ struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 #else
     float2 iPos : VPOS; // Screen space x,y pixel location
 #endif
-    float4 iD0 : COLOR0; // Front-facing primary (diffuse) vertex color (clamped to 0..1)
-    float4 iD1 : COLOR1; // Front-facing secondary (specular) vertex color (clamped to 0..1)
-    float iFog : FOG;
-    float iPts : PSIZE;
-    float4 iB0 : TEXCOORD4; // Back-facing primary (diffuse) vertex color (clamped to 0..1)
-    float4 iB1 : TEXCOORD5; // Back-facing secondary (specular) vertex color (clamped to 0..1)
-    float4 iT[4] : TEXCOORD0; // Texture Coord 0
+    float4 iD0  : COLOR0; // Front-facing primary (diffuse) vertex color (clamped to 0..1)
+    float4 iD1  : COLOR1; // Front-facing secondary (specular) vertex color (clamped to 0..1)
+    float  iFog : FOG;
+    float  iPts : PSIZE;
+    float4 iB0  : TEXCOORD4; // Back-facing primary (diffuse) vertex color (clamped to 0..1)
+    float4 iB1  : TEXCOORD5; // Back-facing secondary (specular) vertex color (clamped to 0..1)
+    float4 iT0  : TEXCOORD0; // Texture Coord 0
+    float4 iT1  : TEXCOORD1; // Texture Coord 1
+    float4 iT2  : TEXCOORD2; // Texture Coord 2
+    float4 iT3  : TEXCOORD3; // Texture Coord 3
 #if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
-	bool   iFF : SV_IsFrontFace; // SM4.0+: bool type required
+	bool   iFF  : SV_IsFrontFace; // SM4.0+: bool type required
 #else
-    float iFF : VFACE; // Front facing if > 0
+    float  iFF  : VFACE; // Front facing if > 0
 #endif
 };
 
@@ -334,7 +337,11 @@ float4 main(const PS_INPUT input) : COLOR
     if (state.FogEnable == 0)
         fogFactor = 1;
     }
-	TexCoords = input.iT;
+    // Map input texture coordinates to an array, for indexing purposes
+    TexCoords[0] = input.iT0;
+    TexCoords[1] = input.iT1;
+    TexCoords[2] = input.iT2;
+    TexCoords[3] = input.iT3;
 
 	// Each stage is passed and returns
 	// a set of texture arguments
