@@ -75,6 +75,9 @@ extern UINT  g_D3D11SampleMask;
 // Compile blit shaders and create sampler states (called once at device init)
 void CxbxD3D11InitBlit();
 
+// Create a D3D11 constant buffer (DYNAMIC or DEFAULT).
+HRESULT CxbxD3D11CreateConstantBuffer(UINT byteWidth, bool bDynamic, ID3D11Buffer** ppBuffer);
+
 // Release all D3D11 backend resources (blit shaders, samplers, constant buffers, state objects)
 void CxbxD3D11ReleaseBackendResources();
 
