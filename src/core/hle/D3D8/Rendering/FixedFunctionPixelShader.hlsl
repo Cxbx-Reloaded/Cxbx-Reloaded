@@ -396,6 +396,22 @@ float4 main(const PS_INPUT input) : COLOR
 		ctx.CURRENT.rgb += ctx.SPECULAR.rgb;
 	}
 
+	// D3D11: Alpha test (D3D11 has no fixed-function alpha test)
+	if (state.AlphaTest.x) { // AlphaTestEnable
+		float alphaRef = state.AlphaTest.y;
+		int alphaFunc = (int)state.AlphaTest.z;
+		// D3DCMPFUNC: 1=NEVER,2=LESS,3=EQUAL,4=LESSEQUAL,5=GREATER,6=NOTEQUAL,7=GREATEREQUAL,8=ALWAYS
+		bool pass = (alphaFunc == 8); // ALWAYS
+		if (alphaFunc == 1) pass = false;                          // NEVER
+		if (alphaFunc == 2) pass = (ctx.CURRENT.a < alphaRef);     // LESS
+		if (alphaFunc == 3) pass = (ctx.CURRENT.a == alphaRef);    // EQUAL
+		if (alphaFunc == 4) pass = (ctx.CURRENT.a <= alphaRef);    // LESSEQUAL
+		if (alphaFunc == 5) pass = (ctx.CURRENT.a > alphaRef);     // GREATER
+		if (alphaFunc == 6) pass = (ctx.CURRENT.a != alphaRef);    // NOTEQUAL
+		if (alphaFunc == 7) pass = (ctx.CURRENT.a >= alphaRef);    // GREATEREQUAL
+		if (!pass) clip(-1);
+	}
+
 	// Output whatever is in current at the end
 	return ctx.CURRENT;
 }

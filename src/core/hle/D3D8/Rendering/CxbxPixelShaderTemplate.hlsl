@@ -77,6 +77,7 @@ uniform const float  FRONTFACE_FACTOR : register(c39); // Note : PSH_XBOX_CONSTA
 uniform const float4 FOGINFO : register(c40);
 uniform const float  FOGENABLE : register(c41);
 uniform const float4 TEXFMTFIXUP : register(c42); // D3D11: per-stage texture format channel fixup (0=identity, 1=.gbar, 2=.abgr, 3=luminance, 4=alpha-luminance)
+uniform const float4 ALPHATEST : register(c43); // D3D11: alpha test state (x=enable, y=ref [0..1], z=func [D3DCMPFUNC], w=unused)
 
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
 #define CM_GE(c) if(c >= 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_GE
@@ -504,6 +505,22 @@ PS_OUTPUT main(const PS_INPUT xIn)
 	PS_OUTPUT xOut;
 
 	xOut.oR0 = r0;
+
+	// D3D11: Alpha test (D3D11 has no fixed-function alpha test)
+	if (ALPHATEST.x) { // AlphaTestEnable
+		float alphaRef = ALPHATEST.y;
+		int alphaFunc = (int)ALPHATEST.z;
+		// D3DCMPFUNC: 1=NEVER,2=LESS,3=EQUAL,4=LESSEQUAL,5=GREATER,6=NOTEQUAL,7=GREATEREQUAL,8=ALWAYS
+		bool pass = (alphaFunc == 8); // ALWAYS
+		if (alphaFunc == 1) pass = false;                        // NEVER
+		if (alphaFunc == 2) pass = (xOut.oR0.a < alphaRef);     // LESS
+		if (alphaFunc == 3) pass = (xOut.oR0.a == alphaRef);    // EQUAL
+		if (alphaFunc == 4) pass = (xOut.oR0.a <= alphaRef);    // LESSEQUAL
+		if (alphaFunc == 5) pass = (xOut.oR0.a > alphaRef);     // GREATER
+		if (alphaFunc == 6) pass = (xOut.oR0.a != alphaRef);    // NOTEQUAL
+		if (alphaFunc == 7) pass = (xOut.oR0.a >= alphaRef);    // GREATEREQUAL
+		if (!pass) clip(-1);
+	}
 
 	return xOut;
 }

@@ -150,6 +150,7 @@ namespace FixedFunctionPixelShader {
 		alignas(16) float FogDensity;
 		alignas(16) float FogStart;
 		alignas(16) float FogEnd;
+		alignas(16) float4 AlphaTest; // x=enable, y=ref [0..1], z=func [D3DCMPFUNC], w=unused
     };
 #ifdef  __cplusplus
 } // FixedFunctionPixelShader namespace
