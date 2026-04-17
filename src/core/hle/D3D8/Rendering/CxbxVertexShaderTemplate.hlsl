@@ -333,7 +333,7 @@ VS_OUTPUT main(const VS_INPUT xIn)
 	xOut.oPos = reverseScreenspaceTransform(oPos);
 	xOut.oD0 = saturate(oD0);
 	xOut.oD1 = saturate(oD1);
-	xOut.oFog = saturate(oFog.x); // NV2A clamps fog factor output to [0,1]
+	xOut.oFog = oFog.x; // Don't clamp here: table fog modes pass a distance (can be > 1); PS clamps the final fog factor
 	xOut.oPts = oPts.x;
 	xOut.oB0 = saturate(oB0);
 	xOut.oB1 = saturate(oB1);
