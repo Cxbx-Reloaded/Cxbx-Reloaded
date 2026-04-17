@@ -706,12 +706,28 @@ float CxbxGetTexFmtFixup(int stage_nr)
 		return TEXFMTFIXUP_ALUM;
 	// B8G8R8A8 and R8G8B8A8 use GBAR/ABGR swizzles when uploaded raw
 	// (requires corresponding skip of CPU conversion in HostResourceCreate.cpp)
+	// Exception: render targets use B8G8R8A8_UNORM and don't need a swizzle.
 	case xbox::X_D3DFMT_B8G8R8A8:
 	case xbox::X_D3DFMT_LIN_B8G8R8A8:
+	{
+		// Check if the host texture is B8G8R8A8_UNORM (render target) — data is already correct
+		auto key = GetHostResourceKey(pXboxTex, stage_nr);
+		auto& cache = GetResourceCache(key);
+		auto it = cache.find(key);
+		if (it != cache.end() && it->second.HostFormat == EMUFMT_A8R8G8B8)
+			return TEXFMTFIXUP_IDENTITY;
 		return TEXFMTFIXUP_GBAR;
+	}
 	case xbox::X_D3DFMT_R8G8B8A8:
 	case xbox::X_D3DFMT_LIN_R8G8B8A8:
+	{
+		auto key = GetHostResourceKey(pXboxTex, stage_nr);
+		auto& cache = GetResourceCache(key);
+		auto it = cache.find(key);
+		if (it != cache.end() && it->second.HostFormat == EMUFMT_A8R8G8B8)
+			return TEXFMTFIXUP_IDENTITY;
 		return TEXFMTFIXUP_ABGR;
+	}
 	default:
 		break;
 	}
