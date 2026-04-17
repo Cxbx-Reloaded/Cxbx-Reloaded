@@ -270,3 +270,27 @@ Comprehensive audit of every D3D11 code path that could produce different visual
 - **Description**: Input layout created lazily on first use. If multiple threads access the creation path, a race condition could create duplicate layouts or use a partially initialized one.
 - **Resolution**: N/A — `CxbxUpdateHostVertexDeclaration()` is called from the draw path which runs on a single emulation/rendering thread. Xbox D3D is single-threaded. No race condition possible.
 - **Impact**: None
+
+---
+
+## GPU Pipeline Offload Opportunities
+
+Items below identify CPU-bound operations that could be moved to the GPU shader pipeline for correctness and/or performance.
+
+### 40. Thick Line Rendering Not Implemented
+- [ ] Fixed
+- **Files**: `Backend_D3D11.cpp`, `RenderStates.cpp`
+- **Description**: `X_D3DRS_LINEWIDTH` (NV2A register 0x380) is defined but never handled in the D3D11 backend. D3D11 has no native line width control — all lines render at 1 pixel regardless of the game's requested width. Requires a geometry shader to expand line segments into screen-aligned quads, following the same pattern as the point sprite GS.
+- **Impact**: Games using thick lines (debug overlays, UI borders, wireframe modes, racing lines) render too thin
+
+### 41. Texture Unswizzle on GPU via Compute Shader
+- [ ] Fixed
+- **Files**: `HostResourceCreate.cpp`, `XbConvert.cpp:385-497`
+- **Description**: Every swizzled Xbox texture is unswizzled on CPU via `EmuUnswizzleBox()` — a triple-nested loop with Morton/Z-order decode per pixel, per mip level. This is the single largest CPU bottleneck during texture uploads. A compute shader could take the raw swizzled bytes (uploaded to a structured buffer), compute the Morton decode in-shader, and write directly to the target texture UAV.
+- **Impact**: Performance — significant CPU time savings on texture-heavy titles
+
+### 42. Index Buffer Topology Conversion on GPU
+- [ ] Fixed
+- **Files**: `IndexBufferConvert.cpp`, `HostDraw.cpp:292-430`
+- **Description**: Triangle fan → triangle list and quad list → triangle list conversions run on CPU per draw call. For large meshes, a compute shader could perform the index expansion on GPU. The pattern is regular (fan: emit v0,vi,vi+1; quad: emit two triangles per quad with winding awareness).
+- **Impact**: Performance — minor, conversions are simple arithmetic but run frequently
