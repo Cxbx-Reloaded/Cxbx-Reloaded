@@ -31,6 +31,7 @@
 #include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
 #include "core\hle\D3D8\Rendering\Shader.h" // EmuCompileShader
 #include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3D11PrimitiveTopology
+#include "core\hle\D3D8\XbVertexShader.h" // CxbxVertexDeclaration, CxbxGetActiveVertexShaderBytecode
 
 #include <cstring> // memcpy
 #include <unordered_map>
@@ -1927,6 +1928,40 @@ HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirec
 void CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader)
 {
 	g_pD3DDeviceContext->PSSetShader(pPixelShader, nullptr, 0);
+}
+
+void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration)
+{
+	// Lazily create the input layout when we have elements but no layout yet
+	if (pCxbxVertexDeclaration != nullptr && pCxbxVertexDeclaration->pHostVertexDeclaration == nullptr
+		&& pCxbxVertexDeclaration->pD3D11InputElements != nullptr && pCxbxVertexDeclaration->D3D11InputElementCount > 0) {
+		ID3DBlob* pBytecode = CxbxGetActiveVertexShaderBytecode();
+		if (pBytecode != nullptr) {
+			HRESULT hRet = g_pD3DDevice->CreateInputLayout(
+				pCxbxVertexDeclaration->pD3D11InputElements,
+				pCxbxVertexDeclaration->D3D11InputElementCount,
+				pBytecode->GetBufferPointer(),
+				pBytecode->GetBufferSize(),
+				&pCxbxVertexDeclaration->pHostVertexDeclaration
+			);
+			if (FAILED(hRet)) {
+				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: CreateInputLayout failed (0x%08X) elements=%u bytecodeSize=%zu",
+					hRet,
+					pCxbxVertexDeclaration->D3D11InputElementCount,
+					pBytecode->GetBufferSize());
+				for (UINT i = 0; i < pCxbxVertexDeclaration->D3D11InputElementCount; i++) {
+					auto& e = pCxbxVertexDeclaration->pD3D11InputElements[i];
+					EmuLog(LOG_LEVEL::WARNING, "  [%u] Semantic=%s/%u Fmt=%u Slot=%u Offset=%u Class=%u Step=%u",
+						i, e.SemanticName ? e.SemanticName : "(null)", e.SemanticIndex,
+						e.Format, e.InputSlot, e.AlignedByteOffset,
+						e.InputSlotClass, e.InstanceDataStepRate);
+				}
+			}
+		}
+	}
+
+	g_pD3DDeviceContext->IASetInputLayout(
+		pCxbxVertexDeclaration != nullptr ? pCxbxVertexDeclaration->pHostVertexDeclaration : nullptr);
 }
 
 #endif // CXBX_USE_D3D11

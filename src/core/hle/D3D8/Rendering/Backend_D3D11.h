@@ -172,6 +172,11 @@ bool CxbxD3D11ConvertVertexBufferGPU(
 	UINT dstBufferSize,
 	IDirect3DVertexBuffer** ppOutputVB);
 
+// Lazily create the D3D11 input layout for a vertex declaration (if not yet
+// created) and bind it via IASetInputLayout.  Encapsulates all device access
+// so callers outside the Rendering folder never touch g_pD3DDevice directly.
+void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration);
+
 #endif // CXBX_USE_D3D11
 
 #endif // BACKEND_D3D11_H

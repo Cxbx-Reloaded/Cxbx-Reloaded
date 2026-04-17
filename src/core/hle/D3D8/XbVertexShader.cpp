@@ -36,6 +36,9 @@
 #include "core\hle\D3D8\Rendering\RenderStates.h" // For XboxRenderStateConverter
 #include "core\hle\D3D8\Rendering\VertexShaderCache.h" // For g_VertexShaderCache
 #include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
+#ifdef CXBX_USE_D3D11
+#include "core\hle\D3D8\Rendering\Backend_D3D11.h" // For CxbxD3D11SetVertexDeclaration
+#endif
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
@@ -757,44 +760,7 @@ void CxbxUpdateHostVertexDeclaration()
 {
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = CxbxGetVertexDeclaration();
 #ifdef CXBX_USE_D3D11
-	// For D3D11, create the input layout lazily using the current vertex shader's bytecode
-	if (pCxbxVertexDeclaration != nullptr && pCxbxVertexDeclaration->pHostVertexDeclaration == nullptr
-		&& pCxbxVertexDeclaration->pD3D11InputElements != nullptr && pCxbxVertexDeclaration->D3D11InputElementCount > 0) {
-		// Get bytecode from the appropriate source: programmable shader cache, or FF/passthrough blobs
-		ID3DBlob* pBytecode = nullptr;
-		if (g_D3D11HasActiveShaderKey) {
-			pBytecode = g_VertexShaderCache.GetShaderBytecode(g_D3D11ActiveVertexShaderKey);
-		} else if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
-			pBytecode = g_pD3D11FixedFunctionBytecode;
-		} else if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough) {
-			pBytecode = g_pD3D11PassthroughBytecode;
-		}
-		if (pBytecode != nullptr) {
-			HRESULT hRet = g_pD3DDevice->CreateInputLayout(
-				pCxbxVertexDeclaration->pD3D11InputElements,
-				pCxbxVertexDeclaration->D3D11InputElementCount,
-				pBytecode->GetBufferPointer(),
-				pBytecode->GetBufferSize(),
-				&pCxbxVertexDeclaration->pHostVertexDeclaration
-			);
-			if (FAILED(hRet)) {
-				EmuLog(LOG_LEVEL::WARNING, "CxbxUpdateHostVertexDeclaration: CreateInputLayout failed (0x%08X) elements=%u bytecodeSize=%zu mode=%d hasKey=%d",
-					hRet,
-					pCxbxVertexDeclaration->D3D11InputElementCount,
-					pBytecode->GetBufferSize(),
-					(int)g_Xbox_VertexShaderMode,
-					(int)g_D3D11HasActiveShaderKey);
-				for (UINT i = 0; i < pCxbxVertexDeclaration->D3D11InputElementCount; i++) {
-					auto& e = pCxbxVertexDeclaration->pD3D11InputElements[i];
-					EmuLog(LOG_LEVEL::WARNING, "  [%u] Semantic=%s/%u Fmt=%u Slot=%u Offset=%u Class=%u Step=%u",
-						i, e.SemanticName ? e.SemanticName : "(null)", e.SemanticIndex,
-						e.Format, e.InputSlot, e.AlignedByteOffset,
-						e.InputSlotClass, e.InstanceDataStepRate);
-				}
-			}
-		}
-	}
-	g_pD3DDeviceContext->IASetInputLayout(pCxbxVertexDeclaration != nullptr ? pCxbxVertexDeclaration->pHostVertexDeclaration : nullptr);
+	CxbxD3D11SetVertexDeclaration(pCxbxVertexDeclaration);
 	HRESULT hRet = S_OK;
 #else
 	HRESULT hRet = g_pD3DDevice->SetVertexDeclaration(pCxbxVertexDeclaration->pHostVertexDeclaration);
