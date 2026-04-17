@@ -106,6 +106,17 @@ HRESULT CxbxD3D11Blt(
 void CxbxBindThickLineGS(xbox::X_D3DPRIMITIVETYPE type);
 void CxbxUnbindThickLineGS(xbox::X_D3DPRIMITIVETYPE type);
 
+// GPU-accelerated texture unswizzle via compute shader.
+// Returns true if the CS path was used, false if caller should fall back to CPU.
+// Texture must be D3D11_USAGE_DEFAULT with D3D11_BIND_UNORDERED_ACCESS.
+bool CxbxD3D11UnswizzleTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSwizzledSrc,
+	UINT width,
+	UINT height,
+	UINT bpp,
+	DXGI_FORMAT format);
+
 #endif // CXBX_USE_D3D11
 
 #endif // BACKEND_D3D11_H

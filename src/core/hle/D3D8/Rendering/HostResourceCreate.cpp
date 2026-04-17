@@ -23,6 +23,7 @@
 // *
 // ******************************************************************
 #include "EmuD3D8_common.h"
+#include "Backend_D3D11.h"
 
 
 bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage) {
@@ -523,10 +524,17 @@ EMUFORMAT PCFormat;
 				desc.Usage = D3D11_USAGE_DEFAULT;
 				desc.CPUAccessFlags = 0;
 			} else if (dwMipMapLevels == 1) {
-				// D3D11_USAGE_DYNAMIC requires MipLevels == 1
-				desc.Usage = D3D11_USAGE_DYNAMIC;
-				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-				desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+				if (bSwizzled && !bConvertTextureFormat) {
+					// Swizzled textures use DEFAULT + UAV for GPU compute shader unswizzle
+					desc.Usage = D3D11_USAGE_DEFAULT;
+					desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+					desc.CPUAccessFlags = 0;
+				} else {
+					// D3D11_USAGE_DYNAMIC requires MipLevels == 1
+					desc.Usage = D3D11_USAGE_DYNAMIC;
+					desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+					desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+				}
 			} else {
 				desc.Usage = D3D11_USAGE_DEFAULT;
 				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -763,6 +771,26 @@ EMUFORMAT PCFormat;
 				// See https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-resources-subresources
 				D3D11_MAPPED_SUBRESOURCE MappedResource;
 				uint8_t* pStagingBuffer = nullptr; // Used for DEFAULT textures only
+
+				// CS unswizzle path: for swizzled single-mip 2D textures (DEFAULT+UAV),
+				// dispatch compute shader instead of Map/CPU-unswizzle/Unmap
+				if (bSwizzled && !bConvertTextureFormat && dwMipMapLevels == 1 && pxMipDepth == 1
+					&& XboxResourceType == xbox::X_D3DRTYPE_TEXTURE) {
+					uint8_t *pCsSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
+					ID3D11Texture2D* pTexture2D = static_cast<ID3D11Texture2D*>(pNewHostResource.Get());
+					if (CxbxD3D11UnswizzleTexture(pTexture2D, pCsSrc, pxMipWidth, pxMipHeight, dwBPP, PCFormat)) {
+						continue; // CS handled it, skip to next mip/face
+					}
+					// CS failed (unsupported format?) — fall back to CPU unswizzle via staging buffer + UpdateSubresource
+					EmuLog(LOG_LEVEL::WARNING, "CS unswizzle failed, falling back to CPU for %ux%u bpp=%u", pxMipWidth, pxMipHeight, dwBPP);
+					DWORD fallbackRowPitch = pxMipWidth * dwBPP;
+					DWORD fallbackSize = fallbackRowPitch * pxMipHeight;
+					uint8_t* pFallbackBuf = (uint8_t*)malloc(fallbackSize);
+					EmuUnswizzleBox(pCsSrc, pxMipWidth, pxMipHeight, 1, dwBPP, pFallbackBuf, fallbackRowPitch, 0);
+					g_pD3DDeviceContext->UpdateSubresource(pNewHostResource.Get(), Subresource, nullptr, pFallbackBuf, fallbackRowPitch, 0);
+					free(pFallbackBuf);
+					continue;
+				}
 
 				if (dwMipMapLevels == 1) {
 					hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);

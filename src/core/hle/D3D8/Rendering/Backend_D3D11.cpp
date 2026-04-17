@@ -115,6 +115,15 @@ static ID3D11GeometryShader *g_pD3D11ThickLineGS = nullptr;
 static float                 g_fLineWidth = 1.0f;
 
 // ******************************************************************
+// * Compute shader unswizzle resources
+// ******************************************************************
+static ID3D11ComputeShader  *g_pD3D11UnswizzleCS = nullptr;
+static ID3D11Buffer         *g_pD3D11UnswizzleCB = nullptr; // constant buffer: maskX, maskY, width, bpp
+static ID3D11Buffer         *g_pD3D11UnswizzleStagingBuf = nullptr; // reusable ByteAddressBuffer for upload
+static UINT                  g_UnswizzleStagingBufSize = 0;
+static ID3D11ShaderResourceView *g_pD3D11UnswizzleSRV = nullptr; // SRV for staging buffer
+
+// ******************************************************************
 // * Shader constant functions
 // ******************************************************************
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
@@ -422,6 +431,73 @@ void CxbxD3D11InitBlit()
 	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11GSConstantBuffer);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create GS constant buffer");
+	}
+
+	// ************************************************************
+	// Compute shader for texture unswizzle
+	// ************************************************************
+	static const char* unswizzleCS =
+		"ByteAddressBuffer g_SrcBuffer : register(t0);\n"
+		"RWTexture2D<uint> g_DstTexture : register(u0);\n"
+		"cbuffer UnswizzleConstants : register(b0) {\n"
+		"    uint maskX; uint maskY; uint texWidth; uint bpp;\n"
+		"};\n"
+		"uint MortonIndex(uint x, uint y) {\n"
+		"    uint mx = maskX; uint my = maskY;\n"
+		"    uint result = 0;\n"
+		"    uint xBit = 1, yBit = 1, outBit = 1;\n"
+		"    uint totalMask = mx | my;\n"
+		"    [unroll(20)]\n"
+		"    for (uint i = 0; i < 20; i++) {\n"
+		"        if ((totalMask & outBit) == 0) break;\n"
+		"        if (mx & outBit) { if (x & xBit) result |= outBit; xBit <<= 1; }\n"
+		"        if (my & outBit) { if (y & yBit) result |= outBit; yBit <<= 1; }\n"
+		"        outBit <<= 1;\n"
+		"    }\n"
+		"    return result;\n"
+		"}\n"
+		"[numthreads(8, 8, 1)]\n"
+		"void main(uint3 dtid : SV_DispatchThreadID) {\n"
+		"    uint x = dtid.x; uint y = dtid.y;\n"
+		"    if (x >= texWidth) return;\n"
+		"    uint mortonIdx = MortonIndex(x, y);\n"
+		"    uint srcByteOffset = mortonIdx * bpp;\n"
+		"    uint value;\n"
+		"    if (bpp == 4) {\n"
+		"        value = g_SrcBuffer.Load(srcByteOffset);\n"
+		"    } else if (bpp == 2) {\n"
+		"        uint dwordAddr = srcByteOffset & ~3u;\n"
+		"        uint shift = (srcByteOffset & 2u) * 8u;\n"
+		"        value = (g_SrcBuffer.Load(dwordAddr) >> shift) & 0xFFFF;\n"
+		"    } else {\n"
+		"        uint dwordAddr = srcByteOffset & ~3u;\n"
+		"        uint shift = (srcByteOffset & 3u) * 8u;\n"
+		"        value = (g_SrcBuffer.Load(dwordAddr) >> shift) & 0xFF;\n"
+		"    }\n"
+		"    g_DstTexture[uint2(x, y)] = value;\n"
+		"}\n";
+
+	ID3DBlob* pCSBlob = nullptr;
+	hr = EmuCompileShader(std::string(unswizzleCS), "cs_5_0", &pCSBlob, "CxbxUnswizzleCS");
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile unswizzle CS");
+	} else {
+		hr = g_pD3DDevice->CreateComputeShader(pCSBlob->GetBufferPointer(), pCSBlob->GetBufferSize(), nullptr, &g_pD3D11UnswizzleCS);
+		pCSBlob->Release();
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create unswizzle CS");
+		}
+	}
+
+	// Create unswizzle constant buffer (4 uints: maskX, maskY, width, bpp)
+	cbDesc = {};
+	cbDesc.ByteWidth = 16; // 4 x uint32
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11UnswizzleCB);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create unswizzle CB");
 	}
 }
 
@@ -765,6 +841,135 @@ static void ClearRTVCache()
 }
 
 // ******************************************************************
+// * GPU unswizzle via compute shader
+// ******************************************************************
+static void CxbxEnsureUnswizzleStagingBuffer(UINT requiredSize)
+{
+	// Round up to next 4KB to avoid frequent re-allocs
+	requiredSize = (requiredSize + 4095) & ~4095u;
+	if (g_pD3D11UnswizzleStagingBuf && g_UnswizzleStagingBufSize >= requiredSize)
+		return;
+
+	// Release old resources
+	if (g_pD3D11UnswizzleSRV) { g_pD3D11UnswizzleSRV->Release(); g_pD3D11UnswizzleSRV = nullptr; }
+	if (g_pD3D11UnswizzleStagingBuf) { g_pD3D11UnswizzleStagingBuf->Release(); g_pD3D11UnswizzleStagingBuf = nullptr; }
+
+	D3D11_BUFFER_DESC bufDesc = {};
+	bufDesc.ByteWidth = requiredSize;
+	bufDesc.Usage = D3D11_USAGE_DYNAMIC;
+	bufDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	bufDesc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+	HRESULT hr = g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, &g_pD3D11UnswizzleStagingBuf);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxEnsureUnswizzleStagingBuffer: Failed to create buffer (%u bytes)", requiredSize);
+		return;
+	}
+	g_UnswizzleStagingBufSize = requiredSize;
+
+	// Create raw SRV for ByteAddressBuffer access
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	srvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
+	srvDesc.BufferEx.NumElements = requiredSize / 4;
+	hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11UnswizzleStagingBuf, &srvDesc, &g_pD3D11UnswizzleSRV);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxEnsureUnswizzleStagingBuffer: Failed to create SRV");
+	}
+}
+
+bool CxbxD3D11UnswizzleTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSwizzledSrc,
+	UINT width,
+	UINT height,
+	UINT bpp,
+	DXGI_FORMAT format)
+{
+	if (!g_pD3D11UnswizzleCS || !g_pD3D11UnswizzleCB)
+		return false;
+
+	// Only 2D textures with bpp 1, 2, or 4
+	if (bpp != 1 && bpp != 2 && bpp != 4)
+		return false;
+
+	UINT dataSize = width * height * bpp;
+	// Round up to DWORD alignment for ByteAddressBuffer
+	UINT bufferSize = (dataSize + 3) & ~3u;
+
+	// Ensure staging buffer is large enough
+	CxbxEnsureUnswizzleStagingBuffer(bufferSize);
+	if (!g_pD3D11UnswizzleStagingBuf || !g_pD3D11UnswizzleSRV)
+		return false;
+
+	// Upload swizzled source data to the staging buffer
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
+	HRESULT hr = g_pD3DDeviceContext->Map(g_pD3D11UnswizzleStagingBuf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return false;
+	memcpy(mapped.pData, pSwizzledSrc, dataSize);
+	g_pD3DDeviceContext->Unmap(g_pD3D11UnswizzleStagingBuf, 0);
+
+	// Compute Morton masks (same algorithm as EmuUnswizzleBox)
+	UINT maskX = 0, maskY = 0;
+	for (UINT i = 1, j = 1; (i < width) || (i < height); i <<= 1) {
+		if (i < width)  { maskX |= j; j <<= 1; }
+		if (i < height) { maskY |= j; j <<= 1; }
+	}
+
+	// Update constant buffer
+	UINT cbData[4] = { maskX, maskY, width, bpp };
+	hr = g_pD3DDeviceContext->Map(g_pD3D11UnswizzleCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+	if (FAILED(hr))
+		return false;
+	memcpy(mapped.pData, cbData, sizeof(cbData));
+	g_pD3DDeviceContext->Unmap(g_pD3D11UnswizzleCB, 0);
+
+	// Create a temporary UAV for the destination texture
+	// Map the format to a uint-typed format for RWTexture2D<uint>
+	DXGI_FORMAT uavFormat;
+	switch (bpp) {
+	case 4:  uavFormat = DXGI_FORMAT_R32_UINT; break;
+	case 2:  uavFormat = DXGI_FORMAT_R16_UINT; break;
+	case 1:  uavFormat = DXGI_FORMAT_R8_UINT;  break;
+	default: return false;
+	}
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = uavFormat;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.Texture2D.MipSlice = 0;
+	ID3D11UnorderedAccessView* pUAV = nullptr;
+	hr = g_pD3DDevice->CreateUnorderedAccessView(pTexture, &uavDesc, &pUAV);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11UnswizzleTexture: Failed to create UAV (format=%u)", uavFormat);
+		return false;
+	}
+
+	// Save and set CS pipeline state
+	g_pD3DDeviceContext->CSSetShader(g_pD3D11UnswizzleCS, nullptr, 0);
+	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11UnswizzleCB);
+	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &g_pD3D11UnswizzleSRV);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pUAV, nullptr);
+
+	// Dispatch: 8x8 thread groups covering the texture dimensions
+	UINT groupsX = (width + 7) / 8;
+	UINT groupsY = (height + 7) / 8;
+	g_pD3DDeviceContext->Dispatch(groupsX, groupsY, 1);
+
+	// Unbind CS resources to avoid hazards
+	ID3D11ShaderResourceView* pNullSRV = nullptr;
+	ID3D11UnorderedAccessView* pNullUAV = nullptr;
+	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &pNullSRV);
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+
+	pUAV->Release();
+	return true;
+}
+
+// ******************************************************************
 // * Release all backend resources (called from device release lambda)
 // ******************************************************************
 void CxbxD3D11ReleaseBackendResources()
@@ -781,6 +986,11 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11PointSpriteGS) { g_pD3D11PointSpriteGS->Release(); g_pD3D11PointSpriteGS = nullptr; }
 	if (g_pD3D11ThickLineGS) { g_pD3D11ThickLineGS->Release(); g_pD3D11ThickLineGS = nullptr; }
 	if (g_pD3D11GSConstantBuffer) { g_pD3D11GSConstantBuffer->Release(); g_pD3D11GSConstantBuffer = nullptr; }
+	if (g_pD3D11UnswizzleCS) { g_pD3D11UnswizzleCS->Release(); g_pD3D11UnswizzleCS = nullptr; }
+	if (g_pD3D11UnswizzleCB) { g_pD3D11UnswizzleCB->Release(); g_pD3D11UnswizzleCB = nullptr; }
+	if (g_pD3D11UnswizzleSRV) { g_pD3D11UnswizzleSRV->Release(); g_pD3D11UnswizzleSRV = nullptr; }
+	if (g_pD3D11UnswizzleStagingBuf) { g_pD3D11UnswizzleStagingBuf->Release(); g_pD3D11UnswizzleStagingBuf = nullptr; }
+	g_UnswizzleStagingBufSize = 0;
 	ClearRTVCache();
 }
 
