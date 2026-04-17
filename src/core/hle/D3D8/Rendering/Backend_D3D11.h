@@ -27,6 +27,9 @@
 
 #include "core\hle\D3D8\XbD3D8Types.h"
 
+struct _CxbxVertexDeclaration;
+typedef struct _CxbxVertexDeclaration CxbxVertexDeclaration;
+
 // ******************************************************************
 // * D3D11 device globals
 // ******************************************************************
