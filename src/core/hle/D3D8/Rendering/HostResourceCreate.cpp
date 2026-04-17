@@ -524,7 +524,12 @@ EMUFORMAT PCFormat;
 				desc.Usage = D3D11_USAGE_DEFAULT;
 				desc.CPUAccessFlags = 0;
 			} else if (dwMipMapLevels == 1) {
-				if (bSwizzled && !bConvertTextureFormat) {
+				// Check if the format supports typed UAV access (needed for GPU unswizzle CS)
+				UINT fmtSupport = 0;
+				bool bCanUAV = SUCCEEDED(g_pD3DDevice->CheckFormatSupport(PCFormat, &fmtSupport))
+					&& (fmtSupport & D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW);
+
+				if (bSwizzled && !bConvertTextureFormat && bCanUAV) {
 					// Swizzled textures use DEFAULT + UAV for GPU compute shader unswizzle
 					desc.Usage = D3D11_USAGE_DEFAULT;
 					desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
