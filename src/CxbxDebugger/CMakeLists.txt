@@ -17,7 +17,10 @@ add_compile_options(
 # Which then will pass down version we want unified.
 set(DOTNET_TARGET_FRAMEWORK_VERSION "v4.8")
 
+# Suppress deprecation warnings from cs_x86 submodule (uses cmake_minimum_required 3.8)
+set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 add_subdirectory("${CXBXR_ROOT_DIR}/import/cs_x86" "${CMAKE_BINARY_DIR}/import/cs_x86")
+set(CMAKE_WARN_DEPRECATED ON CACHE BOOL "" FORCE)
 
 set(CXBXR_DEBUGGER_SRC_DIR "${CXBXR_ROOT_DIR}/src/CxbxDebugger")
 
