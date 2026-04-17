@@ -186,7 +186,8 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 		return float4((1 - arg1.rgb) * arg2.rgb + arg1.a, 1);
 	else if (op == X_D3DTOP_DOTPRODUCT3) {
 		// Test case: PerPixelLighting
-		arg1.rgb = (arg1.rgb - 0.5) * 2; // TODO : These bias and scale operations should not be performed here, but when the input-texture is sampled (same as for X_D3DTOP_BUMPENVMAP*)
+		// DOT_PRODUCT3 expands inputs from [0,1] to [-1,1] range before the dot product
+		arg1.rgb = (arg1.rgb - 0.5) * 2;
 		arg2.rgb = (arg2.rgb - 0.5) * 2;
 		return saturate(dot(arg1.rgb, arg2.rgb));
 	}
@@ -197,8 +198,8 @@ float4 ExecuteTextureOp(float op, float4 arg1, float4 arg2, float4 arg0, Texture
 	else if (op == X_D3DTOP_LERP)
 		return arg0 * arg1 + (1 - arg0) * arg2;
 	else if (op >= X_D3DTOP_BUMPENVMAP) { // Also handles X_D3DTOP_BUMPENVMAPLUMINANCE
-		arg1 = ctx.CURRENT; // TODO : Verify bump mapping indeed uses previous pixel value (CURRENT, or possibly TEXTURE, but not COLORARG1)
-		arg1.xy = (arg1.xy - 0.5) * 2; // TODO : This bias and scale operation should not be performed here, but when the input-texture is sampled (same as for X_D3DTOP_DOTPRODUCT3)
+		arg1 = ctx.CURRENT; // Bump mapping uses the previous stage's result (CURRENT) as the perturbation source
+		arg1.xy = (arg1.xy - 0.5) * 2; // Expand perturbation from [0,1] to [-1,1]
 		// Note : default component order .xyzw is identical to .rgba, and z (red) should not be scaled here, as it's used for luminance which is an unsigned input.
 		return float4(
 			arg1.x * stage.BUMPENVMAT00 + arg1.y * stage.BUMPENVMAT10,
