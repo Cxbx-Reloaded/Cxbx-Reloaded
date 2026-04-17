@@ -358,14 +358,14 @@ void CxbxD3D11InitBlit()
 	LOG_INIT;
 
 	// Full-screen triangle vertex shader (no vertex buffer needed)
-	static const char* blitVS =
+	static const std::string blitVS =
 		"void main(uint id : SV_VertexID, out float4 pos : SV_Position, out float2 uv : TEXCOORD0) {\n"
 		"    uv = float2((id << 1) & 2, id & 2);\n"
 		"    pos = float4(uv * float2(2, -2) + float2(-1, 1), 0, 1);\n"
 		"}\n";
 
 	// Simple texture sampling pixel shader
-	static const char* blitPS =
+	static const std::string blitPS =
 		"Texture2D tex : register(t0);\n"
 		"SamplerState samp : register(s0);\n"
 		"float4 main(float4 pos : SV_Position, float2 uv : TEXCOORD0) : SV_Target {\n"
@@ -374,7 +374,7 @@ void CxbxD3D11InitBlit()
 
 	// Compile vertex shader
 	ID3DBlob* pVSBlob = nullptr;
-	HRESULT hr = EmuCompileShader(std::string(blitVS), "vs_5_0", &pVSBlob, "CxbxBlitVS");
+	HRESULT hr = EmuCompileShader(blitVS, "vs_5_0", &pVSBlob, "CxbxBlitVS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit VS");
 		return;
@@ -388,7 +388,7 @@ void CxbxD3D11InitBlit()
 
 	// Compile pixel shader
 	ID3DBlob* pPSBlob = nullptr;
-	hr = EmuCompileShader(std::string(blitPS), "ps_5_0", &pPSBlob, "CxbxBlitPS");
+	hr = EmuCompileShader(blitPS, "ps_5_0", &pPSBlob, "CxbxBlitPS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit PS");
 		return;
@@ -420,7 +420,7 @@ void CxbxD3D11InitBlit()
 	// ************************************************************
 	// Point sprite geometry shader
 	// ************************************************************
-	static const char* pointSpriteGS =
+	static const std::string pointSpriteGS =
 		"struct GS_INPUT {\n"
 		"    float4 oPos : POSITION;\n"
 		"    float4 oD0  : COLOR0;\n"
@@ -480,7 +480,7 @@ void CxbxD3D11InitBlit()
 		"}\n";
 
 	ID3DBlob* pGSBlob = nullptr;
-	hr = EmuCompileShader(std::string(pointSpriteGS), "gs_5_0", &pGSBlob, "CxbxPointSpriteGS");
+	hr = EmuCompileShader(pointSpriteGS, "gs_5_0", &pGSBlob, "CxbxPointSpriteGS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile point sprite GS");
 	} else {
@@ -494,7 +494,7 @@ void CxbxD3D11InitBlit()
 	// ************************************************************
 	// Thick line geometry shader
 	// ************************************************************
-	static const char* thickLineGS =
+	static const std::string thickLineGS =
 		"struct GS_INPUT {\n"
 		"    float4 oPos : POSITION;\n"
 		"    float4 oD0  : COLOR0;\n"
@@ -565,7 +565,7 @@ void CxbxD3D11InitBlit()
 		"}\n";
 
 	pGSBlob = nullptr;
-	hr = EmuCompileShader(std::string(thickLineGS), "gs_5_0", &pGSBlob, "CxbxThickLineGS");
+	hr = EmuCompileShader(thickLineGS, "gs_5_0", &pGSBlob, "CxbxThickLineGS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile thick line GS");
 	} else {
@@ -585,7 +585,7 @@ void CxbxD3D11InitBlit()
 	// ************************************************************
 	// Compute shader for texture unswizzle
 	// ************************************************************
-	static const char* unswizzleCS =
+	static const std::string unswizzleCS =
 		"ByteAddressBuffer g_SrcBuffer : register(t0);\n"
 		"RWTexture2D<uint> g_DstTexture : register(u0);\n"
 		"cbuffer UnswizzleConstants : register(b0) {\n"
@@ -627,7 +627,7 @@ void CxbxD3D11InitBlit()
 		"}\n";
 
 	ID3DBlob* pCSBlob = nullptr;
-	hr = EmuCompileShader(std::string(unswizzleCS), "cs_5_0", &pCSBlob, "CxbxUnswizzleCS");
+	hr = EmuCompileShader(unswizzleCS, "cs_5_0", &pCSBlob, "CxbxUnswizzleCS");
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile unswizzle CS");
 	} else {
