@@ -202,5 +202,3 @@ set_source_files_properties(
   HEADER_FILE_ONLY TRUE
   VS_TOOL_OVERRIDE "None"
 )
-
-cxbxr_add_hlsl_copy_commands(${PROJECT_NAME})
