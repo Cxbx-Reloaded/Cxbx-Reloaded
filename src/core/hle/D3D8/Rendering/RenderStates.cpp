@@ -275,7 +275,9 @@ void XboxRenderStateConverter::ApplyDeferredRenderState(uint32_t State, uint32_t
             // Cause appears to be non-nvidia drivers clamping values < 0 to 0
             // Resulting in the fog formula becoming (0 - d) / 0, which breaks rendering
             // This prevents that scenario for screen-space fog, *hopefully* without breaking eye-based fog also
-            // NOTE: D3D11 handles fog in the pixel shader, so negative values are valid there
+            // NOTE: D3D11 computes fog in its own pixel shader, so negative values pass through
+            // correctly. D3D9 passes these to the driver's fixed-function fog pipeline where
+            // some non-nvidia drivers clamp them to 0, hence the abs hack is D3D9-only.
             float fogValue = *(float*)& Value;
             if (fogValue < 0.0f) {
                 LOG_TEST_CASE("FOGSTART/FOGEND below 0");
