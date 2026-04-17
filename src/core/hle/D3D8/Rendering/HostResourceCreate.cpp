@@ -25,7 +25,6 @@
 #include "EmuD3D8_common.h"
 #include "Backend_D3D11.h"
 
-
 bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxResourceType, DWORD D3DUsage) {
 	// TODO : Nuance the following, because the Direct3D 8 docs states
 	// CheckDeviceFormat is needed when D3DUSAGE_RENDERTARGET or
@@ -71,7 +70,6 @@ bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxR
 	return pbSupportedFormats[X_Format];
 }
 
-
 // ---- Helper: Try to resolve a surface via its parent texture ----
 // Returns true if the surface was successfully mapped to a parent host texture
 static bool TryResolveParentSurface(
@@ -79,6 +77,7 @@ static bool TryResolveParentSurface(
 	DWORD D3DUsage,
 	int iTextureStage)
 {
+	LOG_INIT;
 	xbox::X_D3DSurface *pXboxSurface = (xbox::X_D3DSurface *)pResource;
 	xbox::X_D3DBaseTexture *pParentXboxTexture = (pXboxSurface) ? (xbox::X_D3DBaseTexture*)pXboxSurface->Parent : xbox::zeroptr;
 
@@ -163,6 +162,7 @@ static bool TryResolveParentVolume(
 	DWORD D3DUsage,
 	int iTextureStage)
 {
+	LOG_INIT;
 	xbox::X_D3DVolume *pXboxVolume = (xbox::X_D3DVolume *)pResource;
 	xbox::X_D3DVolumeTexture *pParentXboxVolumeTexture = (pXboxVolume) ? (xbox::X_D3DVolumeTexture *)pXboxVolume->Parent : xbox::zeroptr;
 	if (!pParentXboxVolumeTexture)
@@ -219,10 +219,17 @@ static EMUFORMAT ResolveHostFormat(
 		// D3D11: For 32-bit formats that differ only in channel order,
 		// skip CPU conversion and upload raw bytes as R8G8B8A8_UNORM.
 		// The pixel shader applies the correct channel swizzle via TEXFMTFIXUP.
+		// Exception: render targets are written by the GPU in correct channel order,
+		// so use B8G8R8A8_UNORM (the standard host equivalent) to avoid a
+		// spurious TEXFMTFIXUP swizzle when the RT is later sampled as a texture.
 		if (X_Format == xbox::X_D3DFMT_B8G8R8A8 || X_Format == xbox::X_D3DFMT_LIN_B8G8R8A8 ||
 			X_Format == xbox::X_D3DFMT_R8G8B8A8 || X_Format == xbox::X_D3DFMT_LIN_R8G8B8A8) {
 			bConvertTextureFormat = false;
-			PCFormat = EMUFMT_A8B8G8R8; // = DXGI_FORMAT_R8G8B8A8_UNORM (raw byte order)
+			if (D3DUsage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL)) {
+				PCFormat = EMUFMT_A8R8G8B8; // = DXGI_FORMAT_B8G8R8A8_UNORM (GPU-rendered data is already correct)
+			} else {
+				PCFormat = EMUFMT_A8B8G8R8; // = DXGI_FORMAT_R8G8B8A8_UNORM (raw byte upload, PS swizzles via TEXFMTFIXUP)
+			}
 		}
 #endif
 	}
@@ -304,7 +311,6 @@ static void CopyMipDataToHost(
 	}
 }
 
-
 // ---- Helper: Create the host GPU resource for a pixel container ----
 // Creates the D3D surface/texture/volume/cube resource based on XboxResourceType
 static HRESULT CreateGpuPixelContainerResource(
@@ -328,6 +334,7 @@ static HRESULT CreateGpuPixelContainerResource(
 #endif
 )
 {
+	LOG_INIT;
 	HRESULT hRet = D3D_OK;
 
 	// Create the surface/volume/(volume/cube/)texture
@@ -1146,7 +1153,6 @@ static void CreateHostPixelContainer(
 #endif
 	);
 
-
 	// Debug resource dumping
 //#define _DEBUG_DUMP_TEXTURE_REGISTER "D:\\"
 #ifdef _DEBUG_DUMP_TEXTURE_REGISTER
@@ -1191,8 +1197,8 @@ static void CreateHostPixelContainer(
 		} // switch XboxResourceType
 	}
 #endif
-
 }
+
 // Was patch: IDirect3DResource8_Register
 void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
@@ -1261,9 +1267,7 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 	}
 
 	// case X_D3DRTYPE_VERTEXBUFFER: { break; } // TODO
-
 	// case X_D3DRTYPE_INDEXBUFFER: { break; } // TODO
-
 	case xbox::X_D3DRTYPE_PUSHBUFFER: {
 		xbox::X_D3DPushBuffer *pPushBuffer = (xbox::X_D3DPushBuffer*)pResource;
 
