@@ -1408,6 +1408,7 @@ bool CxbxD3D11ConvertVertexBufferGPU(
 		return false;
 
 	// Update constant buffer: header (4 uints) + elements (numElements * 4 uints)
+	D3D11_MAPPED_SUBRESOURCE mapped = {};
 	hr = g_pD3DDeviceContext->Map(g_pD3D11VertexConvertCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
 	if (FAILED(hr))
 		return false;
