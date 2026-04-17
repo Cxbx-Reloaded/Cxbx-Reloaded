@@ -560,15 +560,23 @@ install(FILES ${cxbxr_INSTALL_files}
 # Copy HLSL files to the output directory, which are loaded at runtime
 set(CXBXR_HLSL_FILES ${CXBXR_HEADER_EMU})
 list(FILTER CXBXR_HLSL_FILES INCLUDE REGEX ".*/src/core/hle/D3D8/Rendering/[^/]+\.hlsli?")
-add_custom_command(
-	TARGET misc-batch POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl"
-	# These files can be edited.
-	# Create backup copies for convenience of restoring original shader behaviour.
-	COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup"
-)
+
+# Define the HLSL copy commands as a macro so we can attach to multiple targets
+# This ensures HLSL files are always copied, even if VS skips custom target dependencies
+macro(cxbxr_add_hlsl_copy_commands TARGET_NAME)
+	add_custom_command(
+		TARGET ${TARGET_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl"
+		# These files can be edited.
+		# Create backup copies for convenience of restoring original shader behaviour.
+		COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup"
+	)
+endmacro()
+
+cxbxr_add_hlsl_copy_commands(misc-batch)
+cxbxr_add_hlsl_copy_commands(cxbxr-emu)
 install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl DESTINATION bin)
 
 set(cxbxr_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
