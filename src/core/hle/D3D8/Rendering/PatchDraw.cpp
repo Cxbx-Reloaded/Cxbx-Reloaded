@@ -31,6 +31,24 @@
 // *  D3D9 forwarded these to hardware. D3D11 removed this feature
 // *  entirely, so we must perform the tessellation on the CPU and
 // *  emit a triangle mesh for rendering.
+// *
+// *  FUTURE: Replace this CPU tessellation with D3D11 hardware
+// *  tessellation (Hull Shader + Tessellator + Domain Shader):
+// *   - Upload control points as a patch list primitive topology
+// *     (e.g. D3D11_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST)
+// *   - Hull Shader: pass through control points, output tess factors
+// *     from pNumSegs
+// *   - Domain Shader: evaluate basis functions at each (u,v) sample
+// *     point to produce position. AUTONORMAL can be computed
+// *     analytically via normalize(cross(dP/du, dP/dv)) using the
+// *     derivative basis functions (exact, not finite-difference).
+// *     AUTOTEXCOORD is simply the (u,v) domain coordinates.
+// *   - Each basis type (Bezier/B-spline/Catmull-Rom) x degree
+// *     needs its own HS/DS pair (or a single pair with branching).
+// *   - The existing VS logic would need to be split across VS+DS
+// *     or incorporated into the DS, since the pipeline becomes
+// *     VS -> HS -> Tessellator -> DS -> PS.
+// *  This would be faster, more accurate, and architecturally cleaner.
 // ******************************************************************
 
 #include "PatchDraw.h"
@@ -160,10 +178,10 @@ static BasisFunc1D GetBasisFunction(X_D3DBASISTYPE Basis, X_D3DDEGREETYPE Degree
 }
 
 // ---------------------------------------------------------------
-// Read a float3 from vertex data at the given index
-// Assumes position data starts at offset 0 of each vertex (POSITION is first)
+// Float3 / Float4 types
 // ---------------------------------------------------------------
 struct Float3 { float x, y, z; };
+struct Float4 { float x, y, z, w; };
 
 static Float3 ReadVertexPosition(const uint8_t *pVertexData, UINT stride, UINT index)
 {
@@ -171,27 +189,33 @@ static Float3 ReadVertexPosition(const uint8_t *pVertexData, UINT stride, UINT i
 	return { p[0], p[1], p[2] };
 }
 
+static Float3 Float3Cross(Float3 a, Float3 b)
+{
+	return { a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x };
+}
+
+static Float3 Float3Normalize(Float3 v)
+{
+	float len = std::sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+	if (len < 1e-12f) return { 0, 1, 0 };
+	return { v.x/len, v.y/len, v.z/len };
+}
+
 // ---------------------------------------------------------------
-// Tessellate a rectangular patch into a triangle list
-//
-// The patch is a grid of control points of size (orderU x orderV).
-// For cubic patches this is 4x4 = 16 control points.
-// The patch is evaluated over (tessU+1) x (tessV+1) sample points,
-// producing tessU*tessV*2 triangles.
-//
-// We only tessellate position (first 3 floats per vertex) and
-// pass the tessellated vertices as float3 position-only.
+// Evaluate a rectangular patch position grid
+// Returns a 2D grid (totalSamplesU x totalSamplesV) of Float3.
 // ---------------------------------------------------------------
-static bool TessellateRectPatch(
-	const uint8_t *pVertexData,   // raw control point vertex data
-	UINT stride,                  // bytes per control point vertex
-	UINT startU, UINT startV,     // starting control point offset
-	UINT cpWidth, UINT cpHeight,  // control point grid dimensions
-	UINT cpStride,                // row stride in control points
+static bool EvaluateRectPatchGrid(
+	const uint8_t *pVertexData,
+	UINT stride,
+	UINT startU, UINT startV,
+	UINT cpWidth, UINT cpHeight,
+	UINT cpStride,
 	X_D3DBASISTYPE basis,
 	X_D3DDEGREETYPE degree,
-	UINT tessU, UINT tessV,       // tessellation segments
-	std::vector<Float3> &outVertices)
+	UINT tessU, UINT tessV,
+	std::vector<Float3> &grid,
+	UINT &outSamplesU, UINT &outSamplesV)
 {
 	int order = GetBasisOrder(basis, degree);
 	BasisFunc1D basisFunc = GetBasisFunction(basis, degree);
@@ -208,11 +232,11 @@ static bool TessellateRectPatch(
 	UINT segsPerPatchV = std::max(1u, tessV / (UINT)patchesV);
 
 	// Total grid of sample points
-	UINT totalSamplesU = segsPerPatchU * patchesU + 1;
-	UINT totalSamplesV = segsPerPatchV * patchesV + 1;
+	outSamplesU = segsPerPatchU * patchesU + 1;
+	outSamplesV = segsPerPatchV * patchesV + 1;
 
 	// Evaluate all sample points
-	std::vector<Float3> grid(totalSamplesU * totalSamplesV);
+	grid.resize(outSamplesU * outSamplesV);
 
 	for (int pv = 0; pv < patchesV; pv++) {
 		for (int pu = 0; pu < patchesU; pu++) {
@@ -244,36 +268,78 @@ static bool TessellateRectPatch(
 
 					UINT gridX = pu * segsPerPatchU + su;
 					UINT gridY = pv * segsPerPatchV + sv;
-					grid[gridY * totalSamplesU + gridX] = pos;
+					grid[gridY * outSamplesU + gridX] = pos;
 				}
 			}
 		}
 	}
 
-	// Build triangle list from the sample grid
+	return true;
+}
+
+// ---------------------------------------------------------------
+// Compute surface normal at a grid point using finite differences
+// ---------------------------------------------------------------
+static Float3 ComputeGridNormal(const std::vector<Float3> &grid, UINT samplesU, UINT samplesV, UINT x, UINT y)
+{
+	// dP/du via central (or forward/backward at edges) differences
+	Float3 dPdu;
+	if (x > 0 && x < samplesU - 1) {
+		const Float3 &left  = grid[y * samplesU + (x - 1)];
+		const Float3 &right = grid[y * samplesU + (x + 1)];
+		dPdu = { right.x - left.x, right.y - left.y, right.z - left.z };
+	} else if (x == 0) {
+		const Float3 &here  = grid[y * samplesU + x];
+		const Float3 &right = grid[y * samplesU + (x + 1)];
+		dPdu = { right.x - here.x, right.y - here.y, right.z - here.z };
+	} else {
+		const Float3 &left = grid[y * samplesU + (x - 1)];
+		const Float3 &here = grid[y * samplesU + x];
+		dPdu = { here.x - left.x, here.y - left.y, here.z - left.z };
+	}
+	// dP/dv via central (or forward/backward at edges) differences
+	Float3 dPdv;
+	if (y > 0 && y < samplesV - 1) {
+		const Float3 &up   = grid[(y - 1) * samplesU + x];
+		const Float3 &down = grid[(y + 1) * samplesU + x];
+		dPdv = { down.x - up.x, down.y - up.y, down.z - up.z };
+	} else if (y == 0) {
+		const Float3 &here = grid[y * samplesU + x];
+		const Float3 &down = grid[(y + 1) * samplesU + x];
+		dPdv = { down.x - here.x, down.y - here.y, down.z - here.z };
+	} else {
+		const Float3 &up   = grid[(y - 1) * samplesU + x];
+		const Float3 &here = grid[y * samplesU + x];
+		dPdv = { here.x - up.x, here.y - up.y, here.z - up.z };
+	}
+	return Float3Normalize(Float3Cross(dPdu, dPdv));
+}
+
+// ---------------------------------------------------------------
+// Build a Float3 triangle list from a position grid (fast path)
+// ---------------------------------------------------------------
+static void BuildTriangleListFromGrid(
+	const std::vector<Float3> &grid, UINT samplesU, UINT samplesV,
+	std::vector<Float3> &outVertices)
+{
 	outVertices.clear();
-	outVertices.reserve((totalSamplesU - 1) * (totalSamplesV - 1) * 6);
+	outVertices.reserve((samplesU - 1) * (samplesV - 1) * 6);
 
-	for (UINT y = 0; y < totalSamplesV - 1; y++) {
-		for (UINT x = 0; x < totalSamplesU - 1; x++) {
-			const Float3 &p00 = grid[y * totalSamplesU + x];
-			const Float3 &p10 = grid[y * totalSamplesU + x + 1];
-			const Float3 &p01 = grid[(y + 1) * totalSamplesU + x];
-			const Float3 &p11 = grid[(y + 1) * totalSamplesU + x + 1];
+	for (UINT y = 0; y < samplesV - 1; y++) {
+		for (UINT x = 0; x < samplesU - 1; x++) {
+			const Float3 &p00 = grid[y * samplesU + x];
+			const Float3 &p10 = grid[y * samplesU + x + 1];
+			const Float3 &p01 = grid[(y + 1) * samplesU + x];
+			const Float3 &p11 = grid[(y + 1) * samplesU + x + 1];
 
-			// Triangle 1: p00, p10, p01
 			outVertices.push_back(p00);
 			outVertices.push_back(p10);
 			outVertices.push_back(p01);
-
-			// Triangle 2: p10, p11, p01
 			outVertices.push_back(p10);
 			outVertices.push_back(p11);
 			outVertices.push_back(p01);
 		}
 	}
-
-	return true;
 }
 
 // ---------------------------------------------------------------
@@ -401,7 +467,112 @@ static bool TessellateTriPatch(
 }
 
 // ---------------------------------------------------------------
-// Draw tessellated vertices via a reusable D3D11 dynamic buffer
+// Build multi-attribute triangle list from a position grid.
+// Outputs Float4 per register per vertex: position at register 0,
+// AUTONORMAL and AUTOTEXCOORD at their respective registers,
+// other declared registers at default (0,0,0,1).
+//
+// outData is a flat array of Float4; each vertex occupies
+// numRegs consecutive Float4 values.
+// ---------------------------------------------------------------
+static void BuildMultiAttributeTriangleList(
+	const std::vector<Float3> &grid, UINT samplesU, UINT samplesV,
+	int autoNormalReg, int autoTexcoordReg,
+	int numRegs, const int *regIndices,
+	std::vector<Float4> &outData, UINT &outVertexCount)
+{
+	UINT numQuads = (samplesU - 1) * (samplesV - 1);
+	outVertexCount = numQuads * 6;
+	outData.resize((size_t)outVertexCount * numRegs);
+
+	// Map register index to output slot for fast lookup
+	int regSlot[X_VSH_MAX_ATTRIBUTES];
+	for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) regSlot[i] = -1;
+	for (int s = 0; s < numRegs; s++) regSlot[regIndices[s]] = s;
+
+	auto EmitVertex = [&](UINT vIdx, UINT gx, UINT gy) {
+		Float4 *pVert = &outData[(size_t)vIdx * numRegs];
+		// Initialize all slots to default (0,0,0,1)
+		for (int s = 0; s < numRegs; s++)
+			pVert[s] = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+		// Position at register 0 (X_D3DVSDE_POSITION)
+		const Float3 &pos = grid[gy * samplesU + gx];
+		if (regSlot[0] >= 0)
+			pVert[regSlot[0]] = { pos.x, pos.y, pos.z, 1.0f };
+
+		// AUTONORMAL: surface normal from finite differences
+		if (autoNormalReg >= 0 && regSlot[autoNormalReg] >= 0) {
+			Float3 n = ComputeGridNormal(grid, samplesU, samplesV, gx, gy);
+			pVert[regSlot[autoNormalReg]] = { n.x, n.y, n.z, 0.0f };
+		}
+
+		// AUTOTEXCOORD: parametric UV
+		if (autoTexcoordReg >= 0 && regSlot[autoTexcoordReg] >= 0) {
+			float u = (samplesU > 1) ? (float)gx / (float)(samplesU - 1) : 0.0f;
+			float v = (samplesV > 1) ? (float)gy / (float)(samplesV - 1) : 0.0f;
+			pVert[regSlot[autoTexcoordReg]] = { u, v, 0.0f, 1.0f };
+		}
+	};
+
+	UINT vIdx = 0;
+	for (UINT y = 0; y < samplesV - 1; y++) {
+		for (UINT x = 0; x < samplesU - 1; x++) {
+			EmitVertex(vIdx++, x,     y);
+			EmitVertex(vIdx++, x + 1, y);
+			EmitVertex(vIdx++, x,     y + 1);
+			EmitVertex(vIdx++, x + 1, y);
+			EmitVertex(vIdx++, x + 1, y + 1);
+			EmitVertex(vIdx++, x,     y + 1);
+		}
+	}
+}
+
+// ---------------------------------------------------------------
+// Cached tessellation input layout (one per VS bytecode pointer)
+// ---------------------------------------------------------------
+static ID3D11InputLayout *s_pTessInputLayout = nullptr;
+static const void *s_TessInputLayoutVSPtr = nullptr;
+static int s_TessInputLayoutNumRegs = 0;
+
+static ID3D11InputLayout* GetOrCreateTessInputLayout(
+	const int *regIndices, int numRegs, ID3DBlob *pVSBytecode)
+{
+	if (pVSBytecode == nullptr || numRegs == 0)
+		return nullptr;
+
+	// Invalidate cache if VS bytecode changed or register count changed
+	if (pVSBytecode->GetBufferPointer() != s_TessInputLayoutVSPtr || numRegs != s_TessInputLayoutNumRegs) {
+		if (s_pTessInputLayout) { s_pTessInputLayout->Release(); s_pTessInputLayout = nullptr; }
+
+		std::vector<D3D11_INPUT_ELEMENT_DESC> elements(numRegs);
+		for (int i = 0; i < numRegs; i++) {
+			elements[i].SemanticName = "TEXCOORD";
+			elements[i].SemanticIndex = (UINT)regIndices[i];
+			elements[i].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			elements[i].InputSlot = 0;
+			elements[i].AlignedByteOffset = (UINT)(i * sizeof(Float4));
+			elements[i].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+			elements[i].InstanceDataStepRate = 0;
+		}
+
+		HRESULT hr = g_pD3DDevice->CreateInputLayout(
+			elements.data(), (UINT)elements.size(),
+			pVSBytecode->GetBufferPointer(), pVSBytecode->GetBufferSize(),
+			&s_pTessInputLayout);
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "GetOrCreateTessInputLayout: CreateInputLayout failed (0x%08X)", hr);
+			s_pTessInputLayout = nullptr;
+		}
+
+		s_TessInputLayoutVSPtr = pVSBytecode->GetBufferPointer();
+		s_TessInputLayoutNumRegs = numRegs;
+	}
+	return s_pTessInputLayout;
+}
+
+// ---------------------------------------------------------------
+// Draw tessellated mesh (position-only fast path)
 // ---------------------------------------------------------------
 static HRESULT DrawTessellatedMesh(const std::vector<Float3> &vertices)
 {
@@ -426,6 +597,101 @@ static HRESULT DrawTessellatedMesh(const std::vector<Float3> &vertices)
 	g_pD3DDeviceContext->Draw(vertexCount, 0);
 
 	return S_OK;
+}
+
+// ---------------------------------------------------------------
+// Draw tessellated mesh (multi-attribute path with auto-generated
+// normals/texcoords and a dedicated input layout)
+// ---------------------------------------------------------------
+static HRESULT DrawTessellatedMeshMultiAttr(
+	const std::vector<Float4> &vertexData, UINT vertexCount,
+	int numRegs, const int *regIndices)
+{
+	if (vertexCount == 0)
+		return E_FAIL;
+
+	UINT dataSize = (UINT)(vertexData.size() * sizeof(Float4));
+
+	static CxbxDynBuffer s_PatchVB = { nullptr, 0, D3D11_BIND_VERTEX_BUFFER };
+	ID3D11Buffer *pVB = s_PatchVB.Update(vertexData.data(), dataSize);
+	if (pVB == nullptr)
+		return E_FAIL;
+
+	// Apply pending state changes (shaders, constants, render targets, etc.)
+	CxbxD3D11ApplyDirtyStates();
+
+	// Override input layout with tessellation-specific one
+	ID3DBlob *pVSBytecode = CxbxGetActiveVertexShaderBytecode();
+	ID3D11InputLayout *pTessLayout = GetOrCreateTessInputLayout(regIndices, numRegs, pVSBytecode);
+	if (pTessLayout != nullptr)
+		g_pD3DDeviceContext->IASetInputLayout(pTessLayout);
+
+	UINT stride = (UINT)(numRegs * sizeof(Float4));
+	UINT offset = 0;
+	g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
+	g_pD3DDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	g_pD3DDeviceContext->Draw(vertexCount, 0);
+
+	return S_OK;
+}
+
+// ---------------------------------------------------------------
+// Determine whether auto-generation is needed, collect register
+// list, and choose the appropriate draw path.
+// ---------------------------------------------------------------
+static HRESULT DrawRectPatchWithAutoGen(
+	const std::vector<Float3> &grid, UINT samplesU, UINT samplesV)
+{
+	CxbxVertexDeclaration *pDecl = CxbxGetVertexDeclaration();
+	bool needAutoGen = pDecl != nullptr &&
+		(pDecl->autoNormalRegister >= 0 || pDecl->autoTexcoordRegister >= 0);
+
+	if (!needAutoGen) {
+		// Fast path: position-only output
+		std::vector<Float3> triList;
+		BuildTriangleListFromGrid(grid, samplesU, samplesV, triList);
+		return DrawTessellatedMesh(triList);
+	}
+
+	// Multi-attribute path: collect all needed registers
+	// Start with registers declared in the input layout
+	int regIndices[X_VSH_MAX_ATTRIBUTES];
+	int numRegs = 0;
+	bool regIncluded[X_VSH_MAX_ATTRIBUTES] = {};
+
+	if (pDecl->pD3D11InputElements != nullptr) {
+		for (UINT i = 0; i < pDecl->D3D11InputElementCount; i++) {
+			int reg = (int)pDecl->pD3D11InputElements[i].SemanticIndex;
+			if (reg >= 0 && reg < X_VSH_MAX_ATTRIBUTES && !regIncluded[reg]) {
+				regIndices[numRegs++] = reg;
+				regIncluded[reg] = true;
+			}
+		}
+	}
+
+	// Add auto-generated registers (they're not in the input layout)
+	if (pDecl->autoNormalRegister >= 0 && !regIncluded[pDecl->autoNormalRegister]) {
+		regIndices[numRegs++] = pDecl->autoNormalRegister;
+		regIncluded[pDecl->autoNormalRegister] = true;
+	}
+	if (pDecl->autoTexcoordRegister >= 0 && !regIncluded[pDecl->autoTexcoordRegister]) {
+		regIndices[numRegs++] = pDecl->autoTexcoordRegister;
+		regIncluded[pDecl->autoTexcoordRegister] = true;
+	}
+
+	// Sort by register index for consistent layout
+	std::sort(regIndices, regIndices + numRegs);
+
+	// Build multi-attribute triangle list
+	std::vector<Float4> vertexData;
+	UINT vertexCount = 0;
+	BuildMultiAttributeTriangleList(
+		grid, samplesU, samplesV,
+		pDecl->autoNormalRegister, pDecl->autoTexcoordRegister,
+		numRegs, regIndices,
+		vertexData, vertexCount);
+
+	return DrawTessellatedMeshMultiAttr(vertexData, vertexCount, numRegs, regIndices);
 }
 
 // ---------------------------------------------------------------
@@ -467,8 +733,9 @@ HRESULT CxbxDrawRectPatchD3D11(
 	UINT stride = stream.Stride;
 	if (stride == 0) stride = sizeof(Float3); // fallback
 
-	std::vector<Float3> tessellated;
-	bool ok = TessellateRectPatch(
+	std::vector<Float3> grid;
+	UINT samplesU = 0, samplesV = 0;
+	bool ok = EvaluateRectPatchGrid(
 		pVertexData, stride,
 		pRectPatchInfo->StartVertexOffsetWidth,
 		pRectPatchInfo->StartVertexOffsetHeight,
@@ -478,7 +745,7 @@ HRESULT CxbxDrawRectPatchD3D11(
 		pRectPatchInfo->Basis,
 		pRectPatchInfo->Degree,
 		(UINT)tessU, (UINT)tessV,
-		tessellated
+		grid, samplesU, samplesV
 	);
 
 	if (!ok) {
@@ -488,7 +755,7 @@ HRESULT CxbxDrawRectPatchD3D11(
 		return E_FAIL;
 	}
 
-	return DrawTessellatedMesh(tessellated);
+	return DrawRectPatchWithAutoGen(grid, samplesU, samplesV);
 }
 
 // ---------------------------------------------------------------

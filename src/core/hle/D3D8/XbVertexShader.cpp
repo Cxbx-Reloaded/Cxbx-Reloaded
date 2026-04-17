@@ -698,6 +698,12 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 	CxbxVertexDeclaration* pCxbxVertexDeclaration = FetchCachedCxbxVertexDeclaration(XboxVertexAttributesKey);
 	if (pCxbxVertexDeclaration == nullptr) {
 		pCxbxVertexDeclaration = (CxbxVertexDeclaration*)calloc(1, sizeof(CxbxVertexDeclaration));
+#ifdef CXBX_USE_D3D11
+		// calloc zero-initializes, but tessellation registers use -1 as "not present"
+		pCxbxVertexDeclaration->autoNormalRegister = -1;
+		pCxbxVertexDeclaration->autoNormalSourceRegister = -1;
+		pCxbxVertexDeclaration->autoTexcoordRegister = -1;
+#endif
 
 		// Convert Xbox vertex attributes towards host Direct3D vertex element
 		D3DVERTEXELEMENT* pRecompiledVertexElements = EmuRecompileVshDeclaration(
@@ -733,6 +739,19 @@ CxbxVertexDeclaration* CxbxGetVertexDeclaration()
 
 	return pCxbxVertexDeclaration;
 }
+
+#ifdef CXBX_USE_D3D11
+ID3DBlob* CxbxGetActiveVertexShaderBytecode()
+{
+	if (g_D3D11HasActiveShaderKey)
+		return g_VertexShaderCache.GetShaderBytecode(g_D3D11ActiveVertexShaderKey);
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction)
+		return g_pD3D11FixedFunctionBytecode;
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough)
+		return g_pD3D11PassthroughBytecode;
+	return nullptr;
+}
+#endif
 
 void CxbxUpdateHostVertexDeclaration()
 {
