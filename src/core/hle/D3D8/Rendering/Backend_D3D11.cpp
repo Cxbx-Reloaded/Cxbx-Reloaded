@@ -77,9 +77,9 @@ UINT  g_D3D11SampleMask = 0xFFFFFFFF;
 // ******************************************************************
 // * D3D11 state objects (internal — only used by ApplyDirtyStates)
 // ******************************************************************
-static ID3D11RasterizerState   *g_pD3DRasterizerState = nullptr;
-static ID3D11DepthStencilState *g_pD3DDepthStencilState = nullptr;
-static ID3D11BlendState        *g_pD3DBlendState = nullptr;
+static ComPtr<ID3D11RasterizerState>   g_pD3DRasterizerState;
+static ComPtr<ID3D11DepthStencilState> g_pD3DDepthStencilState;
+static ComPtr<ID3D11BlendState>        g_pD3DBlendState;
 
 // ******************************************************************
 // * Vertex shader constant buffer
@@ -1151,31 +1151,28 @@ void CxbxD3D11ApplyDirtyStates()
 	LOG_INIT;
 
 	if (g_bD3D11RasterizerStateDirty) {
-		if (g_pD3DRasterizerState) { g_pD3DRasterizerState->Release(); g_pD3DRasterizerState = nullptr; }
-		HRESULT hr = g_pD3DDevice->CreateRasterizerState(&g_D3D11RasterizerDesc, &g_pD3DRasterizerState);
+		HRESULT hr = g_pD3DDevice->CreateRasterizerState(&g_D3D11RasterizerDesc, g_pD3DRasterizerState.ReleaseAndGetAddressOf());
 		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateRasterizerState");
 		if (SUCCEEDED(hr)) {
-			g_pD3DDeviceContext->RSSetState(g_pD3DRasterizerState);
+			g_pD3DDeviceContext->RSSetState(g_pD3DRasterizerState.Get());
 		}
 		g_bD3D11RasterizerStateDirty = false;
 	}
 
 	if (g_bD3D11DepthStencilStateDirty) {
-		if (g_pD3DDepthStencilState) { g_pD3DDepthStencilState->Release(); g_pD3DDepthStencilState = nullptr; }
-		HRESULT hr = g_pD3DDevice->CreateDepthStencilState(&g_D3D11DepthStencilDesc, &g_pD3DDepthStencilState);
+		HRESULT hr = g_pD3DDevice->CreateDepthStencilState(&g_D3D11DepthStencilDesc, g_pD3DDepthStencilState.ReleaseAndGetAddressOf());
 		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateDepthStencilState");
 		if (SUCCEEDED(hr)) {
-			g_pD3DDeviceContext->OMSetDepthStencilState(g_pD3DDepthStencilState, g_D3D11StencilRef);
+			g_pD3DDeviceContext->OMSetDepthStencilState(g_pD3DDepthStencilState.Get(), g_D3D11StencilRef);
 		}
 		g_bD3D11DepthStencilStateDirty = false;
 	}
 
 	if (g_bD3D11BlendStateDirty) {
-		if (g_pD3DBlendState) { g_pD3DBlendState->Release(); g_pD3DBlendState = nullptr; }
-		HRESULT hr = g_pD3DDevice->CreateBlendState(&g_D3D11BlendDesc, &g_pD3DBlendState);
+		HRESULT hr = g_pD3DDevice->CreateBlendState(&g_D3D11BlendDesc, g_pD3DBlendState.ReleaseAndGetAddressOf());
 		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateBlendState");
 		if (SUCCEEDED(hr)) {
-			g_pD3DDeviceContext->OMSetBlendState(g_pD3DBlendState, g_D3D11BlendFactor, g_D3D11SampleMask);
+			g_pD3DDeviceContext->OMSetBlendState(g_pD3DBlendState.Get(), g_D3D11BlendFactor, g_D3D11SampleMask);
 		}
 		g_bD3D11BlendStateDirty = false;
 	}
@@ -1575,9 +1572,9 @@ bool CxbxD3D11ConvertIndexBufferGPU(
 // ******************************************************************
 void CxbxD3D11ReleaseBackendResources()
 {
-	if (g_pD3DBlendState) { g_pD3DBlendState->Release(); g_pD3DBlendState = nullptr; }
-	if (g_pD3DDepthStencilState) { g_pD3DDepthStencilState->Release(); g_pD3DDepthStencilState = nullptr; }
-	if (g_pD3DRasterizerState) { g_pD3DRasterizerState->Release(); g_pD3DRasterizerState = nullptr; }
+	g_pD3DBlendState.Reset();
+	g_pD3DDepthStencilState.Reset();
+	g_pD3DRasterizerState.Reset();
 	if (g_pD3D11VSConstantBuffer) { g_pD3D11VSConstantBuffer->Release(); g_pD3D11VSConstantBuffer = nullptr; }
 	if (g_pD3D11PSConstantBuffer) { g_pD3D11PSConstantBuffer->Release(); g_pD3D11PSConstantBuffer = nullptr; }
 	if (g_pD3D11BlitVS) { g_pD3D11BlitVS->Release(); g_pD3D11BlitVS = nullptr; }
