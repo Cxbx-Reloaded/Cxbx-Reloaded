@@ -68,7 +68,7 @@ INDEX16* CxbxCreateTriFanToTriangleListIndexData(INDEX16* pFanIndexData, unsigne
 
 // Determine winding order from X_D3DRS_FRONTFACE render state
 // 0x900 = NV2A_FRONT_FACE_CW (clockwise), anything else = CCW
-static bool CxbxGetClockWiseWindingOrder()
+bool CxbxGetClockWiseWindingOrder()
 {
 	return XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_FRONTFACE) == 0x900;
 }

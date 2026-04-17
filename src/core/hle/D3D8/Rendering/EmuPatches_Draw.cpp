@@ -24,6 +24,7 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 #include "IndexBufferConvert.h"
+#include "Backend_D3D11.h"
 
 // ******************************************************************
 // * patch: D3DDevice_Begin
@@ -380,18 +381,25 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			}
 
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
+			UINT primCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
+			UINT IndexCount = primCount * 3;
+#ifdef CXBX_USE_D3D11
+			{
+				int mode = CxbxGetClockWiseWindingOrder() ? CXBX_INDEX_CONVERT_QUAD_CW : CXBX_INDEX_CONVERT_QUAD_CCW;
+				if (!CxbxD3D11ConvertIndexBufferGPU(nullptr, DrawContext.dwVertexCount, IndexCount, mode)) {
+					// Fallback: CPU conversion
+					CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
+				}
+			}
+#else
 			// Assure & activate that special index buffer :
 			CxbxAssureQuadListD3DIndexBuffer(/*NrOfQuadIndices=*/DrawContext.dwVertexCount);
-			// Convert quad vertex count to triangle vertex count :
+#endif
 			UINT NumVertices = QuadToTriangleVertexCount(DrawContext.dwVertexCount);
-			// Convert quad primitive count to triangle primitive count :
-			UINT primCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
-			// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/rendering-from-vertex-and-index-buffers
-			// for an explanation on the function of the BaseVertexIndex, MinVertexIndex, NumVertices and StartIndex arguments.
 			// Emulate drawing quads by drawing each quad with two indexed triangles :
 			HRESULT hRet = CxbxDrawIndexedPrimitive(
 				/*XboxPrimitiveType=*/(xbox::X_D3DPRIMITIVETYPE)xbox::X_D3DPT_TRIANGLELIST,
-				/*IndexCount=*/primCount * 3,
+				/*IndexCount=*/IndexCount,
 				/*BaseVertexIndex=*/0, // Base vertex index has been accounted for in the stream conversion
 				/*StartIndex=*/0,
 				/*MinIndex=*/0,
@@ -408,15 +416,22 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawVertices)
 			// D3D11 doesn't support triangle fan topology — convert to indexed triangle list
 			UINT NrOfTriangleIndices = FanToTriangleVertexCount(DrawContext.dwVertexCount);
 			if (NrOfTriangleIndices > 0) {
-				INDEX16* pFanIndices = CxbxCreateTriFanToTriangleListIndexData(nullptr, DrawContext.dwVertexCount);
 				UINT primCount = DrawContext.dwVertexCount - 2;
+				bool bReady = CxbxD3D11ConvertIndexBufferGPU(nullptr, DrawContext.dwVertexCount, NrOfTriangleIndices, CXBX_INDEX_CONVERT_FAN);
 
-				static CxbxDynBuffer s_FanIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
-				ID3D11Buffer* pIB = s_FanIB.Update(pFanIndices, NrOfTriangleIndices * sizeof(INDEX16));
-				free(pFanIndices);
+				if (!bReady) {
+					// Fallback: CPU conversion
+					INDEX16* pFanIndices = CxbxCreateTriFanToTriangleListIndexData(nullptr, DrawContext.dwVertexCount);
+					static CxbxDynBuffer s_FanIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
+					ID3D11Buffer* pIB = s_FanIB.Update(pFanIndices, NrOfTriangleIndices * sizeof(INDEX16));
+					free(pFanIndices);
+					if (pIB != nullptr) {
+						g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
+						bReady = true;
+					}
+				}
 
-				if (pIB != nullptr) {
-					g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
+				if (bReady) {
 					g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 					g_pD3DDeviceContext->DrawIndexed(NrOfTriangleIndices, 0, 0);
 				}
@@ -634,24 +649,41 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_DrawIndexedVerticesUP)
 #ifdef CXBX_USE_D3D11
 		// D3D11 has no DrawIndexedPrimitiveUP - use reusable dynamic buffers
 		UINT vertexDataSize = DrawContext.dwVertexCount * DrawContext.uiHostVertexStreamZeroStride;
-		UINT indexDataSize = (bConvertedPrimitive ? PrimitiveCount * 3 : DrawContext.dwVertexCount) * sizeof(INDEX16);
 
 		static CxbxDynBuffer s_IdxUpVB = { nullptr, 0, D3D11_BIND_VERTEX_BUFFER };
-		static CxbxDynBuffer s_IdxUpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
 		ID3D11Buffer* pVB = s_IdxUpVB.Update(DrawContext.pHostVertexStreamZeroData, vertexDataSize);
-		ID3D11Buffer* pIB = s_IdxUpIB.Update(pHostIndexData, indexDataSize);
 
-		if (pVB != nullptr && pIB != nullptr) {
+		if (pVB != nullptr) {
 			UINT stride = DrawContext.uiHostVertexStreamZeroStride;
 			UINT offset = 0;
 			g_pD3DDeviceContext->IASetVertexBuffers(0, 1, &pVB, &stride, &offset);
-			g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
+
+			UINT indexCount = bConvertedPrimitive ? PrimitiveCount * 3 : DrawContext.dwVertexCount;
+			bool bCsHandled = false;
+
+			// Try GPU index conversion for converted primitives
+			if (bConvertedPrimitive) {
+				int mode = bConvertQuadListToTriangleList ?
+					(CxbxGetClockWiseWindingOrder() ? CXBX_INDEX_CONVERT_QUAD_CW : CXBX_INDEX_CONVERT_QUAD_CCW) :
+					CXBX_INDEX_CONVERT_FAN;
+				bCsHandled = CxbxD3D11ConvertIndexBufferGPU(pXboxIndexData, VertexCount, indexCount, mode);
+			}
+
+			if (!bCsHandled) {
+				// CPU path: upload converted (or original) index data
+				UINT indexDataSize = indexCount * sizeof(INDEX16);
+				static CxbxDynBuffer s_IdxUpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
+				ID3D11Buffer* pIB = s_IdxUpIB.Update(pHostIndexData, indexDataSize);
+				if (pIB != nullptr) {
+					g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
+				}
+			}
+
 			D3D_PRIMITIVE_TOPOLOGY topology = bConvertedPrimitive ?
 				D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST :
 				EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType);
 			g_pD3DDeviceContext->IASetPrimitiveTopology(topology);
 			CxbxBindThickLineGS(DrawContext.XboxPrimitiveType);
-			UINT indexCount = bConvertedPrimitive ? PrimitiveCount * 3 : DrawContext.dwVertexCount;
 			g_pD3DDeviceContext->DrawIndexed(indexCount, 0, 0);
 			CxbxUnbindThickLineGS(DrawContext.XboxPrimitiveType);
 			hRet = S_OK;

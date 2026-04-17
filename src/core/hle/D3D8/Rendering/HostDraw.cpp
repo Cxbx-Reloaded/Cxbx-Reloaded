@@ -24,6 +24,7 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 #include "IndexBufferConvert.h"
+#include "Backend_D3D11.h"
 
 class ConvertedIndexBuffer {
 public:
@@ -293,6 +294,45 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 #ifdef CXBX_USE_D3D11
 	bool bConvertTriFanToTriangleList = (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_TRIANGLEFAN
 		|| DrawContext.XboxPrimitiveType == xbox::X_D3DPT_POLYGON);
+
+	// GPU index conversion path: dispatch CS to convert quad/fan indices to triangle list
+	if (bConvertQuadListToTriangleList || bConvertTriFanToTriangleList) {
+		// WalkIndexBuffer is still needed on CPU for LowIndex/HighIndex (vertex buffer range)
+		INDEX16 LowIndex = 0, HighIndex = 0;
+		WalkIndexBuffer(LowIndex, HighIndex, DrawContext.pXboxIndexData, DrawContext.dwVertexCount);
+		DrawContext.LowIndex = LowIndex;
+		DrawContext.HighIndex = HighIndex;
+
+		UINT OutputIndexCount = bConvertQuadListToTriangleList ?
+			QuadToTriangleVertexCount(DrawContext.dwVertexCount) :
+			FanToTriangleVertexCount(DrawContext.dwVertexCount);
+
+		int mode = bConvertQuadListToTriangleList ?
+			(CxbxGetClockWiseWindingOrder() ? CXBX_INDEX_CONVERT_QUAD_CW : CXBX_INDEX_CONVERT_QUAD_CCW) :
+			CXBX_INDEX_CONVERT_FAN;
+
+		if (CxbxD3D11ConvertIndexBufferGPU(DrawContext.pXboxIndexData, DrawContext.dwVertexCount, OutputIndexCount, mode)) {
+			VertexBufferConverter.Apply(&DrawContext);
+
+			UINT primCount = bConvertQuadListToTriangleList ?
+				DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD :
+				((DrawContext.dwVertexCount >= 3) ? DrawContext.dwVertexCount - 2 : 0);
+
+			HRESULT hRet = CxbxDrawIndexedPrimitive(
+				DrawContext.XboxPrimitiveType,
+				/*IndexCount=*/OutputIndexCount,
+				/*BaseVertexIndex=*/-(INT)LowIndex,
+				/*StartIndex=*/0,
+				/*MinIndex=*/LowIndex,
+				/*NumVertices=*/(HighIndex - LowIndex) + 1,
+				primCount);
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->DrawIndexedPrimitive(CS converted)");
+
+			g_dwPrimPerFrame += primCount;
+			return;
+		}
+		// CS failed — fall through to CPU conversion path
+	}
 #else
 	bool bConvertTriFanToTriangleList = false;
 #endif
@@ -391,19 +431,20 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 
 		if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_QUADLIST) {
 			// Draw quadlists using a single 'quad-to-triangle mapping' index buffer :
-			INDEX16 *pIndexData = CxbxAssureQuadListIndexData(DrawContext.dwVertexCount);
 			UINT PrimitiveCount = DrawContext.dwHostPrimitiveCount * TRIANGLES_PER_QUAD;
 			UINT IndexCount = PrimitiveCount * 3;
+			int mode = CxbxGetClockWiseWindingOrder() ? CXBX_INDEX_CONVERT_QUAD_CW : CXBX_INDEX_CONVERT_QUAD_CCW;
 
-			// Reusable dynamic index buffer for quad-to-triangle conversion
-			static CxbxDynBuffer s_UpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
-			ID3D11Buffer* pIB = s_UpIB.Update(pIndexData, IndexCount * sizeof(INDEX16));
-
-			if (pIB != nullptr) {
+			if (!CxbxD3D11ConvertIndexBufferGPU(nullptr, DrawContext.dwVertexCount, IndexCount, mode)) {
+				// Fallback: CPU conversion
+				INDEX16 *pIndexData = CxbxAssureQuadListIndexData(DrawContext.dwVertexCount);
+				static CxbxDynBuffer s_UpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
+				ID3D11Buffer* pIB = s_UpIB.Update(pIndexData, IndexCount * sizeof(INDEX16));
+				if (!pIB) { g_dwPrimPerFrame += PrimitiveCount; return; }
 				g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
-				g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-				g_pD3DDeviceContext->DrawIndexed(IndexCount, 0, 0);
 			}
+			g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			g_pD3DDeviceContext->DrawIndexed(IndexCount, 0, 0);
 
 			g_dwPrimPerFrame += PrimitiveCount;
 		} else if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_TRIANGLEFAN
@@ -411,18 +452,19 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 			// D3D11 doesn't support triangle fan topology — convert to indexed triangle list
 			UINT NrOfTriangleIndices = FanToTriangleVertexCount(DrawContext.dwVertexCount);
 			if (NrOfTriangleIndices > 0) {
-				INDEX16* pFanIndices = CxbxCreateTriFanToTriangleListIndexData(nullptr, DrawContext.dwVertexCount);
 				UINT PrimitiveCount = DrawContext.dwVertexCount - 2;
 
-				static CxbxDynBuffer s_FanUpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
-				ID3D11Buffer* pIB = s_FanUpIB.Update(pFanIndices, NrOfTriangleIndices * sizeof(INDEX16));
-				free(pFanIndices);
-
-				if (pIB != nullptr) {
+				if (!CxbxD3D11ConvertIndexBufferGPU(nullptr, DrawContext.dwVertexCount, NrOfTriangleIndices, CXBX_INDEX_CONVERT_FAN)) {
+					// Fallback: CPU conversion
+					INDEX16* pFanIndices = CxbxCreateTriFanToTriangleListIndexData(nullptr, DrawContext.dwVertexCount);
+					static CxbxDynBuffer s_FanUpIB = { nullptr, 0, D3D11_BIND_INDEX_BUFFER };
+					ID3D11Buffer* pIB = s_FanUpIB.Update(pFanIndices, NrOfTriangleIndices * sizeof(INDEX16));
+					free(pFanIndices);
+					if (!pIB) { g_dwPrimPerFrame += PrimitiveCount; return; }
 					g_pD3DDeviceContext->IASetIndexBuffer(pIB, DXGI_FORMAT_R16_UINT, 0);
-					g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-					g_pD3DDeviceContext->DrawIndexed(NrOfTriangleIndices, 0, 0);
 				}
+				g_pD3DDeviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				g_pD3DDeviceContext->DrawIndexed(NrOfTriangleIndices, 0, 0);
 
 				g_dwPrimPerFrame += PrimitiveCount;
 			}

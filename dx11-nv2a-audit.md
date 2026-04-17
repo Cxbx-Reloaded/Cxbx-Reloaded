@@ -291,7 +291,7 @@ Items below identify CPU-bound operations that could be moved to the GPU shader 
 - **Impact**: Performance — GPU-side texture unswizzle eliminates the largest per-texture CPU bottleneck
 
 ### 42. Index Buffer Topology Conversion on GPU
-- [ ] Fixed
-- **Files**: `IndexBufferConvert.cpp`, `HostDraw.cpp:292-430`
-- **Description**: Triangle fan → triangle list and quad list → triangle list conversions run on CPU per draw call. For large meshes, a compute shader could perform the index expansion on GPU. The pattern is regular (fan: emit v0,vi,vi+1; quad: emit two triangles per quad with winding awareness).
-- **Impact**: Performance — minor, conversions are simple arithmetic but run frequently
+- [x] Fixed
+- **Files**: `Backend_D3D11.cpp`, `Backend_D3D11.h`, `HostDraw.cpp`, `EmuPatches_Draw.cpp`, `IndexBufferConvert.cpp`, `IndexBufferConvert.h`
+- **Description**: Triangle fan → triangle list and quad list → triangle list index conversions now run on GPU via a compute shader (cs_5_0). The CS reads source 16-bit indices from a ByteAddressBuffer SRV (or generates sequential indices for non-indexed draws), packs output 16-bit triangle-list indices into a typed R32_UINT UAV buffer, and binds the result as the active index buffer. Quad conversion respects the `X_D3DRS_FRONTFACE` winding order (CW: ABD+BCD, CCW: ADB+BDC diagonal split). Fan conversion processes triangle pairs per thread for 32-bit alignment. All draw paths (DrawIndexed, DrawPrimitiveUP, DrawVertices, DrawIndexedVerticesUP) use the CS with CPU fallback if the shader fails.
+- **Impact**: Performance — index conversion offloaded to GPU, eliminating per-draw CPU conversion loops
