@@ -576,7 +576,6 @@ macro(cxbxr_add_hlsl_copy_commands TARGET_NAME)
 endmacro()
 
 cxbxr_add_hlsl_copy_commands(misc-batch)
-cxbxr_add_hlsl_copy_commands(cxbxr-emu)
 install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl DESTINATION bin)
 
 set(cxbxr_GLEW_DLL "${CMAKE_SOURCE_DIR}/import/glew-2.0.0/bin/Release/Win32/glew32.dll")
