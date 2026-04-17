@@ -44,7 +44,7 @@ bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxR
 			break;
 		}
 		case xbox::X_D3DRTYPE_VOLUME: {
-			pbSupportedFormats = g_bSupportsFormatTexture; // TODO : Complete
+			pbSupportedFormats = g_bSupportsFormatVolumeTexture;
 			break;
 		}
 		case xbox::X_D3DRTYPE_TEXTURE: {
@@ -58,11 +58,11 @@ bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxR
 			break;
 		}
 		case xbox::X_D3DRTYPE_VOLUMETEXTURE: {
-			pbSupportedFormats = g_bSupportsFormatVolumeTexture; // TODO : Complete
+			pbSupportedFormats = g_bSupportsFormatVolumeTexture;
 			break;
 		}
 		case xbox::X_D3DRTYPE_CUBETEXTURE: {
-			pbSupportedFormats = g_bSupportsFormatCubeTexture; // TODO : Complete
+			pbSupportedFormats = g_bSupportsFormatCubeTexture;
 			break;
 		}
 	} // switch XboxResourceType
@@ -469,12 +469,38 @@ EMUFORMAT PCFormat;
 		}
 
 		case xbox::X_D3DRTYPE_VOLUME: {
+#ifdef CXBX_USE_D3D11
+			// In D3D11, a standalone volume (no parent VolumeTexture) is backed by
+			// a single-depth Texture3D. This is rare but can occur if a game creates
+			// a volume resource directly.
+			D3D11_TEXTURE3D_DESC desc;
+			desc.Width = hostWidth;
+			desc.Height = hostHeight;
+			desc.Depth = dwDepth > 0 ? dwDepth : 1;
+			desc.MipLevels = 1;
+			desc.Format = PCFormat;
+			desc.Usage = D3D11_USAGE_DYNAMIC;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+			desc.MiscFlags = 0;
+
+			hRet = g_pD3DDevice->CreateTexture3D(&desc, NULL, reinterpret_cast<ID3D11Texture3D**>(pNewHostResource.ReleaseAndGetAddressOf()));
+			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateTexture3D (standalone volume)");
+
+			if (hRet != D3D_OK) {
+				CxbxrAbort("CreateTexture3D (standalone volume) Failed!\n\n"
+					"Error: 0x%X\nFormat: %d\nDimensions: %dx%dx%d", hRet, PCFormat, hostWidth, hostHeight, desc.Depth);
+			}
+			SetHostVolume(pResource, (IDirect3DVolume *)pNewHostResource.Get(), iTextureStage);
+			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created standalone Volume (0x%.08X, 0x%.08X)",
+				pResource, pNewHostResource.Get());
+#else
 			LOG_UNIMPLEMENTED();
 			// Note : Host D3D can only(?) retrieve a volume like this :
 			// hRet = pNewHostVolumeTexture->GetVolumeLevel(level, pNewHostVolume.GetAddressOf());
 			// So, we need to do this differently - we need to step up to the containing VolumeTexture,
 			// and retrieve and convert all of it's GetVolumeLevel() slices.
-			// TODO : Implement standalone volume creation for both D3D9 and D3D11
+#endif
 			break;
 		}
 
