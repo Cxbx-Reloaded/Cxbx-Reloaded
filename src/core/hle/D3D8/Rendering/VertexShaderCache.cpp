@@ -36,7 +36,7 @@ VertexShaderCache g_VertexShaderCache = VertexShaderCache();
 
 
 ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, ShaderKey key) {
-	ID3DBlob* pCompiledShader;
+	ID3DBlob* pCompiledShader = nullptr;
 
 	auto hRet = EmuCompileVertexShader(
 		&intermediateShader,
@@ -44,6 +44,10 @@ ID3DBlob* AsyncCreateVertexShader(IntermediateVertexShader intermediateShader, S
 	);
 
 	EmuLog(LOG_LEVEL::DEBUG, "Finished compiling shader %llx", key);
+
+	if (FAILED(hRet)) {
+		return nullptr;
+	}
 
 	return pCompiledShader;
 }
