@@ -29,7 +29,7 @@
 #include "RenderGlobals.h" // g_pD3DDevice, g_pD3DDeviceContext
 #include "core\kernel\init\CxbxKrnl.h" // LOG_INIT, EmuLog
 #include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
-#include "core\hle\D3D8\Rendering\Shader.h" // D3DCompile (via d3dcompiler.h)
+#include "core\hle\D3D8\Rendering\Shader.h" // EmuCompileShader
 #include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3D11PrimitiveTopology
 
 #include <cstring> // memcpy
@@ -205,33 +205,27 @@ void CxbxD3D11InitBlit()
 
 	// Compile vertex shader
 	ID3DBlob* pVSBlob = nullptr;
-	ID3DBlob* pErrors = nullptr;
-	HRESULT hr = D3DCompile(blitVS, strlen(blitVS), "CxbxBlitVS", nullptr, nullptr, "main", "vs_4_0", 0, 0, &pVSBlob, &pErrors);
+	HRESULT hr = EmuCompileShader(std::string(blitVS), "vs_4_0", &pVSBlob, "CxbxBlitVS");
 	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit VS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
-		if (pErrors) pErrors->Release();
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit VS");
 		return;
 	}
 	hr = g_pD3DDevice->CreateVertexShader(pVSBlob->GetBufferPointer(), pVSBlob->GetBufferSize(), nullptr, &g_pD3D11BlitVS);
 	pVSBlob->Release();
-	if (pErrors) pErrors->Release();
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create blit VS");
 		return;
 	}
 
 	// Compile pixel shader
-	pErrors = nullptr;
 	ID3DBlob* pPSBlob = nullptr;
-	hr = D3DCompile(blitPS, strlen(blitPS), "CxbxBlitPS", nullptr, nullptr, "main", "ps_4_0", 0, 0, &pPSBlob, &pErrors);
+	hr = EmuCompileShader(std::string(blitPS), "ps_4_0", &pPSBlob, "CxbxBlitPS");
 	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit PS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
-		if (pErrors) pErrors->Release();
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile blit PS");
 		return;
 	}
 	hr = g_pD3DDevice->CreatePixelShader(pPSBlob->GetBufferPointer(), pPSBlob->GetBufferSize(), nullptr, &g_pD3D11BlitPS);
 	pPSBlob->Release();
-	if (pErrors) pErrors->Release();
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create blit PS");
 		return;
@@ -317,15 +311,12 @@ void CxbxD3D11InitBlit()
 		"}\n";
 
 	ID3DBlob* pGSBlob = nullptr;
-	pErrors = nullptr;
-	hr = D3DCompile(pointSpriteGS, strlen(pointSpriteGS), "CxbxPointSpriteGS", nullptr, nullptr, "main", "gs_4_0", 0, 0, &pGSBlob, &pErrors);
+	hr = EmuCompileShader(std::string(pointSpriteGS), "gs_4_0", &pGSBlob, "CxbxPointSpriteGS");
 	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile point sprite GS: %s", pErrors ? (char*)pErrors->GetBufferPointer() : "unknown");
-		if (pErrors) pErrors->Release();
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile point sprite GS");
 	} else {
 		hr = g_pD3DDevice->CreateGeometryShader(pGSBlob->GetBufferPointer(), pGSBlob->GetBufferSize(), nullptr, &g_pD3D11PointSpriteGS);
 		pGSBlob->Release();
-		if (pErrors) pErrors->Release();
 		if (FAILED(hr)) {
 			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create point sprite GS");
 		}
