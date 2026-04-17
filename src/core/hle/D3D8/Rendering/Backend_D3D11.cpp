@@ -124,6 +124,23 @@ static UINT                  g_UnswizzleStagingBufSize = 0;
 static ID3D11ShaderResourceView *g_pD3D11UnswizzleSRV = nullptr; // SRV for staging buffer
 
 // ******************************************************************
+// * Compute shader index buffer conversion resources
+// ******************************************************************
+static ID3D11ComputeShader       *g_pD3D11IndexConvertCS = nullptr;
+static ID3D11Buffer              *g_pD3D11IndexConvertCB = nullptr; // constant buffer: vertexCount, mode, isIndexed, pad
+static ID3D11Buffer              *g_pD3D11IndexConvertInputBuf = nullptr; // ByteAddressBuffer for source indices
+static UINT                       g_IndexConvertInputBufSize = 0;
+static ID3D11ShaderResourceView  *g_pD3D11IndexConvertInputSRV = nullptr;
+static ID3D11Buffer              *g_pD3D11IndexConvertOutputBuf = nullptr; // output buffer (INDEX_BUFFER + UAV)
+static UINT                       g_IndexConvertOutputBufSize = 0;
+static ID3D11UnorderedAccessView *g_pD3D11IndexConvertOutputUAV = nullptr;
+
+// Index conversion mode constants
+#define CXBX_INDEX_CONVERT_QUAD_CW  0
+#define CXBX_INDEX_CONVERT_QUAD_CCW 1
+#define CXBX_INDEX_CONVERT_FAN      2
+
+// ******************************************************************
 // * Shader constant functions
 // ******************************************************************
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
@@ -498,6 +515,87 @@ void CxbxD3D11InitBlit()
 	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11UnswizzleCB);
 	if (FAILED(hr)) {
 		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create unswizzle CB");
+	}
+
+	// ---------------------------------------------------------------
+	// Index buffer conversion compute shader (cs_5_0)
+	// Converts quad-list and triangle-fan indices to triangle-list on GPU.
+	// ---------------------------------------------------------------
+	const char* indexConvertCS =
+		"cbuffer IndexConvertCB : register(b0) {\n"
+		"    uint g_VertexCount;\n"
+		"    uint g_ConversionMode;\n"
+		"    uint g_IsIndexed;\n"
+		"    uint g_Pad;\n"
+		"};\n"
+		"ByteAddressBuffer InputIndices : register(t0);\n"
+		"RWBuffer<uint> OutputIndices : register(u0);\n"
+		"uint ReadIndex16(uint idx) {\n"
+		"    if (g_IsIndexed == 0) return idx;\n"
+		"    uint byteOff = idx * 2;\n"
+		"    uint dwordOff = byteOff & ~3u;\n"
+		"    uint raw = InputIndices.Load(dwordOff);\n"
+		"    return (byteOff & 2u) ? (raw >> 16) : (raw & 0xFFFF);\n"
+		"}\n"
+		"uint Pack16(uint lo, uint hi) { return (lo & 0xFFFF) | (hi << 16); }\n"
+		"[numthreads(64, 1, 1)]\n"
+		"void main(uint3 DTid : SV_DispatchThreadID) {\n"
+		"    uint tid = DTid.x;\n"
+		"    if (g_ConversionMode <= 1) {\n"
+		"        uint numQuads = g_VertexCount / 4;\n"
+		"        if (tid >= numQuads) return;\n"
+		"        uint s = tid * 4;\n"
+		"        uint A = ReadIndex16(s), B = ReadIndex16(s+1), C = ReadIndex16(s+2), D = ReadIndex16(s+3);\n"
+		"        uint d = tid * 3;\n"
+		"        if (g_ConversionMode == 0) {\n"
+		"            OutputIndices[d+0] = Pack16(A, B);\n"
+		"            OutputIndices[d+1] = Pack16(D, B);\n"
+		"            OutputIndices[d+2] = Pack16(C, D);\n"
+		"        } else {\n"
+		"            OutputIndices[d+0] = Pack16(A, D);\n"
+		"            OutputIndices[d+1] = Pack16(B, B);\n"
+		"            OutputIndices[d+2] = Pack16(D, C);\n"
+		"        }\n"
+		"    } else {\n"
+		"        uint numTris = (g_VertexCount >= 3) ? (g_VertexCount - 2) : 0;\n"
+		"        uint triIdx = tid * 2;\n"
+		"        if (triIdx >= numTris) return;\n"
+		"        uint hub = ReadIndex16(0);\n"
+		"        uint i1 = ReadIndex16(triIdx + 1), i2 = ReadIndex16(triIdx + 2);\n"
+		"        uint d = tid * 3;\n"
+		"        if (triIdx + 1 < numTris) {\n"
+		"            uint i3 = ReadIndex16(triIdx + 3);\n"
+		"            OutputIndices[d+0] = Pack16(hub, i1);\n"
+		"            OutputIndices[d+1] = Pack16(i2, hub);\n"
+		"            OutputIndices[d+2] = Pack16(i2, i3);\n"
+		"        } else {\n"
+		"            OutputIndices[d+0] = Pack16(hub, i1);\n"
+		"            OutputIndices[d+1] = Pack16(i2, 0);\n"
+		"        }\n"
+		"    }\n"
+		"}\n";
+
+	ID3DBlob* pIdxCSBlob = nullptr;
+	hr = EmuCompileShader(std::string(indexConvertCS), "cs_5_0", &pIdxCSBlob, "CxbxIndexConvertCS");
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile index convert CS");
+	} else {
+		hr = g_pD3DDevice->CreateComputeShader(pIdxCSBlob->GetBufferPointer(), pIdxCSBlob->GetBufferSize(), nullptr, &g_pD3D11IndexConvertCS);
+		pIdxCSBlob->Release();
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create index convert CS");
+		}
+	}
+
+	// Create index convert constant buffer (4 uints: vertexCount, mode, isIndexed, pad)
+	cbDesc = {};
+	cbDesc.ByteWidth = 16;
+	cbDesc.Usage = D3D11_USAGE_DEFAULT;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = 0;
+	hr = g_pD3DDevice->CreateBuffer(&cbDesc, nullptr, &g_pD3D11IndexConvertCB);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create index convert CB");
 	}
 }
 
@@ -970,6 +1068,155 @@ bool CxbxD3D11UnswizzleTexture(
 }
 
 // ******************************************************************
+// * GPU index buffer conversion helpers
+// ******************************************************************
+
+static bool CxbxEnsureIndexConvertInputBuffer(UINT requiredSize)
+{
+	if (g_pD3D11IndexConvertInputBuf && g_IndexConvertInputBufSize >= requiredSize)
+		return true;
+
+	// Release old resources
+	if (g_pD3D11IndexConvertInputSRV) { g_pD3D11IndexConvertInputSRV->Release(); g_pD3D11IndexConvertInputSRV = nullptr; }
+	if (g_pD3D11IndexConvertInputBuf) { g_pD3D11IndexConvertInputBuf->Release(); g_pD3D11IndexConvertInputBuf = nullptr; }
+
+	// Round up to 4KB, ensure at least 4 bytes for ByteAddressBuffer
+	UINT newSize = (requiredSize + 4095) & ~4095u;
+	if (newSize < 4) newSize = 4;
+
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = newSize;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
+
+	HRESULT hr = g_pD3DDevice->CreateBuffer(&desc, nullptr, &g_pD3D11IndexConvertInputBuf);
+	if (FAILED(hr)) return false;
+
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+	srvDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
+	srvDesc.BufferEx.NumElements = newSize / 4;
+
+	hr = g_pD3DDevice->CreateShaderResourceView(g_pD3D11IndexConvertInputBuf, &srvDesc, &g_pD3D11IndexConvertInputSRV);
+	if (FAILED(hr)) {
+		g_pD3D11IndexConvertInputBuf->Release();
+		g_pD3D11IndexConvertInputBuf = nullptr;
+		return false;
+	}
+
+	g_IndexConvertInputBufSize = newSize;
+	return true;
+}
+
+static bool CxbxEnsureIndexConvertOutputBuffer(UINT requiredByteSize)
+{
+	if (g_pD3D11IndexConvertOutputBuf && g_IndexConvertOutputBufSize >= requiredByteSize)
+		return true;
+
+	// Release old resources
+	if (g_pD3D11IndexConvertOutputUAV) { g_pD3D11IndexConvertOutputUAV->Release(); g_pD3D11IndexConvertOutputUAV = nullptr; }
+	if (g_pD3D11IndexConvertOutputBuf) { g_pD3D11IndexConvertOutputBuf->Release(); g_pD3D11IndexConvertOutputBuf = nullptr; }
+
+	UINT newSize = (requiredByteSize + 4095) & ~4095u;
+	if (newSize < 4) newSize = 4;
+
+	D3D11_BUFFER_DESC desc = {};
+	desc.ByteWidth = newSize;
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.BindFlags = D3D11_BIND_INDEX_BUFFER | D3D11_BIND_UNORDERED_ACCESS;
+
+	HRESULT hr = g_pD3DDevice->CreateBuffer(&desc, nullptr, &g_pD3D11IndexConvertOutputBuf);
+	if (FAILED(hr)) return false;
+
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = DXGI_FORMAT_R32_UINT;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+	uavDesc.Buffer.FirstElement = 0;
+	uavDesc.Buffer.NumElements = newSize / 4;
+
+	hr = g_pD3DDevice->CreateUnorderedAccessView(g_pD3D11IndexConvertOutputBuf, &uavDesc, &g_pD3D11IndexConvertOutputUAV);
+	if (FAILED(hr)) {
+		g_pD3D11IndexConvertOutputBuf->Release();
+		g_pD3D11IndexConvertOutputBuf = nullptr;
+		return false;
+	}
+
+	g_IndexConvertOutputBufSize = newSize;
+	return true;
+}
+
+bool CxbxD3D11ConvertIndexBufferGPU(
+	const INDEX16* pSourceIndices,
+	UINT sourceVertexCount,
+	UINT outputIndexCount,
+	int conversionMode)
+{
+	if (!g_pD3D11IndexConvertCS || !g_pD3D11IndexConvertCB || outputIndexCount == 0)
+		return false;
+
+	// 1. Upload source indices to input staging buffer (only if indexed)
+	if (pSourceIndices != nullptr) {
+		UINT inputByteSize = sourceVertexCount * sizeof(INDEX16);
+		if (!CxbxEnsureIndexConvertInputBuffer(inputByteSize))
+			return false;
+
+		D3D11_BOX box = { 0, 0, 0, inputByteSize, 1, 1 };
+		g_pD3DDeviceContext->UpdateSubresource(g_pD3D11IndexConvertInputBuf, 0, &box, pSourceIndices, inputByteSize, 0);
+	}
+
+	// 2. Ensure output buffer is large enough
+	// Output: ceil(outputIndexCount / 2) uint32 elements (packed 16-bit pairs)
+	UINT outputUintCount = (outputIndexCount + 1) / 2;
+	UINT outputByteSize = outputUintCount * sizeof(UINT);
+	if (!CxbxEnsureIndexConvertOutputBuffer(outputByteSize))
+		return false;
+
+	// 3. Update constant buffer
+	struct { UINT VertexCount, ConversionMode, IsIndexed, Pad; } cbData = {
+		sourceVertexCount,
+		(UINT)conversionMode,
+		pSourceIndices != nullptr ? 1u : 0u,
+		0
+	};
+	g_pD3DDeviceContext->UpdateSubresource(g_pD3D11IndexConvertCB, 0, nullptr, &cbData, sizeof(cbData), 0);
+
+	// 4. Bind resources and dispatch
+	g_pD3DDeviceContext->CSSetShader(g_pD3D11IndexConvertCS, nullptr, 0);
+	g_pD3DDeviceContext->CSSetConstantBuffers(0, 1, &g_pD3D11IndexConvertCB);
+
+	if (pSourceIndices != nullptr) {
+		g_pD3DDeviceContext->CSSetShaderResources(0, 1, &g_pD3D11IndexConvertInputSRV);
+	}
+
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &g_pD3D11IndexConvertOutputUAV, nullptr);
+
+	UINT numWorkItems;
+	if (conversionMode <= CXBX_INDEX_CONVERT_QUAD_CCW) {
+		numWorkItems = sourceVertexCount / 4; // one thread per quad
+	} else {
+		UINT numTris = (sourceVertexCount >= 3) ? (sourceVertexCount - 2) : 0;
+		numWorkItems = (numTris + 1) / 2; // one thread per pair of triangles
+	}
+	UINT numGroups = (numWorkItems + 63) / 64;
+
+	g_pD3DDeviceContext->Dispatch(numGroups, 1, 1);
+
+	// 5. Unbind CS resources
+	ID3D11UnorderedAccessView* pNullUAV = nullptr;
+	ID3D11ShaderResourceView* pNullSRV = nullptr;
+	g_pD3DDeviceContext->CSSetUnorderedAccessViews(0, 1, &pNullUAV, nullptr);
+	g_pD3DDeviceContext->CSSetShaderResources(0, 1, &pNullSRV);
+	g_pD3DDeviceContext->CSSetShader(nullptr, nullptr, 0);
+
+	// 6. Bind output as index buffer (R16_UINT — the CS packed 16-bit indices into 32-bit writes)
+	g_pD3DDeviceContext->IASetIndexBuffer(g_pD3D11IndexConvertOutputBuf, DXGI_FORMAT_R16_UINT, 0);
+
+	return true;
+}
+
+// ******************************************************************
 // * Release all backend resources (called from device release lambda)
 // ******************************************************************
 void CxbxD3D11ReleaseBackendResources()
@@ -991,6 +1238,14 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11UnswizzleSRV) { g_pD3D11UnswizzleSRV->Release(); g_pD3D11UnswizzleSRV = nullptr; }
 	if (g_pD3D11UnswizzleStagingBuf) { g_pD3D11UnswizzleStagingBuf->Release(); g_pD3D11UnswizzleStagingBuf = nullptr; }
 	g_UnswizzleStagingBufSize = 0;
+	if (g_pD3D11IndexConvertCS) { g_pD3D11IndexConvertCS->Release(); g_pD3D11IndexConvertCS = nullptr; }
+	if (g_pD3D11IndexConvertCB) { g_pD3D11IndexConvertCB->Release(); g_pD3D11IndexConvertCB = nullptr; }
+	if (g_pD3D11IndexConvertInputSRV) { g_pD3D11IndexConvertInputSRV->Release(); g_pD3D11IndexConvertInputSRV = nullptr; }
+	if (g_pD3D11IndexConvertInputBuf) { g_pD3D11IndexConvertInputBuf->Release(); g_pD3D11IndexConvertInputBuf = nullptr; }
+	g_IndexConvertInputBufSize = 0;
+	if (g_pD3D11IndexConvertOutputUAV) { g_pD3D11IndexConvertOutputUAV->Release(); g_pD3D11IndexConvertOutputUAV = nullptr; }
+	if (g_pD3D11IndexConvertOutputBuf) { g_pD3D11IndexConvertOutputBuf->Release(); g_pD3D11IndexConvertOutputBuf = nullptr; }
+	g_IndexConvertOutputBufSize = 0;
 	ClearRTVCache();
 }
 

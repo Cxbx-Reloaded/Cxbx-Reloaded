@@ -117,6 +117,24 @@ bool CxbxD3D11UnswizzleTexture(
 	UINT bpp,
 	DXGI_FORMAT format);
 
+// Index conversion mode constants
+#define CXBX_INDEX_CONVERT_QUAD_CW  0
+#define CXBX_INDEX_CONVERT_QUAD_CCW 1
+#define CXBX_INDEX_CONVERT_FAN      2
+
+// GPU-accelerated index buffer topology conversion via compute shader.
+// Converts quad-list or triangle-fan indices to triangle-list on the GPU.
+// Returns true if successful and sets the output buffer as the active index buffer (R16_UINT).
+// pSourceIndices: Xbox 16-bit index data, or nullptr for non-indexed (sequential) draws.
+// sourceVertexCount: number of source vertices/indices.
+// outputIndexCount: number of output triangle-list indices.
+// conversionMode: CXBX_INDEX_CONVERT_QUAD_CW, CXBX_INDEX_CONVERT_QUAD_CCW, or CXBX_INDEX_CONVERT_FAN.
+bool CxbxD3D11ConvertIndexBufferGPU(
+	const INDEX16* pSourceIndices,
+	UINT sourceVertexCount,
+	UINT outputIndexCount,
+	int conversionMode);
+
 #endif // CXBX_USE_D3D11
 
 #endif // BACKEND_D3D11_H

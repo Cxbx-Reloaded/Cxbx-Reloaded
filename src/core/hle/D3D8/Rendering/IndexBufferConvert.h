@@ -30,6 +30,9 @@ UINT FanToTriangleVertexCount(UINT NrOfFanVertices);
 void CxbxConvertTriFanToTriangleListIndices(INDEX16* pFanIndexData, unsigned uNrOfFanVertices, INDEX16* pTriangleIndexData);
 INDEX16* CxbxCreateTriFanToTriangleListIndexData(INDEX16* pFanIndexData, unsigned FanVertexCount);
 
+// Winding order query (reads X_D3DRS_FRONTFACE)
+bool CxbxGetClockWiseWindingOrder();
+
 // Quad list to triangle list conversion
 UINT QuadToTriangleVertexCount(UINT NrOfQuadVertices);
 void CxbxConvertQuadListToTriangleListIndices(INDEX16* pXboxQuadIndexData, unsigned uNrOfTriangleIndices, INDEX16* pTriangleIndexData);
