@@ -109,6 +109,12 @@ static ID3D11Buffer         *g_pD3D11GSConstantBuffer = nullptr;
 static bool                  g_bPointSpriteEnabled = false;
 
 // ******************************************************************
+// * Thick line geometry shader resources
+// ******************************************************************
+static ID3D11GeometryShader *g_pD3D11ThickLineGS = nullptr;
+static float                 g_fLineWidth = 1.0f;
+
+// ******************************************************************
 // * Shader constant functions
 // ******************************************************************
 void CxbxSetVertexShaderConstantF(UINT startRegister, const float* pConstantData, UINT Vector4fCount)
@@ -322,7 +328,92 @@ void CxbxD3D11InitBlit()
 		}
 	}
 
-	// Create GS constant buffer (1 float4: inverse viewport dimensions)
+	// ************************************************************
+	// Thick line geometry shader
+	// ************************************************************
+	static const char* thickLineGS =
+		"struct GS_INPUT {\n"
+		"    float4 oPos : POSITION;\n"
+		"    float4 oD0  : COLOR0;\n"
+		"    float4 oD1  : COLOR1;\n"
+		"    float  oFog : FOG;\n"
+		"    float  oPts : PSIZE;\n"
+		"    float4 oB0  : TEXCOORD4;\n"
+		"    float4 oB1  : TEXCOORD5;\n"
+		"    float4 oT0  : TEXCOORD0;\n"
+		"    float4 oT1  : TEXCOORD1;\n"
+		"    float4 oT2  : TEXCOORD2;\n"
+		"    float4 oT3  : TEXCOORD3;\n"
+		"};\n"
+		"struct GS_OUTPUT {\n"
+		"    float4 oPos : SV_Position;\n"
+		"    float4 oD0  : COLOR0;\n"
+		"    float4 oD1  : COLOR1;\n"
+		"    float  oFog : FOG;\n"
+		"    float  oPts : PSIZE;\n"
+		"    float4 oB0  : TEXCOORD4;\n"
+		"    float4 oB1  : TEXCOORD5;\n"
+		"    float4 oT0  : TEXCOORD0;\n"
+		"    float4 oT1  : TEXCOORD1;\n"
+		"    float4 oT2  : TEXCOORD2;\n"
+		"    float4 oT3  : TEXCOORD3;\n"
+		"};\n"
+		"cbuffer GSConstants : register(b0) { float4 gsParams; };\n" // xy = invViewport, z = lineWidth
+		"[maxvertexcount(4)]\n"
+		"void main(line GS_INPUT input[2], inout TriangleStream<GS_OUTPUT> stream) {\n"
+		"    float4 p0 = input[0].oPos;\n"
+		"    float4 p1 = input[1].oPos;\n"
+		"    // Convert to NDC\n"
+		"    float2 ndc0 = p0.xy / p0.w;\n"
+		"    float2 ndc1 = p1.xy / p1.w;\n"
+		"    // Line direction in NDC, then to screen pixels\n"
+		"    float2 screenDir = (ndc1 - ndc0) / (gsParams.xy * 2.0);\n"
+		"    float len = length(screenDir);\n"
+		"    float2 dir = (len > 0.0001) ? screenDir / len : float2(1, 0);\n"
+		"    // Perpendicular in screen space, then back to clip space\n"
+		"    float2 perp = float2(-dir.y, dir.x);\n"
+		"    float halfWidth = gsParams.z * 0.5;\n"
+		"    float2 offset0 = perp * halfWidth * gsParams.xy * 2.0 * p0.w;\n"
+		"    float2 offset1 = perp * halfWidth * gsParams.xy * 2.0 * p1.w;\n"
+		"    GS_OUTPUT o;\n"
+		"    // Vertex 0 — start, left side\n"
+		"    o.oD0  = input[0].oD0; o.oD1  = input[0].oD1;\n"
+		"    o.oFog = input[0].oFog; o.oPts = input[0].oPts;\n"
+		"    o.oB0  = input[0].oB0; o.oB1  = input[0].oB1;\n"
+		"    o.oT0  = input[0].oT0; o.oT1  = input[0].oT1;\n"
+		"    o.oT2  = input[0].oT2; o.oT3  = input[0].oT3;\n"
+		"    o.oPos = p0 + float4(-offset0, 0, 0);\n"
+		"    stream.Append(o);\n"
+		"    // Vertex 1 — start, right side\n"
+		"    o.oPos = p0 + float4(+offset0, 0, 0);\n"
+		"    stream.Append(o);\n"
+		"    // Vertex 2 — end, left side (interpolate from input[1])\n"
+		"    o.oD0  = input[1].oD0; o.oD1  = input[1].oD1;\n"
+		"    o.oFog = input[1].oFog; o.oPts = input[1].oPts;\n"
+		"    o.oB0  = input[1].oB0; o.oB1  = input[1].oB1;\n"
+		"    o.oT0  = input[1].oT0; o.oT1  = input[1].oT1;\n"
+		"    o.oT2  = input[1].oT2; o.oT3  = input[1].oT3;\n"
+		"    o.oPos = p1 + float4(-offset1, 0, 0);\n"
+		"    stream.Append(o);\n"
+		"    // Vertex 3 — end, right side\n"
+		"    o.oPos = p1 + float4(+offset1, 0, 0);\n"
+		"    stream.Append(o);\n"
+		"    stream.RestartStrip();\n"
+		"}\n";
+
+	pGSBlob = nullptr;
+	hr = EmuCompileShader(std::string(thickLineGS), "gs_4_0", &pGSBlob, "CxbxThickLineGS");
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile thick line GS");
+	} else {
+		hr = g_pD3DDevice->CreateGeometryShader(pGSBlob->GetBufferPointer(), pGSBlob->GetBufferSize(), nullptr, &g_pD3D11ThickLineGS);
+		pGSBlob->Release();
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create thick line GS");
+		}
+	}
+
+	// Create GS constant buffer (1 float4: inverse viewport dimensions + line width)
 	D3D11_BUFFER_DESC cbDesc = {};
 	cbDesc.ByteWidth = 16; // 1 float4
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -585,6 +676,11 @@ void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
         case xbox::X_D3DRS_POINTSPRITEENABLE:
             g_bPointSpriteEnabled = (Value != 0);
             break;
+        // ---- Line width (Xbox extension, float-encoded DWORD) ----
+        case xbox::X_D3DRS_LINEWIDTH:
+            g_fLineWidth = *reinterpret_cast<const float*>(&Value);
+            if (g_fLineWidth < 1.0f) g_fLineWidth = 1.0f;
+            break;
         default:
             break;
     }
@@ -630,14 +726,14 @@ void CxbxD3D11ApplyDirtyStates()
 	CxbxD3D11FlushVertexShaderConstants();
 	CxbxD3D11FlushPixelShaderConstants();
 
-	// Bind or unbind the point sprite geometry shader
-	if (g_bPointSpriteEnabled && g_pD3D11PointSpriteGS) {
-		// Update GS constant buffer with inverse viewport dimensions
+	// Update GS constant buffer (shared by point sprite and thick line GS)
+	// xy = inverse viewport dimensions, z = line width, w = unused
+	{
 		D3D11_VIEWPORT vp = {};
 		UINT numVP = 1;
 		g_pD3DDeviceContext->RSGetViewports(&numVP, &vp);
 		if (vp.Width > 0 && vp.Height > 0 && g_pD3D11GSConstantBuffer) {
-			float gsConstants[4] = { 1.0f / vp.Width, 1.0f / vp.Height, 0.0f, 0.0f };
+			float gsConstants[4] = { 1.0f / vp.Width, 1.0f / vp.Height, g_fLineWidth, 0.0f };
 			D3D11_MAPPED_SUBRESOURCE mapped = {};
 			if (SUCCEEDED(g_pD3DDeviceContext->Map(g_pD3D11GSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) {
 				memcpy(mapped.pData, gsConstants, sizeof(gsConstants));
@@ -645,6 +741,11 @@ void CxbxD3D11ApplyDirtyStates()
 			}
 			g_pD3DDeviceContext->GSSetConstantBuffers(0, 1, &g_pD3D11GSConstantBuffer);
 		}
+	}
+
+	// Bind or unbind the point sprite geometry shader
+	// (Thick line GS is bound at draw time since it depends on primitive type)
+	if (g_bPointSpriteEnabled && g_pD3D11PointSpriteGS) {
 		g_pD3DDeviceContext->GSSetShader(g_pD3D11PointSpriteGS, nullptr, 0);
 	} else {
 		g_pD3DDeviceContext->GSSetShader(nullptr, nullptr, 0);
@@ -678,8 +779,38 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11BlitSamplerLinear) { g_pD3D11BlitSamplerLinear->Release(); g_pD3D11BlitSamplerLinear = nullptr; }
 	if (g_pD3D11BlitSamplerPoint) { g_pD3D11BlitSamplerPoint->Release(); g_pD3D11BlitSamplerPoint = nullptr; }
 	if (g_pD3D11PointSpriteGS) { g_pD3D11PointSpriteGS->Release(); g_pD3D11PointSpriteGS = nullptr; }
+	if (g_pD3D11ThickLineGS) { g_pD3D11ThickLineGS->Release(); g_pD3D11ThickLineGS = nullptr; }
 	if (g_pD3D11GSConstantBuffer) { g_pD3D11GSConstantBuffer->Release(); g_pD3D11GSConstantBuffer = nullptr; }
 	ClearRTVCache();
+}
+
+// ******************************************************************
+// * Thick line GS bind/unbind helpers
+// ******************************************************************
+static bool CxbxIsLinePrimitive(xbox::X_D3DPRIMITIVETYPE type)
+{
+	return type == xbox::X_D3DPT_LINELIST
+	    || type == xbox::X_D3DPT_LINESTRIP
+	    || type == xbox::X_D3DPT_LINELOOP;
+}
+
+void CxbxBindThickLineGS(xbox::X_D3DPRIMITIVETYPE type)
+{
+	if (g_fLineWidth > 1.0f && CxbxIsLinePrimitive(type) && g_pD3D11ThickLineGS) {
+		g_pD3DDeviceContext->GSSetShader(g_pD3D11ThickLineGS, nullptr, 0);
+	}
+}
+
+void CxbxUnbindThickLineGS(xbox::X_D3DPRIMITIVETYPE type)
+{
+	if (g_fLineWidth > 1.0f && CxbxIsLinePrimitive(type) && g_pD3D11ThickLineGS) {
+		// Restore point sprite GS or null
+		if (g_bPointSpriteEnabled && g_pD3D11PointSpriteGS) {
+			g_pD3DDeviceContext->GSSetShader(g_pD3D11PointSpriteGS, nullptr, 0);
+		} else {
+			g_pD3DDeviceContext->GSSetShader(nullptr, nullptr, 0);
+		}
+	}
 }
 
 // ******************************************************************
@@ -800,15 +931,19 @@ void CxbxUnlockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
 
 HRESULT CxbxDrawIndexedPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT IndexCount, INT BaseVertexIndex, UINT StartIndex, UINT MinIndex, UINT NumVertices, UINT PrimCount)
 {
+	CxbxBindThickLineGS(XboxPrimitiveType);
 	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
 	g_pD3DDeviceContext->DrawIndexed(IndexCount, StartIndex, BaseVertexIndex);
+	CxbxUnbindThickLineGS(XboxPrimitiveType);
 	return S_OK;
 }
 
 HRESULT CxbxDrawPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount, UINT StartVertex, UINT PrimCount)
 {
+	CxbxBindThickLineGS(XboxPrimitiveType);
 	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
 	g_pD3DDeviceContext->Draw(VertexCount, StartVertex);
+	CxbxUnbindThickLineGS(XboxPrimitiveType);
 	return S_OK;
 }
 

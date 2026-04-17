@@ -100,6 +100,12 @@ HRESULT CxbxD3D11Blt(
 	ID3D11Texture2D* pDst, const RECT* pDstRect,
 	D3DTEXTUREFILTERTYPE Filter);
 
+// Bind/unbind thick line geometry shader around line draw calls.
+// Call CxbxBindThickLineGS before and CxbxUnbindThickLineGS after direct
+// Draw/DrawIndexed calls that may use line primitives (UP draw paths).
+void CxbxBindThickLineGS(xbox::X_D3DPRIMITIVETYPE type);
+void CxbxUnbindThickLineGS(xbox::X_D3DPRIMITIVETYPE type);
+
 #endif // CXBX_USE_D3D11
 
 #endif // BACKEND_D3D11_H

@@ -427,8 +427,10 @@ void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 				g_dwPrimPerFrame += PrimitiveCount;
 			}
 		} else {
+			CxbxBindThickLineGS(DrawContext.XboxPrimitiveType);
 			g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(DrawContext.XboxPrimitiveType));
 			g_pD3DDeviceContext->Draw(DrawContext.dwVertexCount, 0);
+			CxbxUnbindThickLineGS(DrawContext.XboxPrimitiveType);
 
 			g_dwPrimPerFrame += DrawContext.dwHostPrimitiveCount;
 			if (DrawContext.XboxPrimitiveType == xbox::X_D3DPT_LINELOOP) {
