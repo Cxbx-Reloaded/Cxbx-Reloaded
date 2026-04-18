@@ -844,7 +844,9 @@ static void UploadPixelContainerMips(
 				hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
 			} else {
 				// For DEFAULT textures, we can't Map; allocate a staging buffer and use UpdateSubresource later
-				DWORD stagingRowPitch = bCompressed ? dwMipRowPitch : pxMipWidth * dwBPP;
+				// When converting to ARGB, output is 4 bytes per pixel regardless of source BPP
+				DWORD stagingBPP = bConvertTextureFormat ? 4u : dwBPP;
+				DWORD stagingRowPitch = bCompressed ? dwMipRowPitch : pxMipWidth * stagingBPP;
 				DWORD stagingSize = stagingRowPitch * numRows * pxMipDepth;
 				pStagingBuffer = (uint8_t*)malloc(stagingSize);
 				MappedResource.pData = pStagingBuffer;
