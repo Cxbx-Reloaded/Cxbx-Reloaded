@@ -954,6 +954,21 @@ void CxbxUpdateActivePixelShader() // NOPATCH
    	fColor[PSH_XBOX_CONSTANT_COLORSIGN + stage_nr] = CxbxCalcColorSign(stage_nr);
   }
 
+  // Diagnostic: log non-zero colorsign values (first 10 occurrences)
+  {
+    static int s_csdiag = 0;
+    for (int s = 0; s < xbox::X_D3DTS_STAGECOUNT && s_csdiag < 10; s++) {
+      auto& cs = fColor[PSH_XBOX_CONSTANT_COLORSIGN + s];
+      if (cs.r != 0 || cs.g != 0 || cs.b != 0 || cs.a != 0) {
+        DWORD xboxCS = XboxTextureStates.Get(s, xbox::X_D3DTSS_COLORSIGN);
+        DWORD colorOp = XboxTextureStates.Get(s, xbox::X_D3DTSS_COLOROP);
+        s_csdiag++;
+        EmuLog(LOG_LEVEL::WARNING, "ColorSign diag [%d]: stage=%d COLORSIGN=(%f,%f,%f,%f) XboxCS=0x%08X ColorOp=%u HostFmt=%d",
+          s_csdiag, s, cs.r, cs.g, cs.b, cs.a, xboxCS, colorOp, (int)g_HostTextureFormats[s]);
+      }
+    }
+  }
+
   // Texture color key operation
   for (int stage_nr = 0; stage_nr < xbox::X_D3DTS_STAGECOUNT; stage_nr++) {
    	fColor[PSH_XBOX_CONSTANT_COLORKEYOP + stage_nr].r = (float)XboxTextureStates.Get(stage_nr, xbox::X_D3DTSS_COLORKEYOP);
