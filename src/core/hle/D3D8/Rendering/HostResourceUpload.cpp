@@ -218,6 +218,24 @@ void UploadPixelContainerMips(
 				continue;
 			}
 
+			// CS format conversion path: for single-mip 2D textures that need format conversion,
+			// dispatch compute shader to unswizzle (if needed) + decode → R8G8B8A8_UNORM
+			{
+				UINT fmtType = CxbxGetFormatConvertType(X_Format);
+				if (fmtType != 0 && bConvertTextureFormat && dwMipMapLevels == 1 && pxMipDepth == 1
+					&& XboxResourceType == xbox::X_D3DRTYPE_TEXTURE) {
+					uint8_t *pCsSrc = (uint8_t *)VirtualAddr + dwCubeFaceOffset + dwMipOffset;
+					ID3D11Texture2D* pTexture2D = static_cast<ID3D11Texture2D*>(pNewHostResource.Get());
+					if (CxbxD3D11FormatConvertTexture(pTexture2D, pCsSrc, pxMipWidth, pxMipHeight,
+							dwBPP, fmtType, bSwizzled, dwMipRowPitch)) {
+						continue; // CS handled it
+					}
+					EmuLog(LOG_LEVEL::WARNING, "CS format convert failed, falling back to CPU for %ux%u fmt=0x%02X",
+						pxMipWidth, pxMipHeight, X_Format);
+					// Fall through to CPU path
+				}
+			}
+
 			if (bHostIsDynamic) {
 				hRet = g_pD3DDeviceContext->Map(pNewHostResource.Get(), Subresource, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource);
 			} else {

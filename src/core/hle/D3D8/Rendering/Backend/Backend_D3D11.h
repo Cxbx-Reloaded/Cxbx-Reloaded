@@ -163,6 +163,47 @@ bool CxbxD3D11ExpandPaletteTexture(
 	UINT height,
 	const void* pPaletteData);
 
+// Format conversion type constants (must match CS shader)
+#define CXBX_FMTCONV_L6V5U5      1
+#define CXBX_FMTCONV_R6G5B5      2
+#define CXBX_FMTCONV_V8U8        3
+#define CXBX_FMTCONV_G8B8        4
+#define CXBX_FMTCONV_R5G5B5A1    5
+#define CXBX_FMTCONV_R4G4B4A4    6
+#define CXBX_FMTCONV_A8          7
+#define CXBX_FMTCONV_YUY2        8
+#define CXBX_FMTCONV_UYVY        9
+
+// Map Xbox texture format to CS format conversion type.
+// Returns 0 if the format is not handled by the CS.
+inline UINT CxbxGetFormatConvertType(xbox::X_D3DFORMAT X_Format) {
+	switch (X_Format) {
+	case xbox::X_D3DFMT_L6V5U5:     case xbox::X_D3DFMT_LIN_L6V5U5:   return CXBX_FMTCONV_L6V5U5;
+	case xbox::X_D3DFMT_V8U8: /* = X_D3DFMT_G8B8 */                   return CXBX_FMTCONV_V8U8;
+	case xbox::X_D3DFMT_R5G5B5A1:   case xbox::X_D3DFMT_LIN_R5G5B5A1: return CXBX_FMTCONV_R5G5B5A1;
+	case xbox::X_D3DFMT_R4G4B4A4:   case xbox::X_D3DFMT_LIN_R4G4B4A4: return CXBX_FMTCONV_R4G4B4A4;
+	case xbox::X_D3DFMT_A8:         case xbox::X_D3DFMT_LIN_A8:        return CXBX_FMTCONV_A8;
+	case xbox::X_D3DFMT_YUY2:                                          return CXBX_FMTCONV_YUY2;
+	case xbox::X_D3DFMT_UYVY:                                          return CXBX_FMTCONV_UYVY;
+	default: return 0;
+	}
+}
+
+// GPU-accelerated texture format conversion via compute shader.
+// Combines optional unswizzle + format decode → R8G8B8A8_UNORM output.
+// Texture must be DXGI_FORMAT_R8G8B8A8_UNORM with DEFAULT+UAV.
+// fmtType: one of CXBX_FMTCONV_* constants.
+// srcRowPitch: row pitch of source data (only used when bSwizzled=false).
+bool CxbxD3D11FormatConvertTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSrc,
+	UINT width,
+	UINT height,
+	UINT bpp,
+	UINT fmtType,
+	bool bSwizzled,
+	UINT srcRowPitch);
+
 // Vertex format conversion type constants
 #define CXBX_VTXCONV_COPY       0
 #define CXBX_VTXCONV_NORMSHORT3 1

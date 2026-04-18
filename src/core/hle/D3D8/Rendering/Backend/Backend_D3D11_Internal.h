@@ -107,6 +107,12 @@ extern ID3D11Buffer              *g_pD3D11PaletteBuf;
 extern ID3D11ShaderResourceView  *g_pD3D11PaletteSRV;
 
 // ******************************************************************
+// * Compute shader resources — format conversion
+// ******************************************************************
+extern ID3D11ComputeShader       *g_pD3D11FormatConvertCS;
+extern ID3D11Buffer              *g_pD3D11FormatConvertCB;
+
+// ******************************************************************
 // * Compute shader resources — vertex convert
 // ******************************************************************
 extern ID3D11ComputeShader       *g_pD3D11VertexConvertCS;

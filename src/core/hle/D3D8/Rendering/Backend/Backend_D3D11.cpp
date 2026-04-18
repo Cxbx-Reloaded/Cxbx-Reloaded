@@ -169,6 +169,12 @@ ID3D11Buffer              *g_pD3D11PaletteBuf = nullptr; // 256-entry palette up
 ID3D11ShaderResourceView  *g_pD3D11PaletteSRV = nullptr;
 
 // ******************************************************************
+// * Compute shader format conversion resources
+// ******************************************************************
+ID3D11ComputeShader       *g_pD3D11FormatConvertCS = nullptr;
+ID3D11Buffer              *g_pD3D11FormatConvertCB = nullptr; // constant buffer: maskX, maskY, width, height, bpp, fmtType, swizzled, pad
+
+// ******************************************************************
 // * Compute shader vertex format conversion resources
 // ******************************************************************
 ID3D11ComputeShader       *g_pD3D11VertexConvertCS = nullptr;
@@ -814,6 +820,185 @@ void CxbxD3D11InitBlit()
 	}
 
 	// ---------------------------------------------------------------
+	// Texture format conversion compute shader (cs_5_0)
+	// Combines unswizzle (optional) + format decode → RGBA output.
+	// Replaces CPU ConvertD3DTextureToARGBBuffer for most formats.
+	// ---------------------------------------------------------------
+	static const std::string formatConvertCS =
+		"ByteAddressBuffer g_SrcBuffer : register(t0);\n"
+		"RWTexture2D<uint> g_DstTexture : register(u0);\n"
+		"cbuffer FormatConvertCB : register(b0) {\n"
+		"    uint maskX; uint maskY; uint texWidth; uint texHeight;\n"
+		"    uint bpp; uint fmtType; uint swizzled; uint srcRowPitch;\n"
+		"};\n"
+		"\n"
+		"uint MortonIndex(uint x, uint y) {\n"
+		"    uint mx = maskX; uint my = maskY;\n"
+		"    uint result = 0;\n"
+		"    uint xBit = 1, yBit = 1, outBit = 1;\n"
+		"    uint totalMask = mx | my;\n"
+		"    [unroll(20)]\n"
+		"    for (uint i = 0; i < 20; i++) {\n"
+		"        if ((totalMask & outBit) == 0) break;\n"
+		"        if (mx & outBit) { if (x & xBit) result |= outBit; xBit <<= 1; }\n"
+		"        if (my & outBit) { if (y & yBit) result |= outBit; yBit <<= 1; }\n"
+		"        outBit <<= 1;\n"
+		"    }\n"
+		"    return result;\n"
+		"}\n"
+		"\n"
+		"uint LoadSrcByte(uint byteOffset) {\n"
+		"    uint dw = g_SrcBuffer.Load(byteOffset & ~3u);\n"
+		"    return (dw >> ((byteOffset & 3u) * 8u)) & 0xFF;\n"
+		"}\n"
+		"uint LoadSrc16(uint byteOffset) {\n"
+		"    uint dw = g_SrcBuffer.Load(byteOffset & ~3u);\n"
+		"    return (dw >> ((byteOffset & 2u) * 8u)) & 0xFFFF;\n"
+		"}\n"
+		"uint LoadSrc32(uint byteOffset) {\n"
+		"    return g_SrcBuffer.Load(byteOffset);\n"
+		"}\n"
+		"\n"
+		"// Sign-extend a 5-bit two's complement value to float [-1,+1]\n"
+		"float SignExtend5(uint v) {\n"
+		"    int s = int(v); if (s >= 16) s -= 32;\n"
+		"    return float(s) / 15.0;\n"
+		"}\n"
+		"// Sign-extend an 8-bit two's complement value to float [-1,+1]\n"
+		"float SignExtend8(uint v) {\n"
+		"    int s = int(v); if (s >= 128) s -= 256;\n"
+		"    return float(s) / 127.0;\n"
+		"}\n"
+		"// Unsigned 5-bit expand [0..31] -> 8-bit [0..255]\n"
+		"uint Expand5to8(uint v) { return (v << 3) | (v >> 2); }\n"
+		"// Unsigned 6-bit expand [0..63] -> 8-bit [0..255]\n"
+		"uint Expand6to8(uint v) { return (v << 2) | (v >> 4); }\n"
+		"// Unsigned 4-bit expand [0..15] -> 8-bit [0..255]\n"
+		"uint Expand4to8(uint v) { return (v << 4) | v; }\n"
+		"// Signed 5-bit bias to unsigned 8-bit (signed -> unsigned range)\n"
+		"uint SignedExpand5to8(uint v) {\n"
+		"    int s = int(v); if (s >= 16) s -= 32;\n"
+		"    // Map [-16..+15] to [0..255]: add 16 then scale\n"
+		"    return uint(clamp((s + 16) * 255 / 31, 0, 255));\n"
+		"}\n"
+		"\n"
+		"// Pack R,G,B,A (0-255 each) into a uint for R8G8B8A8_UNORM UAV\n"
+		"uint PackRGBA(uint r, uint g, uint b, uint a) {\n"
+		"    return (r & 0xFF) | ((g & 0xFF) << 8) | ((b & 0xFF) << 16) | ((a & 0xFF) << 24);\n"
+		"}\n"
+		"\n"
+		"#define FMT_L6V5U5   1\n"
+		"#define FMT_R6G5B5   2\n"
+		"#define FMT_V8U8     3\n"
+		"#define FMT_G8B8     4\n"
+		"#define FMT_R5G5B5A1 5\n"
+		"#define FMT_R4G4B4A4 6\n"
+		"#define FMT_A8       7\n"
+		"#define FMT_YUY2     8\n"
+		"#define FMT_UYVY     9\n"
+		"\n"
+		"uint ConvertTexel16(uint raw, uint fmt) {\n"
+		"    if (fmt == FMT_L6V5U5) {\n"
+		"        // L6V5U5: bits [4:0]=U(signed), [9:5]=V(signed), [15:10]=L(unsigned)\n"
+		"        // Bias U,V from signed to unsigned range for UNORM output\n"
+		"        // Colorsign in the pixel shader converts back to signed at sampling time\n"
+		"        uint u8 = SignedExpand5to8(raw & 0x1Fu);\n"
+		"        uint v8 = SignedExpand5to8((raw >> 5u) & 0x1Fu);\n"
+		"        uint l8 = Expand6to8((raw >> 10u) & 0x3Fu);\n"
+		"        return PackRGBA(u8, v8, l8, 255);\n"
+		"    }\n"
+		"    if (fmt == FMT_R6G5B5) {\n"
+		"        // R6G5B5: bits [4:0]=B(5), [9:5]=G(5), [15:10]=R(6)\n"
+		"        uint b8 = Expand5to8(raw & 0x1Fu);\n"
+		"        uint g8 = Expand5to8((raw >> 5u) & 0x1Fu);\n"
+		"        uint r8 = Expand6to8((raw >> 10u) & 0x3Fu);\n"
+		"        return PackRGBA(r8, g8, b8, 255);\n"
+		"    }\n"
+		"    if (fmt == FMT_V8U8) {\n"
+		"        // V8U8 (G8B8 alias): byte[0]=U(signed), byte[1]=V(signed)\n"
+		"        // Bias from signed to unsigned for UNORM; colorsign converts back\n"
+		"        uint u8 = ((raw & 0xFFu) + 128u) & 0xFFu;\n"
+		"        uint v8 = (((raw >> 8u) & 0xFFu) + 128u) & 0xFFu;\n"
+		"        return PackRGBA(u8, v8, 0, 255);\n"
+		"    }\n"
+		"    if (fmt == FMT_G8B8) {\n"
+		"        // G8B8 (unsigned): byte[0]=B, byte[1]=G\n"
+		"        uint b8 = raw & 0xFFu;\n"
+		"        uint g8 = (raw >> 8u) & 0xFFu;\n"
+		"        return PackRGBA(b8, g8, b8, g8);\n"
+		"    }\n"
+		"    if (fmt == FMT_R5G5B5A1) {\n"
+		"        // R5G5B5A1: bit[0]=A(1), [5:1]=B(5), [10:6]=G(5), [15:11]=R(5)\n"
+		"        uint a8 = (raw & 1u) ? 255 : 0;\n"
+		"        uint b8 = Expand5to8((raw >> 1u) & 0x1Fu);\n"
+		"        uint g8 = Expand5to8((raw >> 6u) & 0x1Fu);\n"
+		"        uint r8 = Expand5to8((raw >> 11u) & 0x1Fu);\n"
+		"        return PackRGBA(r8, g8, b8, a8);\n"
+		"    }\n"
+		"    if (fmt == FMT_R4G4B4A4) {\n"
+		"        // R4G4B4A4: [3:0]=A(4), [7:4]=B(4), [11:8]=G(4), [15:12]=R(4)\n"
+		"        uint a8 = Expand4to8(raw & 0xFu);\n"
+		"        uint b8 = Expand4to8((raw >> 4u) & 0xFu);\n"
+		"        uint g8 = Expand4to8((raw >> 8u) & 0xFu);\n"
+		"        uint r8 = Expand4to8((raw >> 12u) & 0xFu);\n"
+		"        return PackRGBA(r8, g8, b8, a8);\n"
+		"    }\n"
+		"    return PackRGBA(255, 0, 255, 255); // Magenta = unhandled\n"
+		"}\n"
+		"\n"
+		"uint ConvertTexel8(uint raw, uint fmt) {\n"
+		"    if (fmt == FMT_A8) {\n"
+		"        // A8: Xbox RGB=1, alpha=raw\n"
+		"        return PackRGBA(255, 255, 255, raw & 0xFFu);\n"
+		"    }\n"
+		"    return PackRGBA(255, 0, 255, 255); // Magenta\n"
+		"}\n"
+		"\n"
+		"[numthreads(8, 8, 1)]\n"
+		"void main(uint3 dtid : SV_DispatchThreadID) {\n"
+		"    uint x = dtid.x; uint y = dtid.y;\n"
+		"    if (x >= texWidth || y >= texHeight) return;\n"
+		"    uint srcByteOffset;\n"
+		"    if (swizzled != 0) {\n"
+		"        srcByteOffset = MortonIndex(x, y) * bpp;\n"
+		"    } else {\n"
+		"        srcByteOffset = y * srcRowPitch + x * bpp;\n"
+		"    }\n"
+		"    uint rgba;\n"
+		"    if (bpp == 2) {\n"
+		"        uint raw16 = LoadSrc16(srcByteOffset);\n"
+		"        rgba = ConvertTexel16(raw16, fmtType);\n"
+		"    } else if (bpp == 1) {\n"
+		"        uint raw8 = LoadSrcByte(srcByteOffset);\n"
+		"        rgba = ConvertTexel8(raw8, fmtType);\n"
+		"    } else if (bpp == 4) {\n"
+		"        // 32-bit formats: channel reorder only\n"
+		"        rgba = LoadSrc32(srcByteOffset);\n"
+		"    } else {\n"
+		"        rgba = PackRGBA(255, 0, 255, 255);\n"
+		"    }\n"
+		"    g_DstTexture[uint2(x, y)] = rgba;\n"
+		"}\n";
+
+	ID3DBlob* pFmtCSBlob = nullptr;
+	hr = EmuCompileShader(formatConvertCS, "cs_5_0", &pFmtCSBlob, "CxbxFormatConvertCS");
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to compile format convert CS");
+	} else {
+		hr = g_pD3DDevice->CreateComputeShader(pFmtCSBlob->GetBufferPointer(), pFmtCSBlob->GetBufferSize(), nullptr, &g_pD3D11FormatConvertCS);
+		pFmtCSBlob->Release();
+		if (FAILED(hr)) {
+			EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create format convert CS");
+		}
+	}
+
+	// Create format convert constant buffer (8 uints)
+	hr = CxbxD3D11CreateConstantBuffer(32, true, &g_pD3D11FormatConvertCB);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11InitBlit: Failed to create format convert CB");
+	}
+
+	// ---------------------------------------------------------------
 	// Vertex format conversion compute shader (cs_5_0)
 	// Converts Xbox vertex formats to D3D11-compatible layouts on GPU.
 	// ---------------------------------------------------------------
@@ -1040,6 +1225,8 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11IndexConvertOutputUAV) { g_pD3D11IndexConvertOutputUAV->Release(); g_pD3D11IndexConvertOutputUAV = nullptr; }
 	if (g_pD3D11IndexConvertOutputBuf) { g_pD3D11IndexConvertOutputBuf->Release(); g_pD3D11IndexConvertOutputBuf = nullptr; }
 	g_IndexConvertOutputBufSize = 0;
+	if (g_pD3D11FormatConvertCS) { g_pD3D11FormatConvertCS->Release(); g_pD3D11FormatConvertCS = nullptr; }
+	if (g_pD3D11FormatConvertCB) { g_pD3D11FormatConvertCB->Release(); g_pD3D11FormatConvertCB = nullptr; }
 	ClearRTVCache();
 }
 

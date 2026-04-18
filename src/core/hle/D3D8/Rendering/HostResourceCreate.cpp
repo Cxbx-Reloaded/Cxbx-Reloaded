@@ -476,6 +476,13 @@ static HRESULT CreateGpuPixelContainerResource(
 				desc.Usage = D3D11_USAGE_DEFAULT;
 				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
 				desc.CPUAccessFlags = 0;
+			} else if (bConvertTextureFormat && CxbxGetFormatConvertType(X_Format) != 0) {
+				// Format-convertible textures use DEFAULT + UAV for GPU CS format conversion
+				// Output is always R8G8B8A8_UNORM (CS writes packed RGBA via R32_UINT UAV)
+				desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+				desc.Usage = D3D11_USAGE_DEFAULT;
+				desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+				desc.CPUAccessFlags = 0;
 			} else {
 				// D3D11_USAGE_DYNAMIC requires MipLevels == 1
 				desc.Usage = D3D11_USAGE_DYNAMIC;

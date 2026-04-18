@@ -177,6 +177,72 @@ bool CxbxD3D11ExpandPaletteTexture(
 }
 
 // ******************************************************************
+// * GPU texture format conversion (unswizzle + decode → RGBA)
+// ******************************************************************
+
+bool CxbxD3D11FormatConvertTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSrc,
+	UINT width,
+	UINT height,
+	UINT bpp,
+	UINT fmtType,
+	bool bSwizzled,
+	UINT srcRowPitch)
+{
+	if (!g_pD3D11FormatConvertCS || !g_pD3D11FormatConvertCB)
+		return false;
+
+	if (bpp != 1 && bpp != 2 && bpp != 4)
+		return false;
+
+	UINT dataSize = bSwizzled ? (width * height * bpp) : (srcRowPitch * height);
+	UINT bufferSize = (dataSize + 3) & ~3u;
+
+	// Reuse the unswizzle staging buffer
+	CxbxEnsureUnswizzleStagingBuffer(bufferSize);
+	if (!g_pD3D11UnswizzleStagingBuf || !g_pD3D11UnswizzleSRV)
+		return false;
+
+	HRESULT hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11UnswizzleStagingBuf, pSrc, dataSize);
+	if (FAILED(hr))
+		return false;
+
+	// Compute Morton masks (only used if swizzled, but always computed)
+	UINT maskX = 0, maskY = 0;
+	for (UINT i = 1, j = 1; (i < width) || (i < height); i <<= 1) {
+		if (i < width)  { maskX |= j; j <<= 1; }
+		if (i < height) { maskY |= j; j <<= 1; }
+	}
+
+	// Update constant buffer: 8 uints
+	UINT cbData[8] = { maskX, maskY, width, height, bpp, fmtType, bSwizzled ? 1u : 0u, srcRowPitch };
+	hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11FormatConvertCB, cbData, sizeof(cbData));
+	if (FAILED(hr))
+		return false;
+
+	// Create UAV (R32_UINT view of the R8G8B8A8_UNORM texture)
+	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+	uavDesc.Format = DXGI_FORMAT_R32_UINT;
+	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+	uavDesc.Texture2D.MipSlice = 0;
+	ID3D11UnorderedAccessView* pUAV = nullptr;
+	hr = g_pD3DDevice->CreateUnorderedAccessView(pTexture, &uavDesc, &pUAV);
+	if (FAILED(hr)) {
+		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11FormatConvertTexture: Failed to create UAV (hr=0x%08X)", hr);
+		return false;
+	}
+
+	UINT groupsX = (width + 7) / 8;
+	UINT groupsY = (height + 7) / 8;
+	CxbxD3D11DispatchCS(g_pD3D11FormatConvertCS, g_pD3D11FormatConvertCB,
+		1, &g_pD3D11UnswizzleSRV, pUAV, groupsX, groupsY, 1);
+
+	pUAV->Release();
+	return true;
+}
+
+// ******************************************************************
 // * GPU vertex format conversion
 // ******************************************************************
 
