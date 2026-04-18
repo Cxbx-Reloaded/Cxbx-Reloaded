@@ -1,8 +1,11 @@
 // Xbox HLSL pretransformed vertex shader
 
+#ifndef CXBX_USE_D3D11
 // Default values for vertex registers, and whether to use them
+// D3D9 path: init_v() lerps between vertex data and these defaults
 uniform float4 vRegisterDefaultValues[16]  : register(c192);
 uniform float4 vRegisterDefaultFlagsPacked[4]  : register(c208);
+#endif
 
 uniform float4 xboxScreenspaceScale : register(c212);
 uniform float4 xboxScreenspaceOffset : register(c213);
@@ -67,12 +70,17 @@ VS_OUTPUT main(const VS_INPUT xIn)
     // Input registers
     float4 v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11, v12, v13, v14, v15;
 
-    // Unpack 16 flags from 4 float4 constant registers
+#ifdef CXBX_USE_D3D11
+    // D3D11: The input assembler delivers correct values for all 16 attributes.
+    // Streamed attributes come from their real vertex buffer slots.
+    // Non-streamed attributes come from the zero-stride defaults buffer (slot 16)
+    // which holds the NV2A's sticky inline_value[] registers.
+    #define init_v(i) v##i = xIn.v[i];
+#else
+    // D3D9: Lerp between vertex data and constant buffer defaults
     float vRegisterDefaultFlags[16] = (float[16])vRegisterDefaultFlagsPacked;
-
-    // Initialize input registers from the vertex buffer data
-    // Or use the register's default value (which can be changed by the title)
     #define init_v(i) v##i = lerp(xIn.v[i], vRegisterDefaultValues[i], vRegisterDefaultFlags[i]);
+#endif
     // Note : unroll manually instead of for-loop, because of the ## concatenation
     init_v( 0); init_v( 1); init_v( 2); init_v( 3);
     init_v( 4); init_v( 5); init_v( 6); init_v( 7);

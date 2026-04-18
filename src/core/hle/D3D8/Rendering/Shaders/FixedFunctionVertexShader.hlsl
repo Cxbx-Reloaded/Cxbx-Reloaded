@@ -1,9 +1,15 @@
 #include "FixedFunctionVertexShaderState.hlsli"
 
-// Default values for vertex registers, and whether to use them
-uniform float4 vRegisterDefaultValues[16] : register(c192);
+// Whether each vertex register is present in the vertex declaration.
+// Used by DoMaterial to determine ColorVertex behavior (all shaders),
+// and by D3D9's init_v lerp to select between vertex data and defaults.
 uniform float4 vRegisterDefaultFlagsPacked[4] : register(c208);
 static  bool  vRegisterDefaultFlags[16];
+
+#ifndef CXBX_USE_D3D11
+// D3D9 path: init_v() lerps between vertex data and these defaults
+uniform float4 vRegisterDefaultValues[16] : register(c192);
+#endif
 
 uniform FixedFunctionVertexShaderState state : register(c0);
 
@@ -434,7 +440,13 @@ VS_INPUT InitializeInputRegisters(const VS_INPUT xInput)
     // Or use the register's default value (which can be changed by the title)
     for (uint i = 0; i < 16; i++)
     {
+#ifdef CXBX_USE_D3D11
+        // D3D11: The input assembler delivers correct values for all 16 attributes
+        // via the zero-stride defaults buffer, no lerp needed.
+        const float4 value = Get(xInput, i);
+#else
         const float4 value = lerp(Get(xInput, i), vRegisterDefaultValues[i], vRegisterDefaultFlags[i]);
+#endif
         #ifdef CXBX_ALL_TEXCOORD_INPUTS
             xIn.v[i] = value;
         #else

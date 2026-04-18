@@ -784,11 +784,15 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	attribute_floats[2] = c;
 	attribute_floats[3] = d;
 
-	// Also, write the given register value to a matching host vertex shader constant
+#ifndef CXBX_USE_D3D11
+	// D3D9: Write the given register value to a matching host vertex shader constant.
 	// This allows us to implement Xbox functionality where SetVertexData4f can be used to specify attributes
 	// not present in the vertex declaration.
 	// We use range 193 and up to store these values, as Xbox shaders stop at c192!
 	CxbxSetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
+#endif
+	// D3D11: The zero-stride vertex defaults buffer reads inline_value[] directly,
+	// so no constant buffer upload is needed for attribute defaults.
 }
 
 void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)
