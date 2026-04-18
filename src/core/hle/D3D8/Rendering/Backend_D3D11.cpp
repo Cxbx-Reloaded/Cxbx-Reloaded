@@ -459,7 +459,7 @@ void CxbxD3D11InitBlit()
 	// ************************************************************
 	static const std::string pointSpriteGS =
 		"struct GS_INPUT {\n"
-		"    float4 oPos : POSITION;\n"
+		"    float4 oPos : SV_Position;\n"
 		"    float4 oD0  : COLOR0;\n"
 		"    float4 oD1  : COLOR1;\n"
 		"    float  oFog : FOG;\n"
@@ -533,7 +533,7 @@ void CxbxD3D11InitBlit()
 	// ************************************************************
 	static const std::string thickLineGS =
 		"struct GS_INPUT {\n"
-		"    float4 oPos : POSITION;\n"
+		"    float4 oPos : SV_Position;\n"
 		"    float4 oD0  : COLOR0;\n"
 		"    float4 oD1  : COLOR1;\n"
 		"    float  oFog : FOG;\n"
