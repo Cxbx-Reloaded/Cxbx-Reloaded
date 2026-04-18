@@ -23,22 +23,8 @@
 
 #ifdef CXBX_USE_D3D11
 
-#define LOG_PREFIX CXBXR_MODULE::D3D8
+#include "Backend_D3D11_Internal.h"
 
-#include "Backend_D3D11.h"
-#include "../RenderGlobals.h" // g_pD3DDevice, g_pD3DDeviceContext
-#include "core\kernel\init\CxbxKrnl.h" // LOG_INIT, EmuLog
-#include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
-#include "core\hle\D3D8\Rendering\Shaders\Shader.h" // EmuCompileShader
-#include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3D11PrimitiveTopology
-#include "core\hle\D3D8\XbVertexShader.h" // CxbxVertexDeclaration, CxbxGetActiveVertexShaderBytecode
-#include "../TextureStates.h" // XboxTextureStateConverter
-
-#include <cstring> // memcpy
-#include <unordered_map>
-#include <vector>
-#include <wrl/client.h>
-using namespace Microsoft::WRL;
 
 // ******************************************************************
 // * D3D11 device globals — definitions
@@ -114,82 +100,82 @@ UINT  g_D3D11SampleMask = 0xFFFFFFFF;
 // ******************************************************************
 // * D3D11 state objects (internal — only used by ApplyDirtyStates)
 // ******************************************************************
-static ComPtr<ID3D11RasterizerState>   g_pD3DRasterizerState;
-static ComPtr<ID3D11DepthStencilState> g_pD3DDepthStencilState;
-static ComPtr<ID3D11BlendState>        g_pD3DBlendState;
+ComPtr<ID3D11RasterizerState>   g_pD3DRasterizerState;
+ComPtr<ID3D11DepthStencilState> g_pD3DDepthStencilState;
+ComPtr<ID3D11BlendState>        g_pD3DBlendState;
 
 // ******************************************************************
 // * Vertex shader constant buffer
 // ******************************************************************
    	   ID3D11Buffer *g_pD3D11VSConstantBuffer = nullptr;
-static float         g_D3D11VSConstants[CXBX_D3D11_VS_CB_COUNT][4] = {};
-static bool          g_bD3D11VSConstantsDirty = true;
+float         g_D3D11VSConstants[CXBX_D3D11_VS_CB_COUNT][4] = {};
+bool          g_bD3D11VSConstantsDirty = true;
 
 // ******************************************************************
 // * Pixel shader constant buffer
 // ******************************************************************
    	   ID3D11Buffer *g_pD3D11PSConstantBuffer = nullptr;
-static float         g_D3D11PSConstants[CXBX_D3D11_PS_CB_COUNT][4] = {};
-static bool          g_bD3D11PSConstantsDirty = true;
+float         g_D3D11PSConstants[CXBX_D3D11_PS_CB_COUNT][4] = {};
+bool          g_bD3D11PSConstantsDirty = true;
 
 // ******************************************************************
 // * Blit shader resources (StretchRect replacement)
 // ******************************************************************
-static ID3D11VertexShader  *g_pD3D11BlitVS = nullptr;
-static ID3D11PixelShader   *g_pD3D11BlitPS = nullptr;
-static ID3D11SamplerState  *g_pD3D11BlitSamplerLinear = nullptr;
-static ID3D11SamplerState  *g_pD3D11BlitSamplerPoint = nullptr;
+ID3D11VertexShader  *g_pD3D11BlitVS = nullptr;
+ID3D11PixelShader   *g_pD3D11BlitPS = nullptr;
+ID3D11SamplerState  *g_pD3D11BlitSamplerLinear = nullptr;
+ID3D11SamplerState  *g_pD3D11BlitSamplerPoint = nullptr;
 
 // ******************************************************************
 // * Point sprite geometry shader resources
 // ******************************************************************
-static ID3D11GeometryShader *g_pD3D11PointSpriteGS = nullptr;
-static ID3D11Buffer         *g_pD3D11GSConstantBuffer = nullptr;
-static bool                  g_bPointSpriteEnabled = false;
+ID3D11GeometryShader *g_pD3D11PointSpriteGS = nullptr;
+ID3D11Buffer         *g_pD3D11GSConstantBuffer = nullptr;
+bool                  g_bPointSpriteEnabled = false;
 
 // ******************************************************************
 // * Thick line geometry shader resources
 // ******************************************************************
-static ID3D11GeometryShader *g_pD3D11ThickLineGS = nullptr;
-static float                 g_fLineWidth = 1.0f;
+ID3D11GeometryShader *g_pD3D11ThickLineGS = nullptr;
+float                 g_fLineWidth = 1.0f;
 
 // ******************************************************************
 // * Compute shader unswizzle resources
 // ******************************************************************
-static ID3D11ComputeShader  *g_pD3D11UnswizzleCS = nullptr;
-static ID3D11Buffer         *g_pD3D11UnswizzleCB = nullptr; // constant buffer: maskX, maskY, width, bpp
-static ID3D11Buffer         *g_pD3D11UnswizzleStagingBuf = nullptr; // reusable ByteAddressBuffer for upload
-static UINT                  g_UnswizzleStagingBufSize = 0;
-static ID3D11ShaderResourceView *g_pD3D11UnswizzleSRV = nullptr; // SRV for staging buffer
+ID3D11ComputeShader  *g_pD3D11UnswizzleCS = nullptr;
+ID3D11Buffer         *g_pD3D11UnswizzleCB = nullptr; // constant buffer: maskX, maskY, width, bpp
+ID3D11Buffer         *g_pD3D11UnswizzleStagingBuf = nullptr; // reusable ByteAddressBuffer for upload
+UINT                  g_UnswizzleStagingBufSize = 0;
+ID3D11ShaderResourceView *g_pD3D11UnswizzleSRV = nullptr; // SRV for staging buffer
 
 // ******************************************************************
 // * Compute shader index buffer conversion resources
 // ******************************************************************
-static ID3D11ComputeShader       *g_pD3D11IndexConvertCS = nullptr;
-static ID3D11Buffer              *g_pD3D11IndexConvertCB = nullptr; // constant buffer: vertexCount, mode, isIndexed, pad
-static ID3D11Buffer              *g_pD3D11IndexConvertInputBuf = nullptr; // ByteAddressBuffer for source indices
-static UINT                       g_IndexConvertInputBufSize = 0;
-static ID3D11ShaderResourceView  *g_pD3D11IndexConvertInputSRV = nullptr;
-static ID3D11Buffer              *g_pD3D11IndexConvertOutputBuf = nullptr; // output buffer (INDEX_BUFFER + UAV)
-static UINT                       g_IndexConvertOutputBufSize = 0;
-static ID3D11UnorderedAccessView *g_pD3D11IndexConvertOutputUAV = nullptr;
+ID3D11ComputeShader       *g_pD3D11IndexConvertCS = nullptr;
+ID3D11Buffer              *g_pD3D11IndexConvertCB = nullptr; // constant buffer: vertexCount, mode, isIndexed, pad
+ID3D11Buffer              *g_pD3D11IndexConvertInputBuf = nullptr; // ByteAddressBuffer for source indices
+UINT                       g_IndexConvertInputBufSize = 0;
+ID3D11ShaderResourceView  *g_pD3D11IndexConvertInputSRV = nullptr;
+ID3D11Buffer              *g_pD3D11IndexConvertOutputBuf = nullptr; // output buffer (INDEX_BUFFER + UAV)
+UINT                       g_IndexConvertOutputBufSize = 0;
+ID3D11UnorderedAccessView *g_pD3D11IndexConvertOutputUAV = nullptr;
 
 // ******************************************************************
 // * Compute shader palette texture expansion resources
 // ******************************************************************
-static ID3D11ComputeShader       *g_pD3D11PaletteExpandCS = nullptr;
-static ID3D11Buffer              *g_pD3D11PaletteExpandCB = nullptr; // constant buffer: maskX, maskY, width, pad
-static ID3D11Buffer              *g_pD3D11PaletteBuf = nullptr; // 256-entry palette upload buffer
-static ID3D11ShaderResourceView  *g_pD3D11PaletteSRV = nullptr;
+ID3D11ComputeShader       *g_pD3D11PaletteExpandCS = nullptr;
+ID3D11Buffer              *g_pD3D11PaletteExpandCB = nullptr; // constant buffer: maskX, maskY, width, pad
+ID3D11Buffer              *g_pD3D11PaletteBuf = nullptr; // 256-entry palette upload buffer
+ID3D11ShaderResourceView  *g_pD3D11PaletteSRV = nullptr;
 
 // ******************************************************************
 // * Compute shader vertex format conversion resources
 // ******************************************************************
-static ID3D11ComputeShader       *g_pD3D11VertexConvertCS = nullptr;
-static ID3D11Buffer              *g_pD3D11VertexConvertCB = nullptr; // constant buffer: header + 16 element descriptors
-static ID3D11Buffer              *g_pD3D11VertexConvertSrcBuf = nullptr; // staging ByteAddressBuffer for source vertices
-static UINT                       g_VertexConvertSrcBufSize = 0;
-static ID3D11ShaderResourceView  *g_pD3D11VertexConvertSrcSRV = nullptr;
+ID3D11ComputeShader       *g_pD3D11VertexConvertCS = nullptr;
+ID3D11Buffer              *g_pD3D11VertexConvertCB = nullptr; // constant buffer: header + 16 element descriptors
+ID3D11Buffer              *g_pD3D11VertexConvertSrcBuf = nullptr; // staging ByteAddressBuffer for source vertices
+UINT                       g_VertexConvertSrcBufSize = 0;
+ID3D11ShaderResourceView  *g_pD3D11VertexConvertSrcSRV = nullptr;
 
 // Index conversion mode constants
 #define CXBX_INDEX_CONVERT_QUAD_CW  0
@@ -224,7 +210,7 @@ HRESULT CxbxD3D11CreateConstantBuffer(UINT byteWidth, bool bDynamic, ID3D11Buffe
 
 // Create a ByteAddressBuffer (BUFFER_ALLOW_RAW_VIEWS) with optional CPU write access.
 // If bDynamic, uses DYNAMIC + CPU_ACCESS_WRITE; otherwise DEFAULT.
-static HRESULT CxbxD3D11CreateRawBuffer(UINT byteWidth, bool bDynamic, UINT extraBindFlags, ID3D11Buffer** ppBuffer)
+HRESULT CxbxD3D11CreateRawBuffer(UINT byteWidth, bool bDynamic, UINT extraBindFlags, ID3D11Buffer** ppBuffer)
 {
 	D3D11_BUFFER_DESC desc = {};
 	desc.ByteWidth = byteWidth;
@@ -236,7 +222,7 @@ static HRESULT CxbxD3D11CreateRawBuffer(UINT byteWidth, bool bDynamic, UINT extr
 }
 
 // Create a R32_TYPELESS raw SRV (for ByteAddressBuffer access in shaders).
-static HRESULT CxbxD3D11CreateRawBufferSRV(ID3D11Buffer* pBuffer, UINT byteWidth, ID3D11ShaderResourceView** ppSRV)
+HRESULT CxbxD3D11CreateRawBufferSRV(ID3D11Buffer* pBuffer, UINT byteWidth, ID3D11ShaderResourceView** ppSRV)
 {
 	D3D11_SHADER_RESOURCE_VIEW_DESC desc = {};
 	desc.Format = DXGI_FORMAT_R32_TYPELESS;
@@ -247,7 +233,7 @@ static HRESULT CxbxD3D11CreateRawBufferSRV(ID3D11Buffer* pBuffer, UINT byteWidth
 }
 
 // Create a R32_UINT typed UAV for a buffer.
-static HRESULT CxbxD3D11CreateTypedBufferUAV(ID3D11Buffer* pBuffer, UINT byteWidth, ID3D11UnorderedAccessView** ppUAV)
+HRESULT CxbxD3D11CreateTypedBufferUAV(ID3D11Buffer* pBuffer, UINT byteWidth, ID3D11UnorderedAccessView** ppUAV)
 {
 	D3D11_UNORDERED_ACCESS_VIEW_DESC desc = {};
 	desc.Format = DXGI_FORMAT_R32_UINT;
@@ -259,7 +245,7 @@ static HRESULT CxbxD3D11CreateTypedBufferUAV(ID3D11Buffer* pBuffer, UINT byteWid
 
 // Ensure a dynamic raw staging buffer + SRV pair are at least requiredSize bytes.
 // Rounds up to 4KB. Releases and re-creates if too small.
-static void CxbxD3D11EnsureRawStagingBuffer(
+void CxbxD3D11EnsureRawStagingBuffer(
 	UINT requiredSize,
 	ID3D11Buffer** ppBuffer, UINT* pCurrentSize,
 	ID3D11ShaderResourceView** ppSRV,
@@ -286,7 +272,7 @@ static void CxbxD3D11EnsureRawStagingBuffer(
 }
 
 // Bind CS pipeline state, dispatch, and unbind resources to avoid hazards.
-static void CxbxD3D11DispatchCS(
+void CxbxD3D11DispatchCS(
 	ID3D11ComputeShader* pShader,
 	ID3D11Buffer* pCB,
 	UINT numSRVs,
@@ -311,7 +297,7 @@ static void CxbxD3D11DispatchCS(
 }
 
 // Map a DYNAMIC buffer with WRITE_DISCARD, memcpy data, and Unmap.
-static HRESULT CxbxD3D11UpdateDynamicBuffer(ID3D11Buffer* pBuffer, const void* pData, size_t dataSize)
+HRESULT CxbxD3D11UpdateDynamicBuffer(ID3D11Buffer* pBuffer, const void* pData, size_t dataSize)
 {
 	D3D11_MAPPED_SUBRESOURCE mapped = {};
 	HRESULT hr = g_pD3DDeviceContext->Map(pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
@@ -1023,593 +1009,6 @@ HRESULT CxbxD3D11Blt(
 	return S_OK;
 }
 
-// ******************************************************************
-// * Unified D3D11 render state mapping
-// * Called from ApplySimpleRenderState and ApplyComplexRenderState
-// * after Xbox→PC value conversion. Updates D3D11 state descriptors
-// * and sets dirty flags for deferred state object recreation.
-// ******************************************************************
-void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value)
-{
-   	switch (State) {
-   	   	// ---- Rasterizer state ----
-   	   	case xbox::X_D3DRS_FILLMODE:
-   	   	   	switch (Value) {
-   	   	   	   	case D3DFILL_SOLID:     g_D3D11RasterizerDesc.FillMode = D3D11_FILL_SOLID; break;
-   	   	   	   	case D3DFILL_WIREFRAME: g_D3D11RasterizerDesc.FillMode = D3D11_FILL_WIREFRAME; break;
-   	   	   	   	default: break;
-   	   	   	}
-   	   	   	g_bD3D11RasterizerStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_CULLMODE:
-   	   	   	switch (Value) {
-   	   	   	   	case D3DCULL_NONE: g_D3D11RasterizerDesc.CullMode = D3D11_CULL_NONE; break;
-   	   	   	   	case D3DCULL_CW:   g_D3D11RasterizerDesc.CullMode = D3D11_CULL_FRONT; break;
-   	   	   	   	case D3DCULL_CCW:  g_D3D11RasterizerDesc.CullMode = D3D11_CULL_BACK; break;
-   	   	   	   	default: break;
-   	   	   	}
-   	   	   	g_bD3D11RasterizerStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_ZBIAS: {
-   	   	   	// Value arrives as a float-encoded DWORD (converted by ApplyComplexRenderState)
-   	   	   	// D3D11 DepthBias is an integer scaled by the depth buffer's minimum representable value
-   	   	   	// For D24: DepthBias * (1 / 2^24). Convert the D3D9 float bias to D3D11 integer bias.
-   	   	   	float fBias; std::memcpy(&fBias, &Value, sizeof(fBias));
-   	   	   	g_D3D11RasterizerDesc.DepthBias = static_cast<INT>(fBias * (float)(1 << 24));
-   	   	   	g_D3D11RasterizerDesc.DepthBiasClamp = 0.0f;
-   	   	   	g_D3D11RasterizerDesc.SlopeScaledDepthBias = 0.0f;
-   	   	   	g_bD3D11RasterizerStateDirty = true;
-   	   	} break;
-   	   	case xbox::X_D3DRS_EDGEANTIALIAS:
-   	   	   	g_D3D11RasterizerDesc.AntialiasedLineEnable = (Value != 0) ? TRUE : FALSE;
-   	   	   	g_bD3D11RasterizerStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_MULTISAMPLEANTIALIAS:
-   	   	   	g_D3D11RasterizerDesc.MultisampleEnable = (Value != 0) ? TRUE : FALSE;
-   	   	   	g_bD3D11RasterizerStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_FRONTFACE:
-   	   	   	// Xbox FRONTFACE: 0x900 = CW, 0x901 = CCW (NV2A values)
-   	   	   	g_D3D11RasterizerDesc.FrontCounterClockwise = (Value != 0x900) ? TRUE : FALSE;
-   	   	   	g_bD3D11RasterizerStateDirty = true;
-   	   	   	break;
-
-   	   	// ---- Depth/stencil state ----
-   	   	case xbox::X_D3DRS_ZENABLE:
-   	   	   	g_D3D11DepthStencilDesc.DepthEnable = (Value != 0) ? TRUE : FALSE;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_ZWRITEENABLE:
-   	   	   	g_D3D11DepthStencilDesc.DepthWriteMask = Value ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_ZFUNC:
-   	   	   	g_D3D11DepthStencilDesc.DepthFunc = (D3D11_COMPARISON_FUNC)Value; // D3D9 and D3D11 comparison func values match
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILENABLE:
-   	   	   	g_D3D11DepthStencilDesc.StencilEnable = (Value != 0) ? TRUE : FALSE;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILFAIL:
-   	   	   	g_D3D11DepthStencilDesc.FrontFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
-   	   	   	g_D3D11DepthStencilDesc.BackFace.StencilFailOp = (D3D11_STENCIL_OP)Value;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILZFAIL:
-   	   	   	g_D3D11DepthStencilDesc.FrontFace.StencilDepthFailOp = (D3D11_STENCIL_OP)Value;
-   	   	   	g_D3D11DepthStencilDesc.BackFace.StencilDepthFailOp = (D3D11_STENCIL_OP)Value;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILPASS:
-   	   	   	g_D3D11DepthStencilDesc.FrontFace.StencilPassOp = (D3D11_STENCIL_OP)Value;
-   	   	   	g_D3D11DepthStencilDesc.BackFace.StencilPassOp = (D3D11_STENCIL_OP)Value;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILFUNC:
-   	   	   	g_D3D11DepthStencilDesc.FrontFace.StencilFunc = (D3D11_COMPARISON_FUNC)Value;
-   	   	   	g_D3D11DepthStencilDesc.BackFace.StencilFunc = (D3D11_COMPARISON_FUNC)Value;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILREF:
-   	   	   	g_D3D11StencilRef = Value;
-   	   	   	g_bD3D11DepthStencilStateDirty = true; // re-apply to pass new ref
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILMASK:
-   	   	   	g_D3D11DepthStencilDesc.StencilReadMask = (UINT8)Value;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_STENCILWRITEMASK:
-   	   	   	g_D3D11DepthStencilDesc.StencilWriteMask = (UINT8)Value;
-   	   	   	g_bD3D11DepthStencilStateDirty = true;
-   	   	   	break;
-
-   	   	// ---- Blend state ----
-   	   	case xbox::X_D3DRS_ALPHABLENDENABLE:
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].BlendEnable = (Value != 0) ? TRUE : FALSE;
-   	   	   	g_bD3D11BlendStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_SRCBLEND:
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].SrcBlend = (D3D11_BLEND)Value;
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].SrcBlendAlpha = (D3D11_BLEND)Value;
-   	   	   	g_bD3D11BlendStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_DESTBLEND:
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].DestBlend = (D3D11_BLEND)Value;
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].DestBlendAlpha = (D3D11_BLEND)Value;
-   	   	   	g_bD3D11BlendStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_BLENDOP:
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].BlendOp = (D3D11_BLEND_OP)Value;
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].BlendOpAlpha = (D3D11_BLEND_OP)Value;
-   	   	   	g_bD3D11BlendStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_BLENDCOLOR: {
-   	   	   	// Convert ARGB DWORD to float4 blend factor
-   	   	   	g_D3D11BlendFactor[0] = ((Value >> 16) & 0xFF) / 255.0f; // R
-   	   	   	g_D3D11BlendFactor[1] = ((Value >> 8) & 0xFF) / 255.0f;  // G
-   	   	   	g_D3D11BlendFactor[2] = (Value & 0xFF) / 255.0f;         // B
-   	   	   	g_D3D11BlendFactor[3] = ((Value >> 24) & 0xFF) / 255.0f;  // A
-   	   	   	g_bD3D11BlendStateDirty = true; // re-apply to pass new factor
-   	   	   	break;
-   	   	}
-   	   	case xbox::X_D3DRS_COLORWRITEENABLE:
-   	   	   	g_D3D11BlendDesc.RenderTarget[0].RenderTargetWriteMask = (UINT8)Value;
-   	   	   	g_bD3D11BlendStateDirty = true;
-   	   	   	break;
-   	   	case xbox::X_D3DRS_MULTISAMPLEMASK:
-   	   	   	g_D3D11SampleMask = Value;
-   	   	   	g_bD3D11BlendStateDirty = true; // re-apply to pass new sample mask
-   	   	   	break;
-
-   	   	// ---- States handled as shader constants ----
-   	   	case xbox::X_D3DRS_ALPHATESTENABLE:
-   	   	case xbox::X_D3DRS_ALPHAREF:
-   	   	case xbox::X_D3DRS_ALPHAFUNC:
-   	   	case xbox::X_D3DRS_SHADEMODE:
-   	   	case xbox::X_D3DRS_DITHERENABLE:
-   	   	case xbox::X_D3DRS_FOGCOLOR:
-   	   	case xbox::X_D3DRS_NORMALIZENORMALS:
-   	   	case xbox::X_D3DRS_TEXTUREFACTOR:
-   	   	   	// These are read from xbox render state by the fixed function shader
-   	   	   	break;
-   	   	// ---- Point sprite state ----
-   	   	case xbox::X_D3DRS_POINTSPRITEENABLE:
-   	   	   	g_bPointSpriteEnabled = (Value != 0);
-   	   	   	break;
-   	   	// ---- Line width (Xbox extension, float-encoded DWORD) ----
-   	   	case xbox::X_D3DRS_LINEWIDTH:
-   	   	   	float fVal; std::memcpy(&fVal, &Value, sizeof(fVal)); g_fLineWidth = fVal;
-   	   	   	if (g_fLineWidth < 1.0f) g_fLineWidth = 1.0f;
-   	   	   	break;
-   	   	default:
-   	   	   	break;
-   	}
-}
-
-// ******************************************************************
-// * Apply dirty states
-// ******************************************************************
-void CxbxD3D11ApplyDirtyStates()
-{
-	LOG_INIT;
-
-	if (g_bD3D11RasterizerStateDirty) {
-		HRESULT hr = g_pD3DDevice->CreateRasterizerState(&g_D3D11RasterizerDesc, g_pD3DRasterizerState.ReleaseAndGetAddressOf());
-		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateRasterizerState");
-		if (SUCCEEDED(hr)) {
-			g_pD3DDeviceContext->RSSetState(g_pD3DRasterizerState.Get());
-		}
-		g_bD3D11RasterizerStateDirty = false;
-	}
-
-	if (g_bD3D11DepthStencilStateDirty) {
-		HRESULT hr = g_pD3DDevice->CreateDepthStencilState(&g_D3D11DepthStencilDesc, g_pD3DDepthStencilState.ReleaseAndGetAddressOf());
-		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateDepthStencilState");
-		if (SUCCEEDED(hr)) {
-			g_pD3DDeviceContext->OMSetDepthStencilState(g_pD3DDepthStencilState.Get(), g_D3D11StencilRef);
-		}
-		g_bD3D11DepthStencilStateDirty = false;
-	}
-
-	if (g_bD3D11BlendStateDirty) {
-		HRESULT hr = g_pD3DDevice->CreateBlendState(&g_D3D11BlendDesc, g_pD3DBlendState.ReleaseAndGetAddressOf());
-		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateBlendState");
-		if (SUCCEEDED(hr)) {
-			g_pD3DDeviceContext->OMSetBlendState(g_pD3DBlendState.Get(), g_D3D11BlendFactor, g_D3D11SampleMask);
-		}
-		g_bD3D11BlendStateDirty = false;
-	}
-
-	CxbxD3D11FlushVertexShaderConstants();
-	CxbxD3D11FlushPixelShaderConstants();
-
-	// Update GS constant buffer (shared by point sprite and thick line GS)
-	// xy = inverse viewport dimensions, z = line width, w = unused
-	{
-		D3D11_VIEWPORT vp = {};
-		UINT numVP = 1;
-		g_pD3DDeviceContext->RSGetViewports(&numVP, &vp);
-		if (vp.Width > 0 && vp.Height > 0 && g_pD3D11GSConstantBuffer) {
-			float gsConstants[4] = { 1.0f / vp.Width, 1.0f / vp.Height, g_fLineWidth, 0.0f };
-			CxbxD3D11UpdateDynamicBuffer(g_pD3D11GSConstantBuffer, gsConstants, sizeof(gsConstants));
-			g_pD3DDeviceContext->GSSetConstantBuffers(0, 1, &g_pD3D11GSConstantBuffer);
-		}
-	}
-
-	// Bind or unbind the point sprite geometry shader
-	// (Thick line GS is bound at draw time since it depends on primitive type)
-	if (g_bPointSpriteEnabled && g_pD3D11PointSpriteGS) {
-		g_pD3DDeviceContext->GSSetShader(g_pD3D11PointSpriteGS, nullptr, 0);
-	} else {
-		g_pD3DDeviceContext->GSSetShader(nullptr, nullptr, 0);
-	}
-}
-
-// RTV cache: maps texture pointer to its render target view, avoiding
-// redundant CreateRenderTargetView calls for the same texture.
-static std::unordered_map<IDirect3DSurface*, ID3D11RenderTargetView*> g_RTVCache;
-
-static void ClearRTVCache()
-{
-	for (auto &pair : g_RTVCache) {
-		if (pair.second) pair.second->Release();
-	}
-	g_RTVCache.clear();
-}
-
-// ******************************************************************
-// * GPU unswizzle via compute shader
-// ******************************************************************
-static void CxbxEnsureUnswizzleStagingBuffer(UINT requiredSize)
-{
-	CxbxD3D11EnsureRawStagingBuffer(requiredSize,
-		&g_pD3D11UnswizzleStagingBuf, &g_UnswizzleStagingBufSize,
-		&g_pD3D11UnswizzleSRV, "CxbxEnsureUnswizzleStagingBuffer");
-}
-
-bool CxbxD3D11UnswizzleTexture(
-	ID3D11Texture2D* pTexture,
-	const void* pSwizzledSrc,
-	UINT width,
-	UINT height,
-	UINT bpp,
-	DXGI_FORMAT format)
-{
-	if (!g_pD3D11UnswizzleCS || !g_pD3D11UnswizzleCB)
-		return false;
-
-	// Only 2D textures with bpp 1, 2, or 4
-	if (bpp != 1 && bpp != 2 && bpp != 4)
-		return false;
-
-	UINT dataSize = width * height * bpp;
-	// Round up to DWORD alignment for ByteAddressBuffer
-	UINT bufferSize = (dataSize + 3) & ~3u;
-
-	// Ensure staging buffer is large enough
-	CxbxEnsureUnswizzleStagingBuffer(bufferSize);
-	if (!g_pD3D11UnswizzleStagingBuf || !g_pD3D11UnswizzleSRV)
-		return false;
-
-	// Upload swizzled source data to the staging buffer
-	HRESULT hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11UnswizzleStagingBuf, pSwizzledSrc, dataSize);
-	if (FAILED(hr))
-		return false;
-
-	// Compute Morton masks (same algorithm as EmuUnswizzleBox)
-	UINT maskX = 0, maskY = 0;
-	for (UINT i = 1, j = 1; (i < width) || (i < height); i <<= 1) {
-		if (i < width)  { maskX |= j; j <<= 1; }
-		if (i < height) { maskY |= j; j <<= 1; }
-	}
-
-	// Update constant buffer
-	UINT cbData[4] = { maskX, maskY, width, bpp };
-	hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11UnswizzleCB, cbData, sizeof(cbData));
-	if (FAILED(hr))
-		return false;
-
-	// Create a temporary UAV for the destination texture
-	// Map the format to a uint-typed format for RWTexture2D<uint>
-	DXGI_FORMAT uavFormat;
-	switch (bpp) {
-	case 4:  uavFormat = DXGI_FORMAT_R32_UINT; break;
-	case 2:  uavFormat = DXGI_FORMAT_R16_UINT; break;
-	case 1:  uavFormat = DXGI_FORMAT_R8_UINT;  break;
-	default: return false;
-	}
-
-	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = uavFormat;
-	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-	uavDesc.Texture2D.MipSlice = 0;
-	ID3D11UnorderedAccessView* pUAV = nullptr;
-	hr = g_pD3DDevice->CreateUnorderedAccessView(pTexture, &uavDesc, &pUAV);
-	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11UnswizzleTexture: Failed to create UAV (format=%u)", uavFormat);
-		return false;
-	}
-
-	// Dispatch 8x8 thread groups covering the texture dimensions
-	UINT groupsX = (width + 7) / 8;
-	UINT groupsY = (height + 7) / 8;
-	CxbxD3D11DispatchCS(g_pD3D11UnswizzleCS, g_pD3D11UnswizzleCB,
-		1, &g_pD3D11UnswizzleSRV, pUAV, groupsX, groupsY, 1);
-
-	pUAV->Release();
-	return true;
-}
-
-// ******************************************************************
-// * GPU palette texture expansion
-// ******************************************************************
-
-bool CxbxD3D11ExpandPaletteTexture(
-	ID3D11Texture2D* pTexture,
-	const void* pSwizzledP8Src,
-	UINT width,
-	UINT height,
-	const void* pPaletteData)
-{
-	if (!g_pD3D11PaletteExpandCS || !g_pD3D11PaletteExpandCB || !g_pD3D11PaletteBuf || !g_pD3D11PaletteSRV)
-		return false;
-
-	UINT dataSize = width * height; // 1 byte per pixel
-	UINT bufferSize = (dataSize + 3) & ~3u;
-
-	// Reuse the unswizzle staging buffer for P8 source data
-	CxbxEnsureUnswizzleStagingBuffer(bufferSize);
-	if (!g_pD3D11UnswizzleStagingBuf || !g_pD3D11UnswizzleSRV)
-		return false;
-
-	// Upload swizzled P8 source data
-	HRESULT hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11UnswizzleStagingBuf, pSwizzledP8Src, dataSize);
-	if (FAILED(hr))
-		return false;
-
-	// Upload palette data (256 entries * 4 bytes = 1024 bytes)
-	hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11PaletteBuf, pPaletteData, 1024);
-	if (FAILED(hr))
-		return false;
-
-	// Compute Morton masks
-	UINT maskX = 0, maskY = 0;
-	for (UINT i = 1, j = 1; (i < width) || (i < height); i <<= 1) {
-		if (i < width)  { maskX |= j; j <<= 1; }
-		if (i < height) { maskY |= j; j <<= 1; }
-	}
-
-	// Update constant buffer
-	UINT cbData[4] = { maskX, maskY, width, height };
-	hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11PaletteExpandCB, cbData, sizeof(cbData));
-	if (FAILED(hr))
-		return false;
-
-	// Create UAV for destination texture (R8G8B8A8_UNORM → R32_UINT UAV)
-	D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-	uavDesc.Format = DXGI_FORMAT_R32_UINT;
-	uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-	uavDesc.Texture2D.MipSlice = 0;
-	ID3D11UnorderedAccessView* pUAV = nullptr;
-	hr = g_pD3DDevice->CreateUnorderedAccessView(pTexture, &uavDesc, &pUAV);
-	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11ExpandPaletteTexture: Failed to create UAV (hr=0x%08X)", hr);
-		return false;
-	}
-
-	// Dispatch 8x8 thread groups: t0=P8 source, t1=palette, u0=destination
-	ID3D11ShaderResourceView* srvs[2] = { g_pD3D11UnswizzleSRV, g_pD3D11PaletteSRV };
-	UINT groupsX = (width + 7) / 8;
-	UINT groupsY = (height + 7) / 8;
-	CxbxD3D11DispatchCS(g_pD3D11PaletteExpandCS, g_pD3D11PaletteExpandCB,
-		2, srvs, pUAV, groupsX, groupsY, 1);
-
-	pUAV->Release();
-	return true;
-}
-
-// ******************************************************************
-// * GPU vertex format conversion
-// ******************************************************************
-
-static void CxbxEnsureVertexConvertSrcBuffer(UINT requiredSize)
-{
-	CxbxD3D11EnsureRawStagingBuffer(requiredSize,
-		&g_pD3D11VertexConvertSrcBuf, &g_VertexConvertSrcBufSize,
-		&g_pD3D11VertexConvertSrcSRV, "CxbxEnsureVertexConvertSrcBuffer");
-}
-
-bool CxbxD3D11ConvertVertexBufferGPU(
-	const uint8_t* pSrcVertexData,
-	UINT srcDataSize,
-	UINT vertexCount,
-	UINT srcStride,
-	UINT dstStride,
-	UINT numElements,
-	const UINT* pElementDescriptors, // 4 UINTs per element: srcOffset, dstOffset, convType, copyDwords
-	UINT dstBufferSize,
-	IDirect3DVertexBuffer** ppOutputVB)
-{
-	if (!g_pD3D11VertexConvertCS || !g_pD3D11VertexConvertCB || vertexCount == 0)
-		return false;
-
-	// Require dst stride to be a multiple of 4 (for RWBuffer<uint> writes)
-	if ((dstStride & 3) != 0)
-		return false;
-
-	UINT bufferSize = (srcDataSize + 3) & ~3u;
-
-	// Upload source vertex data
-	CxbxEnsureVertexConvertSrcBuffer(bufferSize);
-	if (!g_pD3D11VertexConvertSrcBuf || !g_pD3D11VertexConvertSrcSRV)
-		return false;
-
-	HRESULT hr = CxbxD3D11UpdateDynamicBuffer(g_pD3D11VertexConvertSrcBuf, pSrcVertexData, srcDataSize);
-	if (FAILED(hr))
-		return false;
-
-	// Update constant buffer: header (4 uints) + elements (numElements * 4 uints)
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	hr = g_pD3DDeviceContext->Map(g_pD3D11VertexConvertCB, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-	if (FAILED(hr))
-		return false;
-	UINT* pCB = (UINT*)mapped.pData;
-	pCB[0] = vertexCount;
-	pCB[1] = srcStride;
-	pCB[2] = dstStride;
-	pCB[3] = numElements;
-	memcpy(&pCB[4], pElementDescriptors, numElements * 4 * sizeof(UINT));
-	// Zero unused element slots
-	if (numElements < 16)
-		memset(&pCB[4 + numElements * 4], 0, (16 - numElements) * 4 * sizeof(UINT));
-	g_pD3DDeviceContext->Unmap(g_pD3D11VertexConvertCB, 0);
-
-	// Create output vertex buffer (DEFAULT + VERTEX_BUFFER + UAV)
-	D3D11_BUFFER_DESC outDesc = {};
-	outDesc.ByteWidth = dstBufferSize;
-	outDesc.Usage = D3D11_USAGE_DEFAULT;
-	outDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER | D3D11_BIND_UNORDERED_ACCESS;
-	ID3D11Buffer* pOutputBuf = nullptr;
-	hr = g_pD3DDevice->CreateBuffer(&outDesc, nullptr, &pOutputBuf);
-	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11ConvertVertexBufferGPU: Failed to create output VB (hr=0x%08X)", hr);
-		return false;
-	}
-
-	ID3D11UnorderedAccessView* pUAV = nullptr;
-	hr = CxbxD3D11CreateTypedBufferUAV(pOutputBuf, dstBufferSize, &pUAV);
-	if (FAILED(hr)) {
-		EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11ConvertVertexBufferGPU: Failed to create UAV");
-		pOutputBuf->Release();
-		return false;
-	}
-
-	// Dispatch CS
-	UINT numGroups = (vertexCount + 63) / 64;
-	CxbxD3D11DispatchCS(g_pD3D11VertexConvertCS, g_pD3D11VertexConvertCB,
-		1, &g_pD3D11VertexConvertSrcSRV, pUAV, numGroups, 1, 1);
-
-	pUAV->Release();
-	*ppOutputVB = pOutputBuf;
-	return true;
-}
-
-// ******************************************************************
-// * GPU index buffer conversion helpers
-// ******************************************************************
-
-static bool CxbxEnsureIndexConvertInputBuffer(UINT requiredSize)
-{
-	if (g_pD3D11IndexConvertInputBuf && g_IndexConvertInputBufSize >= requiredSize)
-		return true;
-
-	// Release old resources
-	if (g_pD3D11IndexConvertInputSRV) { g_pD3D11IndexConvertInputSRV->Release(); g_pD3D11IndexConvertInputSRV = nullptr; }
-	if (g_pD3D11IndexConvertInputBuf) { g_pD3D11IndexConvertInputBuf->Release(); g_pD3D11IndexConvertInputBuf = nullptr; }
-
-	UINT newSize = (requiredSize + 4095) & ~4095u;
-	if (newSize < 4) newSize = 4;
-
-	HRESULT hr = CxbxD3D11CreateRawBuffer(newSize, /*bDynamic=*/false, 0, &g_pD3D11IndexConvertInputBuf);
-	if (FAILED(hr)) return false;
-
-	hr = CxbxD3D11CreateRawBufferSRV(g_pD3D11IndexConvertInputBuf, newSize, &g_pD3D11IndexConvertInputSRV);
-	if (FAILED(hr)) {
-		g_pD3D11IndexConvertInputBuf->Release();
-		g_pD3D11IndexConvertInputBuf = nullptr;
-		return false;
-	}
-
-	g_IndexConvertInputBufSize = newSize;
-	return true;
-}
-
-static bool CxbxEnsureIndexConvertOutputBuffer(UINT requiredByteSize)
-{
-	if (g_pD3D11IndexConvertOutputBuf && g_IndexConvertOutputBufSize >= requiredByteSize)
-		return true;
-
-	// Release old resources
-	if (g_pD3D11IndexConvertOutputUAV) { g_pD3D11IndexConvertOutputUAV->Release(); g_pD3D11IndexConvertOutputUAV = nullptr; }
-	if (g_pD3D11IndexConvertOutputBuf) { g_pD3D11IndexConvertOutputBuf->Release(); g_pD3D11IndexConvertOutputBuf = nullptr; }
-
-	UINT newSize = (requiredByteSize + 4095) & ~4095u;
-	if (newSize < 4) newSize = 4;
-
-	D3D11_BUFFER_DESC desc = {};
-	desc.ByteWidth = newSize;
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = D3D11_BIND_INDEX_BUFFER | D3D11_BIND_UNORDERED_ACCESS;
-
-	HRESULT hr = g_pD3DDevice->CreateBuffer(&desc, nullptr, &g_pD3D11IndexConvertOutputBuf);
-	if (FAILED(hr)) return false;
-
-	hr = CxbxD3D11CreateTypedBufferUAV(g_pD3D11IndexConvertOutputBuf, newSize, &g_pD3D11IndexConvertOutputUAV);
-	if (FAILED(hr)) {
-		g_pD3D11IndexConvertOutputBuf->Release();
-		g_pD3D11IndexConvertOutputBuf = nullptr;
-		return false;
-	}
-
-	g_IndexConvertOutputBufSize = newSize;
-	return true;
-}
-
-bool CxbxD3D11ConvertIndexBufferGPU(
-	const INDEX16* pSourceIndices,
-	UINT sourceVertexCount,
-	UINT outputIndexCount,
-	int conversionMode)
-{
-	if (!g_pD3D11IndexConvertCS || !g_pD3D11IndexConvertCB || outputIndexCount == 0)
-		return false;
-
-	// 1. Upload source indices to input staging buffer (only if indexed)
-	if (pSourceIndices != nullptr) {
-		UINT inputByteSize = sourceVertexCount * sizeof(INDEX16);
-		if (!CxbxEnsureIndexConvertInputBuffer(inputByteSize))
-			return false;
-
-		D3D11_BOX box = { 0, 0, 0, inputByteSize, 1, 1 };
-		g_pD3DDeviceContext->UpdateSubresource(g_pD3D11IndexConvertInputBuf, 0, &box, pSourceIndices, inputByteSize, 0);
-	}
-
-	// 2. Ensure output buffer is large enough
-	// Output: ceil(outputIndexCount / 2) uint32 elements (packed 16-bit pairs)
-	UINT outputUintCount = (outputIndexCount + 1) / 2;
-	UINT outputByteSize = outputUintCount * sizeof(UINT);
-	if (!CxbxEnsureIndexConvertOutputBuffer(outputByteSize))
-		return false;
-
-	// 3. Update constant buffer
-	struct { UINT VertexCount, ConversionMode, IsIndexed, Pad; } cbData = {
-		sourceVertexCount,
-		(UINT)conversionMode,
-		pSourceIndices != nullptr ? 1u : 0u,
-		0
-	};
-	g_pD3DDeviceContext->UpdateSubresource(g_pD3D11IndexConvertCB, 0, nullptr, &cbData, sizeof(cbData), 0);
-
-	// 4. Bind resources and dispatch
-	UINT numSRVs = (pSourceIndices != nullptr) ? 1 : 0;
-	UINT numWorkItems;
-	if (conversionMode <= CXBX_INDEX_CONVERT_QUAD_CCW) {
-		numWorkItems = sourceVertexCount / 4; // one thread per quad
-	} else {
-		UINT numTris = (sourceVertexCount >= 3) ? (sourceVertexCount - 2) : 0;
-		numWorkItems = (numTris + 1) / 2; // one thread per pair of triangles
-	}
-	UINT numGroups = (numWorkItems + 63) / 64;
-	CxbxD3D11DispatchCS(g_pD3D11IndexConvertCS, g_pD3D11IndexConvertCB,
-		numSRVs, &g_pD3D11IndexConvertInputSRV, g_pD3D11IndexConvertOutputUAV,
-		numGroups, 1, 1);
-
-	// 5. Bind output as index buffer (R16_UINT — the CS packed 16-bit indices into 32-bit writes)
-	g_pD3DDeviceContext->IASetIndexBuffer(g_pD3D11IndexConvertOutputBuf, DXGI_FORMAT_R16_UINT, 0);
-
-	return true;
-}
 
 // ******************************************************************
 // * Release all backend resources (called from device release lambda)
@@ -1642,532 +1041,6 @@ void CxbxD3D11ReleaseBackendResources()
 	if (g_pD3D11IndexConvertOutputBuf) { g_pD3D11IndexConvertOutputBuf->Release(); g_pD3D11IndexConvertOutputBuf = nullptr; }
 	g_IndexConvertOutputBufSize = 0;
 	ClearRTVCache();
-}
-
-// ******************************************************************
-// * Thick line GS bind/unbind helpers
-// ******************************************************************
-static bool CxbxIsLinePrimitive(xbox::X_D3DPRIMITIVETYPE type)
-{
-	return type == xbox::X_D3DPT_LINELIST
-	   	|| type == xbox::X_D3DPT_LINESTRIP
-	   	|| type == xbox::X_D3DPT_LINELOOP;
-}
-
-void CxbxBindThickLineGS(xbox::X_D3DPRIMITIVETYPE type)
-{
-	if (g_fLineWidth > 1.0f && CxbxIsLinePrimitive(type) && g_pD3D11ThickLineGS) {
-		g_pD3DDeviceContext->GSSetShader(g_pD3D11ThickLineGS, nullptr, 0);
-	}
-}
-
-void CxbxUnbindThickLineGS(xbox::X_D3DPRIMITIVETYPE type)
-{
-	if (g_fLineWidth > 1.0f && CxbxIsLinePrimitive(type) && g_pD3D11ThickLineGS) {
-		// Restore point sprite GS or null
-		if (g_bPointSpriteEnabled && g_pD3D11PointSpriteGS) {
-			g_pD3DDeviceContext->GSSetShader(g_pD3D11PointSpriteGS, nullptr, 0);
-		} else {
-			g_pD3DDeviceContext->GSSetShader(nullptr, nullptr, 0);
-		}
-	}
-}
-
-// ******************************************************************
-// * Rendering helpers (D3D11 implementations)
-// ******************************************************************
-
-HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
-{
-	LOG_INIT;
-	HRESULT hRet;
-	if (pHostRenderTarget == nullptr) {
-		g_pD3DCurrentHostRenderTarget = g_pD3DBackBufferSurface;
-		if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
-			g_pD3DCurrentRTV->Release();
-		}
-		g_pD3DCurrentRTV = g_pD3DBackBufferView;
-		g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DBackBufferView, g_pD3DDepthStencilView);
-		hRet = S_OK;
-	} else {
-		g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
-
-		// Check RTV cache first
-		auto it = g_RTVCache.find(pHostRenderTarget);
-		if (it != g_RTVCache.end()) {
-			if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
-				// Don't release — it's in the cache
-			}
-			g_pD3DCurrentRTV = it->second;
-			g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
-			hRet = S_OK;
-		} else {
-			D3D11_TEXTURE2D_DESC textureDesc = {};
-			pHostRenderTarget->GetDesc(&textureDesc);
-
-			D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
-			renderTargetViewDesc.Format = textureDesc.Format;
-			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			renderTargetViewDesc.Texture2D.MipSlice = 0;
-
-			ID3D11RenderTargetView* renderTargetView = nullptr;
-			hRet = g_pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pHostRenderTarget, &renderTargetViewDesc, &renderTargetView);
-			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
-
-			if (SUCCEEDED(hRet)) {
-				g_RTVCache[pHostRenderTarget] = renderTargetView;
-				if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
-					// Don't release — it's in the cache
-				}
-				g_pD3DCurrentRTV = renderTargetView;
-				g_pD3DDeviceContext->OMSetRenderTargets(1, &renderTargetView, g_pD3DDepthStencilView);
-			}
-		}
-	}
-	return hRet;
-}
-
-void CxbxD3DClear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
-{
-	LOG_INIT;
-	FLOAT clearColor[4];
-	clearColor[0] = ((Color >> 16) & 0xFF) / 255.0f;
-	clearColor[1] = ((Color >>  8) & 0xFF) / 255.0f;
-	clearColor[2] = ((Color >>  0) & 0xFF) / 255.0f;
-	clearColor[3] = ((Color >> 24) & 0xFF) / 255.0f;
-
-	if ((Flags & D3DCLEAR_TARGET) && g_pD3DCurrentRTV != nullptr) {
-		if (Count > 0 && pRects != nullptr) {
-			ComPtr<ID3D11DeviceContext1> context1;
-			if (SUCCEEDED(g_pD3DDeviceContext->QueryInterface(IID_PPV_ARGS(context1.GetAddressOf())))) {
-				context1->ClearView(g_pD3DCurrentRTV, clearColor, (const D3D11_RECT*)pRects, Count);
-			}
-		} else {
-			g_pD3DDeviceContext->ClearRenderTargetView(g_pD3DCurrentRTV, clearColor);
-		}
-	}
-
-	if (g_pD3DDepthStencilView != nullptr) {
-		UINT clearFlags = 0;
-		if (Flags & D3DCLEAR_ZBUFFER) clearFlags |= D3D11_CLEAR_DEPTH;
-		if (Flags & D3DCLEAR_STENCIL) clearFlags |= D3D11_CLEAR_STENCIL;
-		if (clearFlags != 0) {
-			g_pD3DDeviceContext->ClearDepthStencilView(g_pD3DDepthStencilView, clearFlags, Z, (UINT8)Stencil);
-		}
-	}
-}
-
-void CxbxSetViewport(D3DVIEWPORT *pHostViewport)
-{
-	g_pD3DDeviceContext->RSSetViewports(1, pHostViewport);
-}
-
-void CxbxSetScissorRect(CONST RECT *pHostViewportRect)
-{
-	g_pD3DDeviceContext->RSSetScissorRects(1, pHostViewportRect);
-}
-
-void CxbxSetIndices(IDirect3DIndexBuffer* pHostIndexBuffer)
-{
-	g_pD3DDeviceContext->IASetIndexBuffer(pHostIndexBuffer, DXGI_FORMAT_R16_UINT, 0);
-}
-
-INDEX16* CxbxLockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
-{
-	LOG_INIT;
-	INDEX16* pData = nullptr;
-	D3D11_MAPPED_SUBRESOURCE mapped = {};
-	HRESULT hRet = g_pD3DDeviceContext->Map(pHostIndexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-	DEBUG_D3DRESULT(hRet, "CxbxLockIndexBuffer: Map");
-	if (SUCCEEDED(hRet))
-		pData = (INDEX16*)mapped.pData;
-	return pData;
-}
-
-void CxbxUnlockIndexBuffer(IDirect3DIndexBuffer* pHostIndexBuffer)
-{
-	g_pD3DDeviceContext->Unmap(pHostIndexBuffer, 0);
-}
-
-HRESULT CxbxDrawIndexedPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT IndexCount, INT BaseVertexIndex, UINT StartIndex, UINT MinIndex, UINT NumVertices, UINT PrimCount)
-{
-	CxbxBindThickLineGS(XboxPrimitiveType);
-	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
-	g_pD3DDeviceContext->DrawIndexed(IndexCount, StartIndex, BaseVertexIndex);
-	CxbxUnbindThickLineGS(XboxPrimitiveType);
-	return S_OK;
-}
-
-HRESULT CxbxDrawPrimitive(xbox::X_D3DPRIMITIVETYPE XboxPrimitiveType, UINT VertexCount, UINT StartVertex, UINT PrimCount)
-{
-	CxbxBindThickLineGS(XboxPrimitiveType);
-	g_pD3DDeviceContext->IASetPrimitiveTopology(EmuXB2PC_D3D11PrimitiveTopology(XboxPrimitiveType));
-	g_pD3DDeviceContext->Draw(VertexCount, StartVertex);
-	CxbxUnbindThickLineGS(XboxPrimitiveType);
-	return S_OK;
-}
-
-HRESULT CxbxBltSurface(IDirect3DSurface* pSrc, const RECT* pSrcRect, IDirect3DSurface* pDst, const RECT* pDstRect, D3DTEXTUREFILTERTYPE Filter)
-{
-	return CxbxD3D11Blt(pSrc, pSrcRect, pDst, pDstRect, Filter);
-}
-
-HRESULT CxbxPresent()
-{
-	LOG_INIT;
-	CxbxEndScene();
-	HRESULT hRet = g_pSwapChain->Present(0, 0);
-	DEBUG_D3DRESULT(hRet, "g_pSwapChain->Present");
-	CxbxBeginScene();
-	return hRet;
-}
-
-void CxbxSetDepthStencilSurface(IDirect3DSurface* pHostDepthStencil)
-{
-	ID3D11DepthStencilView* pDSV = nullptr;
-	if (pHostDepthStencil != nullptr) {
-		D3D11_TEXTURE2D_DESC texDesc = {};
-		pHostDepthStencil->GetDesc(&texDesc);
-		D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-		dsvDesc.Format = texDesc.Format;
-		dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		dsvDesc.Texture2D.MipSlice = 0;
-		g_pD3DDevice->CreateDepthStencilView(pHostDepthStencil, &dsvDesc, &pDSV);
-	}
-	if (g_pD3DDepthStencilView) { g_pD3DDepthStencilView->Release(); }
-	g_pD3DDepthStencilView = pDSV;
-	g_pD3DDeviceContext->OMSetRenderTargets(1, &g_pD3DCurrentRTV, g_pD3DDepthStencilView);
-}
-
-IDirect3DSurface* CxbxGetCurrentRenderTarget()
-{
-	return g_pD3DCurrentHostRenderTarget;
-}
-
-HRESULT CxbxGetBackBuffer(IDirect3DSurface** ppBackBuffer)
-{
-	return g_pSwapChain->GetBuffer(0, __uuidof(IDirect3DSurface), reinterpret_cast<void**>(ppBackBuffer));
-}
-
-HRESULT CxbxSetStreamSource(UINT HostStreamNumber, IDirect3DVertexBuffer* pHostVertexBuffer, UINT VertexStride)
-{
-	UINT offset = 0;
-	g_pD3DDeviceContext->IASetVertexBuffers(HostStreamNumber, 1, &pHostVertexBuffer, &VertexStride, &offset);
-	return S_OK;
-}
-
-HRESULT CxbxCreateVertexBuffer(UINT Length, IDirect3DVertexBuffer** ppVertexBuffer)
-{
-	D3D11_BUFFER_DESC bufDesc = {};
-	bufDesc.ByteWidth = Length;
-	bufDesc.Usage = D3D11_USAGE_DYNAMIC;
-	bufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	return g_pD3DDevice->CreateBuffer(&bufDesc, nullptr, ppVertexBuffer);
-}
-
-void* CxbxLockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
-{
-	D3D11_MAPPED_SUBRESOURCE mappedResource = {};
-	if (FAILED(g_pD3DDeviceContext->Map(pVertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
-		return nullptr;
-	}
-	return mappedResource.pData;
-}
-
-void CxbxUnlockVertexBuffer(IDirect3DVertexBuffer* pVertexBuffer)
-{
-	g_pD3DDeviceContext->Unmap(pVertexBuffer, 0);
-}
-
-ID3D11Buffer *CxbxDynBuffer::Update(const void *pData, UINT size)
-{
-	if (size == 0)
-		return nullptr;
-
-	// Grow the buffer if it's too small (or doesn't exist yet)
-	if (pBuffer == nullptr || capacity < size) {
-		Release();
-		// Round up to next power-of-two-ish size to avoid frequent re-allocs
-		UINT newCap = (size < 4096) ? 4096 : size;
-		// Round up to next multiple of 4096
-		newCap = (newCap + 4095) & ~4095u;
-
-		D3D11_BUFFER_DESC desc = {};
-		desc.ByteWidth = newCap;
-		desc.Usage = D3D11_USAGE_DYNAMIC;
-		desc.BindFlags = bindFlags;
-		desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		HRESULT hr = g_pD3DDevice->CreateBuffer(&desc, nullptr, &pBuffer);
-		if (FAILED(hr) || pBuffer == nullptr)
-			return nullptr;
-		capacity = newCap;
-	}
-
-	// Map-discard and upload
-	if (FAILED(CxbxD3D11UpdateDynamicBuffer(pBuffer, pData, size)))
-		return nullptr;
-	return pBuffer;
-}
-
-void CxbxDynBuffer::Release()
-{
-	if (pBuffer != nullptr) {
-		pBuffer->Release();
-		pBuffer = nullptr;
-	}
-	capacity = 0;
-}
-
-HRESULT CxbxCreatePixelShader(const void* pFunction, SIZE_T FunctionSize, IDirect3DPixelShader** ppShader)
-{
-	return g_pD3DDevice->CreatePixelShader(pFunction, FunctionSize, nullptr, ppShader);
-}
-
-void CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader)
-{
-	g_pD3DDeviceContext->PSSetShader(pPixelShader, nullptr, 0);
-}
-
-// Filter D3D11 input layout elements to only include semantics present in
-// the shader's input signature (ISGN/ISG1 chunk in DXBC bytecode).
-// D3D11 returns E_INVALIDARG from CreateInputLayout when an element references
-// a semantic the vertex shader doesn't declare (e.g. the HLSL compiler optimized
-// away an unused TEXCOORD slot).  The NV2A has 16 attribute slots that all map
-// to TEXCOORD0-15, but a given shader may only use a subset.
-std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
-	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
-	const void* bytecode, size_t bytecodeSize)
-{
-	std::vector<D3D11_INPUT_ELEMENT_DESC> result;
-
-	// Parse DXBC header to find the ISGN (or ISG1) chunk
-	auto data = static_cast<const uint8_t*>(bytecode);
-	if (bytecodeSize < 32 || memcmp(data, "DXBC", 4) != 0) {
-		// Not valid DXBC — return all elements unfiltered
-		result.assign(pElements, pElements + elementCount);
-		return result;
-	}
-
-	uint32_t chunkCount = *reinterpret_cast<const uint32_t*>(data + 28);
-	if (32 + chunkCount * 4 > bytecodeSize) {
-		result.assign(pElements, pElements + elementCount);
-		return result;
-	}
-
-	const uint8_t* isgnData = nullptr;
-	uint32_t isgnSize = 0;
-	for (uint32_t i = 0; i < chunkCount; i++) {
-		uint32_t offset = *reinterpret_cast<const uint32_t*>(data + 32 + i * 4);
-		if (offset + 8 > bytecodeSize)
-			continue;
-		uint32_t fourCC = *reinterpret_cast<const uint32_t*>(data + offset);
-		// ISGN = 0x4E475349 ("ISGN"), ISG1 = 0x31475349 ("ISG1")
-		if (fourCC == 0x4E475349 || fourCC == 0x31475349) {
-			isgnSize = *reinterpret_cast<const uint32_t*>(data + offset + 4);
-			isgnData = data + offset + 8;
-			break;
-		}
-	}
-
-	if (isgnData == nullptr || isgnSize < 8) {
-		EmuLog(LOG_LEVEL::WARNING, "FilterInputElements: No ISGN chunk found in bytecode (%zu bytes)", bytecodeSize);
-		result.assign(pElements, pElements + elementCount);
-		return result;
-	}
-
-	uint32_t sigElementCount = *reinterpret_cast<const uint32_t*>(isgnData);
-	// Detect element stride: ISG1 uses 32 bytes per element, ISGN uses 24
-	uint32_t elemStride = 24;
-	// Re-check which chunk type we found
-	for (uint32_t i = 0; i < chunkCount; i++) {
-		uint32_t offset = *reinterpret_cast<const uint32_t*>(data + 32 + i * 4);
-		if (offset + 8 > bytecodeSize) continue;
-		uint32_t fourCC = *reinterpret_cast<const uint32_t*>(data + offset);
-		if (fourCC == 0x31475349) { // ISG1
-			elemStride = 32;
-			break;
-		}
-		if (fourCC == 0x4E475349) break; // ISGN
-	}
-
-	if (8 + sigElementCount * elemStride > isgnSize) {
-		EmuLog(LOG_LEVEL::WARNING, "FilterInputElements: ISGN size mismatch (count=%u stride=%u isgnSize=%u)", sigElementCount, elemStride, isgnSize);
-		result.assign(pElements, pElements + elementCount);
-		return result;
-	}
-
-	// Log ISGN contents for debugging
-	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: ISGN has %u elements (stride=%u, isgnSize=%u, bytecodeSize=%zu)",
-		sigElementCount, elemStride, isgnSize, bytecodeSize);
-	for (uint32_t s = 0; s < sigElementCount; s++) {
-		const uint8_t* sigElem = isgnData + 8 + s * elemStride;
-		uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem);
-		uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + 4);
-		const char* sigName = (nameOffset < isgnSize) ? reinterpret_cast<const char*>(isgnData + nameOffset) : "(invalid)";
-		EmuLog(LOG_LEVEL::DEBUG, "  ISGN[%u]: %s/%u", s, sigName, semIndex);
-	}
-
-	// For each input layout element, check if the shader has a matching input
-	for (UINT e = 0; e < elementCount; e++) {
-		bool found = false;
-		for (uint32_t s = 0; s < sigElementCount; s++) {
-			const uint8_t* sigElem = isgnData + 8 + s * elemStride;
-			uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem);
-			uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + 4);
-			if (nameOffset >= isgnSize)
-				continue;
-			const char* sigName = reinterpret_cast<const char*>(isgnData + nameOffset);
-			if (semIndex == pElements[e].SemanticIndex
-				&& pElements[e].SemanticName != nullptr
-				&& _stricmp(sigName, pElements[e].SemanticName) == 0) {
-				found = true;
-				break;
-			}
-		}
-		if (found) {
-			result.push_back(pElements[e]);
-		}
-	}
-
-	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: %u of %u elements matched ISGN", (unsigned)result.size(), elementCount);
-
-	return result;
-}
-
-void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration)
-{
-	// Lazily create the input layout when we have elements but no layout yet
-	if (pCxbxVertexDeclaration != nullptr && pCxbxVertexDeclaration->pHostVertexDeclaration == nullptr
-		&& pCxbxVertexDeclaration->pD3D11InputElements != nullptr && pCxbxVertexDeclaration->D3D11InputElementCount > 0) {
-		ID3DBlob* pBytecode = CxbxGetActiveVertexShaderBytecode();
-		if (pBytecode == nullptr) {
-			// No fallback available either; try the fixed-function bytecode
-			pBytecode = CxbxGetFixedFunctionVertexShaderBytecode();
-		}
-		if (pBytecode != nullptr) {
-			// Filter input elements to only those the shader actually declares,
-			// since D3D11 rejects CreateInputLayout when an element references a
-			// semantic not present in the shader's input signature.
-			auto filtered = FilterInputElementsByShaderSignature(
-				pCxbxVertexDeclaration->pD3D11InputElements,
-				pCxbxVertexDeclaration->D3D11InputElementCount,
-				pBytecode->GetBufferPointer(),
-				pBytecode->GetBufferSize());
-
-			HRESULT hRet = E_FAIL;
-			if (!filtered.empty()) {
-				EmuLog(LOG_LEVEL::DEBUG, "CxbxD3D11SetVertexDeclaration: Trying CreateInputLayout with %u filtered elements, bytecodeSize=%zu",
-					(unsigned)filtered.size(), pBytecode->GetBufferSize());
-				for (UINT i = 0; i < (UINT)filtered.size(); i++) {
-					auto& e = filtered[i];
-					EmuLog(LOG_LEVEL::DEBUG, "  filtered[%u] Semantic=%s/%u Fmt=%u Slot=%u Offset=%u",
-						i, e.SemanticName ? e.SemanticName : "(null)", e.SemanticIndex,
-						e.Format, e.InputSlot, e.AlignedByteOffset);
-				}
-				hRet = g_pD3DDevice->CreateInputLayout(
-					filtered.data(),
-					(UINT)filtered.size(),
-					pBytecode->GetBufferPointer(),
-					pBytecode->GetBufferSize(),
-					&pCxbxVertexDeclaration->pHostVertexDeclaration
-				);
-				if (FAILED(hRet)) {
-					EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: Primary CreateInputLayout failed (0x%08X)", hRet);
-				}
-			} else {
-				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: Filter produced 0 elements from %u originals", pCxbxVertexDeclaration->D3D11InputElementCount);
-			}
-			// If layout creation still failed, retry with the FixedFunction
-			// shader bytecode which declares all 16 TEXCOORD inputs.
-			if (FAILED(hRet)) {
-				ID3DBlob* pFallback = CxbxGetFixedFunctionVertexShaderBytecode();
-				if (pFallback != nullptr && pFallback != pBytecode) {
-					auto fbFiltered = FilterInputElementsByShaderSignature(
-						pCxbxVertexDeclaration->pD3D11InputElements,
-						pCxbxVertexDeclaration->D3D11InputElementCount,
-						pFallback->GetBufferPointer(),
-						pFallback->GetBufferSize());
-					if (!fbFiltered.empty()) {
-						EmuLog(LOG_LEVEL::DEBUG, "CxbxD3D11SetVertexDeclaration: Fallback with %u elements, bytecodeSize=%zu",
-							(unsigned)fbFiltered.size(), pFallback->GetBufferSize());
-						hRet = g_pD3DDevice->CreateInputLayout(
-							fbFiltered.data(),
-							(UINT)fbFiltered.size(),
-							pFallback->GetBufferPointer(),
-							pFallback->GetBufferSize(),
-							&pCxbxVertexDeclaration->pHostVertexDeclaration
-						);
-						if (FAILED(hRet)) {
-							EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: Fallback CreateInputLayout also failed (0x%08X)", hRet);
-						}
-					}
-				}
-			}
-			if (FAILED(hRet)) {
-				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: CreateInputLayout failed (0x%08X) elements=%u bytecodeSize=%zu",
-					hRet,
-					pCxbxVertexDeclaration->D3D11InputElementCount,
-					pBytecode->GetBufferSize());
-				for (UINT i = 0; i < pCxbxVertexDeclaration->D3D11InputElementCount; i++) {
-					auto& e = pCxbxVertexDeclaration->pD3D11InputElements[i];
-					EmuLog(LOG_LEVEL::WARNING, "  [%u] Semantic=%s/%u Fmt=%u Slot=%u Offset=%u Class=%u Step=%u",
-						i, e.SemanticName ? e.SemanticName : "(null)", e.SemanticIndex,
-						e.Format, e.InputSlot, e.AlignedByteOffset,
-						e.InputSlotClass, e.InstanceDataStepRate);
-				}
-			}
-		}
-	}
-
-	g_pD3DDeviceContext->IASetInputLayout(
-		pCxbxVertexDeclaration != nullptr ? pCxbxVertexDeclaration->pHostVertexDeclaration : nullptr);
-}
-
-// ******************************************************************
-// * Dual-backend wrappers — D3D11 implementations
-// ******************************************************************
-
-HRESULT CxbxSetVertexShader(IDirect3DVertexShader* pHostVertexShader)
-{
-	g_pD3DDeviceContext->VSSetShader(pHostVertexShader, nullptr, 0);
-	return S_OK;
-}
-
-IDirect3DVertexDeclaration* CxbxCreateHostVertexDeclaration(D3DVERTEXELEMENT *pDeclaration)
-{
-	// For D3D11, we cannot create an input layout without compiled shader bytecode.
-	// Return nullptr here; the actual ID3D11InputLayout will be created lazily
-	// in CxbxSetHostVertexDeclaration when both elements and a compiled shader are available.
-	(void)pDeclaration;
-	return nullptr;
-}
-
-void CxbxSetHostVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration)
-{
-	CxbxD3D11SetVertexDeclaration(pCxbxVertexDeclaration);
-}
-
-void CxbxSetFogColor(uint32_t fog_color)
-{
-	// D3D11: Set fog color in PS constant buffer at PSH_XBOX_CONSTANT_FOG (register 18)
-	D3DXCOLOR fogColorFloat(fog_color); // ARGB → correct R,G,B,A
-	CxbxSetPixelShaderConstantF(/*PSH_XBOX_CONSTANT_FOG=*/18, (const float*)&fogColorFloat, 1);
-}
-
-void CxbxGetBumpEnvMatrix(int stage, DWORD value[4])
-{
-	value[0] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT00);
-	value[1] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT01);
-	value[2] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT10);
-	value[3] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVMAT11);
-}
-
-void CxbxGetBumpEnvLuminance(int stage, DWORD value[2])
-{
-	value[0] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVLSCALE);
-	value[1] = XboxTextureStates.Get(stage, xbox::X_D3DTSS_BUMPENVLOFFSET);
 }
 
 #endif // CXBX_USE_D3D11
