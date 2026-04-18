@@ -258,9 +258,13 @@ return input * input;
 #define PS_DOTMAPPING_HILO_HEMISPHERE_GL(in)  CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)):?                      0x8000=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x8000)
 #define PS_DOTMAPPING_HILO_HEMISPHERE(in)     CalcHiLo(in); dm = float3(hls(H), hls(L), sqrt(1-p2(H)-p2(L))) // :H16L16  ->(H,L,sqrt(1-H^2-L^2)): 0x8000=>-32768/32767, 0x8001=>-1, 0x0000=>0,                     0x7fff=>1 thus : output =  (input < 0x8000) ? (input / 0x7fff) : ((input - 0x10000) / 0x7fff)
 
-// Declare one sampler per each {Sampler Type, Texture Stage} combination
-// TODO : Generate sampler status?
-sampler samplers[4] : register(s0);
+// Declare one sampler per texture stage (individual samplers instead of an array,
+// because the D3D11 HLSL compiler cannot resolve a sampler array where different
+// elements are used with different DX9-style intrinsics like tex2D vs texCUBE).
+sampler sampler_0 : register(s0);
+sampler sampler_1 : register(s1);
+sampler sampler_2 : register(s2);
+sampler sampler_3 : register(s3);
 
 // Declare alphakill as a variable (avoiding a constant, to allow false's to be optimized away) :
 #ifndef ALPHAKILL
@@ -349,25 +353,32 @@ float4 PostProcessTexel(const int ts, float4 t)
 	return t;
 }
 
-// Actual texture sampling per texture stage (ts), using the sampling vector (s) as input,
-// abstracting away the specifics of accessing above sampler declarations (usefull for future Direct3D 10+ sampler arrays)
-float4 Sample2D(int ts, float3 s)
+// Actual texture sampling per texture stage (ts), using the sampling vector (s) as input.
+// Individual samplers are used so that each sampler is only ever passed to a single
+// DX9-style intrinsic (tex2D, tex3D or texCUBE), avoiding D3D11 error X4539.
+// The ts argument is always a compile-time literal from the PS_TEXTUREMODES_* macros,
+// so token-pasting (sampler_##ts) resolves to the correct individual sampler.
+float4 _Sample2D(sampler samp, int ts, float3 s)
 {
-	float4 result = tex2D(samplers[ts], s.xy); // Ignores s.z (and whatever it's set to, will be optimized away by the compiler, see [1] below)
+	float4 result = tex2D(samp, s.xy); // Ignores s.z (and whatever it's set to, will be optimized away by the compiler, see [1] below)
 	return PostProcessTexel(ts, result);
 }
 
-float4 Sample3D(int ts, float3 s)
+float4 _Sample3D(sampler samp, int ts, float3 s)
 {
-	float4 result = tex3D(samplers[ts], s.xyz);
+	float4 result = tex3D(samp, s.xyz);
 	return PostProcessTexel(ts, result);
 }
 
-float4 Sample6F(int ts, float3 s)
+float4 _Sample6F(sampler samp, int ts, float3 s)
 {
-	float4 result = texCUBE(samplers[ts], s.xyz);
+	float4 result = texCUBE(samp, s.xyz);
 	return PostProcessTexel(ts, result);
 }
+
+#define Sample2D(ts, s) _Sample2D(sampler_##ts, ts, s)
+#define Sample3D(ts, s) _Sample3D(sampler_##ts, ts, s)
+#define Sample6F(ts, s) _Sample6F(sampler_##ts, ts, s)
 
 // Test-case JSRF (boost-dash effect).
 float3 DoBumpEnv(const float4 TexCoord, const float4 BumpEnvMat, const float4 BumpMap)
