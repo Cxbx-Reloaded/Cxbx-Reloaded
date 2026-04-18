@@ -13,7 +13,7 @@
 // a string literal in CxbxD3D11InitBlit() in Backend_D3D11.cpp.
 
 struct GS_INPUT {
-    float4 oPos : POSITION;
+    float4 oPos : SV_Position;
     float4 oD0  : COLOR0;
     float4 oD1  : COLOR1;
     float  oFog : FOG;

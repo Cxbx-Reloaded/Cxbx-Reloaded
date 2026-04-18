@@ -21,7 +21,11 @@ struct VS_INPUT
 // Output registers
 struct VS_OUTPUT
 {
+#if defined(CXBX_USE_D3D11) || __HLSL_VERSION >= 4
+    float4 oPos : SV_Position;  // Homogeneous clip space position (SM4.0+)
+#else
     float4 oPos : POSITION;  // Homogeneous clip space position
+#endif
     float4 oD0  : COLOR0;    // Primary color (front-facing)
     float4 oD1  : COLOR1;    // Secondary color (front-facing)
     float  oFog : FOG;       // Fog coordinate
