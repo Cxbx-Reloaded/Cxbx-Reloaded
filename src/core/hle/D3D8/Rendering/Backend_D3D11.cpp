@@ -1972,22 +1972,48 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 	}
 
 	if (isgnData == nullptr || isgnSize < 8) {
+		EmuLog(LOG_LEVEL::WARNING, "FilterInputElements: No ISGN chunk found in bytecode (%zu bytes)", bytecodeSize);
 		result.assign(pElements, pElements + elementCount);
 		return result;
 	}
 
 	uint32_t sigElementCount = *reinterpret_cast<const uint32_t*>(isgnData);
-	// Each ISGN element is 24 bytes, starting at offset 8 within the chunk data
-	if (8 + sigElementCount * 24 > isgnSize) {
+	// Detect element stride: ISG1 uses 32 bytes per element, ISGN uses 24
+	uint32_t elemStride = 24;
+	// Re-check which chunk type we found
+	for (uint32_t i = 0; i < chunkCount; i++) {
+		uint32_t offset = *reinterpret_cast<const uint32_t*>(data + 32 + i * 4);
+		if (offset + 8 > bytecodeSize) continue;
+		uint32_t fourCC = *reinterpret_cast<const uint32_t*>(data + offset);
+		if (fourCC == 0x31475349) { // ISG1
+			elemStride = 32;
+			break;
+		}
+		if (fourCC == 0x4E475349) break; // ISGN
+	}
+
+	if (8 + sigElementCount * elemStride > isgnSize) {
+		EmuLog(LOG_LEVEL::WARNING, "FilterInputElements: ISGN size mismatch (count=%u stride=%u isgnSize=%u)", sigElementCount, elemStride, isgnSize);
 		result.assign(pElements, pElements + elementCount);
 		return result;
+	}
+
+	// Log ISGN contents for debugging
+	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: ISGN has %u elements (stride=%u, isgnSize=%u, bytecodeSize=%zu)",
+		sigElementCount, elemStride, isgnSize, bytecodeSize);
+	for (uint32_t s = 0; s < sigElementCount; s++) {
+		const uint8_t* sigElem = isgnData + 8 + s * elemStride;
+		uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem);
+		uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + 4);
+		const char* sigName = (nameOffset < isgnSize) ? reinterpret_cast<const char*>(isgnData + nameOffset) : "(invalid)";
+		EmuLog(LOG_LEVEL::DEBUG, "  ISGN[%u]: %s/%u", s, sigName, semIndex);
 	}
 
 	// For each input layout element, check if the shader has a matching input
 	for (UINT e = 0; e < elementCount; e++) {
 		bool found = false;
 		for (uint32_t s = 0; s < sigElementCount; s++) {
-			const uint8_t* sigElem = isgnData + 8 + s * 24;
+			const uint8_t* sigElem = isgnData + 8 + s * elemStride;
 			uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem);
 			uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + 4);
 			if (nameOffset >= isgnSize)
@@ -2004,6 +2030,8 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 			result.push_back(pElements[e]);
 		}
 	}
+
+	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: %u of %u elements matched ISGN", (unsigned)result.size(), elementCount);
 
 	return result;
 }
@@ -2030,6 +2058,14 @@ void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration
 
 			HRESULT hRet = E_FAIL;
 			if (!filtered.empty()) {
+				EmuLog(LOG_LEVEL::DEBUG, "CxbxD3D11SetVertexDeclaration: Trying CreateInputLayout with %u filtered elements, bytecodeSize=%zu",
+					(unsigned)filtered.size(), pBytecode->GetBufferSize());
+				for (UINT i = 0; i < (UINT)filtered.size(); i++) {
+					auto& e = filtered[i];
+					EmuLog(LOG_LEVEL::DEBUG, "  filtered[%u] Semantic=%s/%u Fmt=%u Slot=%u Offset=%u",
+						i, e.SemanticName ? e.SemanticName : "(null)", e.SemanticIndex,
+						e.Format, e.InputSlot, e.AlignedByteOffset);
+				}
 				hRet = g_pD3DDevice->CreateInputLayout(
 					filtered.data(),
 					(UINT)filtered.size(),
@@ -2037,6 +2073,11 @@ void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration
 					pBytecode->GetBufferSize(),
 					&pCxbxVertexDeclaration->pHostVertexDeclaration
 				);
+				if (FAILED(hRet)) {
+					EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: Primary CreateInputLayout failed (0x%08X)", hRet);
+				}
+			} else {
+				EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: Filter produced 0 elements from %u originals", pCxbxVertexDeclaration->D3D11InputElementCount);
 			}
 			// If layout creation still failed, retry with the FixedFunction
 			// shader bytecode which declares all 16 TEXCOORD inputs.
@@ -2049,6 +2090,8 @@ void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration
 						pFallback->GetBufferPointer(),
 						pFallback->GetBufferSize());
 					if (!fbFiltered.empty()) {
+						EmuLog(LOG_LEVEL::DEBUG, "CxbxD3D11SetVertexDeclaration: Fallback with %u elements, bytecodeSize=%zu",
+							(unsigned)fbFiltered.size(), pFallback->GetBufferSize());
 						hRet = g_pD3DDevice->CreateInputLayout(
 							fbFiltered.data(),
 							(UINT)fbFiltered.size(),
@@ -2056,6 +2099,9 @@ void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration
 							pFallback->GetBufferSize(),
 							&pCxbxVertexDeclaration->pHostVertexDeclaration
 						);
+						if (FAILED(hRet)) {
+							EmuLog(LOG_LEVEL::WARNING, "CxbxD3D11SetVertexDeclaration: Fallback CreateInputLayout also failed (0x%08X)", hRet);
+						}
 					}
 				}
 			}
