@@ -443,6 +443,22 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
+#ifdef CXBX_USE_D3D11
+			// Diagnostic: log actual DXGI formats of source and destination surfaces
+			{
+				D3D11_TEXTURE2D_DESC srcDesc = {}, dstDesc = {};
+				((ID3D11Texture2D*)pXboxBackBufferHostSurface)->GetDesc(&srcDesc);
+				((ID3D11Texture2D*)pCurrentHostBackBuffer)->GetDesc(&dstDesc);
+				static DXGI_FORMAT lastSrcFmt = (DXGI_FORMAT)0, lastDstFmt = (DXGI_FORMAT)0;
+				if (srcDesc.Format != lastSrcFmt || dstDesc.Format != lastDstFmt) {
+					EmuLog(LOG_LEVEL::INFO, "Present blit: src format=%u (%ux%u), dst format=%u (%ux%u)",
+						srcDesc.Format, srcDesc.Width, srcDesc.Height,
+						dstDesc.Format, dstDesc.Width, dstDesc.Height);
+					lastSrcFmt = srcDesc.Format;
+					lastDstFmt = dstDesc.Format;
+				}
+			}
+#endif
    	   	   	// Calculate the centered rectangle
    	   	   	RECT dest{};
    	   	   	dest.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
