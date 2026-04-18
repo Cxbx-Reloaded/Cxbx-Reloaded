@@ -36,6 +36,7 @@
 
 #include <cstring> // memcpy
 #include <unordered_map>
+#include <vector>
 #include <wrl/client.h>
 using namespace Microsoft::WRL;
 
@@ -59,10 +60,46 @@ IDirect3DSurface                   *g_pD3DCurrentHostRenderTarget = nullptr;
 
 // ******************************************************************
 // * D3D11 state descriptors — definitions
+// * Initialize with valid D3D11 defaults so that the first
+// * CreateXxxState() call (triggered by the dirty flags below)
+// * succeeds even if the game hasn't set every render state yet.
 // ******************************************************************
-D3D11_RASTERIZER_DESC    g_D3D11RasterizerDesc = {};
-D3D11_DEPTH_STENCIL_DESC g_D3D11DepthStencilDesc = {};
-D3D11_BLEND_DESC         g_D3D11BlendDesc = {};
+D3D11_RASTERIZER_DESC    g_D3D11RasterizerDesc = {
+	/* FillMode              */ D3D11_FILL_SOLID,
+	/* CullMode              */ D3D11_CULL_BACK,
+	/* FrontCounterClockwise */ FALSE,
+	/* DepthBias             */ 0,
+	/* DepthBiasClamp        */ 0.0f,
+	/* SlopeScaledDepthBias  */ 0.0f,
+	/* DepthClipEnable       */ TRUE,
+	/* ScissorEnable         */ FALSE,
+	/* MultisampleEnable     */ FALSE,
+	/* AntialiasedLineEnable */ FALSE,
+};
+D3D11_DEPTH_STENCIL_DESC g_D3D11DepthStencilDesc = {
+	/* DepthEnable           */ TRUE,
+	/* DepthWriteMask        */ D3D11_DEPTH_WRITE_MASK_ALL,
+	/* DepthFunc             */ D3D11_COMPARISON_LESS,
+	/* StencilEnable         */ FALSE,
+	/* StencilReadMask       */ D3D11_DEFAULT_STENCIL_READ_MASK,
+	/* StencilWriteMask      */ D3D11_DEFAULT_STENCIL_WRITE_MASK,
+	/* FrontFace             */ { D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_COMPARISON_ALWAYS },
+	/* BackFace              */ { D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_STENCIL_OP_KEEP, D3D11_COMPARISON_ALWAYS },
+};
+D3D11_BLEND_DESC         g_D3D11BlendDesc = {
+	/* AlphaToCoverageEnable  */ FALSE,
+	/* IndependentBlendEnable */ FALSE,
+	/* RenderTarget[0]        */ {
+		/* BlendEnable           */ FALSE,
+		/* SrcBlend              */ D3D11_BLEND_ONE,
+		/* DestBlend             */ D3D11_BLEND_ZERO,
+		/* BlendOp               */ D3D11_BLEND_OP_ADD,
+		/* SrcBlendAlpha         */ D3D11_BLEND_ONE,
+		/* DestBlendAlpha        */ D3D11_BLEND_ZERO,
+		/* BlendOpAlpha          */ D3D11_BLEND_OP_ADD,
+		/* RenderTargetWriteMask */ D3D11_COLOR_WRITE_ENABLE_ALL,
+	},
+};
 
 // Dirty flags
 bool  g_bD3D11RasterizerStateDirty = true;
@@ -946,11 +983,17 @@ HRESULT CxbxD3D11Blt(
 	D3D11_VIEWPORT oldVP;
 	UINT numVP = 1;
 	g_pD3DDeviceContext->RSGetViewports(&numVP, &oldVP);
+	// Save blend state so the game's blend settings don't leak into the blit
+	ComPtr<ID3D11BlendState> pOldBlendState;
+	FLOAT oldBlendFactor[4];
+	UINT oldSampleMask;
+	g_pD3DDeviceContext->OMGetBlendState(&pOldBlendState, oldBlendFactor, &oldSampleMask);
 
 	// Set blit pipeline state
 	D3D11_VIEWPORT vp = { (FLOAT)dstX, (FLOAT)dstY, (FLOAT)dstW, (FLOAT)dstH, 0.0f, 1.0f };
 	g_pD3DDeviceContext->RSSetViewports(1, &vp);
 	g_pD3DDeviceContext->OMSetRenderTargets(1, &pRTV, nullptr);
+	g_pD3DDeviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF); // Default blend: no blending, all channels written
 	g_pD3DDeviceContext->VSSetShader(g_pD3D11BlitVS, nullptr, 0);
 	g_pD3DDeviceContext->PSSetShader(g_pD3D11BlitPS, nullptr, 0);
 	g_pD3DDeviceContext->GSSetShader(nullptr, nullptr, 0); // Ensure point sprite GS doesn't interfere
@@ -966,6 +1009,7 @@ HRESULT CxbxD3D11Blt(
 	// Restore previous state
 	g_pD3DDeviceContext->OMSetRenderTargets(1, &pOldRTV, pOldDSV);
 	g_pD3DDeviceContext->RSSetViewports(1, &oldVP);
+	g_pD3DDeviceContext->OMSetBlendState(pOldBlendState.Get(), oldBlendFactor, oldSampleMask);
 	if (pOldRTV) pOldRTV->Release();
 	if (pOldDSV) pOldDSV->Release();
 
@@ -1886,33 +1930,133 @@ void CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader)
 	g_pD3DDeviceContext->PSSetShader(pPixelShader, nullptr, 0);
 }
 
+// Filter D3D11 input layout elements to only include semantics present in
+// the shader's input signature (ISGN/ISG1 chunk in DXBC bytecode).
+// D3D11 returns E_INVALIDARG from CreateInputLayout when an element references
+// a semantic the vertex shader doesn't declare (e.g. the HLSL compiler optimized
+// away an unused TEXCOORD slot).  The NV2A has 16 attribute slots that all map
+// to TEXCOORD0-15, but a given shader may only use a subset.
+std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
+	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
+	const void* bytecode, size_t bytecodeSize)
+{
+	std::vector<D3D11_INPUT_ELEMENT_DESC> result;
+
+	// Parse DXBC header to find the ISGN (or ISG1) chunk
+	auto data = static_cast<const uint8_t*>(bytecode);
+	if (bytecodeSize < 32 || memcmp(data, "DXBC", 4) != 0) {
+		// Not valid DXBC — return all elements unfiltered
+		result.assign(pElements, pElements + elementCount);
+		return result;
+	}
+
+	uint32_t chunkCount = *reinterpret_cast<const uint32_t*>(data + 28);
+	if (32 + chunkCount * 4 > bytecodeSize) {
+		result.assign(pElements, pElements + elementCount);
+		return result;
+	}
+
+	const uint8_t* isgnData = nullptr;
+	uint32_t isgnSize = 0;
+	for (uint32_t i = 0; i < chunkCount; i++) {
+		uint32_t offset = *reinterpret_cast<const uint32_t*>(data + 32 + i * 4);
+		if (offset + 8 > bytecodeSize)
+			continue;
+		uint32_t fourCC = *reinterpret_cast<const uint32_t*>(data + offset);
+		// ISGN = 0x4E475349 ("ISGN"), ISG1 = 0x31475349 ("ISG1")
+		if (fourCC == 0x4E475349 || fourCC == 0x31475349) {
+			isgnSize = *reinterpret_cast<const uint32_t*>(data + offset + 4);
+			isgnData = data + offset + 8;
+			break;
+		}
+	}
+
+	if (isgnData == nullptr || isgnSize < 8) {
+		result.assign(pElements, pElements + elementCount);
+		return result;
+	}
+
+	uint32_t sigElementCount = *reinterpret_cast<const uint32_t*>(isgnData);
+	// Each ISGN element is 24 bytes, starting at offset 8 within the chunk data
+	if (8 + sigElementCount * 24 > isgnSize) {
+		result.assign(pElements, pElements + elementCount);
+		return result;
+	}
+
+	// For each input layout element, check if the shader has a matching input
+	for (UINT e = 0; e < elementCount; e++) {
+		bool found = false;
+		for (uint32_t s = 0; s < sigElementCount; s++) {
+			const uint8_t* sigElem = isgnData + 8 + s * 24;
+			uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem);
+			uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + 4);
+			if (nameOffset >= isgnSize)
+				continue;
+			const char* sigName = reinterpret_cast<const char*>(isgnData + nameOffset);
+			if (semIndex == pElements[e].SemanticIndex
+				&& pElements[e].SemanticName != nullptr
+				&& _stricmp(sigName, pElements[e].SemanticName) == 0) {
+				found = true;
+				break;
+			}
+		}
+		if (found) {
+			result.push_back(pElements[e]);
+		}
+	}
+
+	return result;
+}
+
 void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration)
 {
 	// Lazily create the input layout when we have elements but no layout yet
 	if (pCxbxVertexDeclaration != nullptr && pCxbxVertexDeclaration->pHostVertexDeclaration == nullptr
 		&& pCxbxVertexDeclaration->pD3D11InputElements != nullptr && pCxbxVertexDeclaration->D3D11InputElementCount > 0) {
 		ID3DBlob* pBytecode = CxbxGetActiveVertexShaderBytecode();
+		if (pBytecode == nullptr) {
+			// No fallback available either; try the fixed-function bytecode
+			pBytecode = CxbxGetFixedFunctionVertexShaderBytecode();
+		}
 		if (pBytecode != nullptr) {
-			HRESULT hRet = g_pD3DDevice->CreateInputLayout(
+			// Filter input elements to only those the shader actually declares,
+			// since D3D11 rejects CreateInputLayout when an element references a
+			// semantic not present in the shader's input signature.
+			auto filtered = FilterInputElementsByShaderSignature(
 				pCxbxVertexDeclaration->pD3D11InputElements,
 				pCxbxVertexDeclaration->D3D11InputElementCount,
 				pBytecode->GetBufferPointer(),
-				pBytecode->GetBufferSize(),
-				&pCxbxVertexDeclaration->pHostVertexDeclaration
-			);
-			// If layout creation failed (e.g. the compiled shader optimized away
-			// some TEXCOORD inputs), retry with the FixedFunction shader bytecode
-			// which always declares all 16 TEXCOORD inputs in its signature.
+				pBytecode->GetBufferSize());
+
+			HRESULT hRet = E_FAIL;
+			if (!filtered.empty()) {
+				hRet = g_pD3DDevice->CreateInputLayout(
+					filtered.data(),
+					(UINT)filtered.size(),
+					pBytecode->GetBufferPointer(),
+					pBytecode->GetBufferSize(),
+					&pCxbxVertexDeclaration->pHostVertexDeclaration
+				);
+			}
+			// If layout creation still failed, retry with the FixedFunction
+			// shader bytecode which declares all 16 TEXCOORD inputs.
 			if (FAILED(hRet)) {
 				ID3DBlob* pFallback = CxbxGetFixedFunctionVertexShaderBytecode();
 				if (pFallback != nullptr && pFallback != pBytecode) {
-					hRet = g_pD3DDevice->CreateInputLayout(
+					auto fbFiltered = FilterInputElementsByShaderSignature(
 						pCxbxVertexDeclaration->pD3D11InputElements,
 						pCxbxVertexDeclaration->D3D11InputElementCount,
 						pFallback->GetBufferPointer(),
-						pFallback->GetBufferSize(),
-						&pCxbxVertexDeclaration->pHostVertexDeclaration
-					);
+						pFallback->GetBufferSize());
+					if (!fbFiltered.empty()) {
+						hRet = g_pD3DDevice->CreateInputLayout(
+							fbFiltered.data(),
+							(UINT)fbFiltered.size(),
+							pFallback->GetBufferPointer(),
+							pFallback->GetBufferSize(),
+							&pCxbxVertexDeclaration->pHostVertexDeclaration
+						);
+					}
 				}
 			}
 			if (FAILED(hRet)) {
