@@ -387,6 +387,7 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostRender.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResource.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResourceCreate.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResourceUpload.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostSync.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostWindow.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/IndexBufferConvert.cpp"
