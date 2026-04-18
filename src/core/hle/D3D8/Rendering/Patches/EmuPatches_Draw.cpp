@@ -88,10 +88,6 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetVertexData2s)
 	CxbxImpl_SetVertexData4f(Register, a, b, 0.0f, 1.0f);
 }
 
-extern uint32_t HLE_read_NV2A_pgraph_register(const int reg); // Declared in PushBuffer.cpp
-
-extern NV2ADevice* g_NV2A;
-
 // Overload for logging
 static void D3DDevice_SetVertexData4f_16__LTCG_edi1
 (

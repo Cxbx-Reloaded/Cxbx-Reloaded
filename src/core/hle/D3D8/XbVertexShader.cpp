@@ -38,6 +38,7 @@
 #include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
+#include "core\hle\D3D8\XbPushBuffer.h" // For g_NV2A, HLE_get_NV2A_vertex_constant_float4_ptr
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
 #include "devices\xbox.h"
 #include "core\hle\D3D8\XbConvert.h" // For NV2A_VP_UPLOAD_INST, NV2A_VP_UPLOAD_CONST_ID, NV2A_VP_UPLOAD_CONST
@@ -54,9 +55,6 @@
 #include <filesystem>
 
 #include "nv2a_vsh_emulator.h"
-
-// External symbols :
-extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS]; // Declared in XbVertexBuffer.cpp
 
 // Variables set by [D3DDevice|CxbxImpl]_SetVertexShaderInput() :
                       unsigned g_Xbox_SetVertexShaderInput_Count = 0; // Read by GetXboxVertexAttributes
@@ -1016,12 +1014,10 @@ void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD C
 	if (Register + ConstantCount > X_D3DVS_CONSTREG_COUNT) LOG_TEST_CASE("Register + ConstantCount > X_D3DVS_CONSTREG_COUNT");
 
 	// Write Vertex Shader constants in nv2a
-	extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
 	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(Register);
 	memcpy(constant_floats, pConstantData, ConstantCount * sizeof(float) * 4);
 
 	// Mark the constant as dirty, so that CxbxUpdateHostVertexShaderConstants will pick it up
-	extern NV2ADevice* g_NV2A; // TMP glue
 	auto nv2a = g_NV2A->GetDeviceState();
 	for (DWORD i = 0; i < ConstantCount; i++) {
 		nv2a->pgraph.vsh_constants_dirty[Register + i] = true;

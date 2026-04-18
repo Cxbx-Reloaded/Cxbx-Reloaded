@@ -62,10 +62,6 @@ UINT                          g_InlineVertexBuffer_TableOffset = 0;
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
 xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
 
-extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); // Declared in PushBuffer.cpp
-
-extern void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource); // Declared in Direct3D.cpp
-
 // CxbxSetStreamSource moved to Backend_D3D9.cpp / Backend_D3D11.cpp
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamNumber) const

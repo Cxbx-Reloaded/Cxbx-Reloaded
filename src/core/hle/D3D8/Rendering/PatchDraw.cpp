@@ -69,10 +69,6 @@
 
 using namespace xbox;
 
-extern void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
-extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS];
-extern void CxbxD3D11ApplyDirtyStates();
-
 // ---------------------------------------------------------------
 // Utility: Evaluate 1D Bernstein basis for cubic Bezier (degree 3)
 // ---------------------------------------------------------------

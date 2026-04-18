@@ -26,14 +26,8 @@
 
 static DWORD g_VBLastSwap = 0;
 
-// Forward declarations (defined in XbPushBuffer.cpp)
-extern uint32_t HLE_read_NV2A_pgraph_register(const int reg);
-
 // Forward declaration (defined in HostImGui.cpp)
 extern void CxbxImGui_RenderD3D(ImGuiUI* m_imgui, IDirect3DSurface* renderTarget);
-
-// Forward declaration (defined in XbConvert_ColorFormats.cpp)
-extern void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2, uint8_t* rgb_buf, int width);
 
 
 xbox::X_D3DSurface* WINAPI xbox::EMUPATCH(D3DDevice_GetBackBuffer2)

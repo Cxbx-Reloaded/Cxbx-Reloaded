@@ -74,6 +74,7 @@ enum _ComponentEncoding {
 typedef void(*FormatToARGBRow)(const uint8_t* src, uint8_t* dst_argb, int width);
 
 extern void __L6V5U5ToX8L8V8U8Row_C(const uint8_t* src_l6v5u5, uint8_t* dst_xlvu, int width);
+extern void ____YUY2ToARGBRow_C(const uint8_t* src_yuy2, uint8_t* rgb_buf, int width);
 extern const FormatToARGBRow ComponentConverters[];
 extern const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format);
 

@@ -24,8 +24,6 @@
 // ******************************************************************
 #include "EmuD3D8_common.h"
 
-extern NV2ADevice* g_NV2A;
-
 static std::queue<s_Xbox_Callback> g_Xbox_CallbackQueue;
 
 void CxbxUpdateHostTextures()
@@ -266,7 +264,6 @@ void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
 	}
 }
 
-extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
 // TODO : Once we're able to flush the NV2A push buffer
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()

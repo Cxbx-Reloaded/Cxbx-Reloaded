@@ -268,9 +268,6 @@ extern void pgraph_handle_method(
 	unsigned int method,
 	uint32_t parameter);
 
-// LLE NV2A
-extern NV2ADevice* g_NV2A;
-
 uint32_t HLE_read_NV2A_pgraph_register(const int reg)
 {
 	NV2AState* dev = g_NV2A->GetDeviceState();

@@ -175,8 +175,6 @@ typedef struct s_CxbxPSDef {
 
 		// Fetch currently active texture types, which impact AdjustTextureModes
 		for (unsigned i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-			extern xbox::X_D3DRESOURCETYPE GetXboxD3DResourceType(const xbox::X_D3DResource *pXboxResource);
-
 			if (g_pXbox_SetTexture[i])
 				ActiveTextureTypes[i] = GetXboxD3DResourceType(g_pXbox_SetTexture[i]);
 			else

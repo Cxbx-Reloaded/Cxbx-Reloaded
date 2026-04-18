@@ -141,6 +141,4 @@ extern void CxbxImpl_End();
 extern void CxbxImpl_SetStreamSource(UINT StreamNumber, xbox::X_D3DVertexBuffer* pStreamData, UINT Stride);
 extern void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d);
 
-extern DWORD g_dwPrimPerFrame;
-
 #endif

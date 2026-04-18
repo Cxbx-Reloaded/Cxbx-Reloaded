@@ -265,6 +265,7 @@ extern int GetXboxVertexDataComponentCount(int d3dvsdt);
 extern bool g_Xbox_VertexShader_IsFixedFunction;
 
 extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();
+extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS];
 extern xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber);
 #ifdef CXBX_USE_D3D11
 extern ID3DBlob* CxbxGetActiveVertexShaderBytecode();
