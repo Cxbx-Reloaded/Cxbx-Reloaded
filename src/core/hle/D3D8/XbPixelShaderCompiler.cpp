@@ -1055,4 +1055,24 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   // Read the color from the corresponding render state slot :
   // Set all host constant values using a single call:
   CxbxSetPixelShaderConstantF(0, reinterpret_cast<const float*>(fColor), PSH_XBOX_CONSTANT_MAX);
-}
+
+  // Diagnostic: dump PS constant values (first 3 occurrences only)
+  {
+    static int s_diagCount = 0;
+    if (s_diagCount < 3) {
+      s_diagCount++;
+      EmuLog(LOG_LEVEL::INFO, "PS diag [%d]: fog=(%f,%f,%f,%f) fogInfo=(%f,%f,%f,%f) fogEnable=%f",
+        s_diagCount,
+        fColor[PSH_XBOX_CONSTANT_FOG].r, fColor[PSH_XBOX_CONSTANT_FOG].g,
+        fColor[PSH_XBOX_CONSTANT_FOG].b, fColor[PSH_XBOX_CONSTANT_FOG].a,
+        fColor[CXBX_D3DPS_CONSTREG_FOGINFO].r, fColor[CXBX_D3DPS_CONSTREG_FOGINFO].g,
+        fColor[CXBX_D3DPS_CONSTREG_FOGINFO].b, fColor[CXBX_D3DPS_CONSTREG_FOGINFO].a,
+        fColor[PSH_XBOX_CONSTANT_FOGENABLE].r);
+      EmuLog(LOG_LEVEL::INFO, "PS diag [%d]: c0=(%f,%f,%f,%f) c1=(%f,%f,%f,%f) texfmt=(%f,%f,%f,%f)",
+        s_diagCount,
+        fColor[0].r, fColor[0].g, fColor[0].b, fColor[0].a,
+        fColor[1].r, fColor[1].g, fColor[1].b, fColor[1].a,
+        fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].r, fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].g,
+        fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].b, fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].a);
+    }
+  }

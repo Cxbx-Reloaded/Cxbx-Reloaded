@@ -215,6 +215,17 @@ void CxbxD3D11ApplyDirtyStates()
 	}
 
 	if (g_bD3D11BlendStateDirty) {
+		// Diagnostic: log blend state (first 5 occurrences only)
+		{
+			static int s_blendDiag = 0;
+			if (s_blendDiag < 5) {
+				s_blendDiag++;
+				auto& rt = g_D3D11BlendDesc.RenderTarget[0];
+				EmuLog(LOG_LEVEL::INFO, "Blend diag [%d]: Enable=%d Src=%d Dst=%d Op=%d SrcA=%d DstA=%d OpA=%d WriteMask=0x%X",
+					s_blendDiag, rt.BlendEnable, rt.SrcBlend, rt.DestBlend, rt.BlendOp,
+					rt.SrcBlendAlpha, rt.DestBlendAlpha, rt.BlendOpAlpha, rt.RenderTargetWriteMask);
+			}
+		}
 		HRESULT hr = g_pD3DDevice->CreateBlendState(&g_D3D11BlendDesc, g_pD3DBlendState.ReleaseAndGetAddressOf());
 		DEBUG_D3DRESULT(hr, "g_pD3DDevice->CreateBlendState");
 		if (SUCCEEDED(hr)) {

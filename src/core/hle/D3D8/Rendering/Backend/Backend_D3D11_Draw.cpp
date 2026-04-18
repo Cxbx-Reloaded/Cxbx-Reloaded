@@ -88,6 +88,16 @@ void CxbxD3DClear(DWORD Count, CONST D3DRECT* pRects, DWORD Flags, D3DCOLOR Colo
 	clearColor[2] = ((Color >>  0) & 0xFF) / 255.0f;
 	clearColor[3] = ((Color >> 24) & 0xFF) / 255.0f;
 
+	// Diagnostic: log clear color (first 3 occurrences only)
+	{
+		static int s_clearDiag = 0;
+		if (s_clearDiag < 3) {
+			s_clearDiag++;
+			EmuLog(LOG_LEVEL::INFO, "Clear diag [%d]: Color=0x%08X -> RGBA(%f,%f,%f,%f) Flags=0x%X",
+				s_clearDiag, Color, clearColor[0], clearColor[1], clearColor[2], clearColor[3], Flags);
+		}
+	}
+
 	if ((Flags & D3DCLEAR_TARGET) && g_pD3DCurrentRTV != nullptr) {
 		if (Count > 0 && pRects != nullptr) {
 			ComPtr<ID3D11DeviceContext1> context1;
@@ -288,6 +298,14 @@ void CxbxRawSetPixelShader(IDirect3DPixelShader* pPixelShader)
 // a semantic the vertex shader doesn't declare (e.g. the HLSL compiler optimized
 // away an unused TEXCOORD slot).  The NV2A has 16 attribute slots that all map
 // to TEXCOORD0-15, but a given shader may only use a subset.
+//
+// Additionally, DXVK (unlike native D3D11) requires ALL non-builtin shader
+// inputs to have a corresponding input layout element.  Native D3D11 defaults
+// missing inputs to (0,0,0,1), but DXVK returns E_INVALIDARG.  To handle this,
+// we add dummy elements (slot 0, offset 0) for ISGN entries that have no
+// matching vertex buffer element.  The dummy reads overlap real vertex data,
+// but the shader ignores these values (they're either optimized away or
+// overridden by vRegisterDefaultValues via the lerp in init_v).
 std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
 	const void* bytecode, size_t bytecodeSize)
@@ -310,6 +328,7 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 
 	const uint8_t* isgnData = nullptr;
 	uint32_t isgnSize = 0;
+	bool isISG1 = false;
 	for (uint32_t i = 0; i < chunkCount; i++) {
 		uint32_t offset = *reinterpret_cast<const uint32_t*>(data + 32 + i * 4);
 		if (offset + 8 > bytecodeSize)
@@ -319,6 +338,7 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 		if (fourCC == 0x4E475349 || fourCC == 0x31475349) {
 			isgnSize = *reinterpret_cast<const uint32_t*>(data + offset + 4);
 			isgnData = data + offset + 8;
+			isISG1 = (fourCC == 0x31475349);
 			break;
 		}
 	}
@@ -330,19 +350,13 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 	}
 
 	uint32_t sigElementCount = *reinterpret_cast<const uint32_t*>(isgnData);
-	// Detect element stride: ISG1 uses 32 bytes per element, ISGN uses 24
-	uint32_t elemStride = 24;
-	// Re-check which chunk type we found
-	for (uint32_t i = 0; i < chunkCount; i++) {
-		uint32_t offset = *reinterpret_cast<const uint32_t*>(data + 32 + i * 4);
-		if (offset + 8 > bytecodeSize) continue;
-		uint32_t fourCC = *reinterpret_cast<const uint32_t*>(data + offset);
-		if (fourCC == 0x31475349) { // ISG1
-			elemStride = 32;
-			break;
-		}
-		if (fourCC == 0x4E475349) break; // ISGN
-	}
+	// ISG1 uses 32 bytes per element (extra Stream field), ISGN uses 24
+	uint32_t elemStride = isISG1 ? 32 : 24;
+	// ISG1 element layout: Stream(4), NameOffset(4), SemanticIndex(4), SystemValue(4), ...
+	// ISGN element layout: NameOffset(4), SemanticIndex(4), SystemValue(4), ...
+	uint32_t nameFieldOff   = isISG1 ? 4 : 0;
+	uint32_t semIdxFieldOff = isISG1 ? 8 : 4;
+	uint32_t sysvalFieldOff = isISG1 ? 12 : 8;
 
 	if (8 + sigElementCount * elemStride > isgnSize) {
 		EmuLog(LOG_LEVEL::WARNING, "FilterInputElements: ISGN size mismatch (count=%u stride=%u isgnSize=%u)", sigElementCount, elemStride, isgnSize);
@@ -351,23 +365,26 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 	}
 
 	// Log ISGN contents for debugging
-	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: ISGN has %u elements (stride=%u, isgnSize=%u, bytecodeSize=%zu)",
-		sigElementCount, elemStride, isgnSize, bytecodeSize);
+	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: ISGN has %u elements (stride=%u, isgnSize=%u, bytecodeSize=%zu, ISG1=%d)",
+		sigElementCount, elemStride, isgnSize, bytecodeSize, isISG1);
 	for (uint32_t s = 0; s < sigElementCount; s++) {
 		const uint8_t* sigElem = isgnData + 8 + s * elemStride;
-		uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem);
-		uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + 4);
+		uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem + nameFieldOff);
+		uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + semIdxFieldOff);
 		const char* sigName = (nameOffset < isgnSize) ? reinterpret_cast<const char*>(isgnData + nameOffset) : "(invalid)";
 		EmuLog(LOG_LEVEL::DEBUG, "  ISGN[%u]: %s/%u", s, sigName, semIndex);
 	}
+
+	// Track which ISGN entries are matched by input layout elements
+	std::vector<bool> isgnMatched(sigElementCount, false);
 
 	// For each input layout element, check if the shader has a matching input
 	for (UINT e = 0; e < elementCount; e++) {
 		bool found = false;
 		for (uint32_t s = 0; s < sigElementCount; s++) {
 			const uint8_t* sigElem = isgnData + 8 + s * elemStride;
-			uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem);
-			uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + 4);
+			uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem + nameFieldOff);
+			uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + semIdxFieldOff);
 			if (nameOffset >= isgnSize)
 				continue;
 			const char* sigName = reinterpret_cast<const char*>(isgnData + nameOffset);
@@ -375,6 +392,7 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 				&& pElements[e].SemanticName != nullptr
 				&& _stricmp(sigName, pElements[e].SemanticName) == 0) {
 				found = true;
+				isgnMatched[s] = true;
 				break;
 			}
 		}
@@ -383,7 +401,37 @@ std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 		}
 	}
 
-	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: %u of %u elements matched ISGN", (unsigned)result.size(), elementCount);
+	// DXVK compatibility: add dummy elements for unmatched ISGN entries.
+	// DXVK (unlike native D3D11) requires every non-builtin shader input to
+	// have a corresponding input layout element, returning E_INVALIDARG otherwise.
+	// Dummy elements read from slot 0 / offset 0 with a small format; the shader
+	// either doesn't use the value or overrides it via vRegisterDefaultValues.
+	uint32_t dummyCount = 0;
+	for (uint32_t s = 0; s < sigElementCount; s++) {
+		if (isgnMatched[s]) continue;
+		const uint8_t* sigElem = isgnData + 8 + s * elemStride;
+		uint32_t nameOffset = *reinterpret_cast<const uint32_t*>(sigElem + nameFieldOff);
+		uint32_t semIndex   = *reinterpret_cast<const uint32_t*>(sigElem + semIdxFieldOff);
+		uint32_t sysval     = *reinterpret_cast<const uint32_t*>(sigElem + sysvalFieldOff);
+		// Skip built-in system-value inputs (SV_VertexID, SV_InstanceID, etc.)
+		if (sysval != 0) continue;
+		if (nameOffset >= isgnSize) continue;
+		const char* sigName = reinterpret_cast<const char*>(isgnData + nameOffset);
+
+		D3D11_INPUT_ELEMENT_DESC dummy = {};
+		dummy.SemanticName = sigName; // Points into bytecode, valid for CreateInputLayout lifetime
+		dummy.SemanticIndex = semIndex;
+		dummy.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // 4 bytes, universally supported, 4-byte aligned
+		dummy.InputSlot = 0;
+		dummy.AlignedByteOffset = 0;
+		dummy.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		dummy.InstanceDataStepRate = 0;
+		result.push_back(dummy);
+		dummyCount++;
+	}
+
+	EmuLog(LOG_LEVEL::DEBUG, "FilterInputElements: %u of %u elements matched ISGN, %u dummy elements added for DXVK compat",
+		(unsigned)(result.size() - dummyCount), elementCount, dummyCount);
 
 	return result;
 }
