@@ -845,6 +845,7 @@ bool ConvertD3DTextureToARGBBuffer(
 			// This code will get hit when converting compressed texture mipmaps on hardware that somehow doesn't support DXT natively
 			// (or lied when Cxbx asked it if it does!)
 			EmuLog(LOG_LEVEL::WARNING, "Converting DXT textures smaller than a block is not currently implemented. Ignoring conversion!");
+			free(unswizleBuffer);
 			return true;
 		}
 
@@ -869,8 +870,8 @@ bool ConvertD3DTextureToARGBBuffer(
 		pDstSlice += DstSlicePitch;
 	}
 
-	if (unswizleBuffer)
-		free(unswizleBuffer);
+	free(unswizleBuffer);
+	unswizleBuffer = nullptr;
 
 	return true;
 }
