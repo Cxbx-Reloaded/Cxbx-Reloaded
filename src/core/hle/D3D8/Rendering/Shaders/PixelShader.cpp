@@ -403,5 +403,5 @@ extern HRESULT EmuCompilePixelShader
 	BuildShader(pIntermediateShader, hlsl_stream);
 	std::string hlsl_str = hlsl_stream.str();
 
-	return EmuCompileShader(hlsl_str, g_ps_model, ppHostShader);
+	return EmuCompileShader(hlsl_str, g_ps_model, ppHostShader, g_ShaderSources.pixelShaderTemplatePath.c_str());
 }

@@ -157,6 +157,7 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.hpp"
  "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.hpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/CxbxPixelShaderTemplate.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/CxbxTextureFormatDecode.hlsli"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/CxbxVertexShaderTemplate.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/CxbxVertexShaderPassthrough.hlsl"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/RenderGlobals.h"

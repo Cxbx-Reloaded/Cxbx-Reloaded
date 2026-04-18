@@ -39,6 +39,7 @@ extern HRESULT EmuCompileShader
 struct ShaderSources {
 	// Pixel Shader
 	std::string pixelShaderTemplateHlsl[3];
+	std::string pixelShaderTemplatePath;
 
 	std::string fixedFunctionPixelShaderHlsl;
 	std::string fixedFunctionPixelShaderPath;

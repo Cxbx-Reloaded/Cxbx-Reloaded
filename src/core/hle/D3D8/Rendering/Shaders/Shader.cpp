@@ -202,6 +202,7 @@ void ShaderSources::LoadShadersFromDisk() {
 		std::stringstream tmp;
 		auto dir = hlslDir;
 		dir.append("CxbxPixelShaderTemplate.hlsl");
+		this->pixelShaderTemplatePath = dir.string();
 		tmp << OpenWithRetry(dir.string()).rdbuf();
 		std::string hlsl = tmp.str();
 
