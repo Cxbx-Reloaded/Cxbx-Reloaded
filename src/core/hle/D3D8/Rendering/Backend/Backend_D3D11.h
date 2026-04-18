@@ -51,6 +51,15 @@ static const UINT CXBX_D3D11_VS_CB_COUNT = 256;
 static const UINT CXBX_D3D11_PS_CB_SLOT = 0;
 static const UINT CXBX_D3D11_PS_CB_COUNT = 53; // Must accommodate both programmatic PS (44 regs) and FF PS FixedFunctionPixelShaderState struct (53 regs)
 
+// ******************************************************************
+// * Vertex defaults buffer — provides all 16 TEXCOORD attributes via
+// * a zero-stride vertex buffer bound to a dedicated input slot.
+// * Non-streamed attributes read NV2A "sticky" values from this buffer.
+// * This satisfies DXVK's requirement that every ISGN entry has a
+// * matching input layout element.
+// ******************************************************************
+static const UINT CXBX_D3D11_VERTEX_DEFAULTS_SLOT = 16; // Input slot for zero-stride defaults buffer
+extern ID3D11Buffer *g_pD3D11VertexDefaultsBuffer;
 // Constant buffers (created in RenderGlobals.cpp device init, used by Backend_D3D11.cpp)
 extern ID3D11Buffer *g_pD3D11VSConstantBuffer;
 extern ID3D11Buffer *g_pD3D11PSConstantBuffer;
@@ -184,6 +193,23 @@ bool CxbxD3D11ConvertVertexBufferGPU(
 std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
 	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
 	const void* bytecode, size_t bytecodeSize);
+
+// Build a complete D3D11 input layout with all 16 TEXCOORD attributes.
+// Streamed attributes use their declared slot/format/offset; non-streamed
+// attributes read from the zero-stride vertex defaults buffer on slot
+// CXBX_D3D11_VERTEX_DEFAULTS_SLOT.  This satisfies DXVK's requirement
+// that every ISGN entry has a matching input layout element.
+std::vector<D3D11_INPUT_ELEMENT_DESC> BuildCompleteInputLayout(
+	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
+	const bool* vRegisterInDeclaration);
+
+// Create the vertex defaults buffer and bind it to the defaults slot.
+// Called once during device initialization.
+void CxbxD3D11CreateVertexDefaultsBuffer();
+
+// Upload current NV2A sticky attribute values to the vertex defaults buffer.
+// Call before each draw to ensure non-streamed attributes have correct values.
+void CxbxD3D11UpdateVertexDefaultsBuffer();
 
 // Lazily create the D3D11 input layout for a vertex declaration (if not yet
 // created) and bind it via IASetInputLayout.  Encapsulates all device access

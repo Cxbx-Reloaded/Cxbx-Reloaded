@@ -374,6 +374,9 @@ void CreateDefaultD3D9Device
 			g_pD3DDeviceContext->PSSetConstantBuffers(CXBX_D3D11_PS_CB_SLOT, 1, &g_pD3D11PSConstantBuffer);
 		}
 	}
+
+	// Create the zero-stride vertex defaults buffer for NV2A sticky attribute emulation
+	CxbxD3D11CreateVertexDefaultsBuffer();
 #else
    	// IDirect3D9::CreateDevice must be called from the window message thread
    	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/multithreading-issues
