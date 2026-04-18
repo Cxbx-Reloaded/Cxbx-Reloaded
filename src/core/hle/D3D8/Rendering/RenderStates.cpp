@@ -31,7 +31,7 @@
 #include "Logging.h"
 #include <cstring> // For std::memcpy
 #include "core/hle/D3D8/Rendering/RenderGlobals.h" // For g_pD3DDevice
-#include "core/hle/D3D8/Rendering/Backend_D3D11.h" // For D3D11 state descs & dirty flags
+#include "core/hle/D3D8/Rendering/Backend/Backend_D3D11.h" // For D3D11 state descs & dirty flags
 #include "core/hle/D3D8/XbConvert.h"
 
 bool XboxRenderStateConverter::Init()

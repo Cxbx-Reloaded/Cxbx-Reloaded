@@ -38,7 +38,7 @@
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
 #ifdef CXBX_USE_D3D11
-#include "core\hle\D3D8\Rendering\Backend_D3D11.h"
+#include "core\hle\D3D8\Rendering\Backend\Backend_D3D11.h"
 #endif
 
 #include <imgui.h>
