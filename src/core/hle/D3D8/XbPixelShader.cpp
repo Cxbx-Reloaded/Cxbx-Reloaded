@@ -39,14 +39,14 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Rendering\RenderGlobals.h" // For g_pXbox_PixelShader
-#include "core\hle\D3D8\Rendering\Shader.h" // For g_ShaderSources
+#include "core\hle\D3D8\Rendering\Shaders\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbPixelShader.h"
-#include "core\hle\D3D8\Rendering\PixelShader.h" // EmuCompilePixelShader
+#include "core\hle\D3D8\Rendering\Shaders\PixelShader.h" // EmuCompilePixelShader
 #include "core\hle\D3D8\XbD3D8Logging.h" // For D3DErrorString()
 
 #include "core\kernel\init\CxbxKrnl.h" // For CxbxrAbort()
 #include "util\hasher.h"
-#include "core\hle\D3D8\Rendering\FixedFunctionPixelShader.hlsli"
+#include "core\hle\D3D8\Rendering\Shaders\FixedFunctionPixelShader.hlsli"
 #include "common/FilePaths.hpp" // For szFilePath_CxbxReloaded_Exe
 
 #include <assert.h> // assert()

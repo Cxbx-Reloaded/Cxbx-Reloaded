@@ -29,14 +29,14 @@
 
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\Rendering\RenderGlobals.h"
-#include "core\hle\D3D8\Rendering\Shader.h"
+#include "core\hle\D3D8\Rendering\Shaders\Shader.h"
 #include "core\hle\D3D8\XbPixelShader.h"
-#include "core\hle\D3D8\Rendering\PixelShader.h"
+#include "core\hle\D3D8\Rendering\Shaders\PixelShader.h"
 #include "core\hle\D3D8\XbD3D8Logging.h"
 #include "core\hle\D3D8\XbConvert.h"
 #include "core\kernel\init\CxbxKrnl.h"
 #include "util\hasher.h"
-#include "core\hle\D3D8\Rendering\FixedFunctionPixelShader.hlsli"
+#include "core\hle\D3D8\Rendering\Shaders\FixedFunctionPixelShader.hlsli"
 #include "common/FilePaths.hpp"
 #include <assert.h>
 #include <process.h>

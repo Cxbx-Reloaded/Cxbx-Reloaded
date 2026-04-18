@@ -50,7 +50,7 @@
 #include "core\hle\D3D8\Rendering\RenderGlobals.h"
 #include "core\hle\D3D8\Rendering\Backend_D3D9.h"
 #include "core\hle\D3D8\Rendering\Backend_D3D11.h"
-#include "core\hle\D3D8\Rendering\Shader.h"
+#include "core\hle\D3D8\Rendering\Shaders\Shader.h"
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbVertexShader.h"
 #include "core\hle\D3D8\XbPixelShader.h"
@@ -71,7 +71,7 @@
 #include "common\input\DInputKeyboardMouse.h"
 #include "common\input\InputManager.h"
 #include "common/util/strConverter.hpp"
-#include "VertexShaderCache.h"
+#include "Shaders\VertexShaderCache.h"
 #include "PatchDraw.h"
 #include "Timer.h"
 
