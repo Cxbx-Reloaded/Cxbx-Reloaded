@@ -22,8 +22,8 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "EmuD3D8_common.h"
-#include "IndexBufferConvert.h"
+#include "../EmuD3D8_common.h"
+#include "../IndexBufferConvert.h"
 
 // Variables only used in EmuPatches_State.cpp
 static xbox::X_D3DBaseTexture CxbxActiveTextureCopies[xbox::X_D3DTS_STAGECOUNT] = {}; // Set by D3DDevice_SwitchTexture. Cached active texture

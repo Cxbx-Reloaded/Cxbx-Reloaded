@@ -22,7 +22,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "EmuD3D8_common.h"
+#include "../EmuD3D8_common.h"
 
 static xbox::dword_xt *g_pXbox_BeginPush_Buffer = xbox::zeroptr; // primary push buffer
 

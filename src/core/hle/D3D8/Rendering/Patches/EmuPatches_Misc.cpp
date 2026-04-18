@@ -22,7 +22,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "EmuD3D8_common.h"
+#include "../EmuD3D8_common.h"
 
 // Variables only used in EmuPatches_Misc.cpp
 static DWORD g_OverlaySwap = 0; // Set in D3DDevice_UpdateOverlay

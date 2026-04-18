@@ -22,9 +22,9 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "EmuD3D8_common.h"
-#include "IndexBufferConvert.h"
-#include "Backend_D3D11.h"
+#include "../EmuD3D8_common.h"
+#include "../IndexBufferConvert.h"
+#include "../Backend_D3D11.h"
 
 // ******************************************************************
 // * patch: D3DDevice_Begin

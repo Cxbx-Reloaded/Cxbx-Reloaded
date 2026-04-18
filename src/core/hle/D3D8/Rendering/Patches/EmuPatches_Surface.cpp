@@ -22,7 +22,7 @@
 // *  All rights reserved
 // *
 // ******************************************************************
-#include "EmuD3D8_common.h"
+#include "../EmuD3D8_common.h"
 
 static DWORD g_VBLastSwap = 0;
 

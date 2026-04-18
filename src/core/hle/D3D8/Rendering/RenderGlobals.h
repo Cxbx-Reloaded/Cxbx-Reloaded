@@ -531,12 +531,12 @@ XB_TRAMPOLINES(XB_trampoline_extern);
 
 
 // EMUPATCH declarations split into topic-specific headers:
-#include "EmuPatches_Device.h"
-#include "EmuPatches_Draw.h"
-#include "EmuPatches_Misc.h"
-#include "EmuPatches_Shader.h"
-#include "EmuPatches_State.h"
-#include "EmuPatches_Surface.h"
+#include "Patches/EmuPatches_Device.h"
+#include "Patches/EmuPatches_Draw.h"
+#include "Patches/EmuPatches_Misc.h"
+#include "Patches/EmuPatches_Shader.h"
+#include "Patches/EmuPatches_State.h"
+#include "Patches/EmuPatches_Surface.h"
 // EmuPatches_Unused.h intentionally not included - it's a documentation-only dustbin
 
 #endif // RENDERGLOBALS_H
