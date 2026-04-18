@@ -80,9 +80,6 @@ uniform const float  FOGENABLE : register(c41);
 uniform const float4 TEXFMTFIXUP : register(c42); // D3D11: per-stage texture format channel fixup (0=identity, 1=.gbar, 2=.abgr, 3=luminance, 4=alpha-luminance)
 uniform const float4 ALPHATEST : register(c43); // D3D11: alpha test state (x=enable, y=ref [0..1], z=func [D3DCMPFUNC], w=unused)
 
-// Shader-based texture format decoding (D3D11 only)
-#include "CxbxTextureFormatDecode.hlsli"
-
 #define CM_LT(c) if(c < 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_LT
 #define CM_GE(c) if(c >= 0) clip(-1); // = PS_COMPAREMODE_[RSTQ]_GE
 
@@ -379,23 +376,7 @@ float4 _Sample6F(sampler samp, int ts, float3 s)
 	return PostProcessTexel(ts, result);
 }
 
-#ifdef CXBX_USE_D3D11
-// Decode-aware sampling: when TEXDECODEINFO[ts].x != 0, use raw integer
-// SRV + shader decode instead of normal tex2D.  Falls back to normal
-// sampling otherwise.  The rawTex argument is resolved by token-pasting
-// in the Sample2D macro so it is always a compile-time constant.
-float4 _Sample2D_Decode(Texture2D<uint> rawTex, sampler samp, int ts, float3 s)
-{
-	if (TEXDECODEINFO[ts].x != TEXDECODE_FMT_NONE) {
-		float4 result = SampleWithDecode(rawTex, s.xy, TEXDECODEINFO[ts]);
-		return PostProcessTexel(ts, result);
-	}
-	return _Sample2D(samp, ts, s);
-}
-#define Sample2D(ts, s) _Sample2D_Decode(rawTex_##ts, sampler_##ts, ts, s)
-#else
 #define Sample2D(ts, s) _Sample2D(sampler_##ts, ts, s)
-#endif
 #define Sample3D(ts, s) _Sample3D(sampler_##ts, ts, s)
 #define Sample6F(ts, s) _Sample6F(sampler_##ts, ts, s)
 

@@ -384,11 +384,8 @@ constexpr int PSH_XBOX_CONSTANT_FOGENABLE = CXBX_D3DPS_CONSTREG_FOGINFO + 1; // 
 constexpr int PSH_XBOX_CONSTANT_TEXFMTFIXUP = PSH_XBOX_CONSTANT_FOGENABLE + 1; // = 42
 // D3D11: Alpha test state (enable, ref, func, 0) — D3D11 has no fixed-function alpha test
 constexpr int PSH_XBOX_CONSTANT_ALPHATEST = PSH_XBOX_CONSTANT_TEXFMTFIXUP + 1; // = 43
-// D3D11: Per-stage texture format decode info (4 float4s at c44-c47)
-// Each float4 = (formatType, width, height, filterMode); 0 = normal sampling
-constexpr int PSH_XBOX_CONSTANT_TEXDECODEINFO = PSH_XBOX_CONSTANT_ALPHATEST + 1; // = 44..47
 // This concludes the set of constants that need to be set on host :
-constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_TEXDECODEINFO + 4; // = 48
+constexpr int PSH_XBOX_CONSTANT_MAX = PSH_XBOX_CONSTANT_ALPHATEST + 1; // = 44
 
 std::string_view GetD3DTOPString(int d3dtop) {
 	static constexpr std::string_view opToString[] = {
@@ -1068,17 +1065,6 @@ void CxbxUpdateActivePixelShader() // NOPATCH
   fColor[PSH_XBOX_CONSTANT_ALPHATEST].g = static_cast<float>(XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHAREF)) / 255.0f;
   fColor[PSH_XBOX_CONSTANT_ALPHATEST].b = static_cast<float>(EmuXB2PC_D3DCMPFUNC((xbox::X_D3DCMPFUNC)XboxRenderStates.GetXboxRenderState(xbox::X_D3DRS_ALPHAFUNC)));
   fColor[PSH_XBOX_CONSTANT_ALPHATEST].a = 0;
-
-  // D3D11: Per-stage texture format decode info (c44-c47)
-  // Each float4 = (formatType, width, height, filterMode)
-  // Currently initialized to zero (no decode); the C++ backend will populate
-  // these when raw integer SRVs are bound for formats needing shader decode.
-  for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
-    fColor[PSH_XBOX_CONSTANT_TEXDECODEINFO + stage].r = 0; // TEXDECODE_FMT_NONE
-    fColor[PSH_XBOX_CONSTANT_TEXDECODEINFO + stage].g = 0;
-    fColor[PSH_XBOX_CONSTANT_TEXDECODEINFO + stage].b = 0;
-    fColor[PSH_XBOX_CONSTANT_TEXDECODEINFO + stage].a = 0;
-  }
 
   // Assume all constants are in use (this is much easier than tracking them for no other purpose than to skip a few here)
   // Read the color from the corresponding render state slot :
