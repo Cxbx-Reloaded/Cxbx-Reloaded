@@ -755,6 +755,13 @@ D3DXCOLOR CxbxCalcColorSign(int stage_nr)
 #endif
 	// Host D3DFMT's with one or more signed components : D3DFMT_V8U8, D3DFMT_Q8W8V8U8, D3DFMT_V16U16, D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8
 	EMUFORMAT H/*ostTextureFormat*/ = g_HostTextureFormats[stage_nr];
+	// Guard: if the host format is unknown (stage not yet populated), skip all signed checks.
+	// In D3D11, EMUFMT_L6V5U5 == DXGI_FORMAT_NOT_AVAILABLE == DXGI_FORMAT_UNKNOWN == 0,
+	// so without this guard, uninitialized stages falsely match L6V5U5 signed detection.
+	if (H == EMUFMT_UNKNOWN) {
+		D3DXCOLOR zero(0, 0, 0, 0);
+		return zero; // No signed conversion for unknown/uninitialized stages
+	}
 	// See https://docs.microsoft.com/en-us/windows/win32/direct3d9/bump-map-pixel-formats
 	// No need to check for unused formats : D3DFMT_Q16W16V16U16, D3DFMT_CxV8U8, D3DFMT_A2W10V10U10
 #if 0 // Original signed-ness checking code gave effectively this :
