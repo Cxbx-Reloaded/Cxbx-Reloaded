@@ -165,14 +165,11 @@ bool CxbxD3D11ExpandPaletteTexture(
 
 // Format conversion type constants (must match CS shader)
 #define CXBX_FMTCONV_L6V5U5      1
-#define CXBX_FMTCONV_R6G5B5      2
-#define CXBX_FMTCONV_V8U8        3
-#define CXBX_FMTCONV_G8B8        4
-#define CXBX_FMTCONV_R5G5B5A1    5
-#define CXBX_FMTCONV_R4G4B4A4    6
-#define CXBX_FMTCONV_A8          7
-#define CXBX_FMTCONV_YUY2        8
-#define CXBX_FMTCONV_UYVY        9
+#define CXBX_FMTCONV_R6G5B5      2  // Same bit layout as L6V5U5, unsigned interpretation
+#define CXBX_FMTCONV_V8U8        3  // V8U8/G8B8 are aliases (Xbox fmt 0x28); signedness via colorsign
+#define CXBX_FMTCONV_R5G5B5A1    4
+#define CXBX_FMTCONV_R4G4B4A4    5
+#define CXBX_FMTCONV_A8          6
 
 // Map Xbox texture format to CS format conversion type.
 // Returns 0 if the format is not handled by the CS.
@@ -183,8 +180,8 @@ inline UINT CxbxGetFormatConvertType(xbox::X_D3DFORMAT X_Format) {
 	case xbox::X_D3DFMT_R5G5B5A1:   case xbox::X_D3DFMT_LIN_R5G5B5A1: return CXBX_FMTCONV_R5G5B5A1;
 	case xbox::X_D3DFMT_R4G4B4A4:   case xbox::X_D3DFMT_LIN_R4G4B4A4: return CXBX_FMTCONV_R4G4B4A4;
 	case xbox::X_D3DFMT_A8:         case xbox::X_D3DFMT_LIN_A8:        return CXBX_FMTCONV_A8;
-	case xbox::X_D3DFMT_YUY2:                                          return CXBX_FMTCONV_YUY2;
-	case xbox::X_D3DFMT_UYVY:                                          return CXBX_FMTCONV_UYVY;
+	// YUY2/UYVY are 4:2:2 packed — chroma shared across texel pairs, can't be decoded per-texel.
+	// They need a separate dispatch path or fall back to CPU conversion.
 	default: return 0;
 	}
 }
