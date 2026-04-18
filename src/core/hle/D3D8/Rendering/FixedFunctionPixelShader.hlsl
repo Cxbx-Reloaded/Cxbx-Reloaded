@@ -60,7 +60,13 @@ void PerformAlphaKill(const float AlphaKill, float4 t)
 #endif
 
 uniform FixedFunctionPixelShaderState state : register(c0);
-sampler samplers[4] : register(s0);
+// Individual samplers instead of an array, because the D3D11 HLSL compiler
+// cannot resolve a sampler array where different elements are used with
+// different DX9-style intrinsics (tex2D vs tex3D vs texCUBE).
+sampler sampler_0 : register(s0);
+sampler sampler_1 : register(s1);
+sampler sampler_2 : register(s2);
+sampler sampler_3 : register(s3);
 
 struct PS_INPUT // Declared identical to vertex shader output (see VS_OUTPUT)
 {
@@ -240,12 +246,31 @@ TextureArgs ExecuteTextureStage(
 	int type = TextureSampleType[i];
 	if (type == SAMPLE_NONE)
 		t = 1; // Test case JSRF
-	else if (type == SAMPLE_2D)
-		t = tex2D(samplers[i], TexCoord.xy);
-	else if (type == SAMPLE_3D)
-		t = tex3D(samplers[i], TexCoord.xyz);
-	else if (type == SAMPLE_CUBE)
-		t = texCUBE(samplers[i], TexCoord.xyz);
+	else if (type == SAMPLE_2D) {
+		// Use switch to dispatch to individual samplers, avoiding X4539
+		switch (i) {
+			case 0: t = tex2D(sampler_0, TexCoord.xy); break;
+			case 1: t = tex2D(sampler_1, TexCoord.xy); break;
+			case 2: t = tex2D(sampler_2, TexCoord.xy); break;
+			case 3: t = tex2D(sampler_3, TexCoord.xy); break;
+		}
+	}
+	else if (type == SAMPLE_3D) {
+		switch (i) {
+			case 0: t = tex3D(sampler_0, TexCoord.xyz); break;
+			case 1: t = tex3D(sampler_1, TexCoord.xyz); break;
+			case 2: t = tex3D(sampler_2, TexCoord.xyz); break;
+			case 3: t = tex3D(sampler_3, TexCoord.xyz); break;
+		}
+	}
+	else if (type == SAMPLE_CUBE) {
+		switch (i) {
+			case 0: t = texCUBE(sampler_0, TexCoord.xyz); break;
+			case 1: t = texCUBE(sampler_1, TexCoord.xyz); break;
+			case 2: t = texCUBE(sampler_2, TexCoord.xyz); break;
+			case 3: t = texCUBE(sampler_3, TexCoord.xyz); break;
+		}
+	}
 
 	// Apply texture format channel fixup (D3D11: luminance replication, channel swizzle)
 	[branch] if (stage.TEXFMTFIXUP != TEXFMTFIXUP_IDENTITY) {
