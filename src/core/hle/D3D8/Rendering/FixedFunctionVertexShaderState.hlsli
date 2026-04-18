@@ -20,11 +20,22 @@ using namespace DirectX;
 #include <array> // for std::array<>
 #define arr(name, type, length) std::array<type, length> name
 
+// A float that occupies a full 16-byte constant register (matching Xbox register layout)
+#define PADDED_FLOAT(name) alignas(16) float name
+// A float3 that occupies a full 16-byte constant register (matching Xbox register layout)
+#define PADDED_FLOAT3(name) alignas(16) float3 name
+
 #else
 // HLSL
 #define arr(name, type, length) type name[length]
 #define alignas(x)
 #define const static
+
+// Ensure each field occupies a full float4 constant register in SM5 cbuffer packing,
+// matching the C++ alignas(16) layout for raw Xbox register data upload.
+#define PADDED_FLOAT(name) float name; float3 _pad_##name
+#define PADDED_FLOAT3(name) float3 name; float _pad_##name
+
 #endif //  __cplusplus
 
 namespace FixedFunctionVertexShader {
@@ -70,19 +81,19 @@ struct Light {
     float4 Specular;
 
     // Viewspace light position
-    alignas(16) float3 PositionV;
-    alignas(16) float Range;
+    PADDED_FLOAT3(PositionV);
+    PADDED_FLOAT(Range);
 
     // Viewspace light direction (normalized)
-    alignas(16) float3 DirectionVN;
-    alignas(16) float Type; // 1=Point, 2=Spot, 3=Directional
+    PADDED_FLOAT3(DirectionVN);
+    PADDED_FLOAT(Type); // 1=Point, 2=Spot, 3=Directional
 
-    alignas(16) float3 Attenuation;
-    alignas(16) float Falloff;
+    PADDED_FLOAT3(Attenuation);
+    PADDED_FLOAT(Falloff);
 
-    alignas(16) float CosHalfPhi;
+    PADDED_FLOAT(CosHalfPhi);
     // cos(theta/2) - cos(phi/2)
-    alignas(16) float SpotIntensityDivisor;
+    PADDED_FLOAT(SpotIntensityDivisor);
 };
 
 struct Material {
@@ -91,63 +102,63 @@ struct Material {
     float4 Specular;
     float4 Emissive;
 
-    alignas(16) float Power;
+    PADDED_FLOAT(Power);
 };
 
 struct Modes {
-    alignas(16) float AmbientMaterialSource;
-    alignas(16) float DiffuseMaterialSource;
-    alignas(16) float SpecularMaterialSource;
-    alignas(16) float EmissiveMaterialSource;
+    PADDED_FLOAT(AmbientMaterialSource);
+    PADDED_FLOAT(DiffuseMaterialSource);
+    PADDED_FLOAT(SpecularMaterialSource);
+    PADDED_FLOAT(EmissiveMaterialSource);
 
-    alignas(16) float BackAmbientMaterialSource;
-    alignas(16) float BackDiffuseMaterialSource;
-    alignas(16) float BackSpecularMaterialSource;
-    alignas(16) float BackEmissiveMaterialSource;
+    PADDED_FLOAT(BackAmbientMaterialSource);
+    PADDED_FLOAT(BackDiffuseMaterialSource);
+    PADDED_FLOAT(BackSpecularMaterialSource);
+    PADDED_FLOAT(BackEmissiveMaterialSource);
 
-    alignas(16) float Lighting;
-    alignas(16) float TwoSidedLighting;
-//  alignas(16) float SpecularEnable;
-    alignas(16) float LocalViewer;
+    PADDED_FLOAT(Lighting);
+    PADDED_FLOAT(TwoSidedLighting);
+//  PADDED_FLOAT(SpecularEnable);
+    PADDED_FLOAT(LocalViewer);
 
-/// alignas(16) float ColorVertex;
-    alignas(16) float VertexBlend_NrOfMatrices;
-    alignas(16) float VertexBlend_CalcLastWeight; // Could be a bool in higer shader models
-    alignas(16) float NormalizeNormals;
+/// PADDED_FLOAT(ColorVertex);
+    PADDED_FLOAT(VertexBlend_NrOfMatrices);
+    PADDED_FLOAT(VertexBlend_CalcLastWeight); // Could be a bool in higer shader models
+    PADDED_FLOAT(NormalizeNormals);
 };
 
 struct PointSprite {
-    alignas(16) float PointSize;
-    alignas(16) float PointSize_Min;
-    alignas(16) float PointSize_Max;
-//  alignas(16) float PointScaleEnable;
-    alignas(16) float XboxRenderTargetHeight;
-    alignas(16) float3 PointScaleABC;
-    alignas(16) float RenderUpscaleFactor;
+    PADDED_FLOAT(PointSize);
+    PADDED_FLOAT(PointSize_Min);
+    PADDED_FLOAT(PointSize_Max);
+//  PADDED_FLOAT(PointScaleEnable);
+    PADDED_FLOAT(XboxRenderTargetHeight);
+    PADDED_FLOAT3(PointScaleABC);
+    PADDED_FLOAT(RenderUpscaleFactor);
 };
 
 struct TextureState {
-    alignas(16) float TextureTransformFlagsCount;
-    alignas(16) float TextureTransformFlagsProjected;
-    alignas(16) float TexCoordIndex;
-    alignas(16) float TexCoordIndexGen;
+    PADDED_FLOAT(TextureTransformFlagsCount);
+    PADDED_FLOAT(TextureTransformFlagsProjected);
+    PADDED_FLOAT(TexCoordIndex);
+    PADDED_FLOAT(TexCoordIndexGen);
 };
 
 struct Fog {
-    alignas(16) float Enable;
-    alignas(16) float DepthMode;
-    alignas(16) float TableMode;
-    alignas(16) float Density; // EXP fog density
-    alignas(16) float Start; // LINEAR fog start
-    alignas(16) float End; // LINEAR fog end
+    PADDED_FLOAT(Enable);
+    PADDED_FLOAT(DepthMode);
+    PADDED_FLOAT(TableMode);
+    PADDED_FLOAT(Density); // EXP fog density
+    PADDED_FLOAT(Start); // LINEAR fog start
+    PADDED_FLOAT(End); // LINEAR fog end
 };
 
 // Vertex lighting
 // Both frontface and backface lighting can be calculated
 struct TwoSidedColor
 {
-	alignas(16) float3 Front;
-	alignas(16) float3 Back;
+	PADDED_FLOAT3(Front);
+	PADDED_FLOAT3(Back);
 };
 
 struct FixedFunctionVertexShaderState {
@@ -173,3 +184,5 @@ struct FixedFunctionVertexShaderState {
 #endif //  __cplusplus
 
 #undef arr
+#undef PADDED_FLOAT
+#undef PADDED_FLOAT3
