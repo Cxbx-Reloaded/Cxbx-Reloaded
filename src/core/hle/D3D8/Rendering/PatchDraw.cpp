@@ -58,6 +58,7 @@
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
 #include "RenderGlobals.h"
+#include "Backend_D3D11.h" // FilterInputElementsByShaderSignature
 #include "core/hle/D3D8/XbVertexShader.h"
 #include "core/kernel/support/Emu.h"
 
@@ -556,10 +557,18 @@ static ID3D11InputLayout* GetOrCreateTessInputLayout(
 			elements[i].InstanceDataStepRate = 0;
 		}
 
-		HRESULT hr = g_pD3DDevice->CreateInputLayout(
+		// Filter out elements whose semantics the shader doesn't declare
+		auto filtered = FilterInputElementsByShaderSignature(
 			elements.data(), (UINT)elements.size(),
-			pVSBytecode->GetBufferPointer(), pVSBytecode->GetBufferSize(),
-			&s_pTessInputLayout);
+			pVSBytecode->GetBufferPointer(), pVSBytecode->GetBufferSize());
+
+		HRESULT hr = E_FAIL;
+		if (!filtered.empty()) {
+			hr = g_pD3DDevice->CreateInputLayout(
+				filtered.data(), (UINT)filtered.size(),
+				pVSBytecode->GetBufferPointer(), pVSBytecode->GetBufferSize(),
+				&s_pTessInputLayout);
+		}
 		if (FAILED(hr)) {
 			EmuLog(LOG_LEVEL::WARNING, "GetOrCreateTessInputLayout: CreateInputLayout failed (0x%08X)", hr);
 			s_pTessInputLayout = nullptr;

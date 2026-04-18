@@ -26,6 +26,7 @@
 #ifdef CXBX_USE_D3D11
 
 #include "core\hle\D3D8\XbD3D8Types.h"
+#include <vector>
 
 struct _CxbxVertexDeclaration;
 typedef struct _CxbxVertexDeclaration CxbxVertexDeclaration;
@@ -177,6 +178,12 @@ bool CxbxD3D11ConvertVertexBufferGPU(
 	const UINT* pElementDescriptors,
 	UINT dstBufferSize,
 	IDirect3DVertexBuffer** ppOutputVB);
+
+// Filter D3D11 input layout elements to only include semantics present in
+// the shader's input signature (parsed from the DXBC ISGN chunk).
+std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
+	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
+	const void* bytecode, size_t bytecodeSize);
 
 // Lazily create the D3D11 input layout for a vertex declaration (if not yet
 // created) and bind it via IASetInputLayout.  Encapsulates all device access
