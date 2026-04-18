@@ -16,6 +16,11 @@ uniform float4 xboxTextureScale[4] : register(c214);
 // Parameters for mapping the shader's fog output value to a fog factor
 uniform float4  CxbxFogInfo: register(c218); // = CXBX_D3DVS_CONSTREG_FOGINFO
 
+// TEXCOORDINDEX remapping: xyzw = texcoord source index for stages 0-3
+// On NV2A, the texture unit applies TEXCOORDINDEX after VS output interpolation.
+// In D3D11, we must do this in the VS since there's no hardware texcoord routing.
+uniform float4 xboxTexCoordIndex : register(c219); // = CXBX_D3DVS_CONSTREG_TEXCOORDINDEX
+
 struct VS_INPUT
 {
     float4 v[16] : TEXCOORD;
@@ -95,10 +100,16 @@ VS_OUTPUT main(const VS_INPUT xIn)
     float4 oPts = v6;
     float4 oB0 = v7;
     float4 oB1 = v8;
-    float4 oT0 = v9;
-    float4 oT1 = v10;
-    float4 oT2 = v11;
-    float4 oT3 = v12;
+
+    // Apply TEXCOORDINDEX remapping: on NV2A, the texture unit routes interpolated
+    // texcoords to texture stages based on D3DTSS_TEXCOORDINDEX. In D3D11, we must
+    // do this in the VS. xboxTexCoordIndex.xyzw holds the source texcoord set index
+    // (0-3) for each texture stage.
+    float4 texcoordSets[4] = { v9, v10, v11, v12 };
+    float4 oT0 = texcoordSets[(int)xboxTexCoordIndex.x];
+    float4 oT1 = texcoordSets[(int)xboxTexCoordIndex.y];
+    float4 oT2 = texcoordSets[(int)xboxTexCoordIndex.z];
+    float4 oT3 = texcoordSets[(int)xboxTexCoordIndex.w];
 
     // Copy variables to output struct
     VS_OUTPUT xOut;

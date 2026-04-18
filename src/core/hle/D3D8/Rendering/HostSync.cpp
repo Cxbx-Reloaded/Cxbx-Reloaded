@@ -169,9 +169,10 @@ void CxbxUpdateHostTextureScaling()
 			continue;
 		}
 
-		// Texcoord index. Just the texture stage unless fixed function mode
+		// Texcoord index. Just the texture stage unless fixed function or passthrough mode
 		int texCoordIndex = stage;
-		if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction) {
+		if (g_Xbox_VertexShaderMode == VertexShaderMode::FixedFunction
+			|| g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough) {
 			// Get TEXCOORDINDEX for the current texture stage's state
 			// Stores both the texture stage index and information for generating coordinates
 			// See D3DTSS_TEXCOORDINDEX
@@ -236,6 +237,22 @@ void CxbxUpdateHostTextureScaling()
 	// need to allow scaling on all 16 attributes, instead of just the four
 	// textures like we do right now).
 	CxbxSetVertexShaderConstantF(CXBX_D3DVS_TEXTURES_SCALE_BASE, (float*)texcoordScales.data(), CXBX_D3DVS_TEXTURES_SCALE_SIZE);
+
+	// Upload TEXCOORDINDEX remapping for the passthrough vertex shader.
+	// On NV2A, the texture unit applies D3DTSS_TEXCOORDINDEX after VS output
+	// interpolation. In D3D11 passthrough mode, we must do this remapping in the VS.
+	if (g_Xbox_VertexShaderMode == VertexShaderMode::Passthrough) {
+		float texCoordIndices[4];
+		for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
+			auto texCoordIndexState = XboxTextureStates.Get(stage, xbox::X_D3DTSS_TEXCOORDINDEX);
+			texCoordIndices[stage] = (float)(texCoordIndexState & 0x3); // 0 - 3
+		}
+		CxbxSetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_TEXCOORDINDEX, texCoordIndices, 1);
+	} else {
+		// Default: each stage uses its own texcoord set (identity mapping)
+		float defaultIndices[4] = { 0.0f, 1.0f, 2.0f, 3.0f };
+		CxbxSetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_TEXCOORDINDEX, defaultIndices, 1);
+	}
 }
 
 void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
