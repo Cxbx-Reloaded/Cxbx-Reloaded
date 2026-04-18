@@ -29,7 +29,7 @@
 #include "RenderGlobals.h" // g_pD3DDevice, g_pD3DDeviceContext
 #include "core\kernel\init\CxbxKrnl.h" // LOG_INIT, EmuLog
 #include "core\hle\D3D8\XbD3D8Logging.h" // DEBUG_D3DRESULT
-#include "core\hle\D3D8\Rendering\Shader.h" // EmuCompileShader
+#include "core\hle\D3D8\Rendering\Shaders\Shader.h" // EmuCompileShader
 #include "core\hle\D3D8\XbConvert.h" // EmuXB2PC_D3D11PrimitiveTopology
 #include "core\hle\D3D8\XbVertexShader.h" // CxbxVertexDeclaration, CxbxGetActiveVertexShaderBytecode
 #include "TextureStates.h" // XboxTextureStateConverter
