@@ -115,7 +115,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x24 X_D3DFMT_YUY2         */ { 16, Linear, ____YUY2, EMUFMT_YUY2     }, // DXGI_FORMAT_NOT_AVAILABLE ?
 	/* 0x25 X_D3DFMT_UYVY         */ { 16, Linear, ____UYVY, EMUFMT_UYVY     },
 	/* 0x26 undefined             */ {},
-	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __R6G5B5, EMUFMT_L6V5U5   }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
+	/* 0x27 X_D3DFMT_L6V5U5       */ { 16, Swzzld, __L6V5U5, EMUFMT_L6V5U5   }, // Alias : X_D3DFMT_R6G5B5 // XQEMU NOTE : This might be signed
 	/* 0x28 X_D3DFMT_V8U8         */ { 16, Swzzld, ____G8B8, EMUFMT_V8U8     }, // Alias : X_D3DFMT_G8B8 // XQEMU NOTE : This might be signed
 	/* 0x29 X_D3DFMT_R8B8         */ { 16, Swzzld, ____R8B8, EMUFMT_A8L8     , Texture, "X_D3DFMT_R8B8 -> EMUFMT_R5G6B5" }, // XQEMU NOTE : This might be signed
 	/* 0x2A X_D3DFMT_D24S8        */ { 32, Swzzld, NoCmpnts, EMUFMT_D24S8    , DepthBuffer },
@@ -131,7 +131,7 @@ static const FormatInfo FormatInfos[] = {
 	/* 0x34 undefined             */ {},
 	/* 0x35 X_D3DFMT_LIN_L16      */ { 16, Linear, _____L16, EMUFMT_L16      },
 	/* 0x36 X_D3DFMT_LIN_V16U16   */ { 32, Linear, NoCmpnts, EMUFMT_V16U16   }, // Note : Seems unused on Xbox
-	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __R6G5B5, EMUFMT_L6V5U5   }, // Alias : X_D3DFMT_LIN_R6G5B5
+	/* 0x37 X_D3DFMT_LIN_L6V5U5   */ { 16, Linear, __L6V5U5, EMUFMT_L6V5U5   }, // Alias : X_D3DFMT_LIN_R6G5B5
 	/* 0x38 X_D3DFMT_R5G5B5A1     */ { 16, Swzzld, R5G5B5A1, EMUFMT_A1R5G5B5 , Texture, "X_D3DFMT_R5G5B5A1 -> EMUFMT_A1R5G5B5" },
 	/* 0x39 X_D3DFMT_R4G4B4A4     */ { 16, Swzzld, R4G4B4A4, EMUFMT_A4R4G4B4 , Texture, "X_D3DFMT_R4G4B4A4 -> EMUFMT_A4R4G4B4" },
 	/* 0x3A X_D3DFMT_Q8W8V8U8     */ { 32, Swzzld, A8B8G8R8, EMUFMT_Q8W8V8U8 }, // Alias : X_D3DFMT_A8B8G8R8 // Note : EMUFMT_A8B8G8R8=32 EMUFMT_Q8W8V8U8=63 // TODO : Needs testcase.
@@ -153,9 +153,11 @@ const FormatToARGBRow EmuXBFormatComponentConverter(xbox::X_D3DFORMAT Format)
 {
 	if (Format <= xbox::X_D3DFMT_LAST) {
 		const _ComponentEncoding components = FormatInfos[Format].components;
+#ifndef CXBX_USE_D3D11
 		if (components == __L6V5U5) {
-			return __L6V5U5ToX8L8V8U8Row_C;
+			return __L6V5U5ToX8L8V8U8Row_C; // D3D9: X8L8V8U8 has native mixed signedness (V/U signed, L unsigned)
 		}
+#endif
 		if (components != NoCmpnts) {
 			return ComponentConverters[components];
 		}
@@ -168,7 +170,13 @@ bool EmuXBFormatCanBeConverted(xbox::X_D3DFORMAT Format, EMUFORMAT &PCFormat)
 {
 	const FormatToARGBRow info = EmuXBFormatComponentConverter(Format);
 	if (info != nullptr) {
+#ifdef CXBX_USE_D3D11
+		// D3D11: DXGI has no mixed-signedness format like D3D9's X8L8V8U8,
+		// so always convert to ARGB; colorsign handles signed channels in shader
+		/*&*/PCFormat = EMUFMT_A8R8G8B8;
+#else
 		/*&*/PCFormat = (FormatInfos[Format].components == __L6V5U5) ? EMUFMT_X8L8V8U8 : EMUFMT_A8R8G8B8;
+#endif
 		return true;
 	}
 	return false;
