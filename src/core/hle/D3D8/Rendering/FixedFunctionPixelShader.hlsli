@@ -20,11 +20,22 @@ using namespace DirectX;
 #include <array> // for std::array<>
 #define arr(name, type, length) std::array<type, length> name
 
+// A float that occupies a full 16-byte constant register (matching Xbox register layout)
+#define PADDED_FLOAT(name) alignas(16) float name
+// A float3 that occupies a full 16-byte constant register (matching Xbox register layout)
+#define PADDED_FLOAT3(name) alignas(16) float3 name
+
 #else
 // HLSL
 #define arr(name, type, length) type name[length]
 #define alignas(x)
 #define const static
+
+// Ensure each field occupies a full float4 constant register in SM5 cbuffer packing,
+// matching the C++ alignas(16) layout for raw Xbox register data upload.
+#define PADDED_FLOAT(name) float name; float3 _pad_##name
+#define PADDED_FLOAT3(name) float3 name; float _pad_##name
+
 #endif //  __cplusplus
 
 #ifdef  __cplusplus
@@ -98,24 +109,24 @@ namespace FixedFunctionPixelShader {
 		constexpr DWORD X_D3DTSS_MAXANISOTROPY = 8;
 		*/
 
-		alignas(16) float COLORKEYOP; // = 9; Xbox extension!
+		PADDED_FLOAT(COLORKEYOP); // = 9; Xbox extension!
 		alignas(16) float4 COLORSIGN; // = 10; Xbox extension!
-		alignas(16) float ALPHAKILL; // = 11; Xbox extension!
+		PADDED_FLOAT(ALPHAKILL); // = 11; Xbox extension!
 
 		// 12 .. 20 are moved into PsTextureHardcodedState, which are compiled into the shader
 
 		// TEXTURETRANSFORMFLAGS // = 21; handled by the VS
-		alignas(16) float BUMPENVMAT00; // = 22;
-		alignas(16) float BUMPENVMAT01; // = 23;
-		alignas(16) float BUMPENVMAT11; // = 24;
-		alignas(16) float BUMPENVMAT10; // = 25;
-		alignas(16) float BUMPENVLSCALE; // = 26;
-		alignas(16) float BUMPENVLOFFSET; // = 27;
+		PADDED_FLOAT(BUMPENVMAT00); // = 22;
+		PADDED_FLOAT(BUMPENVMAT01); // = 23;
+		PADDED_FLOAT(BUMPENVMAT11); // = 24;
+		PADDED_FLOAT(BUMPENVMAT10); // = 25;
+		PADDED_FLOAT(BUMPENVLSCALE); // = 26;
+		PADDED_FLOAT(BUMPENVLOFFSET); // = 27;
 		// TEXCOORDINDEX // = 28; handled by the VS
 		// BORDERCOLOR // = 29; set on sampler
 		alignas(16) float4 COLORKEYCOLOR; // = 30; Xbox extension!
 		// UNSUPPORTED // = 31; // Note : Somehow, this one comes through D3DDevice_SetTextureStageStateNotInline sometimes
-		alignas(16) float TEXFMTFIXUP; // D3D11: texture format channel fixup (0=identity, 1=.gbar, 2=.abgr, 3=luminance .rrra, 4=alpha-luminance .rrrg)
+		PADDED_FLOAT(TEXFMTFIXUP); // D3D11: texture format channel fixup (0=identity, 1=.gbar, 2=.abgr, 3=luminance .rrra, 4=alpha-luminance .rrrg)
 	};
 
 	// Texture format fixup constants (shared between C++ and HLSL)
@@ -129,27 +140,27 @@ namespace FixedFunctionPixelShader {
 	// Values correspond to XD3D8 version of D3DTEXTURESTAGESTATETYPE
 	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/d3dtexturestagestatetype
 	struct PsTextureHardcodedState {
-		alignas(16) float COLOROP; // = 12;
-		alignas(16) float COLORARG0; // = 13;
-		alignas(16) float COLORARG1; // = 14;
-		alignas(16) float COLORARG2; // = 15;
-		alignas(16) float ALPHAOP; // = 16;
-		alignas(16) float ALPHAARG0; // = 17;
-		alignas(16) float ALPHAARG1; // = 18;
-		alignas(16) float ALPHAARG2; // = 19;
-		alignas(16) float RESULTARG; // = 20;
+		PADDED_FLOAT(COLOROP); // = 12;
+		PADDED_FLOAT(COLORARG0); // = 13;
+		PADDED_FLOAT(COLORARG1); // = 14;
+		PADDED_FLOAT(COLORARG2); // = 15;
+		PADDED_FLOAT(ALPHAOP); // = 16;
+		PADDED_FLOAT(ALPHAARG0); // = 17;
+		PADDED_FLOAT(ALPHAARG1); // = 18;
+		PADDED_FLOAT(ALPHAARG2); // = 19;
+		PADDED_FLOAT(RESULTARG); // = 20;
 	};
 
 	struct FixedFunctionPixelShaderState {
 		alignas(16) arr(stages, PsTextureStageState, 4);
 		alignas(16) float4 TextureFactor;
-		alignas(16) float SpecularEnable;
-		alignas(16) float FogEnable;
-		alignas(16) float3 FogColor;
-		alignas(16) float FogTableMode;
-		alignas(16) float FogDensity;
-		alignas(16) float FogStart;
-		alignas(16) float FogEnd;
+		PADDED_FLOAT(SpecularEnable);
+		PADDED_FLOAT(FogEnable);
+		PADDED_FLOAT3(FogColor);
+		PADDED_FLOAT(FogTableMode);
+		PADDED_FLOAT(FogDensity);
+		PADDED_FLOAT(FogStart);
+		PADDED_FLOAT(FogEnd);
 		alignas(16) float4 AlphaTest; // x=enable, y=ref [0..1], z=func [D3DCMPFUNC], w=unused
     };
 #ifdef  __cplusplus
@@ -167,3 +178,5 @@ namespace FixedFunctionPixelShader {
 #endif //  __cplusplus
 
 #undef arr
+#undef PADDED_FLOAT
+#undef PADDED_FLOAT3
