@@ -1076,3 +1076,4 @@ void CxbxUpdateActivePixelShader() // NOPATCH
         fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].b, fColor[PSH_XBOX_CONSTANT_TEXFMTFIXUP].a);
     }
   }
+}
