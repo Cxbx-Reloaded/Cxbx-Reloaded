@@ -43,6 +43,7 @@ void LookupTrampolinesD3D();
 extern void CxbxInitWindow();
 
 void CxbxUpdateNativeD3DResources();
+void CxbxInvalidateFixedFunctionNonTransformState();
 
 void CxbxImpl_SetRenderTarget(xbox::X_D3DSurface* pRenderTarget, xbox::X_D3DSurface* pNewZStencil);
 void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport);

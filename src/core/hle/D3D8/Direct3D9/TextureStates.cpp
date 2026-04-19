@@ -189,6 +189,13 @@ void XboxTextureStateConverter::Apply()
                 continue;
             }
 
+            // The fixed-function vertex shader consumes these texture states directly for texgen
+            // and texture transforms, so changes must invalidate its cached non-transform state.
+            if (State == xbox::X_D3DTSS_TEXCOORDINDEX ||
+                State == xbox::X_D3DTSS_TEXTURETRANSFORMFLAGS) {
+                CxbxInvalidateFixedFunctionNonTransformState();
+            }
+
             switch (State) {
                 // These types map 1:1 but have some unsupported values
                 case xbox::X_D3DTSS_ADDRESSU: case xbox::X_D3DTSS_ADDRESSV: case xbox::X_D3DTSS_ADDRESSW:

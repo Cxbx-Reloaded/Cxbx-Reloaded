@@ -100,6 +100,11 @@ static bool g_FFRestInvalid = true; // Set when Xbox constants overwrite GPU reg
 static bool g_FFTransformDirty = true; // Set when any transform changes (SetTransform)
 static bool g_FFNonTransformDirty = true; // Set when render states, lights, materials, or non-world transforms change
 
+void CxbxInvalidateFixedFunctionNonTransformState()
+{
+	g_FFNonTransformDirty = true;
+}
+
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
 
