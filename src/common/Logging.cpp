@@ -149,7 +149,12 @@ void EmuLogOutput(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarn
 
 	fprintf(stdout, "\n");
 
-	fflush(stdout);
+	// Only flush synchronously on fatal errors. Flushing on every message
+	// adds a synchronous OS round-trip (~0.1–10 ms on Windows Console Host)
+	// that stalls the emulation thread and causes GPU under-submission on AMD.
+	if (level == LOG_LEVEL::FATAL) {
+		fflush(stdout);
+	}
 }
 inline void EmuLogOutputEx(const CXBXR_MODULE cxbxr_module, const LOG_LEVEL level, const char *szWarningMessage, ...)
 {
@@ -169,13 +174,9 @@ void EmuLogEx(CXBXR_MODULE cxbxr_module, LOG_LEVEL level, const char *szWarningM
 	LOG_CHECK_ENABLED_EX(cxbxr_module, level) {
 		if (g_bPrintfOn) {
 
-	LOG_THREAD_INIT;
-
 	va_list argp;
 	va_start(argp, szWarningMessage);
-
 	EmuLogOutput(cxbxr_module, level, szWarningMessage, argp);
-
 	va_end(argp);
 		}
 	}

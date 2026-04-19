@@ -28,23 +28,26 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 #include "core\kernel\init\CxbxKrnl.h"
 
-static std::vector<xbox::addr_xt> g_RdtscPatches;
+// unordered_set gives O(1) lookup vs the O(n) linear scan of the old vector.
+// IsRdtscInstruction is called on every privileged-instruction exception, so
+// games with many patched RDTSC instructions benefit significantly from this.
+static std::unordered_set<xbox::addr_xt> g_RdtscPatches;
 
 #define OPCODE_PATCH_RDTSC 0x90EF  // OUT DX, EAX; NOP
 
 bool IsRdtscInstruction(xbox::addr_xt addr)
 {
 	// First the fastest check - does addr contain exact patch from PatchRdtsc?
-	// Second check - is addr on the rdtsc patch list?
+	// Second check - is addr on the rdtsc patch set?  O(1) with unordered_set.
 	return (*(uint16_t*)addr == OPCODE_PATCH_RDTSC)
 		// Note : It's not needed to check for g_SkipRdtscPatching,
-		// as when that's set, the g_RdtscPatches vector will be empty
+		// as when that's set, the g_RdtscPatches set will be empty
 		// anyway, failing this lookup :
-		&& (std::find(g_RdtscPatches.begin(), g_RdtscPatches.end(), addr) != g_RdtscPatches.end());
+		&& (g_RdtscPatches.count(addr) != 0);
 }
 
 static void PatchRdtsc(xbox::addr_xt addr)
@@ -56,7 +59,7 @@ static void PatchRdtsc(xbox::addr_xt addr)
 	// A privilaged instruction (like OUT) does not suffer from this
 	EmuLogInit(LOG_LEVEL::DEBUG, "Patching rdtsc opcode at 0x%.8X", (DWORD)addr);
 	*(uint16_t*)addr = OPCODE_PATCH_RDTSC;
-	g_RdtscPatches.push_back(addr);
+	g_RdtscPatches.insert(addr);
 }
 
 static const uint8_t rdtsc_pattern[] = {

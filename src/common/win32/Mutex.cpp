@@ -25,6 +25,21 @@
 // *
 // ******************************************************************
 #include "Mutex.h"
+#include <intrin.h> // YieldProcessor / _mm_pause
+
+// Spin this many times with YieldProcessor before falling back to SwitchToThread.
+// ~200 iterations costs < 1 µs on modern CPUs, which is cheaper than a context switch
+// for locks held for a short period (the typical case in Cxbx's emulation mutex use).
+static constexpr int kSpinCount = 200;
+
+// Helper: spin briefly, then yield the time-slice once before the caller retries.
+static inline void MutexBackoff()
+{
+    for (int i = 0; i < kSpinCount; ++i) {
+        YieldProcessor(); // issues PAUSE on x86 — hints the CPU this is a spin-wait
+    }
+    SwitchToThread(); // let the OS run other ready threads; avoids burning an entire ms
+}
 
 // ******************************************************************
 // * Constructor
@@ -52,7 +67,7 @@ void Mutex::Lock()
 #else
         while(InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
 #endif
-            Sleep(1);
+            MutexBackoff();
 
         // Are we the the new owner?
         if (!m_OwnerProcess)
@@ -77,9 +92,8 @@ void Mutex::Lock()
             // Unlock the mutex itself
             InterlockedExchange(&m_MutexLock, 0);
 
-            // Wait and try again
-			// TODO : Improve performance replacing Sleep(1) with YieldProcessor and perhaps an optional SpinLock
-            Sleep(1);
+            // Spin-wait then yield before retrying; avoids the 1 ms floor of Sleep(1).
+            MutexBackoff();
             continue;
         }
 
@@ -103,7 +117,7 @@ void Mutex::Unlock()
 #else
     while (InterlockedCompareExchange((LPLONG)&m_MutexLock, (LONG)1, (LONG)0))
 #endif
-        Sleep(1);
+        MutexBackoff();
 
     // Decrement the lock count
     if (!InterlockedDecrement(&m_LockCount))

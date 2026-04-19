@@ -932,6 +932,11 @@ typedef std::unordered_map<resource_key_t, resource_info_t, resource_key_hash> r
 resource_cache_t g_Cxbx_Cached_Direct3DResources;
 resource_cache_t g_Cxbx_Cached_PaletizedTextures;
 
+// Pool of D3DPOOL_SYSTEMMEM staging surfaces reused across CreateHostResource calls.
+// Keyed by (width | (height << 16)) ^ (format * 0x9e3779b9) to avoid per-upload driver allocation.
+// Surfaces in SYSTEMMEM are never used by the GPU directly, so reuse is safe.
+static std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<IDirect3DSurface9>> g_StagingSurfacePool;
+
 bool IsResourceAPixelContainer(xbox::dword_xt XboxResource_Common)
 {
 	DWORD Type = GetXboxCommonResourceType(XboxResource_Common);
@@ -4254,10 +4259,12 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 	}
 
 	// Guard against Xbox surface structs in Xbox VM regions not committed in host memory
-	// (e.g. Chihiro arcade games with firmware pre-mapped surfaces)
+	// (e.g. Chihiro arcade games with firmware pre-mapped surfaces, or after NtFreeVirtualMemory).
+	// Must be checked unconditionally — the same pointer can become decommitted at any time.
 	{
 		MEMORY_BASIC_INFORMATION mbi;
-		if (!VirtualQuery(g_pXbox_RenderTarget, &mbi, sizeof(mbi)) || mbi.State != MEM_COMMIT) {
+		if (VirtualQuery(g_pXbox_RenderTarget, &mbi, sizeof(mbi)) == 0
+		    || mbi.State != MEM_COMMIT) {
 			return; // Surface struct not CPU-accessible; skip dimension-based viewport clamping
 		}
 	}
@@ -5273,14 +5280,14 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             dest.right = (LONG)(dest.left + width);
             dest.bottom = (LONG)(dest.top + height);
 
-            // Clear the backbuffer to black only when StretchRect won't cover the full surface.
-            // When dest equals the full backbuffer (stretch mode / matching aspect ratio) the blit
-            // overwrites every pixel, making a pre-clear redundant and expensive (3 API calls saved per frame).
-            // Test-case: Dashboard (black bars during aspect-ratio change)
-            const bool bFullCoverage = (dest.left == 0 && dest.top == 0 &&
-                dest.right == (LONG)g_HostBackBufferDesc.Width &&
-                dest.bottom == (LONG)g_HostBackBufferDesc.Height);
-            if (!bFullCoverage) {
+            // Always clear the backbuffer to black before the StretchRect blit.
+            // With D3DSWAPEFFECT_DISCARD, the driver (especially AMD) is permitted to
+            // leave the backbuffer contents completely undefined after Present.
+            // Skipping the clear when dest == full-backbuffer was an attempted optimisation
+            // but caused garbage pixels in the un-blitted region on AMD GPUs.
+            // The 3 extra API calls per frame (GetRenderTarget / SetRenderTarget×2) are
+            // far cheaper than the visual corruption they prevent.
+            {
                 IDirect3DSurface* pExistingRenderTarget = nullptr;
                 hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
                 if (hRet == D3D_OK) {
@@ -6069,15 +6076,27 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
         }
 
 		// For X_D3DRTYPE_SURFACE, pNewHostSurface lives in D3DPOOL_DEFAULT and is not lockable.
-		// Create a SYSTEMMEM staging surface to lock/unlock, then upload via UpdateSurface.
+		// Use a pooled D3DPOOL_SYSTEMMEM staging surface (keyed by width/height/format) to
+		// lock and fill pixel data, then upload via UpdateSurface.  Reusing the staging surface
+		// avoids a driver allocation on every surface upload (critical on AMD where repeated
+		// CreateOffscreenPlainSurface/Release cycles cause measurable CPU overhead).
 		ComPtr<IDirect3DSurface9> tempHostSurface;
 		if (XboxResourceType == xbox::X_D3DRTYPE_SURFACE) {
-			HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
-				hostWidth, hostHeight, PCFormat, D3DPOOL_SYSTEMMEM, tempHostSurface.GetAddressOf(), nullptr);
-			if (hRet != D3D_OK) {
-				EmuLog(LOG_LEVEL::WARNING, "CreateOffscreenPlainSurface %s failed!", ResourceTypeName);
-				return;
+			uint64_t stagingKey = ((uint64_t)(uint32_t)hostWidth)
+			                    | ((uint64_t)(uint32_t)hostHeight << 32)
+			                    ^ ((uint64_t)(uint32_t)PCFormat * 0x9e3779b97f4a7c15ULL);
+			auto& poolEntry = g_StagingSurfacePool[stagingKey];
+			if (!poolEntry) {
+				// First time (or surface was lost) — allocate and cache it.
+				HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
+					hostWidth, hostHeight, PCFormat, D3DPOOL_SYSTEMMEM, poolEntry.GetAddressOf(), nullptr);
+				if (hRet != D3D_OK) {
+					EmuLog(LOG_LEVEL::WARNING, "CreateOffscreenPlainSurface %s failed!", ResourceTypeName);
+					g_StagingSurfacePool.erase(stagingKey);
+					return;
+				}
 			}
+			tempHostSurface = poolEntry; // shared ownership; poolEntry keeps it alive
 		}
 
 		DWORD dwCubeFaceOffset = 0;

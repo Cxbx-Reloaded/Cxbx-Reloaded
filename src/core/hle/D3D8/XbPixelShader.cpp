@@ -1117,6 +1117,12 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // manually read from D3D__RenderState[X_D3DRS_PSTEXTUREMODES] for that one field.
   // See D3DDevice_SetPixelShaderCommon which implements this
 
+  // Declared here (before the early return) so both paths can update or read it.
+  // If the device is switched to FF/null, we invalidate s_lastConvertedPS so the
+  // next custom-PS draw call unconditionally re-issues SetPixelShader instead of
+  // silently leaving the device with the wrong (FF) shader bound.
+  static IDirect3DPixelShader9* s_lastConvertedPS = nullptr;
+
   const xbox::X_D3DPIXELSHADERDEF *pPSDef = g_pXbox_PixelShader != nullptr ? (xbox::X_D3DPIXELSHADERDEF*)(XboxRenderStates.GetPixelShaderRenderStatePointer()) : nullptr;
   if (pPSDef == nullptr) {
 	IDirect3DPixelShader9* pShader = nullptr;
@@ -1126,6 +1132,7 @@ void DxbxUpdateActivePixelShader() // NOPATCH
 	}
 
     g_pD3DDevice->SetPixelShader(pShader);
+    s_lastConvertedPS = nullptr; // device no longer has our tracked custom PS
     return;
   }
 
@@ -1143,6 +1150,9 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   if (pixelShaderVersion != shaderVersion) {
 	  pixelShaderVersion = shaderVersion;
 	  g_pD3DDevice->SetPixelShader(nullptr);
+	  // s_lastConvertedPS (declared below) will automatically mismatch the freshly
+	  // compiled shader on the next draw call, so SetPixelShader will be re-issued
+	  // even without an explicit reset here.
 
 	  for (auto& [key, hostShader] : g_RecompiledPixelShaders) {
 		  if (hostShader.ConvertedPixelShader)
@@ -1176,12 +1186,13 @@ void DxbxUpdateActivePixelShader() // NOPATCH
     RecompiledPixelShader = &insertIt->second;
   }
 
-  // Switch to the converted pixel shader (if it's any different from our currently active
-  // pixel shader, to avoid many unnecessary state changes on the local side).
-  Microsoft::WRL::ComPtr<IDirect3DPixelShader> CurrentPixelShader;
-  g_pD3DDevice->GetPixelShader(/*out*/CurrentPixelShader.GetAddressOf());
-  if (CurrentPixelShader.Get() != RecompiledPixelShader->ConvertedPixelShader) {
-    g_pD3DDevice->SetPixelShader(RecompiledPixelShader->ConvertedPixelShader);
+  // Switch to the converted pixel shader, skipping the D3D9 GetPixelShader round-trip.
+  // We track the last shader we set ourselves rather than querying the device state —
+  // this is safe because we are the sole owner of SetPixelShader for the custom PS path.
+  // Reset to nullptr whenever the device is reset or shaders are reloaded (handled above).
+  if (RecompiledPixelShader->ConvertedPixelShader != s_lastConvertedPS) {
+    s_lastConvertedPS = RecompiledPixelShader->ConvertedPixelShader;
+    g_pD3DDevice->SetPixelShader(s_lastConvertedPS);
   }
 
   //PS_TEXTUREMODES psTextureModes[xbox::X_D3DTS_STAGECOUNT];

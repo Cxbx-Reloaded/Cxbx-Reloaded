@@ -550,12 +550,26 @@ extern HRESULT EmuCompileShader
 	bool asyncAllowed
 )
 {
-	// Compute a cache key from the HLSL source + shader profile
-	bool cacheReady = EnsureShaderCacheDir();
+	// 1. Fast-path: check the in-memory cache first.  Building cacheInput (~10 µs for
+	//    a string alloc+copy) is still far cheaper than any filesystem I/O or compile,
+	//    and using the same key that all store-sites use guarantees a real hit.
 	std::string cacheInput = hlsl_str + "|" + shader_profile;
 	uint64_t cacheHash = ComputeHash(cacheInput.c_str(), cacheInput.size());
+	{
+		std::lock_guard<std::mutex> lock(g_AsyncMutex);
+		auto it = g_MemCache.find(cacheHash);
+		if (it != g_MemCache.end()) {
+			it->second->AddRef();
+			*ppHostShader = it->second;
+			return S_OK;
+		}
+	}
 
-	// Dump original HLSL source to Dumped\ (once per unique shader, for user inspection)
+	// Cache miss — do the full work: disk I/O, hot-swap check, compile.
+	bool cacheReady = EnsureShaderCacheDir();
+
+	// Dump original HLSL source to Dumped\ (once per unique shader, for user inspection).
+	// Only runs on first compile per shader — filesystem::exists() guards subsequent calls.
 	if (cacheReady) {
 		DumpShaderSource(cacheHash, shader_profile, hlsl_str);
 	}
@@ -575,19 +589,15 @@ extern HRESULT EmuCompileShader
 			// to the file produces a new key and forces a fresh compile.
 			std::string repInput = hlsl_str + "|" + shader_profile + "|repl";
 			activeCacheHash = ComputeHash(repInput.c_str(), repInput.size());
-		}
-	}
 
-	// 1. Check in-memory cache first (populated from disk loads and async compiles).
-	//    This avoids repeated fopen/fread for the same shader within a session —
-	//    the same hash can be requested dozens of times per second.
-	{
-		std::lock_guard<std::mutex> lock(g_AsyncMutex);
-		auto it = g_MemCache.find(activeCacheHash);
-		if (it != g_MemCache.end()) {
-			it->second->AddRef();
-			*ppHostShader = it->second;
-			return S_OK;
+			// Re-check the memory cache with the replacement hash before going further.
+			std::lock_guard<std::mutex> lock(g_AsyncMutex);
+			auto it = g_MemCache.find(activeCacheHash);
+			if (it != g_MemCache.end()) {
+				it->second->AddRef();
+				*ppHostShader = it->second;
+				return S_OK;
+			}
 		}
 	}
 
