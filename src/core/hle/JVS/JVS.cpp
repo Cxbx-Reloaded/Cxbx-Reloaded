@@ -149,8 +149,8 @@ void JvsInputThread()
 	while (true) {
 		// This thread is responsible for reading the emulated Baseboard state
 		// and setting the correct internal variables
-		ChihiroBaseBoardState.TestButton = GetAsyncKeyState(VK_F1);
-		ChihiroBaseBoardState.ServiceButton = GetAsyncKeyState(VK_F2);
+			ChihiroBaseBoardState.TestButton = GetAsyncKeyState(VK_F1);
+			ChihiroBaseBoardState.ServiceButton = GetAsyncKeyState(VK_F2);
 
 		// Call into the Jvs I/O board update function
 		g_pJvsIo->Update();

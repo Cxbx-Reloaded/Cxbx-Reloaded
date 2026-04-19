@@ -9,7 +9,8 @@ extern HRESULT EmuCompileShader
 	std::string hlsl_str,
 	const char* shader_profile,
 	ID3DBlob** ppHostShader,
-	const char* pSourceName = nullptr
+	const char* pSourceName = nullptr,
+	bool asyncAllowed = false
 );
 
 struct ShaderSources {

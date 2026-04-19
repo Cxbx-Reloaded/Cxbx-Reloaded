@@ -110,8 +110,7 @@ IDirect3DVertexShader* VertexShaderCache::GetShader(ShaderKey key)
 	// We need to get the compiled HLSL and create a shader from it
 	ID3DBlob* pCompiledShader = nullptr;
 	try {
-		// TODO one day, check is_ready before logging this (non-standard..?)
-		EmuLog(LOG_LEVEL::DEBUG, "Waiting for shader %llx...", key);
+		// Block until background compile finishes (fast with disk cache ~0.08ms)
 		pCompiledShader = pLazyShader->compileResult.get();
 
 		if (!pCompiledShader) {

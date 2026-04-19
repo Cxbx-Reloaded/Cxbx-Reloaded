@@ -49,12 +49,12 @@ JvsIo::JvsIo(uint8_t* sense)
 void JvsIo::Update()
 {
 	// Handle coin input
-	static bool previousCoinButtonsState = false;
-	bool currentCoinButtonState = GetAsyncKeyState('5');
-	if (currentCoinButtonState && !previousCoinButtonsState) {
-		Inputs.coins[0].coins += 1;
-	}
-	previousCoinButtonsState = currentCoinButtonState;
+		static bool previousCoinButtonsState = false;
+		bool currentCoinButtonState = GetAsyncKeyState('5');
+		if (currentCoinButtonState && !previousCoinButtonsState) {
+			Inputs.coins[0].coins += 1;
+		}
+		previousCoinButtonsState = currentCoinButtonState;
 
 	// TODO: Update Jvs inputs based on user configuration
 	// For now, hardcode the inputs for the game we are currently testing (Ollie King)
@@ -180,6 +180,24 @@ int JvsIo::Jvs_Command_14_GetCapabilities()
 	return 0;
 }
 
+int JvsIo::Jvs_Command_15_ConveyMainBoardId(uint8_t* data, size_t remaining)
+{
+	// Main board sends its ID as a null-terminated string
+	// We just acknowledge it
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// Scan past the null-terminated string starting at data[1]
+	int consumed = 0;
+	for (size_t j = 1; j < remaining; j++) {
+		consumed++;
+		if (data[j] == 0x00) {
+			break;
+		}
+	}
+
+	return consumed;
+}
+
 int JvsIo::Jvs_Command_20_ReadSwitchInputs(uint8_t* data)
 {
 	static jvs_switch_player_inputs_t default_switch_player_input;
@@ -251,6 +269,64 @@ int JvsIo::Jvs_Command_22_ReadAnalogInputs(uint8_t* data)
 	return 1;
 }
 
+int JvsIo::Jvs_Command_26_ReadMiscSwitchInputs(uint8_t* data)
+{
+	uint8_t nr_bytes = data[1];
+
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// Return requested number of bytes (all zeros - no misc switches active)
+	for (int i = 0; i < nr_bytes; i++) {
+		ResponseBuffer.push_back(0x00);
+	}
+
+	return 1;
+}
+
+int JvsIo::Jvs_Command_2E_ReadPayoutHopperStatus(uint8_t* data)
+{
+	uint8_t nr_slots = data[1];
+
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// Return 4 bytes of hopper status per slot (all zeros = normal)
+	for (int i = 0; i < nr_slots; i++) {
+		ResponseBuffer.push_back(0x00);
+		ResponseBuffer.push_back(0x00);
+		ResponseBuffer.push_back(0x00);
+		ResponseBuffer.push_back(0x00);
+	}
+
+	return 1;
+}
+
+int JvsIo::Jvs_Command_2F_RetransmitData()
+{
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	return 0;
+}
+
+int JvsIo::Jvs_Command_30_CoinDecrease(uint8_t* data)
+{
+	uint8_t coinSlot = data[1];
+	uint16_t coinCount = (data[2] << 8) | data[3];
+
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// JVS coin slots are 1-based
+	uint8_t slotIndex = coinSlot - 1;
+	if (slotIndex < JVS_MAX_COINS) {
+		if (Inputs.coins[slotIndex].coins >= coinCount) {
+			Inputs.coins[slotIndex].coins -= coinCount;
+		} else {
+			Inputs.coins[slotIndex].coins = 0;
+		}
+	}
+
+	return 3;
+}
+
 int JvsIo::Jvs_Command_32_GeneralPurposeOutput(uint8_t* data)
 {
 	uint8_t banks = data[1];
@@ -261,6 +337,81 @@ int JvsIo::Jvs_Command_32_GeneralPurposeOutput(uint8_t* data)
 
 	// Input data size is 1 byte indicating the number of banks, followed by one byte per bank
 	return 1 + banks;
+}
+
+int JvsIo::Jvs_Command_33_AnalogOutput(uint8_t* data)
+{
+	uint8_t channels = data[1];
+
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// TODO: Handle analog output
+	// Each channel has 2 bytes of data following the channel count
+	return 1 + (channels * 2);
+}
+
+int JvsIo::Jvs_Command_34_CharacterOutput(uint8_t* data)
+{
+	uint8_t byteCount = data[1];
+
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// TODO: Handle character output
+	return 1 + byteCount;
+}
+
+int JvsIo::Jvs_Command_36_PayoutSubtractionOutput(uint8_t* data)
+{
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// TODO: Handle payout subtraction output
+	// Fixed 3 parameter bytes (slot, count high, count low)
+	return 3;
+}
+
+int JvsIo::Jvs_Command_37_GeneralPurposeOutput2(uint8_t* data)
+{
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// TODO: Handle general purpose output 2
+	// Fixed 2 parameter bytes
+	return 2;
+}
+
+int JvsIo::Jvs_Command_70_NamcoCustom(uint8_t* data, size_t remaining)
+{
+	uint8_t subCommand = data[1];
+
+	switch (subCommand) {
+		case 0x18:
+			ResponseBuffer.push_back(ReportCode::Handled);
+			// Consumes entire remaining packet data
+			return (int)remaining - 1;
+		case 0x05:
+			ResponseBuffer.push_back(ReportCode::Handled);
+			// data[2] specifies the total bytes to consume
+			return data[2] - 1;
+		case 0x03:
+			ResponseBuffer.push_back(ReportCode::Handled);
+			ResponseBuffer.push_back(0x00);
+			return 3;
+		case 0x15:
+		case 0x16:
+			ResponseBuffer.push_back(ReportCode::Handled);
+			return 3;
+		default:
+			ResponseBuffer.push_back(ReportCode::Handled);
+			printf("JvsIo: Unknown Namco sub-command 0x70:%02X\n", subCommand);
+			return 1;
+	}
+}
+
+int JvsIo::Jvs_Command_78_80_SkipNamcoUnknownCustom()
+{
+	ResponseBuffer.push_back(ReportCode::Handled);
+
+	// Skip 14 additional parameter bytes (15 total including command byte)
+	return 14;
 }
 
 uint8_t JvsIo::GetByte(uint8_t* &buffer)
@@ -303,10 +454,33 @@ void JvsIo::HandlePacket(jvs_packet_header_t* header, std::vector<uint8_t>& pack
 			case 0x12: i += Jvs_Command_12_GetJvsRevision(); break;
 			case 0x13: i += Jvs_Command_13_GetCommunicationVersion(); break;
 			case 0x14: i += Jvs_Command_14_GetCapabilities(); break;
+			case 0x15: i += Jvs_Command_15_ConveyMainBoardId(command_data, packet.size() - i); break;
+			// Data I/O Commands
 			case 0x20: i += Jvs_Command_20_ReadSwitchInputs(command_data); break;
 			case 0x21: i += Jvs_Command_21_ReadCoinInputs(command_data); break;
 			case 0x22: i += Jvs_Command_22_ReadAnalogInputs(command_data); break;
+			case 0x26: i += Jvs_Command_26_ReadMiscSwitchInputs(command_data); break;
+			case 0x2E: i += Jvs_Command_2E_ReadPayoutHopperStatus(command_data); break;
+			case 0x2F: i += Jvs_Command_2F_RetransmitData(); break;
+			case 0x30:
+			case 0x31: i += Jvs_Command_30_CoinDecrease(command_data); break;
+			// Output Commands
 			case 0x32: i += Jvs_Command_32_GeneralPurposeOutput(command_data); break;
+			case 0x33: i += Jvs_Command_33_AnalogOutput(command_data); break;
+			case 0x34: i += Jvs_Command_34_CharacterOutput(command_data); break;
+			case 0x36: i += Jvs_Command_36_PayoutSubtractionOutput(command_data); break;
+			case 0x37: i += Jvs_Command_37_GeneralPurposeOutput2(command_data); break;
+			// Manufacturer-specific Commands
+			case 0x70: i += Jvs_Command_70_NamcoCustom(command_data, packet.size() - i); break;
+			case 0x78:
+			case 0x79:
+			case 0x7A:
+			case 0x7B:
+			case 0x7C:
+			case 0x7D:
+			case 0x7E:
+			case 0x7F:
+			case 0x80: i += Jvs_Command_78_80_SkipNamcoUnknownCustom(); break;
 			default:
 				// Overwrite the verly-optimistic StatusCode::StatusOkay with Status::Unsupported command
 				// Don't process any further commands. Existing processed commands must still return their responses.

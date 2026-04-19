@@ -617,6 +617,7 @@ CxbxPSDef;
 typedef struct _PSH_RECOMPILED_SHADER {
 	CxbxPSDef CompletePSDef;
 	IDirect3DPixelShader* ConvertedPixelShader;
+	bool isPending; // true = async compile in flight, don't cache permanently
 } PSH_RECOMPILED_SHADER;
 
 PSH_RECOMPILED_SHADER CxbxRecompilePixelShader(CxbxPSDef &CompletePSDef)
@@ -626,11 +627,12 @@ PSH_RECOMPILED_SHADER CxbxRecompilePixelShader(CxbxPSDef &CompletePSDef)
 	CompletePSDef.PerformRuntimeAdjustments(RC);
 
 	ID3DBlob *pShader = nullptr;
-	EmuCompilePixelShader(&RC, &pShader);
+	HRESULT compileHr = EmuCompilePixelShader(&RC, &pShader);
 
 	PSH_RECOMPILED_SHADER Result;
 	Result.CompletePSDef = CompletePSDef;
 	Result.ConvertedPixelShader = nullptr;
+	Result.isPending = (compileHr == S_FALSE); // S_FALSE = async fallback
 	if (pShader) {
 		DWORD *pFunction = (DWORD*)pShader->GetBufferPointer();
 		if (pFunction) {
@@ -932,7 +934,7 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 
 	auto pseudoFileName = "FixedFunctionPixelShader-" + std::to_string(key) + ".hlsl";
 	auto pseudoSourceFile = hlslDir.append(pseudoFileName).string();
-	EmuCompileShader(finalShader, "ps_3_0", &pShaderBlob, pseudoSourceFile.c_str());
+	HRESULT compileHr = EmuCompileShader(finalShader, "ps_3_0", &pShaderBlob, pseudoSourceFile.c_str(), /*asyncAllowed=*/true);
 
 	IDirect3DPixelShader9* pShader = nullptr;
 	if (pShaderBlob) {
@@ -944,8 +946,10 @@ IDirect3DPixelShader9* GetFixedFunctionShader()
 		pShaderBlob->Release();
 	}
 
-	// Insert the shader into the cache
-	ffPsCache[key] = pShader;
+	// Only cache if the shader was fully compiled (not an async fallback)
+	if (compileHr != S_FALSE) {
+		ffPsCache[key] = pShader;
+	}
 
 	return pShader;
 };
@@ -1121,18 +1125,32 @@ void DxbxUpdateActivePixelShader() // NOPATCH
   // Now, see if we already have a shader compiled for this definition :
   // TODO : Change g_RecompiledPixelShaders into an unordered_map, hash just the identifying PSDef members, and add cache eviction (clearing host resources when pruning)
   const PSH_RECOMPILED_SHADER* RecompiledPixelShader = nullptr;
-  for (const auto& it : g_RecompiledPixelShaders) {
-    if (CompletePSDef.IsEquivalent(it.CompletePSDef)) {
-      RecompiledPixelShader = &it;
+  size_t foundIndex = SIZE_MAX;
+  for (size_t i = 0; i < g_RecompiledPixelShaders.size(); i++) {
+    if (CompletePSDef.IsEquivalent(g_RecompiledPixelShaders[i].CompletePSDef)) {
+      // If the cached entry was from an async fallback, try recompiling to get the real shader
+      if (g_RecompiledPixelShaders[i].isPending) {
+        foundIndex = i;
+        break; // will recompile below
+      }
+      RecompiledPixelShader = &g_RecompiledPixelShaders[i];
       break;
     }
   }
 
-  // If none was found, recompile this shader and remember it :
+  // If none was found, or found but pending async completion, (re)compile :
   if (RecompiledPixelShader == nullptr) {
-    // Recompile this pixel shader :
-    g_RecompiledPixelShaders.push_back(CxbxRecompilePixelShader(CompletePSDef));
-    RecompiledPixelShader = &g_RecompiledPixelShaders.back();
+    auto result = CxbxRecompilePixelShader(CompletePSDef);
+    if (foundIndex != SIZE_MAX) {
+      // Replace the pending entry
+      if (g_RecompiledPixelShaders[foundIndex].ConvertedPixelShader)
+        g_RecompiledPixelShaders[foundIndex].ConvertedPixelShader->Release();
+      g_RecompiledPixelShaders[foundIndex] = std::move(result);
+      RecompiledPixelShader = &g_RecompiledPixelShaders[foundIndex];
+    } else {
+      g_RecompiledPixelShaders.push_back(std::move(result));
+      RecompiledPixelShader = &g_RecompiledPixelShaders.back();
+    }
   }
 
   // Switch to the converted pixel shader (if it's any different from our currently active

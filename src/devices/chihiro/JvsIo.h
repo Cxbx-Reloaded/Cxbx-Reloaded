@@ -192,10 +192,21 @@ private:
 	int Jvs_Command_12_GetJvsRevision();
 	int Jvs_Command_13_GetCommunicationVersion();
 	int Jvs_Command_14_GetCapabilities();
+	int Jvs_Command_15_ConveyMainBoardId(uint8_t *data, size_t remaining);
 	int Jvs_Command_20_ReadSwitchInputs(uint8_t *data);
 	int Jvs_Command_21_ReadCoinInputs(uint8_t *data);
 	int Jvs_Command_22_ReadAnalogInputs(uint8_t *data);
+	int Jvs_Command_26_ReadMiscSwitchInputs(uint8_t *data);
+	int Jvs_Command_2E_ReadPayoutHopperStatus(uint8_t *data);
+	int Jvs_Command_2F_RetransmitData();
+	int Jvs_Command_30_CoinDecrease(uint8_t *data);
 	int Jvs_Command_32_GeneralPurposeOutput(uint8_t *data);
+	int Jvs_Command_33_AnalogOutput(uint8_t *data);
+	int Jvs_Command_34_CharacterOutput(uint8_t *data);
+	int Jvs_Command_36_PayoutSubtractionOutput(uint8_t *data);
+	int Jvs_Command_37_GeneralPurposeOutput2(uint8_t *data);
+	int Jvs_Command_70_NamcoCustom(uint8_t *data, size_t remaining);
+	int Jvs_Command_78_80_SkipNamcoUnknownCustom();
 
 	bool BroadcastPacket;					// Set when the last command was a broadcast
 	uint8_t *pSense = nullptr;				// Pointer to Sense line
