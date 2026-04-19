@@ -29,6 +29,7 @@
 #include "common/Timer.h" // For Timer_Shutdown
 #include "core/common/video/RenderBase.hpp" // For g_renderbase
 #include "core/kernel/memory-manager/VMManager.h"
+#include "core/hle/D3D8/Direct3D9/Shader.h" // For ShaderCacheShutdown()
 extern void CxbxrKrnlSuspendThreads();
 #endif
 
@@ -93,8 +94,6 @@ void ShaderCacheShutdown();
 
 [[noreturn]] void CxbxrShutDown(bool is_reboot)
 {
-	ShaderCacheShutdown();
-
 	if (!is_reboot) {
 		// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
 		int BootFlags = 0;
@@ -134,6 +133,11 @@ void ShaderCacheShutdown();
 	if (CxbxKrnl_hEmuParent != NULL && !is_reboot) {
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 	}
+
+	// Flush shader cache saves to disk before terminating — the save thread is
+	// detached and TerminateProcess would kill it mid-write, losing all shaders
+	// compiled this session.
+	ShaderCacheShutdown();
 #endif
 
 	EmuShared::Cleanup();

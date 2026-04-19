@@ -48,6 +48,7 @@
 #include "util\hasher.h"
 #include "core\hle\D3D8\Direct3D9\FixedFunctionPixelShader.hlsli"
 #include "common/FilePaths.hpp" // For szFilePath_CxbxReloaded_Exe
+#include "common/PerfTrace.h"
 
 #include <assert.h> // assert()
 #include <process.h>
@@ -1105,6 +1106,7 @@ void UpdateFixedFunctionPixelShaderState()
 bool g_UseFixedFunctionPixelShader = true;
 void DxbxUpdateActivePixelShader() // NOPATCH
 {
+  PERF_SCOPE(PERF_CAT_UPDATE_PS);
   // The first RenderState is PSAlpha,
   // The pixel shader is stored in pDevice->m_pPixelShader
   // For now, we still patch SetPixelShader and read from there...

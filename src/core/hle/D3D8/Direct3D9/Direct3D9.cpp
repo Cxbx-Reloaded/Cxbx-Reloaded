@@ -67,6 +67,7 @@
 #include "VertexShaderCache.h"
 #include "Shader.h"
 #include "Timer.h"
+#include "common/PerfTrace.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_dx9.h>
@@ -91,6 +92,9 @@ XboxTextureStateConverter XboxTextureStates;
 D3D8LightState d3d8LightState = D3D8LightState();
 D3D8TransformState d3d8TransformState = D3D8TransformState();
 FixedFunctionVertexShaderState ffShaderState = {0}; // TODO find a home for this and associated code
+static bool g_FFRestInvalid = true; // Set when Xbox constants overwrite GPU registers, forces re-upload of non-transform FF data
+static bool g_FFTransformDirty = true; // Set when any transform changes (SetTransform)
+static bool g_FFNonTransformDirty = true; // Set when render states, lights, materials, or non-world transforms change
 
 // Allow use of time duration literals (making 16ms, etc possible)
 using namespace std::literals::chrono_literals;
@@ -923,6 +927,7 @@ typedef struct _resource_info_t {
 	size_t szXboxDataSize = 0;
 	uint64_t hash = 0;
 	bool forceRehash = false;
+	bool isRenderTarget = false; // Set when created as RT; prevents CPU-hash-based re-creation
 	std::chrono::time_point<std::chrono::steady_clock> nextHashTime;
 	std::chrono::milliseconds hashLifeTime = 1ms;
     std::chrono::time_point<std::chrono::steady_clock> lastUpdate;
@@ -2288,9 +2293,15 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 	auto key = GetHostResourceKey(pResource, iTextureStage);
 	auto& ResourceCache = GetResourceCache(key);
 	auto it = ResourceCache.find(key);
+
 	if (it != ResourceCache.end()) {
-		// TODO : Should this check be (D3DUsage & D3DUSAGE_RENDERTARGET) instead?
-		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource) && EmuXBFormatIsRenderTarget(GetXboxPixelContainerFormat((xbox::X_D3DPixelContainer*)pResource))) {
+		// Render target surfaces are GPU-written; never re-hash or re-create them based on CPU data.
+		// This covers both RT->RT and texture->RT access patterns (render-to-texture).
+		if (it->second.isRenderTarget && it->second.pHostResource) {
+			return;
+		}
+
+		if (D3DUsage == D3DUSAGE_RENDERTARGET && IsResourceAPixelContainer(pResource)) {
             // Render targets have special behavior: We can't trash them on guest modification
             // this fixes an issue where CubeMaps were broken because the surface Set in GetCubeMapSurface
             // would be overwritten by the surface created in SetRenderTarget
@@ -2323,12 +2334,19 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 
                         if (pParentXboxTexture) {
                             // Re-create the texture with D3DUSAGE_RENDERTARGET, this will automatically create any child-surfaces
-                            FreeHostResource(GetHostResourceKey(pParentXboxTexture, iTextureStage));
+                            auto parentKey = GetHostResourceKey(pParentXboxTexture, iTextureStage);
+                            FreeHostResource(parentKey);
                             CreateHostResource(pParentXboxTexture, D3DUsage, iTextureStage, dwSize);
+                            // Mark parent texture as RT so future accesses skip re-creation
+                            auto& parentCache = GetResourceCache(parentKey);
+                            auto parentIt = parentCache.find(parentKey);
+                            if (parentIt != parentCache.end()) parentIt->second.isRenderTarget = true;
                         }
 
                         // Re-create the surface with D3DUSAGE_RENDERTARGET
                         CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
+                        // Mark surface as RT
+                        { auto& rc2 = GetResourceCache(key); auto it2 = rc2.find(key); if (it2 != rc2.end()) it2->second.isRenderTarget = true; }
                     } break;
                     case xbox::X_D3DRTYPE_TEXTURE: {
                         auto xboxTexture = (xbox::X_D3DTexture*)pResource;
@@ -2338,6 +2356,8 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 
                         // And re-create the texture with D3DUSAGE_RENDERTARGET
                         CreateHostResource(pResource, D3DUsage, iTextureStage, dwSize);
+                        // Mark texture as RT so future accesses skip re-creation
+                        { auto& rc2 = GetResourceCache(key); auto it2 = rc2.find(key); if (it2 != rc2.end()) it2->second.isRenderTarget = true; }
                     } break;
                     default:
                         LOG_TEST_CASE("Unimplemented rendertarget type");
@@ -2345,6 +2365,13 @@ static void EmuVerifyResourceIsRegistered(xbox::X_D3DResource *pResource, DWORD 
 
                 return;
             }
+		}
+
+		// Render targets are written by the GPU, not the CPU.
+		// If a host resource is already registered for this key, never re-hash or re-create it
+		// based on CPU-side data — the GPU content can't be detected as "changed" by hashing Xbox memory.
+		if (D3DUsage == D3DUSAGE_RENDERTARGET && it->second.pHostResource) {
+			return;
 		}
 
 		if (!HostResourceRequiresUpdate(key, pResource, dwSize)) {
@@ -4102,6 +4129,7 @@ void ValidateRenderTargetDimensions(DWORD HostRenderTarget_Width, DWORD HostRend
     // TEST CASE: Chihiro Factory Test Program
     DWORD XboxRenderTarget_Width_Scaled = XboxRenderTarget_Width * g_RenderUpscaleFactor;
     DWORD XboxRenderTarget_Height_Scaled = XboxRenderTarget_Height * g_RenderUpscaleFactor;
+
     if (HostRenderTarget_Width != XboxRenderTarget_Width_Scaled || HostRenderTarget_Height != XboxRenderTarget_Height_Scaled) {
         LOG_TEST_CASE("Existing RenderTarget width/height changed");
 
@@ -5215,6 +5243,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 )
 {
 	LOG_FUNC_ONE_ARG(Flags);
+	PerfTrace_OnSwapBegin(); // prints previous frame, resets accumulators, starts swap timer
 
 	// Handle swap flags
 	// We don't maintain a swap chain, and draw everything to backbuffer 0
@@ -5273,6 +5302,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 		// Pre-compute the destination rectangle so we can decide whether a pre-clear is necessary
 		auto pXboxBackBufferHostSurface = GetHostSurface(g_pXbox_BackBufferSurface, D3DUSAGE_RENDERTARGET);
 		if (pXboxBackBufferHostSurface) {
+			PERF_SCOPE(PERF_CAT_BLIT);
             // Calculate the centered rectangle
             RECT dest{};
             dest.top = (LONG)((g_HostBackBufferDesc.Height - height) / 2);
@@ -5494,7 +5524,10 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 
 	g_pD3DDevice->EndScene();
 
-	hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+	{
+		PERF_SCOPE(PERF_CAT_PRESENT);
+		hRet = g_pD3DDevice->Present(0, 0, 0, 0);
+	}
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->Present");
 
 	hRet = g_pD3DDevice->BeginScene();
@@ -5577,6 +5610,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 	else
 		result = g_Xbox_SwapData.Swap; // Swap returns number of swaps
 
+	PerfTrace_OnSwapEnd();
     return result;
 }
 
@@ -5628,6 +5662,7 @@ bool IsSupportedFormat(xbox::X_D3DFORMAT X_Format, xbox::X_D3DRESOURCETYPE XboxR
 // Was patch: IDirect3DResource8_Register
 void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTextureStage, DWORD dwSize)
 {
+	PERF_SCOPE(PERF_CAT_CREATE_RESOURCE);
 	if (pResource == xbox::zeroptr)
 		return;
 
@@ -5935,6 +5970,13 @@ void CreateHostResource(xbox::X_D3DResource *pResource, DWORD D3DUsage, int iTex
 			}
 
 			SetHostResource(pResource, (IDirect3DResource*)pNewHostSurface.Get(), iTextureStage, D3DUsage, PCFormat);
+			// Mark as render target so future accesses never trigger CPU-hash-based re-creation
+			if (D3DUsage & D3DUSAGE_RENDERTARGET) {
+				auto rtKey = GetHostResourceKey(pResource, iTextureStage);
+				auto& rtCache = GetResourceCache(rtKey);
+				auto rtIt = rtCache.find(rtKey);
+				if (rtIt != rtCache.end()) rtIt->second.isRenderTarget = true;
+			}
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Successfully created %s (0x%.08X, 0x%.08X)",
 				ResourceTypeName, pResource, pNewHostSurface.Get());
 			EmuLog(LOG_LEVEL::DEBUG, "CreateHostResource : Width : %d, Height : %d, Format : %d",
@@ -6476,176 +6518,220 @@ void UpdateFixedFunctionShaderLight(int d3dLightIndex, Light* pShaderLight, D3DX
 
 void UpdateFixedFunctionVertexShaderState()
 {
+	// Dirty-flag early exit: skip entirely if no Xbox state has changed and GPU data is current.
+	// This avoids redundant computation+upload for multi-pass draws on the same object.
+	// With ~1100 draw calls/frame in WMMT2, skipping the non-transform computation
+	// (lights, materials, fog, ~30 render state reads) saves ~0.3ms/frame.
+	bool transformDirty = g_FFTransformDirty;
+	bool nonTransformDirty = g_FFNonTransformDirty;
+	bool gpuInvalid = g_FFRestInvalid;
+
+	if (!transformDirty && !nonTransformDirty && !gpuInvalid) {
+		return;
+	}
+
+	g_FFTransformDirty = false;
+	g_FFNonTransformDirty = false;
+
+	// If GPU was invalidated (Xbox shader wrote over registers) but no state actually changed,
+	// just re-upload the cached data without recomputing anything.
+	if (gpuInvalid && !transformDirty && !nonTransformDirty) {
+		const int slotSize = 16;
+		const int transformSlots = sizeof(Transforms) / slotSize;
+		const int totalSlots = (sizeof(FixedFunctionVertexShaderState) + slotSize - 1) / slotSize;
+		const int restSlots = totalSlots - transformSlots;
+		g_pD3DDevice->SetVertexShaderConstantF(0, (float*)&ffShaderState.Transforms, transformSlots);
+		g_pD3DDevice->SetVertexShaderConstantF(transformSlots,
+			(const float*)(((const uint8_t*)&ffShaderState) + sizeof(Transforms)), restSlots);
+		g_FFRestInvalid = false;
+		return;
+	}
+
 	extern xbox::X_VERTEXATTRIBUTEFORMAT* GetXboxVertexAttributeFormat(); // TMP glue
 	using namespace xbox;
 
-	// Vertex blending
-	// Prepare vertex blending mode variables used in transforms, below
-	auto VertexBlend = XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
-	// Xbox and host D3DVERTEXBLENDFLAGS :
-	//     D3DVBF_DISABLE           = 0 : 1 matrix,   0 weights => final weight 1
-	//     D3DVBF_1WEIGHTS          = 1 : 2 matrices, 1 weights => final weight calculated
-	//     D3DVBF_2WEIGHTS          = 3 : 3 matrices, 2 weights => final weight calculated
-	//     D3DVBF_3WEIGHTS          = 5 : 4 matrices, 3 weights => final weight calculated
-	// Xbox X_D3DVERTEXBLENDFLAGS :
-	//   X_D3DVBF_2WEIGHTS2MATRICES = 2 : 2 matrices, 2 weights
-	//   X_D3DVBF_3WEIGHTS3MATRICES = 4 : 3 matrices, 3 weights
-	//   X_D3DVBF_4WEIGHTS4MATRICES = 6 : 4 matrices, 4 weights
-	//
-	if (VertexBlend > xbox::X_D3DVBF_4WEIGHTS4MATRICES) LOG_TEST_CASE("X_D3DRS_VERTEXBLEND out of range");
-	// Calculate the number of matrices, by adding the LSB to turn (0,1,3,5) and (0,2,4,6) into (0,2,4,6); Then divide by 2 to get (0,1,2,3), and add 1 to get 1, 2, 3 or 4 matrices :
-	auto NrBlendMatrices = ((VertexBlend + (VertexBlend & 1)) / 2) + 1;
-	// Looking at the above values, 0 or the LSB of VertexBlend signals that the final weight needs to be calculated from all previous weigths (deducting them all from an initial 1) :
-	auto CalcLastBlendWeight = (VertexBlend == xbox::X_D3DVBF_DISABLE) || (VertexBlend & 1);
-	// Copy the resulting values over to shader state :
-	ffShaderState.Modes.VertexBlend_NrOfMatrices = (float)NrBlendMatrices;
-	ffShaderState.Modes.VertexBlend_CalcLastWeight = (float)CalcLastBlendWeight;
+	// fullRebuild = true when render states, lights, materials, or non-world transforms changed.
+	// When only the world matrix changed, we skip all the expensive non-transform computation.
+	bool fullRebuild = nonTransformDirty;
 
-	// Transforms
-	// Transpose row major to column major for HLSL
-	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
-	D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
+	// Cached vertex blend matrix count (only changes with render state, i.e. fullRebuild)
+	static unsigned s_NrBlendMatrices = 1;
 
-	for (unsigned i = 0; i < 4; i++) { // TODO : Would it help to limit this to just the active texture channels?
-		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
-	}
+	if (fullRebuild) {
+		// Vertex blending
+		auto VertexBlend = XboxRenderStates.GetXboxRenderState(X_D3DRS_VERTEXBLEND);
+		// Xbox and host D3DVERTEXBLENDFLAGS :
+		//     D3DVBF_DISABLE           = 0 : 1 matrix,   0 weights => final weight 1
+		//     D3DVBF_1WEIGHTS          = 1 : 2 matrices, 1 weights => final weight calculated
+		//     D3DVBF_2WEIGHTS          = 3 : 3 matrices, 2 weights => final weight calculated
+		//     D3DVBF_3WEIGHTS          = 5 : 4 matrices, 3 weights => final weight calculated
+		// Xbox X_D3DVERTEXBLENDFLAGS :
+		//   X_D3DVBF_2WEIGHTS2MATRICES = 2 : 2 matrices, 2 weights
+		//   X_D3DVBF_3WEIGHTS3MATRICES = 4 : 3 matrices, 3 weights
+		//   X_D3DVBF_4WEIGHTS4MATRICES = 6 : 4 matrices, 4 weights
+		//
+		if (VertexBlend > xbox::X_D3DVBF_4WEIGHTS4MATRICES) LOG_TEST_CASE("X_D3DRS_VERTEXBLEND out of range");
+		s_NrBlendMatrices = ((VertexBlend + (VertexBlend & 1)) / 2) + 1;
+		auto CalcLastBlendWeight = (VertexBlend == xbox::X_D3DVBF_DISABLE) || (VertexBlend & 1);
+		ffShaderState.Modes.VertexBlend_NrOfMatrices = (float)s_NrBlendMatrices;
+		ffShaderState.Modes.VertexBlend_CalcLastWeight = (float)CalcLastBlendWeight;
 
-	for (unsigned i = 0; i < ffShaderState.Modes.VertexBlend_NrOfMatrices; i++) {
+		// Transforms — Projection, View, Texture (only change with non-world SetTransform)
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Projection, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_PROJECTION]);
+		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.View, (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_VIEW]);
+
+		for (unsigned i = 0; i < 4; i++) {
+			D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.Texture[i], (D3DXMATRIX*)&d3d8TransformState.Transforms[X_D3DTS_TEXTURE0 + i]);
+		}
+
+		// Lighting
+		// Point sprites aren't lit - 'each point is always rendered with constant colors.'
+		// https://docs.microsoft.com/en-us/windows/win32/direct3d9/point-sprites
+		bool PointSpriteEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
+		bool LightingEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
+		ffShaderState.Modes.Lighting = LightingEnable && !PointSpriteEnable;
+		ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
+		ffShaderState.Modes.LocalViewer = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
+
+		// Material sources
+		bool ColorVertex = XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
+		ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.SpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.EmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackAmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackDiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackSpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
+		ffShaderState.Modes.BackEmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+
+		// Point sprites; Fetch required variables
+		float pointSize = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE);
+		float pointSize_Min = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MIN);
+		float pointSize_Max = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MAX);
+		bool PointScaleEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE);
+		float pointScale_A = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_A);
+		float pointScale_B = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_B);
+		float pointScale_C = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_C);
+		float renderTargetHeight = (float)GetPixelContainerHeight(g_pXbox_RenderTarget);
+		// Make sure to disable point scaling when point sprites are not enabled
+		PointScaleEnable &= PointSpriteEnable;
+		// Set variables in shader state
+		ffShaderState.PointSprite.PointSize = PointSpriteEnable ? pointSize : 1.0f;
+		ffShaderState.PointSprite.PointSize_Min = PointSpriteEnable ? pointSize_Min : 1.0f;
+		ffShaderState.PointSprite.PointSize_Max = PointSpriteEnable ? pointSize_Max : 1.0f;
+		ffShaderState.PointSprite.PointScaleABC.x = PointScaleEnable ? pointScale_A : 1.0f;
+		ffShaderState.PointSprite.PointScaleABC.y = PointScaleEnable ? pointScale_B : 0.0f;
+		ffShaderState.PointSprite.PointScaleABC.z = PointScaleEnable ? pointScale_C : 0.0f;
+		ffShaderState.PointSprite.XboxRenderTargetHeight = PointScaleEnable ? renderTargetHeight : 1.0f;
+		ffShaderState.PointSprite.RenderUpscaleFactor = (float)g_RenderUpscaleFactor;
+
+		// Fog
+		// Determine how the fog depth is transformed into the fog factor
+		auto fogEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGENABLE);
+		auto fogTableMode = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE);
+		ffShaderState.Fog.Enable = fogEnable;
+		// FIXME remove when fixed function PS is implemented
+		// Note if we are using the fixed function pixel shader
+		// We only want to produce the fog depth value in the VS, not the fog factor
+		ffShaderState.Fog.TableMode = !g_UseFixedFunctionPixelShader ? D3DFOG_NONE : fogTableMode;
+
+		// Determine how fog depth is calculated
+		if (fogEnable && fogTableMode != D3DFOG_NONE) {
+			auto proj = &ffShaderState.Transforms.Projection;
+
+			if (XboxRenderStates.GetXboxRenderState(X_D3DRS_RANGEFOGENABLE)) {
+				LOG_TEST_CASE("Using RANGE fog");
+				ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_RANGE;
+			}
+			else if (proj->_14 == 0 &&
+				proj->_24 == 0 &&
+				proj->_34 == 0 &&
+				proj->_44 == 1) {
+				LOG_TEST_CASE("Using Z fog");
+				ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_Z;
+			}
+			else {
+				// Test case:
+				// Fog sample
+				// JSRF (non-compliant projection matrix)
+				ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_W;
+			}
+
+			auto density = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGDENSITY);
+			auto fogStart = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGSTART);
+			auto fogEnd = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGEND);
+			ffShaderState.Fog.Density = *reinterpret_cast<float*>(&density);
+			ffShaderState.Fog.Start = *reinterpret_cast<float*>(&fogStart);
+			ffShaderState.Fog.End = *reinterpret_cast<float*>(&fogEnd);
+		}
+		else {
+			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_NONE;
+		}
+
+		// Texture state
+		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+			auto transformFlags = XboxTextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
+			ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
+			ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
+
+			auto texCoordIndex = XboxTextureStates.Get(i, X_D3DTSS_TEXCOORDINDEX);
+			ffShaderState.TextureStates[i].TexCoordIndex = (float)(texCoordIndex & 0x7); // 8 coords
+			ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
+		}
+
+		// Read current TexCoord component counts
+		xbox::X_VERTEXATTRIBUTEFORMAT* pXboxVertexAttributeFormat = GetXboxVertexAttributeFormat();
+		for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
+			auto vertexDataFormat = pXboxVertexAttributeFormat->Slots[xbox::X_D3DVSDE_TEXCOORD0 + i].Format;
+			ffShaderState.TexCoordComponentCount[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
+		}
+
+		// Update lights
+		auto LightAmbient = D3DXVECTOR4(0.f, 0.f, 0.f, 0.f);
+		for (size_t i = 0; i < ffShaderState.Lights.size(); i++) {
+			UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient);
+		}
+
+		D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
+		D3DXVECTOR4 BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
+
+		ffShaderState.TotalLightsAmbient.Front = (D3DXVECTOR3)(LightAmbient + Ambient);
+		ffShaderState.TotalLightsAmbient.Back = (D3DXVECTOR3)(LightAmbient + BackAmbient);
+
+		// Misc flags
+		ffShaderState.Modes.NormalizeNormals = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
+	} // end fullRebuild
+
+	// WorldView/WorldViewIT — recompute whenever transforms or blend matrix count changed
+	for (unsigned i = 0; i < s_NrBlendMatrices; i++) {
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldView[i], (D3DXMATRIX*)d3d8TransformState.GetWorldView(i));
 		D3DXMatrixTranspose((D3DXMATRIX*)&ffShaderState.Transforms.WorldViewInverseTranspose[i], (D3DXMATRIX*)d3d8TransformState.GetWorldViewInverseTranspose(i));
 	}
 
-	// Lighting
-	// Point sprites aren't lit - 'each point is always rendered with constant colors.'
-	// https://docs.microsoft.com/en-us/windows/win32/direct3d9/point-sprites
-	bool PointSpriteEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSPRITEENABLE);
-	bool LightingEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_LIGHTING);
-	ffShaderState.Modes.Lighting = LightingEnable && !PointSpriteEnable;
-	ffShaderState.Modes.TwoSidedLighting = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_TWOSIDEDLIGHTING);
-	ffShaderState.Modes.LocalViewer = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_LOCALVIEWER);
+	// === Upload to GPU ===
+	const int slotSize = 16; // sizeof(float4)
+	const int transformSlots = sizeof(Transforms) / slotSize;
+	const int totalSlots = (sizeof(FixedFunctionVertexShaderState) + slotSize - 1) / slotSize;
+	const int restSlots = totalSlots - transformSlots;
+	const int restOffset = transformSlots; // register index where non-transform data starts
 
-	// Material sources
-	bool ColorVertex = XboxRenderStates.GetXboxRenderState(X_D3DRS_COLORVERTEX) != FALSE;
-	ffShaderState.Modes.AmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
-	ffShaderState.Modes.DiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_DIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
-	ffShaderState.Modes.SpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_SPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
-	ffShaderState.Modes.EmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_EMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
-	ffShaderState.Modes.BackAmbientMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENTMATERIALSOURCE) : D3DMCS_MATERIAL);
-	ffShaderState.Modes.BackDiffuseMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKDIFFUSEMATERIALSOURCE) : D3DMCS_MATERIAL);
-	ffShaderState.Modes.BackSpecularMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKSPECULARMATERIALSOURCE) : D3DMCS_MATERIAL);
-	ffShaderState.Modes.BackEmissiveMaterialSource = (float)(ColorVertex ? XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKEMISSIVEMATERIALSOURCE) : D3DMCS_MATERIAL);
+	// Upload transforms (always needed when we reach this point — either transforms changed or fullRebuild)
+	g_pD3DDevice->SetVertexShaderConstantF(0, (float*)&ffShaderState.Transforms, transformSlots);
 
-	// Point sprites; Fetch required variables
-	float pointSize = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE);
-	float pointSize_Min = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MIN);
-	float pointSize_Max = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSIZE_MAX);
-	bool PointScaleEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_POINTSCALEENABLE);
-	float pointScale_A = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_A);
-	float pointScale_B = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_B);
-	float pointScale_C = XboxRenderStates.GetXboxRenderStateAsFloat(X_D3DRS_POINTSCALE_C);
-	float renderTargetHeight = (float)GetPixelContainerHeight(g_pXbox_RenderTarget);
-	// Make sure to disable point scaling when point sprites are not enabled
-	PointScaleEnable &= PointSpriteEnable;
-	// Set variables in shader state
-	ffShaderState.PointSprite.PointSize = PointSpriteEnable ? pointSize : 1.0f;
-	ffShaderState.PointSprite.PointSize_Min = PointSpriteEnable ? pointSize_Min : 1.0f;
-	ffShaderState.PointSprite.PointSize_Max = PointSpriteEnable ? pointSize_Max : 1.0f;
-	ffShaderState.PointSprite.PointScaleABC.x = PointScaleEnable ? pointScale_A : 1.0f;
-	ffShaderState.PointSprite.PointScaleABC.y = PointScaleEnable ? pointScale_B : 0.0f;
-	ffShaderState.PointSprite.PointScaleABC.z = PointScaleEnable ? pointScale_C : 0.0f;
-	ffShaderState.PointSprite.XboxRenderTargetHeight = PointScaleEnable ? renderTargetHeight : 1.0f;
-	ffShaderState.PointSprite.RenderUpscaleFactor = (float)g_RenderUpscaleFactor;
+	// Upload rest only when it may have changed (fullRebuild or GPU invalidated)
+	if (fullRebuild || gpuInvalid) {
+		static uint8_t s_lastRestData[sizeof(FixedFunctionVertexShaderState) - sizeof(Transforms)] = {};
+		static bool s_restValid = false;
+		const uint8_t* restPtr = ((const uint8_t*)&ffShaderState) + sizeof(Transforms);
+		const size_t restSize = sizeof(FixedFunctionVertexShaderState) - sizeof(Transforms);
 
-	// Fog
-	// Determine how the fog depth is transformed into the fog factor
-	auto fogEnable = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGENABLE);
-	auto fogTableMode = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGTABLEMODE);
-	ffShaderState.Fog.Enable = fogEnable;
-	// FIXME remove when fixed function PS is implemented
-	// Note if we are using the fixed function pixel shader
-	// We only want to produce the fog depth value in the VS, not the fog factor
-	ffShaderState.Fog.TableMode = !g_UseFixedFunctionPixelShader ? D3DFOG_NONE : fogTableMode;
-
-	// Determine how fog depth is calculated
-	if (fogEnable && fogTableMode != D3DFOG_NONE) {
-		auto proj = &ffShaderState.Transforms.Projection;
-
-		if (XboxRenderStates.GetXboxRenderState(X_D3DRS_RANGEFOGENABLE)) {
-			LOG_TEST_CASE("Using RANGE fog");
-			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_RANGE;
+		if (gpuInvalid || !s_restValid || memcmp(restPtr, s_lastRestData, restSize) != 0) {
+			g_pD3DDevice->SetVertexShaderConstantF(restOffset, (const float*)restPtr, restSlots);
+			memcpy(s_lastRestData, restPtr, restSize);
+			s_restValid = true;
 		}
-		else if (proj->_14 == 0 &&
-			proj->_24 == 0 &&
-			proj->_34 == 0 &&
-			proj->_44 == 1) {
-			LOG_TEST_CASE("Using Z fog");
-			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_Z;
-		}
-		else {
-			// Test case:
-			// Fog sample
-			// JSRF (non-compliant projection matrix)
-			ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_W;
-		}
-
-		auto density = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGDENSITY);
-		auto fogStart = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGSTART);
-		auto fogEnd = XboxRenderStates.GetXboxRenderState(X_D3DRS_FOGEND);
-		ffShaderState.Fog.Density = *reinterpret_cast<float*>(&density);
-		ffShaderState.Fog.Start = *reinterpret_cast<float*>(&fogStart);
-		ffShaderState.Fog.End = *reinterpret_cast<float*>(&fogEnd);
 	}
-	else {
-		ffShaderState.Fog.DepthMode = FixedFunctionVertexShader::FOG_DEPTH_NONE;
-	}
-
-	// Texture state
-	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-		auto transformFlags = XboxTextureStates.Get(i, X_D3DTSS_TEXTURETRANSFORMFLAGS);
-		ffShaderState.TextureStates[i].TextureTransformFlagsCount = (float)(transformFlags & ~D3DTTFF_PROJECTED);
-		ffShaderState.TextureStates[i].TextureTransformFlagsProjected = (float)(transformFlags & D3DTTFF_PROJECTED);
-
-		auto texCoordIndex = XboxTextureStates.Get(i, X_D3DTSS_TEXCOORDINDEX);
-		ffShaderState.TextureStates[i].TexCoordIndex = (float)(texCoordIndex & 0x7); // 8 coords
-		ffShaderState.TextureStates[i].TexCoordIndexGen = (float)(texCoordIndex >> 16); // D3DTSS_TCI flags
-	}
-
-	// Read current TexCoord component counts
-	xbox::X_VERTEXATTRIBUTEFORMAT* pXboxVertexAttributeFormat = GetXboxVertexAttributeFormat();
-	// Note : There seem to be other ways to access this, but we can use only this one;
-	// This, because CxbxGetVertexDeclaration() can't be used, since it doesn't track VertexAttributes
-	// (plus, it contains the overhead of shader lookup).
-	// Another, GetXboxVertexShader(), can't be used, because it doesn't honor vertex attribute overrides
-	// like those that apply for g_InlineVertexBuffer_DeclarationOverride and active SetVertexShaderInput.
-	// Also, the xbox::X_D3DVertexShader.Dimensionality[] field contains somewhat strange values.
-	for (int i = 0; i < xbox::X_D3DTS_STAGECOUNT; i++) {
-		auto vertexDataFormat = pXboxVertexAttributeFormat->Slots[xbox::X_D3DVSDE_TEXCOORD0 + i].Format;
-		ffShaderState.TexCoordComponentCount[i] = (float)GetXboxVertexDataComponentCount(vertexDataFormat);
-	}
-
-	// Update lights
-	auto LightAmbient = D3DXVECTOR4(0.f, 0.f, 0.f, 0.f);
-	for (size_t i = 0; i < ffShaderState.Lights.size(); i++) {
-		UpdateFixedFunctionShaderLight(d3d8LightState.EnabledLights[i], &ffShaderState.Lights[i], &LightAmbient);
-	}
-
-	D3DXVECTOR4 Ambient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_AMBIENT));
-	D3DXVECTOR4 BackAmbient = toVector(XboxRenderStates.GetXboxRenderState(X_D3DRS_BACKAMBIENT));
-
-	ffShaderState.TotalLightsAmbient.Front = (D3DXVECTOR3)(LightAmbient + Ambient);
-	ffShaderState.TotalLightsAmbient.Back = (D3DXVECTOR3)(LightAmbient + BackAmbient);
-
-	// Misc flags
-	ffShaderState.Modes.NormalizeNormals = (float)XboxRenderStates.GetXboxRenderState(X_D3DRS_NORMALIZENORMALS);
-
-	// Write fixed function state to shader constants
-	const int slotSize = 16;
-	const int fixedFunctionStateSize = (sizeof(FixedFunctionVertexShaderState) + slotSize - 1) / slotSize;
-	auto hRet = g_pD3DDevice->SetVertexShaderConstantF(0, (float*)&ffShaderState, fixedFunctionStateSize);
-
-	if (FAILED(hRet)) {
-		CxbxrAbort("Failed to write fixed-function HLSL state");
-	}
+	g_FFRestInvalid = false;
 }
 
 static void CxbxrImpl_EnableOverlay()
@@ -6831,6 +6917,7 @@ xbox::void_xt __fastcall xbox::EMUPATCH(D3DDevice_SetRenderState_Simple)
 	EmuLog(LOG_LEVEL::DEBUG, "RenderState_Simple: %s = 0x%08X", GetDxbxRenderStateInfo(XboxRenderStateIndex).S, Value);
 
     XboxRenderStates.SetXboxRenderState(XboxRenderStateIndex, Value);
+    g_FFNonTransformDirty = true;
 }
 
 void CxbxImpl_SetTransform
@@ -6842,6 +6929,11 @@ void CxbxImpl_SetTransform
     LOG_INIT
 
 	d3d8TransformState.SetTransform(State, pMatrix);
+	g_FFTransformDirty = true;
+	// Non-world transforms (View, Projection, Texture) also require full FF state rebuild
+	if (State < xbox::X_D3DTS_WORLD || State > xbox::X_D3DTS_WORLD3) {
+		g_FFNonTransformDirty = true;
+	}
 
 	auto d3d9State = EmuXB2PC_D3DTS(State);
 
@@ -7594,6 +7686,7 @@ void CxbxDrawIndexedClosingLineUP(INDEX16 LowIndex, INDEX16 HighIndex, void *pHo
 void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
+	PERF_SCOPE(PERF_CAT_DRAW);
 
 	assert(DrawContext.dwStartVertex == 0);
 	assert(DrawContext.pXboxIndexData != nullptr);
@@ -7665,6 +7758,7 @@ void CxbxDrawIndexed(CxbxDrawContext &DrawContext)
 void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext)
 {
 	LOG_INIT // Allows use of DEBUG_D3DRESULT
+	PERF_SCOPE(PERF_CAT_DRAW);
 
 	assert(DrawContext.dwStartVertex == 0);
 	assert(DrawContext.pXboxVertexStreamZeroData != xbox::zeroptr);
@@ -7742,11 +7836,27 @@ IDirect3DBaseTexture* CxbxConvertXboxSurfaceToHostTexture(xbox::X_D3DBaseTexture
 
 void CxbxUpdateHostTextures()
 {
+	PERF_SCOPE(PERF_CAT_UPDATE_TEXTURES);
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
+
+	// Cache last-set host texture per stage to skip redundant SetTexture and GetHostBaseTexture calls.
+	// In heavy scenes (WMMT2 with 800+ draws), most draws share the same textures —
+	// this eliminates ~6000+ redundant D3D9 calls per frame and the associated resource lookups.
+	static IDirect3DBaseTexture* s_lastHostTexture[xbox::X_D3DTS_STAGECOUNT] = {};
+	static xbox::X_D3DBaseTexture* s_lastXboxTexture[xbox::X_D3DTS_STAGECOUNT] = {};
+	static xbox::addr_xt s_lastXboxTextureData[xbox::X_D3DTS_STAGECOUNT] = {};
 
 	// Set the host texture for each stage
 	for (int stage = 0; stage < xbox::X_D3DTS_STAGECOUNT; stage++) {
 		auto pXboxBaseTexture = g_pXbox_SetTexture[stage];
+
+		// Fast path: if the Xbox texture pointer AND data address haven't changed, skip all work.
+		// We check Data too because SwitchTexture reuses the same pointer with different Data.
+		xbox::addr_xt xboxData = (pXboxBaseTexture != xbox::zeroptr) ? pXboxBaseTexture->Data : 0;
+		if (pXboxBaseTexture == s_lastXboxTexture[stage] && xboxData == s_lastXboxTextureData[stage]) {
+			continue;
+		}
+
 		IDirect3DBaseTexture* pHostBaseTexture = nullptr;
 		bool bNeedRelease = false;
 		if (pXboxBaseTexture != xbox::zeroptr) {
@@ -7780,6 +7890,10 @@ void CxbxUpdateHostTextures()
 
 		HRESULT hRet = g_pD3DDevice->SetTexture(stage, pHostBaseTexture);
 		DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetTexture");
+		s_lastHostTexture[stage] = pHostBaseTexture;
+		s_lastXboxTexture[stage] = pXboxBaseTexture;
+		s_lastXboxTextureData[stage] = xboxData;
+
 		if (bNeedRelease) {
 			pHostBaseTexture->Release();
 		}
@@ -7943,6 +8057,7 @@ void CxbxUpdateHostVertexShaderConstants()
 
 		// We've written the Xbox constants
 		isXboxConstants = true;
+		g_FFRestInvalid = true; // GPU constants now hold Xbox data, not FF state
 
 		// FIXME our viewport constants don't match Xbox values
 		// If we write them to pgraph constants, like we do with constants set by the title,
@@ -8059,21 +8174,23 @@ extern void CxbxUpdateHostVertexShader(); // TMP glue
 
 void CxbxUpdateNativeD3DResources()
 {
-	CxbxUpdateHostVertexDeclaration();
+	PERF_SCOPE(PERF_CAT_UPDATE_NATIVE);
+	{
+		PERF_SCOPE(PERF_CAT_VTX_DECL);
+		{ PERF_SCOPE(PERF_CAT_VS_DECL); CxbxUpdateHostVertexDeclaration(); }
+		{ PERF_SCOPE(PERF_CAT_VS_CONST); CxbxUpdateHostVertexShaderConstants(); }
+		{ PERF_SCOPE(PERF_CAT_VIEWPORT); CxbxUpdateHostViewport(); }
+	}
 
 	CxbxUpdateHostVertexShader();
-
-	CxbxUpdateHostVertexShaderConstants();
-
-	CxbxUpdateHostViewport();
 
 	// NOTE: Order is important here
     // Some Texture States depend on RenderState values (Point Sprites)
     // And some Pixel Shaders depend on Texture State values (BumpEnvMat, etc)
 	CxbxUpdateHostTextures();
 	CxbxUpdateHostTextureScaling();
-    XboxRenderStates.Apply();
-    XboxTextureStates.Apply();
+	{ PERF_SCOPE(PERF_CAT_RENDER_STATES); XboxRenderStates.Apply(); }
+	{ PERF_SCOPE(PERF_CAT_TEX_STATES); XboxTextureStates.Apply(); }
 
     // If Pixel Shaders are not disabled, process them
     if (!g_DisablePixelShaders) {
@@ -8688,6 +8805,7 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(D3DDevice_SetLight)
 	XB_TRMP(D3DDevice_SetLight)(Index, pLight);
 
 	d3d8LightState.Lights[Index] = *pLight;
+	g_FFNonTransformDirty = true;
 
     HRESULT hRet = g_pD3DDevice->SetLight(Index, pLight);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetLight");    
@@ -8710,6 +8828,7 @@ xbox::void_xt WINAPI xbox::EMUPATCH(D3DDevice_SetMaterial)
 	ffShaderState.Materials[0].Specular = toVector(pMaterial->Specular);
 	ffShaderState.Materials[0].Emissive = toVector(pMaterial->Emissive);
 	ffShaderState.Materials[0].Power = pMaterial->Power;
+	g_FFNonTransformDirty = true;
 
     HRESULT hRet = g_pD3DDevice->SetMaterial(pMaterial);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetMaterial");
@@ -8720,6 +8839,7 @@ static HRESULT CxbxrImpl_LightEnable(xbox::dword_xt Index, xbox::bool_xt bEnable
 	LOG_INIT;
 
 	d3d8LightState.EnableLight(Index, bEnable);
+	g_FFNonTransformDirty = true;
 
 	HRESULT hRet = g_pD3DDevice->LightEnable(Index, bEnable);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->LightEnable");

@@ -38,6 +38,7 @@
 #include "core\hle\D3D8\Direct3D9\Shader.h" // For g_ShaderSources
 #include "core\hle\D3D8\XbVertexBuffer.h" // For CxbxImpl_SetVertexData4f
 #include "core\hle\D3D8\XbVertexShader.h"
+#include "common/PerfTrace.h"
 #include "core\hle\D3D8\XbD3D8Logging.h" // For DEBUG_D3DRESULT
 #include "devices\xbox.h"
 #include "core\hle\D3D8\XbConvert.h" // For NV2A_VP_UPLOAD_INST, NV2A_VP_UPLOAD_CONST_ID, NV2A_VP_UPLOAD_CONST
@@ -1144,6 +1145,7 @@ IDirect3DVertexShader* InitShader(void (*compileFunc)(ID3DBlob**), const char* l
 
 void CxbxUpdateHostVertexShader()
 {
+	PERF_SCOPE(PERF_CAT_UPDATE_VS);
 	extern bool g_bUsePassthroughHLSL; // TMP glue
 	// TODO: move d3d9 state to VertexShader.cpp
 	static IDirect3DVertexShader* fixedFunctionShader = nullptr; // TODO: move to shader cache

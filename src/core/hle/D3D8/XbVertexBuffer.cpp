@@ -37,6 +37,7 @@
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
+#include "common\PerfTrace.h"
 
 #include <imgui.h>
 
@@ -90,6 +91,8 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamN
 	}
 }
 
+static void VBPool_Return(IDirect3DVertexBuffer* vb); // forward declaration
+
 void CxbxPatchedStream::Clear()
 {
     if (bCachedHostVertexStreamZeroDataIsAllocated) {
@@ -100,7 +103,7 @@ void CxbxPatchedStream::Clear()
     pCachedHostVertexStreamZeroData = nullptr;
 
     if (pCachedHostVertexBuffer != nullptr) {
-        pCachedHostVertexBuffer->Release();
+        VBPool_Return(pCachedHostVertexBuffer);
         pCachedHostVertexBuffer = nullptr;
     }
 }
@@ -207,6 +210,80 @@ void CxbxVertexBufferConverter::DrawCacheStats()
 	ImGui::TextUnformatted("Cache miss details:");
 	ImGui::TextWrapped("Vertex stream hash miss: %u", std::exchange(m_VertexStreamHashMisses, 0));
 	ImGui::TextWrapped("Data not in cache: %u", std::exchange(m_DataNotInCacheMisses, 0));
+}
+
+// ── Vertex Buffer Pool ────────────────────────────────────────────────────────
+// Recycles D3D vertex buffers to avoid Create/Release overhead on cache misses.
+// Buckets are sized in powers of 2 (256 B to 2 MB). Max 32 VBs per bucket.
+static constexpr int VB_POOL_MIN_BUCKET = 8;   // 2^8  = 256 bytes
+static constexpr int VB_POOL_MAX_BUCKET = 21;   // 2^21 = 2 MB
+static constexpr int VB_POOL_NUM_BUCKETS = VB_POOL_MAX_BUCKET - VB_POOL_MIN_BUCKET + 1;
+static constexpr int VB_POOL_MAX_PER_BUCKET = 32;
+
+struct VBPoolBucket {
+	IDirect3DVertexBuffer* vbs[VB_POOL_MAX_PER_BUCKET];
+	DWORD allocSize; // actual D3D allocation size (power of 2)
+	int count;
+};
+static VBPoolBucket g_VBPool[VB_POOL_NUM_BUCKETS];
+static bool g_VBPoolInitialized = false;
+
+static void VBPool_Init()
+{
+	for (int i = 0; i < VB_POOL_NUM_BUCKETS; i++) {
+		g_VBPool[i].allocSize = 1u << (VB_POOL_MIN_BUCKET + i);
+		g_VBPool[i].count = 0;
+	}
+	g_VBPoolInitialized = true;
+}
+
+static int VBPool_BucketIndex(DWORD size)
+{
+	// Find the smallest power-of-2 bucket that fits 'size'
+	int idx = 0;
+	DWORD bucketSize = 1u << VB_POOL_MIN_BUCKET;
+	while (bucketSize < size && idx < VB_POOL_NUM_BUCKETS - 1) {
+		idx++;
+		bucketSize <<= 1;
+	}
+	return idx;
+}
+
+static IDirect3DVertexBuffer* VBPool_Acquire(DWORD size)
+{
+	if (!g_VBPoolInitialized) VBPool_Init();
+
+	int idx = VBPool_BucketIndex(size);
+	auto& bucket = g_VBPool[idx];
+
+	if (bucket.count > 0) {
+		return bucket.vbs[--bucket.count]; // Pop from pool
+	}
+
+	// Pool empty — create a new VB at bucket size
+	IDirect3DVertexBuffer* vb = nullptr;
+	HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
+		bucket.allocSize,
+		D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
+		0, D3DPOOL_DEFAULT, &vb, nullptr);
+	if (FAILED(hRet)) return nullptr;
+	return vb;
+}
+
+static void VBPool_Return(IDirect3DVertexBuffer* vb)
+{
+	if (!vb) return;
+	D3DVERTEXBUFFER_DESC desc;
+	vb->GetDesc(&desc);
+
+	int idx = VBPool_BucketIndex(desc.Size);
+	auto& bucket = g_VBPool[idx];
+
+	if (bucket.count < VB_POOL_MAX_PER_BUCKET) {
+		bucket.vbs[bucket.count++] = vb; // Return to pool
+	} else {
+		vb->Release(); // Pool full, release
+	}
 }
 
 void CxbxVertexBufferConverter::ConvertStream
@@ -317,13 +394,16 @@ void CxbxVertexBufferConverter::ConvertStream
     // We check a few fields of the patched stream to protect against hash collisions (rare)
     // but also to protect against games using the exact same vertex data for different vertex formats (Test Case: Burnout)
     if (patchedStream.isValid && // Check that we found a cached stream
-        patchedStream.uiCachedHostVertexStride == patchedStream.uiCachedHostVertexStride && // Make sure the host stride didn't change
+        patchedStream.uiCachedHostVertexStride == uiHostVertexStride && // Make sure the host stride didn't change
         patchedStream.uiCachedXboxVertexStride == uiXboxVertexStride && // Make sure the Xbox Stride didn't change
         patchedStream.uiCachedXboxVertexDataSize == xboxVertexDataSize ) { // Make sure the Xbox Data Size also didn't change
         m_TotalCacheHits++;
+        g_VtxCacheHits++;
         patchedStream.Activate(pDrawContext, HostStreamNumber);
         return;
     }
+
+    g_VtxCacheMisses++;
 
 	// Gather stats
     if (patchedStream.uiVertexStreamInformationHash != pVertexShaderSteamInfoHash)
@@ -353,17 +433,9 @@ void CxbxVertexBufferConverter::ConvertStream
             CxbxrAbort("Couldn't allocate the new stream zero buffer");
         }
     } else {
-        HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
-            dwHostVertexDataSize,
-            D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
-            0,
-            D3DPOOL_DEFAULT,
-            &pNewHostVertexBuffer,
-            nullptr
-        );
-
-        if (FAILED(hRet)) {
-            CxbxrAbort("Failed to create vertex buffer");
+        pNewHostVertexBuffer = VBPool_Acquire(dwHostVertexDataSize);
+        if (pNewHostVertexBuffer == nullptr) {
+            CxbxrAbort("Failed to acquire vertex buffer from pool");
         }
     }
 
@@ -608,6 +680,7 @@ void CxbxVertexBufferConverter::ConvertStream
 
 void CxbxVertexBufferConverter::Apply(CxbxDrawContext *pDrawContext)
 {
+	PERF_SCOPE(PERF_CAT_VTX_CONVERT);
 	if ((pDrawContext->XboxPrimitiveType < xbox::X_D3DPT_POINTLIST) || (pDrawContext->XboxPrimitiveType > xbox::X_D3DPT_POLYGON))
 		CxbxrAbort("Unknown primitive type: 0x%.02X\n", pDrawContext->XboxPrimitiveType);
 

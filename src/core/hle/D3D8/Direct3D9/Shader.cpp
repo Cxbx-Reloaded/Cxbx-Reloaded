@@ -30,6 +30,7 @@
 #include <d3dcompiler.h>
 #include "Shader.h"
 #include "common/FilePaths.hpp" // For szFilePath_CxbxReloaded_Exe
+#include "common/PerfTrace.h"
 #include "core\kernel\init\CxbxKrnl.h" // LOG_TEST_CASE
 #include "core\kernel\support\Emu.h" // EmuLog
 
@@ -264,6 +265,11 @@ static bool EnsureShaderCacheDir()
 	// Open log file in the per-game shader cache dir
 	std::string logPath = g_ShaderCacheDir + "\\shader_cache.log";
 	g_ShaderCacheLogFile = fopen(logPath.c_str(), "wt");
+	// Init perf trace log alongside the shader cache log
+	if (g_PerfTraceEnabled) {
+		std::string perfLogPath = g_ShaderCacheDir + "\\perf_trace.log";
+		PerfTrace_Init(perfLogPath.c_str());
+	}
 	ShaderCacheLog("ShaderCache initialized: %s\n", g_ShaderCacheDir.c_str());
 	ShaderCacheLog("AdapterFingerprint = %s\n", g_AdapterFingerprint.empty() ? "<not set>" : g_AdapterFingerprint.c_str());
 	ShaderCacheLog("g_DataFilePath = %s\n", g_DataFilePath.c_str());

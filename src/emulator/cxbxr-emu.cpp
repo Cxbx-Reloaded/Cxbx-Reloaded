@@ -33,6 +33,7 @@
 #include "VerifyAddressRanges.h" // For VerifyBaseAddr()
 //#include "CxbxKrnl/Emu.h"
 #include "EmuShared.h"
+#include "common/PerfTrace.h"
 #include "core\kernel\init\CxbxKrnl.h" // For HandleFirstLaunch() and LaunchEmulation()
 //#include <commctrl.h>
 #include "common/util/cliConverter.hpp"
@@ -153,6 +154,14 @@ DWORD WINAPI Emulate(unsigned int reserved_systems, blocks_reserved_t blocks_res
 		PopupError(nullptr, "Couldn't convert parsed command line!");
 		LocalFree(argv);
 		return EXIT_FAILURE;
+	}
+
+	// Enable perf tracing if --perf-trace flag present
+	for (int i = 0; i < argc; i++) {
+		if (argv[i] && _stricmp(argv[i], "--perf-trace") == 0) {
+			g_PerfTraceEnabled = true;
+			break;
+		}
 	}
 	LocalFree(argv);
 
