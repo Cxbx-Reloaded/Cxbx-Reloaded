@@ -54,6 +54,7 @@
 
 static constexpr uint32_t APU_TIMER_FREQUENCY = 48000;
 static uint64_t dsound_last;
+static uint64_t dsound_worker_last;
 
 uint32_t GetAPUTime()
 {
@@ -96,6 +97,7 @@ void CxbxInitAudio()
 {
     g_EmuShared->GetAudioSettings(&g_XBAudio);
     dsound_last = get_now();
+    dsound_worker_last = dsound_last;
 }
 
 #ifdef __cplusplus
@@ -450,7 +452,10 @@ void StreamBufferAudio(xbox::XbHybridDSBuffer* pHybridBuffer, float msToCopy) {
 
 void dsound_async_worker()
 {
-    DSoundMutexGuardLock;
+    std::unique_lock<std::recursive_mutex> guard(g_DSoundMutex, std::try_to_lock);
+    if (!guard.owns_lock()) {
+        return;
+    }
 
     xbox::LARGE_INTEGER getTime;
     xbox::KeQuerySystemTime(&getTime);
@@ -462,8 +467,24 @@ void dsound_worker()
     // Testcase: Gauntlet Dark Legacy, if Sleep(1) then intro videos start to starved often
     // unless console is open with logging enabled. This is the cause of stopping intro videos often.
 
-    // Enforce mutex guard lock only occur inside below bracket for proper compile build.
-    DSoundMutexGuardLock;
+    // This worker only performs opportunistic host buffer refills for regular sound buffers.
+    // Running it every system-events loop creates a lot of mutex traffic without improving
+    // audio timing, so pace it to the configured streaming interval instead.
+    const uint64_t now = get_now();
+    const DWORD workerPeriodMs = (g_dsBufferStreaming.streamInterval != 0) ? g_dsBufferStreaming.streamInterval : 1;
+    const uint64_t workerPeriodUs = static_cast<uint64_t>(workerPeriodMs) * 1000;
+    if ((now - dsound_worker_last) < workerPeriodUs) {
+        return;
+    }
+    dsound_worker_last = now;
+
+    // This runs from the system events thread as opportunistic maintenance.
+    // If the game thread is actively touching DSound state, skip this pass instead
+    // of stalling guest execution behind long host DirectSound calls.
+    std::unique_lock<std::recursive_mutex> guard(g_DSoundMutex, std::try_to_lock);
+    if (!guard.owns_lock()) {
+        return;
+    }
 
 	// Stream sound buffer audio
 	// because the title may change the content of sound buffers at any time
