@@ -4226,14 +4226,6 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 {
 	LOG_INIT;
 
-	// Unclear what to do when no viewport is passed
-	// Set the default viewport?
-	// Clamp the current viewport to the current rendertarget?
-	if (pViewport == nullptr) {
-		LOG_TEST_CASE("pViewport = null");
-		return;
-	}
-
 	// We need a rendertarget to clamp the viewport
 	// Pretty much everything hits this on boot because of the way our SetRenderTarget patch works
 	if (!g_pXbox_RenderTarget) {
@@ -4244,13 +4236,22 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 	float rendertargetBaseHeight;
 	GetRenderTargetBaseDimensions(rendertargetBaseWidth, rendertargetBaseHeight);
 
-	// Update the current viewport
-	g_Xbox_Viewport = *pViewport;
 
-	// The SetRenderTarget trampoline calls SetViewport with
-	// both Width and Height set to INT_MAX
-	if ((pViewport->Width == INT_MAX) ^ (pViewport->Height == INT_MAX)) {
-		LOG_TEST_CASE("SetViewport called with only one of width/height set to INT_MAX");
+	// When new viewport is passed, use the render target dimensions instead
+	if (pViewport == nullptr) {
+		g_Xbox_Viewport.X = 0;
+		g_Xbox_Viewport.Y = 0;
+		g_Xbox_Viewport.Width = rendertargetBaseWidth;
+		g_Xbox_Viewport.Height = rendertargetBaseHeight;
+	} else {
+		// Update the current viewport
+		g_Xbox_Viewport = *pViewport;
+
+		// The SetRenderTarget trampoline calls SetViewport with
+		// both Width and Height set to INT_MAX
+		if ((pViewport->Width == INT_MAX) ^ (pViewport->Height == INT_MAX)) {
+			LOG_TEST_CASE("SetViewport called with only one of width/height set to INT_MAX");
+		}
 	}
 
 	// Cap width and height to screen bounds
