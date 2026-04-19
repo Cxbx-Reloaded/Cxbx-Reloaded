@@ -56,11 +56,7 @@ void D3D8LightState::EnableLight(uint32_t index, bool enable) {
             // Either way we move this light to the end
             std::rotate(std::begin(EnabledLights) + i, std::begin(EnabledLights) + i + 1, std::begin(EnabledLights) + EnabledLightCount);
 
-            if (enable) {
-                // Don't need to do anything
-                EmuLog(LOG_LEVEL::INFO, "Enabled light %d but it was already enabled", index);
-            }
-            else {
+            if (!enable) {
                 // Disable the light
                 EnabledLights[EnabledLightCount - 1] = -1;
                 EnabledLightCount--;
