@@ -38,6 +38,8 @@
 #include "CxbxDebugger.h"
 
 #include <Dbghelp.h>
+
+#include "core/hle/D3D8/Direct3D9/Shader.h"
 #pragma comment(lib, "Dbghelp.lib")
 
 // Global Variable(s)
@@ -141,6 +143,7 @@ void EmuExceptionExitProcess()
 		SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
 	EmuShared::Cleanup();
+	ShaderCacheShutdown();
 	ExitProcess(1);
 }
 
@@ -383,6 +386,7 @@ int ExitException(LPEXCEPTION_POINTERS e)
     if(CxbxKrnl_hEmuParent != NULL)
         SendMessage(CxbxKrnl_hEmuParent, WM_PARENTNOTIFY, WM_DESTROY, 0);
 
+	ShaderCacheShutdown();
     ExitProcess(1);
 
     return EXCEPTION_CONTINUE_SEARCH;

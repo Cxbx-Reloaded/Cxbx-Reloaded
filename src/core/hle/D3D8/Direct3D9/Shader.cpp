@@ -131,6 +131,57 @@ static void ShaderCacheSaveWorker()
 	}
 }
 
+void ShaderCacheShutdown()
+{
+	// Signal the save thread to stop and drain whatever is left in the queue.
+	// This must be called before TerminateProcess so compiled .cso files are
+	// flushed to disk and survive across sessions.
+	g_SaveThreadRunning = false;
+
+	// Drain anything still in the queue on this thread (the save thread may
+	// already have exited by the time we get here since it was detached).
+	while (true) {
+		std::pair<std::string, std::vector<uint8_t>> item;
+		{
+			std::lock_guard<std::mutex> lock(g_SaveQueueMutex);
+			if (g_SaveQueue.empty()) break;
+			item = std::move(g_SaveQueue.front());
+			g_SaveQueue.pop();
+		}
+		FILE* fp = fopen(item.first.c_str(), "wb");
+		if (fp) {
+			fwrite(item.second.data(), 1, item.second.size(), fp);
+			fclose(fp);
+			ShaderCacheLog("SHUTDOWN-SAVE %s (%zu bytes)\n", item.first.c_str(), item.second.size());
+		}
+	}
+
+	ShaderCacheLog("ShaderCache shutdown: hits=%d misses=%d saves=%d errors=%d\n",
+		g_CacheHits.load(), g_CacheMisses.load(), g_CacheSaves.load(), g_CacheLoadErrors.load());
+
+	if (g_ShaderCacheLogFile) {
+		fclose(g_ShaderCacheLogFile);
+		g_ShaderCacheLogFile = nullptr;
+	}
+}
+
+// ============================================================================
+// Shared in-memory shader caches (declared early so all functions below can use them)
+// ============================================================================
+
+// Results from background async compiles
+static std::mutex g_AsyncMutex;
+static std::unordered_map<uint64_t, ID3DBlob*> g_AsyncResults;
+static std::unordered_set<uint64_t> g_AsyncInFlight;
+
+// Blob cache populated from disk loads and async compiles.
+// Checked first on every EmuCompileShader call — pure hash-map lookup, no file I/O.
+static std::unordered_map<uint64_t, ID3DBlob*> g_MemCache;
+
+// Forward declarations (defined later in file)
+static bool LoadCachedShader(uint64_t hash, ID3DBlob** ppBlob);
+static void PreloadShaderCache();
+
 // Returns true if cache dir is ready to use
 static bool EnsureShaderCacheDir()
 {
@@ -234,6 +285,9 @@ static bool EnsureShaderCacheDir()
 		g_SaveThread = std::thread(ShaderCacheSaveWorker);
 		g_SaveThread.detach();
 	}
+
+	// Preload all .cso files into memory now that the cache dir is known
+	PreloadShaderCache();
 
 	return true;
 }
@@ -365,14 +419,34 @@ static void QueueSaveCachedShader(uint64_t hash, ID3DBlob* pBlob)
 	ShaderCacheLog("QUEUED save %016llx (%zu bytes)\n", hash, pBlob->GetBufferSize());
 }
 
+// Scan the shader cache directory and load every .cso into g_MemCache so that
+// gameplay never needs a file open. Called once at the end of EnsureShaderCacheDir().
+static void PreloadShaderCache()
+{
+	std::error_code ec;
+	int preloaded = 0;
+	std::lock_guard<std::mutex> lock(g_AsyncMutex);
+	for (auto& entry : std::filesystem::directory_iterator(g_ShaderCacheDir, ec)) {
+		if (entry.path().extension() != ".cso") continue;
+		std::string stem = entry.path().stem().string();
+		if (stem.size() != 16) continue;
+		uint64_t hash = 0;
+		try { hash = std::stoull(stem, nullptr, 16); }
+		catch (...) { continue; }
+		if (g_MemCache.count(hash)) continue;
+		ID3DBlob* pBlob = nullptr;
+		if (LoadCachedShader(hash, &pBlob)) {
+			g_MemCache[hash] = pBlob;
+			preloaded++;
+		}
+	}
+	ShaderCacheLog("Preloaded %d shader(s) into memory cache\n", preloaded);
+	EmuLog(LOG_LEVEL::INFO, "ShaderCache: preloaded %d shader(s) into memory", preloaded);
+}
+
 // ============================================================================
 // Async shader compilation (Dolphin-style)
 // ============================================================================
-
-// In-memory cache of compiled shaders (from async completions)
-static std::mutex g_AsyncMutex;
-static std::unordered_map<uint64_t, ID3DBlob*> g_AsyncResults;
-static std::unordered_set<uint64_t> g_AsyncInFlight;
 
 // Precompiled fallback pixel shader (simple white output)
 static ID3DBlob* g_FallbackPSBlob = nullptr;
@@ -439,6 +513,8 @@ static void AsyncCompileWorker(std::string hlsl_str, std::string profile,
 		g_AsyncInFlight.erase(hash);
 		if (!FAILED(hr) && pResult) {
 			g_AsyncResults[hash] = pResult; // takes ownership
+			pResult->AddRef();
+			g_MemCache[hash] = pResult;     // also in fast in-memory lookup cache
 			if (cacheReady) {
 				QueueSaveCachedShader(hash, pResult);
 			}
@@ -502,13 +578,30 @@ extern HRESULT EmuCompileShader
 		}
 	}
 
-	// 1. Try loading from disk cache first (fast — ~0.08ms)
+	// 1. Check in-memory cache first (populated from disk loads and async compiles).
+	//    This avoids repeated fopen/fread for the same shader within a session —
+	//    the same hash can be requested dozens of times per second.
+	{
+		std::lock_guard<std::mutex> lock(g_AsyncMutex);
+		auto it = g_MemCache.find(activeCacheHash);
+		if (it != g_MemCache.end()) {
+			it->second->AddRef();
+			*ppHostShader = it->second;
+			return S_OK;
+		}
+	}
+
+	// 2. Try loading from disk cache (fast — ~0.08ms, but only once per hash per session)
 	if (cacheReady) {
 		auto t0 = std::chrono::high_resolution_clock::now();
 		if (LoadCachedShader(activeCacheHash, ppHostShader)) {
 			auto t1 = std::chrono::high_resolution_clock::now();
 			double ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
 			ShaderCacheLog("LOAD took %.2f ms (profile=%s%s)\n", ms, shader_profile, hasReplacement ? " [replacement]" : "");
+			// Store in memory so subsequent calls skip disk I/O
+			(*ppHostShader)->AddRef();
+			std::lock_guard<std::mutex> lock(g_AsyncMutex);
+			g_MemCache[activeCacheHash] = *ppHostShader;
 			return S_OK;
 		}
 	}
@@ -519,7 +612,7 @@ extern HRESULT EmuCompileShader
 		// Ensure fallback shader is ready (outside mutex — D3DCompile is slow first time)
 		EnsureFallbackShaders();
 
-		std::lock_guard<std::mutex> lock(g_AsyncMutex);
+		std::unique_lock<std::mutex> lock(g_AsyncMutex);
 
 		// Check in-memory async results (completed background compiles)
 		auto it = g_AsyncResults.find(cacheHash);
@@ -529,9 +622,7 @@ extern HRESULT EmuCompileShader
 			*ppHostShader = it->second;
 			ShaderCacheLog("ASYNC HIT %016llx (profile=%s)\n", cacheHash, shader_profile);
 			return S_OK;
-		}
-
-		if (g_AsyncInFlight.count(cacheHash)) {
+		} else if (g_AsyncInFlight.count(cacheHash)) {
 			// Already compiling in background — return fallback
 			if (g_FallbackPSBlob) {
 				g_FallbackPSBlob->AddRef();
@@ -541,22 +632,33 @@ extern HRESULT EmuCompileShader
 			}
 			// If no fallback available, fall through to synchronous compile
 		} else {
-			// Start background compile
+			// Mark in-flight under the lock, then release before constructing
+			// the thread. std::thread() calls CreateThread internally (~1-5 ms)
+			// — holding g_AsyncMutex that long blocks every concurrent draw call
+			// that polls for a pending or completed async shader.
 			g_AsyncInFlight.insert(cacheHash);
-
 			std::string profileStr = shader_profile;
 			std::string sourceStr = pSourceName ? pSourceName : "";
-			std::thread(AsyncCompileWorker, hlsl_str, profileStr, sourceStr, cacheHash, cacheReady).detach();
+			ID3DBlob* fallback = g_FallbackPSBlob;
+			if (fallback) fallback->AddRef();
+			lock.unlock(); // release before slow CreateThread
+
+			std::thread t(AsyncCompileWorker, hlsl_str, profileStr, sourceStr, cacheHash, cacheReady);
+			// Run below normal priority so compile threads don't starve the audio thread
+			SetThreadPriority(t.native_handle(), THREAD_PRIORITY_BELOW_NORMAL);
+			t.detach();
 
 			// Return fallback shader
-			if (g_FallbackPSBlob) {
-				g_FallbackPSBlob->AddRef();
-				*ppHostShader = g_FallbackPSBlob;
+			if (fallback) {
+				*ppHostShader = fallback;
 				ShaderCacheLog("ASYNC START %016llx -> fallback (profile=%s)\n", cacheHash, shader_profile);
 				return S_FALSE;
 			}
 			// If no fallback (shouldn't happen), fall through to synchronous
-			g_AsyncInFlight.erase(cacheHash);
+			{
+				std::lock_guard<std::mutex> relock(g_AsyncMutex);
+				g_AsyncInFlight.erase(cacheHash);
+			}
 		}
 	} else if (asyncAllowed && !hasReplacement) {
 		// VS path: check async results in case a previous async compile for this hash finished

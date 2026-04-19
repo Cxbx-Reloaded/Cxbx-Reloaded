@@ -89,8 +89,12 @@ bool HandleFirstLaunch()
 	return true;
 }
 
+void ShaderCacheShutdown();
+
 [[noreturn]] void CxbxrShutDown(bool is_reboot)
 {
+	ShaderCacheShutdown();
+
 	if (!is_reboot) {
 		// Clear all kernel boot flags. These (together with the shared memory) persist until Cxbx-Reloaded is closed otherwise.
 		int BootFlags = 0;

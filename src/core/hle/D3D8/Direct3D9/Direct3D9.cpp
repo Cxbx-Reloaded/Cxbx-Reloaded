@@ -1740,14 +1740,14 @@ static LRESULT WINAPI EmuMsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
             /*! disable fullscreen if we are set to faux mode, and faux fullscreen is active */
             if(wParam == VK_ESCAPE)
             {
-                if(g_XBVideo.bFullScreen)
-                {
-                    SendMessage(hWnd, WM_CLOSE, 0, 0);
-                }
-                else if(g_bIsFauxFullscreen)
-                {
-                    ToggleFauxFullscreen(hWnd);
-                }
+            	if(g_XBVideo.bFullScreen)
+            	{
+            		SendMessage(hWnd, WM_CLOSE, 0, 0);
+            	}
+            	else if(g_bIsFauxFullscreen)
+            	{
+            		ToggleFauxFullscreen(hWnd);
+            	}
             }
             else if (wParam == VK_F1)
             {

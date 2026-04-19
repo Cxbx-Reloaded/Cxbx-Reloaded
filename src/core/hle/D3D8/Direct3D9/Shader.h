@@ -13,6 +13,11 @@ extern HRESULT EmuCompileShader
 	bool asyncAllowed = false
 );
 
+// Flush the background shader save queue and stop the save thread.
+// Must be called before process termination to ensure all compiled shaders
+// are written to disk and persisted across sessions.
+void ShaderCacheShutdown();
+
 struct ShaderSources {
 	// Pixel Shader
 	std::string pixelShaderTemplateHlsl[3];
