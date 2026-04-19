@@ -28,7 +28,7 @@
 
 #include "core\kernel\init\CxbxKrnl.h"
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Direct3D9/Direct3D9.h"
+#include "core\hle\D3D8\Rendering/RenderGlobals.h"
 #include "core\hle\JVS\JVS.h"
 #include "core\hle\DSOUND\DirectSound\DirectSound.hpp"
 #include "Patches.hpp"
@@ -95,7 +95,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_GetBackBuffer2_0__LTCG_eax1", xbox::EMUPATCH(D3DDevice_GetBackBuffer2_0__LTCG_eax1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetDisplayFieldStatus", xbox::EMUPATCH(D3DDevice_GetDisplayFieldStatus), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetGammaRamp", xbox::EMUPATCH(D3DDevice_GetGammaRamp), PATCH_HLE_D3D),
-	PATCH_ENTRY("D3DDevice_GetMaterial", xbox::EMUPATCH(D3DDevice_GetMaterial), PATCH_HLE_D3D),
+	//PATCH_ENTRY("D3DDevice_GetMaterial", xbox::EMUPATCH(D3DDevice_GetMaterial), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetModelView", xbox::EMUPATCH(D3DDevice_GetModelView), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetOverlayUpdateStatus", xbox::EMUPATCH(D3DDevice_GetOverlayUpdateStatus), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_GetProjectionViewportMatrix", xbox::EMUPATCH(D3DDevice_GetProjectionViewportMatrix), PATCH_HLE_D3D),
@@ -140,6 +140,7 @@ std::map<const std::string, const xbox_patch_t> g_PatchTable = {
 	PATCH_ENTRY("D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2", xbox::EMUPATCH(D3DDevice_SelectVertexShader_0__LTCG_eax1_ebx2), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SelectVertexShader_4__LTCG_eax1", xbox::EMUPATCH(D3DDevice_SelectVertexShader_4__LTCG_eax1), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetBackBufferScale", xbox::EMUPATCH(D3DDevice_SetBackBufferScale), PATCH_HLE_D3D),
+	PATCH_ENTRY("D3DDevice_SetBackMaterial", xbox::EMUPATCH(D3DDevice_SetBackMaterial), PATCH_HLE_D3D),
 	PATCH_ENTRY("D3DDevice_SetDepthClipPlanes", xbox::EMUPATCH(D3DDevice_SetDepthClipPlanes), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetFlickerFilter", xbox::EMUPATCH(D3DDevice_SetFlickerFilter), PATCH_HLE_D3D),
 	//PATCH_ENTRY("D3DDevice_SetFlickerFilter_0__LTCG_esi1", xbox::EMUPATCH(D3DDevice_SetFlickerFilter_0__LTCG_esi1), PATCH_HLE_D3D),

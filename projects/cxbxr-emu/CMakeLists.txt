@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.12)
 project(cxbxr-emu)
 
+option(CXBX_USE_D3D11 "Enable Direct3D 11 rendering path (instead of D3D9)" ON)
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -63,6 +65,10 @@ add_compile_definitions(
  CXBXR_EMU_EXPORTS
 )
 
+if(CXBX_USE_D3D11)
+ add_compile_definitions(CXBX_USE_D3D11)
+endif()
+
 file (GLOB RESOURCES
  "${CXBXR_ROOT_DIR}/CONTRIBUTORS"
  "${CXBXR_ROOT_DIR}/COPYING"
@@ -122,6 +128,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
   LINK_FLAGS_RELEASE "
   /LTCG \
   /DEBUG \
+  /ignore:4099 \
   "
  )
 
@@ -144,8 +151,6 @@ endif()
 # Windows libraries
 set(WINS_LIB
  legacy_stdio_definitions
- d3d9
- d3dcompiler
  delayimp
  dinput8
  dxguid
@@ -157,13 +162,18 @@ set(WINS_LIB
  dsound
  winmm
  ddraw
- d3dx9
  dbghelp
  comctl32
  XINPUT9_1_0
  Iphlpapi
  wpcap
 )
+
+if(CXBX_USE_D3D11)
+ list(APPEND WINS_LIB d3d11 dxgi d3dcompiler)
+else()
+ list(APPEND WINS_LIB d3d9 d3dx9 d3dcompiler)
+endif()
 
 target_link_libraries(${PROJECT_NAME}
  PUBLIC libXbSymbolDatabase

@@ -30,7 +30,7 @@
 #include <mutex>
 #include "core/kernel/support/Emu.h"
 #include "common/win32/EmuShared.h"
-#include "core/hle/D3D8/Direct3D9/Direct3D9.h" // For D3D_OK
+#include "core/hle/D3D8/XbD3D8Types.h" // For D3D_OK
 #include "core/hle/DSOUND/DirectSound/DirectSound.hpp"
 #include "common/Settings.hpp"
 

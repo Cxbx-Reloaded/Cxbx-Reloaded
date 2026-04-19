@@ -4,8 +4,8 @@
 #include "Logging.h"
 #include "core/kernel/init/CxbxKrnl.h"
 
-D3DCOLORVALUE colorValue(float r, float g, float b, float a) {
-    auto value = D3DCOLORVALUE();
+xbox::X_D3DCOLORVALUE colorValue(float r, float g, float b, float a) {
+   	auto value = xbox::X_D3DCOLORVALUE();
     value.r = r;
     value.g = g;
     value.b = b;
@@ -13,8 +13,8 @@ D3DCOLORVALUE colorValue(float r, float g, float b, float a) {
     return value;
 }
 
-D3DVECTOR toVector(float x, float y, float z) {
-    auto value = D3DVECTOR();
+xbox::X_D3DVECTOR toVector(float x, float y, float z) {
+   	auto value = xbox::X_D3DVECTOR();
     value.x = x;
     value.y = y;
     value.z = z;
@@ -25,7 +25,7 @@ D3D8LightState::D3D8LightState() {
     // Define the default light
     // When unset lights are enabled, they're set to the default light
     auto defaultLight = xbox::X_D3DLIGHT8();
-    defaultLight.Type = D3DLIGHT_DIRECTIONAL;
+   	defaultLight.Type = xbox::X_D3DLIGHTTYPE::D3DLIGHT_DIRECTIONAL;
     defaultLight.Diffuse = colorValue(1, 1, 1, 0);
     defaultLight.Specular = colorValue(0, 0, 0, 0);
     defaultLight.Ambient = colorValue(0, 0, 0, 0);
@@ -88,8 +88,12 @@ void D3D8LightState::EnableLight(uint32_t index, bool enable) {
 }
 
 D3D8TransformState::D3D8TransformState() {
+#ifdef CXBX_USE_D3D11
+	XMMATRIX identity = XMMatrixIdentity();
+#else
 	D3DMATRIX identity;
 	D3DXMatrixIdentity((D3DXMATRIX*)&identity);
+#endif
 
 	this->Transforms.fill(identity);
 	this->WorldView.fill(identity);
@@ -97,13 +101,13 @@ D3D8TransformState::D3D8TransformState() {
 	bWorldViewDirty.fill(true);
 }
 
-void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const D3DMATRIX* pMatrix)
+void D3D8TransformState::SetTransform(xbox::X_D3DTRANSFORMSTATETYPE state, const xbox::X_D3DMATRIX* pMatrix)
 {
 	using namespace xbox;
 
 	LOG_INIT
 
-	if (state >= this->Transforms.size()) {
+	if (static_cast<size_t>(state) >= this->Transforms.size()) {
 		LOG_TEST_CASE("Transform state was not in expected range");
 		return;
 	}
@@ -132,7 +136,7 @@ void D3D8TransformState::RecalculateDependentMatrices(unsigned i)
 	this->WorldViewInverseTranspose[i] = worldViewInverseTranspose;
 }
 
-D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
+xbox::X_D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
 {
 	assert(i < 4);
 
@@ -144,7 +148,7 @@ D3DMATRIX* D3D8TransformState::GetWorldView(unsigned i)
 	return &WorldView[i];
 }
 
-void D3D8TransformState::SetWorldView(unsigned i, const D3DMATRIX* pMatrix)
+void D3D8TransformState::SetWorldView(unsigned i, const xbox::X_D3DMATRIX* pMatrix)
 {
     assert(i < 4);
 
@@ -160,7 +164,7 @@ void D3D8TransformState::SetWorldView(unsigned i, const D3DMATRIX* pMatrix)
     }
 }
 
-D3DMATRIX* D3D8TransformState::GetWorldViewInverseTranspose(unsigned i)
+xbox::X_D3DMATRIX* D3D8TransformState::GetWorldViewInverseTranspose(unsigned i)
 {
 	assert(i < 4);
 

@@ -11,6 +11,7 @@ cmake-build-*/
 
 # Generated files
 *.aps
+.cache/clangd
 
 #Test files
 src/[Vv]ersion.h

@@ -70,7 +70,7 @@ xbox::void_xt WINAPI EMUPATCH(XGSwizzleBox)
     LPCVOID          pSource,
     DWORD            RowPitch,
     DWORD            SlicePitch,
-    CONST D3DBOX    *pBox,
+   	CONST X_D3DBOX  *pBox,
     LPVOID           pDest,
     DWORD            Width,
     DWORD            Height,
@@ -99,7 +99,7 @@ xbox::void_xt	WINAPI EMUPATCH(XGSetTextureHeader)
 	uint_xt			Levels,
 	DWORD			Usage,
 	X_D3DFORMAT		Format,
-	D3DPOOL			Pool,
+	X_D3DPOOL		Pool,
 	X_D3DTexture*	pTexture,
 	uint_xt			Data,
 	uint_xt			Pitch

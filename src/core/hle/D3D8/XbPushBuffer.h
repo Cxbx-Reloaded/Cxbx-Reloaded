@@ -27,6 +27,12 @@
 
 #include "core/hle/D3D8/XbVertexBuffer.h" // for CxbxDrawContext
 
+class NV2ADevice;
+extern NV2ADevice* g_NV2A;
+extern uint32_t HLE_read_NV2A_pgraph_register(const int reg);
+extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index);
+extern float* HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot);
+
 extern void CxbxDrawIndexed(CxbxDrawContext &DrawContext);
 extern void CxbxDrawPrimitiveUP(CxbxDrawContext &DrawContext);
 

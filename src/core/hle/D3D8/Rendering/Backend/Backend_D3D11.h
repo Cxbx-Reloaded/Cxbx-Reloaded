@@ -1,0 +1,259 @@
+// ******************************************************************
+// *
+// *  This file is part of the Cxbx project.
+// *
+// *  Cxbx and Cxbe are free software; you can redistribute them
+// *  and/or modify them under the terms of the GNU General Public
+// *  License as published by the Free Software Foundation; either
+// *  version 2 of the license, or (at your option) any later version.
+// *
+// *  This program is distributed in the hope that it will be useful,
+// *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+// *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// *  GNU General Public License for more details.
+// *
+// *  You should have recieved a copy of the GNU General Public License
+// *  along with this program; see the file COPYING.
+// *  If not, write to the Free Software Foundation, Inc.,
+// *  59 Temple Place - Suite 330, Bostom, MA 02111-1307, USA.
+// *
+// *  All rights reserved
+// *
+// ******************************************************************
+#ifndef BACKEND_D3D11_H
+#define BACKEND_D3D11_H
+
+#ifdef CXBX_USE_D3D11
+
+#include "core\hle\D3D8\XbD3D8Types.h"
+#include <vector>
+
+struct _CxbxVertexDeclaration;
+typedef struct _CxbxVertexDeclaration CxbxVertexDeclaration;
+
+// ******************************************************************
+// * D3D11 device globals
+// ******************************************************************
+extern IDXGISwapChain              *g_pSwapChain;
+extern ID3D11DeviceContext         *g_pD3DDeviceContext;
+extern ID3D11RenderTargetView      *g_pD3DBackBufferView;
+extern ID3D11DepthStencilView      *g_pD3DDepthStencilView;
+extern ID3D11RenderTargetView      *g_pD3DCurrentRTV;
+extern ID3D11Texture2D             *g_pD3DDepthStencilBuffer;
+extern IDirect3DSurface            *g_pD3DBackBufferSurface;
+extern IDirect3DSurface            *g_pD3DCurrentHostRenderTarget;
+
+// ******************************************************************
+// * Constant buffer sizing
+// ******************************************************************
+static const UINT CXBX_D3D11_VS_CB_SLOT = 0;
+static const UINT CXBX_D3D11_VS_CB_COUNT = 256;
+static const UINT CXBX_D3D11_PS_CB_SLOT = 0;
+static const UINT CXBX_D3D11_PS_CB_COUNT = 53; // Must accommodate both programmatic PS (44 regs) and FF PS FixedFunctionPixelShaderState struct (53 regs)
+
+// ******************************************************************
+// * Vertex defaults buffer — provides all 16 TEXCOORD attributes via
+// * a zero-stride vertex buffer bound to a dedicated input slot.
+// * Non-streamed attributes read NV2A "sticky" values from this buffer.
+// * This satisfies DXVK's requirement that every ISGN entry has a
+// * matching input layout element.
+// ******************************************************************
+static const UINT CXBX_D3D11_VERTEX_DEFAULTS_SLOT = 16; // Input slot for zero-stride defaults buffer
+extern ID3D11Buffer *g_pD3D11VertexDefaultsBuffer;
+// Constant buffers (created in RenderGlobals.cpp device init, used by Backend_D3D11.cpp)
+extern ID3D11Buffer *g_pD3D11VSConstantBuffer;
+extern ID3D11Buffer *g_pD3D11PSConstantBuffer;
+
+// ******************************************************************
+// * D3D11 state descriptors (modified by RenderStates.cpp, applied by CxbxD3D11ApplyDirtyStates)
+// ******************************************************************
+extern D3D11_RASTERIZER_DESC    g_D3D11RasterizerDesc;
+extern D3D11_DEPTH_STENCIL_DESC g_D3D11DepthStencilDesc;
+extern D3D11_BLEND_DESC         g_D3D11BlendDesc;
+
+// Dirty flags to trigger D3D11 state object recreation
+extern bool  g_bD3D11RasterizerStateDirty;
+extern bool  g_bD3D11DepthStencilStateDirty;
+extern bool  g_bD3D11BlendStateDirty;
+
+// Additional state parameters passed to OMSet* calls
+extern UINT  g_D3D11StencilRef;
+extern FLOAT g_D3D11BlendFactor[4];
+extern UINT  g_D3D11SampleMask;
+
+// ******************************************************************
+// * D3D11 backend functions
+// ******************************************************************
+
+// Compile blit shaders and create sampler states (called once at device init)
+void CxbxD3D11InitBlit();
+
+// Create a D3D11 constant buffer (DYNAMIC or DEFAULT).
+HRESULT CxbxD3D11CreateConstantBuffer(UINT byteWidth, bool bDynamic, ID3D11Buffer** ppBuffer);
+
+// Release all D3D11 backend resources (blit shaders, samplers, constant buffers, state objects)
+void CxbxD3D11ReleaseBackendResources();
+
+// Unified D3D11 render state mapping — maps a PC-converted render state
+// to D3D11 state descriptor members and sets appropriate dirty flags.
+// Called from ApplySimpleRenderState and ApplyComplexRenderState.
+void CxbxD3D11SetRenderState(uint32_t State, uint32_t Value);
+
+// Recreate D3D11 state objects that have been marked dirty, and flush constant buffers
+void CxbxD3D11ApplyDirtyStates();
+
+// Flush vertex/pixel shader constant buffers to GPU if dirty
+void CxbxD3D11FlushVertexShaderConstants();
+void CxbxD3D11FlushPixelShaderConstants();
+
+// Read back vertex shader constants from the shadow buffer
+void CxbxGetVertexShaderConstants(UINT startRegister, float* pConstantData, UINT Vector4fCount);
+
+// D3D11 blit: copy source texture region to dest texture region with optional filtering
+// Fast path for same-size copies, shader-based path for scaled copies
+HRESULT CxbxD3D11Blt(
+	ID3D11Texture2D* pSrc, const RECT* pSrcRect,
+	ID3D11Texture2D* pDst, const RECT* pDstRect,
+	D3DTEXTUREFILTERTYPE Filter);
+
+// Bind/unbind thick line geometry shader around line draw calls.
+// Call CxbxBindThickLineGS before and CxbxUnbindThickLineGS after direct
+// Draw/DrawIndexed calls that may use line primitives (UP draw paths).
+void CxbxBindThickLineGS(xbox::X_D3DPRIMITIVETYPE type);
+void CxbxUnbindThickLineGS(xbox::X_D3DPRIMITIVETYPE type);
+
+// GPU-accelerated texture unswizzle via compute shader.
+// Returns true if the CS path was used, false if caller should fall back to CPU.
+// Texture must be D3D11_USAGE_DEFAULT with D3D11_BIND_UNORDERED_ACCESS.
+bool CxbxD3D11UnswizzleTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSwizzledSrc,
+	UINT width,
+	UINT height,
+	UINT bpp,
+	DXGI_FORMAT format);
+
+// Index conversion mode constants
+#define CXBX_INDEX_CONVERT_QUAD_CW  0
+#define CXBX_INDEX_CONVERT_QUAD_CCW 1
+#define CXBX_INDEX_CONVERT_FAN      2
+
+// GPU-accelerated index buffer topology conversion via compute shader.
+// Converts quad-list or triangle-fan indices to triangle-list on the GPU.
+// Returns true if successful and sets the output buffer as the active index buffer (R16_UINT).
+// pSourceIndices: Xbox 16-bit index data, or nullptr for non-indexed (sequential) draws.
+// sourceVertexCount: number of source vertices/indices.
+// outputIndexCount: number of output triangle-list indices.
+// conversionMode: CXBX_INDEX_CONVERT_QUAD_CW, CXBX_INDEX_CONVERT_QUAD_CCW, or CXBX_INDEX_CONVERT_FAN.
+bool CxbxD3D11ConvertIndexBufferGPU(
+	const INDEX16* pSourceIndices,
+	UINT sourceVertexCount,
+	UINT outputIndexCount,
+	int conversionMode);
+
+// GPU-accelerated palette texture expansion via compute shader.
+// Combines unswizzle + palette lookup in a single CS dispatch.
+// Texture must be DXGI_FORMAT_R8G8B8A8_UNORM with DEFAULT+UAV.
+// pSwizzledP8Src: raw swizzled P8 pixel data (1 byte per pixel).
+// pPaletteData: 256-entry ARGB palette (1024 bytes).
+bool CxbxD3D11ExpandPaletteTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSwizzledP8Src,
+	UINT width,
+	UINT height,
+	const void* pPaletteData);
+
+// Format conversion type constants (must match CS shader)
+#define CXBX_FMTCONV_L6V5U5      1
+#define CXBX_FMTCONV_R6G5B5      2  // Same bit layout as L6V5U5, unsigned interpretation
+#define CXBX_FMTCONV_V8U8        3  // V8U8/G8B8 are aliases (Xbox fmt 0x28); signedness via colorsign
+#define CXBX_FMTCONV_R5G5B5A1    4
+#define CXBX_FMTCONV_R4G4B4A4    5
+#define CXBX_FMTCONV_A8          6
+
+// Map Xbox texture format to CS format conversion type.
+// Returns 0 if the format is not handled by the CS.
+inline UINT CxbxGetFormatConvertType(xbox::X_D3DFORMAT X_Format) {
+	switch (X_Format) {
+	case xbox::X_D3DFMT_L6V5U5:     case xbox::X_D3DFMT_LIN_L6V5U5:   return CXBX_FMTCONV_L6V5U5;
+	case xbox::X_D3DFMT_V8U8: /* = X_D3DFMT_G8B8 */                   return CXBX_FMTCONV_V8U8;
+	case xbox::X_D3DFMT_R5G5B5A1:   case xbox::X_D3DFMT_LIN_R5G5B5A1: return CXBX_FMTCONV_R5G5B5A1;
+	case xbox::X_D3DFMT_R4G4B4A4:   case xbox::X_D3DFMT_LIN_R4G4B4A4: return CXBX_FMTCONV_R4G4B4A4;
+	case xbox::X_D3DFMT_A8:         case xbox::X_D3DFMT_LIN_A8:        return CXBX_FMTCONV_A8;
+	// YUY2/UYVY are 4:2:2 packed — chroma shared across texel pairs, can't be decoded per-texel.
+	// They need a separate dispatch path or fall back to CPU conversion.
+	default: return 0;
+	}
+}
+
+// GPU-accelerated texture format conversion via compute shader.
+// Combines optional unswizzle + format decode → R8G8B8A8_UNORM output.
+// Texture must be DXGI_FORMAT_R8G8B8A8_UNORM with DEFAULT+UAV.
+// fmtType: one of CXBX_FMTCONV_* constants.
+// srcRowPitch: row pitch of source data (only used when bSwizzled=false).
+bool CxbxD3D11FormatConvertTexture(
+	ID3D11Texture2D* pTexture,
+	const void* pSrc,
+	UINT width,
+	UINT height,
+	UINT bpp,
+	UINT fmtType,
+	bool bSwizzled,
+	UINT srcRowPitch);
+
+// Vertex format conversion type constants
+#define CXBX_VTXCONV_COPY       0
+#define CXBX_VTXCONV_NORMSHORT3 1
+#define CXBX_VTXCONV_NORMPACKED3 2
+#define CXBX_VTXCONV_SHORT3     3
+#define CXBX_VTXCONV_PBYTE3     4
+#define CXBX_VTXCONV_FLOAT2H    5
+#define CXBX_VTXCONV_D3DCOLOR   6
+#define CXBX_VTXCONV_NONE       7
+
+// GPU-accelerated vertex format conversion via compute shader.
+// Converts Xbox vertex data to D3D11-compatible layouts on the GPU.
+// pElementDescriptors: array of numElements * 4 UINTs (srcOffset, dstOffset, convType, copyDwords).
+// Returns true if successful, with *ppOutputVB set to the converted vertex buffer.
+bool CxbxD3D11ConvertVertexBufferGPU(
+	const uint8_t* pSrcVertexData,
+	UINT srcDataSize,
+	UINT vertexCount,
+	UINT srcStride,
+	UINT dstStride,
+	UINT numElements,
+	const UINT* pElementDescriptors,
+	UINT dstBufferSize,
+	IDirect3DVertexBuffer** ppOutputVB);
+
+// Filter D3D11 input layout elements to only include semantics present in
+// the shader's input signature (parsed from the DXBC ISGN chunk).
+std::vector<D3D11_INPUT_ELEMENT_DESC> FilterInputElementsByShaderSignature(
+	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
+	const void* bytecode, size_t bytecodeSize);
+
+// Build a complete D3D11 input layout with all 16 TEXCOORD attributes.
+// Streamed attributes use their declared slot/format/offset; non-streamed
+// attributes read from the zero-stride vertex defaults buffer on slot
+// CXBX_D3D11_VERTEX_DEFAULTS_SLOT.  This satisfies DXVK's requirement
+// that every ISGN entry has a matching input layout element.
+std::vector<D3D11_INPUT_ELEMENT_DESC> BuildCompleteInputLayout(
+	const D3D11_INPUT_ELEMENT_DESC* pElements, UINT elementCount,
+	const bool* vRegisterInDeclaration);
+
+// Create the vertex defaults buffer and bind it to the defaults slot.
+// Called once during device initialization.
+void CxbxD3D11CreateVertexDefaultsBuffer();
+
+// Upload current NV2A sticky attribute values to the vertex defaults buffer.
+// Call before each draw to ensure non-streamed attributes have correct values.
+void CxbxD3D11UpdateVertexDefaultsBuffer();
+
+// Lazily create the D3D11 input layout for a vertex declaration (if not yet
+// created) and bind it via IASetInputLayout.  Encapsulates all device access
+// so callers outside the Rendering folder never touch g_pD3DDevice directly.
+void CxbxD3D11SetVertexDeclaration(CxbxVertexDeclaration* pCxbxVertexDeclaration);
+
+#endif // CXBX_USE_D3D11
+
+#endif // BACKEND_D3D11_H

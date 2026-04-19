@@ -31,12 +31,15 @@
 #include "core\kernel\memory-manager\VMManager.h"
 #include "common\util\hasher.h"
 #include "core\kernel\support\Emu.h"
-#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_pD3DDevice
-#include "core\hle\D3D8\Direct3D9\WalkIndexBuffer.h" // for WalkIndexBuffer
+#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For CxbxSetStreamSource, CxbxCreateVertexBuffer, etc.
+#include "core\hle\D3D8\Rendering\WalkIndexBuffer.h" // for WalkIndexBuffer
 #include "core\hle\D3D8\ResourceTracker.h"
 #include "core\hle\D3D8\XbPushBuffer.h" // For CxbxDrawPrimitiveUP
 #include "core\hle\D3D8\XbVertexBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
+#ifdef CXBX_USE_D3D11
+#include "core\hle\D3D8\Rendering\Backend\Backend_D3D11.h"
+#endif
 
 #include <imgui.h>
 
@@ -59,12 +62,7 @@ UINT                          g_InlineVertexBuffer_TableOffset = 0;
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
 xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
 
-extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); // Declared in PushBuffer.cpp
-
-void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
-bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
-uint32_t GetPixelContainerWidth(xbox::X_D3DPixelContainer* pPixelContainer);
-uint32_t GetPixelContainerHeight(xbox::X_D3DPixelContainer* pPixelContainer);
+// CxbxSetStreamSource moved to Backend_D3D9.cpp / Backend_D3D11.cpp
 
 void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamNumber) const
 {
@@ -77,12 +75,10 @@ void CxbxPatchedStream::Activate(CxbxDrawContext *pDrawContext, UINT HostStreamN
 		pDrawContext->uiHostVertexStreamZeroStride = uiCachedHostVertexStride;
 	}
 	else {
-		HRESULT hRet = g_pD3DDevice->SetStreamSource(
+		HRESULT hRet = CxbxSetStreamSource(
 			HostStreamNumber,
 			pCachedHostVertexBuffer, 
-			0, // OffsetInBytes
 			uiCachedHostVertexStride);
-		//DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 		if (FAILED(hRet)) {
 			CxbxrAbort("Failed to set the type patched buffer as the new stream source!\n");
 			// TODO : test-case : XDK Cartoon hits the above case when the vertex cache size is 0.
@@ -216,8 +212,10 @@ void CxbxVertexBufferConverter::ConvertStream
     UINT             uiStream
 )
 {
+#ifndef CXBX_USE_D3D11
 	extern D3DCAPS g_D3DCaps;
-		//X_D3DBaseTexture *pLinearBaseTexture[xbox::X_D3DTS_STAGECOUNT];
+#endif
+	//X_D3DBaseTexture *pLinearBaseTexture[xbox::X_D3DTS_STAGECOUNT];
 
 	CxbxVertexShaderStreamInfo *pVertexShaderStreamInfo = nullptr;
 	UINT XboxStreamNumber = uiStream;
@@ -255,14 +253,12 @@ void CxbxVertexBufferConverter::ConvertStream
 		xbox::X_D3DVertexBuffer *pXboxVertexBuffer = XboxStreamInput.VertexBuffer;
         pXboxVertexData = (uint8_t*)GetDataFromXboxResource(pXboxVertexBuffer);
 		if (pXboxVertexData == xbox::zeroptr) {
-			HRESULT hRet = g_pD3DDevice->SetStreamSource(
+			HRESULT hRet = CxbxSetStreamSource(
 				HostStreamNumber,
 				nullptr, 
-				0, // OffsetInBytes
 				0);
-//			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetStreamSource");
 			if (FAILED(hRet)) {
-				EmuLog(LOG_LEVEL::WARNING, "g_pD3DDevice->SetStreamSource(HostStreamNumber, nullptr, 0)");
+				EmuLog(LOG_LEVEL::WARNING, "CxbxSetStreamSource(HostStreamNumber, nullptr, 0)");
 			}
 
 			return;
@@ -345,6 +341,66 @@ void CxbxVertexBufferConverter::ConvertStream
 		return;
 	}
 
+#ifdef CXBX_USE_D3D11
+	// Try GPU vertex conversion via compute shader (non-UP, patching case only)
+	if (bNeedVertexPatching && pDrawContext->pXboxVertexStreamZeroData == xbox::zeroptr) {
+		// Check if all host element sizes are multiples of 4 (required for RWBuffer<uint> writes)
+		bool canUseCS = (uiHostVertexStride & 3) == 0;
+		UINT elemDescs[16 * 4]; // Up to 16 elements, 4 uints each
+		UINT srcOff = 0, dstOff = 0;
+		UINT numElems = pVertexShaderStreamInfo->NumberOfVertexElements;
+		if (numElems > 16) canUseCS = false;
+		if (canUseCS) {
+			for (UINT e = 0; e < numElems; e++) {
+				UINT hostSize = pVertexShaderStreamInfo->VertexElements[e].HostByteSize;
+				UINT xboxSize = pVertexShaderStreamInfo->VertexElements[e].XboxByteSize;
+				// All host element sizes and offsets must be 4-byte aligned for CS writes
+				if ((hostSize & 3) != 0 || (dstOff & 3) != 0) {
+					canUseCS = false;
+					break;
+				}
+				UINT convType, copyDwords = 0;
+				switch (pVertexShaderStreamInfo->VertexElements[e].XboxType) {
+				case xbox::X_D3DVSDT_NORMSHORT3:  convType = CXBX_VTXCONV_NORMSHORT3; break;
+				case xbox::X_D3DVSDT_NORMPACKED3: convType = CXBX_VTXCONV_NORMPACKED3; break;
+				case xbox::X_D3DVSDT_SHORT3:      convType = CXBX_VTXCONV_SHORT3; break;
+				case xbox::X_D3DVSDT_PBYTE3:      convType = CXBX_VTXCONV_PBYTE3; break;
+				case xbox::X_D3DVSDT_FLOAT2H:     convType = CXBX_VTXCONV_FLOAT2H; break;
+				case xbox::X_D3DVSDT_D3DCOLOR:    convType = CXBX_VTXCONV_D3DCOLOR; break;
+				case xbox::X_D3DVSDT_NONE:        convType = CXBX_VTXCONV_NONE; break;
+				default:                          convType = CXBX_VTXCONV_COPY; copyDwords = hostSize / 4; break;
+				}
+				elemDescs[e * 4 + 0] = srcOff;
+				elemDescs[e * 4 + 1] = dstOff;
+				elemDescs[e * 4 + 2] = convType;
+				elemDescs[e * 4 + 3] = copyDwords;
+				srcOff += xboxSize;
+				dstOff += hostSize;
+			}
+		}
+		if (canUseCS) {
+			IDirect3DVertexBuffer* pGPUVB = nullptr;
+			if (CxbxD3D11ConvertVertexBufferGPU(
+					pXboxVertexData, xboxVertexDataSize, uiVertexCount,
+					uiXboxVertexStride, uiHostVertexStride,
+					numElems, elemDescs, dwHostVertexDataSize, &pGPUVB)) {
+				patchedStream.isValid = true;
+				patchedStream.XboxPrimitiveType = pDrawContext->XboxPrimitiveType;
+				patchedStream.pCachedXboxVertexData = pXboxVertexData;
+				patchedStream.uiCachedXboxVertexDataSize = xboxVertexDataSize;
+				patchedStream.uiVertexDataHash = vertexDataHash;
+				patchedStream.uiVertexStreamInformationHash = pVertexShaderSteamInfoHash;
+				patchedStream.uiCachedXboxVertexStride = uiXboxVertexStride;
+				patchedStream.uiCachedHostVertexStride = uiHostVertexStride;
+				patchedStream.bCacheIsStreamZeroDrawUP = false;
+				patchedStream.pCachedHostVertexBuffer = pGPUVB;
+				patchedStream.Activate(pDrawContext, HostStreamNumber);
+				return;
+			}
+		}
+	}
+#endif
+
     // Allocate new buffers
     if (pDrawContext->pXboxVertexStreamZeroData != xbox::zeroptr) {
         pHostVertexData = (uint8_t*)malloc(dwHostVertexDataSize);
@@ -353,14 +409,7 @@ void CxbxVertexBufferConverter::ConvertStream
             CxbxrAbort("Couldn't allocate the new stream zero buffer");
         }
     } else {
-        HRESULT hRet = g_pD3DDevice->CreateVertexBuffer(
-            dwHostVertexDataSize,
-            D3DUSAGE_WRITEONLY | D3DUSAGE_DYNAMIC,
-            0,
-            D3DPOOL_DEFAULT,
-            &pNewHostVertexBuffer,
-            nullptr
-        );
+   	   	HRESULT hRet = CxbxCreateVertexBuffer(dwHostVertexDataSize, &pNewHostVertexBuffer);
 
         if (FAILED(hRet)) {
             CxbxrAbort("Failed to create vertex buffer");
@@ -369,7 +418,8 @@ void CxbxVertexBufferConverter::ConvertStream
 
     // If we need to lock a host vertex buffer, do so now
     if (pHostVertexData == nullptr && pNewHostVertexBuffer != nullptr) {
-        if (FAILED(pNewHostVertexBuffer->Lock(0, 0, (D3DLockData **)&pHostVertexData, D3DLOCK_DISCARD))) {
+   	   	pHostVertexData = (uint8_t*)CxbxLockVertexBuffer(pNewHostVertexBuffer);
+   	   	if (pHostVertexData == nullptr) {
             CxbxrAbort("Couldn't lock vertex buffer");
         }
     }
@@ -388,8 +438,8 @@ void CxbxVertexBufferConverter::ConvertStream
 				// Dxbx note : The following code handles only the D3DVSDT enums that need conversion;
 				// All other cases are catched by the memcpy in the default-block.
 				switch (pVertexShaderStreamInfo->VertexElements[uiElement].XboxType) {
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16_SNORM
 				case xbox::X_D3DVSDT_NORMSHORT1: { // 0x11:
-					// Test-cases : Halo - Combat Evolved
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// Make it SHORT2N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
@@ -401,8 +451,9 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16G16_SNORM
 				case xbox::X_D3DVSDT_NORMSHORT2: { // 0x21:
-					// Test-cases : Baldur's Gate: Dark Alliance 2, F1 2002, Gun, Halo - Combat Evolved, Scrapland 
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT2N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT2N
 						// TODO : goto default; // ??
@@ -417,8 +468,15 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_NORMSHORT3: { // 0x31:
-					// Test-cases : Cel Damage, Constantine, Destroy All Humans!
+#ifdef CXBX_USE_D3D11 // D3D11 uses DXGI_FORMAT_R16G16B16A16_SNORM
+					// Make it SHORT4N
+					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
+					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
+					pHostVertexAsShort[2] = pXboxVertexAsShort[2];
+					pHostVertexAsShort[3] = 32767; // TODO : verify
+#else
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// Make it SHORT4N
 						pHostVertexAsShort[0] = pXboxVertexAsShort[0];
@@ -431,10 +489,11 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsFloat[1] = NormShortToFloat(pXboxVertexAsShort[1]);
 						pHostVertexAsFloat[2] = NormShortToFloat(pXboxVertexAsShort[2]);
 					}
+#endif
 					break;
 				}
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16G16B16A16_SNORM
 				case xbox::X_D3DVSDT_NORMSHORT4: { // 0x41:
-					// Test-cases : Judge Dredd: Dredd vs Death, NHL Hitz 2002, Silent Hill 2, Sneakers, Tony Hawk Pro Skater 4
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_SHORT4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_SHORT4N
 						// TODO : goto default; // ??
@@ -453,8 +512,8 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_NORMPACKED3: { // 0x16:
-					// Test-cases : Dashboard
 					// Make it FLOAT3
 					union {
                         int32_t value;
@@ -472,14 +531,15 @@ void CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsFloat[2] = PackedIntToFloat(NormPacked3.z, 511.0f, 512.f);
 					break;
 				}
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R16_SINT
 				case xbox::X_D3DVSDT_SHORT1: { // 0x15:
 					// Make it SHORT2 and set the second short to 0
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = 0;
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_SHORT3: { // 0x35:
-					// Test-cases : Turok
 					// Make it a SHORT4 and set the fourth short to 1
 					pHostVertexAsShort[0] = pXboxVertexAsShort[0];
 					pHostVertexAsShort[1] = pXboxVertexAsShort[1];
@@ -487,6 +547,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					pHostVertexAsShort[3] = 1; // Turok verified (character disappears when this is 32767)
 					break;
 				}
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R8_UNORM
 				case xbox::X_D3DVSDT_PBYTE1: { // 0x14:
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
@@ -500,6 +561,8 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R8G8_UNORM
 				case xbox::X_D3DVSDT_PBYTE2: { // 0x24:
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
@@ -514,8 +577,15 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_PBYTE3: { // 0x34:
-					// Test-cases : Turok
+#ifdef CXBX_USE_D3D11 // D3D11 uses DXGI_FORMAT_R8G8B8A8_UNORM
+					// Make it UBYTE4N
+					pHostVertexAsByte[0] = pXboxVertexAsByte[0];
+					pHostVertexAsByte[1] = pXboxVertexAsByte[1];
+					pHostVertexAsByte[2] = pXboxVertexAsByte[2];
+					pHostVertexAsByte[3] = 255; // TODO : Verify
+#else
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// Make it UBYTE4N
 						pHostVertexAsByte[0] = pXboxVertexAsByte[0];
@@ -528,10 +598,11 @@ void CxbxVertexBufferConverter::ConvertStream
 						pHostVertexAsFloat[1] = ByteToFloat(pXboxVertexAsByte[1]);
 						pHostVertexAsFloat[2] = ByteToFloat(pXboxVertexAsByte[2]);
 					}
+#endif
 					break;
 				}
+#ifndef CXBX_USE_D3D11 // D3D11 supports DXGI_FORMAT_R8G8B8A8_UNORM
 				case xbox::X_D3DVSDT_PBYTE4: { // 0x44:
-					// Test-case : Jet Set Radio Future
 					if (g_D3DCaps.DeclTypes & D3DDTCAPS_UBYTE4N) {
 						// No need for patching when D3D9 supports D3DDECLTYPE_UBYTE4N
 						// TODO : goto default; // ??
@@ -550,6 +621,7 @@ void CxbxVertexBufferConverter::ConvertStream
 					}
 					break;
 				}
+#endif
 				case xbox::X_D3DVSDT_FLOAT2H: { // 0x72:
 					// Make it FLOAT4 and set the third float to 0.0
 					pHostVertexAsFloat[0] = pXboxVertexAsFloat[0];
@@ -565,6 +637,34 @@ void CxbxVertexBufferConverter::ConvertStream
 					// No host element data (but Xbox size can be above zero, when used for X_D3DVSD_MASK_SKIP*
 					break;
 				}
+#ifdef CXBX_USE_D3D11
+				case xbox::X_D3DVSDT_D3DCOLOR: { // 0x40: DXGI_FORMAT_R8G8B8A8_UNORM
+					// D3DCOLOR is stored as [B,G,R,A] in memory. We use DXGI_FORMAT_R8G8B8A8_UNORM
+					// which reads bytes as [R,G,B,A], so swap bytes 0 (B) and 2 (R) to get correct RGBA.
+					pHostVertexAsByte[0] = pXboxVertexAsByte[2]; // R
+					pHostVertexAsByte[1] = pXboxVertexAsByte[1]; // G
+					pHostVertexAsByte[2] = pXboxVertexAsByte[0]; // B
+					pHostVertexAsByte[3] = pXboxVertexAsByte[3]; // A
+					break;
+				}
+#else
+				case xbox::X_D3DVSDT_D3DCOLOR: [[fallthrough]]; // 0x40: D3DDECLTYPE_D3DCOLOR (BGRA→RGBA handled by hardware)
+#endif
+				case xbox::X_D3DVSDT_FLOAT1: [[fallthrough]]; // 0x12: DXGI_FORMAT_R32_FLOAT
+				case xbox::X_D3DVSDT_FLOAT2: [[fallthrough]]; // 0x22: DXGI_FORMAT_R32G32_FLOAT
+				case xbox::X_D3DVSDT_FLOAT3: [[fallthrough]]; // 0x32: DXGI_FORMAT_R32G32B32_FLOAT
+				case xbox::X_D3DVSDT_FLOAT4: [[fallthrough]]; // 0x42: DXGI_FORMAT_R32G32B32A32_FLOAT
+#ifdef CXBX_USE_D3D11
+				case xbox::X_D3DVSDT_NORMSHORT1: [[fallthrough]]; // 0x11: DXGI_FORMAT_R16_SNORM
+				case xbox::X_D3DVSDT_NORMSHORT2: [[fallthrough]]; // 0x21: DXGI_FORMAT_R16G16_SNORM
+				case xbox::X_D3DVSDT_NORMSHORT4: [[fallthrough]]; // 0x41: DXGI_FORMAT_R16G16B16A16_SNORM
+				case xbox::X_D3DVSDT_PBYTE1: [[fallthrough]]; // 0x14: DXGI_FORMAT_R8_UNORM
+				case xbox::X_D3DVSDT_PBYTE2: [[fallthrough]]; // 0x24: DXGI_FORMAT_R8G8_UNORM
+				case xbox::X_D3DVSDT_PBYTE4: [[fallthrough]]; // 0x44: DXGI_FORMAT_R8G8B8A8_UNORM
+				case xbox::X_D3DVSDT_SHORT1: [[fallthrough]]; // 0x15: DXGI_FORMAT_R16_SINT
+#endif
+				case xbox::X_D3DVSDT_SHORT2: [[fallthrough]]; // 0x25: DXGI_FORMAT_R16G16_SINT
+				case xbox::X_D3DVSDT_SHORT4: [[fallthrough]]; // 0x45: DXGI_FORMAT_R16G16B16A16_SINT
 				default: {
 					// Generic 'conversion' - just make a copy :
 					memcpy(pHostVertexAsByte, pXboxVertexAsByte, XboxElementByteSize);
@@ -599,7 +699,7 @@ void CxbxVertexBufferConverter::ConvertStream
         patchedStream.bCachedHostVertexStreamZeroDataIsAllocated = bNeedStreamCopy;
     } else {
         // assert(pNewHostVertexBuffer != nullptr);
-        pNewHostVertexBuffer->Unlock();
+   	   	CxbxUnlockVertexBuffer(pNewHostVertexBuffer);
         patchedStream.pCachedHostVertexBuffer = pNewHostVertexBuffer;
     }
 
@@ -684,11 +784,15 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 	attribute_floats[2] = c;
 	attribute_floats[3] = d;
 
-	// Also, write the given register value to a matching host vertex shader constant
+#ifndef CXBX_USE_D3D11
+	// D3D9: Write the given register value to a matching host vertex shader constant.
 	// This allows us to implement Xbox functionality where SetVertexData4f can be used to specify attributes
 	// not present in the vertex declaration.
 	// We use range 193 and up to store these values, as Xbox shaders stop at c192!
-	g_pD3DDevice->SetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
+	CxbxSetVertexShaderConstantF(CXBX_D3DVS_CONSTREG_VREGDEFAULTS_BASE + Register, attribute_floats, 1);
+#endif
+	// D3D11: The zero-stride vertex defaults buffer reads inline_value[] directly,
+	// so no constant buffer upload is needed for attribute defaults.
 }
 
 void CxbxImpl_Begin(xbox::X_D3DPRIMITIVETYPE PrimitiveType)

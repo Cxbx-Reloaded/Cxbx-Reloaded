@@ -28,7 +28,7 @@
 #include "Logging.h"
 #include "XbD3D8Types.h"
 
-extern const char* D3DErrorString(HRESULT hResult); // Implemented in Direct3D9.cpp
+extern const char* D3DErrorString(HRESULT hResult); // Implemented in RenderGlobals.cpp
 
 #define DEBUG_D3DRESULT(hRet, message) \
 	do { \
@@ -40,6 +40,8 @@ extern const char* D3DErrorString(HRESULT hResult); // Implemented in Direct3D9.
 	} while (0)
 
 // Additional types, exclusively for logging (not really enums) :
+#ifndef CXBX_USE_D3D11
+// D3D9-specific enum forward declarations and logging headers
 enum D3DVS20CAPS : int;
 enum D3DPS20CAPS : int;
 enum _D3DCAPS : int;
@@ -63,6 +65,7 @@ enum D3DFVFCAPS : int;
 enum D3DVTXPCAPS : int;
 enum D3DDEVCAPS2 : int;
 enum D3DDTCAPS : int;
+#endif
 
 namespace xbox {
 
@@ -78,6 +81,8 @@ enum X_D3DRESOURCE_SIZE : int;
 // Headers for rendering host D3D enum types :
 //
 
+#ifndef CXBX_USE_D3D11
+// D3D9-specific logging headers
 FLAGS2STR_HEADER(D3DVS20CAPS) // Not really an enum
 FLAGS2STR_HEADER(D3DPS20CAPS) // Not really an enum
 ENUM2STR_HEADER(D3DDEVTYPE)
@@ -103,7 +108,6 @@ FLAGS2STR_HEADER(D3DVTXPCAPS) // Not really an enum
 FLAGS2STR_HEADER(D3DDEVCAPS2) // Not really an enum
 FLAGS2STR_HEADER(D3DDTCAPS) // Not really an enum
 
-ENUM2STR_HEADER(D3DCUBEMAP_FACES)
 ENUM2STR_HEADER(D3DFORMAT)
 ENUM2STR_HEADER(D3DPOOL)
 
@@ -113,10 +117,11 @@ ENUM2STR_HEADER(D3DPOOL)
 
 LOGRENDER_HEADER(D3DVSHADERCAPS2_0)
 LOGRENDER_HEADER(D3DPSHADERCAPS2_0)
-
 LOGRENDER_HEADER(D3DCAPS)
-LOGRENDER_HEADER(D3DLOCKED_RECT)
-LOGRENDER_HEADER(RECT)
+#else
+// D3D11-specific logging headers
+ENUM2STR_HEADER(DXGI_FORMAT)
+#endif // !CXBX_USE_D3D11
 
 namespace xbox {
 
@@ -133,9 +138,12 @@ namespace xbox {
 //ENUM2STR_HEADER(X_D3DSTENCILOP)
 //ENUM2STR_HEADER(X_D3DTEXTURESTAGESTATETYPE)
 
+ENUM2STR_HEADER(X_D3DCUBEMAP_FACES)
 ENUM2STR_HEADER(X_D3DCULL)
+//ENUM2STR_HEADER(X_D3DDEVTYPE)
 ENUM2STR_HEADER(X_D3DFORMAT)
 ENUM2STR_HEADER(X_D3DPRIMITIVETYPE)
+LOGRENDER_HEADER(X_RECT)
 ENUM2STR_HEADER(X_D3DRESOURCETYPE)
 ENUM2STR_HEADER(X_D3DSET_DEPTH_CLIP_PLANES_FLAGS)
 FLAGS2STR_HEADER(X_D3DUSAGE) // Not really an enum
@@ -157,6 +165,10 @@ LOGRENDER_HEADER(X_D3DVIEWPORT8)
 LOGRENDER_HEADER(X_D3DDISPLAYMODE)
 LOGRENDER_HEADER(X_D3DResource)
 LOGRENDER_HEADER(X_D3DPixelContainer)
+LOGRENDER_HEADER(X_D3DBOX)
+LOGRENDER_HEADER(X_D3DLOCKED_BOX)
+LOGRENDER_HEADER(X_D3DLOCKED_RECT)
+LOGRENDER_HEADER(X_D3DRECT)
 
 } // end of namespace xbox
 

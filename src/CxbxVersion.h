@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 extern const char* CxbxVersionStr;
 extern const char *CxbxrHashBuild;
 

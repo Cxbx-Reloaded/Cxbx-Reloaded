@@ -42,7 +42,7 @@ typedef struct _CxbxVertexShaderStreamElement
 {
 	UINT XboxType; // The stream element data type (xbox)
 	UINT XboxByteSize; // The stream element data size (xbox)
-	BYTE HostDataType; // The stream element data type (pc)
+	_9_11(BYTE, DXGI_FORMAT) HostDataType; // The stream element data type (pc)
 	UINT HostByteSize; // The stream element data size (pc)
 }
 CxbxVertexShaderStreamElement;
@@ -56,6 +56,17 @@ CxbxVertexShaderStreamElement;
 	BYTE    Usage;      // Semantics
 	BYTE    UsageIndex; // Semantic index
 } D3DVERTEXELEMENT9, *LPD3DVERTEXELEMENT9;
+
+typedef struct D3D11_INPUT_ELEMENT_DESC
+	{
+	LPCSTR SemanticName;
+	UINT SemanticIndex;
+	DXGI_FORMAT Format;
+	UINT InputSlot;
+	UINT AlignedByteOffset;
+	D3D11_INPUT_CLASSIFICATION InputSlotClass;
+	UINT InstanceDataStepRate;
+} 	D3D11_INPUT_ELEMENT_DESC;
 */
 
 typedef struct _CxbxVertexShaderStreamInfo
@@ -77,6 +88,19 @@ typedef struct _CxbxVertexDeclaration
 	IDirect3DVertexDeclaration* pHostVertexDeclaration;
 	UINT NumberOfVertexStreams; // The number of streams the vertex shader uses
 	bool vRegisterInDeclaration[X_VSH_MAX_ATTRIBUTES];
+#ifdef CXBX_USE_D3D11
+	// For D3D11, we need to defer input layout creation until we have both
+	// the vertex elements AND compiled vertex shader bytecode.
+	// Store the element descriptors and count for lazy input layout creation.
+	D3DVERTEXELEMENT* pD3D11InputElements;  // Heap-allocated copy of D3D11_INPUT_ELEMENT_DESC[]
+	UINT D3D11InputElementCount;
+	// Tessellation auto-generation metadata (for PatchDraw CPU tessellation).
+	// Register indices are -1 when not requested by the vertex declaration.
+	// NOTE: Must be explicitly initialized to -1 after calloc (see CxbxGetVertexDeclaration).
+	int autoNormalRegister;          // Target register for AUTONORMAL (surface normal)
+	int autoNormalSourceRegister;    // Source register to compute derivatives from
+	int autoTexcoordRegister;        // Target register for AUTOTEXCOORD (parametric UV)
+#endif
 }
 CxbxVertexDeclaration;
 
@@ -89,7 +113,6 @@ enum class VertexShaderMode {
 };
 
 extern VertexShaderMode g_Xbox_VertexShaderMode;
-extern bool g_UseFixedFunctionVertexShader;
 
 // Intermediate vertex shader structures
 
@@ -242,7 +265,12 @@ extern int GetXboxVertexDataComponentCount(int d3dvsdt);
 extern bool g_Xbox_VertexShader_IsFixedFunction;
 
 extern CxbxVertexDeclaration* CxbxGetVertexDeclaration();
+extern xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS];
 extern xbox::X_STREAMINPUT& GetXboxVertexStreamInput(unsigned XboxStreamNumber);
+#ifdef CXBX_USE_D3D11
+extern ID3DBlob* CxbxGetActiveVertexShaderBytecode();
+extern ID3DBlob* CxbxGetFixedFunctionVertexShaderBytecode();
+#endif
 
 extern void CxbxImpl_SetScreenSpaceOffset(float x, float y);
 extern void CxbxImpl_LoadVertexShaderProgram(CONST DWORD* pFunction, DWORD Address);

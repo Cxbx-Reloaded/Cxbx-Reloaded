@@ -20,28 +20,36 @@ on:
       - '*.yml'
       - 'doc/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-windows:
     name: Build (Windows, ${{ matrix.configuration }}) # runner.os doesn't work here
     runs-on: windows-2025
     env:
       POWERSHELL_TELEMETRY_OPTOUT: 1
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     strategy:
       fail-fast: false
       matrix:
-        configuration: [Release, Debug]
+        configuration: ${{ fromJSON(github.event_name == 'pull_request' && '["Release"]' || '["Release","Debug"]') }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
+          fetch-depth: 1
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Generate CMake files
-        run: cmake -B build -A Win32 -DBUILD_CXBXR_DEBUGGER=ON -DCMAKE_SYSTEM_VERSION=7
+        run: cmake -B build -A Win32 -DBUILD_CXBXR_DEBUGGER=ON -DCMAKE_SYSTEM_VERSION=7 -DCMAKE_C_COMPILER_LAUNCHER=sccache -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
       - name: Build
         run: cmake --build build --config ${{ matrix.configuration }} -j $env:NUMBER_OF_PROCESSORS
       - name: Prepare artifacts
         if: matrix.configuration == 'Release'
         run: cmake --install build --config ${{ matrix.configuration }} --prefix artifacts
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: matrix.configuration == 'Release'
         with:
           name: CxbxReloaded-${{ matrix.configuration }}
@@ -56,9 +64,9 @@ jobs:
     needs: build-windows
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts
       - name: Re-zip artifacts

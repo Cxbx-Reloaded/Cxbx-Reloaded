@@ -27,6 +27,9 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/mio" EXCLUDE_FROM_ALL)
 # Cxbx-Reloaded projects
 set(CXBXR_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+# D3D11 option must be set here before imgui backend selection below
+option(CXBX_USE_D3D11 "Enable Direct3D 11 rendering path (instead of D3D9)" ON)
+
 add_custom_target(misc-batch
   ${CMAKE_COMMAND} -DTargetRunTimeDir=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>
   -P ${CXBXR_ROOT_DIR}/projects/misc/batch.cmake
@@ -98,6 +101,9 @@ file (GLOB CXBXR_HEADER_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbConvert.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Types.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Types_D3D9Compat.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Types_Enums.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Types_Resources.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/Xapi.h"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlLogging.h"
  "${CXBXR_ROOT_DIR}/src/Cxbx.h"
@@ -126,8 +132,15 @@ file (GLOB CXBXR_HEADER_GUIv1
 )
 
 # Emulator (module)
+if(CXBX_USE_D3D11)
+ set(IMGUI_GFX_HEADER "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx11.h")
+ set(IMGUI_GFX_SOURCE "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx11.cpp")
+else()
+ set(IMGUI_GFX_HEADER "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.h")
+ set(IMGUI_GFX_SOURCE "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.cpp")
+endif()
 file (GLOB CXBXR_HEADER_EMU_IMPORT
- "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.h"
+ "${IMGUI_GFX_HEADER}"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_opengl3.h"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_win32.h"
 )
@@ -143,25 +156,39 @@ file (GLOB CXBXR_HEADER_EMU
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/settings.h"
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.hpp"
  "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.hpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxPixelShaderTemplate.hlsl"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderTemplate.hlsl"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/CxbxVertexShaderPassthrough.hlsl"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsl"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionPixelShader.hlsli"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShader.hlsl"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/FixedFunctionVertexShaderState.hlsli"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/PixelShader.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Shader.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShader.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShaderCache.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/WalkIndexBuffer.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/CxbxPixelShaderTemplate.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/CxbxVertexShaderTemplate.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/CxbxVertexShaderPassthrough.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/RenderGlobals.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/EmuD3D8_common.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Device.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Draw.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Misc.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Shader.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_State.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Surface.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Unused.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/FixedFunctionPixelShader.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/FixedFunctionPixelShader.hlsli"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/FixedFunctionVertexShader.hlsl"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/FixedFunctionVertexShaderState.hlsli"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D9.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D11.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D11_Internal.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/PatchDraw.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/PixelShader.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/RenderStates.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/Shader.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/TextureStates.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/VertexShader.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/VertexShaderCache.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/WalkIndexBuffer.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/FixedFunctionState.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/ResourceTracker.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Logging.h"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbNV2A.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbPixelShader.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbPushBuffer.h"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbState.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbVertexBuffer.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbVertexShader.h"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/common/windows/WFXformat.hpp"
@@ -289,6 +316,7 @@ file (GLOB CXBXR_SOURCE_COMMON
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/buffered_io.cpp"
  "${CXBXR_ROOT_DIR}/src/common/xdvdfs-tools/xdvdfs.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbConvert.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbConvert_ColorFormats.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/XAPI/Xapi.cpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlLogging.cpp"
  "${CXBXR_ROOT_DIR}/src/core/kernel/exports/EmuKrnlXbox.cpp"
@@ -325,7 +353,7 @@ file (GLOB CXBXR_KRNL_CPP
  "${CXBXR_ROOT_DIR}/src/core/kernel/init/CxbxKrnl.cpp"
 )
 file (GLOB CXBXR_SOURCE_EMU_IMPORT
- "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_dx9.cpp"
+ "${IMGUI_GFX_SOURCE}"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_opengl3.cpp"
  "${CXBXR_ROOT_DIR}/import/imgui/backends/imgui_impl_win32.cpp"
 )
@@ -341,14 +369,37 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/ui.cpp"
  "${CXBXR_ROOT_DIR}/src/core/common/imgui/video.cpp"
  "${CXBXR_ROOT_DIR}/src/core/common/video/RenderBase.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Direct3D9.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/PixelShader.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/RenderStates.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/Shader.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/TextureStates.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShader.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/VertexShaderCache.cpp"
- "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Direct3D9/WalkIndexBuffer.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D9.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D11.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D11_State.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D11_Compute.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Backend/Backend_D3D11_Draw.cpp"
+  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/RenderGlobals.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Device.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Draw.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Misc.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Shader.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_RenderState.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_TextureState.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Patches/EmuPatches_Surface.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostDevice.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostDraw.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostImGui.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostRender.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResource.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResourceCreate.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostResourceUpload.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostSync.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/HostWindow.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/IndexBufferConvert.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/PatchDraw.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/PixelShader.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/RenderStates.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/Shader.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/TextureStates.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/VertexShader.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/Shaders/VertexShaderCache.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/Rendering/WalkIndexBuffer.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/FixedFunctionState.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/ResourceTracker.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbD3D8Logging.cpp"
@@ -356,6 +407,8 @@ file (GLOB CXBXR_SOURCE_EMU
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbPushBuffer.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbVertexBuffer.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbVertexShader.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbVertexShaderDecoder.cpp"
+ "${CXBXR_ROOT_DIR}/src/core/hle/D3D8/XbPixelShaderCompiler.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSound.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSound3DCalculator.cpp"
  "${CXBXR_ROOT_DIR}/src/core/hle/DSOUND/DirectSound/DirectSoundBuffer.cpp"
@@ -494,6 +547,15 @@ if(${CMAKE_GENERATOR} MATCHES "Visual Studio ([^9]|[9][0-9])" AND BUILD_CXBXR_DE
   PROPERTIES EXCLUDE_FROM_ALL TRUE
  )
 
+ # Suppress warnings in external capstone code
+ if ("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+  target_compile_options(capstone-shared PRIVATE
+   /wd4018 # signed/unsigned mismatch
+   /wd4244 # conversion, possible loss of data
+   /wd4267 # conversion from size_t, possible loss of data
+  )
+ endif()
+
  # Cxbx-Debugger project with third-party libraries
  set_target_properties(cxbxr-debugger cs_x86 Tests_cs_x86 capstone-shared
   PROPERTIES FOLDER Cxbx-Reloaded/debugger
@@ -506,15 +568,16 @@ install(FILES ${cxbxr_INSTALL_files}
 
 # Copy HLSL files to the output directory, which are loaded at runtime
 set(CXBXR_HLSL_FILES ${CXBXR_HEADER_EMU})
-list(FILTER CXBXR_HLSL_FILES INCLUDE REGEX ".*/src/core/hle/D3D8/Direct3D9/[^/]+\.hlsli?")
+list(FILTER CXBXR_HLSL_FILES INCLUDE REGEX ".*/src/core/hle/D3D8/Rendering/Shaders/[^/]+\\.hlsli?")
 add_custom_command(
-	TARGET misc-batch POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl"
-	# These files can be edited.
-	# Create backup copies for convenience of restoring original shader behaviour.
-	COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup"
+    TARGET misc-batch POST_BUILD
+    COMMENT "Copying any updated hlsl files..."
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl"
+    # These files can be edited.
+    # Create backup copies for convenience of restoring original shader behaviour.
+    COMMAND ${CMAKE_COMMAND} -E make_directory  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CXBXR_HLSL_FILES} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl/backup"
 )
 install(DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>/hlsl DESTINATION bin)
 

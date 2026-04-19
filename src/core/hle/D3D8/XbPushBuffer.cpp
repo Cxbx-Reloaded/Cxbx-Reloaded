@@ -32,7 +32,7 @@
 #include "core\kernel\support\Emu.h"
 #include "core\hle\D3D8\XbD3D8Types.h" // For X_D3DFORMAT
 #include "core\hle\D3D8\ResourceTracker.h"
-#include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For g_Xbox_VertexShader_Handle
+#include "core\hle\D3D8\Rendering\RenderGlobals.h" // For g_Xbox_VertexShader_Handle
 #include "core\hle\D3D8\XbPushBuffer.h"
 #include "core\hle\D3D8\XbConvert.h"
 #include "devices/video/nv2a.h" // For g_NV2A, PGRAPHState
@@ -195,20 +195,21 @@ void HLE_draw_state_update(NV2AState *d)
 
 	CxbxUpdateNativeD3DResources();
 
-	HRESULT hRet;
-
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
-//	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGENABLE, xtBOOL); // NV2A_FOG_ENABLE
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGTABLEMODE, xtD3DFOGMODE); // NV2A_FOG_MODE
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGSTART, xtFloat); // NV2A_FOG_COORD_DIST
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGEND, xtFloat); // NV2A_FOG_MODE
+//	g_pD3DDevice->SetRenderState(D3DRS_FOGDENSITY, xtFloat); // NV2A_FOG_EQUATION_CONSTANT / NV2A_FOG_EQUATION_LINEAR / NV2A_FOG_EQUATION_QUADRATIC
 	// NV2A_FOG_PLANE?
 	// NV2A_SET_LINEAR_FOG_CONST?
 //	hRet = g_pD3DDevice->SetRenderState(D3DRS_RANGEFOGENABLE, xtBOOL); // NV2A_FOG_COORD_DIST
 	// Unused : D3DRS_FOGVERTEXMODE
 
+	// NV_PGRAPH_FOGCOLOR stores fog color in ARGB format (the PGRAPH extracts
+	// individual R,G,B,A fields from the NV2A ABGR method parameter and
+	// reassembles them into ARGB-ordered bit fields). No byte swap needed.
 	uint32_t fog_color = pg->regs[NV_PGRAPH_FOGCOLOR];
-	hRet = g_pD3DDevice->SetRenderState(D3DRS_FOGCOLOR, ABGR_to_ARGB(fog_color)); // NV2A_FOG_COLOR
+	CxbxSetFogColor(fog_color);
 
 // Hint : see DxbxRenderStateInfo table for all known Xbox states, their data type and NV2A method
 // Also, see D3DDevice_SetRenderState_Simple call EmuXB2PC_* conversion functions for some render states
@@ -266,9 +267,6 @@ extern void pgraph_handle_method(
 	unsigned int subchannel,
 	unsigned int method,
 	uint32_t parameter);
-
-// LLE NV2A
-extern NV2ADevice* g_NV2A;
 
 uint32_t HLE_read_NV2A_pgraph_register(const int reg)
 {
