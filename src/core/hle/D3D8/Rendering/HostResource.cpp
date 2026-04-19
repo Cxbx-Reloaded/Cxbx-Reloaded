@@ -637,7 +637,7 @@ void GetSurfaceFaceAndLevelWithinTexture(xbox::X_D3DSurface* pSurface, xbox::X_D
    	   	int mipDataOffset = 0;
 
    	   	for (int level = 0; level < numLevels; level++) {
-   	   	   	if (pData == pSurfaceData) {
+   	   	   	if (pData + mipDataOffset == pSurfaceData) {
    	   	   	   	Level = level;
    	   	   	   	Face = (_9_11(D3DCUBEMAP_FACES, int))face;
    	   	   	   	return;

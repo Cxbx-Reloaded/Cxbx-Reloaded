@@ -259,9 +259,9 @@ void CxbxD3D11ApplyDirtyStates()
 	}
 }
 
-// RTV cache: maps texture pointer to its render target view, avoiding
-// redundant CreateRenderTargetView calls for the same texture.
-std::unordered_map<IDirect3DSurface*, ID3D11RenderTargetView*> g_RTVCache;
+// RTV cache: maps (texture pointer, mip slice) to its render target view, avoiding
+// redundant CreateRenderTargetView calls for the same texture+mip combination.
+std::unordered_map<RTVCacheKey, ID3D11RenderTargetView*, RTVCacheKeyHash> g_RTVCache;
 
 void ClearRTVCache()
 {

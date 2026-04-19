@@ -30,7 +30,7 @@
 // * Rendering helpers (D3D11 implementations)
 // ******************************************************************
 
-HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
+HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget, UINT mipSlice)
 {
 	LOG_INIT;
 	HRESULT hRet;
@@ -45,8 +45,10 @@ HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 	} else {
 		g_pD3DCurrentHostRenderTarget = pHostRenderTarget;
 
+		RTVCacheKey cacheKey = { pHostRenderTarget, mipSlice };
+
 		// Check RTV cache first
-		auto it = g_RTVCache.find(pHostRenderTarget);
+		auto it = g_RTVCache.find(cacheKey);
 		if (it != g_RTVCache.end()) {
 			if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
 				// Don't release — it's in the cache
@@ -61,14 +63,14 @@ HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
 			D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc{};
 			renderTargetViewDesc.Format = textureDesc.Format;
 			renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-			renderTargetViewDesc.Texture2D.MipSlice = 0;
+			renderTargetViewDesc.Texture2D.MipSlice = mipSlice;
 
 			ID3D11RenderTargetView* renderTargetView = nullptr;
 			hRet = g_pD3DDevice->CreateRenderTargetView((ID3D11Resource*)pHostRenderTarget, &renderTargetViewDesc, &renderTargetView);
 			DEBUG_D3DRESULT(hRet, "g_pD3DDevice->CreateRenderTargetView");
 
 			if (SUCCEEDED(hRet)) {
-				g_RTVCache[pHostRenderTarget] = renderTargetView;
+				g_RTVCache[cacheKey] = renderTargetView;
 				if (g_pD3DCurrentRTV != nullptr && g_pD3DCurrentRTV != g_pD3DBackBufferView) {
 					// Don't release — it's in the cache
 				}

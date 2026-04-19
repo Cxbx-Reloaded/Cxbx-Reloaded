@@ -65,9 +65,10 @@ void CxbxGetVertexShaderConstants(UINT startRegister, float* pConstantData, UINT
 // ******************************************************************
 // * Rendering helpers (D3D9 implementations)
 // ******************************************************************
-HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget)
+HRESULT CxbxSetRenderTarget(IDirect3DSurface* pHostRenderTarget, UINT mipSlice)
 {
 	LOG_INIT;
+	// D3D9 surfaces already reference the correct mip level, so mipSlice is unused
 	HRESULT hRet = g_pD3DDevice->SetRenderTarget(/*RenderTargetIndex=*/0, pHostRenderTarget);
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetRenderTarget");
 	return hRet;

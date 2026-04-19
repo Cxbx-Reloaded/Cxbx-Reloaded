@@ -41,6 +41,7 @@
 
 #include <cstring>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 #include <wrl/client.h>
 using namespace Microsoft::WRL;
@@ -149,8 +150,14 @@ void CxbxD3D11DispatchCS(ID3D11ComputeShader* pShader, ID3D11Buffer* pCB, UINT n
 HRESULT CxbxD3D11UpdateDynamicBuffer(ID3D11Buffer* pBuffer, const void* pData, size_t dataSize);
 
 // RTV cache helpers
+using RTVCacheKey = std::pair<IDirect3DSurface*, UINT>;
+struct RTVCacheKeyHash {
+	size_t operator()(const RTVCacheKey& k) const {
+		return std::hash<IDirect3DSurface*>()(k.first) ^ (static_cast<size_t>(k.second) << 16);
+	}
+};
 void ClearRTVCache();
-extern std::unordered_map<IDirect3DSurface*, ID3D11RenderTargetView*> g_RTVCache;
+extern std::unordered_map<RTVCacheKey, ID3D11RenderTargetView*, RTVCacheKeyHash> g_RTVCache;
 
 // Scene begin/end (defined in HostDevice.cpp or HostRender.cpp)
 extern void CxbxBeginScene();

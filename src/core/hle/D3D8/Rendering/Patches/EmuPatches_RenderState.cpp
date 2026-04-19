@@ -330,6 +330,17 @@ void CxbxImpl_SetRenderTarget
 
 	pHostRenderTarget = GetHostSurface(pRenderTarget, D3DUSAGE_RENDERTARGET);
 
+	// Determine mip level for surfaces that are children of a texture
+	UINT mipSlice = 0;
+#ifdef CXBX_USE_D3D11
+	if (pRenderTarget != xbox::zeroptr) {
+		xbox::X_D3DBaseTexture* pParent = ((xbox::X_D3DSurface*)pRenderTarget)->Parent;
+		if (pParent != xbox::zeroptr && pRenderTarget->Format == pParent->Format) {
+			GetSurfaceFaceAndLevelWithinTexture((xbox::X_D3DSurface*)pRenderTarget, pParent, mipSlice);
+		}
+	}
+#endif
+
 	// The currenct depth stencil is always replaced by whats passed in here (even a null)
 	g_pXbox_DepthStencil = pNewZStencil;
 	g_ZScale = GetZScaleForPixelContainer(g_pXbox_DepthStencil); // TODO : Discern between Xbox and host and do this in UpdateDepthStencilFlags?
@@ -338,7 +349,7 @@ void CxbxImpl_SetRenderTarget
 	HRESULT hRet;
 	// Mimick Direct3D 8 SetRenderTarget by only setting render target if non-null
 	if (pHostRenderTarget) {
-		hRet = CxbxSetRenderTarget(pHostRenderTarget);
+		hRet = CxbxSetRenderTarget(pHostRenderTarget, mipSlice);
 		if (FAILED(hRet)) {
 			// If Direct3D 9 SetRenderTarget failed, skip setting depth stencil
 			return;
@@ -354,8 +365,10 @@ void CxbxImpl_SetRenderTarget
 	}
 
    	// Validate that our host render target is still the correct size
+   	// Skip validation for mip-level surfaces: host reports full texture size,
+   	// Xbox reports mip-level size, which is an expected mismatch.
    	DWORD HostRenderTarget_Width, HostRenderTarget_Height;
-   	if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height, pHostRenderTarget)) {
+   	if (mipSlice == 0 && GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height, pHostRenderTarget)) {
    	   	DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXbox_RenderTarget);
    	   	DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
    	   	ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
