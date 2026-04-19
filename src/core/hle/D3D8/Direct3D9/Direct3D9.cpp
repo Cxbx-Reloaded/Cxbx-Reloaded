@@ -5371,29 +5371,46 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
 				}
 			}
 
-            // Create a temporary surface to hold the overlay
+            // Reuse a cached surface to hold the overlay (avoids per-frame GPU allocation)
             // This is faster than loading directly into the backbuffer because it offloads scaling to the GPU
             // Without this, upscaling tanks the frame-rate!
-            IDirect3DSurface* pTemporaryOverlaySurface;
-            HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
-                OverlayWidth,
-                OverlayHeight,
-                D3DFMT_A8R8G8B8,
-                D3DPOOL_DEFAULT,
-                &pTemporaryOverlaySurface,
-                nullptr
-            );
+            static IDirect3DSurface* pCachedOverlaySurface = nullptr;
+            static UINT cachedOverlayWidth = 0;
+            static UINT cachedOverlayHeight = 0;
 
-            if (FAILED(hRet)) {
-                EmuLog(LOG_LEVEL::WARNING, "Couldn't create temporary overlay surface : %X", hRet);
-            } else {
+            // Recreate only if dimensions changed or surface was lost
+            if (pCachedOverlaySurface == nullptr
+                || cachedOverlayWidth != OverlayWidth
+                || cachedOverlayHeight != OverlayHeight) {
+                if (pCachedOverlaySurface) {
+                    pCachedOverlaySurface->Release();
+                    pCachedOverlaySurface = nullptr;
+                }
+                HRESULT hRet = g_pD3DDevice->CreateOffscreenPlainSurface(
+                    OverlayWidth,
+                    OverlayHeight,
+                    D3DFMT_A8R8G8B8,
+                    D3DPOOL_DEFAULT,
+                    &pCachedOverlaySurface,
+                    nullptr
+                );
+                if (FAILED(hRet)) {
+                    EmuLog(LOG_LEVEL::WARNING, "Couldn't create temporary overlay surface : %X", hRet);
+                    pCachedOverlaySurface = nullptr;
+                } else {
+                    cachedOverlayWidth = OverlayWidth;
+                    cachedOverlayHeight = OverlayHeight;
+                }
+            }
+
+            if (pCachedOverlaySurface) {
                 RECT doNotScaleRect = { 0, 0, (LONG)OverlayWidth, (LONG)OverlayHeight };
 
                 // Use D3DXLoadSurfaceFromMemory() to do conversion, we don't stretch at this moment in time
                 // avoiding the need for YUY2toARGB() (might become relevant when porting to D3D9 or OpenGL)
                 // see https://msdn.microsoft.com/en-us/library/windows/desktop/bb172902(v=vs.85).aspx
-                hRet = D3DXLoadSurfaceFromMemory(
-                    /* pDestSurface = */ pTemporaryOverlaySurface,
+                HRESULT hRet = D3DXLoadSurfaceFromMemory(
+                    /* pDestSurface = */ pCachedOverlaySurface,
                     /* pDestPalette = */ nullptr,
                     /* pDestRect = */ &doNotScaleRect,
                     /* pSrcMemory = */ pOverlayData, // Source buffer
@@ -5409,7 +5426,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                     EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host surface : %X", hRet);
                 } else {
                     hRet = g_pD3DDevice->StretchRect(
-                        /* pSourceSurface = */ pTemporaryOverlaySurface,
+                        /* pSourceSurface = */ pCachedOverlaySurface,
                         /* pSourceRect = */ &EmuSourRect,
                         /* pDestSurface = */ pCurrentHostBackBuffer,
                         /* pDestRect = */ &EmuDestRect,
@@ -5420,8 +5437,6 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
                         EmuLog(LOG_LEVEL::WARNING, "Couldn't load Xbox overlay to host back buffer : %X", hRet);
                     }
                 }
-
-                pTemporaryOverlaySurface->Release();
             }
 		}
 
