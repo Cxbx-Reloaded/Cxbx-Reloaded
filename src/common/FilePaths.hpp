@@ -24,6 +24,10 @@
 // ******************************************************************
 #pragma once
 
+#include <filesystem>
+#include <string>
+#include <string_view>
+
 extern char szFilePath_CxbxReloaded_Exe[MAX_PATH];
 extern char szFilePath_EEPROM_bin[MAX_PATH];
 
@@ -33,7 +37,9 @@ extern std::string g_MediaBoardBasePath;
 extern std::string g_MuBasePath;
 extern std::string g_TitleMountPath;
 
-#include <filesystem>
+// Resolve to a canonical host path. Falls back to absolute(weakly_canonical(...))
+// to work around Windows std::filesystem::canonical failures on some Dokany-backed paths.
+std::filesystem::path CxbxResolveCanonicalPath(const std::filesystem::path& file_path, std::error_code& error);
 
 //TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
 // Let filesystem library clean it up for us, including resolve host's symbolic link path.

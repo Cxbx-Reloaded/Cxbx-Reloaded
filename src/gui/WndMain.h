@@ -28,6 +28,8 @@
 #include "Wnd.h"
 #include "common\xbe\Xbe.h"
 
+#include <memory>
+#include <string>
 #include <thread>
 
 // ******************************************************************
@@ -58,6 +60,7 @@ class WndMain : public Wnd
         // * Xbe operations
         // ******************************************************************
         void OpenXbe(const char *x_filename);
+        void OpenXiso(const char *x_filename);
         void CloseXbe();
         void OpenMRU(int mru);
 		void OpenDashboard();
@@ -78,6 +81,7 @@ class WndMain : public Wnd
         // * accessor
         // ******************************************************************
         bool isCreated() { return m_bCreated; }
+        bool HasOpenXbe() const { return m_Xbe != nullptr; }
 
         // ******************************************************************
         // * suggest appropriate filename based on input
@@ -93,6 +97,7 @@ class WndMain : public Wnd
         // ******************************************************************
         // * after an xbe is loaded, some things must be updated
         // ******************************************************************
+        void OpenXbeInternal(const char *xbe_filename, const char *recent_path);
         void XbeLoaded();
 
         // ******************************************************************
@@ -194,6 +199,7 @@ class WndMain : public Wnd
         // * cached filenames
         // ******************************************************************
         char        m_XbeFilename[MAX_PATH];
+        std::unique_ptr<class XisoMount> m_XisoMount;
 
         // ******************************************************************
         // * cached window, process, and thread handle
@@ -228,6 +234,7 @@ class WndMain : public Wnd
 		};
 		UINT                m_FlagsLLE_status;
 		bool                m_LogKrnl_status;
+		std::string         m_pendingStartupWarning;
 };
 
 #endif

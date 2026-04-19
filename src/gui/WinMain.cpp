@@ -113,9 +113,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if(cli_config::ConfigSize() > 1 && false == MainWindow->HasError() && cli_config::GetValue(cli_config::arg1, &tempStr))
     {
         tempStr = std::filesystem::absolute(std::filesystem::path(tempStr)).string();
-        MainWindow->OpenXbe(tempStr.c_str());
+        if (tempStr.ends_with(".iso") || tempStr.ends_with(".xiso") ||
+            tempStr.ends_with(".ISO") || tempStr.ends_with(".XISO")) {
+            MainWindow->OpenXiso(tempStr.c_str());
+        }
+        else {
+            MainWindow->OpenXbe(tempStr.c_str());
+        }
 
-        MainWindow->StartEmulation(MainWindow->GetHwnd());
+        if (MainWindow->HasOpenXbe()) {
+            MainWindow->StartEmulation(MainWindow->GetHwnd());
+        }
     }
 
     /*! wait for window to be closed, or failure */

@@ -41,23 +41,30 @@ std::string g_DiskBasePath;
 std::string g_MediaBoardBasePath;
 std::string g_MuBasePath;
 
+std::filesystem::path CxbxResolveCanonicalPath(const std::filesystem::path& file_path, std::error_code& error)
+{
+	error.clear();
+
+	std::filesystem::path resolved_path = std::filesystem::canonical(file_path, error);
+	if (!error) {
+		return resolved_path;
+	}
+
+	// The MS implementation of std::filesystem::canonical internally calls GetFinalPathNameByHandleW, which fails with ERROR_FILE_NOT_FOUND when called
+	// on a file inside a mounted xiso under Windows with the xbox-iso-vfs tool because of this known dokany bug https://github.com/dokan-dev/dokany/issues/343
+	// so we can fallback to weakly_canonical, which doesn't call GetFinalPathNameByHandleW and thus works fine in this scenario
+	error.clear();
+	return std::filesystem::absolute(std::filesystem::weakly_canonical(file_path, error), error);
+}
+
 //TODO: Possible move CxbxResolveHostToFullPath inline function someplace else if become useful elsewhere.
 // Let filesystem library clean it up for us, including resolve host's symbolic link path.
 // Since internal kernel do translate to full path than preserved host symoblic link path.
 void CxbxResolveHostToFullPath(std::filesystem::path& file_path, std::string_view finish_error_sentence) {
 	std::error_code error;
-	std::filesystem::path sanityPath = std::filesystem::canonical(file_path, error);
+	std::filesystem::path sanityPath = CxbxResolveCanonicalPath(file_path, error);
 	if (error) {
-
-		// The MS implementation of std::filesystem::canonical internally calls GetFinalPathNameByHandleW, which fails with ERROR_FILE_NOT_FOUND when called
-		// on a file inside a mounted xiso under Windows with the xbox-iso-vfs tool because of this known dokany bug https://github.com/dokan-dev/dokany/issues/343
-		EmuLogInit(LOG_LEVEL::WARNING, "Could not resolve to %s: %s, dokany in use? The error was: %s",
-			finish_error_sentence.data(), file_path.string().c_str(), error.message().c_str());
-
-		sanityPath = std::filesystem::absolute(std::filesystem::weakly_canonical(file_path, error), error);
-		if (error) {
-			CxbxrAbortEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s. The error was: %s", finish_error_sentence.data(), file_path.string().c_str(), error.message().c_str());
-		}
+		CxbxrAbortEx(LOG_PREFIX_INIT, "Could not resolve to %s: %s. The error was: %s", finish_error_sentence.data(), file_path.string().c_str(), error.message().c_str());
 	}
 	file_path = sanityPath;
 }

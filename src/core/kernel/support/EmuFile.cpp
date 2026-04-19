@@ -165,8 +165,8 @@ void io_mu_metadata::flush(const wchar_t lett)
 static bool CxbxrIsPathInsideRootPath(const std::filesystem::path& path, const std::filesystem::path& root_path)
 {
 	std::error_code rootError, finalError;
-	const std::filesystem::path rootPath = std::filesystem::canonical(root_path, rootError); // TODO: Replace rootPath to root_path when possible.
-	const std::filesystem::path finalPath = std::filesystem::canonical(path, finalError);
+ 	const std::filesystem::path rootPath = CxbxResolveCanonicalPath(root_path, rootError); // TODO: Replace rootPath to root_path when possible.
+	const std::filesystem::path finalPath = CxbxResolveCanonicalPath(path, finalError);
 	if (rootError || finalError) {
 		return false;
 	}
@@ -237,27 +237,6 @@ FATX_SUPERBLOCK CxbxGetFatXSuperBlock(int partitionNumber)
 	fread(&superblock, sizeof(FATX_SUPERBLOCK), 1, fp);
 	fclose(fp);
 	return superblock;
-}
-
-std::wstring CxbxGetFinalPathNameByHandle(HANDLE hFile)
-{
-	constexpr size_t INITIAL_BUF_SIZE = MAX_PATH;
-	std::wstring path(INITIAL_BUF_SIZE, '\0');
-
-	DWORD size = GetFinalPathNameByHandleW(hFile, path.data(), INITIAL_BUF_SIZE, VOLUME_NAME_DOS);
-	if (size == 0) {
-		return L"";
-	}
-
-	// If the function fails because lpszFilePath is too small to hold the string plus the terminating null character,
-	// the return value is the required buffer size, in TCHARs. This value includes the size of the terminating null character.
-	if (size >= INITIAL_BUF_SIZE) {
-		path.resize(size);
-		size = GetFinalPathNameByHandleW(hFile, path.data(), size, VOLUME_NAME_DOS);
-	}
-	path.resize(size);
-
-	return path;
 }
 
 void NTAPI CxbxIoApcDispatcher(PVOID ApcContext, xbox::PIO_STATUS_BLOCK /*IoStatusBlock*/, xbox::ulong_xt Reserved)

@@ -95,6 +95,7 @@ public:
 		DebugMode CxbxDebugMode;
 		std::string szCxbxDebugFile;
 		std::string szRecentXbeFiles[10];
+		std::string szXisoMountDrive = "auto";
 		unsigned int DataStorageToggle;
 		std::string szCustomLocation = "";
 		bool bIgnoreInvalidXbeSig;

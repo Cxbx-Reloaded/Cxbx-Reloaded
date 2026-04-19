@@ -14,6 +14,8 @@ include_directories(
  "${CXBXR_ROOT_DIR}/import/OpenXDK/include"
  "${CXBXR_ROOT_DIR}/import/DirectX9/include"
  "${CXBXR_ROOT_DIR}/import/distorm/include"
+ "${CXBXR_ROOT_DIR}/import/dokany"
+ "${CXBXR_ROOT_DIR}/import/dokany/sys"
  "${CXBXR_ROOT_DIR}/import/glew-2.0.0/include"
  "${CXBXR_ROOT_DIR}/import/libusb/libusb"
  "${CXBXR_ROOT_DIR}/import/simpleini"

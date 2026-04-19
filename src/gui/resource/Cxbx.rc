@@ -709,7 +709,8 @@ BEGIN
     POPUP "&File",                          65535,MFT_STRING,MFS_ENABLED
     BEGIN
         MENUITEM "&Open Xbe...",                ID_FILE_OPEN_XBE,MFT_STRING,MFS_ENABLED
-        MENUITEM "Open D&ashboard...\tF7",      ID_FILE_OPEN_DASHBOARD,MFT_STRING,MFS_ENABLED
+        MENUITEM "Open &Xiso...",                ID_FILE_OPEN_XISO,MFT_STRING,MFS_ENABLED
+        MENUITEM "Open &Dashboard...\tF7",      ID_FILE_OPEN_DASHBOARD,MFT_STRING,MFS_ENABLED
         MENUITEM "&Close Xbe",                  ID_FILE_CLOSE_XBE,MFT_STRING,MFS_ENABLED
         MENUITEM "", -1, MFT_SEPARATOR
         POPUP "&Recent Xbe Files",              65535,MFT_STRING,MFS_ENABLED
@@ -769,6 +770,36 @@ BEGIN
             MENUITEM "&Retail",                     ID_SETTINGS_CONFIG_CONT_RETAIL
             MENUITEM "&Devkit",                     ID_SETTINGS_CONFIG_CONT_DEVKIT
             MENUITEM "&Chihiro",                    ID_SETTINGS_CONFIG_CONT_CHIHIRO
+        END
+        POPUP "XISO Mount &Drive...",           65535,MFT_STRING,MFS_ENABLED
+        BEGIN
+            MENUITEM "&Auto",                       ID_SETTINGS_CONFIG_XISO_AUTO,MFT_STRING,MFS_ENABLED
+            MENUITEM "A:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_A,MFT_STRING,MFS_ENABLED
+            MENUITEM "B:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_B,MFT_STRING,MFS_ENABLED
+            MENUITEM "C:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_C,MFT_STRING,MFS_ENABLED
+            MENUITEM "D:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_D,MFT_STRING,MFS_ENABLED
+            MENUITEM "E:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_E,MFT_STRING,MFS_ENABLED
+            MENUITEM "F:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_F,MFT_STRING,MFS_ENABLED
+            MENUITEM "G:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_G,MFT_STRING,MFS_ENABLED
+            MENUITEM "H:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_H,MFT_STRING,MFS_ENABLED
+            MENUITEM "I:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_I,MFT_STRING,MFS_ENABLED
+            MENUITEM "J:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_J,MFT_STRING,MFS_ENABLED
+            MENUITEM "K:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_K,MFT_STRING,MFS_ENABLED
+            MENUITEM "L:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_L,MFT_STRING,MFS_ENABLED
+            MENUITEM "M:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_M,MFT_STRING,MFS_ENABLED
+            MENUITEM "N:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_N,MFT_STRING,MFS_ENABLED
+            MENUITEM "O:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_O,MFT_STRING,MFS_ENABLED
+            MENUITEM "P:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_P,MFT_STRING,MFS_ENABLED
+            MENUITEM "Q:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_Q,MFT_STRING,MFS_ENABLED
+            MENUITEM "R:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_R,MFT_STRING,MFS_ENABLED
+            MENUITEM "S:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_S,MFT_STRING,MFS_ENABLED
+            MENUITEM "T:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_T,MFT_STRING,MFS_ENABLED
+            MENUITEM "U:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_U,MFT_STRING,MFS_ENABLED
+            MENUITEM "V:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_V,MFT_STRING,MFS_ENABLED
+            MENUITEM "W:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_W,MFT_STRING,MFS_ENABLED
+            MENUITEM "X:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_X,MFT_STRING,MFS_ENABLED
+            MENUITEM "Y:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_Y,MFT_STRING,MFS_ENABLED
+            MENUITEM "Z:",                          ID_SETTINGS_CONFIG_XISO_DRIVE_Z,MFT_STRING,MFS_ENABLED
         END
         POPUP "Config &Data Location...",       65535,MFT_STRING,MFS_ENABLED
         BEGIN
@@ -835,5 +866,4 @@ IDR_COPYING             TXT                     "..\\COPYING"
 
 #endif    // Neutral resources
 /////////////////////////////////////////////////////////////////////////////
-
 

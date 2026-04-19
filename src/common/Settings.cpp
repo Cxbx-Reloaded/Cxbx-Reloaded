@@ -86,6 +86,7 @@ static struct {
 	const char* CxbxDebugMode = "CxbxDebugMode";
 	const char* CxbxDebugLogFile = "CxbxDebugLogFile";
 	const char* RecentXbeFiles = "RecentXbeFiles";
+	const char* XisoMountDrive = "XisoMountDrive";
 	const char* DataStorageToggle = "DataStorageToggle";
 	const char* DataCustomLocation = "DataCustomLocation";
 	const char* IgnoreInvalidXbeSig = "IgnoreInvalidXbeSig";
@@ -340,6 +341,9 @@ bool Settings::LoadConfig()
 		index++;
 	}
 
+	si_data = m_si.GetValue(section_gui, sect_gui_keys.XisoMountDrive, /*Default=*/"auto");
+	m_gui.szXisoMountDrive = si_data != nullptr ? si_data : "auto";
+
 	m_gui.bIgnoreInvalidXbeSig = m_si.GetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSig, /*Default=*/false);
 	m_gui.bIgnoreInvalidXbeSec = m_si.GetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSec, /*Default=*/false);
 
@@ -587,6 +591,7 @@ bool Settings::Save(std::string file_path)
 	for (unsigned int i = 1; i < 10; i++) {
 		m_si.SetValue(section_gui, sect_gui_keys.RecentXbeFiles, m_gui.szRecentXbeFiles[i].c_str(), nullptr, false);
 	}
+	m_si.SetValue(section_gui, sect_gui_keys.XisoMountDrive, m_gui.szXisoMountDrive.c_str(), nullptr, true);
 
 	m_si.SetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSig, m_gui.bIgnoreInvalidXbeSig, nullptr, true);
 	m_si.SetBoolValue(section_gui, sect_gui_keys.IgnoreInvalidXbeSec, m_gui.bIgnoreInvalidXbeSec, nullptr, true);
@@ -879,6 +884,18 @@ void Settings::Verify()
 	// Set to null string once if contain invalid path.
 	if (m_core.szKrnlDebug[0] != '\0' && szKrnlDebug.size() == 0) {
 		std::memset(m_core.szKrnlDebug, 0, MAX_PATH);
+	}
+
+	if (m_gui.szXisoMountDrive.empty()) {
+		m_gui.szXisoMountDrive = "auto";
+	}
+	else if (m_gui.szXisoMountDrive != "auto") {
+		if (m_gui.szXisoMountDrive.size() == 1) {
+			m_gui.szXisoMountDrive[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(m_gui.szXisoMountDrive[0])));
+		}
+		else {
+			m_gui.szXisoMountDrive = "auto";
+		}
 	}
 }
 

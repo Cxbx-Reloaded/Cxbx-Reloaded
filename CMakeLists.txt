@@ -40,6 +40,7 @@ add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libtom")
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/imgui")
 
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/libusb")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/projects/dokany")
 
 set(nv2a_vsh_cpu_UNIT_TEST OFF)
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/import/nv2a_vsh_cpu" EXCLUDE_FROM_ALL)
@@ -317,6 +318,7 @@ file (GLOB CXBXR_SOURCE_GUIv1
  "${CXBXR_ROOT_DIR}/src/gui/WinMain.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/Wnd.cpp"
  "${CXBXR_ROOT_DIR}/src/gui/WndMain.cpp"
+ "${CXBXR_ROOT_DIR}/src/gui/xiso/XisoMount.cpp"
 )
 
 # Emulator (module)

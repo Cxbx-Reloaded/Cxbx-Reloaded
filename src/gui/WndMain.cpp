@@ -40,6 +40,7 @@
 #include "DlgNetworkConfig.h"
 #include "DlgEepromConfig.h"
 #include "DlgLoggingConfig.h"
+#include "xiso/XisoMount.hpp"
 #include "common\xbe\XbePrinter.h" // For DumpInformation
 #include "EmuShared.h"
 #include "core\hle\D3D8\Direct3D9\Direct3D9.h" // For CxbxSetPixelContainerHeader
@@ -61,6 +62,8 @@
 #include <shlobj.h>
 
 #include <filesystem>
+#include <algorithm>
+#include <cctype>
 #include <sstream> // for std::stringstream
 #include <fstream>
 #include <iostream>
@@ -76,6 +79,138 @@ static int gameLogoWidth, gameLogoHeight;
 static int splashLogoWidth, splashLogoHeight;
 
 bool g_SaveOnExit = true;
+
+namespace {
+constexpr int RecentFilesSubmenuIndex = 5;
+constexpr int SettingsXisoDriveSubmenuIndex = 7;
+constexpr int XisoDriveIdBase = ID_SETTINGS_CONFIG_XISO_DRIVE_A;
+constexpr int XisoDriveIdLast = ID_SETTINGS_CONFIG_XISO_DRIVE_Z;
+
+bool IsXisoPath(const std::string& path)
+{
+	std::string extension = std::filesystem::path(path).extension().string();
+	std::transform(extension.begin(), extension.end(), extension.begin(), [](char c) {
+		return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	});
+	return extension == ".iso" || extension == ".xiso";
+}
+
+HMENU GetRecentFilesMenu(HMENU mainMenu)
+{
+	HMENU fileMenu = GetSubMenu(mainMenu, 0);
+	return GetSubMenu(fileMenu, RecentFilesSubmenuIndex);
+}
+
+HMENU GetXisoDriveMenu(HMENU mainMenu)
+{
+	HMENU settingsMenu = GetSubMenu(mainMenu, 3);
+	return GetSubMenu(settingsMenu, SettingsXisoDriveSubmenuIndex);
+}
+
+char GetConfiguredXisoDriveLetter()
+{
+	if (g_Settings->m_gui.szXisoMountDrive.size() == 1) {
+		return static_cast<char>(std::toupper(static_cast<unsigned char>(g_Settings->m_gui.szXisoMountDrive[0])));
+	}
+	return '\0';
+}
+
+bool IsDriveLetterAvailable(char driveLetter)
+{
+	if (driveLetter < 'A' || driveLetter > 'Z') {
+		return false;
+	}
+
+	const DWORD drives = GetLogicalDrives();
+	const DWORD mask = 1u << (driveLetter - 'A');
+	return (drives & mask) == 0;
+}
+
+void ValidateConfiguredXisoMountDrive(std::string* warningMessage)
+{
+	const char configuredDrive = GetConfiguredXisoDriveLetter();
+	if (configuredDrive == '\0' || IsDriveLetterAvailable(configuredDrive)) {
+		return;
+	}
+
+	g_Settings->m_gui.szXisoMountDrive = "auto";
+	if (warningMessage != nullptr) {
+		*warningMessage = "The configured XISO mount drive letter is already in use. Falling back to Auto.";
+	}
+}
+
+void RebuildXisoDriveMenu(HMENU mainMenu)
+{
+	HMENU xisoDriveMenu = GetXisoDriveMenu(mainMenu);
+	if (xisoDriveMenu == nullptr) {
+		return;
+	}
+
+	const char configuredDrive = GetConfiguredXisoDriveLetter();
+
+	while (GetMenuItemCount(xisoDriveMenu) > 0) {
+		RemoveMenu(xisoDriveMenu, 0, MF_BYPOSITION);
+	}
+
+	AppendMenu(xisoDriveMenu,
+		MF_STRING | (g_Settings->m_gui.szXisoMountDrive == "auto" ? MF_CHECKED : MF_UNCHECKED),
+		ID_SETTINGS_CONFIG_XISO_AUTO,
+		"&Auto");
+
+	for (UINT id = XisoDriveIdBase; id <= XisoDriveIdLast; ++id) {
+		const char driveLetter = static_cast<char>('A' + (id - XisoDriveIdBase));
+		if (!IsDriveLetterAvailable(driveLetter)) {
+			continue;
+		}
+
+		char label[] = { driveLetter, ':', '\0' };
+		AppendMenu(xisoDriveMenu,
+			MF_STRING | (configuredDrive == driveLetter ? MF_CHECKED : MF_UNCHECKED),
+			id,
+			label);
+	}
+}
+
+std::wstring MakeMountPointFromDriveLetter(char driveLetter)
+{
+	wchar_t mountPoint[] = { static_cast<wchar_t>(driveLetter), L':', L'\\', L'\0' };
+	return mountPoint;
+}
+
+bool ResolveXisoMountPoint(std::wstring& mountPoint, std::string& error)
+{
+	const char configuredDrive = GetConfiguredXisoDriveLetter();
+	if (configuredDrive != '\0') {
+		if (!IsDriveLetterAvailable(configuredDrive)) {
+			error = "The configured XISO mount drive letter is not currently available.";
+			return false;
+		}
+
+		mountPoint = MakeMountPointFromDriveLetter(configuredDrive);
+		return true;
+	}
+
+	for (char drive = 'Z'; drive >= 'D'; --drive) {
+		if (IsDriveLetterAvailable(drive)) {
+			mountPoint = MakeMountPointFromDriveLetter(drive);
+			return true;
+		}
+	}
+
+	error = "No free drive letters are available for mounting an XISO.";
+	return false;
+}
+
+std::string BuildDokanInstallMessage(const std::string& detail)
+{
+	std::string message = detail;
+	if (!message.empty() && message.back() != '\n') {
+		message += "\n\n";
+	}
+	message += "Install Dokan from https://dokan-dev.github.io/ and try again.";
+	return message;
+}
+} // namespace
 
 void ClearSymbolCache(const char sStorageLocation[MAX_PATH])
 {
@@ -221,6 +356,7 @@ WndMain::WndMain(HINSTANCE x_hInstance) :
 		// NOTE: Settings has already been initalized/load from file before WndMain constructed.
 
 		g_Settings->Verify();
+		ValidateConfiguredXisoMountDrive(&m_pendingStartupWarning);
 
 		// NOTE: This is a requirement for pre-verification from GUI. Used in CxbxrInitFilePaths function.
 		g_EmuShared->SetDataLocation(g_Settings->GetDataLocation().c_str());
@@ -261,11 +397,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
     {
         case WM_CREATE:
         {
-            // initialize menu
-            {
-                HMENU hMenu = LoadMenu(m_hInstance, MAKEINTRESOURCE(IDR_MAINMENU));
+			// initialize menu
+			{
+				HMENU hMenu = LoadMenu(m_hInstance, MAKEINTRESOURCE(IDR_MAINMENU));
 
-                SetMenu(hwnd, hMenu);
+				SetMenu(hwnd, hMenu);
             }
 
 			// Set window size to GUI dimensions
@@ -330,6 +466,11 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			// Remove rounded corners from the render window on Windows 11
 			const DWM_WINDOW_CORNER_PREFERENCE corner_preference = DWMWCP_DONOTROUND;
 			DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &corner_preference, sizeof(corner_preference));
+
+			if (!m_pendingStartupWarning.empty()) {
+				PopupWarning(hwnd, m_pendingStartupWarning.c_str());
+				m_pendingStartupWarning.clear();
+			}
 
             m_bCreated = true;
         }
@@ -597,7 +738,12 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			if(!m_bIsStarted) {
 				char DroppedXbeFilename[MAX_PATH];
 				DragQueryFile((HDROP)wParam, 0, DroppedXbeFilename, MAX_PATH);
-				OpenXbe(DroppedXbeFilename);
+				if (IsXisoPath(DroppedXbeFilename)) {
+					OpenXiso(DroppedXbeFilename);
+				}
+				else {
+					OpenXbe(DroppedXbeFilename);
+				}
 			}
 		}
 		break;
@@ -630,6 +776,30 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			}
 			break;
 
+			case ID_FILE_OPEN_XISO:
+			{
+				OPENFILENAME ofn = { 0 };
+
+				char filename[MAX_PATH] = { 0 };
+
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = m_hwnd;
+				ofn.lpstrFilter = "Xbox ISO Images (*.iso;*.xiso)\0*.iso;*.xiso\0";
+				ofn.lpstrFile = filename;
+				ofn.nMaxFile = MAX_PATH;
+				ofn.nFilterIndex = 1;
+				ofn.lpstrFileTitle = nullptr;
+				ofn.nMaxFileTitle = 0;
+				ofn.lpstrInitialDir = nullptr;
+				ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+				if (GetOpenFileName(&ofn) == TRUE)
+				{
+					OpenXiso(ofn.lpstrFile);
+				}
+			}
+			break;
+
 			case ID_FILE_CLOSE_XBE:
 				CloseXbe();
 				break;
@@ -655,6 +825,50 @@ LRESULT CALLBACK WndMain::WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			case ID_FILE_RXBE_9:
 			{
 				OpenMRU(LOWORD(wParam) - ID_FILE_RXBE_0);
+			}
+			break;
+
+			case ID_SETTINGS_CONFIG_XISO_AUTO:
+				g_Settings->m_gui.szXisoMountDrive = "auto";
+				RefreshMenus();
+				break;
+
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_A:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_B:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_C:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_D:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_E:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_F:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_G:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_H:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_I:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_J:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_K:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_L:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_M:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_N:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_O:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_P:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_Q:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_R:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_S:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_T:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_U:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_V:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_W:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_X:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_Y:
+			case ID_SETTINGS_CONFIG_XISO_DRIVE_Z:
+			{
+				const char driveLetter = static_cast<char>('A' + (LOWORD(wParam) - XisoDriveIdBase));
+				if (!IsDriveLetterAvailable(driveLetter)) {
+					PopupWarning(m_hwnd, "That XISO mount drive letter is already in use. Select Auto or another available drive.");
+					g_Settings->m_gui.szXisoMountDrive = "auto";
+				}
+				else {
+					g_Settings->m_gui.szXisoMountDrive = std::string(1, driveLetter);
+				}
+				RefreshMenus();
 			}
 			break;
 
@@ -1651,8 +1865,9 @@ void WndMain::RefreshMenus()
 	UINT MF_WhenXbeLoadedAndRunning = (XbeLoaded && Running) ? MF_ENABLED : MF_GRAYED;
 
     // disable/enable appropriate menus
-    {
+	{
         HMENU menu = GetMenu(m_hwnd);
+		RebuildXisoDriveMenu(menu);
 
         // file menu
         {
@@ -1663,7 +1878,7 @@ void WndMain::RefreshMenus()
 
             // recent xbe files menu
             {
-                HMENU rxbe_menu = GetSubMenu(file_menu, 4);
+                HMENU rxbe_menu = GetRecentFilesMenu(menu);
 
                 int max = m_dwRecentXbe;
                 for(int v=0;v<max;v++)
@@ -1807,6 +2022,9 @@ void WndMain::RefreshMenus()
 					break;
 			}
 
+			CheckMenuItem(settings_menu, ID_SETTINGS_CONFIG_XISO_AUTO,
+				g_Settings->m_gui.szXisoMountDrive == "auto" ? MF_CHECKED : MF_UNCHECKED);
+
 			chk_flag = (g_Settings->m_gui.bIgnoreInvalidXbeSig) ? MF_CHECKED : MF_UNCHECKED;
 			CheckMenuItem(settings_menu, ID_SETTINGS_IGNOREINVALIDXBESIG, chk_flag);
 
@@ -1901,8 +2119,7 @@ void WndMain::UpdateDebugConsoles()
 // update recent files menu
 void WndMain::UpdateRecentFiles()
 {
-    HMENU FileMenu = GetSubMenu(GetMenu(m_hwnd), 0);
-    HMENU RXbeMenu = GetSubMenu(FileMenu, 4);
+    HMENU RXbeMenu = GetRecentFilesMenu(GetMenu(m_hwnd));
 
     // clear existing menu items
     {
@@ -2012,8 +2229,50 @@ void WndMain::RefreshAllStatus()
 	DrawMenuBar(m_hwnd);
 }
 
-// open an xbe file
 void WndMain::OpenXbe(const char *x_filename)
+{
+	OpenXbeInternal(x_filename, x_filename);
+}
+
+void WndMain::OpenXiso(const char *x_filename)
+{
+	if (m_Xbe != nullptr) {
+		CloseXbe();
+		if (m_Xbe != nullptr) {
+			return;
+		}
+	}
+
+	std::string error;
+	if (!XisoMount::IsDokanAvailable(error)) {
+		PopupError(m_hwnd, BuildDokanInstallMessage(error).c_str());
+		return;
+	}
+
+	std::wstring mountPoint;
+	if (!ResolveXisoMountPoint(mountPoint, error)) {
+		PopupError(m_hwnd, error.c_str());
+		return;
+	}
+
+	if (!m_XisoMount) {
+		m_XisoMount = std::make_unique<XisoMount>();
+	}
+
+	const std::string absolutePath = std::filesystem::absolute(std::filesystem::path(x_filename)).string();
+	if (!m_XisoMount->Mount(absolutePath, mountPoint, error)) {
+		PopupError(m_hwnd, error.c_str());
+		return;
+	}
+
+	OpenXbeInternal(m_XisoMount->GetMountedDefaultXbePath().c_str(), absolutePath.c_str());
+	if (m_Xbe == nullptr && m_XisoMount) {
+		m_XisoMount->Unmount();
+	}
+}
+
+// open an xbe file
+void WndMain::OpenXbeInternal(const char *xbe_filename, const char *recent_path)
 {
     if (m_Xbe != nullptr) {
         CloseXbe();
@@ -2021,7 +2280,7 @@ void WndMain::OpenXbe(const char *x_filename)
             return;
     }
 
-    strcpy(m_XbeFilename, x_filename);
+    strcpy(m_XbeFilename, xbe_filename);
 
     m_Xbe = new Xbe(m_XbeFilename);
 
@@ -2081,12 +2340,12 @@ void WndMain::OpenXbe(const char *x_filename)
 	}
 
     // save this xbe to the list of recent xbe files
-    if(m_XbeFilename[0] != '\0') {
+    if(recent_path != nullptr && recent_path[0] != '\0') {
         bool found = false;
 
         // if this filename already exists, temporarily remove it
         for(int c=0, r=0;c<m_dwRecentXbe;c++, r++) {
-            if(strcmp(g_Settings->m_gui.szRecentXbeFiles[c].c_str(), m_XbeFilename) == 0) {
+            if(strcmp(g_Settings->m_gui.szRecentXbeFiles[c].c_str(), recent_path) == 0) {
                 found = true;
                 r++;
             }
@@ -2117,7 +2376,7 @@ void WndMain::OpenXbe(const char *x_filename)
         }
 
         // add new item as first index
-        g_Settings->m_gui.szRecentXbeFiles[0] = m_XbeFilename;
+        g_Settings->m_gui.szRecentXbeFiles[0] = recent_path;
 
         if (m_dwRecentXbe < RECENT_XBE_LIST_MAX) {
             m_dwRecentXbe++;
@@ -2145,11 +2404,15 @@ void WndMain::CloseXbe()
             return;
     }
 
-    printf("WndMain: %s unloaded.\n", m_Xbe->m_szAsciiTitle);
+    const std::string unloadedTitle = m_Xbe != nullptr ? m_Xbe->m_szAsciiTitle : "";
+    printf("WndMain: %s unloaded.\n", unloadedTitle.c_str());
 
     m_bXbeChanged = false;
 
     delete m_Xbe; m_Xbe = nullptr;
+	if (m_XisoMount) {
+		m_XisoMount->Unmount();
+	}
 
     UpdateCaption();
     RefreshMenus();
@@ -2180,8 +2443,7 @@ void WndMain::CloseXbe()
 void WndMain::OpenMRU(int mru)
 {
 	HMENU menu = GetMenu(m_hwnd);
-	HMENU file_menu = GetSubMenu(menu, 0);
-	HMENU rxbe_menu = GetSubMenu(file_menu, 4);
+	HMENU rxbe_menu = GetRecentFilesMenu(menu);
 
 	char szBuffer[270];
 
@@ -2189,7 +2451,12 @@ void WndMain::OpenMRU(int mru)
 
 	char *szFilename = (char*)((uint32_t)szBuffer + 5); // +5 skips over "&%d : " prefix (see UpdateRecentFiles)
 
-	OpenXbe(szFilename);
+	if (IsXisoPath(szFilename)) {
+		OpenXiso(szFilename);
+	}
+	else {
+		OpenXbe(szFilename);
+	}
 }
 
 // Open the dashboard xbe if found
