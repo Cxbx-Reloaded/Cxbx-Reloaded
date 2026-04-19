@@ -28,6 +28,7 @@
 #include <d3dcompiler.h>
 #include <vector>
 #include <future>
+#include <array>
 
 #include "core\hle\D3D8\XbD3D8Types.h" // for X_VSH_MAX_ATTRIBUTES
 
@@ -254,4 +255,7 @@ extern void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, 
 extern void CxbxImpl_DeleteVertexShader(DWORD Handle);
 extern void CxbxrImpl_RunVertexStateShader(DWORD Address, CONST FLOAT* pData);
 extern void CxbxVertexShaderSetFlags();
+extern float* CxbxGetVertexShaderConstantFloat4Ptr(unsigned const_index);
+extern const float* CxbxGetVertexShaderConstants();
+extern bool* CxbxGetVertexShaderConstantsDirtyFlags();
 #endif

@@ -8012,7 +8012,6 @@ void CxbxUpdateDirtyVertexShaderConstants(const float* constants, bool* dirty) {
 	}
 }
 
-extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
 // TODO : Once we're able to flush the NV2A push buffer
 // remove our patches on D3DDevice_SetVertexShaderConstant (and CxbxImpl_SetVertexShaderConstant)
 void CxbxUpdateHostVertexShaderConstants()
@@ -8034,16 +8033,19 @@ void CxbxUpdateHostVertexShaderConstants()
 	}
 	else {
 		// Write Xbox constants
-		auto pg = &(g_NV2A->GetDeviceState()->pgraph);
-		auto constant_floats = (float*)pg->vsh_constants;
+		auto constant_floats = CxbxGetVertexShaderConstants();
+		auto dirty_flags = CxbxGetVertexShaderConstantsDirtyFlags();
 
 		if (isXboxConstants) {
 			// Only need to overwrite what's changed
-			CxbxUpdateDirtyVertexShaderConstants(constant_floats, pg->vsh_constants_dirty);
+			CxbxUpdateDirtyVertexShaderConstants(constant_floats, dirty_flags);
 		}
 		else {
 			// We need to update everything
 			g_pD3DDevice->SetVertexShaderConstantF(0, constant_floats, X_D3DVS_CONSTREG_COUNT);
+			for (int i = 0; i < X_D3DVS_CONSTREG_COUNT; i++) {
+				dirty_flags[i] = false;
+			}
 		}
 
 		// We've written the Xbox constants

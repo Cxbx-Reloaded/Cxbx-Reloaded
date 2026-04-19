@@ -277,16 +277,6 @@ uint32_t HLE_read_NV2A_pgraph_register(const int reg)
 	return pg->regs[reg];
 }
 
-float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned slot)
-{
-	NV2AState* dev = g_NV2A->GetDeviceState();
-	PGRAPHState *pg = &(dev->pgraph);
-
-	// See CASE_16(NV097_SET_VERTEX_DATA4UB, 4) in LLE pgraph_handle_method()
-	VertexAttribute *vertex_attribute = &pg->vertex_attributes[slot];
-	return vertex_attribute->inline_value;
-}
-
 uint32_t HLE_read_NV2A_vertex_program_slot(unsigned program_load, unsigned slot)
 {
 	NV2AState* dev = g_NV2A->GetDeviceState();
@@ -297,16 +287,6 @@ uint32_t HLE_read_NV2A_vertex_program_slot(unsigned program_load, unsigned slot)
 	uint32_t value = pg->program_data[program_load][slot % 4];
 
 	return value;
-}
-
-float *HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index)
-{
-	NV2AState* dev = g_NV2A->GetDeviceState();
-	PGRAPHState* pg = &(dev->pgraph);
-
-	// See CASE_32(NV097_SET_TRANSFORM_CONSTANT, 4) in LLE pgraph_handle_method()
-	assert(const_index < NV2A_VERTEXSHADER_CONSTANTS);
-	return (float*)&(pg->vsh_constants[const_index][0]);
 }
 
 // For now, skip the cache, but handle the pgraph method directly

@@ -28,6 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::VTXB
 
 #include <unordered_map>
+#include <array>
 #include "core\kernel\memory-manager\VMManager.h"
 #include "common\util\hasher.h"
 #include "core\kernel\support\Emu.h"
@@ -59,8 +60,7 @@ UINT                          g_InlineVertexBuffer_TableOffset = 0;
 
 // Copy of active Xbox D3D Vertex Streams (and strides), set by [D3DDevice|CxbxImpl]_SetStreamSource*
 xbox::X_STREAMINPUT g_Xbox_SetStreamSource[X_VSH_MAX_STREAMS] = { 0 }; // Note : .Offset member is never set (so always 0)
-
-extern float *HLE_get_NV2A_vertex_attribute_value_pointer(unsigned VertexSlot); // Declared in PushBuffer.cpp
+static std::array<std::array<float, 4>, X_VSH_MAX_ATTRIBUTES> g_EmuD3DVertexAttributeValues = {};
 
 void *GetDataFromXboxResource(xbox::X_D3DResource *pXboxResource);
 bool GetHostRenderTargetDimensions(DWORD* pHostWidth, DWORD* pHostHeight, IDirect3DSurface* pHostRenderTarget = nullptr);
@@ -750,8 +750,7 @@ void CxbxSetVertexAttribute(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 		return;
 	}
 
-	// Write these values to the NV2A registers, so that we read them back when needed
-	float* attribute_floats = HLE_get_NV2A_vertex_attribute_value_pointer(Register);
+	float* attribute_floats = g_EmuD3DVertexAttributeValues[Register].data();
 	attribute_floats[0] = a;
 	attribute_floats[1] = b;
 	attribute_floats[2] = c;
@@ -846,9 +845,9 @@ void CxbxImpl_SetVertexData4f(int Register, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 
 	// Is this the initial call after D3DDevice_Begin() ?
 	if (g_InlineVertexBuffer_TableOffset == 0) {
-		// Read starting values for all inline vertex attributes from HLE NV2A pgraph (converting them to required types) :
+		// Read starting values for all inline vertex attributes from EmuD3D-managed state.
 		for (int i = 0; i < X_VSH_MAX_ATTRIBUTES; i++) {
-			g_InlineVertexBuffer_Table[0].Slots[i] = D3DXVECTOR4(HLE_get_NV2A_vertex_attribute_value_pointer(i));
+			g_InlineVertexBuffer_Table[0].Slots[i] = D3DXVECTOR4(g_EmuD3DVertexAttributeValues[i].data());
 		}
 		// Note : Because all members are assigned an initial value, there's no need for a clearing constructor for _D3DIVB!
 	}

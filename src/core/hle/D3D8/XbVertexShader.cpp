@@ -85,6 +85,24 @@ static xbox::X_D3DVertexShader g_Xbox_VertexShader_ForFVF = {};
 
 static uint32_t                g_X_VERTEXSHADER_FLAG_PROGRAM; // X_VERTEXSHADER_FLAG_PROGRAM flag varies per XDK, so it is set on runtime
 static uint32_t                g_X_VERTEXSHADER_FLAG_VALID_MASK; // For a test case
+static std::array<float, X_D3DVS_CONSTREG_COUNT * 4> g_EmuD3DVertexShaderConstants = {};
+static std::array<bool, X_D3DVS_CONSTREG_COUNT> g_EmuD3DVertexShaderConstantsDirty = {};
+
+float* CxbxGetVertexShaderConstantFloat4Ptr(unsigned const_index)
+{
+	assert(const_index < X_D3DVS_CONSTREG_COUNT);
+	return &g_EmuD3DVertexShaderConstants[const_index * 4];
+}
+
+const float* CxbxGetVertexShaderConstants()
+{
+	return g_EmuD3DVertexShaderConstants.data();
+}
+
+bool* CxbxGetVertexShaderConstantsDirtyFlags()
+{
+	return g_EmuD3DVertexShaderConstantsDirty.data();
+}
 
 void CxbxVertexShaderSetFlags()
 {
@@ -1611,16 +1629,12 @@ void CxbxImpl_SetVertexShaderConstant(INT Register, PVOID pConstantData, DWORD C
 	if (Register < 0) LOG_TEST_CASE("Register < 0");
 	if (Register + ConstantCount > X_D3DVS_CONSTREG_COUNT) LOG_TEST_CASE("Register + ConstantCount > X_D3DVS_CONSTREG_COUNT");
 
-	// Write Vertex Shader constants in nv2a
-	extern float* HLE_get_NV2A_vertex_constant_float4_ptr(unsigned const_index); // TMP glue
-	float* constant_floats = HLE_get_NV2A_vertex_constant_float4_ptr(Register);
+	// Maintain Xbox vertex shader constants in EmuD3D instead of mirroring through NV2A state.
+	float* constant_floats = CxbxGetVertexShaderConstantFloat4Ptr(Register);
 	memcpy(constant_floats, pConstantData, ConstantCount * sizeof(float) * 4);
 
-	// Mark the constant as dirty, so that CxbxUpdateHostVertexShaderConstants will pick it up
-	extern NV2ADevice* g_NV2A; // TMP glue
-	auto nv2a = g_NV2A->GetDeviceState();
 	for (DWORD i = 0; i < ConstantCount; i++) {
-		nv2a->pgraph.vsh_constants_dirty[Register + i] = true;
+		g_EmuD3DVertexShaderConstantsDirty[Register + i] = true;
 	}
 }
 
@@ -1652,9 +1666,6 @@ void CxbxrImpl_RunVertexStateShader(DWORD Address, CONST FLOAT *pData)
 		return;
 	}
 
-	NV2AState* dev = g_NV2A->GetDeviceState();
-	PGRAPHState* pg = &(dev->pgraph);
-
 	Nv2aVshProgram program = {}; // Note: This nulls program.steps
 	// TODO : Retain program globally and perform nv2a_vsh_parse_program only when
 	//        the address-range we're about to emulate was modified since last parse.
@@ -1672,13 +1683,13 @@ void CxbxrImpl_RunVertexStateShader(DWORD Address, CONST FLOAT *pData)
 
 	Nv2aVshCPUXVSSExecutionState state_linkage;
 	Nv2aVshExecutionState state = nv2a_vsh_emu_initialize_xss_execution_state(
-		&state_linkage, (float*)pg->vsh_constants); // Note : This wil memset(state_linkage, 0)
+		&state_linkage, g_EmuD3DVertexShaderConstants.data()); // Note : This wil memset(state_linkage, 0)
 	if (pData != nullptr)
 		//if pData != nullptr, then it contains v0.xyzw, we shall copy the binary content directly.
 		memcpy(state_linkage.input_regs, pData, sizeof(state_linkage.input_regs));
 
-	nv2a_vsh_emu_execute_track_context_writes(&state, &program, pg->vsh_constants_dirty);
-	// Note: Above emulation's primary purpose is to update pg->vsh_constants and pg->vsh_constants_dirty
+	nv2a_vsh_emu_execute_track_context_writes(&state, &program, g_EmuD3DVertexShaderConstantsDirty.data());
+	// Note: Above emulation's primary purpose is to update EmuD3D's vertex shader constants and dirty flags
 	// therefor, nothing else needs to be done here, other than to cleanup
 
 	nv2a_vsh_program_destroy(&program); // Note: program.steps will be free'ed
