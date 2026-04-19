@@ -243,17 +243,6 @@ std::unique_ptr<AffinityPolicy> AffinityPolicy::InitPolicy()
 	std::unique_ptr<AffinityPolicy> result;
 
 	if (!g_UseAllCores) {
-		// Restrict the process to CPUs 0 and 1 for best single-threaded emulation
-		// performance. Keeping execution on two adjacent logical cores (same physical
-		// core or first two hyperthreads) minimises cache thrash and scheduler
-		// migration. The existing policy then splits core 0 (Xbox thread) from
-		// core 1 (host threads) as normal.
-		SYSTEM_INFO si{};
-		GetSystemInfo(&si);
-		if (si.dwNumberOfProcessors >= 2) {
-			SetProcessAffinityMask(GetCurrentProcess(), 0x3); // CPU 0 + CPU 1
-		}
-
 		if (auto win10Policy = std::make_unique<Win10Policy>(); win10Policy->Initialize()) {
 			result = std::move(win10Policy);
 		} else if (auto win7Policy = std::make_unique<Win7Policy>(); win7Policy->Initialize()) {
