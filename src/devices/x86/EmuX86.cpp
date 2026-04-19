@@ -44,6 +44,7 @@
 
 #include <assert.h>
 #include "devices\Xbox.h" // For g_PCIBus
+#include "common/PerfTrace.h" // For PERF_SCOPE(PERF_CAT_EMU_X86)
 #include <atomic>
 #include <map>
 #include "Logging.h"
@@ -2930,6 +2931,7 @@ int EmuX86_OpcodeSize(uint8_t *Eip)
 
 bool EmuX86_DecodeException(LPEXCEPTION_POINTERS e)
 {
+	PERF_SCOPE(PERF_CAT_EMU_X86);
 	// Decoded instruction information.
 	// Opcode handler note : 
 	// If an opcode or one of it's operand can't be decoded, that's a clear failure.

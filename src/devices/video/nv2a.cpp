@@ -1403,7 +1403,11 @@ uint64_t NV2ADevice::vblank_next(uint64_t now)
 
 	if (now >= next) {
 		m_nv2a_state->vblank_cb(m_nv2a_state);
-		m_nv2a_state->vblank_last = get_now();
+		// Use the SCHEDULED fire time (not get_now()) so that ISR execution latency
+		// is not absorbed into the next vblank period. Without this fix the vblank
+		// fires every (16667 + ISR_time) µs instead of exactly 16667 µs, causing
+		// slow drift and timing jitter visible as alternating long/short frame times.
+		m_nv2a_state->vblank_last = next;
 		return vblank_period;
 	}
 
@@ -1427,7 +1431,7 @@ uint64_t NV2ADevice::ptimer_next(uint64_t now)
 					HalSystemInterrupts[3].Trigger(EmuInterruptList[3]);
 				}
 			}
-			m_nv2a_state->ptimer_last = get_now();
+			m_nv2a_state->ptimer_last = next; // use scheduled time to avoid ISR drift
 			return ptimer_period;
 		}
 

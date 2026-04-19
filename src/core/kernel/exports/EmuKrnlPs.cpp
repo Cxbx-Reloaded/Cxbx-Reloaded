@@ -44,6 +44,7 @@
 #include "core\kernel\support\Emu.h" // For EmuLog(LOG_LEVEL::WARNING, )
 #include "core\kernel\support\EmuFS.h" // For EmuGenerateFS
 #include "core\kernel\support\NativeHandle.h"
+#include "common/PerfTrace.h"  // For PerfTrace_RegisterXboxThread
 
 // prevent name collisions
 namespace NtDll
@@ -404,6 +405,8 @@ XBSYSAPI EXPORTNUM(255) xbox::ntstatus_xt NTAPI xbox::PsCreateSystemThreadEx
 
 		KeQuerySystemTime(&eThread->CreateTime);
 		RegisterXboxObject(eThread, handle);
+		// Register the native thread handle so PerfTrace can account for its CPU time per-frame.
+		PerfTrace_RegisterXboxThread(handle);
 
 		eThread->Tcb.Priority = GetThreadPriority(handle);
 		g_AffinityPolicy->SetAffinityXbox(handle);

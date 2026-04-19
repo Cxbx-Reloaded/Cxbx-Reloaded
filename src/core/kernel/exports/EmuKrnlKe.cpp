@@ -83,6 +83,7 @@ namespace NtDll
 #include "core\kernel\support\NativeHandle.h"
 #include "Timer.h"
 #include "Util.h"
+#include "common/PerfTrace.h" // For PERF_SCOPE(PERF_CAT_KE_*)
 
 #pragma warning(disable:4005) // Ignore redefined status values
 #include <ntstatus.h>
@@ -756,6 +757,8 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 		LOG_FUNC_ARG(Interval)
 		LOG_FUNC_END;
 
+	PERF_SCOPE(PERF_CAT_KE_DELAY);
+
 	// Because user APCs from NtQueueApcThread are now handled by the kernel, we need to wait for them ourselves
 	// We can't remove NtDll::NtDelayExecution until all APCs queued by Io are implemented by our kernel as well
 	// Test case: Metal Slug 3
@@ -764,6 +767,19 @@ XBSYSAPI EXPORTNUM(99) xbox::ntstatus_xt NTAPI xbox::KeDelayExecutionThread
 	kThread->WaitStatus = X_STATUS_SUCCESS;
 	if (!AddWaitObject(kThread, Interval)) {
 		RETURN(X_STATUS_TIMEOUT);
+	}
+
+	// Issue a precise host-side sleep for the requested interval before entering the yield-spin WaitApc loop.
+	// Without this, the WaitApc loop spins via yield() which has non-deterministic scheduler latency (1–3ms
+	// on Windows even with timeBeginPeriod(1)). For frame-timing calls (e.g. VC3 sleeping 16.67ms/vblank)
+	// that 2–3ms overshoot causes the game to miss its vblank window and drop from 60fps to 30fps.
+	// SleepPrecise sleeps for (interval - 2ms) then spin-waits for the last 2ms, so WaitApc exits immediately.
+	// Absolute timeouts (QuadPart > 0) are not handled here — they are rare and correctness isn't impacted.
+	if (Interval != nullptr && Interval->QuadPart < 0) {
+		// Interval is a relative timeout in 100ns units (negative). Convert to nanoseconds.
+		int64_t intervalNs = (-Interval->QuadPart) * 100LL;
+		auto target = std::chrono::steady_clock::now() + std::chrono::nanoseconds(intervalNs);
+		SleepPrecise(target);
 	}
 
 	xbox::ntstatus_xt ret = WaitApc<true>([Alertable](xbox::PKTHREAD kThread) -> std::optional<ntstatus_xt> {
@@ -2476,6 +2492,8 @@ XBSYSAPI EXPORTNUM(159) xbox::ntstatus_xt NTAPI xbox::KeWaitForSingleObject
 		LOG_FUNC_ARG(Alertable)
 		LOG_FUNC_ARG(Timeout)
 		LOG_FUNC_END;
+
+	PERF_SCOPE(PERF_CAT_KE_WAIT);
 
 	// If the lock is not already held, lock it
 	PRKTHREAD Thread = KeGetCurrentThread();

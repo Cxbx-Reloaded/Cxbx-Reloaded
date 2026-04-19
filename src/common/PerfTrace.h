@@ -25,6 +25,8 @@
 #ifndef PERF_REPORT_INTERVAL_S
 #define PERF_REPORT_INTERVAL_S 5.0
 #endif
+// Maximum number of Xbox threads to track for CPU time accounting
+#define PERF_MAX_XBOX_THREADS 32
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Category IDs — add new ones here and mirror in PerfTrace.cpp's g_catNames[]
@@ -47,7 +49,13 @@ enum PerfCat : int {
     PERF_CAT_VS_DECL         = 15, // CxbxUpdateHostVertexDeclaration only
     PERF_CAT_VS_CONST        = 16, // CxbxUpdateHostVertexShaderConstants only
     PERF_CAT_VIEWPORT        = 17, // CxbxUpdateHostViewport only
-    PERF_CAT_COUNT           = 18,
+    PERF_CAT_GET_BACKBUFFER  = 18, // GetHostSurface for backbuffer in swap path
+    PERF_CAT_FRAME_SLEEP     = 19, // SleepPrecise frame limiter inside Swap
+    PERF_CAT_ENDSCENE        = 20, // EndScene + GPU flush before Present
+    PERF_CAT_EMU_X86         = 21, // EmuX86_DecodeException VEH handler (privileged instrs)
+    PERF_CAT_KE_WAIT         = 22, // KeWaitForSingleObject / KeWaitForMultipleObjects
+    PERF_CAT_KE_DELAY        = 23, // KeDelayExecutionThread
+    PERF_CAT_COUNT           = 24,
 };
 
 // ── internal state (defined in PerfTrace.h to keep it header-only) ───────────
@@ -69,19 +77,33 @@ struct State {
     CatStats cats[PERF_CAT_COUNT];
     long long windowStartTick;
     long long swapStartTick;  // set in OnSwapBegin, read in OnSwapEnd
+    long long lastSwapBeginTick; // for computing frame-to-frame time
     long long freq;
     unsigned long long frameCount;
     unsigned long long windowFrameCount;
+    double smoothFps;  // EMA-smoothed FPS (alpha=0.1)
     FILE* logFile;
     bool initialized;
     // simple per-frame accumulators reset each Swap
     CatStats frame[PERF_CAT_COUNT];
+    // Xbox thread CPU time tracking (QueryThreadCycleTime, TSC-based)
+    HANDLE xboxThreads[PERF_MAX_XBOX_THREADS];        // duplicated native Win32 handles
+    ULONGLONG xboxThreadCycleStart[PERF_MAX_XBOX_THREADS]; // cumulative TSC cycles at last sample
+    ULONGLONG xcpuCyclesPerFrame;  // last frame: total Xbox-thread TSC cycles (converted to ms using cpuGhz)
+    double cpuGhz;        // measured CPU frequency (GHz) used to convert TSC cycles -> ms
+    int xboxThreadCount;  // number of registered Xbox threads (written atomically)
+    double xcpuMs;        // last frame: total Xbox-thread CPU time in ms
+    // Render thread tracking: host thread ID of the thread that calls D3DDevice_Swap
+    DWORD renderThreadId; // set each frame in OnSwapBegin from GetCurrentThreadId()
+    // Per-frame render-thread exclusive stats for KE_WAIT and KE_DELAY
+    CatStats frameRt[2]; // [0]=KE_WAIT, [1]=KE_DELAY, render thread only
 };
 
 extern State g_state;
 extern const char* g_catNames[PERF_CAT_COUNT];
 
 void Init(const char* logPath);
+void RegisterXboxThread(HANDLE h); // duplicate h and track its CPU time per-frame
 void Report();          // called by PerfTrace_OnSwap every N seconds
 void OnSwapBegin();     // resets per-frame accumulators, bumps frame counter
 void OnSwapEnd();       // accumulates frame totals into window totals, maybe Report
@@ -112,6 +134,14 @@ struct PerfScopeGuard {
         s.cats[cat].totalTicks += elapsed;
         s.cats[cat].calls++;
         if (elapsed > s.cats[cat].maxTicks) s.cats[cat].maxTicks = elapsed;
+        // render-thread exclusive tracking for kewait/kedelay
+        if ((cat == PERF_CAT_KE_WAIT || cat == PERF_CAT_KE_DELAY) && s.renderThreadId != 0) {
+            if (GetCurrentThreadId() == s.renderThreadId) {
+                int rtIdx = (cat == PERF_CAT_KE_WAIT) ? 0 : 1;
+                s.frameRt[rtIdx].totalTicks += elapsed;
+                s.frameRt[rtIdx].calls++;
+            }
+        }
     }
 };
 
@@ -135,6 +165,13 @@ inline void PerfTrace_OnSwapBegin() {
 // Call at the END of EMUPATCH(D3DDevice_Swap).
 inline void PerfTrace_OnSwapEnd() {
     if (g_PerfTraceEnabled) PerfTraceInternal::OnSwapEnd();
+}
+
+// Register a native Win32 thread handle to have its CPU time tracked per-frame.
+// Safe to call from any thread; a duplicate of h is stored internally.
+// Typically called once per Xbox thread from PsCreateSystemThreadEx.
+inline void PerfTrace_RegisterXboxThread(HANDLE h) {
+    if (g_PerfTraceEnabled) PerfTraceInternal::RegisterXboxThread(h);
 }
 
 #endif // PERFTRACE_H

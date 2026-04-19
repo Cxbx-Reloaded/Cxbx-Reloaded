@@ -4254,6 +4254,18 @@ void CxbxUpdateHostViewPortOffsetAndScaleConstants()
 
 }
 
+// Helper to quickly check if the render target struct is committed in host memory
+static bool CheckXboxRenderTargetReadable() {
+    if (!g_pXbox_RenderTarget) return false;
+    __try {
+        volatile DWORD _ = g_pXbox_RenderTarget->Data + g_pXbox_RenderTarget->Size + g_pXbox_RenderTarget->Common;
+        return true;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER) {
+        return false;
+    }
+}
+
 // ******************************************************************
 // * patch: D3DDevice_SetViewport
 // ******************************************************************
@@ -4289,13 +4301,7 @@ void CxbxImpl_SetViewport(xbox::X_D3DVIEWPORT8* pViewport)
 	// Guard against Xbox surface structs in Xbox VM regions not committed in host memory
 	// (e.g. Chihiro arcade games with firmware pre-mapped surfaces, or after NtFreeVirtualMemory).
 	// Must be checked unconditionally — the same pointer can become decommitted at any time.
-	{
-		MEMORY_BASIC_INFORMATION mbi;
-		if (VirtualQuery(g_pXbox_RenderTarget, &mbi, sizeof(mbi)) == 0
-		    || mbi.State != MEM_COMMIT) {
-			return; // Surface struct not CPU-accessible; skip dimension-based viewport clamping
-		}
-	}
+	if (!CheckXboxRenderTargetReadable()) { return; /* Surface struct not CPU-accessible; skip dimension-based viewport clamping */ }
 
 	float rendertargetBaseWidth;
 	float rendertargetBaseHeight;
@@ -5317,22 +5323,7 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             // but caused garbage pixels in the un-blitted region on AMD GPUs.
             // The 3 extra API calls per frame (GetRenderTarget / SetRenderTarget×2) are
             // far cheaper than the visual corruption they prevent.
-            {
-                IDirect3DSurface* pExistingRenderTarget = nullptr;
-                hRet = g_pD3DDevice->GetRenderTarget(0, &pExistingRenderTarget);
-                if (hRet == D3D_OK) {
-                    g_pD3DDevice->SetRenderTarget(0, pCurrentHostBackBuffer);
-                    g_pD3DDevice->Clear(
-                        /*Count=*/0,
-                        /*pRects=*/nullptr,
-                        D3DCLEAR_TARGET,
-                        /*Color=*/0xFF000000,
-                        /*Z=*/1.0f,
-                        /*Stencil=*/0);
-                    g_pD3DDevice->SetRenderTarget(0, pExistingRenderTarget);
-                    pExistingRenderTarget->Release();
-                }
-            }
+            g_pD3DDevice->ColorFill(pCurrentHostBackBuffer, nullptr, 0xFF000000);
 
             // Blit Xbox BackBuffer to host BackBuffer
             hRet = g_pD3DDevice->StretchRect(
@@ -9000,8 +8991,7 @@ static void CxbxImpl_SetRenderTarget
     // Validate that our host render target is still the correct size
     DWORD HostRenderTarget_Width, HostRenderTarget_Height;
     if (GetHostRenderTargetDimensions(&HostRenderTarget_Width, &HostRenderTarget_Height, pHostRenderTarget)) {
-        MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery(g_pXbox_RenderTarget, &mbi, sizeof(mbi)) && mbi.State == MEM_COMMIT) {
+        if (CheckXboxRenderTargetReadable()) {
             DWORD XboxRenderTarget_Width = GetPixelContainerWidth(g_pXbox_RenderTarget);
             DWORD XboxRenderTarget_Height = GetPixelContainerHeight(g_pXbox_RenderTarget);
             ValidateRenderTargetDimensions(HostRenderTarget_Width, HostRenderTarget_Height, XboxRenderTarget_Width, XboxRenderTarget_Height);
