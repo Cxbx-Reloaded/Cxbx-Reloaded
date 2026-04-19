@@ -78,9 +78,13 @@
 #include <process.h>
 #include <chrono>
 #include <clocale>
+#include <cstdint>
 #include <functional>
+#include <iterator>
+#include <list>
 #include <unordered_map>
 #include <thread>
+#include <vector>
 
 #include <wrl/client.h>
 
@@ -2473,25 +2477,127 @@ void CxbxReleaseQuadListToTriangleListIndexData(void* pHostIndexData)
 
 class ConvertedIndexBuffer {
 public:
+	uint32_t LookupKey = 0;
 	uint64_t Hash = 0;
-	DWORD IndexCount = 0;
-	IDirect3DIndexBuffer* pHostIndexBuffer = nullptr;
+	uint64_t FastSignature = 0;
+	DWORD XboxIndexCount = 0;
+	DWORD HostIndexCount = 0;
+	ComPtr<IDirect3DIndexBuffer> HostIndexBuffer;
 	INDEX16 LowIndex = 0;
 	INDEX16 HighIndex = 0;
-
-	~ConvertedIndexBuffer()
-	{
-		if (pHostIndexBuffer != nullptr) {
-			pHostIndexBuffer->Release();
-		}
-	}
+	uint64_t LastUseTick = 0;
+	size_t BucketIndex = 0;
 };
 
-	std::unordered_map<uint32_t, ConvertedIndexBuffer> g_IndexBufferCache;
+using IndexBufferCacheIterator = std::list<ConvertedIndexBuffer>::iterator;
+
+static constexpr size_t INDEX_BUFFER_CACHE_VARIANTS_PER_ADDRESS = 8;
+static std::list<ConvertedIndexBuffer> g_IndexBufferCacheLru;
+static std::unordered_map<uint32_t, std::vector<IndexBufferCacheIterator>> g_IndexBufferCacheByAddress;
+static uint64_t g_IndexBufferCacheTick = 0;
+
+static uint32_t CxbxMakeIndexBufferLookupKey(const INDEX16* pXboxIndexData, bool bConvertQuadListToTriangleList)
+{
+	uint32_t LookupKey = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(pXboxIndexData));
+	if (bConvertQuadListToTriangleList) {
+		// Guest index buffers are 16-bit aligned, so we can encode the converted/non-converted variant in bit 0.
+		LookupKey |= 1;
+	}
+
+	return LookupKey;
+}
+
+static uint64_t CxbxComputeIndexBufferFastSignature(const INDEX16* pXboxIndexData, unsigned XboxIndexCount)
+{
+	if (XboxIndexCount == 0) {
+		return 0;
+	}
+
+	// Sample a few stable positions so we can cheaply reject most mismatches before falling back to a full hash.
+	const unsigned MidIndex = XboxIndexCount / 2;
+	const unsigned TailIndex = XboxIndexCount - 1;
+
+	uint64_t Signature = static_cast<uint64_t>(XboxIndexCount);
+	Signature ^= static_cast<uint64_t>(pXboxIndexData[0]) << 16;
+	Signature ^= static_cast<uint64_t>(pXboxIndexData[MidIndex]) << 32;
+	Signature ^= static_cast<uint64_t>(pXboxIndexData[TailIndex]) << 48;
+
+	return Signature;
+}
+
+static void CxbxTouchIndexBufferCacheEntry(IndexBufferCacheIterator CacheEntryIt)
+{
+	CacheEntryIt->LastUseTick = ++g_IndexBufferCacheTick;
+	if (CacheEntryIt != g_IndexBufferCacheLru.begin()) {
+		g_IndexBufferCacheLru.splice(g_IndexBufferCacheLru.begin(), g_IndexBufferCacheLru, CacheEntryIt);
+	}
+}
+
+static void CxbxEraseIndexBufferCacheEntry(IndexBufferCacheIterator CacheEntryIt)
+{
+	const auto BucketIt = g_IndexBufferCacheByAddress.find(CacheEntryIt->LookupKey);
+	assert(BucketIt != g_IndexBufferCacheByAddress.end());
+
+	auto& Bucket = BucketIt->second;
+	assert(CacheEntryIt->BucketIndex < Bucket.size());
+
+	const size_t RemovedIndex = CacheEntryIt->BucketIndex;
+	if (RemovedIndex + 1 != Bucket.size()) {
+		Bucket[RemovedIndex] = Bucket.back();
+		Bucket[RemovedIndex]->BucketIndex = RemovedIndex;
+	}
+	Bucket.pop_back();
+	if (Bucket.empty()) {
+		g_IndexBufferCacheByAddress.erase(BucketIt);
+	}
+
+	g_IndexBufferCacheLru.erase(CacheEntryIt);
+}
+
+static void CxbxTrimIndexBufferAddressBucket(uint32_t LookupKey)
+{
+	const auto BucketIt = g_IndexBufferCacheByAddress.find(LookupKey);
+	if (BucketIt == g_IndexBufferCacheByAddress.end()) {
+		return;
+	}
+
+	auto& Bucket = BucketIt->second;
+	while (Bucket.size() > INDEX_BUFFER_CACHE_VARIANTS_PER_ADDRESS) {
+		auto OldestIt = Bucket.front();
+		for (auto CandidateIt : Bucket) {
+			if (CandidateIt->LastUseTick < OldestIt->LastUseTick) {
+				OldestIt = CandidateIt;
+			}
+		}
+
+		CxbxEraseIndexBufferCacheEntry(OldestIt);
+		EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Evicted stale per-address variant for key 0x%08X", LookupKey);
+	}
+}
+
+static void CxbxTrimIndexBufferCache()
+{
+	while (g_IndexBufferCacheLru.size() > INDEX_BUFFER_CACHE_SIZE) {
+		const uint32_t LookupKey = g_IndexBufferCacheLru.back().LookupKey;
+		CxbxEraseIndexBufferCacheEntry(std::prev(g_IndexBufferCacheLru.end()));
+		EmuLog(LOG_LEVEL::DEBUG, "CxbxUpdateActiveIndexBuffer: Evicted LRU index buffer cache entry for key 0x%08X", LookupKey);
+	}
+}
 
 void CxbxRemoveIndexBuffer(PWORD pData)
 {
-	// HACK: Never Free
+	const auto RemoveLookupKey = [](uint32_t LookupKey)
+	{
+		auto BucketIt = g_IndexBufferCacheByAddress.find(LookupKey);
+		while (BucketIt != g_IndexBufferCacheByAddress.end() && !BucketIt->second.empty()) {
+			CxbxEraseIndexBufferCacheEntry(BucketIt->second.back());
+			BucketIt = g_IndexBufferCacheByAddress.find(LookupKey);
+		}
+	};
+
+	const uint32_t LookupKey = CxbxMakeIndexBufferLookupKey(reinterpret_cast<INDEX16*>(pData), false);
+	RemoveLookupKey(LookupKey);
+	RemoveLookupKey(LookupKey | 1);
 }
 
 IDirect3DIndexBuffer* CxbxCreateIndexBuffer(unsigned IndexCount)
@@ -2536,57 +2642,75 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 {
 	LOG_INIT; // Allows use of DEBUG_D3DRESULT
 
-	uint32_t LookupKey = (uint32_t)pXboxIndexData;
+	const uint32_t LookupKey = CxbxMakeIndexBufferLookupKey(pXboxIndexData, bConvertQuadListToTriangleList);
 	unsigned RequiredIndexCount = XboxIndexCount;
 
 	if (bConvertQuadListToTriangleList) {
 		LOG_TEST_CASE("bConvertQuadListToTriangleList");
 		RequiredIndexCount = QuadToTriangleVertexCount(XboxIndexCount);
-		// For now, indicate the quad-to-triangles case using the otherwise
-		// (due to alignment) always-zero least significant bit :
-		LookupKey |= 1;
 	}
 
-	// Poor-mans eviction policy : when exceeding treshold, clear entire cache :
-	if (g_IndexBufferCache.size() > INDEX_BUFFER_CACHE_SIZE) {
-		g_IndexBufferCache.clear(); // Note : ConvertedIndexBuffer destructor will release any assigned pHostIndexBuffer
+	// Keep a small set of variants per guest address so games can rotate through a handful of layouts
+	// without forcing a global cache flush or re-upload every frame.
+	IndexBufferCacheIterator CacheEntryIt = g_IndexBufferCacheLru.end();
+	const uint64_t FastSignature = CxbxComputeIndexBufferFastSignature(pXboxIndexData, XboxIndexCount);
+	bool bHasFullHash = false;
+	uint64_t FullHash = 0;
+
+	const auto BucketIt = g_IndexBufferCacheByAddress.find(LookupKey);
+	if (BucketIt != g_IndexBufferCacheByAddress.end()) {
+		for (auto CandidateIt : BucketIt->second) {
+			if (CandidateIt->XboxIndexCount != XboxIndexCount || CandidateIt->FastSignature != FastSignature) {
+				continue;
+			}
+
+			if (!bHasFullHash) {
+				FullHash = ComputeHash(pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
+				bHasFullHash = true;
+			}
+
+			if (CandidateIt->Hash == FullHash) {
+				CacheEntryIt = CandidateIt;
+				break;
+			}
+		}
 	}
 
-	// Create a reference to the active buffer
-	ConvertedIndexBuffer& CacheEntry = g_IndexBufferCache[LookupKey];
+	if (CacheEntryIt == g_IndexBufferCacheLru.end()) {
+		if (!bHasFullHash) {
+			FullHash = ComputeHash(pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
+			bHasFullHash = true;
+		}
 
-	// If the current index buffer size is too small, free it, so it'll get re-created
-	bool bNeedRepopulation = CacheEntry.IndexCount < RequiredIndexCount;
-	if (bNeedRepopulation) {
-		if (CacheEntry.pHostIndexBuffer != nullptr)
-			CacheEntry.pHostIndexBuffer->Release();
+		g_IndexBufferCacheLru.emplace_front();
+		CacheEntryIt = g_IndexBufferCacheLru.begin();
+		ConvertedIndexBuffer& CacheEntry = *CacheEntryIt;
+		CacheEntry.LookupKey = LookupKey;
+		CacheEntry.Hash = FullHash;
+		CacheEntry.FastSignature = FastSignature;
+		CacheEntry.XboxIndexCount = XboxIndexCount;
+		CacheEntry.HostIndexCount = RequiredIndexCount;
 
-		CacheEntry = {};
-	}
+		auto& Bucket = g_IndexBufferCacheByAddress[LookupKey];
+		CacheEntry.BucketIndex = Bucket.size();
+		Bucket.push_back(CacheEntryIt);
+		CxbxTouchIndexBufferCacheEntry(CacheEntryIt);
 
-	// If we need to create an index buffer, do so.
-	if (CacheEntry.pHostIndexBuffer == nullptr) {
-		CacheEntry.pHostIndexBuffer = CxbxCreateIndexBuffer(RequiredIndexCount);
-		if (!CacheEntry.pHostIndexBuffer)
+		CacheEntry.HostIndexBuffer.Attach(CxbxCreateIndexBuffer(RequiredIndexCount));
+		if (!CacheEntry.HostIndexBuffer) {
+			CxbxEraseIndexBufferCacheEntry(CacheEntryIt);
 			CxbxrAbort("CxbxUpdateActiveIndexBuffer: IndexBuffer Create Failed!");
-	}
+		}
 
-	// TODO : Speeds this up, perhaps by hashing less often, and/or by
-	// doing two hashes : a small subset regularly, all data less frequently.
-	uint64_t uiHash = ComputeHash(pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
+		CxbxTrimIndexBufferAddressBucket(LookupKey);
+		CxbxTrimIndexBufferCache();
 
-	// If the data needs updating, do so
-	bNeedRepopulation |= (uiHash != CacheEntry.Hash);
-	if (bNeedRepopulation)	{
-		// Update the Index Count and the hash
-		CacheEntry.IndexCount = RequiredIndexCount;
-		CacheEntry.Hash = uiHash;
-
-		// Update the host index buffer
+		// Update the host index buffer for a newly created cache entry.
 		INDEX16* pHostIndexBufferData = nullptr;
-		HRESULT hRet = CacheEntry.pHostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
-		DEBUG_D3DRESULT(hRet, "CacheEntry.pHostIndexBuffer->Lock");
+		HRESULT hRet = CacheEntry.HostIndexBuffer->Lock(0, /*entire SizeToLock=*/0, (D3DLockData **)&pHostIndexBufferData, D3DLOCK_DISCARD);
+		DEBUG_D3DRESULT(hRet, "CacheEntry.HostIndexBuffer->Lock");
 		if (pHostIndexBufferData == nullptr) {
+			CxbxEraseIndexBufferCacheEntry(CacheEntryIt);
 			CxbxrAbort("CxbxUpdateActiveIndexBuffer: Could not lock index buffer!");
 		}
 
@@ -2602,11 +2726,15 @@ ConvertedIndexBuffer& CxbxUpdateActiveIndexBuffer
 			memcpy(pHostIndexBufferData, pXboxIndexData, XboxIndexCount * sizeof(INDEX16));
 		}
 
-		CacheEntry.pHostIndexBuffer->Unlock();
+		CacheEntry.HostIndexBuffer->Unlock();
+	} else {
+		CxbxTouchIndexBufferCacheEntry(CacheEntryIt);
 	}
 
+	ConvertedIndexBuffer& CacheEntry = *CacheEntryIt;
+
 	// Activate the new native index buffer :
-	HRESULT hRet = g_pD3DDevice->SetIndices(CacheEntry.pHostIndexBuffer);
+	HRESULT hRet = g_pD3DDevice->SetIndices(CacheEntry.HostIndexBuffer.Get());
 	// Note : Under Direct3D 9, the BaseVertexIndex argument is moved towards DrawIndexedPrimitive
 	DEBUG_D3DRESULT(hRet, "g_pD3DDevice->SetIndices");
 
