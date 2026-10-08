@@ -28,6 +28,7 @@
 #define LOG_PREFIX CXBXR_MODULE::CXBXR
 #define LOG_PREFIX_INIT CXBXR_MODULE::INIT
 
+#include "common\win32\Threads.h"
 
 #include <core\kernel\exports\xboxkrnl.h>
 #include "common\xbdm\CxbxXbdm.h" // For Cxbx_LibXbdmThunkTable
@@ -54,6 +55,7 @@
 #include "common/win32/WineEnv.h"
 
 #include <clocale>
+#include <cstdio>
 #include <process.h>
 #include <sstream> // For std::ostringstream
 

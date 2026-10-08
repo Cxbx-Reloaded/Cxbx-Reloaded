@@ -24,6 +24,8 @@
 // ******************************************************************
 #pragma once
 
+#include <exception>
+
 #include "Cxbx.h"
 #include "core\hle\DSOUND\XbDSoundTypes.h"
 #include "common/audio/converter.hpp"

@@ -77,7 +77,7 @@ extern bool g_SaveOnExit;
 /*! runtime logging toggle boolean */
 extern volatile bool g_bPrintfOn;
 
-#if WIN32
+#ifdef WIN32
 #include "Win32\Threads.h"
 #define CxbxSetThreadName(Name) SetCurrentThreadName(Name)
 #else

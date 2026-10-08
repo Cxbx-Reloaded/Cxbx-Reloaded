@@ -26,6 +26,7 @@
 #define _XBOXKRNL_DEFEXTRN_
 
 #define LOG_PREFIX CXBXR_MODULE::JVS
+#include "common\win32\Threads.h"
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 

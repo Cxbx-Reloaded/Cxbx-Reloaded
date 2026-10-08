@@ -1,4 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 // ******************************************************************
 // *
@@ -27,6 +27,7 @@
 #define LOG_PREFIX CXBXR_MODULE::D3D8
 
 #include "common\util\hasher.h" // For ComputeHash
+#include "common\win32\Threads.h"
 #include <condition_variable>
 #include <stack>
 

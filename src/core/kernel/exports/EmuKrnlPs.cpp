@@ -27,6 +27,7 @@
 // ******************************************************************
 
 #define LOG_PREFIX CXBXR_MODULE::PS
+#include "common\win32\Threads.h"
 #include <common\util\CxbxUtil.h>
 
 

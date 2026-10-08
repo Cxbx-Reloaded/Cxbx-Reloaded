@@ -24,6 +24,7 @@
 // ******************************************************************
 #pragma once
 
+#include <cmath>
 #include <cstdint>
 
 // Convert frequency to pitch helper
