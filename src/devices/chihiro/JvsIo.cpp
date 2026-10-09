@@ -25,6 +25,7 @@
 // ******************************************************************
 
 #include "JvsIo.h"
+#include "JvsInput.h"
 #include <cstdio>
 #include <cstdarg>
 #include <ctime>
@@ -133,22 +134,25 @@ JvsIo::JvsIo(uint8_t* sense)
 
 void JvsIo::Update()
 {
-	// Handle coin input
+	if (!JvsInput::IsEnabled()) {
+		// Preserve the existing controls for games other than HOD3.
 		static bool previousCoinButtonsState = false;
-		bool currentCoinButtonState = GetAsyncKeyState('5');
-		if (currentCoinButtonState && !previousCoinButtonsState) {
-			Inputs.coins[0].coins += 1;
-		}
+		const bool currentCoinButtonState = GetAsyncKeyState('5');
+		if (currentCoinButtonState && !previousCoinButtonsState) Inputs.coins[0].coins += 1;
 		previousCoinButtonsState = currentCoinButtonState;
-
-	// TODO: Update Jvs inputs based on user configuration
-	// For now, hardcode the inputs for the game we are currently testing (Ollie King)
-	Inputs.switches.player[0].start = GetAsyncKeyState('1');                                                        // Start
-	Inputs.analog[1].value = GetAsyncKeyState(VK_LEFT) ? 0x9000 : (GetAsyncKeyState(VK_RIGHT) ? 0x7000 : 0x8000);   // Board Swing
-	Inputs.switches.player[0].up = GetAsyncKeyState(VK_UP);                                                         // Board Front
-	Inputs.switches.player[0].down = GetAsyncKeyState(VK_DOWN);                                                     // Board Rear
-	Inputs.switches.player[0].button[0] = GetAsyncKeyState('A');                                                    // Left Button
-	Inputs.switches.player[0].button[1] = GetAsyncKeyState('S');                                                    // Right Button
+		Inputs.switches.player[0].start = GetAsyncKeyState('1');
+		Inputs.analog[1].value = GetAsyncKeyState(VK_LEFT) ? 0x9000 : (GetAsyncKeyState(VK_RIGHT) ? 0x7000 : 0x8000);
+		Inputs.switches.player[0].up = GetAsyncKeyState(VK_UP);
+		Inputs.switches.player[0].down = GetAsyncKeyState(VK_DOWN);
+		Inputs.switches.player[0].button[0] = GetAsyncKeyState('A');
+		Inputs.switches.player[0].button[1] = GetAsyncKeyState('S');
+		return;
+	}
+	const auto& frame = JvsInput::GetState();
+	std::lock_guard<std::mutex> lock(IoBoardMutex);
+	Inputs.switches = frame.switches;
+	for (int a = 0; a < JVS_MAX_ANALOG; ++a) Inputs.analog[a] = frame.analog[a];
+	for (int p = 0; p < JVS_MAX_COINS; ++p) Inputs.coins[p].coins += frame.coins[p].coins;
 }
 
 uint8_t JvsIo::GetDeviceId()

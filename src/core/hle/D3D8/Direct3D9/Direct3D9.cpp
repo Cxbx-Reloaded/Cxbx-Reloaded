@@ -68,6 +68,7 @@
 #include "Shader.h"
 #include "Timer.h"
 #include "common/PerfTrace.h"
+#include "devices/chihiro/JvsInput.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_dx9.h>
@@ -1620,11 +1621,13 @@ void ToggleFauxFullscreen(HWND hWnd)
         if (CxbxKrnl_hEmuParent) {
             LONG parent_style = gwl_style & ~WS_CHILD;
             parent_style |= WS_POPUP;
-            SetWindowLong(hWnd, GWL_STYLE, gwl_style);
+            SetWindowLong(hWnd, GWL_STYLE, parent_style);
             SetParent(hWnd, NULL);
         }
         SetWindowPos(hWnd, HWND_TOPMOST, lRect.left, lRect.top, 0, 0, SWP_NOSIZE);
         ShowWindow(hWnd, SW_MAXIMIZE);
+        SetForegroundWindow(hWnd);
+        SetFocus(hWnd);
     }
     else {
         SetWindowLong(hWnd, GWL_STYLE, gwl_style);
@@ -5448,6 +5451,13 @@ xbox::dword_xt WINAPI xbox::EMUPATCH(D3DDevice_Swap)
             dest.left = (LONG)((g_HostBackBufferDesc.Width - width) / 2);
             dest.right = (LONG)(dest.left + width);
             dest.bottom = (LONG)(dest.top + height);
+            if (g_bIsChihiro && g_HostBackBufferDesc.Width && g_HostBackBufferDesc.Height) {
+                JvsInput::SetRenderBounds(
+                    (float)dest.left / g_HostBackBufferDesc.Width,
+                    (float)dest.top / g_HostBackBufferDesc.Height,
+                    (float)dest.right / g_HostBackBufferDesc.Width,
+                    (float)dest.bottom / g_HostBackBufferDesc.Height);
+            }
 
             // Always clear the backbuffer to black before the StretchRect blit.
             // With D3DSWAPEFFECT_DISCARD, the driver (especially AMD) is permitted to

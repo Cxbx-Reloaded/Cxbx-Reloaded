@@ -29,6 +29,7 @@
 
 #undef FIELD_OFFSET     // prevent macro redefinition warnings
 
+#include "EmuEEPROM.h" // XboxFactoryGameRegion; before Emu.h's RTL macros
 #include "EmuShared.h"
 #include "common\Logging.h"
 #include "common\FilePaths.hpp"
@@ -37,6 +38,8 @@
 #include "core\hle\JVS\JVS.h"
 #include "core\hle\Intercept.hpp"
 #include "devices\chihiro\JvsIo.h"
+#include "devices/chihiro/JvsInput.h"
+#include "common/util/cliConfig.hpp"
 #include "devices\Xbox.h"
 #include <thread>
 #include <mutex>
@@ -151,8 +154,9 @@ void JvsInputThread()
 	while (true) {
 		// This thread is responsible for reading the emulated Baseboard state
 		// and setting the correct internal variables
-			ChihiroBaseBoardState.TestButton = GetAsyncKeyState(VK_F1);
-			ChihiroBaseBoardState.ServiceButton = GetAsyncKeyState(VK_F2);
+		JvsInput::Poll();
+		ChihiroBaseBoardState.TestButton = JvsInput::IsEnabled() ? JvsInput::Test() : GetAsyncKeyState(VK_F1);
+		ChihiroBaseBoardState.ServiceButton = JvsInput::IsEnabled() ? JvsInput::Service() : GetAsyncKeyState(VK_F2);
 
 		// Call into the Jvs I/O board update function
 		g_pJvsIo->Update();
@@ -170,6 +174,27 @@ void JvsInputThread()
 }
 
 #define CHIHIRO_PATH "/EmuMediaBoard/Chihiro/"
+
+// Xbox EEPROM and Chihiro firmware use different region encodings.
+// Honor a supported EEPROM selection before considering the firmware region.
+static constexpr uint8_t SelectChihiroRegion(uint32_t xboxRegion, uint8_t firmwareRegion, uint32_t supported)
+{
+	const uint8_t requested = xboxRegion == XC_GAME_REGION_JAPAN ? 1 :
+		xboxRegion == XC_GAME_REGION_NA ? 2 : xboxRegion == XC_GAME_REGION_RESTOFWORLD ? 3 : 0;
+	if (requested && (!supported || (supported & (1u << requested)))) return requested;
+	if (firmwareRegion >= 1 && firmwareRegion <= 3 && (supported & (1u << firmwareRegion))) return firmwareRegion;
+	if (supported & MB_CHIHIRO_REGION_FLAG_USA) return 2;
+	if (supported & MB_CHIHIRO_REGION_FLAG_EXPORT) return 3;
+	if (supported & MB_CHIHIRO_REGION_FLAG_JAPAN) return 1;
+	return firmwareRegion; // No supported region information: retain the dump's value.
+}
+
+static_assert(SelectChihiroRegion(XC_GAME_REGION_JAPAN, 2, 0xE) == 1, "Japan must override USA firmware");
+static_assert(SelectChihiroRegion(XC_GAME_REGION_NA, 1, 0xE) == 2, "USA EEPROM encoding differs from Chihiro");
+static_assert(SelectChihiroRegion(XC_GAME_REGION_RESTOFWORLD, 2, 0xE) == 3, "Export EEPROM must be honored");
+static_assert(SelectChihiroRegion(XC_GAME_REGION_JAPAN, 2, MB_CHIHIRO_REGION_FLAG_USA) == 2, "Retain supported fallback");
+static_assert(SelectChihiroRegion(0, 255, MB_CHIHIRO_REGION_FLAG_JAPAN) == 1, "Invalid firmware region must be safe");
+static_assert(SelectChihiroRegion(XC_GAME_REGION_JAPAN, 2, 0) == 1, "Missing boot metadata must honor EEPROM");
 
 void JVS_Init()
 {
@@ -236,27 +261,17 @@ void JVS_Init()
 
 	// Set state to a sane initial default
 	ChihiroBaseBoardState.Reset();
+	const auto& inputBootId = g_MediaBoard->GetBootId();
+	std::string inputExecutable(inputBootId.gameExecutable,
+		strnlen(inputBootId.gameExecutable, sizeof(inputBootId.gameExecutable)));
+	if (inputExecutable.empty()) cli_config::GetValue(cli_config::load, &inputExecutable);
+	JvsInput::Init(g_DataFilePath, inputExecutable);
 
-	// Auto-Patch Chihiro Region Flag to match the desired game
+	// Synchronize the baseboard region with the GUI's Xbox EEPROM region.
 	uint8_t &region = (uint8_t &)g_BaseBoardQcFirmware[0x1F00];
-	auto regionFlags = g_MediaBoard->GetBootId().regionFlags;
-
-	// The region of the system can be converted to a game region flag by doing 1 << region
-	// This gives a bitmask that can be ANDed with the BootID region flags to check the games support
-	if ((regionFlags & (1 << region)) == 0) {
-		// The region was not compatible, so we need to patch the region flag
-		// This avoids "Error 05: This game is not acceptable by main board."
-		// We use USA,EXPORT,JAPAN to make sure mutiple-language games default to English first
-		if (regionFlags & MB_CHIHIRO_REGION_FLAG_USA) {
-			region = 2;
-		}
-		else if (regionFlags & MB_CHIHIRO_REGION_FLAG_EXPORT) {
-			region = 3;
-		}
-		else if (regionFlags & MB_CHIHIRO_REGION_FLAG_JAPAN) {
-			region = 1;
-		}
-	}
+	const auto regionFlags = g_MediaBoard->GetBootId().regionFlags;
+	const uint8_t previousRegion = region;
+	region = SelectChihiroRegion(XboxFactoryGameRegion, previousRegion, regionFlags);
 
 	// === JVS watchdog suppression — "Error 11" / "Error 12" ===
 	//

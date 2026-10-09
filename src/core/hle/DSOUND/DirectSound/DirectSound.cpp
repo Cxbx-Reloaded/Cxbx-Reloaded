@@ -55,6 +55,25 @@
 static constexpr uint32_t APU_TIMER_FREQUENCY = 48000;
 static uint64_t dsound_last;
 static uint64_t dsound_worker_last;
+static HWND dsound_focus_window = nullptr;
+
+// The renderer is embedded in the launcher in windowed mode, but becomes
+// its own top-level window in faux fullscreen. DirectSound must follow it
+// or foreground-only buffers remain muted while the game has focus.
+// Call with g_DSoundMutex held.
+static void DSoundUpdateFocusWindow()
+{
+    if (!g_pDSound8 || !g_hEmuWindow) {
+        return;
+    }
+    const HWND window = GetAncestor(g_hEmuWindow, GA_ROOT);
+    if (window && window != dsound_focus_window) {
+        const HRESULT result = g_pDSound8->SetCooperativeLevel(window, DSSCL_PRIORITY);
+        if (SUCCEEDED(result)) {
+            dsound_focus_window = window;
+        }
+    }
+}
 
 uint32_t GetAPUTime()
 {
@@ -165,11 +184,13 @@ xbox::hresult_xt WINAPI xbox::EMUPATCH(DirectSoundCreate)
             CxbxrAbort(dsErrorMsg, hRet);
         }
 
-        hRet = g_pDSound8->SetCooperativeLevel(GET_FRONT_WINDOW_HANDLE, DSSCL_PRIORITY);
+        const HWND soundWindow = GetAncestor(g_hEmuWindow, GA_ROOT);
+        hRet = g_pDSound8->SetCooperativeLevel(soundWindow ? soundWindow : GET_FRONT_WINDOW_HANDLE, DSSCL_PRIORITY);
 
         if (hRet != DS_OK) {
             CxbxrAbort("g_pDSound8->SetCooperativeLevel Failed!");
         }
+        dsound_focus_window = soundWindow ? soundWindow : GET_FRONT_WINDOW_HANDLE;
 
         // clear sound buffer cache
         vector_ds_buffer::iterator ppDSBuffer = g_pDSoundBufferCache.begin();
@@ -457,6 +478,8 @@ void dsound_async_worker()
         return;
     }
 
+    DSoundUpdateFocusWindow();
+
     xbox::LARGE_INTEGER getTime;
     xbox::KeQuerySystemTime(&getTime);
     DirectSoundDoWork_Stream(getTime);
@@ -485,6 +508,8 @@ void dsound_worker()
     if (!guard.owns_lock()) {
         return;
     }
+
+    DSoundUpdateFocusWindow();
 
 	// Stream sound buffer audio
 	// because the title may change the content of sound buffers at any time
