@@ -150,7 +150,6 @@ xbox::void_xt xbox::KiClockIsr(ulonglong_xt TotalUs)
 {
 	LARGE_INTEGER InterruptTime, SystemTime;
 	ULONG Hand;
-	DWORD OldKeTickCount;
 	static uint64_t LostUs;
 	uint64_t TotalMs = TotalUs / 1000;
 	LostUs += (TotalUs - TotalMs * 1000);
@@ -186,23 +185,20 @@ xbox::void_xt xbox::KiClockIsr(ulonglong_xt TotalUs)
 	}
 
 	// Update the tick counter
-	OldKeTickCount = KeTickCount;
 	KeTickCount += static_cast<dword_xt>(TotalMs);
 
 	// Because this function must be fast to continuously update the kernel clocks, if somebody else is currently
 	// holding the lock, we won't wait and instead skip the check of the timers for this cycle
 	if (KiTimerMtx.Mtx.try_lock()) {
 		KiTimerMtx.Acquired++;
-		// Check if a timer has expired
-		// On real hw, this is called every ms, so it only needs to check a single timer index. However, testing on the emulator shows that this can have a delay
-		// larger than a ms. If we only check the index corresponding to OldKeTickCount, then we will miss timers that might have expired already, causing an unpredictable
-		// delay on threads that are waiting with those timeouts
-		dword_xt EndKeTickCount = (KeTickCount - OldKeTickCount) >= TIMER_TABLE_SIZE ? OldKeTickCount + TIMER_TABLE_SIZE : KeTickCount;
-		for (dword_xt i = OldKeTickCount; i < EndKeTickCount; ++i) {
-			Hand = i & (TIMER_TABLE_SIZE - 1);
+		// Check all 32 buckets. A failed try_lock on the previous tick must not
+		// postpone an expired timer until the table wraps. A pending expiration
+		// DPC also coalesces requests, so its arguments must cover every bucket.
+		for (dword_xt i = 0; i < TIMER_TABLE_SIZE; ++i) {
+			Hand = i;
 			if (KiTimerTableListHead[Hand].Entry.Flink != &KiTimerTableListHead[Hand].Entry &&
 				(ULONGLONG)InterruptTime.QuadPart >= KiTimerTableListHead[Hand].Time.QuadPart) {
-				KeInsertQueueDpc(&KiTimerExpireDpc, (PVOID)OldKeTickCount, (PVOID)EndKeTickCount);
+				KeInsertQueueDpc(&KiTimerExpireDpc, nullptr, (PVOID)TIMER_TABLE_SIZE);
 				break;
 			}
 		}
